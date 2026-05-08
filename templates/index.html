@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO & Branding -->
+  <title>RadarBDS | AI Real Estate Intelligence & Valuation</title>
+  <meta name="description" content="RadarBDS - Nền tảng định giá và săn bất động sản thông minh sử dụng AI. Phân tích dữ liệu thực tế, tìm kiếm Margin of Safety (MOS) và theo dõi biến động thị trường tại Bình Dương.">
+  <meta name="keywords" content="định giá bất động sản, radar bds, săn nhà đất bình dương, đầu tư bất động sản ai, định giá đất nền, bds bình dương">
+  <meta name="author" content="RadarBDS Team">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@3.1.0/dist/chartjs-chart-treemap.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+
+<div class="mobile-overlay" id="mobileOverlay" onclick="toggleMenu()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="RadarBDS Logo" class="logo-img">
+    <span class="logo-text">RADAR<span style="color:var(--primary)">BDS</span></span>
+  </div>
+  
+  <form id="filterForm">
+    <div class="filter-group">
+      <div class="filter-title">Nguồn Tin</div>
+      <div id="sourceFilters" class="source-grid">
+        <label class="filter-option">
+          <input type="checkbox" name="source" value="facebook" checked> 
+          Facebook <span class="badge-recommend">REC</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="source" value="guland" checked> 
+          Guland.vn
+        </label>
+        <label class="filter-option disabled">
+          <input type="checkbox" name="source" value="batdongsan" disabled> 
+          BDS.com
+        </label>
+        <label class="filter-option disabled">
+          <input type="checkbox" name="source" value="muaban" disabled> 
+          Muaban.net
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-title">Thành Phố</div>
+      <div class="filter-grid">
+        <label class="filter-option"><input type="radio" name="city" value="THỦ DẦU MỘT" checked> Thủ Dầu Một</label>
+        <label class="filter-option"><input type="radio" name="city" value="BẾN CÁT"> Bến Cát</label>
+        <!-- Other cities can be added dynamically -->
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-title">Khu Vực (Phường)</div>
+      <div id="wardFilters">
+        <label class="filter-option"><input type="checkbox" name="ward" value="Tân An" checked> Tân An</label>
+        <!-- Wards will be populated dynamically -->
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-title">Loại Hình</div>
+      <div class="filter-grid">
+        <label class="filter-option"><input type="checkbox" name="prop_type" value="dat_nen" checked> Đất nền</label>
+        <label class="filter-option"><input type="checkbox" name="prop_type" value="nha_dat" checked> Nhà đất</label>
+        <label class="filter-option"><input type="checkbox" name="prop_type" value="dat_vuon" checked> Đất vườn</label>
+        <label class="filter-option"><input type="checkbox" name="prop_type" value="chung_cu" checked> Chung cư</label>
+        <label class="filter-option"><input type="checkbox" name="prop_type" value="nha_tro" checked> Nhà trọ</label>
+      </div>
+    </div>
+    
+    <div class="filter-group">
+      <label class="filter-option" style="font-weight: 700; color: var(--danger);">
+        <input type="checkbox" name="only_drops" value="1"> Chỉ hiển thị tin giảm giá
+      </label>
+    </div>
+  </form>
+</aside>
+
+<main class="main">
+  <div class="loader" id="mainLoader"><div class="spinner"></div><div style="font-weight:600; color:var(--primary);">Đang tải dữ liệu...</div></div>
+  
+  <header class="header">
+    <button class="menu-btn btn btn-outline" onclick="toggleMenu()">☰</button>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('signals', this)">🚨 Signals <span class="tab-badge" id="badgeSignals">0</span></button>
+      <button class="tab-btn" onclick="switchTab('market', this)">📈 Thị trường</button>
+      <button class="tab-btn" onclick="switchTab('all', this)">📋 Tin rao <span class="tab-badge" id="badgeTotal">0</span></button>
+    </div>
+
+    <div class="stats-bar" id="topStats">
+      <div class="stat-box">
+        <div class="label">Tổng tin</div>
+        <div class="value" id="statTotal">0</div>
+      </div>
+      <div class="stat-box green">
+        <div class="label">Signals</div>
+        <div class="value" id="statSignals">0</div>
+      </div>
+    </div>
+    
+    <div class="header-actions" style="display:flex; align-items:center; gap: 16px;">
+      <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);" id="lastUpdated"></div>
+      <button id="themeToggle" class="btn btn-outline" style="padding: 8px; border-radius: 50%; width: 38px; height: 38px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; border: none; background: rgba(128,128,128,0.1);" onclick="toggleTheme()" title="Đổi giao diện">🌓</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- TAB: SIGNALS -->
+    <div id="tab-signals" class="tab-content active">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <h3 style="margin:0; font-size:1.1rem; color:var(--text);">🔥 Tín hiệu nổi bật</h3>
+        <select id="signalSorter" onchange="sortAndRenderSignals()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; cursor: pointer; outline: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <option value="newest" selected>🕒 Mới đăng nhất</option>
+          <option value="mos_desc">🚀 Cơ hội (MOS) cao nhất</option>
+          <option value="price_asc">💰 Giá rẻ nhất</option>
+          <option value="score_desc">⭐ Điểm Signal cao nhất</option>
+        </select>
+      </div>
+      <div class="cards-grid" id="signalsGrid">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB: MARKET -->
+    <div id="tab-market" class="tab-content">
+      <div class="market-grid" style="display:grid; grid-template-columns: 1fr; gap: 24px;">
+        
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">🗺️ Bản đồ Cơ hội (MOS)</h3>
+            <p class="chart-subtitle">Vùng xanh đậm = Giá đang rẻ hơn thị trường (Cơ hội đầu tư)</p>
+          </div>
+          <div class="chart-body" id="heatmapContainer" style="height: 400px; position:relative;">
+            <canvas id="treemapChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h3 class="chart-title">📉 Biểu đồ Xu hướng Giá</h3>
+              <p class="chart-subtitle">Phân tích biến động giá theo thời gian</p>
+            </div>
+            <div class="period-pills">
+              <button class="p-pill" data-period="day" onclick="updateTrendPeriod('day', this)">Ngày</button>
+              <button class="p-pill" data-period="week" onclick="updateTrendPeriod('week', this)">Tuần</button>
+              <button class="p-pill active" data-period="month" onclick="updateTrendPeriod('month', this)">Tháng</button>
+            </div>
+          </div>
+          <div class="chart-body" id="trendContainer" style="height: 400px; position:relative;">
+            <canvas id="trendChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB: ALL LISTINGS -->
+    <div id="tab-all" class="tab-content">
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Loại</th>
+                <th>Khu vực</th>
+                <th>Ảnh</th>
+                <th>Diện tích</th>
+                <th>Giá Thực Tế</th>
+                <th>Fair Value</th>
+                <th>Nội dung</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody id="listingsTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <div>Trang <span id="currentPage">1</span> / <span id="totalPages">1</span></div>
+          <div style="display:flex; gap:8px;">
+            <button class="page-btn" id="btnPrevPage" onclick="changePage(-1)">← Trước</button>
+            <button class="page-btn" id="btnNextPage" onclick="changePage(1)">Sau →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal Signal Detail -->
+<div id="signalModal" class="modal">
+  <div class="modal-content" style="max-width:720px; padding:0; overflow:hidden; border-radius:20px;">
+    <!-- Image Slider -->
+    <div id="sm-slider" style="position:relative; height:240px; background:#0f172a; overflow:hidden; flex-shrink:0; user-select:none;">
+      <div id="sm-slides" style="display:flex; height:100%; transition:transform 0.4s cubic-bezier(0.25,0.8,0.25,1);"></div>
+      <!-- Gradient overlay -->
+      <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%); pointer-events:none;"></div>
+      <!-- Prev/Next arrows -->
+      <button id="sm-prev" onclick="slideSignal(-1)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:none; background:rgba(0,0,0,0.5); color:#fff; font-size:1.1rem; cursor:pointer; z-index:10; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); transition:background 0.2s;">&#8249;</button>
+      <button id="sm-next" onclick="slideSignal(1)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:none; background:rgba(0,0,0,0.5); color:#fff; font-size:1.1rem; cursor:pointer; z-index:10; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); transition:background 0.2s;">&#8250;</button>
+      <!-- Dot indicators -->
+      <div id="sm-dots" style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); display:flex; gap:5px; z-index:10;"></div>
+      <!-- Close -->
+      <button class="close-modal" onclick="closeModal('signalModal')" style="top:12px; right:12px;">&times;</button>
+      <!-- Badges -->
+      <div style="position:absolute; bottom:14px; left:16px; display:flex; gap:8px; flex-wrap:wrap; z-index:10;">
+        <span id="sm-mos-badge" style="background:linear-gradient(135deg,#10b981,#047857); color:#fff; font-weight:800; font-size:1rem; padding:5px 14px; border-radius:10px; box-shadow:0 4px 12px rgba(16,185,129,0.4);"></span>
+        <span id="sm-profit-badge" style="background:rgba(16,185,129,0.9); color:#fff; font-weight:700; font-size:0.82rem; padding:5px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); display:none;"></span>
+        <span id="sm-drop-badge" style="background:linear-gradient(135deg,#ef4444,#b91c1c); color:#fff; font-weight:700; font-size:0.82rem; padding:5px 12px; border-radius:8px; animation:pulse 2s infinite; display:none;"></span>
+      </div>
+      <span id="sm-source-badge" style="position:absolute; top:12px; left:14px; font-size:0.7rem; font-weight:700; color:#fff; padding:3px 9px; border-radius:6px; text-transform:uppercase; z-index:10;"></span>
+      <span id="sm-img-count" style="position:absolute; bottom:14px; right:14px; font-size:0.75rem; color:rgba(255,255,255,0.7); z-index:10; background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:6px;"></span>
+    </div>
+    <!-- Content -->
+    <div style="padding:20px 24px; overflow-y:auto; max-height:calc(90vh - 240px);">
+      <h2 id="sm-title" style="font-size:1rem; font-weight:700; line-height:1.5; margin-bottom:14px; color:var(--text);"></h2>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+        <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:12px; padding:12px 16px;">
+          <div style="font-size:0.65rem; font-weight:700; color:#10b981; text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px;">💰 Giá rao</div>
+          <div id="sm-price" style="font-size:1.35rem; font-weight:800; color:#10b981;"></div>
+          <div id="sm-ppm2" style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;"></div>
+        </div>
+        <div style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); border-radius:12px; padding:12px 16px;">
+          <div style="font-size:0.65rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px;">📊 Fair Value</div>
+          <div id="sm-fair" style="font-size:1.15rem; font-weight:700; color:var(--text);"></div>
+          <div id="sm-fppm2" style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;"></div>
+        </div>
+      </div>
+      <div id="sm-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;"></div>
+      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:16px;">
+        <div style="font-size:0.65rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px;">📋 Mô tả</div>
+        <div id="sm-desc" style="font-size:0.85rem; color:var(--text-muted); line-height:1.7; max-height:130px; overflow-y:auto;"></div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <a id="sm-zalo" href="#" target="_blank" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px; border-radius:12px; background:#eef2ff; border:2px solid #2563eb; color:#2563eb; font-weight:700; font-size:0.9rem; text-decoration:none; transition:all 0.2s;" onmouseover="this.style.background='#2563eb';this.style.color='#fff'" onmouseout="this.style.background='#eef2ff';this.style.color='#2563eb'">💬 Chat Zalo</a>
+        <a id="sm-detail" href="#" target="_blank" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px; border-radius:12px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-weight:700; font-size:0.9rem; text-decoration:none; box-shadow:0 4px 14px rgba(99,102,241,0.4); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">↗ Xem trang chi tiết</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal History -->
+<div id="historyModal" class="modal">
+  <div class="modal-content">
+    <button class="close-modal" onclick="closeModal('historyModal')">&times;</button>
+    <h2 class="section-title" id="historyTitle" style="margin-bottom:24px;">Lịch sử giá</h2>
+    <div style="height: 350px;">
+      <canvas id="historyChartCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="floating-actions">
+  <button class="fab fab-ai" onclick="toggleChat()" title="Hỏi AI RadarBDS">🤖</button>
+  <a href="https://zalo.me/0343216024" target="_blank" class="fab fab-zalo" title="Chat Zalo">💬</a>
+</div>
+
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <span>🤖 RadarBDS AI Assistant</span>
+    <button onclick="toggleChat()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem;">×</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="message bot">Xin chào! Tôi là trợ lý AI của RadarBDS. Tôi có thể giúp gì cho bạn về bất động sản hôm nay?</div>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" class="chat-input" id="chatInput" placeholder="Nhập câu hỏi của bạn..." onkeypress="if(event.key==='Enter') sendMessage()">
+    <button class="chat-send" onclick="sendMessage()">Gửi</button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

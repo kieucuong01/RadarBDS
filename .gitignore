@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Databases
+*.db
+*.sqlite3
+
+# Local settings
+.env
+
+# Project specific data
+data/images/
+data/fb_photos/
+logs/
+reports/
+scratch/
+browser_recordings/
+artifacts/
+
+# OS
+.DS_Store
+Thumbs.db

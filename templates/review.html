@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="vi"><head>
+<meta charset="utf-8"><title>Review Signals — Radar BDS</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:#0e1117; color:#e6edf3; margin:0; padding:24px; }
+  h1 { margin:0 0 6px; font-size:22px; } .sub { color:#8b949e; margin-bottom:18px; }
+  .nav a { color:#58a6ff; margin-right:14px; text-decoration:none; }
+  .counter { background:#1f6feb; color:#fff; border-radius:12px; padding:2px 10px; font-size:13px; }
+  .card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:16px; margin-bottom:14px; transition:opacity .4s; }
+  .card.fade { opacity:0; }
+  .row { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; }
+  .meta { flex:1; min-width:280px; }
+  .title { font-size:15px; font-weight:600; margin-bottom:6px; }
+  .title a { color:#e6edf3; text-decoration:none; } .title a:hover { color:#58a6ff; }
+  .badges span { background:#21262d; border:1px solid #30363d; padding:2px 8px; border-radius:6px; font-size:12px; margin-right:6px; display:inline-block; margin-bottom:4px; }
+  .badge-ward { background:#1f6feb22; border-color:#1f6feb; }
+  .badge-mos { background:#238636aa; border-color:#238636; color:#fff; font-weight:600; }
+  .badge-score { background:#9e6a03aa; border-color:#9e6a03; color:#fff; font-weight:600; }
+  .nums { color:#8b949e; font-size:13px; margin-top:4px; }
+  .form { display:flex; gap:8px; flex-direction:column; min-width:320px; }
+  .verdict-row { display:flex; gap:6px; flex-wrap:wrap; }
+  .verdict-row label { background:#21262d; border:1px solid #30363d; border-radius:6px; padding:6px 10px; cursor:pointer; font-size:13px; user-select:none; }
+  .verdict-row input[type=radio] { display:none; }
+  .verdict-row input[type=radio]:checked + span { color:#fff; }
+  .verdict-row label:has(input:checked) { border-color:#58a6ff; background:#1f6feb33; }
+  textarea { background:#0d1117; border:1px solid #30363d; color:#e6edf3; padding:8px; border-radius:6px; resize:vertical; min-height:50px; font-family:inherit; font-size:13px; }
+  button.submit { background:#238636; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; }
+  button.submit:hover { background:#2ea043; }
+  .empty { text-align:center; color:#8b949e; padding:40px; font-size:15px; }
+  /* Description */
+  .desc { color:#c9d1d9; font-size:13px; line-height:1.55; margin-top:8px; white-space:pre-wrap; word-break:break-word; }
+  .desc-toggle { color:#58a6ff; font-size:12px; cursor:pointer; background:none; border:none; padding:0; margin-top:4px; display:inline-block; }
+  /* Gallery thumbnails */
+  .gallery-strip { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .gallery-strip img { width:80px; height:60px; object-fit:cover; border-radius:5px; cursor:pointer;
+    border:2px solid #30363d; transition:border-color .15s, transform .15s; }
+  .gallery-strip img:hover { border-color:#58a6ff; transform:scale(1.05); }
+  .gallery-count { color:#8b949e; font-size:12px; align-self:center; }
+  /* Lightbox */
+  #rv-lightbox { display:none; position:fixed; z-index:9999; inset:0; background:rgba(0,0,0,.92);
+    align-items:center; justify-content:center; flex-direction:column; }
+  #rv-lightbox.open { display:flex; }
+  #rv-lb-img { max-width:90vw; max-height:80vh; object-fit:contain; border-radius:8px;
+    box-shadow:0 0 60px rgba(0,0,0,.8); }
+  #rv-lb-close { position:absolute; top:16px; right:24px; font-size:36px; color:#fff;
+    cursor:pointer; line-height:1; background:none; border:none; }
+  #rv-lb-prev, #rv-lb-next { position:absolute; top:50%; transform:translateY(-50%);
+    font-size:32px; color:#fff; background:rgba(255,255,255,.1); border:none;
+    padding:14px 18px; cursor:pointer; border-radius:6px; }
+  #rv-lb-prev { left:16px; } #rv-lb-next { right:16px; }
+  #rv-lb-thumbs { display:flex; gap:8px; margin-top:14px; overflow-x:auto; max-width:90vw; padding:4px; }
+  #rv-lb-thumbs img { width:56px; height:42px; object-fit:cover; border-radius:4px;
+    opacity:.5; cursor:pointer; border:2px solid transparent; flex-shrink:0; }
+  #rv-lb-thumbs img.active { opacity:1; border-color:#58a6ff; }
+  #rv-lb-counter { color:#8b949e; font-size:13px; margin-top:6px; }
+</style></head>
+<body>
+<h1>Review Signals <span class="counter" id="counter">{{ rows|length }} cần review</span></h1>
+<div class="sub">Đánh giá từng signal để hệ thống học pattern reject/accept của bạn.</div>
+<div class="nav">
+  <a href="/">← Dashboard</a>
+  <a href="/review/stats">📊 Stats</a>
+</div>
+<form method="get" action="/review" style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+  <label style="color:#8b949e; font-size:13px;">📍 Phường:</label>
+  <select name="ward" onchange="this.form.submit()"
+          style="background:#0d1117; border:1px solid #30363d; color:#e6edf3; padding:5px 8px; border-radius:6px; font-size:13px;">
+    <option value="">— Tất cả —</option>
+    {% for w in ward_opts %}
+      <option value="{{ w }}" {% if w == ward %}selected{% endif %}>{{ w }}</option>
+    {% endfor %}
+  </select>
+  <label style="color:#8b949e; font-size:13px; margin-left:12px;">⭐ Tối thiểu score:</label>
+  <select name="min_score" onchange="this.form.submit()"
+          style="background:#0d1117; border:1px solid #30363d; color:#e6edf3; padding:5px 8px; border-radius:6px; font-size:13px;">
+    {% for s in [0, 30, 45, 55, 60, 70] %}
+      <option value="{{ s }}" {% if s == min_score %}selected{% endif %}>≥ {{ s }}{% if s == 55 %} (TOP){% elif s == 45 %} (REVIEW){% elif s == 0 %} (tất cả){% endif %}</option>
+    {% endfor %}
+  </select>
+  {% if ward %}<a href="/review" style="color:#8b949e; font-size:12px;">✕ clear</a>{% endif %}
+</form>
+<hr style="border-color:#30363d; margin:14px 0;">
+<div id="list">
+{% for r in rows %}
+<div class="card" id="card-{{ r['id'] }}">
+  <div class="row">
+    <div class="meta">
+      <div class="title"><a href="/listing/{{ r['id'] }}" target="_blank">#{{ r['id'] }} · {{ r['title'][:90] }}</a></div>
+      <div class="badges">
+        <span class="badge-ward">📍 {{ r['ward'] or '?' }}</span>
+        <span>🏠 {{ r['property_type'] or '?' }}</span>
+        <span>🛣 tier {{ r['road_tier'] or 0 }}</span>
+        <span>📜 {{ 'có sổ' if r['has_so'] else 'không sổ' }}</span>
+        <span>📰 {{ r['source'] }}</span>
+        {% if r['mos_pct'] %}<span class="badge-mos">MOS {{ "%.0f"|format(r['mos_pct']*100) }}%</span>{% endif %}
+        {% if r['signal_score'] %}<span class="badge-score">Score {{ r['signal_score'] }}</span>{% endif %}
+      </div>
+      <div class="nums">
+        💰 {{ "%.2f"|format(r['price_ty'] or 0) }} tỷ · {{ r['area_m2'] or '?' }} m² ·
+        actual <b>{{ "%.1f"|format(r['actual_ppm2'] or 0) }}</b> tr/m² vs fair <b>{{ "%.1f"|format(r['fair_ppm2'] or 0) }}</b> tr/m²
+        · n={{ r['n_segment'] or '?' }}
+      </div>
+      <div class="nums" style="margin-top:6px;"><a href="{{ r['url'] }}" target="_blank" style="color:#58a6ff;">🔗 Mở post gốc</a></div>
+      {% if r['description'] %}
+      {% set desc = r['description'] %}
+      {% set short = desc[:280] %}
+      <div class="desc" id="desc-{{ r['id'] }}">{{ short }}{% if desc|length > 280 %}…{% endif %}</div>
+      {% if desc|length > 280 %}
+      <button class="desc-toggle" onclick="toggleDesc({{ r['id'] }}, {{ desc|tojson }})">▼ Xem thêm</button>
+      {% endif %}
+      {% endif %}
+      {% if r['images'] %}
+      <div class="gallery-strip" data-lid="{{ r['id'] }}">
+        {% for img in r['images'][:5] %}
+        <img src="{{ img }}" loading="lazy" data-idx="{{ loop.index0 }}"
+             onerror="this.style.display='none'" alt="ảnh {{ loop.index }}">
+        {% endfor %}
+        {% if r['images']|length > 5 %}
+        <span class="gallery-count">+{{ r['images']|length - 5 }} ảnh</span>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    <form class="form" data-id="{{ r['id'] }}">
+      <div class="verdict-row">
+        <label><input type="radio" name="verdict" value="good"><span>👍 Good</span></label>
+        <label><input type="radio" name="verdict" value="bad"><span>👎 Bad</span></label>
+        <label><input type="radio" name="verdict" value="maybe"><span>🤔 Maybe</span></label>
+        <label><input type="radio" name="verdict" value="spam"><span>⛔ Spam</span></label>
+        <label><input type="radio" name="verdict" value="sold"><span>💸 Sold</span></label>
+      </div>
+      <textarea name="reason" placeholder="Lý do (tùy chọn — vd: đất CLN không xây được, hẻm quá nhỏ, broker spam...)"></textarea>
+      <button type="submit" class="submit">💾 Lưu feedback</button>
+    </form>
+  </div>
+</div>
+{% else %}
+<div class="empty">🎉 Không còn signal nào cần review!</div>
+{% endfor %}
+</div>
+<script>
+/* Map listing_id → image URL list (injected server-side, no HTML attr quoting issue) */
+const GALLERY_IMAGES = {
+{% for r in rows %}{% if r['images'] %}
+  {{ r['id'] }}: {{ r['images']|tojson }},
+{% endif %}{% endfor %}
+};
+</script>
+<script>
+document.querySelectorAll('form.form').forEach(f => {
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = f.dataset.id;
+    const fd = new FormData(f);
+    if (!fd.get('verdict')) { alert('Chọn verdict trước!'); return; }
+    const res = await fetch('/review/' + id, { method:'POST', body:fd });
+    if (res.ok) {
+      const card = document.getElementById('card-' + id);
+      card.classList.add('fade');
+      setTimeout(() => {
+        card.remove();
+        const c = document.getElementById('counter');
+        const left = document.querySelectorAll('.card').length;
+        c.textContent = left + ' cần review';
+        if (left === 0) document.getElementById('list').innerHTML = '<div class="empty">🎉 Không còn signal nào cần review!</div>';
+      }, 400);
+    } else {
+      const j = await res.json();
+      alert('Lỗi: ' + (j.error || res.status));
+    }
+  });
+});
+
+/* Gallery thumbnail clicks — uses server-injected GALLERY_IMAGES map */
+document.querySelectorAll('.gallery-strip img').forEach(img => {
+  img.addEventListener('click', () => {
+    const lid = parseInt(img.closest('.gallery-strip').dataset.lid);
+    const images = GALLERY_IMAGES[lid] || [];
+    const idx = parseInt(img.dataset.idx || '0');
+    openLightbox(images, idx);
+  });
+});
+
+/* Description toggle */
+function toggleDesc(id, fullText) {
+  const el = document.getElementById('desc-' + id);
+  const btn = el.nextElementSibling;
+  if (el.dataset.expanded === '1') {
+    el.textContent = fullText.slice(0, 280) + '…';
+    btn.textContent = '▼ Xem thêm';
+    el.dataset.expanded = '0';
+  } else {
+    el.textContent = fullText;
+    btn.textContent = '▲ Thu gọn';
+    el.dataset.expanded = '1';
+  }
+}
+
+/* Lightbox */
+let _lbImgs = [], _lbIdx = 0;
+function openLightbox(imgs, idx) {
+  _lbImgs = imgs; _lbIdx = idx;
+  document.getElementById('rv-lightbox').classList.add('open');
+  _renderLb();
+}
+function closeLightbox() {
+  document.getElementById('rv-lightbox').classList.remove('open');
+}
+function moveLb(dir) {
+  _lbIdx = (_lbIdx + dir + _lbImgs.length) % _lbImgs.length;
+  _renderLb();
+}
+function _renderLb() {
+  document.getElementById('rv-lb-img').src = _lbImgs[_lbIdx];
+  document.getElementById('rv-lb-counter').textContent = (_lbIdx+1) + ' / ' + _lbImgs.length;
+  const thumbs = document.getElementById('rv-lb-thumbs');
+  thumbs.innerHTML = _lbImgs.map((src, i) =>
+    `<img src="${src}" class="${i===_lbIdx?'active':''}" onclick="_lbIdx=${i};_renderLb()"
+          onerror="this.style.display='none'">`
+  ).join('');
+}
+document.addEventListener('keydown', e => {
+  const lb = document.getElementById('rv-lightbox');
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowRight') moveLb(1);
+  if (e.key === 'ArrowLeft')  moveLb(-1);
+});
+</script>
+
+<!-- Lightbox modal -->
+<div id="rv-lightbox" onclick="if(event.target===this)closeLightbox()">
+  <button id="rv-lb-close" onclick="closeLightbox()">&times;</button>
+  <button id="rv-lb-prev" onclick="moveLb(-1)">&#10094;</button>
+  <img id="rv-lb-img" src="" alt="">
+  <button id="rv-lb-next" onclick="moveLb(1)">&#10095;</button>
+  <div id="rv-lb-thumbs"></div>
+  <div id="rv-lb-counter"></div>
+</div>
+
+</body></html>

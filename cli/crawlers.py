@@ -1,0 +1,339 @@
+import json
+import time
+import logging
+import sys
+from pathlib import Path
+from config.database_sqlite import init_schema, get_conn, insert_raw
+from cli.data_import import cmd_export_raw
+
+def _get_crawlers(source_filter=None):
+    from crawler.guland_pw import GulandCrawler
+    from crawler.batdongsan_pw import BatDongSanCrawler
+
+    all_crawlers = {
+        "guland":     GulandCrawler,
+        "batdongsan": BatDongSanCrawler,
+    }
+    if source_filter:
+        cls = all_crawlers.get(source_filter)
+        if not cls:
+            print(f"Nguồn không hỗ trợ: {source_filter}. Chọn: {list(all_crawlers)}")
+            return []
+        return [cls()]
+    return [cls() for cls in all_crawlers.values()]
+
+def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_filter=None):
+    from crawler.facebook_apify import FacebookApifyCrawler, load_profiles
+    from crawler.facebook_chrome import build_record, is_relevant
+
+    if profiles is None:
+        profiles = load_profiles(area_filter=area_filter)
+    if not profiles:
+        print("[facebook] Khong co profile nao. Kiem tra data/facebook_profiles.json hoac --area")
+        return None
+
+    try:
+        crawler = FacebookApifyCrawler()
+    except RuntimeError as e:
+        print(f"[facebook] LOI: {e}")
+        return None
+
+    raw_posts = crawler.crawl_all(profiles, mode=mode, limit_override=limit_override or None)
+    if not raw_posts:
+        print("[facebook] Khong co bai nao tu Apify (kiem tra profile URL va APIFY_TOKEN).")
+        return {"fetched": 0, "inserted": 0, "skipped": 0, "irrelevant": 0}
+
+    inserted = skipped = irrelevant = 0
+    for post in raw_posts:
+        text = post.get("text") or ""
+        if not is_relevant(text):
+            irrelevant += 1
+            continue
+        apify_raw = post.pop("_apify_raw", None)
+        record = build_record(post)
+        if not record:
+            irrelevant += 1
+            continue
+        raw_data = dict(record)
+        if apify_raw:
+            raw_data["_apify_raw"] = apify_raw
+        rid = insert_raw(
+            source="facebook",
+            source_id=record.get("post_id") or None,
+            url=record["url"],
+            raw_data=raw_data,
+        )
+        if rid:
+            inserted += 1
+        else:
+            skipped += 1
+
+    return {"fetched": len(raw_posts), "inserted": inserted,
+            "skipped": skipped, "irrelevant": irrelevant}
+
+def cmd_crawl_facebook(args):
+    init_schema()
+
+    profiles = [{"url": args.profile, "tier": "medium", "default_area": None}] if getattr(args, "profile", None) else None
+    stats = _facebook_crawl_to_raw(
+        mode=args.mode,
+        limit_override=getattr(args, "limit", None),
+        profiles=profiles,
+        area_filter=getattr(args, "area", None)
+    )
+    if stats is None:
+        return
+
+    print(
+        f"[facebook] crawled={stats['fetched']} | "
+        f"bds={stats['fetched']-stats['irrelevant']} | "
+        f"imported={stats['inserted']} | skipped={stats['skipped']} (da co) | "
+        f"irrelevant={stats['irrelevant']}"
+    )
+
+    if stats["inserted"] > 0 and not getattr(args, "no_reprocess", False):
+        print("\nChay reprocess...")
+        from cleansing.reprocess import run_full_reprocess
+        result = run_full_reprocess()
+        r = result["listings"]
+        v = result["valuation"]
+        print(f"Listings : {r['new']} new | {r['updated']} updated")
+        print(f"Valuation: {v['total']} valuated | {v['signals']} signals")
+        print(f"\nĐang tải ảnh về local...")
+        from cleansing.download_images import download_images
+        download_images()
+    elif stats["inserted"] == 0:
+        print("[facebook] Khong co bai moi, bo qua reprocess.")
+
+def cmd_crawl(args, mode: str = "full"):
+    init_schema()
+
+    crawlers = _get_crawlers(getattr(args, "source", None))
+    if not crawlers:
+        return
+
+    headless = not getattr(args, "visible", False)
+    no_reprocess = getattr(args, "no_reprocess", False)
+    no_alert = getattr(args, "no_alert", False)
+    source_filter = getattr(args, "source", None)
+
+    total_new = 0
+    for crawler in crawlers:
+        try:
+            stats = crawler.run(mode=mode, headless=headless)
+            total_new += stats.get("new", 0)
+            print(f"[{crawler.SOURCE_NAME}] new={stats['new']} skip={stats['skipped']} err={stats['errors']}")
+        except Exception as e:
+            print(f"[{crawler.SOURCE_NAME}] Lỗi: {e}")
+
+    if mode == "incremental" and not source_filter:
+        print(f"\n[facebook] Crawling 20 posts/profile (incremental)...")
+        fb_stats = _facebook_crawl_to_raw(mode="incremental", limit_override=20)
+        if fb_stats:
+            print(
+                f"[facebook] crawled={fb_stats['fetched']} | "
+                f"imported={fb_stats['inserted']} | skipped={fb_stats['skipped']} | "
+                f"irrelevant={fb_stats['irrelevant']}"
+            )
+            total_new += fb_stats["inserted"]
+
+    if total_new == 0:
+        print(f"\nKhông có tin mới. DB không thay đổi.")
+        if mode == "incremental" and not no_alert:
+            from alerts.telegram import collect_hot_deals_3d, send_consolidated_daily_alert
+            with get_conn() as conn:
+                sig_total = conn.execute(
+                    "SELECT COUNT(*) FROM valuation_results WHERE is_signal=1"
+                ).fetchone()[0]
+                deals = collect_hot_deals_3d(conn)
+                send_consolidated_daily_alert(conn, deals, new_count=0,
+                                              total_active_signals=sig_total)
+        return
+
+    if not no_reprocess:
+        print(f"\nReprocess {total_new} records mới...")
+        from cleansing.reprocess import run_full_reprocess
+        result = run_full_reprocess()
+        r, v = result["listings"], result["valuation"]
+        print(f"Listings : {r['new']} new | {r['updated']} updated")
+        print(f"Valuation: {v['total']} valuated | {v['signals']} signals | {v['outliers']} outliers")
+
+        print(f"\nĐang tải ảnh về local...")
+        from cleansing.download_images import download_images
+        download_images()
+
+    class _FakeArgs:
+        out = None
+    cmd_export_raw(_FakeArgs())
+
+    if not no_alert and mode == "incremental":
+        from alerts.telegram import collect_hot_deals_3d, send_consolidated_daily_alert
+        with get_conn() as conn:
+            sig_total = conn.execute(
+                "SELECT COUNT(*) FROM valuation_results WHERE is_signal=1"
+            ).fetchone()[0]
+            deals = collect_hot_deals_3d(conn)
+            sent = send_consolidated_daily_alert(conn, deals, new_count=total_new,
+                                                 total_active_signals=sig_total)
+        print(f"Telegram: 1 consolidated alert | {sent} deals đánh dấu alerted | "
+              f"queue 3d={len(deals)} | total active signals={sig_total}")
+
+    print(f"\n{'='*45}")
+    print(f"CRAWL {mode.upper()} DONE — {total_new} records mới")
+    print(f"{'='*45}")
+
+def _repair_guland(crawler, rows, headless):
+    from playwright.sync_api import sync_playwright
+
+    BATCH_JS = """
+    async (urls) => {
+        const results = await Promise.all(urls.map(async url => {
+            try {
+                const r = await fetch(url);
+                const html = await r.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const getText = sel => doc.querySelector(sel)?.textContent.trim() || '';
+                const priceEl = doc.querySelector('.sdb-inf-data.data-color-1.data-size-xl b');
+                const infBs   = [...doc.querySelectorAll('.sdb-inf-data.data-size-lg b')];
+                const phoneEl = doc.querySelector('[href^="tel:"]');
+                const infoRow = getText('.dtl-inf__row');
+                const extract = (...keys) => {
+                    for (const k of keys) {
+                        const m = infoRow.match(new RegExp(k + '[\\\\s\\\\-:]+([^\\\\n]+?)(?=\\\\s{2,}|$)', 'i'));
+                        if (m) return m[1].trim();
+                    }
+                    return '';
+                };
+                return {
+                    url,
+                    price_raw:    priceEl?.textContent.trim() || '',
+                    area_raw:     infBs[0]?.textContent.trim() || '',
+                    pm2_raw:      infBs[1]?.textContent.trim() || '',
+                    description:  getText('.dtl-inf__dsr'),
+                    address:      getText('.dtl-stl__row, .dtl-adr'),
+                    legal_raw:    extract('Pháp lý'),
+                    road_type_raw:extract('Loại đường', 'Đường'),
+                    contact_phone: phoneEl ? phoneEl.href.replace('tel:','') : '',
+                    imgs: [...doc.querySelectorAll('img')]
+                                .map(i => i.getAttribute('data-src') || i.getAttribute('src'))
+                                .filter(s => s && s.startsWith('http') && !s.includes('logo') && !s.includes('avatar')),
+                };
+            } catch(e) { return {url, error: e.message}; }
+        }));
+        return results;
+    }
+    """
+
+    BATCH_SIZE = 10
+    urls = [r[1] for r in rows]
+    raw_by_url = {r[1]: (r[0], json.loads(r[2])) for r in rows}
+
+    repaired = 0
+    with sync_playwright() as pw:
+        browser, ctx = crawler._launch(pw, headless=headless)
+        page = ctx.new_page()
+        page.goto("https://guland.vn", wait_until="domcontentloaded", timeout=30_000)
+        time.sleep(2)
+
+        for i in range(0, len(urls), BATCH_SIZE):
+            batch = urls[i:i + BATCH_SIZE]
+            try:
+                results = page.evaluate(BATCH_JS, batch)
+                for res in (results or []):
+                    if not res or res.get("error") or not res.get("url"):
+                        continue
+                    url = res["url"]
+                    raw_id, raw_data = raw_by_url[url]
+                    changed = False
+                    for field in ["price_raw","area_raw","pm2_raw","description",
+                                  "address","legal_raw","road_type_raw","contact_phone", "imgs"]:
+                        v = res.get(field, "")
+                        if v and v not in ("", "—"):
+                            raw_data[field] = v
+                            changed = True
+                    if changed:
+                        with get_conn() as conn:
+                            conn.execute("UPDATE raw_listings SET raw_json=? WHERE id=?",
+                                         (json.dumps(raw_data, ensure_ascii=False), raw_id))
+                        repaired += 1
+                        print(f"  [repair] OK: {url[-50:]}")
+            except Exception as e:
+                print(f"  [repair] Batch error: {e}")
+            done = min(i + BATCH_SIZE, len(urls))
+            print(f"  [repair] {done}/{len(urls)} processed, {repaired} repaired")
+            time.sleep(0.5)
+
+        browser.close()
+    print(f"\n[repair] Xong: {repaired}/{len(rows)} records cập nhật data")
+
+def _repair_batdongsan(crawler, rows, headless):
+    from playwright.sync_api import sync_playwright
+
+    repaired = 0
+    with sync_playwright() as pw:
+        browser, ctx = crawler._launch(pw, headless=headless)
+        page = ctx.new_page()
+
+        for i, row in enumerate(rows):
+            raw_id, url, raw_json_str = row[0], row[1], row[2]
+            raw_data = json.loads(raw_json_str)
+            try:
+                detail = crawler._fetch_detail(page, url)
+                if detail:
+                    for field in ["price_raw_detail","area_raw_detail","description",
+                                  "address","legal_raw","road_type_raw","frontage_raw","contact_phone"]:
+                        v = detail.get(field, "")
+                        if v and v not in ("", "—"):
+                            raw_data[field] = v
+                    if detail.get("detail_imgs"):
+                        raw_data["imgs"] = detail["detail_imgs"]
+                    with get_conn() as conn:
+                        conn.execute("UPDATE raw_listings SET raw_json=? WHERE id=?",
+                                     (json.dumps(raw_data, ensure_ascii=False), raw_id))
+                    repaired += 1
+                    print(f"  [repair] [{i+1}/{len(rows)}] OK: {url[-50:]}")
+            except Exception as e:
+                print(f"  [repair] [{i+1}/{len(rows)}] Error {url[-40:]}: {e}")
+            time.sleep(1)
+
+        browser.close()
+    print(f"\n[repair] Xong: {repaired}/{len(rows)} records cập nhật data")
+
+def cmd_repair_missing(args):
+    source  = args.source
+    limit   = args.limit
+    headless = not getattr(args, "visible", False)
+
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT r.id, r.url, r.raw_json
+            FROM raw_listings r JOIN listings l ON l.raw_id = r.id
+            WHERE r.source = ? AND (l.area_m2 IS NULL OR l.price_ty IS NULL)
+            ORDER BY r.id
+        """, (source,)).fetchall()
+
+    if not rows:
+        print(f"[repair] Không có listing nào thiếu data (source={source})")
+        return
+
+    if limit:
+        rows = rows[:limit]
+
+    print(f"[repair] {len(rows)} listings cần re-fetch (source={source})")
+
+    if source == "guland":
+        from crawler.guland_pw import GulandCrawler
+        crawler = GulandCrawler()
+        _repair_guland(crawler, rows, headless)
+    elif source == "batdongsan":
+        from crawler.batdongsan_pw import BatDongSanCrawler
+        crawler = BatDongSanCrawler()
+        _repair_batdongsan(crawler, rows, headless)
+    else:
+        print(f"[repair] Source '{source}' chưa hỗ trợ repair")
+        return
+
+    print("\n[repair] Chạy reprocess...")
+    from cleansing.reprocess import run_full_reprocess
+    stats = run_full_reprocess()
+    print(f"[repair] Valuation: {stats.get('valuation', {})}")
