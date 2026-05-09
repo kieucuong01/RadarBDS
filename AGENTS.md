@@ -59,9 +59,8 @@ python radar.py reprocess --full         # Chạy Toàn Bộ (Full) - Dùng khi 
 python radar.py reprocess --groq         # Regex + Groq batch enrich
 python radar.py inspect                 # Snapshot nhanh tình trạng DB (Agent nên chạy đầu session)
 
-# Debug/Manual/Testing
-python app.py                           # Flask Dashboard (DYNAMIC)
-python tests/sanity_test.py             # MANDATORY: Run after any backend/API changes
+# Debug/Manual
+python app.py                           # Flask Dashboard
 python alerts/telegram.py               # Test gửi tin nhắn Telegram manually
 ```
 
@@ -158,11 +157,7 @@ GROQ_API_KEY=...        # Groq (ưu tiên)
 **Nhanh kiểm tra**: `python radar.py inspect`
 
 - **Tối ưu Dedup**: Thuật toán Bucketing xử lý 6000+ tin trong < 1 phút.
-- **UI/UX (Dynamic Dashboard)**: 
-    - Real-time filtering by Ward, Property Type, MOS (Ngợp), and Source.
-    - Advanced Sorting: Newest, Price/m2, Total Price, Best Opportunity.
-    - Dynamic Analytics: Trend Charts (Period-based), Heatmap (Ward comparison).
-    - Performance: Centralized `applyFilters()` and `load_data()` with SQL optimizations.
+- **UI/UX**: Fintech UI, Image Slider, Mobile-First, Signal Modal 2.0 (glassmorphism).
 - **Valuation refactor (07/05)**:
     - Per-ward models thay SELECTED_REGION → định giá theo đúng thị trường từng phường
     - Tier-0 → tier-3 (×0.50) thay vì neutral (×1.00)
@@ -187,8 +182,8 @@ GROQ_API_KEY=...        # Groq (ưu tiên)
 
 ### 🔲 TODO tiếp theo (theo thứ tự ưu tiên)
 1. **has_so extraction fix** — `has_so=False → fair_value × 0.75` (discount 25%)
-2. **Sanity Testing** — Always run `python tests/sanity_test.py` before finalizing edits.
-3. **Token Efficiency** — Use `python radar.py inspect` to get context instead of reading large DB logs.
+2. **Chạy groq-frontage** — `python radar.py reprocess --groq-frontage` để điền road_width_m còn thiếu
+3. **Chạy groq-signals** — `python radar.py reprocess --groq-signals` để verify top deals
 
 ---
 
@@ -196,22 +191,4 @@ GROQ_API_KEY=...        # Groq (ưu tiên)
 
 ---
 
-*Cập nhật: 08/05/2026 — Dynamic Filtering & Sorting + Backend Stability (Fix 500) + Automated Sanity Tests*
-
-### 🚀 TIẾN ĐỘ & FIXES (Phiên 08/05/2026)
-
-#### 1. Hệ thống Bộ lọc & Sắp xếp (Frontend/Backend Sync)
-- **Fix Lọc Loại hình**: Chuyển toàn bộ trigger sang `applyFilters()` để thu thập đầy đủ trạng thái checkbox trước khi fetch.
-- **Tối ưu Slider Ngợp**: Tách biệt `oninput` (cập nhật text nhanh) và `onchange` (fetch dữ liệu khi buông tay) → Hết lỗi load 2 lần.
-- **Thêm Sắp xếp (Săn Deal)**: Hỗ trợ 4 chế độ: Mới nhất, Giá/m² rẻ nhất, Giá trị rẻ nhất, Cơ hội tốt nhất (MOS).
-- **Fix Trigger Phường**: Thêm `onchange` trực tiếp vào template tạo checkbox ward động trong `main.js`.
-
-#### 2. Độ ổn định Backend (Fix 500 Errors)
-- **SQL Parameter Order**: Sửa lỗi sai thứ tự `?` trong `stats_query` (where_sql vs mos_pct).
-- **Rounding Safety**: Thêm `COALESCE` và kiểm tra `None` trước khi `round()` dữ liệu Heatmap/WardStats → Hết crash khi gặp phường không có dữ liệu.
-- **Serialization**: Đảm bảo toàn bộ kết quả từ `load_data` được convert sang `dict()` trước khi `jsonify` (Sửa lỗi Row object không serializable).
-
-#### 3. Quy trình AI Agent & QA
-- **MANDATORY Sanity Test**: Triển khai `tests/sanity_test.py` kiểm tra API, Lọc, Sắp xếp.
-- **Dashboard Rules**: Cập nhật `.Codex/rules/dashboard.md` mô tả kiến trúc Dynamic Dashboard (UI -> Aggregation -> API -> Backend).
-- **Testing Rules**: Thêm `.Codex/rules/testing.md` bắt buộc AI phải run test trước khi hoàn tất.
+*Cập nhật: 07/05/2026 — Valuation per-ward + BatDongSan 26 slugs + auto image download + _legacy cleanup*

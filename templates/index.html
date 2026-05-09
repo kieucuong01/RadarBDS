@@ -1,189 +1,340 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RadarBDS | Chuyên Sâu Bình Dương</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO & Branding -->
+  <title>RadarBDS | AI Real Estate Intelligence & Valuation</title>
+  <meta name="description" content="RadarBDS - Nền tảng định giá và săn bất động sản thông minh sử dụng AI. Phân tích dữ liệu thực tế, tìm kiếm Margin of Safety (MOS) và theo dõi biến động thị trường tại Bình Dương.">
+  <meta name="keywords" content="định giá bất động sản, radar bds, săn nhà đất bình dương, đầu tư bất động sản ai, định giá đất nền, bds bình dương">
+  <meta name="author" content="RadarBDS Team">
+  
+  <!-- Favicon -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@3.1.0/dist/chartjs-chart-treemap.min.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 <body>
 
-  <div style="display: flex; height: 100vh;">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="logo-container">
-          <div class="logo-icon"><i data-lucide="radio"></i></div>
-          <div class="logo-text-wrap">
-            <div class="logo-main">RadarBDS</div>
-            <div class="logo-sub">CHUYÊN SÂU BÌNH DƯƠNG</div>
-          </div>
-        </div>
-      </div>
+<div class="mobile-overlay" id="mobileOverlay" onclick="toggleMenu()"></div>
 
-      <div class="sidebar-scroll">
-        <div class="filter-section">
-          <div class="section-title"><i data-lucide="database" size="14"></i> Nguồn dữ liệu</div>
-          <div class="check-grid">
-            <label class="check-item"><input type="checkbox" name="source" value="facebook" checked onchange="applyFilters()"> Facebook</label>
-            <label class="check-item"><input type="checkbox" name="source" value="guland" checked onchange="applyFilters()"> Guland.vn</label>
-            <label class="check-item"><input type="checkbox" name="source" value="batdongsan"><span style="color:var(--text-muted)">BDS.com</span></label>
-            <label class="check-item"><input type="checkbox" name="source" value="muaban"><span style="color:var(--text-muted)">Muaban.net</span></label>
-          </div>
-        </div>
-
-        <div class="filter-section">
-          <div class="section-title"><i data-lucide="map-pin" size="14"></i> Thành phố & Khu vực</div>
-          <div class="city-pills">
-            <button class="city-pill active" onclick="changeCity('THỦ DẦU MỘT', this)">Thủ Dầu Một</button>
-            <button class="city-pill" onclick="changeCity('BẾN CÁT', this)">Bến Cát</button>
-          </div>
-          <div class="ward-search-wrap" style="background:var(--bg-main); border-radius:10px; padding:8px; display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-            <i data-lucide="search" size="14"></i>
-            <input type="text" id="wardSearch" placeholder="Tìm phường/xã..." oninput="filterWards()" style="border:none; background:none; outline:none; font-size:13px; width:100%;">
-          </div>
-          <div id="wardFilters" class="check-grid" style="grid-template-columns: 1fr 1fr;"></div>
-        </div>
-
-        <div class="filter-section">
-          <div class="section-title"><i data-lucide="home" size="14"></i> Loại hình</div>
-          <div class="check-grid">
-            <label class="check-item"><input type="checkbox" name="prop_type" value="dat_nen" checked onchange="applyFilters()"> Đất nền</label>
-            <label class="check-item"><input type="checkbox" name="prop_type" value="nha_dat" checked onchange="applyFilters()"> Nhà đất</label>
-          </div>
-        </div>
-
-        <div class="filter-section">
-          <div class="section-title"><i data-lucide="zap" size="14"></i> Độ ngợp (MOS) <span id="discountVal" style="margin-left:auto; color:var(--primary)">≥ 15%</span></div>
-          <input type="range" id="discountRange" min="0" max="50" value="15" step="5" oninput="updateDiscount(this.value)" onchange="applyFilters()">
-        </div>
-      </div>
-    </aside>
-
-    <!-- MAIN -->
-    <main class="main-content">
-      <header class="top-nav">
-        <div class="nav-tabs">
-          <div class="nav-tab active" onclick="switchTab('deals', this)"><i data-lucide="sparkles"></i> Săn Deal</div>
-          <div class="nav-tab" onclick="switchTab('market', this)"><i data-lucide="bar-chart-big"></i> Phân Tích Chuyên Sâu</div>
-          <div class="nav-tab" onclick="switchTab('infra', this)"><i data-lucide="map"></i> Hạ tầng</div>
-        </div>
-        
-        <div class="nav-right">
-          <div class="live-scan">LIVE SCAN</div>
-          <div class="stats-summary">
-            <div><b id="stat-total">0</b> Tin bán - <b id="stat-new">0</b> Tin Mới (3 ngày)</div>
-            <div><span id="stat-signals">0</span> Deal hời</div>
-          </div>
-          <button class="city-pill" style="width:40px; height:40px; padding:0; display:flex; align-items:center; justify-content:center;" onclick="toggleTheme()"><i data-lucide="moon"></i></button>
-        </div>
-      </header>
-
-      <div class="filter-bar">
-        <div class="sort-label"><i data-lucide="arrow-down-up" size="14"></i> Sắp xếp theo:</div>
-        <div class="sort-pills">
-          <button class="sort-pill active" onclick="changeSort('newest', this)">Mới nhất</button>
-          <button class="sort-pill" onclick="changeSort('ppm2_low', this)">Giá/m² rẻ nhất</button>
-          <button class="sort-pill" onclick="changeSort('total_low', this)">Giá trị thấp nhất</button>
-          <button class="sort-pill" onclick="changeSort('mos_high', this)">Cơ hội tốt nhất</button>
-        </div>
-      </div>
-
-      <div class="signals-container">
-        <div class="loader-overlay" id="mainLoader"><div class="loader-card"><div class="spinner"></div><span>Đang quét dữ liệu...</span></div></div>
-        
-        <div id="tab-deals" class="tab-content active animate-up">
-          <div class="signals-grid" id="signalsGrid"></div>
-          <div class="pagination" id="pagination"></div>
-        </div>
-
-        <div id="tab-market" class="tab-content animate-up">
-          <div class="signals-grid" style="grid-template-columns: 1fr 1fr;">
-            <div class="sc-card" style="padding:24px; cursor:default;"><div class="section-title">Xu hướng giá</div><canvas id="trendChart"></canvas></div>
-            <div class="sc-card" style="padding:24px; cursor:default;"><div class="section-title">Heatmap MOS</div><canvas id="mosChart"></canvas></div>
-          </div>
-        </div>
-
-        <div id="tab-infra" class="tab-content animate-up">
-           <div class="sc-card" style="padding:40px; max-width:800px; margin:0 auto;">
-            <div class="section-title" style="font-size:16px; margin-bottom:24px;"><i data-lucide="map"></i> Timeline Hạ tầng Bình Dương</div>
-            <div style="display:flex; flex-direction:column; gap:24px;">
-              <div style="border-left:3px solid var(--primary); padding-left:20px; position:relative;">
-                <div style="width:12px; height:12px; background:var(--primary); border-radius:50%; position:absolute; left:-7.5px; top:0;"></div>
-                <div style="font-weight:800; font-size:16px;">Vành Đai 3 - Đoạn qua TDM</div>
-                <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Giai đoạn: Giải phóng mặt bằng (95%). Dự kiến khởi công 2024.</div>
-              </div>
-              <div style="border-left:3px solid var(--primary); padding-left:20px; position:relative;">
-                <div style="width:12px; height:12px; background:var(--primary); border-radius:50%; position:absolute; left:-7.5px; top:0;"></div>
-                <div style="font-weight:800; font-size:16px;">Nâng cấp QL13</div>
-                <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Giai đoạn: Đang thi công mở rộng 8 làn xe. Hoàn thành 2025.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- FAB -->
-  <div class="fab-container">
-    <button class="fab fab-ai" onclick="toggleChat()"><i data-lucide="bot"></i></button>
-    <button class="fab fab-zalo" onclick="window.open('https://zalo.me/yourid', '_blank')"><i data-lucide="message-circle"></i></button>
-  </div>
-
-  <!-- MODAL -->
-  <div class="modal" id="signalModal">
-    <div class="modal-card">
-      <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
-      <div class="modal-left">
-        <div class="gallery-main-wrap">
-          <img id="modalMainImg" src="" alt="Main">
-          <div class="gallery-nav">
-            <button onclick="changeGallery(-1)"><i data-lucide="chevron-left"></i></button>
-            <button onclick="changeGallery(1)"><i data-lucide="chevron-right"></i></button>
-          </div>
-          <div class="gallery-counter" id="galCounter">1 / 1</div>
-        </div>
-        <div class="gallery-thumbs" id="modalThumbs"></div>
-        <div style="margin-top:32px;">
-          <div class="section-title">Lịch sử biến động giá</div>
-          <div style="height:250px;"><canvas id="priceChart"></canvas></div>
-        </div>
-      </div>
-      <div class="modal-right">
-        <h2 id="modalTitle" class="modal-title"></h2>
-        <div id="modalMeta" class="modal-meta"></div>
-        <div class="modal-ai-review">
-          <div class="ai-lbl"><i data-lucide="sparkles"></i> Phân tích AI</div>
-          <div class="ai-text" id="modalAIReview"></div>
-        </div>
-        <div class="section-title">So sánh giá thị trường</div>
-        <div style="margin-bottom:32px; overflow-x:auto;">
-          <table style="width:100%; border-collapse:collapse; font-size:13px;">
-            <thead style="text-align:left; color:var(--text-muted); border-bottom:1px solid var(--border);">
-              <tr><th style="padding:10px;">Tin rao</th><th style="padding:10px;">Diện tích</th><th style="padding:10px;">Giá</th><th style="padding:10px;">Ngày</th></tr>
-            </thead>
-            <tbody id="modalCompsTable"></tbody>
-          </table>
-        </div>
-        <div class="modal-desc" id="modalDescription"></div>
-        <a id="btnZalo" href="#" target="_blank" class="btn-primary" style="margin-top:24px;"><i data-lucide="message-circle"></i> Liên hệ Zalo chính chủ</a>
-      </div>
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="RadarBDS Logo" class="logo-img">
+    <div class="logo-info">
+      <span class="logo-text">Radar<span style="color:var(--primary)">BDS</span></span>
+      <span class="logo-subtitle">CHUYÊN SÂU BÌNH DƯƠNG</span>
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-  <script>
-    lucide.createIcons();
-    function closeModal() { document.getElementById('signalModal').style.display = 'none'; }
-    document.addEventListener('DOMContentLoaded', () => {
-      updateWardFilters('THỦ DẦU MỘT');
-      applyFilters();
-    });
-  </script>
+  <form id="filterForm">
+    <div class="filter-group">
+      <div class="filter-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg> NGUỒN DỮ LIỆU</div>
+      <div id="sourceFilters" class="source-grid">
+        <label class="filter-option">
+          <input type="checkbox" name="source" value="facebook" checked>
+          Facebook
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="source" value="guland" checked>
+          Guland.vn
+        </label>
+        <label class="filter-option disabled">
+          <input type="checkbox" name="source" value="batdongsan" disabled>
+          BDS.com
+        </label>
+        <label class="filter-option disabled">
+          <input type="checkbox" name="source" value="muaban" disabled>
+          Muaban.net
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> THÀNH PHỐ & KHU VỰC</div>
+      <div class="city-pills">
+        <button type="button" class="city-pill active" data-city="THỦ DẦU MỘT" onclick="selectCity(this)">Thủ Dầu Một</button>
+        <button type="button" class="city-pill" data-city="BẾN CÁT" onclick="selectCity(this)">Bến Cát</button>
+      </div>
+      <input type="hidden" name="city" id="cityInput" value="THỦ DẦU MỘT">
+      <input type="text" class="ward-search" id="wardSearch" placeholder="Tìm phường/xã..." oninput="filterWards(this.value)">
+      <div id="wardFilters">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> LOẠI HÌNH</div>
+      <div class="filter-grid">
+        <label class="filter-option"><input type="checkbox" name="prop_type" value="dat_nen" checked> Đất nền</label>
+        <label class="filter-option"><input type="checkbox" name="prop_type" value="nha_dat" checked> Nhà đất</label>
+        <label class="filter-option"><input type="checkbox" name="prop_type" value="dat_vuon" checked> Đất vườn</label>
+        <label class="filter-option"><input type="checkbox" name="prop_type" value="chung_cu" checked> Chung cư</label>
+        <label class="filter-option"><input type="checkbox" name="prop_type" value="nha_tro" checked> Nhà trọ</label>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-option" style="font-weight: 700; color: var(--danger);">
+        <input type="checkbox" name="only_drops" value="1"> Chỉ hiển thị tin giảm giá
+      </label>
+    </div>
+  </form>
+</aside>
+
+<main class="main">
+  <div class="loader" id="mainLoader"><div class="spinner"></div><div style="font-weight:600; color:var(--primary);">Đang tải dữ liệu...</div></div>
+  
+  <header class="header">
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <nav class="header-nav">
+      <button class="nav-link active" onclick="switchTab('signals', this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        Săn Deal
+      </button>
+      <button class="nav-link" onclick="switchTab('market', this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Phân Tích Chuyên Sâu
+      </button>
+      <button class="nav-link" onclick="switchTab('all', this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        Hạ Tầng
+      </button>
+    </nav>
+
+    <div class="header-right">
+      <div class="live-scan">
+        <span class="live-dot"></span>
+        LIVE SCAN
+      </div>
+      <div class="header-stats" id="topStats">
+        <span id="statTotal">0</span> Tin bán - <span id="statNewRecent" class="stat-highlight">0</span> Tin Mới (3 ngày)
+        <br><span id="statSignals" class="stat-highlight-green">0</span> Deal hời
+      </div>
+      <button class="header-icon-btn" onclick="toggleTheme()" title="Đổi giao diện">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      </button>
+    </div>
+    <span id="badgeSignals" style="display:none">0</span>
+    <span id="badgeTotal" style="display:none">0</span>
+  </header>
+
+  <div class="content">
+
+    <!-- TAB: SIGNALS -->
+    <div id="tab-signals" class="tab-content active">
+      <div class="sort-bar">
+        <div class="sort-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M9 18h6"/></svg>
+          Sắp xếp theo:
+        </div>
+        <div class="sort-pills" id="signalSorter">
+          <button type="button" class="sort-pill active" data-sort="newest" onclick="setSortPill(this)">Mới nhất</button>
+          <button type="button" class="sort-pill" data-sort="price_m2_asc" onclick="setSortPill(this)">Giá/m² rẻ nhất</button>
+          <button type="button" class="sort-pill" data-sort="price_asc" onclick="setSortPill(this)">Giá trị thấp nhất</button>
+          <button type="button" class="sort-pill" data-sort="mos_desc" onclick="setSortPill(this)">Cơ hội tốt nhất</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="signalsGrid">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB: MARKET -->
+    <div id="tab-market" class="tab-content">
+      <div class="market-grid" style="display:grid; grid-template-columns: 1fr; gap: 24px;">
+        
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">🗺️ Bản đồ Cơ hội (MOS)</h3>
+            <p class="chart-subtitle">Vùng xanh đậm = nhiều deal signal có MOS cao theo từng phường</p>
+          </div>
+          <div class="chart-body" id="heatmapContainer" style="height: 400px; position:relative;">
+            <canvas id="treemapChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">📊 Heatmap Độ lệch giá</h3>
+            <p class="chart-subtitle">Giá chào trung bình vs Định giá AI (tỷ VND)</p>
+          </div>
+          <div class="chart-body" id="priceGapContainer" style="height: 400px; position:relative;">
+            <canvas id="priceGapChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h3 class="chart-title">📉 Biểu đồ Xu hướng Giá</h3>
+              <p class="chart-subtitle">Phân tích biến động giá theo thời gian</p>
+            </div>
+            <div class="period-pills">
+              <button class="p-pill" data-period="day" onclick="updateTrendPeriod('day', this)">Ngày</button>
+              <button class="p-pill" data-period="week" onclick="updateTrendPeriod('week', this)">Tuần</button>
+              <button class="p-pill active" data-period="month" onclick="updateTrendPeriod('month', this)">Tháng</button>
+            </div>
+          </div>
+          <div class="chart-body" id="trendContainer" style="height: 400px; position:relative;">
+            <canvas id="trendChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB: ALL LISTINGS -->
+    <div id="tab-all" class="tab-content">
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Loại</th>
+                <th>Khu vực</th>
+                <th>Ảnh</th>
+                <th>Diện tích</th>
+                <th>Giá Thực Tế</th>
+                <th>Fair Value</th>
+                <th>Nội dung</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody id="listingsTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <div>Trang <span id="currentPage">1</span> / <span id="totalPages">1</span></div>
+          <div style="display:flex; gap:8px;">
+            <button class="page-btn" id="btnPrevPage" onclick="changePage(-1)">← Trước</button>
+            <button class="page-btn" id="btnNextPage" onclick="changePage(1)">Sau →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal Signal Detail -->
+<div id="signalModal" class="modal">
+  <div class="modal-content" style="max-width:960px; padding:0; overflow-y:auto; overflow-x:hidden; border-radius:20px;">
+    <!-- Image Slider -->
+    <div id="sm-slider" style="position:relative; height:240px; background:#0f172a; overflow:hidden; flex-shrink:0; user-select:none;">
+      <div id="sm-slides" style="display:flex; height:100%; transition:transform 0.4s cubic-bezier(0.25,0.8,0.25,1);"></div>
+      <!-- Gradient overlay -->
+      <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%); pointer-events:none;"></div>
+      <!-- Prev/Next arrows -->
+      <button id="sm-prev" onclick="slideSignal(-1)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:none; background:rgba(0,0,0,0.5); color:#fff; font-size:1.1rem; cursor:pointer; z-index:10; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); transition:background 0.2s;">&#8249;</button>
+      <button id="sm-next" onclick="slideSignal(1)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:none; background:rgba(0,0,0,0.5); color:#fff; font-size:1.1rem; cursor:pointer; z-index:10; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); transition:background 0.2s;">&#8250;</button>
+      <!-- Dot indicators -->
+      <div id="sm-dots" style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); display:flex; gap:5px; z-index:10;"></div>
+      <!-- Close -->
+      <button class="close-modal" onclick="closeModal('signalModal')" style="top:12px; right:12px;">&times;</button>
+      <!-- Badges -->
+      <div style="position:absolute; bottom:14px; left:16px; display:flex; gap:8px; flex-wrap:wrap; z-index:10;">
+        <span id="sm-mos-badge" style="background:linear-gradient(135deg,#10b981,#047857); color:#fff; font-weight:800; font-size:1rem; padding:5px 14px; border-radius:10px; box-shadow:0 4px 12px rgba(16,185,129,0.4);"></span>
+        <span id="sm-profit-badge" style="background:rgba(16,185,129,0.9); color:#fff; font-weight:700; font-size:0.82rem; padding:5px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); display:none;"></span>
+        <span id="sm-drop-badge" style="background:linear-gradient(135deg,#ef4444,#b91c1c); color:#fff; font-weight:700; font-size:0.82rem; padding:5px 12px; border-radius:8px; animation:pulse 2s infinite; display:none;"></span>
+      </div>
+      <span id="sm-source-badge" style="position:absolute; top:12px; left:14px; font-size:0.7rem; font-weight:700; color:#fff; padding:3px 9px; border-radius:6px; text-transform:uppercase; z-index:10;"></span>
+      <span id="sm-img-count" style="position:absolute; bottom:14px; right:14px; font-size:0.75rem; color:rgba(255,255,255,0.7); z-index:10; background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:6px;"></span>
+    </div>
+    <!-- Content — 2-column layout on desktop -->
+    <div class="sm-content">
+      <!-- LEFT COLUMN -->
+      <div class="sm-left">
+        <!-- Thumbnail strip -->
+        <div id="sm-thumbs" class="sm-thumbs"></div>
+
+        <!-- Signal badge -->
+        <div id="sm-signal-badge" class="sm-signal-badge"></div>
+
+        <h2 id="sm-title" class="sm-detail-title"></h2>
+        <div id="sm-meta-line" class="sm-meta-line"></div>
+
+        <!-- Description -->
+        <div class="sm-section">
+          <div class="sm-section-label">NGUYÊN VĂN TIN RAO</div>
+          <div id="sm-desc" class="sm-desc-text"></div>
+        </div>
+
+        <!-- AI Assessment -->
+        <div id="sm-ai-section" class="sm-ai-section">
+          <div class="sm-ai-label">✨ NHẬN ĐỊNH GROQ AI</div>
+          <div id="sm-ai-text" class="sm-ai-text"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="sm-right">
+        <!-- Price history chart -->
+        <div class="sm-section" style="margin-bottom:16px;">
+          <div style="height:160px; position:relative;">
+            <canvas id="sm-history-chart"></canvas>
+          </div>
+          <div id="sm-price-history" class="sm-price-history"></div>
+        </div>
+
+        <!-- COMPS table -->
+        <div class="sm-section">
+          <div class="sm-section-label">📊 COMPS · GIAO DỊCH TƯƠNG TỰ CÙNG PHƯỜNG</div>
+          <table class="sm-comps-table" id="sm-comps-table">
+            <thead><tr><th>Địa chỉ</th><th>Diện tích</th><th>Giá</th><th>Tháng</th></tr></thead>
+            <tbody id="sm-comps-body"></tbody>
+          </table>
+        </div>
+
+        <!-- Tags -->
+        <div id="sm-tags" class="sm-tags-wrap"></div>
+
+        <!-- Action buttons -->
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <a id="sm-zalo" href="#" target="_blank" class="sm-btn-zalo">💬 Chat Zalo</a>
+          <a id="sm-detail" href="#" target="_blank" class="sm-btn-detail">↗ Xem chi tiết</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal History -->
+<div id="historyModal" class="modal">
+  <div class="modal-content">
+    <button class="close-modal" onclick="closeModal('historyModal')">&times;</button>
+    <h2 class="section-title" id="historyTitle" style="margin-bottom:24px;">Lịch sử giá</h2>
+    <div style="height: 350px;">
+      <canvas id="historyChartCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="floating-actions">
+  <button class="fab fab-ai" onclick="toggleChat()" title="Hỏi AI RadarBDS">🤖</button>
+  <a href="https://zalo.me/0343216024" target="_blank" class="fab fab-zalo" title="Chat Zalo">💬</a>
+</div>
+
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <span>🤖 RadarBDS AI Assistant</span>
+    <button onclick="toggleChat()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem;">×</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="message bot">Xin chào! Tôi là trợ lý AI của RadarBDS. Tôi có thể giúp gì cho bạn về bất động sản hôm nay?</div>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" class="chat-input" id="chatInput" placeholder="Nhập câu hỏi của bạn..." onkeypress="if(event.key==='Enter') sendMessage()">
+    <button class="chat-send" onclick="sendMessage()">Gửi</button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
