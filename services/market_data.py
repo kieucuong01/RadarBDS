@@ -1,5 +1,7 @@
 import sqlite3
+from pathlib import Path
 from datetime import datetime, date
+from functools import lru_cache
 
 CITY_MAP = {
     "THỦ DẦU MỘT": ["Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ", "Phú Mỹ", "Phú Cường", "Phú Hòa", "Phú Lợi", "Hiệp Thành", "Chánh Nghĩa", "Phú Tân", "Hòa Phú"],
@@ -24,7 +26,39 @@ def _days_ago(crawled_at: str) -> int:
     except Exception:
         return 0
 
-def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False):
+def normalize_image_url(src: str) -> str:
+    if not src:
+        return ""
+    s = str(src).strip().replace("\\", "/")
+    if not s or s.upper().endswith("NOT_FOUND"):
+        return ""
+    if s.startswith(("http://", "https://", "data:")):
+        return s
+    if s.startswith("/data/images/"):
+        return s
+    marker = "data/images/"
+    if marker in s:
+        return "/" + s[s.index(marker):]
+    return "/data/images/" + Path(s).name
+
+@lru_cache(maxsize=20000)
+def _local_image_exists(url: str) -> bool:
+    if not url.startswith("/data/images/"):
+        return True
+    filename = url.removeprefix("/data/images/")
+    image_dir = Path(__file__).resolve().parent.parent / "data" / "images"
+    return (image_dir / filename).exists()
+
+def resolve_image_url(local_src: str, remote_src: str) -> str:
+    local_url = normalize_image_url(local_src)
+    if local_url and _local_image_exists(local_url):
+        return local_url
+    remote_url = normalize_image_url(remote_src)
+    if remote_url:
+        return remote_url
+    return local_url
+
+def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True):
     if not sources:
         sources = ["facebook", "guland", "batdongsan"]
     
@@ -74,6 +108,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         JOIN listings l ON v.listing_id = l.id
         WHERE v.is_signal = 1 AND {where_sql}
         ORDER BY v.signal_score DESC, v.mos_pct DESC
+        LIMIT 200
     """
     sig_rows = conn.execute(sig_query, params).fetchall()
 
@@ -98,10 +133,18 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     img_rows = []
     if listing_ids:
         placeholders = ",".join("?" * len(listing_ids))
-        img_rows = conn.execute(f"SELECT listing_id, COALESCE(local_path, img_url) FROM listing_images WHERE listing_id IN ({placeholders}) ORDER BY listing_id, img_order", listing_ids).fetchall()
+        img_rows = conn.execute(f"""
+            SELECT listing_id, local_path, img_url
+            FROM listing_images
+            WHERE listing_id IN ({placeholders})
+            ORDER BY listing_id, img_order
+        """, listing_ids).fetchall()
     from collections import defaultdict
     img_map = defaultdict(list)
-    for r in img_rows: img_map[r[0]].append(r[1])
+    for r in img_rows:
+        url = resolve_image_url(r[1], r[2])
+        if url:
+            img_map[r[0]].append(url)
 
     # 5. Market Pulse (Median per Type) - filtered
     market = []
@@ -114,6 +157,8 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     """, params).fetchall()
     type_label = {'dat_nen': 'Đất nền', 'dat_vuon': 'Đất vườn', 'nha_dat': 'Nhà đất', 'nha_tro': 'Nhà trọ', 'chung_cu': 'Chung cư'}
     for s in summary_rows:
+        if s['mean_ppm2'] is None:
+            continue
         market.append({
             'type': s['property_type'],
             'label': type_label.get(s['property_type'], s['property_type']),
@@ -148,7 +193,10 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         ORDER BY time_key ASC
     """
     
-    trend_rows = conn.execute(trend_query, params).fetchall()
+    if include_trend:
+        trend_rows = conn.execute(trend_query, params).fetchall()
+    else:
+        trend_rows = []
     
     # Group by ward -> time_key -> list of prices -> median
     import statistics
@@ -203,6 +251,77 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         "wards_by_city": wards_by_city
     }
 
+def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day'):
+    if not sources:
+        sources = ["facebook", "guland", "batdongsan"]
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    where_parts = ["probably_sold = 0", "possibly_duplicate = 0"]
+    params = []
+
+    if wards:
+        where_parts.append(f"ward IN ({','.join(['?']*len(wards))})")
+        params.extend(wards)
+    if sources:
+        where_parts.append(f"source IN ({','.join(['?']*len(sources))})")
+        params.extend(sources)
+    if prop_types:
+        where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
+        params.extend(prop_types)
+    if only_drops:
+        where_parts.append("price_dropped = 1")
+
+    where_sql = " AND ".join(where_parts)
+    target_wards = wards if wards else ["TÃ¢n An", "Hiá»‡p An", "TÆ°Æ¡ng BÃ¬nh Hiá»‡p", "Äá»‹nh HÃ²a", "ChÃ¡nh Má»¹"]
+
+    if trend_period == 'month':
+        date_fmt = "strftime('%Y-%m', COALESCE(posted_at, crawled_at))"
+        prefix = 'M-'
+    elif trend_period == 'day':
+        date_fmt = "strftime('%Y-%m-%d', COALESCE(posted_at, crawled_at))"
+        prefix = 'D-'
+    else:
+        date_fmt = "strftime('%Y-W%W', COALESCE(posted_at, crawled_at))"
+        prefix = ''
+
+    trend_rows = conn.execute(f"""
+        SELECT
+            '{prefix}' || {date_fmt} as time_key,
+            ward,
+            price_per_m2
+        FROM listings
+        WHERE {where_sql}
+          AND price_per_m2 IS NOT NULL
+          AND price_per_m2 > 0
+          AND is_outlier = 0
+        ORDER BY time_key ASC
+    """, params).fetchall()
+    conn.close()
+
+    from collections import defaultdict
+    import statistics
+
+    grouped_trend = defaultdict(lambda: defaultdict(list))
+    for r in trend_rows:
+        if r['ward'] in target_wards:
+            grouped_trend[r['ward']][r['time_key']].append(r['price_per_m2'])
+
+    trend_data = {}
+    for w, time_map in grouped_trend.items():
+        ward_points = []
+        for t_key, prices in sorted(time_map.items()):
+            if len(prices) >= 2:
+                ward_points.append({
+                    'week': t_key,
+                    'median_ppm2': round(statistics.median(prices), 2)
+                })
+        if ward_points:
+            trend_data[w] = ward_points
+
+    return trend_data
+
 def load_listing_detail(db_path, listing_id):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -215,7 +334,18 @@ def load_listing_detail(db_path, listing_id):
     if not listing:
         return None
     
-    images = [r[0] for r in conn.execute("SELECT COALESCE(local_path, img_url) FROM listing_images WHERE listing_id = ? ORDER BY img_order", (listing_id,)).fetchall()]
+    images = [
+        url for url in (
+            resolve_image_url(r[0], r[1])
+            for r in conn.execute("""
+                SELECT local_path, img_url
+                FROM listing_images
+                WHERE listing_id = ?
+                ORDER BY img_order
+            """, (listing_id,)).fetchall()
+        )
+        if url
+    ]
     history = [{'date': (r['recorded_at'] or '')[:10], 'price_ty': r['price_ty']} for r in conn.execute("SELECT recorded_at, price_ty FROM price_history WHERE listing_id = ? ORDER BY recorded_at ASC", (listing_id,)).fetchall()]
     conn.close()
     

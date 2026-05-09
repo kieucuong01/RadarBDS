@@ -2,13 +2,14 @@ import os
 import json
 import sqlite3
 import logging
+import statistics
 from datetime import datetime
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from config import database_sqlite as db_mod
 
 # Import the extracted services
-from services.market_data import load_data, load_listing_detail, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago
+from services.market_data import load_data, load_trend_data, load_listing_detail, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url
 from services.ai_bot import AIBot
 
 app = Flask(__name__)
@@ -29,9 +30,12 @@ def index():
 @app.route("/api/dashboard")
 def api_dashboard():
     active_city, wards, sources, prop_types, only_drops, trend_period = get_base_filters(request)
+    if not wards and active_city in CITY_MAP:
+        wards = CITY_MAP[active_city]
     db_path = str(db_mod.DB_PATH.resolve())
+    include_trend = request.args.get("include_trend") == "1"
     # Load data without fetching all listings to save time/memory
-    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True)
+    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend)
     
     return jsonify({
         "stats": data["stats"],
@@ -45,6 +49,17 @@ def api_dashboard():
         "active_wards": wards,
         "active_sources": sources,
         "active_props": prop_types,
+        "trend_period": trend_period
+    })
+
+@app.route("/api/trends")
+def api_trends():
+    active_city, wards, sources, prop_types, only_drops, trend_period = get_base_filters(request)
+    if not wards and active_city in CITY_MAP:
+        wards = CITY_MAP[active_city]
+    db_path = str(db_mod.DB_PATH.resolve())
+    return jsonify({
+        "trend_data": load_trend_data(db_path, sources, wards, prop_types, only_drops, trend_period),
         "trend_period": trend_period
     })
 
@@ -76,34 +91,72 @@ def api_heatmap():
         
     where_sql = " AND ".join(where_parts)
     
-    # Join with valuation_results to filter outliers and get real MOS
+    # Market fields use all valid listings; opportunity fields use signal deals only.
     query = f"""
-        SELECT l.ward, COUNT(*) as count, 
-               AVG(l.price_per_m2) as avg_price,
-               AVG(v.mos_pct) as avg_mos
+        SELECT l.ward,
+               l.price_per_m2,
+               l.price_ty,
+               l.area_m2,
+               v.fair_ppm2,
+               v.mos_pct,
+               COALESCE(v.is_signal, 0) as is_signal,
+               COALESCE(v.is_outlier, 0) as is_outlier
         FROM listings l
         LEFT JOIN valuation_results v ON l.id = v.listing_id
-        WHERE {where_sql} 
-          AND l.ward IS NOT NULL 
+        WHERE {where_sql}
+          AND l.ward IS NOT NULL
           AND l.ward != 'unknown'
           AND COALESCE(v.is_outlier, 0) = 0
-        GROUP BY l.ward
-        HAVING count > 0
     """
     rows = conn.execute(query, params).fetchall()
     conn.close()
-    
-    heatmap_data = [{
-        "ward": r["ward"], 
-        "count": r["count"], 
-        "avg_price": round(r["avg_price"], 1) if r["avg_price"] else 0,
-        "avg_mos": round(r["avg_mos"], 1) if r["avg_mos"] else 0
-    } for r in rows]
+
+    grouped = {}
+    for r in rows:
+        ward = r["ward"]
+        item = grouped.setdefault(ward, {
+            "prices": [],
+            "price_tys": [],
+            "fair_tys": [],
+            "signal_mos": []
+        })
+        item["prices"].append(r["price_per_m2"])
+        if r["price_ty"]:
+            item["price_tys"].append(r["price_ty"])
+        if r["fair_ppm2"] and r["area_m2"]:
+            item["fair_tys"].append(r["fair_ppm2"] * r["area_m2"] / 1000)
+        if r["is_signal"] == 1 and r["mos_pct"] and r["mos_pct"] > 0:
+            item["signal_mos"].append(r["mos_pct"])
+
+    heatmap_data = []
+    for ward, g in grouped.items():
+        total_count = len(g["prices"])
+        deal_count = len(g["signal_mos"])
+        median_mos = round(statistics.median(g["signal_mos"]), 1) if g["signal_mos"] else 0
+        avg_signal_mos = round(sum(g["signal_mos"]) / deal_count, 1) if deal_count else 0
+        signal_rate = round((deal_count / total_count) * 100, 1) if total_count else 0
+        heatmap_data.append({
+            "ward": ward,
+            "total_count": total_count,
+            "deal_count": deal_count,
+            "median_mos": median_mos,
+            "avg_signal_mos": avg_signal_mos,
+            "signal_rate": signal_rate,
+            "count": deal_count,
+            "avg_price": round(sum(g["prices"]) / total_count, 1) if total_count else 0,
+            "avg_mos": median_mos,
+            "avg_price_ty": round(sum(g["price_tys"]) / len(g["price_tys"]), 2) if g["price_tys"] else 0,
+            "avg_fair_ty": round(sum(g["fair_tys"]) / len(g["fair_tys"]), 2) if g["fair_tys"] else 0
+        })
+
+    heatmap_data.sort(key=lambda x: (x["deal_count"], x["median_mos"]), reverse=True)
     return jsonify(heatmap_data)
 
 @app.route('/api/listings')
 def api_listings():
     active_city, wards, sources, prop_types, only_drops, trend_period = get_base_filters(request)
+    if not wards and active_city in CITY_MAP:
+        wards = CITY_MAP[active_city]
     try:
         page = int(request.args.get("page", 1))
         limit = int(request.args.get("limit", 50))
@@ -152,8 +205,16 @@ def api_listings():
     img_map = defaultdict(list)
     if listing_ids:
         placeholders = ",".join("?" * len(listing_ids))
-        img_rows = conn.execute(f"SELECT listing_id, COALESCE(local_path, img_url) FROM listing_images WHERE listing_id IN ({placeholders}) ORDER BY listing_id, img_order", listing_ids).fetchall()
-        for r in img_rows: img_map[r[0]].append(r[1])
+        img_rows = conn.execute(f"""
+            SELECT listing_id, local_path, img_url
+            FROM listing_images
+            WHERE listing_id IN ({placeholders})
+            ORDER BY listing_id, img_order
+        """, listing_ids).fetchall()
+        for r in img_rows:
+            url = resolve_image_url(r[1], r[2])
+            if url:
+                img_map[r[0]].append(url)
         
     conn.close()
     
@@ -193,10 +254,30 @@ def listing_detail(listing_id):
 def get_price_history(listing_id):
     with db_mod.get_conn() as conn:
         rows = conn.execute("SELECT recorded_at, price_ty FROM price_history WHERE listing_id = ? ORDER BY recorded_at ASC", (listing_id,)).fetchall()
-        curr = conn.execute("SELECT updated_at, price_ty FROM listings WHERE id = ?", (listing_id,)).fetchone()
+        curr = conn.execute("SELECT updated_at, price_ty, ward, area_m2, property_type FROM listings WHERE id = ?", (listing_id,)).fetchone()
         history = [{'date': (r[0] or '')[:10], 'price_ty': r[1]} for r in rows]
-        if curr: history.append({'date': (curr[0] or '')[:10], 'price_ty': curr[1]})
-        return jsonify(history)
+        if curr and curr[1]: history.append({'date': (curr[0] or '')[:10], 'price_ty': curr[1]})
+
+        comps = []
+        if curr and curr[2]:
+            ward = curr[2]
+            area = curr[3] or 0
+            comp_rows = conn.execute("""
+                SELECT title, price_ty, area_m2, COALESCE(posted_at, crawled_at) as dt
+                FROM listings
+                WHERE ward = ? AND id != ? AND price_ty > 0 AND probably_sold = 0
+                  AND area_m2 BETWEEN ? AND ?
+                ORDER BY COALESCE(posted_at, crawled_at) DESC LIMIT 3
+            """, (ward, listing_id, area * 0.6, area * 1.5)).fetchall()
+            for c in comp_rows:
+                comps.append({
+                    'title': (c[0] or '')[:40],
+                    'price_ty': c[1],
+                    'area_m2': c[2],
+                    'date': (c[3] or '')[:7]
+                })
+
+        return jsonify({'history': history, 'comps': comps})
 
 @app.route("/review")
 def review_list():
@@ -348,5 +429,26 @@ def api_chat():
     
     return jsonify({"response": response})
 
+def ensure_perf_indexes():
+    with db_mod.get_conn() as conn:
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_listings_filter_fast
+            ON listings(ward, source, property_type, probably_sold, possibly_duplicate)
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_listings_ward_ppm2
+            ON listings(ward, price_per_m2)
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_images_listing_order
+            ON listing_images(listing_id, img_order)
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_valuation_signal_score
+            ON valuation_results(is_signal, signal_score DESC, mos_pct DESC)
+        """)
+        conn.commit()
+
 if __name__ == "__main__":
+    ensure_perf_indexes()
     app.run(host="127.0.0.1", port=5000, debug=True)

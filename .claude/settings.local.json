@@ -54,7 +54,16 @@
       "mcp__Claude_in_Chrome__browser_batch",
       "mcp__Claude_in_Chrome__javascript_tool",
       "Bash(ping -n 45 127.0.0.1)",
-      "PowerShell(Stop-Process -Id 9536 -Force)"
+      "PowerShell(Stop-Process -Id 9536 -Force)",
+      "Bash(timeout 3)",
+      "mcp__Claude_in_Chrome__computer",
+      "mcp__Claude_in_Chrome__tabs_close_mcp",
+      "mcp__Claude_in_Chrome__find",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue)",
+      "PowerShell(Start-Sleep -Seconds 3; $tcp = New-Object System.Net.Sockets.TcpClient; try { $tcp.Connect\\(\"127.0.0.1\", 5000\\); \"Server is running\" } catch { \"Server not running: $_\" } finally { $tcp.Close\\(\\) })",
+      "mcp__Claude_in_Chrome__get_page_text",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__read_console_messages"
     ]
   }
 }
