@@ -16,9 +16,17 @@ Pattern Facebook:
 
 import re
 import logging
+import unicodedata
 from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
+
+
+def _ascii_fold(text: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFD", text or "")
+        if unicodedata.category(c) != "Mn"
+    ).lower()
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -890,7 +898,17 @@ def classify_property_type(
         r'(?:xây|cất|làm)(?:\s*dựng)?\s*(?:đc|được|đk)?\s*\d+\s*(?:căn\s*|ngôi\s*)?(?:nhà|biệt\s*thự|villa)',
         ' ', text_for_nha, flags=re.IGNORECASE,
     )
-    has_house_kw = any(kw in text_for_nha for kw in _NHA_KW)
+    text_ascii = _ascii_fold(text_for_nha)
+    has_house_kw = any(kw in text_for_nha for kw in _NHA_KW) or bool(re.search(
+        r'(^|\n)\s*[^\w\s]*\s*nha\b|'
+        r'\bnha\s*(?:tret|lau|cap|moi)\b|'
+        r'\btret\s*lau\b|\bgac\s*lung\b|'
+        r'\b\d+\s*pn\b|\b\d+\s*wc\b|'
+        r'\bphong\s*(?:ngu|khach|tho)\b|'
+        r'\bbep\b|\bmay\s*lanh\b|\bsan\s*o\s*to\b|\bsan\s*oto\b',
+        text_ascii,
+        re.IGNORECASE,
+    ))
 
     # --- Bước 0b: Nhà trọ → nha_tro (tách khỏi nha_dat — rental yield pricing) ---
     if re.search(r'nhà\s*trọ|phòng\s*trọ|dãy\s*trọ|khu\s*trọ|kinh\s*doanh\s*trọ', text):

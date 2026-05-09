@@ -3,6 +3,7 @@
 import logging
 import re
 import sqlite3
+import unicodedata
 from difflib import SequenceMatcher
 from typing import Optional
 
@@ -16,7 +17,20 @@ _PRICE_PAT = re.compile(
 )
 _PHONE_PAT = re.compile(r"(?:0|\+84)\d{8,10}")
 _ROAD_TOKEN_PAT = re.compile(
-    r"\b(?:dx|dj|dt|dh|dl|ql|tl|ni|nj)\s*0*(\d{1,4})\b",
+    r"\b(?:dx|dj|dh|dl|ql|tl|ni|nj|dk|nk|nl|nh)\s*0*(\d{1,4})\b",
+    re.IGNORECASE,
+)
+_BLOCK_TOKEN_PAT = re.compile(
+    r"\b(?:k|l|g|h|ne)\s*0*(\d{1,3})\b",
+    re.IGNORECASE,
+)
+_LOCATION_WORD_PAT = re.compile(
+    r"\b(?:tuong|hiep|dinh|chanh|hoa|loi|cuong|my|phu|cat|ben|thoi|tay|dong)\b",
+    re.IGNORECASE,
+)
+_NAMED_LOCATION_PAT = re.compile(
+    r"\b(?:le\s+chi\s+dan|nguyen\s+thai\s+binh|phan\s+dang\s+luu|"
+    r"huynh\s+thi\s+hieu|ben\s+the|so\s+ga|cho\s+nho|cho\s+phu\s+my)\b",
     re.IGNORECASE,
 )
 
@@ -26,6 +40,13 @@ def _strip_noise(text: str) -> str:
     text = _PHONE_PAT.sub(" ", text)
     text = re.sub(r"[^\w\s]", " ", text, flags=re.UNICODE)
     return re.sub(r"\s+", " ", text).strip().lower()
+
+
+def _ascii_fold(text: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFD", text)
+        if unicodedata.category(c) != "Mn"
+    ).lower()
 
 
 def _text_similarity(t1: Optional[str], t2: Optional[str]) -> float:
@@ -53,6 +74,107 @@ def _road_tokens(text: Optional[str]) -> set[str]:
     return tokens
 
 
+def _block_tokens(text: Optional[str]) -> set[str]:
+    if not text:
+        return set()
+    tokens = set()
+    for m in _BLOCK_TOKEN_PAT.finditer(text.lower()):
+        raw = re.sub(r"\s+", "", m.group(0).lower())
+        prefix = re.match(r"[a-z]+", raw).group(0)
+        tokens.add(f"{prefix}{int(m.group(1))}")
+    return tokens
+
+
+def _location_words(text: Optional[str]) -> set[str]:
+    if not text:
+        return set()
+    text = _ascii_fold(_strip_noise(text))
+    return {m.group(0).lower() for m in _LOCATION_WORD_PAT.finditer(text)}
+
+
+def _named_location_tokens(text: Optional[str]) -> set[str]:
+    if not text:
+        return set()
+    text = _ascii_fold(_strip_noise(text))
+    return {re.sub(r"\s+", " ", m.group(0).lower()) for m in _NAMED_LOCATION_PAT.finditer(text)}
+
+
+def _house_text_signal(listing: dict) -> bool:
+    text = _ascii_fold(_combined_text(listing))
+    return bool(re.search(
+        r"(^|\n)\s*[^\w\s]*\s*nha\b|"
+        r"\bnha\s*(?:tret|lau|cap|moi)\b|"
+        r"\btret\s*lau\b|\bgac\s*lung\b|"
+        r"\b\d+\s*pn\b|\b\d+\s*wc\b|"
+        r"\bphong\s*(?:ngu|khach|tho)\b|"
+        r"\bbep\b|\bmay\s*lanh\b|\bsan\s*o\s*to\b|\bsan\s*oto\b",
+        text,
+        re.IGNORECASE,
+    ))
+
+
+def _land_only_text_signal(listing: dict) -> bool:
+    text = _ascii_fold(_combined_text(listing))
+    return bool(re.search(
+        r"\blo\s+dat\b|\bdat\s+(?:tan|phu|hiep|dinh|chanh|tdm|thu)\b|"
+        r"\bdat\s+(?:sach|trong|nen|tho\s*cu)\b|\bxem\s+dat\b",
+        text,
+        re.IGNORECASE,
+    ))
+
+
+def _property_text_conflict(l1: dict, l2: dict) -> bool:
+    h1, h2 = _house_text_signal(l1), _house_text_signal(l2)
+    d1, d2 = _land_only_text_signal(l1), _land_only_text_signal(l2)
+    return bool((h1 and d2 and not h2) or (h2 and d1 and not h1))
+
+
+def _tho_cu_m2(listing: dict) -> Optional[float]:
+    text = _ascii_fold(_combined_text(listing))
+    area = listing.get("area_m2")
+    if area and re.search(r"\b(?:tho\s*cu|tc)\s*full\b|\bfull\s*(?:tho\s*cu|tc)\b", text):
+        return float(area)
+
+    patterns = [
+        r"\b(?:tho\s*cu|tho\s*san|tc)\s*([\d]+(?:[.,]\d+)?)\s*m?",
+        r"([\d]+(?:[.,]\d+)?)\s*m(?:2)?\s*(?:tho\s*cu|tc)\b",
+    ]
+    for pat in patterns:
+        m = re.search(pat, text)
+        if not m:
+            continue
+        try:
+            value = float(m.group(1).replace(",", "."))
+        except ValueError:
+            continue
+        if 5 <= value <= 10000:
+            return value
+    return None
+
+
+def _lot_attribute_conflict(l1: dict, l2: dict) -> bool:
+    tc1 = _tho_cu_m2(l1)
+    tc2 = _tho_cu_m2(l2)
+    if tc1 is not None and tc2 is not None:
+        if abs(tc1 - tc2) > max(5.0, max(tc1, tc2) * 0.05):
+            return True
+
+    text1 = _combined_text(l1)
+    text2 = _combined_text(l2)
+    loc1 = _road_tokens(text1) | _named_location_tokens(text1)
+    loc2 = _road_tokens(text2) | _named_location_tokens(text2)
+    if loc1 and loc2 and not loc1.intersection(loc2):
+        return True
+
+    return False
+
+
+def _same_tho_cu(l1: dict, l2: dict) -> bool:
+    tc1 = _tho_cu_m2(l1)
+    tc2 = _tho_cu_m2(l2)
+    return bool(tc1 is not None and tc2 is not None and _near(tc1, tc2, 0.01))
+
+
 def _same_source_id(l1: dict, l2: dict) -> bool:
     if l1.get("source") != l2.get("source"):
         return False
@@ -65,7 +187,11 @@ def _same_required_segment(l1: dict, l2: dict) -> bool:
     pt1, pt2 = l1.get("property_type"), l2.get("property_type")
     w1 = (l1.get("ward") or "").strip()
     w2 = (l2.get("ward") or "").strip()
-    return bool(pt1 and pt2 and pt1 == pt2 and w1 and w2 and w1 == w2)
+    return bool(
+        pt1 and pt2 and pt1 == pt2
+        and w1 and w2 and w1 == w2
+        and not _property_text_conflict(l1, l2)
+    )
 
 
 def _near(a: Optional[float], b: Optional[float], tol: float) -> bool:
@@ -82,6 +208,24 @@ def _same_ward(l1: dict, l2: dict) -> bool:
     return w1 == w2
 
 
+def _same_source(l1: dict, l2: dict, source: str) -> bool:
+    return (l1.get("source") or "").lower() == source and (l2.get("source") or "").lower() == source
+
+
+def _facebook_pair(l1: dict, l2: dict) -> bool:
+    return _same_source(l1, l2, "facebook")
+
+
+def _phone_value(listing: dict) -> str:
+    return re.sub(r"\D", "", listing.get("contact_phone") or "")
+
+
+def _same_phone(l1: dict, l2: dict) -> bool:
+    p1 = _phone_value(l1)
+    p2 = _phone_value(l2)
+    return bool(len(p1) >= 9 and len(p2) >= 9 and p1[-9:] == p2[-9:])
+
+
 def _different_days(l1: dict, l2: dict) -> bool:
     d1 = (l1.get("posted_at") or l1.get("crawled_at") or "")[:10]
     d2 = (l2.get("posted_at") or l2.get("crawled_at") or "")[:10]
@@ -90,12 +234,55 @@ def _different_days(l1: dict, l2: dict) -> bool:
     return d1 != d2
 
 
-def _has_reliable_lot_signature(l1: dict, l2: dict) -> bool:
+def _location_signal(l1: dict, l2: dict) -> bool:
+    text1 = _combined_text(l1)
+    text2 = _combined_text(l2)
+    roads1 = _road_tokens(text1)
+    roads2 = _road_tokens(text2)
+    named1 = _named_location_tokens(text1)
+    named2 = _named_location_tokens(text2)
+    location1 = roads1 | named1
+    location2 = roads2 | named2
+    if location1 or location2:
+        if not location1.intersection(location2):
+            return False
+        blocks1 = _block_tokens(text1)
+        blocks2 = _block_tokens(text2)
+        if blocks1 and blocks2:
+            return bool(blocks1.intersection(blocks2))
+        return True
+
+    words1 = _location_words(text1)
+    words2 = _location_words(text2)
+    shared_words = words1.intersection(words2)
+    if len(shared_words) >= 3:
+        return True
+
+    desc1 = l1.get("description") or text1
+    desc2 = l2.get("description") or text2
+    return max(_text_similarity(text1, text2), _text_similarity(desc1, desc2)) >= 0.80
+
+
+def _has_reliable_lot_signature(l1: dict, l2: dict, *, allow_facebook_same_price: bool = False) -> bool:
     """Strong evidence that reposts are the same lot, not just the same broker template."""
     if _same_source_id(l1, l2):
         return True
 
+    if not _facebook_pair(l1, l2):
+        return False
+
     if not _same_required_segment(l1, l2):
+        return False
+
+    if _lot_attribute_conflict(l1, l2):
+        return False
+
+    area_match = _near(l1.get("area_m2"), l2.get("area_m2"), 0.01)
+    if _same_phone(l1, l2) and area_match and _same_tho_cu(l1, l2):
+        return True
+
+    has_location = _location_signal(l1, l2)
+    if not has_location:
         return False
 
     front_depth_match = (
@@ -105,31 +292,104 @@ def _has_reliable_lot_signature(l1: dict, l2: dict) -> bool:
     if front_depth_match:
         return True
 
-    area_match = _near(l1.get("area_m2"), l2.get("area_m2"), 0.01)
-    if area_match:
+    text_sim = _text_similarity(_combined_text(l1), _combined_text(l2))
+
+    if _same_phone(l1, l2) and (area_match or text_sim >= 0.70):
         return True
 
-    roads1 = _road_tokens(_combined_text(l1))
-    roads2 = _road_tokens(_combined_text(l2))
-    if roads1 and roads2 and roads1.intersection(roads2):
-        return _near(l1.get("area_m2"), l2.get("area_m2"), 0.10)
+    if area_match:
+        if text_sim >= 0.88:
+            return True
+        if allow_facebook_same_price and _same_source(l1, l2, "facebook"):
+            return True
 
-    return False
+    if has_location and text_sim >= 0.88:
+        return True
+
+    return allow_facebook_same_price and _same_source(l1, l2, "facebook") and has_location
+
+
+def _drop_pct(canonical: dict, candidate: dict) -> Optional[float]:
+    canonical_price = canonical.get("price_ty") or 0
+    candidate_price = candidate.get("price_ty") or 0
+    if canonical_price > 0 and candidate_price > 0 and candidate_price < canonical_price * 0.99:
+        return round((canonical_price - candidate_price) / canonical_price * 100, 2)
+
+    canonical_ppm2 = canonical.get("price_per_m2") or 0
+    candidate_ppm2 = candidate.get("price_per_m2") or 0
+    if canonical_ppm2 > 0 and candidate_ppm2 > 0 and candidate_ppm2 < canonical_ppm2 * 0.99:
+        return round((canonical_ppm2 - candidate_ppm2) / canonical_ppm2 * 100, 2)
+
+    return None
+
+
+def _is_suspicious_bait(canonical: dict, candidate: dict) -> bool:
+    drop_pct = _drop_pct(canonical, candidate)
+    return bool(drop_pct is not None and drop_pct > 40.0)
 
 
 def _is_reliable_price_drop(canonical: dict, candidate: dict) -> bool:
-    canonical_price = canonical.get("price_ty")
-    candidate_price = candidate.get("price_ty")
     can_time = canonical.get("posted_at") or canonical.get("crawled_at") or ""
     cand_time = candidate.get("posted_at") or candidate.get("crawled_at") or ""
+    drop_pct = _drop_pct(canonical, candidate)
 
     return bool(
-        canonical_price
-        and candidate_price
-        and candidate_price < canonical_price * 0.99
+        drop_pct is not None
+        and drop_pct <= 40.0
         and cand_time >= can_time
         and _has_reliable_lot_signature(canonical, candidate)
     )
+
+
+def _is_same_lot_repost(l1: dict, l2: dict) -> bool:
+    if not _facebook_pair(l1, l2):
+        return False
+
+    same_price = _same_price_for_dedup(l1.get("price_ty"), l2.get("price_ty"))
+    allow_facebook_same_price = same_price
+    return _has_reliable_lot_signature(
+        l1, l2, allow_facebook_same_price=allow_facebook_same_price
+    )
+
+
+def _same_price_for_dedup(a: Optional[float], b: Optional[float]) -> bool:
+    if a is None or b is None or a <= 0 or b <= 0:
+        return False
+    return abs(float(a) - float(b)) / max(float(a), float(b)) <= 0.005
+
+
+def _candidate_keys(listing: dict) -> set[tuple]:
+    ward = (listing.get("ward") or "").strip()
+    prop_type = listing.get("property_type") or ""
+    base = (ward, prop_type)
+    keys = set()
+
+    source = listing.get("source") or ""
+    source_id = (listing.get("source_id") or "").strip()
+    if source and source_id:
+        keys.add(base + ("source_id", source, source_id))
+
+    if source.lower() != "facebook":
+        return keys
+
+    text = _combined_text(listing)
+    for token in _road_tokens(text):
+        keys.add(base + ("road", token))
+
+    area = listing.get("area_m2")
+    if area and area > 0:
+        keys.add(base + ("area", round(float(area), 1)))
+
+    frontage = listing.get("frontage_m")
+    depth = listing.get("depth_m")
+    if frontage and depth and frontage > 0 and depth > 0:
+        keys.add(base + ("dims", round(float(frontage), 2), round(float(depth), 2)))
+
+    stripped = _strip_noise(text)
+    if len(stripped) >= 40:
+        keys.add(base + ("text", " ".join(stripped.split()[:12])))
+
+    return keys
 
 
 def _repost_score(l1: dict, l2: dict) -> int:
@@ -141,6 +401,9 @@ def _repost_score(l1: dict, l2: dict) -> int:
         return 0
 
     if not _same_ward(l1, l2):
+        return 0
+
+    if _property_text_conflict(l1, l2) or _lot_attribute_conflict(l1, l2):
         return 0
 
     front_match = _near(l1.get("frontage_m"), l2.get("frontage_m"), 0.0)
@@ -165,6 +428,9 @@ def _repost_score(l1: dict, l2: dict) -> int:
     elif sim >= 0.30:
         score += 1
 
+    if not _location_signal(l1, l2):
+        return 0
+
     if front_match and depth_match:
         return score if sim >= 0.30 else 0
     if area_match:
@@ -177,32 +443,57 @@ def _repost_score(l1: dict, l2: dict) -> int:
 def _is_duplicate(l1: dict, l2: dict) -> bool:
     if _same_source_id(l1, l2):
         return True
+    if not _facebook_pair(l1, l2):
+        return False
+    if _same_price_for_dedup(l1.get("price_ty"), l2.get("price_ty")) and not _same_source(l1, l2, "facebook"):
+        return False
+    if _is_same_lot_repost(l1, l2):
+        return True
     return _repost_score(l1, l2) >= SCORE_THRESHOLD
 
 
 def flag_duplicates_in_db(conn: sqlite3.Connection) -> dict:
     """Flag duplicate reposts and reliable repost price drops."""
+    existing_cols = {r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()}
+    if "suspicious_bait" not in existing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN suspicious_bait INTEGER DEFAULT 0")
+
     conn.execute("""
         UPDATE listings
         SET price_dropped = CASE
                 WHEN price_first_ty IS NOT NULL
                  AND price_ty IS NOT NULL
                  AND price_ty < price_first_ty * 0.99
+                 AND price_ty >= price_first_ty * 0.60
                 THEN 1 ELSE 0 END,
             price_drop_pct = CASE
                 WHEN price_first_ty IS NOT NULL
                  AND price_ty IS NOT NULL
                  AND price_ty < price_first_ty * 0.99
+                 AND price_ty >= price_first_ty * 0.60
                 THEN ROUND((price_first_ty - price_ty) / price_first_ty * 100, 2)
-                ELSE NULL END
+                ELSE NULL END,
+            suspicious_bait = CASE
+                WHEN price_first_ty IS NOT NULL
+                 AND price_ty IS NOT NULL
+                 AND price_ty < price_first_ty * 0.60
+                THEN 1 ELSE 0 END
+        WHERE probably_sold = 0
+    """)
+    conn.execute("""
+        UPDATE listings
+        SET price_dropped = 0,
+            price_drop_pct = NULL,
+            price_first_ty = price_ty,
+            suspicious_bait = 0
         WHERE duplicate_of_id IS NOT NULL
-          AND price_dropped = 1
+          AND (price_dropped = 1 OR suspicious_bait = 1)
     """)
     conn.execute("UPDATE listings SET possibly_duplicate=0, duplicate_of_id=NULL")
 
     rows = conn.execute("""
         SELECT id, source, source_id, url, title, area, ward,
-               property_type, area_m2, price_ty, crawled_at, posted_at,
+               property_type, area_m2, price_ty, price_per_m2, crawled_at, posted_at,
                frontage_m, depth_m, contact_phone, has_so, description
         FROM listings
         WHERE probably_sold = 0
@@ -228,16 +519,20 @@ def flag_duplicates_in_db(conn: sqlite3.Connection) -> dict:
 
     buckets = defaultdict(list)
     for i, listing in enumerate(listings):
-        ward = (listing.get("ward") or "").strip()
-        prop_type = listing.get("property_type") or ""
-        buckets[(ward, prop_type)].append(i)
+        for key in _candidate_keys(listing):
+            buckets[key].append(i)
 
+    seen_pairs = set()
     for indices in buckets.values():
         if len(indices) < 2:
             continue
         for idx_i in range(len(indices)):
             for idx_j in range(idx_i + 1, len(indices)):
                 i, j = indices[idx_i], indices[idx_j]
+                pair = (i, j) if i < j else (j, i)
+                if pair in seen_pairs:
+                    continue
+                seen_pairs.add(pair)
                 if _is_duplicate(listings[i], listings[j]):
                     union(i, j)
 
@@ -270,20 +565,33 @@ def flag_duplicates_in_db(conn: sqlite3.Connection) -> dict:
             )
             flagged += 1
 
-            if _is_reliable_price_drop(canonical, dup):
-                dup_price = dup.get("price_ty")
-                drop_pct = round((canonical_price - dup_price) / canonical_price * 100, 2)
+            if _is_suspicious_bait(canonical, dup) and _has_reliable_lot_signature(canonical, dup):
+                conn.execute("""
+                    UPDATE listings SET
+                        price_dropped   = 0,
+                        price_drop_pct  = NULL,
+                        price_first_ty  = ?,
+                        suspicious_bait = 1
+                    WHERE id = ?
+                """, (canonical_price, dup_id))
+                logger.info(
+                    f"Suspicious bait via repost: listing_id={dup_id} "
+                    f"canonical_price={canonical_price} candidate_price={dup.get('price_ty')}"
+                )
+            elif _is_reliable_price_drop(canonical, dup):
+                drop_pct = _drop_pct(canonical, dup)
                 conn.execute("""
                     UPDATE listings SET
                         price_dropped  = 1,
                         price_drop_pct = ?,
-                        price_first_ty = ?
+                        price_first_ty = ?,
+                        suspicious_bait = 0
                     WHERE id = ?
                 """, (drop_pct, canonical_price, dup_id))
                 price_drops_detected += 1
                 logger.info(
                     f"Price drop via repost: listing_id={dup_id} "
-                    f"{canonical_price:.2f}->{dup_price:.2f}ty (-{drop_pct}%)"
+                    f"{canonical_price}->{dup.get('price_ty')}ty (-{drop_pct}%)"
                 )
 
     stats = {

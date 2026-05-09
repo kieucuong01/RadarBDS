@@ -6,6 +6,7 @@ import hashlib
 import json
 import logging
 import re
+import unicodedata
 from typing import List, Dict, Optional
 
 from config.settings import WATCH_AREAS, ALERT_KEYWORDS
@@ -16,6 +17,13 @@ from cleansing.feature_extractor import (
 )  # extract_legal đã có sẵn — dùng cho has_so detection
 
 logger = logging.getLogger(__name__)
+
+
+def _ascii_fold(text: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFD", text or "")
+        if unicodedata.category(c) != "Mn"
+    ).lower()
 
 _CAP_TRO_RE = re.compile(
     r'cặp\s*trọ|hai\s*dãy\s*trọ|2\s*dãy\s*trọ|cặp\s*nhà\s*trọ|cặp\s*dãy', re.IGNORECASE
@@ -233,6 +241,14 @@ def match_ward(*texts: str, intended_city: Optional[str] = None) -> Optional[str
                 if ward not in _CITY_WARDS[intended_city]:
                     continue
             if any(kw in text_lower for kw in kws):
+                return ward
+
+        text_ascii = _ascii_fold(text_lower)
+        for ward, kws in _WARD_KEYWORDS.items():
+            if intended_city and intended_city in _CITY_WARDS:
+                if ward not in _CITY_WARDS[intended_city]:
+                    continue
+            if any(_ascii_fold(kw) in text_ascii for kw in kws):
                 return ward
     return None
 

@@ -15,7 +15,8 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from cleansing.dedup import _repost_score, _is_duplicate, _is_reliable_price_drop, SCORE_THRESHOLD
+from cleansing.dedup import _repost_score, _is_duplicate, _is_reliable_price_drop, _is_suspicious_bait, SCORE_THRESHOLD
+from cleansing.normalizer import normalize_record
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -32,6 +33,23 @@ def _listing(**kw):
     return defaults
 
 
+def _normalize_fb(text, source_id="test", posted_at="2026-05-08"):
+    raw = {
+        "source": "facebook",
+        "source_id": source_id,
+        "external_id": source_id,
+        "url": f"https://facebook.com/test/{source_id}",
+        "title": text.split("\n")[0],
+        "description": text,
+        "date_raw": posted_at,
+        "crawled_at": "2026-05-10T09:00:00",
+        "area_name": "Tân An",
+        "ward": "Tân An",
+        "default_area": "Thủ Dầu Một",
+    }
+    return normalize_record(raw)
+
+
 LONG_DESC = (
     "Bán đất nền đường Hùng Vương, phường Tân An, Thủ Dầu Một. "
     "Diện tích 100m2, mặt tiền 5m, sổ hồng riêng. "
@@ -43,6 +61,18 @@ LONG_DESC_SLIGHT = (
     "Diện tích 100m2, mặt tiền 5m, sổ hồng riêng. "
     "Giá 1.9 tỷ, đã giảm. Liên hệ 0901234567."
 )
+LONG_DESC = (
+    "Ban dat nen duong DX84, phuong Tan An, Thu Dau Mot. "
+    "Dien tich 100m2, mat tien 5m, so hong rieng. "
+    "Gia 2 ty, thuong luong. Lien he 0901234567."
+)
+LONG_DESC_COPY = LONG_DESC
+LONG_DESC_SLIGHT = (
+    "Ban dat nen duong DX84, phuong Tan An, Thu Dau Mot. "
+    "Dien tich 100m2, mat tien 5m, so hong rieng. "
+    "Gia 1.9 ty, da giam. Lien he 0901234567."
+)
+
 LONG_DESC_DIFFERENT = (
     "Nhà cấp 4 hẻm đường Lê Hồng Phong, cách mặt tiền 50m, "
     "diện tích 80m2, giá 1.5 tỷ, cần bán gấp kẹt tiền."
@@ -172,18 +202,18 @@ def test_same_source_id_always_duplicate():
     assert _is_duplicate(l1, l2), "Same source + source_id → always duplicate"
 
 
-def test_same_source_different_id_uses_scoring():
-    l1 = _listing(source="guland", source_id="POST111", crawled_at="2026-04-19", description=LONG_DESC_COPY)
-    l2 = _listing(source="guland", source_id="POST222", crawled_at="2026-04-20", description=LONG_DESC_COPY)
-    assert _is_duplicate(l1, l2), "Same source, different id, identical text → duplicate via scoring"
+def test_facebook_same_source_different_id_uses_scoring():
+    l1 = _listing(source="facebook", source_id="POST111", crawled_at="2026-04-19", description=LONG_DESC_COPY)
+    l2 = _listing(source="facebook", source_id="POST222", crawled_at="2026-04-20", description=LONG_DESC_COPY)
+    assert _is_duplicate(l1, l2), "Facebook same source, different id, identical text -> duplicate via scoring"
 
 
-def test_cross_source_scoring():
+def test_non_facebook_cross_source_does_not_use_scoring():
     l1 = _listing(source="guland",     source_id="G1", crawled_at="2026-04-19",
                   area_m2=100.0, description=LONG_DESC)
     l2 = _listing(source="batdongsan", source_id="B1", crawled_at="2026-04-20",
                   area_m2=100.0, description=LONG_DESC_SLIGHT)
-    assert _is_duplicate(l1, l2), "Cross-source with same area + similar text → duplicate"
+    assert not _is_duplicate(l1, l2), "Guland/BatDongSan cross-source heuristics should be disabled"
 
 
 # ── Score floor verification ──────────────────────────────────────────────────
@@ -214,6 +244,285 @@ def test_reliable_drop_rejects_same_template_different_lot():
         price_ty=3.3, description="Cần bán đất Định Hòa đường DX71 liên hệ môi giới"
     )
     assert not _is_reliable_price_drop(old, new), "Different area and road should not count as price drop"
+
+
+def test_reliable_drop_rejects_same_dims_different_location():
+    old = _listing(
+        source="facebook", source_id="fb1", posted_at="2026-01-16",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=300.0,
+        frontage_m=10.0, depth_m=30.0, price_ty=4.3,
+        description="BÃ¡n 10x30 Ä‘Æ°á»ng DI4 dÃ i kinh doanh giÃ¡ 4ty3"
+    )
+    new = _listing(
+        source="facebook", source_id="fb2", posted_at="2026-05-07",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=300.0,
+        frontage_m=10.0, depth_m=30.0, price_ty=3.85,
+        description="DX072 Äá»‹nh HÃ²a ChÃ¡nh Hiá»‡p dt 10x30 giÃ¡ 3ty85"
+    )
+    assert not _is_reliable_price_drop(old, new), "Same dims without location signal should not be price drop"
+
+
+def test_reliable_drop_rejects_same_road_different_block():
+    old = _listing(
+        source="facebook", source_id="fb1", posted_at="2026-05-01",
+        ward="Má»¹ PhÆ°á»›c 3", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, price_ty=1.9,
+        description="BÃ¡n Ä‘áº¥t K22 Ä‘Æ°á»ng DK12 Má»¹ PhÆ°á»›c 3 dt 5x30"
+    )
+    new = _listing(
+        source="facebook", source_id="fb2", posted_at="2026-05-03",
+        ward="Má»¹ PhÆ°á»›c 3", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, price_ty=1.8,
+        description="BÃ¡n Ä‘áº¥t K32 Ä‘Æ°á»ng DK12 Má»¹ PhÆ°á»›c 3 dt 5x30"
+    )
+    assert not _is_reliable_price_drop(old, new), "Same road but different block token should not be price drop"
+
+
+def test_reliable_drop_same_phone_area_anchor():
+    old = _listing(
+        source="facebook", source_id="fb1", posted_at="2026-05-01",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.0, contact_phone="0901234567",
+        description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2"
+    )
+    new = _listing(
+        source="facebook", source_id="fb2", posted_at="2026-05-03",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=100.5,
+        price_ty=1.9, contact_phone="+84901234567",
+        description="ChÃ­nh chá»§ gá»­i bÃ¡n DX84, cÃ³ sá»•, cáº§n ra nhanh"
+    )
+    assert _is_reliable_price_drop(old, new), "Same phone + near area + location should be reliable"
+
+
+def test_reliable_drop_uses_price_per_m2_when_total_price_same():
+    old = _listing(
+        source="facebook", source_id="fb1", posted_at="2026-05-01",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.0, price_per_m2=20.0,
+        description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2"
+    )
+    new = _listing(
+        source="facebook", source_id="fb2", posted_at="2026-05-03",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.0, price_per_m2=18.0,
+        description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2"
+    )
+    assert _is_reliable_price_drop(old, new), "Price/m2 drop should count even if total price did not drop"
+
+
+def test_suspicious_bait_over_40pct_not_reliable_drop():
+    old = _listing(
+        source="facebook", source_id="fb1", posted_at="2026-05-01",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.0, description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2"
+    )
+    new = _listing(
+        source="facebook", source_id="fb2", posted_at="2026-05-03",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=100.0,
+        price_ty=1.0, description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2"
+    )
+    assert _is_suspicious_bait(old, new), "Drop >40% should be suspicious bait"
+    assert not _is_reliable_price_drop(old, new), "Suspicious bait should not be reliable price drop"
+
+
+def test_facebook_same_price_repost_counts_duplicate():
+    old = _listing(
+        source="facebook", source_id="fb1", posted_at="2026-05-01",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.0, description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2 giÃ¡ 2 tá»·"
+    )
+    new = _listing(
+        source="facebook", source_id="fb2", posted_at="2026-05-03",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.0, description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2 giÃ¡ 2 tá»·"
+    )
+    assert _is_duplicate(old, new), "Facebook same-price repost should remain duplicate for lot history"
+
+
+def test_guland_same_price_repost_not_duplicate_for_history():
+    old = _listing(
+        source="guland", source_id="g1", posted_at="2026-05-01",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.0, description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2 giÃ¡ 2 tá»·"
+    )
+    new = _listing(
+        source="guland", source_id="g2", posted_at="2026-05-03",
+        ward="TÃ¢n An", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.0, description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2 giÃ¡ 2 tá»·"
+    )
+    assert not _is_duplicate(old, new), "Guland same-price repost should not extend lot history"
+
+
+def test_guland_phu_tan_template_same_phone_not_same_lot():
+    canonical = _listing(
+        source="guland", source_id="1251615", posted_at="2026-05-06",
+        ward="Phu Tan", property_type="nha_dat", area_m2=107.0,
+        price_ty=2.05, price_per_m2=19.16, contact_phone="0983284379",
+        description="Ban dat 107m2 2.05 ty tai Phuong Phu Tan Thanh pho Thu Dau Mot"
+    )
+    larger = _listing(
+        source="guland", source_id="1251608", posted_at="2026-05-06",
+        ward="Phu Tan", property_type="nha_dat", area_m2=132.5,
+        price_ty=2.45, price_per_m2=18.49, contact_phone="0983284379",
+        description="Ban dat 132.5m2 2.45 ty tai Phuong Phu Tan Thanh pho Thu Dau Mot"
+    )
+    smaller = _listing(
+        source="guland", source_id="1254053", posted_at="2026-05-06",
+        ward="Phu Tan", property_type="nha_dat", area_m2=95.9,
+        price_ty=1.6, price_per_m2=16.68, contact_phone="0983284379",
+        description="Ban dat 95.9m2 1.6 ty tai Phuong Phu Tan Thanh pho Thu Dau Mot"
+    )
+
+    assert not _is_duplicate(canonical, larger)
+    assert not _is_duplicate(canonical, smaller)
+    assert not _is_reliable_price_drop(canonical, larger)
+    assert not _is_reliable_price_drop(canonical, smaller)
+
+
+def test_guland_phu_hoa_same_phone_area_without_road_not_same_lot():
+    canonical = _listing(
+        source="guland", source_id="1282556", posted_at="2026-02-05",
+        ward="Phu Hoa", property_type="dat_nen", area_m2=100.0,
+        price_ty=3.05, price_per_m2=30.5, contact_phone="0983284379",
+        description="Dat khu8 Phu Hoa TPTDM vi tri trung tam hem 385 Le Hong Phong nhua 5m"
+    )
+    repost = _listing(
+        source="guland", source_id="2217134", posted_at="2026-04-29",
+        ward="Phu Hoa", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.75, price_per_m2=27.5, contact_phone="0983284379",
+        description="Ban dat Phu Hoa 100m2 ngang 5m gia 2.75 ty Phuong Phu Loi"
+    )
+    short = _listing(
+        source="guland", source_id="1122353", posted_at="2026-05-06",
+        ward="Phu Hoa", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.05, price_per_m2=20.5, contact_phone="0983284379",
+        description="Dat Phu Hoa nhua oto 4m"
+    )
+
+    assert not _is_duplicate(canonical, repost)
+    assert not _is_duplicate(canonical, short)
+    assert not _is_reliable_price_drop(canonical, repost)
+    assert not _is_reliable_price_drop(canonical, short)
+
+
+def test_guland_phu_my_dx006_same_road_not_duplicate_without_same_source_id():
+    canonical = _listing(
+        source="guland", source_id="1596027", posted_at="2026-01-06",
+        ward="Phu My", property_type="dat_nen", area_m2=80.0,
+        price_ty=1.99, price_per_m2=24.88, contact_phone="0983284379",
+        description="Dat 1 xec DX 06 duong be tong 5m vi tri dep gan cho Phu My"
+    )
+    repost = _listing(
+        source="guland", source_id="1303708", posted_at="2026-02-05",
+        ward="Phu My", property_type="dat_nen", area_m2=80.0,
+        price_ty=1.95, price_per_m2=24.38, contact_phone="0983284379",
+        description="Dat Phu My duong oto 1/DX006 vi tri dep dan kin gia em"
+    )
+
+    assert not _is_duplicate(canonical, repost)
+    assert not _is_reliable_price_drop(canonical, repost)
+
+
+def test_guland_same_source_id_price_drop_still_allowed():
+    old = _listing(
+        source="guland", source_id="same-post", posted_at="2026-05-01",
+        area_m2=100.0, price_ty=2.0, price_per_m2=20.0,
+        description="Old Guland listing"
+    )
+    new = _listing(
+        source="guland", source_id="same-post", posted_at="2026-05-03",
+        area_m2=100.0, price_ty=1.9, price_per_m2=19.0,
+        description="Updated Guland listing"
+    )
+    assert _is_duplicate(old, new)
+    assert _is_reliable_price_drop(old, new)
+
+
+def test_facebook_land_and_house_same_phone_area_not_duplicate():
+    land = _normalize_fb(
+        "Chủ kẹt cứng ngắc cần bán gấp lô đất Tân An\n"
+        "Diện tích 148m tc 60m\n"
+        "Giá 1ty5 thương lượng\n"
+        "Liên hệ em Hằng xem đất 0948018508",
+        "fb-land-148",
+        "2026-05-01",
+    )
+    house = _normalize_fb(
+        "🌷🌷Nhà Tân An (Phú An, tp HCM) cách Lê Chí Dân 150m\n"
+        "Ngang 8 dài 18.5 thổ cư 60m2 (tổng 148m2), vị trí góc đẹp thông thoáng mát mẻ\n"
+        "Nhà 3PN sân ô tô rộng, tiệc tùng thoải mái\n"
+        "Sẵn 3 máy lạnh, bếp từ, máy hút mùi...\n"
+        "❌Giá: 2tỷ 450tr❌ hỗ trợ NH tối đa\n"
+        "LH: 0948018508 xem nhà Giáp chủ",
+        "fb-house-148",
+        "2026-05-08",
+    )
+
+    assert land["property_type"] == "dat_nen"
+    assert house["property_type"] == "nha_dat"
+    assert not _is_duplicate(land, house)
+    assert not _is_reliable_price_drop(house, land)
+
+
+def test_facebook_same_dims_different_tho_cu_or_location_not_duplicate():
+    simple_land = _normalize_fb(
+        "Đất Tân An TDM. Dt 5 x 19, thổ cư 60. Đường ô tô nhỏ. "
+        "Đất sạch, gpxd cấp chính. Giá 1tỷ2xx bớt lộc lá. "
+        "Lh Hằng 0948018508 Giáp chủ",
+        "fb-land-5x19-60",
+        "2026-05-01",
+    )
+    dx_land = _normalize_fb(
+        "Đất Tân An Thủ Dầu Một - phường Phú An TpHCM\n"
+        "Dt 5 x 19, thổ cư 75\n"
+        "Nhánh Dx135, cách Lê Chí Dân ko đến 100m, đường bê tông ô tô đến đất\n"
+        "💰💰Giá 1tỷ550\n"
+        "Lh Hằng 0948018508 xem đất Giáp chủ",
+        "fb-land-5x19-dx135",
+        "2026-05-08",
+    )
+    phu_hoa_house = _normalize_fb(
+        "Nhà  Phú Hoà TDM\n"
+        "Diện tích 5x19 thổ cư full\n"
+        "📌Vị trí VIP 1/ đường Nguyễn Thái Bình, ngay chợ nhỏ, trường cấp 2, cấp 3 chuẩn bị làm\n"
+        "💰Giá chỉ: 2ty790\n"
+        "Lh Hằng 0948018508 xem nhà Gc",
+        "fb-house-phu-hoa",
+        "2026-05-08",
+    )
+
+    assert simple_land["property_type"] == "dat_nen"
+    assert dx_land["property_type"] == "dat_nen"
+    assert phu_hoa_house["property_type"] == "nha_dat"
+    assert phu_hoa_house["ward"] == "Phú Hòa"
+    assert not _is_duplicate(simple_land, dx_land)
+    assert not _is_duplicate(dx_land, phu_hoa_house)
+    assert not _is_reliable_price_drop(dx_land, simple_land)
+
+
+def test_facebook_same_phone_area_tho_cu_without_repeated_location_is_drop():
+    old = _listing(
+        source="facebook", source_id="fb-garden-old", posted_at="2026-04-08",
+        ward="Tan An", property_type="dat_vuon", area_m2=1212.0,
+        price_ty=3.5, price_per_m2=2.89, contact_phone="0933630130",
+        description=(
+            "Ban 1.212 m2 Dat Tan An Sau cho Ben The cach Huynh Thi Hieu 200m, "
+            "co san 140m2 tho cu. Lam vuon ok lam, Huynh Thi Hieu mo rong em luon. "
+            "Duong oto ok a."
+        ),
+    )
+    new = _listing(
+        source="facebook", source_id="fb-garden-new", posted_at="2026-05-08",
+        ward="Tan An", property_type="dat_vuon", area_m2=1212.0,
+        price_ty=2.9, price_per_m2=2.39, contact_phone="0933630130",
+        description=(
+            "Ban dat phuong Tan an lam vuon gia tot duong ba gac "
+            "Dt 1.212 m2 tc 140 xem dat gap chu chot."
+        ),
+    )
+
+    assert _is_duplicate(old, new)
+    assert _is_reliable_price_drop(old, new)
 
 
 def test_reliable_drop_same_source_id():
@@ -251,10 +560,24 @@ if __name__ == "__main__":
         test_case3_no_text_no_match,
         test_case3_low_similarity_no_match,
         test_same_source_id_always_duplicate,
-        test_same_source_different_id_uses_scoring,
-        test_cross_source_scoring,
+        test_facebook_same_source_different_id_uses_scoring,
+        test_non_facebook_cross_source_does_not_use_scoring,
         test_reliable_drop_facebook_same_area_different_post,
         test_reliable_drop_rejects_same_template_different_lot,
+        test_reliable_drop_rejects_same_dims_different_location,
+        test_reliable_drop_rejects_same_road_different_block,
+        test_reliable_drop_same_phone_area_anchor,
+        test_reliable_drop_uses_price_per_m2_when_total_price_same,
+        test_suspicious_bait_over_40pct_not_reliable_drop,
+        test_facebook_same_price_repost_counts_duplicate,
+        test_guland_same_price_repost_not_duplicate_for_history,
+        test_guland_phu_tan_template_same_phone_not_same_lot,
+        test_guland_phu_hoa_same_phone_area_without_road_not_same_lot,
+        test_guland_phu_my_dx006_same_road_not_duplicate_without_same_source_id,
+        test_guland_same_source_id_price_drop_still_allowed,
+        test_facebook_land_and_house_same_phone_area_not_duplicate,
+        test_facebook_same_dims_different_tho_cu_or_location_not_duplicate,
+        test_facebook_same_phone_area_tho_cu_without_repeated_location_is_drop,
         test_reliable_drop_same_source_id,
         test_score_threshold_boundary,
     ]
