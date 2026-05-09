@@ -14,6 +14,7 @@
   --text: #f8fafc;
   --text-muted: #94a3b8;
   --radius: 16px;
+  --font-sans: 'Plus Jakarta Sans', 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
 [data-theme="light"] {
@@ -32,7 +33,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; display: flex; height: 100vh; overflow: hidden; font-size: 15px; transition: background 0.3s, color 0.3s; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); display: flex; height: 100vh; overflow: hidden; font-size: 15px; transition: background 0.3s, color 0.3s; }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -111,16 +112,16 @@ body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta San
 
 /* City Pills */
 .city-pills { display: flex; gap: 8px; margin-bottom: 16px; }
-.city-pill { padding: 8px 20px; border-radius: 20px; border: 2px solid var(--border); background: transparent; color: var(--text-muted); font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; }
+.city-pill { padding: 8px 20px; border-radius: 20px; border: 2px solid var(--border); background: transparent; color: var(--text-muted); font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; font-family: var(--font-sans); }
 .city-pill.active { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 4px 12px var(--primary-glow); }
 .city-pill:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
 
 /* Ward Search */
-.ward-search { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--text); font-size: 0.82rem; margin-bottom: 12px; outline: none; transition: border-color 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; }
+.ward-search { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--text); font-size: 0.82rem; margin-bottom: 12px; outline: none; transition: border-color 0.2s; font-family: var(--font-sans); }
 .ward-search:focus { border-color: var(--primary); }
 [data-theme="light"] .ward-search { background: rgba(0,0,0,0.02); }
 
-.apply-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), #8b5cf6); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: auto; box-shadow: 0 8px 20px var(--primary-glow); transition: transform 0.2s, box-shadow 0.2s; font-family: 'Plus Jakarta Sans', sans-serif;}
+.apply-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), #8b5cf6); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: auto; box-shadow: 0 8px 20px var(--primary-glow); transition: transform 0.2s, box-shadow 0.2s; font-family: var(--font-sans);}
 .apply-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 25px var(--primary-glow); }
 .apply-btn:active { transform: translateY(0); }
 
@@ -130,7 +131,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta San
 
 /* Header Navigation */
 .header-nav { display: flex; align-items: center; gap: 4px; height: 100%; }
-.nav-link { display: flex; align-items: center; gap: 8px; padding: 8px 18px; border: none; background: none; color: var(--text-muted); font-weight: 600; font-size: 0.9rem; cursor: pointer; border-radius: 10px; transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; position: relative; white-space: nowrap; }
+.nav-link { display: flex; align-items: center; gap: 8px; padding: 8px 18px; border: none; background: none; color: var(--text-muted); font-weight: 600; font-size: 0.9rem; cursor: pointer; border-radius: 10px; transition: all 0.2s; font-family: var(--font-sans); position: relative; white-space: nowrap; }
 .nav-link svg { flex-shrink: 0; }
 .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
 .nav-link.active { color: var(--primary); background: rgba(99,102,241,0.1); font-weight: 700; }
@@ -161,7 +162,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta San
 .sort-label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
 .sort-label svg { opacity: 0.6; }
 .sort-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-.sort-pill { padding: 8px 18px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; white-space: nowrap; }
+.sort-pill { padding: 8px 18px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; font-family: var(--font-sans); white-space: nowrap; }
 .sort-pill:hover { border-color: var(--text-muted); color: var(--text); }
 .sort-pill.active { background: var(--surface-solid); color: var(--text); border-color: var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-weight: 700; }
 [data-theme="light"] .sort-pill.active { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -307,7 +308,7 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
 /* Pagination */
 .pagination { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: rgba(30, 41, 59, 0.95); border-top: 1px solid var(--border); z-index: 10; backdrop-filter: blur(10px); transition: background 0.3s; }
 [data-theme="light"] .pagination { background: rgba(248, 250, 252, 0.95); }
-.page-btn { padding: 8px 16px; border: 1px solid var(--border); background: transparent; border-radius: 8px; cursor: pointer; font-weight: 500; color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s; }
+.page-btn { padding: 8px 16px; border: 1px solid var(--border); background: transparent; border-radius: 8px; cursor: pointer; font-weight: 500; color: var(--text); font-family: var(--font-sans); transition: all 0.2s; }
 .page-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
 .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
@@ -388,7 +389,7 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
 .chart-subtitle { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-muted); }
 .chart-header { margin-bottom: 20px; }
 .period-pills { display: flex; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 10px; gap: 2px; }
-.p-pill { border: none; background: none; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; padding: 6px 14px; border-radius: 7px; cursor: pointer; transition: 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; }
+.p-pill { border: none; background: none; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; padding: 6px 14px; border-radius: 7px; cursor: pointer; transition: 0.2s; font-family: var(--font-sans); }
 .p-pill:hover { color: var(--text); }
 .p-pill.active { color: var(--primary); background: var(--surface-solid); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 .chart-body { position: relative; }

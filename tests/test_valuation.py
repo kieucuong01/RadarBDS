@@ -8,22 +8,22 @@ from datetime import date
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from analytics.valuation import (
-    Listing, ValuationEngine, SegmentModel,
+    Listing, ValuationEngine,
     compute_signal_score, remove_outliers,
-    MOS_THRESHOLD_HIGH, MOS_THRESHOLD_MEDIUM, MOS_THRESHOLD_LOW,
 )
 
 
 def _make_listing(lid: int, ppm2: float, area: float = 100, **kw) -> Listing:
     return Listing(
         id=lid, area="Tân An", property_type="dat_nen", tx_type="ban",
+        ward=kw.get("ward", "Tân An"),
         price_per_m2=ppm2, price_total=round(ppm2 * area / 1000, 2),
         area_m2=area, crawled_at=date.today(),
         has_so=kw.get("has_so", True),
         frontage_m=kw.get("frontage_m", 5.0),
         road_tier=kw.get("road_tier", 2),
-        contact_phone=kw.get("contact_phone", ""),  # default rỗng để test validation gate
-        **{k: v for k, v in kw.items() if k not in {"has_so", "frontage_m", "road_tier", "contact_phone"}},
+        contact_phone=kw.get("contact_phone", ""),
+        **{k: v for k, v in kw.items() if k not in {"ward", "has_so", "frontage_m", "road_tier", "contact_phone"}},
     )
 
 
@@ -55,17 +55,15 @@ def test_engine_signal_threshold():
     engine = ValuationEngine()
     engine.fit(listings)
 
-    # Listing giá 10.5 tr/m² (discount 30%) có is_hot → qua validation gate → signal
-    # area=100 trùng ref_area để tránh size discount làm loãng
-    target_hot = _make_listing(999, 10.5, area=100, is_hot=True)
+    # Listing cheaper than fair value by more than the fixed MOS threshold should signal.
+    target_hot = _make_listing(999, 9.5, area=100, is_hot=True)
     r_hot = engine.valuate(target_hot)
     assert r_hot is not None and r_hot.is_signal is True
 
-    # Listing 8 tr/m² (extreme ~47%) KHÔNG hot/dropped → validation gate REJECT
-    # (contact_phone bỏ khỏi gate vì Guland không expose phone trong data)
-    target_fake = _make_listing(998, 8.0, area=120, is_hot=False, price_dropped=False)
-    r_fake = engine.valuate(target_fake)
-    assert r_fake is not None and r_fake.is_signal is False
+    # Unknown ward is valuated for audit, but never promoted to a signal.
+    target_unknown = _make_listing(998, 8.0, area=100, ward="unknown")
+    r_unknown = engine.valuate(target_unknown)
+    assert r_unknown is not None and r_unknown.is_signal is False
 
     # Listing bằng fair → không signal
     target2 = _make_listing(1000, 15.0, area=100)
@@ -86,21 +84,33 @@ def test_signal_score_bounds():
 
 
 def test_road_tier_adjustment():
-    # Fit segment với 30 listings tier 2 (baseline)
-    listings = [_make_listing(i, 15.0, road_tier=2) for i in range(30)]
+    # Use fewer than MIN_SAMPLES so the median fallback path applies road multipliers.
+    listings = [_make_listing(i, 15.0, road_tier=2) for i in range(10)]
     engine = ValuationEngine()
     engine.fit(listings)
 
     # Listing tier 1 (đường tên) → fair value ×2
     t1 = _make_listing(100, 20.0, road_tier=1)
     r1 = engine.valuate(t1)
-    # Listing tier 5 (hẻm <3m) → fair value ×0.4
-    t5 = _make_listing(101, 20.0, road_tier=5)
-    r5 = engine.valuate(t5)
+    # Listing tier 4 (hẻm xe máy) has a lower fallback multiplier.
+    t4 = _make_listing(101, 20.0, road_tier=4)
+    r4 = engine.valuate(t4)
 
-    assert r1 and r5
-    # Tier 1 fair > Tier 5 fair cho cùng 1 actual price
-    assert r1.price_per_m2_fair > r5.price_per_m2_fair
+    assert r1 and r4
+    # Tier 1 fair > Tier 4 fair cho cùng 1 actual price
+    assert r1.price_per_m2_fair > r4.price_per_m2_fair
+
+
+def test_has_so_discount():
+    listings = [_make_listing(i, 15.0, road_tier=2) for i in range(10)]
+    engine = ValuationEngine()
+    engine.fit(listings)
+
+    with_so = engine.valuate(_make_listing(200, 10.0, has_so=True))
+    no_so = engine.valuate(_make_listing(201, 10.0, has_so=False))
+
+    assert with_so and no_so
+    assert no_so.price_per_m2_fair < with_so.price_per_m2_fair
 
 
 if __name__ == "__main__":

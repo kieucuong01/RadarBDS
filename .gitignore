@@ -24,6 +24,8 @@ wheels/
 # Databases
 *.db
 *.sqlite3
+*.db-shm
+*.db-wal
 
 # Local settings
 .env
@@ -36,6 +38,11 @@ reports/
 scratch/
 browser_recordings/
 artifacts/
+
+# Agent/runtime worktrees and local state
+.claude/worktrees/
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
 
 # OS
 .DS_Store

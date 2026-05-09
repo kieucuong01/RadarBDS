@@ -13,6 +13,7 @@ from services.market_data import load_data, load_trend_data, load_listing_detail
 from services.ai_bot import AIBot
 
 app = Flask(__name__)
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,11 @@ def api_heatmap():
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     
-    where_parts = ["probably_sold = 0", "possibly_duplicate = 0", "price_per_m2 > 0", "price_per_m2 < 1000"]
+    where_parts = ["l.probably_sold = 0", "l.price_per_m2 > 0", "l.price_per_m2 < 1000"]
+    if only_drops:
+        where_parts.append("l.price_dropped = 1")
+    else:
+        where_parts.append("l.possibly_duplicate = 0")
     params = []
     
     # Filter by city if no specific wards selected
@@ -86,9 +91,6 @@ def api_heatmap():
     if prop_types:
         where_parts.append(f"l.property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
-    if only_drops:
-        where_parts.append("l.price_dropped = 1")
-        
     where_sql = " AND ".join(where_parts)
     
     # Market fields use all valid listings; opportunity fields use signal deals only.
@@ -168,7 +170,11 @@ def api_listings():
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     
-    where_parts = ["probably_sold = 0", "possibly_duplicate = 0"]
+    where_parts = ["probably_sold = 0"]
+    if only_drops:
+        where_parts.append("price_dropped = 1")
+    else:
+        where_parts.append("possibly_duplicate = 0")
     params = []
     
     if wards:
@@ -180,9 +186,6 @@ def api_listings():
     if prop_types:
         where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
-    if only_drops:
-        where_parts.append("price_dropped = 1")
-        
     where_sql = " AND ".join(where_parts)
     
     query = f"""
@@ -225,6 +228,7 @@ def api_listings():
         "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0,
         "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None,
         "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
+        "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],
         "source": r['source'], "imgs": img_map.get(r['id'], [])
     } for r in rows]
     
@@ -253,10 +257,29 @@ def listing_detail(listing_id):
 @app.route('/api/history/<int:listing_id>')
 def get_price_history(listing_id):
     with db_mod.get_conn() as conn:
-        rows = conn.execute("SELECT recorded_at, price_ty FROM price_history WHERE listing_id = ? ORDER BY recorded_at ASC", (listing_id,)).fetchall()
+        rows = conn.execute("""
+            SELECT recorded_at, price_ty, price_per_m2
+            FROM price_history
+            WHERE listing_id = ?
+            ORDER BY recorded_at ASC, id ASC
+        """, (listing_id,)).fetchall()
         curr = conn.execute("SELECT updated_at, price_ty, ward, area_m2, property_type FROM listings WHERE id = ?", (listing_id,)).fetchone()
-        history = [{'date': (r[0] or '')[:10], 'price_ty': r[1]} for r in rows]
-        if curr and curr[1]: history.append({'date': (curr[0] or '')[:10], 'price_ty': curr[1]})
+        history = []
+        last_price = None
+        has_last = False
+        for r in rows:
+            price_ty = r[1]
+            same_as_last = has_last and _same_price_value(price_ty, last_price)
+            if same_as_last:
+                continue
+            history.append({'date': (r[0] or '')[:10], 'price_ty': price_ty})
+            last_price = price_ty
+            has_last = True
+
+        if curr and curr[1]:
+            current_price = curr[1]
+            if not history or not _same_price_value(history[-1]['price_ty'], current_price):
+                history.append({'date': (curr[0] or '')[:10], 'price_ty': current_price})
 
         comps = []
         if curr and curr[2]:
@@ -278,6 +301,13 @@ def get_price_history(listing_id):
                 })
 
         return jsonify({'history': history, 'comps': comps})
+
+def _same_price_value(a, b):
+    if a is None and b is None:
+        return True
+    if a is None or b is None:
+        return False
+    return abs(float(a) - float(b)) < 0.000001
 
 @app.route("/review")
 def review_list():

@@ -65,8 +65,13 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     
-    # Common filters
-    where_parts = ["probably_sold = 0", "possibly_duplicate = 0"]
+    # Common filters. Normal views hide duplicates; drop-only views show reliable
+    # repost drops even when the lower-price repost is marked duplicate.
+    where_parts = ["probably_sold = 0"]
+    if only_drops:
+        where_parts.append("price_dropped = 1")
+    else:
+        where_parts.append("possibly_duplicate = 0")
     params = []
     
     if wards:
@@ -81,9 +86,6 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
 
-    if only_drops:
-        where_parts.append("price_dropped = 1")
-        
     where_sql = " AND ".join(where_parts)
 
     # 1. Stats
@@ -101,6 +103,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                l.id, l.title, l.source, l.area_m2, l.price_ty,
                l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct,
+               l.price_first_ty, l.duplicate_of_id,
                l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so, l.seller_name,
                l.description,
                COALESCE(v.signal_score, 0) as signal_score
@@ -230,7 +233,8 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             "id": r['id'], "title": r['title'], "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0, "actual_ppm2": round(r['actual_ppm2'],1) if r['actual_ppm2'] else 0,
             "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None, "area_m2": r['area_m2'], "price_ty": r['price_ty'],
             "prop_type": r['property_type'], "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
-            "drop_pct": r['price_drop_pct'], "url": r['url'], "days_ago": _days_ago(r['posted_at'] or r['crawled_at']),
+            "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'],
+            "duplicate_of_id": r['duplicate_of_id'], "url": r['url'], "days_ago": _days_ago(r['posted_at'] or r['crawled_at']),
             "ward": r['ward'], "signal_score": r['signal_score'], "imgs": img_map.get(r['id'], []), "source": r['source'],
             "road_tier": r['road_tier'] or 0, "has_so": bool(r['has_so']),
             "description": r['description'] or ""
@@ -242,6 +246,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0,
             "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None,
             "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
+            "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],
             "source": r['source'], "imgs": img_map.get(r['id'], [])
         } for r in all_rows],
         "market": market,
@@ -258,7 +263,11 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
-    where_parts = ["probably_sold = 0", "possibly_duplicate = 0"]
+    where_parts = ["probably_sold = 0"]
+    if only_drops:
+        where_parts.append("price_dropped = 1")
+    else:
+        where_parts.append("possibly_duplicate = 0")
     params = []
 
     if wards:
@@ -270,11 +279,8 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
     if prop_types:
         where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
-    if only_drops:
-        where_parts.append("price_dropped = 1")
-
     where_sql = " AND ".join(where_parts)
-    target_wards = wards if wards else ["TÃ¢n An", "Hiá»‡p An", "TÆ°Æ¡ng BÃ¬nh Hiá»‡p", "Äá»‹nh HÃ²a", "ChÃ¡nh Má»¹"]
+    target_wards = wards if wards else ["Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ"]
 
     if trend_period == 'month':
         date_fmt = "strftime('%Y-%m', COALESCE(posted_at, crawled_at))"

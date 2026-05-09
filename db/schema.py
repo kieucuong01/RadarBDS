@@ -1,0 +1,289 @@
+﻿"""SQLite schema and idempotent migrations for Radar BDS."""
+import logging
+import sqlite3
+
+from db.connection import DB_PATH, get_conn
+
+logger = logging.getLogger(__name__)
+SCHEMA_SQL = """
+-- ================================================================
+-- TẦNG 1: RAW — source of truth, không bao giờ xóa/sửa
+-- ================================================================
+CREATE TABLE IF NOT EXISTS raw_listings (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    source       TEXT NOT NULL,        -- 'batdongsan' | 'guland' | 'facebook'
+    source_id    TEXT,                 -- post ID gốc từ nguồn
+    url          TEXT NOT NULL,
+    raw_json     TEXT NOT NULL,        -- toàn bộ fields parser trả về, chưa normalize
+    crawled_at   TEXT DEFAULT (datetime('now')),
+    crawl_run_id INTEGER,
+    UNIQUE(source, url)                -- mỗi URL chỉ lưu 1 lần (crawl lại → bỏ qua)
+);
+
+CREATE INDEX IF NOT EXISTS idx_raw_source    ON raw_listings(source, source_id);
+CREATE INDEX IF NOT EXISTS idx_raw_url       ON raw_listings(url);
+CREATE INDEX IF NOT EXISTS idx_raw_crawled   ON raw_listings(crawled_at DESC);
+
+
+-- ================================================================
+-- TẦNG 2: PROCESSED — output của pipeline, reprocessable từ raw
+-- ================================================================
+CREATE TABLE IF NOT EXISTS listings (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    raw_id              INTEGER REFERENCES raw_listings(id),  -- trace ngược về raw
+    source              TEXT NOT NULL,
+    source_id           TEXT,
+    url                 TEXT UNIQUE NOT NULL,
+    title               TEXT,
+    description         TEXT,
+    area                TEXT,
+    raw_area_text       TEXT,
+    price_ty            REAL,                       -- tỷ VND
+    price_per_m2        REAL,                       -- triệu/m²
+    area_m2             REAL,
+    property_type       TEXT,
+    tx_type             TEXT DEFAULT 'ban',
+    frontage_m          REAL,
+    depth_m             REAL,
+    road_width_m        REAL,
+    road_type           TEXT DEFAULT 'unknown',
+    has_so              INTEGER DEFAULT 0,
+    is_hot              INTEGER DEFAULT 0,
+    contact_phone       TEXT,
+    seller_name         TEXT,
+
+    -- Outlier flag (thay vì drop)
+    is_outlier          INTEGER DEFAULT 0,   -- 1 = nằm ngoài ±2σ của segment
+    outlier_direction   TEXT,                -- 'high' | 'low' (low = có thể là deal thật)
+    outlier_sigma       REAL,                -- cách mean bao nhiêu sigma
+
+    -- Price tracking
+    price_dropped       INTEGER DEFAULT 0,
+    price_drop_pct      REAL,
+    price_first_ty      REAL,
+
+    -- OCR sổ hồng
+    thua_so             TEXT,
+    to_ban_do           TEXT,
+    dien_tich_tho_cu_ocr REAL,
+    dia_chi_thua        TEXT,
+
+    -- Sold tracking
+    sold_at             TEXT,
+    probably_sold       INTEGER DEFAULT 0,
+    consecutive_missing INTEGER DEFAULT 0,
+
+    -- Dedup flag
+    possibly_duplicate  INTEGER DEFAULT 0,   -- 1 = có thể trùng với listing khác
+    duplicate_of_id     INTEGER DEFAULT NULL, -- FK → listings.id canonical
+
+    -- Meta
+    crawled_at          TEXT DEFAULT (datetime('now')),
+    updated_at          TEXT DEFAULT (datetime('now')),
+    posted_at           TEXT,                             -- ngày đăng từ bài post (khác crawled_at)
+
+    -- LLM Enrichment
+    llm_verified        INTEGER DEFAULT 0,
+    llm_notes           TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_listings_source        ON listings(source, source_id);
+CREATE INDEX IF NOT EXISTS idx_listings_area          ON listings(area);
+CREATE INDEX IF NOT EXISTS idx_listings_property_type ON listings(property_type);
+CREATE INDEX IF NOT EXISTS idx_listings_price_per_m2  ON listings(price_per_m2);
+CREATE INDEX IF NOT EXISTS idx_listings_is_hot        ON listings(is_hot);
+CREATE INDEX IF NOT EXISTS idx_listings_is_outlier    ON listings(is_outlier);
+CREATE INDEX IF NOT EXISTS idx_listings_crawled_at    ON listings(crawled_at DESC);
+CREATE INDEX IF NOT EXISTS idx_listings_probably_sold ON listings(probably_sold);
+CREATE INDEX IF NOT EXISTS idx_listings_raw_id        ON listings(raw_id);
+
+
+-- ================================================================
+-- TẦNG 3: ENRICHMENT
+-- ================================================================
+CREATE TABLE IF NOT EXISTS listing_images (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id  INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    img_url     TEXT NOT NULL,
+    img_order   INTEGER DEFAULT 0,
+    img_type    TEXT DEFAULT 'unknown',   -- cover | so_hong | aerial | street | unknown
+    local_path  TEXT,
+    ocr_text    TEXT,
+    crawled_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(listing_id, img_url)
+);
+
+CREATE INDEX IF NOT EXISTS idx_images_listing ON listing_images(listing_id);
+CREATE INDEX IF NOT EXISTS idx_images_type    ON listing_images(img_type);
+
+
+CREATE TABLE IF NOT EXISTS price_history (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id   INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    price_ty     REAL,
+    price_per_m2 REAL,
+    crawl_run_id INTEGER,
+    recorded_at  TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_price_history_listing ON price_history(listing_id, recorded_at DESC);
+
+
+-- ================================================================
+-- TẦNG 4: ANALYTICS
+-- ================================================================
+CREATE TABLE IF NOT EXISTS crawl_runs (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    started_at      TEXT DEFAULT (datetime('now')),
+    finished_at     TEXT,
+    source          TEXT,
+    area            TEXT,
+    n_fetched       INTEGER DEFAULT 0,
+    n_new           INTEGER DEFAULT 0,
+    n_updated       INTEGER DEFAULT 0,
+    n_price_dropped INTEGER DEFAULT 0,
+    n_skipped       INTEGER DEFAULT 0,
+    status          TEXT DEFAULT 'running',
+    error_msg       TEXT
+);
+
+
+CREATE TABLE IF NOT EXISTS market_weekly (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    week            TEXT NOT NULL,
+    area            TEXT NOT NULL,
+    property_type   TEXT NOT NULL,
+    median_ppm2     REAL,
+    avg_ppm2        REAL,
+    n_listings      INTEGER DEFAULT 0,
+    n_outlier_low   INTEGER DEFAULT 0,   -- số listing outlier thấp (potential deals)
+    n_new           INTEGER DEFAULT 0,
+    n_dropped       INTEGER DEFAULT 0,
+    computed_at     TEXT DEFAULT (datetime('now')),
+    UNIQUE(week, area, property_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_market_weekly_week ON market_weekly(week DESC, area, property_type);
+
+
+CREATE TABLE IF NOT EXISTS alert_logs (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id  INTEGER REFERENCES listings(id),
+    alert_type  TEXT,
+    message     TEXT,
+    sent_date   TEXT DEFAULT (date('now')),
+    sent_at     TEXT DEFAULT (datetime('now')),
+    UNIQUE(listing_id, alert_type, sent_date)
+);
+
+
+CREATE TABLE IF NOT EXISTS valuation_results (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id      INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    crawl_run_id    INTEGER,
+    fair_ppm2       REAL,
+    actual_ppm2     REAL,
+    mos_pct         REAL,
+    is_signal       INTEGER DEFAULT 0,
+    is_outlier      INTEGER DEFAULT 0,
+    outlier_direction TEXT,
+    outlier_sigma   REAL,
+    segment         TEXT,
+    n_segment       INTEGER,
+    computed_at     TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_valuation_listing  ON valuation_results(listing_id);
+CREATE INDEX IF NOT EXISTS idx_valuation_signal   ON valuation_results(is_signal, mos_pct DESC);
+CREATE INDEX IF NOT EXISTS idx_valuation_computed ON valuation_results(computed_at DESC);
+
+
+-- ═══════════════════════════════════════════════════════════════════
+-- Signal Outcome Tracking — human-in-the-loop feedback
+-- User review từng signal trên web /review → verdict + reason text
+-- Hybrid learning: numeric prior (per-segment reject rate) + LLM rules
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS signal_feedback (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id      INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    verdict         TEXT NOT NULL,            -- 'good' | 'bad' | 'maybe' | 'sold' | 'spam'
+    reason_text     TEXT,                     -- free-text user nhập
+    snapshot_mos    REAL,                     -- v.mos_pct tại thời điểm review
+    snapshot_score  INTEGER,                  -- v.signal_score tại thời điểm review
+    snapshot_segment TEXT,                    -- ward|property_type|road_tier để aggregate prior
+    created_at      TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_listing  ON signal_feedback(listing_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_verdict  ON signal_feedback(verdict, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feedback_segment  ON signal_feedback(snapshot_segment);
+
+CREATE TABLE IF NOT EXISTS feedback_rules (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    rule_text       TEXT NOT NULL,            -- human-readable: "Loại signal nếu ward=X và area>Y"
+    rule_sql        TEXT,                     -- SQL WHERE clause (NULL nếu chỉ là human note)
+    confidence      REAL,                     -- 0.0–1.0 do Groq estimate
+    sample_size     INTEGER,                  -- # feedback hỗ trợ rule
+    enabled         INTEGER DEFAULT 1,        -- toggle on/off để A/B test
+    created_at      TEXT DEFAULT (datetime('now')),
+    last_used_at    TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_rules_enabled ON feedback_rules(enabled);
+"""
+
+
+def init_schema() -> None:
+    with get_conn() as conn:
+        conn.executescript(SCHEMA_SQL)
+        # Migration: thêm cột mới cho DB cũ (ALTER TABLE idempotent)
+        _run_migrations(conn)
+    logger.info(f"SQLite schema initialized: {DB_PATH}")
+
+
+def _run_migrations(conn: sqlite3.Connection) -> None:
+    """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
+    existing = {r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()}
+    migrations = [
+        ("possibly_duplicate", "ALTER TABLE listings ADD COLUMN possibly_duplicate INTEGER DEFAULT 0"),
+        ("duplicate_of_id",    "ALTER TABLE listings ADD COLUMN duplicate_of_id INTEGER DEFAULT NULL"),
+        ("road_tier",          "ALTER TABLE listings ADD COLUMN road_tier INTEGER DEFAULT 0"),
+        ("ward",               "ALTER TABLE listings ADD COLUMN ward TEXT"),
+        # Logic giá trị: lifecycle tracking = feedback loop từ thị trường
+        # Listing biến mất nhanh = deal đã khớp → proof-of-signal + boost confidence segment
+        ("first_seen_at",      "ALTER TABLE listings ADD COLUMN first_seen_at TEXT"),
+        ("last_seen_at",       "ALTER TABLE listings ADD COLUMN last_seen_at TEXT"),
+        ("delisted_at",        "ALTER TABLE listings ADD COLUMN delisted_at TEXT"),
+        ("is_active",          "ALTER TABLE listings ADD COLUMN is_active INTEGER DEFAULT 1"),
+        ("lifecycle_hours",    "ALTER TABLE listings ADD COLUMN lifecycle_hours INTEGER"),
+        ("posted_at",          "ALTER TABLE listings ADD COLUMN posted_at TEXT"),
+        ("content_hash",       "ALTER TABLE listings ADD COLUMN content_hash TEXT"),
+        ("llm_verified",       "ALTER TABLE listings ADD COLUMN llm_verified INTEGER DEFAULT 0"),
+        ("llm_notes",          "ALTER TABLE listings ADD COLUMN llm_notes TEXT"),
+    ]
+    for col, sql in migrations:
+        if col not in existing:
+            try:
+                conn.execute(sql)
+                logger.info(f"Migration: added listings.{col}")
+            except Exception as e:
+                logger.warning(f"Migration skip {col}: {e}")
+
+    try:
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_content_hash ON listings(content_hash)")
+    except Exception as e:
+        logger.warning(f"Index skip idx_listings_content_hash: {e}")
+
+    # Migrations cho valuation_results
+    v_existing = {r[1] for r in conn.execute("PRAGMA table_info(valuation_results)").fetchall()}
+    v_migrations = [
+        ("signal_score", "ALTER TABLE valuation_results ADD COLUMN signal_score INTEGER DEFAULT NULL"),
+        ("road_tier",    "ALTER TABLE valuation_results ADD COLUMN road_tier INTEGER DEFAULT 0"),
+    ]
+    for col, sql in v_migrations:
+        if col not in v_existing:
+            try:
+                conn.execute(sql)
+                logger.info(f"Migration: added valuation_results.{col}")
+            except Exception as e:
+                logger.warning(f"Migration skip valuation_results.{col}: {e}")
+
+

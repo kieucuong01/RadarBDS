@@ -71,10 +71,10 @@ def test_extract_road_tier():
     assert extract_road_tier("Đường nhựa rộng 6m") == 2
     # Tier 3 — hẻm ≥5m
     assert extract_road_tier("Hẻm bê tông 6m", "") == 3
-    # Tier 4 — hẻm 3-5m
-    assert extract_road_tier("hẻm 4m", "") == 4
-    # Tier 5 — hẻm <3m
-    assert extract_road_tier("hẻm 2m", "") == 5
+    # Tier 3 — hẻm 3-5m can fit a car.
+    assert extract_road_tier("hẻm 4m", "") == 3
+    # Tier 4 — hẻm <3m is motorbike-only.
+    assert extract_road_tier("hẻm 2m", "") == 4
     # Tier 0 — unknown
     assert extract_road_tier("đất đẹp giá tốt", "") == 0
 

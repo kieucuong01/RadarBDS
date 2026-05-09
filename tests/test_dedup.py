@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from cleansing.dedup import _repost_score, _is_duplicate, SCORE_THRESHOLD
+from cleansing.dedup import _repost_score, _is_duplicate, _is_reliable_price_drop, SCORE_THRESHOLD
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -188,6 +188,46 @@ def test_cross_source_scoring():
 
 # ── Score floor verification ──────────────────────────────────────────────────
 
+def test_reliable_drop_facebook_same_area_different_post():
+    old = _listing(
+        source="facebook", source_id="fb1", posted_at="2026-05-01",
+        ward="Tân An", property_type="dat_nen", area_m2=100.0,
+        price_ty=2.0, description="Bán đất đường DX84 diện tích 100m2 giá 2 tỷ"
+    )
+    new = _listing(
+        source="facebook", source_id="fb2", posted_at="2026-05-03",
+        ward="Tân An", property_type="dat_nen", area_m2=100.0,
+        price_ty=1.9, description="Bán đất đường DX84 diện tích 100m2 giá giảm còn 1.9 tỷ"
+    )
+    assert _is_reliable_price_drop(old, new), "Facebook repost same area should count as reliable price drop"
+
+
+def test_reliable_drop_rejects_same_template_different_lot():
+    old = _listing(
+        source="facebook", source_id="fb1", posted_at="2026-05-01",
+        ward="Định Hòa", property_type="dat_nen", area_m2=1259.0,
+        price_ty=13.5, description="Cần bán đất Định Hòa đường DX78 liên hệ môi giới"
+    )
+    new = _listing(
+        source="facebook", source_id="fb2", posted_at="2026-05-03",
+        ward="Định Hòa", property_type="dat_nen", area_m2=180.0,
+        price_ty=3.3, description="Cần bán đất Định Hòa đường DX71 liên hệ môi giới"
+    )
+    assert not _is_reliable_price_drop(old, new), "Different area and road should not count as price drop"
+
+
+def test_reliable_drop_same_source_id():
+    old = _listing(
+        source="facebook", source_id="same-post", posted_at="2026-05-01",
+        area_m2=1259.0, price_ty=13.5, description="Old post"
+    )
+    new = _listing(
+        source="facebook", source_id="same-post", posted_at="2026-05-03",
+        area_m2=180.0, price_ty=12.9, description="Updated post"
+    )
+    assert _is_reliable_price_drop(old, new), "Same source_id should be a reliable price drop"
+
+
 def test_score_threshold_boundary():
     assert SCORE_THRESHOLD == 6, f"SCORE_THRESHOLD should be 6, got {SCORE_THRESHOLD}"
 
@@ -213,6 +253,9 @@ if __name__ == "__main__":
         test_same_source_id_always_duplicate,
         test_same_source_different_id_uses_scoring,
         test_cross_source_scoring,
+        test_reliable_drop_facebook_same_area_different_post,
+        test_reliable_drop_rejects_same_template_different_lot,
+        test_reliable_drop_same_source_id,
         test_score_threshold_boundary,
     ]
     passed = failed = 0

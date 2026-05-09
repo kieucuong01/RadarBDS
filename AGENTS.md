@@ -29,6 +29,13 @@ You are operating under Andrej Karpathy's recommended skills for LLM coding agen
 
 > **Mục đích file này**: Cung cấp context đầy đủ cho AI Agent để làm việc ngay, không hỏi lại những gì đã biết.
 
+## 0. AGENT HYGIENE — ĐỌC TRƯỚC KHI QUÉT REPO
+
+- Đọc thêm `docs/architecture.md`, `docs/dev_commands.md`, `docs/agent_playbook.md`.
+- Khi search toàn repo, tránh mặc định các thư mục: `.claude/worktrees/`, `_legacy/`, `data/`, `logs/`, `reports/`, `scratch/`, `browser_recordings/`, `artifacts/`.
+- Default smoke tests trên Windows: dùng Python với `-X utf8`.
+- `tests/test_guland.py` và `tests/sanity_test.py` là integration checks, không thuộc default pytest set.
+
 ---
 
 ## 1. DỰ ÁN LÀ GÌ?
@@ -84,7 +91,10 @@ python alerts/telegram.py               # Test gửi tin nhắn Telegram manuall
 | `crawler/batdongsan_pw.py` | BatDongSan (26 slugs, 8s delay) |
 | `crawler/facebook_apify.py` | Facebook via Apify API |
 | `config/area_profiles.py` | Config-driven area rules: street patterns, standard lots, sub-wards |
-| `config/database_sqlite.py` | get_conn(), init_schema(), upsert_listing() |
+| `db/connection.py` + `db/schema.py` | SQLite connection, schema, migrations |
+| `db/raw_listings.py`, `db/listings.py`, `db/crawl_runs.py`, `db/analytics.py` | DB repository helpers by concern |
+| `db/sqlite.py` | Compatibility facade for DB public API |
+| `config/database_sqlite.py` | Compatibility facade for older imports |
 | `alerts/telegram.py` | Telegram consolidated alert |
 
 ---

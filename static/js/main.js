@@ -1,4 +1,4 @@
-﻿// Init theme on load before body renders
+// Init theme on load before body renders
 const savedTheme = localStorage.getItem('radar_theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
 
@@ -42,11 +42,11 @@ const requestControllers = {};
 let filterDebounceTimer = null;
 
 const CITY_COORDS = {
-  "THá»¦ Dáº¦U Má»˜T": { lat: 10.98, lon: 106.65 },
-  "Báº¾N CÃT": { lat: 11.13, lon: 106.61 },
-  "THUáº¬N AN": { lat: 10.91, lon: 106.70 },
-  "DÄ¨ AN": { lat: 10.91, lon: 106.77 },
-  "TÃ‚N UYÃŠN": { lat: 11.05, lon: 106.81 }
+  "THỦ DẦU MỘT": { lat: 10.98, lon: 106.65 },
+  "BẾN CÁT": { lat: 11.13, lon: 106.61 },
+  "THUẬN AN": { lat: 10.91, lon: 106.70 },
+  "DĨ AN": { lat: 10.91, lon: 106.77 },
+  "TÂN UYÊN": { lat: 11.05, lon: 106.81 }
 };
 
 function detectLocation() {
@@ -60,7 +60,7 @@ function detectLocation() {
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
     
-    let closestCity = "THá»¦ Dáº¦U Má»˜T";
+    let closestCity = "THỦ DẦU MỘT";
     let minDist = Infinity;
     
     for (const [city, coords] of Object.entries(CITY_COORDS)) {
@@ -82,16 +82,16 @@ function detectLocation() {
     applyFilters();
   }, (err) => {
     console.warn("Geolocation error:", err.message);
-    // Fallback: Ensure THá»¦ Dáº¦U Má»˜T is checked (which triggers TÃ¢n An fallback in updateWardFilters)
+    // Fallback: Ensure THỦ DẦU MỘT is checked (which triggers Tân An fallback in updateWardFilters)
     const radios = document.getElementsByName('city');
-    radios.forEach(r => { if(r.value === "THá»¦ Dáº¦U Má»˜T") r.checked = true; });
+    radios.forEach(r => { if(r.value === "THỦ DẦU MỘT") r.checked = true; });
     applyFilters();
   });
 }
 let treemapInstance = null;
 let trendInstance = null;
 let priceGapInstance = null;
-const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='520' viewBox='0 0 800 520'%3E%3Crect width='800' height='520' fill='%23e2e8f0'/%3E%3Cpath d='M275 330l78-86 58 62 38-42 76 66H275z' fill='%2394a3b8'/%3E%3Ccircle cx='505' cy='190' r='38' fill='%23cbd5e1'/%3E%3Ctext x='400' y='405' text-anchor='middle' font-family='Arial,sans-serif' font-size='30' font-weight='700' fill='%2364748b'%3EChÆ°a cÃ³ áº£nh%3C/text%3E%3C/svg%3E";
+const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='520' viewBox='0 0 800 520'%3E%3Crect width='800' height='520' fill='%23e2e8f0'/%3E%3Cpath d='M275 330l78-86 58 62 38-42 76 66H275z' fill='%2394a3b8'/%3E%3Ccircle cx='505' cy='190' r='38' fill='%23cbd5e1'/%3E%3Ctext x='400' y='405' text-anchor='middle' font-family='Arial,sans-serif' font-size='30' font-weight='700' fill='%2364748b'%3EChưa có ảnh%3C/text%3E%3C/svg%3E";
 
 const sourceNames = { 'batdongsan': 'BDS.vn', 'facebook': 'Facebook', 'guland': 'Guland' };
 const sourceClasses = { 'batdongsan': 'source-bds', 'facebook': 'source-fb', 'guland': 'source-gl' };
@@ -232,7 +232,7 @@ async function initDashboard() {
   } catch (err) {
     if (err.name === 'AbortError') return;
     console.error(err);
-    alert('Lá»—i táº£i dá»¯ liá»‡u Dashboard');
+    alert('Lỗi tải dữ liệu Dashboard');
   } finally {
     hideLoader();
   }
@@ -269,9 +269,9 @@ function renderSignals(signals) {
   if (!signals || signals.length === 0) {
     grid.innerHTML = `
       <div style="grid-column: 1/-1; padding: 60px 20px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: 16px; margin-top: 20px;">
-        <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.8;">ðŸ“¡</div>
-        <h3 style="color: var(--text); font-size: 1.2rem; margin-bottom: 8px;">KhÃ´ng tÃ¬m tháº¥y KÃ¨o ThÆ¡m nÃ o</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Radar chÆ°a quÃ©t Ä‘Æ°á»£c tÃ­n hiá»‡u nÃ o khá»›p vá»›i bá»™ lá»c hiá»‡n táº¡i. HÃ£y thá»­ ná»›i lá»ng bá»™ lá»c á»Ÿ menu bÃªn trÃ¡i!</p>
+        <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.8;">📡</div>
+        <h3 style="color: var(--text); font-size: 1.2rem; margin-bottom: 8px;">Không tìm thấy Kèo Thơm nào</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Radar chưa quét được tín hiệu nào khớp với bộ lọc hiện tại. Hãy thử nới lỏng bộ lọc ở menu bên trái!</p>
       </div>
     `;
     return;
@@ -281,16 +281,16 @@ function renderSignals(signals) {
     const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
     const profit = fairPrice !== '-' ? (parseFloat(fairPrice) - x.price_ty).toFixed(2) : '-';
 
-    let timeStr = x.days_ago === 0 ? 'hÃ´m nay' : `${x.days_ago} ngÃ y trÆ°á»›c`;
-    let legalStr = x.has_so === 1 ? 'Sá»• Há»“ng' : (x.has_so === 0 ? 'Chá» sá»•' : 'Äang cáº­p nháº­t');
+    let timeStr = x.days_ago === 0 ? 'hôm nay' : `${x.days_ago} ngày trước`;
+    let legalStr = x.has_so === 1 ? 'Sổ Hồng' : (x.has_so === 0 ? 'Chờ sổ' : 'Đang cập nhật');
 
     const roadTiers = {
-      1: 'Máº·t tiá»n',
-      2: 'ÄÆ°á»ng nhá»±a',
-      3: 'Háº»m xe hÆ¡i',
-      4: 'Háº»m xe mÃ¡y'
+      1: 'Mặt tiền',
+      2: 'Đường nhựa',
+      3: 'Hẻm xe hơi',
+      4: 'Hẻm xe máy'
     };
-    let roadStr = roadTiers[x.road_tier] || 'ChÆ°a rÃµ';
+    let roadStr = roadTiers[x.road_tier] || 'Chưa rõ';
 
     const safeTitle = String(x.title || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const safeDesc = String(x.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -299,10 +299,10 @@ function renderSignals(signals) {
     const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-desc="${safeDesc}" data-imgs="${imgsJson}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.price_drop_pct || ''}" data-score="${x.signal_score || '-'}"`;
 
     const isNew = x.days_ago <= 3;
-    const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Má»šI</div>` : '';
+    const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
 
     const srcName = sourceNames[x.source] || x.source;
-    const dropBadge = x.price_dropped ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg> Giáº£m ${x.drop_pct ? x.drop_pct + '%' : '2 láº§n'}</span>` : '';
+    const dropBadge = x.price_dropped ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg> Giảm ${x.drop_pct ? x.drop_pct + '%' : '2 lần'}</span>` : '';
 
     return `
       <div class="scard" onclick="openSignal(this)" ${dataAttr}>
@@ -321,27 +321,27 @@ function renderSignals(signals) {
 
           <div class="price-container">
             <div class="price-actual">
-              <span class="price-label price-label-actual">THá»°C Táº¾</span>
-              <div class="price-val">${x.price_ty || '-'} tá»·</div>
-              <div class="price-m2">${x.actual_ppm2 || '-'} tr/mÂ²</div>
+              <span class="price-label price-label-actual">THỰC TẾ</span>
+              <div class="price-val">${x.price_ty || '-'} tỷ</div>
+              <div class="price-m2">${x.actual_ppm2 || '-'} tr/m²</div>
             </div>
             <div class="price-fair">
               <span class="price-label price-label-fair">FAIR VALUE AI</span>
-              <div class="price-val-fair">${fairPrice} tá»·</div>
-              <div class="price-m2">${x.fair_ppm2 || '-'} tr/mÂ²</div>
+              <div class="price-val-fair">${fairPrice} tỷ</div>
+              <div class="price-m2">${x.fair_ppm2 || '-'} tr/m²</div>
             </div>
           </div>
 
           <div class="sc-meta-grid">
             <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${x.ward}</div>
-            <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg> ${x.area_m2 || '-'} mÂ²</div>
+            <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg> ${x.area_m2 || '-'} m²</div>
             <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> ${roadStr}</div>
             <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ${legalStr}</div>
           </div>
 
           <div class="sc-actions" onclick="event.stopPropagation()">
             <a href="https://zalo.me/0343216024" target="_blank" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Zalo</a>
-            <a href="/listing/${x.id}" target="_blank" class="btn-analyze"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> PhÃ¢n tÃ­ch Deal</a>
+            <a href="/listing/${x.id}" target="_blank" class="btn-analyze"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Phân tích Deal</a>
           </div>
         </div>
       </div>
@@ -413,16 +413,16 @@ function openSignal(card) {
   // Signal badge
   const mosNum = parseFloat(d.mos) || 0;
   const badgeLabel = mosNum >= 25 ? 'SUPER SIGNAL' : 'SIGNAL';
-  document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} Â· -${d.mos}%</span>`;
+  document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} · -${d.mos}%</span>`;
 
   // Title
   document.getElementById('sm-title').innerText = d.title;
 
   // Meta line
-  document.getElementById('sm-meta-line').innerHTML = `<span>ÄÄƒng ${d.time}</span> Â· <span>${d.source}</span>`;
+  document.getElementById('sm-meta-line').innerHTML = `<span>Đăng ${d.time}</span> · <span>${d.source}</span>`;
 
   // Description
-  document.getElementById('sm-desc').innerText = d.desc || 'KhÃ´ng cÃ³ mÃ´ táº£.';
+  document.getElementById('sm-desc').innerText = d.desc || 'Không có mô tả.';
 
   // AI Assessment
   const aiSection = document.getElementById('sm-ai-section');
@@ -430,9 +430,9 @@ function openSignal(card) {
   const price = parseFloat(d.price) || 0;
   const fair = parseFloat(d.fair) || 0;
   const area = parseFloat(d.area) || 0;
-  const dropInfo = d.drop ? `, Ä‘Ã£ giáº£m <b>${d.drop}%</b>` : '';
+  const dropInfo = d.drop ? `, đã giảm <b>${d.drop}%</b>` : '';
   if (fair > 0 && price > 0) {
-    aiText.innerHTML = `TÃ­n hiá»‡u ngá»£p <b>cáº¥p Ä‘á»™ ${mosNum >= 25 ? 'cao' : 'trung bÃ¬nh'}</b>: giÃ¡ chÃ o tháº¥p hÆ¡n fair value <b>${Math.round(mosNum)}%</b>${dropInfo}. Khu vá»±c <b>${d.ward}</b>, ${d.road}. Diá»‡n tÃ­ch ${area} mÂ². Khuyáº¿n nghá»‹ xÃ¡c minh chá»§ sá»Ÿ há»¯u, Ä‘Ã m phÃ¡n thÃªm 2-5%.`;
+    aiText.innerHTML = `Tín hiệu ngợp <b>cấp độ ${mosNum >= 25 ? 'cao' : 'trung bình'}</b>: giá chào thấp hơn fair value <b>${Math.round(mosNum)}%</b>${dropInfo}. Khu vực <b>${d.ward}</b>, ${d.road}. Diện tích ${area} m². Khuyến nghị xác minh chủ sở hữu, đàm phán thêm 2-5%.`;
     aiSection.style.display = 'block';
   } else {
     aiSection.style.display = 'none';
@@ -440,10 +440,10 @@ function openSignal(card) {
 
   // Tags
   const tags = [
-    { icon: 'ðŸ“', label: `${d.area} mÂ²` },
-    { icon: 'ðŸ“', label: d.ward },
-    { icon: 'ðŸ›£ï¸', label: d.road },
-    { icon: 'ðŸ“Š', label: `Score: ${d.score || '-'}` },
+    { icon: '📐', label: `${d.area} m²` },
+    { icon: '📍', label: d.ward },
+    { icon: '🛣️', label: d.road },
+    { icon: '📊', label: `Score: ${d.score || '-'}` },
   ];
   document.getElementById('sm-tags').innerHTML = tags
     .map(t => `<span>${t.icon} ${t.label}</span>`).join('');
@@ -481,7 +481,7 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
           changeHtml = `<span class="ph-change">${pct}%</span>`;
         }
         prevPrice = h.price_ty;
-        return `<div class="ph-row"><span class="ph-date">ðŸ“… ${h.date}</span><span class="ph-price">${h.price_ty} tá»·</span>${changeHtml}</div>`;
+        return `<div class="ph-row"><span class="ph-date">📅 ${h.date}</span><span class="ph-price">${h.price_ty} tỷ</span>${changeHtml}</div>`;
       }).join('');
 
       // Mini chart
@@ -507,14 +507,14 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
       });
     }
 
-    // COMPS â€” similar listings in same ward
+    // COMPS — similar listings in same ward
     if (data.comps && data.comps.length > 0) {
       compsBody.innerHTML = data.comps.map(c =>
-        `<tr><td>${c.address || c.title || '-'}</td><td>${c.area_m2 || '-'} mÂ²</td><td><b>${c.price_ty} tá»·</b></td><td>${c.date || '-'}</td></tr>`
+        `<tr><td>${c.address || c.title || '-'}</td><td>${c.area_m2 || '-'} m²</td><td><b>${c.price_ty} tỷ</b></td><td>${c.date || '-'}</td></tr>`
       ).join('');
     }
     // Add current deal row
-    compsBody.innerHTML += `<tr><td>Deal hiá»‡n táº¡i</td><td>${area} mÂ²</td><td><b>${currentPrice} tá»·</b></td><td>Now</td></tr>`;
+    compsBody.innerHTML += `<tr><td>Deal hiện tại</td><td>${area} m²</td><td><b>${currentPrice} tỷ</b></td><td>Now</td></tr>`;
 
   } catch (err) {
     console.error('History load error:', err);
@@ -571,9 +571,9 @@ function renderHeatmap(data) {
         container.insertAdjacentHTML('beforeend', `
           <div id="heatmapEmptyState" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--text-muted); padding:24px;">
             <div>
-              <div style="font-size:2rem; margin-bottom:10px;">ðŸ“¡</div>
-              <div style="font-weight:800; color:var(--text); margin-bottom:4px;">ChÆ°a cÃ³ deal MOS dÆ°Æ¡ng</div>
-              <div style="font-size:0.85rem;">HÃ£y ná»›i filter phÆ°á»ng, nguá»“n tin hoáº·c loáº¡i hÃ¬nh Ä‘á»ƒ radar cÃ³ thÃªm máº«u signal.</div>
+              <div style="font-size:2rem; margin-bottom:10px;">📡</div>
+              <div style="font-weight:800; color:var(--text); margin-bottom:4px;">Chưa có deal MOS dương</div>
+              <div style="font-size:0.85rem;">Hãy nới filter phường, nguồn tin hoặc loại hình để radar có thêm mẫu signal.</div>
             </div>
           </div>
         `);
@@ -676,13 +676,13 @@ function renderPriceGapChart(data) {
         labels: filtered.map(d => d.ward),
         datasets: [
           {
-            label: 'GiÃ¡ chÃ o TB',
+            label: 'Giá chào TB',
             data: filtered.map(d => d.avg_price_ty),
             backgroundColor: '#6366f1',
             borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.8
           },
           {
-            label: 'Äá»‹nh giÃ¡ AI',
+            label: 'Định giá AI',
             data: filtered.map(d => d.avg_fair_ty),
             backgroundColor: '#10b981',
             borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.8
@@ -695,13 +695,13 @@ function renderPriceGapChart(data) {
           legend: { position: 'top', labels: { font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded' } },
           tooltip: {
             callbacks: {
-              label: (item) => `${item.dataset.label}: ${item.raw.toFixed(2)} tá»·`
+              label: (item) => `${item.dataset.label}: ${item.raw.toFixed(2)} tỷ`
             }
           }
         },
         scales: {
           x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11 } } },
-          y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { font: { size: 10 }, callback: v => v + ' tá»·' }, beginAtZero: true }
+          y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { font: { size: 10 }, callback: v => v + ' tỷ' }, beginAtZero: true }
         }
       }
     });
@@ -790,7 +790,7 @@ function renderTrendChart(trendData) {
       },
       scales: {
         y: { 
-          title: { display: true, text: 'GiÃ¡ (tr/mÂ²)', font: { weight: '600' } },
+          title: { display: true, text: 'Giá (tr/m²)', font: { weight: '600' } },
           grid: { color: 'rgba(255,255,255,0.05)' },
           ticks: { font: { size: 11 } }
         },
@@ -828,20 +828,20 @@ async function loadListings(page) {
           <td><span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">${x.prop_type}</span></td>
           <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:6px; font-weight:600; font-size:0.8rem;">${x.ward}</span></td>
           <td><img src="${x.imgs && x.imgs.length ? x.imgs[0] : PLACEHOLDER_IMG}" class="td-img" loading="lazy" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG"></td>
-          <td style="font-weight:700;">${x.area_m2 ? x.area_m2 + ' mÂ²' : '-'}</td>
+          <td style="font-weight:700;">${x.area_m2 ? x.area_m2 + ' m²' : '-'}</td>
           <td>
-            <div style="color:var(--accent); font-weight:800; font-size:1rem;">${x.price_ty ? x.price_ty + ' tá»·' : '-'}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${x.price_per_m2 || '-'} tr/mÂ²</div>
+            <div style="color:var(--accent); font-weight:800; font-size:1rem;">${x.price_ty ? x.price_ty + ' tỷ' : '-'}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${x.price_per_m2 || '-'} tr/m²</div>
           </td>
           <td>
-            <div style="color:var(--primary); font-weight:800;">${fair !== '-' ? fair + ' tá»·' : '-'}</div>
-            <div style="font-size:0.75rem; color:var(--primary); opacity:0.8; margin-top:2px;">${x.fair_ppm2 || '-'} tr/mÂ²</div>
+            <div style="color:var(--primary); font-weight:800;">${fair !== '-' ? fair + ' tỷ' : '-'}</div>
+            <div style="font-size:0.75rem; color:var(--primary); opacity:0.8; margin-top:2px;">${x.fair_ppm2 || '-'} tr/m²</div>
           </td>
           <td style="max-width: 300px;">
             <div class="td-title" title="${String(x.title || '').replace(/"/g, '&quot;')}">${x.title}</div>
             <div class="td-desc" title="${String(x.description || '').replace(/"/g, '&quot;')}">${x.description}</div>
           </td>
-          <td style="text-align:center;"><a href="/listing/${x.id}" target="_blank" style="color:var(--primary); font-weight:900; font-size:1.2rem; text-decoration:none;">â†—</a></td>
+          <td style="text-align:center;"><a href="/listing/${x.id}" target="_blank" style="color:var(--primary); font-weight:900; font-size:1.2rem; text-decoration:none;">↗</a></td>
         </tr>
       `;
     }).join('');
@@ -858,7 +858,7 @@ function changePage(dir) {
 }
 
 async function openHistory(id, title) {
-  document.getElementById('historyTitle').innerText = `Lá»‹ch sá»­ giÃ¡: ${title}`;
+  document.getElementById('historyTitle').innerText = `Lịch sử giá: ${title}`;
   document.getElementById('historyModal').style.display = 'flex';
   
   try {
@@ -873,7 +873,7 @@ async function openHistory(id, title) {
       data: {
         labels: (data.history || data).map(d => d.date),
         datasets: [{
-          label: 'GiÃ¡ (tá»·)',
+          label: 'Giá (tỷ)',
           data: (data.history || data).map(d => d.price_ty),
           borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)',
           borderWidth: 3, tension: 0.1, fill: true, stepped: true,
@@ -884,7 +884,7 @@ async function openHistory(id, title) {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: { title: { display: true, text: 'Tá»•ng giÃ¡ (tá»·)' } },
+          y: { title: { display: true, text: 'Tổng giá (tỷ)' } },
           x: { grid: { display: false } }
         }
       }
@@ -966,7 +966,7 @@ async function sendMessage() {
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'message bot';
   loadingDiv.id = loadingId;
-  loadingDiv.innerText = 'RadarBDS AI Ä‘ang tráº£ lá»i...';
+  loadingDiv.innerText = 'RadarBDS AI đang trả lời...';
   msgContainer.appendChild(loadingDiv);
   msgContainer.scrollTop = msgContainer.scrollHeight;
 
@@ -988,7 +988,7 @@ async function sendMessage() {
     if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10); // Keep last 5 turns
     
   } catch (err) {
-    loadingDiv.innerText = 'Lá»—i káº¿t ná»‘i. Vui lÃ²ng thá»­ láº¡i.';
+    loadingDiv.innerText = 'Lỗi kết nối. Vui lòng thử lại.';
     console.error(err);
   }
 }
