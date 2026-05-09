@@ -58,7 +58,7 @@ def resolve_image_url(local_src: str, remote_src: str) -> str:
         return remote_url
     return local_url
 
-def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True):
+def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0):
     if not sources:
         sources = ["facebook", "guland", "batdongsan"]
     
@@ -88,15 +88,21 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
 
     where_sql = " AND ".join(where_parts)
 
+    mos_condition = ""
+    mos_params = []
+    if mos_min > 0:
+        mos_condition = " AND v.mos_pct >= ?"
+        mos_params = [mos_min]
+
     # 1. Stats
     stats = conn.execute(f"""
         WITH filtered AS (SELECT * FROM listings WHERE {where_sql})
-        SELECT 
+        SELECT
             (SELECT COUNT(*) FROM filtered) as total,
-            (SELECT COUNT(*) FROM filtered l JOIN valuation_results v ON l.id = v.listing_id WHERE v.is_signal = 1) as signals,
+            (SELECT COUNT(*) FROM filtered l JOIN valuation_results v ON l.id = v.listing_id WHERE v.is_signal = 1{mos_condition}) as signals,
             (SELECT COUNT(*) FROM filtered WHERE is_hot = 1) as hot,
             (SELECT COUNT(*) FROM filtered WHERE price_dropped = 1) as price_drops
-    """, params).fetchone()
+    """, params + mos_params).fetchone()
 
     # 2. Signals
     sig_query = f"""
@@ -109,11 +115,11 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
                COALESCE(v.signal_score, 0) as signal_score
         FROM valuation_results v
         JOIN listings l ON v.listing_id = l.id
-        WHERE v.is_signal = 1 AND {where_sql}
+        WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
         ORDER BY v.signal_score DESC, v.mos_pct DESC
         LIMIT 200
     """
-    sig_rows = conn.execute(sig_query, params).fetchall()
+    sig_rows = conn.execute(sig_query, params + mos_params).fetchall()
 
     # 3. All Listings
     all_rows = []
@@ -368,10 +374,14 @@ def get_base_filters(req):
     prop_types = req.args.getlist("prop_type[]") or req.args.getlist("prop_type")
     only_drops = req.args.get("only_drops") == "1"
     trend_period = req.args.get("trend_period", "day")
-    
+    try:
+        mos_min = int(req.args.get("mos_min", 0))
+    except (ValueError, TypeError):
+        mos_min = 0
+
     if not active_city and wards:
         active_city = get_city_for_ward(wards[0])
     if not active_city:
         active_city = "THỦ DẦU MỘT"
-        
-    return active_city, wards, sources, prop_types, only_drops, trend_period
+
+    return active_city, wards, sources, prop_types, only_drops, trend_period, mos_min

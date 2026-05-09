@@ -29,9 +29,21 @@ function hideSidebarMobile() {
   }
 }
 
+function toggleFilterSection(titleEl) {
+  const group = titleEl.closest('.filter-group');
+  if (!group || !group.hasAttribute('data-collapsible')) return;
+  if (group.hasAttribute('data-collapsed')) {
+    group.removeAttribute('data-collapsed');
+  } else {
+    group.setAttribute('data-collapsed', '');
+  }
+}
+
 // Global State
 let currentFilters = "";
 let currentPageNo = 1;
+let listingsHasMore = false;
+let listingsLoading = false;
 let trendPeriod = 'month'; 
 let historyChartInstance = null;
 let globalSignals = [];
@@ -190,6 +202,7 @@ function updateTrendPeriod(p, btn) {
 function applyFilters() {
   currentFilters = getFilterQuery();
   currentPageNo = 1;
+  listingsHasMore = false;
   initDashboard();
   
   const tab = activeTabId();
@@ -808,20 +821,57 @@ function renderTrendChart(trendData) {
   });
 }
 
+let tableSort = { col: 'price_m2', dir: 'asc' };
+
+function sortTable(th) {
+  const col = th.dataset.col;
+  if (tableSort.col === col) {
+    tableSort.dir = tableSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    tableSort.col = col;
+    tableSort.dir = 'asc';
+  }
+  document.querySelectorAll('.th-sort').forEach(el => {
+    el.classList.remove('sort-asc', 'sort-desc');
+    el.querySelector('.sort-icon').textContent = '↕';
+  });
+  th.classList.add(tableSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+  th.querySelector('.sort-icon').textContent = tableSort.dir === 'asc' ? '↑' : '↓';
+  loadListings(1);
+}
+
+function applyTableFilters() { loadListings(1); }
+function resetTableFilters() {
+  ['tfAreaMin','tfAreaMax','tfPriceMin','tfPriceMax'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  loadListings(1);
+}
+
 async function loadListings(page) {
+  if (listingsLoading) return;
+  listingsLoading = true;
   const tbody = document.getElementById('listingsTableBody');
+  const sentinel = document.getElementById('listingsSentinel');
+  if (page === 1) { tbody.innerHTML = ''; listingsHasMore = false; }
   tbody.classList.add('loading');
+  if (sentinel) sentinel.textContent = '⏳ Đang tải...';
   try {
-    const data = await fetchJSONCached('listings', `/api/listings?${currentFilters}&page=${page}&limit=50`);
-    
-    currentPageNo = data.page;
-    document.getElementById('currentPage').innerText = data.page;
-    document.getElementById('totalPages').innerText = data.pages;
-    document.getElementById('btnPrevPage').disabled = (data.page <= 1);
-    document.getElementById('btnNextPage').disabled = (data.page >= data.pages);
-    
-    const tbody = document.getElementById('listingsTableBody');
-    tbody.innerHTML = data.listings.map(x => {
+    const areaMin = document.getElementById('tfAreaMin')?.value || '';
+    const areaMax = document.getElementById('tfAreaMax')?.value || '';
+    const priceMin = document.getElementById('tfPriceMin')?.value || '';
+    const priceMax = document.getElementById('tfPriceMax')?.value || '';
+    let tableParams = '';
+    if (areaMin) tableParams += `&area_min=${areaMin}`;
+    if (areaMax) tableParams += `&area_max=${areaMax}`;
+    if (priceMin) tableParams += `&price_min=${priceMin}`;
+    if (priceMax) tableParams += `&price_max=${priceMax}`;
+    currentPageNo = page;
+    const data = await fetchJSONCached('listings', `/api/listings?${currentFilters}${tableParams}&sort_by=${tableSort.col}&sort_dir=${tableSort.dir}&page=${page}&limit=50`);
+    listingsHasMore = (data.listings || []).length >= 50;
+    if (sentinel) sentinel.textContent = listingsHasMore ? '' : `Đã hiển thị tất cả ${data.total} tin`;
+    const rows = (data.listings || []).map(x => {
       const fair = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       return `
         <tr>
@@ -837,6 +887,10 @@ async function loadListings(page) {
             <div style="color:var(--primary); font-weight:800;">${fair !== '-' ? fair + ' tỷ' : '-'}</div>
             <div style="font-size:0.75rem; color:var(--primary); opacity:0.8; margin-top:2px;">${x.fair_ppm2 || '-'} tr/m²</div>
           </td>
+          <td style="white-space:nowrap; font-size:0.8rem; color:var(--text-muted);">
+            <div>${x.posted_at || '-'}</div>
+            <div style="font-size:0.72rem; opacity:0.7;">${x.days_ago === 0 ? 'hôm nay' : x.days_ago + ' ngày'}</div>
+          </td>
           <td style="max-width: 300px;">
             <div class="td-title" title="${String(x.title || '').replace(/"/g, '&quot;')}">${x.title}</div>
             <div class="td-desc" title="${String(x.description || '').replace(/"/g, '&quot;')}">${x.description}</div>
@@ -845,16 +899,25 @@ async function loadListings(page) {
         </tr>
       `;
     }).join('');
-    
+    tbody.insertAdjacentHTML('beforeend', rows);
   } catch(e) {
     if (e.name !== 'AbortError') console.error(e);
+    if (sentinel) sentinel.textContent = '';
   } finally {
     tbody.classList.remove('loading');
+    listingsLoading = false;
   }
 }
 
-function changePage(dir) {
-  loadListings(currentPageNo + dir);
+function setupListingsObserver() {
+  const sentinel = document.getElementById('listingsSentinel');
+  const scrollEl = document.querySelector('.table-scroll');
+  if (!sentinel || !scrollEl) return;
+  new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && listingsHasMore && !listingsLoading) {
+      loadListings(currentPageNo + 1);
+    }
+  }, { root: scrollEl, rootMargin: '100px' }).observe(sentinel);
 }
 
 async function openHistory(id, title) {
@@ -932,6 +995,7 @@ document.addEventListener('change', (e) => {
 
 // Init on load
 document.addEventListener('DOMContentLoaded', () => {
+  setupListingsObserver();
   if(window.location.search) {
     currentFilters = window.location.search.substring(1);
     initDashboard();
