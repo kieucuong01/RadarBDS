@@ -1,780 +1,582 @@
-// Init theme on load before body renders
-const savedTheme = localStorage.getItem('radar_theme') || 'dark';
-document.documentElement.setAttribute('data-theme', savedTheme);
-
-function toggleTheme() {
-  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-  if (isLight) {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    localStorage.setItem('radar_theme', 'dark');
-  } else {
-    document.documentElement.setAttribute('data-theme', 'light');
-    localStorage.setItem('radar_theme', 'light');
-  }
-}
-
-function toggleMenu() {
-  if (window.innerWidth <= 1024) {
-    document.getElementById('sidebar').classList.toggle('show');
-    document.getElementById('mobileOverlay').classList.toggle('show');
-  } else {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-  }
-}
-
-function hideSidebarMobile() {
-  if (window.innerWidth <= 1024) {
-    document.getElementById('sidebar').classList.remove('show');
-    document.getElementById('mobileOverlay').classList.remove('show');
-  }
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
 }
 
 // Global State
-let currentFilters = "";
-let currentPageNo = 1;
-let trendPeriod = 'month'; 
-let historyChartInstance = null;
 let globalSignals = [];
-let globalWardsByCity = {};
-
-const CITY_COORDS = {
-  "THỦ DẦU MỘT": { lat: 10.98, lon: 106.65 },
-  "BẾN CÁT": { lat: 11.13, lon: 106.61 },
-  "THUẬN AN": { lat: 10.91, lon: 106.70 },
-  "DĨ AN": { lat: 10.91, lon: 106.77 },
-  "TÂN UYÊN": { lat: 11.05, lon: 106.81 }
+let globalWardsByCity = {
+  "THỦ DẦU MỘT": ["Tân An", "Tương Bình Hiệp", "Hiệp An", "Chánh Mỹ", "Phú Mỹ", "Phú Tân", "Chánh Nghĩa", "Định Hòa", "Phú Thọ", "Phú Hòa", "Phú Cường", "Hiệp Thành", "Phú Lợi"],
+  "BẾN CÁT": ["Phú An", "An Tây", "An Điền", "Thới Hòa", "Mỹ Phước", "Mỹ Phước 1", "Mỹ Phước 2", "Mỹ Phước 3", "Mỹ Phước 4", "Chánh Phú Hòa", "Tân Định", "Hòa Lợi"]
 };
+let currentFilters = `city=${encodeURIComponent("THỦ DẦU MỘT")}&discount_min=15&source=facebook&source=guland`;
+let activeTab = 'deals';
+let theme = localStorage.getItem('radar_theme') || 'light';
 
-function detectLocation() {
-  if (!navigator.geolocation) {
-    console.warn("Geolocation not supported. Using fallback.");
-    applyFilters();
-    return;
-  }
+// Init Theme
+document.documentElement.setAttribute('data-theme', theme);
+
+function toggleTheme() {
+  theme = theme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('radar_theme', theme);
+  const icon = document.getElementById('themeIcon');
+  icon.setAttribute('data-lucide', theme === 'light' ? 'moon' : 'sun');
+  lucide.createIcons();
+}
+
+function switchTab(tabId, btn) {
+  activeTab = tabId;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`tab-${tabId}`).classList.add('active');
   
-  navigator.geolocation.getCurrentPosition((pos) => {
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-    
-    let closestCity = "THỦ DẦU MỘT";
-    let minDist = Infinity;
-    
-    for (const [city, coords] of Object.entries(CITY_COORDS)) {
-      const d = Math.sqrt(Math.pow(lat - coords.lat, 2) + Math.pow(lon - coords.lon, 2));
-      if (d < minDist) {
-        minDist = d;
-        closestCity = city;
-      }
-    }
-    
-    const radios = document.getElementsByName('city');
-    radios.forEach(r => {
-      if (r.value === closestCity) {
-        r.checked = true;
-      }
-    });
-    
-    console.log("Detected location, closest city:", closestCity);
-    applyFilters();
-  }, (err) => {
-    console.warn("Geolocation error:", err.message);
-    // Fallback: Ensure THỦ DẦU MỘT is checked (which triggers Tân An fallback in updateWardFilters)
-    const radios = document.getElementsByName('city');
-    radios.forEach(r => { if(r.value === "THỦ DẦU MỘT") r.checked = true; });
-    applyFilters();
+  if (tabId === 'market') {
+    // Market logic here
+  }
+}
+
+function changeCity(city, btn) {
+  document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  // Logic to update wards based on city
+  updateWardFilters(city);
+  applyFilters();
+}
+
+function updateDiscount(val) {
+  document.getElementById('discountVal').innerText = `≥ ${val}%`;
+}
+
+function toggleDrops() {
+  const toggle = document.getElementById('dropsToggle');
+  toggle.classList.toggle('active');
+  applyFilters();
+}
+
+function updateWardFilters(city) {
+  const wards = globalWardsByCity[city] || [];
+  const container = document.getElementById('wardFilters');
+  
+  container.innerHTML = wards.map(w => `
+    <label class="filter-option">
+      <div class="filter-checkbox-wrap">
+        <input type="checkbox" name="ward" value="${w}" checked onchange="applyFilters()">
+        <div class="custom-checkbox"></div>
+        <span class="option-label">${w}</span>
+      </div>
+    </label>
+  `).join('');
+}
+
+function filterWards() {
+  const query = document.getElementById('wardSearch').value.toLowerCase();
+  document.querySelectorAll('.ward-list .filter-option').forEach(opt => {
+    const text = opt.querySelector('.option-label').innerText.toLowerCase();
+    opt.style.display = text.includes(query) ? 'flex' : 'none';
   });
 }
-let treemapInstance = null;
-let trendInstance = null;
 
-const sourceNames = { 'batdongsan': 'BDS.vn', 'facebook': 'Facebook', 'guland': 'Guland' };
-const sourceClasses = { 'batdongsan': 'source-bds', 'facebook': 'source-fb', 'guland': 'source-gl' };
+function changeSort(sortId, btn) {
+    document.querySelectorAll('.sort-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters();
+}
+
+function applyFilters() {
+    const form = document.getElementById('filterForm');
+    const fd = new FormData(form);
+    const params = new URLSearchParams();
+    
+    // Custom manual fields
+    params.append('city', document.querySelector('.city-btn.active').dataset.city);
+    params.append('discount_min', document.getElementById('discountRange').value);
+    params.append('only_drops', document.getElementById('dropsToggle').classList.contains('active') ? '1' : '0');
+    
+    // Sort field
+    const activeSort = document.querySelector('.sort-opt.active');
+    if (activeSort) params.append('sort_by', activeSort.dataset.sort);
+    
+    // Form fields (wards, sources, prop_types)
+    for (let [k, v] of fd.entries()) {
+        params.append(k, v);
+    }
+    
+    currentFilters = params.toString();
+    currentPage = 1;
+    fetchDashboard();
+}
 
 function showLoader() { document.getElementById('mainLoader').classList.add('show'); }
 function hideLoader() { document.getElementById('mainLoader').classList.remove('show'); }
 
-function switchTab(tabId, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  document.getElementById(`tab-${tabId}`).classList.add('active');
-  
-  if(tabId === 'market' && !treemapInstance) {
-    loadHeatmap();
-  }
-  if(tabId === 'all' && document.getElementById('listingsTableBody').innerHTML.trim() === "") {
-    loadListings(1);
-  }
+function changeTrendPeriod(period) {
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick').includes(period));
+    });
+    // Update global filters and refetch
+    const params = new URLSearchParams(currentFilters);
+    params.set('trend_period', period);
+    currentFilters = params.toString();
+    fetchDashboard();
 }
 
-function getFilterQuery() {
-  const form = document.getElementById('filterForm');
-  const fd = new FormData(form);
-  const params = new URLSearchParams();
-  for (let [k, v] of fd.entries()) {
-    params.append(k, v);
-  }
-  params.append('trend_period', trendPeriod);
-  return params.toString();
+async function fetchDashboard() {
+    const loader = document.getElementById('mainLoader');
+    if (loader) loader.classList.add('show');
+    
+    console.log("RadarBDS: Fetching dashboard with filters:", currentFilters);
+    try {
+        const res = await fetch(`/api/dashboard?${currentFilters}`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const data = await res.json();
+        
+        globalWardsByCity = data.wards_by_city;
+        globalSignals = data.signals || [];
+        
+        // Update stats in header
+        if (data.stats) {
+            if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = data.stats.total;
+            if (document.getElementById('stat-new')) document.getElementById('stat-new').innerText = data.stats.new_today || 0;
+            if (document.getElementById('stat-signals')) document.getElementById('stat-signals').innerText = data.stats.signals;
+        }
+        
+        renderSignals(globalSignals);
+        
+        // Safety wrap analytical renders
+        try {
+            renderTrendChart(data.trend_data);
+            renderHeatmap(data.ward_stats);
+        } catch (e) {
+            console.warn("RadarBDS: Analytics render failed:", e);
+        }
+        
+        // Check if data returned ward stats to update counts
+        if (data.ward_stats) {
+            // ... (rest of logic can stay if needed, but I'll just remove the if block for wardFilters length)
+        }
+        
+    } catch (err) {
+        console.error("Dashboard error:", err);
+        const grid = document.getElementById('signalsGrid');
+        if (grid) grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:100px; color:var(--danger);">Lỗi tải dữ liệu: ${err.message}</div>`;
+    } finally {
+        if (loader) loader.classList.remove('show');
+    }
 }
 
-function updateTrendPeriod(p, btn) {
-  trendPeriod = p;
-  document.querySelectorAll('.p-pill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  
-  // Only reload the trend chart to prevent global "jumping"
-  const container = document.getElementById('trendContainer');
-  container.classList.add('loading');
-  
-  fetch(`/api/dashboard?${getFilterQuery()}`)
-    .then(res => res.json())
-    .then(data => {
-      renderTrendChart(data.trend_data);
-    })
-    .finally(() => {
-      container.classList.remove('loading');
+let trendChartInstance = null;
+function renderTrendChart(trendData) {
+    const ctx = document.getElementById('trendChart');
+    if (!ctx || !trendData) return;
+    
+    // trendData: { ward: [ {week: "2024-W1", median_ppm2: 15.5}, ... ] }
+    const wards = Object.keys(trendData);
+    if (wards.length === 0) return;
+
+    // Collect all unique time labels (weeks/days/months)
+    const allLabels = new Set();
+    wards.forEach(w => trendData[w].forEach(p => allLabels.add(p.week)));
+    const sortedLabels = Array.from(allLabels).sort();
+
+    const colors = ['#5252E6', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6', '#EC4899'];
+
+    const datasets = wards.map((ward, i) => {
+        const dataMap = {};
+        trendData[ward].forEach(p => dataMap[p.week] = p.median_ppm2);
+        
+        return {
+            label: ward,
+            data: sortedLabels.map(lbl => dataMap[lbl] || null),
+            borderColor: colors[i % colors.length],
+            backgroundColor: 'transparent',
+            borderWidth: 3,
+            tension: 0.3,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            spanGaps: true
+        };
+    });
+
+    if (trendChartInstance) trendChartInstance.destroy();
+    
+    trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels: sortedLabels, datasets: datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true, font: { size: 11, weight: '700' } } },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: false, 
+                    title: { display: true, text: 'Giá (tr/m²)', font: { weight: '700' } },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
     });
 }
 
-function applyFilters() {
-  currentFilters = getFilterQuery();
-  currentPageNo = 1;
-  initDashboard();
-  
-  // Reload other tabs if they were already loaded
-  if(document.getElementById('tab-market').classList.contains('active') || treemapInstance) {
-    loadHeatmap();
-  }
-  if(document.getElementById('tab-all').classList.contains('active') || document.getElementById('listingsTableBody').innerHTML.trim() !== "") {
-    loadListings(1);
-  }
+let mosChartInstance = null;
+function renderHeatmap(marketData) {
+    const ctx = document.getElementById('mosChart');
+    if (!ctx || !marketData) return;
+    
+    if (marketData.length === 0) {
+        // Handle empty state (maybe draw placeholder)
+        return;
+    }
+
+    // Sort by ward name or MOS
+    const sorted = [...marketData].sort((a, b) => b.avg_price - a.avg_price).slice(0, 8); // Top 8 wards
+    
+    const labels = sorted.map(d => d.ward);
+    const actualPrices = sorted.map(d => d.avg_price);
+    const fairPrices = sorted.map(d => {
+        // Calc fair price from MOS: MOS = (Fair - Actual) / Fair * 100 
+        // -> Actual = Fair * (1 - MOS/100) -> Fair = Actual / (1 - MOS/100)
+        const mos = d.avg_mos || 0;
+        return d.avg_price / (1 - mos/100);
+    });
+
+    if (mosChartInstance) mosChartInstance.destroy();
+
+    mosChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Giá thực tế',
+                    data: actualPrices,
+                    backgroundColor: '#6366F1', // Indigo
+                    borderRadius: 6
+                },
+                {
+                    label: 'Định giá AI',
+                    data: fairPrices,
+                    backgroundColor: '#10B981', // Emerald
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 12, font: { weight: '700' } } }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Tỷ VNĐ', font: { weight: '700' } } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
 }
 
-async function initDashboard() {
-  showLoader();
-  try {
-    const res = await fetch(`/api/dashboard?${currentFilters}`);
-    const data = await res.json();
-    
-    // Update Stats
-    document.getElementById('statTotal').innerText = data.stats.total;
-    document.getElementById('statSignals').innerText = data.stats.signals;
-    document.getElementById('badgeTotal').innerText = data.stats.total;
-    document.getElementById('badgeSignals').innerText = data.stats.signals;
-    const now = new Date();
-    document.getElementById('lastUpdated').innerText = `Cập nhật lúc: ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
-    
-    // Update Wards based on City
-    globalWardsByCity = data.wards_by_city;
-    updateWardFilters(data.wards_by_city, data.active_wards);
-    
-    globalSignals = data.signals || [];
-    sortAndRenderSignals();
-    renderTrendChart(data.trend_data);
-    
-  } catch (err) {
-    console.error(err);
-    alert('Lỗi tải dữ liệu Dashboard');
-  }
-  hideLoader();
-}
-
-function sortAndRenderSignals() {
-  const sorter = document.getElementById('signalSorter');
-  if (!sorter) return;
-  const val = sorter.value;
-  let sorted = [...globalSignals];
-  
-  if (val === 'mos_desc') {
-    sorted.sort((a, b) => b.mos_pct - a.mos_pct);
-  } else if (val === 'price_asc') {
-    sorted.sort((a, b) => a.price_ty - b.price_ty);
-  } else if (val === 'newest') {
-    sorted.sort((a, b) => a.days_ago - b.days_ago);
-  } else if (val === 'score_desc') {
-    sorted.sort((a, b) => (b.signal_score || 0) - (a.signal_score || 0));
-  }
-  renderSignals(sorted);
-}
+const PAGE_SIZE = 12;
+let currentPage = 1;
 
 function renderSignals(signals) {
   const grid = document.getElementById('signalsGrid');
+  const pagination = document.getElementById('pagination');
+  if (!grid) return;
+
   if (!signals || signals.length === 0) {
-    grid.innerHTML = `
-      <div style="grid-column: 1/-1; padding: 60px 20px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: 16px; margin-top: 20px;">
-        <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.8; animation: pulse 2s infinite;">📡</div>
-        <h3 style="color: var(--text); font-size: 1.2rem; margin-bottom: 8px;">Không tìm thấy Kèo Thơm nào</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Radar chưa quét được tín hiệu nào khớp với bộ lọc hiện tại của bạn. Hãy thử nới lỏng bộ lọc ở menu bên trái nhé!</p>
-      </div>
-    `;
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 100px 0; color: var(--text-muted);">Không tìm thấy tin rao phù hợp.</div>';
+    if (pagination) pagination.innerHTML = '';
     return;
   }
-  
-  grid.innerHTML = signals.map(x => {
-    const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
-    const srcClass = sourceClasses[x.source] || 'source-fb';
-    const mosClass = x.mos_pct >= 25 ? '' : 'low';
-    const profit = fairPrice !== '-' ? (parseFloat(fairPrice) - x.price_ty).toFixed(2) : '-';
-    const profitBadgeHtml = profit !== '-' ? `<div class="profit-badge">Hời ~ ${profit} tỷ</div>` : '';
-    const dropBadgeHtml = x.price_dropped === 1 ? `<div class="drop-badge">📉 Giảm ${x.price_drop_pct ? x.price_drop_pct + '%' : 'giá'}</div>` : '';
-    
-    let timeStr = x.days_ago === 0 ? 'hôm nay' : `${x.days_ago} ngày trước`;
-    let legalStr = x.has_so === 1 ? '📜 Sổ riêng' : (x.has_so === 0 ? '📄 Chờ sổ' : '📜 PL (Đang cập nhật)');
-    
-    const roadTiers = {
-      1: '🛣️ Mặt tiền lớn',
-      2: '🛣️ Mặt tiền nhựa/DX',
-      3: '🚗 Hẻm xe hơi',
-      4: '🛵 Hẻm xe máy'
-    };
-    let roadStr = roadTiers[x.road_tier] || '🚗 Đường (Chưa rõ)';
-    
-    const safeTitle = String(x.title || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    const safeDesc = String(x.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    const imgSrc = x.imgs && x.imgs.length ? x.imgs[0] : '';
-    const imgsJson = encodeURIComponent(JSON.stringify(x.imgs && x.imgs.length ? x.imgs : []));
-    const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-desc="${safeDesc}" data-imgs="${imgsJson}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.price_drop_pct || ''}" data-score="${x.signal_score || '-'}"`;
-    
-    const isNew = x.days_ago <= 3;
-    const newBadgeHtml = isNew ? `<div style="position:absolute; top:-5px; right:-5px; background:linear-gradient(135deg,#ef4444,#b91c1c); color:#fff; font-size:0.65rem; font-weight:800; padding:4px 10px; border-radius:8px; z-index:10; box-shadow:0 0 12px rgba(239,68,68,0.8); animation:pulse 2s infinite;">MỚI 🔥</div>` : '';
-    const glowStyle = isNew ? `box-shadow: 0 0 0 2px rgba(239,68,68,0.5), 0 4px 12px rgba(0,0,0,0.1);` : ``;
+
+  const totalPages = Math.ceil(signals.length / PAGE_SIZE);
+  if (currentPage > totalPages) currentPage = 1;
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageSignals = signals.slice(start, start + PAGE_SIZE);
+
+  grid.innerHTML = pageSignals.map((s, idx) => {
+    const globalIdx = start + idx;
+    const fairPriceTy = (s.fair_ppm2 && s.area_m2) ? (s.fair_ppm2 * s.area_m2 / 1000).toFixed(2) : '-';
+    const isNew = s.days_ago <= 3;
+    const timeLabel = s.days_ago === 0 ? 'Hôm nay' : `${s.days_ago} ngày trước`;
+    const roadLabel = s.road_width_m ? `Đường ${s.road_width_m}m` : (s.road_tier <= 2 ? 'Mặt tiền' : 'Kiệt/Hẻm');
 
     return `
-      <div class="scard" onclick="openSignal(this)" style="${glowStyle}" ${dataAttr}>
+      <div class="sc-card animate-up" onclick="handleSignalClick(${globalIdx})">
         <div class="sc-img-wrap">
-          <img class="sc-img" src="${imgSrc}" loading="lazy" alt="Img" onerror="this.src='https://placehold.co/400x300/e2e8f0/94a3b8?text=No+Image'">
-          ${newBadgeHtml}
-          <div class="mos-badge">-${x.mos_pct}%</div>
-          ${x.price_dropped === 1 ? `<div class="drop-badge">Giảm ${x.price_drop_pct ? x.price_drop_pct + '%' : 'giá'}</div>` : ''}
-          <div class="source-badge">MỚI - ${sourceNames[x.source] || x.source}</div>
+          <img src="${s.imgs && s.imgs.length ? s.imgs[0] : 'https://placehold.co/600x400'}" class="sc-img" onerror="this.src='https://placehold.co/600x400'">
+          <div class="sc-badge-left"><i data-lucide="trending-down" size="14"></i> -${s.mos_pct}%</div>
+          ${isNew ? `<div class="sc-badge-right"><i data-lucide="star" size="14"></i> MỚI</div>` : ''}
+          <div class="sc-overlay-bottom">
+            <div class="sc-source">${s.source}</div>
+            <div class="sc-time"><i data-lucide="clock" size="12"></i> ${timeLabel}</div>
+          </div>
         </div>
         <div class="sc-body">
-          <div class="sc-title" title="${safeTitle}">${x.title}</div>
-          
-          <div class="price-container">
-            <div class="price-actual">
-              <span class="price-label">GIÁ CHỐT (THỰC TẾ)</span>
-              <div class="price-val">${x.price_ty} tỷ</div>
-              <div class="price-m2">~${x.actual_ppm2} tr/m²</div>
+          <div class="sc-title">${s.title}</div>
+          <div class="sc-price-box">
+            <div class="price-col actual">
+              <span>Thực tế</span>
+              <b>${s.price_ty} tỷ</b>
+              <small>${s.actual_ppm2} tr/m²</small>
             </div>
-            <div class="price-fair">
-              <span class="price-label">ĐỊNH GIÁ AI</span>
-              <div class="price-val-fair">${fairPrice} tỷ</div>
-              <div class="price-m2">~${x.fair_ppm2 || '-'} tr/m²</div>
+            <div class="price-col">
+              <span>Định giá</span>
+              <b>${fairPriceTy} tỷ</b>
+              <small>${s.fair_ppm2 || '-'} tr/m²</small>
             </div>
           </div>
-
-          <div class="sc-meta-grid">
-            <div class="meta-item">📍 ${x.ward}</div>
-            <div class="meta-item">📐 ${x.area_m2} m²</div>
-            <div class="meta-item">${roadStr.split(' ')[0]} ${roadStr.split(' ').slice(1).join(' ')}</div>
-            <div class="meta-item">${legalStr.split(' ')[0]} ${legalStr.split(' ').slice(1).join(' ')}</div>
+          <div class="sc-meta">
+            <div class="m-item"><i data-lucide="map-pin" size="13"></i> ${s.ward}</div>
+            <div class="m-item"><i data-lucide="maximize" size="13"></i> ${s.area_m2} m²</div>
+            <div class="m-item"><i data-lucide="navigation" size="13"></i> ${roadLabel}</div>
+            <div class="m-item"><i data-lucide="file-text" size="13"></i> ${s.has_so ? 'Sổ Hồng' : 'Đang chờ'}</div>
           </div>
-
           <div class="sc-actions" onclick="event.stopPropagation()">
-            <a href="https://zalo.me/0343216024" target="_blank" class="btn-zalo">💬 Zalo tư vấn</a>
-            <a href="/listing/${x.id}" target="_blank" class="btn-analyze">Phân tích Deal</a>
+            <a href="https://zalo.me/${s.phone || '0343216024'}" target="_blank" class="btn-outline">
+              <i data-lucide="message-circle" size="14"></i> Zalo
+            </a>
+            <button class="btn-primary" onclick="handleSignalClick(${globalIdx})">
+              <i data-lucide="sparkles" size="14"></i> Phân tích Deal
+            </button>
           </div>
         </div>
       </div>
     `;
   }).join('');
-}
 
-// Slider state
-let _smSlideIdx = 0;
-let _smSlideImgs = [];
-
-function slideSignal(dir) {
-  if (_smSlideImgs.length <= 1) return;
-  _smSlideIdx = (_smSlideIdx + dir + _smSlideImgs.length) % _smSlideImgs.length;
-  document.getElementById('sm-slides').style.transform = `translateX(-${_smSlideIdx * 100}%)`;
-  // Update counter
-  document.getElementById('sm-img-count').innerText = `${_smSlideIdx + 1} / ${_smSlideImgs.length}`;
-  // Update dots
-  document.querySelectorAll('#sm-dots span').forEach((d, i) => {
-    d.style.background = i === _smSlideIdx ? '#fff' : 'rgba(255,255,255,0.4)';
-  });
-}
-
-function buildSlider(imgs) {
-  _smSlideIdx = 0;
-  _smSlideImgs = imgs.length ? imgs : [''];
-  const slides = document.getElementById('sm-slides');
-  const dots = document.getElementById('sm-dots');
-  const counter = document.getElementById('sm-img-count');
-  const prevBtn = document.getElementById('sm-prev');
-  const nextBtn = document.getElementById('sm-next');
-
-  // Build slides
-  slides.style.transform = 'translateX(0)';
-  slides.innerHTML = _smSlideImgs.map(src => `
-    <div style="min-width:100%; height:100%; flex-shrink:0; background:#0f172a;">
-      <img src="${src}" style="width:100%; height:100%; object-fit:contain; display:block; background:#0f172a;"
-        onerror="this.style.display='none'; this.parentElement.style.background='#1e293b';">
-    </div>`
-  ).join('');
-
-  // Dots
-  dots.innerHTML = _smSlideImgs.length > 1
-    ? _smSlideImgs.map((_, i) => `<span onclick="_smSlideIdx=${i-1}; slideSignal(1);" style="width:7px; height:7px; border-radius:50%; background:${i===0?'#fff':'rgba(255,255,255,0.4)'}; cursor:pointer; transition:background 0.2s; display:inline-block;"></span>`).join('')
-    : '';
-
-  // Arrows + counter
-  const multi = _smSlideImgs.length > 1;
-  prevBtn.style.display = multi ? 'flex' : 'none';
-  nextBtn.style.display = multi ? 'flex' : 'none';
-  counter.innerText = multi ? `1 / ${_smSlideImgs.length}` : '';
-}
-
-function openSignal(card) {
-  const d = card.dataset;
-  
-  // Build image slider
-  const imgs = d.imgs ? JSON.parse(decodeURIComponent(d.imgs)) : [];
-  buildSlider(imgs);
-  
-  // Title
-  document.getElementById('sm-title').innerText = d.title;
-  
-  // Price
-  document.getElementById('sm-price').innerText = `${d.price} tỷ`;
-  document.getElementById('sm-ppm2').innerText = `${d.ppm2} tr/m²`;
-  document.getElementById('sm-fair').innerText = `${d.fair} tỷ`;
-  document.getElementById('sm-fppm2').innerText = `${d.fppm2} tr/m²`;
-  
-  // MOS badge
-  const mosBadge = document.getElementById('sm-mos-badge');
-  mosBadge.innerText = `-${d.mos}% MOS`;
-  const mosNum = parseFloat(d.mos);
-  mosBadge.style.background = mosNum >= 25
-    ? 'linear-gradient(135deg,#10b981,#047857)'
-    : 'linear-gradient(135deg,#f59e0b,#b45309)';
-  
-  // Profit badge
-  const profitEl = document.getElementById('sm-profit-badge');
-  const profitVal = parseFloat(d.profit);
-  if (d.profit !== '-' && profitVal > 0) {
-    profitEl.innerText = `Hời ~ ${d.profit} tỷ`;
-    profitEl.style.display = 'inline-block';
-  } else { profitEl.style.display = 'none'; }
-  
-  // Drop badge
-  const dropEl = document.getElementById('sm-drop-badge');
-  if (d.drop) {
-    dropEl.innerText = `📉 Giảm ${d.drop}%`;
-    dropEl.style.display = 'inline-block';
-  } else { dropEl.style.display = 'none'; }
-  
-  // Source badge
-  const srcBadge = document.getElementById('sm-source-badge');
-  srcBadge.innerText = d.source;
-  const srcColors = { 'BDS.vn': '#e11d48', 'Facebook': '#1877f2', 'Guland': '#f97316' };
-  srcBadge.style.background = srcColors[d.source] || '#6366f1';
-  
-  // Tags
-  const tags = [
-    { icon: '📐', label: `${d.area} m²` },
-    { icon: '📍', label: d.ward },
-    { icon: '', label: d.road },
-    { icon: '⏳', label: `Đăng ${d.time}` },
-    { icon: '📊', label: `Signal Score: ${d.score || '-'}` },
-  ];
-  document.getElementById('sm-tags').innerHTML = tags
-    .map(t => `<span style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:7px; padding:4px 10px; font-size:0.78rem; color:var(--text-muted);">${t.icon} ${t.label}</span>`)
-    .join('');
-  
-  // Description
-  document.getElementById('sm-desc').innerText = d.desc || 'Không có mô tả.';
-  
-  // Links
-  document.getElementById('sm-zalo').href = 'https://zalo.me/0343216024';
-  document.getElementById('sm-detail').href = `/listing/${d.id}`;
-  
-  document.getElementById('signalModal').style.display = 'flex';
-}
-
-async function loadHeatmap() {
-  const container = document.getElementById('heatmapContainer');
-  container.classList.add('loading');
-  try {
-    const res = await fetch(`/api/heatmap?${currentFilters}`);
-    const data = await res.json();
+  // Render pagination
+  if (pagination && totalPages > 1) {
+    let pages = '';
     
-    if (treemapInstance) {
-      treemapInstance.destroy();
-      treemapInstance = null;
+    // Prev button
+    pages += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹ Trước</button>`;
+    
+    // Page numbers (show up to 5 around current)
+    const range = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+        range.push(i);
+      }
+    }
+    let prev = null;
+    for (const p of range) {
+      if (prev && p - prev > 1) pages += `<span class="page-info">…</span>`;
+      pages += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+      prev = p;
     }
 
-    if (!data || data.length === 0) return;
+    // Next button
+    pages += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Sau ›</button>`;
+    pages += `<span class="page-info">${signals.length} tin • Trang ${currentPage}/${totalPages}</span>`;
     
-    const ctx = document.getElementById('treemapChart').getContext('2d');
-    
-    // Gradient coloring based on avg_price
-    treemapInstance = new Chart(ctx, {
-      type: 'treemap',
-      data: {
-        datasets: [{
-          tree: data,
-          key: 'count',       // Box size based on number of listings
-          groups: ['ward'],   // Group by ward
-          spacing: 2,
-          borderWidth: 0,
-          backgroundColor(ctx) {
-            if (ctx.type !== 'data') return 'transparent';
-            const d = ctx.raw._data || ctx.raw;
-            const avgMos = d ? d.avg_mos : 0;
-            if (avgMos === 0) return 'rgba(156, 163, 175, 0.5)'; // Gray for neutral/no-data
-            // MOS > 0% is good (green), < 0% is bad (red)
-            if (avgMos > 0) {
-                const ratio = Math.min(1, avgMos / 30); // Max intensity at 30% MOS
-                return `rgba(16, 185, 129, ${0.4 + ratio * 0.6})`; // Green
-            } else {
-                const ratio = Math.min(1, Math.abs(avgMos) / 20); // Max intensity at -20% MOS
-                return `rgba(239, 68, 68, ${0.4 + ratio * 0.6})`; // Red
-            }
-          },
-          labels: {
-            display: true,
-            align: 'center',
-            position: 'center',
-            color: 'white',
-            font: { family: 'Inter', size: 14, weight: 'bold' },
-            formatter(ctx) {
-              if (ctx.type !== 'data') return '';
-              const d = ctx.raw._data || ctx.raw;
-              if (!d || !d.ward) return '';
-              const mosStr = d.avg_mos > 0 ? `+${d.avg_mos}%` : `${d.avg_mos}%`;
-              return [d.ward, `${d.avg_price || 0} tr/m²`, `MOS: ${mosStr}`];
-            }
-          }
-        }]
-      },
-      options: {
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: (items) => {
-                const d = items[0].raw._data || items[0].raw;
-                return d ? d.ward : '';
-              },
-              label: (item) => {
-                const d = item.raw._data || item.raw;
-                if (!d) return '';
-                return [
-                  `Giá TB: ${d.avg_price || 0} tr/m²`,
-                  `Cơ hội (MOS): ${d.avg_mos || 0}%`,
-                  `Số lượng: ${d.count || 0} tin`
-                ];
-              }
-            }
-          }
-        }
-      }
-    });
-    
-  } catch (err) {
-    console.error("Heatmap error:", err);
-  } finally {
-    container.classList.remove('loading');
+    pagination.innerHTML = pages;
+  } else if (pagination) {
+    pagination.innerHTML = signals.length > 0 ? `<span class="page-info">${signals.length} tin</span>` : '';
   }
+
+  lucide.createIcons();
 }
 
-function renderTrendChart(trendData) {
-  const ctx = document.getElementById('trendChart').getContext('2d');
-  if (trendInstance) {
-    trendInstance.destroy();
-    trendInstance = null;
-  }
-  
-  if (!trendData || Object.keys(trendData).length === 0) {
-    return;
-  }
-  
-  const datasets = [];
-  const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
-  const allTimeKeys = new Set();
-  
-  for (const w in trendData) {
-    trendData[w].forEach(d => allTimeKeys.add(d.week));
-  }
-  const sortedKeys = Array.from(allTimeKeys).sort();
-  const labels = sortedKeys.map(w => w.replace('D-', '').replace('M-', ''));
-  
-  let i = 0;
-  for (const ward in trendData) {
-    const data = trendData[ward];
-    const dataMap = {};
-    data.forEach(d => dataMap[d.week] = d.median_ppm2);
-    const wardData = sortedKeys.map(w => dataMap[w] || null);
+function goToPage(page) {
+  currentPage = page;
+  renderSignals(globalSignals);
+  document.getElementById('signalsGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+function handleSignalClick(idx) {
+    if (globalSignals && globalSignals[idx]) {
+        showSignalDetail(globalSignals[idx]);
+    }
+}
+
+let priceChartInstance = null;
+let currentGalleryImages = [];
+let currentGalleryIdx = 0;
+
+function showSignalDetail(s) {
+    console.log("RadarBDS: Showing detail for", s.id);
     
-    const color = colors[i % colors.length];
-    datasets.push({
-      label: ward, 
-      data: wardData,
-      borderColor: color, 
-      backgroundColor: color + '10',
-      borderWidth: 3, 
-      tension: 0.4, 
-      fill: false,
-      pointRadius: sortedKeys.length > 30 ? 0 : 4, 
-      pointHoverRadius: 8,
-      spanGaps: true,
-      borderCapStyle: 'round'
-    });
-    i++;
-  }
-  
-  Chart.defaults.font.family = "'Inter', sans-serif";
-  trendInstance = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      animation: { duration: 0 }, // Disable animation to prevent "jumping"
-      responsive: true, 
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: { 
-        legend: { 
-          position: 'bottom',
-          labels: { boxWidth: 12, padding: 20, font: { size: 11, weight: '600' } }
+    // 1. Basic Info
+    document.getElementById('modalTitle').innerText = s.title;
+    document.getElementById('modalMeta').innerText = `Đăng ${s.days_ago === 0 ? 'Hôm nay' : s.days_ago + ' ngày trước'} • ${s.source}`;
+    document.getElementById('modalBadgeMOS').innerText = `SUPER SIGNAL - ${s.mos_pct}%`;
+    document.getElementById('modalDescription').innerText = s.description || 'Không có mô tả chi tiết.';
+    document.getElementById('btnZalo').href = `https://zalo.me/0343216024?text=${encodeURIComponent("Chào bạn, mình quan tâm đến tin đăng: " + s.title + " (ID: " + s.id + ")")}`;
+
+    // 2. AI Review (Dynamic generation based on data)
+    const roadType = s.road_width_m ? `đường ${s.road_width_m}m` : (s.road_tier <= 2 ? 'mặt tiền' : 'hẻm xe hơi');
+    const aiText = `Tín hiệu ngợp **cấp độ cao**: giá chào thấp hơn fair value **${s.mos_pct}%**, đã giảm **${s.price_dropped ? 'nhiều lần' : 'giá'}** trong thời gian ngắn. Pháp lý **${s.has_so ? 'Sổ Hồng' : 'Đang kiểm tra'}**, vị trí thuộc khu ${s.ward}. Phù hợp đầu tư trung hạn hoặc lướt sóng.`;
+    document.getElementById('modalAIReview').innerHTML = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // 3. Gallery
+    currentGalleryImages = s.imgs && s.imgs.length ? s.imgs : ['https://placehold.co/600x400?text=No+Image'];
+    currentGalleryIdx = 0;
+    updateGallery();
+
+    // 4. Price History & Chart
+    fetchPriceHistory(s.id, s.price_ty);
+
+    // 5. Comps
+    fetchComps(s.id, s.area_m2, s.price_ty);
+
+    document.getElementById('signalModal').style.display = 'flex';
+    lucide.createIcons();
+}
+
+function updateGallery() {
+    const mainImg = document.getElementById('modalMainImg');
+    const thumbs = document.getElementById('modalThumbs');
+    const counter = document.getElementById('galCounter');
+
+    mainImg.src = currentGalleryImages[currentGalleryIdx];
+    counter.innerText = `${currentGalleryIdx + 1} / ${currentGalleryImages.length}`;
+
+    thumbs.innerHTML = currentGalleryImages.map((img, i) => `
+        <img src="${img}" class="thumb-item ${i === currentGalleryIdx ? 'active' : ''}" onclick="currentGalleryIdx=${i}; updateGallery()">
+    `).join('');
+}
+
+function changeGallery(dir) {
+    currentGalleryIdx = (currentGalleryIdx + dir + currentGalleryImages.length) % currentGalleryImages.length;
+    updateGallery();
+}
+
+async function fetchPriceHistory(listingId, currentPrice) {
+    const container = document.getElementById('modalPriceHistory');
+    container.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Đang tải lịch sử giá...</div>';
+    
+    try {
+        const res = await fetch(`/api/history/${listingId}`);
+        const history = await res.json();
+        
+        // Prepare data for chart
+        const labels = history.map(h => h.date);
+        const data = history.map(h => h.price_ty);
+        
+        renderPriceChart(labels, data);
+        
+        // Render list
+        container.innerHTML = history.reverse().map((h, i) => {
+            const prevPrice = history[i+1] ? history[i+1].price_ty : null;
+            const drop = prevPrice ? (((h.price_ty - prevPrice) / prevPrice) * 100).toFixed(1) : null;
+            return `
+                <div class="price-item">
+                    <div class="pi-date"><i data-lucide="calendar" size="12"></i> ${h.date}</div>
+                    <div class="pi-val">
+                        ${h.price_ty} tỷ
+                        ${drop && drop < 0 ? `<span class="pi-drop">${drop}%</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        lucide.createIcons();
+        
+    } catch (err) {
+        container.innerHTML = 'Không có dữ liệu lịch sử giá.';
+    }
+}
+
+function renderPriceChart(labels, data) {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    
+    if (priceChartInstance) {
+        priceChartInstance.destroy();
+    }
+    
+    priceChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Giá (tỷ)',
+                data: data,
+                borderColor: '#5252e6',
+                backgroundColor: 'rgba(82, 82, 230, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointBackgroundColor: '#5252e6',
+                fill: true
+            }]
         },
-        tooltip: {
-          padding: 12,
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          titleFont: { size: 14, weight: 'bold' },
-          bodyFont: { size: 13 },
-          cornerRadius: 8
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { display: true, grid: { display: false } },
+                x: { display: true, grid: { display: false } }
+            }
         }
-      },
-      scales: {
-        y: { 
-          title: { display: true, text: 'Giá (tr/m²)', font: { weight: '600' } },
-          grid: { color: 'rgba(255,255,255,0.05)' },
-          ticks: { font: { size: 11 } }
-        },
-        x: { 
-          grid: { display: false },
-          ticks: { 
-            font: { size: 10 },
-            maxRotation: 45,
-            autoSkip: true,
-            maxTicksLimit: 12
-          }
-        }
-      }
-    }
-  });
-}
-
-async function loadListings(page) {
-  const tbody = document.getElementById('listingsTableBody');
-  tbody.classList.add('loading');
-  try {
-    const res = await fetch(`/api/listings?${currentFilters}&page=${page}&limit=50`);
-    const data = await res.json();
-    
-    currentPageNo = data.page;
-    document.getElementById('currentPage').innerText = data.page;
-    document.getElementById('totalPages').innerText = data.pages;
-    document.getElementById('btnPrevPage').disabled = (data.page <= 1);
-    document.getElementById('btnNextPage').disabled = (data.page >= data.pages);
-    
-    const tbody = document.getElementById('listingsTableBody');
-    tbody.innerHTML = data.listings.map(x => {
-      const fair = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
-      return `
-        <tr>
-          <td><span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">${x.prop_type}</span></td>
-          <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:6px; font-weight:600; font-size:0.8rem;">${x.ward}</span></td>
-          <td><img src="${x.imgs && x.imgs.length ? x.imgs[0] : ''}" class="td-img" loading="lazy" onerror="this.style.display='none'"></td>
-          <td style="font-weight:700;">${x.area_m2} m²</td>
-          <td>
-            <div style="color:var(--accent); font-weight:800; font-size:1rem;">${x.price_ty} tỷ</div>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${x.price_per_m2 || '-'} tr/m²</div>
-          </td>
-          <td>
-            <div style="color:var(--primary); font-weight:800;">${fair} tỷ</div>
-            <div style="font-size:0.75rem; color:var(--primary); opacity:0.8; margin-top:2px;">${x.fair_ppm2 || '-'} tr/m²</div>
-          </td>
-          <td style="max-width: 300px;">
-            <div class="td-title" title="${String(x.title || '').replace(/"/g, '&quot;')}">${x.title}</div>
-            <div class="td-desc" title="${String(x.description || '').replace(/"/g, '&quot;')}">${x.description}</div>
-          </td>
-          <td style="text-align:center;"><a href="/listing/${x.id}" target="_blank" style="color:var(--primary); font-weight:900; font-size:1.2rem; text-decoration:none;">↗</a></td>
-        </tr>
-      `;
-    }).join('');
-    
-  } catch(e) {
-    console.error(e);
-  } finally {
-    tbody.classList.remove('loading');
-  }
-}
-
-function changePage(dir) {
-  loadListings(currentPageNo + dir);
-}
-
-async function openHistory(id, title) {
-  document.getElementById('historyTitle').innerText = `Lịch sử giá: ${title}`;
-  document.getElementById('historyModal').style.display = 'flex';
-  
-  try {
-    const res = await fetch(`/api/history/${id}`);
-    const data = await res.json();
-    
-    if (historyChartInstance) historyChartInstance.destroy();
-    
-    const ctx = document.getElementById('historyChartCanvas').getContext('2d');
-    historyChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: data.map(d => d.date),
-        datasets: [{
-          label: 'Giá (tỷ)',
-          data: data.map(d => d.price_ty),
-          borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          borderWidth: 3, tension: 0.1, fill: true, stepped: true,
-          pointRadius: 6, pointHoverRadius: 8,
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { title: { display: true, text: 'Tổng giá (tỷ)' } },
-          x: { grid: { display: false } }
-        }
-      }
     });
-  } catch(e) {
-    console.error(e);
-  }
 }
 
-function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
-}
-
-window.onclick = function(event) {
-  if (event.target.classList.contains('modal')) {
-    event.target.style.display = 'none';
-  }
-}
-
-function updateWardFilters(wardsByCity, activeWards) {
-  const selectedCity = document.querySelector('input[name="city"]:checked').value;
-  const wards = wardsByCity[selectedCity] || [];
-  const container = document.getElementById('wardFilters');
-  
-  container.innerHTML = wards.map(w => {
-    let checked = false;
-    let disabled = false;
+async function fetchComps(listingId, area, price) {
+    const tbody = document.getElementById('modalCompsTable');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Đang tìm giao dịch tương tự...</td></tr>';
     
-
-
-    // Check if current activeWards actually belong to the current city
-    const hasValidActiveWard = activeWards && activeWards.some(aw => wards.includes(aw));
-    
-    if (hasValidActiveWard && !disabled) {
-      checked = activeWards.includes(w);
-    } else if (selectedCity === "THỦ DẦU MỘT" && w === "Tân An") {
-      checked = true; // Default fallback
-    } else if (selectedCity === "BẾN CÁT" && w === "Mỹ Phước 3") {
-      checked = true; // Default fallback for Bến Cát
+    try {
+        const res = await fetch(`/api/comps/${listingId}`);
+        const comps = await res.json();
+        
+        let html = comps.map(c => `
+            <tr>
+                <td>${c.title.substring(0, 20)}...</td>
+                <td>${c.area_m2} m²</td>
+                <td class="c-price">${c.price_ty} tỷ</td>
+                <td>${(c.posted_at || '').substring(0, 7)}</td>
+            </tr>
+        `).join('');
+        
+        // Add current deal highlight
+        html += `
+            <tr class="highlight">
+                <td><strong>Deal hiện tại</strong></td>
+                <td><strong>${area} m²</strong></td>
+                <td class="c-now">${price} tỷ</td>
+                <td><strong>Now</strong></td>
+            </tr>
+        `;
+        
+        tbody.innerHTML = html;
+        
+    } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="4">Không tìm thấy dữ liệu so sánh.</td></tr>';
     }
-    
-    return `
-      <label class="filter-option ${disabled ? 'disabled' : ''}">
-        <input type="checkbox" name="ward" value="${w}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}> ${w}
-      </label>
-    `;
-  }).join('');
 }
 
-// Global listener for Filter changes (Auto-apply)
-document.addEventListener('change', (e) => {
-  // Check if the change happened inside the filter form
-  if (e.target.closest('#filterForm')) {
-    if (e.target.name === 'city') {
-      // Update the UI ward options with empty activeWards → triggers default selection
-      updateWardFilters(globalWardsByCity, []);
-    }
-    // Auto-apply filters immediately so data loads
-    applyFilters();
-  }
-});
+function closeModal() {
+  document.getElementById('signalModal').style.display = 'none';
+}
 
-// Init on load
+// Initial Load
 document.addEventListener('DOMContentLoaded', () => {
-  // Try to detect location automatically
-  detectLocation();
-  
-  if(window.location.search) {
-    currentFilters = window.location.search.substring(1);
-  } else {
-    currentFilters = getFilterQuery();
-  }
-  initDashboard();
+    console.log("RadarBDS: DOM loaded, initializing...");
+    try {
+        // 1. Populate ward filters first so applyFilters captures them
+        const activeCity = document.querySelector('.city-btn.active').dataset.city;
+        updateWardFilters(activeCity);
+        
+        // 2. Then fetch data
+        applyFilters(); 
+        
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    } catch (e) {
+        console.error("Initialization error:", e);
+    }
 });
-
-// AI Chat Logic
-let chatHistory = [];
-
-function toggleChat() {
-  const win = document.getElementById('chatWindow');
-  win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
-  if (win.style.display === 'flex') {
-    document.getElementById('chatInput').focus();
-  }
-}
-
-async function sendMessage() {
-  const input = document.getElementById('chatInput');
-  const msg = input.value.trim();
-  if (!msg) return;
-
-  // Add user message to UI
-  appendMessage('user', msg);
-  input.value = '';
-
-  // Add loading indicator
-  const loadingId = 'loading-' + Date.now();
-  const msgContainer = document.getElementById('chatMessages');
-  const loadingDiv = document.createElement('div');
-  loadingDiv.className = 'message bot';
-  loadingDiv.id = loadingId;
-  loadingDiv.innerText = 'RadarBDS AI đang trả lời...';
-  msgContainer.appendChild(loadingDiv);
-  msgContainer.scrollTop = msgContainer.scrollHeight;
-
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg, history: chatHistory })
-    });
-    const data = await res.json();
-    
-    // Remove loading and show response
-    loadingDiv.remove();
-    appendMessage('bot', data.response);
-    
-    // Update history
-    chatHistory.push({ role: 'user', content: msg });
-    chatHistory.push({ role: 'assistant', content: data.response });
-    if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10); // Keep last 5 turns
-    
-  } catch (err) {
-    loadingDiv.innerText = 'Lỗi kết nối. Vui lòng thử lại.';
-    console.error(err);
-  }
-}
 
 function appendMessage(role, text) {
   const container = document.getElementById('chatMessages');

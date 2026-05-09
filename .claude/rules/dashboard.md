@@ -1,58 +1,35 @@
 ---
 paths:
-  - "generate_dashboard.py"
+  - "app.py"
+  - "services/market_data.py"
+  - "static/js/main.js"
+  - "templates/index.html"
 ---
 
-# Dashboard (generate_dashboard.py)
+# Dynamic Dashboard Architecture
 
-## Chạy
+## Core Components
+1. **Backend (Python/Flask)**:
+   - `app.py`: Route definitions and API endpoints (`/api/dashboard`, `/api/heatmap`).
+   - `services/market_data.py`: Centralized data loading logic (`load_data`, `get_base_filters`). Handle SQL queries and MOS calculations here.
+2. **Frontend (JS/HTML)**:
+   - `templates/index.html`: Main layout using custom Vanilla CSS (Glassmorphism). Contains Sidebar filters and Tab content.
+   - `static/js/main.js`: Client-side logic. Handles `applyFilters()`, `fetchDashboard()`, and rendering charts via Chart.js.
 
-```bash
-python radar.py dashboard                # sinh dashboard_signals.html
-python radar.py dashboard --out PATH     # custom output
-```
+## Filter Pipeline (MANDATORY FLOW)
+To prevent regressions and 500 errors, always follow this data flow:
+1. **UI Event**: User clicks a checkbox or moves a slider in `index.html`.
+2. **Aggregation**: `applyFilters()` in `main.js` collects ALL current states (City, Ward, Source, PropType, MOS, Sort).
+3. **API Request**: `fetchDashboard()` sends the aggregated `URLSearchParams` to `/api/dashboard`.
+4. **Backend Extraction**: `get_base_filters()` in `market_data.py` extracts parameters safely (using `getlist` for arrays and `int()` for thresholds).
+5. **Data Load**: `load_data()` builds the SQL `WHERE` clause and applies `ORDER BY`. **Always use `COALESCE` for potentially NULL fields.**
+6. **Serialization**: Return `dict(stats)` and list of dicts. Never return raw `sqlite3.Row` objects.
 
-## Sections của dashboard
-
-1. **Market Pulse** — Median price/m² theo 3 segments (dat_nen, dat_vuon, nha_dat)
-   - Hiển thị: median, min, max, n samples
-2. **Headline Deals** — Top 3 signals ranked by `signal_score × mos_pct`
-3. **All Signals Grid** — Cards filterable, collapsible (≥20% MOS)
-4. **Price/m² Histogram** — 18 bins per property type, tô màu signal/outlier
-5. **Full Table** — Sortable, searchable listings, 40 rows per page
-
-## Filters mặc định
-
-- Loại `probably_sold=1` và `possibly_duplicate=1` khỏi view
-- Chỉ hiển thị listings có `price_ty > 0` và `area_m2 > 0`
-
-## URL canonicalization
-
-Dashboard tự sửa URL cũ khi render:
-- Guland: thêm `/post/` nếu URL dạng `guland.vn/slug` (không có `/post/`)
-- BatDongSan: rebuild slug từ title nếu URL bị corrupt
-
-## Data loading (load_data)
-
-```python
-load_data(db_path) → {
-    signals:       # valuation_results WHERE is_signal=1, joined listings
-    all_listings:  # tất cả listings (not probably_sold, not duplicate)
-    market_weekly: # median per segment
-    images:        # first image per listing_id
-}
-```
-
-## Key constants
-
-```python
-PROP_LABELS = {
-    'dat_nen':  'Đất nền',
-    'dat_vuon': 'Đất vườn',
-    'nha_dat':  'Nhà đất',
-    'nha_pho':  'Nhà phố',
-}
-HISTOGRAM_BINS = 18      # per property type
-PAGE_SIZE_SIGNALS = 6    # cards per load
-PAGE_SIZE_TABLE = 40     # rows per page
-```
+## Efficiency & Stability
+- **Token Saving**: When analyzing dashboard issues, read `services/market_data.py` FIRST as it contains 90% of the data logic.
+- **Verification**: After modifying any part of this pipeline, you MUST run:
+  ```bash
+  python tests/sanity_test.py
+  ```
+- **Performance**: Use `skip_listings=True` for dashboard API calls that only need statistics and signals, reducing payload size.
+- **Dark Mode**: Always update the `[data-theme="dark"]` overrides in `index.html` if adding new components.

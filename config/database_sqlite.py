@@ -36,10 +36,11 @@ def _resolve_db_path() -> Path:
         except Exception as e:
             logger.warning(f"RADAR_DB_PATH không dùng được ({e}), fallback auto")
 
-    # Auto-detect: thử từng path, dùng cái nào writable
+    # Auto-detect: prioritize local project data directory
+    project_root = Path(__file__).parent.parent
     candidates = [
+        project_root / "data" / "radar_bds.db", # Project local (preferred)
         Path.home() / "radar_bds.db",          # ~/radar_bds.db (session home)
-        Path(tempfile.gettempdir()) / f"radar_bds_{os.getpid()}.db",  # cross-platform
         Path(tempfile.gettempdir()) / "radar_bds.db",
     ]
     for p in candidates:

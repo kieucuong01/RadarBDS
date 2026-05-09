@@ -24,7 +24,7 @@ def _days_ago(crawled_at: str) -> int:
     except Exception:
         return 0
 
-def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False):
+def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, discount_min=0, sort_by='newest'):
     if not sources:
         sources = ["facebook", "guland", "batdongsan"]
     
@@ -53,29 +53,45 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     where_sql = " AND ".join(where_parts)
 
     # 1. Stats
-    stats = conn.execute(f"""
+    stats_query = f"""
         WITH filtered AS (SELECT * FROM listings WHERE {where_sql})
         SELECT 
             (SELECT COUNT(*) FROM filtered) as total,
-            (SELECT COUNT(*) FROM filtered l JOIN valuation_results v ON l.id = v.listing_id WHERE v.is_signal = 1) as signals,
+            (SELECT COUNT(*) FROM filtered l JOIN valuation_results v ON l.id = v.listing_id 
+             WHERE v.is_signal = 1 AND COALESCE(v.mos_pct, 0) >= ?) as signals,
             (SELECT COUNT(*) FROM filtered WHERE is_hot = 1) as hot,
-            (SELECT COUNT(*) FROM filtered WHERE price_dropped = 1) as price_drops
-    """, params).fetchone()
-
+            (SELECT COUNT(*) FROM filtered WHERE price_dropped = 1) as price_drops,
+            (SELECT COUNT(*) FROM filtered WHERE posted_at >= date('now', '-3 days')) as new_today
+    """
+    # Fix: placeholders in where_sql come BEFORE the ? for signals subquery
+    stats = conn.execute(stats_query, params + [discount_min]).fetchone()
+    
     # 2. Signals
+    # Define Order By
+    order_sql = "v.signal_score DESC, v.mos_pct DESC"
+    if sort_by == 'ppm2_low':
+        order_sql = "l.price_per_m2 ASC"
+    elif sort_by == 'total_low':
+        order_sql = "l.price_ty ASC"
+    elif sort_by == 'newest':
+        order_sql = "COALESCE(l.posted_at, l.crawled_at) DESC"
+    elif sort_by == 'mos_high':
+        order_sql = "v.mos_pct DESC"
+
     sig_query = f"""
         SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                l.id, l.title, l.source, l.area_m2, l.price_ty,
                l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct,
-               l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so, l.seller_name,
+               l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.road_width_m, l.has_so, l.seller_name,
                l.description,
                COALESCE(v.signal_score, 0) as signal_score
         FROM valuation_results v
         JOIN listings l ON v.listing_id = l.id
-        WHERE v.is_signal = 1 AND {where_sql}
-        ORDER BY v.signal_score DESC, v.mos_pct DESC
+        WHERE v.is_signal = 1 AND COALESCE(v.mos_pct, 0) >= ? AND {where_sql}
+        ORDER BY {order_sql}
     """
-    sig_rows = conn.execute(sig_query, params).fetchall()
+    params_with_mos = [discount_min] + params
+    sig_rows = conn.execute(sig_query, params_with_mos).fetchall()
 
     # 3. All Listings
     all_rows = []
@@ -117,8 +133,31 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         market.append({
             'type': s['property_type'],
             'label': type_label.get(s['property_type'], s['property_type']),
-            'median': round(s['mean_ppm2'], 1),
+            'median': round(s['mean_ppm2'], 1) if s['mean_ppm2'] is not None else 0,
             'n': s['n_samples']
+        })
+
+    # 5b. Ward-based MOS Stats (for the Heatmap chart)
+    ward_stats = []
+    ward_rows = conn.execute(f"""
+        SELECT l.ward, COUNT(*) as count, 
+               AVG(l.price_per_m2) as avg_price,
+               AVG(v.mos_pct) as avg_mos
+        FROM listings l
+        LEFT JOIN valuation_results v ON l.id = v.listing_id
+        WHERE {where_sql} 
+          AND l.ward IS NOT NULL 
+          AND l.ward != 'unknown'
+          AND COALESCE(v.is_outlier, 0) = 0
+        GROUP BY l.ward
+        HAVING count > 0
+    """, params).fetchall()
+    
+    for r in ward_rows:
+        ward_stats.append({
+            "ward": r["ward"],
+            "avg_price": round(r["avg_price"], 1) if r["avg_price"] is not None else 0,
+            "avg_mos": round(r["avg_mos"], 1) if r["avg_mos"] is not None else 0
         })
 
     # 6. Trend (DYNAMIC) — Tuân theo tất cả bộ lọc (Source, Ward, PropType)
@@ -177,15 +216,15 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     wards_by_city = {city: list(wards) for city, wards in CITY_MAP.items()}
 
     return {
-        "stats": dict(stats),
+        "stats": dict(stats) if stats else {},
         "signals": [{
             "id": r['id'], "title": r['title'], "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0, "actual_ppm2": round(r['actual_ppm2'],1) if r['actual_ppm2'] else 0,
             "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None, "area_m2": r['area_m2'], "price_ty": r['price_ty'],
             "prop_type": r['property_type'], "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
             "drop_pct": r['price_drop_pct'], "url": r['url'], "days_ago": _days_ago(r['posted_at'] or r['crawled_at']),
             "ward": r['ward'], "signal_score": r['signal_score'], "imgs": img_map.get(r['id'], []), "source": r['source'],
-            "road_tier": r['road_tier'] or 0, "has_so": bool(r['has_so']),
-            "description": r['description'] or ""
+            "road_tier": r['road_tier'] or 0, "road_width_m": r['road_width_m'], "has_so": bool(r['has_so']),
+            "description": r['description'] or "", "phone": r['phone']
         } for r in sig_rows],
         "all_listings": [{
             "id": r['id'], "title": r['title'], "description": r['description'] or "",
@@ -194,9 +233,10 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0,
             "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None,
             "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
-            "source": r['source'], "imgs": img_map.get(r['id'], [])
+            "source": r['source'], "imgs": img_map.get(r['id'], []), "phone": r['phone']
         } for r in all_rows],
         "market": market,
+        "ward_stats": ward_stats,
         "trend_data": trend_data,
         "all_wards": all_wards,
         "all_sources": all_sources,
@@ -232,10 +272,37 @@ def get_base_filters(req):
     prop_types = req.args.getlist("prop_type[]") or req.args.getlist("prop_type")
     only_drops = req.args.get("only_drops") == "1"
     trend_period = req.args.get("trend_period", "day")
+    discount_min = int(req.args.get("discount_min", 0))
+    sort_by = req.args.get("sort_by", "newest")
     
     if not active_city and wards:
         active_city = get_city_for_ward(wards[0])
     if not active_city:
         active_city = "THỦ DẦU MỘT"
         
-    return active_city, wards, sources, prop_types, only_drops, trend_period
+    return active_city, wards, sources, prop_types, only_drops, trend_period, discount_min, sort_by
+
+def get_comps(db_path, listing_id):
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    
+    # 1. Get current listing info
+    l = conn.execute("SELECT ward, property_type, price_per_m2 FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not l:
+        conn.close()
+        return []
+    
+    # 2. Find similar listings in same ward
+    # We look for same prop_type and order by price_per_m2 similarity
+    query = """
+        SELECT l.title, l.area_m2, l.price_ty, l.posted_at
+        FROM listings l
+        WHERE l.ward = ? AND l.property_type = ? AND l.id != ?
+          AND l.probably_sold = 0
+        ORDER BY ABS(l.price_per_m2 - ?) ASC
+        LIMIT 5
+    """
+    rows = conn.execute(query, (l['ward'], l['property_type'], listing_id, l['price_per_m2'])).fetchall()
+    conn.close()
+    
+    return [dict(r) for r in rows]

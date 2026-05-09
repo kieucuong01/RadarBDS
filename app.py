@@ -26,31 +26,37 @@ def serve_local_image(filename):
 def index():
     return render_template('index.html')
 
+
 @app.route("/api/dashboard")
 def api_dashboard():
-    active_city, wards, sources, prop_types, only_drops, trend_period = get_base_filters(request)
-    db_path = str(db_mod.DB_PATH.resolve())
-    # Load data without fetching all listings to save time/memory
-    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True)
-    
-    return jsonify({
-        "stats": data["stats"],
-        "signals": data["signals"],
-        "market": data["market"],
-        "trend_data": data["trend_data"],
-        "all_wards": data["all_wards"],
-        "all_sources": data["all_sources"],
-        "wards_by_city": data["wards_by_city"],
-        "active_city": active_city,
-        "active_wards": wards,
-        "active_sources": sources,
-        "active_props": prop_types,
-        "trend_period": trend_period
-    })
+    try:
+        active_city, wards, sources, prop_types, only_drops, trend_period, discount_min, sort_by = get_base_filters(request)
+        db_path = str(db_mod.DB_PATH.resolve())
+        # Load data
+        data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=False, discount_min=discount_min, sort_by=sort_by)
+        
+        return jsonify({
+            "stats": data["stats"],
+            "signals": data["signals"],
+            "market": data["market"],
+            "ward_stats": data["ward_stats"],
+            "trend_data": data["trend_data"],
+            "all_wards": data["all_wards"],
+            "all_sources": data["all_sources"],
+            "wards_by_city": data["wards_by_city"],
+            "active_city": active_city,
+            "active_wards": wards,
+            "active_sources": sources,
+            "active_props": prop_types,
+            "trend_period": trend_period
+        })
+    except Exception as e:
+        logger.error(f"Dashboard API Error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/heatmap')
 def api_heatmap():
-    active_city, wards, sources, prop_types, only_drops, trend_period = get_base_filters(request)
+    active_city, wards, sources, prop_types, only_drops, trend_period, discount_min, sort_by = get_base_filters(request)
     db_path = str(db_mod.DB_PATH.resolve())
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -174,6 +180,13 @@ def api_listings():
         "limit": limit,
         "pages": (total + limit - 1) // limit if limit > 0 else 1
     })
+
+@app.route('/api/comps/<int:listing_id>')
+def api_comps(listing_id):
+    db_path = str(db_mod.DB_PATH.resolve())
+    from services.market_data import get_comps
+    comps = get_comps(db_path, listing_id)
+    return jsonify(comps)
 
 @app.route('/listing/<int:listing_id>')
 def listing_detail(listing_id):
@@ -349,4 +362,5 @@ def api_chat():
     return jsonify({"response": response})
 
 if __name__ == "__main__":
+    db_mod.init_schema()
     app.run(host="127.0.0.1", port=5000, debug=True)

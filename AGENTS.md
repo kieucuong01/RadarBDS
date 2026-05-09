@@ -213,5 +213,5 @@ GROQ_API_KEY=...        # Groq (ưu tiên)
 
 #### 3. Quy trình AI Agent & QA
 - **MANDATORY Sanity Test**: Triển khai `tests/sanity_test.py` kiểm tra API, Lọc, Sắp xếp.
-- **Dashboard Rules**: Cập nhật `.claude/rules/dashboard.md` mô tả kiến trúc Dynamic Dashboard (UI -> Aggregation -> API -> Backend).
-- **Testing Rules**: Thêm `.claude/rules/testing.md` bắt buộc AI phải run test trước khi hoàn tất.
+- **Dashboard Rules**: Cập nhật `.Codex/rules/dashboard.md` mô tả kiến trúc Dynamic Dashboard (UI -> Aggregation -> API -> Backend).
+- **Testing Rules**: Thêm `.Codex/rules/testing.md` bắt buộc AI phải run test trước khi hoàn tất.
