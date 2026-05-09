@@ -29,13 +29,13 @@ def index():
 
 @app.route("/api/dashboard")
 def api_dashboard():
-    active_city, wards, sources, prop_types, only_drops, trend_period = get_base_filters(request)
+    active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     db_path = str(db_mod.DB_PATH.resolve())
     include_trend = request.args.get("include_trend") == "1"
     # Load data without fetching all listings to save time/memory
-    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend)
+    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min)
     
     return jsonify({
         "stats": data["stats"],
@@ -54,7 +54,7 @@ def api_dashboard():
 
 @app.route("/api/trends")
 def api_trends():
-    active_city, wards, sources, prop_types, only_drops, trend_period = get_base_filters(request)
+    active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     db_path = str(db_mod.DB_PATH.resolve())
@@ -65,7 +65,7 @@ def api_trends():
 
 @app.route('/api/heatmap')
 def api_heatmap():
-    active_city, wards, sources, prop_types, only_drops, trend_period = get_base_filters(request)
+    active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     db_path = str(db_mod.DB_PATH.resolve())
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -154,14 +154,19 @@ def api_heatmap():
 
 @app.route('/api/listings')
 def api_listings():
-    active_city, wards, sources, prop_types, only_drops, trend_period = get_base_filters(request)
+    active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     try:
         page = int(request.args.get("page", 1))
         limit = int(request.args.get("limit", 50))
+        area_min = float(request.args.get("area_min") or 0)
+        area_max = float(request.args.get("area_max") or 0)
+        price_min = float(request.args.get("price_min") or 0)
+        price_max = float(request.args.get("price_max") or 0)
     except ValueError:
         page, limit = 1, 50
+        area_min = area_max = price_min = price_max = 0
     offset = (page - 1) * limit
     
     db_path = str(db_mod.DB_PATH.resolve())
@@ -182,15 +187,36 @@ def api_listings():
         params.extend(prop_types)
     if only_drops:
         where_parts.append("price_dropped = 1")
-        
+    if area_min > 0:
+        where_parts.append("area_m2 >= ?")
+        params.append(area_min)
+    if area_max > 0:
+        where_parts.append("area_m2 <= ?")
+        params.append(area_max)
+    if price_min > 0:
+        where_parts.append("price_ty >= ?")
+        params.append(price_min)
+    if price_max > 0:
+        where_parts.append("price_ty <= ?")
+        params.append(price_max)
+
     where_sql = " AND ".join(where_parts)
-    
+
+    sort_col_map = {
+        "area": "l.area_m2", "price": "l.price_ty", "price_m2": "l.price_per_m2",
+        "fair": "v.fair_ppm2", "date": "COALESCE(l.posted_at, l.crawled_at)",
+        "ward": "l.ward", "prop_type": "l.property_type",
+    }
+    sort_by = request.args.get("sort_by", "price_m2")
+    sort_dir = "DESC" if request.args.get("sort_dir", "asc").lower() == "desc" else "ASC"
+    order_expr = sort_col_map.get(sort_by, "l.price_per_m2")
+
     query = f"""
         SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score
         FROM listings l
         LEFT JOIN valuation_results v ON l.id = v.listing_id
         WHERE {where_sql}
-        ORDER BY l.price_per_m2 ASC
+        ORDER BY {order_expr} {sort_dir} NULLS LAST
         LIMIT ? OFFSET ?
     """
     query_params = list(params)
@@ -224,7 +250,9 @@ def api_listings():
         "price_per_m2": round(r['price_per_m2'],1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
         "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0,
         "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None,
-        "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
+        "days_ago": _days_ago(r['posted_at'] or r['crawled_at']),
+        "posted_at": (r['posted_at'] or r['crawled_at'] or '')[:10],
+        "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
         "source": r['source'], "imgs": img_map.get(r['id'], [])
     } for r in rows]
     

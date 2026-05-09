@@ -196,7 +196,7 @@ GROQ_API_KEY=...        # Groq (ưu tiên)
 
 ---
 
-*Cập nhật: 08/05/2026 — Dynamic Filtering & Sorting + Backend Stability (Fix 500) + Automated Sanity Tests*
+*Cập nhật: 09/05/2026 — Dashboard UX: Compact Sidebar, MOS Slider, Tab Hạ Tầng nâng cấp*
 
 ### 🚀 TIẾN ĐỘ & FIXES (Phiên 08/05/2026)
 
@@ -215,3 +215,18 @@ GROQ_API_KEY=...        # Groq (ưu tiên)
 - **MANDATORY Sanity Test**: Triển khai `tests/sanity_test.py` kiểm tra API, Lọc, Sắp xếp.
 - **Dashboard Rules**: Cập nhật `.claude/rules/dashboard.md` mô tả kiến trúc Dynamic Dashboard (UI -> Aggregation -> API -> Backend).
 - **Testing Rules**: Thêm `.claude/rules/testing.md` bắt buộc AI phải run test trước khi hoàn tất.
+
+### 🚀 TIẾN ĐỘ & FIXES (Phiên 09/05/2026)
+
+#### 1. Sidebar gọn + Bộ lọc tín hiệu
+- **Compact sidebar**: spacing giảm toàn bộ (padding, margin, font-size, checkbox size).
+- **Collapsible sections**: mỗi filter-group có chevron toggle, Data Sources mặc định collapsed.
+- **BỘ LỌC TÍN HIỆU** (section mới): gộp MOS slider + checkbox "Chỉ tin giảm giá".
+- **MOS slider range 30–70**: `mos_pct` trong DB lưu theo %, tất cả signals >= 30% — range 0–50 cũ không có tác dụng.
+- **Backend `mos_min`**: `get_base_filters()` parse param, `load_data()` filter `v.mos_pct >= ?` cho signals.
+
+#### 2. Tab Hạ Tầng nâng cấp
+- **Filter bar**: lọc theo diện tích (m²) và giá (tỷ) ngay trên bảng; backend `/api/listings` nhận `area_min/max`, `price_min/max`.
+- **Ngày đăng column**: hiển thị ngày + số ngày trước (`posted_at` hoặc `crawled_at`).
+- **Sortable headers**: click vào tiêu đề cột (Loại, Khu vực, Diện tích, Giá, Fair Value, Ngày đăng) để sort asc/desc với icon ↑↓.
+- **Infinite scroll**: cuộn xuống cuối bảng tự load 50 tin tiếp theo (IntersectionObserver với `root: .table-scroll`); sentinel nằm trong `.table-scroll` để detect đúng scroll container.

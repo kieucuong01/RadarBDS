@@ -1,4 +1,4 @@
-# Pending & Backlog (2026-05-07)
+# Pending & Backlog (2026-05-09)
 
 ## Backlog tính năng (theo thứ tự ưu tiên)
 
@@ -25,6 +25,18 @@
 | Mở rộng địa bàn | Thuận An, Dĩ An chưa có data |
 
 ## Đã làm gần đây
+
+**Session 2026-05-09 — Dashboard UX overhaul:**
+- **Compact sidebar**: spacing toàn bộ giảm, collapsible sections (chevron toggle), Data Sources mặc định collapsed.
+- **BỘ LỌC TÍN HIỆU**: section mới gộp MOS slider (range 30–70) + checkbox "Chỉ tin giảm giá".
+  - MOS range 30–70 vì `mos_pct` trong DB là % (30–95%), range cũ 0–50 không lọc được gì.
+  - Backend `get_base_filters()` + `load_data()` nhận `mos_min`, filter `v.mos_pct >= ?`.
+- **Tab Hạ Tầng**:
+  - Filter bar: lọc diện tích + giá ngay trên bảng (`/api/listings` nhận `area_min/max`, `price_min/max`).
+  - Cột Ngày đăng: `posted_at` hoặc fallback `crawled_at`, hiển thị ngày + "X ngày trước".
+  - Sortable headers: click tiêu đề → sort asc/desc với icon ↑↓; sort_by/sort_dir qua URL param.
+  - Infinite scroll: IntersectionObserver với `root: .table-scroll` (scroll container thực). Sentinel nằm trong `.table-scroll`. Cuộn gần cuối tự fetch 50 tin tiếp, append vào bảng.
+- **`scripts/find_reposted.py`** (NEW): query ad-hoc tìm tin môi giới đăng lại với giảm giá (dùng `price_history` + `possibly_duplicate`).
 
 **Session 2026-05-07 (tiếp 3) — Mỹ Phước optimization:**
 - **`config/area_profiles.py`** (NEW): Config-driven area profiles — extensible pattern for per-area rules
