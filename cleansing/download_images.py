@@ -9,6 +9,7 @@ import urllib.request
 from pathlib import Path
 
 from config.database_sqlite import get_conn
+from services.image_assets import ensure_thumbnail
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,10 @@ def download_images(limit: int = 1000):
                 img_data = response.read()
                 with open(local_file_path, "wb") as f:
                     f.write(img_data)
+            try:
+                ensure_thumbnail(local_file_path)
+            except Exception as e:
+                logger.warning(f"Không tạo được thumbnail {local_file_path}: {e}")
             
             # Cập nhật DB
             with get_conn() as conn:

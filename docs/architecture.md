@@ -1,41 +1,65 @@
-# Radar BDS Architecture Notes
+# Radar BDS Architecture
 
-## Current Shape
+This document is for agents that need module boundaries or data-flow context. For quick work, start with `AGENTS.md`.
 
-Pipeline flow:
+## Data Flow
 
 ```text
-crawler/* -> raw_listings -> cleansing/normalizer.py -> listings
-          -> cleansing/dedup.py -> analytics/valuation.py
-          -> valuation_results -> app.py / alerts/telegram.py / cli/*
+Source crawlers
+  -> raw_listings
+  -> cleansing/normalizer.py
+  -> listings
+  -> cleansing/dedup.py
+  -> analytics/valuation.py
+  -> valuation_results
+  -> app.py APIs / alerts / CLI reports
 ```
 
-Main entrypoints:
+## Runtime Data
 
-- `radar.py`: CLI router.
-- `app.py`: Flask dashboard and review UI.
-- `cleansing/reprocess.py`: normalization, valuation, enrichment orchestration.
-- `db/connection.py`: SQLite path and connection lifecycle.
-- `db/schema.py`: schema and idempotent migrations.
-- `db/raw_listings.py`, `db/listings.py`, `db/crawl_runs.py`, `db/analytics.py`: write-side repository helpers.
-- `db/sqlite.py` and `config/database_sqlite.py`: compatibility facades for existing imports.
+- Canonical SQLite DB: `data/radar_bds.db`.
+- Override: `RADAR_DB_PATH`; relative paths resolve from repo root.
+- Local images: `data/images/`.
+- Card thumbnails: `data/images/thumbs/*.webp`.
+- Runtime data is ignored by git and should not be committed.
 
-## Boundaries
+## Main Boundaries
 
-- `crawler/`: fetch source data only; write raw records, avoid valuation logic.
-- `cleansing/`: parse, normalize, enrich, deduplicate.
-- `analytics/`: market logic and valuation, no crawler calls.
-- `services/`: read models for dashboard/API.
-- `cli/`: command orchestration and user-facing output.
-- `alerts/`: Telegram formatting and send logic.
+- `crawler/`: fetch source data and store raw rows. Avoid valuation or dashboard logic here.
+- `cleansing/`: normalize text, extract features, deduplicate, enrich, and prepare listings.
+- `analytics/`: valuation and market signal logic. No crawler calls.
+- `db/`: schema, connection, migrations, and write-side repository helpers.
+- `services/`: read models for API/dashboard; keep expensive shaping here, not in routes.
+- `static/` and `templates/`: dashboard UI.
+- `cli/`: command orchestration.
+- `alerts/`: Telegram formatting and sending.
 
-## Refactor Targets
+## Dashboard API Shape
 
-Keep future changes surgical. The highest-value splits are:
+- `/api/dashboard`: lightweight summary. No full signal list, no descriptions, no image arrays.
+- `/api/signals`: paginated card summaries. It accepts the dashboard filters plus `page`, `limit`, `sort`.
+- `/api/listing/<id>`: full detail payload for modal, including description and original images.
+- `/api/history/<id>`: price history, lot history, and comparable data for modal.
+- `/api/listings`: paginated table data for the all-listings tab.
 
-1. Move dashboard SQL out of `app.py` into `services/` or read-model repository modules.
-2. Centralize ward/city config in `config/area_profiles.py`; avoid duplicating ward lists in dashboard and normalizer.
-3. Split `cleansing/feature_extractor.py` by concern when touching it heavily: price/area, road, legal, property type.
-4. Add migration versioning if DB schema changes become frequent.
+## Dedup and Price Drop Policy
 
-Do not move files only for aesthetics. Move a boundary when it reduces test scope or prevents agents from editing unrelated logic.
+- Same URL/source_id is the same listing and should use `price_history` for same-listing price changes.
+- Guland and BatDongSan cross-URL heuristics are disabled for duplicate/lot identity. Use source-id only.
+- Facebook repost heuristics are allowed because broker reposts are meaningful, but only with strict guards.
+- Same-price Facebook reposts may support lot history. Same-price Guland/BatDongSan reposts must not.
+- `price_dropped=1` means a reliable drop. Drops over 40% should be `suspicious_bait=1`.
+
+## Image Policy
+
+- Cards use thumbnails via `services/image_assets.resolve_image_url(..., prefer_thumb=True)`.
+- Detail/modal uses original images via `prefer_thumb=False`.
+- `cleansing/download_images.py` creates thumbnails after new downloads.
+- `scripts/generate_thumbnails.py` backfills thumbnails for existing images.
+
+## Refactor Guidance
+
+- Do not move files only for aesthetics.
+- Move SQL out of `app.py` into `services/` when touching dashboard read behavior.
+- Keep `config/database_sqlite.py` and `db/sqlite.py` as compatibility facades.
+- If schema changes become frequent, add migration versioning instead of scattered ad hoc `ALTER TABLE`.

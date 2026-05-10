@@ -1,204 +1,115 @@
-# 🧠 ANDREJ KARPATHY SKILLS (CRITICAL GUIDELINES)
+# Radar BDS - Agent Quick Context
 
-You are operating under Andrej Karpathy's recommended skills for LLM coding agents. Adhere to these principles:
+Use this file as the first read for Codex, Claude Code, Antigravity, or any new AI session. It is intentionally compact. Read deeper docs only when the task touches that area.
 
-### 1. Think Before Coding
-- **Don't assume.** If the user's request is ambiguous, state your assumptions explicitly. If uncertain, STOP and ASK rather than guess.
-- **Present tradeoffs.** If there are multiple ways to solve a problem, present them and let the user decide.
-- **Push back.** If a simpler approach exists or the user is asking for something overcomplicated, say so.
-- **Manage confusion.** If you don't understand something, name what's unclear and ask for clarification.
+## Read Order
 
-### 2. Simplicity First
-- **Minimum code.** Write only the code necessary to solve the exact problem. Nothing speculative.
-- **No overengineering.** No features beyond what was asked. No abstractions for single-use code. No "flexibility" or "configurability" that wasn't requested.
-- **Simplify.** If 200 lines could be 50, rewrite it.
+1. `AGENTS.md` - this quick context.
+2. `docs/agent_playbook.md` - workflow rules and common traps.
+3. `docs/architecture.md` - module boundaries and current data flow.
+4. `docs/dev_commands.md` - exact Windows commands for checks.
 
-### 3. Surgical Changes
-- **Touch only what you must.** Clean up only your own mess.
-- **Don't touch adjacent code.** Do not "improve" adjacent code, comments, or formatting unless explicitly requested.
-- **Match existing style.** Even if you'd do it differently, follow the surrounding code style.
-- **Don't delete dead code unless asked.** If you notice unrelated dead code, mention it — don't delete it.
-- **Clean up your orphans.** Remove imports/variables/functions that YOUR changes made unused.
+Avoid broad reads of `.claude/worktrees/`, `_legacy/`, `data/`, `logs/`, `reports/`, `scratch/`, `browser_recordings/`, and `artifacts/` unless the task explicitly requires them.
 
-### 4. Goal-Driven Execution
-- **Define success criteria.** For multi-step tasks, state a brief plan and loop until verified.
+## Project Summary
 
----
+Radar BDS is a local SQLite + Flask dashboard for Bình Dương real-estate signals.
 
-# RADAR BDS — AI Agent Context
-
-> **Mục đích file này**: Cung cấp context đầy đủ cho AI Agent để làm việc ngay, không hỏi lại những gì đã biết.
-
-## 0. AGENT HYGIENE — ĐỌC TRƯỚC KHI QUÉT REPO
-
-- Đọc thêm `docs/architecture.md`, `docs/dev_commands.md`, `docs/agent_playbook.md`.
-- Khi search toàn repo, tránh mặc định các thư mục: `.claude/worktrees/`, `_legacy/`, `data/`, `logs/`, `reports/`, `scratch/`, `browser_recordings/`, `artifacts/`.
-- Default smoke tests trên Windows: dùng Python với `-X utf8`.
-- `tests/test_guland.py` và `tests/sanity_test.py` là integration checks, không thuộc default pytest set.
-
----
-
-## 1. DỰ ÁN LÀ GÌ?
-
-Công cụ **định giá tự động bất động sản** tại Bình Dương (Thủ Dầu Một & Bến Cát).  
-Luồng: **Crawl Facebook/Guland/BDS** → **Regex parse** → **LLM enrich (Groq/Gemini)** → **Ridge Regression định giá** → **Dashboard HTML**.
-
-**Khu vực hỗ trợ**:
-- **Thủ Dầu Một (TDM)**: 13 phường.
-- **Bến Cát**: Phú An, An Tây, An Điền, Mỹ Phước (1-4 sub-zones), Thới Hòa, Tân Định, Hòa Lợi, Chánh Phú Hòa.
-
-**Database (canonical)**: SQLite tại `data/radar_bds.db` (override bằng `RADAR_DB_PATH`).
-**Kiến trúc**: Hỗ trợ xử lý tịnh tiến (Incremental) cho tập dữ liệu lớn (>500k records).
-
----
-
-## 2. CÁC LỆNH QUAN TRỌNG
-
-```bash
-# Cào dữ liệu & Automation
-python radar.py crawl-daily              # Chạy full pipeline: Crawl (BDS/Guland/FB) -> Reprocess -> Telegram Alert
-python radar.py schedule-setup --every 3 # Cài Windows Task Scheduler chạy crawl-daily mỗi 3 ngày
-python radar.py crawl-facebook --mode incremental --limit 30 # Cào tin FB 3 ngày qua (10 tin/ngày/môi giới)
-
-# Xử lý dữ liệu
-python radar.py reprocess                # Chạy Tịnh Tiến (Incremental) - CHỈ xử lý tin mới (Mặc định cực nhanh)
-python radar.py reprocess --full         # Chạy Toàn Bộ (Full) - Dùng khi sửa logic normalize/valuation
-python radar.py reprocess --groq         # Regex + Groq batch enrich
-python radar.py inspect                 # Snapshot nhanh tình trạng DB (Agent nên chạy đầu session)
-
-# Debug/Manual
-python app.py                           # Flask Dashboard
-python alerts/telegram.py               # Test gửi tin nhắn Telegram manually
-```
-
----
-
-## 3. CẤU TRÚC MODULE
-
-| Module | Chức năng chính |
-|--------|----------------|
-| `radar.py` | CLI router (argparse) |
-| `app.py` + `services/market_data.py` | Flask dashboard |
-| `cli/crawlers.py` | crawl-all, crawl-daily, crawl-facebook, repair-missing |
-| `cli/system.py` | reprocess, lifecycle, schedule, download-images |
-| `cli/queries.py` | inspect, stats, deal-brief, top50-cheap |
-| `analytics/valuation.py` | ValuationEngine: per-ward ridge regression, signals |
-| `analytics/lifecycle.py` | sweep delisted, segment velocity |
-| `cleansing/reprocess.py` | pipeline: normalize → dedup → valuation → groq |
-| `cleansing/feature_extractor.py` | road_tier, property_type, frontage, legal |
-| `cleansing/groq_enricher.py` | Groq Llama 3.3 70B, batch 20/call |
-| `crawler/guland_pw.py` | Guland Playwright (13 wards, MAX_CLICKS=50) |
-| `crawler/batdongsan_pw.py` | BatDongSan (26 slugs, 8s delay) |
-| `crawler/facebook_apify.py` | Facebook via Apify API |
-| `config/area_profiles.py` | Config-driven area rules: street patterns, standard lots, sub-wards |
-| `db/connection.py` + `db/schema.py` | SQLite connection, schema, migrations |
-| `db/raw_listings.py`, `db/listings.py`, `db/crawl_runs.py`, `db/analytics.py` | DB repository helpers by concern |
-| `db/sqlite.py` | Compatibility facade for DB public API |
-| `config/database_sqlite.py` | Compatibility facade for older imports |
-| `alerts/telegram.py` | Telegram consolidated alert |
-
----
-
-## 4. SCHEMA DATABASE (BẢNG CHÍNH: `listings`)
-
-| Cột quan trọng | Ý nghĩa |
-|---|---|
-| `ward` | Tên phường (13 TDM + Bến Cát incl. Mỹ Phước 1-4 sub-zones); `"unknown"` nếu chưa xác định |
-| `road_type` | `hem_xe_may / hem_ba_gac / hem_xe_hoi / duong_nhua / mat_tien_kinh_doanh` |
-| `road_tier` | 1=mặt tiền lớn, 2=đường nhựa, 3=hẻm xe hơi, 4=hẻm xe máy |
-| `road_width_m` | Chiều rộng đường (mét) |
-| `price_ty` | Giá (tỷ VNĐ) |
-| `price_per_m2` | Giá/m² (triệu/m²) |
-| `area_m2` | Diện tích (m²) |
-| `llm_verified` | 0=chưa qua LLM, 1=đã xử lý (dù có kết quả hay không) |
-| `llm_notes` | JSON string kết quả LLM |
-| `is_signal` | (trong `valuation_results`) 1=Deal hời/ngợp theo AI |
-| `outlier_direction` | `'low'` = đáng ngờ rẻ, `'high'` = ngờ đắt |
-
----
-
-## 5. LOGIC ĐỊNH GIÁ (ValuationEngine)
-
-- **Per-ward models**: Mỗi phường có SegmentModel riêng. Fallback 3 tầng: sub-ward → parent ward → `SELECTED_REGION`.
-- **Fit strategy**: Chỉ lấy **30.000 records gần nhất** để huấn luyện mô hình nhằm tối ưu RAM và bám sát giá thị trường.
-- **Tier-0 = Tier-3**: `road_tier=0` định giá như tier-3 hẻm xe hơi (×0.50).
-- **Signal**: Tin rẻ hơn Fair Value đáng kể → `is_signal = 1`.
-- **Fit threshold**: Cần tối thiểu 15 listing/segment để dùng Regression.
-
----
-
-## 6. HYBRID LLM PIPELINE
+Pipeline:
 
 ```text
-raw text (Facebook/Guland)
-    ↓ Regex (normalizer.py) — nhanh, miễn phí
-listings có ward/road_type
-    ↓ nếu ward='unknown' OR road_tier=0 → Groq Batch Enrich (groq_enricher.py)
-    ↓ Groq: Llama 3.3 70B, batch 20/call, 2s delay, retry 65s nếu 429
-listings đầy đủ
-    ↓ ValuationEngine.fit() + evaluate_all()
-valuation_results
-    ↓ gửi Telegram Alert (alerts/telegram.py)
-    ↓ 1. Alert signal mới ngay lập tức
-    ↓ 2. Consolidated Alert 3 ngày (tổng hợp deal hời nhất)
-Dashboard
+crawler/* -> raw_listings -> cleansing/normalizer.py
+          -> listings -> cleansing/dedup.py
+          -> analytics/valuation.py -> valuation_results
+          -> Flask dashboard / Telegram alerts / CLI reports
 ```
 
-**Keys cần có trong `.env`**:
-```env
-APIFY_TOKEN=...         # Crawl Facebook
-GEMINI_API_KEY=...      # Gemini (backup)
-GROQ_API_KEY=...        # Groq (ưu tiên)
+Supported focus areas:
+
+- Thủ Dầu Một wards.
+- Bến Cát wards and Mỹ Phước sub-zones.
+- Sources: Facebook, Guland, BatDongSan.
+
+## Canonical Runtime State
+
+- Canonical DB: `data/radar_bds.db`.
+- Override: `RADAR_DB_PATH`; relative values resolve from repo root.
+- Runtime images: `data/images/`.
+- Card thumbnails: `data/images/thumbs/*.webp`.
+- Runtime data is ignored by git. Do not commit DB files, images, reports, or logs.
+- If app behavior differs from code, check which DB is loaded:
+
+```powershell
+$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+& $py -X utf8 -c "import db.connection as c; print(c.DB_PATH)"
 ```
 
----
+## Core Entry Points
 
-## 7. TRẠNG THÁI HIỆN TẠI & VIỆC CẦN LÀM
+- `radar.py`: CLI router.
+- `app.py`: Flask routes only; keep route handlers thin.
+- `services/market_data.py`: dashboard/listing read models and API shaping.
+- `services/image_assets.py`: image URL normalization and thumbnail resolution.
+- `cleansing/reprocess.py`: normalize, dedup, valuation orchestration.
+- `cleansing/dedup.py`: duplicate and price-drop policy.
+- `db/connection.py`, `db/schema.py`, `db/listings.py`: DB path, schema, writes.
+- `config/database_sqlite.py`: compatibility facade; new code should prefer `db.*`.
 
-### Số liệu DB (Cập nhật 2026-05-07 — sau Guland re-crawl)
+## Current Product Rules
 
-| Bảng | Số lượng | Ghi chú |
-|------|----------|---------|
-| raw_listings | 6,336 | Guland + Facebook (BatDongSan đang crawl lại) |
-| listings active | 6,335 | 1 skipped |
-| Valuated | 5,787 | 663 signals (~11.5%), 204 outliers |
-| Dedup | 577 flagged | 300 groups, 5,758 unique lots |
+Dedup and price drop:
 
-**Nhanh kiểm tra**: `python radar.py inspect`
+- Same URL/source_id: same listing; track price changes with `price_history`.
+- Guland/BatDongSan: source-id only for duplicate/lot identity. Do not use cross-URL heuristics for lot history or price drop.
+- Facebook: heuristic repost matching is allowed, but must pass strong guards for property type, thổ cư, location, area/dimensions, and phone.
+- `only_drops=1` may show duplicate reposts if `price_dropped=1`.
+- Suspicious drops over 40% should be `suspicious_bait`, not normal price-drop signal.
 
-- **Tối ưu Dedup**: Thuật toán Bucketing xử lý 6000+ tin trong < 1 phút.
-- **UI/UX**: Fintech UI, Image Slider, Mobile-First, Signal Modal 2.0 (glassmorphism).
-- **Valuation refactor (07/05)**:
-    - Per-ward models thay SELECTED_REGION → định giá theo đúng thị trường từng phường
-    - Tier-0 → tier-3 (×0.50) thay vì neutral (×1.00)
-    - Bỏ floor check (FAIR_FLOOR_RATIO × median)
-- **Crawler refactor (07/05)**:
-    - BatDongSan: 4 slugs → 26 slugs (13 phường × ban-dat + ban-nha)
-    - Guland: re-crawl full với ảnh, 5,083 records mới
-    - Auto download images sau mỗi lần crawl (không cần chạy thủ công)
-- **Groq pipeline (07/05)**:
-    - `enrich_frontage_with_groq()`: fill frontage_m + road_width_m bị thiếu
-    - `verify_signals_with_groq()`: verify + re-valuate top signals
-    - Lệnh: `python radar.py reprocess --groq-frontage [--ward Tân An]`
-    - Lệnh: `python radar.py reprocess --groq-signals [--ward Tân An]`
+Dashboard/API:
 
-### ⚠️ Vấn đề tồn tại
+- `/api/dashboard` is lightweight summary only. It must not return all signals, descriptions, or image arrays.
+- `/api/signals` is paginated card data. Default limit is 30. It returns `primary_img` thumbnail when available.
+- `/api/listing/<id>` is full modal/detail data, including description and full image list.
+- `/api/history/<id>` returns same-listing price history and lot history/comps payload used by modal.
 
-| Vấn đề | Trạng thái |
-|--------|-----------|
-| `has_so` luôn = 0 | Extraction chưa đủ; discount 25% valuation chưa áp dụng |
-| Facebook image URLs | CDN token hết hạn sau vài giờ → download ngay sau crawl để dùng local |
-| `road_tier=0` còn cao | Groq commands đã implement — chạy `--groq-frontage` để cải thiện |
+Images/performance:
 
-### 🔲 TODO tiếp theo (theo thứ tự ưu tiên)
-1. **has_so extraction fix** — `has_so=False → fair_value × 0.75` (discount 25%)
-2. **Chạy groq-frontage** — `python radar.py reprocess --groq-frontage` để điền road_width_m còn thiếu
-3. **Chạy groq-signals** — `python radar.py reprocess --groq-signals` để verify top deals
+- Cards must use thumbnails from `data/images/thumbs/`.
+- Modal/detail may use original images.
+- `download_images()` creates thumbnails for new downloads.
+- Backfill thumbnails with `python scripts/generate_thumbnails.py --signals 300` or full backfill without `--signals`.
 
----
+## Common Commands
 
-- **13 phường TDM**: Tân An, Tương Bình Hiệp, Hiệp An, Chánh Mỹ, Phú Mỹ, Phú Tân, Chánh Nghĩa, Định Hòa, Phú Thọ, Phú Hòa, Phú Cường, Hiệp Thành, Phú Lợi.
+Use UTF-8 mode on Windows:
 
----
+```powershell
+$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+& $py -X utf8 radar.py inspect
+& $py -X utf8 app.py
+& $py -X utf8 radar.py reprocess
+& $py -X utf8 scripts\generate_thumbnails.py --signals 300
+```
 
-*Cập nhật: 07/05/2026 — Valuation per-ward + BatDongSan 26 slugs + auto image download + _legacy cleanup*
+Targeted checks:
+
+```powershell
+& $py -X utf8 -m py_compile app.py services\market_data.py services\image_assets.py cleansing\download_images.py
+node --check static\js\main.js
+& $py -X utf8 -m pytest tests\test_dedup.py tests\test_price_history.py tests\test_lot_history.py tests\test_drop_filter.py
+```
+
+## Verification Defaults
+
+- Backend/API change: run `py_compile` for touched Python files and the relevant pytest file.
+- Frontend JS change: run `node --check static/js/main.js` and smoke test `http://127.0.0.1:5000`.
+- Dashboard/API performance change: check payload sizes for `/api/dashboard`, `/api/signals?page=1&limit=30`, and `/api/listing/<id>`.
+- Dedup/price-drop change: run targeted dedup/history/drop tests, then recompute only if explicitly needed.
+
+## Agent Discipline
+
+- Make surgical changes; do not refactor adjacent code for aesthetics.
+- Do not revert user changes or runtime data unless explicitly requested.
+- Prefer repo patterns and existing service boundaries.
+- Keep docs concise; move long historical notes to `SUMMARY_HISTORY.md`.
+- When changing behavior, update this file only if future agents need to know it.

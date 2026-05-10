@@ -1,21 +1,33 @@
 # Database Layer
 
-Current module map:
+Canonical DB path: `data/radar_bds.db`.
 
-- `connection.py`: DB path resolution, per-thread SQLite connections.
-- `schema.py`: `SCHEMA_SQL`, `init_schema()`, idempotent migrations.
-- `raw_listings.py`: raw-listing reads/writes.
-- `listings.py`: processed listing upsert, images, outlier updates.
-- `crawl_runs.py`: crawl run lifecycle helpers.
-- `analytics.py`: alert logs and valuation result writes.
-- `sqlite.py`: compatibility facade that re-exports the public SQLite API.
+Override with `RADAR_DB_PATH`. If the override is relative, it resolves from repo root.
 
-`config.database_sqlite` is now only a compatibility facade. Existing code can
-keep importing from it, but new code should prefer `db.sqlite` or future
-repository modules under `db/`.
+## Module Map
 
-Next safe split points:
+- `connection.py`: DB path resolution and SQLite connection lifecycle.
+- `schema.py`: `SCHEMA_SQL`, `init_schema()`, idempotent schema migrations.
+- `raw_listings.py`: raw crawler rows.
+- `listings.py`: processed listing upsert, images, price history, outlier flags.
+- `crawl_runs.py`: crawl run lifecycle.
+- `analytics.py`: valuation results and alert logs.
+- `sqlite.py`: compatibility facade that re-exports the public DB API.
 
-- Move direct dashboard SQL from `app.py` and `services/market_data.py` into
-  read-model services or repository modules.
-- Add migration versioning if schema changes become frequent.
+`config.database_sqlite` is also a compatibility facade. New code should prefer focused `db.*` modules.
+
+## Current Data Rules
+
+- `price_history` tracks same-listing price changes only; do not insert unchanged snapshots.
+- Same URL/source_id is the same listing.
+- Guland/BatDongSan duplicate identity is source-id only.
+- Facebook may use repost heuristics, guarded by property type, location, thổ cư, area/dimensions, and phone.
+- Runtime DB files, WAL/SHM files, images, logs, and reports are ignored by git.
+
+## Safe Checks
+
+```powershell
+$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+& $py -X utf8 -c "import db.connection as c; print(c.DB_PATH)"
+& $py -X utf8 radar.py inspect
+```

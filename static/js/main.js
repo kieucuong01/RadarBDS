@@ -46,8 +46,15 @@ let listingsHasMore = false;
 let listingsLoading = false;
 let trendPeriod = 'month'; 
 let historyChartInstance = null;
-let globalSignals = [];
 let globalWardsByCity = {};
+let signalPageNo = 1;
+let signalHasMore = false;
+let signalLoading = false;
+let signalSort = 'newest';
+let signalRunSeq = 0;
+let signalRenderSeq = 0;
+const SIGNAL_PAGE_SIZE = 30;
+const SIGNAL_RENDER_CHUNK_SIZE = 10;
 const CACHE_TTL_MS = 60000;
 const responseCache = new Map();
 const requestControllers = {};
@@ -225,7 +232,9 @@ async function initDashboard() {
   const runId = ++dashboardRunSeq;
   showLoader();
   try {
-    const data = await fetchJSONCached('dashboard', `/api/dashboard?${currentFilters}`);
+    const dashboardPromise = fetchJSONCached('dashboard', `/api/dashboard?${currentFilters}`);
+    const signalsPromise = loadSignals(1, { reset: true, manageLoader: false, parentRunId: runId });
+    const data = await dashboardPromise;
     if (runId !== dashboardRunSeq) return;
     
     // Update Stats
@@ -242,13 +251,12 @@ async function initDashboard() {
     globalWardsByCity = data.wards_by_city;
     updateWardFilters(data.wards_by_city, data.active_wards);
     
-    globalSignals = data.signals || [];
-    sortAndRenderSignals();
+    await signalsPromise;
     
   } catch (err) {
     if (err.name === 'AbortError') return;
     console.error(err);
-    alert('Lỗi tải dữ liệu Dashboard');
+    renderSignalError('Khong tai duoc du lieu dashboard.');
   } finally {
     if (runId === dashboardRunSeq) {
       // Only the latest dashboard run can hide the loader.
@@ -260,65 +268,105 @@ async function initDashboard() {
 function setSortPill(btn) {
   document.querySelectorAll('.sort-pill').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
-  sortAndRenderSignals();
+  signalSort = btn.dataset.sort || 'newest';
+  loadSignals(1, { reset: true });
 }
 
 function sortAndRenderSignals() {
-  const activeBtn = document.querySelector('.sort-pill.active');
-  if (!activeBtn) return;
-  const val = activeBtn.dataset.sort;
-  let sorted = [...globalSignals];
-
-  if (val === 'mos_desc') {
-    sorted.sort((a, b) => b.mos_pct - a.mos_pct);
-  } else if (val === 'price_asc') {
-    sorted.sort((a, b) => a.price_ty - b.price_ty);
-  } else if (val === 'price_m2_asc') {
-    sorted.sort((a, b) => (a.actual_ppm2 || 999) - (b.actual_ppm2 || 999));
-  } else if (val === 'newest') {
-    sorted.sort((a, b) => a.days_ago - b.days_ago);
-  } else if (val === 'score_desc') {
-    sorted.sort((a, b) => (b.signal_score || 0) - (a.signal_score || 0));
-  }
-  renderSignals(sorted);
+  loadSignals(1, { reset: true });
 }
 
-let _sigPageSize = 60;
-let _sigRendered = 0;
-let _sigSorted = [];
 let _sigObserver = null;
 
-function renderSignals(signals) {
+function signalQuery(page) {
+  const params = new URLSearchParams(currentFilters);
+  params.set('sort', signalSort);
+  params.set('page', String(page));
+  params.set('limit', String(SIGNAL_PAGE_SIZE));
+  return params.toString();
+}
+
+function renderSignalSkeleton() {
+  const grid = document.getElementById('signalsGrid');
+  grid.innerHTML = Array.from({ length: 6 }).map(() => `
+    <div class="scard" style="min-height:420px; opacity:.65; pointer-events:none;">
+      <div class="sc-img-wrap" style="background:var(--border);"></div>
+      <div class="sc-body">
+        <div style="height:22px; width:85%; background:var(--border); border-radius:6px; margin-bottom:16px;"></div>
+        <div class="price-container" style="min-height:96px;"></div>
+        <div style="height:14px; width:70%; background:var(--border); border-radius:6px; margin-top:18px;"></div>
+        <div style="height:14px; width:55%; background:var(--border); border-radius:6px; margin-top:12px;"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSignalError(message) {
+  const grid = document.getElementById('signalsGrid');
+  if (!grid) return;
+  grid.innerHTML = `
+    <div style="grid-column: 1/-1; padding: 48px 20px; text-align: center; border: 1px dashed var(--border); border-radius: 16px; margin-top: 20px; color: var(--text-muted);">
+      ${message}
+    </div>
+  `;
+}
+
+async function loadSignals(page = 1, opts = {}) {
+  const reset = Boolean(opts.reset);
+  const runId = reset ? ++signalRunSeq : signalRunSeq;
+  if (opts.parentRunId && opts.parentRunId !== dashboardRunSeq) return;
+  if (signalLoading && !reset) return;
+  signalLoading = true;
+  if (reset) {
+    signalRenderSeq++;
+    signalPageNo = 1;
+    signalHasMore = false;
+    renderSignalSkeleton();
+  }
+  try {
+    const data = await fetchJSONCached('signals', `/api/signals?${signalQuery(page)}`, false);
+    if (runId !== signalRunSeq) return;
+    if (reset) document.getElementById('signalsGrid').innerHTML = '';
+    renderSignals(data.signals || [], { append: !reset });
+    signalPageNo = data.page || page;
+    signalHasMore = Boolean(data.has_more);
+    if (!signalHasMore && _sigObserver) _sigObserver.disconnect();
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      console.error(err);
+      renderSignalError('Khong tai duoc danh sach signal.');
+    }
+  } finally {
+    if (runId === signalRunSeq) signalLoading = false;
+  }
+}
+
+function renderSignals(signals, options = {}) {
   const grid = document.getElementById('signalsGrid');
   if (!signals || signals.length === 0) {
-    grid.innerHTML = `
-      <div style="grid-column: 1/-1; padding: 60px 20px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: 16px; margin-top: 20px;">
-        <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.8;">📡</div>
-        <h3 style="color: var(--text); font-size: 1.2rem; margin-bottom: 8px;">Không tìm thấy Kèo Thơm nào</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Radar chưa quét được tín hiệu nào khớp với bộ lọc hiện tại. Hãy thử nới lỏng bộ lọc ở menu bên trái!</p>
-      </div>
-    `;
-    _sigSorted = [];
+    if (!options.append) renderSignalError('Khong tim thay signal nao khop voi bo loc hien tai.');
     return;
   }
 
-  _sigSorted = signals;
-  _sigRendered = 0;
-  grid.innerHTML = '';
-  _renderMoreSignals();
+  _renderSignalCards(signals);
   _setupSignalScroll();
 }
 
-function _renderMoreSignals() {
+function _renderSignalCards(signals) {
   const grid = document.getElementById('signalsGrid');
-  const batch = _sigSorted.slice(_sigRendered, _sigRendered + _sigPageSize);
-  if (batch.length === 0) return;
-  grid.insertAdjacentHTML('beforeend', batch.map(x => {
+  if (!signals || signals.length === 0) return;
+  const renderSeq = signalRenderSeq;
+
+  const renderChunk = (start) => {
+    if (renderSeq !== signalRenderSeq) return;
+    const chunk = signals.slice(start, start + SIGNAL_RENDER_CHUNK_SIZE);
+    if (chunk.length === 0) return;
+    grid.insertAdjacentHTML('beforeend', chunk.map(x => {
     const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
     const profit = fairPrice !== '-' ? (parseFloat(fairPrice) - x.price_ty).toFixed(2) : '-';
 
     let timeStr = x.days_ago === 0 ? 'hôm nay' : `${x.days_ago} ngày trước`;
-    let legalStr = x.has_so === 1 ? 'Sổ Hồng' : (x.has_so === 0 ? 'Chờ sổ' : 'Đang cập nhật');
+    let legalStr = (x.has_so === true || x.has_so === 1) ? 'Sổ Hồng' : ((x.has_so === false || x.has_so === 0) ? 'Chờ sổ' : 'Đang cập nhật');
 
     const roadTiers = {
       1: 'Mặt tiền',
@@ -329,10 +377,8 @@ function _renderMoreSignals() {
     let roadStr = roadTiers[x.road_tier] || 'Chưa rõ';
 
     const safeTitle = String(x.title || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    const safeDesc = String(x.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    const imgSrc = x.imgs && x.imgs.length ? x.imgs[0] : PLACEHOLDER_IMG;
-    const imgsJson = encodeURIComponent(JSON.stringify(x.imgs && x.imgs.length ? x.imgs : []));
-    const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-desc="${safeDesc}" data-imgs="${imgsJson}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.price_drop_pct || ''}" data-score="${x.signal_score || '-'}" data-url="${x.url || ''}"`;
+    const imgSrc = x.primary_img || PLACEHOLDER_IMG;
+    const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-primary="${imgSrc}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || '-'}" data-url="${x.url || ''}"`;
 
     const isNew = x.days_ago <= 3;
     const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
@@ -343,7 +389,7 @@ function _renderMoreSignals() {
     return `
       <div class="scard" onclick="openSignal(this)" ${dataAttr}>
         <div class="sc-img-wrap">
-          <img class="sc-img" src="${imgSrc}" loading="lazy" alt="Img" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG">
+          <img class="sc-img" src="${imgSrc}" loading="lazy" decoding="async" width="640" height="416" alt="Img" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG">
           <div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg> -${x.mos_pct}%</div>
           ${newBadgeHtml}
           <div class="sc-img-tags">
@@ -382,13 +428,19 @@ function _renderMoreSignals() {
         </div>
       </div>
     `;
-  }).join(''));
-  _sigRendered += batch.length;
+    }).join(''));
+    if (start + SIGNAL_RENDER_CHUNK_SIZE < signals.length) {
+      requestAnimationFrame(() => renderChunk(start + SIGNAL_RENDER_CHUNK_SIZE));
+    }
+  };
+
+  requestAnimationFrame(() => renderChunk(0));
 }
 
 function _setupSignalScroll() {
   if (_sigObserver) _sigObserver.disconnect();
   const grid = document.getElementById('signalsGrid');
+  const root = grid.closest('.tab-content');
   const sentinel = document.getElementById('sig-scroll-sentinel');
   if (!sentinel) {
     const s = document.createElement('div');
@@ -398,10 +450,10 @@ function _setupSignalScroll() {
   }
   const el = document.getElementById('sig-scroll-sentinel');
   _sigObserver = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting && _sigRendered < _sigSorted.length) {
-      _renderMoreSignals();
+    if (entries[0].isIntersecting && signalHasMore && !signalLoading) {
+      loadSignals(signalPageNo + 1, { reset: false });
     }
-  }, { rootMargin: '400px' });
+  }, { root, rootMargin: '400px' });
   _sigObserver.observe(el);
 }
 
@@ -455,9 +507,11 @@ let smHistoryChart = null;
 
 function openSignal(card) {
   const d = card.dataset;
+  const modal = document.getElementById('signalModal');
+  modal.dataset.listingId = d.id;
 
   // Build image slider
-  const imgs = d.imgs ? JSON.parse(decodeURIComponent(d.imgs)) : [];
+  const imgs = d.primary ? [d.primary] : [];
   buildSlider(imgs);
 
   // Thumbnails
@@ -477,8 +531,8 @@ function openSignal(card) {
   // Meta line
   document.getElementById('sm-meta-line').innerHTML = `<span>Đăng ${d.time}</span> · <span>${d.source}</span>`;
 
-  // Description
-  document.getElementById('sm-desc').innerText = d.desc || 'Không có mô tả.';
+  // Description is lazy-loaded from /api/listing/<id>.
+  document.getElementById('sm-desc').innerText = 'Đang tải mô tả chi tiết...';
 
   // AI Assessment
   const aiSection = document.getElementById('sm-ai-section');
@@ -510,8 +564,37 @@ function openSignal(card) {
 
   // Load price history + comps
   loadSignalHistory(d.id, price, area, d.ward);
+  hydrateSignalDetail(d.id);
 
-  document.getElementById('signalModal').style.display = 'flex';
+  modal.style.display = 'flex';
+}
+
+async function hydrateSignalDetail(listingId) {
+  const modal = document.getElementById('signalModal');
+  try {
+    const res = await fetch(`/api/listing/${listingId}`);
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const data = await res.json();
+    if (modal.dataset.listingId !== String(listingId)) return;
+
+    document.getElementById('sm-title').innerText = data.title || document.getElementById('sm-title').innerText;
+    document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
+    document.getElementById('sm-detail').href = data.url || `/listing/${listingId}`;
+
+    const imgs = Array.isArray(data.imgs) ? data.imgs.filter(Boolean) : [];
+    if (imgs.length) {
+      buildSlider(imgs);
+      const thumbsEl = document.getElementById('sm-thumbs');
+      thumbsEl.innerHTML = imgs.length > 1
+        ? imgs.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i-1}; slideSignal(1);" onerror="this.style.display='none'">`).join('')
+        : '';
+    }
+  } catch (err) {
+    console.error(err);
+    if (modal.dataset.listingId === String(listingId)) {
+      document.getElementById('sm-desc').innerText = 'Không tải được mô tả chi tiết.';
+    }
+  }
 }
 
 async function loadSignalHistory(listingId, currentPrice, area, ward) {

@@ -1,7 +1,8 @@
 import sqlite3
-from pathlib import Path
 from datetime import datetime, date
-from functools import lru_cache
+from collections import defaultdict
+
+from services.image_assets import resolve_image_url
 
 CITY_MAP = {
     "THỦ DẦU MỘT": ["Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ", "Phú Mỹ", "Phú Cường", "Phú Hòa", "Phú Lợi", "Hiệp Thành", "Chánh Nghĩa", "Phú Tân", "Hòa Phú"],
@@ -26,73 +27,155 @@ def _days_ago(crawled_at: str) -> int:
     except Exception:
         return 0
 
-def normalize_image_url(src: str) -> str:
-    if not src:
-        return ""
-    s = str(src).strip().replace("\\", "/")
-    if not s or s.upper().endswith("NOT_FOUND"):
-        return ""
-    if s.startswith(("http://", "https://", "data:")):
-        return s
-    if s.startswith("/data/images/"):
-        return s
-    marker = "data/images/"
-    if marker in s:
-        return "/" + s[s.index(marker):]
-    return "/data/images/" + Path(s).name
-
-@lru_cache(maxsize=20000)
-def _local_image_exists(url: str) -> bool:
-    if not url.startswith("/data/images/"):
-        return True
-    filename = url.removeprefix("/data/images/")
-    image_dir = Path(__file__).resolve().parent.parent / "data" / "images"
-    return (image_dir / filename).exists()
-
-def resolve_image_url(local_src: str, remote_src: str) -> str:
-    local_url = normalize_image_url(local_src)
-    if local_url and _local_image_exists(local_url):
-        return local_url
-    remote_url = normalize_image_url(remote_src)
-    if remote_url:
-        return remote_url
-    return local_url
-
-def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0):
+def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix=""):
     if not sources:
         sources = ["facebook", "guland", "batdongsan"]
-    
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    
+
     # Common filters. Normal views hide duplicates; drop-only views show reliable
     # repost drops even when the lower-price repost is marked duplicate.
-    where_parts = ["probably_sold = 0"]
+    col = lambda name: f"{prefix}{name}" if prefix else name
+    where_parts = [f"{col('probably_sold')} = 0"]
     if only_drops:
-        where_parts.append("price_dropped = 1")
+        where_parts.append(f"{col('price_dropped')} = 1")
     else:
-        where_parts.append("possibly_duplicate = 0")
+        where_parts.append(f"{col('possibly_duplicate')} = 0")
     params = []
-    
+
     if wards:
-        where_parts.append(f"ward IN ({','.join(['?']*len(wards))})")
+        where_parts.append(f"{col('ward')} IN ({','.join(['?']*len(wards))})")
         params.extend(wards)
-    
+
     if sources:
-        where_parts.append(f"source IN ({','.join(['?']*len(sources))})")
+        where_parts.append(f"{col('source')} IN ({','.join(['?']*len(sources))})")
         params.extend(sources)
 
     if prop_types:
-        where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
+        where_parts.append(f"{col('property_type')} IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
 
-    where_sql = " AND ".join(where_parts)
+    return " AND ".join(where_parts), params
 
+
+def _mos_filter(mos_min=0):
     mos_condition = ""
     mos_params = []
     if mos_min > 0:
         mos_condition = " AND v.mos_pct >= ?"
         mos_params = [mos_min]
+    return mos_condition, mos_params
+
+
+def _signal_sort_sql(sort_key: str) -> str:
+    sort_map = {
+        "newest": "COALESCE(l.posted_at, l.crawled_at) DESC, l.id DESC",
+        "price_m2_asc": "v.actual_ppm2 IS NULL, v.actual_ppm2 ASC, l.id DESC",
+        "price_asc": "l.price_ty IS NULL, l.price_ty ASC, l.id DESC",
+        "mos_desc": "v.mos_pct IS NULL, v.mos_pct DESC, l.id DESC",
+        "score_desc": "COALESCE(v.signal_score, 0) DESC, v.mos_pct DESC",
+    }
+    return sort_map.get(sort_key or "newest", sort_map["newest"])
+
+
+def _primary_images(conn, listing_ids):
+    if not listing_ids:
+        return {}
+    placeholders = ",".join("?" * len(listing_ids))
+    rows = conn.execute(f"""
+        SELECT listing_id, local_path, img_url
+        FROM listing_images
+        WHERE listing_id IN ({placeholders})
+        ORDER BY listing_id, img_order
+    """, listing_ids).fetchall()
+    img_map = {}
+    for r in rows:
+        if r[0] in img_map:
+            continue
+        url = resolve_image_url(r[1], r[2], prefer_thumb=True)
+        if url:
+            img_map[r[0]] = url
+    return img_map
+
+
+def _format_signal_row(r, primary_img=None):
+    fair_ppm2 = round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None
+    return {
+        "id": r['id'],
+        "title": r['title'],
+        "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
+        "actual_ppm2": round(r['actual_ppm2'], 1) if r['actual_ppm2'] else 0,
+        "fair_ppm2": fair_ppm2,
+        "area_m2": r['area_m2'],
+        "price_ty": r['price_ty'],
+        "prop_type": r['property_type'],
+        "is_hot": bool(r['is_hot']),
+        "price_dropped": bool(r['price_dropped']),
+        "suspicious_bait": bool(r['suspicious_bait']),
+        "drop_pct": r['price_drop_pct'],
+        "price_first_ty": r['price_first_ty'],
+        "duplicate_of_id": r['duplicate_of_id'],
+        "url": r['url'],
+        "days_ago": _days_ago(r['posted_at'] or r['crawled_at']),
+        "ward": r['ward'],
+        "signal_score": r['signal_score'],
+        "primary_img": primary_img or "",
+        "source": r['source'],
+        "road_tier": r['road_tier'] or 0,
+        "has_so": None if r['has_so'] is None else bool(r['has_so']),
+    }
+
+
+def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30):
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    where_sql, params = _build_filters(sources, wards, prop_types, only_drops, prefix="l.")
+    mos_condition, mos_params = _mos_filter(mos_min)
+    page = max(int(page or 1), 1)
+    limit = min(max(int(limit or 30), 1), 100)
+    offset = (page - 1) * limit
+    order_sql = _signal_sort_sql(sort)
+
+    count_row = conn.execute(f"""
+        SELECT COUNT(*)
+        FROM valuation_results v
+        JOIN listings l ON v.listing_id = l.id
+        WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
+    """, params + mos_params).fetchone()
+    total = count_row[0] if count_row else 0
+
+    rows = conn.execute(f"""
+        SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
+               l.id, l.title, l.source, l.area_m2, l.price_ty,
+               l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
+               l.price_first_ty, l.duplicate_of_id,
+               l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
+               COALESCE(v.signal_score, 0) as signal_score
+        FROM valuation_results v
+        JOIN listings l ON v.listing_id = l.id
+        WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
+        ORDER BY {order_sql}
+        LIMIT ? OFFSET ?
+    """, params + mos_params + [limit, offset]).fetchall()
+
+    image_map = _primary_images(conn, [r['id'] for r in rows])
+    conn.close()
+
+    return {
+        "signals": [_format_signal_row(r, image_map.get(r['id'])) for r in rows],
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit if limit else 1,
+        "has_more": page * limit < total,
+        "sort": sort or "newest",
+    }
+
+
+def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True):
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    where_sql, params = _build_filters(sources, wards, prop_types, only_drops)
+    mos_condition, mos_params = _mos_filter(mos_min)
 
     # 1. Stats
     stats = conn.execute(f"""
@@ -104,21 +187,21 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             (SELECT COUNT(*) FROM filtered WHERE price_dropped = 1) as price_drops
     """, params + mos_params).fetchone()
 
-    # 2. Signals
-    sig_query = f"""
-        SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
-               l.id, l.title, l.source, l.area_m2, l.price_ty,
-               l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
-               l.price_first_ty, l.duplicate_of_id,
-               l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so, l.seller_name,
-               l.description,
-               COALESCE(v.signal_score, 0) as signal_score
-        FROM valuation_results v
-        JOIN listings l ON v.listing_id = l.id
-        WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
-        ORDER BY v.signal_score DESC, v.mos_pct DESC
-    """
-    sig_rows = conn.execute(sig_query, params + mos_params).fetchall()
+    sig_rows = []
+    if include_signals:
+        sig_query = f"""
+            SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
+                   l.id, l.title, l.source, l.area_m2, l.price_ty,
+                   l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
+                   l.price_first_ty, l.duplicate_of_id,
+                   l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
+                   COALESCE(v.signal_score, 0) as signal_score
+            FROM valuation_results v
+            JOIN listings l ON v.listing_id = l.id
+            WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
+            ORDER BY COALESCE(v.signal_score, 0) DESC, v.mos_pct DESC
+        """
+        sig_rows = conn.execute(sig_query, params + mos_params).fetchall()
 
     # 3. All Listings
     all_rows = []
@@ -147,7 +230,6 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             WHERE listing_id IN ({placeholders})
             ORDER BY listing_id, img_order
         """, listing_ids).fetchall()
-    from collections import defaultdict
     img_map = defaultdict(list)
     for r in img_rows:
         url = resolve_image_url(r[1], r[2])
@@ -234,17 +316,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
 
     return {
         "stats": dict(stats),
-        "signals": [{
-            "id": r['id'], "title": r['title'], "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0, "actual_ppm2": round(r['actual_ppm2'],1) if r['actual_ppm2'] else 0,
-            "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None, "area_m2": r['area_m2'], "price_ty": r['price_ty'],
-            "prop_type": r['property_type'], "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
-            "suspicious_bait": bool(r['suspicious_bait']),
-            "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'],
-            "duplicate_of_id": r['duplicate_of_id'], "url": r['url'], "days_ago": _days_ago(r['posted_at'] or r['crawled_at']),
-            "ward": r['ward'], "signal_score": r['signal_score'], "imgs": img_map.get(r['id'], []), "source": r['source'],
-            "road_tier": r['road_tier'] or 0, "has_so": bool(r['has_so']),
-            "description": r['description'] or ""
-        } for r in sig_rows],
+        "signals": [_format_signal_row(r, (img_map.get(r['id']) or [""])[0]) for r in sig_rows],
         "all_listings": [{
             "id": r['id'], "title": r['title'], "description": r['description'] or "",
             "price_ty": r['price_ty'], "area_m2": r['area_m2'],

@@ -9,7 +9,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 from config import database_sqlite as db_mod
 
 # Import the extracted services
-from services.market_data import load_data, load_trend_data, load_listing_detail, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url
+from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url
 from services.ai_bot import AIBot
 
 app = Flask(__name__)
@@ -36,11 +36,10 @@ def api_dashboard():
     db_path = str(db_mod.DB_PATH.resolve())
     include_trend = request.args.get("include_trend") == "1"
     # Load data without fetching all listings to save time/memory
-    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min)
+    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False)
     
     return jsonify({
         "stats": data["stats"],
-        "signals": data["signals"],
         "market": data["market"],
         "trend_data": data["trend_data"],
         "all_wards": data["all_wards"],
@@ -52,6 +51,30 @@ def api_dashboard():
         "active_props": prop_types,
         "trend_period": trend_period
     })
+
+@app.route("/api/signals")
+def api_signals():
+    active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
+    if not wards and active_city in CITY_MAP:
+        wards = CITY_MAP[active_city]
+    try:
+        page = int(request.args.get("page", 1))
+        limit = int(request.args.get("limit", 30))
+    except ValueError:
+        page, limit = 1, 30
+    sort = request.args.get("sort", "newest")
+    db_path = str(db_mod.DB_PATH.resolve())
+    return jsonify(load_signals(
+        db_path,
+        sources=sources,
+        wards=wards,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        mos_min=mos_min,
+        sort=sort,
+        page=page,
+        limit=limit,
+    ))
 
 @app.route("/api/trends")
 def api_trends():
@@ -268,6 +291,37 @@ def listing_detail(listing_id):
     desc_html = l.get('description', '').replace('\n', '<br>') if l.get('description') else 'Không có mô tả.'
     
     return render_template('listing_detail.html', l=l, imgs=imgs, history_json=history_json, desc_html=desc_html)
+
+@app.route('/api/listing/<int:listing_id>')
+def api_listing_detail(listing_id):
+    db_path = str(db_mod.DB_PATH.resolve())
+    data = load_listing_detail(db_path, listing_id)
+    if not data:
+        return jsonify({"error": "not found"}), 404
+
+    l = data["listing"]
+    return jsonify({
+        "id": l["id"],
+        "title": l["title"],
+        "description": l["description"] or "",
+        "price_ty": l["price_ty"],
+        "area_m2": l["area_m2"],
+        "actual_ppm2": round(l["price_per_m2"], 1) if l["price_per_m2"] else None,
+        "fair_ppm2": round(l["fair_ppm2"], 1) if l["fair_ppm2"] else None,
+        "mos_pct": round(l["mos_pct"], 1) if l["mos_pct"] else 0,
+        "ward": l["ward"],
+        "source": l["source"],
+        "url": l["url"],
+        "road_tier": l["road_tier"] or 0,
+        "has_so": None if l["has_so"] is None else bool(l["has_so"]),
+        "price_dropped": bool(l["price_dropped"]),
+        "drop_pct": l["price_drop_pct"],
+        "price_first_ty": l["price_first_ty"],
+        "duplicate_of_id": l["duplicate_of_id"],
+        "signal_score": l["signal_score"] or 0,
+        "days_ago": _days_ago(l["posted_at"] or l["crawled_at"]),
+        "imgs": data["images"],
+    })
 
 @app.route('/api/history/<int:listing_id>')
 def get_price_history(listing_id):
