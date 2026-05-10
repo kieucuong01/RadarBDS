@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Control Room</title>
+  <style>
+    body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#0b1020;color:#e2e8f0;margin:0}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px}
+    h1{margin:0 0 6px;font-size:26px}
+    .sub{color:#94a3b8;margin-bottom:14px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tab{border:1px solid #334155;background:#111827;color:#e2e8f0;padding:8px 12px;border-radius:10px;cursor:pointer}
+    .tab.active{background:#1d4ed8;border-color:#1d4ed8}
+    .panel{display:none;background:#111827;border:1px solid #334155;border-radius:14px;padding:14px}
+    .panel.active{display:block}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border-bottom:1px solid #334155;padding:8px;font-size:13px;text-align:left;vertical-align:top}
+    th{color:#94a3b8;font-size:12px;text-transform:uppercase}
+    input,select,textarea,button{background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:7px 10px}
+    button{cursor:pointer}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .badge{display:inline-block;padding:3px 8px;border-radius:999px;border:1px solid #334155;font-size:12px}
+    .ok{color:#22c55e}.err{color:#ef4444}.muted{color:#94a3b8}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Control Room</h1>
+    <div class="sub">Mini CRM · QC Signals · QC Duplicates · Blacklist Broker</div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('crm', this)">CRM Leads</button>
+      <button class="tab" onclick="showTab('signals', this)">QC Signals</button>
+      <button class="tab" onclick="showTab('dups', this)">QC Duplicates</button>
+      <button class="tab" onclick="showTab('blacklist', this)">Blacklist Broker</button>
+      <a class="tab" href="/" style="text-decoration:none">← Dashboard</a>
+    </div>
+
+    <section id="panel-crm" class="panel active">
+      <div class="row">
+        <label>Trạng thái</label>
+        <select id="crmStatusFilter" onchange="loadLeads()">
+          <option value="">Tất cả</option>
+          <option value="new">new</option>
+          <option value="called">called</option>
+          <option value="viewing">viewing</option>
+          <option value="deposit">deposit</option>
+          <option value="cancelled">cancelled</option>
+        </select>
+        <button onclick="loadLeads()">Refresh</button>
+      </div>
+      <table>
+        <thead><tr><th>Ngày tạo</th><th>Zalo khách</th><th>Lô quan tâm</th><th>Nguồn</th><th>Trạng thái</th></tr></thead>
+        <tbody id="crmBody"></tbody>
+      </table>
+    </section>
+
+    <section id="panel-signals" class="panel">
+      <div class="row">
+        <label>MOS từ</label><input id="mosMin" type="number" step="1" value="10" style="width:90px">
+        <label>đến</label><input id="mosMax" type="number" step="1" value="200" style="width:90px">
+        <input id="signalWard" placeholder="Phường">
+        <select id="signalSource">
+          <option value="">Nguồn</option><option value="facebook">facebook</option><option value="guland">guland</option><option value="batdongsan">batdongsan</option>
+        </select>
+        <button onclick="loadSignalQC()">Lọc</button>
+      </div>
+      <table>
+        <thead><tr><th>Tin</th><th>MOS</th><th>Score</th><th>Giá</th><th>Feedback</th></tr></thead>
+        <tbody id="signalBody"></tbody>
+      </table>
+    </section>
+
+    <section id="panel-dups" class="panel">
+      <div class="row"><button onclick="loadDups()">Refresh</button></div>
+      <table>
+        <thead><tr><th>Tin duplicate</th><th>Tin canonical</th><th>Thao tác</th></tr></thead>
+        <tbody id="dupBody"></tbody>
+      </table>
+    </section>
+
+    <section id="panel-blacklist" class="panel">
+      <div class="row">
+        <input id="blPhone" placeholder="SĐT cần chặn">
+        <input id="blReason" placeholder="Lý do" style="min-width:220px">
+        <button onclick="addBlacklist()">Thêm / Kích hoạt</button>
+      </div>
+      <table>
+        <thead><tr><th>Phone</th><th>Lý do</th><th>Active</th><th>Thao tác</th></tr></thead>
+        <tbody id="blBody"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    const leadStatuses = ["new","called","viewing","deposit","cancelled"];
+    function showTab(name, btn){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      document.getElementById('panel-'+name).classList.add('active');
+      if(name==='crm') loadLeads();
+      if(name==='signals') loadSignalQC();
+      if(name==='dups') loadDups();
+      if(name==='blacklist') loadBlacklist();
+    }
+
+    async function loadLeads(){
+      const status = document.getElementById('crmStatusFilter').value;
+      const res = await fetch('/admin/api/leads' + (status ? ('?status=' + encodeURIComponent(status)) : ''));
+      const data = await res.json();
+      const body = document.getElementById('crmBody');
+      body.innerHTML = (data.items || []).map(x => {
+        const opts = leadStatuses.map(s => `<option value="${s}" ${x.status===s?'selected':''}>${s}</option>`).join('');
+        const link = x.listing_id ? `<a href="/listing/${x.listing_id}" target="_blank">#${x.listing_id}</a>` : (x.listing_url ? `<a href="${x.listing_url}" target="_blank">Link</a>` : '-');
+        return `<tr>
+          <td>${(x.created_at || '').replace('T',' ').slice(0,16)}</td>
+          <td>${x.zalo_phone || '-'}</td>
+          <td>${link}</td>
+          <td>${x.source_context || '-'}</td>
+          <td><select onchange="setLeadStatus(${x.id}, this.value)">${opts}</select></td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="5" class="muted">No data</td></tr>`;
+    }
+
+    async function setLeadStatus(id, status){
+      await fetch(`/admin/api/leads/${id}/status`, {
+        method:'PATCH',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({status})
+      });
+    }
+
+    async function loadSignalQC(){
+      const q = new URLSearchParams({
+        mos_min: document.getElementById('mosMin').value || 0,
+        mos_max: document.getElementById('mosMax').value || 1000,
+        ward: document.getElementById('signalWard').value || '',
+        source: document.getElementById('signalSource').value || ''
+      });
+      const res = await fetch('/admin/api/qc/signals?' + q.toString());
+      const data = await res.json();
+      const body = document.getElementById('signalBody');
+      body.innerHTML = (data.items || []).map(x => `
+        <tr>
+          <td><a href="/listing/${x.id}" target="_blank">${x.title || ('#'+x.id)}</a><div class="muted">${x.ward || '-'} · ${x.source || '-'}</div></td>
+          <td>${(x.mos_pct || 0).toFixed(1)}%</td>
+          <td>${x.signal_score || 0}</td>
+          <td>${x.price_ty || '-'} tỷ</td>
+          <td>
+            <select id="verdict-${x.id}">
+              <option value="good">good</option><option value="bad">bad</option><option value="maybe">maybe</option><option value="spam">spam</option><option value="sold">sold</option>
+            </select>
+            <button onclick="submitSignalReview(${x.id})">Lưu</button>
+            <div class="muted">${x.verdict || ''}</div>
+          </td>
+        </tr>
+      `).join('') || `<tr><td colspan="5" class="muted">No data</td></tr>`;
+    }
+
+    async function submitSignalReview(id){
+      const verdict = document.getElementById('verdict-'+id).value;
+      await fetch(`/admin/api/qc/signals/${id}/review`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({verdict, reason:''})
+      });
+      loadSignalQC();
+    }
+
+    async function loadDups(){
+      const res = await fetch('/admin/api/qc/duplicates');
+      const data = await res.json();
+      const body = document.getElementById('dupBody');
+      body.innerHTML = (data.items || []).map(x => `
+        <tr>
+          <td><a href="/listing/${x.id}" target="_blank">#${x.id}</a> · ${x.title || ''}<div class="muted">${x.source || ''} · ${x.price_ty || '-'} tỷ · ${x.area_m2 || '-'} m²</div></td>
+          <td><a href="/listing/${x.duplicate_of_id}" target="_blank">#${x.duplicate_of_id}</a> · ${x.canonical_title || ''}<div class="muted">${x.canonical_price_ty || '-'} tỷ · ${x.canonical_area_m2 || '-'} m²</div></td>
+          <td>
+            <button onclick="splitDup(${x.id}, ${x.duplicate_of_id})">Tách</button>
+            <button onclick="mergeDup(${x.id}, ${x.duplicate_of_id})">Gộp lại</button>
+          </td>
+        </tr>
+      `).join('') || `<tr><td colspan="3" class="muted">No data</td></tr>`;
+    }
+
+    async function splitDup(id, target){
+      await fetch('/admin/api/qc/duplicates/split', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({listing_id:id, target_listing_id:target})
+      });
+      loadDups();
+    }
+    async function mergeDup(id, target){
+      await fetch('/admin/api/qc/duplicates/merge', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({listing_id:id, target_listing_id:target})
+      });
+      loadDups();
+    }
+
+    async function loadBlacklist(){
+      const res = await fetch('/admin/api/blacklist');
+      const data = await res.json();
+      const body = document.getElementById('blBody');
+      body.innerHTML = (data.items || []).map(x => `
+        <tr>
+          <td>${x.phone_norm}</td>
+          <td>${x.reason || '-'}</td>
+          <td>${x.active ? '<span class="ok">active</span>' : '<span class="err">inactive</span>'}</td>
+          <td>${x.active ? `<button onclick="deactivateBlacklist('${x.phone_norm}')">Deactivate</button>` : ''}</td>
+        </tr>
+      `).join('') || `<tr><td colspan="4" class="muted">No data</td></tr>`;
+    }
+    async function addBlacklist(){
+      const phone = document.getElementById('blPhone').value.trim();
+      const reason = document.getElementById('blReason').value.trim();
+      if(!phone) return;
+      await fetch('/admin/api/blacklist', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({phone, reason})
+      });
+      document.getElementById('blPhone').value = '';
+      document.getElementById('blReason').value = '';
+      loadBlacklist();
+    }
+    async function deactivateBlacklist(phone){
+      await fetch('/admin/api/blacklist', {
+        method:'DELETE',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({phone})
+      });
+      loadBlacklist();
+    }
+
+    loadLeads();
+  </script>
+</body>
+</html>

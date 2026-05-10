@@ -20,6 +20,7 @@ from config.database_sqlite import (
     save_valuation_result, start_crawl_run, finish_crawl_run,
 )
 from cleansing.normalizer import normalize_record, compute_content_hash
+from db.moderation import is_phone_blacklisted
 
 
 def populate_content_hashes(conn) -> int:
@@ -107,6 +108,12 @@ def reprocess_listings(source: str = None, since: str = None, full: bool = False
             rec["raw_id"]   = raw["id"]
             rec["source"]   = raw["source"]
             rec["source_id"] = raw.get("source_id") or rec.get("source_id", "")
+
+            with get_conn() as conn:
+                blocked, _ = is_phone_blacklisted(conn, rec.get("contact_phone"))
+            if blocked:
+                stats["skipped"] += 1
+                continue
 
             listing_id, is_new = upsert_listing(rec, crawl_run_id=run_id)
             stats["processed_ids"].append(listing_id)

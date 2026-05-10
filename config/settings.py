@@ -109,6 +109,10 @@ FACEBOOK_GROUPS   = [
 ]
 FACEBOOK_SCROLL_TIMES = int(os.getenv("FACEBOOK_SCROLL_TIMES", 10))
 
+# ─── ADMIN CONTROL ROOM ───────────────────────────────────────────────────────
+ADMIN_BASIC_USER = os.getenv("ADMIN_BASIC_USER", "").strip()
+ADMIN_BASIC_PASS = os.getenv("ADMIN_BASIC_PASS", "").strip()
+
 # ─── USER AGENTS ─────────────────────────────────────────────────────────────
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",

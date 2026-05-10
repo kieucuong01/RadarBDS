@@ -229,6 +229,48 @@ CREATE TABLE IF NOT EXISTS feedback_rules (
     last_used_at    TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_feedback_rules_enabled ON feedback_rules(enabled);
+
+-- ═══════════════════════════════════════════════════════════════════
+-- Admin Control Room
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS lead_captures (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at      TEXT DEFAULT (datetime('now')),
+    updated_at      TEXT DEFAULT (datetime('now')),
+    listing_id      INTEGER REFERENCES listings(id) ON DELETE SET NULL,
+    listing_url     TEXT,
+    zalo_phone      TEXT NOT NULL,
+    source_context  TEXT,   -- card_signal | modal_signal | listing_detail
+    note            TEXT,
+    status          TEXT DEFAULT 'new' -- new | called | viewing | deposit | cancelled
+);
+CREATE INDEX IF NOT EXISTS idx_leads_created_at ON lead_captures(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_status ON lead_captures(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_listing ON lead_captures(listing_id);
+
+CREATE TABLE IF NOT EXISTS dedup_overrides (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at          TEXT DEFAULT (datetime('now')),
+    updated_at          TEXT DEFAULT (datetime('now')),
+    action              TEXT NOT NULL,  -- merge | split
+    listing_id          INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    target_listing_id   INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    note                TEXT,
+    active              INTEGER DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_dedup_overrides_active ON dedup_overrides(active, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_dedup_overrides_pair ON dedup_overrides(listing_id, target_listing_id, active);
+
+CREATE TABLE IF NOT EXISTS broker_blacklist (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at      TEXT DEFAULT (datetime('now')),
+    updated_at      TEXT DEFAULT (datetime('now')),
+    phone_norm      TEXT NOT NULL,
+    reason          TEXT,
+    active          INTEGER DEFAULT 1,
+    UNIQUE(phone_norm)
+);
+CREATE INDEX IF NOT EXISTS idx_broker_blacklist_active ON broker_blacklist(active, phone_norm);
 """
 
 
@@ -260,6 +302,9 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         ("suspicious_bait",    "ALTER TABLE listings ADD COLUMN suspicious_bait INTEGER DEFAULT 0"),
         ("llm_verified",       "ALTER TABLE listings ADD COLUMN llm_verified INTEGER DEFAULT 0"),
         ("llm_notes",          "ALTER TABLE listings ADD COLUMN llm_notes TEXT"),
+        ("is_blacklisted",     "ALTER TABLE listings ADD COLUMN is_blacklisted INTEGER DEFAULT 0"),
+        ("blacklisted_at",     "ALTER TABLE listings ADD COLUMN blacklisted_at TEXT"),
+        ("blacklist_phone_norm", "ALTER TABLE listings ADD COLUMN blacklist_phone_norm TEXT"),
     ]
     for col, sql in migrations:
         if col not in existing:

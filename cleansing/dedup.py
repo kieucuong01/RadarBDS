@@ -604,6 +604,8 @@ def flag_duplicates_in_db(conn: sqlite3.Connection) -> dict:
                 f"{oldest_price}->{canonical_price}ty (-{drop_pct}%)"
             )
 
+    _apply_dedup_overrides(conn)
+
     stats = {
         "total": n,
         "dup_groups": len(dup_groups),
@@ -617,6 +619,34 @@ def flag_duplicates_in_db(conn: sqlite3.Connection) -> dict:
         f"{price_drops_detected} price drops detected"
     )
     return stats
+
+
+def _apply_dedup_overrides(conn: sqlite3.Connection) -> None:
+    try:
+        rows = conn.execute("""
+            SELECT action, listing_id, target_listing_id
+            FROM dedup_overrides
+            WHERE active = 1
+            ORDER BY updated_at ASC, id ASC
+        """).fetchall()
+    except Exception:
+        return
+    for r in rows:
+        action = (r["action"] or "").strip().lower()
+        lid = r["listing_id"]
+        tid = r["target_listing_id"]
+        if not lid or not tid or lid == tid:
+            continue
+        if action == "merge":
+            conn.execute(
+                "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
+                (tid, lid),
+            )
+        elif action == "split":
+            conn.execute(
+                "UPDATE listings SET possibly_duplicate=0, duplicate_of_id=NULL WHERE id IN (?, ?)",
+                (lid, tid),
+            )
 
 
 def get_dedup_stats(conn: sqlite3.Connection) -> dict:

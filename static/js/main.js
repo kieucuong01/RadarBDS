@@ -433,7 +433,7 @@ function _renderSignalCards(signals) {
           </div>
 
           <div class="sc-actions" onclick="event.stopPropagation()">
-            <a href="https://zalo.me/0343216024" target="_blank" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Zalo</a>
+            <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;captureLeadAndOpen(c.id,c.url,'card_signal');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Zalo</a>
             <a href="/listing/${x.id}" target="_blank" class="btn-analyze"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Phân tích Deal</a>
           </div>
         </div>
@@ -622,7 +622,8 @@ function _openSignalLegacy(card) {
   });
 
   // Links
-  document.getElementById('sm-zalo').href = 'https://zalo.me/0343216024';
+  document.getElementById('sm-zalo').dataset.listingId = d.id;
+  document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
   document.getElementById('sm-detail').href = d.url || `/listing/${d.id}`;
 
   // Load price history + comps
@@ -642,6 +643,8 @@ async function _hydrateSignalDetailLegacy(listingId) {
 
     document.getElementById('sm-title').innerText = data.title || document.getElementById('sm-title').innerText;
     document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
+    document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
+    document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
     document.getElementById('sm-detail').href = data.url || `/listing/${listingId}`;
     renderSignalTags({
       area: data.area_m2,
@@ -792,7 +795,8 @@ function openSignal(card) {
     propertyType: d.ptype
   });
 
-  document.getElementById('sm-zalo').href = 'https://zalo.me/0343216024';
+  document.getElementById('sm-zalo').dataset.listingId = d.id;
+  document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
   document.getElementById('sm-detail').href = d.url || `/listing/${d.id}`;
 
   loadSignalHistory(d.id, price, area, d.ward);
@@ -810,6 +814,8 @@ async function hydrateSignalDetail(listingId) {
 
     document.getElementById('sm-title').innerText = data.title || document.getElementById('sm-title').innerText;
     document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
+    document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
+    document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
     document.getElementById('sm-detail').href = data.url || `/listing/${listingId}`;
     renderSignalTags({
       area: data.area_m2,
@@ -1437,6 +1443,30 @@ document.addEventListener('DOMContentLoaded', () => {
     detectLocation();
   }
 });
+
+async function captureLeadAndOpen(listingId, listingUrl, sourceContext = 'signal') {
+  const zaloHref = 'https://zalo.me/0343216024';
+  window.open(zaloHref, '_blank', 'noopener,noreferrer');
+  let phone = '';
+  try {
+    const answer = window.prompt('De em ho tro nhanh hon, cho xin so Zalo cua anh/chi (co the bo qua).', '');
+    if (answer && answer.trim()) {
+      phone = answer.trim();
+      await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          listing_id: listingId ? Number(listingId) : null,
+          listing_url: listingUrl || '',
+          zalo_phone: phone,
+          source_context: sourceContext
+        })
+      });
+    }
+  } catch (err) {
+    console.warn('Lead capture failed:', err);
+  }
+}
 
 // AI Chat Logic
 let chatHistory = [];
