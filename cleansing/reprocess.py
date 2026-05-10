@@ -154,7 +154,7 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
                    has_so, is_hot, price_dropped, crawled_at, url, contact_phone
             FROM listings
             WHERE price_per_m2 IS NOT NULL AND price_per_m2 > 0
-              AND probably_sold = 0 AND possibly_duplicate = 0
+              AND probably_sold = 0
             ORDER BY id DESC
             LIMIT 30000
         """).fetchall()
@@ -214,8 +214,7 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
 
     logger.info(f"Valuation: fitting engine on {len(train_listings)} listings, valuating {len(valuate_listings)}...")
     engine = ValuationEngine()
-    with get_conn() as _conn_priors:
-        engine.fit(train_listings, conn=_conn_priors)
+    engine.fit(train_listings)
     
     results = engine.valuate_batch(valuate_listings)
 

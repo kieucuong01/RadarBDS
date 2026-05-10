@@ -94,6 +94,24 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual([r["price_ty"] for r in rows], [1.74, 1.70])
         self.assertEqual([r["crawl_run_id"] for r in rows], [1, 2])
 
+    def test_upsert_listing_over_40pct_drop_marks_suspicious_bait(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(_listing_rec(price_ty=2.0, price_per_m2=20.0), crawl_run_id=1)
+        upsert_listing(_listing_rec(price_ty=1.0, price_per_m2=10.0), crawl_run_id=2)
+
+        with get_conn() as conn:
+            row = conn.execute("""
+                SELECT price_dropped, price_drop_pct, suspicious_bait
+                FROM listings
+                WHERE id = ?
+            """, (listing_id,)).fetchone()
+
+        self.assertEqual(row["price_dropped"], 0)
+        self.assertIsNone(row["price_drop_pct"])
+        self.assertEqual(row["suspicious_bait"], 1)
+
     def test_history_api_compacts_repeated_snapshots_and_current_price(self):
         from app import app
         from db.connection import get_conn

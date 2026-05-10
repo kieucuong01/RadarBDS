@@ -108,7 +108,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     sig_query = f"""
         SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                l.id, l.title, l.source, l.area_m2, l.price_ty,
-               l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct,
+               l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
                l.price_first_ty, l.duplicate_of_id,
                l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so, l.seller_name,
                l.description,
@@ -117,7 +117,6 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         JOIN listings l ON v.listing_id = l.id
         WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
         ORDER BY v.signal_score DESC, v.mos_pct DESC
-        LIMIT 200
     """
     sig_rows = conn.execute(sig_query, params + mos_params).fetchall()
 
@@ -239,6 +238,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             "id": r['id'], "title": r['title'], "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0, "actual_ppm2": round(r['actual_ppm2'],1) if r['actual_ppm2'] else 0,
             "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None, "area_m2": r['area_m2'], "price_ty": r['price_ty'],
             "prop_type": r['property_type'], "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
+            "suspicious_bait": bool(r['suspicious_bait']),
             "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'],
             "duplicate_of_id": r['duplicate_of_id'], "url": r['url'], "days_ago": _days_ago(r['posted_at'] or r['crawled_at']),
             "ward": r['ward'], "signal_score": r['signal_score'], "imgs": img_map.get(r['id'], []), "source": r['source'],
@@ -252,6 +252,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0,
             "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None,
             "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
+            "suspicious_bait": bool(r['suspicious_bait']),
             "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],
             "source": r['source'], "imgs": img_map.get(r['id'], [])
         } for r in all_rows],

@@ -45,7 +45,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
     """
     with get_conn() as conn:
         existing = conn.execute(
-            "SELECT id, price_ty, price_first_ty, price_dropped FROM listings WHERE url = ?",
+            "SELECT id, price_ty, price_first_ty, price_dropped, suspicious_bait FROM listings WHERE url = ?",
             (rec["url"],)
         ).fetchone()
 
@@ -112,10 +112,18 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             new_price   = rec.get("price_ty")
             price_dropped  = existing["price_dropped"]
             price_drop_pct = None
+            suspicious_bait = existing["suspicious_bait"] if "suspicious_bait" in existing.keys() else 0
 
             if new_price and first_price and new_price < first_price * 0.99:
-                price_dropped  = 1
-                price_drop_pct = round((first_price - new_price) / first_price * 100, 2)
+                drop_pct = round((first_price - new_price) / first_price * 100, 2)
+                if drop_pct > 40.0:
+                    price_dropped = 0
+                    price_drop_pct = None
+                    suspicious_bait = 1
+                else:
+                    price_dropped = 1
+                    price_drop_pct = drop_pct
+                    suspicious_bait = 0
 
             conn.execute("""
                 UPDATE listings SET
@@ -134,6 +142,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     is_hot              = :is_hot,
                     price_dropped       = :price_dropped,
                     price_drop_pct      = :price_drop_pct,
+                    suspicious_bait     = :suspicious_bait,
                     consecutive_missing = 0,
                     updated_at          = :updated_at,
                     last_seen_at        = :updated_at,
@@ -157,6 +166,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "is_hot":        int(rec.get("is_hot", False)),
                 "price_dropped": price_dropped,
                 "price_drop_pct": price_drop_pct,
+                "suspicious_bait": suspicious_bait,
                 "updated_at":    now,
                 "posted_at":     rec.get("post_date"),
             })

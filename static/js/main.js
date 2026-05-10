@@ -277,6 +277,11 @@ function sortAndRenderSignals() {
   renderSignals(sorted);
 }
 
+let _sigPageSize = 60;
+let _sigRendered = 0;
+let _sigSorted = [];
+let _sigObserver = null;
+
 function renderSignals(signals) {
   const grid = document.getElementById('signalsGrid');
   if (!signals || signals.length === 0) {
@@ -287,10 +292,22 @@ function renderSignals(signals) {
         <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Radar chưa quét được tín hiệu nào khớp với bộ lọc hiện tại. Hãy thử nới lỏng bộ lọc ở menu bên trái!</p>
       </div>
     `;
+    _sigSorted = [];
     return;
   }
 
-  grid.innerHTML = signals.map(x => {
+  _sigSorted = signals;
+  _sigRendered = 0;
+  grid.innerHTML = '';
+  _renderMoreSignals();
+  _setupSignalScroll();
+}
+
+function _renderMoreSignals() {
+  const grid = document.getElementById('signalsGrid');
+  const batch = _sigSorted.slice(_sigRendered, _sigRendered + _sigPageSize);
+  if (batch.length === 0) return;
+  grid.insertAdjacentHTML('beforeend', batch.map(x => {
     const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
     const profit = fairPrice !== '-' ? (parseFloat(fairPrice) - x.price_ty).toFixed(2) : '-';
 
@@ -309,7 +326,7 @@ function renderSignals(signals) {
     const safeDesc = String(x.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const imgSrc = x.imgs && x.imgs.length ? x.imgs[0] : PLACEHOLDER_IMG;
     const imgsJson = encodeURIComponent(JSON.stringify(x.imgs && x.imgs.length ? x.imgs : []));
-    const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-desc="${safeDesc}" data-imgs="${imgsJson}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.price_drop_pct || ''}" data-score="${x.signal_score || '-'}"`;
+    const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-desc="${safeDesc}" data-imgs="${imgsJson}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.price_drop_pct || ''}" data-score="${x.signal_score || '-'}" data-url="${x.url || ''}"`;
 
     const isNew = x.days_ago <= 3;
     const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
@@ -359,7 +376,27 @@ function renderSignals(signals) {
         </div>
       </div>
     `;
-  }).join('');
+  }).join(''));
+  _sigRendered += batch.length;
+}
+
+function _setupSignalScroll() {
+  if (_sigObserver) _sigObserver.disconnect();
+  const grid = document.getElementById('signalsGrid');
+  const sentinel = document.getElementById('sig-scroll-sentinel');
+  if (!sentinel) {
+    const s = document.createElement('div');
+    s.id = 'sig-scroll-sentinel';
+    s.style.height = '1px';
+    grid.parentElement.appendChild(s);
+  }
+  const el = document.getElementById('sig-scroll-sentinel');
+  _sigObserver = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && _sigRendered < _sigSorted.length) {
+      _renderMoreSignals();
+    }
+  }, { rootMargin: '400px' });
+  _sigObserver.observe(el);
 }
 
 // Slider state
@@ -463,7 +500,7 @@ function openSignal(card) {
 
   // Links
   document.getElementById('sm-zalo').href = 'https://zalo.me/0343216024';
-  document.getElementById('sm-detail').href = `/listing/${d.id}`;
+  document.getElementById('sm-detail').href = d.url || `/listing/${d.id}`;
 
   // Load price history + comps
   loadSignalHistory(d.id, price, area, d.ward);
@@ -474,8 +511,9 @@ function openSignal(card) {
 async function loadSignalHistory(listingId, currentPrice, area, ward) {
   const historyEl = document.getElementById('sm-price-history');
   const compsBody = document.getElementById('sm-comps-body');
-  historyEl.innerHTML = '';
-  compsBody.innerHTML = '';
+  const LOADING_ROW = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.5;">⏳ Đang tải...</td></tr>';
+  historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">⏳ Đang tải lịch sử...</div>';
+  compsBody.innerHTML = LOADING_ROW;
 
   // Destroy old chart
   if (smHistoryChart) { smHistoryChart.destroy(); smHistoryChart = null; }
@@ -487,7 +525,7 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
     // Price history rows with % change
     if (data.history && data.history.length > 0) {
       let prevPrice = null;
-      historyEl.innerHTML = data.history.map(h => {
+      const priceHistoryHtml = data.history.map(h => {
         let changeHtml = '';
         if (prevPrice && h.price_ty) {
           const pct = ((h.price_ty - prevPrice) / prevPrice * 100).toFixed(1);
@@ -496,6 +534,7 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
         prevPrice = h.price_ty;
         return `<div class="ph-row"><span class="ph-date">📅 ${h.date}</span><span class="ph-price">${h.price_ty} tỷ</span>${changeHtml}</div>`;
       }).join('');
+      historyEl.innerHTML = priceHistoryHtml;
 
       // Mini chart
       const ctx = document.getElementById('sm-history-chart').getContext('2d');
@@ -521,6 +560,21 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
     }
 
     // COMPS — similar listings in same ward
+    if (data.lot_history && data.lot_history.length > 1) {
+      const lotRows = data.lot_history.map(h => {
+        const drop = h.price_dropped && h.drop_pct ? `<span class="ph-change">-${h.drop_pct}%</span>` : '';
+        const current = h.is_current ? ' - current' : '';
+        const source = h.source ? ` - ${h.source}` : '';
+        const title = String(h.title || '').replace(/"/g, '&quot;');
+        const label = `Lot ${h.date}${source}${current}`;
+        const dateHtml = h.url
+          ? `<a class="ph-date" href="${h.url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="${title}">${label}</a>`
+          : `<span class="ph-date" title="${title}">${label}</span>`;
+        return `<div class="ph-row">${dateHtml}<span class="ph-price">${h.price_ty || '-'} ty</span>${drop}</div>`;
+      }).join('');
+      historyEl.innerHTML += `<div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border);">${lotRows}</div>`;
+    }
+
     if (data.comps && data.comps.length > 0) {
       compsBody.innerHTML = data.comps.map(c =>
         `<tr><td>${c.address || c.title || '-'}</td><td>${c.area_m2 || '-'} m²</td><td><b>${c.price_ty} tỷ</b></td><td>${c.date || '-'}</td></tr>`
@@ -531,6 +585,8 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
 
   } catch (err) {
     console.error('History load error:', err);
+    historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Không tải được dữ liệu.</div>';
+    compsBody.innerHTML = '';
   }
 }
 
@@ -995,6 +1051,7 @@ document.addEventListener('change', (e) => {
 
 // Init on load
 document.addEventListener('DOMContentLoaded', () => {
+  showLoader();
   setupListingsObserver();
   if(window.location.search) {
     currentFilters = window.location.search.substring(1);

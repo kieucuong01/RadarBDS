@@ -162,6 +162,8 @@ body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta San
 .nav-link.active { color: var(--primary); background: rgba(99,102,241,0.1); font-weight: 700; }
 [data-theme="light"] .nav-link:hover { background: rgba(0,0,0,0.04); }
 [data-theme="light"] .nav-link.active { background: rgba(79,70,229,0.08); }
+.nav-count-badge { background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 1px 7px; border-radius: 20px; min-width: 20px; text-align: center; line-height: 1.6; }
+.nav-link:not(.active) .nav-count-badge { background: rgba(99,102,241,0.25); color: var(--text-muted); }
 
 /* Header Right */
 .header-right { display: flex; align-items: center; gap: 16px; margin-left: auto; }
@@ -405,6 +407,8 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
 .sm-price-history { margin-top: 10px; }
 .sm-price-history .ph-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 0.82rem; color: var(--text-muted); }
 .sm-price-history .ph-date { min-width: 90px; }
+.sm-price-history a.ph-date { color: var(--primary); text-decoration: none; font-weight: 700; }
+.sm-price-history a.ph-date:hover { text-decoration: underline; }
 .sm-price-history .ph-price { font-weight: 800; color: var(--text); min-width: 70px; text-align: right; }
 .sm-price-history .ph-change { font-weight: 700; color: #ef4444; font-size: 0.78rem; }
 .sm-price-history .ph-row:last-child .ph-price { color: #10b981; }

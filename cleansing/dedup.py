@@ -309,35 +309,36 @@ def _has_reliable_lot_signature(l1: dict, l2: dict, *, allow_facebook_same_price
     return allow_facebook_same_price and _same_source(l1, l2, "facebook") and has_location
 
 
-def _drop_pct(canonical: dict, candidate: dict) -> Optional[float]:
-    canonical_price = canonical.get("price_ty") or 0
-    candidate_price = candidate.get("price_ty") or 0
-    if canonical_price > 0 and candidate_price > 0 and candidate_price < canonical_price * 0.99:
-        return round((canonical_price - candidate_price) / canonical_price * 100, 2)
+def _drop_pct(older: dict, newer: dict) -> Optional[float]:
+    """Calculate price drop % from older (higher) to newer (lower) listing."""
+    older_price = older.get("price_ty") or 0
+    newer_price = newer.get("price_ty") or 0
+    if older_price > 0 and newer_price > 0 and newer_price < older_price * 0.99:
+        return round((older_price - newer_price) / older_price * 100, 2)
 
-    canonical_ppm2 = canonical.get("price_per_m2") or 0
-    candidate_ppm2 = candidate.get("price_per_m2") or 0
-    if canonical_ppm2 > 0 and candidate_ppm2 > 0 and candidate_ppm2 < canonical_ppm2 * 0.99:
-        return round((canonical_ppm2 - candidate_ppm2) / canonical_ppm2 * 100, 2)
+    older_ppm2 = older.get("price_per_m2") or 0
+    newer_ppm2 = newer.get("price_per_m2") or 0
+    if older_ppm2 > 0 and newer_ppm2 > 0 and newer_ppm2 < older_ppm2 * 0.99:
+        return round((older_ppm2 - newer_ppm2) / older_ppm2 * 100, 2)
 
     return None
 
 
-def _is_suspicious_bait(canonical: dict, candidate: dict) -> bool:
-    drop_pct = _drop_pct(canonical, candidate)
+def _is_suspicious_bait(older: dict, newer: dict) -> bool:
+    drop_pct = _drop_pct(older, newer)
     return bool(drop_pct is not None and drop_pct > 40.0)
 
 
-def _is_reliable_price_drop(canonical: dict, candidate: dict) -> bool:
-    can_time = canonical.get("posted_at") or canonical.get("crawled_at") or ""
-    cand_time = candidate.get("posted_at") or candidate.get("crawled_at") or ""
-    drop_pct = _drop_pct(canonical, candidate)
+def _is_reliable_price_drop(older: dict, newer: dict) -> bool:
+    older_time = older.get("posted_at") or older.get("crawled_at") or ""
+    newer_time = newer.get("posted_at") or newer.get("crawled_at") or ""
+    drop_pct = _drop_pct(older, newer)
 
     return bool(
         drop_pct is not None
         and drop_pct <= 40.0
-        and cand_time >= can_time
-        and _has_reliable_lot_signature(canonical, candidate)
+        and newer_time >= older_time
+        and _has_reliable_lot_signature(older, newer)
     )
 
 
@@ -545,13 +546,21 @@ def flag_duplicates_in_db(conn: sqlite3.Connection) -> dict:
     price_drops_detected = 0
 
     for group_indices in dup_groups.values():
-        canonical_idx = min(
+        canonical_idx = max(
             group_indices,
             key=lambda i: (listings[i].get("posted_at") or listings[i].get("crawled_at") or ""),
         )
         canonical = listings[canonical_idx]
         canonical_id = canonical["id"]
         canonical_price = canonical.get("price_ty")
+
+        # Find the oldest listing in group to determine original price
+        oldest_idx = min(
+            group_indices,
+            key=lambda i: (listings[i].get("posted_at") or listings[i].get("crawled_at") or ""),
+        )
+        oldest = listings[oldest_idx]
+        oldest_price = oldest.get("price_ty")
 
         for idx in group_indices:
             if idx == canonical_idx:
@@ -565,34 +574,35 @@ def flag_duplicates_in_db(conn: sqlite3.Connection) -> dict:
             )
             flagged += 1
 
-            if _is_suspicious_bait(canonical, dup) and _has_reliable_lot_signature(canonical, dup):
-                conn.execute("""
-                    UPDATE listings SET
-                        price_dropped   = 0,
-                        price_drop_pct  = NULL,
-                        price_first_ty  = ?,
-                        suspicious_bait = 1
-                    WHERE id = ?
-                """, (canonical_price, dup_id))
-                logger.info(
-                    f"Suspicious bait via repost: listing_id={dup_id} "
-                    f"canonical_price={canonical_price} candidate_price={dup.get('price_ty')}"
-                )
-            elif _is_reliable_price_drop(canonical, dup):
-                drop_pct = _drop_pct(canonical, dup)
-                conn.execute("""
-                    UPDATE listings SET
-                        price_dropped  = 1,
-                        price_drop_pct = ?,
-                        price_first_ty = ?,
-                        suspicious_bait = 0
-                    WHERE id = ?
-                """, (drop_pct, canonical_price, dup_id))
-                price_drops_detected += 1
-                logger.info(
-                    f"Price drop via repost: listing_id={dup_id} "
-                    f"{canonical_price}->{dup.get('price_ty')}ty (-{drop_pct}%)"
-                )
+        # Check price drop: compare oldest vs canonical (newest)
+        if _is_suspicious_bait(oldest, canonical) and _has_reliable_lot_signature(oldest, canonical):
+            conn.execute("""
+                UPDATE listings SET
+                    price_dropped   = 0,
+                    price_drop_pct  = NULL,
+                    price_first_ty  = ?,
+                    suspicious_bait = 1
+                WHERE id = ?
+            """, (oldest_price, canonical_id))
+            logger.info(
+                f"Suspicious bait via repost: listing_id={canonical_id} "
+                f"oldest_price={oldest_price} canonical_price={canonical_price}"
+            )
+        elif _is_reliable_price_drop(oldest, canonical):
+            drop_pct = _drop_pct(oldest, canonical)
+            conn.execute("""
+                UPDATE listings SET
+                    price_dropped  = 1,
+                    price_drop_pct = ?,
+                    price_first_ty = ?,
+                    suspicious_bait = 0
+                WHERE id = ?
+            """, (drop_pct, oldest_price, canonical_id))
+            price_drops_detected += 1
+            logger.info(
+                f"Price drop via repost: listing_id={canonical_id} "
+                f"{oldest_price}->{canonical_price}ty (-{drop_pct}%)"
+            )
 
     stats = {
         "total": n,

@@ -63,7 +63,12 @@
       "PowerShell(Start-Sleep -Seconds 3; $tcp = New-Object System.Net.Sockets.TcpClient; try { $tcp.Connect\\(\"127.0.0.1\", 5000\\); \"Server is running\" } catch { \"Server not running: $_\" } finally { $tcp.Close\\(\\) })",
       "mcp__Claude_in_Chrome__get_page_text",
       "mcp__Claude_in_Chrome__navigate",
-      "mcp__Claude_in_Chrome__read_console_messages"
+      "mcp__Claude_in_Chrome__read_console_messages",
+      "Bash(python -X utf8 tests/sanity_test.py)",
+      "Bash(python -X utf8 radar.py reprocess --full)",
+      "Bash(Select-String -Pattern \"Valuation done|error|Error|signal\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

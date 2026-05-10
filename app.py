@@ -191,9 +191,6 @@ def api_listings():
     if prop_types:
         where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
-    if only_drops:
-        where_parts.append("price_dropped = 1")
-        
     where_sql = " AND ".join(where_parts)
 
     sort_col_map = {
@@ -245,6 +242,8 @@ def api_listings():
         "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0,
         "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None,
         "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
+        "suspicious_bait": bool(r['suspicious_bait']),
+        "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],
         "source": r['source'], "imgs": img_map.get(r['id'], [])
     } for r in rows]
     
@@ -316,7 +315,61 @@ def get_price_history(listing_id):
                     'date': (c[3] or '')[:7]
                 })
 
-        return jsonify({'history': history, 'comps': comps})
+        lot_history = _get_lot_history(conn, listing_id)
+        return jsonify({'history': history, 'lot_history': lot_history, 'comps': comps})
+
+
+def _get_lot_history(conn, listing_id):
+    row = conn.execute("""
+        SELECT id, duplicate_of_id
+        FROM listings
+        WHERE id = ?
+    """, (listing_id,)).fetchone()
+    if not row:
+        return []
+
+    canonical_id = row["duplicate_of_id"] or row["id"]
+    rows = conn.execute("""
+        SELECT id, source, url, title, price_ty, price_first_ty, price_dropped,
+               price_drop_pct, possibly_duplicate, duplicate_of_id,
+               COALESCE(posted_at, crawled_at, updated_at) AS dt
+        FROM listings
+        WHERE id = ? OR duplicate_of_id = ?
+        ORDER BY COALESCE(posted_at, crawled_at, updated_at) ASC, id ASC
+    """, (canonical_id, canonical_id)).fetchall()
+
+    lot_history = []
+    first_price = None
+    for r in rows:
+        source = (r["source"] or "").lower()
+        is_anchor = r["id"] == listing_id or r["id"] == canonical_id
+        is_price_drop = bool(r["price_dropped"])
+        include_same_price_repost = source == "facebook"
+        if not (is_anchor or is_price_drop or include_same_price_repost):
+            continue
+
+        price = r["price_ty"]
+        if first_price is None and price:
+            first_price = price
+        change_pct = None
+        if first_price and price and not _same_price_value(first_price, price):
+            change_pct = round((price - first_price) / first_price * 100, 2)
+
+        lot_history.append({
+            "id": r["id"],
+            "date": (r["dt"] or "")[:10],
+            "source": r["source"],
+            "url": r["url"],
+            "title": (r["title"] or "")[:80],
+            "price_ty": price,
+            "change_pct": change_pct,
+            "price_dropped": is_price_drop,
+            "drop_pct": r["price_drop_pct"],
+            "is_current": r["id"] == listing_id,
+            "is_canonical": r["id"] == canonical_id,
+        })
+
+    return lot_history
 
 def _same_price_value(a, b):
     if a is None and b is None:

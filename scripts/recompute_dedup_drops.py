@@ -3,7 +3,10 @@
 import argparse
 import json
 import sqlite3
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from cleansing.dedup import flag_duplicates_in_db
 

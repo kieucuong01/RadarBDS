@@ -290,13 +290,8 @@ class SegmentModel:
         return 'medium' if self.n_samples >= 15 else 'low'
 
     def mos_threshold(self):
-        """Fixed threshold 0.30 (30%).
-
-        NOTE 2026-05-05: CV-based dynamic threshold (0.6 × std/median) bị loại vì
-        bùng nổ khi gộp 13 phường vào 1 segment (CV > 1.0 → threshold > 70%,
-        dat_vuon lên 125%). Signal score (multi-factor) đảm nhận phân loại chất lượng.
-        """
-        return 0.30
+        """Fixed threshold 0.10 (10%)."""
+        return 0.10
 
 def get_segment_priors(conn) -> Dict[str, int]:
     """
@@ -336,7 +331,6 @@ def get_segment_priors(conn) -> Dict[str, int]:
 class ValuationEngine:
     def __init__(self):
         self._models = {}
-        self.priors: Dict[str, int] = {}   # segment_key → adjustment, populated by fit()
 
     def _key(self, l):
         return (l.ward or "SELECTED_REGION", l.property_type, l.tx_type)
@@ -352,15 +346,9 @@ class ValuationEngine:
             return (parent, l.property_type, l.tx_type)
         return None
 
-    def _seg_key_for_priors(self, l: 'Listing') -> str:
-        """Khớp với snapshot_segment lưu lúc user submit feedback."""
-        return f"{l.ward or '?'}|{l.property_type or '?'}|{l.road_tier or 0}"
-
     def fit(self, listings, conn=None):
         from collections import defaultdict
         from config.area_profiles import ALL_SUBWARDS
-        if conn is not None:
-            self.priors = get_segment_priors(conn)
         segs          = defaultdict(list)
         fallback_segs = defaultdict(list)
         parent_segs   = defaultdict(list)   # aggregate sub-ward → parent
@@ -420,16 +408,7 @@ class ValuationEngine:
         if not listing.has_so: note.append("⚠️ Chưa sổ")
         if is_sig: note.append(f"✅ MOS {discount:.0%}")
 
-        # Hybrid learning: trừ signal_score theo per-segment reject prior từ feedback
         score = compute_signal_score(listing, discount*100) if is_sig else 0
-        if is_sig and self.priors:
-            adj = self.priors.get(self._seg_key_for_priors(listing), 0)
-            if adj:
-                score = max(0, min(100, score + adj))
-                note.append(f"🧠 prior {adj:+d} (segment feedback)")
-                # Nếu adj kéo score = 0 → demote signal
-                if score == 0:
-                    is_sig = False
 
         return ValuationResult(
             listing_id=listing.id, area=listing.area, property_type=listing.property_type,

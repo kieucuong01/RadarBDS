@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS listings (
     price_dropped       INTEGER DEFAULT 0,
     price_drop_pct      REAL,
     price_first_ty      REAL,
+    suspicious_bait     INTEGER DEFAULT 0,
 
     -- OCR sổ hồng
     thua_so             TEXT,
@@ -256,6 +257,7 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         ("lifecycle_hours",    "ALTER TABLE listings ADD COLUMN lifecycle_hours INTEGER"),
         ("posted_at",          "ALTER TABLE listings ADD COLUMN posted_at TEXT"),
         ("content_hash",       "ALTER TABLE listings ADD COLUMN content_hash TEXT"),
+        ("suspicious_bait",    "ALTER TABLE listings ADD COLUMN suspicious_bait INTEGER DEFAULT 0"),
         ("llm_verified",       "ALTER TABLE listings ADD COLUMN llm_verified INTEGER DEFAULT 0"),
         ("llm_notes",          "ALTER TABLE listings ADD COLUMN llm_notes TEXT"),
     ]
