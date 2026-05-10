@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from cleansing.dedup import flag_duplicates_in_db
+from db.connection import DB_PATH
 
 
 def recompute(db_path: Path) -> dict:
@@ -27,10 +28,15 @@ def recompute(db_path: Path) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Recompute dedup and repost price-drop flags.")
-    parser.add_argument("--db", required=True, help="Path to radar_bds.db")
+    parser.add_argument(
+        "--db",
+        default=None,
+        help="Path to radar_bds.db (default: data/radar_bds.db; honors RADAR_DB_PATH).",
+    )
     args = parser.parse_args()
 
-    stats = recompute(Path(args.db).expanduser().resolve())
+    db_path = Path(args.db).expanduser().resolve() if args.db else Path(DB_PATH)
+    stats = recompute(db_path)
     print(json.dumps(stats, ensure_ascii=False, indent=2))
 
 

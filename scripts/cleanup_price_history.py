@@ -6,7 +6,11 @@ where price_ty or price_per_m2 changes.
 """
 import argparse
 import sqlite3
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from db.connection import DB_PATH
 
 
 def _same_value(a, b) -> bool:
@@ -60,11 +64,15 @@ def cleanup_price_history(db_path: Path, dry_run: bool = False) -> int:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Clean unchanged price_history snapshots.")
-    parser.add_argument("--db", required=True, help="Path to radar_bds.db")
+    parser.add_argument(
+        "--db",
+        default=None,
+        help="Path to radar_bds.db (default: data/radar_bds.db; honors RADAR_DB_PATH).",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Count rows without deleting")
     args = parser.parse_args()
 
-    db_path = Path(args.db).expanduser().resolve()
+    db_path = Path(args.db).expanduser().resolve() if args.db else Path(DB_PATH)
     deleted = cleanup_price_history(db_path, dry_run=args.dry_run)
     action = "Would delete" if args.dry_run else "Deleted"
     print(f"{action} {deleted} unchanged price_history snapshots from {db_path}")

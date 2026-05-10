@@ -37,7 +37,7 @@ User=$USER
 Group=www-data
 WorkingDirectory=/home/$USER/radar_bds
 Environment="PATH=/home/$USER/radar_bds/venv/bin"
-Environment="RADAR_DB_PATH=/home/$USER/radar_bds/radar_bds.db"
+Environment="RADAR_DB_PATH=/home/$USER/radar_bds/data/radar_bds.db"
 ExecStart=/home/$USER/radar_bds/venv/bin/gunicorn --workers 3 --bind unix:radar_bds.sock -m 007 app:app
 
 [Install]

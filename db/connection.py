@@ -7,6 +7,12 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# Ensure .env at repo root is loaded even when entrypoints don't import config.settings.
+try:  # pragma: no cover
+    import config.settings as _settings  # noqa: F401
+except Exception:
+    pass
+
 
 def _resolve_db_path() -> Path:
     """
@@ -17,9 +23,12 @@ def _resolve_db_path() -> Path:
     import stat
     import tempfile
 
+    project_root = Path(__file__).parent.parent
     env = os.environ.get("RADAR_DB_PATH", "").strip()
     if env:
         p = Path(env)
+        if not p.is_absolute():
+            p = (project_root / p).resolve()
         try:
             p.parent.mkdir(parents=True, exist_ok=True)
             test = p.parent / ".write_test"
@@ -30,11 +39,8 @@ def _resolve_db_path() -> Path:
         except Exception as e:
             logger.warning(f"RADAR_DB_PATH khong dung duoc ({e}), fallback auto")
 
-    project_root = Path(__file__).parent.parent
     candidates = [
         project_root / "data" / "radar_bds.db",
-        Path.home() / "radar_bds.db",
-        Path(tempfile.gettempdir()) / "radar_bds.db",
     ]
     for p in candidates:
         try:

@@ -47,7 +47,7 @@ Luồng: **Crawl Facebook/Guland/BDS** → **Regex parse** → **LLM enrich (Gro
 - **Thủ Dầu Một (TDM)**: 13 phường.
 - **Bến Cát**: Phú An, An Tây, An Điền, Mỹ Phước (1-4 sub-zones), Thới Hòa, Tân Định, Hòa Lợi, Chánh Phú Hòa.
 
-**Database**: SQLite tại `C:\Users\ASUS\radar_bds.db`. 
+**Database (canonical)**: SQLite tại `data/radar_bds.db` (override bằng `RADAR_DB_PATH`).
 **Kiến trúc**: Hỗ trợ xử lý tịnh tiến (Incremental) cho tập dữ liệu lớn (>500k records).
 
 ---

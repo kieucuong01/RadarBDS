@@ -90,6 +90,7 @@ def cmd_schedule_setup(args):
     task_name = "RadarBDS_DailyCrawl"
     script_path = Path(__file__).parent.parent / "radar.py"
     python_exe = sys.executable
+    repo_root = str(script_path.parent)
 
     if getattr(args, "remove", False):
         result = subprocess.run(
@@ -101,7 +102,8 @@ def cmd_schedule_setup(args):
 
     run_time = getattr(args, "time", "04:15")
     interval_days = str(getattr(args, "every", 3))
-    cmd = f'"{python_exe}" "{script_path}" crawl-daily'
+    # Ensure the task runs from repo root so relative paths (data/, logs/, etc.) are stable.
+    cmd = f'cmd /c "cd /d {repo_root} && \\"{python_exe}\\" \\"{script_path}\\" crawl-daily"'
 
     result = subprocess.run([
         "schtasks", "/create",
