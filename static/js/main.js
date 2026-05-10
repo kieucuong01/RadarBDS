@@ -52,6 +52,7 @@ const CACHE_TTL_MS = 60000;
 const responseCache = new Map();
 const requestControllers = {};
 let filterDebounceTimer = null;
+let dashboardRunSeq = 0;
 
 const CITY_COORDS = {
   "THỦ DẦU MỘT": { lat: 10.98, lon: 106.65 },
@@ -221,9 +222,11 @@ function scheduleApplyFilters() {
 }
 
 async function initDashboard() {
+  const runId = ++dashboardRunSeq;
   showLoader();
   try {
     const data = await fetchJSONCached('dashboard', `/api/dashboard?${currentFilters}`);
+    if (runId !== dashboardRunSeq) return;
     
     // Update Stats
     document.getElementById('statTotal').innerText = data.stats.total;
@@ -247,7 +250,10 @@ async function initDashboard() {
     console.error(err);
     alert('Lỗi tải dữ liệu Dashboard');
   } finally {
-    hideLoader();
+    if (runId === dashboardRunSeq) {
+      // Only the latest dashboard run can hide the loader.
+      hideLoader();
+    }
   }
 }
 
