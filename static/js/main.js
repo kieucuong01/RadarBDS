@@ -44,7 +44,7 @@ let currentFilters = "";
 let currentPageNo = 1;
 let listingsHasMore = false;
 let listingsLoading = false;
-let trendPeriod = 'month'; 
+let trendPeriod = 'month';
 let historyChartInstance = null;
 let globalWardsByCity = {};
 let signalPageNo = 1;
@@ -75,14 +75,14 @@ function detectLocation() {
     applyFilters();
     return;
   }
-  
+
   navigator.geolocation.getCurrentPosition((pos) => {
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
-    
+
     let closestCity = "THỦ DẦU MỘT";
     let minDist = Infinity;
-    
+
     for (const [city, coords] of Object.entries(CITY_COORDS)) {
       const d = Math.sqrt(Math.pow(lat - coords.lat, 2) + Math.pow(lon - coords.lon, 2));
       if (d < minDist) {
@@ -90,31 +90,38 @@ function detectLocation() {
         closestCity = city;
       }
     }
-    
+
     const radios = document.getElementsByName('city');
     radios.forEach(r => {
       if (r.value === closestCity) {
         r.checked = true;
       }
     });
-    
+
     console.log("Detected location, closest city:", closestCity);
     applyFilters();
   }, (err) => {
     console.warn("Geolocation error:", err.message);
     // Fallback: Ensure THỦ DẦU MỘT is checked (which triggers Tân An fallback in updateWardFilters)
     const radios = document.getElementsByName('city');
-    radios.forEach(r => { if(r.value === "THỦ DẦU MỘT") r.checked = true; });
+    radios.forEach(r => { if (r.value === "THỦ DẦU MỘT") r.checked = true; });
     applyFilters();
   });
 }
 let treemapInstance = null;
 let trendInstance = null;
 let priceGapInstance = null;
-const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='520' viewBox='0 0 800 520'%3E%3Crect width='800' height='520' fill='%23e2e8f0'/%3E%3Cpath d='M275 330l78-86 58 62 38-42 76 66H275z' fill='%2394a3b8'/%3E%3Ccircle cx='505' cy='190' r='38' fill='%23cbd5e1'/%3E%3Ctext x='400' y='405' text-anchor='middle' font-family='Arial,sans-serif' font-size='30' font-weight='700' fill='%2364748b'%3EChưa có ảnh%3C/text%3E%3C/svg%3E";
+const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='520' viewBox='0 0 800 520'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%230f172a'/%3E%3Cstop offset='100%25' stop-color='%231e293b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='520' fill='url(%23bg)'/%3E%3Ccircle cx='140' cy='88' r='110' fill='rgba(148,163,184,0.08)'/%3E%3Ccircle cx='690' cy='430' r='140' fill='rgba(148,163,184,0.06)'/%3E%3Ctext x='400' y='278' text-anchor='middle' font-family='Plus Jakarta Sans,Arial,sans-serif' font-size='56' font-weight='700' fill='rgba(203,213,225,0.12)'%3ERadarBDS%3C/text%3E%3Ctext x='400' y='322' text-anchor='middle' font-family='Plus Jakarta Sans,Arial,sans-serif' font-size='24' font-weight='600' fill='rgba(203,213,225,0.55)'%3EKhong co anh hien thi%3C/text%3E%3C/svg%3E";
 
 const sourceNames = { 'batdongsan': 'BDS.vn', 'facebook': 'Facebook', 'guland': 'Guland' };
 const sourceClasses = { 'batdongsan': 'source-bds', 'facebook': 'source-fb', 'guland': 'source-gl' };
+const PROPERTY_TYPE_LABELS = {
+  dat_nen: 'Đất nền',
+  dat_vuon: 'Đất vườn',
+  nha_dat: 'Nhà đất',
+  nha_tro: 'Nhà trọ',
+  chung_cu: 'Chung cư'
+};
 
 function showLoader() { document.getElementById('mainLoader').classList.add('show'); }
 function hideLoader() { document.getElementById('mainLoader').classList.remove('show'); }
@@ -162,11 +169,11 @@ function switchTab(tabId, btn) {
   if (btn) btn.classList.add('active');
   document.getElementById(`tab-${tabId}`).classList.add('active');
 
-  if(tabId === 'market') {
+  if (tabId === 'market') {
     loadMarketCharts();
     loadTrendData();
   }
-  if(tabId === 'all') {
+  if (tabId === 'all') {
     loadListings(1);
   }
 }
@@ -202,7 +209,7 @@ function updateTrendPeriod(p, btn) {
   trendPeriod = p;
   document.querySelectorAll('.p-pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  
+
   currentFilters = getFilterQuery();
   loadTrendData(false);
 }
@@ -212,13 +219,13 @@ function applyFilters() {
   currentPageNo = 1;
   listingsHasMore = false;
   initDashboard();
-  
+
   const tab = activeTabId();
-  if(tab === 'market') {
+  if (tab === 'market') {
     loadMarketCharts(false);
     loadTrendData(false);
   }
-  if(tab === 'all') {
+  if (tab === 'all') {
     loadListings(1);
   }
 }
@@ -236,7 +243,7 @@ async function initDashboard() {
     const signalsPromise = loadSignals(1, { reset: true, manageLoader: false, parentRunId: runId });
     const data = await dashboardPromise;
     if (runId !== dashboardRunSeq) return;
-    
+
     // Update Stats
     document.getElementById('statTotal').innerText = data.stats.total;
     document.getElementById('statSignals').innerText = data.stats.signals;
@@ -246,13 +253,13 @@ async function initDashboard() {
     const bTot = document.getElementById('badgeTotal');
     if (bSig) bSig.innerText = data.stats.signals;
     if (bTot) bTot.innerText = data.stats.total;
-    
+
     // Update Wards based on City
     globalWardsByCity = data.wards_by_city;
     updateWardFilters(data.wards_by_city, data.active_wards);
-    
+
     await signalsPromise;
-    
+
   } catch (err) {
     if (err.name === 'AbortError') return;
     console.error(err);
@@ -334,7 +341,7 @@ async function loadSignals(page = 1, opts = {}) {
   } catch (err) {
     if (err.name !== 'AbortError') {
       console.error(err);
-      renderSignalError('Khong tai duoc danh sach signal.');
+      renderSignalError('Không có kèo thơm nào !.');
     }
   } finally {
     if (runId === signalRunSeq) signalLoading = false;
@@ -344,7 +351,7 @@ async function loadSignals(page = 1, opts = {}) {
 function renderSignals(signals, options = {}) {
   const grid = document.getElementById('signalsGrid');
   if (!signals || signals.length === 0) {
-    if (!options.append) renderSignalError('Khong tim thay signal nao khop voi bo loc hien tai.');
+    if (!options.append) renderSignalError(' Không tìm thấy kèo thơm nào với bộ lọc hiện tại.');
     return;
   }
 
@@ -362,35 +369,39 @@ function _renderSignalCards(signals) {
     const chunk = signals.slice(start, start + SIGNAL_RENDER_CHUNK_SIZE);
     if (chunk.length === 0) return;
     grid.insertAdjacentHTML('beforeend', chunk.map(x => {
-    const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
-    const profit = fairPrice !== '-' ? (parseFloat(fairPrice) - x.price_ty).toFixed(2) : '-';
+      const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
+      const fairNum = fairPrice !== '-' ? parseFloat(fairPrice) : NaN;
+      const priceNum = parseFloat(x.price_ty);
+      const profit = fairPrice !== '-' ? (fairNum - priceNum).toFixed(2) : '-';
+      const isOverpriced = Number.isFinite(priceNum) && Number.isFinite(fairNum) && priceNum > fairNum;
+      const actualClass = isOverpriced ? 'price-over' : 'price-deal';
 
-    let timeStr = x.days_ago === 0 ? 'hôm nay' : `${x.days_ago} ngày trước`;
-    let legalStr = (x.has_so === true || x.has_so === 1) ? 'Sổ Hồng' : ((x.has_so === false || x.has_so === 0) ? 'Chờ sổ' : 'Đang cập nhật');
+      let timeStr = x.days_ago === 0 ? 'hôm nay' : `${x.days_ago} ngày trước`;
+      let legalStr = (x.has_so === true || x.has_so === 1) ? 'Sổ Hồng' : ((x.has_so === false || x.has_so === 0) ? 'Chờ sổ' : 'Đang cập nhật');
 
-    const roadTiers = {
-      1: 'Mặt tiền',
-      2: 'Đường nhựa',
-      3: 'Hẻm xe hơi',
-      4: 'Hẻm xe máy'
-    };
-    let roadStr = roadTiers[x.road_tier] || 'Chưa rõ';
+      const roadTiers = {
+        1: 'Mặt tiền',
+        2: 'Đường nhựa',
+        3: 'Hẻm xe hơi',
+        4: 'Hẻm xe máy'
+      };
+      let roadStr = roadTiers[x.road_tier] || 'Chưa rõ';
 
-    const safeTitle = String(x.title || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    const imgSrc = x.primary_img || PLACEHOLDER_IMG;
-    const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-primary="${imgSrc}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || '-'}" data-url="${x.url || ''}"`;
+      const safeTitle = String(x.title || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const imgSrc = x.primary_img || PLACEHOLDER_IMG;
+      const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-primary="${imgSrc}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || '-'}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}"`;
 
-    const isNew = x.days_ago <= 3;
-    const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
+      const isNew = x.days_ago <= 3;
+      const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
 
-    const srcName = sourceNames[x.source] || x.source;
-    const dropBadge = x.price_dropped ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg> Giảm ${x.drop_pct ? x.drop_pct + '%' : '2 lần'}</span>` : '';
+      const srcName = sourceNames[x.source] || x.source;
+      const dropBadge = x.price_dropped ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 4 12 20"/><polyline points="6 14 12 20 18 14"/></svg> Chủ hạ: ${x.drop_pct ? x.drop_pct + '%' : 'N/A'}</span>` : '';
 
-    return `
+      return `
       <div class="scard" onclick="openSignal(this)" ${dataAttr}>
         <div class="sc-img-wrap">
           <img class="sc-img" src="${imgSrc}" loading="lazy" decoding="async" width="640" height="416" alt="Img" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG">
-          <div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg> -${x.mos_pct}%</div>
+          <div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> So với AI: -${Math.round(x.mos_pct)}%</div>
           ${newBadgeHtml}
           <div class="sc-img-tags">
             <span class="sc-source-tag">${srcName}</span>
@@ -403,8 +414,8 @@ function _renderSignalCards(signals) {
 
           <div class="price-container">
             <div class="price-actual">
-              <span class="price-label price-label-actual">THỰC TẾ</span>
-              <div class="price-val">${x.price_ty || '-'} tỷ</div>
+              <span class="price-label price-label-actual ${actualClass}">THỰC TẾ</span>
+              <div class="price-val ${actualClass}">${x.price_ty || '-'} tỷ</div>
               <div class="price-m2">${x.actual_ppm2 || '-'} tr/m²</div>
             </div>
             <div class="price-fair">
@@ -484,16 +495,17 @@ function buildSlider(imgs) {
 
   // Build slides
   slides.style.transform = 'translateX(0)';
-  slides.innerHTML = _smSlideImgs.map(src => `
+  slides.innerHTML = _smSlideImgs.map((src, i) => `
     <div style="min-width:100%; height:100%; flex-shrink:0; background:#0f172a;">
-      <img src="${src}" style="width:100%; height:100%; object-fit:contain; display:block; background:#0f172a;"
+      <img src="${src}" style="width:100%; height:100%; object-fit:contain; display:block; background:#0f172a; cursor:zoom-in;"
+        onclick="openGallery(${i})"
         onerror="this.onerror=null;this.src=PLACEHOLDER_IMG;">
     </div>`
   ).join('');
 
   // Dots
   dots.innerHTML = _smSlideImgs.length > 1
-    ? _smSlideImgs.map((_, i) => `<span onclick="_smSlideIdx=${i-1}; slideSignal(1);" style="width:7px; height:7px; border-radius:50%; background:${i===0?'#fff':'rgba(255,255,255,0.4)'}; cursor:pointer; transition:background 0.2s; display:inline-block;"></span>`).join('')
+    ? _smSlideImgs.map((_, i) => `<span onclick="_smSlideIdx=${i - 1}; slideSignal(1);" style="width:7px; height:7px; border-radius:50%; background:${i === 0 ? '#fff' : 'rgba(255,255,255,0.4)'}; cursor:pointer; transition:background 0.2s; display:inline-block;"></span>`).join('')
     : '';
 
   // Arrows + counter
@@ -504,8 +516,51 @@ function buildSlider(imgs) {
 }
 
 let smHistoryChart = null;
+let galleryImages = [];
+let galleryIndex = 0;
 
-function openSignal(card) {
+function propertyTypeLabel(v) {
+  return PROPERTY_TYPE_LABELS[v] || v || 'N/A';
+}
+
+function renderSignalTags(data) {
+  const tags = [
+    { icon: '📐', label: `${data.area || '-'} m²` },
+    { icon: '📍', label: data.ward || '-' },
+    { icon: '🛣️', label: data.road || '-' },
+    { icon: '🏷️', label: propertyTypeLabel(data.propertyType) },
+    { icon: '📊', label: `Score: ${data.score || '-'}` },
+  ];
+  document.getElementById('sm-tags').innerHTML = tags
+    .map((t) => `<span>${t.icon} ${t.label}</span>`)
+    .join('');
+}
+
+function openGallery(idx = 0) {
+  if (!galleryImages.length) return;
+  galleryIndex = Math.max(0, Math.min(idx, galleryImages.length - 1));
+  const modal = document.getElementById('galleryModal');
+  const img = document.getElementById('galleryImage');
+  const counter = document.getElementById('galleryCounter');
+  img.src = galleryImages[galleryIndex];
+  counter.innerText = `${galleryIndex + 1} / ${galleryImages.length}`;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeGallery() {
+  const modal = document.getElementById('galleryModal');
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function slideGallery(delta) {
+  if (!galleryImages.length) return;
+  galleryIndex = (galleryIndex + delta + galleryImages.length) % galleryImages.length;
+  openGallery(galleryIndex);
+}
+
+function _openSignalLegacy(card) {
   const d = card.dataset;
   const modal = document.getElementById('signalModal');
   modal.dataset.listingId = d.id;
@@ -513,11 +568,12 @@ function openSignal(card) {
   // Build image slider
   const imgs = d.primary ? [d.primary] : [];
   buildSlider(imgs);
+  galleryImages = imgs.length ? imgs : [PLACEHOLDER_IMG];
 
   // Thumbnails
   const thumbsEl = document.getElementById('sm-thumbs');
-  thumbsEl.innerHTML = imgs.length > 1
-    ? imgs.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i-1}; slideSignal(1);" onerror="this.style.display='none'">`).join('')
+  thumbsEl.innerHTML = galleryImages.length > 1
+    ? galleryImages.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i - 1}; slideSignal(1);" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
     : '';
 
   // Signal badge
@@ -557,6 +613,13 @@ function openSignal(card) {
   ];
   document.getElementById('sm-tags').innerHTML = tags
     .map(t => `<span>${t.icon} ${t.label}</span>`).join('');
+  renderSignalTags({
+    area: d.area,
+    ward: d.ward,
+    road: d.road,
+    score: d.score,
+    propertyType: d.ptype
+  });
 
   // Links
   document.getElementById('sm-zalo').href = 'https://zalo.me/0343216024';
@@ -569,7 +632,7 @@ function openSignal(card) {
   modal.style.display = 'flex';
 }
 
-async function hydrateSignalDetail(listingId) {
+async function _hydrateSignalDetailLegacy(listingId) {
   const modal = document.getElementById('signalModal');
   try {
     const res = await fetch(`/api/listing/${listingId}`);
@@ -580,13 +643,21 @@ async function hydrateSignalDetail(listingId) {
     document.getElementById('sm-title').innerText = data.title || document.getElementById('sm-title').innerText;
     document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
     document.getElementById('sm-detail').href = data.url || `/listing/${listingId}`;
+    renderSignalTags({
+      area: data.area_m2,
+      ward: data.ward,
+      road: data.road_type || data.road_tier || '-',
+      score: data.signal_score || '-',
+      propertyType: data.property_type
+    });
 
     const imgs = Array.isArray(data.imgs) ? data.imgs.filter(Boolean) : [];
-    if (imgs.length) {
-      buildSlider(imgs);
+    galleryImages = imgs.length ? imgs : [PLACEHOLDER_IMG];
+    if (galleryImages.length) {
+      buildSlider(galleryImages);
       const thumbsEl = document.getElementById('sm-thumbs');
-      thumbsEl.innerHTML = imgs.length > 1
-        ? imgs.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i-1}; slideSignal(1);" onerror="this.style.display='none'">`).join('')
+      thumbsEl.innerHTML = galleryImages.length > 1
+        ? galleryImages.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i - 1}; slideSignal(1);" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
         : '';
     }
   } catch (err) {
@@ -597,7 +668,7 @@ async function hydrateSignalDetail(listingId) {
   }
 }
 
-async function loadSignalHistory(listingId, currentPrice, area, ward) {
+async function _loadSignalHistoryLegacyOld(listingId, currentPrice, area, ward) {
   const historyEl = document.getElementById('sm-price-history');
   const compsBody = document.getElementById('sm-comps-body');
   const LOADING_ROW = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.5;">⏳ Đang tải...</td></tr>';
@@ -679,6 +750,211 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
   }
 }
 
+// Override modal handlers with finalized V2 logic (keeps backward compatibility with existing onclick hooks).
+function openSignal(card) {
+  const d = card.dataset;
+  const modal = document.getElementById('signalModal');
+  modal.dataset.listingId = d.id;
+
+  const imgs = d.primary ? [d.primary] : [];
+  buildSlider(imgs);
+  galleryImages = imgs.length ? imgs : [PLACEHOLDER_IMG];
+  const thumbsEl = document.getElementById('sm-thumbs');
+  thumbsEl.innerHTML = galleryImages.length > 1
+    ? galleryImages.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i - 1}; slideSignal(1);" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
+    : '';
+
+  const mosNum = parseFloat(d.mos) || 0;
+  const badgeLabel = mosNum >= 25 ? 'SUPER SIGNAL' : 'SIGNAL';
+  document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} · -${d.mos}%</span>`;
+  document.getElementById('sm-title').innerText = d.title || '';
+  document.getElementById('sm-meta-line').innerHTML = `<span>Dang ${d.time || '-'}</span> · <span>${d.source || '-'}</span>`;
+  document.getElementById('sm-desc').innerText = 'Dang tai mo ta chi tiet...';
+
+  const aiSection = document.getElementById('sm-ai-section');
+  const aiText = document.getElementById('sm-ai-text');
+  const price = parseFloat(d.price) || 0;
+  const fair = parseFloat(d.fair) || 0;
+  const area = parseFloat(d.area) || 0;
+  const dropInfo = d.drop ? `, da giam <b>${d.drop}%</b>` : '';
+  if (fair > 0 && price > 0) {
+    aiText.innerHTML = `Tín hiệu ngộp <b>${mosNum >= 25 ? 'cap cao' : 'trung binh'}</b>: gia chao thap hon fair value <b>${Math.round(mosNum)}%</b>${dropInfo}. Khu vuc <b>${d.ward || '-'}</b>, ${d.road || '-'}. Dien tich ${area || '-'} m².`;
+    aiSection.style.display = 'block';
+  } else {
+    aiSection.style.display = 'none';
+  }
+
+  renderSignalTags({
+    area: d.area,
+    ward: d.ward,
+    road: d.road,
+    score: d.score,
+    propertyType: d.ptype
+  });
+
+  document.getElementById('sm-zalo').href = 'https://zalo.me/0343216024';
+  document.getElementById('sm-detail').href = d.url || `/listing/${d.id}`;
+
+  loadSignalHistory(d.id, price, area, d.ward);
+  hydrateSignalDetail(d.id);
+  modal.style.display = 'flex';
+}
+
+async function hydrateSignalDetail(listingId) {
+  const modal = document.getElementById('signalModal');
+  try {
+    const res = await fetch(`/api/listing/${listingId}`);
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const data = await res.json();
+    if (modal.dataset.listingId !== String(listingId)) return;
+
+    document.getElementById('sm-title').innerText = data.title || document.getElementById('sm-title').innerText;
+    document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
+    document.getElementById('sm-detail').href = data.url || `/listing/${listingId}`;
+    renderSignalTags({
+      area: data.area_m2,
+      ward: data.ward,
+      road: data.road_type || data.road_tier || '-',
+      score: data.signal_score || '-',
+      propertyType: data.property_type
+    });
+
+    const imgs = Array.isArray(data.imgs) ? data.imgs.filter(Boolean) : [];
+    galleryImages = imgs.length ? imgs : [PLACEHOLDER_IMG];
+    buildSlider(galleryImages);
+    const thumbsEl = document.getElementById('sm-thumbs');
+    thumbsEl.innerHTML = galleryImages.length > 1
+      ? galleryImages.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i - 1}; slideSignal(1);" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
+      : '';
+  } catch (err) {
+    console.error(err);
+    if (modal.dataset.listingId === String(listingId)) {
+      document.getElementById('sm-desc').innerText = 'Khong tai duoc mo ta chi tiet.';
+    }
+  }
+}
+
+async function loadSignalHistory(listingId, currentPrice, area, ward) {
+  const historyEl = document.getElementById('sm-price-history');
+  const compsBody = document.getElementById('sm-comps-body');
+  historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Dang tai lich su...</div>';
+  compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.5;">Dang tai...</td></tr>';
+  if (smHistoryChart) { smHistoryChart.destroy(); smHistoryChart = null; }
+
+  try {
+    const res = await fetch(`/api/history/${listingId}`);
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const data = await res.json();
+    const sameListingHistory = Array.isArray(data.history) ? data.history : [];
+    const lotHistory = Array.isArray(data.lot_history) ? data.lot_history : [];
+
+    let prevPrice = null;
+    const sameRows = sameListingHistory.map((h) => {
+      let changeHtml = '';
+      if (prevPrice && h.price_ty && prevPrice > 0) {
+        const pct = ((h.price_ty - prevPrice) / prevPrice * 100).toFixed(1);
+        const cls = Number(pct) < 0 ? 'ph-change' : '';
+        changeHtml = `<span class="${cls}">${pct}%</span>`;
+      }
+      prevPrice = h.price_ty;
+      return `<div class="ph-row"><span class="ph-date">📅 ${h.date}</span><span class="ph-price">${h.price_ty} tỷ</span>${changeHtml}</div>`;
+    }).join('');
+
+    const lotRows = lotHistory.length > 1 ? lotHistory.map((h) => {
+      const drop = h.price_dropped && h.drop_pct ? `<span class="ph-change">-${h.drop_pct}%</span>` : '';
+      const source = h.source ? ` · ${h.source}` : '';
+      const current = h.is_current ? ' · now' : '';
+      const title = String(h.title || '').replace(/"/g, '&quot;');
+      const origin = h.url
+        ? `<a class="ph-date" href="${h.url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="${title}">${h.date}${source}${current}</a>`
+        : `<span class="ph-date">${h.date}${source}${current}</span>`;
+      const detail = h.detail_url
+        ? `<a class="ph-lot-link" href="${h.detail_url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Detail</a>`
+        : '';
+      return `<div class="ph-row">${origin}<span class="ph-price">${h.price_ty || '-'} tỷ</span>${drop}${detail}</div>`;
+    }).join('') : '';
+
+    historyEl.innerHTML = `
+      <div class="sm-section-label" style="margin-bottom:6px;">Giá theo bài đăng)</div>
+      ${sameRows || '<div class="ph-row"><span class="ph-date">Chưa có biến động giá </span></div>'}
+      <div class="sm-section-label" style="margin-top:10px; margin-bottom:6px;">Lịch sử đăng BDS</div>
+      ${lotRows || '<div class="ph-row"><span class="ph-date">Không có repost cùng lô</span></div>'}
+    `;
+
+    const labels = Array.from(new Set([
+      ...sameListingHistory.map((h) => h.date),
+      ...lotHistory.map((h) => h.date)
+    ])).sort();
+    const mapSame = {};
+    sameListingHistory.forEach((h) => { mapSame[h.date] = h.price_ty; });
+    const mapLot = {};
+    lotHistory.forEach((h) => { mapLot[h.date] = h.price_ty; });
+
+    if (labels.length > 0) {
+      const ctx = document.getElementById('sm-history-chart').getContext('2d');
+      smHistoryChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Cung tin',
+              data: labels.map((d) => (mapSame[d] ?? null)),
+              borderColor: '#6366f1',
+              backgroundColor: 'rgba(99,102,241,0.12)',
+              fill: false,
+              tension: 0.25,
+              pointRadius: 3,
+              borderWidth: 2
+            },
+            {
+              label: 'Cung lo',
+              data: labels.map((d) => (mapLot[d] ?? null)),
+              borderColor: '#0ea5a4',
+              backgroundColor: 'rgba(14,165,164,0.12)',
+              fill: false,
+              tension: 0.25,
+              pointRadius: 3,
+              borderWidth: 2,
+              borderDash: [5, 4]
+            }
+          ]
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: { legend: { display: true, labels: { usePointStyle: true, boxWidth: 8 } } },
+          scales: {
+            x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
+            y: { grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false }, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    if (Array.isArray(data.comps) && data.comps.length > 0) {
+      compsBody.innerHTML = data.comps.map((c) => {
+        const detail = c.detail_url
+          ? `<a class="sm-comps-link" href="${c.detail_url}" target="_blank" rel="noopener noreferrer">${c.title || 'Tin tuong tu'}</a>`
+          : (c.title || '-');
+
+        const origin = c.url
+          ? `<a class="ph-lot-link" href="${c.url}" target="_blank" rel="noopener noreferrer">Link gốc</a>`
+          : '';
+        const match = c.match_score != null ? `${c.match_score}%` : '-';
+        return `<tr><td>${origin}<div style="margin-top:4px;">${detail}</div></td><td>${c.area_m2 || '-'} m²</td><td><b>${c.price_ty || '-'} tỷ</b></td><td>${match}</td></tr>`;
+      }).join('');
+    } else {
+      compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.6;">Khong co comps phu hop</td></tr>';
+    }
+
+    compsBody.innerHTML += `<tr><td>Deal hiện tại</td><td>${area || '-'} m²</td><td><b>${currentPrice || '-'} tỷ</b></td><td>Now</td></tr>`;
+  } catch (err) {
+    console.error('History load error:', err);
+    historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Khong tai duoc du lieu.</div>';
+    compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.6;">Loi tai du lieu</td></tr>';
+  }
+}
+
 async function loadMarketCharts(useCache = true) {
   const container = document.getElementById('heatmapContainer');
   const gapContainer = document.getElementById('priceGapContainer');
@@ -710,23 +986,23 @@ async function loadHeatmap() {
 }
 
 function renderHeatmap(data) {
-    if (treemapInstance) {
-      treemapInstance.destroy();
-      treemapInstance = null;
-    }
+  if (treemapInstance) {
+    treemapInstance.destroy();
+    treemapInstance = null;
+  }
 
-    const canvas = document.getElementById('treemapChart');
-    const container = document.getElementById('heatmapContainer');
-    const oldEmpty = document.getElementById('heatmapEmptyState');
-    if (oldEmpty) oldEmpty.remove();
+  const canvas = document.getElementById('treemapChart');
+  const container = document.getElementById('heatmapContainer');
+  const oldEmpty = document.getElementById('heatmapEmptyState');
+  if (oldEmpty) oldEmpty.remove();
 
-    const opportunityData = (data || []).filter(d => (d.deal_count || 0) > 0 && (d.median_mos || 0) > 0);
-    if (canvas) canvas.style.display = '';
+  const opportunityData = (data || []).filter(d => (d.deal_count || 0) > 0 && (d.median_mos || 0) > 0);
+  if (canvas) canvas.style.display = '';
 
-    if (opportunityData.length === 0) {
-      if (canvas) canvas.style.display = 'none';
-      if (container) {
-        container.insertAdjacentHTML('beforeend', `
+  if (opportunityData.length === 0) {
+    if (canvas) canvas.style.display = 'none';
+    if (container) {
+      container.insertAdjacentHTML('beforeend', `
           <div id="heatmapEmptyState" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--text-muted); padding:24px;">
             <div>
               <div style="font-size:2rem; margin-bottom:10px;">📡</div>
@@ -735,71 +1011,71 @@ function renderHeatmap(data) {
             </div>
           </div>
         `);
-      }
-      return;
     }
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Gradient coloring based on avg_price
-    treemapInstance = new Chart(ctx, {
-      type: 'treemap',
-      data: {
-        datasets: [{
-          tree: opportunityData,
-          key: 'deal_count',
-          spacing: 2,
-          borderWidth: 0,
-          backgroundColor(ctx) {
-            if (ctx.type !== 'data') return 'transparent';
+    return;
+  }
+
+  const ctx = canvas.getContext('2d');
+
+  // Gradient coloring based on avg_price
+  treemapInstance = new Chart(ctx, {
+    type: 'treemap',
+    data: {
+      datasets: [{
+        tree: opportunityData,
+        key: 'deal_count',
+        spacing: 2,
+        borderWidth: 0,
+        backgroundColor(ctx) {
+          if (ctx.type !== 'data') return 'transparent';
+          const d = ctx.raw._data || ctx.raw;
+          const mos = d ? (d.median_mos || 0) : 0;
+          const ratio = Math.min(1, mos / 50);
+          return `rgba(16, 185, 129, ${0.35 + ratio * 0.65})`;
+        },
+        labels: {
+          display: true,
+          align: 'center',
+          position: 'center',
+          color: 'white',
+          font: { family: 'Inter', size: 14, weight: 'bold' },
+          formatter(ctx) {
+            if (ctx.type !== 'data') return '';
             const d = ctx.raw._data || ctx.raw;
-            const mos = d ? (d.median_mos || 0) : 0;
-            const ratio = Math.min(1, mos / 50);
-            return `rgba(16, 185, 129, ${0.35 + ratio * 0.65})`;
-          },
-          labels: {
-            display: true,
-            align: 'center',
-            position: 'center',
-            color: 'white',
-            font: { family: 'Inter', size: 14, weight: 'bold' },
-            formatter(ctx) {
-              if (ctx.type !== 'data') return '';
-              const d = ctx.raw._data || ctx.raw;
-              if (!d || !d.ward) return '';
-              const mos = d.median_mos || 0;
-              return [d.ward, `${d.deal_count || 0} deal`, `MOS trung vị +${mos}%`];
-            }
+            if (!d || !d.ward) return '';
+            const mos = d.median_mos || 0;
+            return [d.ward, `${d.deal_count || 0} deal`, `MOS trung vị +${mos}%`];
           }
-        }]
-      },
-      options: {
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: (items) => {
-                const d = items[0].raw._data || items[0].raw;
-                return d ? d.ward : '';
-              },
-              label: (item) => {
-                const d = item.raw._data || item.raw;
-                if (!d) return '';
-                return [
-                  `Deal signal: ${d.deal_count || 0} tin`,
-                  `MOS trung vị: +${d.median_mos || 0}%`,
-                  `MOS trung bình: +${d.avg_signal_mos || 0}%`,
-                  `Tỷ lệ deal: ${d.signal_rate || 0}%`,
-                  `Tổng tin hợp lệ: ${d.total_count || 0}`,
-                  `Giá TB: ${d.avg_price || 0} tr/m²`
-                ];
-              }
+        }
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const d = items[0].raw._data || items[0].raw;
+              return d ? d.ward : '';
+            },
+            label: (item) => {
+              const d = item.raw._data || item.raw;
+              if (!d) return '';
+              return [
+                `Deal signal: ${d.deal_count || 0} tin`,
+                `MOS trung vị: +${d.median_mos || 0}%`,
+                `MOS trung bình: +${d.avg_signal_mos || 0}%`,
+                `Tỷ lệ deal: ${d.signal_rate || 0}%`,
+                `Tổng tin hợp lệ: ${d.total_count || 0}`,
+                `Giá TB: ${d.avg_price || 0} tr/m²`
+              ];
             }
           }
         }
       }
-    });
+    }
+  });
 }
 
 async function loadPriceGapChart() {
@@ -817,52 +1093,52 @@ async function loadPriceGapChart() {
 }
 
 function renderPriceGapChart(data) {
-    if (priceGapInstance) { priceGapInstance.destroy(); priceGapInstance = null; }
-    if (!data || data.length === 0) return;
+  if (priceGapInstance) { priceGapInstance.destroy(); priceGapInstance = null; }
+  if (!data || data.length === 0) return;
 
-    // Sort by avg_price_ty descending, take top wards with fair value data
-    const filtered = data.filter(d => d.avg_price_ty > 0 && d.avg_fair_ty > 0)
-      .sort((a, b) => b.avg_price_ty - a.avg_price_ty)
-      .slice(0, 10);
+  // Sort by avg_price_ty descending, take top wards with fair value data
+  const filtered = data.filter(d => d.avg_price_ty > 0 && d.avg_fair_ty > 0)
+    .sort((a, b) => b.avg_price_ty - a.avg_price_ty)
+    .slice(0, 10);
 
-    if (filtered.length === 0) return;
+  if (filtered.length === 0) return;
 
-    const ctx = document.getElementById('priceGapChart').getContext('2d');
-    priceGapInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: filtered.map(d => d.ward),
-        datasets: [
-          {
-            label: 'Giá chào TB',
-            data: filtered.map(d => d.avg_price_ty),
-            backgroundColor: '#6366f1',
-            borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.8
-          },
-          {
-            label: 'Định giá AI',
-            data: filtered.map(d => d.avg_fair_ty),
-            backgroundColor: '#10b981',
-            borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.8
-          }
-        ]
-      },
-      options: {
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'top', labels: { font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded' } },
-          tooltip: {
-            callbacks: {
-              label: (item) => `${item.dataset.label}: ${item.raw.toFixed(2)} tỷ`
-            }
-          }
+  const ctx = document.getElementById('priceGapChart').getContext('2d');
+  priceGapInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: filtered.map(d => d.ward),
+      datasets: [
+        {
+          label: 'Giá chào TB',
+          data: filtered.map(d => d.avg_price_ty),
+          backgroundColor: '#6366f1',
+          borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.8
         },
-        scales: {
-          x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11 } } },
-          y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { font: { size: 10 }, callback: v => v + ' tỷ' }, beginAtZero: true }
+        {
+          label: 'Định giá AI',
+          data: filtered.map(d => d.avg_fair_ty),
+          backgroundColor: '#10b981',
+          borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.8
         }
+      ]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded' } },
+        tooltip: {
+          callbacks: {
+            label: (item) => `${item.dataset.label}: ${item.raw.toFixed(2)} tỷ`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11 } } },
+        y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { font: { size: 10 }, callback: v => v + ' tỷ' }, beginAtZero: true }
       }
-    });
+    }
+  });
 }
 
 async function loadTrendData(useCache = true) {
@@ -885,56 +1161,56 @@ function renderTrendChart(trendData) {
     trendInstance.destroy();
     trendInstance = null;
   }
-  
+
   if (!trendData || Object.keys(trendData).length === 0) {
     return;
   }
-  
+
   const datasets = [];
   const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
   const allTimeKeys = new Set();
-  
+
   for (const w in trendData) {
     trendData[w].forEach(d => allTimeKeys.add(d.week));
   }
   const sortedKeys = Array.from(allTimeKeys).sort();
   const labels = sortedKeys.map(w => w.replace('D-', '').replace('M-', ''));
-  
+
   let i = 0;
   for (const ward in trendData) {
     const data = trendData[ward];
     const dataMap = {};
     data.forEach(d => dataMap[d.week] = d.median_ppm2);
     const wardData = sortedKeys.map(w => dataMap[w] || null);
-    
+
     const color = colors[i % colors.length];
     datasets.push({
-      label: ward, 
+      label: ward,
       data: wardData,
-      borderColor: color, 
+      borderColor: color,
       backgroundColor: color + '10',
-      borderWidth: 3, 
-      tension: 0.4, 
+      borderWidth: 3,
+      tension: 0.4,
       fill: false,
-      pointRadius: sortedKeys.length > 30 ? 0 : 4, 
+      pointRadius: sortedKeys.length > 30 ? 0 : 4,
       pointHoverRadius: 8,
       spanGaps: true,
       borderCapStyle: 'round'
     });
     i++;
   }
-  
+
   Chart.defaults.font.family = "'Inter', sans-serif";
   trendInstance = new Chart(ctx, {
     type: 'line',
     data: { labels, datasets },
     options: {
       animation: { duration: 0 }, // Disable animation to prevent "jumping"
-      responsive: true, 
+      responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
-      plugins: { 
-        legend: { 
+      plugins: {
+        legend: {
           position: 'bottom',
           labels: { boxWidth: 12, padding: 20, font: { size: 11, weight: '600' } }
         },
@@ -947,14 +1223,14 @@ function renderTrendChart(trendData) {
         }
       },
       scales: {
-        y: { 
+        y: {
           title: { display: true, text: 'Giá (tr/m²)', font: { weight: '600' } },
           grid: { color: 'rgba(255,255,255,0.05)' },
           ticks: { font: { size: 11 } }
         },
-        x: { 
+        x: {
           grid: { display: false },
-          ticks: { 
+          ticks: {
             font: { size: 10 },
             maxRotation: 45,
             autoSkip: true,
@@ -987,7 +1263,7 @@ function sortTable(th) {
 
 function applyTableFilters() { loadListings(1); }
 function resetTableFilters() {
-  ['tfAreaMin','tfAreaMax','tfPriceMin','tfPriceMax'].forEach(id => {
+  ['tfAreaMin', 'tfAreaMax', 'tfPriceMin', 'tfPriceMax'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -1045,7 +1321,7 @@ async function loadListings(page) {
       `;
     }).join('');
     tbody.insertAdjacentHTML('beforeend', rows);
-  } catch(e) {
+  } catch (e) {
     if (e.name !== 'AbortError') console.error(e);
     if (sentinel) sentinel.textContent = '';
   } finally {
@@ -1068,13 +1344,13 @@ function setupListingsObserver() {
 async function openHistory(id, title) {
   document.getElementById('historyTitle').innerText = `Lịch sử giá: ${title}`;
   document.getElementById('historyModal').style.display = 'flex';
-  
+
   try {
     const res = await fetch(`/api/history/${id}`);
     const data = await res.json();
-    
+
     if (historyChartInstance) historyChartInstance.destroy();
-    
+
     const ctx = document.getElementById('historyChartCanvas').getContext('2d');
     historyChartInstance = new Chart(ctx, {
       type: 'line',
@@ -1097,7 +1373,7 @@ async function openHistory(id, title) {
         }
       }
     });
-  } catch(e) {
+  } catch (e) {
     console.error(e);
   }
 }
@@ -1106,11 +1382,23 @@ function closeModal(id) {
   document.getElementById(id).style.display = 'none';
 }
 
-window.onclick = function(event) {
+window.onclick = function (event) {
   if (event.target.classList.contains('modal')) {
     event.target.style.display = 'none';
+    if (event.target.id === 'galleryModal') {
+      document.body.style.overflow = '';
+    }
   }
 }
+
+document.addEventListener('keydown', (event) => {
+  const galleryModal = document.getElementById('galleryModal');
+  if (galleryModal && galleryModal.style.display === 'flex') {
+    if (event.key === 'Escape') closeGallery();
+    if (event.key === 'ArrowLeft') slideGallery(-1);
+    if (event.key === 'ArrowRight') slideGallery(1);
+  }
+});
 
 function updateWardFilters(wardsByCity, activeWards) {
   const selectedCity = document.getElementById('cityInput').value;
@@ -1142,7 +1430,7 @@ document.addEventListener('change', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   showLoader();
   setupListingsObserver();
-  if(window.location.search) {
+  if (window.location.search) {
     currentFilters = window.location.search.substring(1);
     initDashboard();
   } else {
@@ -1187,16 +1475,16 @@ async function sendMessage() {
       body: JSON.stringify({ message: msg, history: chatHistory })
     });
     const data = await res.json();
-    
+
     // Remove loading and show response
     loadingDiv.remove();
     appendMessage('bot', data.response);
-    
+
     // Update history
     chatHistory.push({ role: 'user', content: msg });
     chatHistory.push({ role: 'assistant', content: data.response });
     if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10); // Keep last 5 turns
-    
+
   } catch (err) {
     loadingDiv.innerText = 'Lỗi kết nối. Vui lòng thử lại.';
     console.error(err);

@@ -3,6 +3,7 @@ import json
 import sqlite3
 import logging
 import statistics
+import re
 from datetime import datetime
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_from_directory
@@ -310,6 +311,8 @@ def api_listing_detail(listing_id):
         "fair_ppm2": round(l["fair_ppm2"], 1) if l["fair_ppm2"] else None,
         "mos_pct": round(l["mos_pct"], 1) if l["mos_pct"] else 0,
         "ward": l["ward"],
+        "property_type": l["property_type"],
+        "road_type": l["road_type"],
         "source": l["source"],
         "url": l["url"],
         "road_tier": l["road_tier"] or 0,
@@ -332,7 +335,11 @@ def get_price_history(listing_id):
             WHERE listing_id = ?
             ORDER BY recorded_at ASC, id ASC
         """, (listing_id,)).fetchall()
-        curr = conn.execute("SELECT updated_at, price_ty, ward, area_m2, property_type FROM listings WHERE id = ?", (listing_id,)).fetchone()
+        curr = conn.execute("""
+            SELECT updated_at, price_ty, ward, area_m2, property_type, road_tier, price_per_m2, title
+            FROM listings
+            WHERE id = ?
+        """, (listing_id,)).fetchone()
         history = []
         last_price = None
         has_last = False
@@ -345,29 +352,89 @@ def get_price_history(listing_id):
             last_price = price_ty
             has_last = True
 
-        if curr and curr[1]:
-            current_price = curr[1]
+        if curr and curr["price_ty"]:
+            current_price = curr["price_ty"]
             if not history or not _same_price_value(history[-1]['price_ty'], current_price):
-                history.append({'date': (curr[0] or '')[:10], 'price_ty': current_price})
+                history.append({'date': (curr["updated_at"] or '')[:10], 'price_ty': current_price})
 
         comps = []
-        if curr and curr[2]:
-            ward = curr[2]
-            area = curr[3] or 0
+        if curr and curr["ward"]:
+            ward = curr["ward"]
+            area = curr["area_m2"] or 0
+            prop_type = curr["property_type"]
+            road_tier = curr["road_tier"]
+            curr_ppm2 = curr["price_per_m2"] or 0
+            curr_title_tokens = _title_tokens(curr["title"])
+            area_min = max(1, area * 0.75) if area else 1
+            area_max = area * 1.30 if area else 20000
+            ppm2_min = curr_ppm2 * 0.55 if curr_ppm2 else 0
+            ppm2_max = curr_ppm2 * 1.45 if curr_ppm2 else 999999
             comp_rows = conn.execute("""
-                SELECT title, price_ty, area_m2, COALESCE(posted_at, crawled_at) as dt
+                SELECT id, title, url, price_ty, area_m2, price_per_m2, property_type, road_tier,
+                       COALESCE(posted_at, crawled_at) as dt
                 FROM listings
                 WHERE ward = ? AND id != ? AND price_ty > 0 AND probably_sold = 0
+                  AND possibly_duplicate = 0
+                  AND (? IS NULL OR property_type = ?)
                   AND area_m2 BETWEEN ? AND ?
-                ORDER BY COALESCE(posted_at, crawled_at) DESC LIMIT 3
-            """, (ward, listing_id, area * 0.6, area * 1.5)).fetchall()
+                  AND (
+                    ? <= 0
+                    OR COALESCE(price_per_m2, 0) BETWEEN ? AND ?
+                  )
+                  AND (
+                    ? IS NULL
+                    OR road_tier IS NULL
+                    OR ABS(road_tier - ?) <= 1
+                  )
+                ORDER BY ABS(area_m2 - ?) ASC,
+                         ABS(COALESCE(price_per_m2, 0) - ?) ASC,
+                         COALESCE(posted_at, crawled_at) DESC
+                LIMIT 20
+            """, (
+                ward, listing_id,
+                prop_type, prop_type,
+                area_min, area_max,
+                curr_ppm2, ppm2_min, ppm2_max,
+                road_tier, road_tier,
+                area, curr_ppm2
+            )).fetchall()
+            ranked = []
             for c in comp_rows:
-                comps.append({
-                    'title': (c[0] or '')[:40],
-                    'price_ty': c[1],
-                    'area_m2': c[2],
-                    'date': (c[3] or '')[:7]
+                area_gap_pct = 0.0
+                if area and c["area_m2"]:
+                    area_gap_pct = abs(c["area_m2"] - area) / area
+                ppm2_gap_pct = 0.0
+                if curr_ppm2 and c["price_per_m2"]:
+                    ppm2_gap_pct = abs(c["price_per_m2"] - curr_ppm2) / curr_ppm2
+                road_gap = 0
+                if road_tier is not None and c["road_tier"] is not None:
+                    road_gap = abs(c["road_tier"] - road_tier)
+                text_sim = _jaccard(curr_title_tokens, _title_tokens(c["title"]))
+
+                # Weighted score: area+ppm2 are strongest, then road tier and title similarity.
+                score = 100.0
+                score -= min(45.0, area_gap_pct * 100 * 0.55)
+                score -= min(30.0, ppm2_gap_pct * 100 * 0.30)
+                score -= min(12.0, road_gap * 6.0)
+                score += min(12.0, text_sim * 12.0)
+                score = round(max(0.0, min(99.0, score)), 1)
+
+                ranked.append({
+                    'id': c["id"],
+                    'title': (c["title"] or '')[:80],
+                    'url': c["url"] or "",
+                    'detail_url': f"/listing/{c['id']}",
+                    'price_ty': c["price_ty"],
+                    'area_m2': c["area_m2"],
+                    'price_per_m2': c["price_per_m2"],
+                    'property_type': c["property_type"],
+                    'date': (c["dt"] or '')[:7],
+                    'area_gap_pct': round(area_gap_pct * 100, 1),
+                    'match_score': score,
                 })
+
+            ranked.sort(key=lambda x: (-x["match_score"], x["area_gap_pct"], -(x["price_per_m2"] or 0)))
+            comps = ranked[:6]
 
         lot_history = _get_lot_history(conn, listing_id)
         return jsonify({'history': history, 'lot_history': lot_history, 'comps': comps})
@@ -414,6 +481,7 @@ def _get_lot_history(conn, listing_id):
             "date": (r["dt"] or "")[:10],
             "source": r["source"],
             "url": r["url"],
+            "detail_url": f"/listing/{r['id']}",
             "title": (r["title"] or "")[:80],
             "price_ty": price,
             "change_pct": change_pct,
@@ -431,6 +499,24 @@ def _same_price_value(a, b):
     if a is None or b is None:
         return False
     return abs(float(a) - float(b)) < 0.000001
+
+
+def _title_tokens(text):
+    if not text:
+        return set()
+    norm = re.sub(r"[^a-z0-9\s]", " ", str(text).lower())
+    toks = [t for t in norm.split() if len(t) > 2]
+    return set(toks)
+
+
+def _jaccard(a, b):
+    if not a or not b:
+        return 0.0
+    inter = len(a & b)
+    union = len(a | b)
+    if union == 0:
+        return 0.0
+    return inter / union
 
 @app.route("/review")
 def review_list():
