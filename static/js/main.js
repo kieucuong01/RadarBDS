@@ -516,7 +516,7 @@ function _renderSignalCards(signals) {
       <div class="scard" onclick="openSignal(this)" ${dataAttr}>
         <div class="sc-img-wrap">
           <img class="sc-img" src="${imgSrc}" loading="lazy" decoding="async" width="640" height="416" alt="Img" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG">
-          <div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> So với AI: -${Math.round(x.mos_pct)}%</div>
+          <div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> So với Định Giá: -${Math.round(x.mos_pct)}%</div>
           ${newBadgeHtml}
           <div class="sc-img-tags">
             <span class="sc-source-tag">${srcName}</span>
@@ -534,7 +534,7 @@ function _renderSignalCards(signals) {
               <div class="price-m2">${x.actual_ppm2 || '-'} tr/m²</div>
             </div>
             <div class="price-fair">
-              <span class="price-label price-label-fair">FAIR VALUE AI</span>
+              <span class="price-label price-label-fair">ĐỊNH GIÁ</span>
               <div class="price-val-fair">${fairPrice} tỷ</div>
               <div class="price-m2">${x.fair_ppm2 || '-'} tr/m²</div>
             </div>
@@ -870,7 +870,10 @@ async function _loadSignalHistoryLegacyOld(listingId, currentPrice, area, ward) 
 
 // Override modal handlers with finalized V2 logic (keeps backward compatibility with existing onclick hooks).
 function openSignal(card) {
-  const d = card.dataset;
+  _openSignalFromData(card.dataset);
+}
+
+function _openSignalFromData(d) {
   const modal = document.getElementById('signalModal');
   modal.dataset.listingId = d.id;
 
@@ -917,6 +920,28 @@ function openSignal(card) {
   loadSignalHistory(d.id, price, area, d.ward);
   hydrateSignalDetail(d.id);
   modal.style.display = 'flex';
+}
+
+function openListingModal(row) {
+  const d = row.dataset;
+  _openSignalFromData({
+    id: d.id,
+    title: d.title,
+    primary: d.primary,
+    price: d.price,
+    fair: d.fair,
+    area: d.area,
+    ward: d.ward,
+    road: d.road,
+    time: d.time,
+    profit: d.profit,
+    mos: d.mos,
+    source: d.source,
+    drop: d.drop,
+    score: d.score,
+    url: d.url,
+    ptype: d.ptype
+  });
 }
 
 async function hydrateSignalDetail(listingId) {
@@ -1416,7 +1441,7 @@ async function loadListings(page) {
     const rows = (data.listings || []).map(x => {
       const fair = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       return `
-        <tr>
+        <tr class="clickable-row" onclick="openListingModal(this)" data-id="${x.id}" data-title="${String(x.title || '').replace(/"/g, '&quot;')}" data-primary="${x.imgs && x.imgs.length ? x.imgs[0] : PLACEHOLDER_IMG}" data-price="${x.price_ty || ''}" data-fair="${fair !== '-' ? fair : ''}" data-area="${x.area_m2 || ''}" data-ward="${x.ward || ''}" data-road="${x.road_type || x.road_tier || ''}" data-time="${x.days_ago === 0 ? 'hôm nay' : x.days_ago + ' ngày trước'}" data-profit="${x.price_ty && fair !== '-' ? (parseFloat(fair) - parseFloat(x.price_ty)).toFixed(2) : ''}" data-mos="${x.mos_pct || ''}" data-source="${sourceNames[x.source] || x.source || ''}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || ''}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}">
           <td><span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">${x.prop_type}</span></td>
           <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:6px; font-weight:600; font-size:0.8rem;">${x.ward}</span></td>
           <td><img src="${x.imgs && x.imgs.length ? x.imgs[0] : PLACEHOLDER_IMG}" class="td-img" loading="lazy" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG"></td>
@@ -1437,7 +1462,6 @@ async function loadListings(page) {
             <div class="td-title" title="${String(x.title || '').replace(/"/g, '&quot;')}">${x.title}</div>
             <div class="td-desc" title="${String(x.description || '').replace(/"/g, '&quot;')}">${x.description}</div>
           </td>
-          <td style="text-align:center;"><a href="/listing/${x.id}" target="_blank" style="color:var(--primary); font-weight:900; font-size:1.2rem; text-decoration:none;">↗</a></td>
         </tr>
       `;
     }).join('');
