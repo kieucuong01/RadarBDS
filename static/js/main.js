@@ -51,6 +51,7 @@ let signalPageNo = 1;
 let signalHasMore = false;
 let signalLoading = false;
 let signalSort = 'newest';
+let signalsVersion = '0';
 let signalRunSeq = 0;
 let signalRenderSeq = 0;
 const SIGNAL_PAGE_SIZE = 30;
@@ -60,6 +61,8 @@ const responseCache = new Map();
 const requestControllers = {};
 let filterDebounceTimer = null;
 let dashboardRunSeq = 0;
+let insightsRunSeq = 0;
+let insightsLoaded = false;
 
 const CITY_COORDS = {
   "THỦ DẦU MỘT": { lat: 10.98, lon: 106.65 },
@@ -123,6 +126,12 @@ const PROPERTY_TYPE_LABELS = {
   chung_cu: 'Chung cư'
 };
 
+function escHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (ch) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+  ));
+}
+
 function showLoader() { document.getElementById('mainLoader').classList.add('show'); }
 function hideLoader() { document.getElementById('mainLoader').classList.remove('show'); }
 
@@ -172,6 +181,9 @@ function switchTab(tabId, btn) {
   if (tabId === 'market') {
     loadMarketCharts();
     loadTrendData();
+  }
+  if (tabId === 'insights') {
+    loadInsights(false);
   }
   if (tabId === 'all') {
     loadListings(1);
@@ -225,6 +237,9 @@ function applyFilters() {
     loadMarketCharts(false);
     loadTrendData(false);
   }
+  if (tab === 'insights') {
+    loadInsights(false);
+  }
   if (tab === 'all') {
     loadListings(1);
   }
@@ -239,9 +254,7 @@ async function initDashboard() {
   const runId = ++dashboardRunSeq;
   showLoader();
   try {
-    const dashboardPromise = fetchJSONCached('dashboard', `/api/dashboard?${currentFilters}`);
-    const signalsPromise = loadSignals(1, { reset: true, manageLoader: false, parentRunId: runId });
-    const data = await dashboardPromise;
+    const data = await fetchJSONCached('dashboard', `/api/dashboard?${currentFilters}`, false);
     if (runId !== dashboardRunSeq) return;
 
     // Update Stats
@@ -257,8 +270,10 @@ async function initDashboard() {
     // Update Wards based on City
     globalWardsByCity = data.wards_by_city;
     updateWardFilters(data.wards_by_city, data.active_wards);
+    signalsVersion = String(data.signals_version || '0');
+    await loadInsights(false);
 
-    await signalsPromise;
+    await loadSignals(1, { reset: true, manageLoader: false, parentRunId: runId });
 
   } catch (err) {
     if (err.name === 'AbortError') return;
@@ -290,7 +305,107 @@ function signalQuery(page) {
   params.set('sort', signalSort);
   params.set('page', String(page));
   params.set('limit', String(SIGNAL_PAGE_SIZE));
+  params.set('sigv', String(signalsVersion || '0'));
   return params.toString();
+}
+
+function _severityText(level) {
+  if (level === 'critical') return 'Cập nhật quan trọng';
+  if (level === 'warning') return 'Cần theo dõi';
+  return 'Thông tin';
+}
+
+function _timelineIcon(statusTag) {
+  if (statusTag === 'done') return '✓';
+  if (statusTag === 'in_progress') return '◔';
+  return '◷';
+}
+
+function _timelinePercent(progressPct, statusTag) {
+  if (progressPct === null || progressPct === undefined || progressPct === '') {
+    if (statusTag === 'done') return 100;
+    if (statusTag === 'planned') return 10;
+    return 35;
+  }
+  const n = Number(progressPct);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, n));
+}
+
+function _renderInsightsTimeline(items) {
+  const root = document.getElementById('insightTimeline');
+  if (!root) return;
+  if (!items || !items.length) {
+    root.innerHTML = `<div class="insight-empty">Chưa có dữ liệu hạ tầng.</div>`;
+    return;
+  }
+  root.innerHTML = items.map((x) => {
+    const percent = _timelinePercent(x.progress_pct, x.status_tag);
+    const place = [x.ward, x.road_ref].filter(Boolean).join(' · ');
+    return `
+      <article class="timeline-item status-${x.status_tag || 'planned'}">
+        <div class="timeline-dot">${_timelineIcon(x.status_tag)}</div>
+        <div class="timeline-card">
+          <div class="timeline-top">
+            <h4>${escHtml(x.title || '')}</h4>
+            <span>${escHtml(x.milestone_label || '')}</span>
+          </div>
+          <p>${escHtml(x.subtitle || x.summary || '')}</p>
+          <div class="timeline-meta">
+            <strong>${escHtml(place || 'Bình Dương')}</strong>
+            <small>${escHtml(x.relative_time || '')}</small>
+          </div>
+          <div class="timeline-bar"><span style="width:${percent}%"></span></div>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+function _renderInsightsPolicy(items) {
+  const root = document.getElementById('insightPolicy');
+  if (!root) return;
+  if (!items || !items.length) {
+    root.innerHTML = `<div class="insight-empty">Chưa có policy alert.</div>`;
+    return;
+  }
+  root.innerHTML = items.map((x) => {
+    const severity = x.severity || 'info';
+    return `
+      <article class="policy-item severity-${severity}">
+        <div class="policy-top">
+          <h4>${escHtml(x.title || '')}</h4>
+          <span>${escHtml(x.relative_time || '')}</span>
+        </div>
+        <p>${escHtml(x.summary || x.subtitle || '')}</p>
+        <div class="policy-foot">
+          <small>${escHtml(_severityText(severity))}</small>
+          ${x.source_url ? `<a href="${escHtml(x.source_url)}" target="_blank" rel="noopener noreferrer">Nguồn</a>` : ''}
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+async function loadInsights(useCache = true) {
+  const runId = ++insightsRunSeq;
+  try {
+    const data = await fetchJSONCached('insights', '/api/insights', useCache);
+    if (runId !== insightsRunSeq) return;
+    _renderInsightsTimeline(data.timeline || []);
+    _renderInsightsPolicy(data.policy_alerts || []);
+    const total = Number((data.counts && data.counts.projects) || 0) + Number((data.counts && data.counts.alerts) || 0);
+    const badge = document.getElementById('badgeInsights');
+    if (badge) badge.innerText = total;
+    insightsLoaded = true;
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    console.error('Insights load error', err);
+    if (!insightsLoaded) {
+      _renderInsightsTimeline([]);
+      _renderInsightsPolicy([]);
+    }
+  }
 }
 
 function renderSignalSkeleton() {
@@ -1404,6 +1519,10 @@ document.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowLeft') slideGallery(-1);
     if (event.key === 'ArrowRight') slideGallery(1);
   }
+  const leadModal = document.getElementById('leadCaptureModal');
+  if (leadModal && leadModal.style.display === 'flex' && event.key === 'Escape') {
+    closeLeadCaptureModal();
+  }
 });
 
 function updateWardFilters(wardsByCity, activeWards) {
@@ -1444,28 +1563,90 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-async function captureLeadAndOpen(listingId, listingUrl, sourceContext = 'signal') {
+const LEAD_CAPTURE = {
+  listingId: null,
+  listingUrl: '',
+  sourceContext: 'signal'
+};
+
+function captureLeadAndOpen(listingId, listingUrl, sourceContext = 'signal') {
+  LEAD_CAPTURE.listingId = listingId ? Number(listingId) : null;
+  LEAD_CAPTURE.listingUrl = listingUrl || '';
+  LEAD_CAPTURE.sourceContext = sourceContext || 'signal';
+
+  const modal = document.getElementById('leadCaptureModal');
+  const input = document.getElementById('leadPhoneInput');
+  const errorEl = document.getElementById('leadError');
+  if (errorEl) errorEl.textContent = '';
+  if (input) {
+    input.value = '';
+    setTimeout(() => input.focus(), 20);
+  }
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeLeadCaptureModal() {
+  const modal = document.getElementById('leadCaptureModal');
+  const errorEl = document.getElementById('leadError');
+  if (errorEl) errorEl.textContent = '';
+  if (modal) modal.style.display = 'none';
+}
+
+function _openZaloDirect() {
   const zaloHref = 'https://zalo.me/0343216024';
-  window.open(zaloHref, '_blank', 'noopener,noreferrer');
-  let phone = '';
+  const w = window.open(zaloHref, '_blank', 'noopener,noreferrer');
+  if (!w) window.location.href = zaloHref;
+}
+
+function _isLikelyPhone(v) {
+  const digits = (v || '').replace(/\D/g, '');
+  return digits.length >= 9;
+}
+
+async function submitLeadAndOpenZalo() {
+  const input = document.getElementById('leadPhoneInput');
+  const errorEl = document.getElementById('leadError');
+  const raw = (input?.value || '').trim();
+
+  if (!raw) {
+    closeLeadCaptureModal();
+    _openZaloDirect();
+    return;
+  }
+  if (!_isLikelyPhone(raw)) {
+    if (errorEl) errorEl.textContent = 'Số Zalo chưa hợp lệ, vui lòng kiểm tra lại.';
+    return;
+  }
+
   try {
-    const answer = window.prompt('De em ho tro nhanh hon, cho xin so Zalo cua anh/chi (co the bo qua).', '');
-    if (answer && answer.trim()) {
-      phone = answer.trim();
-      await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          listing_id: listingId ? Number(listingId) : null,
-          listing_url: listingUrl || '',
-          zalo_phone: phone,
-          source_context: sourceContext
-        })
-      });
+    const res = await fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        listing_id: LEAD_CAPTURE.listingId,
+        listing_url: LEAD_CAPTURE.listingUrl,
+        zalo_phone: raw,
+        source_context: LEAD_CAPTURE.sourceContext
+      })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data && data.error === 'invalid_phone') {
+        if (errorEl) errorEl.textContent = 'Số Zalo chưa hợp lệ, vui lòng nhập lại.';
+        return;
+      }
     }
   } catch (err) {
     console.warn('Lead capture failed:', err);
+  } finally {
+    closeLeadCaptureModal();
+    _openZaloDirect();
   }
+}
+
+function skipLeadAndOpenZalo() {
+  closeLeadCaptureModal();
+  _openZaloDirect();
 }
 
 // AI Chat Logic

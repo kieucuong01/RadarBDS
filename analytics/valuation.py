@@ -294,38 +294,8 @@ class SegmentModel:
         return 0.10
 
 def get_segment_priors(conn) -> Dict[str, int]:
-    """
-    Đọc signal_feedback → tính per-segment adjustment cho signal_score.
-
-    Segment key = "ward|property_type|road_tier" (khớp với snapshot_segment lúc submit).
-    Cần ≥5 feedback/segment mới apply (tránh overfit). Linear scale:
-      reject_rate 0% → 0
-      reject_rate 50% → -15
-      reject_rate 100% → -30 (signal score gần như mất)
-    """
-    try:
-        rows = conn.execute("""
-            SELECT snapshot_segment AS seg,
-                   SUM(CASE WHEN verdict='good' THEN 1 ELSE 0 END) AS g,
-                   SUM(CASE WHEN verdict IN ('bad','spam') THEN 1 ELSE 0 END) AS bs,
-                   COUNT(*) AS n
-              FROM signal_feedback
-             WHERE snapshot_segment IS NOT NULL
-             GROUP BY snapshot_segment
-            HAVING n >= 5
-        """).fetchall()
-    except Exception:
-        return {}   # bảng chưa tồn tại (lần đầu chạy) → no-op
-    out = {}
-    for r in rows:
-        n = r["n"] if hasattr(r, '__getitem__') else r[3]
-        bs = r["bs"] if hasattr(r, '__getitem__') else r[2]
-        seg = r["seg"] if hasattr(r, '__getitem__') else r[0]
-        if not seg or n == 0:
-            continue
-        reject_rate = bs / n
-        out[seg] = -round(reject_rate * 30)
-    return out
+    """Legacy hook kept as no-op; Admin Control Room feedback is the source of truth."""
+    return {}
 
 
 class ValuationEngine:

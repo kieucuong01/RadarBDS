@@ -235,12 +235,3 @@ def cmd_groq_extract_test(args):
     print(f"  Tổng DIFF: {diffs_total} trường khác biệt / {len(rows)} listings")
     print(f"{'='*65}\n")
 
-
-def cmd_learn_from_feedback(args):
-    init_schema()
-    from cleansing.feedback_learner import run_learner
-    min_new = getattr(args, "min_new", 20)
-    force = getattr(args, "force", False)
-    with get_conn() as conn:
-        n = run_learner(conn, min_new=min_new, force=force)
-    print(f"Saved {n} new feedback rules.")

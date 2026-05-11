@@ -165,6 +165,13 @@
           </svg>
           Phân Tích Chuyên Sâu
         </button>
+        <button class="nav-link" onclick="switchTab('insights', this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h4l3 8 4-16 3 8h4" />
+          </svg>
+          Hạ tầng (Insights)
+          <span id="badgeInsights" class="nav-count-badge">0</span>
+        </button>
         <button class="nav-link" onclick="switchTab('all', this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path
@@ -287,6 +294,26 @@
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <!-- TAB: INSIGHTS -->
+      <div id="tab-insights" class="tab-content">
+        <div class="insights-wrap">
+          <section class="insight-panel">
+            <div class="insight-head">
+              <h3>Tiến độ hạ tầng</h3>
+              <small>Cập nhật đường, cao tốc và giao thông</small>
+            </div>
+            <div id="insightTimeline" class="timeline-list"></div>
+          </section>
+          <section class="insight-panel">
+            <div class="insight-head">
+              <h3>Cảnh báo chính sách</h3>
+              <small>Quy hoạch và pháp lý theo khu vực</small>
+            </div>
+            <div id="insightPolicy" class="policy-list"></div>
+          </section>
         </div>
       </div>
 
@@ -478,6 +505,21 @@
     </div>
   </div>
 
+  <!-- Lead Capture Modal -->
+  <div id="leadCaptureModal" class="modal" onclick="if(event.target===this)closeLeadCaptureModal()">
+    <div class="modal-content lead-capture-modal">
+      <button class="close-modal" onclick="closeLeadCaptureModal()" style="top:12px; right:12px;">&times;</button>
+      <h3 class="lead-title">Để lại Zalo để hỗ trợ nhanh hơn</h3>
+      <p class="lead-sub">Bạn có thể bỏ qua bước này và vẫn chat Zalo ngay.</p>
+      <input id="leadPhoneInput" type="text" class="lead-input" placeholder="Nhập số Zalo (tuỳ chọn)">
+      <div id="leadError" class="lead-error"></div>
+      <div class="lead-actions">
+        <button class="lead-btn lead-btn-primary" onclick="submitLeadAndOpenZalo()">Gửi & mở Zalo</button>
+        <button class="lead-btn lead-btn-ghost" onclick="skipLeadAndOpenZalo()">Bỏ qua & mở Zalo</button>
+      </div>
+    </div>
+  </div>
+
   <div class="floating-actions">
     <button class="fab fab-ai" onclick="toggleChat()" title="Radar AI">AI</button>
   </div>
@@ -499,7 +541,7 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/main.js') }}?v=uifix-20260510-modal-v3-layout"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=uifix-20260511-insights-v1"></script>
 </body>
 
 </html>

@@ -7,7 +7,6 @@ Cấu hình: thêm vào file .env hoặc set env var:
     TELEGRAM_CHAT_ID=xxx
 """
 import logging
-import sqlite3
 import sys
 from pathlib import Path
 
@@ -209,55 +208,7 @@ def collect_hot_deals_3d(conn) -> list:
     for r in rows:
         if not _already_alerted(conn, r["listing_id"], "hot_deal_3d"):
             fresh.append(dict(r))
-
-    # Apply feedback_rules — loại tin có pattern user đã reject trước đó
-    fresh = _apply_feedback_rules(conn, fresh)
     return fresh
-
-
-def _apply_feedback_rules(conn, rows: list) -> list:
-    """
-    Loại tin nếu match bất kỳ feedback_rule (enabled=1) nào.
-    Rules sinh từ Groq tổng hợp signal_feedback (xem cleansing/feedback_learner.py).
-    Robust: nếu rule SQL lỗi → skip rule, không crash alert flow.
-    """
-    try:
-        rules = conn.execute(
-            "SELECT id, rule_text, rule_sql FROM feedback_rules "
-            "WHERE enabled=1 AND rule_sql IS NOT NULL AND TRIM(rule_sql) != ''"
-        ).fetchall()
-    except Exception:
-        return rows  # bảng chưa migrate
-    if not rules:
-        return rows
-
-    kept = []
-    n_filtered = 0
-    for row in rows:
-        excluded = False
-        for rule in rules:
-            try:
-                hit = conn.execute(
-                    f"SELECT 1 FROM listings WHERE id=? AND ({rule['rule_sql']})",
-                    (row["listing_id"],),
-                ).fetchone()
-                if hit:
-                    excluded = True
-                    n_filtered += 1
-                    conn.execute(
-                        "UPDATE feedback_rules SET last_used_at=CURRENT_TIMESTAMP WHERE id=?",
-                        (rule["id"],),
-                    )
-                    break
-            except sqlite3.Error:
-                # Rule SQL invalid → skip silently, không spam log mỗi listing
-                pass
-        if not excluded:
-            kept.append(row)
-    if n_filtered:
-        conn.commit()
-        logger.info(f"feedback_rules filtered {n_filtered} listings (kept {len(kept)})")
-    return kept
 
 
 def _compose_reasons(d: dict) -> list:
