@@ -139,12 +139,22 @@ class BaseCrawler(ABC):
         Return True nếu là record mới, False nếu đã tồn tại.
         """
         from config.database_sqlite import get_conn
+        from db.moderation import normalize_phone
 
         source_id = str(raw_data.get("post_id") or raw_data.get("source_id") or "")
         raw_json = json.dumps(raw_data, ensure_ascii=False)
+        phone_norm = normalize_phone(raw_data.get("contact_phone"))
 
         try:
             with get_conn() as conn:
+                if phone_norm:
+                    blocked = conn.execute(
+                        "SELECT 1 FROM broker_blacklist WHERE active=1 AND phone_norm=?",
+                        (phone_norm,),
+                    ).fetchone()
+                    if blocked:
+                        self._stats["skipped"] += 1
+                        return False
                 existing = conn.execute(
                     "SELECT id FROM raw_listings WHERE source=? AND url=?",
                     (self.SOURCE_NAME, url),

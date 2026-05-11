@@ -34,7 +34,11 @@ def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, 
     # Common filters. Normal views hide duplicates; drop-only views show reliable
     # repost drops even when the lower-price repost is marked duplicate.
     col = lambda name: f"{prefix}{name}" if prefix else name
-    where_parts = [f"{col('probably_sold')} = 0"]
+    where_parts = [
+        f"{col('probably_sold')} = 0",
+        f"COALESCE({col('is_blacklisted')},0)=0",
+        f"COALESCE({col('review_hidden')},0)=0",
+    ]
     if only_drops:
         where_parts.append(f"{col('price_dropped')} = 1")
     else:
@@ -342,7 +346,7 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
-    where_parts = ["probably_sold = 0"]
+    where_parts = ["probably_sold = 0", "COALESCE(is_blacklisted,0)=0", "COALESCE(review_hidden,0)=0"]
     if only_drops:
         where_parts.append("price_dropped = 1")
     else:
@@ -415,6 +419,8 @@ def load_listing_detail(db_path, listing_id):
         FROM listings l
         LEFT JOIN valuation_results v ON l.id = v.listing_id
         WHERE l.id = ?
+          AND COALESCE(l.is_blacklisted,0)=0
+          AND COALESCE(l.review_hidden,0)=0
     """, (listing_id,)).fetchone()
     if not listing:
         return None

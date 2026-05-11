@@ -22,6 +22,12 @@ Override with `RADAR_DB_PATH`. If the override is relative, it resolves from rep
 - Same URL/source_id is the same listing.
 - Guland/BatDongSan duplicate identity is source-id only.
 - Facebook may use repost heuristics, guarded by property type, location, thổ cư, area/dimensions, and phone.
+- Admin Control Room tables:
+  - `lead_captures` (CRM lead intake)
+  - `dedup_overrides` (manual merge/split precedence after auto-dedup)
+  - `broker_blacklist` (phone blacklist for crawler + reprocess + display filters)
+- Listings moderation columns:
+  - `is_blacklisted`, `blacklisted_at`, `blacklist_phone_norm`
 - Runtime DB files, WAL/SHM files, images, logs, and reports are ignored by git.
 
 ## Safe Checks

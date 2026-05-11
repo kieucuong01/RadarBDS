@@ -200,35 +200,100 @@ CREATE INDEX IF NOT EXISTS idx_valuation_computed ON valuation_results(computed_
 
 
 -- ═══════════════════════════════════════════════════════════════════
--- Signal Outcome Tracking — human-in-the-loop feedback
--- User review từng signal trên web /review → verdict + reason text
--- Hybrid learning: numeric prior (per-segment reject rate) + LLM rules
+-- Admin Control Room
 -- ═══════════════════════════════════════════════════════════════════
-CREATE TABLE IF NOT EXISTS signal_feedback (
+CREATE TABLE IF NOT EXISTS lead_captures (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    listing_id      INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
-    verdict         TEXT NOT NULL,            -- 'good' | 'bad' | 'maybe' | 'sold' | 'spam'
-    reason_text     TEXT,                     -- free-text user nhập
-    snapshot_mos    REAL,                     -- v.mos_pct tại thời điểm review
-    snapshot_score  INTEGER,                  -- v.signal_score tại thời điểm review
-    snapshot_segment TEXT,                    -- ward|property_type|road_tier để aggregate prior
-    created_at      TEXT DEFAULT (datetime('now'))
-);
-CREATE INDEX IF NOT EXISTS idx_feedback_listing  ON signal_feedback(listing_id);
-CREATE INDEX IF NOT EXISTS idx_feedback_verdict  ON signal_feedback(verdict, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_feedback_segment  ON signal_feedback(snapshot_segment);
-
-CREATE TABLE IF NOT EXISTS feedback_rules (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    rule_text       TEXT NOT NULL,            -- human-readable: "Loại signal nếu ward=X và area>Y"
-    rule_sql        TEXT,                     -- SQL WHERE clause (NULL nếu chỉ là human note)
-    confidence      REAL,                     -- 0.0–1.0 do Groq estimate
-    sample_size     INTEGER,                  -- # feedback hỗ trợ rule
-    enabled         INTEGER DEFAULT 1,        -- toggle on/off để A/B test
     created_at      TEXT DEFAULT (datetime('now')),
-    last_used_at    TEXT
+    updated_at      TEXT DEFAULT (datetime('now')),
+    listing_id      INTEGER REFERENCES listings(id) ON DELETE SET NULL,
+    listing_url     TEXT,
+    zalo_phone      TEXT NOT NULL,
+    source_context  TEXT,   -- card_signal | modal_signal | listing_detail
+    note            TEXT,
+    status          TEXT DEFAULT 'new' -- new | called | viewing | deposit | cancelled
 );
-CREATE INDEX IF NOT EXISTS idx_feedback_rules_enabled ON feedback_rules(enabled);
+CREATE INDEX IF NOT EXISTS idx_leads_created_at ON lead_captures(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_status ON lead_captures(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_listing ON lead_captures(listing_id);
+
+CREATE TABLE IF NOT EXISTS dedup_overrides (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at          TEXT DEFAULT (datetime('now')),
+    updated_at          TEXT DEFAULT (datetime('now')),
+    action              TEXT NOT NULL,  -- merge | split
+    listing_id          INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    target_listing_id   INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    note                TEXT,
+    active              INTEGER DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_dedup_overrides_active ON dedup_overrides(active, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_dedup_overrides_pair ON dedup_overrides(listing_id, target_listing_id, active);
+
+CREATE TABLE IF NOT EXISTS broker_blacklist (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at      TEXT DEFAULT (datetime('now')),
+    updated_at      TEXT DEFAULT (datetime('now')),
+    phone_norm      TEXT NOT NULL,
+    reason          TEXT,
+    active          INTEGER DEFAULT 1,
+    UNIQUE(phone_norm)
+);
+CREATE INDEX IF NOT EXISTS idx_broker_blacklist_active ON broker_blacklist(active, phone_norm);
+
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at      TEXT DEFAULT (datetime('now')),
+    actor           TEXT DEFAULT 'admin',
+    action          TEXT NOT NULL,
+    entity_type     TEXT NOT NULL,
+    entity_id       INTEGER,
+    before_json     TEXT,
+    after_json      TEXT,
+    reason          TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_entity ON admin_audit_log(entity_type, entity_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_action ON admin_audit_log(action, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS ai_training_feedback (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at          TEXT DEFAULT (datetime('now')),
+    updated_at          TEXT DEFAULT (datetime('now')),
+    listing_id          INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    actor               TEXT DEFAULT 'admin',
+    verdict             TEXT NOT NULL,
+    extraction_verdict  TEXT,
+    valuation_verdict   TEXT,
+    reason_code         TEXT,
+    reason_text         TEXT,
+    reason_tags         TEXT,
+    note                TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ai_training_listing ON ai_training_feedback(listing_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_training_verdict ON ai_training_feedback(verdict, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS infra_entries (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at      TEXT DEFAULT (datetime('now')),
+    updated_at      TEXT DEFAULT (datetime('now')),
+    kind            TEXT NOT NULL,      -- timeline | policy
+    title           TEXT NOT NULL,
+    subtitle        TEXT,
+    summary         TEXT,
+    ward            TEXT,
+    road_ref        TEXT,
+    project_code    TEXT,
+    milestone_label TEXT,
+    progress_pct    REAL,
+    status_tag      TEXT,               -- done | in_progress | planned
+    severity        TEXT,               -- critical | warning | info
+    event_date      TEXT,
+    source_url      TEXT,
+    sort_order      INTEGER DEFAULT 0,
+    active          INTEGER DEFAULT 1,
+    created_by      TEXT DEFAULT 'admin'
+);
+CREATE INDEX IF NOT EXISTS idx_infra_kind_active ON infra_entries(kind, active, sort_order, event_date DESC);
 """
 
 
@@ -260,6 +325,12 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         ("suspicious_bait",    "ALTER TABLE listings ADD COLUMN suspicious_bait INTEGER DEFAULT 0"),
         ("llm_verified",       "ALTER TABLE listings ADD COLUMN llm_verified INTEGER DEFAULT 0"),
         ("llm_notes",          "ALTER TABLE listings ADD COLUMN llm_notes TEXT"),
+        ("is_blacklisted",     "ALTER TABLE listings ADD COLUMN is_blacklisted INTEGER DEFAULT 0"),
+        ("blacklisted_at",     "ALTER TABLE listings ADD COLUMN blacklisted_at TEXT"),
+        ("blacklist_phone_norm", "ALTER TABLE listings ADD COLUMN blacklist_phone_norm TEXT"),
+        ("review_hidden",      "ALTER TABLE listings ADD COLUMN review_hidden INTEGER DEFAULT 0"),
+        ("review_hidden_at",   "ALTER TABLE listings ADD COLUMN review_hidden_at TEXT"),
+        ("review_hidden_reason", "ALTER TABLE listings ADD COLUMN review_hidden_reason TEXT"),
     ]
     for col, sql in migrations:
         if col not in existing:
@@ -287,5 +358,82 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
                 logger.info(f"Migration: added valuation_results.{col}")
             except Exception as e:
                 logger.warning(f"Migration skip valuation_results.{col}: {e}")
+
+    _drop_legacy_feedback(conn)
+
+
+def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
+    return bool(conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+        (name,),
+    ).fetchone())
+
+
+def _drop_legacy_feedback(conn: sqlite3.Connection) -> None:
+    """Backfill review visibility once, then remove legacy feedback tables."""
+    if _table_exists(conn, "signal_feedback"):
+        try:
+            rows = conn.execute("""
+                SELECT sf.listing_id, sf.verdict
+                  FROM signal_feedback sf
+                  JOIN (
+                        SELECT listing_id, MAX(id) AS latest_id
+                          FROM signal_feedback
+                         GROUP BY listing_id
+                  ) latest ON latest.latest_id = sf.id
+                 WHERE sf.verdict IN ('good', 'bad', 'spam', 'sold')
+            """).fetchall()
+            for row in rows:
+                listing_id = int(row["listing_id"])
+                verdict = row["verdict"]
+                cluster_ids = {listing_id}
+                current = conn.execute(
+                    "SELECT id, duplicate_of_id FROM listings WHERE id=?",
+                    (listing_id,),
+                ).fetchone()
+                if current:
+                    canonical_id = current["duplicate_of_id"] or current["id"]
+                    cluster_ids.add(int(canonical_id))
+                    cluster_ids.update(
+                        int(r["id"])
+                        for r in conn.execute(
+                            "SELECT id FROM listings WHERE duplicate_of_id=?",
+                            (canonical_id,),
+                        ).fetchall()
+                    )
+                placeholders = ",".join("?" for _ in cluster_ids)
+                ids = list(cluster_ids)
+                if verdict in ("bad", "spam", "sold"):
+                    conn.execute(
+                        f"""
+                        UPDATE listings
+                           SET review_hidden=1,
+                               review_hidden_at=COALESCE(review_hidden_at, datetime('now')),
+                               review_hidden_reason=COALESCE(review_hidden_reason, ?)
+                         WHERE id IN ({placeholders})
+                        """,
+                        [verdict] + ids,
+                    )
+                elif verdict == "good":
+                    conn.execute(
+                        f"""
+                        UPDATE listings
+                           SET review_hidden=0,
+                               review_hidden_at=NULL,
+                               review_hidden_reason=NULL
+                         WHERE id IN ({placeholders})
+                        """,
+                        ids,
+                    )
+            logger.info("Backfilled review_hidden from legacy feedback before drop")
+        except Exception as e:
+            logger.warning(f"Legacy feedback backfill skipped: {e}")
+
+    for table in ("signal_feedback", "feedback_rules"):
+        try:
+            conn.execute(f"DROP TABLE IF EXISTS {table}")
+            logger.info(f"Dropped legacy table: {table}")
+        except Exception as e:
+            logger.warning(f"Drop legacy table {table} skipped: {e}")
 
 

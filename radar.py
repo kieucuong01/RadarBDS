@@ -37,7 +37,7 @@ from cli.queries import (
 )
 from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
-    cmd_lifecycle, cmd_download_images, cmd_learn_from_feedback,
+    cmd_lifecycle, cmd_download_images,
     cmd_groq_extract_test,
 )
 
@@ -157,10 +157,6 @@ def main():
     p_gt.add_argument("--ward",   default="Tân An", help="Phường cần test (default: Tân An)")
     p_gt.add_argument("--sample", type=int, default=20, help="Số listings test (default: 20)")
 
-    # learn-from-feedback
-    p_learn = sub.add_parser("learn-from-feedback", help="Groq tổng hợp signal_feedback thành rules SQL")
-    p_learn.add_argument("--min-new", type=int, default=20)
-    p_learn.add_argument("--force", action="store_true")
 
     args = parser.parse_args()
 
@@ -204,8 +200,6 @@ def main():
         cmd_inspect(args)
     elif args.cmd == "groq-test":
         cmd_groq_extract_test(args)
-    elif args.cmd == "learn-from-feedback":
-        cmd_learn_from_feedback(args)
     else:
         parser.print_help()
 

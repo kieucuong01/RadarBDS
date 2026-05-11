@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RadarBDS Control Room</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v4-infra">
+</head>
+<body>
+  <aside class="admin-sidebar">
+    <div class="brand">
+      <div class="brand-mark">R</div>
+      <div>
+        <div class="brand-name">RadarBDS</div>
+        <div class="brand-sub">Control Room</div>
+      </div>
+    </div>
+
+    <nav class="side-nav" aria-label="Admin workspace">
+      <div class="nav-label">Workspace</div>
+      <button class="nav-item active" data-panel="crm">
+        <span class="nav-icon">LC</span>
+        <span><strong>Lead CRM</strong><small>Quản lý khách hàng</small></span>
+      </button>
+      <button class="nav-item" data-panel="quality">
+        <span class="nav-icon">DQ</span>
+        <span><strong>Data Quality</strong><small>Trạm kiểm dịch data</small></span>
+      </button>
+      <button class="nav-item" data-panel="training">
+        <span class="nav-icon">AI</span>
+        <span><strong>AI Training</strong><small>Trạm huấn luyện định giá</small></span>
+      </button>
+      <button class="nav-item" data-panel="infra">
+        <span class="nav-icon">HT</span>
+        <span><strong>Hạ tầng</strong><small>Insights timeline và policy</small></span>
+      </button>
+    </nav>
+
+    <div class="admin-profile">
+      <div class="avatar">AD</div>
+      <div>
+        <strong>Admin</strong>
+        <small>admin@radarbds.vn</small>
+      </div>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="toggleSidebar" title="Thu gọn sidebar">||</button>
+        <div class="top-title">
+          <strong>RadarBDS Control Room</strong>
+          <small>Bình Dương · Realtime</small>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="adminThemeToggle" title="Đổi theme">Theme</button>
+        <a class="system-status" href="/" title="Về dashboard user"><span></span>Hệ thống ổn định</a>
+      </div>
+    </header>
+
+    <section id="panel-crm" class="workspace-panel active">
+      <div class="page-head">
+        <div>
+          <h1>Mini CRM — Lead Săn Deal</h1>
+          <p>Lead phát sinh từ RadarBDS, cập nhật realtime.</p>
+        </div>
+        <button class="secondary-btn" id="exportLeadsBtn">Xuất CSV</button>
+      </div>
+
+      <div class="stat-grid" id="leadStats"></div>
+
+      <section class="surface">
+        <div class="toolbar">
+          <label class="searchbox">
+            <span>Search</span>
+            <input id="leadSearch" placeholder="Tìm theo SĐT, lô đất...">
+          </label>
+          <select id="leadStatusFilter" class="select-control">
+            <option value="">Tất cả trạng thái</option>
+            <option value="new">Chờ xử lý</option>
+            <option value="called">Đang tư vấn</option>
+            <option value="viewing">Đi xem đất</option>
+            <option value="deposit">Chốt cọc</option>
+            <option value="cancelled">Hủy</option>
+          </select>
+          <div class="toolbar-meta" id="leadCountMeta"></div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Ngày nhận</th>
+                <th>Số Zalo</th>
+                <th>Lô đất quan tâm</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="leadRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="panel-quality" class="workspace-panel">
+      <div class="page-head">
+        <div>
+          <h1>Trạm Kiểm Dịch Data</h1>
+          <p>Xử lý conflict do AI flag, giữ chất lượng data sạch trước khi lên feed.</p>
+        </div>
+      </div>
+
+      <div class="segmented">
+        <button class="segment active" data-quality-tab="dups">Tin trùng <span id="dupCount">0</span></button>
+        <button class="segment" data-quality-tab="blacklist">Hắc danh sách <span id="blacklistCount">0</span></button>
+      </div>
+
+      <section id="quality-dups" class="quality-tab active">
+        <div class="notice"><strong>Ca khó AI:</strong> Nghi ngờ trùng lặp. Vùng màu vàng là nội dung cần soi kỹ trước khi quyết định.</div>
+        <div id="duplicateCards" class="dup-list"></div>
+      </section>
+
+      <section id="quality-blacklist" class="quality-tab">
+        <div class="surface blacklist-panel">
+          <div class="toolbar">
+            <input id="blacklistPhone" placeholder="SĐT môi giới cần chặn">
+            <input id="blacklistReason" placeholder="Lý do">
+            <button class="primary-btn" id="addBlacklistBtn">Thêm vào blacklist</button>
+          </div>
+          <div id="blacklistRows" class="blacklist-list"></div>
+        </div>
+      </section>
+    </section>
+
+    <section id="panel-training" class="workspace-panel">
+      <div class="page-head">
+        <div>
+          <h1>AI Training</h1>
+          <p>Review signal có rủi ro cao để tạo feedback có cấu trúc cho thuật toán.</p>
+        </div>
+        <button class="secondary-btn" id="refreshTrainingBtn">Làm mới queue</button>
+      </div>
+      <div id="trainingGrid" class="training-grid"></div>
+    </section>
+
+    <section id="panel-infra" class="workspace-panel">
+      <div class="page-head">
+        <div>
+          <h1>Hạ tầng Insights</h1>
+          <p>Quản trị dữ liệu dự án hạ tầng và policy alerts hiển thị cho user.</p>
+        </div>
+        <button class="secondary-btn" id="refreshInfraBtn">Làm mới</button>
+      </div>
+
+      <section class="surface infra-surface">
+        <div class="infra-grid">
+          <form id="infraForm" class="infra-form" onsubmit="return false;">
+            <input type="hidden" id="infraId">
+            <div class="infra-row">
+              <label>Loại</label>
+              <select id="infraKind" class="select-control">
+                <option value="timeline">Timeline</option>
+                <option value="policy">Cảnh báo chính sách</option>
+              </select>
+            </div>
+            <div class="infra-row">
+              <label>Tiêu đề</label>
+              <input id="infraTitle" placeholder="Ví dụ: Khởi công Vành đai 4 đoạn Bình Dương">
+            </div>
+            <div class="infra-row">
+              <label>Mô tả ngắn</label>
+              <input id="infraSubtitle" placeholder="Ví dụ: Giải phóng mặt bằng 78%">
+            </div>
+            <div class="infra-row">
+              <label>Nội dung chi tiết</label>
+              <textarea id="infraSummary" rows="4" placeholder="Nội dung update cho card"></textarea>
+            </div>
+            <div class="infra-two">
+              <div class="infra-row">
+                <label>Ward/Khu vực</label>
+                <input id="infraWard" placeholder="Phú Mỹ, Bến Cát...">
+              </div>
+              <div class="infra-row">
+                <label>Đường/Reference</label>
+                <input id="infraRoadRef" placeholder="QL13, DX006...">
+              </div>
+            </div>
+            <div class="infra-two">
+              <div class="infra-row">
+                <label>Project code</label>
+                <input id="infraProjectCode" placeholder="PRJ-001">
+              </div>
+              <div class="infra-row">
+                <label>Milestone</label>
+                <input id="infraMilestone" placeholder="2026 Q2">
+              </div>
+            </div>
+            <div class="infra-two">
+              <div class="infra-row">
+                <label>Status</label>
+                <select id="infraStatus" class="select-control">
+                  <option value="">(none)</option>
+                  <option value="done">Done</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="planned">Planned</option>
+                </select>
+              </div>
+              <div class="infra-row">
+                <label>Severity</label>
+                <select id="infraSeverity" class="select-control">
+                  <option value="">(none)</option>
+                  <option value="critical">Critical</option>
+                  <option value="warning">Warning</option>
+                  <option value="info">Info</option>
+                </select>
+              </div>
+            </div>
+            <div class="infra-two">
+              <div class="infra-row">
+                <label>Progress %</label>
+                <input id="infraProgress" type="number" min="0" max="100" step="1" placeholder="0-100">
+              </div>
+              <div class="infra-row">
+                <label>Ngày sự kiện</label>
+                <input id="infraDate" type="date">
+              </div>
+            </div>
+            <div class="infra-two">
+              <div class="infra-row">
+                <label>Sort order</label>
+                <input id="infraSortOrder" type="number" step="1" value="0">
+              </div>
+              <div class="infra-row">
+                <label>Nguồn URL</label>
+                <input id="infraSourceUrl" placeholder="https://...">
+              </div>
+            </div>
+            <div class="infra-actions">
+              <button class="primary-btn" id="saveInfraBtn">Lưu item</button>
+              <button class="secondary-btn" id="resetInfraBtn" type="button">Reset form</button>
+            </div>
+          </form>
+
+          <div class="infra-list-wrap">
+            <div class="segmented">
+              <button class="segment active" data-infra-filter="timeline">Timeline</button>
+              <button class="segment" data-infra-filter="policy">Policy</button>
+              <button class="segment" data-infra-filter="all">All</button>
+            </div>
+            <div id="infraRows" class="infra-rows"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v4-infra"></script>
+</body>
+</html>

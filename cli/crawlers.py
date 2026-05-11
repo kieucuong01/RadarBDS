@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from config.database_sqlite import init_schema, get_conn, insert_raw
 from cli.data_import import cmd_export_raw
+from db.moderation import normalize_phone
 
 def _get_crawlers(source_filter=None):
     from crawler.guland_pw import GulandCrawler
@@ -54,6 +55,16 @@ def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_f
         if not record:
             irrelevant += 1
             continue
+        phone_norm = normalize_phone(record.get("contact_phone"))
+        if phone_norm:
+            with get_conn() as conn:
+                blocked = conn.execute(
+                    "SELECT 1 FROM broker_blacklist WHERE active=1 AND phone_norm=?",
+                    (phone_norm,),
+                ).fetchone()
+            if blocked:
+                skipped += 1
+                continue
         raw_data = dict(record)
         if apify_raw:
             raw_data["_apify_raw"] = apify_raw

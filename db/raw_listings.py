@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 
 from db.connection import get_conn
+from db.moderation import normalize_phone
 
 logger = logging.getLogger(__name__)
 # ─── RAW layer ────────────────────────────────────────────────────────────────
@@ -25,6 +26,14 @@ def insert_raw(source: str, source_id: Optional[str], url: str,
     """
     with get_conn() as conn:
         try:
+            phone_norm = normalize_phone(raw_data.get("contact_phone"))
+            if phone_norm:
+                blocked = conn.execute(
+                    "SELECT 1 FROM broker_blacklist WHERE active=1 AND phone_norm=?",
+                    (phone_norm,),
+                ).fetchone()
+                if blocked:
+                    return None
             cur = conn.execute(
                 """INSERT OR IGNORE INTO raw_listings
                    (source, source_id, url, raw_json, crawl_run_id)
