@@ -23,11 +23,11 @@ def _days_ago(crawled_at: str) -> int:
         if crawled_at:
             d = date.fromisoformat(crawled_at[:10])
             return (date.today() - d).days
-        return 0
+        return None
     except Exception:
-        return 0
+        return None
 
-def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix=""):
+def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0):
     if not sources:
         sources = ["facebook", "guland", "batdongsan"]
 
@@ -57,7 +57,30 @@ def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, 
         where_parts.append(f"{col('property_type')} IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
 
+    range_clauses, range_params = _range_filters(area_min, area_max, price_min, price_max, prefix)
+    where_parts.extend(range_clauses)
+    params.extend(range_params)
+
     return " AND ".join(where_parts), params
+
+
+def _range_filters(area_min=0, area_max=0, price_min=0, price_max=0, prefix=""):
+    col = lambda name: f"{prefix}{name}" if prefix else name
+    clauses = []
+    params = []
+    if area_min and area_min > 0:
+        clauses.append(f"{col('area_m2')} >= ?")
+        params.append(area_min)
+    if area_max and area_max > 0:
+        clauses.append(f"{col('area_m2')} <= ?")
+        params.append(area_max)
+    if price_min and price_min > 0:
+        clauses.append(f"{col('price_ty')} >= ?")
+        params.append(price_min)
+    if price_max and price_max > 0:
+        clauses.append(f"{col('price_ty')} <= ?")
+        params.append(price_max)
+    return clauses, params
 
 
 def _mos_filter(mos_min=0):
@@ -128,10 +151,10 @@ def _format_signal_row(r, primary_img=None):
     }
 
 
-def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30):
+def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    where_sql, params = _build_filters(sources, wards, prop_types, only_drops, prefix="l.")
+    where_sql, params = _build_filters(sources, wards, prop_types, only_drops, prefix="l.", area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
     mos_condition, mos_params = _mos_filter(mos_min)
     page = max(int(page or 1), 1)
     limit = min(max(int(limit or 30), 1), 100)
@@ -174,11 +197,11 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     }
 
 
-def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True):
+def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
-    where_sql, params = _build_filters(sources, wards, prop_types, only_drops)
+    where_sql, params = _build_filters(sources, wards, prop_types, only_drops, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
     mos_condition, mos_params = _mos_filter(mos_min)
 
     # 1. Stats
@@ -188,7 +211,13 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             (SELECT COUNT(*) FROM filtered) as total,
             (SELECT COUNT(*) FROM filtered l JOIN valuation_results v ON l.id = v.listing_id WHERE v.is_signal = 1{mos_condition}) as signals,
             (SELECT COUNT(*) FROM filtered WHERE is_hot = 1) as hot,
+            (SELECT COUNT(*) FROM filtered WHERE (
+                COALESCE(posted_at, crawled_at) IS NOT NULL
+                AND julianday('now') - julianday(substr(COALESCE(posted_at, crawled_at),1,10)) <= 7
+            )) as new_recent_days_7,
+
             (SELECT COUNT(*) FROM filtered WHERE price_dropped = 1) as price_drops
+
     """, params + mos_params).fetchone()
 
     sig_rows = []
@@ -339,7 +368,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         "wards_by_city": wards_by_city
     }
 
-def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day'):
+def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0):
     if not sources:
         sources = ["facebook", "guland", "batdongsan"]
 
@@ -362,6 +391,9 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
     if prop_types:
         where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
+    range_clauses, range_params = _range_filters(area_min, area_max, price_min, price_max)
+    where_parts.extend(range_clauses)
+    params.extend(range_params)
     where_sql = " AND ".join(where_parts)
     target_wards = wards if wards else ["Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ"]
 

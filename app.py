@@ -14,7 +14,7 @@ from config import database_sqlite as db_mod
 from db.moderation import normalize_phone
 
 # Import the extracted services
-from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url
+from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters
 from services.ai_bot import AIBot
 
 app = Flask(__name__)
@@ -87,6 +87,17 @@ def _get_signals_version(db_path: str) -> str:
         return str(row[0] if row and row[0] is not None else "0")
     finally:
         conn.close()
+
+
+def _request_range_filters(req):
+    def _parse(name):
+        try:
+            value = req.args.get(name, 0)
+            return float(value) if value not in (None, "") else 0
+        except (TypeError, ValueError):
+            return 0
+
+    return _parse("area_min"), _parse("area_max"), _parse("price_min"), _parse("price_max")
 
 
 def _safe_date(value):
@@ -305,12 +316,13 @@ def _clean_infra_payload(payload):
 @app.route("/api/dashboard")
 def api_dashboard():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
+    area_min, area_max, price_min, price_max = _request_range_filters(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     db_path = str(db_mod.DB_PATH.resolve())
     include_trend = request.args.get("include_trend") == "1"
     # Load data without fetching all listings to save time/memory
-    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False)
+    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
     
     return jsonify({
         "stats": data["stats"],
@@ -330,6 +342,7 @@ def api_dashboard():
 @app.route("/api/signals")
 def api_signals():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
+    area_min, area_max, price_min, price_max = _request_range_filters(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     try:
@@ -349,16 +362,21 @@ def api_signals():
         sort=sort,
         page=page,
         limit=limit,
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
     ))
 
 @app.route("/api/trends")
 def api_trends():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
+    area_min, area_max, price_min, price_max = _request_range_filters(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     db_path = str(db_mod.DB_PATH.resolve())
     return jsonify({
-        "trend_data": load_trend_data(db_path, sources, wards, prop_types, only_drops, trend_period),
+        "trend_data": load_trend_data(db_path, sources, wards, prop_types, only_drops, trend_period, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max),
         "trend_period": trend_period
     })
 
@@ -415,6 +433,7 @@ def api_insights():
 @app.route('/api/heatmap')
 def api_heatmap():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
+    area_min, area_max, price_min, price_max = _request_range_filters(request)
     db_path = str(db_mod.DB_PATH.resolve())
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -445,6 +464,9 @@ def api_heatmap():
     if prop_types:
         where_parts.append(f"l.property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
+    range_clauses, range_params = _range_filters(area_min, area_max, price_min, price_max, prefix="l.")
+    where_parts.extend(range_clauses)
+    params.extend(range_params)
     where_sql = " AND ".join(where_parts)
     
     # Market fields use all valid listings; opportunity fields use signal deals only.
@@ -511,18 +533,14 @@ def api_heatmap():
 @app.route('/api/listings')
 def api_listings():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
+    area_min, area_max, price_min, price_max = _request_range_filters(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     try:
         page = int(request.args.get("page", 1))
         limit = int(request.args.get("limit", 50))
-        area_min = float(request.args.get("area_min") or 0)
-        area_max = float(request.args.get("area_max") or 0)
-        price_min = float(request.args.get("price_min") or 0)
-        price_max = float(request.args.get("price_max") or 0)
     except ValueError:
         page, limit = 1, 50
-        area_min = area_max = price_min = price_max = 0
     offset = (page - 1) * limit
     
     db_path = str(db_mod.DB_PATH.resolve())
@@ -545,6 +563,9 @@ def api_listings():
     if prop_types:
         where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
+    range_clauses, range_params = _range_filters(area_min, area_max, price_min, price_max)
+    where_parts.extend(range_clauses)
+    params.extend(range_params)
     where_sql = " AND ".join(where_parts)
 
     sort_col_map = {

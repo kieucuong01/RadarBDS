@@ -72,3 +72,10 @@ Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/dashboard"
 Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/signals?page=1&limit=30"
 Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/listing/1"
 ```
+
+Filter sanity:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/signals?page=1&limit=30&mos_min=25&only_drops=1&sort=mos_desc"
+Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/dashboard?mos_min=25&only_drops=1"
+```

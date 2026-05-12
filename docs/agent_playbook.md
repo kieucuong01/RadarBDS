@@ -34,6 +34,8 @@ This playbook helps agents work without wasting context or breaking local runtim
 - Do not reintroduce `C:\Users\ASUS\radar_bds.db`; canonical DB is `data/radar_bds.db`.
 - Do not put all signals back into `/api/dashboard`; use `/api/signals`.
 - Do not put full descriptions or full image arrays into signal card payloads.
+- Do not make signal filtering wait on dashboard/insights; keep `signals-first` flow.
+- Do not assume command-bar controls are inside `#filterForm`; keep explicit query append for `mos_min` and `only_drops`.
 - Do not use Guland/BatDongSan cross-URL heuristics for same-lot detection.
 - Do not commit `data/radar_bds.db`, `data/images/`, thumbnails, logs, or reports.
 - Some terminal output may display Vietnamese as mojibake; prefer UTF-8 Python mode and inspect files with an editor/browser when text fidelity matters.
@@ -44,6 +46,10 @@ This playbook helps agents work without wasting context or breaking local runtim
 - JS syntax: `node --check static/js/main.js`.
 - Dedup: `tests/test_dedup.py`, `tests/test_price_history.py`, `tests/test_lot_history.py`, `tests/test_drop_filter.py`.
 - Dashboard performance: payload check for `/api/dashboard` and `/api/signals?page=1&limit=30`.
+- Filter performance: rapidly change MOS/drop/source/ward and confirm:
+  - one signal fetch per settled interaction,
+  - no stale overwrite from older requests,
+  - no duplicate cards when scrolling page 2/3.
 - Images: confirm card uses `/data/images/thumbs/*.webp` and modal uses `/data/images/*`.
 
 ## When Updating Docs

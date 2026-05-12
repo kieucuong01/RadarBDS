@@ -42,6 +42,14 @@ Source crawlers
 - `/api/history/<id>`: price history, lot history, and comparable data for modal.
 - `/api/listings`: paginated table data for the all-listings tab.
 
+## Signal Filter Runtime Flow
+
+- Main tab filtering should run in two stages:
+  - stage 1: request `/api/signals` immediately and update cards,
+  - stage 2: request `/api/dashboard` in background for header/meta updates.
+- `insights` data is not part of normal signal-filter refresh and should load on Insights tab activation.
+- Infinite scroll must dedupe by listing id on client render to avoid race-condition duplicates.
+
 ## Dedup and Price Drop Policy
 
 - Same URL/source_id is the same listing and should use `price_history` for same-listing price changes.

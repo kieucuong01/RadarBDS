@@ -71,6 +71,9 @@ Dashboard/API:
 - `/api/signals` is paginated card data. Default limit is 30. It returns `primary_img` thumbnail when available.
 - `/api/listing/<id>` is full modal/detail data, including description and full image list.
 - `/api/history/<id>` returns same-listing price history and lot history/comps payload used by modal.
+- Filtering UX is `signals-first`: update `/api/signals` immediately, then refresh `/api/dashboard` in background.
+- Do not block signal rendering behind dashboard/insights fetches.
+- In command-bar flow, `mos_min` and `only_drops` controls are outside `#filterForm`; query assembly must append them explicitly.
 
 Images/performance:
 
@@ -104,6 +107,7 @@ node --check static\js\main.js
 - Backend/API change: run `py_compile` for touched Python files and the relevant pytest file.
 - Frontend JS change: run `node --check static/js/main.js` and smoke test `http://127.0.0.1:5000`.
 - Dashboard/API performance change: check payload sizes for `/api/dashboard`, `/api/signals?page=1&limit=30`, and `/api/listing/<id>`.
+- Filter performance change: verify no duplicate requests per interaction and no duplicate cards across signal pages.
 - Dedup/price-drop change: run targeted dedup/history/drop tests, then recompute only if explicitly needed.
 
 ## Agent Discipline

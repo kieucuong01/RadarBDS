@@ -54,6 +54,10 @@ let signalSort = 'newest';
 let signalsVersion = '0';
 let signalRunSeq = 0;
 let signalRenderSeq = 0;
+let firstSignalsLoaded = false;
+let renderedSignalIds = new Set();
+let inflightSignalQueryKey = '';
+let inflightDashboardQueryKey = '';
 const SIGNAL_PAGE_SIZE = 30;
 const SIGNAL_RENDER_CHUNK_SIZE = 10;
 const CACHE_TTL_MS = 60000;
@@ -194,7 +198,7 @@ function selectCity(btn) {
   document.querySelectorAll('.city-pill').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('cityInput').value = btn.dataset.city;
-  updateWardFilters(globalWardsByCity, []);
+  updateWardFilters(globalWardsByCity, [], { preserveScroll: false, preserveSearch: false });
   applyFilters();
 }
 
@@ -213,8 +217,59 @@ function getFilterQuery() {
   for (let [k, v] of fd.entries()) {
     params.append(k, v);
   }
+  // Command-bar controls live outside #filterForm, so append them explicitly.
+  const mosSlider = document.getElementById('mosSlider');
+  if (mosSlider) {
+    params.set('mos_min', mosSlider.value || '0');
+  }
+  const onlyDrops = document.querySelector('input[name="only_drops"]');
+  if (onlyDrops && onlyDrops.checked) {
+    params.set('only_drops', '1');
+  }
   params.append('trend_period', trendPeriod);
   return params.toString();
+}
+
+function setPriceRangePreset(min, max) {
+  const minEl = document.getElementById('priceMin');
+  const maxEl = document.getElementById('priceMax');
+  if (minEl) minEl.value = min === '' || min === null || min === undefined ? '' : String(min);
+  if (maxEl) maxEl.value = max === '' || max === null || max === undefined ? '' : String(max);
+  scheduleApplyFilters();
+}
+
+function setSquareRangePreset(min, max) {
+  const minEl = document.getElementById('areaMin');
+  const maxEl = document.getElementById('areaMax');
+  if (minEl) minEl.value = min === '' || min === null || min === undefined ? '' : String(min);
+  if (maxEl) maxEl.value = max === '' || max === null || max === undefined ? '' : String(max);
+  scheduleApplyFilters();
+}
+
+function activateSuperSignal() {
+  const mosSlider = document.getElementById('mosSlider');
+  const mosValue = document.getElementById('mosValue');
+  const onlyDrops = document.querySelector('input[name="only_drops"]');
+  if (mosSlider) mosSlider.value = 25;
+  if (mosValue) mosValue.textContent = '25';
+  if (onlyDrops && !onlyDrops.checked) {
+    onlyDrops.checked = true;
+    onlyDrops.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  scheduleApplyFilters();
+}
+
+function syncSignalSortSelect() {
+  const select = document.getElementById('signalSortSelect');
+  if (select && select.value !== signalSort) {
+    select.value = signalSort;
+  }
+}
+
+function setSignalSort(sortKey) {
+  signalSort = sortKey || 'newest';
+  syncSignalSortSelect();
+  loadSignals(1, { reset: true });
 }
 
 function updateTrendPeriod(p, btn) {
@@ -230,9 +285,14 @@ function applyFilters() {
   currentFilters = getFilterQuery();
   currentPageNo = 1;
   listingsHasMore = false;
-  initDashboard();
-
   const tab = activeTabId();
+  if (tab === 'signals') {
+    loadSignals(1, { reset: true });
+    refreshDashboardMeta(false);
+  } else {
+    refreshDashboardMeta(false);
+  }
+
   if (tab === 'market') {
     loadMarketCharts(false);
     loadTrendData(false);
@@ -251,17 +311,26 @@ function scheduleApplyFilters() {
 }
 
 async function initDashboard() {
+  return refreshDashboardMeta(false);
+}
+
+async function refreshDashboardMeta(useCache = false) {
+  const dashboardKey = currentFilters;
+  if (inflightDashboardQueryKey === dashboardKey) return;
+  inflightDashboardQueryKey = dashboardKey;
   const runId = ++dashboardRunSeq;
-  showLoader();
   try {
-    const data = await fetchJSONCached('dashboard', `/api/dashboard?${currentFilters}`, false);
+    const data = await fetchJSONCached('dashboard', `/api/dashboard?${currentFilters}`, useCache);
     if (runId !== dashboardRunSeq) return;
 
     // Update Stats
     document.getElementById('statTotal').innerText = data.stats.total;
     document.getElementById('statSignals').innerText = data.stats.signals;
+    // Tin mới (3 ngày) dựa trên posted/crawled_at <= 3 ngày (thống nhất với badge trên card)
     const el = document.getElementById('statNewRecent');
-    if (el) el.innerText = data.stats.hot || 0;
+    if (el) el.innerText = data.stats.new_recent_days_7 || 0;
+
+
     const bSig = document.getElementById('badgeSignals');
     const bTot = document.getElementById('badgeTotal');
     if (bSig) bSig.innerText = data.stats.signals;
@@ -269,29 +338,23 @@ async function initDashboard() {
 
     // Update Wards based on City
     globalWardsByCity = data.wards_by_city;
-    updateWardFilters(data.wards_by_city, data.active_wards);
+    updateWardFilters(data.wards_by_city, data.active_wards, { preserveScroll: true });
     signalsVersion = String(data.signals_version || '0');
-    await loadInsights(false);
-
-    await loadSignals(1, { reset: true, manageLoader: false, parentRunId: runId });
+    syncSignalSortSelect();
 
   } catch (err) {
     if (err.name === 'AbortError') return;
     console.error(err);
-    renderSignalError('Khong tai duoc du lieu dashboard.');
   } finally {
     if (runId === dashboardRunSeq) {
-      // Only the latest dashboard run can hide the loader.
-      hideLoader();
+      inflightDashboardQueryKey = '';
     }
   }
 }
 
 function setSortPill(btn) {
-  document.querySelectorAll('.sort-pill').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  signalSort = btn.dataset.sort || 'newest';
-  loadSignals(1, { reset: true });
+  if (!btn) return;
+  setSignalSort(btn.dataset.sort || 'newest');
 }
 
 function sortAndRenderSignals() {
@@ -433,44 +496,87 @@ function renderSignalError(message) {
   `;
 }
 
+function _daysAgoValue(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+function _timeAgoText(v) {
+  const n = _daysAgoValue(v);
+  if (n === null) return 'Chưa rõ ngày';
+  return n === 0 ? 'hôm nay' : `${n} ngày trước`;
+}
+
+function _isNewWithin(v, maxDays = 4) {
+  const n = _daysAgoValue(v);
+  return n !== null && n <= maxDays;
+}
+
 async function loadSignals(page = 1, opts = {}) {
   const reset = Boolean(opts.reset);
+  const queryKey = signalQuery(page);
+  if (reset && signalLoading && inflightSignalQueryKey === queryKey) return;
   const runId = reset ? ++signalRunSeq : signalRunSeq;
-  if (opts.parentRunId && opts.parentRunId !== dashboardRunSeq) return;
   if (signalLoading && !reset) return;
   signalLoading = true;
+  inflightSignalQueryKey = queryKey;
   if (reset) {
+    if (_sigObserver) _sigObserver.disconnect();
     signalRenderSeq++;
     signalPageNo = 1;
     signalHasMore = false;
-    renderSignalSkeleton();
+    renderedSignalIds = new Set();
+    if (!firstSignalsLoaded) {
+      renderSignalSkeleton();
+    }
   }
   try {
-    const data = await fetchJSONCached('signals', `/api/signals?${signalQuery(page)}`, false);
+    const data = await fetchJSONCached('signals', `/api/signals?${queryKey}`, false);
     if (runId !== signalRunSeq) return;
     if (reset) document.getElementById('signalsGrid').innerHTML = '';
     renderSignals(data.signals || [], { append: !reset });
     signalPageNo = data.page || page;
     signalHasMore = Boolean(data.has_more);
     if (!signalHasMore && _sigObserver) _sigObserver.disconnect();
+    if (!firstSignalsLoaded) {
+      firstSignalsLoaded = true;
+      hideLoader();
+    }
   } catch (err) {
     if (err.name !== 'AbortError') {
       console.error(err);
-      renderSignalError('Không có kèo thơm nào !.');
+      renderSignalError('Không tìm thấy signal theo bộ lọc hiện tại.');
+      if (!firstSignalsLoaded) {
+        firstSignalsLoaded = true;
+        hideLoader();
+      }
     }
   } finally {
-    if (runId === signalRunSeq) signalLoading = false;
+    if (runId === signalRunSeq) {
+      signalLoading = false;
+      inflightSignalQueryKey = '';
+    }
   }
 }
 
 function renderSignals(signals, options = {}) {
-  const grid = document.getElementById('signalsGrid');
-  if (!signals || signals.length === 0) {
-    if (!options.append) renderSignalError(' Không tìm thấy kèo thơm nào với bộ lọc hiện tại.');
+  const append = Boolean(options.append);
+  const freshSignals = (signals || []).filter((x) => {
+    const id = Number(x && x.id);
+    if (!Number.isFinite(id)) return true;
+    if (renderedSignalIds.has(id)) return false;
+    return true;
+  });
+  for (const x of freshSignals) {
+    const id = Number(x && x.id);
+    if (Number.isFinite(id)) renderedSignalIds.add(id);
+  }
+  if (!freshSignals || freshSignals.length === 0) {
+    if (!append) renderSignalError('Không tìm thấy signal theo bộ lọc hiện tại.');
     return;
   }
 
-  _renderSignalCards(signals);
+  _renderSignalCards(freshSignals);
   _setupSignalScroll();
 }
 
@@ -491,7 +597,8 @@ function _renderSignalCards(signals) {
       const isOverpriced = Number.isFinite(priceNum) && Number.isFinite(fairNum) && priceNum > fairNum;
       const actualClass = isOverpriced ? 'price-over' : 'price-deal';
 
-      let timeStr = x.days_ago === 0 ? 'hôm nay' : `${x.days_ago} ngày trước`;
+      const daysAgo = _daysAgoValue(x.days_ago);
+      let timeStr = _timeAgoText(daysAgo);
       let legalStr = (x.has_so === true || x.has_so === 1) ? 'Sổ Hồng' : ((x.has_so === false || x.has_so === 0) ? 'Chờ sổ' : 'Đang cập nhật');
 
       const roadTiers = {
@@ -506,7 +613,7 @@ function _renderSignalCards(signals) {
       const imgSrc = x.primary_img || PLACEHOLDER_IMG;
       const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-primary="${imgSrc}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || '-'}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}"`;
 
-      const isNew = x.days_ago <= 3;
+      const isNew = _isNewWithin(x.days_ago, 7);
       const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
 
       const srcName = sourceNames[x.source] || x.source;
@@ -1441,7 +1548,7 @@ async function loadListings(page) {
     const rows = (data.listings || []).map(x => {
       const fair = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       return `
-        <tr class="clickable-row" onclick="openListingModal(this)" data-id="${x.id}" data-title="${String(x.title || '').replace(/"/g, '&quot;')}" data-primary="${x.imgs && x.imgs.length ? x.imgs[0] : PLACEHOLDER_IMG}" data-price="${x.price_ty || ''}" data-fair="${fair !== '-' ? fair : ''}" data-area="${x.area_m2 || ''}" data-ward="${x.ward || ''}" data-road="${x.road_type || x.road_tier || ''}" data-time="${x.days_ago === 0 ? 'hôm nay' : x.days_ago + ' ngày trước'}" data-profit="${x.price_ty && fair !== '-' ? (parseFloat(fair) - parseFloat(x.price_ty)).toFixed(2) : ''}" data-mos="${x.mos_pct || ''}" data-source="${sourceNames[x.source] || x.source || ''}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || ''}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}">
+        <tr class="clickable-row" onclick="openListingModal(this)" data-id="${x.id}" data-title="${String(x.title || '').replace(/"/g, '&quot;')}" data-price="${x.price_ty || ''}" data-fair="${fair !== '-' ? fair : ''}" data-area="${x.area_m2 || ''}" data-ward="${x.ward || ''}" data-road="${x.road_type || x.road_tier || ''}" data-time="${_timeAgoText(x.days_ago)}" data-profit="${x.price_ty && fair !== '-' ? (parseFloat(fair) - parseFloat(x.price_ty)).toFixed(2) : ''}" data-mos="${x.mos_pct || ''}" data-source="${sourceNames[x.source] || x.source || ''}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || ''}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}">
           <td><span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">${x.prop_type}</span></td>
           <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:6px; font-weight:600; font-size:0.8rem;">${x.ward}</span></td>
           <td><img src="${x.imgs && x.imgs.length ? x.imgs[0] : PLACEHOLDER_IMG}" class="td-img" loading="lazy" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG"></td>
@@ -1456,7 +1563,7 @@ async function loadListings(page) {
           </td>
           <td style="white-space:nowrap; font-size:0.8rem; color:var(--text-muted);">
             <div>${x.posted_at || '-'}</div>
-            <div style="font-size:0.72rem; opacity:0.7;">${x.days_ago === 0 ? 'hôm nay' : x.days_ago + ' ngày'}</div>
+            <div style="font-size:0.72rem; opacity:0.7;">${_timeAgoText(x.days_ago)}</div>
           </td>
           <td style="max-width: 300px;">
             <div class="td-title" title="${String(x.title || '').replace(/"/g, '&quot;')}">${x.title}</div>
@@ -1549,12 +1656,17 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-function updateWardFilters(wardsByCity, activeWards) {
+function updateWardFilters(wardsByCity, activeWards, opts = {}) {
   const selectedCity = document.getElementById('cityInput').value;
   const wards = wardsByCity[selectedCity] || [];
   const container = document.getElementById('wardFilters');
   const searchInput = document.getElementById('wardSearch');
-  if (searchInput) searchInput.value = '';
+  const sidebar = document.getElementById('sidebar');
+  const wardScroll = document.querySelector('.ward-scroll-area');
+  const sidebarScrollTop = sidebar ? sidebar.scrollTop : 0;
+  const wardScrollTop = wardScroll ? wardScroll.scrollTop : 0;
+  const preserveSearch = opts.preserveSearch !== false;
+  if (searchInput && !preserveSearch) searchInput.value = '';
   const selected = new Set(activeWards || []);
   const shouldCheckAll = selected.size === 0;
 
@@ -1566,6 +1678,11 @@ function updateWardFilters(wardsByCity, activeWards) {
       </label>
     `;
   }).join('');
+
+  requestAnimationFrame(() => {
+    if (sidebar) sidebar.scrollTop = sidebarScrollTop;
+    if (wardScroll) wardScroll.scrollTop = wardScrollTop;
+  });
 }
 
 // Global listener for Filter changes (Auto-apply)
@@ -1581,7 +1698,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupListingsObserver();
   if (window.location.search) {
     currentFilters = window.location.search.substring(1);
-    initDashboard();
+    applyFilters();
   } else {
     detectLocation();
   }
@@ -1734,4 +1851,5 @@ function appendMessage(role, text) {
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
+
 

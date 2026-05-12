@@ -16,3 +16,4 @@ This file is intentionally short to avoid duplicate, stale context across AI too
 - Do not scan runtime folders by default: `data/`, `logs/`, `reports/`, `scratch/`, `.claude/worktrees/`, `_legacy/`.
 - Do not duplicate long project history into this file. Put durable history in `SUMMARY_HISTORY.md`.
 - Treat `data/radar_bds.db` as the canonical runtime DB unless `RADAR_DB_PATH` is explicitly set.
+- For signal filtering work, follow `signals-first` UX: cards first, dashboard/meta second.
