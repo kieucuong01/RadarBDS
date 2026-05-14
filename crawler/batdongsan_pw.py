@@ -15,7 +15,9 @@ Tối ưu tốc độ:
 Full crawl  : python crawler/batdongsan_pw.py --mode full
 Incremental : python crawler/batdongsan_pw.py --mode incremental
 """
+import json
 import logging
+import queue
 import re
 import sys
 import time
@@ -29,65 +31,174 @@ logger = logging.getLogger(__name__)
 
 BASE = "https://batdongsan.com.vn"
 
-SEARCH_SLUGS = [
-    # ban-dat (đất nền)
-    "ban-dat-phuong-tan-an_1",
-    "ban-dat-phuong-tuong-binh-hiep_1",
-    "ban-dat-phuong-hiep-an_1",
-    "ban-dat-phuong-chanh-my_1",
-    "ban-dat-phuong-phu-my_1",
-    "ban-dat-phuong-phu-tan_1",
-    "ban-dat-phuong-chanh-nghia_1",
-    "ban-dat-phuong-dinh-hoa_1",
-    "ban-dat-phuong-phu-tho_1",
-    "ban-dat-phuong-phu-hoa_1",
-    "ban-dat-phuong-phu-cuong_1",
-    "ban-dat-phuong-hiep-thanh_1",
-    "ban-dat-phuong-phu-loi_1",
-    # ban-nha (nhà ở)
-    "ban-nha-phuong-tan-an_1",
-    "ban-nha-phuong-tuong-binh-hiep_1",
-    "ban-nha-phuong-hiep-an_1",
-    "ban-nha-phuong-chanh-my_1",
-    "ban-nha-phuong-phu-my_1",
-    "ban-nha-phuong-phu-tan_1",
-    "ban-nha-phuong-chanh-nghia_1",
-    "ban-nha-phuong-dinh-hoa_1",
-    "ban-nha-phuong-phu-tho_1",
-    "ban-nha-phuong-phu-hoa_1",
-    "ban-nha-phuong-phu-cuong_1",
-    "ban-nha-phuong-hiep-thanh_1",
-    "ban-nha-phuong-phu-loi_1",
+BDS_SOURCES_FILE = Path(__file__).parent.parent / "data" / "batdongsan_sources.json"
+DEFAULT_BDS_CRAWL_FOR_DAYS = 7
+
+# Fallback nếu thiếu/lỗi data/batdongsan_sources.json
+_FALLBACK_WARDS = [
+    {"name": "Tân An",          "slug": "tan-an",
+     "urls": ["ban-dat-dat-nen-phuong-tan-an_1",
+              "ban-nha-dat-phuong-tan-an_1",
+              "ban-can-ho-chung-cu-phuong-tan-an_1",
+              "ban-kho-nha-xuong-phuong-tan-an_1"]},
+    {"name": "Tương Bình Hiệp", "slug": "tuong-binh-hiep"},
+    {"name": "Hiệp An",         "slug": "hiep-an"},
+    {"name": "Chánh Mỹ",        "slug": "chanh-my"},
+    {"name": "Phú Mỹ",          "slug": "phu-my"},
+    {"name": "Phú Tân",         "slug": "phu-tan"},
+    {"name": "Chánh Nghĩa",     "slug": "chanh-nghia"},
+    {"name": "Định Hòa",        "slug": "dinh-hoa"},
+    {"name": "Phú Thọ",         "slug": "phu-tho"},
+    {"name": "Phú Hòa",         "slug": "phu-hoa"},
+    {"name": "Phú Cường",       "slug": "phu-cuong",
+     "urls": ["ban-dat-dat-nen-phuong-phu-cuong-1",
+              "nha-dat-ban-phuong-phu-cuong-1",
+              "ban-can-ho-chung-cu-phuong-phu-cuong-1",
+              "ban-kho-nha-xuong-phuong-phu-cuong-1"]},
+    {"name": "Hiệp Thành",      "slug": "hiep-thanh"},
+    {"name": "Phú Lợi",         "slug": "phu-loi"},
 ]
 
+
+def _default_bds_urls(slug: str) -> list:
+    return [
+        f"ban-dat-dat-nen-phuong-{slug}",
+        f"ban-nha-dat-phuong-{slug}",
+        f"ban-can-ho-chung-cu-phuong-{slug}",
+        f"ban-kho-nha-xuong-phuong-{slug}",
+    ]
+
+
+def _load_bds_config():
+    try:
+        data = json.loads(BDS_SOURCES_FILE.read_text(encoding="utf-8"))
+        wards = data.get("wards") or []
+        wards = [w for w in wards if w.get("slug") and w.get("name")]
+        days  = int(data.get("crawl_for_days") or DEFAULT_BDS_CRAWL_FOR_DAYS)
+        if wards:
+            return wards, days
+        logger.warning(f"[bds] {BDS_SOURCES_FILE.name} thiếu wards → fallback")
+    except FileNotFoundError:
+        logger.warning(f"[bds] Không thấy {BDS_SOURCES_FILE.name} → fallback")
+    except Exception as e:
+        logger.warning(f"[bds] Lỗi parse {BDS_SOURCES_FILE.name}: {e} → fallback")
+    return list(_FALLBACK_WARDS), DEFAULT_BDS_CRAWL_FOR_DAYS
+
+
+_BDS_WARDS, _BDS_DAYS = _load_bds_config()
+
+# Build SEARCH_SLUGS + lookup map (url_slug -> ward_name)
+SEARCH_SLUGS = []
+BDS_URL_TO_WARD = {}
+BDS_WARD_MAP = {}
+for _w in _BDS_WARDS:
+    _urls = _w.get("urls") or _default_bds_urls(_w["slug"])
+    BDS_WARD_MAP[_w["slug"]] = _w["name"]
+    for _u in _urls:
+        SEARCH_SLUGS.append(_u)
+        BDS_URL_TO_WARD[_u] = _w["name"]
+
 DETAIL_WORKERS  = 3    # số pages song song khi fetch detail
-SLUG_DELAY_S    = 8    # delay giữa các slug để tránh Cloudflare rate-limit
-PAGE_DELAY_S    = 3    # delay giữa các listing pages trong 1 slug
+SLUG_DELAY_S    = 30   # delay giữa các slug để tránh Cloudflare rate-limit
+PAGE_DELAY_S    = 10   # delay giữa các listing pages trong 1 slug
+
+# Thư mục debug khi crawler báo "No cards" (lưu HTML + screenshot lần đầu)
+_DEBUG_DIR = Path(__file__).parent.parent / "logs" / "bds_no_cards"
+_DEBUG_SAVED = set()  # set of slug_url đã save HTML lần đầu
+
+
+def _looks_like_challenge(html: str, title: str) -> bool:
+    """Detect Cloudflare/anti-bot challenge bằng cả title và body."""
+    t = (title or "").lower()
+    if "just a moment" in t or "cloudflare" in t or "attention required" in t:
+        return True
+    h = (html or "").lower()
+    return any(s in h for s in (
+        "cf-mitigated", "challenge-platform", "cf_chl_opt",
+        "cf-browser-verification", "checking your browser",
+    ))
+
+
+def _save_no_cards_debug(page, url: str, logger) -> None:
+    """Lần đầu gặp 'no cards' cho URL: save HTML + screenshot để inspect."""
+    if url in _DEBUG_SAVED:
+        return
+    _DEBUG_SAVED.add(url)
+    try:
+        _DEBUG_DIR.mkdir(parents=True, exist_ok=True)
+        slug = url.rsplit("/", 1)[-1].replace("?", "_").replace("/", "_")[:80] or "root"
+        (_DEBUG_DIR / f"{slug}.html").write_text(page.content(), encoding="utf-8")
+        page.screenshot(path=str(_DEBUG_DIR / f"{slug}.png"), full_page=False)
+        logger.warning(f"[bds] saved debug HTML+PNG: {_DEBUG_DIR / slug}.*")
+    except Exception as e:
+        logger.warning(f"[bds] save debug failed for {url}: {e}")
+
+
+def _parse_ward_from_slug(slug_url: str) -> str:
+    """Extract ward name from BDS slug URL.
+    Ưu tiên lookup chính xác trong BDS_URL_TO_WARD; fallback regex hỗ trợ cả `_N` và `-N` suffix.
+    """
+    path = slug_url.split("/")[-1]
+    if path in BDS_URL_TO_WARD:
+        return BDS_URL_TO_WARD[path]
+    m = re.search(r"phuong-([a-z0-9-]+?)(?:[_-]\d+)?$", path)
+    if m:
+        return BDS_WARD_MAP.get(m.group(1), m.group(1).replace("-", " ").title())
+    return ""
 
 
 class BatDongSanCrawler(BaseCrawler):
     SOURCE_NAME = "batdongsan"
     TARGET_URLS = [f"{BASE}/{slug}" for slug in SEARCH_SLUGS]
 
+    def is_old(self, date_raw: str) -> bool:
+        """Override: dừng pagination khi gặp tin cũ hơn crawl_for_days ngày."""
+        s = (date_raw or "").lower().strip()
+        if not s:
+            return False
+        m = re.search(r"(\d+)\s*ngày", s)
+        if m and int(m.group(1)) > getattr(self, "crawl_for_days", DEFAULT_BDS_CRAWL_FOR_DAYS):
+            return True
+        tweek = re.search(r"(\d+)\s*tuần", s)
+        if tweek:
+            if int(tweek.group(1)) * 7 > getattr(self, "crawl_for_days", DEFAULT_BDS_CRAWL_FOR_DAYS):
+                return True
+            return False
+        if re.search(r"\d+\s*(tháng|năm)", s):
+            return True
+        return False
+
     # ── Phase 1: Collect listing cards ────────────────────────────────────
 
     def _get_cards_on_page(self, page, url: str) -> list:
         """Navigate listing page, extract cards. Trả về list dict."""
-        try:
-            page.goto(url, wait_until="domcontentloaded", timeout=30_000)
-            page.wait_for_selector(".js__card", timeout=20_000)
-        except Exception as e:
-            # Phân biệt trang rỗng vs Cloudflare block
-            page_title = ""
+        max_cf_retries = 2
+        for attempt in range(max_cf_retries + 1):
             try:
-                page_title = page.title()
-            except Exception:
-                pass
-            if "Just a moment" in page_title or "Cloudflare" in page_title:
-                self.logger.warning(f"Cloudflare block {url}: {page_title}")
-            else:
-                self.logger.info(f"No cards (empty or slow): {url}")
-            return []
+                page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+                page.wait_for_selector(".js__card", timeout=25_000)
+                break  # success
+            except Exception as e:
+                page_title = ""
+                page_html = ""
+                try:
+                    page_title = page.title()
+                    page_html  = page.content()
+                except Exception:
+                    pass
+                if _looks_like_challenge(page_html, page_title):
+                    if attempt < max_cf_retries:
+                        wait_s = 15 * (attempt + 1)
+                        self.logger.warning(f"Cloudflare block {url}, retry {attempt+1}/{max_cf_retries} sau {wait_s}s...")
+                        time.sleep(wait_s)
+                        continue
+                    self.logger.warning(f"Cloudflare block {url}: vẫn bị block sau {max_cf_retries} retries")
+                    _save_no_cards_debug(page, url, self.logger)
+                else:
+                    # Page render OK nhưng không có .js__card → empty thật hoặc DOM thay đổi
+                    self.logger.info(f"No cards (empty or slow): {url}")
+                    _save_no_cards_debug(page, url, self.logger)
+                return []
 
         try:
             return page.evaluate("""
@@ -149,7 +260,10 @@ class BatDongSanCrawler(BaseCrawler):
     def _fetch_detail(self, page, url: str) -> dict:
         """Navigate tới detail page, extract data."""
         try:
-            page.goto(url, wait_until="domcontentloaded", timeout=25_000)
+            self._retry(
+                lambda: page.goto(url, wait_until="domcontentloaded", timeout=25_000),
+                max_retries=2, base_delay=2.0, label=f"detail {url}"
+            )
             try:
                 page.wait_for_selector(".re__pr-short-description, .re__section-description", timeout=8_000)
             except Exception:
@@ -206,7 +320,7 @@ class BatDongSanCrawler(BaseCrawler):
 
     # ── Build record ───────────────────────────────────────────────────────
 
-    def _build_record(self, card: dict, detail: dict) -> dict:
+    def _build_record(self, card: dict, detail: dict, ward_name: str = "") -> dict:
         price_raw = card.get("price_raw") or detail.get("price_raw_detail", "")
         area_raw  = card.get("area_raw")  or detail.get("area_raw_detail", "")
 
@@ -225,7 +339,7 @@ class BatDongSanCrawler(BaseCrawler):
             "price_ty":      price_ty,
             "area_m2":       area_m2,
             "price_per_m2":  ppm2,
-            "area_name":     "Tân An",
+            "area_name":     ward_name or "",
             "road_type_raw": detail.get("road_type_raw", ""),
             "legal_raw":     detail.get("legal_raw", ""),
             "frontage_raw":  detail.get("frontage_raw", ""),
@@ -240,17 +354,27 @@ class BatDongSanCrawler(BaseCrawler):
 
     # ── Core crawl ─────────────────────────────────────────────────────────
 
-    _slug_count = 0  # đếm số slug đã crawl trong session này
+    def __init__(self):
+        super().__init__()
+        self._slug_count = 0
+        self.crawl_for_days = _BDS_DAYS
+        logger.info(
+            f"[bds] Loaded {len(_BDS_WARDS)} wards = {len(SEARCH_SLUGS)} slugs "
+            f"| crawl_for_days={_BDS_DAYS}"
+        )
 
     def _run_crawl(self, page, base_url: str, incremental: bool) -> int:
         # Delay giữa các slug (trừ slug đầu tiên)
-        BatDongSanCrawler._slug_count += 1
-        if BatDongSanCrawler._slug_count > 1:
+        self._slug_count += 1
+        if self._slug_count > 1:
             self.logger.info(f"  Waiting {SLUG_DELAY_S}s trước slug tiếp theo (chống rate-limit)...")
             time.sleep(SLUG_DELAY_S)
 
+        # Parse ward từ slug URL
+        ward_name = _parse_ward_from_slug(base_url)
+
         # Phase 1: collect tất cả listing cards
-        self.logger.info(f"Phase 1 — collect cards từ {base_url}")
+        self.logger.info(f"Phase 1 — collect cards từ {base_url} (ward={ward_name})")
         all_cards = self._collect_all_urls(page, base_url, incremental=incremental)
 
         # Lọc chỉ URL mới
@@ -263,19 +387,80 @@ class BatDongSanCrawler(BaseCrawler):
         if not new_cards:
             return 0
 
-        # Phase 2: fetch detail cho từng URL mới
-        self.logger.info(f"Phase 2 — fetch {len(new_cards)} detail pages")
+        # Phase 2: fetch detail — parallel nếu có ctx, fallback sequential
+        n_workers = min(DETAIL_WORKERS, len(new_cards))
+        ctx = getattr(self, "_ctx", None)
+
+        if ctx and n_workers > 1:
+            return self._fetch_details_parallel(ctx, new_cards, ward_name, n_workers)
+        else:
+            return self._fetch_details_sequential(page, new_cards, ward_name)
+
+    def _fetch_details_sequential(self, page, cards: list, ward_name: str) -> int:
+        """Fallback: fetch detail tuần tự."""
+        self.logger.info(f"Phase 2 — fetch {len(cards)} detail pages (sequential)")
         count = 0
-        for i, card in enumerate(new_cards):
+        for i, card in enumerate(cards):
             detail = self._fetch_detail(page, card["url"])
-            record = self._build_record(card, detail)
+            record = self._build_record(card, detail, ward_name=ward_name)
             if self.upsert_raw(card["url"], record):
                 count += 1
                 self.logger.info(
-                    f"  [{i+1}/{len(new_cards)}] + {record['title'][:50]} | "
+                    f"  [{i+1}/{len(cards)}] + {record['title'][:50]} | "
                     f"{record['price_ty']}ty {record['area_m2']}m²"
                 )
             time.sleep(0.4)
+        return count
+
+    def _fetch_details_parallel(self, ctx, cards: list, ward_name: str, n_workers: int) -> int:
+        """Fetch detail pages song song bằng ThreadPoolExecutor."""
+        self.logger.info(
+            f"Phase 2 — fetch {len(cards)} detail pages ({n_workers} workers)"
+        )
+
+        page_pool = queue.Queue()
+        pages = []
+        for _ in range(n_workers):
+            p = ctx.new_page()
+            p.set_default_timeout(30_000)
+            pages.append(p)
+            page_pool.put(p)
+
+        count = 0
+        done_count = 0
+
+        def _worker(card):
+            worker_page = page_pool.get()
+            try:
+                detail = self._fetch_detail(worker_page, card["url"])
+                return card, detail
+            finally:
+                time.sleep(0.4)
+                page_pool.put(worker_page)
+
+        try:
+            with ThreadPoolExecutor(max_workers=n_workers) as pool:
+                futures = {pool.submit(_worker, card): card for card in cards}
+                for future in as_completed(futures):
+                    done_count += 1
+                    try:
+                        card, detail = future.result()
+                        record = self._build_record(card, detail, ward_name=ward_name)
+                        if self.upsert_raw(card["url"], record):
+                            count += 1
+                            self.logger.info(
+                                f"  [{done_count}/{len(cards)}] + {record['title'][:50]} | "
+                                f"{record['price_ty']}ty {record['area_m2']}m²"
+                            )
+                    except Exception as e:
+                        self.logger.warning(f"  Detail worker error: {e}")
+                        self._stats["errors"] += 1
+        finally:
+            for p in pages:
+                try:
+                    p.close()
+                except Exception:
+                    pass
 
         return count
 

@@ -67,6 +67,7 @@ let filterDebounceTimer = null;
 let dashboardRunSeq = 0;
 let insightsRunSeq = 0;
 let insightsLoaded = false;
+let marketIndicatorRunSeq = 0;
 
 const CITY_COORDS = {
   "THỦ DẦU MỘT": { lat: 10.98, lon: 106.65 },
@@ -183,6 +184,7 @@ function switchTab(tabId, btn) {
   document.getElementById(`tab-${tabId}`).classList.add('active');
 
   if (tabId === 'market') {
+    loadMarketIndicators();
     loadMarketCharts();
     loadTrendData();
   }
@@ -294,6 +296,7 @@ function applyFilters() {
   }
 
   if (tab === 'market') {
+    loadMarketIndicators(false);
     loadMarketCharts(false);
     loadTrendData(false);
   }
@@ -1394,6 +1397,130 @@ function renderPriceGapChart(data) {
   });
 }
 
+function _fmtIndicatorNumber(value, digits = 0) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '-';
+  return n.toLocaleString('vi-VN', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  });
+}
+
+function _fmtIndicatorPct(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '-';
+  return `${n.toLocaleString('vi-VN', { maximumFractionDigits: n >= 10 ? 0 : 1 })}%`;
+}
+
+function _indicatorBadge(levelKey, level) {
+  return `<span class="indicator-badge level-${escHtml(levelKey || 'normal')}">${escHtml(level || '')}</span>`;
+}
+
+function _renderDistressRatio(rows, summary) {
+  const body = document.getElementById('distressRatioBody');
+  const summaryEl = document.getElementById('distressRatioSummary');
+  if (!body) return;
+
+  if (summaryEl) {
+    const hotspots = Number((summary && summary.distress_hotspots) || 0);
+    const scanned = Number((summary && summary.wards_scanned) || 0);
+    summaryEl.innerHTML = `
+      <span><strong>${hotspots}</strong> khu vực áp lực cao</span>
+      <span>Ngưỡng săn ép giá: từ 25%, vùng rất mạnh: từ 35%</span>
+      <span>${scanned} khu vực được quét</span>
+    `;
+  }
+
+  if (!rows || !rows.length) {
+    body.innerHTML = `<tr><td colspan="6" class="indicator-empty-row">Chưa đủ dữ liệu giảm giá theo khu vực.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = rows.map((x) => {
+    const ratio = Number(x.ratio_pct || 0);
+    const meterWidth = Math.max(2, Math.min(100, ratio));
+    return `
+      <tr>
+        <td><strong>${escHtml(x.ward || '')}</strong></td>
+        <td>${_fmtIndicatorNumber(x.total_count)}</td>
+        <td>${_fmtIndicatorNumber(x.distress_count)}</td>
+        <td>
+          <div class="indicator-meter"><span class="level-${escHtml(x.level_key || 'normal')}" style="width:${meterWidth}%"></span></div>
+          <b>${_fmtIndicatorPct(ratio)}</b>
+        </td>
+        <td>${_indicatorBadge(x.level_key, x.level)}</td>
+        <td class="indicator-action">${escHtml(x.action || '')}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function _renderSupplyAnomaly(rows, summary) {
+  const body = document.getElementById('supplyAnomalyBody');
+  const summaryEl = document.getElementById('supplyAnomalySummary');
+  if (!body) return;
+
+  if (summaryEl) {
+    const month = (summary && summary.current_month) || '';
+    const hotspots = Number((summary && summary.supply_hotspots) || 0);
+    const prev = ((summary && summary.previous_months) || []).join(', ');
+    summaryEl.innerHTML = `
+      <span><strong>${hotspots}</strong> khu vực tăng cung</span>
+      <span>Tháng đang đo: ${escHtml(month || '-')}</span>
+      <span>Nền so sánh: ${escHtml(prev || '-')}</span>
+    `;
+  }
+
+  if (!rows || !rows.length) {
+    body.innerHTML = `<tr><td colspan="6" class="indicator-empty-row">Chưa đủ dữ liệu nguồn cung theo tháng.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = rows.map((x) => {
+    const delta = Number(x.delta || 0);
+    const growthText = x.growth_pct === null || x.growth_pct === undefined
+      ? (Number(x.current_count || 0) > 0 ? 'Mới bật' : '-')
+      : `${delta >= 0 ? '+' : ''}${_fmtIndicatorPct(x.growth_pct)}`;
+    return `
+      <tr>
+        <td><strong>${escHtml(x.ward || '')}</strong></td>
+        <td>${_fmtIndicatorNumber(x.current_count)}</td>
+        <td>${_fmtIndicatorNumber(x.prev_avg, 1)}</td>
+        <td>
+          <b class="${delta > 0 ? 'indicator-up' : 'indicator-flat'}">${escHtml(growthText)}</b>
+          <small>${delta >= 0 ? '+' : ''}${_fmtIndicatorNumber(delta, 1)} tin</small>
+        </td>
+        <td>${_indicatorBadge(x.level_key, x.level)}</td>
+        <td class="indicator-action">${escHtml(x.action || '')}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function loadMarketIndicators(useCache = true) {
+  const distressContainer = document.getElementById('distressRatioContainer');
+  const supplyContainer = document.getElementById('supplyAnomalyContainer');
+  if (!distressContainer && !supplyContainer) return;
+  if (distressContainer) distressContainer.classList.add('loading');
+  if (supplyContainer) supplyContainer.classList.add('loading');
+  const runId = ++marketIndicatorRunSeq;
+  try {
+    const data = await fetchJSONCached('marketIndicators', `/api/market-indicators?${currentFilters}`, useCache);
+    if (runId !== marketIndicatorRunSeq) return;
+    _renderDistressRatio(data.distress_ratio || [], data.summary || {});
+    _renderSupplyAnomaly(data.supply_anomaly || [], data.summary || {});
+  } catch (err) {
+    if (err.name !== 'AbortError') console.error('Market indicators error:', err);
+    _renderDistressRatio([], {});
+    _renderSupplyAnomaly([], {});
+  } finally {
+    if (runId === marketIndicatorRunSeq) {
+      if (distressContainer) distressContainer.classList.remove('loading');
+      if (supplyContainer) supplyContainer.classList.remove('loading');
+    }
+  }
+}
+
 async function loadTrendData(useCache = true) {
   const container = document.getElementById('trendContainer');
   if (!container) return;
@@ -1550,7 +1677,7 @@ async function loadListings(page) {
       return `
         <tr class="clickable-row" onclick="openListingModal(this)" data-id="${x.id}" data-title="${String(x.title || '').replace(/"/g, '&quot;')}" data-price="${x.price_ty || ''}" data-fair="${fair !== '-' ? fair : ''}" data-area="${x.area_m2 || ''}" data-ward="${x.ward || ''}" data-road="${x.road_type || x.road_tier || ''}" data-time="${_timeAgoText(x.days_ago)}" data-profit="${x.price_ty && fair !== '-' ? (parseFloat(fair) - parseFloat(x.price_ty)).toFixed(2) : ''}" data-mos="${x.mos_pct || ''}" data-source="${sourceNames[x.source] || x.source || ''}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || ''}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}">
           <td><span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">${x.prop_type}</span></td>
-          <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:6px; font-weight:600; font-size:0.8rem;">${x.ward}</span></td>
+          <td><span style="padding:4px 8px; border-radius:6px; font-weight:600; font-size:0.8rem;">${x.ward}</span></td>
           <td><img src="${x.imgs && x.imgs.length ? x.imgs[0] : PLACEHOLDER_IMG}" class="td-img" loading="lazy" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG"></td>
           <td style="font-weight:700;">${x.area_m2 ? x.area_m2 + ' m²' : '-'}</td>
           <td>

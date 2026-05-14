@@ -103,7 +103,7 @@ def cmd_schedule_setup(args):
     run_time = getattr(args, "time", "04:15")
     interval_days = str(getattr(args, "every", 3))
     # Ensure the task runs from repo root so relative paths (data/, logs/, etc.) are stable.
-    cmd = f'cmd /c "cd /d {repo_root} && \\"{python_exe}\\" \\"{script_path}\\" crawl-daily"'
+    cmd = f'cmd /c "cd /d {repo_root} && \\"{python_exe}\\" -X utf8 \\"{script_path}\\" crawl-daily"'
 
     result = subprocess.run([
         "schtasks", "/create",

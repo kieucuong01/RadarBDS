@@ -443,6 +443,191 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
 
     return trend_data
 
+
+def _shift_month(d: date, delta: int) -> date:
+    month_idx = d.year * 12 + (d.month - 1) + delta
+    return date(month_idx // 12, month_idx % 12 + 1, 1)
+
+
+def _market_indicator_filters(sources=None, wards=None, prop_types=None, prefix="",
+                              area_min=0, area_max=0, price_min=0, price_max=0):
+    if not sources:
+        sources = ["facebook", "guland", "batdongsan"]
+
+    col = lambda name: f"{prefix}{name}" if prefix else name
+    where_parts = [
+        f"{col('probably_sold')} = 0",
+        f"COALESCE({col('is_blacklisted')},0)=0",
+        f"COALESCE({col('review_hidden')},0)=0",
+    ]
+    params = []
+
+    if wards:
+        where_parts.append(f"{col('ward')} IN ({','.join(['?']*len(wards))})")
+        params.extend(wards)
+    if sources:
+        where_parts.append(f"{col('source')} IN ({','.join(['?']*len(sources))})")
+        params.extend(sources)
+    if prop_types:
+        where_parts.append(f"{col('property_type')} IN ({','.join(['?']*len(prop_types))})")
+        params.extend(prop_types)
+
+    range_clauses, range_params = _range_filters(area_min, area_max, price_min, price_max, prefix)
+    where_parts.extend(range_clauses)
+    params.extend(range_params)
+    return " AND ".join(where_parts), params
+
+
+def _distress_verdict(ratio_pct: float) -> tuple[str, str, str]:
+    if ratio_pct >= 35:
+        return "danger", "Vùng ép giá mạnh", "Ưu tiên kiểm tra deal, có dư địa trả giá sâu."
+    if ratio_pct >= 25:
+        return "warning", "Áp lực bán cao", "Đưa vào watchlist và so sánh pháp lý từng lô."
+    if ratio_pct >= 10:
+        return "watch", "Cần theo dõi", "Chưa vội xuống tiền, chờ thêm tín hiệu giảm."
+    return "normal", "Bình thường", "Giữ kỷ luật giá, chưa có áp lực bán diện rộng."
+
+
+def _supply_verdict(current_count: int, prev_avg: float):
+    delta = current_count - prev_avg
+    growth_pct = None
+    growth_x = None
+    if prev_avg > 0:
+        growth_x = current_count / prev_avg
+        growth_pct = ((current_count - prev_avg) / prev_avg) * 100
+
+    if (prev_avg == 0 and current_count >= 10) or (growth_x is not None and growth_x >= 3) or delta >= 15:
+        return "danger", "Nguồn cung bất thường", "Có dấu hiệu bán ồ ạt, nên ép biên an toàn mạnh.", growth_pct, growth_x
+    if (prev_avg == 0 and current_count >= 5) or (growth_x is not None and growth_x >= 1.75) or delta >= 5:
+        return "warning", "Nguồn cung tăng nhanh", "Theo dõi tin quy hoạch và thanh khoản khu vực.", growth_pct, growth_x
+    return "normal", "Nhịp cung ổn định", "Chưa thấy áp lực nguồn cung đột biến.", growth_pct, growth_x
+
+
+def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
+                           area_min=0, area_max=0, price_min=0, price_max=0):
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    where_sql, params = _market_indicator_filters(
+        sources=sources,
+        wards=wards,
+        prop_types=prop_types,
+        prefix="l.",
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+    )
+
+    lot_cte = f"""
+        WITH filtered AS (
+            SELECT
+                COALESCE(l.duplicate_of_id, l.id) AS canonical_id,
+                l.ward,
+                COALESCE(l.price_dropped, 0) AS price_dropped,
+                COALESCE(l.suspicious_bait, 0) AS suspicious_bait,
+                date(substr(COALESCE(l.posted_at, l.crawled_at), 1, 10)) AS listed_date
+            FROM listings l
+            WHERE {where_sql}
+              AND l.ward IS NOT NULL
+              AND TRIM(l.ward) != ''
+              AND LOWER(l.ward) != 'unknown'
+        ),
+        lots AS (
+            SELECT
+                canonical_id,
+                ward,
+                MIN(listed_date) AS first_listed_date,
+                MAX(CASE WHEN price_dropped = 1 AND suspicious_bait = 0 THEN 1 ELSE 0 END) AS has_price_drop
+            FROM filtered
+            GROUP BY canonical_id, ward
+        )
+    """
+
+    distress_rows = conn.execute(f"""
+        {lot_cte}
+        SELECT
+            ward,
+            COUNT(*) AS total_count,
+            SUM(has_price_drop) AS distress_count
+        FROM lots
+        GROUP BY ward
+        HAVING total_count > 0
+    """, params).fetchall()
+
+    today = date.today()
+    current_start = date(today.year, today.month, 1)
+    next_start = _shift_month(current_start, 1)
+    prev_months = [_shift_month(current_start, -i) for i in (1, 2, 3)]
+    prev_keys = [m.strftime("%Y-%m") for m in prev_months]
+    window_start = _shift_month(current_start, -3)
+
+    supply_rows = conn.execute(f"""
+        {lot_cte}
+        SELECT
+            ward,
+            strftime('%Y-%m', first_listed_date) AS month_key,
+            COUNT(*) AS new_count
+        FROM lots
+        WHERE first_listed_date >= ?
+          AND first_listed_date < ?
+        GROUP BY ward, month_key
+    """, params + [window_start.isoformat(), next_start.isoformat()]).fetchall()
+    conn.close()
+
+    distress = []
+    for row in distress_rows:
+        total = int(row["total_count"] or 0)
+        distress_count = int(row["distress_count"] or 0)
+        ratio_pct = round((distress_count / total) * 100, 1) if total else 0
+        level_key, level, action = _distress_verdict(ratio_pct)
+        distress.append({
+            "ward": row["ward"],
+            "total_count": total,
+            "distress_count": distress_count,
+            "ratio_pct": ratio_pct,
+            "level_key": level_key,
+            "level": level,
+            "action": action,
+        })
+    distress.sort(key=lambda x: (x["ratio_pct"], x["distress_count"], x["total_count"]), reverse=True)
+
+    supply_by_ward = defaultdict(lambda: defaultdict(int))
+    for row in supply_rows:
+        supply_by_ward[row["ward"]][row["month_key"]] = int(row["new_count"] or 0)
+
+    supply = []
+    level_rank = {"danger": 3, "warning": 2, "normal": 1}
+    for ward, month_counts in supply_by_ward.items():
+        current_count = int(month_counts.get(current_start.strftime("%Y-%m"), 0))
+        prev_counts = [int(month_counts.get(k, 0)) for k in prev_keys]
+        prev_avg = round(sum(prev_counts) / 3, 1)
+        level_key, level, action, growth_pct, growth_x = _supply_verdict(current_count, prev_avg)
+        supply.append({
+            "ward": ward,
+            "current_count": current_count,
+            "prev_avg": prev_avg,
+            "prev_counts": prev_counts,
+            "delta": round(current_count - prev_avg, 1),
+            "growth_pct": round(growth_pct, 1) if growth_pct is not None else None,
+            "growth_x": round(growth_x, 1) if growth_x is not None else None,
+            "level_key": level_key,
+            "level": level,
+            "action": action,
+        })
+    supply.sort(key=lambda x: (level_rank.get(x["level_key"], 0), x["delta"], x["current_count"]), reverse=True)
+
+    return {
+        "distress_ratio": distress[:30],
+        "supply_anomaly": supply[:30],
+        "summary": {
+            "current_month": current_start.strftime("%Y-%m"),
+            "previous_months": prev_keys,
+            "distress_hotspots": sum(1 for x in distress if x["ratio_pct"] >= 25),
+            "supply_hotspots": sum(1 for x in supply if x["level_key"] in ("danger", "warning")),
+            "wards_scanned": len({x["ward"] for x in distress} | {x["ward"] for x in supply}),
+        }
+    }
+
 def load_listing_detail(db_path, listing_id):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row

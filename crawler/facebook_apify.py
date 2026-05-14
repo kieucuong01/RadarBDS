@@ -30,37 +30,71 @@ INCR_HOURS     = 72    # phải khớp với --every N của schedule-setup
 PROFILES_FILE = Path(__file__).parent.parent / "data" / "facebook_profiles.json"
 
 
+_TIER_STR_MAP = {"high": 40, "medium": 20, "low": 10}
+_DEFAULT_TIER = 20
+
+
+def _coerce_tier(raw) -> int:
+    """tier có thể là int (số bài fetch) hoặc string cũ ('high'/'medium'/'low')."""
+    if isinstance(raw, int):
+        return raw if raw > 0 else _DEFAULT_TIER
+    if isinstance(raw, str):
+        key = raw.strip().lower()
+        if key in _TIER_STR_MAP:
+            print(f"[facebook] WARN: tier='{raw}' (legacy string) -> int={_TIER_STR_MAP[key]}. Hãy update JSON.")
+            return _TIER_STR_MAP[key]
+        try:
+            n = int(key)
+            return n if n > 0 else _DEFAULT_TIER
+        except ValueError:
+            print(f"[facebook] WARN: tier='{raw}' không parse được -> default={_DEFAULT_TIER}")
+            return _DEFAULT_TIER
+    return _DEFAULT_TIER
+
+
 def load_profiles(path: str | Path = PROFILES_FILE, area_filter: Optional[str] = None) -> list[dict]:
-    """Đọc danh sách profiles từ JSON file. Trả về list of dicts."""
+    """Đọc danh sách profiles từ JSON file. Trả về list of dicts.
+
+    Schema mới:
+      {"city": [{"url": "...", "broker_name": "...", "tier": <int>}]}
+    Backward compat: tier string 'high'/'medium'/'low' → tự convert sang int.
+    """
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"Không tìm thấy file profiles: {p}")
     data = json.loads(p.read_text(encoding="utf-8"))
-    
+
+    def _build(item, area):
+        if isinstance(item, str):
+            return {
+                "url": item.strip(),
+                "tier": _DEFAULT_TIER,
+                "broker_name": None,
+                "default_area": area,
+            }
+        if isinstance(item, dict):
+            return {
+                "url": (item.get("url") or "").strip(),
+                "tier": _coerce_tier(item.get("tier")),
+                "broker_name": (item.get("broker_name") or "").strip() or None,
+                "default_area": area,
+            }
+        return None
+
     profiles = []
     if isinstance(data, list):
         for item in data:
-            if isinstance(item, str):
-                profiles.append({"url": item.strip(), "tier": "medium", "default_area": None})
-            elif isinstance(item, dict):
-                profiles.append({
-                    "url": (item.get("url") or "").strip(),
-                    "tier": item.get("tier", "medium"),
-                    "default_area": None
-                })
+            rec = _build(item, None)
+            if rec:
+                profiles.append(rec)
     elif isinstance(data, dict):
         for area_name, items in data.items():
             if area_filter and area_filter.lower() != area_name.lower():
                 continue
             for item in items:
-                if isinstance(item, str):
-                    profiles.append({"url": item.strip(), "tier": "medium", "default_area": area_name})
-                elif isinstance(item, dict):
-                    profiles.append({
-                        "url": (item.get("url") or "").strip(),
-                        "tier": item.get("tier", "medium"),
-                        "default_area": area_name
-                    })
+                rec = _build(item, area_name)
+                if rec:
+                    profiles.append(rec)
     return [p for p in profiles if p["url"]]
 
 
@@ -97,29 +131,34 @@ class FacebookApifyCrawler:
             return []
 
         from collections import defaultdict
-        by_tier = defaultdict(list)
-        for p in profiles:
-            by_tier[p.get("tier", "medium")].append(p)
 
-        TIER_LIMITS = {"high": 40, "medium": 20, "low": 10}
-        if mode == "full":
-            TIER_LIMITS = {"high": MAX_POSTS_FULL, "medium": MAX_POSTS_FULL, "low": MAX_POSTS_FULL}
+        # Quy per_profile cuối cùng cho từng profile
+        def _per_profile(p: dict) -> int:
+            if limit_override:
+                return int(limit_override)
+            base = int(p.get("tier") or _DEFAULT_TIER)
+            if mode == "full":
+                return max(base, MAX_POSTS_FULL)
+            return base
+
+        # Gom profiles có cùng per_profile vào một batch (giảm số Apify calls)
+        by_limit = defaultdict(list)
+        for p in profiles:
+            by_limit[_per_profile(p)].append(p)
 
         adapted_all = []
 
-        for tier, tier_profiles in by_tier.items():
-            per_profile = limit_override or TIER_LIMITS.get(tier, 20)
-            total_limit = per_profile * len(tier_profiles)
-
-            urls = [p["url"] for p in tier_profiles]
+        for per_profile, batch_profiles in by_limit.items():
+            total_limit = per_profile * len(batch_profiles)
+            urls = [p["url"] for p in batch_profiles]
             run_input = {
                 "startUrls": [{"url": u} for u in urls],
                 "resultsLimit": total_limit,
             }
 
             print(
-                f"[facebook-apify] Chay batch tier '{tier}' | "
-                f"{len(urls)} profiles | limit={total_limit} | mode={mode}"
+                f"[facebook-apify] Batch limit={per_profile}/profile | "
+                f"{len(urls)} profiles | total={total_limit} | mode={mode}"
             )
 
             try:
@@ -133,15 +172,16 @@ class FacebookApifyCrawler:
                 raise
 
             items = list(self._client.dataset(run["defaultDatasetId"]).iterate_items())
-            print(f"[facebook-apify] Nhan duoc {len(items)} raw items tu batch '{tier}'.")
+            print(f"[facebook-apify] Nhan duoc {len(items)} raw items (limit={per_profile}/profile).")
 
             for item in items:
                 post = self._adapt(item)
                 if post:
                     input_url = item.get("inputUrl", "")
-                    for p in tier_profiles:
+                    for p in batch_profiles:
                         if input_url and p["url"] in input_url:
                             post["default_area"] = p.get("default_area")
+                            post["broker_name"] = p.get("broker_name")
                             break
                     adapted_all.append(post)
 

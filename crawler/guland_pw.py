@@ -9,6 +9,7 @@ Cải tiến:
 Full crawl  : python crawler/guland_pw.py --mode full
 Incremental : python crawler/guland_pw.py --mode incremental
 """
+import json
 import logging
 import re
 import sys
@@ -23,6 +24,20 @@ logger = logging.getLogger(__name__)
 BATCH_SIZE  = 5     # số detail pages fetch song song
 BTN_WAIT_MS = 3000  # ms đợi sau khi click "Xem thêm"
 MAX_CLICKS  = 50    # tăng giới hạn an toàn để cào nhiều phường
+
+GULAND_SOURCES_FILE = Path(__file__).parent.parent / "data" / "guland_sources.json"
+GULAND_URL_PREFIX   = "https://guland.vn/"
+DEFAULT_CRAWL_FOR_DAYS = 7
+
+
+def _default_guland_urls(slug: str) -> list:
+    """4 URL types/ward: đất thổ cư, nhà mặt phố, chung cư, kho xưởng."""
+    return [
+        f"mua-ban-dat-tho-cu-{slug}",
+        f"mua-ban-nha-mat-pho-mat-tien-{slug}",
+        f"mua-ban-can-ho-chung-cu-{slug}",
+        f"mua-ban-kho-nha-xuong-{slug}",
+    ]
 
 # JS extract toàn bộ cards từ DOM hiện tại
 _JS_EXTRACT_CARDS = """
@@ -97,37 +112,87 @@ async (urls) => {
 
 class GulandCrawler(BaseCrawler):
     SOURCE_NAME = "guland"
-    TARGET_URLS = [
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-tan-an-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-tuong-binh-hiep-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-hiep-an-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-phu-my-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-phu-tan-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-chanh-my-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-dinh-hoa-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-chanh-nghia-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-phu-tho-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-phu-hoa-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-phu-cuong-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-hiep-thanh-thanh-pho-thu-dau-mot-binh-duong",
-        "https://guland.vn/mua-ban-bat-dong-san-phuong-phu-loi-thanh-pho-thu-dau-mot-binh-duong"
+
+    # Fallback nếu thiếu/lỗi data/guland_sources.json
+    _FALLBACK_WARDS = [
+        ("Tân An",          "phuong-tan-an-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Tương Bình Hiệp", "phuong-tuong-binh-hiep-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Hiệp An",         "phuong-hiep-an-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Phú Mỹ",          "phuong-phu-my-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Phú Tân",         "phuong-phu-tan-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Chánh Mỹ",        "phuong-chanh-my-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Định Hòa",        "phuong-dinh-hoa-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Chánh Nghĩa",     "phuong-chanh-nghia-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Phú Thọ",         "phuong-phu-tho-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Phú Hòa",         "phuong-phu-hoa-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Phú Cường",       "phuong-phu-cuong-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Hiệp Thành",      "phuong-hiep-thanh-thanh-pho-thu-dau-mot-binh-duong"),
+        ("Phú Lợi",         "phuong-phu-loi-thanh-pho-thu-dau-mot-binh-duong"),
     ]
 
-    WARD_MAP = {
-        "tan-an": "Tân An",
-        "tuong-binh-hiep": "Tương Bình Hiệp",
-        "hiep-an": "Hiệp An",
-        "phu-my": "Phú Mỹ",
-        "phu-tan": "Phú Tân",
-        "chanh-my": "Chánh Mỹ",
-        "dinh-hoa": "Định Hòa",
-        "chanh-nghia": "Chánh Nghĩa",
-        "phu-tho": "Phú Thọ",
-        "phu-hoa": "Phú Hòa",
-        "phu-cuong": "Phú Cường",
-        "hiep-thanh": "Hiệp Thành",
-        "phu-loi": "Phú Lợi"
-    }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        wards, days = self._load_sources_config()
+        self.TARGET_URLS = []
+        self.WARD_MAP    = {}
+        for w in wards:
+            urls = w.get("urls") or _default_guland_urls(w["slug"])
+            self.WARD_MAP[self._slug_to_ward_key(w["slug"])] = w["name"]
+            for u in urls:
+                self.TARGET_URLS.append(GULAND_URL_PREFIX + u)
+        self.crawl_for_days = days
+        logger.info(
+            f"[guland] Loaded {len(wards)} wards = {len(self.TARGET_URLS)} URLs "
+            f"| crawl_for_days={days}"
+        )
+
+    @staticmethod
+    def _slug_to_ward_key(slug: str) -> str:
+        """phuong-tan-an-thanh-pho-... → 'tan-an' (key cũ trong WARD_MAP)."""
+        # bỏ prefix 'phuong-' và phần sau 'thanh-pho-...'
+        s = slug
+        if s.startswith("phuong-"):
+            s = s[len("phuong-"):]
+        idx = s.find("-thanh-pho-")
+        if idx > 0:
+            s = s[:idx]
+        return s
+
+    @classmethod
+    def _load_sources_config(cls):
+        try:
+            data = json.loads(GULAND_SOURCES_FILE.read_text(encoding="utf-8"))
+            wards = data.get("wards") or []
+            days  = int(data.get("crawl_for_days") or DEFAULT_CRAWL_FOR_DAYS)
+            wards = [w for w in wards if w.get("slug") and w.get("name")]
+            if wards:
+                return wards, days
+            logger.warning(f"[guland] {GULAND_SOURCES_FILE.name}: wards rỗng → dùng fallback")
+        except FileNotFoundError:
+            logger.warning(f"[guland] Không thấy {GULAND_SOURCES_FILE.name} → dùng fallback")
+        except Exception as e:
+            logger.warning(f"[guland] Lỗi parse {GULAND_SOURCES_FILE.name}: {e} → dùng fallback")
+        wards = [{"name": n, "slug": s} for n, s in cls._FALLBACK_WARDS]
+        return wards, DEFAULT_CRAWL_FOR_DAYS
+
+    def is_old(self, date_raw: str) -> bool:
+        """Override: dừng load-more khi gặp tin cũ hơn crawl_for_days ngày."""
+        s = (date_raw or "").lower().strip()
+        if not s:
+            return False
+        m = re.search(r"(\d+)\s*ngày", s)
+        if m and int(m.group(1)) > getattr(self, "crawl_for_days", DEFAULT_CRAWL_FOR_DAYS):
+            return True
+        if re.search(r"\d+\s*(tuần|tháng|năm)", s):
+            # tuần >= 1 ~7 ngày — nếu crawl_for_days < 7 thì coi là cũ; ngược lại
+            # vẫn để regex chính xác qua match trên 'tuần'.
+            tweek = re.search(r"(\d+)\s*tuần", s)
+            if tweek:
+                if int(tweek.group(1)) * 7 > getattr(self, "crawl_for_days", DEFAULT_CRAWL_FOR_DAYS):
+                    return True
+            else:
+                return True
+        return False
 
     # ── Phase 1: Scroll hết cards bằng click "Xem thêm" ──────────────────
 
@@ -136,11 +201,14 @@ class GulandCrawler(BaseCrawler):
         Load toàn bộ listing cards bằng cách click "Xem thêm".
         incremental=True: dừng sớm khi gặp tin cũ.
         """
-        page.goto(base_url, wait_until="domcontentloaded", timeout=30_000)
         try:
+            self._retry(
+                lambda: page.goto(base_url, wait_until="domcontentloaded", timeout=30_000),
+                max_retries=2, base_delay=3.0, label=f"goto {base_url}"
+            )
             page.wait_for_selector(".c-sdb-card", timeout=15_000)
         except Exception:
-            self.logger.warning("Không tìm thấy .c-sdb-card")
+            self.logger.warning(f"Không tìm thấy .c-sdb-card trên {base_url}")
             return []
 
         for click_num in range(MAX_CLICKS + 1):
@@ -205,7 +273,10 @@ class GulandCrawler(BaseCrawler):
         for i in range(0, total, BATCH_SIZE):
             batch = urls[i:i + BATCH_SIZE]
             try:
-                results = page.evaluate(_JS_BATCH_DETAIL, batch)
+                results = self._retry(
+                    lambda b=batch: page.evaluate(_JS_BATCH_DETAIL, b),
+                    max_retries=2, base_delay=1.0, label=f"batch {i//BATCH_SIZE+1}"
+                )
                 for r in (results or []):
                     if r and r.get("url"):
                         url_to_detail[r["url"]] = r

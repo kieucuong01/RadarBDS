@@ -290,8 +290,8 @@ class SegmentModel:
         return 'medium' if self.n_samples >= 15 else 'low'
 
     def mos_threshold(self):
-        """Fixed threshold 0.10 (10%)."""
-        return 0.10
+        from config.settings import SIGNAL_MOS_THRESHOLD
+        return SIGNAL_MOS_THRESHOLD
 
 def get_segment_priors(conn) -> Dict[str, int]:
     """Legacy hook kept as no-op; Admin Control Room feedback is the source of truth."""
@@ -323,6 +323,8 @@ class ValuationEngine:
         fallback_segs = defaultdict(list)
         parent_segs   = defaultdict(list)   # aggregate sub-ward → parent
         for l in listings:
+            if l.property_type == 'kho_xuong':
+                continue  # chưa đủ data — skip segment build
             if l.price_per_m2 and l.area_m2:
                 segs[self._key(l)].append(l)
                 fallback_segs[self._fallback_key(l)].append(l)
@@ -347,6 +349,11 @@ class ValuationEngine:
             self._models[k] = m
 
     def valuate(self, listing: Listing) -> Optional[ValuationResult]:
+        # kho_xuong: giá/m² và logic định giá hoàn toàn khác đất/nhà, chưa đủ data để
+        # build segment regression riêng → skip valuation. Tin vẫn hiển thị nhưng
+        # không có fair_value/MOS. Khi đủ data (n≥30) sẽ build model riêng.
+        if listing.property_type == 'kho_xuong':
+            return None
         m = self._models.get(self._key(listing))
         if not m or not m.fitted:
             pk = self._parent_ward_key(listing)

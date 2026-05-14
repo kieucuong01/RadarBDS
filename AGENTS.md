@@ -7,7 +7,8 @@ Use this file as the first read for Codex, Claude Code, Antigravity, or any new 
 1. `AGENTS.md` - this quick context.
 2. `docs/agent_playbook.md` - workflow rules and common traps.
 3. `docs/architecture.md` - module boundaries and current data flow.
-4. `docs/dev_commands.md` - exact Windows commands for checks.
+4. `docs/daily_crawl_flow.md` - daily crawl pipeline, signal threshold, Telegram alert, JSON config, city filter.
+5. `docs/dev_commands.md` - exact Windows commands for checks.
 
 Avoid broad reads of `.claude/worktrees/`, `_legacy/`, `data/`, `logs/`, `reports/`, `scratch/`, `browser_recordings/`, and `artifacts/` unless the task explicitly requires them.
 

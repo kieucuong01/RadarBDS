@@ -69,23 +69,50 @@ Idempotent. Không đọc/write DB. Gọi feature_extractor để extract regex.
 
 **Named road whitelist:** ~42 đường TDM, xem `_NAMED_ROADS` trong `feature_extractor.py`. QL13 excluded.
 
-### Property Type — cascade priority
+### Property Type — 2-tầng (slug → content) — refactor 2026-05-14
 
-> ⚠️ Đã refactor 2026-05-06 — cascade cũ gây 70% dat_vuon sai
+> Slug encode broad-type rõ ràng → chốt nhánh trước, content refine trong nhánh.
+> Facebook (không slug) đi cascade cũ + bổ sung kho_xuong detection.
 
-0. Chung cư/căn hộ → `chung_cu`
-0b. Nhà trọ/phòng trọ/dãy trọ/khu trọ → `nha_tro` (tách khỏi nha_dat, định giá rental yield)
-1. Strong house (nhà cấp 4 mới, N căn nhà đang) → `nha_dat`
-2. vuon_kw (đất vườn/CLN...) → `dat_vuon` **blocked by**: land_only_kw | house_kw | price > 8 tr/m²
-3. nha_kw (nhà/biệt thự/xưởng...) → `nha_dat` (nhà luôn thắng đất)
+**6 property types:** `dat_vuon` · `dat_nen` · `nha_dat` · `nha_tro` · `chung_cu` · `kho_xuong`
+
+**Tầng 1 — `extract_url_hint(url)` → broad type:**
+
+| URL slug | hint |
+|----------|------|
+| `ban-can-ho-chung-cu-*`, `mua-ban-can-ho-chung-cu-*` | `chung_cu` |
+| `ban-kho-nha-xuong-*`, `mua-ban-kho-nha-xuong-*` | `kho_xuong` |
+| `ban-dat-dat-nen-*`, `mua-ban-dat-tho-cu-*` (biến thể) | `dat` |
+| `ban-nha-dat-*`, `nha-dat-ban-*`, `mua-ban-nha-mat-pho-*` | `nha` |
+| Facebook / unmatched | `None` |
+
+> ⚠️ Thứ tự pattern: chung_cu / kho_xuong khớp TRƯỚC dat/nha (vì `ban-kho-nha-xuong-` chứa `-nha-`).
+
+**Tầng 2 — `classify_property_type(..., url_hint=...)`:**
+
+```
+url_hint=chung_cu  → 'chung_cu'                            (short-circuit)
+url_hint=kho_xuong → 'kho_xuong'                           (short-circuit)
+content has chung cư/căn hộ → 'chung_cu'                   (override mọi nhánh)
+content has nhà xưởng/KCN  → 'kho_xuong'                   (chỉ khi hint in None/nha)
+content has nhà trọ/phòng trọ → 'nha_tro'                  (nhánh nhà)
+url_hint=nha   → 'nha_dat' (default sau nha_tro check)
+url_hint=dat   → _classify_dat_only(): vuon_kw / thổ cư <5% / land_only_kw / DX / area>=500
+url_hint=None  → cascade cũ đầy đủ (Facebook)
+```
+
+**Cascade cũ (cho Facebook url_hint=None):**
+1. Strong house (nhà cấp 4 mới) → `nha_dat`
+2. vuon_kw → `dat_vuon` **blocked by**: land_only_kw | house_kw | price > 8 tr/m²
+3. nha_kw → `nha_dat`
 4. Thổ cư < 5% → `dat_vuon` **blocked by**: land_only_kw
-5. land_only_kw (lô đất/đất nền/mặt tiền...) → `dat_nen`
-6. Đường DX → `dat_nen` (block vườn)
-7. area ≥ 500m² + không nhà: `dat_vuon`, ngoại lệ → `dat_nen` nếu thổ cư ≥ 20% hoặc giá > 8 tr/m²
-8. Source label hint → mapped type
+5. land_only_kw → `dat_nen`
+6. Đường DX → `dat_nen`
+7. area ≥ 500m² + không nhà → `dat_vuon` (ngoại lệ thổ cư ≥ 20% hoặc giá > 8 tr/m²)
+8. Source label hint → mapped
 9. Default → `dat_nen`
 
-**Kết quả sau fix**: dat_vuon > 8 tr/m² giảm từ 388 → 0 (100%)
+**Valuation impact:** `kho_xuong` được skip khỏi segment regression (chưa đủ data) — listing vẫn hiển thị nhưng không có fair_value/MOS.
 
 ### Legal Extraction
 

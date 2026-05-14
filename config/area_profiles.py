@@ -97,6 +97,49 @@ def detect_subward_from_street(text: str) -> Tuple[Optional[str], Optional[float
     return None, None, None
 
 
+# ── City filter cho Facebook posts ─────────────────────────────────────────
+# Mặc định INSERT mọi post. Chỉ SKIP khi post ghi RÕ tên TP/khu KHÁC với
+# profile_city (broker thường không ghi city — chỉ ghi phường/đường/landmark).
+#
+# LƯU Ý 2026-05: Bình Dương đã sáp nhập vào TP HCM. Broker có thể ghi địa chỉ
+# mới "TP HCM / Sài Gòn" cho tin TDM/Bến Cát → KHÔNG đưa HCM/Sài Gòn vào list
+# skip. Chỉ skip khi post nêu rõ quận/huyện/tỉnh khác địa bàn quan tâm.
+OTHER_CITY_KEYWORDS = [
+    # Các huyện/khu khác trong BD cũ (giờ thuộc HCM) — vẫn skip nếu profile là TDM
+    "tân uyên", "dĩ an", "thuận an", "bến cát", "bàu bàng",
+    "phú giáo", "dầu tiếng",
+    # Các tỉnh/TP khác hoàn toàn
+    "hà nội", "đà nẵng", "đồng nai", "biên hòa",
+    "long an", "tây ninh", "vũng tàu", "cần thơ",
+    "bình phước", "đồng xoài",
+    "thủ dầu một", "tdm",
+]
+
+# Keyword của chính city profile — loại khỏi check để không tự skip nhầm.
+CITY_OWN_KEYWORDS = {
+    "Thủ Dầu Một": ["thủ dầu một", "tdm"],
+    "Bến Cát":     ["bến cát"],
+}
+
+
+def post_mentions_other_city(text: str, profile_city: Optional[str]) -> bool:
+    """True nếu text chứa keyword TP khác với profile_city.
+
+    - Post không có text (ảnh thuần) → False (không skip).
+    - profile_city rỗng → False (không có baseline để so sánh).
+    """
+    if not text or not profile_city:
+        return False
+    txt = text.lower()
+    own = set(k.lower() for k in CITY_OWN_KEYWORDS.get(profile_city, []))
+    for kw in OTHER_CITY_KEYWORDS:
+        if kw in own:
+            continue
+        if kw in txt:
+            return True
+    return False
+
+
 def infer_standard_lot(area_m2: Optional[float], ward: Optional[str]) -> Tuple[Optional[float], Optional[float]]:
     """Infer frontage/depth for standard lot sizes in configured areas.
 

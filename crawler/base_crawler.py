@@ -9,8 +9,10 @@ Thiết kế:
 """
 import json
 import logging
+import random
 import re
 import sys
+import time
 from abc import ABC, abstractmethod
 from datetime import date, timedelta
 from pathlib import Path
@@ -45,7 +47,18 @@ class BaseCrawler(ABC):
 
     def __init__(self):
         self.logger = logging.getLogger(f"crawler.{self.SOURCE_NAME or self.__class__.__name__}")
-        self._stats = {"new": 0, "skipped": 0, "errors": 0}
+        self._stats = {"new": 0, "skipped": 0, "errors": 0, "error_details": []}
+
+    # ── User-Agent pool ─────────────────────────────────────────────────────
+
+    _UA_POOL = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15",
+    ]
 
     # ── Playwright lifecycle ───────────────────────────────────────────────
 
@@ -61,12 +74,10 @@ class BaseCrawler(ABC):
                 "--disable-plugins-discovery",
             ],
         )
+        ua = random.choice(self._UA_POOL)
+        self.logger.info(f"UA: {ua[:60]}...")
         ctx = browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/123.0.0.0 Safari/537.36"
-            ),
+            user_agent=ua,
             viewport={"width": 1280, "height": 800},
             locale="vi-VN",
             timezone_id="Asia/Ho_Chi_Minh",
@@ -74,6 +85,52 @@ class BaseCrawler(ABC):
         )
         ctx.add_init_script(_STEALTH_JS)
         return browser, ctx
+
+    # ── Retry helper ──────────────────────────────────────────────────────
+
+    def _retry(self, fn, max_retries: int = 3, base_delay: float = 2.0, label: str = ""):
+        """Execute fn() with exponential backoff + jitter. Returns result or raises last exception."""
+        last_exc = None
+        for attempt in range(max_retries + 1):
+            try:
+                return fn()
+            except Exception as e:
+                last_exc = e
+                if attempt < max_retries:
+                    delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
+                    self.logger.warning(
+                        f"Retry {attempt+1}/{max_retries} {label}: {e.__class__.__name__}: {e} "
+                        f"(wait {delay:.1f}s)"
+                    )
+                    time.sleep(delay)
+        raise last_exc
+
+    # ── Record validation ─────────────────────────────────────────────────
+
+    def _validate_record(self, raw_data: dict) -> Optional[str]:
+        """Validate raw record before insert. Returns error message if invalid, None if OK."""
+        url = raw_data.get("url", "")
+        if not url or not url.startswith("http"):
+            return f"invalid url: {url!r}"
+        title = raw_data.get("title", "")
+        if len(title) < 5:
+            return f"title too short: {title!r}"
+        price = raw_data.get("price_ty")
+        if price is not None and (price <= 0 or price > 10000):
+            return f"price out of range: {price}"
+        area = raw_data.get("area_m2")
+        if area is not None and (area <= 0 or area > 100000):
+            return f"area out of range: {area}"
+        return None
+
+    def _track_error(self, url: str, error: Exception, error_type: str = "unknown") -> None:
+        """Log và track error với classification."""
+        self._stats["errors"] += 1
+        self._stats["error_details"].append({
+            "url": url,
+            "error_type": error_type,
+            "error_msg": str(error)[:200],
+        })
 
     def run(self, mode: str = "full", headless: bool = True) -> dict:
         """
@@ -90,14 +147,34 @@ class BaseCrawler(ABC):
                 "  playwright install chromium"
             )
 
-        self._stats = {"new": 0, "skipped": 0, "errors": 0}
+        from db.crawl_runs import start_crawl_run, finish_crawl_run, get_incomplete_run, mark_url_done
+
+        self._stats = {"new": 0, "skipped": 0, "errors": 0, "error_details": []}
+
+        # Check for incomplete run to resume
+        incomplete = get_incomplete_run(self.SOURCE_NAME)
+        if incomplete:
+            run_id = incomplete["run_id"]
+            completed_urls = incomplete["completed_urls"]
+            self.logger.info(
+                f"[{self.SOURCE_NAME}] Resuming run #{run_id} "
+                f"({len(completed_urls)}/{len(self.TARGET_URLS)} URLs done)"
+            )
+        else:
+            run_id = start_crawl_run(self.SOURCE_NAME, "TDM")
+            completed_urls = set()
 
         with sync_playwright() as pw:
             browser, ctx = self._launch(pw, headless=headless)
+            self._ctx = ctx
             page = ctx.new_page()
             page.set_default_timeout(30_000)
 
             for url in self.TARGET_URLS:
+                if url in completed_urls:
+                    self.logger.info(f"[{self.SOURCE_NAME}] Skip (already done): {url}")
+                    continue
+
                 self.logger.info(f"[{self.SOURCE_NAME}] {mode} crawl: {url}")
                 try:
                     if mode == "full":
@@ -107,11 +184,17 @@ class BaseCrawler(ABC):
                     self.logger.info(
                         f"[{self.SOURCE_NAME}] {url} → {n} new records"
                     )
+                    mark_url_done(run_id, url, n)
                 except Exception as e:
                     self.logger.error(f"[{self.SOURCE_NAME}] Error on {url}: {e}", exc_info=True)
-                    self._stats["errors"] += 1
+                    self._track_error(url, e, error_type="crawl_exception")
 
             browser.close()
+
+        error_msg = None
+        if self._stats["error_details"]:
+            error_msg = json.dumps(self._stats["error_details"][:20], ensure_ascii=False)
+        finish_crawl_run(run_id, self._stats, status="done", error_msg=error_msg)
 
         self.logger.info(
             f"[{self.SOURCE_NAME}] Done — "
@@ -138,6 +221,12 @@ class BaseCrawler(ABC):
         Ghi vào raw_listings.
         Return True nếu là record mới, False nếu đã tồn tại.
         """
+        validation_err = self._validate_record(raw_data)
+        if validation_err:
+            self.logger.warning(f"Validation failed for {url}: {validation_err}")
+            self._stats["skipped"] += 1
+            return False
+
         from config.database_sqlite import get_conn
         from db.moderation import normalize_phone
 

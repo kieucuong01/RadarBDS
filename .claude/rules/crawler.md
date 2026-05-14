@@ -43,7 +43,11 @@ page.evaluate(JS_BATCH_DETAIL, urls)
 - Incremental mode: dừng khi URL đã tồn tại trong DB từ lần crawl trước
 - URL format: `guland.vn/post/slug-ID` — dashboard tự thêm `/post/` nếu thiếu
 - Extract: price_raw, area_raw, pm2_raw, date_raw, description, address, legal_raw, road_type_raw, contact_phone, imgs
-- Mở rộng địa bàn: chỉ cần thêm URL vào `TARGET_URLS`
+- **TARGET_URLS**: 52 URLs — 13 phường × 4 loại hình (đất thổ cư, nhà mặt phố, chung cư, kho xưởng)
+  - Default pattern: `mua-ban-dat-tho-cu-{slug}` · `mua-ban-nha-mat-pho-mat-tien-{slug}` · `mua-ban-can-ho-chung-cu-{slug}` · `mua-ban-kho-nha-xuong-{slug}`
+  - Override per-ward bằng `urls` trong `data/guland_sources.json`
+  - **Không** crawl URL tổng hợp `mua-ban-bat-dong-san-*` — đã crawl 4 loại riêng
+- Mở rộng địa bàn: thêm ward vào `data/guland_sources.json`
 
 ## BatDongSan crawler (batdongsan_pw.py)
 
@@ -52,8 +56,11 @@ page.evaluate(JS_BATCH_DETAIL, urls)
 - `PAGE_DELAY_S = 3` — delay giữa listing pages
 - Cloudflare detect: kiểm tra `page.title()` — bị block nếu title là Cloudflare page
 - Bottleneck: ~500 records × 8s ≈ 67 phút — không thể song song
-- **SEARCH_SLUGS**: 26 slugs — 13 phường TDM × 2 loại hình (`ban-dat-*` + `ban-nha-*`)
-  - Format: `ban-{dat|nha}-phuong-{ward-slug}_1`
+- **SEARCH_SLUGS**: 52 slugs — 13 phường TDM × 4 loại hình (đất, nhà, chung cư, kho xưởng)
+  - Default pattern (11 phường, không suffix): `ban-dat-dat-nen-phuong-{slug}` · `ban-nha-dat-phuong-{slug}` · `ban-can-ho-chung-cu-phuong-{slug}` · `ban-kho-nha-xuong-phuong-{slug}`
+  - Tân An: suffix `_1`; Phú Cường: suffix `-1` + prefix `nha-dat-ban-` (nhà)
+  - Override per-ward bằng `urls` trong `data/batdongsan_sources.json`
+  - `BDS_URL_TO_WARD`: exact lookup từ slug → ward (tránh regex fallback)
   - Ward slugs: tan-an, tuong-binh-hiep, hiep-an, chanh-my, phu-my, phu-tan, chanh-nghia, dinh-hoa, phu-tho, phu-hoa, phu-cuong, hiep-thanh, phu-loi
 
 ## Facebook crawler (facebook_apify.py)

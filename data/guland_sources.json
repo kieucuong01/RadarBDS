@@ -1,0 +1,64 @@
+{
+  "city": "Thủ Dầu Một",
+  "crawl_for_days": 1,
+  "wards": [
+    {
+      "name": "Tân An",
+      "slug": "phuong-tan-an-thanh-pho-thu-dau-mot-binh-duong",
+      "urls": [
+        "mua-ban-dat-tho-cu-phuong-tan-an-thanh-pho-thu-dau-mot-binh-duong",
+        "mua-ban-nha-mat-pho-mat-tien-phuong-tan-an-thanh-pho-thu-dau-mot-binh-duong",
+        "mua-ban-can-ho-chung-cu-phuong-tan-an-thanh-pho-thu-dau-mot-binh-duong",
+        "mua-ban-kho-nha-xuong-phuong-tan-an-thanh-pho-thu-dau-mot-binh-duong"
+      ]
+    },
+    {
+      "name": "Tương Bình Hiệp",
+      "slug": "phuong-tuong-binh-hiep-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Hiệp An",
+      "slug": "phuong-hiep-an-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Phú Mỹ",
+      "slug": "phuong-phu-my-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Phú Tân",
+      "slug": "phuong-phu-tan-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Chánh Mỹ",
+      "slug": "phuong-chanh-my-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Định Hòa",
+      "slug": "phuong-dinh-hoa-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Chánh Nghĩa",
+      "slug": "phuong-chanh-nghia-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Phú Thọ",
+      "slug": "phuong-phu-tho-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Phú Hòa",
+      "slug": "phuong-phu-hoa-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Phú Cường",
+      "slug": "phuong-phu-cuong-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Hiệp Thành",
+      "slug": "phuong-hiep-thanh-thanh-pho-thu-dau-mot-binh-duong"
+    },
+    {
+      "name": "Phú Lợi",
+      "slug": "phuong-phu-loi-thanh-pho-thu-dau-mot-binh-duong"
+    }
+  ]
+}

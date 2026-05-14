@@ -33,7 +33,7 @@ from cli.crawlers import (
     cmd_crawl, cmd_crawl_facebook, cmd_repair_missing
 )
 from cli.queries import (
-    cmd_query, cmd_deal_brief, cmd_inspect
+    cmd_query, cmd_deal_brief, cmd_inspect, cmd_crawl_health
 )
 from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
@@ -92,8 +92,8 @@ def main():
 
     # schedule-setup
     p_ss = sub.add_parser("schedule-setup", help="Cài Windows Task Scheduler chạy crawl-daily")
-    p_ss.add_argument("--time", default="04:15", help="Giờ chạy (HH:MM, default 04:15)")
-    p_ss.add_argument("--every", type=int, default=3, help="Chu kỳ chạy theo ngày (default 3)")
+    p_ss.add_argument("--time", default="10:15", help="Giờ chạy (HH:MM, default 10:15)")
+    p_ss.add_argument("--every", type=int, default=1, help="Chu kỳ chạy theo ngày (default 1)")
     p_ss.add_argument("--remove", action="store_true", help="Xóa task đã cài")
 
     # crawl-facebook
@@ -157,6 +157,10 @@ def main():
     p_gt.add_argument("--ward",   default="Tân An", help="Phường cần test (default: Tân An)")
     p_gt.add_argument("--sample", type=int, default=20, help="Số listings test (default: 20)")
 
+    # crawl-health
+    p_ch = sub.add_parser("crawl-health", help="Health dashboard các crawl runs gần đây")
+    p_ch.add_argument("--limit", type=int, default=10, help="Số runs hiển thị (default: 10)")
+
 
     args = parser.parse_args()
 
@@ -200,6 +204,8 @@ def main():
         cmd_inspect(args)
     elif args.cmd == "groq-test":
         cmd_groq_extract_test(args)
+    elif args.cmd == "crawl-health":
+        cmd_crawl_health(args)
     else:
         parser.print_help()
 

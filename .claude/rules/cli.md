@@ -114,7 +114,8 @@ python radar.py delete-batdongsan --yes
 ## Schedule Windows
 
 ```bash
-python radar.py schedule-setup                      # Task Scheduler 7:00 sáng
-python radar.py schedule-setup --time 06:30
-python radar.py schedule-setup --remove
+python radar.py schedule-setup                      # Task Scheduler mỗi ngày 10:15 sáng
+python radar.py schedule-setup --time 07:00         # đổi giờ
+python radar.py schedule-setup --every 3            # mỗi 3 ngày thay vì hàng ngày
+python radar.py schedule-setup --remove             # xóa task
 ```

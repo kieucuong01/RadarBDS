@@ -14,6 +14,7 @@ from config.area_profiles import detect_subward_from_street, infer_standard_lot
 from cleansing.feature_extractor import (
     classify_property_type, extract_tho_cu, extract_road_tier,
     extract_legal, extract_phone, extract_road_type, parse_facebook_post,
+    extract_url_hint,
 )  # extract_legal đã có sẵn — dùng cho has_so detection
 
 logger = logging.getLogger(__name__)
@@ -369,6 +370,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         full_text   = title + ' ' + description
         tho_cu_info = extract_tho_cu(full_text, area_m2)
         raw_label   = str(raw.get("property_type", ""))
+        url_hint    = extract_url_hint(url)
         prop_type   = classify_property_type(
             title       = title,
             description = description,
@@ -376,6 +378,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             tho_cu_m2   = tho_cu_info.get('tho_cu_m2'),
             raw_source_label = raw_label,
             price_per_m2 = price_per_m2,
+            url_hint    = url_hint,
         )
         road_tier = extract_road_tier(title, description)
 

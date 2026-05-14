@@ -148,6 +148,16 @@ CREATE TABLE IF NOT EXISTS crawl_runs (
     error_msg       TEXT
 );
 
+CREATE TABLE IF NOT EXISTS crawl_run_progress (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id          INTEGER NOT NULL,
+    target_url      TEXT NOT NULL,
+    status          TEXT DEFAULT 'pending',
+    n_new           INTEGER DEFAULT 0,
+    completed_at    TEXT,
+    UNIQUE(run_id, target_url)
+);
+
 
 CREATE TABLE IF NOT EXISTS market_weekly (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,

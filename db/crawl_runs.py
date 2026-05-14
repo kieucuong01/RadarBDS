@@ -1,5 +1,6 @@
 ﻿"""Crawl run repository helpers."""
 from datetime import datetime
+from typing import Optional
 
 from db.connection import get_conn
 # ─── Crawl runs ───────────────────────────────────────────────────────────────
@@ -36,6 +37,37 @@ def finish_crawl_run(run_id: int, stats: dict,
             "status":          status,
             "error_msg":       error_msg,
         })
+
+
+# ─── Crawl progress checkpointing ────────────────────────────────────────────
+
+def get_incomplete_run(source: str) -> Optional[dict]:
+    """Find the most recent incomplete run for a source (status='running')."""
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT id, started_at FROM crawl_runs WHERE source=? AND status='running' ORDER BY id DESC LIMIT 1",
+            (source,),
+        ).fetchone()
+        if not row:
+            return None
+        completed = {
+            r["target_url"]
+            for r in conn.execute(
+                "SELECT target_url FROM crawl_run_progress WHERE run_id=? AND status='done'",
+                (row["id"],),
+            ).fetchall()
+        }
+        return {"run_id": row["id"], "started_at": row["started_at"], "completed_urls": completed}
+
+
+def mark_url_done(run_id: int, target_url: str, n_new: int) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            """INSERT INTO crawl_run_progress (run_id, target_url, status, n_new, completed_at)
+               VALUES (?, ?, 'done', ?, datetime('now'))
+               ON CONFLICT(run_id, target_url) DO UPDATE SET status='done', n_new=?, completed_at=datetime('now')""",
+            (run_id, target_url, n_new, n_new),
+        )
 
 
 def mark_missing_listings(source: str, seen_urls: set) -> int:

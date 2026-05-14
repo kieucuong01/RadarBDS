@@ -2,17 +2,20 @@
   "Thủ Dầu Một": [
     {
       "url": "https://www.facebook.com/nhadatkhanhmy",
-      "tier": "medium"
+      "broker_name": "Khánh My",
+      "tier": 20
     },
     {
       "url": "https://www.facebook.com/hang.pk.90",
-      "tier": "low"
+      "broker_name": "Hằng PK",
+      "tier": 10
     }
   ],
   "Bến Cát": [
     {
       "url": "https://www.facebook.com/khuyen.vu.86",
-      "tier": "low"
+      "broker_name": "Khuyên Vũ",
+      "tier": 5
     }
   ]
 }

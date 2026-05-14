@@ -14,7 +14,7 @@ from config import database_sqlite as db_mod
 from db.moderation import normalize_phone
 
 # Import the extracted services
-from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters
+from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters
 from services.ai_bot import AIBot
 
 app = Flask(__name__)
@@ -529,6 +529,25 @@ def api_heatmap():
 
     heatmap_data.sort(key=lambda x: (x["deal_count"], x["median_mos"]), reverse=True)
     return jsonify(heatmap_data)
+
+
+@app.route('/api/market-indicators')
+def api_market_indicators():
+    active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
+    area_min, area_max, price_min, price_max = _request_range_filters(request)
+    if not wards and active_city in CITY_MAP:
+        wards = CITY_MAP[active_city]
+    db_path = str(db_mod.DB_PATH.resolve())
+    return jsonify(load_market_indicators(
+        db_path,
+        sources=sources,
+        wards=wards,
+        prop_types=prop_types,
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+    ))
 
 @app.route('/api/listings')
 def api_listings():

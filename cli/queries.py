@@ -333,3 +333,72 @@ def cmd_inspect(args):
                   f"median={r['median_ppm2']:5.1f} tr/m² | n={r['n_listings']}")
 
     print(f"\n{'═'*W}\n")
+
+
+def cmd_crawl_health(args):
+    """Hiển thị health dashboard cho các crawl runs gần đây."""
+    init_schema()
+    limit = getattr(args, "limit", None) or 10
+
+    with get_conn() as conn:
+        runs = conn.execute("""
+            SELECT id, source, started_at, finished_at, status,
+                   n_new, n_skipped, n_fetched, error_msg
+            FROM crawl_runs ORDER BY id DESC LIMIT ?
+        """, (limit,)).fetchall()
+
+    if not runs:
+        print("Chưa có crawl run nào.")
+        return
+
+    W = 90
+    print(f"\n{'═'*W}")
+    print(f"  CRAWL HEALTH — {limit} runs gần nhất")
+    print(f"{'═'*W}")
+    print(f"  {'ID':>4} | {'Source':12} | {'Started':19} | {'Status':8} | {'New':>5} | {'Skip':>5} | {'Errors'}")
+    print(f"  {'─'*4}-+-{'─'*12}-+-{'─'*19}-+-{'─'*8}-+-{'─'*5}-+-{'─'*5}-+-{'─'*20}")
+
+    for r in runs:
+        started = (r["started_at"] or "")[:19]
+        err_summary = ""
+        if r["error_msg"]:
+            try:
+                errors = json.loads(r["error_msg"])
+                if isinstance(errors, list):
+                    types = {}
+                    for e in errors:
+                        t = e.get("error_type", "unknown")
+                        types[t] = types.get(t, 0) + 1
+                    err_summary = ", ".join(f"{t}:{n}" for t, n in types.items())
+                else:
+                    err_summary = str(r["error_msg"])[:40]
+            except Exception:
+                err_summary = str(r["error_msg"])[:40]
+
+        n_new = r["n_new"] or 0
+        n_skip = r["n_skipped"] or 0
+        status_icon = "done" if r["status"] == "done" else r["status"]
+
+        print(f"  {r['id']:>4} | {(r['source'] or ''):12} | {started:19} | {status_icon:8} | {n_new:>5} | {n_skip:>5} | {err_summary}")
+
+    # Summary
+    with get_conn() as conn:
+        recent = conn.execute("""
+            SELECT source,
+                   COUNT(*) as runs,
+                   SUM(COALESCE(n_new, 0)) as total_new,
+                   SUM(CASE WHEN error_msg IS NOT NULL AND error_msg != '' THEN 1 ELSE 0 END) as runs_with_errors
+            FROM crawl_runs
+            WHERE started_at > datetime('now', '-7 days')
+            GROUP BY source
+        """).fetchall()
+
+    if recent:
+        print(f"\n── TUẦN QUA ──────────────────────────────────────────")
+        for r in recent:
+            err_pct = round(r["runs_with_errors"] / r["runs"] * 100) if r["runs"] else 0
+            health = "OK" if err_pct < 30 else "WARN" if err_pct < 60 else "CRIT"
+            print(f"  {(r['source'] or ''):12} | {r['runs']:>3} runs | {r['total_new']:>5} new | "
+                  f"errors: {r['runs_with_errors']}/{r['runs']} ({err_pct}%) [{health}]")
+
+    print(f"\n{'═'*W}\n")

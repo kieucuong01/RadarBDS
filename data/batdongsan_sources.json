@@ -1,0 +1,43 @@
+{
+  "city": "Thủ Dầu Một",
+  "crawl_for_days": 1,
+  "categories": [
+    "ban-dat-dat-nen",
+    "ban-nha-dat",
+    "ban-can-ho-chung-cu",
+    "ban-kho-nha-xuong"
+  ],
+  "wards": [
+    {
+      "name": "Tân An",
+      "slug": "tan-an",
+      "urls": [
+        "ban-dat-dat-nen-phuong-tan-an_1",
+        "ban-nha-dat-phuong-tan-an_1",
+        "ban-can-ho-chung-cu-phuong-tan-an_1",
+        "ban-kho-nha-xuong-phuong-tan-an_1"
+      ]
+    },
+    { "name": "Tương Bình Hiệp", "slug": "tuong-binh-hiep" },
+    { "name": "Hiệp An",         "slug": "hiep-an" },
+    { "name": "Chánh Mỹ",        "slug": "chanh-my" },
+    { "name": "Phú Mỹ",          "slug": "phu-my" },
+    { "name": "Phú Tân",         "slug": "phu-tan" },
+    { "name": "Chánh Nghĩa",     "slug": "chanh-nghia" },
+    { "name": "Định Hòa",        "slug": "dinh-hoa" },
+    { "name": "Phú Thọ",         "slug": "phu-tho" },
+    { "name": "Phú Hòa",         "slug": "phu-hoa" },
+    {
+      "name": "Phú Cường",
+      "slug": "phu-cuong",
+      "urls": [
+        "ban-dat-dat-nen-phuong-phu-cuong-1",
+        "nha-dat-ban-phuong-phu-cuong-1",
+        "ban-can-ho-chung-cu-phuong-phu-cuong-1",
+        "ban-kho-nha-xuong-phuong-phu-cuong-1"
+      ]
+    },
+    { "name": "Hiệp Thành",      "slug": "hiep-thanh" },
+    { "name": "Phú Lợi",         "slug": "phu-loi" }
+  ]
+}

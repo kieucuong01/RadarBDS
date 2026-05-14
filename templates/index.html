@@ -235,13 +235,10 @@
       <div id="tab-signals" class="tab-content active">
                 <div class="command-bar">
           <div class="command-bar-left">
-            <button type="button" class="super-signal-btn command-super-signal" onclick="activateSuperSignal()">
+            <!-- <button type="button" class="super-signal-btn command-super-signal" onclick="activateSuperSignal()">
               🔥 SUPER SIGNAL
-            </button>
-            <label class="drop-toggle-pill command-drop-toggle">
-              <input type="checkbox" name="only_drops" value="1" onchange="scheduleApplyFilters()">
-              <span>📉 Chỉ hiển thị tin giảm giá</span>
-            </label>
+            </button> -->
+
             <div class="command-mos"> 
               <div class="command-mos-head">
                 <span class="command-mos-label">Thấp hơn so với Định Giá: &gt;= <strong><span id="mosValue">25</span>%</strong></span>
@@ -259,7 +256,10 @@
                 <span>50%+</span>
               </div>
             </div>
-
+            <label class=" drop-toggle-pill command-drop-toggle">
+              <input type="checkbox" name="only_drops" value="1" onchange="scheduleApplyFilters()">
+              <span>📉 CHỈ HIỂN THỊ TIN GIẢM GIÁ</span>
+            </label>
 
           </div>
 
@@ -283,6 +283,54 @@
       <!-- TAB: MARKET -->
       <div id="tab-market" class="tab-content">
         <div class="market-grid" style="display:grid; grid-template-columns: 1fr; gap: 24px;">
+          <div class="market-indicator-grid">
+            <div class="chart-card market-indicator-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Chỉ báo Tỷ lệ Cắt máu</h3>
+                <p class="chart-subtitle">Tỷ lệ lô đang rao bán đã có lịch sử giảm giá theo từng phường/xã</p>
+              </div>
+              <div class="indicator-summary" id="distressRatioSummary"></div>
+              <div class="chart-body market-table-wrap" id="distressRatioContainer">
+                <table class="market-indicator-table">
+                  <thead>
+                    <tr>
+                      <th>Khu vực</th>
+                      <th>Tổng lô</th>
+                      <th>Lô giảm giá</th>
+                      <th>Tỷ lệ</th>
+                      <th>Tín hiệu</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="distressRatioBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="chart-card market-indicator-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Chỉ báo Bất thường Nguồn Cung</h3>
+                <p class="chart-subtitle">Tin rao mới tháng này so với trung bình 3 tháng trước, đã gộp trùng</p>
+              </div>
+              <div class="indicator-summary" id="supplyAnomalySummary"></div>
+              <div class="chart-body market-table-wrap" id="supplyAnomalyContainer">
+                <table class="market-indicator-table">
+                  <thead>
+                    <tr>
+                      <th>Khu vực</th>
+                      <th>Tháng này</th>
+                      <th>TB 3 tháng</th>
+                      <th>Tăng</th>
+                      <th>Tín hiệu</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="supplyAnomalyBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <div class="chart-card">
             <div class="chart-header" style="display:flex; justify-content:space-between; align-items:center;">
               <div>
@@ -348,7 +396,7 @@
 
       <!-- TAB: ALL LISTINGS -->
       <div id="tab-all" class="tab-content">
-        <div class="table-filters">
+        <!-- <div class="table-filters">
           <div class="tf-group">
             <label class="tf-label">Diện tích (m²)</label>
             <div class="tf-range">
@@ -372,7 +420,7 @@
             Lọc
           </button>
           <button class="tf-btn tf-btn-reset" onclick="resetTableFilters()">Xóa</button>
-        </div>
+        </div> -->
         <div class="table-wrap">
           <div class="table-scroll">
             <table>
@@ -568,7 +616,7 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/main.js') }}?v=uifix-20260511-insights-v1"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=uifix-20260511-market-indicators-v1"></script>
 </body>
 
 </html>

@@ -26,6 +26,7 @@ def _get_crawlers(source_filter=None):
 def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_filter=None):
     from crawler.facebook_apify import FacebookApifyCrawler, load_profiles
     from crawler.facebook_chrome import build_record, is_relevant
+    from config.area_profiles import post_mentions_other_city
 
     if profiles is None:
         profiles = load_profiles(area_filter=area_filter)
@@ -42,19 +43,29 @@ def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_f
     raw_posts = crawler.crawl_all(profiles, mode=mode, limit_override=limit_override or None)
     if not raw_posts:
         print("[facebook] Khong co bai nao tu Apify (kiem tra profile URL va APIFY_TOKEN).")
-        return {"fetched": 0, "inserted": 0, "skipped": 0, "irrelevant": 0}
+        return {"fetched": 0, "inserted": 0, "skipped": 0,
+                "irrelevant": 0, "out_of_area": 0}
 
-    inserted = skipped = irrelevant = 0
+    inserted = skipped = irrelevant = out_of_area = 0
     for post in raw_posts:
         text = post.get("text") or ""
         if not is_relevant(text):
             irrelevant += 1
+            continue
+        # City filter: chỉ skip khi post ghi RÕ TP KHÁC với profile_city.
+        profile_city = post.get("default_area") or ""
+        if profile_city and post_mentions_other_city(text, profile_city):
+            out_of_area += 1
             continue
         apify_raw = post.pop("_apify_raw", None)
         record = build_record(post)
         if not record:
             irrelevant += 1
             continue
+        # Giữ broker_name vào record để lưu raw_json
+        broker_name = post.get("broker_name")
+        if broker_name:
+            record["broker_name"] = broker_name
         phone_norm = normalize_phone(record.get("contact_phone"))
         if phone_norm:
             with get_conn() as conn:
@@ -80,12 +91,13 @@ def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_f
             skipped += 1
 
     return {"fetched": len(raw_posts), "inserted": inserted,
-            "skipped": skipped, "irrelevant": irrelevant}
+            "skipped": skipped, "irrelevant": irrelevant,
+            "out_of_area": out_of_area}
 
 def cmd_crawl_facebook(args):
     init_schema()
 
-    profiles = [{"url": args.profile, "tier": "medium", "default_area": None}] if getattr(args, "profile", None) else None
+    profiles = [{"url": args.profile, "tier": 20, "broker_name": None, "default_area": None}] if getattr(args, "profile", None) else None
     stats = _facebook_crawl_to_raw(
         mode=args.mode,
         limit_override=getattr(args, "limit", None),
@@ -99,7 +111,7 @@ def cmd_crawl_facebook(args):
         f"[facebook] crawled={stats['fetched']} | "
         f"bds={stats['fetched']-stats['irrelevant']} | "
         f"imported={stats['inserted']} | skipped={stats['skipped']} (da co) | "
-        f"irrelevant={stats['irrelevant']}"
+        f"irrelevant={stats['irrelevant']} | out_of_area={stats.get('out_of_area', 0)}"
     )
 
     if stats["inserted"] > 0 and not getattr(args, "no_reprocess", False):
@@ -128,6 +140,10 @@ def cmd_crawl(args, mode: str = "full"):
     no_alert = getattr(args, "no_alert", False)
     source_filter = getattr(args, "source", None)
 
+    # Capture timestamp ngay trước khi crawl để filter "tin mới run này" cho Telegram alert
+    with get_conn() as _c:
+        crawl_start_ts = _c.execute("SELECT datetime('now')").fetchone()[0]
+
     total_new = 0
     for crawler in crawlers:
         try:
@@ -144,19 +160,19 @@ def cmd_crawl(args, mode: str = "full"):
             print(
                 f"[facebook] crawled={fb_stats['fetched']} | "
                 f"imported={fb_stats['inserted']} | skipped={fb_stats['skipped']} | "
-                f"irrelevant={fb_stats['irrelevant']}"
+                f"irrelevant={fb_stats['irrelevant']} | out_of_area={fb_stats.get('out_of_area', 0)}"
             )
             total_new += fb_stats["inserted"]
 
     if total_new == 0:
         print(f"\nKhông có tin mới. DB không thay đổi.")
         if mode == "incremental" and not no_alert:
-            from alerts.telegram import collect_hot_deals_3d, send_consolidated_daily_alert
+            from alerts.telegram import collect_fresh_signals, send_consolidated_daily_alert
             with get_conn() as conn:
                 sig_total = conn.execute(
                     "SELECT COUNT(*) FROM valuation_results WHERE is_signal=1"
                 ).fetchone()[0]
-                deals = collect_hot_deals_3d(conn)
+                deals = collect_fresh_signals(conn, since_ts=crawl_start_ts)
                 send_consolidated_daily_alert(conn, deals, new_count=0,
                                               total_active_signals=sig_total)
         return
@@ -178,16 +194,16 @@ def cmd_crawl(args, mode: str = "full"):
     cmd_export_raw(_FakeArgs())
 
     if not no_alert and mode == "incremental":
-        from alerts.telegram import collect_hot_deals_3d, send_consolidated_daily_alert
+        from alerts.telegram import collect_fresh_signals, send_consolidated_daily_alert
         with get_conn() as conn:
             sig_total = conn.execute(
                 "SELECT COUNT(*) FROM valuation_results WHERE is_signal=1"
             ).fetchone()[0]
-            deals = collect_hot_deals_3d(conn)
+            deals = collect_fresh_signals(conn, since_ts=crawl_start_ts)
             sent = send_consolidated_daily_alert(conn, deals, new_count=total_new,
                                                  total_active_signals=sig_total)
         print(f"Telegram: 1 consolidated alert | {sent} deals đánh dấu alerted | "
-              f"queue 3d={len(deals)} | total active signals={sig_total}")
+              f"fresh signals={len(deals)} | total active signals={sig_total}")
 
     print(f"\n{'='*45}")
     print(f"CRAWL {mode.upper()} DONE — {total_new} records mới")

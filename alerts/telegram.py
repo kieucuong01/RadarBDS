@@ -211,6 +211,40 @@ def collect_hot_deals_3d(conn) -> list:
     return fresh
 
 
+def collect_fresh_signals(conn, since_ts: str) -> list:
+    """
+    Lấy listings mới crawl trong run hiện tại (first_seen_at >= since_ts)
+    đã được valuation đánh giá là deal ngộp (v.is_signal = 1) và chưa alert.
+    Order: signal_score desc, mos_pct desc.
+    """
+    rows = conn.execute("""
+        SELECT l.id AS listing_id, l.title, l.url, l.price_ty, l.area_m2,
+               l.area, l.ward, l.property_type, l.is_hot, l.source,
+               l.road_tier, l.has_so, l.frontage_m, l.price_dropped,
+               l.posted_at, l.first_seen_at,
+               l.possibly_duplicate, l.duplicate_of_id,
+               canon.price_ty  AS canonical_price_ty,
+               v.mos_pct, v.fair_ppm2, v.actual_ppm2, v.is_signal,
+               v.signal_score, v.n_segment, v.segment,
+               m.median_ppm2 AS ward_median
+          FROM listings l
+          LEFT JOIN listings canon       ON canon.id = l.duplicate_of_id
+          LEFT JOIN valuation_results v  ON v.listing_id = l.id
+          LEFT JOIN market_weekly m
+                 ON m.area = l.area AND m.property_type = l.property_type
+         WHERE l.probably_sold = 0
+           AND l.first_seen_at >= ?
+           AND v.is_signal = 1
+         ORDER BY COALESCE(v.signal_score, 0) DESC, COALESCE(v.mos_pct, 0) DESC
+    """, (since_ts,)).fetchall()
+
+    fresh = []
+    for r in rows:
+        if not _already_alerted(conn, r["listing_id"], "fresh_signal"):
+            fresh.append(dict(r))
+    return fresh
+
+
 def _compose_reasons(d: dict) -> list:
     """Liệt kê 1-5 lý do tại sao deal đáng chú ý — dùng cho field 'Vì sao rẻ'."""
     reasons = []
@@ -274,29 +308,35 @@ def _esc(s: str) -> str:
 
 
 def send_consolidated_daily_alert(conn, deals: list, new_count: int,
-                                   total_active_signals: int = 0) -> int:
+                                   total_active_signals: int = 0,
+                                   alert_type: str = "fresh_signal") -> int:
     """
     Gửi 1 tin Telegram tổng hợp gồm:
-      - Header: số tin mới crawl + số deal ngộp 24h + (tham khảo) tổng signal active
-      - Mỗi deal: tags + giá/DT/ward + property_type + Fair vs Thực + 'Vì sao rẻ' + link
+      - Header: số tin mới crawl run này + số deal ngộp mới
+      - Mỗi deal: tags + giá/DT/ward + 'Vì sao đáng chú ý' + 2 link:
+          'Mở trong Radar' (dashboard project) + 'Original source' (link gốc dạng anchor)
+      - Footer: 'Còn lại N tin ngộp đang active — xem thêm tại Dashboard'
     Tự chia thành nhiều tin nếu vượt 4000 ký tự.
-    Đánh dấu các listing đã alert trong alert_logs.
+    Đánh dấu các listing đã alert trong alert_logs (alert_type).
     """
+    from config.settings import DASHBOARD_BASE_URL
+    base = DASHBOARD_BASE_URL.rstrip("/")
+
     if not deals:
         msg = (
-            f"📊 <b>Radar BDS — Crawl 3 ngày</b>\n"
-            f"🆕 Tin mới crawl run này: <b>{new_count}</b>\n"
-            f"😴 Không có deal ngộp / signal mới trong 3 ngày.\n"
-            f"<i>Tổng signal đang theo dõi (toàn DB): {total_active_signals}</i>"
+            f"📊 <b>Radar BDS — Crawl run này</b>\n"
+            f"🆕 Tin mới crawl: <b>{new_count}</b>\n"
+            f"😴 Không có deal ngộp mới trong run này.\n"
+            f'<i>Tổng signal đang active toàn DB: {total_active_signals} — '
+            f'<a href="{_esc(base)}/">xem Dashboard</a></i>'
         )
         send_message(msg)
         return 0
 
     header = [
-        f"🚨 <b>Radar BDS — Alert 3 ngày</b>",
+        f"🚨 <b>Radar BDS — Alert deal ngộp</b>",
         f"🆕 Tin mới crawl run này: <b>{new_count}</b>",
-        f"🔥 Deal ngộp/signal mới trong 3 ngày: <b>{len(deals)}</b>",
-        f"<i>(Tổng signal đang active toàn DB: {total_active_signals})</i>",
+        f"🔥 Deal ngộp mới: <b>{len(deals)}</b>",
         f"━━━━━━━━━━━━━━━━━━━━",
     ]
 
@@ -310,10 +350,12 @@ def send_consolidated_daily_alert(conn, deals: list, new_count: int,
         ptype = _esc(d.get("property_type") or "?")
         src   = _esc(d.get("source") or "?")
 
-        url = d.get("url") or ""
-        if url and not url.startswith("http"):
-            url = "https://guland.vn/" + url
-        url = _esc(url)
+        listing_id = d.get("listing_id")
+        project_url = f"{base}/listing/{listing_id}"
+
+        orig_url = d.get("url") or ""
+        if orig_url and not orig_url.startswith("http"):
+            orig_url = "https://guland.vn/" + orig_url
 
         tags = []
         if d.get("is_hot"):
@@ -338,12 +380,22 @@ def send_consolidated_daily_alert(conn, deals: list, new_count: int,
             lines.append("💡 <i>Vì sao đáng chú ý:</i>")
             for r in reasons:
                 lines.append(f"   • {r}")
-        if url:
-            lines.append(f"🔗 {url}")
+        lines.append(f'🔗 <a href="{_esc(project_url)}">Mở trong Radar</a>')
+        if orig_url:
+            lines.append(f'📎 <a href="{_esc(orig_url)}">Original source</a>')
         blocks.append("\n".join(lines))
 
     if len(deals) > MAX_DEALS:
-        blocks.append(f"\n<i>... và {len(deals)-MAX_DEALS} deals khác — xem dashboard</i>")
+        blocks.append(f"\n<i>... và {len(deals)-MAX_DEALS} deals khác — xem Dashboard</i>")
+
+    # Footer: tổng tin ngộp đang active + link dashboard
+    shown_count = len(deals[:MAX_DEALS])
+    remaining = max(int(total_active_signals or 0) - shown_count, 0)
+    footer = (
+        f"\n━━━━━━━━━━━━━━━━━━━━\n"
+        f"📊 Còn lại <b>{remaining}</b> tin ngộp đang active — "
+        f'<a href="{_esc(base)}/">xem thêm tại Dashboard</a>'
+    )
 
     # Gộp + chia tin nếu cần (Telegram limit 4096 chars)
     LIMIT = 3800
@@ -355,8 +407,13 @@ def send_consolidated_daily_alert(conn, deals: list, new_count: int,
             cur = b
         else:
             cur += "\n" + b
+    # Cố gắng append footer vào chunk cuối; nếu không vừa, tách thành chunk riêng
     if cur:
-        chunks.append(cur)
+        if len(cur) + len(footer) + 1 > LIMIT:
+            chunks.append(cur)
+            chunks.append(footer.lstrip("\n"))
+        else:
+            chunks.append(cur + footer)
 
     sent_ok = True
     for c in chunks:
@@ -366,6 +423,6 @@ def send_consolidated_daily_alert(conn, deals: list, new_count: int,
 
     if sent_ok:
         for d in deals[:MAX_DEALS]:
-            _log_alert(conn, d["listing_id"], "hot_deal_3d", "[consolidated]")
+            _log_alert(conn, d["listing_id"], alert_type, "[consolidated]")
         return len(deals[:MAX_DEALS])
     return 0
