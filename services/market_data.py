@@ -43,19 +43,21 @@ def redact_for_tier(record, tier: str):
 
 
 def apply_guest_truncation(records, tier: str, limit: int = 12):
-    """Guest sees `limit` real cards + up to `limit` locked stubs (total ≤ 2*limit).
+    """Deprecated as of 2026-05-14: Guest sees everything except fresh signals.
 
-    Each stub keeps only id + ward so client can render `🔒 Đăng ký để xem`.
-    The locked-count is capped so infinite scroll stops naturally at the first page.
+    Kept as a no-op so callers don't need updating. The 12+12 cap was replaced
+    by a server-side 7-day cutoff on the signals tab only — see
+    `_guest_signal_age_clause`.
     """
-    if tier != "guest" or not records:
-        return records
-    visible = list(records[:limit])
-    locked = [
-        {"id": r.get("id"), "ward": r.get("ward"), "locked": True}
-        for r in records[limit:limit * 2]
-    ]
-    return visible + locked
+    return records
+
+
+def _guest_signal_age_clause(alias: str = "l", days: int = 7) -> str:
+    """Hide signals older than `days` for guest tier (commission protection)."""
+    return (
+        f"datetime(COALESCE({alias}.posted_at, {alias}.crawled_at)) "
+        f">= datetime('now', '-{int(days)} days')"
+    )
 
 
 def _fresh_lock_sql(alias: str = "l", delay_hours: int = 24) -> str:
@@ -225,9 +227,16 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
 
 
 def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=24):
+    # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters,
+    # and hide signals older than 7 days (commission protection).
+    if tier == "guest":
+        mos_min = 0
+        only_drops = False
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     where_sql, params = _build_filters(sources, wards, prop_types, only_drops, prefix="l.", area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
+    if tier == "guest":
+        where_sql = where_sql + " AND " + _guest_signal_age_clause("l", days=7)
     mos_condition, mos_params = _mos_filter(mos_min)
     page = max(int(page or 1), 1)
     limit = min(max(int(limit or 30), 1), 100)
@@ -270,7 +279,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         "page": page,
         "limit": limit,
         "pages": (total + limit - 1) // limit if limit else 1,
-        "has_more": False if tier == "guest" else (page * limit < total),
+        "has_more": page * limit < total,
         "sort": sort or "newest",
         "tier": tier,
     }
@@ -780,6 +789,15 @@ def get_base_filters(req):
         mos_min = int(req.args.get("mos_min", 0))
     except (ValueError, TypeError):
         mos_min = 0
+
+    # Guest tier cannot use commission-sensitive filters (mos_min, only_drops).
+    try:
+        from auth.core import current_tier as _current_tier
+        if _current_tier() == "guest":
+            mos_min = 0
+            only_drops = False
+    except Exception:
+        pass
 
     if not active_city and wards:
         active_city = get_city_for_ward(wards[0])

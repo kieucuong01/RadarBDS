@@ -34,6 +34,10 @@
         <span class="nav-icon">HT</span>
         <span><strong>Hạ tầng</strong><small>Insights timeline và policy</small></span>
       </button>
+      <button class="nav-item" data-panel="users">
+        <span class="nav-icon">US</span>
+        <span><strong>Người dùng</strong><small>Cấp / thu hồi VIP, ban</small></span>
+      </button>
     </nav>
 
     <div class="admin-profile">
@@ -254,8 +258,53 @@
         </div>
       </section>
     </section>
+
+    <section id="panel-users" class="workspace-panel">
+      <div class="page-head">
+        <div>
+          <h1>Quản lý Người dùng</h1>
+          <p>Cấp / thu hồi VIP, ban tài khoản. VIP auto-expire theo `vip_expires_at`.</p>
+        </div>
+        <button class="secondary-btn" id="refreshUsersBtn">Làm mới</button>
+      </div>
+
+      <div class="stat-grid" id="userStats"></div>
+
+      <section class="surface">
+        <div class="toolbar">
+          <label class="searchbox">
+            <span>Search</span>
+            <input id="userSearch" placeholder="SĐT, email, tên...">
+          </label>
+          <select id="userTierFilter" class="select-control">
+            <option value="">Tất cả tier</option>
+            <option value="free">Free</option>
+            <option value="vip">VIP</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="userTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Identifier</th>
+                <th>Tên</th>
+                <th>Tier</th>
+                <th>VIP hết hạn</th>
+                <th>TG</th>
+                <th>Đăng ký</th>
+                <th>Last login</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
   </main>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v4-infra"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v5-users"></script>
 </body>
 </html>

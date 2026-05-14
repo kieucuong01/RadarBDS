@@ -205,6 +205,16 @@ def cmd_crawl(args, mode: str = "full"):
         print(f"Telegram: 1 consolidated alert | {sent} deals đánh dấu alerted | "
               f"fresh signals={len(deals)} | total active signals={sig_total}")
 
+    if not no_alert:
+        try:
+            from cli.notify import push_new_listings_to_vip
+            push_stats = push_new_listings_to_vip(since=crawl_start_ts)
+            print(f"VIP push: {push_stats['matched_users']} users matched | "
+                  f"{push_stats['telegram_sent']} TG cards | "
+                  f"{push_stats['email_users']} email batches")
+        except Exception as e:
+            print(f"[vip-push] error: {e}")
+
     print(f"\n{'='*45}")
     print(f"CRAWL {mode.upper()} DONE — {total_new} records mới")
     print(f"{'='*45}")

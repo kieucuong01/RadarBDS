@@ -27,18 +27,34 @@ def _get_credentials():
 
 
 def send_message(text: str, parse_mode: str = "HTML") -> bool:
-    """Gửi message Telegram. Return True nếu thành công."""
+    """Gửi message Telegram tới admin chat (TELEGRAM_CHAT_ID env). Return True nếu thành công."""
+    token, chat_id = _get_credentials()
+    if not chat_id:
+        logger.warning("Telegram: chưa cấu hình TELEGRAM_CHAT_ID")
+        return False
+    return send_message_to(chat_id, text, parse_mode=parse_mode)
+
+
+def send_message_to(chat_id: str, text: str, parse_mode: str = "HTML") -> bool:
+    """Gửi tới chat_id bất kỳ (dùng cho VIP push, bind confirm)."""
     if not _HAS_REQUESTS:
         logger.warning("Telegram: pip install requests")
         return False
-    token, chat_id = _get_credentials()
+    token, _ = _get_credentials()
+    import os
+    if not token:
+        token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
     if not token or not chat_id:
-        logger.warning("Telegram: chưa cấu hình BOT_TOKEN / CHAT_ID")
+        logger.warning("Telegram send_message_to: missing token/chat_id")
         return False
+    if os.getenv("TELEGRAM_DRY_RUN", "").strip() == "1":
+        logger.info(f"[telegram DRY] to={chat_id} text={text[:80]!r}")
+        return True
     try:
         resp = _requests.post(
             f"https://api.telegram.org/bot{token}/sendMessage",
-            json={"chat_id": chat_id, "text": text, "parse_mode": parse_mode},
+            json={"chat_id": chat_id, "text": text, "parse_mode": parse_mode,
+                  "disable_web_page_preview": True},
             timeout=10,
         )
         ok = resp.json().get("ok", False)
@@ -48,6 +64,27 @@ def send_message(text: str, parse_mode: str = "HTML") -> bool:
     except Exception as e:
         logger.error(f"Telegram send error: {e}")
         return False
+
+
+def send_listing_card(chat_id: str, listing: dict, base_url: str = "") -> bool:
+    """Format 1 listing thành card đẹp + gửi tới chat_id."""
+    lid = listing.get("id")
+    title = (listing.get("title") or "(không tên)")[:120]
+    ward = listing.get("ward") or ""
+    price = listing.get("price_ty")
+    mos = listing.get("mos_pct")
+    area = listing.get("area_m2")
+    parts = [f"🔥 <b>{title}</b>"]
+    meta = []
+    if ward: meta.append(f"📍 {ward}")
+    if price is not None: meta.append(f"💰 {price} tỷ")
+    if area is not None: meta.append(f"📐 {area} m²")
+    if mos is not None: meta.append(f"⚡ MOS {mos}%")
+    if meta: parts.append(" · ".join(meta))
+    if lid:
+        url = f"{base_url.rstrip('/')}/?listing={lid}" if base_url else f"/?listing={lid}"
+        parts.append(f"🔗 <a href=\"{url}\">Xem chi tiết</a>")
+    return send_message_to(chat_id, "\n".join(parts))
 
 
 def _already_alerted(conn, listing_id: int, alert_type: str) -> bool:

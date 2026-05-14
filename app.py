@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import json
 import csv
@@ -7,7 +9,7 @@ import logging
 import statistics
 import re
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response
 from config import database_sqlite as db_mod
@@ -30,6 +32,7 @@ from auth.core import (
     identifier_exists,
     log_audit,
     normalize_identifier,
+    rate_limit,
     require_tier,
 )
 
@@ -225,6 +228,294 @@ def api_auth_me():
         "tier": current_tier(),
         "user": _user_public(u) if u else None,
     })
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Watchlists (logged-in users — VIP gets push, Free gets stored for upsell)
+# ═══════════════════════════════════════════════════════════════════════════
+def _serialize_watchlist(row: dict) -> dict:
+    d = dict(row)
+    for k in ("wards", "prop_types"):
+        v = d.get(k)
+        if isinstance(v, str) and v:
+            try:
+                d[k] = json.loads(v)
+            except json.JSONDecodeError:
+                d[k] = []
+        elif v is None:
+            d[k] = []
+    d["active"] = bool(d.get("active", 1))
+    d["notify_telegram"] = bool(d.get("notify_telegram", 1))
+    d["notify_email"] = bool(d.get("notify_email", 1))
+    return d
+
+
+def _validate_watchlist_payload(payload: dict) -> tuple[dict, str | None]:
+    name = (payload.get("name") or "").strip()[:120]
+    if not name:
+        return {}, "name_required"
+    wards = payload.get("wards") or []
+    prop_types = payload.get("prop_types") or []
+    if not isinstance(wards, list) or not isinstance(prop_types, list):
+        return {}, "invalid_array"
+
+    def _opt_num(key):
+        v = payload.get(key)
+        if v in (None, "", "null"):
+            return None
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return None
+
+    def _opt_int(key, default=0):
+        v = payload.get(key)
+        if v in (None, "", "null"):
+            return default
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return default
+
+    out = {
+        "name": name,
+        "wards": json.dumps(wards, ensure_ascii=False),
+        "prop_types": json.dumps(prop_types, ensure_ascii=False),
+        "mos_min": _opt_int("mos_min", 0),
+        "price_max_ty": _opt_num("price_max_ty"),
+        "price_min_ty": _opt_num("price_min_ty"),
+        "area_min": _opt_num("area_min"),
+        "area_max": _opt_num("area_max"),
+        "notify_telegram": 1 if payload.get("notify_telegram", True) else 0,
+        "notify_email": 1 if payload.get("notify_email", True) else 0,
+        "active": 1 if payload.get("active", True) else 0,
+    }
+    return out, None
+
+
+@app.route("/api/watchlists", methods=["GET"])
+@require_tier("free")
+def api_list_watchlists():
+    u = current_user()
+    with db_mod.get_conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM user_watchlists WHERE user_id=? ORDER BY id DESC", (u["id"],)
+        ).fetchall()
+    return jsonify({"ok": True, "items": [_serialize_watchlist(r) for r in rows]})
+
+
+@app.route("/api/watchlists", methods=["POST"])
+@require_tier("free")
+def api_create_watchlist():
+    u = current_user()
+    payload = request.get_json(silent=True) or {}
+    data, err = _validate_watchlist_payload(payload)
+    if err:
+        return jsonify({"ok": False, "error": err}), 400
+    with db_mod.get_conn() as conn:
+        cur = conn.execute("""
+            INSERT INTO user_watchlists
+              (user_id, name, wards, prop_types, mos_min, price_max_ty, price_min_ty,
+               area_min, area_max, notify_telegram, notify_email, active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            u["id"], data["name"], data["wards"], data["prop_types"], data["mos_min"],
+            data["price_max_ty"], data["price_min_ty"], data["area_min"], data["area_max"],
+            data["notify_telegram"], data["notify_email"], data["active"],
+        ))
+        wid = cur.lastrowid
+        row = conn.execute("SELECT * FROM user_watchlists WHERE id=?", (wid,)).fetchone()
+    log_audit(user_id=u["id"], tier=current_tier(), action="watchlist_create",
+              context={"id": wid, "name": data["name"]})
+    return jsonify({"ok": True, "item": _serialize_watchlist(row)})
+
+
+@app.route("/api/watchlists/<int:wid>", methods=["PATCH"])
+@require_tier("free")
+def api_update_watchlist(wid):
+    u = current_user()
+    payload = request.get_json(silent=True) or {}
+    data, err = _validate_watchlist_payload(payload)
+    if err:
+        return jsonify({"ok": False, "error": err}), 400
+    with db_mod.get_conn() as conn:
+        row = conn.execute(
+            "SELECT id FROM user_watchlists WHERE id=? AND user_id=?", (wid, u["id"])
+        ).fetchone()
+        if not row:
+            return jsonify({"ok": False, "error": "not_found"}), 404
+        conn.execute("""
+            UPDATE user_watchlists SET
+              name=?, wards=?, prop_types=?, mos_min=?, price_max_ty=?, price_min_ty=?,
+              area_min=?, area_max=?, notify_telegram=?, notify_email=?, active=?,
+              updated_at=datetime('now')
+            WHERE id=? AND user_id=?
+        """, (
+            data["name"], data["wards"], data["prop_types"], data["mos_min"],
+            data["price_max_ty"], data["price_min_ty"], data["area_min"], data["area_max"],
+            data["notify_telegram"], data["notify_email"], data["active"],
+            wid, u["id"],
+        ))
+        row = conn.execute("SELECT * FROM user_watchlists WHERE id=?", (wid,)).fetchone()
+    return jsonify({"ok": True, "item": _serialize_watchlist(row)})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Telegram bind: deep-link token → /start <token> → bot webhook updates chat_id
+# ─────────────────────────────────────────────────────────────────────────────
+import secrets as _secrets
+
+
+@app.route("/api/auth/telegram/start", methods=["POST"])
+@require_tier("free")
+def api_telegram_start():
+    u = current_user()
+    bot_username = os.getenv("TELEGRAM_BOT_USERNAME", "").strip().lstrip("@")
+    if not bot_username:
+        return jsonify({"ok": False, "error": "bot_not_configured"}), 500
+    token = _secrets.token_urlsafe(16)
+    expires = (datetime.utcnow() + timedelta(minutes=10)).isoformat(timespec="seconds")
+    with db_mod.get_conn() as conn:
+        conn.execute(
+            "UPDATE users SET telegram_link_token=?, telegram_link_expires_at=? WHERE id=?",
+            (token, expires, u["id"]),
+        )
+    deep_link = f"https://t.me/{bot_username}?start={token}"
+    return jsonify({"ok": True, "url": deep_link, "expires_at": expires})
+
+
+@app.route("/api/auth/telegram/unbind", methods=["POST"])
+@require_tier("free")
+def api_telegram_unbind():
+    u = current_user()
+    with db_mod.get_conn() as conn:
+        conn.execute(
+            "UPDATE users SET telegram_chat_id=NULL, telegram_link_token=NULL, "
+            "telegram_link_expires_at=NULL WHERE id=?", (u["id"],),
+        )
+    return jsonify({"ok": True})
+
+
+@app.route("/api/auth/telegram/webhook", methods=["POST"])
+def api_telegram_webhook():
+    """Receive Telegram bot updates. Match `/start <token>` → bind chat_id.
+
+    Secret query param `?secret=<TELEGRAM_WEBHOOK_SECRET>` for crude auth.
+    """
+    secret_env = (os.getenv("TELEGRAM_WEBHOOK_SECRET") or "").strip()
+    if secret_env and request.args.get("secret") != secret_env:
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    update = request.get_json(silent=True) or {}
+    msg = update.get("message") or update.get("edited_message") or {}
+    text = (msg.get("text") or "").strip()
+    chat = msg.get("chat") or {}
+    chat_id = chat.get("id")
+    if not chat_id or not text.startswith("/start"):
+        return jsonify({"ok": True, "ignored": True})
+
+    parts = text.split(maxsplit=1)
+    token = parts[1].strip() if len(parts) == 2 else ""
+    if not token:
+        try:
+            from alerts.telegram import send_message_to
+            send_message_to(str(chat_id), "Vui lòng mở RadarBDS → Kết nối Telegram để lấy link.")
+        except Exception:
+            pass
+        return jsonify({"ok": True})
+
+    now_iso = datetime.utcnow().isoformat(timespec="seconds")
+    with db_mod.get_conn() as conn:
+        row = conn.execute(
+            "SELECT id, display_name FROM users WHERE telegram_link_token=? "
+            "AND (telegram_link_expires_at IS NULL OR telegram_link_expires_at > ?)",
+            (token, now_iso),
+        ).fetchone()
+        if not row:
+            try:
+                from alerts.telegram import send_message_to
+                send_message_to(str(chat_id), "❌ Token hết hạn hoặc không hợp lệ. Hãy lấy link mới trên RadarBDS.")
+            except Exception:
+                pass
+            return jsonify({"ok": True, "matched": False})
+        user_id = row["id"]
+        conn.execute(
+            "UPDATE users SET telegram_chat_id=?, telegram_link_token=NULL, "
+            "telegram_link_expires_at=NULL WHERE id=?",
+            (str(chat_id), user_id),
+        )
+    try:
+        from alerts.telegram import send_message_to
+        send_message_to(
+            str(chat_id),
+            f"✅ Đã kết nối tài khoản RadarBDS. Bạn sẽ nhận thông báo deal khẩn cấp từ giờ."
+        )
+    except Exception:
+        pass
+    try:
+        log_audit(user_id=user_id, tier=None, action="telegram_linked",
+                  context={"chat_id": str(chat_id)})
+    except Exception:
+        pass
+    return jsonify({"ok": True, "matched": True, "user_id": user_id})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Conversion tracking (/api/track) — open to guests, used to measure funnel
+# ─────────────────────────────────────────────────────────────────────────────
+ALLOWED_TRACK_ACTIONS = {
+    "teaser_hit_12",
+    "locked_tab_click",
+    "locked_fresh_click",
+    "locked_filter_click",
+    "vip_cta_click",
+    "cta_signup",
+    "cta_vip",
+    "modal_open",
+}
+
+
+@app.route("/api/track", methods=["POST"])
+@rate_limit("track", limits={"guest": 120, "free": 600, "vip": None, "admin": None})
+def api_track():
+    payload = request.get_json(silent=True) or {}
+    action = (payload.get("action") or "").strip()[:60]
+    if action not in ALLOWED_TRACK_ACTIONS:
+        return jsonify({"ok": False, "error": "invalid_action"}), 400
+    listing_id = payload.get("listing_id")
+    try:
+        listing_id = int(listing_id) if listing_id not in (None, "") else None
+    except (TypeError, ValueError):
+        listing_id = None
+    ctx = payload.get("context") or {}
+    if not isinstance(ctx, dict):
+        ctx = {"raw": str(ctx)[:200]}
+    u = current_user()
+    try:
+        log_audit(
+            user_id=u["id"] if u else None,
+            tier=current_tier(),
+            action=action,
+            listing_id=listing_id,
+            context=ctx,
+        )
+    except Exception:
+        pass
+    return jsonify({"ok": True})
+
+
+@app.route("/api/watchlists/<int:wid>", methods=["DELETE"])
+@require_tier("free")
+def api_delete_watchlist(wid):
+    u = current_user()
+    with db_mod.get_conn() as conn:
+        cur = conn.execute(
+            "DELETE FROM user_watchlists WHERE id=? AND user_id=?", (wid, u["id"])
+        )
+    if not cur.rowcount:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+    return jsonify({"ok": True})
+
 
 # Serve local downloaded images (data/images/<filename>)
 _DATA_IMAGES_DIR = Path(__file__).parent / "data" / "images"
@@ -487,6 +778,7 @@ def _clean_infra_payload(payload):
     }
 
 @app.route("/api/dashboard")
+@rate_limit("dashboard")
 def api_dashboard():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     area_min, area_max, price_min, price_max = _request_range_filters(request)
@@ -728,6 +1020,7 @@ def api_market_indicators():
     ))
 
 @app.route('/api/listings')
+@rate_limit("listings")
 def api_listings():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     area_min, area_max, price_min, price_max = _request_range_filters(request)
@@ -830,7 +1123,7 @@ def api_listings():
         "page": page,
         "limit": limit,
         "pages": (total + limit - 1) // limit if limit > 0 else 1,
-        "has_more": False if tier == "guest" else (page * limit < total),
+        "has_more": page * limit < total,
         "tier": tier,
     })
 
@@ -879,6 +1172,7 @@ def api_listing_detail(listing_id):
         "signal_score": l["signal_score"] or 0,
         "days_ago": _days_ago(l["posted_at"] or l["crawled_at"]),
         "imgs": data["images"],
+        "tier": data.get("tier"),
     })
 
 @app.route('/api/history/<int:listing_id>')
@@ -994,7 +1288,12 @@ def get_price_history(listing_id):
             comps = ranked[:6]
 
         lot_history = _get_lot_history(conn, listing_id)
-        return jsonify({'history': history, 'lot_history': lot_history, 'comps': comps})
+        # Hide commission-sensitive price/lot history for non-admin tiers.
+        tier = current_tier()
+        if tier != "admin":
+            history = []
+            lot_history = []
+        return jsonify({'history': history, 'lot_history': lot_history, 'comps': comps, 'tier': tier})
 
 
 def _get_lot_history(conn, listing_id):
@@ -1050,6 +1349,37 @@ def _get_lot_history(conn, listing_id):
 
     return lot_history
 
+def _resolve_lead_ack_email(conn, user_id: int | None, guest_email: str | None) -> str | None:
+    if guest_email and "@" in guest_email:
+        return guest_email
+    if user_id:
+        row = conn.execute("SELECT email FROM users WHERE id=?", (user_id,)).fetchone()
+        if row and row["email"] and "@" in (row["email"] or ""):
+            return row["email"]
+    return None
+
+
+def _send_lead_ack_safe(conn, lead_id: int, listing_id, user_id: int | None,
+                        guest_name: str | None, guest_email: str | None) -> None:
+    """Send lead acknowledgement email; mark notify_email_sent_at. Never raises."""
+    try:
+        from alerts.email import send_lead_ack
+        to_email = _resolve_lead_ack_email(conn, user_id, guest_email)
+        if not to_email:
+            return
+        listing_title = None
+        if listing_id is not None:
+            row = conn.execute("SELECT title FROM listings WHERE id=?", (listing_id,)).fetchone()
+            listing_title = row["title"] if row else None
+        if send_lead_ack(to_email, guest_name, listing_title, listing_id):
+            conn.execute(
+                "UPDATE lead_captures SET notify_email_sent_at=datetime('now') WHERE id=?",
+                (lead_id,),
+            )
+    except Exception as e:
+        logger.warning(f"lead ack email failed lead_id={lead_id}: {e}")
+
+
 def _same_price_value(a, b):
     if a is None and b is None:
         return True
@@ -1094,6 +1424,7 @@ def api_create_lead():
             VALUES (?, ?, ?, ?, ?, 'new', ?, ?, ?)
         """, (listing_id, listing_url, phone_norm, source_context, note, user_id, tier, urgency))
         lead_id = cur.lastrowid
+        _send_lead_ack_safe(conn, lead_id, listing_id, user_id, None, None)
 
     log_audit(
         user_id=user_id, tier=tier, action="lead_capture",
@@ -1150,6 +1481,7 @@ def api_create_guest_lead():
             user_id, tier, urgency, name, email_for_ack,
         ))
         lead_id = cur.lastrowid
+        _send_lead_ack_safe(conn, lead_id, listing_id, user_id, name, email_for_ack)
 
     log_audit(
         user_id=user_id, tier=tier, action="lead_capture_guest",
@@ -1779,6 +2111,156 @@ def admin_api_audit():
             LIMIT 200
         """, params).fetchall()
     return jsonify({"items": [dict(r) for r in rows]})
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Admin: User management (grant/revoke VIP, ban)
+# ═══════════════════════════════════════════════════════════════════════════
+def _user_admin_row(row):
+    if not row:
+        return None
+    d = dict(row)
+    # Compute effective tier (VIP can be expired)
+    eff = _effective_tier_from_user(d)
+    d["effective_tier"] = eff
+    # Strip password_hash, telegram_link_token (sensitive)
+    d.pop("password_hash", None)
+    d.pop("telegram_link_token", None)
+    d.pop("telegram_link_expires_at", None)
+    d["telegram_linked"] = bool(d.pop("telegram_chat_id", None))
+    return d
+
+
+@app.route("/admin/api/users")
+@require_admin_auth
+def admin_api_users():
+    tier_filter = (request.args.get("tier") or "").strip()
+    q = (request.args.get("q") or "").strip()
+    where = []
+    params = []
+    if tier_filter in ("free", "vip", "admin"):
+        where.append("tier = ?")
+        params.append(tier_filter)
+    if q:
+        like = f"%{q}%"
+        where.append("(identifier LIKE ? OR display_name LIKE ? OR email LIKE ? OR phone LIKE ?)")
+        params.extend([like, like, like, like])
+    where_sql = f"WHERE {' AND '.join(where)}" if where else ""
+    with db_mod.get_conn() as conn:
+        rows = conn.execute(f"""
+            SELECT id, identifier, identifier_type, email, phone, display_name,
+                   tier, vip_expires_at, telegram_chat_id, notify_email, notify_telegram,
+                   created_at, last_login_at, is_banned
+            FROM users
+            {where_sql}
+            ORDER BY created_at DESC
+            LIMIT 500
+        """, params).fetchall()
+        summary_rows = conn.execute("""
+            SELECT tier, COUNT(*) AS n FROM users WHERE is_banned=0 GROUP BY tier
+        """).fetchall()
+        banned = conn.execute("SELECT COUNT(*) FROM users WHERE is_banned=1").fetchone()[0]
+    summary = {r["tier"]: r["n"] for r in summary_rows}
+    return jsonify({
+        "items": [_user_admin_row(r) for r in rows],
+        "summary": {
+            "total": sum(summary.values()) + banned,
+            "free": summary.get("free", 0),
+            "vip": summary.get("vip", 0),
+            "admin": summary.get("admin", 0),
+            "banned": banned,
+        },
+    })
+
+
+@app.route("/admin/api/users/<int:user_id>/grant-vip", methods=["POST"])
+@require_admin_auth
+def admin_api_grant_vip(user_id):
+    payload = request.get_json(silent=True) or {}
+    try:
+        days = int(payload.get("days") or 30)
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "error": "invalid_days"}), 400
+    if days <= 0 or days > 3650:
+        return jsonify({"ok": False, "error": "invalid_days"}), 400
+    with db_mod.get_conn() as conn:
+        before = conn.execute(
+            "SELECT id, tier, vip_expires_at FROM users WHERE id=?", (user_id,)
+        ).fetchone()
+        if not before:
+            return jsonify({"ok": False, "error": "not_found"}), 404
+        # Extend from max(now, current vip_expires_at) so stacking days works
+        now_iso = datetime.utcnow().isoformat(timespec="seconds")
+        cur_exp = before["vip_expires_at"]
+        base_iso = cur_exp if (cur_exp and cur_exp > now_iso) else now_iso
+        try:
+            base_dt = datetime.fromisoformat(base_iso)
+        except ValueError:
+            base_dt = datetime.utcnow()
+        new_exp = (base_dt + timedelta(days=days)).isoformat(timespec="seconds")
+        conn.execute(
+            "UPDATE users SET tier='vip', vip_expires_at=? WHERE id=?",
+            (new_exp, user_id),
+        )
+        _write_admin_audit(
+            conn, "user_grant_vip", "user", user_id,
+            before=dict(before),
+            after={"id": user_id, "tier": "vip", "vip_expires_at": new_exp},
+            reason=f"+{days}d",
+        )
+    try:
+        log_audit(user_id=user_id, tier="vip", action="vip_granted",
+                  context={"days": days, "vip_expires_at": new_exp})
+    except Exception:
+        pass
+    return jsonify({"ok": True, "vip_expires_at": new_exp, "tier": "vip"})
+
+
+@app.route("/admin/api/users/<int:user_id>/revoke", methods=["POST"])
+@require_admin_auth
+def admin_api_revoke_vip(user_id):
+    with db_mod.get_conn() as conn:
+        before = conn.execute(
+            "SELECT id, tier, vip_expires_at FROM users WHERE id=?", (user_id,)
+        ).fetchone()
+        if not before:
+            return jsonify({"ok": False, "error": "not_found"}), 404
+        conn.execute(
+            "UPDATE users SET tier='free', vip_expires_at=NULL WHERE id=?",
+            (user_id,),
+        )
+        _write_admin_audit(
+            conn, "user_revoke_vip", "user", user_id,
+            before=dict(before),
+            after={"id": user_id, "tier": "free", "vip_expires_at": None},
+        )
+    try:
+        log_audit(user_id=user_id, tier="free", action="vip_revoked")
+    except Exception:
+        pass
+    return jsonify({"ok": True, "tier": "free"})
+
+
+@app.route("/admin/api/users/<int:user_id>/ban", methods=["POST"])
+@require_admin_auth
+def admin_api_ban_user(user_id):
+    payload = request.get_json(silent=True) or {}
+    banned = 1 if payload.get("banned", True) else 0
+    with db_mod.get_conn() as conn:
+        before = conn.execute(
+            "SELECT id, is_banned FROM users WHERE id=?", (user_id,)
+        ).fetchone()
+        if not before:
+            return jsonify({"ok": False, "error": "not_found"}), 404
+        conn.execute("UPDATE users SET is_banned=? WHERE id=?", (banned, user_id))
+        if banned:
+            # Kill all active sessions
+            conn.execute("DELETE FROM user_sessions WHERE user_id=?", (user_id,))
+        _write_admin_audit(
+            conn, "user_ban" if banned else "user_unban", "user", user_id,
+            before=dict(before), after={"id": user_id, "is_banned": banned},
+        )
+    return jsonify({"ok": True, "is_banned": bool(banned)})
 
 
 def _title_tokens(text):

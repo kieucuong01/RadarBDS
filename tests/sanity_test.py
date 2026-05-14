@@ -23,12 +23,13 @@ class RadarSanityTest(unittest.TestCase):
         """Test if dashboard API returns 200 and basic structure"""
         response = self.client.get('/api/dashboard')
         self.assertEqual(response.status_code, 200)
-        
+
         data = json.loads(response.data)
-        expected_keys = ["stats", "signals", "market", "wards_by_city", "trend_data"]
+        # Dashboard now returns stats+meta only; signals served by /api/signals.
+        expected_keys = ["stats", "market", "wards_by_city", "trend_data"]
         for key in expected_keys:
             self.assertIn(key, data, f"Missing key '{key}' in API response")
-            
+
         # Check stats serialization
         self.assertIsInstance(data["stats"], dict)
         self.assertIn("total", data["stats"])
@@ -43,27 +44,28 @@ class RadarSanityTest(unittest.TestCase):
         # Get count with 50% MOS (should be less or equal)
         res50 = self.client.get('/api/dashboard?mos_min=50')
         count50 = json.loads(res50.data)["stats"]["signals"]
-        
+
         self.assertLessEqual(count50, count0, "MOS 50% should have fewer or equal signals than MOS 0%")
 
     def test_prop_type_filtering(self):
         """Test if property type filtering works"""
-        # Request only 'nha_dat'
-        res = self.client.get('/api/dashboard?prop_type=nha_dat')
+        # Signals were moved to dedicated endpoint /api/signals.
+        res = self.client.get('/api/signals?prop_type=nha_dat&limit=20')
+        self.assertEqual(res.status_code, 200)
         data = json.loads(res.data)
-        
-        for sig in data["signals"]:
-            self.assertEqual(sig["prop_type"], "nha_dat", f"Listing {sig['id']} has wrong prop_type")
+        signals = data.get("signals") or data.get("rows") or []
+        for sig in signals:
+            self.assertEqual(sig.get("prop_type"), "nha_dat", f"Listing {sig.get('id')} has wrong prop_type")
 
     def test_sorting(self):
         """Test if sorting by price works"""
-        res = self.client.get('/api/dashboard?sort_by=ppm2_low')
+        res = self.client.get('/api/signals?sort=price_m2_asc&limit=20')
+        self.assertEqual(res.status_code, 200)
         data = json.loads(res.data)
-        signals = data["signals"]
-        
+        signals = data.get("signals") or data.get("rows") or []
+
         if len(signals) > 1:
-            # Check if prices are non-decreasing
-            prices = [s["actual_ppm2"] for s in signals if s["actual_ppm2"] > 0]
+            prices = [s["actual_ppm2"] for s in signals if (s.get("actual_ppm2") or 0) > 0]
             self.assertEqual(prices, sorted(prices), "Signals are not sorted by price per m2 ASC")
 
     def test_heatmap_api(self):

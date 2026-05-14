@@ -64,6 +64,112 @@ function switchPanel(name) {
   }
   if (name === 'training') loadTrainingItems();
   if (name === 'infra') loadInfraItems();
+  if (name === 'users') loadUsers();
+}
+
+// ──────────────────────────────────────────────────────────────
+// User management (RBAC)
+// ──────────────────────────────────────────────────────────────
+let userTimer = null;
+
+function userQuery() {
+  const q = new URLSearchParams();
+  const text = document.getElementById('userSearch').value.trim();
+  const tier = document.getElementById('userTierFilter').value;
+  if (text) q.set('q', text);
+  if (tier) q.set('tier', tier);
+  return q.toString();
+}
+
+async function loadUsers() {
+  const data = await fetchJSON(`/admin/api/users?${userQuery()}`);
+  renderUserStats(data.summary || {});
+  renderUserRows(data.items || []);
+}
+
+function renderUserStats(s) {
+  const items = [
+    ['Total Users', s.total || 0, 'tất cả'],
+    ['VIP', s.vip || 0, 'đang trả phí'],
+    ['Free', s.free || 0, 'miễn phí'],
+    ['Admin', s.admin || 0, 'nội bộ'],
+    ['Banned', s.banned || 0, 'đã chặn'],
+  ];
+  document.getElementById('userStats').innerHTML = items.map((s, idx) => `
+    <div class="stat-card">
+      <small>${esc(s[0])}</small>
+      <div><strong style="color:${idx === 1 ? 'var(--green)' : idx === 4 ? 'var(--red)' : 'var(--ink)'}">${s[1]}</strong><span>${esc(s[2])}</span></div>
+    </div>
+  `).join('');
+}
+
+function renderUserRows(items) {
+  const body = document.getElementById('userTableBody');
+  if (!items.length) {
+    body.innerHTML = `<tr><td colspan="9"><div class="empty">Không có user phù hợp.</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = items.map(u => {
+    const tierBadgeColor = u.effective_tier === 'vip' ? 'var(--green)' : u.effective_tier === 'admin' ? 'var(--orange)' : 'var(--ink-muted)';
+    const banned = u.is_banned ? `<span style="color:var(--red)">BANNED</span>` : '';
+    const vipExp = u.vip_expires_at ? shortDate(u.vip_expires_at) : '-';
+    const expired = u.tier === 'vip' && u.effective_tier !== 'vip' ? ' <small style="color:var(--red)">(hết hạn)</small>' : '';
+    const tg = u.telegram_linked ? '✓' : '-';
+    return `
+      <tr>
+        <td>#${u.id}</td>
+        <td><strong>${esc(u.identifier || '-')}</strong><br><small>${esc(u.identifier_type || '')}</small></td>
+        <td>${esc(u.display_name || '-')}</td>
+        <td><strong style="color:${tierBadgeColor}">${esc((u.effective_tier || u.tier || '').toUpperCase())}</strong>${expired} ${banned}</td>
+        <td>${vipExp}</td>
+        <td>${tg}</td>
+        <td>${shortDate(u.created_at)}</td>
+        <td>${shortDate(u.last_login_at)}</td>
+        <td>
+          <button class="icon-btn" onclick="grantVip(${u.id}, 30)">+30d VIP</button>
+          <button class="icon-btn" onclick="grantVip(${u.id}, 7)">+7d</button>
+          <button class="icon-btn" onclick="revokeVip(${u.id})">Revoke</button>
+          <button class="icon-btn" onclick="toggleBan(${u.id}, ${u.is_banned ? 0 : 1})">${u.is_banned ? 'Unban' : 'Ban'}</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function grantVip(userId, days) {
+  const customDays = prompt(`Cấp VIP bao nhiêu ngày? (default ${days})`, String(days));
+  if (customDays === null) return;
+  const n = parseInt(customDays, 10);
+  if (!n || n <= 0) return alert('Số ngày không hợp lệ');
+  try {
+    await fetchJSON(`/admin/api/users/${userId}/grant-vip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ days: n }),
+    });
+    loadUsers();
+  } catch (e) { alert('Lỗi: ' + (e.message || e)); }
+}
+
+async function revokeVip(userId) {
+  if (!confirm(`Thu hồi VIP của user #${userId}?`)) return;
+  try {
+    await fetchJSON(`/admin/api/users/${userId}/revoke`, { method: 'POST' });
+    loadUsers();
+  } catch (e) { alert('Lỗi: ' + (e.message || e)); }
+}
+
+async function toggleBan(userId, banned) {
+  const verb = banned ? 'Ban' : 'Unban';
+  if (!confirm(`${verb} user #${userId}?`)) return;
+  try {
+    await fetchJSON(`/admin/api/users/${userId}/ban`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ banned: !!banned }),
+    });
+    loadUsers();
+  } catch (e) { alert('Lỗi: ' + (e.message || e)); }
 }
 
 function leadQuery() {
@@ -509,5 +615,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('saveInfraBtn').addEventListener('click', saveInfra);
   document.getElementById('resetInfraBtn').addEventListener('click', resetInfraForm);
   document.getElementById('adminThemeToggle').addEventListener('click', toggleAdminTheme);
+  const refreshUsersBtn = document.getElementById('refreshUsersBtn');
+  if (refreshUsersBtn) refreshUsersBtn.addEventListener('click', loadUsers);
+  const userTierFilter = document.getElementById('userTierFilter');
+  if (userTierFilter) userTierFilter.addEventListener('change', loadUsers);
+  const userSearch = document.getElementById('userSearch');
+  if (userSearch) userSearch.addEventListener('input', () => {
+    clearTimeout(userTimer);
+    userTimer = setTimeout(loadUsers, 220);
+  });
   loadLeads();
 });

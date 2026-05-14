@@ -368,3 +368,16 @@
 .scard.fresh-locked .sc-title { color: #92400e; font-weight: 700; }
 [data-theme="dark"] .scard.fresh-locked .sc-title { color: #fde68a; }
 
+/* Guest-disabled filters (MOS slider, only-drops toggle) — clickable to login */
+.tier-locked-filter {
+  position: relative;
+  cursor: pointer;
+  opacity: .62;
+  filter: grayscale(.2);
+}
+.tier-locked-filter input[type="range"],
+.tier-locked-filter input[type="checkbox"] {
+  pointer-events: none;
+}
+.tier-locked-filter:hover { opacity: .85; }
+

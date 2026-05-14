@@ -593,22 +593,10 @@ function _renderSignalCards(signals) {
     const chunk = signals.slice(start, start + SIGNAL_RENDER_CHUNK_SIZE);
     if (chunk.length === 0) return;
     grid.insertAdjacentHTML('beforeend', chunk.map(x => {
-      // Guest 12-cap stub
-      if (x && x.locked === true) {
-        return `
-        <div class="scard locked-card" onclick="RadarAuth.openAuthModal('Đăng ký miễn phí để xem toàn bộ tin săn deal')">
-          <div class="locked-card-inner">
-            <div class="lock-icon">🔒</div>
-            <div class="locked-title">Đăng ký để xem thêm</div>
-            <div class="locked-sub">Khu vực: ${x.ward || '—'}</div>
-            <button class="upgrade-btn" onclick="event.stopPropagation(); RadarAuth.openAuthModal('Đăng ký miễn phí để xem toàn bộ tin săn deal')">Đăng ký miễn phí</button>
-          </div>
-        </div>`;
-      }
       // Free fresh-lock skeleton (< 24h)
       if (x && x.locked_reason === 'fresh_24h') {
         return `
-        <div class="scard fresh-locked" onclick="RadarAuth.nudgeVipUpgrade('Nâng cấp VIP để xem tin mới ngay')">
+        <div class="scard fresh-locked" onclick="onLockedFreshClick(${x.id || 'null'}, 'card')">
           <div class="sc-img-wrap">
             <div class="sc-img" style="background:linear-gradient(135deg,#fef3c7,#fde68a); display:flex; align-items:center; justify-content:center; font-size:32px;">🔒</div>
             <div class="mos-badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);">VIP ONLY</div>
@@ -616,7 +604,7 @@ function _renderSignalCards(signals) {
           <div class="sc-body">
             <div class="sc-title">${x.title || 'Tin mới — Nâng cấp VIP để xem ngay'}</div>
             <div style="padding:20px 0; text-align:center;">
-              <button class="upgrade-btn" onclick="event.stopPropagation(); RadarAuth.nudgeVipUpgrade('Tin mới đăng — VIP xem trước 24h')">💎 Nâng cấp VIP</button>
+              <button class="upgrade-btn" onclick="event.stopPropagation(); onLockedFreshClick(${x.id || 'null'}, 'button')">💎 Nâng cấp VIP</button>
               <div style="margin-top:10px; font-size:12px; color:var(--muted,#64748b);">Tin đăng dưới 24h — VIP xem ngay, Free chờ thêm.</div>
             </div>
           </div>
@@ -878,7 +866,7 @@ function _openSignalLegacy(card) {
   // Links
   document.getElementById('sm-zalo').dataset.listingId = d.id;
   document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
-  document.getElementById('sm-detail').href = d.url || `/listing/${d.id}`;
+  { const _d=document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
 
   // Load price history + comps
   loadSignalHistory(d.id, price, area, d.ward);
@@ -899,7 +887,7 @@ async function _hydrateSignalDetailLegacy(listingId) {
     document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
     document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
     document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
-    document.getElementById('sm-detail').href = data.url || `/listing/${listingId}`;
+    { const _d=document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
     renderSignalTags({
       area: data.area_m2,
       ward: data.ward,
@@ -1054,7 +1042,7 @@ function _openSignalFromData(d) {
 
   document.getElementById('sm-zalo').dataset.listingId = d.id;
   document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
-  document.getElementById('sm-detail').href = d.url || `/listing/${d.id}`;
+  { const _d=document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
 
   loadSignalHistory(d.id, price, area, d.ward);
   hydrateSignalDetail(d.id);
@@ -1095,7 +1083,7 @@ async function hydrateSignalDetail(listingId) {
     document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
     document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
     document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
-    document.getElementById('sm-detail').href = data.url || `/listing/${listingId}`;
+    { const _d=document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
     renderSignalTags({
       area: data.area_m2,
       ward: data.ward,
@@ -1120,10 +1108,12 @@ async function hydrateSignalDetail(listingId) {
 }
 
 async function loadSignalHistory(listingId, currentPrice, area, ward) {
+  // Chart/history elements only exist for admin tier. Comps table is always present.
   const historyEl = document.getElementById('sm-price-history');
+  const chartEl = document.getElementById('sm-history-chart');
   const compsBody = document.getElementById('sm-comps-body');
-  historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Dang tai lich su...</div>';
-  compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.5;">Dang tai...</td></tr>';
+  if (historyEl) historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Dang tai lich su...</div>';
+  if (compsBody) compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.5;">Dang tai...</td></tr>';
   if (smHistoryChart) { smHistoryChart.destroy(); smHistoryChart = null; }
 
   try {
@@ -1159,12 +1149,14 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
       return `<div class="ph-row">${origin}<span class="ph-price">${h.price_ty || '-'} tỷ</span>${drop}${detail}</div>`;
     }).join('') : '';
 
-    historyEl.innerHTML = `
-      <div class="sm-section-label" style="margin-bottom:6px;">Giá theo bài đăng)</div>
-      ${sameRows || '<div class="ph-row"><span class="ph-date">Chưa có biến động giá </span></div>'}
-      <div class="sm-section-label" style="margin-top:10px; margin-bottom:6px;">Lịch sử đăng BDS</div>
-      ${lotRows || '<div class="ph-row"><span class="ph-date">Không có repost cùng lô</span></div>'}
-    `;
+    if (historyEl) {
+      historyEl.innerHTML = `
+        <div class="sm-section-label" style="margin-bottom:6px;">Giá theo bài đăng)</div>
+        ${sameRows || '<div class="ph-row"><span class="ph-date">Chưa có biến động giá </span></div>'}
+        <div class="sm-section-label" style="margin-top:10px; margin-bottom:6px;">Lịch sử đăng BDS</div>
+        ${lotRows || '<div class="ph-row"><span class="ph-date">Không có repost cùng lô</span></div>'}
+      `;
+    }
 
     const labels = Array.from(new Set([
       ...sameListingHistory.map((h) => h.date),
@@ -1175,8 +1167,8 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
     const mapLot = {};
     lotHistory.forEach((h) => { mapLot[h.date] = h.price_ty; });
 
-    if (labels.length > 0) {
-      const ctx = document.getElementById('sm-history-chart').getContext('2d');
+    if (labels.length > 0 && chartEl) {
+      const ctx = chartEl.getContext('2d');
       smHistoryChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -1216,27 +1208,29 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
       });
     }
 
-    if (Array.isArray(data.comps) && data.comps.length > 0) {
-      compsBody.innerHTML = data.comps.map((c) => {
-        const detail = c.detail_url
-          ? `<a class="sm-comps-link" href="${c.detail_url}" target="_blank" rel="noopener noreferrer">${c.title || 'Tin tuong tu'}</a>`
-          : (c.title || '-');
+    if (compsBody) {
+      if (Array.isArray(data.comps) && data.comps.length > 0) {
+        compsBody.innerHTML = data.comps.map((c) => {
+          const detail = c.detail_url
+            ? `<a class="sm-comps-link" href="${c.detail_url}" target="_blank" rel="noopener noreferrer">${c.title || 'Tin tuong tu'}</a>`
+            : (c.title || '-');
 
-        const origin = c.url
-          ? `<a class="ph-lot-link" href="${c.url}" target="_blank" rel="noopener noreferrer">Link gốc</a>`
-          : '';
-        const match = c.match_score != null ? `${c.match_score}%` : '-';
-        return `<tr><td>${origin}<div style="margin-top:4px;">${detail}</div></td><td>${c.area_m2 || '-'} m²</td><td><b>${c.price_ty || '-'} tỷ</b></td><td>${match}</td></tr>`;
-      }).join('');
-    } else {
-      compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.6;">Khong co comps phu hop</td></tr>';
+          const origin = c.url
+            ? `<a class="ph-lot-link" href="${c.url}" target="_blank" rel="noopener noreferrer">Link gốc</a>`
+            : '';
+          const match = c.match_score != null ? `${c.match_score}%` : '-';
+          return `<tr><td>${origin}<div style="margin-top:4px;">${detail}</div></td><td>${c.area_m2 || '-'} m²</td><td><b>${c.price_ty || '-'} tỷ</b></td><td>${match}</td></tr>`;
+        }).join('');
+      } else {
+        compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.6;">Khong co comps phu hop</td></tr>';
+      }
+
+      compsBody.innerHTML += `<tr><td>Deal hiện tại</td><td>${area || '-'} m²</td><td><b>${currentPrice || '-'} tỷ</b></td><td>Now</td></tr>`;
     }
-
-    compsBody.innerHTML += `<tr><td>Deal hiện tại</td><td>${area || '-'} m²</td><td><b>${currentPrice || '-'} tỷ</b></td><td>Now</td></tr>`;
   } catch (err) {
     console.error('History load error:', err);
-    historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Khong tai duoc du lieu.</div>';
-    compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.6;">Loi tai du lieu</td></tr>';
+    if (historyEl) historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Khong tai duoc du lieu.</div>';
+    if (compsBody) compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.6;">Loi tai du lieu</td></tr>';
   }
 }
 
@@ -1700,21 +1694,8 @@ async function loadListings(page) {
     currentPageNo = page;
     const data = await fetchJSONCached('listings', `/api/listings?${currentFilters}${tableParams}&sort_by=${tableSort.col}&sort_dir=${tableSort.dir}&page=${page}&limit=50`);
     listingsHasMore = (typeof data.has_more === 'boolean') ? data.has_more : ((data.listings || []).length >= 50);
-    if (sentinel) {
-      if (data.tier === 'guest') {
-        sentinel.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-muted);">🔒 Đăng ký miễn phí để xem toàn bộ ${data.total} tin <button class="upgrade-btn" style="margin-left:8px;" onclick="RadarAuth.openAuthModal('listings_guest_cap')">Đăng ký</button></div>`;
-      } else {
-        sentinel.textContent = listingsHasMore ? '' : `Đã hiển thị tất cả ${data.total} tin`;
-      }
-    }
+    if (sentinel) sentinel.textContent = listingsHasMore ? '' : `Đã hiển thị tất cả ${data.total} tin`;
     const rows = (data.listings || []).map(x => {
-      if (x && x.locked === true) {
-        return `<tr class="locked-row" onclick="RadarAuth.openAuthModal('listings_locked_row')" style="cursor:pointer; background:linear-gradient(90deg, rgba(245,158,11,0.06), rgba(245,158,11,0.02));">
-          <td colspan="8" style="padding:14px 16px; text-align:center; color:var(--text-muted); font-weight:600;">
-            🔒 <span style="margin:0 8px;">Khu vực: ${x.ward || '—'}</span> · Đăng ký miễn phí để xem chi tiết
-          </td>
-        </tr>`;
-      }
       const fair = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       return `
         <tr class="clickable-row" onclick="openListingModal(this)" data-id="${x.id}" data-title="${String(x.title || '').replace(/"/g, '&quot;')}" data-price="${x.price_ty || ''}" data-fair="${fair !== '-' ? fair : ''}" data-area="${x.area_m2 || ''}" data-ward="${x.ward || ''}" data-road="${x.road_type || x.road_tier || ''}" data-time="${_timeAgoText(x.days_ago)}" data-profit="${x.price_ty && fair !== '-' ? (parseFloat(fair) - parseFloat(x.price_ty)).toFixed(2) : ''}" data-mos="${x.mos_pct || ''}" data-source="${sourceNames[x.source] || x.source || ''}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || ''}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}">
@@ -2025,13 +2006,56 @@ function appendMessage(role, text) {
 }
 
 /* ───────────────────────────────────────────────────────────────
+   Conversion tracker — fire-and-forget POST /api/track
+   ─────────────────────────────────────────────────────────────── */
+window.track = function (action, opts) {
+  opts = opts || {};
+  try {
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        action: action,
+        listing_id: opts.listing_id || null,
+        context: opts.context || {},
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (e) { /* silent */ }
+};
+
+// Track + nudge wrappers for locked UI elements
+function onLockedFreshClick(listingId, source) {
+  window.track('locked_fresh_click', {
+    listing_id: listingId || null,
+    context: { reason: 'fresh_24h', source: source || 'card' },
+  });
+  if (window.RadarAuth && typeof RadarAuth.nudgeVipUpgrade === 'function') {
+    RadarAuth.nudgeVipUpgrade('Tin mới đăng — VIP xem trước 24h');
+  }
+}
+function onLockedTabClick(tab, reason) {
+  window.track('locked_tab_click', {
+    context: { tab: tab || 'unknown', reason: reason || 'tier_required' },
+  });
+  if (window.RadarAuth && typeof RadarAuth.nudgeVipUpgrade === 'function') {
+    RadarAuth.nudgeVipUpgrade(reason || 'Mở khoá Phân Tích Chuyên Sâu');
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────
    Tier-aware CTA dispatcher + Guest Lead modal
    ─────────────────────────────────────────────────────────────── */
 function tierCTA(listingId, url, ctx) {
   const t = window.USER_TIER || 'guest';
   if (t === 'guest') {
+    window.track('vip_cta_click', { listing_id: listingId, context: { tier: 'guest', ctx: ctx } });
     openGuestLeadForm(listingId, ctx);
     return;
+  }
+  if (t === 'free') {
+    window.track('cta_vip', { listing_id: listingId, context: { tier: 'free', ctx: ctx } });
   }
   // free / vip / admin → reuse existing flow (urgency from tier)
   const urgency = (t === 'vip' || t === 'admin') ? 'urgent' : 'standard';

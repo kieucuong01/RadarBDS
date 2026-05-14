@@ -323,3 +323,88 @@ def log_audit(
             )
     except Exception as e:
         logger.warning(f"audit log failed action={action}: {e}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Rate limit (per-tier sliding hour window)
+# ─────────────────────────────────────────────────────────────────────────────
+# Tier → requests/hour. None = unlimited.
+RATE_LIMITS_PER_HOUR = {
+    "guest": 60,
+    "free": 300,
+    "vip": None,
+    "admin": None,
+}
+
+
+def _client_ip_from_request() -> str:
+    try:
+        return (request.headers.get("X-Forwarded-For", request.remote_addr or "")
+                .split(",")[0].strip() or "0.0.0.0")
+    except Exception:
+        return "0.0.0.0"
+
+
+def rate_limit(scope: str, limits: dict | None = None):
+    """Decorator: enforce per-tier per-hour limit using SQLite `rate_limits` table.
+
+    Key shape: '{scope}:user:{id}' for logged-in, '{scope}:ip:{addr}' otherwise.
+    Sliding hour window (window_start = ISO datetime).
+    """
+    table_limits = limits or RATE_LIMITS_PER_HOUR
+
+    def deco(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            tier = current_tier()
+            cap = table_limits.get(tier)
+            if cap is None:
+                return fn(*args, **kwargs)
+            u = current_user()
+            key = (f"{scope}:user:{u['id']}" if u else f"{scope}:ip:{_client_ip_from_request()}")
+            now = datetime.utcnow()
+            try:
+                with get_conn() as conn:
+                    row = conn.execute(
+                        "SELECT window_start, count FROM rate_limits WHERE key=?",
+                        (key,),
+                    ).fetchone()
+                    if row and row["window_start"]:
+                        try:
+                            ws = datetime.fromisoformat(row["window_start"])
+                        except ValueError:
+                            ws = now
+                    else:
+                        ws = None
+                    if ws is None or (now - ws) > timedelta(hours=1):
+                        # Reset window
+                        conn.execute(
+                            "INSERT INTO rate_limits(key, window_start, count) VALUES(?, ?, 1) "
+                            "ON CONFLICT(key) DO UPDATE SET window_start=excluded.window_start, count=1",
+                            (key, now.isoformat(timespec="seconds")),
+                        )
+                        return fn(*args, **kwargs)
+                    cur_count = int(row["count"] or 0)
+                    if cur_count >= cap:
+                        # Compute remaining seconds in window
+                        retry_after = max(1, int(3600 - (now - ws).total_seconds()))
+                        resp = jsonify({
+                            "error": "rate_limited",
+                            "scope": scope,
+                            "tier": tier,
+                            "limit": cap,
+                            "retry_after": retry_after,
+                        })
+                        resp.headers["Retry-After"] = str(retry_after)
+                        return resp, 429
+                    conn.execute(
+                        "UPDATE rate_limits SET count=count+1 WHERE key=?",
+                        (key,),
+                    )
+            except Exception as e:
+                logger.warning(f"rate_limit check failed scope={scope}: {e}")
+            return fn(*args, **kwargs)
+
+        return wrapper
+
+    return deco

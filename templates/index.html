@@ -271,26 +271,33 @@
               🔥 SUPER SIGNAL
             </button> -->
 
-            <div class="command-mos"> 
+            <div class="command-mos {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}"
+                 {% if USER_TIER == 'guest' %}onclick="window.track('locked_filter_click',{context:{filter:'mos_min'}}); RadarAuth.openAuthModal('Đăng ký miễn phí để lọc theo định giá')" title="Đăng ký để dùng bộ lọc này"{% endif %}>
               <div class="command-mos-head">
-                <span class="command-mos-label">Thấp hơn so với Định Giá: &gt;= <strong><span id="mosValue">25</span>%</strong></span>
+                <span class="command-mos-label">
+                  {% if USER_TIER == 'guest' %}🔒 {% endif %}Thấp hơn so với Định Giá: &gt;= <strong><span id="mosValue">25</span>%</strong>
+                </span>
               </div>
-              
+
               <div class="command-mos-track">
                 <input type="range" name="mos_min" id="mosSlider" min="0" max="70" step="5" value="25"
+                  {% if USER_TIER == 'guest' %}disabled{% endif %}
                   oninput="document.getElementById('mosValue').textContent=this.value"
                   onchange="scheduleApplyFilters()">
               </div>
-              
+
               <div class="mos-markers command-mos-markers">
                 <span>0%</span>
                 <span>25%</span>
                 <span>50%+</span>
               </div>
             </div>
-            <label class=" drop-toggle-pill command-drop-toggle">
-              <input type="checkbox" name="only_drops" value="1" onchange="scheduleApplyFilters()">
-              <span>📉 CHỈ HIỂN THỊ TIN GIẢM GIÁ</span>
+            <label class="drop-toggle-pill command-drop-toggle {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}"
+                   {% if USER_TIER == 'guest' %}onclick="event.preventDefault(); window.track('locked_filter_click',{context:{filter:'only_drops'}}); RadarAuth.openAuthModal('Đăng ký miễn phí để lọc tin giảm giá')" title="Đăng ký để dùng bộ lọc này"{% endif %}>
+              <input type="checkbox" name="only_drops" value="1"
+                {% if USER_TIER == 'guest' %}disabled{% endif %}
+                onchange="scheduleApplyFilters()">
+              <span>{% if USER_TIER == 'guest' %}🔒 {% endif %}CHỈ HIỂN THỊ TIN GIẢM GIÁ</span>
             </label>
 
           </div>
@@ -342,7 +349,7 @@
                   <div class="lock-icon">🔒</div>
                   <h4>Đặc quyền VIP</h4>
                   <p>Chỉ báo Tỷ lệ Cắt máu giúp phát hiện phường đang có nhiều chủ hạ giá — chỉ mở cho thành viên VIP.</p>
-                  <button class="upgrade-btn" onclick="RadarAuth.nudgeVipUpgrade('Mở khoá Phân Tích Chuyên Sâu')">💎 Nâng cấp VIP</button>
+                  <button class="upgrade-btn" onclick="onLockedTabClick('distress_ratio', 'Mở khoá Phân Tích Chuyên Sâu')">💎 Nâng cấp VIP</button>
                 </div>
               {% endif %}
             </div>
@@ -373,7 +380,7 @@
                   <div class="lock-icon">🔒</div>
                   <h4>Đặc quyền VIP</h4>
                   <p>Bất thường nguồn cung phát hiện phường có sóng tin rao tăng đột biến — chỉ mở cho thành viên VIP.</p>
-                  <button class="upgrade-btn" onclick="RadarAuth.nudgeVipUpgrade('Mở khoá Phân Tích Chuyên Sâu')">💎 Nâng cấp VIP</button>
+                  <button class="upgrade-btn" onclick="onLockedTabClick('supply_anomaly', 'Mở khoá Phân Tích Chuyên Sâu')">💎 Nâng cấp VIP</button>
                 </div>
               {% endif %}
             </div>
@@ -568,13 +575,15 @@
 
         <!-- RIGHT COLUMN -->
         <div class="sm-right">
-          <!-- Price history chart -->
-          <div class="sm-section" style="margin-bottom:16px;">
+          {% if USER_TIER == 'admin' %}
+          <!-- Price history chart (admin only) -->
+          <div class="sm-section" id="sm-history-section" style="margin-bottom:16px;">
             <div style="height:160px; position:relative;">
               <canvas id="sm-history-chart"></canvas>
             </div>
             <div id="sm-price-history" class="sm-price-history"></div>
           </div>
+          {% endif %}
 
           <!-- COMPS table -->
           <div class="sm-section">
@@ -595,7 +604,9 @@
           <!-- Action buttons -->
           <div style="display:flex; gap:10px; margin-top:16px;">
           <a id="sm-zalo" href="#" target="_blank" class="sm-btn-zalo" onclick="event.preventDefault();captureLeadAndOpen(this.dataset.listingId,this.dataset.listingUrl,'modal_signal');">💬 Chat Zalo</a>
+            {% if USER_TIER == 'admin' %}
             <a id="sm-detail" href="#" target="_blank" class="sm-btn-detail">↗ Xem tin gốc</a>
+            {% endif %}
           </div>
         </div>
       </div>
