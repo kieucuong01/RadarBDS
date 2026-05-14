@@ -13,7 +13,7 @@ python radar.py crawl-daily
   └─ cli/crawlers.py::cmd_crawl(mode="incremental")
        ├─ capture crawl_start_ts                       # mốc "tin mới của run này"
        ├─ Guland crawl       (crawler/guland_pw.py)
-       ├─ BatDongSan crawl   (crawler/batdongsan_pw.py)
+       ├─ BatDongSan crawl   (crawler/batdongsan_pw.py)   ⚠️ Cloudflare blocked — 0 records
        ├─ Facebook crawl     (crawler/facebook_apify.py via Apify)
        ├─ run_full_reprocess()   → normalize → dedup → valuation
        ├─ download_images()      → tải ảnh + tạo thumbnail
@@ -22,6 +22,8 @@ python radar.py crawl-daily
             collect_fresh_signals(conn, since_ts=crawl_start_ts)
             send_consolidated_daily_alert(...)
 ```
+
+> ⚠️ **BDS hiện không lấy được data** (Cloudflare Turnstile, 2026-05). Daily run chỉ có Guland + Facebook. Xem `.claude/rules/crawler.md` mục BatDongSan để biết điều kiện resume.
 
 Pipeline lõi sau crawl giữ nguyên: `raw_listings → listings → valuation_results`. Phần thay đổi nằm ở **input config** (đầu pipeline) và **alert** (cuối pipeline).
 
@@ -139,7 +141,7 @@ Loader: `crawler/guland_pw.py::__init__` → `_load_sources_config()`. Nếu fil
 }
 ```
 
-`SEARCH_SLUGS` tự build cross-product: `{cat}-phuong-{ward.slug}_1` → 13 wards × 2 cats = 26 slugs. Loader: `crawler/batdongsan_pw.py::_load_bds_config()` (module level).
+`SEARCH_SLUGS` build từ `urls` của mỗi ward (default 4 URL/ward × 13 ward = 52). Loader: `crawler/batdongsan_pw.py::_load_bds_config()` (module level). **Thực tế hiện tại:** chỉ slug đầu tiên may mắn qua Cloudflare; phần còn lại trả 0 cards và lưu HTML+PNG debug vào `logs/bds_no_cards/`.
 
 ### 4.3 Facebook profiles — `data/facebook_profiles.json`
 

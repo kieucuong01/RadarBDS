@@ -49,19 +49,26 @@ page.evaluate(JS_BATCH_DETAIL, urls)
   - **Không** crawl URL tổng hợp `mua-ban-bat-dong-san-*` — đã crawl 4 loại riêng
 - Mở rộng địa bàn: thêm ward vào `data/guland_sources.json`
 
-## BatDongSan crawler (batdongsan_pw.py)
+## BatDongSan crawler (batdongsan_pw.py) — ⚠️ Cloudflare Turnstile blocked
+
+**Trạng thái 2026-05-14:** BDS đã bị Cloudflare Turnstile interactive challenge chặn — Playwright stealth không bypass được. Chỉ slug đầu tiên trong session may mắn pass; slug 2 trở đi 100% block (header/body markers `cf-mitigated`, `challenge-platform`, `cf_chl_opt`, title "Just a moment...").
+
+Toàn bộ dữ liệu BDS cũ đã xóa khỏi DB. Crawler vẫn còn code (`crawler/batdongsan_pw.py`) và CLI vẫn nhận `--source batdongsan`, nhưng `crawl-all` sẽ kết thúc với 0 records mới. Không gỡ code để dễ resume nếu sau này có proxy/solver.
 
 - Pagination: navigate `/p1`, `/p2`, ... → selector `.js__card` → `a.href`
-- `SLUG_DELAY_S = 8` — delay giữa các detail page (tránh Cloudflare)
-- `PAGE_DELAY_S = 3` — delay giữa listing pages
-- Cloudflare detect: kiểm tra `page.title()` — bị block nếu title là Cloudflare page
-- Bottleneck: ~500 records × 8s ≈ 67 phút — không thể song song
-- **SEARCH_SLUGS**: 52 slugs — 13 phường TDM × 4 loại hình (đất, nhà, chung cư, kho xưởng)
+- `SLUG_DELAY_S = 30` — delay giữa các detail page (anti rate-limit)
+- `PAGE_DELAY_S = 10` — delay giữa listing pages
+- Cloudflare detect: `_looks_like_challenge()` kiểm tra title + body markers (`cf-mitigated`, `challenge-platform`, `cf_chl_opt`, `cf-browser-verification`, "checking your browser")
+- Auto retry: 2 lần với backoff 15s/30s khi gặp challenge
+- Debug: HTML + screenshot full page lưu vào `logs/bds_no_cards/<slug>.{html,png}` khi không có cards
+- **SEARCH_SLUGS**: 52 slugs — 13 phường TDM × 4 loại hình (đất, nhà, chung cư, kho xưởng) — config sẵn nhưng KHÔNG dùng được do Cloudflare
   - Default pattern (11 phường, không suffix): `ban-dat-dat-nen-phuong-{slug}` · `ban-nha-dat-phuong-{slug}` · `ban-can-ho-chung-cu-phuong-{slug}` · `ban-kho-nha-xuong-phuong-{slug}`
   - Tân An: suffix `_1`; Phú Cường: suffix `-1` + prefix `nha-dat-ban-` (nhà)
   - Override per-ward bằng `urls` trong `data/batdongsan_sources.json`
   - `BDS_URL_TO_WARD`: exact lookup từ slug → ward (tránh regex fallback)
   - Ward slugs: tan-an, tuong-binh-hiep, hiep-an, chanh-my, phu-my, phu-tan, chanh-nghia, dinh-hoa, phu-tho, phu-hoa, phu-cuong, hiep-thanh, phu-loi
+
+**Khi nào resume:** cần residential proxy pool hoặc Turnstile solver (2captcha/CapSolver) — không trong scope MVP. Theo dõi Cloudflare có nới rule hay không.
 
 ## Facebook crawler (facebook_apify.py)
 

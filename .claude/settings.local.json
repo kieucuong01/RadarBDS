@@ -94,7 +94,9 @@
       "Bash(python -X utf8 -c \"from crawler.batdongsan_pw import BatDongSanCrawler; c = BatDongSanCrawler\\(\\); print\\('stats keys:', list\\(c._stats.keys\\(\\)\\)\\); print\\('error_details:', c._stats['error_details']\\)\")",
       "Bash(python -X utf8 radar.py crawl-health --limit 5)",
       "PowerShell(cd \"C:\\\\Users\\\\ASUS\\\\Documents\\\\Claude\\\\Projects\\\\Radar BDS\"; & \"$env:LOCALAPPDATA\\\\Programs\\\\Python\\\\Python39\\\\python.exe\" -X utf8 radar.py schedule-setup --time 10:15 --every 1)",
-      "PowerShell(schtasks /query /tn RadarBDS_DailyCrawl /fo LIST)"
+      "PowerShell(schtasks /query /tn RadarBDS_DailyCrawl /fo LIST)",
+      "Bash(git checkout *)",
+      "Bash(python -X utf8 -c \"from db.schema import init_schema; init_schema\\(\\)\")"
     ]
   }
 }

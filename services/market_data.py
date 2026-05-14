@@ -4,6 +4,68 @@ from collections import defaultdict
 
 from services.image_assets import resolve_image_url
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Tier-aware masking (server-side). Address + tên đường KHÔNG che (decision 2026-05-14)
+# ─────────────────────────────────────────────────────────────────────────────
+TIER_ORDER = {"guest": 0, "free": 1, "vip": 2, "admin": 3}
+FRESH_LOCK_TITLE = "Tin mới — Nâng cấp VIP để xem ngay"
+
+
+def redact_for_tier(record, tier: str):
+    """Return a tier-safe copy of a listing dict.
+
+    - admin: untouched.
+    - others: contact_phone / url / source_url forced to None (commission protection).
+    - free + is_fresh_locked: skeleton card (title nudge, no price/MOS/desc/imgs/address).
+    """
+    if record is None:
+        return None
+    if tier == "admin":
+        return dict(record)
+    out = dict(record)
+    for key in ("contact_phone", "url", "source_url"):
+        if key in out:
+            out[key] = None
+
+    if tier == "free" and out.get("is_fresh_locked"):
+        out["title"] = FRESH_LOCK_TITLE
+        out["description"] = None
+        out["price_ty"] = None
+        out["price_per_m2"] = None
+        out["actual_ppm2"] = None
+        out["fair_ppm2"] = None
+        out["mos_pct"] = None
+        out["address"] = None
+        out["imgs"] = []
+        out["primary_img"] = ""
+        out["locked_reason"] = "fresh_24h"
+    return out
+
+
+def apply_guest_truncation(records, tier: str, limit: int = 12):
+    """Guest sees `limit` real cards + up to `limit` locked stubs (total ≤ 2*limit).
+
+    Each stub keeps only id + ward so client can render `🔒 Đăng ký để xem`.
+    The locked-count is capped so infinite scroll stops naturally at the first page.
+    """
+    if tier != "guest" or not records:
+        return records
+    visible = list(records[:limit])
+    locked = [
+        {"id": r.get("id"), "ward": r.get("ward"), "locked": True}
+        for r in records[limit:limit * 2]
+    ]
+    return visible + locked
+
+
+def _fresh_lock_sql(alias: str = "l", delay_hours: int = 24) -> str:
+    """SQL fragment marking listings newer than delay_hours as fresh-locked."""
+    return (
+        f"CASE WHEN datetime(COALESCE({alias}.posted_at, {alias}.crawled_at)) "
+        f"> datetime('now', '-{int(delay_hours)} hours') THEN 1 ELSE 0 END "
+        f"AS is_fresh_locked"
+    )
+
 CITY_MAP = {
     "THỦ DẦU MỘT": ["Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ", "Phú Mỹ", "Phú Cường", "Phú Hòa", "Phú Lợi", "Hiệp Thành", "Chánh Nghĩa", "Phú Tân", "Hòa Phú"],
     "BẾN CÁT": ["Phú An", "An Tây", "An Điền", "Thới Hòa", "Mỹ Phước", "Mỹ Phước 1", "Mỹ Phước 2", "Mỹ Phước 3", "Mỹ Phước 4", "Chánh Phú Hòa", "Tân Định", "Hòa Lợi"],
@@ -123,9 +185,18 @@ def _primary_images(conn, listing_ids):
     return img_map
 
 
-def _format_signal_row(r, primary_img=None):
+def _row_get(r, key, default=None):
+    """Safe getter that works for both sqlite3.Row and dict."""
+    try:
+        val = r[key]
+    except (IndexError, KeyError):
+        return default
+    return default if val is None else val
+
+
+def _format_signal_row(r, primary_img=None, tier: str = "guest"):
     fair_ppm2 = round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None
-    return {
+    record = {
         "id": r['id'],
         "title": r['title'],
         "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
@@ -148,10 +219,12 @@ def _format_signal_row(r, primary_img=None):
         "source": r['source'],
         "road_tier": r['road_tier'] or 0,
         "has_so": None if r['has_so'] is None else bool(r['has_so']),
+        "is_fresh_locked": bool(_row_get(r, 'is_fresh_locked', 0)),
     }
+    return redact_for_tier(record, tier)
 
 
-def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0):
+def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=24):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     where_sql, params = _build_filters(sources, wards, prop_types, only_drops, prefix="l.", area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
@@ -160,6 +233,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     limit = min(max(int(limit or 30), 1), 100)
     offset = (page - 1) * limit
     order_sql = _signal_sort_sql(sort)
+    fresh_flag = _fresh_lock_sql("l", delay_hours)
 
     count_row = conn.execute(f"""
         SELECT COUNT(*)
@@ -175,7 +249,8 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
                l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
                l.price_first_ty, l.duplicate_of_id,
                l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
-               COALESCE(v.signal_score, 0) as signal_score
+               COALESCE(v.signal_score, 0) as signal_score,
+               {fresh_flag}
         FROM valuation_results v
         JOIN listings l ON v.listing_id = l.id
         WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
@@ -186,23 +261,28 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     image_map = _primary_images(conn, [r['id'] for r in rows])
     conn.close()
 
+    signals = [_format_signal_row(r, image_map.get(r['id']), tier=tier) for r in rows]
+    signals = apply_guest_truncation(signals, tier, limit=12)
+
     return {
-        "signals": [_format_signal_row(r, image_map.get(r['id'])) for r in rows],
+        "signals": signals,
         "total": total,
         "page": page,
         "limit": limit,
         "pages": (total + limit - 1) // limit if limit else 1,
-        "has_more": page * limit < total,
+        "has_more": False if tier == "guest" else (page * limit < total),
         "sort": sort or "newest",
+        "tier": tier,
     }
 
 
-def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0):
+def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=24):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
     where_sql, params = _build_filters(sources, wards, prop_types, only_drops, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
     mos_condition, mos_params = _mos_filter(mos_min)
+    fresh_flag = _fresh_lock_sql("l", delay_hours)
 
     # 1. Stats
     stats = conn.execute(f"""
@@ -228,7 +308,8 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
                    l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
                    l.price_first_ty, l.duplicate_of_id,
                    l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
-                   COALESCE(v.signal_score, 0) as signal_score
+                   COALESCE(v.signal_score, 0) as signal_score,
+                   {fresh_flag}
             FROM valuation_results v
             JOIN listings l ON v.listing_id = l.id
             WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
@@ -240,7 +321,8 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     all_rows = []
     if not skip_listings:
         all_query = f"""
-            SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score
+            SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
+                   {fresh_flag}
             FROM listings l
             LEFT JOIN valuation_results v ON l.id = v.listing_id
             WHERE {where_sql}
@@ -347,25 +429,36 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     # 7. Grouped Wards for UI
     wards_by_city = {city: list(wards) for city, wards in CITY_MAP.items()}
 
-    return {
-        "stats": dict(stats),
-        "signals": [_format_signal_row(r, (img_map.get(r['id']) or [""])[0]) for r in sig_rows],
-        "all_listings": [{
+    signals_out = [_format_signal_row(r, (img_map.get(r['id']) or [""])[0], tier=tier) for r in sig_rows]
+    signals_out = apply_guest_truncation(signals_out, tier, limit=12)
+
+    all_listings_out = [
+        redact_for_tier({
             "id": r['id'], "title": r['title'], "description": r['description'] or "",
             "price_ty": r['price_ty'], "area_m2": r['area_m2'],
-            "price_per_m2": round(r['price_per_m2'],1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
-            "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0,
-            "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None,
+            "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
+            "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
+            "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
             "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
             "suspicious_bait": bool(r['suspicious_bait']),
             "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],
-            "source": r['source'], "imgs": img_map.get(r['id'], [])
-        } for r in all_rows],
+            "source": r['source'], "imgs": img_map.get(r['id'], []),
+            "is_fresh_locked": bool(_row_get(r, 'is_fresh_locked', 0)),
+        }, tier)
+        for r in all_rows
+    ]
+    all_listings_out = apply_guest_truncation(all_listings_out, tier, limit=12)
+
+    return {
+        "stats": dict(stats),
+        "signals": signals_out,
+        "all_listings": all_listings_out,
         "market": market,
         "trend_data": trend_data,
         "all_wards": all_wards,
         "all_sources": all_sources,
-        "wards_by_city": wards_by_city
+        "wards_by_city": wards_by_city,
+        "tier": tier,
     }
 
 def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0):
@@ -628,11 +721,13 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
         }
     }
 
-def load_listing_detail(db_path, listing_id):
+def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours: int = 24):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    listing = conn.execute("""
-        SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score
+    fresh_flag = _fresh_lock_sql("l", delay_hours)
+    listing = conn.execute(f"""
+        SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
+               {fresh_flag}
         FROM listings l
         LEFT JOIN valuation_results v ON l.id = v.listing_id
         WHERE l.id = ?
@@ -641,7 +736,7 @@ def load_listing_detail(db_path, listing_id):
     """, (listing_id,)).fetchone()
     if not listing:
         return None
-    
+
     images = [
         url for url in (
             resolve_image_url(r[0], r[1])
@@ -656,11 +751,22 @@ def load_listing_detail(db_path, listing_id):
     ]
     history = [{'date': (r['recorded_at'] or '')[:10], 'price_ty': r['price_ty']} for r in conn.execute("SELECT recorded_at, price_ty FROM price_history WHERE listing_id = ? ORDER BY recorded_at ASC", (listing_id,)).fetchall()]
     conn.close()
-    
+
+    listing_dict = dict(listing)
+    listing_dict["is_fresh_locked"] = bool(listing_dict.get("is_fresh_locked"))
+    listing_dict = redact_for_tier(listing_dict, tier)
+
+    # Fresh-lock for free → also blank images/history (skeleton experience)
+    if tier == "free" and listing_dict.get("locked_reason") == "fresh_24h":
+        images = []
+        history = []
+    # Hide history price detail for non-admin? keep — only commission-sensitive fields are masked.
+
     return {
-        "listing": dict(listing),
+        "listing": listing_dict,
         "images": images,
-        "history": history
+        "history": history,
+        "tier": tier,
     }
 
 def get_base_filters(req):

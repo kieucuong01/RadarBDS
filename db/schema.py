@@ -304,6 +304,101 @@ CREATE TABLE IF NOT EXISTS infra_entries (
     created_by      TEXT DEFAULT 'admin'
 );
 CREATE INDEX IF NOT EXISTS idx_infra_kind_active ON infra_entries(kind, active, sort_order, event_date DESC);
+
+
+-- ═══════════════════════════════════════════════════════════════════
+-- RBAC: 4-tier user system (Guest / Free / VIP / Admin)
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS users (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    identifier          TEXT NOT NULL UNIQUE,            -- normalized phone OR email
+    identifier_type     TEXT NOT NULL,                   -- 'phone' | 'email'
+    email               TEXT,                            -- = identifier nếu type=email; optional khi type=phone
+    phone               TEXT,                            -- = identifier nếu type=phone
+    password_hash       TEXT NOT NULL,                   -- bcrypt
+    display_name        TEXT,
+    tier                TEXT NOT NULL DEFAULT 'free',    -- 'free' | 'vip' | 'admin'
+    vip_expires_at      TEXT,                            -- ISO datetime; NULL = chưa VIP
+    telegram_chat_id    TEXT,                            -- bound qua /start <token>
+    telegram_link_token TEXT,                            -- random token cho deep-link, expire 10 phút
+    telegram_link_expires_at TEXT,
+    notify_email        INTEGER DEFAULT 1,
+    notify_telegram     INTEGER DEFAULT 1,
+    created_at          TEXT DEFAULT (datetime('now')),
+    last_login_at       TEXT,
+    is_banned           INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_users_identifier    ON users(identifier);
+CREATE INDEX IF NOT EXISTS idx_users_tier_expires  ON users(tier, vip_expires_at);
+CREATE INDEX IF NOT EXISTS idx_users_telegram_chat ON users(telegram_chat_id);
+
+
+CREATE TABLE IF NOT EXISTS user_sessions (
+    token       TEXT PRIMARY KEY,                          -- secrets.token_urlsafe(32)
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at  TEXT DEFAULT (datetime('now')),
+    expires_at  TEXT NOT NULL,                             -- ~30 ngày
+    user_agent  TEXT,
+    ip          TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user    ON user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON user_sessions(expires_at);
+
+
+CREATE TABLE IF NOT EXISTS user_watchlists (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name             TEXT NOT NULL,
+    wards            TEXT,        -- JSON array
+    prop_types       TEXT,        -- JSON array
+    mos_min          INTEGER DEFAULT 0,
+    price_max_ty     REAL,
+    price_min_ty     REAL,
+    area_min         REAL,
+    area_max         REAL,
+    notify_telegram  INTEGER DEFAULT 1,
+    notify_email     INTEGER DEFAULT 1,
+    active           INTEGER DEFAULT 1,
+    last_notified_at TEXT,
+    created_at       TEXT DEFAULT (datetime('now')),
+    updated_at       TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_watchlists_user_active ON user_watchlists(user_id, active);
+
+
+CREATE TABLE IF NOT EXISTS user_audit_log (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER,                  -- nullable: guest tracking
+    tier        TEXT,                     -- snapshot tier tại thời điểm action
+    action      TEXT NOT NULL,
+    listing_id  INTEGER,
+    context     TEXT,                     -- JSON tùy action
+    ip          TEXT,
+    user_agent  TEXT,
+    created_at  TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_audit_user_action ON user_audit_log(user_id, action, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_action_time ON user_audit_log(action, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_listing     ON user_audit_log(listing_id, created_at DESC);
+
+
+CREATE TABLE IF NOT EXISTS rate_limits (
+    key          TEXT PRIMARY KEY,       -- 'listings:user:42' | 'listings:ip:1.2.3.4'
+    window_start TEXT,
+    count        INTEGER DEFAULT 0
+);
+
+
+-- Notification idempotency log: tránh push 1 listing × user nhiều lần
+CREATE TABLE IF NOT EXISTS notification_log (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    listing_id  INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    channel     TEXT NOT NULL,           -- 'telegram' | 'email'
+    sent_at     TEXT DEFAULT (datetime('now')),
+    UNIQUE(user_id, listing_id, channel)
+);
+CREATE INDEX IF NOT EXISTS idx_notif_user_listing ON notification_log(user_id, listing_id);
 """
 
 
@@ -368,6 +463,30 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
                 logger.info(f"Migration: added valuation_results.{col}")
             except Exception as e:
                 logger.warning(f"Migration skip valuation_results.{col}: {e}")
+
+    # Migrations cho lead_captures — RBAC fields
+    lc_existing = {r[1] for r in conn.execute("PRAGMA table_info(lead_captures)").fetchall()}
+    lc_migrations = [
+        ("user_id",              "ALTER TABLE lead_captures ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE SET NULL"),
+        ("tier",                 "ALTER TABLE lead_captures ADD COLUMN tier TEXT"),
+        ("urgency",              "ALTER TABLE lead_captures ADD COLUMN urgency TEXT DEFAULT 'standard'"),
+        ("guest_name",           "ALTER TABLE lead_captures ADD COLUMN guest_name TEXT"),
+        ("guest_email",          "ALTER TABLE lead_captures ADD COLUMN guest_email TEXT"),
+        ("notify_email_sent_at", "ALTER TABLE lead_captures ADD COLUMN notify_email_sent_at TEXT"),
+    ]
+    for col, sql in lc_migrations:
+        if col not in lc_existing:
+            try:
+                conn.execute(sql)
+                logger.info(f"Migration: added lead_captures.{col}")
+            except Exception as e:
+                logger.warning(f"Migration skip lead_captures.{col}: {e}")
+
+    try:
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_leads_user ON lead_captures(user_id, created_at DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_leads_urgency ON lead_captures(urgency, status, created_at DESC)")
+    except Exception as e:
+        logger.warning(f"Index skip lead_captures: {e}")
 
     _drop_legacy_feedback(conn)
 

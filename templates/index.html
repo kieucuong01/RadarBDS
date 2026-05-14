@@ -22,6 +22,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@3.1.0/dist/chartjs-chart-treemap.min.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=fontfix-20260509-2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=rbac-20260514-1">
+  <script>
+    window.USER_TIER = {{ USER_TIER|tojson }};
+    window.CURRENT_USER = {{ USER|tojson }};
+  </script>
 </head>
 
 <body>
@@ -226,6 +231,33 @@
               d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         </button>
+
+        {% if USER %}
+          <div class="user-menu" id="userMenu">
+            <button class="user-menu-trigger" onclick="RadarAuth.toggleUserMenu(event)" title="Tài khoản">
+              <span class="user-avatar">{{ (USER.display_name or (USER.email or USER.phone or 'Bạn'))[:1]|upper }}</span>
+              <span>{{ USER.display_name or (USER.email or USER.phone or 'Bạn') }}</span>
+              <span class="tier-badge" data-tier="{{ USER_TIER }}">{{ USER_TIER }}</span>
+            </button>
+            <div class="user-menu-dropdown" id="userMenuDropdown">
+              <div class="user-menu-header">
+                <div class="name">{{ USER.display_name or 'Bạn' }}</div>
+                <div class="id">{{ (USER.email or USER.phone or 'Bạn') }}</div>
+                {% if USER_TIER == 'vip' and USER.vip_expires_at %}
+                  <div class="meta">VIP đến: {{ USER.vip_expires_at }}</div>
+                {% elif USER_TIER == 'free' %}
+                  <div class="meta">Gói Free — nâng cấp VIP để xem tin mới ngay.</div>
+                {% endif %}
+              </div>
+              {% if USER_TIER == 'free' %}
+                <button class="user-menu-item" onclick="RadarAuth.nudgeVipUpgrade()">💎 Nâng cấp VIP</button>
+              {% endif %}
+              <button class="user-menu-item danger" onclick="RadarAuth.logout()">↩️ Đăng xuất</button>
+            </div>
+          </div>
+        {% else %}
+          <button class="btn-auth-cta" onclick="RadarAuth.openAuthModal()">Đăng nhập</button>
+        {% endif %}
       </div>
     </header>
 
@@ -284,7 +316,7 @@
       <div id="tab-market" class="tab-content">
         <div class="market-grid" style="display:grid; grid-template-columns: 1fr; gap: 24px;">
           <div class="market-indicator-grid">
-            <div class="chart-card market-indicator-card">
+            <div class="chart-card market-indicator-card" style="position:relative;">
               <div class="chart-header">
                 <h3 class="chart-title">Chỉ báo Tỷ lệ Cắt máu</h3>
                 <p class="chart-subtitle">Tỷ lệ lô đang rao bán đã có lịch sử giảm giá theo từng phường/xã</p>
@@ -305,9 +337,17 @@
                   <tbody id="distressRatioBody"></tbody>
                 </table>
               </div>
+              {% if USER_TIER not in ['vip', 'admin'] %}
+                <div class="tier-locked-overlay">
+                  <div class="lock-icon">🔒</div>
+                  <h4>Đặc quyền VIP</h4>
+                  <p>Chỉ báo Tỷ lệ Cắt máu giúp phát hiện phường đang có nhiều chủ hạ giá — chỉ mở cho thành viên VIP.</p>
+                  <button class="upgrade-btn" onclick="RadarAuth.nudgeVipUpgrade('Mở khoá Phân Tích Chuyên Sâu')">💎 Nâng cấp VIP</button>
+                </div>
+              {% endif %}
             </div>
 
-            <div class="chart-card market-indicator-card">
+            <div class="chart-card market-indicator-card" style="position:relative;">
               <div class="chart-header">
                 <h3 class="chart-title">Chỉ báo Bất thường Nguồn Cung</h3>
                 <p class="chart-subtitle">Tin rao mới tháng này so với trung bình 3 tháng trước, đã gộp trùng</p>
@@ -328,6 +368,14 @@
                   <tbody id="supplyAnomalyBody"></tbody>
                 </table>
               </div>
+              {% if USER_TIER not in ['vip', 'admin'] %}
+                <div class="tier-locked-overlay">
+                  <div class="lock-icon">🔒</div>
+                  <h4>Đặc quyền VIP</h4>
+                  <p>Bất thường nguồn cung phát hiện phường có sóng tin rao tăng đột biến — chỉ mở cho thành viên VIP.</p>
+                  <button class="upgrade-btn" onclick="RadarAuth.nudgeVipUpgrade('Mở khoá Phân Tích Chuyên Sâu')">💎 Nâng cấp VIP</button>
+                </div>
+              {% endif %}
             </div>
           </div>
 
@@ -580,6 +628,58 @@
     </div>
   </div>
 
+  <!-- Auth Modal (unified login/register) -->
+  <div id="authModal" class="modal" onclick="if(event.target===this)RadarAuth.closeAuthModal()">
+    <div class="modal-content auth-modal-content">
+      <button class="close-modal" onclick="RadarAuth.closeAuthModal()" style="top:12px; right:12px;">&times;</button>
+      <h3 id="authTitle">Đăng nhập / Đăng ký</h3>
+      <p class="auth-sub" id="authSub">Nhập số điện thoại hoặc email để tiếp tục.</p>
+      <div id="authReasonBanner" class="auth-trial-banner" style="display:none; background: rgba(15,118,110,.1); border-color: rgba(15,118,110,.3); color: #0f766e;"></div>
+      <div id="authError" class="auth-error"></div>
+      <div class="auth-field">
+        <label for="authIdentifier">Số điện thoại hoặc email</label>
+        <input type="text" id="authIdentifier" autocomplete="username" placeholder="0901234567 hoặc you@email.com">
+      </div>
+      <div class="auth-field" id="authPasswordField" style="display:none;">
+        <label for="authPassword">Mật khẩu</label>
+        <input type="password" id="authPassword" autocomplete="current-password" placeholder="Ít nhất 6 ký tự">
+      </div>
+      <div id="authTrialBanner" class="auth-trial-banner" style="display:none;"></div>
+      <div class="auth-actions">
+        <button class="auth-btn auth-btn-primary" id="authSubmitBtn" onclick="RadarAuth.submitAuth()">Tiếp tục</button>
+        <button class="auth-btn auth-btn-ghost" onclick="RadarAuth.authBack()">Đổi SĐT/email khác</button>
+      </div>
+      <p class="auth-hint">
+        Bằng việc đăng ký, bạn đồng ý nhận tin nhắn từ RadarBDS qua kênh đã đăng ký.
+      </p>
+    </div>
+  </div>
+
+  <!-- Guest Lead Capture Modal (matchmaking without account) -->
+  <div id="guestLeadModal" class="modal" onclick="if(event.target===this)closeGuestLeadModal()">
+    <div class="modal-content auth-modal-content">
+      <button class="close-modal" onclick="closeGuestLeadModal()" style="top:12px; right:12px;">&times;</button>
+      <h3>Yêu cầu RadarBDS ráp mối</h3>
+      <p class="auth-sub">Để lại liên hệ, admin sẽ chủ động gọi lại trong 30 phút để giới thiệu lô đất phù hợp.</p>
+      <div id="guestLeadError" class="auth-error"></div>
+      <div class="auth-field">
+        <label for="guestLeadName">Tên của bạn</label>
+        <input type="text" id="guestLeadName" placeholder="Nguyễn Văn A">
+      </div>
+      <div class="auth-field">
+        <label for="guestLeadContact">SĐT hoặc email</label>
+        <input type="text" id="guestLeadContact" placeholder="0901234567 hoặc you@email.com">
+      </div>
+      <div class="auth-actions">
+        <button class="auth-btn auth-btn-primary" id="guestLeadSubmitBtn" onclick="submitGuestLead()">Gửi yêu cầu</button>
+        <button class="auth-btn auth-btn-ghost" onclick="closeGuestLeadModal()">Để sau</button>
+      </div>
+      <p class="auth-hint">
+        Muốn xem trực tiếp link gốc + SĐT chủ tin? <span class="link" onclick="closeGuestLeadModal(); RadarAuth.openAuthModal('Đăng ký để mở khoá toàn bộ tin')">Đăng ký miễn phí</span>
+      </p>
+    </div>
+  </div>
+
   <!-- Lead Capture Modal -->
   <div id="leadCaptureModal" class="modal" onclick="if(event.target===this)closeLeadCaptureModal()">
     <div class="modal-content lead-capture-modal">
@@ -616,6 +716,7 @@
     </div>
   </div>
 
+  <script src="{{ url_for('static', filename='js/auth.js') }}?v=rbac-20260514-1"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}?v=uifix-20260511-market-indicators-v1"></script>
 </body>
 

@@ -9,13 +9,29 @@ import re
 from functools import wraps
 from datetime import datetime
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify, send_from_directory, Response
+from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response
 from config import database_sqlite as db_mod
 from db.moderation import normalize_phone
 
 # Import the extracted services
-from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters
+from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, apply_guest_truncation
 from services.ai_bot import AIBot
+
+# RBAC (4-tier auth)
+from auth.core import (
+    SESSION_COOKIE_NAME,
+    SESSION_TTL_DAYS,
+    authenticate,
+    create_session,
+    create_user,
+    current_tier,
+    current_user,
+    delete_session,
+    identifier_exists,
+    log_audit,
+    normalize_identifier,
+    require_tier,
+)
 
 app = Flask(__name__)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
@@ -52,6 +68,163 @@ def require_admin_auth(fn):
             return _unauthorized()
         return fn(*args, **kwargs)
     return wrapper
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# RBAC: session cookie helpers + /api/auth/* endpoints
+# ═══════════════════════════════════════════════════════════════════════════
+def _cookie_kwargs():
+    """HttpOnly + SameSite=Lax; Secure only when request is HTTPS (prod)."""
+    return dict(
+        httponly=True,
+        samesite="Lax",
+        secure=request.is_secure,
+        max_age=SESSION_TTL_DAYS * 86400,
+        path="/",
+    )
+
+
+def _set_session_cookie(resp, token: str):
+    resp.set_cookie(SESSION_COOKIE_NAME, token, **_cookie_kwargs())
+    return resp
+
+
+def _clear_session_cookie(resp):
+    resp.delete_cookie(SESSION_COOKIE_NAME, path="/")
+    return resp
+
+
+def _client_ip() -> str:
+    return request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+
+
+def _effective_tier_from_user(user: dict) -> str:
+    """Compute tier from raw user row, applying VIP expiry — does NOT touch session cookie."""
+    if not user:
+        return "guest"
+    tier = user.get("tier") or "free"
+    if tier == "vip":
+        exp = user.get("vip_expires_at")
+        if exp and exp < datetime.utcnow().isoformat(timespec="seconds"):
+            return "free"
+    return tier
+
+
+def _user_public(user: dict) -> dict:
+    """Strip sensitive fields before returning user to client."""
+    if not user:
+        return {}
+    return {
+        "id": user.get("id"),
+        "identifier_type": user.get("identifier_type"),
+        "display_name": user.get("display_name"),
+        "email": user.get("email"),
+        "phone": user.get("phone"),
+        "tier": _effective_tier_from_user(user),
+        "vip_expires_at": user.get("vip_expires_at"),
+        "telegram_linked": bool(user.get("telegram_chat_id")),
+        "notify_email": bool(user.get("notify_email", 1)),
+        "notify_telegram": bool(user.get("notify_telegram", 1)),
+    }
+
+
+@app.context_processor
+def inject_user_tier():
+    """Expose USER_TIER + USER to all Jinja templates."""
+    u = current_user()
+    return {
+        "USER_TIER": current_tier(),
+        "USER": _user_public(u) if u else None,
+    }
+
+
+@app.route("/api/auth/check", methods=["POST"])
+def api_auth_check():
+    """Step 1 of unified login flow: detect identifier + whether user exists."""
+    payload = request.get_json(silent=True) or {}
+    raw = (payload.get("identifier") or "").strip()
+    norm = normalize_identifier(raw)
+    if not norm:
+        return jsonify({"ok": False, "error": "invalid_identifier"}), 400
+    ident, ident_type = norm
+    return jsonify({
+        "ok": True,
+        "identifier": ident,
+        "type": ident_type,
+        "exists": identifier_exists(ident),
+    })
+
+
+@app.route("/api/auth/register", methods=["POST"])
+def api_auth_register():
+    payload = request.get_json(silent=True) or {}
+    raw = (payload.get("identifier") or "").strip()
+    pwd = payload.get("password") or ""
+    name = (payload.get("display_name") or "").strip()[:80] or None
+
+    norm = normalize_identifier(raw)
+    if not norm:
+        return jsonify({"ok": False, "error": "invalid_identifier"}), 400
+    if len(pwd) < 6:
+        return jsonify({"ok": False, "error": "password_too_short"}), 400
+    ident, ident_type = norm
+
+    if identifier_exists(ident):
+        return jsonify({"ok": False, "error": "already_registered"}), 409
+
+    try:
+        user = create_user(ident, ident_type, pwd, display_name=name)
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 409
+
+    token = create_session(user["id"], user_agent=request.headers.get("User-Agent", ""), ip=_client_ip())
+    log_audit(user["id"], user["tier"], "signup_completed", context={"type": ident_type})
+    resp = make_response(jsonify({"ok": True, "user": _user_public(user)}))
+    return _set_session_cookie(resp, token)
+
+
+@app.route("/api/auth/login", methods=["POST"])
+def api_auth_login():
+    payload = request.get_json(silent=True) or {}
+    raw = (payload.get("identifier") or "").strip()
+    pwd = payload.get("password") or ""
+
+    norm = normalize_identifier(raw)
+    if not norm:
+        return jsonify({"ok": False, "error": "invalid_identifier"}), 400
+    ident, _ = norm
+
+    user = authenticate(ident, pwd)
+    if not user:
+        log_audit(None, "guest", "login_failed", context={"identifier_masked": ident[:4] + "***"})
+        return jsonify({"ok": False, "error": "invalid_credentials"}), 401
+
+    token = create_session(user["id"], user_agent=request.headers.get("User-Agent", ""), ip=_client_ip())
+    log_audit(user["id"], user["tier"], "login")
+    resp = make_response(jsonify({"ok": True, "user": _user_public(user)}))
+    return _set_session_cookie(resp, token)
+
+
+@app.route("/api/auth/logout", methods=["POST"])
+def api_auth_logout():
+    token = request.cookies.get(SESSION_COOKIE_NAME)
+    if token:
+        u = current_user()
+        delete_session(token)
+        if u:
+            log_audit(u["id"], u.get("tier"), "logout")
+    resp = make_response(jsonify({"ok": True}))
+    return _clear_session_cookie(resp)
+
+
+@app.route("/api/auth/me", methods=["GET"])
+def api_auth_me():
+    u = current_user()
+    return jsonify({
+        "ok": True,
+        "tier": current_tier(),
+        "user": _user_public(u) if u else None,
+    })
 
 # Serve local downloaded images (data/images/<filename>)
 _DATA_IMAGES_DIR = Path(__file__).parent / "data" / "images"
@@ -322,7 +495,8 @@ def api_dashboard():
     db_path = str(db_mod.DB_PATH.resolve())
     include_trend = request.args.get("include_trend") == "1"
     # Load data without fetching all listings to save time/memory
-    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
+    tier = current_tier()
+    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max, tier=tier)
     
     return jsonify({
         "stats": data["stats"],
@@ -336,7 +510,8 @@ def api_dashboard():
         "active_wards": wards,
         "active_sources": sources,
         "active_props": prop_types,
-        "trend_period": trend_period
+        "trend_period": trend_period,
+        "tier": tier,
     })
 
 @app.route("/api/signals")
@@ -352,6 +527,7 @@ def api_signals():
         page, limit = 1, 30
     sort = request.args.get("sort", "newest")
     db_path = str(db_mod.DB_PATH.resolve())
+    tier = current_tier()
     return jsonify(load_signals(
         db_path,
         sources=sources,
@@ -366,6 +542,7 @@ def api_signals():
         area_max=area_max,
         price_min=price_min,
         price_max=price_max,
+        tier=tier,
     ))
 
 @app.route("/api/trends")
@@ -532,6 +709,7 @@ def api_heatmap():
 
 
 @app.route('/api/market-indicators')
+@require_tier('vip')
 def api_market_indicators():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     area_min, area_max, price_min, price_max = _request_range_filters(request)
@@ -596,8 +774,10 @@ def api_listings():
     sort_dir = "DESC" if request.args.get("sort_dir", "asc").lower() == "desc" else "ASC"
     order_expr = sort_col_map.get(sort_by, "l.price_per_m2")
 
+    fresh_flag = "CASE WHEN datetime(COALESCE(l.posted_at, l.crawled_at)) > datetime('now', '-24 hours') THEN 1 ELSE 0 END AS is_fresh_locked"
     query = f"""
-        SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score
+        SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
+               {fresh_flag}
         FROM listings l
         LEFT JOIN valuation_results v ON l.id = v.listing_id
         WHERE {where_sql}
@@ -629,30 +809,35 @@ def api_listings():
         
     conn.close()
     
-    listings = [{
+    tier = current_tier()
+    listings = [redact_for_tier({
         "id": r['id'], "title": r['title'], "description": r['description'] or "",
         "price_ty": r['price_ty'], "area_m2": r['area_m2'],
-        "price_per_m2": round(r['price_per_m2'],1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
-        "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'],1) if r['mos_pct'] else 0,
-        "fair_ppm2": round(r['fair_ppm2'],1) if r['fair_ppm2'] else None,
+        "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
+        "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
+        "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
         "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
         "suspicious_bait": bool(r['suspicious_bait']),
         "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],
-        "source": r['source'], "imgs": img_map.get(r['id'], [])
-    } for r in rows]
-    
+        "source": r['source'], "imgs": img_map.get(r['id'], []),
+        "is_fresh_locked": bool(r['is_fresh_locked']),
+    }, tier) for r in rows]
+    listings = apply_guest_truncation(listings, tier, limit=12)
+
     return jsonify({
         "listings": listings,
         "total": total,
         "page": page,
         "limit": limit,
-        "pages": (total + limit - 1) // limit if limit > 0 else 1
+        "pages": (total + limit - 1) // limit if limit > 0 else 1,
+        "has_more": False if tier == "guest" else (page * limit < total),
+        "tier": tier,
     })
 
 @app.route('/listing/<int:listing_id>')
 def listing_detail(listing_id):
     db_path = str(db_mod.DB_PATH.resolve())
-    data = load_listing_detail(db_path, listing_id)
+    data = load_listing_detail(db_path, listing_id, tier=current_tier())
     if not data:
         return "Listing not found", 404
     
@@ -666,7 +851,7 @@ def listing_detail(listing_id):
 @app.route('/api/listing/<int:listing_id>')
 def api_listing_detail(listing_id):
     db_path = str(db_mod.DB_PATH.resolve())
-    data = load_listing_detail(db_path, listing_id)
+    data = load_listing_detail(db_path, listing_id, tier=current_tier())
     if not data:
         return jsonify({"error": "not found"}), 404
 
@@ -882,9 +1067,19 @@ def api_create_lead():
     note = (payload.get("note") or "").strip()[:500]
     phone_raw = (payload.get("zalo_phone") or "").strip()
     phone_norm = normalize_phone(phone_raw)
+    urgency = (payload.get("urgency") or "standard").strip()[:20]
+    if urgency not in ("standard", "urgent"):
+        urgency = "standard"
 
     if not phone_norm or len(phone_norm) < 9:
         return jsonify({"ok": False, "error": "invalid_phone"}), 400
+
+    tier = current_tier()
+    u = current_user()
+    user_id = u["id"] if u else None
+    # VIP/admin → escalate to urgent regardless of client flag
+    if tier in ("vip", "admin"):
+        urgency = "urgent"
 
     with db_mod.get_conn() as conn:
         if listing_id is not None:
@@ -894,10 +1089,73 @@ def api_create_lead():
             listing_url = listing_url or row["url"] or ""
 
         cur = conn.execute("""
-            INSERT INTO lead_captures (listing_id, listing_url, zalo_phone, source_context, note, status)
-            VALUES (?, ?, ?, ?, ?, 'new')
-        """, (listing_id, listing_url, phone_norm, source_context, note))
+            INSERT INTO lead_captures (listing_id, listing_url, zalo_phone, source_context, note, status,
+                                       user_id, tier, urgency)
+            VALUES (?, ?, ?, ?, ?, 'new', ?, ?, ?)
+        """, (listing_id, listing_url, phone_norm, source_context, note, user_id, tier, urgency))
         lead_id = cur.lastrowid
+
+    log_audit(
+        user_id=user_id, tier=tier, action="lead_capture",
+        listing_id=listing_id,
+        context={"urgency": urgency, "source_context": source_context},
+    )
+    return jsonify({"ok": True, "lead_id": lead_id})
+
+
+@app.route("/api/lead-capture-guest", methods=["POST"])
+def api_create_guest_lead():
+    """Guest matchmaking request — no account needed. Captures name + contact (phone or email).
+
+    Accepts logged-in users too (admin can still see who clicked the guest form).
+    """
+    payload = request.get_json(silent=True) or {}
+    listing_id = payload.get("listing_id")
+    name = (payload.get("name") or "").strip()[:120]
+    contact_raw = (payload.get("contact") or "").strip()
+    context_ctx = (payload.get("context") or "card_signal").strip()[:50]
+
+    if not name:
+        return jsonify({"ok": False, "error": "name_required"}), 400
+
+    # Detect phone vs email
+    norm = normalize_identifier(contact_raw)
+    if not norm:
+        return jsonify({"ok": False, "error": "invalid_contact"}), 400
+    ident, ident_type = norm
+    phone_for_admin = ident if ident_type == "phone" else None
+    email_for_ack = ident if ident_type == "email" else None
+
+    tier = current_tier()
+    u = current_user()
+    user_id = u["id"] if u else None
+    urgency = "guest"
+
+    listing_url = ""
+    with db_mod.get_conn() as conn:
+        if listing_id is not None:
+            row = conn.execute("SELECT id, url FROM listings WHERE id=?", (listing_id,)).fetchone()
+            if not row:
+                return jsonify({"ok": False, "error": "listing_not_found"}), 404
+            listing_url = row["url"] or ""
+
+        cur = conn.execute("""
+            INSERT INTO lead_captures (
+                listing_id, listing_url, zalo_phone, source_context, note, status,
+                user_id, tier, urgency, guest_name, guest_email
+            ) VALUES (?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?)
+        """, (
+            listing_id, listing_url, phone_for_admin or "", context_ctx,
+            f"Guest matchmaking — name={name}",
+            user_id, tier, urgency, name, email_for_ack,
+        ))
+        lead_id = cur.lastrowid
+
+    log_audit(
+        user_id=user_id, tier=tier, action="lead_capture_guest",
+        listing_id=listing_id,
+        context={"name": name, "contact_type": ident_type},
+    )
     return jsonify({"ok": True, "lead_id": lead_id})
 
 

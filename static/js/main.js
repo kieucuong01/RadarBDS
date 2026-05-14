@@ -593,6 +593,35 @@ function _renderSignalCards(signals) {
     const chunk = signals.slice(start, start + SIGNAL_RENDER_CHUNK_SIZE);
     if (chunk.length === 0) return;
     grid.insertAdjacentHTML('beforeend', chunk.map(x => {
+      // Guest 12-cap stub
+      if (x && x.locked === true) {
+        return `
+        <div class="scard locked-card" onclick="RadarAuth.openAuthModal('Đăng ký miễn phí để xem toàn bộ tin săn deal')">
+          <div class="locked-card-inner">
+            <div class="lock-icon">🔒</div>
+            <div class="locked-title">Đăng ký để xem thêm</div>
+            <div class="locked-sub">Khu vực: ${x.ward || '—'}</div>
+            <button class="upgrade-btn" onclick="event.stopPropagation(); RadarAuth.openAuthModal('Đăng ký miễn phí để xem toàn bộ tin săn deal')">Đăng ký miễn phí</button>
+          </div>
+        </div>`;
+      }
+      // Free fresh-lock skeleton (< 24h)
+      if (x && x.locked_reason === 'fresh_24h') {
+        return `
+        <div class="scard fresh-locked" onclick="RadarAuth.nudgeVipUpgrade('Nâng cấp VIP để xem tin mới ngay')">
+          <div class="sc-img-wrap">
+            <div class="sc-img" style="background:linear-gradient(135deg,#fef3c7,#fde68a); display:flex; align-items:center; justify-content:center; font-size:32px;">🔒</div>
+            <div class="mos-badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);">VIP ONLY</div>
+          </div>
+          <div class="sc-body">
+            <div class="sc-title">${x.title || 'Tin mới — Nâng cấp VIP để xem ngay'}</div>
+            <div style="padding:20px 0; text-align:center;">
+              <button class="upgrade-btn" onclick="event.stopPropagation(); RadarAuth.nudgeVipUpgrade('Tin mới đăng — VIP xem trước 24h')">💎 Nâng cấp VIP</button>
+              <div style="margin-top:10px; font-size:12px; color:var(--muted,#64748b);">Tin đăng dưới 24h — VIP xem ngay, Free chờ thêm.</div>
+            </div>
+          </div>
+        </div>`;
+      }
       const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       const fairNum = fairPrice !== '-' ? parseFloat(fairPrice) : NaN;
       const priceNum = parseFloat(x.price_ty);
@@ -658,7 +687,7 @@ function _renderSignalCards(signals) {
           </div>
 
           <div class="sc-actions" onclick="event.stopPropagation()">
-            <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;captureLeadAndOpen(c.id,c.url,'card_signal');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Zalo</a>
+            <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'card_signal');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${(window.USER_TIER==='vip'||window.USER_TIER==='admin')?'⚡ Ráp mối VIP':'💬 Ráp mối'}</a>
             <a href="/listing/${x.id}" target="_blank" class="btn-analyze"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Phân tích Deal</a>
           </div>
         </div>
@@ -1670,9 +1699,22 @@ async function loadListings(page) {
     if (priceMax) tableParams += `&price_max=${priceMax}`;
     currentPageNo = page;
     const data = await fetchJSONCached('listings', `/api/listings?${currentFilters}${tableParams}&sort_by=${tableSort.col}&sort_dir=${tableSort.dir}&page=${page}&limit=50`);
-    listingsHasMore = (data.listings || []).length >= 50;
-    if (sentinel) sentinel.textContent = listingsHasMore ? '' : `Đã hiển thị tất cả ${data.total} tin`;
+    listingsHasMore = (typeof data.has_more === 'boolean') ? data.has_more : ((data.listings || []).length >= 50);
+    if (sentinel) {
+      if (data.tier === 'guest') {
+        sentinel.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-muted);">🔒 Đăng ký miễn phí để xem toàn bộ ${data.total} tin <button class="upgrade-btn" style="margin-left:8px;" onclick="RadarAuth.openAuthModal('listings_guest_cap')">Đăng ký</button></div>`;
+      } else {
+        sentinel.textContent = listingsHasMore ? '' : `Đã hiển thị tất cả ${data.total} tin`;
+      }
+    }
     const rows = (data.listings || []).map(x => {
+      if (x && x.locked === true) {
+        return `<tr class="locked-row" onclick="RadarAuth.openAuthModal('listings_locked_row')" style="cursor:pointer; background:linear-gradient(90deg, rgba(245,158,11,0.06), rgba(245,158,11,0.02));">
+          <td colspan="8" style="padding:14px 16px; text-align:center; color:var(--text-muted); font-weight:600;">
+            🔒 <span style="margin:0 8px;">Khu vực: ${x.ward || '—'}</span> · Đăng ký miễn phí để xem chi tiết
+          </td>
+        </tr>`;
+      }
       const fair = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       return `
         <tr class="clickable-row" onclick="openListingModal(this)" data-id="${x.id}" data-title="${String(x.title || '').replace(/"/g, '&quot;')}" data-price="${x.price_ty || ''}" data-fair="${fair !== '-' ? fair : ''}" data-area="${x.area_m2 || ''}" data-ward="${x.ward || ''}" data-road="${x.road_type || x.road_tier || ''}" data-time="${_timeAgoText(x.days_ago)}" data-profit="${x.price_ty && fair !== '-' ? (parseFloat(fair) - parseFloat(x.price_ty)).toFixed(2) : ''}" data-mos="${x.mos_pct || ''}" data-source="${sourceNames[x.source] || x.source || ''}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || ''}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}">
@@ -1834,13 +1876,15 @@ document.addEventListener('DOMContentLoaded', () => {
 const LEAD_CAPTURE = {
   listingId: null,
   listingUrl: '',
-  sourceContext: 'signal'
+  sourceContext: 'signal',
+  urgency: 'standard'
 };
 
-function captureLeadAndOpen(listingId, listingUrl, sourceContext = 'signal') {
+function captureLeadAndOpen(listingId, listingUrl, sourceContext = 'signal', urgency = 'standard') {
   LEAD_CAPTURE.listingId = listingId ? Number(listingId) : null;
   LEAD_CAPTURE.listingUrl = listingUrl || '';
   LEAD_CAPTURE.sourceContext = sourceContext || 'signal';
+  LEAD_CAPTURE.urgency = urgency || 'standard';
 
   const modal = document.getElementById('leadCaptureModal');
   const input = document.getElementById('leadPhoneInput');
@@ -1894,7 +1938,8 @@ async function submitLeadAndOpenZalo() {
         listing_id: LEAD_CAPTURE.listingId,
         listing_url: LEAD_CAPTURE.listingUrl,
         zalo_phone: raw,
-        source_context: LEAD_CAPTURE.sourceContext
+        source_context: LEAD_CAPTURE.sourceContext,
+        urgency: LEAD_CAPTURE.urgency
       })
     });
     if (!res.ok) {
@@ -1977,6 +2022,81 @@ function appendMessage(role, text) {
   div.innerText = text;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   Tier-aware CTA dispatcher + Guest Lead modal
+   ─────────────────────────────────────────────────────────────── */
+function tierCTA(listingId, url, ctx) {
+  const t = window.USER_TIER || 'guest';
+  if (t === 'guest') {
+    openGuestLeadForm(listingId, ctx);
+    return;
+  }
+  // free / vip / admin → reuse existing flow (urgency from tier)
+  const urgency = (t === 'vip' || t === 'admin') ? 'urgent' : 'standard';
+  captureLeadAndOpen(listingId, url, ctx, urgency);
+}
+
+let _guestLeadListingId = null;
+let _guestLeadCtx = null;
+function openGuestLeadForm(listingId, ctx) {
+  _guestLeadListingId = listingId;
+  _guestLeadCtx = ctx || 'card_signal';
+  const m = document.getElementById('guestLeadModal');
+  if (!m) return;
+  const err = document.getElementById('guestLeadError');
+  if (err) err.classList.remove('show');
+  ['guestLeadName', 'guestLeadContact'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  m.classList.add('show');
+  setTimeout(() => {
+    const n = document.getElementById('guestLeadName');
+    if (n) n.focus();
+  }, 80);
+}
+function closeGuestLeadModal() {
+  const m = document.getElementById('guestLeadModal');
+  if (m) m.classList.remove('show');
+}
+async function submitGuestLead() {
+  const nameEl = document.getElementById('guestLeadName');
+  const contactEl = document.getElementById('guestLeadContact');
+  const err = document.getElementById('guestLeadError');
+  const btn = document.getElementById('guestLeadSubmitBtn');
+  const name = (nameEl && nameEl.value || '').trim();
+  const contact = (contactEl && contactEl.value || '').trim();
+  if (!name || !contact) {
+    if (err) { err.textContent = 'Vui lòng nhập tên và liên hệ.'; err.classList.add('show'); }
+    return;
+  }
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch('/api/lead-capture-guest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        listing_id: _guestLeadListingId,
+        name,
+        contact,
+        urgency: 'guest',
+        context: _guestLeadCtx,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.ok === false) {
+      if (err) { err.textContent = data.error || 'Không gửi được, thử lại sau.'; err.classList.add('show'); }
+      return;
+    }
+    closeGuestLeadModal();
+    alert('✅ Đã gửi yêu cầu!\nAdmin RadarBDS sẽ liên hệ bạn trong 30 phút.');
+  } catch (e) {
+    if (err) { err.textContent = 'Mất kết nối, thử lại sau.'; err.classList.add('show'); }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 
