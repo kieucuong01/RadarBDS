@@ -8,7 +8,18 @@ from services.image_assets import resolve_image_url
 # Tier-aware masking (server-side). Address + tên đường KHÔNG che (decision 2026-05-14)
 # ─────────────────────────────────────────────────────────────────────────────
 TIER_ORDER = {"guest": 0, "free": 1, "vip": 2, "admin": 3}
-FRESH_LOCK_TITLE = "Tin mới — Nâng cấp VIP để xem ngay"
+FRESH_LOCK_TITLE = "Tin mới — Đăng ký miễn phí để xem ngay"
+GUEST_FRESH_LOCK_DAYS = 7  # Guest sees skeleton for listings posted within last 7 days
+
+
+def fresh_lock_hours_for(tier: str) -> int:
+    """Window (hours) within which a listing is masked as 'new' for given tier.
+
+    Returns 0 = no masking. Only guest is gated; free/vip/admin see everything.
+    """
+    if tier == "guest":
+        return GUEST_FRESH_LOCK_DAYS * 24
+    return 0
 
 
 def redact_for_tier(record, tier: str):
@@ -16,7 +27,9 @@ def redact_for_tier(record, tier: str):
 
     - admin: untouched.
     - others: contact_phone / url / source_url forced to None (commission protection).
-    - free + is_fresh_locked: skeleton card (title nudge, no price/MOS/desc/imgs/address).
+    - guest + is_fresh_locked: skeleton card (title nudge, no price/MOS/desc/imgs/address).
+      Logic moved from Free→Guest (decision 2026-05-15): Free sees everything,
+      Guest only sees listings older than the new-lock window.
     """
     if record is None:
         return None
@@ -27,7 +40,7 @@ def redact_for_tier(record, tier: str):
         if key in out:
             out[key] = None
 
-    if tier == "free" and out.get("is_fresh_locked"):
+    if tier == "guest" and out.get("is_fresh_locked"):
         out["title"] = FRESH_LOCK_TITLE
         out["description"] = None
         out["price_ty"] = None
@@ -38,7 +51,7 @@ def redact_for_tier(record, tier: str):
         out["address"] = None
         out["imgs"] = []
         out["primary_img"] = ""
-        out["locked_reason"] = "fresh_24h"
+        out["locked_reason"] = "new_locked"
     return out
 
 
@@ -226,23 +239,23 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
     return redact_for_tier(record, tier)
 
 
-def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=24):
-    # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters,
-    # and hide signals older than 7 days (commission protection).
+def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None):
+    # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
+    # Recent listings (within fresh-lock window) are masked client-side via
+    # redact_for_tier — full scroll is allowed.
     if tier == "guest":
         mos_min = 0
         only_drops = False
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     where_sql, params = _build_filters(sources, wards, prop_types, only_drops, prefix="l.", area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
-    if tier == "guest":
-        where_sql = where_sql + " AND " + _guest_signal_age_clause("l", days=7)
     mos_condition, mos_params = _mos_filter(mos_min)
     page = max(int(page or 1), 1)
     limit = min(max(int(limit or 30), 1), 100)
     offset = (page - 1) * limit
     order_sql = _signal_sort_sql(sort)
-    fresh_flag = _fresh_lock_sql("l", delay_hours)
+    lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
+    fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
 
     count_row = conn.execute(f"""
         SELECT COUNT(*)
@@ -730,10 +743,11 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
         }
     }
 
-def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours: int = 24):
+def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=None):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    fresh_flag = _fresh_lock_sql("l", delay_hours)
+    lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
+    fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
     listing = conn.execute(f"""
         SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
                {fresh_flag}
@@ -765,11 +779,10 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours: i
     listing_dict["is_fresh_locked"] = bool(listing_dict.get("is_fresh_locked"))
     listing_dict = redact_for_tier(listing_dict, tier)
 
-    # Fresh-lock for free → also blank images/history (skeleton experience)
-    if tier == "free" and listing_dict.get("locked_reason") == "fresh_24h":
+    # Guest skeleton: blank images so the new-locked teaser doesn't leak photos.
+    # History stays open for all tiers (decision 2026-05-15).
+    if tier == "guest" and listing_dict.get("locked_reason") == "new_locked":
         images = []
-        history = []
-    # Hide history price detail for non-admin? keep — only commission-sensitive fields are masked.
 
     return {
         "listing": listing_dict,
@@ -783,6 +796,8 @@ def get_base_filters(req):
     wards = req.args.getlist("ward[]") or req.args.getlist("ward")
     sources = req.args.getlist("source[]") or req.args.getlist("source")
     prop_types = req.args.getlist("prop_type[]") or req.args.getlist("prop_type")
+    if req.args.get("ward_mode") == "none":
+        wards = ["__NO_WARD_SELECTED__"]
     only_drops = req.args.get("only_drops") == "1"
     trend_period = req.args.get("trend_period", "day")
     try:

@@ -19,8 +19,9 @@ python radar.py crawl-daily
        ├─ download_images()      → tải ảnh + tạo thumbnail
        ├─ export_raw()           → backup JSON
        └─ alert:
-            collect_fresh_signals(conn, since_ts=crawl_start_ts)
-            send_consolidated_daily_alert(...)
+             collect_fresh_signals(conn, since_ts=crawl_start_ts)
+             send_consolidated_daily_alert(...)       # admin/general alert
+             push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists
 ```
 
 > ⚠️ **BDS hiện không lấy được data** (Cloudflare Turnstile, 2026-05). Daily run chỉ có Guland + Facebook. Xem `.claude/rules/crawler.md` mục BatDongSan để biết điều kiện resume.
@@ -89,6 +90,25 @@ Mỗi deal có **2 anchor link**:
 ```
 
 `DASHBOARD_BASE_URL` lấy từ `config/settings.py` (override bằng env `DASHBOARD_BASE_URL`, default `http://localhost:5000`).
+
+### 3.4 VIP watchlist push
+
+Sau alert tổng hợp, `cli/crawlers.py` gọi:
+
+```python
+from cli.notify import push_new_listings_to_vip
+push_new_listings_to_vip(since=crawl_start_ts)
+```
+
+Luồng này khác alert admin:
+
+- query signal mới theo `since`;
+- lọc theo từng `user_watchlists` của VIP còn hạn;
+- gửi riêng vào `users.telegram_chat_id`;
+- format là một digest/tin, title từng deal link về `/listing/<id>`;
+- footer dẫn về `DASHBOARD_BASE_URL`.
+
+Chi tiết bot binding, zrok webhook, local sync fallback và message format nằm ở `docs/telegram_watchlist.md`.
 
 Footer của chunk cuối:
 

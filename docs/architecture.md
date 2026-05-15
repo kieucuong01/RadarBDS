@@ -30,9 +30,11 @@ Source crawlers
 - `analytics/`: valuation and market signal logic. No crawler calls.
 - `db/`: schema, connection, migrations, and write-side repository helpers.
 - `services/`: read models for API/dashboard; keep expensive shaping here, not in routes.
+- `auth/`: sessions, tier checks, VIP expiry, audit, and rate limiting.
+- `alerts/`: Telegram/email formatting and send helpers.
+- `cli/notify.py`: VIP watchlist push orchestration after crawls.
 - `static/` and `templates/`: dashboard UI.
 - `cli/`: command orchestration.
-- `alerts/`: Telegram formatting and sending.
 
 ## Dashboard API Shape
 
@@ -41,6 +43,14 @@ Source crawlers
 - `/api/listing/<id>`: full detail payload for modal, including description and original images.
 - `/api/history/<id>`: price history, lot history, and comparable data for modal.
 - `/api/listings`: paginated table data for the all-listings tab.
+- `/api/watchlists`: user saved filters for VIP Telegram push.
+- `/api/auth/telegram/*`: bot linking via webhook or local sync fallback.
+- `/api/market-indicators`: VIP-only deep analysis.
+
+Security boundary:
+
+- Non-admin payloads must not expose original listing URL, source URL, or phone.
+- Guest fresh-lock masking is server-side and must be consistent across card, table, detail, and history endpoints.
 
 ## Signal Filter Runtime Flow
 
@@ -71,3 +81,4 @@ Source crawlers
 - Move SQL out of `app.py` into `services/` when touching dashboard read behavior.
 - Keep `config/database_sqlite.py` and `db/sqlite.py` as compatibility facades.
 - If schema changes become frequent, add migration versioning instead of scattered ad hoc `ALTER TABLE`.
+- For RBAC or Telegram push work, prefer `docs/rbac.md` and `docs/telegram_watchlist.md` over broad codebase reads.

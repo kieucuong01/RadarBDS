@@ -397,11 +397,11 @@ def extract_road_width(text: str) -> Optional[float]:
 def extract_road_type(text: str) -> str:
     """Trả về canonical: 'duong_nhua' | 'be_tong' | 'duong_dat' | 'unknown'"""
     t = text.lower()
-    if 'nhựa' in t or 'asphalt' in t:
+    if 'nhựa' in t or 'nhua' in t or 'asphalt' in t:
         return 'duong_nhua'
     if 'bê tông' in t or 'be tong' in t:
         return 'be_tong'
-    if 'đường đất' in t or 'đất hiện hữu' in t:
+    if 'đường đất' in t or 'duong dat' in t or 'đất hiện hữu' in t:
         return 'duong_dat'
     return 'unknown'
 
@@ -443,7 +443,8 @@ _NAMED_ROADS = [
 
 # Regex bê tông/hẻm + số mét
 _BT_WIDTH_RE = re.compile(
-    r'(?:bê\s*tông|hẻm|đường\s*hẻm|ngõ)\s*'
+    r'(?:bê\s*tông|be\s*tong|hẻm|hem|đường\s*hẻm|duong\s*hem|ngõ|ngo)\s*'
+    r'(?:(?:xe\s*hơi|ô\s*tô|ôtô|oto|thông|bê\s*tông|be\s*tong|rộng)\s*)?'
     r'(?:rộng\s*)?(\d+(?:[,.]\d+)?)\s*m\b',
     re.IGNORECASE
 )
@@ -451,12 +452,27 @@ _BT_WIDTH_RE = re.compile(
 # Regex lộ giới đường — bắt "lộ giới 8m", "lộ 6m", "đường nhựa 6m", "MT 30m", "mặt tiền 6m"
 # Logic giá trị: dùng để infer Tier 2 khi có width mặt đường rõ ràng
 _ROAD_WIDTH_RE = re.compile(
-    r'(?:lộ(?:\s*giới)?|mặt\s*tiền|\bmt\b|đường(?:\s*(?:nhựa|bê\s*tông))?)\s*(?:rộng\s*)?(\d+(?:[,.]\d+)?)\s*m\b',
+    r'(?:lộ(?:\s*giới)?|lo(?:\s*gioi)?|mặt\s*tiền|mat\s*tien|\bmt\b|'
+    r'đường(?:\s*(?:nhựa|bê\s*tông))?|duong(?:\s*(?:nhua|be\s*tong))?)'
+    r'\s*(?:rộng\s*)?(\d+(?:[,.]\d+)?)\s*m\b',
     re.IGNORECASE
+)
+
+# Broker typo: "đường 4m2" often means road width 4m, not 4m² area.
+_ROAD_WIDTH_M2_TYPO_RE = re.compile(
+    r'(?:đường|duong|hẻm|hem|ngõ|ngo|lộ|lo)\s*(?:rộng\s*)?(\d+(?:[,.]\d+)?)\s*m2\b',
+    re.IGNORECASE,
 )
 
 # Chuẩn hóa biến thể ô tô (thiếu dấu, liền chữ)
 _AUTO_RE = re.compile(r'(?:ô\s*tô|ôtô|oto|xe\s*hơi|xe\s*tải)', re.IGNORECASE)
+_AUTO_ROAD_RE = re.compile(
+    r'(?:đường|duong|hẻm|hem|ngõ|ngo|lối|loi)\s*[^,.;\n]{0,25}'
+    r'(?:ô\s*tô|ôtô|oto|xe\s*hơi|xe\s*tải)|'
+    r'(?:ô\s*tô|ôtô|oto|xe\s*hơi|xe\s*tải)\s*[^,.;\n]{0,25}'
+    r'(?:vào|tới|đến|ra\s*vào|thông)\s*(?:đất|nhà|cửa)?',
+    re.IGNORECASE,
+)
 
 # DX road pattern
 _DX_RE = re.compile(r'\bdx\s*\d{2,3}\b', re.IGNORECASE)
@@ -481,17 +497,40 @@ _SAN_AUTO_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Hẻm/đường quá nhỏ: ba gác/xe máy.
+_SMALL_ACCESS_RE = re.compile(
+    r'(?:đường|duong|hẻm|hem|ngõ|ngo|lối|loi)\s*(?:ba|3)\s*gác|'
+    r'(?:ba|3)\s*gác\s*(?:vào|tới|đến|ra\s*vào)?|'
+    r'(?:xe\s*máy|xe\s*may|hẻm\s*nhỏ|hem\s*nho|đường\s*nhỏ\s*hẹp|duong\s*nho\s*hep)',
+    re.IGNORECASE,
+)
+
+# Có đường/hẻm thông nhưng không rõ bề rộng/chất liệu: xem như hẻm/đường nội bộ cần kiểm tra.
+_ROAD_THONG_RE = re.compile(
+    r'(?:đường|duong|hẻm|hem|ngõ|ngo)\s+thông(?:\s+(?:tứ|tu|4)\s+hướng|\s+dài)?',
+    re.IGNORECASE,
+)
+
 # Tín hiệu mặt tiền — dùng raw pattern để \b là word boundary (không phải backspace)
-_MT_RE = re.compile(r'mặt tiền|mặt phố|mặt đường|\bmt\b', re.IGNORECASE)
+_MT_RE = re.compile(r'mặt tiền|mat tien|mặt phố|mat pho|mặt đường|mat duong|\bmt\b', re.IGNORECASE)
 
 # "Mặt lộ" / "tiếp giáp đường" — Tier 2 signals bị thiếu trong cascade cũ
 _MAT_LO_RE = re.compile(
-    r'mặt\s*lộ|tiếp\s*giáp\s*đường|sát\s*đường\s*(?:lớn|chính|nhựa)',
+    r'mặt\s*lộ|mat\s*lo|tiếp\s*giáp\s*đường|tiep\s*giap\s*duong|'
+    r'sát\s*đường\s*(?:lớn|chính|nhựa)|sat\s*duong\s*(?:lon|chinh|nhua)',
     re.IGNORECASE,
 )
 
 # "Đường số X" — đường địa phương đánh số (Bình Dương), thường là Tier 2
-_DUONG_SO_RE = re.compile(r'đường\s*số\s*\d+', re.IGNORECASE)
+_DUONG_SO_RE = re.compile(r'(?:đường|duong)\s*(?:số|so)\s*\d+', re.IGNORECASE)
+
+# Mỹ Phước/KCN grid road codes that brokers often write as "đường TC 1A", "đường DB6".
+_MP_CODED_ROAD_RE = re.compile(
+    r'(?:đường|duong)\s+(?:tc|db|dh|dha|da|dl|dj|ni|ng|nh|ne|de|na)\s*[\da-z]+\b',
+    re.IGNORECASE,
+)
+
+_HEM_RE = re.compile(r'\b(?:hẻm|hem|hẽm|ngõ|ngo)\b', re.IGNORECASE)
 
 
 def extract_road_tier(title: str, description: str = '') -> int:
@@ -525,18 +564,21 @@ def extract_road_tier(title: str, description: str = '') -> int:
     text = (title + ' ' + (description or '')).lower()
     title_lower = title.lower()
     has_mt   = bool(_MT_RE.search(text))
-    has_hem  = any(kw in text for kw in ['hẻm', 'ngõ', 'hẽm', 'trong hẻm'])
+    has_hem  = bool(_HEM_RE.search(text))
     has_auto = bool(_AUTO_RE.search(text))
-    # Loại false positive: "sân ô tô" / "chỗ đậu ô tô" — đó là vị trí đậu xe, không phải đường vào
-    if has_auto and _SAN_AUTO_RE.search(text):
+    has_auto_road = bool(_AUTO_ROAD_RE.search(text))
+    # Loại false positive: "sân ô tô" / "chỗ đậu ô tô" là chỗ đậu xe trong nhà.
+    # Nếu cùng tin có "đường/hẻm oto" riêng thì vẫn giữ tín hiệu đường.
+    if has_auto and _SAN_AUTO_RE.search(text) and not has_auto_road:
         has_auto = False
+    has_nhua = 'nhựa' in text or 'nhua' in text
     # Logic giá trị: "kinh doanh"/"mtkd" = mặt tiền kinh doanh = đường lớn → Tier 2
     has_kd   = any(kw in text for kw in ['mtkd', 'mt kd', 'kinh doanh', 'mt kinh doanh'])
 
     # --- Title-specific signals (title authoritative, desc can mention "hẻm" as nearby) ---
     has_mt_title = bool(_MT_RE.search(title_lower))
     has_kd_title = any(kw in title_lower for kw in ['mtkd', 'mt kd', 'kinh doanh'])
-    has_hem_title = any(kw in title_lower for kw in ['hẻm', 'ngõ', 'hẽm', 'trong hẻm'])
+    has_hem_title = bool(_HEM_RE.search(title_lower))
     # "nhánh / xẹt / xẹc / N/" trong title = ngõ nhánh, không phải mặt tiền chính
     # N/ = ký hiệu hẻm số N (VD: "2/ Huỳnh Văn Luỹ" = hẻm thứ 2 đường Huỳnh Văn Luỹ)
     has_nhanh_title = bool(re.search(
@@ -548,11 +590,11 @@ def extract_road_tier(title: str, description: str = '') -> int:
     # "đường 3m" / "đường nhựa 3m" / "lộ giới 8m" → road_width = 3.0 / 8.0
     # Chỉ skip khi TITLE nói hẻm — desc có thể đề cập hẻm gần đó
     road_width = None
-    _m_w = _ROAD_WIDTH_RE.search(text)
+    _m_w = _ROAD_WIDTH_RE.search(text) or _ROAD_WIDTH_M2_TYPO_RE.search(text)
     if _m_w and not has_hem_title:
         try:
             _w = float(_m_w.group(1).replace(',', '.'))
-            if 1 <= _w <= 60:
+            if 1 <= _w <= 60 and not (_m_w.re is _ROAD_WIDTH_M2_TYPO_RE and _w > 12):
                 road_width = _w
         except (ValueError, IndexError):
             pass
@@ -563,7 +605,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
 
     # --- Đường quy hoạch Mỹ Phước (config-driven) ---
     from config.area_profiles import detect_subward_from_street
-    _mp_sw, _mp_width, _mp_tier = detect_subward_from_street(title_lower)
+    _mp_sw, _mp_width, _mp_tier = detect_subward_from_street(text)
     if _mp_tier is not None:
         return _mp_tier
 
@@ -603,7 +645,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
         s, e = m_dx.span()
         around = text[max(0, s - 25):min(len(text), e + 25)]
         before_dx = text[max(0, s - 25):s]
-        hem_before = any(kw in before_dx for kw in ['hẻm', 'hẽm', 'ngõ'])
+        hem_before = bool(_HEM_RE.search(before_dx))
         if (_NHANH_XEET_RE.search(around)          # nhánh/xẹt bất kỳ
                 or _GAN_CACH_RE.search(before_dx)   # gần/cách TRƯỚC DX
                 or hem_before):                     # hẻm TRƯỚC DX
@@ -614,7 +656,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
     # Block bằng has_hem_title + _has_hem_road_in_desc:
     #   has_hem_title: hẻm trong TITLE → không phải mặt tiền đường lớn
     #   _has_hem_road_in_desc: desc có "hẻm Xm" có số đo → đó là đường vào thực, không phải hẻm lân cận
-    if (has_mt or has_kd) and 'nhựa' in text and not has_hem_title and not _has_hem_road_in_desc:
+    if (has_mt or has_kd) and has_nhua and not has_hem_title and not _has_hem_road_in_desc:
         # Nhánh/xẹt đường nhựa → Tier 3 (user: "1 xẹt đường nhựa thuộc tier 3")
         if has_nhanh_strong:
             return 3
@@ -628,7 +670,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
         return 2
 
     # --- Tier 2: Đường nhựa thông thường, không hẻm title ---
-    if 'nhựa' in text and not has_hem_title and not _has_hem_road_in_desc:
+    if has_nhua and not has_hem_title and not _has_hem_road_in_desc:
         # Nhánh/xẹt đường nhựa → Tier 3
         if has_nhanh_strong:
             return 3
@@ -643,24 +685,30 @@ def extract_road_tier(title: str, description: str = '') -> int:
         return 2
 
     # "Đường nội bộ" / "lộ nội bộ" — đường trong KDC, thường rải nhựa
-    if any(kw in text for kw in ['đường nội bộ', 'lộ nội bộ', 'nội khu']) and not has_hem_title:
+    if any(kw in text for kw in ['đường nội bộ', 'duong noi bo', 'lộ nội bộ', 'lo noi bo', 'nội khu', 'noi khu']) and not has_hem_title:
         return 2
 
     # "Đường số X" — đường địa phương đánh số (khác DX), thường là đường nhựa Tier 2
     if _DUONG_SO_RE.search(text) and not has_hem_title:
         return 2
 
+    # "Đường TC 1A" / "đường DB6" — mã đường nội khu Mỹ Phước/KCN, thường là đường quy hoạch.
+    if _MP_CODED_ROAD_RE.search(text) and not has_hem_title:
+        return 2
+
     # "Lộ giới" không có số đo cụ thể — vẫn là tín hiệu có đường rõ ràng
-    if 'lộ giới' in text and not has_hem_title:
+    if ('lộ giới' in text or 'lo gioi' in text) and not has_hem_title:
         return 2
 
     # Logic giá trị: lộ giới/đường có width đo được — width quyết định tier.
     # "đường 6m" / "lộ giới 8m" không hẻm + có chỉ dấu mặt tiền/nhựa → Tier 2.
     # "lộ 6m" / "đường 3m" hoặc "đường 4m bê tông" hoặc "nhánh đường 5m" → Tier 3.
-    m_road = _ROAD_WIDTH_RE.search(text)
+    m_road = _ROAD_WIDTH_RE.search(text) or _ROAD_WIDTH_M2_TYPO_RE.search(text)
     if m_road and not has_hem_title:
         try:
             width = float(m_road.group(1).replace(',', '.'))
+            if m_road.re is _ROAD_WIDTH_M2_TYPO_RE and width > 12:
+                raise ValueError
             if 3 <= width <= 60:      # sanity — loại "300m²", "1500m"
                 # Nhánh / xẹt → Tier 3 (đường nhánh nhỏ)
                 if _NHANH_XEET_RE.search(text):
@@ -672,7 +720,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
                 #   3–5m → Tier 3 (xe hơi vào được)
                 #   <3m  → Tier 4 (xe máy)
                 # (User: "hẻm bê tông <3m mới là tier 4, 3-5m vẫn là tier 3")
-                if width < 5 and not has_mt and not has_kd and 'nhựa' not in text:
+                if width < 5 and not has_mt and not has_kd and not has_nhua:
                     return 4 if width < 3 else 3
                 return 2
         except (ValueError, IndexError):
@@ -686,6 +734,10 @@ def extract_road_tier(title: str, description: str = '') -> int:
             return 3   # xe hơi vào được
         return 4       # xe máy <3m
 
+    # Ba gác/xe máy/hẻm nhỏ là đường vào hẹp, phải xét trước fallback hẻm default.
+    if _SMALL_ACCESS_RE.search(text):
+        return 4
+
     # Bê tông không có width → Tier 3 (default xe hơi vào được).
     # (User: "bê tông thì tier 3 rồi")
     if any(kw in text for kw in ['bê tông', 'be tong', 'btxm', 'bt xi măng']):
@@ -698,9 +750,13 @@ def extract_road_tier(title: str, description: str = '') -> int:
         return 3
 
     # Logic giá trị: ô tô/xe tải vào/tới/đậu — bắt thêm variants thiếu (oto/ôtô/xe hơi)
-    if has_auto and any(kw in text for kw in [
+    if (has_auto_road or has_auto) and any(kw in text for kw in [
         'vào', 'thông', 'đi', 'đậu', 'tới', 'đến', 'ra vào', 'đường', 'hẻm'
     ]):
+        return 3
+
+    # Đường/hẻm thông nhưng chưa rõ rộng/chất liệu: không nâng lên tier 2, chỉ ghi nhận là đường nội bộ/hẻm.
+    if _ROAD_THONG_RE.search(text):
         return 3
 
     # --- Hẻm/ngõ không có width → Tier 3 (default hẻm ô tô vào được) ---
@@ -708,11 +764,11 @@ def extract_road_tier(title: str, description: str = '') -> int:
         return 3
 
     # Logic giá trị: đê bao / bờ kè / đường tỉnh — đường lớn ven sông/ngoại thị → Tier 2
-    if any(kw in text for kw in ['đê bao', 'bờ kè', 'đường tỉnh', 'đường liên xã', 'đường liên huyện']):
+    if any(kw in text for kw in ['đê bao', 'de bao', 'bờ kè', 'bo ke', 'đường tỉnh', 'duong tinh', 'đường liên xã', 'duong lien xa', 'đường liên huyện', 'duong lien huyen']):
         return 2
 
     # --- Xe máy / hẻm nhỏ → Tier 4 ---
-    if any(kw in text for kw in ['xe máy', 'hẻm nhỏ', 'đường nhỏ hẹp']):
+    if _SMALL_ACCESS_RE.search(text):
         return 4
 
     return 0   # không rõ → neutral (treat như Tier 2, không điều chỉnh fair value)

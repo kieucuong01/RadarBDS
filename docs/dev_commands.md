@@ -42,6 +42,7 @@ Check DB path:
 ```powershell
 & $py -X utf8 -m py_compile app.py services\market_data.py services\image_assets.py cleansing\download_images.py
 node --check static\js\main.js
+node --check static\js\auth.js
 ```
 
 Targeted tests:
@@ -78,4 +79,36 @@ Filter sanity:
 ```powershell
 Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/signals?page=1&limit=30&mos_min=25&only_drops=1&sort=mos_desc"
 Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/dashboard?mos_min=25&only_drops=1"
+```
+
+## Telegram / VIP Watchlist
+
+Check bot identity without printing secrets:
+
+```powershell
+$token = (Get-Content .env | Select-String '^TELEGRAM_BOT_TOKEN=').Line.Split('=',2)[1]
+Invoke-RestMethod "https://api.telegram.org/bot$token/getMe"
+Invoke-RestMethod "https://api.telegram.org/bot$token/getWebhookInfo"
+```
+
+Public local Flask with zrok:
+
+```powershell
+.\zrok.exe share public http://127.0.0.1:5000 --headless
+```
+
+Set webhook after adding `DASHBOARD_BASE_URL` and `TELEGRAM_WEBHOOK_SECRET` to `.env` and restarting Flask:
+
+```powershell
+$token = (Get-Content .env | Select-String '^TELEGRAM_BOT_TOKEN=').Line.Split('=',2)[1]
+$base = (Get-Content .env | Select-String '^DASHBOARD_BASE_URL=').Line.Split('=',2)[1].TrimEnd('/')
+$secret = (Get-Content .env | Select-String '^TELEGRAM_WEBHOOK_SECRET=').Line.Split('=',2)[1]
+$webhook = "$base/api/auth/telegram/webhook?secret=$secret"
+Invoke-RestMethod "https://api.telegram.org/bot$token/setWebhook?url=$([uri]::EscapeDataString($webhook))"
+```
+
+Run VIP push manually:
+
+```powershell
+& $py -X utf8 -c "from cli.notify import push_new_listings_to_vip; print(push_new_listings_to_vip(since='2026-01-01T00:00:00'))"
 ```

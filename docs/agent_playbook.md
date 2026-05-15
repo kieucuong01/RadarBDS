@@ -26,6 +26,8 @@ This playbook helps agents work without wasting context or breaking local runtim
 - Normalizer/extractor task: focus `cleansing/`; run extractor/dedup tests.
 - Dedup/drop task: focus `cleansing/dedup.py`, `db/listings.py`, and related tests.
 - Dashboard/API task: keep route handlers thin; put read shaping in `services/market_data.py`.
+- RBAC/auth task: read `docs/rbac.md` first; security must be backend-side, not only hidden in UI.
+- Telegram/watchlist task: read `docs/telegram_watchlist.md` first; one bot maps to per-user `telegram_chat_id`.
 - Image performance task: use `services/image_assets.py`, `cleansing/download_images.py`, and `scripts/generate_thumbnails.py`.
 - DB task: prefer `db/connection.py`, `db/schema.py`, or the focused repository file. Compatibility facades should stay thin.
 
@@ -38,12 +40,16 @@ This playbook helps agents work without wasting context or breaking local runtim
 - Do not assume command-bar controls are inside `#filterForm`; keep explicit query append for `mos_min` and `only_drops`.
 - Do not use Guland/BatDongSan cross-URL heuristics for same-lot detection.
 - Do not commit `data/radar_bds.db`, `data/images/`, thumbnails, logs, or reports.
+- Do not print `.env` secrets or Telegram bot token; mask tokens in status output.
+- Do not assume zrok URLs are stable; update webhook when zrok restarts.
 - Some terminal output may display Vietnamese as mojibake; prefer UTF-8 Python mode and inspect files with an editor/browser when text fidelity matters.
 
 ## Verification Matrix
 
 - Python syntax: `py_compile` touched files.
 - JS syntax: `node --check static/js/main.js`.
+- Auth UI syntax: `node --check static/js/auth.js`.
+- Telegram push syntax: `py_compile alerts/telegram.py cli/notify.py`.
 - Dedup: `tests/test_dedup.py`, `tests/test_price_history.py`, `tests/test_lot_history.py`, `tests/test_drop_filter.py`.
 - Dashboard performance: payload check for `/api/dashboard` and `/api/signals?page=1&limit=30`.
 - Filter performance: rapidly change MOS/drop/source/ward and confirm:

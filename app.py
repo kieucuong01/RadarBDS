@@ -8,6 +8,7 @@ import sqlite3
 import logging
 import statistics
 import re
+import urllib.request
 from functools import wraps
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -17,6 +18,7 @@ from db.moderation import normalize_phone
 
 # Import the extracted services
 from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, apply_guest_truncation
+from services.investment_memo import load_investment_memo
 from services.ai_bot import AIBot
 
 # RBAC (4-tier auth)
@@ -52,24 +54,24 @@ def _admin_credentials():
     return (os.getenv("ADMIN_BASIC_USER", "").strip(), os.getenv("ADMIN_BASIC_PASS", "").strip())
 
 
-def _unauthorized():
-    return Response(
-        "Unauthorized",
-        401,
-        {"WWW-Authenticate": 'Basic realm="RadarBDS Admin"'},
-    )
+def _admin_forbidden():
+    if request.path.startswith("/admin/api/"):
+        return jsonify({"ok": False, "error": "admin_required"}), 403
+    return Response("Admin required", 403)
 
 
 def require_admin_auth(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        user, pwd = _admin_credentials()
-        if not user or not pwd:
-            return _unauthorized()
+        if current_tier() == "admin":
+            return fn(*args, **kwargs)
+
         auth = request.authorization
-        if not auth or auth.username != user or auth.password != pwd:
-            return _unauthorized()
-        return fn(*args, **kwargs)
+        user, pwd = _admin_credentials()
+        if auth and user and pwd and auth.username == user and auth.password == pwd:
+            return fn(*args, **kwargs)
+
+        return _admin_forbidden()
     return wrapper
 
 
@@ -142,6 +144,7 @@ def inject_user_tier():
 
 
 @app.route("/api/auth/check", methods=["POST"])
+@rate_limit("auth_check", limits={"guest": 60, "free": 120, "vip": 300, "admin": None})
 def api_auth_check():
     """Step 1 of unified login flow: detect identifier + whether user exists."""
     payload = request.get_json(silent=True) or {}
@@ -150,6 +153,9 @@ def api_auth_check():
     if not norm:
         return jsonify({"ok": False, "error": "invalid_identifier"}), 400
     ident, ident_type = norm
+    # Tạm thời chỉ hỗ trợ đăng ký/đăng nhập bằng SĐT
+    if ident_type == "email":
+        return jsonify({"ok": False, "error": "phone_only"}), 400
     return jsonify({
         "ok": True,
         "identifier": ident,
@@ -159,6 +165,7 @@ def api_auth_check():
 
 
 @app.route("/api/auth/register", methods=["POST"])
+@rate_limit("auth_register", limits={"guest": 20, "free": 30, "vip": 60, "admin": None})
 def api_auth_register():
     payload = request.get_json(silent=True) or {}
     raw = (payload.get("identifier") or "").strip()
@@ -171,6 +178,9 @@ def api_auth_register():
     if len(pwd) < 6:
         return jsonify({"ok": False, "error": "password_too_short"}), 400
     ident, ident_type = norm
+    # Tạm thời chỉ hỗ trợ đăng ký bằng SĐT
+    if ident_type == "email":
+        return jsonify({"ok": False, "error": "phone_only"}), 400
 
     if identifier_exists(ident):
         return jsonify({"ok": False, "error": "already_registered"}), 409
@@ -187,6 +197,7 @@ def api_auth_register():
 
 
 @app.route("/api/auth/login", methods=["POST"])
+@rate_limit("auth_login", limits={"guest": 30, "free": 60, "vip": 120, "admin": None})
 def api_auth_login():
     payload = request.get_json(silent=True) or {}
     raw = (payload.get("identifier") or "").strip()
@@ -396,6 +407,79 @@ def api_telegram_unbind():
     return jsonify({"ok": True})
 
 
+def _telegram_api(method: str, payload: dict | None = None) -> dict:
+    token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token:
+        return {"ok": False, "error": "missing_token"}
+    url = f"https://api.telegram.org/bot{token}/{method}"
+    data = None
+    headers = {}
+    if payload is not None:
+        data = json.dumps(payload).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+    req = urllib.request.Request(url, data=data, headers=headers)
+    with urllib.request.urlopen(req, timeout=12) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+@app.route("/api/auth/telegram/sync", methods=["POST"])
+@require_tier("free")
+def api_telegram_sync():
+    """Local-dev fallback: poll Telegram updates and bind current user's /start token.
+
+    Production should use webhook. This keeps localhost usable when Telegram
+    cannot call back into 127.0.0.1.
+    """
+    u = current_user()
+    if not u:
+        return jsonify({"ok": False, "error": "login_required"}), 401
+    if u.get("telegram_chat_id"):
+        return jsonify({"ok": True, "linked": True})
+
+    user_token = ""
+    with db_mod.get_conn() as conn:
+        row = conn.execute(
+            "SELECT telegram_link_token FROM users WHERE id=?",
+            (u["id"],),
+        ).fetchone()
+        user_token = (row["telegram_link_token"] if row else "") or ""
+    if not user_token:
+        return jsonify({"ok": True, "linked": False, "error": "no_active_token"})
+
+    try:
+        data = _telegram_api("getUpdates")
+    except Exception as e:
+        return jsonify({"ok": False, "error": "telegram_unreachable", "detail": str(e)[:160]}), 502
+
+    if not data.get("ok"):
+        return jsonify({"ok": False, "error": data.get("description") or "telegram_error"}), 502
+
+    chat_id = None
+    for upd in data.get("result", []):
+        msg = upd.get("message") or upd.get("edited_message") or {}
+        text = (msg.get("text") or "").strip()
+        chat = msg.get("chat") or {}
+        if text == f"/start {user_token}" and chat.get("id"):
+            chat_id = str(chat["id"])
+            break
+
+    if not chat_id:
+        return jsonify({"ok": True, "linked": False})
+
+    with db_mod.get_conn() as conn:
+        conn.execute(
+            "UPDATE users SET telegram_chat_id=?, telegram_link_token=NULL, "
+            "telegram_link_expires_at=NULL WHERE id=?",
+            (chat_id, u["id"]),
+        )
+    try:
+        from alerts.telegram import send_message_to
+        send_message_to(chat_id, "Da ket noi tai khoan RadarBDS. Ban se nhan thong bao deal khop khu vuc quan tam.")
+    except Exception:
+        pass
+    return jsonify({"ok": True, "linked": True})
+
+
 @app.route("/api/auth/telegram/webhook", methods=["POST"])
 def api_telegram_webhook():
     """Receive Telegram bot updates. Match `/start <token>` → bind chat_id.
@@ -526,7 +610,7 @@ def serve_local_image(filename):
 
 @app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template('index.html', wards_by_city=CITY_MAP)
 
 def _get_signals_version(db_path: str) -> str:
     conn = sqlite3.connect(db_path)
@@ -640,6 +724,14 @@ def _set_review_visibility(conn, listing_id: int, verdict: str) -> None:
 
 
 def _admin_actor() -> str:
+    user = current_user()
+    if user:
+        return (
+            user.get("identifier")
+            or user.get("phone")
+            or user.get("email")
+            or f"user:{user.get('id')}"
+        )
     auth = request.authorization
     return auth.username if auth and auth.username else "admin"
 
@@ -778,7 +870,7 @@ def _clean_infra_payload(payload):
     }
 
 @app.route("/api/dashboard")
-@rate_limit("dashboard")
+@rate_limit("dashboard", limits={"guest": 1200, "free": 2400, "vip": None, "admin": None})
 def api_dashboard():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     area_min, area_max, price_min, price_max = _request_range_filters(request)
@@ -1063,11 +1155,22 @@ def api_listings():
         "fair": "v.fair_ppm2", "date": "COALESCE(l.posted_at, l.crawled_at)",
         "ward": "l.ward", "prop_type": "l.property_type",
     }
-    sort_by = request.args.get("sort_by", "price_m2")
-    sort_dir = "DESC" if request.args.get("sort_dir", "asc").lower() == "desc" else "ASC"
-    order_expr = sort_col_map.get(sort_by, "l.price_per_m2")
+    # Default sort = newest first (date DESC). Client can override.
+    sort_by = request.args.get("sort_by", "date")
+    default_dir = "desc" if sort_by == "date" else "asc"
+    sort_dir = "DESC" if request.args.get("sort_dir", default_dir).lower() == "desc" else "ASC"
+    order_expr = sort_col_map.get(sort_by, "COALESCE(l.posted_at, l.crawled_at)")
 
-    fresh_flag = "CASE WHEN datetime(COALESCE(l.posted_at, l.crawled_at)) > datetime('now', '-24 hours') THEN 1 ELSE 0 END AS is_fresh_locked"
+    from services.market_data import fresh_lock_hours_for
+    tier = current_tier()
+    lock_hours = fresh_lock_hours_for(tier)
+    if lock_hours > 0:
+        fresh_flag = (
+            f"CASE WHEN datetime(COALESCE(l.posted_at, l.crawled_at)) "
+            f"> datetime('now', '-{int(lock_hours)} hours') THEN 1 ELSE 0 END AS is_fresh_locked"
+        )
+    else:
+        fresh_flag = "0 AS is_fresh_locked"
     query = f"""
         SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
                {fresh_flag}
@@ -1101,8 +1204,7 @@ def api_listings():
                 img_map[r[0]].append(url)
         
     conn.close()
-    
-    tier = current_tier()
+
     listings = [redact_for_tier({
         "id": r['id'], "title": r['title'], "description": r['description'] or "",
         "price_ty": r['price_ty'], "area_m2": r['area_m2'],
@@ -1130,7 +1232,8 @@ def api_listings():
 @app.route('/listing/<int:listing_id>')
 def listing_detail(listing_id):
     db_path = str(db_mod.DB_PATH.resolve())
-    data = load_listing_detail(db_path, listing_id, tier=current_tier())
+    tier = current_tier()
+    data = load_listing_detail(db_path, listing_id, tier=tier)
     if not data:
         return "Listing not found", 404
     
@@ -1139,7 +1242,9 @@ def listing_detail(listing_id):
     history_json = json.dumps(data["history"], ensure_ascii=False)
     desc_html = l.get('description', '').replace('\n', '<br>') if l.get('description') else 'Không có mô tả.'
     
-    return render_template('listing_detail.html', l=l, imgs=imgs, history_json=history_json, desc_html=desc_html)
+    memo = {"locked": True, "reason": "login_required"} if tier == "guest" else load_investment_memo(db_path, listing_id, tier=tier)
+
+    return render_template('listing_detail.html', l=l, imgs=imgs, history_json=history_json, desc_html=desc_html, memo=memo)
 
 @app.route('/api/listing/<int:listing_id>')
 def api_listing_detail(listing_id):
@@ -1175,8 +1280,21 @@ def api_listing_detail(listing_id):
         "tier": data.get("tier"),
     })
 
+@app.route('/api/listing/<int:listing_id>/memo')
+def api_listing_memo(listing_id):
+    tier = current_tier()
+    if tier == "guest":
+        return jsonify({"locked": True, "reason": "login_required"}), 403
+
+    db_path = str(db_mod.DB_PATH.resolve())
+    memo = load_investment_memo(db_path, listing_id, tier=tier)
+    if not memo:
+        return jsonify({"error": "not found"}), 404
+    return jsonify(memo)
+
 @app.route('/api/history/<int:listing_id>')
 def get_price_history(listing_id):
+    tier = current_tier()
     with db_mod.get_conn() as conn:
         rows = conn.execute("""
             SELECT recorded_at, price_ty, price_per_m2
@@ -1273,7 +1391,7 @@ def get_price_history(listing_id):
                 ranked.append({
                     'id': c["id"],
                     'title': (c["title"] or '')[:80],
-                    'url': c["url"] or "",
+                    'url': (c["url"] or "") if tier == "admin" else "",
                     'detail_url': f"/listing/{c['id']}",
                     'price_ty': c["price_ty"],
                     'area_m2': c["area_m2"],
@@ -1287,16 +1405,14 @@ def get_price_history(listing_id):
             ranked.sort(key=lambda x: (-x["match_score"], x["area_gap_pct"], -(x["price_per_m2"] or 0)))
             comps = ranked[:6]
 
-        lot_history = _get_lot_history(conn, listing_id)
-        # Hide commission-sensitive price/lot history for non-admin tiers.
-        tier = current_tier()
-        if tier != "admin":
-            history = []
-            lot_history = []
+        lot_history = _get_lot_history(conn, listing_id, tier=tier)
+        # History is open for all tiers (decision 2026-05-15) — price/lot
+        # timelines are not commission-sensitive, and they're a key conversion
+        # driver. SĐT/URL commission protection is handled elsewhere.
         return jsonify({'history': history, 'lot_history': lot_history, 'comps': comps, 'tier': tier})
 
 
-def _get_lot_history(conn, listing_id):
+def _get_lot_history(conn, listing_id, tier: str = "guest"):
     row = conn.execute("""
         SELECT id, duplicate_of_id
         FROM listings
@@ -1336,7 +1452,7 @@ def _get_lot_history(conn, listing_id):
             "id": r["id"],
             "date": (r["dt"] or "")[:10],
             "source": r["source"],
-            "url": r["url"],
+            "url": r["url"] if tier == "admin" else "",
             "detail_url": f"/listing/{r['id']}",
             "title": (r["title"] or "")[:80],
             "price_ty": price,
@@ -1389,6 +1505,7 @@ def _same_price_value(a, b):
 
 
 @app.route("/api/leads", methods=["POST"])
+@rate_limit("lead_capture", limits={"guest": 10, "free": 30, "vip": 120, "admin": None})
 def api_create_lead():
     payload = request.get_json(silent=True) or {}
     listing_id = payload.get("listing_id")
@@ -1435,34 +1552,29 @@ def api_create_lead():
 
 
 @app.route("/api/lead-capture-guest", methods=["POST"])
+@rate_limit("lead_capture", limits={"guest": 10, "free": 30, "vip": 120, "admin": None})
 def api_create_guest_lead():
-    """Guest matchmaking request — no account needed. Captures name + contact (phone or email).
+    """Matchmaking request from guest/free/vip. Captures phone and default request note.
 
     Accepts logged-in users too (admin can still see who clicked the guest form).
     """
     payload = request.get_json(silent=True) or {}
     listing_id = payload.get("listing_id")
-    name = (payload.get("name") or "").strip()[:120]
     contact_raw = (payload.get("contact") or "").strip()
+    note = (payload.get("note") or "").strip()[:500]
     context_ctx = (payload.get("context") or "card_signal").strip()[:50]
 
-    if not name:
-        return jsonify({"ok": False, "error": "name_required"}), 400
-
-    # Detect phone vs email
     norm = normalize_identifier(contact_raw)
-    if not norm:
-        return jsonify({"ok": False, "error": "invalid_contact"}), 400
+    if not norm or norm[1] != "phone":
+        return jsonify({"ok": False, "error": "invalid_phone"}), 400
     ident, ident_type = norm
-    phone_for_admin = ident if ident_type == "phone" else None
-    email_for_ack = ident if ident_type == "email" else None
 
     tier = current_tier()
     u = current_user()
     user_id = u["id"] if u else None
-    urgency = "guest"
+    urgency = "urgent" if tier in ("vip", "admin") else ("standard" if tier == "free" else "guest")
 
-    listing_url = ""
+    listing_url = (payload.get("listing_url") or "").strip()[:500]
     with db_mod.get_conn() as conn:
         if listing_id is not None:
             row = conn.execute("SELECT id, url FROM listings WHERE id=?", (listing_id,)).fetchone()
@@ -1470,23 +1582,29 @@ def api_create_guest_lead():
                 return jsonify({"ok": False, "error": "listing_not_found"}), 404
             listing_url = row["url"] or ""
 
+        if not note:
+            lot_ref = f"#{listing_id}" if listing_id is not None else "này"
+            note = f"Tôi quan tâm lô {lot_ref}, hãy gửi thêm thông tin."
+        if tier in ("vip", "admin") and "1-1" not in note:
+            note = f"{note} Tôi muốn được tư vấn và phân tích 1-1 với chuyên gia."
+
         cur = conn.execute("""
             INSERT INTO lead_captures (
                 listing_id, listing_url, zalo_phone, source_context, note, status,
                 user_id, tier, urgency, guest_name, guest_email
             ) VALUES (?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?)
         """, (
-            listing_id, listing_url, phone_for_admin or "", context_ctx,
-            f"Guest matchmaking — name={name}",
-            user_id, tier, urgency, name, email_for_ack,
+            listing_id, listing_url, ident, context_ctx,
+            note,
+            user_id, tier, urgency, None, None,
         ))
         lead_id = cur.lastrowid
-        _send_lead_ack_safe(conn, lead_id, listing_id, user_id, name, email_for_ack)
+        _send_lead_ack_safe(conn, lead_id, listing_id, user_id, None, None)
 
     log_audit(
         user_id=user_id, tier=tier, action="lead_capture_guest",
         listing_id=listing_id,
-        context={"name": name, "contact_type": ident_type},
+        context={"contact_type": ident_type, "urgency": urgency, "source_context": context_ctx},
     )
     return jsonify({"ok": True, "lead_id": lead_id})
 
@@ -2150,8 +2268,14 @@ def admin_api_users():
         rows = conn.execute(f"""
             SELECT id, identifier, identifier_type, email, phone, display_name,
                    tier, vip_expires_at, telegram_chat_id, notify_email, notify_telegram,
-                   created_at, last_login_at, is_banned
-            FROM users
+                   created_at, last_login_at, is_banned,
+                   COALESCE(wc.watchlist_count, 0) AS watchlist_count
+            FROM users u
+            LEFT JOIN (
+                SELECT user_id, COUNT(*) AS watchlist_count
+                FROM user_watchlists
+                GROUP BY user_id
+            ) wc ON wc.user_id = u.id
             {where_sql}
             ORDER BY created_at DESC
             LIMIT 500

@@ -367,7 +367,13 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         hot = is_hot(title, description)
 
         # Phân loại tài sản + road tier
+        road_text_extra = " ".join(filter(None, [
+            str(raw.get("address") or ""),
+            str(raw.get("road_type_raw") or ""),
+            str(raw.get("road_name") or ""),
+        ]))
         full_text   = title + ' ' + description
+        road_text   = " ".join(filter(None, [description, road_text_extra]))
         tho_cu_info = extract_tho_cu(full_text, area_m2)
         raw_label   = str(raw.get("property_type", ""))
         url_hint    = extract_url_hint(url)
@@ -380,7 +386,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             price_per_m2 = price_per_m2,
             url_hint    = url_hint,
         )
-        road_tier = extract_road_tier(title, description)
+        road_tier = extract_road_tier(title, road_text)
 
         # Nha_tro: fill area_m2 mặc định khi thiếu (sau classify để biết prop_type)
         if prop_type == 'nha_tro' and not area_m2:
@@ -389,11 +395,13 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                 price_per_m2 = round((price_ty * 1_000) / area_m2, 3)
 
         # Street name → upgrade sub-ward + fill road_width_m (config-driven)
-        full_text_for_street = title + ' ' + description
+        full_text_for_street = " ".join(filter(None, [title, description, road_text_extra]))
         _st_sw, _st_width, _st_tier = detect_subward_from_street(full_text_for_street)
         if _st_sw and ward_final and ward_final.startswith("Mỹ Phước") and ward_final == "Mỹ Phước":
             ward_final = _st_sw
             area_name = _st_sw
+        if not road_tier and _st_tier is not None:
+            road_tier = _st_tier
 
         # Pháp lý: default = có sổ. Flip về 0 chỉ khi text rõ ràng nói "vi bằng / giấy tay / chưa sổ"
         # (extract_legal regex: chưa có sổ|chưa sổ|không có sổ|không sổ|đất chưa|vi bằng|giấy tay|giấy viết tay)
@@ -432,7 +440,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                              or _st_width,
             "road_type":     _norm_road_type(raw.get("road_type") or
                              extract_road_type(" ".join(filter(None, [
-                                 title, description, str(raw.get("road_type_raw") or "")
+                                 title, description, road_text_extra
                              ])))),
             "road_tier":     road_tier,
             "has_so":        has_so_final,

@@ -10,6 +10,11 @@ Use this file as the first read for Codex, Claude Code, Antigravity, or any new 
 4. `docs/daily_crawl_flow.md` - daily crawl pipeline, signal threshold, Telegram alert, JSON config, city filter.
 5. `docs/dev_commands.md` - exact Windows commands for checks.
 
+Read only when relevant:
+
+- `docs/rbac.md` - Guest/Free/VIP/Admin masking, auth, lead capture, rate limits.
+- `docs/telegram_watchlist.md` - VIP watchlists, Telegram bot binding, zrok webhook, digest format.
+
 Avoid broad reads of `.claude/worktrees/`, `_legacy/`, `data/`, `logs/`, `reports/`, `scratch/`, `browser_recordings/`, and `artifacts/` unless the task explicitly requires them.
 
 ## Project Summary
@@ -51,6 +56,8 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
 - `app.py`: Flask routes only; keep route handlers thin.
 - `services/market_data.py`: dashboard/listing read models and API shaping.
 - `services/image_assets.py`: image URL normalization and thumbnail resolution.
+- `auth/core.py`: session, tier, rate-limit, VIP expiry, audit.
+- `alerts/telegram.py`, `cli/notify.py`: Telegram formatting and VIP watchlist push.
 - `cleansing/reprocess.py`: normalize, dedup, valuation orchestration.
 - `cleansing/dedup.py`: duplicate and price-drop policy.
 - `db/connection.py`, `db/schema.py`, `db/listings.py`: DB path, schema, writes.
@@ -72,9 +79,19 @@ Dashboard/API:
 - `/api/signals` is paginated card data. Default limit is 30. It returns `primary_img` thumbnail when available.
 - `/api/listing/<id>` is full modal/detail data, including description and full image list.
 - `/api/history/<id>` returns same-listing price history and lot history/comps payload used by modal.
+- Non-admin APIs must not expose original listing URLs or phone numbers. Use `redact_for_tier()` or explicit tier redaction.
+- Guest fresh listings are skeleton-locked for 7 days; Free/VIP see listing content but still not original URL/phone.
+- `/api/market-indicators` is VIP gated.
 - Filtering UX is `signals-first`: update `/api/signals` immediately, then refresh `/api/dashboard` in background.
 - Do not block signal rendering behind dashboard/insights fetches.
 - In command-bar flow, `mos_min` and `only_drops` controls are outside `#filterForm`; query assembly must append them explicitly.
+
+VIP watchlist/Telegram:
+
+- Free users can save watchlists; only active VIP users receive push.
+- Users share one Telegram bot but each user maps to a private `telegram_chat_id`.
+- `cli/notify.py::push_new_listings_to_vip(since)` sends one digest per user, filtered by that user's active watchlists.
+- For local webhook testing use `zrok.exe share public http://127.0.0.1:5000 --headless`; see `docs/telegram_watchlist.md`.
 
 Images/performance:
 
@@ -107,6 +124,8 @@ node --check static\js\main.js
 
 - Backend/API change: run `py_compile` for touched Python files and the relevant pytest file.
 - Frontend JS change: run `node --check static/js/main.js` and smoke test `http://127.0.0.1:5000`.
+- Auth/watchlist JS change: also run `node --check static/js/auth.js`.
+- Telegram/notification change: run `py_compile alerts/telegram.py cli/notify.py`; if testing live send, use a known linked test user and avoid leaking tokens.
 - Dashboard/API performance change: check payload sizes for `/api/dashboard`, `/api/signals?page=1&limit=30`, and `/api/listing/<id>`.
 - Filter performance change: verify no duplicate requests per interaction and no duplicate cards across signal pages.
 - Dedup/price-drop change: run targeted dedup/history/drop tests, then recompute only if explicitly needed.

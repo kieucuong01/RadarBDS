@@ -347,6 +347,276 @@
 /* Open modal via .show class (auth modal + guest lead modal) */
 .modal.show { display: flex !important; }
 
+.auth-textarea {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: rgba(148, 163, 184, .08);
+  color: var(--text, #0f172a);
+  font: inherit;
+  line-height: 1.45;
+  outline: none;
+}
+.auth-textarea[readonly] {
+  cursor: default;
+}
+.lead-vip-note {
+  margin: 10px 0 12px;
+  align-items: flex-start;
+  line-height: 1.45;
+}
+
+/* Watchlist settings */
+.watchlist-modal-content {
+  width: min(920px, calc(100vw - 28px));
+  max-height: 88vh;
+  overflow: auto;
+  padding: 24px;
+  border-radius: 16px;
+}
+.watchlist-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-right: 28px;
+}
+.watchlist-head h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  color: var(--text, #0f172a);
+}
+.watchlist-status {
+  margin: 14px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  border: 1px solid rgba(15, 118, 110, .2);
+}
+.watchlist-status.is-vip {
+  background: rgba(15, 118, 110, .08);
+  color: #0f766e;
+}
+.watchlist-status.is-free {
+  background: rgba(245, 158, 11, .10);
+  color: #92400e;
+  border-color: rgba(245, 158, 11, .28);
+}
+.watchlist-telegram {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+  background: rgba(148, 163, 184, .06);
+}
+.watchlist-telegram strong,
+.watchlist-list-title,
+.watchlist-section-title {
+  display: block;
+  color: var(--text, #0f172a);
+  font-weight: 700;
+}
+.watchlist-telegram span {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted, #64748b);
+}
+.watchlist-telegram-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.watchlist-telegram-actions .auth-btn {
+  width: auto;
+  padding: 8px 12px;
+}
+.watchlist-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, .85fr);
+  gap: 16px;
+}
+.watchlist-form,
+.watchlist-list {
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  padding: 14px;
+  background: var(--card-bg, #fff);
+}
+.watchlist-section-title {
+  margin: 14px 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted, #64748b);
+}
+.watchlist-city-tabs,
+.watchlist-bulk,
+.watchlist-props,
+.watchlist-switches,
+.watchlist-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.watchlist-city-tabs button,
+.watchlist-bulk button,
+.watchlist-item-actions button {
+  border: 1px solid var(--border, #e5e7eb);
+  background: rgba(148, 163, 184, .08);
+  color: var(--text, #0f172a);
+  border-radius: 999px;
+  padding: 7px 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.watchlist-city-tabs button.active {
+  background: rgba(15, 118, 110, .12);
+  border-color: rgba(15, 118, 110, .35);
+  color: #0f766e;
+}
+.watchlist-bulk {
+  margin: 8px 0;
+}
+.watchlist-bulk span {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted, #64748b);
+}
+.watchlist-wards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  max-height: 170px;
+  overflow: auto;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(148, 163, 184, .04);
+}
+.watchlist-wards label,
+.watchlist-props label,
+.watchlist-switches label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text, #0f172a);
+}
+.watchlist-props label,
+.watchlist-switches label {
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: rgba(148, 163, 184, .05);
+}
+.watchlist-ranges {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.watchlist-actions {
+  margin-top: 12px;
+}
+.watchlist-actions .auth-btn {
+  width: auto;
+  min-width: 130px;
+}
+.watchlist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.watchlist-item {
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  padding: 11px;
+  background: rgba(148, 163, 184, .04);
+}
+.watchlist-item strong {
+  display: block;
+  color: var(--text, #0f172a);
+  margin-bottom: 4px;
+}
+.watchlist-item p,
+.watchlist-item span,
+.watchlist-empty {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted, #64748b);
+}
+.watchlist-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.watchlist-item-actions .danger {
+  color: #b91c1c;
+}
+[data-theme="dark"] .watchlist-modal-content,
+[data-theme="dark"] .watchlist-form,
+[data-theme="dark"] .watchlist-list {
+  background: #1e293b;
+  border-color: #334155;
+}
+[data-theme="dark"] .watchlist-head h3,
+[data-theme="dark"] .watchlist-telegram strong,
+[data-theme="dark"] .watchlist-list-title,
+[data-theme="dark"] .watchlist-item strong,
+[data-theme="dark"] .watchlist-wards label,
+[data-theme="dark"] .watchlist-props label,
+[data-theme="dark"] .watchlist-switches label {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .watchlist-telegram,
+[data-theme="dark"] .watchlist-wards,
+[data-theme="dark"] .watchlist-item,
+[data-theme="dark"] .watchlist-props label,
+[data-theme="dark"] .watchlist-switches label,
+[data-theme="dark"] .watchlist-city-tabs button,
+[data-theme="dark"] .watchlist-bulk button,
+[data-theme="dark"] .watchlist-item-actions button {
+  border-color: #334155;
+  background: rgba(15, 23, 42, .45);
+}
+@media (max-width: 820px) {
+  .watchlist-layout {
+    grid-template-columns: 1fr;
+  }
+  .watchlist-ranges {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .watchlist-telegram,
+  .watchlist-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+@media (max-width: 520px) {
+  .watchlist-modal-content {
+    padding: 18px;
+  }
+  .watchlist-wards,
+  .watchlist-ranges {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Guest 12-cap stub card inner layout */
 .locked-card .locked-card-inner {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -380,4 +650,3 @@
   pointer-events: none;
 }
 .tier-locked-filter:hover { opacity: .85; }
-

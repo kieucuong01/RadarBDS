@@ -87,6 +87,102 @@ def send_listing_card(chat_id: str, listing: dict, base_url: str = "") -> bool:
     return send_message_to(chat_id, "\n".join(parts))
 
 
+def _fmt_ty(value) -> str:
+    if value is None:
+        return "-"
+    try:
+        return f"{float(value):.2f} tỷ"
+    except (TypeError, ValueError):
+        return "-"
+
+
+def _fmt_area(value) -> str:
+    if value is None:
+        return "-"
+    try:
+        return f"{float(value):.0f} m²"
+    except (TypeError, ValueError):
+        return "-"
+
+
+def _fmt_pct(value) -> str:
+    if value is None:
+        return "-"
+    try:
+        return f"{float(value):.1f}%"
+    except (TypeError, ValueError):
+        return "-"
+
+
+def _deal_tone(mos) -> str:
+    try:
+        m = float(mos or 0)
+    except (TypeError, ValueError):
+        m = 0
+    if m >= 30:
+        return "Vùng ép giá mạnh"
+    if m >= 20:
+        return "Đáng ưu tiên xem"
+    if m >= 10:
+        return "Đáng đưa vào shortlist"
+    return "Theo dõi thêm"
+
+
+def send_watchlist_digest(chat_id: str, listings: list, base_url: str = "",
+                          max_items: int = 6, watchlist_names=None) -> bool:
+    """Send one investment-focused VIP watchlist digest.
+
+    Each listing title links directly to its detail page; footer links back to
+    the dashboard for older matches.
+    """
+    if not listings:
+        return False
+    base = (base_url or "").rstrip("/")
+    dashboard_url = f"{base}/" if base else "/"
+    shown = listings[:max_items]
+    older_count = max(len(listings) - len(shown), 0)
+    filter_text = ", ".join((watchlist_names or [])[:3])
+    if watchlist_names and len(watchlist_names) > 3:
+        filter_text += f" +{len(watchlist_names) - 3}"
+
+    lines = [
+        "📡 <b>RADAR BDS - DEAL KHỚP BỘ LỌC</b>",
+        f"🎯 <b>{len(listings)} cơ hội</b> đang khớp tiêu chí của bạn",
+    ]
+    if filter_text:
+        lines.append(f"🔎 Bộ lọc: <b>{_esc(filter_text)}</b>")
+    lines.append("━━━━━━━━━━━━━━━━━━━━")
+
+    for idx, listing in enumerate(shown, 1):
+        lid = listing.get("id") or listing.get("listing_id")
+        detail_url = f"{base}/listing/{lid}" if base and lid else dashboard_url
+        title = _esc((listing.get("title") or "(không tên)")[:90])
+        ward = _esc(listing.get("ward") or listing.get("area") or "-")
+        ptype = _esc(listing.get("property_type") or "-")
+        price_text = _fmt_ty(listing.get("price_ty"))
+        area_text = _fmt_area(listing.get("area_m2"))
+        mos_text = _fmt_pct(listing.get("mos_pct"))
+        tone = _deal_tone(listing.get("mos_pct"))
+        lines.extend([
+            "",
+            f"<b>{idx}. {tone}</b>",
+            f"🔗 <a href=\"{_esc(detail_url)}\"><b>{title}</b></a>",
+            f"💰 {price_text}  ·  📐 {area_text}  ·  📉 MOS {mos_text}",
+            f"📍 {ward}  ·  {ptype}",
+            "✅ Việc cần làm: mở detail, so lịch sử giá, kiểm tra pháp lý trước khi hẹn xem.",
+        ])
+
+    lines.append("")
+    if older_count:
+        lines.append(
+            f"📌 Còn <b>{older_count}</b> tin cũ hơn cũng khớp bộ lọc. "
+            f"<a href=\"{_esc(dashboard_url)}\"><b>Xem thêm trên Dashboard</b></a>"
+        )
+    else:
+        lines.append(f"📌 <a href=\"{_esc(dashboard_url)}\"><b>Mở Dashboard để xem thêm ngữ cảnh thị trường</b></a>")
+    return send_message_to(chat_id, "\n".join(lines))
+
+
 def _already_alerted(conn, listing_id: int, alert_type: str) -> bool:
     row = conn.execute(
         "SELECT 1 FROM alert_logs WHERE listing_id=? AND alert_type=? "

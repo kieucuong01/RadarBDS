@@ -212,12 +212,31 @@ function filterWards(query) {
   });
 }
 
+function updateWardSelectionSummary() {
+  const boxes = Array.from(document.querySelectorAll('#wardFilters input[name="ward"]'));
+  const countEl = document.getElementById('wardSelectedCount');
+  const selectedCount = boxes.filter(b => b.checked).length;
+  if (countEl) countEl.textContent = `${selectedCount}/${boxes.length} phường`;
+}
+
+function setAllWards(checked) {
+  document.querySelectorAll('#wardFilters input[name="ward"]').forEach(box => {
+    box.checked = checked;
+  });
+  updateWardSelectionSummary();
+  scheduleApplyFilters();
+}
+
 function getFilterQuery() {
   const form = document.getElementById('filterForm');
   const fd = new FormData(form);
   const params = new URLSearchParams();
   for (let [k, v] of fd.entries()) {
     params.append(k, v);
+  }
+  const wardBoxes = Array.from(document.querySelectorAll('#wardFilters input[name="ward"]'));
+  if (wardBoxes.length > 0 && wardBoxes.every(box => !box.checked)) {
+    params.set('ward_mode', 'none');
   }
   // Command-bar controls live outside #filterForm, so append them explicitly.
   const mosSlider = document.getElementById('mosSlider');
@@ -536,6 +555,10 @@ async function loadSignals(page = 1, opts = {}) {
   try {
     const data = await fetchJSONCached('signals', `/api/signals?${queryKey}`, false);
     if (runId !== signalRunSeq) return;
+    const bSig = document.getElementById('badgeSignals');
+    if (bSig && Number.isFinite(Number(data.total))) {
+      bSig.innerText = data.total;
+    }
     if (reset) document.getElementById('signalsGrid').innerHTML = '';
     renderSignals(data.signals || [], { append: !reset });
     signalPageNo = data.page || page;
@@ -593,19 +616,19 @@ function _renderSignalCards(signals) {
     const chunk = signals.slice(start, start + SIGNAL_RENDER_CHUNK_SIZE);
     if (chunk.length === 0) return;
     grid.insertAdjacentHTML('beforeend', chunk.map(x => {
-      // Free fresh-lock skeleton (< 24h)
-      if (x && x.locked_reason === 'fresh_24h') {
+      // Guest skeleton for "NEW" signals (within 7 days)
+      if (x && (x.locked_reason === 'new_locked' || x.locked_reason === 'fresh_24h')) {
         return `
         <div class="scard fresh-locked" onclick="onLockedFreshClick(${x.id || 'null'}, 'card')">
           <div class="sc-img-wrap">
-            <div class="sc-img" style="background:linear-gradient(135deg,#fef3c7,#fde68a); display:flex; align-items:center; justify-content:center; font-size:32px;">🔒</div>
-            <div class="mos-badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);">VIP ONLY</div>
+            <div class="sc-img" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe); display:flex; align-items:center; justify-content:center; font-size:32px;">🔒</div>
+            <div class="mos-badge" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);">MỚI</div>
           </div>
           <div class="sc-body">
-            <div class="sc-title">${x.title || 'Tin mới — Nâng cấp VIP để xem ngay'}</div>
+            <div class="sc-title">${x.title || 'Tin mới — Đăng ký miễn phí để xem ngay'}</div>
             <div style="padding:20px 0; text-align:center;">
-              <button class="upgrade-btn" onclick="event.stopPropagation(); onLockedFreshClick(${x.id || 'null'}, 'button')">💎 Nâng cấp VIP</button>
-              <div style="margin-top:10px; font-size:12px; color:var(--muted,#64748b);">Tin đăng dưới 24h — VIP xem ngay, Free chờ thêm.</div>
+              <button class="upgrade-btn" onclick="event.stopPropagation(); onLockedFreshClick(${x.id || 'null'}, 'button')">📝 Đăng ký miễn phí</button>
+              <div style="margin-top:10px; font-size:12px; color:var(--muted,#64748b);">Tin mới đăng — đăng ký miễn phí để xem chi tiết.</div>
             </div>
           </div>
         </div>`;
@@ -675,8 +698,7 @@ function _renderSignalCards(signals) {
           </div>
 
           <div class="sc-actions" onclick="event.stopPropagation()">
-            <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'card_signal');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${(window.USER_TIER==='vip'||window.USER_TIER==='admin')?'⚡ Ráp mối VIP':'💬 Ráp mối'}</a>
-            <a href="/listing/${x.id}" target="_blank" class="btn-analyze"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Phân tích Deal</a>
+            <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'card_signal');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${(window.USER_TIER === 'vip' || window.USER_TIER === 'admin') ? '⚡ Ráp mối VIP' : '💬 Ráp mối'}</a>
           </div>
         </div>
       </div>
@@ -778,6 +800,33 @@ function renderSignalTags(data) {
     .join('');
 }
 
+function renderModalTitle(rawTitle) {
+  const el = document.getElementById('sm-title');
+  if (!el) return;
+  const parts = String(rawTitle || '')
+    .split(/\n+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  if (!parts.length) {
+    el.innerHTML = '';
+    return;
+  }
+  const main = parts[0];
+  const sub = parts.slice(1).join(' · ');
+  el.innerHTML = `
+    <span class="sm-title-main">${escHtml(main)}</span>
+    ${sub ? `<span class="sm-title-sub">${escHtml(sub)}</span>` : ''}
+  `;
+}
+
+function toggleModalComps(btn) {
+  const list = btn.closest('.sm-comps-list');
+  if (!list) return;
+  const expanded = list.classList.toggle('is-expanded');
+  const count = btn.dataset.count || '0';
+  btn.textContent = expanded ? 'Thu gọn' : `Xem thêm ${count} lô`;
+}
+
 function openGallery(idx = 0) {
   if (!galleryImages.length) return;
   galleryIndex = Math.max(0, Math.min(idx, galleryImages.length - 1));
@@ -832,19 +881,10 @@ function _openSignalLegacy(card) {
   // Description is lazy-loaded from /api/listing/<id>.
   document.getElementById('sm-desc').innerText = 'Đang tải mô tả chi tiết...';
 
-  // AI Assessment
-  const aiSection = document.getElementById('sm-ai-section');
-  const aiText = document.getElementById('sm-ai-text');
+  // Groq assessment is intentionally hidden while Investment Memo owns this slot.
   const price = parseFloat(d.price) || 0;
-  const fair = parseFloat(d.fair) || 0;
   const area = parseFloat(d.area) || 0;
-  const dropInfo = d.drop ? `, đã giảm <b>${d.drop}%</b>` : '';
-  if (fair > 0 && price > 0) {
-    aiText.innerHTML = `Tín hiệu ngợp <b>cấp độ ${mosNum >= 25 ? 'cao' : 'trung bình'}</b>: giá chào thấp hơn fair value <b>${Math.round(mosNum)}%</b>${dropInfo}. Khu vực <b>${d.ward}</b>, ${d.road}. Diện tích ${area} m². Khuyến nghị xác minh chủ sở hữu, đàm phán thêm 2-5%.`;
-    aiSection.style.display = 'block';
-  } else {
-    aiSection.style.display = 'none';
-  }
+  hideGroqAssessment();
 
   // Tags
   const tags = [
@@ -866,7 +906,7 @@ function _openSignalLegacy(card) {
   // Links
   document.getElementById('sm-zalo').dataset.listingId = d.id;
   document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
-  { const _d=document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
+  { const _d = document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
 
   // Load price history + comps
   loadSignalHistory(d.id, price, area, d.ward);
@@ -887,7 +927,7 @@ async function _hydrateSignalDetailLegacy(listingId) {
     document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
     document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
     document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
-    { const _d=document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
+    { const _d = document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
     renderSignalTags({
       area: data.area_m2,
       ward: data.ward,
@@ -995,6 +1035,115 @@ async function _loadSignalHistoryLegacyOld(listingId, currentPrice, area, ward) 
   }
 }
 
+function _memoTy(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? `${n.toFixed(2)} tỷ` : '-';
+}
+
+function _memoPct(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? `${n.toFixed(1)}%` : '-';
+}
+
+function _memoList(items, emptyText) {
+  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (!list.length) return `<div class="sm-empty-state">${escHtml(emptyText || 'Chưa có dữ liệu.')}</div>`;
+  return `<ul class="sm-memo-list">${list.map((x) => `<li>${escHtml(x)}</li>`).join('')}</ul>`;
+}
+
+function hideGroqAssessment() {
+  const aiSection = document.getElementById('sm-ai-section');
+  const aiText = document.getElementById('sm-ai-text');
+  if (aiText) aiText.innerHTML = '';
+  if (aiSection) {
+    aiSection.hidden = true;
+    aiSection.setAttribute('aria-hidden', 'true');
+    aiSection.style.display = 'none';
+  }
+}
+
+function renderInvestmentMemoLoading() {
+  const body = document.getElementById('sm-memo-body');
+  if (!body) return;
+  body.innerHTML = '<div class="sm-empty-state">Đang tải memo...</div>';
+}
+
+function renderInvestmentMemoLocked() {
+  const body = document.getElementById('sm-memo-body');
+  if (!body) return;
+  body.innerHTML = `
+    <div class="sm-memo-locked">
+      <b>Investment Memo đang khóa</b><br>
+      Đăng ký miễn phí để xem giải thích định giá, dữ liệu còn thiếu và các cảnh báo rủi ro.
+      <div style="margin-top:10px;">
+        <button type="button" class="sm-comps-toggle" onclick="RadarAuth.openAuthModal('Đăng ký để xem giải thích định giá cho từng deal.')">Đăng ký miễn phí</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderInvestmentMemo(data) {
+  const body = document.getElementById('sm-memo-body');
+  if (!body) return;
+  if (!data || data.locked) {
+    renderInvestmentMemoLocked();
+    return;
+  }
+  const metrics = data.metrics || {};
+  const comps = data.comps_summary || {};
+  const price = data.price_context || {};
+  const tone = data.verdict_tone || 'muted';
+  const dropText = price.price_dropped
+    ? `Đã ghi nhận giảm ${_memoPct(price.drop_pct)}${price.suspicious_bait ? ' (cần xác minh)' : ''}.`
+    : 'Chưa có biến động giảm giá đáng kể.';
+  const missingInfo = data.missing_info || data.data_quality_warnings;
+  const riskWarnings = data.risk_warnings || data.risks;
+  const questions = data.verification_questions || data.broker_questions;
+  body.innerHTML = `
+    <div class="sm-memo-head">
+      <span class="sm-memo-verdict ${escHtml(tone)}">${escHtml(data.verdict_label || data.verdict || '-')}</span>
+      <p class="sm-memo-summary">${escHtml(data.summary || '')}</p>
+    </div>
+    <div class="sm-memo-metrics">
+      <div class="sm-memo-metric"><span>Giá hiện tại</span><b>${_memoTy(metrics.current_price_ty)}</b></div>
+      <div class="sm-memo-metric"><span>Fair total</span><b>${_memoTy(metrics.fair_total_ty)}</b></div>
+      <div class="sm-memo-metric"><span>Biên an toàn hiện tại</span><b>${_memoPct(metrics.mos_pct)}</b></div>
+      <div class="sm-memo-metric"><span>Comps gần nhất</span><b>${Number(comps.count || 0)}</b></div>
+    </div>
+    <div class="sm-memo-grid">
+      <div><p class="sm-memo-block-title">Cách định giá</p>${_memoList(data.valuation_explanation, 'Chưa đủ dữ liệu để giải thích định giá.')}</div>
+      <div><p class="sm-memo-block-title">Thiếu thông tin ảnh hưởng định giá</p>${_memoList(missingInfo, 'Chưa phát hiện thiếu dữ liệu lớn từ hệ thống.')}</div>
+      <div><p class="sm-memo-block-title">Cảnh báo rủi ro</p>${_memoList(riskWarnings, 'Vẫn cần kiểm tra pháp lý, quy hoạch và hiện trạng.')}</div>
+      <div><p class="sm-memo-block-title">Câu hỏi xác minh</p>${_memoList(questions, 'Cần xin thêm thông tin để xác minh định giá.')}</div>
+      <div class="sm-memo-note">${escHtml(dropText)} Lịch sử lô: ${Number(price.repost_count || 0)} repost.</div>
+    </div>
+  `;
+}
+
+async function loadInvestmentMemo(listingId) {
+  const modal = document.getElementById('signalModal');
+  renderInvestmentMemoLoading();
+  if ((window.USER_TIER || 'guest') === 'guest') {
+    renderInvestmentMemoLocked();
+    return;
+  }
+  try {
+    const res = await fetch(`/api/listing/${listingId}/memo`);
+    if (res.status === 403) {
+      renderInvestmentMemoLocked();
+      return;
+    }
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const data = await res.json();
+    if (modal && modal.dataset.listingId !== String(listingId)) return;
+    renderInvestmentMemo(data);
+  } catch (err) {
+    console.error('Investment memo load error:', err);
+    const body = document.getElementById('sm-memo-body');
+    if (body) body.innerHTML = '<div class="sm-empty-state">Không tải được Investment Memo.</div>';
+  }
+}
+
 // Override modal handlers with finalized V2 logic (keeps backward compatibility with existing onclick hooks).
 function openSignal(card) {
   _openSignalFromData(card.dataset);
@@ -1015,22 +1164,14 @@ function _openSignalFromData(d) {
   const mosNum = parseFloat(d.mos) || 0;
   const badgeLabel = mosNum >= 25 ? 'SUPER SIGNAL' : 'SIGNAL';
   document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} · -${d.mos}%</span>`;
-  document.getElementById('sm-title').innerText = d.title || '';
+  renderModalTitle(d.title || '');
   document.getElementById('sm-meta-line').innerHTML = `<span>Dang ${d.time || '-'}</span> · <span>${d.source || '-'}</span>`;
   document.getElementById('sm-desc').innerText = 'Dang tai mo ta chi tiet...';
 
-  const aiSection = document.getElementById('sm-ai-section');
-  const aiText = document.getElementById('sm-ai-text');
+  // Groq assessment is intentionally hidden while Investment Memo owns this slot.
   const price = parseFloat(d.price) || 0;
-  const fair = parseFloat(d.fair) || 0;
   const area = parseFloat(d.area) || 0;
-  const dropInfo = d.drop ? `, da giam <b>${d.drop}%</b>` : '';
-  if (fair > 0 && price > 0) {
-    aiText.innerHTML = `Tín hiệu ngộp <b>${mosNum >= 25 ? 'cap cao' : 'trung binh'}</b>: gia chao thap hon fair value <b>${Math.round(mosNum)}%</b>${dropInfo}. Khu vuc <b>${d.ward || '-'}</b>, ${d.road || '-'}. Dien tich ${area || '-'} m².`;
-    aiSection.style.display = 'block';
-  } else {
-    aiSection.style.display = 'none';
-  }
+  hideGroqAssessment();
 
   renderSignalTags({
     area: d.area,
@@ -1042,9 +1183,10 @@ function _openSignalFromData(d) {
 
   document.getElementById('sm-zalo').dataset.listingId = d.id;
   document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
-  { const _d=document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
+  { const _d = document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
 
   loadSignalHistory(d.id, price, area, d.ward);
+  loadInvestmentMemo(d.id);
   hydrateSignalDetail(d.id);
   modal.style.display = 'flex';
 }
@@ -1079,11 +1221,11 @@ async function hydrateSignalDetail(listingId) {
     const data = await res.json();
     if (modal.dataset.listingId !== String(listingId)) return;
 
-    document.getElementById('sm-title').innerText = data.title || document.getElementById('sm-title').innerText;
+    renderModalTitle(data.title || document.getElementById('sm-title').innerText);
     document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
     document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
     document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
-    { const _d=document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
+    { const _d = document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
     renderSignalTags({
       area: data.area_m2,
       ward: data.ward,
@@ -1112,8 +1254,8 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
   const historyEl = document.getElementById('sm-price-history');
   const chartEl = document.getElementById('sm-history-chart');
   const compsBody = document.getElementById('sm-comps-body');
-  if (historyEl) historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Dang tai lich su...</div>';
-  if (compsBody) compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.5;">Dang tai...</td></tr>';
+  if (historyEl) historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Đang tải lịch sử...</div>';
+  if (compsBody) compsBody.innerHTML = '<div class="sm-empty-state">Đang tải giao dịch tương tự...</div>';
   if (smHistoryChart) { smHistoryChart.destroy(); smHistoryChart = null; }
 
   try {
@@ -1123,38 +1265,49 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
     const sameListingHistory = Array.isArray(data.history) ? data.history : [];
     const lotHistory = Array.isArray(data.lot_history) ? data.lot_history : [];
 
-    let prevPrice = null;
-    const sameRows = sameListingHistory.map((h) => {
+    let prettyPrevPrice = null;
+    const sameRowsPretty = sameListingHistory.map((h) => {
       let changeHtml = '';
-      if (prevPrice && h.price_ty && prevPrice > 0) {
-        const pct = ((h.price_ty - prevPrice) / prevPrice * 100).toFixed(1);
-        const cls = Number(pct) < 0 ? 'ph-change' : '';
+      if (prettyPrevPrice && h.price_ty && prettyPrevPrice > 0) {
+        const pct = ((h.price_ty - prettyPrevPrice) / prettyPrevPrice * 100).toFixed(1);
+        const cls = Number(pct) < 0 ? 'ph-change is-down' : 'ph-change';
         changeHtml = `<span class="${cls}">${pct}%</span>`;
       }
-      prevPrice = h.price_ty;
-      return `<div class="ph-row"><span class="ph-date">📅 ${h.date}</span><span class="ph-price">${h.price_ty} tỷ</span>${changeHtml}</div>`;
+      prettyPrevPrice = h.price_ty;
+      return `<div class="ph-row ph-price-row">
+        <div class="ph-main">
+          <span class="ph-date">${escHtml(h.date || '-')}</span>
+          <span class="ph-sub">Giá ghi nhận</span>
+        </div>
+        <span class="ph-price">${escHtml(h.price_ty || '-')} tỷ</span>
+        ${changeHtml}
+      </div>`;
     }).join('');
 
-    const lotRows = lotHistory.length > 1 ? lotHistory.map((h) => {
-      const drop = h.price_dropped && h.drop_pct ? `<span class="ph-change">-${h.drop_pct}%</span>` : '';
-      const source = h.source ? ` · ${h.source}` : '';
-      const current = h.is_current ? ' · now' : '';
-      const title = String(h.title || '').replace(/"/g, '&quot;');
+    const lotRowsPretty = lotHistory.length > 1 ? lotHistory.map((h) => {
+      const drop = h.price_dropped && h.drop_pct ? `<span class="ph-change is-down">-${escHtml(h.drop_pct)}%</span>` : '';
+      const title = escHtml(h.title || 'Tin cùng lô');
+      const sourceText = escHtml([h.source, h.is_current ? 'đang rao' : ''].filter(Boolean).join(' · ') || 'Cùng lô');
       const origin = h.url
-        ? `<a class="ph-date" href="${h.url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="${title}">${h.date}${source}${current}</a>`
-        : `<span class="ph-date">${h.date}${source}${current}</span>`;
+        ? `<a class="ph-date" href="${escHtml(h.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="${title}">${escHtml(h.date || '-')}</a>`
+        : `<span class="ph-date">${escHtml(h.date || '-')}</span>`;
       const detail = h.detail_url
-        ? `<a class="ph-lot-link" href="${h.detail_url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Detail</a>`
+        ? `<a class="ph-lot-link" href="${escHtml(h.detail_url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Chi tiết</a>`
         : '';
-      return `<div class="ph-row">${origin}<span class="ph-price">${h.price_ty || '-'} tỷ</span>${drop}${detail}</div>`;
+      return `<div class="ph-row ph-lot-row">
+        <div class="ph-main">${origin}<span class="ph-sub">${sourceText}</span></div>
+        <span class="ph-price">${escHtml(h.price_ty || '-')} tỷ</span>
+        ${drop}
+        ${detail}
+      </div>`;
     }).join('') : '';
 
     if (historyEl) {
       historyEl.innerHTML = `
-        <div class="sm-section-label" style="margin-bottom:6px;">Giá theo bài đăng)</div>
-        ${sameRows || '<div class="ph-row"><span class="ph-date">Chưa có biến động giá </span></div>'}
-        <div class="sm-section-label" style="margin-top:10px; margin-bottom:6px;">Lịch sử đăng BDS</div>
-        ${lotRows || '<div class="ph-row"><span class="ph-date">Không có repost cùng lô</span></div>'}
+        <div class="sm-section-label sm-history-label">Giá theo bài đăng</div>
+        ${sameRowsPretty || '<div class="sm-empty-state">Chưa có biến động giá.</div>'}
+        <div class="sm-section-label sm-history-label">Lịch sử đăng BĐS</div>
+        ${lotRowsPretty || '<div class="sm-empty-state">Không có repost cùng lô.</div>'}
       `;
     }
 
@@ -1209,28 +1362,52 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
     }
 
     if (compsBody) {
-      if (Array.isArray(data.comps) && data.comps.length > 0) {
-        compsBody.innerHTML = data.comps.map((c) => {
-          const detail = c.detail_url
-            ? `<a class="sm-comps-link" href="${c.detail_url}" target="_blank" rel="noopener noreferrer">${c.title || 'Tin tuong tu'}</a>`
-            : (c.title || '-');
-
-          const origin = c.url
-            ? `<a class="ph-lot-link" href="${c.url}" target="_blank" rel="noopener noreferrer">Link gốc</a>`
-            : '';
-          const match = c.match_score != null ? `${c.match_score}%` : '-';
-          return `<tr><td>${origin}<div style="margin-top:4px;">${detail}</div></td><td>${c.area_m2 || '-'} m²</td><td><b>${c.price_ty || '-'} tỷ</b></td><td>${match}</td></tr>`;
-        }).join('');
-      } else {
-        compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.6;">Khong co comps phu hop</td></tr>';
-      }
-
-      compsBody.innerHTML += `<tr><td>Deal hiện tại</td><td>${area || '-'} m²</td><td><b>${currentPrice || '-'} tỷ</b></td><td>Now</td></tr>`;
+      const isAdmin = window.USER_TIER === 'admin';
+      const currentTitle = document.getElementById('sm-title')?.innerText || 'Deal hiện tại';
+      const renderCompRow = (c, opts = {}) => {
+        const isCurrent = Boolean(opts.isCurrent);
+        const hidden = Boolean(opts.hidden);
+        const title = escHtml(c.title || (isCurrent ? currentTitle : 'Tin tương tự'));
+        const areaText = c.area_m2 || c.area || '-';
+        const priceText = c.price_ty || c.price || '-';
+        const rowHref = isCurrent ? '' : (isAdmin && c.url ? c.url : (c.detail_url || ''));
+        const clickAttrs = rowHref
+          ? ` role="link" tabindex="0" data-href="${escHtml(rowHref)}" onclick="window.open(this.dataset.href,'_blank','noopener,noreferrer')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"`
+          : '';
+        const sourceBadge = isAdmin && c.url ? '<span class="sm-comp-source-badge">TIN GỐC</span>' : '';
+        return `<article class="sm-comp-card sm-comp-row ${isCurrent ? 'is-current' : ''} ${hidden ? 'sm-comp-extra' : ''} ${rowHref ? 'is-clickable' : ''}"${clickAttrs}>
+          <div class="sm-comp-main">
+            <div class="sm-comp-title-line">
+              <div class="sm-comp-title" title="${title}">${title}</div>
+              ${isCurrent ? '<span class="sm-current-badge">Đang xem</span>' : sourceBadge}
+            </div>
+            <div class="sm-comp-metrics">
+              <span><b>${escHtml(areaText)}</b><small>m²</small></span>
+              <span><b>${escHtml(priceText)}</b><small>tỷ</small></span>
+            </div>
+          </div>
+        </article>`;
+      };
+      const comps = Array.isArray(data.comps) ? data.comps : [];
+      const baseline = renderCompRow({
+        title: currentTitle,
+        area_m2: area || '-',
+        price_ty: currentPrice || '-'
+      }, { isCurrent: true });
+      const compRows = comps.length
+        ? comps.map((c, index) => renderCompRow(c, { hidden: index >= 3 })).join('')
+        : '<div class="sm-empty-state">Chưa có lô tương tự phù hợp.</div>';
+      const extraCount = Math.max(0, comps.length - 3);
+      const toggle = extraCount > 0
+        ? `<button type="button" class="sm-comps-toggle" data-count="${extraCount}" onclick="toggleModalComps(this)">Xem thêm ${extraCount} lô</button>`
+        : '';
+      compsBody.classList.remove('is-expanded');
+      compsBody.innerHTML = baseline + compRows + toggle;
     }
   } catch (err) {
     console.error('History load error:', err);
-    if (historyEl) historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Khong tai duoc du lieu.</div>';
-    if (compsBody) compsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;opacity:0.6;">Loi tai du lieu</td></tr>';
+    if (historyEl) historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Không tải được dữ liệu.</div>';
+    if (compsBody) compsBody.innerHTML = '<div class="sm-empty-state">Lỗi tải dữ liệu.</div>';
   }
 }
 
@@ -1645,7 +1822,7 @@ function renderTrendChart(trendData) {
   });
 }
 
-let tableSort = { col: 'price_m2', dir: 'asc' };
+let tableSort = { col: 'date', dir: 'desc' };
 
 function sortTable(th) {
   const col = th.dataset.col;
@@ -1696,6 +1873,21 @@ async function loadListings(page) {
     listingsHasMore = (typeof data.has_more === 'boolean') ? data.has_more : ((data.listings || []).length >= 50);
     if (sentinel) sentinel.textContent = listingsHasMore ? '' : `Đã hiển thị tất cả ${data.total} tin`;
     const rows = (data.listings || []).map(x => {
+      if (x && (x.locked_reason === 'new_locked' || x.locked_reason === 'fresh_24h')) {
+        return `
+        <tr class="locked-row" style="cursor:pointer; background:linear-gradient(90deg, rgba(37,99,235,0.06), rgba(29,78,216,0.02));" onclick="onLockedFreshClick(${x.id || 'null'}, 'row')">
+          <td><span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">${x.prop_type || '-'}</span></td>
+          <td><span style="padding:4px 8px; border-radius:6px; font-weight:600; font-size:0.8rem;">${x.ward || '-'}</span></td>
+          <td><div class="td-img" style="display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#dbeafe,#bfdbfe); font-size:18px;">🔒</div></td>
+          <td colspan="5" style="padding:14px 16px;">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <span style="background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.75rem;">MỚI</span>
+              <span style="font-weight:700; color:#1e40af;">Tin mới đăng — đăng ký miễn phí để xem chi tiết</span>
+              <button class="upgrade-btn" style="margin-left:auto;" onclick="event.stopPropagation(); onLockedFreshClick(${x.id || 'null'}, 'button')">📝 Đăng ký miễn phí</button>
+            </div>
+          </td>
+        </tr>`;
+      }
       const fair = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       return `
         <tr class="clickable-row" onclick="openListingModal(this)" data-id="${x.id}" data-title="${String(x.title || '').replace(/"/g, '&quot;')}" data-price="${x.price_ty || ''}" data-fair="${fair !== '-' ? fair : ''}" data-area="${x.area_m2 || ''}" data-ward="${x.ward || ''}" data-road="${x.road_type || x.road_tier || ''}" data-time="${_timeAgoText(x.days_ago)}" data-profit="${x.price_ty && fair !== '-' ? (parseFloat(fair) - parseFloat(x.price_ty)).toFixed(2) : ''}" data-mos="${x.mos_pct || ''}" data-source="${sourceNames[x.source] || x.source || ''}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || ''}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}">
@@ -1828,6 +2020,7 @@ function updateWardFilters(wardsByCity, activeWards, opts = {}) {
       </label>
     `;
   }).join('');
+  updateWardSelectionSummary();
 
   requestAnimationFrame(() => {
     if (sidebar) sidebar.scrollTop = sidebarScrollTop;
@@ -1837,6 +2030,9 @@ function updateWardFilters(wardsByCity, activeWards, opts = {}) {
 
 // Global listener for Filter changes (Auto-apply)
 document.addEventListener('change', (e) => {
+  if (e.target.matches('#wardFilters input[name="ward"]')) {
+    updateWardSelectionSummary();
+  }
   if (e.target.closest('#filterForm')) {
     scheduleApplyFilters();
   }
@@ -1846,6 +2042,10 @@ document.addEventListener('change', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   showLoader();
   setupListingsObserver();
+  if (window.INITIAL_WARDS_BY_CITY) {
+    globalWardsByCity = window.INITIAL_WARDS_BY_CITY;
+    updateWardFilters(globalWardsByCity, [], { preserveScroll: false, preserveSearch: false });
+  }
   if (window.location.search) {
     currentFilters = window.location.search.substring(1);
     applyFilters();
@@ -1866,16 +2066,7 @@ function captureLeadAndOpen(listingId, listingUrl, sourceContext = 'signal', urg
   LEAD_CAPTURE.listingUrl = listingUrl || '';
   LEAD_CAPTURE.sourceContext = sourceContext || 'signal';
   LEAD_CAPTURE.urgency = urgency || 'standard';
-
-  const modal = document.getElementById('leadCaptureModal');
-  const input = document.getElementById('leadPhoneInput');
-  const errorEl = document.getElementById('leadError');
-  if (errorEl) errorEl.textContent = '';
-  if (input) {
-    input.value = '';
-    setTimeout(() => input.focus(), 20);
-  }
-  if (modal) modal.style.display = 'flex';
+  openGuestLeadForm(listingId, sourceContext, listingUrl);
 }
 
 function closeLeadCaptureModal() {
@@ -2021,7 +2212,7 @@ window.track = function (action, opts) {
         context: opts.context || {},
       }),
       keepalive: true,
-    }).catch(() => {});
+    }).catch(() => { });
   } catch (e) { /* silent */ }
 };
 
@@ -2051,49 +2242,92 @@ function tierCTA(listingId, url, ctx) {
   const t = window.USER_TIER || 'guest';
   if (t === 'guest') {
     window.track('vip_cta_click', { listing_id: listingId, context: { tier: 'guest', ctx: ctx } });
-    openGuestLeadForm(listingId, ctx);
-    return;
-  }
-  if (t === 'free') {
+  } else if (t === 'free') {
     window.track('cta_vip', { listing_id: listingId, context: { tier: 'free', ctx: ctx } });
+  } else if (t === 'vip' || t === 'admin') {
+    window.track('lead_vip_click', { listing_id: listingId, context: { tier: t, ctx: ctx } });
   }
-  // free / vip / admin → reuse existing flow (urgency from tier)
-  const urgency = (t === 'vip' || t === 'admin') ? 'urgent' : 'standard';
-  captureLeadAndOpen(listingId, url, ctx, urgency);
+  openGuestLeadForm(listingId, ctx, url);
 }
 
 let _guestLeadListingId = null;
 let _guestLeadCtx = null;
-function openGuestLeadForm(listingId, ctx) {
+let _guestLeadListingUrl = '';
+
+function _currentUserPhone() {
+  return ((window.CURRENT_USER && window.CURRENT_USER.phone) || '').trim();
+}
+
+function _guestLeadDefaultNote(tier, listingId) {
+  const lotRef = listingId ? `#${listingId}` : 'này';
+  let note = `Tôi quan tâm lô ${lotRef}, hãy gửi thêm thông tin.`;
+  if (tier === 'vip' || tier === 'admin') {
+    note += ' Tôi muốn được tư vấn và phân tích 1-1 với chuyên gia.';
+  }
+  return note;
+}
+
+function openGuestLeadForm(listingId, ctx, listingUrl = '') {
   _guestLeadListingId = listingId;
   _guestLeadCtx = ctx || 'card_signal';
+  _guestLeadListingUrl = listingUrl || '';
+  const tier = window.USER_TIER || 'guest';
   const m = document.getElementById('guestLeadModal');
   if (!m) return;
   const err = document.getElementById('guestLeadError');
-  if (err) err.classList.remove('show');
-  ['guestLeadName', 'guestLeadContact'].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
+  const title = document.getElementById('guestLeadTitle');
+  const sub = document.getElementById('guestLeadSub');
+  const vipNote = document.getElementById('guestLeadVipNote');
+  const contactEl = document.getElementById('guestLeadContact');
+  const noteEl = document.getElementById('guestLeadNote');
+
+  if (err) { err.textContent = ''; err.classList.remove('show'); }
+  if (title) title.textContent = tier === 'guest' ? 'Yêu cầu RadarBDS ráp mối' : 'Gửi yêu cầu tư vấn';
+  if (sub) {
+    sub.textContent = tier === 'guest'
+      ? 'Chỉ cần để lại SĐT/Zalo, admin sẽ gửi thêm thông tin lô này.'
+      : 'RadarBDS đã điền sẵn SĐT từ tài khoản của bạn. Bạn có thể gửi yêu cầu hoặc chat Zalo trực tiếp.';
+  }
+  if (vipNote) {
+    if (tier === 'vip' || tier === 'admin') {
+      vipNote.textContent = 'Đặc quyền VIP: yêu cầu này sẽ được ưu tiên và có tư vấn, phân tích 1-1 với chuyên gia.';
+      vipNote.style.display = 'flex';
+    } else {
+      vipNote.textContent = '';
+      vipNote.style.display = 'none';
+    }
+  }
+  if (contactEl) contactEl.value = tier === 'guest' ? '' : _currentUserPhone();
+  if (noteEl) noteEl.value = _guestLeadDefaultNote(tier, listingId);
   m.classList.add('show');
   setTimeout(() => {
-    const n = document.getElementById('guestLeadName');
-    if (n) n.focus();
+    const contact = document.getElementById('guestLeadContact');
+    const submitBtn = document.getElementById('guestLeadSubmitBtn');
+    if (contact && !contact.value) contact.focus();
+    else if (submitBtn) submitBtn.focus();
   }, 80);
 }
 function closeGuestLeadModal() {
   const m = document.getElementById('guestLeadModal');
   if (m) m.classList.remove('show');
 }
+function guestLeadChatZalo() {
+  closeGuestLeadModal();
+  _openZaloDirect();
+}
 async function submitGuestLead() {
-  const nameEl = document.getElementById('guestLeadName');
   const contactEl = document.getElementById('guestLeadContact');
+  const noteEl = document.getElementById('guestLeadNote');
   const err = document.getElementById('guestLeadError');
   const btn = document.getElementById('guestLeadSubmitBtn');
-  const name = (nameEl && nameEl.value || '').trim();
   const contact = (contactEl && contactEl.value || '').trim();
-  if (!name || !contact) {
-    if (err) { err.textContent = 'Vui lòng nhập tên và liên hệ.'; err.classList.add('show'); }
+  const note = (noteEl && noteEl.value || '').trim();
+  if (!contact) {
+    if (err) { err.textContent = 'Vui lòng nhập số điện thoại/Zalo.'; err.classList.add('show'); }
+    return;
+  }
+  if (!_isLikelyPhone(contact)) {
+    if (err) { err.textContent = 'Số điện thoại chưa hợp lệ, vui lòng kiểm tra lại.'; err.classList.add('show'); }
     return;
   }
   if (btn) btn.disabled = true;
@@ -2103,9 +2337,9 @@ async function submitGuestLead() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         listing_id: _guestLeadListingId,
-        name,
+        listing_url: _guestLeadListingUrl,
         contact,
-        urgency: 'guest',
+        note,
         context: _guestLeadCtx,
       }),
     });
@@ -2115,7 +2349,7 @@ async function submitGuestLead() {
       return;
     }
     closeGuestLeadModal();
-    alert('✅ Đã gửi yêu cầu!\nAdmin RadarBDS sẽ liên hệ bạn trong 30 phút.');
+    alert('Đã gửi yêu cầu. RadarBDS sẽ liên hệ và gửi thêm thông tin cho bạn.');
   } catch (e) {
     if (err) { err.textContent = 'Mất kết nối, thử lại sau.'; err.classList.add('show'); }
   } finally {

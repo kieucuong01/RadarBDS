@@ -160,12 +160,14 @@ def push_new_listings_to_vip(since: str | None = None) -> dict:
                         },
                         "listings": [],
                         "seen": set(),
+                        "watchlists": set(),
                         "wl_notify_email": False,
                         "wl_notify_telegram": False,
                     })
                     # OR-combine watchlist channel preferences (any matching wl can drive channel)
                     if wl.get("w_notify_email"): bucket["wl_notify_email"] = True
                     if wl.get("w_notify_telegram"): bucket["wl_notify_telegram"] = True
+                    if wl.get("w_name"): bucket["watchlists"].add(wl["w_name"])
                     if listing["id"] in bucket["seen"]:
                         continue
                     bucket["seen"].add(listing["id"])
@@ -177,9 +179,10 @@ def push_new_listings_to_vip(since: str | None = None) -> dict:
 
             stats["matched_users"] = len(user_matches)
 
-            # Send Telegram (per listing) + Email (batch)
-            from alerts.telegram import send_listing_card
+            # Send Telegram (one compact digest/user) + Email (batch)
+            from alerts.telegram import send_watchlist_digest
             from alerts.email import send_listing_alert
+            from config.settings import DASHBOARD_BASE_URL
 
             for uid, bucket in user_matches.items():
                 user = bucket["user"]
@@ -188,9 +191,12 @@ def push_new_listings_to_vip(since: str | None = None) -> dict:
                 em_enabled = user["notify_email"] and bucket["wl_notify_email"] and user["email"]
 
                 if tg_enabled:
-                    for listing in listings[:5]:  # cap 5 cards/user/run
-                        if send_listing_card(user["telegram_chat_id"], listing):
-                            stats["telegram_sent"] += 1
+                    watchlist_names = sorted(bucket.get("watchlists") or [])
+                    if send_watchlist_digest(user["telegram_chat_id"], listings, base_url=DASHBOARD_BASE_URL,
+                                             watchlist_names=watchlist_names):
+                        sent_count = min(len(listings), 6)
+                        stats["telegram_sent"] += sent_count
+                        for listing in listings[:sent_count]:
                             _log_notify(conn, uid, listing["id"], "telegram")
 
                 if em_enabled and listings:

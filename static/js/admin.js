@@ -123,6 +123,7 @@ function renderUserRows(items) {
         <td><strong style="color:${tierBadgeColor}">${esc((u.effective_tier || u.tier || '').toUpperCase())}</strong>${expired} ${banned}</td>
         <td>${vipExp}</td>
         <td>${tg}</td>
+        <td>${Number(u.watchlist_count || 0)}</td>
         <td>${shortDate(u.created_at)}</td>
         <td>${shortDate(u.last_login_at)}</td>
         <td>

@@ -21,11 +21,12 @@
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@3.1.0/dist/chartjs-chart-treemap.min.js"></script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=fontfix-20260509-2">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=rbac-20260514-1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=modal-comps-titlelink-20260515">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=watchlist-20260515">
   <script>
-    window.USER_TIER = {{ USER_TIER|tojson }};
-    window.CURRENT_USER = {{ USER|tojson }};
+    window.USER_TIER = {{ USER_TIER | tojson }};
+    window.CURRENT_USER = {{ USER | tojson }};
+    window.INITIAL_WARDS_BY_CITY = {{ wards_by_city | tojson }};
   </script>
 </head>
 
@@ -87,6 +88,11 @@
           <input type="hidden" name="city" id="cityInput" value="THỦ DẦU MỘT">
           <input type="text" class="ward-search" id="wardSearch" placeholder="Tìm phường/xã..."
             oninput="filterWards(this.value)">
+          <div class="ward-bulk-actions">
+            <button type="button" class="ward-action-btn" onclick="setAllWards(true)">Chọn tất cả</button>
+            <button type="button" class="ward-action-btn ward-action-clear" onclick="setAllWards(false)">Bỏ chọn</button>
+            <span class="ward-count" id="wardSelectedCount">0/0 phường</span>
+          </div>
           <div class="ward-scroll-area">
             <div id="wardFilters"></div>
           </div>
@@ -110,10 +116,11 @@
           <div class="range-block">
             <div class="range-label">Khoảng giá (Tỷ VNĐ)</div>
             <div class="range-grid">
-              <input type="number" class="range-input" name="price_min" id="priceMin" min="0" step="0.01" placeholder="Từ"
-                inputmode="decimal" onchange="scheduleApplyFilters()" oninput="scheduleApplyFilters()">
-              <input type="number" class="range-input" name="price_max" id="priceMax" min="0" step="0.01" placeholder="Đến"
-                inputmode="decimal" onchange="scheduleApplyFilters()" oninput="scheduleApplyFilters()">
+              <input type="number" class="range-input" name="price_min" id="priceMin" min="0" step="0.01"
+                placeholder="Từ" inputmode="decimal" onchange="scheduleApplyFilters()" oninput="scheduleApplyFilters()">
+              <input type="number" class="range-input" name="price_max" id="priceMax" min="0" step="0.01"
+                placeholder="Đến" inputmode="decimal" onchange="scheduleApplyFilters()"
+                oninput="scheduleApplyFilters()">
             </div>
             <div class="range-chips">
               <button type="button" class="range-chip" onclick="setPriceRangePreset('0', '')">Tất cả</button>
@@ -171,7 +178,7 @@
         </div>
       </div>
 
-        </form>
+    </form>
   </aside>
 
   <main class="main">
@@ -198,7 +205,7 @@
           </svg>
           Toàn bộ tin rao
           <span id="badgeTotal" class="nav-count-badge">0</span>
-        </button>        
+        </button>
         <button class="nav-link" onclick="switchTab('market', this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -225,39 +232,41 @@
           tuần)
           <span hidden id="statSignals" class="stat-highlight-green"> </span>
         </div>
+
+
+        {% if USER %}
+        <div class="user-menu" id="userMenu">
+          <button class="user-menu-trigger" onclick="RadarAuth.toggleUserMenu(event)" title="Tài khoản">
+            <span class="user-avatar">{{ (USER.display_name or (USER.email or USER.phone or 'Bạn'))[:1]|upper }}</span>
+            <span>{{ USER.display_name or (USER.email or USER.phone or 'Bạn') }}</span>
+            <span class="tier-badge" data-tier="{{ USER_TIER }}">{{ USER_TIER }}</span>
+          </button>
+          <div class="user-menu-dropdown" id="userMenuDropdown">
+            <div class="user-menu-header">
+              <div class="name">{{ USER.display_name or 'Bạn' }}</div>
+              <div class="id">{{ (USER.email or USER.phone or 'Bạn') }}</div>
+              {% if USER_TIER == 'vip' and USER.vip_expires_at %}
+              <div class="meta">VIP đến: {{ USER.vip_expires_at }}</div>
+              {% elif USER_TIER == 'free' %}
+              <div class="meta">Gói Free — nâng cấp VIP để xem tin mới ngay.</div>
+              {% endif %}
+            </div>
+            <button class="user-menu-item" onclick="RadarAuth.openWatchlistModal()">🔔 Khu vực quan tâm</button>
+            {% if USER_TIER == 'free' %}
+            <button class="user-menu-item" onclick="RadarAuth.nudgeVipUpgrade()">💎 Nâng cấp VIP</button>
+            {% endif %}
+            <button class="user-menu-item danger" onclick="RadarAuth.logout()">↩️ Đăng xuất</button>
+          </div>
+        </div>
+        {% else %}
+        <button class="btn-auth-cta" onclick="RadarAuth.openAuthModal()">Đăng nhập</button>
+        {% endif %}
         <button class="header-icon-btn" onclick="toggleTheme()" title="Đổi giao diện">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path
               d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         </button>
-
-        {% if USER %}
-          <div class="user-menu" id="userMenu">
-            <button class="user-menu-trigger" onclick="RadarAuth.toggleUserMenu(event)" title="Tài khoản">
-              <span class="user-avatar">{{ (USER.display_name or (USER.email or USER.phone or 'Bạn'))[:1]|upper }}</span>
-              <span>{{ USER.display_name or (USER.email or USER.phone or 'Bạn') }}</span>
-              <span class="tier-badge" data-tier="{{ USER_TIER }}">{{ USER_TIER }}</span>
-            </button>
-            <div class="user-menu-dropdown" id="userMenuDropdown">
-              <div class="user-menu-header">
-                <div class="name">{{ USER.display_name or 'Bạn' }}</div>
-                <div class="id">{{ (USER.email or USER.phone or 'Bạn') }}</div>
-                {% if USER_TIER == 'vip' and USER.vip_expires_at %}
-                  <div class="meta">VIP đến: {{ USER.vip_expires_at }}</div>
-                {% elif USER_TIER == 'free' %}
-                  <div class="meta">Gói Free — nâng cấp VIP để xem tin mới ngay.</div>
-                {% endif %}
-              </div>
-              {% if USER_TIER == 'free' %}
-                <button class="user-menu-item" onclick="RadarAuth.nudgeVipUpgrade()">💎 Nâng cấp VIP</button>
-              {% endif %}
-              <button class="user-menu-item danger" onclick="RadarAuth.logout()">↩️ Đăng xuất</button>
-            </div>
-          </div>
-        {% else %}
-          <button class="btn-auth-cta" onclick="RadarAuth.openAuthModal()">Đăng nhập</button>
-        {% endif %}
       </div>
     </header>
 
@@ -265,23 +274,25 @@
 
       <!-- TAB: SIGNALS -->
       <div id="tab-signals" class="tab-content active">
-                <div class="command-bar">
+        <div class="command-bar">
           <div class="command-bar-left">
             <!-- <button type="button" class="super-signal-btn command-super-signal" onclick="activateSuperSignal()">
               🔥 SUPER SIGNAL
             </button> -->
 
-            <div class="command-mos {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}"
-                 {% if USER_TIER == 'guest' %}onclick="window.track('locked_filter_click',{context:{filter:'mos_min'}}); RadarAuth.openAuthModal('Đăng ký miễn phí để lọc theo định giá')" title="Đăng ký để dùng bộ lọc này"{% endif %}>
+            <div class="command-mos {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}" {% if USER_TIER=='guest'
+              %}onclick="window.track('locked_filter_click',{context:{filter:'mos_min'}}); RadarAuth.openAuthModal('Đăng ký miễn phí để lọc theo định giá')"
+              title="Đăng ký để dùng bộ lọc này" {% endif %}>
               <div class="command-mos-head">
                 <span class="command-mos-label">
-                  {% if USER_TIER == 'guest' %}🔒 {% endif %}Thấp hơn so với Định Giá: &gt;= <strong><span id="mosValue">25</span>%</strong>
+                  {% if USER_TIER == 'guest' %}🔒 {% endif %}Thấp hơn so với Định Giá: &gt;= <strong><span
+                      id="mosValue">25</span>%</strong>
                 </span>
               </div>
 
               <div class="command-mos-track">
-                <input type="range" name="mos_min" id="mosSlider" min="0" max="70" step="5" value="25"
-                  {% if USER_TIER == 'guest' %}disabled{% endif %}
+                <input type="range" name="mos_min" id="mosSlider" min="0" max="70" step="5" value="25" {% if
+                  USER_TIER=='guest' %}disabled{% endif %}
                   oninput="document.getElementById('mosValue').textContent=this.value"
                   onchange="scheduleApplyFilters()">
               </div>
@@ -292,10 +303,12 @@
                 <span>50%+</span>
               </div>
             </div>
-            <label class="drop-toggle-pill command-drop-toggle {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}"
-                   {% if USER_TIER == 'guest' %}onclick="event.preventDefault(); window.track('locked_filter_click',{context:{filter:'only_drops'}}); RadarAuth.openAuthModal('Đăng ký miễn phí để lọc tin giảm giá')" title="Đăng ký để dùng bộ lọc này"{% endif %}>
-              <input type="checkbox" name="only_drops" value="1"
-                {% if USER_TIER == 'guest' %}disabled{% endif %}
+            <label
+              class="drop-toggle-pill command-drop-toggle {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}" {%
+              if USER_TIER=='guest'
+              %}onclick="event.preventDefault(); window.track('locked_filter_click',{context:{filter:'only_drops'}}); RadarAuth.openAuthModal('Đăng ký miễn phí để lọc tin giảm giá')"
+              title="Đăng ký để dùng bộ lọc này" {% endif %}>
+              <input type="checkbox" name="only_drops" value="1" {% if USER_TIER=='guest' %}disabled{% endif %}
                 onchange="scheduleApplyFilters()">
               <span>{% if USER_TIER == 'guest' %}🔒 {% endif %}CHỈ HIỂN THỊ TIN GIẢM GIÁ</span>
             </label>
@@ -345,12 +358,13 @@
                 </table>
               </div>
               {% if USER_TIER not in ['vip', 'admin'] %}
-                <div class="tier-locked-overlay">
-                  <div class="lock-icon">🔒</div>
-                  <h4>Đặc quyền VIP</h4>
-                  <p>Chỉ báo Tỷ lệ Cắt máu giúp phát hiện phường đang có nhiều chủ hạ giá — chỉ mở cho thành viên VIP.</p>
-                  <button class="upgrade-btn" onclick="onLockedTabClick('distress_ratio', 'Mở khoá Phân Tích Chuyên Sâu')">💎 Nâng cấp VIP</button>
-                </div>
+              <div class="tier-locked-overlay">
+                <div class="lock-icon">🔒</div>
+                <h4>Đặc quyền VIP</h4>
+                <p>Chỉ báo Tỷ lệ Cắt máu giúp phát hiện phường đang có nhiều chủ hạ giá — chỉ mở cho thành viên VIP.</p>
+                <button class="upgrade-btn"
+                  onclick="onLockedTabClick('distress_ratio', 'Mở khoá Phân Tích Chuyên Sâu')">💎 Nâng cấp VIP</button>
+              </div>
               {% endif %}
             </div>
 
@@ -376,12 +390,13 @@
                 </table>
               </div>
               {% if USER_TIER not in ['vip', 'admin'] %}
-                <div class="tier-locked-overlay">
-                  <div class="lock-icon">🔒</div>
-                  <h4>Đặc quyền VIP</h4>
-                  <p>Bất thường nguồn cung phát hiện phường có sóng tin rao tăng đột biến — chỉ mở cho thành viên VIP.</p>
-                  <button class="upgrade-btn" onclick="onLockedTabClick('supply_anomaly', 'Mở khoá Phân Tích Chuyên Sâu')">💎 Nâng cấp VIP</button>
-                </div>
+              <div class="tier-locked-overlay">
+                <div class="lock-icon">🔒</div>
+                <h4>Đặc quyền VIP</h4>
+                <p>Bất thường nguồn cung phát hiện phường có sóng tin rao tăng đột biến — chỉ mở cho thành viên VIP.</p>
+                <button class="upgrade-btn"
+                  onclick="onLockedTabClick('supply_anomaly', 'Mở khoá Phân Tích Chuyên Sâu')">💎 Nâng cấp VIP</button>
+              </div>
               {% endif %}
             </div>
           </div>
@@ -403,7 +418,7 @@
               <canvas id="trendChart"></canvas>
             </div>
           </div>
-                    
+
           <div class="chart-card">
             <div class="chart-header">
               <h3 class="chart-title">🗺️ Bản đồ Cơ hội (MOS)</h3>
@@ -566,44 +581,41 @@
             <div id="sm-desc" class="sm-desc-text"></div>
           </div>
 
-          <!-- AI Assessment -->
-          <div id="sm-ai-section" class="sm-ai-section">
-            <div class="sm-ai-label">✨ NHẬN ĐỊNH GROQ AI</div>
-            <div id="sm-ai-text" class="sm-ai-text"></div>
+          <!-- COMPS list -->
+          <div class="sm-section">
+            <div class="sm-section-label">📊 SO SÁNH LÔ TƯƠNG TỰ</div>
+            <div class="sm-comps-list" id="sm-comps-body"></div>
           </div>
         </div>
 
         <!-- RIGHT COLUMN -->
         <div class="sm-right">
-          {% if USER_TIER == 'admin' %}
-          <!-- Price history chart (admin only) -->
+          <!-- Investment Memo -->
+          <div class="sm-ai-section sm-memo-section" id="sm-memo-section">
+            <div class="sm-ai-label">Investment Memo</div>
+            <div id="sm-memo-body" class="sm-ai-text sm-memo-body">
+              <div class="sm-empty-state">Đang tải memo...</div>
+            </div>
+          </div>
+
+          <!-- AI Assessment (temporarily hidden) -->
+          <div id="sm-ai-section" class="sm-ai-section" hidden aria-hidden="true">
+            <div class="sm-ai-label">✨ NHẬN ĐỊNH GROQ AI</div>
+            <div id="sm-ai-text" class="sm-ai-text"></div>
+          </div>
+
           <div class="sm-section" id="sm-history-section" style="margin-bottom:16px;">
             <div style="height:160px; position:relative;">
               <canvas id="sm-history-chart"></canvas>
             </div>
             <div id="sm-price-history" class="sm-price-history"></div>
           </div>
-          {% endif %}
-
-          <!-- COMPS table -->
-          <div class="sm-section">
-            <div class="sm-section-label">📊 SO SÁNH · GIAO DỊCH TƯƠNG TỰ CÙNG PHƯỜNG</div>
-            <table class="sm-comps-table" id="sm-comps-table">
-              <thead>
-                <tr>
-                  <th>Lô tương tự</th>
-                  <th>Diện tích</th>
-                  <th>Giá</th>
-                  <th>Mức khớp</th>
-                </tr>
-              </thead>
-              <tbody id="sm-comps-body"></tbody>
-            </table>
-          </div>
 
           <!-- Action buttons -->
           <div style="display:flex; gap:10px; margin-top:16px;">
-          <a id="sm-zalo" href="#" target="_blank" class="sm-btn-zalo" onclick="event.preventDefault();captureLeadAndOpen(this.dataset.listingId,this.dataset.listingUrl,'modal_signal');">💬 Chat Zalo</a>
+            <a id="sm-zalo" href="#" target="_blank" class="sm-btn-zalo"
+              onclick="event.preventDefault();tierCTA(this.dataset.listingId,this.dataset.listingUrl,'modal_signal');">💬
+              Liên hệ tư vấn </a>
             {% if USER_TIER == 'admin' %}
             <a id="sm-detail" href="#" target="_blank" class="sm-btn-detail">↗ Xem tin gốc</a>
             {% endif %}
@@ -645,11 +657,12 @@
       <button class="close-modal" onclick="RadarAuth.closeAuthModal()" style="top:12px; right:12px;">&times;</button>
       <h3 id="authTitle">Đăng nhập / Đăng ký</h3>
       <p class="auth-sub" id="authSub">Nhập số điện thoại hoặc email để tiếp tục.</p>
-      <div id="authReasonBanner" class="auth-trial-banner" style="display:none; background: rgba(15,118,110,.1); border-color: rgba(15,118,110,.3); color: #0f766e;"></div>
+      <div id="authReasonBanner" class="auth-trial-banner"
+        style="display:none; background: rgba(15,118,110,.1); border-color: rgba(15,118,110,.3); color: #0f766e;"></div>
       <div id="authError" class="auth-error"></div>
       <div class="auth-field">
-        <label for="authIdentifier">Số điện thoại hoặc email</label>
-        <input type="text" id="authIdentifier" autocomplete="username" placeholder="0901234567 hoặc you@email.com">
+        <label for="authIdentifier">Số điện thoại</label>
+        <input type="tel" id="authIdentifier" autocomplete="tel" placeholder="0901234567">
       </div>
       <div class="auth-field" id="authPasswordField" style="display:none;">
         <label for="authPassword">Mật khẩu</label>
@@ -658,7 +671,7 @@
       <div id="authTrialBanner" class="auth-trial-banner" style="display:none;"></div>
       <div class="auth-actions">
         <button class="auth-btn auth-btn-primary" id="authSubmitBtn" onclick="RadarAuth.submitAuth()">Tiếp tục</button>
-        <button class="auth-btn auth-btn-ghost" onclick="RadarAuth.authBack()">Đổi SĐT/email khác</button>
+        <!-- <button class="auth-btn auth-btn-ghost" onclick="RadarAuth.authBack()">Đổi SĐT/email khác</button> -->
       </div>
       <p class="auth-hint">
         Bằng việc đăng ký, bạn đồng ý nhận tin nhắn từ RadarBDS qua kênh đã đăng ký.
@@ -666,27 +679,126 @@
     </div>
   </div>
 
+  <!-- Watchlist / Telegram Notification Modal -->
+  <div id="watchlistModal" class="modal" onclick="if(event.target===this)RadarAuth.closeWatchlistModal()">
+    <div class="modal-content watchlist-modal-content">
+      <button class="close-modal" onclick="RadarAuth.closeWatchlistModal()" style="top:12px; right:12px;">&times;</button>
+      <div class="watchlist-head">
+        <div>
+          <h3>Khu vực quan tâm</h3>
+          <p class="auth-sub">Lưu bộ lọc để RadarBDS báo tin mới khớp tiêu chí qua Telegram.</p>
+        </div>
+        <span class="tier-badge" data-tier="{{ USER_TIER }}">{{ USER_TIER }}</span>
+      </div>
+
+      <div id="watchlistStatus" class="watchlist-status"></div>
+
+      <div class="watchlist-telegram">
+        <div>
+          <strong>Telegram</strong>
+          <span id="watchlistTelegramText">Đang kiểm tra...</span>
+        </div>
+        <div class="watchlist-telegram-actions">
+          <button type="button" class="auth-btn auth-btn-ghost" id="watchlistConnectTelegramBtn"
+            onclick="RadarAuth.connectTelegram()">Kết nối Telegram</button>
+          <button type="button" class="auth-btn auth-btn-ghost" id="watchlistUnbindTelegramBtn"
+            onclick="RadarAuth.unbindTelegram()" style="display:none;">Ngắt kết nối</button>
+        </div>
+      </div>
+
+      <div class="watchlist-layout">
+        <section class="watchlist-form">
+          <input type="hidden" id="watchlistId">
+          <div class="auth-field">
+            <label for="watchlistName">Tên bộ lọc</label>
+            <input id="watchlistName" type="text" placeholder="Ví dụ: Tân An dưới 3 tỷ">
+          </div>
+
+          <div class="watchlist-section-title">Phường/Xã</div>
+          <div class="watchlist-city-tabs" id="watchlistCityTabs"></div>
+          <div class="watchlist-bulk">
+            <button type="button" onclick="RadarAuth.setWatchlistCityWards(true)">Chọn tất cả</button>
+            <button type="button" onclick="RadarAuth.setWatchlistCityWards(false)">Bỏ chọn</button>
+            <span id="watchlistWardCount">0 phường</span>
+          </div>
+          <div class="watchlist-wards" id="watchlistWardBox"></div>
+
+          <div class="watchlist-section-title">Loại hình</div>
+          <div class="watchlist-props">
+            <label><input type="checkbox" name="watchProp" value="dat_nen" checked> Đất nền</label>
+            <label><input type="checkbox" name="watchProp" value="nha_dat" checked> Nhà đất</label>
+            <label><input type="checkbox" name="watchProp" value="dat_vuon" checked> Đất vườn</label>
+            <label><input type="checkbox" name="watchProp" value="chung_cu"> Chung cư</label>
+            <label><input type="checkbox" name="watchProp" value="nha_tro"> Nhà trọ</label>
+          </div>
+
+          <div class="watchlist-ranges">
+            <div class="auth-field">
+              <label for="watchMosMin">MOS tối thiểu (%)</label>
+              <input id="watchMosMin" type="number" min="0" max="80" step="1" value="15">
+            </div>
+            <div class="auth-field">
+              <label for="watchPriceMin">Giá từ (tỷ)</label>
+              <input id="watchPriceMin" type="number" min="0" step="0.01" placeholder="Bỏ trống">
+            </div>
+            <div class="auth-field">
+              <label for="watchPriceMax">Giá đến (tỷ)</label>
+              <input id="watchPriceMax" type="number" min="0" step="0.01" placeholder="Bỏ trống">
+            </div>
+            <div class="auth-field">
+              <label for="watchAreaMin">DT từ (m²)</label>
+              <input id="watchAreaMin" type="number" min="0" step="1" placeholder="Bỏ trống">
+            </div>
+            <div class="auth-field">
+              <label for="watchAreaMax">DT đến (m²)</label>
+              <input id="watchAreaMax" type="number" min="0" step="1" placeholder="Bỏ trống">
+            </div>
+          </div>
+
+          <div class="watchlist-switches">
+            <label><input type="checkbox" id="watchNotifyTelegram" checked> Nhận Telegram</label>
+            <label><input type="checkbox" id="watchActive" checked> Đang bật</label>
+          </div>
+
+          <div class="auth-error" id="watchlistError"></div>
+          <div class="watchlist-actions">
+            <button type="button" class="auth-btn auth-btn-primary" id="watchlistSaveBtn"
+              onclick="RadarAuth.saveWatchlist()">Lưu bộ lọc</button>
+            <button type="button" class="auth-btn auth-btn-ghost" onclick="RadarAuth.resetWatchlistForm()">Tạo mới</button>
+          </div>
+        </section>
+
+        <section class="watchlist-list">
+          <div class="watchlist-list-title">Bộ lọc đã lưu</div>
+          <div id="watchlistItems" class="watchlist-items"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <!-- Guest Lead Capture Modal (matchmaking without account) -->
   <div id="guestLeadModal" class="modal" onclick="if(event.target===this)closeGuestLeadModal()">
     <div class="modal-content auth-modal-content">
       <button class="close-modal" onclick="closeGuestLeadModal()" style="top:12px; right:12px;">&times;</button>
-      <h3>Yêu cầu RadarBDS ráp mối</h3>
-      <p class="auth-sub">Để lại liên hệ, admin sẽ chủ động gọi lại trong 30 phút để giới thiệu lô đất phù hợp.</p>
+      <h3 id="guestLeadTitle">Yêu cầu RadarBDS ráp mối</h3>
+      <p class="auth-sub" id="guestLeadSub">Để lại SĐT, admin sẽ gửi thêm thông tin lô đất phù hợp.</p>
+      <div id="guestLeadVipNote" class="auth-trial-banner lead-vip-note" style="display:none;"></div>
       <div id="guestLeadError" class="auth-error"></div>
       <div class="auth-field">
-        <label for="guestLeadName">Tên của bạn</label>
-        <input type="text" id="guestLeadName" placeholder="Nguyễn Văn A">
+        <label for="guestLeadContact">Số điện thoại / Zalo</label>
+        <input type="tel" id="guestLeadContact" autocomplete="tel" placeholder="0901234567">
       </div>
       <div class="auth-field">
-        <label for="guestLeadContact">SĐT hoặc email</label>
-        <input type="text" id="guestLeadContact" placeholder="0901234567 hoặc you@email.com">
+        <label for="guestLeadNote">Nội dung yêu cầu</label>
+        <textarea id="guestLeadNote" class="auth-textarea" rows="3" readonly></textarea>
       </div>
       <div class="auth-actions">
-        <button class="auth-btn auth-btn-primary" id="guestLeadSubmitBtn" onclick="submitGuestLead()">Gửi yêu cầu</button>
-        <button class="auth-btn auth-btn-ghost" onclick="closeGuestLeadModal()">Để sau</button>
+        <button class="auth-btn auth-btn-primary" id="guestLeadSubmitBtn" onclick="submitGuestLead()">Gửi yêu
+          cầu</button>
+        <button class="auth-btn auth-btn-ghost" onclick="guestLeadChatZalo()">Chat Zalo trực tiếp</button>
       </div>
       <p class="auth-hint">
-        Muốn xem trực tiếp link gốc + SĐT chủ tin? <span class="link" onclick="closeGuestLeadModal(); RadarAuth.openAuthModal('Đăng ký để mở khoá toàn bộ tin')">Đăng ký miễn phí</span>
+        Gửi yêu cầu để RadarBDS giữ lại thông tin lô này và hỗ trợ bạn nhanh hơn.
       </p>
     </div>
   </div>
@@ -727,10 +839,8 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/auth.js') }}?v=rbac-20260514-1"></script>
-  <script src="{{ url_for('static', filename='js/main.js') }}?v=uifix-20260511-market-indicators-v1"></script>
+  <script src="{{ url_for('static', filename='js/auth.js') }}?v=watchlist-telegram-sync-20260515"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=modal-comps-titlelink-20260515"></script>
 </body>
 
 </html>
-
-

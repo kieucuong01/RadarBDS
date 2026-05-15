@@ -12,6 +12,7 @@ from cleansing.feature_extractor import (
     extract_tho_cu, extract_road_tier, extract_legal,
     classify_property_type,
 )
+from cleansing.normalizer import normalize_record
 
 
 def test_extract_price():
@@ -97,6 +98,40 @@ def test_extract_road_tier_new_patterns():
     assert extract_road_tier("Lộ giới 8m phường Tân An") == 2
     # "ngang Xm" = chiều rộng lô đất KHÔNG phải đường → không nâng tier
     assert extract_road_tier("Đất 4482m² ngang 78m giá 9 tỷ") == 0
+
+
+def test_extract_road_tier_data_quality_patterns():
+    # "sân xe hơi" alone is parking/yard, not road access.
+    assert extract_road_tier("Nhà có sân xe hơi rộng, gần chợ") == 0
+    # But a separate road-auto signal in the same listing must still count.
+    assert extract_road_tier("Nhà có sân xe hơi", "Đường xe hơi, dân đông kín") == 3
+    assert extract_road_tier("Bán đất đường oto thổ cư 100%") == 3
+    # Small access signals.
+    assert extract_road_tier("Bán đất đường ba gác Tân An") == 4
+    assert extract_road_tier("Hẻm xe máy sát chợ") == 4
+    # Broker typo: "đường 4m2" means road width 4m in this context.
+    assert extract_road_tier("Rẻ nhất Tân An, đường 4m2 hiện sổ") == 3
+    # Through-road with no width/type is usable evidence but not a main road.
+    assert extract_road_tier("Nhà đẹp", "Đường thông tứ hướng, khu dân cư đông") == 3
+    # Mỹ Phước grid street codes in description should be picked up, not only title.
+    assert extract_road_tier("Bán nhà Mỹ Phước 3", "đường DJ6 gần trường") == 2
+    assert extract_road_tier("Bán nhà Mỹ Phước 1", "đường TC 1A") == 2
+
+
+def test_normalizer_uses_structured_address_for_road_tier():
+    rec = normalize_record({
+        "source": "guland",
+        "external_id": "addr-road-tier",
+        "url": "https://guland.vn/post/addr-road-tier",
+        "title": "Bán đất 100m² Phường Phú Tân",
+        "description": "",
+        "address": "Đường DB6, Phường Phú Tân, Thủ Dầu Một, Bình Dương",
+        "ward": "Phú Tân",
+        "area_m2": 100,
+        "price_ty": 2.0,
+    })
+    assert rec is not None
+    assert rec["road_tier"] == 2
 
 
 def test_extract_legal():
