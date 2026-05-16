@@ -50,7 +50,7 @@ Source crawlers
 Security boundary:
 
 - Non-admin payloads must not expose original listing URL, source URL, or phone.
-- Guest fresh-lock masking is server-side and must be consistent across card, table, detail, and history endpoints.
+- Guest can see listing content in the deal feed and detail pages; only original URL/phone stay redacted for non-admin users.
 
 ## Signal Filter Runtime Flow
 

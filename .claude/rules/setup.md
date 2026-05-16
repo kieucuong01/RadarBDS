@@ -20,9 +20,9 @@ playwright install chromium
 ## .env (tạo từ .env.example)
 
 ```env
-# Telegram alerts
+# Telegram VIP watchlist push
 TELEGRAM_BOT_TOKEN=your_bot_token
-TELEGRAM_CHAT_ID=your_chat_id
+TELEGRAM_BOT_USERNAME=your_bot_username
 
 # Optional overrides
 CRAWLER_THREADS=8
@@ -43,7 +43,7 @@ python radar.py schedule-setup --remove
 pip install playwright numpy requests python-dotenv
 playwright install chromium
 cp .env.example .env
-# Điền TELEGRAM_BOT_TOKEN và TELEGRAM_CHAT_ID vào .env
+# Điền TELEGRAM_BOT_TOKEN và TELEGRAM_BOT_USERNAME vào .env
 python radar.py import-raw-backup            # load data từ backup
 python radar.py query --stats                # verify
 ```

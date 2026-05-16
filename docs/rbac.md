@@ -10,7 +10,7 @@ This is the compact current-state reference for auth and permission work. For th
 TIER_ORDER = {"guest": 0, "free": 1, "vip": 2, "admin": 3}
 ```
 
-- **Guest**: no session. Can browse dashboard, but listings newer than the guest lock window are skeleton-masked. No phone/original URL. MOS/drop filters are disabled. VIP market indicators are gated.
+- **Guest**: no session. Can browse the deal feed and listing detail content. No phone/original URL. MOS/drop filters are disabled. VIP market indicators are gated.
 - **Free**: logged in. Sees full listing content, but still no phone/original URL. Can save watchlists for upsell/readiness.
 - **VIP**: Free plus Telegram watchlist push and deep market indicators. Still no phone/original URL; lead/rap-moi flow protects commission.
 - **Admin**: can see original URL/phone/source fields where APIs intentionally return them. Admin control room uses the same app session tier, so a logged-in `tier=admin` user can open `/admin/control-room` without a browser Basic Auth popup.
@@ -25,13 +25,7 @@ Do not rely on CSS or `window.USER_TIER` for security.
 
 - Admin: unchanged.
 - Non-admin: forces `contact_phone`, `url`, `source_url` to `None` when present.
-- Guest plus `is_fresh_locked`: hides title/description/price/MOS/images/address and sets `locked_reason="new_locked"`.
-
-Fresh lock:
-
-- `fresh_lock_hours_for("guest")` returns 7 days.
-- `fresh_lock_hours_for("free"|"vip"|"admin")` returns 0.
-- `/api/signals`, `/api/listings`, and `/api/listing/<id>` must use the same lock policy.
+- Fresh/new listings are visible to Guest; `fresh_lock_hours_for(...)` returns 0 for all tiers.
 
 History:
 
@@ -86,7 +80,8 @@ Default limit is guest 60/h, free 300/h, VIP/admin unlimited unless overridden.
 
 Admin control room:
 
-- `/admin/*` accepts app-session admins (`tier=admin`) first. Legacy `ADMIN_BASIC_USER`/`ADMIN_BASIC_PASS` is only a compatibility fallback when a request already sends an Authorization header.
+- `/admin/control-room` renders an in-app login modal for non-admin visitors instead of challenging with browser Basic Auth. A logged-in `tier=admin` user sees the workspace immediately.
+- `/admin/*` accepts app-session admins (`tier=admin`) first. Legacy `ADMIN_BASIC_USER`/`ADMIN_BASIC_PASS` is only a compatibility fallback when a request already sends an Authorization header. Admin APIs still return `admin_required` when the session is not admin.
 - `/admin/api/users` now includes `watchlist_count` plus `telegram_linked`.
 - Admin user table shows TG status and watchlist count, enough for current ops. A separate notification-ops screen is not yet needed.
 
@@ -110,6 +105,6 @@ Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/history/<id>"
 
 Expected:
 
-- Guest fresh detail is skeleton.
+- Guest can see fresh listing title/price/description/images.
 - Non-admin `url` fields are blank/null.
 - `/api/market-indicators` returns 403 for guest/free.

@@ -1,22 +1,25 @@
-# Pending & Backlog (2026-05-09)
+# Pending & Backlog (2026-05-17)
 
 ## Backlog tính năng (theo thứ tự ưu tiên)
 
-1. **has_so extraction fix** — hiện tất cả `has_so=0` dù title ghi "sổ đỏ/sổ hồng"
-   - Sau khi fix: `has_so=False → fair_value × 0.75` (discount 25%)
-2. **Tầng 3a — Quy hoạch checker** — WebGIS Bình Dương (`qhbinhduong.vn`)
+1. **Groq frontage enrichment** — chạy `python radar.py reprocess --groq-frontage`
+   - road_tier=0 đang chiếm 25% (1,735/6,991 listings) → target < 15%
+   - LLM verified mới 8% (551/6,991) — pipeline có, chỉ cần chạy
+2. **Auto-schedule + crawl-error alert** — `python radar.py schedule-setup` (Task Scheduler 04:15)
+   - Thêm admin Telegram alert nếu crawl ERROR > 30% hoặc raw < 50% baseline
+3. **Signal alert TTL** — `notification_log` hiện chỉ check tồn tại → re-alert nếu price drop tiếp > 5%
+4. **DB cleanup CLI** — `python radar.py db-cleanup`: probably_sold > 90d, raw không match > 60d, alert_logs > 180d, orphan images
+5. **Tầng 3a — Quy hoạch checker** — WebGIS Bình Dương (`qhbinhduong.vn`)
    - Parse tọa độ từ URL → query loại đất (ODT/SKC/CLN)
    - CLN không chuyển được → loại khỏi signal
-3. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
+6. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
    - Score 1–5, cộng vào Signal Score
-4. **Schedule tự động** — `python radar.py schedule-setup` (Task Scheduler 7:00 sáng)
-5. **Telegram alert** — config `.env` TELEGRAM_TOKEN + CHAT_ID
 
 ## Giới hạn đã biết
 
 | Vấn đề | Trạng thái |
 |--------|-----------|
-| `has_so` luôn = 0 | Extraction chưa đủ; discount 25% chưa áp dụng |
+| `has_so` default=1 | Thiết kế đúng: 6990/6991 has_so=1, chỉ trừ khi title/desc nói ngược |
 | `road_tier=0` còn cao | Groq commands đã implement; chạy `--groq-frontage` để cải thiện |
 | Facebook image URLs | CDN expire → auto download ngay sau crawl (đã fix) |
 | BDS crawl chậm | 8s/slug × 26 slugs ≈ 40–60 phút; không thể song song (Cloudflare) |
@@ -25,6 +28,19 @@
 | Mở rộng địa bàn | Thuận An, Dĩ An chưa có data |
 
 ## Đã làm gần đây
+
+**Session 2026-05-17 — VIP-only notification + admin auth cleanup (ship WIP):**
+- **`alerts/telegram.py`** (-340 dòng net): xoá toàn bộ admin/global broadcast path
+  - Xoá `send_message(text)` (legacy admin chat), `_already_alerted`, `collect_fresh_signals`, `collect_hot_deals_3d`, `send_consolidated_daily_alert`
+  - Chỉ giữ `send_message_to(chat_id, text)` + `send_watchlist_digest(...)` cho per-user push
+- **`cli/notify.py`**: chuyển log từ `user_audit_log` → bảng mới `notification_log` (UNIQUE per user+listing+channel)
+  - Filter thêm `probably_sold=0`, `is_blacklisted=0`; ưu tiên `first_seen_at`
+- **`cli/crawlers.py`**: bỏ gọi broadcast, chỉ giữ `push_new_listings_to_vip`
+- **`radar.py`/`cli/system.py`**: bỏ flag `--alert` ở `lifecycle`; help text "Telegram alert" → "VIP notification"
+- **`app.py`**: tách `_basic_admin_authorized()`/`_admin_request_authorized()`; api_listings không còn fresh-lock cho non-admin
+- **`db/schema.py`**: bỏ CREATE `alert_logs` (legacy giữ trong DB cũ, schema mới không tạo lại)
+- **Tests mới**: `test_vip_notify.py`, `test_guest_visibility.py`, `test_admin_control_room.py`; 53/53 pass
+- **Backlog #5 cũ (TELEGRAM_TOKEN + CHAT_ID admin alert)**: xoá khỏi roadmap
 
 **Session 2026-05-09 — Dashboard UX overhaul:**
 - **Compact sidebar**: spacing toàn bộ giảm, collapsible sections (chevron toggle), Data Sources mặc định collapsed.

@@ -616,23 +616,6 @@ function _renderSignalCards(signals) {
     const chunk = signals.slice(start, start + SIGNAL_RENDER_CHUNK_SIZE);
     if (chunk.length === 0) return;
     grid.insertAdjacentHTML('beforeend', chunk.map(x => {
-      // Guest skeleton for "NEW" signals (within 7 days)
-      if (x && (x.locked_reason === 'new_locked' || x.locked_reason === 'fresh_24h')) {
-        return `
-        <div class="scard fresh-locked" onclick="onLockedFreshClick(${x.id || 'null'}, 'card')">
-          <div class="sc-img-wrap">
-            <div class="sc-img" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe); display:flex; align-items:center; justify-content:center; font-size:32px;">🔒</div>
-            <div class="mos-badge" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);">MỚI</div>
-          </div>
-          <div class="sc-body">
-            <div class="sc-title">${x.title || 'Tin mới — Đăng ký miễn phí để xem ngay'}</div>
-            <div style="padding:20px 0; text-align:center;">
-              <button class="upgrade-btn" onclick="event.stopPropagation(); onLockedFreshClick(${x.id || 'null'}, 'button')">📝 Đăng ký miễn phí</button>
-              <div style="margin-top:10px; font-size:12px; color:var(--muted,#64748b);">Tin mới đăng — đăng ký miễn phí để xem chi tiết.</div>
-            </div>
-          </div>
-        </div>`;
-      }
       const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       const fairNum = fairPrice !== '-' ? parseFloat(fairPrice) : NaN;
       const priceNum = parseFloat(x.price_ty);
@@ -1873,21 +1856,6 @@ async function loadListings(page) {
     listingsHasMore = (typeof data.has_more === 'boolean') ? data.has_more : ((data.listings || []).length >= 50);
     if (sentinel) sentinel.textContent = listingsHasMore ? '' : `Đã hiển thị tất cả ${data.total} tin`;
     const rows = (data.listings || []).map(x => {
-      if (x && (x.locked_reason === 'new_locked' || x.locked_reason === 'fresh_24h')) {
-        return `
-        <tr class="locked-row" style="cursor:pointer; background:linear-gradient(90deg, rgba(37,99,235,0.06), rgba(29,78,216,0.02));" onclick="onLockedFreshClick(${x.id || 'null'}, 'row')">
-          <td><span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">${x.prop_type || '-'}</span></td>
-          <td><span style="padding:4px 8px; border-radius:6px; font-weight:600; font-size:0.8rem;">${x.ward || '-'}</span></td>
-          <td><div class="td-img" style="display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#dbeafe,#bfdbfe); font-size:18px;">🔒</div></td>
-          <td colspan="5" style="padding:14px 16px;">
-            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-              <span style="background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.75rem;">MỚI</span>
-              <span style="font-weight:700; color:#1e40af;">Tin mới đăng — đăng ký miễn phí để xem chi tiết</span>
-              <button class="upgrade-btn" style="margin-left:auto;" onclick="event.stopPropagation(); onLockedFreshClick(${x.id || 'null'}, 'button')">📝 Đăng ký miễn phí</button>
-            </div>
-          </td>
-        </tr>`;
-      }
       const fair = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       return `
         <tr class="clickable-row" onclick="openListingModal(this)" data-id="${x.id}" data-title="${String(x.title || '').replace(/"/g, '&quot;')}" data-price="${x.price_ty || ''}" data-fair="${fair !== '-' ? fair : ''}" data-area="${x.area_m2 || ''}" data-ward="${x.ward || ''}" data-road="${x.road_type || x.road_tier || ''}" data-time="${_timeAgoText(x.days_ago)}" data-profit="${x.price_ty && fair !== '-' ? (parseFloat(fair) - parseFloat(x.price_ty)).toFixed(2) : ''}" data-mos="${x.mos_pct || ''}" data-source="${sourceNames[x.source] || x.source || ''}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || ''}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}">
@@ -2217,15 +2185,6 @@ window.track = function (action, opts) {
 };
 
 // Track + nudge wrappers for locked UI elements
-function onLockedFreshClick(listingId, source) {
-  window.track('locked_fresh_click', {
-    listing_id: listingId || null,
-    context: { reason: 'fresh_24h', source: source || 'card' },
-  });
-  if (window.RadarAuth && typeof RadarAuth.nudgeVipUpgrade === 'function') {
-    RadarAuth.nudgeVipUpgrade('Tin mới đăng — VIP xem trước 24h');
-  }
-}
 function onLockedTabClick(tab, reason) {
   window.track('locked_tab_click', {
     context: { tab: tab || 'unknown', reason: reason || 'tier_required' },

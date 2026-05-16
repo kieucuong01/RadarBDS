@@ -5,8 +5,140 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v4-infra">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
+  <script>
+    window.USER_TIER = {{ USER_TIER | tojson }};
+    window.CURRENT_USER = {{ USER | tojson }};
+  </script>
+  <style>
+    .admin-auth-gate {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(20, 184, 166, .14), transparent 28%),
+        linear-gradient(135deg, #07111f 0%, #0f172a 48%, #172554 100%);
+      color: #e5eefb;
+    }
+    .admin-auth-card {
+      width: min(460px, 100%);
+      padding: 28px;
+      border: 1px solid rgba(148, 163, 184, .24);
+      border-radius: 16px;
+      background: rgba(15, 23, 42, .78);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .32);
+    }
+    .admin-auth-card h1 {
+      margin: 12px 0 8px;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+    .admin-auth-card p {
+      margin: 0 0 20px;
+      color: #b6c3d6;
+      line-height: 1.55;
+    }
+    .admin-auth-card .brand-mark {
+      margin: 0;
+    }
+    .admin-auth-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .admin-auth-actions a,
+    .admin-auth-actions button {
+      min-height: 40px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(2, 6, 23, .72);
+      backdrop-filter: blur(10px);
+    }
+    .modal-content {
+      position: relative;
+      background: #fff;
+      border: 1px solid rgba(148, 163, 184, .25);
+      box-shadow: 0 24px 80px rgba(15, 23, 42, .35);
+    }
+    .close-modal {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .06);
+      color: #64748b;
+      cursor: pointer;
+      font-size: 24px;
+      line-height: 1;
+    }
+    .close-modal:hover {
+      background: rgba(15, 23, 42, .1);
+      color: #0f172a;
+    }
+  </style>
 </head>
 <body>
+  {% if admin_login_required %}
+  <main class="admin-auth-gate">
+    <section class="admin-auth-card" aria-label="Admin login required">
+      <div class="brand-mark">R</div>
+      <h1>RadarBDS Control Room</h1>
+      <p>Cần đăng nhập bằng tài khoản admin để mở khu điều khiển. Sau khi đăng nhập thành công, trang sẽ tự tải lại.</p>
+      <div class="admin-auth-actions">
+        <button class="primary-btn" type="button"
+          onclick="RadarAuth.openAuthModal('Đăng nhập tài khoản admin để vào Control Room.')">Đăng nhập admin</button>
+        <a class="secondary-btn" href="/">Về dashboard</a>
+      </div>
+    </section>
+  </main>
+
+  <div id="authModal" class="modal" onclick="if(event.target===this)RadarAuth.closeAuthModal()">
+    <div class="modal-content auth-modal-content">
+      <button class="close-modal" onclick="RadarAuth.closeAuthModal()" style="top:12px; right:12px;">&times;</button>
+      <h3 id="authTitle">Đăng nhập / Đăng ký</h3>
+      <p class="auth-sub" id="authSub">Nhập số điện thoại hoặc email để tiếp tục.</p>
+      <div id="authReasonBanner" class="auth-trial-banner"
+        style="display:none; background: rgba(15,118,110,.1); border-color: rgba(15,118,110,.3); color: #0f766e;"></div>
+      <div id="authError" class="auth-error"></div>
+      <div class="auth-field">
+        <label for="authIdentifier">Số điện thoại</label>
+        <input type="tel" id="authIdentifier" autocomplete="tel" placeholder="0901234567">
+      </div>
+      <div class="auth-field" id="authPasswordField" style="display:none;">
+        <label for="authPassword">Mật khẩu</label>
+        <input type="password" id="authPassword" autocomplete="current-password" placeholder="Ít nhất 6 ký tự">
+      </div>
+      <div id="authTrialBanner" class="auth-trial-banner" style="display:none;"></div>
+      <div class="auth-actions">
+        <button class="auth-btn auth-btn-primary" id="authSubmitBtn" onclick="RadarAuth.submitAuth()">Tiếp tục</button>
+      </div>
+      <p class="auth-hint">
+        Bằng việc đăng nhập, bạn đồng ý sử dụng RadarBDS theo quyền tài khoản hiện tại.
+      </p>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/auth.js') }}?v=admin-login-gate"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      if (window.RadarAuth) {
+        window.RadarAuth.openAuthModal('Đăng nhập tài khoản admin để vào Control Room.');
+      }
+    });
+  </script>
+  {% else %}
   <aside class="admin-sidebar">
     <div class="brand">
       <div class="brand-mark">R</div>
@@ -307,5 +439,6 @@
   </main>
 
   <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v5-users"></script>
+  {% endif %}
 </body>
 </html>

@@ -1,6 +1,6 @@
 # Daily Crawl & Signal Flow
 
-Reference cho agent / dev mới: cách `radar.py crawl-daily` chạy end-to-end, signal được sinh ra như thế nào, Telegram alert lấy gì, và config có thể chỉnh ở đâu mà không phải sửa code.
+Reference cho agent / dev mới: cách `radar.py crawl-daily` chạy end-to-end, signal được sinh ra như thế nào, VIP notification lấy gì, và config có thể chỉnh ở đâu mà không phải sửa code.
 
 Đọc kèm `AGENTS.md` (data flow tổng quát) và `.claude/rules/valuation.md` (công thức fair value chi tiết).
 
@@ -18,15 +18,13 @@ python radar.py crawl-daily
        ├─ run_full_reprocess()   → normalize → dedup → valuation
        ├─ download_images()      → tải ảnh + tạo thumbnail
        ├─ export_raw()           → backup JSON
-       └─ alert:
-             collect_fresh_signals(conn, since_ts=crawl_start_ts)
-             send_consolidated_daily_alert(...)       # admin/general alert
-             push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists
+       └─ notification:
+             push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists only
 ```
 
 > ⚠️ **BDS hiện không lấy được data** (Cloudflare Turnstile, 2026-05). Daily run chỉ có Guland + Facebook. Xem `.claude/rules/crawler.md` mục BatDongSan để biết điều kiện resume.
 
-Pipeline lõi sau crawl giữ nguyên: `raw_listings → listings → valuation_results`. Phần thay đổi nằm ở **input config** (đầu pipeline) và **alert** (cuối pipeline).
+Pipeline lõi sau crawl giữ nguyên: `raw_listings → listings → valuation_results`. Phần thay đổi nằm ở **input config** (đầu pipeline) và **VIP notification** (cuối pipeline).
 
 ---
 
@@ -59,52 +57,24 @@ print(f'{n_sig}/{n_all} = {n_sig/n_all:.1%}')
 
 ---
 
-## 3. Telegram alert — "fresh signals only"
+## 3. VIP notification only
 
-Mục đích: mỗi run `crawl-daily` chỉ alert những deal **mới cào về trong run này** và đã pass signal threshold. Tránh spam lại tin đã alert hôm trước.
+Mục đích: mỗi run crawl chỉ bắn notification cho user VIP còn hạn, theo watchlist riêng của từng user. Không còn admin/general Telegram alert và không còn dùng `TELEGRAM_CHAT_ID` để broadcast listing.
 
-### 3.1 Logic chọn deal
-
-`alerts/telegram.py::collect_fresh_signals(conn, since_ts)`:
-
-```sql
-SELECT ... FROM listings l
-  LEFT JOIN valuation_results v ON v.listing_id = l.id
- WHERE l.probably_sold = 0
-   AND l.first_seen_at >= :since_ts     -- chỉ tin xuất hiện run này
-   AND v.is_signal = 1                   -- pass MOS ≥ 25%
- ORDER BY v.signal_score DESC, v.mos_pct DESC
-```
-
-Sau đó filter qua `_already_alerted(listing_id, "fresh_signal")` để tránh dup khi rerun.
-
-`alert_logs.alert_type` riêng là `fresh_signal` (cũ là `hot_deal_3d`) — không xung đột nếu có CLI cũ còn gọi `collect_hot_deals_3d`.
-
-### 3.2 Format message
-
-Mỗi deal có **2 anchor link**:
-
-```html
-🔗 <a href="{DASHBOARD_BASE_URL}/listing/{id}">Mở trong Radar</a>
-📎 <a href="{original_url}">Original source</a>
-```
-
-`DASHBOARD_BASE_URL` lấy từ `config/settings.py` (override bằng env `DASHBOARD_BASE_URL`, default `http://localhost:5000`).
-
-### 3.4 VIP watchlist push
-
-Sau alert tổng hợp, `cli/crawlers.py` gọi:
+`cli/crawlers.py` gọi:
 
 ```python
 from cli.notify import push_new_listings_to_vip
 push_new_listings_to_vip(since=crawl_start_ts)
 ```
 
-Luồng này khác alert admin:
+Luồng này:
 
-- query signal mới theo `since`;
+- query signal mới theo `first_seen_at >= since`;
+- bỏ tin sold, blacklisted, review hidden;
 - lọc theo từng `user_watchlists` của VIP còn hạn;
 - gửi riêng vào `users.telegram_chat_id`;
+- không đưa original source URL vào Telegram;
 - format là một digest/tin, title từng deal link về `/listing/<id>`;
 - footer dẫn về `DASHBOARD_BASE_URL`.
 
@@ -118,7 +88,7 @@ Footer của chunk cuối:
 
 `N` = tổng `valuation_results.is_signal=1` đang active trừ số deal đã in trong message.
 
-### 3.3 Disable alert
+### 3.1 Disable notification
 
 ```powershell
 & $py -X utf8 radar.py crawl-daily --no-alert
@@ -234,8 +204,9 @@ Gọi từ `cli/crawlers.py::_facebook_crawl_to_raw` ngay trước khi insert ra
 |---|---|---|
 | MOS threshold | `config/settings.py`, `analytics/valuation.py` | Sửa số → reprocess lại |
 | Dashboard URL trong Telegram | `config/settings.py::DASHBOARD_BASE_URL` | Override bằng env |
-| Alert query / format | `alerts/telegram.py` | `collect_fresh_signals`, `send_consolidated_daily_alert` |
-| Crawl entry + alert wiring | `cli/crawlers.py::cmd_crawl`, `_facebook_crawl_to_raw` | Capture `crawl_start_ts`, gọi city filter |
+| VIP push query | `cli/notify.py` | `_fetch_new_signals`, `_fetch_active_vip_users_with_watchlists` |
+| Telegram digest format | `alerts/telegram.py` | `send_watchlist_digest`, `send_message_to` |
+| Crawl entry + notification wiring | `cli/crawlers.py::cmd_crawl`, `_facebook_crawl_to_raw` | Capture `crawl_start_ts`, gọi city filter |
 | Guland targets | `data/guland_sources.json`, `crawler/guland_pw.py` | Chỉ sửa JSON khi mở rộng ward |
 | BDS targets | `data/batdongsan_sources.json`, `crawler/batdongsan_pw.py` | Cross-product slug auto-build |
 | FB profiles | `data/facebook_profiles.json`, `crawler/facebook_apify.py` | tier=int, broker_name |
@@ -274,7 +245,7 @@ print('min mos:', c.execute('SELECT MIN(mos_pct) FROM valuation_results WHERE is
 ## 8. Không làm
 
 - ❌ Đừng đưa `hồ chí minh / tp hcm / sài gòn` vào `OTHER_CITY_KEYWORDS` — BD đã sáp nhập HCM, sẽ skip nhầm tin chính chủ.
-- ❌ Đừng xoá `collect_hot_deals_3d` — vẫn dùng được qua CLI khác, không vướng `collect_fresh_signals`.
+- ❌ Đừng thêm lại admin/general Telegram alert — listing notification chỉ đi qua VIP watchlist push.
 - ❌ Đừng hardcode ward/slug trong crawler nữa — sửa JSON.
 - ❌ Đừng tune `SIGNAL_MOS_THRESHOLD` < 0.25 mà không verify signal rate vẫn ≤ 30%.
 - ❌ Đừng skip dedup repost Facebook — repost FB cần lưu để track price history (anti-bloat đã bị reject).

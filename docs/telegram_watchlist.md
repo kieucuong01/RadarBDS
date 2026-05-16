@@ -8,7 +8,7 @@ This document is for agents touching VIP notifications, zrok/webhook setup, or T
 - Each user links the bot through a unique `/start <token>`.
 - The app stores the user's private `users.telegram_chat_id`.
 - VIP push sends only to that user's `telegram_chat_id`, filtered by that user's active watchlists.
-- `TELEGRAM_CHAT_ID` is legacy/admin broadcast config; VIP watchlist push does not use it.
+- `TELEGRAM_CHAT_ID` is no longer used for listing notifications. Do not add admin/global broadcasts back.
 
 ## Files
 
@@ -124,18 +124,18 @@ Watchlist fields:
 2. Fetches active, unexpired VIP users with active watchlists.
 3. Groups unique matches per user.
 4. Sends one Telegram digest per user.
-5. Logs `user_audit_log action='notify_vip_listing'` per listing/channel.
+5. Logs `notification_log` per user/listing/channel for idempotency.
 6. Updates `user_watchlists.last_notified_at`.
 
 ## Telegram Digest Format
 
-`alerts/telegram.py::send_watchlist_digest(...)` sends one investor-friendly message:
+`alerts/telegram.py::send_watchlist_digest(...)` sends one VIP-only watchlist message:
 
-- Header: `RADAR BDS - DEAL KHỚP BỘ LỌC`.
+- Header: `RADAR BDS - TIN KHỚP WATCHLIST VIP`.
 - Summary count and matched watchlist names.
 - Up to 6 deals by default.
 - Each deal title is an HTML link to `/listing/<id>` under `DASHBOARD_BASE_URL`.
-- Each deal shows price, area, MOS, ward, property type, and a short action recommendation.
+- Each deal shows price, area, MOS, ward, property type, and a neutral verification note.
 - Footer links to the dashboard and says how many older matches remain when applicable.
 
 Keep messages under Telegram's 4096-character limit. If increasing `max_items`, check message length.

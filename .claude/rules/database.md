@@ -75,10 +75,10 @@ confidence   TEXT          -- 'high' | 'medium' | 'low'
 
 ### Bảng phụ
 ```
-market_weekly:  segment, median_ppm2, n, min_ppm2, max_ppm2, week
-price_history:  listing_id FK, price_ty, price_per_m2, recorded_at
-alert_logs:     listing_id FK, alert_type, sent_at
-crawl_runs:     source, mode, started_at, finished_at, n_new, n_updated
+market_weekly:     segment, median_ppm2, n, min_ppm2, max_ppm2, week
+price_history:     listing_id FK, price_ty, price_per_m2, recorded_at
+notification_log:  user_id FK, listing_id FK, channel, sent_at
+crawl_runs:        source, mode, started_at, finished_at, n_new, n_updated
 ```
 
 ## Auto-migrations (`_run_migrations()`)

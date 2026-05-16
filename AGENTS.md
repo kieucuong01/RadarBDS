@@ -7,7 +7,7 @@ Use this file as the first read for Codex, Claude Code, Antigravity, or any new 
 1. `AGENTS.md` - this quick context.
 2. `docs/agent_playbook.md` - workflow rules and common traps.
 3. `docs/architecture.md` - module boundaries and current data flow.
-4. `docs/daily_crawl_flow.md` - daily crawl pipeline, signal threshold, Telegram alert, JSON config, city filter.
+4. `docs/daily_crawl_flow.md` - daily crawl pipeline, signal threshold, VIP notification, JSON config, city filter.
 5. `docs/dev_commands.md` - exact Windows commands for checks.
 
 Read only when relevant:
@@ -27,7 +27,7 @@ Pipeline:
 crawler/* -> raw_listings -> cleansing/normalizer.py
           -> listings -> cleansing/dedup.py
           -> analytics/valuation.py -> valuation_results
-          -> Flask dashboard / Telegram alerts / CLI reports
+          -> Flask dashboard / VIP Telegram push / CLI reports
 ```
 
 Supported focus areas:
@@ -57,7 +57,7 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
 - `services/market_data.py`: dashboard/listing read models and API shaping.
 - `services/image_assets.py`: image URL normalization and thumbnail resolution.
 - `auth/core.py`: session, tier, rate-limit, VIP expiry, audit.
-- `alerts/telegram.py`, `cli/notify.py`: Telegram formatting and VIP watchlist push.
+- `alerts/telegram.py`, `cli/notify.py`: VIP Telegram formatting and watchlist push.
 - `cleansing/reprocess.py`: normalize, dedup, valuation orchestration.
 - `cleansing/dedup.py`: duplicate and price-drop policy.
 - `db/connection.py`, `db/schema.py`, `db/listings.py`: DB path, schema, writes.
@@ -80,7 +80,7 @@ Dashboard/API:
 - `/api/listing/<id>` is full modal/detail data, including description and full image list.
 - `/api/history/<id>` returns same-listing price history and lot history/comps payload used by modal.
 - Non-admin APIs must not expose original listing URLs or phone numbers. Use `redact_for_tier()` or explicit tier redaction.
-- Guest fresh listings are skeleton-locked for 7 days; Free/VIP see listing content but still not original URL/phone.
+- Guest/Free/VIP can see listing content, but non-admin users still never receive original URL/phone.
 - `/api/market-indicators` is VIP gated.
 - Filtering UX is `signals-first`: update `/api/signals` immediately, then refresh `/api/dashboard` in background.
 - Do not block signal rendering behind dashboard/insights fetches.
