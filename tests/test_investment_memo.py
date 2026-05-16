@@ -232,7 +232,7 @@ class InvestmentMemoTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["verdict"], "below_fair")
 
-    def test_existing_guest_listing_redaction_still_applies(self):
+    def test_guest_listing_keeps_content_but_redacts_source_url(self):
         listing_id = self._seed_strong_deal()
         from db.connection import get_conn
 
@@ -244,7 +244,8 @@ class InvestmentMemoTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(data["url"])
-        self.assertIsNone(data["price_ty"])
+        self.assertEqual(data["price_ty"], 2.0)
+        self.assertEqual(data["title"], "Strong deal")
 
 
 if __name__ == "__main__":
