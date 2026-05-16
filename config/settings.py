@@ -90,7 +90,6 @@ SIGNAL_MOS_THRESHOLD = float(os.getenv("SIGNAL_MOS_THRESHOLD", 0.25))
 
 # ─── ALERTS ──────────────────────────────────────────────────────────────────
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")
 DASHBOARD_BASE_URL = os.getenv("DASHBOARD_BASE_URL", "http://localhost:5000")
 
 # Cảnh báo khi giá thấp hơn X% so với mặt bằng chung

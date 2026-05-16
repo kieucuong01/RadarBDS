@@ -18,7 +18,6 @@ from db.sqlite import (  # noqa: F401
     insert_images,
     insert_raw,
     mark_missing_listings,
-    save_alert_log,
     save_valuation_result,
     start_crawl_run,
     update_listing_outlier,

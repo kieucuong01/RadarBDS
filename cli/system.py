@@ -64,14 +64,8 @@ def cmd_lifecycle(args):
         delisted = sweep_delisted(conn, stale_hours=getattr(args, "sweep_hours", 48))
         likely   = [d for d in delisted if d.get("likely_sold")]
         vel      = segment_velocity(conn) if getattr(args, "velocity", False) else []
-        sent     = 0
-        if getattr(args, "alert", False):
-            from alerts.telegram import alert_delisted_signals
-            sent = alert_delisted_signals(conn, hours=72)
 
     print(f"Delisted    : {len(delisted)}  (likely_sold <72h: {len(likely)})")
-    if getattr(args, "alert", False):
-        print(f"Alert sent  : {sent}")
     if getattr(args, "velocity", False) and vel:
         print("\nSegment velocity (30d):")
         for v in vel:

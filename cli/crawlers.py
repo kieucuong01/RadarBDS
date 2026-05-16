@@ -140,7 +140,7 @@ def cmd_crawl(args, mode: str = "full"):
     no_alert = getattr(args, "no_alert", False)
     source_filter = getattr(args, "source", None)
 
-    # Capture timestamp ngay trước khi crawl để filter "tin mới run này" cho Telegram alert
+    # Capture timestamp ngay trước khi crawl để filter "tin mới run này" cho VIP push
     with get_conn() as _c:
         crawl_start_ts = _c.execute("SELECT datetime('now')").fetchone()[0]
 
@@ -166,15 +166,6 @@ def cmd_crawl(args, mode: str = "full"):
 
     if total_new == 0:
         print(f"\nKhông có tin mới. DB không thay đổi.")
-        if mode == "incremental" and not no_alert:
-            from alerts.telegram import collect_fresh_signals, send_consolidated_daily_alert
-            with get_conn() as conn:
-                sig_total = conn.execute(
-                    "SELECT COUNT(*) FROM valuation_results WHERE is_signal=1"
-                ).fetchone()[0]
-                deals = collect_fresh_signals(conn, since_ts=crawl_start_ts)
-                send_consolidated_daily_alert(conn, deals, new_count=0,
-                                              total_active_signals=sig_total)
         return
 
     if not no_reprocess:
@@ -192,18 +183,6 @@ def cmd_crawl(args, mode: str = "full"):
     class _FakeArgs:
         out = None
     cmd_export_raw(_FakeArgs())
-
-    if not no_alert and mode == "incremental":
-        from alerts.telegram import collect_fresh_signals, send_consolidated_daily_alert
-        with get_conn() as conn:
-            sig_total = conn.execute(
-                "SELECT COUNT(*) FROM valuation_results WHERE is_signal=1"
-            ).fetchone()[0]
-            deals = collect_fresh_signals(conn, since_ts=crawl_start_ts)
-            sent = send_consolidated_daily_alert(conn, deals, new_count=total_new,
-                                                 total_active_signals=sig_total)
-        print(f"Telegram: 1 consolidated alert | {sent} deals đánh dấu alerted | "
-              f"fresh signals={len(deals)} | total active signals={sig_total}")
 
     if not no_alert:
         try:

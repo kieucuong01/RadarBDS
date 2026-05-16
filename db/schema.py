@@ -177,17 +177,6 @@ CREATE TABLE IF NOT EXISTS market_weekly (
 CREATE INDEX IF NOT EXISTS idx_market_weekly_week ON market_weekly(week DESC, area, property_type);
 
 
-CREATE TABLE IF NOT EXISTS alert_logs (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    listing_id  INTEGER REFERENCES listings(id),
-    alert_type  TEXT,
-    message     TEXT,
-    sent_date   TEXT DEFAULT (date('now')),
-    sent_at     TEXT DEFAULT (datetime('now')),
-    UNIQUE(listing_id, alert_type, sent_date)
-);
-
-
 CREATE TABLE IF NOT EXISTS valuation_results (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     listing_id      INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,

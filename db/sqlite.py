@@ -4,7 +4,7 @@ Connection handling lives in `db.connection`; schema and migrations live in
 `db.schema`; repository helpers live in focused `db.*` modules. This module keeps
 historical imports stable.
 """
-from db.analytics import save_alert_log, save_valuation_result
+from db.analytics import save_valuation_result
 from db.connection import DB_PATH, close_all, get_conn
 from db.crawl_runs import finish_crawl_run, mark_missing_listings, start_crawl_run
 from db.listings import insert_images, update_listing_outlier, upsert_listing
@@ -32,7 +32,6 @@ __all__ = [
     "insert_raw",
     "mark_missing_listings",
     "normalize_phone",
-    "save_alert_log",
     "save_valuation_result",
     "start_crawl_run",
     "update_listing_outlier",

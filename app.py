@@ -17,7 +17,7 @@ from config import database_sqlite as db_mod
 from db.moderation import normalize_phone
 
 # Import the extracted services
-from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, apply_guest_truncation
+from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier
 from services.investment_memo import load_investment_memo
 from services.ai_bot import AIBot
 
@@ -54,6 +54,16 @@ def _admin_credentials():
     return (os.getenv("ADMIN_BASIC_USER", "").strip(), os.getenv("ADMIN_BASIC_PASS", "").strip())
 
 
+def _basic_admin_authorized():
+    auth = request.authorization
+    user, pwd = _admin_credentials()
+    return bool(auth and user and pwd and auth.username == user and auth.password == pwd)
+
+
+def _admin_request_authorized():
+    return current_tier() == "admin" or _basic_admin_authorized()
+
+
 def _admin_forbidden():
     if request.path.startswith("/admin/api/"):
         return jsonify({"ok": False, "error": "admin_required"}), 403
@@ -63,12 +73,7 @@ def _admin_forbidden():
 def require_admin_auth(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        if current_tier() == "admin":
-            return fn(*args, **kwargs)
-
-        auth = request.authorization
-        user, pwd = _admin_credentials()
-        if auth and user and pwd and auth.username == user and auth.password == pwd:
+        if _admin_request_authorized():
             return fn(*args, **kwargs)
 
         return _admin_forbidden()
@@ -1161,16 +1166,8 @@ def api_listings():
     sort_dir = "DESC" if request.args.get("sort_dir", default_dir).lower() == "desc" else "ASC"
     order_expr = sort_col_map.get(sort_by, "COALESCE(l.posted_at, l.crawled_at)")
 
-    from services.market_data import fresh_lock_hours_for
     tier = current_tier()
-    lock_hours = fresh_lock_hours_for(tier)
-    if lock_hours > 0:
-        fresh_flag = (
-            f"CASE WHEN datetime(COALESCE(l.posted_at, l.crawled_at)) "
-            f"> datetime('now', '-{int(lock_hours)} hours') THEN 1 ELSE 0 END AS is_fresh_locked"
-        )
-    else:
-        fresh_flag = "0 AS is_fresh_locked"
+    fresh_flag = "0 AS is_fresh_locked"
     query = f"""
         SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
                {fresh_flag}
@@ -1217,8 +1214,6 @@ def api_listings():
         "source": r['source'], "imgs": img_map.get(r['id'], []),
         "is_fresh_locked": bool(r['is_fresh_locked']),
     }, tier) for r in rows]
-    listings = apply_guest_truncation(listings, tier, limit=12)
-
     return jsonify({
         "listings": listings,
         "total": total,
@@ -1610,9 +1605,9 @@ def api_create_guest_lead():
 
 
 @app.route("/admin/control-room")
-@require_admin_auth
 def admin_control_room():
-    return render_template("admin_control_room.html")
+    is_admin = _admin_request_authorized()
+    return render_template("admin_control_room.html", admin_login_required=not is_admin)
 
 
 @app.route("/admin/api/leads")

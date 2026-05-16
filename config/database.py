@@ -77,14 +77,6 @@ CREATE TABLE IF NOT EXISTS sentiment_logs (
     crawled_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS alert_logs (
-    id          SERIAL PRIMARY KEY,
-    listing_id  INT REFERENCES listings(id),
-    alert_type  VARCHAR(100),
-    message     TEXT,
-    sent_at     TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_listings_area_id      ON listings(area_id);
 CREATE INDEX IF NOT EXISTS idx_listings_source       ON listings(source);

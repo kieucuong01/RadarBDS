@@ -1,10 +1,10 @@
 """VIP push: notify VIP users about new listings matching their watchlist.
 
-Triggered after each crawl (crawl-daily / crawl-all). Sends Telegram card per
-match (real-time feel) + 1 batched email per user (avoid inbox spam).
+Triggered after each crawl (crawl-daily / crawl-all). Sends one Telegram digest
+per matched VIP user + 1 batched email per user (avoid inbox spam).
 
-Anti-spam: log every push to `user_audit_log` with action='notify_vip_listing'
-and listing_id; skip if already pushed to this user.
+Anti-spam: log every push to `notification_log`; skip if a listing was already
+pushed to this user on any channel.
 
 Usage:
     from cli.notify import push_new_listings_to_vip
@@ -61,8 +61,7 @@ def _listing_matches(listing: dict, watchlist: dict) -> bool:
 
 def _already_notified(conn, user_id: int, listing_id: int) -> bool:
     row = conn.execute(
-        "SELECT id FROM user_audit_log "
-        "WHERE user_id=? AND action='notify_vip_listing' AND listing_id=? LIMIT 1",
+        "SELECT id FROM notification_log WHERE user_id=? AND listing_id=? LIMIT 1",
         (user_id, listing_id),
     ).fetchone()
     return row is not None
@@ -70,25 +69,27 @@ def _already_notified(conn, user_id: int, listing_id: int) -> bool:
 
 def _log_notify(conn, user_id: int, listing_id: int, channel: str) -> None:
     conn.execute(
-        "INSERT INTO user_audit_log (user_id, tier, action, listing_id, context) "
-        "VALUES (?, 'vip', 'notify_vip_listing', ?, ?)",
-        (user_id, listing_id, json.dumps({"channel": channel})),
+        "INSERT OR IGNORE INTO notification_log (user_id, listing_id, channel) "
+        "VALUES (?, ?, ?)",
+        (user_id, listing_id, channel),
     )
 
 
 def _fetch_new_signals(conn, since: str) -> list[dict]:
-    """Listings crawled or posted since timestamp, signal=1 only."""
+    """Listings first seen since timestamp, signal=1 only."""
     rows = conn.execute(
         """
         SELECT l.id, l.title, l.ward, l.property_type, l.price_ty, l.area_m2, l.url,
                COALESCE(v.mos_pct, 0) AS mos_pct,
-               COALESCE(l.posted_at, l.crawled_at) AS posted_at
+               COALESCE(l.posted_at, l.crawled_at, l.first_seen_at) AS posted_at
         FROM listings l
         LEFT JOIN valuation_results v ON v.listing_id = l.id
         WHERE COALESCE(v.is_signal, 0) = 1
-          AND datetime(COALESCE(l.posted_at, l.crawled_at)) >= datetime(?)
+          AND datetime(COALESCE(l.first_seen_at, l.crawled_at, l.posted_at)) >= datetime(?)
+          AND COALESCE(l.probably_sold, 0) = 0
+          AND COALESCE(l.is_blacklisted, 0) = 0
           AND COALESCE(l.review_hidden, 0) = 0
-        ORDER BY datetime(COALESCE(l.posted_at, l.crawled_at)) DESC
+        ORDER BY datetime(COALESCE(l.first_seen_at, l.crawled_at, l.posted_at)) DESC
         LIMIT 500
         """,
         (since,),

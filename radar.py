@@ -85,10 +85,10 @@ def main():
     p_ca.add_argument("--no-reprocess", action="store_true", help="Không reprocess sau crawl")
 
     # crawl-daily
-    p_cd = sub.add_parser("crawl-daily", help="Crawl tin mới hôm nay → reprocess → Telegram alert")
+    p_cd = sub.add_parser("crawl-daily", help="Crawl tin mới hôm nay → reprocess → VIP notification")
     p_cd.add_argument("--source",  help="Chỉ crawl 1 nguồn")
     p_cd.add_argument("--visible", action="store_true")
-    p_cd.add_argument("--no-alert", action="store_true", help="Không gửi Telegram")
+    p_cd.add_argument("--no-alert", action="store_true", help="Không gửi VIP notification")
 
     # schedule-setup
     p_ss = sub.add_parser("schedule-setup", help="Cài Windows Task Scheduler chạy crawl-daily")
@@ -132,7 +132,6 @@ def main():
     # lifecycle
     p_lc = sub.add_parser("lifecycle", help="Sweep delisted + stats feedback loop")
     p_lc.add_argument("--sweep-hours", type=int, default=48, help="Listing không thấy > N giờ → delisted")
-    p_lc.add_argument("--alert",       action="store_true", help="Bắn Telegram alert cho signal vừa biến mất")
     p_lc.add_argument("--velocity",    action="store_true", help="In segment velocity (hot score)")
 
     # query

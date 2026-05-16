@@ -8,17 +8,10 @@ from services.image_assets import resolve_image_url
 # Tier-aware masking (server-side). Address + tên đường KHÔNG che (decision 2026-05-14)
 # ─────────────────────────────────────────────────────────────────────────────
 TIER_ORDER = {"guest": 0, "free": 1, "vip": 2, "admin": 3}
-FRESH_LOCK_TITLE = "Tin mới — Đăng ký miễn phí để xem ngay"
-GUEST_FRESH_LOCK_DAYS = 7  # Guest sees skeleton for listings posted within last 7 days
 
 
 def fresh_lock_hours_for(tier: str) -> int:
-    """Window (hours) within which a listing is masked as 'new' for given tier.
-
-    Returns 0 = no masking. Only guest is gated; free/vip/admin see everything.
-    """
-    if tier == "guest":
-        return GUEST_FRESH_LOCK_DAYS * 24
+    """Fresh listings are visible to every tier; kept for older callers."""
     return 0
 
 
@@ -27,9 +20,6 @@ def redact_for_tier(record, tier: str):
 
     - admin: untouched.
     - others: contact_phone / url / source_url forced to None (commission protection).
-    - guest + is_fresh_locked: skeleton card (title nudge, no price/MOS/desc/imgs/address).
-      Logic moved from Free→Guest (decision 2026-05-15): Free sees everything,
-      Guest only sees listings older than the new-lock window.
     """
     if record is None:
         return None
@@ -40,46 +30,17 @@ def redact_for_tier(record, tier: str):
         if key in out:
             out[key] = None
 
-    if tier == "guest" and out.get("is_fresh_locked"):
-        out["title"] = FRESH_LOCK_TITLE
-        out["description"] = None
-        out["price_ty"] = None
-        out["price_per_m2"] = None
-        out["actual_ppm2"] = None
-        out["fair_ppm2"] = None
-        out["mos_pct"] = None
-        out["address"] = None
-        out["imgs"] = []
-        out["primary_img"] = ""
-        out["locked_reason"] = "new_locked"
     return out
 
 
 def apply_guest_truncation(records, tier: str, limit: int = 12):
-    """Deprecated as of 2026-05-14: Guest sees everything except fresh signals.
-
-    Kept as a no-op so callers don't need updating. The 12+12 cap was replaced
-    by a server-side 7-day cutoff on the signals tab only — see
-    `_guest_signal_age_clause`.
-    """
+    """Deprecated no-op: Guest can browse the full deal feed."""
     return records
 
 
-def _guest_signal_age_clause(alias: str = "l", days: int = 7) -> str:
-    """Hide signals older than `days` for guest tier (commission protection)."""
-    return (
-        f"datetime(COALESCE({alias}.posted_at, {alias}.crawled_at)) "
-        f">= datetime('now', '-{int(days)} days')"
-    )
-
-
 def _fresh_lock_sql(alias: str = "l", delay_hours: int = 24) -> str:
-    """SQL fragment marking listings newer than delay_hours as fresh-locked."""
-    return (
-        f"CASE WHEN datetime(COALESCE({alias}.posted_at, {alias}.crawled_at)) "
-        f"> datetime('now', '-{int(delay_hours)} hours') THEN 1 ELSE 0 END "
-        f"AS is_fresh_locked"
-    )
+    """Compatibility SQL fragment; fresh lock is disabled."""
+    return "0 AS is_fresh_locked"
 
 CITY_MAP = {
     "THỦ DẦU MỘT": ["Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ", "Phú Mỹ", "Phú Cường", "Phú Hòa", "Phú Lợi", "Hiệp Thành", "Chánh Nghĩa", "Phú Tân", "Hòa Phú"],
@@ -241,8 +202,7 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
 
 def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None):
     # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
-    # Recent listings (within fresh-lock window) are masked client-side via
-    # redact_for_tier — full scroll is allowed.
+    # Guest still sees the full deal feed; original URLs/phones stay redacted.
     if tier == "guest":
         mos_min = 0
         only_drops = False
@@ -298,7 +258,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     }
 
 
-def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=24):
+def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=0):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
@@ -778,11 +738,6 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=No
     listing_dict = dict(listing)
     listing_dict["is_fresh_locked"] = bool(listing_dict.get("is_fresh_locked"))
     listing_dict = redact_for_tier(listing_dict, tier)
-
-    # Guest skeleton: blank images so the new-locked teaser doesn't leak photos.
-    # History stays open for all tiers (decision 2026-05-15).
-    if tier == "guest" and listing_dict.get("locked_reason") == "new_locked":
-        images = []
 
     return {
         "listing": listing_dict,

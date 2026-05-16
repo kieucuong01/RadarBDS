@@ -1,21 +1,8 @@
 ﻿"""Analytics repository helpers."""
-import sqlite3
 from typing import Optional
 
 from db.connection import get_conn
 # ─── Analytics ────────────────────────────────────────────────────────────────
-
-def save_alert_log(listing_id: int, alert_type: str, message: str) -> bool:
-    with get_conn() as conn:
-        try:
-            conn.execute(
-                "INSERT INTO alert_logs (listing_id, alert_type, message) VALUES (?,?,?)",
-                (listing_id, alert_type, message)
-            )
-            return True
-        except sqlite3.IntegrityError:
-            return False
-
 
 def save_valuation_result(listing_id: int, result: dict,
                           crawl_run_id: Optional[int] = None) -> None:
