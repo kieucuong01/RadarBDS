@@ -18,8 +18,10 @@ python radar.py crawl-daily
        ├─ run_full_reprocess()   → normalize → dedup → valuation
        ├─ download_images()      → tải ảnh + tạo thumbnail
        ├─ export_raw()           → backup JSON
-       └─ notification:
-             push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists only
+       ├─ notification:
+       │     push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists only
+       └─ ops health check:
+             _maybe_send_ops_alert(crawl_start_ts)    # crawl_runs error / zero-fetched → ops Telegram
 ```
 
 > ⚠️ **BDS hiện không lấy được data** (Cloudflare Turnstile, 2026-05). Daily run chỉ có Guland + Facebook. Xem `.claude/rules/crawler.md` mục BatDongSan để biết điều kiện resume.
@@ -93,6 +95,47 @@ Footer của chunk cuối:
 ```powershell
 & $py -X utf8 radar.py crawl-daily --no-alert
 ```
+
+---
+
+## 3a. Ops alert (crawl health)
+
+Một kênh **tách rời** khỏi VIP push, chỉ dành cho infra/operator. Sau mỗi `crawl-daily`, `cli/crawlers.py::_maybe_send_ops_alert()`:
+
+- query `crawl_runs` từ `crawl_start_ts` (bỏ qua row `reprocess:*`);
+- gọi `alerts.ops.summarize_crawl_health()` — flag unhealthy nếu có source `status='error'` hoặc `n_fetched=0`;
+- cộng thêm exception bắt ngoài crawler loop (rare);
+- nếu unhealthy → `alerts.ops.send_ops_alert(msg)` gửi Telegram đến `OPS_ALERT_CHAT_ID`.
+
+`OPS_ALERT_CHAT_ID` đặt trong `.env`. Không set → silent no-op (dev không bị spam).
+
+```env
+OPS_ALERT_CHAT_ID=123456789
+```
+
+Message format (HTML):
+```
+⚙️ [Radar BDS OPS]
+Crawl health summary:
+❌ ERROR guland: fetched=0 new=0
+   ↳ Playwright TimeoutError: page.goto exceeded 30000ms
+⚠️ ZERO FETCHED batdongsan: fetched=0 new=0
+```
+
+Module: `alerts/ops.py` — tách hẳn khỏi `alerts/telegram.py` để boundary giữa listing-channel (per-user VIP) và ops-channel (admin) luôn rõ ràng. Không gửi data listing qua kênh này.
+
+---
+
+## 3b. Windows Task Scheduler
+
+```powershell
+python radar.py schedule-setup                # daily 10:15 (defaults)
+python radar.py schedule-setup --time 04:15   # đổi giờ
+python radar.py schedule-setup --every 2      # cách ngày
+python radar.py schedule-setup --remove       # gỡ task
+```
+
+Task tên `RadarBDS_DailyCrawl`. Chạy `cmd /c "cd /d <repo> && python -X utf8 radar.py crawl-daily"`. Verify: `schtasks /query /tn RadarBDS_DailyCrawl`.
 
 ---
 

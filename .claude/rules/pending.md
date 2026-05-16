@@ -5,14 +5,12 @@
 1. **Groq frontage enrichment** — chạy `python radar.py reprocess --groq-frontage`
    - road_tier=0 đang chiếm 25% (1,735/6,991 listings) → target < 15%
    - LLM verified mới 8% (551/6,991) — pipeline có, chỉ cần chạy
-2. **Auto-schedule + crawl-error alert** — `python radar.py schedule-setup` (Task Scheduler 04:15)
-   - Thêm admin Telegram alert nếu crawl ERROR > 30% hoặc raw < 50% baseline
-3. **Signal alert TTL** — `notification_log` hiện chỉ check tồn tại → re-alert nếu price drop tiếp > 5%
-4. **DB cleanup CLI** — `python radar.py db-cleanup`: probably_sold > 90d, raw không match > 60d, alert_logs > 180d, orphan images
-5. **Tầng 3a — Quy hoạch checker** — WebGIS Bình Dương (`qhbinhduong.vn`)
+2. **Signal alert TTL** — `notification_log` hiện chỉ check tồn tại → re-alert nếu price drop tiếp > 5%
+3. **DB cleanup CLI** — `python radar.py db-cleanup`: probably_sold > 90d, raw không match > 60d, alert_logs > 180d, orphan images
+4. **Tầng 3a — Quy hoạch checker** — WebGIS Bình Dương (`qhbinhduong.vn`)
    - Parse tọa độ từ URL → query loại đất (ODT/SKC/CLN)
    - CLN không chuyển được → loại khỏi signal
-6. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
+5. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
    - Score 1–5, cộng vào Signal Score
 
 ## Giới hạn đã biết

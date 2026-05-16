@@ -145,6 +145,7 @@ def cmd_crawl(args, mode: str = "full"):
         crawl_start_ts = _c.execute("SELECT datetime('now')").fetchone()[0]
 
     total_new = 0
+    crawler_exceptions: list[tuple[str, str]] = []
     for crawler in crawlers:
         try:
             stats = crawler.run(mode=mode, headless=headless)
@@ -152,6 +153,7 @@ def cmd_crawl(args, mode: str = "full"):
             print(f"[{crawler.SOURCE_NAME}] new={stats['new']} skip={stats['skipped']} err={stats['errors']}")
         except Exception as e:
             print(f"[{crawler.SOURCE_NAME}] Lỗi: {e}")
+            crawler_exceptions.append((crawler.SOURCE_NAME, str(e)))
 
     if mode == "incremental" and not source_filter:
         print(f"\n[facebook] Crawling 20 posts/profile (incremental)...")
@@ -194,9 +196,40 @@ def cmd_crawl(args, mode: str = "full"):
         except Exception as e:
             print(f"[vip-push] error: {e}")
 
+    _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
+
     print(f"\n{'='*45}")
     print(f"CRAWL {mode.upper()} DONE — {total_new} records mới")
     print(f"{'='*45}")
+
+
+def _maybe_send_ops_alert(crawl_start_ts: str, crawler_exceptions: list) -> None:
+    """Inspect crawl_runs since the run started; fire ops alert if unhealthy."""
+    try:
+        from alerts.ops import send_ops_alert, summarize_crawl_health
+
+        with get_conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT source, status, COALESCE(n_fetched,0) AS n_fetched,
+                       COALESCE(n_new,0) AS n_new, COALESCE(error_msg,'') AS error_msg
+                FROM crawl_runs
+                WHERE source NOT LIKE 'reprocess:%'
+                  AND datetime(started_at) >= datetime(?)
+                ORDER BY started_at
+                """,
+                (crawl_start_ts,),
+            ).fetchall()
+        unhealthy, msg = summarize_crawl_health(rows)
+        if crawler_exceptions:
+            exc_text = "\n".join(f"- {src}: {err[:180]}" for src, err in crawler_exceptions)
+            msg = f"{msg}\n\nException(s):\n{exc_text}"
+            unhealthy = True
+        if unhealthy:
+            sent = send_ops_alert(msg)
+            print(f"[ops-alert] unhealthy crawl, sent={sent}")
+    except Exception as e:
+        print(f"[ops-alert] error: {e}")
 
 def _repair_guland(crawler, rows, headless):
     from playwright.sync_api import sync_playwright
