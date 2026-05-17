@@ -3,8 +3,10 @@
 Triggered after each crawl (crawl-daily / crawl-all). Sends one Telegram digest
 per matched VIP user + 1 batched email per user (avoid inbox spam).
 
-Anti-spam: log every push to `notification_log`; skip if a listing was already
-pushed to this user on any channel.
+Anti-spam: every push is logged to `notification_log` with the listing price
+at push time. A user is re-alerted for the same listing only when the current
+price has dropped at least SIGNAL_REALERT_THRESHOLD_PCT compared to the last
+notification — see `_should_skip_notify` below.
 
 Usage:
     from cli.notify import push_new_listings_to_vip
@@ -18,6 +20,7 @@ from datetime import datetime
 from typing import Iterable
 
 from db.connection import get_conn
+from config.settings import SIGNAL_REALERT_THRESHOLD_PCT
 
 logger = logging.getLogger(__name__)
 
@@ -59,19 +62,53 @@ def _listing_matches(listing: dict, watchlist: dict) -> bool:
     return True
 
 
-def _already_notified(conn, user_id: int, listing_id: int) -> bool:
+def _last_notification(conn, user_id: int, listing_id: int) -> dict | None:
     row = conn.execute(
-        "SELECT id FROM notification_log WHERE user_id=? AND listing_id=? LIMIT 1",
+        "SELECT id, channel, notified_price_ty, sent_at FROM notification_log "
+        "WHERE user_id=? AND listing_id=? "
+        "ORDER BY datetime(sent_at) DESC, id DESC LIMIT 1",
         (user_id, listing_id),
     ).fetchone()
-    return row is not None
+    return dict(row) if row else None
 
 
-def _log_notify(conn, user_id: int, listing_id: int, channel: str) -> None:
+def _should_skip_notify(
+    conn, user_id: int, listing_id: int,
+    current_price, threshold_pct: float,
+) -> tuple[bool, float | None]:
+    """Return (skip, prev_price).
+
+    - No prior row → (False, None): first push.
+    - Prior row with notified_price_ty IS NULL → (True, None): legacy row,
+      preserve pre-TTL behavior (don't spam).
+    - current_price missing/invalid or prev <= 0 → (True, prev): can't reason.
+    - drop_pct < threshold → (True, prev): skip.
+    - drop_pct >= threshold → (False, prev): re-alert.
+    """
+    last = _last_notification(conn, user_id, listing_id)
+    if last is None:
+        return False, None
+    prev = last.get("notified_price_ty")
+    if prev is None:
+        return True, None
+    if current_price is None:
+        return True, prev
+    try:
+        cur = float(current_price)
+        prev_f = float(prev)
+    except (TypeError, ValueError):
+        return True, prev
+    if prev_f <= 0 or cur <= 0:
+        return True, prev
+    drop_pct = (prev_f - cur) / prev_f * 100.0
+    return (drop_pct < threshold_pct), prev_f
+
+
+def _log_notify(conn, user_id: int, listing_id: int, channel: str, price_ty) -> None:
     conn.execute(
-        "INSERT OR IGNORE INTO notification_log (user_id, listing_id, channel) "
-        "VALUES (?, ?, ?)",
-        (user_id, listing_id, channel),
+        "INSERT INTO notification_log (user_id, listing_id, channel, notified_price_ty) "
+        "VALUES (?, ?, ?, ?)",
+        (user_id, listing_id, channel, price_ty),
     )
 
 
@@ -146,7 +183,11 @@ def push_new_listings_to_vip(since: str | None = None) -> dict:
             for wl in wl_rows:
                 uid = wl["id"]
                 for listing in signals:
-                    if _already_notified(conn, uid, listing["id"]):
+                    skip, prev_price = _should_skip_notify(
+                        conn, uid, listing["id"], listing.get("price_ty"),
+                        SIGNAL_REALERT_THRESHOLD_PCT,
+                    )
+                    if skip:
                         continue
                     if not _listing_matches(listing, wl):
                         continue
@@ -172,7 +213,11 @@ def push_new_listings_to_vip(since: str | None = None) -> dict:
                     if listing["id"] in bucket["seen"]:
                         continue
                     bucket["seen"].add(listing["id"])
-                    bucket["listings"].append(listing)
+                    # Shallow copy so the per-user re-alert flag doesn't leak
+                    # across users sharing the same `signals` dict.
+                    entry = dict(listing)
+                    entry["_prev_notified_price_ty"] = prev_price
+                    bucket["listings"].append(entry)
 
             if not user_matches:
                 logger.info(f"[vip-push] no matches across {len(wl_rows)} watchlists")
@@ -198,14 +243,14 @@ def push_new_listings_to_vip(since: str | None = None) -> dict:
                         sent_count = min(len(listings), 6)
                         stats["telegram_sent"] += sent_count
                         for listing in listings[:sent_count]:
-                            _log_notify(conn, uid, listing["id"], "telegram")
+                            _log_notify(conn, uid, listing["id"], "telegram", listing.get("price_ty"))
 
                 if em_enabled and listings:
                     if send_listing_alert(user["email"], user["name"], listings):
                         stats["email_users"] += 1
                         # Log first 10 as email-channel (matches email body cap)
                         for listing in listings[:10]:
-                            _log_notify(conn, uid, listing["id"], "email")
+                            _log_notify(conn, uid, listing["id"], "email", listing.get("price_ty"))
 
                 # Update watchlist last_notified_at for all touched watchlists
                 conn.execute(

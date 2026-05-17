@@ -5,12 +5,11 @@
 1. **Groq frontage enrichment** — chạy `python radar.py reprocess --groq-frontage`
    - road_tier=0 đang chiếm 25% (1,735/6,991 listings) → target < 15%
    - LLM verified mới 8% (551/6,991) — pipeline có, chỉ cần chạy
-2. **Signal alert TTL** — `notification_log` hiện chỉ check tồn tại → re-alert nếu price drop tiếp > 5%
-3. **DB cleanup CLI** — `python radar.py db-cleanup`: probably_sold > 90d, raw không match > 60d, alert_logs > 180d, orphan images
-4. **Tầng 3a — Quy hoạch checker** — WebGIS Bình Dương (`qhbinhduong.vn`)
+2. **DB cleanup CLI** — `python radar.py db-cleanup`: probably_sold > 90d, raw không match > 60d, alert_logs > 180d, orphan images
+3. **Tầng 3a — Quy hoạch checker** — WebGIS Bình Dương (`qhbinhduong.vn`)
    - Parse tọa độ từ URL → query loại đất (ODT/SKC/CLN)
    - CLN không chuyển được → loại khỏi signal
-5. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
+4. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
    - Score 1–5, cộng vào Signal Score
 
 ## Giới hạn đã biết
@@ -26,6 +25,16 @@
 | Mở rộng địa bàn | Thuận An, Dĩ An chưa có data |
 
 ## Đã làm gần đây
+
+**Session 2026-05-17 (tiếp) — Signal alert TTL re-alert khi price drop ≥5%:**
+- **`db/schema.py`**: `notification_log` CREATE bỏ `UNIQUE(user_id,listing_id,channel)`, thêm cột `notified_price_ty REAL` + index `idx_notif_user_listing(user_id,listing_id,sent_at DESC)`
+- **Migration idempotent** `_migrate_notification_log()`: ALTER ADD column nếu thiếu; nếu phát hiện `sqlite_autoindex_notification_log_*` (UNIQUE cũ) → rebuild table trong BEGIN/COMMIT, copy data sang `_new`, swap tên
+- **`cli/notify.py`**: thay `_already_notified` (binary check) bằng `_last_notification` + `_should_skip_notify(conn, uid, lid, current_price, threshold_pct)` → `(skip, prev_price)`. Logic: no prior=push lần đầu; prev_price NULL=legacy skip; drop_pct ≥ threshold = re-alert
+- **In-memory shared dict fix**: shallow copy listing trước khi gán `_prev_notified_price_ty` để per-user flag không leak cross-user
+- **`alerts/telegram.py`**: digest có header switch "TIN MỚI + TIN GIẢM TIẾP" khi có realert; mỗi item realert thêm dòng `🔔 [Tiếp tục giảm giá] Giá cũ: X tỷ → Giá mới: Y tỷ (-Z%)`
+- **`config/settings.py`** + **`.env.example`**: `SIGNAL_REALERT_THRESHOLD_PCT=5.0` (env-tunable)
+- **Tests**: `tests/test_vip_notify.py` +8 case mới (first push records price, same-price skip, small drop <threshold skip, ≥threshold realert, legacy NULL skip, badge text contains "Tiếp tục giảm giá", boundary 5.0% inclusive, custom threshold via patched settings); 9/9 pass, full suite 55/55
+- **Backlog #2 cũ ship xong**, đẩy DB cleanup CLI lên #2
 
 **Session 2026-05-17 — VIP-only notification + admin auth cleanup (ship WIP):**
 - **`alerts/telegram.py`** (-340 dòng net): xoá toàn bộ admin/global broadcast path

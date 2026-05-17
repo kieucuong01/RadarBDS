@@ -378,16 +378,19 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 );
 
 
--- Notification idempotency log: tránh push 1 listing × user nhiều lần
+-- Notification log: track mỗi push kèm snapshot giá để re-alert khi giảm tiếp.
+-- Không có UNIQUE: cho phép nhiều row per (user, listing, channel) khi giá rớt
+-- vượt ngưỡng. Dedup ở app-level qua _should_skip_notify() trong cli/notify.py.
 CREATE TABLE IF NOT EXISTS notification_log (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    listing_id  INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
-    channel     TEXT NOT NULL,           -- 'telegram' | 'email'
-    sent_at     TEXT DEFAULT (datetime('now')),
-    UNIQUE(user_id, listing_id, channel)
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id            INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    listing_id         INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    channel            TEXT NOT NULL,           -- 'telegram' | 'email'
+    notified_price_ty  REAL,                    -- giá (tỷ) lúc push; NULL = row legacy
+    sent_at            TEXT DEFAULT (datetime('now'))
 );
-CREATE INDEX IF NOT EXISTS idx_notif_user_listing ON notification_log(user_id, listing_id);
+CREATE INDEX IF NOT EXISTS idx_notif_user_listing
+    ON notification_log(user_id, listing_id, sent_at DESC);
 """
 
 
@@ -478,6 +481,60 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         logger.warning(f"Index skip lead_captures: {e}")
 
     _drop_legacy_feedback(conn)
+    _migrate_notification_log(conn)
+
+
+def _migrate_notification_log(conn: sqlite3.Connection) -> None:
+    """Add notified_price_ty + drop UNIQUE(user_id, listing_id, channel).
+
+    SQLite doesn't support DROP CONSTRAINT, so we rebuild the table when the
+    legacy auto-index is still present. Idempotent.
+    """
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(notification_log)").fetchall()}
+    if "notified_price_ty" not in cols:
+        try:
+            conn.execute("ALTER TABLE notification_log ADD COLUMN notified_price_ty REAL")
+            logger.info("Migration: added notification_log.notified_price_ty")
+        except Exception as e:
+            logger.warning(f"Migration skip notification_log.notified_price_ty: {e}")
+
+    idx_list = conn.execute("PRAGMA index_list(notification_log)").fetchall()
+    has_unique = any(
+        r[2] == 1 and r[1].startswith("sqlite_autoindex_notification_log")
+        for r in idx_list
+    )
+    if has_unique:
+        try:
+            conn.executescript("""
+                BEGIN;
+                CREATE TABLE notification_log_new (
+                    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id            INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    listing_id         INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+                    channel            TEXT NOT NULL,
+                    notified_price_ty  REAL,
+                    sent_at            TEXT DEFAULT (datetime('now'))
+                );
+                INSERT INTO notification_log_new (id, user_id, listing_id, channel, notified_price_ty, sent_at)
+                    SELECT id, user_id, listing_id, channel, notified_price_ty, sent_at
+                      FROM notification_log;
+                DROP TABLE notification_log;
+                ALTER TABLE notification_log_new RENAME TO notification_log;
+                CREATE INDEX IF NOT EXISTS idx_notif_user_listing
+                    ON notification_log(user_id, listing_id, sent_at DESC);
+                COMMIT;
+            """)
+            logger.info("Migration: rebuilt notification_log without UNIQUE constraint")
+        except Exception as e:
+            logger.warning(f"Migration skip rebuild notification_log: {e}")
+    else:
+        try:
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_notif_user_listing "
+                "ON notification_log(user_id, listing_id, sent_at DESC)"
+            )
+        except Exception as e:
+            logger.warning(f"Index skip idx_notif_user_listing: {e}")
 
 
 def _table_exists(conn: sqlite3.Connection, name: str) -> bool:

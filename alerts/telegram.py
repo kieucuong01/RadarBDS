@@ -124,8 +124,13 @@ def send_watchlist_digest(
     if watchlist_names and len(watchlist_names) > 3:
         filter_text += f" +{len(watchlist_names) - 3}"
 
+    realert_count = sum(
+        1 for l in listings if l.get("_prev_notified_price_ty") is not None
+    )
+    header_title = "TIN MỚI + TIN GIẢM TIẾP" if realert_count else "TIN KHỚP WATCHLIST VIP"
+
     lines = [
-        "📡 <b>RADAR BDS - TIN KHỚP WATCHLIST VIP</b>",
+        f"📡 <b>RADAR BDS - {header_title}</b>",
         f"🎯 <b>{len(listings)} tin</b> đang khớp tiêu chí của bạn",
     ]
     if filter_text:
@@ -142,14 +147,30 @@ def send_watchlist_digest(
         area_text = _fmt_area(listing.get("area_m2"))
         mos_text = _fmt_pct(listing.get("mos_pct"))
         tone = _deal_tone(listing.get("mos_pct"))
-        lines.extend([
-            "",
-            f"<b>{idx}. {tone}</b>",
+
+        prev_price = listing.get("_prev_notified_price_ty")
+        realert_line = None
+        if prev_price is not None:
+            cur_p = listing.get("price_ty")
+            try:
+                drop = (float(prev_price) - float(cur_p)) / float(prev_price) * 100.0
+            except (TypeError, ValueError, ZeroDivisionError):
+                drop = 0.0
+            realert_line = (
+                f"🔔 <b>[Tiếp tục giảm giá]</b>  Giá cũ: {_fmt_ty(prev_price)} → "
+                f"Giá mới: {_fmt_ty(cur_p)} (<b>-{drop:.1f}%</b>)"
+            )
+
+        item_lines = ["", f"<b>{idx}. {tone}</b>"]
+        if realert_line:
+            item_lines.append(realert_line)
+        item_lines.extend([
             f"🔗 <a href=\"{_esc(detail_url)}\"><b>{title}</b></a>",
             f"💰 {price_text}  ·  📐 {area_text}  ·  📉 MOS {mos_text}",
             f"📍 {ward}  ·  {ptype}",
             "ℹ️ Mở detail để xem lịch sử giá, comps và kiểm tra pháp lý/đường trước khi liên hệ.",
         ])
+        lines.extend(item_lines)
 
     lines.append("")
     if older_count:

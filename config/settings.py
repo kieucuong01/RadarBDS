@@ -88,6 +88,10 @@ ALERT_KEYWORDS = [
 # Margin of safety threshold cho is_signal. 0.25 = listing rẻ hơn fair value ≥25%.
 SIGNAL_MOS_THRESHOLD = float(os.getenv("SIGNAL_MOS_THRESHOLD", 0.25))
 
+# Ngưỡng % giảm giá để VIP nhận push lại cùng một listing. So với giá tại
+# lần push gần nhất; dưới ngưỡng → skip để tránh spam, đạt/vượt → re-alert.
+SIGNAL_REALERT_THRESHOLD_PCT = float(os.getenv("SIGNAL_REALERT_THRESHOLD_PCT", 5.0))
+
 # ─── ALERTS ──────────────────────────────────────────────────────────────────
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 DASHBOARD_BASE_URL = os.getenv("DASHBOARD_BASE_URL", "http://localhost:5000")
