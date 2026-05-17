@@ -37,7 +37,7 @@ from cli.queries import (
 )
 from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
-    cmd_lifecycle, cmd_download_images,
+    cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
     cmd_groq_extract_test,
 )
 
@@ -148,6 +148,18 @@ def main():
     p_di = sub.add_parser("download-images", help="Tải ảnh về máy cục bộ")
     p_di.add_argument("--limit", type=int, default=1000, help="Số lượng ảnh tối đa cần tải")
 
+    # db-cleanup
+    p_cl = sub.add_parser("db-cleanup", help="Prune stale rows + orphan image files (dry-run default)")
+    p_cl.add_argument("--apply", action="store_true", help="Actually delete (default = dry run)")
+    p_cl.add_argument("--sold-days", type=int, default=90, dest="sold_days",
+                      help="Xóa listings probably_sold cũ hơn N ngày (default 90)")
+    p_cl.add_argument("--raw-days", type=int, default=60, dest="raw_days",
+                      help="Xóa raw_listings không match listings cũ hơn N ngày (default 60)")
+    p_cl.add_argument("--notif-days", type=int, default=180, dest="notif_days",
+                      help="Xóa notification_log cũ hơn N ngày (default 180)")
+    p_cl.add_argument("--no-vacuum", action="store_true", dest="no_vacuum",
+                      help="Bỏ qua VACUUM sau khi xóa")
+
     # inspect
     sub.add_parser("inspect", help="In snapshot toàn bộ trạng thái DB")
 
@@ -199,6 +211,8 @@ def main():
         cmd_deal_brief(args)
     elif args.cmd == "download-images":
         cmd_download_images(args)
+    elif args.cmd == "db-cleanup":
+        cmd_db_cleanup(args)
     elif args.cmd == "inspect":
         cmd_inspect(args)
     elif args.cmd == "groq-test":

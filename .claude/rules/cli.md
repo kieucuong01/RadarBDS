@@ -87,6 +87,21 @@ python radar.py lifecycle --alert                   # Telegram nếu signal bị
 python radar.py lifecycle --velocity                # hotness metric per segment
 ```
 
+## DB Cleanup
+
+```bash
+python radar.py db-cleanup                          # DRY RUN: in count, không xóa
+python radar.py db-cleanup --apply                  # Thực sự xóa + VACUUM
+python radar.py db-cleanup --apply --no-vacuum      # Xóa, bỏ VACUUM
+python radar.py db-cleanup --sold-days 60           # custom: listings probably_sold > 60d
+python radar.py db-cleanup --raw-days 30            # raw_listings mồ côi > 30d
+python radar.py db-cleanup --notif-days 90          # notification_log > 90d
+```
+
+> Mặc định: `--sold-days 90 --raw-days 60 --notif-days 180`. Luôn dry-run trước
+> khi `--apply` lần đầu để xem số lượng. FK cascade tự dọn `listing_images`,
+> `price_history`, `valuation_results` khi xóa `listings`.
+
 ## Facebook (Apify)
 
 ```bash

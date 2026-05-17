@@ -5,11 +5,10 @@
 1. **Groq frontage enrichment** — chạy `python radar.py reprocess --groq-frontage`
    - road_tier=0 đang chiếm 25% (1,735/6,991 listings) → target < 15%
    - LLM verified mới 8% (551/6,991) — pipeline có, chỉ cần chạy
-2. **DB cleanup CLI** — `python radar.py db-cleanup`: probably_sold > 90d, raw không match > 60d, alert_logs > 180d, orphan images
-3. **Tầng 3a — Quy hoạch checker** — WebGIS Bình Dương (`qhbinhduong.vn`)
+2. **Tầng 3a — Quy hoạch checker** — WebGIS Bình Dương (`qhbinhduong.vn`)
    - Parse tọa độ từ URL → query loại đất (ODT/SKC/CLN)
    - CLN không chuyển được → loại khỏi signal
-4. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
+3. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
    - Score 1–5, cộng vào Signal Score
 
 ## Giới hạn đã biết
@@ -25,6 +24,20 @@
 | Mở rộng địa bàn | Thuận An, Dĩ An chưa có data |
 
 ## Đã làm gần đây
+
+**Session 2026-05-17 (tiếp 2) — DB cleanup CLI:**
+- **`cli/cleanup.py`** (NEW): 4 cleanup pass + `run_cleanup(apply, sold_days, raw_days, notif_days, vacuum)`
+  - `listings probably_sold=1` cũ hơn `--sold-days` (default 90) → DELETE; FK cascade tự dọn `listing_images`/`price_history`/`valuation_results`
+  - `raw_listings` mồ côi (không có `listings.raw_id` trỏ tới) cũ hơn `--raw-days` (default 60) → DELETE
+  - `notification_log` cũ hơn `--notif-days` (default 180) → DELETE
+  - File trong `data/images/` không match `listing_images.local_path` → unlink + tính `bytes_freed`
+- **VACUUM** chạy trên dedicated `sqlite3.connect(..., isolation_level=None)` để bypass implicit transaction; có flag `--no-vacuum`
+- **`radar.py`** + **`cli/system.py`**: subparser `db-cleanup` + wrapper `cmd_db_cleanup`. Dry-run mặc định, `--apply` mới xóa
+- **`pytest.ini`**: thêm 5 file test bỏ sót (`test_admin_control_room`, `test_guest_visibility`, `test_vip_notify`, `test_db_cleanup`, `test_investment_memo`) vào `python_files`
+- **Tests**: `tests/test_db_cleanup.py` +9 case (dry-run no-op, sold > N days deleted, FK cascade verified, orphan raw deleted, raw with listing kept, old notif deleted, orphan image files unlinked + bytes counted, custom threshold, idempotent re-run)
+- **Full suite**: 55 → **86 pass** (test discovery mở rộng)
+- **Dry-run trên DB thật**: 6991 listings/raw, 0 sold/orphan/notif → cleanup không có gì để xóa (DB sạch); CLI verified hoạt động đúng
+- Backlog #2 cũ ship xong, đẩy Tầng 3a Quy hoạch checker lên #2
 
 **Session 2026-05-17 (tiếp) — Signal alert TTL re-alert khi price drop ≥5%:**
 - **`db/schema.py`**: `notification_log` CREATE bỏ `UNIQUE(user_id,listing_id,channel)`, thêm cột `notified_price_ty REAL` + index `idx_notif_user_listing(user_id,listing_id,sent_at DESC)`

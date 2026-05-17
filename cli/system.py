@@ -123,6 +123,26 @@ def cmd_download_images(args):
     limit = getattr(args, "limit", 1000)
     download_images(limit=limit)
 
+def cmd_db_cleanup(args):
+    init_schema()
+    from cli.cleanup import run_cleanup
+    apply = bool(getattr(args, "apply", False))
+    stats = run_cleanup(
+        apply=apply,
+        sold_days=int(getattr(args, "sold_days", 90)),
+        raw_days=int(getattr(args, "raw_days", 60)),
+        notif_days=int(getattr(args, "notif_days", 180)),
+        vacuum=not bool(getattr(args, "no_vacuum", False)),
+    )
+    mb = stats["bytes_freed"] / (1024 * 1024)
+    mode = "APPLIED" if apply else "DRY RUN (use --apply to delete)"
+    print(
+        f"[{mode}] sold listings={stats['sold_listings']} | "
+        f"orphan raw={stats['orphan_raw']} | "
+        f"old notif={stats['old_notifications']} | "
+        f"orphan images={stats['orphan_image_files']} ({mb:.1f} MB)"
+    )
+
 def cmd_groq_extract_test(args):
     """
     Test: Groq full-field extraction vs regex, sample N listings từ 1 phường.
