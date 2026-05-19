@@ -24,6 +24,11 @@ mos_pct  = (fair_ppm2 - actual_ppm2) / fair_ppm2
 is_signal = mos_pct ≥ MOS_THRESHOLD (theo confidence level)
 ```
 
+> ⚠️ **2026-05-18:** regression chỉ dùng `road_tier` (qua multiplier). `road_width_m`
+> + `frontage_m` đã loại khỏi feature matrix từ lâu (xem `valuation.py:149`).
+> `road_width_m` nay functional-removed khỏi `Listing` dataclass + pipeline.
+> `road_tier` LLM-authoritative khi `llm_verified=1` (sticky, regex không ghi đè).
+
 ## Road Tier Multipliers (dat_nen & nha_dat only)
 
 | Tier | Mô tả | Multiplier |

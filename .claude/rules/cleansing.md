@@ -49,6 +49,13 @@ Idempotent. Không đọc/write DB. Gọi feature_extractor để extract regex.
 
 ### Road Tier (0–4) — cascade priority
 
+> ⚠️ **LLM-authoritative (2026-05-18):** khi `llm_verified=1`, `road_tier` do
+> LLM (Groq) set là chân lý — regex reprocess KHÔNG ghi đè (CASE order trong
+> `db/listings.py` upsert: `llm_verified=1` ưu tiên trước regex). Hybrid: regex
+> pass 1 cho ~75%; `--groq` chỉ chạy cho `road_tier=0`. `road_width_m` đã
+> functional-removed (không còn feed valuation/LLM prompt; cột DB dormant).
+> `extract_road_width()` vẫn là helper nội bộ cho regex tier path.
+
 > ⚠️ Đã refactor 2026-05-06 — fix 5 bugs: hẻm blocking, DX gần false-positive, named roads thiếu, `\bmt\b` backspace bug
 
 | Tier | Điều kiện | Valuation multiplier |

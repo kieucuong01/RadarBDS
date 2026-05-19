@@ -42,11 +42,10 @@ class GeminiEnricher:
         YÊU CẦU TRÍCH XUẤT (JSON):
         1. "ward": Tên phường chính xác (Tân An, Phú An, Hiệp An, Chánh Hiệp, Chánh Mỹ, Tương Bình Hiệp, Định Hòa, Hiệp Thành, Chánh Nghĩa, Phú Mỹ, Phú Lợi, Phú Hòa, Phú Cường, Phú Tân). Nếu không chắc chắn, để null.
         2. "road_type": Phân loại đường: 'hem_xe_may', 'hem_ba_gac', 'hem_xe_hoi', 'duong_nhua', 'mat_tien_kinh_doanh'.
-        3. "road_width_m": Chiều rộng đường (số mét), ví dụ: 6.0. Nếu không ghi, để null.
-        4. "price_ty": Tổng giá trị (tỷ VNĐ). Hãy cẩn thận với đơn vị "tỷ", "triệu". Ví dụ "1 tỷ 2" là 1.2.
-        5. "area_m2": Tổng diện tích (m2).
-        6. "is_verified_deal": true nếu thông tin giá và diện tích logic, không có dấu hiệu nhầm lẫn (ví dụ ghi nhầm giá/m2 thành giá tổng).
-        7. "reason": Giải thích ngắn gọn nếu phát hiện sai sót hoặc xác nhận deal hời.
+        3. "price_ty": Tổng giá trị (tỷ VNĐ). Hãy cẩn thận với đơn vị "tỷ", "triệu". Ví dụ "1 tỷ 2" là 1.2.
+        4. "area_m2": Tổng diện tích (m2).
+        5. "is_verified_deal": true nếu thông tin giá và diện tích logic, không có dấu hiệu nhầm lẫn (ví dụ ghi nhầm giá/m2 thành giá tổng).
+        6. "reason": Giải thích ngắn gọn nếu phát hiện sai sót hoặc xác nhận deal hời.
 
         TRẢ VỀ DUY NHẤT JSON, KHÔNG GIẢI THÍCH THÊM.
         """

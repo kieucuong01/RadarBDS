@@ -65,7 +65,6 @@ class Listing:
     depth_m:        Optional[float] = None
     tho_cu_m2:      Optional[float] = None
     tho_cu_ratio:   Optional[float] = None
-    road_width_m:   Optional[float] = None
     road_type:      str = 'unknown'
     road_tier:      int = 0
     has_so:         bool = False

@@ -31,7 +31,6 @@ Mỗi phần tử trong array gồm:
 - "id": giữ nguyên số từ input
 - "ward": tên phường (chỉ chọn trong {wards}, hoặc null nếu không rõ)
 - "road_type": "hem_xe_may" | "hem_ba_gac" | "hem_xe_hoi" | "duong_nhua" | "be_tong" | "duong_dat" | "mat_tien_kinh_doanh" | null
-- "road_width_m": chiều rộng đường tính bằng mét (float hoặc null)
 - "road_tier": 1 nếu mặt tiền đường lớn có tên (Lê Chí Dân, Mạc Đĩnh Chi...); \
 2 nếu đường nhựa/ĐX/mặt tiền không hẻm; \
 3 nếu hẻm bê tông xe hơi vào được (rộng hơn 3m); \
@@ -57,7 +56,6 @@ Mỗi phần tử trong array gồm:
 - "ward": tên phường (chỉ chọn trong {wards}; null nếu không rõ)
 - "road_tier": 1 (mặt tiền đường lớn có tên) | 2 (đường nhựa/DX/mặt tiền) | 3 (hẻm bê tông xe hơi >3m) | 4 (hẻm xe máy <3m) | null
 - "road_type": "hem_xe_may" | "hem_ba_gac" | "hem_xe_hoi" | "duong_nhua" | "be_tong" | "mat_tien_kinh_doanh" | null
-- "road_width_m": chiều rộng đường (float, m; null nếu không rõ)
 - "has_so": false CHỈ KHI ghi rõ không có sổ / vi bằng / giấy tay / đang làm sổ; true trong mọi trường hợp còn lại
 - "is_hot": true nếu có từ "cắt lỗ" / "ngộp" / "bán gấp" / "bán nhanh" / "kẹt tiền" / "giảm sốc" / "hạ giá"
 
@@ -75,7 +73,7 @@ class GroqEnricher:
     def enrich_batch(self, listings: list) -> dict:
         """
         listings: [{"id": int, "title": str, "description": str}]
-        returns:  {id: {"ward": ..., "road_type": ..., "road_width_m": ..., "has_so": ...}}
+        returns:  {id: {"ward": ..., "road_type": ..., "road_tier": ..., "has_so": ...}}
         """
         if not self.enabled or not listings:
             return {}
@@ -116,7 +114,7 @@ class GroqEnricher:
     def enrich_full_batch(self, listings: list) -> dict:
         """
         Full extraction: price, area, property_type, road_tier, road_type,
-        road_width_m, frontage_m, has_so, is_hot, tx_type, ward.
+        frontage_m, has_so, is_hot, tx_type, ward.
         listings: [{"id": int, "title": str, "description": str}]
         """
         if not self.enabled or not listings:

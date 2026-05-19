@@ -157,7 +157,7 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
         # Với 500k tin, việc load toàn bộ là không cần thiết vì có TIME_DECAY.
         train_rows = conn.execute("""
             SELECT id, area, ward, property_type, tx_type, price_per_m2, price_ty,
-                   area_m2, frontage_m, depth_m, road_width_m, road_type, road_tier,
+                   area_m2, frontage_m, depth_m, road_type, road_tier,
                    has_so, is_hot, price_dropped, crawled_at, url, contact_phone
             FROM listings
             WHERE price_per_m2 IS NOT NULL AND price_per_m2 > 0
@@ -172,7 +172,7 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
             placeholders = ",".join(["?"] * len(incremental_ids))
             valuate_rows = conn.execute(f"""
                 SELECT id, area, ward, property_type, tx_type, price_per_m2, price_ty,
-                       area_m2, frontage_m, depth_m, road_width_m, road_type, road_tier,
+                       area_m2, frontage_m, depth_m, road_type, road_tier,
                        has_so, is_hot, price_dropped, crawled_at, url, contact_phone
                 FROM listings
                 WHERE id IN ({placeholders})
@@ -194,7 +194,6 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
             area_m2      = float(row["area_m2"] or 0),
             frontage_m   = float(row["frontage_m"]) if row["frontage_m"] else None,
             depth_m      = float(row["depth_m"])    if row["depth_m"]    else None,
-            road_width_m = float(row["road_width_m"]) if row["road_width_m"] else None,
             road_type    = row["road_type"] or "unknown",
             road_tier     = int(row["road_tier"] or 0),
             has_so        = bool(row["has_so"]),
@@ -305,7 +304,6 @@ def enrich_listings_with_gemini(limit=50):
                 UPDATE listings SET
                     ward = COALESCE(?, ward),
                     road_type = COALESCE(?, road_type),
-                    road_width_m = COALESCE(?, road_width_m),
                     price_ty = COALESCE(?, price_ty),
                     area_m2 = COALESCE(?, area_m2),
                     price_per_m2 = COALESCE(?, price_per_m2),
@@ -313,7 +311,7 @@ def enrich_listings_with_gemini(limit=50):
                     llm_notes = ?
                 WHERE id = ?
             """, (
-                res.get('ward'), res.get('road_type'), res.get('road_width_m'),
+                res.get('ward'), res.get('road_type'),
                 p, a, ppm2,
                 res.get('reason', ''),
                 lid
@@ -426,7 +424,6 @@ def enrich_listings_with_groq(limit: int = 600, ward: str = None) -> int:
                     UPDATE listings SET
                         ward         = COALESCE(?, ward),
                         road_type    = COALESCE(?, road_type),
-                        road_width_m = COALESCE(?, road_width_m),
                         has_so       = COALESCE(?, has_so),
                         road_tier    = COALESCE(?, road_tier),
                         llm_verified = 1,
@@ -435,7 +432,6 @@ def enrich_listings_with_groq(limit: int = 600, ward: str = None) -> int:
                 """, (
                     res.get("ward") or None,
                     res.get("road_type") or None,
-                    res.get("road_width_m") or None,
                     has_so_val,
                     road_tier_val,
                     _json.dumps(res, ensure_ascii=False),
@@ -453,8 +449,8 @@ def enrich_listings_with_groq(limit: int = 600, ward: str = None) -> int:
 
 def enrich_frontage_with_groq(limit: int = 500, ward: str = None) -> int:
     """
-    Enrich frontage_m và road_width_m cho listings còn NULL bằng Groq full extraction.
-    Chỉ ghi đè 2 fields này — không đụng fields khác.
+    Enrich frontage_m cho listings còn NULL bằng Groq full extraction.
+    Chỉ ghi đè field này — không đụng fields khác.
     """
     import time
     import json as _json
@@ -509,15 +505,13 @@ def enrich_frontage_with_groq(limit: int = 500, ward: str = None) -> int:
                 if not res:
                     continue
                 frontage    = res.get("frontage_m")    or None
-                road_width  = res.get("road_width_m")  or None
-                if frontage is None and road_width is None:
+                if frontage is None:
                     continue
                 conn.execute("""
                     UPDATE listings SET
-                        frontage_m   = COALESCE(?, frontage_m),
-                        road_width_m = COALESCE(?, road_width_m)
+                        frontage_m   = COALESCE(?, frontage_m)
                     WHERE id = ?
-                """, (frontage, road_width, row["id"]))
+                """, (frontage, row["id"]))
             done += len(chunk)
 
         logger.info(f"  Batch {i}/{len(chunks)}: {done}/{total} done")
@@ -615,7 +609,6 @@ def verify_signals_with_groq(limit: int = 300, ward: str = None) -> int:
                         frontage_m    = COALESCE(?, frontage_m),
                         road_tier     = COALESCE(?, road_tier),
                         road_type     = COALESCE(?, road_type),
-                        road_width_m  = COALESCE(?, road_width_m),
                         has_so        = COALESCE(?, has_so),
                         property_type = COALESCE(?, property_type),
                         ward          = COALESCE(?, ward),
@@ -629,7 +622,6 @@ def verify_signals_with_groq(limit: int = 300, ward: str = None) -> int:
                     res.get("frontage_m") or None,
                     res.get("road_tier")  or None,
                     road_type_val,
-                    res.get("road_width_m") or None,
                     has_so_val,
                     res.get("property_type") or None,
                     res.get("ward") or None,
@@ -722,7 +714,7 @@ if __name__ == "__main__":
     parser.add_argument("--full",           action="store_true", help="Chạy toàn bộ dữ liệu (mặc định là incremental)")
     parser.add_argument("--gemini",        action="store_true", help="Bật làm giàu dữ liệu bằng Gemini")
     parser.add_argument("--groq",          action="store_true", help="Chỉ chạy Groq enrichment (không reprocess)")
-    parser.add_argument("--groq-frontage", action="store_true", dest="groq_frontage", help="Groq enrich frontage_m/road_width_m cho listings còn NULL")
+    parser.add_argument("--groq-frontage", action="store_true", dest="groq_frontage", help="Groq enrich frontage_m cho listings còn NULL")
     parser.add_argument("--groq-signals",  action="store_true", dest="groq_signals",  help="Groq verify toàn bộ fields cho signal listings")
     parser.add_argument("--ward",          help="Lọc theo phường khi dùng --groq* (vd: 'Tân An')")
     args = parser.parse_args()

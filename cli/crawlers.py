@@ -182,6 +182,19 @@ def cmd_crawl(args, mode: str = "full"):
         from cleansing.download_images import download_images
         download_images()
 
+        # LLM verify signals: chỉ verify tin đã thành signal & chưa llm_verified.
+        # Groq free-tier có daily token cap → 429 được handle nội bộ
+        # (retry/break) trong verify_signals_with_groq, không làm vỡ pipeline.
+        # Tự re-valuate sau khi enrich (reprocess_valuation bên trong).
+        if mode == "incremental" and not getattr(args, "no_groq", False):
+            try:
+                print(f"\nLLM verify signals (Groq)...")
+                from cleansing.reprocess import verify_signals_with_groq
+                n_verified = verify_signals_with_groq()
+                print(f"Groq verified: {n_verified} signals")
+            except Exception as e:
+                print(f"[groq-signals] error (bỏ qua, không vỡ pipeline): {e}")
+
     class _FakeArgs:
         out = None
     cmd_export_raw(_FakeArgs())
