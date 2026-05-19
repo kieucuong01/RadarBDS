@@ -271,6 +271,25 @@ CREATE TABLE IF NOT EXISTS ai_training_feedback (
 CREATE INDEX IF NOT EXISTS idx_ai_training_listing ON ai_training_feedback(listing_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_training_verdict ON ai_training_feedback(verdict, created_at DESC);
 
+-- Claude pre-review verdicts (CỐ VẤN). Bảng RIÊNG, KHÔNG bao giờ trộn với
+-- ai_training_feedback (nhãn người = ground-truth). Append-only history;
+-- latest-per-listing giải bằng subquery. Logic định giá chỉ học từ nhãn người.
+CREATE TABLE IF NOT EXISTS ai_deal_review (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at      TEXT DEFAULT (datetime('now')),
+    updated_at      TEXT DEFAULT (datetime('now')),
+    listing_id      INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    actor           TEXT DEFAULT 'claude',
+    verdict         TEXT NOT NULL,          -- cheap_real|suspect|not_cheap|insufficient_info
+    confidence      REAL,                    -- 0.0–1.0
+    reasoning       TEXT,
+    red_flags       TEXT,                    -- JSON array of strings
+    needs_map_check INTEGER DEFAULT 0,
+    model           TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ai_deal_review_listing ON ai_deal_review(listing_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_deal_review_verdict ON ai_deal_review(verdict, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS infra_entries (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at      TEXT DEFAULT (datetime('now')),

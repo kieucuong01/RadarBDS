@@ -1966,11 +1966,20 @@ def admin_api_ai_training_items():
                    v.segment, v.n_segment,
                    f.verdict AS feedback_verdict,
                    f.extraction_verdict, f.valuation_verdict, f.reason_tags,
+                   r.verdict AS ai_verdict, r.confidence AS ai_confidence,
+                   r.reasoning AS ai_reasoning, r.red_flags AS ai_red_flags,
+                   r.needs_map_check AS ai_needs_map_check,
                    li.local_path AS img_local, li.img_url AS img_url
             FROM listings l
             JOIN valuation_results v ON v.listing_id = l.id
             LEFT JOIN ai_training_feedback f ON f.id = (
                 SELECT id FROM ai_training_feedback
+                WHERE listing_id = l.id
+                ORDER BY created_at DESC
+                LIMIT 1
+            )
+            LEFT JOIN ai_deal_review r ON r.id = (
+                SELECT id FROM ai_deal_review
                 WHERE listing_id = l.id
                 ORDER BY created_at DESC
                 LIMIT 1
@@ -2016,6 +2025,43 @@ def admin_api_ai_training_items():
         }
         items.append(d)
     return jsonify({"items": items})
+
+
+@app.route("/admin/api/ai-training/disagreements")
+@require_admin_auth
+def admin_api_ai_training_disagreements():
+    """Read-only: nơi nhãn người (f) và verdict Claude (r) xung đột bucket.
+
+    Lọc CHẶT — chỉ hiện khi cả hai phía đã có nhãn latest VÀ bucket ngược nhau;
+    `maybe` / `insufficient_info` (NEUTRAL) tự loại. Chỉ surfacing, KHÔNG ghi.
+    """
+    with db_mod.get_conn() as conn:
+        rows = conn.execute("""
+            SELECT l.id, l.title, l.url, l.ward, l.price_ty, l.area_m2,
+                   v.mos_pct, v.signal_score,
+                   f.verdict AS human_verdict, f.created_at AS human_at,
+                   r.verdict AS ai_verdict, r.confidence AS ai_confidence,
+                   r.reasoning AS ai_reasoning, r.red_flags AS ai_red_flags,
+                   r.needs_map_check AS ai_needs_map_check
+            FROM listings l
+            JOIN valuation_results v ON v.listing_id = l.id
+            JOIN ai_training_feedback f ON f.id = (
+                SELECT id FROM ai_training_feedback
+                WHERE listing_id = l.id ORDER BY created_at DESC LIMIT 1
+            )
+            JOIN ai_deal_review r ON r.id = (
+                SELECT id FROM ai_deal_review
+                WHERE listing_id = l.id ORDER BY created_at DESC LIMIT 1
+            )
+            WHERE (
+                   (f.verdict IN ('good','correct')
+                        AND r.verdict IN ('suspect','not_cheap'))
+                OR (f.verdict IN ('bad','spam','sold','fake_price','bad_data')
+                        AND r.verdict = 'cheap_real')
+            )
+            ORDER BY COALESCE(r.confidence,0) DESC, v.signal_score DESC
+        """).fetchall()
+    return jsonify({"items": [dict(r) for r in rows]})
 
 
 @app.route("/admin/api/qc/duplicates")

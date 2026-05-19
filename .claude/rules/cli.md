@@ -18,7 +18,13 @@ python radar.py crawl-daily                         # incremental + Telegram ale
 python radar.py crawl-daily --source guland
 python radar.py crawl-daily --visible
 python radar.py crawl-daily --no-alert
+python radar.py crawl-daily --no-groq               # bỏ bước LLM verify signals
 ```
+
+> `crawl-daily` (incremental) tự chạy `verify_signals_with_groq()` sau reprocess:
+> chỉ verify tin **đã thành signal & `llm_verified=0`**, tự re-valuate. Groq
+> free-tier daily cap → 429 handle nội bộ (retry/break), KHÔNG vỡ pipeline.
+> `--no-groq` để tắt. `crawl-all` (full) KHÔNG chạy bước này.
 
 ## Data Quality
 
@@ -77,6 +83,21 @@ python radar.py dashboard --out PATH                # custom output path
 python radar.py deal-brief --id 123                 # brief chi tiết 1 listing
 python radar.py deal-brief --top 5                  # top 5 signals brief
 ```
+
+## Claude Pre-Review (CỐ VẤN)
+
+```bash
+python radar.py review-queue --top 5                 # signal chưa review + memo (JSON stdout)
+python radar.py review-queue --top 10 --ward "Phú Hòa"
+python radar.py review-save --id 123 --verdict suspect --confidence 0.7 \
+  --reasoning "nghi mồi giá ảo" --red-flags "mồi;giá ảo" --needs-map-check
+```
+
+> Back skill `review-deal-signals` (user gọi trong chat — KHÔNG cần API key).
+> verdict ∈ `cheap_real|suspect|not_cheap|insufficient_info`. Chỉ ghi bảng
+> RIÊNG `ai_deal_review` (CỐ VẤN, append-only). **KHÔNG bao giờ** đụng
+> `ai_training_feedback` (nhãn người = ground-truth) hay `listings.review_hidden`.
+> Nhãn cuối VẪN do admin bấm trên màn review. Logic định giá chỉ học nhãn người.
 
 ## Lifecycle
 

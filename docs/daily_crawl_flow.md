@@ -17,6 +17,7 @@ python radar.py crawl-daily
        ├─ Facebook crawl     (crawler/facebook_apify.py via Apify)
        ├─ run_full_reprocess()   → normalize → dedup → valuation
        ├─ download_images()      → tải ảnh + tạo thumbnail
+       ├─ verify_signals_with_groq()  → LLM verify signal mới + re-valuate (xem 2a)
        ├─ export_raw()           → backup JSON
        ├─ notification:
        │     push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists only
@@ -56,6 +57,34 @@ n_all = c.execute('SELECT COUNT(*) FROM valuation_results').fetchone()[0]
 print(f'{n_sig}/{n_all} = {n_sig/n_all:.1%}')
 "
 ```
+
+---
+
+## 2a. LLM verify signals (Groq) — tự động trong crawl-daily
+
+Sau `run_full_reprocess()` + `download_images()`, **chỉ trong `mode="incremental"`** (`crawl-daily`), `cmd_crawl` gọi `cleansing/reprocess.py::verify_signals_with_groq()`.
+
+```python
+from cleansing.reprocess import verify_signals_with_groq
+verify_signals_with_groq()   # bọc try/except → lỗi Groq KHÔNG vỡ pipeline
+```
+
+- Chỉ verify tin **đã thành signal & `llm_verified=0`** (`WHERE v.is_signal=1 AND l.llm_verified=0`, order by `signal_score DESC`).
+- Re-check price/area/property_type/road_tier/road_type/has_so/ward → giết false-signal, tự `reprocess_valuation()` sau khi enrich.
+- `road_tier` từ LLM là **authoritative**: khi `llm_verified=1`, regex reprocess KHÔNG ghi đè (CASE order `db/listings.py`).
+- Groq free-tier có **daily token cap** → 429 handle nội bộ (retry 1 lần `GROQ_RETRY_WAIT`s → break, vẫn mark `llm_verified=1` để khỏi retry vô hạn). Quota cạn → bước này dừng êm, crawl/push vẫn chạy bình thường.
+- **`crawl-all` (full) KHÔNG chạy** bước này (tránh đốt budget khi reprocess toàn bộ).
+- Backlog ~841 signal tồn drain dần qua các phiên daily (~2–3 ngày sạch, sau đó chỉ signal mới).
+
+### 2a.1 Disable
+
+```powershell
+& $py -X utf8 radar.py crawl-daily --no-groq
+```
+
+Manual chạy độc lập (không qua crawl): `python radar.py reprocess --groq-signals [--ward X]`.
+
+> `road_width_m` đã **functional-removed** khỏi code (valuation / Groq + Gemini prompt / upsert) — cột DB để dormant, optional cleanup migration sau. `--groq-frontage` chỉ fill `frontage_m` (hiển thị), KHÔNG liên quan road_tier.
 
 ---
 
@@ -249,7 +278,8 @@ Gọi từ `cli/crawlers.py::_facebook_crawl_to_raw` ngay trước khi insert ra
 | Dashboard URL trong Telegram | `config/settings.py::DASHBOARD_BASE_URL` | Override bằng env |
 | VIP push query | `cli/notify.py` | `_fetch_new_signals`, `_fetch_active_vip_users_with_watchlists` |
 | Telegram digest format | `alerts/telegram.py` | `send_watchlist_digest`, `send_message_to` |
-| Crawl entry + notification wiring | `cli/crawlers.py::cmd_crawl`, `_facebook_crawl_to_raw` | Capture `crawl_start_ts`, gọi city filter |
+| Crawl entry + notification wiring | `cli/crawlers.py::cmd_crawl`, `_facebook_crawl_to_raw` | Capture `crawl_start_ts`, gọi city filter, gọi `verify_signals_with_groq()` |
+| LLM verify signals | `cleansing/reprocess.py::verify_signals_with_groq`, `cleansing/groq_enricher.py` | Chỉ incremental; opt-out `--no-groq` |
 | Guland targets | `data/guland_sources.json`, `crawler/guland_pw.py` | Chỉ sửa JSON khi mở rộng ward |
 | BDS targets | `data/batdongsan_sources.json`, `crawler/batdongsan_pw.py` | Cross-product slug auto-build |
 | FB profiles | `data/facebook_profiles.json`, `crawler/facebook_apify.py` | tier=int, broker_name |
@@ -285,6 +315,14 @@ print('min mos:', c.execute('SELECT MIN(mos_pct) FROM valuation_results WHERE is
 
 ---
 
+## 7a. Claude pre-review — TÁCH RIÊNG, CỐ Ý không gắn crawl-daily
+
+Skill `review-deal-signals` + lệnh `review-queue` / `review-save` (ghi bảng
+RIÊNG `ai_deal_review`, CỐ VẤN) **không** nằm trong pipeline crawl-daily. Chạy
+**thủ công** trong chat khi cần — quyết định có chủ đích để kiểm soát chi phí
+và tránh confirmation-loop. Logic định giá CHỈ học từ nhãn người
+(`ai_training_feedback`); verdict Claude không bao giờ trộn vào đó.
+
 ## 8. Không làm
 
 - ❌ Đừng đưa `hồ chí minh / tp hcm / sài gòn` vào `OTHER_CITY_KEYWORDS` — BD đã sáp nhập HCM, sẽ skip nhầm tin chính chủ.
@@ -292,3 +330,4 @@ print('min mos:', c.execute('SELECT MIN(mos_pct) FROM valuation_results WHERE is
 - ❌ Đừng hardcode ward/slug trong crawler nữa — sửa JSON.
 - ❌ Đừng tune `SIGNAL_MOS_THRESHOLD` < 0.25 mà không verify signal rate vẫn ≤ 30%.
 - ❌ Đừng skip dedup repost Facebook — repost FB cần lưu để track price history (anti-bloat đã bị reject).
+- ❌ Đừng gắn `review-queue/review-save` (Claude pre-review) vào crawl-daily — cố ý tách (xem 7a).

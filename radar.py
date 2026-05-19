@@ -35,6 +35,7 @@ from cli.crawlers import (
 from cli.queries import (
     cmd_query, cmd_deal_brief, cmd_inspect, cmd_crawl_health
 )
+from cli.review import cmd_review_queue, cmd_review_save
 from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
@@ -53,7 +54,7 @@ def main():
     p_re.add_argument("--valuation-only", action="store_true")
     p_re.add_argument("--listings-only",  action="store_true")
     p_re.add_argument("--groq",          action="store_true", help="Enrich hard listings (road_tier=0) bằng Groq LLM")
-    p_re.add_argument("--groq-frontage", action="store_true", dest="groq_frontage", help="Groq enrich frontage_m/road_width_m còn NULL")
+    p_re.add_argument("--groq-frontage", action="store_true", dest="groq_frontage", help="Groq enrich frontage_m còn NULL")
     p_re.add_argument("--groq-signals",  action="store_true", dest="groq_signals",  help="Groq verify toàn bộ fields cho signal listings")
     p_re.add_argument("--ward",          help="Lọc phường khi dùng --groq* (vd: 'Tân An')")
 
@@ -89,6 +90,8 @@ def main():
     p_cd.add_argument("--source",  help="Chỉ crawl 1 nguồn")
     p_cd.add_argument("--visible", action="store_true")
     p_cd.add_argument("--no-alert", action="store_true", help="Không gửi VIP notification")
+    p_cd.add_argument("--no-groq", action="store_true",
+                      help="Bỏ bước LLM verify signals (Groq) sau reprocess")
 
     # schedule-setup
     p_ss = sub.add_parser("schedule-setup", help="Cài Windows Task Scheduler chạy crawl-daily")
@@ -128,6 +131,25 @@ def main():
     p_db3 = sub.add_parser("deal-brief", help="Deal brief chi tiết cho 1 listing hoặc top N signals")
     p_db3.add_argument("--id",  type=int, help="Listing ID cụ thể")
     p_db3.add_argument("--top", type=int, help="Top N signals theo signal score")
+
+    # review-queue / review-save (Claude pre-review CỐ VẤN — lưu bảng RIÊNG)
+    p_rq = sub.add_parser("review-queue",
+                          help="Signal chưa có verdict Claude + memo (JSON stdout)")
+    p_rq.add_argument("--top",  type=int, default=5, help="Số signal (mặc định 5)")
+    p_rq.add_argument("--ward", type=str, help="Lọc theo phường")
+
+    p_rs = sub.add_parser("review-save",
+                          help="Lưu verdict Claude (append-only) vào ai_deal_review")
+    p_rs.add_argument("--id", type=int, required=True, help="Listing ID")
+    p_rs.add_argument("--verdict", required=True,
+                      help="cheap_real|suspect|not_cheap|insufficient_info")
+    p_rs.add_argument("--confidence", type=float, help="Độ tin 0.0–1.0")
+    p_rs.add_argument("--reasoning", required=True, help="Lập luận (tiếng Việt)")
+    p_rs.add_argument("--red-flags", dest="red_flags",
+                      help='Cờ đỏ, ngăn cách bằng ";"')
+    p_rs.add_argument("--needs-map-check", dest="needs_map_check",
+                      action="store_true",
+                      help="Kết luận phụ thuộc quy hoạch/pháp lý/vị trí thực địa")
 
     # lifecycle
     p_lc = sub.add_parser("lifecycle", help="Sweep delisted + stats feedback loop")
@@ -209,6 +231,10 @@ def main():
         cmd_query(args)
     elif args.cmd == "deal-brief":
         cmd_deal_brief(args)
+    elif args.cmd == "review-queue":
+        cmd_review_queue(args)
+    elif args.cmd == "review-save":
+        cmd_review_save(args)
     elif args.cmd == "download-images":
         cmd_download_images(args)
     elif args.cmd == "db-cleanup":

@@ -1,15 +1,46 @@
-# Pending & Backlog (2026-05-17)
+# Pending & Backlog (2026-05-18)
 
 ## Backlog tính năng (theo thứ tự ưu tiên)
 
-1. **Groq frontage enrichment** — chạy `python radar.py reprocess --groq-frontage`
-   - road_tier=0 đang chiếm 25% (1,735/6,991 listings) → target < 15%
-   - LLM verified mới 8% (551/6,991) — pipeline có, chỉ cần chạy
-2. **Tầng 3a — Quy hoạch checker** — WebGIS Bình Dương (`qhbinhduong.vn`)
-   - Parse tọa độ từ URL → query loại đất (ODT/SKC/CLN)
-   - CLN không chuyển được → loại khỏi signal
-3. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
+1. **LLM verify signals (daily job)** — ✅ ĐÃ TỰ ĐỘNG HOÁ (2026-05-18)
+   - Đã gắn `verify_signals_with_groq()` vào `crawl-daily` (incremental) sau
+     reprocess+download_images, trước VIP push. `cli/crawlers.py`. Opt-out:
+     `--no-groq`. 429 daily-cap handle nội bộ → không vỡ pipeline. `crawl-all`
+     (full) KHÔNG chạy. Manual vẫn được: `python radar.py reprocess --groq-signals`.
+   - Backlog tự rút cạn: ~841 signal chưa verify sẽ drain dần qua các phiên
+     crawl-daily (Groq cap/ngày → ~2–3 ngày sạch hàng tồn, sau đó chỉ signal mới).
+   - ⚠️ Đây là cách dùng LLM ĐÚNG (quyết định 2026-05-18): ngân sách Groq
+     free-tier ~400–500 call/ngày → đổ vào **841 signal chưa verify**, KHÔNG
+     blanket `--groq` (1408 tin road_tier=0, ~800 không text = đốt budget vô ích).
+   - `verify_signals_with_groq()` re-check price/area/property_type/road_tier/
+     has_so → giết false-signal + tự re-valuate. Đã sửa luôn tier cho 175
+     signal đang kẹt road_tier=0 (chỗ tier ảnh hưởng định giá nhất).
+   - ~2 phiên/ngày là sạch 841; sau đó queue nhỏ dần (chỉ signal mới mỗi crawl).
+   - `road_tier` giờ **LLM-authoritative**: khi `llm_verified=1`, regex
+     reprocess KHÔNG ghi đè (fix CASE order `db/listings.py`).
+   - `road_width_m` **functional-removed** khỏi code (valuation/Groq/Gemini
+     prompt/upsert) — cột DB để dormant, optional cleanup migration sau.
+   - `--groq-frontage` chỉ fill `frontage_m` (hiển thị), KHÔNG liên quan road_tier.
+1b. **(Phase 2, tùy hứng) blanket `--groq` road_tier=0** — chỉ cứu false-negative
+   (deal ngon bị tier-0 dìm dưới ngưỡng signal). Làm SAU khi signal sạch, kèm
+   tweak code bỏ tin không text (đừng đốt budget vào ~800 null).
+2. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
    - Score 1–5, cộng vào Signal Score
+   - Không cần toạ độ chính xác tới thửa; ward centroid đủ
+
+## DEFERRED (không làm cho tới khi có điều kiện)
+
+- **Tầng 3a — Quy hoạch checker (WebGIS)** — DEFER 2026-05-17 theo quyết định user.
+  - **Lý do**: dữ liệu listing là text marketing thuần, không có lat/lng, không có
+    cadastral (thua_so/to_ban_do/dia_chi_thua = 0%), Guland raw không expose zoning
+    field, WebGIS Bình Dương không có public API. Môi giới có lợi giấu thông tin
+    quy hoạch bất lợi → text regex chỉ catch ~2% với false negative cao.
+  - **Unlock khi**: (a) OCR sổ hồng pipeline có → fill cadastral fields, HOẶC
+    (b) BD publish open data quy hoạch (shapefile/GeoJSON/REST), HOẶC
+    (c) source mới có lat/lng per listing, HOẶC
+    (d) manual coord entry cho top-N signal sau khi pool đã sạch.
+  - **Workaround tạm**: dashboard có thể thêm link external "Tra quy hoạch" mở
+    Guland map cho user nhìn manual (chưa làm — chờ user confirm cần).
 
 ## Giới hạn đã biết
 
@@ -22,8 +53,54 @@
 | Apify credits | Free tier $5/tháng gần hết — dùng `--mode incremental` cho daily |
 | Không có proxy | Guland OK (batch same-origin); BDS risk bị block |
 | Mở rộng địa bàn | Thuận An, Dĩ An chưa có data |
+| 958 listings không valuated (14%) | Giới hạn cố hữu: tin "giá thoả thuận" (`price_ty=0.0` ở nguồn) + Facebook free-text. `repair-missing` đã chạm trần (52/52 guland re-fetch nhưng vẫn no-price). Loại khỏi valuation là đúng |
 
 ## Đã làm gần đây
+
+**Session 2026-05-19 — Skill `review-deal-signals` (Claude pre-review CỐ VẤN):**
+- **Đã ship**: bảng RIÊNG `ai_deal_review` (`db/schema.py`, append-only,
+  idempotent); CLI `review-queue` (JSON memo) / `review-save`
+  (`cli/review.py`, wired `radar.py`); skill `review-deal-signals`
+  (`.claude/skills/` + `.agents/skills/`); `app.py` items JOIN `ai_*` +
+  endpoint `/admin/api/ai-training/disagreements` (read-only, lọc CHẶT);
+  `static/js/admin.js` block gợi ý read-only; `tests/test_ai_deal_review.py`
+  (5 case, anti-bias verified) + pytest.ini.
+- **Anti-bias (cứng)**: verdict Claude KHÔNG bao giờ ghi `ai_training_feedback`
+  / không flip `review_hidden`. Nhãn cuối VẪN người bấm trên màn admin. Logic
+  định giá CHỈ học nhãn người. KHÔNG gắn crawl-daily (chạy skill thủ công).
+- **Phiên pre-review #1 đã chạy** (2026-05-19): batch `--top 10` → 10 verdict
+  lưu `ai_deal_review` (7 suspect · 2 not_cheap · 1 insufficient_info · 0
+  cheap_real). Verify: 10 id rời hàng đợi, `ai_training_feedback`=0 &
+  `review_hidden` không đổi (anti-bias OK). Hiển thị read-only ở
+  `/admin/control-room` tab AI training.
+- **Bug phát hiện ngoài lề (chưa fix)**: listing #38764 — parser giá nuốt
+  cú pháp `"2t45"` (= 2.45 tỷ) thành 0.245 tỷ (sai 10×) → tạo signal MOS ảo.
+  Nghi `cleansing/normalizer.py` regex `<tỷ>t<trăm-triệu>`. Cần fix riêng,
+  có thể ảnh hưởng nhiều tin khác.
+- **Phase sau (chưa làm)**: dùng `/admin/api/ai-training/disagreements` làm
+  input phân tích/tune logic định giá — nhưng tune CHỈ học từ nhãn người;
+  bảng disagreement chỉ để con người soi chỗ Claude vs người lệch nhau.
+
+**Session 2026-05-18 — repair-missing run + xác định trần valuation coverage:**
+- `inspect`: 6991 listings, 6033 valuated (86%), 958 không valuated. road_tier=0 = 25%, LLM enriched 8%.
+- User chọn hướng "Repair missing price/area". Phân bố thiếu price/area: 430 facebook + 52 guland.
+- `repair-missing --source guland --limit 10` test OK 10/10 → full run 52/52 re-fetch OK (background).
+- **Phát hiện**: 52 guland sau re-fetch **area được điền nhưng price vẫn NULL** — raw `price_ty=0.0`. Đây là tin "Bán đất X m²" đăng **giá thoả thuận/liên hệ**, người bán không công bố giá. Re-fetch xác nhận giá không tồn tại ở nguồn.
+- **Kết luận**: `repair-missing` đã chạm trần. 958 không valuated (14%) = tin giá thoả thuận + Facebook free-text → giới hạn cố hữu của nguồn, loại khỏi valuation là đúng (không thể tính MOS khi no-price). Ghi vào bảng "Giới hạn đã biết".
+- Backlog #1 (Groq frontage) vẫn chưa chạy — chờ user quyết (tốn Groq credits).
+
+**Session 2026-05-17 (tiếp 3) — Quy hoạch checker research & defer:**
+- User hỏi "Quy hoạch checker (WebGIS) nên làm như thế nào? Nghiên cứu và đề xuất."
+- **Verify giả thuyết "Guland raw_json có sẵn zoning"** → **SAI**. Inspect 5 raw mới nhất: top-level keys chỉ có address/area_m2/description/imgs/legal_raw/... — không có lat/lng, không có code đất, không có cadastral.
+- **Audit DB**: 0% listings có thua_so/to_ban_do/dia_chi_thua (OCR pipeline chưa có). Address chỉ tới level phường (6955/6991). Không có anchor để query bản đồ.
+- **Đếm keyword zoning trong text**:
+  - `legal_raw` distribution: 4930 rỗng, 524 "Có sổ hồng", 65 "Có sổ hồng, Sổ sẵn" — chỉ pháp lý sổ, không phải mã quy hoạch
+  - "quy hoạch" mention: 207/6991 (~3%, free text "dính/không dính/có quy hoạch đường")
+  - Mã đất chuẩn ODT/SKC/CLN/LUC/TMD/RSX: ~120 hits / 6991 (< 2%); "ONT" 5539 hits là false positive (substring URL `guland.vn/post/...`)
+- **WebGIS Bình Dương official** (qhkhsdd / gisxd / quyhoachxaydung .binhduong.gov.vn): không có public API/shapefile/GeoJSON cộng đồng cho BD
+- **Quyết định user**: *"Vì dữ liệu hiện tại là bài đăng tin dựa vào text thuần, nên không thể check quy hoạch bằng ứng dụng. Chỉ có thể dựa vào môi giới cung cấp toạ độ cụ thể rồi tra trên bản đồ."*
+- **Tầng 3a → DEFERRED**: di chuyển khỏi backlog active, ghi 4 điều kiện unlock (OCR sổ hồng / BD open data / source mới có lat-lng / manual coord entry). Promote Tầng 3b — Proximity scoring lên #2 (không cần coord precision tới thửa)
+- **Memory**: lưu `project_quy_hoach_checker_deferred.md` để session sau không retry
 
 **Session 2026-05-17 (tiếp 2) — DB cleanup CLI:**
 - **`cli/cleanup.py`** (NEW): 4 cleanup pass + `run_cleanup(apply, sold_days, raw_days, notif_days, vacuum)`

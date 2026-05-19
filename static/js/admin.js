@@ -571,6 +571,16 @@ function trainingCard(x) {
             ${['bad_fengshui','deep_alley','corner_lot','bait_listing','fake_price','bad_data'].map(tag => `<button class="chip reason-chip" data-card="${cid}" data-group="reason" data-value="${tag}">${tag.replace(/_/g, ' ')}</button>`).join('')}
           </div>
         </div>
+        ${x.ai_verdict ? `
+        <div class="review-box" style="opacity:.92">
+          <div class="review-title">🤖 Claude pre-review (cố vấn — không tự chọn)</div>
+          <ul class="explain-list">
+            <li><strong>${esc(x.ai_verdict)}</strong>${x.ai_confidence != null ? ` · tin cậy ${Math.round(x.ai_confidence * 100)}%` : ''}</li>
+            ${x.ai_reasoning ? `<li>${esc(x.ai_reasoning)}</li>` : ''}
+            ${(() => { let f = []; try { f = JSON.parse(x.ai_red_flags || '[]'); } catch (e) { f = []; } return (f && f.length) ? `<li>🚩 ${f.map(esc).join(', ')}</li>` : ''; })()}
+            ${x.ai_needs_map_check ? `<li>🗺️ Cần admin tự kiểm tra quy hoạch/pháp lý/vị trí trên bản đồ</li>` : ''}
+          </ul>
+        </div>` : ''}
         <button class="primary-btn save-training" onclick="saveTraining(${x.id})">Lưu Phản Hồi & Dạy AI</button>
       </div>
     </article>
