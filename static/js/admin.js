@@ -50,6 +50,13 @@ function area(v) {
   return `${Number(v).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} m²`;
 }
 
+function ppm2(v) {
+  if (v === null || v === undefined || v === '') return '-';
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return '-';
+  return `${n.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tr/m²`;
+}
+
 function shortDate(v) {
   return (v || '').replace('T', ' ').slice(0, 16) || '-';
 }
@@ -505,35 +512,208 @@ async function deactivateBlacklist(phone) {
   loadBlacklist();
 }
 
-async function loadTrainingItems() {
-  const data = await fetchJSON('/admin/api/ai-training/items?limit=24');
-  const root = document.getElementById('trainingGrid');
-  const items = data.items || [];
-  if (!items.length) {
-    root.innerHTML = `<div class="empty">Chưa có signal nào cần training.</div>`;
-    return;
-  }
-  root.innerHTML = items.map(trainingCard).join('');
-  root.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const group = chip.dataset.group;
-      if (group !== 'reason') {
-        root.querySelectorAll(`.chip[data-card="${chip.dataset.card}"][data-group="${group}"]`).forEach(c => c.classList.remove('active'));
-      }
-      chip.classList.toggle('active');
-    });
+let _trnGal = {};
+let _trnGalIds = [];
+let _trnGalIdx = 0;
+let _trnWardsLoaded = false;
+let _trnWardCities = {};   // { city: [wards] }
+let _trnAllWards = [];     // mọi phường có signal (kể cả ngoài CITY_MAP)
+let _trnOffset = 0;
+let _trnLoading = false;
+let _trnHasMore = false;
+let _trnChipDelegated = false;
+const TRN_PAGE = 50;
+
+function trnFilterQuery(offset = 0) {
+  const city  = document.getElementById('trnCity')?.value || '';
+  const ward  = document.getElementById('trnWard')?.value || '';
+  const mos   = document.getElementById('trnMos')?.value || '0';
+  const sort  = document.getElementById('trnSort')?.value || 'default';
+  const p = new URLSearchParams({ limit: String(TRN_PAGE), sort, offset: String(offset) });
+  if (city) p.set('city', city);
+  if (ward) p.set('ward', ward);
+  if (mos && mos !== '0') p.set('mos_min', mos);
+  return p.toString();
+}
+
+function _trnPopulateWards(city) {
+  const wardSel = document.getElementById('trnWard');
+  if (!wardSel) return;
+  const cur = wardSel.value;
+  const list = city && _trnWardCities[city] ? _trnWardCities[city]
+    : (_trnAllWards.length ? _trnAllWards : Object.values(_trnWardCities).flat().sort());
+  wardSel.innerHTML = '<option value="">Tất cả phường</option>' +
+    list.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join('');
+  if (list.includes(cur)) wardSel.value = cur;
+}
+
+function _trnBindChipDelegation(root) {
+  if (_trnChipDelegated) return;
+  _trnChipDelegated = true;
+  root.addEventListener('click', (ev) => {
+    const chip = ev.target.closest('.chip');
+    if (!chip || !root.contains(chip)) return;
+    const group = chip.dataset.group;
+    if (group !== 'reason') {
+      root.querySelectorAll(`.chip[data-card="${chip.dataset.card}"][data-group="${group}"]`).forEach(c => c.classList.remove('active'));
+    }
+    chip.classList.toggle('active');
+    if (group === 'extraction') syncExtractionState(chip.dataset.card);
   });
+}
+
+async function loadTrainingItems(append = false) {
+  if (_trnLoading) return;
+  _trnLoading = true;
+  try {
+    if (!append) _trnOffset = 0;
+    const data = await fetchJSON('/admin/api/ai-training/items?' + trnFilterQuery(_trnOffset));
+    const root = document.getElementById('trainingGrid');
+    const items = data.items || [];
+
+    // Badge: luôn "chưa review / tổng signal"
+    const badge = document.getElementById('trainingCount');
+    if (badge) badge.textContent = `${data.pending || 0}/${data.total || 0}`;
+    const meta = document.getElementById('trainingMeta');
+    const shown = append ? (_trnOffset + items.length) : items.length;
+    if (meta) meta.textContent = `· ${data.pending || 0} chưa review / ${data.total || 0} signal · hiển thị ${shown}`;
+
+    // City + ward dropdowns (populate once)
+    if (!_trnWardsLoaded && (data.ward_cities || data.wards)) {
+      _trnWardCities = data.ward_cities || {};
+      _trnAllWards = (data.wards || []).slice();
+      const citySel = document.getElementById('trnCity');
+      if (citySel) {
+        citySel.innerHTML = '<option value="">Tất cả TP</option>' +
+          Object.keys(_trnWardCities).map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+      }
+      _trnPopulateWards('');
+      _trnWardsLoaded = true;
+    }
+
+    _trnOffset += items.length;
+    _trnHasMore = !!data.has_more;
+
+    // Gallery store
+    items.forEach(it => { _trnGal[it.id] = (it.images && it.images.length) ? it.images : []; });
+
+    if (!items.length && !append) {
+      root.innerHTML = `<div class="empty">Không có signal nào khớp bộ lọc.</div>`;
+      _trnSyncSentinel();
+      return;
+    }
+    const html = items.map(trainingCard).join('');
+    if (append) root.insertAdjacentHTML('beforeend', html);
+    else root.innerHTML = html;
+    _trnBindChipDelegation(root);
+    requestAnimationFrame(() => _trnSyncDescriptionToggles(root));
+    _trnSyncSentinel();
+  } finally {
+    _trnLoading = false;
+  }
+}
+
+// Sentinel cuối lưới: scroll tới → tự load thêm (infinite scroll)
+let _trnObserver = null;
+function _trnSyncSentinel() {
+  const sent = document.getElementById('trnSentinel');
+  if (!sent) return;
+  sent.style.display = _trnHasMore ? 'block' : 'none';
+  if (!_trnObserver) {
+    _trnObserver = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting) && _trnHasMore && !_trnLoading) {
+        loadTrainingItems(true);
+      }
+    }, { rootMargin: '400px' });
+    _trnObserver.observe(sent);
+  }
+}
+
+// Trích xuất sai → ẩn mục "2. Định giá AI" (tin đó để học làm sạch dữ liệu);
+// chỉ khi trích xuất "Đúng hết" mới chấm định giá (để cải tiến phần định giá).
+function syncExtractionState(cid) {
+  const active = document.querySelector(`.chip[data-card="${cid}"][data-group="extraction"].active`);
+  const ok = !active || active.dataset.value === 'all_correct';
+  const valbox = document.getElementById(`valbox-${cid}`);
+  const note = document.getElementById(`exnote-${cid}`);
+  if (valbox) valbox.style.display = ok ? '' : 'none';
+  if (note) note.style.display = ok ? 'none' : '';
+}
+
+async function loadMoreTraining() {
+  await loadTrainingItems(true);
+}
+
+function trnToggleExpand(id) {
+  const card = document.querySelector(`.training-card[data-id="${id}"]`);
+  const btn = document.getElementById(`expbtn-${id}`);
+  if (!card) return;
+  const expanded = card.classList.toggle('expanded');
+  if (btn) btn.textContent = expanded ? '▲ Thu gọn' : '▼ Mở review';
+}
+
+function trnToggleDesc(id) {
+  const wrap = document.querySelector(`.train-desc-wrap[data-desc-wrap="${id}"]`);
+  const btn = document.querySelector(`.train-desc-toggle[data-desc-toggle="${id}"]`);
+  if (!wrap) return;
+  const expanded = wrap.classList.toggle('expanded');
+  if (btn) btn.textContent = expanded ? 'Thu gọn' : 'Xem thêm';
+}
+
+function _trnSyncDescriptionToggles(scope = document) {
+  scope.querySelectorAll('.train-desc-wrap').forEach(wrap => {
+    const desc = wrap.querySelector('.train-desc');
+    const btn = wrap.querySelector('.train-desc-toggle');
+    if (!desc || !btn) return;
+    const wasExpanded = wrap.classList.contains('expanded');
+    if (wasExpanded) wrap.classList.remove('expanded');
+    const needsToggle = desc.scrollHeight > desc.clientHeight + 1;
+    if (wasExpanded) wrap.classList.add('expanded');
+    btn.hidden = !needsToggle;
+    if (!needsToggle) wrap.classList.remove('expanded');
+    btn.textContent = wrap.classList.contains('expanded') ? 'Thu gọn' : 'Xem thêm';
+  });
+}
+
+function openTrnGallery(id) {
+  const imgs = _trnGal[id] || [];
+  if (!imgs.length) return;
+  _trnGalIds = imgs;
+  _trnGalIdx = 0;
+  _trnGalRender();
+  document.getElementById('trnGallery').classList.add('open');
+}
+function closeTrnGallery() {
+  document.getElementById('trnGallery').classList.remove('open');
+}
+function trnGalleryNav(delta) {
+  if (!_trnGalIds.length) return;
+  _trnGalIdx = (_trnGalIdx + delta + _trnGalIds.length) % _trnGalIds.length;
+  _trnGalRender();
+}
+function _trnGalRender() {
+  document.getElementById('trnGalleryImg').src = _trnGalIds[_trnGalIdx];
+  document.getElementById('trnGalleryCounter').textContent =
+    `${_trnGalIdx + 1} / ${_trnGalIds.length}`;
 }
 
 function trainingCard(x) {
   const cid = `card-${x.id}`;
   const explain = x.explain || {};
   const missing = (explain.missing_fields || []).length ? explain.missing_fields.join(', ') : 'không';
+  const nImg = (x.images && x.images.length) || 0;
+  const desc = (x.description || '').trim();
+  const actualPpm2 = x.actual_ppm2 || x.price_per_m2 || '';
+  const fairPpm2 = x.fair_ppm2 || '';
+  const fairTitle = x.fair_ty
+    ? `(Fair Value: ${money(x.fair_ty)}${fairPpm2 ? ` · ${ppm2(fairPpm2)}` : ''})`
+    : '';
   return `
     <article class="training-card" data-id="${x.id}">
       <div class="train-img-wrap">
         <img class="train-img" src="${esc(x.image || PLACEHOLDER)}" onerror="this.src=PLACEHOLDER" alt="">
         <div class="mos-chip">MOS ${Math.round(x.mos_pct || 0)}%</div>
+        ${nImg ? `<button class="train-gallery-btn" onclick="openTrnGallery(${x.id})">🖼️ Ảnh (${nImg})</button>` : ''}
       </div>
       <div class="train-body">
         <div class="train-title">
@@ -541,47 +721,61 @@ function trainingCard(x) {
           <span>TD-${x.id}</span>
         </div>
         <div class="train-lines">
+          <div><strong>${esc(x.title || 'Không có tiêu đề')}</strong></div>
           <div>${esc(x.road_type || 'Chưa rõ đường')} · ${esc(PTYPES[x.property_type] || x.property_type || 'Chưa rõ loại')}</div>
-          <div>DT: <strong>${area(x.area_m2)}</strong> · Giá rao: <strong>${money(x.price_ty)}</strong></div>
+          <div>DT: <strong>${area(x.area_m2)}</strong> · Giá rao: <strong>${money(x.price_ty)}</strong> · Giá/m²: <strong>${ppm2(actualPpm2)}</strong></div>
         </div>
+        ${desc ? `
+          <div class="train-desc-wrap" data-desc-wrap="${x.id}">
+            <div class="train-desc">${esc(desc)}</div>
+            <button type="button" class="train-desc-toggle" data-desc-toggle="${x.id}" onclick="trnToggleDesc(${x.id})" hidden>Xem thêm</button>
+          </div>` : ''}
 
-        <div class="review-box">
-          <div class="review-title">1. Thông tin trích xuất</div>
-          <div class="chip-row">
-            <button class="chip active" data-card="${cid}" data-group="extraction" data-value="all_correct">Đúng hết</button>
-            <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_ward">Sai phường</button>
-            <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_road">Sai đường</button>
-            <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_property_type">Sai loại hình</button>
+        <div class="trn-review-cols${x.ai_verdict ? ' has-ai' : ''}">
+          <div class="trn-review-main">
+            <div class="review-box">
+              <div class="review-title">1. Thông tin trích xuất</div>
+              <div class="chip-row">
+                <button class="chip active" data-card="${cid}" data-group="extraction" data-value="all_correct">Đúng hết</button>
+                <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_ward">Sai phường</button>
+                <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_road">Sai đường</button>
+                <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_property_type">Sai loại hình</button>
+                <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_price">Sai giá</button>
+                <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_area">Sai diện tích</button>
+              </div>
+              <div class="extraction-note" id="exnote-${cid}" style="display:none;margin-top:8px;font-size:11px;color:var(--muted)">
+                Trích xuất sai → tin này dùng để học <strong>làm sạch dữ liệu</strong>, không cần chấm định giá.
+              </div>
+            </div>
+            <div class="review-box" id="valbox-${cid}">
+              <div class="review-title">2. Định giá AI ${fairTitle}</div>
+              <div class="chip-row">
+                <button class="chip" data-card="${cid}" data-group="valuation" data-value="too_high">Hơi cao</button>
+                <button class="chip active" data-card="${cid}" data-group="valuation" data-value="correct">Chuẩn</button>
+                <button class="chip" data-card="${cid}" data-group="valuation" data-value="too_low">Hơi thấp</button>
+              </div>
+              <ul class="explain-list">
+                <li>Score ${Math.round(x.signal_score || 0)}, segment ${esc(x.segment || '-')} (${x.n_segment || 0} mẫu)</li>
+                <li>Giá thực ${money(x.price_ty)} (${ppm2(actualPpm2)}), fair ${money(x.fair_ty)} (${ppm2(fairPpm2)}), thiếu field: ${esc(missing)}</li>
+              </ul>
+              <div class="review-title" style="margin-top:10px">Nguyên nhân</div>
+              <div class="chip-row">
+                ${[['bad_fengshui','Phong thủy xấu'],['deep_alley','Hẻm sâu'],['corner_lot','Đất góc'],['bait_listing','Tin mồi'],['fake_price','Giá ảo'],['bad_data','Dữ liệu sai']].map(([v,l]) => `<button class="chip reason-chip" data-card="${cid}" data-group="reason" data-value="${v}">${l}</button>`).join('')}
+              </div>
+            </div>
+            <button class="primary-btn save-training" onclick="saveTraining(${x.id})">Lưu Phản Hồi & Dạy AI</button>
           </div>
+          <div class="trn-review-aside">${x.ai_verdict ? `
+            <div class="review-box" style="opacity:.92;height:100%">
+              <div class="review-title">🤖 Claude pre-review</div>
+              <ul class="explain-list">
+                <li><strong>${esc(x.ai_verdict)}</strong>${x.ai_confidence != null ? ` · ${Math.round(x.ai_confidence * 100)}%` : ''}</li>
+                ${x.ai_reasoning ? `<li>${esc(x.ai_reasoning)}</li>` : ''}
+                ${(() => { let f = []; try { f = JSON.parse(x.ai_red_flags || '[]'); } catch (e) { f = []; } return (f && f.length) ? `<li>🚩 ${f.map(esc).join(', ')}</li>` : ''; })()}
+                ${x.ai_needs_map_check ? `<li>🗺️ Cần kiểm tra quy hoạch/pháp lý/vị trí</li>` : ''}
+              </ul>
+            </div>` : ''}</div>
         </div>
-
-        <div class="review-box">
-          <div class="review-title">2. Định giá AI ${x.fair_ty ? `(Fair Value: ${money(x.fair_ty)})` : ''}</div>
-          <div class="chip-row">
-            <button class="chip" data-card="${cid}" data-group="valuation" data-value="too_high">Hơi cao</button>
-            <button class="chip active" data-card="${cid}" data-group="valuation" data-value="correct">Chuẩn</button>
-            <button class="chip" data-card="${cid}" data-group="valuation" data-value="too_low">Hơi thấp</button>
-          </div>
-          <ul class="explain-list">
-            <li>Score ${Math.round(x.signal_score || 0)}, segment ${esc(x.segment || '-')} (${x.n_segment || 0} mẫu)</li>
-            <li>Giá thực ${money(x.price_ty)}, fair ${money(x.fair_ty)}, thiếu field: ${esc(missing)}</li>
-          </ul>
-          <div class="review-title" style="margin-top:12px">Nguyên nhân</div>
-          <div class="chip-row">
-            ${['bad_fengshui','deep_alley','corner_lot','bait_listing','fake_price','bad_data'].map(tag => `<button class="chip reason-chip" data-card="${cid}" data-group="reason" data-value="${tag}">${tag.replace(/_/g, ' ')}</button>`).join('')}
-          </div>
-        </div>
-        ${x.ai_verdict ? `
-        <div class="review-box" style="opacity:.92">
-          <div class="review-title">🤖 Claude pre-review (cố vấn — không tự chọn)</div>
-          <ul class="explain-list">
-            <li><strong>${esc(x.ai_verdict)}</strong>${x.ai_confidence != null ? ` · tin cậy ${Math.round(x.ai_confidence * 100)}%` : ''}</li>
-            ${x.ai_reasoning ? `<li>${esc(x.ai_reasoning)}</li>` : ''}
-            ${(() => { let f = []; try { f = JSON.parse(x.ai_red_flags || '[]'); } catch (e) { f = []; } return (f && f.length) ? `<li>🚩 ${f.map(esc).join(', ')}</li>` : ''; })()}
-            ${x.ai_needs_map_check ? `<li>🗺️ Cần admin tự kiểm tra quy hoạch/pháp lý/vị trí trên bản đồ</li>` : ''}
-          </ul>
-        </div>` : ''}
-        <button class="primary-btn save-training" onclick="saveTraining(${x.id})">Lưu Phản Hồi & Dạy AI</button>
       </div>
     </article>
   `;
@@ -590,9 +784,22 @@ function trainingCard(x) {
 async function saveTraining(id) {
   const card = document.querySelector(`.training-card[data-id="${id}"]`);
   const extraction = card.querySelector('.chip[data-group="extraction"].active')?.dataset.value || 'all_correct';
-  const valuation = card.querySelector('.chip[data-group="valuation"].active')?.dataset.value || 'correct';
+  const extractionOk = extraction === 'all_correct';
+  // Trích xuất sai → bỏ qua chấm định giá, tin này về nhánh học làm sạch dữ liệu.
+  const valuation = extractionOk
+    ? (card.querySelector('.chip[data-group="valuation"].active')?.dataset.value || 'correct')
+    : 'na';
   const tags = Array.from(card.querySelectorAll('.chip[data-group="reason"].active')).map(x => x.dataset.value);
-  const verdict = tags.includes('fake_price') ? 'fake_price' : tags.includes('bad_data') ? 'bad_data' : (valuation === 'correct' && extraction === 'all_correct' ? 'correct' : 'bad_data');
+  let verdict;
+  if (!extractionOk) {
+    verdict = 'bad_data';                       // sai trích xuất → học làm sạch dữ liệu
+  } else if (tags.includes('fake_price')) {
+    verdict = 'fake_price';
+  } else if (tags.includes('bad_data')) {
+    verdict = 'bad_data';
+  } else {
+    verdict = valuation === 'correct' ? 'correct' : 'bad_data';  // định giá lệch → cải tiến định giá
+  }
   await fetchJSON('/admin/api/ai-training/feedback', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -622,6 +829,48 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('exportLeadsBtn').addEventListener('click', exportLeads);
   document.getElementById('addBlacklistBtn').addEventListener('click', addBlacklist);
   document.getElementById('refreshTrainingBtn').addEventListener('click', loadTrainingItems);
+  ['trnMos', 'trnSort', 'trnWard'].forEach(idv => {
+    const el = document.getElementById(idv);
+    if (el) el.addEventListener('change', () => { _trnWardsLoaded = true; loadTrainingItems(); });
+  });
+  const citySel = document.getElementById('trnCity');
+  if (citySel) citySel.addEventListener('change', () => {
+    _trnPopulateWards(citySel.value);
+    document.getElementById('trnWard').value = '';
+    loadTrainingItems();
+  });
+  // Sidebar collapse
+  const toggleSidebar = document.getElementById('toggleSidebar');
+  if (toggleSidebar) {
+    let collapsed = false;
+    try { collapsed = localStorage.getItem('sidebarCollapsed') === '1'; } catch (e) {}
+    if (collapsed) document.body.classList.add('sidebar-collapsed');
+    toggleSidebar.addEventListener('click', () => {
+      document.body.classList.toggle('sidebar-collapsed');
+      const c = document.body.classList.contains('sidebar-collapsed');
+      try { localStorage.setItem('sidebarCollapsed', c ? '1' : '0'); } catch (e) {}
+    });
+  }
+  const applyTrnView = (view) => {
+    const grid = document.getElementById('trainingGrid');
+    if (grid) grid.classList.toggle('view-list', view === 'list');
+    document.getElementById('trnViewGrid')?.classList.toggle('active', view !== 'list');
+    document.getElementById('trnViewList')?.classList.toggle('active', view === 'list');
+    try { localStorage.setItem('trnView', view); } catch (e) {}
+    if (grid) requestAnimationFrame(() => _trnSyncDescriptionToggles(grid));
+  };
+  document.getElementById('trnViewGrid')?.addEventListener('click', () => applyTrnView('grid'));
+  document.getElementById('trnViewList')?.addEventListener('click', () => applyTrnView('list'));
+  let savedView = 'grid';
+  try { savedView = localStorage.getItem('trnView') || 'grid'; } catch (e) {}
+  applyTrnView(savedView);
+  document.addEventListener('keydown', (e) => {
+    const g = document.getElementById('trnGallery');
+    if (!g || !g.classList.contains('open')) return;
+    if (e.key === 'Escape') closeTrnGallery();
+    else if (e.key === 'ArrowLeft') trnGalleryNav(-1);
+    else if (e.key === 'ArrowRight') trnGalleryNav(1);
+  });
   document.getElementById('refreshInfraBtn').addEventListener('click', loadInfraItems);
   document.getElementById('saveInfraBtn').addEventListener('click', saveInfra);
   document.getElementById('resetInfraBtn').addEventListener('click', resetInfraForm);

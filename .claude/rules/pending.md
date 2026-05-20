@@ -73,6 +73,35 @@
   cheap_real). Verify: 10 id rời hàng đợi, `ai_training_feedback`=0 &
   `review_hidden` không đổi (anti-bias OK). Hiển thị read-only ở
   `/admin/control-room` tab AI training.
+- **UI AI Training mở rộng** (2026-05-19, `app.py` items endpoint +
+  `templates/admin_control_room.html` + `admin.js` + `admin.css`): badge
+  số lượng cần review (`pending`/`total`); filter Phường + MOS≥ + Sắp xếp
+  (mặc định/mới nhất/giá thấp/MOS/score) — server nhận `ward,mos_min,sort`;
+  card hiện thêm Title + Description (cắt 240 ký tự); nút "🖼️ Ảnh (n)" mở
+  lightbox gallery ngay trên card (prev/next, phím ←→/Esc). Endpoint trả
+  thêm `images[]` (full ảnh resolved), `wards[]`, `pending`, `total`.
+  Toggle "Lưới / Dòng" (list view 1 card/dòng, ảnh trái) — nhớ localStorage
+  `trnView`, responsive < 720px tự về 1 cột.
+- **UI AI Training tinh chỉnh** (2026-05-19, `static/js/admin.js` +
+  `static/css/admin.css`): thêm chip trích xuất "Sai giá" (`wrong_price`) /
+  "Sai diện tích" (`wrong_area`); khi trích xuất ≠ "Đúng hết" → ẩn mục
+  "2. Định giá AI" (tin về nhánh học **làm sạch dữ liệu**, verdict
+  `bad_data`); chỉ khi trích xuất đúng mới chấm định giá (nhánh **cải tiến
+  định giá**). Card thu nhỏ font/spacing + grid auto-fill để xem nhiều hơn.
+  Backend không đổi (phân nhánh dựa `extraction_verdict`).
+- **UI AI Training — fix lọc phường + infinite scroll** (2026-05-19,
+  `app.py` + `static/js/admin.js` + `templates/admin_control_room.html`):
+  (1) `admin_api_ai_training_items` đổi thứ tự filter `if ward … elif city`
+  (trước là city-precedence → phường bị bỏ qua khi đã chọn TP). (2) Badge
+  `#trainingCount` luôn hiển thị `pending/total` (vd `7/901`). (3) Bỏ nút
+  "Tải thêm", thay bằng `#trnSentinel` + IntersectionObserver
+  (`rootMargin:400px`) tự load batch kế khi cuộn gần cuối; guard `_trnLoading`
+  chống double-fetch, `_trnHasMore` theo `data.has_more`. (4) Bỏ dòng dead
+  `root.innerHTML = items.map(trainingCard)` ghi đè append (vỡ phân trang);
+  chip listener chuyển sang **event delegation** trên `#trainingGrid` (bind
+  1 lần, card append vẫn click được). (5) Dropdown phường nay phủ **mọi**
+  phường có signal (`_trnAllWards` từ `data.wards`, không chỉ CITY_MAP).
+  Cache bump `?v=admin-v13-infscroll`. node --check OK, 8 test xanh.
 - **Bug phát hiện ngoài lề (chưa fix)**: listing #38764 — parser giá nuốt
   cú pháp `"2t45"` (= 2.45 tỷ) thành 0.245 tỷ (sai 10×) → tạo signal MOS ảo.
   Nghi `cleansing/normalizer.py` regex `<tỷ>t<trăm-triệu>`. Cần fix riêng,

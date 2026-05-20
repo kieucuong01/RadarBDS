@@ -62,6 +62,31 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
 - `cleansing/dedup.py`: duplicate and price-drop policy.
 - `db/connection.py`, `db/schema.py`, `db/listings.py`: DB path, schema, writes.
 - `config/database_sqlite.py`: compatibility facade; new code should prefer `db.*`.
+- `cli/review.py`: `review-queue` (JSON memo, chưa review) / `review-save` (ghi `ai_deal_review`).
+- `services/investment_memo.py`: `load_investment_memo()` — memo nguồn cho pre-review.
+
+## Admin AI Training Panel
+
+Route: `/admin/control-room` → tab "AI Training".
+
+API endpoint: `GET /admin/api/ai-training/items` — params: `limit`, `offset`, `ward`, `city`, `mos_min`, `sort` (default/newest/cheapest/mos/score). Trả JSON: `{items, pending, total, offset, has_more, wards, ward_cities}`.
+
+Front-end files:
+- `templates/admin_control_room.html` — markup; `#trainingGrid`, `#trnSentinel`, filter bar.
+- `static/js/admin.js` — `loadTrainingItems`, `trainingCard`, `saveTraining`, infinite scroll.
+- `static/css/admin.css` — `.training-grid`, `.view-list`, sidebar collapsed, card styles.
+
+Cache version: `?v=admin-v13-infscroll` (bump khi đổi admin.js/html).
+
+**Anti-bias — KHÔNG BAO GIỜ vi phạm:**
+- Verdict Claude ghi `ai_deal_review` (append-only). KHÔNG ghi `ai_training_feedback`.
+- `ai_training_feedback` là ground-truth nhãn người, KHÔNG contaminate bằng verdict AI.
+- `review_hidden` chỉ admin bấm; Claude KHÔNG tự flip.
+- Logic định giá CHỈ học từ nhãn người. Claude chỉ cố vấn.
+
+Infinite scroll: `#trnSentinel` + `IntersectionObserver` (`rootMargin:400px`) → `loadTrainingItems(true)`. Guard `_trnLoading` chống double-fetch. Badge: `pending/total`.
+
+Chip delegation: event listener delegate trên `#trainingGrid` (1 lần, không re-bind khi append).
 
 ## Current Product Rules
 
@@ -124,6 +149,7 @@ node --check static\js\main.js
 
 - Backend/API change: run `py_compile` for touched Python files and the relevant pytest file.
 - Frontend JS change: run `node --check static/js/main.js` and smoke test `http://127.0.0.1:5000`.
+- Admin UI change: also run `node --check static/js/admin.js` + `pytest tests/test_admin_control_room.py tests/test_ai_deal_review.py -q`.
 - Auth/watchlist JS change: also run `node --check static/js/auth.js`.
 - Telegram/notification change: run `py_compile alerts/telegram.py cli/notify.py`; if testing live send, use a known linked test user and avoid leaking tokens.
 - Dashboard/API performance change: check payload sizes for `/api/dashboard`, `/api/signals?page=1&limit=30`, and `/api/listing/<id>`.

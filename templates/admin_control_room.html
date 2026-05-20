@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v4-infra">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v5-training-ppm2">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -273,12 +273,46 @@
     <section id="panel-training" class="workspace-panel">
       <div class="page-head">
         <div>
-          <h1>AI Training</h1>
-          <p>Review signal có rủi ro cao để tạo feedback có cấu trúc cho thuật toán.</p>
+          <h1>AI Training <span id="trainingCount" class="count-badge">0</span></h1>
+          <p>Review signal deal để tạo feedback có cấu trúc cho thuật toán. <span id="trainingMeta" class="muted-inline"></span></p>
         </div>
         <button class="secondary-btn" id="refreshTrainingBtn">Làm mới queue</button>
       </div>
+      <div class="train-filterbar">
+        <label>Thành phố
+          <select id="trnCity"><option value="">Tất cả TP</option></select>
+        </label>
+        <label>Phường
+          <select id="trnWard"><option value="">Tất cả phường</option></select>
+        </label>
+        <label>MOS ≥
+          <select id="trnMos">
+            <option value="0">Tất cả</option>
+            <option value="30">30%</option>
+            <option value="40">40%</option>
+            <option value="50">50%</option>
+            <option value="60">60%</option>
+            <option value="70">70%</option>
+          </select>
+        </label>
+        <label>Sắp xếp
+          <select id="trnSort">
+            <option value="default">Ưu tiên review (mặc định)</option>
+            <option value="newest">Mới nhất</option>
+            <option value="cheapest">Giá thấp nhất</option>
+            <option value="mos">MOS cao nhất</option>
+            <option value="score">Score cao nhất</option>
+          </select>
+        </label>
+        <label>Hiển thị
+          <div class="trn-view-toggle">
+            <button type="button" id="trnViewGrid" class="trn-view-btn active" data-view="grid">Lưới</button>
+            <button type="button" id="trnViewList" class="trn-view-btn" data-view="list">Dòng</button>
+          </div>
+        </label>
+      </div>
       <div id="trainingGrid" class="training-grid"></div>
+      <div id="trnSentinel" style="display:none;text-align:center;padding:18px;color:var(--muted,#888);font-size:12px">Đang tải thêm…</div>
     </section>
 
     <section id="panel-infra" class="workspace-panel">
@@ -438,7 +472,15 @@
     </section>
   </main>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v5-users"></script>
+  <div id="trnGallery" class="trn-gallery" onclick="if(event.target===this)closeTrnGallery()">
+    <button class="trn-g-close" onclick="closeTrnGallery()">&times;</button>
+    <button class="trn-g-nav trn-g-prev" onclick="trnGalleryNav(-1)">&#10094;</button>
+    <img id="trnGalleryImg" alt="">
+    <button class="trn-g-nav trn-g-next" onclick="trnGalleryNav(1)">&#10095;</button>
+    <div id="trnGalleryCounter" class="trn-g-counter"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v14-training-ppm2-desc"></script>
   {% endif %}
 </body>
 </html>

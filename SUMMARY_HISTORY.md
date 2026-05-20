@@ -2,7 +2,41 @@
 
 This file keeps durable handoff notes for future AI sessions. For day-to-day context, read `AGENTS.md` first.
 
-## Current Handoff - 2026-05-10
+## Current Handoff - 2026-05-19
+
+### Admin AI Training panel (feature complete)
+
+**Bảng / API:**
+- `ai_deal_review` (append-only) — verdict Claude pre-review, KHÔNG dùng làm ground-truth.
+- `ai_training_feedback` — nhãn người (ground-truth). Logic định giá CHỈ học từ đây.
+- `/admin/api/ai-training/items` — filter `ward/city/mos_min/sort`, phân trang `limit+offset`, trả `pending`, `total`, `has_more`, `wards`, `ward_cities`.
+
+**Front-end (admin_control_room.html + admin.js + admin.css):**
+- Card 2 loại view: Grid và List (toggle nhớ `localStorage trnView`).
+- List view: 2 cột bên trong (extraction+valuation | Claude pre-review).
+- Badge `#trainingCount` luôn `pending/total` (e.g. `7/901`).
+- Infinite scroll: `#trnSentinel` + `IntersectionObserver` rootMargin=400px, guard `_trnLoading`, state `_trnHasMore`.
+- Chip event delegation trên `#trainingGrid` (1 lần bind, không double-bind khi append).
+- Ward filter đúng ưu tiên (`if ward … elif city`); `_trnAllWards` từ `data.wards` phủ mọi phường signal.
+- Conditional valuation: chỉ hiện "2. Định giá AI" khi extraction = `all_correct`.
+- Lightbox gallery trực tiếp từ card.
+- Cache bust: `?v=admin-v13-infscroll`.
+
+**CLI review-deal-signals:**
+- `python radar.py review-queue --top N` — lấy queue JSON (chưa có verdict Claude).
+- `python radar.py review-save --id <id> --verdict <...> --confidence <0..1> --reasoning "<vi>" [--red-flags "a;b"] [--needs-map-check]`.
+- Phiên pre-review #1 đã chạy (2026-05-19): 10 verdict lưu, anti-bias verified.
+
+**Sidebar admin:** 240px, collapsible (52px), toggle `body.sidebar-collapsed`, localStorage `sidebarCollapsed`.
+
+**Còn mở:**
+- Bug parser giá `"2t45"` → 0.245 tỷ (sai 10×), nghi `cleansing/normalizer.py`. Chưa fix.
+- Backlog: Proximity scoring (Tầng 3b) — chưa làm.
+- `ai_training_feedback` disagreements endpoint `/admin/api/ai-training/disagreements` — read-only, có thể dùng để audit/tune sau.
+
+---
+
+## Archived Handoff - 2026-05-10
 
 - Canonical DB is `data/radar_bds.db`; `RADAR_DB_PATH` remains the override.
 - Runtime data is ignored by git: DB files, `data/images/`, thumbnails, logs, reports, and scratch output.

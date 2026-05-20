@@ -1954,22 +1954,71 @@ def admin_api_ai_training_feedback():
 @require_admin_auth
 def admin_api_ai_training_items():
     try:
-        limit = min(max(int(request.args.get("limit", 24)), 1), 60)
+        limit = min(max(int(request.args.get("limit", 50)), 1), 200)
     except ValueError:
-        limit = 24
+        limit = 50
+    try:
+        offset = max(int(request.args.get("offset", 0)), 0)
+    except ValueError:
+        offset = 0
+    ward = (request.args.get("ward") or "").strip()
+    city = (request.args.get("city") or "").strip()
+    try:
+        mos_min = float(request.args.get("mos_min") or 0)
+    except ValueError:
+        mos_min = 0.0
+    sort = (request.args.get("sort") or "default").strip()
+
+    where = [
+        "v.is_signal = 1",
+        "COALESCE(l.probably_sold,0)=0",
+        "COALESCE(l.is_blacklisted,0)=0",
+        "COALESCE(l.review_hidden,0)=0",
+    ]
+    params = []
+    if ward:
+        where.append("l.ward = ?")
+        params.append(ward)
+    elif city and city in CITY_MAP:
+        city_wards = CITY_MAP[city]
+        placeholders = ",".join("?" * len(city_wards))
+        where.append(f"l.ward IN ({placeholders})")
+        params.extend(city_wards)
+    if mos_min > 0:
+        where.append("COALESCE(v.mos_pct,0) >= ?")
+        params.append(mos_min)
+    where_sql = " AND ".join(where)
+
+    order_map = {
+        "newest": "COALESCE(l.posted_at, l.first_seen_at, l.crawled_at) DESC",
+        "cheapest": "COALESCE(NULLIF(l.price_ty,0), 1e9) ASC",
+        "mos": "COALESCE(v.mos_pct,0) DESC",
+        "score": "COALESCE(v.signal_score,0) DESC",
+    }
+    order_sql = (
+        order_map[sort] + ", COALESCE(v.signal_score,0) DESC"
+        if sort in order_map
+        else """
+          CASE WHEN f.id IS NULL THEN 0 ELSE 1 END ASC,
+          (CASE WHEN l.area_m2 IS NULL OR l.ward IS NULL OR l.property_type IS NULL OR l.road_tier IS NULL THEN 20 ELSE 0 END) DESC,
+          COALESCE(v.mos_pct,0) DESC,
+          COALESCE(v.signal_score,0) DESC
+        """
+    )
+
     with db_mod.get_conn() as conn:
-        rows = conn.execute("""
+        rows = conn.execute(f"""
             SELECT l.id, l.title, l.url, l.source, l.ward, l.property_type,
-                   l.price_ty, l.area_m2, l.frontage_m, l.depth_m, l.road_tier,
+                   l.price_ty, l.price_per_m2, l.area_m2, l.frontage_m, l.depth_m, l.road_tier,
                    l.road_type, l.has_so, l.description,
+                   COALESCE(l.posted_at, l.first_seen_at, l.crawled_at) AS posted_display,
                    v.mos_pct, v.signal_score, v.fair_ppm2, v.actual_ppm2,
                    v.segment, v.n_segment,
                    f.verdict AS feedback_verdict,
                    f.extraction_verdict, f.valuation_verdict, f.reason_tags,
                    r.verdict AS ai_verdict, r.confidence AS ai_confidence,
                    r.reasoning AS ai_reasoning, r.red_flags AS ai_red_flags,
-                   r.needs_map_check AS ai_needs_map_check,
-                   li.local_path AS img_local, li.img_url AS img_url
+                   r.needs_map_check AS ai_needs_map_check
             FROM listings l
             JOIN valuation_results v ON v.listing_id = l.id
             LEFT JOIN ai_training_feedback f ON f.id = (
@@ -1984,47 +2033,94 @@ def admin_api_ai_training_items():
                 ORDER BY created_at DESC
                 LIMIT 1
             )
-            LEFT JOIN listing_images li ON li.id = (
-                SELECT id FROM listing_images
-                WHERE listing_id = l.id
-                ORDER BY img_order
-                LIMIT 1
+            WHERE {where_sql}
+            ORDER BY {order_sql}
+            LIMIT ? OFFSET ?
+        """, params + [limit, offset]).fetchall()
+
+        pending = conn.execute(f"""
+            SELECT COUNT(*) c
+            FROM listings l
+            JOIN valuation_results v ON v.listing_id = l.id
+            LEFT JOIN ai_training_feedback f ON f.id = (
+                SELECT id FROM ai_training_feedback
+                WHERE listing_id = l.id ORDER BY created_at DESC LIMIT 1
             )
-            WHERE v.is_signal = 1
-              AND COALESCE(l.probably_sold,0)=0
-              AND COALESCE(l.is_blacklisted,0)=0
-              AND COALESCE(l.review_hidden,0)=0
-            ORDER BY
-              CASE WHEN f.id IS NULL THEN 0 ELSE 1 END ASC,
-              (CASE WHEN l.area_m2 IS NULL OR l.ward IS NULL OR l.property_type IS NULL OR l.road_tier IS NULL THEN 20 ELSE 0 END) DESC,
-              COALESCE(v.mos_pct,0) DESC,
-              COALESCE(v.signal_score,0) DESC
-            LIMIT ?
-        """, (limit,)).fetchall()
-    items = []
-    for r in rows:
-        d = dict(r)
-        fair_ty = None
-        if d.get("fair_ppm2") and d.get("area_m2"):
-            fair_ty = round(float(d["fair_ppm2"]) * float(d["area_m2"]) / 1000, 2)
-        d["fair_ty"] = fair_ty
-        d["image"] = resolve_image_url(d.pop("img_local"), d.pop("img_url"),)
-        d["detail_url"] = f"/listing/{d['id']}"
-        missing = []
-        for key, label in (("ward", "phuong"), ("property_type", "loai_hinh"), ("area_m2", "dien_tich"), ("road_tier", "duong")):
-            if d.get(key) in (None, "", 0):
-                missing.append(label)
-        d["explain"] = {
-            "mos_pct": d.get("mos_pct"),
-            "signal_score": d.get("signal_score"),
-            "segment": d.get("segment"),
-            "n_segment": d.get("n_segment"),
-            "fair_ty": fair_ty,
-            "actual_ty": d.get("price_ty"),
-            "missing_fields": missing,
-        }
-        items.append(d)
-    return jsonify({"items": items})
+            WHERE {where_sql} AND f.id IS NULL
+        """, params).fetchone()["c"]
+
+        total = conn.execute(f"""
+            SELECT COUNT(*) c
+            FROM listings l
+            JOIN valuation_results v ON v.listing_id = l.id
+            WHERE {where_sql}
+        """, params).fetchone()["c"]
+
+        ward_rows = conn.execute("""
+            SELECT DISTINCT l.ward
+            FROM listings l
+            JOIN valuation_results v ON v.listing_id = l.id
+            WHERE v.is_signal = 1 AND COALESCE(l.probably_sold,0)=0
+              AND COALESCE(l.is_blacklisted,0)=0 AND COALESCE(l.review_hidden,0)=0
+              AND l.ward IS NOT NULL AND l.ward <> ''
+            ORDER BY l.ward
+        """).fetchall()
+        wards = [w["ward"] for w in ward_rows]
+        ward_cities = {c: [ww for ww in ws if ww in wards] for c, ws in CITY_MAP.items()}
+        ward_cities = {c: ws for c, ws in ward_cities.items() if ws}
+
+        items = []
+        for r in rows:
+            d = dict(r)
+            fair_ty = None
+            if d.get("fair_ppm2") and d.get("area_m2"):
+                fair_ty = round(float(d["fair_ppm2"]) * float(d["area_m2"]) / 1000, 2)
+            d["fair_ty"] = fair_ty
+            actual_ppm2 = d.get("actual_ppm2") or d.get("price_per_m2")
+            if not actual_ppm2 and d.get("price_ty") and d.get("area_m2"):
+                actual_ppm2 = float(d["price_ty"]) * 1000 / float(d["area_m2"])
+            if actual_ppm2:
+                d["actual_ppm2"] = round(float(actual_ppm2), 1)
+            if d.get("price_per_m2"):
+                d["price_per_m2"] = round(float(d["price_per_m2"]), 1)
+            if d.get("fair_ppm2"):
+                d["fair_ppm2"] = round(float(d["fair_ppm2"]), 1)
+            imgs = conn.execute(
+                "SELECT local_path, img_url FROM listing_images "
+                "WHERE listing_id=? ORDER BY img_order",
+                (d["id"],),
+            ).fetchall()
+            gallery = []
+            for im in imgs:
+                u = resolve_image_url(im["local_path"], im["img_url"])
+                if u:
+                    gallery.append(u)
+            d["images"] = gallery
+            d["image"] = gallery[0] if gallery else resolve_image_url("", "")
+            d["detail_url"] = f"/listing/{d['id']}"
+            missing = []
+            for key, label in (("ward", "phuong"), ("property_type", "loai_hinh"), ("area_m2", "dien_tich"), ("road_tier", "duong")):
+                if d.get(key) in (None, "", 0):
+                    missing.append(label)
+            d["explain"] = {
+                "mos_pct": d.get("mos_pct"),
+                "signal_score": d.get("signal_score"),
+                "segment": d.get("segment"),
+                "n_segment": d.get("n_segment"),
+                "fair_ty": fair_ty,
+                "actual_ty": d.get("price_ty"),
+                "missing_fields": missing,
+            }
+            items.append(d)
+    return jsonify({
+        "items": items,
+        "pending": pending,
+        "total": total,
+        "offset": offset,
+        "has_more": (offset + len(items)) < total,
+        "wards": wards,
+        "ward_cities": ward_cities,
+    })
 
 
 @app.route("/admin/api/ai-training/disagreements")
