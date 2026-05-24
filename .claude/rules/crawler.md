@@ -11,7 +11,7 @@ paths:
 | Source | File | Trạng thái |
 |--------|------|-----------|
 | Guland.vn | `guland_pw.py` | ✅ Hoạt động |
-| BatDongSan.com.vn | `batdongsan_pw.py` | ✅ Hoạt động |
+| BatDongSan.com.vn | `batdongsan_pw.py` | ⚠️ Code giữ lại nhưng hiện bị Cloudflare Turnstile chặn |
 | Facebook | `facebook_apify.py` | ✅ Hoạt động (Apify API) |
 | Nhatot | `nhatot_pw.py` | ❌ Stub (NotImplementedError) |
 | Muaban | `muaban_pw.py` | ❌ Stub (NotImplementedError) |

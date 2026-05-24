@@ -10,6 +10,7 @@ Usage:
 import argparse
 import logging
 import sys
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -21,6 +22,51 @@ from config.database_sqlite import (
 )
 from cleansing.normalizer import normalize_record, compute_content_hash
 from db.moderation import is_phone_blacklisted
+
+
+GULAND_EXTREME_PPM2 = 80.0
+GULAND_OLD_POST_DAYS = 60
+BAD_VALUATION_VERDICTS = {"fake_price", "cannot_price", "overpriced"}
+GOOD_VALUATION_VERDICTS = {"cheap_real", "correct", "good"}
+
+
+def _date_prefix(value):
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(str(value)[:10])
+    except Exception:
+        return None
+
+
+def _source_quality_flags(row) -> tuple:
+    source = (row["source"] or "").lower()
+    if source != "guland":
+        return ()
+
+    verdict = (row["feedback_verdict"] or "").strip()
+    extraction = (row["feedback_extraction_verdict"] or "").strip()
+    valuation = (row["feedback_valuation_verdict"] or verdict).strip()
+    if valuation in GOOD_VALUATION_VERDICTS and extraction in ("", "all_correct"):
+        return ()
+
+    flags = []
+    if int(row["suspicious_bait"] or 0):
+        flags.append("suspicious_bait")
+    if float(row["price_per_m2"] or 0) >= GULAND_EXTREME_PPM2:
+        flags.append("extreme_guland_ppm2")
+
+    posted = _date_prefix(row["posted_at"])
+    crawled = _date_prefix(row["crawled_at"])
+    if posted and crawled and (crawled - posted).days >= GULAND_OLD_POST_DAYS:
+        flags.append("old_guland_post")
+
+    if valuation in BAD_VALUATION_VERDICTS or verdict in {"fake_price", "overpriced", "cannot_price"}:
+        flags.append("review_bad_valuation")
+    if verdict == "bad_data" and extraction and extraction != "all_correct":
+        flags.append("review_bad_extraction")
+
+    return tuple(sorted(set(flags)))
 
 
 def populate_content_hashes(conn) -> int:
@@ -54,14 +100,17 @@ def _batch_save_valuations(results, id_map):
                 INSERT INTO valuation_results
                     (listing_id, fair_ppm2, actual_ppm2, mos_pct,
                      is_signal, is_outlier, outlier_direction, outlier_sigma,
-                     segment, n_segment, signal_score, road_tier)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                     segment, n_segment, signal_score, road_tier,
+                     source_quality_flags, source_quality_recheck)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (
                 r.listing_id, r.price_per_m2_fair, r.price_per_m2_actual,
                 r.discount_pct, int(r.is_signal), int(r.is_outlier),
                 r.outlier_direction or None, r.outlier_sigma or None,
                 f"{r.area}|{r.property_type}", r.segment_n,
                 r.signal_score, listing.road_tier if listing else 0,
+                ",".join(r.source_quality_flags or ()),
+                int(bool(r.source_quality_recheck)),
             ))
             conn.execute("""
                 UPDATE listings
@@ -155,14 +204,36 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
             
         # 1. Lấy dữ liệu để TRAIN model (Fit). Chỉ lấy 30k tin gần nhất để đảm bảo hiệu năng và độ tươi.
         # Với 500k tin, việc load toàn bộ là không cần thiết vì có TIME_DECAY.
-        train_rows = conn.execute("""
-            SELECT id, area, ward, property_type, tx_type, price_per_m2, price_ty,
-                   area_m2, frontage_m, depth_m, road_type, road_tier,
-                   has_so, is_hot, price_dropped, crawled_at, url, contact_phone
-            FROM listings
-            WHERE price_per_m2 IS NOT NULL AND price_per_m2 > 0
-              AND probably_sold = 0
-            ORDER BY id DESC
+        valuation_select = """
+            SELECT l.id, l.area, l.ward, l.property_type, l.tx_type, l.price_per_m2, l.price_ty,
+                   l.area_m2, l.frontage_m, l.depth_m, l.road_type, l.road_tier,
+                   l.has_so, l.is_hot, l.price_dropped, l.crawled_at, l.posted_at,
+                   l.url, l.contact_phone, l.source, l.suspicious_bait,
+                   f.verdict AS feedback_verdict,
+                   f.extraction_verdict AS feedback_extraction_verdict,
+                   f.valuation_verdict AS feedback_valuation_verdict
+            FROM listings l
+            LEFT JOIN ai_training_feedback f ON f.id = (
+                SELECT id FROM ai_training_feedback
+                WHERE listing_id = l.id
+                ORDER BY created_at DESC
+                LIMIT 1
+            )
+        """
+        visible_or_recheckable = """
+              AND (
+                    COALESCE(l.review_hidden,0) = 0
+                 OR f.verdict = 'bad_data'
+              )
+        """
+
+        train_rows = conn.execute(f"""
+            {valuation_select}
+            WHERE l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
+              AND COALESCE(l.probably_sold,0) = 0
+              AND COALESCE(l.is_blacklisted,0) = 0
+              AND COALESCE(l.review_hidden,0) = 0
+            ORDER BY l.id DESC
             LIMIT 30000
         """).fetchall()
 
@@ -171,17 +242,25 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
             # Chỉ định giá những tin vừa mới xử lý
             placeholders = ",".join(["?"] * len(incremental_ids))
             valuate_rows = conn.execute(f"""
-                SELECT id, area, ward, property_type, tx_type, price_per_m2, price_ty,
-                       area_m2, frontage_m, depth_m, road_type, road_tier,
-                       has_so, is_hot, price_dropped, crawled_at, url, contact_phone
-                FROM listings
-                WHERE id IN ({placeholders})
-                  AND price_per_m2 IS NOT NULL AND price_per_m2 > 0
+                {valuation_select}
+                WHERE l.id IN ({placeholders})
+                  AND l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
+                  AND COALESCE(l.probably_sold,0) = 0
+                  AND COALESCE(l.is_blacklisted,0) = 0
+                  {visible_or_recheckable}
             """, incremental_ids).fetchall()
         else:
-            valuate_rows = train_rows # Full run thì định giá chính mảng train luôn (hoặc toàn bộ)
+            valuate_rows = conn.execute(f"""
+                {valuation_select}
+                WHERE l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
+                  AND COALESCE(l.probably_sold,0) = 0
+                  AND COALESCE(l.is_blacklisted,0) = 0
+                  {visible_or_recheckable}
+                ORDER BY l.id DESC
+            """).fetchall()
 
     def row_to_listing(row):
+        flags = _source_quality_flags(row)
         crawled = date.fromisoformat(row["crawled_at"][:10]) if row["crawled_at"] else None
         return Listing(
             id           = row["id"],
@@ -202,6 +281,9 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
             crawled_at    = crawled,
             url           = row["url"] or "",
             contact_phone = row["contact_phone"] or "",
+            source        = row["source"] or "",
+            source_quality_flags = flags,
+            exclude_from_baseline = bool(flags),
         )
 
     train_listings = []

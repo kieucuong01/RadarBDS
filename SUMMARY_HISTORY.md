@@ -2,7 +2,42 @@
 
 This file keeps durable handoff notes for future AI sessions. For day-to-day context, read `AGENTS.md` first.
 
-## Current Handoff - 2026-05-19
+## Current Handoff - 2026-05-20
+
+### Valuation cleanup: signal reliability gate + Hiệp Thành sub-ward split
+
+**Mục tiêu**: tăng signal-to-noise ratio bằng (C) chặn signal khi mẫu so sánh
+quá yếu và (F) audit ward Hiệp Thành (152/901 = 17% signal toàn DB, segment
+quá rộng gộp nhiều khu vực khác giá).
+
+**Code changes:**
+- `analytics/valuation.py`: thêm `MIN_RELIABLE_N_FOR_SIGNAL = 15`; gate
+  `is_sig = False` khi `m.n_samples < threshold` (giữa block `ward unknown`
+  và `sigma` calc). `valuation_result` vẫn ghi để audit.
+- `config/area_profiles.py`: thêm `HIEP_THANH_PROFILE` với 5 street patterns
+  (HT3/HT1/HT2/KDC K8 ×2 variants); `_HT_SUBWARDS = {Hiệp Thành 1/2/3, KDC K8
+  Hiệp Thành}`. `detect_subward_from_street()` nhận thêm `parent_filter` để
+  scope detection theo ward (tránh pattern HT3 nhặt nhầm trong tin MP).
+- `cleansing/normalizer.py`: gate sub-ward promotion mở rộng từ
+  `ward == "Mỹ Phước"` thành `ward in ("Mỹ Phước", "Hiệp Thành")`; truyền
+  `parent_filter=ward_final`.
+
+**Kết quả goal-driven (`python -X utf8 radar.py reprocess --full`):**
+
+| Metric                     | Baseline | After   |
+|----------------------------|---------:|--------:|
+| Total signal               |     809  |    763  |
+| Signal `n_segment < 15`    |      28  |      0  |
+| Hiệp Thành parent          |     152  |    107  |
+| Hiệp Thành 3 (sub-ward)    |       — |     22  |
+| Hiệp Thành 1 (sub-ward)    |       — |      5  |
+
+Hiệp Thành 2 (10 listings) + KDC K8 (19 listings) chưa ra signal — đủ listing
+fit segment riêng nhưng không deal nào vượt MOS threshold. Tổng signal họ HT:
+152 → 134 (-12%); MOS distribution chặt hơn (HT3 avg 46% vs HT-mixed cũ 42%).
+
+**Tests**: `pytest -q` → 93/93 pass (kể cả `tests/test_valuation.py`). Không
+listing chuyển sang ward sai (MP NE5 vẫn match Mỹ Phước 3 OK).
 
 ### Admin AI Training panel (feature complete)
 
@@ -19,8 +54,10 @@ This file keeps durable handoff notes for future AI sessions. For day-to-day con
 - Chip event delegation trên `#trainingGrid` (1 lần bind, không double-bind khi append).
 - Ward filter đúng ưu tiên (`if ward … elif city`); `_trnAllWards` từ `data.wards` phủ mọi phường signal.
 - Conditional valuation: chỉ hiện "2. Định giá AI" khi extraction = `all_correct`.
+- Card hiển thị giá rao quy đổi `tr/m²`; box định giá hiển thị Fair Value cả tổng `tỷ` và `tr/m²`.
+- Description giữ full text trong payload/DOM, UI clamp 3 dòng và có `Xem thêm`/`Thu gọn` khi dài.
 - Lightbox gallery trực tiếp từ card.
-- Cache bust: `?v=admin-v13-infscroll`.
+- Cache bust hiện tại: `admin.css?v=admin-v5-training-ppm2`, `admin.js?v=admin-v14-training-ppm2-desc`.
 
 **CLI review-deal-signals:**
 - `python radar.py review-queue --top N` — lấy queue JSON (chưa có verdict Claude).

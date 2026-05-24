@@ -68,12 +68,62 @@ MY_PHUOC_PROFILE = {
     "lot_tolerance_m2": 1.0,
 }
 
+# ── Hiệp Thành (Thủ Dầu Một) ────────────────────────────────────────────────
+# Hiệp Thành là ward rộng nhất TDM theo signal count (152/901 = 17% baseline
+# 2026-05-20). Audit cho thấy n_segment=204-231 → KHÔNG phải bug fallback;
+# vấn đề là geography: gộp HT1/HT2/HT3 + KDC K8 + vòng xoay + landmark "Tương
+# Bình Hiệp" vào 1 segment → median nằm giữa, extremes hai đầu đều thành signal
+# MOS cao. Sub-ward split theo pattern Mỹ Phước giải quyết.
+#
+# Sub-zones từ survey 613 listings (2026-05-20):
+#   - "Hiệp Thành 3" / "KDC Hiệp Thành 3": 133 hits (lớn nhất, lan ra DT743)
+#   - "Hiệp Thành 1": 59 hits (gần Phú Lợi)
+#   - "Hiệp Thành 2": 15 hits (KDC HT2)
+#   - "KDC K8" / "K8 Hiệp Thành": 30 hits (sub-zone K8)
+#
+# Không set road_width_m / road_tier ở đây: đường HT không bàn cờ như MP, lộ
+# giới mỗi đường khác nhau — tránh sai số. Tier vẫn do extract_road_tier()
+# regex / Groq quyết định.
+
+_HT_STREET_PATTERNS = [
+    # (regex, sub_ward, road_width_m, road_tier)
+    # HT3 (lớn nhất, check trước)
+    (re.compile(r'\bhi[eệ]p\s*th[aà]nh\s*3\b', re.IGNORECASE),
+     "Hiệp Thành 3", None, None),
+    (re.compile(r'\bhi[eệ]p\s*th[aà]nh\s*1\b', re.IGNORECASE),
+     "Hiệp Thành 1", None, None),
+    (re.compile(r'\bhi[eệ]p\s*th[aà]nh\s*2\b', re.IGNORECASE),
+     "Hiệp Thành 2", None, None),
+    # KDC K8 — chỉ match khi có context "KDC K8" hoặc "K8 Hiệp Thành" để tránh
+    # nhặt false-positive ("K8" lẻ trong text có thể là khu khác).
+    (re.compile(r'\bkdc\s*k\s*8\b', re.IGNORECASE),
+     "KDC K8 Hiệp Thành", None, None),
+    (re.compile(r'\bk\s*8\s+hi[eệ]p\s*th[aà]nh\b', re.IGNORECASE),
+     "KDC K8 Hiệp Thành", None, None),
+]
+
+_HT_SUBWARDS = {
+    "Hiệp Thành 1",
+    "Hiệp Thành 2",
+    "Hiệp Thành 3",
+    "KDC K8 Hiệp Thành",
+}
+
+HIEP_THANH_PROFILE = {
+    "parent_ward": "Hiệp Thành",
+    "sub_wards": _HT_SUBWARDS,
+    "street_patterns": _HT_STREET_PATTERNS,
+    "standard_lots": {},  # HT không có lô bàn cờ chuẩn
+    "lot_tolerance_m2": 1.0,
+}
+
 
 # ── Public API ──────────────────────────────────────────────────────────────
 
 # Registry: parent_ward → profile
 AREA_PROFILES: Dict[str, dict] = {
     "Mỹ Phước": MY_PHUOC_PROFILE,
+    "Hiệp Thành": HIEP_THANH_PROFILE,
 }
 
 # Flat set of all sub-wards across all profiles (for valuation fallback)
@@ -83,14 +133,27 @@ for _profile in AREA_PROFILES.values():
         ALL_SUBWARDS[_sw] = _profile["parent_ward"]
 
 
-def detect_subward_from_street(text: str) -> Tuple[Optional[str], Optional[float], Optional[int]]:
+def detect_subward_from_street(
+    text: str,
+    parent_filter: Optional[str] = None,
+) -> Tuple[Optional[str], Optional[float], Optional[int]]:
     """Detect sub-ward, road width, road tier from street name patterns.
+
+    Args:
+        text: full text (title + description + ...) to scan.
+        parent_filter: if set, only profiles whose parent_ward equals this string
+            are scanned. Used by normalizer to scope detection to the listing's
+            already-classified ward — prevents e.g. "Hiệp Thành 3" patterns
+            firing on a Mỹ Phước listing that happens to mention HT3 as a
+            landmark.
 
     Returns: (sub_ward, road_width_m, road_tier) — any field can be None.
     """
     if not text:
         return None, None, None
     for profile in AREA_PROFILES.values():
+        if parent_filter and profile["parent_ward"] != parent_filter:
+            continue
         for pattern, sub_ward, width, tier in profile["street_patterns"]:
             if pattern.search(text):
                 return sub_ward, width, tier

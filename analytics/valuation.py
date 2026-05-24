@@ -22,8 +22,19 @@ MOS_THRESHOLD_MEDIUM = 0.25
 MOS_THRESHOLD_LOW    = 0.35
 
 MIN_SAMPLES     = 15
+# Ngưỡng tin cậy n_samples để PHÁT signal (khác MIN_SAMPLES — ngưỡng build segment).
+# Segment < ngưỡng này → fair_value tính bằng median fallback, KHÔNG đủ tin cậy để gắn cờ
+# is_signal dù MOS cao. Giữ giá trị bằng MIN_SAMPLES để semantic rõ "regression-fit-only".
+MIN_RELIABLE_N_FOR_SIGNAL = 15
 OUTLIER_SIGMA   = 2.0
 TIME_DECAY_DAYS = 90
+GULAND_SIGNAL_EXTRA_MOS = 0.08
+GULAND_STRONG_SIGNAL_SCORE = 55
+SOURCE_SIGNAL_SUPPRESS_FLAGS = {
+    "old_guland_post",
+    "extreme_guland_ppm2",
+    "suspicious_bait",
+}
 
 FAIR_FLOOR_RATIO = 0.70
 EXPECTED_NEGOTIATION_RATIO = 0.95
@@ -48,6 +59,7 @@ ROAD_TIER_MULTIPLIER = {
     4: 0.40,
 }
 _ROAD_TIER_PROP_TYPES = {'dat_nen', 'nha_dat', 'nha_tro'}
+SPECIAL_MARKET_SKIP_TYPES = {'kho_xuong', 'nha_o_xa_hoi'}
 
 # ── Data models ───────────────────────────────────────────────────────────────
 
@@ -75,6 +87,9 @@ class Listing:
     contact_phone:  str = ''
     title:          str = ''
     description:    str = ''
+    source:         str = ''
+    exclude_from_baseline: bool = False
+    source_quality_flags:  Tuple[str, ...] = field(default_factory=tuple)
 
 def extract_regex_features(text: str) -> Dict[str, bool]:
     if not text: return {}
@@ -103,6 +118,8 @@ class ValuationResult:
     outlier_direction:    str  = ''
     outlier_sigma:        float = 0.0
     note:                 str  = ''
+    source_quality_flags: Tuple[str, ...] = field(default_factory=tuple)
+    source_quality_recheck: bool = False
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -126,6 +143,26 @@ def compute_signal_score(listing: 'Listing', mos_pct: float) -> int:
     if listing.is_hot: score += 10
     if getattr(listing, 'price_dropped', False): score += 15
     return min(100, score)
+
+
+def _source_flags(listing: 'Listing') -> set:
+    return set(getattr(listing, "source_quality_flags", ()) or ())
+
+
+def _is_guland(listing: 'Listing') -> bool:
+    return (getattr(listing, "source", "") or "").lower() == "guland"
+
+
+def _passes_source_signal_gate(listing: 'Listing', discount: float,
+                               base_threshold: float, score: int) -> bool:
+    if not _is_guland(listing):
+        return discount >= base_threshold
+    if _source_flags(listing) & SOURCE_SIGNAL_SUPPRESS_FLAGS:
+        return False
+    return (
+        discount >= base_threshold + GULAND_SIGNAL_EXTRA_MOS
+        or (discount >= base_threshold and score >= GULAND_STRONG_SIGNAL_SCORE)
+    )
 
 def remove_outliers(values: List[float], sigma: float = OUTLIER_SIGMA) -> Tuple[List[float], float, float]:
     if len(values) < 3:
@@ -322,8 +359,10 @@ class ValuationEngine:
         fallback_segs = defaultdict(list)
         parent_segs   = defaultdict(list)   # aggregate sub-ward → parent
         for l in listings:
-            if l.property_type == 'kho_xuong':
+            if l.property_type in SPECIAL_MARKET_SKIP_TYPES:
                 continue  # chưa đủ data — skip segment build
+            if getattr(l, "exclude_from_baseline", False) or _source_flags(l):
+                continue
             if l.price_per_m2 and l.area_m2:
                 segs[self._key(l)].append(l)
                 fallback_segs[self._fallback_key(l)].append(l)
@@ -348,10 +387,10 @@ class ValuationEngine:
             self._models[k] = m
 
     def valuate(self, listing: Listing) -> Optional[ValuationResult]:
-        # kho_xuong: giá/m² và logic định giá hoàn toàn khác đất/nhà, chưa đủ data để
+        # Special markets: giá/m² và logic định giá khác đất/nhà, chưa đủ data để
         # build segment regression riêng → skip valuation. Tin vẫn hiển thị nhưng
         # không có fair_value/MOS. Khi đủ data (n≥30) sẽ build model riêng.
-        if listing.property_type == 'kho_xuong':
+        if listing.property_type in SPECIAL_MARKET_SKIP_TYPES:
             return None
         m = self._models.get(self._key(listing))
         if not m or not m.fitted:
@@ -365,11 +404,24 @@ class ValuationEngine:
         if not fair: return None
         actual = listing.price_per_m2
         discount = (fair - actual) / fair
-        is_sig = discount >= m.mos_threshold()
+        base_threshold = m.mos_threshold()
+        provisional_score = compute_signal_score(listing, discount * 100)
+        quality_flags = tuple(sorted(_source_flags(listing)))
+        source_quality_recheck = bool(
+            _is_guland(listing)
+            and (set(quality_flags) & SOURCE_SIGNAL_SUPPRESS_FLAGS)
+            and discount >= base_threshold
+        )
+        is_sig = _passes_source_signal_gate(listing, discount, base_threshold, provisional_score)
         # Tin có ward=NULL/unknown → KHÔNG signal: hoặc nằm ngoài TDM (bị blacklist),
         # hoặc địa chỉ không xác định → không đáng tin để so segment.
         # (Vẫn lưu valuation result để audit nhưng is_signal=False)
         if not listing.ward or listing.ward == 'unknown':
+            is_sig = False
+        # Gate signal khi mẫu so sánh quá yếu (segment dưới ngưỡng regression-fit).
+        # Khi n_samples < MIN_RELIABLE_N_FOR_SIGNAL, fair_value đã rơi về median fallback —
+        # không đủ tin cậy để gắn cờ signal dù MOS lớn. Vẫn lưu valuation_result để audit.
+        if m.n_samples < MIN_RELIABLE_N_FOR_SIGNAL:
             is_sig = False
         sigma = (actual - m.mean_ppm2) / m.std_ppm2 if m.std_ppm2 else 0
         
@@ -384,7 +436,10 @@ class ValuationEngine:
         if not listing.has_so: note.append("⚠️ Chưa sổ")
         if is_sig: note.append(f"✅ MOS {discount:.0%}")
 
-        score = compute_signal_score(listing, discount*100) if is_sig else 0
+        if source_quality_recheck:
+            note.append("source_qc")
+
+        score = provisional_score if is_sig else 0
 
         return ValuationResult(
             listing_id=listing.id, area=listing.area, property_type=listing.property_type,
@@ -394,7 +449,9 @@ class ValuationEngine:
             is_outlier=abs(sigma)>2 or is_hard_outlier, 
             outlier_direction='low' if sigma<-2 else ('high' if (sigma>2 or is_hard_outlier) else ''),
             outlier_sigma=round(max(abs(sigma), 5.0 if is_hard_outlier else 0), 2), 
-            note=' | '.join(note)
+            note=' | '.join(note),
+            source_quality_flags=quality_flags,
+            source_quality_recheck=source_quality_recheck,
         )
 
     def valuate_batch(self, listings: List[Listing]) -> List[ValuationResult]:

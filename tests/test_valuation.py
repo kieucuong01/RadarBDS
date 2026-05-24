@@ -15,7 +15,7 @@ from analytics.valuation import (
 
 def _make_listing(lid: int, ppm2: float, area: float = 100, **kw) -> Listing:
     return Listing(
-        id=lid, area="Tân An", property_type="dat_nen", tx_type="ban",
+        id=lid, area="Tân An", property_type=kw.get("property_type", "dat_nen"), tx_type="ban",
         ward=kw.get("ward", "Tân An"),
         price_per_m2=ppm2, price_total=round(ppm2 * area / 1000, 2),
         area_m2=area, crawled_at=date.today(),
@@ -23,7 +23,7 @@ def _make_listing(lid: int, ppm2: float, area: float = 100, **kw) -> Listing:
         frontage_m=kw.get("frontage_m", 5.0),
         road_tier=kw.get("road_tier", 2),
         contact_phone=kw.get("contact_phone", ""),
-        **{k: v for k, v in kw.items() if k not in {"ward", "has_so", "frontage_m", "road_tier", "contact_phone"}},
+        **{k: v for k, v in kw.items() if k not in {"ward", "property_type", "has_so", "frontage_m", "road_tier", "contact_phone"}},
     )
 
 
@@ -69,6 +69,90 @@ def test_engine_signal_threshold():
     target2 = _make_listing(1000, 15.0, area=100)
     result2 = engine.valuate(target2)
     assert result2 is not None and result2.is_signal is False
+
+
+def test_social_housing_is_not_valuated_against_landed_house_market():
+    listings = (
+        [_make_listing(i, 15.0, property_type="nha_dat") for i in range(30)]
+        + [_make_listing(100 + i, 25.0, area=30, property_type="nha_o_xa_hoi") for i in range(30)]
+    )
+    engine = ValuationEngine()
+    engine.fit(listings)
+
+    target = _make_listing(
+        1004,
+        8.0,
+        area=30,
+        property_type="nha_o_xa_hoi",
+        title="Nhà ở xã hội Becamex Định Hòa",
+    )
+
+    assert engine.valuate(target) is None
+
+
+def test_guland_low_quality_samples_do_not_pollute_baseline():
+    clean_samples = [_make_listing(i, 15.0, source="facebook") for i in range(18)]
+    noisy_guland = [
+        _make_listing(100 + i, 60.0, source="guland", source_quality_flags=("extreme_guland_ppm2",))
+        for i in range(18)
+    ]
+    engine = ValuationEngine()
+    engine.fit(clean_samples + noisy_guland)
+
+    target = _make_listing(999, 15.0, source="facebook")
+    result = engine.valuate(target)
+
+    assert result is not None
+    assert result.price_per_m2_fair < 25.0
+
+
+def test_guland_bad_human_valuation_labels_do_not_pollute_baseline():
+    clean_samples = [_make_listing(i, 15.0, source="facebook") for i in range(18)]
+    reviewed_bad_guland = [
+        _make_listing(200 + i, 60.0, source="guland", source_quality_flags=("review_bad_valuation",))
+        for i in range(18)
+    ]
+    engine = ValuationEngine()
+    engine.fit(clean_samples + reviewed_bad_guland)
+
+    result = engine.valuate(_make_listing(999, 15.0, source="facebook"))
+
+    assert result is not None
+    assert result.price_per_m2_fair < 25.0
+
+
+def test_guland_requires_stronger_signal_than_facebook():
+    listings = [_make_listing(i, 15.0, source="facebook") for i in range(30)]
+    engine = ValuationEngine()
+    engine.fit(listings)
+
+    facebook_target = _make_listing(1001, 10.5, source="facebook")
+    guland_same_discount = _make_listing(1002, 10.5, source="guland")
+    guland_deeper_discount = _make_listing(1003, 9.0, source="guland")
+
+    assert engine.valuate(facebook_target).is_signal is True
+    assert engine.valuate(guland_same_discount).is_signal is False
+    assert engine.valuate(guland_deeper_discount).is_signal is True
+
+
+def test_guland_quality_flags_keep_valuation_but_suppress_signal():
+    listings = [_make_listing(i, 15.0, source="facebook") for i in range(30)]
+    engine = ValuationEngine()
+    engine.fit(listings)
+
+    target = _make_listing(
+        2001,
+        8.5,
+        source="guland",
+        source_quality_flags=("old_guland_post",),
+    )
+    result = engine.valuate(target)
+
+    assert result is not None
+    assert result.price_per_m2_fair > 0
+    assert result.is_signal is False
+    assert result.source_quality_recheck is True
+    assert "old_guland_post" in result.source_quality_flags
 
 
 def test_signal_score_bounds():

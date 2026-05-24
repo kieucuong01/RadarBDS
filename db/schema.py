@@ -190,6 +190,8 @@ CREATE TABLE IF NOT EXISTS valuation_results (
     outlier_sigma   REAL,
     segment         TEXT,
     n_segment       INTEGER,
+    source_quality_flags TEXT,
+    source_quality_recheck INTEGER DEFAULT 0,
     computed_at     TEXT DEFAULT (datetime('now'))
 );
 
@@ -466,6 +468,8 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
     v_migrations = [
         ("signal_score", "ALTER TABLE valuation_results ADD COLUMN signal_score INTEGER DEFAULT NULL"),
         ("road_tier",    "ALTER TABLE valuation_results ADD COLUMN road_tier INTEGER DEFAULT 0"),
+        ("source_quality_flags", "ALTER TABLE valuation_results ADD COLUMN source_quality_flags TEXT"),
+        ("source_quality_recheck", "ALTER TABLE valuation_results ADD COLUMN source_quality_recheck INTEGER DEFAULT 0"),
     ]
     for col, sql in v_migrations:
         if col not in v_existing:

@@ -7,7 +7,7 @@ const STATUS = {
 };
 const STATUS_KEYS = Object.keys(STATUS);
 const SOURCE_NAMES = { facebook: 'Facebook', guland: 'Guland', batdongsan: 'BDS.vn' };
-const PTYPES = { dat_nen: 'Đất nền', dat_vuon: 'Đất vườn', nha_dat: 'Nhà đất', nha_tro: 'Nhà trọ', chung_cu: 'Chung cư' };
+const PTYPES = { dat_nen: 'Đất nền', dat_vuon: 'Đất vườn', nha_dat: 'Nhà đất', nha_tro: 'Nhà trọ', chung_cu: 'Chung cư', nha_o_xa_hoi: 'Nhà ở xã hội' };
 const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='420' viewBox='0 0 640 420'%3E%3Crect width='640' height='420' fill='%23eef2f7'/%3E%3Cpath d='M250 250l55-72 44 57 25-32 66 82H204z' fill='%2394a3b8'/%3E%3Ccircle cx='392' cy='150' r='24' fill='%2394a3b8'/%3E%3C/svg%3E";
 const ADMIN_THEME_KEY = 'radar_admin_theme';
 
@@ -529,7 +529,9 @@ function trnFilterQuery(offset = 0) {
   const ward  = document.getElementById('trnWard')?.value || '';
   const mos   = document.getElementById('trnMos')?.value || '0';
   const sort  = document.getElementById('trnSort')?.value || 'default';
+  const queue = document.getElementById('trnQueue')?.value || 'main';
   const p = new URLSearchParams({ limit: String(TRN_PAGE), sort, offset: String(offset) });
+  if (queue && queue !== 'main') p.set('queue', queue);
   if (city) p.set('city', city);
   if (ward) p.set('ward', ward);
   if (mos && mos !== '0') p.set('mos_min', mos);
@@ -576,7 +578,8 @@ async function loadTrainingItems(append = false) {
     if (badge) badge.textContent = `${data.pending || 0}/${data.total || 0}`;
     const meta = document.getElementById('trainingMeta');
     const shown = append ? (_trnOffset + items.length) : items.length;
-    if (meta) meta.textContent = `· ${data.pending || 0} chưa review / ${data.total || 0} signal · hiển thị ${shown}`;
+    const queueLabel = data.queue_label || 'Review mới';
+    if (meta) meta.textContent = `· ${queueLabel} · ${data.pending || 0} mục / ${data.total || 0} signal · hiển thị ${shown}`;
 
     // City + ward dropdowns (populate once)
     if (!_trnWardsLoaded && (data.ward_cities || data.wards)) {
@@ -705,6 +708,7 @@ function trainingCard(x) {
   const desc = (x.description || '').trim();
   const actualPpm2 = x.actual_ppm2 || x.price_per_m2 || '';
   const fairPpm2 = x.fair_ppm2 || '';
+  const sourceFlags = (x.source_quality_flags || '').split(',').filter(Boolean);
   const fairTitle = x.fair_ty
     ? `(Fair Value: ${money(x.fair_ty)}${fairPpm2 ? ` · ${ppm2(fairPpm2)}` : ''})`
     : '';
@@ -750,13 +754,16 @@ function trainingCard(x) {
             <div class="review-box" id="valbox-${cid}">
               <div class="review-title">2. Định giá AI ${fairTitle}</div>
               <div class="chip-row">
-                <button class="chip" data-card="${cid}" data-group="valuation" data-value="too_high">Hơi cao</button>
-                <button class="chip active" data-card="${cid}" data-group="valuation" data-value="correct">Chuẩn</button>
-                <button class="chip" data-card="${cid}" data-group="valuation" data-value="too_low">Hơi thấp</button>
+                <button class="chip active" data-card="${cid}" data-group="valuation" data-value="cheap_real">Rẻ thật</button>
+                <button class="chip" data-card="${cid}" data-group="valuation" data-value="fair">Giá hợp lý</button>
+                <button class="chip" data-card="${cid}" data-group="valuation" data-value="overpriced">Đang cao</button>
+                <button class="chip" data-card="${cid}" data-group="valuation" data-value="fake_price">Giá ảo</button>
+                <button class="chip" data-card="${cid}" data-group="valuation" data-value="cannot_price">Không định giá</button>
               </div>
               <ul class="explain-list">
                 <li>Score ${Math.round(x.signal_score || 0)}, segment ${esc(x.segment || '-')} (${x.n_segment || 0} mẫu)</li>
                 <li>Giá thực ${money(x.price_ty)} (${ppm2(actualPpm2)}), fair ${money(x.fair_ty)} (${ppm2(fairPpm2)}), thiếu field: ${esc(missing)}</li>
+                ${sourceFlags.length ? `<li>Source QC: ${sourceFlags.map(esc).join(', ')}</li>` : ''}
               </ul>
               <div class="review-title" style="margin-top:10px">Nguyên nhân</div>
               <div class="chip-row">
@@ -787,18 +794,18 @@ async function saveTraining(id) {
   const extractionOk = extraction === 'all_correct';
   // Trích xuất sai → bỏ qua chấm định giá, tin này về nhánh học làm sạch dữ liệu.
   const valuation = extractionOk
-    ? (card.querySelector('.chip[data-group="valuation"].active')?.dataset.value || 'correct')
-    : 'na';
+    ? (card.querySelector('.chip[data-group="valuation"].active')?.dataset.value || 'cheap_real')
+    : 'cannot_price';
   const tags = Array.from(card.querySelectorAll('.chip[data-group="reason"].active')).map(x => x.dataset.value);
   let verdict;
-  if (!extractionOk) {
-    verdict = 'bad_data';                       // sai trích xuất → học làm sạch dữ liệu
-  } else if (tags.includes('fake_price')) {
+  if (tags.includes('fake_price') || valuation === 'fake_price') {
     verdict = 'fake_price';
+  } else if (!extractionOk) {
+    verdict = 'bad_data';                       // sai trích xuất → học làm sạch dữ liệu
   } else if (tags.includes('bad_data')) {
-    verdict = 'bad_data';
+    verdict = 'cannot_price';
   } else {
-    verdict = valuation === 'correct' ? 'correct' : 'bad_data';  // định giá lệch → cải tiến định giá
+    verdict = valuation;                        // nhãn định giá tách riêng: cheap_real|fair|overpriced|fake_price|cannot_price
   }
   await fetchJSON('/admin/api/ai-training/feedback', {
     method: 'POST',
@@ -829,9 +836,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('exportLeadsBtn').addEventListener('click', exportLeads);
   document.getElementById('addBlacklistBtn').addEventListener('click', addBlacklist);
   document.getElementById('refreshTrainingBtn').addEventListener('click', loadTrainingItems);
-  ['trnMos', 'trnSort', 'trnWard'].forEach(idv => {
+  ['trnMos', 'trnSort', 'trnWard', 'trnQueue'].forEach(idv => {
     const el = document.getElementById(idv);
-    if (el) el.addEventListener('change', () => { _trnWardsLoaded = true; loadTrainingItems(); });
+    if (el) el.addEventListener('change', () => {
+      if (idv === 'trnQueue') {
+        _trnWardsLoaded = false;
+        _trnAllWards = [];
+        _trnWardCities = {};
+      } else {
+        _trnWardsLoaded = true;
+      }
+      loadTrainingItems();
+    });
   });
   const citySel = document.getElementById('trnCity');
   if (citySel) citySel.addEventListener('change', () => {

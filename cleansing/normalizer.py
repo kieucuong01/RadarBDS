@@ -14,7 +14,7 @@ from config.area_profiles import detect_subward_from_street, infer_standard_lot
 from cleansing.feature_extractor import (
     classify_property_type, extract_tho_cu, extract_road_tier,
     extract_legal, extract_phone, extract_road_type, parse_facebook_post,
-    extract_url_hint,
+    extract_area, extract_url_hint,
 )  # extract_legal đã có sẵn — dùng cho has_so detection
 
 logger = logging.getLogger(__name__)
@@ -301,9 +301,20 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                 intended_city = "Thủ Dầu Một"
             elif "ben-cat" in url_lower or "bến cát" in raw_addr:
                 intended_city = "Bến Cát"
-                
+
+            # Text rao ghi rõ ward phải thắng raw/cache ward từ nguồn.
+            # VD raw_url/raw_ward còn "Phú An" cũ, nhưng title/desc nói "Hiệp An".
+            content_ward = match_ward(
+                raw.get("title", ""), raw.get("description", ""),
+                intended_city=intended_city,
+            )
+            if content_ward and content_ward != "Tân An":
+                ward_from_text = content_ward
+
             # Tin từ web chuyên trang có phân mục rõ ràng
-            if "phu-an" in url_lower or "phú an" in raw_ward or "phú an" in raw_addr:
+            if not ward_from_text and (
+                "phu-an" in url_lower or "phú an" in raw_ward or "phú an" in raw_addr
+            ):
                 if intended_city == "Thủ Dầu Một":
                     ward_from_text = "Tân An" # Phú An TDM cũ -> nay là Tân An
                 elif intended_city == "Bến Cát":
@@ -343,6 +354,16 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             if _re2.match(r'^\d{1,2}\.\d{3}$', f'{area_m2:.3f}'):
                 area_m2 = round(area_m2 * 1000)
                 price_per_m2 = None  # buộc tính lại từ price_ty / area_m2 mới
+
+        # Source structured area can be stale/wrong. If title has an explicit area
+        # that is wildly different, trust title because it is the visible listing fact.
+        title_area_m2 = extract_area(title)
+        if area_m2 and title_area_m2 and 10 < title_area_m2 < 100000:
+            bigger = max(float(area_m2), float(title_area_m2))
+            smaller = min(float(area_m2), float(title_area_m2))
+            if smaller > 0 and bigger / smaller >= 1.8:
+                area_m2 = title_area_m2
+                price_per_m2 = None
 
         # Fallback: trích xuất từ text khi nguồn không có structured fields (Facebook posts)
         _fb_parsed: dict = {}
@@ -395,9 +416,14 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                 price_per_m2 = round((price_ty * 1_000) / area_m2, 3)
 
         # Street name → upgrade sub-ward + fill road_width_m (config-driven)
+        # Scope detection to ward_final's profile via parent_filter — tránh
+        # pattern HT3 nhặt nhầm trong tin Mỹ Phước, hoặc ngược lại.
         full_text_for_street = " ".join(filter(None, [title, description, road_text_extra]))
-        _st_sw, _st_width, _st_tier = detect_subward_from_street(full_text_for_street)
-        if _st_sw and ward_final and ward_final.startswith("Mỹ Phước") and ward_final == "Mỹ Phước":
+        _st_sw, _st_width, _st_tier = detect_subward_from_street(
+            full_text_for_street,
+            parent_filter=ward_final,
+        )
+        if _st_sw and ward_final in ("Mỹ Phước", "Hiệp Thành"):
             ward_final = _st_sw
             area_name = _st_sw
         if not road_tier and _st_tier is not None:

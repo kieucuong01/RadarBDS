@@ -304,6 +304,13 @@
             <option value="score">Score cao nhất</option>
           </select>
         </label>
+        <label>Queue
+          <select id="trnQueue">
+            <option value="main">Review mới</option>
+            <option value="recheck">Recheck sau fix</option>
+            <option value="source_qc">Guland QC</option>
+          </select>
+        </label>
         <label>Hiển thị
           <div class="trn-view-toggle">
             <button type="button" id="trnViewGrid" class="trn-view-btn active" data-view="grid">Lưới</button>
@@ -480,7 +487,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v14-training-ppm2-desc"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v16-source-quality"></script>
   {% endif %}
 </body>
 </html>

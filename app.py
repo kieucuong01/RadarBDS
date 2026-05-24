@@ -43,8 +43,13 @@ app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 LEAD_STATUSES = {"new", "called", "viewing", "deposit", "cancelled"}
-HIDE_REVIEW_VERDICTS = {"bad", "spam", "sold", "fake_price", "bad_data"}
-TRAINING_VERDICTS = {"good", "correct", "bad", "spam", "sold", "fake_price", "bad_data", "maybe"}
+POSITIVE_REVIEW_VERDICTS = {"good", "correct", "cheap_real"}
+HARD_HIDE_REVIEW_VERDICTS = {"bad", "spam", "sold", "fake_price"}
+SOFT_HIDE_REVIEW_VERDICTS = {"bad_data", "fair", "overpriced", "cannot_price"}
+HIDE_REVIEW_VERDICTS = HARD_HIDE_REVIEW_VERDICTS | SOFT_HIDE_REVIEW_VERDICTS
+VALUATION_VERDICTS = {"cheap_real", "fair", "overpriced", "fake_price", "cannot_price"}
+EXTRACTION_RECHECK_VERDICTS = {"wrong_ward", "wrong_road", "wrong_property_type", "wrong_price", "wrong_area"}
+TRAINING_VERDICTS = POSITIVE_REVIEW_VERDICTS | HIDE_REVIEW_VERDICTS | {"maybe"}
 INFRA_KINDS = {"timeline", "policy"}
 INFRA_STATUS = {"done", "in_progress", "planned"}
 INFRA_SEVERITY = {"critical", "warning", "info"}
@@ -714,7 +719,7 @@ def _set_review_visibility(conn, listing_id: int, verdict: str) -> None:
             """,
             [verdict] + cluster_params,
         )
-    elif verdict in ("good", "correct"):
+    elif verdict in POSITIVE_REVIEW_VERDICTS:
         conn.execute(
             f"""
             UPDATE listings
@@ -726,6 +731,55 @@ def _set_review_visibility(conn, listing_id: int, verdict: str) -> None:
             """,
             cluster_params,
         )
+
+
+def _normalize_valuation_verdict(value) -> str:
+    val = (value or "").strip()
+    aliases = {
+        "good": "cheap_real",
+        "correct": "cheap_real",
+        "too_high": "overpriced",
+        "too_low": "cheap_real",
+        "bad": "cannot_price",
+        "bad_data": "cannot_price",
+        "na": "cannot_price",
+    }
+    return aliases.get(val, val)
+
+
+def _derive_training_verdict(payload: dict):
+    extraction_verdict = (payload.get("extraction_verdict") or "").strip()[:80] or None
+    raw_valuation = payload.get("valuation_verdict")
+    valuation_verdict = _normalize_valuation_verdict(raw_valuation)[:80] or None
+    raw_verdict = (payload.get("verdict") or "").strip()
+    reason_tags = payload.get("reason_tags") or []
+    if isinstance(reason_tags, str):
+        reason_tags = [reason_tags]
+    if raw_valuation and valuation_verdict not in VALUATION_VERDICTS:
+        raise ValueError("invalid_verdict")
+
+    if extraction_verdict and extraction_verdict != "all_correct":
+        if raw_verdict in HARD_HIDE_REVIEW_VERDICTS:
+            verdict = raw_verdict
+        elif valuation_verdict == "fake_price" or "fake_price" in reason_tags:
+            verdict = "fake_price"
+        else:
+            verdict = "bad_data"
+        if valuation_verdict not in VALUATION_VERDICTS:
+            valuation_verdict = "cannot_price"
+        return verdict, extraction_verdict, valuation_verdict
+
+    if valuation_verdict in VALUATION_VERDICTS:
+        return valuation_verdict, extraction_verdict or "all_correct", valuation_verdict
+
+    normalized_verdict = _normalize_valuation_verdict(raw_verdict)
+    if normalized_verdict in VALUATION_VERDICTS:
+        return normalized_verdict, extraction_verdict or "all_correct", normalized_verdict
+
+    verdict = raw_verdict or "maybe"
+    if verdict not in TRAINING_VERDICTS:
+        raise ValueError("invalid_verdict")
+    return verdict, extraction_verdict, valuation_verdict
 
 
 def _admin_actor() -> str:
@@ -762,14 +816,12 @@ def _write_admin_audit(conn, action: str, entity_type: str, entity_id,
 
 
 def _save_ai_training_feedback(conn, listing_id: int, payload: dict) -> dict:
-    verdict = (payload.get("verdict") or payload.get("valuation_verdict") or "maybe").strip()
+    verdict, extraction_verdict, valuation_verdict = _derive_training_verdict(payload)
     if verdict not in TRAINING_VERDICTS:
         raise ValueError("invalid_verdict")
 
     reason_code = (payload.get("reason_code") or "").strip()[:80] or None
     reason_text = (payload.get("reason_text") or payload.get("reason") or "").strip()[:500] or None
-    extraction_verdict = (payload.get("extraction_verdict") or "").strip()[:80] or None
-    valuation_verdict = verdict
     reason_tags = payload.get("reason_tags") or []
     if isinstance(reason_tags, str):
         reason_tags = [reason_tags]
@@ -806,6 +858,8 @@ def _save_ai_training_feedback(conn, listing_id: int, payload: dict) -> dict:
     audit_after.update({
         "feedback_id": cur.lastrowid,
         "verdict": verdict,
+        "extraction_verdict": extraction_verdict,
+        "valuation_verdict": valuation_verdict,
         "reason_code": reason_code,
         "reason_text": reason_text,
     })
@@ -818,7 +872,12 @@ def _save_ai_training_feedback(conn, listing_id: int, payload: dict) -> dict:
         after=audit_after,
         reason=reason_text or reason_code or verdict,
     )
-    return {"feedback_id": cur.lastrowid, "verdict": verdict}
+    return {
+        "feedback_id": cur.lastrowid,
+        "verdict": verdict,
+        "extraction_verdict": extraction_verdict,
+        "valuation_verdict": valuation_verdict,
+    }
 
 
 def _clean_infra_payload(payload):
@@ -1968,14 +2027,33 @@ def admin_api_ai_training_items():
     except ValueError:
         mos_min = 0.0
     sort = (request.args.get("sort") or "default").strip()
+    queue = (request.args.get("queue") or "main").strip()
+    if queue not in ("main", "recheck", "source_qc"):
+        queue = "main"
 
     where = [
-        "v.is_signal = 1",
         "COALESCE(l.probably_sold,0)=0",
         "COALESCE(l.is_blacklisted,0)=0",
-        "COALESCE(l.review_hidden,0)=0",
     ]
     params = []
+    if queue == "recheck":
+        where.append("v.is_signal = 1")
+        extraction_placeholders = ",".join("?" for _ in EXTRACTION_RECHECK_VERDICTS)
+        where.extend([
+            "COALESCE(l.review_hidden,0)=1",
+            "f.verdict = 'bad_data'",
+            f"f.extraction_verdict IN ({extraction_placeholders})",
+        ])
+        params.extend(sorted(EXTRACTION_RECHECK_VERDICTS))
+    elif queue == "source_qc":
+        where.extend([
+            "COALESCE(l.review_hidden,0)=0",
+            "l.source = 'guland'",
+            "COALESCE(v.source_quality_recheck,0)=1",
+        ])
+    else:
+        where.append("v.is_signal = 1")
+        where.append("COALESCE(l.review_hidden,0)=0")
     if ward:
         where.append("l.ward = ?")
         params.append(ward)
@@ -2005,6 +2083,14 @@ def admin_api_ai_training_items():
           COALESCE(v.signal_score,0) DESC
         """
     )
+    feedback_join = """
+            LEFT JOIN ai_training_feedback f ON f.id = (
+                SELECT id FROM ai_training_feedback
+                WHERE listing_id = l.id
+                ORDER BY created_at DESC
+                LIMIT 1
+            )
+    """
 
     with db_mod.get_conn() as conn:
         rows = conn.execute(f"""
@@ -2013,7 +2099,7 @@ def admin_api_ai_training_items():
                    l.road_type, l.has_so, l.description,
                    COALESCE(l.posted_at, l.first_seen_at, l.crawled_at) AS posted_display,
                    v.mos_pct, v.signal_score, v.fair_ppm2, v.actual_ppm2,
-                   v.segment, v.n_segment,
+                   v.segment, v.n_segment, v.source_quality_flags, v.source_quality_recheck,
                    f.verdict AS feedback_verdict,
                    f.extraction_verdict, f.valuation_verdict, f.reason_tags,
                    r.verdict AS ai_verdict, r.confidence AS ai_confidence,
@@ -2021,12 +2107,7 @@ def admin_api_ai_training_items():
                    r.needs_map_check AS ai_needs_map_check
             FROM listings l
             JOIN valuation_results v ON v.listing_id = l.id
-            LEFT JOIN ai_training_feedback f ON f.id = (
-                SELECT id FROM ai_training_feedback
-                WHERE listing_id = l.id
-                ORDER BY created_at DESC
-                LIMIT 1
-            )
+            {feedback_join}
             LEFT JOIN ai_deal_review r ON r.id = (
                 SELECT id FROM ai_deal_review
                 WHERE listing_id = l.id
@@ -2042,10 +2123,7 @@ def admin_api_ai_training_items():
             SELECT COUNT(*) c
             FROM listings l
             JOIN valuation_results v ON v.listing_id = l.id
-            LEFT JOIN ai_training_feedback f ON f.id = (
-                SELECT id FROM ai_training_feedback
-                WHERE listing_id = l.id ORDER BY created_at DESC LIMIT 1
-            )
+            {feedback_join}
             WHERE {where_sql} AND f.id IS NULL
         """, params).fetchone()["c"]
 
@@ -2053,18 +2131,48 @@ def admin_api_ai_training_items():
             SELECT COUNT(*) c
             FROM listings l
             JOIN valuation_results v ON v.listing_id = l.id
+            {feedback_join}
             WHERE {where_sql}
         """, params).fetchone()["c"]
+        if queue == "recheck":
+            pending = total
+        if queue == "source_qc":
+            pending = total
 
-        ward_rows = conn.execute("""
+        ward_where = [
+            "COALESCE(l.probably_sold,0)=0",
+            "COALESCE(l.is_blacklisted,0)=0",
+            "l.ward IS NOT NULL",
+            "l.ward <> ''",
+        ]
+        ward_params = []
+        if queue == "recheck":
+            ward_where.append("v.is_signal = 1")
+            extraction_placeholders = ",".join("?" for _ in EXTRACTION_RECHECK_VERDICTS)
+            ward_where.extend([
+                "COALESCE(l.review_hidden,0)=1",
+                "f.verdict = 'bad_data'",
+                f"f.extraction_verdict IN ({extraction_placeholders})",
+            ])
+            ward_params.extend(sorted(EXTRACTION_RECHECK_VERDICTS))
+        elif queue == "source_qc":
+            ward_where.extend([
+                "COALESCE(l.review_hidden,0)=0",
+                "l.source = 'guland'",
+                "COALESCE(v.source_quality_recheck,0)=1",
+            ])
+        else:
+            ward_where.append("v.is_signal = 1")
+            ward_where.append("COALESCE(l.review_hidden,0)=0")
+
+        ward_rows = conn.execute(f"""
             SELECT DISTINCT l.ward
             FROM listings l
             JOIN valuation_results v ON v.listing_id = l.id
-            WHERE v.is_signal = 1 AND COALESCE(l.probably_sold,0)=0
-              AND COALESCE(l.is_blacklisted,0)=0 AND COALESCE(l.review_hidden,0)=0
-              AND l.ward IS NOT NULL AND l.ward <> ''
+            {feedback_join}
+            WHERE {" AND ".join(ward_where)}
             ORDER BY l.ward
-        """).fetchall()
+        """, ward_params).fetchall()
         wards = [w["ward"] for w in ward_rows]
         ward_cities = {c: [ww for ww in ws if ww in wards] for c, ws in CITY_MAP.items()}
         ward_cities = {c: ws for c, ws in ward_cities.items() if ws}
@@ -2098,6 +2206,8 @@ def admin_api_ai_training_items():
             d["images"] = gallery
             d["image"] = gallery[0] if gallery else resolve_image_url("", "")
             d["detail_url"] = f"/listing/{d['id']}"
+            d["is_recheck"] = queue == "recheck"
+            d["is_source_qc"] = queue == "source_qc"
             missing = []
             for key, label in (("ward", "phuong"), ("property_type", "loai_hinh"), ("area_m2", "dien_tich"), ("road_tier", "duong")):
                 if d.get(key) in (None, "", 0):
@@ -2120,6 +2230,12 @@ def admin_api_ai_training_items():
         "has_more": (offset + len(items)) < total,
         "wards": wards,
         "ward_cities": ward_cities,
+        "queue": queue,
+        "queue_label": (
+            "Recheck sau fix" if queue == "recheck"
+            else "Guland QC" if queue == "source_qc"
+            else "Review mới"
+        ),
     })
 
 
@@ -2150,9 +2266,9 @@ def admin_api_ai_training_disagreements():
                 WHERE listing_id = l.id ORDER BY created_at DESC LIMIT 1
             )
             WHERE (
-                   (f.verdict IN ('good','correct')
+                   (f.verdict IN ('good','correct','cheap_real')
                         AND r.verdict IN ('suspect','not_cheap'))
-                OR (f.verdict IN ('bad','spam','sold','fake_price','bad_data')
+                OR (f.verdict IN ('bad','spam','sold','fake_price','bad_data','fair','overpriced','cannot_price')
                         AND r.verdict = 'cheap_real')
             )
             ORDER BY COALESCE(r.confidence,0) DESC, v.signal_score DESC

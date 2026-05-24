@@ -8,11 +8,11 @@ paths:
 
 ## Locations
 
-- **Runtime DB:** `C:\Users\ASUS\radar_bds.db` (Windows home — writable)
-- **Backup (source of truth):** `data/raw_backup.json`
+- **Canonical runtime DB:** `data/radar_bds.db`
+- **Override:** `RADAR_DB_PATH`; relative values resolve from repo root.
+- **Backup export:** `data/raw_backup.json`
 
-> ⚠️ SQLite không write được lên NTFS mount path của project.
-> `_resolve_db_path()` tự resolve về `~/radar_bds.db`.
+Runtime DB files, WAL/SHM files, images, logs, reports, and scratch output are ignored by git. Do not document or recreate `C:\Users\ASUS\radar_bds.db` as the default path.
 
 ## Quy trình persist
 
@@ -26,7 +26,7 @@ Session mới            → python radar.py import-raw-backup
 ### raw_listings
 ```
 id          INTEGER PK
-source      TEXT              -- 'guland' | 'batdongsan'
+source      TEXT              -- 'facebook' | 'guland' | 'batdongsan'
 source_id   TEXT
 url         TEXT UNIQUE
 raw_json    TEXT              -- toàn bộ data gốc từ crawler
@@ -43,12 +43,12 @@ title             TEXT
 price_ty          REAL          -- tỷ VND
 area_m2           REAL
 price_per_m2      REAL          -- triệu/m²
-property_type     TEXT          -- dat_nen | dat_vuon | nha_dat | nha_pho
+property_type     TEXT          -- dat_nen | dat_vuon | nha_dat | nha_tro | chung_cu | kho_xuong
 tx_type           TEXT          -- ban | thue
 ward              TEXT          -- NULL nếu không match keyword
 road_type         TEXT          -- nhua | be_tong | dat | unknown
 road_tier         INTEGER       -- 0–5
-has_so            INTEGER       -- 0/1 (⚠️ hiện luôn=0, extraction chưa fix)
+has_so            INTEGER       -- 0/1 (default optimistic unless text says no-so)
 frontage_m        REAL
 is_outlier        INTEGER       -- 0/1
 price_dropped     INTEGER       -- 0/1
@@ -56,7 +56,8 @@ probably_sold     INTEGER       -- 0/1
 possibly_duplicate INTEGER      -- 0/1
 duplicate_of_id   INTEGER       -- FK → listings.id canonical
 is_hot            INTEGER       -- 0/1 (bán gấp, cắt lỗ...)
-signal_score      REAL          -- 0–100
+llm_verified      INTEGER       -- 0/1, Groq signal verification/enrichment guard
+review_hidden     INTEGER       -- 0/1, admin moderation
 area              TEXT          -- khu vực (Tân An, Thủ Dầu Một...)
 ```
 
@@ -77,14 +78,16 @@ confidence   TEXT          -- 'high' | 'medium' | 'low'
 ```
 market_weekly:     segment, median_ppm2, n, min_ppm2, max_ppm2, week
 price_history:     listing_id FK, price_ty, price_per_m2, recorded_at
-notification_log:  user_id FK, listing_id FK, channel, sent_at
+notification_log:  user_id FK, listing_id FK, channel, sent_at, notified_price_ty
 crawl_runs:        source, mode, started_at, finished_at, n_new, n_updated
+ai_deal_review:    Claude pre-review verdicts, append-only advisory labels
+ai_training_feedback: human ground-truth labels from Admin AI Training
 ```
 
-## Auto-migrations (`_run_migrations()`)
+## Auto-migrations (`init_schema()`)
 
 Tự động thêm columns mới vào DB cũ — không cần tay:
-`possibly_duplicate`, `duplicate_of_id`, `road_tier`, `ward`, `has_so`, `is_hot`, `signal_score`
+`db/schema.py` keeps idempotent migrations for newer listing, notification, RBAC, admin, and AI-review columns.
 
 ## Key functions
 

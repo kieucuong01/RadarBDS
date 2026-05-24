@@ -52,7 +52,7 @@ Mỗi phần tử trong array gồm:
 - "area_m2": tổng diện tích (float, m²; null nếu không rõ)
 - "frontage_m": chiều ngang mặt tiền lô đất (float, m; null nếu không rõ)
 - "tx_type": "ban" | "thue" (mặc định "ban")
-- "property_type": "nha_dat" | "dat_nen" | "dat_vuon" | "chung_cu" | "xuong_kho" | null
+- "property_type": "nha_dat" | "dat_nen" | "dat_vuon" | "chung_cu" | "nha_o_xa_hoi" | "xuong_kho" | null
 - "ward": tên phường (chỉ chọn trong {wards}; null nếu không rõ)
 - "road_tier": 1 (mặt tiền đường lớn có tên) | 2 (đường nhựa/DX/mặt tiền) | 3 (hẻm bê tông xe hơi >3m) | 4 (hẻm xe máy <3m) | null
 - "road_type": "hem_xe_may" | "hem_ba_gac" | "hem_xe_hoi" | "duong_nhua" | "be_tong" | "mat_tien_kinh_doanh" | null

@@ -21,7 +21,7 @@ Bất cứ khi nào thay đổi các module sau:
 ```bash
 python -X utf8 -c "
 import sqlite3
-conn = sqlite3.connect(r'C:/Users/ASUS/radar_bds.db')
+conn = sqlite3.connect(r'data/radar_bds.db')
 # Paste kiểm tra cụ thể ở đây
 "
 ```

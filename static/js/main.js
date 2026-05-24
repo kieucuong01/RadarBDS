@@ -128,7 +128,8 @@ const PROPERTY_TYPE_LABELS = {
   dat_vuon: 'Đất vườn',
   nha_dat: 'Nhà đất',
   nha_tro: 'Nhà trọ',
-  chung_cu: 'Chung cư'
+  chung_cu: 'Chung cư',
+  nha_o_xa_hoi: 'Nhà ở xã hội'
 };
 
 function escHtml(v) {

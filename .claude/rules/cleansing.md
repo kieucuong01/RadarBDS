@@ -29,13 +29,13 @@ Idempotent. Không đọc/write DB. Gọi feature_extractor để extract regex.
 | `property_type` | `classify_property_type()` — cascade (xem bên dưới) |
 | `road_tier` | `extract_road_tier(title, desc)` → 0–5 |
 | `road_type` | `extract_road_type(text)` → nhua/be_tong/dat/unknown |
-| `has_so` | `extract_legal(title+desc+legal_raw)` — ⚠️ thường = 0 |
+| `has_so` | `extract_legal(title+desc+legal_raw)` — optimistic default; set 0 only when text indicates no-so |
 | `is_hot` | Match HOT_SIGNALS list |
 | `tx_type` | `_norm_tx_type()` → 'ban' / 'thue' |
 
 **HOT_SIGNALS:** cắt lỗ, ngộp, bán gấp, bán nhanh, kẹt tiền, cần tiền gấp, giảm giá mạnh, giảm sốc, bán lỗ
 
-**Ward keywords:** 13 TDM + Bến Cát (incl. Mỹ Phước 1-4 sub-zones, detected via keyword + street name patterns from `config/area_profiles.py`)
+**Ward keywords:** 13 TDM + Bến Cát (incl. Mỹ Phước 1-4 và Hiệp Thành 1-3 / KDC K8 sub-zones, detected via keyword + street name patterns from `config/area_profiles.py`; `detect_subward_from_street` nhận `parent_filter` để scope theo parent ward, tránh leak cross-ward).
 
 ## Feature Extractor (feature_extractor.py)
 
@@ -133,7 +133,7 @@ url_hint=None  → cascade cũ đầy đủ (Facebook)
 }
 ```
 
-> ⚠️ has_so thường = 0 do legal_raw từ Guland sparse. Cần fix extraction trước khi áp dụng discount 25% trong valuation.
+> Current product rule: `has_so` defaults optimistic for sparse sources; only discount when title/desc/legal text explicitly says no-so / đang làm sổ. Do not reintroduce a blanket discount for missing `legal_raw`.
 
 ## Dedup (dedup.py)
 

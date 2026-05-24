@@ -24,6 +24,10 @@ def test_extract_price():
     # Tỷ + lẻ
     assert extract_price("1 tỷ 2") == 1.2
     assert extract_price("2 tỷ 550") == 2.55
+    assert extract_price("2t45") == 2.45
+    assert extract_price("2t450") == 2.45
+    assert extract_price("2t450tr") == 2.45
+    assert extract_price("nhà 2 tầng") is None
     # Triệu
     assert extract_price("880 triệu") == 0.88
     assert extract_price("1.500 triệu") == 1.5
@@ -134,6 +138,39 @@ def test_normalizer_uses_structured_address_for_road_tier():
     assert rec["road_tier"] == 2
 
 
+def test_normalizer_prefers_text_ward_over_legacy_phu_an_raw():
+    rec = normalize_record({
+        "source": "guland",
+        "external_id": "legacy-phu-an-raw",
+        "url": "https://guland.vn/post/nha-phu-an-legacy",
+        "title": "Cần bán nhà phường Hiệp An - TDM",
+        "description": "Cần bán căn nhà tại phường Hiệp An, Thủ Dầu Một Bình Dương.",
+        "address": "Phú An, Thủ Dầu Một, Bình Dương",
+        "ward": "Phú An",
+        "area_m2": 57.1,
+        "price_ty": 1.45,
+    })
+    assert rec is not None
+    assert rec["ward"] == "Hiệp An"
+
+
+def test_normalizer_prefers_explicit_title_area_when_source_area_conflicts():
+    rec = normalize_record({
+        "source": "guland",
+        "external_id": "bad-source-area",
+        "url": "https://guland.vn/post/bad-source-area",
+        "title": "Bán đất 225m² 2.65 tỷ tại Phường Phú Mỹ Thành phố Thủ Dầu Một",
+        "description": "Mặt tiền dx 057 phú mỹ 2 lô liền kề 4,5x25 60 mtc",
+        "address": "Phường Phú Mỹ, Thủ Dầu Một",
+        "ward": "Phú Mỹ",
+        "area_m2": 739.0,
+        "price_ty": 2.65,
+    })
+    assert rec is not None
+    assert rec["area_m2"] == 225.0
+    assert round(rec["price_per_m2"], 2) == 11.78
+
+
 def test_extract_legal():
     r = extract_legal("đã có SHR chính chủ")
     assert r["has_so"] is True
@@ -155,6 +192,63 @@ def test_classify_property_type():
     assert classify_property_type("Đất Tân An giá tốt", "đất đẹp", 800) == "dat_vuon"
     # Default dat_nen
     assert classify_property_type("Đất nền Tân An", "đất phân lô kdc", 100) == "dat_nen"
+    # Broker service boilerplate is not proof of an existing house on the lot.
+    assert classify_property_type(
+        "Bán đất 95m² 1.75 tỷ tại Phường Tân An Thành phố Thủ Dầu Một",
+        "Hotline: 0986694438. Ký Gửi - Mua Bán: Bất Động Sản. Xây Dựng Nhà Ở Trọn Gói.",
+        95,
+        price_per_m2=18.42,
+    ) == "dat_nen"
+    # "Phù hợp xây/phòng trọ đầu tư" is potential use, not an existing rental block.
+    assert classify_property_type(
+        "Lô đất đẹp - phù hợp xây nhà vườn, phòng trọ đầu tư",
+        "Diện tích 6,5 x 50 = 315m², thổ cư 90m², xung quanh toàn nhà lầu",
+        315,
+        tho_cu_m2=90,
+        price_per_m2=8.73,
+    ) == "dat_nen"
+    assert classify_property_type(
+        "Đất đẹp thổ cư 5x25m sát mặt tiền Nguyễn Chí Thanh",
+        "Vị trí đẹp, phù hợp để xây nhà ở, đầu tư, hoặc kinh doanh.",
+        125,
+        tho_cu_m2=82,
+        price_per_m2=16.0,
+    ) == "dat_nen"
+    # Actual rental assets should still be classified as nha_tro.
+    assert classify_property_type("Bán dãy trọ đang cho thuê", "12 phòng trọ, thu nhập ổn định") == "nha_tro"
+    # Nhà ở xã hội / NOXH Becamex là thị trường căn hộ đặc thù, không phải nhà đất.
+    assert classify_property_type(
+        "Bán nhà ở xã hội Becamex Định Hòa block A",
+        "Căn 30m2, sổ hồng riêng, giá tốt",
+        30,
+        price_per_m2=25.0,
+        url_hint="nha",
+    ) == "nha_o_xa_hoi"
+    assert classify_property_type(
+        "Cần bán NOXH Becamex Định Hòa",
+        "Nhà xã hội Becamex gần KCN, căn hộ tầng 5",
+        30,
+        price_per_m2=22.0,
+    ) == "nha_o_xa_hoi"
+    assert classify_property_type(
+        "Becamex Định Hòa, lầu 3, sổ hồng 465 triệu",
+        "Thuê được 2 triệu/tháng, toàn quốc mua được",
+        38,
+        price_per_m2=12.2,
+    ) == "nha_o_xa_hoi"
+    # Landmark gần nhà xã hội vẫn có thể là đất, không được gom nhầm.
+    assert classify_property_type(
+        "Bán đất gần nhà ở xã hội Becamex Định Hòa",
+        "Lô đất thổ cư 5x20 đường nhựa",
+        100,
+        price_per_m2=18.0,
+    ) == "dat_nen"
+    assert classify_property_type(
+        "Bán lô đất góc 2 mặt tiền kế bên tòa nhà Becamex",
+        "Đất thổ cư, xây biệt thự được",
+        214,
+        price_per_m2=90.0,
+    ) == "dat_nen"
 
 
 if __name__ == "__main__":

@@ -69,20 +69,31 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
 
 Route: `/admin/control-room` → tab "AI Training".
 
-API endpoint: `GET /admin/api/ai-training/items` — params: `limit`, `offset`, `ward`, `city`, `mos_min`, `sort` (default/newest/cheapest/mos/score). Trả JSON: `{items, pending, total, offset, has_more, wards, ward_cities}`.
+API endpoint: `GET /admin/api/ai-training/items` — params: `limit`, `offset`, `ward`, `city`, `mos_min`, `sort` (default/newest/cheapest/mos/score), `queue` (`main`/`recheck`/`source_qc`). Trả JSON: `{items, pending, total, offset, has_more, wards, ward_cities, queue, queue_label}`.
 
 Front-end files:
 - `templates/admin_control_room.html` — markup; `#trainingGrid`, `#trnSentinel`, filter bar.
 - `static/js/admin.js` — `loadTrainingItems`, `trainingCard`, `saveTraining`, infinite scroll.
 - `static/css/admin.css` — `.training-grid`, `.view-list`, sidebar collapsed, card styles.
 
-Cache version: `?v=admin-v13-infscroll` (bump khi đổi admin.js/html).
+Current cache versions: `admin.css?v=admin-v5-training-ppm2`, `admin.js?v=admin-v16-source-quality` (bump khi đổi admin CSS/JS/html).
+
+Card display:
+- Listing card shows title, road/type, area, asking price, asking `Giá/m²`, and description.
+- Description payload stays full; UI clamps to 3 lines and shows `Xem thêm` when longer.
+- Valuation box shows Fair Value as both total `tỷ` and `tr/m²`.
+- Valuation verdicts are separate from extraction: `cheap_real | fair | overpriced | fake_price | cannot_price`.
+- Queue `Guland QC` shows Guland listings that were valuated but suppressed from `is_signal` because source quality flags require manual check.
 
 **Anti-bias — KHÔNG BAO GIỜ vi phạm:**
 - Verdict Claude ghi `ai_deal_review` (append-only). KHÔNG ghi `ai_training_feedback`.
 - `ai_training_feedback` là ground-truth nhãn người, KHÔNG contaminate bằng verdict AI.
 - `review_hidden` chỉ admin bấm; Claude KHÔNG tự flip.
 - Logic định giá CHỈ học từ nhãn người. Claude chỉ cố vấn.
+- `reprocess_valuation()` vẫn loại mọi `review_hidden` khỏi training model, nhưng valuate lại hidden latest `bad_data` để đưa vào queue `Recheck sau fix` nếu còn `is_signal=1`.
+- Hard hide: `fake_price`, `sold`, `spam`, `bad`. Soft recheck hide: `bad_data` với `wrong_*`. Valuation non-deal labels `fair`, `overpriced`, `cannot_price` vẫn ẩn khỏi main queue.
+- Guland is hybrid, not deleted: crawl/display stays on, but `source_quality_flags` remove suspect Guland rows from the valuation baseline. Flags currently include old reposts, extreme Guland price/m², suspicious bait, and direct human bad/fake/cannot-price labels.
+- Guland signals require a stronger gate than Facebook: normal source threshold plus extra MOS or a high signal score. Source-quality-suppressed Guland rows get `valuation_results.source_quality_recheck=1` instead of VIP/main signal promotion.
 
 Infinite scroll: `#trnSentinel` + `IntersectionObserver` (`rootMargin:400px`) → `loadTrainingItems(true)`. Guard `_trnLoading` chống double-fetch. Badge: `pending/total`.
 

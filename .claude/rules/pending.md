@@ -57,6 +57,39 @@
 
 ## Đã làm gần đây
 
+**Session 2026-05-20 — Valuation cleanup: signal reliability gate + Hiệp Thành sub-ward:**
+- **Part C — Signal reliability gate** (`analytics/valuation.py`):
+  - Thêm hằng `MIN_RELIABLE_N_FOR_SIGNAL = 15` (semantic riêng so với
+    `MIN_SAMPLES`: ngưỡng tin cậy phát signal, không phải build segment).
+  - Trong `valuate()`, sau check ward unknown và trước sigma calc:
+    `if m.n_samples < MIN_RELIABLE_N_FOR_SIGNAL: is_sig = False`.
+  - Lý do: segment dưới ngưỡng → fair rơi về median fallback, không đủ tin cậy
+    để phát signal dù MOS lớn (false-positive). `valuation_result` vẫn ghi.
+  - Kết quả: weak-n signal 28/809 → 0 sau reprocess.
+- **Part F — Hiệp Thành sub-ward split** (`config/area_profiles.py` +
+  `cleansing/normalizer.py`):
+  - Thêm `HIEP_THANH_PROFILE` với 5 street patterns: HT3/HT1/HT2 (regex
+    `\bhi[eệ]p\s*th[aà]nh\s*[123]\b`) + KDC K8 (2 variants).
+  - `_HT_SUBWARDS = {Hiệp Thành 1/2/3, KDC K8 Hiệp Thành}` auto-extends
+    `ALL_SUBWARDS` (valuation.py 3-tier fallback dùng dict này).
+  - `detect_subward_from_street(text, parent_filter=None)` — thêm
+    `parent_filter` scope theo profile.parent_ward, ngăn pattern HT3 fire
+    trong tin Mỹ Phước.
+  - Normalizer line 419-423: gate sub-ward promotion mở rộng từ
+    `ward == "Mỹ Phước"` thành `ward in ("Mỹ Phước", "Hiệp Thành")`; truyền
+    `parent_filter=ward_final`.
+- **Kết quả combined** (`reprocess --full` trên 6991 listings):
+  - Total signal: 809 → 763 (-46, -5.7%).
+  - Hiệp Thành family: 152 → 134 (HT parent 107, HT3 22, HT1 5; HT2/K8 fit
+    segment nhưng 0 deal vượt threshold).
+  - MOS distribution chặt hơn: HT3 avg 46% vs HT-mixed cũ 42%.
+- **Tests**: `pytest -q` 93/93 pass. NE5 vẫn match Mỹ Phước 3 (regression-free).
+- **Out-of-scope giữ nguyên**: `has_so` default=1 (intentional design per
+  cleansing.md); bug parse `2t45` (#38764 — task riêng); magic number tuning
+  (refactor session); quy hoạch checker Tầng 3a (deferred 2026-05-17); thêm
+  sub-ward cho ward khác (Phú Lợi/Định Hòa cũng có thể, làm sau khi đo độ ổn
+  định Hiệp Thành sub-split).
+
 **Session 2026-05-19 — Skill `review-deal-signals` (Claude pre-review CỐ VẤN):**
 - **Đã ship**: bảng RIÊNG `ai_deal_review` (`db/schema.py`, append-only,
   idempotent); CLI `review-queue` (JSON memo) / `review-save`
@@ -77,7 +110,7 @@
   `templates/admin_control_room.html` + `admin.js` + `admin.css`): badge
   số lượng cần review (`pending`/`total`); filter Phường + MOS≥ + Sắp xếp
   (mặc định/mới nhất/giá thấp/MOS/score) — server nhận `ward,mos_min,sort`;
-  card hiện thêm Title + Description (cắt 240 ký tự); nút "🖼️ Ảnh (n)" mở
+  card hiện thêm Title + Description; nút "🖼️ Ảnh (n)" mở
   lightbox gallery ngay trên card (prev/next, phím ←→/Esc). Endpoint trả
   thêm `images[]` (full ảnh resolved), `wards[]`, `pending`, `total`.
   Toggle "Lưới / Dòng" (list view 1 card/dòng, ảnh trái) — nhớ localStorage
@@ -101,7 +134,14 @@
   chip listener chuyển sang **event delegation** trên `#trainingGrid` (bind
   1 lần, card append vẫn click được). (5) Dropdown phường nay phủ **mọi**
   phường có signal (`_trnAllWards` từ `data.wards`, không chỉ CITY_MAP).
-  Cache bump `?v=admin-v13-infscroll`. node --check OK, 8 test xanh.
+- **UI AI Training — `/m²` + full description** (2026-05-20,
+  `app.py` + `static/js/admin.js` + `static/css/admin.css` +
+  `templates/admin_control_room.html`): card hiển thị giá rao quy đổi `tr/m²`;
+  box "2. Định giá AI" hiển thị Fair Value cả tổng `tỷ` và `tr/m²`; description
+  giữ full text, clamp 3 dòng và có `Xem thêm` / `Thu gọn`. API training trả
+  thêm/chuẩn hóa `price_per_m2`, fallback `actual_ppm2`. Cache bump
+  `admin.css?v=admin-v5-training-ppm2`, `admin.js?v=admin-v14-training-ppm2-desc`.
+  node --check + py_compile + Flask test client OK.
 - **Bug phát hiện ngoài lề (chưa fix)**: listing #38764 — parser giá nuốt
   cú pháp `"2t45"` (= 2.45 tỷ) thành 0.245 tỷ (sai 10×) → tạo signal MOS ảo.
   Nghi `cleansing/normalizer.py` regex `<tỷ>t<trăm-triệu>`. Cần fix riêng,

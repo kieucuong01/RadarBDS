@@ -42,6 +42,7 @@ def extract_price(text: str) -> Optional[float]:
       "880 triệu" → 0.88
       "1 tỷ 2" → 1.2
       "2 tỷ 550" → 2.55
+      "2t45" → 2.45
       "1,69 tỷ" → 1.69
       "Thỏa thuận" / "Giá thỏa thuận" → None
     """
@@ -83,6 +84,12 @@ def extract_price(text: str) -> Optional[float]:
 
     # Pattern ASCII "ty" (môi giới FB hay dùng): 1ty8=1.8, 2ty550=2.55, 4ty5=4.5
     m = re.search(r'(\d+)\s*ty\s*(\d+)', t)
+    if m:
+        return _parse_ty_rest(m.group(1), m.group(2))
+
+    # Pattern compact single "t" as tỷ marker: 2t45=2.45, 2t450=2.45, 2t450tr=2.45.
+    # Require digits immediately after "t" so normal words like "2 tầng" are ignored.
+    m = re.search(r'(\d+)\s*t\s*(\d{1,3})(?:\s*(?:tr|triệu))?(?![\da-zà-ỹ])', t)
     if m:
         return _parse_ty_rest(m.group(1), m.group(2))
 
@@ -923,6 +930,34 @@ _CHUNG_CU_RE = re.compile(
 )
 
 
+def _is_social_housing_text(text: str) -> bool:
+    """Detect NOXH/Becamex social-housing units, not land near that landmark."""
+    t = _ascii_fold(text).replace("đ", "d").replace("Đ", "d")
+    has_social_kw = bool(re.search(r'\bnha\s*(?:o\s*)?xa\s*hoi\b|\bnoxh\b', t))
+    has_becamex_dinh_hoa = bool(re.search(r'\bbecamex\b.{0,40}\bdinh\s*hoa\b|\bdinh\s*hoa\b.{0,40}\bbecamex\b', t))
+    has_unit_kw = bool(re.search(
+        r'\bcan\s*ho\b|\bchung\s*cu\b|\bblock\s*[a-z0-9]+\b|'
+        r'\btang\s*\d+\b|\blau\s*\d+\b|\b\d+\s*pn\b|\bpk\b|\bwc\b|'
+        r'\bthang\s*may\b',
+        t,
+    ))
+    has_land_asset_kw = bool(re.search(r'\bdat\b|\blo\s*dat\b|\bdat\s*nen\b|\btho\s*cu\b', t))
+    if has_becamex_dinh_hoa and has_land_asset_kw and not has_social_kw and not has_unit_kw:
+        return False
+    if not (has_social_kw or has_becamex_dinh_hoa):
+        return False
+
+    is_land_near_landmark = bool(re.search(
+        r'\b(?:dat|lo\s*dat|dat\s*nen|tho\s*cu)\b.{0,40}'
+        r'\b(?:gan|sat|canh|ke|doi\s*dien|cach|duong\s*vao)\b.{0,50}'
+        r'\b(?:nha\s*(?:o\s*)?xa\s*hoi|noxh|becamex\b.{0,25}dinh\s*hoa)\b',
+        t,
+    ))
+    if is_land_near_landmark and not has_unit_kw:
+        return False
+    return True
+
+
 def _is_kho_xuong_text(text: str) -> bool:
     """True nếu nội dung chỉ rõ kho/nhà xưởng (cho Facebook hoặc URL không rõ)."""
     return any(kw in text for kw in _KHO_XUONG_KW)
@@ -1023,9 +1058,13 @@ def classify_property_type(
       - 'nha'                      → chỉ chọn nha_dat / nha_tro (bỏ qua nhánh đất)
       - None (Facebook)            → cascade cũ (đầy đủ keyword logic) + kho_xuong fallback
 
-    Trả về một trong 6 giá trị: dat_vuon | dat_nen | nha_dat | nha_tro | chung_cu | kho_xuong.
+    Trả về một trong 7 giá trị: dat_vuon | dat_nen | nha_dat | nha_tro | chung_cu | kho_xuong | nha_o_xa_hoi.
     """
     text = (title + ' ' + (description or '')).lower().strip()
+
+    # NOXH/Becamex Định Hòa là thị trường căn hộ đặc thù, không so chung với nhà đất.
+    if _is_social_housing_text(text):
+        return 'nha_o_xa_hoi'
 
     # ── Bước 0: url_hint short-circuit cho chung_cu / kho_xuong ──
     if url_hint == 'chung_cu':
@@ -1066,8 +1105,39 @@ def classify_property_type(
         r'(?:xây|cất|làm)(?:\s*dựng)?\s*(?:đc|được|đk)?\s*\d+\s*(?:căn\s*|ngôi\s*)?(?:nhà|biệt\s*thự|villa)',
         ' ', text_for_nha, flags=re.IGNORECASE,
     )
-    text_ascii = _ascii_fold(text_for_nha)
-    has_house_kw = any(kw in text_for_nha for kw in _NHA_KW) or bool(re.search(
+    text_for_nha_ascii = _ascii_fold(text_for_nha).replace("đ", "d").replace("Đ", "d")
+    text_for_nha_ascii = re.sub(
+        r'\b(?:gan|sat|canh|ke|doi\s*dien|cach|duong\s*vao)\b.{0,50}'
+        r'\bnha\s*(?:o\s*)?xa\s*hoi\b',
+        ' ', text_for_nha_ascii, flags=re.IGNORECASE,
+    )
+    text_for_nha_ascii = re.sub(
+        r'\b(?:gan|sat|canh|ke|doi\s*dien|cach|duong\s*vao)\b.{0,50}'
+        r'\btoa\s*nha\b',
+        ' ', text_for_nha_ascii, flags=re.IGNORECASE,
+    )
+    text_for_nha_ascii = re.sub(
+        r'\b(?:xay|cat|lam)\s*(?:biet\s*thu|villa|nha)(?:\s*duoc)?\b',
+        ' ', text_for_nha_ascii, flags=re.IGNORECASE,
+    )
+    text_for_nha_ascii = re.sub(
+        r'\bxay\s*dung\s*nha\s*o\s*tron\s*goi\b|'
+        r'\bky\s*gui\s*-?\s*mua\s*ban\s*bat\s*dong\s*san\b|'
+        r'\bho\s*tro\s*khach\s*hang\s*lam\s*so\s*sach\b',
+        ' ', text_for_nha_ascii, flags=re.IGNORECASE,
+    )
+    text_for_nha_ascii = re.sub(
+        r'\b(?:phu\s*hop|thich\s*hop|co\s*the|[dđ]at\s*[dđ]e|[dđ]e)'
+        r'\s*(?:[dđ]e\s*)?(?:xay|cat|lam)(?:\s*dung)?\s*'
+        r'(?:\d+\s*)?(?:can\s*|ngoi\s*)?(?:nha|biet\s*thu|villa|nha\s*xuong)(?:\s*o)?\b',
+        ' ', text_for_nha_ascii, flags=re.IGNORECASE,
+    )
+    text_for_nha_ascii = re.sub(
+        r'\b(?:xung\s*quanh|hang\s*xom|khu\s*vuc|sat\s*ben)\b.{0,70}\bnha\s*(?:lau|cap|moi|o)?\b',
+        ' ', text_for_nha_ascii, flags=re.IGNORECASE,
+    )
+    text_ascii = text_for_nha_ascii
+    has_house_kw = any(_ascii_fold(kw) in text_for_nha_ascii for kw in _NHA_KW) or bool(re.search(
         r'(^|\n)\s*[^\w\s]*\s*nha\b|'
         r'\bnha\s*(?:tret|lau|cap|moi)\b|'
         r'\btret\s*lau\b|\bgac\s*lung\b|'
@@ -1079,7 +1149,15 @@ def classify_property_type(
     ))
 
     # --- Bước 0b: Nhà trọ → nha_tro (tách khỏi nha_dat — rental yield pricing) ---
-    if re.search(r'nhà\s*trọ|phòng\s*trọ|dãy\s*trọ|khu\s*trọ|kinh\s*doanh\s*trọ', text):
+    text_for_tro = _ascii_fold(text)
+    text_for_tro = re.sub(
+        r'\b(?:phu\s*hop|thich\s*hop|co\s*the|[dđ]at\s*[dđ]e|[dđ]e\s*xay|xay|lam)'
+        r'\b.{0,70}\b(?:nha|phong|day|khu)?\s*tro(?:\s*dau\s*tu)?\b',
+        ' ', text_for_tro, flags=re.IGNORECASE,
+    )
+    if has_land_only_kw:
+        text_for_tro = re.sub(r'\bphong\s*tro\s*dau\s*tu\b', ' ', text_for_tro, flags=re.IGNORECASE)
+    if re.search(r'nha\s*tro|phong\s*tro|day\s*tro|khu\s*tro|kinh\s*doanh\s*tro', text_for_tro):
         return 'nha_tro'
 
     # ── url_hint branching ──

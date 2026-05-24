@@ -11,7 +11,7 @@ Override with `RADAR_DB_PATH`. If the override is relative, it resolves from rep
 - `raw_listings.py`: raw crawler rows.
 - `listings.py`: processed listing upsert, images, price history, outlier flags.
 - `crawl_runs.py`: crawl run lifecycle.
-- `analytics.py`: valuation results and alert logs.
+- `analytics.py`: valuation results and legacy analytics helpers.
 - `sqlite.py`: compatibility facade that re-exports the public DB API.
 
 `config.database_sqlite` is also a compatibility facade. New code should prefer focused `db.*` modules.

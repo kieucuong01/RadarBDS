@@ -14,7 +14,7 @@ python radar.py crawl-all --source batdongsan       # chỉ BatDongSan
 python radar.py crawl-all --visible                 # debug: hiện browser
 python radar.py crawl-all --no-reprocess            # bỏ qua bước reprocess
 
-python radar.py crawl-daily                         # incremental + Telegram alert
+python radar.py crawl-daily                         # incremental + VIP watchlist notification
 python radar.py crawl-daily --source guland
 python radar.py crawl-daily --visible
 python radar.py crawl-daily --no-alert
@@ -104,7 +104,6 @@ python radar.py review-save --id 123 --verdict suspect --confidence 0.7 \
 ```bash
 python radar.py lifecycle                           # sweep delisted (default 48h)
 python radar.py lifecycle --sweep-hours 72
-python radar.py lifecycle --alert                   # Telegram nếu signal bị delisted
 python radar.py lifecycle --velocity                # hotness metric per segment
 ```
 

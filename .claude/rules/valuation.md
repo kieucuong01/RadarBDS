@@ -57,6 +57,29 @@ is_signal = mos_pct ≥ MOS_THRESHOLD (theo confidence level)
 
 `high` n≥45 · `medium` n≥15 · `low` n<15 (median fallback). MIN_SAMPLES=15, OUTLIER_SIGMA=2.0.
 
+## Signal reliability gate (2026-05-20)
+
+`MIN_RELIABLE_N_FOR_SIGNAL = 15` (`analytics/valuation.py`). Khi segment khớp
+listing có `n_samples < 15` (fair_value rơi về median fallback), gate set
+`is_signal=False` dù MOS lớn. `valuation_result` vẫn ghi để audit nhưng
+KHÔNG ra signal. Lý do: median fallback của mẫu nhỏ không đủ tin cậy → MOS
+cao chủ yếu noise, signal-to-noise xấu.
+
+Baseline 2026-05-20: 28/809 signal có `n_segment<15` (chủ yếu Tân An / Định
+Hòa / Phú Tân ở phân khúc hiếm). Sau gate: 0 weak-n signal.
+
+## Sub-ward registry (config/area_profiles.py)
+
+Sub-ward chỉ tách khi parent_ward "quá rộng" gộp nhiều khu vực khác giá (median
+nằm giữa → cả hai đầu thành signal MOS cao false-positive). Pattern:
+
+- **Mỹ Phước** → `Mỹ Phước 1/2/3/4` (street-grid `[ND]E\d+`, `[ND][GHIJKLF]\d+`, `[ND]A\d+`)
+- **Hiệp Thành** → `Hiệp Thành 1/2/3` + `KDC K8 Hiệp Thành` (2026-05-20)
+
+Sub-ward auto-fit nếu n≥15; <15 → fallback parent (3-tier: sub → parent → region).
+Detection scope theo `parent_filter` ở `detect_subward_from_street()` — pattern
+HT chỉ fire khi parent ward đã = "Hiệp Thành" (tránh leak cross-ward).
+
 ## Chạy valuation
 
 ```bash

@@ -189,6 +189,173 @@ class AiDealReviewTest(unittest.TestCase):
             ).fetchone()["h"]
         self.assertEqual(hidden_before, hidden_after)
 
+    # ---- 6. human training labels split extraction vs valuation --------
+    def test_ai_training_feedback_separates_extraction_and_valuation_labels(self):
+        import app as app_module
+        from db.connection import get_conn
+
+        cheap_lid = self._insert_signal(url="https://t.test/cheap-real")
+        bad_lid = self._insert_signal(url="https://t.test/bad-data")
+        fair_lid = self._insert_signal(url="https://t.test/fair")
+        fake_lid = self._insert_signal(url="https://t.test/fake-price-hard")
+
+        with app_module.app.test_request_context():
+            with get_conn() as conn:
+                cheap = app_module._save_ai_training_feedback(
+                    conn,
+                    cheap_lid,
+                    {
+                        "extraction_verdict": "all_correct",
+                        "valuation_verdict": "cheap_real",
+                    },
+                )
+                bad = app_module._save_ai_training_feedback(
+                    conn,
+                    bad_lid,
+                    {
+                        "extraction_verdict": "wrong_area",
+                        "valuation_verdict": "cannot_price",
+                        "reason_tags": ["wrong_area"],
+                    },
+                )
+                fair = app_module._save_ai_training_feedback(
+                    conn,
+                    fair_lid,
+                    {
+                        "extraction_verdict": "all_correct",
+                        "valuation_verdict": "fair",
+                    },
+                )
+                fake = app_module._save_ai_training_feedback(
+                    conn,
+                    fake_lid,
+                    {
+                        "extraction_verdict": "wrong_price",
+                        "valuation_verdict": "fake_price",
+                        "reason_tags": ["fake_price"],
+                    },
+                )
+
+        self.assertEqual(cheap["verdict"], "cheap_real")
+        self.assertEqual(bad["verdict"], "bad_data")
+        self.assertEqual(fair["verdict"], "fair")
+        self.assertEqual(fake["verdict"], "fake_price")
+
+        with get_conn() as conn:
+            rows = {
+                r["listing_id"]: dict(r)
+                for r in conn.execute(
+                    """
+                    SELECT f.listing_id, f.verdict, f.extraction_verdict,
+                           f.valuation_verdict, COALESCE(l.review_hidden,0) hidden,
+                           l.review_hidden_reason
+                    FROM ai_training_feedback f
+                    JOIN listings l ON l.id = f.listing_id
+                    """
+                ).fetchall()
+            }
+
+        self.assertEqual(rows[cheap_lid]["extraction_verdict"], "all_correct")
+        self.assertEqual(rows[cheap_lid]["valuation_verdict"], "cheap_real")
+        self.assertEqual(rows[cheap_lid]["hidden"], 0)
+
+        self.assertEqual(rows[bad_lid]["verdict"], "bad_data")
+        self.assertEqual(rows[bad_lid]["valuation_verdict"], "cannot_price")
+        self.assertEqual(rows[bad_lid]["hidden"], 1)
+        self.assertEqual(rows[bad_lid]["review_hidden_reason"], "bad_data")
+
+        self.assertEqual(rows[fair_lid]["verdict"], "fair")
+        self.assertEqual(rows[fair_lid]["valuation_verdict"], "fair")
+        self.assertEqual(rows[fair_lid]["hidden"], 1)
+        self.assertEqual(rows[fair_lid]["review_hidden_reason"], "fair")
+
+        self.assertEqual(rows[fake_lid]["verdict"], "fake_price")
+        self.assertEqual(rows[fake_lid]["valuation_verdict"], "fake_price")
+        self.assertEqual(rows[fake_lid]["hidden"], 1)
+        self.assertEqual(rows[fake_lid]["review_hidden_reason"], "fake_price")
+
+    def test_ai_training_recheck_queue_shows_hidden_bad_data_signals_only(self):
+        import app as app_module
+
+        bad_lid = self._insert_signal(url="https://t.test/recheck-bad-data")
+        fake_lid = self._insert_signal(url="https://t.test/recheck-fake-price")
+
+        with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path):
+            client = app_module.app.test_client()
+            self._login_admin(client)
+
+            resp_bad = client.post(
+                "/admin/api/ai-training/feedback",
+                json={
+                    "listing_id": bad_lid,
+                    "extraction_verdict": "wrong_price",
+                    "valuation_verdict": "cannot_price",
+                    "reason_tags": ["wrong_price"],
+                },
+            )
+            self.assertEqual(resp_bad.status_code, 200)
+
+            resp_fake = client.post(
+                "/admin/api/ai-training/feedback",
+                json={
+                    "listing_id": fake_lid,
+                    "extraction_verdict": "all_correct",
+                    "valuation_verdict": "fake_price",
+                    "reason_tags": ["fake_price"],
+                },
+            )
+            self.assertEqual(resp_fake.status_code, 200)
+
+            normal = client.get("/admin/api/ai-training/items")
+            self.assertEqual(normal.status_code, 200)
+            normal_ids = {it["id"] for it in normal.get_json()["items"]}
+            self.assertNotIn(bad_lid, normal_ids)
+            self.assertNotIn(fake_lid, normal_ids)
+
+            recheck = client.get("/admin/api/ai-training/items?queue=recheck")
+            self.assertEqual(recheck.status_code, 200)
+            data = recheck.get_json()
+            recheck_ids = {it["id"] for it in data["items"]}
+            self.assertIn(bad_lid, recheck_ids)
+            self.assertNotIn(fake_lid, recheck_ids)
+            self.assertEqual(data["queue"], "recheck")
+            self.assertTrue(next(it for it in data["items"] if it["id"] == bad_lid)["is_recheck"])
+
+    def test_ai_training_source_qc_queue_shows_suppressed_guland_quality_items(self):
+        import app as app_module
+        from db.connection import get_conn
+
+        lid = self._insert_signal(url="https://t.test/source-qc-old-guland")
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE valuation_results
+                   SET is_signal=0,
+                       signal_score=0,
+                       source_quality_recheck=1,
+                       source_quality_flags='old_guland_post'
+                 WHERE listing_id=?
+                """,
+                (lid,),
+            )
+
+        with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path):
+            client = app_module.app.test_client()
+            self._login_admin(client)
+
+            normal = client.get("/admin/api/ai-training/items")
+            self.assertEqual(normal.status_code, 200)
+            self.assertNotIn(lid, {it["id"] for it in normal.get_json()["items"]})
+
+            source_qc = client.get("/admin/api/ai-training/items?queue=source_qc")
+            self.assertEqual(source_qc.status_code, 200)
+            data = source_qc.get_json()
+            self.assertEqual(data["queue"], "source_qc")
+            self.assertIn(lid, {it["id"] for it in data["items"]})
+            item = next(it for it in data["items"] if it["id"] == lid)
+            self.assertTrue(item["is_source_qc"])
+            self.assertEqual(item["source_quality_flags"], "old_guland_post")
+
     # ---- shared admin helpers -----------------------------------------
     def _login_admin(self, client):
         from auth.core import SESSION_COOKIE_NAME
