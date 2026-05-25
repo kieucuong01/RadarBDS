@@ -5,17 +5,16 @@ Market Trend Analytics
 - get_trend_chart_data(): lấy data để vẽ line chart trên dashboard
 """
 import logging
-import sqlite3
 import statistics
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
+from typing import Any, List, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 
 # ─── Price Drop Detection ──────────────────────────────────────────────────────
 
-def detect_price_drops(conn: sqlite3.Connection) -> int:
+def detect_price_drops(conn: Any) -> int:
     """
     So sánh price_ty hiện tại với price_first_ty của mỗi listing.
     Update price_dropped + price_drop_pct.
@@ -61,7 +60,7 @@ def _get_iso_week(dt: datetime) -> str:
     return f"{year}-W{week:02d}"
 
 
-def compute_weekly_trend(conn: sqlite3.Connection,
+def compute_weekly_trend(conn: Any,
                          week: Optional[str] = None) -> List[Dict]:
     """
     Tính median/avg ppm2 cho tuần hiện tại (hoặc tuần chỉ định).
@@ -173,7 +172,7 @@ def _week_to_date(week_str: str) -> datetime:
 
 # ─── Chart data ───────────────────────────────────────────────────────────────
 
-def get_trend_chart_data(conn: sqlite3.Connection,
+def get_trend_chart_data(conn: Any,
                          area: str,
                          property_type: str,
                          last_n_weeks: int = 12) -> List[Dict]:
@@ -192,7 +191,7 @@ def get_trend_chart_data(conn: sqlite3.Connection,
     return [dict(r) for r in reversed(rows)]
 
 
-def get_market_summary(conn: sqlite3.Connection) -> List[Dict]:
+def get_market_summary(conn: Any) -> List[Dict]:
     """
     Tóm tắt thị trường: mỗi (area, property_type) lấy tuần gần nhất.
     So sánh với tuần trước để tính direction (up/down/flat).
@@ -226,7 +225,7 @@ def get_market_summary(conn: sqlite3.Connection) -> List[Dict]:
             d["direction"]  = "unknown"
         result.append(d)
 
-def compute_monthly_trend(conn: sqlite3.Connection):
+def compute_monthly_trend(conn: Any):
     """
     Tính toán median ppm2 theo tháng cho tất cả dữ liệu lịch sử.
     """
@@ -269,7 +268,7 @@ def compute_monthly_trend(conn: sqlite3.Connection):
         
     logger.info(f"Đã cập nhật xu hướng tháng cho {len(groups)} phân khúc.")
 
-def compute_daily_trend(conn: sqlite3.Connection):
+def compute_daily_trend(conn: Any):
     """
     Tính toán median ppm2 theo ngày cho tất cả dữ liệu lịch sử.
     """
@@ -312,7 +311,7 @@ def compute_daily_trend(conn: sqlite3.Connection):
     logger.info(f"Đã cập nhật xu hướng ngày cho {len(groups)} phân khúc.")
 
 if __name__ == "__main__":
-    from config.database_sqlite import get_conn
+    from db.connection import get_conn
     with get_conn() as conn:
         compute_monthly_trend(conn)
         compute_daily_trend(conn)

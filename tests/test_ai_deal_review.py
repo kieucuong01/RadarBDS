@@ -4,6 +4,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import uuid
 from contextlib import redirect_stdout
 from pathlib import Path
 from types import SimpleNamespace
@@ -19,20 +20,64 @@ class AiDealReviewTest(unittest.TestCase):
 
         self.tmpdir = Path(tempfile.mkdtemp())
         self.db_path = self.tmpdir / "radar_ai_review.db"
+        self.token = uuid.uuid4().hex
+        self.url_prefix = f"https://ai-review-{self.token}.test"
+        self.ward = f"AIReviewWard{self.token[:8]}"
+        self.listing_ids = []
+        self.user_ids = []
         connection.close_all()
         self.db_patch = mock.patch.object(connection, "DB_PATH", self.db_path)
         self.db_patch.start()
         init_schema()
+        self._delete_test_rows()
 
     def tearDown(self):
         from db import connection
 
+        self._delete_test_rows()
         connection.close_all()
         self.db_patch.stop()
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     # ---- helpers -------------------------------------------------------
-    def _insert_signal(self, *, url, ward="Phú Hòa", price_ty=2.0,
+    def _url(self, url: str) -> str:
+        if url.startswith("https://t.test/"):
+            return f"{self.url_prefix}/{url.rsplit('/', 1)[-1]}"
+        return f"{self.url_prefix}/{len(self.listing_ids) + 1}"
+
+    def _delete_test_rows(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            rows = conn.execute(
+                "SELECT id FROM listings WHERE url LIKE ?",
+                (f"{self.url_prefix}%",),
+            ).fetchall()
+            ids = {r["id"] for r in rows}
+            ids.update(self.listing_ids)
+            if ids:
+                placeholders = ",".join("?" * len(ids))
+                params = list(ids)
+                conn.execute(f"DELETE FROM ai_deal_review WHERE listing_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM ai_training_feedback WHERE listing_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM valuation_results WHERE listing_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM price_history WHERE listing_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM listing_images WHERE listing_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
+            user_rows = conn.execute(
+                "SELECT id FROM users WHERE identifier LIKE ?",
+                (f"%{self.token}%",),
+            ).fetchall()
+            user_ids = {r["id"] for r in user_rows}
+            user_ids.update(self.user_ids)
+            if user_ids:
+                placeholders = ",".join("?" * len(user_ids))
+                params = list(user_ids)
+                conn.execute(f"DELETE FROM user_sessions WHERE user_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM users WHERE id IN ({placeholders})", params)
+
+    def _insert_signal(self, *, url, ward=None, price_ty=2.0,
                        area_m2=80.0, signal_score=70, mos_pct=35.0):
         from db.connection import get_conn
 
@@ -44,8 +89,9 @@ class AiDealReviewTest(unittest.TestCase):
                 VALUES ('guland', ?, 'Tin test', ?, 'dat_nen',
                         ?, ?, 1, 1, '2026-05-01T00:00:00')
                 """,
-                (url, ward, price_ty, area_m2),
+                (self._url(url), ward or self.ward, price_ty, area_m2),
             ).lastrowid
+            self.listing_ids.append(lid)
             conn.execute(
                 """
                 INSERT INTO valuation_results (listing_id, fair_ppm2,
@@ -72,13 +118,19 @@ class AiDealReviewTest(unittest.TestCase):
 
         buf = io.StringIO()
         with redirect_stdout(buf):
-            cmd_review_queue(SimpleNamespace(top=top, ward=ward))
+            cmd_review_queue(SimpleNamespace(top=top, ward=ward or self.ward))
         return json.loads(buf.getvalue())
 
     def _count(self, table):
         from db.connection import get_conn
 
         with get_conn() as conn:
+            if table in ("ai_deal_review", "ai_training_feedback") and self.listing_ids:
+                placeholders = ",".join("?" * len(self.listing_ids))
+                return conn.execute(
+                    f"SELECT COUNT(*) c FROM {table} WHERE listing_id IN ({placeholders})",
+                    list(self.listing_ids),
+                ).fetchone()["c"]
             return conn.execute(f"SELECT COUNT(*) c FROM {table}").fetchone()["c"]
 
     # ---- 1. idempotent schema -----------------------------------------
@@ -89,10 +141,71 @@ class AiDealReviewTest(unittest.TestCase):
         init_schema()  # second call must not raise
         with get_conn() as conn:
             row = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' "
-                "AND name='ai_deal_review'"
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema = 'public' AND table_name = 'ai_deal_review'"
             ).fetchone()
             self.assertIsNotNone(row)
+
+    def test_schema_normalizes_legacy_positive_training_labels(self):
+        from db.connection import get_conn
+        from db.schema import init_schema
+
+        correct_lid = self._insert_signal(url="https://t.test/legacy-correct")
+        good_lid = self._insert_signal(url="https://t.test/legacy-good")
+
+        with get_conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO ai_training_feedback (
+                    listing_id, actor, verdict, extraction_verdict,
+                    valuation_verdict
+                )
+                VALUES (?, 'admin', 'correct', 'all_correct', 'correct')
+                """,
+                (correct_lid,),
+            )
+            conn.execute(
+                """
+                INSERT INTO ai_training_feedback (
+                    listing_id, actor, verdict, extraction_verdict,
+                    valuation_verdict
+                )
+                VALUES (?, 'admin', 'good', 'all_correct', 'good')
+                """,
+                (good_lid,),
+            )
+
+        init_schema()
+
+        with get_conn() as conn:
+            rows = [
+                dict(r)
+                for r in conn.execute(
+                    """
+                    SELECT listing_id, verdict, valuation_verdict
+                    FROM ai_training_feedback
+                    WHERE listing_id IN (?, ?)
+                    ORDER BY listing_id
+                    """,
+                    (correct_lid, good_lid),
+                ).fetchall()
+            ]
+
+        self.assertEqual(
+            rows,
+            [
+                {
+                    "listing_id": correct_lid,
+                    "verdict": "cheap_real",
+                    "valuation_verdict": "cheap_real",
+                },
+                {
+                    "listing_id": good_lid,
+                    "verdict": "cheap_real",
+                    "valuation_verdict": "cheap_real",
+                },
+            ],
+        )
 
     # ---- 2. review-save validation ------------------------------------
     def test_review_save_insert_and_validation(self):
@@ -251,7 +364,9 @@ class AiDealReviewTest(unittest.TestCase):
                            l.review_hidden_reason
                     FROM ai_training_feedback f
                     JOIN listings l ON l.id = f.listing_id
-                    """
+                    WHERE f.listing_id IN (?, ?, ?, ?)
+                    """,
+                    (cheap_lid, bad_lid, fair_lid, fake_lid),
                 ).fetchall()
             }
 
@@ -306,13 +421,13 @@ class AiDealReviewTest(unittest.TestCase):
             )
             self.assertEqual(resp_fake.status_code, 200)
 
-            normal = client.get("/admin/api/ai-training/items")
+            normal = client.get(f"/admin/api/ai-training/items?ward={self.ward}")
             self.assertEqual(normal.status_code, 200)
             normal_ids = {it["id"] for it in normal.get_json()["items"]}
             self.assertNotIn(bad_lid, normal_ids)
             self.assertNotIn(fake_lid, normal_ids)
 
-            recheck = client.get("/admin/api/ai-training/items?queue=recheck")
+            recheck = client.get(f"/admin/api/ai-training/items?queue=recheck&ward={self.ward}")
             self.assertEqual(recheck.status_code, 200)
             data = recheck.get_json()
             recheck_ids = {it["id"] for it in data["items"]}
@@ -343,11 +458,11 @@ class AiDealReviewTest(unittest.TestCase):
             client = app_module.app.test_client()
             self._login_admin(client)
 
-            normal = client.get("/admin/api/ai-training/items")
+            normal = client.get(f"/admin/api/ai-training/items?ward={self.ward}")
             self.assertEqual(normal.status_code, 200)
             self.assertNotIn(lid, {it["id"] for it in normal.get_json()["items"]})
 
-            source_qc = client.get("/admin/api/ai-training/items?queue=source_qc")
+            source_qc = client.get(f"/admin/api/ai-training/items?queue=source_qc&ward={self.ward}")
             self.assertEqual(source_qc.status_code, 200)
             data = source_qc.get_json()
             self.assertEqual(data["queue"], "source_qc")
@@ -356,17 +471,85 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertTrue(item["is_source_qc"])
             self.assertEqual(item["source_quality_flags"], "old_guland_post")
 
+    def test_ai_training_needs_valuation_queue_shows_legacy_all_correct_bad_data(self):
+        import app as app_module
+        from db.connection import get_conn
+
+        ambiguous_lid = self._insert_signal(url="https://t.test/ambiguous-bad-data")
+        explicit_lid = self._insert_signal(url="https://t.test/explicit-cannot-price")
+
+        with get_conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO ai_training_feedback (
+                    listing_id, actor, verdict, extraction_verdict,
+                    valuation_verdict
+                )
+                VALUES (?, 'admin', 'bad_data', 'all_correct', 'bad_data')
+                """,
+                (ambiguous_lid,),
+            )
+            conn.execute(
+                """
+                UPDATE listings
+                   SET review_hidden=1,
+                       review_hidden_reason='bad_data'
+                 WHERE id=?
+                """,
+                (ambiguous_lid,),
+            )
+            conn.execute(
+                """
+                INSERT INTO ai_training_feedback (
+                    listing_id, actor, verdict, extraction_verdict,
+                    valuation_verdict
+                )
+                VALUES (?, 'admin', 'cannot_price', 'all_correct', 'cannot_price')
+                """,
+                (explicit_lid,),
+            )
+            conn.execute(
+                """
+                UPDATE listings
+                   SET review_hidden=1,
+                       review_hidden_reason='cannot_price'
+                 WHERE id=?
+                """,
+                (explicit_lid,),
+            )
+
+        with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path):
+            client = app_module.app.test_client()
+            self._login_admin(client)
+
+            normal = client.get(f"/admin/api/ai-training/items?ward={self.ward}")
+            self.assertEqual(normal.status_code, 200)
+            self.assertNotIn(ambiguous_lid, {it["id"] for it in normal.get_json()["items"]})
+
+            needs = client.get(f"/admin/api/ai-training/items?queue=needs_valuation&ward={self.ward}")
+            self.assertEqual(needs.status_code, 200)
+            data = needs.get_json()
+            self.assertEqual(data["queue"], "needs_valuation")
+            self.assertEqual(data["queue_label"], "Cần phân loại valuation")
+            ids = {it["id"] for it in data["items"]}
+            self.assertIn(ambiguous_lid, ids)
+            self.assertNotIn(explicit_lid, ids)
+            item = next(it for it in data["items"] if it["id"] == ambiguous_lid)
+            self.assertTrue(item["is_needs_valuation"])
+
     # ---- shared admin helpers -----------------------------------------
     def _login_admin(self, client):
         from auth.core import SESSION_COOKIE_NAME
         from db.connection import get_conn
 
-        token = "ai-review-admin-token"
+        token = f"ai-review-admin-token-{self.token}"
         with get_conn() as conn:
             cur = conn.execute(
                 "INSERT INTO users (identifier, identifier_type, "
-                "password_hash, tier) VALUES ('admin','email','h','admin')"
+                "password_hash, tier) VALUES (?, 'email', 'h', 'admin')",
+                (f"admin-{self.token}",),
             )
+            self.user_ids.append(cur.lastrowid)
             conn.execute(
                 "INSERT INTO user_sessions (token, user_id, expires_at) "
                 "VALUES (?, ?, '2099-01-01T00:00:00')",

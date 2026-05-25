@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v5-training-ppm2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v6-legal-qc">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -309,6 +309,8 @@
             <option value="main">Review mới</option>
             <option value="recheck">Recheck sau fix</option>
             <option value="source_qc">Guland QC</option>
+            <option value="legal_qc">Legal QC</option>
+            <option value="needs_valuation">Cần phân loại valuation</option>
           </select>
         </label>
         <label>Hiển thị
@@ -487,7 +489,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v16-source-quality"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v18-legal-qc"></script>
   {% endif %}
 </body>
 </html>

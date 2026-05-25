@@ -16,7 +16,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from services.image_assets import DATA_IMAGES_DIR, IMAGE_EXTS, THUMB_DIR, ensure_thumbnail
 from services.image_assets import local_path_for_url
-from config.database_sqlite import get_conn
+from db.connection import get_conn
 
 
 logger = logging.getLogger(__name__)

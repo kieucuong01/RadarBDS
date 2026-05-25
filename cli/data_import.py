@@ -2,8 +2,10 @@ import sys
 import json
 import logging
 from pathlib import Path
-from config.database_sqlite import init_schema, get_conn, insert_raw
 from cli.utils import _parse_price, _parse_area, _detect_prop, _map_road_type, _map_has_so, _parse_road_width
+from db.connection import get_conn
+from db.raw_listings import insert_raw
+from db.schema import init_schema
 import re
 
 def cmd_import_guland(args):

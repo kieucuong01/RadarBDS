@@ -4,6 +4,7 @@ import logging
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
+from db.connection import connect
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
@@ -20,9 +21,7 @@ class AIBot:
 
     def get_market_context(self):
         """Fetch some basic market stats to give the AI context."""
-        import sqlite3
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        conn = connect(self.db_path)
         try:
             # Get top 5 signals
             signals = conn.execute("""

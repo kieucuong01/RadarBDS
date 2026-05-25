@@ -1,0 +1,56 @@
+// DOM event wiring and initial dashboard boot sequence.
+function updateWardFilters(wardsByCity, activeWards, opts = {}) {
+  const selectedCity = document.getElementById('cityInput').value;
+  const wards = wardsByCity[selectedCity] || [];
+  const container = document.getElementById('wardFilters');
+  const searchInput = document.getElementById('wardSearch');
+  const sidebar = document.getElementById('sidebar');
+  const wardScroll = document.querySelector('.ward-scroll-area');
+  const sidebarScrollTop = sidebar ? sidebar.scrollTop : 0;
+  const wardScrollTop = wardScroll ? wardScroll.scrollTop : 0;
+  const preserveSearch = opts.preserveSearch !== false;
+  if (searchInput && !preserveSearch) searchInput.value = '';
+  const selected = new Set(activeWards || []);
+  const shouldCheckAll = selected.size === 0;
+
+  container.innerHTML = wards.map(w => {
+    const checked = shouldCheckAll || selected.has(w) ? 'checked' : '';
+    return `
+      <label class="filter-option">
+        <input type="checkbox" name="ward" value="${w}" ${checked}> ${w}
+      </label>
+    `;
+  }).join('');
+  updateWardSelectionSummary();
+
+  requestAnimationFrame(() => {
+    if (sidebar) sidebar.scrollTop = sidebarScrollTop;
+    if (wardScroll) wardScroll.scrollTop = wardScrollTop;
+  });
+}
+
+// Global listener for Filter changes (Auto-apply)
+document.addEventListener('change', (e) => {
+  if (e.target.matches('#wardFilters input[name="ward"]')) {
+    updateWardSelectionSummary();
+  }
+  if (e.target.closest('#filterForm')) {
+    scheduleApplyFilters();
+  }
+});
+
+// Init on load
+document.addEventListener('DOMContentLoaded', () => {
+  showLoader();
+  setupListingsObserver();
+  if (window.INITIAL_WARDS_BY_CITY) {
+    globalWardsByCity = window.INITIAL_WARDS_BY_CITY;
+    updateWardFilters(globalWardsByCity, [], { preserveScroll: false, preserveSearch: false });
+  }
+  if (window.location.search) {
+    currentFilters = window.location.search.substring(1);
+    applyFilters();
+  } else {
+    detectLocation();
+  }
+});

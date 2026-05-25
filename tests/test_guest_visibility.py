@@ -2,6 +2,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 from unittest import mock
 
@@ -16,6 +17,10 @@ class GuestVisibilityTest(unittest.TestCase):
 
         self.tmpdir = Path(tempfile.mkdtemp())
         self.db_path = self.tmpdir / "radar_guest_visibility.db"
+        self.token = uuid.uuid4().hex
+        self.url_prefix = f"https://guest-visibility-{self.token}.test"
+        self.ward = f"GuestWard{self.token[:8]}"
+        self.listing_ids = []
         connection.close_all()
         self.patches = [
             mock.patch.object(connection, "DB_PATH", self.db_path),
@@ -25,16 +30,38 @@ class GuestVisibilityTest(unittest.TestCase):
             p.start()
 
         init_schema()
+        self._delete_test_rows()
         self.client = app_module.app.test_client()
         self.listing_id = self._seed_fresh_signal()
 
     def tearDown(self):
         from db import connection
 
+        self._delete_test_rows()
         connection.close_all()
         for p in reversed(self.patches):
             p.stop()
         shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _delete_test_rows(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            rows = conn.execute(
+                "SELECT id FROM listings WHERE url LIKE ?",
+                (f"{self.url_prefix}%",),
+            ).fetchall()
+            ids = {r["id"] for r in rows}
+            ids.update(self.listing_ids)
+            if not ids:
+                return
+            placeholders = ",".join("?" * len(ids))
+            params = list(ids)
+            conn.execute(f"DELETE FROM price_history WHERE listing_id IN ({placeholders})", params)
+            conn.execute(f"DELETE FROM valuation_results WHERE listing_id IN ({placeholders})", params)
+            conn.execute(f"DELETE FROM listing_images WHERE listing_id IN ({placeholders})", params)
+            conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
+            conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
 
     def _seed_fresh_signal(self):
         from db.connection import get_conn
@@ -48,14 +75,16 @@ class GuestVisibilityTest(unittest.TestCase):
                     is_hot, price_dropped, suspicious_bait,
                     probably_sold, possibly_duplicate, posted_at, crawled_at
                 ) VALUES (
-                    'facebook', 'fresh-guest-visible', 'https://example.test/fresh',
+                    'facebook', ?, ?,
                     'Fresh guest-visible signal', 'Fresh listing description',
-                    'Tân An', 100, 'dat_nen', 2.0, 20.0,
+                    ?, 100, 'dat_nen', 2.0, 20.0,
                     0, 0, 0, 0, 0, datetime('now'), datetime('now')
                 )
-                """
+                """,
+                (f"fresh-guest-visible-{self.token}", f"{self.url_prefix}/fresh", self.ward),
             )
             listing_id = cur.lastrowid
+            self.listing_ids.append(listing_id)
             conn.execute(
                 """
                 INSERT INTO valuation_results (
@@ -68,7 +97,7 @@ class GuestVisibilityTest(unittest.TestCase):
             return listing_id
 
     def test_guest_sees_fresh_signal_card_content_without_source_url(self):
-        response = self.client.get("/api/signals?city=Khac&limit=5")
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=5")
         self.assertEqual(response.status_code, 200)
 
         signals = response.get_json()["signals"]

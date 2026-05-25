@@ -402,13 +402,20 @@ def extract_road_width(text: str) -> Optional[float]:
 # ═══════════════════════════════════════════════════════════════════
 
 def extract_road_type(text: str) -> str:
-    """Trả về canonical: 'duong_nhua' | 'be_tong' | 'duong_dat' | 'unknown'"""
+    """Trả về canonical road_type."""
     t = text.lower()
-    if 'nhựa' in t or 'nhua' in t or 'asphalt' in t:
+    folded = _ascii_fold(text)
+    if re.search(r'(?:duong|hem|ngo|loi)\s*(?:ba|3)\s*gac|(?:ba|3)\s*gac', folded):
+        return 'hem_ba_gac'
+    if re.search(r'xe\s*may|hem\s*nho|duong\s*nho\s*hep', folded):
+        return 'hem_xe_may'
+    if re.search(r'(?:duong|hem)\s*(?:oto|o\s*to|xe\s*hoi)|(?:oto|o\s*to|xe\s*hoi)\s*(?:vao|toi|den|thong)', folded):
+        return 'hem_xe_hoi'
+    if 'nhựa' in t or 'nhua' in folded or 'asphalt' in folded:
         return 'duong_nhua'
-    if 'bê tông' in t or 'be tong' in t:
+    if 'bê tông' in t or 'be tong' in folded or 'betong' in folded:
         return 'be_tong'
-    if 'đường đất' in t or 'duong dat' in t or 'đất hiện hữu' in t:
+    if 'đường đất' in t or 'duong dat' in folded or 'dat hien huu' in folded:
         return 'duong_dat'
     return 'unknown'
 

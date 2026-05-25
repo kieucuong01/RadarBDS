@@ -12,9 +12,8 @@ Scalable:
   - segment_velocity() trả dict → feed vào ValuationEngine hoặc dashboard dễ dàng
 """
 import logging
-import sqlite3
 from datetime import datetime, timedelta
-from typing import List, Dict, Set, Iterable
+from typing import Any, List, Dict, Set, Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ FAST_DELIST_HOURS         = 72
 VELOCITY_WINDOW_DAYS      = 30
 
 
-def mark_seen(conn: sqlite3.Connection, urls: Iterable[str]) -> int:
+def mark_seen(conn: Any, urls: Iterable[str]) -> int:
     """
     Gọi ngay sau mỗi crawl run — update last_seen_at cho các URL vừa crawl.
     Auto-reactivate nếu listing từng bị delisted nhưng xuất hiện lại (seller repost).
@@ -36,7 +35,7 @@ def mark_seen(conn: sqlite3.Connection, urls: Iterable[str]) -> int:
         return 0
     now = datetime.now().isoformat(timespec='seconds')
 
-    # Chunk tránh SQLite parameter limit (999)
+    # Chunk keeps updates reasonably small for DB parameter/lock pressure.
     touched = 0
     for i in range(0, len(urls), 500):
         chunk = urls[i:i + 500]
@@ -54,7 +53,7 @@ def mark_seen(conn: sqlite3.Connection, urls: Iterable[str]) -> int:
     return touched
 
 
-def sweep_delisted(conn: sqlite3.Connection,
+def sweep_delisted(conn: Any,
                    stale_hours: int = STALE_HOURS_BEFORE_DELIST) -> List[Dict]:
     """
     Quét listing không được thấy lại sau `stale_hours` → flag delisted.
@@ -101,7 +100,7 @@ def sweep_delisted(conn: sqlite3.Connection,
     return delisted
 
 
-def get_delisted_signals(conn: sqlite3.Connection, hours: int = 72) -> List[Dict]:
+def get_delisted_signals(conn: Any, hours: int = 72) -> List[Dict]:
     """
     Signal đã là MOS signal + vừa bị delisted < `hours` → alert thứ cấp giá trị cao.
     "Signal này vừa biến mất sau Xh → khả năng cao đã giao dịch, cùng khu còn N signal".
@@ -122,7 +121,7 @@ def get_delisted_signals(conn: sqlite3.Connection, hours: int = 72) -> List[Dict
     return [dict(r) for r in rows]
 
 
-def segment_velocity(conn: sqlite3.Connection,
+def segment_velocity(conn: Any,
                      days: int = VELOCITY_WINDOW_DAYS) -> List[Dict]:
     """
     Tốc độ 'burn' signal theo (area, property_type) trong N ngày gần nhất.
@@ -152,7 +151,7 @@ def segment_velocity(conn: sqlite3.Connection,
     return result
 
 
-def backfill_first_seen(conn: sqlite3.Connection) -> int:
+def backfill_first_seen(conn: Any) -> int:
     """
     One-shot: populate first_seen_at từ crawled_at cho DB cũ (migration giá trị cao).
     Idempotent — chỉ update khi NULL.

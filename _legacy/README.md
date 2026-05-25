@@ -6,7 +6,7 @@ Mã nguồn cũ được lưu trữ (không còn dùng trong pipeline hiện t�
 
 | File | Lý do archive |
 |------|---------------|
-| `main.py` | Entry point PostgreSQL cũ — đã thay thế bằng `radar.py` (SQLite) |
+| `main.py` | Entry point PostgreSQL cũ — đã thay thế bằng `radar.py` (PostgreSQL runtime qua `DATABASE_URL`) |
 | `crawler/base.py` | BaseCrawler phiên bản requests — đã thay bằng `base_crawler.py` (Playwright) |
 | `crawler/batdongsan.py` | BDS crawler requests — thay bằng `batdongsan_pw.py` (Playwright stealth) |
 | `crawler/facebook.py` | FB crawler prototype — chưa giải quyết được login, stub `facebook_pw.py` |

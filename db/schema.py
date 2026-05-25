@@ -1,8 +1,8 @@
-﻿"""SQLite schema and idempotent migrations for Radar BDS."""
+﻿"""PostgreSQL schema and idempotent migrations for Radar BDS."""
 import logging
-import sqlite3
+from typing import Any
 
-from db.connection import DB_PATH, get_conn
+from db.connection import get_conn
 
 logger = logging.getLogger(__name__)
 SCHEMA_SQL = """
@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS listings (
     depth_m             REAL,
     road_width_m        REAL,
     road_type           TEXT DEFAULT 'unknown',
+    tho_cu_m2           REAL,
+    tho_cu_ratio        REAL,
     has_so              INTEGER DEFAULT 0,
     is_hot              INTEGER DEFAULT 0,
     contact_phone       TEXT,
@@ -116,6 +118,41 @@ CREATE TABLE IF NOT EXISTS listing_images (
 
 CREATE INDEX IF NOT EXISTS idx_images_listing ON listing_images(listing_id);
 CREATE INDEX IF NOT EXISTS idx_images_type    ON listing_images(img_type);
+CREATE INDEX IF NOT EXISTS idx_images_listing_legal_order
+    ON listing_images(
+        listing_id,
+        (CASE WHEN img_type = 'so_hong' THEN 0 ELSE 1 END),
+        img_order,
+        id
+    );
+
+
+CREATE TABLE IF NOT EXISTS legal_verifications (
+    listing_id              INTEGER PRIMARY KEY REFERENCES listings(id) ON DELETE CASCADE,
+    status                  TEXT DEFAULT 'unverified',
+    trust_tier              TEXT DEFAULT 'candidate_signal',
+    confidence_score        INTEGER DEFAULT 0,
+    document_image_id       INTEGER REFERENCES listing_images(id) ON DELETE SET NULL,
+    thua_so                 TEXT,
+    to_ban_do               TEXT,
+    legal_area_m2           REAL,
+    legal_residential_m2    REAL,
+    legal_address           TEXT,
+    legal_ward              TEXT,
+    legal_road_text         TEXT,
+    legal_road_code         TEXT,
+    road_match_status       TEXT DEFAULT 'unknown',
+    conflict_flags          TEXT,
+    evidence_json           TEXT,
+    verified_by             TEXT,
+    verified_at             TEXT,
+    updated_at              TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_legal_verifications_status
+    ON legal_verifications(status, trust_tier, confidence_score DESC);
+CREATE INDEX IF NOT EXISTS idx_legal_verifications_doc
+    ON legal_verifications(document_image_id);
 
 
 CREATE TABLE IF NOT EXISTS price_history (
@@ -192,12 +229,30 @@ CREATE TABLE IF NOT EXISTS valuation_results (
     n_segment       INTEGER,
     source_quality_flags TEXT,
     source_quality_recheck INTEGER DEFAULT 0,
+    legal_status    TEXT DEFAULT 'unverified',
+    trust_tier      TEXT DEFAULT 'candidate_signal',
+    trust_score     INTEGER DEFAULT 0,
+    legal_flags     TEXT,
     computed_at     TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_valuation_listing  ON valuation_results(listing_id);
 CREATE INDEX IF NOT EXISTS idx_valuation_signal   ON valuation_results(is_signal, mos_pct DESC);
 CREATE INDEX IF NOT EXISTS idx_valuation_computed ON valuation_results(computed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_valuation_listing_computed
+    ON valuation_results(listing_id, computed_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_valuation_signal_trust_score
+    ON valuation_results(
+        (CASE COALESCE(trust_tier, 'candidate_signal')
+            WHEN 'has_legal_doc' THEN 0
+            ELSE 1
+         END),
+        trust_score DESC,
+        signal_score DESC,
+        mos_pct DESC,
+        listing_id
+    )
+    WHERE is_signal = 1;
 
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -417,15 +472,21 @@ CREATE INDEX IF NOT EXISTS idx_notif_user_listing
 
 def init_schema() -> None:
     with get_conn() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS schema_migrations (
+                version TEXT PRIMARY KEY,
+                applied_at TEXT DEFAULT (CURRENT_TIMESTAMP::text)
+            )
+        """)
         conn.executescript(SCHEMA_SQL)
         # Migration: thêm cột mới cho DB cũ (ALTER TABLE idempotent)
         _run_migrations(conn)
-    logger.info(f"SQLite schema initialized: {DB_PATH}")
+    logger.info("PostgreSQL schema initialized")
 
 
-def _run_migrations(conn: sqlite3.Connection) -> None:
+def _run_migrations(conn: Any) -> None:
     """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
-    existing = {r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()}
+    existing = _table_columns(conn, "listings")
     migrations = [
         ("possibly_duplicate", "ALTER TABLE listings ADD COLUMN possibly_duplicate INTEGER DEFAULT 0"),
         ("duplicate_of_id",    "ALTER TABLE listings ADD COLUMN duplicate_of_id INTEGER DEFAULT NULL"),
@@ -449,6 +510,8 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         ("review_hidden",      "ALTER TABLE listings ADD COLUMN review_hidden INTEGER DEFAULT 0"),
         ("review_hidden_at",   "ALTER TABLE listings ADD COLUMN review_hidden_at TEXT"),
         ("review_hidden_reason", "ALTER TABLE listings ADD COLUMN review_hidden_reason TEXT"),
+        ("tho_cu_m2",          "ALTER TABLE listings ADD COLUMN tho_cu_m2 REAL"),
+        ("tho_cu_ratio",       "ALTER TABLE listings ADD COLUMN tho_cu_ratio REAL"),
     ]
     for col, sql in migrations:
         if col not in existing:
@@ -464,12 +527,16 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         logger.warning(f"Index skip idx_listings_content_hash: {e}")
 
     # Migrations cho valuation_results
-    v_existing = {r[1] for r in conn.execute("PRAGMA table_info(valuation_results)").fetchall()}
+    v_existing = _table_columns(conn, "valuation_results")
     v_migrations = [
         ("signal_score", "ALTER TABLE valuation_results ADD COLUMN signal_score INTEGER DEFAULT NULL"),
         ("road_tier",    "ALTER TABLE valuation_results ADD COLUMN road_tier INTEGER DEFAULT 0"),
         ("source_quality_flags", "ALTER TABLE valuation_results ADD COLUMN source_quality_flags TEXT"),
         ("source_quality_recheck", "ALTER TABLE valuation_results ADD COLUMN source_quality_recheck INTEGER DEFAULT 0"),
+        ("legal_status", "ALTER TABLE valuation_results ADD COLUMN legal_status TEXT DEFAULT 'unverified'"),
+        ("trust_tier",   "ALTER TABLE valuation_results ADD COLUMN trust_tier TEXT DEFAULT 'candidate_signal'"),
+        ("trust_score",  "ALTER TABLE valuation_results ADD COLUMN trust_score INTEGER DEFAULT 0"),
+        ("legal_flags",  "ALTER TABLE valuation_results ADD COLUMN legal_flags TEXT"),
     ]
     for col, sql in v_migrations:
         if col not in v_existing:
@@ -480,7 +547,7 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
                 logger.warning(f"Migration skip valuation_results.{col}: {e}")
 
     # Migrations cho lead_captures — RBAC fields
-    lc_existing = {r[1] for r in conn.execute("PRAGMA table_info(lead_captures)").fetchall()}
+    lc_existing = _table_columns(conn, "lead_captures")
     lc_migrations = [
         ("user_id",              "ALTER TABLE lead_captures ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE SET NULL"),
         ("tier",                 "ALTER TABLE lead_captures ADD COLUMN tier TEXT"),
@@ -504,16 +571,14 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         logger.warning(f"Index skip lead_captures: {e}")
 
     _drop_legacy_feedback(conn)
+    _normalize_ai_training_feedback_labels(conn)
+    _migrate_legal_verifications(conn)
     _migrate_notification_log(conn)
 
 
-def _migrate_notification_log(conn: sqlite3.Connection) -> None:
-    """Add notified_price_ty + drop UNIQUE(user_id, listing_id, channel).
-
-    SQLite doesn't support DROP CONSTRAINT, so we rebuild the table when the
-    legacy auto-index is still present. Idempotent.
-    """
-    cols = {r[1] for r in conn.execute("PRAGMA table_info(notification_log)").fetchall()}
+def _migrate_notification_log(conn: Any) -> None:
+    """Add notified_price_ty and ensure the app-level dedup index exists."""
+    cols = _table_columns(conn, "notification_log")
     if "notified_price_ty" not in cols:
         try:
             conn.execute("ALTER TABLE notification_log ADD COLUMN notified_price_ty REAL")
@@ -521,53 +586,72 @@ def _migrate_notification_log(conn: sqlite3.Connection) -> None:
         except Exception as e:
             logger.warning(f"Migration skip notification_log.notified_price_ty: {e}")
 
-    idx_list = conn.execute("PRAGMA index_list(notification_log)").fetchall()
-    has_unique = any(
-        r[2] == 1 and r[1].startswith("sqlite_autoindex_notification_log")
-        for r in idx_list
-    )
-    if has_unique:
-        try:
-            conn.executescript("""
-                BEGIN;
-                CREATE TABLE notification_log_new (
-                    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id            INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                    listing_id         INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
-                    channel            TEXT NOT NULL,
-                    notified_price_ty  REAL,
-                    sent_at            TEXT DEFAULT (datetime('now'))
-                );
-                INSERT INTO notification_log_new (id, user_id, listing_id, channel, notified_price_ty, sent_at)
-                    SELECT id, user_id, listing_id, channel, notified_price_ty, sent_at
-                      FROM notification_log;
-                DROP TABLE notification_log;
-                ALTER TABLE notification_log_new RENAME TO notification_log;
-                CREATE INDEX IF NOT EXISTS idx_notif_user_listing
-                    ON notification_log(user_id, listing_id, sent_at DESC);
-                COMMIT;
-            """)
-            logger.info("Migration: rebuilt notification_log without UNIQUE constraint")
-        except Exception as e:
-            logger.warning(f"Migration skip rebuild notification_log: {e}")
-    else:
-        try:
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_notif_user_listing "
-                "ON notification_log(user_id, listing_id, sent_at DESC)"
+    try:
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_notif_user_listing "
+            "ON notification_log(user_id, listing_id, sent_at DESC)"
+        )
+    except Exception as e:
+        logger.warning(f"Index skip idx_notif_user_listing: {e}")
+
+
+def _migrate_legal_verifications(conn: Any) -> None:
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS legal_verifications (
+                listing_id              INTEGER PRIMARY KEY REFERENCES listings(id) ON DELETE CASCADE,
+                status                  TEXT DEFAULT 'unverified',
+                trust_tier              TEXT DEFAULT 'candidate_signal',
+                confidence_score        INTEGER DEFAULT 0,
+                document_image_id       INTEGER REFERENCES listing_images(id) ON DELETE SET NULL,
+                thua_so                 TEXT,
+                to_ban_do               TEXT,
+                legal_area_m2           REAL,
+                legal_residential_m2    REAL,
+                legal_address           TEXT,
+                legal_ward              TEXT,
+                legal_road_text         TEXT,
+                legal_road_code         TEXT,
+                road_match_status       TEXT DEFAULT 'unknown',
+                conflict_flags          TEXT,
+                evidence_json           TEXT,
+                verified_by             TEXT,
+                verified_at             TEXT,
+                updated_at              TEXT DEFAULT (datetime('now'))
             )
-        except Exception as e:
-            logger.warning(f"Index skip idx_notif_user_listing: {e}")
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_legal_verifications_status
+            ON legal_verifications(status, trust_tier, confidence_score DESC)
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_legal_verifications_doc
+            ON legal_verifications(document_image_id)
+        """)
+    except Exception as e:
+        logger.warning(f"Legal verification migration skipped: {e}")
 
 
-def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
+def _table_exists(conn: Any, name: str) -> bool:
     return bool(conn.execute(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+        "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=?",
         (name,),
     ).fetchone())
 
 
-def _drop_legacy_feedback(conn: sqlite3.Connection) -> None:
+def _table_columns(conn: Any, table: str) -> set[str]:
+    rows = conn.execute(
+        """
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema='public' AND table_name=?
+        """,
+        (table,),
+    ).fetchall()
+    return {r["column_name"] for r in rows}
+
+
+def _drop_legacy_feedback(conn: Any) -> None:
     """Backfill review visibility once, then remove legacy feedback tables."""
     if _table_exists(conn, "signal_feedback"):
         try:
@@ -635,3 +719,20 @@ def _drop_legacy_feedback(conn: sqlite3.Connection) -> None:
             logger.warning(f"Drop legacy table {table} skipped: {e}")
 
 
+def _normalize_ai_training_feedback_labels(conn: Any) -> None:
+    """Normalize legacy positive training labels to the split verdict vocabulary."""
+    if not _table_exists(conn, "ai_training_feedback"):
+        return
+    try:
+        conn.execute("""
+            UPDATE ai_training_feedback
+               SET verdict='cheap_real'
+             WHERE verdict IN ('good', 'correct', 'too_low')
+        """)
+        conn.execute("""
+            UPDATE ai_training_feedback
+               SET valuation_verdict='cheap_real'
+             WHERE valuation_verdict IN ('good', 'correct', 'too_low')
+        """)
+    except Exception as e:
+        logger.warning(f"Training feedback label normalization skipped: {e}")

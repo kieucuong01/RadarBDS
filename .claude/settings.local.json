@@ -96,7 +96,24 @@
       "PowerShell(cd \"C:\\\\Users\\\\ASUS\\\\Documents\\\\Claude\\\\Projects\\\\Radar BDS\"; & \"$env:LOCALAPPDATA\\\\Programs\\\\Python\\\\Python39\\\\python.exe\" -X utf8 radar.py schedule-setup --time 10:15 --every 1)",
       "PowerShell(schtasks /query /tn RadarBDS_DailyCrawl /fo LIST)",
       "Bash(git checkout *)",
-      "Bash(python -X utf8 -c \"from db.schema import init_schema; init_schema\\(\\)\")"
+      "Bash(python -X utf8 -c \"from db.schema import init_schema; init_schema\\(\\)\")",
+      "Bash(python -X utf8 -m pytest tests/test_vip_notify.py -v)",
+      "Bash(python -X utf8 -m pytest tests/)",
+      "Bash(python -X utf8 -m pytest tests/test_db_cleanup.py -v)",
+      "Bash(python -X utf8 -m pytest tests/ --collect-only -q)",
+      "Bash(python -X utf8 -m pytest tests/test_vip_notify.py tests/test_db_cleanup.py tests/test_admin_control_room.py tests/test_guest_visibility.py)",
+      "Bash(python -X utf8 -c \"import sqlite3;c=sqlite3.connect\\(r'C:/Users/ASUS/Documents/Claude/Projects/Radar BDS/data/radar_bds.db'\\);print\\('road_tier dist:',c.execute\\('SELECT road_tier,count\\(*\\) FROM listings GROUP BY road_tier ORDER BY road_tier'\\).fetchall\\(\\)\\);print\\('total:',c.execute\\('SELECT count\\(*\\) FROM listings'\\).fetchone\\(\\)\\);print\\('llm_verified=1:',c.execute\\('SELECT count\\(*\\) FROM listings WHERE llm_verified=1'\\).fetchone\\(\\)\\);print\\('signals:',c.execute\\('SELECT count\\(*\\) FROM valuation_results WHERE is_signal=1'\\).fetchone\\(\\)\\);print\\('valuated:',c.execute\\('SELECT count\\(*\\) FROM valuation_results'\\).fetchone\\(\\)\\)\")",
+      "Bash(python -c \"print\\('count of road_width_m occurrences check'\\)\")",
+      "Bash(python -X utf8 -m py_compile db/listings.py analytics/valuation.py cleansing/reprocess.py cleansing/groq_enricher.py cleansing/gemini_enricher.py radar.py)",
+      "Bash(python -X utf8 -m pytest -q)",
+      "Bash(python -X utf8 -m pytest)",
+      "Bash(tee scratch/groq_road_tier_run.log)",
+      "Bash(python -X utf8 -m py_compile radar.py cli/crawlers.py cleansing/reprocess.py cleansing/groq_enricher.py db/listings.py analytics/valuation.py)",
+      "Bash(python -X utf8 radar.py review-save --id 41861 --verdict not_cheap --confidence 0.6 --reasoning \"Giá 8.9tr/m2 ngang comps thực 7.1–9.3 → MOS cao là do fair model thổi, không thực sự rẻ so thị trường\" --red-flags \"MOS ảo do fair model\")",
+      "Bash(python -X utf8 radar.py review-save --id 41786 --verdict not_cheap --confidence 0.6 --reasoning \"Giá 9.3tr/m2 ≥ comps median 8.0 → không thực sự rẻ, MOS dương chỉ do fair model\" --red-flags \"không rẻ so comps\")",
+      "Bash(python -X utf8 radar.py review-queue --top 10)",
+      "Bash(python -X utf8 -c \"import json;d=json.load\\(open\\('scratch_rq2.json',encoding='utf-8'\\)\\);ids={38764,39280,38097,41059,38660,41861,39622,41786,40330,40980};got={i['listing_id'] for i in d['items']};print\\('queue count:',d['count']\\);print\\('saved ids still in queue:', ids & got or 'NONE \\(good\\)'\\)\")",
+      "PowerShell($py = \"$env:LOCALAPPDATA\\\\Programs\\\\Python\\\\Python39\\\\python.exe\"; & $py -X utf8 scratch\\\\baseline_check.py)"
     ]
   }
 }

@@ -1,4 +1,4 @@
-﻿"""SQLite database facade for Radar BDS.
+"""Database facade for Radar BDS.
 
 Connection handling lives in `db.connection`; schema and migrations live in
 `db.schema`; repository helpers live in focused `db.*` modules. This module keeps

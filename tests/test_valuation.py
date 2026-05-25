@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from analytics.valuation import (
     Listing, ValuationEngine,
-    compute_signal_score, remove_outliers,
+    compute_signal_score, proximity_score_for_ward, remove_outliers,
 )
 
 
@@ -155,14 +155,83 @@ def test_guland_quality_flags_keep_valuation_but_suppress_signal():
     assert "old_guland_post" in result.source_quality_flags
 
 
+def test_legal_conflict_keeps_valuation_but_suppresses_signal():
+    listings = [_make_listing(i, 15.0, source="facebook") for i in range(30)]
+    engine = ValuationEngine()
+    engine.fit(listings)
+
+    target = _make_listing(
+        2101,
+        8.5,
+        legal_status="conflict",
+        legal_flags=("area_mismatch", "road_conflict"),
+        trust_tier="candidate_signal",
+        trust_score=25,
+    )
+    result = engine.valuate(target)
+
+    assert result is not None
+    assert result.price_per_m2_fair > 0
+    assert result.is_signal is False
+    assert result.trust_tier == "candidate_signal"
+    assert result.trust_score == 25
+    assert "road_conflict" in result.legal_flags
+
+
+def test_verified_legal_signal_carries_trust_fields():
+    listings = [_make_listing(i, 15.0, source="facebook") for i in range(30)]
+    engine = ValuationEngine()
+    engine.fit(listings)
+
+    target = _make_listing(
+        2102,
+        8.5,
+        legal_status="verified",
+        trust_tier="legal_verified_signal",
+        trust_score=92,
+        legal_flags=(),
+    )
+    result = engine.valuate(target)
+
+    assert result is not None
+    assert result.is_signal is True
+    assert result.legal_status == "verified"
+    assert result.trust_tier == "legal_verified_signal"
+    assert result.trust_score == 92
+
+
+def test_proximity_score_is_ward_level_and_bounded():
+    central = proximity_score_for_ward("Phú Cường")
+    industrial = proximity_score_for_ward("Mỹ Phước 3")
+
+    assert 1 <= central <= 5
+    assert 1 <= industrial <= 5
+    assert proximity_score_for_ward("unknown") == 0
+
+
+def test_signal_score_adds_proximity_without_affecting_cap():
+    unknown = _make_listing(3001, 10.0, ward="unknown", is_hot=False)
+    central = _make_listing(3002, 10.0, ward="Phú Cường", is_hot=False)
+    capped = _make_listing(
+        3003,
+        1.0,
+        ward="Phú Cường",
+        area=100,
+        is_hot=True,
+        price_dropped=True,
+    )
+
+    assert compute_signal_score(central, mos_pct=30.0) > compute_signal_score(unknown, mos_pct=30.0)
+    assert compute_signal_score(capped, mos_pct=200.0) == 100
+
+
 def test_signal_score_bounds():
     listing = _make_listing(1, 10.0, area=100, frontage_m=5, is_hot=True, price_dropped=True)
-    # MOS 50% → 25pt + area 10 + price 10 + hot 10 + frontage 10 + drop 10 = 75
     score = compute_signal_score(listing, mos_pct=50.0)
     assert 0 <= score <= 100
-    assert score >= 60  # có nhiều bonus
+    assert score >= 60  # MOS + liquidity + hot/drop + proximity bonuses
 
-    # MOS 0% → chỉ bonus (diện tích+giá = 20)
+    # MOS 0% still gets bounded non-MOS bonuses.
     score_low = compute_signal_score(_make_listing(2, 10.0, area=100, is_hot=False), mos_pct=0.0)
     assert 0 <= score_low <= 100
 

@@ -8,17 +8,37 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
 
 ## App and DB
 
+Supabase-first local setup:
+
 ```powershell
+$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+
+# Current local Supabase project ref: ozdjzfiqcjnlfuihqqjy
+# The real password is in .env only. Do not paste it into docs or commits.
+
+# Put this in .env for normal app/CLI runs.
+# Prefer Direct connection for migration if IPv6 works.
+$env:DATABASE_URL = "postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres"
+
+# If Direct connection fails because of IPv6/network, use Session Pooler instead.
+$env:DATABASE_URL = "postgres://postgres.<project-ref>:<password>@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+
+& $py -X utf8 -m pip install -r requirements.txt
+& $py -X utf8 scripts\migrate_sqlite_to_postgres.py --sqlite data\radar_bds.db --database-url $env:DATABASE_URL --truncate
 & $py -X utf8 radar.py inspect
 & $py -X utf8 app.py
 & $py -X utf8 radar.py reprocess
 & $py -X utf8 radar.py reprocess --full
 ```
 
-Check DB path:
+Avoid Supabase Transaction Pooler for the Flask app/crawler unless psycopg
+prepared statements are explicitly disabled.
+
+After a migration or DB credential change, smoke test the Postgres-backed app:
 
 ```powershell
-& $py -X utf8 -c "import db.connection as c; print(c.DB_PATH)"
+& $py -X utf8 radar.py inspect
+& $py -X utf8 -c "from app import app; c=app.test_client(); [print(p, c.get(p).status_code) for p in ['/api/dashboard','/api/signals?page=1&limit=3']]"
 ```
 
 ## Crawl and Jobs
@@ -33,6 +53,9 @@ Check DB path:
 
 ```powershell
 & $py -X utf8 radar.py download-images
+& $py -X utf8 radar.py classify-legal-images --limit 500
+& $py -X utf8 radar.py verify-legal-signals --limit 500
+& $py -X utf8 radar.py verify-legal-signals --apply
 & $py -X utf8 scripts\generate_thumbnails.py --signals 300
 & $py -X utf8 scripts\generate_thumbnails.py --limit 1000
 ```
@@ -41,6 +64,7 @@ Check DB path:
 
 ```powershell
 & $py -X utf8 -m py_compile app.py services\market_data.py services\image_assets.py cleansing\download_images.py
+& $py -X utf8 -m py_compile cleansing\legal_verification.py analytics\valuation.py
 node --check static\js\main.js
 node --check static\js\auth.js
 ```
@@ -54,6 +78,8 @@ Targeted tests:
 & $py -X utf8 -m pytest tests\test_drop_filter.py
 & $py -X utf8 -m pytest tests\test_feature_extractor.py
 & $py -X utf8 -m pytest tests\test_valuation.py
+& $py -X utf8 -m pytest tests\test_legal_verification.py tests\test_market_data_trust.py
+& $py -X utf8 -m pytest tests\test_market_data_performance.py tests\test_postgres_connection.py tests\test_market_data_trust.py
 ```
 
 Full pytest:
@@ -79,6 +105,25 @@ Filter sanity:
 ```powershell
 Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/signals?page=1&limit=30&mos_min=25&only_drops=1&sort=mos_desc"
 Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/dashboard?mos_min=25&only_drops=1"
+```
+
+## Cleanup Policy
+
+`radar.py db-cleanup` is dry-run by default. It removes rows that cannot support
+valuation when applied: listings with missing/zero `price_ty` or missing/zero
+`area_m2`, plus their source `raw_listings` rows so full reprocess does not
+recreate them. It also deletes old sold rows, stale orphan raw rows, old
+notifications, and orphan local image files.
+
+```powershell
+& $py -X utf8 radar.py db-cleanup
+& $py -X utf8 radar.py db-cleanup --apply
+```
+
+Quick local API timing without starting a browser:
+
+```powershell
+& $py -X utf8 -c "import time, app as a; c=a.app.test_client(); a.clear_dashboard_cache(); [print(p, c.get(p).status_code) for p in ['/api/dashboard','/api/signals?page=1&limit=30&sort=score_desc']]"
 ```
 
 ## Telegram / VIP Watchlist

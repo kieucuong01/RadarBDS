@@ -1,70 +1,98 @@
-"""
-Script tải hình ảnh về local để hiển thị trên dashboard.
-Mục đích: Tránh lỗi ảnh CDN của FB, Guland, Batdongsan bị chặn hoặc hết hạn.
-"""
+"""Download listing images to local storage for dashboard rendering."""
+from __future__ import annotations
+
 import logging
-import os
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
-from config.database_sqlite import get_conn
+from db.connection import advisory_lock, get_conn
 from services.image_assets import ensure_thumbnail
 
 logger = logging.getLogger(__name__)
 
-# Thư mục lưu ảnh: cùng cấp với DB
 DATA_DIR = Path(__file__).parent.parent / "data" / "images"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-# Fake User-Agent để tránh 403 Forbidden
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    )
 }
 
-def download_images(limit: int = 1000):
+
+def download_images(limit: int = 1000, listing_id: int | None = None):
+    with advisory_lock("download-images"):
+        return _download_images(limit=limit, listing_id=listing_id)
+
+
+def _candidate_query(listing_id: int | None = None) -> tuple[str, list]:
+    where = [
+        """
+        (
+            li.local_path IS NULL
+            OR (
+                 l.source = 'facebook'
+             AND li.local_path = 'NOT_FOUND'
+             AND (li.img_url LIKE '%fbcdn.net%' OR li.img_url LIKE '%scontent%')
+             AND datetime(COALESCE(li.crawled_at, '1970-01-01')) >= datetime('now', '-30 days')
+            )
+        )
+        """
+    ]
+    params = []
+    if listing_id is not None:
+        where.append("li.listing_id = ?")
+        params.append(listing_id)
+
+    sql = f"""
+        SELECT li.id, li.listing_id, li.img_url, li.img_order
+          FROM listing_images li
+          JOIN listings l ON l.id = li.listing_id
+         WHERE {' AND '.join(where)}
+         ORDER BY CASE WHEN li.local_path IS NULL THEN 0 ELSE 1 END,
+                  li.img_order ASC, li.id DESC
+         LIMIT ?
     """
-    Quét bảng listing_images, tải các ảnh chưa có local_path.
-    Chỉ lấy các ảnh cover (img_order = 0) để tiết kiệm dung lượng, hoặc tùy nhu cầu.
-    """
-    logger.info(f"Bắt đầu tải ảnh vào: {DATA_DIR}")
-    
+    return sql, params
+
+
+def _download_images(limit: int = 1000, listing_id: int | None = None):
+    """Download missing images, plus recent Facebook CDN images marked NOT_FOUND."""
+    logger.info("Downloading listing images into: %s", DATA_DIR)
+
+    sql, params = _candidate_query(listing_id=listing_id)
+    params.append(limit)
     with get_conn() as conn:
-        # Lấy danh sách ảnh cần tải (ưu tiên ảnh bìa img_order=0 trước)
-        rows = conn.execute("""
-            SELECT id, listing_id, img_url, img_order
-            FROM listing_images
-            WHERE local_path IS NULL
-            ORDER BY img_order ASC, id DESC
-            LIMIT ?
-        """, (limit,)).fetchall()
-        
+        rows = conn.execute(sql, params).fetchall()
+
     if not rows:
-        logger.info("Không có ảnh mới cần tải.")
+        logger.info("No new images to download.")
         return 0
 
     success_count = 0
-    
     for row in rows:
-        img_id     = row['id']
-        listing_id = row['listing_id']
-        img_url    = row['img_url']
-        img_order  = row['img_order']
-        
-        if not img_url or not img_url.startswith('http'):
+        img_id = row["id"]
+        listing_id = row["listing_id"]
+        img_url = row["img_url"]
+        img_order = row["img_order"]
+
+        if not img_url or not img_url.startswith("http"):
             continue
-            
-        # Extract extension
-        ext = '.jpg'
-        if '.png' in img_url.lower():
-            ext = '.png'
-        elif '.webp' in img_url.lower():
-            ext = '.webp'
-            
+
+        ext = ".jpg"
+        lower_url = img_url.lower()
+        if ".png" in lower_url:
+            ext = ".png"
+        elif ".webp" in lower_url:
+            ext = ".webp"
+
         filename = f"{listing_id}_{img_order}{ext}"
         local_file_path = DATA_DIR / filename
         relative_path = f"data/images/{filename}"
-        
+
         try:
             req = urllib.request.Request(img_url, headers=HEADERS)
             with urllib.request.urlopen(req, timeout=10) as response:
@@ -74,33 +102,31 @@ def download_images(limit: int = 1000):
             try:
                 ensure_thumbnail(local_file_path)
             except Exception as e:
-                logger.warning(f"Không tạo được thumbnail {local_file_path}: {e}")
-            
-            # Cập nhật DB
+                logger.warning("Could not create thumbnail %s: %s", local_file_path, e)
+
             with get_conn() as conn:
                 conn.execute(
                     "UPDATE listing_images SET local_path = ? WHERE id = ?",
-                    (relative_path, img_id)
+                    (relative_path, img_id),
                 )
             success_count += 1
-            logger.info(f"Đã tải ảnh: {relative_path}")
-            
-            time.sleep(0.5) # Tránh bị rate limit
-            
+            logger.info("Downloaded image: %s", relative_path)
+
+            time.sleep(0.5)
         except urllib.error.HTTPError as e:
-            logger.warning(f"Lỗi tải ảnh {img_url}: {e.code}")
-            if e.code in (404, 403, 410): # Nếu ảnh chết hoàn toàn
-                # Đánh dấu đã thử tải nhưng thất bại để lần sau không tải lại
+            logger.warning("Image download failed %s: %s", img_url, e.code)
+            if e.code in (404, 403, 410):
                 with get_conn() as conn:
                     conn.execute(
                         "UPDATE listing_images SET local_path = ? WHERE id = ?",
-                        ('NOT_FOUND', img_id)
+                        ("NOT_FOUND", img_id),
                     )
         except Exception as e:
-            logger.warning(f"Lỗi tải ảnh {img_url}: {str(e)}")
+            logger.warning("Image download failed %s: %s", img_url, e)
 
-    logger.info(f"Đã tải thành công: {success_count}/{len(rows)} ảnh.")
+    logger.info("Downloaded successfully: %s/%s images.", success_count, len(rows))
     return success_count
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")

@@ -647,6 +647,28 @@ async function loadMoreTraining() {
   await loadTrainingItems(true);
 }
 
+async function saveLegalVerification(id, status) {
+  const val = (suffix) => document.getElementById(`legal-${suffix}-${id}`)?.value || '';
+  const payload = {
+    listing_id: id,
+    status,
+    legal_road_text: val('road'),
+    legal_ward: val('ward'),
+    legal_area_m2: val('area'),
+    legal_residential_m2: val('res'),
+    thua_so: val('thua'),
+    to_ban_do: val('to')
+  };
+  const result = await fetchJSON('/admin/api/legal-verification', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (result && result.ok) {
+    loadTrainingItems();
+  }
+}
+
 function trnToggleExpand(id) {
   const card = document.querySelector(`.training-card[data-id="${id}"]`);
   const btn = document.getElementById(`expbtn-${id}`);
@@ -709,6 +731,31 @@ function trainingCard(x) {
   const actualPpm2 = x.actual_ppm2 || x.price_per_m2 || '';
   const fairPpm2 = x.fair_ppm2 || '';
   const sourceFlags = (x.source_quality_flags || '').split(',').filter(Boolean);
+  const legal = x.legal_summary || {};
+  const legalFlags = String(legal.flags || '').split(',').filter(Boolean);
+  const legalBox = (x.is_legal_qc || legal.status) ? `
+            <div class="review-box legal-qc-box">
+              <div class="review-title">Legal QC · ${esc(legal.status || 'unverified')} · ${Math.round(legal.trust_score || legal.confidence_score || 0)}%</div>
+              <ul class="explain-list">
+                <li>Thua/to: ${esc(legal.thua_so || '-')} / ${esc(legal.to_ban_do || '-')}</li>
+                <li>DT so: ${area(legal.legal_area_m2)} · Tho cu: ${area(legal.legal_residential_m2)}</li>
+                <li>Ward: ${esc(legal.legal_ward || '-')} · Road: ${esc(legal.legal_road_text || '-')}</li>
+                ${legalFlags.length ? `<li>Flags: ${legalFlags.map(esc).join(', ')}</li>` : ''}
+              </ul>
+              <div class="legal-qc-grid">
+                <input id="legal-road-${x.id}" value="${esc(legal.legal_road_text || '')}" placeholder="Duong tren so">
+                <input id="legal-ward-${x.id}" value="${esc(legal.legal_ward || '')}" placeholder="Phuong tren so">
+                <input id="legal-area-${x.id}" value="${esc(legal.legal_area_m2 || '')}" placeholder="DT so">
+                <input id="legal-res-${x.id}" value="${esc(legal.legal_residential_m2 || '')}" placeholder="Tho cu">
+                <input id="legal-thua-${x.id}" value="${esc(legal.thua_so || '')}" placeholder="Thua so">
+                <input id="legal-to-${x.id}" value="${esc(legal.to_ban_do || '')}" placeholder="To ban do">
+              </div>
+              <div class="chip-row">
+                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'verified')">Xac nhan dung so</button>
+                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'needs_review')">Can soi tiep</button>
+                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'conflict')">Co conflict</button>
+              </div>
+            </div>` : '';
   const fairTitle = x.fair_ty
     ? `(Fair Value: ${money(x.fair_ty)}${fairPpm2 ? ` · ${ppm2(fairPpm2)}` : ''})`
     : '';
@@ -737,6 +784,7 @@ function trainingCard(x) {
 
         <div class="trn-review-cols${x.ai_verdict ? ' has-ai' : ''}">
           <div class="trn-review-main">
+            ${legalBox}
             <div class="review-box">
               <div class="review-title">1. Thông tin trích xuất</div>
               <div class="chip-row">
@@ -754,7 +802,7 @@ function trainingCard(x) {
             <div class="review-box" id="valbox-${cid}">
               <div class="review-title">2. Định giá AI ${fairTitle}</div>
               <div class="chip-row">
-                <button class="chip active" data-card="${cid}" data-group="valuation" data-value="cheap_real">Rẻ thật</button>
+                <button class="chip" data-card="${cid}" data-group="valuation" data-value="cheap_real">Rẻ thật</button>
                 <button class="chip" data-card="${cid}" data-group="valuation" data-value="fair">Giá hợp lý</button>
                 <button class="chip" data-card="${cid}" data-group="valuation" data-value="overpriced">Đang cao</button>
                 <button class="chip" data-card="${cid}" data-group="valuation" data-value="fake_price">Giá ảo</button>
@@ -794,8 +842,12 @@ async function saveTraining(id) {
   const extractionOk = extraction === 'all_correct';
   // Trích xuất sai → bỏ qua chấm định giá, tin này về nhánh học làm sạch dữ liệu.
   const valuation = extractionOk
-    ? (card.querySelector('.chip[data-group="valuation"].active')?.dataset.value || 'cheap_real')
+    ? (card.querySelector('.chip[data-group="valuation"].active')?.dataset.value || '')
     : 'cannot_price';
+  if (extractionOk && !valuation) {
+    alert('Chọn nhãn định giá trước khi lưu.');
+    return;
+  }
   const tags = Array.from(card.querySelectorAll('.chip[data-group="reason"].active')).map(x => x.dataset.value);
   let verdict;
   if (tags.includes('fake_price') || valuation === 'fake_price') {

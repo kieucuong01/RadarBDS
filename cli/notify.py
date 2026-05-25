@@ -118,6 +118,9 @@ def _fetch_new_signals(conn, since: str) -> list[dict]:
         """
         SELECT l.id, l.title, l.ward, l.property_type, l.price_ty, l.area_m2, l.url,
                COALESCE(v.mos_pct, 0) AS mos_pct,
+               COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,
+               COALESCE(v.trust_score, 0) AS trust_score,
+               COALESCE(v.legal_status, 'unverified') AS legal_status,
                COALESCE(l.posted_at, l.crawled_at, l.first_seen_at) AS posted_at
         FROM listings l
         LEFT JOIN valuation_results v ON v.listing_id = l.id
@@ -126,7 +129,12 @@ def _fetch_new_signals(conn, since: str) -> list[dict]:
           AND COALESCE(l.probably_sold, 0) = 0
           AND COALESCE(l.is_blacklisted, 0) = 0
           AND COALESCE(l.review_hidden, 0) = 0
-        ORDER BY datetime(COALESCE(l.first_seen_at, l.crawled_at, l.posted_at)) DESC
+        ORDER BY CASE COALESCE(v.trust_tier, 'candidate_signal')
+                    WHEN 'has_legal_doc' THEN 0
+                    ELSE 1
+                 END ASC,
+                 COALESCE(v.trust_score, 0) DESC,
+                 datetime(COALESCE(l.first_seen_at, l.crawled_at, l.posted_at)) DESC
         LIMIT 500
         """,
         (since,),

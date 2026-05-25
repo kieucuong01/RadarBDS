@@ -33,13 +33,15 @@ This playbook helps agents work without wasting context or breaking local runtim
 
 ## Current Traps
 
-- Do not reintroduce `C:\Users\ASUS\radar_bds.db`; canonical DB is `data/radar_bds.db`.
+- Do not reintroduce `C:\Users\ASUS\radar_bds.db`; runtime DB is PostgreSQL via `DATABASE_URL`.
+- Current local DB target is Supabase project `ozdjzfiqcjnlfuihqqjy`; never print or commit the password from `.env`.
+- Tests run against PostgreSQL too. Use unique URL/ward/user tokens and cleanup by those tokens; patching `DB_PATH` no longer creates an isolated SQLite DB.
 - Do not put all signals back into `/api/dashboard`; use `/api/signals`.
 - Do not put full descriptions or full image arrays into signal card payloads.
 - Do not make signal filtering wait on dashboard/insights; keep `signals-first` flow.
 - Do not assume command-bar controls are inside `#filterForm`; keep explicit query append for `mos_min` and `only_drops`.
 - Do not use Guland/BatDongSan cross-URL heuristics for same-lot detection.
-- Do not commit `data/radar_bds.db`, `data/images/`, thumbnails, logs, or reports.
+- Do not commit DB backups, `data/images/`, thumbnails, logs, or reports.
 - Do not print `.env` secrets or Telegram bot token; mask tokens in status output.
 - Do not assume zrok URLs are stable; update webhook when zrok restarts.
 - Some terminal output may display Vietnamese as mojibake; prefer UTF-8 Python mode and inspect files with an editor/browser when text fidelity matters.
@@ -47,7 +49,7 @@ This playbook helps agents work without wasting context or breaking local runtim
 ## Verification Matrix
 
 - Python syntax: `py_compile` touched files.
-- JS syntax: `node --check static/js/main.js`.
+- JS syntax: `node --check static/js/auth.js` plus touched `static/js/main/*.js` feature files.
 - Auth UI syntax: `node --check static/js/auth.js`.
 - Telegram push syntax: `py_compile alerts/telegram.py cli/notify.py`.
 - Dedup: `tests/test_dedup.py`, `tests/test_price_history.py`, `tests/test_lot_history.py`, `tests/test_drop_filter.py`.

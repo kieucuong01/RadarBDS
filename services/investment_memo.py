@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import math
-import sqlite3
 import statistics
 from typing import Any
 
+from db.connection import PgConnection, connect
 
 VERDICT_META = {
     "below_fair": {
@@ -67,7 +67,7 @@ def _safe_bool(value: Any) -> bool:
     return bool(value) if value is not None else False
 
 
-def _fetch_listing(conn: sqlite3.Connection, listing_id: int) -> sqlite3.Row | None:
+def _fetch_listing(conn: PgConnection, listing_id: int):
     return conn.execute(
         """
         SELECT l.id, l.title, l.description, l.source, l.url, l.price_ty,
@@ -78,7 +78,18 @@ def _fetch_listing(conn: sqlite3.Connection, listing_id: int) -> sqlite3.Row | N
                l.crawled_at, l.updated_at,
                v.id AS valuation_id, v.fair_ppm2, v.actual_ppm2, v.mos_pct,
                v.is_signal, v.n_segment, v.signal_score, v.is_outlier,
-               v.outlier_direction, v.outlier_sigma
+               v.outlier_direction, v.outlier_sigma,
+               COALESCE(v.legal_status, lv.status, 'unverified') AS legal_status,
+               COALESCE(v.trust_tier, lv.trust_tier, 'candidate_signal') AS trust_tier,
+               COALESCE(v.trust_score, lv.confidence_score, 0) AS trust_score,
+               COALESCE(v.legal_flags, lv.conflict_flags, '') AS legal_flags,
+               lv.confidence_score AS legal_confidence_score,
+               lv.thua_so AS legal_thua_so,
+               lv.to_ban_do AS legal_to_ban_do,
+               lv.legal_area_m2, lv.legal_residential_m2,
+               lv.legal_address, lv.legal_ward,
+               lv.legal_road_text, lv.legal_road_code,
+               lv.road_match_status
           FROM listings l
           LEFT JOIN valuation_results v ON v.id = (
                 SELECT vv.id
@@ -87,6 +98,7 @@ def _fetch_listing(conn: sqlite3.Connection, listing_id: int) -> sqlite3.Row | N
                  ORDER BY vv.computed_at DESC, vv.id DESC
                  LIMIT 1
           )
+          LEFT JOIN legal_verifications lv ON lv.listing_id = l.id
          WHERE l.id = ?
            AND COALESCE(l.is_blacklisted, 0) = 0
            AND COALESCE(l.review_hidden, 0) = 0
@@ -95,7 +107,7 @@ def _fetch_listing(conn: sqlite3.Connection, listing_id: int) -> sqlite3.Row | N
     ).fetchone()
 
 
-def _ranked_comps(conn: sqlite3.Connection, listing: sqlite3.Row, tier: str) -> list[dict[str, Any]]:
+def _ranked_comps(conn: PgConnection, listing, tier: str) -> list[dict[str, Any]]:
     ward = listing["ward"]
     area = _num(listing["area_m2"]) or 0
     prop_type = listing["property_type"]
@@ -109,42 +121,41 @@ def _ranked_comps(conn: sqlite3.Connection, listing: sqlite3.Row, tier: str) -> 
     ppm2_min = curr_ppm2 * 0.55 if curr_ppm2 else 0
     ppm2_max = curr_ppm2 * 1.45 if curr_ppm2 else 999999
 
+    where = [
+        "ward = ?",
+        "id != ?",
+        "price_ty > 0",
+        "probably_sold = 0",
+        "COALESCE(is_blacklisted, 0) = 0",
+        "COALESCE(review_hidden, 0) = 0",
+        "possibly_duplicate = 0",
+    ]
+    params = [ward, listing["id"]]
+    if prop_type:
+        where.append("property_type = ?")
+        params.append(prop_type)
+    where.append("area_m2 BETWEEN ? AND ?")
+    params.extend([area_min, area_max])
+    if curr_ppm2 > 0:
+        where.append("COALESCE(price_per_m2, 0) BETWEEN ? AND ?")
+        params.extend([ppm2_min, ppm2_max])
+    if road_tier is not None:
+        where.append("(road_tier IS NULL OR ABS(road_tier - ?) <= 1)")
+        params.append(road_tier)
+    params.extend([area, curr_ppm2])
+
     rows = conn.execute(
-        """
+        f"""
         SELECT id, title, url, price_ty, area_m2, price_per_m2, property_type,
                road_tier, COALESCE(posted_at, crawled_at) AS dt
           FROM listings
-         WHERE ward = ?
-           AND id != ?
-           AND price_ty > 0
-           AND probably_sold = 0
-           AND COALESCE(is_blacklisted, 0) = 0
-           AND COALESCE(review_hidden, 0) = 0
-           AND possibly_duplicate = 0
-           AND (? IS NULL OR property_type = ?)
-           AND area_m2 BETWEEN ? AND ?
-           AND (? <= 0 OR COALESCE(price_per_m2, 0) BETWEEN ? AND ?)
-           AND (? IS NULL OR road_tier IS NULL OR ABS(road_tier - ?) <= 1)
+         WHERE {" AND ".join(where)}
          ORDER BY ABS(area_m2 - ?) ASC,
                   ABS(COALESCE(price_per_m2, 0) - ?) ASC,
                   COALESCE(posted_at, crawled_at) DESC
          LIMIT 20
         """,
-        (
-            ward,
-            listing["id"],
-            prop_type,
-            prop_type,
-            area_min,
-            area_max,
-            curr_ppm2,
-            ppm2_min,
-            ppm2_max,
-            road_tier,
-            road_tier,
-            area,
-            curr_ppm2,
-        ),
+        params,
     ).fetchall()
 
     ranked: list[dict[str, Any]] = []
@@ -181,7 +192,7 @@ def _ranked_comps(conn: sqlite3.Connection, listing: sqlite3.Row, tier: str) -> 
     return ranked
 
 
-def _price_history(conn: sqlite3.Connection, listing_id: int, current_price: float | None) -> list[dict[str, Any]]:
+def _price_history(conn: PgConnection, listing_id: int, current_price: float | None) -> list[dict[str, Any]]:
     rows = conn.execute(
         """
         SELECT recorded_at, price_ty
@@ -206,7 +217,7 @@ def _price_history(conn: sqlite3.Connection, listing_id: int, current_price: flo
     return history
 
 
-def _lot_stats(conn: sqlite3.Connection, listing: sqlite3.Row) -> dict[str, Any]:
+def _lot_stats(conn: PgConnection, listing) -> dict[str, Any]:
     canonical_id = listing["duplicate_of_id"] or listing["id"]
     rows = conn.execute(
         """
@@ -249,7 +260,7 @@ def _comps_summary(comps: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _data_quality_warnings_and_risks(listing: sqlite3.Row, comps_count: int) -> tuple[list[str], list[str]]:
+def _data_quality_warnings_and_risks(listing, comps_count: int) -> tuple[list[str], list[str]]:
     warnings: list[str] = []
     risks: list[str] = []
 
@@ -274,10 +285,14 @@ def _data_quality_warnings_and_risks(listing: sqlite3.Row, comps_count: int) -> 
         warnings.append("Tin bị gắn cờ suspicious bait; cần xác minh nguồn tin, giá và tình trạng lô.")
         risks.append("Tin có dấu hiệu giá mồi/quá bất thường.")
 
+    legal_status = listing["legal_status"] if "legal_status" in listing.keys() else "unverified"
+    if legal_status not in ("has_document", "verified"):
+        warnings.append("Tin chua co anh so hong/so do duoc nhan dien; can doi chieu phap ly truoc khi dat coc.")
+
     return warnings, risks
 
 
-def _valuation_metrics(listing: sqlite3.Row) -> dict[str, Any]:
+def _valuation_metrics(listing) -> dict[str, Any]:
     current = _num(listing["price_ty"])
     fair_ppm2 = _num(listing["fair_ppm2"])
     area = _num(listing["area_m2"])
@@ -293,7 +308,7 @@ def _valuation_metrics(listing: sqlite3.Row) -> dict[str, Any]:
     }
 
 
-def _valuation_status(listing: sqlite3.Row, metrics: dict[str, Any], comps_count: int) -> str:
+def _valuation_status(listing, metrics: dict[str, Any], comps_count: int) -> str:
     if (
         listing["valuation_id"] is None
         or metrics["current_price_ty"] is None
@@ -305,7 +320,11 @@ def _valuation_status(listing: sqlite3.Row, metrics: dict[str, Any], comps_count
 
     mos = metrics["mos_pct"] or 0
     major_risk = _safe_bool(listing["suspicious_bait"]) or _safe_bool(listing["is_outlier"])
+    if "legal_status" in listing.keys() and listing["legal_status"] == "conflict":
+        major_risk = True
     unclear_data = comps_count < 3 or not listing["road_tier"] or not _safe_bool(listing["has_so"])
+    if "legal_status" in listing.keys() and listing["legal_status"] not in ("has_document", "verified"):
+        unclear_data = True
     thin_segment = int(listing["n_segment"] or 0) < 15
     if major_risk:
         return "risk_flagged"
@@ -318,7 +337,7 @@ def _valuation_status(listing: sqlite3.Row, metrics: dict[str, Any], comps_count
     return "above_fair"
 
 
-def _valuation_signals(listing: sqlite3.Row, metrics: dict[str, Any], comps_count: int, price_context: dict[str, Any]) -> list[str]:
+def _valuation_signals(listing, metrics: dict[str, Any], comps_count: int, price_context: dict[str, Any]) -> list[str]:
     items: list[str] = []
     mos = metrics.get("mos_pct")
     if mos is not None and mos > 0:
@@ -334,7 +353,7 @@ def _valuation_signals(listing: sqlite3.Row, metrics: dict[str, Any], comps_coun
     return items[:5]
 
 
-def _valuation_explanation(listing: sqlite3.Row, metrics: dict[str, Any], comps_summary: dict[str, Any]) -> list[str]:
+def _valuation_explanation(listing, metrics: dict[str, Any], comps_summary: dict[str, Any]) -> list[str]:
     notes: list[str] = []
     area = _num(listing["area_m2"])
     fair_ppm2 = metrics.get("fair_ppm2")
@@ -374,7 +393,7 @@ def _valuation_explanation(listing: sqlite3.Row, metrics: dict[str, Any], comps_
     return notes[:6]
 
 
-def _verification_questions(listing: sqlite3.Row, price_context: dict[str, Any]) -> list[str]:
+def _verification_questions(listing, price_context: dict[str, Any]) -> list[str]:
     questions = [
         "Gửi hình sổ hồng/giấy tờ gốc, tọa độ lô đất và clip đường vào để kiểm tra.",
         "Lô có dính quy hoạch, lộ giới, tranh chấp, ngập hay hạn chế xây dựng nào không?",
@@ -391,8 +410,7 @@ def _verification_questions(listing: sqlite3.Row, price_context: dict[str, Any])
 
 def load_investment_memo(db_path: str, listing_id: int, tier: str = "guest") -> dict[str, Any] | None:
     """Return a tier-safe investment memo for a listing, or None if missing."""
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    conn = connect(db_path)
     try:
         listing = _fetch_listing(conn, listing_id)
         if not listing:
@@ -422,6 +440,22 @@ def load_investment_memo(db_path: str, listing_id: int, tier: str = "guest") -> 
             "verdict_tone": meta["tone"],
             "summary": meta["summary"],
             "metrics": metrics,
+            "legal_verification": {
+                "status": listing["legal_status"],
+                "trust_tier": listing["trust_tier"],
+                "trust_score": listing["trust_score"],
+                "confidence_score": listing["legal_confidence_score"],
+                "flags": listing["legal_flags"],
+                "thua_so": listing["legal_thua_so"],
+                "to_ban_do": listing["legal_to_ban_do"],
+                "legal_area_m2": listing["legal_area_m2"],
+                "legal_residential_m2": listing["legal_residential_m2"],
+                "legal_ward": listing["legal_ward"],
+                "legal_road_text": listing["legal_road_text"],
+                "legal_road_code": listing["legal_road_code"],
+                "road_match_status": listing["road_match_status"],
+                "legal_address": listing["legal_address"],
+            },
             "comps_summary": summary,
             "price_context": price_context,
             "valuation_explanation": _valuation_explanation(listing, metrics, summary),

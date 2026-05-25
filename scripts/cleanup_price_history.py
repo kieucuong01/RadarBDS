@@ -5,12 +5,12 @@ idempotent: it keeps the first snapshot for each listing and any later snapshot
 where price_ty or price_per_m2 changes.
 """
 import argparse
-import sqlite3
 import sys
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from db.connection import DB_PATH
+from db.connection import connect
 
 
 def _same_value(a, b) -> bool:
@@ -21,7 +21,7 @@ def _same_value(a, b) -> bool:
     return abs(float(a) - float(b)) < 0.000001
 
 
-def find_duplicate_snapshot_ids(conn: sqlite3.Connection) -> list[int]:
+def find_duplicate_snapshot_ids(conn: Any) -> list[int]:
     rows = conn.execute("""
         SELECT id, listing_id, price_ty, price_per_m2
         FROM price_history
@@ -41,9 +41,8 @@ def find_duplicate_snapshot_ids(conn: sqlite3.Connection) -> list[int]:
     return duplicate_ids
 
 
-def cleanup_price_history(db_path: Path, dry_run: bool = False) -> int:
-    conn = sqlite3.connect(str(db_path))
-    conn.row_factory = sqlite3.Row
+def cleanup_price_history(dry_run: bool = False) -> int:
+    conn = connect()
     try:
         duplicate_ids = find_duplicate_snapshot_ids(conn)
         if dry_run or not duplicate_ids:
@@ -67,15 +66,14 @@ def main() -> None:
     parser.add_argument(
         "--db",
         default=None,
-        help="Path to radar_bds.db (default: data/radar_bds.db; honors RADAR_DB_PATH).",
+        help="Deprecated; runtime uses DATABASE_URL.",
     )
     parser.add_argument("--dry-run", action="store_true", help="Count rows without deleting")
     args = parser.parse_args()
 
-    db_path = Path(args.db).expanduser().resolve() if args.db else Path(DB_PATH)
-    deleted = cleanup_price_history(db_path, dry_run=args.dry_run)
+    deleted = cleanup_price_history(dry_run=args.dry_run)
     action = "Would delete" if args.dry_run else "Deleted"
-    print(f"{action} {deleted} unchanged price_history snapshots from {db_path}")
+    print(f"{action} {deleted} unchanged price_history snapshots")
 
 
 if __name__ == "__main__":

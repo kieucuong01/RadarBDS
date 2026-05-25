@@ -24,9 +24,12 @@
 1b. **(Phase 2, tùy hứng) blanket `--groq` road_tier=0** — chỉ cứu false-negative
    (deal ngon bị tier-0 dìm dưới ngưỡng signal). Làm SAU khi signal sạch, kèm
    tweak code bỏ tin không text (đừng đốt budget vào ~800 null).
-2. **Tầng 3b — Proximity scoring** — khoảng cách tới KCN Vsip 3, QL13, TDM center, trường/BV
-   - Score 1–5, cộng vào Signal Score
-   - Không cần toạ độ chính xác tới thửa; ward centroid đủ
+2. **Tầng 3b — Proximity scoring** — ✅ ĐÃ TỰ ĐỘNG HOÁ (2026-05-25)
+   - `config/proximity.py` chấm ward/sub-ward level 0–5 cho TDM center/QL13,
+     tiện ích trường-BV-hành chính, và KCN/VSIP-facing markets.
+   - `analytics/valuation.py::compute_signal_score()` cộng proximity vào Signal
+     Score, cap 100. Không ảnh hưởng fair value/MOS.
+   - Dùng ward centroid/ward-level proxy vì listing chưa có lat/lng đáng tin.
 
 ## DEFERRED (không làm cho tới khi có điều kiện)
 

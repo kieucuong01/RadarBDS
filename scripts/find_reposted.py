@@ -1,20 +1,16 @@
 """Find listings with price_history drops and duplicate repost drops.
 
-Defaults to the project's canonical DB (`data/radar_bds.db`). Override with --db
-or RADAR_DB_PATH if needed.
+Runtime uses PostgreSQL through DATABASE_URL.
 """
 
 import argparse
-import sqlite3
 import sys
 from pathlib import Path
 
 
-def _default_db_path() -> Path:
-    # Allow running as a script from any working directory.
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from db.connection import DB_PATH  # pylint: disable=import-error
-    return Path(DB_PATH)
+# Allow running as a script from any working directory.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from db.connection import connect  # pylint: disable=wrong-import-position
 
 
 def main() -> None:
@@ -24,31 +20,30 @@ def main() -> None:
     parser.add_argument(
         "--db",
         default=None,
-        help="Path to radar_bds.db (default: data/radar_bds.db; honors RADAR_DB_PATH).",
+        help="Deprecated; runtime uses DATABASE_URL.",
     )
     args = parser.parse_args()
 
-    db_path = Path(args.db).expanduser().resolve() if args.db else _default_db_path()
-    conn = sqlite3.connect(str(db_path))
+    conn = connect()
 
     r = conn.execute("SELECT COUNT(*), COUNT(DISTINCT listing_id) FROM price_history")
     total_rows, unique_listings = r.fetchone()
-    print(f"DB: {db_path}")
+    print("DB: DATABASE_URL")
     print(f"price_history: {total_rows} rows / {unique_listings} unique listings\n")
 
     sql = """
         SELECT l.id, l.title, l.ward, l.price_ty, l.source,
                COUNT(ph.id) as n_records,
-               ROUND(MIN(ph.price_ty), 3) as price_min,
-               ROUND(MAX(ph.price_ty), 3) as price_max,
-               ROUND((MAX(ph.price_ty) - MIN(ph.price_ty)) / MAX(ph.price_ty) * 100, 1) as drop_pct,
+               ROUND(MIN(ph.price_ty)::numeric, 3) as price_min,
+               ROUND(MAX(ph.price_ty)::numeric, 3) as price_max,
+               ROUND(((MAX(ph.price_ty) - MIN(ph.price_ty)) / MAX(ph.price_ty) * 100)::numeric, 1) as drop_pct,
                MIN(ph.recorded_at) as first_seen,
                MAX(ph.recorded_at) as last_seen
         FROM listings l
         JOIN price_history ph ON ph.listing_id = l.id
         WHERE l.probably_sold = 0
         GROUP BY l.id
-        HAVING n_records >= 2 AND price_max > price_min
+        HAVING COUNT(ph.id) >= 2 AND MAX(ph.price_ty) > MIN(ph.price_ty)
         ORDER BY drop_pct DESC
         LIMIT 30
     """
@@ -85,4 +80,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

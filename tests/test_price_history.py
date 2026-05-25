@@ -2,6 +2,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 from unittest import mock
 
@@ -14,10 +15,10 @@ def _listing_rec(**overrides):
         "source": "guland",
         "source_id": "1123539",
         "url": "https://guland.vn/post/dat-chinh-chu-1134m2-truc-duong-dx84-tdm-binh-duong-1123539",
-        "title": "Đất chính chủ 113,4m2, trục đường DX84, TDM, Bình Dương",
-        "description": "Đất chính chủ 113,4m2, trục đường DX84",
-        "area": "Phú Lợi",
-        "ward": "Phú Lợi",
+        "title": "Dat chinh chu 113,4m2, truc duong DX84, TDM, Binh Duong",
+        "description": "Dat chinh chu 113,4m2, truc duong DX84",
+        "area": "Phu Loi",
+        "ward": "Phu Loi",
         "raw_area_text": "113,4m2",
         "price_ty": 1.74,
         "price_per_m2": 15.4,
@@ -46,39 +47,79 @@ class PriceHistoryTest(unittest.TestCase):
 
         self.tmpdir = Path(tempfile.mkdtemp())
         self.db_path = self.tmpdir / "radar_test.db"
+        self.token = uuid.uuid4().hex
+        self.url_prefix = f"https://price-history-{self.token}.test"
+        self.source_id = f"price-history-{self.token}"
+        self.listing_ids = []
         connection.close_all()
         self.db_path_patch = mock.patch.object(connection, "DB_PATH", self.db_path)
         self.db_path_patch.start()
         init_schema()
+        self._delete_test_rows()
 
     def tearDown(self):
         from db import connection
 
+        self._delete_test_rows()
         connection.close_all()
         self.db_path_patch.stop()
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-    def _history_rows(self):
+    def _delete_test_rows(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            rows = conn.execute(
+                "SELECT id FROM listings WHERE url LIKE ?",
+                (f"{self.url_prefix}%",),
+            ).fetchall()
+            ids = {r["id"] for r in rows}
+            ids.update(self.listing_ids)
+            if not ids:
+                return
+            placeholders = ",".join("?" * len(ids))
+            params = list(ids)
+            conn.execute(f"DELETE FROM price_history WHERE listing_id IN ({placeholders})", params)
+            conn.execute(f"DELETE FROM valuation_results WHERE listing_id IN ({placeholders})", params)
+            conn.execute(f"DELETE FROM listing_images WHERE listing_id IN ({placeholders})", params)
+            conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
+            conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
+
+    def _rec(self, **overrides):
+        data = {
+            "source_id": self.source_id,
+            "url": f"{self.url_prefix}/listing",
+        }
+        data.update(overrides)
+        return _listing_rec(**data)
+
+    def _track(self, listing_id):
+        self.listing_ids.append(listing_id)
+        return listing_id
+
+    def _history_rows(self, listing_id):
         from db.connection import get_conn
 
         with get_conn() as conn:
             return conn.execute("""
                 SELECT price_ty, price_per_m2, crawl_run_id
                 FROM price_history
+                WHERE listing_id = ?
                 ORDER BY recorded_at ASC, id ASC
-            """).fetchall()
+            """, (listing_id,)).fetchall()
 
     def test_upsert_listing_same_price_does_not_duplicate_history(self):
         from db.listings import upsert_listing
 
-        listing_id, is_new = upsert_listing(_listing_rec(), crawl_run_id=1)
+        listing_id, is_new = upsert_listing(self._rec(), crawl_run_id=1)
+        self._track(listing_id)
         self.assertTrue(is_new)
 
-        same_listing_id, is_new = upsert_listing(_listing_rec(), crawl_run_id=2)
+        same_listing_id, is_new = upsert_listing(self._rec(), crawl_run_id=2)
         self.assertEqual(same_listing_id, listing_id)
         self.assertFalse(is_new)
 
-        rows = self._history_rows()
+        rows = self._history_rows(listing_id)
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["price_ty"], 1.74)
         self.assertEqual(rows[0]["crawl_run_id"], 1)
@@ -86,11 +127,12 @@ class PriceHistoryTest(unittest.TestCase):
     def test_upsert_listing_changed_price_adds_one_history_snapshot(self):
         from db.listings import upsert_listing
 
-        upsert_listing(_listing_rec(), crawl_run_id=1)
-        upsert_listing(_listing_rec(price_ty=1.70, price_per_m2=15.04), crawl_run_id=2)
-        upsert_listing(_listing_rec(price_ty=1.70, price_per_m2=15.04), crawl_run_id=3)
+        listing_id, _ = upsert_listing(self._rec(), crawl_run_id=1)
+        self._track(listing_id)
+        upsert_listing(self._rec(price_ty=1.70, price_per_m2=15.04), crawl_run_id=2)
+        upsert_listing(self._rec(price_ty=1.70, price_per_m2=15.04), crawl_run_id=3)
 
-        rows = self._history_rows()
+        rows = self._history_rows(listing_id)
         self.assertEqual([r["price_ty"] for r in rows], [1.74, 1.70])
         self.assertEqual([r["crawl_run_id"] for r in rows], [1, 2])
 
@@ -98,8 +140,9 @@ class PriceHistoryTest(unittest.TestCase):
         from db.connection import get_conn
         from db.listings import upsert_listing
 
-        listing_id, _ = upsert_listing(_listing_rec(price_ty=2.0, price_per_m2=20.0), crawl_run_id=1)
-        upsert_listing(_listing_rec(price_ty=1.0, price_per_m2=10.0), crawl_run_id=2)
+        listing_id, _ = upsert_listing(self._rec(price_ty=2.0, price_per_m2=20.0), crawl_run_id=1)
+        self._track(listing_id)
+        upsert_listing(self._rec(price_ty=1.0, price_per_m2=10.0), crawl_run_id=2)
 
         with get_conn() as conn:
             row = conn.execute("""
@@ -123,11 +166,11 @@ class PriceHistoryTest(unittest.TestCase):
                     price_ty, price_per_m2, updated_at, probably_sold
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
             """, (
-                "guland", "1123539", "https://example.test/dx84",
-                "Đất chính chủ 113,4m2, trục đường DX84", "Phú Lợi", 113.0,
+                "guland", f"{self.source_id}-api", f"{self.url_prefix}/dx84",
+                "Dat chinh chu 113,4m2, truc duong DX84", "Phu Loi", 113.0,
                 "dat_nen", 1.74, 15.4, "2026-05-07T12:25:35",
             ))
-            listing_id = cur.lastrowid
+            listing_id = self._track(cur.lastrowid)
             conn.executemany("""
                 INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
                 VALUES (?, ?, ?, ?)

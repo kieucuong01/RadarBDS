@@ -17,6 +17,9 @@ python radar.py crawl-daily
        ├─ Facebook crawl     (crawler/facebook_apify.py via Apify)
        ├─ run_full_reprocess()   → normalize → dedup → valuation
        ├─ download_images()      → tải ảnh + tạo thumbnail
+       ├─ classify legal images  → img_type='so_hong'
+       ├─ verify legal trust     → legal_verifications + trust_tier
+       ├─ broker image cleanup   → xóa avatar/selfie/profile
        ├─ verify_signals_with_groq()  → LLM verify signal mới + re-valuate (xem 2a)
        ├─ export_raw()           → backup JSON
        ├─ notification:
@@ -46,14 +49,22 @@ is_signal = (mos_pct ≥ SIGNAL_MOS_THRESHOLD)
 
 Cách tính fair_ppm2 (per-ward weighted ridge + road tier + size discount) xem `.claude/rules/valuation.md`. Không hardcode threshold ở chỗ khác — `analytics/valuation.py::SegmentModel.mos_threshold` đọc từ settings.
 
+Signal now has a separate trust tier:
+
+- `candidate_signal`: cheap by valuation, not legally verified yet.
+- `has_legal_doc`: has a detected so hong/so do image.
+- OCR parsing is disabled for now; having a detected so hong/so do image is the active legal trust boost.
+
+VIP and score sorting prioritize higher trust tiers, but candidate signals remain visible so the system does not miss early opportunities. Hard legal conflicts keep a valuation audit row but are not promoted as normal signals.
+
 **Sanity target sau reprocess:** signals chiếm 10–30% tổng listing đã valuated. Verify:
 
 ```powershell
 & $py -X utf8 -c "
-import sqlite3
-c = sqlite3.connect('data/radar_bds.db')
-n_sig = c.execute('SELECT COUNT(*) FROM valuation_results WHERE is_signal=1').fetchone()[0]
-n_all = c.execute('SELECT COUNT(*) FROM valuation_results').fetchone()[0]
+from db.connection import get_conn
+with get_conn() as c:
+    n_sig = c.execute('SELECT COUNT(*) FROM valuation_results WHERE is_signal=1').fetchone()[0]
+    n_all = c.execute('SELECT COUNT(*) FROM valuation_results').fetchone()[0]
 print(f'{n_sig}/{n_all} = {n_sig/n_all:.1%}')
 "
 ```
@@ -306,10 +317,10 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
 
 # 4. signal rate
 & $py -X utf8 -c "
-import sqlite3
-c = sqlite3.connect('data/radar_bds.db')
-print('signals:', c.execute('SELECT COUNT(*) FROM valuation_results WHERE is_signal=1').fetchone()[0])
-print('min mos:', c.execute('SELECT MIN(mos_pct) FROM valuation_results WHERE is_signal=1').fetchone()[0])
+from db.connection import get_conn
+with get_conn() as c:
+    print('signals:', c.execute('SELECT COUNT(*) FROM valuation_results WHERE is_signal=1').fetchone()[0])
+    print('min mos:', c.execute('SELECT MIN(mos_pct) FROM valuation_results WHERE is_signal=1').fetchone()[0])
 "
 ```
 

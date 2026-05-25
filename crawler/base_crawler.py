@@ -227,7 +227,7 @@ class BaseCrawler(ABC):
             self._stats["skipped"] += 1
             return False
 
-        from config.database_sqlite import get_conn
+        from db.connection import get_conn
         from db.moderation import normalize_phone
 
         source_id = str(raw_data.get("post_id") or raw_data.get("source_id") or "")
@@ -265,7 +265,7 @@ class BaseCrawler(ABC):
 
     def url_exists(self, url: str) -> bool:
         """Kiểm tra URL đã có trong DB chưa."""
-        from config.database_sqlite import get_conn
+        from db.connection import get_conn
         with get_conn() as conn:
             return conn.execute(
                 "SELECT 1 FROM raw_listings WHERE source=? AND url=?",

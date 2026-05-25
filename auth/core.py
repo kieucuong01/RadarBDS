@@ -10,6 +10,7 @@ import json
 import logging
 import re
 import secrets
+import threading
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any
@@ -335,6 +336,34 @@ RATE_LIMITS_PER_HOUR = {
     "vip": None,
     "admin": None,
 }
+MEMORY_RATE_LIMIT_SCOPES = {"dashboard"}
+_rate_limit_memory: dict[str, tuple[datetime, int]] = {}
+_rate_limit_lock = threading.Lock()
+
+
+def clear_rate_limit_cache() -> None:
+    _rate_limit_memory.clear()
+
+
+def _memory_rate_limit_retry_after(scope: str, key: str, cap: int, now: datetime) -> int | None:
+    memory_key = f"{scope}:{key}"
+    with _rate_limit_lock:
+        window_start, count = _rate_limit_memory.get(memory_key, (None, 0))
+        if window_start is None or (now - window_start) > timedelta(hours=1):
+            _rate_limit_memory[memory_key] = (now, 1)
+            return None
+        if count >= cap:
+            return max(1, int(3600 - (now - window_start).total_seconds()))
+        _rate_limit_memory[memory_key] = (window_start, count + 1)
+
+        if len(_rate_limit_memory) > 5000:
+            expired = [
+                k for k, (ws, _count) in _rate_limit_memory.items()
+                if (now - ws) > timedelta(hours=1)
+            ]
+            for k in expired[:1000]:
+                _rate_limit_memory.pop(k, None)
+    return None
 
 
 def _client_ip_from_request() -> str:
@@ -346,7 +375,7 @@ def _client_ip_from_request() -> str:
 
 
 def rate_limit(scope: str, limits: dict | None = None):
-    """Decorator: enforce per-tier per-hour limit using SQLite `rate_limits` table.
+    """Decorator: enforce per-tier per-hour limit using the `rate_limits` table.
 
     Key shape: '{scope}:user:{id}' for logged-in, '{scope}:ip:{addr}' otherwise.
     Sliding hour window (window_start = ISO datetime).
@@ -363,6 +392,19 @@ def rate_limit(scope: str, limits: dict | None = None):
             u = current_user()
             key = (f"{scope}:user:{u['id']}" if u else f"{scope}:ip:{_client_ip_from_request()}")
             now = datetime.utcnow()
+            if tier == "guest" and scope in MEMORY_RATE_LIMIT_SCOPES:
+                retry_after = _memory_rate_limit_retry_after(scope, key, cap, now)
+                if retry_after is not None:
+                    resp = jsonify({
+                        "error": "rate_limited",
+                        "scope": scope,
+                        "tier": tier,
+                        "limit": cap,
+                        "retry_after": retry_after,
+                    })
+                    resp.headers["Retry-After"] = str(retry_after)
+                    return resp, 429
+                return fn(*args, **kwargs)
             try:
                 with get_conn() as conn:
                     row = conn.execute(
@@ -383,24 +425,24 @@ def rate_limit(scope: str, limits: dict | None = None):
                             "ON CONFLICT(key) DO UPDATE SET window_start=excluded.window_start, count=1",
                             (key, now.isoformat(timespec="seconds")),
                         )
-                        return fn(*args, **kwargs)
-                    cur_count = int(row["count"] or 0)
-                    if cur_count >= cap:
-                        # Compute remaining seconds in window
-                        retry_after = max(1, int(3600 - (now - ws).total_seconds()))
-                        resp = jsonify({
-                            "error": "rate_limited",
-                            "scope": scope,
-                            "tier": tier,
-                            "limit": cap,
-                            "retry_after": retry_after,
-                        })
-                        resp.headers["Retry-After"] = str(retry_after)
-                        return resp, 429
-                    conn.execute(
-                        "UPDATE rate_limits SET count=count+1 WHERE key=?",
-                        (key,),
-                    )
+                    else:
+                        cur_count = int(row["count"] or 0)
+                        if cur_count >= cap:
+                            # Compute remaining seconds in window
+                            retry_after = max(1, int(3600 - (now - ws).total_seconds()))
+                            resp = jsonify({
+                                "error": "rate_limited",
+                                "scope": scope,
+                                "tier": tier,
+                                "limit": cap,
+                                "retry_after": retry_after,
+                            })
+                            resp.headers["Retry-After"] = str(retry_after)
+                            return resp, 429
+                        conn.execute(
+                            "UPDATE rate_limits SET count=count+1 WHERE key=?",
+                            (key,),
+                        )
             except Exception as e:
                 logger.warning(f"rate_limit check failed scope={scope}: {e}")
             return fn(*args, **kwargs)

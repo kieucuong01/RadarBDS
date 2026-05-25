@@ -2,10 +2,15 @@ import sys
 import subprocess
 import platform
 from pathlib import Path
-from config.database_sqlite import init_schema, get_conn
-import config.database_sqlite as _db
+from db.connection import advisory_lock, get_conn
+from db.schema import init_schema
 
 def cmd_reprocess(args):
+    with advisory_lock("reprocess"):
+        return _cmd_reprocess(args)
+
+
+def _cmd_reprocess(args):
     init_schema()
     from cleansing.reprocess import (
         run_full_reprocess, reprocess_listings, reprocess_valuation,
@@ -44,7 +49,7 @@ def cmd_reprocess(args):
         print(f"{'='*50}")
 
 def cmd_dashboard(args):
-    db_path = getattr(args, "db", None) or str(_db.DB_PATH)
+    db_path = getattr(args, "db", None) or ""
     out_path = getattr(args, "out", None) or "dashboard_signals.html"
     result = subprocess.run(
         [sys.executable, "scripts/generate_dashboard.py", "--db", db_path, "--out", out_path],
@@ -118,12 +123,101 @@ def cmd_schedule_setup(args):
         print(f"❌ Lỗi tạo task: {result.stderr}")
 
 def cmd_download_images(args):
+    with advisory_lock("download-images"):
+        return _cmd_download_images(args)
+
+
+def _cmd_download_images(args):
     init_schema()
     from cleansing.download_images import download_images
+    from cleansing.legal_image_classifier import classify_legal_images
+    from cleansing.legal_verification import refresh_legal_verifications
+    from cleansing.image_cleanup import clean_broker_images
     limit = getattr(args, "limit", 1000)
     download_images(limit=limit)
+    legal_stats = classify_legal_images(apply=True, limit=limit)
+    print(
+        f"Classify legal images: scanned={legal_stats.get('scanned', 0)} | "
+        f"updated={legal_stats.get('updated', 0)} | reasons={legal_stats.get('reasons', {})}"
+    )
+    verify_stats = refresh_legal_verifications(apply=True, limit=limit)
+    print(
+        f"Verify legal trust: scanned={verify_stats.get('scanned', 0)} | "
+        f"updated={verify_stats.get('updated', 0)} | statuses={verify_stats.get('statuses', {})}"
+    )
+    stats = clean_broker_images(apply=True, limit=limit, strong=True)
+    print(
+        f"Clean broker images: scanned={stats.get('scanned', 0)} | "
+        f"deleted={stats.get('deleted', 0)} | reasons={stats.get('reasons', {})}"
+    )
+
+def cmd_classify_legal_images(args):
+    with advisory_lock("classify-legal-images"):
+        return _cmd_classify_legal_images(args)
+
+
+def _cmd_classify_legal_images(args):
+    init_schema()
+    from cleansing.legal_image_classifier import classify_legal_images
+    stats = classify_legal_images(
+        source=getattr(args, "source", None),
+        apply=bool(getattr(args, "apply", False)),
+        limit=getattr(args, "limit", None),
+    )
+    mode = "APPLIED" if stats["apply"] else "DRY RUN (use --apply to update)"
+    print(
+        f"[{mode}] scanned={stats['scanned']} | candidates={stats['candidates']} | "
+        f"updated={stats['updated']} | reasons={stats['reasons']}"
+    )
+
+def cmd_verify_legal_signals(args):
+    with advisory_lock("verify-legal-signals"):
+        return _cmd_verify_legal_signals(args)
+
+
+def _cmd_verify_legal_signals(args):
+    init_schema()
+    from cleansing.legal_verification import refresh_legal_verifications
+    stats = refresh_legal_verifications(
+        source=getattr(args, "source", None),
+        listing_id=getattr(args, "listing_id", None),
+        apply=bool(getattr(args, "apply", False)),
+        limit=getattr(args, "limit", None),
+    )
+    mode = "APPLIED" if stats["apply"] else "DRY RUN (use --apply to update)"
+    print(
+        f"[{mode}] scanned={stats['scanned']} | updated={stats['updated']} | "
+        f"statuses={stats['statuses']} | trust_tiers={stats['trust_tiers']}"
+    )
+
+def cmd_clean_broker_images(args):
+    with advisory_lock("clean-broker-images"):
+        return _cmd_clean_broker_images(args)
+
+
+def _cmd_clean_broker_images(args):
+    init_schema()
+    from cleansing.image_cleanup import clean_broker_images
+    stats = clean_broker_images(
+        source=getattr(args, "source", None),
+        apply=bool(getattr(args, "apply", False)),
+        limit=getattr(args, "limit", None),
+        strong=bool(getattr(args, "strong", True)),
+    )
+    mode = "APPLIED" if stats["apply"] else "DRY RUN (use --apply to delete)"
+    print(
+        f"[{mode}] scanned={stats['scanned']} | candidates={stats['candidates']} | "
+        f"deleted={stats['deleted']} | files={stats['files_deleted']} | "
+        f"thumbs={stats['thumbs_deleted']} | raw_updated={stats['raw_updated']} | "
+        f"reasons={stats['reasons']}"
+    )
 
 def cmd_db_cleanup(args):
+    with advisory_lock("db-cleanup"):
+        return _cmd_db_cleanup(args)
+
+
+def _cmd_db_cleanup(args):
     init_schema()
     from cli.cleanup import run_cleanup
     apply = bool(getattr(args, "apply", False))
@@ -138,6 +232,8 @@ def cmd_db_cleanup(args):
     mode = "APPLIED" if apply else "DRY RUN (use --apply to delete)"
     print(
         f"[{mode}] sold listings={stats['sold_listings']} | "
+        f"unpriceable listings={stats['unpriceable_listings']} | "
+        f"unpriceable raw={stats['unpriceable_raw']} | "
         f"orphan raw={stats['orphan_raw']} | "
         f"old notif={stats['old_notifications']} | "
         f"orphan images={stats['orphan_image_files']} ({mb:.1f} MB)"

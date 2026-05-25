@@ -3,19 +3,19 @@
     {
       "url": "https://www.facebook.com/nhadatkhanhmy",
       "broker_name": "Khánh My",
-      "tier": 20
+      "tier": 100
     },
     {
       "url": "https://www.facebook.com/hang.pk.90",
       "broker_name": "Hằng PK",
-      "tier": 10
+      "tier": 50
     }
   ],
   "Bến Cát": [
     {
       "url": "https://www.facebook.com/khuyen.vu.86",
       "broker_name": "Khuyên Vũ",
-      "tier": 5
+      "tier": 30
     }
   ]
 }

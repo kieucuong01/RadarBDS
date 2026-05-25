@@ -30,9 +30,9 @@ SELECT
         WHEN AVG(CASE WHEN l.transaction_type='ban'  THEN l.price_per_m2 END) > 0
          AND AVG(CASE WHEN l.transaction_type='thue' THEN l.price_per_m2 END) > 0
         THEN ROUND(
-            (AVG(CASE WHEN l.transaction_type='thue' THEN l.price_per_m2 END) * 12
+            ((AVG(CASE WHEN l.transaction_type='thue' THEN l.price_per_m2 END) * 12
              / (AVG(CASE WHEN l.transaction_type='ban' THEN l.price_per_m2 END) * 1000)
-            ) * 100, 2
+            ) * 100)::numeric, 2
         )
         ELSE NULL
     END

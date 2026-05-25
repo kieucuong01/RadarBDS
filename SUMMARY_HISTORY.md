@@ -2,7 +2,39 @@
 
 This file keeps durable handoff notes for future AI sessions. For day-to-day context, read `AGENTS.md` first.
 
-## Current Handoff - 2026-05-20
+## Current Handoff - 2026-05-25
+
+### Supabase/PostgreSQL local cutover
+
+- Runtime DB is now PostgreSQL via `DATABASE_URL`; local `.env` points to Supabase project `ozdjzfiqcjnlfuihqqjy` under account/org `kieucuong02`.
+- Do not print or commit the Supabase DB password. If the password was shared in chat or logs, rotate it in Supabase and update local `.env`.
+- `data/radar_bds.db` is now a legacy migration source only. Normal app, CLI, crawler, and admin flows should not open it.
+- Migration completed from SQLite to Supabase Postgres on 2026-05-25:
+  - `raw_listings`: 6,991
+  - `listings`: 6,991
+  - `listing_images`: 38,951 copied, 18 orphan rows skipped
+  - `price_history`: 6,971 copied, 18 orphan rows skipped
+  - `valuation_results`: 5,911
+  - `users`: 13
+  - `user_audit_log`: 203 copied, 13 orphan rows skipped
+- Verification after migration:
+  - direct Supabase `psycopg` connection OK
+  - `radar.py inspect` OK
+  - `/api/dashboard` 200
+  - `/api/signals?page=1&limit=3` 200
+  - `/api/listing/620` 200
+  - `py_compile` OK
+  - `pytest tests/test_postgres_connection.py -q` -> 4 passed
+- Migration script notes:
+  - `scripts/migrate_sqlite_to_postgres.py` loads `.env` and inserts in batches.
+  - The script skips orphan child rows that violate Postgres foreign keys instead of weakening FK constraints.
+  - SQL script splitting handles semicolons inside line comments.
+- Supabase connection policy:
+  - Prefer Direct connection for migration/backup when local network supports it.
+  - Use Session Pooler only if direct networking fails.
+  - Avoid Transaction Pooler for the Flask app/crawler unless psycopg prepared statements are explicitly disabled.
+
+## Previous Handoff - 2026-05-20
 
 ### Valuation cleanup: signal reliability gate + Hiệp Thành sub-ward split
 
@@ -75,7 +107,7 @@ listing chuyển sang ward sai (MP NE5 vẫn match Mỹ Phước 3 OK).
 
 ## Archived Handoff - 2026-05-10
 
-- Canonical DB is `data/radar_bds.db`; `RADAR_DB_PATH` remains the override.
+- Historical note: at this time the canonical DB was `data/radar_bds.db`. This is no longer true after the 2026-05-25 PostgreSQL cutover.
 - Runtime data is ignored by git: DB files, `data/images/`, thumbnails, logs, reports, and scratch output.
 - Dashboard first load was optimized:
   - `/api/dashboard` is lightweight summary only.
@@ -98,7 +130,7 @@ listing chuyển sang ward sai (MP NE5 vẫn match Mỹ Phước 3 OK).
 ## Older Stable Milestones
 
 - Refactored `app.py` toward thin Flask routes and moved dashboard read shaping into `services/market_data.py`.
-- Refactored DB layer into focused modules under `db/`; `config/database_sqlite.py` remains a compatibility facade.
+- Refactored DB layer into focused modules under `db/`; after the PostgreSQL cutover, `config/database_sqlite.py` remains a compatibility facade only.
 - Added incremental reprocess flow for daily crawls.
 - Moved valuation to per-ward models with recent-record training limits.
 - Added Facebook/Guland/BatDongSan crawl flows and local image download pipeline.
@@ -107,6 +139,7 @@ listing chuyển sang ward sai (MP NE5 vẫn match Mỹ Phước 3 OK).
 ## What Not To Reintroduce
 
 - Do not document `C:\Users\ASUS\radar_bds.db` as the default DB.
+- Do not document `data/radar_bds.db` / `RADAR_DB_PATH` as the runtime path.
 - Do not make `/api/dashboard` return all signals/descriptions/images again.
 - Do not use Guland/BatDongSan cross-URL heuristics for same-lot price drop.
 - Do not rely on remote Facebook image URLs for dashboard cards; use local images and thumbnails.

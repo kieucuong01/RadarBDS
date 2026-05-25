@@ -21,10 +21,11 @@ logger = logging.getLogger(__name__)
 
 
 def _ascii_fold(text: str) -> str:
-    return "".join(
+    folded = "".join(
         c for c in unicodedata.normalize("NFD", text or "")
         if unicodedata.category(c) != "Mn"
     ).lower()
+    return folded.replace("đ", "d")
 
 _CAP_TRO_RE = re.compile(
     r'cặp\s*trọ|hai\s*dãy\s*trọ|2\s*dãy\s*trọ|cặp\s*nhà\s*trọ|cặp\s*dãy', re.IGNORECASE
@@ -102,6 +103,8 @@ _OUTSIDE_KEYWORDS = [
     "tân vĩnh hiệp", "tan-vinh-hiep",
     # Dầu Tiếng
     "dầu tiếng", "dau-tieng",
+    # Bàu Bàng/ngoài focus sau sáp nhập, hay bị rơi nhầm vào Bến Cát/Tân An
+    "long nguyên", "long-nguyen", "long nguyen",
 ]
 
 # Danh sách ward phổ biến tại Thủ Dầu Một để parse từ title/url
@@ -151,6 +154,36 @@ _CITY_WARDS = {
         "Tân Định", "Thới Hòa", "Phú An"
     ]
 }
+
+
+def _is_intended_city(intended_city: Optional[str], city_name: str) -> bool:
+    return _ascii_fold(intended_city or "") == _ascii_fold(city_name)
+
+
+def _has_ben_cat_context(text: str, intended_city: Optional[str]) -> bool:
+    folded = _ascii_fold(text)
+    return _is_intended_city(intended_city, "Bến Cát") or "ben cat" in folded
+
+
+def _match_ben_cat_landmark_ward(text: str) -> Optional[str]:
+    folded = _ascii_fold(text)
+
+    # Review wrong_ward: khu L / DL / NL / DH... là lưới Mỹ Phước 3.
+    if (
+        re.search(r"\bkhu\s*l\b", folded)
+        or re.search(r"\b[dn][ghijklf]\d{1,2}[a-z]?\b", folded)
+    ):
+        return "Mỹ Phước 3"
+
+    # Review wrong_ward: ĐH/Đại học Việt Đức nằm ở Thới Hòa.
+    if re.search(r"\b(?:dai\s*hoc|dh|truong)\s+viet\s+duc\b", folded):
+        return "Thới Hòa"
+
+    # Chà Vi là landmark trong khu Mỹ Phước; giữ ở parent ward khi thiếu MP1/2/3/4.
+    if re.search(r"\b(?:ben\s+)?cha\s+vi\b", folded):
+        return "Mỹ Phước"
+
+    return None
 
 
 def match_area_helper(text: str) -> Optional[str]:
@@ -236,6 +269,11 @@ def match_ward(*texts: str, intended_city: Optional[str] = None) -> Optional[str
         # Loại bỏ các tên đường dễ gây nhầm lẫn trước khi match
         text_lower = re.sub(r'mỹ phước\s*[-–]?\s*tân vạn', '', text_lower)
         text_lower = text_lower.replace('mp-tv', '').replace('mptv', '')
+
+        if _has_ben_cat_context(blob, intended_city):
+            landmark_ward = _match_ben_cat_landmark_ward(text_lower)
+            if landmark_ward:
+                return landmark_ward
         
         for ward, kws in _WARD_KEYWORDS.items():
             if intended_city and intended_city in _CITY_WARDS:
@@ -283,9 +321,14 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         if not url or not title:
             return None
 
-        # Khu vực (area = "Tân An" — dùng cho segment analytics)
+        intended_city = raw.get("default_area")
+
+        # Khu vực (area dùng cho segment analytics). default_area là city/profile,
+        # không phải ward; không fallback về Tân An khi chưa bắt được ward rõ.
         area_name = (raw.get("area_name") or raw.get("area") or
-                     match_area(raw.get("raw_area_text", "")) or "Tân An")
+                     match_area(raw.get("raw_area_text", "")))
+        if not area_name and intended_city in _CITY_WARDS:
+            area_name = intended_city
 
         # Override logic cho Guland/BDS để tránh nhập nhằng Phú An
         source_name = raw.get("source", "")
@@ -294,7 +337,6 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         raw_addr = (raw.get("address") or "").lower()
         
         ward_from_text = None
-        intended_city = raw.get("default_area")
         
         if source_name != "facebook":
             if "thu-dau-mot" in url_lower or "thủ dầu một" in raw_addr:
@@ -339,8 +381,16 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                 area_name  = "Other"           # Phân loại ra ngoài TDM
             else:
                 # Không có signal địa danh nào → trust cached ward từ source, cuối cùng là area_name
-                ward_final = (raw.get("ward") or "").strip() or area_name
-                if ward_final: area_name = ward_final
+                cached_ward = (raw.get("ward") or "").strip()
+                if cached_ward:
+                    ward_final = cached_ward
+                    area_name = cached_ward
+                else:
+                    ward_final = None
+                    if not area_name and intended_city in _CITY_WARDS:
+                        area_name = intended_city
+                    if not area_name:
+                        area_name = "Unknown"
 
         # Giá — hỗ trợ cả price_ty (SQLite) và price_total (legacy)
         price_ty     = raw.get("price_ty") or raw.get("price_total")
@@ -469,6 +519,8 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                                  title, description, road_text_extra
                              ])))),
             "road_tier":     road_tier,
+            "tho_cu_m2":     tho_cu_info.get("tho_cu_m2"),
+            "tho_cu_ratio":  tho_cu_info.get("tho_cu_ratio"),
             "has_so":        has_so_final,
             "is_hot":        int(hot),
             "contact_phone": (contact_phone[:50] or None),

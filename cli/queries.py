@@ -1,5 +1,7 @@
 import json
-from config.database_sqlite import init_schema, get_conn
+
+from db.connection import get_conn
+from db.schema import init_schema
 
 def cmd_query(args):
     init_schema()

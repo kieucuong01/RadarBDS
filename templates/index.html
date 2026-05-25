@@ -21,7 +21,13 @@
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@3.1.0/dist/chartjs-chart-treemap.min.js"></script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=modal-comps-titlelink-20260515">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=main-css-split-20260526">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=main-css-split-20260526">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=main-css-split-20260526">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=main-css-split-20260526">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=main-css-split-20260526">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=main-css-split-20260526">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=main-css-split-20260526">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=watchlist-20260515">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -326,6 +332,10 @@
               </select>
             </label>
           </div>
+        </div>
+        <div class="signal-loading-bar" id="signalsLoadingBar" hidden aria-live="polite">
+          <span class="mini-spinner" aria-hidden="true"></span>
+          <span id="signalsLoadingText">Đang lọc signal...</span>
         </div>
         <div class="cards-grid" id="signalsGrid">
           <!-- Rendered via JS -->
@@ -840,7 +850,14 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=watchlist-telegram-sync-20260515"></script>
-  <script src="{{ url_for('static', filename='js/main.js') }}?v=modal-comps-titlelink-20260515"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/market.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=main-split-20260526"></script>
 </body>
 
 </html>

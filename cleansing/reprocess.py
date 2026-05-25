@@ -9,23 +9,27 @@ Usage:
 """
 import argparse
 import logging
+import re
 import sys
+import unicodedata
 from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.database_sqlite import (
-    init_schema, get_conn, get_raw_for_reprocess,
-    upsert_listing, insert_images, update_listing_outlier,
-    save_valuation_result, start_crawl_run, finish_crawl_run,
-)
 from cleansing.normalizer import normalize_record, compute_content_hash
+from db.analytics import save_valuation_result
+from db.connection import advisory_lock, get_conn
+from db.crawl_runs import finish_crawl_run, start_crawl_run
+from db.listings import insert_images, update_listing_outlier, upsert_listing
 from db.moderation import is_phone_blacklisted
+from db.raw_listings import get_raw_for_reprocess
+from db.schema import init_schema
 
 
 GULAND_EXTREME_PPM2 = 80.0
-GULAND_OLD_POST_DAYS = 60
+GULAND_OLD_POST_DAYS = 14
+GULAND_CLUSTER_MIN_SIZE = 4
 BAD_VALUATION_VERDICTS = {"fake_price", "cannot_price", "overpriced"}
 GOOD_VALUATION_VERDICTS = {"cheap_real", "correct", "good"}
 
@@ -39,16 +43,24 @@ def _date_prefix(value):
         return None
 
 
+def _has_positive_feedback(row) -> bool:
+    verdict = (row["feedback_verdict"] or "").strip()
+    extraction = (row["feedback_extraction_verdict"] or "").strip()
+    valuation = (row["feedback_valuation_verdict"] or verdict).strip()
+    return valuation in GOOD_VALUATION_VERDICTS and extraction in ("", "all_correct")
+
+
 def _source_quality_flags(row) -> tuple:
     source = (row["source"] or "").lower()
     if source != "guland":
         return ()
 
+    if _has_positive_feedback(row):
+        return ()
+
     verdict = (row["feedback_verdict"] or "").strip()
     extraction = (row["feedback_extraction_verdict"] or "").strip()
     valuation = (row["feedback_valuation_verdict"] or verdict).strip()
-    if valuation in GOOD_VALUATION_VERDICTS and extraction in ("", "all_correct"):
-        return ()
 
     flags = []
     if int(row["suspicious_bait"] or 0):
@@ -67,6 +79,58 @@ def _source_quality_flags(row) -> tuple:
         flags.append("review_bad_extraction")
 
     return tuple(sorted(set(flags)))
+
+
+def _ascii_signature(text: str) -> str:
+    text = unicodedata.normalize("NFD", text or "")
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    text = text.lower().replace("đ", "d")
+    text = re.sub(r"\b\d+(?:[,.]\d+)?\b", " ", text)
+    tokens = re.findall(r"[a-z]+", text)
+    return " ".join(tokens[:8])
+
+
+def _guland_cluster_key(row):
+    if (row["source"] or "").lower() != "guland":
+        return None
+    if _has_positive_feedback(row):
+        return None
+    title_sig = _ascii_signature(row["title"] or row["description"] or "")
+    if not title_sig:
+        return None
+    try:
+        area_bucket = int(round(float(row["area_m2"] or 0)))
+        price_bucket = round(float(row["price_ty"] or 0), 1)
+    except Exception:
+        return None
+    if area_bucket <= 0 or price_bucket <= 0:
+        return None
+    return (
+        row["ward"] or "unknown",
+        row["property_type"] or "khac",
+        area_bucket,
+        price_bucket,
+        title_sig,
+    )
+
+
+def _guland_cluster_flag_map(rows) -> dict:
+    unique_rows = {}
+    for row in rows:
+        unique_rows[row["id"]] = row
+
+    groups = {}
+    for row in unique_rows.values():
+        key = _guland_cluster_key(row)
+        if key:
+            groups.setdefault(key, []).append(row["id"])
+
+    flagged = {}
+    for ids in groups.values():
+        if len(ids) >= GULAND_CLUSTER_MIN_SIZE:
+            for listing_id in ids:
+                flagged.setdefault(listing_id, set()).add("guland_cluster_flood")
+    return flagged
 
 
 def populate_content_hashes(conn) -> int:
@@ -101,8 +165,9 @@ def _batch_save_valuations(results, id_map):
                     (listing_id, fair_ppm2, actual_ppm2, mos_pct,
                      is_signal, is_outlier, outlier_direction, outlier_sigma,
                      segment, n_segment, signal_score, road_tier,
-                     source_quality_flags, source_quality_recheck)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                     source_quality_flags, source_quality_recheck,
+                     legal_status, trust_tier, trust_score, legal_flags)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (
                 r.listing_id, r.price_per_m2_fair, r.price_per_m2_actual,
                 r.discount_pct, int(r.is_signal), int(r.is_outlier),
@@ -111,6 +176,10 @@ def _batch_save_valuations(results, id_map):
                 r.signal_score, listing.road_tier if listing else 0,
                 ",".join(r.source_quality_flags or ()),
                 int(bool(r.source_quality_recheck)),
+                r.legal_status,
+                r.trust_tier,
+                r.trust_score,
+                ",".join(r.legal_flags or ()),
             ))
             conn.execute("""
                 UPDATE listings
@@ -188,7 +257,7 @@ def reprocess_listings(source: str = None, since: str = None, full: bool = False
     return stats
 
 
-def reprocess_valuation(incremental_ids: list = None) -> dict:
+def reprocess_valuation(incremental_ids: list = None, training_ids: list = None) -> dict:
     """
     Bước 2: listings → valuation_results (chạy lại engine).
     Nếu incremental_ids có giá trị, chỉ tính định giá cho các ID đó.
@@ -205,14 +274,22 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
         # 1. Lấy dữ liệu để TRAIN model (Fit). Chỉ lấy 30k tin gần nhất để đảm bảo hiệu năng và độ tươi.
         # Với 500k tin, việc load toàn bộ là không cần thiết vì có TIME_DECAY.
         valuation_select = """
-            SELECT l.id, l.area, l.ward, l.property_type, l.tx_type, l.price_per_m2, l.price_ty,
+            SELECT l.id, l.title, l.description,
+                   l.area, l.ward, l.property_type, l.tx_type, l.price_per_m2, l.price_ty,
                    l.area_m2, l.frontage_m, l.depth_m, l.road_type, l.road_tier,
+                   l.tho_cu_m2, l.tho_cu_ratio,
                    l.has_so, l.is_hot, l.price_dropped, l.crawled_at, l.posted_at,
                    l.url, l.contact_phone, l.source, l.suspicious_bait,
+                   l.review_hidden,
+                   COALESCE(lv.status, 'unverified') AS legal_status,
+                   COALESCE(lv.trust_tier, 'candidate_signal') AS trust_tier,
+                   COALESCE(lv.confidence_score, 0) AS trust_score,
+                   COALESCE(lv.conflict_flags, '') AS legal_flags,
                    f.verdict AS feedback_verdict,
                    f.extraction_verdict AS feedback_extraction_verdict,
                    f.valuation_verdict AS feedback_valuation_verdict
             FROM listings l
+            LEFT JOIN legal_verifications lv ON lv.listing_id = l.id
             LEFT JOIN ai_training_feedback f ON f.id = (
                 SELECT id FROM ai_training_feedback
                 WHERE listing_id = l.id
@@ -227,15 +304,26 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
               )
         """
 
-        train_rows = conn.execute(f"""
-            {valuation_select}
-            WHERE l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
-              AND COALESCE(l.probably_sold,0) = 0
-              AND COALESCE(l.is_blacklisted,0) = 0
-              AND COALESCE(l.review_hidden,0) = 0
-            ORDER BY l.id DESC
-            LIMIT 30000
-        """).fetchall()
+        if training_ids:
+            train_placeholders = ",".join(["?"] * len(training_ids))
+            train_rows = conn.execute(f"""
+                {valuation_select}
+                WHERE l.id IN ({train_placeholders})
+                  AND l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
+                  AND COALESCE(l.probably_sold,0) = 0
+                  AND COALESCE(l.is_blacklisted,0) = 0
+                  AND COALESCE(l.review_hidden,0) = 0
+            """, training_ids).fetchall()
+        else:
+            train_rows = conn.execute(f"""
+                {valuation_select}
+                WHERE l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
+                  AND COALESCE(l.probably_sold,0) = 0
+                  AND COALESCE(l.is_blacklisted,0) = 0
+                  AND COALESCE(l.review_hidden,0) = 0
+                ORDER BY l.id DESC
+                LIMIT 30000
+            """).fetchall()
 
         # 2. Lấy dữ liệu để ĐỊNH GIÁ (Valuate).
         if incremental_ids:
@@ -259,8 +347,10 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
                 ORDER BY l.id DESC
             """).fetchall()
 
+    cluster_flags = _guland_cluster_flag_map(list(train_rows) + list(valuate_rows))
+
     def row_to_listing(row):
-        flags = _source_quality_flags(row)
+        flags = tuple(sorted(set(_source_quality_flags(row)) | cluster_flags.get(row["id"], set())))
         crawled = date.fromisoformat(row["crawled_at"][:10]) if row["crawled_at"] else None
         return Listing(
             id           = row["id"],
@@ -273,6 +363,8 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
             area_m2      = float(row["area_m2"] or 0),
             frontage_m   = float(row["frontage_m"]) if row["frontage_m"] else None,
             depth_m      = float(row["depth_m"])    if row["depth_m"]    else None,
+            tho_cu_m2    = float(row["tho_cu_m2"]) if row["tho_cu_m2"] else None,
+            tho_cu_ratio = float(row["tho_cu_ratio"]) if row["tho_cu_ratio"] else None,
             road_type    = row["road_type"] or "unknown",
             road_tier     = int(row["road_tier"] or 0),
             has_so        = bool(row["has_so"]),
@@ -284,6 +376,21 @@ def reprocess_valuation(incremental_ids: list = None) -> dict:
             source        = row["source"] or "",
             source_quality_flags = flags,
             exclude_from_baseline = bool(flags),
+            legal_status = row["legal_status"] or "unverified",
+            trust_tier = row["trust_tier"] or "candidate_signal",
+            trust_score = int(row["trust_score"] or 0),
+            legal_flags = tuple(x for x in (row["legal_flags"] or "").split(",") if x),
+            review_recheck_candidate = bool(
+                row["review_hidden"]
+                and row["feedback_verdict"] == "bad_data"
+                and row["feedback_extraction_verdict"] in {
+                    "wrong_area",
+                    "wrong_price",
+                    "wrong_property_type",
+                    "wrong_road",
+                    "wrong_ward",
+                }
+            ),
         )
 
     train_listings = []
@@ -723,12 +830,31 @@ def verify_signals_with_groq(limit: int = 300, ward: str = None) -> int:
 
 
 def run_full_reprocess(source: str = None, since: str = None, use_gemini: bool = False, use_groq: bool = False, full: bool = False):
+    with advisory_lock("reprocess"):
+        return _run_full_reprocess(source=source, since=since, use_gemini=use_gemini, use_groq=use_groq, full=full)
+
+
+def _run_full_reprocess(source: str = None, since: str = None, use_gemini: bool = False, use_groq: bool = False, full: bool = False):
     """Chạy pipeline reprocess: raw → listings → valuation."""
     logger.info("=" * 55)
     logger.info(f"{'FULL' if full else 'INCREMENTAL'} REPROCESS START")
 
     listing_stats = reprocess_listings(source=source, since=since, full=full)
     processed_ids = listing_stats.get("processed_ids", [])
+
+    from cleansing.legal_verification import refresh_legal_verifications
+    if full:
+        legal_stats = refresh_legal_verifications(source=source, apply=True)
+    else:
+        legal_stats = {"apply": True, "scanned": 0, "updated": 0, "statuses": {}, "trust_tiers": {}}
+        for lid in processed_ids:
+            one = refresh_legal_verifications(listing_id=lid, apply=True)
+            legal_stats["scanned"] += one.get("scanned", 0)
+            legal_stats["updated"] += one.get("updated", 0)
+            for key, val in one.get("statuses", {}).items():
+                legal_stats["statuses"][key] = legal_stats["statuses"].get(key, 0) + val
+            for key, val in one.get("trust_tiers", {}).items():
+                legal_stats["trust_tiers"][key] = legal_stats["trust_tiers"].get(key, 0) + val
     
     # Valuation: Nếu full=False, chỉ định giá các tin vừa mới xử lý
     val_stats = reprocess_valuation(incremental_ids=None if full else processed_ids)
@@ -775,6 +901,7 @@ def run_full_reprocess(source: str = None, since: str = None, use_gemini: bool =
 
     logger.info("FULL REPROCESS DONE")
     logger.info(f"  Listings : {listing_stats}")
+    logger.info(f"  Legal    : {legal_stats}")
     logger.info(f"  Valuation: {val_stats}")
     logger.info(f"  PriceDrop: {n_drops} new drops detected")
     logger.info(f"  Lifecycle: {n_delisted} delisted ({n_likely_sold} likely sold <72h)")
@@ -782,7 +909,7 @@ def run_full_reprocess(source: str = None, since: str = None, use_gemini: bool =
     logger.info(f"  ContentHash: {n_hashes} rows updated")
     logger.info("=" * 55)
 
-    return {"listings": listing_stats, "valuation": val_stats,
+    return {"listings": listing_stats, "legal": legal_stats, "valuation": val_stats,
             "dedup": dedup_stats, "price_drops": n_drops,
             "lifecycle": {"delisted": n_delisted, "likely_sold": n_likely_sold}}
 

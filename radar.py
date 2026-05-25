@@ -39,10 +39,12 @@ from cli.review import cmd_review_queue, cmd_review_save
 from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
-    cmd_groq_extract_test,
+    cmd_groq_extract_test, cmd_clean_broker_images,
+    cmd_classify_legal_images,
+    cmd_verify_legal_signals,
 )
 
-def main():
+def build_parser():
     parser = argparse.ArgumentParser(prog="radar", description="Radar BDS CLI")
     sub = parser.add_subparsers(dest="cmd")
 
@@ -170,6 +172,28 @@ def main():
     p_di = sub.add_parser("download-images", help="Tải ảnh về máy cục bộ")
     p_di.add_argument("--limit", type=int, default=1000, help="Số lượng ảnh tối đa cần tải")
 
+    # clean-broker-images
+    p_cbi = sub.add_parser("clean-broker-images", help="Xóa ảnh avatar/selfie/profile môi giới khỏi listing_images")
+    p_cbi.add_argument("--source", help="Lọc source: guland | facebook | batdongsan")
+    p_cbi.add_argument("--limit", type=int, help="Giới hạn số ảnh scan")
+    p_cbi.add_argument("--apply", action="store_true", help="Xóa thật (mặc định dry-run)")
+    p_cbi.add_argument("--conservative", action="store_false", dest="strong",
+                       help="Lọc thận trọng hơn, ít xóa ảnh có người")
+    p_cbi.set_defaults(strong=True)
+
+    # classify-legal-images
+    p_cli = sub.add_parser("classify-legal-images", help="Nhan dien anh so hong/so do trong listing_images")
+    p_cli.add_argument("--source", help="Loc source: guland | facebook | batdongsan")
+    p_cli.add_argument("--limit", type=int, help="Gioi han so anh scan")
+    p_cli.add_argument("--apply", action="store_true", help="Update img_type='so_hong' (mac dinh dry-run)")
+
+    # verify-legal-signals
+    p_vls = sub.add_parser("verify-legal-signals", help="Tinh trust tier tu viec co anh so hong/so do")
+    p_vls.add_argument("--source", help="Loc source: guland | facebook | batdongsan")
+    p_vls.add_argument("--listing-id", type=int, dest="listing_id", help="Listing ID cu the")
+    p_vls.add_argument("--limit", type=int, help="Gioi han so listing scan")
+    p_vls.add_argument("--apply", action="store_true", help="Update legal_verifications va trust fields")
+
     # db-cleanup
     p_cl = sub.add_parser("db-cleanup", help="Prune stale rows + orphan image files (dry-run default)")
     p_cl.add_argument("--apply", action="store_true", help="Actually delete (default = dry run)")
@@ -194,7 +218,11 @@ def main():
     p_ch = sub.add_parser("crawl-health", help="Health dashboard các crawl runs gần đây")
     p_ch.add_argument("--limit", type=int, default=10, help="Số runs hiển thị (default: 10)")
 
+    return parser
 
+
+def main():
+    parser = build_parser()
     args = parser.parse_args()
 
     if args.cmd == "reprocess":
@@ -237,6 +265,12 @@ def main():
         cmd_review_save(args)
     elif args.cmd == "download-images":
         cmd_download_images(args)
+    elif args.cmd == "clean-broker-images":
+        cmd_clean_broker_images(args)
+    elif args.cmd == "classify-legal-images":
+        cmd_classify_legal_images(args)
+    elif args.cmd == "verify-legal-signals":
+        cmd_verify_legal_signals(args)
     elif args.cmd == "db-cleanup":
         cmd_db_cleanup(args)
     elif args.cmd == "inspect":

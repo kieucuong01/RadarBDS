@@ -89,10 +89,9 @@ def _days_ago(crawled_at: str) -> int:
 
 # ──────────────────────────────────────────────────────────
 def load_data(db_path: str) -> dict:
-    import config.database_sqlite as db_mod
-    db_mod.DB_PATH = Path(db_path)
+    from db.connection import get_conn
 
-    with db_mod.get_conn() as conn:
+    with get_conn() as conn:
         # Signals + valuation — bỏ duplicate/sold
         sig_rows = conn.execute("""
             SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
@@ -137,8 +136,8 @@ def load_data(db_path: str) -> dict:
         # Range ppm2 per type (loại outlier)
         range_rows = conn.execute("""
             SELECT property_type,
-                   ROUND(MIN(price_per_m2), 1),
-                   ROUND(MAX(price_per_m2), 1)
+                   ROUND(MIN(price_per_m2)::numeric, 1),
+                   ROUND(MAX(price_per_m2)::numeric, 1)
             FROM listings
             WHERE is_outlier = 0 AND probably_sold = 0 AND price_per_m2 IS NOT NULL
             GROUP BY property_type
@@ -1061,13 +1060,12 @@ renderTable();
 # ──────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--db",     default=None,                          help="SQLite DB path")
+    parser.add_argument("--db",     default=None,                          help="Deprecated; runtime uses DATABASE_URL")
     parser.add_argument("--output", default="dashboard_signals.html",      help="Output HTML path")
     args = parser.parse_args()
 
     if args.db is None:
-        from config.database_sqlite import DB_PATH
-        args.db = str(DB_PATH)
+        args.db = ""
 
     data = load_data(args.db)
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M")

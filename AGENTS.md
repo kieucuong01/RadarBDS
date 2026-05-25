@@ -19,13 +19,14 @@ Avoid broad reads of `.claude/worktrees/`, `_legacy/`, `data/`, `logs/`, `report
 
 ## Project Summary
 
-Radar BDS is a local SQLite + Flask dashboard for Bình Dương real-estate signals.
+Radar BDS is a PostgreSQL + Flask dashboard for Bình Dương real-estate signals.
 
 Pipeline:
 
 ```text
 crawler/* -> raw_listings -> cleansing/normalizer.py
           -> listings -> cleansing/dedup.py
+          -> cleansing/legal_verification.py -> legal_verifications
           -> analytics/valuation.py -> valuation_results
           -> Flask dashboard / VIP Telegram push / CLI reports
 ```
@@ -38,8 +39,14 @@ Supported focus areas:
 
 ## Canonical Runtime State
 
-- Canonical DB: `data/radar_bds.db`.
-- Override: `RADAR_DB_PATH`; relative values resolve from repo root.
+- Canonical DB: PostgreSQL via `DATABASE_URL`.
+- Recommended local Postgres target: a dedicated Supabase Free project.
+  Use Direct connection for migration if IPv6 works; otherwise use Supabase
+  Session Pooler. Avoid Transaction Pooler for app/crawler runtime.
+- Current local Supabase project: `ozdjzfiqcjnlfuihqqjy` (`kieucuong02`,
+  region `ap-southeast-2`). The password lives only in local `.env`; never
+  print or commit it.
+- Legacy SQLite import source: `data/radar_bds.db`; use only for `scripts/migrate_sqlite_to_postgres.py`.
 - Runtime images: `data/images/`.
 - Card thumbnails: `data/images/thumbs/*.webp`.
 - Runtime data is ignored by git. Do not commit DB files, images, reports, or logs.
@@ -47,20 +54,23 @@ Supported focus areas:
 
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
-& $py -X utf8 -c "import db.connection as c; print(c.DB_PATH)"
+echo $env:DATABASE_URL
 ```
 
 ## Core Entry Points
 
 - `radar.py`: CLI router.
-- `app.py`: Flask routes only; keep route handlers thin.
+- `app.py`: Flask app setup plus current route implementations; route registration lives in `routes/*` blueprints.
+- `routes/`: public/auth/market/admin blueprint modules. Current blueprint handlers delegate to `app.py` implementations to keep this refactor behavior-neutral.
 - `services/market_data.py`: dashboard/listing read models and API shaping.
 - `services/image_assets.py`: image URL normalization and thumbnail resolution.
 - `auth/core.py`: session, tier, rate-limit, VIP expiry, audit.
 - `alerts/telegram.py`, `cli/notify.py`: VIP Telegram formatting and watchlist push.
 - `cleansing/reprocess.py`: normalize, dedup, valuation orchestration.
+- `cleansing/legal_image_classifier.py`, `cleansing/legal_verification.py`: detect so hong/so do images and assign legal trust from document-image presence. OCR is disabled for now.
 - `cleansing/dedup.py`: duplicate and price-drop policy.
 - `db/connection.py`, `db/schema.py`, `db/listings.py`: DB path, schema, writes.
+- `config/proximity.py`: ward/sub-ward proximity boost for `signal_score` only; does not change fair value/MOS.
 - `config/database_sqlite.py`: compatibility facade; new code should prefer `db.*`.
 - `cli/review.py`: `review-queue` (JSON memo, chưa review) / `review-save` (ghi `ai_deal_review`).
 - `services/investment_memo.py`: `load_investment_memo()` — memo nguồn cho pre-review.
@@ -69,21 +79,29 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
 
 Route: `/admin/control-room` → tab "AI Training".
 
-API endpoint: `GET /admin/api/ai-training/items` — params: `limit`, `offset`, `ward`, `city`, `mos_min`, `sort` (default/newest/cheapest/mos/score), `queue` (`main`/`recheck`/`source_qc`). Trả JSON: `{items, pending, total, offset, has_more, wards, ward_cities, queue, queue_label}`.
+API endpoint: `GET /admin/api/ai-training/items` — params: `limit`, `offset`, `ward`, `city`, `mos_min`, `sort` (default/newest/cheapest/mos/score), `queue` (`main`/`recheck`/`source_qc`/`needs_valuation`/`legal_qc`). Trả JSON: `{items, pending, total, offset, has_more, wards, ward_cities, queue, queue_label}`.
 
 Front-end files:
 - `templates/admin_control_room.html` — markup; `#trainingGrid`, `#trnSentinel`, filter bar.
 - `static/js/admin.js` — `loadTrainingItems`, `trainingCard`, `saveTraining`, infinite scroll.
 - `static/css/admin.css` — `.training-grid`, `.view-list`, sidebar collapsed, card styles.
 
-Current cache versions: `admin.css?v=admin-v5-training-ppm2`, `admin.js?v=admin-v16-source-quality` (bump khi đổi admin CSS/JS/html).
+Current cache versions: `admin.css?v=admin-v6-legal-qc`, `admin.js?v=admin-v18-legal-qc` (bump khi đổi admin CSS/JS/html).
 
 Card display:
 - Listing card shows title, road/type, area, asking price, asking `Giá/m²`, and description.
 - Description payload stays full; UI clamps to 3 lines and shows `Xem thêm` when longer.
 - Valuation box shows Fair Value as both total `tỷ` and `tr/m²`.
+- Queue `needs_valuation` ("Cần phân loại valuation") giữ các nhãn cũ/ambiguous kiểu `all_correct + bad_data` để admin phân loại valuation lại.
+- Khi extraction đúng, UI không default valuation về `cheap_real`; admin phải chọn `cheap_real|fair|overpriced|fake_price|cannot_price` trước khi lưu.
 - Valuation verdicts are separate from extraction: `cheap_real | fair | overpriced | fake_price | cannot_price`.
 - Queue `Guland QC` shows Guland listings that were valuated but suppressed from `is_signal` because source quality flags require manual check.
+- Queue `Legal QC` shows signal listings without detected so hong/so do images, or with human `bad_data/wrong_road|wrong_area|wrong_ward` notes.
+
+Legal trust tiers:
+- `candidate_signal`: cheap by model only.
+- `has_legal_doc`: has detected `img_type='so_hong'`.
+- OCR/parsing of certificate text is disabled for now. `has_legal_doc` is the only legal trust boost.
 
 **Anti-bias — KHÔNG BAO GIỜ vi phạm:**
 - Verdict Claude ghi `ai_deal_review` (append-only). KHÔNG ghi `ai_training_feedback`.
@@ -92,7 +110,7 @@ Card display:
 - Logic định giá CHỈ học từ nhãn người. Claude chỉ cố vấn.
 - `reprocess_valuation()` vẫn loại mọi `review_hidden` khỏi training model, nhưng valuate lại hidden latest `bad_data` để đưa vào queue `Recheck sau fix` nếu còn `is_signal=1`.
 - Hard hide: `fake_price`, `sold`, `spam`, `bad`. Soft recheck hide: `bad_data` với `wrong_*`. Valuation non-deal labels `fair`, `overpriced`, `cannot_price` vẫn ẩn khỏi main queue.
-- Guland is hybrid, not deleted: crawl/display stays on, but `source_quality_flags` remove suspect Guland rows from the valuation baseline. Flags currently include old reposts, extreme Guland price/m², suspicious bait, and direct human bad/fake/cannot-price labels.
+- Guland is hybrid, not deleted: crawl/display stays on, but `source_quality_flags` remove suspect Guland rows from the valuation baseline. Flags currently include old/up posts (`posted_at` → `crawled_at` age ≥ 14 days), extreme Guland price/m², suspicious bait, duplicate-like Guland listing clusters (`guland_cluster_flood`), and direct human bad/fake/cannot-price labels.
 - Guland signals require a stronger gate than Facebook: normal source threshold plus extra MOS or a high signal score. Source-quality-suppressed Guland rows get `valuation_results.source_quality_recheck=1` instead of VIP/main signal promotion.
 
 Infinite scroll: `#trnSentinel` + `IntersectionObserver` (`rootMargin:400px`) → `loadTrainingItems(true)`. Guard `_trnLoading` chống double-fetch. Badge: `pending/total`.
@@ -109,10 +127,20 @@ Dedup and price drop:
 - `only_drops=1` may show duplicate reposts if `price_dropped=1`.
 - Suspicious drops over 40% should be `suspicious_bait`, not normal price-drop signal.
 
+Extractor ward rules:
+
+- `default_area` is city/profile context, not a ward fallback. If a Facebook Bến Cát profile has no clear ward, keep `area="Bến Cát"`, `ward=None`; never default it to Tân An.
+- If no city/ward/location is clear, keep `area="Unknown"`, `ward=None` so valuation does not learn from a guessed segment.
+- Review-driven Bến Cát patterns: `khu L` / road codes like `DL12`, `NL5`, `DH3A` → Mỹ Phước 3; `ĐH/Đại học Việt Đức` → Thới Hòa; `Chà Vi` → parent Mỹ Phước.
+- `Long Nguyên` is outside the current focus area and should normalize to `area="Other"`, `ward=None`.
+
 Dashboard/API:
 
 - `/api/dashboard` is lightweight summary only. It must not return all signals, descriptions, or image arrays.
+- `/api/dashboard` uses a short in-process cache keyed by filters. Guest dashboard rate limiting is also in-memory to avoid a DB write on every summary refresh.
 - `/api/signals` is paginated card data. Default limit is 30. It returns `primary_img` thumbnail when available.
+- `services/market_data.py` read models should use the shared read connection scope, not fresh `connect()+close()` calls. Supabase remote latency makes extra round-trips visible.
+- Keep `/api/signals` page queries compact: use one query with window count and primary-thumbnail selection instead of separate count/list/image queries.
 - `/api/listing/<id>` is full modal/detail data, including description and full image list.
 - `/api/history/<id>` returns same-listing price history and lot history/comps payload used by modal.
 - Non-admin APIs must not expose original listing URLs or phone numbers. Use `redact_for_tier()` or explicit tier redaction.
@@ -135,6 +163,11 @@ Images/performance:
 - Modal/detail may use original images.
 - `download_images()` creates thumbnails for new downloads.
 - Backfill thumbnails with `python scripts/generate_thumbnails.py --signals 300` or full backfill without `--signals`.
+
+Cleanup:
+
+- `radar.py db-cleanup` is dry-run by default. Applied cleanup deletes listings missing/zero `price_ty` or `area_m2` because they cannot be valued, and deletes their source raw rows to prevent full reprocess from recreating them.
+- Keep human feedback/audit rows unless an explicit retention policy says otherwise.
 
 ## Common Commands
 
@@ -159,7 +192,7 @@ node --check static\js\main.js
 ## Verification Defaults
 
 - Backend/API change: run `py_compile` for touched Python files and the relevant pytest file.
-- Frontend JS change: run `node --check static/js/main.js` and smoke test `http://127.0.0.1:5000`.
+- Frontend JS change: run `node --check static/js/auth.js` plus the touched `static/js/main/*.js` files, and smoke test `http://127.0.0.1:5000`.
 - Admin UI change: also run `node --check static/js/admin.js` + `pytest tests/test_admin_control_room.py tests/test_ai_deal_review.py -q`.
 - Auth/watchlist JS change: also run `node --check static/js/auth.js`.
 - Telegram/notification change: run `py_compile alerts/telegram.py cli/notify.py`; if testing live send, use a known linked test user and avoid leaking tokens.

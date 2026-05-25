@@ -12,7 +12,8 @@ Functions:
 
 import logging
 from typing import List, Dict, Optional
-from config.database_sqlite import get_conn
+
+from db.connection import get_conn
 
 logger = logging.getLogger(__name__)
 
@@ -130,15 +131,15 @@ def get_most_dropped_listings(n: int = 20) -> List[Dict]:
                     l.price_ty        AS current_price_ty,
                     l.price_first_ty  AS first_price_ty,
                     l.price_dropped,
-                    ROUND((l.price_first_ty - l.price_ty) / l.price_first_ty * 100, 1) AS drop_pct,
+                    ROUND(((l.price_first_ty - l.price_ty) / l.price_first_ty * 100)::numeric, 1) AS drop_pct,
                     COUNT(ph.id)      AS n_snapshots
                 FROM listings l
                 JOIN price_history ph ON ph.listing_id = l.id
                 WHERE l.price_first_ty IS NOT NULL
                   AND l.price_first_ty > 0
                   AND l.price_ty < l.price_first_ty
-                GROUP BY ph.listing_id
-                HAVING n_snapshots >= 1
+                GROUP BY ph.listing_id, l.id
+                HAVING COUNT(ph.id) >= 1
                 ORDER BY drop_pct DESC
                 LIMIT ?
             """, (n,)).fetchall()

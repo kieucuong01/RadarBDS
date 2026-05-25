@@ -1,20 +1,18 @@
-"""Recompute duplicate flags and reliable repost price drops for an SQLite DB."""
+"""Recompute duplicate flags and reliable repost price drops."""
 
 import argparse
 import json
-import sqlite3
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from cleansing.dedup import flag_duplicates_in_db
-from db.connection import DB_PATH
+from db.connection import connect
 
 
-def recompute(db_path: Path) -> dict:
-    conn = sqlite3.connect(str(db_path))
-    conn.row_factory = sqlite3.Row
+def recompute() -> dict:
+    conn = connect()
     try:
         stats = flag_duplicates_in_db(conn)
         conn.commit()
@@ -31,12 +29,11 @@ def main() -> None:
     parser.add_argument(
         "--db",
         default=None,
-        help="Path to radar_bds.db (default: data/radar_bds.db; honors RADAR_DB_PATH).",
+        help="Deprecated; runtime uses DATABASE_URL.",
     )
     args = parser.parse_args()
 
-    db_path = Path(args.db).expanduser().resolve() if args.db else Path(DB_PATH)
-    stats = recompute(db_path)
+    stats = recompute()
     print(json.dumps(stats, ensure_ascii=False, indent=2))
 
 

@@ -1,9 +1,9 @@
 """
-Compatibility facade for the SQLite database layer.
+Legacy compatibility facade for the PostgreSQL database layer.
 
-New code should import from `db.sqlite`. This module stays so existing imports
-(`from config.database_sqlite import ...`) continue to work while the database
-layer is split into clearer boundaries.
+Runtime code should import from focused `db.*` modules directly. This module
+only keeps older imports (`from config.database_sqlite import ...`) from
+breaking while old scripts are migrated.
 """
 from db.sqlite import (  # noqa: F401
     DB_PATH,

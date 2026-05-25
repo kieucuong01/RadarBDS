@@ -9,31 +9,43 @@ Source crawlers
   -> raw_listings
   -> cleansing/normalizer.py
   -> listings
+  -> cleansing/legal_image_classifier.py
+  -> cleansing/legal_verification.py -> legal_verifications
   -> cleansing/dedup.py
   -> analytics/valuation.py
   -> valuation_results
-  -> app.py APIs / alerts / CLI reports
+  -> routes/* blueprints -> app.py API implementations / alerts / CLI reports
 ```
 
 ## Runtime Data
 
-- Canonical SQLite DB: `data/radar_bds.db`.
-- Override: `RADAR_DB_PATH`; relative paths resolve from repo root.
+- Canonical relational DB: PostgreSQL via `DATABASE_URL`.
+- Current local Supabase project: `ozdjzfiqcjnlfuihqqjy` in org/account `kieucuong02`.
+- Legacy SQLite DB: `data/radar_bds.db` is read only by `scripts/migrate_sqlite_to_postgres.py`.
 - Local images: `data/images/`.
 - Card thumbnails: `data/images/thumbs/*.webp`.
 - Runtime data is ignored by git and should not be committed.
+
+PostgreSQL migration status:
+
+- On 2026-05-25, the local SQLite dataset was migrated to Supabase Postgres.
+- `raw_listings` and `listings` each migrated 6,991 rows.
+- Orphan child rows that violated PostgreSQL foreign keys were skipped during migration: 18 `listing_images`, 18 `price_history`, and 13 `user_audit_log` rows.
+- Direct Supabase connection works locally; use Session Pooler only if direct networking fails.
 
 ## Main Boundaries
 
 - `crawler/`: fetch source data and store raw rows. Avoid valuation or dashboard logic here.
 - `cleansing/`: normalize text, extract features, deduplicate, enrich, and prepare listings.
+- `cleansing/legal_verification.py`: mark listings with detected so hong/so do images as `has_legal_doc`. OCR/parsing is disabled for now.
 - `analytics/`: valuation and market signal logic. No crawler calls.
 - `db/`: schema, connection, migrations, and write-side repository helpers.
 - `services/`: read models for API/dashboard; keep expensive shaping here, not in routes.
+- `routes/`: public/auth/market/admin Flask blueprints. The current handlers delegate to `app.py` implementations; move logic into services before making route handlers fatter.
 - `auth/`: sessions, tier checks, VIP expiry, audit, and rate limiting.
 - `alerts/`: Telegram/email formatting and send helpers.
 - `cli/notify.py`: VIP watchlist push orchestration after crawls.
-- `static/` and `templates/`: dashboard UI.
+- `static/js/main/`, `static/css/main/`, and `templates/`: dashboard UI split by feature/domain.
 - `cli/`: command orchestration.
 
 ## Dashboard API Shape
@@ -52,6 +64,13 @@ Security boundary:
 - Non-admin payloads must not expose original listing URL, source URL, or phone.
 - Guest can see listing content in the deal feed and detail pages; only original URL/phone stay redacted for non-admin users.
 
+Performance boundary:
+
+- `services/market_data.py` is on the hot path for Supabase-backed local dev. Use the shared read connection scope from `db.connection.get_conn()` instead of opening a fresh PostgreSQL connection per read.
+- `/api/dashboard` is cached in-process for a short TTL by filter key. Guest dashboard rate limiting is in-memory; write-sensitive scopes such as lead capture still use DB-backed rate limiting.
+- `/api/signals` should avoid avoidable remote round-trips. The card feed query uses `COUNT(*) OVER()` and a lateral primary-image subquery so page data, total count, and thumbnail are fetched together.
+- Feed ordering depends on legal trust fields, so keep the trust/feed indexes in `db/schema.py` aligned with `_signal_sort_sql()`.
+
 ## Signal Filter Runtime Flow
 
 - Main tab filtering should run in two stages:
@@ -59,6 +78,14 @@ Security boundary:
   - stage 2: request `/api/dashboard` in background for header/meta updates.
 - `insights` data is not part of normal signal-filter refresh and should load on Insights tab activation.
 - Infinite scroll must dedupe by listing id on client render to avoid race-condition duplicates.
+
+## Legal Trust Layer
+
+- `valuation_results.is_signal` still means "cheap by model"; trust is tracked separately.
+- Trust tiers currently used by the feed are `candidate_signal` and `has_legal_doc`.
+- `legal_verifications` currently tracks whether a listing has a detected document image. Existing OCR columns remain in schema for old data/admin notes, but runtime OCR code is not shipped or called.
+- Hard legal conflict inference from OCR is disabled until OCR is intentionally re-enabled with a fresh module and tests.
+- `/api/signals`, `/api/listing/<id>`, investment memo, and VIP push expose or prioritize trust fields without exposing source URL/phone to non-admin users.
 
 ## Dedup and Price Drop Policy
 
@@ -79,6 +106,6 @@ Security boundary:
 
 - Do not move files only for aesthetics.
 - Move SQL out of `app.py` into `services/` when touching dashboard read behavior.
-- Keep `config/database_sqlite.py` and `db/sqlite.py` as compatibility facades.
-- If schema changes become frequent, add migration versioning instead of scattered ad hoc `ALTER TABLE`.
+- Keep `config/database_sqlite.py` and `db/sqlite.py` as compatibility facades only; runtime connections are PostgreSQL.
+- Use `schema_migrations` / `db/schema.py` for schema changes instead of SQLite-style ad hoc migrations.
 - For RBAC or Telegram push work, prefer `docs/rbac.md` and `docs/telegram_watchlist.md` over broad codebase reads.

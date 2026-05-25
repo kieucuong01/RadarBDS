@@ -44,14 +44,18 @@ is_signal = mos_pct ≥ MOS_THRESHOLD (theo confidence level)
 
 | Yếu tố | Điểm tối đa |
 |--------|------------|
-| MOS contribution (`mos_pct × 0.5`, cap 40) | 0–40 |
-| Area 50–200 m² (thanh khoản tốt) | +10 |
-| Giá < 3 tỷ (tầm tay nhà đầu tư nhỏ) | +10 |
+| MOS contribution (`mos_pct × 0.65`, cap 65) | 0–65 |
+| Area 50–200 m² (thanh khoản tốt) | +5 |
+| Giá < 4 tỷ (tầm tay nhà đầu tư nhỏ) | +5 |
 | `is_hot` = True (bán gấp, cắt lỗ...) | +10 |
-| Frontage ≥ 4m | +10 |
-| `price_dropped` = True | +10 |
+| `price_dropped` = True | +15 |
+| Ward-level proximity (`config/proximity.py`) | +0–5 |
 
 **Phân loại:** ≥ 70 = HIGH · 50–69 = WATCH · < 50 = LOW
+
+Proximity score là boost xếp hạng, KHÔNG ảnh hưởng fair value/MOS. Vì listing hiện
+chưa có lat/lng đáng tin, `config/proximity.py` dùng ward/sub-ward level 0–5 cho
+các driver như TDM center/QL13, cụm tiện ích trường-BV-hành chính, và KCN/VSIP.
 
 ## Segments & Confidence
 
@@ -67,6 +71,21 @@ cao chủ yếu noise, signal-to-noise xấu.
 
 Baseline 2026-05-20: 28/809 signal có `n_segment<15` (chủ yếu Tân An / Định
 Hòa / Phú Tân ở phân khúc hiếm). Sau gate: 0 weak-n signal.
+
+## Guland source quality gate (2026-05-25)
+
+Guland vẫn crawl/hiển thị, nhưng không được ảnh hưởng valuation ngang Facebook.
+`cleansing/reprocess.py::_source_quality_flags()` gắn flag trước khi fit/valuate:
+
+- `old_guland_post`: `posted_at` đến `crawled_at` ≥ 14 ngày, trừ khi admin đã gắn
+  `valuation_verdict=cheap_real` và `extraction_verdict=all_correct`.
+- `extreme_guland_ppm2`: giá/m² Guland quá cực đoan.
+- `guland_cluster_flood`: cụm Guland cùng ward/property/area/price/title-signature
+  có ≥ 4 tin giống nhau.
+
+Các flag này loại row khỏi training baseline. Nếu row vẫn có MOS đạt ngưỡng,
+`analytics/valuation.py` suppress `is_signal` và ghi
+`valuation_results.source_quality_recheck=1` để vào queue `Guland QC`, không push VIP.
 
 ## Sub-ward registry (config/area_profiles.py)
 

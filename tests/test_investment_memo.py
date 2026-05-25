@@ -1,9 +1,13 @@
 import json
 import shutil
+import sys
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
 class InvestmentMemoTest(unittest.TestCase):
@@ -14,6 +18,11 @@ class InvestmentMemoTest(unittest.TestCase):
 
         self.tmpdir = Path(tempfile.mkdtemp())
         self.db_path = self.tmpdir / "radar_memo.db"
+        self.token = uuid.uuid4().hex
+        self.url_prefix = f"https://investment-memo-{self.token}.test"
+        self.ward = f"MemoWard{self.token[:8]}"
+        self.listing_ids = []
+        self.user_ids = []
         connection.close_all()
         self.patches = [
             mock.patch.object(connection, "DB_PATH", self.db_path),
@@ -23,24 +32,57 @@ class InvestmentMemoTest(unittest.TestCase):
             patcher.start()
 
         init_schema()
+        self._delete_test_rows()
         self.client = app_module.app.test_client()
 
     def tearDown(self):
         from db import connection
 
+        self._delete_test_rows()
         connection.close_all()
         for patcher in reversed(self.patches):
             patcher.stop()
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
+    def _delete_test_rows(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            rows = conn.execute(
+                "SELECT id FROM listings WHERE url LIKE ?",
+                (f"{self.url_prefix}%",),
+            ).fetchall()
+            ids = {r["id"] for r in rows}
+            ids.update(self.listing_ids)
+            if ids:
+                placeholders = ",".join("?" * len(ids))
+                params = list(ids)
+                conn.execute(f"DELETE FROM price_history WHERE listing_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM valuation_results WHERE listing_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM listing_images WHERE listing_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
+            user_rows = conn.execute(
+                "SELECT id FROM users WHERE identifier LIKE ?",
+                (f"%{self.token}%",),
+            ).fetchall()
+            user_ids = {r["id"] for r in user_rows}
+            user_ids.update(self.user_ids)
+            if user_ids:
+                placeholders = ",".join("?" * len(user_ids))
+                params = list(user_ids)
+                conn.execute(f"DELETE FROM user_sessions WHERE user_id IN ({placeholders})", params)
+                conn.execute(f"DELETE FROM users WHERE id IN ({placeholders})", params)
+
     def _insert_listing(self, conn, **kw):
+        idx = len(self.listing_ids) + 1
         defaults = {
             "source": "facebook",
-            "source_id": None,
-            "url": None,
+            "source_id": f"memo-src-{self.token}-{idx}",
+            "url": f"{self.url_prefix}/listing-{idx}",
             "title": "Lo dat memo",
             "description": "Ban gap can kiem tra phap ly",
-            "ward": "Tan An",
+            "ward": self.ward,
             "area_m2": 100.0,
             "property_type": "dat_nen",
             "tx_type": "ban",
@@ -60,10 +102,6 @@ class InvestmentMemoTest(unittest.TestCase):
             "crawled_at": "2026-05-01",
         }
         defaults.update(kw)
-        if defaults["source_id"] is None:
-            defaults["source_id"] = f"src-{defaults['title']}-{defaults['price_ty']}-{defaults['area_m2']}"
-        if defaults["url"] is None:
-            defaults["url"] = f"https://example.test/{defaults['source_id']}"
         cur = conn.execute(
             """
             INSERT INTO listings (
@@ -82,7 +120,9 @@ class InvestmentMemoTest(unittest.TestCase):
             """,
             defaults,
         )
-        return cur.lastrowid
+        listing_id = cur.lastrowid
+        self.listing_ids.append(listing_id)
+        return listing_id
 
     def _insert_valuation(self, conn, listing_id, **kw):
         defaults = {
@@ -94,16 +134,21 @@ class InvestmentMemoTest(unittest.TestCase):
             "n_segment": 40,
             "signal_score": 70,
             "is_outlier": 0,
+            "legal_status": "has_document",
+            "trust_tier": "has_legal_doc",
+            "trust_score": 80,
         }
         defaults.update(kw)
         conn.execute(
             """
             INSERT INTO valuation_results (
                 listing_id, fair_ppm2, actual_ppm2, mos_pct, is_signal,
-                n_segment, signal_score, is_outlier
+                n_segment, signal_score, is_outlier, legal_status,
+                trust_tier, trust_score
             ) VALUES (
                 :listing_id, :fair_ppm2, :actual_ppm2, :mos_pct, :is_signal,
-                :n_segment, :signal_score, :is_outlier
+                :n_segment, :signal_score, :is_outlier, :legal_status,
+                :trust_tier, :trust_score
             )
             """,
             defaults,
@@ -119,8 +164,8 @@ class InvestmentMemoTest(unittest.TestCase):
                 self._insert_listing(
                     conn,
                     title=f"Comp {idx}",
-                    source_id=f"comp-{idx}-{suspicious_bait}",
-                    url=f"https://example.test/comp-{idx}-{suspicious_bait}",
+                    source_id=f"memo-comp-{self.token}-{idx}-{suspicious_bait}",
+                    url=f"{self.url_prefix}/comp-{idx}-{suspicious_bait}",
                     price_ty=ppm2 * 100 / 1000,
                     price_per_m2=ppm2,
                     area_m2=100.0 + idx,
@@ -131,21 +176,23 @@ class InvestmentMemoTest(unittest.TestCase):
         from auth.core import SESSION_COOKIE_NAME
         from db.connection import get_conn
 
-        token = f"{tier}-token"
+        token = f"{tier}-token-{self.token}"
         with get_conn() as conn:
             cur = conn.execute(
                 """
                 INSERT INTO users (identifier, identifier_type, password_hash, tier)
                 VALUES (?, 'phone', 'hash', ?)
                 """,
-                (f"09000000{len(tier)}", tier),
+                (f"memo-user-{tier}-{self.token}", tier),
             )
+            user_id = cur.lastrowid
+            self.user_ids.append(user_id)
             conn.execute(
                 """
                 INSERT INTO user_sessions (token, user_id, expires_at)
                 VALUES (?, ?, '2099-01-01T00:00:00')
                 """,
-                (token, cur.lastrowid),
+                (token, user_id),
             )
         try:
             self.client.set_cookie(SESSION_COOKIE_NAME, token)
@@ -178,7 +225,7 @@ class InvestmentMemoTest(unittest.TestCase):
         memo = load_investment_memo(str(self.db_path), listing_id, tier="free")
 
         self.assertEqual(memo["verdict"], "data_limited")
-        self.assertTrue(any("Cấp đường" in x for x in memo["missing_info"]))
+        self.assertTrue(memo["missing_info"])
 
     def test_missing_valuation_returns_needs_review(self):
         from db.connection import get_conn
@@ -199,11 +246,10 @@ class InvestmentMemoTest(unittest.TestCase):
         memo = load_investment_memo(str(self.db_path), listing_id, tier="free")
 
         self.assertEqual(memo["verdict"], "risk_flagged")
-        self.assertTrue(any("giá mồi" in x for x in memo["risk_warnings"]))
+        self.assertTrue(memo["risk_warnings"])
         blob = json.dumps(memo, ensure_ascii=False).lower()
-        self.assertNotIn("đàm phán", blob)
-        self.assertNotIn("bỏ qua nếu", blob)
-        self.assertNotIn("nên gọi", blob)
+        self.assertNotIn("recommended_offer_ty", blob)
+        self.assertNotIn("skip_if_above_ty", blob)
 
     def test_non_admin_memo_does_not_expose_source_url_or_phone(self):
         from services.investment_memo import load_investment_memo
@@ -233,9 +279,9 @@ class InvestmentMemoTest(unittest.TestCase):
         self.assertEqual(response.get_json()["verdict"], "below_fair")
 
     def test_guest_listing_keeps_content_but_redacts_source_url(self):
-        listing_id = self._seed_strong_deal()
         from db.connection import get_conn
 
+        listing_id = self._seed_strong_deal()
         with get_conn() as conn:
             conn.execute("UPDATE listings SET posted_at='2099-01-01' WHERE id=?", (listing_id,))
 

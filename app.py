@@ -4,16 +4,18 @@ import os
 import json
 import csv
 import io
-import sqlite3
 import logging
 import statistics
 import re
+import time
 import urllib.request
+from copy import deepcopy
 from functools import wraps
 from datetime import datetime, timedelta
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response
 from config import database_sqlite as db_mod
+from db.connection import connect, get_conn
 from db.moderation import normalize_phone
 
 # Import the extracted services
@@ -153,7 +155,6 @@ def inject_user_tier():
     }
 
 
-@app.route("/api/auth/check", methods=["POST"])
 @rate_limit("auth_check", limits={"guest": 60, "free": 120, "vip": 300, "admin": None})
 def api_auth_check():
     """Step 1 of unified login flow: detect identifier + whether user exists."""
@@ -174,7 +175,6 @@ def api_auth_check():
     })
 
 
-@app.route("/api/auth/register", methods=["POST"])
 @rate_limit("auth_register", limits={"guest": 20, "free": 30, "vip": 60, "admin": None})
 def api_auth_register():
     payload = request.get_json(silent=True) or {}
@@ -206,7 +206,6 @@ def api_auth_register():
     return _set_session_cookie(resp, token)
 
 
-@app.route("/api/auth/login", methods=["POST"])
 @rate_limit("auth_login", limits={"guest": 30, "free": 60, "vip": 120, "admin": None})
 def api_auth_login():
     payload = request.get_json(silent=True) or {}
@@ -229,7 +228,6 @@ def api_auth_login():
     return _set_session_cookie(resp, token)
 
 
-@app.route("/api/auth/logout", methods=["POST"])
 def api_auth_logout():
     token = request.cookies.get(SESSION_COOKIE_NAME)
     if token:
@@ -241,7 +239,6 @@ def api_auth_logout():
     return _clear_session_cookie(resp)
 
 
-@app.route("/api/auth/me", methods=["GET"])
 def api_auth_me():
     u = current_user()
     return jsonify({
@@ -314,7 +311,6 @@ def _validate_watchlist_payload(payload: dict) -> tuple[dict, str | None]:
     return out, None
 
 
-@app.route("/api/watchlists", methods=["GET"])
 @require_tier("free")
 def api_list_watchlists():
     u = current_user()
@@ -325,7 +321,6 @@ def api_list_watchlists():
     return jsonify({"ok": True, "items": [_serialize_watchlist(r) for r in rows]})
 
 
-@app.route("/api/watchlists", methods=["POST"])
 @require_tier("free")
 def api_create_watchlist():
     u = current_user()
@@ -351,7 +346,6 @@ def api_create_watchlist():
     return jsonify({"ok": True, "item": _serialize_watchlist(row)})
 
 
-@app.route("/api/watchlists/<int:wid>", methods=["PATCH"])
 @require_tier("free")
 def api_update_watchlist(wid):
     u = current_user()
@@ -387,7 +381,6 @@ def api_update_watchlist(wid):
 import secrets as _secrets
 
 
-@app.route("/api/auth/telegram/start", methods=["POST"])
 @require_tier("free")
 def api_telegram_start():
     u = current_user()
@@ -405,7 +398,6 @@ def api_telegram_start():
     return jsonify({"ok": True, "url": deep_link, "expires_at": expires})
 
 
-@app.route("/api/auth/telegram/unbind", methods=["POST"])
 @require_tier("free")
 def api_telegram_unbind():
     u = current_user()
@@ -432,7 +424,6 @@ def _telegram_api(method: str, payload: dict | None = None) -> dict:
         return json.loads(resp.read().decode("utf-8"))
 
 
-@app.route("/api/auth/telegram/sync", methods=["POST"])
 @require_tier("free")
 def api_telegram_sync():
     """Local-dev fallback: poll Telegram updates and bind current user's /start token.
@@ -490,7 +481,6 @@ def api_telegram_sync():
     return jsonify({"ok": True, "linked": True})
 
 
-@app.route("/api/auth/telegram/webhook", methods=["POST"])
 def api_telegram_webhook():
     """Receive Telegram bot updates. Match `/start <token>` → bind chat_id.
 
@@ -569,7 +559,6 @@ ALLOWED_TRACK_ACTIONS = {
 }
 
 
-@app.route("/api/track", methods=["POST"])
 @rate_limit("track", limits={"guest": 120, "free": 600, "vip": None, "admin": None})
 def api_track():
     payload = request.get_json(silent=True) or {}
@@ -598,7 +587,6 @@ def api_track():
     return jsonify({"ok": True})
 
 
-@app.route("/api/watchlists/<int:wid>", methods=["DELETE"])
 @require_tier("free")
 def api_delete_watchlist(wid):
     u = current_user()
@@ -614,22 +602,47 @@ def api_delete_watchlist(wid):
 # Serve local downloaded images (data/images/<filename>)
 _DATA_IMAGES_DIR = Path(__file__).parent / "data" / "images"
 
-@app.route("/data/images/<path:filename>")
 def serve_local_image(filename):
     return send_from_directory(_DATA_IMAGES_DIR, filename)
 
-@app.route("/")
 def index():
     return render_template('index.html', wards_by_city=CITY_MAP)
 
+
+_DASHBOARD_CACHE = {}
+_DASHBOARD_CACHE_MAX_ITEMS = 96
+_DASHBOARD_CACHE_TTL_SECONDS = float(os.getenv("RADAR_DASHBOARD_CACHE_TTL_SECONDS", "30"))
+
+
+def clear_dashboard_cache():
+    _DASHBOARD_CACHE.clear()
+
+
+def _cached_dashboard_payload(key, loader, now=None, ttl_seconds=None):
+    ttl = _DASHBOARD_CACHE_TTL_SECONDS if ttl_seconds is None else ttl_seconds
+    if ttl <= 0:
+        return loader()
+
+    now = time.monotonic() if now is None else now
+    entry = _DASHBOARD_CACHE.get(key)
+    if entry and now - entry["ts"] <= ttl:
+        return deepcopy(entry["payload"])
+
+    payload = loader()
+    _DASHBOARD_CACHE[key] = {"ts": now, "payload": deepcopy(payload)}
+    if len(_DASHBOARD_CACHE) > _DASHBOARD_CACHE_MAX_ITEMS:
+        oldest_key = min(_DASHBOARD_CACHE, key=lambda k: _DASHBOARD_CACHE[k]["ts"])
+        _DASHBOARD_CACHE.pop(oldest_key, None)
+    return payload
+
+
 def _get_signals_version(db_path: str) -> str:
-    conn = sqlite3.connect(db_path)
-    try:
+    with get_conn() as conn:
         row = conn.execute(
             """
             SELECT COALESCE(
                 MAX(v),
-                '0'
+                '1970-01-01T00:00:00'
             ) AS v
             FROM (
                 SELECT datetime(review_hidden_at) AS v
@@ -643,8 +656,11 @@ def _get_signals_version(db_path: str) -> str:
             """
         ).fetchone()
         return str(row[0] if row and row[0] is not None else "0")
-    finally:
-        conn.close()
+
+
+def _db_handle():
+    """Placeholder argument for older service signatures; runtime uses DATABASE_URL."""
+    return None
 
 
 def _request_range_filters(req):
@@ -933,36 +949,52 @@ def _clean_infra_payload(payload):
         "sort_order": sort_order,
     }
 
-@app.route("/api/dashboard")
 @rate_limit("dashboard", limits={"guest": 1200, "free": 2400, "vip": None, "admin": None})
 def api_dashboard():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     area_min, area_max, price_min, price_max = _request_range_filters(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
-    db_path = str(db_mod.DB_PATH.resolve())
+    db_path = _db_handle()
     include_trend = request.args.get("include_trend") == "1"
     # Load data without fetching all listings to save time/memory
     tier = current_tier()
-    data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max, tier=tier)
-    
-    return jsonify({
-        "stats": data["stats"],
-        "market": data["market"],
-        "trend_data": data["trend_data"],
-        "signals_version": _get_signals_version(db_path),
-        "all_wards": data["all_wards"],
-        "all_sources": data["all_sources"],
-        "wards_by_city": data["wards_by_city"],
-        "active_city": active_city,
-        "active_wards": wards,
-        "active_sources": sources,
-        "active_props": prop_types,
-        "trend_period": trend_period,
-        "tier": tier,
-    })
+    cache_key = (
+        tier,
+        active_city,
+        tuple(wards or ()),
+        tuple(sources or ()),
+        tuple(prop_types or ()),
+        bool(only_drops),
+        trend_period,
+        int(mos_min or 0),
+        float(area_min or 0),
+        float(area_max or 0),
+        float(price_min or 0),
+        float(price_max or 0),
+        bool(include_trend),
+    )
 
-@app.route("/api/signals")
+    def _load_dashboard_payload():
+        data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max, tier=tier)
+        return {
+            "stats": data["stats"],
+            "market": data["market"],
+            "trend_data": data["trend_data"],
+            "signals_version": _get_signals_version(db_path),
+            "all_wards": data["all_wards"],
+            "all_sources": data["all_sources"],
+            "wards_by_city": data["wards_by_city"],
+            "active_city": active_city,
+            "active_wards": wards,
+            "active_sources": sources,
+            "active_props": prop_types,
+            "trend_period": trend_period,
+            "tier": tier,
+        }
+
+    return jsonify(_cached_dashboard_payload(cache_key, _load_dashboard_payload))
+
 def api_signals():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     area_min, area_max, price_min, price_max = _request_range_filters(request)
@@ -974,7 +1006,7 @@ def api_signals():
     except ValueError:
         page, limit = 1, 30
     sort = request.args.get("sort", "newest")
-    db_path = str(db_mod.DB_PATH.resolve())
+    db_path = _db_handle()
     tier = current_tier()
     return jsonify(load_signals(
         db_path,
@@ -993,24 +1025,21 @@ def api_signals():
         tier=tier,
     ))
 
-@app.route("/api/trends")
 def api_trends():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     area_min, area_max, price_min, price_max = _request_range_filters(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
-    db_path = str(db_mod.DB_PATH.resolve())
+    db_path = _db_handle()
     return jsonify({
         "trend_data": load_trend_data(db_path, sources, wards, prop_types, only_drops, trend_period, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max),
         "trend_period": trend_period
     })
 
 
-@app.route("/api/insights")
 def api_insights():
-    db_path = str(db_mod.DB_PATH.resolve())
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    db_path = _db_handle()
+    conn = connect(db_path)
     try:
         timeline_rows = conn.execute("""
             SELECT id, kind, title, subtitle, summary, ward, road_ref, project_code,
@@ -1055,13 +1084,11 @@ def api_insights():
         }
     })
 
-@app.route('/api/heatmap')
 def api_heatmap():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     area_min, area_max, price_min, price_max = _request_range_filters(request)
-    db_path = str(db_mod.DB_PATH.resolve())
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    db_path = _db_handle()
+    conn = connect(db_path)
     
     where_parts = [
         "l.probably_sold = 0",
@@ -1156,14 +1183,13 @@ def api_heatmap():
     return jsonify(heatmap_data)
 
 
-@app.route('/api/market-indicators')
 @require_tier('vip')
 def api_market_indicators():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     area_min, area_max, price_min, price_max = _request_range_filters(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
-    db_path = str(db_mod.DB_PATH.resolve())
+    db_path = _db_handle()
     return jsonify(load_market_indicators(
         db_path,
         sources=sources,
@@ -1175,7 +1201,6 @@ def api_market_indicators():
         price_max=price_max,
     ))
 
-@app.route('/api/listings')
 @rate_limit("listings")
 def api_listings():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
@@ -1189,9 +1214,8 @@ def api_listings():
         page, limit = 1, 50
     offset = (page - 1) * limit
     
-    db_path = str(db_mod.DB_PATH.resolve())
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    db_path = _db_handle()
+    conn = connect(db_path)
     
     where_parts = ["probably_sold = 0", "COALESCE(is_blacklisted,0)=0", "COALESCE(review_hidden,0)=0"]
     if only_drops:
@@ -1252,7 +1276,7 @@ def api_listings():
             SELECT listing_id, local_path, img_url
             FROM listing_images
             WHERE listing_id IN ({placeholders})
-            ORDER BY listing_id, img_order
+            ORDER BY listing_id, CASE WHEN img_type='so_hong' THEN 0 ELSE 1 END, img_order, id
         """, listing_ids).fetchall()
         for r in img_rows:
             url = resolve_image_url(r[1], r[2])
@@ -1283,9 +1307,8 @@ def api_listings():
         "tier": tier,
     })
 
-@app.route('/listing/<int:listing_id>')
 def listing_detail(listing_id):
-    db_path = str(db_mod.DB_PATH.resolve())
+    db_path = _db_handle()
     tier = current_tier()
     data = load_listing_detail(db_path, listing_id, tier=tier)
     if not data:
@@ -1300,9 +1323,8 @@ def listing_detail(listing_id):
 
     return render_template('listing_detail.html', l=l, imgs=imgs, history_json=history_json, desc_html=desc_html, memo=memo)
 
-@app.route('/api/listing/<int:listing_id>')
 def api_listing_detail(listing_id):
-    db_path = str(db_mod.DB_PATH.resolve())
+    db_path = _db_handle()
     data = load_listing_detail(db_path, listing_id, tier=current_tier())
     if not data:
         return jsonify({"error": "not found"}), 404
@@ -1329,24 +1351,27 @@ def api_listing_detail(listing_id):
         "price_first_ty": l["price_first_ty"],
         "duplicate_of_id": l["duplicate_of_id"],
         "signal_score": l["signal_score"] or 0,
+        "trust_tier": l.get("trust_tier") or "candidate_signal",
+        "trust_score": l.get("trust_score") or 0,
+        "legal_status": l.get("legal_status") or "unverified",
+        "legal_flags": l.get("legal_flags") or "",
+        "legal_verification": data.get("legal_verification") or {},
         "days_ago": _days_ago(l["posted_at"] or l["crawled_at"]),
         "imgs": data["images"],
         "tier": data.get("tier"),
     })
 
-@app.route('/api/listing/<int:listing_id>/memo')
 def api_listing_memo(listing_id):
     tier = current_tier()
     if tier == "guest":
         return jsonify({"locked": True, "reason": "login_required"}), 403
 
-    db_path = str(db_mod.DB_PATH.resolve())
+    db_path = _db_handle()
     memo = load_investment_memo(db_path, listing_id, tier=tier)
     if not memo:
         return jsonify({"error": "not found"}), 404
     return jsonify(memo)
 
-@app.route('/api/history/<int:listing_id>')
 def get_price_history(listing_id):
     tier = current_tier()
     with db_mod.get_conn() as conn:
@@ -1390,37 +1415,39 @@ def get_price_history(listing_id):
             area_max = area * 1.30 if area else 20000
             ppm2_min = curr_ppm2 * 0.55 if curr_ppm2 else 0
             ppm2_max = curr_ppm2 * 1.45 if curr_ppm2 else 999999
-            comp_rows = conn.execute("""
+            comp_where = [
+                "ward = ?",
+                "id != ?",
+                "price_ty > 0",
+                "probably_sold = 0",
+                "COALESCE(is_blacklisted,0)=0",
+                "COALESCE(review_hidden,0)=0",
+                "possibly_duplicate = 0",
+            ]
+            comp_params = [ward, listing_id]
+            if prop_type:
+                comp_where.append("property_type = ?")
+                comp_params.append(prop_type)
+            comp_where.append("area_m2 BETWEEN ? AND ?")
+            comp_params.extend([area_min, area_max])
+            if curr_ppm2 > 0:
+                comp_where.append("COALESCE(price_per_m2, 0) BETWEEN ? AND ?")
+                comp_params.extend([ppm2_min, ppm2_max])
+            if road_tier is not None:
+                comp_where.append("(road_tier IS NULL OR ABS(road_tier - ?) <= 1)")
+                comp_params.append(road_tier)
+            comp_params.extend([area, curr_ppm2])
+
+            comp_rows = conn.execute(f"""
                 SELECT id, title, url, price_ty, area_m2, price_per_m2, property_type, road_tier,
                        COALESCE(posted_at, crawled_at) as dt
                 FROM listings
-                WHERE ward = ? AND id != ? AND price_ty > 0 AND probably_sold = 0
-                  AND COALESCE(is_blacklisted,0)=0
-                  AND COALESCE(review_hidden,0)=0
-                  AND possibly_duplicate = 0
-                  AND (? IS NULL OR property_type = ?)
-                  AND area_m2 BETWEEN ? AND ?
-                  AND (
-                    ? <= 0
-                    OR COALESCE(price_per_m2, 0) BETWEEN ? AND ?
-                  )
-                  AND (
-                    ? IS NULL
-                    OR road_tier IS NULL
-                    OR ABS(road_tier - ?) <= 1
-                  )
+                WHERE {" AND ".join(comp_where)}
                 ORDER BY ABS(area_m2 - ?) ASC,
                          ABS(COALESCE(price_per_m2, 0) - ?) ASC,
                          COALESCE(posted_at, crawled_at) DESC
                 LIMIT 20
-            """, (
-                ward, listing_id,
-                prop_type, prop_type,
-                area_min, area_max,
-                curr_ppm2, ppm2_min, ppm2_max,
-                road_tier, road_tier,
-                area, curr_ppm2
-            )).fetchall()
+            """, comp_params).fetchall()
             ranked = []
             for c in comp_rows:
                 area_gap_pct = 0.0
@@ -1558,7 +1585,6 @@ def _same_price_value(a, b):
     return abs(float(a) - float(b)) < 0.000001
 
 
-@app.route("/api/leads", methods=["POST"])
 @rate_limit("lead_capture", limits={"guest": 10, "free": 30, "vip": 120, "admin": None})
 def api_create_lead():
     payload = request.get_json(silent=True) or {}
@@ -1605,7 +1631,6 @@ def api_create_lead():
     return jsonify({"ok": True, "lead_id": lead_id})
 
 
-@app.route("/api/lead-capture-guest", methods=["POST"])
 @rate_limit("lead_capture", limits={"guest": 10, "free": 30, "vip": 120, "admin": None})
 def api_create_guest_lead():
     """Matchmaking request from guest/free/vip. Captures phone and default request note.
@@ -1663,13 +1688,11 @@ def api_create_guest_lead():
     return jsonify({"ok": True, "lead_id": lead_id})
 
 
-@app.route("/admin/control-room")
 def admin_control_room():
     is_admin = _admin_request_authorized()
     return render_template("admin_control_room.html", admin_login_required=not is_admin)
 
 
-@app.route("/admin/api/leads")
 @require_admin_auth
 def admin_api_leads():
     status = (request.args.get("status") or "").strip()
@@ -1721,7 +1744,6 @@ def admin_api_leads():
     })
 
 
-@app.route("/admin/api/leads/export.csv")
 @require_admin_auth
 def admin_api_leads_export():
     status = (request.args.get("status") or "").strip()
@@ -1765,7 +1787,6 @@ def admin_api_leads_export():
     )
 
 
-@app.route("/admin/api/leads/<int:lead_id>/status", methods=["PATCH"])
 @require_admin_auth
 def admin_api_update_lead_status(lead_id):
     payload = request.get_json(silent=True) or {}
@@ -1795,7 +1816,6 @@ def admin_api_update_lead_status(lead_id):
     return jsonify({"ok": cur.rowcount > 0})
 
 
-@app.route("/admin/api/infra", methods=["GET", "POST"])
 @require_admin_auth
 def admin_api_infra():
     if request.method == "GET":
@@ -1898,7 +1918,6 @@ def admin_api_infra():
     return jsonify({"ok": True, "id": new_id, "mode": "create"})
 
 
-@app.route("/admin/api/infra/<int:entry_id>", methods=["DELETE", "PATCH"])
 @require_admin_auth
 def admin_api_infra_item(entry_id):
     if request.method == "DELETE":
@@ -1952,7 +1971,6 @@ def admin_api_infra_item(entry_id):
     return jsonify({"ok": True, "active": active_val})
 
 
-@app.route("/admin/api/qc/signals")
 @require_admin_auth
 def admin_api_qc_signals():
     try:
@@ -1991,7 +2009,6 @@ def admin_api_qc_signals():
     return jsonify({"items": [dict(r) for r in rows]})
 
 
-@app.route("/admin/api/ai-training/feedback", methods=["POST"])
 @require_admin_auth
 def admin_api_ai_training_feedback():
     payload = request.get_json(silent=True) or {}
@@ -2009,7 +2026,6 @@ def admin_api_ai_training_feedback():
     return jsonify({"ok": True, **result})
 
 
-@app.route("/admin/api/ai-training/items")
 @require_admin_auth
 def admin_api_ai_training_items():
     try:
@@ -2028,7 +2044,7 @@ def admin_api_ai_training_items():
         mos_min = 0.0
     sort = (request.args.get("sort") or "default").strip()
     queue = (request.args.get("queue") or "main").strip()
-    if queue not in ("main", "recheck", "source_qc"):
+    if queue not in ("main", "recheck", "source_qc", "needs_valuation", "legal_qc"):
         queue = "main"
 
     where = [
@@ -2050,6 +2066,25 @@ def admin_api_ai_training_items():
             "COALESCE(l.review_hidden,0)=0",
             "l.source = 'guland'",
             "COALESCE(v.source_quality_recheck,0)=1",
+        ])
+    elif queue == "needs_valuation":
+        where.extend([
+            "v.is_signal = 1",
+            "COALESCE(f.extraction_verdict,'all_correct') = 'all_correct'",
+            "(f.verdict = 'bad_data' OR f.valuation_verdict = 'bad_data')",
+        ])
+    elif queue == "legal_qc":
+        where.extend([
+            "v.is_signal = 1",
+            "COALESCE(l.review_hidden,0)=0",
+            """(
+                COALESCE(lv.status, v.legal_status, 'unverified') IN
+                    ('unverified')
+                OR (
+                    f.verdict = 'bad_data'
+                    AND f.extraction_verdict IN ('wrong_road','wrong_area','wrong_ward')
+                )
+            )""",
         ])
     else:
         where.append("v.is_signal = 1")
@@ -2077,6 +2112,15 @@ def admin_api_ai_training_items():
         order_map[sort] + ", COALESCE(v.signal_score,0) DESC"
         if sort in order_map
         else """
+          CASE COALESCE(lv.status, v.legal_status, 'unverified')
+            WHEN 'unverified' THEN 0
+            WHEN 'has_document' THEN 1
+            ELSE 5
+          END ASC,
+          COALESCE(v.trust_score,0) ASC,
+          COALESCE(v.signal_score,0) DESC
+        """ if queue == "legal_qc"
+        else """
           CASE WHEN f.id IS NULL THEN 0 ELSE 1 END ASC,
           (CASE WHEN l.area_m2 IS NULL OR l.ward IS NULL OR l.property_type IS NULL OR l.road_tier IS NULL THEN 20 ELSE 0 END) DESC,
           COALESCE(v.mos_pct,0) DESC,
@@ -2090,6 +2134,7 @@ def admin_api_ai_training_items():
                 ORDER BY created_at DESC
                 LIMIT 1
             )
+            LEFT JOIN legal_verifications lv ON lv.listing_id = l.id
     """
 
     with db_mod.get_conn() as conn:
@@ -2100,6 +2145,17 @@ def admin_api_ai_training_items():
                    COALESCE(l.posted_at, l.first_seen_at, l.crawled_at) AS posted_display,
                    v.mos_pct, v.signal_score, v.fair_ppm2, v.actual_ppm2,
                    v.segment, v.n_segment, v.source_quality_flags, v.source_quality_recheck,
+                   COALESCE(v.trust_tier, lv.trust_tier, 'candidate_signal') AS trust_tier,
+                   COALESCE(v.trust_score, lv.confidence_score, 0) AS trust_score,
+                   COALESCE(v.legal_status, lv.status, 'unverified') AS legal_status,
+                   COALESCE(v.legal_flags, lv.conflict_flags, '') AS legal_flags,
+                   lv.confidence_score AS legal_confidence_score,
+                   lv.thua_so AS legal_thua_so,
+                   lv.to_ban_do AS legal_to_ban_do,
+                   lv.legal_area_m2, lv.legal_residential_m2,
+                   lv.legal_address, lv.legal_ward,
+                   lv.legal_road_text, lv.legal_road_code,
+                   lv.road_match_status,
                    f.verdict AS feedback_verdict,
                    f.extraction_verdict, f.valuation_verdict, f.reason_tags,
                    r.verdict AS ai_verdict, r.confidence AS ai_confidence,
@@ -2136,7 +2192,7 @@ def admin_api_ai_training_items():
         """, params).fetchone()["c"]
         if queue == "recheck":
             pending = total
-        if queue == "source_qc":
+        if queue in ("source_qc", "needs_valuation", "legal_qc"):
             pending = total
 
         ward_where = [
@@ -2160,6 +2216,25 @@ def admin_api_ai_training_items():
                 "COALESCE(l.review_hidden,0)=0",
                 "l.source = 'guland'",
                 "COALESCE(v.source_quality_recheck,0)=1",
+            ])
+        elif queue == "needs_valuation":
+            ward_where.extend([
+                "v.is_signal = 1",
+                "COALESCE(f.extraction_verdict,'all_correct') = 'all_correct'",
+                "(f.verdict = 'bad_data' OR f.valuation_verdict = 'bad_data')",
+            ])
+        elif queue == "legal_qc":
+            ward_where.extend([
+                "v.is_signal = 1",
+                "COALESCE(l.review_hidden,0)=0",
+                """(
+                    COALESCE(lv.status, v.legal_status, 'unverified') IN
+                        ('unverified')
+                    OR (
+                        f.verdict = 'bad_data'
+                        AND f.extraction_verdict IN ('wrong_road','wrong_area','wrong_ward')
+                    )
+                )""",
             ])
         else:
             ward_where.append("v.is_signal = 1")
@@ -2195,7 +2270,7 @@ def admin_api_ai_training_items():
                 d["fair_ppm2"] = round(float(d["fair_ppm2"]), 1)
             imgs = conn.execute(
                 "SELECT local_path, img_url FROM listing_images "
-                "WHERE listing_id=? ORDER BY img_order",
+                "WHERE listing_id=? ORDER BY CASE WHEN img_type='so_hong' THEN 0 ELSE 1 END, img_order, id",
                 (d["id"],),
             ).fetchall()
             gallery = []
@@ -2208,6 +2283,24 @@ def admin_api_ai_training_items():
             d["detail_url"] = f"/listing/{d['id']}"
             d["is_recheck"] = queue == "recheck"
             d["is_source_qc"] = queue == "source_qc"
+            d["is_needs_valuation"] = queue == "needs_valuation"
+            d["is_legal_qc"] = queue == "legal_qc"
+            d["legal_summary"] = {
+                "status": d.get("legal_status") or "unverified",
+                "trust_tier": d.get("trust_tier") or "candidate_signal",
+                "trust_score": d.get("trust_score") or 0,
+                "confidence_score": d.get("legal_confidence_score") or d.get("trust_score") or 0,
+                "flags": d.get("legal_flags") or "",
+                "thua_so": d.get("legal_thua_so"),
+                "to_ban_do": d.get("legal_to_ban_do"),
+                "legal_area_m2": d.get("legal_area_m2"),
+                "legal_residential_m2": d.get("legal_residential_m2"),
+                "legal_ward": d.get("legal_ward"),
+                "legal_road_text": d.get("legal_road_text"),
+                "legal_road_code": d.get("legal_road_code"),
+                "road_match_status": d.get("road_match_status"),
+                "legal_address": d.get("legal_address"),
+            }
             missing = []
             for key, label in (("ward", "phuong"), ("property_type", "loai_hinh"), ("area_m2", "dien_tich"), ("road_tier", "duong")):
                 if d.get(key) in (None, "", 0):
@@ -2215,6 +2308,10 @@ def admin_api_ai_training_items():
             d["explain"] = {
                 "mos_pct": d.get("mos_pct"),
                 "signal_score": d.get("signal_score"),
+                "trust_tier": d.get("trust_tier"),
+                "trust_score": d.get("trust_score"),
+                "legal_status": d.get("legal_status"),
+                "legal_flags": d.get("legal_flags"),
                 "segment": d.get("segment"),
                 "n_segment": d.get("n_segment"),
                 "fair_ty": fair_ty,
@@ -2234,12 +2331,107 @@ def admin_api_ai_training_items():
         "queue_label": (
             "Recheck sau fix" if queue == "recheck"
             else "Guland QC" if queue == "source_qc"
+            else "Legal QC" if queue == "legal_qc"
+            else "Cần phân loại valuation" if queue == "needs_valuation"
             else "Review mới"
         ),
     })
 
 
-@app.route("/admin/api/ai-training/disagreements")
+@require_admin_auth
+def admin_api_legal_verification():
+    payload = request.get_json(silent=True) or {}
+    try:
+        listing_id = int(payload.get("listing_id") or 0)
+    except (TypeError, ValueError):
+        listing_id = 0
+    if listing_id <= 0:
+        return jsonify({"ok": False, "error": "invalid_listing_id"}), 400
+
+    with db_mod.get_conn() as conn:
+        listing = conn.execute(
+            """
+            SELECT id, title, description, ward, area_m2, road_type,
+                   tho_cu_m2, tho_cu_ratio
+              FROM listings
+             WHERE id=?
+            """,
+            (listing_id,),
+        ).fetchone()
+        if not listing:
+            return jsonify({"ok": False, "error": "not_found"}), 404
+
+        existing = conn.execute(
+            "SELECT * FROM legal_verifications WHERE listing_id=?",
+            (listing_id,),
+        ).fetchone()
+        latest_doc = conn.execute(
+            """
+            SELECT id
+              FROM listing_images
+             WHERE listing_id=? AND img_type='so_hong'
+             ORDER BY img_order, id
+             LIMIT 1
+            """,
+            (listing_id,),
+        ).fetchone()
+
+        legal_fields = dict(existing) if existing else {}
+        if latest_doc:
+            legal_fields.setdefault("document_image_id", latest_doc["id"])
+        for key in (
+            "thua_so", "to_ban_do", "legal_area_m2", "legal_residential_m2",
+            "legal_address", "legal_ward", "legal_road_text", "legal_road_code",
+        ):
+            if key in payload:
+                legal_fields[key] = payload.get(key) or None
+        status = (payload.get("status") or "").strip() or None
+
+        from cleansing.legal_verification import (
+            LEGAL_STATUSES,
+            conflict_flags_text,
+            upsert_legal_verification,
+            verify_legal_listing,
+        )
+
+        admin_status = status if status in LEGAL_STATUSES else None
+        result = verify_legal_listing(
+            listing,
+            legal_fields,
+            has_legal_doc=bool(legal_fields.get("document_image_id")),
+            admin_status=admin_status,
+        )
+        upsert_legal_verification(
+            conn,
+            result,
+            verified_by=None,
+        )
+        flags_text = conflict_flags_text(result["conflict_flags"])
+        conn.execute(
+            """
+            UPDATE valuation_results
+               SET legal_status=?,
+                   trust_tier=?,
+                   trust_score=?,
+                   legal_flags=?
+             WHERE id = (
+                SELECT id FROM valuation_results
+                 WHERE listing_id=?
+                 ORDER BY computed_at DESC, id DESC
+                 LIMIT 1
+             )
+            """,
+            (
+                result["status"],
+                result["trust_tier"],
+                result["confidence_score"],
+                flags_text,
+                listing_id,
+            ),
+        )
+    return jsonify({"ok": True, "legal_summary": {**result, "conflict_flags": flags_text}})
+
+
 @require_admin_auth
 def admin_api_ai_training_disagreements():
     """Read-only: nơi nhãn người (f) và verdict Claude (r) xung đột bucket.
@@ -2276,7 +2468,6 @@ def admin_api_ai_training_disagreements():
     return jsonify({"items": [dict(r) for r in rows]})
 
 
-@app.route("/admin/api/qc/duplicates")
 @require_admin_auth
 def admin_api_qc_duplicates():
     with db_mod.get_conn() as conn:
@@ -2295,10 +2486,10 @@ def admin_api_qc_duplicates():
             FROM listings l
             JOIN listings c ON c.id = l.duplicate_of_id
             LEFT JOIN listing_images li ON li.id = (
-                SELECT id FROM listing_images WHERE listing_id = l.id ORDER BY img_order LIMIT 1
+                SELECT id FROM listing_images WHERE listing_id = l.id ORDER BY CASE WHEN img_type='so_hong' THEN 0 ELSE 1 END, img_order, id LIMIT 1
             )
             LEFT JOIN listing_images ci ON ci.id = (
-                SELECT id FROM listing_images WHERE listing_id = c.id ORDER BY img_order LIMIT 1
+                SELECT id FROM listing_images WHERE listing_id = c.id ORDER BY CASE WHEN img_type='so_hong' THEN 0 ELSE 1 END, img_order, id LIMIT 1
             )
             WHERE COALESCE(l.probably_sold,0)=0
               AND COALESCE(l.is_blacklisted,0)=0
@@ -2319,7 +2510,6 @@ def admin_api_qc_duplicates():
     return jsonify({"items": items})
 
 
-@app.route("/admin/api/qc/duplicates/merge", methods=["POST"])
 @require_admin_auth
 def admin_api_qc_duplicates_merge():
     payload = request.get_json(silent=True) or {}
@@ -2353,7 +2543,6 @@ def admin_api_qc_duplicates_merge():
     return jsonify({"ok": True})
 
 
-@app.route("/admin/api/qc/duplicates/split", methods=["POST"])
 @require_admin_auth
 def admin_api_qc_duplicates_split():
     payload = request.get_json(silent=True) or {}
@@ -2384,7 +2573,6 @@ def admin_api_qc_duplicates_split():
     return jsonify({"ok": True})
 
 
-@app.route("/admin/api/blacklist", methods=["GET", "POST", "DELETE"])
 @require_admin_auth
 def admin_api_blacklist():
     if request.method == "GET":
@@ -2455,7 +2643,6 @@ def admin_api_blacklist():
     return jsonify({"ok": True})
 
 
-@app.route("/admin/api/audit")
 @require_admin_auth
 def admin_api_audit():
     entity_type = (request.args.get("entity_type") or "").strip()
@@ -2502,7 +2689,6 @@ def _user_admin_row(row):
     return d
 
 
-@app.route("/admin/api/users")
 @require_admin_auth
 def admin_api_users():
     tier_filter = (request.args.get("tier") or "").strip()
@@ -2550,7 +2736,6 @@ def admin_api_users():
     })
 
 
-@app.route("/admin/api/users/<int:user_id>/grant-vip", methods=["POST"])
 @require_admin_auth
 def admin_api_grant_vip(user_id):
     payload = request.get_json(silent=True) or {}
@@ -2593,7 +2778,6 @@ def admin_api_grant_vip(user_id):
     return jsonify({"ok": True, "vip_expires_at": new_exp, "tier": "vip"})
 
 
-@app.route("/admin/api/users/<int:user_id>/revoke", methods=["POST"])
 @require_admin_auth
 def admin_api_revoke_vip(user_id):
     with db_mod.get_conn() as conn:
@@ -2618,7 +2802,6 @@ def admin_api_revoke_vip(user_id):
     return jsonify({"ok": True, "tier": "free"})
 
 
-@app.route("/admin/api/users/<int:user_id>/ban", methods=["POST"])
 @require_admin_auth
 def admin_api_ban_user(user_id):
     payload = request.get_json(silent=True) or {}
@@ -2657,7 +2840,6 @@ def _jaccard(a, b):
         return 0.0
     return inter / union
 
-@app.route('/api/chat', methods=['POST'])
 def api_chat():
     data = request.json
     message = data.get("message")
@@ -2666,11 +2848,16 @@ def api_chat():
     if not message:
         return jsonify({"error": "No message provided"}), 400
         
-    db_path = str(db_mod.DB_PATH.resolve())
+    db_path = _db_handle()
     bot = AIBot(db_path)
     response = bot.chat(message, history)
     
     return jsonify({"response": response})
+
+from routes import register_blueprints
+
+register_blueprints(app)
+
 
 def ensure_perf_indexes():
     db_mod.init_schema()
@@ -2692,8 +2879,35 @@ def ensure_perf_indexes():
             ON listing_images(listing_id, img_order)
         """)
         conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_images_listing_legal_order
+            ON listing_images(
+                listing_id,
+                (CASE WHEN img_type = 'so_hong' THEN 0 ELSE 1 END),
+                img_order,
+                id
+            )
+        """)
+        conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_valuation_signal_score
             ON valuation_results(is_signal, signal_score DESC, mos_pct DESC)
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_valuation_listing_computed
+            ON valuation_results(listing_id, computed_at DESC, id DESC)
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_valuation_signal_trust_score
+            ON valuation_results(
+                (CASE COALESCE(trust_tier, 'candidate_signal')
+                    WHEN 'has_legal_doc' THEN 0
+                    ELSE 1
+                 END),
+                trust_score DESC,
+                signal_score DESC,
+                mos_pct DESC,
+                listing_id
+            )
+            WHERE is_signal = 1
         """)
         conn.commit()
 

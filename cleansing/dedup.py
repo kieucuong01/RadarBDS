@@ -2,10 +2,9 @@
 
 import logging
 import re
-import sqlite3
 import unicodedata
 from difflib import SequenceMatcher
-from typing import Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -453,9 +452,18 @@ def _is_duplicate(l1: dict, l2: dict) -> bool:
     return _repost_score(l1, l2) >= SCORE_THRESHOLD
 
 
-def flag_duplicates_in_db(conn: sqlite3.Connection) -> dict:
+def flag_duplicates_in_db(conn: Any) -> dict:
     """Flag duplicate reposts and reliable repost price drops."""
-    existing_cols = {r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()}
+    existing_cols = {
+        r["column_name"]
+        for r in conn.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema='public' AND table_name='listings'
+            """
+        ).fetchall()
+    }
     if "suspicious_bait" not in existing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN suspicious_bait INTEGER DEFAULT 0")
 
@@ -472,7 +480,7 @@ def flag_duplicates_in_db(conn: sqlite3.Connection) -> dict:
                  AND price_ty IS NOT NULL
                  AND price_ty < price_first_ty * 0.99
                  AND price_ty >= price_first_ty * 0.60
-                THEN ROUND((price_first_ty - price_ty) / price_first_ty * 100, 2)
+                THEN ROUND(((price_first_ty - price_ty) / price_first_ty * 100)::numeric, 2)
                 ELSE NULL END,
             suspicious_bait = CASE
                 WHEN price_first_ty IS NOT NULL
@@ -621,7 +629,7 @@ def flag_duplicates_in_db(conn: sqlite3.Connection) -> dict:
     return stats
 
 
-def _apply_dedup_overrides(conn: sqlite3.Connection) -> None:
+def _apply_dedup_overrides(conn: Any) -> None:
     try:
         rows = conn.execute("""
             SELECT action, listing_id, target_listing_id
@@ -649,7 +657,7 @@ def _apply_dedup_overrides(conn: sqlite3.Connection) -> None:
             )
 
 
-def get_dedup_stats(conn: sqlite3.Connection) -> dict:
+def get_dedup_stats(conn: Any) -> dict:
     total = conn.execute(
         "SELECT COUNT(*) FROM listings WHERE probably_sold=0"
     ).fetchone()[0]

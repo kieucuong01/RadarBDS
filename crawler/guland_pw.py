@@ -41,7 +41,53 @@ def _default_guland_urls(slug: str) -> list:
 
 # JS extract toàn bộ cards từ DOM hiện tại
 _JS_EXTRACT_CARDS = """
-() => [...document.querySelectorAll('.c-sdb-card')].map(card => {
+() => {
+  const listingImages = (root) => {
+    const mediaSelectors = [
+      '.c-sdb-card__img img',
+      '.c-sdb-card__thumb img',
+      '.sdb-card__img img',
+      '.sdb-img img',
+      '[class*="gallery"] img',
+      '[class*="slider"] img',
+      '[class*="swiper"] img',
+      '[class*="photo"] img',
+      '[class*="media"] img'
+    ].join(',');
+    const scoped = [...root.querySelectorAll(mediaSelectors)];
+    const candidates = scoped.length ? scoped : [...root.querySelectorAll('img')];
+    const badParent = [
+      '.profile-info',
+      '[class*="avatar"]',
+      '[class*="author"]',
+      '[class*="broker"]',
+      '[class*="contact"]',
+      '[class*="member"]',
+      '[class*="profile"]',
+      '[class*="seller"]',
+      '[class*="user"]'
+    ].join(',');
+    const badAsset = /(avatar|author|broker|contact|logo|member|profile|seller|placeholder|no-image)/i;
+    const seen = new Set();
+    return candidates
+      .filter(i => !i.closest(badParent))
+      .filter(i => {
+        const label = [i.getAttribute('alt'), i.getAttribute('title'), i.className, i.parentElement?.className].join(' ');
+        if (badAsset.test(label)) return false;
+        const w = parseInt(i.getAttribute('width') || i.naturalWidth || i.width || '0', 10);
+        const h = parseInt(i.getAttribute('height') || i.naturalHeight || i.height || '0', 10);
+        return !(w && h && Math.max(w, h) < 120);
+      })
+      .map(i => i.getAttribute('data-src') || i.getAttribute('data-original') || i.getAttribute('src'))
+      .filter(s => s && s.startsWith('http') && !badAsset.test(s))
+      .filter(s => {
+        if (seen.has(s)) return false;
+        seen.add(s);
+        return true;
+      });
+  };
+
+  return [...document.querySelectorAll('.c-sdb-card')].map(card => {
     const links = card.querySelectorAll('a[href*="/post/"]');
     const a = links.length > 1 ? links[1] : links[0];
     if (!a) return null;
@@ -49,7 +95,7 @@ _JS_EXTRACT_CARDS = """
     const priceEl = card.querySelector('.sdb-inf-data.data-color-1.data-size-xl b');
     const infBs   = card.querySelectorAll('.sdb-inf-data.data-size-lg b');
     const dateEl  = card.querySelector('.profile-info__stl, .sdb-time, [class*="time"]');
-    const imgs    = [...card.querySelectorAll('img')].map(i => i.getAttribute('data-src') || i.src).filter(s => s && s.startsWith('http') && !s.includes('logo') && !s.includes('avatar'));
+    const imgs    = listingImages(card);
     const postId  = a.href.match(/(\\d+)(?:\\.html)?$/)?.[1] || '';
     return {
         url:       a.href,
@@ -61,12 +107,61 @@ _JS_EXTRACT_CARDS = """
         date_raw:  dateEl?.textContent.trim() || '',
         imgs,
     };
-}).filter(Boolean)
+  }).filter(Boolean);
+}
 """
 
 # JS batch fetch detail pages (Promise.all — chạy trong Guland context)
 _JS_BATCH_DETAIL = """
 async (urls) => {
+    const listingImages = (root) => {
+        const mediaSelectors = [
+            '.dtl-img img',
+            '.dtl-gallery img',
+            '.dtl-media img',
+            '.dtl-slider img',
+            '.swiper-slide img',
+            '.owl-item img',
+            '.slick-slide img',
+            '[class*="gallery"] img',
+            '[class*="slider"] img',
+            '[class*="swiper"] img',
+            '[class*="photo"] img',
+            '[class*="media"] img'
+        ].join(',');
+        const scoped = [...root.querySelectorAll(mediaSelectors)];
+        const candidates = scoped.length ? scoped : [...root.querySelectorAll('img')];
+        const badParent = [
+            '.profile-info',
+            '[class*="avatar"]',
+            '[class*="author"]',
+            '[class*="broker"]',
+            '[class*="contact"]',
+            '[class*="member"]',
+            '[class*="profile"]',
+            '[class*="seller"]',
+            '[class*="user"]'
+        ].join(',');
+        const badAsset = /(avatar|author|broker|contact|logo|member|profile|seller|placeholder|no-image)/i;
+        const seen = new Set();
+        return candidates
+            .filter(i => !i.closest(badParent))
+            .filter(i => {
+                const label = [i.getAttribute('alt'), i.getAttribute('title'), i.className, i.parentElement?.className].join(' ');
+                if (badAsset.test(label)) return false;
+                const w = parseInt(i.getAttribute('width') || i.naturalWidth || i.width || '0', 10);
+                const h = parseInt(i.getAttribute('height') || i.naturalHeight || i.height || '0', 10);
+                return !(w && h && Math.max(w, h) < 120);
+            })
+            .map(i => i.getAttribute('data-src') || i.getAttribute('data-original') || i.getAttribute('src'))
+            .filter(s => s && s.startsWith('http') && !badAsset.test(s))
+            .filter(s => {
+                if (seen.has(s)) return false;
+                seen.add(s);
+                return true;
+            });
+    };
+
     const results = await Promise.all(urls.map(async url => {
         try {
             const r   = await fetch(url);
@@ -85,9 +180,7 @@ async (urls) => {
             };
 
             const phoneEl = doc.querySelector('[href^="tel:"]');
-            const imgs    = [...doc.querySelectorAll('img')]
-                                .map(i => i.getAttribute('data-src') || i.getAttribute('src'))
-                                .filter(s => s && s.startsWith('http') && !s.includes('logo') && !s.includes('avatar'));
+            const imgs    = listingImages(doc);
 
             return {
                 url,

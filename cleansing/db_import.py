@@ -15,7 +15,9 @@ from pathlib import Path
 # Thêm project root vào path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.database_sqlite import init_schema, upsert_listing, insert_images, start_crawl_run, finish_crawl_run
+from db.crawl_runs import finish_crawl_run, start_crawl_run
+from db.listings import insert_images, upsert_listing
+from db.schema import init_schema
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")

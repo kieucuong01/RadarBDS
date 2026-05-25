@@ -3,9 +3,11 @@ import time
 import logging
 import sys
 from pathlib import Path
-from config.database_sqlite import init_schema, get_conn, insert_raw
 from cli.data_import import cmd_export_raw
+from db.connection import advisory_lock, get_conn
 from db.moderation import normalize_phone
+from db.raw_listings import insert_raw
+from db.schema import init_schema
 
 def _get_crawlers(source_filter=None):
     from crawler.guland_pw import GulandCrawler
@@ -22,6 +24,66 @@ def _get_crawlers(source_filter=None):
             return []
         return [cls()]
     return [cls() for cls in all_crawlers.values()]
+
+
+def _clean_broker_images_after_download(source=None, limit=None):
+    from cleansing.legal_image_classifier import classify_legal_images
+    from cleansing.legal_verification import refresh_legal_verifications
+    from cleansing.image_cleanup import clean_broker_images
+    legal_stats = classify_legal_images(source=source, apply=True, limit=limit)
+    print(
+        f"Classify legal images: scanned={legal_stats.get('scanned', 0)} | "
+        f"updated={legal_stats.get('updated', 0)} | reasons={legal_stats.get('reasons', {})}"
+    )
+    verify_stats = refresh_legal_verifications(source=source, apply=True, limit=limit)
+    print(
+        f"Verify legal trust: scanned={verify_stats.get('scanned', 0)} | "
+        f"updated={verify_stats.get('updated', 0)} | statuses={verify_stats.get('statuses', {})}"
+    )
+    stats = clean_broker_images(source=source, apply=True, limit=limit, strong=True)
+    print(
+        f"Clean broker images: scanned={stats.get('scanned', 0)} | "
+        f"deleted={stats.get('deleted', 0)} | reasons={stats.get('reasons', {})}"
+    )
+    return stats
+
+
+def _refresh_existing_facebook_images(url: str, raw_data: dict) -> bool:
+    """Refresh volatile Facebook CDN image URLs for an already-seen post."""
+    imgs = raw_data.get("imgs") or raw_data.get("img_urls") or []
+    if not url or not imgs:
+        return False
+
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT id, raw_json FROM raw_listings WHERE source='facebook' AND url=?",
+            (url,),
+        ).fetchone()
+        if not row:
+            return False
+
+        try:
+            existing = json.loads(row["raw_json"] or "{}")
+        except Exception:
+            existing = {}
+
+        old_imgs = existing.get("imgs") or existing.get("img_urls") or []
+        if old_imgs == imgs:
+            return False
+
+        existing["imgs"] = imgs
+        if raw_data.get("_apify_raw"):
+            existing["_apify_raw"] = raw_data["_apify_raw"]
+        conn.execute(
+            """
+            UPDATE raw_listings
+               SET raw_json = ?, crawled_at = datetime('now')
+             WHERE id = ?
+            """,
+            (json.dumps(existing, ensure_ascii=False), row["id"]),
+        )
+        return True
+
 
 def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_filter=None):
     from crawler.facebook_apify import FacebookApifyCrawler, load_profiles
@@ -46,7 +108,7 @@ def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_f
         return {"fetched": 0, "inserted": 0, "skipped": 0,
                 "irrelevant": 0, "out_of_area": 0}
 
-    inserted = skipped = irrelevant = out_of_area = 0
+    inserted = skipped = irrelevant = out_of_area = refreshed_images = 0
     for post in raw_posts:
         text = post.get("text") or ""
         if not is_relevant(text):
@@ -87,14 +149,22 @@ def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_f
         )
         if rid:
             inserted += 1
+        elif _refresh_existing_facebook_images(record["url"], raw_data):
+            refreshed_images += 1
         else:
             skipped += 1
 
     return {"fetched": len(raw_posts), "inserted": inserted,
             "skipped": skipped, "irrelevant": irrelevant,
+            "refreshed_images": refreshed_images,
             "out_of_area": out_of_area}
 
 def cmd_crawl_facebook(args):
+    with advisory_lock("crawl-facebook"):
+        return _cmd_crawl_facebook(args)
+
+
+def _cmd_crawl_facebook(args):
     init_schema()
 
     profiles = [{"url": args.profile, "tier": 20, "broker_name": None, "default_area": None}] if getattr(args, "profile", None) else None
@@ -111,10 +181,11 @@ def cmd_crawl_facebook(args):
         f"[facebook] crawled={stats['fetched']} | "
         f"bds={stats['fetched']-stats['irrelevant']} | "
         f"imported={stats['inserted']} | skipped={stats['skipped']} (da co) | "
+        f"refreshed_img={stats.get('refreshed_images', 0)} | "
         f"irrelevant={stats['irrelevant']} | out_of_area={stats.get('out_of_area', 0)}"
     )
 
-    if stats["inserted"] > 0 and not getattr(args, "no_reprocess", False):
+    if (stats["inserted"] > 0 or stats.get("refreshed_images", 0) > 0) and not getattr(args, "no_reprocess", False):
         print("\nChay reprocess...")
         from cleansing.reprocess import run_full_reprocess
         result = run_full_reprocess()
@@ -125,10 +196,16 @@ def cmd_crawl_facebook(args):
         print(f"\nĐang tải ảnh về local...")
         from cleansing.download_images import download_images
         download_images()
+        _clean_broker_images_after_download(source="facebook")
     elif stats["inserted"] == 0:
         print("[facebook] Khong co bai moi, bo qua reprocess.")
 
 def cmd_crawl(args, mode: str = "full"):
+    with advisory_lock(f"crawl-{mode}"):
+        return _cmd_crawl(args, mode=mode)
+
+
+def _cmd_crawl(args, mode: str = "full"):
     init_schema()
 
     crawlers = _get_crawlers(getattr(args, "source", None))
@@ -162,16 +239,22 @@ def cmd_crawl(args, mode: str = "full"):
             print(
                 f"[facebook] crawled={fb_stats['fetched']} | "
                 f"imported={fb_stats['inserted']} | skipped={fb_stats['skipped']} | "
+                f"refreshed_img={fb_stats.get('refreshed_images', 0)} | "
                 f"irrelevant={fb_stats['irrelevant']} | out_of_area={fb_stats.get('out_of_area', 0)}"
             )
-            total_new += fb_stats["inserted"]
+            total_new += fb_stats["inserted"] + fb_stats.get("refreshed_images", 0)
 
     if total_new == 0:
+        print("\nKhong co tin moi. Kiem tra backlog anh can tai...")
+        from cleansing.download_images import download_images
+        download_images(limit=200)
+        _clean_broker_images_after_download(source=source_filter, limit=200)
+        _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
         print(f"\nKhông có tin mới. DB không thay đổi.")
         return
 
     if not no_reprocess:
-        print(f"\nReprocess {total_new} records mới...")
+        print(f"\nReprocess {total_new} records moi/cap nhat...")
         from cleansing.reprocess import run_full_reprocess
         result = run_full_reprocess()
         r, v = result["listings"], result["valuation"]
@@ -181,6 +264,7 @@ def cmd_crawl(args, mode: str = "full"):
         print(f"\nĐang tải ảnh về local...")
         from cleansing.download_images import download_images
         download_images()
+        _clean_broker_images_after_download(source=source_filter)
 
         # LLM verify signals: chỉ verify tin đã thành signal & chưa llm_verified.
         # Groq free-tier có daily token cap → 429 được handle nội bộ

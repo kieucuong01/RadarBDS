@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from cleansing.feature_extractor import (
     extract_price, extract_area, extract_dimensions,
     extract_tho_cu, extract_road_tier, extract_legal,
-    classify_property_type,
+    classify_property_type, extract_road_type,
 )
 from cleansing.normalizer import normalize_record
 
@@ -122,6 +122,12 @@ def test_extract_road_tier_data_quality_patterns():
     assert extract_road_tier("Bán nhà Mỹ Phước 1", "đường TC 1A") == 2
 
 
+def test_extract_road_type_small_access_patterns():
+    assert extract_road_type("Ban dat duong ba gac Tan An") == "hem_ba_gac"
+    assert extract_road_type("Hem xe may sat cho") == "hem_xe_may"
+    assert extract_road_type("Duong oto vao tan dat") == "hem_xe_hoi"
+
+
 def test_normalizer_uses_structured_address_for_road_tier():
     rec = normalize_record({
         "source": "guland",
@@ -169,6 +175,90 @@ def test_normalizer_prefers_explicit_title_area_when_source_area_conflicts():
     assert rec is not None
     assert rec["area_m2"] == 225.0
     assert round(rec["price_per_m2"], 2) == 11.78
+
+
+def test_normalizer_maps_ben_cat_khu_l_grid_codes_to_my_phuoc_3():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "wrong-ward-khu-l",
+        "url": "https://www.facebook.com/khuyen.vu.86/posts/khu-l",
+        "default_area": "Bến Cát",
+        "title": "Bán nhanh 5m khu L sát góc DL12 hướng bắc",
+        "description": "DT 5*30 thổ cư 150m. Sát chợ, sát trường cấp 2, sát QL13. Giá 1 tỷ 6x",
+        "area_m2": 150,
+        "price_ty": 1.6,
+    })
+
+    assert rec is not None
+    assert rec["ward"] == "Mỹ Phước 3"
+    assert rec["area"] == "Mỹ Phước 3"
+
+
+def test_normalizer_maps_viet_duc_landmark_to_thoi_hoa():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "wrong-ward-vgu",
+        "url": "https://www.facebook.com/khuyen.vu.86/posts/vgu",
+        "default_area": "Bến Cát",
+        "title": "Nhà gác lửng ngay khu đại học Việt Đức",
+        "description": "DT 5x30, sân xe hơi, 5 phòng ngủ, giá chỉ 1 tỷ 9xx",
+        "area_m2": 150,
+        "price_ty": 1.9,
+    })
+
+    assert rec is not None
+    assert rec["ward"] == "Thới Hòa"
+    assert rec["area"] == "Thới Hòa"
+
+
+def test_normalizer_does_not_fallback_ben_cat_profile_to_tan_an():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "wrong-ward-generic-ben-cat",
+        "url": "https://www.facebook.com/khuyen.vu.86/posts/generic-ben-cat",
+        "default_area": "Bến Cát",
+        "title": "Bến Cát TPHCM tổng diện tích 1102m2 có 200 thổ cư",
+        "description": "Giá 3 tỷ 6 thương lượng, liên hệ xem đất",
+        "area_m2": 1102,
+        "price_ty": 3.6,
+    })
+
+    assert rec is not None
+    assert rec["ward"] is None
+    assert rec["area"] == "Bến Cát"
+
+
+def test_normalizer_marks_long_nguyen_as_outside_focus_area():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "wrong-ward-long-nguyen",
+        "url": "https://www.facebook.com/khuyen.vu.86/posts/long-nguyen",
+        "default_area": "Bến Cát",
+        "title": "Phường Long Nguyên TPHCM, đất 20x37 có thổ cư",
+        "description": "Chủ kẹt tiền bán rẻ lô đất, giá 3 tỷ 2",
+        "area_m2": 740,
+        "price_ty": 3.2,
+    })
+
+    assert rec is not None
+    assert rec["ward"] is None
+    assert rec["area"] == "Other"
+
+
+def test_normalizer_keeps_unknown_location_out_of_known_ward_segments():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "unknown-location",
+        "url": "https://www.facebook.com/hang.pk.90/posts/unknown-location",
+        "title": "Mặt tiền Đại lộ Bình Dương giảm giá bán nhanh",
+        "description": "DT 5x30 thổ cư 150m, giá 2 tỷ 5",
+        "area_m2": 150,
+        "price_ty": 2.5,
+    })
+
+    assert rec is not None
+    assert rec["ward"] is None
+    assert rec["area"] == "Unknown"
 
 
 def test_extract_legal():

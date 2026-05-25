@@ -476,6 +476,23 @@ p { margin: 6px 0 0; color: var(--muted); }
   padding: 10px;
   margin-top: 10px;
 }
+.legal-qc-box { border-color: rgba(16, 185, 129, 0.35); }
+.legal-qc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+.legal-qc-grid input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 12px;
+}
 .review-title { font-weight: 800; font-size: 12px; margin-bottom: 7px; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {

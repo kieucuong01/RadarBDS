@@ -14,6 +14,8 @@ from datetime import datetime, date
 import numpy as np
 import re
 
+from config.proximity import proximity_score_for_ward
+
 logger = logging.getLogger(__name__)
 
 # ── Cấu hình ────────────────────────────────────────────────────────────────
@@ -34,6 +36,7 @@ SOURCE_SIGNAL_SUPPRESS_FLAGS = {
     "old_guland_post",
     "extreme_guland_ppm2",
     "suspicious_bait",
+    "guland_cluster_flood",
 }
 
 FAIR_FLOOR_RATIO = 0.70
@@ -90,6 +93,11 @@ class Listing:
     source:         str = ''
     exclude_from_baseline: bool = False
     source_quality_flags:  Tuple[str, ...] = field(default_factory=tuple)
+    review_recheck_candidate: bool = False
+    legal_status:   str = 'unverified'
+    trust_tier:     str = 'candidate_signal'
+    trust_score:    int = 0
+    legal_flags:    Tuple[str, ...] = field(default_factory=tuple)
 
 def extract_regex_features(text: str) -> Dict[str, bool]:
     if not text: return {}
@@ -120,6 +128,10 @@ class ValuationResult:
     note:                 str  = ''
     source_quality_flags: Tuple[str, ...] = field(default_factory=tuple)
     source_quality_recheck: bool = False
+    legal_status:         str = 'unverified'
+    trust_tier:           str = 'candidate_signal'
+    trust_score:          int = 0
+    legal_flags:          Tuple[str, ...] = field(default_factory=tuple)
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -142,11 +154,22 @@ def compute_signal_score(listing: 'Listing', mos_pct: float) -> int:
     if 0 < price_ty < 4.0: score += 5
     if listing.is_hot: score += 10
     if getattr(listing, 'price_dropped', False): score += 15
+    score += proximity_score_for_ward(getattr(listing, 'ward', ''))
     return min(100, score)
 
 
 def _source_flags(listing: 'Listing') -> set:
     return set(getattr(listing, "source_quality_flags", ()) or ())
+
+
+def _legal_flags(listing: 'Listing') -> set:
+    return set(getattr(listing, "legal_flags", ()) or ())
+
+
+def _has_legal_conflict(listing: 'Listing') -> bool:
+    if (getattr(listing, "legal_status", "") or "") == "conflict":
+        return True
+    return bool(_legal_flags(listing) & {"area_mismatch", "ward_mismatch", "road_conflict", "tho_cu_mismatch"})
 
 
 def _is_guland(listing: 'Listing') -> bool:
@@ -421,7 +444,9 @@ class ValuationEngine:
         # Gate signal khi mẫu so sánh quá yếu (segment dưới ngưỡng regression-fit).
         # Khi n_samples < MIN_RELIABLE_N_FOR_SIGNAL, fair_value đã rơi về median fallback —
         # không đủ tin cậy để gắn cờ signal dù MOS lớn. Vẫn lưu valuation_result để audit.
-        if m.n_samples < MIN_RELIABLE_N_FOR_SIGNAL:
+        if m.n_samples < MIN_RELIABLE_N_FOR_SIGNAL and not listing.review_recheck_candidate:
+            is_sig = False
+        if _has_legal_conflict(listing):
             is_sig = False
         sigma = (actual - m.mean_ppm2) / m.std_ppm2 if m.std_ppm2 else 0
         
@@ -438,6 +463,8 @@ class ValuationEngine:
 
         if source_quality_recheck:
             note.append("source_qc")
+        if _has_legal_conflict(listing):
+            note.append("legal_conflict")
 
         score = provisional_score if is_sig else 0
 
@@ -452,6 +479,10 @@ class ValuationEngine:
             note=' | '.join(note),
             source_quality_flags=quality_flags,
             source_quality_recheck=source_quality_recheck,
+            legal_status=getattr(listing, "legal_status", "unverified") or "unverified",
+            trust_tier=getattr(listing, "trust_tier", "candidate_signal") or "candidate_signal",
+            trust_score=int(getattr(listing, "trust_score", 0) or 0),
+            legal_flags=tuple(sorted(_legal_flags(listing))),
         )
 
     def valuate_batch(self, listings: List[Listing]) -> List[ValuationResult]:

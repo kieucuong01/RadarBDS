@@ -37,6 +37,12 @@ Idempotent. Không đọc/write DB. Gọi feature_extractor để extract regex.
 
 **Ward keywords:** 13 TDM + Bến Cát (incl. Mỹ Phước 1-4 và Hiệp Thành 1-3 / KDC K8 sub-zones, detected via keyword + street name patterns from `config/area_profiles.py`; `detect_subward_from_street` nhận `parent_filter` để scope theo parent ward, tránh leak cross-ward).
 
+**Review-driven ward fixes (2026-05-25):**
+- `default_area` là city/profile, không phải ward. Nếu Facebook profile là `Bến Cát` nhưng không bắt được ward rõ, giữ `area="Bến Cát"`, `ward=None`; không fallback về `Tân An`.
+- Nếu không có city/ward/location rõ, giữ `area="Unknown"`, `ward=None` để không contaminate segment định giá.
+- Bến Cát landmark: `khu L` / road code `DL12`, `NL5`, `DH3A` → `Mỹ Phước 3`; `ĐH/Đại học Việt Đức` → `Thới Hòa`; `Chà Vi` → parent `Mỹ Phước`.
+- `Long Nguyên` là ngoài vùng focus hiện tại → `area="Other"`, `ward=None`, tránh đưa vào segment TDM/Bến Cát.
+
 ## Feature Extractor (feature_extractor.py)
 
 ### Price

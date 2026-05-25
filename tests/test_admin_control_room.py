@@ -2,6 +2,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 from unittest import mock
 
@@ -16,6 +17,8 @@ class AdminControlRoomGateTest(unittest.TestCase):
 
         self.tmpdir = Path(tempfile.mkdtemp())
         self.db_path = self.tmpdir / "radar_admin_gate.db"
+        self.admin_identifier = f"admin-{uuid.uuid4().hex}@example.test"
+        self.admin_token = f"admin-control-room-token-{uuid.uuid4().hex}"
         connection.close_all()
         self.patches = [
             mock.patch.object(connection, "DB_PATH", self.db_path),
@@ -29,6 +32,14 @@ class AdminControlRoomGateTest(unittest.TestCase):
 
     def tearDown(self):
         from db import connection
+        from db.connection import get_conn
+
+        try:
+            with get_conn() as conn:
+                conn.execute("DELETE FROM user_sessions WHERE token = ?", (self.admin_token,))
+                conn.execute("DELETE FROM users WHERE identifier = ?", (self.admin_identifier,))
+        except Exception:
+            pass
 
         connection.close_all()
         for patcher in reversed(self.patches):
@@ -39,25 +50,25 @@ class AdminControlRoomGateTest(unittest.TestCase):
         from auth.core import SESSION_COOKIE_NAME
         from db.connection import get_conn
 
-        token = "admin-control-room-token"
         with get_conn() as conn:
             cur = conn.execute(
                 """
                 INSERT INTO users (identifier, identifier_type, password_hash, tier)
-                VALUES ('admin@example.test', 'email', 'hash', 'admin')
-                """
+                VALUES (?, 'email', 'hash', 'admin')
+                """,
+                (self.admin_identifier,),
             )
             conn.execute(
                 """
                 INSERT INTO user_sessions (token, user_id, expires_at)
                 VALUES (?, ?, '2099-01-01T00:00:00')
                 """,
-                (token, cur.lastrowid),
+                (self.admin_token, cur.lastrowid),
             )
         try:
-            self.client.set_cookie(SESSION_COOKIE_NAME, token)
+            self.client.set_cookie(SESSION_COOKIE_NAME, self.admin_token)
         except TypeError:
-            self.client.set_cookie("localhost", SESSION_COOKIE_NAME, token)
+            self.client.set_cookie("localhost", SESSION_COOKIE_NAME, self.admin_token)
 
     def test_guest_control_room_renders_login_modal_gate(self):
         response = self.client.get("/admin/control-room")
@@ -84,3 +95,14 @@ class AdminControlRoomGateTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn("js/admin.js", html)
         self.assertNotIn('id="authModal"', html)
+
+    def test_ai_training_requires_explicit_valuation_choice_in_js(self):
+        js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertNotIn(
+            'class="chip active" data-card="${cid}" data-group="valuation" data-value="cheap_real"',
+            js,
+        )
+        self.assertIn("if (extractionOk && !valuation)", js)

@@ -1,7 +1,8 @@
-import sqlite3
 from datetime import datetime, date
 from collections import defaultdict
+from contextlib import contextmanager
 
+from db.connection import get_conn
 from services.image_assets import resolve_image_url
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -131,14 +132,48 @@ def _mos_filter(mos_min=0):
 
 
 def _signal_sort_sql(sort_key: str) -> str:
+    trust_rank = (
+        "CASE COALESCE(v.trust_tier, 'candidate_signal') "
+        "WHEN 'has_legal_doc' THEN 0 "
+        "ELSE 1 END ASC, COALESCE(v.trust_score, 0) DESC"
+    )
     sort_map = {
         "newest": "COALESCE(l.posted_at, l.crawled_at) DESC, l.id DESC",
         "price_m2_asc": "v.actual_ppm2 IS NULL, v.actual_ppm2 ASC, l.id DESC",
         "price_asc": "l.price_ty IS NULL, l.price_ty ASC, l.id DESC",
         "mos_desc": "v.mos_pct IS NULL, v.mos_pct DESC, l.id DESC",
-        "score_desc": "COALESCE(v.signal_score, 0) DESC, v.mos_pct DESC",
+        "score_desc": f"{trust_rank}, COALESCE(v.signal_score, 0) DESC, v.mos_pct DESC",
     }
     return sort_map.get(sort_key or "newest", sort_map["newest"])
+
+
+LEGAL_IMAGE_ORDER_SQL = "CASE WHEN img_type = 'so_hong' THEN 0 ELSE 1 END, img_order, id"
+
+
+@contextmanager
+def _read_conn(_db_path=None):
+    """Reuse the per-thread PostgreSQL connection for hot read models."""
+    with get_conn() as conn:
+        yield conn
+
+
+class _ScopedReadConnection:
+    def __init__(self, ctx):
+        self._ctx = ctx
+        self._conn = ctx.__enter__()
+        self._closed = False
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+    def close(self):
+        if not self._closed:
+            self._ctx.__exit__(None, None, None)
+            self._closed = True
+
+
+def _open_read_conn(db_path=None):
+    return _ScopedReadConnection(_read_conn(db_path))
 
 
 def _primary_images(conn, listing_ids):
@@ -149,7 +184,7 @@ def _primary_images(conn, listing_ids):
         SELECT listing_id, local_path, img_url
         FROM listing_images
         WHERE listing_id IN ({placeholders})
-        ORDER BY listing_id, img_order
+        ORDER BY listing_id, {LEGAL_IMAGE_ORDER_SQL}
     """, listing_ids).fetchall()
     img_map = {}
     for r in rows:
@@ -191,6 +226,10 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "days_ago": _days_ago(r['posted_at'] or r['crawled_at']),
         "ward": r['ward'],
         "signal_score": r['signal_score'],
+        "trust_tier": _row_get(r, "trust_tier", "candidate_signal"),
+        "trust_score": _row_get(r, "trust_score", 0),
+        "legal_status": _row_get(r, "legal_status", "unverified"),
+        "legal_flags": _row_get(r, "legal_flags", "") or "",
         "primary_img": primary_img or "",
         "source": r['source'],
         "road_tier": r['road_tier'] or 0,
@@ -206,8 +245,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     if tier == "guest":
         mos_min = 0
         only_drops = False
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    conn = _open_read_conn(db_path)
     where_sql, params = _build_filters(sources, wards, prop_types, only_drops, prefix="l.", area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
     mos_condition, mos_params = _mos_filter(mos_min)
     page = max(int(page or 1), 1)
@@ -217,33 +255,50 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
     fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
 
-    count_row = conn.execute(f"""
-        SELECT COUNT(*)
-        FROM valuation_results v
-        JOIN listings l ON v.listing_id = l.id
-        WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
-    """, params + mos_params).fetchone()
-    total = count_row[0] if count_row else 0
-
     rows = conn.execute(f"""
-        SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
+        SELECT COUNT(*) OVER() AS total_count,
+               v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                l.id, l.title, l.source, l.area_m2, l.price_ty,
                l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
                l.price_first_ty, l.duplicate_of_id,
                l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
                COALESCE(v.signal_score, 0) as signal_score,
+               COALESCE(v.trust_tier, 'candidate_signal') as trust_tier,
+               COALESCE(v.trust_score, 0) as trust_score,
+               COALESCE(v.legal_status, 'unverified') as legal_status,
+               COALESCE(v.legal_flags, '') as legal_flags,
+               primary_img.local_path AS primary_local_path,
+               primary_img.img_url AS primary_img_url,
                {fresh_flag}
         FROM valuation_results v
         JOIN listings l ON v.listing_id = l.id
+        LEFT JOIN LATERAL (
+            SELECT li.local_path, li.img_url
+            FROM listing_images li
+            WHERE li.listing_id = l.id
+            ORDER BY {LEGAL_IMAGE_ORDER_SQL.replace('img_type', 'li.img_type').replace('img_order', 'li.img_order').replace(', id', ', li.id')}
+            LIMIT 1
+        ) primary_img ON TRUE
         WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
         ORDER BY {order_sql}
         LIMIT ? OFFSET ?
     """, params + mos_params + [limit, offset]).fetchall()
 
-    image_map = _primary_images(conn, [r['id'] for r in rows])
     conn.close()
 
-    signals = [_format_signal_row(r, image_map.get(r['id']), tier=tier) for r in rows]
+    total = int(_row_get(rows[0], "total_count", 0)) if rows else 0
+    signals = [
+        _format_signal_row(
+            r,
+            resolve_image_url(
+                _row_get(r, "primary_local_path"),
+                _row_get(r, "primary_img_url"),
+                prefer_thumb=True,
+            ),
+            tier=tier,
+        )
+        for r in rows
+    ]
     signals = apply_guest_truncation(signals, tier, limit=12)
 
     return {
@@ -259,8 +314,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
 
 
 def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=0):
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    conn = _open_read_conn(db_path)
 
     where_sql, params = _build_filters(sources, wards, prop_types, only_drops, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
     mos_condition, mos_params = _mos_filter(mos_min)
@@ -291,11 +345,15 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
                    l.price_first_ty, l.duplicate_of_id,
                    l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
                    COALESCE(v.signal_score, 0) as signal_score,
+                   COALESCE(v.trust_tier, 'candidate_signal') as trust_tier,
+                   COALESCE(v.trust_score, 0) as trust_score,
+                   COALESCE(v.legal_status, 'unverified') as legal_status,
+                   COALESCE(v.legal_flags, '') as legal_flags,
                    {fresh_flag}
             FROM valuation_results v
             JOIN listings l ON v.listing_id = l.id
             WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
-            ORDER BY COALESCE(v.signal_score, 0) DESC, v.mos_pct DESC
+            ORDER BY {_signal_sort_sql('score_desc')}
         """
         sig_rows = conn.execute(sig_query, params + mos_params).fetchall()
 
@@ -304,6 +362,10 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     if not skip_listings:
         all_query = f"""
             SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
+                   COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,
+                   COALESCE(v.trust_score, 0) AS trust_score,
+                   COALESCE(v.legal_status, 'unverified') AS legal_status,
+                   COALESCE(v.legal_flags, '') AS legal_flags,
                    {fresh_flag}
             FROM listings l
             LEFT JOIN valuation_results v ON l.id = v.listing_id
@@ -325,7 +387,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             SELECT listing_id, local_path, img_url
             FROM listing_images
             WHERE listing_id IN ({placeholders})
-            ORDER BY listing_id, img_order
+            ORDER BY listing_id, {LEGAL_IMAGE_ORDER_SQL}
         """, listing_ids).fetchall()
     img_map = defaultdict(list)
     for r in img_rows:
@@ -340,7 +402,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         FROM listings
         WHERE is_outlier = 0 AND {where_sql}
         GROUP BY property_type
-        HAVING n_samples >= 1
+        HAVING COUNT(*) >= 1
     """, params).fetchall()
     type_label = {'dat_nen': 'Đất nền', 'dat_vuon': 'Đất vườn', 'nha_dat': 'Nhà đất', 'nha_tro': 'Nhà trọ', 'chung_cu': 'Chung cư'}
     for s in summary_rows:
@@ -425,6 +487,10 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             "suspicious_bait": bool(r['suspicious_bait']),
             "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],
             "source": r['source'], "imgs": img_map.get(r['id'], []),
+            "trust_tier": _row_get(r, "trust_tier", "candidate_signal"),
+            "trust_score": _row_get(r, "trust_score", 0),
+            "legal_status": _row_get(r, "legal_status", "unverified"),
+            "legal_flags": _row_get(r, "legal_flags", "") or "",
             "is_fresh_locked": bool(_row_get(r, 'is_fresh_locked', 0)),
         }, tier)
         for r in all_rows
@@ -447,8 +513,7 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
     if not sources:
         sources = ["facebook", "guland", "batdongsan"]
 
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    conn = _open_read_conn(db_path)
 
     where_parts = ["probably_sold = 0", "COALESCE(is_blacklisted,0)=0", "COALESCE(review_hidden,0)=0"]
     if only_drops:
@@ -580,8 +645,7 @@ def _supply_verdict(current_count: int, prev_avg: float):
 
 def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
                            area_min=0, area_max=0, price_min=0, price_max=0):
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    conn = _open_read_conn(db_path)
     where_sql, params = _market_indicator_filters(
         sources=sources,
         wards=wards,
@@ -626,7 +690,7 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
             SUM(has_price_drop) AS distress_count
         FROM lots
         GROUP BY ward
-        HAVING total_count > 0
+        HAVING COUNT(*) > 0
     """, params).fetchall()
 
     today = date.today()
@@ -704,15 +768,31 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
     }
 
 def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=None):
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    conn = _open_read_conn(db_path)
     lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
     fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
     listing = conn.execute(f"""
         SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
+               COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,
+               COALESCE(v.trust_score, 0) AS trust_score,
+               COALESCE(v.legal_status, 'unverified') AS legal_status,
+               COALESCE(v.legal_flags, '') AS legal_flags,
+               lv.status AS legal_verification_status,
+               lv.confidence_score AS legal_confidence_score,
+               lv.thua_so AS legal_thua_so,
+               lv.to_ban_do AS legal_to_ban_do,
+               lv.legal_area_m2,
+               lv.legal_residential_m2,
+               lv.legal_address,
+               lv.legal_ward,
+               lv.legal_road_text,
+               lv.legal_road_code,
+               lv.road_match_status,
+               lv.conflict_flags AS legal_conflict_flags,
                {fresh_flag}
         FROM listings l
         LEFT JOIN valuation_results v ON l.id = v.listing_id
+        LEFT JOIN legal_verifications lv ON lv.listing_id = l.id
         WHERE l.id = ?
           AND COALESCE(l.is_blacklisted,0)=0
           AND COALESCE(l.review_hidden,0)=0
@@ -723,11 +803,11 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=No
     images = [
         url for url in (
             resolve_image_url(r[0], r[1])
-            for r in conn.execute("""
+            for r in conn.execute(f"""
                 SELECT local_path, img_url
                 FROM listing_images
                 WHERE listing_id = ?
-                ORDER BY img_order
+                ORDER BY {LEGAL_IMAGE_ORDER_SQL}
             """, (listing_id,)).fetchall()
         )
         if url
@@ -738,9 +818,26 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=No
     listing_dict = dict(listing)
     listing_dict["is_fresh_locked"] = bool(listing_dict.get("is_fresh_locked"))
     listing_dict = redact_for_tier(listing_dict, tier)
+    legal_verification = {
+        "status": listing_dict.get("legal_verification_status") or listing_dict.get("legal_status") or "unverified",
+        "trust_tier": listing_dict.get("trust_tier") or "candidate_signal",
+        "trust_score": listing_dict.get("trust_score") or 0,
+        "confidence_score": listing_dict.get("legal_confidence_score") or 0,
+        "thua_so": listing_dict.get("legal_thua_so") or listing_dict.get("thua_so"),
+        "to_ban_do": listing_dict.get("legal_to_ban_do") or listing_dict.get("to_ban_do"),
+        "legal_area_m2": listing_dict.get("legal_area_m2"),
+        "legal_residential_m2": listing_dict.get("legal_residential_m2"),
+        "legal_address": listing_dict.get("legal_address"),
+        "legal_ward": listing_dict.get("legal_ward"),
+        "legal_road_text": listing_dict.get("legal_road_text"),
+        "legal_road_code": listing_dict.get("legal_road_code"),
+        "road_match_status": listing_dict.get("road_match_status"),
+        "conflict_flags": listing_dict.get("legal_conflict_flags") or listing_dict.get("legal_flags") or "",
+    }
 
     return {
         "listing": listing_dict,
+        "legal_verification": legal_verification,
         "images": images,
         "history": history,
         "tier": tier,

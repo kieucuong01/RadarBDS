@@ -14,7 +14,6 @@ import json
 import sys
 from datetime import datetime, timezone
 
-from db import connection
 from db.connection import get_conn
 from db.schema import init_schema
 
@@ -55,10 +54,9 @@ def cmd_review_queue(args):
     with get_conn() as conn:
         rows = conn.execute(sql, params).fetchall()
 
-    db_path = str(connection.DB_PATH)
     items = []
     for row in rows:
-        memo = load_investment_memo(db_path, row["id"], tier="admin")
+        memo = load_investment_memo(None, row["id"], tier="admin")
         if memo is None:
             continue
         items.append({
