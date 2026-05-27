@@ -22,8 +22,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@3.1.0/dist/chartjs-chart-treemap.min.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=main-css-split-20260526">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=main-css-split-20260526">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=main-css-split-20260526">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=listings-view-20260527">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=listings-view-20260527">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=main-css-split-20260526">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=main-css-split-20260526">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=main-css-split-20260526">
@@ -503,7 +503,13 @@
           </button>
           <button class="tf-btn tf-btn-reset" onclick="resetTableFilters()">Xóa</button>
         </div> -->
-        <div class="table-wrap">
+        <div class="listings-view-bar" aria-label="Chọn kiểu hiển thị tin rao">
+          <div class="listings-view-toggle" role="group" aria-label="Kiểu hiển thị">
+            <button type="button" id="listingsViewTable" class="listings-view-btn active" data-view="table">Table</button>
+            <button type="button" id="listingsViewGrid" class="listings-view-btn" data-view="grid">Grid</button>
+          </div>
+        </div>
+        <div class="table-wrap listing-view" id="listingsTableView">
           <div class="table-scroll">
             <table>
               <thead>
@@ -531,6 +537,10 @@
               style="height:40px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.8rem;">
             </div>
           </div>
+        </div>
+        <div class="listing-view listings-grid-shell" id="listingsGridView" hidden>
+          <div class="cards-grid listings-grid" id="listingsGrid"></div>
+          <div id="listingsGridSentinel" class="signal-load-more"></div>
         </div>
       </div>
     </div>
@@ -852,14 +862,14 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=watchlist-telegram-sync-20260515"></script>
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=listings-view-20260527"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=main-split-20260526"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=legal-doc-disabled-20260526"></script>
   <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=memo-hidden-20260526"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=main-split-20260526"></script>
-  <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=listings-view-20260527"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=main-split-20260526"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=listings-view-20260527"></script>
 </body>
 
 </html>

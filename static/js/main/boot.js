@@ -42,6 +42,7 @@ document.addEventListener('change', (e) => {
 // Init on load
 document.addEventListener('DOMContentLoaded', () => {
   showLoader();
+  setupListingsViewToggle();
   setupListingsObserver();
   if (window.INITIAL_WARDS_BY_CITY) {
     globalWardsByCity = window.INITIAL_WARDS_BY_CITY;

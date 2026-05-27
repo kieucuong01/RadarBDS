@@ -966,6 +966,12 @@
   overflow: hidden;
 }
 
+#tab-all.listings-grid-mode {
+  overflow-y: auto;
+  padding-right: 12px;
+  padding-bottom: 32px;
+}
+
 #tab-insights {
   overflow-y: auto;
   padding-right: 12px;
