@@ -480,7 +480,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             road_tier = _st_tier
 
         # Pháp lý: default = có sổ. Flip về 0 chỉ khi text rõ ràng nói "vi bằng / giấy tay / chưa sổ"
-        # (extract_legal regex: chưa có sổ|chưa sổ|không có sổ|không sổ|đất chưa|vi bằng|giấy tay|giấy viết tay)
+        # (extract_legal regex: chưa có sổ|chưa sổ|không có sổ|không sổ|vi bằng|giấy tay|đang làm sổ)
         _legal = extract_legal(full_text)
         has_so_final = 0 if _legal.get("no_so") else 1
 

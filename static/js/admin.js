@@ -14,6 +14,13 @@ const ADMIN_THEME_KEY = 'radar_admin_theme';
 let leadTimer = null;
 let activeQualityTab = 'dups';
 let activeInfraFilter = 'timeline';
+let crawlProfiles = [];
+let apifyTokens = [];
+let crawlMode = 'first';
+let crawlPollTimer = null;
+let activeCrawlJobId = null;
+let adminToastSeq = 0;
+let adminToastDepth = 0;
 
 function initAdminTheme() {
   const saved = localStorage.getItem(ADMIN_THEME_KEY) || 'light';
@@ -35,9 +42,88 @@ async function fetchJSON(url, options = {}) {
   const clean = new URL(url, window.location.href);
   clean.username = '';
   clean.password = '';
-  const res = await fetch(clean.toString(), options);
-  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-  return res.json();
+  const method = String(options.method || 'GET').toUpperCase();
+  const isPoll = clean.pathname.includes('/admin/api/facebook-crawl/jobs/');
+  const shouldToast = !options.silent && !isPoll && adminToastDepth === 0;
+  const toast = shouldToast
+    ? showAdminToast(method === 'GET' ? 'Dang tai du lieu' : 'Dang xu ly tac vu', 'loading', { sticky: true })
+    : null;
+  try {
+    const res = await fetch(clean.toString(), options);
+    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+    const data = await res.json();
+    if (toast) updateAdminToast(toast, method === 'GET' ? 'Da tai du lieu' : 'Da xu ly xong', 'success');
+    return data;
+  } catch (error) {
+    if (toast) updateAdminToast(toast, `Tac vu loi: ${formatAdminError(error)}`, 'error', { delay: 5200 });
+    throw error;
+  }
+}
+
+function ensureToastRoot() {
+  let root = document.getElementById('adminToastRoot');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'adminToastRoot';
+    root.className = 'admin-toast-root';
+    root.setAttribute('aria-live', 'polite');
+    root.setAttribute('aria-atomic', 'false');
+    document.body.appendChild(root);
+  }
+  return root;
+}
+
+function showAdminToast(message, type = 'loading', options = {}) {
+  const root = ensureToastRoot();
+  const toast = document.createElement('div');
+  toast.className = `admin-toast ${type}`;
+  toast.dataset.toastId = String(++adminToastSeq);
+  toast.innerHTML = `
+    <span class="admin-toast-dot"></span>
+    <span class="admin-toast-text">${esc(message)}</span>
+  `;
+  root.prepend(toast);
+  if (!options.sticky && type !== 'loading') {
+    setTimeout(() => dismissAdminToast(toast), options.delay || 2400);
+  }
+  return toast;
+}
+
+function updateAdminToast(toast, message, type = 'success', options = {}) {
+  if (!toast) return;
+  toast.className = `admin-toast ${type}`;
+  const text = toast.querySelector('.admin-toast-text');
+  if (text) text.textContent = message;
+  if (!options.sticky && type !== 'loading') {
+    setTimeout(() => dismissAdminToast(toast), options.delay || 2400);
+  }
+}
+
+function dismissAdminToast(toast) {
+  if (!toast || !toast.parentNode) return;
+  toast.classList.add('leaving');
+  setTimeout(() => toast.remove(), 180);
+}
+
+function formatAdminError(error) {
+  const msg = String(error?.message || error || 'Không rõ lỗi');
+  return msg.length > 150 ? `${msg.slice(0, 150)}...` : msg;
+}
+
+async function withAdminToast(loadingMessage, task, successMessage = 'Hoàn tất', errorMessage = 'Có lỗi xảy ra') {
+  const toast = showAdminToast(loadingMessage, 'loading', { sticky: true });
+  try {
+    adminToastDepth += 1;
+    const result = await task();
+    updateAdminToast(toast, successMessage, 'success');
+    return result;
+  } catch (error) {
+    console.error(error);
+    updateAdminToast(toast, `${errorMessage}: ${formatAdminError(error)}`, 'error', { delay: 5200 });
+    return null;
+  } finally {
+    adminToastDepth = Math.max(0, adminToastDepth - 1);
+  }
 }
 
 function money(v) {
@@ -64,17 +150,354 @@ function shortDate(v) {
 function switchPanel(name) {
   document.querySelectorAll('.nav-item').forEach(btn => btn.classList.toggle('active', btn.dataset.panel === name));
   document.querySelectorAll('.workspace-panel').forEach(panel => panel.classList.toggle('active', panel.id === `panel-${name}`));
-  if (name === 'crm') loadLeads();
+  const panelLabels = { crm: 'CRM', quality: 'Quality', training: 'AI Training', infra: 'Hạ tầng', users: 'Users', crawl: 'Facebook Crawl' };
+  let loader = null;
+  if (name === 'crm') loader = loadLeads;
   if (name === 'quality') {
-    if (activeQualityTab === 'dups') loadDuplicates();
-    else loadBlacklist();
+    loader = activeQualityTab === 'dups' ? loadDuplicates : loadBlacklist;
   }
-  if (name === 'training') loadTrainingItems();
-  if (name === 'infra') loadInfraItems();
-  if (name === 'users') loadUsers();
+  if (name === 'training') loader = () => loadTrainingItems(false);
+  if (name === 'infra') loader = loadInfraItems;
+  if (name === 'users') loader = loadUsers;
+  if (name === 'crawl') loader = loadCrawlConfig;
+  if (loader) {
+    withAdminToast(`Đang mở ${panelLabels[name] || 'tab'}`, loader, `Đã mở ${panelLabels[name] || 'tab'}`, 'Không tải được tab');
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
+// Facebook crawl manager
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+function crawlProfileLabel(p) {
+  const name = p.broker_name || p.url.replace('https://www.facebook.com/', '');
+  return `${name}${p.city ? ' · ' + p.city : ''}`;
+}
+
+function readCrawlTableState() {
+  document.querySelectorAll('#crawlProfileRows tr[data-url]').forEach(row => {
+    const p = crawlProfiles.find(x => x.url === row.dataset.url);
+    if (!p) return;
+    p.active = !!row.querySelector('[data-crawl-field="active"]')?.checked;
+    p.broker_name = row.querySelector('[data-crawl-field="broker_name"]')?.value.trim() || '';
+    p.city = row.querySelector('[data-crawl-field="city"]')?.value.trim() || '';
+    p.daily_limit = Number(row.querySelector('[data-crawl-field="daily_limit"]')?.value || p.daily_limit || 20);
+    p.tier = p.daily_limit;
+    p.range_days = Number(row.querySelector('[data-crawl-field="range_days"]')?.value || p.range_days || 7);
+  });
+}
+
+async function loadCrawlConfig() {
+  const data = await fetchJSON('/admin/api/facebook-crawl/config');
+  crawlProfiles = data.profiles || [];
+  apifyTokens = data.apify_tokens || [];
+  renderCrawlStats(data.summary || {});
+  renderApifyTokens();
+  renderCrawlProfiles();
+  renderCrawlRunSelect();
+  if (data.summary?.active_job?.id) {
+    activeCrawlJobId = data.summary.active_job.id;
+    renderCrawlJob(data.summary.active_job);
+    startCrawlPolling(activeCrawlJobId);
+  }
+}
+
+function renderApifyTokens() {
+  const body = document.getElementById('apifyTokenRows');
+  if (!body) return;
+  if (!apifyTokens.length) {
+    body.innerHTML = `<tr><td colspan="7"><div class="empty">Chưa có key trong pool. Nếu trống, crawler sẽ dùng APIFY_TOKEN từ .env.</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = apifyTokens.map(t => {
+    const pct = t.monthly_quota ? Math.min(100, Math.round((Number(t.used_this_month || 0) / Number(t.monthly_quota)) * 100)) : 0;
+    const warn = Number(t.remaining || 0) <= 100 ? 'warn' : '';
+    return `
+      <tr data-token-id="${esc(t.id)}">
+        <td data-label="Bật">
+          <label class="crawl-switch">
+            <input type="checkbox" ${t.active ? 'checked' : ''} onchange="toggleApifyToken('${esc(t.id)}', this.checked)">
+            <span></span>
+          </label>
+        </td>
+        <td data-label="Key"><strong>${esc(t.label)}</strong><br><small>${esc(t.token_mask)}</small></td>
+        <td data-label="Quota">${Number(t.monthly_quota || 0).toLocaleString('vi-VN')}</td>
+        <td data-label="Đã dùng">
+          <div class="apify-usage"><span style="width:${pct}%"></span></div>
+          <small>${Number(t.used_this_month || 0).toLocaleString('vi-VN')} post · ${esc(t.month || '')}</small>
+        </td>
+        <td data-label="Còn lại"><strong class="${warn}">${Number(t.remaining || 0).toLocaleString('vi-VN')}</strong></td>
+        <td data-label="Trạng thái">${t.last_error ? `<span class="crawl-error">${esc(t.last_error)}</span>` : `<span class="ok-text">OK</span>`}<br><small>${esc(shortDate(t.last_used_at))}</small></td>
+        <td data-label="Thao tác" class="apify-token-actions">
+          <button class="icon-btn" onclick="resetApifyTokenUsage('${esc(t.id)}')">Reset</button>
+          <button class="icon-btn danger" onclick="deleteApifyToken('${esc(t.id)}')">Xóa</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function saveApifyToken(payload) {
+  const data = await fetchJSON('/admin/api/facebook-crawl/tokens', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  apifyTokens = data.tokens || [];
+  renderApifyTokens();
+}
+
+async function addApifyToken() {
+  const label = document.getElementById('apifyTokenLabel').value.trim();
+  const token = document.getElementById('apifyTokenValue').value.trim();
+  const monthly_quota = Number(document.getElementById('apifyTokenQuota').value || 950);
+  if (!token.startsWith('apify_api_')) return alert('Token Apify chưa đúng định dạng apify_api_...');
+  await withAdminToast('Dang them Apify key', async () => {
+    await saveApifyToken({ label, token, monthly_quota, active: true });
+    document.getElementById('apifyTokenLabel').value = '';
+    document.getElementById('apifyTokenValue').value = '';
+  }, 'Da them Apify key', 'Khong them duoc Apify key');
+}
+
+async function toggleApifyToken(id, active) {
+  const current = apifyTokens.find(t => t.id === id);
+  if (!current) return;
+  await withAdminToast(active ? 'Dang bat Apify key' : 'Dang tat Apify key', () => (
+    saveApifyToken({ id, label: current.label, monthly_quota: current.monthly_quota, active })
+  ), active ? 'Da bat Apify key' : 'Da tat Apify key', 'Khong cap nhat duoc Apify key');
+}
+
+async function resetApifyTokenUsage(id) {
+  if (!confirm('Reset số post đã dùng tháng này cho key này?')) return;
+  await withAdminToast('Dang reset usage Apify key', async () => {
+    const data = await fetchJSON(`/admin/api/facebook-crawl/tokens/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reset_usage' }),
+    });
+    apifyTokens = data.tokens || [];
+    renderApifyTokens();
+  }, 'Da reset usage Apify key', 'Khong reset duoc usage');
+}
+
+async function deleteApifyToken(id) {
+  if (!confirm('Xóa key Apify này khỏi pool?')) return;
+  await withAdminToast('Dang xoa Apify key', async () => {
+    const data = await fetchJSON(`/admin/api/facebook-crawl/tokens/${id}`, { method: 'DELETE' });
+    apifyTokens = data.tokens || [];
+    renderApifyTokens();
+  }, 'Da xoa Apify key', 'Khong xoa duoc Apify key');
+}
+
+function renderCrawlStats(summary) {
+  const active = crawlProfiles.filter(p => p.active !== false).length;
+  const items = [
+    ['Môi giới bật', active, 'đang dùng'],
+    ['Tổng môi giới', crawlProfiles.length, 'trong cấu hình'],
+    ['Listing FB', summary.facebook_listings || 0, 'đã xử lý'],
+    ['Ảnh còn thiếu', summary.pending_images || 0, 'facebook'],
+    ['Job hiện tại', summary.active_job ? summary.active_job.status : 'Idle', summary.active_job ? summary.active_job.stage : 'sẵn sàng'],
+  ];
+  const el = document.getElementById('crawlStats');
+  if (!el) return;
+  el.innerHTML = items.map((s, idx) => `
+    <div class="stat-card">
+      <small>${esc(s[0])}</small>
+      <div><strong style="color:${idx === 3 && Number(s[1]) ? 'var(--orange)' : idx === 4 && s[1] !== 'Idle' ? 'var(--blue)' : 'var(--ink)'}">${esc(s[1])}</strong><span>${esc(s[2])}</span></div>
+    </div>
+  `).join('');
+}
+
+function renderCrawlProfiles() {
+  const body = document.getElementById('crawlProfileRows');
+  if (!body) return;
+  if (!crawlProfiles.length) {
+    body.innerHTML = `<tr><td colspan="6"><div class="empty">Chưa có môi giới Facebook.</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = crawlProfiles.map(p => `
+    <tr data-url="${esc(p.url)}">
+      <td data-label="Bật">
+        <label class="crawl-switch">
+          <input type="checkbox" data-crawl-field="active" ${p.active !== false ? 'checked' : ''}>
+          <span></span>
+        </label>
+      </td>
+      <td data-label="Môi giới">
+        <div class="crawl-broker-cell">
+          <input class="crawl-inline-input crawl-broker-name" data-crawl-field="broker_name" value="${esc(p.broker_name || '')}" placeholder="Tên môi giới">
+          <input class="crawl-inline-input crawl-url" value="${esc(p.url)}" readonly>
+          <input class="crawl-inline-input crawl-city" data-crawl-field="city" value="${esc(p.city || '')}" placeholder="Khu vực">
+        </div>
+      </td>
+      <td data-label="Daily"><input class="crawl-small-input" type="number" min="1" max="500" data-crawl-field="daily_limit" value="${Number(p.daily_limit || p.tier || 20)}"></td>
+      <td data-label="Range"><input class="crawl-small-input" type="number" min="1" max="60" data-crawl-field="range_days" value="${Number(p.range_days || 7)}"> <small>ngày</small></td>
+      <td data-label="Dữ liệu">
+        <div class="crawl-data-meta">
+          <strong>${Number(p.raw_count || 0)}</strong>
+          <small>${esc(shortDate(p.latest_crawled_at))}</small>
+        </div>
+      </td>
+      <td data-label="Chạy" class="crawl-row-actions">
+        <div class="crawl-action-grid">
+          <button class="icon-btn primary-lite" title="Crawl lần đầu" onclick="runCrawlForUrl('${esc(p.url)}', 'first')">Lần 1</button>
+          <button class="icon-btn" title="Crawl daily" onclick="runCrawlForUrl('${esc(p.url)}', 'daily')">Daily</button>
+          <button class="icon-btn" title="Crawl theo range days" onclick="runCrawlForUrl('${esc(p.url)}', 'range')">Range</button>
+          <button class="icon-btn danger" title="Xóa môi giới" onclick="removeCrawlProfile('${esc(p.url)}')">Xóa</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderCrawlRunSelect() {
+  const sel = document.getElementById('crawlRunProfile');
+  if (!sel) return;
+  const selected = sel.value;
+  sel.innerHTML = crawlProfiles.map(p => `<option value="${esc(p.url)}">${esc(crawlProfileLabel(p))}</option>`).join('');
+  if (selected && crawlProfiles.some(p => p.url === selected)) sel.value = selected;
+  syncCrawlRunInputs();
+}
+
+function syncCrawlRunInputs() {
+  const url = document.getElementById('crawlRunProfile')?.value;
+  const p = crawlProfiles.find(x => x.url === url) || {};
+  const limit = document.getElementById('crawlRunLimit');
+  const days = document.getElementById('crawlRunDays');
+  if (limit) limit.value = crawlMode === 'first' ? 330 : Number(p.daily_limit || p.tier || 30);
+  if (days) days.value = Number(p.range_days || 7);
+  updateCrawlModeFields();
+}
+
+function updateCrawlModeFields() {
+  const fields = document.getElementById('crawlRunFields');
+  const daysField = document.querySelector('.crawl-days-field');
+  const showDays = crawlMode === 'range';
+  if (fields) fields.classList.toggle('days-hidden', !showDays);
+  if (daysField) daysField.hidden = !showDays;
+}
+
+function addCrawlProfile() {
+  const broker = document.getElementById('crawlBrokerName').value.trim();
+  const url = document.getElementById('crawlProfileUrl').value.trim();
+  const city = document.getElementById('crawlCity').value.trim() || 'Bình Dương';
+  if (!url.startsWith('https://www.facebook.com/')) return alert('URL Facebook chưa hợp lệ.');
+  if (crawlProfiles.some(p => p.url === url)) return alert('Môi giới này đã có trong danh sách.');
+  crawlProfiles.push({ broker_name: broker, url, city, active: true, daily_limit: 30, tier: 30, range_days: 7 });
+  document.getElementById('crawlBrokerName').value = '';
+  document.getElementById('crawlProfileUrl').value = '';
+  renderCrawlProfiles();
+  renderCrawlRunSelect();
+  showAdminToast('Da them moi gioi vao danh sach tam', 'success');
+}
+
+function removeCrawlProfile(url) {
+  if (!confirm('Xóa môi giới này khỏi danh sách crawl?')) return;
+  crawlProfiles = crawlProfiles.filter(p => p.url !== url);
+  renderCrawlProfiles();
+  renderCrawlRunSelect();
+  showAdminToast('Da xoa moi gioi khoi danh sach tam', 'success');
+}
+
+async function saveCrawlProfiles() {
+  await withAdminToast('Dang luu danh sach moi gioi', async () => {
+    readCrawlTableState();
+    const data = await fetchJSON('/admin/api/facebook-crawl/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profiles: crawlProfiles }),
+    });
+    crawlProfiles = data.profiles || [];
+    renderCrawlStats(data.summary || {});
+    renderCrawlProfiles();
+    renderCrawlRunSelect();
+  }, 'Da luu danh sach moi gioi', 'Khong luu duoc danh sach');
+}
+
+function setCrawlMode(mode) {
+  crawlMode = mode;
+  document.querySelectorAll('[data-crawl-mode]').forEach(btn => btn.classList.toggle('active', btn.dataset.crawlMode === mode));
+  syncCrawlRunInputs();
+}
+
+async function runCrawlForUrl(url, mode = crawlMode) {
+  await withAdminToast('Dang tao job crawl', async () => {
+    readCrawlTableState();
+    const p = crawlProfiles.find(x => x.url === url) || {};
+    const payload = {
+      url,
+      mode,
+      broker_name: p.broker_name || '',
+      city: p.city || '',
+      limit: Number(document.getElementById('crawlRunLimit')?.value || (mode === 'first' ? 330 : p.daily_limit || 30)),
+      days: Number(document.getElementById('crawlRunDays')?.value || p.range_days || 7),
+      download_images: !!document.getElementById('crawlDownloadImages')?.checked,
+    };
+    const data = await fetchJSON('/admin/api/facebook-crawl/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    activeCrawlJobId = data.job.id;
+    renderCrawlJob(data.job);
+    startCrawlPolling(activeCrawlJobId);
+  }, 'Da tao job crawl, dang theo doi tien trinh', 'Khong tao duoc job crawl');
+}
+
+async function runSelectedCrawl() {
+  const url = document.getElementById('crawlRunProfile')?.value;
+  if (!url) return alert('Chọn môi giới cần crawl.');
+  await runCrawlForUrl(url, crawlMode);
+}
+
+function renderCrawlJob(job) {
+  const status = document.getElementById('crawlJobStatus');
+  const meta = document.getElementById('crawlJobMeta');
+  const log = document.getElementById('crawlJobLog');
+  const pct = Math.max(0, Math.min(100, Number(job.progress_pct || 0)));
+  const progressLabel = job.progress_label || job.stage || 'Đang chờ';
+  const progressPct = document.getElementById('crawlProgressPct');
+  const progressFill = document.getElementById('crawlProgressFill');
+  const progressText = document.getElementById('crawlProgressLabel');
+  if (status) {
+    status.textContent = `${job.status || 'idle'} · ${job.stage || '-'}`;
+    status.dataset.status = job.status || '';
+  }
+  if (progressPct) progressPct.textContent = `${pct.toFixed(0)}%`;
+  if (progressFill) progressFill.style.width = `${pct}%`;
+  if (progressText) progressText.textContent = progressLabel;
+  const crawl = job.stats?.crawl || {};
+  const reprocess = job.stats?.reprocess?.listings || {};
+  const downloaded = job.stats?.downloaded_images;
+  if (meta) {
+    meta.innerHTML = `
+      <strong>${esc(job.broker_name || job.profile_url || '')}</strong>
+      <span>${esc(job.mode || '')} · limit ${esc(job.limit || '')}${job.mode === 'range' ? ' · ' + esc(job.days || '') + ' ngày' : ''}</span>
+      <span>Fetched ${Number(crawl.fetched || 0)} · Imported ${Number(crawl.inserted || 0)} · Refreshed ${Number(crawl.refreshed_images || 0)} · Skipped ${Number(crawl.skipped || 0)}</span>
+      <span>Irrelevant ${Number(crawl.irrelevant || 0)} · Out area ${Number(crawl.out_of_area || 0)} · Range filter ${Number(crawl.range_filtered || 0)}${downloaded !== undefined ? ' · Ảnh ' + Number(downloaded || 0) : ''}</span>
+      ${job.stats?.reprocess ? `<span>Reprocess new ${Number(reprocess.new || 0)} · updated ${Number(reprocess.updated || 0)} · skipped ${Number(reprocess.skipped || 0)}</span>` : ''}
+      ${job.error ? `<span class="crawl-error">${esc(job.error)}</span>` : ''}
+    `;
+  }
+  if (log) log.textContent = (job.logs || []).join('\n') || 'Job đang chờ bắt đầu.';
+}
+
+function startCrawlPolling(jobId) {
+  clearInterval(crawlPollTimer);
+  crawlPollTimer = setInterval(async () => {
+    try {
+      const data = await fetchJSON(`/admin/api/facebook-crawl/jobs/${jobId}`);
+      renderCrawlJob(data.job);
+      if (['succeeded', 'failed'].includes(data.job.status)) {
+        clearInterval(crawlPollTimer);
+        loadCrawlConfig();
+      }
+    } catch (e) {
+      clearInterval(crawlPollTimer);
+    }
+  }, 2500);
+}
+
 // User management (RBAC)
 // ──────────────────────────────────────────────────────────────
 let userTimer = null;
@@ -253,6 +676,7 @@ function exportLeads() {
   const clean = new URL(`/admin/api/leads/export.csv${q ? '?' + q : ''}`, window.location.href);
   clean.username = '';
   clean.password = '';
+  showAdminToast('Dang tai file CSV leads', 'success', { delay: 1800 });
   window.location.href = clean.toString();
 }
 
@@ -887,6 +1311,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('exportLeadsBtn').addEventListener('click', exportLeads);
   document.getElementById('addBlacklistBtn').addEventListener('click', addBlacklist);
+  document.getElementById('refreshCrawlBtn')?.addEventListener('click', loadCrawlConfig);
+  document.getElementById('saveCrawlProfilesBtn')?.addEventListener('click', saveCrawlProfiles);
+  document.getElementById('addCrawlProfileBtn')?.addEventListener('click', addCrawlProfile);
+  document.getElementById('addApifyTokenBtn')?.addEventListener('click', addApifyToken);
+  document.getElementById('runCrawlBtn')?.addEventListener('click', runSelectedCrawl);
+  document.getElementById('crawlRunProfile')?.addEventListener('change', syncCrawlRunInputs);
+  document.querySelectorAll('[data-crawl-mode]').forEach(btn => btn.addEventListener('click', () => setCrawlMode(btn.dataset.crawlMode)));
   document.getElementById('refreshTrainingBtn').addEventListener('click', loadTrainingItems);
   ['trnMos', 'trnSort', 'trnWard', 'trnQueue'].forEach(idv => {
     const el = document.getElementById(idv);

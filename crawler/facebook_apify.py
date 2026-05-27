@@ -52,6 +52,27 @@ def _coerce_tier(raw) -> int:
     return _DEFAULT_TIER
 
 
+def _is_apify_limit_error(message: str) -> bool:
+    text = (message or "").lower()
+    limit_markers = [
+        "402",
+        "payment",
+        "monthly",
+        "quota",
+        "usage limit",
+        "remaining usage",
+        "limit exceeded",
+        "exceed your remaining",
+        "not enough credits",
+        "insufficient credits",
+        "credit limit",
+        "paid plan",
+        "billing/subscription",
+        "upgrade",
+    ]
+    return any(marker in text for marker in limit_markers)
+
+
 def load_profiles(path: str | Path = PROFILES_FILE, area_filter: Optional[str] = None) -> list[dict]:
     """Đọc danh sách profiles từ JSON file. Trả về list of dicts.
 
@@ -73,9 +94,11 @@ def load_profiles(path: str | Path = PROFILES_FILE, area_filter: Optional[str] =
                 "default_area": area,
             }
         if isinstance(item, dict):
+            if item.get("active", True) is False:
+                return None
             return {
                 "url": (item.get("url") or "").strip(),
-                "tier": _coerce_tier(item.get("tier")),
+                "tier": _coerce_tier(item.get("daily_limit", item.get("tier"))),
                 "broker_name": (item.get("broker_name") or "").strip() or None,
                 "default_area": area,
             }
@@ -102,16 +125,22 @@ class FacebookApifyCrawler:
     """Crawl Facebook posts dùng Apify actor API."""
 
     def __init__(self, token: Optional[str] = None, actor: Optional[str] = None):
-        self.token = token or os.getenv("APIFY_TOKEN") or ""
+        from crawler.apify_token_pool import has_configured_tokens
+
+        self.token = token or ""
+        self._use_token_pool = token is None and has_configured_tokens()
+        if not self._use_token_pool:
+            self.token = self.token or os.getenv("APIFY_TOKEN") or ""
         self.actor = actor or os.getenv("APIFY_ACTOR") or DEFAULT_ACTOR
-        if not self.token:
+        if not self.token and not self._use_token_pool:
             raise RuntimeError(
                 "Thieu APIFY_TOKEN. Them vao .env:\n  APIFY_TOKEN=apify_api_xxxxxx\n"
                 "Dang ky tai: https://apify.com/"
             )
         # Import lazy de khong loi import neu chua cai
         from apify_client import ApifyClient  # noqa: PLC0415
-        self._client = ApifyClient(self.token)
+        self._client_cls = ApifyClient
+        self._client = None if self._use_token_pool else ApifyClient(self.token)
 
     # ------------------------------------------------------------------
     # Public API
@@ -162,7 +191,7 @@ class FacebookApifyCrawler:
             )
 
             try:
-                run = self._client.actor(self.actor).call(run_input=run_input)
+                items = self._run_actor(run_input, required_posts=total_limit)
             except Exception as exc:
                 msg = str(exc)
                 if "401" in msg or "Unauthorized" in msg:
@@ -171,7 +200,6 @@ class FacebookApifyCrawler:
                     raise RuntimeError("Het Apify credits. Nap them hoac giam --limit.") from exc
                 raise
 
-            items = list(self._client.dataset(run["defaultDatasetId"]).iterate_items())
             print(f"[facebook-apify] Nhan duoc {len(items)} raw items (limit={per_profile}/profile).")
 
             for item in items:
@@ -195,6 +223,43 @@ class FacebookApifyCrawler:
             )
 
         return adapted_all
+
+    def _run_actor(self, run_input: dict, required_posts: int) -> list[dict]:
+        if not self._use_token_pool:
+            run = self._client.actor(self.actor).call(run_input=run_input)
+            return list(self._client.dataset(run["defaultDatasetId"]).iterate_items())
+
+        from crawler.apify_token_pool import (
+            acquire_token,
+            mark_error,
+            mark_limit_exhausted,
+            record_usage,
+        )
+
+        excluded: set[str] = set()
+        last_error = None
+        for _ in range(5):
+            token_rec = acquire_token(required_posts=required_posts, exclude_ids=excluded)
+            client = self._client_cls(token_rec["token"])
+            try:
+                print(f"[facebook-apify] Dung token {token_rec['label']} cho limit={required_posts}")
+                run = client.actor(self.actor).call(run_input=run_input)
+                items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+                record_usage(token_rec["id"], len(items))
+                return items
+            except Exception as exc:
+                msg = str(exc)
+                last_error = exc
+                if _is_apify_limit_error(msg):
+                    mark_limit_exhausted(token_rec["id"], msg)
+                    excluded.add(token_rec["id"])
+                    continue
+                mark_error(token_rec["id"], msg)
+                if "401" in msg or "Unauthorized" in msg:
+                    excluded.add(token_rec["id"])
+                    continue
+                raise
+        raise last_error or RuntimeError("Khong chon duoc APIFY_TOKEN kha dung.")
 
     # ------------------------------------------------------------------
     # Internal helpers

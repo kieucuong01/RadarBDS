@@ -3,7 +3,7 @@ Valuation Engine — Python thuần, 0 token Claude
 - Outlier removal (±2σ per segment)
 - Multiple Regression: price_per_m2 ~ features
 - Fair value estimation
-- MOS 20% signal generation
+- MOS threshold signal generation
 """
 
 import logging
@@ -13,6 +13,7 @@ from typing import List, Optional, Dict, Tuple
 from datetime import datetime, date
 import numpy as np
 import re
+import unicodedata
 
 from config.proximity import proximity_score_for_ward
 
@@ -38,6 +39,7 @@ SOURCE_SIGNAL_SUPPRESS_FLAGS = {
     "suspicious_bait",
     "guland_cluster_flood",
 }
+DEFAULT_BASELINE_SOURCES = ("facebook",)
 
 FAIR_FLOOR_RATIO = 0.70
 EXPECTED_NEGOTIATION_RATIO = 0.95
@@ -82,7 +84,7 @@ class Listing:
     tho_cu_ratio:   Optional[float] = None
     road_type:      str = 'unknown'
     road_tier:      int = 0
-    has_so:         bool = False
+    has_so:         bool = True
     is_hot:         bool = False
     price_dropped:  bool = False
     crawled_at:     Optional[date] = None
@@ -170,6 +172,38 @@ def _has_legal_conflict(listing: 'Listing') -> bool:
     if (getattr(listing, "legal_status", "") or "") == "conflict":
         return True
     return bool(_legal_flags(listing) & {"area_mismatch", "ward_mismatch", "road_conflict", "tho_cu_mismatch"})
+
+
+_NO_SO_RE = re.compile(
+    r"\b("
+    r"chua\s+co\s+so|chua\s+so|khong\s+co\s+so|khong\s+so|"
+    r"vi\s+bang|giay\s+(?:viet\s+)?tay|"
+    r"dang\s+lam\s+so|dang\s+cap\s+so|dang\s+ra\s+so|cho\s+so"
+    r")\b",
+    re.I,
+)
+
+
+def _ascii_fold(text: str) -> str:
+    text = (text or "").replace("Đ", "D").replace("đ", "d")
+    return "".join(
+        c for c in unicodedata.normalize("NFD", text)
+        if unicodedata.category(c) != "Mn"
+    ).lower()
+
+
+def _has_explicit_no_so(listing: 'Listing') -> bool:
+    text = " ".join(
+        str(getattr(listing, field, "") or "")
+        for field in ("title", "description", "road_type")
+    )
+    return bool(_NO_SO_RE.search(_ascii_fold(text)))
+
+
+def _effective_has_so(listing: 'Listing') -> bool:
+    if getattr(listing, "has_so", True):
+        return True
+    return not _has_explicit_no_so(listing)
 
 
 def _is_guland(listing: 'Listing') -> bool:
@@ -340,7 +374,7 @@ class SegmentModel:
         if feat.get('is_đường_đâm'): base_fair *= 0.85
         if feat.get('near_grave'): base_fair *= 0.80
         
-        if not listing.has_so: base_fair *= 0.75
+        if not _effective_has_so(listing): base_fair *= 0.75
         base_fair *= EXPECTED_NEGOTIATION_RATIO
         return round(base_fair, 2) if base_fair > 0 else None
 
@@ -358,8 +392,13 @@ def get_segment_priors(conn) -> Dict[str, int]:
 
 
 class ValuationEngine:
-    def __init__(self):
+    def __init__(self, baseline_sources=None):
         self._models = {}
+        self._baseline_sources = tuple(
+            str(s).strip().lower()
+            for s in (baseline_sources or DEFAULT_BASELINE_SOURCES)
+            if str(s).strip()
+        )
 
     def _key(self, l):
         return (l.ward or "SELECTED_REGION", l.property_type, l.tx_type)
@@ -385,6 +424,9 @@ class ValuationEngine:
             if l.property_type in SPECIAL_MARKET_SKIP_TYPES:
                 continue  # chưa đủ data — skip segment build
             if getattr(l, "exclude_from_baseline", False) or _source_flags(l):
+                continue
+            source = (getattr(l, "source", "") or "").strip().lower()
+            if self._baseline_sources and source and source not in self._baseline_sources:
                 continue
             if l.price_per_m2 and l.area_m2:
                 segs[self._key(l)].append(l)
@@ -458,7 +500,7 @@ class ValuationEngine:
 
         note = []
         if listing.is_hot: note.append("🔴 Tin ngộp")
-        if not listing.has_so: note.append("⚠️ Chưa sổ")
+        if not _effective_has_so(listing): note.append("⚠️ Chưa sổ")
         if is_sig: note.append(f"✅ MOS {discount:.0%}")
 
         if source_quality_recheck:

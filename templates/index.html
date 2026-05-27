@@ -50,6 +50,7 @@
     </div>
 
     <form id="filterForm">
+      {% if USER_TIER == 'admin' %}
       <div class="filter-group" data-collapsible data-collapsed>
         <div class="filter-title" onclick="toggleFilterSection(this)">
           <span class="filter-title-left"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -64,7 +65,7 @@
         <div class="filter-body">
           <div id="sourceFilters" class="source-grid">
             <label class="filter-option"><input type="checkbox" name="source" value="facebook" checked> Facebook</label>
-            <label class="filter-option"><input type="checkbox" name="source" value="guland" checked> Guland.vn</label>
+            <label class="filter-option"><input type="checkbox" name="source" value="guland"> Guland.vn</label>
             <label class="filter-option disabled"><input type="checkbox" name="source" value="batdongsan" disabled>
               BDS.com</label>
             <label class="filter-option disabled"><input type="checkbox" name="source" value="muaban" disabled>
@@ -72,6 +73,7 @@
           </div>
         </div>
       </div>
+      {% endif %}
 
       <div class="filter-group signal-filter" data-collapsible>
         <div class="filter-title" onclick="toggleFilterSection(this)">
@@ -600,8 +602,8 @@
 
         <!-- RIGHT COLUMN -->
         <div class="sm-right">
-          <!-- Investment Memo -->
-          <div class="sm-ai-section sm-memo-section" id="sm-memo-section">
+          <!-- Investment Memo temporarily hidden -->
+          <div class="sm-ai-section sm-memo-section" id="sm-memo-section" hidden aria-hidden="true" style="display:none;">
             <div class="sm-ai-label">Investment Memo</div>
             <div id="sm-memo-body" class="sm-ai-text sm-memo-body">
               <div class="sm-empty-state">Đang tải memo...</div>
@@ -852,8 +854,8 @@
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=watchlist-telegram-sync-20260515"></script>
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=main-split-20260526"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=main-split-20260526"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=main-split-20260526"></script>
-  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=main-split-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=legal-doc-disabled-20260526"></script>
+  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=memo-hidden-20260526"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=main-split-20260526"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=main-split-20260526"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=main-split-20260526"></script>

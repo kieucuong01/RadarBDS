@@ -192,13 +192,16 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
-def reprocess_listings(source: str = None, since: str = None, full: bool = False) -> dict:
+def reprocess_listings(source: str = None, since: str = None, full: bool = False, raw_ids: list = None) -> dict:
     """
     Bước 1: raw_listings → listings (normalize + upsert).
     Trả về stats và danh sách ID các listing vừa được xử lý.
     """
-    raws = get_raw_for_reprocess(source=source, since=since, incremental=not full)
-    logger.info(f"Reprocess: {len(raws)} raw records (source={source}, since={since}, full={full})")
+    raws = get_raw_for_reprocess(source=source, since=since, incremental=not full and raw_ids is None, raw_ids=raw_ids)
+    logger.info(
+        f"Reprocess: {len(raws)} raw records "
+        f"(source={source}, since={since}, full={full}, raw_ids={len(raw_ids or [])})"
+    )
 
     run_id = start_crawl_run(f"reprocess:{source or 'all'}", "all")
     stats  = {"fetched": len(raws), "new": 0, "updated": 0, "skipped": 0, "price_dropped": 0, "processed_ids": []}
@@ -265,8 +268,12 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
     from analytics.valuation import ValuationEngine, Listing
     from datetime import date
 
+    if incremental_ids is not None and not incremental_ids:
+        logger.info("Valuation: khong co incremental listing nao, bo qua valuation.")
+        return {"total": 0, "signals": 0, "outliers": 0}
+
     with get_conn() as conn:
-        if not incremental_ids:
+        if incremental_ids is None:
             # Full run: Xóa valuation cũ để tính lại sạch
             logger.info("Valuation: Full reprocess, clearing old results...")
             conn.execute("DELETE FROM valuation_results")
@@ -326,7 +333,7 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
             """).fetchall()
 
         # 2. Lấy dữ liệu để ĐỊNH GIÁ (Valuate).
-        if incremental_ids:
+        if incremental_ids is not None:
             # Chỉ định giá những tin vừa mới xử lý
             placeholders = ",".join(["?"] * len(incremental_ids))
             valuate_rows = conn.execute(f"""
@@ -829,32 +836,42 @@ def verify_signals_with_groq(limit: int = 300, ward: str = None) -> int:
     return done
 
 
-def run_full_reprocess(source: str = None, since: str = None, use_gemini: bool = False, use_groq: bool = False, full: bool = False):
+def run_full_reprocess(source: str = None, since: str = None, use_gemini: bool = False, use_groq: bool = False, full: bool = False, raw_ids: list = None):
     with advisory_lock("reprocess"):
-        return _run_full_reprocess(source=source, since=since, use_gemini=use_gemini, use_groq=use_groq, full=full)
+        return _run_full_reprocess(source=source, since=since, use_gemini=use_gemini, use_groq=use_groq, full=full, raw_ids=raw_ids)
 
 
-def _run_full_reprocess(source: str = None, since: str = None, use_gemini: bool = False, use_groq: bool = False, full: bool = False):
+def _run_full_reprocess(source: str = None, since: str = None, use_gemini: bool = False, use_groq: bool = False, full: bool = False, raw_ids: list = None):
     """Chạy pipeline reprocess: raw → listings → valuation."""
     logger.info("=" * 55)
     logger.info(f"{'FULL' if full else 'INCREMENTAL'} REPROCESS START")
 
-    listing_stats = reprocess_listings(source=source, since=since, full=full)
+    listing_stats = reprocess_listings(source=source, since=since, full=full, raw_ids=raw_ids)
     processed_ids = listing_stats.get("processed_ids", [])
 
-    from cleansing.legal_verification import refresh_legal_verifications
-    if full:
-        legal_stats = refresh_legal_verifications(source=source, apply=True)
+    from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
+    if LEGAL_IMAGE_EVIDENCE_ENABLED:
+        from cleansing.legal_verification import refresh_legal_verifications
+        if full:
+            legal_stats = refresh_legal_verifications(source=source, apply=True)
+        else:
+            legal_stats = {"apply": True, "scanned": 0, "updated": 0, "statuses": {}, "trust_tiers": {}}
+            for lid in processed_ids:
+                one = refresh_legal_verifications(listing_id=lid, apply=True)
+                legal_stats["scanned"] += one.get("scanned", 0)
+                legal_stats["updated"] += one.get("updated", 0)
+                for key, val in one.get("statuses", {}).items():
+                    legal_stats["statuses"][key] = legal_stats["statuses"].get(key, 0) + val
+                for key, val in one.get("trust_tiers", {}).items():
+                    legal_stats["trust_tiers"][key] = legal_stats["trust_tiers"].get(key, 0) + val
     else:
-        legal_stats = {"apply": True, "scanned": 0, "updated": 0, "statuses": {}, "trust_tiers": {}}
-        for lid in processed_ids:
-            one = refresh_legal_verifications(listing_id=lid, apply=True)
-            legal_stats["scanned"] += one.get("scanned", 0)
-            legal_stats["updated"] += one.get("updated", 0)
-            for key, val in one.get("statuses", {}).items():
-                legal_stats["statuses"][key] = legal_stats["statuses"].get(key, 0) + val
-            for key, val in one.get("trust_tiers", {}).items():
-                legal_stats["trust_tiers"][key] = legal_stats["trust_tiers"].get(key, 0) + val
+        legal_stats = {
+            "apply": False,
+            "scanned": 0,
+            "updated": 0,
+            "statuses": {"disabled": 1},
+            "trust_tiers": {},
+        }
     
     # Valuation: Nếu full=False, chỉ định giá các tin vừa mới xử lý
     val_stats = reprocess_valuation(incremental_ids=None if full else processed_ids)

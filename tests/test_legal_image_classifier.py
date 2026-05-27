@@ -99,6 +99,29 @@ class LegalImageClassifierTest(unittest.TestCase):
         img.save(path)
         return path
 
+    def _make_bright_street_image(self, name):
+        path = self.image_dir / name
+        img = Image.new("RGB", (900, 900), (180, 220, 245))
+        draw = ImageDraw.Draw(img)
+        draw.rectangle((0, 360, 900, 900), fill=(210, 205, 190))
+        draw.rectangle((670, 180, 895, 820), fill=(235, 235, 230))
+        draw.line((0, 120, 900, 70), fill=(20, 20, 20), width=4)
+        draw.line((0, 190, 900, 160), fill=(45, 45, 45), width=3)
+        draw.rectangle((120, 520, 320, 700), fill=(130, 105, 80))
+        img.save(path)
+        return path
+
+    def _make_white_room_image(self, name):
+        path = self.image_dir / name
+        img = Image.new("RGB", (900, 675), (232, 235, 228))
+        draw = ImageDraw.Draw(img)
+        draw.rectangle((0, 500, 900, 675), fill=(150, 130, 105))
+        for x in range(520, 870, 90):
+            draw.line((x, 20, x, 500), fill=(120, 120, 115), width=3)
+        draw.rectangle((50, 520, 300, 650), fill=(210, 20, 40))
+        img.save(path)
+        return path
+
     def test_url_keywords_classify_as_so_hong(self):
         from db.connection import get_conn
         import cleansing.legal_image_classifier as legal_image_classifier
@@ -159,6 +182,65 @@ class LegalImageClassifierTest(unittest.TestCase):
                 ).fetchall()
             ]
         self.assertEqual(types, ["unknown", "unknown"])
+
+    def test_bright_street_or_white_room_image_is_not_classified(self):
+        from db.connection import get_conn
+        import cleansing.legal_image_classifier as legal_image_classifier
+
+        listing_id = self._insert_listing()
+        self._make_bright_street_image("street_0.jpg")
+        self._make_white_room_image("room_0.jpg")
+        self._insert_image(listing_id, "https://cdn.test/post/street.jpg", name="street_0.jpg")
+        self._insert_image(listing_id, "https://cdn.test/post/room.jpg", name="room_0.jpg")
+
+        with mock.patch.object(legal_image_classifier, "DATA_DIR", self.tmpdir):
+            stats = legal_image_classifier.classify_legal_images(source=self.source, apply=True)
+
+        self.assertEqual(stats["updated"], 0)
+        with get_conn() as conn:
+            types = [
+                r["img_type"]
+                for r in conn.execute(
+                    "SELECT img_type FROM listing_images WHERE listing_id=? ORDER BY id",
+                    (listing_id,),
+                ).fetchall()
+            ]
+        self.assertEqual(types, ["unknown", "unknown"])
+
+    def test_clean_legal_image_tags_demotes_stale_false_positive(self):
+        from db.connection import get_conn
+        import cleansing.legal_image_classifier as legal_image_classifier
+
+        listing_id = self._insert_listing()
+        self._make_bright_street_image("street_false_positive.jpg")
+        self._make_document_image("doc_true_positive.jpg")
+        self._insert_image(
+            listing_id,
+            "https://cdn.test/post/street.jpg",
+            name="street_false_positive.jpg",
+            img_type="so_hong",
+        )
+        self._insert_image(
+            listing_id,
+            "https://cdn.test/post/doc.jpg",
+            name="doc_true_positive.jpg",
+            img_type="so_hong",
+        )
+
+        with mock.patch.object(legal_image_classifier, "DATA_DIR", self.tmpdir):
+            stats = legal_image_classifier.clean_legal_image_tags(source=self.source, apply=True)
+
+        self.assertEqual(stats["demoted"], 1)
+        self.assertEqual(stats["kept"], 1)
+        with get_conn() as conn:
+            types = [
+                r["img_type"]
+                for r in conn.execute(
+                    "SELECT img_type FROM listing_images WHERE listing_id=? ORDER BY id",
+                    (listing_id,),
+                ).fetchall()
+            ]
+        self.assertEqual(types, ["cover", "so_hong"])
 
 
 if __name__ == "__main__":

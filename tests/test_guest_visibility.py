@@ -109,6 +109,34 @@ class GuestVisibilityTest(unittest.TestCase):
         self.assertNotIn("locked_reason", row)
         self.assertFalse(row["is_fresh_locked"])
 
+    def test_signal_feed_uses_latest_valuation_once_per_listing(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO valuation_results (
+                    listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score
+                ) VALUES (?, 40.0, 20.0, 50.0, 1, 90)
+                """,
+                (self.listing_id,),
+            )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=5")
+        self.assertEqual(response.status_code, 200)
+
+        payload = response.get_json()
+        self.assertEqual(payload["total"], 1)
+        self.assertEqual(len(payload["signals"]), 1)
+        self.assertEqual(payload["signals"][0]["id"], self.listing_id)
+        self.assertEqual(payload["signals"][0]["mos_pct"], 50.0)
+        self.assertEqual(payload["signals"][0]["signal_score"], 90)
+
+        dashboard = self.client.get(f"/api/dashboard?city=Khac&ward={self.ward}")
+        self.assertEqual(dashboard.status_code, 200)
+        self.assertEqual(dashboard.get_json()["stats"]["signals"], 1)
+
     def test_guest_sees_fresh_listing_detail_without_source_url(self):
         response = self.client.get(f"/api/listing/{self.listing_id}")
         self.assertEqual(response.status_code, 200)

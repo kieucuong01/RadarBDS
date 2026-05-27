@@ -45,7 +45,7 @@ is_signal = (mos_pct ≥ SIGNAL_MOS_THRESHOLD)
 
 | Hằng số | File | Giá trị hiện tại |
 |---|---|---|
-| `SIGNAL_MOS_THRESHOLD` | `config/settings.py` | **0.25** (= 25%) |
+| `SIGNAL_MOS_THRESHOLD` | `config/settings.py` | **0.10** (= 10%) |
 
 Cách tính fair_ppm2 (per-ward weighted ridge + road tier + size discount) xem `.claude/rules/valuation.md`. Không hardcode threshold ở chỗ khác — `analytics/valuation.py::SegmentModel.mos_threshold` đọc từ settings.
 
@@ -234,12 +234,18 @@ Loader: `crawler/guland_pw.py::__init__` → `_load_sources_config()`. Nếu fil
 ```
 
 - `tier` = số post fetch mỗi lần (int). Backward-compat: nếu vẫn còn string `"high"/"medium"/"low"` → convert qua `_TIER_STR_MAP` = `{high:40, medium:20, low:10}` + log warning.
+- Admin có thể chỉnh danh sách này tại `/admin/control-room` → tab **Facebook Crawl**. Tab này lưu lại `active`, `daily_limit`, `range_days` vào cùng file JSON.
+- Cũng trong tab **Facebook Crawl**, admin quản lý **Apify Tokens**. Token được lưu local tại `data/apify_tokens.json` (gitignored), UI chỉ hiển thị mask. Mỗi token có `monthly_quota`, `used_this_month`, `remaining`; crawler tự chọn token còn đủ quota cho request hiện tại và cộng usage theo số post Apify trả về. Khi qua tháng mới, usage tự reset theo month key.
+- `daily_limit` được ưu tiên hơn `tier` khi load profile. `active=false` sẽ bị bỏ qua trong daily crawl.
+- Crawl thủ công trong admin chạy dạng job nền: `first` = full crawl theo số bài, `daily` = incremental 72h, `range` = full fetch rồi lọc bài có `date_raw` trong N ngày gần nhất. Nếu bật tải ảnh, job reprocess Facebook và download ảnh cho các listing vừa xử lý.
 - `broker_name` được lưu vào `raw_json` của listing, không thành column riêng.
 - Key cấp 1 = `default_area` của profile → dùng cho city filter (mục 5).
 
 Loader: `crawler/facebook_apify.py::load_profiles()`. CLI `crawl-facebook --mode full` ép `per_profile = max(tier, MAX_POSTS_FULL)`.
 
 ---
+
+Neu Apify tra monthly/quota/payment limit, crawler danh token do `used_this_month=monthly_quota`, tu tat `active=false`, ghi `last_error`, roi thu token tiep theo trong pool.
 
 ## 5. City filter cho Facebook posts
 
@@ -339,6 +345,6 @@ và tránh confirmation-loop. Logic định giá CHỈ học từ nhãn người
 - ❌ Đừng đưa `hồ chí minh / tp hcm / sài gòn` vào `OTHER_CITY_KEYWORDS` — BD đã sáp nhập HCM, sẽ skip nhầm tin chính chủ.
 - ❌ Đừng thêm lại admin/general Telegram alert — listing notification chỉ đi qua VIP watchlist push.
 - ❌ Đừng hardcode ward/slug trong crawler nữa — sửa JSON.
-- ❌ Đừng tune `SIGNAL_MOS_THRESHOLD` < 0.25 mà không verify signal rate vẫn ≤ 30%.
+- ❌ Đừng tune `SIGNAL_MOS_THRESHOLD` thấp hơn 0.10 mà không verify signal rate vẫn hợp lý.
 - ❌ Đừng skip dedup repost Facebook — repost FB cần lưu để track price history (anti-bloat đã bị reject).
 - ❌ Đừng gắn `review-queue/review-save` (Claude pre-review) vào crawl-daily — cố ý tách (xem 7a).

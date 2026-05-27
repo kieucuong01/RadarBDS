@@ -60,6 +60,11 @@ def test_engine_signal_threshold():
     r_hot = engine.valuate(target_hot)
     assert r_hot is not None and r_hot.is_signal is True
 
+    # Deal cheaper than fair value by about 16% should now count as a signal.
+    target_moderate_discount = _make_listing(997, 12.0, area=100)
+    r_moderate = engine.valuate(target_moderate_discount)
+    assert r_moderate is not None and r_moderate.is_signal is True
+
     # Unknown ward is valuated for audit, but never promoted to a signal.
     target_unknown = _make_listing(998, 8.0, area=100, ward="unknown")
     r_unknown = engine.valuate(target_unknown)
@@ -121,14 +126,30 @@ def test_guland_bad_human_valuation_labels_do_not_pollute_baseline():
     assert result.price_per_m2_fair < 25.0
 
 
+def test_default_valuation_baseline_uses_facebook_only():
+    facebook_samples = [_make_listing(i, 20.0, source="facebook") for i in range(18)]
+    low_guland_samples = [
+        _make_listing(300 + i, 8.0, source="guland")
+        for i in range(18)
+    ]
+    engine = ValuationEngine()
+    engine.fit(facebook_samples + low_guland_samples)
+
+    result = engine.valuate(_make_listing(999, 20.0, source="facebook"))
+
+    assert result is not None
+    assert result.segment_n == len(facebook_samples)
+    assert result.price_per_m2_fair > 18.0
+
+
 def test_guland_requires_stronger_signal_than_facebook():
     listings = [_make_listing(i, 15.0, source="facebook") for i in range(30)]
     engine = ValuationEngine()
     engine.fit(listings)
 
-    facebook_target = _make_listing(1001, 10.5, source="facebook")
-    guland_same_discount = _make_listing(1002, 10.5, source="guland")
-    guland_deeper_discount = _make_listing(1003, 9.0, source="guland")
+    facebook_target = _make_listing(1001, 12.5, source="facebook")
+    guland_same_discount = _make_listing(1002, 12.5, source="guland")
+    guland_deeper_discount = _make_listing(1003, 11.4, source="guland")
 
     assert engine.valuate(facebook_target).is_signal is True
     assert engine.valuate(guland_same_discount).is_signal is False
@@ -260,10 +281,19 @@ def test_has_so_discount():
     engine.fit(listings)
 
     with_so = engine.valuate(_make_listing(200, 10.0, has_so=True))
-    no_so = engine.valuate(_make_listing(201, 10.0, has_so=False))
+    default_false = engine.valuate(_make_listing(201, 10.0, has_so=False))
+    explicit_no_so = engine.valuate(
+        _make_listing(
+            202,
+            10.0,
+            has_so=False,
+            title="Dat vi bang giay tay, chua co so",
+        )
+    )
 
-    assert with_so and no_so
-    assert no_so.price_per_m2_fair < with_so.price_per_m2_fair
+    assert with_so and default_false and explicit_no_so
+    assert default_false.price_per_m2_fair == with_so.price_per_m2_fair
+    assert explicit_no_so.price_per_m2_fair < with_so.price_per_m2_fair
 
 
 if __name__ == "__main__":

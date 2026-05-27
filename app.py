@@ -9,14 +9,17 @@ import statistics
 import re
 import time
 import urllib.request
+import threading
 from copy import deepcopy
 from functools import wraps
 from datetime import datetime, timedelta
 from pathlib import Path
+from uuid import uuid4
 from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response
 from config import database_sqlite as db_mod
 from db.connection import connect, get_conn
 from db.moderation import normalize_phone
+from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
 
 # Import the extracted services
 from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier
@@ -55,6 +58,18 @@ TRAINING_VERDICTS = POSITIVE_REVIEW_VERDICTS | HIDE_REVIEW_VERDICTS | {"maybe"}
 INFRA_KINDS = {"timeline", "policy"}
 INFRA_STATUS = {"done", "in_progress", "planned"}
 INFRA_SEVERITY = {"critical", "warning", "info"}
+FACEBOOK_PROFILE_PATH = Path(__file__).resolve().parent / "data" / "facebook_profiles.json"
+FACEBOOK_MANUAL_CRAWL_MAX_LIMIT = 950
+FACEBOOK_CRAWL_JOBS: dict[str, dict] = {}
+FACEBOOK_CRAWL_JOB_ORDER: list[str] = []
+FACEBOOK_CRAWL_LOCK = threading.Lock()
+
+
+def _image_order_sql(prefix: str = "") -> str:
+    col = f"{prefix}." if prefix else ""
+    if LEGAL_IMAGE_EVIDENCE_ENABLED:
+        return f"CASE WHEN {col}img_type='so_hong' THEN 0 ELSE 1 END, {col}img_order, {col}id"
+    return f"{col}img_order, {col}id"
 
 
 def _admin_credentials():
@@ -85,6 +100,331 @@ def require_admin_auth(fn):
 
         return _admin_forbidden()
     return wrapper
+
+
+def _clamp_int(value, default: int, min_value: int, max_value: int) -> int:
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        n = default
+    return max(min_value, min(max_value, n))
+
+
+def _read_facebook_profile_config() -> list[dict]:
+    if not FACEBOOK_PROFILE_PATH.exists():
+        return []
+    data = json.loads(FACEBOOK_PROFILE_PATH.read_text(encoding="utf-8"))
+    profiles: list[dict] = []
+    if isinstance(data, dict):
+        iterable = ((city, items) for city, items in data.items())
+    elif isinstance(data, list):
+        iterable = ((None, data),)
+    else:
+        iterable = ()
+    for city, items in iterable:
+        for item in items or []:
+            if isinstance(item, str):
+                raw = {"url": item}
+            elif isinstance(item, dict):
+                raw = dict(item)
+            else:
+                continue
+            url = (raw.get("url") or "").strip()
+            if not url:
+                continue
+            tier = _clamp_int(raw.get("daily_limit", raw.get("tier")), 20, 1, 500)
+            profiles.append({
+                "city": (raw.get("city") or city or "").strip(),
+                "url": url,
+                "broker_name": (raw.get("broker_name") or "").strip(),
+                "tier": tier,
+                "daily_limit": tier,
+                "range_days": _clamp_int(raw.get("range_days"), 7, 1, 60),
+                "active": raw.get("active", True) is not False,
+            })
+    return profiles
+
+
+def _write_facebook_profile_config(profiles: list[dict]) -> list[dict]:
+    cleaned: list[dict] = []
+    seen: set[str] = set()
+    for raw in profiles:
+        if not isinstance(raw, dict):
+            continue
+        url = (raw.get("url") or "").strip()
+        if not url or not url.startswith("https://www.facebook.com/") or url in seen:
+            continue
+        seen.add(url)
+        daily_limit = _clamp_int(raw.get("daily_limit", raw.get("tier")), 20, 1, 500)
+        cleaned.append({
+            "city": (raw.get("city") or "Bình Dương").strip(),
+            "url": url,
+            "broker_name": (raw.get("broker_name") or "").strip(),
+            "tier": daily_limit,
+            "daily_limit": daily_limit,
+            "range_days": _clamp_int(raw.get("range_days"), 7, 1, 60),
+            "active": raw.get("active", True) is not False,
+        })
+    grouped: dict[str, list[dict]] = {}
+    for item in cleaned:
+        city = item.pop("city") or "Bình Dương"
+        grouped.setdefault(city, []).append(item)
+    FACEBOOK_PROFILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    FACEBOOK_PROFILE_PATH.write_text(
+        json.dumps(grouped, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return _read_facebook_profile_config()
+
+
+def _facebook_profile_lookup(url: str) -> dict | None:
+    normalized = (url or "").strip()
+    for profile in _read_facebook_profile_config():
+        if profile["url"] == normalized:
+            return profile
+    return None
+
+
+def _facebook_profile_stats(profile_urls: list[str]) -> dict:
+    stats = {url: {"raw_count": 0, "latest_crawled_at": None} for url in profile_urls}
+    if not profile_urls:
+        return stats
+    try:
+        with get_conn() as conn:
+            rows = conn.execute("""
+                SELECT raw_json, crawled_at
+                FROM raw_listings
+                WHERE source = 'facebook'
+                ORDER BY crawled_at DESC
+                LIMIT 8000
+            """).fetchall()
+    except Exception:
+        return stats
+    for row in rows:
+        try:
+            raw = json.loads(row["raw_json"] or "{}")
+        except Exception:
+            continue
+        candidates = [
+            (raw.get("profile_url") or "").strip(),
+            (((raw.get("_apify_raw") or {}).get("inputUrl") or "") if isinstance(raw.get("_apify_raw"), dict) else "").strip(),
+        ]
+        for url in profile_urls:
+            if any(c and (c == url or c.startswith(url)) for c in candidates):
+                stats[url]["raw_count"] += 1
+                if not stats[url]["latest_crawled_at"]:
+                    stats[url]["latest_crawled_at"] = row["crawled_at"]
+                break
+    return stats
+
+
+def _facebook_crawl_summary() -> dict:
+    try:
+        with get_conn() as conn:
+            pending = conn.execute("""
+                SELECT COUNT(*) AS n
+                FROM listing_images li
+                JOIN listings l ON l.id = li.listing_id
+                WHERE l.source = 'facebook' AND li.local_path IS NULL
+            """).fetchone()["n"]
+            listings = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE source='facebook'").fetchone()["n"]
+    except Exception:
+        pending = 0
+        listings = 0
+    with FACEBOOK_CRAWL_LOCK:
+        active = next(
+            (FACEBOOK_CRAWL_JOBS[jid] for jid in FACEBOOK_CRAWL_JOB_ORDER
+             if FACEBOOK_CRAWL_JOBS[jid].get("status") in {"queued", "running"}),
+            None,
+        )
+    return {"pending_images": pending, "facebook_listings": listings, "active_job": _public_crawl_job(active) if active else None}
+
+
+def _apify_tokens_public() -> list[dict]:
+    from crawler.apify_token_pool import list_tokens_public
+
+    return list_tokens_public()
+
+
+def _append_crawl_log(job: dict, message: str) -> None:
+    entry = f"{datetime.utcnow().isoformat(timespec='seconds')}Z {message}"
+    with FACEBOOK_CRAWL_LOCK:
+        job.setdefault("logs", []).append(entry)
+        job["logs"] = job["logs"][-120:]
+
+
+def _set_crawl_progress(job: dict, pct: int, stage: str | None = None, label: str | None = None) -> None:
+    with FACEBOOK_CRAWL_LOCK:
+        job["progress_pct"] = _clamp_int(pct, 0, 0, 100)
+        if stage:
+            job["stage"] = stage
+        if label:
+            job["progress_label"] = label
+
+
+def _public_crawl_job(job: dict | None) -> dict | None:
+    if not job:
+        return None
+    return {
+        "id": job.get("id"),
+        "status": job.get("status"),
+        "stage": job.get("stage"),
+        "mode": job.get("mode"),
+        "profile_url": job.get("profile_url"),
+        "broker_name": job.get("broker_name"),
+        "limit": job.get("limit"),
+        "days": job.get("days"),
+        "download_images": job.get("download_images"),
+        "started_at": job.get("started_at"),
+        "finished_at": job.get("finished_at"),
+        "progress_pct": job.get("progress_pct", 0),
+        "progress_label": job.get("progress_label") or job.get("stage"),
+        "stats": job.get("stats") or {},
+        "error": job.get("error"),
+        "logs": job.get("logs") or [],
+    }
+
+
+def _run_admin_facebook_crawl_job(job_id: str) -> None:
+    from db.connection import advisory_lock
+    from cli.crawlers import _facebook_crawl_to_raw, _clean_broker_images_after_download
+    from cleansing.reprocess import run_full_reprocess
+    from cleansing.download_images import download_images
+
+    with FACEBOOK_CRAWL_LOCK:
+        job = FACEBOOK_CRAWL_JOBS[job_id]
+        job["status"] = "running"
+        job["started_at"] = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+        job["progress_pct"] = 3
+        job["progress_label"] = "Đang chuẩn bị crawl"
+    try:
+        profile = {
+            "url": job["profile_url"],
+            "tier": job["limit"],
+            "broker_name": job.get("broker_name") or None,
+            "default_area": job.get("city") or None,
+        }
+        crawl_mode = "incremental" if job["mode"] == "daily" else "full"
+        max_age_days = job["days"] if job["mode"] == "range" else None
+        with advisory_lock("admin-facebook-crawl"):
+            _set_crawl_progress(job, 8, "crawl", "Đang gọi Apify")
+            _append_crawl_log(job, f"Crawl {job['mode']} | limit={job['limit']} | url={job['profile_url']}")
+
+            def _crawl_progress(stage, done, total, stats):
+                if stage != "import_raw":
+                    return
+                pct = 10
+                if total:
+                    pct = 10 + int((done / total) * 23)
+                _set_crawl_progress(
+                    job,
+                    pct,
+                    "import_raw",
+                    f"Đang nhập raw {done}/{total} từ Apify",
+                )
+                if done and (done == total or done % 50 == 0):
+                    _append_crawl_log(
+                        job,
+                        "Nhập raw: "
+                        f"{done}/{total} | imported={stats.get('inserted', 0)}, "
+                        f"refreshed={stats.get('refreshed_images', 0)}, "
+                        f"skipped={stats.get('skipped', 0)}, "
+                        f"irrelevant={stats.get('irrelevant', 0)}, "
+                        f"out_of_area={stats.get('out_of_area', 0)}",
+                    )
+
+            crawl_stats = _facebook_crawl_to_raw(
+                mode=crawl_mode,
+                limit_override=job["limit"],
+                profiles=[profile],
+                max_age_days=max_age_days,
+                progress_callback=_crawl_progress,
+            ) or {}
+            job.setdefault("stats", {})["crawl"] = crawl_stats
+            _set_crawl_progress(job, 35, "crawl", "Đã lấy dữ liệu từ Facebook")
+            _append_crawl_log(
+                job,
+                "Crawl xong: "
+                f"fetched={crawl_stats.get('fetched', 0)}, "
+                f"imported={crawl_stats.get('inserted', 0)}, "
+                f"refreshed={crawl_stats.get('refreshed_images', 0)}, "
+                f"skipped={crawl_stats.get('skipped', 0)}, "
+                f"irrelevant={crawl_stats.get('irrelevant', 0)}, "
+                f"out_of_area={crawl_stats.get('out_of_area', 0)}, "
+                f"range_filtered={crawl_stats.get('range_filtered', 0)}",
+            )
+
+            if crawl_stats.get("inserted", 0) > 0 or crawl_stats.get("refreshed_images", 0) > 0:
+                _set_crawl_progress(job, 42, "reprocess", "Đang reprocess listing")
+                changed_raw_ids = []
+                changed_raw_ids.extend(crawl_stats.get("inserted_raw_ids") or [])
+                changed_raw_ids.extend(crawl_stats.get("refreshed_raw_ids") or [])
+                changed_raw_ids = list(dict.fromkeys(changed_raw_ids))
+                reprocess_kwargs = {"source": "facebook", "full": False}
+                if changed_raw_ids:
+                    reprocess_kwargs["raw_ids"] = changed_raw_ids
+                    _append_crawl_log(job, f"Reprocess {len(changed_raw_ids)} raw vua crawl/refresh.")
+                reprocess_stats = run_full_reprocess(**reprocess_kwargs)
+                job["stats"]["reprocess"] = reprocess_stats
+                processed_ids = reprocess_stats.get("listings", {}).get("processed_ids") or []
+                listing_reprocess = reprocess_stats.get("listings", {})
+                _set_crawl_progress(job, 70, "reprocess", "Đã reprocess xong")
+                _append_crawl_log(
+                    job,
+                    "Reprocess xong: "
+                    f"processed={len(processed_ids)}, "
+                    f"new={listing_reprocess.get('new', 0)}, "
+                    f"updated={listing_reprocess.get('updated', 0)}, "
+                    f"skipped={listing_reprocess.get('skipped', 0)}",
+                )
+
+                if job.get("download_images"):
+                    _set_crawl_progress(job, 75, "download_images", "Đang tải ảnh")
+
+                    def _download_progress(done, total, success):
+                        if total:
+                            pct = 75 + int((done / total) * 19)
+                            _set_crawl_progress(
+                                job,
+                                pct,
+                                "download_images",
+                                f"Đang tải ảnh {done}/{total} (ok {success})",
+                            )
+
+                    downloaded = download_images(
+                        limit=max(200, min(3000, job["limit"] * 12)),
+                        listing_ids=processed_ids,
+                        progress_callback=_download_progress,
+                    )
+                    job["stats"]["downloaded_images"] = downloaded
+                    _set_crawl_progress(job, 94, "download_images", "Đã tải ảnh xong")
+                    _append_crawl_log(job, f"Tải ảnh xong: {downloaded} ảnh")
+                    try:
+                        _set_crawl_progress(job, 96, "cleanup", "Đang dọn ảnh môi giới")
+                        _clean_broker_images_after_download(source="facebook", limit=max(200, job["limit"] * 12))
+                    except Exception as exc:
+                        _append_crawl_log(job, f"Clean ảnh môi giới lỗi nhẹ: {exc}")
+                else:
+                    _set_crawl_progress(job, 95, "reprocess", "Bỏ qua tải ảnh")
+            else:
+                _set_crawl_progress(job, 95, "crawl", "Không có bài mới")
+                _append_crawl_log(job, "Không có bài mới hoặc ảnh mới, bỏ qua reprocess.")
+
+        with FACEBOOK_CRAWL_LOCK:
+            job["status"] = "succeeded"
+            job["stage"] = "done"
+            job["progress_pct"] = 100
+            job["progress_label"] = "Hoàn tất"
+            job["finished_at"] = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    except Exception as exc:
+        logger.exception("Admin Facebook crawl job failed")
+        _append_crawl_log(job, f"Lỗi: {exc}")
+        with FACEBOOK_CRAWL_LOCK:
+            job["status"] = "failed"
+            job["stage"] = "failed"
+            job["progress_label"] = "Lỗi khi crawl"
+            job["error"] = str(exc)
+            job["finished_at"] = datetime.utcnow().isoformat(timespec="seconds") + "Z"
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -983,7 +1323,7 @@ def api_dashboard():
             "trend_data": data["trend_data"],
             "signals_version": _get_signals_version(db_path),
             "all_wards": data["all_wards"],
-            "all_sources": data["all_sources"],
+            "all_sources": data["all_sources"] if tier == "admin" else sources,
             "wards_by_city": data["wards_by_city"],
             "active_city": active_city,
             "active_wards": wards,
@@ -1276,7 +1616,7 @@ def api_listings():
             SELECT listing_id, local_path, img_url
             FROM listing_images
             WHERE listing_id IN ({placeholders})
-            ORDER BY listing_id, CASE WHEN img_type='so_hong' THEN 0 ELSE 1 END, img_order, id
+            ORDER BY listing_id, {_image_order_sql()}
         """, listing_ids).fetchall()
         for r in img_rows:
             url = resolve_image_url(r[1], r[2])
@@ -1319,7 +1659,8 @@ def listing_detail(listing_id):
     history_json = json.dumps(data["history"], ensure_ascii=False)
     desc_html = l.get('description', '').replace('\n', '<br>') if l.get('description') else 'Không có mô tả.'
     
-    memo = {"locked": True, "reason": "login_required"} if tier == "guest" else load_investment_memo(db_path, listing_id, tier=tier)
+    # Investment Memo is temporarily hidden from listing detail pages.
+    memo = None
 
     return render_template('listing_detail.html', l=l, imgs=imgs, history_json=history_json, desc_html=desc_html, memo=memo)
 
@@ -1691,6 +2032,123 @@ def api_create_guest_lead():
 def admin_control_room():
     is_admin = _admin_request_authorized()
     return render_template("admin_control_room.html", admin_login_required=not is_admin)
+
+
+@require_admin_auth
+def admin_api_facebook_crawl_config():
+    if request.method == "GET":
+        profiles = _read_facebook_profile_config()
+        stats = _facebook_profile_stats([p["url"] for p in profiles])
+        for profile in profiles:
+            profile.update(stats.get(profile["url"], {}))
+        return jsonify({
+            "profiles": profiles,
+            "summary": _facebook_crawl_summary(),
+            "apify_tokens": _apify_tokens_public(),
+        })
+
+    payload = request.get_json(silent=True) or {}
+    profiles = payload.get("profiles") or []
+    saved = _write_facebook_profile_config(profiles)
+    stats = _facebook_profile_stats([p["url"] for p in saved])
+    for profile in saved:
+        profile.update(stats.get(profile["url"], {}))
+    return jsonify({
+        "ok": True,
+        "profiles": saved,
+        "summary": _facebook_crawl_summary(),
+        "apify_tokens": _apify_tokens_public(),
+    })
+
+
+@require_admin_auth
+def admin_api_facebook_crawl_tokens(token_id=None):
+    from crawler.apify_token_pool import delete_token, reset_token_usage, upsert_token
+
+    if request.method == "GET":
+        return jsonify({"tokens": _apify_tokens_public()})
+    if request.method == "POST":
+        payload = request.get_json(silent=True) or {}
+        try:
+            tokens = upsert_token(payload)
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+        return jsonify({"ok": True, "tokens": tokens})
+    if request.method == "DELETE":
+        if not token_id:
+            return jsonify({"ok": False, "error": "token_id_required"}), 400
+        return jsonify({"ok": delete_token(token_id), "tokens": _apify_tokens_public()})
+    if request.method == "PATCH":
+        if not token_id:
+            return jsonify({"ok": False, "error": "token_id_required"}), 400
+        action = (request.get_json(silent=True) or {}).get("action")
+        if action == "reset_usage":
+            return jsonify({"ok": reset_token_usage(token_id), "tokens": _apify_tokens_public()})
+        return jsonify({"ok": False, "error": "invalid_action"}), 400
+    return jsonify({"ok": False, "error": "method_not_allowed"}), 405
+
+
+@require_admin_auth
+def admin_api_facebook_crawl_run():
+    payload = request.get_json(silent=True) or {}
+    url = (payload.get("url") or payload.get("profile_url") or "").strip()
+    if not url.startswith("https://www.facebook.com/"):
+        return jsonify({"ok": False, "error": "invalid_profile_url"}), 400
+    mode = (payload.get("mode") or "daily").strip().lower()
+    if mode not in {"first", "daily", "range"}:
+        return jsonify({"ok": False, "error": "invalid_mode"}), 400
+
+    with FACEBOOK_CRAWL_LOCK:
+        active = next(
+            (FACEBOOK_CRAWL_JOBS[jid] for jid in FACEBOOK_CRAWL_JOB_ORDER
+             if FACEBOOK_CRAWL_JOBS[jid].get("status") in {"queued", "running"}),
+            None,
+        )
+        if active:
+            return jsonify({"ok": False, "error": "crawl_already_running", "job": _public_crawl_job(active)}), 409
+
+    configured = _facebook_profile_lookup(url) or {}
+    limit_default = 330 if mode == "first" else configured.get("daily_limit", 30)
+    limit = _clamp_int(payload.get("limit"), limit_default, 1, FACEBOOK_MANUAL_CRAWL_MAX_LIMIT)
+    days = _clamp_int(payload.get("days"), configured.get("range_days", 7), 1, 60)
+    job = {
+        "id": uuid4().hex[:12],
+        "status": "queued",
+        "stage": "queued",
+        "mode": mode,
+        "profile_url": url,
+        "broker_name": (payload.get("broker_name") or configured.get("broker_name") or "").strip(),
+        "city": (payload.get("city") or configured.get("city") or "").strip(),
+        "limit": limit,
+        "days": days,
+        "download_images": payload.get("download_images", True) is not False,
+        "created_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "started_at": None,
+        "finished_at": None,
+        "progress_pct": 0,
+        "progress_label": "Đang chờ chạy",
+        "stats": {},
+        "logs": [],
+    }
+    with FACEBOOK_CRAWL_LOCK:
+        FACEBOOK_CRAWL_JOBS[job["id"]] = job
+        FACEBOOK_CRAWL_JOB_ORDER.insert(0, job["id"])
+        del FACEBOOK_CRAWL_JOB_ORDER[20:]
+    thread = threading.Thread(target=_run_admin_facebook_crawl_job, args=(job["id"],), daemon=True)
+    thread.start()
+    return jsonify({"ok": True, "job": _public_crawl_job(job)})
+
+
+@require_admin_auth
+def admin_api_facebook_crawl_jobs(job_id=None):
+    with FACEBOOK_CRAWL_LOCK:
+        if job_id:
+            job = FACEBOOK_CRAWL_JOBS.get(job_id)
+            if not job:
+                return jsonify({"ok": False, "error": "not_found"}), 404
+            return jsonify({"job": _public_crawl_job(job)})
+        jobs = [_public_crawl_job(FACEBOOK_CRAWL_JOBS[jid]) for jid in FACEBOOK_CRAWL_JOB_ORDER]
+    return jsonify({"jobs": jobs})
 
 
 @require_admin_auth
@@ -2270,7 +2728,7 @@ def admin_api_ai_training_items():
                 d["fair_ppm2"] = round(float(d["fair_ppm2"]), 1)
             imgs = conn.execute(
                 "SELECT local_path, img_url FROM listing_images "
-                "WHERE listing_id=? ORDER BY CASE WHEN img_type='so_hong' THEN 0 ELSE 1 END, img_order, id",
+                f"WHERE listing_id=? ORDER BY {_image_order_sql()}",
                 (d["id"],),
             ).fetchall()
             gallery = []
@@ -2365,18 +2823,22 @@ def admin_api_legal_verification():
             "SELECT * FROM legal_verifications WHERE listing_id=?",
             (listing_id,),
         ).fetchone()
-        latest_doc = conn.execute(
-            """
-            SELECT id
-              FROM listing_images
-             WHERE listing_id=? AND img_type='so_hong'
-             ORDER BY img_order, id
-             LIMIT 1
-            """,
-            (listing_id,),
-        ).fetchone()
+        latest_doc = None
+        if LEGAL_IMAGE_EVIDENCE_ENABLED:
+            latest_doc = conn.execute(
+                """
+                SELECT id
+                  FROM listing_images
+                 WHERE listing_id=? AND img_type='so_hong'
+                 ORDER BY img_order, id
+                 LIMIT 1
+                """,
+                (listing_id,),
+            ).fetchone()
 
         legal_fields = dict(existing) if existing else {}
+        if not LEGAL_IMAGE_EVIDENCE_ENABLED:
+            legal_fields.pop("document_image_id", None)
         if latest_doc:
             legal_fields.setdefault("document_image_id", latest_doc["id"])
         for key in (
@@ -2398,7 +2860,7 @@ def admin_api_legal_verification():
         result = verify_legal_listing(
             listing,
             legal_fields,
-            has_legal_doc=bool(legal_fields.get("document_image_id")),
+            has_legal_doc=bool(LEGAL_IMAGE_EVIDENCE_ENABLED and legal_fields.get("document_image_id")),
             admin_status=admin_status,
         )
         upsert_legal_verification(
@@ -2486,10 +2948,10 @@ def admin_api_qc_duplicates():
             FROM listings l
             JOIN listings c ON c.id = l.duplicate_of_id
             LEFT JOIN listing_images li ON li.id = (
-                SELECT id FROM listing_images WHERE listing_id = l.id ORDER BY CASE WHEN img_type='so_hong' THEN 0 ELSE 1 END, img_order, id LIMIT 1
+                SELECT id FROM listing_images WHERE listing_id = l.id ORDER BY {_image_order_sql()} LIMIT 1
             )
             LEFT JOIN listing_images ci ON ci.id = (
-                SELECT id FROM listing_images WHERE listing_id = c.id ORDER BY CASE WHEN img_type='so_hong' THEN 0 ELSE 1 END, img_order, id LIMIT 1
+                SELECT id FROM listing_images WHERE listing_id = c.id ORDER BY {_image_order_sql()} LIMIT 1
             )
             WHERE COALESCE(l.probably_sold,0)=0
               AND COALESCE(l.is_blacklisted,0)=0

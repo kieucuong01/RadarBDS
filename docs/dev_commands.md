@@ -8,31 +8,24 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
 
 ## App and DB
 
-Supabase-first local setup:
+Local PostgreSQL setup:
 
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
 
-# Current local Supabase project ref: ozdjzfiqcjnlfuihqqjy
-# The real password is in .env only. Do not paste it into docs or commits.
-
-# Put this in .env for normal app/CLI runs.
-# Prefer Direct connection for migration if IPv6 works.
-$env:DATABASE_URL = "postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres"
-
-# If Direct connection fails because of IPv6/network, use Session Pooler instead.
-$env:DATABASE_URL = "postgres://postgres.<project-ref>:<password>@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
-
-& $py -X utf8 -m pip install -r requirements.txt
-& $py -X utf8 scripts\migrate_sqlite_to_postgres.py --sqlite data\radar_bds.db --database-url $env:DATABASE_URL --truncate
+.\scripts\local_postgres.ps1 start
+$env:DATABASE_URL = "postgresql://postgres@127.0.0.1:5432/radar_bds"
 & $py -X utf8 radar.py inspect
 & $py -X utf8 app.py
 & $py -X utf8 radar.py reprocess
 & $py -X utf8 radar.py reprocess --full
 ```
 
+Remote Supabase project ref `ozdjzfiqcjnlfuihqqjy` is kept only for sync/backup.
+The real password is in local `.env` only. Do not paste it into docs or commits.
 Avoid Supabase Transaction Pooler for the Flask app/crawler unless psycopg
-prepared statements are explicitly disabled.
+prepared statements are explicitly disabled; local Postgres should be the normal
+dev/reprocess target because remote round trips make full jobs slow.
 
 After a migration or DB credential change, smoke test the Postgres-backed app:
 

@@ -49,13 +49,22 @@ def insert_raw(source: str, source_id: Optional[str], url: str,
 
 def get_raw_for_reprocess(source: Optional[str] = None,
                           since: Optional[str] = None,
-                          incremental: bool = False) -> list:
+                          incremental: bool = False,
+                          raw_ids: Optional[list] = None) -> list:
     """
     Lấy raw records để reprocess.
     source: filter theo nguồn. since: ISO date string 'YYYY-MM-DD'.
     incremental: Nếu True, chỉ lấy các raw_listings chưa từng được normalize (raw_id chưa có trong bảng listings).
     """
-    if incremental:
+    params = []
+    if raw_ids is not None:
+        ids = [int(x) for x in raw_ids if x]
+        if not ids:
+            return []
+        placeholders = ",".join(["?"] * len(ids))
+        query = f"SELECT id, source, source_id, url, raw_json, crawled_at FROM raw_listings WHERE id IN ({placeholders})"
+        params = ids
+    elif incremental:
         query = """
             SELECT r.id, r.source, r.source_id, r.url, r.raw_json, r.crawled_at 
             FROM raw_listings r
@@ -64,8 +73,6 @@ def get_raw_for_reprocess(source: Optional[str] = None,
         """
     else:
         query = "SELECT id, source, source_id, url, raw_json, crawled_at FROM raw_listings WHERE 1=1"
-        
-    params = []
     if source:
         query += " AND r.source = ?" if incremental else " AND source = ?"
         params.append(source)

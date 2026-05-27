@@ -270,11 +270,6 @@ function _renderSignalCards(signals) {
       const daysAgo = _daysAgoValue(x.days_ago);
       let timeStr = _timeAgoText(daysAgo);
       let legalStr = (x.has_so === true || x.has_so === 1) ? 'Sổ Hồng' : ((x.has_so === false || x.has_so === 0) ? 'Chờ sổ' : 'Đang cập nhật');
-      const trustLabels = {
-        has_legal_doc: 'Có sổ',
-        candidate_signal: 'Chưa có sổ'
-      };
-      legalStr = `${trustLabels[x.trust_tier] || trustLabels.candidate_signal} · ${legalStr}`;
 
       const roadTiers = {
         1: 'Mặt tiền',

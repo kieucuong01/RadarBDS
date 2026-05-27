@@ -2,6 +2,7 @@ import json
 import time
 import logging
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from cli.data_import import cmd_export_raw
 from db.connection import advisory_lock, get_conn
@@ -27,19 +28,23 @@ def _get_crawlers(source_filter=None):
 
 
 def _clean_broker_images_after_download(source=None, limit=None):
-    from cleansing.legal_image_classifier import classify_legal_images
-    from cleansing.legal_verification import refresh_legal_verifications
+    from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
     from cleansing.image_cleanup import clean_broker_images
-    legal_stats = classify_legal_images(source=source, apply=True, limit=limit)
-    print(
-        f"Classify legal images: scanned={legal_stats.get('scanned', 0)} | "
-        f"updated={legal_stats.get('updated', 0)} | reasons={legal_stats.get('reasons', {})}"
-    )
-    verify_stats = refresh_legal_verifications(source=source, apply=True, limit=limit)
-    print(
-        f"Verify legal trust: scanned={verify_stats.get('scanned', 0)} | "
-        f"updated={verify_stats.get('updated', 0)} | statuses={verify_stats.get('statuses', {})}"
-    )
+    if LEGAL_IMAGE_EVIDENCE_ENABLED:
+        from cleansing.legal_image_classifier import classify_legal_images
+        from cleansing.legal_verification import refresh_legal_verifications
+        legal_stats = classify_legal_images(source=source, apply=True, limit=limit)
+        print(
+            f"Classify legal images: scanned={legal_stats.get('scanned', 0)} | "
+            f"updated={legal_stats.get('updated', 0)} | reasons={legal_stats.get('reasons', {})}"
+        )
+        verify_stats = refresh_legal_verifications(source=source, apply=True, limit=limit)
+        print(
+            f"Verify legal trust: scanned={verify_stats.get('scanned', 0)} | "
+            f"updated={verify_stats.get('updated', 0)} | statuses={verify_stats.get('statuses', {})}"
+        )
+    else:
+        print("Legal image evidence is disabled for the later OCR/extraction phase.")
     stats = clean_broker_images(source=source, apply=True, limit=limit, strong=True)
     print(
         f"Clean broker images: scanned={stats.get('scanned', 0)} | "
@@ -48,11 +53,11 @@ def _clean_broker_images_after_download(source=None, limit=None):
     return stats
 
 
-def _refresh_existing_facebook_images(url: str, raw_data: dict) -> bool:
+def _refresh_existing_facebook_images(url: str, raw_data: dict):
     """Refresh volatile Facebook CDN image URLs for an already-seen post."""
     imgs = raw_data.get("imgs") or raw_data.get("img_urls") or []
     if not url or not imgs:
-        return False
+        return None
 
     with get_conn() as conn:
         row = conn.execute(
@@ -60,7 +65,7 @@ def _refresh_existing_facebook_images(url: str, raw_data: dict) -> bool:
             (url,),
         ).fetchone()
         if not row:
-            return False
+            return None
 
         try:
             existing = json.loads(row["raw_json"] or "{}")
@@ -69,7 +74,7 @@ def _refresh_existing_facebook_images(url: str, raw_data: dict) -> bool:
 
         old_imgs = existing.get("imgs") or existing.get("img_urls") or []
         if old_imgs == imgs:
-            return False
+            return None
 
         existing["imgs"] = imgs
         if raw_data.get("_apify_raw"):
@@ -82,10 +87,17 @@ def _refresh_existing_facebook_images(url: str, raw_data: dict) -> bool:
             """,
             (json.dumps(existing, ensure_ascii=False), row["id"]),
         )
-        return True
+        return row["id"]
 
 
-def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_filter=None):
+def _facebook_crawl_to_raw(
+    mode: str,
+    limit_override=None,
+    profiles=None,
+    area_filter=None,
+    max_age_days=None,
+    progress_callback=None,
+):
     from crawler.facebook_apify import FacebookApifyCrawler, load_profiles
     from crawler.facebook_chrome import build_record, is_relevant
     from config.area_profiles import post_mentions_other_city
@@ -106,23 +118,55 @@ def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_f
     if not raw_posts:
         print("[facebook] Khong co bai nao tu Apify (kiem tra profile URL va APIFY_TOKEN).")
         return {"fetched": 0, "inserted": 0, "skipped": 0,
-                "irrelevant": 0, "out_of_area": 0}
+                "irrelevant": 0, "out_of_area": 0, "range_filtered": 0}
+
+    range_filtered = 0
+    if max_age_days:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=int(max_age_days))
+        before = len(raw_posts)
+        raw_posts = [post for post in raw_posts if crawler._is_within_24h(post.get("date_raw") or "", cutoff)]
+        range_filtered = before - len(raw_posts)
+        print(
+            f"[facebook] Range filter: {before} -> {len(raw_posts)} bai "
+            f"({int(max_age_days)} ngay)"
+        )
 
     inserted = skipped = irrelevant = out_of_area = refreshed_images = 0
-    for post in raw_posts:
+    inserted_raw_ids = []
+    refreshed_raw_ids = []
+    total_posts = len(raw_posts)
+
+    def _emit_progress(done: int) -> None:
+        if not progress_callback:
+            return
+        if done != total_posts and done % 10 != 0:
+            return
+        progress_callback("import_raw", done, total_posts, {
+            "inserted": inserted,
+            "skipped": skipped,
+            "irrelevant": irrelevant,
+            "out_of_area": out_of_area,
+            "refreshed_images": refreshed_images,
+        })
+
+    _emit_progress(0)
+    for idx, post in enumerate(raw_posts, start=1):
         text = post.get("text") or ""
         if not is_relevant(text):
             irrelevant += 1
+            _emit_progress(idx)
             continue
         # City filter: chỉ skip khi post ghi RÕ TP KHÁC với profile_city.
         profile_city = post.get("default_area") or ""
         if profile_city and post_mentions_other_city(text, profile_city):
             out_of_area += 1
+            _emit_progress(idx)
             continue
         apify_raw = post.pop("_apify_raw", None)
         record = build_record(post)
         if not record:
             irrelevant += 1
+            _emit_progress(idx)
             continue
         # Giữ broker_name vào record để lưu raw_json
         broker_name = post.get("broker_name")
@@ -134,9 +178,10 @@ def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_f
                 blocked = conn.execute(
                     "SELECT 1 FROM broker_blacklist WHERE active=1 AND phone_norm=?",
                     (phone_norm,),
-                ).fetchone()
+            ).fetchone()
             if blocked:
                 skipped += 1
+                _emit_progress(idx)
                 continue
         raw_data = dict(record)
         if apify_raw:
@@ -149,15 +194,24 @@ def _facebook_crawl_to_raw(mode: str, limit_override=None, profiles=None, area_f
         )
         if rid:
             inserted += 1
-        elif _refresh_existing_facebook_images(record["url"], raw_data):
-            refreshed_images += 1
         else:
-            skipped += 1
+            refreshed_raw_id = _refresh_existing_facebook_images(record["url"], raw_data)
+            if refreshed_raw_id:
+                refreshed_images += 1
+                refreshed_raw_ids.append(refreshed_raw_id)
+            else:
+                skipped += 1
+        if rid:
+            inserted_raw_ids.append(rid)
+        _emit_progress(idx)
 
     return {"fetched": len(raw_posts), "inserted": inserted,
             "skipped": skipped, "irrelevant": irrelevant,
+            "inserted_raw_ids": inserted_raw_ids,
             "refreshed_images": refreshed_images,
-            "out_of_area": out_of_area}
+            "refreshed_raw_ids": refreshed_raw_ids,
+            "out_of_area": out_of_area,
+            "range_filtered": range_filtered}
 
 def cmd_crawl_facebook(args):
     with advisory_lock("crawl-facebook"):

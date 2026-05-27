@@ -42,7 +42,7 @@ def _map_clean_to_db(rec: dict) -> dict:
         "depth_m":      rec.get("depth_m"),
         "road_width_m": rec.get("road_width_m"),
         "road_type":    rec.get("road_type", "unknown"),
-        "has_so":       int(rec.get("has_so", False)),
+        "has_so":       int(rec.get("has_so", True)),
         "is_hot":       int(rec.get("is_hot", False)),
         "contact_phone": rec.get("contact_phone"),
         "seller_name":  rec.get("seller_name"),

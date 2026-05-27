@@ -33,11 +33,14 @@ wheels/
 # Project specific data
 data/images/
 data/fb_photos/
+data/apify_tokens.json
 logs/
 reports/
 scratch/
 browser_recordings/
 artifacts/
+tools/
+.local/
 
 # Agent/runtime worktrees and local state
 .claude/worktrees/

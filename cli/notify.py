@@ -20,7 +20,7 @@ from datetime import datetime
 from typing import Iterable
 
 from db.connection import get_conn
-from config.settings import SIGNAL_REALERT_THRESHOLD_PCT
+from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED, SIGNAL_REALERT_THRESHOLD_PCT
 
 logger = logging.getLogger(__name__)
 
@@ -114,8 +114,18 @@ def _log_notify(conn, user_id: int, listing_id: int, channel: str, price_ty) -> 
 
 def _fetch_new_signals(conn, since: str) -> list[dict]:
     """Listings first seen since timestamp, signal=1 only."""
+    order_sql = (
+        """CASE COALESCE(v.trust_tier, 'candidate_signal')
+                    WHEN 'has_legal_doc' THEN 0
+                    ELSE 1
+                 END ASC,
+                 COALESCE(v.trust_score, 0) DESC,
+                 datetime(COALESCE(l.first_seen_at, l.crawled_at, l.posted_at)) DESC"""
+        if LEGAL_IMAGE_EVIDENCE_ENABLED
+        else "datetime(COALESCE(l.first_seen_at, l.crawled_at, l.posted_at)) DESC"
+    )
     rows = conn.execute(
-        """
+        f"""
         SELECT l.id, l.title, l.ward, l.property_type, l.price_ty, l.area_m2, l.url,
                COALESCE(v.mos_pct, 0) AS mos_pct,
                COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,
@@ -129,12 +139,7 @@ def _fetch_new_signals(conn, since: str) -> list[dict]:
           AND COALESCE(l.probably_sold, 0) = 0
           AND COALESCE(l.is_blacklisted, 0) = 0
           AND COALESCE(l.review_hidden, 0) = 0
-        ORDER BY CASE COALESCE(v.trust_tier, 'candidate_signal')
-                    WHEN 'has_legal_doc' THEN 0
-                    ELSE 1
-                 END ASC,
-                 COALESCE(v.trust_score, 0) DESC,
-                 datetime(COALESCE(l.first_seen_at, l.crawled_at, l.posted_at)) DESC
+        ORDER BY {order_sql}
         LIMIT 500
         """,
         (since,),

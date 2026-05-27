@@ -91,7 +91,7 @@ class MarketDataImageOrderingTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-    def test_primary_images_prefers_so_hong(self):
+    def test_primary_images_keeps_original_order_while_legal_image_feature_disabled(self):
         import services.market_data as market_data
 
         conn = sqlite3.connect(self.db_path)
@@ -100,9 +100,10 @@ class MarketDataImageOrderingTest(unittest.TestCase):
             images = market_data._primary_images(conn, [1])
         conn.close()
 
-        self.assertEqual(images[1], "data/images/sohong.jpg")
+        self.assertFalse(market_data.LEGAL_IMAGE_EVIDENCE_ENABLED)
+        self.assertEqual(images[1], "data/images/land.jpg")
 
-    def test_listing_detail_gallery_orders_so_hong_first(self):
+    def test_listing_detail_gallery_keeps_original_order_while_legal_image_feature_disabled(self):
         import services.market_data as market_data
 
         @contextmanager
@@ -118,7 +119,90 @@ class MarketDataImageOrderingTest(unittest.TestCase):
              mock.patch.object(market_data, "resolve_image_url", side_effect=lambda local, remote, prefer_thumb=False: local or remote):
             detail = market_data.load_listing_detail(str(self.db_path), 1, tier="admin", delay_hours=0)
 
-        self.assertEqual(detail["images"], ["data/images/sohong.jpg", "data/images/land.jpg"])
+        self.assertEqual(detail["images"], ["data/images/land.jpg", "data/images/sohong.jpg"])
+
+    def test_signal_row_hides_legal_doc_image_presence_while_feature_disabled(self):
+        import services.market_data as market_data
+
+        row = {
+            "id": 1,
+            "title": "Tin co anh so hong",
+            "mos_pct": 35.5,
+            "actual_ppm2": 2.4,
+            "fair_ppm2": 4.1,
+            "area_m2": 100.0,
+            "price_ty": 0.24,
+            "property_type": "dat_tho_cu",
+            "is_hot": 0,
+            "price_dropped": 0,
+            "suspicious_bait": 0,
+            "price_drop_pct": None,
+            "price_first_ty": None,
+            "duplicate_of_id": None,
+            "url": "https://example.test/listing/1",
+            "posted_at": "2026-05-01",
+            "crawled_at": "2026-05-01",
+            "ward": "Tan An",
+            "signal_score": 80,
+            "trust_tier": "candidate_signal",
+            "trust_score": 0,
+            "legal_status": "unverified",
+            "legal_flags": "",
+            "has_legal_doc_image": 1,
+            "source": "guland",
+            "road_tier": 3,
+            "has_so": 1,
+            "is_fresh_locked": 0,
+        }
+
+        record = market_data._format_signal_row(row, primary_img="data/images/sohong.jpg", tier="admin")
+
+        self.assertFalse(record["has_legal_doc_image"])
+        self.assertEqual(record["primary_img"], "data/images/sohong.jpg")
+
+    def test_signal_row_defaults_has_so_to_true_unless_title_is_explicit_no_so(self):
+        import services.market_data as market_data
+
+        row = {
+            "id": 1,
+            "title": "Tin co anh so hong",
+            "mos_pct": 35.5,
+            "actual_ppm2": 2.4,
+            "fair_ppm2": 4.1,
+            "area_m2": 100.0,
+            "price_ty": 0.24,
+            "property_type": "dat_tho_cu",
+            "is_hot": 0,
+            "price_dropped": 0,
+            "suspicious_bait": 0,
+            "price_drop_pct": None,
+            "price_first_ty": None,
+            "duplicate_of_id": None,
+            "url": "https://example.test/listing/1",
+            "posted_at": "2026-05-01",
+            "crawled_at": "2026-05-01",
+            "ward": "Tan An",
+            "signal_score": 80,
+            "trust_tier": "candidate_signal",
+            "trust_score": 0,
+            "legal_status": "unverified",
+            "legal_flags": "",
+            "has_legal_doc_image": 0,
+            "source": "guland",
+            "road_tier": 3,
+            "has_so": 0,
+            "is_fresh_locked": 0,
+        }
+
+        default_record = market_data._format_signal_row(row, primary_img="", tier="admin")
+        no_so_record = market_data._format_signal_row(
+            {**row, "title": "Dat vi bang giay tay, chua co so"},
+            primary_img="",
+            tier="admin",
+        )
+
+        self.assertTrue(default_record["has_so"])
+        self.assertFalse(no_so_record["has_so"])
 
 
 if __name__ == "__main__":

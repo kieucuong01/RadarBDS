@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v6-legal-qc">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v7-facebook-crawl">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -158,6 +158,10 @@
         <span class="nav-icon">DQ</span>
         <span><strong>Data Quality</strong><small>Trạm kiểm dịch data</small></span>
       </button>
+      <button class="nav-item" data-panel="crawl">
+        <span class="nav-icon">FB</span>
+        <span><strong>Facebook Crawl</strong><small>Môi giới, daily, range</small></span>
+      </button>
       <button class="nav-item" data-panel="training">
         <span class="nav-icon">AI</span>
         <span><strong>AI Training</strong><small>Trạm huấn luyện định giá</small></span>
@@ -267,6 +271,111 @@
           </div>
           <div id="blacklistRows" class="blacklist-list"></div>
         </div>
+      </section>
+    </section>
+
+    <section id="panel-crawl" class="workspace-panel">
+      <div class="page-head">
+        <div>
+          <h1>Facebook Crawl</h1>
+          <p>Quản lý môi giới tin cậy, chạy crawl lần đầu, daily hoặc theo số ngày gần đây.</p>
+        </div>
+        <div class="page-actions">
+          <button class="secondary-btn" id="refreshCrawlBtn">Làm mới</button>
+          <button class="primary-btn" id="saveCrawlProfilesBtn">Lưu danh sách</button>
+        </div>
+      </div>
+
+      <div class="stat-grid" id="crawlStats"></div>
+
+      <section class="surface apify-token-panel">
+        <div class="toolbar apify-token-form">
+          <input id="apifyTokenLabel" placeholder="Tên key, ví dụ Key 1">
+          <input id="apifyTokenValue" type="password" autocomplete="off" placeholder="apify_api_...">
+          <input id="apifyTokenQuota" type="number" min="1" max="10000" value="950" title="Quota post/tháng">
+          <button class="primary-btn" id="addApifyTokenBtn">Thêm key</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table apify-token-table">
+            <thead>
+              <tr>
+                <th>Bật</th>
+                <th>Key</th>
+                <th>Quota tháng</th>
+                <th>Đã dùng</th>
+                <th>Còn lại</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="apifyTokenRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="crawl-layout">
+        <div class="surface crawl-profiles-panel">
+          <div class="toolbar crawl-add-row">
+            <input id="crawlBrokerName" placeholder="Tên môi giới">
+            <input id="crawlProfileUrl" placeholder="https://www.facebook.com/...">
+            <input id="crawlCity" placeholder="Khu vực" value="Bến Cát">
+            <button class="primary-btn" id="addCrawlProfileBtn">Thêm</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table crawl-table">
+              <thead>
+                <tr>
+                  <th>Bật</th>
+                  <th>Môi giới</th>
+                  <th>Daily</th>
+                  <th>Range</th>
+                  <th>Dữ liệu</th>
+                  <th>Chạy</th>
+                </tr>
+              </thead>
+              <tbody id="crawlProfileRows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside class="surface crawl-run-panel">
+          <div class="crawl-run-head">
+            <strong>Chạy crawl thủ công</strong>
+            <span id="crawlJobStatus" class="crawl-status">Idle</span>
+          </div>
+          <label class="crawl-field">Môi giới
+            <select id="crawlRunProfile" class="select-control"></select>
+          </label>
+          <div class="segmented crawl-mode">
+            <button class="segment active" data-crawl-mode="first">Lần đầu</button>
+            <button class="segment" data-crawl-mode="daily">Daily</button>
+            <button class="segment" data-crawl-mode="range">Range days</button>
+          </div>
+          <div class="crawl-two" id="crawlRunFields">
+            <label class="crawl-field">Số bài
+              <input id="crawlRunLimit" type="number" min="1" max="950" value="330">
+            </label>
+            <label class="crawl-field crawl-days-field">Số ngày
+              <input id="crawlRunDays" type="number" min="1" max="60" value="7">
+            </label>
+          </div>
+          <label class="toggle-line">
+            <input id="crawlDownloadImages" type="checkbox" checked>
+            <span>Tải ảnh sau khi reprocess</span>
+          </label>
+          <button class="primary-btn crawl-run-btn" id="runCrawlBtn">Chạy crawl</button>
+          <div class="crawl-progress">
+            <div class="crawl-progress-top">
+              <span id="crawlProgressLabel">Chưa chạy</span>
+              <strong id="crawlProgressPct">0%</strong>
+            </div>
+            <div class="crawl-progress-track">
+              <div id="crawlProgressFill" class="crawl-progress-fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div id="crawlJobMeta" class="crawl-job-meta"></div>
+          <pre id="crawlJobLog" class="crawl-log">Chưa có job crawl.</pre>
+        </aside>
       </section>
     </section>
 
@@ -489,7 +598,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v18-legal-qc"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v19-facebook-crawl"></script>
   {% endif %}
 </body>
 </html>

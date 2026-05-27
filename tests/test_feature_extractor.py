@@ -266,6 +266,14 @@ def test_extract_legal():
     assert r["has_so"] is True
     assert r["has_shr"] is True
 
+    r = extract_legal("dat giay tay vi bang")
+    assert r["no_so"] is True
+    assert r["has_so"] is False
+
+    r = extract_legal("dat dang lam so")
+    assert r["no_so"] is True
+    assert r["has_so"] is False
+
     r = extract_legal("đất chưa có sổ")
     assert r["no_so"] is True
 

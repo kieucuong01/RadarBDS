@@ -4,12 +4,23 @@ Canonical runtime DB: PostgreSQL via `DATABASE_URL`.
 
 Legacy SQLite source: `data/radar_bds.db`, read only by `scripts/migrate_sqlite_to_postgres.py`.
 
-For local development, the recommended first Postgres target is a dedicated
-Supabase Free project. Put either the Direct connection URL or, if IPv6 fails,
-the Session Pooler URL in `.env` as `DATABASE_URL`. Do not use the Transaction
-Pooler for the app/crawler unless prepared statements are explicitly disabled.
+For local development, use portable PostgreSQL 17 in `tools/postgresql-17.10/`
+with data in `.local/postgres-data`. Start it with:
 
-Current local Supabase project: `ozdjzfiqcjnlfuihqqjy` (`kieucuong02`,
+```powershell
+.\scripts\local_postgres.ps1 start
+```
+
+Normal local `.env` should point to:
+
+```env
+DATABASE_URL=postgresql://postgres@127.0.0.1:5432/radar_bds
+```
+
+Remote Supabase is for sync/backup. Do not use a remote DB for normal full
+reprocess work because the app still has many row-by-row DB operations.
+
+Current remote Supabase project: `ozdjzfiqcjnlfuihqqjy` (`kieucuong02`,
 `ap-southeast-2`). The DB password belongs in local `.env` only.
 
 Migration snapshot from 2026-05-25:
@@ -51,7 +62,8 @@ Migration snapshot from 2026-05-25:
 
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
-$env:DATABASE_URL = "postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres"
+.\scripts\local_postgres.ps1 start
+$env:DATABASE_URL = "postgresql://postgres@127.0.0.1:5432/radar_bds"
 & $py -X utf8 scripts\migrate_sqlite_to_postgres.py --sqlite data\radar_bds.db --database-url $env:DATABASE_URL --truncate
 & $py -X utf8 radar.py inspect
 ```

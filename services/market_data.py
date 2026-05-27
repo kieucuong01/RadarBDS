@@ -1,7 +1,10 @@
 from datetime import datetime, date
 from collections import defaultdict
 from contextlib import contextmanager
+import re
+import unicodedata
 
+from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
 from db.connection import get_conn
 from services.image_assets import resolve_image_url
 
@@ -9,6 +12,21 @@ from services.image_assets import resolve_image_url
 # Tier-aware masking (server-side). Address + tên đường KHÔNG che (decision 2026-05-14)
 # ─────────────────────────────────────────────────────────────────────────────
 TIER_ORDER = {"guest": 0, "free": 1, "vip": 2, "admin": 3}
+DEFAULT_VISIBLE_SOURCES = ("facebook",)
+ADMIN_SOURCE_OPTIONS = ("facebook", "guland", "batdongsan", "muaban")
+
+
+def normalize_sources_for_tier(sources=None, tier: str = "guest"):
+    if tier != "admin":
+        return list(DEFAULT_VISIBLE_SOURCES)
+
+    allowed = set(ADMIN_SOURCE_OPTIONS)
+    normalized = []
+    for source in sources or []:
+        value = (source or "").strip().lower()
+        if value and value in allowed and value not in normalized:
+            normalized.append(value)
+    return normalized or list(DEFAULT_VISIBLE_SOURCES)
 
 
 def fresh_lock_hours_for(tier: str) -> int:
@@ -68,7 +86,7 @@ def _days_ago(crawled_at: str) -> int:
 
 def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0):
     if not sources:
-        sources = ["facebook", "guland", "batdongsan"]
+        sources = list(DEFAULT_VISIBLE_SOURCES)
 
     # Common filters. Normal views hide duplicates; drop-only views show reliable
     # repost drops even when the lower-price repost is marked duplicate.
@@ -132,11 +150,14 @@ def _mos_filter(mos_min=0):
 
 
 def _signal_sort_sql(sort_key: str) -> str:
-    trust_rank = (
-        "CASE COALESCE(v.trust_tier, 'candidate_signal') "
-        "WHEN 'has_legal_doc' THEN 0 "
-        "ELSE 1 END ASC, COALESCE(v.trust_score, 0) DESC"
-    )
+    if LEGAL_IMAGE_EVIDENCE_ENABLED:
+        trust_rank = (
+            "CASE COALESCE(v.trust_tier, 'candidate_signal') "
+            "WHEN 'has_legal_doc' THEN 0 "
+            "ELSE 1 END ASC, COALESCE(v.trust_score, 0) DESC"
+        )
+    else:
+        trust_rank = "0"
     sort_map = {
         "newest": "COALESCE(l.posted_at, l.crawled_at) DESC, l.id DESC",
         "price_m2_asc": "v.actual_ppm2 IS NULL, v.actual_ppm2 ASC, l.id DESC",
@@ -147,7 +168,30 @@ def _signal_sort_sql(sort_key: str) -> str:
     return sort_map.get(sort_key or "newest", sort_map["newest"])
 
 
-LEGAL_IMAGE_ORDER_SQL = "CASE WHEN img_type = 'so_hong' THEN 0 ELSE 1 END, img_order, id"
+LEGAL_IMAGE_ORDER_SQL = (
+    "CASE WHEN img_type = 'so_hong' THEN 0 ELSE 1 END, img_order, id"
+    if LEGAL_IMAGE_EVIDENCE_ENABLED
+    else "img_order, id"
+)
+LEGAL_DOC_IMAGE_SELECT_SQL = (
+    """EXISTS (
+                   SELECT 1
+                   FROM listing_images legal_img
+                   WHERE legal_img.listing_id = l.id
+                     AND legal_img.img_type = 'so_hong'
+               )"""
+    if LEGAL_IMAGE_EVIDENCE_ENABLED
+    else "0"
+)
+
+
+LATEST_VALUATION_CTE = """
+latest_valuation AS (
+    SELECT DISTINCT ON (vr.listing_id) vr.*
+    FROM valuation_results vr
+    ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
+)
+"""
 
 
 @contextmanager
@@ -205,6 +249,34 @@ def _row_get(r, key, default=None):
     return default if val is None else val
 
 
+_NO_SO_RE = re.compile(
+    r"\b("
+    r"chua\s+co\s+so|chua\s+so|khong\s+co\s+so|khong\s+so|"
+    r"vi\s+bang|giay\s+(?:viet\s+)?tay|"
+    r"dang\s+lam\s+so|dang\s+cap\s+so|dang\s+ra\s+so|cho\s+so"
+    r")\b",
+    re.I,
+)
+
+
+def _ascii_fold(text: str) -> str:
+    text = (text or "").replace("Đ", "D").replace("đ", "d")
+    return "".join(
+        c for c in unicodedata.normalize("NFD", text)
+        if unicodedata.category(c) != "Mn"
+    ).lower()
+
+
+def _format_has_so(r):
+    raw = _row_get(r, "has_so", None)
+    if raw is None:
+        return True
+    if bool(raw):
+        return True
+    text = " ".join(str(_row_get(r, key, "") or "") for key in ("title", "description", "road_type"))
+    return not bool(_NO_SO_RE.search(_ascii_fold(text)))
+
+
 def _format_signal_row(r, primary_img=None, tier: str = "guest"):
     fair_ppm2 = round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None
     record = {
@@ -230,10 +302,11 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "trust_score": _row_get(r, "trust_score", 0),
         "legal_status": _row_get(r, "legal_status", "unverified"),
         "legal_flags": _row_get(r, "legal_flags", "") or "",
+        "has_legal_doc_image": bool(LEGAL_IMAGE_EVIDENCE_ENABLED and _row_get(r, "has_legal_doc_image", 0)),
         "primary_img": primary_img or "",
         "source": r['source'],
         "road_tier": r['road_tier'] or 0,
-        "has_so": None if r['has_so'] is None else bool(r['has_so']),
+        "has_so": _format_has_so(r),
         "is_fresh_locked": bool(_row_get(r, 'is_fresh_locked', 0)),
     }
     return redact_for_tier(record, tier)
@@ -256,6 +329,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
 
     rows = conn.execute(f"""
+        WITH {LATEST_VALUATION_CTE}
         SELECT COUNT(*) OVER() AS total_count,
                v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                l.id, l.title, l.source, l.area_m2, l.price_ty,
@@ -267,10 +341,11 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
                COALESCE(v.trust_score, 0) as trust_score,
                COALESCE(v.legal_status, 'unverified') as legal_status,
                COALESCE(v.legal_flags, '') as legal_flags,
+               {LEGAL_DOC_IMAGE_SELECT_SQL} AS has_legal_doc_image,
                primary_img.local_path AS primary_local_path,
                primary_img.img_url AS primary_img_url,
                {fresh_flag}
-        FROM valuation_results v
+        FROM latest_valuation v
         JOIN listings l ON v.listing_id = l.id
         LEFT JOIN LATERAL (
             SELECT li.local_path, li.img_url
@@ -322,10 +397,11 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
 
     # 1. Stats
     stats = conn.execute(f"""
-        WITH filtered AS (SELECT * FROM listings WHERE {where_sql})
+        WITH filtered AS (SELECT * FROM listings WHERE {where_sql}),
+             {LATEST_VALUATION_CTE}
         SELECT
             (SELECT COUNT(*) FROM filtered) as total,
-            (SELECT COUNT(*) FROM filtered l JOIN valuation_results v ON l.id = v.listing_id WHERE v.is_signal = 1{mos_condition}) as signals,
+            (SELECT COUNT(*) FROM filtered l JOIN latest_valuation v ON l.id = v.listing_id WHERE v.is_signal = 1{mos_condition}) as signals,
             (SELECT COUNT(*) FROM filtered WHERE is_hot = 1) as hot,
             (SELECT COUNT(*) FROM filtered WHERE (
                 COALESCE(posted_at, crawled_at) IS NOT NULL
@@ -339,6 +415,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     sig_rows = []
     if include_signals:
         sig_query = f"""
+            WITH {LATEST_VALUATION_CTE}
             SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                    l.id, l.title, l.source, l.area_m2, l.price_ty,
                    l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
@@ -350,7 +427,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
                    COALESCE(v.legal_status, 'unverified') as legal_status,
                    COALESCE(v.legal_flags, '') as legal_flags,
                    {fresh_flag}
-            FROM valuation_results v
+            FROM latest_valuation v
             JOIN listings l ON v.listing_id = l.id
             WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
             ORDER BY {_signal_sort_sql('score_desc')}
@@ -361,6 +438,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     all_rows = []
     if not skip_listings:
         all_query = f"""
+            WITH {LATEST_VALUATION_CTE}
             SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
                    COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,
                    COALESCE(v.trust_score, 0) AS trust_score,
@@ -368,7 +446,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
                    COALESCE(v.legal_flags, '') AS legal_flags,
                    {fresh_flag}
             FROM listings l
-            LEFT JOIN valuation_results v ON l.id = v.listing_id
+            LEFT JOIN latest_valuation v ON l.id = v.listing_id
             WHERE {where_sql}
             ORDER BY l.price_per_m2 ASC
         """
@@ -511,7 +589,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
 
 def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0):
     if not sources:
-        sources = ["facebook", "guland", "batdongsan"]
+        sources = list(DEFAULT_VISIBLE_SOURCES)
 
     conn = _open_read_conn(db_path)
 
@@ -592,7 +670,7 @@ def _shift_month(d: date, delta: int) -> date:
 def _market_indicator_filters(sources=None, wards=None, prop_types=None, prefix="",
                               area_min=0, area_max=0, price_min=0, price_max=0):
     if not sources:
-        sources = ["facebook", "guland", "batdongsan"]
+        sources = list(DEFAULT_VISIBLE_SOURCES)
 
     col = lambda name: f"{prefix}{name}" if prefix else name
     where_parts = [
@@ -817,6 +895,7 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=No
 
     listing_dict = dict(listing)
     listing_dict["is_fresh_locked"] = bool(listing_dict.get("is_fresh_locked"))
+    listing_dict["has_so"] = _format_has_so(listing_dict)
     listing_dict = redact_for_tier(listing_dict, tier)
     legal_verification = {
         "status": listing_dict.get("legal_verification_status") or listing_dict.get("legal_status") or "unverified",
@@ -857,14 +936,19 @@ def get_base_filters(req):
     except (ValueError, TypeError):
         mos_min = 0
 
+    tier = "guest"
+
     # Guest tier cannot use commission-sensitive filters (mos_min, only_drops).
     try:
         from auth.core import current_tier as _current_tier
-        if _current_tier() == "guest":
+        tier = _current_tier()
+        if tier == "guest":
             mos_min = 0
             only_drops = False
     except Exception:
         pass
+
+    sources = normalize_sources_for_tier(sources, tier)
 
     if not active_city and wards:
         active_city = get_city_for_ward(wards[0])

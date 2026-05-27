@@ -19,7 +19,7 @@ def _load_dotenv(env_path: Path) -> None:
             if not line or line.startswith("#") or "=" not in line:
                 continue
             k, _, v = line.partition("=")
-            k, v = k.strip(), v.strip().strip('"').strip("'")
+            k, v = k.strip().lstrip("\ufeff"), v.strip().strip('"').strip("'")
             if k and k not in os.environ:
                 os.environ[k] = v
     except Exception:
@@ -85,14 +85,17 @@ ALERT_KEYWORDS = [
 ]
 
 # ─── SIGNAL DETECTION ───────────────────────────────────────────────────────
-# Margin of safety threshold cho is_signal. 0.25 = listing rẻ hơn fair value ≥25%.
-SIGNAL_MOS_THRESHOLD = float(os.getenv("SIGNAL_MOS_THRESHOLD", 0.25))
+# Margin of safety threshold cho is_signal. 0.10 = listing rẻ hơn fair value >=10%.
+SIGNAL_MOS_THRESHOLD = float(os.getenv("SIGNAL_MOS_THRESHOLD", 0.10))
 
 # Ngưỡng % giảm giá để VIP nhận push lại cùng một listing. So với giá tại
 # lần push gần nhất; dưới ngưỡng → skip để tránh spam, đạt/vượt → re-alert.
 SIGNAL_REALERT_THRESHOLD_PCT = float(os.getenv("SIGNAL_REALERT_THRESHOLD_PCT", 5.0))
 
 # ─── ALERTS ──────────────────────────────────────────────────────────────────
+# Legal document-image evidence is parked for a later OCR/extraction phase.
+LEGAL_IMAGE_EVIDENCE_ENABLED = os.getenv("LEGAL_IMAGE_EVIDENCE_ENABLED", "0").lower() in {"1", "true", "yes", "on"}
+
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 DASHBOARD_BASE_URL = os.getenv("DASHBOARD_BASE_URL", "http://localhost:5000")
 

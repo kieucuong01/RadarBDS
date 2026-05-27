@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS listings (
     road_type           TEXT DEFAULT 'unknown',
     tho_cu_m2           REAL,
     tho_cu_ratio        REAL,
-    has_so              INTEGER DEFAULT 0,
+    has_so              INTEGER DEFAULT 1,
     is_hot              INTEGER DEFAULT 0,
     contact_phone       TEXT,
     seller_name         TEXT,

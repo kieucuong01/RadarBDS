@@ -32,6 +32,28 @@ def admin_api_update_lead_status(**kwargs):
     return _impl("admin_api_update_lead_status", **kwargs)
 
 
+@bp.route("/admin/api/facebook-crawl/config", methods=["GET", "POST"])
+def admin_api_facebook_crawl_config(**kwargs):
+    return _impl("admin_api_facebook_crawl_config", **kwargs)
+
+
+@bp.route("/admin/api/facebook-crawl/run", methods=["POST"])
+def admin_api_facebook_crawl_run(**kwargs):
+    return _impl("admin_api_facebook_crawl_run", **kwargs)
+
+
+@bp.route("/admin/api/facebook-crawl/tokens", methods=["GET", "POST"])
+@bp.route("/admin/api/facebook-crawl/tokens/<token_id>", methods=["DELETE", "PATCH"])
+def admin_api_facebook_crawl_tokens(**kwargs):
+    return _impl("admin_api_facebook_crawl_tokens", **kwargs)
+
+
+@bp.route("/admin/api/facebook-crawl/jobs")
+@bp.route("/admin/api/facebook-crawl/jobs/<job_id>")
+def admin_api_facebook_crawl_jobs(**kwargs):
+    return _impl("admin_api_facebook_crawl_jobs", **kwargs)
+
+
 @bp.route("/admin/api/infra", methods=["GET", "POST"])
 def admin_api_infra(**kwargs):
     return _impl("admin_api_infra", **kwargs)

@@ -41,6 +41,7 @@ from cli.system import (
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
     cmd_groq_extract_test, cmd_clean_broker_images,
     cmd_classify_legal_images,
+    cmd_clean_legal_image_tags,
     cmd_verify_legal_signals,
 )
 
@@ -187,6 +188,13 @@ def build_parser():
     p_cli.add_argument("--limit", type=int, help="Gioi han so anh scan")
     p_cli.add_argument("--apply", action="store_true", help="Update img_type='so_hong' (mac dinh dry-run)")
 
+    # clean-legal-image-tags
+    p_clit = sub.add_parser("clean-legal-image-tags", help="Go tag so_hong sai khoi anh hien trang/nha/duong")
+    p_clit.add_argument("--source", help="Loc source: guland | facebook | batdongsan")
+    p_clit.add_argument("--limit", type=int, help="Gioi han so anh scan")
+    p_clit.add_argument("--signals-only", action="store_true", dest="signals_only", help="Chi audit signal hien tai")
+    p_clit.add_argument("--apply", action="store_true", help="Demote img_type sai ve cover/unknown (mac dinh dry-run)")
+
     # verify-legal-signals
     p_vls = sub.add_parser("verify-legal-signals", help="Tinh trust tier tu viec co anh so hong/so do")
     p_vls.add_argument("--source", help="Loc source: guland | facebook | batdongsan")
@@ -269,6 +277,8 @@ def main():
         cmd_clean_broker_images(args)
     elif args.cmd == "classify-legal-images":
         cmd_classify_legal_images(args)
+    elif args.cmd == "clean-legal-image-tags":
+        cmd_clean_legal_image_tags(args)
     elif args.cmd == "verify-legal-signals":
         cmd_verify_legal_signals(args)
     elif args.cmd == "db-cleanup":

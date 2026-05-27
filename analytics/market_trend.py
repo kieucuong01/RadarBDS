@@ -81,6 +81,10 @@ def compute_weekly_trend(conn: Any,
         WHERE price_per_m2 IS NOT NULL
           AND price_per_m2 > 0
           AND probably_sold = 0
+          AND area IS NOT NULL
+          AND TRIM(area) <> ''
+          AND property_type IS NOT NULL
+          AND TRIM(property_type) <> ''
           AND updated_at >= ?
           AND updated_at <  ?
     """, (week_start.isoformat(), week_end.isoformat())).fetchall()
@@ -93,11 +97,17 @@ def compute_weekly_trend(conn: Any,
             WHERE price_per_m2 IS NOT NULL
               AND price_per_m2 > 0
               AND probably_sold = 0
+              AND area IS NOT NULL
+              AND TRIM(area) <> ''
+              AND property_type IS NOT NULL
+              AND TRIM(property_type) <> ''
         """).fetchall()
 
     # Group by (area, property_type)
     groups: Dict[tuple, List[float]] = {}
     for row in rows:
+        if not row[0] or not row[1]:
+            continue
         key = (row[0], row[1])  # (area, property_type)
         groups.setdefault(key, []).append(row[2])
 
@@ -107,6 +117,10 @@ def compute_weekly_trend(conn: Any,
         SELECT area, property_type, COUNT(*) as cnt
         FROM listings
         WHERE crawled_at >= ? AND crawled_at < ?
+          AND area IS NOT NULL
+          AND TRIM(area) <> ''
+          AND property_type IS NOT NULL
+          AND TRIM(property_type) <> ''
         GROUP BY area, property_type
     """, (week_start.isoformat(), week_end.isoformat())).fetchall()
     for r in new_rows:
@@ -119,6 +133,10 @@ def compute_weekly_trend(conn: Any,
         FROM listings
         WHERE price_dropped = 1
           AND updated_at >= ? AND updated_at < ?
+          AND area IS NOT NULL
+          AND TRIM(area) <> ''
+          AND property_type IS NOT NULL
+          AND TRIM(property_type) <> ''
         GROUP BY area, property_type
     """, (week_start.isoformat(), week_end.isoformat())).fetchall()
     for r in drop_rows:
@@ -238,14 +256,20 @@ def compute_monthly_trend(conn: Any):
             price_per_m2
         FROM listings
         WHERE price_per_m2 IS NOT NULL 
+          AND price_per_m2 > 0
           AND COALESCE(posted_at, crawled_at) IS NOT NULL
           AND probably_sold = 0
+          AND area IS NOT NULL
+          AND TRIM(area) <> ''
+          AND property_type IS NOT NULL
+          AND TRIM(property_type) <> ''
     """).fetchall()
     
     groups = {}
     for row in rows:
         month, area, ptype, ppm2 = row
-        if not month: continue
+        if not month or not area or not str(area).strip() or not ptype or not str(ptype).strip():
+            continue
         key = (month, area, ptype)
         groups.setdefault(key, []).append(ppm2)
         
@@ -281,14 +305,20 @@ def compute_daily_trend(conn: Any):
             price_per_m2
         FROM listings
         WHERE price_per_m2 IS NOT NULL 
+          AND price_per_m2 > 0
           AND COALESCE(posted_at, crawled_at) IS NOT NULL
           AND probably_sold = 0
+          AND area IS NOT NULL
+          AND TRIM(area) <> ''
+          AND property_type IS NOT NULL
+          AND TRIM(property_type) <> ''
     """).fetchall()
     
     groups = {}
     for row in rows:
         day, area, ptype, ppm2 = row
-        if not day: continue
+        if not day or not area or not str(area).strip() or not ptype or not str(ptype).strip():
+            continue
         key = (day, area, ptype)
         groups.setdefault(key, []).append(ppm2)
         

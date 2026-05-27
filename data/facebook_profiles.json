@@ -2,20 +2,45 @@
   "Thủ Dầu Một": [
     {
       "url": "https://www.facebook.com/nhadatkhanhmy",
-      "broker_name": "Khánh My",
-      "tier": 100
+      "broker_name": "Duy Khánh bds",
+      "tier": 30
     },
     {
       "url": "https://www.facebook.com/hang.pk.90",
       "broker_name": "Hằng PK",
-      "tier": 50
+      "tier": 15
+    },
+    {
+      "url": "https://www.facebook.com/phadongvo.vo",
+      "broker_name": "Võ Đông Pha",
+      "tier": 15
+    },
+    {
+      "url": "https://www.facebook.com/thanh.phuong.cu.toi",
+      "broker_name": "Đỗ Phương",
+      "tier": 30
     }
   ],
   "Bến Cát": [
     {
       "url": "https://www.facebook.com/khuyen.vu.86",
       "broker_name": "Khuyên Vũ",
-      "tier": 30
+      "tier": 5
+    },
+    {
+      "url": " https://www.facebook.com/leminhtoan.le.524",
+      "broker_name": "Lê Minh Toàn",
+      "tier": 10
+    },
+    {
+      "url": "https://www.facebook.com/huong.doan.672928",
+      "broker_name": "Huong Doan",
+      "tier": 15
+    },
+    {
+      "url": " https://www.facebook.com/le.hai.240196",
+      "broker_name": "Lê Hải",
+      "tier": 10
     }
   ]
 }

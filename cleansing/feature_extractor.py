@@ -23,8 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 def _ascii_fold(text: str) -> str:
+    text = (text or "").replace("Đ", "D").replace("đ", "d")
     return "".join(
-        c for c in unicodedata.normalize("NFD", text or "")
+        c for c in unicodedata.normalize("NFD", text)
         if unicodedata.category(c) != "Mn"
     ).lower()
 
@@ -800,16 +801,18 @@ def extract_legal(text: str) -> Dict[str, Any]:
       "chưa có sổ" → no_so=True
       "đang làm sổ" → dang_lam_so=True
     """
-    t = text.lower()
+    t = _ascii_fold(text)
+    dang_lam_so = bool(re.search(r'dang lam so|dang hoan cong|dang cap(?: so)?|dang ra so|cho so', t))
+    pending_so = bool(re.search(r'dang lam so|dang cap so|dang ra so|cho so', t))
     no_so = bool(re.search(
-        r'chưa có sổ|chưa sổ|không có sổ|không sổ|đất chưa|vi bằng|giấy tay|giấy viết tay',
+        r'chua co so|chua so|khong co so|khong so|vi bang|giay tay|giay viet tay',
         t,
-    ))
+    ) or pending_so)
     return {
-        'has_shr':     bool(re.search(r'\bshr\b|sổ hồng riêng', t)),
-        'has_gcn':     bool(re.search(r'gcn|qsdđ|sổ đỏ|giấy chứng nhận', t)),
+        'has_shr':     bool(re.search(r'\bshr\b|so hong rieng', t)),
+        'has_gcn':     bool(re.search(r'gcn|qsdd|so do|giay chung nhan', t)),
         'no_so':       no_so,
-        'dang_lam_so': bool(re.search(r'đang làm sổ|đang hoàn công|đang cấp', t)),
+        'dang_lam_so': dang_lam_so,
         'has_so':      not no_so,  # default True; False chỉ khi ghi rõ không có sổ
     }
 

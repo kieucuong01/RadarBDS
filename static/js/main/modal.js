@@ -1,4 +1,5 @@
 // Signal detail modal, gallery, memo, price history, and generic modal helpers.
+const INVESTMENT_MEMO_ENABLED = false;
 // Slider state
 let _smSlideIdx = 0;
 let _smSlideImgs = [];
@@ -329,6 +330,17 @@ function hideGroqAssessment() {
   }
 }
 
+function setInvestmentMemoVisible(visible) {
+  const section = document.getElementById('sm-memo-section');
+  const body = document.getElementById('sm-memo-body');
+  if (body && !visible) body.innerHTML = '';
+  if (section) {
+    section.hidden = !visible;
+    section.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    section.style.display = visible ? '' : 'none';
+  }
+}
+
 function renderInvestmentMemoLoading() {
   const body = document.getElementById('sm-memo-body');
   if (!body) return;
@@ -388,6 +400,11 @@ function renderInvestmentMemo(data) {
 }
 
 async function loadInvestmentMemo(listingId) {
+  if (!INVESTMENT_MEMO_ENABLED) {
+    setInvestmentMemoVisible(false);
+    return;
+  }
+  setInvestmentMemoVisible(true);
   const modal = document.getElementById('signalModal');
   renderInvestmentMemoLoading();
   if ((window.USER_TIER || 'guest') === 'guest') {
@@ -435,7 +452,7 @@ function _openSignalFromData(d) {
   document.getElementById('sm-meta-line').innerHTML = `<span>Dang ${d.time || '-'}</span> · <span>${d.source || '-'}</span>`;
   document.getElementById('sm-desc').innerText = 'Dang tai mo ta chi tiet...';
 
-  // Groq assessment is intentionally hidden while Investment Memo owns this slot.
+  // Groq assessment is intentionally hidden for now.
   const price = parseFloat(d.price) || 0;
   const area = parseFloat(d.area) || 0;
   hideGroqAssessment();
@@ -453,7 +470,7 @@ function _openSignalFromData(d) {
   { const _d = document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
 
   loadSignalHistory(d.id, price, area, d.ward);
-  loadInvestmentMemo(d.id);
+  setInvestmentMemoVisible(false);
   hydrateSignalDetail(d.id);
   modal.style.display = 'flex';
 }

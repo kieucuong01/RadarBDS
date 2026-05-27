@@ -40,10 +40,10 @@ Supported focus areas:
 ## Canonical Runtime State
 
 - Canonical DB: PostgreSQL via `DATABASE_URL`.
-- Recommended local Postgres target: a dedicated Supabase Free project.
-  Use Direct connection for migration if IPv6 works; otherwise use Supabase
-  Session Pooler. Avoid Transaction Pooler for app/crawler runtime.
-- Current local Supabase project: `ozdjzfiqcjnlfuihqqjy` (`kieucuong02`,
+- Current local dev target: portable PostgreSQL 17 in `tools/postgresql-17.10/`
+  with data in `.local/postgres-data`, started by `scripts/local_postgres.ps1`.
+  `.env` should point `DATABASE_URL` to `postgresql://postgres@127.0.0.1:5432/radar_bds`.
+- Remote Supabase project for sync/backup: `ozdjzfiqcjnlfuihqqjy` (`kieucuong02`,
   region `ap-southeast-2`). The password lives only in local `.env`; never
   print or commit it.
 - Legacy SQLite import source: `data/radar_bds.db`; use only for `scripts/migrate_sqlite_to_postgres.py`.
@@ -67,7 +67,7 @@ echo $env:DATABASE_URL
 - `auth/core.py`: session, tier, rate-limit, VIP expiry, audit.
 - `alerts/telegram.py`, `cli/notify.py`: VIP Telegram formatting and watchlist push.
 - `cleansing/reprocess.py`: normalize, dedup, valuation orchestration.
-- `cleansing/legal_image_classifier.py`, `cleansing/legal_verification.py`: detect so hong/so do images and assign legal trust from document-image presence. OCR is disabled for now.
+- `cleansing/legal_image_classifier.py`, `cleansing/legal_verification.py`: later-phase so hong/so do image evidence helpers. OCR and image-based trust are disabled by default for now.
 - `cleansing/dedup.py`: duplicate and price-drop policy.
 - `db/connection.py`, `db/schema.py`, `db/listings.py`: DB path, schema, writes.
 - `config/proximity.py`: ward/sub-ward proximity boost for `signal_score` only; does not change fair value/MOS.
@@ -100,8 +100,9 @@ Card display:
 
 Legal trust tiers:
 - `candidate_signal`: cheap by model only.
-- `has_legal_doc`: has detected `img_type='so_hong'`.
-- OCR/parsing of certificate text is disabled for now. `has_legal_doc` is the only legal trust boost.
+- `has_legal_doc`: reserved for the later document-image/OCR extraction phase; disabled by default for now.
+- OCR/parsing of certificate text is disabled for now.
+- `has_so` defaults to true. Only explicit no-so wording like "vi bằng", "giấy tay", "chưa có sổ", or "đang làm sổ" should flip it false; `has_legal_doc_image` is not active in current signal/UI logic.
 
 **Anti-bias — KHÔNG BAO GIỜ vi phạm:**
 - Verdict Claude ghi `ai_deal_review` (append-only). KHÔNG ghi `ai_training_feedback`.
@@ -139,6 +140,7 @@ Dashboard/API:
 - `/api/dashboard` is lightweight summary only. It must not return all signals, descriptions, or image arrays.
 - `/api/dashboard` uses a short in-process cache keyed by filters. Guest dashboard rate limiting is also in-memory to avoid a DB write on every summary refresh.
 - `/api/signals` is paginated card data. Default limit is 30. It returns `primary_img` thumbnail when available.
+- Source policy is Facebook-first: Guest/Free/VIP are forced to `source=facebook`; Admin alone sees the source filter and defaults to Facebook unless selecting another source for QC/research. Valuation baseline also defaults to Facebook-only.
 - `services/market_data.py` read models should use the shared read connection scope, not fresh `connect()+close()` calls. Supabase remote latency makes extra round-trips visible.
 - Keep `/api/signals` page queries compact: use one query with window count and primary-thumbnail selection instead of separate count/list/image queries.
 - `/api/listing/<id>` is full modal/detail data, including description and full image list.
