@@ -8,6 +8,14 @@ from db.connection import get_conn
 logger = logging.getLogger(__name__)
 # ─── PROCESSED layer ──────────────────────────────────────────────────────────
 
+def _present(value) -> bool:
+    return value not in (None, "", 0, 0.0)
+
+
+def _prefer_new_value(new_value, old_value):
+    return new_value if _present(new_value) else old_value
+
+
 def _same_price_snapshot(a: Optional[float], b: Optional[float]) -> bool:
     if a is None and b is None:
         return True
@@ -45,7 +53,13 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
     """
     with get_conn() as conn:
         existing = conn.execute(
-            "SELECT id, price_ty, price_first_ty, price_dropped, suspicious_bait FROM listings WHERE url = ?",
+            """
+            SELECT id, price_ty, price_per_m2, area_m2,
+                   frontage_m, depth_m,
+                   price_first_ty, price_dropped, suspicious_bait
+            FROM listings
+            WHERE url = ?
+            """,
             (rec["url"],)
         ).fetchone()
 
@@ -110,7 +124,13 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
         else:
             listing_id  = existing["id"]
             first_price = existing["price_first_ty"] or existing["price_ty"]
-            new_price   = rec.get("price_ty")
+            new_price = _prefer_new_value(rec.get("price_ty"), existing["price_ty"])
+            new_area = _prefer_new_value(rec.get("area_m2"), existing["area_m2"])
+            new_ppm2 = _prefer_new_value(rec.get("price_per_m2"), existing["price_per_m2"])
+            new_frontage = _prefer_new_value(rec.get("frontage_m"), existing["frontage_m"])
+            new_depth = _prefer_new_value(rec.get("depth_m"), existing["depth_m"])
+            if not _present(new_ppm2) and _present(new_price) and _present(new_area):
+                new_ppm2 = round(float(new_price) * 1000 / float(new_area), 3)
             price_dropped  = existing["price_dropped"]
             price_drop_pct = None
             suspicious_bait = existing["suspicious_bait"] if "suspicious_bait" in existing.keys() else 0
@@ -133,6 +153,8 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     price_per_m2        = :price_per_m2,
                     area_m2             = :area_m2,
                     property_type       = :property_type,
+                    frontage_m          = :frontage_m,
+                    depth_m             = :depth_m,
                     area                = :area,
                     road_tier           = CASE WHEN llm_verified = 1 THEN road_tier
                                                WHEN :road_tier > 0 THEN :road_tier
@@ -158,9 +180,11 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "id":            listing_id,
                 "title":         rec.get("title", ""),
                 "price_ty":      new_price,
-                "price_per_m2":  rec.get("price_per_m2"),
-                "area_m2":       rec.get("area_m2"),
+                "price_per_m2":  new_ppm2,
+                "area_m2":       new_area,
                 "property_type": rec.get("property_type", "dat_nen"),
+                "frontage_m":    new_frontage,
+                "depth_m":       new_depth,
                 "area":          rec.get("area", ""),
                 "road_tier":     int(rec.get("road_tier", 0)),
                 "road_type":     rec.get("road_type") or "unknown",
@@ -176,10 +200,10 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "posted_at":     rec.get("post_date"),
             })
 
-            if _should_insert_price_history(conn, listing_id, new_price, rec.get("price_per_m2")):
+            if _should_insert_price_history(conn, listing_id, new_price, new_ppm2):
                 conn.execute(
                     "INSERT INTO price_history (listing_id, price_ty, price_per_m2, crawl_run_id) VALUES (?,?,?,?)",
-                    (listing_id, new_price, rec.get("price_per_m2"), crawl_run_id)
+                    (listing_id, new_price, new_ppm2, crawl_run_id)
                 )
             return listing_id, False
 

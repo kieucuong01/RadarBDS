@@ -136,11 +136,19 @@ const PROPERTY_TYPE_LABELS = {
   chung_cu: 'Chung cư',
   nha_o_xa_hoi: 'Nhà ở xã hội'
 };
+const CONTACT_CTA_LABEL = 'Liên hệ tư vấn';
 
 function escHtml(v) {
   return String(v ?? '').replace(/[&<>"']/g, (ch) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
   ));
+}
+
+function renderTextWithContactCta(text, listingId, context = 'redacted_contact') {
+  return String(text || '').split(/\r?\n/).map((line) => {
+    if (line.trim() !== CONTACT_CTA_LABEL) return escHtml(line);
+    return `<button type="button" class="inline-contact-cta" data-listing-id="${escHtml(listingId || '')}" data-ctx="${escHtml(context)}" onclick="event.preventDefault();event.stopPropagation();tierCTA(this.dataset.listingId,'',this.dataset.ctx);">${CONTACT_CTA_LABEL}</button>`;
+  }).join('<br>');
 }
 
 function showLoader() { document.getElementById('mainLoader').classList.add('show'); }

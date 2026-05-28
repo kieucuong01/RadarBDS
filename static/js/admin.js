@@ -192,6 +192,7 @@ async function loadCrawlConfig() {
   crawlProfiles = data.profiles || [];
   apifyTokens = data.apify_tokens || [];
   renderCrawlStats(data.summary || {});
+  renderCrawlOps(data.summary?.ops || {});
   renderApifyTokens();
   renderCrawlProfiles();
   renderCrawlRunSelect();
@@ -291,11 +292,18 @@ async function deleteApifyToken(id) {
 
 function renderCrawlStats(summary) {
   const active = crawlProfiles.filter(p => p.active !== false).length;
+  const ops = summary.ops || {};
+  const last24 = ops.last_24h || {};
+  const blockers = ops.lock_blockers || [];
+  const sourceErrors = ops.source_errors || [];
   const items = [
     ['Môi giới bật', active, 'đang dùng'],
     ['Tổng môi giới', crawlProfiles.length, 'trong cấu hình'],
     ['Listing FB', summary.facebook_listings || 0, 'đã xử lý'],
-    ['Ảnh còn thiếu', summary.pending_images || 0, 'facebook'],
+    ['Signal', ops.signal_count || 0, 'đang active'],
+    ['Tin mới gần nhất', last24.new || 0, 'new'],
+    ['Nguồn lỗi', sourceErrors.length || 0, 'cần xem'],
+    ['Lock kẹt', blockers.length || 0, 'job'],
     ['Job hiện tại', summary.active_job ? summary.active_job.status : 'Idle', summary.active_job ? summary.active_job.stage : 'sẵn sàng'],
   ];
   const el = document.getElementById('crawlStats');
@@ -303,9 +311,77 @@ function renderCrawlStats(summary) {
   el.innerHTML = items.map((s, idx) => `
     <div class="stat-card">
       <small>${esc(s[0])}</small>
-      <div><strong style="color:${idx === 3 && Number(s[1]) ? 'var(--orange)' : idx === 4 && s[1] !== 'Idle' ? 'var(--blue)' : 'var(--ink)'}">${esc(s[1])}</strong><span>${esc(s[2])}</span></div>
+      <div><strong style="color:${idx === 5 && Number(s[1]) ? 'var(--orange)' : idx === 6 && Number(s[1]) ? 'var(--red)' : idx === 7 && s[1] !== 'Idle' ? 'var(--blue)' : 'var(--ink)'}">${esc(s[1])}</strong><span>${esc(s[2])}</span></div>
     </div>
   `).join('');
+}
+
+function renderCrawlOps(ops = {}) {
+  const el = document.getElementById('crawlOpsPanel');
+  if (!el) return;
+  const schedule = ops.schedule || {};
+  const last = ops.last_run || {};
+  const last24 = ops.last_24h || {};
+  const source_errors = ops.source_errors || [];
+  const lock_blockers = ops.lock_blockers || [];
+  const scheduleOk = schedule.installed && (schedule.run_time === '21:00' || String(schedule.next_run_time || '').includes('9:00'));
+  const healthClass = lock_blockers.length ? 'danger' : source_errors.length ? 'warn' : 'ok';
+  const sourceList = source_errors.length
+    ? source_errors.map(x => `
+        <li>
+          <strong>${esc(x.source || 'unknown')}</strong>
+          <span>${esc(x.status || 'error')} · fetched=${Number(x.fetched || 0)} · new=${Number(x.new || 0)}</span>
+          ${x.error_msg ? `<em>${esc(x.error_msg)}</em>` : ''}
+        </li>
+      `).join('')
+    : `<li><strong>OK</strong><span>Khong co loi nguon trong cac run gan day.</span></li>`;
+  const lockList = lock_blockers.length
+    ? lock_blockers.map(x => `
+        <li>
+          <strong>${esc(x.name || 'lock')}</strong>
+          <span>${esc(x.state || 'locked')}${x.pid ? ` · pid=${esc(x.pid)}` : ''}</span>
+          ${x.error ? `<em>${esc(x.error)}</em>` : ''}
+        </li>
+      `).join('')
+    : `<li><strong>OK</strong><span>Khong co crawl/reprocess lock dang chan.</span></li>`;
+
+  el.innerHTML = `
+    <div class="crawl-ops-head">
+      <div>
+        <small>Daily Automation</small>
+        <strong>RadarBDS_DailyCrawl</strong>
+      </div>
+      <span class="ops-pill ${healthClass}">${lock_blockers.length ? 'Lock dang ket' : source_errors.length ? 'Can xem loi nguon' : 'Dang on dinh'}</span>
+    </div>
+    <div class="crawl-ops-grid">
+      <div class="crawl-ops-card ${scheduleOk ? 'ok' : 'warn'}">
+        <small>Lich daily</small>
+        <strong>${schedule.installed ? (schedule.run_time || shortDate(schedule.next_run_time) || 'Da cai') : 'Chua cai'}</strong>
+        <span>${schedule.installed ? `Next: ${esc(schedule.next_run_time || 'chua ro')}` : 'Can cai RadarBDS_DailyCrawl luc 21:00'}</span>
+        ${schedule.error ? `<em>${esc(schedule.error)}</em>` : ''}
+      </div>
+      <div class="crawl-ops-card">
+        <small>Lan chay gan nhat</small>
+        <strong>${last.source ? `${esc(last.source)} · ${esc(last.status || '')}` : 'Chua co run'}</strong>
+        <span>${last.started_at ? `${esc(shortDate(last.started_at))} · new=${Number(last.new || 0)} · fetched=${Number(last.fetched || 0)}` : 'Chua co crawl_runs'}</span>
+      </div>
+      <div class="crawl-ops-card">
+        <small>Batch gan nhat</small>
+        <strong>${Number(last24.new || 0).toLocaleString('vi-VN')} tin moi</strong>
+        <span>${Number(last24.runs || 0)} runs · fetched=${Number(last24.fetched || 0).toLocaleString('vi-VN')} · skipped=${Number(last24.skipped || 0).toLocaleString('vi-VN')}</span>
+      </div>
+    </div>
+    <div class="crawl-ops-lists">
+      <div>
+        <h3>Loi nguon gan day</h3>
+        <ul>${sourceList}</ul>
+      </div>
+      <div>
+        <h3>Lock crawl/reprocess</h3>
+        <ul>${lockList}</ul>
+      </div>
+    </div>
+  `;
 }
 
 function renderCrawlProfiles() {
@@ -409,6 +485,7 @@ async function saveCrawlProfiles() {
     });
     crawlProfiles = data.profiles || [];
     renderCrawlStats(data.summary || {});
+    renderCrawlOps(data.summary?.ops || {});
     renderCrawlProfiles();
     renderCrawlRunSelect();
   }, 'Da luu danh sach moi gioi', 'Khong luu duoc danh sach');

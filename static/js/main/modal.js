@@ -192,7 +192,11 @@ async function _hydrateSignalDetailLegacy(listingId) {
     if (modal.dataset.listingId !== String(listingId)) return;
 
     document.getElementById('sm-title').innerText = data.title || document.getElementById('sm-title').innerText;
-    document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
+    document.getElementById('sm-desc').innerHTML = renderTextWithContactCta(
+      data.description || 'Không có mô tả.',
+      data.id || listingId,
+      'redacted_description_modal'
+    );
     document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
     document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
     { const _d = document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
@@ -506,7 +510,11 @@ async function hydrateSignalDetail(listingId) {
     if (modal.dataset.listingId !== String(listingId)) return;
 
     renderModalTitle(data.title || document.getElementById('sm-title').innerText);
-    document.getElementById('sm-desc').innerText = data.description || 'Không có mô tả.';
+    document.getElementById('sm-desc').innerHTML = renderTextWithContactCta(
+      data.description || 'Không có mô tả.',
+      data.id || listingId,
+      'redacted_description_modal'
+    );
     document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
     document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
     { const _d = document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };

@@ -98,7 +98,7 @@ def build_parser():
 
     # schedule-setup
     p_ss = sub.add_parser("schedule-setup", help="Cài Windows Task Scheduler chạy crawl-daily")
-    p_ss.add_argument("--time", default="10:15", help="Giờ chạy (HH:MM, default 10:15)")
+    p_ss.add_argument("--time", default="21:00", help="Giờ chạy (HH:MM, default 21:00)")
     p_ss.add_argument("--every", type=int, default=1, help="Chu kỳ chạy theo ngày (default 1)")
     p_ss.add_argument("--remove", action="store_true", help="Xóa task đã cài")
 

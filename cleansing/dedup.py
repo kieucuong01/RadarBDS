@@ -3,6 +3,7 @@
 import logging
 import re
 import unicodedata
+from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Any, Optional
 
@@ -460,6 +461,59 @@ def _is_duplicate(l1: dict, l2: dict) -> bool:
     return _repost_score(l1, l2) >= SCORE_THRESHOLD
 
 
+def _has_value(value) -> bool:
+    return value not in (None, "", 0, 0.0)
+
+
+def _row_date(row: dict):
+    value = (row.get("posted_at") or row.get("crawled_at") or "")[:10]
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _nearest_field_value(rows: list[dict], target_idx: int, field: str):
+    target_dt = _row_date(rows[target_idx])
+    candidates = []
+    for idx, row in enumerate(rows):
+        if idx == target_idx or not _has_value(row.get(field)):
+            continue
+        row_dt = _row_date(row)
+        if target_dt and row_dt:
+            distance = abs((target_dt - row_dt).days)
+        else:
+            distance = abs(target_idx - idx)
+        newer_bias = -(row_dt.timestamp() if row_dt else 0)
+        candidates.append((distance, newer_bias, idx, row.get(field)))
+    if not candidates:
+        return None
+    candidates.sort()
+    return candidates[0][3]
+
+
+def _inherit_missing_group_values(rows: list[dict]) -> list[dict]:
+    hydrated = [dict(row) for row in rows]
+    for idx, row in enumerate(hydrated):
+        for field in ("price_ty", "area_m2"):
+            if not _has_value(row.get(field)):
+                inherited = _nearest_field_value(hydrated, idx, field)
+                if _has_value(inherited):
+                    row[field] = inherited
+
+        if not _has_value(row.get("price_per_m2")):
+            inherited_ppm2 = _nearest_field_value(hydrated, idx, "price_per_m2")
+            if _has_value(inherited_ppm2):
+                row["price_per_m2"] = inherited_ppm2
+
+        if not _has_value(row.get("price_per_m2")) and _has_value(row.get("price_ty")) and _has_value(row.get("area_m2")):
+            row["price_per_m2"] = round(float(row["price_ty"]) * 1000 / float(row["area_m2"]), 2)
+
+    return hydrated
+
+
 def flag_duplicates_in_db(conn: Any) -> dict:
     """Flag duplicate reposts and reliable repost price drops."""
     existing_cols = {
@@ -560,8 +614,35 @@ def flag_duplicates_in_db(conn: Any) -> dict:
     dup_groups = {k: v for k, v in groups.items() if len(v) >= 2}
     flagged = 0
     price_drops_detected = 0
+    inherited_fields = 0
 
     for group_indices in dup_groups.values():
+        hydrated_rows = _inherit_missing_group_values([listings[i] for i in group_indices])
+        for idx, hydrated in zip(group_indices, hydrated_rows):
+            original = listings[idx]
+            updates = {}
+            for field in ("price_ty", "area_m2", "price_per_m2"):
+                if not _has_value(original.get(field)) and _has_value(hydrated.get(field)):
+                    updates[field] = hydrated[field]
+                    original[field] = hydrated[field]
+            if updates:
+                conn.execute(
+                    """
+                    UPDATE listings SET
+                        price_ty = CASE WHEN price_ty IS NULL OR price_ty = 0 THEN ? ELSE price_ty END,
+                        area_m2 = CASE WHEN area_m2 IS NULL OR area_m2 = 0 THEN ? ELSE area_m2 END,
+                        price_per_m2 = CASE WHEN price_per_m2 IS NULL OR price_per_m2 = 0 THEN ? ELSE price_per_m2 END
+                    WHERE id = ?
+                    """,
+                    (
+                        updates.get("price_ty"),
+                        updates.get("area_m2"),
+                        updates.get("price_per_m2"),
+                        original["id"],
+                    ),
+                )
+                inherited_fields += len(updates)
+
         canonical_idx = max(
             group_indices,
             key=lambda i: (listings[i].get("posted_at") or listings[i].get("crawled_at") or ""),
@@ -628,11 +709,13 @@ def flag_duplicates_in_db(conn: Any) -> dict:
         "flagged": flagged,
         "unique_lots": n - flagged,
         "price_drops": price_drops_detected,
+        "inherited_fields": inherited_fields,
     }
     logger.info(
         f"Dedup: {n} listings -> {len(dup_groups)} groups -> "
         f"{flagged} flagged -> {n - flagged} unique lots -> "
-        f"{price_drops_detected} price drops detected"
+        f"{price_drops_detected} price drops detected -> "
+        f"{inherited_fields} missing fields inherited"
     )
     return stats
 

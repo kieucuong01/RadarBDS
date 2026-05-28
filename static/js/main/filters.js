@@ -37,6 +37,8 @@ function getFilterQuery() {
   for (let [k, v] of fd.entries()) {
     params.append(k, v);
   }
+  selectedRangeTokens('price').forEach(token => params.append('price_range', token));
+  selectedRangeTokens('area').forEach(token => params.append('area_range', token));
   const wardBoxes = Array.from(document.querySelectorAll('#wardFilters input[name="ward"]'));
   if (wardBoxes.length > 0 && wardBoxes.every(box => !box.checked)) {
     params.set('ward_mode', 'none');
@@ -54,19 +56,48 @@ function getFilterQuery() {
   return params.toString();
 }
 
-function setPriceRangePreset(min, max) {
-  const minEl = document.getElementById('priceMin');
-  const maxEl = document.getElementById('priceMax');
-  if (minEl) minEl.value = min === '' || min === null || min === undefined ? '' : String(min);
-  if (maxEl) maxEl.value = max === '' || max === null || max === undefined ? '' : String(max);
+function rangeToken(btn) {
+  const min = btn?.dataset.min ?? '';
+  const max = btn?.dataset.max ?? '';
+  return `${min}:${max}`;
+}
+
+function selectedRangeTokens(kind) {
+  return Array.from(document.querySelectorAll(`.range-chip.active[data-range-kind="${kind}"]`))
+    .map(rangeToken)
+    .filter(token => token !== ':');
+}
+
+function setRangeInputs(kind, min = '', max = '') {
+  const prefix = kind === 'price' ? 'price' : 'area';
+  const minEl = document.getElementById(`${prefix}Min`);
+  const maxEl = document.getElementById(`${prefix}Max`);
+  if (minEl) minEl.value = min === null || min === undefined ? '' : String(min);
+  if (maxEl) maxEl.value = max === null || max === undefined ? '' : String(max);
+}
+
+function clearRangeFilters(kind) {
+  document.querySelectorAll(`.range-chip[data-range-kind="${kind}"]`).forEach(btn => {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed', 'false');
+  });
+  setRangeInputs(kind, '', '');
   scheduleApplyFilters();
 }
 
-function setSquareRangePreset(min, max) {
-  const minEl = document.getElementById('areaMin');
-  const maxEl = document.getElementById('areaMax');
-  if (minEl) minEl.value = min === '' || min === null || min === undefined ? '' : String(min);
-  if (maxEl) maxEl.value = max === '' || max === null || max === undefined ? '' : String(max);
+function onManualRangeInput(kind) {
+  document.querySelectorAll(`.range-chip[data-range-kind="${kind}"]`).forEach(btn => {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed', 'false');
+  });
+  scheduleApplyFilters();
+}
+
+function toggleRangePreset(btn, kind) {
+  if (!btn) return;
+  btn.classList.toggle('active');
+  btn.setAttribute('aria-pressed', btn.classList.contains('active') ? 'true' : 'false');
+  setRangeInputs(kind, '', '');
   scheduleApplyFilters();
 }
 

@@ -5,6 +5,8 @@ import json
 import csv
 import io
 import logging
+import platform
+import subprocess
 import statistics
 import re
 import time
@@ -63,6 +65,17 @@ FACEBOOK_MANUAL_CRAWL_MAX_LIMIT = 950
 FACEBOOK_CRAWL_JOBS: dict[str, dict] = {}
 FACEBOOK_CRAWL_JOB_ORDER: list[str] = []
 FACEBOOK_CRAWL_LOCK = threading.Lock()
+
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _insights_enabled() -> bool:
+    return _env_flag("RADAR_INSIGHTS_ENABLED", False)
 
 
 def _image_order_sql(prefix: str = "") -> str:
@@ -237,7 +250,202 @@ def _facebook_crawl_summary() -> dict:
              if FACEBOOK_CRAWL_JOBS[jid].get("status") in {"queued", "running"}),
             None,
         )
-    return {"pending_images": pending, "facebook_listings": listings, "active_job": _public_crawl_job(active) if active else None}
+    return {
+        "pending_images": pending,
+        "facebook_listings": listings,
+        "active_job": _public_crawl_job(active) if active else None,
+        "ops": _crawl_ops_summary(),
+    }
+
+
+def _daily_crawl_schedule_status() -> dict:
+    task_name = "RadarBDS_DailyCrawl"
+    status = {
+        "task_name": task_name,
+        "installed": False,
+        "state": "missing",
+        "next_run_time": "",
+        "last_run_time": "",
+        "last_result": "",
+        "run_time": "",
+        "task_to_run": "",
+        "error": "",
+    }
+    if platform.system() != "Windows":
+        status["error"] = "schedule_status_windows_only"
+        return status
+    try:
+        result = subprocess.run(
+            ["schtasks", "/query", "/tn", task_name, "/fo", "LIST", "/v"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
+    except Exception as exc:
+        status["error"] = str(exc)
+        return status
+    if result.returncode != 0:
+        status["error"] = (result.stderr or result.stdout or "").strip()[:240]
+        return status
+    fields = _parse_schtasks_list(result.stdout)
+    status.update({
+        "installed": True,
+        "state": fields.get("Status") or fields.get("Scheduled Task State") or "installed",
+        "next_run_time": fields.get("Next Run Time", ""),
+        "last_run_time": fields.get("Last Run Time", ""),
+        "last_result": fields.get("Last Result", ""),
+        "task_to_run": fields.get("Task To Run", ""),
+        "run_time": _extract_task_run_time(fields.get("Next Run Time", "")),
+        "error": "",
+    })
+    return status
+
+
+def _parse_schtasks_list(output: str) -> dict:
+    fields: dict[str, str] = {}
+    for line in (output or "").splitlines():
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        fields[key.strip()] = value.strip()
+    return fields
+
+
+def _extract_task_run_time(value: str) -> str:
+    value = (value or "").strip()
+    for fmt in ("%m/%d/%Y %I:%M:%S %p", "%d/%m/%Y %I:%M:%S %p", "%m/%d/%Y %H:%M:%S", "%d/%m/%Y %H:%M:%S"):
+        try:
+            return datetime.strptime(value, fmt).strftime("%H:%M")
+        except ValueError:
+            continue
+    match = re.search(r"\b(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?\b", value, flags=re.I)
+    if not match:
+        return ""
+    hour = int(match.group(1))
+    minute = int(match.group(2))
+    suffix = (match.group(3) or "").upper()
+    if suffix == "PM" and hour != 12:
+        hour += 12
+    elif suffix == "AM" and hour == 12:
+        hour = 0
+    return f"{hour:02d}:{minute:02d}"
+
+
+def _parse_crawl_dt(value: str):
+    value = (value or "").strip().replace("Z", "+00:00")
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        try:
+            return datetime.strptime(value[:19], "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return None
+
+
+def _active_radar_lock_blockers() -> list[dict]:
+    from db.connection import _lock_id
+
+    names = ("crawl-incremental", "crawl-full", "crawl-facebook", "reprocess", "download-images")
+    blockers: list[dict] = []
+    try:
+        with get_conn() as conn:
+            for name in names:
+                lock_id = _lock_id(name)
+                row = conn.execute("SELECT pg_try_advisory_lock(?) AS locked", (lock_id,)).fetchone()
+                locked = bool(row["locked"]) if row else False
+                if locked:
+                    conn.execute("SELECT pg_advisory_unlock(?)", (lock_id,))
+                else:
+                    blockers.append({"name": name, "pid": None, "state": "locked", "age_seconds": None})
+    except Exception as exc:
+        return [{"name": "lock-check", "pid": None, "state": "error", "age_seconds": None, "error": str(exc)[:160]}]
+    return blockers
+
+
+def _crawl_ops_summary() -> dict:
+    schedule = _daily_crawl_schedule_status()
+    blockers = _active_radar_lock_blockers()
+    empty = {
+        "schedule": schedule,
+        "last_run": None,
+        "last_24h": {"runs": 0, "fetched": 0, "new": 0, "updated": 0, "skipped": 0},
+        "signal_count": 0,
+        "source_errors": [],
+        "lock_blockers": blockers,
+    }
+    try:
+        with get_conn() as conn:
+            last_rows = conn.execute(
+                """
+                SELECT id, source, area, started_at, finished_at, status,
+                       COALESCE(n_fetched,0) AS n_fetched,
+                       COALESCE(n_new,0) AS n_new,
+                       COALESCE(n_updated,0) AS n_updated,
+                       COALESCE(n_skipped,0) AS n_skipped,
+                       COALESCE(error_msg,'') AS error_msg
+                FROM crawl_runs
+                ORDER BY id DESC
+                LIMIT 12
+                """
+            ).fetchall()
+            signal_row = conn.execute(
+                "SELECT COUNT(*) AS n FROM valuation_results WHERE is_signal=1"
+            ).fetchone()
+    except Exception as exc:
+        empty["source_errors"] = [{"source": "ops", "status": "error", "error_msg": str(exc)[:180]}]
+        return empty
+    if signal_row:
+        empty["signal_count"] = signal_row["n"] or 0
+    if not last_rows:
+        return empty
+    last = last_rows[0]
+    empty["last_run"] = _crawl_run_public(last)
+    latest_dt = _parse_crawl_dt(last["started_at"])
+    if latest_dt:
+        recent = []
+        for row in last_rows:
+            dt = _parse_crawl_dt(row["started_at"])
+            if not dt:
+                continue
+            delta = (latest_dt - dt).total_seconds()
+            if 0 <= delta <= 15 * 60:
+                recent.append(row)
+        if not recent:
+            recent = [last]
+    else:
+        recent = [last]
+    empty["last_24h"] = {
+        "runs": len(recent),
+        "fetched": sum((r["n_fetched"] or 0) for r in recent),
+        "new": sum((r["n_new"] or 0) for r in recent),
+        "updated": sum((r["n_updated"] or 0) for r in recent),
+        "skipped": sum((r["n_skipped"] or 0) for r in recent),
+    }
+    errors = [
+        _crawl_run_public(r)
+        for r in last_rows
+        if (r["status"] or "") == "error" or (r["n_fetched"] or 0) == 0 or (r["error_msg"] or "")
+    ]
+    empty["source_errors"] = errors[:6]
+    return empty
+
+
+def _crawl_run_public(row) -> dict:
+    return {
+        "id": row["id"],
+        "source": row["source"] or "",
+        "area": row["area"] or "",
+        "started_at": row["started_at"] or "",
+        "finished_at": row["finished_at"] or "",
+        "status": row["status"] or "",
+        "fetched": row["n_fetched"] or 0,
+        "new": row["n_new"] or 0,
+        "updated": row["n_updated"] or 0,
+        "skipped": row["n_skipped"] or 0,
+        "error_msg": row["error_msg"] or "",
+    }
 
 
 def _apify_tokens_public() -> list[dict]:
@@ -492,6 +700,7 @@ def inject_user_tier():
     return {
         "USER_TIER": current_tier(),
         "USER": _user_public(u) if u else None,
+        "SHOW_INSIGHTS": _insights_enabled(),
     }
 
 
@@ -1014,6 +1223,43 @@ def _request_range_filters(req):
     return _parse("area_min"), _parse("area_max"), _parse("price_min"), _parse("price_max")
 
 
+def _request_range_list(req, name):
+    ranges = []
+    for token in req.args.getlist(name):
+        text = str(token or "").strip()
+        if not text:
+            continue
+        if ":" in text:
+            raw_min, raw_max = text.split(":", 1)
+        elif "-" in text:
+            raw_min, raw_max = text.split("-", 1)
+        else:
+            raw_min, raw_max = text, ""
+        try:
+            low = float(raw_min) if raw_min.strip() else 0
+            high = float(raw_max) if raw_max.strip() else 0
+        except (TypeError, ValueError):
+            continue
+        if low <= 0 and high <= 0:
+            continue
+        if low > 0 and high > 0 and low > high:
+            low, high = high, low
+        ranges.append((low, high))
+    return ranges
+
+
+def _request_range_filter_kwargs(req):
+    area_min, area_max, price_min, price_max = _request_range_filters(req)
+    return {
+        "area_min": area_min,
+        "area_max": area_max,
+        "price_min": price_min,
+        "price_max": price_max,
+        "area_ranges": _request_range_list(req, "area_range"),
+        "price_ranges": _request_range_list(req, "price_range"),
+    }
+
+
 def _safe_date(value):
     if not value:
         return None
@@ -1032,9 +1278,13 @@ def _relative_time_label(value):
     dt = _safe_date(value)
     if not dt:
         return ""
-    days = (datetime.now() - dt).days
-    if days <= 0:
+    now = datetime.now()
+    if dt.date() == now.date():
         return "hôm nay"
+    if dt > now:
+        days_until = max(1, (dt.date() - now.date()).days)
+        return f"{days_until} ngày tới"
+    days = (now.date() - dt.date()).days
     if days == 1:
         return "1 ngày trước"
     return f"{days} ngày trước"
@@ -1292,7 +1542,11 @@ def _clean_infra_payload(payload):
 @rate_limit("dashboard", limits={"guest": 1200, "free": 2400, "vip": None, "admin": None})
 def api_dashboard():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
-    area_min, area_max, price_min, price_max = _request_range_filters(request)
+    range_kwargs = _request_range_filter_kwargs(request)
+    area_min = range_kwargs["area_min"]
+    area_max = range_kwargs["area_max"]
+    price_min = range_kwargs["price_min"]
+    price_max = range_kwargs["price_max"]
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     db_path = _db_handle()
@@ -1312,11 +1566,13 @@ def api_dashboard():
         float(area_max or 0),
         float(price_min or 0),
         float(price_max or 0),
+        tuple(range_kwargs["area_ranges"]),
+        tuple(range_kwargs["price_ranges"]),
         bool(include_trend),
     )
 
     def _load_dashboard_payload():
-        data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max, tier=tier)
+        data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False, tier=tier, **range_kwargs)
         return {
             "stats": data["stats"],
             "market": data["market"],
@@ -1337,7 +1593,7 @@ def api_dashboard():
 
 def api_signals():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
-    area_min, area_max, price_min, price_max = _request_range_filters(request)
+    range_kwargs = _request_range_filter_kwargs(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     try:
@@ -1358,26 +1614,34 @@ def api_signals():
         sort=sort,
         page=page,
         limit=limit,
-        area_min=area_min,
-        area_max=area_max,
-        price_min=price_min,
-        price_max=price_max,
         tier=tier,
+        **range_kwargs,
     ))
 
 def api_trends():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
-    area_min, area_max, price_min, price_max = _request_range_filters(request)
+    range_kwargs = _request_range_filter_kwargs(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     db_path = _db_handle()
     return jsonify({
-        "trend_data": load_trend_data(db_path, sources, wards, prop_types, only_drops, trend_period, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max),
+        "trend_data": load_trend_data(db_path, sources, wards, prop_types, only_drops, trend_period, **range_kwargs),
         "trend_period": trend_period
     })
 
 
 def api_insights():
+    if not _insights_enabled():
+        return jsonify({
+            "enabled": False,
+            "timeline": [],
+            "policy_alerts": [],
+            "counts": {
+                "projects": 0,
+                "alerts": 0,
+            },
+        })
+
     db_path = _db_handle()
     conn = connect(db_path)
     try:
@@ -1426,7 +1690,7 @@ def api_insights():
 
 def api_heatmap():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
-    area_min, area_max, price_min, price_max = _request_range_filters(request)
+    range_kwargs = _request_range_filter_kwargs(request)
     db_path = _db_handle()
     conn = connect(db_path)
     
@@ -1456,7 +1720,7 @@ def api_heatmap():
     if prop_types:
         where_parts.append(f"l.property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
-    range_clauses, range_params = _range_filters(area_min, area_max, price_min, price_max, prefix="l.")
+    range_clauses, range_params = _range_filters(prefix="l.", **range_kwargs)
     where_parts.extend(range_clauses)
     params.extend(range_params)
     where_sql = " AND ".join(where_parts)
@@ -1526,7 +1790,7 @@ def api_heatmap():
 @require_tier('vip')
 def api_market_indicators():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
-    area_min, area_max, price_min, price_max = _request_range_filters(request)
+    range_kwargs = _request_range_filter_kwargs(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     db_path = _db_handle()
@@ -1535,16 +1799,13 @@ def api_market_indicators():
         sources=sources,
         wards=wards,
         prop_types=prop_types,
-        area_min=area_min,
-        area_max=area_max,
-        price_min=price_min,
-        price_max=price_max,
+        **range_kwargs,
     ))
 
 @rate_limit("listings")
 def api_listings():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
-    area_min, area_max, price_min, price_max = _request_range_filters(request)
+    range_kwargs = _request_range_filter_kwargs(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     try:
@@ -1573,7 +1834,7 @@ def api_listings():
     if prop_types:
         where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
-    range_clauses, range_params = _range_filters(area_min, area_max, price_min, price_max)
+    range_clauses, range_params = _range_filters(**range_kwargs)
     where_parts.extend(range_clauses)
     params.extend(range_params)
     where_sql = " AND ".join(where_parts)
@@ -3375,4 +3636,8 @@ def ensure_perf_indexes():
 
 if __name__ == "__main__":
     ensure_perf_indexes()
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(
+        host=os.getenv("FLASK_HOST", "127.0.0.1"),
+        port=int(os.getenv("PORT", "5000")),
+        debug=_env_flag("FLASK_DEBUG", False),
+    )

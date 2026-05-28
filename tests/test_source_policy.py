@@ -78,8 +78,9 @@ class SourcePolicyTest(unittest.TestCase):
             conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
 
-    def _seed_signal(self, *, source, title, source_id):
+    def _seed_signal(self, *, source, title, source_id, area_m2=100, price_ty=2.0):
         from db.connection import get_conn
+        price_per_m2 = round(price_ty * 1000 / area_m2, 2) if area_m2 else None
 
         with get_conn() as conn:
             cur = conn.execute(
@@ -91,16 +92,19 @@ class SourcePolicyTest(unittest.TestCase):
                     probably_sold, possibly_duplicate, posted_at, crawled_at
                 ) VALUES (
                     ?, ?, ?, ?, 'Source policy listing',
-                    ?, 100, 'dat_nen', 2.0, 20.0,
+                    ?, ?, 'dat_nen', ?, ?,
                     0, 0, 0, 0, 0, datetime('now'), datetime('now')
                 )
                 """,
                 (
                     source,
                     f"{source_id}-{self.token}",
-                    f"{self.url_prefix}/{source}",
+                    f"{self.url_prefix}/{source_id}",
                     title,
                     self.ward,
+                    area_m2,
+                    price_ty,
+                    price_per_m2,
                 ),
             )
             listing_id = cur.lastrowid
@@ -110,9 +114,9 @@ class SourcePolicyTest(unittest.TestCase):
                 INSERT INTO valuation_results (
                     listing_id, fair_ppm2, actual_ppm2, mos_pct,
                     is_signal, signal_score
-                ) VALUES (?, 30.0, 20.0, 33.3, 1, 70)
+                ) VALUES (?, 30.0, ?, 33.3, 1, 70)
                 """,
-                (listing_id,),
+                (listing_id, price_per_m2),
             )
             return listing_id
 
@@ -183,6 +187,36 @@ class SourcePolicyTest(unittest.TestCase):
         payload = response.get_json()
         self.assertEqual(payload["total"], 1)
         self.assertEqual([s["source"] for s in payload["signals"]], ["facebook"])
+
+    def test_signal_feed_accepts_multiple_area_ranges(self):
+        self._seed_signal(source="facebook", title="Area 200 signal", source_id="fb-area-200", area_m2=200, price_ty=2.0)
+        self._seed_signal(source="facebook", title="Area 600 signal", source_id="fb-area-600", area_m2=600, price_ty=6.0)
+
+        response = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}&area_range=150:500&area_range=500:&limit=20"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        titles = {row["title"] for row in response.get_json()["signals"]}
+        self.assertNotIn("Facebook source policy signal", titles)
+        self.assertIn("Area 200 signal", titles)
+        self.assertIn("Area 600 signal", titles)
+
+    def test_signal_feed_accepts_multiple_price_ranges(self):
+        self._seed_signal(source="facebook", title="Price 0.5 signal", source_id="fb-price-low", area_m2=100, price_ty=0.5)
+        self._seed_signal(source="facebook", title="Price 3 signal", source_id="fb-price-mid", area_m2=100, price_ty=3.0)
+        self._seed_signal(source="facebook", title="Price 5 signal", source_id="fb-price-high", area_m2=100, price_ty=5.0)
+
+        response = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}&price_range=:1&price_range=5:&limit=20"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        titles = {row["title"] for row in response.get_json()["signals"]}
+        self.assertIn("Price 0.5 signal", titles)
+        self.assertIn("Price 5 signal", titles)
+        self.assertNotIn("Facebook source policy signal", titles)
+        self.assertNotIn("Price 3 signal", titles)
 
     def test_source_filter_group_only_renders_for_admin(self):
         guest_html = self.client.get("/").get_data(as_text=True)

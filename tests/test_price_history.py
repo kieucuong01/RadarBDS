@@ -136,6 +136,53 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual([r["price_ty"] for r in rows], [1.74, 1.70])
         self.assertEqual([r["crawl_run_id"] for r in rows], [1, 2])
 
+    def test_upsert_listing_missing_price_or_area_preserves_last_known_values(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(self._rec(), crawl_run_id=1)
+        self._track(listing_id)
+
+        same_listing_id, is_new = upsert_listing(
+            self._rec(price_ty=None, price_per_m2=None, area_m2=None),
+            crawl_run_id=2,
+        )
+
+        self.assertEqual(same_listing_id, listing_id)
+        self.assertFalse(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT price_ty, price_per_m2, area_m2 FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(row["price_ty"], 1.74)
+        self.assertEqual(row["price_per_m2"], 15.4)
+        self.assertEqual(row["area_m2"], 113.0)
+
+    def test_upsert_listing_existing_row_enriches_dimensions_from_new_parse(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(self._rec(), crawl_run_id=1)
+        self._track(listing_id)
+
+        same_listing_id, is_new = upsert_listing(
+            self._rec(frontage_m=4.0, depth_m=28.0),
+            crawl_run_id=2,
+        )
+
+        self.assertEqual(same_listing_id, listing_id)
+        self.assertFalse(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT frontage_m, depth_m FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(row["frontage_m"], 4.0)
+        self.assertEqual(row["depth_m"], 28.0)
+
     def test_upsert_listing_over_40pct_drop_marks_suspicious_bait(self):
         from db.connection import get_conn
         from db.listings import upsert_listing

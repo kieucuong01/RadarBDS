@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v7-facebook-crawl">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v8-crawl-ops">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -287,6 +287,7 @@
       </div>
 
       <div class="stat-grid" id="crawlStats"></div>
+      <section class="surface crawl-ops-panel" id="crawlOpsPanel"></section>
 
       <section class="surface apify-token-panel">
         <div class="toolbar apify-token-form">
@@ -598,7 +599,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v19-facebook-crawl"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v20-crawl-ops"></script>
   {% endif %}
 </body>
 </html>

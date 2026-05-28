@@ -99,7 +99,7 @@ def cmd_schedule_setup(args):
         print("Task đã xóa." if result.returncode == 0 else f"Lỗi: {result.stderr}")
         return
 
-    run_time = getattr(args, "time", "10:15")
+    run_time = getattr(args, "time", "21:00")
     interval_days = str(getattr(args, "every", 1))
     # Ensure the task runs from repo root so relative paths (data/, logs/, etc.) are stable.
     cmd = f'cmd /c "cd /d {repo_root} && \\"{python_exe}\\" -X utf8 \\"{script_path}\\" crawl-daily"'

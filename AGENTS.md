@@ -86,7 +86,7 @@ Front-end files:
 - `static/js/admin.js` — `loadTrainingItems`, `trainingCard`, `saveTraining`, infinite scroll.
 - `static/css/admin.css` — `.training-grid`, `.view-list`, sidebar collapsed, card styles.
 
-Current cache versions: `admin.css?v=admin-v6-legal-qc`, `admin.js?v=admin-v18-legal-qc` (bump khi đổi admin CSS/JS/html).
+Current cache versions: `admin.css?v=admin-v8-crawl-ops`, `admin.js?v=admin-v20-crawl-ops` (bump khi đổi admin CSS/JS/html).
 
 Card display:
 - Listing card shows title, road/type, area, asking price, asking `Giá/m²`, and description.

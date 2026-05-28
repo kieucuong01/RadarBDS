@@ -346,6 +346,97 @@ p { margin: 6px 0 0; color: var(--muted); }
   margin-top: 6px;
   font-size: 24px;
 }
+.crawl-ops-panel {
+  margin-bottom: 16px;
+  border-radius: 10px;
+}
+.crawl-ops-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.crawl-ops-head small,
+.crawl-ops-card small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.crawl-ops-head strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 17px;
+}
+.ops-pill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.ops-pill.ok { color: var(--green); border-color: color-mix(in srgb, var(--green) 36%, var(--line)); }
+.ops-pill.warn { color: var(--orange); border-color: color-mix(in srgb, var(--orange) 36%, var(--line)); }
+.ops-pill.danger { color: var(--red); border-color: color-mix(in srgb, var(--red) 36%, var(--line)); }
+.crawl-ops-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 16px;
+}
+.crawl-ops-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 92px;
+}
+.crawl-ops-card.ok { border-color: color-mix(in srgb, var(--green) 28%, var(--line)); }
+.crawl-ops-card.warn { border-color: color-mix(in srgb, var(--orange) 32%, var(--line)); }
+.crawl-ops-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 20px;
+}
+.crawl-ops-card span,
+.crawl-ops-card em,
+.crawl-ops-lists span,
+.crawl-ops-lists em {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.35;
+}
+.crawl-ops-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+.crawl-ops-lists > div {
+  padding: 12px 16px 14px;
+}
+.crawl-ops-lists > div + div {
+  border-left: 1px solid var(--line);
+}
+.crawl-ops-lists h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.crawl-ops-lists ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.crawl-ops-lists li {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+}
 .crawl-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 330px;
@@ -804,6 +895,18 @@ p { margin: 6px 0 0; color: var(--muted); }
   }
   #panel-crawl .stat-card strong {
     font-size: 21px;
+  }
+  .crawl-ops-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .crawl-ops-grid,
+  .crawl-ops-lists {
+    grid-template-columns: 1fr;
+  }
+  .crawl-ops-lists > div + div {
+    border-left: 0;
+    border-top: 1px solid var(--line);
   }
   .crawl-add-row {
     display: grid;

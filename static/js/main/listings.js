@@ -99,6 +99,7 @@ function listingTableRow(x) {
   const fair = listingFairPrice(x);
   const imgSrc = listingImage(x);
   const dataAttr = listingDataAttrs(x, fair, imgSrc);
+  const priceLabel = x.price_label || (x.price_ty ? `${x.price_ty} tỷ` : '-');
   return `
     <tr class="clickable-row" onclick="openListingModal(this)" ${dataAttr}>
       <td><span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">${escHtml(x.prop_type || '-')}</span></td>
@@ -106,7 +107,7 @@ function listingTableRow(x) {
       <td><img src="${escHtml(imgSrc)}" class="td-img" loading="lazy" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG"></td>
       <td style="font-weight:700;">${x.area_m2 ? `${escHtml(x.area_m2)} m²` : '-'}</td>
       <td>
-        <div style="color:var(--accent); font-weight:800; font-size:1rem;">${x.price_ty ? `${escHtml(x.price_ty)} tỷ` : '-'}</div>
+        <div style="color:var(--accent); font-weight:800; font-size:1rem;">${escHtml(priceLabel)}</div>
         <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${x.price_per_m2 ? `${escHtml(x.price_per_m2)} tr/m²` : '-'}</div>
       </td>
       <td>
@@ -119,7 +120,7 @@ function listingTableRow(x) {
       </td>
       <td style="max-width: 300px;">
         <div class="td-title" title="${escHtml(x.title || '')}">${escHtml(x.title || '-')}</div>
-        <div class="td-desc" title="${escHtml(x.description || '')}">${escHtml(x.description || '')}</div>
+        <div class="td-desc" title="${escHtml(x.description || '')}">${renderTextWithContactCta(x.description || '', x.id, 'redacted_description_table')}</div>
       </td>
     </tr>
   `;
@@ -131,6 +132,7 @@ function listingCard(x) {
   const priceNum = Number(x.price_ty);
   const isOverpriced = Number.isFinite(priceNum) && Number.isFinite(fairNum) && priceNum > fairNum;
   const actualClass = isOverpriced ? 'price-over' : 'price-deal';
+  const priceLabel = x.price_label || (x.price_ty ? `${x.price_ty} tỷ` : '-');
   const imgSrc = listingImage(x);
   const dataAttr = listingDataAttrs(x, fair, imgSrc);
   const daysAgo = _daysAgoValue(x.days_ago);
@@ -165,7 +167,7 @@ function listingCard(x) {
         <div class="price-container">
           <div class="price-actual">
             <span class="price-label price-label-actual ${actualClass}">THỰC TẾ</span>
-            <div class="price-val ${actualClass}">${x.price_ty ? `${escHtml(x.price_ty)} tỷ` : '-'}</div>
+            <div class="price-val ${actualClass}">${escHtml(priceLabel)}</div>
             <div class="price-m2">${x.price_per_m2 ? `${escHtml(x.price_per_m2)} tr/m²` : '-'}</div>
           </div>
           <div class="price-fair">

@@ -418,7 +418,8 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         # Fallback: trích xuất từ text khi nguồn không có structured fields (Facebook posts)
         _fb_parsed: dict = {}
         if price_ty is None or area_m2 is None:
-            _fb_parsed = parse_facebook_post(description) or {}
+            _parse_text = "\n".join(part for part in [title, description] if part)
+            _fb_parsed = parse_facebook_post(_parse_text) or {}
             if price_ty is None:
                 price_ty = _fb_parsed.get("price_total")
             if area_m2 is None:

@@ -39,7 +39,7 @@ After a migration or DB credential change, smoke test the Postgres-backed app:
 ```powershell
 & $py -X utf8 radar.py crawl-daily
 & $py -X utf8 radar.py crawl-facebook --mode incremental --limit 30
-& $py -X utf8 radar.py schedule-setup --every 3
+& $py -X utf8 radar.py schedule-setup --time 21:00
 ```
 
 ## Images

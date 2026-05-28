@@ -15,7 +15,14 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from cleansing.dedup import _repost_score, _is_duplicate, _is_reliable_price_drop, _is_suspicious_bait, SCORE_THRESHOLD
+from cleansing.dedup import (
+    _repost_score,
+    _is_duplicate,
+    _is_reliable_price_drop,
+    _is_suspicious_bait,
+    _inherit_missing_group_values,
+    SCORE_THRESHOLD,
+)
 from cleansing.normalizer import normalize_record
 
 
@@ -381,6 +388,48 @@ def test_guland_same_price_repost_not_duplicate_for_history():
         price_ty=2.0, description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2 giÃ¡ 2 tá»·"
     )
     assert not _is_duplicate(old, new), "Guland same-price repost should not extend lot history"
+
+
+def test_duplicate_group_inherits_missing_area_from_nearest_repost():
+    older = _listing(
+        id=1, source="facebook", source_id="fb-old", posted_at="2026-05-20",
+        ward="Dinh Hoa", property_type="nha_dat", area_m2=82.0,
+        price_ty=3.15, price_per_m2=38.41,
+        description="Nha tret lau 1 duong DX82 Dinh Hoa gia 3 ty 150 dien tich 82m2"
+    )
+    latest = _listing(
+        id=2, source="facebook", source_id="fb-new", posted_at="2026-05-27",
+        ward="Dinh Hoa", property_type="nha_dat", area_m2=None,
+        price_ty=3.15, price_per_m2=None,
+        description="Chi con 1 can duy nhat phuong Dinh Hoa nha tret lau 1 DX82 gia van giu nguyen 3ty150"
+    )
+
+    hydrated = _inherit_missing_group_values([latest, older])
+
+    assert hydrated[0]["area_m2"] == 82.0
+    assert hydrated[0]["price_ty"] == 3.15
+    assert hydrated[0]["price_per_m2"] == 38.41
+
+
+def test_duplicate_group_inherits_missing_price_from_nearest_repost():
+    older = _listing(
+        id=1, source="facebook", source_id="fb-old", posted_at="2026-05-20",
+        ward="Dinh Hoa", property_type="nha_dat", area_m2=82.0,
+        price_ty=3.15, price_per_m2=38.41,
+        description="Nha tret lau 1 duong DX82 Dinh Hoa gia 3 ty 150 dien tich 82m2"
+    )
+    latest = _listing(
+        id=2, source="facebook", source_id="fb-new", posted_at="2026-05-27",
+        ward="Dinh Hoa", property_type="nha_dat", area_m2=82.0,
+        price_ty=None, price_per_m2=None,
+        description="Chi con 1 can duy nhat phuong Dinh Hoa nha tret lau 1 DX82 gia van giu nguyen"
+    )
+
+    hydrated = _inherit_missing_group_values([latest, older])
+
+    assert hydrated[0]["area_m2"] == 82.0
+    assert hydrated[0]["price_ty"] == 3.15
+    assert hydrated[0]["price_per_m2"] == 38.41
 
 
 def test_guland_phu_tan_template_same_phone_not_same_lot():

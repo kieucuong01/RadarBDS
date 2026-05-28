@@ -23,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 def _ascii_fold(text: str) -> str:
-    text = (text or "").replace("Đ", "D").replace("đ", "d")
+    text = unicodedata.normalize("NFKC", text or "")
+    text = text.replace("Đ", "D").replace("đ", "d")
     return "".join(
         c for c in unicodedata.normalize("NFD", text)
         if unicodedata.category(c) != "Mn"
@@ -47,7 +48,8 @@ def extract_price(text: str) -> Optional[float]:
       "1,69 tỷ" → 1.69
       "Thỏa thuận" / "Giá thỏa thuận" → None
     """
-    t = text.lower().strip()
+    t = unicodedata.normalize("NFKC", text or "").lower().strip()
+    t_fold = _ascii_fold(t)
     # Normalize "tỉ" (biến thể không chuẩn) → "tỷ" để pattern match thống nhất
     t = t.replace('tỉ', 'tỷ')
 
@@ -57,11 +59,17 @@ def extract_price(text: str) -> Optional[float]:
     if re.search(r'\d+\s*(?:t|tỷ|ty|tỉ)\s*x{2,}', t, re.IGNORECASE):
         return None
 
+    # "12,x tỷ" / "12.x ty" is an intentional fuzzy price. Use midpoint
+    # 12.5 for valuation while the original text remains visible in details.
+    m = re.search(r'\b(\d+)\s*[,\.]\s*x\b\s*(?:ty|ti)\b', t_fold, re.IGNORECASE)
+    if m:
+        return round(float(m.group(1)) + 0.5, 4)
+
     # Loại phrase mô tả mức GIẢM (price drop) khỏi text trước khi parse giá:
     # "hạ 4 tỷ" / "giảm 2 tỷ" / "bớt 500tr" — đó là mức giảm, KHÔNG phải giá.
     # (User: "Giá hạ 4 tỷ chứ k phải giá là 4 tỷ")
     t = re.sub(
-        r'(?:hạ|giảm|giảm\s*mạnh|bớt)\s*(?:giá\s*)?[\d,.]+\s*(?:tỷ|ty|triệu|tr|m|k)\b',
+        r'(?:hạ|giảm|giảm\s*mạnh|bớt)\s*(?:giá\s*)?[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|triệu|tr|m|k)\b',
         ' ', t, flags=re.IGNORECASE
     )
 
@@ -139,14 +147,36 @@ def extract_area(text: str) -> Optional[float]:
       "124 m²" → 124.0
     Tránh nhầm với thổ cư: luôn loại trừ context "thổ cư / TC" ngay trước số.
     """
-    t = text.replace('\n', ' ')
+    t = unicodedata.normalize("NFKC", text or "").replace('\n', ' ')
 
     # Bước 0: Loại bỏ phần "thổ cư Xm²" / "TC Xm²" khỏi text trước khi parse
     # để tránh nhầm thổ cư với tổng DT
     t_clean = re.sub(
-        r'(?:thổ\s*cư|tc|thổ)\s*[\d]+[,.]?[\d]*\s*m[²2]?',
+        r'(?:thổ\s*cư|tc|thổ)\s*[\d]+[,.]?[\d]*\s*(?:m[²2]?|mv)?',
         '', t, flags=re.IGNORECASE
     )
+    t_fold = _ascii_fold(t_clean)
+
+    # Explicit total area beats frontage-depth multiplication when both appear:
+    # "15x71m. Tổng 1028m2" should be 1028m², not 1065m².
+    m = re.search(r'(?:tong|tong\s*dt|dt\s*tong)[:\s]*([\d]+[,.]?[\d]*)\s*m[²2]?', t_fold, re.IGNORECASE)
+    if m:
+        val = float(m.group(1).replace(',', '.'))
+        if 5 < val < 100000:
+            return val
+
+    # "ngang W x dài/sâu D" written in the title should outrank later
+    # "thổ cư 60mv" snippets in the description.
+    m = re.search(
+        r'(?:ngang\s*)?([\d]+[,.]?[\d]*)\s*(?:m\s*)?(?:x\s*)?(?:dai|sau)\s*([\d]+[,.]?[\d]*)',
+        t_fold,
+        re.IGNORECASE,
+    )
+    if m:
+        w = float(m.group(1).replace(',', '.'))
+        d = float(m.group(2).replace(',', '.'))
+        if 2 <= w <= 50 and 5 <= d <= 500:
+            return round(w * d, 1)
 
     # Ưu tiên 0: Phát hiện kích thước có m2 ở số đầu (môi giới ghi nhầm)
     # Ví dụ: "9m2 x 12.6m" -> 113.4 m2 thay vì 9.0 m2
@@ -193,6 +223,15 @@ def extract_area(text: str) -> Optional[float]:
 
     # Ưu tiên 2d: "Dt W dài D" → W × D (ví dụ "Dt : 4 dài 30" = 120m²)
     m = re.search(r'(?:dt|diện tích)[:\s]*([\d]+[,.]?[\d]*)\s*(?:m\s*)?dài\s*([\d]+[,.]?[\d]*)', t_clean, re.IGNORECASE)
+    if m:
+        w = float(m.group(1).replace(',', '.'))
+        d = float(m.group(2).replace(',', '.'))
+        if 2 <= w <= 50 and 5 <= d <= 500:
+            return round(w * d, 1)
+
+    # Bare "W dai D" / "W sau D" without "DT" prefix.
+    # Example: "4 dài 28 tc 60" -> 112m².
+    m = re.search(r'(?<![/\d])([\d]+[,.]?[\d]*)\s*(?:m\s*)?(?:dai|sau)\s*([\d]+[,.]?[\d]*)', t_fold, re.IGNORECASE)
     if m:
         w = float(m.group(1).replace(',', '.'))
         d = float(m.group(2).replace(',', '.'))
@@ -270,7 +309,7 @@ def extract_price_per_m2(text: str) -> Optional[float]:
       "13,63 tr/m²" → 13.63
       "66tr/1m" → 66.0 (giá/m ngang — khác!)
     """
-    t = text.lower()
+    t = unicodedata.normalize("NFKC", text or "").lower()
 
     # tr/m² hoặc triệu/m²
     m = re.search(r'([\d]+[,.]?[\d]*)\s*tr(?:iệu)?[/\s]*m[²2]', t)
@@ -296,8 +335,16 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
       "5x25 (nở hậu)"
       "DT:4x34 =138m2"
     """
-    t = text.lower().replace('\n', ' ')
+    t = unicodedata.normalize("NFKC", text or "").lower().replace('\n', ' ')
+    t_fold = _ascii_fold(t)
     result = {'frontage_m': None, 'depth_m': None}
+
+    # "ngang 7m x dài 21m" / "ngang 7m x sâu 21m"
+    m = re.search(r'ngang\s*([\d]+[,.]?[\d]*)\s*(?:m\s*)?(?:x\s*)?(?:dai|sau)\s*([\d]+[,.]?[\d]*)', t_fold)
+    if m:
+        result['frontage_m'] = float(m.group(1).replace(',', '.'))
+        result['depth_m'] = float(m.group(2).replace(',', '.'))
+        return result
 
     # "ngang X sâu Y" / "ngang X dài Y"
     m = re.search(r'ngang\s*([\d]+[,.]?[\d]*)\s*(?:m\b)?\s*(?:,|sâu|dài|x)\s*([\d]+[,.]?[\d]*)', t)
@@ -305,6 +352,16 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
         result['frontage_m'] = float(m.group(1).replace(',', '.'))
         result['depth_m'] = float(m.group(2).replace(',', '.'))
         return result
+
+    # Bare "W dài D" / "W sâu D" without "ngang" or "DT" prefix.
+    m = re.search(r'(?<![/\d])([\d]+[,.]?[\d]*)\s*(?:m\s*)?(?:dai|sau)\s*([\d]+[,.]?[\d]*)', t_fold)
+    if m:
+        w = float(m.group(1).replace(',', '.'))
+        d = float(m.group(2).replace(',', '.'))
+        if 2 <= w <= 50 and 5 <= d <= 500:
+            result['frontage_m'] = w
+            result['depth_m'] = d
+            return result
 
     # "XxY" hoặc "X x Y" hoặc "X x Ym" — phổ biến nhất
     m = re.search(r'(?<![/\d])([\d]+[,.]?[\d]*)\s*[x×]\s*([\d]+[,.]?[\d]*)\s*m?(?!\d)', t)
@@ -351,8 +408,8 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
     # "Xm² thổ cư" hoặc "thổ cư Xm²" hoặc "TC Xm" hoặc "TC 35m"
     patterns = [
         r'([\d]+[,.]?[\d]*)\s*m[²2]\s*thổ\s*cư',           # "60m² thổ cư"
-        r'thổ\s*cư\s*([\d]+[,.]?[\d]*)\s*m[²2]?',           # "thổ cư 60m²"
-        r'\btc\s*([\d]+[,.]?[\d]*)\s*m[²2]?',               # "TC 60m²" hoặc "TC 60"
+        r'thổ\s*cư\s*([\d]+[,.]?[\d]*)(?:\s*(?:m[²2]?|mv))?',      # "thổ cư 60m²" hoặc "thổ cư 60"
+        r'\btc\s*([\d]+[,.]?[\d]*)(?:\s*m[²2]?)?',          # "TC 60m²" hoặc "TC 60"
         r'([\d]+[,.]?[\d]*)\s*m\s*(?:tc|thổ\s*cư)\b',       # "35m TC"
     ]
     for pat in patterns:
@@ -404,8 +461,11 @@ def extract_road_width(text: str) -> Optional[float]:
 
 def extract_road_type(text: str) -> str:
     """Trả về canonical road_type."""
-    t = text.lower()
-    folded = _ascii_fold(text)
+    normalized = unicodedata.normalize("NFKC", text or "")
+    t = normalized.lower()
+    folded = _ascii_fold(normalized)
+    if re.search(r'(?:^|\b)(?:dat|nha|ban)?\s*\d+\s*/\s*[a-z]', folded[:500]):
+        return 'be_tong'
     if re.search(r'(?:duong|hem|ngo|loi)\s*(?:ba|3)\s*gac|(?:ba|3)\s*gac', folded):
         return 'hem_ba_gac'
     if re.search(r'xe\s*may|hem\s*nho|duong\s*nho\s*hep', folded):
@@ -576,8 +636,10 @@ def extract_road_tier(title: str, description: str = '') -> int:
         8. Xe máy / hẻm nhỏ → Tier 4
         9. Không có tín hiệu → 0 (neutral)
     """
-    text = (title + ' ' + (description or '')).lower()
-    title_lower = title.lower()
+    text = unicodedata.normalize("NFKC", title + ' ' + (description or '')).lower()
+    title_lower = unicodedata.normalize("NFKC", title or "").lower()
+    text_fold = _ascii_fold(text)
+    title_fold = _ascii_fold(title_lower)
     has_mt   = bool(_MT_RE.search(text))
     has_hem  = bool(_HEM_RE.search(text))
     has_auto = bool(_AUTO_RE.search(text))
@@ -586,19 +648,22 @@ def extract_road_tier(title: str, description: str = '') -> int:
     # Nếu cùng tin có "đường/hẻm oto" riêng thì vẫn giữ tín hiệu đường.
     if has_auto and _SAN_AUTO_RE.search(text) and not has_auto_road:
         has_auto = False
-    has_nhua = 'nhựa' in text or 'nhua' in text
+    has_nhua = 'nhựa' in text or 'nhua' in text_fold
     # Logic giá trị: "kinh doanh"/"mtkd" = mặt tiền kinh doanh = đường lớn → Tier 2
-    has_kd   = any(kw in text for kw in ['mtkd', 'mt kd', 'kinh doanh', 'mt kinh doanh'])
+    has_kd   = any(kw in text_fold for kw in ['mtkd', 'mt kd', 'kinh doanh', 'mt kinh doanh'])
 
     # --- Title-specific signals (title authoritative, desc can mention "hẻm" as nearby) ---
     has_mt_title = bool(_MT_RE.search(title_lower))
-    has_kd_title = any(kw in title_lower for kw in ['mtkd', 'mt kd', 'kinh doanh'])
+    has_kd_title = any(kw in title_fold for kw in ['mtkd', 'mt kd', 'kinh doanh'])
     has_hem_title = bool(_HEM_RE.search(title_lower))
     # "nhánh / xẹt / xẹc / N/" trong title = ngõ nhánh, không phải mặt tiền chính
     # N/ = ký hiệu hẻm số N (VD: "2/ Huỳnh Văn Luỹ" = hẻm thứ 2 đường Huỳnh Văn Luỹ)
     has_nhanh_title = bool(re.search(
         r'\bnh[áa]nh\b|\bx[ẹe][ct]\b|1\s*x[ẹe][ct]|\b\d+\s*/',
         title_lower, re.IGNORECASE,
+    ) or re.search(
+        r'\bnhanh\b|\bx[ee][ct]\b|1\s*x[ee][ct]|\b\d+\s*/',
+        title_fold, re.IGNORECASE,
     ))
 
     # Pre-extract road width (mặt đường) — dùng trong nhiều nhánh logic.
@@ -616,13 +681,21 @@ def extract_road_tier(title: str, description: str = '') -> int:
 
     # Pre-check nhánh/xẹt trong toàn text — chỉ dấu "đường nhánh" mạnh.
     # "nhánh 114" / "1 xẹt Huỳnh Thị Hiếu" → nên là Tier 3 dù không có width / DX.
-    has_nhanh_strong = bool(_NHANH_XEET_RE.search(text))
+    has_nhanh_strong = bool(
+        _NHANH_XEET_RE.search(text)
+        or re.search(r'(?:^|\D)\d+\s*/\s*[a-z]', text_fold, re.IGNORECASE)
+    )
 
     # --- Đường quy hoạch Mỹ Phước (config-driven) ---
     from config.area_profiles import detect_subward_from_street
     _mp_sw, _mp_width, _mp_tier = detect_subward_from_street(text)
     if _mp_tier is not None:
         return _mp_tier
+
+    # "Đất 1/ Lê Hồng Phong" is a branch/alley address, even if the broker
+    # later writes "mặt tiền kinh doanh nhựa"; treat as concrete car alley.
+    if has_nhanh_title:
+        return 3
 
     # --- Tier 1: Mặt tiền đường có tên (whitelist) ---
     # _MT_RE đã fix — \bmt\b bây giờ là word boundary đúng (không phải backspace).
@@ -661,6 +734,8 @@ def extract_road_tier(title: str, description: str = '') -> int:
         around = text[max(0, s - 25):min(len(text), e + 25)]
         before_dx = text[max(0, s - 25):s]
         hem_before = bool(_HEM_RE.search(before_dx))
+        if re.search(r'(?:^|\D)\d+\s*/\s*$', before_dx, re.IGNORECASE):
+            return 3
         if (_NHANH_XEET_RE.search(around)          # nhánh/xẹt bất kỳ
                 or _GAN_CACH_RE.search(before_dx)   # gần/cách TRƯỚC DX
                 or hem_before):                     # hẻm TRƯỚC DX
@@ -1127,7 +1202,7 @@ def classify_property_type(
         ' ', text_for_nha_ascii, flags=re.IGNORECASE,
     )
     text_for_nha_ascii = re.sub(
-        r'\b(?:xay|cat|lam)\s*(?:biet\s*thu|villa|nha)(?:\s*duoc)?\b',
+        r'\b(?:xay|cat|lam)\b.{0,30}\b(?:biet\s*thu|villa|nha)(?:\s*duoc)?\b',
         ' ', text_for_nha_ascii, flags=re.IGNORECASE,
     )
     text_for_nha_ascii = re.sub(

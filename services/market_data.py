@@ -14,6 +14,18 @@ from services.image_assets import resolve_image_url
 TIER_ORDER = {"guest": 0, "free": 1, "vip": 2, "admin": 3}
 DEFAULT_VISIBLE_SOURCES = ("facebook",)
 ADMIN_SOURCE_OPTIONS = ("facebook", "guland", "batdongsan", "muaban")
+_PHONE_TEXT_RE = re.compile(
+    r"(?<!\d)(?:\+?84|0)(?:[\s.\-()]?\d){9,10}(?!\d)"
+)
+_CONTACT_CUE_RE = re.compile(
+    r"(?:"
+    r"☎|📞|"
+    r"\b(?:lh|lien\s*he|li[eê]n\s*h[eệ]|hotline|call|zalo|sdt|sđt|dt|đt|"
+    r"em|anh|chi|chị|gap|gặp)\b"
+    r")",
+    re.I,
+)
+_PHONE_REDACTION = "Liên hệ tư vấn"
 
 
 def normalize_sources_for_tier(sources=None, tier: str = "guest"):
@@ -34,20 +46,61 @@ def fresh_lock_hours_for(tier: str) -> int:
     return 0
 
 
+def _redact_embedded_phones(text):
+    if not isinstance(text, str) or not text:
+        return text
+
+    out_lines = []
+    previous_cta = False
+    for line in text.splitlines():
+        phone_match = _PHONE_TEXT_RE.search(line)
+        if not phone_match:
+            out_lines.append(line)
+            previous_cta = False
+            continue
+
+        prefix = line[:phone_match.start()]
+        cue_match = None
+        for match in _CONTACT_CUE_RE.finditer(prefix):
+            cue_match = match
+
+        if cue_match:
+            before = prefix[:cue_match.start()].rstrip(" -–—:,.|")
+            replacement = f"{before}\n{_PHONE_REDACTION}" if before else _PHONE_REDACTION
+        elif len(line.strip()) <= 140:
+            replacement = _PHONE_REDACTION
+        else:
+            replacement = _PHONE_TEXT_RE.sub(_PHONE_REDACTION, line)
+
+        for part in replacement.splitlines():
+            is_cta = part.strip() == _PHONE_REDACTION
+            if is_cta and previous_cta:
+                continue
+            out_lines.append(part)
+            previous_cta = is_cta
+
+    return "\n".join(out_lines)
+
+
 def redact_for_tier(record, tier: str):
     """Return a tier-safe copy of a listing dict.
 
     - admin: untouched.
-    - others: contact_phone / url / source_url forced to None (commission protection).
+    - others: seller/contact/url fields forced to None and embedded phone
+      numbers in public listing text are masked.
     """
     if record is None:
         return None
     if tier == "admin":
         return dict(record)
     out = dict(record)
-    for key in ("contact_phone", "url", "source_url"):
+    for key in ("contact_phone", "seller_name", "url", "source_url"):
         if key in out:
             out[key] = None
+
+    for key in ("title", "description"):
+        if key in out:
+            out[key] = _redact_embedded_phones(out[key])
 
     return out
 
@@ -84,7 +137,7 @@ def _days_ago(crawled_at: str) -> int:
     except Exception:
         return None
 
-def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0):
+def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
 
@@ -114,27 +167,78 @@ def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, 
         where_parts.append(f"{col('property_type')} IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
 
-    range_clauses, range_params = _range_filters(area_min, area_max, price_min, price_max, prefix)
+    range_clauses, range_params = _range_filters(
+        area_min,
+        area_max,
+        price_min,
+        price_max,
+        prefix,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+    )
     where_parts.extend(range_clauses)
     params.extend(range_params)
 
     return " AND ".join(where_parts), params
 
 
-def _range_filters(area_min=0, area_max=0, price_min=0, price_max=0, prefix=""):
+def _normalize_ranges(ranges):
+    normalized = []
+    for item in ranges or []:
+        if isinstance(item, dict):
+            raw_min, raw_max = item.get("min"), item.get("max")
+        else:
+            try:
+                raw_min, raw_max = item
+            except (TypeError, ValueError):
+                continue
+        try:
+            low = float(raw_min) if raw_min not in (None, "") else 0
+            high = float(raw_max) if raw_max not in (None, "") else 0
+        except (TypeError, ValueError):
+            continue
+        if low <= 0 and high <= 0:
+            continue
+        if low > 0 and high > 0 and low > high:
+            low, high = high, low
+        normalized.append((low, high))
+    return normalized
+
+
+def _append_range_group(clauses, params, column, ranges):
+    range_parts = []
+    for low, high in _normalize_ranges(ranges):
+        if low > 0 and high > 0:
+            range_parts.append(f"({column} >= ? AND {column} <= ?)")
+            params.extend([low, high])
+        elif low > 0:
+            range_parts.append(f"{column} >= ?")
+            params.append(low)
+        elif high > 0:
+            range_parts.append(f"{column} <= ?")
+            params.append(high)
+    if range_parts:
+        clauses.append("(" + " OR ".join(range_parts) + ")")
+        return True
+    return False
+
+
+def _range_filters(area_min=0, area_max=0, price_min=0, price_max=0, prefix="", area_ranges=None, price_ranges=None):
     col = lambda name: f"{prefix}{name}" if prefix else name
     clauses = []
     params = []
-    if area_min and area_min > 0:
+    has_area_ranges = _append_range_group(clauses, params, col('area_m2'), area_ranges)
+    if not has_area_ranges and area_min and area_min > 0:
         clauses.append(f"{col('area_m2')} >= ?")
         params.append(area_min)
-    if area_max and area_max > 0:
+    if not has_area_ranges and area_max and area_max > 0:
         clauses.append(f"{col('area_m2')} <= ?")
         params.append(area_max)
-    if price_min and price_min > 0:
+    has_price_ranges = _append_range_group(clauses, params, col('price_ty'), price_ranges)
+    if not has_price_ranges and price_min and price_min > 0:
         clauses.append(f"{col('price_ty')} >= ?")
         params.append(price_min)
-    if price_max and price_max > 0:
+    if not has_price_ranges and price_max and price_max > 0:
         clauses.append(f"{col('price_ty')} <= ?")
         params.append(price_max)
     return clauses, params
@@ -277,6 +381,14 @@ def _format_has_so(r):
     return not bool(_NO_SO_RE.search(_ascii_fold(text)))
 
 
+def _format_price_label(*texts):
+    folded = _ascii_fold(" ".join(str(t or "") for t in texts))
+    m = re.search(r'\b(\d+)\s*[,\.]\s*x\b\s*(?:ty|ti)\b', folded, re.I)
+    if m:
+        return f"khoảng {m.group(1)}.x tỷ"
+    return None
+
+
 def _format_signal_row(r, primary_img=None, tier: str = "guest"):
     fair_ppm2 = round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None
     record = {
@@ -287,6 +399,7 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "fair_ppm2": fair_ppm2,
         "area_m2": r['area_m2'],
         "price_ty": r['price_ty'],
+        "price_label": _format_price_label(r['title']),
         "prop_type": r['property_type'],
         "is_hot": bool(r['is_hot']),
         "price_dropped": bool(r['price_dropped']),
@@ -312,14 +425,26 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
     return redact_for_tier(record, tier)
 
 
-def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None):
+def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None, area_ranges=None, price_ranges=None):
     # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
     # Guest still sees the full deal feed; original URLs/phones stay redacted.
     if tier == "guest":
         mos_min = 0
         only_drops = False
     conn = _open_read_conn(db_path)
-    where_sql, params = _build_filters(sources, wards, prop_types, only_drops, prefix="l.", area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
+    where_sql, params = _build_filters(
+        sources,
+        wards,
+        prop_types,
+        only_drops,
+        prefix="l.",
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+    )
     mos_condition, mos_params = _mos_filter(mos_min)
     page = max(int(page or 1), 1)
     limit = min(max(int(limit or 30), 1), 100)
@@ -388,10 +513,21 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     }
 
 
-def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=0):
+def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=0, area_ranges=None, price_ranges=None):
     conn = _open_read_conn(db_path)
 
-    where_sql, params = _build_filters(sources, wards, prop_types, only_drops, area_min=area_min, area_max=area_max, price_min=price_min, price_max=price_max)
+    where_sql, params = _build_filters(
+        sources,
+        wards,
+        prop_types,
+        only_drops,
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+    )
     mos_condition, mos_params = _mos_filter(mos_min)
     fresh_flag = _fresh_lock_sql("l", delay_hours)
 
@@ -558,6 +694,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         redact_for_tier({
             "id": r['id'], "title": r['title'], "description": r['description'] or "",
             "price_ty": r['price_ty'], "area_m2": r['area_m2'],
+            "price_label": _format_price_label(r['title'], r['description']),
             "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
             "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
             "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
@@ -587,7 +724,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         "tier": tier,
     }
 
-def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0):
+def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
 
@@ -609,7 +746,14 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
     if prop_types:
         where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
-    range_clauses, range_params = _range_filters(area_min, area_max, price_min, price_max)
+    range_clauses, range_params = _range_filters(
+        area_min,
+        area_max,
+        price_min,
+        price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+    )
     where_parts.extend(range_clauses)
     params.extend(range_params)
     where_sql = " AND ".join(where_parts)
@@ -668,7 +812,8 @@ def _shift_month(d: date, delta: int) -> date:
 
 
 def _market_indicator_filters(sources=None, wards=None, prop_types=None, prefix="",
-                              area_min=0, area_max=0, price_min=0, price_max=0):
+                              area_min=0, area_max=0, price_min=0, price_max=0,
+                              area_ranges=None, price_ranges=None):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
 
@@ -690,7 +835,15 @@ def _market_indicator_filters(sources=None, wards=None, prop_types=None, prefix=
         where_parts.append(f"{col('property_type')} IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
 
-    range_clauses, range_params = _range_filters(area_min, area_max, price_min, price_max, prefix)
+    range_clauses, range_params = _range_filters(
+        area_min,
+        area_max,
+        price_min,
+        price_max,
+        prefix,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+    )
     where_parts.extend(range_clauses)
     params.extend(range_params)
     return " AND ".join(where_parts), params
@@ -722,7 +875,8 @@ def _supply_verdict(current_count: int, prev_avg: float):
 
 
 def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
-                           area_min=0, area_max=0, price_min=0, price_max=0):
+                           area_min=0, area_max=0, price_min=0, price_max=0,
+                           area_ranges=None, price_ranges=None):
     conn = _open_read_conn(db_path)
     where_sql, params = _market_indicator_filters(
         sources=sources,
@@ -733,6 +887,8 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
         area_max=area_max,
         price_min=price_min,
         price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
     )
 
     lot_cte = f"""

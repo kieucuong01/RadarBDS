@@ -263,6 +263,7 @@ function _renderSignalCards(signals) {
       const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       const fairNum = fairPrice !== '-' ? parseFloat(fairPrice) : NaN;
       const priceNum = parseFloat(x.price_ty);
+      const priceLabel = x.price_label || (x.price_ty ? `${x.price_ty} tỷ` : '-');
       const profit = fairPrice !== '-' ? (fairNum - priceNum).toFixed(2) : '-';
       const isOverpriced = Number.isFinite(priceNum) && Number.isFinite(fairNum) && priceNum > fairNum;
       const actualClass = isOverpriced ? 'price-over' : 'price-deal';
@@ -307,7 +308,7 @@ function _renderSignalCards(signals) {
           <div class="price-container">
             <div class="price-actual">
               <span class="price-label price-label-actual ${actualClass}">THỰC TẾ</span>
-              <div class="price-val ${actualClass}">${x.price_ty || '-'} tỷ</div>
+              <div class="price-val ${actualClass}">${escHtml(priceLabel)}</div>
               <div class="price-m2">${x.actual_ppm2 || '-'} tr/m²</div>
             </div>
             <div class="price-fair">

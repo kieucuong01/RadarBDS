@@ -39,6 +39,9 @@ class AdminControlRoomGateTest(unittest.TestCase):
             with get_conn() as conn:
                 conn.execute("DELETE FROM user_sessions WHERE token = ?", (self.admin_token,))
                 conn.execute("DELETE FROM users WHERE identifier = ?", (self.admin_identifier,))
+                conn.execute("DELETE FROM listings WHERE url LIKE ?", ("https://example.test/%",))
+                conn.execute("DELETE FROM raw_listings WHERE url LIKE ?", ("https://example.test/%",))
+                conn.execute("DELETE FROM crawl_runs WHERE area LIKE ?", ("ops-test-%",))
         except Exception:
             pass
 
@@ -154,6 +157,127 @@ class AdminControlRoomGateTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["job"]["limit"], 900)
+
+    def test_admin_crawl_config_includes_ops_summary(self):
+        import app as app_module
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        token = uuid.uuid4().hex[:8]
+        area = f"ops-test-{token}"
+        started_ok = f"2099-01-01T00:{int(token[:2], 16) % 50:02d}:00"
+        started_err = f"2099-01-01T00:{int(token[:2], 16) % 50:02d}:30"
+        with get_conn() as conn:
+            raw = conn.execute(
+                """
+                INSERT INTO raw_listings (source, url, raw_json)
+                VALUES (?, ?, ?)
+                """,
+                ("facebook", f"https://example.test/{uuid.uuid4().hex}", "{}"),
+            )
+            listing = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, url, title, area, property_type,
+                    price_ty, price_per_m2, area_m2
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    raw.lastrowid,
+                    "facebook",
+                    f"https://example.test/listing/{uuid.uuid4().hex}",
+                    "Signal seed",
+                    "Ben Cat",
+                    "dat",
+                    1.0,
+                    10.0,
+                    100.0,
+                ),
+            )
+            conn.execute(
+                """
+                INSERT INTO valuation_results (listing_id, fair_ppm2, actual_ppm2, mos_pct, is_signal)
+                VALUES (?, 10, 7, 30, 1)
+                """,
+                (listing.lastrowid,),
+            )
+            conn.execute(
+                """
+                INSERT INTO crawl_runs (
+                    source, area, n_fetched, n_new, n_updated, n_skipped,
+                    status, error_msg, started_at, finished_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "guland",
+                    area,
+                    12,
+                    4,
+                    2,
+                    1,
+                    "done",
+                    "",
+                    started_ok,
+                    "2099-01-01T00:59:00",
+                ),
+            )
+            conn.execute(
+                """
+                INSERT INTO crawl_runs (
+                    source, area, n_fetched, n_new, n_updated, n_skipped,
+                    status, error_msg, started_at, finished_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "batdongsan",
+                    area,
+                    0,
+                    0,
+                    0,
+                    0,
+                    "error",
+                    "Cloudflare",
+                    started_err,
+                    "2099-01-01T00:58:00",
+                ),
+            )
+
+        with mock.patch.object(app_module, "_daily_crawl_schedule_status", return_value={
+            "task_name": "RadarBDS_DailyCrawl",
+            "installed": True,
+            "state": "Ready",
+            "next_run_time": "5/27/2026 9:00:00 PM",
+            "last_run_time": "5/26/2026 9:00:00 PM",
+            "last_result": "0",
+            "run_time": "21:00",
+            "task_to_run": "cmd /c crawl-daily",
+            "error": "",
+        }), mock.patch.object(app_module, "_active_radar_lock_blockers", return_value=[
+            {"name": "reprocess", "pid": 1234, "state": "idle in transaction", "age_seconds": 90}
+        ]):
+            response = self.client.get("/admin/api/facebook-crawl/config")
+
+        self.assertEqual(response.status_code, 200)
+        ops = response.get_json()["summary"]["ops"]
+        self.assertEqual(ops["schedule"]["run_time"], "21:00")
+        self.assertEqual(ops["last_run"]["source"], "batdongsan")
+        self.assertEqual(ops["last_24h"]["new"], 4)
+        self.assertGreaterEqual(ops["signal_count"], 1)
+        self.assertEqual(ops["source_errors"][0]["source"], "batdongsan")
+        self.assertEqual(ops["lock_blockers"][0]["name"], "reprocess")
+
+    def test_admin_js_renders_crawl_ops_panel(self):
+        root = Path(__file__).resolve().parent.parent
+        js = (root / "static/js/admin.js").read_text(encoding="utf-8")
+        html = (root / "templates/admin_control_room.html").read_text(encoding="utf-8")
+        css = (root / "static/css/admin.css").read_text(encoding="utf-8")
+
+        self.assertIn('id="crawlOpsPanel"', html)
+        self.assertIn("function renderCrawlOps", js)
+        self.assertIn("source_errors", js)
+        self.assertIn("lock_blockers", js)
+        self.assertIn("RadarBDS_DailyCrawl", js)
+        self.assertIn(".crawl-ops-panel", css)
 
     def test_admin_crawl_reprocesses_only_refreshed_raw_ids(self):
         import app as app_module

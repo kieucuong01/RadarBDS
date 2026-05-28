@@ -169,7 +169,8 @@ Module: `alerts/ops.py` — tách hẳn khỏi `alerts/telegram.py` để bounda
 ## 3b. Windows Task Scheduler
 
 ```powershell
-python radar.py schedule-setup                # daily 10:15 (defaults)
+python radar.py schedule-setup                # daily 21:00 (defaults)
+python radar.py schedule-setup --time 21:00   # 9h tối
 python radar.py schedule-setup --time 04:15   # đổi giờ
 python radar.py schedule-setup --every 2      # cách ngày
 python radar.py schedule-setup --remove       # gỡ task

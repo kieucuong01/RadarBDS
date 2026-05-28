@@ -147,6 +147,59 @@ class GuestVisibilityTest(unittest.TestCase):
         self.assertEqual(data["price_ty"], 2.0)
         self.assertEqual(data["url"], None)
 
+    def test_guest_listing_detail_redacts_phone_numbers_embedded_in_description(self):
+        from db.connection import get_conn
+        from services.market_data import load_listing_detail
+
+        description = "Fresh listing description.\nLH 038 294 1231 gap em Phuong giap chu."
+        with get_conn() as conn:
+            conn.execute(
+                "UPDATE listings SET description=?, seller_name=? WHERE id=?",
+                (description, "Phuong Giap", self.listing_id),
+            )
+
+        response = self.client.get(f"/api/listing/{self.listing_id}")
+        self.assertEqual(response.status_code, 200)
+
+        guest_data = response.get_json()
+        self.assertNotIn("038 294 1231", guest_data["description"])
+        self.assertNotIn("0382941231", guest_data["description"])
+        self.assertNotIn("Phuong", guest_data["description"])
+        self.assertNotIn("giap chu", guest_data["description"])
+        self.assertIn("Liên hệ tư vấn", guest_data["description"])
+
+        guest_detail = load_listing_detail(str(self.db_path), self.listing_id, tier="guest")
+        self.assertIsNone(guest_detail["listing"]["seller_name"])
+
+        admin_data = load_listing_detail(str(self.db_path), self.listing_id, tier="admin")
+        self.assertEqual(admin_data["listing"]["description"], description)
+        self.assertEqual(admin_data["listing"]["seller_name"], "Phuong Giap")
+
+    def test_redact_for_tier_hides_embedded_phone_numbers_for_non_admin_tiers(self):
+        from services.market_data import redact_for_tier
+
+        record = {
+            "title": "Ban dat goi 0382941231",
+            "description": "Lien he +84 38 294 1231 hoac 038.294.1231",
+            "url": "https://example.test/listing",
+            "contact_phone": "0382941231",
+            "seller_name": "Phuong Giap",
+        }
+
+        for tier in ("guest", "free", "vip"):
+            redacted = redact_for_tier(record, tier)
+            self.assertNotIn("0382941231", redacted["title"])
+            self.assertNotIn("+84 38 294 1231", redacted["description"])
+            self.assertNotIn("038.294.1231", redacted["description"])
+            self.assertIn("Liên hệ tư vấn", redacted["title"])
+            self.assertIn("Liên hệ tư vấn", redacted["description"])
+            self.assertIsNone(redacted["url"])
+            self.assertIsNone(redacted["contact_phone"])
+            self.assertIsNone(redacted["seller_name"])
+
+        admin = redact_for_tier(record, "admin")
+        self.assertEqual(admin, record)
+
 
 if __name__ == "__main__":
     unittest.main()

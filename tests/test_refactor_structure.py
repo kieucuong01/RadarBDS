@@ -48,6 +48,46 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
     assert not main_js.exists() or main_js.stat().st_size < 1200
 
 
+def test_all_listings_tab_supports_table_and_grid_views():
+    html = _read("templates/index.html")
+    listings_js = _read("static/js/main/listings.js")
+    layout_css = _read("static/css/main/layout.css")
+
+    for expected_id in [
+        'id="listingsViewTable"',
+        'id="listingsViewGrid"',
+        'id="listingsTableView"',
+        'id="listingsGrid"',
+    ]:
+        assert expected_id in html
+
+    for expected_symbol in [
+        "listingsView =",
+        "function setListingsView",
+        "function renderListingCards",
+        "listings-grid",
+    ]:
+        assert expected_symbol in listings_js
+
+    assert ".listings-grid" in layout_css
+
+
+def test_price_and_area_filters_support_multi_select_range_chips():
+    html = _read("templates/index.html")
+    filters_js = _read("static/js/main/filters.js")
+    filters_css = _read("static/css/main/filters.css")
+
+    for expected in [
+        'data-range-name="price_range"',
+        'data-range-name="area_range"',
+        "toggleRangePreset",
+        "selectedRangeTokens",
+    ]:
+        assert expected in html or expected in filters_js
+
+    assert ".range-chip.active" in filters_css
+
+
 def test_index_loads_css_domain_files_in_dependency_order():
     html = _read("templates/index.html")
     expected_order = [

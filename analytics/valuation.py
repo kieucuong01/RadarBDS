@@ -52,7 +52,7 @@ SIZE_DISCOUNT_ALPHA = {
     'nha_dat':  0.50,
     'nha_tro':  0.40,
 }
-SIZE_DISCOUNT_CAP   = (0.65, 1.40)
+SIZE_DISCOUNT_CAP   = (0.65, 1.20)
 
 # Multipliers chỉ dùng làm fallback khi dùng Median
 # tier-0 (unknown) → 0.50 như tier-3: tin không đọc được tier thường là hẻm
@@ -344,6 +344,7 @@ class SegmentModel:
 
     def predict_fair_ppm2(self, listing: Listing) -> Optional[float]:
         if not self.fitted: return None
+        uses_regression = self.beta is not None
         if self.beta is not None:
             log_area = math.log(max(listing.area_m2 or 1, 1))
             # tier-0 unknown → encode như tier-3 (hẻm mặc định)
@@ -362,8 +363,9 @@ class SegmentModel:
         # Adjustments
         prop_type = self.segment_key[1]
         alpha = SIZE_DISCOUNT_ALPHA.get(prop_type)
-        if alpha and listing.area_m2 and self.ref_area_m2:
-            mult = max(0.65, min(1.40, (self.ref_area_m2 / listing.area_m2) ** alpha))
+        if not uses_regression and alpha and listing.area_m2 and self.ref_area_m2:
+            cap_min, cap_max = SIZE_DISCOUNT_CAP
+            mult = max(cap_min, min(cap_max, (self.ref_area_m2 / listing.area_m2) ** alpha))
             base_fair *= mult
         
         # Regex

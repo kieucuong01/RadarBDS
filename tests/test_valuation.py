@@ -8,7 +8,7 @@ from datetime import date
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from analytics.valuation import (
-    Listing, ValuationEngine,
+    Listing, SegmentModel, ValuationEngine,
     compute_signal_score, proximity_score_for_ward, remove_outliers,
 )
 
@@ -273,6 +273,30 @@ def test_road_tier_adjustment():
     assert r1 and r4
     # Tier 1 fair > Tier 4 fair cho cùng 1 actual price
     assert r1.price_per_m2_fair > r4.price_per_m2_fair
+
+
+def test_small_land_lot_size_premium_is_capped_at_twenty_percent():
+    listings = [_make_listing(i, 20.0, area=135.0, road_tier=2) for i in range(10)]
+    engine = ValuationEngine()
+    engine.fit(listings)
+
+    target = _make_listing(200, 10.0, area=62.3, road_tier=2)
+    result = engine.valuate(target)
+
+    assert result is not None
+    assert result.price_per_m2_fair == 22.8
+
+
+def test_regression_model_does_not_apply_extra_size_premium():
+    model = SegmentModel(("Tân An", "dat_nen", "ban"))
+    model.fitted = True
+    model.n_samples = 20
+    model.ref_area_m2 = 135.0
+    model.beta = [20.0, 0.0, 0.0, 0.0, 0.0]
+
+    target = _make_listing(201, 10.0, area=62.3, road_tier=2)
+
+    assert model.predict_fair_ppm2(target) == 19.0
 
 
 def test_has_so_discount():
