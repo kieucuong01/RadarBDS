@@ -16,6 +16,11 @@ from datetime import datetime, timezone
 
 from db.connection import get_conn
 from db.schema import init_schema
+from services.signal_quality import (
+    LATEST_VALUATION_CTE,
+    actionable_listing_sql,
+    actionable_signal_sql,
+)
 
 CLAUDE_VERDICTS = {"cheap_real", "suspect", "not_cheap", "insufficient_info"}
 _MODEL = "claude-code-interactive"
@@ -28,21 +33,21 @@ def cmd_review_queue(args):
 
     top = getattr(args, "top", None) or 5
     ward = getattr(args, "ward", None)
+    signal_condition = actionable_signal_sql("v")
+    listing_condition = actionable_listing_sql("l")
 
-    sql = """
+    sql = f"""
+        WITH {LATEST_VALUATION_CTE}
         SELECT l.id, l.title, l.url, l.ward, l.price_ty, l.area_m2,
                v.mos_pct, v.signal_score
         FROM listings l
-        JOIN valuation_results v ON v.listing_id = l.id
+        JOIN latest_valuation v ON v.listing_id = l.id
         LEFT JOIN ai_deal_review r
                ON r.id = (SELECT id FROM ai_deal_review
                           WHERE listing_id = l.id
                           ORDER BY created_at DESC LIMIT 1)
-        WHERE v.is_signal = 1 AND v.signal_score IS NOT NULL
+        WHERE {signal_condition} AND {listing_condition} AND v.signal_score IS NOT NULL
           AND r.id IS NULL
-          AND COALESCE(l.is_blacklisted, 0) = 0
-          AND COALESCE(l.review_hidden, 0) = 0
-          AND COALESCE(l.probably_sold, 0) = 0
     """
     params = []
     if ward:

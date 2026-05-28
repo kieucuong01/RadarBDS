@@ -16,6 +16,7 @@ import re
 import unicodedata
 
 from config.proximity import proximity_score_for_ward
+from services.signal_quality import ACTIONABLE_SUPPRESS_FLAGS
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,8 @@ OUTLIER_SIGMA   = 2.0
 TIME_DECAY_DAYS = 90
 GULAND_SIGNAL_EXTRA_MOS = 0.08
 GULAND_STRONG_SIGNAL_SCORE = 55
+GULAND_USER_ACTIONABLE_EXTRA_MOS = 0.20
+GULAND_USER_ACTIONABLE_MIN_SCORE = 65
 SOURCE_SIGNAL_SUPPRESS_FLAGS = {
     "old_guland_post",
     "extreme_guland_ppm2",
@@ -40,11 +43,17 @@ SOURCE_SIGNAL_SUPPRESS_FLAGS = {
     "guland_cluster_flood",
 }
 DEFAULT_BASELINE_SOURCES = ("facebook",)
+PRIMARY_BASELINE_MIN_CANONICAL_N = 35
+SUPPLEMENTAL_BASELINE_SOURCE = "guland"
+SUPPLEMENTAL_BASELINE_WEIGHT = 0.40
+SUPPLEMENTAL_GULAND_OLD_POST_DAYS = 14
+SUPPLEMENTAL_LARGE_LOT_AREA_M2 = 1000.0
 
 FAIR_FLOOR_RATIO = 0.70
 EXPECTED_NEGOTIATION_RATIO = 0.95
 
 RIDGE_LAMBDA = 1.0
+TIER3_MAX_OF_TIER2 = 0.80
 # NOTE 2026-05-05: CV_MULTIPLIER đã bị loại — xem mos_threshold() comment.
 
 SIZE_DISCOUNT_ALPHA = {
@@ -88,14 +97,18 @@ class Listing:
     is_hot:         bool = False
     price_dropped:  bool = False
     crawled_at:     Optional[date] = None
+    posted_at:      Optional[date] = None
     url:            str = ''
     contact_phone:  str = ''
     title:          str = ''
     description:    str = ''
     source:         str = ''
+    duplicate_of_id: Optional[int] = None
     exclude_from_baseline: bool = False
+    baseline_weight: float = 1.0
     source_quality_flags:  Tuple[str, ...] = field(default_factory=tuple)
     review_recheck_candidate: bool = False
+    positive_feedback: bool = False
     legal_status:   str = 'unverified'
     trust_tier:     str = 'candidate_signal'
     trust_score:    int = 0
@@ -221,6 +234,20 @@ def _passes_source_signal_gate(listing: 'Listing', discount: float,
         or (discount >= base_threshold and score >= GULAND_STRONG_SIGNAL_SCORE)
     )
 
+
+def _passes_guland_user_facing_gate(listing: 'Listing', discount: float,
+                                    base_threshold: float, score: int) -> bool:
+    if not _is_guland(listing):
+        return True
+    if getattr(listing, "positive_feedback", False):
+        return True
+    if (getattr(listing, "trust_tier", "") or "") == "has_legal_doc":
+        return True
+    return (
+        discount >= base_threshold + GULAND_USER_ACTIONABLE_EXTRA_MOS
+        and score >= GULAND_USER_ACTIONABLE_MIN_SCORE
+    )
+
 def remove_outliers(values: List[float], sigma: float = OUTLIER_SIGMA) -> Tuple[List[float], float, float]:
     if len(values) < 3:
         return values, float(np.mean(values)), float(np.std(values))
@@ -268,7 +295,8 @@ def compute_time_weights(listings: List[Listing], today: Optional[date] = None) 
     weights = []
     for l in listings:
         age = (today - l.crawled_at).days if l.crawled_at else 90
-        weights.append(math.exp(-max(age, 0) / TIME_DECAY_DAYS))
+        source_weight = float(getattr(l, "baseline_weight", 1.0) or 1.0)
+        weights.append(math.exp(-max(age, 0) / TIME_DECAY_DAYS) * max(source_weight, 0.01))
     return np.array(weights, dtype=float)
 
 def weighted_ols(X: np.ndarray, y: np.ndarray, w: np.ndarray, ridge: float = RIDGE_LAMBDA) -> Optional[np.ndarray]:
@@ -353,6 +381,13 @@ class SegmentModel:
             x_list = [1.0, log_area, t1, t3, t4]
             for w in self.wards_in_model: x_list.append(1.0 if listing.ward == w else 0.0)
             base_fair = float(np.array(x_list) @ self.beta)
+            if eff_tier == 3:
+                tier2_x_list = [1.0, log_area, 0.0, 0.0, 0.0]
+                for w in self.wards_in_model:
+                    tier2_x_list.append(1.0 if listing.ward == w else 0.0)
+                tier2_fair = float(np.array(tier2_x_list) @ self.beta)
+                if tier2_fair and tier2_fair > 0:
+                    base_fair = min(base_fair, tier2_fair * TIER3_MAX_OF_TIER2)
         else:
             base_fair = self.median_ppm2
             if self.segment_key[1] in _ROAD_TIER_PROP_TYPES:
@@ -416,26 +451,102 @@ class ValuationEngine:
             return (parent, l.property_type, l.tx_type)
         return None
 
+    def _dedupe_training_lots(self, listings: List[Listing]) -> List[Listing]:
+        lots: Dict[int, Listing] = {}
+        for listing in listings:
+            lot_id = getattr(listing, "duplicate_of_id", None) or listing.id
+            if not lot_id:
+                lots[id(listing)] = listing
+                continue
+            current = lots.get(lot_id)
+            if current is None:
+                lots[lot_id] = listing
+                continue
+            # Prefer the canonical row when it is present; otherwise keep the
+            # latest available duplicate in the group.
+            if listing.id == lot_id and current.id != lot_id:
+                lots[lot_id] = listing
+                continue
+            if current.id != lot_id and (listing.crawled_at or date.min) > (current.crawled_at or date.min):
+                lots[lot_id] = listing
+        return list(lots.values())
+
+    def _is_primary_baseline_source(self, listing: Listing) -> bool:
+        source = (getattr(listing, "source", "") or "").strip().lower()
+        return not self._baseline_sources or not source or source in self._baseline_sources
+
+    def _is_strict_supplemental_baseline(self, listing: Listing) -> bool:
+        source = (getattr(listing, "source", "") or "").strip().lower()
+        if source != SUPPLEMENTAL_BASELINE_SOURCE:
+            return False
+        if getattr(listing, "exclude_from_baseline", False) or _source_flags(listing):
+            return False
+        if not listing.ward or listing.ward == "unknown":
+            return False
+        if not listing.price_total or not listing.price_per_m2 or not listing.area_m2:
+            return False
+        if listing.property_type == "dat_vuon" or listing.area_m2 >= SUPPLEMENTAL_LARGE_LOT_AREA_M2:
+            if (listing.road_tier or 0) <= 0:
+                return False
+        posted = getattr(listing, "posted_at", None)
+        crawled = getattr(listing, "crawled_at", None)
+        if posted and crawled and (crawled - posted).days >= SUPPLEMENTAL_GULAND_OLD_POST_DAYS:
+            return False
+        return True
+
+    def _add_training_listing(self, groups, parent_groups, fallback_groups, listing: Listing):
+        from config.area_profiles import ALL_SUBWARDS
+        groups[self._key(listing)].append(listing)
+        fallback_groups[self._fallback_key(listing)].append(listing)
+        parent = ALL_SUBWARDS.get(listing.ward)
+        if parent:
+            parent_groups[(parent, listing.property_type, listing.tx_type)].append(listing)
+
+    def _combine_primary_and_supplemental(self, primary_groups, supplemental_groups):
+        combined = {}
+        for key in set(primary_groups) | set(supplemental_groups):
+            primary = primary_groups.get(key, [])
+            if len(primary) < PRIMARY_BASELINE_MIN_CANONICAL_N:
+                listings = primary + supplemental_groups.get(key, [])
+            else:
+                listings = primary
+            if listings:
+                combined[key] = listings
+        return combined
+
     def fit(self, listings, conn=None):
         from collections import defaultdict
-        from config.area_profiles import ALL_SUBWARDS
-        segs          = defaultdict(list)
-        fallback_segs = defaultdict(list)
-        parent_segs   = defaultdict(list)   # aggregate sub-ward → parent
+        listings = self._dedupe_training_lots(listings)
+        primary_segs = defaultdict(list)
+        primary_fallback_segs = defaultdict(list)
+        primary_parent_segs = defaultdict(list)
+        supplemental_segs = defaultdict(list)
+        supplemental_fallback_segs = defaultdict(list)
+        supplemental_parent_segs = defaultdict(list)
         for l in listings:
             if l.property_type in SPECIAL_MARKET_SKIP_TYPES:
                 continue  # chưa đủ data — skip segment build
             if getattr(l, "exclude_from_baseline", False) or _source_flags(l):
                 continue
-            source = (getattr(l, "source", "") or "").strip().lower()
-            if self._baseline_sources and source and source not in self._baseline_sources:
+            if not (l.price_per_m2 and l.area_m2):
                 continue
-            if l.price_per_m2 and l.area_m2:
-                segs[self._key(l)].append(l)
-                fallback_segs[self._fallback_key(l)].append(l)
-                parent = ALL_SUBWARDS.get(l.ward)
-                if parent:
-                    parent_segs[(parent, l.property_type, l.tx_type)].append(l)
+            if self._is_primary_baseline_source(l):
+                l.baseline_weight = 1.0
+                self._add_training_listing(
+                    primary_segs, primary_parent_segs, primary_fallback_segs, l
+                )
+            elif self._is_strict_supplemental_baseline(l):
+                l.baseline_weight = SUPPLEMENTAL_BASELINE_WEIGHT
+                self._add_training_listing(
+                    supplemental_segs, supplemental_parent_segs, supplemental_fallback_segs, l
+                )
+        segs = self._combine_primary_and_supplemental(primary_segs, supplemental_segs)
+        parent_segs = self._combine_primary_and_supplemental(
+            primary_parent_segs, supplemental_parent_segs
+        )
+        fallback_segs = self._combine_primary_and_supplemental(
+            primary_fallback_segs, supplemental_fallback_segs
+        )
         for k, ls in segs.items():
             m = SegmentModel(k)
             m.fit(ls)
@@ -473,13 +584,33 @@ class ValuationEngine:
         discount = (fair - actual) / fair
         base_threshold = m.mos_threshold()
         provisional_score = compute_signal_score(listing, discount * 100)
-        quality_flags = tuple(sorted(_source_flags(listing)))
-        source_quality_recheck = bool(
-            _is_guland(listing)
-            and (set(quality_flags) & SOURCE_SIGNAL_SUPPRESS_FLAGS)
-            and discount >= base_threshold
+        quality_flags = set(_source_flags(listing))
+        model_signal = discount >= base_threshold
+        source_gate_pass = _passes_source_signal_gate(
+            listing, discount, base_threshold, provisional_score
         )
-        is_sig = _passes_source_signal_gate(listing, discount, base_threshold, provisional_score)
+        if model_signal and _is_guland(listing) and not source_gate_pass:
+            if not (quality_flags & SOURCE_SIGNAL_SUPPRESS_FLAGS):
+                quality_flags.add("guland_weak_signal")
+        if (
+            model_signal
+            and _is_guland(listing)
+            and source_gate_pass
+            and not _passes_guland_user_facing_gate(
+                listing, discount, base_threshold, provisional_score
+            )
+        ):
+            quality_flags.add("guland_user_facing_risk")
+        if (
+            m.n_samples < MIN_RELIABLE_N_FOR_SIGNAL
+            and not listing.review_recheck_candidate
+            and not listing.positive_feedback
+        ):
+            quality_flags.add("low_segment_confidence")
+        source_quality_recheck = bool(
+            model_signal and (quality_flags & ACTIONABLE_SUPPRESS_FLAGS)
+        )
+        is_sig = model_signal
         # Tin có ward=NULL/unknown → KHÔNG signal: hoặc nằm ngoài TDM (bị blacklist),
         # hoặc địa chỉ không xác định → không đáng tin để so segment.
         # (Vẫn lưu valuation result để audit nhưng is_signal=False)
@@ -488,8 +619,6 @@ class ValuationEngine:
         # Gate signal khi mẫu so sánh quá yếu (segment dưới ngưỡng regression-fit).
         # Khi n_samples < MIN_RELIABLE_N_FOR_SIGNAL, fair_value đã rơi về median fallback —
         # không đủ tin cậy để gắn cờ signal dù MOS lớn. Vẫn lưu valuation_result để audit.
-        if m.n_samples < MIN_RELIABLE_N_FOR_SIGNAL and not listing.review_recheck_candidate:
-            is_sig = False
         if _has_legal_conflict(listing):
             is_sig = False
         sigma = (actual - m.mean_ppm2) / m.std_ppm2 if m.std_ppm2 else 0
@@ -521,7 +650,7 @@ class ValuationEngine:
             outlier_direction='low' if sigma<-2 else ('high' if (sigma>2 or is_hard_outlier) else ''),
             outlier_sigma=round(max(abs(sigma), 5.0 if is_hard_outlier else 0), 2), 
             note=' | '.join(note),
-            source_quality_flags=quality_flags,
+            source_quality_flags=tuple(sorted(quality_flags)),
             source_quality_recheck=source_quality_recheck,
             legal_status=getattr(listing, "legal_status", "unverified") or "unverified",
             trust_tier=getattr(listing, "trust_tier", "candidate_signal") or "candidate_signal",

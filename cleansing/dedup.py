@@ -514,6 +514,54 @@ def _inherit_missing_group_values(rows: list[dict]) -> list[dict]:
     return hydrated
 
 
+def _reconcile_price_first_from_history(conn: Any) -> None:
+    """Recover first asking price from the earliest same-URL history snapshot."""
+    conn.execute("""
+        WITH first_history AS (
+            SELECT DISTINCT ON (listing_id)
+                   listing_id,
+                   price_ty AS first_price
+            FROM price_history
+            WHERE price_ty IS NOT NULL
+              AND price_ty > 0
+            ORDER BY listing_id, recorded_at ASC, id ASC
+        )
+        UPDATE listings l
+        SET price_first_ty = fh.first_price
+        FROM first_history fh
+        WHERE l.id = fh.listing_id
+          AND COALESCE(l.probably_sold,0) = 0
+          AND fh.first_price IS NOT NULL
+          AND fh.first_price > 0
+          AND (
+                l.price_first_ty IS NULL
+             OR ABS(l.price_first_ty - fh.first_price) > 0.000001
+          )
+    """)
+    conn.execute("""
+        UPDATE listings
+        SET price_dropped = CASE
+                WHEN price_first_ty IS NOT NULL
+                 AND price_ty IS NOT NULL
+                 AND price_ty < price_first_ty * 0.99
+                 AND price_ty >= price_first_ty * 0.60
+                THEN 1 ELSE 0 END,
+            price_drop_pct = CASE
+                WHEN price_first_ty IS NOT NULL
+                 AND price_ty IS NOT NULL
+                 AND price_ty < price_first_ty * 0.99
+                 AND price_ty >= price_first_ty * 0.60
+                THEN ROUND(((price_first_ty - price_ty) / price_first_ty * 100)::numeric, 2)
+                ELSE NULL END,
+            suspicious_bait = CASE
+                WHEN price_first_ty IS NOT NULL
+                 AND price_ty IS NOT NULL
+                 AND price_ty < price_first_ty * 0.60
+                THEN 1 ELSE 0 END
+        WHERE probably_sold = 0
+    """)
+
+
 def flag_duplicates_in_db(conn: Any) -> dict:
     """Flag duplicate reposts and reliable repost price drops."""
     existing_cols = {
@@ -528,6 +576,8 @@ def flag_duplicates_in_db(conn: Any) -> dict:
     }
     if "suspicious_bait" not in existing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN suspicious_bait INTEGER DEFAULT 0")
+
+    _reconcile_price_first_from_history(conn)
 
     conn.execute("""
         UPDATE listings

@@ -244,6 +244,58 @@ class AiDealReviewTest(unittest.TestCase):
         self.assertEqual(out2["items"][0]["listing_id"], b)
         self.assertIn("memo", out2["items"][0])
 
+    def test_review_queue_uses_latest_actionable_valuation_only(self):
+        from db.connection import get_conn
+
+        stale_signal = self._insert_signal(url="https://t.test/stale-signal")
+        flagged_signal = self._insert_signal(url="https://t.test/flagged-signal")
+        with get_conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO valuation_results (listing_id, fair_ppm2,
+                    actual_ppm2, mos_pct, is_signal, signal_score, n_segment)
+                VALUES (?, 20.0, 25.0, -25.0, 0, 0, 25)
+                """,
+                (stale_signal,),
+            )
+            conn.execute(
+                """
+                UPDATE valuation_results
+                   SET source_quality_recheck=1,
+                       source_quality_flags='parsed_discount_as_price'
+                 WHERE listing_id=?
+                """,
+                (flagged_signal,),
+            )
+
+        out = self._run_queue(top=10)
+        shown = {item["listing_id"] for item in out["items"]}
+
+        self.assertNotIn(stale_signal, shown)
+        self.assertNotIn(flagged_signal, shown)
+
+    def test_review_queue_skips_duplicate_actionable_reposts(self):
+        from db.connection import get_conn
+
+        canonical = self._insert_signal(url="https://t.test/review-canonical")
+        duplicate = self._insert_signal(url="https://t.test/review-duplicate")
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                   SET possibly_duplicate=1,
+                       duplicate_of_id=?
+                 WHERE id=?
+                """,
+                (canonical, duplicate),
+            )
+
+        out = self._run_queue(top=10)
+        shown = [item["listing_id"] for item in out["items"]]
+
+        self.assertIn(canonical, shown)
+        self.assertNotIn(duplicate, shown)
+
     # ---- 4. disagreement strict mapping -------------------------------
     def test_disagreement_strict(self):
         import app as app_module

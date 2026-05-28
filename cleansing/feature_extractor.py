@@ -31,6 +31,24 @@ def _ascii_fold(text: str) -> str:
     ).lower()
 
 
+_NON_ASKING_PRICE_PATTERNS = [
+    # "Rẻ hơn thị trường 100 triệu" / "thấp hơn 1 tỷ" is a delta, not asking price.
+    r'(?:rẻ\s*hơn|re\s*hon|thấp\s*hơn|thap\s*hon)\s*(?:thị\s*trường|thi\s*truong)?\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
+    # Down-payment / financing snippets are not total asking price.
+    r'(?:đưa\s*trước|dua\s*truoc|trả\s*trước|tra\s*truoc|đặt\s*cọc|dat\s*coc|cọc|coc)\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
+    r'(?:vay|ngân\s*hàng|ngan\s*hang|nh)\s*(?:hỗ\s*trợ|ho\s*tro|được|duoc)?\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
+    # Contact-only price lines such as "Giá LH 0967..." should not make nearby deltas valid.
+    r'(?:giá|gia)\s*(?:lh|liên\s*hệ|lien\s*he|hotline|zalo)\s*[:：\-]?\s*(?:\+?84|0)?[\d\s.\-()]{8,}',
+]
+
+
+def _strip_non_asking_price_phrases(text: str) -> str:
+    out = text or ""
+    for pattern in _NON_ASKING_PRICE_PATTERNS:
+        out = re.sub(pattern, " ", out, flags=re.IGNORECASE)
+    return out
+
+
 # ═══════════════════════════════════════════════════════════════════
 # 1. GIÁ
 # ═══════════════════════════════════════════════════════════════════
@@ -49,9 +67,10 @@ def extract_price(text: str) -> Optional[float]:
       "Thỏa thuận" / "Giá thỏa thuận" → None
     """
     t = unicodedata.normalize("NFKC", text or "").lower().strip()
-    t_fold = _ascii_fold(t)
     # Normalize "tỉ" (biến thể không chuẩn) → "tỷ" để pattern match thống nhất
     t = t.replace('tỉ', 'tỷ')
+    t = _strip_non_asking_price_phrases(t)
+    t_fold = _ascii_fold(t)
 
     # GUARD: "1txx" / "2txx" / "1 tỷ xxx" — môi giới ám chỉ "1 tỷ mấy trăm"
     # nhưng KHÔNG xác định → trả None thay vì guess.
@@ -69,7 +88,7 @@ def extract_price(text: str) -> Optional[float]:
     # "hạ 4 tỷ" / "giảm 2 tỷ" / "bớt 500tr" — đó là mức giảm, KHÔNG phải giá.
     # (User: "Giá hạ 4 tỷ chứ k phải giá là 4 tỷ")
     t = re.sub(
-        r'(?:hạ|giảm|giảm\s*mạnh|bớt)\s*(?:giá\s*)?[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|triệu|tr|m|k)\b',
+        r'(?:hạ|bớt|giảm(?!\s*còn)|giảm\s+mạnh|giảm\s+sâu)\s*(?:giá\s*)?(?:\w+\s+){0,2}[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|triệu|tr|m|k)\b',
         ' ', t, flags=re.IGNORECASE
     )
 
@@ -299,6 +318,44 @@ def extract_area(text: str) -> Optional[float]:
 # ═══════════════════════════════════════════════════════════════════
 # 3. GIÁ / M²
 # ═══════════════════════════════════════════════════════════════════
+
+_MULTI_LOT_LABEL_RE = re.compile(r'\blo\s*(?:so\s*)?\d{1,2}\b', re.IGNORECASE)
+_MULTI_LOT_AREA_RE = re.compile(
+    r'\b\d{2,5}(?:[,.]\d+)?\s*m2\b|'
+    r'\b\d{1,3}(?:[,.]\d+)?\s*[x×]\s*\d{1,3}(?:[,.]\d+)?\s*m?\b',
+    re.IGNORECASE,
+)
+_MULTI_LOT_PRICE_RE = re.compile(
+    r'\b\d{1,3}(?:[,.]\d{1,3})?\s*(?:ty|ti)\b|'
+    r'\b\d{1,3}\s*t\s*\d{1,3}\b|'
+    r'\b\d{3,4}\s*(?:tr|trieu)\b',
+    re.IGNORECASE,
+)
+
+
+def is_multi_lot_listing(title: str, description: str = "") -> bool:
+    """Detect posts that advertise multiple lots with separate area/price pairs."""
+    text = _ascii_fold(" ".join(part for part in [title, description] if part))
+    text = text.replace("đ", "d").replace("Đ", "d")
+    labels = list(_MULTI_LOT_LABEL_RE.finditer(text))
+    if len(labels) < 2:
+        return False
+
+    offer_like_chunks = 0
+    for idx, match in enumerate(labels):
+        next_start = labels[idx + 1].start() if idx + 1 < len(labels) else len(text)
+        chunk = text[match.start():next_start]
+        if _MULTI_LOT_AREA_RE.search(chunk) and _MULTI_LOT_PRICE_RE.search(chunk):
+            offer_like_chunks += 1
+
+    if offer_like_chunks >= 2:
+        return True
+
+    return (
+        len(_MULTI_LOT_AREA_RE.findall(text)) >= 2
+        and len(_MULTI_LOT_PRICE_RE.findall(text)) >= 2
+    )
+
 
 def extract_price_per_m2(text: str) -> Optional[float]:
     """
@@ -1125,6 +1182,47 @@ def _classify_dat_only(
     return 'dat_nen'
 
 
+def _has_source_category_land_override(
+    text: str,
+    area_m2: Optional[float],
+    tho_cu_m2: Optional[float],
+    url_hint: Optional[str],
+) -> bool:
+    has_conflicting_category = (
+        url_hint in {'chung_cu', 'kho_xuong'}
+        or _CHUNG_CU_RE.search(text)
+        or _is_kho_xuong_text(text)
+    )
+    if not has_conflicting_category:
+        return False
+
+    folded = _ascii_fold(text).replace("Ä‘", "d").replace("Ä", "d")
+    has_land_asset = bool(re.search(
+        r'\b(?:ban\s+)?(?:lo\s+)?dat\b|'
+        r'\blo\s+dat\b|'
+        r'\bdat\s+(?:nen|vuon|tho\s*cu|nong\s*nghiep|cln|nhanh?)\b|'
+        r'\bchua\s*(?:co\s*)?tho\s*cu\b',
+        folded,
+    ))
+    has_land_scale_or_legal = bool(
+        (area_m2 and area_m2 >= 300)
+        or tho_cu_m2 is not None
+        or re.search(r'\bchua\s*(?:co\s*)?tho\s*cu\b|\bcln\b|\bdat\s*nong\s*nghiep\b', folded)
+        or re.search(r'\b\d+(?:[,.]\d+)?\s*[x×]\s*\d+(?:[,.]\d+)?\b', folded)
+    )
+    has_unit_evidence = bool(re.search(
+        r'\bblock\s*[a-z0-9]+\b|\btang\s*\d+\b|\blau\s*\d+\b|'
+        r'\b\d+\s*pn\b|\b\d+\s*wc\b|\bthang\s*may\b',
+        folded,
+    ))
+    return has_land_asset and has_land_scale_or_legal and not has_unit_evidence
+
+
+def _has_no_tho_cu_land(text: str) -> bool:
+    folded = _ascii_fold(text).replace("Ä‘", "d").replace("Ä", "d")
+    return bool(re.search(r'\bchua\s*(?:co\s*)?tho\s*cu\b', folded))
+
+
 def classify_property_type(
     title: str,
     description: str,
@@ -1150,6 +1248,17 @@ def classify_property_type(
     # NOXH/Becamex Định Hòa là thị trường căn hộ đặc thù, không so chung với nhà đất.
     if _is_social_housing_text(text):
         return 'nha_o_xa_hoi'
+
+    source_category_land_override = _has_source_category_land_override(
+        text, area_m2, tho_cu_m2, url_hint,
+    )
+    if source_category_land_override and area_m2 and area_m2 >= _AREA_VUON_THRESHOLD and _has_no_tho_cu_land(text):
+        return 'dat_vuon'
+    if source_category_land_override:
+        return _classify_dat_only(
+            text, area_m2, tho_cu_m2, price_per_m2,
+            any(kw in text for kw in _LAND_ONLY_KW), raw_source_label,
+        )
 
     # ── Bước 0: url_hint short-circuit cho chung_cu / kho_xuong ──
     if url_hint == 'chung_cu':

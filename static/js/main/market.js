@@ -1,188 +1,113 @@
-// Heatmap, market indicators, price-gap, and trend chart rendering.
+// Market opportunity, market indicators, and trend chart rendering.
 async function loadMarketCharts(useCache = true) {
-  const container = document.getElementById('heatmapContainer');
-  const gapContainer = document.getElementById('priceGapContainer');
-  if (container) container.classList.add('loading');
-  if (gapContainer) gapContainer.classList.add('loading');
+  const opportunityContainer = document.getElementById('opportunityListContainer');
+  if (opportunityContainer) opportunityContainer.classList.add('loading');
   try {
     const data = await fetchJSONCached('market', `/api/heatmap?${currentFilters}`, useCache);
-    renderHeatmap(data);
-    renderPriceGapChart(data);
+    renderOpportunityList(data);
   } catch (err) {
     if (err.name !== 'AbortError') console.error("Market charts error:", err);
   } finally {
-    if (container) container.classList.remove('loading');
-    if (gapContainer) gapContainer.classList.remove('loading');
+    if (opportunityContainer) opportunityContainer.classList.remove('loading');
   }
 }
 
-async function loadHeatmap() {
-  const container = document.getElementById('heatmapContainer');
-  container.classList.add('loading');
-  try {
-    const data = await fetchJSONCached('market', `/api/heatmap?${currentFilters}`);
-    renderHeatmap(data);
-  } catch (err) {
-    if (err.name !== 'AbortError') console.error("Heatmap error:", err);
-  } finally {
-    container.classList.remove('loading');
-  }
+function _opportunityAction(mos, dealCount) {
+  if (mos >= 25 && dealCount >= 3) return 'Ưu tiên xem trước';
+  if (mos >= 15) return 'Có thể lọc sâu';
+  return 'Theo dõi thêm';
 }
 
-function renderHeatmap(data) {
-  if (treemapInstance) {
-    treemapInstance.destroy();
-    treemapInstance = null;
+function _fmtMarketPrice(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return '-';
+  return `${n.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tr/m²`;
+}
+
+function _viewOpportunityWard(ward) {
+  const target = String(ward || '').trim();
+  if (!target) return;
+  const boxes = Array.from(document.querySelectorAll('#wardFilters input[name="ward"]'));
+  let found = false;
+  boxes.forEach((box) => {
+    const matched = box.value === target;
+    box.checked = matched;
+    found = found || matched;
+  });
+  if (found) updateWardSelectionSummary();
+
+  const signalBtn = Array.from(document.querySelectorAll('.nav-link'))
+    .find(btn => (btn.textContent || '').includes('Săn Deal'));
+  switchTab('signals', signalBtn || null);
+  if (found) {
+    applyFilters();
+  } else {
+    loadSignals(1, { reset: true });
+  }
+  hideSidebarMobile();
+}
+
+function renderOpportunityList(data) {
+  const root = document.getElementById('opportunityList');
+  const summaryEl = document.getElementById('opportunitySummary');
+  if (!root) return;
+
+  const rows = (data || [])
+    .filter(d => Number(d.deal_count || 0) > 0 && Number(d.median_mos || 0) > 0)
+    .sort((a, b) => {
+      const scoreA = Number(a.deal_count || 0) * 100 + Number(a.median_mos || 0);
+      const scoreB = Number(b.deal_count || 0) * 100 + Number(b.median_mos || 0);
+      return scoreB - scoreA;
+    })
+    .slice(0, 6);
+
+  const totalDeals = rows.reduce((sum, x) => sum + Number(x.deal_count || 0), 0);
+  const best = rows[0];
+  if (summaryEl) {
+    summaryEl.innerHTML = rows.length
+      ? `
+        <span><strong>${rows.length}</strong> khu có deal</span>
+        <span><strong>${totalDeals}</strong> tin đang dưới định giá</span>
+        <span>Tốt nhất: <strong>${escHtml(best.ward || '')}</strong> thấp hơn ${Number(best.median_mos || 0).toFixed(1)}%</span>
+      `
+      : '';
   }
 
-  const canvas = document.getElementById('treemapChart');
-  const container = document.getElementById('heatmapContainer');
-  const oldEmpty = document.getElementById('heatmapEmptyState');
-  if (oldEmpty) oldEmpty.remove();
-
-  const opportunityData = (data || []).filter(d => (d.deal_count || 0) > 0 && (d.median_mos || 0) > 0);
-  if (canvas) canvas.style.display = '';
-
-  if (opportunityData.length === 0) {
-    if (canvas) canvas.style.display = 'none';
-    if (container) {
-      container.insertAdjacentHTML('beforeend', `
-          <div id="heatmapEmptyState" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--text-muted); padding:24px;">
-            <div>
-              <div style="font-size:2rem; margin-bottom:10px;">📡</div>
-              <div style="font-weight:800; color:var(--text); margin-bottom:4px;">Chưa có deal MOS dương</div>
-              <div style="font-size:0.85rem;">Hãy nới filter phường, nguồn tin hoặc loại hình để radar có thêm mẫu signal.</div>
-            </div>
-          </div>
-        `);
-    }
+  if (!rows.length) {
+    root.innerHTML = `
+      <div class="opportunity-empty">
+        <strong>Chưa có khu vực đủ tín hiệu tốt</strong>
+        <span>Nới bộ lọc phường, nguồn tin hoặc loại hình để Radar có thêm mẫu deal.</span>
+      </div>
+    `;
     return;
   }
 
-  const ctx = canvas.getContext('2d');
-
-  // Gradient coloring based on avg_price
-  treemapInstance = new Chart(ctx, {
-    type: 'treemap',
-    data: {
-      datasets: [{
-        tree: opportunityData,
-        key: 'deal_count',
-        spacing: 2,
-        borderWidth: 0,
-        backgroundColor(ctx) {
-          if (ctx.type !== 'data') return 'transparent';
-          const d = ctx.raw._data || ctx.raw;
-          const mos = d ? (d.median_mos || 0) : 0;
-          const ratio = Math.min(1, mos / 50);
-          return `rgba(16, 185, 129, ${0.35 + ratio * 0.65})`;
-        },
-        labels: {
-          display: true,
-          align: 'center',
-          position: 'center',
-          color: 'white',
-          font: { family: 'Inter', size: 14, weight: 'bold' },
-          formatter(ctx) {
-            if (ctx.type !== 'data') return '';
-            const d = ctx.raw._data || ctx.raw;
-            if (!d || !d.ward) return '';
-            const mos = d.median_mos || 0;
-            return [d.ward, `${d.deal_count || 0} deal`, `MOS trung vị +${mos}%`];
-          }
-        }
-      }]
-    },
-    options: {
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            title: (items) => {
-              const d = items[0].raw._data || items[0].raw;
-              return d ? d.ward : '';
-            },
-            label: (item) => {
-              const d = item.raw._data || item.raw;
-              if (!d) return '';
-              return [
-                `Deal signal: ${d.deal_count || 0} tin`,
-                `MOS trung vị: +${d.median_mos || 0}%`,
-                `MOS trung bình: +${d.avg_signal_mos || 0}%`,
-                `Tỷ lệ deal: ${d.signal_rate || 0}%`,
-                `Tổng tin hợp lệ: ${d.total_count || 0}`,
-                `Giá TB: ${d.avg_price || 0} tr/m²`
-              ];
-            }
-          }
-        }
-      }
-    }
-  });
-}
-
-async function loadPriceGapChart() {
-  const container = document.getElementById('priceGapContainer');
-  if (!container) return;
-  container.classList.add('loading');
-  try {
-    const data = await fetchJSONCached('market', `/api/heatmap?${currentFilters}`);
-    renderPriceGapChart(data);
-  } catch (err) {
-    if (err.name !== 'AbortError') console.error('Price gap chart error:', err);
-  } finally {
-    container.classList.remove('loading');
-  }
-}
-
-function renderPriceGapChart(data) {
-  if (priceGapInstance) { priceGapInstance.destroy(); priceGapInstance = null; }
-  if (!data || data.length === 0) return;
-
-  // Sort by avg_price_ty descending, take top wards with fair value data
-  const filtered = data.filter(d => d.avg_price_ty > 0 && d.avg_fair_ty > 0)
-    .sort((a, b) => b.avg_price_ty - a.avg_price_ty)
-    .slice(0, 10);
-
-  if (filtered.length === 0) return;
-
-  const ctx = document.getElementById('priceGapChart').getContext('2d');
-  priceGapInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: filtered.map(d => d.ward),
-      datasets: [
-        {
-          label: 'Giá chào TB',
-          data: filtered.map(d => d.avg_price_ty),
-          backgroundColor: '#6366f1',
-          borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.8
-        },
-        {
-          label: 'Định giá AI',
-          data: filtered.map(d => d.avg_fair_ty),
-          backgroundColor: '#10b981',
-          borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.8
-        }
-      ]
-    },
-    options: {
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'top', labels: { font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded' } },
-        tooltip: {
-          callbacks: {
-            label: (item) => `${item.dataset.label}: ${item.raw.toFixed(2)} tỷ`
-          }
-        }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11 } } },
-        y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { font: { size: 10 }, callback: v => v + ' tỷ' }, beginAtZero: true }
-      }
-    }
-  });
+  root.innerHTML = rows.map((x, index) => {
+    const ward = x.ward || '';
+    const dealCount = Number(x.deal_count || 0);
+    const mos = Number(x.median_mos || 0);
+    const signalRate = Number(x.signal_rate || 0);
+    const totalCount = Number(x.total_count || 0);
+    return `
+      <article class="opportunity-row">
+        <div class="opportunity-rank">${index + 1}</div>
+        <div class="opportunity-main">
+          <div class="opportunity-top">
+            <h4>${escHtml(ward)}</h4>
+            <span>${escHtml(_opportunityAction(mos, dealCount))}</span>
+          </div>
+          <div class="opportunity-metrics">
+            <div><strong>${dealCount}</strong><span>deal</span></div>
+            <div><strong>-${mos.toFixed(1)}%</strong><span>so với định giá</span></div>
+            <div><strong>${_fmtMarketPrice(x.avg_price)}</strong><span>giá/m² TB</span></div>
+          </div>
+          <p>${dealCount} / ${totalCount} tin hợp lệ đang là signal (${signalRate.toFixed(1)}%). Dùng để chọn khu đáng xem trước, không phải so giá tổng giữa các phường.</p>
+        </div>
+        <button type="button" class="opportunity-btn" data-ward="${escHtml(ward)}" onclick="_viewOpportunityWard(this.dataset.ward)">Xem deal</button>
+      </article>
+    `;
+  }).join('');
 }
 
 function _fmtIndicatorNumber(value, digits = 0) {
@@ -289,6 +214,11 @@ async function loadMarketIndicators(useCache = true) {
   const distressContainer = document.getElementById('distressRatioContainer');
   const supplyContainer = document.getElementById('supplyAnomalyContainer');
   if (!distressContainer && !supplyContainer) return;
+  if (!['vip', 'admin'].includes(window.USER_TIER || 'guest')) {
+    _renderDistressRatio([], {});
+    _renderSupplyAnomaly([], {});
+    return;
+  }
   if (distressContainer) distressContainer.classList.add('loading');
   if (supplyContainer) supplyContainer.classList.add('loading');
   const runId = ++marketIndicatorRunSeq;

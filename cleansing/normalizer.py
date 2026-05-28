@@ -165,6 +165,31 @@ def _has_ben_cat_context(text: str, intended_city: Optional[str]) -> bool:
     return _is_intended_city(intended_city, "Bến Cát") or "ben cat" in folded
 
 
+def _ward_keyword_items(intended_city: Optional[str] = None):
+    items = []
+    allowed_wards = _CITY_WARDS.get(intended_city) if intended_city else None
+    for ward, keywords in _WARD_KEYWORDS.items():
+        if allowed_wards and ward not in allowed_wards:
+            continue
+        for keyword in keywords:
+            items.append((ward, str(keyword).lower()))
+
+    return sorted(
+        items,
+        key=lambda item: len(_ascii_fold(item[1])),
+        reverse=True,
+    )
+
+
+def _keyword_in_text(text: str, keyword: str) -> bool:
+    keyword = (keyword or "").strip().lower()
+    if not keyword:
+        return False
+    if " " in keyword:
+        return re.search(r"(?<!\w)" + re.escape(keyword) + r"(?!\w)", text) is not None
+    return keyword in text
+
+
 def _match_ben_cat_landmark_ward(text: str) -> Optional[str]:
     folded = _ascii_fold(text)
 
@@ -192,8 +217,8 @@ def match_area_helper(text: str) -> Optional[str]:
     if any(kw in text for kw in _OUTSIDE_KEYWORDS):
         return None
     # Ưu tiên các ward cụ thể trong _WARD_KEYWORDS
-    for ward_name, keywords in _WARD_KEYWORDS.items():
-        if any(kw in text for kw in keywords):
+    for ward_name, keyword in _ward_keyword_items():
+        if _keyword_in_text(text, keyword):
             return ward_name
 
     return None
@@ -261,6 +286,7 @@ def match_ward(*texts: str, intended_city: Optional[str] = None) -> Optional[str
     # Chặn tin từ huyện khác (Bàu Bàng, Tân Uyên, Dầu Tiếng, ...)
     if any(kw in blob for kw in _OUTSIDE_KEYWORDS):
         return None
+    ward_keywords = _ward_keyword_items(intended_city)
     # Check từng source riêng, ưu tiên title > desc > address > url
     for text in texts:
         if not text:
@@ -275,19 +301,13 @@ def match_ward(*texts: str, intended_city: Optional[str] = None) -> Optional[str
             if landmark_ward:
                 return landmark_ward
         
-        for ward, kws in _WARD_KEYWORDS.items():
-            if intended_city and intended_city in _CITY_WARDS:
-                if ward not in _CITY_WARDS[intended_city]:
-                    continue
-            if any(kw in text_lower for kw in kws):
+        for ward, keyword in ward_keywords:
+            if _keyword_in_text(text_lower, keyword):
                 return ward
 
         text_ascii = _ascii_fold(text_lower)
-        for ward, kws in _WARD_KEYWORDS.items():
-            if intended_city and intended_city in _CITY_WARDS:
-                if ward not in _CITY_WARDS[intended_city]:
-                    continue
-            if any(_ascii_fold(kw) in text_ascii for kw in kws):
+        for ward, keyword in ward_keywords:
+            if _keyword_in_text(text_ascii, _ascii_fold(keyword)):
                 return ward
     return None
 

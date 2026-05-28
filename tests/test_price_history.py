@@ -202,6 +202,44 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertIsNone(row["price_drop_pct"])
         self.assertEqual(row["suspicious_bait"], 1)
 
+    def test_dedup_reconciles_price_first_from_history_before_drop_flag(self):
+        from cleansing.dedup import _reconcile_price_first_from_history
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute("""
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, price_first_ty, price_dropped,
+                    price_drop_pct, suspicious_bait, probably_sold
+                ) VALUES (
+                    'facebook', ?, ?, 'Same URL dropped but first price was reset',
+                    'Tan Dinh', 150, 'dat_nen', 1.0, 6.67, 1.0, 0,
+                    NULL, 0, 0
+                )
+            """, (f"{self.source_id}-history-reconcile", f"{self.url_prefix}/history-reconcile"))
+            listing_id = self._track(cur.lastrowid)
+            conn.executemany("""
+                INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
+                VALUES (?, ?, ?, ?)
+            """, [
+                (listing_id, 1.6, 10.67, "2026-05-26 16:38:30"),
+                (listing_id, 1.0, 6.67, "2026-05-28 09:39:54"),
+            ])
+
+            _reconcile_price_first_from_history(conn)
+
+            row = conn.execute("""
+                SELECT price_first_ty, price_dropped, price_drop_pct, suspicious_bait
+                FROM listings
+                WHERE id=?
+            """, (listing_id,)).fetchone()
+
+        self.assertEqual(row["price_first_ty"], 1.6)
+        self.assertEqual(row["price_dropped"], 1)
+        self.assertAlmostEqual(row["price_drop_pct"], 37.5)
+        self.assertEqual(row["suspicious_bait"], 0)
+
     def test_history_api_compacts_repeated_snapshots_and_current_price(self):
         from app import app
         from db.connection import get_conn

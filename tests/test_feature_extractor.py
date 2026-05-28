@@ -10,9 +10,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from cleansing.feature_extractor import (
     extract_price, extract_area, extract_dimensions,
     extract_tho_cu, extract_road_tier, extract_legal,
-    classify_property_type, extract_road_type,
+    classify_property_type, extract_road_type, is_multi_lot_listing,
 )
-from cleansing.normalizer import normalize_record
+from cleansing.normalizer import normalize_record, match_ward
 
 
 def test_extract_price():
@@ -39,6 +39,10 @@ def test_extract_price():
     assert extract_price("Gia con : 4\U0001d42d\u1ef7390\U0001d42d\U0001d42b") == 4.39
     assert extract_price("B\u00e1n nhanh gi\u1ea3m gi\u00e1: 200 tri\u1ec7u trong tu\u1ea7n nh\u00e0") is None
     assert extract_price("*** Gi\u00e1: 2 t\u1ef7 6; C\u00f3 h\u1ed7 tr\u1ee3 Ng\u00e2n h\u00e0ng.") == 2.6
+    assert extract_price("Rẻ hơn thị trường 100 triệu, lô đất DL12 Mỹ Phước 3") is None
+    assert extract_price("Chủ thở oxy giảm sâu 150 triệu rồi quý vị mua dùm") is None
+    assert extract_price("Đưa trước 500 triệu còn lại ngân hàng hỗ trợ trả góp") is None
+    assert extract_price("Giá LH 0967 936 939, rẻ hơn thị trường 100 triệu") is None
 
 
 def test_extract_area():
@@ -53,6 +57,21 @@ def test_extract_area():
     assert extract_area("Đất P hiệp an\n1/ Nguyễn chí Thanh\n4 dài 28 tc 60") == 112.0
     assert extract_area("ngang 7m x dai 21m. Tho cu 60mv.") == 147.0
     assert extract_area("Di\u1ec7n t\u00edch 15x71m. T\u1ed5ng 1028m2 ch\u01b0a th\u1ed5 c\u01b0.") == 1028.0
+
+
+def test_detect_multi_lot_listing():
+    assert is_multi_lot_listing(
+        "L\u00f4 1-300m2-2,15t\u1ef7/ L\u00f4 2-483,7m2-2,55t\u1ef7",
+        (
+            "L\u00f4 1-300m2-2,15t\u1ef7\n"
+            "L\u00f4 2-483,7m2-2,55t\u1ef7\n"
+            "15 ng\u00e0y c\u00f3 s\u1ed5.ch\u01b0a th\u1ed5 c\u01b0 h\u1ed7 tr\u1ee3 l\u00ean tho\u1ea3i m\u00e1i"
+        ),
+    )
+    assert not is_multi_lot_listing(
+        "B\u00e1n 1 l\u00f4 \u0111\u1ea5t 300m2 gi\u00e1 2,15 t\u1ef7",
+        "S\u1ed5 s\u1eb5n, th\u01b0\u01a1ng l\u01b0\u1ee3ng ch\u00ednh ch\u1ee7.",
+    )
 
 
 def test_extract_dimensions():
@@ -195,6 +214,34 @@ def test_normalizer_parses_user_reported_facebook_edge_cases():
     assert dx072_large_land["property_type"] == "dat_nen"
 
 
+def test_normalizer_does_not_treat_discount_or_down_payment_as_asking_price():
+    discount = normalize_record({
+        "source": "facebook",
+        "external_id": "discount-not-price",
+        "url": "https://www.facebook.com/example/posts/discount-not-price",
+        "default_area": "Bến Cát",
+        "title": "Rẻ hơn thị trường 100 triệu. Lô đất kế bên đường DL12 khu L Mỹ Phước 3",
+        "description": "Diện tích 5x30m, sổ sẵn, phí 2% cho anh em môi giới",
+    })
+    assert discount is not None
+    assert discount["ward"] == "Mỹ Phước 3"
+    assert discount["area_m2"] == 150.0
+    assert discount["price_ty"] is None
+    assert discount["price_per_m2"] is None
+
+    down_payment = normalize_record({
+        "source": "facebook",
+        "external_id": "down-payment-not-price",
+        "url": "https://www.facebook.com/example/posts/down-payment-not-price",
+        "default_area": "Bến Cát",
+        "title": "Đưa trước 500 triệu còn lại ngân hàng Vietcombank Mỹ Phước hỗ trợ trả góp",
+        "description": "Nhà tại Mỹ Phước, diện tích 66m2, sổ riêng",
+    })
+    assert down_payment is not None
+    assert down_payment["price_ty"] is None
+    assert down_payment["price_per_m2"] is None
+
+
 def test_extract_road_tier():
     # Tier 1 — đường tên trong whitelist + MT
     assert extract_road_tier("Mặt tiền đường Lê Chí Dân") == 1
@@ -293,6 +340,41 @@ def test_normalizer_prefers_text_ward_over_legacy_phu_an_raw():
     })
     assert rec is not None
     assert rec["ward"] == "Hiệp An"
+
+
+def test_match_ward_prefers_tuong_binh_hiep_before_hiep_thanh_collision():
+    tuong_binh_hiep = "T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p"
+    title = (
+        "B\u00e1n \u0111\u1ea5t 593m\u00b2 2.28 t\u1ef7 t\u1ea1i Ph\u01b0\u1eddng "
+        "T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p Th\u00e0nh ph\u1ed1 Th\u1ee7 D\u1ea7u M\u1ed9t"
+    )
+
+    assert match_ward(title, intended_city="Th\u1ee7 D\u1ea7u M\u1ed9t") == tuong_binh_hiep
+    assert (
+        match_ward(
+            "Ban dat tai Phuong Tuong Binh Hiep Thanh pho Thu Dau Mot",
+            intended_city="Th\u1ee7 D\u1ea7u M\u1ed9t",
+        )
+        == tuong_binh_hiep
+    )
+
+    rec = normalize_record({
+        "source": "guland",
+        "external_id": "tuong-binh-hiep-hiep-thanh-collision",
+        "url": "https://guland.vn/post/phuong-tuong-binh-hiep-thanh-pho-thu-dau-mot",
+        "title": title,
+        "description": "B\u00e1n l\u00f4 \u0111\u1ea5t ph\u01b0\u1eddng t\u01b0\u01a1ng b\u00ecnh hi\u1ec7p TPTDM. M\u1eb7t ti\u1ec1n DX149.",
+        "address": (
+            "Ph\u01b0\u1eddng Ch\u00e1nh Hi\u1ec7p, TP. H\u1ed3 Ch\u00ed Minh (M\u1edbi)\n"
+            "Ph\u01b0\u1eddng T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p, Th\u00e0nh ph\u1ed1 Th\u1ee7 D\u1ea7u M\u1ed9t, B\u00ecnh D\u01b0\u01a1ng"
+        ),
+        "ward": tuong_binh_hiep,
+        "area_m2": 593,
+        "price_ty": 2.28,
+    })
+    assert rec is not None
+    assert rec["ward"] == tuong_binh_hiep
+    assert rec["area"] == tuong_binh_hiep
 
 
 def test_normalizer_prefers_explicit_title_area_when_source_area_conflicts():
@@ -417,6 +499,26 @@ def test_extract_legal():
 
 
 def test_classify_property_type():
+    dinh_hoa_large_land_title = "B\u00e1n \u0111\u1ea5t \u0110\u1ecbnh Ho\u00e0 th\u00edch h\u1ee3p x\u00e2y dinh th\u1ef1 bi\u1ec7t th\u1ef1 v\u01b0\u1eddn, kinh doanh"
+    dinh_hoa_large_land_desc = (
+        "B\u00e1n \u0111\u1ea5t \u0110\u1ecbnh Ho\u00e0 th\u00edch h\u1ee3p x\u00e2y dinh th\u1ef1 bi\u1ec7t th\u1ef1 v\u01b0\u1eddn, "
+        "kinh doanh c\u0103n h\u1ed9 cao c\u1ea5p. Di\u1ec7n t\u00edch 1.750 m\u00b2. "
+        "B\u00e1n \u0111\u1ea5t nh\u00e1nh \u0110X 70 \u0110\u1ecbnh Ho\u00e0. DT 70 x 25 ch\u01b0a th\u1ed5 c\u01b0."
+    )
+    assert classify_property_type(
+        dinh_hoa_large_land_title,
+        dinh_hoa_large_land_desc,
+        1750,
+        price_per_m2=8.57,
+        url_hint="chung_cu",
+    ) == "dat_vuon"
+    assert classify_property_type(
+        dinh_hoa_large_land_title,
+        dinh_hoa_large_land_desc,
+        1750,
+        price_per_m2=8.57,
+    ) == "dat_vuon"
+
     # Hard vườn
     assert classify_property_type("Đất vườn Tân An", "cây ăn trái", 2000) == "dat_vuon"
     # Hard nhà

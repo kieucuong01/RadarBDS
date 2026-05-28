@@ -67,6 +67,7 @@ echo $env:DATABASE_URL
 - `auth/core.py`: session, tier, rate-limit, VIP expiry, audit.
 - `alerts/telegram.py`, `cli/notify.py`: VIP Telegram formatting and watchlist push.
 - `cleansing/reprocess.py`: normalize, dedup, valuation orchestration.
+- `services/signal_quality.py`: shared latest-valuation CTE plus "actionable signal" gate for dashboard/VIP/review surfaces.
 - `cleansing/legal_image_classifier.py`, `cleansing/legal_verification.py`: later-phase so hong/so do image evidence helpers. OCR and image-based trust are disabled by default for now.
 - `cleansing/dedup.py`: duplicate and price-drop policy.
 - `db/connection.py`, `db/schema.py`, `db/listings.py`: DB path, schema, writes.
@@ -95,7 +96,7 @@ Card display:
 - Queue `needs_valuation` ("Cần phân loại valuation") giữ các nhãn cũ/ambiguous kiểu `all_correct + bad_data` để admin phân loại valuation lại.
 - Khi extraction đúng, UI không default valuation về `cheap_real`; admin phải chọn `cheap_real|fair|overpriced|fake_price|cannot_price` trước khi lưu.
 - Valuation verdicts are separate from extraction: `cheap_real | fair | overpriced | fake_price | cannot_price`.
-- Queue `Guland QC` shows Guland listings that were valuated but suppressed from `is_signal` because source quality flags require manual check.
+- Queue `source_qc` shows model-cheap listings suppressed from user/VIP promotion because source or valuation quality flags require manual check.
 - Queue `Legal QC` shows signal listings without detected so hong/so do images, or with human `bad_data/wrong_road|wrong_area|wrong_ward` notes.
 
 Legal trust tiers:
@@ -111,8 +112,10 @@ Legal trust tiers:
 - Logic định giá CHỈ học từ nhãn người. Claude chỉ cố vấn.
 - `reprocess_valuation()` vẫn loại mọi `review_hidden` khỏi training model, nhưng valuate lại hidden latest `bad_data` để đưa vào queue `Recheck sau fix` nếu còn `is_signal=1`.
 - Hard hide: `fake_price`, `sold`, `spam`, `bad`. Soft recheck hide: `bad_data` với `wrong_*`. Valuation non-deal labels `fair`, `overpriced`, `cannot_price` vẫn ẩn khỏi main queue.
-- Guland is hybrid, not deleted: crawl/display stays on, but `source_quality_flags` remove suspect Guland rows from the valuation baseline. Flags currently include old/up posts (`posted_at` → `crawled_at` age ≥ 14 days), extreme Guland price/m², suspicious bait, duplicate-like Guland listing clusters (`guland_cluster_flood`), and direct human bad/fake/cannot-price labels.
-- Guland signals require a stronger gate than Facebook: normal source threshold plus extra MOS or a high signal score. Source-quality-suppressed Guland rows get `valuation_results.source_quality_recheck=1` instead of VIP/main signal promotion.
+- `valuation_results.is_signal` means model-cheap/MOS candidate, not automatically an investable deal. User/VIP/main surfaces use the latest valuation plus `services.signal_quality.actionable_signal_sql()` to exclude `source_quality_recheck` and fatal quality flags.
+- `source_quality_flags` can suppress promotion while keeping the row in admin QC. Current fatal flags include `parsed_discount_as_price`, `down_payment_as_price`, `too_low_absolute_price`, `large_lot_model_risk`, `area_dimension_conflict`, `source_category_conflict`, `multi_lot_listing`, `test_artifact`, `low_segment_confidence`, source bad-extraction labels, and Guland quality flags.
+- Guland is hybrid, not deleted: crawl/display stays on, but `source_quality_flags` remove suspect Guland rows from the valuation baseline. Flags currently include old/up posts (`posted_at` → `crawled_at` age ≥ 14 days), extreme Guland price/m², suspicious bait, duplicate-like Guland listing clusters (`guland_cluster_flood`), weak Guland MOS/score (`guland_weak_signal`), user-facing risk without human/legal evidence (`guland_user_facing_risk`), and direct human bad/fake/cannot-price labels.
+- Guland signals require a stronger gate than Facebook: normal source threshold plus extra MOS or a high signal score for model signal, then user/VIP promotion only when human-positive, legal-doc evidence, or very strong MOS+score passes. Quality-suppressed rows get `valuation_results.source_quality_recheck=1` instead of VIP/main signal promotion.
 
 Infinite scroll: `#trnSentinel` + `IntersectionObserver` (`rootMargin:400px`) → `loadTrainingItems(true)`. Guard `_trnLoading` chống double-fetch. Badge: `pending/total`.
 
@@ -135,11 +138,17 @@ Extractor ward rules:
 - Review-driven Bến Cát patterns: `khu L` / road codes like `DL12`, `NL5`, `DH3A` → Mỹ Phước 3; `ĐH/Đại học Việt Đức` → Thới Hòa; `Chà Vi` → parent Mỹ Phước.
 - `Long Nguyên` is outside the current focus area and should normalize to `area="Other"`, `ward=None`.
 
+Valuation road-tier rules:
+
+- Regression valuation caps `road_tier=3` at max 80% of the same-listing tier-2 counterfactual before downstream adjustments. `road_tier=0` is still encoded as tier 3.
+- Facebook is the primary valuation baseline. If a canonical segment has fewer than 35 Facebook samples, strict-pass Guland rows may supplement training with weight 0.4. Strict Guland baseline rows must have no source/valuation quality flags, no old-post/extreme/bait/cluster/human-bad flags, valid ward/area/price, and known `road_tier` for `dat_vuon` or lots >= 1000m². Guland user/VIP promotion still uses the stronger actionable gate.
+
 Dashboard/API:
 
 - `/api/dashboard` is lightweight summary only. It must not return all signals, descriptions, or image arrays.
 - `/api/dashboard` uses a short in-process cache keyed by filters. Guest dashboard rate limiting is also in-memory to avoid a DB write on every summary refresh.
 - `/api/signals` is paginated card data. Default limit is 30. It returns `primary_img` thumbnail when available.
+- `/api/signals`, `/api/dashboard`, VIP push, admin main queue, and review queue should read the latest valuation snapshot, use actionable-signal gating, and hide duplicate reposts (`possibly_duplicate=1`) unless an explicit price-drop view allows them.
 - Source policy is Facebook-first: Guest/Free/VIP are forced to `source=facebook`; Admin alone sees the source filter and defaults to Facebook unless selecting another source for QC/research. Valuation baseline also defaults to Facebook-only.
 - `services/market_data.py` read models should use the shared read connection scope, not fresh `connect()+close()` calls. Supabase remote latency makes extra round-trips visible.
 - Keep `/api/signals` page queries compact: use one query with window count and primary-thumbnail selection instead of separate count/list/image queries.
@@ -156,7 +165,7 @@ VIP watchlist/Telegram:
 
 - Free users can save watchlists; only active VIP users receive push.
 - Users share one Telegram bot but each user maps to a private `telegram_chat_id`.
-- `cli/notify.py::push_new_listings_to_vip(since)` sends one digest per user, filtered by that user's active watchlists.
+- `cli/notify.py::push_new_listings_to_vip(since)` sends only latest actionable signals, one digest per user, filtered by that user's active watchlists.
 - For local webhook testing use `zrok.exe share public http://127.0.0.1:5000 --headless`; see `docs/telegram_watchlist.md`.
 
 Images/performance:
@@ -170,6 +179,7 @@ Cleanup:
 
 - `radar.py db-cleanup` is dry-run by default. Applied cleanup deletes listings missing/zero `price_ty` or `area_m2` because they cannot be valued, and deletes their source raw rows to prevent full reprocess from recreating them.
 - Keep human feedback/audit rows unless an explicit retention policy says otherwise.
+- Runtime synthetic rows such as `Tin test` / `.test` URLs should be hidden as `review_hidden_reason='test_artifact'` only when explicitly requested; do not delete them by default.
 
 ## Common Commands
 

@@ -7,6 +7,7 @@ import unicodedata
 from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
 from db.connection import get_conn
 from services.image_assets import resolve_image_url
+from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Tier-aware masking (server-side). Address + tên đường KHÔNG che (decision 2026-05-14)
@@ -289,15 +290,6 @@ LEGAL_DOC_IMAGE_SELECT_SQL = (
 )
 
 
-LATEST_VALUATION_CTE = """
-latest_valuation AS (
-    SELECT DISTINCT ON (vr.listing_id) vr.*
-    FROM valuation_results vr
-    ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
-)
-"""
-
-
 @contextmanager
 def _read_conn(_db_path=None):
     """Reuse the per-thread PostgreSQL connection for hot read models."""
@@ -446,6 +438,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         price_ranges=price_ranges,
     )
     mos_condition, mos_params = _mos_filter(mos_min)
+    signal_condition = actionable_signal_sql("v")
     page = max(int(page or 1), 1)
     limit = min(max(int(limit or 30), 1), 100)
     offset = (page - 1) * limit
@@ -479,7 +472,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
             ORDER BY {LEGAL_IMAGE_ORDER_SQL.replace('img_type', 'li.img_type').replace('img_order', 'li.img_order').replace(', id', ', li.id')}
             LIMIT 1
         ) primary_img ON TRUE
-        WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
+        WHERE {signal_condition} AND {where_sql}{mos_condition}
         ORDER BY {order_sql}
         LIMIT ? OFFSET ?
     """, params + mos_params + [limit, offset]).fetchall()
@@ -529,6 +522,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         price_ranges=price_ranges,
     )
     mos_condition, mos_params = _mos_filter(mos_min)
+    signal_condition = actionable_signal_sql("v")
     fresh_flag = _fresh_lock_sql("l", delay_hours)
 
     # 1. Stats
@@ -537,7 +531,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
              {LATEST_VALUATION_CTE}
         SELECT
             (SELECT COUNT(*) FROM filtered) as total,
-            (SELECT COUNT(*) FROM filtered l JOIN latest_valuation v ON l.id = v.listing_id WHERE v.is_signal = 1{mos_condition}) as signals,
+            (SELECT COUNT(*) FROM filtered l JOIN latest_valuation v ON l.id = v.listing_id WHERE {signal_condition}{mos_condition}) as signals,
             (SELECT COUNT(*) FROM filtered WHERE is_hot = 1) as hot,
             (SELECT COUNT(*) FROM filtered WHERE (
                 COALESCE(posted_at, crawled_at) IS NOT NULL
@@ -565,7 +559,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
                    {fresh_flag}
             FROM latest_valuation v
             JOIN listings l ON v.listing_id = l.id
-            WHERE v.is_signal = 1 AND {where_sql}{mos_condition}
+            WHERE {signal_condition} AND {where_sql}{mos_condition}
             ORDER BY {_signal_sort_sql('score_desc')}
         """
         sig_rows = conn.execute(sig_query, params + mos_params).fetchall()
@@ -1006,6 +1000,7 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=No
     lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
     fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
     listing = conn.execute(f"""
+        WITH {LATEST_VALUATION_CTE}
         SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
                COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,
                COALESCE(v.trust_score, 0) AS trust_score,
@@ -1025,7 +1020,7 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=No
                lv.conflict_flags AS legal_conflict_flags,
                {fresh_flag}
         FROM listings l
-        LEFT JOIN valuation_results v ON l.id = v.listing_id
+        LEFT JOIN latest_valuation v ON l.id = v.listing_id
         LEFT JOIN legal_verifications lv ON lv.listing_id = l.id
         WHERE l.id = ?
           AND COALESCE(l.is_blacklisted,0)=0

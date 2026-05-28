@@ -57,10 +57,10 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
     def _insert_listing(self, *, url, ppm2, review_hidden=0, source="guland",
                         crawled_at="2026-05-01T00:00:00", posted_at=None,
-                        suspicious_bait=0, title="Tin test", description=None):
+                        suspicious_bait=0, title="Tin dau tu", description=None,
+                        area_m2=100.0, property_type="dat_nen"):
         from db.connection import get_conn
 
-        area_m2 = 100.0
         price_ty = round(ppm2 * area_m2 / 1000, 3)
         url = self._test_url(url)
         with get_conn() as conn:
@@ -71,14 +71,14 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
                     price_per_m2, price_ty, area_m2, road_type, road_tier,
                     has_so, crawled_at, posted_at, review_hidden, suspicious_bait
                 )
-                VALUES (
-                    ?, ?, ?, ?, 'Tan An', 'Tan An', 'dat_nen',
+                    VALUES (
+                    ?, ?, ?, ?, 'Tan An', 'Tan An', ?,
                     'ban', ?, ?, ?, 'duong_nhua', 2, 1,
                     ?, ?, ?, ?
                 )
                 """,
                 (
-                    source, url, title, description, ppm2, price_ty, area_m2,
+                    source, url, title, description, property_type, ppm2, price_ty, area_m2,
                     crawled_at, posted_at, review_hidden, suspicious_bait,
                 ),
             ).lastrowid
@@ -221,18 +221,177 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
         with get_conn() as conn:
             visible = conn.execute(
-                "SELECT is_signal FROM valuation_results WHERE listing_id=?",
+                """
+                SELECT is_signal, source_quality_recheck, source_quality_flags
+                FROM valuation_results WHERE listing_id=?
+                """,
                 (visible_cheap,),
             ).fetchone()
             recheck = conn.execute(
-                "SELECT is_signal FROM valuation_results WHERE listing_id=?",
+                """
+                SELECT is_signal, source_quality_recheck, source_quality_flags
+                FROM valuation_results WHERE listing_id=?
+                """,
                 (recheck_lid,),
             ).fetchone()
 
         self.assertIsNotNone(visible)
-        self.assertEqual(visible["is_signal"], 0)
+        self.assertEqual(visible["is_signal"], 1)
+        self.assertEqual(visible["source_quality_recheck"], 1)
+        self.assertIn("low_segment_confidence", visible["source_quality_flags"])
         self.assertIsNotNone(recheck)
         self.assertEqual(recheck["is_signal"], 1)
+
+    def test_positive_human_feedback_keeps_low_segment_signal_actionable(self):
+        from db.connection import get_conn
+        from services.signal_quality import is_actionable_signal
+
+        for i in range(3):
+            self._insert_listing(
+                url=f"https://t.test/positive-low-sample-base-{i}",
+                ppm2=15.0,
+                source="facebook",
+            )
+
+        cheap_lid = self._insert_listing(
+            url="https://t.test/positive-low-sample-cheap",
+            ppm2=9.0,
+            source="facebook",
+        )
+        self._insert_feedback(cheap_lid, "all_correct", valuation="cheap_real")
+
+        self._reprocess_inserted()
+
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                SELECT is_signal, source_quality_recheck, source_quality_flags
+                FROM valuation_results WHERE listing_id=?
+                """,
+                (cheap_lid,),
+            ).fetchone()
+
+        self.assertIsNotNone(row)
+        self.assertEqual(row["is_signal"], 1)
+        self.assertEqual(row["source_quality_recheck"], 0)
+        self.assertNotIn("low_segment_confidence", row["source_quality_flags"] or "")
+        self.assertTrue(is_actionable_signal(row))
+
+    def test_reprocess_marks_bad_price_quality_flags_for_qc_not_actionable(self):
+        from db.connection import get_conn
+        from services.signal_quality import is_actionable_signal
+
+        for i in range(30):
+            self._insert_listing(
+                url=f"https://t.test/quality-baseline-{i}",
+                ppm2=15.0,
+                source="facebook",
+            )
+
+        discount_lid = self._insert_listing(
+            url="https://t.test/discount-as-price",
+            ppm2=0.67,
+            source="facebook",
+            title="Rẻ hơn thị trường 100 triệu, lô đất DL12 Mỹ Phước 3",
+            description="Diện tích 5x30m, sổ sẵn",
+            area_m2=150.0,
+        )
+        down_payment_lid = self._insert_listing(
+            url="https://t.test/down-payment-as-price",
+            ppm2=7.58,
+            source="facebook",
+            title="Đưa trước 500 triệu còn lại ngân hàng hỗ trợ trả góp",
+            description="Nhà tại Mỹ Phước diện tích 66m2",
+            area_m2=66.0,
+        )
+        large_lot_lid = self._insert_listing(
+            url="https://t.test/large-lot-risk",
+            ppm2=5.0,
+            source="facebook",
+            title="Bán đất vườn mặt tiền DX72 Định Hòa hơn 1200m2",
+            description="Lô lớn cần kiểm tra riêng trước khi coi là deal",
+            area_m2=1200.0,
+        )
+        area_conflict_lid = self._insert_listing(
+            url="https://t.test/area-dimension-conflict",
+            ppm2=3.84,
+            source="guland",
+            title="B\u00e1n \u0111\u1ea5t 593m\u00b2 2.28 t\u1ef7 t\u1ea1i Ph\u01b0\u1eddng T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p",
+            description="Di\u1ec7n t\u00edch 6 x24 th\u1ed5 c\u01b0 45 m. Gi\u00e1 2 t\u1ef7 280",
+            area_m2=593.0,
+        )
+        source_category_conflict_lid = self._insert_listing(
+            url="https://guland.vn/mua-ban-can-ho-chung-cu-dinh-hoa/source-category-conflict",
+            ppm2=7.0,
+            source="guland",
+            title="B\u00e1n \u0111\u1ea5t \u0110\u1ecbnh Ho\u00e0 nh\u01b0ng source category l\u00e0 c\u0103n h\u1ed9",
+            description="Di\u1ec7n t\u00edch 100 m\u00b2, \u0111\u1ea5t th\u1ed5 c\u01b0.",
+            area_m2=100.0,
+            property_type="dat_nen",
+        )
+        multi_lot_lid = self._insert_listing(
+            url="https://guland.vn/post/lo-1-300m2-215ty-lo-2-4837m2-255ty-test",
+            ppm2=7.17,
+            source="guland",
+            title="L\u00f4 1-300m2-2,15t\u1ef7/ L\u00f4 2-483,7m2-2,55t\u1ef7",
+            description=(
+                "L\u00f4 1-300m2-2,15t\u1ef7\n"
+                "L\u00f4 2-483,7m2-2,55t\u1ef7\n"
+                "15 ng\u00e0y c\u00f3 s\u1ed5.ch\u01b0a th\u1ed5 c\u01b0 h\u1ed7 tr\u1ee3 l\u00ean tho\u1ea3i m\u00e1i"
+            ),
+            area_m2=300.0,
+            property_type="dat_nen",
+        )
+
+        self._reprocess_inserted()
+
+        with get_conn() as conn:
+            target_ids = [
+                discount_lid,
+                down_payment_lid,
+                large_lot_lid,
+                area_conflict_lid,
+                source_category_conflict_lid,
+                multi_lot_lid,
+            ]
+            rows = {
+                r["listing_id"]: dict(r)
+                for r in conn.execute(
+                    f"""
+                    SELECT listing_id, is_signal, source_quality_recheck,
+                           source_quality_flags
+                    FROM valuation_results
+                    WHERE listing_id IN ({','.join('?' for _ in target_ids)})
+                    """,
+                    target_ids,
+                ).fetchall()
+            }
+
+        self.assertIn("parsed_discount_as_price", rows[discount_lid]["source_quality_flags"])
+        self.assertIn("too_low_absolute_price", rows[discount_lid]["source_quality_flags"])
+        self.assertEqual(rows[discount_lid]["is_signal"], 1)
+        self.assertEqual(rows[discount_lid]["source_quality_recheck"], 1)
+        self.assertFalse(is_actionable_signal(rows[discount_lid]))
+
+        self.assertIn("down_payment_as_price", rows[down_payment_lid]["source_quality_flags"])
+        self.assertEqual(rows[down_payment_lid]["source_quality_recheck"], 1)
+        self.assertFalse(is_actionable_signal(rows[down_payment_lid]))
+
+        self.assertIn("large_lot_model_risk", rows[large_lot_lid]["source_quality_flags"])
+        self.assertEqual(rows[large_lot_lid]["source_quality_recheck"], 1)
+        self.assertFalse(is_actionable_signal(rows[large_lot_lid]))
+
+        self.assertIn("area_dimension_conflict", rows[area_conflict_lid]["source_quality_flags"])
+        self.assertEqual(rows[area_conflict_lid]["source_quality_recheck"], 1)
+        self.assertFalse(is_actionable_signal(rows[area_conflict_lid]))
+
+        self.assertIn("source_category_conflict", rows[source_category_conflict_lid]["source_quality_flags"])
+        self.assertEqual(rows[source_category_conflict_lid]["source_quality_recheck"], 1)
+        self.assertFalse(is_actionable_signal(rows[source_category_conflict_lid]))
+
+        self.assertIn("multi_lot_listing", rows[multi_lot_lid]["source_quality_flags"])
+        self.assertEqual(rows[multi_lot_lid]["source_quality_recheck"], 1)
+        self.assertFalse(is_actionable_signal(rows[multi_lot_lid]))
 
     def test_reprocess_marks_old_guland_signal_for_source_qc_without_pushing_signal(self):
         from cleansing.reprocess import reprocess_valuation
@@ -306,13 +465,14 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
         self.assertIsNotNone(old_row)
         self.assertGreater(old_row["fair_ppm2"], 0)
-        self.assertEqual(old_row["is_signal"], 0)
+        self.assertEqual(old_row["is_signal"], 1)
         self.assertEqual(old_row["source_quality_recheck"], 1)
         self.assertIn("old_guland_post", old_row["source_quality_flags"])
 
         self.assertIsNotNone(fresh_row)
         self.assertEqual(fresh_row["is_signal"], 1)
-        self.assertEqual(fresh_row["source_quality_recheck"], 0)
+        self.assertEqual(fresh_row["source_quality_recheck"], 1)
+        self.assertIn("guland_user_facing_risk", fresh_row["source_quality_flags"])
 
         self.assertIsNotNone(trusted_row)
         self.assertEqual(trusted_row["is_signal"], 1)
@@ -372,7 +532,7 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
             ).fetchone()
 
         self.assertIsNotNone(stale)
-        self.assertEqual(stale["is_signal"], 0)
+        self.assertEqual(stale["is_signal"], 1)
         self.assertEqual(stale["source_quality_recheck"], 1)
         self.assertIn("old_guland_post", stale["source_quality_flags"])
 
@@ -436,13 +596,14 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
         self.assertEqual(len(clustered), 4)
         for row in clustered:
-            self.assertEqual(row["is_signal"], 0)
+            self.assertEqual(row["is_signal"], 1)
             self.assertEqual(row["source_quality_recheck"], 1)
             self.assertIn("guland_cluster_flood", row["source_quality_flags"])
 
         self.assertIsNotNone(singleton)
         self.assertEqual(singleton["is_signal"], 1)
-        self.assertEqual(singleton["source_quality_recheck"], 0)
+        self.assertEqual(singleton["source_quality_recheck"], 1)
+        self.assertIn("guland_user_facing_risk", singleton["source_quality_flags"])
         self.assertNotIn("guland_cluster_flood", singleton["source_quality_flags"] or "")
 
 

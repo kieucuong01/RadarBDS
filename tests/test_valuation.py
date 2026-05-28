@@ -127,7 +127,7 @@ def test_guland_bad_human_valuation_labels_do_not_pollute_baseline():
 
 
 def test_default_valuation_baseline_uses_facebook_only():
-    facebook_samples = [_make_listing(i, 20.0, source="facebook") for i in range(18)]
+    facebook_samples = [_make_listing(i, 20.0, source="facebook") for i in range(35)]
     low_guland_samples = [
         _make_listing(300 + i, 8.0, source="guland")
         for i in range(18)
@@ -142,7 +142,87 @@ def test_default_valuation_baseline_uses_facebook_only():
     assert result.price_per_m2_fair > 18.0
 
 
+def test_strict_guland_supplements_thin_facebook_baseline_with_lower_weight():
+    facebook_samples = [_make_listing(i, 20.0, source="facebook", road_tier=2) for i in range(10)]
+    strict_guland_samples = [
+        _make_listing(400 + i, 10.0, source="guland", road_tier=2)
+        for i in range(20)
+    ]
+    engine = ValuationEngine()
+    engine.fit(facebook_samples + strict_guland_samples)
+
+    result = engine.valuate(_make_listing(999, 15.0, source="facebook", road_tier=2))
+
+    assert result is not None
+    assert result.segment_n == 30
+    assert 14.0 < result.price_per_m2_fair < 17.0
+
+
+def test_supplemental_guland_requires_strict_training_quality():
+    facebook_samples = [_make_listing(i, 20.0, source="facebook", road_tier=2) for i in range(10)]
+    flagged_guland_samples = [
+        _make_listing(
+            500 + i,
+            10.0,
+            source="guland",
+            road_tier=2,
+            source_quality_flags=("old_guland_post",),
+        )
+        for i in range(20)
+    ]
+    engine = ValuationEngine()
+    engine.fit(facebook_samples + flagged_guland_samples)
+
+    result = engine.valuate(_make_listing(999, 15.0, source="facebook", road_tier=2))
+
+    assert result is not None
+    assert result.segment_n == len(facebook_samples)
+    assert result.price_per_m2_fair == 19.0
+
+
+def test_supplemental_guland_large_lot_requires_known_road_tier():
+    facebook_samples = [
+        _make_listing(i, 5.0, area=1200.0, property_type="dat_vuon", source="facebook", road_tier=3)
+        for i in range(10)
+    ]
+    unknown_tier_guland_samples = [
+        _make_listing(600 + i, 2.0, area=1200.0, property_type="dat_vuon", source="guland", road_tier=0)
+        for i in range(20)
+    ]
+    engine = ValuationEngine()
+    engine.fit(facebook_samples + unknown_tier_guland_samples)
+
+    result = engine.valuate(
+        _make_listing(999, 3.0, area=1200.0, property_type="dat_vuon", source="facebook", road_tier=3)
+    )
+
+    assert result is not None
+    assert result.segment_n == len(facebook_samples)
+    assert result.price_per_m2_fair == 4.75
+
+
+def test_training_dedupes_duplicate_reposts_by_canonical_lot():
+    base_samples = [_make_listing(i, 10.0, source="facebook", road_tier=3) for i in range(15)]
+    canonical_high = _make_listing(1000, 30.0, source="facebook", road_tier=3)
+    duplicate_reposts = []
+    for i in range(40):
+        dup = _make_listing(1100 + i, 30.0, source="facebook", road_tier=3)
+        dup.duplicate_of_id = canonical_high.id
+        duplicate_reposts.append(dup)
+
+    engine = ValuationEngine()
+    engine.fit(base_samples + [canonical_high] + duplicate_reposts)
+
+    target = _make_listing(9999, 10.0, source="facebook", road_tier=3)
+    result = engine.valuate(target)
+
+    assert result is not None
+    assert result.price_per_m2_fair < 15.0
+
+
 def test_guland_requires_stronger_signal_than_facebook():
+    from services.signal_quality import is_actionable_signal
+
     listings = [_make_listing(i, 15.0, source="facebook") for i in range(30)]
     engine = ValuationEngine()
     engine.fit(listings)
@@ -151,12 +231,48 @@ def test_guland_requires_stronger_signal_than_facebook():
     guland_same_discount = _make_listing(1002, 12.5, source="guland")
     guland_deeper_discount = _make_listing(1003, 11.4, source="guland")
 
-    assert engine.valuate(facebook_target).is_signal is True
-    assert engine.valuate(guland_same_discount).is_signal is False
-    assert engine.valuate(guland_deeper_discount).is_signal is True
+    facebook_result = engine.valuate(facebook_target)
+    weak_guland_result = engine.valuate(guland_same_discount)
+    deep_guland_result = engine.valuate(guland_deeper_discount)
+
+    assert facebook_result.is_signal is True
+    assert is_actionable_signal(facebook_result) is True
+    assert weak_guland_result.is_signal is True
+    assert weak_guland_result.source_quality_recheck is True
+    assert "guland_weak_signal" in weak_guland_result.source_quality_flags
+    assert is_actionable_signal(weak_guland_result) is False
+    assert deep_guland_result.is_signal is True
+    assert deep_guland_result.source_quality_recheck is True
+    assert "guland_user_facing_risk" in deep_guland_result.source_quality_flags
+    assert is_actionable_signal(deep_guland_result) is False
+
+
+def test_guland_with_positive_feedback_or_legal_evidence_can_be_actionable():
+    from services.signal_quality import is_actionable_signal
+
+    listings = [_make_listing(i, 15.0, source="facebook") for i in range(30)]
+    engine = ValuationEngine()
+    engine.fit(listings)
+
+    reviewed = _make_listing(2001, 11.0, source="guland")
+    reviewed.positive_feedback = True
+    legal_evidence = _make_listing(2002, 11.0, source="guland")
+    legal_evidence.trust_tier = "has_legal_doc"
+
+    reviewed_result = engine.valuate(reviewed)
+    legal_result = engine.valuate(legal_evidence)
+
+    assert reviewed_result.is_signal is True
+    assert reviewed_result.source_quality_recheck is False
+    assert is_actionable_signal(reviewed_result) is True
+    assert legal_result.is_signal is True
+    assert legal_result.source_quality_recheck is False
+    assert is_actionable_signal(legal_result) is True
 
 
 def test_guland_quality_flags_keep_valuation_but_suppress_signal():
+    from services.signal_quality import is_actionable_signal
+
     listings = [_make_listing(i, 15.0, source="facebook") for i in range(30)]
     engine = ValuationEngine()
     engine.fit(listings)
@@ -171,9 +287,27 @@ def test_guland_quality_flags_keep_valuation_but_suppress_signal():
 
     assert result is not None
     assert result.price_per_m2_fair > 0
-    assert result.is_signal is False
+    assert result.is_signal is True
     assert result.source_quality_recheck is True
     assert "old_guland_post" in result.source_quality_flags
+    assert is_actionable_signal(result) is False
+
+
+def test_low_segment_confidence_keeps_model_signal_but_sends_to_qc():
+    from services.signal_quality import is_actionable_signal
+
+    listings = [_make_listing(i, 15.0, source="facebook") for i in range(8)]
+    engine = ValuationEngine()
+    engine.fit(listings)
+
+    target = _make_listing(2201, 8.5, source="facebook")
+    result = engine.valuate(target)
+
+    assert result is not None
+    assert result.is_signal is True
+    assert result.source_quality_recheck is True
+    assert "low_segment_confidence" in result.source_quality_flags
+    assert is_actionable_signal(result) is False
 
 
 def test_legal_conflict_keeps_valuation_but_suppresses_signal():
@@ -297,6 +431,23 @@ def test_regression_model_does_not_apply_extra_size_premium():
     target = _make_listing(201, 10.0, area=62.3, road_tier=2)
 
     assert model.predict_fair_ppm2(target) == 19.0
+
+
+def test_regression_tier3_is_at_least_twenty_percent_below_tier2():
+    model = SegmentModel(("TÃ¢n An", "dat_nen", "ban"))
+    model.fitted = True
+    model.n_samples = 20
+    model.beta = [20.0, 0.0, 0.0, 8.0, 0.0]
+
+    tier2 = _make_listing(202, 10.0, area=100.0, road_tier=2)
+    tier3 = _make_listing(203, 10.0, area=100.0, road_tier=3)
+
+    tier2_fair = model.predict_fair_ppm2(tier2)
+    tier3_fair = model.predict_fair_ppm2(tier3)
+
+    assert tier2_fair == 19.0
+    assert tier3_fair == 15.2
+    assert tier3_fair <= round(tier2_fair * 0.8, 2)
 
 
 def test_has_so_discount():

@@ -82,6 +82,9 @@ Performance boundary:
 ## Legal Trust Layer
 
 - `valuation_results.is_signal` still means "cheap by model"; trust is tracked separately.
+- User/VIP-facing queues use latest actionable valuation from `services.signal_quality`, which excludes duplicate reposts, `source_quality_recheck`, and fatal quality flags while preserving model-cheap rows for admin QC.
+- Valuation training is Facebook-primary. Thin canonical Facebook segments (`n < 35`) can be supplemented by strict-pass Guland rows at weight 0.4; this improves sparse segments without letting Guland promote itself directly to user/VIP surfaces.
+- Regression valuation caps tier-3 roads at max 80% of the same-listing tier-2 counterfactual, so learned coefficients cannot make tier 3 equal to or higher than tier 2.
 - Trust tiers currently used by the feed are `candidate_signal` and `has_legal_doc`.
 - `legal_verifications` currently tracks whether a listing has a detected document image. Existing OCR columns remain in schema for old data/admin notes, but runtime OCR code is not shipped or called.
 - Hard legal conflict inference from OCR is disabled until OCR is intentionally re-enabled with a fresh module and tests.

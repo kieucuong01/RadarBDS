@@ -239,6 +239,74 @@ class VipNotifyTest(unittest.TestCase):
         self.assertEqual(send.call_count, 0)
         self.assertEqual(len(self._notif_rows()), 1)
 
+    def test_push_uses_latest_valuation_snapshot(self):
+        from cli.notify import push_new_listings_to_vip
+        from db.connection import get_conn
+
+        self._vip_setup()
+        with get_conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO valuation_results (listing_id, mos_pct, is_signal)
+                VALUES (?, -5.0, 0)
+                """,
+                (self.listing_ids[-1],),
+            )
+
+        with mock.patch("alerts.telegram.send_watchlist_digest", return_value=True) as send:
+            stats = push_new_listings_to_vip(since=self.since)
+
+        self.assertEqual(stats["telegram_sent"], 0)
+        self.assertEqual(send.call_count, 0)
+
+    def test_push_skips_quality_recheck_signals(self):
+        from cli.notify import push_new_listings_to_vip
+        from db.connection import get_conn
+
+        self._vip_setup()
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE valuation_results
+                   SET source_quality_recheck=1,
+                       source_quality_flags='parsed_discount_as_price'
+                 WHERE listing_id=?
+                """,
+                (self.listing_ids[-1],),
+            )
+
+        with mock.patch("alerts.telegram.send_watchlist_digest", return_value=True) as send:
+            stats = push_new_listings_to_vip(since=self.since)
+
+        self.assertEqual(stats["telegram_sent"], 0)
+        self.assertEqual(send.call_count, 0)
+
+    def test_push_skips_duplicate_repost_when_canonical_is_actionable(self):
+        from cli.notify import push_new_listings_to_vip
+        from db.connection import get_conn
+
+        vip_id = self._insert_user("vip", "vip-chat", self.vip_expires)
+        self._insert_watchlist(vip_id)
+        canonical_id = self._insert_signal()
+        duplicate_id = self._insert_signal()
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                   SET possibly_duplicate=1,
+                       duplicate_of_id=?
+                 WHERE id=?
+                """,
+                (canonical_id, duplicate_id),
+            )
+
+        with mock.patch("alerts.telegram.send_watchlist_digest", return_value=True) as send:
+            stats = push_new_listings_to_vip(since=self.since)
+
+        self.assertEqual(stats["telegram_sent"], 1)
+        listings_arg = send.call_args.args[1]
+        self.assertEqual([row["id"] for row in listings_arg], [canonical_id])
+
     def test_small_drop_below_threshold_skips(self):
         from cli.notify import push_new_listings_to_vip
 

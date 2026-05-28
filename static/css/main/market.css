@@ -182,6 +182,182 @@
   color: var(--text-muted);
 }
 
+.opportunity-card .chart-header {
+  margin-bottom: 14px;
+}
+
+.opportunity-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.opportunity-summary span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 750;
+  background: rgba(16, 185, 129, 0.07);
+}
+
+.opportunity-summary strong {
+  color: var(--text);
+  margin: 0 4px;
+}
+
+.opportunity-list-wrap {
+  min-height: 260px;
+}
+
+.opportunity-list {
+  display: grid;
+  gap: 10px;
+}
+
+.opportunity-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.opportunity-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: #047857;
+  background: rgba(16, 185, 129, 0.15);
+  font-weight: 900;
+}
+
+.opportunity-main {
+  min-width: 0;
+}
+
+.opportunity-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.opportunity-top h4 {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 850;
+}
+
+.opportunity-top span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
+  font-size: 0.7rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.opportunity-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.opportunity-metrics div {
+  min-width: 0;
+}
+
+.opportunity-metrics strong,
+.opportunity-metrics span {
+  display: block;
+}
+
+.opportunity-metrics strong {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.opportunity-metrics span {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.opportunity-row p {
+  margin: 9px 0 0;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.opportunity-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: var(--primary);
+  color: white;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.opportunity-btn:hover {
+  filter: brightness(1.05);
+}
+
+.opportunity-empty {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+}
+
+.opportunity-empty strong {
+  color: var(--text);
+}
+
+@media (max-width: 720px) {
+  .opportunity-row {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .opportunity-btn {
+    grid-column: 2;
+    width: fit-content;
+  }
+
+  .opportunity-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
 .period-pills {
   display: flex;
   background: rgba(255, 255, 255, 0.05);

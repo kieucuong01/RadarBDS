@@ -21,6 +21,11 @@ from typing import Iterable
 
 from db.connection import get_conn
 from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED, SIGNAL_REALERT_THRESHOLD_PCT
+from services.signal_quality import (
+    LATEST_VALUATION_CTE,
+    actionable_listing_sql,
+    actionable_signal_sql,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +119,8 @@ def _log_notify(conn, user_id: int, listing_id: int, channel: str, price_ty) -> 
 
 def _fetch_new_signals(conn, since: str) -> list[dict]:
     """Listings first seen since timestamp, signal=1 only."""
+    signal_condition = actionable_signal_sql("v")
+    listing_condition = actionable_listing_sql("l")
     order_sql = (
         """CASE COALESCE(v.trust_tier, 'candidate_signal')
                     WHEN 'has_legal_doc' THEN 0
@@ -126,6 +133,7 @@ def _fetch_new_signals(conn, since: str) -> list[dict]:
     )
     rows = conn.execute(
         f"""
+        WITH {LATEST_VALUATION_CTE}
         SELECT l.id, l.title, l.ward, l.property_type, l.price_ty, l.area_m2, l.url,
                COALESCE(v.mos_pct, 0) AS mos_pct,
                COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,
@@ -133,12 +141,10 @@ def _fetch_new_signals(conn, since: str) -> list[dict]:
                COALESCE(v.legal_status, 'unverified') AS legal_status,
                COALESCE(l.posted_at, l.crawled_at, l.first_seen_at) AS posted_at
         FROM listings l
-        LEFT JOIN valuation_results v ON v.listing_id = l.id
-        WHERE COALESCE(v.is_signal, 0) = 1
+        JOIN latest_valuation v ON v.listing_id = l.id
+        WHERE {signal_condition}
           AND datetime(COALESCE(l.first_seen_at, l.crawled_at, l.posted_at)) >= datetime(?)
-          AND COALESCE(l.probably_sold, 0) = 0
-          AND COALESCE(l.is_blacklisted, 0) = 0
-          AND COALESCE(l.review_hidden, 0) = 0
+          AND {listing_condition}
         ORDER BY {order_sql}
         LIMIT 500
         """,

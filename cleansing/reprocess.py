@@ -18,6 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from cleansing.normalizer import normalize_record, compute_content_hash
+from cleansing.feature_extractor import extract_area, extract_url_hint, is_multi_lot_listing
 from db.analytics import save_valuation_result
 from db.connection import advisory_lock, get_conn
 from db.crawl_runs import finish_crawl_run, start_crawl_run
@@ -32,6 +33,22 @@ GULAND_OLD_POST_DAYS = 14
 GULAND_CLUSTER_MIN_SIZE = 4
 BAD_VALUATION_VERDICTS = {"fake_price", "cannot_price", "overpriced"}
 GOOD_VALUATION_VERDICTS = {"cheap_real", "correct", "good"}
+LOW_ABSOLUTE_PRICE_TY = 0.5
+DOWN_PAYMENT_PRICE_TY = 0.8
+LARGE_LOT_AREA_M2 = 1000.0
+
+
+def _float_value(value, default=0.0) -> float:
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return default
+
+
+def _fold_text(text: str) -> str:
+    text = unicodedata.normalize("NFD", text or "")
+    text = text.replace("Đ", "D").replace("đ", "d").replace("Ä", "D").replace("Ä‘", "d")
+    return "".join(ch for ch in text if unicodedata.category(ch) != "Mn").lower()
 
 
 def _date_prefix(value):
@@ -52,8 +69,6 @@ def _has_positive_feedback(row) -> bool:
 
 def _source_quality_flags(row) -> tuple:
     source = (row["source"] or "").lower()
-    if source != "guland":
-        return ()
 
     if _has_positive_feedback(row):
         return ()
@@ -62,7 +77,10 @@ def _source_quality_flags(row) -> tuple:
     extraction = (row["feedback_extraction_verdict"] or "").strip()
     valuation = (row["feedback_valuation_verdict"] or verdict).strip()
 
-    flags = []
+    flags = list(_valuation_quality_flags(row))
+    if source != "guland":
+        return tuple(sorted(set(flags)))
+
     if int(row["suspicious_bait"] or 0):
         flags.append("suspicious_bait")
     if float(row["price_per_m2"] or 0) >= GULAND_EXTREME_PPM2:
@@ -77,6 +95,70 @@ def _source_quality_flags(row) -> tuple:
         flags.append("review_bad_valuation")
     if verdict == "bad_data" and extraction and extraction != "all_correct":
         flags.append("review_bad_extraction")
+
+    return tuple(sorted(set(flags)))
+
+
+def _valuation_quality_flags(row) -> tuple:
+    flags = []
+    title = row["title"] or ""
+    description = row["description"] or ""
+    source_id = row["source_id"] or ""
+    text = _fold_text(" ".join([title, description]))
+    price_ty = _float_value(row["price_ty"])
+    ppm2 = _float_value(row["price_per_m2"])
+    area_m2 = _float_value(row["area_m2"])
+    prop_type = row["property_type"] or ""
+    url_hint = extract_url_hint(row["url"] or "")
+
+    if _fold_text(title).strip() in {"tin test", "test"} or _fold_text(source_id).startswith("test"):
+        flags.append("test_artifact")
+
+    discount_as_price = bool(re.search(
+        r"(?:re\s*hon|thap\s*hon)\s*(?:thi\s*truong\s*)?\d+(?:[,.]\d+)?\s*(?:ty|ti|trieu|tr|m|k)\b",
+        text,
+    )) or bool(re.search(
+        r"(?:ha|bot|giam(?!\s*con)|giam\s+sau|giam\s+manh)"
+        r"(?:\s+\w+){0,3}\s+\d+(?:[,.]\d+)?\s*(?:ty|ti|trieu|tr|m|k)\b",
+        text,
+    ))
+    if price_ty and price_ty <= LOW_ABSOLUTE_PRICE_TY and discount_as_price:
+        flags.append("parsed_discount_as_price")
+
+    down_payment = bool(re.search(
+        r"(?:dua\s*truoc|tra\s*truoc|dat\s*coc|coc|ngan\s*hang|vietcombank|ho\s*tro\s*tra\s*gop)",
+        text,
+    ))
+    if price_ty and price_ty <= DOWN_PAYMENT_PRICE_TY and down_payment:
+        flags.append("down_payment_as_price")
+
+    if prop_type in {"dat_nen", "nha_dat"} and price_ty and price_ty <= LOW_ABSOLUTE_PRICE_TY:
+        flags.append("too_low_absolute_price")
+
+    if prop_type in {"dat_nen", "nha_dat"} and area_m2 >= LARGE_LOT_AREA_M2:
+        flags.append("large_lot_model_risk")
+
+    category_text_conflict = bool(re.search(
+        r"\b(?:can\s*ho|chung\s*cu|kho\s*xuong|nha\s*xuong)\b",
+        text,
+    )) and bool(re.search(r"\b(?:dat|lo\s*dat|chua\s*(?:co\s*)?tho\s*cu)\b", text))
+    if prop_type in {"dat_nen", "dat_vuon"} and (
+        url_hint in {"chung_cu", "kho_xuong"} or category_text_conflict
+    ):
+        flags.append("source_category_conflict")
+
+    if prop_type in {"dat_nen", "dat_vuon", "nha_dat"} and is_multi_lot_listing(title, description):
+        flags.append("multi_lot_listing")
+
+    description_area_m2 = _float_value(extract_area(description))
+    if area_m2 and description_area_m2 and prop_type in {"dat_nen", "nha_dat"}:
+        bigger = max(area_m2, description_area_m2)
+        smaller = min(area_m2, description_area_m2)
+        if smaller > 0 and bigger / smaller >= 1.8:
+            flags.append("area_dimension_conflict")
+
+    if prop_type in {"dat_nen", "nha_dat"} and ppm2 and ppm2 < 1.0:
+        flags.append("too_low_absolute_price")
 
     return tuple(sorted(set(flags)))
 
@@ -286,8 +368,8 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
                    l.area_m2, l.frontage_m, l.depth_m, l.road_type, l.road_tier,
                    l.tho_cu_m2, l.tho_cu_ratio,
                    l.has_so, l.is_hot, l.price_dropped, l.crawled_at, l.posted_at,
-                   l.url, l.contact_phone, l.source, l.suspicious_bait,
-                   l.review_hidden,
+                   l.url, l.contact_phone, l.source, l.source_id, l.suspicious_bait,
+                   l.review_hidden, l.duplicate_of_id,
                    COALESCE(lv.status, 'unverified') AS legal_status,
                    COALESCE(lv.trust_tier, 'candidate_signal') AS trust_tier,
                    COALESCE(lv.confidence_score, 0) AS trust_score,
@@ -359,6 +441,7 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
     def row_to_listing(row):
         flags = tuple(sorted(set(_source_quality_flags(row)) | cluster_flags.get(row["id"], set())))
         crawled = date.fromisoformat(row["crawled_at"][:10]) if row["crawled_at"] else None
+        posted = date.fromisoformat(row["posted_at"][:10]) if row["posted_at"] else None
         return Listing(
             id           = row["id"],
             area         = row["area"] or "unknown",
@@ -378,11 +461,14 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
             is_hot        = bool(row["is_hot"]),
             price_dropped = bool(row["price_dropped"]),
             crawled_at    = crawled,
+            posted_at     = posted,
             url           = row["url"] or "",
             contact_phone = row["contact_phone"] or "",
             source        = row["source"] or "",
+            duplicate_of_id = int(row["duplicate_of_id"]) if row["duplicate_of_id"] else None,
             source_quality_flags = flags,
             exclude_from_baseline = bool(flags),
+            positive_feedback = _has_positive_feedback(row),
             legal_status = row["legal_status"] or "unverified",
             trust_tier = row["trust_tier"] or "candidate_signal",
             trust_score = int(row["trust_score"] or 0),

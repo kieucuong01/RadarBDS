@@ -27,6 +27,11 @@ from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
 from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier
 from services.investment_memo import load_investment_memo
 from services.ai_bot import AIBot
+from services.signal_quality import (
+    LATEST_VALUATION_CTE,
+    actionable_listing_sql,
+    actionable_signal_sql,
+)
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -1726,17 +1731,19 @@ def api_heatmap():
     where_sql = " AND ".join(where_parts)
     
     # Market fields use all valid listings; opportunity fields use signal deals only.
+    signal_condition = actionable_signal_sql("v")
     query = f"""
+        WITH {LATEST_VALUATION_CTE}
         SELECT l.ward,
                l.price_per_m2,
                l.price_ty,
                l.area_m2,
                v.fair_ppm2,
                v.mos_pct,
-               COALESCE(v.is_signal, 0) as is_signal,
+               CASE WHEN {signal_condition} THEN 1 ELSE 0 END as is_signal,
                COALESCE(v.is_outlier, 0) as is_outlier
         FROM listings l
-        LEFT JOIN valuation_results v ON l.id = v.listing_id
+        LEFT JOIN latest_valuation v ON l.id = v.listing_id
         WHERE {where_sql}
           AND l.ward IS NOT NULL
           AND l.ward != 'unknown'
@@ -1852,11 +1859,14 @@ def api_listings():
 
     tier = current_tier()
     fresh_flag = "0 AS is_fresh_locked"
+    signal_condition = actionable_signal_sql("v")
     query = f"""
+        WITH {LATEST_VALUATION_CTE}
         SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
+               CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS actionable_signal,
                {fresh_flag}
         FROM listings l
-        LEFT JOIN valuation_results v ON l.id = v.listing_id
+        LEFT JOIN latest_valuation v ON l.id = v.listing_id
         WHERE {where_sql}
         ORDER BY {order_expr} {sort_dir} NULLS LAST
         LIMIT ? OFFSET ?
@@ -1890,7 +1900,7 @@ def api_listings():
         "id": r['id'], "title": r['title'], "description": r['description'] or "",
         "price_ty": r['price_ty'], "area_m2": r['area_m2'],
         "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
-        "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
+        "ward": r['ward'], "url": r['url'], "is_signal": bool(r['actionable_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
         "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
         "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
         "suspicious_bait": bool(r['suspicious_bait']),
@@ -2700,7 +2710,8 @@ def admin_api_qc_signals():
     ward = (request.args.get("ward") or "").strip()
     source = (request.args.get("source") or "").strip()
     with db_mod.get_conn() as conn:
-        where = ["COALESCE(l.probably_sold,0)=0", "COALESCE(l.is_blacklisted,0)=0", "v.is_signal=1", "COALESCE(v.mos_pct,0) BETWEEN ? AND ?"]
+        signal_condition = actionable_signal_sql("v")
+        where = ["COALESCE(l.probably_sold,0)=0", "COALESCE(l.is_blacklisted,0)=0", signal_condition, "COALESCE(v.mos_pct,0) BETWEEN ? AND ?"]
         params = [mos_min, mos_max]
         if ward:
             where.append("l.ward = ?")
@@ -2709,12 +2720,13 @@ def admin_api_qc_signals():
             where.append("l.source = ?")
             params.append(source)
         rows = conn.execute(f"""
+            WITH {LATEST_VALUATION_CTE}
             SELECT l.id, l.title, l.url, l.ward, l.source, l.price_ty, l.area_m2,
                    l.property_type, l.price_dropped, l.possibly_duplicate,
                    COALESCE(v.mos_pct,0) AS mos_pct, COALESCE(v.signal_score,0) AS signal_score,
                    f.verdict, f.created_at AS feedback_at
             FROM listings l
-            JOIN valuation_results v ON v.listing_id = l.id
+            JOIN latest_valuation v ON v.listing_id = l.id
             LEFT JOIN ai_training_feedback f ON f.id = (
                 SELECT id FROM ai_training_feedback af
                 WHERE af.listing_id = l.id
@@ -2765,6 +2777,9 @@ def admin_api_ai_training_items():
     queue = (request.args.get("queue") or "main").strip()
     if queue not in ("main", "recheck", "source_qc", "needs_valuation", "legal_qc"):
         queue = "main"
+    model_signal_condition = "COALESCE(v.is_signal,0)=1"
+    signal_condition = actionable_signal_sql("v")
+    listing_condition = actionable_listing_sql("l")
 
     where = [
         "COALESCE(l.probably_sold,0)=0",
@@ -2772,7 +2787,7 @@ def admin_api_ai_training_items():
     ]
     params = []
     if queue == "recheck":
-        where.append("v.is_signal = 1")
+        where.append(model_signal_condition)
         extraction_placeholders = ",".join("?" for _ in EXTRACTION_RECHECK_VERDICTS)
         where.extend([
             "COALESCE(l.review_hidden,0)=1",
@@ -2783,18 +2798,17 @@ def admin_api_ai_training_items():
     elif queue == "source_qc":
         where.extend([
             "COALESCE(l.review_hidden,0)=0",
-            "l.source = 'guland'",
             "COALESCE(v.source_quality_recheck,0)=1",
         ])
     elif queue == "needs_valuation":
         where.extend([
-            "v.is_signal = 1",
+            model_signal_condition,
             "COALESCE(f.extraction_verdict,'all_correct') = 'all_correct'",
             "(f.verdict = 'bad_data' OR f.valuation_verdict = 'bad_data')",
         ])
     elif queue == "legal_qc":
         where.extend([
-            "v.is_signal = 1",
+            model_signal_condition,
             "COALESCE(l.review_hidden,0)=0",
             """(
                 COALESCE(lv.status, v.legal_status, 'unverified') IN
@@ -2806,8 +2820,8 @@ def admin_api_ai_training_items():
             )""",
         ])
     else:
-        where.append("v.is_signal = 1")
-        where.append("COALESCE(l.review_hidden,0)=0")
+        where.append(signal_condition)
+        where.append(listing_condition)
     if ward:
         where.append("l.ward = ?")
         params.append(ward)
@@ -2858,6 +2872,7 @@ def admin_api_ai_training_items():
 
     with db_mod.get_conn() as conn:
         rows = conn.execute(f"""
+            WITH {LATEST_VALUATION_CTE}
             SELECT l.id, l.title, l.url, l.source, l.ward, l.property_type,
                    l.price_ty, l.price_per_m2, l.area_m2, l.frontage_m, l.depth_m, l.road_tier,
                    l.road_type, l.has_so, l.description,
@@ -2881,7 +2896,7 @@ def admin_api_ai_training_items():
                    r.reasoning AS ai_reasoning, r.red_flags AS ai_red_flags,
                    r.needs_map_check AS ai_needs_map_check
             FROM listings l
-            JOIN valuation_results v ON v.listing_id = l.id
+            JOIN latest_valuation v ON v.listing_id = l.id
             {feedback_join}
             LEFT JOIN ai_deal_review r ON r.id = (
                 SELECT id FROM ai_deal_review
@@ -2895,17 +2910,19 @@ def admin_api_ai_training_items():
         """, params + [limit, offset]).fetchall()
 
         pending = conn.execute(f"""
+            WITH {LATEST_VALUATION_CTE}
             SELECT COUNT(*) c
             FROM listings l
-            JOIN valuation_results v ON v.listing_id = l.id
+            JOIN latest_valuation v ON v.listing_id = l.id
             {feedback_join}
             WHERE {where_sql} AND f.id IS NULL
         """, params).fetchone()["c"]
 
         total = conn.execute(f"""
+            WITH {LATEST_VALUATION_CTE}
             SELECT COUNT(*) c
             FROM listings l
-            JOIN valuation_results v ON v.listing_id = l.id
+            JOIN latest_valuation v ON v.listing_id = l.id
             {feedback_join}
             WHERE {where_sql}
         """, params).fetchone()["c"]
@@ -2922,7 +2939,7 @@ def admin_api_ai_training_items():
         ]
         ward_params = []
         if queue == "recheck":
-            ward_where.append("v.is_signal = 1")
+            ward_where.append(model_signal_condition)
             extraction_placeholders = ",".join("?" for _ in EXTRACTION_RECHECK_VERDICTS)
             ward_where.extend([
                 "COALESCE(l.review_hidden,0)=1",
@@ -2933,18 +2950,17 @@ def admin_api_ai_training_items():
         elif queue == "source_qc":
             ward_where.extend([
                 "COALESCE(l.review_hidden,0)=0",
-                "l.source = 'guland'",
                 "COALESCE(v.source_quality_recheck,0)=1",
             ])
         elif queue == "needs_valuation":
             ward_where.extend([
-                "v.is_signal = 1",
+                model_signal_condition,
                 "COALESCE(f.extraction_verdict,'all_correct') = 'all_correct'",
                 "(f.verdict = 'bad_data' OR f.valuation_verdict = 'bad_data')",
             ])
         elif queue == "legal_qc":
             ward_where.extend([
-                "v.is_signal = 1",
+                model_signal_condition,
                 "COALESCE(l.review_hidden,0)=0",
                 """(
                     COALESCE(lv.status, v.legal_status, 'unverified') IN
@@ -2956,13 +2972,14 @@ def admin_api_ai_training_items():
                 )""",
             ])
         else:
-            ward_where.append("v.is_signal = 1")
-            ward_where.append("COALESCE(l.review_hidden,0)=0")
+            ward_where.append(signal_condition)
+            ward_where.append(listing_condition)
 
         ward_rows = conn.execute(f"""
+            WITH {LATEST_VALUATION_CTE}
             SELECT DISTINCT l.ward
             FROM listings l
-            JOIN valuation_results v ON v.listing_id = l.id
+            JOIN latest_valuation v ON v.listing_id = l.id
             {feedback_join}
             WHERE {" AND ".join(ward_where)}
             ORDER BY l.ward
@@ -3164,6 +3181,11 @@ def admin_api_ai_training_disagreements():
     """
     with db_mod.get_conn() as conn:
         rows = conn.execute("""
+            WITH latest_valuation AS (
+                SELECT DISTINCT ON (vr.listing_id) vr.*
+                FROM valuation_results vr
+                ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
+            )
             SELECT l.id, l.title, l.url, l.ward, l.price_ty, l.area_m2,
                    v.mos_pct, v.signal_score,
                    f.verdict AS human_verdict, f.created_at AS human_at,
@@ -3171,7 +3193,7 @@ def admin_api_ai_training_disagreements():
                    r.reasoning AS ai_reasoning, r.red_flags AS ai_red_flags,
                    r.needs_map_check AS ai_needs_map_check
             FROM listings l
-            JOIN valuation_results v ON v.listing_id = l.id
+            JOIN latest_valuation v ON v.listing_id = l.id
             JOIN ai_training_feedback f ON f.id = (
                 SELECT id FROM ai_training_feedback
                 WHERE listing_id = l.id ORDER BY created_at DESC LIMIT 1

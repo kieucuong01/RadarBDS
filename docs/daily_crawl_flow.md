@@ -36,7 +36,12 @@ Pipeline lõi sau crawl giữ nguyên: `raw_listings → listings → valuation_
 
 ## 2. Signal definition
 
-Một listing là **signal** khi `valuation_results.is_signal = 1`. Điều kiện:
+Co 2 lop signal:
+
+- `valuation_results.is_signal = 1`: model-cheap/MOS candidate, dung cho audit va admin QC.
+- "Actionable signal": latest valuation + `is_signal=1` + qua quality gate trong `services.signal_quality.actionable_signal_sql()`, dung cho dashboard user/VIP, review queue, va VIP push.
+
+Dieu kien MOS model:
 
 ```
 mos_pct = (fair_ppm2 - actual_ppm2) / fair_ppm2
@@ -47,7 +52,9 @@ is_signal = (mos_pct ≥ SIGNAL_MOS_THRESHOLD)
 |---|---|---|
 | `SIGNAL_MOS_THRESHOLD` | `config/settings.py` | **0.10** (= 10%) |
 
-Cách tính fair_ppm2 (per-ward weighted ridge + road tier + size discount) xem `.claude/rules/valuation.md`. Không hardcode threshold ở chỗ khác — `analytics/valuation.py::SegmentModel.mos_threshold` đọc từ settings.
+Cách tính fair_ppm2 (per-ward weighted ridge + road tier + size discount) xem `.claude/rules/valuation.md`. Facebook is the primary baseline; if a canonical segment has fewer than 35 Facebook samples, strict-pass Guland rows may supplement training with weight 0.4. Regression valuation caps `road_tier=3` at max 80% of the same-listing tier-2 counterfactual before downstream adjustments. Không hardcode threshold ở chỗ khác — `analytics/valuation.py::SegmentModel.mos_threshold` đọc từ settings.
+
+Quality flags can keep the valuation row but suppress user/VIP promotion. Fatal gates currently include parser/data risk such as `parsed_discount_as_price`, `down_payment_as_price`, `too_low_absolute_price`, `large_lot_model_risk`, `area_dimension_conflict`, `source_category_conflict`, `multi_lot_listing`, `test_artifact`, `low_segment_confidence`, source bad-extraction labels, and Guland quality flags such as `guland_weak_signal` / `guland_user_facing_risk`.
 
 Signal now has a separate trust tier:
 
@@ -55,17 +62,24 @@ Signal now has a separate trust tier:
 - `has_legal_doc`: has a detected so hong/so do image.
 - OCR parsing is disabled for now; having a detected so hong/so do image is the active legal trust boost.
 
-VIP and score sorting prioritize higher trust tiers, but candidate signals remain visible so the system does not miss early opportunities. Hard legal conflicts keep a valuation audit row but are not promoted as normal signals.
+VIP and score sorting prioritize higher trust tiers, but only actionable signals are promoted to user-facing queues. Hard legal conflicts, duplicate reposts, and quality flags keep a valuation audit row but are not promoted as normal signals.
 
-**Sanity target sau reprocess:** signals chiếm 10–30% tổng listing đã valuated. Verify:
+**Sanity target sau reprocess:** model signals can stay broad for QC; actionable signals should be much cleaner. Verify with latest valuation, not raw historical joins:
 
 ```powershell
 & $py -X utf8 -c "
 from db.connection import get_conn
+from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
+cond = actionable_signal_sql('v')
 with get_conn() as c:
-    n_sig = c.execute('SELECT COUNT(*) FROM valuation_results WHERE is_signal=1').fetchone()[0]
-    n_all = c.execute('SELECT COUNT(*) FROM valuation_results').fetchone()[0]
-print(f'{n_sig}/{n_all} = {n_sig/n_all:.1%}')
+    row = c.execute(f'''
+        WITH {LATEST_VALUATION_CTE}
+        SELECT COUNT(*) AS n_all,
+               SUM(CASE WHEN COALESCE(v.is_signal,0)=1 THEN 1 ELSE 0 END) AS model_signals,
+               SUM(CASE WHEN {cond} THEN 1 ELSE 0 END) AS actionable_signals
+          FROM latest_valuation v
+    ''').fetchone()
+print(dict(row))
 "
 ```
 
@@ -112,8 +126,9 @@ push_new_listings_to_vip(since=crawl_start_ts)
 
 Luồng này:
 
-- query signal mới theo `first_seen_at >= since`;
+- query latest actionable signal mới theo `first_seen_at >= since`;
 - bỏ tin sold, blacklisted, review hidden;
+- bỏ duplicate repost, valuation rows có `source_quality_recheck=1` hoặc fatal quality flags;
 - lọc theo từng `user_watchlists` của VIP còn hạn;
 - gửi riêng vào `users.telegram_chat_id`;
 - không đưa original source URL vào Telegram;
@@ -128,7 +143,7 @@ Footer của chunk cuối:
 📊 Còn lại <b>N</b> tin ngộp đang active — <a href="...">xem thêm tại Dashboard</a>
 ```
 
-`N` = tổng `valuation_results.is_signal=1` đang active trừ số deal đã in trong message.
+`N` = tổng latest actionable signal đang active trừ số deal đã in trong message.
 
 ### 3.1 Disable notification
 
