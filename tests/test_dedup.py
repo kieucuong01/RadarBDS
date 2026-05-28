@@ -232,6 +232,36 @@ def test_reliable_drop_facebook_same_area_different_post():
     assert _is_reliable_price_drop(old, new), "Facebook repost same area should count as reliable price drop"
 
 
+def test_reliable_drop_allows_small_depth_variation_when_lot_signature_is_strong():
+    old = _listing(
+        source="facebook", source_id="fb-old", posted_at="2026-05-17",
+        ward="Hiep An", property_type="dat_nen", area_m2=118.0,
+        frontage_m=5.0, depth_m=23.6, price_ty=1.695,
+        title="GIAM GIA BAN LO DAT HIEP AN THU DAU MOT BINH DUONG Gia 1 ty695tr DT 5 x 23.6",
+        description=(
+            "GIAM GIA BAN LO DAT HIEP AN THU DAU MOT BINH DUONG "
+            "Gia 1 ty695tr DT 5 x 23.6 = 118m2. Tho cu 70m2. "
+            "Phap ly so hong rieng. Duong oto vo thoai mai. Hotline 0944 882 225."
+        ),
+    )
+    new = _listing(
+        source="facebook", source_id="fb-new", posted_at="2026-05-26",
+        ward="Hiep An", property_type="dat_nen", area_m2=118.0,
+        frontage_m=5.0, depth_m=23.8, price_ty=1.65,
+        title="GIAM GIA BAN LO DAT HIEP AN THU DAU MOT BINH DUONG Gia 1 ty650tr DT 5 x 23.8",
+        description=(
+            "GIAM GIA BAN LO DAT HIEP AN THU DAU MOT BINH DUONG "
+            "Gia 1 ty650tr. DT 5 x 23.8 = 118m2. Tho cu 70m2. "
+            "Phap ly so hong rieng. Duong oto, dan cu dong duc. "
+            "038 294 1231 em Phuong xem dat."
+        ),
+    )
+    assert _is_reliable_price_drop(old, new), (
+        "Same area, frontage, thổ cư, location text, and high text similarity "
+        "should tolerate a small depth typo/rounding change"
+    )
+
+
 def test_reliable_drop_rejects_same_template_different_lot():
     old = _listing(
         source="facebook", source_id="fb1", posted_at="2026-05-01",

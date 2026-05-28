@@ -293,6 +293,14 @@ def _has_reliable_lot_signature(l1: dict, l2: dict, *, allow_facebook_same_price
 
     text_sim = _text_similarity(_combined_text(l1), _combined_text(l2))
 
+    if (
+        area_match
+        and _near(l1.get("frontage_m"), l2.get("frontage_m"), 0.0)
+        and _same_tho_cu(l1, l2)
+        and text_sim >= 0.80
+    ):
+        return True
+
     if _same_phone(l1, l2) and (area_match or text_sim >= 0.70):
         return True
 
