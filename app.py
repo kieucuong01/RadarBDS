@@ -17,7 +17,7 @@ from functools import wraps
 from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
-from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response
+from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response, abort
 from config import database_sqlite as db_mod
 from db.connection import connect, get_conn
 from db.moderation import normalize_phone
@@ -58,6 +58,17 @@ LEAD_STATUSES = {"new", "called", "viewing", "deposit", "cancelled"}
 POSITIVE_REVIEW_VERDICTS = {"good", "correct", "cheap_real"}
 HARD_HIDE_REVIEW_VERDICTS = {"bad", "spam", "sold", "fake_price"}
 SOFT_HIDE_REVIEW_VERDICTS = {"bad_data", "fair", "overpriced", "cannot_price"}
+ADMIN_CONTROL_ROOM_PANEL_SLUGS = {
+    "crm": "crm",
+    "quality": "data-quality",
+    "crawl": "facebook-crawl",
+    "training": "ai-training",
+    "infra": "infrastructure",
+    "users": "users",
+}
+ADMIN_CONTROL_ROOM_SLUG_TO_PANEL = {
+    slug: panel for panel, slug in ADMIN_CONTROL_ROOM_PANEL_SLUGS.items()
+}
 HIDE_REVIEW_VERDICTS = HARD_HIDE_REVIEW_VERDICTS | SOFT_HIDE_REVIEW_VERDICTS
 VALUATION_VERDICTS = {"cheap_real", "fair", "overpriced", "fake_price", "cannot_price"}
 EXTRACTION_RECHECK_VERDICTS = {"wrong_ward", "wrong_road", "wrong_property_type", "wrong_price", "wrong_area"}
@@ -2300,9 +2311,20 @@ def api_create_guest_lead():
     return jsonify({"ok": True, "lead_id": lead_id})
 
 
-def admin_control_room():
+def admin_control_room(panel_slug=None):
     is_admin = _admin_request_authorized()
-    return render_template("admin_control_room.html", admin_login_required=not is_admin)
+    initial_panel = "crm"
+    if panel_slug:
+        initial_panel = ADMIN_CONTROL_ROOM_SLUG_TO_PANEL.get(panel_slug)
+        if not initial_panel:
+            abort(404)
+    return render_template(
+        "admin_control_room.html",
+        admin_login_required=not is_admin,
+        admin_initial_panel=initial_panel,
+        admin_initial_panel_slug=ADMIN_CONTROL_ROOM_PANEL_SLUGS[initial_panel],
+        admin_panel_slugs=ADMIN_CONTROL_ROOM_PANEL_SLUGS,
+    )
 
 
 @require_admin_auth
@@ -3216,7 +3238,7 @@ def admin_api_ai_training_disagreements():
 @require_admin_auth
 def admin_api_qc_duplicates():
     with db_mod.get_conn() as conn:
-        rows = conn.execute("""
+        rows = conn.execute(f"""
             SELECT l.id, l.title, l.url, l.source, l.ward, l.property_type, l.price_ty, l.area_m2,
                    l.frontage_m, l.depth_m, l.description, COALESCE(l.posted_at, l.crawled_at, l.updated_at) AS dt,
                    l.duplicate_of_id, c.title AS canonical_title, c.url AS canonical_url,

@@ -10,6 +10,18 @@ const SOURCE_NAMES = { facebook: 'Facebook', guland: 'Guland', batdongsan: 'BDS.
 const PTYPES = { dat_nen: 'Đất nền', dat_vuon: 'Đất vườn', nha_dat: 'Nhà đất', nha_tro: 'Nhà trọ', chung_cu: 'Chung cư', nha_o_xa_hoi: 'Nhà ở xã hội' };
 const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='420' viewBox='0 0 640 420'%3E%3Crect width='640' height='420' fill='%23eef2f7'/%3E%3Cpath d='M250 250l55-72 44 57 25-32 66 82H204z' fill='%2394a3b8'/%3E%3Ccircle cx='392' cy='150' r='24' fill='%2394a3b8'/%3E%3C/svg%3E";
 const ADMIN_THEME_KEY = 'radar_admin_theme';
+const ADMIN_PANEL_SLUGS = Object.assign({
+  crm: 'crm',
+  quality: 'data-quality',
+  crawl: 'facebook-crawl',
+  training: 'ai-training',
+  infra: 'infrastructure',
+  users: 'users'
+}, window.ADMIN_CONTROL_ROOM_PANEL_SLUGS || {});
+const ADMIN_SLUG_TO_PANEL = Object.entries(ADMIN_PANEL_SLUGS).reduce((acc, [panel, slug]) => {
+  acc[slug] = panel;
+  return acc;
+}, {});
 
 let leadTimer = null;
 let activeQualityTab = 'dups';
@@ -46,16 +58,16 @@ async function fetchJSON(url, options = {}) {
   const isPoll = clean.pathname.includes('/admin/api/facebook-crawl/jobs/');
   const shouldToast = !options.silent && !isPoll && adminToastDepth === 0;
   const toast = shouldToast
-    ? showAdminToast(method === 'GET' ? 'Dang tai du lieu' : 'Dang xu ly tac vu', 'loading', { sticky: true })
+    ? showAdminToast(method === 'GET' ? 'Đang tải dữ liệu' : 'Đang xử lý tác vụ', 'loading', { sticky: true })
     : null;
   try {
     const res = await fetch(clean.toString(), options);
     if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
     const data = await res.json();
-    if (toast) updateAdminToast(toast, method === 'GET' ? 'Da tai du lieu' : 'Da xu ly xong', 'success');
+    if (toast) updateAdminToast(toast, method === 'GET' ? 'Đã tải dữ liệu' : 'Đã xử lý xong', 'success');
     return data;
   } catch (error) {
-    if (toast) updateAdminToast(toast, `Tac vu loi: ${formatAdminError(error)}`, 'error', { delay: 5200 });
+    if (toast) updateAdminToast(toast, `Tác vụ lỗi: ${formatAdminError(error)}`, 'error', { delay: 5200 });
     throw error;
   }
 }
@@ -73,6 +85,35 @@ function ensureToastRoot() {
   return root;
 }
 
+function ensureAdminLoadingOverlay() {
+  let overlay = document.getElementById('adminLoadingOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'adminLoadingOverlay';
+    overlay.className = 'admin-main-loading';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = `
+      <div class="admin-main-loading-box" role="status" aria-live="polite">
+        <span class="admin-main-loading-spinner"></span>
+        <strong>Đang tải dữ liệu...</strong>
+        <small>Vui lòng đợi trong giây lát</small>
+      </div>
+    `;
+    (document.querySelector('.admin-main') || document.body).appendChild(overlay);
+  }
+  return overlay;
+}
+
+function syncAdminLoadingOverlay() {
+  const active = document.querySelectorAll('.admin-toast.loading').length > 0;
+  const overlay = active ? ensureAdminLoadingOverlay() : document.getElementById('adminLoadingOverlay');
+  const main = document.querySelector('.admin-main');
+  if (main) main.setAttribute('aria-busy', active ? 'true' : 'false');
+  if (!overlay) return;
+  overlay.classList.toggle('active', active);
+  overlay.setAttribute('aria-hidden', active ? 'false' : 'true');
+}
+
 function showAdminToast(message, type = 'loading', options = {}) {
   const root = ensureToastRoot();
   const toast = document.createElement('div');
@@ -86,6 +127,7 @@ function showAdminToast(message, type = 'loading', options = {}) {
   if (!options.sticky && type !== 'loading') {
     setTimeout(() => dismissAdminToast(toast), options.delay || 2400);
   }
+  syncAdminLoadingOverlay();
   return toast;
 }
 
@@ -97,12 +139,16 @@ function updateAdminToast(toast, message, type = 'success', options = {}) {
   if (!options.sticky && type !== 'loading') {
     setTimeout(() => dismissAdminToast(toast), options.delay || 2400);
   }
+  syncAdminLoadingOverlay();
 }
 
 function dismissAdminToast(toast) {
   if (!toast || !toast.parentNode) return;
   toast.classList.add('leaving');
-  setTimeout(() => toast.remove(), 180);
+  setTimeout(() => {
+    toast.remove();
+    syncAdminLoadingOverlay();
+  }, 180);
 }
 
 function formatAdminError(error) {
@@ -147,9 +193,44 @@ function shortDate(v) {
   return (v || '').replace('T', ' ').slice(0, 16) || '-';
 }
 
-function switchPanel(name) {
+function normalizePanelName(name) {
+  return ADMIN_PANEL_SLUGS[name] ? name : 'crm';
+}
+
+function panelSlug(name) {
+  return ADMIN_PANEL_SLUGS[normalizePanelName(name)] || 'crm';
+}
+
+function panelUrl(name) {
+  return `/admin/${panelSlug(name)}`;
+}
+
+function panelFromLocation() {
+  const path = window.location.pathname.replace(/\/+$/, '');
+  if (path === '/admin' || path === '/admin/control-room') {
+    return 'crm';
+  }
+  const match = path.match(/\/admin(?:\/control-room)?\/([^/]+)$/);
+  if (match) {
+    const slug = decodeURIComponent(match[1]);
+    if (ADMIN_SLUG_TO_PANEL[slug]) return ADMIN_SLUG_TO_PANEL[slug];
+  }
+  const initial = window.ADMIN_INITIAL_PANEL || document.body?.dataset.adminInitialPanel || 'crm';
+  return normalizePanelName(initial);
+}
+
+function syncPanelUrl(name) {
+  if (!window.history?.pushState) return;
+  const nextPath = panelUrl(name);
+  if (window.location.pathname === nextPath) return;
+  history.pushState({ adminPanel: normalizePanelName(name) }, '', nextPath);
+}
+
+function switchPanel(name, options = {}) {
+  name = normalizePanelName(name);
   document.querySelectorAll('.nav-item').forEach(btn => btn.classList.toggle('active', btn.dataset.panel === name));
   document.querySelectorAll('.workspace-panel').forEach(panel => panel.classList.toggle('active', panel.id === `panel-${name}`));
+  if (options.updateUrl !== false) syncPanelUrl(name);
   const panelLabels = { crm: 'CRM', quality: 'Quality', training: 'AI Training', infra: 'Hạ tầng', users: 'Users', crawl: 'Facebook Crawl' };
   let loader = null;
   if (name === 'crm') loader = loadLeads;
@@ -253,24 +334,24 @@ async function addApifyToken() {
   const token = document.getElementById('apifyTokenValue').value.trim();
   const monthly_quota = Number(document.getElementById('apifyTokenQuota').value || 950);
   if (!token.startsWith('apify_api_')) return alert('Token Apify chưa đúng định dạng apify_api_...');
-  await withAdminToast('Dang them Apify key', async () => {
+  await withAdminToast('Đang thêm Apify key', async () => {
     await saveApifyToken({ label, token, monthly_quota, active: true });
     document.getElementById('apifyTokenLabel').value = '';
     document.getElementById('apifyTokenValue').value = '';
-  }, 'Da them Apify key', 'Khong them duoc Apify key');
+  }, 'Đã thêm Apify key', 'Không thêm được Apify key');
 }
 
 async function toggleApifyToken(id, active) {
   const current = apifyTokens.find(t => t.id === id);
   if (!current) return;
-  await withAdminToast(active ? 'Dang bat Apify key' : 'Dang tat Apify key', () => (
+  await withAdminToast(active ? 'Đang bật Apify key' : 'Đang tắt Apify key', () => (
     saveApifyToken({ id, label: current.label, monthly_quota: current.monthly_quota, active })
-  ), active ? 'Da bat Apify key' : 'Da tat Apify key', 'Khong cap nhat duoc Apify key');
+  ), active ? 'Đã bật Apify key' : 'Đã tắt Apify key', 'Không cập nhật được Apify key');
 }
 
 async function resetApifyTokenUsage(id) {
   if (!confirm('Reset số post đã dùng tháng này cho key này?')) return;
-  await withAdminToast('Dang reset usage Apify key', async () => {
+  await withAdminToast('Đang reset lượt dùng Apify key', async () => {
     const data = await fetchJSON(`/admin/api/facebook-crawl/tokens/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -278,16 +359,16 @@ async function resetApifyTokenUsage(id) {
     });
     apifyTokens = data.tokens || [];
     renderApifyTokens();
-  }, 'Da reset usage Apify key', 'Khong reset duoc usage');
+  }, 'Đã reset lượt dùng Apify key', 'Không reset được lượt dùng');
 }
 
 async function deleteApifyToken(id) {
   if (!confirm('Xóa key Apify này khỏi pool?')) return;
-  await withAdminToast('Dang xoa Apify key', async () => {
+  await withAdminToast('Đang xóa Apify key', async () => {
     const data = await fetchJSON(`/admin/api/facebook-crawl/tokens/${id}`, { method: 'DELETE' });
     apifyTokens = data.tokens || [];
     renderApifyTokens();
-  }, 'Da xoa Apify key', 'Khong xoa duoc Apify key');
+  }, 'Đã xóa Apify key', 'Không xóa được Apify key');
 }
 
 function renderCrawlStats(summary) {
@@ -334,7 +415,7 @@ function renderCrawlOps(ops = {}) {
           ${x.error_msg ? `<em>${esc(x.error_msg)}</em>` : ''}
         </li>
       `).join('')
-    : `<li><strong>OK</strong><span>Khong co loi nguon trong cac run gan day.</span></li>`;
+    : `<li><strong>OK</strong><span>Không có lỗi nguồn trong các run gần đây.</span></li>`;
   const lockList = lock_blockers.length
     ? lock_blockers.map(x => `
         <li>
@@ -343,7 +424,7 @@ function renderCrawlOps(ops = {}) {
           ${x.error ? `<em>${esc(x.error)}</em>` : ''}
         </li>
       `).join('')
-    : `<li><strong>OK</strong><span>Khong co crawl/reprocess lock dang chan.</span></li>`;
+    : `<li><strong>OK</strong><span>Không có crawl/reprocess lock đang chặn.</span></li>`;
 
   el.innerHTML = `
     <div class="crawl-ops-head">
@@ -351,29 +432,29 @@ function renderCrawlOps(ops = {}) {
         <small>Daily Automation</small>
         <strong>RadarBDS_DailyCrawl</strong>
       </div>
-      <span class="ops-pill ${healthClass}">${lock_blockers.length ? 'Lock dang ket' : source_errors.length ? 'Can xem loi nguon' : 'Dang on dinh'}</span>
+      <span class="ops-pill ${healthClass}">${lock_blockers.length ? 'Lock đang kẹt' : source_errors.length ? 'Cần xem lỗi nguồn' : 'Đang ổn định'}</span>
     </div>
     <div class="crawl-ops-grid">
       <div class="crawl-ops-card ${scheduleOk ? 'ok' : 'warn'}">
         <small>Lich daily</small>
-        <strong>${schedule.installed ? (schedule.run_time || shortDate(schedule.next_run_time) || 'Da cai') : 'Chua cai'}</strong>
-        <span>${schedule.installed ? `Next: ${esc(schedule.next_run_time || 'chua ro')}` : 'Can cai RadarBDS_DailyCrawl luc 21:00'}</span>
+        <strong>${schedule.installed ? (schedule.run_time || shortDate(schedule.next_run_time) || 'Đã cài') : 'Chưa cài'}</strong>
+        <span>${schedule.installed ? `Next: ${esc(schedule.next_run_time || 'chưa rõ')}` : 'Cần cài RadarBDS_DailyCrawl lúc 21:00'}</span>
         ${schedule.error ? `<em>${esc(schedule.error)}</em>` : ''}
       </div>
       <div class="crawl-ops-card">
         <small>Lan chay gan nhat</small>
-        <strong>${last.source ? `${esc(last.source)} · ${esc(last.status || '')}` : 'Chua co run'}</strong>
-        <span>${last.started_at ? `${esc(shortDate(last.started_at))} · new=${Number(last.new || 0)} · fetched=${Number(last.fetched || 0)}` : 'Chua co crawl_runs'}</span>
+        <strong>${last.source ? `${esc(last.source)} · ${esc(last.status || '')}` : 'Chưa có run'}</strong>
+        <span>${last.started_at ? `${esc(shortDate(last.started_at))} · new=${Number(last.new || 0)} · fetched=${Number(last.fetched || 0)}` : 'Chưa có crawl_runs'}</span>
       </div>
       <div class="crawl-ops-card">
         <small>Batch gan nhat</small>
-        <strong>${Number(last24.new || 0).toLocaleString('vi-VN')} tin moi</strong>
+        <strong>${Number(last24.new || 0).toLocaleString('vi-VN')} tin mới</strong>
         <span>${Number(last24.runs || 0)} runs · fetched=${Number(last24.fetched || 0).toLocaleString('vi-VN')} · skipped=${Number(last24.skipped || 0).toLocaleString('vi-VN')}</span>
       </div>
     </div>
     <div class="crawl-ops-lists">
       <div>
-        <h3>Loi nguon gan day</h3>
+        <h3>Lỗi nguồn gần đây</h3>
         <ul>${sourceList}</ul>
       </div>
       <div>
@@ -464,7 +545,7 @@ function addCrawlProfile() {
   document.getElementById('crawlProfileUrl').value = '';
   renderCrawlProfiles();
   renderCrawlRunSelect();
-  showAdminToast('Da them moi gioi vao danh sach tam', 'success');
+  showAdminToast('Đã thêm môi giới vào danh sách tạm', 'success');
 }
 
 function removeCrawlProfile(url) {
@@ -472,11 +553,11 @@ function removeCrawlProfile(url) {
   crawlProfiles = crawlProfiles.filter(p => p.url !== url);
   renderCrawlProfiles();
   renderCrawlRunSelect();
-  showAdminToast('Da xoa moi gioi khoi danh sach tam', 'success');
+  showAdminToast('Đã xóa môi giới khỏi danh sách tạm', 'success');
 }
 
 async function saveCrawlProfiles() {
-  await withAdminToast('Dang luu danh sach moi gioi', async () => {
+  await withAdminToast('Đang lưu danh sách môi giới', async () => {
     readCrawlTableState();
     const data = await fetchJSON('/admin/api/facebook-crawl/config', {
       method: 'POST',
@@ -488,7 +569,7 @@ async function saveCrawlProfiles() {
     renderCrawlOps(data.summary?.ops || {});
     renderCrawlProfiles();
     renderCrawlRunSelect();
-  }, 'Da luu danh sach moi gioi', 'Khong luu duoc danh sach');
+  }, 'Đã lưu danh sách môi giới', 'Không lưu được danh sách');
 }
 
 function setCrawlMode(mode) {
@@ -498,7 +579,7 @@ function setCrawlMode(mode) {
 }
 
 async function runCrawlForUrl(url, mode = crawlMode) {
-  await withAdminToast('Dang tao job crawl', async () => {
+  await withAdminToast('Đang tạo job crawl', async () => {
     readCrawlTableState();
     const p = crawlProfiles.find(x => x.url === url) || {};
     const payload = {
@@ -518,7 +599,7 @@ async function runCrawlForUrl(url, mode = crawlMode) {
     activeCrawlJobId = data.job.id;
     renderCrawlJob(data.job);
     startCrawlPolling(activeCrawlJobId);
-  }, 'Da tao job crawl, dang theo doi tien trinh', 'Khong tao duoc job crawl');
+  }, 'Đã tạo job crawl, đang theo dõi tiến trình', 'Không tạo được job crawl');
 }
 
 async function runSelectedCrawl() {
@@ -753,7 +834,7 @@ function exportLeads() {
   const clean = new URL(`/admin/api/leads/export.csv${q ? '?' + q : ''}`, window.location.href);
   clean.username = '';
   clean.password = '';
-  showAdminToast('Dang tai file CSV leads', 'success', { delay: 1800 });
+  showAdminToast('Đang tải file CSV leads', 'success', { delay: 1800 });
   window.location.href = clean.toString();
 }
 
@@ -1238,23 +1319,23 @@ function trainingCard(x) {
             <div class="review-box legal-qc-box">
               <div class="review-title">Legal QC · ${esc(legal.status || 'unverified')} · ${Math.round(legal.trust_score || legal.confidence_score || 0)}%</div>
               <ul class="explain-list">
-                <li>Thua/to: ${esc(legal.thua_so || '-')} / ${esc(legal.to_ban_do || '-')}</li>
-                <li>DT so: ${area(legal.legal_area_m2)} · Tho cu: ${area(legal.legal_residential_m2)}</li>
-                <li>Ward: ${esc(legal.legal_ward || '-')} · Road: ${esc(legal.legal_road_text || '-')}</li>
+                <li>Thửa/tờ: ${esc(legal.thua_so || '-')} / ${esc(legal.to_ban_do || '-')}</li>
+                <li>DT sổ: ${area(legal.legal_area_m2)} · Thổ cư: ${area(legal.legal_residential_m2)}</li>
+                <li>Phường: ${esc(legal.legal_ward || '-')} · Đường: ${esc(legal.legal_road_text || '-')}</li>
                 ${legalFlags.length ? `<li>Flags: ${legalFlags.map(esc).join(', ')}</li>` : ''}
               </ul>
               <div class="legal-qc-grid">
-                <input id="legal-road-${x.id}" value="${esc(legal.legal_road_text || '')}" placeholder="Duong tren so">
-                <input id="legal-ward-${x.id}" value="${esc(legal.legal_ward || '')}" placeholder="Phuong tren so">
-                <input id="legal-area-${x.id}" value="${esc(legal.legal_area_m2 || '')}" placeholder="DT so">
-                <input id="legal-res-${x.id}" value="${esc(legal.legal_residential_m2 || '')}" placeholder="Tho cu">
-                <input id="legal-thua-${x.id}" value="${esc(legal.thua_so || '')}" placeholder="Thua so">
-                <input id="legal-to-${x.id}" value="${esc(legal.to_ban_do || '')}" placeholder="To ban do">
+                <input id="legal-road-${x.id}" value="${esc(legal.legal_road_text || '')}" placeholder="Đường trên sổ">
+                <input id="legal-ward-${x.id}" value="${esc(legal.legal_ward || '')}" placeholder="Phường trên sổ">
+                <input id="legal-area-${x.id}" value="${esc(legal.legal_area_m2 || '')}" placeholder="DT sổ">
+                <input id="legal-res-${x.id}" value="${esc(legal.legal_residential_m2 || '')}" placeholder="Thổ cư">
+                <input id="legal-thua-${x.id}" value="${esc(legal.thua_so || '')}" placeholder="Thửa số">
+                <input id="legal-to-${x.id}" value="${esc(legal.to_ban_do || '')}" placeholder="Tờ bản đồ">
               </div>
               <div class="chip-row">
-                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'verified')">Xac nhan dung so</button>
-                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'needs_review')">Can soi tiep</button>
-                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'conflict')">Co conflict</button>
+                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'verified')">Xác nhận đúng sổ</button>
+                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'needs_review')">Cần soi tiếp</button>
+                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'conflict')">Có xung đột</button>
               </div>
             </div>` : '';
   const fairTitle = x.fair_ty
@@ -1379,6 +1460,7 @@ async function saveTraining(id) {
 document.addEventListener('DOMContentLoaded', () => {
   initAdminTheme();
   document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => switchPanel(btn.dataset.panel)));
+  window.addEventListener('popstate', () => switchPanel(panelFromLocation(), { updateUrl: false }));
   document.querySelectorAll('.segment[data-quality-tab]').forEach(btn => btn.addEventListener('click', () => switchQualityTab(btn.dataset.qualityTab)));
   document.querySelectorAll('.segment[data-infra-filter]').forEach(btn => btn.addEventListener('click', () => switchInfraFilter(btn.dataset.infraFilter)));
   document.getElementById('leadStatusFilter').addEventListener('change', loadLeads);
@@ -1460,5 +1542,5 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(userTimer);
     userTimer = setTimeout(loadUsers, 220);
   });
-  loadLeads();
+  switchPanel(panelFromLocation(), { updateUrl: false });
 });

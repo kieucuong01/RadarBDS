@@ -75,7 +75,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
             self.client.set_cookie("localhost", SESSION_COOKIE_NAME, self.admin_token)
 
     def test_guest_control_room_renders_login_modal_gate(self):
-        response = self.client.get("/admin/control-room")
+        response = self.client.get("/admin")
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
@@ -93,12 +93,124 @@ class AdminControlRoomGateTest(unittest.TestCase):
     def test_admin_session_loads_control_room_workspace(self):
         self._login_as_admin()
 
-        response = self.client.get("/admin/control-room")
+        response = self.client.get("/admin")
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
         self.assertIn("js/admin.js", html)
         self.assertNotIn('id="authModal"', html)
+
+    def test_admin_control_room_accepts_panel_slug_path(self):
+        self._login_as_admin()
+
+        response = self.client.get("/admin/facebook-crawl")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('data-admin-initial-panel="crawl"', html)
+        self.assertIn('data-panel-slug="facebook-crawl"', html)
+
+    def test_admin_control_room_rejects_unknown_panel_slug(self):
+        self._login_as_admin()
+
+        response = self.client.get("/admin/not-a-panel")
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_legacy_control_room_path_redirects_to_short_admin_slug(self):
+        self._login_as_admin()
+
+        response = self.client.get("/admin/control-room/facebook-crawl")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/admin/facebook-crawl")
+
+    def test_admin_js_updates_panel_slug_history(self):
+        js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("ADMIN_PANEL_SLUGS", js)
+        self.assertIn("function panelFromLocation", js)
+        self.assertIn("return `/admin/${panelSlug(name)}`", js)
+        self.assertIn("history.pushState", js)
+        self.assertIn("popstate", js)
+
+    def test_admin_workspace_uses_real_icons_not_text_abbreviations(self):
+        root = Path(__file__).resolve().parent.parent
+        html = (root / "templates/admin_control_room.html").read_text(encoding="utf-8")
+        css = (root / "static/css/admin.css").read_text(encoding="utf-8")
+
+        self.assertIn('class="admin-icon {{ extra }}"', html)
+        self.assertIn("admin_icon('users', 'nav-svg')", html)
+        self.assertIn("admin_icon('shield-check', 'nav-svg')", html)
+        self.assertIn("admin_icon('refresh', 'btn-svg')", html)
+        self.assertIn('aria-hidden="true"', html)
+        self.assertNotIn('<span class="nav-icon">LC</span>', html)
+        self.assertNotIn('<span class="nav-icon">DQ</span>', html)
+        self.assertIn(".admin-icon", css)
+        self.assertIn(".nav-item.active .nav-icon", css)
+        self.assertIn(".btn-icon-label", css)
+
+    def test_data_quality_duplicate_queue_loads_duplicate_pairs(self):
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        token = uuid.uuid4().hex
+        with get_conn() as conn:
+            raw_canonical = conn.execute(
+                "INSERT INTO raw_listings (source, url, raw_json) VALUES (?, ?, ?)",
+                ("facebook", f"https://example.test/raw-canonical-{token}", "{}"),
+            )
+            canonical = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, url, title, area, property_type,
+                    price_ty, price_per_m2, area_m2, possibly_duplicate
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                """,
+                (
+                    raw_canonical.lastrowid,
+                    "facebook",
+                    f"https://example.test/canonical-{token}",
+                    "Canonical lot",
+                    "Thu Dau Mot",
+                    "dat_nen",
+                    1.8,
+                    18.0,
+                    100.0,
+                ),
+            )
+            raw_dup = conn.execute(
+                "INSERT INTO raw_listings (source, url, raw_json) VALUES (?, ?, ?)",
+                ("facebook", f"https://example.test/raw-duplicate-{token}", "{}"),
+            )
+            conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, url, title, area, property_type,
+                    price_ty, price_per_m2, area_m2, possibly_duplicate, duplicate_of_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+                """,
+                (
+                    raw_dup.lastrowid,
+                    "facebook",
+                    f"https://example.test/duplicate-{token}",
+                    "Duplicate lot",
+                    "Thu Dau Mot",
+                    "dat_nen",
+                    1.82,
+                    18.2,
+                    100.0,
+                    canonical.lastrowid,
+                ),
+            )
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        items = response.get_json()["items"]
+        self.assertTrue(any(item["canonical_title"] == "Canonical lot" for item in items))
 
     def test_ai_training_requires_explicit_valuation_choice_in_js(self):
         js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(
@@ -119,12 +231,21 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("function showAdminToast", js)
         self.assertIn("async function withAdminToast", js)
         self.assertIn("adminToastDepth", js)
-        self.assertIn("Dang xu ly tac vu", js)
+        self.assertIn("Đang xử lý tác vụ", js)
+        self.assertIn("Đang tải dữ liệu", js)
+        self.assertNotIn("Dang tai du lieu", js)
+        self.assertNotIn("Dang xu ly tac vu", js)
         self.assertIn("facebook-crawl/jobs", js)
         self.assertIn("Fetched ${Number(crawl.fetched || 0)}", js)
         self.assertIn("Reprocess new ${Number(reprocess.new || 0)}", js)
+        self.assertIn("function ensureAdminLoadingOverlay", js)
+        self.assertIn("function syncAdminLoadingOverlay", js)
+        self.assertIn("adminLoadingOverlay", js)
         self.assertIn(".admin-toast-root", css)
         self.assertIn(".admin-toast.loading", css)
+        self.assertIn(".admin-main-loading", css)
+        self.assertIn("backdrop-filter", css)
+        self.assertIn("body.sidebar-collapsed .admin-main-loading", css)
 
     def test_admin_manual_first_crawl_allows_900_post_limit(self):
         import app as app_module

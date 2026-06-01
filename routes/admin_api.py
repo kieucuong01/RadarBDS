@@ -1,7 +1,7 @@
 """Admin control room and QC API routes."""
 from __future__ import annotations
 
-from flask import Blueprint
+from flask import Blueprint, redirect
 
 bp = Blueprint("admin_api", __name__)
 
@@ -12,9 +12,17 @@ def _impl(name: str, **kwargs):
     return getattr(app_module, name)(**kwargs)
 
 
+@bp.route("/admin/control-room/<panel_slug>")
 @bp.route("/admin/control-room")
-def admin_control_room(**kwargs):
-    return _impl("admin_control_room", **kwargs)
+def admin_control_room_legacy(panel_slug=None, **kwargs):
+    target = f"/admin/{panel_slug}" if panel_slug else "/admin"
+    return redirect(target, code=302)
+
+
+@bp.route("/admin")
+@bp.route("/admin/<panel_slug>")
+def admin_control_room(panel_slug=None, **kwargs):
+    return _impl("admin_control_room", panel_slug=panel_slug, **kwargs)
 
 
 @bp.route("/admin/api/leads")
