@@ -152,7 +152,7 @@ Invoke-RestMethod "https://api.telegram.org/bot$token/getMe"
 Run a VIP push using current data:
 
 ```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 & $py -X utf8 -c "from cli.notify import push_new_listings_to_vip; print(push_new_listings_to_vip(since='2026-01-01T00:00:00'))"
 ```
 

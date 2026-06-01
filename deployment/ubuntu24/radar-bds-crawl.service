@@ -1,0 +1,18 @@
+[Unit]
+Description=Radar BDS daily crawl and signal refresh
+Wants=network-online.target
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=radar
+Group=radar
+WorkingDirectory=/opt/radar-bds/current
+EnvironmentFile=/etc/radar-bds/radar.env
+Environment=PYTHONUNBUFFERED=1
+RuntimeDirectory=radar-bds
+ExecStart=/usr/bin/flock -n /run/radar-bds/crawl.lock /opt/radar-bds/.venv/bin/python -X utf8 radar.py crawl-daily
+TimeoutStartSec=2h
+
+[Install]
+WantedBy=multi-user.target

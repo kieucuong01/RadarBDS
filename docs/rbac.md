@@ -90,7 +90,7 @@ Admin control room:
 Run these after permission changes:
 
 ```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 & $py -X utf8 -m py_compile app.py services\market_data.py auth\core.py
 node --check static\js\auth.js
 ```

@@ -40,6 +40,11 @@ Supported focus areas:
 ## Canonical Runtime State
 
 - Canonical DB: PostgreSQL via `DATABASE_URL`.
+- Production target: Ubuntu Server 24.04 LTS with Python 3.12, deployed as
+  native systemd services behind Nginx. The production templates live in
+  `deployment/ubuntu24/`.
+- Python 3.12 runtime requires the newer pinned wheels in `requirements.txt`
+  (`numpy==1.26.4`, `Pillow==10.4.0`, `opencv-python-headless==4.10.0.84`).
 - Current local dev target: portable PostgreSQL 17 in `tools/postgresql-17.10/`
   with data in `.local/postgres-data`, started by `scripts/local_postgres.ps1`.
   `.env` should point `DATABASE_URL` to `postgresql://postgres@127.0.0.1:5432/radar_bds`.
@@ -53,7 +58,7 @@ Supported focus areas:
 - If app behavior differs from code, check which DB is loaded:
 
 ```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 echo $env:DATABASE_URL
 ```
 
@@ -186,7 +191,7 @@ Cleanup:
 Use UTF-8 mode on Windows:
 
 ```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 & $py -X utf8 radar.py inspect
 & $py -X utf8 app.py
 & $py -X utf8 radar.py reprocess
@@ -199,6 +204,16 @@ Targeted checks:
 & $py -X utf8 -m py_compile app.py services\market_data.py services\image_assets.py cleansing\download_images.py
 node --check static\js\main.js
 & $py -X utf8 -m pytest tests\test_dedup.py tests\test_price_history.py tests\test_lot_history.py tests\test_drop_filter.py
+```
+
+Ubuntu 24.04 production smoke checks:
+
+```bash
+python3 --version  # must be Python 3.12.x
+python3 -m venv /tmp/radar-bds-venv
+/tmp/radar-bds-venv/bin/python -m pip install -U pip setuptools wheel
+/tmp/radar-bds-venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+/tmp/radar-bds-venv/bin/python -c "import flask, numpy, cv2, PIL, psycopg, playwright; print('ok')"
 ```
 
 ## Verification Defaults

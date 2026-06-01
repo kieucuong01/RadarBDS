@@ -323,7 +323,7 @@ Gọi từ `cli/crawlers.py::_facebook_crawl_to_raw` ngay trước khi insert ra
 ## 7. Quick verify sau khi đổi gì đó
 
 ```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
 # 1. settings & threshold
 & $py -X utf8 -c "from config.settings import SIGNAL_MOS_THRESHOLD, DASHBOARD_BASE_URL; print(SIGNAL_MOS_THRESHOLD, DASHBOARD_BASE_URL)"

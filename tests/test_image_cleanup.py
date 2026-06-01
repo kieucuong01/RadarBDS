@@ -179,12 +179,28 @@ class BrokerImageCleanupTest(unittest.TestCase):
 
 
 class BrokerImageCleanupCliTest(unittest.TestCase):
-    def test_cmd_download_images_runs_cleanup_after_download(self):
+    def test_cmd_download_images_skips_legal_classifier_when_disabled(self):
         import cli.system as system
 
         args = SimpleNamespace(limit=25)
         with mock.patch.object(system, "init_schema"), \
              mock.patch("cleansing.download_images.download_images", return_value=3) as download, \
+             mock.patch("config.settings.LEGAL_IMAGE_EVIDENCE_ENABLED", False), \
+             mock.patch("cleansing.legal_image_classifier.classify_legal_images", return_value={"updated": 1}) as classify, \
+             mock.patch("cleansing.image_cleanup.clean_broker_images", return_value={"deleted": 2}) as clean:
+            system.cmd_download_images(args)
+
+        download.assert_called_once_with(limit=25)
+        classify.assert_not_called()
+        clean.assert_called_once_with(apply=True, limit=25, strong=True)
+
+    def test_cmd_download_images_runs_legal_classifier_when_enabled(self):
+        import cli.system as system
+
+        args = SimpleNamespace(limit=25)
+        with mock.patch.object(system, "init_schema"), \
+             mock.patch("cleansing.download_images.download_images", return_value=3) as download, \
+             mock.patch("config.settings.LEGAL_IMAGE_EVIDENCE_ENABLED", True), \
              mock.patch("cleansing.legal_image_classifier.classify_legal_images", return_value={"updated": 1}) as classify, \
              mock.patch("cleansing.image_cleanup.clean_broker_images", return_value={"deleted": 2}) as clean:
             system.cmd_download_images(args)

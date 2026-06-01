@@ -3,7 +3,7 @@
 Use UTF-8 mode on Windows because the project contains Vietnamese text.
 
 ```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 ```
 
 ## App and DB
@@ -11,7 +11,7 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
 Local PostgreSQL setup:
 
 ```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
 .\scripts\local_postgres.ps1 start
 $env:DATABASE_URL = "postgresql://postgres@127.0.0.1:5432/radar_bds"
@@ -32,6 +32,32 @@ After a migration or DB credential change, smoke test the Postgres-backed app:
 ```powershell
 & $py -X utf8 radar.py inspect
 & $py -X utf8 -c "from app import app; c=app.test_client(); [print(p, c.get(p).status_code) for p in ['/api/dashboard','/api/signals?page=1&limit=3']]"
+```
+
+## Ubuntu 24.04 Production Target
+
+Production is Ubuntu Server 24.04 LTS with Python 3.12, native systemd
+services, local PostgreSQL, and Nginx. Templates and setup steps live in
+`deployment/ubuntu24/`.
+
+Dependency smoke on a fresh Ubuntu 24.04 host:
+
+```bash
+python3 --version  # expected Python 3.12.x
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -U pip setuptools wheel
+pip install -r requirements.txt -r requirements-dev.txt
+python -c "import flask, numpy, cv2, PIL, psycopg, playwright; print('ok')"
+```
+
+Production service smoke after installing `deployment/ubuntu24/*.service`:
+
+```bash
+sudo systemctl status radar-bds.service
+sudo systemctl list-timers radar-bds-crawl.timer
+curl -fsS http://127.0.0.1:5000/api/dashboard >/dev/null
+curl -fsS "http://127.0.0.1:5000/api/signals?page=1&limit=3" >/dev/null
 ```
 
 ## Crawl and Jobs

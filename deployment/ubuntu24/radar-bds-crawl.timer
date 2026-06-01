@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Radar BDS crawl daily
+
+[Timer]
+OnCalendar=*-*-* 21:00:00
+Persistent=true
+RandomizedDelaySec=5m
+Unit=radar-bds-crawl.service
+
+[Install]
+WantedBy=timers.target
