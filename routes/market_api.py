@@ -17,6 +17,11 @@ def api_dashboard(**kwargs):
     return _impl("api_dashboard", **kwargs)
 
 
+@bp.route("/api/counts")
+def api_counts(**kwargs):
+    return _impl("api_counts", **kwargs)
+
+
 @bp.route("/api/signals")
 def api_signals(**kwargs):
     return _impl("api_signals", **kwargs)

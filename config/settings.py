@@ -97,7 +97,19 @@ SIGNAL_REALERT_THRESHOLD_PCT = float(os.getenv("SIGNAL_REALERT_THRESHOLD_PCT", 5
 LEGAL_IMAGE_EVIDENCE_ENABLED = os.getenv("LEGAL_IMAGE_EVIDENCE_ENABLED", "0").lower() in {"1", "true", "yes", "on"}
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-DASHBOARD_BASE_URL = os.getenv("DASHBOARD_BASE_URL", "http://localhost:5000")
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://radarbds.vn").strip().rstrip("/")
+DASHBOARD_BASE_URL = os.getenv("DASHBOARD_BASE_URL", PUBLIC_BASE_URL).strip().rstrip("/")
+SITE_NAME = os.getenv("SITE_NAME", "Radar BDS")
+SITE_TITLE = os.getenv("SITE_TITLE", "Radar BDS - Săn deal nhà đất Bình Dương bằng dữ liệu")
+SITE_DESCRIPTION = os.getenv(
+    "SITE_DESCRIPTION",
+    "Radar BDS giúp săn deal nhà đất Bình Dương bằng dữ liệu: lọc tin rao, định giá, so sánh thị trường và phát hiện bất động sản có biên an toàn tốt.",
+)
+SITE_KEYWORDS = os.getenv(
+    "SITE_KEYWORDS",
+    "radar bds, săn deal bất động sản, nhà đất Bình Dương, bất động sản Bình Dương, định giá nhà đất, đất nền Bình Dương",
+)
+SITE_OG_IMAGE = os.getenv("SITE_OG_IMAGE", f"{PUBLIC_BASE_URL}/static/images/logo.png").strip()
 
 # Cảnh báo khi giá thấp hơn X% so với mặt bằng chung
 ALERT_PRICE_DROP_PCT  = float(os.getenv("ALERT_PRICE_DROP_PCT", 20.0))

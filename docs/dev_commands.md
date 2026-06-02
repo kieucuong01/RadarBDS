@@ -38,7 +38,9 @@ After a migration or DB credential change, smoke test the Postgres-backed app:
 
 Production is Ubuntu Server 24.04 LTS with Python 3.12, native systemd
 services, local PostgreSQL, and Nginx. Templates and setup steps live in
-`deployment/ubuntu24/`.
+`deployment/ubuntu24/`. The public production domain is `https://radarbds.vn`;
+set both `PUBLIC_BASE_URL` and `DASHBOARD_BASE_URL` to that value in
+`/etc/radar-bds/radar.env`.
 
 Dependency smoke on a fresh Ubuntu 24.04 host:
 
@@ -58,6 +60,8 @@ sudo systemctl status radar-bds.service
 sudo systemctl list-timers radar-bds-crawl.timer
 curl -fsS http://127.0.0.1:5000/api/dashboard >/dev/null
 curl -fsS "http://127.0.0.1:5000/api/signals?page=1&limit=3" >/dev/null
+curl -fsS https://radarbds.vn/robots.txt >/dev/null
+curl -fsS https://radarbds.vn/sitemap.xml >/dev/null
 ```
 
 ## Crawl and Jobs

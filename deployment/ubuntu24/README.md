@@ -10,7 +10,8 @@ so one small VPS can share CPU/RAM with Cuon Truyen during the early stage.
 sudo apt update
 sudo apt install -y \
   ca-certificates curl git nginx postgresql postgresql-contrib \
-  python3 python3.12-venv python3-pip libpq-dev util-linux
+  python3 python3.12-venv python3-pip libpq-dev util-linux \
+  certbot python3-certbot-nginx
 ```
 
 Set the server timezone used by logs, crawl timers, and Telegram timestamps:
@@ -70,7 +71,8 @@ PORT=5000
 FLASK_DEBUG=0
 RADAR_INSIGHTS_ENABLED=0
 LEGAL_IMAGE_EVIDENCE_ENABLED=0
-DASHBOARD_BASE_URL=https://radar.example.com
+PUBLIC_BASE_URL=https://radarbds.vn
+DASHBOARD_BASE_URL=https://radarbds.vn
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_BOT_USERNAME=
 TELEGRAM_WEBHOOK_SECRET=
@@ -138,7 +140,8 @@ sudo systemctl start radar-bds-crawl.service
 
 ## 6. Nginx and SSL
 
-Install the Nginx site after changing `server_name` in the template:
+DNS should point both `radarbds.vn` and `www.radarbds.vn` to the VPS public
+IPv4 address before issuing SSL. Install the Nginx site:
 
 ```bash
 sudo cp deployment/ubuntu24/nginx-radar-bds.conf /etc/nginx/sites-available/radar-bds.conf
@@ -150,12 +153,18 @@ sudo systemctl reload nginx
 Use Certbot or the VPS provider's SSL flow for HTTPS. Cuon Truyen should use a
 different `server_name`, port, systemd service, and database.
 
+```bash
+sudo certbot --nginx -d radarbds.vn -d www.radarbds.vn --redirect
+```
+
 ## 7. Smoke checks
 
 ```bash
 curl -fsS http://127.0.0.1:5000/api/dashboard >/dev/null
 curl -fsS "http://127.0.0.1:5000/api/signals?page=1&limit=3" >/dev/null
-curl -fsS https://radar.example.com/api/dashboard >/dev/null
+curl -fsS https://radarbds.vn/api/dashboard >/dev/null
+curl -fsS https://radarbds.vn/robots.txt >/dev/null
+curl -fsS https://radarbds.vn/sitemap.xml >/dev/null
 ```
 
 Before DNS cutover, keep the old server available until these pass on the new

@@ -141,6 +141,7 @@ function applyFilters() {
   currentPageNo = 1;
   listingsHasMore = false;
   const tab = activeTabId();
+  refreshCounts(false);
   if (tab === 'signals') {
     loadSignals(1, { reset: true });
     refreshDashboardMeta(false);
@@ -167,7 +168,44 @@ function scheduleApplyFilters() {
 }
 
 async function initDashboard() {
+  refreshCounts(false);
   return refreshDashboardMeta(false);
+}
+
+function applyStatsCounts(stats = {}) {
+  const statTotal = document.getElementById('statTotal');
+  const statSignals = document.getElementById('statSignals');
+  const statNewRecent = document.getElementById('statNewRecent');
+  const badgeSignals = document.getElementById('badgeSignals');
+  const badgeTotal = document.getElementById('badgeTotal');
+
+  if (Object.prototype.hasOwnProperty.call(stats, 'total')) {
+    const total = Number(stats.total || 0);
+    if (statTotal) statTotal.innerText = total;
+    if (badgeTotal) badgeTotal.innerText = total;
+  }
+  if (Object.prototype.hasOwnProperty.call(stats, 'signals')) {
+    const signals = Number(stats.signals || 0);
+    if (statSignals) statSignals.innerText = signals;
+    if (badgeSignals) badgeSignals.innerText = signals;
+  }
+  if (Object.prototype.hasOwnProperty.call(stats, 'new_recent_days_7')) {
+    const newRecent = Number(stats.new_recent_days_7 || 0);
+    if (statNewRecent) statNewRecent.innerText = newRecent;
+  }
+  if (typeof syncMobileBadges === 'function') syncMobileBadges();
+}
+
+async function refreshCounts(useCache = false) {
+  const runId = ++countsRunSeq;
+  try {
+    const data = await fetchJSONCached('counts', `/api/counts?${currentFilters}`, useCache);
+    if (runId !== countsRunSeq) return;
+    applyStatsCounts(data.stats || {});
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    console.error(err);
+  }
 }
 
 async function refreshDashboardMeta(useCache = false) {

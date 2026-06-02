@@ -21,10 +21,18 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 from config import database_sqlite as db_mod
 from db.connection import connect, get_conn
 from db.moderation import normalize_phone
-from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
+from config.settings import (
+    LEGAL_IMAGE_EVIDENCE_ENABLED,
+    PUBLIC_BASE_URL,
+    SITE_DESCRIPTION,
+    SITE_KEYWORDS,
+    SITE_NAME,
+    SITE_OG_IMAGE,
+    SITE_TITLE,
+)
 
 # Import the extracted services
-from services.market_data import load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier
+from services.market_data import load_counts, load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier
 from services.investment_memo import load_investment_memo
 from services.ai_bot import AIBot
 from services.signal_quality import (
@@ -1167,11 +1175,51 @@ def api_delete_watchlist(wid):
 # Serve local downloaded images (data/images/<filename>)
 _DATA_IMAGES_DIR = Path(__file__).parent / "data" / "images"
 
+def _public_url(path="/"):
+    path = "/" + str(path or "/").lstrip("/")
+    return f"{PUBLIC_BASE_URL}{path}"
+
+
+def _site_meta(path="/"):
+    canonical_url = _public_url(path)
+    return {
+        "name": SITE_NAME,
+        "title": SITE_TITLE,
+        "description": SITE_DESCRIPTION,
+        "keywords": SITE_KEYWORDS,
+        "canonical_url": canonical_url,
+        "og_url": canonical_url,
+        "og_image": SITE_OG_IMAGE,
+    }
+
+
 def serve_local_image(filename):
     return send_from_directory(_DATA_IMAGES_DIR, filename)
 
 def index():
-    return render_template('index.html', wards_by_city=CITY_MAP)
+    return render_template('index.html', wards_by_city=CITY_MAP, site_meta=_site_meta("/"))
+
+
+def robots_txt():
+    body = f"""User-agent: *
+Allow: /
+
+Sitemap: {_public_url('/sitemap.xml')}
+"""
+    return Response(body, mimetype="text/plain; charset=utf-8")
+
+
+def sitemap_xml():
+    body = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>{_public_url('/')}</loc>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
+"""
+    return Response(body, mimetype="application/xml; charset=utf-8")
 
 
 _DASHBOARD_CACHE = {}
@@ -1606,6 +1654,30 @@ def api_dashboard():
         }
 
     return jsonify(_cached_dashboard_payload(cache_key, _load_dashboard_payload))
+
+@rate_limit("dashboard", limits={"guest": 1200, "free": 2400, "vip": None, "admin": None})
+def api_counts():
+    active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
+    range_kwargs = _request_range_filter_kwargs(request)
+    if not wards and active_city in CITY_MAP:
+        wards = CITY_MAP[active_city]
+    return jsonify({
+        "stats": load_counts(
+            _db_handle(),
+            sources=sources,
+            wards=wards,
+            prop_types=prop_types,
+            only_drops=only_drops,
+            mos_min=mos_min,
+            **range_kwargs,
+        ),
+        "active_city": active_city,
+        "active_wards": wards,
+        "active_sources": sources,
+        "active_props": prop_types,
+        "trend_period": trend_period,
+        "tier": current_tier(),
+    })
 
 def api_signals():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)

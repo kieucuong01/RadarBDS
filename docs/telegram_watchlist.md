@@ -37,7 +37,8 @@ TELEGRAM_BOT_TOKEN=123456:bot_token
 Required for webhook/public links:
 
 ```env
-DASHBOARD_BASE_URL=https://your-public-url
+PUBLIC_BASE_URL=https://radarbds.vn
+DASHBOARD_BASE_URL=https://radarbds.vn
 TELEGRAM_WEBHOOK_SECRET=some_secret
 ```
 

@@ -10,12 +10,26 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <!-- SEO & Branding -->
-  <title>RadarBDS | AI Real Estate Intelligence & Valuation</title>
+  <title>{{ site_meta.title }}</title>
   <meta name="description"
-    content="RadarBDS - Nền tảng định giá và săn bất động sản thông minh sử dụng AI. Phân tích dữ liệu thực tế, tìm kiếm Margin of Safety (MOS) và theo dõi biến động thị trường tại Bình Dương.">
+    content="{{ site_meta.description }}">
   <meta name="keywords"
-    content="định giá bất động sản, radar bds, săn nhà đất bình dương, đầu tư bất động sản ai, định giá đất nền, bds bình dương">
-  <meta name="author" content="RadarBDS Team">
+    content="{{ site_meta.keywords }}">
+  <meta name="author" content="Radar BDS">
+  <link rel="canonical" href="{{ site_meta.canonical_url }}">
+  <meta property="og:locale" content="vi_VN">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ site_meta.name }}">
+  <meta property="og:title" content="{{ site_meta.title }}">
+  <meta property="og:description" content="{{ site_meta.description }}">
+  <meta property="og:url" content="{{ site_meta.og_url }}">
+  <meta property="og:image" content="{{ site_meta.og_image }}">
+  <meta property="og:image:secure_url" content="{{ site_meta.og_image }}">
+  <meta property="og:image:type" content="image/png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ site_meta.title }}">
+  <meta name="twitter:description" content="{{ site_meta.description }}">
+  <meta name="twitter:image" content="{{ site_meta.og_image }}">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
@@ -928,8 +942,8 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=watchlist-telegram-sync-20260515"></script>
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-app-shell-20260602"></script>
-  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=mobile-app-shell-20260602"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=fast-counts-20260602"></script>
+  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=fast-counts-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-app-shell-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=signal-mobile-carousel-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=trend-first-20260528"></script>

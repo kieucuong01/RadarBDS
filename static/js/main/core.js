@@ -67,6 +67,7 @@ const CACHE_TTL_MS = 60000;
 const responseCache = new Map();
 const requestControllers = {};
 let filterDebounceTimer = null;
+let countsRunSeq = 0;
 let dashboardRunSeq = 0;
 let insightsRunSeq = 0;
 let insightsLoaded = false;

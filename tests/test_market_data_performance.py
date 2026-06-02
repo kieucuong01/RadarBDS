@@ -54,6 +54,51 @@ def test_load_signals_uses_shared_connection_scope(monkeypatch):
     assert "LEFT JOIN LATERAL" in conn.queries[0][0]
 
 
+def test_load_counts_uses_compact_shared_connection_scope(monkeypatch):
+    import services.market_data as market_data
+
+    class _CountsConnection:
+        def __init__(self):
+            self.queries = []
+            self.closed = False
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params))
+            return _FakeCursor(row={
+                "total": 12,
+                "hot": 1,
+                "new_recent_days_7": 2,
+                "price_drops": 4,
+            })
+
+        def close(self):
+            self.closed = True
+            raise AssertionError("market count reads should not close the shared connection")
+
+    conn = _CountsConnection()
+
+    @contextmanager
+    def fake_read_conn(_db_path=None):
+        yield conn
+
+    def fail_fresh_connect(_db_path=None):
+        raise AssertionError("load_counts opened a fresh connection")
+
+    monkeypatch.setattr(market_data, "connect", fail_fresh_connect, raising=False)
+    monkeypatch.setattr(market_data, "_read_conn", fake_read_conn, raising=False)
+
+    result = market_data.load_counts(None, sources=["facebook"], wards=["Tan An"])
+
+    assert result["total"] == 12
+    assert result["new_recent_days_7"] == 2
+    assert conn.closed is False
+    assert len(conn.queries) == 1
+    assert "FROM listings" in conn.queries[0][0]
+    assert "latest_valuation" not in conn.queries[0][0]
+    assert "listing_images" not in conn.queries[0][0]
+    assert "LEFT JOIN LATERAL" not in conn.queries[0][0]
+
+
 def test_dashboard_cache_reuses_loader_until_ttl_expires():
     import app as radar_app
 

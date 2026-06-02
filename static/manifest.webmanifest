@@ -1,15 +1,16 @@
 {
   "name": "Radar BDS",
   "short_name": "Radar BDS",
-  "description": "Radar BDS real estate signal dashboard.",
-  "start_url": "/?source=pwa",
-  "scope": "/",
+  "description": "Săn deal nhà đất Bình Dương bằng dữ liệu.",
+  "id": "https://radarbds.vn/",
+  "start_url": "https://radarbds.vn/",
+  "scope": "https://radarbds.vn/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#f8fafc",
   "icons": [
     {
-      "src": "/static/images/logo.png",
+      "src": "https://radarbds.vn/static/images/logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

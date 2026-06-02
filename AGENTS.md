@@ -43,6 +43,9 @@ Supported focus areas:
 - Production target: Ubuntu Server 24.04 LTS with Python 3.12, deployed as
   native systemd services behind Nginx. The production templates live in
   `deployment/ubuntu24/`.
+- Public production domain: `https://radarbds.vn`; `www.radarbds.vn` should
+  301-redirect to the apex domain. Production env should set `PUBLIC_BASE_URL`
+  and `DASHBOARD_BASE_URL` to `https://radarbds.vn`.
 - Python 3.12 runtime requires the newer pinned wheels in `requirements.txt`
   (`numpy==1.26.4`, `Pillow==10.4.0`, `opencv-python-headless==4.10.0.84`).
 - Current local dev target: portable PostgreSQL 17 in `tools/postgresql-17.10/`

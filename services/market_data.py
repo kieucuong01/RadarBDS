@@ -718,6 +718,46 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         "tier": tier,
     }
 
+
+def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None):
+    conn = _open_read_conn(db_path)
+    where_sql, params = _build_filters(
+        sources,
+        wards,
+        prop_types,
+        only_drops,
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+    )
+
+    row = conn.execute(f"""
+        WITH filtered AS (
+            SELECT id, is_hot, posted_at, crawled_at, price_dropped
+            FROM listings
+            WHERE {where_sql}
+        )
+        SELECT
+            (SELECT COUNT(*) FROM filtered) AS total,
+            (SELECT COUNT(*) FROM filtered WHERE is_hot = 1) AS hot,
+            (SELECT COUNT(*) FROM filtered WHERE (
+                COALESCE(posted_at, crawled_at) IS NOT NULL
+                AND julianday('now') - julianday(substr(COALESCE(posted_at, crawled_at),1,10)) <= 7
+            )) AS new_recent_days_7,
+            (SELECT COUNT(*) FROM filtered WHERE price_dropped = 1) AS price_drops
+    """, params).fetchone()
+    conn.close()
+
+    return dict(row) if row else {
+        "total": 0,
+        "hot": 0,
+        "new_recent_days_7": 0,
+        "price_drops": 0,
+    }
+
 def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
