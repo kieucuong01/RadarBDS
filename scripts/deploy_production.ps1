@@ -52,7 +52,7 @@ sudo systemctl is-active radar-bds.service
 
 for url in "http://127.0.0.1:5000/api/dashboard" "http://127.0.0.1:5000/api/signals?page=1&limit=3"; do
   for attempt in `$(seq 1 20); do
-    if curl -fsS "`$url" >/dev/null; then
+    if curl -fsS "`$url" >/dev/null 2>&1; then
       break
     fi
     if [ "`$attempt" -eq 20 ]; then
