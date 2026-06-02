@@ -49,8 +49,19 @@ fi
 /opt/radar-bds/.venv/bin/python -X utf8 -m py_compile app.py services/market_data.py services/image_assets.py
 sudo systemctl restart radar-bds.service
 sudo systemctl is-active radar-bds.service
-curl -fsS http://127.0.0.1:5000/api/dashboard >/dev/null
-curl -fsS "http://127.0.0.1:5000/api/signals?page=1&limit=3" >/dev/null
+
+for url in "http://127.0.0.1:5000/api/dashboard" "http://127.0.0.1:5000/api/signals?page=1&limit=3"; do
+  for attempt in `$(seq 1 20); do
+    if curl -fsS "`$url" >/dev/null; then
+      break
+    fi
+    if [ "`$attempt" -eq 20 ]; then
+      echo "smoke failed: `$url"
+      exit 1
+    fi
+    sleep 1
+  done
+done
 
 after=`$(git rev-parse --short HEAD)
 echo "deployed `$before -> `$after"
