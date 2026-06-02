@@ -22,6 +22,16 @@ def index(**kwargs):
     return _impl("index", **kwargs)
 
 
+@bp.route("/binh-duong")
+def seo_binh_duong(**kwargs):
+    return _impl("seo_landing_page", slug="binh-duong", **kwargs)
+
+
+@bp.route("/san-deal-bds")
+def seo_san_deal_bds(**kwargs):
+    return _impl("seo_landing_page", slug="san-deal-bds", **kwargs)
+
+
 @bp.route("/robots.txt")
 def robots_txt(**kwargs):
     return _impl("robots_txt", **kwargs)

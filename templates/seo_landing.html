@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f8fafc">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Radar BDS">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>{{ site_meta.title }}</title>
+  <meta name="description" content="{{ site_meta.description }}">
+  <meta name="keywords" content="{{ site_meta.keywords }}">
+  <meta name="author" content="Radar BDS">
+  <link rel="canonical" href="{{ site_meta.canonical_url }}">
+  <meta property="og:locale" content="vi_VN">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ site_meta.name }}">
+  <meta property="og:title" content="{{ site_meta.title }}">
+  <meta property="og:description" content="{{ site_meta.description }}">
+  <meta property="og:url" content="{{ site_meta.og_url }}">
+  <meta property="og:image" content="{{ site_meta.og_image }}">
+  <meta property="og:image:secure_url" content="{{ site_meta.og_image }}">
+  <meta property="og:image:type" content="image/png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ site_meta.title }}">
+  <meta name="twitter:description" content="{{ site_meta.description }}">
+  <meta name="twitter:image" content="{{ site_meta.og_image }}">
+
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=seo-landing-intent-20260602">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "name": {{ site_meta.title | tojson }},
+        "description": {{ site_meta.description | tojson }},
+        "url": {{ site_meta.canonical_url | tojson }},
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Radar BDS",
+          "url": "https://radarbds.vn/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {% for item in page.faq %}
+          {
+            "@type": "Question",
+            "name": {{ item.q | tojson }},
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": {{ item.a | tojson }}
+            }
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+
+<body class="seo-page seo-page-{{ page.get('variant', 'market') }}">
+  <header class="seo-topbar">
+    <div class="seo-shell topbar-shell">
+      <a class="seo-brand" href="/" aria-label="Radar BDS">
+        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="4" />
+          <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="4" />
+          <circle cx="24" cy="24" r="3.6" fill="currentColor" />
+          <path d="M24 4v7M24 37v7M4 24h7M37 24h7" stroke="currentColor" stroke-linecap="round" stroke-width="4" />
+          <path d="M35.5 8.5 40 4" stroke="currentColor" stroke-linecap="round" stroke-width="4" />
+        </svg>
+        <span>Radar BDS</span>
+      </a>
+      <nav class="seo-nav" aria-label="Điều hướng">
+        <a href="/binh-duong" {% if page.path == "/binh-duong" %}aria-current="page"{% endif %}>Bình Dương</a>
+        <a href="/san-deal-bds" {% if page.path == "/san-deal-bds" %}aria-current="page"{% endif %}>Săn deal BĐS</a>
+      </nav>
+      <a class="seo-nav-cta" href="/">Mở dashboard</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="seo-hero">
+      <aside class="hero-map-stage" aria-label="Mô phỏng Radar BDS phân tích thị trường">
+        <div class="map-label">{{ page.map_label }}</div>
+        <div class="price-tag tag-one">2.3 tỷ</div>
+        <div class="price-tag tag-two">2.1 tỷ</div>
+        <div class="price-tag tag-three">2.2 tỷ</div>
+        <div class="price-tag tag-four">2.3 tỷ</div>
+        <div class="price-tag tag-five">2.6 tỷ</div>
+        <div class="signal-counter">
+          <span>{{ page.hero_metric.label }}</span>
+          <strong>{{ page.hero_metric.value }} <small>{{ page.hero_metric.delta }}</small></strong>
+          <em>{{ page.hero_metric.note }}</em>
+          <svg viewBox="0 0 160 54" aria-hidden="true">
+            <polyline points="0,42 18,34 35,39 52,25 70,31 88,18 107,24 126,11 148,4" />
+          </svg>
+        </div>
+        <div class="property-card">
+          <div class="property-image">
+            <span class="property-status">{{ page.property_card.status }}</span>
+          </div>
+          <div class="property-copy">
+            <strong>{{ page.property_card.title }}</strong>
+            <p>{{ page.property_card.price }}</p>
+            <div class="property-metrics">
+              <span>{{ page.property_card.metric_a }} <b>{{ page.property_card.metric_a_value }}</b></span>
+              <span>{{ page.property_card.metric_b }} <b>{{ page.property_card.metric_b_value }}</b></span>
+            </div>
+            <a href="/" aria-label="Xem chi tiết tin tốt">Xem chi tiết
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
+            </a>
+          </div>
+        </div>
+        <div class="chart-card">
+          <span>Mức giá theo khu vực (tr/m²)</span>
+          <svg viewBox="0 0 220 92" aria-hidden="true">
+            <line x1="0" y1="78" x2="220" y2="78" />
+            <line x1="0" y1="52" x2="220" y2="52" />
+            <line x1="0" y1="26" x2="220" y2="26" />
+            <polyline points="2,74 42,58 82,44 122,50 164,30 218,18" />
+          </svg>
+          <div class="chart-labels"><span>TDM</span><span>Thuận An</span><span>Dĩ An</span><span>Bến Cát</span></div>
+        </div>
+      </aside>
+
+      <div class="seo-shell hero-shell">
+        <div class="seo-hero-copy">
+          <div class="hero-badge">
+            <span></span>
+            {{ page.hero_badge }}
+          </div>
+          <h1>{{ page.hero_title }}</h1>
+          <p class="seo-lead">{{ page.hero_text }}</p>
+          <div class="hero-checks" aria-label="Cam kết dữ liệu">
+            {% for check in page.hero_checks %}
+            <span>{{ check }}</span>
+            {% endfor %}
+          </div>
+          <div class="seo-actions" aria-label="Hành động chính">
+            <a class="seo-button seo-button-primary" href="/">{{ page.primary_cta }}
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
+            </a>
+            <a class="seo-button seo-button-secondary" href="{{ page.secondary_href }}">{{ page.secondary_cta }}</a>
+          </div>
+          <div class="investor-proof" aria-label="Niềm tin người dùng">
+            <div class="avatar-stack" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <p>Hơn 1.000 nhà đầu tư tin dùng Radar BDS</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="seo-value-strip" aria-label="Giá trị chính của Radar BDS">
+      <div class="seo-shell value-grid">
+        {% for section in page.value_cards %}
+        <article class="seo-value-item">
+          <span class="value-icon value-icon-{{ loop.index }}">
+            {% if loop.index == 1 %}
+            <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="22" cy="22" r="13" /><path d="m32 32 9 9M34 16l5-5M39 11v10M39 11H29" /></svg>
+            {% elif loop.index == 2 %}
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 38h32M12 34V22M22 34V14M32 34V8" /><path d="m12 18 8-7 9 6 9-11" /><path d="M35 6h4v4" /></svg>
+            {% else %}
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6 38 12v11c0 9-5.5 15-14 19-8.5-4-14-10-14-19V12Z" /><path d="m17 24 6 6 10-13" /></svg>
+            {% endif %}
+          </span>
+          <div>
+            <h2>{{ section.title }}</h2>
+            <p>{{ section.body }}</p>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="seo-process">
+      <div class="seo-shell">
+        <h2>{{ page.process_title }}</h2>
+        <ol class="seo-steps">
+          {% for step in page.process %}
+          <li>
+            <span class="step-icon">
+              {% if loop.index == 1 %}
+              <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="21" cy="21" r="14" /><path d="m31 31 10 10" /></svg>
+              {% elif loop.index == 2 %}
+              <svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="13" rx="14" ry="6" /><path d="M10 13v20c0 3 6 6 14 6s14-3 14-6V13" /><path d="M10 23c0 3 6 6 14 6s14-3 14-6" /></svg>
+              {% elif loop.index == 3 %}
+              <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 38h32M13 34V24M24 34V14M35 34V20" /><path d="m12 19 9-8 9 5 8-10" /></svg>
+              {% elif loop.index == 4 %}
+              <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16" /><circle cx="24" cy="24" r="8" /><path d="M24 24 39 9M34 9h5v5" /></svg>
+              {% else %}
+              <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 34h32M18 34V21a14 14 0 0 1 28 0v13M24 38a6 6 0 0 0 12 0" transform="translate(-7)" /></svg>
+              {% endif %}
+            </span>
+            <strong>{{ step.title }}</strong>
+            <p>{{ step.body }}</p>
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </section>
+
+    <section class="seo-faq">
+      <div class="seo-shell">
+        <h2>Giải đáp nhanh</h2>
+        <div class="seo-faq-list">
+          {% for item in page.faq %}
+          <article class="faq-card">
+            <span class="faq-icon">?</span>
+            <div>
+              <h3>{{ item.q }}</h3>
+              <p>{{ item.a }}</p>
+            </div>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 8 5 5 5-5" /></svg>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <section class="seo-shell seo-final-cta">
+      <span class="cta-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 38h32M12 34v-8M22 34V18M32 34V12" /><path d="m12 22 8-7 8 5 10-12" /><path d="M35 8h5v5" /></svg></span>
+      <div>
+        <h2>{{ page.final_cta.title }}</h2>
+        <p>{{ page.final_cta.body }}</p>
+      </div>
+      <a class="seo-button seo-button-light" href="/">{{ page.final_cta.button }}
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
+      </a>
+    </section>
+  </main>
+
+  <footer class="seo-footer">
+    <div class="seo-shell footer-grid">
+      <div class="footer-brand">
+        <a class="seo-brand" href="/" aria-label="Radar BDS">
+          <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="4" />
+            <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="4" />
+            <circle cx="24" cy="24" r="3.6" fill="currentColor" />
+            <path d="M24 4v7M24 37v7M4 24h7M37 24h7" stroke="currentColor" stroke-linecap="round" stroke-width="4" />
+          </svg>
+          <span>Radar BDS</span>
+        </a>
+        <p>Dữ liệu thật - Phân tích sâu - Deal chất</p>
+        <small>© 2024 Radar BDS. All rights reserved.</small>
+      </div>
+      <nav aria-label="Sản phẩm">
+        <strong>Sản phẩm</strong>
+        <a href="/">Dashboard</a>
+        <a href="/san-deal-bds">Tín hiệu</a>
+        <a href="/binh-duong">Thị trường</a>
+      </nav>
+      <nav aria-label="Về chúng tôi">
+        <strong>Về chúng tôi</strong>
+        <a href="/san-deal-bds">Giới thiệu</a>
+        <a href="/san-deal-bds">Phương pháp</a>
+        <a href="/">Liên hệ</a>
+      </nav>
+      <nav aria-label="Pháp lý">
+        <strong>Pháp lý</strong>
+        <a href="/">Điều khoản sử dụng</a>
+        <a href="/">Chính sách bảo mật</a>
+      </nav>
+      <div class="footer-social">
+        <strong>Kết nối</strong>
+        <div>
+          <a href="/" aria-label="Facebook">f</a>
+          <a href="/" aria-label="Telegram">↗</a>
+          <a href="/" aria-label="Email">✉</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+
+</html>

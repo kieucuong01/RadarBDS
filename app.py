@@ -5,6 +5,7 @@ import json
 import csv
 import io
 import logging
+import mimetypes
 import platform
 import subprocess
 import statistics
@@ -30,6 +31,9 @@ from config.settings import (
     SITE_OG_IMAGE,
     SITE_TITLE,
 )
+from config.seo_pages import SEO_PAGES
+
+mimetypes.add_type("image/webp", ".webp")
 
 # Import the extracted services
 from services.market_data import load_counts, load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier
@@ -1180,13 +1184,13 @@ def _public_url(path="/"):
     return f"{PUBLIC_BASE_URL}{path}"
 
 
-def _site_meta(path="/"):
+def _site_meta(path="/", *, title=None, description=None, keywords=None):
     canonical_url = _public_url(path)
     return {
         "name": SITE_NAME,
-        "title": SITE_TITLE,
-        "description": SITE_DESCRIPTION,
-        "keywords": SITE_KEYWORDS,
+        "title": title or SITE_TITLE,
+        "description": description or SITE_DESCRIPTION,
+        "keywords": keywords or SITE_KEYWORDS,
         "canonical_url": canonical_url,
         "og_url": canonical_url,
         "og_image": SITE_OG_IMAGE,
@@ -1200,6 +1204,19 @@ def index():
     return render_template('index.html', wards_by_city=CITY_MAP, site_meta=_site_meta("/"))
 
 
+def seo_landing_page(slug):
+    page = SEO_PAGES.get(slug)
+    if not page:
+        abort(404)
+    site_meta = _site_meta(
+        page["path"],
+        title=page["title"],
+        description=page["description"],
+        keywords=page["keywords"],
+    )
+    return render_template("seo_landing.html", page=page, site_meta=site_meta)
+
+
 def robots_txt():
     body = f"""User-agent: *
 Allow: /
@@ -1210,6 +1227,14 @@ Sitemap: {_public_url('/sitemap.xml')}
 
 
 def sitemap_xml():
+    seo_urls = "\n".join(
+        f"""  <url>
+    <loc>{_public_url(page["path"])}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>"""
+        for page in SEO_PAGES.values()
+    )
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -1217,6 +1242,7 @@ def sitemap_xml():
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
   </url>
+{seo_urls}
 </urlset>
 """
     return Response(body, mimetype="application/xml; charset=utf-8")
