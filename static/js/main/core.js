@@ -189,11 +189,36 @@ function activeTabId() {
   return active ? active.id.replace('tab-', '') : 'signals';
 }
 
+const TAB_TITLES = {
+  signals: 'Săn Deal',
+  all: 'Tin rao',
+  market: 'Thị trường',
+  insights: 'Insights'
+};
+
+function syncMobileBadge(sourceId, targetId) {
+  const source = document.getElementById(sourceId);
+  const target = document.getElementById(targetId);
+  if (source && target) target.textContent = source.textContent || '0';
+}
+
+function syncMobileBadges() {
+  syncMobileBadge('badgeSignals', 'mobileBadgeSignals');
+  syncMobileBadge('badgeTotal', 'mobileBadgeTotal');
+}
+
 function switchTab(tabId, btn) {
-  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  document.getElementById(`tab-${tabId}`).classList.add('active');
+  document.querySelectorAll(`[data-tab-target="${tabId}"]`).forEach(b => b.classList.add('active'));
+  if (btn && !btn.dataset.tabTarget) btn.classList.add('active');
+  const tab = document.getElementById(`tab-${tabId}`);
+  if (!tab) return;
+  tab.classList.add('active');
+  const mobileTitle = document.getElementById('mobileActiveTabTitle');
+  if (mobileTitle) mobileTitle.textContent = TAB_TITLES[tabId] || 'Radar BDS';
+  hideSidebarMobile();
+  syncMobileBadges();
 
   if (tabId === 'market') {
     loadMarketIndicators();

@@ -85,6 +85,7 @@ let chatHistory = [];
 function toggleChat() {
   const win = document.getElementById('chatWindow');
   win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+  document.body.classList.toggle('chat-open', win.style.display === 'flex');
   if (win.style.display === 'flex') {
     document.getElementById('chatInput').focus();
   }

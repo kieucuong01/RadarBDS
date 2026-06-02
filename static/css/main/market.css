@@ -19,6 +19,9 @@
   margin: 4px 0 0;
   font-size: 0.8rem;
   color: var(--text-muted);
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 
 .chart-header {
@@ -166,6 +169,9 @@
   color: var(--text-muted);
   line-height: 1.45;
   max-width: 240px;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 
 .indicator-up {
@@ -307,6 +313,9 @@
   color: var(--text-muted);
   font-size: 0.74rem;
   line-height: 1.45;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 
 .opportunity-btn {

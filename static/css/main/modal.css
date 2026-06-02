@@ -156,6 +156,9 @@
   font-size: 0.86rem;
   font-weight: 650;
   line-height: 1.55;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 
 .sm-meta-line {
@@ -188,6 +191,9 @@
   color: var(--text);
   line-height: 1.75;
   white-space: pre-wrap;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -242,6 +248,9 @@
   font-size: 0.85rem;
   color: var(--text);
   line-height: 1.7;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 
 .sm-ai-text b,
@@ -303,6 +312,9 @@
   color: var(--text);
   font-size: 0.84rem;
   line-height: 1.62;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 
 .sm-memo-metrics {
@@ -353,6 +365,9 @@
   color: var(--text);
   font-size: 0.8rem;
   line-height: 1.52;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 
 .sm-memo-list li {
@@ -365,6 +380,9 @@
   line-height: 1.5;
   padding-top: 8px;
   border-top: 1px solid rgba(16, 185, 129, 0.16);
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 
 .sm-memo-locked {
@@ -372,6 +390,9 @@
   color: var(--text-muted);
   font-size: 0.84rem;
   line-height: 1.55;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 
 .sm-price-history {

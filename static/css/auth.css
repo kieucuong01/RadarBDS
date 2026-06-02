@@ -138,6 +138,9 @@
   font-size: 13px;
   color: var(--muted, #64748b);
   line-height: 1.5;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 [data-theme="dark"] .auth-modal-content h3 { color:#e2e8f0; }
 [data-theme="dark"] .auth-modal-content .auth-sub { color:#94a3b8; }
@@ -215,7 +218,9 @@
   font-size: 12px;
   color: var(--muted, #64748b);
   margin-top: 8px;
-  text-align: center;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
   line-height: 1.5;
 }
 .auth-hint a, .auth-hint span.link {
@@ -239,6 +244,9 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 [data-theme="dark"] .auth-trial-banner { color:#fde68a; }
 

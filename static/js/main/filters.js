@@ -191,6 +191,7 @@ async function refreshDashboardMeta(useCache = false) {
     const bTot = document.getElementById('badgeTotal');
     if (bSig) bSig.innerText = data.stats.signals;
     if (bTot) bTot.innerText = data.stats.total;
+    if (typeof syncMobileBadges === 'function') syncMobileBadges();
 
     // Update Wards based on City
     globalWardsByCity = data.wards_by_city;

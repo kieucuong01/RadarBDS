@@ -60,7 +60,15 @@ body {
 
 .content-block { margin-top: 32px; }
 .content-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.description { font-size: 0.95rem; line-height: 1.6; color: var(--text-muted); white-space: pre-wrap; }
+.description {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
+}
 
 .attr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
 .attr-item { font-size: 0.9rem; }
@@ -70,7 +78,7 @@ body {
 .memo-panel.is-locked { border-style: dashed; color: var(--text-muted); }
 .memo-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
 .memo-head h2, .memo-panel > h2 { margin: 8px 0 6px; color: var(--accent); font-size: 0.78rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
-.memo-summary { margin: 0; color: var(--text-muted); line-height: 1.55; }
+.memo-summary { margin: 0; color: var(--text-muted); line-height: 1.55; text-align: justify; text-align-last: left; text-justify: inter-word; }
 .memo-verdict { display: inline-flex; padding: 5px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 900; background: rgba(59,130,246,0.14); color: #93c5fd; border: 1px solid rgba(147,197,253,0.26); }
 .memo-verdict.strong, .memo-verdict.good { background: rgba(16,185,129,0.12); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
 .memo-verdict.watch { background: rgba(245,158,11,0.12); color: #fbbf24; border-color: rgba(245,158,11,0.3); }
@@ -81,7 +89,7 @@ body {
 .memo-metric strong { display: block; margin-top: 5px; font-size: 1rem; }
 .memo-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .memo-list-title { margin: 0 0 8px; font-size: 0.82rem; color: var(--text-muted); font-weight: 900; text-transform: uppercase; }
-.memo-list { margin: 0; padding-left: 18px; color: var(--text-muted); line-height: 1.6; }
+.memo-list { margin: 0; padding-left: 18px; color: var(--text-muted); line-height: 1.6; text-align: justify; text-align-last: left; text-justify: inter-word; }
 .memo-list li { margin-bottom: 5px; }
 
 @media(max-width: 900px) { .container { grid-template-columns: 1fr; } }

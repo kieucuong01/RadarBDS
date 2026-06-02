@@ -200,6 +200,7 @@ async function loadSignals(page = 1, opts = {}) {
     const bSig = document.getElementById('badgeSignals');
     if (bSig && Number.isFinite(Number(data.total))) {
       bSig.innerText = data.total;
+      if (typeof syncMobileBadges === 'function') syncMobileBadges();
     }
     if (reset) document.getElementById('signalsGrid').innerHTML = '';
     renderSignals(data.signals || [], { append: !reset });
