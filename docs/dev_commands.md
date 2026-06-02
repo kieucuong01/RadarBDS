@@ -34,6 +34,26 @@ After a migration or DB credential change, smoke test the Postgres-backed app:
 & $py -X utf8 -c "from app import app; c=app.test_client(); [print(p, c.get(p).status_code) for p in ['/api/dashboard','/api/signals?page=1&limit=3']]"
 ```
 
+Pull the current production DB down to local when the VPS has crawled new data.
+This is one-way production -> local: it creates a production dump on the VPS,
+downloads it, backs up the current local DB, then restores production into the
+local `radar_bds` DB.
+
+```powershell
+.\scripts\sync_prod_to_local.ps1
+```
+
+If the new production rows reference images that local has not downloaded yet,
+also pull missing production images into local `data/images/`:
+
+```powershell
+.\scripts\sync_prod_to_local.ps1 -SyncImages
+```
+
+For daily use on Windows, create a Task Scheduler job that runs the same command
+from the repo root. Keep the generated backups in `.local/prod-sync/` ignored by
+git.
+
 ## Ubuntu 24.04 Production Target
 
 Production is Ubuntu Server 24.04 LTS with Python 3.12, native systemd

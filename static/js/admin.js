@@ -27,6 +27,7 @@ let leadTimer = null;
 let activeQualityTab = 'dups';
 let activeInfraFilter = 'timeline';
 let crawlProfiles = [];
+let crawlSummary = {};
 let apifyTokens = [];
 let crawlMode = 'first';
 let crawlPollTimer = null;
@@ -271,9 +272,10 @@ function readCrawlTableState() {
 async function loadCrawlConfig() {
   const data = await fetchJSON('/admin/api/facebook-crawl/config');
   crawlProfiles = data.profiles || [];
+  crawlSummary = data.summary || {};
   apifyTokens = data.apify_tokens || [];
-  renderCrawlStats(data.summary || {});
-  renderCrawlOps(data.summary?.ops || {});
+  renderCrawlStats(crawlSummary);
+  renderCrawlOps(crawlSummary.ops || {});
   renderApifyTokens();
   renderCrawlProfiles();
   renderCrawlRunSelect();
@@ -377,6 +379,9 @@ function renderCrawlStats(summary) {
   const last24 = ops.last_24h || {};
   const blockers = ops.lock_blockers || [];
   const sourceErrors = ops.source_errors || [];
+  const missingImages = summary.missing_images || {};
+  const missingImageRefs = Number(missingImages.missing_image_refs || summary.pending_images || 0);
+  const missingImageListings = Number(missingImages.listings_with_missing_images || 0);
   const items = [
     ['Môi giới bật', active, 'đang dùng'],
     ['Tổng môi giới', crawlProfiles.length, 'trong cấu hình'],
@@ -387,12 +392,18 @@ function renderCrawlStats(summary) {
     ['Lock kẹt', blockers.length || 0, 'job'],
     ['Job hiện tại', summary.active_job ? summary.active_job.status : 'Idle', summary.active_job ? summary.active_job.stage : 'sẵn sàng'],
   ];
+  items.splice(3, 0, [
+    'Ảnh FB thiếu',
+    missingImageRefs.toLocaleString('vi-VN'),
+    `${missingImageListings.toLocaleString('vi-VN')} listing`,
+    missingImageRefs ? 'var(--orange)' : 'var(--green)',
+  ]);
   const el = document.getElementById('crawlStats');
   if (!el) return;
   el.innerHTML = items.map((s, idx) => `
     <div class="stat-card">
       <small>${esc(s[0])}</small>
-      <div><strong style="color:${idx === 5 && Number(s[1]) ? 'var(--orange)' : idx === 6 && Number(s[1]) ? 'var(--red)' : idx === 7 && s[1] !== 'Idle' ? 'var(--blue)' : 'var(--ink)'}">${esc(s[1])}</strong><span>${esc(s[2])}</span></div>
+      <div><strong style="color:${s[3] || (idx === 6 && Number(s[1]) ? 'var(--orange)' : idx === 7 && Number(s[1]) ? 'var(--red)' : idx === 8 && s[1] !== 'Idle' ? 'var(--blue)' : 'var(--ink)')}">${esc(s[1])}</strong><span>${esc(s[2])}</span></div>
     </div>
   `).join('');
 }
@@ -405,6 +416,10 @@ function renderCrawlOps(ops = {}) {
   const last24 = ops.last_24h || {};
   const source_errors = ops.source_errors || [];
   const lock_blockers = ops.lock_blockers || [];
+  const missingImages = crawlSummary.missing_images || {};
+  const missingImageRefs = Number(missingImages.missing_image_refs || crawlSummary.pending_images || 0);
+  const missingPct = Number(missingImages.missing_pct || 0);
+  const scheduleName = schedule.task_name || 'RadarBDS_DailyCrawl';
   const scheduleOk = schedule.installed && (schedule.run_time === '21:00' || String(schedule.next_run_time || '').includes('9:00'));
   const healthClass = lock_blockers.length ? 'danger' : source_errors.length ? 'warn' : 'ok';
   const sourceList = source_errors.length
@@ -430,7 +445,7 @@ function renderCrawlOps(ops = {}) {
     <div class="crawl-ops-head">
       <div>
         <small>Daily Automation</small>
-        <strong>RadarBDS_DailyCrawl</strong>
+        <strong>${esc(schedule.task_name || scheduleName)}</strong>
       </div>
       <span class="ops-pill ${healthClass}">${lock_blockers.length ? 'Lock đang kẹt' : source_errors.length ? 'Cần xem lỗi nguồn' : 'Đang ổn định'}</span>
     </div>
@@ -438,7 +453,7 @@ function renderCrawlOps(ops = {}) {
       <div class="crawl-ops-card ${scheduleOk ? 'ok' : 'warn'}">
         <small>Lich daily</small>
         <strong>${schedule.installed ? (schedule.run_time || shortDate(schedule.next_run_time) || 'Đã cài') : 'Chưa cài'}</strong>
-        <span>${schedule.installed ? `Next: ${esc(schedule.next_run_time || 'chưa rõ')}` : 'Cần cài RadarBDS_DailyCrawl lúc 21:00'}</span>
+        <span>${schedule.installed ? `Next: ${esc(schedule.next_run_time || 'chưa rõ')}` : `Cần cài ${esc(scheduleName)} lúc 21:00`}</span>
         ${schedule.error ? `<em>${esc(schedule.error)}</em>` : ''}
       </div>
       <div class="crawl-ops-card">
@@ -450,6 +465,11 @@ function renderCrawlOps(ops = {}) {
         <small>Batch gan nhat</small>
         <strong>${Number(last24.new || 0).toLocaleString('vi-VN')} tin mới</strong>
         <span>${Number(last24.runs || 0)} runs · fetched=${Number(last24.fetched || 0).toLocaleString('vi-VN')} · skipped=${Number(last24.skipped || 0).toLocaleString('vi-VN')}</span>
+      </div>
+      <div class="crawl-ops-card ${missingImageRefs ? 'warn' : 'ok'}">
+        <small>Ảnh Facebook còn thiếu</small>
+        <strong>${missingImageRefs.toLocaleString('vi-VN')} ảnh</strong>
+        <span>${Number(missingImages.listings_with_missing_images || 0).toLocaleString('vi-VN')} listing · ${missingPct.toLocaleString('vi-VN')}% tổng ảnh FB</span>
       </div>
     </div>
     <div class="crawl-ops-lists">
@@ -565,8 +585,9 @@ async function saveCrawlProfiles() {
       body: JSON.stringify({ profiles: crawlProfiles }),
     });
     crawlProfiles = data.profiles || [];
-    renderCrawlStats(data.summary || {});
-    renderCrawlOps(data.summary?.ops || {});
+    crawlSummary = data.summary || {};
+    renderCrawlStats(crawlSummary);
+    renderCrawlOps(crawlSummary.ops || {});
     renderCrawlProfiles();
     renderCrawlRunSelect();
   }, 'Đã lưu danh sách môi giới', 'Không lưu được danh sách');
@@ -1314,10 +1335,12 @@ function trainingCard(x) {
   const fairPpm2 = x.fair_ppm2 || '';
   const sourceFlags = (x.source_quality_flags || '').split(',').filter(Boolean);
   const legal = x.legal_summary || {};
+  const legalStatus = String(legal.status || '').trim();
   const legalFlags = String(legal.flags || '').split(',').filter(Boolean);
-  const legalBox = (x.is_legal_qc || legal.status) ? `
+  const shouldShowLegalBox = (x.is_legal_qc || legalStatus) && legalStatus !== 'has_document';
+  const legalBox = shouldShowLegalBox ? `
             <div class="review-box legal-qc-box">
-              <div class="review-title">Legal QC · ${esc(legal.status || 'unverified')} · ${Math.round(legal.trust_score || legal.confidence_score || 0)}%</div>
+              <div class="review-title">Legal QC · ${esc(legalStatus || 'unverified')} · ${Math.round(legal.trust_score || legal.confidence_score || 0)}%</div>
               <ul class="explain-list">
                 <li>Thửa/tờ: ${esc(legal.thua_so || '-')} / ${esc(legal.to_ban_do || '-')}</li>
                 <li>DT sổ: ${area(legal.legal_area_m2)} · Thổ cư: ${area(legal.legal_residential_m2)}</li>

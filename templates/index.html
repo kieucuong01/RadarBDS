@@ -41,11 +41,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=main-css-split-20260526">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=listings-view-20260527">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=mobile-app-shell-20260602">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=mobile-home-polish-20260602">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=justify-text-20260602">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-mobile-carousel-20260602">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=justify-text-20260602">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=pwa-docked-nav-20260602">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=market-mobile-ux-20260602">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=mobile-command-static-20260602">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=justify-text-20260602">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -323,7 +323,7 @@
               title="Đăng ký để dùng bộ lọc này" {% endif %}>
               <div class="command-mos-head">
                 <span class="command-mos-label">
-                  {% if USER_TIER == 'guest' %}🔒 {% endif %}Thấp hơn so với Định Giá: &gt;= <strong><span
+                  {% if USER_TIER == 'guest' %}🔒 {% endif %}Thấp hơn định giá: &gt;= <strong><span
                       id="mosValue">10</span>%</strong>
                 </span>
               </div>
@@ -348,7 +348,7 @@
               title="Đăng ký để dùng bộ lọc này" {% endif %}>
               <input type="checkbox" name="only_drops" value="1" {% if USER_TIER=='guest' %}disabled{% endif %}
                 onchange="scheduleApplyFilters()">
-              <span>{% if USER_TIER == 'guest' %}🔒 {% endif %}CÓ LỊCH SỬ GIẢM GIÁ</span>
+              <span>{% if USER_TIER == 'guest' %}🔒 {% endif %}Có giảm giá</span>
             </label>
 
           </div>
@@ -376,8 +376,8 @@
 
       <!-- TAB: MARKET -->
       <div id="tab-market" class="tab-content">
-        <div class="market-grid" style="display:grid; grid-template-columns: 1fr; gap: 24px;">
-          <div class="chart-card">
+        <div class="market-grid">
+          <div class="chart-card market-trend-card">
             <div class="chart-header" style="display:flex; justify-content:space-between; align-items:center;">
               <div>
                 <h3 class="chart-title">📉 Biểu đồ Xu hướng Giá</h3>
@@ -390,7 +390,7 @@
                   onclick="updateTrendPeriod('month', this)">Tháng</button>
               </div>
             </div>
-            <div class="chart-body" id="trendContainer" style="height: 400px; position:relative;">
+            <div class="chart-body market-trend-body" id="trendContainer">
               <canvas id="trendChart"></canvas>
             </div>
           </div>
@@ -942,14 +942,14 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=watchlist-telegram-sync-20260515"></script>
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=fast-counts-20260602"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-home-polish-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=fast-counts-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-app-shell-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=signal-mobile-carousel-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=trend-first-20260528"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=contact-redaction-20260528"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=listings-view-20260527"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=market-tab-deeplink-20260602"></script>
 </body>
 
 </html>

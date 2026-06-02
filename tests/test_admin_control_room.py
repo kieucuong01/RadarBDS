@@ -222,6 +222,8 @@ class AdminControlRoomGateTest(unittest.TestCase):
             js,
         )
         self.assertIn("if (extractionOk && !valuation)", js)
+        self.assertIn("legalStatus !== 'has_document'", js)
+        self.assertNotIn("(x.is_legal_qc || legal.status) ? `", js)
 
     def test_admin_js_has_loading_toast_feedback_for_actions(self):
         root = Path(__file__).resolve().parent.parent
@@ -288,6 +290,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         area = f"ops-test-{token}"
         started_ok = f"2099-01-01T00:{int(token[:2], 16) % 50:02d}:00"
         started_err = f"2099-01-01T00:{int(token[:2], 16) % 50:02d}:30"
+        before_images = app_module._facebook_crawl_summary()["missing_images"]
         with get_conn() as conn:
             raw = conn.execute(
                 """
@@ -321,6 +324,20 @@ class AdminControlRoomGateTest(unittest.TestCase):
                 VALUES (?, 10, 7, 30, 1)
                 """,
                 (listing.lastrowid,),
+            )
+            conn.execute(
+                """
+                INSERT INTO listing_images (listing_id, img_url, img_order, local_path)
+                VALUES (?, ?, 0, ?)
+                """,
+                (listing.lastrowid, "https://facebook.example/image-ok.jpg", "1_0.jpg"),
+            )
+            conn.execute(
+                """
+                INSERT INTO listing_images (listing_id, img_url, img_order, local_path)
+                VALUES (?, ?, 1, NULL)
+                """,
+                (listing.lastrowid, "https://facebook.example/image-missing.jpg"),
             )
             conn.execute(
                 """
@@ -379,7 +396,19 @@ class AdminControlRoomGateTest(unittest.TestCase):
             response = self.client.get("/admin/api/facebook-crawl/config")
 
         self.assertEqual(response.status_code, 200)
-        ops = response.get_json()["summary"]["ops"]
+        summary = response.get_json()["summary"]
+        missing_images = summary["missing_images"]
+        self.assertEqual(summary["pending_images"], before_images["missing_image_refs"] + 1)
+        self.assertEqual(missing_images["missing_image_refs"], before_images["missing_image_refs"] + 1)
+        self.assertEqual(missing_images["downloaded_image_refs"], before_images["downloaded_image_refs"] + 1)
+        self.assertEqual(missing_images["total_image_refs"], before_images["total_image_refs"] + 2)
+        self.assertEqual(
+            missing_images["listings_with_missing_images"],
+            before_images["listings_with_missing_images"] + 1,
+        )
+        self.assertEqual(missing_images["listings_with_images"], before_images["listings_with_images"] + 1)
+        self.assertIsInstance(missing_images["missing_pct"], float)
+        ops = summary["ops"]
         self.assertEqual(ops["schedule"]["run_time"], "21:00")
         self.assertEqual(ops["last_run"]["source"], "batdongsan")
         self.assertEqual(ops["last_24h"]["new"], 4)
@@ -397,8 +426,45 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("function renderCrawlOps", js)
         self.assertIn("source_errors", js)
         self.assertIn("lock_blockers", js)
-        self.assertIn("RadarBDS_DailyCrawl", js)
+        self.assertIn("schedule.task_name", js)
         self.assertIn(".crawl-ops-panel", css)
+
+    def test_daily_crawl_schedule_status_reads_linux_systemd_timer(self):
+        import app as app_module
+
+        def fake_run(cmd, **_kwargs):
+            if cmd[:3] == ["systemctl", "show", "radar-bds-crawl.timer"]:
+                return mock.Mock(
+                    returncode=0,
+                    stdout=(
+                        "LoadState=loaded\n"
+                        "ActiveState=active\n"
+                        "SubState=waiting\n"
+                        "Unit=radar-bds-crawl.service\n"
+                        "NextElapseUSecRealtime=Tue 2026-06-02 21:00:00 +07\n"
+                        "LastTriggerUSec=Mon 2026-06-01 21:00:04 +07\n"
+                    ),
+                    stderr="",
+                )
+            if cmd[:3] == ["systemctl", "cat", "radar-bds-crawl.timer"]:
+                return mock.Mock(
+                    returncode=0,
+                    stdout="[Timer]\nOnCalendar=*-*-* 21:00:00\n",
+                    stderr="",
+                )
+            raise AssertionError(cmd)
+
+        with mock.patch.object(app_module.platform, "system", return_value="Linux"), \
+             mock.patch.object(app_module.subprocess, "run", side_effect=fake_run):
+            status = app_module._daily_crawl_schedule_status()
+
+        self.assertTrue(status["installed"])
+        self.assertEqual(status["task_name"], "radar-bds-crawl.timer")
+        self.assertEqual(status["state"], "active/waiting")
+        self.assertEqual(status["run_time"], "21:00")
+        self.assertEqual(status["next_run_time"], "Tue 2026-06-02 21:00:00 +07")
+        self.assertEqual(status["last_run_time"], "Mon 2026-06-01 21:00:04 +07")
+        self.assertEqual(status["task_to_run"], "radar-bds-crawl.service")
 
     def test_admin_crawl_reprocesses_only_refreshed_raw_ids(self):
         import app as app_module

@@ -54,8 +54,10 @@
   .header {
     height: 58px;
     flex-wrap: nowrap;
-    padding: 0 12px;
-    gap: 10px;
+    max-width: 100vw;
+    overflow: hidden;
+    padding: 0 10px;
+    gap: 8px;
     justify-content: flex-start;
     position: sticky;
     top: 0;
@@ -80,6 +82,7 @@
     flex-direction: column;
     justify-content: center;
     line-height: 1.05;
+    padding-right: 90px;
   }
 
   .mobile-app-title span {
@@ -118,8 +121,10 @@
 
   .header-right {
     order: 3;
+    position: absolute;
+    right: 10px;
     flex-shrink: 0;
-    gap: 8px;
+    gap: 6px;
   }
 
   .header-stats {
@@ -145,22 +150,27 @@
     display: none;
   }
 
-  .btn-auth-cta {
-    min-height: 42px;
-    padding: 0 12px;
+  .header .btn-auth-cta {
+    min-height: 44px;
+    max-width: 82px;
+    padding: 0 10px;
     border-radius: 14px;
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     white-space: nowrap;
   }
 
-  .header-icon-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
+  .header .header-icon-btn {
+    display: none;
   }
 
   .content {
+    max-width: 100vw;
+    overflow-x: hidden;
     padding: 12px 12px calc(86px + env(safe-area-inset-bottom));
+  }
+
+  body.sidebar-open {
+    overflow: hidden;
   }
 
   .cards-grid {
@@ -195,9 +205,9 @@
   }
 
   .command-bar {
-    position: sticky;
-    top: 0;
-    z-index: 12;
+    position: static;
+    top: auto;
+    z-index: auto;
     flex-direction: row;
     align-items: center;
     gap: 8px;
@@ -207,6 +217,9 @@
     min-height: 56px;
     overflow-x: auto;
     scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 8px;
+    overscroll-behavior-x: contain;
   }
 
   .command-bar::-webkit-scrollbar {
@@ -234,13 +247,17 @@
 
   .command-mos {
     min-width: 0;
-    width: 190px;
-    max-width: 190px;
-    flex: 0 0 190px;
+    width: 176px;
+    max-width: 176px;
+    flex: 0 0 176px;
     gap: 5px;
+    scroll-snap-align: start;
   }
 
   .command-mos-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: 0.7rem;
   }
 
@@ -254,8 +271,11 @@
 
   .command-drop-toggle span {
     min-width: 0;
-    padding: 9px 11px;
-    font-size: 0.68rem;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    scroll-snap-align: start;
   }
 
   .command-sort {
@@ -270,9 +290,10 @@
 
   .command-sort-select {
     flex: 0 0 auto;
-    width: 136px;
+    width: 128px;
     min-width: 0;
-    padding: 9px 28px 9px 10px;
+    min-height: 44px;
+    padding: 10px 28px 10px 10px;
     border-radius: 12px;
     font-size: 0.72rem;
   }
@@ -308,6 +329,8 @@
     position: fixed;
     left: 0;
     right: 0;
+    max-width: 100vw;
+    overflow: hidden;
     bottom: 0;
     z-index: 998;
     display: grid;
@@ -320,6 +343,7 @@
     background: color-mix(in srgb, var(--surface-solid) 92%, transparent);
     box-shadow: 0 -12px 42px rgba(15, 23, 42, 0.18);
     backdrop-filter: blur(18px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
   }
 
   .mobile-bottom-nav:has(.bottom-nav-item:nth-child(4)) {
@@ -383,6 +407,22 @@
   }
 }
 
+@media (max-width: 380px) {
+  .header {
+    gap: 8px;
+    padding: 0 10px;
+  }
+
+  .mobile-app-title strong {
+    font-size: 0.94rem;
+  }
+
+  .btn-auth-cta {
+    padding: 0 10px;
+    font-size: 0.74rem;
+  }
+}
+
 /* Floating Buttons */
 .floating-actions {
   position: fixed;
@@ -399,12 +439,13 @@
     right: 14px;
     bottom: calc(82px + env(safe-area-inset-bottom));
     z-index: 997;
+    transition: opacity 0.18s ease, transform 0.18s ease;
   }
 
   .fab {
-    width: 52px;
-    height: 52px;
-    font-size: 20px;
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.28);
   }
 
@@ -414,6 +455,13 @@
 
   body.chat-open .floating-actions {
     display: none;
+  }
+
+  body.sidebar-open .mobile-bottom-nav,
+  body.sidebar-open .floating-actions {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(18px);
   }
 }
 
@@ -489,9 +537,9 @@
 
 @media (max-width: 1024px) {
   .fab {
-    width: 52px;
-    height: 52px;
-    font-size: 20px;
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.28);
   }
 

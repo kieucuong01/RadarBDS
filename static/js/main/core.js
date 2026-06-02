@@ -16,8 +16,12 @@ function toggleTheme() {
 
 function toggleMenu() {
   if (window.innerWidth <= 1024) {
-    document.getElementById('sidebar').classList.toggle('show');
-    document.getElementById('mobileOverlay').classList.toggle('show');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobileOverlay');
+    const shouldShow = !sidebar.classList.contains('show');
+    sidebar.classList.toggle('show', shouldShow);
+    overlay.classList.toggle('show', shouldShow);
+    document.body.classList.toggle('sidebar-open', shouldShow);
   } else {
     document.getElementById('sidebar').classList.toggle('collapsed');
   }
@@ -27,6 +31,7 @@ function hideSidebarMobile() {
   if (window.innerWidth <= 1024) {
     document.getElementById('sidebar').classList.remove('show');
     document.getElementById('mobileOverlay').classList.remove('show');
+    document.body.classList.remove('sidebar-open');
   }
 }
 

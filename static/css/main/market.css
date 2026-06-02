@@ -8,6 +8,17 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+.market-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+.market-trend-body {
+  height: 400px;
+  position: relative;
+}
+
 .chart-title {
   margin: 0;
   font-size: 1.1rem;
@@ -353,17 +364,206 @@
 }
 
 @media (max-width: 720px) {
-  .opportunity-row {
-    grid-template-columns: 32px minmax(0, 1fr);
+  #tab-market {
+    max-width: 100%;
+    overflow-x: hidden;
+    padding-right: 0;
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
   }
 
-  .opportunity-btn {
-    grid-column: 2;
-    width: fit-content;
+  .market-grid {
+    min-width: 0;
+    max-width: 100%;
+    gap: 14px;
+  }
+
+  .opportunity-card {
+    order: 1;
+  }
+
+  .market-trend-card {
+    order: 2;
+  }
+
+  .market-indicator-grid {
+    order: 3;
+  }
+
+  .chart-card {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+  }
+
+  .chart-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .chart-title {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .chart-subtitle {
+    margin-top: 6px;
+    font-size: 0.76rem;
+    line-height: 1.45;
+    text-align: left;
+  }
+
+  .market-trend-body {
+    height: 280px;
+    overflow: hidden;
+  }
+
+  .market-trend-body canvas {
+    max-width: 100% !important;
+  }
+
+  .period-pills {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .period-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  .p-pill {
+    flex: 1 0 auto;
+    min-height: 36px;
+    padding: 7px 12px;
+  }
+
+  .opportunity-card {
+    padding: 16px 14px;
+  }
+
+  .opportunity-card .chart-header {
+    margin-bottom: 12px;
+  }
+
+  .opportunity-summary {
+    gap: 7px;
+    margin-bottom: 12px;
+  }
+
+  .opportunity-summary span {
+    min-height: 30px;
+    padding: 6px 10px;
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+
+  .opportunity-summary span:last-child {
+    flex-basis: 100%;
+  }
+
+  .opportunity-list-wrap {
+    min-height: 0;
+  }
+
+  .opportunity-list {
+    gap: 12px;
+  }
+
+  .opportunity-row {
+    position: relative;
+    display: block;
+    padding: 14px;
+    border-radius: 16px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+      var(--surface);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  }
+
+  .opportunity-rank {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: 30px;
+    height: 30px;
+    font-size: 0.78rem;
+  }
+
+  .opportunity-main {
+    max-width: 100%;
+    padding-left: 0;
+  }
+
+  .opportunity-top {
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 30px;
+    padding-left: 42px;
+    margin-bottom: 10px;
+  }
+
+  .opportunity-top h4 {
+    font-size: 0.94rem;
+    line-height: 1.2;
+  }
+
+  .opportunity-top span {
+    min-height: 24px;
+    padding: 4px 8px;
+    font-size: 0.66rem;
+    line-height: 1.15;
+    white-space: normal;
+    text-align: center;
+    flex: 0 0 auto;
+    max-width: 108px;
   }
 
   .opportunity-metrics {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .opportunity-metrics div {
+    min-height: 54px;
+    padding: 8px 7px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 12px;
+    background: rgba(148, 163, 184, 0.06);
+  }
+
+  .opportunity-metrics strong {
+    font-size: 0.82rem;
+    line-height: 1.1;
+  }
+
+  .opportunity-metrics span {
+    font-size: 0.6rem;
+    line-height: 1.25;
+  }
+
+  .opportunity-row p {
+    display: -webkit-box;
+    margin-top: 10px;
+    font-size: 0.72rem;
+    line-height: 1.45;
+    text-align: left;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .opportunity-btn {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 12px;
+    border-radius: 14px;
+    font-size: 0.82rem;
   }
 }
 

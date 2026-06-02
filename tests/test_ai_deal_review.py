@@ -589,6 +589,43 @@ class AiDealReviewTest(unittest.TestCase):
             item = next(it for it in data["items"] if it["id"] == ambiguous_lid)
             self.assertTrue(item["is_needs_valuation"])
 
+    def test_ai_training_legal_qc_excludes_effective_has_document_status(self):
+        import app as app_module
+        from db.connection import get_conn
+
+        lid = self._insert_signal(url="https://t.test/legal-has-document")
+
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE valuation_results
+                   SET legal_status='has_document',
+                       trust_tier='has_legal_doc',
+                       trust_score=80
+                 WHERE listing_id=?
+                """,
+                (lid,),
+            )
+            conn.execute(
+                """
+                INSERT INTO legal_verifications (
+                    listing_id, status, trust_tier, confidence_score
+                )
+                VALUES (?, 'unverified', 'candidate_signal', 0)
+                """,
+                (lid,),
+            )
+
+        with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path):
+            client = app_module.app.test_client()
+            self._login_admin(client)
+
+            resp = client.get(f"/admin/api/ai-training/items?queue=legal_qc&ward={self.ward}")
+            self.assertEqual(resp.status_code, 200)
+            data = resp.get_json()
+            self.assertEqual(data["queue"], "legal_qc")
+            self.assertNotIn(lid, {it["id"] for it in data["items"]})
+
     # ---- shared admin helpers -----------------------------------------
     def _login_admin(self, client):
         from auth.core import SESSION_COOKIE_NAME

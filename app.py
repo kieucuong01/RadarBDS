@@ -259,19 +259,50 @@ def _facebook_profile_stats(profile_urls: list[str]) -> dict:
     return stats
 
 
+def _facebook_missing_image_summary(conn) -> dict:
+    row = conn.execute("""
+        SELECT
+            COUNT(*) AS total_image_refs,
+            COALESCE(SUM(CASE WHEN li.local_path IS NULL OR li.local_path = '' THEN 1 ELSE 0 END), 0) AS missing_image_refs,
+            COALESCE(SUM(CASE WHEN li.local_path IS NOT NULL AND li.local_path != '' THEN 1 ELSE 0 END), 0) AS downloaded_image_refs,
+            COUNT(DISTINCT li.listing_id) AS listings_with_images,
+            COUNT(DISTINCT CASE WHEN li.local_path IS NULL OR li.local_path = '' THEN li.listing_id END) AS listings_with_missing_images,
+            COUNT(DISTINCT CASE WHEN li.local_path IS NOT NULL AND li.local_path != '' THEN li.listing_id END) AS listings_with_downloaded_images
+        FROM listing_images li
+        JOIN listings l ON l.id = li.listing_id
+        WHERE l.source = 'facebook'
+    """).fetchone()
+    total = int(row["total_image_refs"] or 0)
+    missing = int(row["missing_image_refs"] or 0)
+    return {
+        "total_image_refs": total,
+        "missing_image_refs": missing,
+        "downloaded_image_refs": int(row["downloaded_image_refs"] or 0),
+        "listings_with_images": int(row["listings_with_images"] or 0),
+        "listings_with_missing_images": int(row["listings_with_missing_images"] or 0),
+        "listings_with_downloaded_images": int(row["listings_with_downloaded_images"] or 0),
+        "missing_pct": round((missing / total) * 100, 1) if total else 0.0,
+    }
+
+
 def _facebook_crawl_summary() -> dict:
     try:
         with get_conn() as conn:
-            pending = conn.execute("""
-                SELECT COUNT(*) AS n
-                FROM listing_images li
-                JOIN listings l ON l.id = li.listing_id
-                WHERE l.source = 'facebook' AND li.local_path IS NULL
-            """).fetchone()["n"]
+            missing_images = _facebook_missing_image_summary(conn)
+            pending = missing_images["missing_image_refs"]
             listings = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE source='facebook'").fetchone()["n"]
     except Exception:
         pending = 0
         listings = 0
+        missing_images = {
+            "total_image_refs": 0,
+            "missing_image_refs": 0,
+            "downloaded_image_refs": 0,
+            "listings_with_images": 0,
+            "listings_with_missing_images": 0,
+            "listings_with_downloaded_images": 0,
+            "missing_pct": 0.0,
+        }
     with FACEBOOK_CRAWL_LOCK:
         active = next(
             (FACEBOOK_CRAWL_JOBS[jid] for jid in FACEBOOK_CRAWL_JOB_ORDER
@@ -280,6 +311,7 @@ def _facebook_crawl_summary() -> dict:
         )
     return {
         "pending_images": pending,
+        "missing_images": missing_images,
         "facebook_listings": listings,
         "active_job": _public_crawl_job(active) if active else None,
         "ops": _crawl_ops_summary(),
@@ -287,6 +319,9 @@ def _facebook_crawl_summary() -> dict:
 
 
 def _daily_crawl_schedule_status() -> dict:
+    if platform.system() == "Linux":
+        return _systemd_crawl_timer_status()
+
     task_name = "RadarBDS_DailyCrawl"
     status = {
         "task_name": task_name,
@@ -300,7 +335,7 @@ def _daily_crawl_schedule_status() -> dict:
         "error": "",
     }
     if platform.system() != "Windows":
-        status["error"] = "schedule_status_windows_only"
+        status["error"] = "schedule_status_unsupported_platform"
         return status
     try:
         result = subprocess.run(
@@ -329,6 +364,73 @@ def _daily_crawl_schedule_status() -> dict:
     return status
 
 
+def _systemd_crawl_timer_status() -> dict:
+    timer_name = "radar-bds-crawl.timer"
+    status = {
+        "task_name": timer_name,
+        "installed": False,
+        "state": "missing",
+        "next_run_time": "",
+        "last_run_time": "",
+        "last_result": "",
+        "run_time": "",
+        "task_to_run": "radar-bds-crawl.service",
+        "error": "",
+    }
+    try:
+        result = subprocess.run(
+            [
+                "systemctl",
+                "show",
+                timer_name,
+                "--no-page",
+                "--property=LoadState,ActiveState,SubState,Unit,NextElapseUSecRealtime,LastTriggerUSec",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
+    except Exception as exc:
+        status["error"] = str(exc)
+        return status
+
+    if result.returncode != 0:
+        status["error"] = (result.stderr or result.stdout or "").strip()[:240]
+        return status
+
+    fields = _parse_key_value_lines(result.stdout)
+    if fields.get("LoadState") != "loaded":
+        status["error"] = fields.get("LoadState") or "not-loaded"
+        return status
+
+    active = fields.get("ActiveState") or "loaded"
+    sub = fields.get("SubState") or ""
+    status.update({
+        "installed": True,
+        "state": f"{active}/{sub}" if sub else active,
+        "next_run_time": fields.get("NextElapseUSecRealtime", ""),
+        "last_run_time": fields.get("LastTriggerUSec", ""),
+        "task_to_run": fields.get("Unit") or status["task_to_run"],
+        "run_time": _extract_task_run_time(fields.get("NextElapseUSecRealtime", "")),
+        "error": "",
+    })
+
+    try:
+        cat = subprocess.run(
+            ["systemctl", "cat", timer_name, "--no-pager"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
+        if cat.returncode == 0:
+            run_time = _extract_systemd_on_calendar_run_time(cat.stdout)
+            if run_time:
+                status["run_time"] = run_time
+    except Exception:
+        pass
+    return status
+
+
 def _parse_schtasks_list(output: str) -> dict:
     fields: dict[str, str] = {}
     for line in (output or "").splitlines():
@@ -337,6 +439,27 @@ def _parse_schtasks_list(output: str) -> dict:
         key, value = line.split(":", 1)
         fields[key.strip()] = value.strip()
     return fields
+
+
+def _parse_key_value_lines(output: str) -> dict:
+    fields: dict[str, str] = {}
+    for line in (output or "").splitlines():
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        fields[key.strip()] = value.strip()
+    return fields
+
+
+def _extract_systemd_on_calendar_run_time(output: str) -> str:
+    for line in (output or "").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or not line.startswith("OnCalendar="):
+            continue
+        run_time = _extract_task_run_time(line.split("=", 1)[1])
+        if run_time:
+            return run_time
+    return ""
 
 
 def _extract_task_run_time(value: str) -> str:
@@ -2903,6 +3026,7 @@ def admin_api_ai_training_items():
     model_signal_condition = "COALESCE(v.is_signal,0)=1"
     signal_condition = actionable_signal_sql("v")
     listing_condition = actionable_listing_sql("l")
+    effective_legal_status_sql = "COALESCE(NULLIF(lv.status, 'unverified'), v.legal_status, lv.status, 'unverified')"
 
     where = [
         "COALESCE(l.probably_sold,0)=0",
@@ -2933,9 +3057,8 @@ def admin_api_ai_training_items():
         where.extend([
             model_signal_condition,
             "COALESCE(l.review_hidden,0)=0",
-            """(
-                COALESCE(lv.status, v.legal_status, 'unverified') IN
-                    ('unverified')
+            f"""(
+                {effective_legal_status_sql} IN ('unverified')
                 OR (
                     f.verdict = 'bad_data'
                     AND f.extraction_verdict IN ('wrong_road','wrong_area','wrong_ward')
@@ -2968,14 +3091,13 @@ def admin_api_ai_training_items():
         order_map[sort] + ", COALESCE(v.signal_score,0) DESC"
         if sort in order_map
         else """
-          CASE COALESCE(lv.status, v.legal_status, 'unverified')
+          CASE {legal_status}
             WHEN 'unverified' THEN 0
-            WHEN 'has_document' THEN 1
             ELSE 5
           END ASC,
           COALESCE(v.trust_score,0) ASC,
           COALESCE(v.signal_score,0) DESC
-        """ if queue == "legal_qc"
+        """.format(legal_status=effective_legal_status_sql) if queue == "legal_qc"
         else """
           CASE WHEN f.id IS NULL THEN 0 ELSE 1 END ASC,
           (CASE WHEN l.area_m2 IS NULL OR l.ward IS NULL OR l.property_type IS NULL OR l.road_tier IS NULL THEN 20 ELSE 0 END) DESC,
@@ -3004,7 +3126,7 @@ def admin_api_ai_training_items():
                    v.segment, v.n_segment, v.source_quality_flags, v.source_quality_recheck,
                    COALESCE(v.trust_tier, lv.trust_tier, 'candidate_signal') AS trust_tier,
                    COALESCE(v.trust_score, lv.confidence_score, 0) AS trust_score,
-                   COALESCE(v.legal_status, lv.status, 'unverified') AS legal_status,
+                   {effective_legal_status_sql} AS legal_status,
                    COALESCE(v.legal_flags, lv.conflict_flags, '') AS legal_flags,
                    lv.confidence_score AS legal_confidence_score,
                    lv.thua_so AS legal_thua_so,
@@ -3085,9 +3207,8 @@ def admin_api_ai_training_items():
             ward_where.extend([
                 model_signal_condition,
                 "COALESCE(l.review_hidden,0)=0",
-                """(
-                    COALESCE(lv.status, v.legal_status, 'unverified') IN
-                        ('unverified')
+                f"""(
+                    {effective_legal_status_sql} IN ('unverified')
                     OR (
                         f.verdict = 'bad_data'
                         AND f.extraction_verdict IN ('wrong_road','wrong_area','wrong_ward')
