@@ -84,6 +84,17 @@ curl -fsS https://radarbds.vn/robots.txt >/dev/null
 curl -fsS https://radarbds.vn/sitemap.xml >/dev/null
 ```
 
+Deploy latest `origin/main` to the VPS after pushing:
+
+```powershell
+.\scripts\deploy_production.ps1
+```
+
+The script uses the local deploy key at
+`$env:USERPROFILE\.ssh\radar_bds_deploy_rsa`, preserves production-only
+`data/facebook_profiles.json` edits, pulls with `--ff-only`, restarts
+`radar-bds.service`, and smokes `/api/dashboard` plus `/api/signals`.
+
 ## Crawl and Jobs
 
 ```powershell
