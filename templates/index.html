@@ -42,10 +42,10 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=main-css-split-20260526">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=listings-view-20260527">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=mobile-home-polish-20260602">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=mobile-signal-card-value-20260603">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=mobile-signal-card-compact-20260603">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-mobile-carousel-20260602">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=market-mobile-ux-20260602">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=mobile-safe-header-filter-icon-20260602">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=mobile-commandbar-compact-20260603">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=justify-text-20260602">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -327,7 +327,7 @@
               title="Đăng ký để dùng bộ lọc này" {% endif %}>
               <div class="command-mos-head">
                 <span class="command-mos-label">
-                  {% if USER_TIER == 'guest' %}🔒 {% endif %}Thấp hơn định giá: &gt;= <strong><span
+                  {% if USER_TIER == 'guest' %}🔒 {% endif %}Rẻ hơn ≥ <strong><span
                       id="mosValue">10</span>%</strong>
                 </span>
               </div>
@@ -948,7 +948,7 @@
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=watchlist-telegram-sync-20260515"></script>
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-home-polish-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=fast-counts-20260602"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-signal-card-value-20260603"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-signal-card-no-delta-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=signal-mobile-carousel-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=trend-first-20260528"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=contact-redaction-20260528"></script>

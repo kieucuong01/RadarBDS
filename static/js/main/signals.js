@@ -176,18 +176,6 @@ function _signalNumber(value) {
   return Number.isFinite(n) ? n : NaN;
 }
 
-function _formatDealDelta(fairNum, priceNum) {
-  if (!Number.isFinite(fairNum) || !Number.isFinite(priceNum)) return null;
-  const delta = fairNum - priceNum;
-  if (!Number.isFinite(delta)) return null;
-  return {
-    className: delta >= 0 ? 'is-positive' : 'is-negative',
-    text: delta >= 0
-      ? `Chênh +${delta.toFixed(2)} tỷ`
-      : `Cao hơn ${Math.abs(delta).toFixed(2)} tỷ`
-  };
-}
-
 async function loadSignals(page = 1, opts = {}) {
   const reset = Boolean(opts.reset);
   const queryKey = signalQuery(page);
@@ -281,7 +269,6 @@ function _renderSignalCards(signals) {
       const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       const fairNum = fairPrice !== '-' ? parseFloat(fairPrice) : NaN;
       const priceNum = parseFloat(x.price_ty);
-      const dealDelta = _formatDealDelta(fairNum, priceNum);
       const priceLabel = x.price_label || (x.price_ty ? `${x.price_ty} tỷ` : '-');
       const profit = fairPrice !== '-' ? (fairNum - priceNum).toFixed(2) : '-';
       const isOverpriced = Number.isFinite(priceNum) && Number.isFinite(fairNum) && priceNum > fairNum;
@@ -339,7 +326,6 @@ function _renderSignalCards(signals) {
               <div class="price-val-fair">${fairPrice} tỷ</div>
               <div class="price-m2">${x.fair_ppm2 || '-'} tr/m²</div>
             </div>
-            ${dealDelta ? `<div class="price-delta ${dealDelta.className}">${dealDelta.text}</div>` : ''}
           </div>
 
           <div class="sc-meta-chips">

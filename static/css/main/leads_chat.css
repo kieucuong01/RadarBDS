@@ -220,18 +220,16 @@
     position: static;
     top: auto;
     z-index: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: stretch;
+    gap: 6px;
     margin: -2px -2px 12px;
-    padding: 8px;
-    border-radius: 16px;
-    min-height: 56px;
-    overflow-x: auto;
+    padding: 7px;
+    border-radius: 14px;
+    min-height: 50px;
+    overflow: visible;
     scrollbar-width: none;
-    scroll-snap-type: x proximity;
-    scroll-padding-inline: 8px;
-    overscroll-behavior-x: contain;
   }
 
   .command-bar::-webkit-scrollbar {
@@ -239,17 +237,21 @@
   }
 
   .command-bar-left {
-    width: auto;
-    flex: 1 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+    min-width: 0;
+    flex: none;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 6px;
   }
 
   .command-bar-right {
-    width: auto;
+    width: 100%;
+    min-width: 0;
     margin-left: 0;
     justify-content: flex-start;
-    flex: 0 0 auto;
+    flex: none;
   }
 
   .command-super-signal.super-signal-btn {
@@ -259,22 +261,21 @@
 
   .command-mos {
     min-width: 0;
-    width: 176px;
-    max-width: 176px;
-    flex: 0 0 176px;
-    gap: 5px;
-    scroll-snap-align: start;
+    width: 100%;
+    max-width: none;
+    flex: none;
+    gap: 4px;
   }
 
   .command-mos-label {
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 0.7rem;
+    font-size: 0.66rem;
   }
 
   .command-mos-track #mosSlider {
-    height: 5px;
+    height: 4px;
   }
 
   .command-mos-markers {
@@ -283,17 +284,16 @@
 
   .command-drop-toggle span {
     min-width: 0;
-    min-height: 44px;
-    padding: 10px 12px;
-    font-size: 0.72rem;
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 0.66rem;
     white-space: nowrap;
-    scroll-snap-align: start;
   }
 
   .command-sort {
-    width: auto;
+    width: 100%;
     justify-content: space-between;
-    gap: 6px;
+    gap: 0;
   }
 
   .command-sort-label {
@@ -302,12 +302,15 @@
 
   .command-sort-select {
     flex: 0 0 auto;
-    width: 128px;
+    width: 92px;
     min-width: 0;
-    min-height: 44px;
-    padding: 10px 28px 10px 10px;
-    border-radius: 12px;
-    font-size: 0.72rem;
+    min-height: 40px;
+    padding: 8px 23px 8px 9px;
+    border-radius: 11px;
+    font-size: 0.68rem;
+    background-position:
+      calc(100% - 14px) calc(50% - 3px),
+      calc(100% - 8px) calc(50% - 3px);
   }
 
   .chart-container {

@@ -382,53 +382,6 @@
   background: #1e293b;
 }
 
-@media (max-width: 720px) {
-  .cards-grid {
-    gap: 14px;
-  }
-
-  .scard {
-    border-radius: 18px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-    contain-intrinsic-size: 390px;
-  }
-
-  .sc-img-wrap {
-    height: clamp(164px, 44vw, 190px);
-  }
-
-  .sc-body {
-    gap: 12px;
-    padding: 12px 18px 18px;
-  }
-
-  .mos-badge {
-    max-width: calc(100% - 104px);
-    padding: 6px 12px;
-    font-size: 0.8rem;
-  }
-
-  .sc-image-count {
-    right: 10px;
-    bottom: 44px;
-  }
-
-  .price-delta {
-    padding: 8px 12px;
-    font-size: 0.8rem;
-  }
-
-  .sc-meta-chips {
-    gap: 6px;
-  }
-
-  .meta-chip {
-    min-height: 29px;
-    padding: 6px 8px;
-    font-size: 0.76rem;
-  }
-}
-
 @media (hover: hover) and (pointer: fine) {
   .sc-img {
     transition: transform 0.25s ease;
@@ -593,22 +546,6 @@
   border-right: 1px solid var(--border);
 }
 
-.price-delta {
-  grid-column: 1 / -1;
-  padding: 9px 14px;
-  border-top: 1px solid var(--border);
-  background: rgba(16, 185, 129, 0.08);
-  color: #047857;
-  font-size: 0.82rem;
-  font-weight: 850;
-  line-height: 1.25;
-}
-
-.price-delta.is-negative {
-  background: rgba(220, 38, 38, 0.08);
-  color: #b91c1c;
-}
-
 .price-label {
   font-size: 0.65rem;
   font-weight: 800;
@@ -764,4 +701,126 @@
 .btn-analyze:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+}
+
+@media (max-width: 720px) {
+  .cards-grid {
+    gap: 10px;
+  }
+
+  .scard {
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.11);
+    contain-intrinsic-size: 320px;
+  }
+
+  .sc-img-wrap {
+    height: clamp(130px, 36vw, 148px);
+  }
+
+  .sc-body {
+    gap: 7px;
+    padding: 9px 14px 11px;
+  }
+
+  .sc-title {
+    font-size: 0.9rem;
+    line-height: 1.32;
+    -webkit-line-clamp: 2;
+  }
+
+  .mos-badge {
+    top: 10px;
+    left: 10px;
+    min-height: 28px;
+    max-width: calc(100% - 104px);
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+  }
+
+  .new-badge {
+    top: 10px;
+    right: 10px;
+    padding: 4px 9px;
+    font-size: 0.64rem;
+  }
+
+  .sc-image-count {
+    right: 10px;
+    bottom: 39px;
+    min-height: 24px;
+    padding: 4px 8px;
+    font-size: 0.68rem;
+  }
+
+  .sc-img-tags {
+    left: 9px;
+    right: 9px;
+    bottom: 8px;
+    gap: 5px;
+  }
+
+  .sc-source-tag,
+  .sc-time-tag,
+  .sc-drop-tag {
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 0.66rem;
+  }
+
+  .price-container {
+    border-radius: 11px;
+  }
+
+  .price-actual,
+  .price-fair {
+    padding: 7px 9px;
+  }
+
+  .price-label {
+    margin-bottom: 2px;
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+  }
+
+  .price-val {
+    font-size: 1.02rem;
+  }
+
+  .price-val-fair {
+    font-size: 0.96rem;
+  }
+
+  .price-m2 {
+    margin-top: 1px;
+    font-size: 0.66rem;
+  }
+
+  .sc-meta-chips {
+    gap: 5px;
+  }
+
+  .meta-chip {
+    min-height: 26px;
+    gap: 4px;
+    padding: 5px 7px;
+    font-size: 0.7rem;
+  }
+
+  .meta-chip svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .sc-actions {
+    margin-top: 2px;
+  }
+
+  .btn-zalo {
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+  }
 }
