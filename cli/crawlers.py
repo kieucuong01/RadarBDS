@@ -287,8 +287,8 @@ def _cmd_crawl(args, mode: str = "full"):
             crawler_exceptions.append((crawler.SOURCE_NAME, str(e)))
 
     if mode == "incremental" and not source_filter:
-        print(f"\n[facebook] Crawling 20 posts/profile (incremental)...")
-        fb_stats = _facebook_crawl_to_raw(mode="incremental", limit_override=20)
+        print(f"\n[facebook] Crawling by profile daily_limit (incremental)...")
+        fb_stats = _facebook_crawl_to_raw(mode="incremental")
         if fb_stats:
             print(
                 f"[facebook] crawled={fb_stats['fetched']} | "

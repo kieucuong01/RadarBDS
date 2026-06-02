@@ -15,7 +15,7 @@ import urllib.request
 import threading
 from copy import deepcopy
 from functools import wraps
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response, abort
@@ -364,12 +364,15 @@ def _parse_crawl_dt(value: str):
     if not value:
         return None
     try:
-        return datetime.fromisoformat(value)
+        dt = datetime.fromisoformat(value)
     except ValueError:
         try:
-            return datetime.strptime(value[:19], "%Y-%m-%d %H:%M:%S")
+            dt = datetime.strptime(value[:19], "%Y-%m-%d %H:%M:%S")
         except ValueError:
             return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def _active_radar_lock_blockers() -> list[dict]:
