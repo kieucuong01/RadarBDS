@@ -171,6 +171,23 @@ function _isNewWithin(v, maxDays = 4) {
   return n !== null && n <= maxDays;
 }
 
+function _signalNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function _formatDealDelta(fairNum, priceNum) {
+  if (!Number.isFinite(fairNum) || !Number.isFinite(priceNum)) return null;
+  const delta = fairNum - priceNum;
+  if (!Number.isFinite(delta)) return null;
+  return {
+    className: delta >= 0 ? 'is-positive' : 'is-negative',
+    text: delta >= 0
+      ? `Chênh +${delta.toFixed(2)} tỷ`
+      : `Cao hơn ${Math.abs(delta).toFixed(2)} tỷ`
+  };
+}
+
 async function loadSignals(page = 1, opts = {}) {
   const reset = Boolean(opts.reset);
   const queryKey = signalQuery(page);
@@ -264,10 +281,14 @@ function _renderSignalCards(signals) {
       const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
       const fairNum = fairPrice !== '-' ? parseFloat(fairPrice) : NaN;
       const priceNum = parseFloat(x.price_ty);
+      const dealDelta = _formatDealDelta(fairNum, priceNum);
       const priceLabel = x.price_label || (x.price_ty ? `${x.price_ty} tỷ` : '-');
       const profit = fairPrice !== '-' ? (fairNum - priceNum).toFixed(2) : '-';
       const isOverpriced = Number.isFinite(priceNum) && Number.isFinite(fairNum) && priceNum > fairNum;
       const actualClass = isOverpriced ? 'price-over' : 'price-deal';
+      const mosRounded = Math.round(_signalNumber(x.mos_pct) || 0);
+      const imageCount = Math.max(0, Math.floor(_signalNumber(x.image_count) || 0));
+      const imageCounterHtml = imageCount > 1 ? `<div class="sc-image-count">1/${imageCount}</div>` : '';
 
       const daysAgo = _daysAgoValue(x.days_ago);
       let timeStr = _timeAgoText(daysAgo);
@@ -295,8 +316,9 @@ function _renderSignalCards(signals) {
       <div class="scard" onclick="openSignal(this)" ${dataAttr}>
         <div class="sc-img-wrap">
           <img class="sc-img" src="${imgSrc}" loading="lazy" decoding="async" width="640" height="416" alt="Img" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG">
-          <div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> So với Định Giá: -${Math.round(x.mos_pct)}%</div>
+          <div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> Rẻ hơn ${mosRounded}%</div>
           ${newBadgeHtml}
+          ${imageCounterHtml}
           <div class="sc-img-tags">
             <span class="sc-source-tag">${srcName}</span>
             <span class="sc-time-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${timeStr}</span>
@@ -317,13 +339,14 @@ function _renderSignalCards(signals) {
               <div class="price-val-fair">${fairPrice} tỷ</div>
               <div class="price-m2">${x.fair_ppm2 || '-'} tr/m²</div>
             </div>
+            ${dealDelta ? `<div class="price-delta ${dealDelta.className}">${dealDelta.text}</div>` : ''}
           </div>
 
-          <div class="sc-meta-grid">
-            <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${x.ward}</div>
-            <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg> ${x.area_m2 || '-'} m²</div>
-            <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> ${roadStr}</div>
-            <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ${legalStr}</div>
+          <div class="sc-meta-chips">
+            <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escHtml(x.ward || 'Chưa rõ')}</span>
+            <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>${escHtml(x.area_m2 || '-')} m²</span>
+            <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>${escHtml(roadStr)}</span>
+            <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${escHtml(legalStr)}</span>
           </div>
 
           <div class="sc-actions" onclick="event.stopPropagation()">

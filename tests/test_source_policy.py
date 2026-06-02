@@ -78,7 +78,7 @@ class SourcePolicyTest(unittest.TestCase):
             conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
 
-    def _seed_signal(self, *, source, title, source_id, area_m2=100, price_ty=2.0):
+    def _seed_signal(self, *, source, title, source_id, area_m2=100, price_ty=2.0, image_count=0):
         from db.connection import get_conn
         price_per_m2 = round(price_ty * 1000 / area_m2, 2) if area_m2 else None
 
@@ -118,6 +118,19 @@ class SourcePolicyTest(unittest.TestCase):
                 """,
                 (listing_id, price_per_m2),
             )
+            for idx in range(image_count):
+                conn.execute(
+                    """
+                    INSERT INTO listing_images (listing_id, img_url, img_order, local_path)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (
+                        listing_id,
+                        f"https://images.test/{source_id}-{idx}.jpg",
+                        idx,
+                        f"data/images/{source_id}-{idx}.jpg",
+                    ),
+                )
             return listing_id
 
     def _login_as_admin(self):
@@ -217,6 +230,34 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertIn("Price 5 signal", titles)
         self.assertNotIn("Facebook source policy signal", titles)
         self.assertNotIn("Price 3 signal", titles)
+
+    def test_signal_feed_returns_image_count(self):
+        no_image_id = self._seed_signal(
+            source="facebook",
+            title="No image signal",
+            source_id="fb-no-image",
+            image_count=0,
+        )
+        one_image_id = self._seed_signal(
+            source="facebook",
+            title="One image signal",
+            source_id="fb-one-image",
+            image_count=1,
+        )
+        many_image_id = self._seed_signal(
+            source="facebook",
+            title="Many image signal",
+            source_id="fb-many-image",
+            image_count=5,
+        )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=20")
+        self.assertEqual(response.status_code, 200)
+
+        counts = {row["id"]: row["image_count"] for row in response.get_json()["signals"]}
+        self.assertEqual(counts[no_image_id], 0)
+        self.assertEqual(counts[one_image_id], 1)
+        self.assertEqual(counts[many_image_id], 5)
 
     def test_source_filter_group_only_renders_for_admin(self):
         guest_html = self.client.get("/").get_data(as_text=True)

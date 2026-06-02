@@ -61,10 +61,14 @@ https://t.me/<bot_username>?start=<token>
 
 ## zrok Local Public URL
 
-`zrok.exe` is in the repo root. Start Flask first, then run:
+`zrok.exe` is a local-only binary and is not committed to the repo. Install zrok
+locally and make it available on `PATH`, or place it under the ignored
+`tools/zrok/zrok.exe` path. Start Flask first, then run:
 
 ```powershell
-.\zrok.exe share public http://127.0.0.1:5000 --headless
+$zrok = "zrok"
+if (Test-Path ".\tools\zrok\zrok.exe") { $zrok = ".\tools\zrok\zrok.exe" }
+& $zrok share public http://127.0.0.1:5000 --headless
 ```
 
 The log line contains the public host, for example:

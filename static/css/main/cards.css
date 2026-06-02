@@ -396,6 +396,37 @@
   .sc-img-wrap {
     height: clamp(164px, 44vw, 190px);
   }
+
+  .sc-body {
+    gap: 12px;
+    padding: 12px 18px 18px;
+  }
+
+  .mos-badge {
+    max-width: calc(100% - 104px);
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .sc-image-count {
+    right: 10px;
+    bottom: 44px;
+  }
+
+  .price-delta {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .sc-meta-chips {
+    gap: 6px;
+  }
+
+  .meta-chip {
+    min-height: 29px;
+    padding: 6px 8px;
+    font-size: 0.76rem;
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -448,21 +479,27 @@
   letter-spacing: 0.02em;
 }
 
-.drop-badge {
+.sc-image-count {
   position: absolute;
-  top: 12px;
   right: 12px;
-  background: #ef4444;
-  color: #fff;
-  font-weight: 800;
-  font-size: 0.85rem;
-  padding: 6px 12px;
-  border-radius: 10px;
+  bottom: 48px;
   z-index: 2;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22);
+  backdrop-filter: blur(8px);
 }
 
-/* Source + Time Tags — positioned at bottom of image */
+/* Source and time tags are positioned at the bottom of the image. */
 .sc-img-tags {
   position: absolute;
   bottom: 10px;
@@ -556,6 +593,22 @@
   border-right: 1px solid var(--border);
 }
 
+.price-delta {
+  grid-column: 1 / -1;
+  padding: 9px 14px;
+  border-top: 1px solid var(--border);
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+  font-size: 0.82rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.price-delta.is-negative {
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+}
+
 .price-label {
   font-size: 0.65rem;
   font-weight: 800;
@@ -611,6 +664,34 @@
   gap: 8px;
 }
 
+.sc-meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.meta-chip {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.meta-chip svg {
+  flex: 0 0 auto;
+  opacity: 0.58;
+}
+
 .meta-item {
   display: flex;
   align-items: center;
@@ -618,12 +699,6 @@
   font-size: 0.82rem;
   color: var(--text-muted);
   font-weight: 500;
-}
-
-.meta-item svg {
-  color: var(--text-muted);
-  opacity: 0.5;
-  flex-shrink: 0;
 }
 
 .sc-actions {

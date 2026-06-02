@@ -52,6 +52,7 @@ def test_load_signals_uses_shared_connection_scope(monkeypatch):
     assert len(conn.queries) == 1
     assert "COUNT(*) OVER()" in conn.queries[0][0]
     assert "LEFT JOIN LATERAL" in conn.queries[0][0]
+    assert "image_count" in conn.queries[0][0]
 
 
 def test_load_counts_uses_compact_shared_connection_scope(monkeypatch):

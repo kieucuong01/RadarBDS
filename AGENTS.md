@@ -174,7 +174,7 @@ VIP watchlist/Telegram:
 - Free users can save watchlists; only active VIP users receive push.
 - Users share one Telegram bot but each user maps to a private `telegram_chat_id`.
 - `cli/notify.py::push_new_listings_to_vip(since)` sends only latest actionable signals, one digest per user, filtered by that user's active watchlists.
-- For local webhook testing use `zrok.exe share public http://127.0.0.1:5000 --headless`; see `docs/telegram_watchlist.md`.
+- For local webhook testing, install zrok locally or put `zrok.exe` under the ignored `tools/zrok/` path; see `docs/telegram_watchlist.md`.
 
 Images/performance:
 

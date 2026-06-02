@@ -409,6 +409,7 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "legal_flags": _row_get(r, "legal_flags", "") or "",
         "has_legal_doc_image": bool(LEGAL_IMAGE_EVIDENCE_ENABLED and _row_get(r, "has_legal_doc_image", 0)),
         "primary_img": primary_img or "",
+        "image_count": int(_row_get(r, "image_count", 0) or 0),
         "source": r['source'],
         "road_tier": r['road_tier'] or 0,
         "has_so": _format_has_so(r),
@@ -462,6 +463,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
                {LEGAL_DOC_IMAGE_SELECT_SQL} AS has_legal_doc_image,
                primary_img.local_path AS primary_local_path,
                primary_img.img_url AS primary_img_url,
+               COALESCE(img_count.image_count, 0) AS image_count,
                {fresh_flag}
         FROM latest_valuation v
         JOIN listings l ON v.listing_id = l.id
@@ -472,6 +474,11 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
             ORDER BY {LEGAL_IMAGE_ORDER_SQL.replace('img_type', 'li.img_type').replace('img_order', 'li.img_order').replace(', id', ', li.id')}
             LIMIT 1
         ) primary_img ON TRUE
+        LEFT JOIN LATERAL (
+            SELECT CAST(COUNT(*) AS INTEGER) AS image_count
+            FROM listing_images li
+            WHERE li.listing_id = l.id
+        ) img_count ON TRUE
         WHERE {signal_condition} AND {where_sql}{mos_condition}
         ORDER BY {order_sql}
         LIMIT ? OFFSET ?

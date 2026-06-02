@@ -182,7 +182,9 @@ Invoke-RestMethod "https://api.telegram.org/bot$token/getWebhookInfo"
 Public local Flask with zrok:
 
 ```powershell
-.\zrok.exe share public http://127.0.0.1:5000 --headless
+$zrok = "zrok"
+if (Test-Path ".\tools\zrok\zrok.exe") { $zrok = ".\tools\zrok\zrok.exe" }
+& $zrok share public http://127.0.0.1:5000 --headless
 ```
 
 Set webhook after adding `DASHBOARD_BASE_URL` and `TELEGRAM_WEBHOOK_SECRET` to `.env` and restarting Flask:
