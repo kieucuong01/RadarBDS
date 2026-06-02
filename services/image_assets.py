@@ -79,6 +79,10 @@ def ensure_thumbnail(image_path: Path, force: bool = False) -> Optional[Path]:
 
 def resolve_image_url(local_src: str, remote_src: str = "", prefer_thumb: bool = False) -> str:
     local_url = normalize_image_url(local_src)
+    if local_url and prefer_thumb:
+        thumb_url = thumb_url_for_image_url(local_url)
+        if thumb_url:
+            return thumb_url
     if local_url and local_image_exists(local_url):
         if prefer_thumb:
             thumb_url = thumb_url_for_image_url(local_url)
