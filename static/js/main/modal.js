@@ -3,21 +3,79 @@ const INVESTMENT_MEMO_ENABLED = false;
 // Slider state
 let _smSlideIdx = 0;
 let _smSlideImgs = [];
+let _smSlideLocked = false;
+let _smSlideLockTimer = null;
+
+function updateSignalSlideUi() {
+  const counter = document.getElementById('sm-img-count');
+  if (counter) counter.innerText = _smSlideImgs.length > 1 ? `${_smSlideIdx + 1} / ${_smSlideImgs.length}` : '';
+  document.querySelectorAll('#sm-dots .sm-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === _smSlideIdx);
+  });
+  document.querySelectorAll('#sm-thumbs .sm-thumb').forEach((thumb, i) => {
+    thumb.classList.toggle('active', i === _smSlideIdx);
+  });
+}
+
+function setSignalSlide(index, opts = {}) {
+  if (!_smSlideImgs.length) return;
+  const slides = document.getElementById('sm-slides');
+  if (!slides) return;
+  const count = _smSlideImgs.length;
+  const previous = _smSlideIdx;
+  const next = ((index % count) + count) % count;
+  const rawDistance = Math.abs(index - previous);
+  const normalizedDistance = Math.abs(next - previous);
+  const isWrap = index < 0 || index >= count || normalizedDistance > 1 || rawDistance > 1;
+  const instant = Boolean(opts.instant || isWrap);
+
+  _smSlideIdx = next;
+  if (_smSlideLockTimer) {
+    clearTimeout(_smSlideLockTimer);
+    _smSlideLockTimer = null;
+  }
+  if (instant) {
+    _smSlideLocked = false;
+    slides.style.transition = 'none';
+  } else {
+    _smSlideLocked = true;
+    slides.style.transition = '';
+    _smSlideLockTimer = setTimeout(() => {
+      _smSlideLocked = false;
+      _smSlideLockTimer = null;
+    }, 430);
+  }
+  slides.style.transform = `translate3d(-${_smSlideIdx * 100}%, 0, 0)`;
+  if (instant) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        slides.style.transition = '';
+      });
+    });
+  }
+  updateSignalSlideUi();
+}
 
 function slideSignal(dir) {
-  if (_smSlideImgs.length <= 1) return;
-  _smSlideIdx = (_smSlideIdx + dir + _smSlideImgs.length) % _smSlideImgs.length;
-  document.getElementById('sm-slides').style.transform = `translateX(-${_smSlideIdx * 100}%)`;
-  // Update counter
-  document.getElementById('sm-img-count').innerText = `${_smSlideIdx + 1} / ${_smSlideImgs.length}`;
-  // Update dots
-  document.querySelectorAll('#sm-dots span').forEach((d, i) => {
-    d.style.background = i === _smSlideIdx ? '#fff' : 'rgba(255,255,255,0.4)';
-  });
+  if (_smSlideImgs.length <= 1 || _smSlideLocked) return;
+  setSignalSlide(_smSlideIdx + dir);
+}
+
+function renderSignalThumbs() {
+  const thumbsEl = document.getElementById('sm-thumbs');
+  if (!thumbsEl) return;
+  thumbsEl.innerHTML = _smSlideImgs.length > 1
+    ? _smSlideImgs.map((src, i) => `<img class="sm-thumb ${i === _smSlideIdx ? 'active' : ''}" src="${escHtml(src)}" onclick="setSignalSlide(${i})" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
+    : '';
 }
 
 function buildSlider(imgs) {
   _smSlideIdx = 0;
+  _smSlideLocked = false;
+  if (_smSlideLockTimer) {
+    clearTimeout(_smSlideLockTimer);
+    _smSlideLockTimer = null;
+  }
   _smSlideImgs = imgs.length ? imgs : [PLACEHOLDER_IMG];
   const slides = document.getElementById('sm-slides');
   const dots = document.getElementById('sm-dots');
@@ -26,10 +84,12 @@ function buildSlider(imgs) {
   const nextBtn = document.getElementById('sm-next');
 
   // Build slides
-  slides.style.transform = 'translateX(0)';
+  slides.classList.add('sm-slides-track');
+  slides.style.transition = '';
+  slides.style.transform = 'translate3d(0, 0, 0)';
   slides.innerHTML = _smSlideImgs.map((src, i) => `
-    <div style="min-width:100%; height:100%; flex-shrink:0; background:#0f172a;">
-      <img src="${src}" style="width:100%; height:100%; object-fit:contain; display:block; background:#0f172a; cursor:zoom-in;"
+    <div class="sm-slide">
+      <img class="sm-slide-img" src="${escHtml(src)}"
         onclick="openGallery(${i})"
         onerror="this.onerror=null;this.src=PLACEHOLDER_IMG;">
     </div>`
@@ -37,14 +97,14 @@ function buildSlider(imgs) {
 
   // Dots
   dots.innerHTML = _smSlideImgs.length > 1
-    ? _smSlideImgs.map((_, i) => `<span onclick="_smSlideIdx=${i - 1}; slideSignal(1);" style="width:7px; height:7px; border-radius:50%; background:${i === 0 ? '#fff' : 'rgba(255,255,255,0.4)'}; cursor:pointer; transition:background 0.2s; display:inline-block;"></span>`).join('')
+    ? _smSlideImgs.map((_, i) => `<button type="button" class="sm-dot ${i === 0 ? 'active' : ''}" onclick="setSignalSlide(${i})" aria-label="Ảnh ${i + 1}"></button>`).join('')
     : '';
 
   // Arrows + counter
   const multi = _smSlideImgs.length > 1;
   prevBtn.style.display = multi ? 'flex' : 'none';
   nextBtn.style.display = multi ? 'flex' : 'none';
-  counter.innerText = multi ? `1 / ${_smSlideImgs.length}` : '';
+  updateSignalSlideUi();
 }
 
 let smHistoryChart = null;
@@ -87,6 +147,72 @@ function renderModalTitle(rawTitle) {
   `;
 }
 
+function _modalNumber(value) {
+  if (value === null || value === undefined || value === '' || value === '-') return NaN;
+  const n = Number(String(value).replace(',', '.'));
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function _modalFormatTy(value) {
+  const n = _modalNumber(value);
+  if (!Number.isFinite(n) || n <= 0) return '-';
+  return `${n.toFixed(2).replace(/\.?0+$/, '')} tỷ`;
+}
+
+function _modalFormatPpm2(value) {
+  const n = _modalNumber(value);
+  if (!Number.isFinite(n) || n <= 0) return '-';
+  return `${n.toFixed(1).replace(/\.?0+$/, '')} tr/m²`;
+}
+
+function _modalSetText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function updateSignalSummary(data = {}) {
+  const price = _modalNumber(data.price_ty ?? data.price);
+  const area = _modalNumber(data.area_m2 ?? data.area);
+  const actualPpm2 = _modalNumber(data.actual_ppm2 ?? data.ppm2);
+  const fairPpm2 = _modalNumber(data.fair_ppm2 ?? data.fppm2);
+  let fairTotal = _modalNumber(data.fair_total_ty ?? data.fair);
+  if ((!Number.isFinite(fairTotal) || fairTotal <= 0) && Number.isFinite(fairPpm2) && Number.isFinite(area) && area > 0) {
+    fairTotal = fairPpm2 * area / 1000;
+  }
+  const computedActualPpm2 = Number.isFinite(actualPpm2)
+    ? actualPpm2
+    : (Number.isFinite(price) && Number.isFinite(area) && area > 0 ? price * 1000 / area : NaN);
+  const mos = _modalNumber(data.mos_pct ?? data.mos);
+  const score = _modalNumber(data.signal_score ?? data.score);
+
+  _modalSetText('sm-sum-price', _modalFormatTy(price));
+  _modalSetText('sm-sum-price-m2', _modalFormatPpm2(computedActualPpm2));
+  _modalSetText('sm-sum-fair', _modalFormatTy(fairTotal));
+  _modalSetText('sm-sum-fair-m2', _modalFormatPpm2(fairPpm2));
+  _modalSetText('sm-sum-mos', Number.isFinite(mos) ? `${mos.toFixed(1).replace(/\.0$/, '')}%` : '-');
+  _modalSetText('sm-sum-score', Number.isFinite(score) ? `Score ${Math.round(score)}` : 'Score -');
+}
+
+function switchSignalPanel(panel = 'desc', btn = null) {
+  const modal = document.getElementById('signalModal');
+  if (!modal) return;
+  modal.dataset.activePanel = panel;
+  modal.querySelectorAll('.sm-tab').forEach((tab) => {
+    tab.classList.toggle('active', tab === btn || (!btn && tab.dataset.smTab === panel));
+  });
+  modal.querySelectorAll('.sm-panel[data-sm-panel]').forEach((section) => {
+    section.classList.toggle('active', section.dataset.smPanel === panel);
+  });
+  if (panel === 'history' && smHistoryChart) {
+    setTimeout(() => smHistoryChart.resize(), 0);
+  }
+}
+
+function setSignalModalOpen(open) {
+  document.body.classList.toggle('signal-modal-open', Boolean(open));
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+
 function toggleModalComps(btn) {
   const list = btn.closest('.sm-comps-list');
   if (!list) return;
@@ -110,7 +236,7 @@ function openGallery(idx = 0) {
 function closeGallery() {
   const modal = document.getElementById('galleryModal');
   modal.style.display = 'none';
-  document.body.style.overflow = '';
+  document.body.style.overflow = document.body.classList.contains('signal-modal-open') ? 'hidden' : '';
 }
 
 function slideGallery(delta) {
@@ -130,10 +256,7 @@ function _openSignalLegacy(card) {
   galleryImages = imgs.length ? imgs : [PLACEHOLDER_IMG];
 
   // Thumbnails
-  const thumbsEl = document.getElementById('sm-thumbs');
-  thumbsEl.innerHTML = galleryImages.length > 1
-    ? galleryImages.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i - 1}; slideSignal(1);" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
-    : '';
+  renderSignalThumbs();
 
   // Signal badge
   const mosNum = parseFloat(d.mos) || 0;
@@ -212,10 +335,7 @@ async function _hydrateSignalDetailLegacy(listingId) {
     galleryImages = imgs.length ? imgs : [PLACEHOLDER_IMG];
     if (galleryImages.length) {
       buildSlider(galleryImages);
-      const thumbsEl = document.getElementById('sm-thumbs');
-      thumbsEl.innerHTML = galleryImages.length > 1
-        ? galleryImages.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i - 1}; slideSignal(1);" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
-        : '';
+      renderSignalThumbs();
     }
   } catch (err) {
     console.error(err);
@@ -440,14 +560,12 @@ function openSignal(card) {
 function _openSignalFromData(d) {
   const modal = document.getElementById('signalModal');
   modal.dataset.listingId = d.id;
+  switchSignalPanel('desc');
 
   const imgs = d.primary ? [d.primary] : [];
   buildSlider(imgs);
   galleryImages = imgs.length ? imgs : [PLACEHOLDER_IMG];
-  const thumbsEl = document.getElementById('sm-thumbs');
-  thumbsEl.innerHTML = galleryImages.length > 1
-    ? galleryImages.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i - 1}; slideSignal(1);" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
-    : '';
+  renderSignalThumbs();
 
   const mosNum = parseFloat(d.mos) || 0;
   const badgeLabel = mosNum >= 25 ? 'SUPER SIGNAL' : 'SIGNAL';
@@ -468,6 +586,7 @@ function _openSignalFromData(d) {
     score: d.score,
     propertyType: d.ptype
   });
+  updateSignalSummary(d);
 
   document.getElementById('sm-zalo').dataset.listingId = d.id;
   document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
@@ -476,6 +595,9 @@ function _openSignalFromData(d) {
   loadSignalHistory(d.id, price, area, d.ward);
   setInvestmentMemoVisible(false);
   hydrateSignalDetail(d.id);
+  const content = modal.querySelector('.signal-modal-content');
+  if (content) content.scrollTop = 0;
+  setSignalModalOpen(true);
   modal.style.display = 'flex';
 }
 
@@ -525,14 +647,12 @@ async function hydrateSignalDetail(listingId) {
       score: data.signal_score || '-',
       propertyType: data.property_type
     });
+    updateSignalSummary(data);
 
     const imgs = Array.isArray(data.imgs) ? data.imgs.filter(Boolean) : [];
     galleryImages = imgs.length ? imgs : [PLACEHOLDER_IMG];
     buildSlider(galleryImages);
-    const thumbsEl = document.getElementById('sm-thumbs');
-    thumbsEl.innerHTML = galleryImages.length > 1
-      ? galleryImages.map((src, i) => `<img src="${src}" onclick="_smSlideIdx=${i - 1}; slideSignal(1);" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
-      : '';
+    renderSignalThumbs();
   } catch (err) {
     console.error(err);
     if (modal.dataset.listingId === String(listingId)) {
@@ -742,15 +862,20 @@ async function openHistory(id, title) {
 }
 
 function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  modal.style.display = 'none';
+  if (id === 'signalModal') {
+    setSignalModalOpen(false);
+  }
+  if (id === 'galleryModal') {
+    document.body.style.overflow = document.body.classList.contains('signal-modal-open') ? 'hidden' : '';
+  }
 }
 
 window.onclick = function (event) {
   if (event.target.classList.contains('modal')) {
-    event.target.style.display = 'none';
-    if (event.target.id === 'galleryModal') {
-      document.body.style.overflow = '';
-    }
+    closeModal(event.target.id);
   }
 }
 
@@ -760,6 +885,12 @@ document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeGallery();
     if (event.key === 'ArrowLeft') slideGallery(-1);
     if (event.key === 'ArrowRight') slideGallery(1);
+    return;
+  }
+  const signalModal = document.getElementById('signalModal');
+  if (signalModal && signalModal.style.display === 'flex' && event.key === 'Escape') {
+    closeModal('signalModal');
+    return;
   }
   const leadModal = document.getElementById('leadCaptureModal');
   if (leadModal && leadModal.style.display === 'flex' && event.key === 'Escape') {

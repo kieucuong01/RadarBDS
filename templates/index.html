@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=listings-view-20260527">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=mobile-app-shell-20260602">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=justify-text-20260602">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=justify-text-20260602">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-mobile-carousel-20260602">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=justify-text-20260602">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=pwa-docked-nav-20260602">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=justify-text-20260602">
@@ -555,7 +555,7 @@
 
   <!-- Modal Signal Detail -->
   <div id="signalModal" class="modal">
-    <div class="modal-content"
+    <div class="modal-content signal-modal-content"
       style="max-width:960px; padding:0; overflow-y:auto; overflow-x:hidden; border-radius:20px;">
       <button class="close-modal" onclick="closeModal('signalModal')"
         style="top:12px; right:12px; z-index:20;">&times;</button>
@@ -595,23 +595,49 @@
           <!-- Thumbnail strip -->
           <div id="sm-thumbs" class="sm-thumbs"></div>
 
-          <!-- Signal badge -->
-          <div id="sm-signal-badge" class="sm-signal-badge"></div>
+          <div class="sm-overview-panel">
+            <!-- Signal badge -->
+            <div id="sm-signal-badge" class="sm-signal-badge"></div>
 
-          <h2 id="sm-title" class="sm-detail-title"></h2>
-          <div id="sm-meta-line" class="sm-meta-line"></div>
+            <h2 id="sm-title" class="sm-detail-title"></h2>
+            <div id="sm-meta-line" class="sm-meta-line"></div>
 
-          <!-- Tags -->
-          <div id="sm-tags" class="sm-tags-wrap"></div>
+            <div id="sm-summary-grid" class="sm-summary-grid" aria-label="Tóm tắt giá và biên an toàn">
+              <div class="sm-summary-item sm-summary-price">
+                <span>Giá rao</span>
+                <strong id="sm-sum-price">-</strong>
+                <small id="sm-sum-price-m2">-</small>
+              </div>
+              <div class="sm-summary-item">
+                <span>Định giá</span>
+                <strong id="sm-sum-fair">-</strong>
+                <small id="sm-sum-fair-m2">-</small>
+              </div>
+              <div class="sm-summary-item sm-summary-mos">
+                <span>MOS</span>
+                <strong id="sm-sum-mos">-</strong>
+                <small id="sm-sum-score">-</small>
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div id="sm-tags" class="sm-tags-wrap"></div>
+          </div>
+
+          <div class="sm-mobile-tabs" role="tablist" aria-label="Nội dung chi tiết signal">
+            <button type="button" class="sm-tab active" data-sm-tab="desc" onclick="switchSignalPanel('desc', this)">Mô tả</button>
+            <button type="button" class="sm-tab" data-sm-tab="comps" onclick="switchSignalPanel('comps', this)">So sánh</button>
+            <button type="button" class="sm-tab" data-sm-tab="history" onclick="switchSignalPanel('history', this)">Lịch sử</button>
+          </div>
 
           <!-- Description -->
-          <div class="sm-section">
+          <div class="sm-section sm-panel active" data-sm-panel="desc">
             <div class="sm-section-label">NGUYÊN VĂN TIN RAO</div>
             <div id="sm-desc" class="sm-desc-text"></div>
           </div>
 
           <!-- COMPS list -->
-          <div class="sm-section">
+          <div class="sm-section sm-panel" data-sm-panel="comps">
             <div class="sm-section-label">📊 SO SÁNH LÔ TƯƠNG TỰ</div>
             <div class="sm-comps-list" id="sm-comps-body"></div>
           </div>
@@ -633,7 +659,7 @@
             <div id="sm-ai-text" class="sm-ai-text"></div>
           </div>
 
-          <div class="sm-section" id="sm-history-section" style="margin-bottom:16px;">
+          <div class="sm-section sm-panel" data-sm-panel="history" id="sm-history-section" style="margin-bottom:16px;">
             <div style="height:160px; position:relative;">
               <canvas id="sm-history-chart"></canvas>
             </div>
@@ -641,7 +667,7 @@
           </div>
 
           <!-- Action buttons -->
-          <div style="display:flex; gap:10px; margin-top:16px;">
+          <div class="sm-action-bar">
             <a id="sm-zalo" href="#" target="_blank" class="sm-btn-zalo"
               onclick="event.preventDefault();tierCTA(this.dataset.listingId,this.dataset.listingUrl,'modal_signal');">💬
               Liên hệ tư vấn </a>
@@ -905,7 +931,7 @@
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-app-shell-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=mobile-app-shell-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-app-shell-20260602"></script>
-  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=contact-redaction-20260528"></script>
+  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=signal-mobile-carousel-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=trend-first-20260528"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=contact-redaction-20260528"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>
