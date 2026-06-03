@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v27-crawl-fail-alert">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v28-data-quality">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -342,6 +342,10 @@
           <p>Xử lý conflict do AI flag, giữ chất lượng data sạch trước khi lên feed.</p>
         </div>
       </div>
+
+      <section id="qualityOverview" class="quality-overview" data-quality-overview>
+        <div class="empty">Đang tải data quality...</div>
+      </section>
 
       <div class="segmented">
         <button class="segment active" data-quality-tab="dups">Tin trùng <span id="dupCount">0</span></button>
@@ -690,7 +694,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v27-crawl-fail-alert"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v28-data-quality"></script>
   {% endif %}
 </body>
 </html>

@@ -29,6 +29,7 @@ let activeInfraFilter = 'timeline';
 let crawlProfiles = [];
 let crawlSummary = {};
 let apifyTokens = [];
+let dataQualitySummary = {};
 let crawlMode = 'first';
 let crawlPollTimer = null;
 let activeCrawlJobId = null;
@@ -236,7 +237,11 @@ function switchPanel(name, options = {}) {
   let loader = null;
   if (name === 'crm') loader = loadLeads;
   if (name === 'quality') {
-    loader = activeQualityTab === 'dups' ? loadDuplicates : loadBlacklist;
+    loader = async () => {
+      await loadDataQualitySummary();
+      if (activeQualityTab === 'dups') await loadDuplicates();
+      else await loadBlacklist();
+    };
   }
   if (name === 'training') loader = () => loadTrainingItems(false);
   if (name === 'infra') loader = loadInfraItems;
@@ -510,6 +515,151 @@ function renderCrawlOps(ops = {}) {
       if (span) span.textContent = `${serviceFailureText || 'service failed'} · log: ${serviceLogHint}`;
     }
   }
+}
+
+function qualityFlagLabel(flag) {
+  const labels = {
+    parsed_discount_as_price: 'Nhầm giảm giá thành giá bán',
+    down_payment_as_price: 'Nhầm cọc thành giá bán',
+    too_low_absolute_price: 'Giá tuyệt đối quá thấp',
+    large_lot_model_risk: 'Rủi ro lô lớn',
+    area_dimension_conflict: 'Mâu thuẫn DT/kích thước',
+    source_category_conflict: 'Sai loại hình nguồn',
+    multi_lot_listing: 'Tin nhiều lô',
+    guland_weak_signal: 'Guland signal yếu',
+    guland_user_facing_risk: 'Guland cần kiểm tra',
+    old_guland_post: 'Guland bài cũ',
+    extreme_guland_ppm2: 'Guland giá/m² bất thường',
+    suspicious_bait: 'Nghi mồi giá',
+    guland_cluster_flood: 'Cụm Guland trùng',
+    review_bad_valuation: 'Review định giá sai',
+    review_bad_extraction: 'Review bóc tách sai',
+    source_quality_recheck: 'Cần QC nguồn',
+    test_artifact: 'Tin test'
+  };
+  return labels[flag] || flag.replaceAll('_', ' ');
+}
+
+async function loadDataQualitySummary() {
+  const data = await fetchJSON('/admin/api/data-quality/summary');
+  dataQualitySummary = data || {};
+  renderDataQualitySummary(dataQualitySummary);
+}
+
+function renderDataQualitySummary(data = {}) {
+  const el = document.getElementById('qualityOverview');
+  if (!el) return;
+  const images = data.missing_images || {};
+  const apify = data.apify_pool || {};
+  const crawl = data.crawl_health || {};
+  const suppressed = data.suppressed_signals || {};
+  const sourceErrors = crawl.source_errors || [];
+  const lockBlockers = crawl.lock_blockers || [];
+  const tokens = apify.tokens || [];
+  const flags = suppressed.by_flag || [];
+  const sources = suppressed.by_source || [];
+  const missingRefs = Number(images.missing_image_refs || 0);
+  const missingListings = Number(images.listings_with_missing_images || 0);
+  const remaining = Number(apify.total_remaining || 0);
+  const quota = Number(apify.monthly_quota || 0);
+  const activeTokens = Number(apify.active_tokens || 0);
+  const suppressedTotal = Number(suppressed.total || 0);
+  const crawlProblemCount = sourceErrors.length + lockBlockers.length;
+  const kpis = [
+    {
+      cls: missingRefs ? 'warn' : 'ok',
+      label: 'Ảnh thiếu',
+      value: missingRefs.toLocaleString('vi-VN'),
+      note: `${missingListings.toLocaleString('vi-VN')} listing · ${Number(images.missing_pct || 0).toLocaleString('vi-VN')}% tổng ảnh`
+    },
+    {
+      cls: !activeTokens || remaining <= 100 ? 'warn' : 'ok',
+      label: 'Apify còn lại',
+      value: activeTokens ? remaining.toLocaleString('vi-VN') : 'Chưa có key',
+      note: activeTokens ? `${activeTokens} key bật · quota ${quota.toLocaleString('vi-VN')}/tháng` : 'Crawler sẽ cần APIFY_TOKEN env hoặc key pool'
+    },
+    {
+      cls: crawlProblemCount ? 'danger' : 'ok',
+      label: 'Nguồn crawl lỗi',
+      value: sourceErrors.length.toLocaleString('vi-VN'),
+      note: lockBlockers.length ? `${lockBlockers.length} lock đang chặn` : `Run gần nhất: ${shortDate(crawl.last_run?.started_at)}`
+    },
+    {
+      cls: suppressedTotal ? 'warn' : 'ok',
+      label: 'Signal bị suppress',
+      value: suppressedTotal.toLocaleString('vi-VN'),
+      note: sources.length ? sources.map(x => `${SOURCE_NAMES[x.source] || x.source}: ${Number(x.count || 0).toLocaleString('vi-VN')}`).join(' · ') : 'Không có signal bị chặn'
+    }
+  ];
+  const tokenList = tokens.length
+    ? tokens.map(t => {
+        const tQuota = Number(t.monthly_quota || 0);
+        const tUsed = Number(t.used_this_month || 0);
+        const tRemaining = Number(t.remaining || 0);
+        const pct = tQuota ? Math.min(100, Math.round((tUsed / tQuota) * 100)) : 0;
+        return `
+          <li>
+            <div>
+              <strong>${esc(t.label || 'Apify key')}</strong>
+              <span>${t.active ? 'Đang bật' : 'Đã tắt'} · ${esc(t.token_mask || '')}</span>
+              <div class="quality-token-bar"><i style="width:${pct}%"></i></div>
+            </div>
+            <b class="${tRemaining <= 100 ? 'warn' : ''}">${tRemaining.toLocaleString('vi-VN')}</b>
+            ${t.last_error ? `<em>${esc(t.last_error)}</em>` : ''}
+          </li>
+        `;
+      }).join('')
+    : `<li><div><strong>Chưa có Apify key trong pool</strong><span>Thêm key ở tab Facebook Crawl để theo dõi quota rõ hơn.</span></div></li>`;
+  const sourceList = sourceErrors.length
+    ? sourceErrors.map(x => `
+        <li>
+          <div>
+            <strong>${esc(SOURCE_NAMES[x.source] || x.source || 'unknown')}</strong>
+            <span>${esc(x.status || 'error')} · fetched=${Number(x.fetched || 0).toLocaleString('vi-VN')} · new=${Number(x.new || 0).toLocaleString('vi-VN')}</span>
+          </div>
+          ${x.error_msg ? `<em>${esc(x.error_msg)}</em>` : ''}
+        </li>
+      `).join('')
+    : `<li><div><strong>Không có lỗi nguồn gần đây</strong><span>Các run gần nhất không báo error hoặc fetched=0.</span></div></li>`;
+  const flagList = flags.length
+    ? flags.map(x => `
+        <li>
+          <div>
+            <strong>${esc(qualityFlagLabel(x.flag))}</strong>
+            <span>${esc(x.flag)}</span>
+          </div>
+          <b>${Number(x.count || 0).toLocaleString('vi-VN')}</b>
+        </li>
+      `).join('')
+    : `<li><div><strong>Không có quality flag đang chặn signal</strong><span>Signal model-cheap hiện không bị suppress bởi source quality.</span></div></li>`;
+
+  el.innerHTML = `
+    <div class="quality-kpi-grid">
+      ${kpis.map(item => `
+        <article class="quality-kpi-card ${item.cls}">
+          <small>${esc(item.label)}</small>
+          <strong>${esc(item.value)}</strong>
+          <span>${esc(item.note)}</span>
+        </article>
+      `).join('')}
+    </div>
+    <div class="quality-detail-grid">
+      <article class="surface quality-detail-card">
+        <h3>Apify quota</h3>
+        ${apify.error ? `<div class="quality-mini-alert danger">${esc(apify.error)}</div>` : ''}
+        <ul class="quality-list">${tokenList}</ul>
+      </article>
+      <article class="surface quality-detail-card">
+        <h3>Lỗi crawl theo nguồn</h3>
+        <ul class="quality-list">${sourceList}</ul>
+      </article>
+      <article class="surface quality-detail-card">
+        <h3>Quality flags suppress signal</h3>
+        ${suppressed.error ? `<div class="quality-mini-alert danger">${esc(suppressed.error)}</div>` : ''}
+        <ul class="quality-list">${flagList}</ul>
+      </article>
+    </div>
+  `;
 }
 
 function renderCrawlProfiles() {

@@ -13,6 +13,7 @@ import re
 import time
 import urllib.request
 import threading
+from collections import Counter
 from copy import deepcopy
 from functools import wraps
 from datetime import datetime, timedelta, timezone
@@ -43,6 +44,7 @@ from services.signal_quality import (
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
     actionable_signal_sql,
+    split_quality_flags,
 )
 
 # RBAC (4-tier auth)
@@ -259,7 +261,12 @@ def _facebook_profile_stats(profile_urls: list[str]) -> dict:
     return stats
 
 
-def _facebook_missing_image_summary(conn) -> dict:
+def _missing_image_summary(conn, source: str | None = None) -> dict:
+    where_sql = ""
+    params = []
+    if source:
+        where_sql = "WHERE l.source = ?"
+        params.append(source)
     row = conn.execute("""
         SELECT
             COUNT(*) AS total_image_refs,
@@ -270,8 +277,8 @@ def _facebook_missing_image_summary(conn) -> dict:
             COUNT(DISTINCT CASE WHEN li.local_path IS NOT NULL AND li.local_path != '' THEN li.listing_id END) AS listings_with_downloaded_images
         FROM listing_images li
         JOIN listings l ON l.id = li.listing_id
-        WHERE l.source = 'facebook'
-    """).fetchone()
+        {where_sql}
+    """.format(where_sql=where_sql), params).fetchone()
     total = int(row["total_image_refs"] or 0)
     missing = int(row["missing_image_refs"] or 0)
     return {
@@ -283,6 +290,10 @@ def _facebook_missing_image_summary(conn) -> dict:
         "listings_with_downloaded_images": int(row["listings_with_downloaded_images"] or 0),
         "missing_pct": round((missing / total) * 100, 1) if total else 0.0,
     }
+
+
+def _facebook_missing_image_summary(conn) -> dict:
+    return _missing_image_summary(conn, source="facebook")
 
 
 def _facebook_crawl_summary() -> dict:
@@ -667,6 +678,141 @@ def _apify_tokens_public() -> list[dict]:
     from crawler.apify_token_pool import list_tokens_public
 
     return list_tokens_public()
+
+
+def _int_metric(value) -> int:
+    try:
+        return max(0, int(value or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _apify_pool_summary(tokens: list[dict] | None = None) -> dict:
+    tokens = list(tokens if tokens is not None else _apify_tokens_public())
+    active_tokens = [t for t in tokens if t.get("active") is not False]
+    total_quota = sum(_int_metric(t.get("monthly_quota")) for t in active_tokens)
+    used_this_month = sum(_int_metric(t.get("used_this_month")) for t in active_tokens)
+    total_remaining = sum(_int_metric(t.get("remaining")) for t in active_tokens)
+    low_tokens = [
+        {
+            "id": t.get("id") or "",
+            "label": t.get("label") or "",
+            "remaining": _int_metric(t.get("remaining")),
+            "last_error": t.get("last_error") or "",
+        }
+        for t in active_tokens
+        if _int_metric(t.get("remaining")) <= 100 or t.get("last_error")
+    ]
+    return {
+        "tokens": tokens,
+        "total_tokens": len(tokens),
+        "active_tokens": len(active_tokens),
+        "monthly_quota": total_quota,
+        "used_this_month": used_this_month,
+        "total_remaining": total_remaining,
+        "usage_pct": round((used_this_month / total_quota) * 100, 1) if total_quota else 0.0,
+        "low_tokens": low_tokens,
+    }
+
+
+def _suppressed_signal_quality_summary(conn) -> dict:
+    listing_condition = actionable_listing_sql("l")
+    signal_condition = actionable_signal_sql("v")
+    rows = conn.execute(f"""
+        WITH {LATEST_VALUATION_CTE}
+        SELECT l.id, l.title, l.source, l.ward,
+               COALESCE(v.mos_pct,0) AS mos_pct,
+               COALESCE(v.signal_score,0) AS signal_score,
+               COALESCE(v.source_quality_recheck,0) AS source_quality_recheck,
+               COALESCE(v.source_quality_flags,'') AS source_quality_flags
+        FROM listings l
+        JOIN latest_valuation v ON v.listing_id = l.id
+        WHERE {listing_condition}
+          AND COALESCE(v.is_signal,0)=1
+          AND NOT ({signal_condition})
+        ORDER BY COALESCE(v.signal_score,0) DESC, COALESCE(v.mos_pct,0) DESC, l.id DESC
+        LIMIT 5000
+    """).fetchall()
+    by_flag: Counter[str] = Counter()
+    by_source: Counter[str] = Counter()
+    samples: list[dict] = []
+    for row in rows:
+        source = row["source"] or "unknown"
+        by_source[source] += 1
+        flags = split_quality_flags(row["source_quality_flags"])
+        if not flags and row["source_quality_recheck"]:
+            flags = {"source_quality_recheck"}
+        for flag in sorted(flags):
+            if flag == "low_segment_confidence":
+                continue
+            by_flag[flag] += 1
+        if len(samples) < 8:
+            samples.append({
+                "id": row["id"],
+                "title": row["title"] or "",
+                "source": source,
+                "ward": row["ward"] or "",
+                "mos_pct": row["mos_pct"] or 0,
+                "signal_score": row["signal_score"] or 0,
+                "source_quality_flags": row["source_quality_flags"] or "",
+            })
+    return {
+        "total": len(rows),
+        "by_flag": [{"flag": flag, "count": count} for flag, count in by_flag.most_common(12)],
+        "by_source": [{"source": source, "count": count} for source, count in by_source.most_common()],
+        "samples": samples,
+    }
+
+
+def _data_quality_summary() -> dict:
+    try:
+        apify_tokens = _apify_tokens_public()
+    except Exception as exc:
+        apify_tokens = []
+        apify_error = str(exc)[:180]
+    else:
+        apify_error = ""
+
+    missing_images = {
+        "total_image_refs": 0,
+        "missing_image_refs": 0,
+        "downloaded_image_refs": 0,
+        "listings_with_images": 0,
+        "listings_with_missing_images": 0,
+        "listings_with_downloaded_images": 0,
+        "missing_pct": 0.0,
+    }
+    suppressed = {"total": 0, "by_flag": [], "by_source": [], "samples": []}
+    try:
+        with get_conn() as conn:
+            missing_images = _missing_image_summary(conn)
+            suppressed = _suppressed_signal_quality_summary(conn)
+    except Exception as exc:
+        suppressed = {
+            "total": 0,
+            "by_flag": [],
+            "by_source": [],
+            "samples": [],
+            "error": str(exc)[:180],
+        }
+
+    ops = _crawl_ops_summary()
+    crawl_health = {
+        "schedule": ops.get("schedule") or {},
+        "last_run": ops.get("last_run"),
+        "last_24h": ops.get("last_24h") or {},
+        "source_errors": ops.get("source_errors") or [],
+        "lock_blockers": ops.get("lock_blockers") or [],
+    }
+    return {
+        "missing_images": missing_images,
+        "apify_pool": {
+            **_apify_pool_summary(apify_tokens),
+            "error": apify_error,
+        },
+        "crawl_health": crawl_health,
+        "suppressed_signals": suppressed,
+    }
 
 
 def _append_crawl_log(job: dict, message: str) -> None:
@@ -3174,6 +3320,11 @@ def admin_api_qc_signals():
             LIMIT 500
         """, params).fetchall()
     return jsonify({"items": [dict(r) for r in rows]})
+
+
+@require_admin_auth
+def admin_api_data_quality_summary():
+    return jsonify(_data_quality_summary())
 
 
 @require_admin_auth

@@ -432,6 +432,179 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".crawl-ops-panel", css)
         self.assertIn(".crawl-ops-alert", css)
 
+    def test_admin_data_quality_summary_includes_images_tokens_errors_and_suppressed_signals(self):
+        import app as app_module
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        token = uuid.uuid4().hex
+        area = f"ops-test-dq-{token[:8]}"
+        with get_conn() as conn:
+            raw = conn.execute(
+                """
+                INSERT INTO raw_listings (source, url, raw_json)
+                VALUES (?, ?, ?)
+                """,
+                ("facebook", f"https://example.test/raw-dq-{token}", "{}"),
+            )
+            suppressed = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, url, title, area, ward, property_type,
+                    price_ty, price_per_m2, area_m2, probably_sold,
+                    is_blacklisted, review_hidden, possibly_duplicate
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)
+                """,
+                (
+                    raw.lastrowid,
+                    "facebook",
+                    f"https://example.test/listing-dq-{token}",
+                    "Suppressed quality signal",
+                    "Ben Cat",
+                    "My Phuoc",
+                    "dat_nen",
+                    1.2,
+                    12.0,
+                    100.0,
+                ),
+            )
+            conn.execute(
+                """
+                INSERT INTO valuation_results (
+                    listing_id, fair_ppm2, actual_ppm2, mos_pct, is_signal,
+                    source_quality_recheck, source_quality_flags
+                ) VALUES (?, 18, 12, 33, 1, 1, ?)
+                """,
+                (suppressed.lastrowid, "parsed_discount_as_price,too_low_absolute_price"),
+            )
+            conn.execute(
+                """
+                INSERT INTO listing_images (listing_id, img_url, img_order, local_path)
+                VALUES (?, ?, 0, ?)
+                """,
+                (suppressed.lastrowid, "https://facebook.example/dq-ok.jpg", "dq-ok.jpg"),
+            )
+            conn.execute(
+                """
+                INSERT INTO listing_images (listing_id, img_url, img_order, local_path)
+                VALUES (?, ?, 1, NULL)
+                """,
+                (suppressed.lastrowid, "https://facebook.example/dq-missing.jpg"),
+            )
+
+            raw_low_conf = conn.execute(
+                """
+                INSERT INTO raw_listings (source, url, raw_json)
+                VALUES (?, ?, ?)
+                """,
+                ("facebook", f"https://example.test/raw-dq-low-conf-{token}", "{}"),
+            )
+            low_conf = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, url, title, area, ward, property_type,
+                    price_ty, price_per_m2, area_m2, probably_sold,
+                    is_blacklisted, review_hidden, possibly_duplicate
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)
+                """,
+                (
+                    raw_low_conf.lastrowid,
+                    "facebook",
+                    f"https://example.test/listing-dq-low-conf-{token}",
+                    "Low confidence but visible signal",
+                    "Ben Cat",
+                    "My Phuoc",
+                    "dat_nen",
+                    1.3,
+                    13.0,
+                    100.0,
+                ),
+            )
+            conn.execute(
+                """
+                INSERT INTO valuation_results (
+                    listing_id, fair_ppm2, actual_ppm2, mos_pct, is_signal,
+                    source_quality_recheck, source_quality_flags
+                ) VALUES (?, 18, 13, 27, 1, 1, ?)
+                """,
+                (low_conf.lastrowid, "low_segment_confidence"),
+            )
+            conn.execute(
+                """
+                INSERT INTO crawl_runs (
+                    source, area, n_fetched, n_new, n_updated, n_skipped,
+                    status, error_msg, started_at, finished_at
+                ) VALUES (?, ?, 0, 0, 0, 0, 'error', ?, ?, ?)
+                """,
+                (
+                    "guland",
+                    area,
+                    "Cloudflare 403",
+                    "2099-02-01T21:00:00",
+                    "2099-02-01T21:00:20",
+                ),
+            )
+
+        with mock.patch.object(app_module, "_apify_tokens_public", return_value=[
+            {
+                "id": "tok-a",
+                "label": "Key A",
+                "token_mask": "apify_***1234",
+                "active": True,
+                "monthly_quota": 100,
+                "used_this_month": 88,
+                "remaining": 12,
+                "month": "2026-06",
+                "last_error": "",
+            }
+        ]), mock.patch.object(app_module, "_daily_crawl_schedule_status", return_value={
+            "task_name": "RadarBDS_DailyCrawl",
+            "installed": True,
+            "state": "Ready",
+            "next_run_time": "2099-02-02 21:00:00",
+            "last_run_time": "2099-02-01 21:00:00",
+            "last_result": "1",
+            "run_time": "21:00",
+            "task_to_run": "radar.py crawl-daily",
+            "error": "",
+        }), mock.patch.object(app_module, "_active_radar_lock_blockers", return_value=[]):
+            response = self.client.get("/admin/api/data-quality/summary")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertGreaterEqual(data["missing_images"]["missing_image_refs"], 1)
+        self.assertGreaterEqual(data["missing_images"]["listings_with_missing_images"], 1)
+        self.assertEqual(data["apify_pool"]["active_tokens"], 1)
+        self.assertEqual(data["apify_pool"]["total_remaining"], 12)
+        self.assertEqual(data["crawl_health"]["source_errors"][0]["source"], "guland")
+        self.assertIn("Cloudflare 403", data["crawl_health"]["source_errors"][0]["error_msg"])
+        self.assertGreaterEqual(data["suppressed_signals"]["total"], 1)
+        flags = {item["flag"]: item["count"] for item in data["suppressed_signals"]["by_flag"]}
+        self.assertGreaterEqual(flags["parsed_discount_as_price"], 1)
+        self.assertNotIn("low_segment_confidence", flags)
+
+    def test_admin_quality_panel_renders_data_quality_dashboard_shell(self):
+        self._login_as_admin()
+
+        response = self.client.get("/admin/data-quality")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('id="qualityOverview"', html)
+        self.assertIn("data-quality-overview", html)
+
+    def test_admin_js_loads_data_quality_summary_for_quality_panel(self):
+        root = Path(__file__).resolve().parent.parent
+        js = (root / "static/js/admin.js").read_text(encoding="utf-8")
+        css = (root / "static/css/admin.css").read_text(encoding="utf-8")
+
+        self.assertIn("/admin/api/data-quality/summary", js)
+        self.assertIn("function renderDataQualitySummary", js)
+        self.assertIn("loadDataQualitySummary", js)
+        self.assertIn("qualityOverview", js)
+        self.assertIn(".quality-kpi-grid", css)
+        self.assertIn(".quality-detail-grid", css)
+
     def test_daily_crawl_schedule_status_reads_linux_systemd_timer(self):
         import app as app_module
 
