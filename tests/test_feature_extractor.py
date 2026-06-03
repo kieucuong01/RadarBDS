@@ -57,6 +57,11 @@ def test_extract_area():
     assert extract_area("Đất P hiệp an\n1/ Nguyễn chí Thanh\n4 dài 28 tc 60") == 112.0
     assert extract_area("ngang 7m x dai 21m. Tho cu 60mv.") == 147.0
     assert extract_area("Di\u1ec7n t\u00edch 15x71m. T\u1ed5ng 1028m2 ch\u01b0a th\u1ed5 c\u01b0.") == 1028.0
+    assert extract_area("DT 9.5m x 29m") == 275.5
+    assert extract_area("7,5m x 29") == 217.5
+    assert extract_area("5,5*27,5") == 151.2
+    assert extract_area("6 * 12.4") == 74.4
+    assert extract_area("Ch\u1ec9 ghi ngang 9m") is None
 
 
 def test_detect_multi_lot_listing():
@@ -90,6 +95,22 @@ def test_extract_dimensions():
     assert d["frontage_m"] == 7.0
     assert d["depth_m"] == 21.0
 
+    d = extract_dimensions("DT 9.5m x 29m")
+    assert d["frontage_m"] == 9.5
+    assert d["depth_m"] == 29.0
+    d = extract_dimensions("7,5m x 29")
+    assert d["frontage_m"] == 7.5
+    assert d["depth_m"] == 29.0
+    d = extract_dimensions("5,5*27,5")
+    assert d["frontage_m"] == 5.5
+    assert d["depth_m"] == 27.5
+    d = extract_dimensions("6 * 12.4")
+    assert d["frontage_m"] == 6.0
+    assert d["depth_m"] == 12.4
+    d = extract_dimensions("Ch\u1ec9 hi\u1ec3n th\u1ecb ngang 9m")
+    assert d["frontage_m"] == 9.0
+    assert d["depth_m"] is None
+
 
 def test_extract_tho_cu():
     r = extract_tho_cu("300m² thổ cư", 500)
@@ -118,6 +139,25 @@ def test_normalizer_parses_bare_width_dai_depth_and_tho_cu():
     assert rec["tho_cu_m2"] == 60.0
     assert rec["price_ty"] == 1.38
     assert round(rec["price_per_m2"], 2) == 12.32
+
+
+def test_normalizer_parses_dimensions_even_when_area_is_structured():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "structured-area-with-frontage-only",
+        "url": "https://www.facebook.com/example/posts/structured-area-with-frontage-only",
+        "default_area": "Th\u1ee7 D\u1ea7u M\u1ed9t",
+        "title": "\u0110\u1ea5t Hi\u1ec7p An ngang 9m",
+        "description": "Di\u1ec7n t\u00edch 215m2, gi\u00e1 4t390tr, \u0111\u01b0\u1eddng nh\u1ef1a.",
+        "area_m2": 215.0,
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 215.0
+    assert rec["frontage_m"] == 9.0
+    assert rec["depth_m"] == 23.9
+    assert rec["price_ty"] == 4.39
+    assert round(rec["price_per_m2"], 2) == 20.42
 
 
 def test_normalizer_parses_user_reported_facebook_edge_cases():

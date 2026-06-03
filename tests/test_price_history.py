@@ -211,6 +211,78 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual(row["frontage_m"], 4.0)
         self.assertEqual(row["depth_m"], 28.0)
 
+    def test_upsert_listing_derives_area_and_ppm2_from_dimensions(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, is_new = upsert_listing(
+            self._rec(area_m2=None, price_per_m2=None, frontage_m=7.5, depth_m=29.0),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+
+        self.assertTrue(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT area_m2, price_per_m2, frontage_m, depth_m FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(row["area_m2"], 217.5)
+        self.assertAlmostEqual(row["price_per_m2"], 8.0, places=3)
+        self.assertEqual(row["frontage_m"], 7.5)
+        self.assertEqual(row["depth_m"], 29.0)
+
+    def test_upsert_listing_derives_depth_from_area_and_frontage(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, is_new = upsert_listing(
+            self._rec(area_m2=215.0, price_per_m2=None, frontage_m=9.0, depth_m=None),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+
+        self.assertTrue(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT area_m2, price_per_m2, frontage_m, depth_m FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(row["area_m2"], 215.0)
+        self.assertAlmostEqual(row["price_per_m2"], 8.093, places=3)
+        self.assertEqual(row["frontage_m"], 9.0)
+        self.assertEqual(row["depth_m"], 23.9)
+
+    def test_upsert_listing_recalculates_ppm2_when_dimensions_correct_area(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(price_ty=1.8, area_m2=90.0, price_per_m2=20.0),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+
+        same_listing_id, is_new = upsert_listing(
+            self._rec(price_ty=1.8, area_m2=None, price_per_m2=None, frontage_m=9.5, depth_m=29.0),
+            crawl_run_id=2,
+        )
+
+        self.assertEqual(same_listing_id, listing_id)
+        self.assertFalse(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT area_m2, price_per_m2, frontage_m, depth_m FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(row["area_m2"], 275.5)
+        self.assertAlmostEqual(row["price_per_m2"], 6.534, places=3)
+        self.assertEqual(row["frontage_m"], 9.5)
+        self.assertEqual(row["depth_m"], 29.0)
+
     def test_upsert_listing_over_40pct_drop_marks_suspicious_bait(self):
         from db.connection import get_conn
         from db.listings import upsert_listing

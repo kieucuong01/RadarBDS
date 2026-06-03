@@ -81,6 +81,26 @@ def _norm_tx_type(v) -> str:
     return "ban"
 
 
+def _float_or_none(value) -> Optional[float]:
+    if value in (None, ""):
+        return None
+    try:
+        return float(str(value).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+
+
+def _infer_depth_from_area_frontage(area_m2, frontage_m) -> Optional[float]:
+    area = _float_or_none(area_m2)
+    frontage = _float_or_none(frontage_m)
+    if area is None or frontage is None or frontage <= 0:
+        return None
+    depth = area / frontage
+    if 2 <= frontage <= 50 and 5 <= depth <= 500:
+        return round(depth, 1)
+    return None
+
+
 def match_area(raw_text: str) -> Optional[str]:
     if not raw_text:
         return None
@@ -435,9 +455,17 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                 area_m2 = title_area_m2
                 price_per_m2 = None
 
-        # Fallback: trích xuất từ text khi nguồn không có structured fields (Facebook posts)
+        # Fallback: trích xuất từ text khi nguồn không có structured fields (Facebook posts).
+        # Vẫn parse khi thiếu dimensions, kể cả area structured đã có sẵn.
         _fb_parsed: dict = {}
-        if price_ty is None or area_m2 is None:
+        if (
+            price_ty is None
+            or area_m2 is None
+            or price_per_m2 is None
+            or raw.get("frontage_m") is None
+            or raw.get("depth_m") is None
+            or raw.get("road_width_m") is None
+        ):
             _parse_text = "\n".join(part for part in [title, description] if part)
             _fb_parsed = parse_facebook_post(_parse_text) or {}
             if price_ty is None:
@@ -445,7 +473,10 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             if area_m2 is None:
                 area_m2 = _fb_parsed.get("area_m2") or None
             if price_per_m2 is None:
-                price_per_m2 = _fb_parsed.get("price_per_m2")
+                if price_ty and area_m2:
+                    price_per_m2 = None  # tính lại từ area cuối cùng ở block dưới
+                else:
+                    price_per_m2 = _fb_parsed.get("price_per_m2")
 
         if price_ty and area_m2 and area_m2 > 0 and not price_per_m2:
             price_per_m2 = round((price_ty * 1_000) / area_m2, 3)
@@ -511,6 +542,8 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         # Lot inference cho khu vực quy hoạch bàn cờ (Mỹ Phước)
         _raw_front = raw.get("frontage_m") or _fb_parsed.get("frontage_m")
         _raw_depth = raw.get("depth_m") or _fb_parsed.get("depth_m")
+        if _raw_front and not _raw_depth:
+            _raw_depth = _infer_depth_from_area_frontage(area_m2, _raw_front)
         _inf_front, _inf_depth = (None, None)
         if not _raw_front and not _raw_depth:
             _inf_front, _inf_depth = infer_standard_lot(area_m2, ward_final)
@@ -529,10 +562,8 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             "area_m2":       area_m2,
             "property_type": prop_type,
             "tx_type":       _norm_tx_type(raw.get("tx_type") or raw.get("transaction_type")),
-            "frontage_m":    raw.get("frontage_m") or _fb_parsed.get("frontage_m")
-                             or _inf_front,
-            "depth_m":       raw.get("depth_m") or _fb_parsed.get("depth_m")
-                             or _inf_depth,
+            "frontage_m":    _raw_front or _inf_front,
+            "depth_m":       _raw_depth or _inf_depth,
             "road_width_m":  raw.get("road_width_m") or _fb_parsed.get("road_width_m")
                              or _st_width,
             "road_type":     _norm_road_type(raw.get("road_type") or

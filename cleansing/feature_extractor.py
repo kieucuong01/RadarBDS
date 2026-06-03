@@ -151,6 +151,29 @@ def extract_price(text: str) -> Optional[float]:
     return None
 
 
+_DIM_NUM_RE = r'[\d]+[,.]?[\d]*'
+_DIM_PAIR_RE = re.compile(
+    rf'(?<![/\d])({_DIM_NUM_RE})\s*m?\s*[x×\*]\s*({_DIM_NUM_RE})\s*m?\b(?!\d)',
+    re.IGNORECASE,
+)
+
+
+def _parse_dim_value(raw: str) -> float:
+    return float(str(raw).replace(',', '.'))
+
+
+def _valid_lot_dimensions(frontage_m: float, depth_m: float) -> bool:
+    return 2 <= frontage_m <= 50 and 5 <= depth_m <= 500
+
+
+def _area_from_dimension_pair(match: re.Match) -> Optional[float]:
+    frontage_m = _parse_dim_value(match.group(1))
+    depth_m = _parse_dim_value(match.group(2))
+    if _valid_lot_dimensions(frontage_m, depth_m):
+        return round(frontage_m * depth_m, 1)
+    return None
+
+
 # ═══════════════════════════════════════════════════════════════════
 # 2. DIỆN TÍCH TỔNG
 # ═══════════════════════════════════════════════════════════════════
@@ -297,6 +320,14 @@ def extract_area(text: str) -> Optional[float]:
         if 2 <= w <= 50 and 5 <= d <= 500:
             return round(w * d, 1)
 
+    # Bare "Wm x Dm", "W x D", or "W*D" variants.
+    # Keep this before the free Xm2 fallback so "9.5m x 29m" is not read as 9.5m2.
+    m = _DIM_PAIR_RE.search(t_clean)
+    if m:
+        area = _area_from_dimension_pair(m)
+        if area is not None:
+            return area
+
     # Pattern thông thường "Xm²" — dùng t_clean để loại thổ cư
     m = re.search(r'([\d]+[,.]?[\d]*)\s*m[²2]', t_clean, re.IGNORECASE)
     if m:
@@ -305,12 +336,9 @@ def extract_area(text: str) -> Optional[float]:
             return val
 
     # Fallback: tính từ kích thước tự do "4x20", "5 x 18"
-    m = re.search(r'(?<![/\d])([\d]+[,.]?[\d]*)\s*[x×]\s*([\d]+[,.]?[\d]*)\s*m?(?!\d)', t_clean, re.IGNORECASE)
+    m = _DIM_PAIR_RE.search(t_clean)
     if m:
-        w = float(m.group(1).replace(',', '.'))
-        d = float(m.group(2).replace(',', '.'))
-        if 2 <= w <= 50 and 5 <= d <= 500:
-            return round(w * d, 1)
+        return _area_from_dimension_pair(m)
 
     return None
 
@@ -420,12 +448,12 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
             result['depth_m'] = d
             return result
 
-    # "XxY" hoặc "X x Y" hoặc "X x Ym" — phổ biến nhất
-    m = re.search(r'(?<![/\d])([\d]+[,.]?[\d]*)\s*[x×]\s*([\d]+[,.]?[\d]*)\s*m?(?!\d)', t)
+    # "XxY", "Xm x Ym", or "X*Y" variants.
+    m = _DIM_PAIR_RE.search(t)
     if m:
-        w = float(m.group(1).replace(',', '.'))
-        d = float(m.group(2).replace(',', '.'))
-        if 2 <= w <= 50 and 5 <= d <= 500:
+        w = _parse_dim_value(m.group(1))
+        d = _parse_dim_value(m.group(2))
+        if _valid_lot_dimensions(w, d):
             result['frontage_m'] = w
             result['depth_m'] = d
             return result

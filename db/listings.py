@@ -16,6 +16,56 @@ def _prefer_new_value(new_value, old_value):
     return new_value if _present(new_value) else old_value
 
 
+def _float_or_none(value):
+    if value in (None, ""):
+        return None
+    try:
+        return float(str(value).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+
+
+def _derive_area_from_dimensions(frontage_m, depth_m):
+    frontage = _float_or_none(frontage_m)
+    depth = _float_or_none(depth_m)
+    if frontage is None or depth is None:
+        return None
+    if 2 <= frontage <= 50 and 5 <= depth <= 500:
+        return round(frontage * depth, 1)
+    return None
+
+
+def _derive_depth_from_area_frontage(area_m2, frontage_m):
+    area = _float_or_none(area_m2)
+    frontage = _float_or_none(frontage_m)
+    if area is None or frontage is None or frontage <= 0:
+        return None
+    depth = area / frontage
+    if 2 <= frontage <= 50 and 5 <= depth <= 500:
+        return round(depth, 1)
+    return None
+
+
+def _coerce_listing_measurements(rec: dict) -> dict:
+    out = dict(rec)
+
+    if not _present(out.get("depth_m")):
+        derived_depth = _derive_depth_from_area_frontage(out.get("area_m2"), out.get("frontage_m"))
+        if derived_depth is not None:
+            out["depth_m"] = derived_depth
+
+    derived_area = _derive_area_from_dimensions(out.get("frontage_m"), out.get("depth_m"))
+    if not _present(out.get("area_m2")) and derived_area is not None:
+        out["area_m2"] = derived_area
+
+    price_ty = _float_or_none(out.get("price_ty"))
+    area_m2 = _float_or_none(out.get("area_m2"))
+    if price_ty is not None and area_m2 and not _present(out.get("price_per_m2")):
+        out["price_per_m2"] = round(price_ty * 1000 / area_m2, 3)
+
+    return out
+
+
 def _same_price_snapshot(a: Optional[float], b: Optional[float]) -> bool:
     if a is None and b is None:
         return True
@@ -51,6 +101,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
     Insert or update listing từ normalized record.
     Returns (listing_id, is_new).
     """
+    rec = _coerce_listing_measurements(rec)
     with get_conn() as conn:
         existing = conn.execute(
             """
@@ -129,6 +180,10 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             new_ppm2 = _prefer_new_value(rec.get("price_per_m2"), existing["price_per_m2"])
             new_frontage = _prefer_new_value(rec.get("frontage_m"), existing["frontage_m"])
             new_depth = _prefer_new_value(rec.get("depth_m"), existing["depth_m"])
+            if not _present(new_depth):
+                derived_depth = _derive_depth_from_area_frontage(new_area, new_frontage)
+                if derived_depth is not None:
+                    new_depth = derived_depth
             if not _present(new_ppm2) and _present(new_price) and _present(new_area):
                 new_ppm2 = round(float(new_price) * 1000 / float(new_area), 3)
             price_dropped  = existing["price_dropped"]
