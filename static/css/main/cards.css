@@ -335,7 +335,7 @@
 .scard {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -737,7 +737,7 @@
   }
 
   .scard {
-    border-radius: 16px;
+    border-radius: 10px;
     box-shadow: 0 6px 18px rgba(15, 23, 42, 0.11);
     contain-intrinsic-size: 320px;
   }

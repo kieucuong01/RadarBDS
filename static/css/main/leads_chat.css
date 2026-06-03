@@ -169,6 +169,10 @@
     display: none;
   }
 
+  .user-menu-trigger .user-menu-chevron {
+    display: none;
+  }
+
   .header .btn-auth-cta {
     min-height: 44px;
     max-width: 82px;
@@ -176,6 +180,10 @@
     border-radius: 14px;
     font-size: 0.76rem;
     white-space: nowrap;
+  }
+
+  .header .btn-auth-cta .auth-cta-icon {
+    display: none;
   }
 
   .header .header-icon-btn {

@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const TIER_LABEL = { guest: 'Khách', free: 'Free', vip: 'VIP', admin: 'Admin' };
+  const TIER_LABEL = { guest: 'Khách', free: 'Gói Free', vip: 'VIP', admin: 'Admin' };
   let authMode = null; // 'login' | 'register' | null (= identifier step)
   let authIdentType = null; // 'phone' | 'email'
   let watchlists = [];
