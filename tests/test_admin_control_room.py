@@ -427,7 +427,10 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("source_errors", js)
         self.assertIn("lock_blockers", js)
         self.assertIn("schedule.task_name", js)
+        self.assertIn("serviceFailed", js)
+        self.assertIn("crawl-ops-alert", js)
         self.assertIn(".crawl-ops-panel", css)
+        self.assertIn(".crawl-ops-alert", css)
 
     def test_daily_crawl_schedule_status_reads_linux_systemd_timer(self):
         import app as app_module
@@ -443,6 +446,19 @@ class AdminControlRoomGateTest(unittest.TestCase):
                         "Unit=radar-bds-crawl.service\n"
                         "NextElapseUSecRealtime=Tue 2026-06-02 21:00:00 +07\n"
                         "LastTriggerUSec=Mon 2026-06-01 21:00:04 +07\n"
+                    ),
+                    stderr="",
+                )
+            if cmd[:3] == ["systemctl", "show", "radar-bds-crawl.service"]:
+                return mock.Mock(
+                    returncode=0,
+                    stdout=(
+                        "LoadState=loaded\n"
+                        "ActiveState=inactive\n"
+                        "SubState=dead\n"
+                        "Result=success\n"
+                        "ExecMainStatus=0\n"
+                        "InactiveExitTimestamp=Mon 2026-06-01 21:14:04 +07\n"
                     ),
                     stderr="",
                 )
@@ -465,6 +481,56 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertEqual(status["next_run_time"], "Tue 2026-06-02 21:00:00 +07")
         self.assertEqual(status["last_run_time"], "Mon 2026-06-01 21:00:04 +07")
         self.assertEqual(status["task_to_run"], "radar-bds-crawl.service")
+        self.assertFalse(status["service_failed"])
+
+    def test_daily_crawl_schedule_status_exposes_linux_service_failure(self):
+        import app as app_module
+
+        def fake_run(cmd, **_kwargs):
+            if cmd[:3] == ["systemctl", "show", "radar-bds-crawl.timer"]:
+                return mock.Mock(
+                    returncode=0,
+                    stdout=(
+                        "LoadState=loaded\n"
+                        "ActiveState=active\n"
+                        "SubState=waiting\n"
+                        "Unit=radar-bds-crawl.service\n"
+                        "NextElapseUSecRealtime=Wed 2026-06-03 21:00:00 +07\n"
+                        "LastTriggerUSec=Tue 2026-06-02 21:03:25 +07\n"
+                    ),
+                    stderr="",
+                )
+            if cmd[:3] == ["systemctl", "show", "radar-bds-crawl.service"]:
+                return mock.Mock(
+                    returncode=0,
+                    stdout=(
+                        "LoadState=loaded\n"
+                        "ActiveState=failed\n"
+                        "SubState=failed\n"
+                        "Result=exit-code\n"
+                        "ExecMainStatus=1\n"
+                        "InactiveExitTimestamp=Tue 2026-06-02 21:03:25 +07\n"
+                    ),
+                    stderr="",
+                )
+            if cmd[:3] == ["systemctl", "cat", "radar-bds-crawl.timer"]:
+                return mock.Mock(
+                    returncode=0,
+                    stdout="[Timer]\nOnCalendar=*-*-* 21:00:00\n",
+                    stderr="",
+                )
+            raise AssertionError(cmd)
+
+        with mock.patch.object(app_module.platform, "system", return_value="Linux"), \
+             mock.patch.object(app_module.subprocess, "run", side_effect=fake_run):
+            status = app_module._daily_crawl_schedule_status()
+
+        self.assertTrue(status["installed"])
+        self.assertTrue(status["service_failed"])
+        self.assertEqual(status["service_state"], "failed/failed")
+        self.assertEqual(status["service_result"], "exit-code")
+        self.assertEqual(status["service_exit_code"], "1")
+        self.assertIn("logs/crawl-daily.log", status["service_log_hint"])
 
     def test_admin_crawl_reprocesses_only_refreshed_raw_ids(self):
         import app as app_module

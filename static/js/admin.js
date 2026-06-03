@@ -420,8 +420,20 @@ function renderCrawlOps(ops = {}) {
   const missingImageRefs = Number(missingImages.missing_image_refs || crawlSummary.pending_images || 0);
   const missingPct = Number(missingImages.missing_pct || 0);
   const scheduleName = schedule.task_name || 'RadarBDS_DailyCrawl';
-  const scheduleOk = schedule.installed && (schedule.run_time === '21:00' || String(schedule.next_run_time || '').includes('9:00'));
-  const healthClass = lock_blockers.length ? 'danger' : source_errors.length ? 'warn' : 'ok';
+  const serviceFailed = Boolean(schedule.service_failed);
+  const serviceExit = schedule.service_exit_code ? `exit=${schedule.service_exit_code}` : '';
+  const serviceResult = schedule.service_result || '';
+  const serviceState = schedule.service_state || '';
+  const serviceLogHint = schedule.service_log_hint || 'logs/crawl-daily.log';
+  const serviceFailureText = [serviceState, serviceResult, serviceExit].filter(Boolean).join(' · ');
+  const scheduleOk = schedule.installed && !serviceFailed && (schedule.run_time === '21:00' || String(schedule.next_run_time || '').includes('9:00'));
+  const healthClass = serviceFailed || lock_blockers.length ? 'danger' : source_errors.length ? 'warn' : 'ok';
+  const serviceAlert = serviceFailed ? `
+    <div class="crawl-ops-alert danger">
+      <strong>Daily crawl lần gần nhất bị lỗi</strong>
+      <span>${esc(serviceFailureText || 'radar-bds-crawl.service failed')} · xem log: <code>${esc(serviceLogHint)}</code></span>
+    </div>
+  ` : '';
   const sourceList = source_errors.length
     ? source_errors.map(x => `
         <li>
@@ -483,6 +495,21 @@ function renderCrawlOps(ops = {}) {
       </div>
     </div>
   `;
+  if (serviceFailed) {
+    const pill = el.querySelector('.ops-pill');
+    if (pill) pill.textContent = 'Daily crawl lỗi';
+    const head = el.querySelector('.crawl-ops-head');
+    if (head) head.insertAdjacentHTML('afterend', serviceAlert);
+    const scheduleCard = el.querySelector('.crawl-ops-card');
+    if (scheduleCard) {
+      scheduleCard.classList.remove('ok', 'warn');
+      scheduleCard.classList.add('danger');
+      const strong = scheduleCard.querySelector('strong');
+      const span = scheduleCard.querySelector('span');
+      if (strong) strong.textContent = 'Lần chạy gần nhất lỗi';
+      if (span) span.textContent = `${serviceFailureText || 'service failed'} · log: ${serviceLogHint}`;
+    }
+  }
 }
 
 function renderCrawlProfiles() {

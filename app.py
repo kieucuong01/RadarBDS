@@ -376,6 +376,12 @@ def _systemd_crawl_timer_status() -> dict:
         "run_time": "",
         "task_to_run": "radar-bds-crawl.service",
         "error": "",
+        "service_state": "",
+        "service_result": "",
+        "service_exit_code": "",
+        "service_failed": False,
+        "service_last_finished_at": "",
+        "service_log_hint": "logs/crawl-daily.log",
     }
     try:
         result = subprocess.run(
@@ -414,6 +420,7 @@ def _systemd_crawl_timer_status() -> dict:
         "run_time": _extract_task_run_time(fields.get("NextElapseUSecRealtime", "")),
         "error": "",
     })
+    status.update(_systemd_crawl_service_status(status["task_to_run"]))
 
     try:
         cat = subprocess.run(
@@ -429,6 +436,60 @@ def _systemd_crawl_timer_status() -> dict:
     except Exception:
         pass
     return status
+
+
+def _systemd_crawl_service_status(service_name: str) -> dict:
+    base = {
+        "service_state": "",
+        "service_result": "",
+        "service_exit_code": "",
+        "service_failed": False,
+        "service_last_finished_at": "",
+        "service_log_hint": "logs/crawl-daily.log",
+    }
+    service = (service_name or "radar-bds-crawl.service").strip() or "radar-bds-crawl.service"
+    try:
+        result = subprocess.run(
+            [
+                "systemctl",
+                "show",
+                service,
+                "--no-page",
+                "--property=LoadState,ActiveState,SubState,Result,ExecMainStatus,InactiveExitTimestamp",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
+    except Exception as exc:
+        base["service_result"] = f"status_error:{str(exc)[:120]}"
+        return base
+
+    if result.returncode != 0:
+        err = (result.stderr or result.stdout or "").strip()[:160]
+        base["service_result"] = f"status_error:{err}" if err else "status_error"
+        return base
+
+    fields = _parse_key_value_lines(result.stdout)
+    active = fields.get("ActiveState") or ""
+    sub = fields.get("SubState") or ""
+    service_state = f"{active}/{sub}" if active and sub else active or sub
+    service_result = fields.get("Result") or ""
+    exit_code = fields.get("ExecMainStatus") or ""
+    failed = (
+        active == "failed"
+        or sub == "failed"
+        or service_result not in ("", "success")
+        or exit_code not in ("", "0")
+    )
+    base.update({
+        "service_state": service_state,
+        "service_result": service_result,
+        "service_exit_code": exit_code,
+        "service_failed": failed,
+        "service_last_finished_at": fields.get("InactiveExitTimestamp", ""),
+    })
+    return base
 
 
 def _parse_schtasks_list(output: str) -> dict:

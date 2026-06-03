@@ -193,6 +193,18 @@ python radar.py schedule-setup --remove       # gỡ task
 
 Task tên `RadarBDS_DailyCrawl`. Chạy `cmd /c "cd /d <repo> && python -X utf8 radar.py crawl-daily"`. Verify: `schtasks /query /tn RadarBDS_DailyCrawl`.
 
+## 3c. Production systemd observability
+
+On Ubuntu production, `radar.py crawl-daily` tees stdout/stderr to
+`logs/crawl-daily.log` from repo root. This file is the first place to inspect
+when `radar-bds-crawl.service` shows `failed`, especially if the deploy user
+cannot read `journalctl`.
+
+The Admin Control Room -> Facebook Crawl ops panel reads both
+`radar-bds-crawl.timer` and `radar-bds-crawl.service`. If the last systemd run
+failed, it shows a red daily-crawl alert with the service result, exit code,
+and the `logs/crawl-daily.log` hint.
+
 ---
 
 ## 4. Crawl targets — JSON config

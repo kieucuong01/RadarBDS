@@ -4,6 +4,7 @@ Radar BDS — CLI tiện dụng
 import argparse
 import sys
 from pathlib import Path
+from datetime import datetime, timezone
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -20,6 +21,63 @@ if sys.stdout.encoding.lower() != 'utf-8':
         sys.stdout = codecs.getwriter('utf-8')(sys.stdout.detach())
     except Exception:
         pass
+
+
+_COMMAND_LOG_FILE = None
+
+
+class _TeeTextIO:
+    def __init__(self, *streams):
+        self.streams = [s for s in streams if s is not None]
+        self.encoding = getattr(self.streams[0], "encoding", "utf-8") if self.streams else "utf-8"
+
+    def write(self, text):
+        for stream in self.streams:
+            try:
+                stream.write(text)
+            except Exception:
+                pass
+        return len(text)
+
+    def flush(self):
+        for stream in self.streams:
+            try:
+                stream.flush()
+            except Exception:
+                pass
+
+    def isatty(self):
+        return any(getattr(stream, "isatty", lambda: False)() for stream in self.streams)
+
+
+def _command_log_name(argv=None):
+    argv = argv if argv is not None else sys.argv
+    if len(argv) > 1 and argv[1] == "crawl-daily":
+        return "crawl-daily.log"
+    return ""
+
+
+def _install_command_log_tee(argv=None):
+    global _COMMAND_LOG_FILE
+    log_name = _command_log_name(argv)
+    if not log_name or _COMMAND_LOG_FILE is not None:
+        return ""
+    try:
+        log_dir = Path(__file__).resolve().parent / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_path = log_dir / log_name
+        _COMMAND_LOG_FILE = log_path.open("a", encoding="utf-8", buffering=1)
+        stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        _COMMAND_LOG_FILE.write(f"\n--- {stamp} {' '.join(argv or sys.argv)} ---\n")
+        sys.stdout = _TeeTextIO(sys.stdout, _COMMAND_LOG_FILE)
+        sys.stderr = _TeeTextIO(sys.stderr, _COMMAND_LOG_FILE)
+        return str(log_path)
+    except Exception as exc:
+        logging.getLogger(__name__).warning("Command log tee disabled: %s", exc)
+        return ""
+
+
+_install_command_log_tee()
 
 import config.settings as _settings
 

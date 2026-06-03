@@ -83,6 +83,7 @@ echo $env:DATABASE_URL
 - `config/database_sqlite.py`: compatibility facade; new code should prefer `db.*`.
 - `cli/review.py`: `review-queue` (JSON memo, chưa review) / `review-save` (ghi `ai_deal_review`).
 - `services/investment_memo.py`: `load_investment_memo()` — memo nguồn cho pre-review.
+- Production `radar.py crawl-daily` tees stdout/stderr to `logs/crawl-daily.log`. Admin Facebook Crawl ops reads `radar-bds-crawl.timer` plus `radar-bds-crawl.service`; if the latest systemd run failed, inspect `logs/crawl-daily.log` before changing crawler code.
 
 ## Admin AI Training Panel
 
