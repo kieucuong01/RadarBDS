@@ -99,6 +99,7 @@ CREATE INDEX IF NOT EXISTS idx_listings_is_outlier    ON listings(is_outlier);
 CREATE INDEX IF NOT EXISTS idx_listings_crawled_at    ON listings(crawled_at DESC);
 CREATE INDEX IF NOT EXISTS idx_listings_probably_sold ON listings(probably_sold);
 CREATE INDEX IF NOT EXISTS idx_listings_raw_id        ON listings(raw_id);
+CREATE INDEX IF NOT EXISTS idx_listings_duplicate_of_id ON listings(duplicate_of_id);
 
 
 -- ================================================================

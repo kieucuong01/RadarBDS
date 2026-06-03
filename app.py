@@ -3892,6 +3892,10 @@ def ensure_perf_indexes():
             ON listings(is_blacklisted, blacklist_phone_norm, probably_sold)
         """)
         conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_listings_duplicate_of_id
+            ON listings(duplicate_of_id)
+        """)
+        conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_listings_ward_ppm2
             ON listings(ward, price_per_m2)
         """)
