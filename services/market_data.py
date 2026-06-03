@@ -468,6 +468,8 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "trust_score": _row_get(r, "trust_score", 0),
         "legal_status": _row_get(r, "legal_status", "unverified"),
         "legal_flags": _row_get(r, "legal_flags", "") or "",
+        "source_quality_flags": _row_get(r, "source_quality_flags", "") or "",
+        "source_quality_recheck": bool(_row_get(r, "source_quality_recheck", 0)),
         "has_legal_doc_image": bool(LEGAL_IMAGE_EVIDENCE_ENABLED and _row_get(r, "has_legal_doc_image", 0)),
         "primary_img": primary_img or "",
         "image_count": int(_row_get(r, "image_count", 0) or 0),
@@ -522,6 +524,8 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
                COALESCE(v.trust_score, 0) as trust_score,
                COALESCE(v.legal_status, 'unverified') as legal_status,
                COALESCE(v.legal_flags, '') as legal_flags,
+               COALESCE(v.source_quality_flags, '') AS source_quality_flags,
+               COALESCE(v.source_quality_recheck, 0) AS source_quality_recheck,
                {LEGAL_DOC_IMAGE_SELECT_SQL} AS has_legal_doc_image,
                primary_img.local_path AS primary_local_path,
                primary_img.img_url AS primary_img_url,
@@ -626,6 +630,8 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
                    COALESCE(v.trust_score, 0) as trust_score,
                    COALESCE(v.legal_status, 'unverified') as legal_status,
                    COALESCE(v.legal_flags, '') as legal_flags,
+                   COALESCE(v.source_quality_flags, '') AS source_quality_flags,
+                   COALESCE(v.source_quality_recheck, 0) AS source_quality_recheck,
                    {fresh_flag}
             FROM latest_valuation v
             JOIN listings l ON v.listing_id = l.id

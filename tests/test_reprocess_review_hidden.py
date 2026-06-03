@@ -237,7 +237,7 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
         self.assertIsNotNone(visible)
         self.assertEqual(visible["is_signal"], 1)
-        self.assertEqual(visible["source_quality_recheck"], 1)
+        self.assertEqual(visible["source_quality_recheck"], 0)
         self.assertIn("low_segment_confidence", visible["source_quality_flags"])
         self.assertIsNotNone(recheck)
         self.assertEqual(recheck["is_signal"], 1)

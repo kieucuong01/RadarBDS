@@ -508,6 +508,23 @@
   flex-shrink: 0;
 }
 
+.sc-quality-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #78350f;
+  background: rgba(254, 243, 199, 0.95);
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(120, 53, 15, 0.16);
+}
+
+.sc-quality-tag svg {
+  flex-shrink: 0;
+}
+
 .sc-body {
   padding: 12px 20px 20px;
   flex: 1;
@@ -774,7 +791,8 @@
 
   .sc-source-tag,
   .sc-time-tag,
-  .sc-drop-tag {
+  .sc-drop-tag,
+  .sc-quality-tag {
     padding: 3px 8px;
     border-radius: 999px;
     font-size: 0.66rem;

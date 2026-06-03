@@ -293,7 +293,7 @@ def test_guland_quality_flags_keep_valuation_but_suppress_signal():
     assert is_actionable_signal(result) is False
 
 
-def test_low_segment_confidence_keeps_model_signal_but_sends_to_qc():
+def test_low_segment_confidence_keeps_model_signal_with_warning_badge_only():
     from services.signal_quality import is_actionable_signal
 
     listings = [_make_listing(i, 15.0, source="facebook") for i in range(8)]
@@ -305,9 +305,9 @@ def test_low_segment_confidence_keeps_model_signal_but_sends_to_qc():
 
     assert result is not None
     assert result.is_signal is True
-    assert result.source_quality_recheck is True
+    assert result.source_quality_recheck is False
     assert "low_segment_confidence" in result.source_quality_flags
-    assert is_actionable_signal(result) is False
+    assert is_actionable_signal(result) is True
 
 
 def test_legal_conflict_keeps_valuation_but_suppresses_signal():

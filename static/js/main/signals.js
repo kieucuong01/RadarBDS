@@ -33,6 +33,22 @@ function _timelinePercent(progressPct, statusTag) {
   return Math.max(0, Math.min(100, n));
 }
 
+function _signalQualityBadges(signal) {
+  const flags = String(signal.source_quality_flags || '')
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const badges = [];
+  if (flags.includes('low_segment_confidence')) {
+    badges.push({
+      label: 'Mẫu giá mỏng',
+      title: 'Dữ liệu so sánh còn ít, cần kiểm tra thêm trước khi xuống tiền.',
+      icon: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>'
+    });
+  }
+  return badges;
+}
+
 function _renderInsightsTimeline(items) {
   const root = document.getElementById('insightTimeline');
   if (!root) return;
@@ -292,6 +308,9 @@ function _renderSignalCards(signals) {
       const imageCount = Math.max(0, Math.floor(_signalNumber(x.image_count) || 0));
       const imageCounterHtml = imageCount > 1 ? `<div class="sc-image-count">1/${imageCount}</div>` : '';
       const areaLabel = _signalAreaLabel(x);
+      const qualityBadgeHtml = _signalQualityBadges(x).map((badge) => (
+        `<span class="sc-quality-tag" title="${escHtml(badge.title)}">${badge.icon || ''}${escHtml(badge.label)}</span>`
+      )).join('');
 
       const daysAgo = _daysAgoValue(x.days_ago);
       let timeStr = _timeAgoText(daysAgo);
@@ -324,6 +343,7 @@ function _renderSignalCards(signals) {
             <span class="sc-source-tag">${srcName}</span>
             <span class="sc-time-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${timeStr}</span>
             ${dropBadge}
+            ${qualityBadgeHtml}
           </div>
         </div>
         <div class="sc-body">
