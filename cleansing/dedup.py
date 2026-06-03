@@ -43,10 +43,11 @@ def _strip_noise(text: str) -> str:
 
 
 def _ascii_fold(text: str) -> str:
-    return "".join(
+    folded = "".join(
         c for c in unicodedata.normalize("NFD", text)
         if unicodedata.category(c) != "Mn"
-    ).lower()
+    )
+    return folded.replace("đ", "d").replace("Đ", "D").lower()
 
 
 def _text_similarity(t1: Optional[str], t2: Optional[str]) -> float:
@@ -66,12 +67,19 @@ def _combined_text(listing: dict) -> str:
 def _road_tokens(text: Optional[str]) -> set[str]:
     if not text:
         return set()
+    text = _ascii_fold(text)
     tokens = set()
-    for m in _ROAD_TOKEN_PAT.finditer(text.lower()):
-        raw = re.sub(r"\s+", "", m.group(0).lower())
+    for m in _ROAD_TOKEN_PAT.finditer(text):
+        raw = re.sub(r"\s+", "", m.group(0))
         prefix = re.match(r"[a-z]+", raw).group(0)
         tokens.add(f"{prefix}{int(m.group(1))}")
     return tokens
+
+
+def _road_token_conflict(text1: Optional[str], text2: Optional[str]) -> bool:
+    roads1 = _road_tokens(text1)
+    roads2 = _road_tokens(text2)
+    return bool(roads1 and roads2 and not roads1.intersection(roads2))
 
 
 def _block_tokens(text: Optional[str]) -> set[str]:
@@ -161,8 +169,13 @@ def _lot_attribute_conflict(l1: dict, l2: dict) -> bool:
 
     text1 = _combined_text(l1)
     text2 = _combined_text(l2)
-    loc1 = _road_tokens(text1) | _named_location_tokens(text1)
-    loc2 = _road_tokens(text2) | _named_location_tokens(text2)
+    if _road_token_conflict(text1, text2):
+        return True
+
+    roads1 = _road_tokens(text1)
+    roads2 = _road_tokens(text2)
+    loc1 = roads1 | _named_location_tokens(text1)
+    loc2 = roads2 | _named_location_tokens(text2)
     if loc1 and loc2 and not loc1.intersection(loc2):
         return True
 
@@ -237,6 +250,9 @@ def _different_days(l1: dict, l2: dict) -> bool:
 def _location_signal(l1: dict, l2: dict) -> bool:
     text1 = _combined_text(l1)
     text2 = _combined_text(l2)
+    if _road_token_conflict(text1, text2):
+        return False
+
     roads1 = _road_tokens(text1)
     roads2 = _road_tokens(text2)
     named1 = _named_location_tokens(text1)

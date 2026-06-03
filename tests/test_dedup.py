@@ -502,6 +502,56 @@ def test_guland_phu_my_dx006_same_road_not_duplicate_without_same_source_id():
     assert not _is_reliable_price_drop(canonical, repost)
 
 
+def test_facebook_conflicting_dx_roads_do_not_share_lot_history():
+    dx20 = _listing(
+        source="facebook", source_id="fb-dx20", posted_at="2026-01-01",
+        ward="Phu My", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, price_ty=3.3,
+        contact_phone="0948018508",
+        description=(
+            "Giap chu Dx20 Phu My duong nhua thong suot oto ne nhau, "
+            "sat ben cho Phu My. Dien tich 5x30, tho cu 60m, gia 3ty3."
+        ),
+    )
+    dx013 = _listing(
+        source="facebook", source_id="fb-dx013", posted_at="2026-06-02",
+        ward="Phu My", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, price_ty=3.9,
+        contact_phone="0935792868",
+        description=(
+            "Can ban lo dat mat tien Dx 013 duong nhua 8m thong, "
+            "cach cho Phu My 300m. Dien tich 5x30 tho cu 60m."
+        ),
+    )
+
+    assert not _is_duplicate(dx20, dx013)
+
+
+def test_facebook_conflicting_dx_roads_do_not_count_price_drop():
+    dx013_old = _listing(
+        source="facebook", source_id="fb-dx013-old", posted_at="2026-01-01",
+        ward="Phu My", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, price_ty=3.9,
+        contact_phone="0935792868",
+        description=(
+            "Can ban lo dat mat tien Dx 013 duong nhua 8m thong, "
+            "cach cho Phu My 300m. Dien tich 5x30 tho cu 60m."
+        ),
+    )
+    dx20_new = _listing(
+        source="facebook", source_id="fb-dx20-new", posted_at="2026-06-02",
+        ward="Phu My", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, price_ty=3.3,
+        contact_phone="0948018508",
+        description=(
+            "Giap chu Dx20 Phu My duong nhua thong suot oto ne nhau, "
+            "sat ben cho Phu My. Dien tich 5x30, tho cu 60m, gia 3ty3."
+        ),
+    )
+
+    assert not _is_reliable_price_drop(dx013_old, dx20_new)
+
+
 def test_guland_same_source_id_price_drop_still_allowed():
     old = _listing(
         source="guland", source_id="same-post", posted_at="2026-05-01",
