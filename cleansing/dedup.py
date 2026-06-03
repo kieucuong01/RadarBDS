@@ -404,6 +404,10 @@ def _candidate_keys(listing: dict) -> set[tuple]:
     area = listing.get("area_m2")
     if area and area > 0:
         keys.add(base + ("area", round(float(area), 1)))
+        phone = _phone_value(listing)
+        if phone and float(area) >= 300:
+            area_bucket = int(round(float(area) / 10.0))
+            keys.add(base + ("phone_large_area", phone[-9:], area_bucket))
 
     frontage = listing.get("frontage_m")
     depth = listing.get("depth_m")

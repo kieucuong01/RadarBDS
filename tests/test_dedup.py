@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from cleansing.dedup import (
+    _candidate_keys,
     _repost_score,
     _is_duplicate,
     _is_reliable_price_drop,
@@ -550,6 +551,30 @@ def test_facebook_conflicting_dx_roads_do_not_count_price_drop():
     )
 
     assert not _is_reliable_price_drop(dx013_old, dx20_new)
+
+
+def test_facebook_same_phone_near_area_reposts_share_candidate_bucket():
+    old = _listing(
+        source="facebook", source_id="fb-1212-old", posted_at="2024-09-07",
+        ward="Tan An", property_type="dat_vuon", area_m2=1212.5,
+        price_ty=3.5, contact_phone="0902861961",
+        description=(
+            "Sau cho Ben The nhanh Dx126 cach Huynh Thi Hieu 200m. "
+            "Dt 1212,5m2, tho cu 140m2, gia 3ty500."
+        ),
+    )
+    new = _listing(
+        source="facebook", source_id="fb-1212-new", posted_at="2025-07-22",
+        ward="Tan An", property_type="dat_vuon", area_m2=1212.0,
+        price_ty=2.9, contact_phone="0902-861-961",
+        description=(
+            "Ban dat phuong Tan An lam vuon gia tot duong ba gac. "
+            "Dt 1.212 m2, tc 140, gia 2ty9."
+        ),
+    )
+
+    assert _candidate_keys(old).intersection(_candidate_keys(new))
+    assert _is_reliable_price_drop(old, new)
 
 
 def test_guland_same_source_id_price_drop_still_allowed():
