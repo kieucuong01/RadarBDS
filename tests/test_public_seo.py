@@ -51,6 +51,41 @@ def test_foundational_seo_pages_render_canonical_content():
         assert "127.0.0.1" not in html
 
 
+def test_binh_duong_location_landing_pages_render_and_are_indexed():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    expected = {
+        "/binh-duong/thu-dau-mot": "Thủ Dầu Một",
+        "/binh-duong/ben-cat": "Bến Cát",
+        "/binh-duong/phuong-phu-my": "Phú Mỹ",
+        "/binh-duong/duong-dx013": "DX013",
+    }
+
+    with radar_app.app.test_request_context("/sitemap.xml"):
+        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
+
+    for path, phrase in expected.items():
+        response = client.get(path)
+        html = response.get_data(as_text=True)
+
+        assert response.status_code == 200
+        assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
+        assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
+        assert phrase in html
+        assert "Khu vực liên quan" in html
+        assert "localhost" not in html
+        assert "127.0.0.1" not in html
+
+
+def test_unknown_binh_duong_location_seo_page_404s():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get("/binh-duong/khu-vuc-khong-co")
+
+    assert response.status_code == 404
+
+
 def test_manifest_uses_radarbds_standalone_start_url():
     manifest = json.loads(Path("static/manifest.webmanifest").read_text(encoding="utf-8"))
 

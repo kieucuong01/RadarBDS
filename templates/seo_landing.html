@@ -35,7 +35,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=seo-header-single-row-20260602">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=seo-location-pages-20260603">
 
   <script type="application/ld+json">
   {
@@ -188,6 +188,26 @@
         {% endfor %}
       </div>
     </section>
+
+    {% if page.local_links %}
+    <section class="seo-local-links" aria-label="Khu vực liên quan">
+      <div class="seo-shell local-links-shell">
+        <div class="local-links-head">
+          <span>SEO địa phương</span>
+          <h2>{{ page.local_links_title or "Khu vực liên quan" }}</h2>
+          <p>Theo dõi thêm các phường, khu vực và tuyến đường có dữ liệu liên quan để so giá đúng mặt bằng hơn.</p>
+        </div>
+        <div class="local-link-grid">
+          {% for link in page.local_links %}
+          <a href="{{ link.href }}">
+            <strong>{{ link.label }}</strong>
+            <span>{{ link.description }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
 
     <section class="seo-process">
       <div class="seo-shell">

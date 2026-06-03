@@ -200,3 +200,10 @@ SEO_PAGES = {
         },
     },
 }
+
+
+from config.seo_locations import SEO_LOCATION_INDEX_LINKS, SEO_LOCATION_PAGES
+
+SEO_PAGES.update(SEO_LOCATION_PAGES)
+SEO_PAGES["binh-duong"]["local_links_title"] = "Khu vực liên quan"
+SEO_PAGES["binh-duong"]["local_links"] = SEO_LOCATION_INDEX_LINKS

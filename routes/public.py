@@ -27,6 +27,11 @@ def seo_binh_duong(**kwargs):
     return _impl("seo_landing_page", slug="binh-duong", **kwargs)
 
 
+@bp.route("/binh-duong/<path:location_slug>")
+def seo_binh_duong_location(location_slug, **kwargs):
+    return _impl("seo_landing_page", slug=f"binh-duong/{location_slug}", **kwargs)
+
+
 @bp.route("/san-deal-bds")
 def seo_san_deal_bds(**kwargs):
     return _impl("seo_landing_page", slug="san-deal-bds", **kwargs)
