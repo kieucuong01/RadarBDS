@@ -137,6 +137,50 @@ class GuestVisibilityTest(unittest.TestCase):
         self.assertEqual(dashboard.status_code, 200)
         self.assertEqual(dashboard.get_json()["stats"]["signals"], 1)
 
+    def test_drop_filter_includes_canonical_with_higher_price_repost(self):
+        from db.connection import get_conn
+        from services.market_data import load_signals
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, description, ward,
+                    area_m2, property_type, price_ty, price_per_m2,
+                    is_hot, price_dropped, suspicious_bait,
+                    probably_sold, possibly_duplicate, duplicate_of_id,
+                    posted_at, crawled_at
+                ) VALUES (
+                    'facebook', ?, ?,
+                    'Older higher-price repost', 'Same lot repost',
+                    ?, 100, 'dat_nen', 2.3, 23.0,
+                    0, 0, 0, 0, 1, ?,
+                    datetime('now','-1 day'), datetime('now','-1 day')
+                )
+                """,
+                (
+                    f"higher-price-repost-{self.token}",
+                    f"{self.url_prefix}/higher-price-repost",
+                    self.ward,
+                    self.listing_id,
+                ),
+            )
+            self.listing_ids.append(cur.lastrowid)
+
+        result = load_signals(
+            self.db_path,
+            sources=["facebook"],
+            wards=[self.ward],
+            only_drops=True,
+            tier="admin",
+        )
+
+        rows = result["signals"]
+        self.assertEqual([row["id"] for row in rows], [self.listing_id])
+        self.assertTrue(rows[0]["price_dropped"])
+        self.assertEqual(rows[0]["price_first_ty"], 2.3)
+        self.assertAlmostEqual(rows[0]["drop_pct"], 13.04, places=2)
+
     def test_guest_sees_fresh_listing_detail_without_source_url(self):
         response = self.client.get(f"/api/listing/{self.listing_id}")
         self.assertEqual(response.status_code, 200)

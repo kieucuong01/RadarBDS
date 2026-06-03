@@ -36,7 +36,7 @@ from config.seo_pages import SEO_PAGES
 mimetypes.add_type("image/webp", ".webp")
 
 # Import the extracted services
-from services.market_data import load_counts, load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter
+from services.market_data import load_counts, load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, related_price_drop_lateral_sql, effective_price_drop_select_sql
 from services.investment_memo import load_investment_memo
 from services.ai_bot import AIBot
 from services.signal_quality import (
@@ -1952,7 +1952,7 @@ def api_heatmap():
         "l.price_per_m2 < 1000"
     ]
     if only_drops:
-        where_parts.append("l.price_dropped = 1")
+        where_parts.append(group_price_drop_filter_sql("l."))
     else:
         where_parts.append("l.possibly_duplicate = 0")
     params = []
@@ -2071,26 +2071,26 @@ def api_listings():
     db_path = _db_handle()
     conn = connect(db_path)
     
-    where_parts = ["probably_sold = 0", "COALESCE(is_blacklisted,0)=0", "COALESCE(review_hidden,0)=0"]
+    where_parts = ["l.probably_sold = 0", "COALESCE(l.is_blacklisted,0)=0", "COALESCE(l.review_hidden,0)=0"]
     if only_drops:
-        where_parts.append("price_dropped = 1")
+        where_parts.append(group_price_drop_filter_sql("l."))
     else:
-        where_parts.append("possibly_duplicate = 0")
+        where_parts.append("l.possibly_duplicate = 0")
     params = []
     
     if wards:
-        where_parts.append(f"ward IN ({','.join(['?']*len(wards))})")
+        where_parts.append(f"l.ward IN ({','.join(['?']*len(wards))})")
         params.extend(wards)
     if sources:
-        where_parts.append(f"source IN ({','.join(['?']*len(sources))})")
+        where_parts.append(f"l.source IN ({','.join(['?']*len(sources))})")
         params.extend(sources)
     if prop_types:
-        where_parts.append(f"property_type IN ({','.join(['?']*len(prop_types))})")
+        where_parts.append(f"l.property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
-    range_clauses, range_params = _range_filters(**range_kwargs)
+    range_clauses, range_params = _range_filters(prefix="l.", **range_kwargs)
     where_parts.extend(range_clauses)
     params.extend(range_params)
-    search_clauses, search_params = keyword_search_filter(keyword)
+    search_clauses, search_params = keyword_search_filter(keyword, prefix="l.")
     where_parts.extend(search_clauses)
     params.extend(search_params)
     where_sql = " AND ".join(where_parts)
@@ -2112,10 +2112,15 @@ def api_listings():
     query = f"""
         WITH {LATEST_VALUATION_CTE}
         SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
+               {effective_price_drop_select_sql("l", "related_drop")
+                   .replace(" AS price_dropped", " AS effective_price_dropped")
+                   .replace(" AS price_drop_pct", " AS effective_price_drop_pct")
+                   .replace(" AS price_first_ty", " AS effective_price_first_ty")},
                CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS actionable_signal,
                {fresh_flag}
         FROM listings l
         LEFT JOIN latest_valuation v ON l.id = v.listing_id
+        {related_price_drop_lateral_sql("l", "related_drop")}
         WHERE {where_sql}
         ORDER BY {order_expr} {sort_dir} NULLS LAST
         LIMIT ? OFFSET ?
@@ -2124,7 +2129,7 @@ def api_listings():
     query_params.extend([limit, offset])
     rows = conn.execute(query, query_params).fetchall()
     
-    count_query = f"SELECT COUNT(*) FROM listings WHERE {where_sql}"
+    count_query = f"SELECT COUNT(*) FROM listings l WHERE {where_sql}"
     total = conn.execute(count_query, params).fetchone()[0]
     
     listing_ids = [r['id'] for r in rows]
@@ -2151,9 +2156,9 @@ def api_listings():
         "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
         "ward": r['ward'], "url": r['url'], "is_signal": bool(r['actionable_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
         "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
-        "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
+        "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['effective_price_dropped']),
         "suspicious_bait": bool(r['suspicious_bait']),
-        "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],
+        "drop_pct": r['effective_price_drop_pct'], "price_first_ty": r['effective_price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],
         "source": r['source'], "imgs": img_map.get(r['id'], []),
         "is_fresh_locked": bool(r['is_fresh_locked']),
     }, tier) for r in rows]

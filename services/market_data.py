@@ -194,6 +194,61 @@ def keyword_search_filter(keyword, prefix=""):
     return clauses, params
 
 
+def group_price_drop_filter_sql(prefix=""):
+    col = lambda name: f"{prefix}{name}" if prefix else name
+    return f"""(
+        COALESCE({col('price_dropped')},0)=1
+        OR EXISTS (
+            SELECT 1
+            FROM listings drop_child
+            WHERE drop_child.duplicate_of_id = {col('id')}
+              AND COALESCE(drop_child.probably_sold,0)=0
+              AND COALESCE(drop_child.is_blacklisted,0)=0
+              AND COALESCE(drop_child.review_hidden,0)=0
+              AND drop_child.price_ty IS NOT NULL
+              AND {col('price_ty')} IS NOT NULL
+              AND drop_child.price_ty > {col('price_ty')} * 1.01
+              AND {col('price_ty')} >= drop_child.price_ty * 0.60
+        )
+    )"""
+
+
+def related_price_drop_lateral_sql(alias="l", lateral_alias="related_drop"):
+    return f"""
+        LEFT JOIN LATERAL (
+            SELECT MAX(drop_child.price_ty) AS first_price
+            FROM listings drop_child
+            WHERE drop_child.duplicate_of_id = {alias}.id
+              AND COALESCE(drop_child.probably_sold,0)=0
+              AND COALESCE(drop_child.is_blacklisted,0)=0
+              AND COALESCE(drop_child.review_hidden,0)=0
+              AND drop_child.price_ty IS NOT NULL
+              AND {alias}.price_ty IS NOT NULL
+              AND drop_child.price_ty > {alias}.price_ty * 1.01
+              AND {alias}.price_ty >= drop_child.price_ty * 0.60
+        ) {lateral_alias} ON TRUE
+    """
+
+
+def effective_price_drop_select_sql(alias="l", lateral_alias="related_drop"):
+    first_price = f"{lateral_alias}.first_price"
+    return f"""
+               CASE
+                   WHEN COALESCE({alias}.price_dropped,0)=1 OR {first_price} IS NOT NULL
+                   THEN 1 ELSE 0
+               END AS price_dropped,
+               CASE
+                   WHEN COALESCE({alias}.price_dropped,0)=1 THEN {alias}.price_drop_pct
+                   WHEN {first_price} IS NOT NULL
+                   THEN ROUND((({first_price} - {alias}.price_ty) / {first_price} * 100)::numeric, 2)
+                   ELSE NULL
+               END AS price_drop_pct,
+               CASE
+                   WHEN {first_price} IS NOT NULL THEN {first_price}
+                   ELSE {alias}.price_first_ty
+               END AS price_first_ty"""
+
+
 def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword=""):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
@@ -207,7 +262,7 @@ def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, 
         f"COALESCE({col('review_hidden')},0)=0",
     ]
     if only_drops:
-        where_parts.append(f"{col('price_dropped')} = 1")
+        where_parts.append(group_price_drop_filter_sql(prefix))
     else:
         where_parts.append(f"{col('possibly_duplicate')} = 0")
     params = []
@@ -516,8 +571,10 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         SELECT COUNT(*) OVER() AS total_count,
                v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                l.id, l.title, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
-               l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
-               l.price_first_ty, l.duplicate_of_id,
+               l.property_type, l.is_hot,
+               {effective_price_drop_select_sql("l", "related_drop")},
+               l.suspicious_bait,
+               l.duplicate_of_id,
                l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
                COALESCE(v.signal_score, 0) as signal_score,
                COALESCE(v.trust_tier, 'candidate_signal') as trust_tier,
@@ -545,6 +602,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
             FROM listing_images li
             WHERE li.listing_id = l.id
         ) img_count ON TRUE
+        {related_price_drop_lateral_sql("l", "related_drop")}
         WHERE {signal_condition} AND {where_sql}{mos_condition}
         ORDER BY {order_sql}
         LIMIT ? OFFSET ?
@@ -622,8 +680,10 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             WITH {LATEST_VALUATION_CTE}
             SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                    l.id, l.title, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
-                   l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
-                   l.price_first_ty, l.duplicate_of_id,
+                   l.property_type, l.is_hot,
+                   {effective_price_drop_select_sql("l", "related_drop")},
+                   l.suspicious_bait,
+                   l.duplicate_of_id,
                    l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
                    COALESCE(v.signal_score, 0) as signal_score,
                    COALESCE(v.trust_tier, 'candidate_signal') as trust_tier,
@@ -635,6 +695,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
                    {fresh_flag}
             FROM latest_valuation v
             JOIN listings l ON v.listing_id = l.id
+            {related_price_drop_lateral_sql("l", "related_drop")}
             WHERE {signal_condition} AND {where_sql}{mos_condition}
             ORDER BY {_signal_sort_sql('score_desc')}
         """
@@ -813,7 +874,8 @@ def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=F
 
     row = conn.execute(f"""
         WITH filtered AS (
-            SELECT id, is_hot, posted_at, crawled_at, price_dropped
+            SELECT id, is_hot, posted_at, crawled_at,
+                   CASE WHEN {group_price_drop_filter_sql()} THEN 1 ELSE 0 END AS price_dropped
             FROM listings
             WHERE {where_sql}
         )
@@ -843,7 +905,7 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
 
     where_parts = ["probably_sold = 0", "COALESCE(is_blacklisted,0)=0", "COALESCE(review_hidden,0)=0"]
     if only_drops:
-        where_parts.append("price_dropped = 1")
+        where_parts.append(group_price_drop_filter_sql())
     else:
         where_parts.append("possibly_duplicate = 0")
     params = []
