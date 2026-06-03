@@ -36,7 +36,7 @@ from config.seo_pages import SEO_PAGES
 mimetypes.add_type("image/webp", ".webp")
 
 # Import the extracted services
-from services.market_data import load_counts, load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, related_price_drop_lateral_sql, effective_price_drop_select_sql
+from services.market_data import load_counts, load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql
 from services.investment_memo import load_investment_memo
 from services.ai_bot import AIBot
 from services.signal_quality import (
@@ -2112,15 +2112,10 @@ def api_listings():
     query = f"""
         WITH {LATEST_VALUATION_CTE}
         SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
-               {effective_price_drop_select_sql("l", "related_drop")
-                   .replace(" AS price_dropped", " AS effective_price_dropped")
-                   .replace(" AS price_drop_pct", " AS effective_price_drop_pct")
-                   .replace(" AS price_first_ty", " AS effective_price_first_ty")},
                CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS actionable_signal,
                {fresh_flag}
         FROM listings l
         LEFT JOIN latest_valuation v ON l.id = v.listing_id
-        {related_price_drop_lateral_sql("l", "related_drop")}
         WHERE {where_sql}
         ORDER BY {order_expr} {sort_dir} NULLS LAST
         LIMIT ? OFFSET ?
@@ -2135,6 +2130,7 @@ def api_listings():
     listing_ids = [r['id'] for r in rows]
     from collections import defaultdict
     img_map = defaultdict(list)
+    related_drop_map = {}
     if listing_ids:
         placeholders = ",".join("?" * len(listing_ids))
         img_rows = conn.execute(f"""
@@ -2147,23 +2143,50 @@ def api_listings():
             url = resolve_image_url(r[1], r[2])
             if url:
                 img_map[r[0]].append(url)
+        drop_rows = conn.execute(f"""
+            SELECT drop_child.duplicate_of_id AS listing_id,
+                   MAX(drop_child.price_ty) AS first_price
+            FROM listings drop_child
+            JOIN listings parent ON parent.id = drop_child.duplicate_of_id
+            WHERE drop_child.duplicate_of_id IN ({placeholders})
+              AND COALESCE(drop_child.probably_sold,0)=0
+              AND COALESCE(drop_child.is_blacklisted,0)=0
+              AND COALESCE(drop_child.review_hidden,0)=0
+              AND drop_child.price_ty IS NOT NULL
+              AND parent.price_ty IS NOT NULL
+              AND drop_child.price_ty > parent.price_ty * 1.01
+              AND parent.price_ty >= drop_child.price_ty * 0.60
+            GROUP BY drop_child.duplicate_of_id
+        """, listing_ids).fetchall()
+        related_drop_map = {r["listing_id"]: r["first_price"] for r in drop_rows}
         
     conn.close()
 
-    listings = [redact_for_tier({
-        "id": r['id'], "title": r['title'], "description": r['description'] or "",
-        "price_ty": r['price_ty'], "area_m2": r['area_m2'],
-        "frontage_m": r['frontage_m'], "depth_m": r['depth_m'],
-        "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
-        "road_tier": r['road_tier'], "road_type": r['road_type'],
-        "ward": r['ward'], "url": r['url'], "is_signal": bool(r['actionable_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
-        "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
-        "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['effective_price_dropped']),
-        "suspicious_bait": bool(r['suspicious_bait']),
-        "drop_pct": r['effective_price_drop_pct'], "price_first_ty": r['effective_price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],
-        "source": r['source'], "imgs": img_map.get(r['id'], []),
-        "is_fresh_locked": bool(r['is_fresh_locked']),
-    }, tier) for r in rows]
+    listings = []
+    for r in rows:
+        related_first = related_drop_map.get(r["id"])
+        price_ty = r["price_ty"]
+        price_dropped = bool(r["price_dropped"])
+        drop_pct = r["price_drop_pct"]
+        price_first_ty = r["price_first_ty"]
+        if related_first is not None and price_ty:
+            price_dropped = True
+            drop_pct = round(((related_first - price_ty) / related_first * 100), 2)
+            price_first_ty = related_first
+        listings.append(redact_for_tier({
+            "id": r['id'], "title": r['title'], "description": r['description'] or "",
+            "price_ty": price_ty, "area_m2": r['area_m2'],
+            "frontage_m": r['frontage_m'], "depth_m": r['depth_m'],
+            "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
+            "road_tier": r['road_tier'], "road_type": r['road_type'],
+            "ward": r['ward'], "url": r['url'], "is_signal": bool(r['actionable_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
+            "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
+            "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": price_dropped,
+            "suspicious_bait": bool(r['suspicious_bait']),
+            "drop_pct": drop_pct, "price_first_ty": price_first_ty, "duplicate_of_id": r['duplicate_of_id'],
+            "source": r['source'], "imgs": img_map.get(r['id'], []),
+            "is_fresh_locked": bool(r['is_fresh_locked']),
+        }, tier))
     return jsonify({
         "listings": listings,
         "total": total,

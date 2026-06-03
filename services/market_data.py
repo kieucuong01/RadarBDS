@@ -198,17 +198,18 @@ def group_price_drop_filter_sql(prefix=""):
     col = lambda name: f"{prefix}{name}" if prefix else name
     return f"""(
         COALESCE({col('price_dropped')},0)=1
-        OR EXISTS (
-            SELECT 1
+        OR {col('id')} IN (
+            SELECT drop_child.duplicate_of_id
             FROM listings drop_child
-            WHERE drop_child.duplicate_of_id = {col('id')}
+            JOIN listings drop_parent ON drop_parent.id = drop_child.duplicate_of_id
+            WHERE drop_child.duplicate_of_id IS NOT NULL
               AND COALESCE(drop_child.probably_sold,0)=0
               AND COALESCE(drop_child.is_blacklisted,0)=0
               AND COALESCE(drop_child.review_hidden,0)=0
               AND drop_child.price_ty IS NOT NULL
-              AND {col('price_ty')} IS NOT NULL
-              AND drop_child.price_ty > {col('price_ty')} * 1.01
-              AND {col('price_ty')} >= drop_child.price_ty * 0.60
+              AND drop_parent.price_ty IS NOT NULL
+              AND drop_child.price_ty > drop_parent.price_ty * 1.01
+              AND drop_parent.price_ty >= drop_child.price_ty * 0.60
         )
     )"""
 
