@@ -2153,7 +2153,9 @@ def api_listings():
     listings = [redact_for_tier({
         "id": r['id'], "title": r['title'], "description": r['description'] or "",
         "price_ty": r['price_ty'], "area_m2": r['area_m2'],
+        "frontage_m": r['frontage_m'], "depth_m": r['depth_m'],
         "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
+        "road_tier": r['road_tier'], "road_type": r['road_type'],
         "ward": r['ward'], "url": r['url'], "is_signal": bool(r['actionable_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
         "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
         "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['effective_price_dropped']),

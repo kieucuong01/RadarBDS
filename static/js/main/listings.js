@@ -140,14 +140,25 @@ function listingCard(x) {
   const sourceName = sourceNames[x.source] || x.source || '-';
   const isNew = _isNewWithin(x.days_ago, 7);
   const mosNum = Number(x.mos_pct);
+  const mosRounded = Math.round(mosNum || 0);
   const mosBadge = Number.isFinite(mosNum) && mosNum > 0
-    ? `<div class="mos-badge">So với Định Giá: -${Math.round(mosNum)}%</div>`
+    ? `<div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> Rẻ hơn ${mosRounded}%</div>`
     : '';
-  const newBadge = isNew ? '<div class="new-badge">MỚI</div>' : '';
+  const newBadge = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
   const dropBadge = x.price_dropped
-    ? `<span class="sc-drop-tag">Chủ hạ: ${x.drop_pct ? `${escHtml(x.drop_pct)}%` : 'N/A'}</span>`
+    ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 4 12 20"/><polyline points="6 14 12 20 18 14"/></svg> Chủ hạ: ${x.drop_pct ? `${escHtml(x.drop_pct)}%` : 'N/A'}</span>`
     : '';
   const propType = PROPERTY_TYPE_LABELS[x.prop_type] || x.prop_type || '-';
+  const imageCount = Array.isArray(x.imgs) ? x.imgs.length : 0;
+  const imageCounterHtml = imageCount > 1 ? `<div class="sc-image-count">1/${imageCount}</div>` : '';
+  const areaLabel = typeof _signalAreaLabel === 'function' ? _signalAreaLabel(x) : (x.area_m2 ? `${x.area_m2}m²` : '-');
+  const roadTiers = {
+    1: 'Mặt tiền',
+    2: 'Đường nhựa',
+    3: 'Hẻm xe hơi',
+    4: 'Hẻm xe máy'
+  };
+  const roadStr = roadTiers[x.road_tier] || x.road_type || 'Chưa rõ';
 
   return `
     <div class="scard listing-grid-card" onclick="openListingModal(this)" ${dataAttr}>
@@ -155,9 +166,10 @@ function listingCard(x) {
         <img class="sc-img" src="${escHtml(imgSrc)}" loading="lazy" decoding="async" width="640" height="416" alt="Img" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG">
         ${mosBadge}
         ${newBadge}
+        ${imageCounterHtml}
         <div class="sc-img-tags">
           <span class="sc-source-tag">${escHtml(sourceName)}</span>
-          <span class="sc-time-tag">${escHtml(timeStr)}</span>
+          <span class="sc-time-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${escHtml(timeStr)}</span>
           ${dropBadge}
         </div>
       </div>
@@ -177,15 +189,15 @@ function listingCard(x) {
           </div>
         </div>
 
-        <div class="sc-meta-grid">
-          <div class="meta-item">${escHtml(x.ward || '-')}</div>
-          <div class="meta-item">${x.area_m2 ? `${escHtml(x.area_m2)} m²` : '-'}</div>
-          <div class="meta-item">${escHtml(propType)}</div>
-          <div class="meta-item">${escHtml(sourceName)}</div>
+        <div class="sc-meta-chips">
+          <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escHtml(x.ward || 'Chưa rõ')}</span>
+          <span class="meta-chip meta-chip-area"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>${escHtml(areaLabel)}</span>
+          <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>${escHtml(roadStr)}</span>
+          <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18"/><path d="M7 3v18"/><path d="M17 3v18"/><path d="M3 17h18"/></svg>${escHtml(propType)}</span>
         </div>
 
         <div class="sc-actions" onclick="event.stopPropagation()">
-          <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'card_all');" class="btn-zalo">${(window.USER_TIER === 'vip' || window.USER_TIER === 'admin') ? 'Ráp mối VIP' : 'Ráp mối'}</a>
+          <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'card_all');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${(window.USER_TIER === 'vip' || window.USER_TIER === 'admin') ? 'Ráp mối VIP' : 'Ráp mối'}</a>
         </div>
       </div>
     </div>
@@ -231,7 +243,7 @@ function setListingsView(view, options = {}) {
   document.getElementById('listingsViewGrid')?.classList.toggle('active', isGrid);
   document.getElementById('listingsViewTable')?.setAttribute('aria-pressed', String(!isGrid));
   document.getElementById('listingsViewGrid')?.setAttribute('aria-pressed', String(isGrid));
-  try { localStorage.setItem('listingsView', listingsView); } catch (e) {}
+  try { localStorage.setItem('listingsViewV2', listingsView); } catch (e) {}
   if (options.render !== false) {
     renderLoadedListings();
     if (activeTabId() === 'all' && loadedListings.length === 0 && !listingsLoading) {
@@ -241,8 +253,8 @@ function setListingsView(view, options = {}) {
 }
 
 function setupListingsViewToggle() {
-  let savedView = 'table';
-  try { savedView = localStorage.getItem('listingsView') || 'table'; } catch (e) {}
+  let savedView = 'grid';
+  try { savedView = localStorage.getItem('listingsViewV2') || 'grid'; } catch (e) {}
   setListingsView(savedView, { render: false });
   document.querySelectorAll('.listings-view-btn').forEach(btn => {
     btn.addEventListener('click', () => setListingsView(btn.dataset.view || 'table'));

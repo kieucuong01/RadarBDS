@@ -553,12 +553,12 @@
           </label>
           <div class="listings-view-bar" aria-label="Chọn kiểu hiển thị tin rao">
             <div class="listings-view-toggle" role="group" aria-label="Kiểu hiển thị">
-              <button type="button" id="listingsViewTable" class="listings-view-btn active" data-view="table">Table</button>
-              <button type="button" id="listingsViewGrid" class="listings-view-btn" data-view="grid">Grid</button>
+              <button type="button" id="listingsViewTable" class="listings-view-btn" data-view="table">Bảng</button>
+              <button type="button" id="listingsViewGrid" class="listings-view-btn active" data-view="grid">Lưới</button>
             </div>
           </div>
         </div>
-        <div class="table-wrap listing-view" id="listingsTableView">
+        <div class="table-wrap listing-view" id="listingsTableView" hidden>
           <div class="table-scroll">
             <table>
               <thead>
@@ -587,7 +587,7 @@
             </div>
           </div>
         </div>
-        <div class="listing-view listings-grid-shell" id="listingsGridView" hidden>
+        <div class="listing-view listings-grid-shell" id="listingsGridView">
           <div class="cards-grid listings-grid" id="listingsGrid"></div>
           <div id="listingsGridSentinel" class="signal-load-more"></div>
         </div>
@@ -975,7 +975,7 @@
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=low-confidence-warning-badge-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=signal-modal-browser-back-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=trend-first-20260528"></script>
-  <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=contact-redaction-20260528"></script>
+  <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=listings-grid-signal-card-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=keyword-search-20260603"></script>
 </body>
