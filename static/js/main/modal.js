@@ -121,7 +121,6 @@ function renderSignalTags(data) {
     { icon: '📍', label: data.ward || '-' },
     { icon: '🛣️', label: data.road || '-' },
     { icon: '🏷️', label: propertyTypeLabel(data.propertyType) },
-    { icon: '📊', label: `Score: ${data.score || '-'}` },
   ];
   document.getElementById('sm-tags').innerHTML = tags
     .map((t) => `<span>${t.icon} ${t.label}</span>`)
@@ -282,7 +281,6 @@ function _openSignalLegacy(card) {
     { icon: '📐', label: `${d.area} m²` },
     { icon: '📍', label: d.ward },
     { icon: '🛣️', label: d.road },
-    { icon: '📊', label: `Score: ${d.score || '-'}` },
   ];
   document.getElementById('sm-tags').innerHTML = tags
     .map(t => `<span>${t.icon} ${t.label}</span>`).join('');
@@ -677,60 +675,46 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
     const sameListingHistory = Array.isArray(data.history) ? data.history : [];
     const lotHistory = Array.isArray(data.lot_history) ? data.lot_history : [];
 
-    let prettyPrevPrice = null;
-    const sameRowsPretty = sameListingHistory.map((h) => {
+    const seenTimeline = new Set();
+    const timeline = [...sameListingHistory, ...lotHistory]
+      .filter((h) => h && h.date && h.price_ty)
+      .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))
+      .filter((h) => {
+        const priceKey = Number(h.price_ty);
+        const key = `${h.date}|${Number.isFinite(priceKey) ? priceKey.toFixed(6) : h.price_ty}`;
+        if (seenTimeline.has(key)) return false;
+        seenTimeline.add(key);
+        return true;
+      });
+
+    let previousPrice = null;
+    const timelineRows = timeline.map((h) => {
       let changeHtml = '';
-      if (prettyPrevPrice && h.price_ty && prettyPrevPrice > 0) {
-        const pct = ((h.price_ty - prettyPrevPrice) / prettyPrevPrice * 100).toFixed(1);
+      if (previousPrice && h.price_ty && previousPrice > 0) {
+        const pct = ((h.price_ty - previousPrice) / previousPrice * 100).toFixed(1);
         const cls = Number(pct) < 0 ? 'ph-change is-down' : 'ph-change';
-        changeHtml = `<span class="${cls}">${pct}%</span>`;
+        changeHtml = `<span class="${cls}">${Number(pct) > 0 ? '+' : ''}${pct}%</span>`;
       }
-      prettyPrevPrice = h.price_ty;
+      previousPrice = h.price_ty;
+      const subText = h.is_current ? 'Đang rao hiện tại' : 'Giá ghi nhận';
       return `<div class="ph-row ph-price-row">
         <div class="ph-main">
           <span class="ph-date">${escHtml(h.date || '-')}</span>
-          <span class="ph-sub">Giá ghi nhận</span>
+          <span class="ph-sub">${subText}</span>
         </div>
         <span class="ph-price">${escHtml(h.price_ty || '-')} tỷ</span>
         ${changeHtml}
       </div>`;
     }).join('');
 
-    const lotRowsPretty = lotHistory.length > 1 ? lotHistory.map((h) => {
-      const drop = h.price_dropped && h.drop_pct ? `<span class="ph-change is-down">-${escHtml(h.drop_pct)}%</span>` : '';
-      const title = escHtml(h.title || 'Tin cùng lô');
-      const sourceText = escHtml([h.source, h.is_current ? 'đang rao' : ''].filter(Boolean).join(' · ') || 'Cùng lô');
-      const origin = h.url
-        ? `<a class="ph-date" href="${escHtml(h.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="${title}">${escHtml(h.date || '-')}</a>`
-        : `<span class="ph-date">${escHtml(h.date || '-')}</span>`;
-      const detail = h.detail_url
-        ? `<a class="ph-lot-link" href="${escHtml(h.detail_url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Chi tiết</a>`
-        : '';
-      return `<div class="ph-row ph-lot-row">
-        <div class="ph-main">${origin}<span class="ph-sub">${sourceText}</span></div>
-        <span class="ph-price">${escHtml(h.price_ty || '-')} tỷ</span>
-        ${drop}
-        ${detail}
-      </div>`;
-    }).join('') : '';
-
     if (historyEl) {
       historyEl.innerHTML = `
-        <div class="sm-section-label sm-history-label">Giá theo bài đăng</div>
-        ${sameRowsPretty || '<div class="sm-empty-state">Chưa có biến động giá.</div>'}
-        <div class="sm-section-label sm-history-label">Lịch sử đăng BĐS</div>
-        ${lotRowsPretty || '<div class="sm-empty-state">Không có repost cùng lô.</div>'}
+        <div class="sm-section-label sm-history-label">Lịch sử giá lô này</div>
+        ${timelineRows || '<div class="sm-empty-state">Chưa có lịch sử giá cho lô này.</div>'}
       `;
     }
 
-    const labels = Array.from(new Set([
-      ...sameListingHistory.map((h) => h.date),
-      ...lotHistory.map((h) => h.date)
-    ])).sort();
-    const mapSame = {};
-    sameListingHistory.forEach((h) => { mapSame[h.date] = h.price_ty; });
-    const mapLot = {};
-    lotHistory.forEach((h) => { mapLot[h.date] = h.price_ty; });
+    const labels = timeline.map((h) => h.date);
 
     if (labels.length > 0 && chartEl) {
       const ctx = chartEl.getContext('2d');
@@ -740,31 +724,20 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
           labels,
           datasets: [
             {
-              label: 'Cung tin',
-              data: labels.map((d) => (mapSame[d] ?? null)),
+              label: 'Lịch sử giá',
+              data: timeline.map((h) => h.price_ty),
               borderColor: '#6366f1',
               backgroundColor: 'rgba(99,102,241,0.12)',
               fill: false,
               tension: 0.25,
               pointRadius: 3,
               borderWidth: 2
-            },
-            {
-              label: 'Cung lo',
-              data: labels.map((d) => (mapLot[d] ?? null)),
-              borderColor: '#0ea5a4',
-              backgroundColor: 'rgba(14,165,164,0.12)',
-              fill: false,
-              tension: 0.25,
-              pointRadius: 3,
-              borderWidth: 2,
-              borderDash: [5, 4]
             }
           ]
         },
         options: {
           maintainAspectRatio: false,
-          plugins: { legend: { display: true, labels: { usePointStyle: true, boxWidth: 8 } } },
+          plugins: { legend: { display: false } },
           scales: {
             x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
             y: { grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false }, ticks: { font: { size: 10 } } }
