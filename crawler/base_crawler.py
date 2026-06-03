@@ -9,6 +9,7 @@ Thiết kế:
 """
 import json
 import logging
+import os
 import random
 import re
 import sys
@@ -29,6 +30,16 @@ Object.defineProperty(navigator, 'plugins', {get: () => [1,2,3,4,5]});
 Object.defineProperty(navigator, 'languages', {get: () => ['vi-VN', 'vi', 'en-US', 'en']});
 window.chrome = {runtime: {}};
 """
+
+
+def _normalize_playwright_browser_path_env() -> None:
+    value = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    if not value:
+        return
+    cleaned = value.strip()
+    if cleaned != value:
+        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = cleaned
+        logger.warning("Normalized PLAYWRIGHT_BROWSERS_PATH containing surrounding whitespace")
 
 
 class BaseCrawler(ABC):
@@ -64,6 +75,7 @@ class BaseCrawler(ABC):
 
     def _launch(self, playwright, headless: bool = True):
         """Khởi động browser stealth, trả về (browser, context)."""
+        _normalize_playwright_browser_path_env()
         browser = playwright.chromium.launch(
             headless=headless,
             args=[
