@@ -110,6 +110,57 @@ function buildSlider(imgs) {
 let smHistoryChart = null;
 let galleryImages = [];
 let galleryIndex = 0;
+let signalModalHistoryManaged = false;
+let signalModalClosingFromHistory = false;
+
+function _signalModalIsOpen() {
+  const modal = document.getElementById('signalModal');
+  return Boolean(modal && modal.style.display === 'flex');
+}
+
+function _signalModalUrl(listingId) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('signal', String(listingId));
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function _pushSignalModalHistory(listingId) {
+  if (!listingId || !window.history || typeof window.history.pushState !== 'function') return;
+  const currentSignal = new URLSearchParams(window.location.search).get('signal');
+  if (history.state && history.state.signalModal && currentSignal === String(listingId)) {
+    signalModalHistoryManaged = true;
+    return;
+  }
+  history.pushState(
+    { signalModal: true, signalId: String(listingId) },
+    '',
+    _signalModalUrl(listingId)
+  );
+  signalModalHistoryManaged = true;
+}
+
+function _closeSignalModalDirect() {
+  const modal = document.getElementById('signalModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  setSignalModalOpen(false);
+  signalModalHistoryManaged = false;
+  signalModalClosingFromHistory = false;
+}
+
+function _closeSignalModalViaHistory() {
+  const modal = document.getElementById('signalModal');
+  if (!modal || !signalModalHistoryManaged || signalModalClosingFromHistory) return false;
+  signalModalClosingFromHistory = true;
+  const closingId = modal.dataset.listingId;
+  history.back();
+  window.setTimeout(() => {
+    if (signalModalClosingFromHistory && _signalModalIsOpen() && modal.dataset.listingId === closingId) {
+      _closeSignalModalDirect();
+    }
+  }, 650);
+  return true;
+}
 
 function propertyTypeLabel(v) {
   return PROPERTY_TYPE_LABELS[v] || v || 'N/A';
@@ -552,10 +603,10 @@ async function loadInvestmentMemo(listingId) {
 
 // Override modal handlers with finalized V2 logic (keeps backward compatibility with existing onclick hooks).
 function openSignal(card) {
-  _openSignalFromData(card.dataset);
+  _openSignalFromData(card.dataset, { pushHistory: true });
 }
 
-function _openSignalFromData(d) {
+function _openSignalFromData(d, opts = {}) {
   const modal = document.getElementById('signalModal');
   modal.dataset.listingId = d.id;
   switchSignalPanel('desc');
@@ -597,6 +648,9 @@ function _openSignalFromData(d) {
   if (content) content.scrollTop = 0;
   setSignalModalOpen(true);
   modal.style.display = 'flex';
+  if (opts.pushHistory !== false) {
+    _pushSignalModalHistory(d.id);
+  }
 }
 
 function openListingModal(row) {
@@ -847,14 +901,26 @@ async function openHistory(id, title) {
 function closeModal(id) {
   const modal = document.getElementById(id);
   if (!modal) return;
-  modal.style.display = 'none';
   if (id === 'signalModal') {
-    setSignalModalOpen(false);
+    if (_closeSignalModalViaHistory()) return;
+    _closeSignalModalDirect();
+    return;
   }
+  modal.style.display = 'none';
   if (id === 'galleryModal') {
     document.body.style.overflow = document.body.classList.contains('signal-modal-open') ? 'hidden' : '';
   }
 }
+
+window.addEventListener('popstate', () => {
+  if (!_signalModalIsOpen()) return;
+  const modal = document.getElementById('signalModal');
+  const nextSignal = new URLSearchParams(window.location.search).get('signal');
+  const state = history.state || {};
+  if (!state.signalModal || nextSignal !== modal.dataset.listingId) {
+    _closeSignalModalDirect();
+  }
+});
 
 window.onclick = function (event) {
   if (event.target.classList.contains('modal')) {
