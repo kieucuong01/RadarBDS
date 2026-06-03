@@ -79,6 +79,10 @@ class LotHistoryApiTest(unittest.TestCase):
             "probably_sold": 0,
             "possibly_duplicate": 0,
             "duplicate_of_id": None,
+            "description": "Listing",
+            "frontage_m": None,
+            "depth_m": None,
+            "contact_phone": None,
             "posted_at": "2026-05-01",
         }
         defaults.update(kw)
@@ -87,12 +91,12 @@ class LotHistoryApiTest(unittest.TestCase):
                 source, source_id, url, title, ward, area_m2, property_type,
                 price_ty, price_per_m2, price_first_ty, price_dropped,
                 price_drop_pct, probably_sold, possibly_duplicate, duplicate_of_id,
-                posted_at
+                description, frontage_m, depth_m, contact_phone, posted_at
             ) VALUES (
                 :source, :source_id, :url, :title, :ward, :area_m2, :property_type,
                 :price_ty, :price_per_m2, :price_first_ty, :price_dropped,
                 :price_drop_pct, :probably_sold, :possibly_duplicate, :duplicate_of_id,
-                :posted_at
+                :description, :frontage_m, :depth_m, :contact_phone, :posted_at
             )
         """, defaults)
         listing_id = cur.lastrowid
@@ -156,6 +160,54 @@ class LotHistoryApiTest(unittest.TestCase):
         self.assertIn(self.facebook_same_price_id, ids)
         self.assertIn(self.guland_drop_id, ids)
         self.assertNotIn(self.guland_same_price_id, ids)
+
+    def test_lot_history_filters_conflicting_road_code_child(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            dx013_id = self._insert_listing(
+                conn,
+                source_id=f"fb-dx013-{self.token}",
+                url=f"{self.url_prefix}/fb-dx013",
+                title="DX013 Phu My",
+                ward="Phu My",
+                area_m2=150,
+                frontage_m=5,
+                depth_m=30,
+                price_ty=3.9,
+                price_per_m2=26,
+                description=(
+                    "Can ban lo dat mat tien Dx 013 duong nhua 8m thong, "
+                    "cach cho Phu My 300m. Dien tich 5x30 tho cu 60m."
+                ),
+                posted_at="2026-06-02",
+            )
+            dx20_id = self._insert_listing(
+                conn,
+                source_id=f"fb-dx20-{self.token}",
+                url=f"{self.url_prefix}/fb-dx20",
+                title="DX20 Phu My",
+                ward="Phu My",
+                area_m2=150,
+                frontage_m=5,
+                depth_m=30,
+                price_ty=3.3,
+                price_per_m2=22,
+                description=(
+                    "Giap chu Dx20 Phu My duong nhua thong suot oto ne nhau, "
+                    "sat ben cho Phu My. Dien tich 5x30, tho cu 60m, gia 3ty3."
+                ),
+                possibly_duplicate=1,
+                duplicate_of_id=dx013_id,
+                posted_at="2026-01-01",
+            )
+
+        response = self.client.get(f"/api/history/{dx013_id}")
+        self.assertEqual(response.status_code, 200)
+        ids = [row["id"] for row in response.get_json()["lot_history"]]
+
+        self.assertIn(dx013_id, ids)
+        self.assertNotIn(dx20_id, ids)
 
 
 if __name__ == "__main__":

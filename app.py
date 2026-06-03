@@ -2397,17 +2397,29 @@ def get_price_history(listing_id):
 
 def _get_lot_history(conn, listing_id, tier: str = "guest"):
     row = conn.execute("""
-        SELECT id, duplicate_of_id
+        SELECT id, source, source_id, url, title, description, ward, property_type,
+               area_m2, price_ty, price_per_m2, frontage_m, depth_m, contact_phone,
+               has_so, duplicate_of_id, posted_at, crawled_at, updated_at
         FROM listings
         WHERE id = ?
     """, (listing_id,)).fetchone()
     if not row:
         return []
 
+    from cleansing.dedup import (
+        _combined_text,
+        _has_reliable_lot_signature,
+        _road_token_conflict,
+    )
+
+    anchor = dict(row)
     canonical_id = row["duplicate_of_id"] or row["id"]
     rows = conn.execute("""
-        SELECT id, source, url, title, price_ty, price_first_ty, price_dropped,
-               price_drop_pct, possibly_duplicate, duplicate_of_id,
+        SELECT id, source, source_id, url, title, description, ward, property_type,
+               area_m2, price_ty, price_per_m2, frontage_m, depth_m, contact_phone,
+               has_so, price_first_ty, price_dropped, price_drop_pct,
+               possibly_duplicate, duplicate_of_id,
+               posted_at, crawled_at, updated_at,
                COALESCE(posted_at, crawled_at, updated_at) AS dt
         FROM listings
         WHERE id = ? OR duplicate_of_id = ?
@@ -2417,9 +2429,43 @@ def _get_lot_history(conn, listing_id, tier: str = "guest"):
     lot_history = []
     first_price = None
     for r in rows:
+        candidate = dict(r)
         source = (r["source"] or "").lower()
         is_anchor = r["id"] == listing_id or r["id"] == canonical_id
         is_price_drop = bool(r["price_dropped"])
+        anchor_text = _combined_text(anchor)
+        candidate_text = _combined_text(candidate)
+        same_lot = _has_reliable_lot_signature(
+            anchor,
+            candidate,
+            allow_facebook_same_price=True,
+        )
+        compatible_price_drop = False
+        if is_price_drop and not _road_token_conflict(anchor_text, candidate_text):
+            anchor_ward = (anchor.get("ward") or "").strip()
+            candidate_ward = (candidate.get("ward") or "").strip()
+            anchor_type = anchor.get("property_type")
+            candidate_type = candidate.get("property_type")
+            anchor_area = anchor.get("area_m2") or 0
+            candidate_area = candidate.get("area_m2") or 0
+            same_segment = (
+                (not anchor_ward or not candidate_ward or anchor_ward == candidate_ward)
+                and (not anchor_type or not candidate_type or anchor_type == candidate_type)
+            )
+            area_compatible = (
+                not anchor_area
+                or not candidate_area
+                or (
+                    abs(float(anchor_area) - float(candidate_area))
+                    / max(float(anchor_area), float(candidate_area))
+                    <= 0.05
+                )
+            )
+            compatible_price_drop = same_segment and area_compatible
+
+        if r["id"] != listing_id and not (same_lot or compatible_price_drop):
+            continue
+
         include_same_price_repost = source == "facebook"
         if not (is_anchor or is_price_drop or include_same_price_repost):
             continue
