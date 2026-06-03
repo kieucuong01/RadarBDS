@@ -473,16 +473,41 @@ CREATE INDEX IF NOT EXISTS idx_notif_user_listing
 
 def init_schema() -> None:
     with get_conn() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS schema_migrations (
-                version TEXT PRIMARY KEY,
-                applied_at TEXT DEFAULT (CURRENT_TIMESTAMP::text)
-            )
-        """)
-        conn.executescript(SCHEMA_SQL)
-        # Migration: thêm cột mới cho DB cũ (ALTER TABLE idempotent)
-        _run_migrations(conn)
+        try:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS schema_migrations (
+                    version TEXT PRIMARY KEY,
+                    applied_at TEXT DEFAULT (CURRENT_TIMESTAMP::text)
+                )
+            """)
+            conn.executescript(SCHEMA_SQL)
+            # Migration: thêm cột mới cho DB cũ (ALTER TABLE idempotent)
+            _run_migrations(conn)
+        except Exception as exc:
+            if _is_insufficient_privilege_error(exc):
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+                if _core_schema_exists(conn):
+                    logger.warning(
+                        "PostgreSQL schema init skipped because this DB role lacks DDL ownership; "
+                        "existing core tables are present. Error: %s",
+                        exc,
+                    )
+                    return
+            raise
     logger.info("PostgreSQL schema initialized")
+
+
+def _is_insufficient_privilege_error(exc: Exception) -> bool:
+    sqlstate = getattr(exc, "sqlstate", "") or getattr(exc, "pgcode", "")
+    text = f"{exc.__class__.__name__} {exc}".lower()
+    return sqlstate == "42501" or "insufficientprivilege" in text or "must be owner" in text
+
+
+def _core_schema_exists(conn: Any) -> bool:
+    return all(_table_exists(conn, name) for name in ("raw_listings", "listings", "valuation_results", "crawl_runs"))
 
 
 def _run_migrations(conn: Any) -> None:
