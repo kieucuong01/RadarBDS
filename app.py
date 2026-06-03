@@ -570,6 +570,18 @@ def _parse_crawl_dt(value: str):
     return dt.astimezone(timezone.utc)
 
 
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _utc_iso(timespec: str = "seconds") -> str:
+    return _utc_now().replace(tzinfo=None).isoformat(timespec=timespec)
+
+
+def _utc_iso_z(timespec: str = "seconds") -> str:
+    return _utc_now().isoformat(timespec=timespec).replace("+00:00", "Z")
+
+
 def _active_radar_lock_blockers() -> list[dict]:
     from db.connection import _lock_id
 
@@ -816,7 +828,7 @@ def _data_quality_summary() -> dict:
 
 
 def _append_crawl_log(job: dict, message: str) -> None:
-    entry = f"{datetime.utcnow().isoformat(timespec='seconds')}Z {message}"
+    entry = f"{_utc_iso_z()} {message}"
     with FACEBOOK_CRAWL_LOCK:
         job.setdefault("logs", []).append(entry)
         job["logs"] = job["logs"][-120:]
@@ -863,7 +875,7 @@ def _run_admin_facebook_crawl_job(job_id: str) -> None:
     with FACEBOOK_CRAWL_LOCK:
         job = FACEBOOK_CRAWL_JOBS[job_id]
         job["status"] = "running"
-        job["started_at"] = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+        job["started_at"] = _utc_iso_z()
         job["progress_pct"] = 3
         job["progress_label"] = "Đang chuẩn bị crawl"
     try:
@@ -984,7 +996,7 @@ def _run_admin_facebook_crawl_job(job_id: str) -> None:
             job["stage"] = "done"
             job["progress_pct"] = 100
             job["progress_label"] = "Hoàn tất"
-            job["finished_at"] = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+            job["finished_at"] = _utc_iso_z()
     except Exception as exc:
         logger.exception("Admin Facebook crawl job failed")
         _append_crawl_log(job, f"Lỗi: {exc}")
@@ -993,7 +1005,7 @@ def _run_admin_facebook_crawl_job(job_id: str) -> None:
             job["stage"] = "failed"
             job["progress_label"] = "Lỗi khi crawl"
             job["error"] = str(exc)
-            job["finished_at"] = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+            job["finished_at"] = _utc_iso_z()
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1031,7 +1043,7 @@ def _effective_tier_from_user(user: dict) -> str:
     tier = user.get("tier") or "free"
     if tier == "vip":
         exp = user.get("vip_expires_at")
-        if exp and exp < datetime.utcnow().isoformat(timespec="seconds"):
+        if exp and exp < _utc_iso():
             return "free"
     return tier
 
@@ -1298,7 +1310,7 @@ def api_telegram_start():
     if not bot_username:
         return jsonify({"ok": False, "error": "bot_not_configured"}), 500
     token = _secrets.token_urlsafe(16)
-    expires = (datetime.utcnow() + timedelta(minutes=10)).isoformat(timespec="seconds")
+    expires = (_utc_now() + timedelta(minutes=10)).replace(tzinfo=None).isoformat(timespec="seconds")
     with db_mod.get_conn() as conn:
         conn.execute(
             "UPDATE users SET telegram_link_token=?, telegram_link_expires_at=? WHERE id=?",
@@ -1418,7 +1430,7 @@ def api_telegram_webhook():
             pass
         return jsonify({"ok": True})
 
-    now_iso = datetime.utcnow().isoformat(timespec="seconds")
+    now_iso = _utc_iso()
     with db_mod.get_conn() as conn:
         row = conn.execute(
             "SELECT id, display_name FROM users WHERE telegram_link_token=? "
@@ -2975,7 +2987,7 @@ def admin_api_facebook_crawl_run():
         "limit": limit,
         "days": days,
         "download_images": payload.get("download_images", True) is not False,
-        "created_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "created_at": _utc_iso_z(),
         "started_at": None,
         "finished_at": None,
         "progress_pct": 0,
@@ -4082,13 +4094,13 @@ def admin_api_grant_vip(user_id):
         if not before:
             return jsonify({"ok": False, "error": "not_found"}), 404
         # Extend from max(now, current vip_expires_at) so stacking days works
-        now_iso = datetime.utcnow().isoformat(timespec="seconds")
+        now_iso = _utc_iso()
         cur_exp = before["vip_expires_at"]
         base_iso = cur_exp if (cur_exp and cur_exp > now_iso) else now_iso
         try:
             base_dt = datetime.fromisoformat(base_iso)
         except ValueError:
-            base_dt = datetime.utcnow()
+            base_dt = _utc_now().replace(tzinfo=None)
         new_exp = (base_dt + timedelta(days=days)).isoformat(timespec="seconds")
         conn.execute(
             "UPDATE users SET tier='vip', vip_expires_at=? WHERE id=?",

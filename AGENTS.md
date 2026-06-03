@@ -235,6 +235,7 @@ python3 -m venv /tmp/radar-bds-venv
 ## Agent Discipline
 
 - Make surgical changes; do not refactor adjacent code for aesthetics.
+- Keep refactors incremental: `app.py` and `services/market_data.py` are already large, so avoid a big-bang split. When touching an API handler, move the relevant read/model shaping logic into `services/*` where it fits, while keeping the behavior change scoped and test-covered.
 - Do not revert user changes or runtime data unless explicitly requested.
 - Prefer repo patterns and existing service boundaries.
 - Keep docs concise; move long historical notes to `SUMMARY_HISTORY.md`.

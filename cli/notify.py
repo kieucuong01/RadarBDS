@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Iterable
 
 from db.connection import get_conn
@@ -28,6 +28,14 @@ from services.signal_quality import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _utc_iso(timespec: str = "seconds") -> str:
+    return _utc_now().replace(tzinfo=None).isoformat(timespec=timespec)
 
 
 def _parse_json_list(v) -> list:
@@ -155,7 +163,7 @@ def _fetch_new_signals(conn, since: str) -> list[dict]:
 
 def _fetch_active_vip_users_with_watchlists(conn) -> list[dict]:
     """Effective VIP users + their active watchlists. VIP expiry already filtered."""
-    now = datetime.utcnow().isoformat(timespec="seconds")
+    now = _utc_iso()
     rows = conn.execute(
         """
         SELECT u.id, u.display_name, u.email, u.telegram_chat_id,
@@ -181,8 +189,7 @@ def push_new_listings_to_vip(since: str | None = None) -> dict:
     `since`: ISO timestamp. If None, use last hour.
     """
     if not since:
-        from datetime import timedelta
-        since = (datetime.utcnow() - timedelta(hours=1)).isoformat(timespec="seconds")
+        since = (_utc_now() - timedelta(hours=1)).replace(tzinfo=None).isoformat(timespec="seconds")
 
     stats = {"telegram_sent": 0, "email_users": 0, "matched_users": 0, "since": since}
     try:
