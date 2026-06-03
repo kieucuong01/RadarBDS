@@ -50,6 +50,8 @@ class PriceHistoryTest(unittest.TestCase):
         self.token = uuid.uuid4().hex
         self.url_prefix = f"https://price-history-{self.token}.test"
         self.source_id = f"price-history-{self.token}"
+        self.admin_identifier = f"price-history-admin-{self.token}@example.test"
+        self.admin_token = f"price-history-admin-token-{self.token}"
         self.listing_ids = []
         connection.close_all()
         self.db_path_patch = mock.patch.object(connection, "DB_PATH", self.db_path)
@@ -84,6 +86,8 @@ class PriceHistoryTest(unittest.TestCase):
             conn.execute(f"DELETE FROM listing_images WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
+            conn.execute("DELETE FROM user_sessions WHERE token = ?", (self.admin_token,))
+            conn.execute("DELETE FROM users WHERE identifier = ?", (self.admin_identifier,))
 
     def _rec(self, **overrides):
         data = {
@@ -96,6 +100,30 @@ class PriceHistoryTest(unittest.TestCase):
     def _track(self, listing_id):
         self.listing_ids.append(listing_id)
         return listing_id
+
+    def _login_as_admin(self, client):
+        from auth.core import SESSION_COOKIE_NAME
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO users (identifier, identifier_type, password_hash, tier)
+                VALUES (?, 'email', 'hash', 'admin')
+                """,
+                (self.admin_identifier,),
+            )
+            conn.execute(
+                """
+                INSERT INTO user_sessions (token, user_id, expires_at)
+                VALUES (?, ?, '2099-01-01T00:00:00')
+                """,
+                (self.admin_token, cur.lastrowid),
+            )
+        try:
+            client.set_cookie(SESSION_COOKIE_NAME, self.admin_token)
+        except TypeError:
+            client.set_cookie("localhost", SESSION_COOKIE_NAME, self.admin_token)
 
     def _history_rows(self, listing_id):
         from db.connection import get_conn
@@ -268,6 +296,13 @@ class PriceHistoryTest(unittest.TestCase):
         response = app.test_client().get(f"/api/history/{listing_id}")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["history"], [{"date": "2026-05-06", "price_ty": 1.74}])
+
+        admin_client = app.test_client()
+        self._login_as_admin(admin_client)
+        admin_response = admin_client.get(f"/api/history/{listing_id}")
+        self.assertEqual(admin_response.status_code, 200)
+        admin_history = admin_response.get_json()["history"]
+        self.assertEqual(admin_history[0]["url"], f"{self.url_prefix}/dx84")
 
 
 if __name__ == "__main__":

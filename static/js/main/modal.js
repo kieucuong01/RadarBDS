@@ -675,19 +675,25 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
     const sameListingHistory = Array.isArray(data.history) ? data.history : [];
     const lotHistory = Array.isArray(data.lot_history) ? data.lot_history : [];
 
-    const seenTimeline = new Set();
-    const timeline = [...sameListingHistory, ...lotHistory]
+    const timelineByKey = new Map();
+    [...sameListingHistory, ...lotHistory]
       .filter((h) => h && h.date && h.price_ty)
       .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))
-      .filter((h) => {
+      .forEach((h) => {
         const priceKey = Number(h.price_ty);
         const key = `${h.date}|${Number.isFinite(priceKey) ? priceKey.toFixed(6) : h.price_ty}`;
-        if (seenTimeline.has(key)) return false;
-        seenTimeline.add(key);
-        return true;
+        const existing = timelineByKey.get(key);
+        if (!existing) {
+          timelineByKey.set(key, { ...h });
+          return;
+        }
+        if (!existing.url && h.url) existing.url = h.url;
+        if (!existing.is_current && h.is_current) existing.is_current = true;
       });
+    const timeline = Array.from(timelineByKey.values());
 
     let previousPrice = null;
+    const isAdmin = window.USER_TIER === 'admin';
     const timelineRows = timeline.map((h) => {
       let changeHtml = '';
       if (previousPrice && h.price_ty && previousPrice > 0) {
@@ -696,7 +702,10 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
         changeHtml = `<span class="${cls}">${Number(pct) > 0 ? '+' : ''}${pct}%</span>`;
       }
       previousPrice = h.price_ty;
-      const subText = h.is_current ? 'Đang rao hiện tại' : 'Giá ghi nhận';
+      const subText = h.is_current ? 'Giá rao hiện tại' : 'Giá rao lịch sử';
+      const originLink = isAdmin && h.url
+        ? `<a class="ph-lot-link" href="${escHtml(h.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Tin gốc</a>`
+        : '';
       return `<div class="ph-row ph-price-row">
         <div class="ph-main">
           <span class="ph-date">${escHtml(h.date || '-')}</span>
@@ -704,6 +713,7 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
         </div>
         <span class="ph-price">${escHtml(h.price_ty || '-')} tỷ</span>
         ${changeHtml}
+        ${originLink}
       </div>`;
     }).join('');
 

@@ -78,7 +78,18 @@ class SourcePolicyTest(unittest.TestCase):
             conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
 
-    def _seed_signal(self, *, source, title, source_id, area_m2=100, price_ty=2.0, image_count=0):
+    def _seed_signal(
+        self,
+        *,
+        source,
+        title,
+        source_id,
+        area_m2=100,
+        price_ty=2.0,
+        image_count=0,
+        frontage_m=None,
+        depth_m=None,
+    ):
         from db.connection import get_conn
         price_per_m2 = round(price_ty * 1000 / area_m2, 2) if area_m2 else None
 
@@ -87,12 +98,12 @@ class SourcePolicyTest(unittest.TestCase):
                 """
                 INSERT INTO listings (
                     source, source_id, url, title, description, ward,
-                    area_m2, property_type, price_ty, price_per_m2,
+                    area_m2, frontage_m, depth_m, property_type, price_ty, price_per_m2,
                     is_hot, price_dropped, suspicious_bait,
                     probably_sold, possibly_duplicate, posted_at, crawled_at
                 ) VALUES (
                     ?, ?, ?, ?, 'Source policy listing',
-                    ?, ?, 'dat_nen', ?, ?,
+                    ?, ?, ?, 'dat_nen', ?, ?,
                     0, 0, 0, 0, 0, datetime('now'), datetime('now')
                 )
                 """,
@@ -103,6 +114,8 @@ class SourcePolicyTest(unittest.TestCase):
                     title,
                     self.ward,
                     area_m2,
+                    frontage_m,
+                    depth_m,
                     price_ty,
                     price_per_m2,
                 ),
@@ -258,6 +271,23 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(counts[no_image_id], 0)
         self.assertEqual(counts[one_image_id], 1)
         self.assertEqual(counts[many_image_id], 5)
+
+    def test_signal_feed_returns_lot_dimensions(self):
+        listing_id = self._seed_signal(
+            source="facebook",
+            title="Dimension signal",
+            source_id="fb-dimension",
+            area_m2=100,
+            frontage_m=5,
+            depth_m=20,
+        )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=20")
+        self.assertEqual(response.status_code, 200)
+
+        rows = {row["id"]: row for row in response.get_json()["signals"]}
+        self.assertEqual(rows[listing_id]["frontage_m"], 5)
+        self.assertEqual(rows[listing_id]["depth_m"], 20)
 
     def test_source_filter_group_only_renders_for_admin(self):
         guest_html = self.client.get("/").get_data(as_text=True)

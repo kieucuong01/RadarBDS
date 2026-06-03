@@ -176,6 +176,21 @@ function _signalNumber(value) {
   return Number.isFinite(n) ? n : NaN;
 }
 
+function _formatSignalNumber(value) {
+  const n = _signalNumber(value);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return n.toLocaleString('vi-VN', { maximumFractionDigits: 1 }).replace(',', '.');
+}
+
+function _signalAreaLabel(signal) {
+  const area = _formatSignalNumber(signal && signal.area_m2);
+  const frontage = _formatSignalNumber(signal && signal.frontage_m);
+  const depth = _formatSignalNumber(signal && signal.depth_m);
+  if (frontage && depth && area) return `${frontage}x${depth} (${area}m²)`;
+  if (area) return `${area}m²`;
+  return '-';
+}
+
 async function loadSignals(page = 1, opts = {}) {
   const reset = Boolean(opts.reset);
   const queryKey = signalQuery(page);
@@ -276,6 +291,7 @@ function _renderSignalCards(signals) {
       const mosRounded = Math.round(_signalNumber(x.mos_pct) || 0);
       const imageCount = Math.max(0, Math.floor(_signalNumber(x.image_count) || 0));
       const imageCounterHtml = imageCount > 1 ? `<div class="sc-image-count">1/${imageCount}</div>` : '';
+      const areaLabel = _signalAreaLabel(x);
 
       const daysAgo = _daysAgoValue(x.days_ago);
       let timeStr = _timeAgoText(daysAgo);
@@ -328,7 +344,7 @@ function _renderSignalCards(signals) {
 
           <div class="sc-meta-chips">
             <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escHtml(x.ward || 'Chưa rõ')}</span>
-            <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>${escHtml(x.area_m2 || '-')} m²</span>
+            <span class="meta-chip meta-chip-area"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>${escHtml(areaLabel)}</span>
             <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>${escHtml(roadStr)}</span>
           </div>
 

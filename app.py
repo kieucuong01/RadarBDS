@@ -2229,7 +2229,8 @@ def get_price_history(listing_id):
             ORDER BY recorded_at ASC, id ASC
         """, (listing_id,)).fetchall()
         curr = conn.execute("""
-            SELECT updated_at, price_ty, ward, area_m2, property_type, road_tier, price_per_m2, title
+            SELECT updated_at, price_ty, ward, area_m2, property_type, road_tier,
+                   price_per_m2, title, url
             FROM listings
             WHERE id = ?
         """, (listing_id,)).fetchone()
@@ -2241,14 +2242,24 @@ def get_price_history(listing_id):
             same_as_last = has_last and _same_price_value(price_ty, last_price)
             if same_as_last:
                 continue
-            history.append({'date': (r[0] or '')[:10], 'price_ty': price_ty})
+            item = {'date': (r[0] or '')[:10], 'price_ty': price_ty}
+            if tier == "admin" and curr and curr["url"]:
+                item["url"] = curr["url"]
+            history.append(item)
             last_price = price_ty
             has_last = True
 
         if curr and curr["price_ty"]:
             current_price = curr["price_ty"]
             if not history or not _same_price_value(history[-1]['price_ty'], current_price):
-                history.append({'date': (curr["updated_at"] or '')[:10], 'price_ty': current_price})
+                item = {
+                    'date': (curr["updated_at"] or '')[:10],
+                    'price_ty': current_price,
+                    'is_current': True,
+                }
+                if tier == "admin" and curr["url"]:
+                    item["url"] = curr["url"]
+                history.append(item)
 
         comps = []
         if curr and curr["ward"]:

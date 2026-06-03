@@ -390,6 +390,8 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "actual_ppm2": round(r['actual_ppm2'], 1) if r['actual_ppm2'] else 0,
         "fair_ppm2": fair_ppm2,
         "area_m2": r['area_m2'],
+        "frontage_m": _row_get(r, "frontage_m"),
+        "depth_m": _row_get(r, "depth_m"),
         "price_ty": r['price_ty'],
         "price_label": _format_price_label(r['title']),
         "prop_type": r['property_type'],
@@ -451,7 +453,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         WITH {LATEST_VALUATION_CTE}
         SELECT COUNT(*) OVER() AS total_count,
                v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
-               l.id, l.title, l.source, l.area_m2, l.price_ty,
+               l.id, l.title, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
                l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
                l.price_first_ty, l.duplicate_of_id,
                l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
@@ -554,7 +556,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         sig_query = f"""
             WITH {LATEST_VALUATION_CTE}
             SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
-                   l.id, l.title, l.source, l.area_m2, l.price_ty,
+                   l.id, l.title, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
                    l.property_type, l.is_hot, l.price_dropped, l.price_drop_pct, l.suspicious_bait,
                    l.price_first_ty, l.duplicate_of_id,
                    l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,

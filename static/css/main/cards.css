@@ -603,25 +603,36 @@
 
 .sc-meta-chips {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 7px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sc-meta-chips::-webkit-scrollbar {
+  display: none;
 }
 
 .meta-chip {
-  min-height: 30px;
+  min-height: 28px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  max-width: 100%;
-  padding: 6px 9px;
+  flex: 0 0 auto;
+  max-width: 180px;
+  padding: 5px 8px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.08);
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .meta-chip svg {
@@ -798,14 +809,19 @@
   }
 
   .sc-meta-chips {
-    gap: 5px;
+    gap: 4px;
   }
 
   .meta-chip {
-    min-height: 26px;
-    gap: 4px;
-    padding: 5px 7px;
-    font-size: 0.7rem;
+    min-height: 24px;
+    gap: 3px;
+    max-width: 112px;
+    padding: 4px 6px;
+    font-size: 0.64rem;
+  }
+
+  .meta-chip-area {
+    max-width: 132px;
   }
 
   .meta-chip svg {
