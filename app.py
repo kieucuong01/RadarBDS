@@ -36,7 +36,7 @@ from config.seo_pages import SEO_PAGES
 mimetypes.add_type("image/webp", ".webp")
 
 # Import the extracted services
-from services.market_data import load_counts, load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier
+from services.market_data import load_counts, load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter
 from services.investment_memo import load_investment_memo
 from services.ai_bot import AIBot
 from services.signal_quality import (
@@ -1476,6 +1476,10 @@ def _request_range_filter_kwargs(req):
     }
 
 
+def _request_keyword(req) -> str:
+    return normalize_search_keyword(req.args.get("q") or req.args.get("keyword") or "")
+
+
 def _safe_date(value):
     if not value:
         return None
@@ -1759,6 +1763,7 @@ def _clean_infra_payload(payload):
 def api_dashboard():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     range_kwargs = _request_range_filter_kwargs(request)
+    keyword = _request_keyword(request)
     area_min = range_kwargs["area_min"]
     area_max = range_kwargs["area_max"]
     price_min = range_kwargs["price_min"]
@@ -1784,11 +1789,12 @@ def api_dashboard():
         float(price_max or 0),
         tuple(range_kwargs["area_ranges"]),
         tuple(range_kwargs["price_ranges"]),
+        keyword,
         bool(include_trend),
     )
 
     def _load_dashboard_payload():
-        data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False, tier=tier, **range_kwargs)
+        data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False, tier=tier, keyword=keyword, **range_kwargs)
         return {
             "stats": data["stats"],
             "market": data["market"],
@@ -1811,6 +1817,7 @@ def api_dashboard():
 def api_counts():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     range_kwargs = _request_range_filter_kwargs(request)
+    keyword = _request_keyword(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     return jsonify({
@@ -1821,6 +1828,7 @@ def api_counts():
             prop_types=prop_types,
             only_drops=only_drops,
             mos_min=mos_min,
+            keyword=keyword,
             **range_kwargs,
         ),
         "active_city": active_city,
@@ -1834,6 +1842,7 @@ def api_counts():
 def api_signals():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     range_kwargs = _request_range_filter_kwargs(request)
+    keyword = _request_keyword(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     try:
@@ -1855,6 +1864,7 @@ def api_signals():
         page=page,
         limit=limit,
         tier=tier,
+        keyword=keyword,
         **range_kwargs,
     ))
 
@@ -2048,6 +2058,7 @@ def api_market_indicators():
 def api_listings():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     range_kwargs = _request_range_filter_kwargs(request)
+    keyword = _request_keyword(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     try:
@@ -2079,6 +2090,9 @@ def api_listings():
     range_clauses, range_params = _range_filters(**range_kwargs)
     where_parts.extend(range_clauses)
     params.extend(range_params)
+    search_clauses, search_params = keyword_search_filter(keyword)
+    where_parts.extend(search_clauses)
+    params.extend(search_params)
     where_sql = " AND ".join(where_parts)
 
     sort_col_map = {

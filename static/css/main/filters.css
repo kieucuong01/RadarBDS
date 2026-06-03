@@ -757,6 +757,17 @@
 }
 
 /* Signals Command Bar */
+.signal-search-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.signal-search-row .command-keyword-search {
+  width: min(100%, 560px);
+  max-width: 560px;
+}
+
 .command-bar {
   display: flex;
   align-items: center;
@@ -826,6 +837,95 @@
   align-items: center;
   margin-left: auto;
   flex-shrink: 0;
+}
+
+.command-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.command-bar-actions .command-bar-right {
+  margin-left: 0;
+}
+
+.keyword-search {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.keyword-search:focus-within {
+  border-color: rgba(99, 102, 241, 0.62);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.13);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.keyword-search svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.keyword-search-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.keyword-search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.78;
+}
+
+.keyword-clear {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  display: none;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.keyword-search.has-value .keyword-clear {
+  display: grid;
+}
+
+.command-keyword-search {
+  flex: 1 1 260px;
+  max-width: 380px;
+}
+
+[data-theme="light"] .keyword-search {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(148, 163, 184, 0.34);
 }
 
 .command-super-signal.super-signal-btn {
@@ -964,6 +1064,19 @@
 
 [data-theme="light"] .command-sort-select:focus {
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.listings-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.listings-keyword-search {
+  flex: 1 1 420px;
+  max-width: 620px;
 }
 
 #tab-signals,

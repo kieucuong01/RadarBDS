@@ -48,6 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const initialTab = searchParams.get('tab') || window.location.hash.replace(/^#/, '');
   const shouldOpenInitialTab = ['signals', 'all', 'market', 'insights'].includes(initialTab);
   if (shouldOpenInitialTab) searchParams.delete('tab');
+  if (typeof syncKeywordSearchInputs === 'function') {
+    syncKeywordSearchInputs(searchParams.get('q') || searchParams.get('keyword') || '');
+  }
   if (window.INITIAL_WARDS_BY_CITY) {
     globalWardsByCity = window.INITIAL_WARDS_BY_CITY;
     updateWardFilters(globalWardsByCity, [], { preserveScroll: false, preserveSearch: false });

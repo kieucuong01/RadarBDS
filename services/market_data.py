@@ -138,7 +138,63 @@ def _days_ago(crawled_at: str) -> int:
     except Exception:
         return None
 
-def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None):
+
+_VIET_SEARCH_FROM = (
+    "áàảãạăắằẳẵặâấầẩẫậ"
+    "đ"
+    "éèẻẽẹêếềểễệ"
+    "íìỉĩị"
+    "óòỏõọôốồổỗộơớờởỡợ"
+    "úùủũụưứừửữự"
+    "ýỳỷỹỵ"
+)
+_VIET_SEARCH_TO = (
+    "aaaaaaaaaaaaaaaaa"
+    "d"
+    "eeeeeeeeeee"
+    "iiiii"
+    "ooooooooooooooooo"
+    "uuuuuuuuuuu"
+    "yyyyy"
+)
+
+
+def normalize_search_keyword(value) -> str:
+    text = re.sub(r"\s+", " ", str(value or "").strip())
+    return text[:80]
+
+
+def _search_terms(keyword):
+    folded = _ascii_fold(normalize_search_keyword(keyword))
+    return [t for t in re.split(r"\s+", folded) if t][:6]
+
+
+def _search_text_expr(prefix=""):
+    col = lambda name: f"{prefix}{name}" if prefix else name
+    parts = [
+        col("title"),
+        col("description"),
+        col("ward"),
+        col("road_type"),
+        col("property_type"),
+        col("source"),
+        col("url"),
+    ]
+    combined = " || ' ' || ".join(f"COALESCE({part}, '')" for part in parts)
+    return f"translate(LOWER({combined}), '{_VIET_SEARCH_FROM}', '{_VIET_SEARCH_TO}')"
+
+
+def keyword_search_filter(keyword, prefix=""):
+    terms = _search_terms(keyword)
+    if not terms:
+        return [], []
+    expr = _search_text_expr(prefix)
+    clauses = [f"{expr} LIKE ?" for _ in terms]
+    params = [f"%{term}%" for term in terms]
+    return clauses, params
+
+
+def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword=""):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
 
@@ -179,6 +235,9 @@ def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, 
     )
     where_parts.extend(range_clauses)
     params.extend(range_params)
+    search_clauses, search_params = keyword_search_filter(keyword, prefix)
+    where_parts.extend(search_clauses)
+    params.extend(search_params)
 
     return " AND ".join(where_parts), params
 
@@ -420,7 +479,7 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
     return redact_for_tier(record, tier)
 
 
-def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None, area_ranges=None, price_ranges=None):
+def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None, area_ranges=None, price_ranges=None, keyword=""):
     # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
     # Guest still sees the full deal feed; original URLs/phones stay redacted.
     if tier == "guest":
@@ -439,6 +498,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         price_max=price_max,
         area_ranges=area_ranges,
         price_ranges=price_ranges,
+        keyword=keyword,
     )
     mos_condition, mos_params = _mos_filter(mos_min)
     signal_condition = actionable_signal_sql("v")
@@ -515,7 +575,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     }
 
 
-def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=0, area_ranges=None, price_ranges=None):
+def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=0, area_ranges=None, price_ranges=None, keyword=""):
     conn = _open_read_conn(db_path)
 
     where_sql, params = _build_filters(
@@ -529,6 +589,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         price_max=price_max,
         area_ranges=area_ranges,
         price_ranges=price_ranges,
+        keyword=keyword,
     )
     mos_condition, mos_params = _mos_filter(mos_min)
     signal_condition = actionable_signal_sql("v")
@@ -728,7 +789,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     }
 
 
-def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None):
+def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword=""):
     conn = _open_read_conn(db_path)
     where_sql, params = _build_filters(
         sources,
@@ -741,6 +802,7 @@ def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=F
         price_max=price_max,
         area_ranges=area_ranges,
         price_ranges=price_ranges,
+        keyword=keyword,
     )
 
     row = conn.execute(f"""

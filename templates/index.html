@@ -41,11 +41,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=main-css-split-20260526">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=listings-view-20260527">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=mobile-home-polish-20260602">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=keyword-search-20260603">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=mobile-signal-card-dimension-chips-20260603">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-mobile-carousel-20260602">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=market-mobile-ux-20260602">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=mobile-safe-header-20260603">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=keyword-search-mobile-20260603">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=justify-text-20260602">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -316,6 +316,17 @@
 
       <!-- TAB: SIGNALS -->
       <div id="tab-signals" class="tab-content active">
+        <div class="signal-search-row">
+          <label class="keyword-search command-keyword-search" for="keywordSearchSignals">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M16.5 16.5 21 21"></path>
+            </svg>
+            <input id="keywordSearchSignals" class="keyword-search-input" type="search" inputmode="search"
+              autocomplete="off" placeholder="Tìm tên đường, địa danh..." oninput="onKeywordSearchInput(this)">
+            <button type="button" class="keyword-clear" aria-label="Xóa tìm kiếm" onclick="clearKeywordSearch()">×</button>
+          </label>
+        </div>
         <div class="command-bar">
           <div class="command-bar-left">
             <!-- <button type="button" class="super-signal-btn command-super-signal" onclick="activateSuperSignal()">
@@ -345,6 +356,9 @@
                 <span>50%+</span>
               </div>
             </div>
+          </div>
+
+          <div class="command-bar-actions">
             <label
               class="drop-toggle-pill command-drop-toggle {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}" {%
               if USER_TIER=='guest'
@@ -355,18 +369,17 @@
               <span>{% if USER_TIER == 'guest' %}🔒 {% endif %}Có giảm giá</span>
             </label>
 
-          </div>
-
-          <div class="command-bar-right">
-            <label class="command-sort">
-              <span class="command-sort-label">Sắp xếp</span>
-              <select id="signalSortSelect" class="command-sort-select" onchange="setSignalSort(this.value)">
-                <option value="newest" selected>Mới nhất</option>
-                <option value="price_m2_asc">Giá m2 rẻ nhất</option>
-                <option value="price_asc">Giá trị thấp nhất</option>
-                <option value="mos_desc">Cơ hội tốt nhất</option>
-              </select>
-            </label>
+            <div class="command-bar-right">
+              <label class="command-sort">
+                <span class="command-sort-label">Sắp xếp</span>
+                <select id="signalSortSelect" class="command-sort-select" onchange="setSignalSort(this.value)">
+                  <option value="newest" selected>Mới nhất</option>
+                  <option value="price_m2_asc">Giá m2 rẻ nhất</option>
+                  <option value="price_asc">Giá trị thấp nhất</option>
+                  <option value="mos_desc">Cơ hội tốt nhất</option>
+                </select>
+              </label>
+            </div>
           </div>
         </div>
         <div class="signal-loading-bar" id="signalsLoadingBar" hidden aria-live="polite">
@@ -528,10 +541,21 @@
           </button>
           <button class="tf-btn tf-btn-reset" onclick="resetTableFilters()">Xóa</button>
         </div> -->
-        <div class="listings-view-bar" aria-label="Chọn kiểu hiển thị tin rao">
-          <div class="listings-view-toggle" role="group" aria-label="Kiểu hiển thị">
-            <button type="button" id="listingsViewTable" class="listings-view-btn active" data-view="table">Table</button>
-            <button type="button" id="listingsViewGrid" class="listings-view-btn" data-view="grid">Grid</button>
+        <div class="listings-toolbar">
+          <label class="keyword-search listings-keyword-search" for="keywordSearchListings">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M16.5 16.5 21 21"></path>
+            </svg>
+            <input id="keywordSearchListings" class="keyword-search-input" type="search" inputmode="search"
+              autocomplete="off" placeholder="Tìm tên đường, địa danh..." oninput="onKeywordSearchInput(this)">
+            <button type="button" class="keyword-clear" aria-label="Xóa tìm kiếm" onclick="clearKeywordSearch()">×</button>
+          </label>
+          <div class="listings-view-bar" aria-label="Chọn kiểu hiển thị tin rao">
+            <div class="listings-view-toggle" role="group" aria-label="Kiểu hiển thị">
+              <button type="button" id="listingsViewTable" class="listings-view-btn active" data-view="table">Table</button>
+              <button type="button" id="listingsViewGrid" class="listings-view-btn" data-view="grid">Grid</button>
+            </div>
           </div>
         </div>
         <div class="table-wrap listing-view" id="listingsTableView">
@@ -947,13 +971,13 @@
 
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=watchlist-telegram-sync-20260515"></script>
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-home-polish-20260602"></script>
-  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=fast-counts-20260602"></script>
+  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=keyword-search-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-signal-card-dimensions-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=signal-modal-browser-back-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=trend-first-20260528"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=contact-redaction-20260528"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=market-tab-deeplink-20260602"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=keyword-search-20260603"></script>
 </body>
 
 </html>

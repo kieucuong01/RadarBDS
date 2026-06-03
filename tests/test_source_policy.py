@@ -103,7 +103,7 @@ class SourcePolicyTest(unittest.TestCase):
                     probably_sold, possibly_duplicate, posted_at, crawled_at
                 ) VALUES (
                     ?, ?, ?, ?, 'Source policy listing',
-                    ?, ?, ?, 'dat_nen', ?, ?,
+                    ?, ?, ?, ?, 'dat_nen', ?, ?,
                     0, 0, 0, 0, 0, datetime('now'), datetime('now')
                 )
                 """,
@@ -288,6 +288,47 @@ class SourcePolicyTest(unittest.TestCase):
         rows = {row["id"]: row for row in response.get_json()["signals"]}
         self.assertEqual(rows[listing_id]["frontage_m"], 5)
         self.assertEqual(rows[listing_id]["depth_m"], 20)
+
+    def test_keyword_search_filters_signal_feed_without_accents(self):
+        matched_id = self._seed_signal(
+            source="facebook",
+            title="Đường Nguyễn Chí Thanh giá tốt",
+            source_id="fb-nguyen-chi-thanh",
+        )
+        self._seed_signal(
+            source="facebook",
+            title="Đường khác không khớp",
+            source_id="fb-other-road",
+        )
+
+        response = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}&q=nguyen chi thanh&limit=20"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        rows = response.get_json()["signals"]
+        self.assertEqual([row["id"] for row in rows], [matched_id])
+
+    def test_keyword_search_filters_all_listings_without_accents(self):
+        matched_id = self._seed_signal(
+            source="facebook",
+            title="Nhà gần địa danh Chánh Nghĩa",
+            source_id="fb-chanh-nghia",
+        )
+        self._seed_signal(
+            source="facebook",
+            title="Nhà khu vực khác",
+            source_id="fb-other-place",
+        )
+
+        response = self.client.get(
+            f"/api/listings?city=Khac&ward={self.ward}&q=chanh nghia&limit=20"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        payload = response.get_json()
+        self.assertEqual(payload["total"], 1)
+        self.assertEqual([row["id"] for row in payload["listings"]], [matched_id])
 
     def test_source_filter_group_only_renders_for_admin(self):
         guest_html = self.client.get("/").get_data(as_text=True)

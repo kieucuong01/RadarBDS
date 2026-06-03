@@ -22,6 +22,32 @@ function updateWardSelectionSummary() {
   if (countEl) countEl.textContent = `${selectedCount}/${boxes.length} phường`;
 }
 
+function getKeywordSearchValue() {
+  const input = document.querySelector('.keyword-search-input');
+  return input ? input.value.trim().replace(/\s+/g, ' ').slice(0, 80) : '';
+}
+
+function syncKeywordSearchInputs(value, source = null) {
+  const normalized = String(value || '').slice(0, 80);
+  document.querySelectorAll('.keyword-search-input').forEach(input => {
+    if (input !== source && input.value !== normalized) input.value = normalized;
+    const root = input.closest('.keyword-search');
+    if (root) root.classList.toggle('has-value', normalized.length > 0);
+  });
+}
+
+function onKeywordSearchInput(input) {
+  syncKeywordSearchInputs(input.value, input);
+  scheduleApplyFilters();
+}
+
+function clearKeywordSearch() {
+  syncKeywordSearchInputs('');
+  scheduleApplyFilters();
+  const activeInput = document.querySelector(`#tab-${activeTabId()} .keyword-search-input`) || document.querySelector('.keyword-search-input');
+  if (activeInput) activeInput.focus();
+}
+
 function setAllWards(checked) {
   document.querySelectorAll('#wardFilters input[name="ward"]').forEach(box => {
     box.checked = checked;
@@ -51,6 +77,10 @@ function getFilterQuery() {
   const onlyDrops = document.querySelector('input[name="only_drops"]');
   if (onlyDrops && onlyDrops.checked) {
     params.set('only_drops', '1');
+  }
+  const keyword = getKeywordSearchValue();
+  if (keyword) {
+    params.set('q', keyword);
   }
   params.append('trend_period', trendPeriod);
   return params.toString();
