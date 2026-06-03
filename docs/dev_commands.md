@@ -82,6 +82,7 @@ systemctl status radar-bds-crawl.service --no-pager
 tail -n 120 logs/crawl-daily.log
 curl -fsS http://127.0.0.1:5000/api/dashboard >/dev/null
 curl -fsS "http://127.0.0.1:5000/api/signals?page=1&limit=3" >/dev/null
+curl -fsS "http://127.0.0.1:5000/api/dashboard?cache_refresh=1" >/dev/null
 curl -fsS https://radarbds.vn/robots.txt >/dev/null
 curl -fsS https://radarbds.vn/sitemap.xml >/dev/null
 ```

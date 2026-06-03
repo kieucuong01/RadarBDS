@@ -45,11 +45,13 @@ class OpsAlertTest(unittest.TestCase):
              mock.patch.object(crawlers, "get_conn", fake_get_conn), \
              mock.patch.object(crawlers, "_clean_broker_images_after_download", return_value={}), \
              mock.patch.object(crawlers, "_maybe_send_ops_alert") as ops_alert, \
+             mock.patch.object(crawlers, "_prewarm_dashboard_cache") as prewarm, \
              mock.patch.object(download_module, "download_images", fake_download):
             crawlers._cmd_crawl(args, mode="incremental")
 
         fake_download.assert_called_once_with(limit=200)
         ops_alert.assert_called_once_with("2026-05-26T00:00:00", [])
+        prewarm.assert_called_once_with()
 
     def test_send_ops_alert_noop_when_chat_id_missing(self):
         from alerts import ops

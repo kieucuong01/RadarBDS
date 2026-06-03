@@ -36,7 +36,7 @@ from config.seo_pages import SEO_PAGES
 mimetypes.add_type("image/webp", ".webp")
 
 # Import the extracted services
-from services.market_data import load_counts, load_data, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql
+from services.market_data import load_counts, load_data, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql
 from services.investment_memo import load_investment_memo
 from services.ai_bot import AIBot
 from services.signal_quality import (
@@ -1437,21 +1437,21 @@ def sitemap_xml():
 
 _DASHBOARD_CACHE = {}
 _DASHBOARD_CACHE_MAX_ITEMS = 96
-_DASHBOARD_CACHE_TTL_SECONDS = float(os.getenv("RADAR_DASHBOARD_CACHE_TTL_SECONDS", "30"))
+_DASHBOARD_CACHE_TTL_SECONDS = float(os.getenv("RADAR_DASHBOARD_CACHE_TTL_SECONDS", "120"))
 
 
 def clear_dashboard_cache():
     _DASHBOARD_CACHE.clear()
 
 
-def _cached_dashboard_payload(key, loader, now=None, ttl_seconds=None):
+def _cached_dashboard_payload(key, loader, now=None, ttl_seconds=None, force_refresh=False):
     ttl = _DASHBOARD_CACHE_TTL_SECONDS if ttl_seconds is None else ttl_seconds
     if ttl <= 0:
         return loader()
 
     now = time.monotonic() if now is None else now
     entry = _DASHBOARD_CACHE.get(key)
-    if entry and now - entry["ts"] <= ttl:
+    if not force_refresh and entry and now - entry["ts"] <= ttl:
         return deepcopy(entry["payload"])
 
     payload = loader()
@@ -1460,6 +1460,18 @@ def _cached_dashboard_payload(key, loader, now=None, ttl_seconds=None):
         oldest_key = min(_DASHBOARD_CACHE, key=lambda k: _DASHBOARD_CACHE[k]["ts"])
         _DASHBOARD_CACHE.pop(oldest_key, None)
     return payload
+
+
+def _dashboard_cache_refresh_requested(req) -> bool:
+    if req.args.get("cache_refresh") != "1":
+        return False
+    remote_addr = (req.remote_addr or "").strip()
+    if remote_addr in {"127.0.0.1", "::1", "localhost"}:
+        return True
+    try:
+        return current_tier() == "admin"
+    except Exception:
+        return False
 
 
 def _get_signals_version(db_path: str) -> str:
@@ -1855,7 +1867,19 @@ def api_dashboard():
     )
 
     def _load_dashboard_payload():
-        data = load_data(db_path, sources, wards, prop_types, only_drops, trend_period, skip_listings=True, include_trend=include_trend, mos_min=mos_min, include_signals=False, tier=tier, keyword=keyword, **range_kwargs)
+        data = load_dashboard_summary(
+            db_path,
+            sources=sources,
+            wards=wards,
+            prop_types=prop_types,
+            only_drops=only_drops,
+            trend_period=trend_period,
+            include_trend=include_trend,
+            mos_min=mos_min,
+            tier=tier,
+            keyword=keyword,
+            **range_kwargs,
+        )
         return {
             "stats": data["stats"],
             "market": data["market"],
@@ -1872,7 +1896,11 @@ def api_dashboard():
             "tier": tier,
         }
 
-    return jsonify(_cached_dashboard_payload(cache_key, _load_dashboard_payload))
+    return jsonify(_cached_dashboard_payload(
+        cache_key,
+        _load_dashboard_payload,
+        force_refresh=_dashboard_cache_refresh_requested(request),
+    ))
 
 @rate_limit("dashboard", limits={"guest": 1200, "free": 2400, "vip": None, "admin": None})
 def api_counts():

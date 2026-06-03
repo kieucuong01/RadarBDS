@@ -156,7 +156,7 @@ Valuation road-tier rules:
 Dashboard/API:
 
 - `/api/dashboard` is lightweight summary only. It must not return all signals, descriptions, or image arrays.
-- `/api/dashboard` uses a short in-process cache keyed by filters. Guest dashboard rate limiting is also in-memory to avoid a DB write on every summary refresh.
+- `/api/dashboard` uses `load_dashboard_summary()` instead of `load_data()` so cold-cache summary does not run listing/image shaping. It uses an in-process cache keyed by filters, with localhost/admin `cache_refresh=1` for deploy/crawl prewarm. Guest dashboard rate limiting is also in-memory to avoid a DB write on every summary refresh.
 - `/api/signals` is paginated card data. Default limit is 30. It returns `primary_img` thumbnail when available.
 - `/api/signals`, `/api/dashboard`, VIP push, admin main queue, and review queue should read the latest valuation snapshot, use actionable-signal gating, and hide duplicate reposts (`possibly_duplicate=1`) unless an explicit price-drop view allows them.
 - Source policy is Facebook-first: Guest/Free/VIP are forced to `source=facebook`; Admin alone sees the source filter and defaults to Facebook unless selecting another source for QC/research. Valuation baseline also defaults to Facebook-only.

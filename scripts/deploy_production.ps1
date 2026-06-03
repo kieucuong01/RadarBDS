@@ -63,6 +63,14 @@ for url in "http://127.0.0.1:5000/api/dashboard" "http://127.0.0.1:5000/api/sign
   done
 done
 
+for url in \
+  "http://127.0.0.1:5000/api/dashboard?cache_refresh=1" \
+  "http://127.0.0.1:5000/api/dashboard" \
+  "http://127.0.0.1:5000/api/dashboard" \
+  "http://127.0.0.1:5000/api/dashboard"; do
+  curl -fsS --max-time 30 "`$url" >/dev/null
+done
+
 after=`$(git rev-parse --short HEAD)
 echo "deployed `$before -> `$after"
 "@

@@ -1,7 +1,9 @@
 import json
+import os
 import time
 import logging
 import sys
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from cli.data_import import cmd_export_raw
@@ -51,6 +53,22 @@ def _clean_broker_images_after_download(source=None, limit=None):
         f"deleted={stats.get('deleted', 0)} | reasons={stats.get('reasons', {})}"
     )
     return stats
+
+
+def _prewarm_dashboard_cache():
+    base_url = (os.getenv("RADAR_DASHBOARD_PREWARM_URL") or "http://127.0.0.1:5000").rstrip("/")
+    urls = [f"{base_url}/api/dashboard?cache_refresh=1"]
+    urls.extend([f"{base_url}/api/dashboard"] * 3)
+    ok = 0
+    for url in urls:
+        try:
+            with urllib.request.urlopen(url, timeout=12) as res:
+                if 200 <= getattr(res, "status", 200) < 300:
+                    ok += 1
+        except Exception as exc:
+            print(f"[dashboard-cache] prewarm skipped: {exc}")
+            return
+    print(f"[dashboard-cache] prewarmed {ok}/{len(urls)} request(s)")
 
 
 def _refresh_existing_facebook_images(url: str, raw_data: dict):
@@ -304,6 +322,7 @@ def _cmd_crawl(args, mode: str = "full"):
         download_images(limit=200)
         _clean_broker_images_after_download(source=source_filter, limit=200)
         _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
+        _prewarm_dashboard_cache()
         print(f"\nKhông có tin mới. DB không thay đổi.")
         return
 
@@ -348,6 +367,7 @@ def _cmd_crawl(args, mode: str = "full"):
             print(f"[vip-push] error: {e}")
 
     _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
+    _prewarm_dashboard_cache()
 
     print(f"\n{'='*45}")
     print(f"CRAWL {mode.upper()} DONE — {total_new} records mới")

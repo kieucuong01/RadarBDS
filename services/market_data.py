@@ -857,6 +857,129 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     }
 
 
+def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', include_trend=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier='guest'):
+    if tier == "guest":
+        mos_min = 0
+        only_drops = False
+
+    conn = _open_read_conn(db_path)
+    where_sql, params = _build_filters(
+        sources,
+        wards,
+        prop_types,
+        only_drops,
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+        keyword=keyword,
+    )
+
+    stats_row = conn.execute(f"""
+        WITH filtered AS (
+            SELECT id, is_hot, posted_at, crawled_at, price_dropped, price_ty
+            FROM listings
+            WHERE {where_sql}
+        )
+        SELECT
+            (SELECT COUNT(*) FROM filtered) AS total,
+            0 AS signals,
+            (SELECT COUNT(*) FROM filtered WHERE is_hot = 1) AS hot,
+            (SELECT COUNT(*) FROM filtered WHERE (
+                COALESCE(posted_at, crawled_at) IS NOT NULL
+                AND julianday('now') - julianday(substr(COALESCE(posted_at, crawled_at),1,10)) <= 7
+            )) AS new_recent_days_7,
+            (SELECT COUNT(*) FROM filtered WHERE {group_price_drop_filter_sql()}) AS price_drops
+    """, params).fetchone()
+    stats = dict(stats_row) if stats_row else {
+        "total": 0,
+        "signals": 0,
+        "hot": 0,
+        "new_recent_days_7": 0,
+        "price_drops": 0,
+    }
+
+    signal_where_sql, signal_params = _build_filters(
+        sources,
+        wards,
+        prop_types,
+        only_drops,
+        prefix="l.",
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+        keyword=keyword,
+    )
+    mos_condition, mos_params = _mos_filter(mos_min)
+    signal_condition = actionable_signal_sql("v")
+    signal_row = conn.execute(f"""
+        WITH {LATEST_VALUATION_CTE}
+        SELECT COUNT(*) AS signals
+        FROM listings l
+        JOIN latest_valuation v ON l.id = v.listing_id
+        WHERE {signal_condition} AND {signal_where_sql}{mos_condition}
+    """, signal_params + mos_params).fetchone()
+    stats["signals"] = int(_row_get(signal_row, "signals", 0) or 0)
+
+    market = []
+    summary_rows = conn.execute(f"""
+        SELECT property_type, AVG(price_per_m2) as mean_ppm2, COUNT(*) as n_samples
+        FROM listings
+        WHERE is_outlier = 0 AND {where_sql}
+        GROUP BY property_type
+        HAVING COUNT(*) >= 1
+    """, params).fetchall()
+    type_label = {'dat_nen': 'Äáº¥t ná»n', 'dat_vuon': 'Äáº¥t vÆ°á»n', 'nha_dat': 'NhÃ  Ä‘áº¥t', 'nha_tro': 'NhÃ  trá»', 'chung_cu': 'Chung cÆ°'}
+    for row in summary_rows:
+        mean_ppm2 = _row_get(row, "mean_ppm2")
+        if mean_ppm2 is None:
+            continue
+        prop_type = _row_get(row, "property_type")
+        market.append({
+            "type": prop_type,
+            "label": type_label.get(prop_type, prop_type),
+            "median": round(mean_ppm2, 1),
+            "n": _row_get(row, "n_samples", 0),
+        })
+
+    all_wards = [r[0] for r in conn.execute("SELECT DISTINCT ward FROM listings WHERE ward IS NOT NULL").fetchall()]
+    all_sources = [r[0] for r in conn.execute("SELECT DISTINCT source FROM listings").fetchall()]
+    conn.close()
+
+    trend_data = {}
+    if include_trend:
+        trend_data = load_trend_data(
+            db_path,
+            sources=sources,
+            wards=wards,
+            prop_types=prop_types,
+            only_drops=only_drops,
+            trend_period=trend_period,
+            area_min=area_min,
+            area_max=area_max,
+            price_min=price_min,
+            price_max=price_max,
+            area_ranges=area_ranges,
+            price_ranges=price_ranges,
+            keyword=keyword,
+        )
+
+    return {
+        "stats": stats,
+        "market": market,
+        "trend_data": trend_data,
+        "all_wards": all_wards,
+        "all_sources": all_sources,
+        "wards_by_city": {city: list(wards) for city, wards in CITY_MAP.items()},
+        "tier": tier,
+    }
+
+
 def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword=""):
     conn = _open_read_conn(db_path)
     where_sql, params = _build_filters(
@@ -898,7 +1021,7 @@ def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=F
         "price_drops": 0,
     }
 
-def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None):
+def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword=""):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
 
@@ -930,6 +1053,9 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
     )
     where_parts.extend(range_clauses)
     params.extend(range_params)
+    search_clauses, search_params = keyword_search_filter(keyword)
+    where_parts.extend(search_clauses)
+    params.extend(search_params)
     where_sql = " AND ".join(where_parts)
     target_wards = wards if wards else ["Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ"]
 

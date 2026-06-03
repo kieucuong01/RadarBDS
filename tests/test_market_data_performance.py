@@ -100,6 +100,96 @@ def test_load_counts_uses_compact_shared_connection_scope(monkeypatch):
     assert "LEFT JOIN LATERAL" not in conn.queries[0][0]
 
 
+def test_load_dashboard_summary_uses_compact_read_model(monkeypatch):
+    import services.market_data as market_data
+
+    class _DashboardConnection:
+        def __init__(self):
+            self.queries = []
+            self.closed = False
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params))
+            if "JOIN latest_valuation" in sql:
+                return _FakeCursor(row={"signals": 7})
+            if "GROUP BY property_type" in sql:
+                return _FakeCursor(rows=[
+                    {"property_type": "dat_nen", "mean_ppm2": 25.5, "n_samples": 12}
+                ])
+            if "SELECT DISTINCT ward" in sql:
+                return _FakeCursor(rows=[("Tan An",), ("Hiep An",)])
+            if "SELECT DISTINCT source" in sql:
+                return _FakeCursor(rows=[("facebook",)])
+            return _FakeCursor(row={
+                "total": 20,
+                "signals": 0,
+                "hot": 2,
+                "new_recent_days_7": 5,
+                "price_drops": 3,
+            })
+
+        def close(self):
+            self.closed = True
+            raise AssertionError("dashboard summary reads should not close the shared connection")
+
+    conn = _DashboardConnection()
+
+    @contextmanager
+    def fake_read_conn(_db_path=None):
+        yield conn
+
+    monkeypatch.setattr(market_data, "_read_conn", fake_read_conn, raising=False)
+
+    result = market_data.load_dashboard_summary(
+        None,
+        sources=["facebook"],
+        wards=["Tan An"],
+        include_trend=False,
+        tier="admin",
+    )
+
+    assert result["stats"]["total"] == 20
+    assert result["stats"]["signals"] == 7
+    assert result["market"][0]["type"] == "dat_nen"
+    assert result["trend_data"] == {}
+    assert conn.closed is False
+    assert len(conn.queries) == 5
+    sql_text = "\n".join(sql for sql, _ in conn.queries)
+    assert "SELECT * FROM listings" not in sql_text
+    assert "listing_images" not in sql_text
+    assert "LEFT JOIN LATERAL" not in sql_text
+
+
+def test_api_dashboard_uses_fast_summary_loader(monkeypatch):
+    import app as radar_app
+
+    radar_app.clear_dashboard_cache()
+
+    def fake_summary(*_args, **_kwargs):
+        return {
+            "stats": {"total": 20, "signals": 7, "hot": 2, "new_recent_days_7": 5, "price_drops": 3},
+            "market": [],
+            "trend_data": {},
+            "all_wards": ["Tan An"],
+            "all_sources": ["facebook"],
+            "wards_by_city": {},
+        }
+
+    def fail_load_data(*_args, **_kwargs):
+        raise AssertionError("api_dashboard should use load_dashboard_summary, not load_data")
+
+    monkeypatch.setattr(radar_app, "load_dashboard_summary", fake_summary)
+    monkeypatch.setattr(radar_app, "load_data", fail_load_data)
+    monkeypatch.setattr(radar_app, "_get_signals_version", lambda _db_path: "test-version")
+
+    response = radar_app.app.test_client().get("/api/dashboard?cache_refresh=1")
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["stats"]["signals"] == 7
+    assert payload["signals_version"] == "test-version"
+
+
 def test_dashboard_cache_reuses_loader_until_ttl_expires():
     import app as radar_app
 
@@ -117,6 +207,30 @@ def test_dashboard_cache_reuses_loader_until_ttl_expires():
     assert first == {"stats": {"calls": 1}}
     assert second == first
     assert expired == {"stats": {"calls": 2}}
+    assert calls["n"] == 2
+
+
+def test_dashboard_cache_force_refresh_reloads_even_inside_ttl():
+    import app as radar_app
+
+    radar_app.clear_dashboard_cache()
+    calls = {"n": 0}
+
+    def loader():
+        calls["n"] += 1
+        return {"stats": {"calls": calls["n"]}}
+
+    first = radar_app._cached_dashboard_payload(("same", "filters"), loader, now=100.0, ttl_seconds=120)
+    refreshed = radar_app._cached_dashboard_payload(
+        ("same", "filters"),
+        loader,
+        now=101.0,
+        ttl_seconds=120,
+        force_refresh=True,
+    )
+
+    assert first == {"stats": {"calls": 1}}
+    assert refreshed == {"stats": {"calls": 2}}
     assert calls["n"] == 2
 
 
