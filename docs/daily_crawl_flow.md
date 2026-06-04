@@ -12,23 +12,25 @@ Reference cho agent / dev mới: cách `radar.py crawl-daily` chạy end-to-end,
 python radar.py crawl-daily
   └─ cli/crawlers.py::cmd_crawl(mode="incremental")
        ├─ capture crawl_start_ts                       # mốc "tin mới của run này"
-       ├─ Guland crawl       (crawler/guland_pw.py)
-       ├─ BatDongSan crawl   (crawler/batdongsan_pw.py)   ⚠️ Cloudflare blocked — 0 records
-       ├─ Facebook crawl     (crawler/facebook_apify.py via Apify)
-       ├─ run_full_reprocess()   → normalize → dedup → valuation
-       ├─ download_images()      → tải ảnh + tạo thumbnail
-       ├─ classify legal images  → img_type='so_hong'
-       ├─ verify legal trust     → legal_verifications + trust_tier
-       ├─ broker image cleanup   → xóa avatar/selfie/profile
-       ├─ verify_signals_with_groq()  → LLM verify signal mới + re-valuate (xem 2a)
+       ├─ Facebook primary phase (profile daily_limit via Apify)
+       │    ├─ run_full_reprocess()   → normalize → dedup → valuation
+       │    ├─ download_images(limit=500) + broker image cleanup
+       │    ├─ verify_signals_with_groq()  → LLM verify signal mới + re-valuate (xem 2a)
+       │    ├─ notification:
+       │    │     push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists only
+       │    └─ prewarm /api/dashboard
+       ├─ Secondary sources after Facebook:
+       │    ├─ Guland crawl       (crawler/guland_pw.py)
+       │    └─ BatDongSan crawl   (crawler/batdongsan_pw.py)   ⚠️ may be slow/blocked
+       ├─ secondary reprocess if secondary sources added records
        ├─ export_raw()           → backup JSON
-       ├─ notification:
-       │     push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists only
        └─ ops health check:
              _maybe_send_ops_alert(crawl_start_ts)    # crawl_runs error / zero-fetched → ops Telegram
 ```
 
-> ⚠️ **BDS hiện không lấy được data** (Cloudflare Turnstile, 2026-05). Daily run chỉ có Guland + Facebook. Xem `.claude/rules/crawler.md` mục BatDongSan để biết điều kiện resume.
+Facebook là nguồn chính nên daily crawl chạy và reprocess Facebook trước. Các nguồn phụ chạy sau đó để một crawler phụ chậm hoặc bị timeout không chặn tin Facebook mới lên dashboard/VIP.
+
+> ⚠️ **BDS/BatDongSan có thể chậm hoặc bị Cloudflare/Turnstile**. Nếu nguồn này còn bật, nó không được nằm trước Facebook trong daily pipeline.
 
 Pipeline lõi sau crawl giữ nguyên: `raw_listings → listings → valuation_results`. Phần thay đổi nằm ở **input config** (đầu pipeline) và **VIP notification** (cuối pipeline).
 

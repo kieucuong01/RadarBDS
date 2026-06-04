@@ -277,6 +277,115 @@ def cmd_crawl(args, mode: str = "full"):
         return _cmd_crawl(args, mode=mode)
 
 
+def _print_facebook_import_stats(fb_stats: dict) -> None:
+    print(
+        f"[facebook] crawled={fb_stats['fetched']} | "
+        f"imported={fb_stats['inserted']} | skipped={fb_stats['skipped']} | "
+        f"refreshed_img={fb_stats.get('refreshed_images', 0)} | "
+        f"irrelevant={fb_stats['irrelevant']} | out_of_area={fb_stats.get('out_of_area', 0)}"
+    )
+
+
+def _postprocess_crawl_batch(args, total_new: int, source_filter=None, image_limit: int | None = None) -> bool:
+    if total_new <= 0 or getattr(args, "no_reprocess", False):
+        return False
+
+    print(f"\nReprocess {total_new} records moi/cap nhat...")
+    from cleansing.reprocess import run_full_reprocess
+    result = run_full_reprocess()
+    r, v = result["listings"], result["valuation"]
+    print(f"Listings : {r['new']} new | {r['updated']} updated")
+    print(f"Valuation: {v['total']} valuated | {v['signals']} signals | {v['outliers']} outliers")
+
+    print(f"\nĐang tải ảnh về local...")
+    from cleansing.download_images import download_images
+    if image_limit is None:
+        download_images()
+    else:
+        download_images(limit=image_limit)
+    _clean_broker_images_after_download(source=source_filter, limit=image_limit)
+
+    if not getattr(args, "no_groq", False):
+        try:
+            print(f"\nLLM verify signals (Groq)...")
+            from cleansing.reprocess import verify_signals_with_groq
+            n_verified = verify_signals_with_groq()
+            print(f"Groq verified: {n_verified} signals")
+        except Exception as e:
+            print(f"[groq-signals] error (bỏ qua, không vỡ pipeline): {e}")
+    return True
+
+
+def _push_vip_notifications(no_alert: bool, crawl_start_ts: str) -> None:
+    if no_alert:
+        return
+    try:
+        from cli.notify import push_new_listings_to_vip
+        push_stats = push_new_listings_to_vip(since=crawl_start_ts)
+        print(f"VIP push: {push_stats['matched_users']} users matched | "
+              f"{push_stats['telegram_sent']} TG cards | "
+              f"{push_stats['email_users']} email batches")
+    except Exception as e:
+        print(f"[vip-push] error: {e}")
+
+
+def _cmd_crawl_daily_facebook_first(args, crawlers, headless: bool, crawl_start_ts: str):
+    no_alert = getattr(args, "no_alert", False)
+    total_new = 0
+    secondary_new = 0
+    crawler_exceptions: list[tuple[str, str]] = []
+
+    print(f"\n[facebook] Crawling by profile daily_limit (incremental)...")
+    fb_stats = _facebook_crawl_to_raw(mode="incremental")
+    if fb_stats:
+        _print_facebook_import_stats(fb_stats)
+        fb_new = fb_stats["inserted"] + fb_stats.get("refreshed_images", 0)
+        total_new += fb_new
+        if fb_new > 0 and _postprocess_crawl_batch(
+            args,
+            fb_new,
+            source_filter="facebook",
+            image_limit=500,
+        ):
+            _push_vip_notifications(no_alert, crawl_start_ts)
+            _prewarm_dashboard_cache()
+
+    for crawler in crawlers:
+        try:
+            stats = crawler.run(mode="incremental", headless=headless)
+            secondary_new += stats.get("new", 0)
+            print(f"[{crawler.SOURCE_NAME}] new={stats['new']} skip={stats['skipped']} err={stats['errors']}")
+        except Exception as e:
+            print(f"[{crawler.SOURCE_NAME}] Lỗi: {e}")
+            crawler_exceptions.append((crawler.SOURCE_NAME, str(e)))
+
+    total_new += secondary_new
+    if secondary_new > 0:
+        _postprocess_crawl_batch(args, secondary_new, source_filter=None, image_limit=500)
+
+    if total_new == 0:
+        print("\nKhong co tin moi. Kiem tra backlog anh can tai...")
+        from cleansing.download_images import download_images
+        download_images(limit=200)
+        _clean_broker_images_after_download(source=None, limit=200)
+        _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
+        _prewarm_dashboard_cache()
+        print(f"\nKhông có tin mới. DB không thay đổi.")
+        return
+
+    class _FakeArgs:
+        out = None
+    cmd_export_raw(_FakeArgs())
+
+    _push_vip_notifications(no_alert, crawl_start_ts)
+    _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
+    _prewarm_dashboard_cache()
+
+    print(f"\n{'='*45}")
+    print(f"CRAWL INCREMENTAL DONE — {total_new} records mới")
+    print(f"{'='*45}")
+
+
 def _cmd_crawl(args, mode: str = "full"):
     init_schema()
 
@@ -292,6 +401,9 @@ def _cmd_crawl(args, mode: str = "full"):
     # Capture timestamp ngay trước khi crawl để filter "tin mới run này" cho VIP push
     with get_conn() as _c:
         crawl_start_ts = _c.execute("SELECT datetime('now')").fetchone()[0]
+
+    if mode == "incremental" and not source_filter:
+        return _cmd_crawl_daily_facebook_first(args, crawlers, headless, crawl_start_ts)
 
     total_new = 0
     crawler_exceptions: list[tuple[str, str]] = []
