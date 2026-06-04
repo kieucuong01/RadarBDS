@@ -1,5 +1,26 @@
 import json
+import importlib
 from pathlib import Path
+
+
+def test_site_seo_env_text_falls_back_when_corrupted(monkeypatch):
+    from config import settings
+
+    monkeypatch.setenv("SITE_TITLE", "Radar BDS - S?n deal nh? ??t B?nh D??ng b?ng d? li?u")
+    monkeypatch.setenv(
+        "SITE_DESCRIPTION",
+        "Radar BDS thu th?p, chu?n h?a v? ph?n t?ch tin rao nh? ??t B?nh D??ng.",
+    )
+    monkeypatch.setenv(
+        "SITE_KEYWORDS",
+        "radar bds, s?n deal b?t d?ng s?n, nh? d?t B?nh D??ng",
+    )
+
+    reloaded = importlib.reload(settings)
+
+    assert reloaded.SITE_TITLE == "Radar BDS - Săn deal nhà đất Bình Dương bằng dữ liệu"
+    assert "?" not in reloaded.SITE_DESCRIPTION
+    assert "Bình Dương" in reloaded.SITE_KEYWORDS
 
 
 def test_public_seo_defaults_point_to_radarbds_domain():

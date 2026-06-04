@@ -99,16 +99,41 @@ LEGAL_IMAGE_EVIDENCE_ENABLED = os.getenv("LEGAL_IMAGE_EVIDENCE_ENABLED", "0").lo
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://radarbds.vn").strip().rstrip("/")
 DASHBOARD_BASE_URL = os.getenv("DASHBOARD_BASE_URL", PUBLIC_BASE_URL).strip().rstrip("/")
-SITE_NAME = os.getenv("SITE_NAME", "Radar BDS")
-SITE_TITLE = os.getenv("SITE_TITLE", "Radar BDS - Săn deal nhà đất Bình Dương bằng dữ liệu")
-SITE_DESCRIPTION = os.getenv(
-    "SITE_DESCRIPTION",
-    "Radar BDS giúp săn deal nhà đất Bình Dương bằng dữ liệu: lọc tin rao, định giá, so sánh thị trường và phát hiện bất động sản có biên an toàn tốt.",
+DEFAULT_SITE_TITLE = "Radar BDS - Săn deal nhà đất Bình Dương bằng dữ liệu"
+DEFAULT_SITE_DESCRIPTION = (
+    "Radar BDS giúp săn deal nhà đất Bình Dương bằng dữ liệu: lọc tin rao, định giá, "
+    "so sánh thị trường và phát hiện bất động sản có biên an toàn tốt."
 )
-SITE_KEYWORDS = os.getenv(
-    "SITE_KEYWORDS",
-    "radar bds, săn deal bất động sản, nhà đất Bình Dương, bất động sản Bình Dương, định giá nhà đất, đất nền Bình Dương",
+DEFAULT_SITE_KEYWORDS = (
+    "radar bds, săn deal bất động sản, nhà đất Bình Dương, bất động sản Bình Dương, "
+    "định giá nhà đất, đất nền Bình Dương"
 )
+
+
+def _looks_corrupted_text(value: str) -> bool:
+    if not value:
+        return False
+    mojibake_markers = (
+        "\u00c3",
+        "\u00c4",
+        "\u00c6",
+        "\u00e1\u00ba",
+        "\u00e1\u00bb",
+        "\u00e2\u20ac",
+        "\ufffd",
+    )
+    return any(marker in value for marker in mojibake_markers) or "??" in value or value.count("?") >= 3
+
+
+def _seo_env_text(name: str, default: str) -> str:
+    value = os.getenv(name, default).strip()
+    return default if _looks_corrupted_text(value) else value
+
+
+SITE_NAME = _seo_env_text("SITE_NAME", "Radar BDS")
+SITE_TITLE = _seo_env_text("SITE_TITLE", DEFAULT_SITE_TITLE)
+SITE_DESCRIPTION = _seo_env_text("SITE_DESCRIPTION", DEFAULT_SITE_DESCRIPTION)
+SITE_KEYWORDS = _seo_env_text("SITE_KEYWORDS", DEFAULT_SITE_KEYWORDS)
 SITE_OG_IMAGE = os.getenv("SITE_OG_IMAGE", f"{PUBLIC_BASE_URL}/static/images/logo.png").strip()
 
 # Cảnh báo khi giá thấp hơn X% so với mặt bằng chung
