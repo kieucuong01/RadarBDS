@@ -141,6 +141,120 @@ def test_same_price_history_escape_does_not_override_area_mismatch_when_prices_d
     assert not _is_duplicate(large_lot, small_lot)
 
 
+def test_same_broker_template_different_dx90_lot_size_not_duplicate():
+    large_lot = _listing(
+        source="facebook",
+        source_id="fb-dx90-large-template",
+        posted_at="2026-06-03",
+        ward="Hiep An",
+        property_type="dat_nen",
+        area_m2=461.5,
+        frontage_m=10.0,
+        depth_m=46.0,
+        price_ty=5.5,
+        contact_phone="0948018508",
+        description=(
+            "Dat mat tien DX90 Hiep An gan cho Bung Cau, duong nhua thong. "
+            "Dien tich 10 x 46 = 461.5m2. Gia tot gap chu."
+        ),
+    )
+    small_lot = _listing(
+        source="facebook",
+        source_id="fb-dx90-small-template",
+        posted_at="2026-06-04",
+        ward="Hiep An",
+        property_type="dat_nen",
+        area_m2=125.0,
+        frontage_m=5.0,
+        depth_m=25.0,
+        price_ty=2.3,
+        contact_phone="0948018508",
+        description=(
+            "Dat mat tien DX90 Hiep An gan cho Bung Cau, duong nhua thong. "
+            "Dien tich 5 x 25 = 125m2. Gia tot gap chu."
+        ),
+    )
+
+    assert not _is_duplicate(large_lot, small_lot)
+    assert not _is_reliable_price_drop(large_lot, small_lot)
+
+
+def test_same_area_but_different_dimensions_not_same_lot():
+    five_by_twenty_seven = _listing(
+        source="facebook",
+        source_id="fb-5x27",
+        posted_at="2026-06-01",
+        ward="Tan An",
+        property_type="dat_nen",
+        area_m2=135.0,
+        frontage_m=5.0,
+        depth_m=27.0,
+        price_ty=2.2,
+        contact_phone="0948018508",
+        description=(
+            "Dat Tan An duong oto thong, dien tich 5x27 tong 135m2, "
+            "vi tri dep, gia gap chu."
+        ),
+    )
+    four_half_by_thirty = _listing(
+        source="facebook",
+        source_id="fb-4_5x30",
+        posted_at="2026-06-03",
+        ward="Tan An",
+        property_type="dat_nen",
+        area_m2=135.0,
+        frontage_m=4.5,
+        depth_m=30.0,
+        price_ty=2.1,
+        contact_phone="0948018508",
+        description=(
+            "Dat Tan An duong oto thong, dien tich 4.5x30 tong 135m2, "
+            "vi tri dep, gia gap chu."
+        ),
+    )
+
+    assert not _is_duplicate(five_by_twenty_seven, four_half_by_thirty)
+    assert not _is_reliable_price_drop(five_by_twenty_seven, four_half_by_thirty)
+
+
+def test_same_dimensions_single_lot_and_double_lot_total_area_not_duplicate():
+    single_row = _listing(
+        source="facebook",
+        source_id="fb-single-row",
+        posted_at="2026-06-01",
+        ward="My Phuoc 3",
+        property_type="nha_tro",
+        area_m2=150.0,
+        frontage_m=5.0,
+        depth_m=30.0,
+        price_ty=2.3,
+        contact_phone="0975288084",
+        description=(
+            "Day tro My Phuoc 3 duong NH8, dien tich 5x30, "
+            "1 day tro dang cho thue kin phong."
+        ),
+    )
+    double_row = _listing(
+        source="facebook",
+        source_id="fb-double-row",
+        posted_at="2026-06-04",
+        ward="My Phuoc 3",
+        property_type="nha_tro",
+        area_m2=300.0,
+        frontage_m=5.0,
+        depth_m=30.0,
+        price_ty=4.6,
+        contact_phone="0975288084",
+        description=(
+            "Cap tro My Phuoc 3 duong NH8, gom 2 so 5x30 rieng, "
+            "2 day tro dang cho thue kin phong."
+        ),
+    )
+
+    assert not _is_duplicate(single_row, double_row)
+    assert not _is_reliable_price_drop(double_row, single_row)
+
+
 def test_canonical_assignment_rejects_transitive_road_conflict_bridge():
     nh8 = _listing(
         source="facebook",

@@ -168,7 +168,57 @@ def _tho_cu_m2(listing: dict) -> Optional[float]:
     return None
 
 
+def _numeric(value) -> Optional[float]:
+    if value in (None, ""):
+        return None
+    try:
+        number = float(str(value).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+    if number <= 0:
+        return None
+    return number
+
+
+def _area_conflict(l1: dict, l2: dict) -> bool:
+    a1 = _numeric(l1.get("area_m2"))
+    a2 = _numeric(l2.get("area_m2"))
+    if a1 is None or a2 is None:
+        return False
+    return abs(a1 - a2) / max(a1, a2) > 0.15
+
+
+def _close_dimension(a: Optional[float], b: Optional[float], *, abs_tol: float, rel_tol: float = 0.03) -> bool:
+    a = _numeric(a)
+    b = _numeric(b)
+    if a is None or b is None:
+        return False
+    return abs(a - b) <= max(abs_tol, max(a, b) * rel_tol)
+
+
+def _dimension_conflict(l1: dict, l2: dict) -> bool:
+    f1 = _numeric(l1.get("frontage_m"))
+    f2 = _numeric(l2.get("frontage_m"))
+    d1 = _numeric(l1.get("depth_m"))
+    d2 = _numeric(l2.get("depth_m"))
+    if None in (f1, f2, d1, d2):
+        return False
+
+    same_orientation = (
+        _close_dimension(f1, f2, abs_tol=0.35)
+        and _close_dimension(d1, d2, abs_tol=1.0)
+    )
+    swapped_orientation = (
+        _close_dimension(f1, d2, abs_tol=0.35)
+        and _close_dimension(d1, f2, abs_tol=1.0)
+    )
+    return not (same_orientation or swapped_orientation)
+
+
 def _lot_attribute_conflict(l1: dict, l2: dict) -> bool:
+    if _area_conflict(l1, l2) or _dimension_conflict(l1, l2):
+        return True
+
     tc1 = _tho_cu_m2(l1)
     tc2 = _tho_cu_m2(l2)
     if tc1 is not None and tc2 is not None:

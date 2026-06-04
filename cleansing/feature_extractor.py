@@ -174,6 +174,23 @@ def _area_from_dimension_pair(match: re.Match) -> Optional[float]:
     return None
 
 
+def _first_valid_dimension_pair(text: str) -> Optional[tuple[float, float]]:
+    for match in _DIM_PAIR_RE.finditer(text):
+        frontage_m = _parse_dim_value(match.group(1))
+        depth_m = _parse_dim_value(match.group(2))
+        if _valid_lot_dimensions(frontage_m, depth_m):
+            return frontage_m, depth_m
+    return None
+
+
+def _first_valid_dimension_area(text: str) -> Optional[float]:
+    pair = _first_valid_dimension_pair(text)
+    if pair is None:
+        return None
+    frontage_m, depth_m = pair
+    return round(frontage_m * depth_m, 1)
+
+
 # ═══════════════════════════════════════════════════════════════════
 # 2. DIỆN TÍCH TỔNG
 # ═══════════════════════════════════════════════════════════════════
@@ -322,11 +339,9 @@ def extract_area(text: str) -> Optional[float]:
 
     # Bare "Wm x Dm", "W x D", or "W*D" variants.
     # Keep this before the free Xm2 fallback so "9.5m x 29m" is not read as 9.5m2.
-    m = _DIM_PAIR_RE.search(t_clean)
-    if m:
-        area = _area_from_dimension_pair(m)
-        if area is not None:
-            return area
+    area = _first_valid_dimension_area(t_clean)
+    if area is not None:
+        return area
 
     # Pattern thông thường "Xm²" — dùng t_clean để loại thổ cư
     m = re.search(r'([\d]+[,.]?[\d]*)\s*m[²2]', t_clean, re.IGNORECASE)
@@ -336,11 +351,7 @@ def extract_area(text: str) -> Optional[float]:
             return val
 
     # Fallback: tính từ kích thước tự do "4x20", "5 x 18"
-    m = _DIM_PAIR_RE.search(t_clean)
-    if m:
-        return _area_from_dimension_pair(m)
-
-    return None
+    return _first_valid_dimension_area(t_clean)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -449,14 +460,12 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
             return result
 
     # "XxY", "Xm x Ym", or "X*Y" variants.
-    m = _DIM_PAIR_RE.search(t)
-    if m:
-        w = _parse_dim_value(m.group(1))
-        d = _parse_dim_value(m.group(2))
-        if _valid_lot_dimensions(w, d):
-            result['frontage_m'] = w
-            result['depth_m'] = d
-            return result
+    pair = _first_valid_dimension_pair(t)
+    if pair:
+        w, d = pair
+        result['frontage_m'] = w
+        result['depth_m'] = d
+        return result
 
     # "ngang Xm" / "mặt tiền Xm" / "mt Xm"
     m = re.search(r'(?:ngang|mặt tiền|mt)\s*([\d]+[,.]?[\d]*)\s*m\b', t)

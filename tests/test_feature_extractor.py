@@ -52,6 +52,7 @@ def test_extract_area():
     assert extract_area("2.546,3 m²") == 2546.3
     # Kích thước → diện tích
     assert extract_area("4x20m") == 80.0
+    assert extract_area("Diện tích: 5 x 25m. Thổ Cư : 60 m2") == 125.0
     # Loại thổ cư khỏi area parse
     assert extract_area("DT 500m², thổ cư 100m²") == 500.0
     assert extract_area("Đất P hiệp an\n1/ Nguyễn chí Thanh\n4 dài 28 tc 60") == 112.0
@@ -110,6 +111,20 @@ def test_extract_dimensions():
     d = extract_dimensions("Ch\u1ec9 hi\u1ec3n th\u1ecb ngang 9m")
     assert d["frontage_m"] == 9.0
     assert d["depth_m"] is None
+
+
+def test_extract_area_and_dimensions_skip_truncated_dimension_prefix():
+    text = (
+        "Dat mat tien DX90 Hiep An\n"
+        "Dien tich: 5 x 2\n"
+        "Dat mat tien DX90 Hiep An\n"
+        "Dien tich: 5 x 25m. Tho cu : 60 m2"
+    )
+
+    assert extract_area(text) == 125.0
+    dims = extract_dimensions(text)
+    assert dims["frontage_m"] == 5.0
+    assert dims["depth_m"] == 25.0
 
 
 def test_extract_tho_cu():
