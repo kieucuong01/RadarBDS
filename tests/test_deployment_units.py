@@ -16,6 +16,7 @@ def test_deploy_script_installs_guland_cron_fallback_when_systemd_install_is_res
     script = Path("scripts/deploy_production.ps1").read_text(encoding="utf-8")
 
     assert "sudo -n install" in script
+    assert "command -v crontab" in script
     assert "radar.py crawl-daily --source guland --no-alert --no-groq" in script
     assert "15 23 * * *" in script
     assert "/run/lock/radar-bds-guland-crawl.lock" in script

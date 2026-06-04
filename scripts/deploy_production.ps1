@@ -54,9 +54,13 @@ if [ -f deployment/ubuntu24/radar-bds-guland-crawl.service ] && [ -f deployment/
     sudo systemctl enable --now radar-bds-guland-crawl.timer
   else
     echo "skipped installing Guland systemd units (sudo install requires password)"
-    CRON_CMD='15 23 * * * cd /opt/radar-bds/current && /usr/bin/flock -n /run/lock/radar-bds-guland-crawl.lock /opt/radar-bds/.venv/bin/python -X utf8 radar.py crawl-daily --source guland --no-alert --no-groq >> /opt/radar-bds/current/logs/guland-crawl.log 2>&1'
-    (crontab -l 2>/dev/null | grep -v 'radar.py crawl-daily --source guland'; echo "$CRON_CMD") | crontab -
-    echo "installed deploy-user cron fallback for Guland crawl at 23:15"
+    if command -v crontab >/dev/null 2>&1; then
+      CRON_CMD='15 23 * * * cd /opt/radar-bds/current && /usr/bin/flock -n /run/lock/radar-bds-guland-crawl.lock /opt/radar-bds/.venv/bin/python -X utf8 radar.py crawl-daily --source guland --no-alert --no-groq >> /opt/radar-bds/current/logs/guland-crawl.log 2>&1'
+      (crontab -l 2>/dev/null | grep -v 'radar.py crawl-daily --source guland'; echo "$CRON_CMD") | crontab -
+      echo "installed deploy-user cron fallback for Guland crawl at 23:15"
+    else
+      echo "no crontab command available; keep/install radar-bds-guland-crawl.timer manually with root"
+    fi
   fi
 fi
 sudo systemctl restart radar-bds.service
