@@ -78,7 +78,9 @@ Production service smoke after installing `deployment/ubuntu24/*.service`:
 ```bash
 sudo systemctl status radar-bds.service
 sudo systemctl list-timers radar-bds-crawl.timer
+sudo systemctl list-timers radar-bds-guland-crawl.timer
 systemctl status radar-bds-crawl.service --no-pager
+systemctl status radar-bds-guland-crawl.service --no-pager
 tail -n 120 logs/crawl-daily.log
 curl -fsS http://127.0.0.1:5000/api/dashboard >/dev/null
 curl -fsS "http://127.0.0.1:5000/api/signals?page=1&limit=3" >/dev/null

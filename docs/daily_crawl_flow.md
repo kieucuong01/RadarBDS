@@ -19,16 +19,18 @@ python radar.py crawl-daily
        │    ├─ notification:
        │    │     push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists only
        │    └─ prewarm /api/dashboard
-       ├─ Secondary sources after Facebook:
-       │    ├─ Guland crawl       (crawler/guland_pw.py)
-       │    └─ BatDongSan crawl   (crawler/batdongsan_pw.py)   ⚠️ may be slow/blocked
-       ├─ secondary reprocess if secondary sources added records
        ├─ export_raw()           → backup JSON
        └─ ops health check:
              _maybe_send_ops_alert(crawl_start_ts)    # crawl_runs error / zero-fetched → ops Telegram
 ```
 
-Facebook là nguồn chính nên daily crawl chạy và reprocess Facebook trước. Các nguồn phụ chạy sau đó để một crawler phụ chậm hoặc bị timeout không chặn tin Facebook mới lên dashboard/VIP.
+Facebook là nguồn chính nên `radar-bds-crawl.timer` chỉ chạy daily Facebook + reprocess/push/cache. Guland là nguồn phụ, chạy bằng timer riêng `radar-bds-guland-crawl.timer` lúc 22:30:
+
+```
+radar.py crawl-daily --source guland --no-alert --no-groq
+```
+
+Timer Guland dùng cùng `/run/radar-bds/crawl.lock`, nên nếu job chính còn chạy thì job phụ không đè lên. Guland có reprocess riêng khi có record mới, nhưng không gửi VIP push.
 
 > ⚠️ **BDS/BatDongSan có thể chậm hoặc bị Cloudflare/Turnstile**. Nếu nguồn này còn bật, nó không được nằm trước Facebook trong daily pipeline.
 

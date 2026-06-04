@@ -84,7 +84,7 @@ echo $env:DATABASE_URL
 - `cli/review.py`: `review-queue` (JSON memo, chưa review) / `review-save` (ghi `ai_deal_review`).
 - `services/investment_memo.py`: `load_investment_memo()` — memo nguồn cho pre-review.
 - Production `radar.py crawl-daily` tees stdout/stderr to `logs/crawl-daily.log`. Admin Facebook Crawl ops reads `radar-bds-crawl.timer` plus `radar-bds-crawl.service`; if the latest systemd run failed, inspect `logs/crawl-daily.log` before changing crawler code.
-- Daily crawl is Facebook-first: crawl Facebook by admin `daily_limit`, reprocess, image backfill, VIP push, and dashboard prewarm happen before secondary sources such as Guland/BatDongSan. Do not move a slow secondary crawler ahead of Facebook.
+- Daily crawl is Facebook-only/primary-first: crawl Facebook by admin `daily_limit`, reprocess, image backfill, VIP push, and dashboard prewarm happen in `radar-bds-crawl.timer`. Guland runs later as secondary source through `radar-bds-guland-crawl.timer`; do not move a slow secondary crawler back into the primary daily job.
 
 ## Admin AI Training Panel
 

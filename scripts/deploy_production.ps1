@@ -47,6 +47,12 @@ if [ -n "`$stash_ref" ]; then
 fi
 
 /opt/radar-bds/.venv/bin/python -X utf8 -m py_compile app.py services/market_data.py services/image_assets.py
+if [ -f deployment/ubuntu24/radar-bds-guland-crawl.service ] && [ -f deployment/ubuntu24/radar-bds-guland-crawl.timer ]; then
+  sudo install -m 0644 deployment/ubuntu24/radar-bds-guland-crawl.service /etc/systemd/system/radar-bds-guland-crawl.service
+  sudo install -m 0644 deployment/ubuntu24/radar-bds-guland-crawl.timer /etc/systemd/system/radar-bds-guland-crawl.timer
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now radar-bds-guland-crawl.timer
+fi
 sudo systemctl restart radar-bds.service
 sudo systemctl is-active radar-bds.service
 

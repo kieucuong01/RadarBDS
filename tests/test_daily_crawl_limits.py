@@ -70,7 +70,7 @@ def test_daily_facebook_crawl_uses_profile_daily_limits():
     assert captured.get("limit_override") is None
 
 
-def test_daily_crawl_reprocesses_facebook_before_secondary_sources():
+def test_daily_crawl_reprocesses_facebook_without_running_secondary_sources():
     events = []
 
     def fake_facebook_crawl_to_raw(**_kwargs):
@@ -111,5 +111,31 @@ def test_daily_crawl_reprocesses_facebook_before_secondary_sources():
          mock.patch.object(crawlers, "_prewarm_dashboard_cache"):
         crawlers._cmd_crawl(args, mode="incremental")
 
-    assert events.index("facebook") < events.index("secondary")
-    assert events.index("reprocess") < events.index("secondary")
+    assert events == ["facebook", "reprocess"]
+
+
+def test_daily_primary_does_not_load_secondary_crawlers():
+    args = SimpleNamespace(
+        source=None,
+        visible=False,
+        no_reprocess=True,
+        no_alert=True,
+        no_groq=True,
+    )
+
+    with mock.patch.object(crawlers, "init_schema"), \
+         mock.patch.object(crawlers, "get_conn", return_value=_FakeDbContext()), \
+         mock.patch.object(crawlers, "_get_crawlers", side_effect=AssertionError("secondary crawler loader should not run")), \
+         mock.patch.object(crawlers, "_facebook_crawl_to_raw", return_value={
+             "fetched": 0,
+             "inserted": 0,
+             "skipped": 0,
+             "irrelevant": 0,
+             "out_of_area": 0,
+             "refreshed_images": 0,
+         }), \
+         mock.patch("cleansing.download_images.download_images"), \
+         mock.patch.object(crawlers, "_clean_broker_images_after_download"), \
+         mock.patch.object(crawlers, "_maybe_send_ops_alert"), \
+         mock.patch.object(crawlers, "_prewarm_dashboard_cache"):
+        crawlers._cmd_crawl(args, mode="incremental")

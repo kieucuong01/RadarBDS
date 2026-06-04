@@ -118,9 +118,12 @@ Install the service and crawl timer templates:
 sudo cp deployment/ubuntu24/radar-bds.service /etc/systemd/system/radar-bds.service
 sudo cp deployment/ubuntu24/radar-bds-crawl.service /etc/systemd/system/radar-bds-crawl.service
 sudo cp deployment/ubuntu24/radar-bds-crawl.timer /etc/systemd/system/radar-bds-crawl.timer
+sudo cp deployment/ubuntu24/radar-bds-guland-crawl.service /etc/systemd/system/radar-bds-guland-crawl.service
+sudo cp deployment/ubuntu24/radar-bds-guland-crawl.timer /etc/systemd/system/radar-bds-guland-crawl.timer
 sudo systemctl daemon-reload
 sudo systemctl enable --now radar-bds.service
 sudo systemctl enable --now radar-bds-crawl.timer
+sudo systemctl enable --now radar-bds-guland-crawl.timer
 ```
 
 Useful checks:
@@ -128,14 +131,17 @@ Useful checks:
 ```bash
 systemctl status radar-bds.service
 systemctl list-timers radar-bds-crawl.timer
+systemctl list-timers radar-bds-guland-crawl.timer
 journalctl -u radar-bds.service -n 100 --no-pager
 journalctl -u radar-bds-crawl.service -n 100 --no-pager
+journalctl -u radar-bds-guland-crawl.service -n 100 --no-pager
 ```
 
 Run one manual crawl only after the web/API smoke checks pass:
 
 ```bash
 sudo systemctl start radar-bds-crawl.service
+sudo systemctl start radar-bds-guland-crawl.service
 ```
 
 ## 6. Nginx and SSL

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Radar BDS Guland secondary crawl after primary daily crawl
+
+[Timer]
+OnCalendar=*-*-* 22:30:00
+Persistent=true
+RandomizedDelaySec=5m
+Unit=radar-bds-guland-crawl.service
+
+[Install]
+WantedBy=timers.target

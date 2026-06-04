@@ -332,8 +332,8 @@ def _push_vip_notifications(no_alert: bool, crawl_start_ts: str) -> None:
 def _cmd_crawl_daily_facebook_first(args, crawlers, headless: bool, crawl_start_ts: str):
     no_alert = getattr(args, "no_alert", False)
     total_new = 0
-    secondary_new = 0
     crawler_exceptions: list[tuple[str, str]] = []
+    _ = (crawlers, headless)
 
     print(f"\n[facebook] Crawling by profile daily_limit (incremental)...")
     fb_stats = _facebook_crawl_to_raw(mode="incremental")
@@ -349,19 +349,6 @@ def _cmd_crawl_daily_facebook_first(args, crawlers, headless: bool, crawl_start_
         ):
             _push_vip_notifications(no_alert, crawl_start_ts)
             _prewarm_dashboard_cache()
-
-    for crawler in crawlers:
-        try:
-            stats = crawler.run(mode="incremental", headless=headless)
-            secondary_new += stats.get("new", 0)
-            print(f"[{crawler.SOURCE_NAME}] new={stats['new']} skip={stats['skipped']} err={stats['errors']}")
-        except Exception as e:
-            print(f"[{crawler.SOURCE_NAME}] Lỗi: {e}")
-            crawler_exceptions.append((crawler.SOURCE_NAME, str(e)))
-
-    total_new += secondary_new
-    if secondary_new > 0:
-        _postprocess_crawl_batch(args, secondary_new, source_filter=None, image_limit=500)
 
     if total_new == 0:
         print("\nKhong co tin moi. Kiem tra backlog anh can tai...")
@@ -389,10 +376,6 @@ def _cmd_crawl_daily_facebook_first(args, crawlers, headless: bool, crawl_start_
 def _cmd_crawl(args, mode: str = "full"):
     init_schema()
 
-    crawlers = _get_crawlers(getattr(args, "source", None))
-    if not crawlers:
-        return
-
     headless = not getattr(args, "visible", False)
     no_reprocess = getattr(args, "no_reprocess", False)
     no_alert = getattr(args, "no_alert", False)
@@ -403,7 +386,11 @@ def _cmd_crawl(args, mode: str = "full"):
         crawl_start_ts = _c.execute("SELECT datetime('now')").fetchone()[0]
 
     if mode == "incremental" and not source_filter:
-        return _cmd_crawl_daily_facebook_first(args, crawlers, headless, crawl_start_ts)
+        return _cmd_crawl_daily_facebook_first(args, [], headless, crawl_start_ts)
+
+    crawlers = _get_crawlers(source_filter)
+    if not crawlers:
+        return
 
     total_new = 0
     crawler_exceptions: list[tuple[str, str]] = []
