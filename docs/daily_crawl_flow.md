@@ -32,6 +32,12 @@ radar.py crawl-daily --source guland --no-alert --no-groq
 
 Timer Guland dùng cùng `/run/radar-bds/crawl.lock`, nên nếu job chính còn chạy thì job phụ không đè lên. Guland có reprocess riêng khi có record mới, nhưng không gửi VIP push.
 
+Nếu deploy user chưa có quyền cài systemd unit mới, `scripts/deploy_production.ps1` sẽ cài fallback crontab cho Guland lúc 23:15:
+
+```
+15 23 * * * cd /opt/radar-bds/current && /usr/bin/flock -n /run/lock/radar-bds-guland-crawl.lock /opt/radar-bds/.venv/bin/python -X utf8 radar.py crawl-daily --source guland --no-alert --no-groq >> /opt/radar-bds/current/logs/guland-crawl.log 2>&1
+```
+
 > ⚠️ **BDS/BatDongSan có thể chậm hoặc bị Cloudflare/Turnstile**. Nếu nguồn này còn bật, nó không được nằm trước Facebook trong daily pipeline.
 
 Pipeline lõi sau crawl giữ nguyên: `raw_listings → listings → valuation_results`. Phần thay đổi nằm ở **input config** (đầu pipeline) và **VIP notification** (cuối pipeline).

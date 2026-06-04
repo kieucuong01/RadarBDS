@@ -137,6 +137,14 @@ journalctl -u radar-bds-crawl.service -n 100 --no-pager
 journalctl -u radar-bds-guland-crawl.service -n 100 --no-pager
 ```
 
+If the `deploy` user cannot install new systemd units, `scripts/deploy_production.ps1`
+falls back to a deploy-user crontab entry for Guland at 23:15:
+
+```bash
+crontab -l | grep 'radar.py crawl-daily --source guland'
+tail -n 120 /opt/radar-bds/current/logs/guland-crawl.log
+```
+
 Run one manual crawl only after the web/API smoke checks pass:
 
 ```bash

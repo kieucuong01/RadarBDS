@@ -10,3 +10,13 @@ def test_guland_secondary_systemd_timer_runs_after_primary_daily_crawl():
     assert "/run/radar-bds/crawl.lock" in service
     assert "OnCalendar=*-*-* 22:30:00" in timer
     assert "Unit=radar-bds-guland-crawl.service" in timer
+
+
+def test_deploy_script_installs_guland_cron_fallback_when_systemd_install_is_restricted():
+    script = Path("scripts/deploy_production.ps1").read_text(encoding="utf-8")
+
+    assert "sudo -n install" in script
+    assert "radar.py crawl-daily --source guland --no-alert --no-groq" in script
+    assert "15 23 * * *" in script
+    assert "/run/lock/radar-bds-guland-crawl.lock" in script
+    assert "crontab -" in script
