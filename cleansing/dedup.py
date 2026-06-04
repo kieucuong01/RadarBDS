@@ -5,7 +5,7 @@ import re
 import unicodedata
 from datetime import datetime
 from difflib import SequenceMatcher
-from typing import Any, Optional
+from typing import Any, Iterable, Optional, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -494,6 +494,47 @@ def _is_duplicate(l1: dict, l2: dict) -> bool:
     return _repost_score(l1, l2) >= SCORE_THRESHOLD
 
 
+def _canonical_compatible_duplicate(candidate: dict, canonical: dict) -> bool:
+    """Keep transitive repost clusters from hiding rows that do not match canonical."""
+    if _is_duplicate(candidate, canonical):
+        return True
+    return bool(
+        _is_reliable_price_drop(candidate, canonical)
+        or _is_reliable_price_drop(canonical, candidate)
+    )
+
+
+def _listing_date_key(row: dict) -> str:
+    return row.get("posted_at") or row.get("crawled_at") or ""
+
+
+def _split_canonical_compatible_groups(
+    group_indices: Iterable[int],
+    listings: Sequence[dict],
+) -> list[list[int]]:
+    """Split a transitive DSU component into canonical-compatible repost groups."""
+    remaining = set(group_indices)
+    compatible_groups: list[list[int]] = []
+    while remaining:
+        canonical_idx = max(remaining, key=lambda i: _listing_date_key(listings[i]))
+        canonical = listings[canonical_idx]
+        compatible_indices = [canonical_idx]
+
+        for idx in sorted(remaining):
+            if idx == canonical_idx:
+                continue
+            if _canonical_compatible_duplicate(listings[idx], canonical):
+                compatible_indices.append(idx)
+
+        for idx in compatible_indices:
+            remaining.discard(idx)
+
+        if len(compatible_indices) >= 2:
+            compatible_groups.append(compatible_indices)
+
+    return compatible_groups
+
+
 def _has_value(value) -> bool:
     return value not in (None, "", 0, 0.0)
 
@@ -698,97 +739,98 @@ def flag_duplicates_in_db(conn: Any) -> dict:
     flagged = 0
     price_drops_detected = 0
     inherited_fields = 0
+    final_dup_groups = 0
 
     for group_indices in dup_groups.values():
-        hydrated_rows = _inherit_missing_group_values([listings[i] for i in group_indices])
-        for idx, hydrated in zip(group_indices, hydrated_rows):
-            original = listings[idx]
-            updates = {}
-            for field in ("price_ty", "area_m2", "price_per_m2"):
-                if not _has_value(original.get(field)) and _has_value(hydrated.get(field)):
-                    updates[field] = hydrated[field]
-                    original[field] = hydrated[field]
-            if updates:
+        for compatible_indices in _split_canonical_compatible_groups(group_indices, listings):
+            canonical_idx = max(compatible_indices, key=lambda i: _listing_date_key(listings[i]))
+            canonical = listings[canonical_idx]
+
+            final_dup_groups += 1
+            hydrated_rows = _inherit_missing_group_values([listings[i] for i in compatible_indices])
+            for idx, hydrated in zip(compatible_indices, hydrated_rows):
+                original = listings[idx]
+                updates = {}
+                for field in ("price_ty", "area_m2", "price_per_m2"):
+                    if not _has_value(original.get(field)) and _has_value(hydrated.get(field)):
+                        updates[field] = hydrated[field]
+                        original[field] = hydrated[field]
+                if updates:
+                    conn.execute(
+                        """
+                        UPDATE listings SET
+                            price_ty = CASE WHEN price_ty IS NULL OR price_ty = 0 THEN ? ELSE price_ty END,
+                            area_m2 = CASE WHEN area_m2 IS NULL OR area_m2 = 0 THEN ? ELSE area_m2 END,
+                            price_per_m2 = CASE WHEN price_per_m2 IS NULL OR price_per_m2 = 0 THEN ? ELSE price_per_m2 END
+                        WHERE id = ?
+                        """,
+                        (
+                            updates.get("price_ty"),
+                            updates.get("area_m2"),
+                            updates.get("price_per_m2"),
+                            original["id"],
+                        ),
+                    )
+                    inherited_fields += len(updates)
+
+            canonical_id = canonical["id"]
+            canonical_price = canonical.get("price_ty")
+
+            # Find the oldest compatible listing to determine original price.
+            oldest_idx = min(
+                compatible_indices,
+                key=lambda i: _listing_date_key(listings[i]),
+            )
+            oldest = listings[oldest_idx]
+            oldest_price = oldest.get("price_ty")
+
+            for idx in compatible_indices:
+                if idx == canonical_idx:
+                    continue
+
+                dup = listings[idx]
+                dup_id = dup["id"]
                 conn.execute(
-                    """
-                    UPDATE listings SET
-                        price_ty = CASE WHEN price_ty IS NULL OR price_ty = 0 THEN ? ELSE price_ty END,
-                        area_m2 = CASE WHEN area_m2 IS NULL OR area_m2 = 0 THEN ? ELSE area_m2 END,
-                        price_per_m2 = CASE WHEN price_per_m2 IS NULL OR price_per_m2 = 0 THEN ? ELSE price_per_m2 END
-                    WHERE id = ?
-                    """,
-                    (
-                        updates.get("price_ty"),
-                        updates.get("area_m2"),
-                        updates.get("price_per_m2"),
-                        original["id"],
-                    ),
+                    "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
+                    (canonical_id, dup_id),
                 )
-                inherited_fields += len(updates)
+                flagged += 1
 
-        canonical_idx = max(
-            group_indices,
-            key=lambda i: (listings[i].get("posted_at") or listings[i].get("crawled_at") or ""),
-        )
-        canonical = listings[canonical_idx]
-        canonical_id = canonical["id"]
-        canonical_price = canonical.get("price_ty")
-
-        # Find the oldest listing in group to determine original price
-        oldest_idx = min(
-            group_indices,
-            key=lambda i: (listings[i].get("posted_at") or listings[i].get("crawled_at") or ""),
-        )
-        oldest = listings[oldest_idx]
-        oldest_price = oldest.get("price_ty")
-
-        for idx in group_indices:
-            if idx == canonical_idx:
-                continue
-
-            dup = listings[idx]
-            dup_id = dup["id"]
-            conn.execute(
-                "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
-                (canonical_id, dup_id),
-            )
-            flagged += 1
-
-        # Check price drop: compare oldest vs canonical (newest)
-        if _is_suspicious_bait(oldest, canonical) and _has_reliable_lot_signature(oldest, canonical):
-            conn.execute("""
-                UPDATE listings SET
-                    price_dropped   = 0,
-                    price_drop_pct  = NULL,
-                    price_first_ty  = ?,
-                    suspicious_bait = 1
-                WHERE id = ?
-            """, (oldest_price, canonical_id))
-            logger.info(
-                f"Suspicious bait via repost: listing_id={canonical_id} "
-                f"oldest_price={oldest_price} canonical_price={canonical_price}"
-            )
-        elif _is_reliable_price_drop(oldest, canonical):
-            drop_pct = _drop_pct(oldest, canonical)
-            conn.execute("""
-                UPDATE listings SET
-                    price_dropped  = 1,
-                    price_drop_pct = ?,
-                    price_first_ty = ?,
-                    suspicious_bait = 0
-                WHERE id = ?
-            """, (drop_pct, oldest_price, canonical_id))
-            price_drops_detected += 1
-            logger.info(
-                f"Price drop via repost: listing_id={canonical_id} "
-                f"{oldest_price}->{canonical_price}ty (-{drop_pct}%)"
-            )
+            # Check price drop: compare oldest vs canonical (newest)
+            if _is_suspicious_bait(oldest, canonical) and _has_reliable_lot_signature(oldest, canonical):
+                conn.execute("""
+                    UPDATE listings SET
+                        price_dropped   = 0,
+                        price_drop_pct  = NULL,
+                        price_first_ty  = ?,
+                        suspicious_bait = 1
+                    WHERE id = ?
+                """, (oldest_price, canonical_id))
+                logger.info(
+                    f"Suspicious bait via repost: listing_id={canonical_id} "
+                    f"oldest_price={oldest_price} canonical_price={canonical_price}"
+                )
+            elif _is_reliable_price_drop(oldest, canonical):
+                drop_pct = _drop_pct(oldest, canonical)
+                conn.execute("""
+                    UPDATE listings SET
+                        price_dropped  = 1,
+                        price_drop_pct = ?,
+                        price_first_ty = ?,
+                        suspicious_bait = 0
+                    WHERE id = ?
+                """, (drop_pct, oldest_price, canonical_id))
+                price_drops_detected += 1
+                logger.info(
+                    f"Price drop via repost: listing_id={canonical_id} "
+                    f"{oldest_price}->{canonical_price}ty (-{drop_pct}%)"
+                )
 
     _apply_dedup_overrides(conn)
 
     stats = {
         "total": n,
-        "dup_groups": len(dup_groups),
+        "dup_groups": final_dup_groups,
         "flagged": flagged,
         "unique_lots": n - flagged,
         "price_drops": price_drops_detected,

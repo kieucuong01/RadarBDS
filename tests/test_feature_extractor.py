@@ -160,6 +160,28 @@ def test_normalizer_parses_dimensions_even_when_area_is_structured():
     assert round(rec["price_per_m2"], 2) == 20.42
 
 
+def test_normalizer_prefers_dimension_area_over_residential_area():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "structured-area-is-tho-cu",
+        "url": "https://www.facebook.com/example/posts/structured-area-is-tho-cu",
+        "default_area": "Thủ Dầu Một",
+        "title": "Đất Hiệp An đường DX89 giá tốt",
+        "description": (
+            "Diện tích : 5,8 x 26,6. Thổ cư : 100mv. "
+            "Đường nhựa thông, giá tốt: 2ty390."
+        ),
+        "area_m2": 100.0,
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 154.3
+    assert rec["frontage_m"] == 5.8
+    assert rec["depth_m"] == 26.6
+    assert rec["tho_cu_m2"] == 100.0
+    assert round(rec["price_per_m2"], 2) == 15.49
+
+
 def test_normalizer_parses_user_reported_facebook_edge_cases():
     branch_land = normalize_record({
         "source": "facebook",

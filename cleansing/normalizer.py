@@ -101,6 +101,26 @@ def _infer_depth_from_area_frontage(area_m2, frontage_m) -> Optional[float]:
     return None
 
 
+def _dimension_area_override(area_m2, frontage_m, depth_m) -> Optional[float]:
+    area = _float_or_none(area_m2)
+    frontage = _float_or_none(frontage_m)
+    depth = _float_or_none(depth_m)
+    if frontage is None or depth is None:
+        return None
+    if not (2 <= frontage <= 50 and 5 <= depth <= 500):
+        return None
+
+    dim_area = round(frontage * depth, 1)
+    if area is None or area <= 0:
+        return dim_area
+
+    smaller = min(area, dim_area)
+    bigger = max(area, dim_area)
+    if smaller > 0 and bigger / smaller >= 1.15:
+        return dim_area
+    return None
+
+
 def match_area(raw_text: str) -> Optional[str]:
     if not raw_text:
         return None
@@ -448,7 +468,8 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         # Source structured area can be stale/wrong. If title has an explicit area
         # that is wildly different, trust title because it is the visible listing fact.
         title_area_m2 = extract_area(title)
-        if area_m2 and title_area_m2 and 10 < title_area_m2 < 100000:
+        has_title_area_m2 = bool(title_area_m2 and 10 < title_area_m2 < 100000)
+        if area_m2 and has_title_area_m2:
             bigger = max(float(area_m2), float(title_area_m2))
             smaller = min(float(area_m2), float(title_area_m2))
             if smaller > 0 and bigger / smaller >= 1.8:
@@ -477,6 +498,17 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                     price_per_m2 = None  # tính lại từ area cuối cùng ở block dưới
                 else:
                     price_per_m2 = _fb_parsed.get("price_per_m2")
+
+        parsed_frontage = raw.get("frontage_m") or _fb_parsed.get("frontage_m")
+        parsed_depth = raw.get("depth_m") or _fb_parsed.get("depth_m")
+        corrected_area = (
+            None
+            if has_title_area_m2
+            else _dimension_area_override(area_m2, parsed_frontage, parsed_depth)
+        )
+        if corrected_area is not None:
+            area_m2 = corrected_area
+            price_per_m2 = None
 
         if price_ty and area_m2 and area_m2 > 0 and not price_per_m2:
             price_per_m2 = round((price_ty * 1_000) / area_m2, 3)
@@ -540,8 +572,8 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         contact_phone = (raw.get("contact_phone") or "").strip() or extract_phone(full_text) or ""
 
         # Lot inference cho khu vực quy hoạch bàn cờ (Mỹ Phước)
-        _raw_front = raw.get("frontage_m") or _fb_parsed.get("frontage_m")
-        _raw_depth = raw.get("depth_m") or _fb_parsed.get("depth_m")
+        _raw_front = parsed_frontage
+        _raw_depth = parsed_depth
         if _raw_front and not _raw_depth:
             _raw_depth = _infer_depth_from_area_frontage(area_m2, _raw_front)
         _inf_front, _inf_depth = (None, None)

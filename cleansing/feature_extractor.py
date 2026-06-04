@@ -493,8 +493,8 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
     # "Xm² thổ cư" hoặc "thổ cư Xm²" hoặc "TC Xm" hoặc "TC 35m"
     patterns = [
         r'([\d]+[,.]?[\d]*)\s*m[²2]\s*thổ\s*cư',           # "60m² thổ cư"
-        r'thổ\s*cư\s*([\d]+[,.]?[\d]*)(?:\s*(?:m[²2]?|mv))?',      # "thổ cư 60m²" hoặc "thổ cư 60"
-        r'\btc\s*([\d]+[,.]?[\d]*)(?:\s*m[²2]?)?',          # "TC 60m²" hoặc "TC 60"
+        r'thổ\s*cư\s*[:：]?\s*([\d]+[,.]?[\d]*)(?:\s*(?:m[²2]?|mv))?',      # "thổ cư 60m²" hoặc "thổ cư 60"
+        r'\btc\s*[:：]?\s*([\d]+[,.]?[\d]*)(?:\s*(?:m[²2]?|mv))?',          # "TC 60m²" hoặc "TC 60"
         r'([\d]+[,.]?[\d]*)\s*m\s*(?:tc|thổ\s*cư)\b',       # "35m TC"
     ]
     for pat in patterns:

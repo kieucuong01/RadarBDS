@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import cleansing.dedup as dedup_module
 from cleansing.dedup import (
     _ascii_fold,
     _candidate_keys,
@@ -138,6 +139,123 @@ def test_same_price_history_escape_does_not_override_area_mismatch_when_prices_d
         allow_facebook_same_price=True,
     )
     assert not _is_duplicate(large_lot, small_lot)
+
+
+def test_canonical_assignment_rejects_transitive_road_conflict_bridge():
+    nh8 = _listing(
+        source="facebook",
+        source_id="fb-nh8",
+        posted_at="2025-06-20",
+        ward="Mỹ Phước 3",
+        property_type="nha_tro",
+        area_m2=150.0,
+        frontage_m=5.0,
+        depth_m=30.0,
+        price_ty=2.2,
+        contact_phone="0975288084",
+        description=(
+            "Trọ H19 NH8 Mỹ Phước 3. Dt 5x30 thổ cư 150m, "
+            "gồm 1 nhà 2 phòng ngủ và 4 phòng trọ."
+        ),
+    )
+    bridge_missing_road = _listing(
+        source="facebook",
+        source_id="fb-bridge",
+        posted_at="2025-09-20",
+        ward="Mỹ Phước 3",
+        property_type="nha_tro",
+        area_m2=150.0,
+        frontage_m=5.0,
+        depth_m=30.0,
+        price_ty=2.3,
+        contact_phone="0975288084",
+        description="Bán dãy trọ Mỹ Phước 3. Dt 5x30 thổ cư 150m, thu nhập ổn định.",
+    )
+    nj5_latest = _listing(
+        source="facebook",
+        source_id="fb-nj5",
+        posted_at="2025-12-06",
+        ward="Mỹ Phước 3",
+        property_type="nha_tro",
+        area_m2=150.0,
+        frontage_m=5.0,
+        depth_m=30.0,
+        price_ty=2.4,
+        contact_phone="0975288084",
+        description="Nhà trọ NJ5 Mỹ Phước 3. Dt 5x30 thổ cư 150m, xây kiên cố.",
+    )
+
+    assert _is_duplicate(nh8, bridge_missing_road)
+    assert _is_duplicate(bridge_missing_road, nj5_latest)
+    assert not _is_duplicate(nh8, nj5_latest)
+    assert not dedup_module._canonical_compatible_duplicate(nh8, nj5_latest)
+    assert dedup_module._canonical_compatible_duplicate(bridge_missing_road, nj5_latest)
+
+
+def test_split_canonical_groups_separates_transitive_road_conflict_bridge():
+    listings = [
+        _listing(
+            id=1,
+            source="facebook",
+            source_id="fb-nh8-old",
+            posted_at="2025-06-20",
+            ward="My Phuoc 3",
+            property_type="nha_tro",
+            area_m2=150.0,
+            frontage_m=5.0,
+            depth_m=30.0,
+            price_ty=2.2,
+            contact_phone="0975288084",
+            description="Tro H19 NH8 My Phuoc 3. Dt 5x30 tho cu 150m.",
+        ),
+        _listing(
+            id=2,
+            source="facebook",
+            source_id="fb-nh8-new",
+            posted_at="2025-07-20",
+            ward="My Phuoc 3",
+            property_type="nha_tro",
+            area_m2=150.0,
+            frontage_m=5.0,
+            depth_m=30.0,
+            price_ty=2.2,
+            contact_phone="0975288084",
+            description="Nha tro NH8 My Phuoc 3. Dt 5x30 tho cu 150m.",
+        ),
+        _listing(
+            id=3,
+            source="facebook",
+            source_id="fb-bridge",
+            posted_at="2025-09-20",
+            ward="My Phuoc 3",
+            property_type="nha_tro",
+            area_m2=150.0,
+            frontage_m=5.0,
+            depth_m=30.0,
+            price_ty=2.3,
+            contact_phone="0975288084",
+            description="Ban day tro My Phuoc 3. Dt 5x30 tho cu 150m.",
+        ),
+        _listing(
+            id=4,
+            source="facebook",
+            source_id="fb-nj5",
+            posted_at="2025-12-06",
+            ward="My Phuoc 3",
+            property_type="nha_tro",
+            area_m2=150.0,
+            frontage_m=5.0,
+            depth_m=30.0,
+            price_ty=2.4,
+            contact_phone="0975288084",
+            description="Nha tro NJ5 My Phuoc 3. Dt 5x30 tho cu 150m.",
+        ),
+    ]
+
+    groups = dedup_module._split_canonical_compatible_groups(range(len(listings)), listings)
+    grouped_ids = [sorted(listings[idx]["id"] for idx in group) for group in groups]
+
+    assert grouped_ids == [[3, 4], [1, 2]]
 
 
 LONG_DESC = (
