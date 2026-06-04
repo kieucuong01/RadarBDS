@@ -934,7 +934,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         GROUP BY property_type
         HAVING COUNT(*) >= 1
     """, params).fetchall()
-    type_label = {'dat_nen': 'Äáº¥t ná»n', 'dat_vuon': 'Äáº¥t vÆ°á»n', 'nha_dat': 'NhÃ  Ä‘áº¥t', 'nha_tro': 'NhÃ  trá»', 'chung_cu': 'Chung cÆ°'}
+    type_label = {'dat_nen': 'Đất nền', 'dat_vuon': 'Đất vườn', 'nha_dat': 'Nhà đất', 'nha_tro': 'Nhà trọ', 'chung_cu': 'Chung cư'}
     for row in summary_rows:
         mean_ppm2 = _row_get(row, "mean_ppm2")
         if mean_ppm2 is None:

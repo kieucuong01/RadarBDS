@@ -43,6 +43,12 @@ def _strip_noise(text: str) -> str:
 
 
 def _ascii_fold(text: str) -> str:
+    text = (text or "").translate(str.maketrans({
+        "đ": "d",
+        "Đ": "D",
+        "Ð": "D",
+        "ð": "d",
+    }))
     folded = "".join(
         c for c in unicodedata.normalize("NFD", text)
         if unicodedata.category(c) != "Mn"
@@ -69,6 +75,8 @@ def _road_tokens(text: Optional[str]) -> set[str]:
         return set()
     text = _ascii_fold(text)
     tokens = set()
+    for m in re.finditer(r"\bquoc\s*lo\s*0*(\d{1,4})\b", text, re.IGNORECASE):
+        tokens.add(f"ql{int(m.group(1))}")
     for m in _ROAD_TOKEN_PAT.finditer(text):
         raw = re.sub(r"\s+", "", m.group(0))
         prefix = re.match(r"[a-z]+", raw).group(0)
@@ -330,7 +338,12 @@ def _has_reliable_lot_signature(l1: dict, l2: dict, *, allow_facebook_same_price
     if has_location and text_sim >= 0.88:
         return True
 
-    return allow_facebook_same_price and _same_source(l1, l2, "facebook") and has_location
+    return (
+        allow_facebook_same_price
+        and area_match
+        and _same_source(l1, l2, "facebook")
+        and has_location
+    )
 
 
 def _drop_pct(older: dict, newer: dict) -> Optional[float]:

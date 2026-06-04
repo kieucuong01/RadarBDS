@@ -16,8 +16,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from cleansing.dedup import (
+    _ascii_fold,
     _candidate_keys,
+    _has_reliable_lot_signature,
     _repost_score,
+    _road_tokens,
     _is_duplicate,
     _is_reliable_price_drop,
     _is_suspicious_bait,
@@ -56,6 +59,85 @@ def _normalize_fb(text, source_id="test", posted_at="2026-05-08"):
         "default_area": "Thủ Dầu Một",
     }
     return normalize_record(raw)
+
+
+def test_ascii_fold_normalizes_vietnamese_d_stroke_for_location_matching():
+    assert _ascii_fold("Phan Đăng Lưu - đường ĐX85 - quốc lộ 13 - Ðăng") == (
+        "phan dang luu - duong dx85 - quoc lo 13 - dang"
+    )
+
+
+def test_road_tokens_detect_vietnamese_dx_prefix():
+    assert _road_tokens("mặt tiền ĐX85, gần đường dx 089, quốc lộ 13") == {"dx85", "dx89", "ql13"}
+
+
+def test_history_signature_matches_quoc_lo_written_as_words():
+    parent = _listing(
+        source="facebook",
+        source_id="fb-ql13-new",
+        posted_at="2026-06-01",
+        ward="Hiệp An",
+        property_type="nha_dat",
+        area_m2=125.0,
+        frontage_m=5.0,
+        depth_m=25.0,
+        price_ty=2.29,
+        description="Nhà cấp 4 Hiệp An 1 sẹt QL13, diện tích 5x25, thổ cư 60m2.",
+    )
+    child = _listing(
+        source="facebook",
+        source_id="fb-quoc-lo-old",
+        posted_at="2026-04-02",
+        ward="Hiệp An",
+        property_type="nha_dat",
+        area_m2=125.0,
+        frontage_m=5.0,
+        depth_m=25.0,
+        price_ty=2.35,
+        description="Bán nhà Hiệp An 1 sẹt quốc lộ 13 gần trạm thu phí Suối Giữa, 5x25.",
+    )
+
+    assert _has_reliable_lot_signature(parent, child, allow_facebook_same_price=False)
+
+
+def test_same_price_history_escape_does_not_override_area_mismatch_when_prices_differ():
+    large_lot = _listing(
+        source="facebook",
+        source_id="fb-dx90-large",
+        posted_at="2026-06-03",
+        ward="Hiệp An",
+        property_type="dat_nen",
+        area_m2=461.5,
+        frontage_m=10.0,
+        depth_m=46.0,
+        price_ty=5.5,
+        description=(
+            "Đất mặt tiền DX090 Hiệp An gần chợ Bưng Cầu. "
+            "Diện tích 10 x 46 = 461,5m2. Thổ cư: 120 m2."
+        ),
+    )
+    small_lot = _listing(
+        source="facebook",
+        source_id="fb-dx90-small",
+        posted_at="2026-04-09",
+        ward="Hiệp An",
+        property_type="dat_nen",
+        area_m2=125.0,
+        frontage_m=5.0,
+        depth_m=25.0,
+        price_ty=2.4,
+        description=(
+            "Đất mặt tiền DX90 Hiệp An, 1 xẹt Phan Đăng Lưu. "
+            "Diện tích 5 x 25m. Thổ Cư : 60 m2."
+        ),
+    )
+
+    assert not _has_reliable_lot_signature(
+        large_lot,
+        small_lot,
+        allow_facebook_same_price=True,
+    )
+    assert not _is_duplicate(large_lot, small_lot)
 
 
 LONG_DESC = (

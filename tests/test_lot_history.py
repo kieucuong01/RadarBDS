@@ -209,6 +209,54 @@ class LotHistoryApiTest(unittest.TestCase):
         self.assertIn(dx013_id, ids)
         self.assertNotIn(dx20_id, ids)
 
+    def test_lot_history_filters_same_road_different_area_when_price_is_different(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            large_lot_id = self._insert_listing(
+                conn,
+                source_id=f"fb-dx90-large-{self.token}",
+                url=f"{self.url_prefix}/fb-dx90-large",
+                title="DX90 large lot",
+                ward="Hiệp An",
+                area_m2=461.5,
+                frontage_m=10,
+                depth_m=46,
+                price_ty=5.5,
+                price_per_m2=11.92,
+                description=(
+                    "Đất mặt tiền DX090 Hiệp An gần chợ Bưng Cầu. "
+                    "Diện tích 10 x 46 = 461,5m2, thổ cư 120m2."
+                ),
+                posted_at="2026-06-03",
+            )
+            small_lot_id = self._insert_listing(
+                conn,
+                source_id=f"fb-dx90-small-{self.token}",
+                url=f"{self.url_prefix}/fb-dx90-small",
+                title="DX90 small lot",
+                ward="Hiệp An",
+                area_m2=125.0,
+                frontage_m=5,
+                depth_m=25,
+                price_ty=2.4,
+                price_per_m2=19.2,
+                description=(
+                    "Đất mặt tiền DX90 Hiệp An, 1 xẹt Phan Đăng Lưu. "
+                    "Diện tích 5 x 25m, thổ cư 60m2."
+                ),
+                possibly_duplicate=1,
+                duplicate_of_id=large_lot_id,
+                posted_at="2026-04-09",
+            )
+
+        response = self.client.get(f"/api/history/{large_lot_id}")
+        self.assertEqual(response.status_code, 200)
+        ids = [row["id"] for row in response.get_json()["lot_history"]]
+
+        self.assertIn(large_lot_id, ids)
+        self.assertNotIn(small_lot_id, ids)
+
 
 if __name__ == "__main__":
     unittest.main()
