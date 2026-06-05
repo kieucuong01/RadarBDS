@@ -43,8 +43,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=nav-badge-highlight-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=keyword-search-20260603">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-card-radius-20260603">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-mobile-carousel-20260602">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=vip-locked-market-20260605">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-detail-tags-polish-20260605">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=area-risk-radar-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=nav-badge-highlight-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=auth-vietnamese-header-20260605">
   <script>
@@ -469,7 +469,7 @@
             <div class="chart-header" style="display:flex; justify-content:space-between; align-items:center;">
               <div>
                 <h3 class="chart-title">📉 Biểu đồ Xu hướng Giá</h3>
-                <p class="chart-subtitle">Phân tích biến động giá theo thời gian</p>
+                <p class="chart-subtitle">Median giá/m² theo thời gian; điểm nhạt là kỳ ít mẫu</p>
               </div>
               <div class="period-pills">
                 <button class="p-pill" data-period="day" onclick="updateTrendPeriod('day', this)">Ngày</button>
@@ -494,7 +494,43 @@
             </div>
           </div>
 
+          <div class="chart-card opportunity-matrix-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Ma trận Cơ hội Khu vực</h3>
+              <p class="chart-subtitle">So sánh độ rẻ, độ dày deal và mẫu thị trường để chọn khu đáng xem trước</p>
+            </div>
+            <div id="opportunityMatrixInsight" class="opportunity-matrix-insight"></div>
+            <div class="chart-body opportunity-matrix-body" id="opportunityMatrixContainer">
+              <canvas id="opportunityMatrixChart"></canvas>
+            </div>
+            <div class="opportunity-matrix-legend" aria-label="Chú giải ma trận cơ hội">
+              <span><i class="matrix-dot is-priority"></i>Ưu tiên xem trước</span>
+              <span><i class="matrix-dot is-watch"></i>Có thể lọc sâu</span>
+              <span><i class="matrix-dot is-neutral"></i>Theo dõi thêm</span>
+            </div>
+          </div>
+
           <div class="market-indicator-grid">
+            <div class="chart-card market-indicator-card area-risk-radar-card {% if USER_TIER not in ['vip', 'admin'] %}is-tier-locked{% endif %}" style="position:relative;">
+              <div class="chart-header">
+                <h3 class="chart-title">Radar Rủi ro Khu vực</h3>
+                <p class="chart-subtitle">Gộp áp lực giảm giá, nguồn cung, MOS median và số deal để phân biệt cơ hội thật với khu đang bị xả hàng</p>
+              </div>
+              <div class="indicator-summary" id="areaRiskRadarSummary"></div>
+              <div class="chart-body area-risk-radar-wrap" id="areaRiskRadarContainer">
+                <div class="area-risk-radar" id="areaRiskRadar"></div>
+              </div>
+              {% if USER_TIER not in ['vip', 'admin'] %}
+              <div class="tier-locked-overlay">
+                <div class="lock-icon">🔒</div>
+                <h4>Đặc quyền VIP</h4>
+                <p>Radar Rủi ro Khu vực giúp biết khu này rẻ vì cơ hội hay vì đang bị xả hàng — chỉ mở cho thành viên VIP.</p>
+                <button class="upgrade-btn"
+                  onclick="onLockedTabClick('area_risk_radar', 'Mở khoá Radar Rủi ro Khu vực')">💎 Nâng cấp VIP</button>
+              </div>
+              {% endif %}
+            </div>
+
             <div class="chart-card market-indicator-card {% if USER_TIER not in ['vip', 'admin'] %}is-tier-locked{% endif %}" style="position:relative;">
               <div class="chart-header">
                 <h3 class="chart-title">Chỉ báo Tỷ lệ Cắt máu</h3>
@@ -1044,8 +1080,8 @@
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-home-polish-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=keyword-search-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=low-confidence-warning-badge-20260603"></script>
-  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=signal-modal-browser-back-20260603"></script>
-  <script src="{{ url_for('static', filename='js/main/market.js') }}?v=trend-first-20260528"></script>
+  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-tags-polish-20260605"></script>
+  <script src="{{ url_for('static', filename='js/main/market.js') }}?v=area-risk-radar-20260605"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=listings-grid-signal-card-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=keyword-search-20260603"></script>

@@ -838,23 +838,73 @@
 
 .sm-tags-wrap {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 8px 0 14px;
+  flex-wrap: nowrap;
+  gap: 7px;
+  margin: 7px 0 13px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1px 1px 3px;
+  scrollbar-width: none;
+}
+
+.sm-tags-wrap::-webkit-scrollbar {
+  display: none;
 }
 
 .sm-tags-wrap span {
+  min-width: 0;
+}
+
+.sm-tags-wrap .sm-tag-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 46%;
+  min-height: 28px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 5px 11px;
-  font-size: 0.78rem;
+  padding: 4px 10px 4px 5px;
   color: var(--text-muted);
-  font-weight: 650;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
-[data-theme="light"] .sm-tags-wrap span {
-  background: #f1f5f9;
+.sm-tag-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.sm-tag-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+[data-theme="light"] .sm-tags-wrap .sm-tag-chip {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-color: #dbe4ef;
+}
+
+[data-theme="dark"] .sm-tags-wrap .sm-tag-chip {
+  background: rgba(15, 23, 42, 0.74);
+}
+
+[data-theme="dark"] .sm-tag-icon {
+  background: rgba(129, 140, 248, 0.16);
 }
 
 .sm-action-bar {
@@ -1090,12 +1140,25 @@
 
   .sm-tags-wrap {
     gap: 6px;
-    margin: 8px 0 12px;
+    margin: 6px -2px 10px;
+    padding: 0 2px 3px;
   }
 
-  .sm-tags-wrap span {
-    padding: 5px 8px;
-    font-size: 0.69rem;
+  .sm-tags-wrap .sm-tag-chip {
+    gap: 4px;
+    max-width: 58%;
+    min-height: 26px;
+    padding: 3px 8px 3px 4px;
+  }
+
+  .sm-tag-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 0.66rem;
+  }
+
+  .sm-tag-text {
+    font-size: 0.66rem;
   }
 
   .sm-mobile-tabs {

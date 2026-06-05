@@ -106,3 +106,53 @@ def test_index_loads_css_domain_files_in_dependency_order():
         assert idx > last_idx, f"{asset} not loaded after previous CSS file"
         last_idx = idx
         assert (ROOT / "static" / asset).exists(), f"missing static/{asset}"
+
+
+def test_market_tab_has_opportunity_matrix_visualization():
+    html = _read("templates/index.html")
+    market_js = _read("static/js/main/market.js")
+    market_css = _read("static/css/main/market.css")
+
+    for expected in [
+        'id="opportunityMatrixChart"',
+        'id="opportunityMatrixInsight"',
+        "opportunityMatrixInstance",
+        "renderOpportunityMatrix",
+        "type: 'bubble'",
+        "onClick:",
+        "_viewOpportunityWard",
+    ]:
+        assert expected in html or expected in market_js
+
+    assert ".opportunity-matrix-body" in market_css
+
+
+def test_market_trend_chart_exposes_sample_reliability():
+    market_js = _read("static/js/main/market.js")
+
+    for expected in [
+        "sample_count",
+        "sampleCounts",
+        "pointBackgroundColor",
+        "pointBorderColor",
+        "từ",
+        "tin",
+    ]:
+        assert expected in market_js
+
+
+def test_market_tab_has_vip_area_risk_radar():
+    html = _read("templates/index.html")
+    market_js = _read("static/js/main/market.js")
+    market_css = _read("static/css/main/market.css")
+
+    for expected in [
+        'id="areaRiskRadar"',
+        'id="areaRiskRadarSummary"',
+        "renderAreaRiskRadar",
+        "area_risk_radar",
+        "risk-score-strip",
+    ]:
+        assert expected in html or expected in market_js or expected in market_css
+
+    assert ".area-risk-radar" in market_css

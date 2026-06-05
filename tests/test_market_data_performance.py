@@ -201,6 +201,90 @@ def test_api_dashboard_uses_fast_summary_loader(monkeypatch):
     assert payload["signals_version"] == "test-version"
 
 
+def test_load_trend_data_includes_sample_count(monkeypatch):
+    import services.market_data as market_data
+
+    class _TrendConnection:
+        def __init__(self):
+            self.closed = False
+
+        def execute(self, _sql, _params=None):
+            return _FakeCursor(rows=[
+                {"time_key": "M-2026-05", "ward": "Ward A", "price_per_m2": 10.0},
+                {"time_key": "M-2026-05", "ward": "Ward A", "price_per_m2": 12.0},
+                {"time_key": "M-2026-05", "ward": "Ward A", "price_per_m2": 14.0},
+            ])
+
+        def close(self):
+            self.closed = True
+
+    conn = _TrendConnection()
+    monkeypatch.setattr(market_data, "_open_read_conn", lambda _db_path=None: conn)
+
+    result = market_data.load_trend_data(
+        None,
+        sources=["facebook"],
+        wards=["Ward A"],
+        trend_period="month",
+    )
+
+    point = result["Ward A"][0]
+    assert point["median_ppm2"] == 12.0
+    assert point["sample_count"] == 3
+    assert conn.closed is True
+
+
+def test_load_market_indicators_includes_area_risk_radar(monkeypatch):
+    import services.market_data as market_data
+
+    class _IndicatorConnection:
+        def __init__(self):
+            self.closed = False
+
+        def execute(self, sql, params=None):
+            if "SUM(has_price_drop)" in sql:
+                return _FakeCursor(rows=[
+                    {"ward": "Ward A", "total_count": 10, "distress_count": 4},
+                    {"ward": "Ward B", "total_count": 12, "distress_count": 1},
+                ])
+            if "strftime('%Y-%m'" in sql:
+                current_month = market_data.date.today().strftime("%Y-%m")
+                return _FakeCursor(rows=[
+                    {"ward": "Ward A", "month_key": current_month, "new_count": 18},
+                    {"ward": "Ward B", "month_key": current_month, "new_count": 4},
+                ])
+            if "risk_deal_rows" in sql:
+                return _FakeCursor(rows=[
+                    {"ward": "Ward A", "mos_pct": 28.0, "is_signal": 1},
+                    {"ward": "Ward A", "mos_pct": 22.0, "is_signal": 1},
+                    {"ward": "Ward B", "mos_pct": 18.0, "is_signal": 1},
+                    {"ward": "Ward B", "mos_pct": 0.0, "is_signal": 0},
+                ])
+            return _FakeCursor(rows=[])
+
+        def close(self):
+            self.closed = True
+
+    conn = _IndicatorConnection()
+    monkeypatch.setattr(market_data, "_open_read_conn", lambda _db_path=None: conn)
+
+    result = market_data.load_market_indicators(
+        None,
+        sources=["facebook"],
+        wards=["Ward A", "Ward B"],
+    )
+
+    radar = result["area_risk_radar"]
+    assert radar[0]["ward"] == "Ward A"
+    assert radar[0]["risk_score"] > radar[1]["risk_score"]
+    assert radar[0]["distress_ratio_pct"] == 40.0
+    assert radar[0]["median_mos"] == 25.0
+    assert radar[0]["deal_count"] == 2
+    assert radar[0]["verdict_key"] == "selloff"
+    assert result["summary"]["area_risk_hotspots"] == 1
+    assert conn.closed is True
+
+
 def test_dashboard_cache_reuses_loader_until_ttl_expires():
     import app as radar_app
 

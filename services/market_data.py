@@ -821,7 +821,8 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             if len(prices) >= 2: # Require at least 2 samples to reduce noise/jumping
                 ward_points.append({
                     'week': t_key,
-                    'median_ppm2': round(statistics.median(prices), 2)
+                    'median_ppm2': round(statistics.median(prices), 2),
+                    'sample_count': len(prices)
                 })
         if ward_points:
             trend_data[w] = ward_points
@@ -1112,7 +1113,8 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
             if len(prices) >= 2:
                 ward_points.append({
                     'week': t_key,
-                    'median_ppm2': round(statistics.median(prices), 2)
+                    'median_ppm2': round(statistics.median(prices), 2),
+                    'sample_count': len(prices)
                 })
         if ward_points:
             trend_data[w] = ward_points
@@ -1188,6 +1190,84 @@ def _supply_verdict(current_count: int, prev_avg: float):
     return "normal", "Nhịp cung ổn định", "Chưa thấy áp lực nguồn cung đột biến.", growth_pct, growth_x
 
 
+def _risk_score_from_indicators(distress_ratio_pct: float, supply_level_key: str, supply_delta: float) -> int:
+    distress_component = min(100, max(0, float(distress_ratio_pct or 0)) / 35 * 100)
+    supply_base = {
+        "danger": 100,
+        "warning": 72,
+        "watch": 45,
+        "normal": 18,
+    }.get(supply_level_key or "normal", 18)
+    supply_component = max(supply_base, min(100, max(0, float(supply_delta or 0)) * 6))
+    return int(round(distress_component * 0.55 + supply_component * 0.45))
+
+
+def _area_risk_verdict(risk_score: int, median_mos: float, deal_count: int) -> tuple[str, str, str]:
+    if risk_score >= 70 and median_mos >= 15 and deal_count > 0:
+        return "selloff", "Rẻ vì đang bị xả", "Kiểm tra pháp lý, thanh khoản và lịch sử giảm giá trước khi xuống tiền."
+    if risk_score >= 70:
+        return "pressure", "Áp lực xả hàng cao", "Theo dõi thêm nguồn cung; chưa nên coi giá rẻ là cơ hội."
+    if median_mos >= 20 and deal_count >= 2 and risk_score < 55:
+        return "opportunity", "Cơ hội sạch hơn", "Có thể ưu tiên lọc sâu từng deal trong khu này."
+    if risk_score >= 45:
+        return "watch", "Cần soi kỹ", "Có tín hiệu rẻ nhưng nền cung/giảm giá chưa thật yên tâm."
+    return "normal", "Rủi ro thấp", "Giữ kỷ luật giá và đối chiếu từng lô cụ thể."
+
+
+def _build_area_risk_radar(distress, supply, deal_rows):
+    import statistics
+
+    distress_by_ward = {x["ward"]: x for x in distress}
+    supply_by_ward = {x["ward"]: x for x in supply}
+    deal_stats = defaultdict(lambda: {"total_count": 0, "deal_count": 0, "mos_values": []})
+
+    for row in deal_rows:
+        ward = row["ward"]
+        if not ward:
+            continue
+        stats = deal_stats[ward]
+        stats["total_count"] += 1
+        mos = row["mos_pct"]
+        if row["is_signal"] == 1 and mos and mos > 0:
+            stats["deal_count"] += 1
+            stats["mos_values"].append(float(mos))
+
+    wards = set(distress_by_ward) | set(supply_by_ward) | set(deal_stats)
+    radar = []
+    for ward in wards:
+        distress_row = distress_by_ward.get(ward, {})
+        supply_row = supply_by_ward.get(ward, {})
+        stats = deal_stats.get(ward, {})
+        mos_values = stats.get("mos_values", [])
+        median_mos = round(statistics.median(mos_values), 1) if mos_values else 0
+        deal_count = int(stats.get("deal_count", 0))
+        total_count = int(stats.get("total_count", 0) or distress_row.get("total_count", 0) or 0)
+        distress_ratio = float(distress_row.get("ratio_pct", 0) or 0)
+        supply_delta = float(supply_row.get("delta", 0) or 0)
+        supply_level_key = supply_row.get("level_key", "normal")
+        risk_score = _risk_score_from_indicators(distress_ratio, supply_level_key, supply_delta)
+        verdict_key, verdict, action = _area_risk_verdict(risk_score, median_mos, deal_count)
+
+        radar.append({
+            "ward": ward,
+            "risk_score": risk_score,
+            "distress_ratio_pct": round(distress_ratio, 1),
+            "distress_count": int(distress_row.get("distress_count", 0) or 0),
+            "supply_level_key": supply_level_key,
+            "supply_delta": round(supply_delta, 1),
+            "supply_growth_pct": supply_row.get("growth_pct"),
+            "median_mos": median_mos,
+            "deal_count": deal_count,
+            "total_count": total_count,
+            "verdict_key": verdict_key,
+            "verdict": verdict,
+            "action": action,
+        })
+
+    radar.sort(key=lambda x: (x["risk_score"], x["deal_count"], x["median_mos"]), reverse=True)
+    return radar[:12]
+
+
 def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
                            area_min=0, area_max=0, price_min=0, price_max=0,
                            area_ranges=None, price_ranges=None):
@@ -1259,6 +1339,28 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
           AND first_listed_date < ?
         GROUP BY ward, month_key
     """, params + [window_start.isoformat(), next_start.isoformat()]).fetchall()
+
+    signal_condition = actionable_signal_sql("v")
+    deal_rows = conn.execute(f"""
+        WITH {LATEST_VALUATION_CTE},
+        risk_deal_rows AS (
+            SELECT
+                l.ward,
+                v.mos_pct,
+                CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS is_signal
+            FROM listings l
+            LEFT JOIN latest_valuation v ON l.id = v.listing_id
+            WHERE {where_sql}
+              AND l.ward IS NOT NULL
+              AND TRIM(l.ward) != ''
+              AND LOWER(l.ward) != 'unknown'
+              AND COALESCE(l.price_per_m2, 0) > 0
+              AND COALESCE(l.price_per_m2, 0) < 1000
+              AND COALESCE(v.is_outlier, 0) = 0
+        )
+        SELECT ward, mos_pct, is_signal
+        FROM risk_deal_rows
+    """, params).fetchall()
     conn.close()
 
     distress = []
@@ -1302,15 +1404,18 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
             "action": action,
         })
     supply.sort(key=lambda x: (level_rank.get(x["level_key"], 0), x["delta"], x["current_count"]), reverse=True)
+    area_risk_radar = _build_area_risk_radar(distress, supply, deal_rows)
 
     return {
         "distress_ratio": distress[:30],
         "supply_anomaly": supply[:30],
+        "area_risk_radar": area_risk_radar,
         "summary": {
             "current_month": current_start.strftime("%Y-%m"),
             "previous_months": prev_keys,
             "distress_hotspots": sum(1 for x in distress if x["ratio_pct"] >= 25),
             "supply_hotspots": sum(1 for x in supply if x["level_key"] in ("danger", "warning")),
+            "area_risk_hotspots": sum(1 for x in area_risk_radar if x["risk_score"] >= 70),
             "wards_scanned": len({x["ward"] for x in distress} | {x["ward"] for x in supply}),
         }
     }

@@ -1,14 +1,20 @@
 // Market opportunity, market indicators, and trend chart rendering.
+let opportunityMatrixInstance = null;
+
 async function loadMarketCharts(useCache = true) {
   const opportunityContainer = document.getElementById('opportunityListContainer');
+  const matrixContainer = document.getElementById('opportunityMatrixContainer');
   if (opportunityContainer) opportunityContainer.classList.add('loading');
+  if (matrixContainer) matrixContainer.classList.add('loading');
   try {
     const data = await fetchJSONCached('market', `/api/heatmap?${currentFilters}`, useCache);
     renderOpportunityList(data);
+    renderOpportunityMatrix(data);
   } catch (err) {
     if (err.name !== 'AbortError') console.error("Market charts error:", err);
   } finally {
     if (opportunityContainer) opportunityContainer.classList.remove('loading');
+    if (matrixContainer) matrixContainer.classList.remove('loading');
   }
 }
 
@@ -22,6 +28,38 @@ function _fmtMarketPrice(value) {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return '-';
   return `${n.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tr/m²`;
+}
+
+function _opportunityMatrixTier(mos, dealCount) {
+  if (mos >= 25 && dealCount >= 3) {
+    return { key: 'priority', label: 'Ưu tiên xem trước', color: '#10b981', border: '#047857' };
+  }
+  if (mos >= 15 || dealCount >= 8) {
+    return { key: 'watch', label: 'Có thể lọc sâu', color: '#f59e0b', border: '#b45309' };
+  }
+  return { key: 'neutral', label: 'Theo dõi thêm', color: '#64748b', border: '#475569' };
+}
+
+function _matrixBubbleSize(totalCount) {
+  const total = Number(totalCount || 0);
+  if (!Number.isFinite(total) || total <= 0) return 7;
+  return Math.max(7, Math.min(24, Math.sqrt(total) * 1.6));
+}
+
+function _hexToRgba(hex, alpha) {
+  const clean = String(hex || '').replace('#', '');
+  if (clean.length !== 6) return hex;
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function _sampleCountLabel(count) {
+  const n = Number(count || 0);
+  if (!Number.isFinite(n) || n <= 0) return 'không rõ số mẫu';
+  if (n <= 3) return `ít mẫu: từ ${n} tin`;
+  return `từ ${n} tin`;
 }
 
 function _viewOpportunityWard(ward) {
@@ -110,6 +148,121 @@ function renderOpportunityList(data) {
   }).join('');
 }
 
+function renderOpportunityMatrix(data) {
+  const canvas = document.getElementById('opportunityMatrixChart');
+  const insightEl = document.getElementById('opportunityMatrixInsight');
+  if (!canvas) return;
+
+  if (opportunityMatrixInstance) {
+    opportunityMatrixInstance.destroy();
+    opportunityMatrixInstance = null;
+  }
+
+  const rows = (data || [])
+    .filter(d => Number(d.total_count || 0) > 0)
+    .map((d) => {
+      const mos = Number(d.median_mos || 0);
+      const dealCount = Number(d.deal_count || 0);
+      const totalCount = Number(d.total_count || 0);
+      const tier = _opportunityMatrixTier(mos, dealCount);
+      return {
+        x: mos,
+        y: dealCount,
+        r: _matrixBubbleSize(totalCount),
+        ward: d.ward || '',
+        totalCount,
+        signalRate: Number(d.signal_rate || 0),
+        avgPrice: Number(d.avg_price || 0),
+        tier
+      };
+    })
+    .filter(d => d.x > 0 || d.y > 0)
+    .sort((a, b) => (b.y * 100 + b.x) - (a.y * 100 + a.x));
+
+  if (insightEl) {
+    const best = rows[0];
+    insightEl.innerHTML = best
+      ? `
+        <span><strong>${escHtml(best.ward)}</strong> nổi bật nhất</span>
+        <span>${best.y} deal, MOS trung vị ${best.x.toFixed(1)}%</span>
+        <span>Cỡ bong bóng = số tin hợp lệ trong khu</span>
+      `
+      : '<span>Chưa đủ dữ liệu để dựng ma trận cơ hội.</span>';
+  }
+
+  if (!rows.length) return;
+
+  const maxMos = Math.max(30, ...rows.map(d => d.x));
+  const maxDeals = Math.max(10, ...rows.map(d => d.y));
+  const rootStyle = getComputedStyle(document.documentElement);
+  const gridColor = rootStyle.getPropertyValue('--border').trim() || 'rgba(148,163,184,.25)';
+  const textColor = rootStyle.getPropertyValue('--text-muted').trim() || '#64748b';
+
+  opportunityMatrixInstance = new Chart(canvas.getContext('2d'), {
+    type: 'bubble',
+    data: {
+      datasets: [{
+        label: 'Khu vực',
+        data: rows,
+        backgroundColor: rows.map(d => `${d.tier.color}55`),
+        borderColor: rows.map(d => d.tier.border),
+        borderWidth: 1.5,
+        hoverBorderWidth: 2.5
+      }]
+    },
+    options: {
+      animation: { duration: 0 },
+      responsive: true,
+      maintainAspectRatio: false,
+      parsing: false,
+      onClick: (event, elements) => {
+        if (!elements || !elements.length) return;
+        const point = rows[elements[0].index];
+        if (point && point.ward) _viewOpportunityWard(point.ward);
+      },
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements && elements.length ? 'pointer' : 'default';
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => (items[0] && items[0].raw && items[0].raw.ward) || '',
+            label: (item) => {
+              const d = item.raw || {};
+              return [
+                `${d.tier ? d.tier.label : 'Khu vực'}`,
+                `Deal: ${d.y || 0}/${d.totalCount || 0} tin (${(d.signalRate || 0).toFixed(1)}%)`,
+                `MOS trung vị: ${(d.x || 0).toFixed(1)}%`,
+                `Giá TB: ${_fmtMarketPrice(d.avgPrice)}`
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          min: 0,
+          suggestedMax: Math.ceil(maxMos / 5) * 5,
+          title: { display: true, text: 'Độ rẻ so với định giá AI (MOS trung vị)', color: textColor, font: { weight: '700' } },
+          grid: { color: gridColor },
+          ticks: {
+            color: textColor,
+            callback: (value) => `${value}%`
+          }
+        },
+        y: {
+          min: 0,
+          suggestedMax: Math.ceil(maxDeals * 1.15),
+          title: { display: true, text: 'Số deal đang thấp hơn định giá', color: textColor, font: { weight: '700' } },
+          grid: { color: gridColor },
+          ticks: { color: textColor, precision: 0 }
+        }
+      }
+    }
+  });
+}
+
 function _fmtIndicatorNumber(value, digits = 0) {
   const n = Number(value);
   if (!Number.isFinite(n)) return '-';
@@ -127,6 +280,81 @@ function _fmtIndicatorPct(value) {
 
 function _indicatorBadge(levelKey, level) {
   return `<span class="indicator-badge level-${escHtml(levelKey || 'normal')}">${escHtml(level || '')}</span>`;
+}
+
+function _areaRiskTone(score) {
+  const n = Number(score || 0);
+  if (n >= 70) return 'danger';
+  if (n >= 50) return 'warning';
+  if (n >= 32) return 'watch';
+  return 'normal';
+}
+
+function _fmtSignedNumber(value, digits = 1) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n)) return '-';
+  return `${n >= 0 ? '+' : ''}${_fmtIndicatorNumber(n, digits)}`;
+}
+
+function renderAreaRiskRadar(rows, summary) {
+  const root = document.getElementById('areaRiskRadar');
+  const summaryEl = document.getElementById('areaRiskRadarSummary');
+  if (!root) return;
+
+  const items = (rows || [])
+    .filter(x => x && x.ward)
+    .slice(0, 8);
+
+  if (summaryEl) {
+    const hotspots = Number((summary && summary.area_risk_hotspots) || 0);
+    const scanned = Number((summary && summary.wards_scanned) || 0);
+    summaryEl.innerHTML = `
+      <span><strong>${hotspots}</strong> khu rủi ro cao</span>
+      <span>Điểm rủi ro gộp từ giảm giá và nguồn cung</span>
+      <span>${scanned} khu vực được quét</span>
+    `;
+  }
+
+  if (!items.length) {
+    root.innerHTML = `
+      <div class="opportunity-empty area-risk-empty">
+        <strong>Chưa đủ dữ liệu rủi ro khu vực</strong>
+        <span>Nới bộ lọc hoặc chờ thêm tin mới để Radar có nền so sánh tốt hơn.</span>
+      </div>
+    `;
+    return;
+  }
+
+  root.innerHTML = items.map((x, index) => {
+    const riskScore = Math.max(0, Math.min(100, Number(x.risk_score || 0)));
+    const tone = _areaRiskTone(riskScore);
+    const mos = Number(x.median_mos || 0);
+    const deals = Number(x.deal_count || 0);
+    const total = Number(x.total_count || 0);
+    return `
+      <article class="area-risk-row risk-${tone}">
+        <div class="area-risk-rank">${index + 1}</div>
+        <div class="area-risk-main">
+          <div class="area-risk-top">
+            <h4>${escHtml(x.ward || '')}</h4>
+            <span class="indicator-badge level-${tone}">${escHtml(x.verdict || '')}</span>
+          </div>
+          <div class="risk-score-strip" aria-label="Điểm rủi ro ${riskScore}/100">
+            <span style="width:${Math.max(4, riskScore)}%"></span>
+          </div>
+          <div class="area-risk-metrics">
+            <div><strong>${riskScore}</strong><span>rủi ro</span></div>
+            <div><strong>${_fmtIndicatorPct(x.distress_ratio_pct)}</strong><span>áp lực giảm</span></div>
+            <div><strong>${_fmtSignedNumber(x.supply_delta, 1)}</strong><span>cung mới</span></div>
+            <div><strong>${mos ? mos.toFixed(1) + '%' : '-'}</strong><span>MOS median</span></div>
+            <div><strong>${deals}/${total || '-'}</strong><span>deal/tin</span></div>
+          </div>
+          <p>${escHtml(x.action || '')}</p>
+        </div>
+        <button type="button" class="opportunity-btn" data-ward="${escHtml(x.ward || '')}" onclick="_viewOpportunityWard(this.dataset.ward)">Xem deal</button>
+      </article>
+    `;
+  }).join('');
 }
 
 function _renderDistressRatio(rows, summary) {
@@ -213,26 +441,32 @@ function _renderSupplyAnomaly(rows, summary) {
 async function loadMarketIndicators(useCache = true) {
   const distressContainer = document.getElementById('distressRatioContainer');
   const supplyContainer = document.getElementById('supplyAnomalyContainer');
-  if (!distressContainer && !supplyContainer) return;
+  const riskContainer = document.getElementById('areaRiskRadarContainer');
+  if (!distressContainer && !supplyContainer && !riskContainer) return;
   if (!['vip', 'admin'].includes(window.USER_TIER || 'guest')) {
+    renderAreaRiskRadar([], {});
     _renderDistressRatio([], {});
     _renderSupplyAnomaly([], {});
     return;
   }
+  if (riskContainer) riskContainer.classList.add('loading');
   if (distressContainer) distressContainer.classList.add('loading');
   if (supplyContainer) supplyContainer.classList.add('loading');
   const runId = ++marketIndicatorRunSeq;
   try {
     const data = await fetchJSONCached('marketIndicators', `/api/market-indicators?${currentFilters}`, useCache);
     if (runId !== marketIndicatorRunSeq) return;
+    renderAreaRiskRadar(data.area_risk_radar || [], data.summary || {});
     _renderDistressRatio(data.distress_ratio || [], data.summary || {});
     _renderSupplyAnomaly(data.supply_anomaly || [], data.summary || {});
   } catch (err) {
     if (err.name !== 'AbortError') console.error('Market indicators error:', err);
+    renderAreaRiskRadar([], {});
     _renderDistressRatio([], {});
     _renderSupplyAnomaly([], {});
   } finally {
     if (runId === marketIndicatorRunSeq) {
+      if (riskContainer) riskContainer.classList.remove('loading');
       if (distressContainer) distressContainer.classList.remove('loading');
       if (supplyContainer) supplyContainer.classList.remove('loading');
     }
@@ -278,20 +512,45 @@ function renderTrendChart(trendData) {
   for (const ward in trendData) {
     const data = trendData[ward];
     const dataMap = {};
-    data.forEach(d => dataMap[d.week] = d.median_ppm2);
+    const sampleMap = {};
+    data.forEach((d) => {
+      dataMap[d.week] = d.median_ppm2;
+      sampleMap[d.week] = Number(d.sample_count || 0);
+    });
     const wardData = sortedKeys.map(w => dataMap[w] || null);
+    const sampleCounts = sortedKeys.map(w => sampleMap[w] || 0);
 
     const color = colors[i % colors.length];
     datasets.push({
       label: ward,
       data: wardData,
+      sampleCounts,
       borderColor: color,
       backgroundColor: color + '10',
       borderWidth: 3,
       tension: 0.4,
       fill: false,
-      pointRadius: sortedKeys.length > 30 ? 0 : 4,
+      pointRadius: (ctx) => {
+        if (sortedKeys.length > 30 || ctx.raw === null) return 0;
+        return (ctx.dataset.sampleCounts[ctx.dataIndex] || 0) <= 3 ? 3 : 4;
+      },
       pointHoverRadius: 8,
+      pointBackgroundColor: (ctx) => {
+        const count = (ctx.dataset.sampleCounts && ctx.dataset.sampleCounts[ctx.dataIndex]) || 0;
+        return count > 3 ? color : _hexToRgba(color, 0.32);
+      },
+      pointBorderColor: (ctx) => {
+        const count = (ctx.dataset.sampleCounts && ctx.dataset.sampleCounts[ctx.dataIndex]) || 0;
+        return count > 3 ? color : _hexToRgba(color, 0.48);
+      },
+      segment: {
+        borderColor: (ctx) => {
+          const dataset = ctx.chart.data.datasets[ctx.datasetIndex] || {};
+          const counts = dataset.sampleCounts || [];
+          const lowSample = (counts[ctx.p0DataIndex] || 0) <= 3 || (counts[ctx.p1DataIndex] || 0) <= 3;
+          return lowSample ? _hexToRgba(color, 0.42) : color;
+        }
+      },
       spanGaps: true,
       borderCapStyle: 'round'
     });
@@ -317,7 +576,14 @@ function renderTrendChart(trendData) {
           backgroundColor: 'rgba(0,0,0,0.8)',
           titleFont: { size: 14, weight: 'bold' },
           bodyFont: { size: 13 },
-          cornerRadius: 8
+          cornerRadius: 8,
+          callbacks: {
+            label: (ctx) => {
+              const value = Number(ctx.raw || 0);
+              const count = (ctx.dataset.sampleCounts && ctx.dataset.sampleCounts[ctx.dataIndex]) || 0;
+              return `${ctx.dataset.label}: median ${value.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tr/m² (${_sampleCountLabel(count)})`;
+            }
+          }
         }
       },
       scales: {

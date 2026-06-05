@@ -174,7 +174,12 @@ function renderSignalTags(data) {
     { icon: '🏷️', label: propertyTypeLabel(data.propertyType) },
   ];
   document.getElementById('sm-tags').innerHTML = tags
-    .map((t) => `<span>${t.icon} ${t.label}</span>`)
+    .map((t) => `
+      <span class="sm-tag-chip">
+        <span class="sm-tag-icon">${escHtml(t.icon)}</span>
+        <span class="sm-tag-text">${escHtml(t.label)}</span>
+      </span>
+    `)
     .join('');
 }
 
