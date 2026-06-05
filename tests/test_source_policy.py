@@ -88,6 +88,9 @@ class SourcePolicyTest(unittest.TestCase):
         ward=None,
         area_m2=100,
         price_ty=2.0,
+        price_first_ty=None,
+        price_dropped=0,
+        price_drop_pct=None,
         image_count=0,
         frontage_m=None,
         depth_m=None,
@@ -101,12 +104,12 @@ class SourcePolicyTest(unittest.TestCase):
                 INSERT INTO listings (
                     source, source_id, url, title, description, ward,
                     area_m2, frontage_m, depth_m, property_type, price_ty, price_per_m2,
-                    is_hot, price_dropped, suspicious_bait,
+                    price_first_ty, is_hot, price_dropped, price_drop_pct, suspicious_bait,
                     probably_sold, possibly_duplicate, posted_at, crawled_at
                 ) VALUES (
                     ?, ?, ?, ?, ?,
                     ?, ?, ?, ?, 'dat_nen', ?, ?,
-                    0, 0, 0, 0, 0, datetime('now'), datetime('now')
+                    ?, 0, ?, ?, 0, 0, 0, datetime('now'), datetime('now')
                 )
                 """,
                 (
@@ -121,6 +124,9 @@ class SourcePolicyTest(unittest.TestCase):
                     depth_m,
                     price_ty,
                     price_per_m2,
+                    price_first_ty if price_first_ty is not None else price_ty,
+                    price_dropped,
+                    price_drop_pct,
                 ),
             )
             listing_id = cur.lastrowid
@@ -311,6 +317,36 @@ class SourcePolicyTest(unittest.TestCase):
 
         rows = response.get_json()["signals"]
         self.assertEqual([row["id"] for row in rows], [matched_id])
+
+    def test_stale_price_drop_flag_without_total_price_drop_is_suppressed(self):
+        stale_id = self._seed_signal(
+            source="facebook",
+            title="Stale drop flag Nguyen Chi Thanh",
+            source_id="fb-stale-drop-flag",
+            area_m2=146,
+            price_ty=1.59,
+            price_first_ty=1.59,
+            price_dropped=1,
+            price_drop_pct=1.38,
+        )
+
+        signal_response = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}&q=stale drop flag&limit=20"
+        )
+        self.assertEqual(signal_response.status_code, 200)
+        signal_rows = signal_response.get_json()["signals"]
+        self.assertEqual([row["id"] for row in signal_rows], [stale_id])
+        self.assertFalse(signal_rows[0]["price_dropped"])
+        self.assertIsNone(signal_rows[0]["drop_pct"])
+
+        listing_response = self.client.get(
+            f"/api/listings?city=Khac&ward={self.ward}&q=stale drop flag&limit=20"
+        )
+        self.assertEqual(listing_response.status_code, 200)
+        listing_rows = listing_response.get_json()["listings"]
+        self.assertEqual([row["id"] for row in listing_rows], [stale_id])
+        self.assertFalse(listing_rows[0]["price_dropped"])
+        self.assertIsNone(listing_rows[0]["drop_pct"])
 
     def test_exact_search_matches_compact_query_to_spaced_road_code(self):
         matched_id = self._seed_signal(

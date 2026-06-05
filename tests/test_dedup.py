@@ -19,6 +19,7 @@ import cleansing.dedup as dedup_module
 from cleansing.dedup import (
     _ascii_fold,
     _candidate_keys,
+    _drop_pct,
     _has_reliable_lot_signature,
     _repost_score,
     _road_tokens,
@@ -646,7 +647,7 @@ def test_reliable_drop_same_phone_area_anchor():
     assert _is_reliable_price_drop(old, new), "Same phone + near area + location should be reliable"
 
 
-def test_reliable_drop_uses_price_per_m2_when_total_price_same():
+def test_reliable_drop_ignores_price_per_m2_when_total_price_same():
     old = _listing(
         source="facebook", source_id="fb1", posted_at="2026-05-01",
         ward="TÃ¢n An", property_type="dat_nen", area_m2=100.0,
@@ -659,7 +660,7 @@ def test_reliable_drop_uses_price_per_m2_when_total_price_same():
         price_ty=2.0, price_per_m2=18.0,
         description="BÃ¡n Ä‘áº¥t Ä‘Æ°á»ng DX84 diá»‡n tÃ­ch 100m2"
     )
-    assert _is_reliable_price_drop(old, new), "Price/m2 drop should count even if total price did not drop"
+    assert not _is_reliable_price_drop(old, new), "Price/m2 drift must not create a visible price-drop badge"
 
 
 def test_suspicious_bait_over_40pct_not_reliable_drop():
@@ -889,6 +890,24 @@ def test_facebook_same_phone_near_area_reposts_share_candidate_bucket():
 
     assert _candidate_keys(old).intersection(_candidate_keys(new))
     assert _is_reliable_price_drop(old, new)
+
+
+def test_same_total_price_area_drift_is_not_price_drop():
+    old = _listing(
+        source="facebook", source_id="fb-same-total-old", posted_at="2026-04-30",
+        ward="Hiep An", property_type="dat_nen", area_m2=144.0,
+        price_ty=1.59, price_per_m2=11.04,
+        description="Dat Hiep An 1 xet Nguyen Chi Thanh 4x36 gia 1ty590."
+    )
+    new = _listing(
+        source="facebook", source_id="fb-same-total-new", posted_at="2026-05-02",
+        ward="Hiep An", property_type="dat_nen", area_m2=146.0,
+        price_ty=1.59, price_per_m2=10.89,
+        description="Dat Hiep An 1 xet Nguyen Chi Thanh 4x36 gia 1ty590."
+    )
+
+    assert _drop_pct(old, new) is None
+    assert not _is_reliable_price_drop(old, new)
 
 
 def test_guland_same_source_id_price_drop_still_allowed():

@@ -2413,9 +2413,9 @@ def api_listings():
     for r in rows:
         related_first = related_drop_map.get(r["id"])
         price_ty = r["price_ty"]
-        price_dropped = bool(r["price_dropped"])
-        drop_pct = r["price_drop_pct"]
         price_first_ty = r["price_first_ty"]
+        price_dropped = _valid_price_drop_values(price_ty, price_first_ty)
+        drop_pct = r["price_drop_pct"] if price_dropped else None
         if related_first is not None and price_ty:
             price_dropped = True
             drop_pct = round(((related_first - price_ty) / related_first * 100), 2)
@@ -2775,7 +2775,11 @@ def _linked_lot_history_price_drop(anchor, candidate, canonical_id, road_conflic
 def _lot_history_property_type_compatible(anchor_type, candidate_type):
     if not anchor_type or not candidate_type or anchor_type == candidate_type:
         return True
-    return {anchor_type, candidate_type}.issubset({"dat_nen", "dat_vuon"})
+    pair = {anchor_type, candidate_type}
+    return (
+        pair.issubset({"dat_nen", "dat_vuon"})
+        or pair.issubset({"nha_dat", "nha_tro"})
+    )
 
 
 def _lot_history_area_compatible(anchor_area, candidate_area, max_gap=0.05):
@@ -2793,6 +2797,17 @@ def _to_float(value):
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _valid_price_drop_values(price_ty, price_first_ty):
+    price = _to_float(price_ty)
+    first_price = _to_float(price_first_ty)
+    return bool(
+        price
+        and first_price
+        and price < first_price * 0.99
+        and price >= first_price * 0.60
+    )
 
 
 def _resolve_lead_ack_email(conn, user_id: int | None, guest_email: str | None) -> str | None:

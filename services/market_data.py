@@ -270,7 +270,7 @@ def keyword_search_filter(keyword, prefix=""):
 def group_price_drop_filter_sql(prefix=""):
     col = lambda name: f"{prefix}{name}" if prefix else name
     return f"""(
-        COALESCE({col('price_dropped')},0)=1
+        {_valid_price_drop_sql(prefix)}
         OR {col('id')} IN (
             SELECT drop_child.duplicate_of_id
             FROM listings drop_child
@@ -284,6 +284,17 @@ def group_price_drop_filter_sql(prefix=""):
               AND drop_child.price_ty > drop_parent.price_ty * 1.01
               AND drop_parent.price_ty >= drop_child.price_ty * 0.60
         )
+    )"""
+
+
+def _valid_price_drop_sql(prefix=""):
+    col = lambda name: f"{prefix}{name}" if prefix else name
+    return f"""(
+        COALESCE({col('price_dropped')},0)=1
+        AND {col('price_first_ty')} IS NOT NULL
+        AND {col('price_ty')} IS NOT NULL
+        AND {col('price_ty')} < {col('price_first_ty')} * 0.99
+        AND {col('price_ty')} >= {col('price_first_ty')} * 0.60
     )"""
 
 
@@ -306,13 +317,14 @@ def related_price_drop_lateral_sql(alias="l", lateral_alias="related_drop"):
 
 def effective_price_drop_select_sql(alias="l", lateral_alias="related_drop"):
     first_price = f"{lateral_alias}.first_price"
+    valid_raw_drop = _valid_price_drop_sql(f"{alias}.")
     return f"""
                CASE
-                   WHEN COALESCE({alias}.price_dropped,0)=1 OR {first_price} IS NOT NULL
+                   WHEN {valid_raw_drop} OR {first_price} IS NOT NULL
                    THEN 1 ELSE 0
                END AS price_dropped,
                CASE
-                   WHEN COALESCE({alias}.price_dropped,0)=1 THEN {alias}.price_drop_pct
+                   WHEN {valid_raw_drop} THEN {alias}.price_drop_pct
                    WHEN {first_price} IS NOT NULL
                    THEN ROUND((({first_price} - {alias}.price_ty) / {first_price} * 100)::numeric, 2)
                    ELSE NULL

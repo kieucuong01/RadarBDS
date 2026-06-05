@@ -400,8 +400,10 @@ def _drop_pct(older: dict, newer: dict) -> Optional[float]:
     """Calculate price drop % from older (higher) to newer (lower) listing."""
     older_price = older.get("price_ty") or 0
     newer_price = newer.get("price_ty") or 0
-    if older_price > 0 and newer_price > 0 and newer_price < older_price * 0.99:
-        return round((older_price - newer_price) / older_price * 100, 2)
+    if older_price > 0 and newer_price > 0:
+        if newer_price < older_price * 0.99:
+            return round((older_price - newer_price) / older_price * 100, 2)
+        return None
 
     older_ppm2 = older.get("price_per_m2") or 0
     newer_ppm2 = newer.get("price_per_m2") or 0

@@ -308,6 +308,60 @@ class LotHistoryApiTest(unittest.TestCase):
         self.assertIn(old_id, ids)
         self.assertIn(current_id, ids)
 
+    def test_lot_history_includes_linked_higher_price_drop_when_house_subtype_changes(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            current_id = self._insert_listing(
+                conn,
+                source_id=f"fb-house-current-{self.token}",
+                url=f"{self.url_prefix}/fb-house-current",
+                title="Dinh Hoa house current",
+                ward="Dinh Hoa",
+                area_m2=114.0,
+                frontage_m=9.0,
+                depth_m=12.6,
+                property_type="nha_dat",
+                price_ty=1.5,
+                price_per_m2=13.23,
+                price_first_ty=1.58,
+                price_dropped=1,
+                price_drop_pct=5.06,
+                description=(
+                    "Ban nha cap 4 Dinh Hoa 9m x 12,6m tho cu 60m2, "
+                    "2 phong ngu, bep va phong tro cho thue. Gia ha con 1ty500."
+                ),
+                posted_at="2026-04-10",
+            )
+            old_id = self._insert_listing(
+                conn,
+                source_id=f"fb-house-old-{self.token}",
+                url=f"{self.url_prefix}/fb-house-old",
+                title="Dinh Hoa house old asking price",
+                ward="Dinh Hoa",
+                area_m2=113.4,
+                frontage_m=9.0,
+                depth_m=12.6,
+                property_type="nha_tro",
+                price_ty=1.58,
+                price_per_m2=13.93,
+                price_first_ty=1.58,
+                possibly_duplicate=1,
+                duplicate_of_id=current_id,
+                description=(
+                    "Can tien ban gap nha cap 4 Dinh Hoa 9m x 12,6m, "
+                    "2 phong ngu va 2 phong tro cho thue. Gia 1ty580."
+                ),
+                posted_at="2026-03-18",
+            )
+
+        response = self.client.get(f"/api/history/{current_id}")
+        self.assertEqual(response.status_code, 200)
+        ids = [row["id"] for row in response.get_json()["lot_history"]]
+
+        self.assertIn(old_id, ids)
+        self.assertIn(current_id, ids)
+
 
 if __name__ == "__main__":
     unittest.main()
