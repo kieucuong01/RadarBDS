@@ -2646,7 +2646,8 @@ def _get_lot_history(conn, listing_id, tier: str = "guest"):
     row = conn.execute("""
         SELECT id, source, source_id, url, title, description, ward, property_type,
                area_m2, price_ty, price_per_m2, frontage_m, depth_m, contact_phone,
-               has_so, duplicate_of_id, posted_at, crawled_at, updated_at
+               has_so, price_first_ty, price_dropped, price_drop_pct, duplicate_of_id,
+               posted_at, crawled_at, updated_at
         FROM listings
         WHERE id = ?
     """, (listing_id,)).fetchone()
@@ -2682,13 +2683,14 @@ def _get_lot_history(conn, listing_id, tier: str = "guest"):
         is_price_drop = bool(r["price_dropped"])
         anchor_text = _combined_text(anchor)
         candidate_text = _combined_text(candidate)
+        road_conflict = _road_token_conflict(anchor_text, candidate_text)
         same_lot = _has_reliable_lot_signature(
             anchor,
             candidate,
             allow_facebook_same_price=True,
         )
         compatible_price_drop = False
-        if is_price_drop and not _road_token_conflict(anchor_text, candidate_text):
+        if is_price_drop and not road_conflict:
             anchor_ward = (anchor.get("ward") or "").strip()
             candidate_ward = (candidate.get("ward") or "").strip()
             anchor_type = anchor.get("property_type")
@@ -2709,12 +2711,13 @@ def _get_lot_history(conn, listing_id, tier: str = "guest"):
                 )
             )
             compatible_price_drop = same_segment and area_compatible
+        linked_price_drop = _linked_lot_history_price_drop(anchor, candidate, canonical_id, road_conflict)
 
-        if r["id"] != listing_id and not (same_lot or compatible_price_drop):
+        if r["id"] != listing_id and not (same_lot or compatible_price_drop or linked_price_drop):
             continue
 
         include_same_price_repost = source == "facebook"
-        if not (is_anchor or is_price_drop or include_same_price_repost):
+        if not (is_anchor or is_price_drop or include_same_price_repost or linked_price_drop):
             continue
 
         price = r["price_ty"]
@@ -2740,6 +2743,57 @@ def _get_lot_history(conn, listing_id, tier: str = "guest"):
         })
 
     return lot_history
+
+
+def _linked_lot_history_price_drop(anchor, candidate, canonical_id, road_conflict):
+    if road_conflict:
+        return False
+    if candidate.get("id") == anchor.get("id"):
+        return False
+    if candidate.get("duplicate_of_id") != canonical_id and candidate.get("id") != canonical_id:
+        return False
+    if not anchor.get("price_dropped"):
+        return False
+
+    anchor_price = _to_float(anchor.get("price_ty"))
+    candidate_price = _to_float(candidate.get("price_ty"))
+    first_price = _to_float(anchor.get("price_first_ty"))
+    if not anchor_price or not candidate_price or candidate_price <= anchor_price * 1.01:
+        return False
+    if first_price and not _same_price_value(first_price, candidate_price):
+        return False
+
+    anchor_ward = (anchor.get("ward") or "").strip()
+    candidate_ward = (candidate.get("ward") or "").strip()
+    if anchor_ward and candidate_ward and anchor_ward != candidate_ward:
+        return False
+    if not _lot_history_property_type_compatible(anchor.get("property_type"), candidate.get("property_type")):
+        return False
+    return _lot_history_area_compatible(anchor.get("area_m2"), candidate.get("area_m2"))
+
+
+def _lot_history_property_type_compatible(anchor_type, candidate_type):
+    if not anchor_type or not candidate_type or anchor_type == candidate_type:
+        return True
+    return {anchor_type, candidate_type}.issubset({"dat_nen", "dat_vuon"})
+
+
+def _lot_history_area_compatible(anchor_area, candidate_area, max_gap=0.05):
+    anchor_area = _to_float(anchor_area)
+    candidate_area = _to_float(candidate_area)
+    if not anchor_area or not candidate_area:
+        return True
+    return abs(anchor_area - candidate_area) / max(anchor_area, candidate_area) <= max_gap
+
+
+def _to_float(value):
+    try:
+        if value is None:
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
 
 def _resolve_lead_ack_email(conn, user_id: int | None, guest_email: str | None) -> str | None:
     if guest_email and "@" in guest_email:

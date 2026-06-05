@@ -257,6 +257,57 @@ class LotHistoryApiTest(unittest.TestCase):
         self.assertIn(large_lot_id, ids)
         self.assertNotIn(small_lot_id, ids)
 
+    def test_lot_history_includes_linked_higher_price_drop_when_land_subtype_changes(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            current_id = self._insert_listing(
+                conn,
+                source_id=f"fb-1212-current-{self.token}",
+                url=f"{self.url_prefix}/fb-1212-current",
+                title="Tan An garden lot current",
+                ward="Tan An",
+                area_m2=1212.0,
+                property_type="dat_vuon",
+                price_ty=2.9,
+                price_per_m2=2.39,
+                price_first_ty=3.5,
+                price_dropped=1,
+                price_drop_pct=17.14,
+                description=(
+                    "Ban dat phuong Tan An lam vuon gia tot duong ba gac. "
+                    "Dt 1.212 m2, tc 140, gia 2ty9."
+                ),
+                posted_at="2025-07-22",
+            )
+            old_id = self._insert_listing(
+                conn,
+                source_id=f"fb-1212-old-{self.token}",
+                url=f"{self.url_prefix}/fb-1212-old",
+                title="Tan An 1212 old asking price",
+                ward="Tan An",
+                area_m2=1212.5,
+                property_type="dat_nen",
+                price_ty=3.5,
+                price_per_m2=2.89,
+                price_first_ty=3.5,
+                possibly_duplicate=1,
+                duplicate_of_id=current_id,
+                description=(
+                    "Sau cho Ben The nhanh Dx126 cach Huynh Thi Hieu 200m. "
+                    "Dt 1212,5m2, tho cu 140m2, gia 3ty500."
+                ),
+                posted_at="2024-09-07",
+            )
+
+        response = self.client.get(f"/api/history/{current_id}")
+        self.assertEqual(response.status_code, 200)
+        lot_history = response.get_json()["lot_history"]
+        ids = [row["id"] for row in lot_history]
+
+        self.assertIn(old_id, ids)
+        self.assertIn(current_id, ids)
+
 
 if __name__ == "__main__":
     unittest.main()
