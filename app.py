@@ -2527,6 +2527,8 @@ def api_listing_memo(listing_id):
              WHERE listing_id = ?
                AND NULLIF(TRIM(COALESCE(memo_markdown,'')), '') IS NOT NULL
                AND COALESCE(model,'') NOT LIKE 'claude-code-advisory-%'
+               AND memo_markdown NOT LIKE '# Investment Memo%'
+               AND memo_markdown NOT LIKE '%## Verdict%'
              ORDER BY created_at DESC, id DESC
              LIMIT 1
             """,

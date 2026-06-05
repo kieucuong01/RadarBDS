@@ -161,7 +161,9 @@ def cmd_review_queue(args):
                              WHERE listing_id = l.id
                                AND NULLIF(TRIM(COALESCE(memo_markdown,'')), '') IS NOT NULL
                                AND COALESCE(model,'') NOT LIKE 'claude-code-advisory-%'
-                             ORDER BY created_at DESC, id DESC LIMIT 1)
+                               AND memo_markdown NOT LIKE '# Investment Memo%'
+                               AND memo_markdown NOT LIKE '%## Verdict%'
+                              ORDER BY created_at DESC, id DESC LIMIT 1)
         WHERE {signal_condition} AND {listing_condition} AND v.signal_score IS NOT NULL
           AND memo.id IS NULL
     """

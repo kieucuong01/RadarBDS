@@ -287,6 +287,18 @@ class AiDealReviewTest(unittest.TestCase):
                 """,
                 (b,),
             )
+            conn.execute(
+                """
+                INSERT INTO ai_deal_review (
+                    listing_id, actor, verdict, confidence, reasoning,
+                    memo_markdown, model, updated_at
+                )
+                VALUES (?, 'claude', 'cheap_real', 0.8, 'old template',
+                        '# Investment Memo Cố Vấn\n\n## Verdict\nold',
+                        'claude-code-interactive', datetime('now'))
+                """,
+                (b,),
+            )
         memo_path = self.tmpdir / "review-c.md"
         memo_path.write_text("Memo cố vấn đã viết cho deal C.", encoding="utf-8")
         self._run_save(id=c, verdict="suspect", confidence=0.6,
@@ -336,6 +348,18 @@ class AiDealReviewTest(unittest.TestCase):
                     VALUES (?, 'claude', 'cheap_real', 0.8, 'rule-based',
                             '# Memo rule-based', 'claude-code-advisory-opinion-v3',
                             datetime('now'))
+                    """,
+                    (lid,),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO ai_deal_review (
+                        listing_id, actor, verdict, confidence, reasoning,
+                        memo_markdown, model, updated_at
+                    )
+                    VALUES (?, 'claude', 'cheap_real', 0.8, 'old template',
+                            '# Investment Memo Cố Vấn\n\n## Verdict\nold',
+                            'claude-code-interactive', datetime('now'))
                     """,
                     (lid,),
                 )
