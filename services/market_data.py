@@ -979,7 +979,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
 
     stats_row = conn.execute(f"""
         WITH filtered AS (
-            SELECT id, is_hot, posted_at, crawled_at, price_dropped, price_ty
+            SELECT id, is_hot, posted_at, crawled_at, price_dropped, price_ty, price_first_ty
             FROM listings
             WHERE {where_sql}
         )
