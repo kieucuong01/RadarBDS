@@ -104,9 +104,13 @@ def _flag_vi(flag: str) -> str:
         "verify_tho_cu": "cần xác minh thổ cư",
         "verify_exact_lot": "cần xác minh đúng lô",
         "broker discount claim": "môi giới nói còn thương lượng",
+        "broker_discount_claim": "môi giới nói còn thương lượng",
         "repost same price": "đăng lại cùng giá",
+        "repost_same_price": "đăng lại cùng giá",
         "needs road check": "cần kiểm tra đường thực tế",
+        "needs_road_check": "cần kiểm tra đường thực tế",
         "wide road claim": "tin nói đường rộng, cần đo lại thực tế",
+        "wide_road_claim": "tin nói đường rộng, cần đo lại thực tế",
     }
     return labels.get(str(flag), str(flag).replace("_", " "))
 
@@ -237,7 +241,7 @@ def _history_notes(row) -> list[str]:
         )
     if lot_history_count >= 3:
         notes.append(
-            f"Lịch sử cùng lô có {lot_history_count} lần xuất hiện, cần soi repost để tránh nhầm tin cũ thành cơ hội mới."
+            f"Lịch sử cùng lô có {lot_history_count} lần xuất hiện, cần soi các lần đăng lại để tránh nhầm tin cũ thành cơ hội mới."
         )
     return notes
 
