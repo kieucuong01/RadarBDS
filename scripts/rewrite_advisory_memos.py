@@ -18,7 +18,6 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from db.connection import get_conn
-from db.schema import init_schema
 from services.signal_quality import LATEST_VALUATION_CTE
 
 
@@ -210,7 +209,7 @@ def build_memo(row) -> str:
     )
 
     thesis = [
-        f"{property_type} tại {ward}, giá rao {_price_ty(row['price_ty'])} cho khoảng {_area(row['area_m2'])}, đường {road}.",
+        f"{property_type} tại {ward}, giá rao {_price_ty(row['price_ty'])} cho khoảng {_area(row['area_m2'])}, lối vào {road}.",
     ]
     if row["tho_cu_m2"]:
         thesis.append(
@@ -371,7 +370,6 @@ def main() -> int:
     parser.add_argument("--preview", type=int, default=3, help="Number of dry-run examples to print.")
     args = parser.parse_args()
 
-    init_schema()
     rows = fetch_rows(args.limit, args.model)
     print(f"candidate_memos={len(rows)} model={args.model} apply={args.apply}")
     for row in rows[: max(args.preview, 0)]:
