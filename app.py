@@ -2560,7 +2560,97 @@ def api_listing_memo(listing_id):
         "needs_map_check": bool(memo["needs_map_check"]),
         "model": memo["model"],
         "memo_markdown": memo["memo_markdown"],
+        **(
+            {"admin_valuation_workflow_markdown": _admin_valuation_workflow_markdown(listing_id)}
+            if tier == "admin"
+            else {}
+        ),
     })
+
+
+def _fmt_memo_num(value, suffix="", digits=1):
+    if value is None:
+        return "NULL"
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if abs(n - round(n)) < 0.05:
+        text = str(int(round(n)))
+    else:
+        text = f"{n:.{digits}f}".rstrip("0").rstrip(".")
+    return f"{text}{suffix}"
+
+
+def _admin_valuation_workflow_markdown(listing_id):
+    with db_mod.get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT l.id, l.source, l.title, l.ward, l.property_type, l.price_ty,
+                   l.area_m2, l.price_per_m2, l.road_tier, l.has_so, l.is_hot,
+                   l.price_dropped, l.price_drop_pct, l.tho_cu_m2,
+                   v.fair_ppm2, v.actual_ppm2, v.mos_pct, v.is_signal,
+                   v.signal_score, v.n_segment, v.source_quality_flags,
+                   v.source_quality_recheck, v.trust_tier, v.trust_score,
+                   v.legal_status
+              FROM listings l
+              LEFT JOIN valuation_results v
+                ON v.id = (SELECT id FROM valuation_results
+                            WHERE listing_id = l.id
+                            ORDER BY id DESC
+                            LIMIT 1)
+             WHERE l.id = ?
+            """,
+            (listing_id,),
+        ).fetchone()
+    if not row:
+        return ""
+
+    fair_ppm2 = row["fair_ppm2"]
+    actual_ppm2 = row["actual_ppm2"] or row["price_per_m2"]
+    area_m2 = row["area_m2"]
+    fair_ty = None
+    if fair_ppm2 and area_m2:
+        fair_ty = float(fair_ppm2) * float(area_m2) / 1000
+
+    signal_gate = "PASS" if row["is_signal"] else "FAIL"
+    quality_flags = row["source_quality_flags"] or ""
+    recheck = "true" if row["source_quality_recheck"] else "false"
+    dropped = "true" if row["price_dropped"] else "false"
+    hot = "true" if row["is_hot"] else "false"
+
+    return "\n".join([
+        "### Admin technical valuation workflow",
+        "",
+        "1. Source ingestion: crawler/* lưu raw payload vào raw_listings; listing này đang có "
+        f"source={row['source']}, listing_id={row['id']}.",
+        "2. Normalize/extract: cleansing/normalizer.py và cleansing/feature_extractor.py chuẩn hóa "
+        "price_ty, area_m2, price_per_m2, ward, property_type, road_tier, thổ cư, hot keywords và legal/source flags.",
+        "3. Dedup/history: cleansing/dedup.py gom repost/same-lot nếu đủ guard; price_dropped được lấy từ lịch sử giá đáng tin.",
+        "4. Valuation: analytics/valuation.py chọn segment model theo ward + property_type + road/feature context; "
+        "nếu segment mỏng thì dùng parent/fallback model. Model trả fair_ppm2, so với actual_ppm2, "
+        "rồi lưu snapshot vào valuation_results.",
+        "5. MOS: mos_pct = (fair_ppm2 - actual_ppm2) / fair_ppm2 * 100. "
+        "fair_total_ty = fair_ppm2 * area_m2 / 1000.",
+        "6. Signal score: compute_signal_score() cộng điểm từ MOS, area range, tổng giá dưới ngưỡng, hot keywords, "
+        "price_dropped và proximity_score_for_ward().",
+        "7. User-facing gate: services.signal_quality.actionable_signal_sql() chỉ cho signal mới nhất đi ra UI khi không bị "
+        "blacklist/review_hidden/duplicate fatal/source_quality_recheck suppress.",
+        "",
+        "### Current valuation snapshot",
+        "",
+        f"- ward={row['ward'] or 'NULL'}, property_type={row['property_type'] or 'NULL'}, road_tier={row['road_tier']}",
+        f"- price_ty={_fmt_memo_num(row['price_ty'], ' tỷ')}, area_m2={_fmt_memo_num(area_m2, ' m2')}, "
+        f"actual_ppm2={_fmt_memo_num(actual_ppm2, ' tr/m2')}",
+        f"- fair_ppm2={_fmt_memo_num(fair_ppm2, ' tr/m2')}, fair_total_ty={_fmt_memo_num(fair_ty, ' tỷ', 2)}, "
+        f"mos_pct={_fmt_memo_num(row['mos_pct'], '%')}",
+        f"- signal_score={row['signal_score'] or 0}, n_segment={row['n_segment'] or 0}, is_signal={signal_gate}",
+        f"- has_so={bool(row['has_so'])}, tho_cu_m2={_fmt_memo_num(row['tho_cu_m2'], ' m2')}, "
+        f"is_hot={hot}, price_dropped={dropped}, price_drop_pct={_fmt_memo_num(row['price_drop_pct'], '%')}",
+        f"- source_quality_recheck={recheck}, source_quality_flags={quality_flags or 'none'}, "
+        f"trust_tier={row['trust_tier'] or 'candidate_signal'}, trust_score={row['trust_score'] or 0}, "
+        f"legal_status={row['legal_status'] or 'unverified'}",
+    ])
 
 def get_price_history(listing_id):
     tier = current_tier()

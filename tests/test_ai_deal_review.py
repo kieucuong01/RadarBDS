@@ -322,6 +322,17 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertEqual(data["memo_markdown"], memo_text)
             self.assertEqual(data["verdict"], "cheap_real")
             self.assertEqual(data["tier"], "vip")
+            self.assertNotIn("admin_valuation_workflow_markdown", data)
+
+            admin_client = app_module.app.test_client()
+            self._login_tier(admin_client, "admin")
+            admin_full = admin_client.get(f"/api/listing/{lid}/memo")
+            admin_data = admin_full.get_json()
+            self.assertEqual(admin_full.status_code, 200)
+            self.assertEqual(admin_data["tier"], "admin")
+            self.assertIn("admin_valuation_workflow_markdown", admin_data)
+            self.assertIn("analytics/valuation.py", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("valuation_results", admin_data["admin_valuation_workflow_markdown"])
 
     def test_review_queue_uses_latest_actionable_valuation_only(self):
         from db.connection import get_conn

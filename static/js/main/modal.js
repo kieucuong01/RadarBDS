@@ -557,12 +557,21 @@ function renderInvestmentMemo(data) {
   const confidence = Number(data.confidence);
   const confidenceText = Number.isFinite(confidence) ? ` · ${Math.round(confidence * 100)}%` : '';
   const flags = Array.isArray(data.red_flags) ? data.red_flags.filter(Boolean) : [];
+  const adminWorkflow = data.admin_valuation_workflow_markdown
+    ? `
+      <details class="sm-memo-admin-tech">
+        <summary>Luồng định giá kỹ thuật</summary>
+        <div class="sm-memo-markdown sm-memo-admin-markdown">${_memoMarkdownToHtml(data.admin_valuation_workflow_markdown)}</div>
+      </details>
+    `
+    : '';
   body.innerHTML = `
     <div class="sm-memo-head">
       <span class="sm-memo-verdict ${escHtml(verdict)}">${escHtml(verdict)}${confidenceText}</span>
       ${data.reasoning ? `<p class="sm-memo-summary">${escHtml(data.reasoning)}</p>` : ''}
     </div>
     <div class="sm-memo-markdown">${_memoMarkdownToHtml(data.memo_markdown || '')}</div>
+    ${adminWorkflow}
     ${flags.length ? `<div class="sm-memo-note">Cờ cần lưu ý: ${escHtml(flags.join(', '))}</div>` : ''}
   `;
 }

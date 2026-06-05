@@ -520,6 +520,42 @@
   text-justify: inter-word;
 }
 
+.sm-memo-admin-tech {
+  margin: 12px 0 10px;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.74);
+}
+
+.sm-memo-admin-tech summary {
+  min-height: 36px;
+  padding: 9px 11px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 900;
+  user-select: none;
+}
+
+.sm-memo-admin-tech summary::marker {
+  color: var(--text-muted);
+}
+
+.sm-memo-admin-markdown {
+  max-height: 320px;
+  overflow: auto;
+  padding: 0 11px 11px;
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.sm-memo-admin-markdown h4 {
+  color: var(--text);
+  font-size: 0.78rem;
+}
+
 .sm-memo-locked {
   text-align: left;
   color: var(--text-muted);
@@ -803,6 +839,11 @@
 
 [data-theme="dark"] .sm-comp-card.is-clickable:hover {
   background: rgba(15, 23, 42, 0.9);
+}
+
+[data-theme="dark"] .sm-memo-admin-tech {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.22);
 }
 
 [data-theme="dark"] .sm-summary-item {
