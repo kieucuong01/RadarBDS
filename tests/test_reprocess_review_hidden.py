@@ -355,8 +355,8 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
             url="https://t.test/ambiguous-price",
             ppm2=6.5,
             source="facebook",
-            title="Mặt tiền Tân Định giá 1ty3xxtr",
-            description="DT 5x40 thổ cư 60m, giá chủ ghi 1ty3xxtr nên không đủ chắc để định giá.",
+            title="Mặt tiền Tân Định giá 1ty3xtr",
+            description="DT 5x40 thổ cư 60m, giá chủ ghi 1ty3xtr nên không đủ chắc để định giá.",
             area_m2=200.0,
         )
         missing_area_evidence_lid = self._insert_listing(

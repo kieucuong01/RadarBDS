@@ -76,6 +76,8 @@ def extract_price(text: str) -> Optional[float]:
     # GUARD: "1txx" / "2txx" / "1 tỷ xxx" — môi giới ám chỉ "1 tỷ mấy trăm"
     # nhưng KHÔNG xác định → trả None thay vì guess.
     # (user feedback L#675: "1tỷ xxx lấy hết giá tốt" → "1txx k phải 1 tỷ").
+    if re.search(r'\d+\s*(?:t|ty|ti)\s*\d*x+\b', t_fold, re.IGNORECASE):
+        return None
     if re.search(r'\d+\s*(?:t|tỷ|ty|tỉ)\s*\d*x{2,}', t, re.IGNORECASE):
         return None
 

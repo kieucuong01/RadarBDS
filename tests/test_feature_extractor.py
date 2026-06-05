@@ -51,6 +51,8 @@ def test_extract_price_handles_real_unicode_ty_patterns():
     assert extract_price("Gi\u00e1 b\u00e1n nhanh: 3,2 t\u1ef7") == 3.2
     assert extract_price("Gi\u00e1 2 t\u1ef7 550") == 2.55
     assert extract_price("B\u00e1n \u0111\u1ea5t 3 t\u1ef7") == 3.0
+    assert extract_price("Nh\u00e0 ng\u1ed9p gi\u00e1 2ty1x") is None
+    assert extract_price("M\u1eb7t ti\u1ec1n gi\u00e1 1ty3xxtr") is None
     assert extract_price("NH ho tro 500tr") is None
 
 
