@@ -109,10 +109,17 @@ def _valuation_quality_flags(row) -> tuple:
     ppm2 = _float_value(row["price_per_m2"])
     area_m2 = _float_value(row["area_m2"])
     prop_type = row["property_type"] or ""
+    source = (row["source"] or "").lower()
     url_hint = extract_url_hint(row["url"] or "")
 
     if _fold_text(title).strip() in {"tin test", "test"} or _fold_text(source_id).startswith("test"):
         flags.append("test_artifact")
+
+    if (
+        re.search(r"\b\d+\s*(?:ty|ti)\s*x+\s*(?:tr|trieu)?\b", text)
+        or re.search(r"\b\d+\s*(?:ty|ti)\s+\d*x+\s*(?:tr|trieu)?\b", text)
+    ):
+        flags.append("ambiguous_price_text")
 
     discount_as_price = bool(re.search(
         r"(?:re\s*hon|thap\s*hon)\s*(?:thi\s*truong\s*)?\d+(?:[,.]\d+)?\s*(?:ty|ti|trieu|tr|m|k)\b",
@@ -134,6 +141,9 @@ def _valuation_quality_flags(row) -> tuple:
 
     if prop_type in {"dat_nen", "nha_dat"} and price_ty and price_ty <= LOW_ABSOLUTE_PRICE_TY:
         flags.append("too_low_absolute_price")
+
+    if source == "facebook" and prop_type in {"dat_nen", "nha_dat"} and area_m2 and not _float_value(extract_area(title + "\n" + description)):
+        flags.append("missing_area_evidence")
 
     if prop_type in {"dat_nen", "nha_dat"} and area_m2 >= LARGE_LOT_AREA_M2:
         flags.append("large_lot_model_risk")

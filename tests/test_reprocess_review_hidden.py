@@ -62,6 +62,8 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
         from db.connection import get_conn
 
         price_ty = round(ppm2 * area_m2 / 1000, 3)
+        if description is None:
+            description = f"Diện tích {area_m2:g}m2"
         url = self._test_url(url)
         with get_conn() as conn:
             listing_id = conn.execute(
@@ -287,6 +289,13 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
                 ppm2=15.0,
                 source="facebook",
             )
+        for i in range(18):
+            self._insert_listing(
+                url=f"https://t.test/quality-baseline-house-{i}",
+                ppm2=35.0,
+                source="facebook",
+                property_type="nha_dat",
+            )
 
         discount_lid = self._insert_listing(
             url="https://t.test/discount-as-price",
@@ -342,6 +351,23 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
             area_m2=300.0,
             property_type="dat_nen",
         )
+        ambiguous_price_lid = self._insert_listing(
+            url="https://t.test/ambiguous-price",
+            ppm2=6.5,
+            source="facebook",
+            title="Mặt tiền Tân Định giá 1ty xxtr",
+            description="DT 5x40 thổ cư 60m, giá chủ ghi 1ty xxtr nên không đủ chắc để định giá.",
+            area_m2=200.0,
+        )
+        missing_area_evidence_lid = self._insert_listing(
+            url="https://t.test/missing-area-evidence",
+            ppm2=22.0,
+            source="facebook",
+            title="Nhà mặt tiền Định Hòa giá 2 tỷ 380",
+            description="Sát bệnh viện, đường nhựa lớn, liên hệ xem nhà.",
+            area_m2=104.0,
+            property_type="nha_dat",
+        )
 
         self._reprocess_inserted()
 
@@ -353,6 +379,8 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
                 area_conflict_lid,
                 source_category_conflict_lid,
                 multi_lot_lid,
+                ambiguous_price_lid,
+                missing_area_evidence_lid,
             ]
             rows = {
                 r["listing_id"]: dict(r)
@@ -392,6 +420,14 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
         self.assertIn("multi_lot_listing", rows[multi_lot_lid]["source_quality_flags"])
         self.assertEqual(rows[multi_lot_lid]["source_quality_recheck"], 1)
         self.assertFalse(is_actionable_signal(rows[multi_lot_lid]))
+
+        self.assertIn("ambiguous_price_text", rows[ambiguous_price_lid]["source_quality_flags"])
+        self.assertEqual(rows[ambiguous_price_lid]["source_quality_recheck"], 1)
+        self.assertFalse(is_actionable_signal(rows[ambiguous_price_lid]))
+
+        self.assertIn("missing_area_evidence", rows[missing_area_evidence_lid]["source_quality_flags"])
+        self.assertEqual(rows[missing_area_evidence_lid]["source_quality_recheck"], 1)
+        self.assertFalse(is_actionable_signal(rows[missing_area_evidence_lid]))
 
     def test_reprocess_marks_old_guland_signal_for_source_qc_without_pushing_signal(self):
         from cleansing.reprocess import reprocess_valuation

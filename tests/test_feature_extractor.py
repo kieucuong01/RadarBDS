@@ -27,6 +27,7 @@ def test_extract_price():
     assert extract_price("2t45") == 2.45
     assert extract_price("2t450") == 2.45
     assert extract_price("2t450tr") == 2.45
+    assert extract_price("Giá 2t tỷ 7") == 2.7
     assert extract_price("nhà 2 tầng") is None
     # Triệu
     assert extract_price("880 triệu") == 0.88
@@ -62,6 +63,8 @@ def test_extract_area():
     assert extract_area("7,5m x 29") == 217.5
     assert extract_area("5,5*27,5") == 151.2
     assert extract_area("6 * 12.4") == 74.4
+    assert extract_area("Hòa lợi 5x37tc 60 đường nhựa thông giá 1ty500") == 185.0
+    assert extract_area("dt 6x65tc60 đường nhựa 7,5m") == 390.0
     assert extract_area("Ch\u1ec9 ghi ngang 9m") is None
 
 
@@ -108,6 +111,12 @@ def test_extract_dimensions():
     d = extract_dimensions("6 * 12.4")
     assert d["frontage_m"] == 6.0
     assert d["depth_m"] == 12.4
+    d = extract_dimensions("Hòa lợi 5x37tc 60 đường nhựa thông giá 1ty500")
+    assert d["frontage_m"] == 5.0
+    assert d["depth_m"] == 37.0
+    d = extract_dimensions("dt 6x65tc60 đường nhựa 7,5m")
+    assert d["frontage_m"] == 6.0
+    assert d["depth_m"] == 65.0
     d = extract_dimensions("Ch\u1ec9 hi\u1ec3n th\u1ecb ngang 9m")
     assert d["frontage_m"] == 9.0
     assert d["depth_m"] is None

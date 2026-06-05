@@ -105,6 +105,11 @@ def extract_price(text: str) -> Optional[float]:
         elif v >= 10:  return round(ty + v / 100,  4)
         else:          return round(ty + v / 10,   4)
 
+    # Broker typo: "2t tỷ 7" means "2 tỷ 7" (2.7), not unknown.
+    m = re.search(r'(\d+)\s*t\s*(?:ty|ti)\s*(\d{1,3})(?!\d)', t_fold)
+    if m:
+        return _parse_ty_rest(m.group(1), m.group(2))
+
     # Pattern unicode: "X tỷ Y" hoặc "XtỷY" (2 tỷ 550=2.55, 1 tỷ 2=1.2, 2tỷ8=2.8)
     m = re.search(r'([\d]+[,.]?[\d]*)\s*tỷ\s*([\d]+)', t)
     if m:
@@ -153,7 +158,7 @@ def extract_price(text: str) -> Optional[float]:
 
 _DIM_NUM_RE = r'[\d]+[,.]?[\d]*'
 _DIM_PAIR_RE = re.compile(
-    rf'(?<![/\d])({_DIM_NUM_RE})\s*m?\s*[x×\*]\s*({_DIM_NUM_RE})\s*m?\b(?!\d)',
+    rf'(?<![/\d])({_DIM_NUM_RE})\s*m?\s*[x×\*]\s*({_DIM_NUM_RE})\s*m?(?=\b|tc|tho\s*cu)(?!\d)',
     re.IGNORECASE,
 )
 
@@ -341,6 +346,11 @@ def extract_area(text: str) -> Optional[float]:
     # Keep this before the free Xm2 fallback so "9.5m x 29m" is not read as 9.5m2.
     area = _first_valid_dimension_area(t_clean)
     if area is not None:
+        return area
+
+    # Facebook shorthand: "5x37tc 60" means 5m x 37m, then 60m2 thổ cư.
+    area = _first_valid_dimension_area(t)
+    if area is not None and re.search(r'[x×\*]\s*[\d]+[,.]?[\d]*\s*(?:tc|tho\s*cu)', _ascii_fold(t)):
         return area
 
     # Pattern thông thường "Xm²" — dùng t_clean để loại thổ cư
