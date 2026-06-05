@@ -416,12 +416,30 @@ _MULTI_LOT_PRICE_RE = re.compile(
     r'\b\d{3,4}\s*(?:tr|trieu)\b',
     re.IGNORECASE,
 )
+_MULTI_LOT_COUNT_RE = re.compile(
+    r'\b(?:co\s*)?[2-9]\d?\s+lo\s+(?:lien\s+ke|dat|nen)\b|'
+    r'\b(?:ban\s+)?le\s+tung\s+lo\b',
+    re.IGNORECASE,
+)
+_MULTI_LOT_PER_LOT_PRICE_RE = re.compile(
+    r'\b(?:gia|gia\s+ban)?\s*[:：-]?\s*'
+    r'\d{1,3}(?:\s*(?:ty|ti)\s*\d{1,3}|[,.]\d{1,3}\s*(?:ty|ti)|\s*(?:ty|ti))'
+    r'\s*/\s*lo\b',
+    re.IGNORECASE,
+)
 
 
 def is_multi_lot_listing(title: str, description: str = "") -> bool:
     """Detect posts that advertise multiple lots with separate area/price pairs."""
     text = _ascii_fold(" ".join(part for part in [title, description] if part))
     text = text.replace("đ", "d").replace("Đ", "d")
+    if (
+        _MULTI_LOT_COUNT_RE.search(text)
+        and _MULTI_LOT_AREA_RE.search(text)
+        and (_MULTI_LOT_PER_LOT_PRICE_RE.search(text) or _MULTI_LOT_PRICE_RE.search(text))
+    ):
+        return True
+
     labels = list(_MULTI_LOT_LABEL_RE.finditer(text))
     if len(labels) < 2:
         return False
@@ -1167,6 +1185,36 @@ _CHUNG_CU_RE = re.compile(
 )
 
 
+def _strip_nearby_chung_cu_context(text: str) -> str:
+    """Remove apartment keywords when they describe a nearby landmark, not the asset."""
+    folded = _ascii_fold(text).replace("Ä‘", "d").replace("Ä", "d")
+    folded = re.sub(
+        r'\b(?:gan|sat|canh|ke|doi\s*dien|cach|duong\s*vao)\b.{0,120}'
+        r'\b(?:khu\s*do\s*thi|toa\s*nha|block|chung\s*cu|can\s*ho)\b.{0,80}'
+        r'\b(?:block|chung\s*cu|can\s*ho)\b',
+        ' ',
+        folded,
+        flags=re.IGNORECASE,
+    )
+    folded = re.sub(
+        r'\b(?:gan|sat|canh|ke|doi\s*dien|cach|duong\s*vao)\b.{0,80}'
+        r'\b(?:block|chung\s*cu|can\s*ho|biconsi)\b',
+        ' ',
+        folded,
+        flags=re.IGNORECASE,
+    )
+    return folded
+
+
+def _has_chung_cu_keyword(text: str) -> bool:
+    folded = _ascii_fold(text).replace("Ä‘", "d").replace("Ä", "d")
+    return bool(_CHUNG_CU_RE.search(text) or re.search(
+        r'\bchung\s*cu\b|\bcan\s*ho\b|\bbiconsi\b|\bblock\s*[a-z0-9]+\b',
+        folded,
+        flags=re.IGNORECASE,
+    ))
+
+
 def _is_social_housing_text(text: str) -> bool:
     """Detect NOXH/Becamex social-housing units, not land near that landmark."""
     t = _ascii_fold(text).replace("đ", "d").replace("Đ", "d")
@@ -1283,9 +1331,10 @@ def _has_source_category_land_override(
     tho_cu_m2: Optional[float],
     url_hint: Optional[str],
 ) -> bool:
+    apartment_text = _strip_nearby_chung_cu_context(text)
     has_conflicting_category = (
         url_hint in {'chung_cu', 'kho_xuong'}
-        or _CHUNG_CU_RE.search(text)
+        or _has_chung_cu_keyword(apartment_text)
         or _is_kho_xuong_text(text)
     )
     if not has_conflicting_category:
@@ -1363,7 +1412,7 @@ def classify_property_type(
 
     # ── Content override #1: Chung cư trumps mọi nhánh khi nội dung rõ ràng ──
     # (Áp dụng cho mọi url_hint còn lại — kể cả 'dat' / 'nha' / None)
-    if _CHUNG_CU_RE.search(text):
+    if _has_chung_cu_keyword(_strip_nearby_chung_cu_context(text)):
         return 'chung_cu'
 
     # ── Content override #2: Kho/nhà xưởng — chỉ khi url_hint cho phép ──
@@ -1403,6 +1452,11 @@ def classify_property_type(
     text_for_nha_ascii = re.sub(
         r'\b(?:gan|sat|canh|ke|doi\s*dien|cach|duong\s*vao)\b.{0,50}'
         r'\btoa\s*nha\b',
+        ' ', text_for_nha_ascii, flags=re.IGNORECASE,
+    )
+    text_for_nha_ascii = re.sub(
+        r'\b(?:gan|sat|canh|ke|doi\s*dien|cach|duong\s*vao|noi\s*co|khu\s*do\s*thi)\b.{0,140}'
+        r'\b(?:nha\s*o\s*lien\s*ke|biet\s*thu|villa)\b',
         ' ', text_for_nha_ascii, flags=re.IGNORECASE,
     )
     text_for_nha_ascii = re.sub(

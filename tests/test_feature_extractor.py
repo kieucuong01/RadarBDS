@@ -100,6 +100,14 @@ def test_detect_multi_lot_listing():
         "B\u00e1n 1 l\u00f4 \u0111\u1ea5t 300m2 gi\u00e1 2,15 t\u1ef7",
         "S\u1ed5 s\u1eb5n, th\u01b0\u01a1ng l\u01b0\u1ee3ng ch\u00ednh ch\u1ee7.",
     )
+    assert is_multi_lot_listing(
+        "\u0110\u1ea5t t\u00e1i \u0111\u1ecbnh c\u01b0 Ch\u00e1nh M\u1ef9",
+        (
+            "C\u00f3 3 l\u00f4 li\u1ec1n k\u1ec1; 15x20; TC 100%. "
+            "Di\u1ec7n t\u00edch m\u1ed7i l\u00f4: 5x20; th\u1ed5 c\u01b0 100%. "
+            "Gi\u00e1: 2 t\u1ef7 650 / l\u00f4. C\u00f3 b\u00e1n l\u1ebb t\u1eebng l\u00f4."
+        ),
+    )
 
 
 def test_extract_dimensions():
@@ -728,6 +736,16 @@ def test_classify_property_type():
         "Đất thổ cư, xây biệt thự được",
         214,
         price_per_m2=90.0,
+    ) == "dat_nen"
+    assert classify_property_type(
+        "\u0110\u1ea5t thu\u1ed9c T\u00e1i \u0110\u1ecbnh C\u01b0 Ch\u00e1nh M\u1ef9, Th\u1ee7 D\u1ea7u M\u1ed9t",
+        (
+            "\u0110\u1ed1i di\u1ec7n khu \u0111\u00f4 th\u1ecb sinh th\u00e1i HUD, n\u01a1i c\u00f3 c\u00e1c block chung c\u01b0, "
+            "nh\u00e0 \u1edf li\u1ec1n k\u1ec1, bi\u1ec7t th\u1ef1 ven s\u00f4ng. "
+            "C\u00f3 3 l\u00f4 li\u1ec1n k\u1ec1; di\u1ec7n t\u00edch m\u1ed7i l\u00f4 5x20; th\u1ed5 c\u01b0 100%."
+        ),
+        100,
+        price_per_m2=26.5,
     ) == "dat_nen"
 
 
