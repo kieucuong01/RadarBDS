@@ -99,6 +99,9 @@ def test_signal_modal_memo_defaults_to_conclusion_and_uses_vietnamese_labels():
     assert "Ghi chú cố vấn" in html
     assert "Investment Memo" not in html
     assert '>Memo<' not in html
+    assert "splitDenseSection" in modal_js
+    assert "Thương vụ|Deal|Tóm tắt|Thông tin|Dữ liệu" in modal_js
+    assert "!hasFullMemo && data.reasoning" in modal_js
 
 
 def test_price_and_area_filters_support_multi_select_range_chips():

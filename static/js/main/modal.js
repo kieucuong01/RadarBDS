@@ -538,6 +538,49 @@ function _splitMemoForPreview(markdown) {
   const lines = _memoDisplayText(markdown).split(/\r?\n/);
   const isH1 = (line) => /^#\s+/.test(line.trim());
   const isH2 = (line) => /^##\s+/.test(line.trim());
+  const splitDenseSection = (startIdx, endIdx) => {
+    const section = lines.slice(startIdx, endIdx);
+    const detailIdx = section.findIndex((line, idx) => (
+      idx > 0 && /^(Thương vụ|Deal|Tóm tắt|Thông tin|Dữ liệu)\s*:/i.test(line.trim())
+    ));
+    if (detailIdx > 0) {
+      const preview = section.slice(0, detailIdx).join('\n').trim();
+      const rest = [
+        '## Chi tiết cố vấn',
+        ...section.slice(detailIdx),
+        ...lines.slice(endIdx),
+      ].join('\n').trim();
+      return { preview, rest };
+    }
+
+    let paragraphCount = 0;
+    let previewEnd = section.length;
+    for (let i = 1; i < section.length; i += 1) {
+      const line = section[i].trim();
+      if (!line) {
+        if (paragraphCount >= 2) {
+          previewEnd = i + 1;
+          break;
+        }
+        continue;
+      }
+      paragraphCount += 1;
+    }
+    if (previewEnd < section.length) {
+      return {
+        preview: section.slice(0, previewEnd).join('\n').trim(),
+        rest: [
+          '## Chi tiết cố vấn',
+          ...section.slice(previewEnd),
+          ...lines.slice(endIdx),
+        ].join('\n').trim(),
+      };
+    }
+    return {
+      preview: section.join('\n').trim(),
+      rest: lines.slice(endIdx).join('\n').trim(),
+    };
+  };
   const conclusionIdx = lines.findIndex((line) => /^##\s+Kết luận\b/i.test(line.trim()));
   if (conclusionIdx >= 0) {
     let endIdx = lines.length;
@@ -547,10 +590,7 @@ function _splitMemoForPreview(markdown) {
         break;
       }
     }
-    return {
-      preview: lines.slice(conclusionIdx, endIdx).join('\n').trim(),
-      rest: lines.slice(endIdx).join('\n').trim(),
-    };
+    return splitDenseSection(conclusionIdx, endIdx);
   }
 
   const firstContent = lines.findIndex((line) => line.trim() && !isH1(line));
@@ -650,6 +690,7 @@ function renderInvestmentMemo(data) {
   const confidenceText = Number.isFinite(confidence) ? ` · ${Math.round(confidence * 100)}%` : '';
   const flags = Array.isArray(data.red_flags) ? data.red_flags.filter(Boolean) : [];
   const memoParts = _splitMemoForPreview(data.memo_markdown || '');
+  const hasFullMemo = Boolean((data.memo_markdown || '').trim());
   const restHtml = memoParts.rest
     ? `
       <details class="sm-memo-more">
@@ -669,7 +710,7 @@ function renderInvestmentMemo(data) {
   body.innerHTML = `
     <div class="sm-memo-head">
       <span class="sm-memo-verdict ${escHtml(verdict)}">${escHtml(_memoVerdictLabel(verdict))}${confidenceText}</span>
-      ${data.reasoning ? `<p class="sm-memo-summary">${escHtml(_memoDisplayText(data.reasoning))}</p>` : ''}
+      ${!hasFullMemo && data.reasoning ? `<p class="sm-memo-summary">${escHtml(_memoDisplayText(data.reasoning))}</p>` : ''}
     </div>
     <div class="sm-memo-markdown">${_memoMarkdownToHtml(memoParts.preview || data.memo_markdown || '')}</div>
     ${restHtml}

@@ -195,19 +195,19 @@ def build_parser():
 
     # review-queue / review-save (Claude pre-review CỐ VẤN — lưu bảng RIÊNG)
     p_rq = sub.add_parser("review-queue",
-                          help="Signal chưa có verdict Claude + memo (JSON stdout)")
+                          help="Signal chưa có kết luận Claude + ghi chú cố vấn (JSON stdout)")
     p_rq.add_argument("--top",  type=int, default=5, help="Số signal (mặc định 5)")
     p_rq.add_argument("--ward", type=str, help="Lọc theo phường")
 
     p_rs = sub.add_parser("review-save",
-                          help="Lưu verdict Claude (append-only) vào ai_deal_review")
+                          help="Lưu kết luận Claude (append-only) vào ai_deal_review")
     p_rs.add_argument("--id", type=int, required=True, help="Listing ID")
     p_rs.add_argument("--verdict", required=True,
                       help="cheap_real|suspect|not_cheap|insufficient_info")
     p_rs.add_argument("--confidence", type=float, help="Độ tin 0.0–1.0")
     p_rs.add_argument("--reasoning", required=True, help="Lập luận (tiếng Việt)")
     p_rs.add_argument("--memo-file", dest="memo_file",
-                      help="File markdown Investment Memo do Claude viết cho listing")
+                      help="File markdown ghi chú cố vấn do Claude viết cho listing")
     p_rs.add_argument("--red-flags", dest="red_flags",
                       help='Cờ đỏ, ngăn cách bằng ";"')
     p_rs.add_argument("--needs-map-check", dest="needs_map_check",
