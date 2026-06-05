@@ -39,8 +39,10 @@
   align-items: center;
   gap: 7px;
   cursor: pointer;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
   font-weight: 800;
   font-size: 13px;
+  line-height: 1.2;
   color: var(--text, #0f172a);
   box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
   transition: border-color .15s, transform .1s, box-shadow .15s;
@@ -73,6 +75,7 @@
 .user-menu-label {
   color: var(--text, #0f172a);
   white-space: nowrap;
+  line-height: 1.2;
 }
 .user-plan-chip {
   display: inline-flex;
@@ -244,8 +247,10 @@
   border: none;
   padding: 0 16px;
   border-radius: 999px;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
   font-weight: 850;
   font-size: 13px;
+  line-height: 1.2;
   cursor: pointer;
   white-space: nowrap;
   box-shadow: 0 12px 26px rgba(79, 70, 229, .28);

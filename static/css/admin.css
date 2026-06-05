@@ -1371,6 +1371,21 @@ p { margin: 6px 0 0; color: var(--muted); }
   margin-bottom: 16px;
   font-weight: 800;
 }
+.dup-review-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -6px 0 14px;
+}
+.dup-review-reasons span {
+  border: 1px solid rgba(234, 88, 12, .24);
+  border-radius: 999px;
+  background: rgba(251, 146, 60, .12);
+  color: #9a3412;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
 .dup-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

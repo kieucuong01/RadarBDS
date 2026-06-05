@@ -25,6 +25,7 @@ Use this when a task touches user-facing deal quality, dedup/history, valuation,
 - Guland and legacy BatDongSan use source-id identity only. Do not use cross-URL same-lot heuristics for them.
 - `price_dropped=1` means a reliable drop. Suspicious drops over 40% should be treated as `suspicious_bait`, not a normal price-drop signal.
 - When auditing lot-history regressions, verify both pair-level conflicts and group-level spread. A clean local audit should reach `pair_issue_counts={}` and `group_spread_flags=0`.
+- Data Quality duplicate review should show only ambiguous pairs. High-confidence Facebook pairs with matching ward, property type, area, and dimensions are auto-accepted by the pipeline and should not burden human review.
 
 ## Extractor Ward Rules
 

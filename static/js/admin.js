@@ -1240,12 +1240,16 @@ function adPanel(x, side) {
 
 function duplicateCard(x) {
   const confidence = Math.min(96, Math.max(72, Math.round(100 - Math.abs((x.price_ty || 0) - (x.canonical_price_ty || 0)) * 5)));
+  const reasons = (x.qc_reasons || []).length
+    ? `<div class="dup-review-reasons">${x.qc_reasons.map(r => `<span>${esc(r)}</span>`).join('')}</div>`
+    : '';
   return `
     <article class="dup-card">
       <div class="dup-head">
-        <div>Cặp nghi trùng <span class="deal-pill">DUP-${x.id}</span></div>
+        <div>Cặp phân vân <span class="deal-pill">DUP-${x.id}</span></div>
         <div style="color:var(--muted)">AI confidence: <strong style="color:var(--red)">${confidence}%</strong></div>
       </div>
+      ${reasons}
       <div class="dup-grid">
         ${adPanel(x, 'listing')}
         ${adPanel(x, 'canonical')}

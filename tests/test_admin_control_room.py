@@ -84,6 +84,22 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("js/auth.js", html)
         self.assertNotIn("js/admin.js", html)
 
+    def test_public_auth_header_keeps_vietnamese_labels(self):
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("Đăng nhập", html)
+        self.assertIn("Đăng nhập tài khoản", html)
+
+        self._login_as_admin()
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("Tài khoản", html)
+        self.assertIn("Tài khoản của bạn", html)
+
     def test_guest_admin_api_still_requires_admin(self):
         response = self.client.get("/admin/api/users")
 
@@ -211,6 +227,74 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         items = response.get_json()["items"]
         self.assertTrue(any(item["canonical_title"] == "Canonical lot" for item in items))
+
+    def test_data_quality_duplicate_queue_hides_high_confidence_pairs(self):
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        token = uuid.uuid4().hex
+        with get_conn() as conn:
+            raw_canonical = conn.execute(
+                "INSERT INTO raw_listings (source, url, raw_json) VALUES (?, ?, ?)",
+                ("facebook", f"https://example.test/raw-clear-canonical-{token}", "{}"),
+            )
+            canonical = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, url, title, area, ward, property_type,
+                    price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                    possibly_duplicate
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                """,
+                (
+                    raw_canonical.lastrowid,
+                    "facebook",
+                    f"https://example.test/clear-canonical-{token}",
+                    "Clear canonical lot",
+                    "Thu Dau Mot",
+                    "Phu Loi",
+                    "dat_nen",
+                    1.8,
+                    18.0,
+                    100.0,
+                    5.0,
+                    20.0,
+                ),
+            )
+            raw_dup = conn.execute(
+                "INSERT INTO raw_listings (source, url, raw_json) VALUES (?, ?, ?)",
+                ("facebook", f"https://example.test/raw-clear-duplicate-{token}", "{}"),
+            )
+            duplicate = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, url, title, area, ward, property_type,
+                    price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                    possibly_duplicate, duplicate_of_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+                """,
+                (
+                    raw_dup.lastrowid,
+                    "facebook",
+                    f"https://example.test/clear-duplicate-{token}",
+                    "Clear duplicate lot",
+                    "Thu Dau Mot",
+                    "Phu Loi",
+                    "dat_nen",
+                    1.79,
+                    17.9,
+                    100.5,
+                    5.02,
+                    20.1,
+                    canonical.lastrowid,
+                ),
+            )
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        ids = {item["id"] for item in response.get_json()["items"]}
+        self.assertNotIn(duplicate.lastrowid, ids)
 
     def test_ai_training_requires_explicit_valuation_choice_in_js(self):
         js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(
@@ -787,3 +871,13 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("fetched=12", logs)
         self.assertIn("skipped=0", logs)
         self.assertIn("Reprocess xong: processed=3, new=0, updated=0, skipped=0", logs)
+
+
+class PublicAuthHeaderAssetTest(unittest.TestCase):
+    def test_public_auth_header_mobile_css_keeps_labels_readable(self):
+        css = Path("static/css/main/leads_chat.css").read_text(encoding="utf-8")
+
+        self.assertNotIn(".user-menu-trigger span:not(.user-avatar)", css)
+        self.assertNotIn("max-width: 82px", css)
+        self.assertIn(".header .user-menu-label", css)
+        self.assertIn("line-height: 1.2", css)

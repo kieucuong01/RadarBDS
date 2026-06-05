@@ -3828,6 +3828,36 @@ def admin_api_ai_training_disagreements():
 
 @require_admin_auth
 def admin_api_qc_duplicates():
+    ambiguous_duplicate_sql = """
+              AND (
+                   l.source <> 'facebook'
+                OR c.source <> 'facebook'
+                OR COALESCE(l.ward,'') = ''
+                OR COALESCE(c.ward,'') = ''
+                OR l.ward <> c.ward
+                OR COALESCE(l.property_type,'') = ''
+                OR COALESCE(c.property_type,'') = ''
+                OR l.property_type <> c.property_type
+                OR COALESCE(l.area_m2,0) <= 0
+                OR COALESCE(c.area_m2,0) <= 0
+                OR ABS(l.area_m2 - c.area_m2) >
+                   CASE
+                     WHEN l.area_m2 < c.area_m2
+                     THEN CASE WHEN l.area_m2 * 0.03 > 3.0 THEN l.area_m2 * 0.03 ELSE 3.0 END
+                     ELSE CASE WHEN c.area_m2 * 0.03 > 3.0 THEN c.area_m2 * 0.03 ELSE 3.0 END
+                   END
+                OR (
+                    l.frontage_m IS NOT NULL
+                    AND c.frontage_m IS NOT NULL
+                    AND ABS(l.frontage_m - c.frontage_m) > 0.35
+                )
+                OR (
+                    l.depth_m IS NOT NULL
+                    AND c.depth_m IS NOT NULL
+                    AND ABS(l.depth_m - c.depth_m) > 0.8
+                )
+              )
+    """
     with db_mod.get_conn() as conn:
         rows = conn.execute(f"""
             SELECT l.id, l.title, l.url, l.source, l.ward, l.property_type, l.price_ty, l.area_m2,
@@ -3852,6 +3882,7 @@ def admin_api_qc_duplicates():
             WHERE COALESCE(l.probably_sold,0)=0
               AND COALESCE(l.is_blacklisted,0)=0
               AND l.possibly_duplicate=1
+              {ambiguous_duplicate_sql}
             ORDER BY l.updated_at DESC
             LIMIT 500
         """).fetchall()
@@ -3864,8 +3895,51 @@ def admin_api_qc_duplicates():
         item["canonical_image"] = resolve_image_url(item.pop("canonical_img_local"), item.pop("canonical_img_url"))
         item["description_excerpt"] = (item.get("description") or "")[:260]
         item["canonical_description_excerpt"] = (item.get("canonical_description") or "")[:260]
+        item["qc_reasons"] = _duplicate_qc_reasons(item)
         items.append(item)
     return jsonify({"items": items})
+
+
+def _duplicate_qc_reasons(item: dict) -> list[str]:
+    reasons = []
+    if item.get("source") != "facebook" or item.get("canonical_source") != "facebook":
+        reasons.append("Khác hoặc không phải nguồn Facebook")
+    if not item.get("ward") or not item.get("canonical_ward"):
+        reasons.append("Thiếu phường")
+    elif item.get("ward") != item.get("canonical_ward"):
+        reasons.append("Khác phường")
+    if not item.get("property_type") or not item.get("canonical_property_type"):
+        reasons.append("Thiếu loại hình")
+    elif item.get("property_type") != item.get("canonical_property_type"):
+        reasons.append("Khác loại hình")
+
+    area_a = _safe_float(item.get("area_m2"))
+    area_b = _safe_float(item.get("canonical_area_m2"))
+    if not area_a or not area_b:
+        reasons.append("Thiếu diện tích")
+    else:
+        area_tolerance = max(3.0, min(area_a, area_b) * 0.03)
+        if abs(area_a - area_b) > area_tolerance:
+            reasons.append("Diện tích lệch")
+
+    frontage_a = _safe_float(item.get("frontage_m"))
+    frontage_b = _safe_float(item.get("canonical_frontage_m"))
+    if frontage_a and frontage_b and abs(frontage_a - frontage_b) > 0.35:
+        reasons.append("Ngang lệch")
+
+    depth_a = _safe_float(item.get("depth_m"))
+    depth_b = _safe_float(item.get("canonical_depth_m"))
+    if depth_a and depth_b and abs(depth_a - depth_b) > 0.8:
+        reasons.append("Dài lệch")
+
+    return reasons or ["Cần kiểm tra thủ công"]
+
+
+def _safe_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 @require_admin_auth
