@@ -441,37 +441,37 @@ class AiDealReviewTest(unittest.TestCase):
         self.assertEqual(rows[fake_lid]["hidden"], 1)
         self.assertEqual(rows[fake_lid]["review_hidden_reason"], "fake_price")
 
-    def test_ai_training_recheck_queue_shows_hidden_bad_data_signals_only(self):
+    def test_data_quality_recheck_queue_shows_hidden_bad_data_signals_only(self):
         import app as app_module
+        from db.connection import get_conn
 
         bad_lid = self._insert_signal(url="https://t.test/recheck-bad-data")
         fake_lid = self._insert_signal(url="https://t.test/recheck-fake-price")
 
+        with app_module.app.test_request_context():
+            with get_conn() as conn:
+                app_module._save_ai_training_feedback(
+                    conn,
+                    bad_lid,
+                    {
+                        "extraction_verdict": "wrong_price",
+                        "valuation_verdict": "cannot_price",
+                        "reason_tags": ["wrong_price"],
+                    },
+                )
+                app_module._save_ai_training_feedback(
+                    conn,
+                    fake_lid,
+                    {
+                        "extraction_verdict": "all_correct",
+                        "valuation_verdict": "fake_price",
+                        "reason_tags": ["fake_price"],
+                    },
+                )
+
         with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path):
             client = app_module.app.test_client()
             self._login_admin(client)
-
-            resp_bad = client.post(
-                "/admin/api/ai-training/feedback",
-                json={
-                    "listing_id": bad_lid,
-                    "extraction_verdict": "wrong_price",
-                    "valuation_verdict": "cannot_price",
-                    "reason_tags": ["wrong_price"],
-                },
-            )
-            self.assertEqual(resp_bad.status_code, 200)
-
-            resp_fake = client.post(
-                "/admin/api/ai-training/feedback",
-                json={
-                    "listing_id": fake_lid,
-                    "extraction_verdict": "all_correct",
-                    "valuation_verdict": "fake_price",
-                    "reason_tags": ["fake_price"],
-                },
-            )
-            self.assertEqual(resp_fake.status_code, 200)
 
             normal = client.get(f"/admin/api/ai-training/items?ward={self.ward}")
             self.assertEqual(normal.status_code, 200)
@@ -479,7 +479,7 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertNotIn(bad_lid, normal_ids)
             self.assertNotIn(fake_lid, normal_ids)
 
-            recheck = client.get(f"/admin/api/ai-training/items?queue=recheck&ward={self.ward}")
+            recheck = client.get(f"/admin/api/data-quality/items?queue=recheck&ward={self.ward}")
             self.assertEqual(recheck.status_code, 200)
             data = recheck.get_json()
             recheck_ids = {it["id"] for it in data["items"]}
@@ -488,7 +488,7 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertEqual(data["queue"], "recheck")
             self.assertTrue(next(it for it in data["items"] if it["id"] == bad_lid)["is_recheck"])
 
-    def test_ai_training_source_qc_queue_shows_suppressed_guland_quality_items(self):
+    def test_data_quality_source_qc_queue_shows_suppressed_guland_quality_items(self):
         import app as app_module
         from db.connection import get_conn
 
@@ -514,7 +514,7 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertEqual(normal.status_code, 200)
             self.assertNotIn(lid, {it["id"] for it in normal.get_json()["items"]})
 
-            source_qc = client.get(f"/admin/api/ai-training/items?queue=source_qc&ward={self.ward}")
+            source_qc = client.get(f"/admin/api/data-quality/items?queue=source_qc&ward={self.ward}")
             self.assertEqual(source_qc.status_code, 200)
             data = source_qc.get_json()
             self.assertEqual(data["queue"], "source_qc")
@@ -523,73 +523,39 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertTrue(item["is_source_qc"])
             self.assertEqual(item["source_quality_flags"], "old_guland_post")
 
-    def test_ai_training_needs_valuation_queue_shows_legacy_all_correct_bad_data(self):
+    def test_ai_training_ignores_legacy_qc_queue_params(self):
         import app as app_module
         from db.connection import get_conn
 
-        ambiguous_lid = self._insert_signal(url="https://t.test/ambiguous-bad-data")
-        explicit_lid = self._insert_signal(url="https://t.test/explicit-cannot-price")
+        source_qc_lid = self._insert_signal(url="https://t.test/source-qc-not-training")
 
         with get_conn() as conn:
             conn.execute(
                 """
-                INSERT INTO ai_training_feedback (
-                    listing_id, actor, verdict, extraction_verdict,
-                    valuation_verdict
-                )
-                VALUES (?, 'admin', 'bad_data', 'all_correct', 'bad_data')
+                UPDATE valuation_results
+                   SET is_signal=0,
+                       signal_score=0,
+                       source_quality_recheck=1,
+                       source_quality_flags='old_guland_post'
+                 WHERE listing_id=?
                 """,
-                (ambiguous_lid,),
-            )
-            conn.execute(
-                """
-                UPDATE listings
-                   SET review_hidden=1,
-                       review_hidden_reason='bad_data'
-                 WHERE id=?
-                """,
-                (ambiguous_lid,),
-            )
-            conn.execute(
-                """
-                INSERT INTO ai_training_feedback (
-                    listing_id, actor, verdict, extraction_verdict,
-                    valuation_verdict
-                )
-                VALUES (?, 'admin', 'cannot_price', 'all_correct', 'cannot_price')
-                """,
-                (explicit_lid,),
-            )
-            conn.execute(
-                """
-                UPDATE listings
-                   SET review_hidden=1,
-                       review_hidden_reason='cannot_price'
-                 WHERE id=?
-                """,
-                (explicit_lid,),
+                (source_qc_lid,),
             )
 
         with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path):
             client = app_module.app.test_client()
             self._login_admin(client)
 
-            normal = client.get(f"/admin/api/ai-training/items?ward={self.ward}")
-            self.assertEqual(normal.status_code, 200)
-            self.assertNotIn(ambiguous_lid, {it["id"] for it in normal.get_json()["items"]})
+            for queue in ("recheck", "source_qc", "legal_qc", "needs_valuation"):
+                resp = client.get(
+                    f"/admin/api/ai-training/items?queue={queue}&ward={self.ward}"
+                )
+                self.assertEqual(resp.status_code, 200)
+                data = resp.get_json()
+                self.assertEqual(data["queue"], "main")
+                self.assertNotIn(source_qc_lid, {it["id"] for it in data["items"]})
 
-            needs = client.get(f"/admin/api/ai-training/items?queue=needs_valuation&ward={self.ward}")
-            self.assertEqual(needs.status_code, 200)
-            data = needs.get_json()
-            self.assertEqual(data["queue"], "needs_valuation")
-            self.assertEqual(data["queue_label"], "Cần phân loại valuation")
-            ids = {it["id"] for it in data["items"]}
-            self.assertIn(ambiguous_lid, ids)
-            self.assertNotIn(explicit_lid, ids)
-            item = next(it for it in data["items"] if it["id"] == ambiguous_lid)
-            self.assertTrue(item["is_needs_valuation"])
-
-    def test_ai_training_legal_qc_excludes_effective_has_document_status(self):
+    def test_data_quality_legal_qc_excludes_effective_has_document_status(self):
         import app as app_module
         from db.connection import get_conn
 
@@ -620,11 +586,33 @@ class AiDealReviewTest(unittest.TestCase):
             client = app_module.app.test_client()
             self._login_admin(client)
 
-            resp = client.get(f"/admin/api/ai-training/items?queue=legal_qc&ward={self.ward}")
+            resp = client.get(f"/admin/api/data-quality/items?queue=legal_qc&ward={self.ward}")
             self.assertEqual(resp.status_code, 200)
             data = resp.get_json()
             self.assertEqual(data["queue"], "legal_qc")
             self.assertNotIn(lid, {it["id"] for it in data["items"]})
+
+    def test_ai_training_feedback_endpoint_rejects_extraction_qc_labels(self):
+        import app as app_module
+
+        lid = self._insert_signal(url="https://t.test/reject-extraction-qc")
+
+        with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path):
+            client = app_module.app.test_client()
+            self._login_admin(client)
+
+            resp = client.post(
+                "/admin/api/ai-training/feedback",
+                json={
+                    "listing_id": lid,
+                    "extraction_verdict": "wrong_area",
+                    "valuation_verdict": "cannot_price",
+                    "reason_tags": ["wrong_area"],
+                },
+            )
+
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.get_json()["error"], "valuation_feedback_only")
 
     # ---- shared admin helpers -----------------------------------------
     def _login_admin(self, client):

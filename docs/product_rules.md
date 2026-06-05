@@ -58,14 +58,16 @@ Use this when a task touches user-facing deal quality, dedup/history, valuation,
 
 Route: `/admin/control-room`, tab "AI Training".
 
-Endpoint: `GET /admin/api/ai-training/items` with `limit`, `offset`, `ward`, `city`, `mos_min`, `sort`, and `queue`.
+Endpoint: `GET /admin/api/ai-training/items` with `limit`, `offset`, `ward`, `city`, `mos_min`, and `sort`.
 
-Queues:
+AI Training is valuation-only. Admin labels should only express whether the model-cheap listing is `cheap_real`, `fair`, `overpriced`, `fake_price`, or `cannot_price`. Data extraction, source quality, recheck, and legal review belong to Data Quality/pipeline work, not this screen.
 
-- `main`: normal human labeling queue.
+Data Quality endpoint: `GET /admin/api/data-quality/items` with `queue=recheck|source_qc|legal_qc`.
+
+Data Quality queues:
+
 - `recheck`: hidden/bad-data rows that need recheck after fixes.
 - `source_qc`: model-cheap listings suppressed from user/VIP promotion due to source or valuation quality flags.
-- `needs_valuation`: rows needing a valuation verdict.
 - `legal_qc`: signal rows missing detected legal-doc image or with human wrong-data notes.
 
 Anti-bias rules:

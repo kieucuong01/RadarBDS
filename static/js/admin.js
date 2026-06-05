@@ -240,7 +240,8 @@ function switchPanel(name, options = {}) {
     loader = async () => {
       await loadDataQualitySummary();
       if (activeQualityTab === 'dups') await loadDuplicates();
-      else await loadBlacklist();
+      else if (activeQualityTab === 'blacklist') await loadBlacklist();
+      else await loadDataQualityQueue(activeQualityTab);
     };
   }
   if (name === 'training') loader = () => loadTrainingItems(false);
@@ -1039,9 +1040,35 @@ function exportLeads() {
 function switchQualityTab(name) {
   activeQualityTab = name;
   document.querySelectorAll('.segment[data-quality-tab]').forEach(btn => btn.classList.toggle('active', btn.dataset.qualityTab === name));
-  document.querySelectorAll('.quality-tab').forEach(tab => tab.classList.toggle('active', tab.id === `quality-${name === 'dups' ? 'dups' : 'blacklist'}`));
+  document.querySelectorAll('.quality-tab').forEach(tab => tab.classList.toggle('active', tab.id === `quality-${name}`));
   if (name === 'dups') loadDuplicates();
-  else loadBlacklist();
+  else if (name === 'blacklist') loadBlacklist();
+  else loadDataQualityQueue(name);
+}
+
+function qualityQueueRoot(queue) {
+  return {
+    recheck: 'qualityRecheckGrid',
+    source_qc: 'qualitySourceQcGrid',
+    legal_qc: 'qualityLegalQcGrid'
+  }[queue] || '';
+}
+
+async function loadDataQualityQueue(queue) {
+  const rootId = qualityQueueRoot(queue);
+  const root = rootId ? document.getElementById(rootId) : null;
+  if (!root) return;
+  root.innerHTML = `<div class="empty">Đang tải queue kiểm dịch...</div>`;
+  const p = new URLSearchParams({ queue, limit: '60', sort: 'default' });
+  const data = await fetchJSON('/admin/api/data-quality/items?' + p.toString());
+  const items = data.items || [];
+  if (!items.length) {
+    root.innerHTML = `<div class="empty">Không có mục nào trong queue này.</div>`;
+    return;
+  }
+  items.forEach(it => { _trnGal[it.id] = (it.images && it.images.length) ? it.images : []; });
+  root.innerHTML = items.map(x => dataQualityReviewCard(x, queue)).join('');
+  requestAnimationFrame(() => _trnSyncDescriptionToggles(root));
 }
 
 function infraFilters() {
@@ -1309,9 +1336,7 @@ function trnFilterQuery(offset = 0) {
   const ward  = document.getElementById('trnWard')?.value || '';
   const mos   = document.getElementById('trnMos')?.value || '0';
   const sort  = document.getElementById('trnSort')?.value || 'default';
-  const queue = document.getElementById('trnQueue')?.value || 'main';
   const p = new URLSearchParams({ limit: String(TRN_PAGE), sort, offset: String(offset) });
-  if (queue && queue !== 'main') p.set('queue', queue);
   if (city) p.set('city', city);
   if (ward) p.set('ward', ward);
   if (mos && mos !== '0') p.set('mos_min', mos);
@@ -1340,7 +1365,6 @@ function _trnBindChipDelegation(root) {
       root.querySelectorAll(`.chip[data-card="${chip.dataset.card}"][data-group="${group}"]`).forEach(c => c.classList.remove('active'));
     }
     chip.classList.toggle('active');
-    if (group === 'extraction') syncExtractionState(chip.dataset.card);
   });
 }
 
@@ -1412,17 +1436,6 @@ function _trnSyncSentinel() {
   }
 }
 
-// Trích xuất sai → ẩn mục "2. Định giá AI" (tin đó để học làm sạch dữ liệu);
-// chỉ khi trích xuất "Đúng hết" mới chấm định giá (để cải tiến phần định giá).
-function syncExtractionState(cid) {
-  const active = document.querySelector(`.chip[data-card="${cid}"][data-group="extraction"].active`);
-  const ok = !active || active.dataset.value === 'all_correct';
-  const valbox = document.getElementById(`valbox-${cid}`);
-  const note = document.getElementById(`exnote-${cid}`);
-  if (valbox) valbox.style.display = ok ? '' : 'none';
-  if (note) note.style.display = ok ? 'none' : '';
-}
-
 async function loadMoreTraining() {
   await loadTrainingItems(true);
 }
@@ -1445,7 +1458,8 @@ async function saveLegalVerification(id, status) {
     body: JSON.stringify(payload)
   });
   if (result && result.ok) {
-    loadTrainingItems();
+    await loadDataQualityQueue('legal_qc');
+    await loadDataQualitySummary();
   }
 }
 
@@ -1511,33 +1525,6 @@ function trainingCard(x) {
   const actualPpm2 = x.actual_ppm2 || x.price_per_m2 || '';
   const fairPpm2 = x.fair_ppm2 || '';
   const sourceFlags = (x.source_quality_flags || '').split(',').filter(Boolean);
-  const legal = x.legal_summary || {};
-  const legalStatus = String(legal.status || '').trim();
-  const legalFlags = String(legal.flags || '').split(',').filter(Boolean);
-  const shouldShowLegalBox = (x.is_legal_qc || legalStatus) && legalStatus !== 'has_document';
-  const legalBox = shouldShowLegalBox ? `
-            <div class="review-box legal-qc-box">
-              <div class="review-title">Legal QC · ${esc(legalStatus || 'unverified')} · ${Math.round(legal.trust_score || legal.confidence_score || 0)}%</div>
-              <ul class="explain-list">
-                <li>Thửa/tờ: ${esc(legal.thua_so || '-')} / ${esc(legal.to_ban_do || '-')}</li>
-                <li>DT sổ: ${area(legal.legal_area_m2)} · Thổ cư: ${area(legal.legal_residential_m2)}</li>
-                <li>Phường: ${esc(legal.legal_ward || '-')} · Đường: ${esc(legal.legal_road_text || '-')}</li>
-                ${legalFlags.length ? `<li>Flags: ${legalFlags.map(esc).join(', ')}</li>` : ''}
-              </ul>
-              <div class="legal-qc-grid">
-                <input id="legal-road-${x.id}" value="${esc(legal.legal_road_text || '')}" placeholder="Đường trên sổ">
-                <input id="legal-ward-${x.id}" value="${esc(legal.legal_ward || '')}" placeholder="Phường trên sổ">
-                <input id="legal-area-${x.id}" value="${esc(legal.legal_area_m2 || '')}" placeholder="DT sổ">
-                <input id="legal-res-${x.id}" value="${esc(legal.legal_residential_m2 || '')}" placeholder="Thổ cư">
-                <input id="legal-thua-${x.id}" value="${esc(legal.thua_so || '')}" placeholder="Thửa số">
-                <input id="legal-to-${x.id}" value="${esc(legal.to_ban_do || '')}" placeholder="Tờ bản đồ">
-              </div>
-              <div class="chip-row">
-                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'verified')">Xác nhận đúng sổ</button>
-                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'needs_review')">Cần soi tiếp</button>
-                <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'conflict')">Có xung đột</button>
-              </div>
-            </div>` : '';
   const fairTitle = x.fair_ty
     ? `(Fair Value: ${money(x.fair_ty)}${fairPpm2 ? ` · ${ppm2(fairPpm2)}` : ''})`
     : '';
@@ -1566,23 +1553,8 @@ function trainingCard(x) {
 
         <div class="trn-review-cols${x.ai_verdict ? ' has-ai' : ''}">
           <div class="trn-review-main">
-            ${legalBox}
             <div class="review-box">
-              <div class="review-title">1. Thông tin trích xuất</div>
-              <div class="chip-row">
-                <button class="chip active" data-card="${cid}" data-group="extraction" data-value="all_correct">Đúng hết</button>
-                <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_ward">Sai phường</button>
-                <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_road">Sai đường</button>
-                <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_property_type">Sai loại hình</button>
-                <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_price">Sai giá</button>
-                <button class="chip" data-card="${cid}" data-group="extraction" data-value="wrong_area">Sai diện tích</button>
-              </div>
-              <div class="extraction-note" id="exnote-${cid}" style="display:none;margin-top:8px;font-size:11px;color:var(--muted)">
-                Trích xuất sai → tin này dùng để học <strong>làm sạch dữ liệu</strong>, không cần chấm định giá.
-              </div>
-            </div>
-            <div class="review-box" id="valbox-${cid}">
-              <div class="review-title">2. Định giá AI ${fairTitle}</div>
+              <div class="review-title">Định giá AI ${fairTitle}</div>
               <div class="chip-row">
                 <button class="chip" data-card="${cid}" data-group="valuation" data-value="cheap_real">Rẻ thật</button>
                 <button class="chip" data-card="${cid}" data-group="valuation" data-value="fair">Giá hợp lý</button>
@@ -1597,10 +1569,10 @@ function trainingCard(x) {
               </ul>
               <div class="review-title" style="margin-top:10px">Nguyên nhân</div>
               <div class="chip-row">
-                ${[['bad_fengshui','Phong thủy xấu'],['deep_alley','Hẻm sâu'],['corner_lot','Đất góc'],['bait_listing','Tin mồi'],['fake_price','Giá ảo'],['bad_data','Dữ liệu sai']].map(([v,l]) => `<button class="chip reason-chip" data-card="${cid}" data-group="reason" data-value="${v}">${l}</button>`).join('')}
+                ${[['bad_fengshui','Phong thủy xấu'],['deep_alley','Hẻm sâu'],['corner_lot','Đất góc'],['bait_listing','Tin mồi'],['fake_price','Giá ảo']].map(([v,l]) => `<button class="chip reason-chip" data-card="${cid}" data-group="reason" data-value="${v}">${l}</button>`).join('')}
               </div>
             </div>
-            <button class="primary-btn save-training" onclick="saveTraining(${x.id})">Lưu Phản Hồi & Dạy AI</button>
+            <button class="primary-btn save-training" onclick="saveTraining(${x.id})">Lưu nhãn định giá</button>
           </div>
           <div class="trn-review-aside">${x.ai_verdict ? `
             <div class="review-box" style="opacity:.92;height:100%">
@@ -1618,15 +1590,81 @@ function trainingCard(x) {
   `;
 }
 
+function dataQualityReviewCard(x, queue) {
+  const nImg = (x.images && x.images.length) || 0;
+  const desc = (x.description || '').trim();
+  const actualPpm2 = x.actual_ppm2 || x.price_per_m2 || '';
+  const fairPpm2 = x.fair_ppm2 || '';
+  const sourceFlags = (x.source_quality_flags || '').split(',').filter(Boolean);
+  const explain = x.explain || {};
+  const missing = (explain.missing_fields || []).length ? explain.missing_fields.join(', ') : 'không';
+  const legal = x.legal_summary || {};
+  const legalFlags = String(legal.flags || '').split(',').filter(Boolean);
+  const showLegalTools = queue === 'legal_qc' && String(legal.status || '').trim() !== 'has_document';
+  const legalTools = showLegalTools ? `
+        <div class="review-box legal-qc-box">
+          <div class="review-title">Legal QC · ${esc(legal.status || 'unverified')} · ${Math.round(legal.trust_score || legal.confidence_score || 0)}%</div>
+          <ul class="explain-list">
+            <li>Thửa/tờ: ${esc(legal.thua_so || '-')} / ${esc(legal.to_ban_do || '-')}</li>
+            <li>DT sổ: ${area(legal.legal_area_m2)} · Thổ cư: ${area(legal.legal_residential_m2)}</li>
+            <li>Phường: ${esc(legal.legal_ward || '-')} · Đường: ${esc(legal.legal_road_text || '-')}</li>
+            ${legalFlags.length ? `<li>Flags: ${legalFlags.map(esc).join(', ')}</li>` : ''}
+          </ul>
+          <div class="legal-qc-grid">
+            <input id="legal-road-${x.id}" value="${esc(legal.legal_road_text || '')}" placeholder="Đường trên sổ">
+            <input id="legal-ward-${x.id}" value="${esc(legal.legal_ward || '')}" placeholder="Phường trên sổ">
+            <input id="legal-area-${x.id}" value="${esc(legal.legal_area_m2 || '')}" placeholder="DT sổ">
+            <input id="legal-res-${x.id}" value="${esc(legal.legal_residential_m2 || '')}" placeholder="Thổ cư">
+            <input id="legal-thua-${x.id}" value="${esc(legal.thua_so || '')}" placeholder="Thửa số">
+            <input id="legal-to-${x.id}" value="${esc(legal.to_ban_do || '')}" placeholder="Tờ bản đồ">
+          </div>
+          <div class="chip-row">
+            <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'verified')">Xác nhận đúng sổ</button>
+            <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'needs_review')">Cần soi tiếp</button>
+            <button class="secondary-btn legal-qc-action" onclick="saveLegalVerification(${x.id}, 'conflict')">Có xung đột</button>
+          </div>
+        </div>` : '';
+  return `
+    <article class="training-card quality-review-card" data-id="${x.id}">
+      <div class="train-img-wrap">
+        <img class="train-img" src="${esc(x.image || PLACEHOLDER)}" onerror="this.src=PLACEHOLDER" alt="">
+        <div class="mos-chip">MOS ${Math.round(x.mos_pct || 0)}%</div>
+        ${nImg ? `<button class="train-gallery-btn" onclick="openTrnGallery(${x.id})">Ảnh (${nImg})</button>` : ''}
+      </div>
+      <div class="train-body">
+        <div class="train-title">
+          <a href="${esc(x.detail_url)}" target="_blank">${esc(x.ward || 'Unknown')}</a>
+          <span>TD-${x.id}</span>
+        </div>
+        <div class="train-lines">
+          <div><strong>${esc(x.title || 'Không có tiêu đề')}</strong></div>
+          <div>${esc(SOURCE_NAMES[x.source] || x.source || '-')} · ${esc(x.road_type || 'Chưa rõ đường')} · ${esc(PTYPES[x.property_type] || x.property_type || 'Chưa rõ loại')}</div>
+          <div>DT: <strong>${area(x.area_m2)}</strong> · Giá rao: <strong>${money(x.price_ty)}</strong> · Giá/m²: <strong>${ppm2(actualPpm2)}</strong></div>
+        </div>
+        ${desc ? `
+          <div class="train-desc-wrap" data-desc-wrap="${x.id}">
+            <div class="train-desc">${esc(desc)}</div>
+            <button type="button" class="train-desc-toggle" data-desc-toggle="${x.id}" onclick="trnToggleDesc(${x.id})" hidden>Xem thêm</button>
+          </div>` : ''}
+        ${legalTools}
+        <div class="review-box">
+          <div class="review-title">Thông tin kiểm dịch</div>
+          <ul class="explain-list">
+            <li>Queue: ${esc(queue)} · Feedback: ${esc(x.feedback_verdict || '-')} · Valuation: ${esc(x.valuation_verdict || '-')} · Data: ${esc(x.extraction_verdict || '-')}</li>
+            <li>Score ${Math.round(x.signal_score || 0)}, segment ${esc(x.segment || '-')} (${x.n_segment || 0} mẫu)</li>
+            <li>Giá thực ${money(x.price_ty)} (${ppm2(actualPpm2)}), fair ${money(x.fair_ty)} (${ppm2(fairPpm2)}), thiếu field: ${esc(missing)}</li>
+            ${sourceFlags.length ? `<li>Source QC: ${sourceFlags.map(flag => esc(qualityFlagLabel(flag))).join(', ')}</li>` : ''}
+          </ul>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
 async function saveTraining(id) {
   const card = document.querySelector(`.training-card[data-id="${id}"]`);
-  const extraction = card.querySelector('.chip[data-group="extraction"].active')?.dataset.value || 'all_correct';
-  const extractionOk = extraction === 'all_correct';
-  // Trích xuất sai → bỏ qua chấm định giá, tin này về nhánh học làm sạch dữ liệu.
-  const valuation = extractionOk
-    ? (card.querySelector('.chip[data-group="valuation"].active')?.dataset.value || '')
-    : 'cannot_price';
-  if (extractionOk && !valuation) {
+  const valuation = card.querySelector('.chip[data-group="valuation"].active')?.dataset.value || '';
+  if (!valuation) {
     alert('Chọn nhãn định giá trước khi lưu.');
     return;
   }
@@ -1634,12 +1672,8 @@ async function saveTraining(id) {
   let verdict;
   if (tags.includes('fake_price') || valuation === 'fake_price') {
     verdict = 'fake_price';
-  } else if (!extractionOk) {
-    verdict = 'bad_data';                       // sai trích xuất → học làm sạch dữ liệu
-  } else if (tags.includes('bad_data')) {
-    verdict = 'cannot_price';
   } else {
-    verdict = valuation;                        // nhãn định giá tách riêng: cheap_real|fair|overpriced|fake_price|cannot_price
+    verdict = valuation;
   }
   await fetchJSON('/admin/api/ai-training/feedback', {
     method: 'POST',
@@ -1647,11 +1681,11 @@ async function saveTraining(id) {
     body: JSON.stringify({
       listing_id: id,
       verdict,
-      extraction_verdict: extraction,
+      extraction_verdict: 'all_correct',
       valuation_verdict: valuation,
       reason_tags: tags,
-      reason_code: tags[0] || extraction || valuation,
-      reason_text: 'admin_ai_training'
+      reason_code: tags[0] || valuation,
+      reason_text: 'admin_valuation_training'
     })
   });
   card.remove();
@@ -1678,16 +1712,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('crawlRunProfile')?.addEventListener('change', syncCrawlRunInputs);
   document.querySelectorAll('[data-crawl-mode]').forEach(btn => btn.addEventListener('click', () => setCrawlMode(btn.dataset.crawlMode)));
   document.getElementById('refreshTrainingBtn').addEventListener('click', loadTrainingItems);
-  ['trnMos', 'trnSort', 'trnWard', 'trnQueue'].forEach(idv => {
+  ['trnMos', 'trnSort', 'trnWard'].forEach(idv => {
     const el = document.getElementById(idv);
     if (el) el.addEventListener('change', () => {
-      if (idv === 'trnQueue') {
-        _trnWardsLoaded = false;
-        _trnAllWards = [];
-        _trnWardCities = {};
-      } else {
-        _trnWardsLoaded = true;
-      }
+      _trnWardsLoaded = true;
       loadTrainingItems();
     });
   });

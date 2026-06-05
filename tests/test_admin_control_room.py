@@ -221,9 +221,29 @@ class AdminControlRoomGateTest(unittest.TestCase):
             'class="chip active" data-card="${cid}" data-group="valuation" data-value="cheap_real"',
             js,
         )
-        self.assertIn("if (extractionOk && !valuation)", js)
-        self.assertIn("legalStatus !== 'has_document'", js)
+        self.assertIn("if (!valuation)", js)
+        self.assertNotIn("syncExtractionState", js)
+        self.assertNotIn('data-group="extraction"', js)
+        self.assertNotIn("wrong_ward", js)
+        self.assertNotIn("wrong_road", js)
+        self.assertNotIn("wrong_property_type", js)
+        self.assertNotIn("wrong_price", js)
+        self.assertNotIn("wrong_area", js)
+        self.assertNotIn("legalStatus !== 'has_document'", js)
         self.assertNotIn("(x.is_legal_qc || legal.status) ? `", js)
+
+    def test_ai_training_template_is_valuation_only(self):
+        self._login_as_admin()
+
+        response = self.client.get("/admin/ai-training")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('id="trainingGrid"', html)
+        self.assertNotIn('id="trnQueue"', html)
+        self.assertNotIn('value="source_qc"', html)
+        self.assertNotIn('value="legal_qc"', html)
+        self.assertNotIn('value="recheck"', html)
 
     def test_admin_js_has_loading_toast_feedback_for_actions(self):
         root = Path(__file__).resolve().parent.parent
@@ -592,6 +612,9 @@ class AdminControlRoomGateTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn('id="qualityOverview"', html)
         self.assertIn("data-quality-overview", html)
+        self.assertIn('data-quality-tab="recheck"', html)
+        self.assertIn('data-quality-tab="source_qc"', html)
+        self.assertIn('data-quality-tab="legal_qc"', html)
 
     def test_admin_js_loads_data_quality_summary_for_quality_panel(self):
         root = Path(__file__).resolve().parent.parent

@@ -3348,6 +3348,10 @@ def admin_api_ai_training_feedback():
         listing_id = 0
     if listing_id <= 0:
         return jsonify({"ok": False, "error": "invalid_listing_id"}), 400
+    extraction_verdict = (payload.get("extraction_verdict") or "all_correct").strip()
+    if extraction_verdict != "all_correct":
+        return jsonify({"ok": False, "error": "valuation_feedback_only"}), 400
+    payload["extraction_verdict"] = "all_correct"
     with db_mod.get_conn() as conn:
         try:
             result = _save_ai_training_feedback(conn, listing_id, payload)
@@ -3358,6 +3362,18 @@ def admin_api_ai_training_feedback():
 
 @require_admin_auth
 def admin_api_ai_training_items():
+    return _admin_review_items_response(allowed_queues=("main",), default_queue="main")
+
+
+@require_admin_auth
+def admin_api_data_quality_items():
+    return _admin_review_items_response(
+        allowed_queues=("recheck", "source_qc", "legal_qc"),
+        default_queue="source_qc",
+    )
+
+
+def _admin_review_items_response(*, allowed_queues, default_queue):
     try:
         limit = min(max(int(request.args.get("limit", 50)), 1), 200)
     except ValueError:
@@ -3373,9 +3389,9 @@ def admin_api_ai_training_items():
     except ValueError:
         mos_min = 0.0
     sort = (request.args.get("sort") or "default").strip()
-    queue = (request.args.get("queue") or "main").strip()
-    if queue not in ("main", "recheck", "source_qc", "needs_valuation", "legal_qc"):
-        queue = "main"
+    queue = (request.args.get("queue") or default_queue).strip()
+    if queue not in allowed_queues:
+        queue = default_queue
     model_signal_condition = "COALESCE(v.is_signal,0)=1"
     signal_condition = actionable_signal_sql("v")
     listing_condition = actionable_listing_sql("l")

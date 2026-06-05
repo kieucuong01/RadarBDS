@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v28-data-quality">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v29-valuation-training">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -350,6 +350,9 @@
       <div class="segmented">
         <button class="segment active" data-quality-tab="dups">Tin trùng <span id="dupCount">0</span></button>
         <button class="segment" data-quality-tab="blacklist">Hắc danh sách <span id="blacklistCount">0</span></button>
+        <button class="segment" data-quality-tab="recheck">Recheck sau fix</button>
+        <button class="segment" data-quality-tab="source_qc">Guland QC</button>
+        <button class="segment" data-quality-tab="legal_qc">Legal QC</button>
       </div>
 
       <section id="quality-dups" class="quality-tab active">
@@ -366,6 +369,21 @@
           </div>
           <div id="blacklistRows" class="blacklist-list"></div>
         </div>
+      </section>
+
+      <section id="quality-recheck" class="quality-tab">
+        <div class="notice"><strong>Recheck sau fix:</strong> Tin từng bị đánh dấu sai dữ liệu, dùng để agent/admin kiểm lại sau khi parser hoặc rule được sửa.</div>
+        <div id="qualityRecheckGrid" class="training-grid quality-review-grid"></div>
+      </section>
+
+      <section id="quality-source_qc" class="quality-tab">
+        <div class="notice"><strong>Guland QC:</strong> Signal model-cheap bị chặn bởi quality flags nguồn, không đưa vào feed cho đến khi pipeline đủ tin cậy.</div>
+        <div id="qualitySourceQcGrid" class="training-grid quality-review-grid"></div>
+      </section>
+
+      <section id="quality-legal_qc" class="quality-tab">
+        <div class="notice"><strong>Legal QC:</strong> Case thiếu hoặc cần soi lại bằng chứng pháp lý. Hành động xác minh sổ nằm tại đây, không ở AI Training.</div>
+        <div id="qualityLegalQcGrid" class="training-grid quality-review-grid"></div>
       </section>
     </section>
 
@@ -479,7 +497,7 @@
       <div class="page-head">
         <div>
           <h1>AI Training <span id="trainingCount" class="count-badge">0</span></h1>
-          <p>Review signal deal để tạo feedback có cấu trúc cho thuật toán. <span id="trainingMeta" class="muted-inline"></span></p>
+          <p>Chỉ chấm nhãn định giá để tạo ground truth cho thuật toán valuation. <span id="trainingMeta" class="muted-inline"></span></p>
         </div>
         <button class="secondary-btn" id="refreshTrainingBtn"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>Làm mới queue</span></span></button>
       </div>
@@ -507,15 +525,6 @@
             <option value="cheapest">Giá thấp nhất</option>
             <option value="mos">MOS cao nhất</option>
             <option value="score">Score cao nhất</option>
-          </select>
-        </label>
-        <label>Queue
-          <select id="trnQueue">
-            <option value="main">Review mới</option>
-            <option value="recheck">Recheck sau fix</option>
-            <option value="source_qc">Guland QC</option>
-            <option value="legal_qc">Legal QC</option>
-            <option value="needs_valuation">Cần phân loại valuation</option>
           </select>
         </label>
         <label>Hiển thị
@@ -694,7 +703,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v28-data-quality"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v29-valuation-training"></script>
   {% endif %}
 </body>
 </html>

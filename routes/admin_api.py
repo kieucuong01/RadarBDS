@@ -82,6 +82,11 @@ def admin_api_data_quality_summary(**kwargs):
     return _impl("admin_api_data_quality_summary", **kwargs)
 
 
+@bp.route("/admin/api/data-quality/items")
+def admin_api_data_quality_items(**kwargs):
+    return _impl("admin_api_data_quality_items", **kwargs)
+
+
 @bp.route("/admin/api/ai-training/feedback", methods=["POST"])
 def admin_api_ai_training_feedback(**kwargs):
     return _impl("admin_api_ai_training_feedback", **kwargs)
