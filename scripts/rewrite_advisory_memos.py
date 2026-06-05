@@ -334,6 +334,7 @@ def _advisory_stance(row, flags: list[str]) -> tuple[str, str]:
     thin_samples = samples < 10
     unclear_road = "cần kiểm tra đường thực tế" in flags or "thiếu thông tin đường" in flags or not row["road_type"]
     low_tho_cu = (_ratio(row["tho_cu_m2"], row["area_m2"]) or 1) < 0.35
+    dimension = _dimension_note(row) or ""
 
     if row["verdict"] == "suspect":
         return (
@@ -346,9 +347,19 @@ def _advisory_stance(row, flags: list[str]) -> tuple[str, str]:
             "Biên giá nhìn tốt nhưng dữ liệu nền còn thiếu, nên bước đúng là lọc thông tin trước chứ chưa phải đi xem hay giữ chỗ.",
         )
     if row["verdict"] == "not_cheap":
+        reasons = []
+        if margin < 15:
+            reasons.append("biên giá còn mỏng")
+        if low_tho_cu:
+            reasons.append("tỷ lệ thổ cư thấp")
+        if "dài và hẹp" in dimension:
+            reasons.append("form đất dài/hẹp làm thanh khoản kén hơn")
+        if price_ty >= 4:
+            reasons.append("giá tổng cao làm vòng thoát hàng chậm")
+        reason_text = "; ".join(reasons) if reasons else "phần chênh với mặt bằng chưa đủ hấp dẫn"
         return (
             "Tôi không ưu tiên thương vụ này ở giá hiện tại.",
-            "Phần chênh với mặt bằng chưa đủ bù rủi ro kiểm chứng, nhất là khi mua đầu tư còn phải tính thanh khoản, chi phí và thời gian ra hàng.",
+            f"Lý do chính: {reason_text}. Khi mua đầu tư, những điểm này làm biên lợi nhuận thực tế mỏng hơn con số định giá ban đầu.",
         )
     if margin >= 30 and not thin_samples and not unclear_road and not low_tho_cu:
         return (
@@ -390,12 +401,14 @@ def _investor_thesis(row, flags: list[str]) -> list[str]:
     )
     if dimension:
         if "dài và hẹp" in dimension:
+            clean_dimension = dimension.replace("Form đất ", "", 1)
             notes.append(
-                f"Form đất là điểm phải cân nhắc: {dimension} Loại này có thể rẻ/m2 nhưng thanh khoản không mạnh bằng lô cân đối."
+                f"Form đất là điểm phải cân nhắc: {clean_dimension} Loại này có thể rẻ/m2 nhưng thanh khoản không mạnh bằng lô cân đối."
             )
         elif "bề ngang tốt" in dimension:
+            clean_dimension = dimension.replace("Form đất ", "", 1)
             notes.append(
-                f"Form đất là điểm cộng thật: {dimension} Với nhà đầu tư, bề ngang tốt giúp dễ bán lại hoặc khai thác hơn."
+                f"Form đất là điểm cộng thật: {clean_dimension} Với nhà đầu tư, bề ngang tốt giúp dễ bán lại hoặc khai thác hơn."
             )
         else:
             notes.append(dimension)
@@ -412,9 +425,9 @@ def _investor_thesis(row, flags: list[str]) -> list[str]:
 
     for location_note in _location_notes(row):
         if "Mỹ Phước Tân Vạn" in location_note or "Quốc lộ 13" in location_note:
-            notes.append(location_note + " Đây là chi tiết có thể tạo thanh khoản, không chỉ là thông tin mô tả.")
+            notes.append(location_note + " Nếu khoảng cách đúng, đây là điểm hỗ trợ thanh khoản.")
         elif "cho thuê" in location_note or "trọ" in location_note:
-            notes.append(location_note + " Nếu mua, phải tách riêng giá trị dòng tiền và giá trị đất.")
+            notes.append(location_note + " Khi định giá, phải tách riêng giá trị dòng tiền và giá trị đất.")
         else:
             notes.append(location_note)
 
