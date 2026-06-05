@@ -775,6 +775,7 @@
 
           <div class="sm-mobile-tabs" role="tablist" aria-label="Nội dung chi tiết signal">
             <button type="button" class="sm-tab active" data-sm-tab="desc" onclick="switchSignalPanel('desc', this)">Mô tả</button>
+            <button type="button" class="sm-tab" data-sm-tab="memo" onclick="switchSignalPanel('memo', this)">Memo</button>
             <button type="button" class="sm-tab" data-sm-tab="comps" onclick="switchSignalPanel('comps', this)">So sánh</button>
             <button type="button" class="sm-tab" data-sm-tab="history" onclick="switchSignalPanel('history', this)">Lịch sử</button>
           </div>
@@ -794,8 +795,8 @@
 
         <!-- RIGHT COLUMN -->
         <div class="sm-right">
-          <!-- Investment Memo temporarily hidden -->
-          <div class="sm-ai-section sm-memo-section" id="sm-memo-section" hidden aria-hidden="true" style="display:none;">
+          <!-- Investment Memo -->
+          <div class="sm-ai-section sm-memo-section sm-panel" data-sm-panel="memo" id="sm-memo-section" hidden aria-hidden="true" style="display:none;">
             <div class="sm-ai-label">Investment Memo</div>
             <div id="sm-memo-body" class="sm-ai-text sm-memo-body">
               <div class="sm-empty-state">Đang tải memo...</div>

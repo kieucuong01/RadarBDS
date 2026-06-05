@@ -121,6 +121,9 @@ def test_market_tab_has_opportunity_matrix_visualization():
         "type: 'bubble'",
         "onClick:",
         "_viewOpportunityWard",
+        "MATRIX_BUBBLE_MIN_RADIUS = 12",
+        "MATRIX_BUBBLE_MAX_RADIUS = 38",
+        "MATRIX_BUBBLE_SCALE = 2.4",
     ]:
         assert expected in html or expected in market_js
 

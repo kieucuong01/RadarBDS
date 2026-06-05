@@ -38,7 +38,6 @@ mimetypes.add_type("image/webp", ".webp")
 
 # Import the extracted services
 from services.market_data import load_counts, load_data, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql
-from services.investment_memo import load_investment_memo
 from services.ai_bot import AIBot
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
@@ -2503,12 +2502,65 @@ def api_listing_memo(listing_id):
     tier = current_tier()
     if tier == "guest":
         return jsonify({"locked": True, "reason": "login_required"}), 403
+    if tier not in ("vip", "admin"):
+        return jsonify({"locked": True, "reason": "vip_required"}), 403
 
-    db_path = _db_handle()
-    memo = load_investment_memo(db_path, listing_id, tier=tier)
+    with db_mod.get_conn() as conn:
+        listing = conn.execute(
+            """
+            SELECT id
+              FROM listings
+             WHERE id = ?
+               AND COALESCE(is_blacklisted,0) = 0
+               AND COALESCE(review_hidden,0) = 0
+            """,
+            (listing_id,),
+        ).fetchone()
+        if not listing:
+            return jsonify({"error": "not found"}), 404
+
+        memo = conn.execute(
+            """
+            SELECT id, created_at, updated_at, actor, verdict, confidence,
+                   reasoning, red_flags, needs_map_check, model, memo_markdown
+              FROM ai_deal_review
+             WHERE listing_id = ?
+               AND NULLIF(TRIM(COALESCE(memo_markdown,'')), '') IS NOT NULL
+             ORDER BY created_at DESC, id DESC
+             LIMIT 1
+            """,
+            (listing_id,),
+        ).fetchone()
+
     if not memo:
-        return jsonify({"error": "not found"}), 404
-    return jsonify(memo)
+        return jsonify({
+            "listing_id": listing_id,
+            "pending": True,
+            "tier": tier,
+            "message": "Chưa có Investment Memo cố vấn cho deal này.",
+        })
+
+    try:
+        red_flags = json.loads(memo["red_flags"]) if memo["red_flags"] else []
+    except Exception:
+        red_flags = []
+
+    return jsonify({
+        "listing_id": listing_id,
+        "pending": False,
+        "tier": tier,
+        "review_id": memo["id"],
+        "created_at": memo["created_at"],
+        "updated_at": memo["updated_at"],
+        "actor": memo["actor"],
+        "verdict": memo["verdict"],
+        "confidence": memo["confidence"],
+        "reasoning": memo["reasoning"],
+        "red_flags": red_flags,
+        "needs_map_check": bool(memo["needs_map_check"]),
+        "model": memo["model"],
+        "memo_markdown": memo["memo_markdown"],
+    })
 
 def get_price_history(listing_id):
     tier = current_tier()

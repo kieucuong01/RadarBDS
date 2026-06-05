@@ -206,6 +206,8 @@ def build_parser():
                       help="cheap_real|suspect|not_cheap|insufficient_info")
     p_rs.add_argument("--confidence", type=float, help="Độ tin 0.0–1.0")
     p_rs.add_argument("--reasoning", required=True, help="Lập luận (tiếng Việt)")
+    p_rs.add_argument("--memo-file", dest="memo_file",
+                      help="File markdown Investment Memo do Claude viết cho listing")
     p_rs.add_argument("--red-flags", dest="red_flags",
                       help='Cờ đỏ, ngăn cách bằng ";"')
     p_rs.add_argument("--needs-map-check", dest="needs_map_check",

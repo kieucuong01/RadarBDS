@@ -104,7 +104,7 @@ class AiDealReviewTest(unittest.TestCase):
 
     def _save_args(self, **kw):
         base = dict(id=None, verdict=None, confidence=None, reasoning=None,
-                    red_flags=None, needs_map_check=False)
+                    red_flags=None, needs_map_check=False, memo_file=None)
         base.update(kw)
         return SimpleNamespace(**base)
 
@@ -145,6 +145,12 @@ class AiDealReviewTest(unittest.TestCase):
                 "WHERE table_schema = 'public' AND table_name = 'ai_deal_review'"
             ).fetchone()
             self.assertIsNotNone(row)
+            col = conn.execute(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_schema = 'public' AND table_name = 'ai_deal_review' "
+                "AND column_name = 'memo_markdown'"
+            ).fetchone()
+            self.assertIsNotNone(col)
 
     def test_schema_normalizes_legacy_positive_training_labels(self):
         from db.connection import get_conn
@@ -230,19 +236,92 @@ class AiDealReviewTest(unittest.TestCase):
             self._run_save(id=lid, verdict="cheap_real",
                            confidence=1.5, reasoning="x")
 
-    # ---- 3. review-queue excludes already reviewed --------------------
-    def test_review_queue_excludes_reviewed(self):
+    def test_review_save_accepts_memo_file_without_truncating(self):
+        lid = self._insert_signal(url="https://t.test/memo-file")
+        memo_path = self.tmpdir / "memo.md"
+        long_memo = "# Investment Memo\n\n" + ("Chi tiết cố vấn riêng cho deal này.\n" * 120)
+        memo_path.write_text(long_memo, encoding="utf-8")
+
+        self._run_save(
+            id=lid,
+            verdict="cheap_real",
+            confidence=0.82,
+            reasoning="rẻ thật, cần xác minh pháp lý",
+            memo_file=str(memo_path),
+        )
+
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            r = conn.execute(
+                "SELECT reasoning, memo_markdown FROM ai_deal_review WHERE listing_id=?",
+                (lid,),
+            ).fetchone()
+
+        self.assertEqual(r["reasoning"], "rẻ thật, cần xác minh pháp lý")
+        self.assertEqual(r["memo_markdown"], long_memo)
+        self.assertGreater(len(r["memo_markdown"]), 2000)
+
+    # ---- 3. review-queue excludes rows with saved memo -----------------
+    def test_review_queue_excludes_rows_with_memo_but_keeps_unmemoed_reviews(self):
         a = self._insert_signal(url="https://t.test/a")
         b = self._insert_signal(url="https://t.test/b")
+        c = self._insert_signal(url="https://t.test/c")
         out = self._run_queue()
-        self.assertEqual(out["count"], 2)
+        self.assertEqual(out["count"], 3)
 
         self._run_save(id=a, verdict="cheap_real", confidence=0.8,
                        reasoning="rẻ thật")
+        memo_path = self.tmpdir / "review-c.md"
+        memo_path.write_text("Memo cố vấn đã viết cho deal C.", encoding="utf-8")
+        self._run_save(id=c, verdict="suspect", confidence=0.6,
+                       reasoning="cần kiểm tra", memo_file=str(memo_path))
+
         out2 = self._run_queue()
-        self.assertEqual(out2["count"], 1)
-        self.assertEqual(out2["items"][0]["listing_id"], b)
-        self.assertIn("memo", out2["items"][0])
+        shown = {item["listing_id"] for item in out2["items"]}
+        self.assertEqual(shown, {a, b})
+        item = next(item for item in out2["items"] if item["listing_id"] == b)
+        self.assertIn("context", item)
+        self.assertNotIn("memo", item)
+        self.assertIn("valuation", item["context"])
+        self.assertIn("listing", item["context"])
+
+    def test_listing_memo_api_is_vip_only_and_returns_pending_or_latest_memo(self):
+        import app as app_module
+
+        lid = self._insert_signal(url="https://t.test/api-memo")
+
+        with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path):
+            client = app_module.app.test_client()
+
+            guest = client.get(f"/api/listing/{lid}/memo")
+            self.assertEqual(guest.status_code, 403)
+            self.assertEqual(guest.get_json()["reason"], "login_required")
+
+            self._login_tier(client, "free")
+            free = client.get(f"/api/listing/{lid}/memo")
+            self.assertEqual(free.status_code, 403)
+            self.assertEqual(free.get_json()["reason"], "vip_required")
+
+            client = app_module.app.test_client()
+            self._login_tier(client, "vip")
+            pending = client.get(f"/api/listing/{lid}/memo")
+            self.assertEqual(pending.status_code, 200)
+            self.assertTrue(pending.get_json()["pending"])
+
+            memo_path = self.tmpdir / "api-memo.md"
+            memo_text = "# Memo cố vấn\n\nDeal này rẻ nhưng cần kiểm tra đường vào."
+            memo_path.write_text(memo_text, encoding="utf-8")
+            self._run_save(id=lid, verdict="cheap_real", confidence=0.9,
+                           reasoning="rẻ thật", memo_file=str(memo_path))
+
+            full = client.get(f"/api/listing/{lid}/memo")
+            data = full.get_json()
+            self.assertEqual(full.status_code, 200)
+            self.assertFalse(data["pending"])
+            self.assertEqual(data["memo_markdown"], memo_text)
+            self.assertEqual(data["verdict"], "cheap_real")
+            self.assertEqual(data["tier"], "vip")
 
     def test_review_queue_uses_latest_actionable_valuation_only(self):
         from db.connection import get_conn
@@ -615,6 +694,28 @@ class AiDealReviewTest(unittest.TestCase):
         self.assertEqual(resp.get_json()["error"], "valuation_feedback_only")
 
     # ---- shared admin helpers -----------------------------------------
+    def _login_tier(self, client, tier):
+        from auth.core import SESSION_COOKIE_NAME
+        from db.connection import get_conn
+
+        token = f"ai-review-{tier}-token-{self.token}-{len(self.user_ids)}"
+        with get_conn() as conn:
+            cur = conn.execute(
+                "INSERT INTO users (identifier, identifier_type, "
+                "password_hash, tier) VALUES (?, 'email', 'h', ?)",
+                (f"{tier}-{len(self.user_ids)}-{self.token}", tier),
+            )
+            self.user_ids.append(cur.lastrowid)
+            conn.execute(
+                "INSERT INTO user_sessions (token, user_id, expires_at) "
+                "VALUES (?, ?, '2099-01-01T00:00:00')",
+                (token, cur.lastrowid),
+            )
+        try:
+            client.set_cookie(SESSION_COOKIE_NAME, token)
+        except TypeError:
+            client.set_cookie("localhost", SESSION_COOKIE_NAME, token)
+
     def _login_admin(self, client):
         from auth.core import SESSION_COOKIE_NAME
         from db.connection import get_conn

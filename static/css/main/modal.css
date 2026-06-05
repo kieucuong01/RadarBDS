@@ -432,6 +432,26 @@
   text-justify: inter-word;
 }
 
+.sm-memo-markdown {
+  color: var(--text);
+  font-size: 0.84rem;
+  line-height: 1.62;
+}
+
+.sm-memo-markdown h4 {
+  margin: 12px 0 6px;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.sm-memo-markdown p {
+  margin: 0 0 8px;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
+}
+
 .sm-memo-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1166,7 +1186,7 @@
     top: 0;
     z-index: 14;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
     margin: 0 -16px 12px;
     padding: 8px 16px;

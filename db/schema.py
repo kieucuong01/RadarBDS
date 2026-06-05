@@ -342,6 +342,7 @@ CREATE TABLE IF NOT EXISTS ai_deal_review (
     confidence      REAL,                    -- 0.0–1.0
     reasoning       TEXT,
     red_flags       TEXT,                    -- JSON array of strings
+    memo_markdown   TEXT,                    -- Claude-authored investment memo, free-form markdown
     needs_map_check INTEGER DEFAULT 0,
     model           TEXT
 );
@@ -571,6 +572,19 @@ def _run_migrations(conn: Any) -> None:
                 logger.info(f"Migration: added valuation_results.{col}")
             except Exception as e:
                 logger.warning(f"Migration skip valuation_results.{col}: {e}")
+
+    # Migrations cho ai_deal_review — Claude-authored memo, append-only
+    adr_existing = _table_columns(conn, "ai_deal_review")
+    adr_migrations = [
+        ("memo_markdown", "ALTER TABLE ai_deal_review ADD COLUMN memo_markdown TEXT"),
+    ]
+    for col, sql in adr_migrations:
+        if col not in adr_existing:
+            try:
+                conn.execute(sql)
+                logger.info(f"Migration: added ai_deal_review.{col}")
+            except Exception as e:
+                logger.warning(f"Migration skip ai_deal_review.{col}: {e}")
 
     # Migrations cho lead_captures — RBAC fields
     lc_existing = _table_columns(conn, "lead_captures")

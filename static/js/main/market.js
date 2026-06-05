@@ -1,5 +1,9 @@
 // Market opportunity, market indicators, and trend chart rendering.
 let opportunityMatrixInstance = null;
+const MATRIX_BUBBLE_MIN_RADIUS = 12;
+const MATRIX_BUBBLE_MAX_RADIUS = 38;
+const MATRIX_BUBBLE_BASE_RADIUS = 9;
+const MATRIX_BUBBLE_SCALE = 2.4;
 
 async function loadMarketCharts(useCache = true) {
   const opportunityContainer = document.getElementById('opportunityListContainer');
@@ -42,8 +46,11 @@ function _opportunityMatrixTier(mos, dealCount) {
 
 function _matrixBubbleSize(totalCount) {
   const total = Number(totalCount || 0);
-  if (!Number.isFinite(total) || total <= 0) return 7;
-  return Math.max(7, Math.min(24, Math.sqrt(total) * 1.6));
+  if (!Number.isFinite(total) || total <= 0) return MATRIX_BUBBLE_MIN_RADIUS;
+  return Math.max(
+    MATRIX_BUBBLE_MIN_RADIUS,
+    Math.min(MATRIX_BUBBLE_MAX_RADIUS, MATRIX_BUBBLE_BASE_RADIUS + Math.sqrt(total) * MATRIX_BUBBLE_SCALE)
+  );
 }
 
 function _hexToRgba(hex, alpha) {
