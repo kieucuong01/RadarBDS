@@ -612,6 +612,8 @@ def extract_road_type(text: str) -> str:
         return 'hem_xe_may'
     if re.search(r'(?:duong|hem)\s*(?:oto|o\s*to|xe\s*hoi)|(?:oto|o\s*to|xe\s*hoi)\s*(?:vao|toi|den|thong)', folded):
         return 'hem_xe_hoi'
+    if re.search(r'\b(?:cach|gan)\s+(?:duong\s+)?nhua\b', folded):
+        return 'unknown'
     if 'nhựa' in t or 'nhua' in folded or 'asphalt' in folded:
         return 'duong_nhua'
     if 'bê tông' in t or 'be tong' in folded or 'betong' in folded:
@@ -825,12 +827,16 @@ def extract_road_tier(title: str, description: str = '') -> int:
         _NHANH_XEET_RE.search(text)
         or re.search(r'(?:^|\D)\d+\s*/\s*[a-z]', text_fold, re.IGNORECASE)
     )
+    near_nhua_only = bool(re.search(r'\b(?:cach|gan)\s+(?:duong\s+)?nhua\b', text_fold))
 
     # --- Đường quy hoạch Mỹ Phước (config-driven) ---
     from config.area_profiles import detect_subward_from_street
     _mp_sw, _mp_width, _mp_tier = detect_subward_from_street(text)
     if _mp_tier is not None:
         return _mp_tier
+
+    if has_nhanh_strong:
+        return 3
 
     # "Đất 1/ Lê Hồng Phong" is a branch/alley address, even if the broker
     # later writes "mặt tiền kinh doanh nhựa"; treat as concrete car alley.
@@ -887,6 +893,8 @@ def extract_road_tier(title: str, description: str = '') -> int:
     #   has_hem_title: hẻm trong TITLE → không phải mặt tiền đường lớn
     #   _has_hem_road_in_desc: desc có "hẻm Xm" có số đo → đó là đường vào thực, không phải hẻm lân cận
     if (has_mt or has_kd) and has_nhua and not has_hem_title and not _has_hem_road_in_desc:
+        if near_nhua_only:
+            return 3
         # Nhánh/xẹt đường nhựa → Tier 3 (user: "1 xẹt đường nhựa thuộc tier 3")
         if has_nhanh_strong:
             return 3
@@ -901,6 +909,8 @@ def extract_road_tier(title: str, description: str = '') -> int:
 
     # --- Tier 2: Đường nhựa thông thường, không hẻm title ---
     if has_nhua and not has_hem_title and not _has_hem_road_in_desc:
+        if near_nhua_only:
+            return 3
         # Nhánh/xẹt đường nhựa → Tier 3
         if has_nhanh_strong:
             return 3
@@ -980,6 +990,8 @@ def extract_road_tier(title: str, description: str = '') -> int:
         return 3
 
     # Logic giá trị: ô tô/xe tải vào/tới/đậu — bắt thêm variants thiếu (oto/ôtô/xe hơi)
+    if has_auto_road:
+        return 3
     if (has_auto_road or has_auto) and any(kw in text for kw in [
         'vào', 'thông', 'đi', 'đậu', 'tới', 'đến', 'ra vào', 'đường', 'hẻm'
     ]):

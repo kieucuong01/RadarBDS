@@ -428,6 +428,18 @@ def test_extract_road_tier_data_quality_patterns():
         "GIAM GIA BAN LE",
         "phuong dinh hoa\n1/ Dx 072 duong Oto\nDt : 4 dai 30",
     ) == 3
+    assert extract_road_tier(
+        "Nha Phu Hoa vi tri VIP",
+        "1/ duong Nguyen Thai Binh, ngay cho nho, gia 2ty790",
+    ) == 3
+    assert extract_road_tier(
+        "Ban dat tang nha trung tam Chanh Nghia",
+        "Gan Duong Lo Chen. Duong oto vao toi nha.",
+    ) == 3
+    assert extract_road_tier(
+        "Nha ngop Tuong Binh Hiep",
+        "cach nhua 20m thoi, nha dep, gia 2ty1x",
+    ) == 3
     # Through-road with no width/type is usable evidence but not a main road.
     assert extract_road_tier("Nhà đẹp", "Đường thông tứ hướng, khu dân cư đông") == 3
     # Mỹ Phước grid street codes in description should be picked up, not only title.
@@ -440,6 +452,7 @@ def test_extract_road_type_small_access_patterns():
     assert extract_road_type("Hem xe may sat cho") == "hem_xe_may"
     assert extract_road_type("Duong oto vao tan dat") == "hem_xe_hoi"
     assert extract_road_type(("GIAM GIA BAN LE " * 12) + "1/ Dx 072 duong Oto") == "be_tong"
+    assert extract_road_type("Nha dep cach nhua 20m thoi") == "unknown"
 
 
 def test_normalizer_uses_structured_address_for_road_tier():
