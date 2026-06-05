@@ -103,6 +103,10 @@ def _flag_vi(flag: str) -> str:
         "road_width_check": "cần kiểm tra độ rộng đường",
         "verify_tho_cu": "cần xác minh thổ cư",
         "verify_exact_lot": "cần xác minh đúng lô",
+        "broker discount claim": "môi giới nói còn thương lượng",
+        "repost same price": "đăng lại cùng giá",
+        "needs road check": "cần kiểm tra đường thực tế",
+        "wide road claim": "tin nói đường rộng, cần đo lại thực tế",
     }
     return labels.get(str(flag), str(flag).replace("_", " "))
 
@@ -125,6 +129,8 @@ def _road_vi(row) -> str:
         "hem_xe_hoi": "hẻm xe hơi",
         "hem_nho": "hẻm nhỏ",
         "mat_tien": "mặt tiền",
+        "be_tong": "đường bê tông",
+        "be tong": "đường bê tông",
         "unknown": "chưa rõ đường",
     }
     if road_type:
@@ -145,6 +151,12 @@ def _unique(items: list[str]) -> list[str]:
         if item and item not in out:
             out.append(item)
     return out
+
+
+def _cap_first(text: str) -> str:
+    if not text:
+        return text
+    return text[0].upper() + text[1:]
 
 
 def _fair_total_ty(row) -> float | None:
@@ -278,14 +290,24 @@ def _action_note(row, fair_ty: float | None) -> str:
     if fair_ty is None:
         return "Gọi hỏi vị trí, sổ và giá chốt trước; nếu không có đủ dữ liệu thì không nên đi xem mất thời gian."
     target_ty = fair_ty * 0.82
+    asking_ty = float(row["price_ty"]) if row["price_ty"] is not None else None
     margin = float(row["mos_pct"] or 0)
     verdict = row["verdict"]
     if verdict == "cheap_real" and margin >= 20:
+        if asking_ty is not None and target_ty >= asking_ty:
+            return (
+                f"Giá rao đã thấp hơn mốc mua thận trọng khoảng {_price_ty(target_ty)}; nếu dữ liệu đúng, nên xem sớm "
+                "và cố giữ giá mua không cao hơn giá rao, tốt nhất ép thêm bằng các điểm cần kiểm tra."
+            )
         return (
             f"Có thể hẹn xem sớm; nếu vị trí/pháp lý đúng, neo thương lượng quanh {_price_ty(target_ty)} "
             "để giữ biên an toàn sau chi phí."
         )
     if verdict == "cheap_real":
+        if asking_ty is not None and target_ty >= asking_ty:
+            return (
+                "Đáng kiểm tra, nhưng không nên trả cao hơn giá rao hiện tại; dùng điểm pháp lý, thổ cư, đường và lịch sử đăng lại để ép thêm."
+            )
         return (
             f"Đáng kiểm tra, nhưng chỉ nên xuống tiền khi chốt được thấp hơn giá rao hoặc có lợi thế thực địa rõ; "
             f"mốc mua thận trọng quanh {_price_ty(target_ty)}."
@@ -316,7 +338,7 @@ def build_reasoning(row) -> str:
 
 def _conclusion(row) -> str:
     verdict = row["verdict"]
-    lot = f"{_property_vi(row['property_type'])} khoảng {_area(row['area_m2'])} tại {row['ward'] or 'khu vực này'}"
+    lot = _cap_first(f"{_property_vi(row['property_type'])} khoảng {_area(row['area_m2'])} tại {row['ward'] or 'khu vực này'}")
     price = _price_ty(row["price_ty"])
     margin = _pct(row["mos_pct"])
     if verdict == "cheap_real":
@@ -354,7 +376,7 @@ def build_memo(row) -> str:
     )
 
     asset_notes = [
-        f"{property_type} tại {ward}, giá rao {_price_ty(row['price_ty'])} cho khoảng {_area(row['area_m2'])}, lối vào {road}.",
+        f"{_cap_first(property_type)} tại {ward}, giá rao {_price_ty(row['price_ty'])} cho khoảng {_area(row['area_m2'])}, lối vào {road}.",
     ]
     dimension = _dimension_note(row)
     if dimension:
