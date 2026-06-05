@@ -45,6 +45,7 @@ _NON_ASKING_PRICE_PATTERNS = [
 def _strip_non_asking_price_phrases(text: str) -> str:
     out = text or ""
     for pattern in _NON_ASKING_PRICE_PATTERNS:
+        pattern = pattern.replace("|nh)", r"|\bnh\b)")
         out = re.sub(pattern, " ", out, flags=re.IGNORECASE)
     return out
 
@@ -120,6 +121,12 @@ def extract_price(text: str) -> Optional[float]:
     if m:
         return _parse_ty_rest(m.group(1), m.group(2))
 
+    # Folded Vietnamese: "X ty Y" covers real Unicode "X tỷ Y" even when
+    # legacy source literals below are mojibake.
+    m = re.search(r'([\d]+[,.]?[\d]*)\s*(?:ty|ti)\s*([\d]+)(?!\d)', t_fold)
+    if m:
+        return _parse_ty_rest(m.group(1), m.group(2))
+
     # Pattern unicode: "X tỷ Y" hoặc "XtỷY" (2 tỷ 550=2.55, 1 tỷ 2=1.2, 2tỷ8=2.8)
     m = re.search(r'([\d]+[,.]?[\d]*)\s*tỷ\s*([\d]+)', t)
     if m:
@@ -129,6 +136,14 @@ def extract_price(text: str) -> Optional[float]:
     m = re.search(r'(\d+)\s*ty\s*(\d+)', t)
     if m:
         return _parse_ty_rest(m.group(1), m.group(2))
+
+    # Folded Vietnamese: "X,Y ty" / "X.Y ty" / "X ty".
+    m = re.search(r'([\d]+[,.]\d+)\s*(?:ty|ti)\b', t_fold)
+    if m:
+        return round(float(m.group(1).replace(',', '.')), 4)
+    m = re.search(r'([\d]+)\s*(?:ty|ti)\b', t_fold)
+    if m:
+        return float(m.group(1))
 
     # Pattern compact single "t" as tỷ marker: 2t45=2.45, 2t450=2.45, 2t450tr=2.45.
     # Require digits immediately after "t" so normal words like "2 tầng" are ignored.
