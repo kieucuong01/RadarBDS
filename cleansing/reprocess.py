@@ -115,10 +115,18 @@ def _valuation_quality_flags(row) -> tuple:
     if _fold_text(title).strip() in {"tin test", "test"} or _fold_text(source_id).startswith("test"):
         flags.append("test_artifact")
 
-    if (
-        re.search(r"\b\d+\s*(?:ty|ti)\s*\d*x+\s*(?:tr|trieu)?\b", text)
-        or re.search(r"\b\d+\s*(?:ty|ti)\s+\d*x+\s*(?:tr|trieu)?\b", text)
-    ):
+    approximate_price = bool(
+        re.search(r"\b\d+\s*(?:ty|ti)\s*\d+x+\s*(?:tr|trieu)?\b", text)
+        or re.search(r"\b\d+\s*(?:ty|ti)\s+\d+x+\s*(?:tr|trieu)?\b", text)
+    )
+    ambiguous_price = bool(
+        re.search(r"\b\d+\s*t\s*x+\b", text)
+        or re.search(r"\b\d+\s*(?:ty|ti)\s*x+\s*(?:tr|trieu)?\b", text)
+        or re.search(r"\b\d+\s*[,\.]\s*x\s*(?:ty|ti)\b", text)
+    )
+    if approximate_price:
+        flags.append("approximate_price_text")
+    if ambiguous_price:
         flags.append("ambiguous_price_text")
 
     discount_as_price = bool(re.search(

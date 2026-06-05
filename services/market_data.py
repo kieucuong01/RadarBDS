@@ -490,6 +490,20 @@ def _format_has_so(r):
 
 def _format_price_label(*texts):
     folded = _ascii_fold(" ".join(str(t or "") for t in texts))
+    m = re.search(r'\b(\d+)\s*(?:ty|ti)\s*(\d{1,3})x+\s*(?:tr|trieu)?\b', folded, re.I)
+    if m:
+        ty = float(m.group(1).replace(',', '.'))
+        rest = float(m.group(2))
+        if rest >= 100:
+            value = round(ty + rest / 1000, 4)
+        elif rest >= 10:
+            value = round(ty + rest / 100, 4)
+        else:
+            value = round(ty + rest / 10, 4)
+        label = f"{value:.3f}".rstrip("0").rstrip(".")
+        return f"~{label} tỷ"
+    if re.search(r'\b\d+\s*[,\.]\s*x\b\s*(?:ty|ti)\b', folded, re.I):
+        return None
     m = re.search(r'\b(\d+)\s*[,\.]\s*x\b\s*(?:ty|ti)\b', folded, re.I)
     if m:
         return f"khoảng {m.group(1)}.x tỷ"
@@ -508,7 +522,7 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "frontage_m": _row_get(r, "frontage_m"),
         "depth_m": _row_get(r, "depth_m"),
         "price_ty": r['price_ty'],
-        "price_label": _format_price_label(r['title']),
+        "price_label": _format_price_label(r['title'], _row_get(r, "description", "")),
         "prop_type": r['property_type'],
         "is_hot": bool(r['is_hot']),
         "price_dropped": bool(r['price_dropped']),
@@ -571,7 +585,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         WITH {LATEST_VALUATION_CTE}
         SELECT COUNT(*) OVER() AS total_count,
                v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
-               l.id, l.title, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
+               l.id, l.title, l.description, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
                l.property_type, l.is_hot,
                {effective_price_drop_select_sql("l", "related_drop")},
                l.suspicious_bait,

@@ -76,7 +76,16 @@ def extract_price(text: str) -> Optional[float]:
     # GUARD: "1txx" / "2txx" / "1 tỷ xxx" — môi giới ám chỉ "1 tỷ mấy trăm"
     # nhưng KHÔNG xác định → trả None thay vì guess.
     # (user feedback L#675: "1tỷ xxx lấy hết giá tốt" → "1txx k phải 1 tỷ").
-    if re.search(r'\d+\s*(?:t|ty|ti)\s*\d*x+\b', t_fold, re.IGNORECASE):
+    if re.search(r'\d+\s*(?:t|ty|ti)\s*\d*x+\s*(?:tr|trieu)?\b', t_fold, re.IGNORECASE):
+        m = re.search(r'\b(\d+)\s*(?:ty|ti)\s*(\d{1,3})x+\s*(?:tr|trieu)?\b', t_fold, re.IGNORECASE)
+        if m:
+            ty = float(m.group(1).replace(',', '.'))
+            rest = float(m.group(2))
+            if rest >= 100:
+                return round(ty + rest / 1000, 4)
+            if rest >= 10:
+                return round(ty + rest / 100, 4)
+            return round(ty + rest / 10, 4)
         return None
     if re.search(r'\d+\s*(?:t|tỷ|ty|tỉ)\s*\d*x{2,}', t, re.IGNORECASE):
         return None
@@ -85,7 +94,7 @@ def extract_price(text: str) -> Optional[float]:
     # 12.5 for valuation while the original text remains visible in details.
     m = re.search(r'\b(\d+)\s*[,\.]\s*x\b\s*(?:ty|ti)\b', t_fold, re.IGNORECASE)
     if m:
-        return round(float(m.group(1)) + 0.5, 4)
+        return None
 
     # Facebook shorthand with price context: "giá tốt 2.600" means 2.6 tỷ.
     # Keep context required so dimensions/areas such as "1.212 m2" are not parsed as price.

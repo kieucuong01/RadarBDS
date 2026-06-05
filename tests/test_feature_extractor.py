@@ -13,6 +13,7 @@ from cleansing.feature_extractor import (
     classify_property_type, extract_road_type, is_multi_lot_listing,
 )
 from cleansing.normalizer import normalize_record, match_ward
+from services.market_data import _format_price_label
 
 
 def test_extract_price():
@@ -37,7 +38,7 @@ def test_extract_price():
     assert extract_price("80 triệu") is None        # < 100 triệu: reject
     assert extract_price("giá thỏa thuận") is None
     assert extract_price("") is None
-    assert extract_price("Gia 12,x ty") == 12.5
+    assert extract_price("Gia 12,x ty") is None
     assert extract_price("Gia con : 4\U0001d42d\u1ef7390\U0001d42d\U0001d42b") == 4.39
     assert extract_price("B\u00e1n nhanh gi\u1ea3m gi\u00e1: 200 tri\u1ec7u trong tu\u1ea7n nh\u00e0") is None
     assert extract_price("*** Gi\u00e1: 2 t\u1ef7 6; C\u00f3 h\u1ed7 tr\u1ee3 Ng\u00e2n h\u00e0ng.") == 2.6
@@ -51,9 +52,17 @@ def test_extract_price_handles_real_unicode_ty_patterns():
     assert extract_price("Gi\u00e1 b\u00e1n nhanh: 3,2 t\u1ef7") == 3.2
     assert extract_price("Gi\u00e1 2 t\u1ef7 550") == 2.55
     assert extract_price("B\u00e1n \u0111\u1ea5t 3 t\u1ef7") == 3.0
-    assert extract_price("Nh\u00e0 ng\u1ed9p gi\u00e1 2ty1x") is None
-    assert extract_price("M\u1eb7t ti\u1ec1n gi\u00e1 1ty3xxtr") is None
+    assert extract_price("Nh\u00e0 ng\u1ed9p gi\u00e1 2ty1x") == 2.1
+    assert extract_price("M\u1eb7t ti\u1ec1n gi\u00e1 1ty3xxtr") == 1.3
+    assert extract_price("Gi\u00e1 2txx") is None
+    assert extract_price("Gi\u00e1 12.x t\u1ef7") is None
     assert extract_price("NH ho tro 500tr") is None
+
+
+def test_price_label_marks_tens_level_approximate_prices():
+    assert _format_price_label("M\u1eb7t ti\u1ec1n gi\u00e1 1ty3xxtr") == "~1.3 t\u1ef7"
+    assert _format_price_label("Nh\u00e0 ng\u1ed9p gi\u00e1 2ty1x") == "~2.1 t\u1ef7"
+    assert _format_price_label("Gi\u00e1 12.x t\u1ef7") is None
 
 
 def test_extract_area():
@@ -230,7 +239,7 @@ def test_normalizer_parses_user_reported_facebook_edge_cases():
         ),
     })
     assert branch_land is not None
-    assert branch_land["price_ty"] == 12.5
+    assert branch_land["price_ty"] is None
     assert branch_land["area_m2"] == 803.0
     assert branch_land["frontage_m"] == 11.0
     assert branch_land["depth_m"] == 73.0

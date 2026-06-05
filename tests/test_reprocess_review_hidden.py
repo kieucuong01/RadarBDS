@@ -351,12 +351,20 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
             area_m2=300.0,
             property_type="dat_nen",
         )
+        approximate_price_lid = self._insert_listing(
+            url="https://t.test/approximate-price",
+            ppm2=6.5,
+            source="facebook",
+            title="Mặt tiền Tân Định giá 1ty3xxtr",
+            description="DT 5x40 thổ cư 60m, giá chủ ghi 1ty3xxtr, sai số hàng chục triệu.",
+            area_m2=200.0,
+        )
         ambiguous_price_lid = self._insert_listing(
             url="https://t.test/ambiguous-price",
             ppm2=6.5,
             source="facebook",
-            title="Mặt tiền Tân Định giá 1ty3xtr",
-            description="DT 5x40 thổ cư 60m, giá chủ ghi 1ty3xtr nên không đủ chắc để định giá.",
+            title="Mặt tiền Tân Định giá 12.x tỷ",
+            description="DT 5x40 thổ cư 60m, giá chủ ghi 12.x tỷ nên chênh hàng trăm triệu.",
             area_m2=200.0,
         )
         missing_area_evidence_lid = self._insert_listing(
@@ -379,6 +387,7 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
                 area_conflict_lid,
                 source_category_conflict_lid,
                 multi_lot_lid,
+                approximate_price_lid,
                 ambiguous_price_lid,
                 missing_area_evidence_lid,
             ]
@@ -420,6 +429,11 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
         self.assertIn("multi_lot_listing", rows[multi_lot_lid]["source_quality_flags"])
         self.assertEqual(rows[multi_lot_lid]["source_quality_recheck"], 1)
         self.assertFalse(is_actionable_signal(rows[multi_lot_lid]))
+
+        self.assertIn("approximate_price_text", rows[approximate_price_lid]["source_quality_flags"])
+        self.assertNotIn("ambiguous_price_text", rows[approximate_price_lid]["source_quality_flags"])
+        self.assertEqual(rows[approximate_price_lid]["source_quality_recheck"], 0)
+        self.assertTrue(is_actionable_signal(rows[approximate_price_lid]))
 
         self.assertIn("ambiguous_price_text", rows[ambiguous_price_lid]["source_quality_flags"])
         self.assertEqual(rows[ambiguous_price_lid]["source_quality_recheck"], 1)
