@@ -87,6 +87,20 @@ def test_signal_modal_helpers_used_by_open_path_are_defined():
     assert "setInvestmentMemoVisible(true);" in modal_js
 
 
+def test_signal_modal_memo_defaults_to_conclusion_and_uses_vietnamese_labels():
+    html = _read("templates/index.html")
+    modal_js = _read("static/js/main/modal.js")
+
+    assert "function _splitMemoForPreview" in modal_js
+    assert "Xem thêm" in modal_js
+    assert "Kết luận" in modal_js
+    assert "biên an toàn" in modal_js
+    assert "Kiểm tra giả định" in modal_js
+    assert "Ghi chú cố vấn" in html
+    assert "Investment Memo" not in html
+    assert '>Memo<' not in html
+
+
 def test_price_and_area_filters_support_multi_select_range_chips():
     html = _read("templates/index.html")
     filters_js = _read("static/js/main/filters.js")

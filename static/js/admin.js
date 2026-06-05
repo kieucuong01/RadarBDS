@@ -1536,7 +1536,7 @@ function trainingCard(x) {
     <article class="training-card" data-id="${x.id}">
       <div class="train-img-wrap">
         <img class="train-img" src="${esc(x.image || PLACEHOLDER)}" onerror="this.src=PLACEHOLDER" alt="">
-        <div class="mos-chip">MOS ${Math.round(x.mos_pct || 0)}%</div>
+        <div class="mos-chip">Biên an toàn ${Math.round(x.mos_pct || 0)}%</div>
         ${nImg ? `<button class="train-gallery-btn" onclick="openTrnGallery(${x.id})">🖼️ Ảnh (${nImg})</button>` : ''}
       </div>
       <div class="train-body">
@@ -1632,7 +1632,7 @@ function dataQualityReviewCard(x, queue) {
     <article class="training-card quality-review-card" data-id="${x.id}">
       <div class="train-img-wrap">
         <img class="train-img" src="${esc(x.image || PLACEHOLDER)}" onerror="this.src=PLACEHOLDER" alt="">
-        <div class="mos-chip">MOS ${Math.round(x.mos_pct || 0)}%</div>
+        <div class="mos-chip">Biên an toàn ${Math.round(x.mos_pct || 0)}%</div>
         ${nImg ? `<button class="train-gallery-btn" onclick="openTrnGallery(${x.id})">Ảnh (${nImg})</button>` : ''}
       </div>
       <div class="train-body">

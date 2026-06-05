@@ -376,7 +376,7 @@
       return `<article class="watchlist-item">
         <div>
           <strong>${escHtml(w.name)}</strong>
-          <p>${escHtml(wards)}${escHtml(more)} · MOS ≥ ${escHtml(w.mos_min || 0)}% · ${escHtml(props)}</p>
+          <p>${escHtml(wards)}${escHtml(more)} · Biên an toàn ≥ ${escHtml(w.mos_min || 0)}% · ${escHtml(props)}</p>
           <span>${escHtml(active)} · ${escHtml(tg)}</span>
         </div>
         <div class="watchlist-item-actions">

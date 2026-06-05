@@ -401,7 +401,7 @@
         <div class="command-bar">
           <div class="command-bar-left">
             <!-- <button type="button" class="super-signal-btn command-super-signal" onclick="activateSuperSignal()">
-              🔥 SUPER SIGNAL
+              🔥 TÍN HIỆU MẠNH
             </button> -->
 
             <div class="command-mos {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}" {% if USER_TIER=='guest'
@@ -514,7 +514,7 @@
             <div class="chart-card market-indicator-card area-risk-radar-card {% if USER_TIER not in ['vip', 'admin'] %}is-tier-locked{% endif %}" style="position:relative;">
               <div class="chart-header">
                 <h3 class="chart-title">Radar Rủi ro Khu vực</h3>
-                <p class="chart-subtitle">Gộp áp lực giảm giá, nguồn cung, MOS median và số deal để phân biệt cơ hội thật với khu đang bị xả hàng</p>
+                <p class="chart-subtitle">Gộp áp lực giảm giá, nguồn cung, biên an toàn trung vị và số tin để phân biệt cơ hội thật với khu đang bị xả hàng</p>
               </div>
               <div class="indicator-summary" id="areaRiskRadarSummary"></div>
               <div class="chart-body area-risk-radar-wrap" id="areaRiskRadarContainer">
@@ -763,7 +763,7 @@
                 <small id="sm-sum-fair-m2">-</small>
               </div>
               <div class="sm-summary-item sm-summary-mos">
-                <span>MOS</span>
+                <span>Biên an toàn</span>
                 <strong id="sm-sum-mos">-</strong>
                 <small id="sm-sum-score">-</small>
               </div>
@@ -775,7 +775,7 @@
 
           <div class="sm-mobile-tabs" role="tablist" aria-label="Nội dung chi tiết signal">
             <button type="button" class="sm-tab active" data-sm-tab="desc" onclick="switchSignalPanel('desc', this)">Mô tả</button>
-            <button type="button" class="sm-tab" data-sm-tab="memo" onclick="switchSignalPanel('memo', this)">Memo</button>
+            <button type="button" class="sm-tab" data-sm-tab="memo" onclick="switchSignalPanel('memo', this)">Ghi chú</button>
             <button type="button" class="sm-tab" data-sm-tab="comps" onclick="switchSignalPanel('comps', this)">So sánh</button>
             <button type="button" class="sm-tab" data-sm-tab="history" onclick="switchSignalPanel('history', this)">Lịch sử</button>
           </div>
@@ -795,11 +795,11 @@
 
         <!-- RIGHT COLUMN -->
         <div class="sm-right">
-          <!-- Investment Memo -->
+          <!-- Advisory note -->
           <div class="sm-ai-section sm-memo-section sm-panel" data-sm-panel="memo" id="sm-memo-section" hidden aria-hidden="true" style="display:none;">
-            <div class="sm-ai-label">Investment Memo</div>
+            <div class="sm-ai-label">Ghi chú cố vấn</div>
             <div id="sm-memo-body" class="sm-ai-text sm-memo-body">
-              <div class="sm-empty-state">Đang tải memo...</div>
+              <div class="sm-empty-state">Đang tải ghi chú...</div>
             </div>
           </div>
 
@@ -939,7 +939,7 @@
 
           <div class="watchlist-ranges">
             <div class="auth-field">
-              <label for="watchMosMin">MOS tối thiểu (%)</label>
+              <label for="watchMosMin">Biên an toàn tối thiểu (%)</label>
               <input id="watchMosMin" type="number" min="0" max="80" step="1" value="15">
             </div>
             <div class="auth-field">

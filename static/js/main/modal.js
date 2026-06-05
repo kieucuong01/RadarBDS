@@ -315,7 +315,7 @@ function _openSignalLegacy(card) {
 
   // Signal badge
   const mosNum = parseFloat(d.mos) || 0;
-  const badgeLabel = mosNum >= 25 ? 'SUPER SIGNAL' : 'SIGNAL';
+  const badgeLabel = mosNum >= 25 ? 'TÍN HIỆU MẠNH' : 'TÍN HIỆU';
   document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} · -${d.mos}%</span>`;
 
   // Title
@@ -327,7 +327,7 @@ function _openSignalLegacy(card) {
   // Description is lazy-loaded from /api/listing/<id>.
   document.getElementById('sm-desc').innerText = 'Đang tải mô tả chi tiết...';
 
-  // Groq assessment is intentionally hidden while Investment Memo owns this slot.
+  // Groq assessment is intentionally hidden while advisory notes own this slot.
   const price = parseFloat(d.price) || 0;
   const area = parseFloat(d.area) || 0;
   hideGroqAssessment();
@@ -481,8 +481,25 @@ async function _loadSignalHistoryLegacyOld(listingId, currentPrice, area, ward) 
   }
 }
 
+function _memoDisplayText(text) {
+  return String(text || '')
+    .replace(/Investment Memo Cố Vấn/gi, 'Ghi chú cố vấn đầu tư')
+    .replace(/Investment Memo/gi, 'Ghi chú cố vấn đầu tư')
+    .replace(/\bVerdict\b/gi, 'Kết luận')
+    .replace(/\bMOS\b/g, 'biên an toàn')
+    .replace(/Stress test/gi, 'Kiểm tra giả định')
+    .replace(/fair value/gi, 'giá trị tham chiếu')
+    .replace(/fair total/gi, 'tổng giá trị tham chiếu')
+    .replace(/signal score/gi, 'điểm tín hiệu')
+    .replace(/\bsignal\b/gi, 'tín hiệu')
+    .replace(/\bdeal\b/gi, 'thương vụ')
+    .replace(/\bsource\b/gi, 'nguồn')
+    .replace(/\btrust\b/gi, 'độ tin cậy')
+    .replace(/\blegal\b/gi, 'pháp lý');
+}
+
 function _memoMarkdownToHtml(markdown) {
-  const lines = String(markdown || '').split(/\r?\n/);
+  const lines = _memoDisplayText(markdown).split(/\r?\n/);
   const html = [];
   let listOpen = false;
   const closeList = () => {
@@ -517,10 +534,85 @@ function _memoMarkdownToHtml(markdown) {
   return html.join('');
 }
 
+function _splitMemoForPreview(markdown) {
+  const lines = _memoDisplayText(markdown).split(/\r?\n/);
+  const isH1 = (line) => /^#\s+/.test(line.trim());
+  const isH2 = (line) => /^##\s+/.test(line.trim());
+  const conclusionIdx = lines.findIndex((line) => /^##\s+Kết luận\b/i.test(line.trim()));
+  if (conclusionIdx >= 0) {
+    let endIdx = lines.length;
+    for (let i = conclusionIdx + 1; i < lines.length; i += 1) {
+      if (isH2(lines[i])) {
+        endIdx = i;
+        break;
+      }
+    }
+    return {
+      preview: lines.slice(conclusionIdx, endIdx).join('\n').trim(),
+      rest: lines.slice(endIdx).join('\n').trim(),
+    };
+  }
+
+  const firstContent = lines.findIndex((line) => line.trim() && !isH1(line));
+  const start = firstContent >= 0 ? firstContent : 0;
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i += 1) {
+    if (isH2(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+  return {
+    preview: lines.slice(start, end).join('\n').trim(),
+    rest: lines.slice(end).join('\n').trim(),
+  };
+}
+
+function _memoVerdictLabel(verdict) {
+  const labels = {
+    cheap_real: 'Rẻ thật',
+    fair: 'Giá hợp lý',
+    overpriced: 'Giá cao',
+    fake_price: 'Nghi giá mồi',
+    cannot_price: 'Không đủ dữ liệu định giá',
+    suspect: 'Cần nghi ngờ',
+    not_cheap: 'Chưa đủ rẻ',
+    insufficient_info: 'Thiếu thông tin',
+    memo: 'Ghi chú',
+  };
+  return labels[verdict] || verdict || 'Ghi chú';
+}
+
+function _memoFlagLabel(flag) {
+  const labels = {
+    low_segment_confidence: 'mẫu so sánh mỏng',
+    approximate_price_text: 'giá ghi ước lượng',
+    missing_road_info: 'thiếu thông tin đường',
+    missing_location_detail: 'thiếu vị trí cụ thể',
+    planning_or_tho_cu_dependency: 'phụ thuộc quy hoạch/thổ cư',
+    needs_location_check: 'cần kiểm tra vị trí',
+    needs_map_check: 'cần kiểm tra bản đồ',
+    legal_unverified: 'pháp lý chưa xác minh',
+    many_reposts: 'đăng lại nhiều lần',
+    repost_history: 'có lịch sử đăng lại',
+    high_total_price: 'giá tổng cao',
+    extreme_low_ppm2: 'giá/m2 thấp bất thường',
+    large_land_check: 'đất diện tích lớn cần soi kỹ',
+    thin_margin: 'biên an toàn mỏng',
+    parsed_price_mismatch: 'giá đọc được có thể lệch',
+    needs_price_confirmation: 'cần xác nhận giá chốt',
+    low_tho_cu_ratio: 'tỷ lệ thổ cư thấp',
+    road_width_check: 'cần kiểm tra độ rộng đường',
+    verify_tho_cu: 'cần xác minh thổ cư',
+    verify_exact_lot: 'cần xác minh đúng lô',
+  };
+  return labels[flag] || _memoDisplayText(flag).replace(/_/g, ' ');
+}
+
 function renderInvestmentMemoLoading() {
   const body = document.getElementById('sm-memo-body');
   if (!body) return;
-  body.innerHTML = '<div class="sm-empty-state">Đang tải memo...</div>';
+  body.innerHTML = '<div class="sm-empty-state">Đang tải ghi chú...</div>';
 }
 
 function renderInvestmentMemoLocked() {
@@ -528,10 +620,10 @@ function renderInvestmentMemoLocked() {
   if (!body) return;
   body.innerHTML = `
     <div class="sm-memo-locked">
-      <b>Investment Memo dành cho VIP</b><br>
-      Nâng cấp VIP để xem memo cố vấn riêng cho từng signal: định giá, rủi ro cần kiểm tra và góc nhìn đầu tư.
+      <b>Ghi chú cố vấn dành cho VIP</b><br>
+      Nâng cấp VIP để xem ghi chú cố vấn riêng cho từng tín hiệu: định giá, rủi ro cần kiểm tra và góc nhìn đầu tư.
       <div style="margin-top:10px;">
-        <button type="button" class="sm-comps-toggle" onclick="RadarAuth.openAuthModal('Đăng nhập hoặc nâng cấp VIP để xem Investment Memo.')">Đăng nhập</button>
+        <button type="button" class="sm-comps-toggle" onclick="RadarAuth.openAuthModal('Đăng nhập hoặc nâng cấp VIP để xem ghi chú cố vấn.')">Đăng nhập</button>
       </div>
     </div>
   `;
@@ -547,8 +639,8 @@ function renderInvestmentMemo(data) {
   if (data.pending) {
     body.innerHTML = `
       <div class="sm-memo-head">
-        <span class="sm-memo-verdict muted">Đang chờ memo</span>
-        <p class="sm-memo-summary">${escHtml(data.message || 'Chưa có Investment Memo cố vấn cho deal này.')}</p>
+        <span class="sm-memo-verdict muted">Đang chờ ghi chú</span>
+        <p class="sm-memo-summary">${escHtml(_memoDisplayText(data.message || 'Chưa có ghi chú cố vấn cho thương vụ này.'))}</p>
       </div>
     `;
     return;
@@ -557,6 +649,15 @@ function renderInvestmentMemo(data) {
   const confidence = Number(data.confidence);
   const confidenceText = Number.isFinite(confidence) ? ` · ${Math.round(confidence * 100)}%` : '';
   const flags = Array.isArray(data.red_flags) ? data.red_flags.filter(Boolean) : [];
+  const memoParts = _splitMemoForPreview(data.memo_markdown || '');
+  const restHtml = memoParts.rest
+    ? `
+      <details class="sm-memo-more">
+        <summary>Xem thêm</summary>
+        <div class="sm-memo-markdown sm-memo-more-body">${_memoMarkdownToHtml(memoParts.rest)}</div>
+      </details>
+    `
+    : '';
   const adminWorkflow = data.admin_valuation_workflow_markdown
     ? `
       <details class="sm-memo-admin-tech">
@@ -567,12 +668,13 @@ function renderInvestmentMemo(data) {
     : '';
   body.innerHTML = `
     <div class="sm-memo-head">
-      <span class="sm-memo-verdict ${escHtml(verdict)}">${escHtml(verdict)}${confidenceText}</span>
-      ${data.reasoning ? `<p class="sm-memo-summary">${escHtml(data.reasoning)}</p>` : ''}
+      <span class="sm-memo-verdict ${escHtml(verdict)}">${escHtml(_memoVerdictLabel(verdict))}${confidenceText}</span>
+      ${data.reasoning ? `<p class="sm-memo-summary">${escHtml(_memoDisplayText(data.reasoning))}</p>` : ''}
     </div>
-    <div class="sm-memo-markdown">${_memoMarkdownToHtml(data.memo_markdown || '')}</div>
+    <div class="sm-memo-markdown">${_memoMarkdownToHtml(memoParts.preview || data.memo_markdown || '')}</div>
+    ${restHtml}
     ${adminWorkflow}
-    ${flags.length ? `<div class="sm-memo-note">Cờ cần lưu ý: ${escHtml(flags.join(', '))}</div>` : ''}
+    ${flags.length ? `<div class="sm-memo-note">Điểm cần lưu ý: ${escHtml(flags.map(_memoFlagLabel).join(', '))}</div>` : ''}
   `;
 }
 
@@ -621,9 +723,9 @@ async function loadInvestmentMemo(listingId) {
     if (modal && modal.dataset.listingId !== String(listingId)) return;
     renderInvestmentMemo(data);
   } catch (err) {
-    console.error('Investment memo load error:', err);
+    console.error('Advisory memo load error:', err);
     const body = document.getElementById('sm-memo-body');
-    if (body) body.innerHTML = '<div class="sm-empty-state">Không tải được Investment Memo.</div>';
+    if (body) body.innerHTML = '<div class="sm-empty-state">Không tải được ghi chú cố vấn.</div>';
   }
 }
 
@@ -643,7 +745,7 @@ function _openSignalFromData(d, opts = {}) {
   renderSignalThumbs();
 
   const mosNum = parseFloat(d.mos) || 0;
-  const badgeLabel = mosNum >= 25 ? 'SUPER SIGNAL' : 'SIGNAL';
+  const badgeLabel = mosNum >= 25 ? 'TÍN HIỆU MẠNH' : 'TÍN HIỆU';
   document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} · -${d.mos}%</span>`;
   renderModalTitle(d.title || '');
   document.getElementById('sm-meta-line').innerHTML = `<span>Dang ${d.time || '-'}</span> · <span>${d.source || '-'}</span>`;

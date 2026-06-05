@@ -2455,7 +2455,7 @@ def listing_detail(listing_id):
     history_json = json.dumps(data["history"], ensure_ascii=False)
     desc_html = l.get('description', '').replace('\n', '<br>') if l.get('description') else 'Không có mô tả.'
     
-    # Investment Memo is temporarily hidden from listing detail pages.
+    # Advisory note is temporarily hidden from listing detail pages.
     memo = None
 
     return render_template('listing_detail.html', l=l, imgs=imgs, history_json=history_json, desc_html=desc_html, memo=memo)
@@ -2537,7 +2537,7 @@ def api_listing_memo(listing_id):
             "listing_id": listing_id,
             "pending": True,
             "tier": tier,
-            "message": "Chưa có Investment Memo cố vấn cho deal này.",
+            "message": "Chưa có ghi chú cố vấn cho thương vụ này.",
         })
 
     try:
@@ -2613,43 +2613,44 @@ def _admin_valuation_workflow_markdown(listing_id):
     if fair_ppm2 and area_m2:
         fair_ty = float(fair_ppm2) * float(area_m2) / 1000
 
-    signal_gate = "PASS" if row["is_signal"] else "FAIL"
+    signal_gate = "qua" if row["is_signal"] else "không qua"
     quality_flags = row["source_quality_flags"] or ""
-    recheck = "true" if row["source_quality_recheck"] else "false"
-    dropped = "true" if row["price_dropped"] else "false"
-    hot = "true" if row["is_hot"] else "false"
+    recheck = "có" if row["source_quality_recheck"] else "không"
+    dropped = "có" if row["price_dropped"] else "không"
+    hot = "có" if row["is_hot"] else "không"
 
     return "\n".join([
-        "### Admin technical valuation workflow",
+        "### Luồng định giá kỹ thuật cho quản trị",
         "",
-        "1. Source ingestion: crawler/* lưu raw payload vào raw_listings; listing này đang có "
-        f"source={row['source']}, listing_id={row['id']}.",
-        "2. Normalize/extract: cleansing/normalizer.py và cleansing/feature_extractor.py chuẩn hóa "
-        "price_ty, area_m2, price_per_m2, ward, property_type, road_tier, thổ cư, hot keywords và legal/source flags.",
-        "3. Dedup/history: cleansing/dedup.py gom repost/same-lot nếu đủ guard; price_dropped được lấy từ lịch sử giá đáng tin.",
-        "4. Valuation: analytics/valuation.py chọn segment model theo ward + property_type + road/feature context; "
-        "nếu segment mỏng thì dùng parent/fallback model. Model trả fair_ppm2, so với actual_ppm2, "
+        "1. Nạp dữ liệu nguồn: crawler/* lưu dữ liệu gốc vào raw_listings; listing này đang có "
+        f"nguồn={row['source']}, mã tin={row['id']}.",
+        "2. Chuẩn hóa và trích xuất: cleansing/normalizer.py và cleansing/feature_extractor.py chuẩn hóa "
+        "giá, diện tích, giá/m2, phường, loại tài sản, cấp đường, thổ cư, từ khóa nóng và cờ pháp lý/chất lượng nguồn.",
+        "3. Gộp tin trùng và lịch sử: cleansing/dedup.py gom tin đăng lại/cùng lô nếu đủ điều kiện; "
+        "cờ giảm giá được lấy từ lịch sử giá đáng tin.",
+        "4. Định giá: analytics/valuation.py chọn mô hình theo phường + loại tài sản + đường/đặc điểm tài sản; "
+        "nếu nhóm so sánh mỏng thì dùng nhóm cha hoặc nhóm dự phòng. Mô hình trả giá tham chiếu/m2, so với giá rao/m2, "
         "rồi lưu snapshot vào valuation_results.",
-        "5. MOS: mos_pct = (fair_ppm2 - actual_ppm2) / fair_ppm2 * 100. "
-        "fair_total_ty = fair_ppm2 * area_m2 / 1000.",
-        "6. Signal score: compute_signal_score() cộng điểm từ MOS, area range, tổng giá dưới ngưỡng, hot keywords, "
-        "price_dropped và proximity_score_for_ward().",
-        "7. User-facing gate: services.signal_quality.actionable_signal_sql() chỉ cho signal mới nhất đi ra UI khi không bị "
-        "blacklist/review_hidden/duplicate fatal/source_quality_recheck suppress.",
+        "5. Biên an toàn: công thức là (giá tham chiếu/m2 - giá rao/m2) / giá tham chiếu/m2 * 100. "
+        "Tổng giá trị tham chiếu = giá tham chiếu/m2 * diện tích / 1000.",
+        "6. Điểm tín hiệu: compute_signal_score() cộng điểm từ biên an toàn, khoảng diện tích, tổng giá dưới ngưỡng, "
+        "từ khóa nóng, tín hiệu giảm giá và điểm ưu tiên khu vực.",
+        "7. Cổng hiển thị người dùng: services.signal_quality.actionable_signal_sql() chỉ cho tín hiệu mới nhất ra UI khi không bị "
+        "ẩn, chặn, trùng nghiêm trọng hoặc cờ chất lượng nguồn cần kiểm tra lại.",
         "",
-        "### Current valuation snapshot",
+        "### Ảnh chụp định giá hiện tại",
         "",
-        f"- ward={row['ward'] or 'NULL'}, property_type={row['property_type'] or 'NULL'}, road_tier={row['road_tier']}",
-        f"- price_ty={_fmt_memo_num(row['price_ty'], ' tỷ')}, area_m2={_fmt_memo_num(area_m2, ' m2')}, "
-        f"actual_ppm2={_fmt_memo_num(actual_ppm2, ' tr/m2')}",
-        f"- fair_ppm2={_fmt_memo_num(fair_ppm2, ' tr/m2')}, fair_total_ty={_fmt_memo_num(fair_ty, ' tỷ', 2)}, "
-        f"mos_pct={_fmt_memo_num(row['mos_pct'], '%')}",
-        f"- signal_score={row['signal_score'] or 0}, n_segment={row['n_segment'] or 0}, is_signal={signal_gate}",
-        f"- has_so={bool(row['has_so'])}, tho_cu_m2={_fmt_memo_num(row['tho_cu_m2'], ' m2')}, "
-        f"is_hot={hot}, price_dropped={dropped}, price_drop_pct={_fmt_memo_num(row['price_drop_pct'], '%')}",
-        f"- source_quality_recheck={recheck}, source_quality_flags={quality_flags or 'none'}, "
-        f"trust_tier={row['trust_tier'] or 'candidate_signal'}, trust_score={row['trust_score'] or 0}, "
-        f"legal_status={row['legal_status'] or 'unverified'}",
+        f"- phường={row['ward'] or 'NULL'}, loại tài sản={row['property_type'] or 'NULL'}, cấp đường={row['road_tier']}",
+        f"- giá rao={_fmt_memo_num(row['price_ty'], ' tỷ')}, diện tích={_fmt_memo_num(area_m2, ' m2')}, "
+        f"giá rao/m2={_fmt_memo_num(actual_ppm2, ' tr/m2')}",
+        f"- giá tham chiếu/m2={_fmt_memo_num(fair_ppm2, ' tr/m2')}, tổng giá trị tham chiếu={_fmt_memo_num(fair_ty, ' tỷ', 2)}, "
+        f"biên an toàn={_fmt_memo_num(row['mos_pct'], '%')}",
+        f"- điểm tín hiệu={row['signal_score'] or 0}, số mẫu so sánh={row['n_segment'] or 0}, qua cổng tín hiệu={signal_gate}",
+        f"- có sổ={bool(row['has_so'])}, thổ cư={_fmt_memo_num(row['tho_cu_m2'], ' m2')}, "
+        f"tin nóng={hot}, có giảm giá={dropped}, mức giảm={_fmt_memo_num(row['price_drop_pct'], '%')}",
+        f"- cần kiểm tra chất lượng nguồn={recheck}, cờ chất lượng nguồn={quality_flags or 'không có'}, "
+        f"tầng tin cậy={row['trust_tier'] or 'candidate_signal'}, điểm tin cậy={row['trust_score'] or 0}, "
+        f"trạng thái pháp lý={row['legal_status'] or 'unverified'}",
     ])
 
 def get_price_history(listing_id):

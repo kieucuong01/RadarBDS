@@ -191,7 +191,7 @@ function renderOpportunityMatrix(data) {
     insightEl.innerHTML = best
       ? `
         <span><strong>${escHtml(best.ward)}</strong> nổi bật nhất</span>
-        <span>${best.y} deal, MOS trung vị ${best.x.toFixed(1)}%</span>
+        <span>${best.y} tin, biên an toàn trung vị ${best.x.toFixed(1)}%</span>
         <span>Cỡ bong bóng = số tin hợp lệ trong khu</span>
       `
       : '<span>Chưa đủ dữ liệu để dựng ma trận cơ hội.</span>';
@@ -240,7 +240,7 @@ function renderOpportunityMatrix(data) {
               return [
                 `${d.tier ? d.tier.label : 'Khu vực'}`,
                 `Deal: ${d.y || 0}/${d.totalCount || 0} tin (${(d.signalRate || 0).toFixed(1)}%)`,
-                `MOS trung vị: ${(d.x || 0).toFixed(1)}%`,
+                `Biên an toàn trung vị: ${(d.x || 0).toFixed(1)}%`,
                 `Giá TB: ${_fmtMarketPrice(d.avgPrice)}`
               ];
             }
@@ -251,7 +251,7 @@ function renderOpportunityMatrix(data) {
         x: {
           min: 0,
           suggestedMax: Math.ceil(maxMos / 5) * 5,
-          title: { display: true, text: 'Độ rẻ so với định giá AI (MOS trung vị)', color: textColor, font: { weight: '700' } },
+          title: { display: true, text: 'Độ rẻ so với định giá tự động (biên an toàn trung vị)', color: textColor, font: { weight: '700' } },
           grid: { color: gridColor },
           ticks: {
             color: textColor,
@@ -353,7 +353,7 @@ function renderAreaRiskRadar(rows, summary) {
             <div><strong>${riskScore}</strong><span>rủi ro</span></div>
             <div><strong>${_fmtIndicatorPct(x.distress_ratio_pct)}</strong><span>áp lực giảm</span></div>
             <div><strong>${_fmtSignedNumber(x.supply_delta, 1)}</strong><span>cung mới</span></div>
-            <div><strong>${mos ? mos.toFixed(1) + '%' : '-'}</strong><span>MOS median</span></div>
+            <div><strong>${mos ? mos.toFixed(1) + '%' : '-'}</strong><span>Biên an toàn trung vị</span></div>
             <div><strong>${deals}/${total || '-'}</strong><span>deal/tin</span></div>
           </div>
           <p>${escHtml(x.action || '')}</p>
