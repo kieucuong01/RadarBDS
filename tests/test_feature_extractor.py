@@ -28,6 +28,7 @@ def test_extract_price():
     assert extract_price("2t450") == 2.45
     assert extract_price("2t450tr") == 2.45
     assert extract_price("Giá 2t tỷ 7") == 2.7
+    assert extract_price("giá tốt 2.600") == 2.6
     assert extract_price("nhà 2 tầng") is None
     # Triệu
     assert extract_price("880 triệu") == 0.88
@@ -373,6 +374,33 @@ def test_extract_road_tier_data_quality_patterns():
     assert extract_road_tier("Bán đất đường oto thổ cư 100%") == 3
     # Small access signals.
     assert extract_road_tier("Bán đất đường ba gác Tân An") == 4
+    assert extract_road_tier(
+        "Bán đất Hiệp An",
+        "Cách Đường Bùi Ngọc Thu 50 mét thôi. Đường xe ba gác DT 5 x 28 thổ cư 110 mét",
+    ) == 4
+    assert extract_road_tier(
+        "Bán Đất Tặng nhà Cấp 4 Hiệp An",
+        "Cách Đường Bùi Ngọc Thu 50 mét thôi . Đường xe ba gác "
+        "DT 5 x 28 thổ cư 110 mét Giá 1 tỷ 6 còn bớt",
+    ) == 4
+    assert extract_road_tier(
+        "Nhà trệt lửng Định Hòa, nhanh dx67",
+        "Đường xe hơi tới nhà. Sân xe hơi, phòng khách, bếp",
+    ) == 3
+    assert extract_road_tier(
+        "Chủ hạ giá bán nhanh lô đất KP4 Tân Định",
+        "đường nhựa thông giá 1ty8",
+    ) == 2
+    assert extract_road_tier(
+        "📣chốt nhanh mới kịp\n"
+        "🌷🌷 Bán Đất Tặng nhà Cấp 4 Hiệp An Thủ Dầu Một nay là phường Chánh Hiệp TpHCM . C",
+        "📣chốt nhanh mới kịp\n"
+        "🌷🌷 Bán Đất Tặng nhà Cấp 4 Hiệp An Thủ Dầu Một nay là phường Chánh Hiệp TpHCM . "
+        "Cách Đường Bùi Ngọc Thu 50 mét thôi . Đường xe ba gác \n"
+        "DT 5 x 28 thổ cư 110 mét \n"
+        "💰💰Giá 1 tỷ 6 còn bớt\n"
+        "Lh Hằng 0948018508 xem nhà GC",
+    ) == 4
     assert extract_road_tier("Hẻm xe máy sát chợ") == 4
     # Broker typo: "đường 4m2" means road width 4m in this context.
     assert extract_road_tier("Rẻ nhất Tân An, đường 4m2 hiện sổ") == 3

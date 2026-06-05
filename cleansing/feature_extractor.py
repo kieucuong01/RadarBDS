@@ -75,7 +75,7 @@ def extract_price(text: str) -> Optional[float]:
     # GUARD: "1txx" / "2txx" / "1 tỷ xxx" — môi giới ám chỉ "1 tỷ mấy trăm"
     # nhưng KHÔNG xác định → trả None thay vì guess.
     # (user feedback L#675: "1tỷ xxx lấy hết giá tốt" → "1txx k phải 1 tỷ").
-    if re.search(r'\d+\s*(?:t|tỷ|ty|tỉ)\s*x{2,}', t, re.IGNORECASE):
+    if re.search(r'\d+\s*(?:t|tỷ|ty|tỉ)\s*\d*x{2,}', t, re.IGNORECASE):
         return None
 
     # "12,x tỷ" / "12.x ty" is an intentional fuzzy price. Use midpoint
@@ -83,6 +83,16 @@ def extract_price(text: str) -> Optional[float]:
     m = re.search(r'\b(\d+)\s*[,\.]\s*x\b\s*(?:ty|ti)\b', t_fold, re.IGNORECASE)
     if m:
         return round(float(m.group(1)) + 0.5, 4)
+
+    # Facebook shorthand with price context: "giá tốt 2.600" means 2.6 tỷ.
+    # Keep context required so dimensions/areas such as "1.212 m2" are not parsed as price.
+    m = re.search(
+        r'\b(?:gia|giá|chi|chỉ|ban|bán)\b(?:\s+\w+){0,4}\s+(\d{1,2})[,.](\d{3})(?!\s*m)',
+        t_fold,
+        re.IGNORECASE,
+    )
+    if m:
+        return round(float(m.group(1)) + float(m.group(2)) / 1000, 4)
 
     # Loại phrase mô tả mức GIẢM (price drop) khỏi text trước khi parse giá:
     # "hạ 4 tỷ" / "giảm 2 tỷ" / "bớt 500tr" — đó là mức giảm, KHÔNG phải giá.
@@ -662,7 +672,7 @@ _DX_RE = re.compile(r'\bdx\s*\d{2,3}\b', re.IGNORECASE)
 # Tín hiệu "nhánh/xẹt/xẹc" — chắc chắn không phải mặt đường chính (vị trí bất kỳ)
 # xẹc/xẹt = variant cách viết của "1 block off" trong BĐS miền Nam
 _NHANH_XEET_RE = re.compile(
-    r'\bnh[áa]nh\b|\bx[ẹe][ct]\b|1\s*x[ẹe][ct]',
+    r'\bnhánh\b|\bnhanh\s+(?:\d+|đường|duong|dx\d*|hẻm|hem)\b|\bx[ẹe][ct]\b|1\s*x[ẹe][ct]',
     re.IGNORECASE,
 )
 # Tín hiệu "gần/cách" — chỉ có ý nghĩa khi nằm TRƯỚC DX/đường.
@@ -678,8 +688,8 @@ _SAN_AUTO_RE = re.compile(
 
 # Hẻm/đường quá nhỏ: ba gác/xe máy.
 _SMALL_ACCESS_RE = re.compile(
-    r'(?:đường|duong|hẻm|hem|ngõ|ngo|lối|loi)\s*(?:ba|3)\s*gác|'
-    r'(?:ba|3)\s*gác\s*(?:vào|tới|đến|ra\s*vào)?|'
+    r'(?:đường|duong|hẻm|hem|ngõ|ngo|lối|loi)\s*(?:xe\s*)?(?:ba|3)\s*gác|'
+    r'(?:xe\s*)?(?:ba|3)\s*gác\s*(?:vào|tới|đến|ra\s*vào)?|'
     r'(?:xe\s*máy|xe\s*may|hẻm\s*nhỏ|hem\s*nho|đường\s*nhỏ\s*hẹp|duong\s*nho\s*hep)',
     re.IGNORECASE,
 )
@@ -763,10 +773,10 @@ def extract_road_tier(title: str, description: str = '') -> int:
     # "nhánh / xẹt / xẹc / N/" trong title = ngõ nhánh, không phải mặt tiền chính
     # N/ = ký hiệu hẻm số N (VD: "2/ Huỳnh Văn Luỹ" = hẻm thứ 2 đường Huỳnh Văn Luỹ)
     has_nhanh_title = bool(re.search(
-        r'\bnh[áa]nh\b|\bx[ẹe][ct]\b|1\s*x[ẹe][ct]|\b\d+\s*/',
+        r'\bnhánh\b|\bnhanh\s+(?:\d+|đường|duong|dx\d*|hẻm|hem)\b|\bx[ẹe][ct]\b|1\s*x[ẹe][ct]|\b\d+\s*/',
         title_lower, re.IGNORECASE,
     ) or re.search(
-        r'\bnhanh\b|\bx[ee][ct]\b|1\s*x[ee][ct]|\b\d+\s*/',
+        r'\bnhanh\s+(?:\d+|duong|dx\d*|hem)\b|\bx[ee][ct]\b|1\s*x[ee][ct]|\b\d+\s*/',
         title_fold, re.IGNORECASE,
     ))
 

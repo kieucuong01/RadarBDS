@@ -283,6 +283,73 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual(row["frontage_m"], 9.5)
         self.assertEqual(row["depth_m"], 29.0)
 
+    def test_upsert_listing_allows_explicit_small_road_parse_to_override_llm_tier(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(road_type="hem_ba_gac", road_tier=3),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+        with get_conn() as conn:
+            conn.execute(
+                "UPDATE listings SET llm_verified=1, road_tier=3 WHERE id=?",
+                (listing_id,),
+            )
+
+        same_listing_id, is_new = upsert_listing(
+            self._rec(road_type="hem_ba_gac", road_tier=4),
+            crawl_run_id=2,
+        )
+
+        self.assertEqual(same_listing_id, listing_id)
+        self.assertFalse(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT road_type, road_tier FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(row["road_type"], "hem_ba_gac")
+        self.assertEqual(row["road_tier"], 4)
+
+    def test_upsert_listing_clears_stale_road_tier_when_llm_has_no_road_evidence(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(road_type="unknown", road_tier=3),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                SET llm_verified=1, road_type='unknown', road_tier=3,
+                    llm_notes='{"road_tier": null, "road_type": null}'
+                WHERE id=?
+                """,
+                (listing_id,),
+            )
+
+        same_listing_id, is_new = upsert_listing(
+            self._rec(road_type="unknown", road_tier=0),
+            crawl_run_id=2,
+        )
+
+        self.assertEqual(same_listing_id, listing_id)
+        self.assertFalse(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT road_type, road_tier FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(row["road_type"], "unknown")
+        self.assertEqual(row["road_tier"], 0)
+
     def test_upsert_listing_over_40pct_drop_marks_suspicious_bait(self):
         from db.connection import get_conn
         from db.listings import upsert_listing

@@ -116,8 +116,8 @@ def _valuation_quality_flags(row) -> tuple:
         flags.append("test_artifact")
 
     if (
-        re.search(r"\b\d+\s*(?:ty|ti)\s*x+\s*(?:tr|trieu)?\b", text)
-        or re.search(r"\b\d+\s*(?:ty|ti)\s+\d*x+\s*(?:tr|trieu)?\b", text)
+        re.search(r"\b\d+\s*(?:ty|ti)\s*\d*x{2,}\s*(?:tr|trieu)?\b", text)
+        or re.search(r"\b\d+\s*(?:ty|ti)\s+\d*x{2,}\s*(?:tr|trieu)?\b", text)
     ):
         flags.append("ambiguous_price_text")
 

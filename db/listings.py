@@ -211,7 +211,15 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     frontage_m          = :frontage_m,
                     depth_m             = :depth_m,
                     area                = :area,
-                    road_tier           = CASE WHEN llm_verified = 1 THEN road_tier
+                    road_tier           = CASE WHEN llm_verified = 1
+                                                    AND :road_type IN ('hem_ba_gac', 'hem_xe_may')
+                                                    AND :road_tier >= 4 THEN :road_tier
+                                               WHEN llm_verified = 1
+                                                    AND :road_tier <= 0
+                                                    AND :road_type = 'unknown'
+                                                    AND COALESCE(road_type, 'unknown') = 'unknown'
+                                                    AND COALESCE(llm_notes, '') LIKE '%"road_tier": null%' THEN 0
+                                               WHEN llm_verified = 1 THEN road_tier
                                                WHEN :road_tier > 0 THEN :road_tier
                                                ELSE 0 END,
                     road_type           = :road_type,
