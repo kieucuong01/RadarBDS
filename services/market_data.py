@@ -164,9 +164,68 @@ def normalize_search_keyword(value) -> str:
     return text[:80]
 
 
-def _search_terms(keyword):
+_GENERIC_SEARCH_WORDS = {
+    "duong",
+    "gan",
+    "khu",
+    "lo",
+    "nen",
+    "dat",
+    "nha",
+    "mat",
+    "tien",
+    "phuong",
+    "xa",
+    "thi",
+    "tran",
+    "tp",
+    "thanh",
+    "pho",
+}
+_ROAD_CODE_RE = re.compile(r"\b(dx|dh|dl|nl)\s*[-./_]?\s*(\d{1,3}[a-z]?)\b")
+_MY_PHUOC_RE = re.compile(r"\bmy\s+phuoc\s+([1-4])\b")
+_MY_PHUOC_SHORT_RE = re.compile(r"\bmp\s*[-./_]?\s*([1-4])\b")
+_AREA_CODE_RE = re.compile(r"\bkhu\s+([a-z]\d?)\b")
+
+
+def _dedupe_search_tokens(tokens):
+    seen = set()
+    out = []
+    for mode, value in tokens:
+        key = (mode, value)
+        if value and key not in seen:
+            seen.add(key)
+            out.append(key)
+    return out[:6]
+
+
+def _search_tokens(keyword):
     folded = _ascii_fold(normalize_search_keyword(keyword))
-    return [t for t in re.split(r"\s+", folded) if t][:6]
+    folded = re.sub(r"[-./_]+", " ", folded)
+    folded = re.sub(r"\s+", " ", folded).strip()
+    if not folded:
+        return []
+
+    tokens = []
+    remainder = folded
+
+    for pattern, repl in (
+        (_ROAD_CODE_RE, lambda m: tokens.append(("compact", f"{m.group(1)}{m.group(2)}")) or " "),
+        (_MY_PHUOC_RE, lambda m: tokens.append(("phrase", f"my phuoc {m.group(1)}")) or " "),
+        (_MY_PHUOC_SHORT_RE, lambda m: tokens.append(("phrase", f"my phuoc {m.group(1)}")) or " "),
+        (_AREA_CODE_RE, lambda m: tokens.append(("phrase", f"khu {m.group(1)}")) or " "),
+    ):
+        remainder = pattern.sub(repl, remainder)
+
+    words = [
+        word
+        for word in re.split(r"\s+", remainder.strip())
+        if word and word not in _GENERIC_SEARCH_WORDS
+    ]
+    if words:
+        tokens.append(("phrase", " ".join(words[:6])))
+
+    return _dedupe_search_tokens(tokens)
 
 
 def _search_text_expr(prefix=""):
@@ -184,13 +243,27 @@ def _search_text_expr(prefix=""):
     return f"translate(LOWER({combined}), '{_VIET_SEARCH_FROM}', '{_VIET_SEARCH_TO}')"
 
 
-def keyword_search_filter(keyword, prefix=""):
-    terms = _search_terms(keyword)
-    if not terms:
-        return [], []
+def _compact_search_text_expr(prefix=""):
     expr = _search_text_expr(prefix)
-    clauses = [f"{expr} LIKE ?" for _ in terms]
-    params = [f"%{term}%" for term in terms]
+    for separator in (" ", "-", ".", "/", "_"):
+        expr = f"REPLACE({expr}, '{separator}', '')"
+    return expr
+
+
+def keyword_search_filter(keyword, prefix=""):
+    tokens = _search_tokens(keyword)
+    if not tokens:
+        return [], []
+    phrase_expr = _search_text_expr(prefix)
+    compact_expr = _compact_search_text_expr(prefix)
+    clauses = []
+    params = []
+    for mode, value in tokens:
+        if mode == "compact":
+            clauses.append(f"{compact_expr} LIKE ?")
+        else:
+            clauses.append(f"{phrase_expr} LIKE ?")
+        params.append(f"%{value}%")
     return clauses, params
 
 

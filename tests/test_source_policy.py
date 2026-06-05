@@ -84,6 +84,8 @@ class SourcePolicyTest(unittest.TestCase):
         source,
         title,
         source_id,
+        description=None,
+        ward=None,
         area_m2=100,
         price_ty=2.0,
         image_count=0,
@@ -102,7 +104,7 @@ class SourcePolicyTest(unittest.TestCase):
                     is_hot, price_dropped, suspicious_bait,
                     probably_sold, possibly_duplicate, posted_at, crawled_at
                 ) VALUES (
-                    ?, ?, ?, ?, 'Source policy listing',
+                    ?, ?, ?, ?, ?,
                     ?, ?, ?, ?, 'dat_nen', ?, ?,
                     0, 0, 0, 0, 0, datetime('now'), datetime('now')
                 )
@@ -112,7 +114,8 @@ class SourcePolicyTest(unittest.TestCase):
                     f"{source_id}-{self.token}",
                     f"{self.url_prefix}/{source_id}",
                     title,
-                    self.ward,
+                    description or "Source policy listing",
+                    ward or self.ward,
                     area_m2,
                     frontage_m,
                     depth_m,
@@ -308,6 +311,113 @@ class SourcePolicyTest(unittest.TestCase):
 
         rows = response.get_json()["signals"]
         self.assertEqual([row["id"] for row in rows], [matched_id])
+
+    def test_exact_search_matches_compact_query_to_spaced_road_code(self):
+        matched_id = self._seed_signal(
+            source="facebook",
+            title="Lo goc mat tien duong lon",
+            description="Can ban nen gan duong DX 44 khu dan cu hien huu",
+            source_id="fb-dx44-spaced",
+        )
+        self._seed_signal(
+            source="facebook",
+            title="Lo khac o duong DX 45",
+            description="Can ban nen gan duong DX 45",
+            source_id="fb-dx45",
+        )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&q=DX44&limit=20")
+        self.assertEqual(response.status_code, 200)
+
+        rows = response.get_json()["signals"]
+        self.assertEqual([row["id"] for row in rows], [matched_id])
+
+    def test_exact_search_matches_spaced_query_to_compact_road_code(self):
+        matched_id = self._seed_signal(
+            source="facebook",
+            title="Nen gan DH3A My Phuoc",
+            description="Lo dep truc DH3A, thich hop dau tu",
+            source_id="fb-dh3a-compact",
+        )
+        self._seed_signal(
+            source="facebook",
+            title="Nen gan DH3",
+            description="Lo dep truc DH3",
+            source_id="fb-dh3",
+        )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&q=DH 3A&limit=20")
+        self.assertEqual(response.status_code, 200)
+
+        rows = response.get_json()["signals"]
+        self.assertEqual([row["id"] for row in rows], [matched_id])
+
+    def test_exact_search_matches_area_code_and_my_phuoc_shorthand(self):
+        khu_l_id = self._seed_signal(
+            source="facebook",
+            title="Nen khu L My Phuoc 3",
+            description="Lo khu L gan cong vien",
+            ward="My Phuoc 3",
+            source_id="fb-khu-l-mp3",
+        )
+        khu_m_id = self._seed_signal(
+            source="facebook",
+            title="Nen khu M My Phuoc 2",
+            description="Lo khu M gan cho",
+            ward="My Phuoc 2",
+            source_id="fb-khu-m-mp2",
+        )
+
+        khu_response = self.client.get(f"/api/signals?city=Khac&q=khu L&limit=20")
+        self.assertEqual(khu_response.status_code, 200)
+        self.assertEqual([row["id"] for row in khu_response.get_json()["signals"]], [khu_l_id])
+
+        mp_response = self.client.get(f"/api/signals?city=Khac&q=MP3&limit=20")
+        self.assertEqual(mp_response.status_code, 200)
+        mp_ids = {row["id"] for row in mp_response.get_json()["signals"]}
+        self.assertIn(khu_l_id, mp_ids)
+        self.assertNotIn(khu_m_id, mp_ids)
+
+    def test_generic_road_keyword_does_not_narrow_signal_feed(self):
+        first_id = self._seed_signal(
+            source="facebook",
+            title="Nen gan duong DX 44",
+            description="Mat tien duong lon",
+            source_id="fb-generic-road-a",
+        )
+        second_id = self._seed_signal(
+            source="facebook",
+            title="Nen trong khu dan cu",
+            description="Duong noi bo thong thoang",
+            source_id="fb-generic-road-b",
+        )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&q=duong&limit=20")
+        self.assertEqual(response.status_code, 200)
+
+        ids = {row["id"] for row in response.get_json()["signals"]}
+        self.assertTrue({first_id, second_id}.issubset(ids))
+
+    def test_exact_keyword_search_filters_all_listings_by_road_code(self):
+        matched_id = self._seed_signal(
+            source="facebook",
+            title="Dat gan duong DL 12",
+            description="Can ban gap lo dat duong DL 12",
+            source_id="fb-dl12-spaced",
+        )
+        self._seed_signal(
+            source="facebook",
+            title="Dat gan duong DL 13",
+            description="Can ban gap lo dat duong DL 13",
+            source_id="fb-dl13",
+        )
+
+        response = self.client.get(f"/api/listings?city=Khac&ward={self.ward}&q=DL12&limit=20")
+        self.assertEqual(response.status_code, 200)
+
+        payload = response.get_json()
+        self.assertEqual(payload["total"], 1)
+        self.assertEqual([row["id"] for row in payload["listings"]], [matched_id])
 
     def test_keyword_search_filters_all_listings_without_accents(self):
         matched_id = self._seed_signal(
