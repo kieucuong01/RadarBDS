@@ -160,6 +160,7 @@ def cmd_review_queue(args):
                ON memo.id = (SELECT id FROM ai_deal_review
                              WHERE listing_id = l.id
                                AND NULLIF(TRIM(COALESCE(memo_markdown,'')), '') IS NOT NULL
+                               AND COALESCE(model,'') NOT LIKE 'claude-code-advisory-%'
                              ORDER BY created_at DESC, id DESC LIMIT 1)
         WHERE {signal_condition} AND {listing_condition} AND v.signal_score IS NOT NULL
           AND memo.id IS NULL

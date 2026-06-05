@@ -6,8 +6,10 @@ allowed-tools: Bash(python radar.py *)
 
 # Review Deal Signals — Claude pre-review (CỐ VẤN)
 
-Đây là **pre-review cố vấn**. Mục tiêu: đỡ việc cho admin bằng cách đọc trước
-từng deal signal và đề xuất "rẻ thật / mồi / không rẻ / thiếu thông tin".
+Đây là **pre-review cố vấn**. Mục tiêu: đọc từng deal signal như một nhà cố vấn
+đầu tư BĐS, tự đưa nhận định "rẻ thật / mồi / không rẻ / thiếu thông tin", rồi
+lưu memo do chính agent viết sau khi đọc context. Không sinh memo bằng rule-base
+hoặc script rewrite hàng loạt.
 
 **Ranh giới phải nhớ và nói rõ với user:**
 
@@ -19,6 +21,9 @@ từng deal signal và đề xuất "rẻ thật / mồi / không rẻ / thiếu
 - **Trần cứng:** Claude chỉ đọc text marketing. KHÔNG xác minh được quy hoạch,
   pháp lý thực tế, vị trí/đường thực địa. Mọi kết luận phụ thuộc các yếu tố đó
   PHẢI set `--needs-map-check` để admin tự tra Guland/bản đồ quy hoạch.
+- Memo hợp lệ phải là nhận định riêng cho từng lô sau khi đọc `context`.
+  Các memo có `model` bắt đầu bằng `claude-code-advisory-` là bản rewrite
+  rule-based cũ, không được xem là memo cố vấn hợp lệ.
 
 Thực hiện tuần tự, báo cáo ngắn gọn từng bước.
 
@@ -52,11 +57,15 @@ thực sự rẻ** (`not_cheap`) vs **thiếu thông tin để kết luận**
 
 ### Chuẩn viết ghi chú cố vấn
 
-Viết như một nhà cố vấn đầu tư BĐS lâu năm: nói thẳng, gọn, đủ ý, không giảng
-lại quy trình máy móc. Mỗi memo nên dài khoảng 220-380 từ; deal phức tạp mới
-dài hơn. Không dùng thuật ngữ tiếng Anh trong phần người dùng đọc. Tránh các
-cụm kiểu "hệ thống đang đọc" lặp đi lặp lại; chỉ diễn giải số liệu khi số đó
-giúp nhà đầu tư ra quyết định.
+Viết như một nhà cố vấn đầu tư BĐS lâu năm: phải có quan điểm rõ, không ba phải,
+không chỉ tóm tắt dữ liệu, không viết theo một form cố định. Mỗi memo phải thể
+hiện agent đã đọc riêng lô đó: form đất, vị trí mô tả, đường, thổ cư, giá tổng,
+lịch sử giảm/repost, mẫu so sánh, nguồn tin và điểm có thể làm thay đổi quyết
+định. Không dùng thuật ngữ tiếng Anh trong phần người dùng đọc.
+
+Memo không đạt nếu đọc như checklist giống nhau giữa nhiều lô. Memo đạt khi nhà
+đầu tư đọc xong biết ngay: nên ưu tiên, chỉ theo dõi, cần ép giá, nghi giá mồi,
+hay bỏ qua; vì sao; và điều kiện nào làm đổi kết luận.
 
 Cấu trúc khuyến nghị:
 

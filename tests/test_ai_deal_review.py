@@ -272,6 +272,21 @@ class AiDealReviewTest(unittest.TestCase):
 
         self._run_save(id=a, verdict="cheap_real", confidence=0.8,
                        reasoning="rẻ thật")
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO ai_deal_review (
+                    listing_id, actor, verdict, confidence, reasoning,
+                    memo_markdown, model, updated_at
+                )
+                VALUES (?, 'claude', 'cheap_real', 0.8, 'rule-based',
+                        '# Memo rule-based', 'claude-code-advisory-opinion-v3',
+                        datetime('now'))
+                """,
+                (b,),
+            )
         memo_path = self.tmpdir / "review-c.md"
         memo_path.write_text("Memo cố vấn đã viết cho deal C.", encoding="utf-8")
         self._run_save(id=c, verdict="suspect", confidence=0.6,
@@ -309,11 +324,44 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertEqual(pending.status_code, 200)
             self.assertTrue(pending.get_json()["pending"])
 
+            from db.connection import get_conn
+
+            with get_conn() as conn:
+                conn.execute(
+                    """
+                    INSERT INTO ai_deal_review (
+                        listing_id, actor, verdict, confidence, reasoning,
+                        memo_markdown, model, updated_at
+                    )
+                    VALUES (?, 'claude', 'cheap_real', 0.8, 'rule-based',
+                            '# Memo rule-based', 'claude-code-advisory-opinion-v3',
+                            datetime('now'))
+                    """,
+                    (lid,),
+                )
+            generated_only = client.get(f"/api/listing/{lid}/memo")
+            self.assertEqual(generated_only.status_code, 200)
+            self.assertTrue(generated_only.get_json()["pending"])
+
             memo_path = self.tmpdir / "api-memo.md"
             memo_text = "# Memo cố vấn\n\nDeal này rẻ nhưng cần kiểm tra đường vào."
             memo_path.write_text(memo_text, encoding="utf-8")
             self._run_save(id=lid, verdict="cheap_real", confidence=0.9,
                            reasoning="rẻ thật", memo_file=str(memo_path))
+
+            with get_conn() as conn:
+                conn.execute(
+                    """
+                    INSERT INTO ai_deal_review (
+                        listing_id, actor, verdict, confidence, reasoning,
+                        memo_markdown, model, updated_at
+                    )
+                    VALUES (?, 'claude', 'not_cheap', 0.4, 'rule-based later',
+                            '# Memo rule-based later', 'claude-code-advisory-specific-v2',
+                            datetime('now'))
+                    """,
+                    (lid,),
+                )
 
             full = client.get(f"/api/listing/{lid}/memo")
             data = full.get_json()
