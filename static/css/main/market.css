@@ -49,6 +49,11 @@
   min-width: 0;
 }
 
+.market-indicator-card.is-tier-locked .indicator-summary,
+.market-indicator-card.is-tier-locked .market-table-wrap {
+  visibility: hidden;
+}
+
 .indicator-summary {
   display: flex;
   flex-wrap: wrap;

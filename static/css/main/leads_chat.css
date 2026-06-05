@@ -473,17 +473,19 @@
 
   .bottom-nav-item small {
     position: absolute;
-    top: 5px;
-    right: 14%;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
+    top: 3px;
+    right: 10%;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 6px;
     border-radius: 999px;
-    background: rgba(99, 102, 241, 0.18);
-    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: linear-gradient(135deg, #fb923c 0%, #f43f5e 100%);
+    color: #fff;
     font-size: 0.62rem;
     line-height: 18px;
-    font-weight: 850;
+    font-weight: 900;
+    box-shadow: 0 5px 14px rgba(244, 63, 94, 0.32);
   }
 
   .bottom-nav-item.active {
@@ -492,8 +494,11 @@
   }
 
   .bottom-nav-item.active small {
-    background: var(--primary);
+    background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
     color: #fff;
+    box-shadow:
+      0 0 0 3px rgba(249, 115, 22, 0.14),
+      0 6px 16px rgba(239, 68, 68, 0.36);
   }
 }
 

@@ -40,12 +40,12 @@
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=vietnamese-font-stack-20260605">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=listings-view-20260527">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=nav-badge-highlight-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=keyword-search-20260603">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-card-radius-20260603">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-mobile-carousel-20260602">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=market-mobile-ux-20260602">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=auth-header-mobile-labels-20260605">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=vip-locked-market-20260605">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=nav-badge-highlight-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=auth-vietnamese-header-20260605">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -495,7 +495,7 @@
           </div>
 
           <div class="market-indicator-grid">
-            <div class="chart-card market-indicator-card" style="position:relative;">
+            <div class="chart-card market-indicator-card {% if USER_TIER not in ['vip', 'admin'] %}is-tier-locked{% endif %}" style="position:relative;">
               <div class="chart-header">
                 <h3 class="chart-title">Chỉ báo Tỷ lệ Cắt máu</h3>
                 <p class="chart-subtitle">Tỷ lệ lô đang rao bán đã có lịch sử giảm giá theo từng phường/xã</p>
@@ -527,7 +527,7 @@
               {% endif %}
             </div>
 
-            <div class="chart-card market-indicator-card" style="position:relative;">
+            <div class="chart-card market-indicator-card {% if USER_TIER not in ['vip', 'admin'] %}is-tier-locked{% endif %}" style="position:relative;">
               <div class="chart-header">
                 <h3 class="chart-title">Chỉ báo Bất thường Nguồn Cung</h3>
                 <p class="chart-subtitle">Tin rao mới tháng này so với trung bình 3 tháng trước, đã gộp trùng</p>
