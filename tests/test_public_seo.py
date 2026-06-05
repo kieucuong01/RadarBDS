@@ -80,7 +80,9 @@ def test_binh_duong_location_landing_pages_render_and_are_indexed():
         "/binh-duong/thu-dau-mot": "Thủ Dầu Một",
         "/binh-duong/ben-cat": "Bến Cát",
         "/binh-duong/phuong-phu-my": "Phú Mỹ",
-        "/binh-duong/duong-dx013": "DX013",
+        "/binh-duong/phuong-tuong-binh-hiep": "Tương Bình Hiệp",
+        "/binh-duong/phuong-tan-dinh": "Tân Định",
+        "/binh-duong/phuong-chanh-phu-hoa": "Chánh Phú Hòa",
     }
 
     with radar_app.app.test_request_context("/sitemap.xml"):
@@ -97,6 +99,28 @@ def test_binh_duong_location_landing_pages_render_and_are_indexed():
         assert "Khu vực liên quan" in html
         assert "localhost" not in html
         assert "127.0.0.1" not in html
+
+    assert "/binh-duong/duong-" not in sitemap
+
+
+def test_street_name_seo_pages_are_not_indexed():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    street_paths = [
+        "/binh-duong/duong-dx013",
+        "/binh-duong/duong-dx20",
+        "/binh-duong/duong-dl12",
+    ]
+
+    with radar_app.app.test_request_context("/sitemap.xml"):
+        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
+
+    for path in street_paths:
+        response = client.get(path)
+
+        assert response.status_code == 404
+        assert f"<loc>https://radarbds.vn{path}</loc>" not in sitemap
 
 
 def test_unknown_binh_duong_location_seo_page_404s():

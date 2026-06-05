@@ -57,7 +57,7 @@ SEO_PAGES = {
         "process": [
             {
                 "title": "1. Gom nguồn địa phương",
-                "body": "Tổng hợp tin từ Facebook, Guland, BatDongSan và các khu vực đang theo dõi.",
+                "body": "Tổng hợp tin từ Facebook, Guland và các phường/khu vực đang theo dõi.",
             },
             {
                 "title": "2. Chuẩn hóa phường/khu",

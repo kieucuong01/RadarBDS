@@ -1,6 +1,6 @@
 # Radar BDS Architecture
 
-This document is for agents that need module boundaries or data-flow context. For quick work, start with `AGENTS.md`.
+This document is for agents that need module boundaries or data-flow context. For quick work, start with `AGENTS.md` and `docs/README.md`.
 
 ## Data Flow
 
@@ -20,7 +20,7 @@ Source crawlers
 ## Runtime Data
 
 - Canonical relational DB: PostgreSQL via `DATABASE_URL`.
-- Current local Supabase project: `ozdjzfiqcjnlfuihqqjy` in org/account `kieucuong02`.
+- Remote Supabase project `ozdjzfiqcjnlfuihqqjy` is kept for sync/backup. Local dev normally uses portable PostgreSQL.
 - Legacy SQLite DB: `data/radar_bds.db` is read only by `scripts/migrate_sqlite_to_postgres.py`.
 - Local images: `data/images/`.
 - Card thumbnails: `data/images/thumbs/*.webp`.
@@ -92,10 +92,12 @@ Performance boundary:
 
 ## Dedup and Price Drop Policy
 
+Full product rules live in `docs/product_rules.md`.
+
 - Same URL/source_id is the same listing and should use `price_history` for same-listing price changes.
-- Guland and BatDongSan cross-URL heuristics are disabled for duplicate/lot identity. Use source-id only.
+- Guland and legacy BatDongSan cross-URL heuristics are disabled for duplicate/lot identity. Use source-id only.
 - Facebook repost heuristics are allowed because broker reposts are meaningful, but only with strict guards.
-- Same-price Facebook reposts may support lot history. Same-price Guland/BatDongSan reposts must not.
+- Same-price Facebook reposts may support lot history. Same-price Guland/legacy BatDongSan reposts must not.
 - `price_dropped=1` means a reliable drop. Drops over 40% should be `suspicious_bait=1`.
 
 ## Image Policy

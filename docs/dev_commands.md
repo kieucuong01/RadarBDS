@@ -1,6 +1,8 @@
 # Development Commands
 
 Use UTF-8 mode on Windows because the project contains Vietnamese text.
+This is a command cookbook. For deploy decisions, crawl health, and production
+runbooks, read `docs/operations.md` first.
 
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"

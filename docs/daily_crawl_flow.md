@@ -2,7 +2,7 @@
 
 Reference cho agent / dev mới: cách `radar.py crawl-daily` chạy end-to-end, signal được sinh ra như thế nào, VIP notification lấy gì, và config có thể chỉnh ở đâu mà không phải sửa code.
 
-Đọc kèm `AGENTS.md` (data flow tổng quát) và `.claude/rules/valuation.md` (công thức fair value chi tiết).
+Đọc kèm `AGENTS.md`, `docs/README.md`, `docs/product_rules.md`, và `.claude/rules/valuation.md` (công thức fair value chi tiết).
 
 ---
 
@@ -38,7 +38,7 @@ Nếu deploy user chưa có quyền cài systemd unit mới, `scripts/deploy_pro
 15 23 * * * cd /opt/radar-bds/current && /usr/bin/flock -n /run/lock/radar-bds-guland-crawl.lock /opt/radar-bds/.venv/bin/python -X utf8 radar.py crawl-daily --source guland --no-alert --no-groq >> /opt/radar-bds/current/logs/guland-crawl.log 2>&1
 ```
 
-> ⚠️ **BDS/BatDongSan có thể chậm hoặc bị Cloudflare/Turnstile**. Nếu nguồn này còn bật, nó không được nằm trước Facebook trong daily pipeline.
+BatDongSan là nguồn legacy/disabled. Không đưa BatDongSan vào daily pipeline nếu chưa có quyết định sản phẩm mới.
 
 Pipeline lõi sau crawl giữ nguyên: `raw_listings → listings → valuation_results`. Phần thay đổi nằm ở **input config** (đầu pipeline) và **VIP notification** (cuối pipeline).
 
@@ -64,7 +64,7 @@ is_signal = (mos_pct ≥ SIGNAL_MOS_THRESHOLD)
 
 Cách tính fair_ppm2 (per-ward weighted ridge + road tier + size discount) xem `.claude/rules/valuation.md`. Facebook is the primary baseline; if a canonical segment has fewer than 35 Facebook samples, strict-pass Guland rows may supplement training with weight 0.4. Regression valuation caps `road_tier=3` at max 80% of the same-listing tier-2 counterfactual before downstream adjustments. Không hardcode threshold ở chỗ khác — `analytics/valuation.py::SegmentModel.mos_threshold` đọc từ settings.
 
-Quality flags can keep the valuation row but suppress user/VIP promotion. Fatal gates currently include parser/data risk such as `parsed_discount_as_price`, `down_payment_as_price`, `too_low_absolute_price`, `large_lot_model_risk`, `area_dimension_conflict`, `source_category_conflict`, `multi_lot_listing`, `test_artifact`, `low_segment_confidence`, source bad-extraction labels, and Guland quality flags such as `guland_weak_signal` / `guland_user_facing_risk`.
+Quality flags can keep the valuation row but suppress user/VIP promotion. Fatal gates currently include parser/data risk such as `parsed_discount_as_price`, `down_payment_as_price`, `too_low_absolute_price`, `large_lot_model_risk`, `area_dimension_conflict`, `source_category_conflict`, `multi_lot_listing`, `test_artifact`, source bad-extraction labels, and Guland quality flags such as `guland_weak_signal` / `guland_user_facing_risk`. `low_segment_confidence` alone is warning-only for user-facing cards.
 
 Signal now has a separate trust tier:
 
@@ -184,7 +184,7 @@ Message format (HTML):
 Crawl health summary:
 ❌ ERROR guland: fetched=0 new=0
    ↳ Playwright TimeoutError: page.goto exceeded 30000ms
-⚠️ ZERO FETCHED batdongsan: fetched=0 new=0
+⚠️ ZERO FETCHED facebook: fetched=0 new=0
 ```
 
 Module: `alerts/ops.py` — tách hẳn khỏi `alerts/telegram.py` để boundary giữa listing-channel (per-user VIP) và ops-channel (admin) luôn rõ ràng. Không gửi data listing qua kênh này.
@@ -238,21 +238,9 @@ Loader: `crawler/guland_pw.py::__init__` → `_load_sources_config()`. Nếu fil
 
 `crawl_for_days` chi phối `is_old()` — listing có `date_raw` cũ hơn N ngày → stop load-more cho phường đó.
 
-### 4.2 BatDongSan — `data/batdongsan_sources.json`
+### 4.2 Legacy BatDongSan
 
-```json
-{
-  "city": "Thủ Dầu Một",
-  "crawl_for_days": 7,
-  "categories": ["ban-dat", "ban-nha"],
-  "wards": [
-    {"name": "Tân An", "slug": "tan-an"},
-    ...
-  ]
-}
-```
-
-`SEARCH_SLUGS` build từ `urls` của mỗi ward (default 4 URL/ward × 13 ward = 52). Loader: `crawler/batdongsan_pw.py::_load_bds_config()` (module level). **Thực tế hiện tại:** chỉ slug đầu tiên may mắn qua Cloudflare; phần còn lại trả 0 cards và lưu HTML+PNG debug vào `logs/bds_no_cards/`.
+BatDongSan is disabled for the current product. Existing code paths may remain for historical import/delete cleanup, but agents should not schedule BatDongSan, add it to daily crawl, or treat it as an active signal source unless the user explicitly changes the source policy.
 
 ### 4.3 Facebook profiles — `data/facebook_profiles.json`
 
@@ -336,7 +324,7 @@ Gọi từ `cli/crawlers.py::_facebook_crawl_to_raw` ngay trước khi insert ra
 | Crawl entry + notification wiring | `cli/crawlers.py::cmd_crawl`, `_facebook_crawl_to_raw` | Capture `crawl_start_ts`, gọi city filter, gọi `verify_signals_with_groq()` |
 | LLM verify signals | `cleansing/reprocess.py::verify_signals_with_groq`, `cleansing/groq_enricher.py` | Chỉ incremental; opt-out `--no-groq` |
 | Guland targets | `data/guland_sources.json`, `crawler/guland_pw.py` | Chỉ sửa JSON khi mở rộng ward |
-| BDS targets | `data/batdongsan_sources.json`, `crawler/batdongsan_pw.py` | Cross-product slug auto-build |
+| Legacy BatDongSan cleanup | `crawler/batdongsan_pw.py`, `cli/data_import.py` | Disabled for daily crawl; keep only for historical cleanup unless policy changes |
 | FB profiles | `data/facebook_profiles.json`, `crawler/facebook_apify.py` | tier=int, broker_name |
 | City filter | `config/area_profiles.py` | `OTHER_CITY_KEYWORDS`, `CITY_OWN_KEYWORDS`, `post_mentions_other_city` |
 
@@ -352,7 +340,6 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
 # 2. crawl config load
 & $py -X utf8 -c "from crawler.guland_pw import GulandCrawler; g=GulandCrawler(); print(len(g.TARGET_URLS), g.crawl_for_days)"
-& $py -X utf8 -c "from crawler.batdongsan_pw import BatDongSanCrawler, SEARCH_SLUGS; print(len(SEARCH_SLUGS))"
 & $py -X utf8 -c "from crawler.facebook_apify import load_profiles; ps=load_profiles(); print([(p['url'], p['tier'], p.get('broker_name')) for p in ps])"
 
 # 3. city filter
