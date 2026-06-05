@@ -567,6 +567,28 @@ function renderInvestmentMemo(data) {
   `;
 }
 
+function hideGroqAssessment() {
+  const aiSection = document.getElementById('sm-ai-section');
+  const aiText = document.getElementById('sm-ai-text');
+  if (aiText) aiText.innerHTML = '';
+  if (aiSection) {
+    aiSection.hidden = true;
+    aiSection.setAttribute('aria-hidden', 'true');
+    aiSection.style.display = 'none';
+  }
+}
+
+function setInvestmentMemoVisible(visible) {
+  const section = document.getElementById('sm-memo-section');
+  const body = document.getElementById('sm-memo-body');
+  if (body && !visible) body.innerHTML = '';
+  if (section) {
+    section.hidden = !visible;
+    section.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    section.style.display = visible ? '' : 'none';
+  }
+}
+
 async function loadInvestmentMemo(listingId) {
   if (!INVESTMENT_MEMO_ENABLED) {
     setInvestmentMemoVisible(false);

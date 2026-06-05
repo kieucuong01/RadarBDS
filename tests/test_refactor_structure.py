@@ -72,6 +72,21 @@ def test_all_listings_tab_supports_table_and_grid_views():
     assert ".listings-grid" in layout_css
 
 
+def test_signal_modal_helpers_used_by_open_path_are_defined():
+    modal_js = _read("static/js/main/modal.js")
+
+    for expected_symbol in [
+        "function hideGroqAssessment",
+        "function setInvestmentMemoVisible",
+        "function loadInvestmentMemo",
+        "function _openSignalFromData",
+    ]:
+        assert expected_symbol in modal_js
+
+    assert "hideGroqAssessment();" in modal_js
+    assert "setInvestmentMemoVisible(true);" in modal_js
+
+
 def test_price_and_area_filters_support_multi_select_range_chips():
     html = _read("templates/index.html")
     filters_js = _read("static/js/main/filters.js")
