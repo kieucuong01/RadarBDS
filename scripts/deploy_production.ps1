@@ -26,7 +26,7 @@ cd "$RemotePath"
 
 before=`$(git rev-parse --short HEAD)
 stash_ref=""
-dirty_files=`$(git status --porcelain | awk '{print `$2}' | grep -v '^data/facebook_profiles.json`$' || true)
+dirty_files=`$(git status --porcelain | awk '{print `$2}' | grep -Ev '^(data/facebook_profiles.json|data/raw_backup.json)`$' || true)
 
 if [ -n "`$dirty_files" ]; then
   echo "Unexpected dirty production files:"

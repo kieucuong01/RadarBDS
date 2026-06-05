@@ -25,6 +25,7 @@ The deploy script:
 - uses `$env:USERPROFILE\.ssh\radar_bds_deploy_rsa`,
 - fast-forwards the VPS checkout,
 - preserves production-only `data/facebook_profiles.json`,
+- allows runtime `data/raw_backup.json` to stay dirty on the VPS,
 - restarts `radar-bds.service`,
 - smokes `/api/dashboard` and `/api/signals`,
 - prewarms dashboard cache,
