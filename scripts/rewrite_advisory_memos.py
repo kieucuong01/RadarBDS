@@ -21,7 +21,7 @@ from db.connection import get_conn
 from services.signal_quality import LATEST_VALUATION_CTE
 
 
-DEFAULT_MODEL = "claude-code-advisory-rewrite"
+DEFAULT_MODEL = "claude-code-advisory-specific-v2"
 
 
 def _num(value: Any, digits: int = 1) -> str | None:
@@ -153,52 +153,197 @@ def _fair_total_ty(row) -> float | None:
     return float(row["fair_ppm2"]) * float(row["area_m2"]) / 1000
 
 
+def _ratio(part: Any, total: Any) -> float | None:
+    if part is None or total in (None, 0):
+        return None
+    try:
+        total_f = float(total)
+        if total_f <= 0:
+            return None
+        return float(part) / total_f
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
+
+
+def _text_blob(row) -> str:
+    return f"{row['title'] or ''}\n{row['description'] or ''}".lower()
+
+
+def _has_any(text: str, needles: list[str]) -> bool:
+    return any(needle in text for needle in needles)
+
+
+def _dimension_note(row) -> str | None:
+    frontage = row["frontage_m"]
+    depth = row["depth_m"]
+    if frontage and depth:
+        try:
+            f = float(frontage)
+            d = float(depth)
+        except (TypeError, ValueError):
+            return None
+        shape = f"{_num(f, 1)}x{_num(d, 1)}"
+        if d / max(f, 0.1) >= 8:
+            return f"Form đất {shape} khá dài và hẹp; cần xem lối vào, ranh đất và khả năng tách/thanh khoản."
+        if f >= 7 and d >= 20:
+            return f"Form đất {shape} có bề ngang tốt, dễ xoay phương án xây ở/khai thác hơn loại ngang nhỏ."
+        return f"Form đất khoảng {shape}; nên đối chiếu lại với sổ và mốc ranh ngoài thực địa."
+    return None
+
+
+def _location_notes(row) -> list[str]:
+    text = _text_blob(row)
+    notes: list[str] = []
+    if _has_any(text, ["mỹ phước tân vạn", "my phuoc tan van"]):
+        notes.append("Có nhắc gần trục Mỹ Phước Tân Vạn, đây là yếu tố thanh khoản tốt nếu khoảng cách thực tế đúng.")
+    if _has_any(text, ["quốc lộ 13", "ql13", "qlo 13"]):
+        notes.append("Có liên hệ Quốc lộ 13; cần đo lại khoảng cách thật vì chênh vài trăm mét có thể làm khác giá.")
+    if _has_any(text, ["chợ", "cho "]):
+        notes.append("Có yếu tố gần chợ/khu dân cư, phù hợp nhóm mua ở thật nếu đường và pháp lý sạch.")
+    if _has_any(text, ["khu công nghiệp", "kcn", "công nhân", "cong nhan"]):
+        notes.append("Có câu chuyện gần khu công nghiệp hoặc tệp thuê ở, nên kiểm tra nhu cầu thuê thực tế quanh lô.")
+    if _has_any(text, ["cho thuê", "phòng trọ", "dãy trọ", "nha tro", "thu nhập", "thu nhap"]):
+        notes.append("Tin có yếu tố dòng tiền cho thuê/trọ; phải tách giá trị đất và giá trị công trình để tránh mua hớ phần xây dựng.")
+    if _has_any(text, ["1 xẹt", "1 xet", "một xẹt", "cách", "cach"]):
+        notes.append("Tin mô tả lô không nằm trực diện trục chính; nên kiểm tra đường vào thật và độ dễ bán lại.")
+    if _has_any(text, ["2 lô", "2lo", "hai lô", "liền kề", "lien ke"]):
+        notes.append("Có dấu hiệu nhiều lô/liền kề; cần xác nhận giá đang tính cho một lô hay toàn bộ phần rao bán.")
+    return notes[:3]
+
+
+def _history_notes(row) -> list[str]:
+    notes: list[str] = []
+    price_history_count = _as_int(row["price_history_count"]) or 0
+    lot_history_count = _as_int(row["lot_history_count"]) or 0
+    if row["price_dropped"]:
+        notes.append(
+            f"Tin có giảm giá khoảng {_pct(row['price_drop_pct'])}; đây là điểm ép giá tốt, nhưng phải hỏi vì sao chủ giảm."
+        )
+    elif price_history_count >= 2:
+        notes.append(
+            f"Có {price_history_count} mốc lịch sử giá; nên xem giá cũ để biết chủ đang giảm thật hay chỉ đổi cách đăng."
+        )
+    if lot_history_count >= 3:
+        notes.append(
+            f"Lịch sử cùng lô có {lot_history_count} lần xuất hiện, cần soi repost để tránh nhầm tin cũ thành cơ hội mới."
+        )
+    return notes
+
+
+def _risk_notes(row, flags: list[str]) -> list[str]:
+    notes: list[str] = []
+    tho_cu_ratio = _ratio(row["tho_cu_m2"], row["area_m2"])
+    if tho_cu_ratio is not None and tho_cu_ratio < 0.35:
+        notes.append(
+            f"Thổ cư chỉ khoảng {int(round(tho_cu_ratio * 100))}% diện tích; phần đất còn lại có thể kéo giảm giá trị sử dụng và khả năng vay."
+        )
+    if not row["has_so"]:
+        notes.append("Chưa có tín hiệu pháp lý rõ; phải xem giấy tờ trước khi tính tới cọc.")
+    if _as_int(row["n_segment"]) is not None and (_as_int(row["n_segment"]) or 0) < 10:
+        notes.append(f"Mẫu so sánh chỉ khoảng {_as_int(row['n_segment']) or 0} tin, nên số định giá chỉ dùng để sàng lọc ban đầu.")
+    if row["price_ty"] and row["price_ty"] >= 4:
+        notes.append("Giá tổng cao; tệp mua lại hẹp hơn, cần biên an toàn dày hơn đất nhỏ tiền.")
+    if flags:
+        notes.append("Cờ cần lưu ý: " + "; ".join(flags[:3]) + ".")
+    return _unique(notes)[:5]
+
+
+def _valuation_notes(row, fair_ty: float | None, actual_ppm2: Any) -> list[str]:
+    notes: list[str] = []
+    fair_ppm2 = row["fair_ppm2"]
+    if actual_ppm2 and fair_ppm2:
+        gap_ppm2 = float(fair_ppm2) - float(actual_ppm2)
+        notes.append(
+            f"Giá rao khoảng {_ppm(actual_ppm2)}, thấp hơn mốc tham chiếu {_ppm(fair_ppm2)} khoảng {_ppm(gap_ppm2)}."
+        )
+    else:
+        notes.append(f"Giá rao khoảng {_ppm(actual_ppm2)}; mốc tham chiếu hiện là {_ppm(fair_ppm2)}.")
+    if fair_ty is not None and row["price_ty"] is not None:
+        gap_ty = float(fair_ty) - float(row["price_ty"])
+        notes.append(
+            f"Quy ra toàn thửa, giá tham chiếu khoảng {_price_ty(fair_ty)}, chênh so với giá rao khoảng {_price_ty(gap_ty)}."
+        )
+    notes.append(f"Biên an toàn hiện khoảng {_pct(row['mos_pct'])}; điểm ưu tiên là {_as_int(row['signal_score']) or 0}.")
+    samples = _as_int(row["n_segment"]) or 0
+    if samples >= 50:
+        notes.append(f"Có khoảng {samples} mẫu so sánh, nên mặt bằng giá khu vực tương đối đáng tham khảo.")
+    elif samples >= 10:
+        notes.append(f"Có khoảng {samples} mẫu so sánh, đủ để sàng lọc nhưng vẫn cần soi đúng hẻm/đường.")
+    else:
+        notes.append(f"Chỉ có khoảng {samples} mẫu so sánh, cần hạ độ tin cậy cho con số định giá.")
+    return notes
+
+
+def _action_note(row, fair_ty: float | None) -> str:
+    if fair_ty is None:
+        return "Gọi hỏi vị trí, sổ và giá chốt trước; nếu không có đủ dữ liệu thì không nên đi xem mất thời gian."
+    target_ty = fair_ty * 0.82
+    margin = float(row["mos_pct"] or 0)
+    verdict = row["verdict"]
+    if verdict == "cheap_real" and margin >= 20:
+        return (
+            f"Có thể hẹn xem sớm; nếu vị trí/pháp lý đúng, neo thương lượng quanh {_price_ty(target_ty)} "
+            "để giữ biên an toàn sau chi phí."
+        )
+    if verdict == "cheap_real":
+        return (
+            f"Đáng kiểm tra, nhưng chỉ nên xuống tiền khi chốt được thấp hơn giá rao hoặc có lợi thế thực địa rõ; "
+            f"mốc mua thận trọng quanh {_price_ty(target_ty)}."
+        )
+    if verdict == "suspect":
+        return "Hỏi vị trí chính xác, ảnh sổ và giá chốt trước; nếu người bán vòng vo hoặc giá thay đổi khi hỏi sâu thì bỏ qua."
+    if verdict == "insufficient_info":
+        return "Ưu tiên bổ sung dữ liệu còn thiếu; chưa đủ cơ sở để đặt lịch xem nếu không có vị trí/sổ/đường rõ."
+    return (
+        f"Không cần đuổi theo giá hiện tại; chỉ quay lại nếu giá về quanh {_price_ty(target_ty)} "
+        "hoặc phát hiện lợi thế riêng mà dữ liệu chưa phản ánh."
+    )
+
+
 def build_reasoning(row) -> str:
     ward = row["ward"] or "khu vực này"
     margin = _pct(row["mos_pct"])
+    lot = f"{_property_vi(row['property_type'])} {_area(row['area_m2'])}"
     verdict = row["verdict"]
     if verdict == "cheap_real":
-        return f"{ward}: có biên giá đáng chú ý, nhưng chỉ nên ưu tiên sau khi xác minh vị trí, đường và pháp lý."
+        return f"{ward}: {lot} có biên giá {margin}, đáng xem thực địa nếu vị trí/đường/pháp lý đúng."
     if verdict == "suspect":
-        return f"{ward}: giá hoặc thông tin tin đăng có điểm cần nghi ngờ, nên kiểm chứng trước khi xem là cơ hội thật."
+        return f"{ward}: {lot} có giá hoặc thông tin cần nghi ngờ, phải kiểm chứng trước khi xem là cơ hội thật."
     if verdict == "insufficient_info":
-        return f"{ward}: thiếu dữ liệu quan trọng nên chưa thể kết luận chất lượng đầu tư."
-    return f"{ward}: biên an toàn khoảng {margin} chưa đủ dày để xếp là cơ hội rẻ mạnh."
+        return f"{ward}: {lot} thiếu dữ liệu quan trọng nên chưa thể kết luận chất lượng đầu tư."
+    return f"{ward}: {lot} có biên an toàn khoảng {margin}, chưa đủ dày để xếp là cơ hội rẻ mạnh."
 
 
 def _conclusion(row) -> str:
     verdict = row["verdict"]
+    lot = f"{_property_vi(row['property_type'])} khoảng {_area(row['area_m2'])} tại {row['ward'] or 'khu vực này'}"
+    price = _price_ty(row["price_ty"])
+    margin = _pct(row["mos_pct"])
     if verdict == "cheap_real":
         return (
-            "Nên đưa vào nhóm ưu tiên xem thực địa, nhưng chưa nên chốt chỉ từ tin đăng. "
-            "Điểm đáng tiền là giá vào đang thấp hơn mốc so sánh; lợi thế này chỉ thật sự "
-            "có giá trị nếu vị trí, đường và pháp lý đúng như mô tả."
+            f"{lot}, giá rao {price}, đang có biên an toàn khoảng {margin}. "
+            "Đáng đưa vào nhóm ưu tiên xem thực địa, nhưng chỉ có giá trị đầu tư nếu vị trí, "
+            "lối vào và pháp lý khớp với tin đăng."
         )
     if verdict == "suspect":
         return (
-            "Xem đây là tin cần kiểm chứng trước, chưa phải cơ hội để ra quyết định mua. "
-            "Giá có vẻ hấp dẫn nhưng rủi ro nằm ở khả năng giá mồi, sai vị trí, sai diện tích "
-            "hoặc điều kiện đường/pháp lý không như tin đăng."
+            f"{lot}, giá rao {price}, nhìn qua có vẻ hấp dẫn nhưng chưa nên xem là cơ hội thật. "
+            "Ưu tiên kiểm chứng giá chốt, đúng lô, diện tích và pháp lý trước khi mất thời gian đi xem."
         )
     if verdict == "insufficient_info":
         return (
-            "Chưa đủ dữ liệu để kết luận đây là thương vụ tốt. Nên giữ lại để hỏi thêm thông tin, "
-            "nhưng không nên ưu tiên vốn cho đến khi rõ vị trí, pháp lý, đường vào và giá chốt."
+            f"{lot} hiện thiếu dữ liệu then chốt để kết luận. "
+            "Có thể giữ lại để hỏi thêm, nhưng chưa nên ưu tiên vốn nếu chưa rõ vị trí, sổ, lối vào và giá chốt."
         )
     return (
-        "Không nên ưu tiên như một thương vụ rẻ mạnh. Tài sản có thể vẫn ổn để mua ở thật "
-        "hoặc nắm giữ, nhưng phần chênh so với mốc tham chiếu chưa đủ dày để bù rủi ro "
-        "kiểm chứng và chi phí giao dịch."
+        f"{lot}, giá rao {price}, có biên an toàn khoảng {margin} nhưng chưa đủ dày. "
+        "Có thể là tài sản ổn, nhưng chưa đáng ưu tiên như một thương vụ rẻ mạnh nếu không có lợi thế riêng ngoài giá."
     )
 
 
 def build_memo(row) -> str:
     fair_ty = _fair_total_ty(row)
-    target_ty = fair_ty * 0.82 if fair_ty else None
     actual_ppm2 = row["actual_ppm2"] or row["price_per_m2"]
-    samples = _as_int(row["n_segment"]) or 0
-    margin = float(row["mos_pct"] or 0)
-    score = _as_int(row["signal_score"]) or 0
     property_type = _property_vi(row["property_type"])
     ward = row["ward"] or "chưa rõ phường"
     road = _road_vi(row)
@@ -208,79 +353,39 @@ def build_memo(row) -> str:
         + [_flag_vi(flag) for flag in _json_list(row["source_quality_flags"])]
     )
 
-    thesis = [
+    asset_notes = [
         f"{property_type} tại {ward}, giá rao {_price_ty(row['price_ty'])} cho khoảng {_area(row['area_m2'])}, lối vào {road}.",
     ]
+    dimension = _dimension_note(row)
+    if dimension:
+        asset_notes.append(dimension)
+
     if row["tho_cu_m2"]:
-        thesis.append(
+        asset_notes.append(
             f"Thổ cư tin đăng ghi khoảng {_area(row['tho_cu_m2'])}; phần còn lại cần kiểm tra mục đích sử dụng và quy hoạch."
         )
     elif row["has_so"]:
-        thesis.append("Tin có tín hiệu có sổ, nhưng vẫn phải xem giấy tờ và ranh thửa trước khi đặt cọc.")
+        asset_notes.append("Tin có tín hiệu có sổ, nhưng vẫn phải xem giấy tờ và ranh thửa trước khi đặt cọc.")
     else:
-        thesis.append("Pháp lý/thổ cư chưa đủ rõ, đây là điểm có thể làm thay đổi mạnh giá trị thật.")
+        asset_notes.append("Pháp lý/thổ cư chưa đủ rõ, đây là điểm có thể làm thay đổi mạnh giá trị thật.")
 
-    if row["price_dropped"]:
-        thesis.append(
-            f"Có tín hiệu giảm giá khoảng {_pct(row['price_drop_pct'])}; đây là lợi thế đàm phán, nhưng cũng cần hỏi lý do chủ giảm."
-        )
-    elif row["source"] == "facebook":
-        thesis.append(
-            "Nguồn Facebook giúp bắt hàng nhanh, đổi lại phải xác minh kỹ giá thật, đúng lô và người đăng có quyền bán hay chỉ là môi giới đăng lại."
-        )
-    else:
-        thesis.append("Nguồn tin cần đối chiếu với thực địa và pháp lý, không nên chỉ dựa vào giá rao.")
+    asset_notes.extend(_location_notes(row))
+    asset_notes.extend(_history_notes(row))
+    if not _history_notes(row) and row["source"] == "facebook":
+        asset_notes.append("Nguồn Facebook bắt tin nhanh, nhưng cần xác nhận giá thật và người đăng có nắm được hàng hay chỉ đăng lại.")
+    asset_notes = _unique(asset_notes)[:6]
 
-    valuation = [
-        f"Giá rao khoảng {_ppm(actual_ppm2)}; mốc tham chiếu phù hợp đang khoảng {_ppm(row['fair_ppm2'])}.",
+    valuation = _valuation_notes(row, fair_ty, actual_ppm2)
+    risks = _risk_notes(row, flags)
+    if not risks:
+        risks = [
+            "Rủi ro chính nằm ở độ chính xác của vị trí, lối vào và giấy tờ; ba điểm này quyết định giá trị thật hơn phần mô tả quảng cáo."
+        ]
+    checks = risks + [
+        "Khi gọi, hỏi thẳng vị trí cụ thể, ảnh sổ, thổ cư, lối vào và giá chốt đã bao gồm chi phí nào.",
+        "Khi đi xem, đối chiếu diện tích/form đất ngoài thực địa với sổ; nếu lệch, phải định giá lại từ đầu.",
     ]
-    if fair_ty is not None:
-        valuation.append(
-            f"Quy ra toàn thửa, mốc tham chiếu khoảng {_price_ty(fair_ty)}; biên an toàn hiện khoảng {_pct(row['mos_pct'])}."
-        )
-    else:
-        valuation.append(
-            f"Biên an toàn hiện khoảng {_pct(row['mos_pct'])}, nhưng thiếu dữ liệu để quy đổi toàn thửa chắc chắn."
-        )
-    if samples < 10:
-        valuation.append(
-            f"Chỉ có khoảng {samples} mẫu so sánh nên độ chắc chưa cao; cần xem thực địa trước khi tin con số định giá."
-        )
-    elif margin < 15:
-        valuation.append(
-            "Biên này khá mỏng với nhà đầu tư; chỉ đáng theo nếu có thêm lợi thế như vị trí đẹp, dòng tiền, hoặc thương lượng giảm tiếp."
-        )
-    else:
-        valuation.append(
-            "Biên giá đủ để kiểm tra nghiêm túc, nhưng chưa thay thế được bước soi quy hoạch, đường và pháp lý."
-        )
-
-    checks = [
-        "Xin vị trí chính xác để đối chiếu quy hoạch, đường vào và khoảng cách tới trục chính.",
-        "Xem sổ, thổ cư, ranh thửa và lối đi thực tế; không đặt cọc nếu chỉ nghe mô tả miệng.",
-        "Xác nhận giá chốt, phí sang tên và có phát sinh môi giới/chênh lệch ngoài hợp đồng không.",
-    ]
-    if flags:
-        checks.append("Lưu ý thêm: " + "; ".join(flags[:4]) + ".")
-    else:
-        checks.append("So lịch sử đăng lại và giá cũ để biết chủ thật sự cần bán hay chỉ thử giá.")
-
-    if target_ty is None:
-        action = "Ưu tiên gọi hỏi dữ liệu còn thiếu trước; nếu người bán không cung cấp được vị trí/sổ/giá chốt rõ ràng thì bỏ qua."
-    elif row["verdict"] == "cheap_real":
-        action = (
-            f"Nếu kiểm tra đúng, có thể hẹn xem sớm và neo giá mua quanh {_price_ty(target_ty)} "
-            "để giữ biên an toàn cho nhà đầu tư."
-        )
-    elif row["verdict"] == "not_cheap":
-        action = (
-            f"Chỉ nên quay lại nếu thương lượng được về quanh {_price_ty(target_ty)} "
-            "hoặc có lợi thế thực địa rõ hơn số liệu đang thể hiện."
-        )
-    else:
-        action = (
-            f"Trước khi đi xem, hỏi đủ thông tin; nếu dữ liệu đúng thì giá mua hợp lý nên thấp hơn đáng kể mốc {_price_ty(fair_ty)}."
-        )
+    checks = _unique(checks)[:6]
 
     return "\n".join(
         [
@@ -289,18 +394,17 @@ def build_memo(row) -> str:
             "## Kết luận",
             _conclusion(row),
             "",
-            "## Luận điểm đầu tư",
-            *[f"- {item}" for item in thesis],
+            "## Điểm riêng của lô này",
+            *[f"- {item}" for item in asset_notes],
             "",
-            "## Định giá dễ hiểu",
+            "## Định giá và biên an toàn",
             *[f"- {item}" for item in valuation],
             "",
-            "## Trước khi đặt cọc",
+            "## Điểm phải soi trước khi cọc",
             *[f"- {item}" for item in checks],
             "",
             "## Cách xử lý",
-            f"- {action}",
-            f"- Điểm ưu tiên hiện tại: {score}; dùng điểm này để chọn tin đi kiểm tra trước, không dùng thay quyết định mua.",
+            f"- {_action_note(row, fair_ty)}",
         ]
     )
 
@@ -318,12 +422,18 @@ def fetch_rows(limit: int | None, model: str):
         )
         SELECT r.id AS review_id, r.listing_id, r.verdict, r.confidence,
                r.red_flags, r.needs_map_check,
-               l.title, l.source, l.ward, l.property_type, l.price_ty,
+               l.title, l.description, l.source, l.ward, l.property_type, l.price_ty,
                l.area_m2, l.price_per_m2, l.frontage_m, l.depth_m,
                l.road_tier, l.road_type, l.has_so, l.tho_cu_m2,
                l.price_dropped, l.price_drop_pct,
                v.fair_ppm2, v.actual_ppm2, v.mos_pct, v.signal_score,
-               v.n_segment, COALESCE(v.source_quality_flags, '') AS source_quality_flags
+               v.n_segment, COALESCE(v.source_quality_flags, '') AS source_quality_flags,
+               (SELECT COUNT(*) FROM price_history ph WHERE ph.listing_id = l.id) AS price_history_count,
+               (SELECT COUNT(*)
+                  FROM listings lh
+                 WHERE lh.id = COALESCE(l.duplicate_of_id, l.id)
+                    OR lh.duplicate_of_id = COALESCE(l.duplicate_of_id, l.id)
+               ) AS lot_history_count
           FROM latest_memo r
           JOIN listings l ON l.id = r.listing_id
           LEFT JOIN latest_valuation v ON v.listing_id = l.id
