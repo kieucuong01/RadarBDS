@@ -31,6 +31,19 @@ def _ascii_fold(text: str) -> str:
     ).lower()
 
 
+def _contains_folded_keyword(text_ascii: str, keyword: str) -> bool:
+    """Match a folded keyword as full words, not as a prefix of another word."""
+    folded = _ascii_fold(keyword).replace("đ", "d").replace("Đ", "d").strip()
+    if not folded:
+        return False
+    parts = [re.escape(part) for part in folded.split()]
+    if not parts:
+        return False
+    separator = r'[\s:;,.\/\-]+'
+    pattern = r'(?<![a-z0-9])' + separator.join(parts) + r'(?![a-z0-9])'
+    return bool(re.search(pattern, text_ascii, re.IGNORECASE))
+
+
 _NON_ASKING_PRICE_PATTERNS = [
     # "Rẻ hơn thị trường 100 triệu" / "thấp hơn 1 tỷ" is a delta, not asking price.
     r'(?:rẻ\s*hơn|re\s*hon|thấp\s*hơn|thap\s*hon)\s*(?:thị\s*trường|thi\s*truong)?\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
@@ -1634,7 +1647,7 @@ def classify_property_type(
         ' ', text_for_nha_ascii, flags=re.IGNORECASE,
     )
     text_ascii = text_for_nha_ascii
-    has_house_kw = any(_ascii_fold(kw) in text_for_nha_ascii for kw in _NHA_KW) or bool(re.search(
+    has_house_kw = any(_contains_folded_keyword(text_for_nha_ascii, kw) for kw in _NHA_KW) or bool(re.search(
         r'(^|\n)\s*[^\w\s]*\s*nha\b|'
         r'\bnha\s*(?:tret|lau|cap|moi)\b|'
         r'\btret\s*lau\b|\bgac\s*lung\b|'

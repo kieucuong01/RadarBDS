@@ -913,6 +913,26 @@ def test_classify_property_type():
         95,
         price_per_m2=18.42,
     ) == "dat_nen"
+    fast_sale_title = (
+        "\U0001f525\U0001f525@Giảm giá bán nhanh . Hàng Hiếm Giá rẻ a e ơi \n\n"
+        "Đất Định Hoà Nhánh DX72 Dân Cư Đông\n"
+        "- Giá : 1ty5 b"
+    )
+    fast_sale_desc = (
+        "\U0001f525\U0001f525@Giảm giá bán nhanh . Hàng Hiếm Giá rẻ a e ơi \n\n"
+        "Đất Định Hoà Nhánh DX72 Dân Cư Đông\n"
+        "- Giá : 1ty5 bớt lộc \n"
+        "- Dien tich : 4 * 30 = 120m2 , thổ cư : 60m2 đường bê tông 4m oto chạy vi vu\n"
+        "- Mua xây nhà ở đẹp\n"
+        "Lh 0987554839 xem đất Gc"
+    )
+    assert classify_property_type(
+        fast_sale_title,
+        fast_sale_desc,
+        120,
+        tho_cu_m2=60,
+        price_per_m2=12.5,
+    ) == "dat_nen"
     # "Phù hợp xây/phòng trọ đầu tư" is potential use, not an existing rental block.
     assert classify_property_type(
         "Lô đất đẹp - phù hợp xây nhà vườn, phòng trọ đầu tư",
