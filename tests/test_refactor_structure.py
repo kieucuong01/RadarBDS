@@ -115,8 +115,11 @@ def test_signal_modal_history_uses_compact_timeline_ui():
 
     for expected in [
         'class="sm-history-chart-shell"',
-        "SM_HISTORY_VISIBLE_LIMIT",
+        "SM_HISTORY_VISIBLE_LIMIT = 3",
         "renderSignalHistoryRows",
+        "_historyVisibleChartTimeline",
+        "updateSignalHistoryChart",
+        "history-three-points-20260606",
         "toggleSignalHistoryRows",
         "sm-history-summary",
         "sm-history-toggle",

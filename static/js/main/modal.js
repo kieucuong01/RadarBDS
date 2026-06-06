@@ -108,6 +108,7 @@ function buildSlider(imgs) {
 }
 
 let smHistoryChart = null;
+let smHistoryChartTimeline = [];
 let galleryImages = [];
 let galleryIndex = 0;
 let signalModalHistoryManaged = false;
@@ -930,7 +931,7 @@ async function hydrateSignalDetail(listingId) {
   }
 }
 
-const SM_HISTORY_VISIBLE_LIMIT = 5;
+const SM_HISTORY_VISIBLE_LIMIT = 3;
 const SM_HISTORY_CHART_MAX_POINTS = 16;
 
 function _historyPriceLabel(value) {
@@ -1019,6 +1020,23 @@ function renderSignalHistoryRows(timeline, opts = {}) {
   return `${rows}${toggle}`;
 }
 
+function _historyVisibleChartTimeline(timeline, expanded) {
+  const limit = expanded ? SM_HISTORY_CHART_MAX_POINTS : SM_HISTORY_VISIBLE_LIMIT;
+  return timeline.length > limit ? timeline.slice(-limit) : timeline;
+}
+
+function updateSignalHistoryChart(expanded) {
+  if (!smHistoryChart || !Array.isArray(smHistoryChartTimeline)) return;
+  const chartTimeline = _historyVisibleChartTimeline(smHistoryChartTimeline, expanded);
+  smHistoryChart.data.labels = chartTimeline.map((h) => _historyShortDate(h.date));
+  const dataset = smHistoryChart.data.datasets && smHistoryChart.data.datasets[0];
+  if (dataset) {
+    dataset.data = chartTimeline.map((h) => h.price_ty);
+    dataset.pointBackgroundColor = chartTimeline.map((h) => h._is_latest ? '#10b981' : '#2563eb');
+  }
+  smHistoryChart.update();
+}
+
 function toggleSignalHistoryRows(button) {
   const root = button && button.closest('.sm-price-history');
   if (!root) return;
@@ -1026,6 +1044,7 @@ function toggleSignalHistoryRows(button) {
   root.querySelectorAll('.is-history-extra').forEach((row) => {
     row.hidden = !expanded;
   });
+  updateSignalHistoryChart(expanded);
   button.textContent = expanded
     ? (button.dataset.expandedText || 'Thu gọn lịch sử')
     : (button.dataset.collapsedText || 'Xem thêm');
@@ -1039,6 +1058,7 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
   if (historyEl) historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Đang tải lịch sử...</div>';
   if (compsBody) compsBody.innerHTML = '<div class="sm-empty-state">Đang tải giao dịch tương tự...</div>';
   if (smHistoryChart) { smHistoryChart.destroy(); smHistoryChart = null; }
+  smHistoryChartTimeline = [];
 
   try {
     const res = await fetch(`/api/history/${listingId}`);
@@ -1077,9 +1097,8 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
       `;
     }
 
-    const chartTimeline = decoratedTimeline.length > SM_HISTORY_CHART_MAX_POINTS
-      ? decoratedTimeline.slice(-SM_HISTORY_CHART_MAX_POINTS)
-      : decoratedTimeline;
+    smHistoryChartTimeline = decoratedTimeline;
+    const chartTimeline = _historyVisibleChartTimeline(decoratedTimeline, false);
     const labels = chartTimeline.map((h) => _historyShortDate(h.date));
 
     if (labels.length > 0 && chartEl) {
