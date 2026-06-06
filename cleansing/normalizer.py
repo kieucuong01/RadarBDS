@@ -121,6 +121,30 @@ def _dimension_area_override(area_m2, frontage_m, depth_m) -> Optional[float]:
     return None
 
 
+def _has_reported_total_area_marker(text: str) -> bool:
+    folded = _ascii_fold(text or "")
+    total_match = re.search(
+        r'(?:tong|tong\s*dt|dt\s*tong)[:\s]*[\d]+[,.]?[\d]*\s*(?:m[²2]?|mv|met\s*vuong)',
+        folded,
+        re.IGNORECASE,
+    )
+    if total_match:
+        return True
+
+    for match in re.finditer(
+        r'(?:=|~)\s*[\d]+[,.]?[\d]*\s*(?:m[²2]?|mv|met\s*vuong)',
+        folded,
+        re.IGNORECASE,
+    ):
+        context = folded[max(0, match.start() - 48):match.start()]
+        if re.search(
+            r'(?:[\d]+[,.]?[\d]*\s*[x×\*]\s*[\d]+[,.]?[\d]*|dt|dien\s*tich|tong|ngang)',
+            context,
+        ):
+            return True
+    return False
+
+
 def match_area(raw_text: str) -> Optional[str]:
     if not raw_text:
         return None
@@ -479,6 +503,9 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         # Fallback: trích xuất từ text khi nguồn không có structured fields (Facebook posts).
         # Vẫn parse khi thiếu dimensions, kể cả area structured đã có sẵn.
         _fb_parsed: dict = {}
+        _parse_text = "\n".join(part for part in [title, description] if part)
+        _has_reported_area = _has_reported_total_area_marker(_parse_text)
+        _fb_area_is_declared_total = False
         if (
             source_name == "facebook"
             or price_ty is None
@@ -488,12 +515,13 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             or raw.get("depth_m") is None
             or raw.get("road_width_m") is None
         ):
-            _parse_text = "\n".join(part for part in [title, description] if part)
             _fb_parsed = parse_facebook_post(_parse_text) or {}
             if price_ty is None:
                 price_ty = _fb_parsed.get("price_total")
             if area_m2 is None:
-                area_m2 = _fb_parsed.get("area_m2") or None
+                parsed_area_from_text = _fb_parsed.get("area_m2") or None
+                area_m2 = parsed_area_from_text
+                _fb_area_is_declared_total = bool(parsed_area_from_text and _has_reported_area)
             if price_per_m2 is None:
                 if price_ty and area_m2:
                     price_per_m2 = None  # tính lại từ area cuối cùng ở block dưới
@@ -536,9 +564,10 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         parsed_area_is_declared_total = False
         if (
             source_name == "facebook"
-            and parsed_area
-            and current_area
-            and 10 < parsed_area < 100000
+                and parsed_area
+                and current_area
+                and 10 < parsed_area < 100000
+                and _has_reported_area
         ):
             parsed_frontage_num = _float_or_none(parsed_frontage)
             parsed_depth_num = _float_or_none(parsed_depth)
@@ -553,7 +582,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
 
         corrected_area = (
             None
-            if has_title_area_m2 or parsed_area_is_declared_total
+            if has_title_area_m2 or parsed_area_is_declared_total or _fb_area_is_declared_total
             else _dimension_area_override(area_m2, parsed_frontage, parsed_depth)
         )
         if corrected_area is not None:

@@ -308,6 +308,22 @@ def test_normalizer_prefers_reported_total_area_over_dimension_product():
 
     rec = normalize_record({
         "source": "facebook",
+        "external_id": "phu-cuong-irregular-reported-area-missing-structured-area",
+        "url": "https://www.facebook.com/example/posts/phu-cuong-irregular-reported-area-missing-structured-area",
+        "default_area": "Th\u1ee7 D\u1ea7u M\u1ed9t",
+        "title": "Ng\u1ed9p C\u1ea7n Ra G\u1ea5p. Nh\u00e0 c\u1ea5p 4 s\u00e2n v\u01b0\u1eddn.",
+        "description": "Di\u1ec7n t\u00edch : 7x38m n\u1edf h\u1eadu 9m ~ 309m2 th\u1ed5 c\u01b0 100m2. Gi\u00e1 4t\u1ef79.",
+        "price_ty": 4.9,
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 309.0
+    assert rec["frontage_m"] == 7.0
+    assert rec["depth_m"] == 38.0
+    assert rec["tho_cu_m2"] == 100.0
+
+    rec = normalize_record({
+        "source": "facebook",
         "external_id": "hiep-thanh-reported-area",
         "url": "https://www.facebook.com/example/posts/hiep-thanh-reported-area",
         "default_area": "Th\u1ee7 D\u1ea7u M\u1ed9t",
