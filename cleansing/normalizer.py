@@ -593,6 +593,8 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             area_m2 = corrected_area
             price_per_m2 = None
 
+        if not price_ty and price_per_m2 and area_m2 and area_m2 > 0:
+            price_ty = round((price_per_m2 * area_m2) / 1_000, 4)
         if price_ty and area_m2 and area_m2 > 0 and not price_per_m2:
             price_per_m2 = round((price_ty * 1_000) / area_m2, 3)
 

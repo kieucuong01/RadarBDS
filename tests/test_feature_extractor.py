@@ -11,6 +11,7 @@ from cleansing.feature_extractor import (
     extract_price, extract_area, extract_dimensions,
     extract_tho_cu, extract_road_tier, extract_legal,
     classify_property_type, extract_road_type, is_multi_lot_listing,
+    extract_price_per_m2,
 )
 from cleansing.normalizer import normalize_record, match_ward
 from services.market_data import _format_price_label
@@ -54,10 +55,16 @@ def test_extract_price_handles_real_unicode_ty_patterns():
     assert extract_price("B\u00e1n \u0111\u1ea5t 3 t\u1ef7") == 3.0
     assert extract_price("Nh\u00e0 ng\u1ed9p gi\u00e1 2ty1x") == 2.1
     assert extract_price("M\u1eb7t ti\u1ec1n gi\u00e1 1ty3xxtr") == 1.3
+    assert extract_price("gi\u00e1 ch\u1ec9 1ty3xxlh 0986694832 v\u00e0o vi\u1ec7c") == 1.3
     assert extract_price("Ch\u1ee7 b\u00e1n gi\u00e1 1ty350tr, sau \u0111\u00f3 ghi gia 1ty3xx") == 1.35
     assert extract_price("Gi\u00e1 2txx") is None
     assert extract_price("Gi\u00e1 12.x t\u1ef7") is None
     assert extract_price("NH ho tro 500tr") is None
+
+
+def test_extract_price_per_m2_handles_per_meter_shorthand():
+    assert extract_price_per_m2("10Tri\u1ec7u/m. R\u1eba QU\u00c1 R\u1eba") == 10
+    assert extract_price_per_m2("Gi\u00e1 9,5 tr/m, di\u1ec7n t\u00edch 5x30") == 9.5
 
 
 def test_price_label_marks_tens_level_approximate_prices():
@@ -514,6 +521,19 @@ def test_normalizer_parses_user_reported_facebook_edge_cases():
     assert dx072_large_land["frontage_m"] == 15.0
     assert dx072_large_land["depth_m"] == 71.0
     assert dx072_large_land["property_type"] == "dat_nen"
+
+    ppm2_price_land = normalize_record({
+        "source": "facebook",
+        "external_id": "chanh-my-price-per-meter",
+        "url": "https://www.facebook.com/example/posts/chanh-my-price-per-meter",
+        "default_area": "Th\u1ee7 D\u1ea7u M\u1ed9t",
+        "title": "10Tri\u1ec7u/m. R\u1eba QU\u00c1 R\u1eba",
+        "description": "B\u00e1n \u0111\u1ea5t Ch\u00e1nh M\u1ef9. Di\u1ec7n t\u00edch: 10x46 th\u1ed5 c\u01b0 150m. \u0110\u01b0\u1eddng 5m nh\u1ef1a.",
+    })
+    assert ppm2_price_land is not None
+    assert ppm2_price_land["area_m2"] == 460.0
+    assert ppm2_price_land["price_per_m2"] == 10.0
+    assert ppm2_price_land["price_ty"] == 4.6
 
 
 def test_normalizer_does_not_treat_discount_or_down_payment_as_asking_price():

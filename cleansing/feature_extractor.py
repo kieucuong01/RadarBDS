@@ -90,8 +90,9 @@ def extract_price(text: str) -> Optional[float]:
     # GUARD: "1txx" / "2txx" / "1 tỷ xxx" — môi giới ám chỉ "1 tỷ mấy trăm"
     # nhưng KHÔNG xác định → trả None thay vì guess.
     # (user feedback L#675: "1tỷ xxx lấy hết giá tốt" → "1txx k phải 1 tỷ").
-    if re.search(r'\d+\s*(?:t|ty|ti)\s*\d*x+\s*(?:tr|trieu)?\b', t_fold, re.IGNORECASE):
-        m = re.search(r'\b(\d+)\s*(?:ty|ti)\s*(\d{1,3})x+\s*(?:tr|trieu)?\b', t_fold, re.IGNORECASE)
+    fuzzy_price_suffix = r'(?=\s*(?:tr|trieu|lh|lien|alo|zalo)\b|[^a-z0-9]|$)'
+    if re.search(rf'\d+\s*(?:t|ty|ti)\s*\d*x+\s*(?:tr|trieu)?{fuzzy_price_suffix}', t_fold, re.IGNORECASE):
+        m = re.search(rf'\b(\d+)\s*(?:ty|ti)\s*(\d{{1,3}})x+\s*(?:tr|trieu)?{fuzzy_price_suffix}', t_fold, re.IGNORECASE)
         if m:
             ty = float(m.group(1).replace(',', '.'))
             rest = float(m.group(2))
@@ -510,9 +511,16 @@ def extract_price_per_m2(text: str) -> Optional[float]:
       "66tr/1m" → 66.0 (giá/m ngang — khác!)
     """
     t = unicodedata.normalize("NFKC", text or "").lower()
+    t_fold = _ascii_fold(t)
 
     # tr/m² hoặc triệu/m²
     m = re.search(r'([\d]+[,.]?[\d]*)\s*tr(?:iệu)?[/\s]*m[²2]', t)
+    if m:
+        return float(m.group(1).replace(',', '.'))
+
+    # Broker shorthand: "10Triệu/m" / "9,5 tr/m" means triệu mỗi m² in land posts.
+    # Keep it separate from "66tr/1m" (price per frontage meter).
+    m = re.search(r'([\d]+[,.]?[\d]*)\s*(?:tr|trieu)[/\s]*m\b', t_fold)
     if m:
         return float(m.group(1).replace(',', '.'))
 
