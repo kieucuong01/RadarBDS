@@ -181,30 +181,63 @@
     window.location.reload();
   }
 
+  const VIP_ZALO_PHONE = '0343216024';
+  const VIP_ZALO_URL = 'https://zalo.me/0343216024';
+
   // ── User menu toggle ────────────────────────────────────────────
+  function setUserMenuOpen(open) {
+    const dd = document.getElementById('userMenuDropdown');
+    const trigger = document.querySelector('.user-menu-trigger');
+    const shouldOpen = Boolean(open);
+    if (dd) dd.classList.toggle('open', shouldOpen);
+    if (trigger) trigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+    document.body.classList.toggle('user-menu-open', shouldOpen && isMobile);
+  }
+
   function toggleUserMenu(e) {
     if (e) e.stopPropagation();
     const dd = document.getElementById('userMenuDropdown');
-    if (dd) dd.classList.toggle('open');
+    setUserMenuOpen(!(dd && dd.classList.contains('open')));
   }
   function closeUserMenuOnOutside(e) {
     const menu = document.getElementById('userMenu');
     if (!menu) return;
     if (!menu.contains(e.target)) {
-      const dd = document.getElementById('userMenuDropdown');
-      if (dd) dd.classList.remove('open');
+      setUserMenuOpen(false);
     }
   }
 
   // ── Tier nudges (called from card CTAs) ─────────────────────────
   function nudgeVipUpgrade(reason) {
-    const tier = window.USER_TIER || 'guest';
-    if (tier === 'guest') {
-      openAuthModal('🔒 ' + (reason || 'Đăng ký để mở khoá tin VIP và phân tích chuyên sâu.'));
-      return;
+    openVipUpgradeModal(reason);
+  }
+
+  function openVipUpgradeModal(reason) {
+    const m = document.getElementById('vipUpgradeModal');
+    if (!m) return;
+    closeUserMenu();
+    const reasonEl = document.getElementById('vipUpgradeReason');
+    if (reasonEl) {
+      reasonEl.textContent = reason || 'Nhận tin mới sớm, cảnh báo theo khu vực quan tâm và phân tích chuyên sâu.';
     }
-    // Free/already-logged-in → simple alert pointing to Zalo for now
-    alert('💎 Nâng cấp VIP\n\nLiên hệ admin qua Zalo để được nâng cấp VIP (1.000.000đ/tháng).\nĐặc quyền:\n• Xem tin mới ngay khi crawl (sớm 24h)\n• Push Telegram + email tin khớp watchlist\n• Phân tích chuyên sâu (Cắt máu, Bất thường nguồn cung)');
+    m.classList.add('show');
+    setTimeout(() => {
+      const zaloBtn = m.querySelector('.vip-upgrade-zalo');
+      if (zaloBtn) zaloBtn.focus();
+    }, 80);
+  }
+
+  function closeVipUpgradeModal() {
+    const m = document.getElementById('vipUpgradeModal');
+    if (m) m.classList.remove('show');
+  }
+
+  function chatVipUpgradeZalo() {
+    closeVipUpgradeModal();
+    const w = window.open(VIP_ZALO_URL, '_blank', 'noopener,noreferrer');
+    if (!w) window.location.href = VIP_ZALO_URL;
   }
 
   function escHtml(v) {
@@ -214,8 +247,7 @@
   }
 
   function closeUserMenu() {
-    const dd = document.getElementById('userMenuDropdown');
-    if (dd) dd.classList.remove('open');
+    setUserMenuOpen(false);
   }
 
   function openWatchlistModal() {
@@ -592,6 +624,9 @@
     logout,
     toggleUserMenu,
     nudgeVipUpgrade,
+    openVipUpgradeModal,
+    closeVipUpgradeModal,
+    chatVipUpgradeZalo,
     openWatchlistModal,
     closeWatchlistModal,
     selectWatchlistCity,
@@ -607,6 +642,14 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', closeUserMenuOnOutside);
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') closeUserMenu();
+    });
+    window.addEventListener('resize', () => {
+      const dd = document.getElementById('userMenuDropdown');
+      if (!dd || !dd.classList.contains('open')) return;
+      setUserMenuOpen(true);
+    });
     // Submit-on-Enter inside auth modal
     const idEl = document.getElementById('authIdentifier');
     const pwEl = document.getElementById('authPassword');

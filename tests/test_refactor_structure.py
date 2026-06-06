@@ -144,7 +144,73 @@ def test_signal_cards_use_professional_empty_image_state():
         assert expected in signals_js or expected in cards_css
 
     assert ".sc-empty-media" in cards_css
-    assert "signal-empty-media-20260606" in html
+    assert "signal-badge-meta-20260606" in html
+
+
+def test_signal_cards_and_modal_render_compact_property_badges():
+    html = _read("templates/index.html")
+    signals_js = _read("static/js/main/signals.js")
+    modal_js = _read("static/js/main/modal.js")
+    cards_css = _read("static/css/main/cards.css")
+    modal_css = _read("static/css/main/modal.css")
+
+    for expected in [
+        "renderSignalMetaChips",
+        "data-road-label",
+        "data-street-label",
+        "data-tho-cu-label",
+        "data-prop-label",
+        "streetLabel",
+        "thoCuLabel",
+        "propertyTypeLabel",
+        "signal-badge-meta-20260606",
+    ]:
+        assert expected in html or expected in signals_js or expected in modal_js
+
+    assert ".meta-chip-label" in cards_css
+    assert ".meta-chip-street" in cards_css
+    assert ".sm-tags-wrap .sm-tag-chip" in modal_css
+    assert "flex-wrap: wrap" in cards_css
+    assert "flex-wrap: wrap" in modal_css
+
+
+def test_mobile_account_menu_uses_fixed_dropdown_not_clipped_header_dropdown():
+    html = _read("templates/index.html")
+    auth_js = _read("static/js/auth.js")
+    auth_css = _read("static/css/auth.css")
+
+    for expected in [
+        "account-menu-compact-20260606",
+        'aria-expanded="false"',
+        "setUserMenuOpen",
+        "user-menu-open",
+        "window.matchMedia('(max-width: 1024px)')",
+        "position: fixed",
+        "top: calc(var(--mobile-header-height) + 8px)",
+        "width: min(300px, calc(100vw - 16px))",
+        "min-height: 44px",
+    ]:
+        assert expected in html or expected in auth_js or expected in auth_css
+
+
+def test_vip_upgrade_click_uses_modal_with_zalo_cta_instead_of_alert():
+    html = _read("templates/index.html")
+    auth_js = _read("static/js/auth.js")
+    auth_css = _read("static/css/auth.css")
+
+    for expected in [
+        'id="vipUpgradeModal"',
+        "openVipUpgradeModal",
+        "closeVipUpgradeModal",
+        "chatVipUpgradeZalo",
+        "0343216024",
+        "zalo.me/0343216024",
+        "vip-upgrade-modal",
+        "vip-upgrade-modal-20260606",
+    ]:
+        assert expected in html or expected in auth_js or expected in auth_css
+
+    assert "alert('💎 Nâng cấp VIP" not in auth_js
 
 
 def test_price_and_area_filters_support_multi_select_range_chips():

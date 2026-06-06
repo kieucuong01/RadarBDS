@@ -42,11 +42,11 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=vietnamese-font-stack-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=nav-badge-highlight-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=keyword-search-20260603">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-empty-media-20260606">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=history-compact-ui-20260606">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-badge-meta-20260606">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-badge-meta-20260606">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=area-risk-radar-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=nav-badge-highlight-20260605">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=auth-vietnamese-header-20260605">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=account-menu-compact-20260606">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
     window.CURRENT_USER = {{ USER | tojson }};
@@ -285,8 +285,8 @@
 
         {% if USER %}
         <div class="user-menu" id="userMenu">
-          <button class="user-menu-trigger" onclick="RadarAuth.toggleUserMenu(event)" title="Tài khoản"
-            aria-label="Mở menu tài khoản">
+          <button class="user-menu-trigger" type="button" onclick="RadarAuth.toggleUserMenu(event)" title="Tài khoản"
+            aria-label="Mở menu tài khoản" aria-haspopup="menu" aria-expanded="false">
             <span class="user-avatar" aria-hidden="true">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -301,7 +301,7 @@
               <path d="m6 9 6 6 6-6" />
             </svg>
           </button>
-          <div class="user-menu-dropdown" id="userMenuDropdown">
+          <div class="user-menu-dropdown" id="userMenuDropdown" role="menu">
             <div class="user-menu-header">
               <div class="user-menu-header-top">
                 <span class="user-avatar user-avatar-lg" aria-hidden="true">
@@ -884,6 +884,29 @@
     </div>
   </div>
 
+  <!-- VIP Upgrade Modal -->
+  <div id="vipUpgradeModal" class="modal" onclick="if(event.target===this)RadarAuth.closeVipUpgradeModal()">
+    <div class="modal-content auth-modal-content vip-upgrade-modal">
+      <button class="close-modal" onclick="RadarAuth.closeVipUpgradeModal()" style="top:12px; right:12px;">&times;</button>
+      <div class="vip-upgrade-icon" aria-hidden="true">💎</div>
+      <h3>Nâng cấp VIP</h3>
+      <p class="auth-sub" id="vipUpgradeReason">Nhận tin mới sớm, cảnh báo theo khu vực quan tâm và phân tích chuyên sâu.</p>
+      <div class="vip-upgrade-benefits">
+        <span>Ưu tiên tin mới ngay khi crawl</span>
+        <span>Push Telegram theo khu vực quan tâm</span>
+        <span>Radar rủi ro và phân tích chuyên sâu</span>
+      </div>
+      <div class="vip-upgrade-contact">
+        <span>Liên hệ Zalo</span>
+        <strong>0343216024</strong>
+      </div>
+      <button type="button" class="auth-btn auth-btn-primary vip-upgrade-zalo" onclick="RadarAuth.chatVipUpgradeZalo()">
+        Nhắn Zalo 0343216024
+      </button>
+      <button type="button" class="auth-btn auth-btn-ghost" onclick="RadarAuth.closeVipUpgradeModal()">Để sau</button>
+    </div>
+  </div>
+
   <!-- Watchlist / Telegram Notification Modal -->
   <div id="watchlistModal" class="modal" onclick="if(event.target===this)RadarAuth.closeWatchlistModal()">
     <div class="modal-content watchlist-modal-content">
@@ -1077,11 +1100,11 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/auth.js') }}?v=watchlist-telegram-sync-20260515"></script>
+  <script src="{{ url_for('static', filename='js/auth.js') }}?v=vip-upgrade-modal-20260606"></script>
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-home-polish-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=keyword-search-20260603"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=signal-empty-media-20260606"></script>
-  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=history-compact-ui-20260606"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=signal-badge-meta-20260606"></script>
+  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=signal-badge-meta-20260606"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=area-risk-radar-20260605"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=listings-grid-signal-card-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>

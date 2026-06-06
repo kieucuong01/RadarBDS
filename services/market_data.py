@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import re
 import unicodedata
 
+from cleansing.feature_extractor import _NAMED_ROADS, extract_road_width, extract_tho_cu
 from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
 from db.connection import get_conn
 from services.image_assets import resolve_image_url
@@ -595,8 +596,222 @@ def _format_price_label(*texts):
     return None
 
 
+PROPERTY_TYPE_LABELS = {
+    "dat_nen": "Đất nền",
+    "dat_vuon": "Đất vườn",
+    "nha_dat": "Nhà đất",
+    "nha_tro": "Nhà trọ",
+    "chung_cu": "Chung cư",
+    "nha_o_xa_hoi": "Nhà ở xã hội",
+}
+
+ROAD_TIER_LABELS = {
+    1: "Mặt tiền",
+    2: "Đường nhựa",
+    3: "Hẻm xe hơi",
+    4: "Hẻm xe máy",
+    5: "Hẻm xe máy",
+}
+
+ROAD_TYPE_LABELS = {
+    "duong_nhua": "Đường nhựa",
+    "be_tong": "Bê tông",
+    "duong_dat": "Đường đất",
+    "hem_xe_hoi": "Hẻm xe hơi",
+    "hem_xe_may": "Hẻm xe máy",
+    "hem_ba_gac": "Hẻm ba gác",
+}
+
+_ROAD_CODE_RE = re.compile(
+    r"\b(?:dx|dh|dl|db|nl|ng|ni|na|nb|dc)\s*[-./]?\s*\d{1,3}[a-z]?\b",
+    re.I,
+)
+_ROAD_WIDTH_FALLBACK_RE = re.compile(
+    r"\b(?:duong|hem|ngo|lo|mat\s*tien|mt|oto|o\s*to|xe\s*hoi)"
+    r"[^,.;\n]{0,28}?(\d+(?:[,.]\d+)?)\s*m\b",
+    re.I,
+)
+
+
+def _as_float(value):
+    if value is None or value == "":
+        return None
+    try:
+        n = float(str(value).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+    return n if n > 0 else None
+
+
+def _format_metric(value, decimals=1):
+    n = _as_float(value)
+    if n is None:
+        return None
+    if abs(n - round(n)) < 0.05:
+        return str(int(round(n)))
+    return f"{n:.{decimals}f}".rstrip("0").rstrip(".")
+
+
+def _listing_badge_text(r):
+    parts = []
+    for key in ("title", "description", "legal_road_text", "legal_road_code"):
+        val = _row_get(r, key, "")
+        if val:
+            parts.append(str(val))
+    return "\n".join(parts)
+
+
+def _infer_road_width_m(r, text):
+    explicit = _as_float(_row_get(r, "road_width_m"))
+    if explicit:
+        return explicit
+    folded = _ascii_fold(text or "")
+    distance_context = re.search(
+        r"\b(?:cach|gan|vao)\s+(?:duong|hem|ngo|lo|mat\s*tien)?[^,.;\n]{0,42}?\d+(?:[,.]\d+)?\s*m\b",
+        folded,
+        re.I,
+    )
+    inferred = extract_road_width(text or "")
+    if inferred and not (distance_context and float(inferred) >= 20):
+        return float(inferred)
+    for m in _ROAD_WIDTH_FALLBACK_RE.finditer(folded):
+        before = folded[max(0, m.start() - 18):m.start()]
+        match_text = m.group(0)
+        if re.search(r"\b(?:cach|gan|vao)\s*$", before, re.I) or re.search(r"\bvao\s+\d+(?:[,.]\d+)?\s*m\b", match_text, re.I):
+            continue
+        value = _as_float(m.group(1))
+        if value and 2 <= value <= 60:
+            return value
+    return None
+
+
+def _infer_tho_cu_m2(r, text):
+    explicit = _as_float(_row_get(r, "tho_cu_m2"))
+    area = _as_float(_row_get(r, "area_m2"))
+    if explicit:
+        return explicit
+    info = extract_tho_cu(text or "", area)
+    value = _as_float(info.get("tho_cu_m2"))
+    if value:
+        return value
+    folded = _ascii_fold(text or "")
+    patterns = [
+        r"\b(?:tc|tho\s*cu)\s*[:\-]?\s*(\d+(?:[,.]\d+)?)\s*m?\b",
+        r"\b(\d+(?:[,.]\d+)?)\s*m?\s*(?:tc|tho\s*cu)\b",
+    ]
+    for pat in patterns:
+        m = re.search(pat, folded, re.I)
+        if not m:
+            continue
+        value = _as_float(m.group(1))
+        if value and 5 <= value <= 10000 and (not area or value <= area * 1.05):
+            return value
+    return None
+
+
+def _infer_tho_cu_ratio(r, tho_cu_m2):
+    explicit = _as_float(_row_get(r, "tho_cu_ratio"))
+    if explicit:
+        return explicit
+    area = _as_float(_row_get(r, "area_m2"))
+    if area and tho_cu_m2:
+        return round(tho_cu_m2 / area, 3)
+    return None
+
+
+def _road_base_label(r):
+    tier = int(_as_float(_row_get(r, "road_tier")) or 0)
+    if tier in ROAD_TIER_LABELS:
+        return ROAD_TIER_LABELS[tier]
+    road_type = str(_row_get(r, "road_type", "") or "")
+    return ROAD_TYPE_LABELS.get(road_type) or "Chưa rõ"
+
+
+def _format_road_label(r, road_width_m):
+    base = _road_base_label(r)
+    width = _format_metric(road_width_m)
+    if width and base != "Chưa rõ":
+        return f"{base} {width}m"
+    return base
+
+
+def _title_case_road_name(value):
+    words = []
+    for part in str(value or "").split():
+        lower = part.lower()
+        if lower in {"dx", "dh", "dl", "db", "ql"}:
+            words.append(lower.upper())
+        else:
+            words.append(lower[:1].upper() + lower[1:])
+    return " ".join(words)
+
+
+def _find_road_name_match(text):
+    folded = _ascii_fold(text or "")
+    for road in sorted(_NAMED_ROADS, key=len, reverse=True):
+        road_folded = _ascii_fold(road)
+        if not road_folded:
+            continue
+        m = re.search(rf"(?<![a-z0-9]){re.escape(road_folded)}(?![a-z0-9])", folded)
+        if m:
+            return _title_case_road_name(road), m.start(), m.end()
+
+    m = _ROAD_CODE_RE.search(folded)
+    if m:
+        raw = re.sub(r"[\s\-./]+", "", m.group(0)).upper()
+        return raw, m.start(), m.end()
+    return None, None, None
+
+
+def _street_prefix(folded, start, end, road_tier):
+    window = folded[max(0, start - 50): min(len(folded), end + 50)]
+    before = folded[max(0, start - 45): start]
+    tier = int(_as_float(road_tier) or 0)
+    if re.search(r"\b(?:mat\s*tien|mt)\b", window) or tier == 1:
+        return "Mặt tiền"
+    if re.search(r"\b(?:nhanh|xet|xec|1\s*xet|1\s*xec)\b", window):
+        return "Nhánh"
+    if re.search(r"\b(?:hem|ngo)\b", window) or tier in (3, 4, 5):
+        return "Hẻm"
+    if re.search(r"\b(?:gan|cach)\b", before):
+        return "Nhánh"
+    if tier == 2:
+        return "Đường"
+    return "Đường"
+
+
+def _format_street_label(r, text):
+    road_name, start, end = _find_road_name_match(text)
+    if not road_name:
+        return None
+    folded = _ascii_fold(text or "")
+    prefix = _street_prefix(folded, start, end, _row_get(r, "road_tier"))
+    return f"{prefix} {road_name}"
+
+
+def signal_badge_metadata(r):
+    """Compact location/property labels for signal cards and detail modals."""
+    text = _listing_badge_text(r)
+    road_width_m = _infer_road_width_m(r, text)
+    tho_cu_m2 = _infer_tho_cu_m2(r, text)
+    tho_cu_ratio = _infer_tho_cu_ratio(r, tho_cu_m2)
+    tho_cu_display = _format_metric(tho_cu_m2)
+
+    prop_type = _row_get(r, "property_type") or _row_get(r, "prop_type")
+    return {
+        "property_type_label": PROPERTY_TYPE_LABELS.get(prop_type),
+        "road_width_m": road_width_m,
+        "road_label": _format_road_label(r, road_width_m),
+        "street_label": _format_street_label(r, text),
+        "tho_cu_m2": tho_cu_m2,
+        "tho_cu_ratio": tho_cu_ratio,
+        "tho_cu_label": f"TC {tho_cu_display} m²" if tho_cu_display else None,
+    }
+
+
 def _format_signal_row(r, primary_img=None, tier: str = "guest"):
     fair_ppm2 = round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None
+    badge_meta = signal_badge_metadata(r)
     record = {
         "id": r['id'],
         "title": r['title'],
@@ -609,6 +824,7 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "price_ty": r['price_ty'],
         "price_label": _format_price_label(r['title'], _row_get(r, "description", "")),
         "prop_type": r['property_type'],
+        "prop_type_label": badge_meta["property_type_label"],
         "is_hot": bool(r['is_hot']),
         "price_dropped": bool(r['price_dropped']),
         "suspicious_bait": bool(r['suspicious_bait']),
@@ -630,6 +846,13 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "image_count": int(_row_get(r, "image_count", 0) or 0),
         "source": r['source'],
         "road_tier": r['road_tier'] or 0,
+        "road_type": _row_get(r, "road_type"),
+        "road_width_m": badge_meta["road_width_m"],
+        "road_label": badge_meta["road_label"],
+        "street_label": badge_meta["street_label"],
+        "tho_cu_m2": badge_meta["tho_cu_m2"],
+        "tho_cu_ratio": badge_meta["tho_cu_ratio"],
+        "tho_cu_label": badge_meta["tho_cu_label"],
         "has_so": _format_has_so(r),
         "is_fresh_locked": bool(_row_get(r, 'is_fresh_locked', 0)),
     }
@@ -671,7 +894,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         SELECT COUNT(*) OVER() AS total_count,
                v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                l.id, l.title, l.description, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
-               l.property_type, l.is_hot,
+               l.property_type, l.road_type, l.road_width_m, l.tho_cu_m2, l.tho_cu_ratio, l.is_hot,
                {effective_price_drop_select_sql("l", "related_drop")},
                l.suspicious_bait,
                l.duplicate_of_id,
@@ -779,8 +1002,8 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         sig_query = f"""
             WITH {LATEST_VALUATION_CTE}
             SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
-                   l.id, l.title, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
-                   l.property_type, l.is_hot,
+                   l.id, l.title, l.description, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
+                   l.property_type, l.road_type, l.road_width_m, l.tho_cu_m2, l.tho_cu_ratio, l.is_hot,
                    {effective_price_drop_select_sql("l", "related_drop")},
                    l.suspicious_bait,
                    l.duplicate_of_id,
@@ -1557,6 +1780,7 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=No
     listing_dict = dict(listing)
     listing_dict["is_fresh_locked"] = bool(listing_dict.get("is_fresh_locked"))
     listing_dict["has_so"] = _format_has_so(listing_dict)
+    listing_dict.update(signal_badge_metadata(listing_dict))
     listing_dict = redact_for_tier(listing_dict, tier)
     legal_verification = {
         "status": listing_dict.get("legal_verification_status") or listing_dict.get("legal_status") or "unverified",

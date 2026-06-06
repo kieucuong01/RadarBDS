@@ -1071,18 +1071,13 @@
 
 .sm-tags-wrap {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 7px;
   margin: 7px 0 13px;
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
   padding: 1px 1px 3px;
-  scrollbar-width: none;
-}
-
-.sm-tags-wrap::-webkit-scrollbar {
-  display: none;
+  align-content: flex-start;
 }
 
 .sm-tags-wrap span {
@@ -1090,11 +1085,11 @@
 }
 
 .sm-tags-wrap .sm-tag-chip {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  max-width: 46%;
+  max-width: min(100%, 240px);
   min-height: 28px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
@@ -1379,7 +1374,7 @@
 
   .sm-tags-wrap .sm-tag-chip {
     gap: 4px;
-    max-width: 58%;
+    max-width: min(100%, 176px);
     min-height: 26px;
     padding: 3px 8px 3px 4px;
   }

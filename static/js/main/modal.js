@@ -166,13 +166,34 @@ function propertyTypeLabel(v) {
   return PROPERTY_TYPE_LABELS[v] || v || 'N/A';
 }
 
+function _signalTagText(value) {
+  const text = String(value || '').trim();
+  if (!text || text === '-' || text === 'N/A') return '';
+  return text;
+}
+
+function _signalTagArea(value) {
+  const n = Number(String(value || '').replace(',', '.'));
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return `${n.toLocaleString('vi-VN', { maximumFractionDigits: 1 }).replace(',', '.')} m²`;
+}
+
+function _signalTagThoCu(data) {
+  if (data.thoCuLabel) return _signalTagText(data.thoCuLabel);
+  const n = Number(String(data.thoCuM2 || '').replace(',', '.'));
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return `TC ${n.toLocaleString('vi-VN', { maximumFractionDigits: 1 }).replace(',', '.')} m²`;
+}
+
 function renderSignalTags(data) {
   const tags = [
-    { icon: '📐', label: `${data.area || '-'} m²` },
-    { icon: '📍', label: data.ward || '-' },
-    { icon: '🛣️', label: data.road || '-' },
-    { icon: '🏷️', label: propertyTypeLabel(data.propertyType) },
-  ];
+    { icon: '📍', label: _signalTagText(data.ward) },
+    { icon: '📐', label: _signalTagArea(data.area) },
+    { icon: '🛣️', label: _signalTagText(data.roadLabel || data.road) },
+    { icon: '↱', label: _signalTagText(data.streetLabel) },
+    { icon: '🏷️', label: _signalTagText(data.propertyTypeLabel || propertyTypeLabel(data.propertyType)) },
+    { icon: '▣', label: _signalTagThoCu(data) },
+  ].filter((t) => t.label);
   document.getElementById('sm-tags').innerHTML = tags
     .map((t) => `
       <span class="sm-tag-chip">
@@ -344,8 +365,13 @@ function _openSignalLegacy(card) {
     area: d.area,
     ward: d.ward,
     road: d.road,
+    roadLabel: d.roadLabel,
+    streetLabel: d.streetLabel,
     score: d.score,
-    propertyType: d.ptype
+    propertyType: d.ptype,
+    propertyTypeLabel: d.propLabel,
+    thoCuM2: d.thoCu,
+    thoCuLabel: d.thoCuLabel
   });
 
   // Links
@@ -381,8 +407,13 @@ async function _hydrateSignalDetailLegacy(listingId) {
       area: data.area_m2,
       ward: data.ward,
       road: data.road_type || data.road_tier || '-',
+      roadLabel: data.road_label,
+      streetLabel: data.street_label,
       score: data.signal_score || '-',
-      propertyType: data.property_type
+      propertyType: data.property_type,
+      propertyTypeLabel: data.property_type_label,
+      thoCuM2: data.tho_cu_m2,
+      thoCuLabel: data.tho_cu_label
     });
 
     const imgs = Array.isArray(data.imgs) ? data.imgs.filter(Boolean) : [];
@@ -808,8 +839,13 @@ function _openSignalFromData(d, opts = {}) {
     area: d.area,
     ward: d.ward,
     road: d.road,
+    roadLabel: d.roadLabel,
+    streetLabel: d.streetLabel,
     score: d.score,
-    propertyType: d.ptype
+    propertyType: d.ptype,
+    propertyTypeLabel: d.propLabel,
+    thoCuM2: d.thoCu,
+    thoCuLabel: d.thoCuLabel
   });
   updateSignalSummary(d);
 
@@ -872,8 +908,13 @@ async function hydrateSignalDetail(listingId) {
       area: data.area_m2,
       ward: data.ward,
       road: data.road_type || data.road_tier || '-',
+      roadLabel: data.road_label,
+      streetLabel: data.street_label,
       score: data.signal_score || '-',
-      propertyType: data.property_type
+      propertyType: data.property_type,
+      propertyTypeLabel: data.property_type_label,
+      thoCuM2: data.tho_cu_m2,
+      thoCuLabel: data.tho_cu_label
     });
     updateSignalSummary(data);
 

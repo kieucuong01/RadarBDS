@@ -237,6 +237,47 @@ function _signalAreaLabel(signal) {
   return '-';
 }
 
+function _signalThoCuLabel(signal) {
+  if (!signal) return '';
+  if (signal.tho_cu_label) return signal.tho_cu_label;
+  const value = _formatSignalNumber(signal.tho_cu_m2);
+  return value ? `TC ${value}m²` : '';
+}
+
+function _signalPropertyTypeLabel(signal) {
+  if (!signal) return '';
+  return signal.prop_type_label || PROPERTY_TYPE_LABELS[signal.prop_type] || signal.prop_type || '';
+}
+
+function renderSignalMetaChip(iconSvg, label, extraClass = '') {
+  const text = String(label || '').trim();
+  if (!text || text === '-' || text === 'N/A') return '';
+  return `
+    <span class="meta-chip ${extraClass}">
+      ${iconSvg}
+      <span class="meta-chip-label">${escHtml(text)}</span>
+    </span>
+  `;
+}
+
+function renderSignalMetaChips(signal, areaLabel, roadLabel) {
+  const pinIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  const areaIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>';
+  const roadIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
+  const propertyIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18"/><path d="M7 3v18"/><path d="M17 3v18"/><path d="M3 17h18"/></svg>';
+  const landIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18h16"/><path d="M7 18 12 4l5 14"/><path d="M9 13h6"/></svg>';
+  const streetIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v18"/><path d="M18 3v18"/><path d="M6 8h18"/><path d="M0 16h18"/></svg>';
+
+  return [
+    renderSignalMetaChip(pinIcon, signal.ward || 'Chưa rõ'),
+    renderSignalMetaChip(areaIcon, areaLabel, 'meta-chip-area'),
+    renderSignalMetaChip(roadIcon, roadLabel, 'meta-chip-road'),
+    renderSignalMetaChip(streetIcon, signal.street_label, 'meta-chip-street'),
+    renderSignalMetaChip(propertyIcon, _signalPropertyTypeLabel(signal), 'meta-chip-property'),
+    renderSignalMetaChip(landIcon, _signalThoCuLabel(signal), 'meta-chip-land'),
+  ].join('');
+}
+
 async function loadSignals(page = 1, opts = {}) {
   const reset = Boolean(opts.reset);
   const queryKey = signalQuery(page);
@@ -348,13 +389,15 @@ function _renderSignalCards(signals) {
         1: 'Mặt tiền',
         2: 'Đường nhựa',
         3: 'Hẻm xe hơi',
-        4: 'Hẻm xe máy'
+        4: 'Hẻm xe máy',
+        5: 'Hẻm xe máy'
       };
-      let roadStr = roadTiers[x.road_tier] || 'Chưa rõ';
+      let roadStr = x.road_label || roadTiers[x.road_tier] || 'Chưa rõ';
+      const metaChipsHtml = renderSignalMetaChips(x, areaLabel, roadStr);
 
-      const safeTitle = String(x.title || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const safeTitle = escHtml(x.title || '');
       const imgSrc = x.primary_img || '';
-      const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-primary="${imgSrc}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || '-'}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}"`;
+      const dataAttr = `data-id="${escHtml(x.id || '')}" data-title="${safeTitle}" data-primary="${escHtml(imgSrc)}" data-price="${escHtml(x.price_ty || '')}" data-ppm2="${escHtml(x.actual_ppm2 || '')}" data-fair="${escHtml(fairPrice)}" data-fppm2="${escHtml(x.fair_ppm2 || '')}" data-area="${escHtml(x.area_m2 || '')}" data-ward="${escHtml(x.ward || '')}" data-road="${escHtml(roadStr)}" data-road-label="${escHtml(x.road_label || '')}" data-street-label="${escHtml(x.street_label || '')}" data-tho-cu="${escHtml(x.tho_cu_m2 || '')}" data-tho-cu-label="${escHtml(_signalThoCuLabel(x))}" data-prop-label="${escHtml(_signalPropertyTypeLabel(x))}" data-time="${escHtml(timeStr)}" data-profit="${escHtml(profit)}" data-mos="${escHtml(x.mos_pct || '')}" data-source="${escHtml(sourceNames[x.source] || x.source || '')}" data-drop="${escHtml(x.drop_pct || '')}" data-score="${escHtml(x.signal_score || '-')}" data-url="${escHtml(x.url || '')}" data-ptype="${escHtml(x.prop_type || '')}"`;
 
       const isNew = _isNewWithin(x.days_ago, 7);
       const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
@@ -377,7 +420,7 @@ function _renderSignalCards(signals) {
       <div class="scard" onclick="openSignal(this)" ${dataAttr}>
         ${mediaHtml}
         <div class="sc-body">
-          <div class="sc-title" title="${safeTitle}">${x.title}</div>
+          <div class="sc-title" title="${safeTitle}">${safeTitle}</div>
 
           <div class="price-container">
             <div class="price-actual">
@@ -393,9 +436,7 @@ function _renderSignalCards(signals) {
           </div>
 
           <div class="sc-meta-chips">
-            <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escHtml(x.ward || 'Chưa rõ')}</span>
-            <span class="meta-chip meta-chip-area"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>${escHtml(areaLabel)}</span>
-            <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>${escHtml(roadStr)}</span>
+            ${metaChipsHtml}
           </div>
 
           <div class="sc-actions" onclick="event.stopPropagation()">

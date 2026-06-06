@@ -118,13 +118,13 @@
 .user-menu-dropdown {
   position: absolute;
   right: 0;
-  top: calc(100% + 10px);
-  min-width: 286px;
+  top: calc(100% + 8px);
+  min-width: 258px;
   background: var(--card-bg, #fff);
   border: 1px solid var(--border, #e5e7eb);
-  border-radius: 16px;
-  box-shadow: 0 18px 46px rgba(15, 23, 42, .16);
-  padding: 10px;
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .14);
+  padding: 8px;
   display: none;
   z-index: 200;
 }
@@ -132,28 +132,28 @@
 .user-menu-dropdown.open { display: block; }
 
 .user-menu-header {
-  padding: 10px;
+  padding: 8px;
   border-bottom: 1px solid var(--border, #e5e7eb);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 [data-theme="dark"] .user-menu-header { border-bottom-color:#334155; }
 .user-menu-header-top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
-.user-menu-header .name { font-weight: 700; font-size: 14px; color: var(--text, #0f172a); }
-.user-menu-header .id   { font-size: 12px; color: var(--muted, #64748b); margin-top: 2px; word-break: break-all; }
-.user-menu-header .meta { font-size: 11px; color: var(--muted, #64748b); margin-top: 6px; }
+.user-menu-header .name { font-weight: 750; font-size: 13px; color: var(--text, #0f172a); }
+.user-menu-header .id   { font-size: 11px; color: var(--muted, #64748b); margin-top: 1px; word-break: break-all; }
+.user-menu-header .meta { font-size: 10.5px; color: var(--muted, #64748b); margin-top: 5px; }
 [data-theme="dark"] .user-menu-header .name { color:#e2e8f0; }
 [data-theme="dark"] .user-menu-header .id, [data-theme="dark"] .user-menu-header .meta { color:#94a3b8; }
 .account-plan-card {
   display: flex;
-  gap: 9px;
+  gap: 8px;
   align-items: flex-start;
-  margin-top: 12px;
-  padding: 10px 11px;
-  border-radius: 12px;
+  margin-top: 9px;
+  padding: 8px 9px;
+  border-radius: 10px;
   border: 1px solid rgba(59, 130, 246, .18);
   background: linear-gradient(135deg, rgba(59, 130, 246, .09), rgba(16, 185, 129, .08));
 }
@@ -166,9 +166,9 @@
   background: linear-gradient(135deg, rgba(220, 38, 38, .1), rgba(245, 158, 11, .08));
 }
 .account-plan-dot {
-  width: 9px;
-  height: 9px;
-  margin-top: 5px;
+  width: 8px;
+  height: 8px;
+  margin-top: 4px;
   border-radius: 999px;
   background: #2563eb;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
@@ -179,14 +179,14 @@
 .account-plan-card strong {
   display: block;
   color: var(--text, #0f172a);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.25;
 }
 .account-plan-card span:last-child {
   display: block;
   margin-top: 2px;
   color: var(--muted, #64748b);
-  font-size: 11px;
+  font-size: 10.5px;
   line-height: 1.4;
 }
 [data-theme="dark"] .account-plan-card {
@@ -199,10 +199,10 @@
 .user-menu-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 11px;
-  border-radius: 12px;
-  font-size: 13px;
+  gap: 8px;
+  padding: 8px 9px;
+  border-radius: 10px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--text, #0f172a);
   cursor: pointer;
@@ -212,9 +212,9 @@
   text-align: left;
 }
 .user-menu-item-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -290,6 +290,96 @@
 }
 [data-theme="dark"] .auth-modal-content h3 { color:#e2e8f0; }
 [data-theme="dark"] .auth-modal-content .auth-sub { color:#94a3b8; }
+
+.vip-upgrade-modal {
+  text-align: center;
+}
+
+.vip-upgrade-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 12px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fef3c7, #f59e0b);
+  box-shadow: 0 14px 32px rgba(217, 119, 6, .24);
+  font-size: 1.55rem;
+}
+
+.vip-upgrade-benefits {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  text-align: left;
+}
+
+.vip-upgrade-benefits span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid rgba(245, 158, 11, .22);
+  border-radius: 12px;
+  background: rgba(245, 158, 11, .08);
+  color: var(--text, #0f172a);
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.vip-upgrade-benefits span::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #f59e0b;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, .14);
+  flex-shrink: 0;
+}
+
+.vip-upgrade-contact {
+  margin: 6px 0 14px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: rgba(15, 118, 110, .08);
+  color: var(--muted, #64748b);
+}
+
+.vip-upgrade-contact span,
+.vip-upgrade-contact strong {
+  display: block;
+}
+
+.vip-upgrade-contact span {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.vip-upgrade-contact strong {
+  margin-top: 2px;
+  color: var(--text, #0f172a);
+  font-size: 1.05rem;
+}
+
+.vip-upgrade-zalo {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+[data-theme="dark"] .vip-upgrade-benefits span {
+  color: #e2e8f0;
+  border-color: rgba(245, 158, 11, .26);
+  background: rgba(245, 158, 11, .12);
+}
+
+[data-theme="dark"] .vip-upgrade-contact {
+  background: rgba(20, 184, 166, .12);
+}
+
+[data-theme="dark"] .vip-upgrade-contact strong {
+  color: #f8fafc;
+}
 
 .auth-field { margin-bottom: 12px; }
 .auth-field label {
@@ -763,6 +853,56 @@
   .watchlist-wards,
   .watchlist-ranges {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1024px) {
+  body.user-menu-open .header {
+    z-index: 1002;
+    overflow: visible;
+  }
+
+  .user-menu-dropdown {
+    position: fixed;
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+    top: calc(var(--mobile-header-height) + 8px);
+    bottom: auto;
+    min-width: 0;
+    width: min(300px, calc(100vw - 16px));
+    max-height: calc(100vh - var(--mobile-header-height) - 24px);
+    overflow-y: auto;
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: 0 16px 38px rgba(15, 23, 42, .16);
+    z-index: 1200;
+  }
+
+  .user-menu-header {
+    padding: 8px 8px 10px;
+  }
+
+  .user-menu-header-top {
+    align-items: flex-start;
+  }
+
+  .user-menu-item {
+    min-height: 44px;
+    padding: 8px 9px;
+    border-radius: 11px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .user-menu-dropdown {
+    right: 6px;
+    width: min(288px, calc(100vw - 12px));
+    border-radius: 15px;
+  }
+
+  .user-menu-item {
+    font-size: 0.8rem;
   }
 }
 
