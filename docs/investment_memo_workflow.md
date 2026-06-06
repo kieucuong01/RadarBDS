@@ -1,18 +1,18 @@
-# Investment Memo Workflow
+﻿# Investment Memo Workflow
 
 Use this doc when the user asks to update, rewrite, backfill, or inspect advisory memos for signal deals.
 
 ## Product Intent
 
-Investment memo is a data-backed advisory note for real-estate investors. It is not a rule-based template, not a Groq/API-generated opinion, and not a human training label.
+Investment memo is a data-backed advisory note for real-estate investors. It is not a rule-based template, not an API-generated opinion, and not a human training label.
 
 The memo must read like an experienced property investor has reviewed the deal context: price, land form, location clues, road, residential land, legal/source flags, valuation sample strength, price history, lot history, and practical action price.
 
 ## Hard Rules
 
 - Store memo/advisory verdicts only in `ai_deal_review`.
-- Never write Codex/Claude/Groq/agent verdicts into `ai_training_feedback`.
-- Do not call Groq or any external LLM API for memo writing.
+- Never write Codex/Claude/agent verdicts into `ai_training_feedback`.
+- Do not call any external LLM API for memo writing.
 - Do not expose phone numbers or source URLs to non-admin users.
 - Keep user-facing memo Vietnamese-only: do not use `Invest memo`, `Verdict`, `MOS`, `stress test`, `comps`, `market approach`, `income approach`, or `unknown`.
 - Use append-only writes. A new review row should supersede older memo rows by `created_at DESC, id DESC`.

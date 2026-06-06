@@ -97,7 +97,7 @@ from cli.review import cmd_review_queue, cmd_review_save
 from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
-    cmd_groq_extract_test, cmd_clean_broker_images,
+    cmd_clean_broker_images,
     cmd_classify_legal_images,
     cmd_clean_legal_image_tags,
     cmd_verify_legal_signals,
@@ -114,10 +114,6 @@ def build_parser():
     p_re.add_argument("--full",   action="store_true", help="Chạy toàn bộ dữ liệu (mặc định là incremental)")
     p_re.add_argument("--valuation-only", action="store_true")
     p_re.add_argument("--listings-only",  action="store_true")
-    p_re.add_argument("--groq",          action="store_true", help="Enrich hard listings (road_tier=0) bằng Groq LLM")
-    p_re.add_argument("--groq-frontage", action="store_true", dest="groq_frontage", help="Groq enrich frontage_m còn NULL")
-    p_re.add_argument("--groq-signals",  action="store_true", dest="groq_signals",  help="Groq verify toàn bộ fields cho signal listings")
-    p_re.add_argument("--ward",          help="Lọc phường khi dùng --groq* (vd: 'Tân An')")
 
     # dashboard
     p_db = sub.add_parser("dashboard", help="Generate dashboard HTML")
@@ -151,8 +147,6 @@ def build_parser():
     p_cd.add_argument("--source",  help="Chỉ crawl 1 nguồn")
     p_cd.add_argument("--visible", action="store_true")
     p_cd.add_argument("--no-alert", action="store_true", help="Không gửi VIP notification")
-    p_cd.add_argument("--no-groq", action="store_true",
-                      help="Bỏ bước LLM verify signals (Groq) sau reprocess")
 
     # schedule-setup
     p_ss = sub.add_parser("schedule-setup", help="Cài Windows Task Scheduler chạy crawl-daily")
@@ -277,11 +271,6 @@ def build_parser():
     # inspect
     sub.add_parser("inspect", help="In snapshot toàn bộ trạng thái DB")
 
-    # groq-test
-    p_gt = sub.add_parser("groq-test", help="Test Groq full-field extraction vs regex cho 1 phường")
-    p_gt.add_argument("--ward",   default="Tân An", help="Phường cần test (default: Tân An)")
-    p_gt.add_argument("--sample", type=int, default=20, help="Số listings test (default: 20)")
-
     # crawl-health
     p_ch = sub.add_parser("crawl-health", help="Health dashboard các crawl runs gần đây")
     p_ch.add_argument("--limit", type=int, default=10, help="Số runs hiển thị (default: 10)")
@@ -345,8 +334,6 @@ def main():
         cmd_db_cleanup(args)
     elif args.cmd == "inspect":
         cmd_inspect(args)
-    elif args.cmd == "groq-test":
-        cmd_groq_extract_test(args)
     elif args.cmd == "crawl-health":
         cmd_crawl_health(args)
     else:

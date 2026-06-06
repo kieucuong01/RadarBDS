@@ -83,7 +83,7 @@ MY_PHUOC_PROFILE = {
 #
 # Không set road_width_m / road_tier ở đây: đường HT không bàn cờ như MP, lộ
 # giới mỗi đường khác nhau — tránh sai số. Tier vẫn do extract_road_tier()
-# regex / Groq quyết định.
+# Extractor quyết định.
 
 _HT_STREET_PATTERNS = [
     # (regex, sub_ward, road_width_m, road_tier)

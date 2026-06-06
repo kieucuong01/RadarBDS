@@ -55,7 +55,6 @@ def test_daily_facebook_crawl_uses_profile_daily_limits():
         visible=False,
         no_reprocess=True,
         no_alert=True,
-        no_groq=True,
     )
 
     with mock.patch.object(crawlers, "init_schema"), \
@@ -96,7 +95,6 @@ def test_daily_crawl_reprocesses_facebook_without_running_secondary_sources():
         visible=False,
         no_reprocess=False,
         no_alert=True,
-        no_groq=True,
     )
 
     with mock.patch.object(crawlers, "init_schema"), \
@@ -120,7 +118,6 @@ def test_daily_primary_does_not_load_secondary_crawlers():
         visible=False,
         no_reprocess=True,
         no_alert=True,
-        no_groq=True,
     )
 
     with mock.patch.object(crawlers, "init_schema"), \

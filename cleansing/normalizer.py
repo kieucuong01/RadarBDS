@@ -69,7 +69,7 @@ _ROAD_TYPE_MAP = {
 }
 
 def _norm_road_type(v: str) -> str:
-    """Chuẩn hóa road_type về canonical form để thống nhất với Groq output."""
+    """Chuẩn hóa road_type về canonical form cho pipeline định giá."""
     return _ROAD_TYPE_MAP.get(v or "unknown", v or "unknown")
 
 

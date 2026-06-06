@@ -76,14 +76,14 @@ def test_signal_modal_helpers_used_by_open_path_are_defined():
     modal_js = _read("static/js/main/modal.js")
 
     for expected_symbol in [
-        "function hideGroqAssessment",
+        "function hideLegacyAiAssessment",
         "function setInvestmentMemoVisible",
         "function loadInvestmentMemo",
         "function _openSignalFromData",
     ]:
         assert expected_symbol in modal_js
 
-    assert "hideGroqAssessment();" in modal_js
+    assert "hideLegacyAiAssessment();" in modal_js
     assert "setInvestmentMemoVisible(true);" in modal_js
 
 

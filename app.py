@@ -38,7 +38,6 @@ mimetypes.add_type("image/webp", ".webp")
 
 # Import the extracted services
 from services.market_data import load_counts, load_data, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql
-from services.ai_bot import AIBot
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
@@ -4454,18 +4453,10 @@ def _jaccard(a, b):
     return inter / union
 
 def api_chat():
-    data = request.json
-    message = data.get("message")
-    history = data.get("history", [])
-    
-    if not message:
-        return jsonify({"error": "No message provided"}), 400
-        
-    db_path = _db_handle()
-    bot = AIBot(db_path)
-    response = bot.chat(message, history)
-    
-    return jsonify({"response": response})
+    return jsonify({
+        "response": "Tính năng chat AI đã được tắt. Hệ thống hiện chỉ dùng dữ liệu parser và định giá nội bộ.",
+        "disabled": True,
+    }), 410
 
 from routes import register_blueprints
 

@@ -1,4 +1,4 @@
-# Daily Crawl & Signal Flow
+﻿# Daily Crawl & Signal Flow
 
 Reference cho agent / dev mới: cách `radar.py crawl-daily` chạy end-to-end, signal được sinh ra như thế nào, VIP notification lấy gì, và config có thể chỉnh ở đâu mà không phải sửa code.
 
@@ -15,7 +15,6 @@ python radar.py crawl-daily
        ├─ Facebook primary phase (profile daily_limit via Apify)
        │    ├─ run_full_reprocess()   → normalize → dedup → valuation
        │    ├─ download_images(limit=500) + broker image cleanup
-       │    ├─ verify_signals_with_groq()  → LLM verify signal mới + re-valuate (xem 2a)
        │    ├─ notification:
        │    │     push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists only
        │    └─ prewarm /api/dashboard
@@ -27,7 +26,7 @@ python radar.py crawl-daily
 Facebook là nguồn chính nên `radar-bds-crawl.timer` chỉ chạy daily Facebook + reprocess/push/cache. Guland là nguồn phụ, chạy bằng timer riêng `radar-bds-guland-crawl.timer` lúc 22:30:
 
 ```
-radar.py crawl-daily --source guland --no-alert --no-groq
+radar.py crawl-daily --source guland --no-alert
 ```
 
 Timer Guland dùng cùng `/run/radar-bds/crawl.lock`, nên nếu job chính còn chạy thì job phụ không đè lên. Guland có reprocess riêng khi có record mới, nhưng không gửi VIP push.
@@ -35,7 +34,7 @@ Timer Guland dùng cùng `/run/radar-bds/crawl.lock`, nên nếu job chính còn
 Nếu deploy user chưa có quyền cài systemd unit mới, `scripts/deploy_production.ps1` sẽ cài fallback crontab cho Guland lúc 23:15:
 
 ```
-15 23 * * * cd /opt/radar-bds/current && /usr/bin/flock -n /run/lock/radar-bds-guland-crawl.lock /opt/radar-bds/.venv/bin/python -X utf8 radar.py crawl-daily --source guland --no-alert --no-groq >> /opt/radar-bds/current/logs/guland-crawl.log 2>&1
+15 23 * * * cd /opt/radar-bds/current && /usr/bin/flock -n /run/lock/radar-bds-guland-crawl.lock /opt/radar-bds/.venv/bin/python -X utf8 radar.py crawl-daily --source guland --no-alert >> /opt/radar-bds/current/logs/guland-crawl.log 2>&1
 ```
 
 BatDongSan là nguồn legacy/disabled. Không đưa BatDongSan vào daily pipeline nếu chưa có quyết định sản phẩm mới.
@@ -95,31 +94,9 @@ print(dict(row))
 
 ---
 
-## 2a. LLM verify signals (Groq) — tự động trong crawl-daily
+## 2a. LLM verification removed
 
-Sau `run_full_reprocess()` + `download_images()`, **chỉ trong `mode="incremental"`** (`crawl-daily`), `cmd_crawl` gọi `cleansing/reprocess.py::verify_signals_with_groq()`.
-
-```python
-from cleansing.reprocess import verify_signals_with_groq
-verify_signals_with_groq()   # bọc try/except → lỗi Groq KHÔNG vỡ pipeline
-```
-
-- Chỉ verify tin **đã thành signal & `llm_verified=0`** (`WHERE v.is_signal=1 AND l.llm_verified=0`, order by `signal_score DESC`).
-- Re-check price/area/property_type/road_tier/road_type/has_so/ward → giết false-signal, tự `reprocess_valuation()` sau khi enrich.
-- `road_tier` từ LLM là **authoritative**: khi `llm_verified=1`, regex reprocess KHÔNG ghi đè (CASE order `db/listings.py`).
-- Groq free-tier có **daily token cap** → 429 handle nội bộ (retry 1 lần `GROQ_RETRY_WAIT`s → break, vẫn mark `llm_verified=1` để khỏi retry vô hạn). Quota cạn → bước này dừng êm, crawl/push vẫn chạy bình thường.
-- **`crawl-all` (full) KHÔNG chạy** bước này (tránh đốt budget khi reprocess toàn bộ).
-- Backlog ~841 signal tồn drain dần qua các phiên daily (~2–3 ngày sạch, sau đó chỉ signal mới).
-
-### 2a.1 Disable
-
-```powershell
-& $py -X utf8 radar.py crawl-daily --no-groq
-```
-
-Manual chạy độc lập (không qua crawl): `python radar.py reprocess --groq-signals [--ward X]`.
-
-> `road_width_m` đã **functional-removed** khỏi code (valuation / Groq + Gemini prompt / upsert) — cột DB để dormant, optional cleanup migration sau. `--groq-frontage` chỉ fill `frontage_m` (hiển thị), KHÔNG liên quan road_tier.
+Daily crawl no longer calls external LLM verification after reprocess and image download. Signal fields used for valuation now come from the deterministic parser, normalizer, dedup, legal image verification, and valuation pipeline only.
 
 ---
 
@@ -321,8 +298,8 @@ Gọi từ `cli/crawlers.py::_facebook_crawl_to_raw` ngay trước khi insert ra
 | Dashboard URL trong Telegram | `config/settings.py::DASHBOARD_BASE_URL` | Override bằng env |
 | VIP push query | `cli/notify.py` | `_fetch_new_signals`, `_fetch_active_vip_users_with_watchlists` |
 | Telegram digest format | `alerts/telegram.py` | `send_watchlist_digest`, `send_message_to` |
-| Crawl entry + notification wiring | `cli/crawlers.py::cmd_crawl`, `_facebook_crawl_to_raw` | Capture `crawl_start_ts`, gọi city filter, gọi `verify_signals_with_groq()` |
-| LLM verify signals | `cleansing/reprocess.py::verify_signals_with_groq`, `cleansing/groq_enricher.py` | Chỉ incremental; opt-out `--no-groq` |
+| Crawl entry + notification wiring | `cli/crawlers.py::cmd_crawl`, `_facebook_crawl_to_raw` | Capture `crawl_start_ts`, gọi city filter, reprocess, tải ảnh, push VIP |
+| Deterministic signal fields | `cleansing/reprocess.py`, `cleansing/normalizer.py`, `cleansing/feature_extractor.py` | Không còn bước verify bằng LLM ngoài sau crawl |
 | Guland targets | `data/guland_sources.json`, `crawler/guland_pw.py` | Chỉ sửa JSON khi mở rộng ward |
 | Legacy BatDongSan cleanup | `crawler/batdongsan_pw.py`, `cli/data_import.py` | Disabled for daily crawl; keep only for historical cleanup unless policy changes |
 | FB profiles | `data/facebook_profiles.json`, `crawler/facebook_apify.py` | tier=int, broker_name |

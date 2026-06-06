@@ -349,10 +349,10 @@ function _openSignalLegacy(card) {
   // Description is lazy-loaded from /api/listing/<id>.
   document.getElementById('sm-desc').innerText = 'Đang tải mô tả chi tiết...';
 
-  // Groq assessment is intentionally hidden while advisory notes own this slot.
+  // Legacy AI assessment is intentionally hidden while advisory notes own this slot.
   const price = parseFloat(d.price) || 0;
   const area = parseFloat(d.area) || 0;
-  hideGroqAssessment();
+  hideLegacyAiAssessment();
 
   // Tags
   const tags = [
@@ -758,7 +758,7 @@ function renderInvestmentMemo(data) {
   `;
 }
 
-function hideGroqAssessment() {
+function hideLegacyAiAssessment() {
   const aiSection = document.getElementById('sm-ai-section');
   const aiText = document.getElementById('sm-ai-text');
   if (aiText) aiText.innerHTML = '';
@@ -831,10 +831,10 @@ function _openSignalFromData(d, opts = {}) {
   document.getElementById('sm-meta-line').innerHTML = `<span>Dang ${d.time || '-'}</span> · <span>${d.source || '-'}</span>`;
   document.getElementById('sm-desc').innerText = 'Dang tai mo ta chi tiet...';
 
-  // Groq assessment is intentionally hidden for now.
+  // Legacy AI assessment is intentionally hidden for now.
   const price = parseFloat(d.price) || 0;
   const area = parseFloat(d.area) || 0;
-  hideGroqAssessment();
+  hideLegacyAiAssessment();
 
   renderSignalTags({
     area: d.area,

@@ -1,4 +1,4 @@
-# Operations And Deploy
+﻿# Operations And Deploy
 
 Use this for VPS deploy, production smoke checks, DB sync, crawl logs, and one-off production maintenance.
 
@@ -61,7 +61,7 @@ Primary daily job:
 Secondary job:
 
 - `radar-bds-guland-crawl.timer`, or fallback deploy-user crontab at 23:15,
-- runs `radar.py crawl-daily --source guland --no-alert --no-groq`,
+- runs `radar.py crawl-daily --source guland --no-alert`,
 - uses the same crawl lock so it does not overlap with the primary job.
 
 BatDongSan is legacy/disabled. Do not add it to production schedules without explicit approval.
