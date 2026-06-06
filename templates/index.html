@@ -42,8 +42,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=vietnamese-font-stack-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=nav-badge-highlight-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=keyword-search-20260603">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-card-radius-20260603">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-detail-tags-polish-20260605">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-empty-media-20260606">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=history-compact-ui-20260606">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=area-risk-radar-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=nav-badge-highlight-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=auth-vietnamese-header-20260605">
@@ -809,8 +809,8 @@
             <div id="sm-ai-text" class="sm-ai-text"></div>
           </div>
 
-          <div class="sm-section sm-panel" data-sm-panel="history" id="sm-history-section" style="margin-bottom:16px;">
-            <div style="height:160px; position:relative;">
+          <div class="sm-section sm-panel" data-sm-panel="history" id="sm-history-section">
+            <div class="sm-history-chart-shell">
               <canvas id="sm-history-chart"></canvas>
             </div>
             <div id="sm-price-history" class="sm-price-history"></div>
@@ -1081,7 +1081,7 @@
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-home-polish-20260602"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=keyword-search-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=low-confidence-warning-badge-20260603"></script>
-  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-tags-polish-20260605"></script>
+  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=history-compact-ui-20260606"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=area-risk-radar-20260605"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=listings-grid-signal-card-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>

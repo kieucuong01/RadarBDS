@@ -24,6 +24,7 @@ from services.signal_quality import (
     actionable_listing_sql,
     actionable_signal_sql,
 )
+from services.advisory_memo import build_memo_dossier
 
 CLAUDE_VERDICTS = {"cheap_real", "suspect", "not_cheap", "insufficient_info"}
 _MODEL = "claude-code-interactive"
@@ -78,6 +79,8 @@ def _lot_history(conn, listing_id: int) -> list[dict]:
 
 def _review_context(conn, row) -> dict:
     listing_id = row["id"]
+    price_history = _price_history(conn, listing_id)
+    lot_history = _lot_history(conn, listing_id)
     latest_unmemoed_review = None
     if row["ai_verdict"]:
         latest_unmemoed_review = {
@@ -120,8 +123,9 @@ def _review_context(conn, row) -> dict:
             "trust_score": row["trust_score"],
             "legal_flags": row["legal_flags"],
         },
-        "price_history": _price_history(conn, listing_id),
-        "lot_history": _lot_history(conn, listing_id),
+        "price_history": price_history,
+        "lot_history": lot_history,
+        "memo_dossier": build_memo_dossier(row, price_history, lot_history),
         "latest_unmemoed_review": latest_unmemoed_review,
     }
 
@@ -139,9 +143,11 @@ def cmd_review_queue(args):
         SELECT l.id, l.title, l.description, l.url, l.source, l.ward,
                l.property_type, l.price_ty, l.price_per_m2, l.area_m2,
                l.frontage_m, l.depth_m, l.road_tier, l.road_type, l.has_so,
+               l.tho_cu_m2, l.tho_cu_ratio, l.is_hot, l.price_dropped,
+               l.price_drop_pct, l.price_first_ty, l.suspicious_bait,
                COALESCE(l.posted_at, l.first_seen_at, l.crawled_at) AS posted_display,
                v.mos_pct, v.signal_score, v.fair_ppm2, v.actual_ppm2,
-               v.n_segment, COALESCE(v.source_quality_flags,'') AS source_quality_flags,
+               v.segment, v.n_segment, COALESCE(v.source_quality_flags,'') AS source_quality_flags,
                COALESCE(v.source_quality_recheck,0) AS source_quality_recheck,
                COALESCE(v.legal_status, 'unverified') AS legal_status,
                COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,

@@ -491,6 +491,13 @@ function _memoDisplayText(text) {
     .replace(/fair value/gi, 'giá trị tham chiếu')
     .replace(/fair total/gi, 'tổng giá trị tham chiếu')
     .replace(/signal score/gi, 'điểm tín hiệu')
+    .replace(/\bcomps?\b/gi, 'lô so sánh')
+    .replace(/market approach/gi, 'phương pháp so sánh thị trường')
+    .replace(/sales comparison approach/gi, 'phương pháp so sánh thị trường')
+    .replace(/income approach/gi, 'phương pháp dòng tiền')
+    .replace(/cost approach/gi, 'phương pháp chi phí/thay thế')
+    .replace(/highest and best use/gi, 'giá trị sử dụng tốt nhất')
+    .replace(/due diligence/gi, 'kiểm tra trước khi đặt cọc')
     .replace(/\bsignal\b/gi, 'tín hiệu')
     .replace(/\bdeal\b/gi, 'thương vụ')
     .replace(/\bsource\b/gi, 'nguồn')
@@ -882,6 +889,107 @@ async function hydrateSignalDetail(listingId) {
   }
 }
 
+const SM_HISTORY_VISIBLE_LIMIT = 5;
+const SM_HISTORY_CHART_MAX_POINTS = 16;
+
+function _historyPriceLabel(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return '-';
+  return `${n.toLocaleString('vi-VN', { maximumFractionDigits: 2 })} tỷ`;
+}
+
+function _historyShortDate(value) {
+  const text = String(value || '').slice(0, 10);
+  const parts = text.split('-');
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return text || '-';
+}
+
+function _decorateSignalHistoryTimeline(timeline) {
+  let previousPrice = null;
+  return timeline.map((h, index) => {
+    const price = Number(h.price_ty);
+    let changePct = null;
+    if (previousPrice && Number.isFinite(price) && previousPrice > 0) {
+      changePct = ((price - previousPrice) / previousPrice) * 100;
+    }
+    if (Number.isFinite(price)) previousPrice = price;
+    return {
+      ...h,
+      _change_pct: changePct,
+      _is_latest: index === timeline.length - 1,
+    };
+  });
+}
+
+function _historySummaryHtml(timeline, fallbackCurrentPrice) {
+  if (!timeline.length) return '';
+  const first = timeline[0];
+  const latest = timeline[timeline.length - 1];
+  const firstPrice = Number(first.price_ty);
+  const latestPrice = Number(latest.price_ty || fallbackCurrentPrice);
+  const netPct = Number.isFinite(firstPrice) && firstPrice > 0 && Number.isFinite(latestPrice)
+    ? ((latestPrice - firstPrice) / firstPrice) * 100
+    : null;
+  const netClass = Number.isFinite(netPct) && netPct < 0 ? 'is-down' : (Number.isFinite(netPct) && netPct > 0 ? 'is-up' : 'is-flat');
+  const netText = Number.isFinite(netPct)
+    ? `${netPct > 0 ? '+' : ''}${netPct.toFixed(1)}%`
+    : '-';
+
+  return `
+    <div class="sm-history-summary" aria-label="Tóm tắt lịch sử giá">
+      <span><strong>${timeline.length}</strong><small>mốc giá</small></span>
+      <span><strong>${_historyPriceLabel(latestPrice)}</strong><small>mới nhất</small></span>
+      <span class="${netClass}"><strong>${netText}</strong><small>biến động</small></span>
+      <span><strong>${_historyShortDate(first.date)} → ${_historyShortDate(latest.date)}</strong><small>khoảng thời gian</small></span>
+    </div>
+  `;
+}
+
+function renderSignalHistoryRows(timeline, opts = {}) {
+  if (!timeline.length) return '<div class="sm-empty-state">Chưa có lịch sử giá cho lô này.</div>';
+  const isAdmin = opts.isAdmin === true;
+  const visibleLimit = opts.visibleLimit || SM_HISTORY_VISIBLE_LIMIT;
+  const rows = [...timeline].reverse().map((h, index) => {
+    const hidden = index >= visibleLimit;
+    const change = Number(h._change_pct);
+    const changeHtml = Number.isFinite(change)
+      ? `<span class="ph-change ${change < 0 ? 'is-down' : (change > 0 ? 'is-up' : 'is-flat')}">${change === 0 ? 'Không đổi' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`}</span>`
+      : '<span class="ph-change is-flat">Mốc đầu</span>';
+    const originLink = isAdmin && h.url
+      ? `<a class="ph-lot-link" href="${escHtml(h.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Tin gốc</a>`
+      : '';
+    return `<div class="ph-row ph-price-row ${h._is_latest ? 'is-latest' : ''} ${hidden ? 'is-history-extra' : ''}"${hidden ? ' hidden' : ''}>
+      <span class="ph-dot" aria-hidden="true"></span>
+      <div class="ph-main">
+        <span class="ph-date">${escHtml(_historyShortDate(h.date))}</span>
+        <span class="ph-sub">${h._is_latest ? 'Giá mới nhất' : 'Mốc lịch sử'}</span>
+      </div>
+      <span class="ph-price">${escHtml(_historyPriceLabel(h.price_ty))}</span>
+      ${changeHtml}
+      ${originLink}
+    </div>`;
+  }).join('');
+
+  const hiddenCount = Math.max(0, timeline.length - visibleLimit);
+  const toggle = hiddenCount > 0
+    ? `<button type="button" class="sm-history-toggle" data-collapsed-text="Xem thêm ${hiddenCount} mốc" data-expanded-text="Thu gọn lịch sử" onclick="toggleSignalHistoryRows(this)">Xem thêm ${hiddenCount} mốc</button>`
+    : '';
+  return `${rows}${toggle}`;
+}
+
+function toggleSignalHistoryRows(button) {
+  const root = button && button.closest('.sm-price-history');
+  if (!root) return;
+  const expanded = root.classList.toggle('is-expanded');
+  root.querySelectorAll('.is-history-extra').forEach((row) => {
+    row.hidden = !expanded;
+  });
+  button.textContent = expanded
+    ? (button.dataset.expandedText || 'Thu gọn lịch sử')
+    : (button.dataset.collapsedText || 'Xem thêm');
+}
+
 async function loadSignalHistory(listingId, currentPrice, area, ward) {
   // Chart/history elements only exist for admin tier. Comps table is always present.
   const historyEl = document.getElementById('sm-price-history');
@@ -915,39 +1023,23 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
       });
     const timeline = Array.from(timelineByKey.values());
 
-    let previousPrice = null;
     const isAdmin = window.USER_TIER === 'admin';
-    const timelineRows = timeline.map((h) => {
-      let changeHtml = '';
-      if (previousPrice && h.price_ty && previousPrice > 0) {
-        const pct = ((h.price_ty - previousPrice) / previousPrice * 100).toFixed(1);
-        const cls = Number(pct) < 0 ? 'ph-change is-down' : 'ph-change';
-        changeHtml = `<span class="${cls}">${Number(pct) > 0 ? '+' : ''}${pct}%</span>`;
-      }
-      previousPrice = h.price_ty;
-      const subText = h.is_current ? 'Giá rao hiện tại' : 'Giá rao lịch sử';
-      const originLink = isAdmin && h.url
-        ? `<a class="ph-lot-link" href="${escHtml(h.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Tin gốc</a>`
-        : '';
-      return `<div class="ph-row ph-price-row">
-        <div class="ph-main">
-          <span class="ph-date">${escHtml(h.date || '-')}</span>
-          <span class="ph-sub">${subText}</span>
-        </div>
-        <span class="ph-price">${escHtml(h.price_ty || '-')} tỷ</span>
-        ${changeHtml}
-        ${originLink}
-      </div>`;
-    }).join('');
+    const decoratedTimeline = _decorateSignalHistoryTimeline(timeline);
 
     if (historyEl) {
       historyEl.innerHTML = `
         <div class="sm-section-label sm-history-label">Lịch sử giá lô này</div>
-        ${timelineRows || '<div class="sm-empty-state">Chưa có lịch sử giá cho lô này.</div>'}
+        ${_historySummaryHtml(decoratedTimeline, currentPrice)}
+        <div class="sm-history-timeline">
+          ${renderSignalHistoryRows(decoratedTimeline, { isAdmin })}
+        </div>
       `;
     }
 
-    const labels = timeline.map((h) => h.date);
+    const chartTimeline = decoratedTimeline.length > SM_HISTORY_CHART_MAX_POINTS
+      ? decoratedTimeline.slice(-SM_HISTORY_CHART_MAX_POINTS)
+      : decoratedTimeline;
+    const labels = chartTimeline.map((h) => _historyShortDate(h.date));
 
     if (labels.length > 0 && chartEl) {
       const ctx = chartEl.getContext('2d');
@@ -958,22 +1050,42 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
           datasets: [
             {
               label: 'Lịch sử giá',
-              data: timeline.map((h) => h.price_ty),
-              borderColor: '#6366f1',
-              backgroundColor: 'rgba(99,102,241,0.12)',
-              fill: false,
-              tension: 0.25,
-              pointRadius: 3,
-              borderWidth: 2
+              data: chartTimeline.map((h) => h.price_ty),
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37,99,235,0.1)',
+              pointBackgroundColor: chartTimeline.map((h) => h._is_latest ? '#10b981' : '#2563eb'),
+              pointBorderColor: '#ffffff',
+              pointHoverRadius: 5,
+              fill: true,
+              tension: 0.32,
+              pointRadius: labels.length > 10 ? 2.5 : 3.5,
+              borderWidth: 2.5
             }
           ]
         },
         options: {
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `Giá rao: ${_historyPriceLabel(ctx.parsed.y)}`
+              }
+            }
+          },
           scales: {
-            x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
-            y: { grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false }, ticks: { font: { size: 10 } } }
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 10, weight: '700' }, maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }
+            },
+            y: {
+              grid: { color: 'rgba(148,163,184,0.18)', drawBorder: false },
+              ticks: {
+                font: { size: 10, weight: '700' },
+                callback: (value) => `${Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`
+              }
+            }
           }
         }
       });

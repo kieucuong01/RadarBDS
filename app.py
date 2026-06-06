@@ -45,6 +45,7 @@ from services.signal_quality import (
     actionable_signal_sql,
     split_quality_flags,
 )
+from services.advisory_memo import build_admin_valuation_workflow_markdown
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -2592,15 +2593,17 @@ def _admin_valuation_workflow_markdown(listing_id):
             SELECT l.id, l.source, l.title, l.ward, l.property_type, l.price_ty,
                    l.area_m2, l.price_per_m2, l.road_tier, l.has_so, l.is_hot,
                    l.price_dropped, l.price_drop_pct, l.tho_cu_m2,
+                   l.tho_cu_ratio, l.frontage_m, l.depth_m, l.road_type,
+                   l.price_first_ty, l.suspicious_bait, l.description,
                    v.fair_ppm2, v.actual_ppm2, v.mos_pct, v.is_signal,
-                   v.signal_score, v.n_segment, v.source_quality_flags,
+                   v.signal_score, v.segment, v.n_segment, v.source_quality_flags,
                    v.source_quality_recheck, v.trust_tier, v.trust_score,
-                   v.legal_status
+                   v.legal_status, v.legal_flags
               FROM listings l
               LEFT JOIN valuation_results v
                 ON v.id = (SELECT id FROM valuation_results
                             WHERE listing_id = l.id
-                            ORDER BY id DESC
+                            ORDER BY computed_at DESC, id DESC
                             LIMIT 1)
              WHERE l.id = ?
             """,
@@ -2608,53 +2611,7 @@ def _admin_valuation_workflow_markdown(listing_id):
         ).fetchone()
     if not row:
         return ""
-
-    fair_ppm2 = row["fair_ppm2"]
-    actual_ppm2 = row["actual_ppm2"] or row["price_per_m2"]
-    area_m2 = row["area_m2"]
-    fair_ty = None
-    if fair_ppm2 and area_m2:
-        fair_ty = float(fair_ppm2) * float(area_m2) / 1000
-
-    signal_gate = "qua" if row["is_signal"] else "không qua"
-    quality_flags = row["source_quality_flags"] or ""
-    recheck = "có" if row["source_quality_recheck"] else "không"
-    dropped = "có" if row["price_dropped"] else "không"
-    hot = "có" if row["is_hot"] else "không"
-
-    return "\n".join([
-        "### Luồng định giá kỹ thuật cho quản trị",
-        "",
-        "1. Nạp dữ liệu nguồn: crawler/* lưu dữ liệu gốc vào raw_listings; listing này đang có "
-        f"nguồn={row['source']}, mã tin={row['id']}.",
-        "2. Chuẩn hóa và trích xuất: cleansing/normalizer.py và cleansing/feature_extractor.py chuẩn hóa "
-        "giá, diện tích, giá/m2, phường, loại tài sản, cấp đường, thổ cư, từ khóa nóng và cờ pháp lý/chất lượng nguồn.",
-        "3. Gộp tin trùng và lịch sử: cleansing/dedup.py gom tin đăng lại/cùng lô nếu đủ điều kiện; "
-        "cờ giảm giá được lấy từ lịch sử giá đáng tin.",
-        "4. Định giá: analytics/valuation.py chọn mô hình theo phường + loại tài sản + đường/đặc điểm tài sản; "
-        "nếu nhóm so sánh mỏng thì dùng nhóm cha hoặc nhóm dự phòng. Mô hình trả giá tham chiếu/m2, so với giá rao/m2, "
-        "rồi lưu snapshot vào valuation_results.",
-        "5. Biên an toàn: công thức là (giá tham chiếu/m2 - giá rao/m2) / giá tham chiếu/m2 * 100. "
-        "Tổng giá trị tham chiếu = giá tham chiếu/m2 * diện tích / 1000.",
-        "6. Điểm tín hiệu: compute_signal_score() cộng điểm từ biên an toàn, khoảng diện tích, tổng giá dưới ngưỡng, "
-        "từ khóa nóng, tín hiệu giảm giá và điểm ưu tiên khu vực.",
-        "7. Cổng hiển thị người dùng: services.signal_quality.actionable_signal_sql() chỉ cho tín hiệu mới nhất ra UI khi không bị "
-        "ẩn, chặn, trùng nghiêm trọng hoặc cờ chất lượng nguồn cần kiểm tra lại.",
-        "",
-        "### Ảnh chụp định giá hiện tại",
-        "",
-        f"- phường={row['ward'] or 'NULL'}, loại tài sản={row['property_type'] or 'NULL'}, cấp đường={row['road_tier']}",
-        f"- giá rao={_fmt_memo_num(row['price_ty'], ' tỷ')}, diện tích={_fmt_memo_num(area_m2, ' m2')}, "
-        f"giá rao/m2={_fmt_memo_num(actual_ppm2, ' tr/m2')}",
-        f"- giá tham chiếu/m2={_fmt_memo_num(fair_ppm2, ' tr/m2')}, tổng giá trị tham chiếu={_fmt_memo_num(fair_ty, ' tỷ', 2)}, "
-        f"biên an toàn={_fmt_memo_num(row['mos_pct'], '%')}",
-        f"- điểm tín hiệu={row['signal_score'] or 0}, số mẫu so sánh={row['n_segment'] or 0}, qua cổng tín hiệu={signal_gate}",
-        f"- có sổ={bool(row['has_so'])}, thổ cư={_fmt_memo_num(row['tho_cu_m2'], ' m2')}, "
-        f"tin nóng={hot}, có giảm giá={dropped}, mức giảm={_fmt_memo_num(row['price_drop_pct'], '%')}",
-        f"- cần kiểm tra chất lượng nguồn={recheck}, cờ chất lượng nguồn={quality_flags or 'không có'}, "
-        f"tầng tin cậy={row['trust_tier'] or 'candidate_signal'}, điểm tin cậy={row['trust_score'] or 0}, "
-        f"trạng thái pháp lý={row['legal_status'] or 'unverified'}",
-    ])
+    return build_admin_valuation_workflow_markdown(row)
 
 def get_price_history(listing_id):
     tier = current_tier()

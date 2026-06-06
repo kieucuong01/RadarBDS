@@ -313,6 +313,90 @@ class AiDealReviewTest(unittest.TestCase):
         self.assertIn("valuation", item["context"])
         self.assertIn("listing", item["context"])
 
+    def test_review_queue_includes_data_backed_memo_dossier(self):
+        lid = self._insert_signal(
+            url="https://t.test/dossier",
+            price_ty=2.0,
+            area_m2=100.0,
+            signal_score=72,
+            mos_pct=40.0,
+        )
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                   SET title='Lo dat 5x20 co nha cho thue',
+                       description='Nha dang cho thue 6 trieu/thang, hem xe hoi.',
+                       price_per_m2=20.0,
+                       frontage_m=5.0,
+                       depth_m=20.0,
+                       road_type='hem_xe_hoi',
+                       tho_cu_m2=60.0,
+                       tho_cu_ratio=0.6,
+                       price_dropped=1,
+                       price_drop_pct=12.5,
+                       price_first_ty=2.3,
+                       is_hot=1
+                 WHERE id=?
+                """,
+                (lid,),
+            )
+            conn.execute(
+                """
+                UPDATE valuation_results
+                   SET fair_ppm2=33.0,
+                       actual_ppm2=20.0,
+                       n_segment=18,
+                       segment='AIReviewWard/dat_nen/hem_xe_hoi',
+                       source_quality_flags='low_segment_confidence',
+                       source_quality_recheck=1,
+                       legal_status='unverified',
+                       trust_tier='candidate_signal',
+                       trust_score=42,
+                       legal_flags='legal_unverified'
+                 WHERE listing_id=?
+                """,
+                (lid,),
+            )
+            conn.execute(
+                """
+                INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
+                VALUES (?, 2.3, 23.0, '2026-05-01T00:00:00')
+                """,
+                (lid,),
+            )
+            conn.execute(
+                """
+                INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
+                VALUES (?, 2.0, 20.0, '2026-05-03T00:00:00')
+                """,
+                (lid,),
+            )
+
+        out = self._run_queue(top=1)
+        item = out["items"][0]
+        dossier = item["context"]["memo_dossier"]
+
+        self.assertEqual(dossier["valuation_principles"]["primary_method"], "so_sanh_thi_truong")
+        self.assertIn("dong_tien_khi_co_khai_thac", dossier["valuation_principles"]["secondary_checks"])
+        self.assertIn("gia_tri_su_dung_tot_nhat", dossier["valuation_principles"]["secondary_checks"])
+        self.assertEqual(dossier["price"]["asking_price_ty"], 2.0)
+        self.assertEqual(dossier["price"]["asking_ppm2"], 20.0)
+        self.assertEqual(dossier["price"]["reference_ppm2"], 33.0)
+        self.assertEqual(dossier["price"]["reference_total_ty"], 3.3)
+        self.assertEqual(dossier["asset"]["frontage_m"], 5.0)
+        self.assertEqual(dossier["asset"]["depth_m"], 20.0)
+        self.assertIn("cho thue", dossier["asset"]["use_case_hints"])
+        self.assertEqual(dossier["market"]["sample_size"], 18)
+        self.assertEqual(dossier["market"]["sample_confidence"], "mong")
+        self.assertIn("low_segment_confidence", dossier["risks"]["flags"])
+        self.assertIn("phap_ly_chua_xac_minh", dossier["risks"]["verification_focus"])
+        self.assertIn("gia_nen_di_xem_ty", dossier["action_pricing"])
+        self.assertIn("gia_nen_tra_khi_con_rui_ro_ty", dossier["action_pricing"])
+        self.assertGreaterEqual(len(dossier["action_pricing"]["due_diligence_questions"]), 3)
+
     def test_listing_memo_api_is_vip_only_and_returns_pending_or_latest_memo(self):
         import app as app_module
 
@@ -405,6 +489,10 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertIn("admin_valuation_workflow_markdown", admin_data)
             self.assertIn("analytics/valuation.py", admin_data["admin_valuation_workflow_markdown"])
             self.assertIn("valuation_results", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("so sánh thị trường là trục chính", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("dòng tiền", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("giá trị sử dụng tốt nhất", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("mức giá hành động", admin_data["admin_valuation_workflow_markdown"])
 
     def test_review_queue_uses_latest_actionable_valuation_only(self):
         from db.connection import get_conn

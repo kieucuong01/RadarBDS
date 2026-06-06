@@ -164,6 +164,36 @@ function setSignalLoadingUI(isLoading, message = 'Đang lọc signal...') {
   if (tab) tab.setAttribute('aria-busy', isLoading ? 'true' : 'false');
 }
 
+function renderSignalCardMedia(x, imgSrc, imageCount, overlaysHtml) {
+  const hasImage = Boolean(x && x.primary_img);
+  const mediaClass = hasImage ? 'sc-img-wrap' : 'sc-img-wrap sc-img-wrap-empty';
+  const imageHtml = hasImage
+    ? `<img class="sc-img" src="${escHtml(imgSrc)}" loading="lazy" decoding="async" width="640" height="416" alt="Ảnh tin đăng" onerror="this.closest('.sc-img-wrap').classList.add('is-image-missing');this.remove();">`
+    : '';
+
+  return `
+    <div class="${mediaClass}" data-has-image="${hasImage ? '1' : '0'}">
+      ${imageHtml}
+      <div class="sc-empty-media" aria-label="Tin đăng chưa có ảnh">
+        <div class="sc-empty-media-map" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="sc-empty-media-mark" aria-hidden="true">
+          <svg width="38" height="38" viewBox="0 0 48 48" fill="none">
+            <path d="M24 42s13-10.6 13-24a13 13 0 1 0-26 0c0 13.4 13 24 13 24Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M18 20h12M18 25h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="sc-empty-media-copy">
+          <strong>Chưa có ảnh</strong>
+          <span>Radar vẫn giữ tín hiệu để bạn kiểm tra giá và vị trí.</span>
+        </div>
+      </div>
+      ${overlaysHtml}
+    </div>
+  `;
+}
+
 function setSignalLoadMoreUI(isLoading) {
   const sentinel = document.getElementById('sig-scroll-sentinel');
   if (!sentinel) return;
@@ -323,7 +353,7 @@ function _renderSignalCards(signals) {
       let roadStr = roadTiers[x.road_tier] || 'Chưa rõ';
 
       const safeTitle = String(x.title || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      const imgSrc = x.primary_img || PLACEHOLDER_IMG;
+      const imgSrc = x.primary_img || '';
       const dataAttr = `data-id="${x.id}" data-title="${safeTitle}" data-primary="${imgSrc}" data-price="${x.price_ty}" data-ppm2="${x.actual_ppm2}" data-fair="${fairPrice}" data-fppm2="${x.fair_ppm2}" data-area="${x.area_m2}" data-ward="${x.ward}" data-road="${roadStr}" data-time="${timeStr}" data-profit="${profit}" data-mos="${x.mos_pct}" data-source="${sourceNames[x.source] || x.source}" data-drop="${x.drop_pct || ''}" data-score="${x.signal_score || '-'}" data-url="${x.url || ''}" data-ptype="${x.prop_type || ''}"`;
 
       const isNew = _isNewWithin(x.days_ago, 7);
@@ -331,11 +361,7 @@ function _renderSignalCards(signals) {
 
       const srcName = sourceNames[x.source] || x.source;
       const dropBadge = x.price_dropped ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 4 12 20"/><polyline points="6 14 12 20 18 14"/></svg> Chủ hạ: ${x.drop_pct ? x.drop_pct + '%' : 'N/A'}</span>` : '';
-
-      return `
-      <div class="scard" onclick="openSignal(this)" ${dataAttr}>
-        <div class="sc-img-wrap">
-          <img class="sc-img" src="${imgSrc}" loading="lazy" decoding="async" width="640" height="416" alt="Img" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG">
+      const mediaHtml = renderSignalCardMedia(x, imgSrc, imageCount, `
           <div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> Rẻ hơn ${mosRounded}%</div>
           ${newBadgeHtml}
           ${imageCounterHtml}
@@ -345,7 +371,11 @@ function _renderSignalCards(signals) {
             ${dropBadge}
             ${qualityBadgeHtml}
           </div>
-        </div>
+      `);
+
+      return `
+      <div class="scard" onclick="openSignal(this)" ${dataAttr}>
+        ${mediaHtml}
         <div class="sc-body">
           <div class="sc-title" title="${safeTitle}">${x.title}</div>
 

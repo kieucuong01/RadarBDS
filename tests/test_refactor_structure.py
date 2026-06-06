@@ -96,12 +96,55 @@ def test_signal_modal_memo_defaults_to_conclusion_and_uses_vietnamese_labels():
     assert "Kết luận" in modal_js
     assert "biên an toàn" in modal_js
     assert "Kiểm tra giả định" in modal_js
+    assert "lô so sánh" in modal_js
+    assert "phương pháp so sánh thị trường" in modal_js
+    assert "phương pháp dòng tiền" in modal_js
+    assert "giá trị sử dụng tốt nhất" in modal_js
     assert "Ghi chú cố vấn" in html
     assert "Investment Memo" not in html
     assert '>Memo<' not in html
     assert "splitDenseSection" in modal_js
     assert "Thương vụ|Deal|Tóm tắt|Thông tin|Dữ liệu" in modal_js
     assert "!hasFullMemo && data.reasoning" in modal_js
+
+
+def test_signal_modal_history_uses_compact_timeline_ui():
+    html = _read("templates/index.html")
+    modal_js = _read("static/js/main/modal.js")
+    modal_css = _read("static/css/main/modal.css")
+
+    for expected in [
+        'class="sm-history-chart-shell"',
+        "SM_HISTORY_VISIBLE_LIMIT",
+        "renderSignalHistoryRows",
+        "toggleSignalHistoryRows",
+        "sm-history-summary",
+        "sm-history-toggle",
+        "is-history-extra",
+    ]:
+        assert expected in html or expected in modal_js or expected in modal_css
+
+    assert ".sm-history-chart-shell" in modal_css
+    assert ".sm-history-summary" in modal_css
+
+
+def test_signal_cards_use_professional_empty_image_state():
+    html = _read("templates/index.html")
+    signals_js = _read("static/js/main/signals.js")
+    cards_css = _read("static/css/main/cards.css")
+
+    for expected in [
+        "renderSignalCardMedia",
+        "sc-img-wrap-empty",
+        "sc-empty-media",
+        "sc-empty-media-map",
+        "is-image-missing",
+        "Chưa có ảnh",
+    ]:
+        assert expected in signals_js or expected in cards_css
+
+    assert ".sc-empty-media" in cards_css
+    assert "signal-empty-media-20260606" in html
 
 
 def test_price_and_area_filters_support_multi_select_range_chips():
