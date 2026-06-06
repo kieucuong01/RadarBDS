@@ -178,6 +178,9 @@ _WARD_KEYWORDS = {
     # Thủ Dầu Một
     "Tân An":           ["tân an", "tan-an", "tanan", "phú an mới", "phu-an-moi", "phu an moi"],
     "Hiệp An":          ["hiệp an", "hiep-an"],
+    "Hiệp Thành 1":     ["hiệp thành 1", "hiep-thanh-1", "hiep thanh 1", "kdc hiệp thành 1", "kdc hiep thanh 1"],
+    "Hiệp Thành 2":     ["hiệp thành 2", "hiep-thanh-2", "hiep thanh 2", "kdc hiệp thành 2", "kdc hiep thanh 2"],
+    "Hiệp Thành 3":     ["hiệp thành 3", "hiep-thanh-3", "hiep thanh 3", "kdc hiệp thành 3", "kdc hiep thanh 3"],
     "Hiệp Thành":       ["hiệp thành", "hiep-thanh"],
     "Phú Hòa":          ["phú hòa", "phu-hoa"],
     "Phú Lợi":          ["phú lợi", "phu-loi"],
@@ -208,8 +211,9 @@ _WARD_KEYWORDS = {
 
 _CITY_WARDS = {
     "Thủ Dầu Một": [
-        "Tân An", "Hiệp An", "Hiệp Thành", "Phú Hòa", "Phú Lợi", "Phú Mỹ", 
-        "Phú Cường", "Phú Tân", "Phú Thọ", "Chánh Mỹ", "Chánh Nghĩa", 
+        "Tân An", "Hiệp An", "Hiệp Thành 1", "Hiệp Thành 2", "Hiệp Thành 3",
+        "Hiệp Thành", "Phú Hòa", "Phú Lợi", "Phú Mỹ",
+        "Phú Cường", "Phú Tân", "Phú Thọ", "Chánh Mỹ", "Chánh Nghĩa",
         "Định Hòa", "Tương Bình Hiệp"
     ],
     "Bến Cát": [

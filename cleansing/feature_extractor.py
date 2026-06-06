@@ -450,12 +450,29 @@ _MULTI_LOT_PER_LOT_PRICE_RE = re.compile(
     r'\s*/\s*lo\b',
     re.IGNORECASE,
 )
+_MULTI_ASSET_RENTAL_CONTEXT_RE = re.compile(
+    r'\b(?:may\s+can|nhieu\s+can|tro\s+moi|tro\s+cu|nha\s+tro|day\s+tro)\b',
+    re.IGNORECASE,
+)
+_MULTI_ASSET_CODED_OFFER_RE = re.compile(
+    r'\b\d{1,2}(?:[,.]\d+)?\s*m\s+'
+    r'(?:[a-z]{1,3}\s*\d+[a-z]?\s*){1,3}'
+    r'[^,.;\n]{0,24}?'
+    r'(?:\d{1,3}\s*(?:ty|ti|t)\s*\d{1,3}|\d{4})\b',
+    re.IGNORECASE,
+)
 
 
 def is_multi_lot_listing(title: str, description: str = "") -> bool:
     """Detect posts that advertise multiple lots with separate area/price pairs."""
     text = _ascii_fold(" ".join(part for part in [title, description] if part))
     text = text.replace("đ", "d").replace("Đ", "d")
+    if (
+        _MULTI_ASSET_RENTAL_CONTEXT_RE.search(text)
+        and len(_MULTI_ASSET_CODED_OFFER_RE.findall(text)) >= 2
+    ):
+        return True
+
     if (
         _MULTI_LOT_COUNT_RE.search(text)
         and _MULTI_LOT_AREA_RE.search(text)
@@ -747,14 +764,20 @@ def extract_road_type(text: str) -> str:
         return 'hem_xe_may'
     if re.search(r'(?:duong|hem)\s*(?:oto|o\s*to|xe\s*hoi)|(?:oto|o\s*to|xe\s*hoi)\s*(?:vao|toi|den|thong)', folded):
         return 'hem_xe_hoi'
+    if re.search(r'\b(?:mtkd|mt\s*kd|mat\s*tien\s*kinh\s*doanh)\b', folded):
+        return 'mat_tien_kinh_doanh'
+    if 'đường đất' in t or 'duong dat' in folded or 'dat hien huu' in folded:
+        return 'duong_dat'
+    if 'bê tông' in t or 'be tong' in folded or 'betong' in folded:
+        return 'be_tong'
     if re.search(r'\b(?:cach|gan)\s+(?:duong\s+)?nhua\b', folded):
         return 'unknown'
     if 'nhựa' in t or 'nhua' in folded or 'asphalt' in folded:
         return 'duong_nhua'
-    if 'bê tông' in t or 'be tong' in folded or 'betong' in folded:
-        return 'be_tong'
-    if 'đường đất' in t or 'duong dat' in folded or 'dat hien huu' in folded:
-        return 'duong_dat'
+    if re.search(r'\bdx\s*\d{2,3}\b', folded):
+        return 'duong_nhua'
+    if re.search(r'\b(?:db|dh|dha|da|dl|dj|ni|nj|ng|nh|ne|de|na|nf|dk)\s*\d+[\da-z]*\b', folded):
+        return 'duong_nhua'
     return 'unknown'
 
 
@@ -988,7 +1011,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
 
     # PRIMARY: named road trong TITLE + MT (title hoặc desc) + không hẻm/nhánh trong title
     _road_in_title = any(rd in title_lower for rd in _NAMED_ROADS)
-    if _road_in_title and not has_hem_title and not has_nhanh_title:
+    if _road_in_title and not _DX_RE.search(title_lower) and not has_hem_title and not has_nhanh_title:
         # Cần tín hiệu MT — loại "cách Nguyễn Chí Thanh 50m" (proximity, không có MT)
         if has_mt_title or has_kd_title or has_mt or has_kd:
             return 1
@@ -1037,6 +1060,12 @@ def extract_road_tier(title: str, description: str = '') -> int:
         if road_width is not None and road_width < 5:
             return 3
         return 2
+
+    if (
+        any(kw in text for kw in ['bê tông', 'be tong'])
+        and re.search(r'\b(?:2|hai)\s+mặt\s+đường\b|\b(?:2|hai)\s+mat\s+duong\b|mặt\s+đường\s+trước\s+sau|mat\s+duong\s+truoc\s+sau', text)
+    ):
+        return 3
 
     # Logic giá trị: MT/MTKD đơn độc (không hẻm title, không hẻm đo được trong desc) → Tier 2
     if (has_mt or has_kd) and not has_hem_title and not _has_hem_road_in_desc:

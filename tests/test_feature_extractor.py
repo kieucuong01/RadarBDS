@@ -644,12 +644,29 @@ def test_extract_road_tier_data_quality_patterns():
     assert extract_road_tier("Bán nhà Mỹ Phước 1", "đường TC 1A") == 2
 
 
+def test_extract_road_tier_signal_audit_edge_cases():
+    assert extract_road_tier(
+        "Bán Đất Mặt Tiền Dx44 Phú Mỹ. Gần quán 2Nù . Phạm Ngọc Thạch. Hiệp Thành 3.",
+        "Dt 193m thổ cư 100%. Đường Nhựa 8m thông.",
+    ) == 2
+    assert extract_road_tier(
+        "Chủ bán lô đất kp3 tân định",
+        "5x40 TC 50m đường bê tông, đất có 2 mặt đường trước sau",
+    ) == 3
+
+
 def test_extract_road_type_small_access_patterns():
     assert extract_road_type("Ban dat duong ba gac Tan An") == "hem_ba_gac"
     assert extract_road_type("Hem xe may sat cho") == "hem_xe_may"
     assert extract_road_type("Duong oto vao tan dat") == "hem_xe_hoi"
     assert extract_road_type(("GIAM GIA BAN LE " * 12) + "1/ Dx 072 duong Oto") == "be_tong"
     assert extract_road_type("Nha dep cach nhua 20m thoi") == "unknown"
+    assert extract_road_type("5x41tc 80m đường đất 4m chuẩn bị lên nhựa") == "duong_dat"
+
+
+def test_match_ward_detects_hiep_thanh_subwards_directly():
+    assert match_ward("Gần KDC Hiệp Thành 3", intended_city="Thủ Dầu Một") == "Hiệp Thành 3"
+    assert match_ward("ĐỐI DIỆN KDC HIỆP THÀNH 3", intended_city="Thủ Dầu Một") == "Hiệp Thành 3"
 
 
 def test_normalizer_uses_structured_address_for_road_tier():

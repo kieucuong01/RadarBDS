@@ -211,37 +211,8 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     frontage_m          = :frontage_m,
                     depth_m             = :depth_m,
                     area                = :area,
-                    road_tier           = CASE WHEN llm_verified = 1
-                                                    AND :road_type IN ('hem_ba_gac', 'hem_xe_may')
-                                                    AND :road_tier >= 4 THEN :road_tier
-                                               WHEN llm_verified = 1
-                                                    AND :road_type = 'hem_xe_hoi'
-                                                    AND :road_tier = 3 THEN :road_tier
-                                               WHEN llm_verified = 1
-                                                    AND :road_type IN ('be_tong', 'unknown')
-                                                    AND :road_tier = 3
-                                                    AND COALESCE(road_tier, 0) IN (1,2,4) THEN :road_tier
-                                               WHEN llm_verified = 1
-                                                    AND :road_tier <= 0
-                                                    AND :road_type = 'unknown' THEN 0
-                                               WHEN llm_verified = 1 THEN road_tier
-                                               WHEN :road_tier > 0 THEN :road_tier
-                                               ELSE 0 END,
-                    road_type           = CASE WHEN llm_verified = 1
-                                                    AND :road_type IN ('hem_ba_gac', 'hem_xe_may')
-                                                    AND :road_tier >= 4 THEN :road_type
-                                               WHEN llm_verified = 1
-                                                    AND :road_type = 'hem_xe_hoi'
-                                                    AND :road_tier = 3 THEN :road_type
-                                               WHEN llm_verified = 1
-                                                    AND :road_type IN ('be_tong', 'unknown')
-                                                    AND :road_tier = 3
-                                                    AND COALESCE(road_tier, 0) IN (1,2,4) THEN :road_type
-                                               WHEN llm_verified = 1
-                                                    AND :road_tier <= 0
-                                                    AND :road_type = 'unknown' THEN 'unknown'
-                                               WHEN llm_verified = 1 THEN road_type
-                                               ELSE :road_type END,
+                    road_tier           = CASE WHEN :road_tier > 0 THEN :road_tier ELSE 0 END,
+                    road_type           = :road_type,
                     tho_cu_m2           = :tho_cu_m2,
                     tho_cu_ratio        = :tho_cu_ratio,
                     ward                = :ward,                 -- cho phép NULL overwrite (re-normalize có thể loại ward sai khi text chứa địa danh non-TDM)

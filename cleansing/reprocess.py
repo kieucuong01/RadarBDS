@@ -165,7 +165,7 @@ def _valuation_quality_flags(row) -> tuple:
     ):
         flags.append("source_category_conflict")
 
-    if prop_type in {"dat_nen", "dat_vuon", "nha_dat"} and is_multi_lot_listing(title, description):
+    if prop_type in {"dat_nen", "dat_vuon", "nha_dat", "nha_tro"} and is_multi_lot_listing(title, description):
         flags.append("multi_lot_listing")
 
     description_area_m2 = _float_value(extract_area(description))

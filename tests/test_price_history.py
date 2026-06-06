@@ -345,6 +345,41 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual(row["road_type"], "hem_xe_hoi")
         self.assertEqual(row["road_tier"], 3)
 
+    def test_upsert_listing_uses_parser_road_tier_over_stale_llm_main_road(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(road_type="mat_tien_kinh_doanh", road_tier=1),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                SET llm_verified=1, road_type='mat_tien_kinh_doanh', road_tier=1
+                WHERE id=?
+                """,
+                (listing_id,),
+            )
+
+        same_listing_id, is_new = upsert_listing(
+            self._rec(road_type="mat_tien_kinh_doanh", road_tier=2),
+            crawl_run_id=2,
+        )
+
+        self.assertEqual(same_listing_id, listing_id)
+        self.assertFalse(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT road_type, road_tier FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(row["road_type"], "mat_tien_kinh_doanh")
+        self.assertEqual(row["road_tier"], 2)
+
     def test_upsert_listing_clears_llm_road_tier_when_parser_has_no_road_evidence(self):
         from db.connection import get_conn
         from db.listings import upsert_listing

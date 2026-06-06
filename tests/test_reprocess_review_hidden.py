@@ -443,6 +443,31 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
         self.assertEqual(rows[missing_area_evidence_lid]["source_quality_recheck"], 1)
         self.assertFalse(is_actionable_signal(rows[missing_area_evidence_lid]))
 
+    def test_quality_flags_mark_multi_lot_nha_tro_posts(self):
+        from cleansing.reprocess import _valuation_quality_flags
+
+        class Row(dict):
+            def __missing__(self, key):
+                return None
+
+        row = Row({
+            "source": "facebook",
+            "source_id": "multi-lot-nha-tro",
+            "url": "https://t.test/multi-lot-nha-tro",
+            "title": "Ch\u1ee7 g\u1eedi m\u1ea5y c\u0103n nh\u00e0 \u1edf nh\u00e0 tr\u1ecd",
+            "description": (
+                "Tr\u1ecd m\u1edbi: 5m Nh14 2t\u1ef7650; 5m H29 DH8 2650; "
+                "10m G4 NG4 5t2; 10m N12 mp1 5t1; "
+                "G\u00f3c c\u00f3 kiot 320m2 DF6-NF4 5t1."
+            ),
+            "price_ty": 2.65,
+            "price_per_m2": 8.0,
+            "area_m2": 320.0,
+            "property_type": "nha_tro",
+        })
+
+        self.assertIn("multi_lot_listing", _valuation_quality_flags(row))
+
     def test_reprocess_marks_old_guland_signal_for_source_qc_without_pushing_signal(self):
         from cleansing.reprocess import reprocess_valuation
         from db.connection import get_conn
