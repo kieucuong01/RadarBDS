@@ -480,7 +480,8 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         # Vẫn parse khi thiếu dimensions, kể cả area structured đã có sẵn.
         _fb_parsed: dict = {}
         if (
-            price_ty is None
+            source_name == "facebook"
+            or price_ty is None
             or area_m2 is None
             or price_per_m2 is None
             or raw.get("frontage_m") is None
@@ -498,6 +499,35 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                     price_per_m2 = None  # tính lại từ area cuối cùng ở block dưới
                 else:
                     price_per_m2 = _fb_parsed.get("price_per_m2")
+
+            parsed_price = _float_or_none(_fb_parsed.get("price_total"))
+            current_price = _float_or_none(price_ty)
+            if (
+                source_name == "facebook"
+                and parsed_price
+                and current_price
+                and parsed_price > current_price * 1.15
+            ):
+                price_ty = parsed_price
+                price_per_m2 = None
+
+            parsed_area = _float_or_none(_fb_parsed.get("area_m2"))
+            current_area = _float_or_none(area_m2)
+            parsed_tho_cu = _float_or_none(_fb_parsed.get("tho_cu_m2"))
+            structured_area_looks_like_tho_cu = (
+                parsed_tho_cu is not None
+                and current_area is not None
+                and abs(current_area - parsed_tho_cu) <= max(1.0, parsed_tho_cu * 0.03)
+            )
+            if (
+                source_name == "facebook"
+                and parsed_area
+                and current_area
+                and parsed_area > current_area * 1.10
+                and structured_area_looks_like_tho_cu
+            ):
+                area_m2 = parsed_area
+                price_per_m2 = None
 
         parsed_frontage = raw.get("frontage_m") or _fb_parsed.get("frontage_m")
         parsed_depth = raw.get("depth_m") or _fb_parsed.get("depth_m")

@@ -87,6 +87,12 @@ def test_extract_area():
     assert extract_area("Ch\u1ec9 ghi ngang 9m") is None
 
 
+def test_extract_area_prefers_explicit_reported_area_for_irregular_lots():
+    assert extract_area("Di\u1ec7n t\u00edch : 7x38m n\u1edf h\u1eadu 9m ~ 309m2 th\u1ed5 c\u01b0 100m2") == 309.0
+    assert extract_area("9.1 x 30 = 253 m\u00e9t vu\u00f4ng n\u1edf h\u1eadu 11 ch\u01b0a th\u1ed5 c\u01b0") == 253.0
+    assert extract_area("Di\u1ec7n t\u00edch 10 x 69, c\u00f3 400mv th\u1ed5 c\u01b0") == 690.0
+
+
 def test_detect_multi_lot_listing():
     assert is_multi_lot_listing(
         "L\u00f4 1-300m2-2,15t\u1ef7/ L\u00f4 2-483,7m2-2,55t\u1ef7",
@@ -149,6 +155,12 @@ def test_extract_dimensions():
     assert d["depth_m"] is None
 
 
+def test_extract_dimensions_handles_m2_typo_after_frontage():
+    d = extract_dimensions("DT: 9m2 x 12,6m th\u1ed5 c\u01b0 60m2")
+    assert d["frontage_m"] == 9.0
+    assert d["depth_m"] == 12.6
+
+
 def test_extract_area_and_dimensions_skip_truncated_dimension_prefix():
     text = (
         "Dat mat tien DX90 Hiep An\n"
@@ -206,6 +218,12 @@ def test_extract_tho_cu_prefers_complete_unit_match_over_truncated_title():
     assert round(r["tho_cu_ratio"], 3) == 0.833
 
 
+def test_extract_tho_cu_handles_value_before_label_with_mv_unit():
+    r = extract_tho_cu("Di\u1ec7n t\u00edch 10 x 69, c\u00f3 400mv th\u1ed5 c\u01b0", 690)
+    assert r["tho_cu_m2"] == 400
+    assert round(r["tho_cu_ratio"], 3) == 0.58
+
+
 def test_normalizer_parses_bare_width_dai_depth_and_tho_cu():
     rec = normalize_record({
         "source": "facebook",
@@ -224,6 +242,40 @@ def test_normalizer_parses_bare_width_dai_depth_and_tho_cu():
     assert rec["tho_cu_m2"] == 60.0
     assert rec["price_ty"] == 1.38
     assert round(rec["price_per_m2"], 2) == 12.32
+
+
+def test_normalizer_overrides_truncated_structured_price_from_full_text():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "tan-dinh-truncated-title-price",
+        "url": "https://www.facebook.com/example/posts/tan-dinh-truncated-title-price",
+        "default_area": "B\u1ebfn C\u00e1t",
+        "title": "Kp2 t\u00e2n \u0111\u1ecbnh 5,20 x41 TC 60m \u0111\u01b0\u1eddng 7m gi\u00e1 1ty",
+        "description": "Kp2 t\u00e2n \u0111\u1ecbnh 5,20 x41 TC 60m \u0111\u01b0\u1eddng 7m gi\u00e1 1ty900 gi\u00e1 bao \u00eam",
+        "price_ty": 1.0,
+        "area_m2": 213.2,
+    })
+
+    assert rec is not None
+    assert rec["price_ty"] == 1.9
+    assert rec["area_m2"] == 213.2
+
+
+def test_normalizer_overrides_structured_area_when_it_is_tho_cu_not_total_area():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "tan-dinh-area-is-tho-cu",
+        "url": "https://www.facebook.com/example/posts/tan-dinh-area-is-tho-cu",
+        "default_area": "B\u1ebfn C\u00e1t",
+        "title": "Nh\u00e0 c\u1ea5p 4 khu 3 T\u00e2n \u0111\u1ecbnh DT 9 x 15 th\u1ed5 c\u01b0 100m gi\u00e1 1 t\u1ef7 7xx",
+        "description": "Tr\u00ean \u0111\u1ea5t c\u00f3 2 c\u0103n nh\u00e0, m\u1eb7t ti\u1ec1n \u0111\u01b0\u1eddng nh\u1ef1a, s\u1ed5 th\u1ec3 hi\u1ec7n \u0111\u01b0\u1eddng.",
+        "price_ty": 1.7,
+        "area_m2": 100.0,
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 135.0
+    assert rec["tho_cu_m2"] == 100.0
 
 
 def test_normalizer_parses_dimensions_even_when_area_is_structured():

@@ -255,15 +255,33 @@ def extract_area(text: str) -> Optional[float]:
         r'(?:thổ\s*cư|tc|thổ)\s*[\d]+[,.]?[\d]*\s*(?:m[²2]?|mv)?',
         '', t, flags=re.IGNORECASE
     )
+    t_clean = re.sub(
+        r'[\d]+[,.]?[\d]*\s*(?:m[²2]?|mv)\s*(?:thổ\s*cư|tho\s*cu|tc)\b',
+        '', t_clean, flags=re.IGNORECASE
+    )
     t_fold = _ascii_fold(t_clean)
 
     # Explicit total area beats frontage-depth multiplication when both appear:
     # "15x71m. Tổng 1028m2" should be 1028m², not 1065m².
-    m = re.search(r'(?:tong|tong\s*dt|dt\s*tong)[:\s]*([\d]+[,.]?[\d]*)\s*m[²2]?', t_fold, re.IGNORECASE)
+    m = re.search(r'(?:tong|tong\s*dt|dt\s*tong)[:\s]*([\d]+[,.]?[\d]*)\s*(?:m[²2]?|mv|met\s*vuong)', t_fold, re.IGNORECASE)
     if m:
         val = float(m.group(1).replace(',', '.'))
         if 5 < val < 100000:
             return val
+
+    # Irregular lots often state the measured area after dimensions:
+    # "7x38 no hau 9m ~ 309m2" or "9.1 x 30 = 253 met vuong".
+    # Trust that declared area over simple frontage-depth multiplication.
+    for m in re.finditer(
+        r'(?:=|~)\s*([\d]+[,.]?[\d]*)\s*(?:m[²2]?|mv|met\s*vuong)',
+        t_fold,
+        re.IGNORECASE,
+    ):
+        context = t_fold[max(0, m.start() - 48):m.start()]
+        if re.search(r'(?:[\d]+[,.]?[\d]*\s*[x×\*]\s*[\d]+[,.]?[\d]*|dt|dien\s*tich|tong|ngang)', context):
+            val = float(m.group(1).replace(',', '.'))
+            if 5 < val < 100000:
+                return val
 
     # "ngang W x dài/sâu D" written in the title should outrank later
     # "thổ cư 60mv" snippets in the description.
@@ -523,6 +541,16 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
             result['depth_m'] = d
             return result
 
+    # "9m2 x 12.6m" is a common broker typo for "9m x 12.6m".
+    m = re.search(r'\b([\d]+[,.]?[\d]*)\s*m[²2]\s*[x×]\s*([\d]+[,.]?[\d]*)\s*m?\b', t, re.IGNORECASE)
+    if m:
+        w = float(m.group(1).replace(',', '.'))
+        d = float(m.group(2).replace(',', '.'))
+        if 2 <= w <= 50 and 5 <= d <= 500:
+            result['frontage_m'] = w
+            result['depth_m'] = d
+            return result
+
     # "XxY", "Xm x Ym", or "X*Y" variants.
     pair = _first_valid_dimension_pair(t)
     if pair:
@@ -584,6 +612,18 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
         if total_area and total_area > 0:
             result['tho_cu_ratio'] = round(val / total_area, 3)
         return result
+
+    for m in re.finditer(
+        r'([\d]+[,.]?[\d]*)\s*(?:m[²2]?|mv)\s*(?:tho\s*cu|tc)\b',
+        folded,
+        re.IGNORECASE,
+    ):
+        val = float(m.group(1).replace(',', '.'))
+        if 5 <= val <= 10000:
+            result['tho_cu_m2'] = val
+            if total_area and total_area > 0:
+                result['tho_cu_ratio'] = round(val / total_area, 3)
+            return result
 
     for pat in (
         r'(?:tho\s*cu|tc)\s*[:：]?\s*([\d]+[,.]?[\d]*)(?!\s*%)(?:\s*(?:m[²2]?|mv))?',
@@ -1686,9 +1726,13 @@ def extract_all(title: str, description: str, source_price_str: str = '',
     # Giá — ưu tiên chuỗi giá riêng (từ badge BDS) nếu có
     price_total = extract_price(source_price_str) if source_price_str else None
     if price_total is None:
-        price_total = extract_price(title)
-    if price_total is None:
-        price_total = extract_price(description)
+        title_price = extract_price(title)
+        description_price = extract_price(description)
+        price_total = title_price
+        if price_total is None:
+            price_total = description_price
+        elif description_price and description_price > price_total * 1.15:
+            price_total = description_price
 
     # Diện tích — badge ưu tiên tuyệt đối, chỉ parse text nếu không có badge
     if badge_area_m2 is not None:
