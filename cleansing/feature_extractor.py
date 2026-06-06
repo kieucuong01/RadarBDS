@@ -633,7 +633,7 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
         return _finish(area)
 
     label_matches = []
-    compact_value_re = rf'[x×\*]\s*\d+(?:[,.]\d+)?\s*(?:m\s*)?tc\s*[\s.:：,\-]*{num}(?![\d,.])\s*{unit}?'
+    compact_value_re = rf'[x×\*]\s*\d+(?:[,.]\d+)?\s*(?:m\s*)?tc\s*[\s.:：,\-]*{num}(?!\d)(?![,.]\d)\s*{unit}?'
     for m in re.finditer(compact_value_re, folded):
         val = _value(m.group(1))
         if val is not None and 5 <= val <= 10000 and not _negated(m.start()):
@@ -642,7 +642,7 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
     # Label before number: "thổ 60", "thổ sẵn 80", "100tc" variants
     # are common in Facebook broker posts.
     filler = r'(?:(?:\s|[.:：,\-])+(?:san|moi\s+lo|tung\s+lo|moi\s+nen|co)?)?'
-    label_before_re = rf'(?<![a-z0-9]){label}{filler}\s*{num}(?![\d,.])(?!\s*%)(?:\s*{unit})?(?![a-z])'
+    label_before_re = rf'(?<![a-z0-9]){label}{filler}\s*{num}(?!\d)(?![,.]\d)(?!\s*%)(?:\s*{unit})?(?![a-z])'
     for m in re.finditer(label_before_re, folded):
         val = _value(m.group(1))
         if val is not None and 5 <= val <= 10000 and not _negated(m.start()):
@@ -651,7 +651,7 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
     # Number before label: "300 tc", "60m2 odt", "có 200 thổ cư".
     # Skip total-area snippets like "125m2 thổ cư 60m2"; the real
     # residential value follows the label in those cases.
-    number_before_re = rf'{num}(?![\d,.])\s*{unit}?\s*{label}\b'
+    number_before_re = rf'{num}(?!\d)(?![,.]\d)\s*{unit}?\s*{label}\b'
     for m in re.finditer(number_before_re, folded):
         val = _value(m.group(1))
         before = folded[max(0, m.start() - 4):m.start()]

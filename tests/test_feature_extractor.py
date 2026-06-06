@@ -240,6 +240,7 @@ def test_extract_tho_cu_handles_facebook_broker_shorthand_from_signal_audit():
         ("Di\u1ec7n t\u00edch 5.6x39, 188m2 (100tc)", 188, 100),
         ("13 x109 c\u00f3 300 tc M\u1ef9 ph\u01b0\u1edbc 1", 1417, 300),
         ("Dt 120mv, th\u1ed5 s\u1eb5n 80", 120, 80),
+        ("Dt 120mv, th\u1ed5 s\u1eb5n 80. \u0110\u01b0\u1eddng nh\u1ef1a \u00f4 t\u00f4", 120, 80),
         ("Dt 5,24 x 29, th\u1ed5 60", 152, 60),
         ("Dt 4,5m x 26m, c\u00f3 60m2 odt", 117, 60),
         ("Di\u1ec7n t\u00edch 5x30m. Th\u1ed5 c\u01b0 . 100%", 150, 150),
