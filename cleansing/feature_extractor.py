@@ -553,8 +553,22 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
       "TC full" / "full thổ" / "100% thổ cư" → ratio=1.0
       "thổ cư 88m2, đất vườn 50m2"
     """
-    t = text.lower()
+    t = unicodedata.normalize("NFKC", text or "").lower()
+    folded = _ascii_fold(t)
     result = {'tho_cu_m2': None, 'tho_cu_ratio': None}
+
+    if re.search(
+        r'(?:'
+        r'full\s*tho|tho\s*(?:cu\s*)?full|tc\s*full|'
+        r'100(?:[,.]0+)?\s*%\s*(?:tho\s*cu|tho|tc)|'
+        r'(?:tho\s*cu|tho|tc)\s*[:：]?\s*100(?:[,.]0+)?\s*%'
+        r')',
+        folded,
+    ):
+        result['tho_cu_ratio'] = 1.0
+        if total_area:
+            result['tho_cu_m2'] = total_area
+        return result
 
     # "full thổ" / "TC full" / "100% thổ cư"
     if re.search(r'(?:full\s*thổ|tc\s*full|100%?\s*thổ)', t):

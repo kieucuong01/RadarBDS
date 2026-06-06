@@ -688,10 +688,12 @@ def _infer_road_width_m(r, text):
 def _infer_tho_cu_m2(r, text):
     explicit = _as_float(_row_get(r, "tho_cu_m2"))
     area = _as_float(_row_get(r, "area_m2"))
-    if explicit:
-        return explicit
     info = extract_tho_cu(text or "", area)
     value = _as_float(info.get("tho_cu_m2"))
+    if explicit:
+        if value and area and explicit > area * 1.05 and abs(value - area) <= max(0.1, area * 0.001):
+            return value
+        return explicit
     if value:
         return value
     folded = _ascii_fold(text or "")
@@ -711,7 +713,7 @@ def _infer_tho_cu_m2(r, text):
 
 def _infer_tho_cu_ratio(r, tho_cu_m2):
     explicit = _as_float(_row_get(r, "tho_cu_ratio"))
-    if explicit:
+    if explicit and 0 < explicit <= 1.05:
         return explicit
     area = _as_float(_row_get(r, "area_m2"))
     if area and tho_cu_m2:

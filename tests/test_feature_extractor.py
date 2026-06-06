@@ -172,6 +172,19 @@ def test_extract_tho_cu():
     assert r["tho_cu_ratio"] == 1.0
 
 
+def test_extract_tho_cu_percent_means_full_area_not_100m2():
+    samples = [
+        "DT 5x15 = 75m2, th\u1ed5 c\u01b0 100%",
+        "DT 5x15 = 75m2, Th\u1ed5 c\u01b0: 100 %",
+        "DT 5x15 = 75m2, TC 100%",
+        "DT 5x15 = 75m2, 100% th\u1ed5 c\u01b0",
+    ]
+    for text in samples:
+        r = extract_tho_cu(text, 75)
+        assert r["tho_cu_m2"] == 75
+        assert r["tho_cu_ratio"] == 1.0
+
+
 def test_normalizer_parses_bare_width_dai_depth_and_tho_cu():
     rec = normalize_record({
         "source": "facebook",

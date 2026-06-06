@@ -83,3 +83,21 @@ def test_signal_badge_metadata_does_not_treat_tho_cu_or_distance_as_road_code():
     assert distance["street_label"] == "Nhánh Nguyễn Chí Thanh"
     assert distance["road_width_m"] is None
     assert distance["road_label"] == "Hẻm xe hơi"
+
+
+def test_signal_badge_metadata_corrects_legacy_full_tho_cu_percent():
+    from services.market_data import signal_badge_metadata
+
+    meta = signal_badge_metadata({
+        "title": "B\u00e1n nh\u00e0 KDC Hi\u1ec7p Th\u00e0nh",
+        "description": "DT 5x15 = 75m2, Th\u1ed5 c\u01b0 100%, nh\u00e0 2PN.",
+        "property_type": "nha_dat",
+        "area_m2": 75,
+        "road_tier": 3,
+        "tho_cu_m2": 100,
+        "tho_cu_ratio": 1.333,
+    })
+
+    assert meta["tho_cu_m2"] == 75.0
+    assert meta["tho_cu_ratio"] == 1.0
+    assert meta["tho_cu_label"] == "TC 75 m²"
