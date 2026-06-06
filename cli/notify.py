@@ -162,7 +162,7 @@ def _fetch_new_signals(conn, since: str) -> list[dict]:
 
 
 def _fetch_active_vip_users_with_watchlists(conn) -> list[dict]:
-    """Effective VIP users + their active watchlists. VIP expiry already filtered."""
+    """Effective VIP/admin users + their active watchlists."""
     now = _utc_iso()
     rows = conn.execute(
         """
@@ -174,8 +174,13 @@ def _fetch_active_vip_users_with_watchlists(conn) -> list[dict]:
         FROM users u
         JOIN user_watchlists w ON w.user_id = u.id
         WHERE u.is_banned = 0
-          AND u.tier = 'vip'
-          AND (u.vip_expires_at IS NULL OR u.vip_expires_at > ?)
+          AND (
+                u.tier = 'admin'
+                OR (
+                    u.tier = 'vip'
+                    AND (u.vip_expires_at IS NULL OR u.vip_expires_at > ?)
+                )
+              )
           AND w.active = 1
         """,
         (now,),

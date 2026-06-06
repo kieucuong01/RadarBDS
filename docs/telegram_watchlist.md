@@ -7,7 +7,7 @@ This document is for agents touching VIP notifications, zrok/webhook setup, or T
 - One shared Telegram bot serves all users.
 - Each user links the bot through a unique `/start <token>`.
 - The app stores the user's private `users.telegram_chat_id`.
-- VIP push sends only to that user's `telegram_chat_id`, filtered by that user's active watchlists.
+- VIP/admin push sends only to that user's `telegram_chat_id`, filtered by that user's active watchlists.
 - `TELEGRAM_CHAT_ID` is no longer used for listing notifications. Do not add admin/global broadcasts back.
 
 ## Files
@@ -126,7 +126,7 @@ Watchlist fields:
 `push_new_listings_to_vip(since)`:
 
 1. Fetches new signal listings since timestamp.
-2. Fetches active, unexpired VIP users with active watchlists.
+2. Fetches active, unexpired VIP users plus admin users with active watchlists.
 3. Groups unique matches per user.
 4. Sends one Telegram digest per user.
 5. Logs `notification_log` per user/listing/channel for idempotency.

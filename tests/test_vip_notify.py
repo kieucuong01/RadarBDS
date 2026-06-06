@@ -207,6 +207,34 @@ class VipNotifyTest(unittest.TestCase):
             ).fetchall()
         self.assertEqual([tuple(r) for r in rows], [(vip_id, listing_id, "telegram", 2.1)])
 
+    def test_admin_watchlists_receive_push(self):
+        from cli.notify import push_new_listings_to_vip
+        from db.connection import get_conn
+
+        admin_id = self._insert_user("admin", "admin-chat")
+        self._insert_watchlist(admin_id)
+        listing_id = self._insert_signal()
+
+        with mock.patch("alerts.telegram.send_watchlist_digest", return_value=True) as send:
+            stats = push_new_listings_to_vip(since=self.since)
+
+        self.assertEqual(stats["matched_users"], 1)
+        self.assertEqual(stats["telegram_sent"], 1)
+        self.assertEqual(send.call_count, 1)
+        self.assertEqual(send.call_args.args[0], self._chat("admin-chat"))
+
+        with get_conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT user_id, listing_id, channel, notified_price_ty
+                FROM notification_log
+                WHERE listing_id = ?
+                ORDER BY id
+                """,
+                (listing_id,),
+            ).fetchall()
+        self.assertEqual([tuple(r) for r in rows], [(admin_id, listing_id, "telegram", 2.1)])
+
     def _vip_setup(self):
         vip_id = self._insert_user("vip", "vip-chat", self.vip_expires)
         self._insert_watchlist(vip_id)
