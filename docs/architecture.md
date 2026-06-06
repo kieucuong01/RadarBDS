@@ -36,7 +36,7 @@ PostgreSQL migration status:
 ## Main Boundaries
 
 - `crawler/`: fetch source data and store raw rows. Avoid valuation or dashboard logic here.
-- `cleansing/`: normalize text, extract features, deduplicate, enrich, and prepare listings.
+- `cleansing/`: normalize text, extract features, deduplicate, verify legal image evidence, and prepare listings.
 - `cleansing/legal_verification.py`: mark listings with detected so hong/so do images as `has_legal_doc`. OCR/parsing is disabled for now.
 - `analytics/`: valuation and market signal logic. No crawler calls.
 - `db/`: schema, connection, migrations, and write-side repository helpers.
@@ -82,6 +82,7 @@ Performance boundary:
 ## Legal Trust Layer
 
 - `valuation_results.is_signal` still means "cheap by model"; trust is tracked separately.
+- Runtime signal fields are deterministic: parser/normalizer/feature extractor, dedup, legal image verification, and valuation. Crawl/reprocess does not call external LLM verification.
 - User/VIP-facing queues use latest actionable valuation from `services.signal_quality`, which excludes duplicate reposts, `source_quality_recheck`, and fatal quality flags while preserving model-cheap rows for admin QC.
 - Valuation training is Facebook-primary. Thin canonical Facebook segments (`n < 35`) can be supplemented by strict-pass Guland rows at weight 0.4; this improves sparse segments without letting Guland promote itself directly to user/VIP surfaces.
 - Regression valuation caps tier-3 roads at max 80% of the same-listing tier-2 counterfactual, so learned coefficients cannot make tier 3 equal to or higher than tier 2.

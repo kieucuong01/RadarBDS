@@ -33,6 +33,15 @@ The deploy script:
 
 Deploy does not automatically run a full production reprocess for every code change. For parser, dedup, valuation, schema, or quality-gate changes, run an explicit reprocess after deploy.
 
+When removing or changing extraction/valuation logic, use this sequence:
+
+```powershell
+git push origin main
+.\scripts\deploy_production.ps1
+ssh -i "$env:USERPROFILE\.ssh\radar_bds_deploy_rsa" deploy@103.90.226.230 "set -a; . /etc/radar-bds/radar.env; set +a; cd /opt/radar-bds/current && /opt/radar-bds/.venv/bin/python -X utf8 radar.py reprocess --full"
+ssh -i "$env:USERPROFILE\.ssh\radar_bds_deploy_rsa" deploy@103.90.226.230 "cd /opt/radar-bds/current && curl -fsS http://127.0.0.1:5000/api/dashboard >/dev/null && curl -fsS 'http://127.0.0.1:5000/api/signals?page=1&limit=3' >/dev/null && curl -fsS 'http://127.0.0.1:5000/api/dashboard?cache_refresh=1' >/dev/null"
+```
+
 ## Production Reprocess
 
 Use the deploy user and production env file:
@@ -55,6 +64,7 @@ Primary daily job:
 - runs Facebook-first daily crawl using admin `daily_limit` per broker profile,
 - reprocesses,
 - downloads/backfills images,
+- does not call external LLM verification/enrichment,
 - pushes VIP notifications,
 - prewarms dashboard cache.
 

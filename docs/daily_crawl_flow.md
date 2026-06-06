@@ -41,6 +41,11 @@ BatDongSan là nguồn legacy/disabled. Không đưa BatDongSan vào daily pipel
 
 Pipeline lõi sau crawl giữ nguyên: `raw_listings → listings → valuation_results`. Phần thay đổi nằm ở **input config** (đầu pipeline) và **VIP notification** (cuối pipeline).
 
+Sau khi gỡ LLM verification, daily crawl không còn bước gọi API ngoài để sửa
+`property_type`, `road_tier`, giá, diện tích, pháp lý hoặc phường. Những field
+này đến từ parser/normalizer/feature extractor, dedup, legal image verification
+và valuation.
+
 ---
 
 ## 2. Signal definition
@@ -96,7 +101,24 @@ print(dict(row))
 
 ## 2a. LLM verification removed
 
-Daily crawl no longer calls external LLM verification after reprocess and image download. Signal fields used for valuation now come from the deterministic parser, normalizer, dedup, legal image verification, and valuation pipeline only.
+Daily crawl no longer calls external LLM verification after reprocess and image
+download. Signal fields used for valuation now come from the deterministic
+parser, normalizer, dedup, legal image verification, and valuation pipeline
+only.
+
+Current CLI shape:
+
+```powershell
+& $py -X utf8 radar.py reprocess --full
+& $py -X utf8 radar.py crawl-daily
+& $py -X utf8 radar.py crawl-daily --source guland --no-alert
+```
+
+Removed CLI/API surface:
+
+- no legacy external-LLM opt-out/enrichment/verification flags;
+- no legacy external-LLM extraction test command;
+- no automatic chat/verification API call during crawl.
 
 ---
 
@@ -330,6 +352,10 @@ with get_conn() as c:
     print('signals:', c.execute('SELECT COUNT(*) FROM valuation_results WHERE is_signal=1').fetchone()[0])
     print('min mos:', c.execute('SELECT MIN(mos_pct) FROM valuation_results WHERE is_signal=1').fetchone()[0])
 "
+
+# 5. removed external LLM verification flags should stay absent
+& $py -X utf8 radar.py reprocess --help
+& $py -X utf8 radar.py crawl-daily --help
 ```
 
 ---
@@ -349,4 +375,5 @@ và tránh confirmation-loop. Logic định giá CHỈ học từ nhãn người
 - ❌ Đừng hardcode ward/slug trong crawler nữa — sửa JSON.
 - ❌ Đừng tune `SIGNAL_MOS_THRESHOLD` thấp hơn 0.10 mà không verify signal rate vẫn hợp lý.
 - ❌ Đừng skip dedup repost Facebook — repost FB cần lưu để track price history (anti-bloat đã bị reject).
+- ❌ Đừng thêm lại external LLM verify/enrich vào crawl/reprocess nếu chưa có quyết định sản phẩm mới.
 - ❌ Đừng gắn `review-queue/review-save` (Claude pre-review) vào crawl-daily — cố ý tách (xem 7a).

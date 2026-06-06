@@ -32,6 +32,10 @@ crawler/* -> raw_listings -> cleansing/normalizer.py
           -> services/market_data.py -> Flask APIs/UI/VIP Telegram
 ```
 
+Signal extraction and crawl post-processing are deterministic. Do not add
+external LLM verification/enrichment back into crawl or reprocess without an
+explicit product decision.
+
 Focus areas:
 
 - Thủ Dầu Một wards.
@@ -73,6 +77,7 @@ Focus areas:
 - Facebook repost matching may use heuristics, but only with strong guards for type, location, area/dimensions, thổ cư, and phone.
 - Guland and legacy BatDongSan use source-id identity only for lot history/dedup; do not use cross-URL same-lot heuristics for them.
 - Daily production crawl is Facebook-first. Guland runs as a secondary timer/fallback cron. Do not put slow secondary crawl before Facebook.
+- Do not reintroduce external LLM verification into crawl/reprocess. Advisory notes and Claude review stay manual/explicit and write only to `ai_deal_review`.
 
 ## Fast Commands
 
