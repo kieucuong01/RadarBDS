@@ -73,6 +73,20 @@ def extract_price(text: str) -> Optional[float]:
     t = _strip_non_asking_price_phrases(t)
     t_fold = _ascii_fold(t)
 
+    def _parse_ty_rest(ty_str: str, rest: str) -> float:
+        """Helper: X tỷ + Y phần lẻ → tỷ (ví dụ 2 + '550' = 2.55, 2 + '8' = 2.8)."""
+        ty = float(ty_str.replace(',', '.'))
+        v  = float(rest)
+        if v >= 100:   return round(ty + v / 1000, 4)
+        elif v >= 10:  return round(ty + v / 100,  4)
+        else:          return round(ty + v / 10,   4)
+
+    # If the post has both exact compact price and later fuzzy shorthand,
+    # trust the exact value: "1ty350tr ... 1ty3xx" -> 1.35, not 1.3.
+    m = re.search(r'\b(\d+)\s*(?:ty|ti)\s*(\d{2,3})(?:\s*(?:tr|trieu))?\b', t_fold, re.IGNORECASE)
+    if m:
+        return _parse_ty_rest(m.group(1), m.group(2))
+
     # GUARD: "1txx" / "2txx" / "1 tỷ xxx" — môi giới ám chỉ "1 tỷ mấy trăm"
     # nhưng KHÔNG xác định → trả None thay vì guess.
     # (user feedback L#675: "1tỷ xxx lấy hết giá tốt" → "1txx k phải 1 tỷ").
@@ -118,14 +132,6 @@ def extract_price(text: str) -> Optional[float]:
     if any(k in t for k in ['thỏa thuận', 'thương lượng', 'liên hệ', 'inbox', 'giá tốt']):
         # Vẫn thử extract nếu có số cụ thể đi kèm
         pass
-
-    def _parse_ty_rest(ty_str: str, rest: str) -> float:
-        """Helper: X tỷ + Y phần lẻ → tỷ (ví dụ 2 + '550' = 2.55, 2 + '8' = 2.8)."""
-        ty = float(ty_str.replace(',', '.'))
-        v  = float(rest)
-        if v >= 100:   return round(ty + v / 1000, 4)
-        elif v >= 10:  return round(ty + v / 100,  4)
-        else:          return round(ty + v / 10,   4)
 
     # Broker typo: "2t tỷ 7" means "2 tỷ 7" (2.7), not unknown.
     m = re.search(r'(\d+)\s*t\s*(?:ty|ti)\s*(\d{1,3})(?!\d)', t_fold)
