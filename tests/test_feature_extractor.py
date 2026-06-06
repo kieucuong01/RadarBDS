@@ -185,6 +185,17 @@ def test_extract_tho_cu_percent_means_full_area_not_100m2():
         assert r["tho_cu_ratio"] == 1.0
 
 
+def test_extract_tho_cu_prefers_value_after_label_when_title_has_total_area():
+    samples = [
+        ("B\u00e1n Nh\u00e0 ri\u00eang 108m\u00b2 th\u1ed5 c\u01b0 60m\u00b2 gi\u00e1 3.6 t\u1ef7", 108, 60),
+        ("B\u00e1n Nh\u00e0 ri\u00eang 145m2 th\u1ed5 c\u01b0 100m2 gi\u00e1 7.6 t\u1ef7", 145, 100),
+    ]
+    for text, total_area, expected in samples:
+        r = extract_tho_cu(text, total_area)
+        assert r["tho_cu_m2"] == expected
+        assert round(r["tho_cu_ratio"], 3) == round(expected / total_area, 3)
+
+
 def test_normalizer_parses_bare_width_dai_depth_and_tho_cu():
     rec = normalize_record({
         "source": "facebook",

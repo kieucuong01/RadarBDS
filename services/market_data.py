@@ -691,8 +691,9 @@ def _infer_tho_cu_m2(r, text):
     info = extract_tho_cu(text or "", area)
     value = _as_float(info.get("tho_cu_m2"))
     if explicit:
-        if value and area and explicit > area * 1.05 and abs(value - area) <= max(0.1, area * 0.001):
-            return value
+        if value and area and explicit > area * 1.05:
+            if value <= area * 1.05 or abs(value - area) <= max(0.1, area * 0.001):
+                return value
         return explicit
     if value:
         return value

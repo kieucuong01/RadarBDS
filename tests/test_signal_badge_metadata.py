@@ -101,3 +101,21 @@ def test_signal_badge_metadata_corrects_legacy_full_tho_cu_percent():
     assert meta["tho_cu_m2"] == 75.0
     assert meta["tho_cu_ratio"] == 1.0
     assert meta["tho_cu_label"] == "TC 75 m²"
+
+
+def test_signal_badge_metadata_prefers_label_value_over_legacy_title_area_value():
+    from services.market_data import signal_badge_metadata
+
+    meta = signal_badge_metadata({
+        "title": "B\u00e1n Nh\u00e0 ri\u00eang 108m\u00b2 th\u1ed5 c\u01b0 60m\u00b2 gi\u00e1 3.6 t\u1ef7",
+        "description": "Nh\u00e0 3 t\u1ea5m li\u1ec1n k\u1ec1, s\u1ed5 h\u1ed3ng ri\u00eang.",
+        "property_type": "nha_dat",
+        "area_m2": 80,
+        "road_tier": 3,
+        "tho_cu_m2": 108,
+        "tho_cu_ratio": 1.35,
+    })
+
+    assert meta["tho_cu_m2"] == 60.0
+    assert meta["tho_cu_ratio"] == 0.75
+    assert meta["tho_cu_label"] == "TC 60 m²"

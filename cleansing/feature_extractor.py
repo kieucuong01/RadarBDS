@@ -570,6 +570,18 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
             result['tho_cu_m2'] = total_area
         return result
 
+    for pat in (
+        r'(?:tho\s*cu|tc)\s*[:：]?\s*([\d]+[,.]?[\d]*)(?!\s*%)(?:\s*(?:m[²2]?|mv))?',
+    ):
+        m = re.search(pat, folded)
+        if m:
+            val = float(m.group(1).replace(',', '.'))
+            if 5 <= val <= 10000:
+                result['tho_cu_m2'] = val
+                if total_area and total_area > 0:
+                    result['tho_cu_ratio'] = round(val / total_area, 3)
+                return result
+
     # "full thổ" / "TC full" / "100% thổ cư"
     if re.search(r'(?:full\s*thổ|tc\s*full|100%?\s*thổ)', t):
         result['tho_cu_ratio'] = 1.0
