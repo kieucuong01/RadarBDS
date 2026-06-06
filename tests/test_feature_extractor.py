@@ -93,6 +93,16 @@ def test_extract_area_prefers_explicit_reported_area_for_irregular_lots():
     assert extract_area("Di\u1ec7n t\u00edch 10 x 69, c\u00f3 400mv th\u1ed5 c\u01b0") == 690.0
 
 
+def test_extract_area_skips_truncated_invalid_dimension_before_full_description():
+    text = (
+        "\u0110\u1ea5t \u0110\u1ecbnh Ho\u00e0 nh\u00e1nh Dx71\n"
+        "Di\u1ec7n t\u00edch : 5,24m x 2\n"
+        "\u0110\u1ea5t \u0110\u1ecbnh Ho\u00e0 nh\u00e1nh Dx71\n"
+        "Di\u1ec7n t\u00edch : 5,24m x 29m, th\u1ed5 c\u01b0 60m."
+    )
+    assert extract_area(text) == 152.0
+
+
 def test_detect_multi_lot_listing():
     assert is_multi_lot_listing(
         "L\u00f4 1-300m2-2,15t\u1ef7/ L\u00f4 2-483,7m2-2,55t\u1ef7",
@@ -276,6 +286,41 @@ def test_normalizer_overrides_structured_area_when_it_is_tho_cu_not_total_area()
     assert rec is not None
     assert rec["area_m2"] == 135.0
     assert rec["tho_cu_m2"] == 100.0
+
+
+def test_normalizer_prefers_reported_total_area_over_dimension_product():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "phu-cuong-irregular-reported-area",
+        "url": "https://www.facebook.com/example/posts/phu-cuong-irregular-reported-area",
+        "default_area": "Th\u1ee7 D\u1ea7u M\u1ed9t",
+        "title": "Ng\u1ed9p C\u1ea7n Ra G\u1ea5p. Nh\u00e0 c\u1ea5p 4 s\u00e2n v\u01b0\u1eddn.",
+        "description": "Di\u1ec7n t\u00edch : 7x38m n\u1edf h\u1eadu 9m ~ 309m2 th\u1ed5 c\u01b0 100m2. Gi\u00e1 4t\u1ef79.",
+        "price_ty": 4.9,
+        "area_m2": 266.0,
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 309.0
+    assert rec["frontage_m"] == 7.0
+    assert rec["depth_m"] == 38.0
+    assert rec["tho_cu_m2"] == 100.0
+
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "hiep-thanh-reported-area",
+        "url": "https://www.facebook.com/example/posts/hiep-thanh-reported-area",
+        "default_area": "Th\u1ee7 D\u1ea7u M\u1ed9t",
+        "title": "\u0110\u1ed1i di\u1ec7n KDC Hi\u1ec7p Th\u00e0nh 3",
+        "description": "Gi\u00e1 2 t\u1ef7 550 c\u00f2n th\u01b0\u01a1ng l\u01b0\u1ee3ng ( DT : 4x28 = 96m2 ).",
+        "price_ty": 2.55,
+        "area_m2": 112.0,
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 96.0
+    assert rec["frontage_m"] == 4.0
+    assert rec["depth_m"] == 28.0
 
 
 def test_normalizer_parses_dimensions_even_when_area_is_structured():

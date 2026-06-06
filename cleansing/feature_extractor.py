@@ -365,8 +365,7 @@ def extract_area(text: str) -> Optional[float]:
             return round(w * d, 1)
 
     # Ưu tiên 2f: "Dt W m x D" — mét sau chiều rộng (ví dụ "Dt 7,9m x 27" = 213m²)
-    m = re.search(r'(?:dt|diện tích)[:\s]*([\d]+[,.]?[\d]*)\s*m\s*[x×]\s*([\d]+[,.]?[\d]*)', t_clean, re.IGNORECASE)
-    if m:
+    for m in re.finditer(r'(?:dt|diện tích)[:\s]*([\d]+[,.]?[\d]*)\s*m\s*[x×]\s*([\d]+[,.]?[\d]*)', t_clean, re.IGNORECASE):
         w = float(m.group(1).replace(',', '.'))
         d = float(m.group(2).replace(',', '.'))
         if 2 <= w <= 50 and 5 <= d <= 500:

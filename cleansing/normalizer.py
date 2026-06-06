@@ -531,9 +531,29 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
 
         parsed_frontage = raw.get("frontage_m") or _fb_parsed.get("frontage_m")
         parsed_depth = raw.get("depth_m") or _fb_parsed.get("depth_m")
+        parsed_area = _float_or_none(_fb_parsed.get("area_m2"))
+        current_area = _float_or_none(area_m2)
+        parsed_area_is_declared_total = False
+        if (
+            source_name == "facebook"
+            and parsed_area
+            and current_area
+            and 10 < parsed_area < 100000
+        ):
+            parsed_frontage_num = _float_or_none(parsed_frontage)
+            parsed_depth_num = _float_or_none(parsed_depth)
+            if parsed_frontage_num and parsed_depth_num:
+                dim_area = round(parsed_frontage_num * parsed_depth_num, 1)
+                current_tracks_dim = abs(current_area - dim_area) <= max(1.0, dim_area * 0.03)
+                parsed_differs_from_current = abs(parsed_area - current_area) >= max(5.0, current_area * 0.08)
+                if current_tracks_dim and parsed_differs_from_current:
+                    area_m2 = parsed_area
+                    price_per_m2 = None
+                    parsed_area_is_declared_total = True
+
         corrected_area = (
             None
-            if has_title_area_m2
+            if has_title_area_m2 or parsed_area_is_declared_total
             else _dimension_area_override(area_m2, parsed_frontage, parsed_depth)
         )
         if corrected_area is not None:
