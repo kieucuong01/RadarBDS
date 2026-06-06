@@ -137,3 +137,33 @@ def test_signal_badge_metadata_prefers_complete_unit_match_over_truncated_legacy
     assert meta["tho_cu_m2"] == 60.0
     assert meta["tho_cu_ratio"] == 0.833
     assert meta["tho_cu_label"] == "TC 60 m²"
+
+
+def test_signal_badge_metadata_uses_strict_tho_cu_parser_for_compact_tc():
+    from services.market_data import signal_badge_metadata
+
+    full_tc = signal_badge_metadata({
+        "title": "T\u00e2n \u0110\u1ecbnh dt. 10 x 24tc fun \u0111\u01b0\u1eddng b\u00ea t\u00f4ng",
+        "description": "Ch\u1ee7 b\u00e1n nhanh 2ty200.",
+        "property_type": "dat_nen",
+        "area_m2": 240,
+        "road_tier": 3,
+        "tho_cu_m2": None,
+        "tho_cu_ratio": None,
+    })
+    compact_value = signal_badge_metadata({
+        "title": "T\u00e2n \u0110\u1ecbnh dt 5x37tc.75m gi\u00e1 1ty390",
+        "description": "",
+        "property_type": "dat_nen",
+        "area_m2": 185,
+        "road_tier": 3,
+        "tho_cu_m2": None,
+        "tho_cu_ratio": None,
+    })
+
+    assert full_tc["tho_cu_m2"] == 240.0
+    assert full_tc["tho_cu_ratio"] == 1.0
+    assert full_tc["tho_cu_label"] == "TC 240 m²"
+    assert compact_value["tho_cu_m2"] == 75.0
+    assert compact_value["tho_cu_ratio"] == 0.405
+    assert compact_value["tho_cu_label"] == "TC 75 m²"

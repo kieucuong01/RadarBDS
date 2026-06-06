@@ -699,18 +699,6 @@ def _infer_tho_cu_m2(r, text):
         return explicit
     if value:
         return value
-    folded = _ascii_fold(text or "")
-    patterns = [
-        r"\b(?:tc|tho\s*cu)\s*[:\-]?\s*(\d+(?:[,.]\d+)?)\s*m?\b",
-        r"\b(\d+(?:[,.]\d+)?)\s*m?\s*(?:tc|tho\s*cu)\b",
-    ]
-    for pat in patterns:
-        m = re.search(pat, folded, re.I)
-        if not m:
-            continue
-        value = _as_float(m.group(1))
-        if value and 5 <= value <= 10000 and (not area or value <= area * 1.05):
-            return value
     return None
 
 

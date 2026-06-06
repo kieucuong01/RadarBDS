@@ -235,6 +235,34 @@ def test_extract_tho_cu_handles_value_before_label_with_mv_unit():
     assert round(r["tho_cu_ratio"], 3) == 0.58
 
 
+def test_extract_tho_cu_handles_facebook_broker_shorthand_from_signal_audit():
+    samples = [
+        ("Di\u1ec7n t\u00edch 5.6x39, 188m2 (100tc)", 188, 100),
+        ("13 x109 c\u00f3 300 tc M\u1ef9 ph\u01b0\u1edbc 1", 1417, 300),
+        ("Dt 120mv, th\u1ed5 s\u1eb5n 80", 120, 80),
+        ("Dt 5,24 x 29, th\u1ed5 60", 152, 60),
+        ("Dt 4,5m x 26m, c\u00f3 60m2 odt", 117, 60),
+        ("Di\u1ec7n t\u00edch 5x30m. Th\u1ed5 c\u01b0 . 100%", 150, 150),
+        ("dt 4x25tc fun \u0111\u01b0\u1eddng b\u00ea t\u00f4ng", 100, 100),
+        ("dt. 10 x 24tc fun, \u0111\u01b0\u1eddng b\u00ea t\u00f4ng", 240, 240),
+        ("dt 5x37tc.75m gi\u00e1 1ty390", 185, 75),
+        ("dt 5x30 th\u1ed5 c\u01b0. S\u00e1t ch\u1ee3", 150, 150),
+        ("dt 5x50 th\u1ed5 c\u01b0 m\u1ed7i l\u00f4 60m", 250, 60),
+    ]
+
+    for text, total_area, expected in samples:
+        r = extract_tho_cu(text, total_area)
+        assert r["tho_cu_m2"] == expected
+        assert round(r["tho_cu_ratio"], 3) == round(expected / total_area, 3)
+
+
+def test_extract_tho_cu_does_not_read_dimension_depth_as_tc_value():
+    assert extract_tho_cu("dt 5x37tc 60m", 185)["tho_cu_m2"] == 60
+    assert extract_tho_cu("dt 5x37tc.75m", 185)["tho_cu_m2"] == 75
+    assert extract_tho_cu("\u0111\u01b0\u1eddng TC 1A M\u1ef9 Ph\u01b0\u1edbc", 150)["tho_cu_m2"] is None
+    assert extract_tho_cu("6x31 ch\u01b0a th\u1ed5 c\u01b0", 186)["tho_cu_m2"] is None
+
+
 def test_normalizer_parses_bare_width_dai_depth_and_tho_cu():
     rec = normalize_record({
         "source": "facebook",

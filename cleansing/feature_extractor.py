@@ -590,81 +590,102 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
     folded = _ascii_fold(t)
     result = {'tho_cu_m2': None, 'tho_cu_ratio': None}
 
-    if re.search(
-        r'(?:'
-        r'full\s*tho|tho\s*(?:cu\s*)?full|tc\s*full|'
-        r'100(?:[,.]0+)?\s*%\s*(?:tho\s*cu|tho|tc)|'
-        r'(?:tho\s*cu|tho|tc)\s*[:：]?\s*100(?:[,.]0+)?\s*%'
-        r')',
-        folded,
-    ):
-        result['tho_cu_ratio'] = 1.0
-        if total_area:
-            result['tho_cu_m2'] = total_area
+    num = r'(\d+(?:[,.]\d+)?)'
+    unit = r'(m[²2]?|mv)'
+    label = r'(?:tho\s*cu|tho|tc|odt|dat\s*o(?:\s*do\s*thi)?)'
+
+    def _value(raw: str) -> Optional[float]:
+        try:
+            return float(str(raw).replace(',', '.'))
+        except (TypeError, ValueError):
+            return None
+
+    area = _value(total_area)
+
+    def _negated(start: int) -> bool:
+        before = folded[max(0, start - 20):start]
+        return bool(re.search(r'\b(?:chua|khong|ko|k)\s*$', before))
+
+    def _finish(val: float):
+        result['tho_cu_m2'] = val
+        if area and area > 0:
+            result['tho_cu_ratio'] = round(val / area, 3)
         return result
+
+    full_patterns = [
+        rf'(?:full\s*{label}|{label}\s*(?:full|fun))',
+        rf'100(?:[,.]0+)?\s*%\s*{label}',
+        rf'{label}(?:\s|[.:：\-]){{0,8}}100(?:[,.]0+)?\s*%',
+    ]
+    for pat in full_patterns:
+        m = re.search(pat, folded)
+        if m and area and not _negated(m.start()):
+            return _finish(area)
+
+    # Compact broker forms:
+    # "5x37tc 60m", "5x37tc.75m" => value after tc.
+    # "10 x 24tc full/fun" => full residential, not depth=24.
+    compact_full = re.search(
+        rf'[x×\*]\s*\d+(?:[,.]\d+)?\s*(?:m\s*)?tc\s*(?:full|fun)\b',
+        folded,
+    )
+    if compact_full and area and not _negated(compact_full.start()):
+        return _finish(area)
 
     label_matches = []
-    for m in re.finditer(
-        r'(?:tho\s*cu|tc)\s*[:：]?\s*([\d]+[,.]?[\d]*)(?!\s*%)(?:\s*(m[²2]?|mv))?',
-        folded,
-    ):
-        val = float(m.group(1).replace(',', '.'))
-        if 5 <= val <= 10000:
+    compact_value_re = rf'[x×\*]\s*\d+(?:[,.]\d+)?\s*(?:m\s*)?tc\s*[\s.:：,\-]*{num}(?![\d,.])\s*{unit}?'
+    for m in re.finditer(compact_value_re, folded):
+        val = _value(m.group(1))
+        if val is not None and 5 <= val <= 10000 and not _negated(m.start()):
             label_matches.append((bool(m.group(2)), val))
+
+    # Label before number: "thổ 60", "thổ sẵn 80", "100tc" variants
+    # are common in Facebook broker posts.
+    filler = r'(?:(?:\s|[.:：,\-])+(?:san|moi\s+lo|tung\s+lo|moi\s+nen|co)?)?'
+    label_before_re = rf'(?<![a-z0-9]){label}{filler}\s*{num}(?![\d,.])(?!\s*%)(?:\s*{unit})?(?![a-z])'
+    for m in re.finditer(label_before_re, folded):
+        val = _value(m.group(1))
+        if val is not None and 5 <= val <= 10000 and not _negated(m.start()):
+            label_matches.append((bool(m.group(2)), val))
+
+    # Number before label: "300 tc", "60m2 odt", "có 200 thổ cư".
+    # Skip total-area snippets like "125m2 thổ cư 60m2"; the real
+    # residential value follows the label in those cases.
+    number_before_re = rf'{num}(?![\d,.])\s*{unit}?\s*{label}\b'
+    for m in re.finditer(number_before_re, folded):
+        val = _value(m.group(1))
+        before = folded[max(0, m.start() - 4):m.start()]
+        after = folded[m.end():m.end() + 24]
+        has_value_after_label = bool(re.match(
+            r'\s*(?:[.:：,\-]|\s)*(?:san|moi\s+lo|tung\s+lo)?\s*\d',
+            after,
+        ))
+        if re.search(r'[x×\*]\s*$', before):
+            continue
+        if has_value_after_label:
+            continue
+        if val is not None and 5 <= val <= 10000 and not _negated(m.start()):
+            label_matches.append((bool(m.group(2)), val))
+
     if label_matches:
-        _, val = next((item for item in label_matches if item[0]), label_matches[0])
-        result['tho_cu_m2'] = val
-        if total_area and total_area > 0:
-            result['tho_cu_ratio'] = round(val / total_area, 3)
-        return result
+        matches = label_matches
+        if area and area > 0:
+            valid = [item for item in matches if item[1] <= area * 1.05]
+            if valid:
+                matches = valid
+        _, val = next((item for item in matches if item[0]), matches[0])
+        return _finish(val)
 
-    for m in re.finditer(
-        r'([\d]+[,.]?[\d]*)\s*(?:m[²2]?|mv)\s*(?:tho\s*cu|tc)\b',
-        folded,
-        re.IGNORECASE,
+    # Bare "5x30 thổ cư." usually means the whole lot is residential.
+    bare_full_re = rf'\d+(?:[,.]\d+)?\s*(?:m)?\s*[x×\*]\s*\d+(?:[,.]\d+)?\s*(?:m)?[^\n]{{0,16}}{label}\s*(?:[).,;]|$)'
+    m = re.search(bare_full_re, folded)
+    if (
+        m
+        and area
+        and not _negated(m.start())
+        and not re.search(rf'\b(?:chua|khong|ko|k)\s+{label}', m.group(0))
     ):
-        val = float(m.group(1).replace(',', '.'))
-        if 5 <= val <= 10000:
-            result['tho_cu_m2'] = val
-            if total_area and total_area > 0:
-                result['tho_cu_ratio'] = round(val / total_area, 3)
-            return result
-
-    for pat in (
-        r'(?:tho\s*cu|tc)\s*[:：]?\s*([\d]+[,.]?[\d]*)(?!\s*%)(?:\s*(?:m[²2]?|mv))?',
-    ):
-        m = re.search(pat, folded)
-        if m:
-            val = float(m.group(1).replace(',', '.'))
-            if 5 <= val <= 10000:
-                result['tho_cu_m2'] = val
-                if total_area and total_area > 0:
-                    result['tho_cu_ratio'] = round(val / total_area, 3)
-                return result
-
-    # "full thổ" / "TC full" / "100% thổ cư"
-    if re.search(r'(?:full\s*thổ|tc\s*full|100%?\s*thổ)', t):
-        result['tho_cu_ratio'] = 1.0
-        if total_area:
-            result['tho_cu_m2'] = total_area
-        return result
-
-    # "Xm² thổ cư" hoặc "thổ cư Xm²" hoặc "TC Xm" hoặc "TC 35m"
-    patterns = [
-        r'([\d]+[,.]?[\d]*)\s*m[²2]\s*thổ\s*cư',           # "60m² thổ cư"
-        r'thổ\s*cư\s*[:：]?\s*([\d]+[,.]?[\d]*)(?:\s*(?:m[²2]?|mv))?',      # "thổ cư 60m²" hoặc "thổ cư 60"
-        r'\btc\s*[:：]?\s*([\d]+[,.]?[\d]*)(?:\s*(?:m[²2]?|mv))?',          # "TC 60m²" hoặc "TC 60"
-        r'([\d]+[,.]?[\d]*)\s*m\s*(?:tc|thổ\s*cư)\b',       # "35m TC"
-    ]
-    for pat in patterns:
-        m = re.search(pat, t)
-        if m:
-            val = float(m.group(1).replace(',', '.'))
-            if 5 <= val <= 10000:
-                result['tho_cu_m2'] = val
-                if total_area and total_area > 0:
-                    result['tho_cu_ratio'] = round(val / total_area, 3)
-                return result
+        return _finish(area)
 
     return result
 
