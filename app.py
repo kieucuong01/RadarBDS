@@ -67,6 +67,17 @@ app = Flask(__name__)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+@app.after_request
+def add_api_cache_headers(response):
+    if request.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
+
 LEAD_STATUSES = {"new", "called", "viewing", "deposit", "cancelled"}
 POSITIVE_REVIEW_VERDICTS = {"good", "correct", "cheap_real"}
 HARD_HIDE_REVIEW_VERDICTS = {"bad", "spam", "sold", "fake_price"}

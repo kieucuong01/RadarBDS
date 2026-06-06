@@ -390,7 +390,7 @@ function _openSignalLegacy(card) {
 async function _hydrateSignalDetailLegacy(listingId) {
   const modal = document.getElementById('signalModal');
   try {
-    const res = await fetch(`/api/listing/${listingId}`);
+    const res = await fetch(`/api/listing/${listingId}`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     const data = await res.json();
     if (modal.dataset.listingId !== String(listingId)) return;

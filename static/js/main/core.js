@@ -176,7 +176,7 @@ async function fetchJSONCached(scope, url, useCache = true) {
   const controller = new AbortController();
   requestControllers[scope] = controller;
 
-  const res = await fetch(url, { signal: controller.signal });
+  const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
   if (!res.ok) {
     throw new Error(`${res.status} ${res.statusText}`);
   }

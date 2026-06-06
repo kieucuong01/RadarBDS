@@ -119,7 +119,7 @@ def test_signal_modal_history_uses_compact_timeline_ui():
         "renderSignalHistoryRows",
         "_historyVisibleChartTimeline",
         "updateSignalHistoryChart",
-        "history-three-points-20260606",
+        "api-no-store-20260606",
         "toggleSignalHistoryRows",
         "sm-history-summary",
         "sm-history-toggle",
