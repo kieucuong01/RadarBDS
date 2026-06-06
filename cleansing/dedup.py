@@ -258,8 +258,12 @@ def _same_required_segment(l1: dict, l2: dict) -> bool:
     pt1, pt2 = l1.get("property_type"), l2.get("property_type")
     w1 = (l1.get("ward") or "").strip()
     w2 = (l2.get("ward") or "").strip()
+    same_or_compatible_type = (
+        pt1 == pt2
+        or {pt1, pt2}.issubset({"dat_nen", "dat_vuon"})
+    )
     return bool(
-        pt1 and pt2 and pt1 == pt2
+        pt1 and pt2 and same_or_compatible_type
         and w1 and w2 and w1 == w2
         and not _property_text_conflict(l1, l2)
     )
@@ -473,6 +477,8 @@ def _candidate_keys(listing: dict) -> set[tuple]:
         if phone and float(area) >= 300:
             area_bucket = int(round(float(area) / 10.0))
             keys.add(base + ("phone_large_area", phone[-9:], area_bucket))
+            if ward and prop_type in {"dat_nen", "dat_vuon"}:
+                keys.add((ward, "dat_land", "phone_large_area", phone[-9:], area_bucket))
 
     frontage = listing.get("frontage_m")
     depth = listing.get("depth_m")

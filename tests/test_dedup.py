@@ -892,6 +892,43 @@ def test_facebook_same_phone_near_area_reposts_share_candidate_bucket():
     assert _is_reliable_price_drop(old, new)
 
 
+def test_facebook_land_subtype_large_lot_drop_shares_candidate_bucket():
+    old = _listing(
+        source="facebook", source_id="fb-1212-old-subtype", posted_at="2024-09-07",
+        ward="Tan An", property_type="dat_nen", area_m2=1212.5,
+        price_ty=3.5, contact_phone="0902861961",
+        description=(
+            "Sau cho Ben The nhanh Dx126 cach Huynh Thi Hieu 200m. "
+            "Dt 1212,5m2, tho cu 140m2, gia 3ty500."
+        ),
+    )
+    new = _listing(
+        source="facebook", source_id="fb-1212-new-subtype", posted_at="2025-07-22",
+        ward="Tan An", property_type="dat_vuon", area_m2=1212.0,
+        price_ty=2.9, contact_phone="0902-861-961",
+        description=(
+            "Ban dat phuong Tan An lam vuon gia tot duong ba gac. "
+            "Dt 1.212 m2, tc 140, gia 2ty9."
+        ),
+    )
+
+    assert _candidate_keys(old).intersection(_candidate_keys(new))
+    assert _is_duplicate(old, new)
+    assert _is_reliable_price_drop(old, new)
+
+
+def test_facebook_land_subtype_large_lot_key_requires_phone():
+    listing = _listing(
+        source="facebook", source_id="fb-1212-no-phone", posted_at="2025-07-22",
+        ward="Tan An", property_type="dat_vuon", area_m2=1212.0,
+        price_ty=2.9, contact_phone=None,
+        description="Ban dat Tan An dien tich 1212m2 gia 2ty9.",
+    )
+
+    keys = _candidate_keys(listing)
+    assert not any(key[1] == "dat_land" for key in keys)
+
+
 def test_same_total_price_area_drift_is_not_price_drop():
     old = _listing(
         source="facebook", source_id="fb-same-total-old", posted_at="2026-04-30",
