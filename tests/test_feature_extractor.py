@@ -264,6 +264,18 @@ def test_extract_tho_cu_does_not_read_dimension_depth_as_tc_value():
     assert extract_tho_cu("6x31 ch\u01b0a th\u1ed5 c\u01b0", 186)["tho_cu_m2"] is None
 
 
+def test_extract_tho_cu_treats_land_label_before_dimensions_as_full_lot():
+    samples = [
+        ("B\u00e1n \u0111\u1ea5t th\u1ed5 c\u01b0 6 x 31 \u0111\u01b0\u1eddng nh\u1ef1a", 186),
+        ("L\u00f4 \u0111\u1ea5t th\u1ed5 c\u01b0 6m x 31m, s\u1ed5 ri\u00eang", 186),
+        ("\u0110\u1ea5t th\u1ed5 c\u01b0 5 x 20 gi\u00e1 t\u1ed1t", 100),
+    ]
+    for text, total_area in samples:
+        r = extract_tho_cu(text, total_area)
+        assert r["tho_cu_m2"] == total_area
+        assert r["tho_cu_ratio"] == 1.0
+
+
 def test_normalizer_parses_bare_width_dai_depth_and_tho_cu():
     rec = normalize_record({
         "source": "facebook",

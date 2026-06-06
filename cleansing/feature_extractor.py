@@ -632,6 +632,13 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
     if compact_full and area and not _negated(compact_full.start()):
         return _finish(area)
 
+    # "dat tho cu 6 x 31" describes a residential lot with dimensions.
+    # The first number is frontage, not residential area.
+    label_dimension_re = rf'(?<![a-z0-9]){label}\s*{num}\s*(?:m\s*)?[x\u00d7\*]\s*\d+(?:[,.]\d+)?'
+    m = re.search(label_dimension_re, folded)
+    if m and area and not _negated(m.start()):
+        return _finish(area)
+
     label_matches = []
     compact_value_re = rf'[x×\*]\s*\d+(?:[,.]\d+)?\s*(?:m\s*)?tc\s*[\s.:：,\-]*{num}(?!\d)(?![,.]\d)\s*{unit}?'
     for m in re.finditer(compact_value_re, folded):
@@ -645,6 +652,9 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
     label_before_re = rf'(?<![a-z0-9]){label}{filler}\s*{num}(?!\d)(?![,.]\d)(?!\s*%)(?:\s*{unit})?(?![a-z])'
     for m in re.finditer(label_before_re, folded):
         val = _value(m.group(1))
+        after = folded[m.end():m.end() + 12]
+        if re.match(r'\s*(?:m\s*)?[x\u00d7\*]\s*\d', after):
+            continue
         if val is not None and 5 <= val <= 10000 and not _negated(m.start()):
             label_matches.append((bool(m.group(2)), val))
 

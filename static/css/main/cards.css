@@ -747,26 +747,28 @@
 }
 
 .sc-meta-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 22px;
+  gap: 4px;
   overflow: visible;
   align-content: flex-start;
 }
 
 .meta-chip {
-  min-height: 28px;
+  min-width: 0;
+  min-height: 22px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  flex: 0 1 auto;
-  max-width: min(100%, 190px);
-  padding: 5px 8px;
+  justify-content: flex-start;
+  gap: 3px;
+  max-width: 100%;
+  padding: 3px 5px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.08);
   color: var(--text-muted);
-  font-size: 0.74rem;
+  font-size: 0.64rem;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
@@ -781,7 +783,7 @@
 }
 
 .meta-chip-street {
-  max-width: min(100%, 220px);
+  max-width: 100%;
 }
 
 .meta-chip-land,
@@ -790,7 +792,9 @@
 }
 
 .meta-chip svg {
-  flex: 0 0 auto;
+  flex: 0 0 11px;
+  width: 11px;
+  height: 11px;
   opacity: 0.58;
 }
 
@@ -1002,28 +1006,20 @@
   }
 
   .sc-meta-chips {
-    gap: 4px;
+    grid-auto-rows: 20px;
+    gap: 3px;
   }
 
   .meta-chip {
-    min-height: 24px;
-    gap: 3px;
-    max-width: 124px;
-    padding: 4px 6px;
-    font-size: 0.64rem;
-  }
-
-  .meta-chip-area {
-    max-width: 132px;
-  }
-
-  .meta-chip-street {
-    max-width: 156px;
+    min-height: 20px;
+    padding: 3px 4px;
+    font-size: 0.58rem;
   }
 
   .meta-chip svg {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
+    flex-basis: 10px;
   }
 
   .sc-actions {

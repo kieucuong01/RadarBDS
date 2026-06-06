@@ -144,7 +144,7 @@ def test_signal_cards_use_professional_empty_image_state():
         assert expected in signals_js or expected in cards_css
 
     assert ".sc-empty-media" in cards_css
-    assert "signal-badge-meta-20260606" in html
+    assert "signal-badge-two-row-20260606" in html
 
 
 def test_signal_cards_and_modal_render_compact_property_badges():
@@ -163,14 +163,15 @@ def test_signal_cards_and_modal_render_compact_property_badges():
         "streetLabel",
         "thoCuLabel",
         "propertyTypeLabel",
-        "signal-badge-meta-20260606",
+        "signal-badge-two-row-20260606",
     ]:
         assert expected in html or expected in signals_js or expected in modal_js
 
     assert ".meta-chip-label" in cards_css
     assert ".meta-chip-street" in cards_css
     assert ".sm-tags-wrap .sm-tag-chip" in modal_css
-    assert "flex-wrap: wrap" in cards_css
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in cards_css
+    assert "grid-auto-rows: 22px" in cards_css
     assert "flex-wrap: wrap" in modal_css
 
 
