@@ -6,6 +6,12 @@ allowed-tools: Bash(python radar.py *)
 
 # Review Deal Signals — Claude pre-review (CỐ VẤN)
 
+Nếu nhiệm vụ là cập nhật/rewrite/backfill memo đầu tư cho signal deals, đọc thêm
+`docs/investment_memo_workflow.md` trước khi viết hoặc lưu memo. Chuẩn mới là
+memo cố vấn dựa trên dữ liệu và định giá chuẩn tắc, không dùng Groq/API ngoài,
+không ghi vào `ai_training_feedback`, và tránh toàn bộ thuật ngữ tiếng Anh trong
+phần người dùng đọc.
+
 Đây là **pre-review cố vấn**. Mục tiêu: đọc từng deal signal như một nhà cố vấn
 đầu tư BĐS, tự đưa nhận định "rẻ thật / mồi / không rẻ / thiếu thông tin", rồi
 lưu memo do chính agent viết sau khi đọc context. Không sinh memo bằng rule-base

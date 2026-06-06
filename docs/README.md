@@ -23,6 +23,7 @@ Do not load every doc by default. The project has long crawl and product notes; 
 | Dedup, lot history, price drops, quality flags | `product_rules.md`, `architecture.md` | `cleansing/dedup.py`, `cleansing/feature_extractor.py`, `db/listings.py`, tests |
 | Dashboard/API performance | `architecture.md`, `product_rules.md` | `services/market_data.py`, `routes/*`, `app.py` |
 | Admin AI Training | `product_rules.md`, `agent_playbook.md` | `routes/admin_api.py`, `static/js/admin.js`, `templates/admin_control_room.html` |
+| Advisory investment memo / signal memo updates | `investment_memo_workflow.md`, `operations.md` | `ai_deal_review`, `cli/review.py`, `app.py` |
 | Auth, VIP, guest/free/admin masking | `rbac.md` | `auth/*`, `routes/auth.py`, frontend auth files |
 | Telegram watchlist push/webhook | `telegram_watchlist.md` | `alerts/telegram.py`, `cli/notify.py`, auth Telegram routes |
 | Local commands/tests | `dev_commands.md` | command line only |
