@@ -570,6 +570,21 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
             result['tho_cu_m2'] = total_area
         return result
 
+    label_matches = []
+    for m in re.finditer(
+        r'(?:tho\s*cu|tc)\s*[:：]?\s*([\d]+[,.]?[\d]*)(?!\s*%)(?:\s*(m[²2]?|mv))?',
+        folded,
+    ):
+        val = float(m.group(1).replace(',', '.'))
+        if 5 <= val <= 10000:
+            label_matches.append((bool(m.group(2)), val))
+    if label_matches:
+        _, val = next((item for item in label_matches if item[0]), label_matches[0])
+        result['tho_cu_m2'] = val
+        if total_area and total_area > 0:
+            result['tho_cu_ratio'] = round(val / total_area, 3)
+        return result
+
     for pat in (
         r'(?:tho\s*cu|tc)\s*[:：]?\s*([\d]+[,.]?[\d]*)(?!\s*%)(?:\s*(?:m[²2]?|mv))?',
     ):

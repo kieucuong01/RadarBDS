@@ -196,6 +196,16 @@ def test_extract_tho_cu_prefers_value_after_label_when_title_has_total_area():
         assert round(r["tho_cu_ratio"], 3) == round(expected / total_area, 3)
 
 
+def test_extract_tho_cu_prefers_complete_unit_match_over_truncated_title():
+    text = (
+        "Di\u1ec7n t\u00edch 72m2 th\u1ed5 c\u01b0 6 | "
+        "Di\u1ec7n t\u00edch 72m2 th\u1ed5 c\u01b0 60m2, nh\u00e0 1 tr\u1ec7t 1 l\u1eedng"
+    )
+    r = extract_tho_cu(text, 72)
+    assert r["tho_cu_m2"] == 60
+    assert round(r["tho_cu_ratio"], 3) == 0.833
+
+
 def test_normalizer_parses_bare_width_dai_depth_and_tho_cu():
     rec = normalize_record({
         "source": "facebook",

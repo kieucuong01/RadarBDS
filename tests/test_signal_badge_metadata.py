@@ -119,3 +119,21 @@ def test_signal_badge_metadata_prefers_label_value_over_legacy_title_area_value(
     assert meta["tho_cu_m2"] == 60.0
     assert meta["tho_cu_ratio"] == 0.75
     assert meta["tho_cu_label"] == "TC 60 m²"
+
+
+def test_signal_badge_metadata_prefers_complete_unit_match_over_truncated_legacy_value():
+    from services.market_data import signal_badge_metadata
+
+    meta = signal_badge_metadata({
+        "title": "Di\u1ec7n t\u00edch 72m2 th\u1ed5 c\u01b0 6",
+        "description": "Di\u1ec7n t\u00edch 72m2 th\u1ed5 c\u01b0 60m2, nh\u00e0 1 tr\u1ec7t 1 l\u1eedng.",
+        "property_type": "nha_dat",
+        "area_m2": 72,
+        "road_tier": 3,
+        "tho_cu_m2": 6,
+        "tho_cu_ratio": 0.083,
+    })
+
+    assert meta["tho_cu_m2"] == 60.0
+    assert meta["tho_cu_ratio"] == 0.833
+    assert meta["tho_cu_label"] == "TC 60 m²"

@@ -694,6 +694,8 @@ def _infer_tho_cu_m2(r, text):
         if value and area and explicit > area * 1.05:
             if value <= area * 1.05 or abs(value - area) <= max(0.1, area * 0.001):
                 return value
+        if value and explicit < 10 <= value:
+            return value
         return explicit
     if value:
         return value
@@ -714,9 +716,13 @@ def _infer_tho_cu_m2(r, text):
 
 def _infer_tho_cu_ratio(r, tho_cu_m2):
     explicit = _as_float(_row_get(r, "tho_cu_ratio"))
-    if explicit and 0 < explicit <= 1.05:
-        return explicit
     area = _as_float(_row_get(r, "area_m2"))
+    if explicit and 0 < explicit <= 1.05:
+        if area and tho_cu_m2:
+            computed = round(tho_cu_m2 / area, 3)
+            if abs(explicit - computed) > 0.01:
+                return computed
+        return explicit
     if area and tho_cu_m2:
         return round(tho_cu_m2 / area, 3)
     return None
