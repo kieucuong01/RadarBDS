@@ -386,18 +386,20 @@
   position: absolute;
   inset: 0;
   display: none;
-  place-items: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   padding: 20px 18px;
   overflow: hidden;
   color: #475569;
   background:
-    linear-gradient(135deg, rgba(248, 250, 252, 0.94), rgba(226, 232, 240, 0.9)),
-    radial-gradient(circle at 24% 20%, rgba(59, 130, 246, 0.12), transparent 28%);
+    linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(226, 232, 240, 0.92));
 }
 
 .sc-img-wrap-empty .sc-empty-media,
 .sc-img-wrap.is-image-missing .sc-empty-media {
-  display: grid;
+  display: flex;
 }
 
 .sc-empty-media-map {
@@ -408,6 +410,14 @@
     linear-gradient(90deg, rgba(148, 163, 184, 0.22) 1px, transparent 1px),
     linear-gradient(0deg, rgba(148, 163, 184, 0.2) 1px, transparent 1px);
   background-size: 38px 38px;
+}
+
+.sc-empty-media-map::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(100, 116, 139, 0.16);
+  border-radius: 18px;
 }
 
 .sc-empty-media-map span {
@@ -445,19 +455,18 @@
 }
 
 .sc-empty-media-mark {
-  width: 62px;
-  height: 62px;
+  width: 58px;
+  height: 58px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(99, 102, 241, 0.18);
-  border-radius: 16px;
+  border-radius: 14px;
   color: #4f46e5;
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.1);
 }
 
 .sc-empty-media-copy {
-  margin-top: 78px;
   max-width: 230px;
   text-align: center;
 }
@@ -484,8 +493,7 @@
 [data-theme="dark"] .sc-empty-media {
   color: #cbd5e1;
   background:
-    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92)),
-    radial-gradient(circle at 24% 20%, rgba(59, 130, 246, 0.14), transparent 28%);
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92));
 }
 
 [data-theme="dark"] .sc-empty-media-mark {
@@ -864,6 +872,44 @@
 
   .sc-img-wrap {
     height: clamp(130px, 36vw, 148px);
+  }
+
+  .sc-empty-media {
+    gap: 5px;
+    padding: 16px 12px 34px;
+  }
+
+  .sc-empty-media-map {
+    background-size: 30px 30px;
+  }
+
+  .sc-empty-media-map::before {
+    inset: 12px;
+    border-radius: 14px;
+  }
+
+  .sc-empty-media-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    transform: translateY(-8px);
+  }
+
+  .sc-empty-media-mark svg {
+    width: 27px;
+    height: 27px;
+  }
+
+  .sc-empty-media-copy {
+    transform: translateY(-8px);
+  }
+
+  .sc-empty-media-copy strong {
+    font-size: 0.76rem;
+  }
+
+  .sc-empty-media-copy span {
+    display: none;
   }
 
   .sc-body {

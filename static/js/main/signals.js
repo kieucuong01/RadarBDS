@@ -186,7 +186,7 @@ function renderSignalCardMedia(x, imgSrc, imageCount, overlaysHtml) {
         </div>
         <div class="sc-empty-media-copy">
           <strong>Chưa có ảnh</strong>
-          <span>Radar vẫn giữ tín hiệu để bạn kiểm tra giá và vị trí.</span>
+          <span>Xem giá và vị trí</span>
         </div>
       </div>
       ${overlaysHtml}
