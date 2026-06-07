@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 
@@ -100,7 +101,7 @@ def test_signal_modal_memo_defaults_to_conclusion_and_uses_vietnamese_labels():
     assert "phương pháp so sánh thị trường" in modal_js
     assert "phương pháp dòng tiền" in modal_js
     assert "giá trị sử dụng tốt nhất" in modal_js
-    assert "Ghi chú cố vấn" in html
+    assert "Cố vấn đầu tư" in html
     assert "Investment Memo" not in html
     assert '>Memo<' not in html
     assert "splitDenseSection" in modal_js
@@ -119,7 +120,7 @@ def test_signal_modal_history_uses_compact_timeline_ui():
         "renderSignalHistoryRows",
         "_historyChartTimeline",
         "const chartTimeline = _historyChartTimeline(decoratedTimeline)",
-        "modal-area-street-tags-20260608",
+        "modal-comps-advisor-20260608",
         "toggleSignalHistoryRows",
         "sm-history-summary",
         "sm-history-toggle",
@@ -133,6 +134,51 @@ def test_signal_modal_history_uses_compact_timeline_ui():
     assert "_historyVisibleChartTimeline" not in modal_js
     assert "updateSignalHistoryChart" not in modal_js
     assert "khoảng thời gian" not in modal_js
+
+
+def test_signal_modal_tabs_meta_and_comps_are_investor_friendly():
+    html = _read("templates/index.html")
+    app_source = _read("app.py")
+    modal_js = _read("static/js/main/modal.js")
+    modal_css = _read("static/css/main/modal.css")
+
+    desc_idx = html.find('data-sm-tab="desc"')
+    history_idx = html.find('data-sm-tab="history"')
+    comps_idx = html.find('data-sm-tab="comps"')
+    memo_idx = html.find('data-sm-tab="memo"')
+    assert -1 not in (desc_idx, history_idx, comps_idx, memo_idx)
+    assert desc_idx < history_idx < comps_idx < memo_idx
+    assert ">Cố vấn<" in html
+    assert ">Ghi chú<" not in html
+    assert "sm-source-badge" not in html
+
+    assert "renderModalMetaLine" in modal_js
+    assert "Đăng ${timeText}" in modal_js
+    assert "Dang ${d.time" not in modal_js
+    assert "data.source" not in modal_js
+    assert "d.source || '-'" not in modal_js
+
+    for expected in [
+        "renderCompInfoTag",
+        "sm-comp-tags",
+        "sm-comp-score",
+        "sm-comp-price-strip",
+        "sm-comp-area",
+        "sm-comp-road",
+        "sm-comp-property",
+        "sm-comp-land",
+    ]:
+        assert expected in modal_js or expected in modal_css
+
+    for expected in [
+        "badge_meta = signal_badge_metadata(c)",
+        "'frontage_m': c[\"frontage_m\"]",
+        "'depth_m': c[\"depth_m\"]",
+        "'road_label': badge_meta[\"road_label\"]",
+        "'street_label': badge_meta[\"street_label\"]",
+        "'tho_cu_label': badge_meta[\"tho_cu_label\"]",
+    ]:
+        assert expected in app_source
 
 
 def test_signal_cards_use_professional_empty_image_state():
@@ -151,7 +197,7 @@ def test_signal_cards_use_professional_empty_image_state():
         assert expected in signals_js or expected in cards_css
 
     assert ".sc-empty-media" in cards_css
-    assert "signal-card-polish-20260608" in html
+    assert "signal-card-chip-balance-20260608" in html
 
 
 def test_signal_tab_mobile_scroll_container_is_stable():
@@ -219,7 +265,7 @@ def test_signal_cards_and_modal_render_compact_property_badges():
         "streetLabel",
         "thoCuLabel",
         "propertyTypeLabel",
-        "signal-card-polish-20260608",
+        "signal-card-chip-balance-20260608",
     ]:
         assert expected in html or expected in signals_js or expected in modal_js
 
@@ -227,8 +273,9 @@ def test_signal_cards_and_modal_render_compact_property_badges():
     assert ".meta-chip-street" in cards_css
     assert ".sm-tags-wrap .sm-tag-chip" in modal_css
     assert "grid-template-columns: repeat(12, minmax(0, 1fr))" in cards_css
-    assert "grid-column: span 7" in cards_css
-    assert "grid-column: span 2" in cards_css
+    assert re.search(r"\.meta-chip-street\s*\{[^}]*grid-column: span 5;", cards_css, re.S)
+    assert re.search(r"\.meta-chip-property\s*\{[^}]*grid-column: span 3;", cards_css, re.S)
+    assert re.search(r"\.meta-chip-land\s*\{[^}]*grid-column: span 4;", cards_css, re.S)
     assert "grid-auto-rows: 22px" in cards_css
     assert "flex-wrap: wrap" in modal_css
     assert "font-style: normal" in cards_css

@@ -840,11 +840,13 @@
 
 .sm-comp-card {
   display: block;
-  min-height: 66px;
-  background: rgba(248, 250, 252, 0.82);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 9px 11px;
+  min-height: 92px;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.94), rgba(248, 250, 252, 0.78));
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  padding: 11px 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
 }
 
 .sm-comp-card.is-current {
@@ -889,7 +891,7 @@
 
 .sm-comp-title {
   color: var(--text);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 800;
   line-height: 1.35;
   overflow: hidden;
@@ -899,8 +901,17 @@
   -webkit-box-orient: vertical;
 }
 
+.sm-comp-badges {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
 .sm-current-badge,
-.sm-comp-source-badge {
+.sm-comp-source-badge,
+.sm-comp-score {
   flex-shrink: 0;
   color: #0f766e;
   background: rgba(20, 184, 166, 0.1);
@@ -915,6 +926,108 @@
   color: #4338ca;
   background: rgba(99, 102, 241, 0.08);
   border-color: rgba(99, 102, 241, 0.22);
+}
+
+.sm-comp-score {
+  color: #0369a1;
+  background: rgba(14, 165, 233, 0.09);
+  border-color: rgba(14, 165, 233, 0.22);
+}
+
+.sm-comp-price-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.sm-comp-price-strip > span {
+  min-width: 0;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 7px 8px;
+}
+
+.sm-comp-price-strip small,
+.sm-comp-price-strip b {
+  display: block;
+  min-width: 0;
+}
+
+.sm-comp-price-strip small {
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sm-comp-price-strip b {
+  margin-top: 2px;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sm-comp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.sm-comp-tag {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text-muted);
+  padding: 3px 8px 3px 5px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.sm-comp-tag > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sm-comp-tag-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  font-size: 0.62rem;
+}
+
+.sm-comp-area,
+.sm-comp-road {
+  color: #334155;
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.18);
+}
+
+.sm-comp-property,
+.sm-comp-land {
+  color: #075985;
+  background: rgba(14, 165, 233, 0.08);
+  border-color: rgba(14, 165, 233, 0.18);
 }
 
 .sm-comp-metrics {
@@ -997,6 +1110,16 @@
 
 [data-theme="dark"] .sm-comp-metrics > span {
   background: rgba(15, 23, 42, 0.88);
+}
+
+[data-theme="dark"] .sm-comp-price-strip > span,
+[data-theme="dark"] .sm-comp-tag-icon {
+  background: rgba(15, 23, 42, 0.72);
+}
+
+[data-theme="dark"] .sm-comp-tag {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(148, 163, 184, 0.18);
 }
 
 [data-theme="dark"] .sm-comp-metrics > .sm-current-badge {
@@ -1481,6 +1604,7 @@
 
   .sm-comp-title-line {
     grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
   }
 
   .sm-comp-title {
@@ -1488,12 +1612,46 @@
     text-align: left;
   }
 
+  .sm-comp-badges {
+    justify-content: flex-start;
+  }
+
+  .sm-comp-price-strip {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .sm-comp-price-strip > span {
+    padding: 6px 7px;
+  }
+
+  .sm-comp-price-strip b {
+    font-size: 0.78rem;
+  }
+
+  .sm-comp-tags {
+    gap: 4px;
+    margin-top: 7px;
+  }
+
+  .sm-comp-tag {
+    min-height: 23px;
+    max-width: 100%;
+    padding: 3px 7px 3px 4px;
+    font-size: 0.62rem;
+  }
+
+  .sm-comp-road {
+    max-width: 100%;
+  }
+
   .sm-comp-metrics {
     gap: 5px;
   }
 
   .sm-current-badge,
-  .sm-comp-source-badge {
+  .sm-comp-source-badge,
+  .sm-comp-score {
     justify-self: start;
     width: max-content;
     font-size: 0.66rem;

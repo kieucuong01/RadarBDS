@@ -27,9 +27,12 @@ def test_public_seo_defaults_point_to_radarbds_domain():
     import app as radar_app
 
     meta = radar_app._site_meta("/")
+    dashboard_meta = radar_app._site_meta("/dashboard")
 
     assert meta["canonical_url"] == "https://radarbds.vn/"
     assert meta["og_url"] == "https://radarbds.vn/"
+    assert dashboard_meta["canonical_url"] == "https://radarbds.vn/dashboard"
+    assert dashboard_meta["og_url"] == "https://radarbds.vn/dashboard"
     assert meta["og_image"].startswith("https://radarbds.vn/")
     assert "localhost" not in meta["canonical_url"]
     assert "127.0.0.1" not in meta["canonical_url"]
@@ -45,10 +48,37 @@ def test_robots_and_sitemap_use_public_domain():
 
     assert "Sitemap: https://radarbds.vn/sitemap.xml" in robots
     assert "<loc>https://radarbds.vn/</loc>" in sitemap
-    assert "<loc>https://radarbds.vn/binh-duong</loc>" in sitemap
+    assert "<loc>https://radarbds.vn/binh-duong</loc>" not in sitemap
     assert "<loc>https://radarbds.vn/san-deal-bds</loc>" in sitemap
     assert "localhost" not in robots + sitemap
     assert "127.0.0.1" not in robots + sitemap
+
+
+def test_homepage_is_binh_duong_landing_and_dashboard_has_own_url():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+
+    home = client.get("/")
+    dashboard = client.get("/dashboard")
+    legacy_binh_duong = client.get("/binh-duong")
+
+    home_html = home.get_data(as_text=True)
+    dashboard_html = dashboard.get_data(as_text=True)
+
+    assert home.status_code == 200
+    assert '<link rel="canonical" href="https://radarbds.vn/">' in home_html
+    assert 'class="seo-page seo-page-market"' in home_html
+    assert "Săn deal nhà đất Bình Dương bằng dữ liệu" in home_html
+    assert 'href="/dashboard"' in home_html
+    assert '<a href="/dashboard">Dashboard</a>' in home_html
+
+    assert dashboard.status_code == 200
+    assert '<link rel="canonical" href="https://radarbds.vn/dashboard">' in dashboard_html
+    assert "window.INITIAL_WARDS_BY_CITY" in dashboard_html
+
+    assert legacy_binh_duong.status_code == 301
+    assert legacy_binh_duong.headers["Location"] == "/"
 
 
 def test_foundational_seo_pages_render_canonical_content():
@@ -56,7 +86,7 @@ def test_foundational_seo_pages_render_canonical_content():
 
     client = radar_app.app.test_client()
     expected = {
-        "/binh-duong": "Săn deal nhà đất Bình Dương bằng dữ liệu",
+        "/": "Săn deal nhà đất Bình Dương bằng dữ liệu",
         "/san-deal-bds": "Cách Radar BDS lọc tin rẻ thật",
     }
 
@@ -135,7 +165,7 @@ def test_manifest_uses_radarbds_standalone_start_url():
     manifest = json.loads(Path("static/manifest.webmanifest").read_text(encoding="utf-8"))
 
     assert manifest["name"] == "Radar BDS"
-    assert manifest["start_url"] == "https://radarbds.vn/"
+    assert manifest["start_url"] == "https://radarbds.vn/dashboard"
     assert manifest["scope"] == "https://radarbds.vn/"
     assert manifest["display"] == "standalone"
     assert manifest["icons"][0]["src"].startswith("https://radarbds.vn/")

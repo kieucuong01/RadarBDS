@@ -121,7 +121,7 @@ SEO_PAGES = {
         "hero_checks": ["Lọc tin ảo", "Tính fair value", "Xếp hạng MOS"],
         "primary_cta": "Xem tín hiệu đang có",
         "secondary_cta": "Thị trường Bình Dương",
-        "secondary_href": "/binh-duong",
+        "secondary_href": "/",
         "map_label": "Deal Filtering Flow",
         "hero_metric": {
             "label": "Tin qua bộ lọc",

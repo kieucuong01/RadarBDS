@@ -232,6 +232,15 @@ function renderModalTitle(rawTitle) {
   `;
 }
 
+function renderModalMetaLine(data = {}) {
+  const el = document.getElementById('sm-meta-line');
+  if (!el) return;
+  const timeText = _signalTagText(data.time || data.daysAgo || '');
+  el.innerHTML = timeText
+    ? `<span>Đăng ${timeText}</span>`
+    : '<span>Đăng gần đây</span>';
+}
+
 function _modalNumber(value) {
   if (value === null || value === undefined || value === '' || value === '-') return NaN;
   const n = Number(String(value).replace(',', '.'));
@@ -306,6 +315,40 @@ function toggleModalComps(btn) {
   btn.textContent = expanded ? 'Thu gọn' : `Xem thêm ${count} lô`;
 }
 
+function renderCompInfoTag(icon, label, extraClass = '') {
+  const text = _signalTagText(label);
+  if (!text) return '';
+  return `
+    <span class="sm-comp-tag ${extraClass}">
+      <span class="sm-comp-tag-icon">${escHtml(icon)}</span>
+      <span>${escHtml(text)}</span>
+    </span>
+  `;
+}
+
+function renderCompTags(c = {}) {
+  const areaLabel = _signalTagArea({
+    area: c.area_m2 || c.area,
+    frontage: c.frontage_m || c.frontage,
+    depth: c.depth_m || c.depth,
+  });
+  const roadLabel = c.street_label || c.streetLabel || c.road_label || c.roadLabel || c.road_type || c.road;
+  const propertyLabel = c.property_type_label || c.prop_type_label || propertyTypeLabel(c.property_type || c.ptype);
+  const landLabel = _signalTagThoCu({
+    thoCuLabel: c.tho_cu_label || c.thoCuLabel,
+    thoCuM2: c.tho_cu_m2 || c.thoCu,
+  });
+  const ppm2Label = _modalFormatPpm2(c.price_per_m2 || c.actual_ppm2 || c.ppm2);
+  return [
+    renderCompInfoTag('📍', c.ward, 'sm-comp-ward'),
+    renderCompInfoTag('📐', areaLabel, 'sm-comp-area'),
+    renderCompInfoTag('↱', roadLabel, 'sm-comp-road'),
+    renderCompInfoTag('🏷️', propertyLabel, 'sm-comp-property'),
+    renderCompInfoTag('▣', landLabel, 'sm-comp-land'),
+    renderCompInfoTag('₫', ppm2Label, 'sm-comp-ppm2'),
+  ].filter(Boolean).join('');
+}
+
 function openGallery(idx = 0) {
   if (!galleryImages.length) return;
   galleryIndex = Math.max(0, Math.min(idx, galleryImages.length - 1));
@@ -352,7 +395,7 @@ function _openSignalLegacy(card) {
   document.getElementById('sm-title').innerText = d.title;
 
   // Meta line
-  document.getElementById('sm-meta-line').innerHTML = `<span>Đăng ${d.time}</span> · <span>${d.source}</span>`;
+  renderModalMetaLine(d);
 
   // Description is lazy-loaded from /api/listing/<id>.
   document.getElementById('sm-desc').innerText = 'Đang tải mô tả chi tiết...';
@@ -391,7 +434,17 @@ function _openSignalLegacy(card) {
   { const _d = document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
 
   // Load price history + comps
-  loadSignalHistory(d.id, price, area, d.ward);
+  loadSignalHistory(d.id, price, area, d.ward, {
+    frontage_m: d.frontage,
+    depth_m: d.depth,
+    price_per_m2: d.ppm2,
+    road_label: d.roadLabel || d.road,
+    street_label: d.streetLabel,
+    property_type: d.ptype,
+    property_type_label: d.propLabel,
+    tho_cu_m2: d.thoCu,
+    tho_cu_label: d.thoCuLabel,
+  });
   hydrateSignalDetail(d.id);
 
   modal.style.display = 'flex';
@@ -669,9 +722,9 @@ function _memoVerdictLabel(verdict) {
     suspect: 'Cần nghi ngờ',
     not_cheap: 'Chưa đủ rẻ',
     insufficient_info: 'Thiếu thông tin',
-    memo: 'Ghi chú',
+    memo: 'Cố vấn',
   };
-  return labels[verdict] || verdict || 'Ghi chú';
+  return labels[verdict] || verdict || 'Cố vấn';
 }
 
 function _memoFlagLabel(flag) {
@@ -711,10 +764,10 @@ function renderInvestmentMemoLocked() {
   if (!body) return;
   body.innerHTML = `
     <div class="sm-memo-locked">
-      <b>Ghi chú cố vấn dành cho VIP</b><br>
+      <b>Cố vấn đầu tư dành cho VIP</b><br>
       Nâng cấp VIP để xem ghi chú cố vấn riêng cho từng tín hiệu: định giá, rủi ro cần kiểm tra và góc nhìn đầu tư.
       <div style="margin-top:10px;">
-        <button type="button" class="sm-comps-toggle" onclick="RadarAuth.openAuthModal('Đăng nhập hoặc nâng cấp VIP để xem ghi chú cố vấn.')">Đăng nhập</button>
+        <button type="button" class="sm-comps-toggle" onclick="RadarAuth.openAuthModal('Đăng nhập hoặc nâng cấp VIP để xem cố vấn đầu tư.')">Đăng nhập</button>
       </div>
     </div>
   `;
@@ -817,7 +870,7 @@ async function loadInvestmentMemo(listingId) {
   } catch (err) {
     console.error('Advisory memo load error:', err);
     const body = document.getElementById('sm-memo-body');
-    if (body) body.innerHTML = '<div class="sm-empty-state">Không tải được ghi chú cố vấn.</div>';
+    if (body) body.innerHTML = '<div class="sm-empty-state">Không tải được cố vấn đầu tư.</div>';
   }
 }
 
@@ -840,8 +893,8 @@ function _openSignalFromData(d, opts = {}) {
   const badgeLabel = mosNum >= 25 ? 'TÍN HIỆU MẠNH' : 'TÍN HIỆU';
   document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} · -${d.mos}%</span>`;
   renderModalTitle(d.title || '');
-  document.getElementById('sm-meta-line').innerHTML = `<span>Dang ${d.time || '-'}</span> · <span>${d.source || '-'}</span>`;
-  document.getElementById('sm-desc').innerText = 'Dang tai mo ta chi tiet...';
+  renderModalMetaLine(d);
+  document.getElementById('sm-desc').innerText = 'Đang tải mô tả chi tiết...';
 
   // Legacy AI assessment is intentionally hidden for now.
   const price = parseFloat(d.price) || 0;
@@ -868,7 +921,17 @@ function _openSignalFromData(d, opts = {}) {
   document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
   { const _d = document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
 
-  loadSignalHistory(d.id, price, area, d.ward);
+  loadSignalHistory(d.id, price, area, d.ward, {
+    frontage_m: d.frontage,
+    depth_m: d.depth,
+    price_per_m2: d.ppm2,
+    road_label: d.roadLabel || d.road,
+    street_label: d.streetLabel,
+    property_type: d.ptype,
+    property_type_label: d.propLabel,
+    tho_cu_m2: d.thoCu,
+    tho_cu_label: d.thoCuLabel,
+  });
   loadInvestmentMemo(d.id);
   hydrateSignalDetail(d.id);
   const content = modal.querySelector('.signal-modal-content');
@@ -887,6 +950,7 @@ function openListingModal(row) {
     title: d.title,
     primary: d.primary,
     price: d.price,
+    ppm2: d.ppm2,
     fair: d.fair,
     area: d.area,
     frontage: d.frontage,
@@ -949,7 +1013,7 @@ async function hydrateSignalDetail(listingId) {
   } catch (err) {
     console.error(err);
     if (modal.dataset.listingId === String(listingId)) {
-      document.getElementById('sm-desc').innerText = 'Khong tai duoc mo ta chi tiet.';
+      document.getElementById('sm-desc').innerText = 'Không tải được mô tả chi tiết.';
     }
   }
 }
@@ -1057,7 +1121,7 @@ function toggleSignalHistoryRows(button) {
     : (button.dataset.collapsedText || 'Xem thêm');
 }
 
-async function loadSignalHistory(listingId, currentPrice, area, ward) {
+async function loadSignalHistory(listingId, currentPrice, area, ward, currentMeta = {}) {
   // Chart/history elements only exist for admin tier. Comps table is always present.
   const historyEl = document.getElementById('sm-price-history');
   const chartEl = document.getElementById('sm-history-chart');
@@ -1165,8 +1229,10 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
         const isCurrent = Boolean(opts.isCurrent);
         const hidden = Boolean(opts.hidden);
         const title = escHtml(c.title || (isCurrent ? currentTitle : 'Tin tương tự'));
-        const areaText = c.area_m2 || c.area || '-';
-        const priceText = c.price_ty || c.price || '-';
+        const priceText = _modalFormatTy(c.price_ty || c.price);
+        const ppm2Text = _modalFormatPpm2(c.price_per_m2 || c.actual_ppm2 || c.ppm2);
+        const score = Number(c.match_score);
+        const scoreText = Number.isFinite(score) ? `${Math.round(score)}% khớp` : (isCurrent ? 'Lô đang xem' : 'Lô gần giống');
         const rowHref = isCurrent ? '' : (isAdmin && c.url ? c.url : (c.detail_url || ''));
         const clickAttrs = rowHref
           ? ` role="link" tabindex="0" data-href="${escHtml(rowHref)}" onclick="window.open(this.dataset.href,'_blank','noopener,noreferrer')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"`
@@ -1176,20 +1242,26 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
           <div class="sm-comp-main">
             <div class="sm-comp-title-line">
               <div class="sm-comp-title" title="${title}">${title}</div>
-              ${isCurrent ? '<span class="sm-current-badge">Đang xem</span>' : sourceBadge}
+              <div class="sm-comp-badges">
+                ${isCurrent ? '<span class="sm-current-badge">Đang xem</span>' : sourceBadge}
+                <span class="sm-comp-score">${escHtml(scoreText)}</span>
+              </div>
             </div>
-            <div class="sm-comp-metrics">
-              <span><b>${escHtml(areaText)}</b><small>m²</small></span>
-              <span><b>${escHtml(priceText)}</b><small>tỷ</small></span>
+            <div class="sm-comp-price-strip">
+              <span><small>Giá</small><b>${escHtml(priceText)}</b></span>
+              <span><small>Đơn giá</small><b>${escHtml(ppm2Text)}</b></span>
             </div>
+            <div class="sm-comp-tags">${renderCompTags(c)}</div>
           </div>
         </article>`;
       };
       const comps = Array.isArray(data.comps) ? data.comps : [];
       const baseline = renderCompRow({
         title: currentTitle,
+        ward,
         area_m2: area || '-',
-        price_ty: currentPrice || '-'
+        price_ty: currentPrice || '-',
+        ...currentMeta,
       }, { isCurrent: true });
       const compRows = comps.length
         ? comps.map((c, index) => renderCompRow(c, { hidden: index >= 3 })).join('')

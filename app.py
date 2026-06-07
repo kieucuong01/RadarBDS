@@ -19,7 +19,7 @@ from functools import wraps
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
-from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response, abort
+from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response, abort, redirect
 from config import database_sqlite as db_mod
 from db.connection import connect, get_conn
 from db.moderation import normalize_phone
@@ -1555,8 +1555,25 @@ def _site_meta(path="/", *, title=None, description=None, keywords=None):
 def serve_local_image(filename):
     return send_from_directory(_DATA_IMAGES_DIR, filename)
 
+
 def index():
-    return render_template('index.html', wards_by_city=CITY_MAP, site_meta=_site_meta("/"))
+    page = dict(SEO_PAGES["binh-duong"])
+    page["path"] = "/"
+    site_meta = _site_meta(
+        "/",
+        title=page["title"],
+        description=page["description"],
+        keywords=page["keywords"],
+    )
+    return render_template("seo_landing.html", page=page, site_meta=site_meta)
+
+
+def dashboard():
+    return render_template('index.html', wards_by_city=CITY_MAP, site_meta=_site_meta("/dashboard"))
+
+
+def redirect_legacy_binh_duong():
+    return redirect("/", code=301)
 
 
 def seo_landing_page(slug):
@@ -1588,7 +1605,8 @@ def sitemap_xml():
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>"""
-        for page in SEO_PAGES.values()
+        for slug, page in SEO_PAGES.items()
+        if slug != "binh-duong"
     )
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -2718,7 +2736,9 @@ def get_price_history(listing_id):
             comp_params.extend([area, curr_ppm2])
 
             comp_rows = conn.execute(f"""
-                SELECT id, title, url, price_ty, area_m2, price_per_m2, property_type, road_tier,
+                SELECT id, title, description, url, ward, price_ty, area_m2, frontage_m, depth_m,
+                       price_per_m2, property_type, road_tier, road_type, road_width_m,
+                       tho_cu_m2, tho_cu_ratio,
                        COALESCE(posted_at, crawled_at) as dt
                 FROM listings
                 WHERE {" AND ".join(comp_where)}
@@ -2748,6 +2768,7 @@ def get_price_history(listing_id):
                 score += min(12.0, text_sim * 12.0)
                 score = round(max(0.0, min(99.0, score)), 1)
 
+                badge_meta = signal_badge_metadata(c)
                 ranked.append({
                     'id': c["id"],
                     'title': (c["title"] or '')[:80],
@@ -2755,8 +2776,20 @@ def get_price_history(listing_id):
                     'detail_url': f"/listing/{c['id']}",
                     'price_ty': c["price_ty"],
                     'area_m2': c["area_m2"],
+                    'frontage_m': c["frontage_m"],
+                    'depth_m': c["depth_m"],
                     'price_per_m2': c["price_per_m2"],
+                    'ward': c["ward"],
                     'property_type': c["property_type"],
+                    'property_type_label': badge_meta["property_type_label"],
+                    'road_tier': c["road_tier"],
+                    'road_type': c["road_type"],
+                    'road_width_m': badge_meta["road_width_m"],
+                    'road_label': badge_meta["road_label"],
+                    'street_label': badge_meta["street_label"],
+                    'tho_cu_m2': badge_meta["tho_cu_m2"],
+                    'tho_cu_ratio': badge_meta["tho_cu_ratio"],
+                    'tho_cu_label': badge_meta["tho_cu_label"],
                     'date': (c["dt"] or '')[:7],
                     'area_gap_pct': round(area_gap_pct * 100, 1),
                     'match_score': score,

@@ -42,8 +42,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=vietnamese-font-stack-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=nav-badge-highlight-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=mobile-filter-compact-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-card-polish-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-badge-meta-20260606">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-card-chip-balance-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=modal-comps-advisor-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=area-risk-radar-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=nav-badge-highlight-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=account-menu-compact-20260606">
@@ -735,8 +735,6 @@
               <span id="sm-drop-badge"
                 style="background:linear-gradient(135deg,#ef4444,#b91c1c); color:#fff; font-weight:700; font-size:0.82rem; padding:5px 12px; border-radius:8px; animation:pulse 2s infinite; display:none;"></span>
             </div>
-            <span id="sm-source-badge"
-              style="position:absolute; top:12px; left:14px; font-size:0.7rem; font-weight:700; color:#fff; padding:3px 9px; border-radius:6px; text-transform:uppercase; z-index:10;"></span>
             <span id="sm-img-count"
               style="position:absolute; bottom:14px; right:14px; font-size:0.75rem; color:rgba(255,255,255,0.7); z-index:10; background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:6px;"></span>
           </div>
@@ -775,9 +773,9 @@
 
           <div class="sm-mobile-tabs" role="tablist" aria-label="Nội dung chi tiết signal">
             <button type="button" class="sm-tab active" data-sm-tab="desc" onclick="switchSignalPanel('desc', this)">Mô tả</button>
-            <button type="button" class="sm-tab" data-sm-tab="memo" onclick="switchSignalPanel('memo', this)">Ghi chú</button>
-            <button type="button" class="sm-tab" data-sm-tab="comps" onclick="switchSignalPanel('comps', this)">So sánh</button>
             <button type="button" class="sm-tab" data-sm-tab="history" onclick="switchSignalPanel('history', this)">Lịch sử</button>
+            <button type="button" class="sm-tab" data-sm-tab="comps" onclick="switchSignalPanel('comps', this)">So sánh</button>
+            <button type="button" class="sm-tab" data-sm-tab="memo" onclick="switchSignalPanel('memo', this)">Cố vấn</button>
           </div>
 
           <!-- Description -->
@@ -797,9 +795,9 @@
         <div class="sm-right">
           <!-- Advisory note -->
           <div class="sm-ai-section sm-memo-section sm-panel" data-sm-panel="memo" id="sm-memo-section" hidden aria-hidden="true" style="display:none;">
-            <div class="sm-ai-label">Ghi chú cố vấn</div>
+            <div class="sm-ai-label">Cố vấn đầu tư</div>
             <div id="sm-memo-body" class="sm-ai-text sm-memo-body">
-              <div class="sm-empty-state">Đang tải ghi chú...</div>
+              <div class="sm-empty-state">Đang tải cố vấn...</div>
             </div>
           </div>
 
@@ -1104,7 +1102,7 @@
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=signals-mobile-scroll-20260607"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=keyword-search-20260603"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=modal-area-street-tags-20260608"></script>
-  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=modal-area-street-tags-20260608"></script>
+  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=modal-comps-advisor-20260608"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=area-risk-radar-20260605"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=shared-signal-card-20260608"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>

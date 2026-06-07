@@ -22,9 +22,14 @@ def index(**kwargs):
     return _impl("index", **kwargs)
 
 
+@bp.route("/dashboard")
+def dashboard(**kwargs):
+    return _impl("dashboard", **kwargs)
+
+
 @bp.route("/binh-duong")
 def seo_binh_duong(**kwargs):
-    return _impl("seo_landing_page", slug="binh-duong", **kwargs)
+    return _impl("redirect_legacy_binh_duong", **kwargs)
 
 
 @bp.route("/binh-duong/<path:location_slug>")

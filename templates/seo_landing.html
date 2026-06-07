@@ -86,10 +86,10 @@
         <span>Radar BDS</span>
       </a>
       <nav class="seo-nav" aria-label="Điều hướng">
-        <a href="/binh-duong" {% if page.path == "/binh-duong" %}aria-current="page"{% endif %}>Bình Dương</a>
+        <a href="/" {% if page.path in ["/", "/binh-duong"] %}aria-current="page"{% endif %}>Bình Dương</a>
         <a href="/san-deal-bds" {% if page.path == "/san-deal-bds" %}aria-current="page"{% endif %}>Săn deal BĐS</a>
       </nav>
-      <a class="seo-nav-cta" href="/">Mở dashboard</a>
+      <a class="seo-nav-cta" href="/dashboard">Mở dashboard</a>
     </div>
   </header>
 
@@ -121,7 +121,7 @@
               <span>{{ page.property_card.metric_a }} <b>{{ page.property_card.metric_a_value }}</b></span>
               <span>{{ page.property_card.metric_b }} <b>{{ page.property_card.metric_b_value }}</b></span>
             </div>
-            <a href="/" aria-label="Xem chi tiết tin tốt">Xem chi tiết
+            <a href="/dashboard" aria-label="Xem chi tiết tin tốt">Xem chi tiết
               <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
             </a>
           </div>
@@ -152,7 +152,7 @@
             {% endfor %}
           </div>
           <div class="seo-actions" aria-label="Hành động chính">
-            <a class="seo-button seo-button-primary" href="/">{{ page.primary_cta }}
+            <a class="seo-button seo-button-primary" href="/dashboard">{{ page.primary_cta }}
               <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
             </a>
             <a class="seo-button seo-button-secondary" href="{{ page.secondary_href }}">{{ page.secondary_cta }}</a>
@@ -260,7 +260,7 @@
         <h2>{{ page.final_cta.title }}</h2>
         <p>{{ page.final_cta.body }}</p>
       </div>
-      <a class="seo-button seo-button-light" href="/">{{ page.final_cta.button }}
+      <a class="seo-button seo-button-light" href="/dashboard">{{ page.final_cta.button }}
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
       </a>
     </section>
@@ -283,9 +283,9 @@
       </div>
       <nav aria-label="Sản phẩm">
         <strong>Sản phẩm</strong>
-        <a href="/">Dashboard</a>
+        <a href="/dashboard">Dashboard</a>
         <a href="/san-deal-bds">Tín hiệu</a>
-        <a href="/binh-duong">Thị trường</a>
+        <a href="/">Thị trường</a>
       </nav>
       <nav aria-label="Về chúng tôi">
         <strong>Về chúng tôi</strong>
