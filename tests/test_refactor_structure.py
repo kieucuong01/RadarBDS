@@ -117,9 +117,9 @@ def test_signal_modal_history_uses_compact_timeline_ui():
         'class="sm-history-chart-shell"',
         "SM_HISTORY_VISIBLE_LIMIT = 3",
         "renderSignalHistoryRows",
-        "_historyVisibleChartTimeline",
-        "updateSignalHistoryChart",
-        "api-no-store-20260606",
+        "_historyChartTimeline",
+        "const chartTimeline = _historyChartTimeline(decoratedTimeline)",
+        "modal-area-street-tags-20260608",
         "toggleSignalHistoryRows",
         "sm-history-summary",
         "sm-history-toggle",
@@ -129,6 +129,10 @@ def test_signal_modal_history_uses_compact_timeline_ui():
 
     assert ".sm-history-chart-shell" in modal_css
     assert ".sm-history-summary" in modal_css
+    assert "SM_HISTORY_CHART_MAX_POINTS" not in modal_js
+    assert "_historyVisibleChartTimeline" not in modal_js
+    assert "updateSignalHistoryChart" not in modal_js
+    assert "khoảng thời gian" not in modal_js
 
 
 def test_signal_cards_use_professional_empty_image_state():
@@ -147,7 +151,52 @@ def test_signal_cards_use_professional_empty_image_state():
         assert expected in signals_js or expected in cards_css
 
     assert ".sc-empty-media" in cards_css
-    assert "signal-badge-two-row-20260606" in html
+    assert "signal-card-polish-20260608" in html
+
+
+def test_signal_tab_mobile_scroll_container_is_stable():
+    html = _read("templates/index.html")
+    core_js = _read("static/js/main/core.js")
+    signals_js = _read("static/js/main/signals.js")
+    filters_css = _read("static/css/main/filters.css")
+    cards_css = _read("static/css/main/cards.css")
+
+    for expected in [
+        "signals-mobile-scroll-20260607",
+        "ensureSignalScrollRoot",
+        "refreshObserver",
+        "signals-scroll-ready",
+        "-webkit-overflow-scrolling: touch",
+        "touch-action: pan-y",
+        "overscroll-behavior-y: contain",
+    ]:
+        assert expected in html or expected in core_js or expected in signals_js or expected in filters_css
+
+    assert "#tab-signals" in filters_css
+    assert "content-visibility: visible" in cards_css
+
+
+def test_mobile_sidebar_filters_are_compact_for_ward_selection():
+    html = _read("templates/index.html")
+    boot_js = _read("static/js/main/boot.js")
+    filters_css = _read("static/css/main/filters.css")
+
+    for expected in [
+        "mobile-filter-compact-20260608",
+        "ward-option-name",
+        ".sidebar #wardFilters",
+        "grid-template-columns: repeat(2, minmax(0, 1fr))",
+        ".sidebar #wardFilters .filter-option",
+        ".sidebar #wardFilters .ward-option-name",
+        "white-space: nowrap",
+        "text-overflow: ellipsis",
+        "min-height: 30px",
+        "font-size: 0.78rem",
+        ".sidebar #wardFilters .filter-option input[type=\"checkbox\"]",
+        "width: 16px",
+        "height: 16px",
+    ]:
+        assert expected in html or expected in boot_js or expected in filters_css
 
 
 def test_signal_cards_and_modal_render_compact_property_badges():
@@ -159,23 +208,76 @@ def test_signal_cards_and_modal_render_compact_property_badges():
 
     for expected in [
         "renderSignalMetaChips",
-        "data-road-label",
-        "data-street-label",
-        "data-tho-cu-label",
-        "data-prop-label",
+        "sourceTagHtml",
+        "window.USER_TIER === 'admin'",
+        "['road-label'",
+        "['street-label'",
+        "['frontage'",
+        "['depth'",
+        "['tho-cu-label'",
+        "['prop-label'",
         "streetLabel",
         "thoCuLabel",
         "propertyTypeLabel",
-        "signal-badge-two-row-20260606",
+        "signal-card-polish-20260608",
     ]:
         assert expected in html or expected in signals_js or expected in modal_js
 
     assert ".meta-chip-label" in cards_css
     assert ".meta-chip-street" in cards_css
     assert ".sm-tags-wrap .sm-tag-chip" in modal_css
-    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in cards_css
+    assert "grid-template-columns: repeat(12, minmax(0, 1fr))" in cards_css
+    assert "grid-column: span 7" in cards_css
+    assert "grid-column: span 2" in cards_css
     assert "grid-auto-rows: 22px" in cards_css
     assert "flex-wrap: wrap" in modal_css
+    assert "font-style: normal" in cards_css
+    assert "linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)" in cards_css
+    assert "imageCounterHtml" not in signals_js
+    assert "sc-image-count" not in signals_js
+    assert ".sc-image-count" not in cards_css
+
+    assert "_signalTagArea(data)" in modal_js
+    assert "frontageText" in modal_js
+    assert "depthText" in modal_js
+    assert "return `${frontageText}x${depthText} (${area}m²)`" in modal_js
+    assert "frontage: d.frontage" in modal_js
+    assert "depth: d.depth" in modal_js
+    assert "frontage: data.frontage_m" in modal_js
+    assert "depth: data.depth_m" in modal_js
+
+
+def test_all_listings_grid_reuses_signal_deal_card_renderer():
+    html = _read("templates/index.html")
+    app_source = _read("app.py")
+    signals_js = _read("static/js/main/signals.js")
+    listings_js = _read("static/js/main/listings.js")
+
+    for expected in [
+        "function renderSignalDealCard",
+        "cardContext",
+        "contactContext",
+        "sourceTagHtml",
+        "renderSignalCardMedia",
+    ]:
+        assert expected in signals_js
+
+    assert "renderSignalDealCard(x, {" in listings_js
+    assert "cardContext: 'all'" in listings_js
+    assert "signal_badge_metadata" in app_source
+    assert '"street_label": badge_meta["street_label"]' in app_source
+    assert '"tho_cu_label": badge_meta["tho_cu_label"]' in app_source
+    assert "function listingCard(x)" in listings_js
+    assert "js/main/signals.js" in html and "js/main/listings.js" in html
+    assert html.find("js/main/signals.js") < html.find("js/main/listings.js")
+
+    forbidden_duplicated_markup = [
+        "const imageCounterHtml",
+        "<span class=\"sc-source-tag\">${escHtml(sourceName)}</span>",
+        "<div class=\"price-val-fair\">${fair !== '-'",
+    ]
+    for snippet in forbidden_duplicated_markup:
+        assert snippet not in listings_js
 
 
 def test_mobile_account_menu_uses_fixed_dropdown_not_clipped_header_dropdown():

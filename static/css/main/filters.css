@@ -1084,6 +1084,10 @@
   overflow-y: auto;
   padding-right: 12px;
   padding-bottom: 32px;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 
 #tab-all {
@@ -1091,44 +1095,116 @@
 }
 
 @media (max-width: 1024px) {
+  #tab-signals {
+    height: 100%;
+    max-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 0;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    scrollbar-gutter: stable;
+  }
+
+  .sidebar .filter-group {
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .sidebar .filter-body {
+    padding-top: 4px;
+  }
+
   .sidebar .filter-title {
-    min-height: 44px;
-    padding: 10px 10px;
-    border-radius: 14px;
-    font-size: 0.82rem;
+    min-height: 36px;
+    padding: 7px 9px;
+    border-radius: 11px;
+    font-size: 0.76rem;
   }
 
   .sidebar .city-pill,
   .sidebar .ward-action-btn,
   .sidebar .range-input,
   .sidebar .ward-search {
-    min-height: 44px;
-    border-radius: 14px;
-    font-size: 0.86rem;
-  }
-
-  .sidebar .range-chip {
-    min-height: 40px;
-    padding: 8px 12px;
+    min-height: 36px;
+    border-radius: 11px;
     font-size: 0.8rem;
   }
 
+  .sidebar .ward-search {
+    padding: 6px 9px;
+    margin-bottom: 5px;
+  }
+
+  .sidebar .city-pills {
+    gap: 5px;
+    margin-bottom: 5px;
+  }
+
+  .sidebar .city-pill {
+    padding: 5px 10px;
+  }
+
+  .sidebar .ward-bulk-actions {
+    gap: 5px;
+    margin-bottom: 5px;
+  }
+
+  .sidebar .ward-action-btn {
+    min-height: 32px;
+  }
+
+  .sidebar .range-chip {
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 0.76rem;
+  }
+
   .sidebar .filter-option {
-    min-height: 42px;
-    gap: 10px;
-    padding: 6px 0;
-    font-size: 0.9rem;
+    min-height: 34px;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 0.82rem;
   }
 
   .sidebar .filter-option input[type="checkbox"],
   .sidebar .filter-option input[type="radio"] {
-    width: 22px;
-    height: 22px;
-    border-radius: 7px;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
   }
 
   .sidebar .filter-option input[type="checkbox"]:checked::after {
-    font-size: 14px;
+    font-size: 12px;
+  }
+
+  .sidebar #wardFilters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 6px;
+  }
+
+  .sidebar #wardFilters .filter-option {
+    min-width: 0;
+    min-height: 30px;
+    gap: 5px;
+    padding: 2px 4px;
+    font-size: 0.78rem;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar #wardFilters .ward-option-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar #wardFilters .filter-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
   }
 }
 

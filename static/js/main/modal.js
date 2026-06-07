@@ -173,10 +173,18 @@ function _signalTagText(value) {
   return text;
 }
 
-function _signalTagArea(value) {
-  const n = Number(String(value || '').replace(',', '.'));
+function _signalTagArea(data) {
+  const n = Number(String((data && data.area) || '').replace(',', '.'));
   if (!Number.isFinite(n) || n <= 0) return '';
-  return `${n.toLocaleString('vi-VN', { maximumFractionDigits: 1 }).replace(',', '.')} m²`;
+  const area = n.toLocaleString('vi-VN', { maximumFractionDigits: 1 }).replace(',', '.');
+  const frontage = Number(String((data && data.frontage) || '').replace(',', '.'));
+  const depth = Number(String((data && data.depth) || '').replace(',', '.'));
+  if (Number.isFinite(frontage) && frontage > 0 && Number.isFinite(depth) && depth > 0) {
+    const frontageText = frontage.toLocaleString('vi-VN', { maximumFractionDigits: 1 }).replace(',', '.');
+    const depthText = depth.toLocaleString('vi-VN', { maximumFractionDigits: 1 }).replace(',', '.');
+    return `${frontageText}x${depthText} (${area}m²)`;
+  }
+  return `${area}m²`;
 }
 
 function _signalTagThoCu(data) {
@@ -189,7 +197,7 @@ function _signalTagThoCu(data) {
 function renderSignalTags(data) {
   const tags = [
     { icon: '📍', label: _signalTagText(data.ward) },
-    { icon: '📐', label: _signalTagArea(data.area) },
+    { icon: '📐', label: _signalTagArea(data) },
     { icon: '🛣️', label: _signalTagText(data.roadLabel || data.road) },
     { icon: '↱', label: _signalTagText(data.streetLabel) },
     { icon: '🏷️', label: _signalTagText(data.propertyTypeLabel || propertyTypeLabel(data.propertyType)) },
@@ -364,6 +372,8 @@ function _openSignalLegacy(card) {
     .map(t => `<span>${t.icon} ${t.label}</span>`).join('');
   renderSignalTags({
     area: d.area,
+    frontage: d.frontage,
+    depth: d.depth,
     ward: d.ward,
     road: d.road,
     roadLabel: d.roadLabel,
@@ -406,6 +416,8 @@ async function _hydrateSignalDetailLegacy(listingId) {
     { const _d = document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
     renderSignalTags({
       area: data.area_m2,
+      frontage: data.frontage_m,
+      depth: data.depth_m,
       ward: data.ward,
       road: data.road_type || data.road_tier || '-',
       roadLabel: data.road_label,
@@ -838,6 +850,8 @@ function _openSignalFromData(d, opts = {}) {
 
   renderSignalTags({
     area: d.area,
+    frontage: d.frontage,
+    depth: d.depth,
     ward: d.ward,
     road: d.road,
     roadLabel: d.roadLabel,
@@ -875,6 +889,8 @@ function openListingModal(row) {
     price: d.price,
     fair: d.fair,
     area: d.area,
+    frontage: d.frontage,
+    depth: d.depth,
     ward: d.ward,
     road: d.road,
     time: d.time,
@@ -884,7 +900,12 @@ function openListingModal(row) {
     drop: d.drop,
     score: d.score,
     url: d.url,
-    ptype: d.ptype
+    ptype: d.ptype,
+    roadLabel: d.roadLabel,
+    streetLabel: d.streetLabel,
+    propLabel: d.propLabel,
+    thoCu: d.thoCu,
+    thoCuLabel: d.thoCuLabel
   });
 }
 
@@ -907,6 +928,8 @@ async function hydrateSignalDetail(listingId) {
     { const _d = document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
     renderSignalTags({
       area: data.area_m2,
+      frontage: data.frontage_m,
+      depth: data.depth_m,
       ward: data.ward,
       road: data.road_type || data.road_tier || '-',
       roadLabel: data.road_label,
@@ -932,7 +955,6 @@ async function hydrateSignalDetail(listingId) {
 }
 
 const SM_HISTORY_VISIBLE_LIMIT = 3;
-const SM_HISTORY_CHART_MAX_POINTS = 16;
 
 function _historyPriceLabel(value) {
   const n = Number(value);
@@ -983,7 +1005,6 @@ function _historySummaryHtml(timeline, fallbackCurrentPrice) {
       <span><strong>${timeline.length}</strong><small>mốc giá</small></span>
       <span><strong>${_historyPriceLabel(latestPrice)}</strong><small>mới nhất</small></span>
       <span class="${netClass}"><strong>${netText}</strong><small>biến động</small></span>
-      <span><strong>${_historyShortDate(first.date)} → ${_historyShortDate(latest.date)}</strong><small>khoảng thời gian</small></span>
     </div>
   `;
 }
@@ -1020,21 +1041,8 @@ function renderSignalHistoryRows(timeline, opts = {}) {
   return `${rows}${toggle}`;
 }
 
-function _historyVisibleChartTimeline(timeline, expanded) {
-  const limit = expanded ? SM_HISTORY_CHART_MAX_POINTS : SM_HISTORY_VISIBLE_LIMIT;
-  return timeline.length > limit ? timeline.slice(-limit) : timeline;
-}
-
-function updateSignalHistoryChart(expanded) {
-  if (!smHistoryChart || !Array.isArray(smHistoryChartTimeline)) return;
-  const chartTimeline = _historyVisibleChartTimeline(smHistoryChartTimeline, expanded);
-  smHistoryChart.data.labels = chartTimeline.map((h) => _historyShortDate(h.date));
-  const dataset = smHistoryChart.data.datasets && smHistoryChart.data.datasets[0];
-  if (dataset) {
-    dataset.data = chartTimeline.map((h) => h.price_ty);
-    dataset.pointBackgroundColor = chartTimeline.map((h) => h._is_latest ? '#10b981' : '#2563eb');
-  }
-  smHistoryChart.update();
+function _historyChartTimeline(timeline) {
+  return Array.isArray(timeline) ? timeline : [];
 }
 
 function toggleSignalHistoryRows(button) {
@@ -1044,7 +1052,6 @@ function toggleSignalHistoryRows(button) {
   root.querySelectorAll('.is-history-extra').forEach((row) => {
     row.hidden = !expanded;
   });
-  updateSignalHistoryChart(expanded);
   button.textContent = expanded
     ? (button.dataset.expandedText || 'Thu gọn lịch sử')
     : (button.dataset.collapsedText || 'Xem thêm');
@@ -1098,7 +1105,7 @@ async function loadSignalHistory(listingId, currentPrice, area, ward) {
     }
 
     smHistoryChartTimeline = decoratedTimeline;
-    const chartTimeline = _historyVisibleChartTimeline(decoratedTimeline, false);
+    const chartTimeline = _historyChartTimeline(decoratedTimeline);
     const labels = chartTimeline.map((h) => _historyShortDate(h.date));
 
     if (labels.length > 0 && chartEl) {

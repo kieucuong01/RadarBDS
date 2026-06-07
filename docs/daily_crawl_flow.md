@@ -48,6 +48,322 @@ và valuation.
 
 ---
 
+## 1a. Workflow kỹ thuật end-to-end theo code hiện tại
+
+Phần này là trace nhanh cho dev/AI agent khi cần debug vì sao một tin đã crawl
+về nhưng chưa hiện signal, hoặc vì sao signal chưa bắn Telegram.
+
+### Bước 0 — lịch production gọi CLI
+
+- Production timer chính: `radar-bds-crawl.timer`.
+- Command chính: `python -X utf8 radar.py crawl-daily`.
+- `radar.py` route vào `cli/crawlers.py::cmd_crawl_daily()`, rồi vào
+  `cli/crawlers.py::_cmd_crawl(args, mode="incremental")`.
+- Ngay đầu `_cmd_crawl()`, hệ thống lấy `crawl_start_ts` bằng SQL
+  `SELECT datetime('now')`. Mốc này rất quan trọng: VIP/admin Telegram chỉ xét
+  listing mới có `first_seen_at/crawled_at/posted_at >= crawl_start_ts`.
+
+Khi debug production, log đầu tiên cần đọc là `logs/crawl-daily.log`.
+
+### Bước 1 — crawl Facebook primary vào `raw_listings`
+
+Luồng daily mặc định không chạy mọi crawler theo vòng lặp cũ. Với
+`mode="incremental"` và không truyền `--source`, `_cmd_crawl()` chuyển sang
+`_cmd_crawl_daily_facebook_first()`.
+
+Trong `_cmd_crawl_daily_facebook_first()`:
+
+1. Gọi `_facebook_crawl_to_raw(mode="incremental")`.
+2. Crawler đọc profile từ `data/facebook_profiles.json`.
+3. Facebook/Apify crawl bài theo profile và daily limit.
+4. Tin hợp lệ được import vào bảng `raw_listings`.
+5. Các bài không phải BĐS, ngoài khu vực, thiếu dữ liệu cơ bản hoặc trùng raw
+   sẽ bị bỏ qua trước khi vào reprocess.
+
+Output log thường có dạng:
+
+```text
+[facebook] crawled=139 | imported=121 | skipped=0 | refreshed_img=4 | irrelevant=13 | out_of_area=1
+```
+
+Ở bước này tin mới **chưa phải signal**. Nó mới là raw JSON đã lưu.
+
+### Bước 2 — postprocess batch sau crawl
+
+Nếu `fb_new > 0`, `_cmd_crawl_daily_facebook_first()` gọi
+`_postprocess_crawl_batch(...)`.
+
+Trong postprocess:
+
+1. Gọi `cleansing/reprocess.py::run_full_reprocess()`.
+2. In stats `Listings` và `Valuation`.
+3. Gọi `cleansing.download_images.download_images(limit=500)`.
+4. Gọi `_clean_broker_images_after_download(...)` để xóa ảnh môi giới/ảnh mặt
+   người không phù hợp.
+
+Nếu `fb_new = 0`, hệ thống không reprocess toàn bộ; nó chỉ tải backlog ảnh,
+ops health check, prewarm dashboard rồi dừng.
+
+### Bước 3 — `raw_listings` → `listings`
+
+`run_full_reprocess()` chạy trong advisory lock `reprocess`, nên tránh hai job
+reprocess đè nhau.
+
+Bước đầu trong file `cleansing/reprocess.py`:
+
+```text
+run_full_reprocess()
+  -> _run_full_reprocess()
+     -> reprocess_listings()
+```
+
+`reprocess_listings()` làm các việc chính:
+
+- Đọc raw bằng `db.raw_listings.get_raw_for_reprocess(...)`.
+- Parse `raw_json`.
+- Chuẩn hóa bằng `cleansing.normalizer.normalize_record(raw_data)`.
+- Bỏ record không có URL hoặc bị trùng URL trong cùng batch.
+- Bỏ record có phone nằm trong `broker_blacklist`.
+- Ghi/upsert vào `listings` bằng `db.listings.upsert_listing(...)`.
+- Ghi ảnh vào `listing_images` nếu record có `img_urls`.
+- Backfill `content_hash` để phục vụ chống repost/spam alert.
+
+Sau bước này, một raw có thể vẫn không thành listing nếu parser không đủ dữ
+liệu, URL thiếu, phone blacklist, hoặc trùng trong batch.
+
+### Bước 4 — legal image verification
+
+Sau `reprocess_listings()`, `_run_full_reprocess()` kiểm tra
+`LEGAL_IMAGE_EVIDENCE_ENABLED`.
+
+Nếu bật:
+
+- Full reprocess: gọi `refresh_legal_verifications(source=..., apply=True)`.
+- Incremental: gọi `refresh_legal_verifications(listing_id=..., apply=True)`
+  cho từng listing vừa xử lý.
+
+Bước này cập nhật `legal_verifications` và trust tier như:
+
+- `candidate_signal`
+- `has_legal_doc`
+
+Hiện tại OCR chi tiết không phải nguồn quyết định chính; có ảnh sổ đỏ/sổ hồng
+là trust boost đang dùng.
+
+### Bước 5 — `listings` → `valuation_results`
+
+Sau legal verification, `_run_full_reprocess()` gọi:
+
+```text
+reprocess_valuation(incremental_ids=processed_ids)
+```
+
+Trong `reprocess_valuation()`:
+
+1. Lấy tập train gần nhất từ `listings`, bỏ tin sold/blacklist/review hidden.
+2. Lấy tập cần định giá:
+   - incremental: chỉ các listing vừa xử lý;
+   - full: toàn bộ listing đủ điều kiện.
+3. Join thêm `legal_verifications` và feedback mới nhất từ
+   `ai_training_feedback` để tạo quality flags.
+4. Dựng object `analytics.valuation.Listing`.
+5. Fit `analytics.valuation.ValuationEngine()`.
+6. Gọi `engine.valuate_batch(...)`.
+7. Xóa valuation cũ của incremental IDs để tránh trùng snapshot.
+8. Ghi kết quả vào `valuation_results` qua `_batch_save_valuations(...)`.
+
+`valuation_results.is_signal=1` chỉ có nghĩa là model thấy tin rẻ hơn fair
+value theo MOS threshold. Đây là **model signal**, chưa chắc được hiện lên UI
+hoặc bắn Telegram.
+
+### Bước 6 — các tác vụ sau valuation
+
+Vẫn trong `_run_full_reprocess()`:
+
+- `detect_price_drops(conn)` cập nhật price-drop/history.
+- `sweep_delisted(conn)` đánh dấu listing biến mất/likely sold.
+- `compute_weekly_trend`, `compute_monthly_trend`, `compute_daily_trend` cập
+  nhật market trend.
+- `cleansing.dedup.flag_duplicates_in_db(conn)` đánh dấu lot trùng/repost.
+- `populate_content_hashes(conn)` backfill hash chống repost.
+
+Điểm dễ nhầm: dedup và price-drop chạy **sau** valuation. Vì vậy UI/Telegram
+không chỉ dựa vào `is_signal`; chúng còn gate tiếp bằng listing flags và latest
+valuation.
+
+### Bước 7 — định nghĩa signal được hiện cho user
+
+User-facing signal dùng helper chung trong `services/signal_quality.py`:
+
+```text
+LATEST_VALUATION_CTE
+actionable_signal_sql("v")
+actionable_listing_sql("l")
+```
+
+`LATEST_VALUATION_CTE` lấy snapshot mới nhất theo từng `listing_id`:
+
+```sql
+SELECT DISTINCT ON (vr.listing_id) vr.*
+FROM valuation_results vr
+ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
+```
+
+`actionable_signal_sql("v")` yêu cầu:
+
+- `v.is_signal = 1`;
+- không bị `source_quality_recheck` nguy hiểm;
+- không có fatal quality flags như `parsed_discount_as_price`,
+  `down_payment_as_price`, `too_low_absolute_price`,
+  `large_lot_model_risk`, `area_dimension_conflict`,
+  `source_category_conflict`, `multi_lot_listing`, `old_guland_post`,
+  `guland_weak_signal`, `review_bad_extraction`, `review_bad_valuation`, ...
+
+`low_segment_confidence` không tự chặn signal; nó là warning/recheck nhẹ.
+
+`actionable_listing_sql("l")` thường yêu cầu listing:
+
+- chưa sold: `probably_sold=0`;
+- không blacklist: `is_blacklisted=0`;
+- không review hidden;
+- không duplicate, trừ một số flow price-drop có rule riêng.
+
+Vì vậy số lượng thường giảm theo phễu:
+
+```text
+raw_listings/imported
+  -> listings đã normalize/upsert
+  -> valuation_results.is_signal = 1
+  -> latest actionable signal
+  -> signal qua filter UI/watchlist
+  -> signal thật sự được gửi Telegram sau anti-spam
+```
+
+### Bước 8 — `/api/signals` hiển thị card signal
+
+Route public nằm ở `routes/market_api.py`:
+
+```text
+GET /api/signals
+  -> app.api_signals()
+     -> services.market_data.load_signals(...)
+```
+
+`load_signals()`:
+
+- build filter từ query params: source, ward, property type, area, price,
+  keyword, MOS, sort, page, limit;
+- với guest: bỏ filter `mos_min` và `only_drops`, nhưng vẫn redacted dữ liệu
+  nhạy cảm;
+- dùng `LATEST_VALUATION_CTE` + `actionable_signal_sql("v")`;
+- join `listings`;
+- chọn ảnh thumbnail ưu tiên ảnh pháp lý/ảnh local qua `listing_images`;
+- sort theo `newest`, score, MOS, price... tùy request;
+- phân trang: default `limit=30`, cap `limit=100`;
+- format card bằng `_format_signal_row(...)`;
+- gọi `redact_for_tier(...)` để che phone/source URL cho guest/free/VIP.
+
+`/api/dashboard` không phải feed signal đầy đủ. Nó là summary nhẹ. Khi debug
+card đang hiển thị, ưu tiên kiểm `/api/signals` hoặc `load_signals()`.
+
+### Bước 9 — frontend render signal
+
+Frontend gọi `/api/signals` để lấy card paginated. Những field đã được backend
+format sẵn gồm giá rao, định giá/fair value, MOS, ward, area, road tier, thổ cư,
+trust/legal badge và thumbnail.
+
+Nếu thấy UI chỉ hiện ít signal hơn số `valuation_results.is_signal`, đó thường
+không phải bug UI. Trước hết kiểm:
+
+1. Có phải đang nhìn latest valuation không.
+2. Có qua `actionable_signal_sql()` không.
+3. Có bị filter UI như ward/source/price/area/keyword không.
+4. Có bị guest truncation/fresh lock/redaction không.
+5. Có phải duplicate/sold/blacklist/review hidden không.
+
+### Bước 10 — Telegram VIP/admin push
+
+Sau postprocess, `_cmd_crawl_daily_facebook_first()` gọi:
+
+```text
+_push_vip_notifications(no_alert, crawl_start_ts)
+  -> cli.notify.push_new_listings_to_vip(since=crawl_start_ts)
+```
+
+Lưu ý: trong Facebook-first flow hiện tại có thể gọi VIP push một lần ngay sau
+postprocess batch, rồi gọi lại ở cuối run sau `export_raw()`. Đây không được
+gửi trùng nếu `notification_log` đã ghi thành công, vì anti-spam kiểm theo
+`user_id + listing_id + channel`.
+
+Trong `push_new_listings_to_vip()`:
+
+1. `_fetch_new_signals(conn, since)` lấy tối đa 500 listing mới:
+   - dùng latest valuation;
+   - phải qua `actionable_signal_sql("v")`;
+   - phải qua `actionable_listing_sql("l")`;
+   - `first_seen_at/crawled_at/posted_at >= since`;
+   - sort ưu tiên `has_legal_doc`, `trust_score`, rồi thời gian mới.
+2. `_fetch_active_vip_users_with_watchlists(conn)` lấy user đủ điều kiện:
+   - `u.tier='admin'`; hoặc
+   - `u.tier='vip'` và chưa hết hạn;
+   - `u.is_banned=0`;
+   - có `user_watchlists.active=1`.
+3. Với từng watchlist, `_listing_matches(listing, watchlist)` lọc theo ward,
+   property type, MOS min, khoảng giá, khoảng diện tích.
+4. `_should_skip_notify(...)` đọc `notification_log` để tránh gửi lại, trừ khi
+   giá thay đổi đủ lớn theo `SIGNAL_REALERT_THRESHOLD_PCT`.
+5. Gom match theo user, dedupe listing nếu nhiều watchlist cùng match.
+6. Nếu user/watchlist bật Telegram và có `users.telegram_chat_id`, gọi
+   `alerts.telegram.send_watchlist_digest(...)`.
+7. Nếu gửi thành công, `_log_notify(...)` ghi `notification_log` cho từng
+   listing đã gửi.
+8. Cập nhật `user_watchlists.last_notified_at`.
+
+Telegram listing notification là per-user/per-watchlist. Không dùng
+`TELEGRAM_CHAT_ID` global để broadcast listing. Admin muốn nhận cũng phải có
+Telegram linked và active watchlist match.
+
+### Bước 11 — ops alert và cache warm
+
+Sau VIP push, crawl gọi:
+
+- `_maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)`:
+  đọc `crawl_runs` từ lúc bắt đầu run, bỏ qua `reprocess:*`, gửi ops alert nếu
+  crawler lỗi hoặc fetched = 0.
+- `_prewarm_dashboard_cache()`:
+  gọi trước một số endpoint dashboard/signals để cache nóng sau crawl.
+
+Ops alert là kênh hạ tầng, tách khỏi listing notification. Nó không chứng minh
+VIP push lỗi hay thành công; muốn kiểm VIP push thì xem log `VIP push: ...` và
+bảng `notification_log`.
+
+### Checklist debug nhanh
+
+Nếu tin đã crawl nhưng không thấy trên UI:
+
+1. Kiểm `raw_listings` có record không.
+2. Kiểm `listings.raw_id/source_id/url` đã upsert chưa.
+3. Kiểm `valuation_results` latest có row không.
+4. Kiểm `is_signal`, `mos_pct`, `source_quality_flags`,
+   `source_quality_recheck`.
+5. Chạy điều kiện `actionable_signal_sql("v")`.
+6. Kiểm listing flags: `probably_sold`, `is_blacklisted`, `review_hidden`,
+   `possibly_duplicate`.
+7. Kiểm filter `/api/signals`: ward/source/property/price/area/keyword/page.
+
+Nếu signal hiện UI nhưng không bắn Telegram:
+
+1. Kiểm signal có mới hơn `crawl_start_ts` không.
+2. Kiểm user là admin hoặc VIP còn hạn, không banned.
+3. Kiểm `users.telegram_chat_id` có giá trị.
+4. Kiểm `user_watchlists.active=1` và filter watchlist có match không.
+5. Kiểm `notify_telegram` ở cả user và watchlist.
+6. Kiểm `notification_log` đã gửi trước đó chưa.
+7. Kiểm `TELEGRAM_BOT_TOKEN`, webhook và log của
+   `alerts.telegram.send_watchlist_digest(...)`.
+
+---
+
 ## 2. Signal definition
 
 Co 2 lop signal:

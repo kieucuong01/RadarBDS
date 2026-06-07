@@ -237,4 +237,7 @@ function switchTab(tabId, btn) {
   if (tabId === 'all') {
     loadListings(1);
   }
+  if (tabId === 'signals' && typeof ensureSignalScrollRoot === 'function') {
+    requestAnimationFrame(() => ensureSignalScrollRoot({ refreshObserver: true }));
+  }
 }

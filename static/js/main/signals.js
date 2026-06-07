@@ -165,7 +165,7 @@ function setSignalLoadingUI(isLoading, message = 'Đang lọc signal...') {
 }
 
 function renderSignalCardMedia(x, imgSrc, imageCount, overlaysHtml) {
-  const hasImage = Boolean(x && x.primary_img);
+  const hasImage = Boolean(imgSrc);
   const mediaClass = hasImage ? 'sc-img-wrap' : 'sc-img-wrap sc-img-wrap-empty';
   const imageHtml = hasImage
     ? `<img class="sc-img" src="${escHtml(imgSrc)}" loading="lazy" decoding="async" width="640" height="416" alt="Ảnh tin đăng" onerror="this.closest('.sc-img-wrap').classList.add('is-image-missing');this.remove();">`
@@ -199,6 +199,15 @@ function setSignalLoadMoreUI(isLoading) {
   if (!sentinel) return;
   sentinel.classList.toggle('is-loading', Boolean(isLoading));
   sentinel.textContent = isLoading ? 'Đang tải thêm...' : '';
+}
+
+function ensureSignalScrollRoot(opts = {}) {
+  const tab = document.getElementById('tab-signals');
+  if (!tab) return;
+  tab.classList.add('signals-scroll-ready');
+  if (opts.refreshObserver && document.getElementById('sig-scroll-sentinel')) {
+    _setupSignalScroll();
+  }
 }
 
 function _daysAgoValue(v) {
@@ -276,6 +285,141 @@ function renderSignalMetaChips(signal, areaLabel, roadLabel) {
     renderSignalMetaChip(propertyIcon, _signalPropertyTypeLabel(signal), 'meta-chip-property'),
     renderSignalMetaChip(landIcon, _signalThoCuLabel(signal), 'meta-chip-land'),
   ].join('');
+}
+
+function signalDealImageSrc(x) {
+  if (x && x.primary_img) return x.primary_img;
+  if (x && x.primary) return x.primary;
+  if (x && Array.isArray(x.imgs) && x.imgs.length) return x.imgs[0];
+  return '';
+}
+
+function signalDealFairPrice(x) {
+  if (!x) return '-';
+  if (x.fair_total_ty) return Number(x.fair_total_ty).toFixed(2).replace(/\.?0+$/, '');
+  if (x.fair) return String(x.fair);
+  const fairPpm2 = Number(x.fair_ppm2);
+  const area = Number(x.area_m2 || x.area);
+  if (!Number.isFinite(fairPpm2) || !Number.isFinite(area) || area <= 0) return '-';
+  return (fairPpm2 * area / 1000).toFixed(2);
+}
+
+function signalDealDataAttrs(x, fairPrice, imgSrc, timeStr, roadStr, profit) {
+  const attrs = [
+    ['id', x.id],
+    ['title', x.title || ''],
+    ['primary', imgSrc || ''],
+    ['price', x.price_ty || x.price || ''],
+    ['ppm2', x.actual_ppm2 || x.price_per_m2 || x.ppm2 || ''],
+    ['fair', fairPrice !== '-' ? fairPrice : ''],
+    ['fppm2', x.fair_ppm2 || x.fppm2 || ''],
+    ['area', x.area_m2 || x.area || ''],
+    ['frontage', x.frontage_m || x.frontage || ''],
+    ['depth', x.depth_m || x.depth || ''],
+    ['ward', x.ward || ''],
+    ['road', roadStr || x.road_type || x.road_tier || x.road || ''],
+    ['road-label', x.road_label || x.roadLabel || ''],
+    ['street-label', x.street_label || x.streetLabel || ''],
+    ['tho-cu', x.tho_cu_m2 || x.thoCuM2 || x.thoCu || ''],
+    ['tho-cu-label', x.tho_cu_label || x.thoCuLabel || _signalThoCuLabel(x)],
+    ['prop-label', _signalPropertyTypeLabel(x)],
+    ['time', timeStr || ''],
+    ['profit', profit || ''],
+    ['mos', x.mos_pct || x.mos || ''],
+    ['source', sourceNames[x.source] || x.source || ''],
+    ['drop', x.drop_pct || x.drop || ''],
+    ['score', x.signal_score || x.score || '-'],
+    ['url', x.url || ''],
+    ['ptype', x.prop_type || x.ptype || ''],
+  ];
+  return attrs.map(([key, value]) => `data-${key}="${escHtml(value)}"`).join(' ');
+}
+
+function renderSignalDealCard(x, opts = {}) {
+  const cardContext = opts.cardContext || 'signal';
+  const contactContext = opts.contactContext || (cardContext === 'all' ? 'card_all' : 'card_signal');
+  const openHandler = opts.openHandler || (cardContext === 'all' ? 'openListingModal' : 'openSignal');
+  const fairPrice = signalDealFairPrice(x);
+  const fairNum = fairPrice !== '-' ? parseFloat(fairPrice) : NaN;
+  const priceNum = parseFloat(x.price_ty || x.price);
+  const priceLabel = x.price_label || (x.price_ty ? `${x.price_ty} tỷ` : (x.price ? `${x.price} tỷ` : '-'));
+  const profit = fairPrice !== '-' && Number.isFinite(priceNum) ? (fairNum - priceNum).toFixed(2) : '-';
+  const isOverpriced = Number.isFinite(priceNum) && Number.isFinite(fairNum) && priceNum > fairNum;
+  const actualClass = isOverpriced ? 'price-over' : 'price-deal';
+  const mosNum = _signalNumber(x.mos_pct || x.mos);
+  const mosRounded = Math.round(mosNum || 0);
+  const areaLabel = _signalAreaLabel(x);
+  const qualityBadgeHtml = _signalQualityBadges(x).map((badge) => (
+    `<span class="sc-quality-tag" title="${escHtml(badge.title)}">${badge.icon || ''}${escHtml(badge.label)}</span>`
+  )).join('');
+
+  const daysAgo = _daysAgoValue(x.days_ago);
+  const timeStr = _timeAgoText(daysAgo);
+  const roadTiers = {
+    1: 'Mặt tiền',
+    2: 'Đường nhựa',
+    3: 'Hẻm xe hơi',
+    4: 'Hẻm xe máy',
+    5: 'Hẻm xe máy'
+  };
+  const roadStr = x.road_label || x.roadLabel || roadTiers[x.road_tier] || x.road_type || x.road || 'Chưa rõ';
+  const metaChipsHtml = renderSignalMetaChips(x, areaLabel, roadStr);
+  const safeTitle = escHtml(x.title || '');
+  const imgSrc = signalDealImageSrc(x);
+  const dataAttr = signalDealDataAttrs(x, fairPrice, imgSrc, timeStr, roadStr, profit);
+  const isNew = _isNewWithin(x.days_ago, 7);
+  const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
+  const srcName = sourceNames[x.source] || x.source;
+  const sourceTagHtml = window.USER_TIER === 'admin' && srcName
+    ? `<span class="sc-source-tag">${escHtml(srcName)}</span>`
+    : '';
+  const dropBadge = x.price_dropped ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 4 12 20"/><polyline points="6 14 12 20 18 14"/></svg> Chủ hạ: ${x.drop_pct ? `${escHtml(x.drop_pct)}%` : 'N/A'}</span>` : '';
+  const mosBadge = Number.isFinite(mosNum) && mosNum > 0
+    ? `<div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> Rẻ hơn ${mosRounded}%</div>`
+    : '';
+  const actualPpm2 = x.actual_ppm2 || x.price_per_m2 || x.ppm2 || '-';
+  const fairPpm2 = x.fair_ppm2 || x.fppm2 || '-';
+  const ctaLabel = (window.USER_TIER === 'vip' || window.USER_TIER === 'admin') ? '⚡ Ráp mối VIP' : '💬 Ráp mối';
+  const mediaHtml = renderSignalCardMedia(x, imgSrc, 0, `
+      ${mosBadge}
+      ${newBadgeHtml}
+      <div class="sc-img-tags">
+        ${sourceTagHtml}
+        <span class="sc-time-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${escHtml(timeStr)}</span>
+        ${dropBadge}
+        ${qualityBadgeHtml}
+      </div>
+  `);
+
+  return `
+  <div class="scard ${cardContext === 'all' ? 'listing-grid-card' : ''}" onclick="${openHandler}(this)" ${dataAttr}>
+    ${mediaHtml}
+    <div class="sc-body">
+      <div class="sc-title" title="${safeTitle}">${safeTitle || '-'}</div>
+
+      <div class="price-container">
+        <div class="price-actual">
+          <span class="price-label price-label-actual ${actualClass}">THỰC TẾ</span>
+          <div class="price-val ${actualClass}">${escHtml(priceLabel)}</div>
+          <div class="price-m2">${escHtml(actualPpm2)}${actualPpm2 !== '-' ? ' tr/m²' : ''}</div>
+        </div>
+        <div class="price-fair">
+          <span class="price-label price-label-fair">ĐỊNH GIÁ</span>
+          <div class="price-val-fair">${fairPrice !== '-' ? `${escHtml(fairPrice)} tỷ` : '-'}</div>
+          <div class="price-m2">${escHtml(fairPpm2)}${fairPpm2 !== '-' ? ' tr/m²' : ''}</div>
+        </div>
+      </div>
+
+      <div class="sc-meta-chips">
+        ${metaChipsHtml}
+      </div>
+
+      <div class="sc-actions" onclick="event.stopPropagation()">
+        <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'${contactContext}');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${ctaLabel}</a>
+      </div>
+    </div>
+  </div>
+`;
 }
 
 async function loadSignals(page = 1, opts = {}) {
@@ -367,85 +511,11 @@ function _renderSignalCards(signals) {
     if (renderSeq !== signalRenderSeq) return;
     const chunk = signals.slice(start, start + SIGNAL_RENDER_CHUNK_SIZE);
     if (chunk.length === 0) return;
-    grid.insertAdjacentHTML('beforeend', chunk.map(x => {
-      const fairPrice = x.fair_ppm2 ? (x.fair_ppm2 * x.area_m2 / 1000).toFixed(2) : '-';
-      const fairNum = fairPrice !== '-' ? parseFloat(fairPrice) : NaN;
-      const priceNum = parseFloat(x.price_ty);
-      const priceLabel = x.price_label || (x.price_ty ? `${x.price_ty} tỷ` : '-');
-      const profit = fairPrice !== '-' ? (fairNum - priceNum).toFixed(2) : '-';
-      const isOverpriced = Number.isFinite(priceNum) && Number.isFinite(fairNum) && priceNum > fairNum;
-      const actualClass = isOverpriced ? 'price-over' : 'price-deal';
-      const mosRounded = Math.round(_signalNumber(x.mos_pct) || 0);
-      const imageCount = Math.max(0, Math.floor(_signalNumber(x.image_count) || 0));
-      const imageCounterHtml = imageCount > 1 ? `<div class="sc-image-count">1/${imageCount}</div>` : '';
-      const areaLabel = _signalAreaLabel(x);
-      const qualityBadgeHtml = _signalQualityBadges(x).map((badge) => (
-        `<span class="sc-quality-tag" title="${escHtml(badge.title)}">${badge.icon || ''}${escHtml(badge.label)}</span>`
-      )).join('');
-
-      const daysAgo = _daysAgoValue(x.days_ago);
-      let timeStr = _timeAgoText(daysAgo);
-      const roadTiers = {
-        1: 'Mặt tiền',
-        2: 'Đường nhựa',
-        3: 'Hẻm xe hơi',
-        4: 'Hẻm xe máy',
-        5: 'Hẻm xe máy'
-      };
-      let roadStr = x.road_label || roadTiers[x.road_tier] || 'Chưa rõ';
-      const metaChipsHtml = renderSignalMetaChips(x, areaLabel, roadStr);
-
-      const safeTitle = escHtml(x.title || '');
-      const imgSrc = x.primary_img || '';
-      const dataAttr = `data-id="${escHtml(x.id || '')}" data-title="${safeTitle}" data-primary="${escHtml(imgSrc)}" data-price="${escHtml(x.price_ty || '')}" data-ppm2="${escHtml(x.actual_ppm2 || '')}" data-fair="${escHtml(fairPrice)}" data-fppm2="${escHtml(x.fair_ppm2 || '')}" data-area="${escHtml(x.area_m2 || '')}" data-ward="${escHtml(x.ward || '')}" data-road="${escHtml(roadStr)}" data-road-label="${escHtml(x.road_label || '')}" data-street-label="${escHtml(x.street_label || '')}" data-tho-cu="${escHtml(x.tho_cu_m2 || '')}" data-tho-cu-label="${escHtml(_signalThoCuLabel(x))}" data-prop-label="${escHtml(_signalPropertyTypeLabel(x))}" data-time="${escHtml(timeStr)}" data-profit="${escHtml(profit)}" data-mos="${escHtml(x.mos_pct || '')}" data-source="${escHtml(sourceNames[x.source] || x.source || '')}" data-drop="${escHtml(x.drop_pct || '')}" data-score="${escHtml(x.signal_score || '-')}" data-url="${escHtml(x.url || '')}" data-ptype="${escHtml(x.prop_type || '')}"`;
-
-      const isNew = _isNewWithin(x.days_ago, 7);
-      const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
-
-      const srcName = sourceNames[x.source] || x.source;
-      const dropBadge = x.price_dropped ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 4 12 20"/><polyline points="6 14 12 20 18 14"/></svg> Chủ hạ: ${x.drop_pct ? x.drop_pct + '%' : 'N/A'}</span>` : '';
-      const mediaHtml = renderSignalCardMedia(x, imgSrc, imageCount, `
-          <div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> Rẻ hơn ${mosRounded}%</div>
-          ${newBadgeHtml}
-          ${imageCounterHtml}
-          <div class="sc-img-tags">
-            <span class="sc-source-tag">${srcName}</span>
-            <span class="sc-time-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${timeStr}</span>
-            ${dropBadge}
-            ${qualityBadgeHtml}
-          </div>
-      `);
-
-      return `
-      <div class="scard" onclick="openSignal(this)" ${dataAttr}>
-        ${mediaHtml}
-        <div class="sc-body">
-          <div class="sc-title" title="${safeTitle}">${safeTitle}</div>
-
-          <div class="price-container">
-            <div class="price-actual">
-              <span class="price-label price-label-actual ${actualClass}">THỰC TẾ</span>
-              <div class="price-val ${actualClass}">${escHtml(priceLabel)}</div>
-              <div class="price-m2">${x.actual_ppm2 || '-'} tr/m²</div>
-            </div>
-            <div class="price-fair">
-              <span class="price-label price-label-fair">ĐỊNH GIÁ</span>
-              <div class="price-val-fair">${fairPrice} tỷ</div>
-              <div class="price-m2">${x.fair_ppm2 || '-'} tr/m²</div>
-            </div>
-          </div>
-
-          <div class="sc-meta-chips">
-            ${metaChipsHtml}
-          </div>
-
-          <div class="sc-actions" onclick="event.stopPropagation()">
-            <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'card_signal');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${(window.USER_TIER === 'vip' || window.USER_TIER === 'admin') ? '⚡ Ráp mối VIP' : '💬 Ráp mối'}</a>
-          </div>
-        </div>
-      </div>
-    `;
-    }).join(''));
+    grid.insertAdjacentHTML('beforeend', chunk.map((x) => renderSignalDealCard(x, {
+      cardContext: 'signal',
+      contactContext: 'card_signal',
+      openHandler: 'openSignal'
+    })).join(''));
     if (start + SIGNAL_RENDER_CHUNK_SIZE < signals.length) {
       requestAnimationFrame(() => renderChunk(start + SIGNAL_RENDER_CHUNK_SIZE));
     }
@@ -455,6 +525,7 @@ function _renderSignalCards(signals) {
 }
 
 function _setupSignalScroll() {
+  ensureSignalScrollRoot();
   if (_sigObserver) _sigObserver.disconnect();
   const grid = document.getElementById('signalsGrid');
   const root = grid.closest('.tab-content');

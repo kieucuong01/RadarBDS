@@ -19,6 +19,7 @@ Do not load every doc by default. The project has long crawl and product notes; 
 | General coding workflow | `agent_playbook.md` | any touched module |
 | Architecture or moving code out of `app.py` | `architecture.md` | `services/*`, `routes/*`, `app.py` |
 | Crawl failed, daily automation, Apify/Facebook/Guland | `daily_crawl_flow.md`, `operations.md` | `cli/crawlers.py`, `crawler/*`, systemd/logs |
+| Crawl-to-signal-to-Telegram workflow | `daily_crawl_flow.md#1a-workflow-kỹ-thuật-end-to-end-theo-code-hiện-tại`, `telegram_watchlist.md` | `cli/crawlers.py`, `cleansing/reprocess.py`, `services/signal_quality.py`, `services/market_data.py`, `cli/notify.py` |
 | Deploy/VPS/prod smoke/local-prod sync | `operations.md`, `dev_commands.md` | `scripts/deploy_production.ps1`, `deployment/ubuntu24/*` |
 | Dedup, lot history, price drops, quality flags | `product_rules.md`, `architecture.md` | `cleansing/dedup.py`, `cleansing/feature_extractor.py`, `db/listings.py`, tests |
 | Dashboard/API performance | `architecture.md`, `product_rules.md` | `services/market_data.py`, `routes/*`, `app.py` |

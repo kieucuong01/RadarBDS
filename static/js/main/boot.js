@@ -15,9 +15,11 @@ function updateWardFilters(wardsByCity, activeWards, opts = {}) {
 
   container.innerHTML = wards.map(w => {
     const checked = shouldCheckAll || selected.has(w) ? 'checked' : '';
+    const wardName = escHtml(w);
     return `
       <label class="filter-option">
-        <input type="checkbox" name="ward" value="${w}" ${checked}> ${w}
+        <input type="checkbox" name="ward" value="${wardName}" ${checked}>
+        <span class="ward-option-name">${wardName}</span>
       </label>
     `;
   }).join('');

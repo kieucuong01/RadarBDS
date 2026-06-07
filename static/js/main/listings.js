@@ -127,81 +127,11 @@ function listingTableRow(x) {
 }
 
 function listingCard(x) {
-  const fair = listingFairPrice(x);
-  const fairNum = Number(fair);
-  const priceNum = Number(x.price_ty);
-  const isOverpriced = Number.isFinite(priceNum) && Number.isFinite(fairNum) && priceNum > fairNum;
-  const actualClass = isOverpriced ? 'price-over' : 'price-deal';
-  const priceLabel = x.price_label || (x.price_ty ? `${x.price_ty} tỷ` : '-');
-  const imgSrc = listingImage(x);
-  const dataAttr = listingDataAttrs(x, fair, imgSrc);
-  const daysAgo = _daysAgoValue(x.days_ago);
-  const timeStr = _timeAgoText(daysAgo);
-  const sourceName = sourceNames[x.source] || x.source || '-';
-  const isNew = _isNewWithin(x.days_ago, 7);
-  const mosNum = Number(x.mos_pct);
-  const mosRounded = Math.round(mosNum || 0);
-  const mosBadge = Number.isFinite(mosNum) && mosNum > 0
-    ? `<div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> Rẻ hơn ${mosRounded}%</div>`
-    : '';
-  const newBadge = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
-  const dropBadge = x.price_dropped
-    ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 4 12 20"/><polyline points="6 14 12 20 18 14"/></svg> Chủ hạ: ${x.drop_pct ? `${escHtml(x.drop_pct)}%` : 'N/A'}</span>`
-    : '';
-  const propType = PROPERTY_TYPE_LABELS[x.prop_type] || x.prop_type || '-';
-  const imageCount = Array.isArray(x.imgs) ? x.imgs.length : 0;
-  const imageCounterHtml = imageCount > 1 ? `<div class="sc-image-count">1/${imageCount}</div>` : '';
-  const areaLabel = typeof _signalAreaLabel === 'function' ? _signalAreaLabel(x) : (x.area_m2 ? `${x.area_m2}m²` : '-');
-  const roadTiers = {
-    1: 'Mặt tiền',
-    2: 'Đường nhựa',
-    3: 'Hẻm xe hơi',
-    4: 'Hẻm xe máy'
-  };
-  const roadStr = roadTiers[x.road_tier] || x.road_type || 'Chưa rõ';
-
-  return `
-    <div class="scard listing-grid-card" onclick="openListingModal(this)" ${dataAttr}>
-      <div class="sc-img-wrap">
-        <img class="sc-img" src="${escHtml(imgSrc)}" loading="lazy" decoding="async" width="640" height="416" alt="Img" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG">
-        ${mosBadge}
-        ${newBadge}
-        ${imageCounterHtml}
-        <div class="sc-img-tags">
-          <span class="sc-source-tag">${escHtml(sourceName)}</span>
-          <span class="sc-time-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${escHtml(timeStr)}</span>
-          ${dropBadge}
-        </div>
-      </div>
-      <div class="sc-body">
-        <div class="sc-title" title="${escHtml(x.title || '')}">${escHtml(x.title || '-')}</div>
-
-        <div class="price-container">
-          <div class="price-actual">
-            <span class="price-label price-label-actual ${actualClass}">THỰC TẾ</span>
-            <div class="price-val ${actualClass}">${escHtml(priceLabel)}</div>
-            <div class="price-m2">${x.price_per_m2 ? `${escHtml(x.price_per_m2)} tr/m²` : '-'}</div>
-          </div>
-          <div class="price-fair">
-            <span class="price-label price-label-fair">ĐỊNH GIÁ</span>
-            <div class="price-val-fair">${fair !== '-' ? `${fair} tỷ` : '-'}</div>
-            <div class="price-m2">${x.fair_ppm2 ? `${escHtml(x.fair_ppm2)} tr/m²` : '-'}</div>
-          </div>
-        </div>
-
-        <div class="sc-meta-chips">
-          <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escHtml(x.ward || 'Chưa rõ')}</span>
-          <span class="meta-chip meta-chip-area"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>${escHtml(areaLabel)}</span>
-          <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>${escHtml(roadStr)}</span>
-          <span class="meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18"/><path d="M7 3v18"/><path d="M17 3v18"/><path d="M3 17h18"/></svg>${escHtml(propType)}</span>
-        </div>
-
-        <div class="sc-actions" onclick="event.stopPropagation()">
-          <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'card_all');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${(window.USER_TIER === 'vip' || window.USER_TIER === 'admin') ? 'Ráp mối VIP' : 'Ráp mối'}</a>
-        </div>
-      </div>
-    </div>
-  `;
+  return renderSignalDealCard(x, {
+    cardContext: 'all',
+    contactContext: 'card_all',
+    openHandler: 'openListingModal'
+  });
 }
 
 function renderListingRows(items, options = {}) {

@@ -37,7 +37,7 @@ from config.seo_pages import SEO_PAGES
 mimetypes.add_type("image/webp", ".webp")
 
 # Import the extracted services
-from services.market_data import load_counts, load_data, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql
+from services.market_data import load_counts, load_data, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
@@ -2421,6 +2421,7 @@ def api_listings():
 
     listings = []
     for r in rows:
+        badge_meta = signal_badge_metadata(r)
         related_first = related_drop_map.get(r["id"])
         price_ty = r["price_ty"]
         price_first_ty = r["price_first_ty"]
@@ -2435,7 +2436,14 @@ def api_listings():
             "price_ty": price_ty, "area_m2": r['area_m2'],
             "frontage_m": r['frontage_m'], "depth_m": r['depth_m'],
             "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
+            "prop_type_label": badge_meta["property_type_label"],
             "road_tier": r['road_tier'], "road_type": r['road_type'],
+            "road_width_m": badge_meta["road_width_m"],
+            "road_label": badge_meta["road_label"],
+            "street_label": badge_meta["street_label"],
+            "tho_cu_m2": badge_meta["tho_cu_m2"],
+            "tho_cu_ratio": badge_meta["tho_cu_ratio"],
+            "tho_cu_label": badge_meta["tho_cu_label"],
             "ward": r['ward'], "url": r['url'], "is_signal": bool(r['actionable_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
             "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
             "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": price_dropped,
