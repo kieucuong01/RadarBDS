@@ -66,6 +66,22 @@ def _coerce_listing_measurements(rec: dict) -> dict:
     return out
 
 
+def _has_listing_column(conn, column: str) -> bool:
+    try:
+        return bool(conn.execute(
+            """
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema='public'
+              AND table_name='listings'
+              AND column_name=?
+            """,
+            (column,),
+        ).fetchone())
+    except Exception:
+        return False
+
+
 def _same_price_snapshot(a: Optional[float], b: Optional[float]) -> bool:
     if a is None and b is None:
         return True
@@ -103,6 +119,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
     """
     rec = _coerce_listing_measurements(rec)
     with get_conn() as conn:
+        has_road_name_column = _has_listing_column(conn, "road_name")
         existing = conn.execute(
             """
             SELECT id, price_ty, price_per_m2, area_m2,
@@ -118,19 +135,21 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
 
         if existing is None:
             # Logic giá trị: set first_seen_at=last_seen_at=now cho lifecycle tracking
-            cur = conn.execute("""
+            road_name_col = ", road_name" if has_road_name_column else ""
+            road_name_val = ", :road_name" if has_road_name_column else ""
+            cur = conn.execute(f"""
                 INSERT INTO listings (
                     raw_id, source, source_id, url, title, description,
                     area, ward, raw_area_text, price_ty, price_per_m2, area_m2,
                     property_type, tx_type, frontage_m, depth_m,
-                    road_name, road_type, road_tier, tho_cu_m2, tho_cu_ratio, has_so, is_hot, contact_phone, seller_name,
+                    road_type, road_tier, tho_cu_m2, tho_cu_ratio, has_so, is_hot, contact_phone, seller_name{road_name_col},
                     price_first_ty, crawled_at, updated_at,
                     first_seen_at, last_seen_at, is_active, posted_at
                 ) VALUES (
                     :raw_id, :source, :source_id, :url, :title, :description,
                     :area, :ward, :raw_area_text, :price_ty, :price_per_m2, :area_m2,
                     :property_type, :tx_type, :frontage_m, :depth_m,
-                    :road_name, :road_type, :road_tier, :tho_cu_m2, :tho_cu_ratio, :has_so, :is_hot, :contact_phone, :seller_name,
+                    :road_type, :road_tier, :tho_cu_m2, :tho_cu_ratio, :has_so, :is_hot, :contact_phone, :seller_name{road_name_val},
                     :price_ty, :crawled_at, :updated_at,
                     :crawled_at, :crawled_at, 1, :posted_at
                 )
@@ -202,7 +221,8 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     price_drop_pct = drop_pct
                     suspicious_bait = 0
 
-            conn.execute("""
+            road_name_set = "road_name           = :road_name," if has_road_name_column else ""
+            conn.execute(f"""
                 UPDATE listings SET
                     title               = :title,
                     price_ty            = :price_ty,
@@ -212,7 +232,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     frontage_m          = :frontage_m,
                     depth_m             = :depth_m,
                     area                = :area,
-                    road_name           = :road_name,
+                    {road_name_set}
                     road_tier           = CASE WHEN :road_tier > 0 THEN :road_tier ELSE 0 END,
                     road_type           = :road_type,
                     tho_cu_m2           = :tho_cu_m2,

@@ -772,10 +772,24 @@ def flag_duplicates_in_db(conn: Any) -> dict:
     """)
     conn.execute("UPDATE listings SET possibly_duplicate=0, duplicate_of_id=NULL")
 
-    rows = conn.execute("""
+    try:
+        has_road_name = bool(conn.execute(
+            """
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema='public'
+              AND table_name='listings'
+              AND column_name='road_name'
+            """
+        ).fetchone())
+    except Exception:
+        has_road_name = False
+    road_name_select = "road_name" if has_road_name else "NULL AS road_name"
+
+    rows = conn.execute(f"""
         SELECT id, source, source_id, url, title, area, ward,
                property_type, area_m2, price_ty, price_per_m2, crawled_at, posted_at,
-               frontage_m, depth_m, road_name, contact_phone, has_so, description
+               frontage_m, depth_m, {road_name_select}, contact_phone, has_so, description
         FROM listings
         WHERE probably_sold = 0
         ORDER BY crawled_at ASC

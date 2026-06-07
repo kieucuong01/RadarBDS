@@ -2765,9 +2765,23 @@ def get_price_history(listing_id):
 
 
 def _get_lot_history(conn, listing_id, tier: str = "guest"):
-    row = conn.execute("""
+    try:
+        has_road_name = bool(conn.execute(
+            """
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema='public'
+              AND table_name='listings'
+              AND column_name='road_name'
+            """
+        ).fetchone())
+    except Exception:
+        has_road_name = False
+    road_name_select = "road_name" if has_road_name else "NULL AS road_name"
+
+    row = conn.execute(f"""
         SELECT id, source, source_id, url, title, description, ward, property_type,
-               area_m2, price_ty, price_per_m2, frontage_m, depth_m, road_name, contact_phone,
+               area_m2, price_ty, price_per_m2, frontage_m, depth_m, {road_name_select}, contact_phone,
                has_so, price_first_ty, price_dropped, price_drop_pct, duplicate_of_id,
                posted_at, crawled_at, updated_at
         FROM listings
@@ -2784,9 +2798,9 @@ def _get_lot_history(conn, listing_id, tier: str = "guest"):
 
     anchor = dict(row)
     canonical_id = row["duplicate_of_id"] or row["id"]
-    rows = conn.execute("""
+    rows = conn.execute(f"""
         SELECT id, source, source_id, url, title, description, ward, property_type,
-               area_m2, price_ty, price_per_m2, frontage_m, depth_m, road_name, contact_phone,
+               area_m2, price_ty, price_per_m2, frontage_m, depth_m, {road_name_select}, contact_phone,
                has_so, price_first_ty, price_dropped, price_drop_pct,
                possibly_duplicate, duplicate_of_id,
                posted_at, crawled_at, updated_at,
