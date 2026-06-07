@@ -123,14 +123,14 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     raw_id, source, source_id, url, title, description,
                     area, ward, raw_area_text, price_ty, price_per_m2, area_m2,
                     property_type, tx_type, frontage_m, depth_m,
-                    road_type, road_tier, tho_cu_m2, tho_cu_ratio, has_so, is_hot, contact_phone, seller_name,
+                    road_name, road_type, road_tier, tho_cu_m2, tho_cu_ratio, has_so, is_hot, contact_phone, seller_name,
                     price_first_ty, crawled_at, updated_at,
                     first_seen_at, last_seen_at, is_active, posted_at
                 ) VALUES (
                     :raw_id, :source, :source_id, :url, :title, :description,
                     :area, :ward, :raw_area_text, :price_ty, :price_per_m2, :area_m2,
                     :property_type, :tx_type, :frontage_m, :depth_m,
-                    :road_type, :road_tier, :tho_cu_m2, :tho_cu_ratio, :has_so, :is_hot, :contact_phone, :seller_name,
+                    :road_name, :road_type, :road_tier, :tho_cu_m2, :tho_cu_ratio, :has_so, :is_hot, :contact_phone, :seller_name,
                     :price_ty, :crawled_at, :updated_at,
                     :crawled_at, :crawled_at, 1, :posted_at
                 )
@@ -151,6 +151,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "tx_type":      rec.get("tx_type", "ban"),
                 "frontage_m":   rec.get("frontage_m"),
                 "depth_m":      rec.get("depth_m"),
+                "road_name":    rec.get("road_name"),
                 "road_type":    rec.get("road_type", "unknown"),
                 "road_tier":    int(rec.get("road_tier", 0)),
                 "tho_cu_m2":    rec.get("tho_cu_m2"),
@@ -211,6 +212,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     frontage_m          = :frontage_m,
                     depth_m             = :depth_m,
                     area                = :area,
+                    road_name           = :road_name,
                     road_tier           = CASE WHEN :road_tier > 0 THEN :road_tier ELSE 0 END,
                     road_type           = :road_type,
                     tho_cu_m2           = :tho_cu_m2,
@@ -239,6 +241,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "frontage_m":    new_frontage,
                 "depth_m":       new_depth,
                 "area":          rec.get("area", ""),
+                "road_name":     rec.get("road_name"),
                 "road_tier":     int(rec.get("road_tier", 0)),
                 "road_type":     rec.get("road_type") or "unknown",
                 "tho_cu_m2":     rec.get("tho_cu_m2"),

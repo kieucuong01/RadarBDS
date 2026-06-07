@@ -30,6 +30,7 @@ from cleansing.dedup import (
     SCORE_THRESHOLD,
 )
 from cleansing.normalizer import normalize_record
+from cleansing.normalizer import extract_road_name
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -71,6 +72,53 @@ def test_ascii_fold_normalizes_vietnamese_d_stroke_for_location_matching():
 
 def test_road_tokens_detect_vietnamese_dx_prefix():
     assert _road_tokens("mặt tiền ĐX85, gần đường dx 089, quốc lộ 13") == {"dx85", "dx89", "ql13"}
+
+
+def test_road_tokens_detect_numbered_tdc_roads():
+    text = "Vi tri: Duong D12, khu TDC Phu My. Ban nhanh lo dat duong 110B TDC Phu Chanh."
+    assert _road_tokens(text) == {"d12", "110b"}
+    assert extract_road_name("Vi tri: Duong D12, khu TDC Phu My") == "D12"
+    assert extract_road_name("Ban nhanh lo dat duong 110B TDC Phu Chanh") == "110B"
+
+
+def test_same_broker_same_dimensions_different_tdc_roads_not_duplicate():
+    d12 = _listing(
+        source="facebook",
+        source_id="fb-d12",
+        posted_at="2026-06-03",
+        ward="Phu Tan",
+        property_type="dat_nen",
+        area_m2=150.0,
+        frontage_m=7.5,
+        depth_m=20.0,
+        price_ty=4.95,
+        contact_phone="0935792868",
+        description=(
+            "Dat dep khu tai dinh cu Phu My - Phu Tan. "
+            "Vi tri: Duong D12, khu TDC Phu My. Dien tich 7.5 x 20m, tho cu 100%. "
+            "Gia ban: 33 trieu/m2."
+        ),
+    )
+    road_110b = _listing(
+        source="facebook",
+        source_id="fb-110b",
+        posted_at="2026-06-03",
+        ward="Phu Tan",
+        property_type="dat_nen",
+        area_m2=150.0,
+        frontage_m=7.5,
+        depth_m=20.0,
+        price_ty=3.2,
+        contact_phone="0935792868",
+        description=(
+            "Ban nhanh lo dat duong 110B - TDC Phu Chanh - Phu Tan. "
+            "Duong nhua rong 12m, via he 8m moi ben. Dien tich 7.5 x 20m, tho cu 100%. "
+            "Gia ban nhanh: 3.2 ty."
+        ),
+    )
+
+    assert not _is_duplicate(d12, road_110b)
+    assert not _is_reliable_price_drop(d12, road_110b)
 
 
 def test_history_signature_matches_quoc_lo_written_as_words():

@@ -2767,7 +2767,7 @@ def get_price_history(listing_id):
 def _get_lot_history(conn, listing_id, tier: str = "guest"):
     row = conn.execute("""
         SELECT id, source, source_id, url, title, description, ward, property_type,
-               area_m2, price_ty, price_per_m2, frontage_m, depth_m, contact_phone,
+               area_m2, price_ty, price_per_m2, frontage_m, depth_m, road_name, contact_phone,
                has_so, price_first_ty, price_dropped, price_drop_pct, duplicate_of_id,
                posted_at, crawled_at, updated_at
         FROM listings
@@ -2786,7 +2786,7 @@ def _get_lot_history(conn, listing_id, tier: str = "guest"):
     canonical_id = row["duplicate_of_id"] or row["id"]
     rows = conn.execute("""
         SELECT id, source, source_id, url, title, description, ward, property_type,
-               area_m2, price_ty, price_per_m2, frontage_m, depth_m, contact_phone,
+               area_m2, price_ty, price_per_m2, frontage_m, depth_m, road_name, contact_phone,
                has_so, price_first_ty, price_dropped, price_drop_pct,
                possibly_duplicate, duplicate_of_id,
                posted_at, crawled_at, updated_at,

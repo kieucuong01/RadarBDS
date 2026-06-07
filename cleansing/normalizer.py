@@ -33,6 +33,33 @@ _CAP_TRO_RE = re.compile(
 # Nếu text nói "cặp trọ" nhưng giá < ngưỡng này → seller đang quote giá 1 dãy (150m²)
 _NHA_TRO_CAP_PRICE_THRESHOLD = 2.5  # tỷ
 
+_ROAD_PREFIX_PAT = re.compile(
+    r"\b(?:dx|dj|dh|dl|ql|tl|ni|nj|dk|nk|nl|nh|d|n)\s*0*(\d{1,4})\b",
+    re.IGNORECASE,
+)
+_NUMBERED_ROAD_PAT = re.compile(
+    r"\b(?:duong|mat\s*tien|mt|goc|hem|hẻm|duong\s+so|đường|đường\s+số)\s*"
+    r"0*(\d{2,4}\s*[a-d])\b",
+    re.IGNORECASE,
+)
+
+
+def extract_road_name(text: str) -> str | None:
+    """Return a compact road code/name for dedup/debug, e.g. D12, DX89, 110B."""
+    folded = _ascii_fold(text or "")
+    for m in re.finditer(r"\bquoc\s*lo\s*0*(\d{1,4})\b", folded, re.IGNORECASE):
+        return f"QL{int(m.group(1))}"
+    for m in _NUMBERED_ROAD_PAT.finditer(folded):
+        return re.sub(r"\s+", "", m.group(1)).upper()
+    for m in _ROAD_PREFIX_PAT.finditer(folded):
+        raw = re.sub(r"\s+", "", m.group(0).lower())
+        prefix_match = re.match(r"[a-z]+", raw)
+        if not prefix_match:
+            continue
+        return f"{prefix_match.group(0).upper()}{int(m.group(1))}"
+    return None
+
+
 def _infer_nha_tro_area(title: str, description: str, price_ty: Optional[float]) -> float:
     """Suy luận diện tích cho nhà trọ khi thiếu area_m2.
     - "cặp trọ" / "2 dãy" → 300m² (trừ khi giá thấp → seller quote 1 dãy → 150m²)
@@ -647,6 +674,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             area_name = _st_sw
         if not road_tier and _st_tier is not None:
             road_tier = _st_tier
+        road_name = extract_road_name(full_text_for_street)
 
         # Pháp lý: default = có sổ. Flip về 0 chỉ khi text rõ ràng nói "vi bằng / giấy tay / chưa sổ"
         # (extract_legal regex: chưa có sổ|chưa sổ|không có sổ|không sổ|vi bằng|giấy tay|đang làm sổ)
@@ -681,6 +709,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             "tx_type":       _norm_tx_type(raw.get("tx_type") or raw.get("transaction_type")),
             "frontage_m":    _raw_front or _inf_front,
             "depth_m":       _raw_depth or _inf_depth,
+            "road_name":     road_name,
             "road_width_m":  raw.get("road_width_m") or _fb_parsed.get("road_width_m")
                              or _st_width,
             "road_type":     _norm_road_type(raw.get("road_type") or

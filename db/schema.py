@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS listings (
     tx_type             TEXT DEFAULT 'ban',
     frontage_m          REAL,
     depth_m             REAL,
+    road_name           TEXT,
     road_width_m        REAL,
     road_type           TEXT DEFAULT 'unknown',
     tho_cu_m2           REAL,
@@ -539,6 +540,7 @@ def _run_migrations(conn: Any) -> None:
         ("review_hidden_reason", "ALTER TABLE listings ADD COLUMN review_hidden_reason TEXT"),
         ("tho_cu_m2",          "ALTER TABLE listings ADD COLUMN tho_cu_m2 REAL"),
         ("tho_cu_ratio",       "ALTER TABLE listings ADD COLUMN tho_cu_ratio REAL"),
+        ("road_name",          "ALTER TABLE listings ADD COLUMN road_name TEXT"),
     ]
     for col, sql in migrations:
         if col not in existing:
@@ -550,8 +552,9 @@ def _run_migrations(conn: Any) -> None:
 
     try:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_content_hash ON listings(content_hash)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_road_name ON listings(road_name)")
     except Exception as e:
-        logger.warning(f"Index skip idx_listings_content_hash: {e}")
+        logger.warning(f"Index skip listings auxiliary indexes: {e}")
 
     # Migrations cho valuation_results
     v_existing = _table_columns(conn, "valuation_results")

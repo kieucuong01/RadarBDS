@@ -17,7 +17,15 @@ _PRICE_PAT = re.compile(
 )
 _PHONE_PAT = re.compile(r"(?:0|\+84)\d{8,10}")
 _ROAD_TOKEN_PAT = re.compile(
-    r"\b(?:dx|dj|dh|dl|ql|tl|ni|nj|dk|nk|nl|nh)\s*0*(\d{1,4})\b",
+    r"\b(?:dx|dj|dh|dl|ql|tl|ni|nj|dk|nk|nl|nh|d|n)\s*0*(\d{1,4})\b",
+    re.IGNORECASE,
+)
+_NUMBERED_ROAD_PAT = re.compile(
+    r"\b(?:duong|mat\s*tien|mt|goc|hem|duong\s+so)\s*0*(\d{2,4}\s*[a-d])\b",
+    re.IGNORECASE,
+)
+_STANDALONE_NUMBERED_ROAD_PAT = re.compile(
+    r"\b(\d{2,4}\s*[a-d])\b",
     re.IGNORECASE,
 )
 _BLOCK_TOKEN_PAT = re.compile(
@@ -67,7 +75,19 @@ def _text_similarity(t1: Optional[str], t2: Optional[str]) -> float:
 
 
 def _combined_text(listing: dict) -> str:
-    return f"{listing.get('title') or ''} {listing.get('description') or ''}"
+    return f"{listing.get('title') or ''} {listing.get('description') or ''} {listing.get('road_name') or ''}"
+
+
+def _normalize_road_token(raw: str, number: str | None = None) -> str | None:
+    raw = re.sub(r"\s+", "", (raw or "").lower())
+    if number is not None:
+        prefix_match = re.match(r"[a-z]+", raw)
+        if not prefix_match:
+            return None
+        return f"{prefix_match.group(0)}{int(number)}"
+    if re.fullmatch(r"\d{2,4}[a-d]", raw):
+        return raw
+    return None
 
 
 def _road_tokens(text: Optional[str]) -> set[str]:
@@ -77,10 +97,18 @@ def _road_tokens(text: Optional[str]) -> set[str]:
     tokens = set()
     for m in re.finditer(r"\bquoc\s*lo\s*0*(\d{1,4})\b", text, re.IGNORECASE):
         tokens.add(f"ql{int(m.group(1))}")
+    for m in _NUMBERED_ROAD_PAT.finditer(text):
+        token = _normalize_road_token(m.group(1))
+        if token:
+            tokens.add(token)
+    for m in _STANDALONE_NUMBERED_ROAD_PAT.finditer(text):
+        token = _normalize_road_token(m.group(1))
+        if token:
+            tokens.add(token)
     for m in _ROAD_TOKEN_PAT.finditer(text):
-        raw = re.sub(r"\s+", "", m.group(0))
-        prefix = re.match(r"[a-z]+", raw).group(0)
-        tokens.add(f"{prefix}{int(m.group(1))}")
+        token = _normalize_road_token(m.group(0), m.group(1))
+        if token:
+            tokens.add(token)
     return tokens
 
 
@@ -747,7 +775,7 @@ def flag_duplicates_in_db(conn: Any) -> dict:
     rows = conn.execute("""
         SELECT id, source, source_id, url, title, area, ward,
                property_type, area_m2, price_ty, price_per_m2, crawled_at, posted_at,
-               frontage_m, depth_m, contact_phone, has_so, description
+               frontage_m, depth_m, road_name, contact_phone, has_so, description
         FROM listings
         WHERE probably_sold = 0
         ORDER BY crawled_at ASC
