@@ -197,7 +197,7 @@ def test_signal_cards_use_professional_empty_image_state():
         assert expected in signals_js or expected in cards_css
 
     assert ".sc-empty-media" in cards_css
-    assert "signal-card-chip-balance-20260608" in html
+    assert "new-badge-orange-20260608" in html
 
 
 def test_signal_tab_mobile_scroll_container_is_stable():
@@ -265,7 +265,7 @@ def test_signal_cards_and_modal_render_compact_property_badges():
         "streetLabel",
         "thoCuLabel",
         "propertyTypeLabel",
-        "signal-card-chip-balance-20260608",
+        "new-badge-orange-20260608",
     ]:
         assert expected in html or expected in signals_js or expected in modal_js
 
