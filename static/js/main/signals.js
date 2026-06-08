@@ -368,6 +368,7 @@ function renderSignalDealCard(x, opts = {}) {
   const imgSrc = signalDealImageSrc(x);
   const dataAttr = signalDealDataAttrs(x, fairPrice, imgSrc, timeStr, roadStr, profit);
   const isNew = _isNewWithin(x.days_ago, 7);
+  const newCardClass = isNew ? 'is-new-signal' : '';
   const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
   const srcName = sourceNames[x.source] || x.source;
   const sourceTagHtml = window.USER_TIER === 'admin' && srcName
@@ -392,7 +393,7 @@ function renderSignalDealCard(x, opts = {}) {
   `);
 
   return `
-  <div class="scard ${cardContext === 'all' ? 'listing-grid-card' : ''}" onclick="${openHandler}(this)" ${dataAttr}>
+  <div class="scard ${newCardClass} ${cardContext === 'all' ? 'listing-grid-card' : ''}" onclick="${openHandler}(this)" ${dataAttr}>
     ${mediaHtml}
     <div class="sc-body">
       <div class="sc-title" title="${safeTitle}">${safeTitle || '-'}</div>

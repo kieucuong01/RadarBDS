@@ -294,6 +294,18 @@ def test_signal_cards_and_modal_render_compact_property_badges():
     assert "depth: data.depth_m" in modal_js
 
 
+def test_new_signal_cards_use_orange_badge_and_card_highlight():
+    signals_js = _read("static/js/main/signals.js")
+    cards_css = _read("static/css/main/cards.css")
+
+    assert "isNew ? 'is-new-signal' : ''" in signals_js
+    assert re.search(r"\.new-badge\s*\{[^}]*linear-gradient\(135deg, #f97316 0%, #ef4444 100%\)", cards_css, re.S)
+    assert re.search(r"\.scard\.is-new-signal\s*\{[^}]*box-shadow:", cards_css, re.S)
+    assert ".scard.is-new-signal::before" in cards_css
+    assert "@keyframes newSignalPulse" in cards_css
+    assert "rgba(249, 115, 22" in cards_css
+
+
 def test_all_listings_grid_reuses_signal_deal_card_renderer():
     html = _read("templates/index.html")
     app_source = _read("app.py")
