@@ -463,13 +463,23 @@ def _signal_sort_sql(sort_key: str) -> str:
             "ELSE 1 END ASC, COALESCE(v.trust_score, 0) DESC"
         )
     else:
-        trust_rank = "0"
+        trust_rank = ""
+    score_sort_parts = [
+        part
+        for part in (
+            trust_rank,
+            "COALESCE(v.signal_score, 0) DESC",
+            "v.mos_pct DESC",
+            "l.id DESC",
+        )
+        if part
+    ]
     sort_map = {
         "newest": "COALESCE(l.posted_at, l.crawled_at) DESC, l.id DESC",
         "price_m2_asc": "v.actual_ppm2 IS NULL, v.actual_ppm2 ASC, l.id DESC",
         "price_asc": "l.price_ty IS NULL, l.price_ty ASC, l.id DESC",
         "mos_desc": "v.mos_pct IS NULL, v.mos_pct DESC, l.id DESC",
-        "score_desc": f"{trust_rank}, COALESCE(v.signal_score, 0) DESC, v.mos_pct DESC",
+        "score_desc": ", ".join(score_sort_parts),
     }
     return sort_map.get(sort_key or "newest", sort_map["newest"])
 
@@ -856,7 +866,7 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
     return redact_for_tier(record, tier)
 
 
-def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None, area_ranges=None, price_ranges=None, keyword=""):
+def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None, area_ranges=None, price_ranges=None, keyword="", include_total=True):
     # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
     # Guest still sees the full deal feed; original URLs/phones stay redacted.
     if tier == "guest":
@@ -882,13 +892,15 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     page = max(int(page or 1), 1)
     limit = min(max(int(limit or 30), 1), 100)
     offset = (page - 1) * limit
+    query_limit = limit if include_total else limit + 1
     order_sql = _signal_sort_sql(sort)
     lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
     fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
+    total_select = "COUNT(*) OVER() AS total_count," if include_total else ""
 
     rows = conn.execute(f"""
         WITH {LATEST_VALUATION_CTE}
-        SELECT COUNT(*) OVER() AS total_count,
+        SELECT {total_select}
                v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                l.id, l.title, l.description, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
                l.property_type, l.road_type, l.road_width_m, l.tho_cu_m2, l.tho_cu_ratio, l.is_hot,
@@ -926,11 +938,14 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         WHERE {signal_condition} AND {where_sql}{mos_condition}
         ORDER BY {order_sql}
         LIMIT ? OFFSET ?
-    """, params + mos_params + [limit, offset]).fetchall()
+    """, params + mos_params + [query_limit, offset]).fetchall()
 
     conn.close()
 
-    total = int(_row_get(rows[0], "total_count", 0)) if rows else 0
+    has_more_without_total = (not include_total) and len(rows) > limit
+    if not include_total:
+        rows = rows[:limit]
+    total = int(_row_get(rows[0], "total_count", 0)) if include_total and rows else 0
     signals = [
         _format_signal_row(
             r,
@@ -945,16 +960,18 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     ]
     signals = apply_guest_truncation(signals, tier, limit=12)
 
-    return {
+    payload = {
         "signals": signals,
-        "total": total,
         "page": page,
         "limit": limit,
-        "pages": (total + limit - 1) // limit if limit else 1,
-        "has_more": page * limit < total,
+        "has_more": has_more_without_total if not include_total else page * limit < total,
         "sort": sort or "newest",
         "tier": tier,
     }
+    if include_total:
+        payload["total"] = total
+        payload["pages"] = (total + limit - 1) // limit if limit else 1
+    return payload
 
 
 def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=0, area_ranges=None, price_ranges=None, keyword=""):

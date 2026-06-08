@@ -1624,10 +1624,17 @@ def sitemap_xml():
 _DASHBOARD_CACHE = {}
 _DASHBOARD_CACHE_MAX_ITEMS = 96
 _DASHBOARD_CACHE_TTL_SECONDS = float(os.getenv("RADAR_DASHBOARD_CACHE_TTL_SECONDS", "120"))
+_SIGNAL_CACHE = {}
+_SIGNAL_CACHE_MAX_ITEMS = 256
+_SIGNAL_CACHE_TTL_SECONDS = float(os.getenv("RADAR_SIGNAL_CACHE_TTL_SECONDS", "60"))
 
 
 def clear_dashboard_cache():
     _DASHBOARD_CACHE.clear()
+
+
+def clear_signal_cache():
+    _SIGNAL_CACHE.clear()
 
 
 def _cached_dashboard_payload(key, loader, now=None, ttl_seconds=None, force_refresh=False):
@@ -1645,6 +1652,24 @@ def _cached_dashboard_payload(key, loader, now=None, ttl_seconds=None, force_ref
     if len(_DASHBOARD_CACHE) > _DASHBOARD_CACHE_MAX_ITEMS:
         oldest_key = min(_DASHBOARD_CACHE, key=lambda k: _DASHBOARD_CACHE[k]["ts"])
         _DASHBOARD_CACHE.pop(oldest_key, None)
+    return payload
+
+
+def _cached_signal_payload(key, loader, now=None, ttl_seconds=None):
+    ttl = _SIGNAL_CACHE_TTL_SECONDS if ttl_seconds is None else ttl_seconds
+    if ttl <= 0:
+        return loader()
+
+    now = time.monotonic() if now is None else now
+    entry = _SIGNAL_CACHE.get(key)
+    if entry and now - entry["ts"] <= ttl:
+        return deepcopy(entry["payload"])
+
+    payload = loader()
+    _SIGNAL_CACHE[key] = {"ts": now, "payload": deepcopy(payload)}
+    if len(_SIGNAL_CACHE) > _SIGNAL_CACHE_MAX_ITEMS:
+        oldest_key = min(_SIGNAL_CACHE, key=lambda k: _SIGNAL_CACHE[k]["ts"])
+        _SIGNAL_CACHE.pop(oldest_key, None)
     return payload
 
 
@@ -2126,22 +2151,50 @@ def api_signals():
     except ValueError:
         page, limit = 1, 30
     sort = request.args.get("sort", "newest")
+    include_total = request.args.get("include_total") != "0"
     db_path = _db_handle()
     tier = current_tier()
-    return jsonify(load_signals(
-        db_path,
-        sources=sources,
-        wards=wards,
-        prop_types=prop_types,
-        only_drops=only_drops,
-        mos_min=mos_min,
-        sort=sort,
-        page=page,
-        limit=limit,
-        tier=tier,
-        keyword=keyword,
-        **range_kwargs,
-    ))
+    cache_key = (
+        tier,
+        active_city,
+        tuple(wards or ()),
+        tuple(sources or ()),
+        tuple(prop_types or ()),
+        bool(only_drops),
+        int(mos_min or 0),
+        float(range_kwargs["area_min"] or 0),
+        float(range_kwargs["area_max"] or 0),
+        float(range_kwargs["price_min"] or 0),
+        float(range_kwargs["price_max"] or 0),
+        tuple(range_kwargs["area_ranges"]),
+        tuple(range_kwargs["price_ranges"]),
+        keyword,
+        sort,
+        page,
+        limit,
+        bool(include_total),
+    )
+
+    def _load_signal_payload():
+        return load_signals(
+            db_path,
+            sources=sources,
+            wards=wards,
+            prop_types=prop_types,
+            only_drops=only_drops,
+            mos_min=mos_min,
+            sort=sort,
+            page=page,
+            limit=limit,
+            tier=tier,
+            keyword=keyword,
+            include_total=include_total,
+            **range_kwargs,
+        )
+
+    if tier == "admin":
+        return jsonify(_load_signal_payload())
+    return jsonify(_cached_signal_payload(cache_key, _load_signal_payload))
 
 def api_trends():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)

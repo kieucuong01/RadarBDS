@@ -197,7 +197,7 @@ def test_signal_cards_use_professional_empty_image_state():
         assert expected in signals_js or expected in cards_css
 
     assert ".sc-empty-media" in cards_css
-    assert "new-badge-orange-20260608" in html
+    assert "new-badge-static-20260608" in html
 
 
 def test_signal_tab_mobile_scroll_container_is_stable():
@@ -208,7 +208,7 @@ def test_signal_tab_mobile_scroll_container_is_stable():
     cards_css = _read("static/css/main/cards.css")
 
     for expected in [
-        "signals-mobile-scroll-20260607",
+        "dashboard-fast-path-20260608",
         "ensureSignalScrollRoot",
         "refreshObserver",
         "signals-scroll-ready",
@@ -265,7 +265,7 @@ def test_signal_cards_and_modal_render_compact_property_badges():
         "streetLabel",
         "thoCuLabel",
         "propertyTypeLabel",
-        "new-badge-orange-20260608",
+        "new-badge-static-20260608",
     ]:
         assert expected in html or expected in signals_js or expected in modal_js
 
@@ -301,9 +301,25 @@ def test_new_signal_cards_use_orange_badge_and_card_highlight():
     assert "isNew ? 'is-new-signal' : ''" in signals_js
     assert re.search(r"\.new-badge\s*\{[^}]*linear-gradient\(135deg, #f97316 0%, #ef4444 100%\)", cards_css, re.S)
     assert re.search(r"\.scard\.is-new-signal\s*\{[^}]*box-shadow:", cards_css, re.S)
-    assert ".scard.is-new-signal::before" in cards_css
-    assert "@keyframes newSignalPulse" in cards_css
+    assert ".scard.is-new-signal::before" not in cards_css
+    assert "newSignalPulse" not in cards_css
+    assert "animation:" not in re.search(r"\.scard\.is-new-signal\s*\{([^}]*)\}", cards_css, re.S).group(1)
     assert "rgba(249, 115, 22" in cards_css
+
+
+def test_signal_feed_uses_fast_total_free_path_and_defers_dashboard_meta():
+    html = _read("templates/index.html")
+    signals_js = _read("static/js/main/signals.js")
+    filters_js = _read("static/js/main/filters.js")
+    core_js = _read("static/js/main/core.js")
+
+    assert "signals-fast-path-20260608" in html
+    assert "params.set('include_total', '0')" in signals_js
+    assert "Number.isFinite(Number(data.total))" in signals_js
+    assert "deferDashboardMetaRefresh" in filters_js
+    assert "requestIdleCallback" in filters_js
+    assert "applyFilters();" in core_js
+    assert "navigator.geolocation.getCurrentPosition" not in core_js
 
 
 def test_all_listings_grid_reuses_signal_deal_card_renderer():

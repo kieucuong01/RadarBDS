@@ -29,6 +29,54 @@ class _FakeReadConnection:
         raise AssertionError("market data reads should not close the shared connection")
 
 
+def _signal_row(row_id: int = 1, **overrides):
+    row = {
+        "id": row_id,
+        "title": f"Signal {row_id}",
+        "description": "",
+        "mos_pct": 20.0,
+        "actual_ppm2": 10.0,
+        "fair_ppm2": 12.0,
+        "is_signal": 1,
+        "area_m2": 100.0,
+        "frontage_m": None,
+        "depth_m": None,
+        "price_ty": 1.0,
+        "property_type": "dat_nen",
+        "road_type": "duong_nhua",
+        "road_width_m": None,
+        "tho_cu_m2": None,
+        "tho_cu_ratio": None,
+        "is_hot": 0,
+        "price_dropped": 0,
+        "price_drop_pct": None,
+        "price_first_ty": None,
+        "suspicious_bait": 0,
+        "duplicate_of_id": None,
+        "url": "https://example.test/listing",
+        "crawled_at": "2026-06-08T00:00:00",
+        "posted_at": "2026-06-08T00:00:00",
+        "ward": "Tan An",
+        "road_tier": 2,
+        "has_so": None,
+        "signal_score": 20,
+        "trust_tier": "candidate_signal",
+        "trust_score": 0,
+        "legal_status": "unverified",
+        "legal_flags": "",
+        "source_quality_flags": "",
+        "source_quality_recheck": 0,
+        "has_legal_doc_image": 0,
+        "primary_local_path": None,
+        "primary_img_url": None,
+        "image_count": 0,
+        "source": "facebook",
+        "is_fresh_locked": 0,
+    }
+    row.update(overrides)
+    return row
+
+
 def test_load_signals_uses_shared_connection_scope(monkeypatch):
     import services.market_data as market_data
 
@@ -53,6 +101,59 @@ def test_load_signals_uses_shared_connection_scope(monkeypatch):
     assert "COUNT(*) OVER()" in conn.queries[0][0]
     assert "LEFT JOIN LATERAL" in conn.queries[0][0]
     assert "image_count" in conn.queries[0][0]
+
+
+def test_load_signals_fast_page_skips_total_count_and_uses_limit_plus_one(monkeypatch):
+    import services.market_data as market_data
+
+    class _FastSignalConnection:
+        def __init__(self):
+            self.queries = []
+            self.closed = False
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params))
+            return _FakeCursor(rows=[_signal_row(i) for i in range(1, 4)])
+
+        def close(self):
+            self.closed = True
+            raise AssertionError("load_signals should keep shared read connection open")
+
+    conn = _FastSignalConnection()
+
+    @contextmanager
+    def fake_read_conn(_db_path=None):
+        yield conn
+
+    monkeypatch.setattr(market_data, "_read_conn", fake_read_conn, raising=False)
+
+    result = market_data.load_signals(
+        None,
+        sources=["facebook"],
+        wards=["Tan An"],
+        tier="admin",
+        limit=2,
+        include_total=False,
+    )
+
+    sql, params = conn.queries[0]
+    assert "COUNT(*) OVER()" not in sql
+    assert params[-2:] == [3, 0]
+    assert len(result["signals"]) == 2
+    assert result["has_more"] is True
+    assert "total" not in result
+    assert "pages" not in result
+    assert conn.closed is False
+
+
+def test_score_sort_does_not_emit_invalid_order_by_zero():
+    import services.market_data as market_data
+
+    score_sort = market_data._signal_sort_sql("score_desc")
+
+    assert "ORDER BY" not in score_sort
+    assert not score_sort.strip().startswith("0,")
+    assert "COALESCE(v.signal_score, 0) DESC" in score_sort
 
 
 def test_load_counts_uses_compact_shared_connection_scope(monkeypatch):
@@ -199,6 +300,37 @@ def test_api_dashboard_uses_fast_summary_loader(monkeypatch):
     payload = response.get_json()
     assert payload["stats"]["signals"] == 7
     assert payload["signals_version"] == "test-version"
+
+
+def test_api_signals_caches_guest_payload_but_not_admin(monkeypatch):
+    import app as radar_app
+
+    radar_app.clear_signal_cache()
+    calls = {"guest": 0, "admin": 0}
+
+    def fake_load_signals(*_args, **kwargs):
+        tier = kwargs.get("tier")
+        calls[tier] += 1
+        return {
+            "signals": [],
+            "page": kwargs.get("page", 1),
+            "limit": kwargs.get("limit", 30),
+            "has_more": False,
+            "sort": kwargs.get("sort", "newest"),
+            "tier": tier,
+        }
+
+    monkeypatch.setattr(radar_app, "load_signals", fake_load_signals)
+
+    client = radar_app.app.test_client()
+    assert client.get("/api/signals?include_total=0").status_code == 200
+    assert client.get("/api/signals?include_total=0").status_code == 200
+    assert calls["guest"] == 1
+
+    monkeypatch.setattr(radar_app, "current_tier", lambda: "admin")
+    assert client.get("/api/signals?include_total=0").status_code == 200
+    assert client.get("/api/signals?include_total=0").status_code == 200
+    assert calls["admin"] == 2
 
 
 def test_load_trend_data_includes_sample_count(monkeypatch):

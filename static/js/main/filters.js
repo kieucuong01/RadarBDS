@@ -166,6 +166,15 @@ function updateTrendPeriod(p, btn) {
   loadTrendData(false);
 }
 
+function deferDashboardMetaRefresh(useCache = false) {
+  const run = () => refreshDashboardMeta(useCache);
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(run, { timeout: 900 });
+  } else {
+    setTimeout(run, 160);
+  }
+}
+
 function applyFilters() {
   currentFilters = getFilterQuery();
   currentPageNo = 1;
@@ -174,7 +183,7 @@ function applyFilters() {
   refreshCounts(false);
   if (tab === 'signals') {
     loadSignals(1, { reset: true });
-    refreshDashboardMeta(false);
+    deferDashboardMetaRefresh(false);
   } else {
     refreshDashboardMeta(false);
   }

@@ -357,37 +357,6 @@
     0 3px 14px rgba(0, 0, 0, 0.14);
 }
 
-.scard.is-new-signal::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 3;
-  border: 1px solid rgba(251, 146, 60, 0.48);
-  box-shadow:
-    0 0 0 1px rgba(249, 115, 22, 0.16),
-    0 0 22px rgba(249, 115, 22, 0.18);
-  animation: newSignalPulse 2.8s ease-in-out infinite;
-}
-
-@keyframes newSignalPulse {
-  0%,
-  100% {
-    opacity: 0.62;
-    box-shadow:
-      0 0 0 1px rgba(249, 115, 22, 0.14),
-      0 0 18px rgba(249, 115, 22, 0.16);
-  }
-
-  50% {
-    opacity: 1;
-    box-shadow:
-      0 0 0 3px rgba(249, 115, 22, 0.18),
-      0 0 30px rgba(239, 68, 68, 0.26);
-  }
-}
-
 @media (hover: hover) and (pointer: fine) {
   .scard:hover {
     transform: translateY(-4px);
