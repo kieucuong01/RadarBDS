@@ -197,7 +197,7 @@ def test_signal_cards_use_professional_empty_image_state():
         assert expected in signals_js or expected in cards_css
 
     assert ".sc-empty-media" in cards_css
-    assert "new-badge-static-20260608" in html
+    assert "signal-feed-polish-20260608" in html
 
 
 def test_signal_tab_mobile_scroll_container_is_stable():
@@ -265,7 +265,7 @@ def test_signal_cards_and_modal_render_compact_property_badges():
         "streetLabel",
         "thoCuLabel",
         "propertyTypeLabel",
-        "new-badge-static-20260608",
+        "signal-feed-polish-20260608",
     ]:
         assert expected in html or expected in signals_js or expected in modal_js
 
@@ -313,13 +313,70 @@ def test_signal_feed_uses_fast_total_free_path_and_defers_dashboard_meta():
     filters_js = _read("static/js/main/filters.js")
     core_js = _read("static/js/main/core.js")
 
-    assert "signals-fast-path-20260608" in html
+    assert "signal-feed-polish-20260608" in html
     assert "params.set('include_total', '0')" in signals_js
     assert "Number.isFinite(Number(data.total))" in signals_js
     assert "deferDashboardMetaRefresh" in filters_js
     assert "requestIdleCallback" in filters_js
     assert "applyFilters();" in core_js
     assert "navigator.geolocation.getCurrentPosition" not in core_js
+
+
+def test_signal_feed_uses_css_skeleton_cards_not_inline_placeholder_blocks():
+    html = _read("templates/index.html")
+    signals_js = _read("static/js/main/signals.js")
+    cards_css = _read("static/css/main/cards.css")
+
+    assert "signal-feed-polish-20260608" in html
+    assert "signal-skeleton-card" in signals_js
+    assert "signal-skeleton-media" in signals_js
+    assert "signal-skeleton-price" in signals_js
+    assert ".signal-skeleton-card" in cards_css
+    assert ".signal-skeleton-card .skeleton-line" in cards_css
+    assert "style=\"min-height:420px" not in signals_js
+
+
+def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
+    html = _read("templates/index.html")
+    core_js = _read("static/js/main/core.js")
+    filters_css = _read("static/css/main/filters.css")
+    leads_css = _read("static/css/main/leads_chat.css")
+
+    for expected in [
+        'class="sidebar filter-sheet"',
+        'class="filter-sheet-head"',
+        'class="filter-sheet-close"',
+        'class="filter-sheet-actions"',
+        'class="filter-sheet-apply"',
+        "hideSidebarMobile();",
+        "filter-sheet-polish-20260608",
+    ]:
+        assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
+
+    assert "transform: translateY(110%)" in leads_css
+    assert ".sidebar.filter-sheet.show" in leads_css
+    assert "border-radius: 22px 22px 0 0" in leads_css
+    assert "aria-modal=\"true\"" in html
+
+
+def test_signal_cards_have_investor_summary_strip_for_mobile_scanning():
+    signals_js = _read("static/js/main/signals.js")
+    cards_css = _read("static/css/main/cards.css")
+
+    for expected in [
+        "function renderSignalDealSummary",
+        "sc-deal-summary",
+        "summary-chip-primary",
+        "summary-chip-muted",
+        "Biên an toàn",
+        "Điểm",
+    ]:
+        assert expected in signals_js or expected in cards_css
+
+    assert ".sc-deal-summary" in cards_css
+    assert ".summary-chip-primary" in cards_css
+    assert "@media (max-width: 720px)" in cards_css
+    assert "grid-template-columns: 1fr" in cards_css
 
 
 def test_all_listings_grid_reuses_signal_deal_card_renderer():

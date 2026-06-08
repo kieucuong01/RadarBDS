@@ -20,6 +20,7 @@ function toggleMenu() {
     const overlay = document.getElementById('mobileOverlay');
     const shouldShow = !sidebar.classList.contains('show');
     sidebar.classList.toggle('show', shouldShow);
+    sidebar.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
     overlay.classList.toggle('show', shouldShow);
     document.body.classList.toggle('sidebar-open', shouldShow);
   } else {
@@ -29,7 +30,9 @@ function toggleMenu() {
 
 function hideSidebarMobile() {
   if (window.innerWidth <= 1024) {
-    document.getElementById('sidebar').classList.remove('show');
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.remove('show');
+    sidebar.setAttribute('aria-hidden', 'true');
     document.getElementById('mobileOverlay').classList.remove('show');
     document.body.classList.remove('sidebar-open');
   }

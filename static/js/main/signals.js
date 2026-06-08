@@ -129,13 +129,20 @@ async function loadInsights(useCache = true) {
 function renderSignalSkeleton() {
   const grid = document.getElementById('signalsGrid');
   grid.innerHTML = Array.from({ length: 6 }).map(() => `
-    <div class="scard" style="min-height:420px; opacity:.65; pointer-events:none;">
-      <div class="sc-img-wrap" style="background:var(--border);"></div>
+    <div class="scard signal-skeleton-card" aria-hidden="true">
+      <div class="signal-skeleton-media skeleton-block"></div>
       <div class="sc-body">
-        <div style="height:22px; width:85%; background:var(--border); border-radius:6px; margin-bottom:16px;"></div>
-        <div class="price-container" style="min-height:96px;"></div>
-        <div style="height:14px; width:70%; background:var(--border); border-radius:6px; margin-top:18px;"></div>
-        <div style="height:14px; width:55%; background:var(--border); border-radius:6px; margin-top:12px;"></div>
+        <span class="skeleton-line signal-skeleton-title"></span>
+        <div class="signal-skeleton-summary">
+          <span class="skeleton-line short"></span>
+          <span class="skeleton-line"></span>
+        </div>
+        <div class="signal-skeleton-price">
+          <span class="skeleton-line"></span>
+          <span class="skeleton-line short"></span>
+        </div>
+        <span class="skeleton-line"></span>
+        <span class="skeleton-line short"></span>
       </div>
     </div>
   `).join('');
@@ -288,6 +295,21 @@ function renderSignalMetaChips(signal, areaLabel, roadLabel) {
   ].join('');
 }
 
+function renderSignalDealSummary(signal, mosRounded, timeStr) {
+  const score = signal && (signal.signal_score || signal.score);
+  const primary = Number.isFinite(Number(mosRounded)) && Number(mosRounded) > 0
+    ? `Biên an toàn ${mosRounded}%`
+    : 'Cần soi thêm';
+  const scoreText = score && score !== '-' ? `Điểm ${score}` : 'Điểm -';
+  return `
+    <div class="sc-deal-summary">
+      <span class="summary-chip summary-chip-primary">${escHtml(primary)}</span>
+      <span class="summary-chip summary-chip-muted">${escHtml(scoreText)}</span>
+      <span class="summary-chip summary-chip-muted">${escHtml(timeStr)}</span>
+    </div>
+  `;
+}
+
 function signalDealImageSrc(x) {
   if (x && x.primary_img) return x.primary_img;
   if (x && x.primary) return x.primary;
@@ -365,6 +387,7 @@ function renderSignalDealCard(x, opts = {}) {
   };
   const roadStr = x.road_label || x.roadLabel || roadTiers[x.road_tier] || x.road_type || x.road || 'Chưa rõ';
   const metaChipsHtml = renderSignalMetaChips(x, areaLabel, roadStr);
+  const dealSummaryHtml = renderSignalDealSummary(x, mosRounded, timeStr);
   const safeTitle = escHtml(x.title || '');
   const imgSrc = signalDealImageSrc(x);
   const dataAttr = signalDealDataAttrs(x, fairPrice, imgSrc, timeStr, roadStr, profit);
@@ -398,6 +421,7 @@ function renderSignalDealCard(x, opts = {}) {
     ${mediaHtml}
     <div class="sc-body">
       <div class="sc-title" title="${safeTitle}">${safeTitle || '-'}</div>
+      ${dealSummaryHtml}
 
       <div class="price-container">
         <div class="price-actual">

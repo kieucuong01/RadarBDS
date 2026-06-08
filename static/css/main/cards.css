@@ -298,6 +298,49 @@
   animation: spin 0.8s linear infinite;
 }
 
+.signal-skeleton-card {
+  min-height: 420px;
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.signal-skeleton-media {
+  height: 200px;
+  border-radius: 0;
+}
+
+.skeleton-block,
+.signal-skeleton-card .skeleton-line {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.13), rgba(148, 163, 184, 0.34), rgba(148, 163, 184, 0.13));
+  background-size: 220% 100%;
+  animation: skeleton-pulse 1.15s ease-in-out infinite;
+}
+
+.signal-skeleton-card .skeleton-line {
+  height: 14px;
+}
+
+.signal-skeleton-title {
+  height: 22px !important;
+  width: 86%;
+}
+
+.signal-skeleton-summary {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 8px;
+}
+
+.signal-skeleton-price {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  min-height: 86px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
 .listing-skeleton-row td {
   padding: 14px 16px;
 }
@@ -685,6 +728,45 @@
   overflow: hidden;
 }
 
+.sc-deal-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.8fr) minmax(0, 0.9fr);
+  gap: 6px;
+}
+
+.summary-chip {
+  min-width: 0;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-chip-primary {
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.24);
+  background: rgba(16, 185, 129, 0.10);
+}
+
+.summary-chip-muted {
+  color: var(--text-muted);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+[data-theme="dark"] .summary-chip-primary {
+  color: #86efac;
+  background: rgba(16, 185, 129, 0.14);
+}
+
 /* Price Section */
 .price-container {
   display: grid;
@@ -925,6 +1007,14 @@
     height: clamp(130px, 36vw, 148px);
   }
 
+  .signal-skeleton-card {
+    min-height: 318px;
+  }
+
+  .signal-skeleton-media {
+    height: clamp(130px, 36vw, 148px);
+  }
+
   .sc-empty-media {
     gap: 5px;
     padding: 16px 12px 34px;
@@ -972,6 +1062,18 @@
     font-size: 0.9rem;
     line-height: 1.32;
     -webkit-line-clamp: 2;
+  }
+
+  .sc-deal-summary {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .summary-chip {
+    min-height: 24px;
+    justify-content: flex-start;
+    padding: 4px 8px;
+    font-size: 0.62rem;
   }
 
   .mos-badge {

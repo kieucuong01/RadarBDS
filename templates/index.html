@@ -30,6 +30,7 @@
   <meta name="twitter:title" content="{{ site_meta.title }}">
   <meta name="twitter:description" content="{{ site_meta.description }}">
   <meta name="twitter:image" content="{{ site_meta.og_image }}">
+  {% include "partials/google_site_tags.html" %}
 
   <!-- Favicon / install icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
@@ -42,11 +43,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=vietnamese-font-stack-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=mobile-filter-compact-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=new-badge-static-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=filter-sheet-polish-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-feed-polish-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=modal-comps-advisor-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=area-risk-radar-20260605">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=nav-badge-highlight-20260605">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=filter-sheet-polish-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=account-menu-compact-20260606">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -66,7 +67,20 @@
 
   <div class="mobile-overlay" id="mobileOverlay" onclick="toggleMenu()"></div>
 
-  <aside class="sidebar" id="sidebar">
+  <aside class="sidebar filter-sheet" id="sidebar" role="dialog" aria-modal="true" aria-label="Bộ lọc deal">
+    <div class="filter-sheet-head">
+      <div>
+        <span>Bộ lọc</span>
+        <strong>Chọn khu vực và tiêu chí deal</strong>
+      </div>
+      <button type="button" class="filter-sheet-close" onclick="hideSidebarMobile()" aria-label="Đóng bộ lọc">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </svg>
+      </button>
+    </div>
     <div class="logo">
       <img src="{{ url_for('static', filename='images/logo.png') }}" alt="RadarBDS Logo" class="logo-img">
       <div class="logo-info">
@@ -219,6 +233,9 @@
       </div>
 
     </form>
+    <div class="filter-sheet-actions">
+      <button type="button" class="filter-sheet-apply" onclick="applyFilters(); hideSidebarMobile();">Xem kết quả</button>
+    </div>
   </aside>
 
   <main class="main">
@@ -1102,7 +1119,7 @@
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=vip-upgrade-modal-20260606"></script>
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=dashboard-fast-path-20260608"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=dashboard-fast-path-20260608"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=signals-fast-path-20260608"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=signal-feed-polish-20260608"></script>
   <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=modal-comps-advisor-20260608"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=area-risk-radar-20260605"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=shared-signal-card-20260608"></script>

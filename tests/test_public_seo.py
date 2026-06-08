@@ -84,6 +84,56 @@ def test_homepage_is_binh_duong_landing_and_dashboard_has_own_url():
     assert legacy_binh_duong.headers["Location"] == "/"
 
 
+def test_google_site_tags_are_env_driven(monkeypatch):
+    import app as radar_app
+
+    monkeypatch.setattr(radar_app, "GOOGLE_ANALYTICS_ID", "G-TEST1234")
+    monkeypatch.setattr(radar_app, "GOOGLE_SEARCH_CONSOLE_VERIFICATION", "search-console-token")
+
+    client = radar_app.app.test_client()
+    home_html = client.get("/").get_data(as_text=True)
+    dashboard_html = client.get("/dashboard").get_data(as_text=True)
+
+    for html in (home_html, dashboard_html):
+        assert '<meta name="google-site-verification" content="search-console-token">' in html
+        assert "https://www.googletagmanager.com/gtag/js?id=G-TEST1234" in html
+        assert 'gtag("config", "G-TEST1234");' in html
+
+
+def test_google_site_tags_are_omitted_without_env(monkeypatch):
+    import app as radar_app
+
+    monkeypatch.setattr(radar_app, "GOOGLE_ANALYTICS_ID", "")
+    monkeypatch.setattr(radar_app, "GOOGLE_SEARCH_CONSOLE_VERIFICATION", "")
+
+    html = radar_app.app.test_client().get("/").get_data(as_text=True)
+
+    assert "google-site-verification" not in html
+    assert "googletagmanager.com/gtag/js" not in html
+
+
+def test_homepage_has_dashboard_preview_metrics_and_dashboard_cta():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get("/")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'class="seo-dashboard-preview"' in html
+    assert "/static/images/seo/dashboard-preview.png" in html
+    assert 'href="/dashboard"' in html
+    assert "Xem dashboard thật" in html
+    assert "Tin rao được chuẩn hóa" in html
+    assert "Tín hiệu đang theo dõi" in html
+    assert "Cập nhật dữ liệu định kỳ" in html
+
+    preview_path = Path("static/images/seo/dashboard-preview.png")
+    assert preview_path.exists()
+    with Image.open(preview_path) as img:
+        assert img.size[0] >= 1000
+        assert img.size[1] >= 620
+
+
 def test_foundational_seo_pages_render_canonical_content():
     import app as radar_app
 
@@ -204,3 +254,6 @@ def test_seo_and_home_screen_icon_assets_are_wired_and_sized():
         assert Path(path).exists(), path
         with Image.open(path) as img:
             assert img.size == size
+            if path in {"static/images/favicon-32.png", "static/images/favicon-16.png"}:
+                assert img.mode == "RGBA"
+                assert img.getpixel((0, 0))[3] == 0

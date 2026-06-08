@@ -26,6 +26,8 @@ from db.moderation import normalize_phone
 from config.settings import (
     LEGAL_IMAGE_EVIDENCE_ENABLED,
     PUBLIC_BASE_URL,
+    GOOGLE_ANALYTICS_ID,
+    GOOGLE_SEARCH_CONSOLE_VERIFICATION,
     SITE_DESCRIPTION,
     SITE_KEYWORDS,
     SITE_NAME,
@@ -67,6 +69,14 @@ app = Flask(__name__)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+@app.context_processor
+def inject_google_site_tags():
+    return {
+        "GOOGLE_ANALYTICS_ID": GOOGLE_ANALYTICS_ID,
+        "GOOGLE_SEARCH_CONSOLE_VERIFICATION": GOOGLE_SEARCH_CONSOLE_VERIFICATION,
+    }
 
 
 @app.after_request

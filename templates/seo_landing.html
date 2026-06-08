@@ -27,6 +27,7 @@
   <meta name="twitter:title" content="{{ site_meta.title }}">
   <meta name="twitter:description" content="{{ site_meta.description }}">
   <meta name="twitter:image" content="{{ site_meta.og_image }}">
+  {% include "partials/google_site_tags.html" %}
 
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16.png') }}?v=app-icon-20260608">
@@ -36,7 +37,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=seo-location-pages-20260603">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=homepage-dashboard-preview-20260608">
 
   <script type="application/ld+json">
   {
@@ -189,6 +190,32 @@
         {% endfor %}
       </div>
     </section>
+
+    {% if page.dashboard_preview %}
+    <section class="seo-dashboard-preview" aria-label="Preview dashboard Radar BDS">
+      <div class="seo-shell dashboard-preview-shell">
+        <div class="dashboard-preview-copy">
+          <span>{{ page.dashboard_preview.eyebrow }}</span>
+          <h2>{{ page.dashboard_preview.title }}</h2>
+          <p>{{ page.dashboard_preview.body }}</p>
+          <div class="dashboard-preview-metrics" aria-label="Số liệu nổi bật">
+            {% for metric in page.dashboard_preview.metrics %}
+            <div>
+              <strong>{{ metric.value }}</strong>
+              <small>{{ metric.label }}</small>
+            </div>
+            {% endfor %}
+          </div>
+          <a class="seo-button seo-button-primary" href="/dashboard">{{ page.dashboard_preview.cta }}
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
+          </a>
+        </div>
+        <a class="dashboard-preview-frame" href="/dashboard" aria-label="{{ page.dashboard_preview.cta }}">
+          <img src="{{ page.dashboard_preview.image }}" alt="{{ page.dashboard_preview.alt }}" loading="lazy" decoding="async" width="1365" height="900">
+        </a>
+      </div>
+    </section>
+    {% endif %}
 
     {% if page.local_links %}
     <section class="seo-local-links" aria-label="Khu vực liên quan">

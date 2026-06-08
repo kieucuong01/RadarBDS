@@ -53,6 +53,19 @@ SEO_PAGES = {
                 "body": "Đẩy các tin có MOS tốt, mô tả rõ và ít dấu hiệu mồi giá lên trước để bạn kiểm tra nhanh hơn.",
             },
         ],
+        "dashboard_preview": {
+            "eyebrow": "Dashboard thật",
+            "title": "Mở là thấy ngay deal nào đáng soi trước",
+            "body": "Feed tín hiệu gom giá rao, định giá, biên an toàn, khu vực và trạng thái tin mới trong một màn hình để nhà đầu tư không phải đọc từng bài thủ công.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Preview dashboard Radar BDS hiển thị các card deal nhà đất Bình Dương",
+            "cta": "Xem dashboard thật",
+            "metrics": [
+                {"value": "876+", "label": "Tin rao được chuẩn hóa"},
+                {"value": "100+", "label": "Tín hiệu đang theo dõi"},
+                {"value": "Hàng ngày", "label": "Cập nhật dữ liệu định kỳ"},
+            ],
+        },
         "process_title": "Radar BDS đọc thị trường Bình Dương như thế nào",
         "process": [
             {
