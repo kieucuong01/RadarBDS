@@ -2,6 +2,8 @@ import json
 import importlib
 from pathlib import Path
 
+from PIL import Image
+
 
 def test_site_seo_env_text_falls_back_when_corrupted(monkeypatch):
     from config import settings
@@ -34,6 +36,7 @@ def test_public_seo_defaults_point_to_radarbds_domain():
     assert dashboard_meta["canonical_url"] == "https://radarbds.vn/dashboard"
     assert dashboard_meta["og_url"] == "https://radarbds.vn/dashboard"
     assert meta["og_image"].startswith("https://radarbds.vn/")
+    assert meta["og_image"].endswith("/static/images/seo/radarbds-og.png")
     assert "localhost" not in meta["canonical_url"]
     assert "127.0.0.1" not in meta["canonical_url"]
 
@@ -97,7 +100,7 @@ def test_foundational_seo_pages_render_canonical_content():
         assert response.status_code == 200
         assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
         assert heading in html
-        assert "https://radarbds.vn/static/images/logo.png" in html
+        assert "https://radarbds.vn/static/images/seo/radarbds-og.png" in html
         assert "localhost" not in html
         assert "127.0.0.1" not in html
 
@@ -163,9 +166,41 @@ def test_unknown_binh_duong_location_seo_page_404s():
 
 def test_manifest_uses_radarbds_standalone_start_url():
     manifest = json.loads(Path("static/manifest.webmanifest").read_text(encoding="utf-8"))
+    icons = {icon["src"]: icon for icon in manifest["icons"]}
 
     assert manifest["name"] == "Radar BDS"
     assert manifest["start_url"] == "https://radarbds.vn/dashboard"
     assert manifest["scope"] == "https://radarbds.vn/"
     assert manifest["display"] == "standalone"
-    assert manifest["icons"][0]["src"].startswith("https://radarbds.vn/")
+    assert "https://radarbds.vn/static/images/app-icon-192.png" in icons
+    assert "https://radarbds.vn/static/images/app-icon-512.png" in icons
+    assert "https://radarbds.vn/static/images/app-icon-maskable-512.png" in icons
+    assert icons["https://radarbds.vn/static/images/app-icon-maskable-512.png"]["purpose"] == "maskable"
+    assert icons["https://radarbds.vn/static/images/app-icon-192.png"]["sizes"] == "192x192"
+    assert icons["https://radarbds.vn/static/images/app-icon-512.png"]["sizes"] == "512x512"
+
+
+def test_seo_and_home_screen_icon_assets_are_wired_and_sized():
+    dashboard_html = Path("templates/index.html").read_text(encoding="utf-8")
+    seo_html = Path("templates/seo_landing.html").read_text(encoding="utf-8")
+
+    for html in (dashboard_html, seo_html):
+        assert "images/favicon-32.png" in html
+        assert "images/favicon-16.png" in html
+        assert "images/apple-touch-icon.png" in html
+        assert "manifest.webmanifest') }}?v=app-icon-20260608" in html
+
+    expected_sizes = {
+        "static/images/logo.png": (1024, 1024),
+        "static/images/app-icon-192.png": (192, 192),
+        "static/images/app-icon-512.png": (512, 512),
+        "static/images/app-icon-maskable-512.png": (512, 512),
+        "static/images/apple-touch-icon.png": (180, 180),
+        "static/images/favicon-32.png": (32, 32),
+        "static/images/favicon-16.png": (16, 16),
+        "static/images/seo/radarbds-og.png": (1200, 630),
+    }
+    for path, size in expected_sizes.items():
+        assert Path(path).exists(), path
+        with Image.open(path) as img:
+            assert img.size == size

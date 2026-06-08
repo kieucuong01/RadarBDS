@@ -33,11 +33,11 @@
 .logo-img {
   width: 32px;
   height: 32px;
-  object-fit: contain;
-  border-radius: 8px;
-  filter: drop-shadow(0 4px 12px var(--primary-glow));
-  background: #fff;
-  padding: 2px;
+  object-fit: cover;
+  border-radius: 12px;
+  filter: drop-shadow(0 5px 14px var(--primary-glow));
+  background: transparent;
+  padding: 0;
 }
 
 .logo-info {

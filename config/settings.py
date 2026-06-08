@@ -134,7 +134,7 @@ SITE_NAME = _seo_env_text("SITE_NAME", "Radar BDS")
 SITE_TITLE = _seo_env_text("SITE_TITLE", DEFAULT_SITE_TITLE)
 SITE_DESCRIPTION = _seo_env_text("SITE_DESCRIPTION", DEFAULT_SITE_DESCRIPTION)
 SITE_KEYWORDS = _seo_env_text("SITE_KEYWORDS", DEFAULT_SITE_KEYWORDS)
-SITE_OG_IMAGE = os.getenv("SITE_OG_IMAGE", f"{PUBLIC_BASE_URL}/static/images/logo.png").strip()
+SITE_OG_IMAGE = os.getenv("SITE_OG_IMAGE", f"{PUBLIC_BASE_URL}/static/images/seo/radarbds-og.png").strip()
 
 # Cảnh báo khi giá thấp hơn X% so với mặt bằng chung
 ALERT_PRICE_DROP_PCT  = float(os.getenv("ALERT_PRICE_DROP_PCT", 20.0))
