@@ -91,8 +91,8 @@ def test_google_site_tags_are_env_driven(monkeypatch):
     monkeypatch.setattr(radar_app, "GOOGLE_SEARCH_CONSOLE_VERIFICATION", "search-console-token")
 
     client = radar_app.app.test_client()
-    home_html = client.get("/").get_data(as_text=True)
-    dashboard_html = client.get("/dashboard").get_data(as_text=True)
+    home_html = client.get("/", base_url="https://radarbds.vn").get_data(as_text=True)
+    dashboard_html = client.get("/dashboard", base_url="https://radarbds.vn").get_data(as_text=True)
 
     for html in (home_html, dashboard_html):
         assert '<meta name="google-site-verification" content="search-console-token">' in html
@@ -110,6 +110,17 @@ def test_google_site_tags_are_omitted_without_env(monkeypatch):
 
     assert "google-site-verification" not in html
     assert "googletagmanager.com/gtag/js" not in html
+
+
+def test_live_domain_renders_radarbds_ga4_by_default(monkeypatch):
+    import app as radar_app
+
+    monkeypatch.setattr(radar_app, "GOOGLE_ANALYTICS_ID", "G-YRJZ26W8Y2")
+
+    html = radar_app.app.test_client().get("/", base_url="https://radarbds.vn").get_data(as_text=True)
+
+    assert "https://www.googletagmanager.com/gtag/js?id=G-YRJZ26W8Y2" in html
+    assert 'gtag("config", "G-YRJZ26W8Y2");' in html
 
 
 def test_homepage_has_dashboard_preview_metrics_and_dashboard_cta():

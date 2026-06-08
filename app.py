@@ -73,8 +73,13 @@ logger = logging.getLogger(__name__)
 
 @app.context_processor
 def inject_google_site_tags():
+    host = (request.host or "").split(":", 1)[0].strip("[]").lower()
+    local_host = host in {"localhost", "127.0.0.1", "::1"}
+    analytics_id = GOOGLE_ANALYTICS_ID
+    if local_host and os.getenv("RADAR_ENABLE_LOCAL_ANALYTICS", "").lower() not in {"1", "true", "yes", "on"}:
+        analytics_id = ""
     return {
-        "GOOGLE_ANALYTICS_ID": GOOGLE_ANALYTICS_ID,
+        "GOOGLE_ANALYTICS_ID": analytics_id,
         "GOOGLE_SEARCH_CONSOLE_VERIFICATION": GOOGLE_SEARCH_CONSOLE_VERIFICATION,
     }
 
