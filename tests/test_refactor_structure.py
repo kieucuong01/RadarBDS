@@ -197,7 +197,7 @@ def test_signal_cards_use_professional_empty_image_state():
         assert expected in signals_js or expected in cards_css
 
     assert ".sc-empty-media" in cards_css
-    assert "signal-feed-polish-20260608" in html
+    assert "signal-card-density-20260609" in html
 
 
 def test_signal_tab_mobile_scroll_container_is_stable():
@@ -256,6 +256,8 @@ def test_signal_cards_and_modal_render_compact_property_badges():
         "renderSignalMetaChips",
         "sourceTagHtml",
         "window.USER_TIER === 'admin'",
+        "meta-chip-ward",
+        "meta-chip-area",
         "['road-label'",
         "['street-label'",
         "['frontage'",
@@ -265,7 +267,7 @@ def test_signal_cards_and_modal_render_compact_property_badges():
         "streetLabel",
         "thoCuLabel",
         "propertyTypeLabel",
-        "signal-feed-polish-20260608",
+        "signal-card-density-20260609",
     ]:
         assert expected in html or expected in signals_js or expected in modal_js
 
@@ -273,9 +275,11 @@ def test_signal_cards_and_modal_render_compact_property_badges():
     assert ".meta-chip-street" in cards_css
     assert ".sm-tags-wrap .sm-tag-chip" in modal_css
     assert "grid-template-columns: repeat(12, minmax(0, 1fr))" in cards_css
+    assert re.search(r"\.meta-chip-ward\s*\{[^}]*grid-column: span 3;", cards_css, re.S)
+    assert re.search(r"\.meta-chip-area\s*\{[^}]*grid-column: span 5;", cards_css, re.S)
     assert re.search(r"\.meta-chip-street\s*\{[^}]*grid-column: span 5;", cards_css, re.S)
-    assert re.search(r"\.meta-chip-property\s*\{[^}]*grid-column: span 3;", cards_css, re.S)
-    assert re.search(r"\.meta-chip-land\s*\{[^}]*grid-column: span 4;", cards_css, re.S)
+    assert re.search(r"\.meta-chip-property\s*\{[^}]*grid-column: span 2;", cards_css, re.S)
+    assert re.search(r"\.meta-chip-land\s*\{[^}]*grid-column: span 3;", cards_css, re.S)
     assert "grid-auto-rows: 22px" in cards_css
     assert "flex-wrap: wrap" in modal_css
     assert "font-style: normal" in cards_css
@@ -313,7 +317,7 @@ def test_signal_feed_uses_fast_total_free_path_and_defers_dashboard_meta():
     filters_js = _read("static/js/main/filters.js")
     core_js = _read("static/js/main/core.js")
 
-    assert "signal-feed-polish-20260608" in html
+    assert "signal-card-density-20260609" in html
     assert "params.set('include_total', '0')" in signals_js
     assert "Number.isFinite(Number(data.total))" in signals_js
     assert "deferDashboardMetaRefresh" in filters_js
@@ -327,7 +331,7 @@ def test_signal_feed_uses_css_skeleton_cards_not_inline_placeholder_blocks():
     signals_js = _read("static/js/main/signals.js")
     cards_css = _read("static/css/main/cards.css")
 
-    assert "signal-feed-polish-20260608" in html
+    assert "signal-card-density-20260609" in html
     assert "signal-skeleton-card" in signals_js
     assert "signal-skeleton-media" in signals_js
     assert "signal-skeleton-price" in signals_js
@@ -359,24 +363,16 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
     assert "aria-modal=\"true\"" in html
 
 
-def test_signal_cards_have_investor_summary_strip_for_mobile_scanning():
+def test_signal_cards_do_not_render_deal_summary_strip():
     signals_js = _read("static/js/main/signals.js")
     cards_css = _read("static/css/main/cards.css")
 
-    for expected in [
-        "function renderSignalDealSummary",
-        "sc-deal-summary",
-        "summary-chip-primary",
-        "summary-chip-muted",
-        "Biên an toàn",
-        "Điểm",
-    ]:
-        assert expected in signals_js or expected in cards_css
-
-    assert ".sc-deal-summary" in cards_css
-    assert ".summary-chip-primary" in cards_css
-    assert "@media (max-width: 720px)" in cards_css
-    assert "grid-template-columns: 1fr" in cards_css
+    assert "function renderSignalDealSummary" not in signals_js
+    assert "dealSummaryHtml" not in signals_js
+    assert "sc-deal-summary" not in signals_js
+    assert ".sc-deal-summary" not in cards_css
+    assert "summary-chip-primary" not in cards_css
+    assert "summary-chip-muted" not in cards_css
 
 
 def test_all_listings_grid_reuses_signal_deal_card_renderer():

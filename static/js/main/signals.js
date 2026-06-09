@@ -286,28 +286,13 @@ function renderSignalMetaChips(signal, areaLabel, roadLabel) {
   const streetIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v18"/><path d="M18 3v18"/><path d="M6 8h18"/><path d="M0 16h18"/></svg>';
 
   return [
-    renderSignalMetaChip(pinIcon, signal.ward || 'Chưa rõ'),
+    renderSignalMetaChip(pinIcon, signal.ward || 'Chưa rõ', 'meta-chip-ward'),
     renderSignalMetaChip(areaIcon, areaLabel, 'meta-chip-area'),
     renderSignalMetaChip(roadIcon, roadLabel, 'meta-chip-road'),
     renderSignalMetaChip(streetIcon, signal.street_label, 'meta-chip-street'),
     renderSignalMetaChip(propertyIcon, _signalPropertyTypeLabel(signal), 'meta-chip-property'),
     renderSignalMetaChip(landIcon, _signalThoCuLabel(signal), 'meta-chip-land'),
   ].join('');
-}
-
-function renderSignalDealSummary(signal, mosRounded, timeStr) {
-  const score = signal && (signal.signal_score || signal.score);
-  const primary = Number.isFinite(Number(mosRounded)) && Number(mosRounded) > 0
-    ? `Biên an toàn ${mosRounded}%`
-    : 'Cần soi thêm';
-  const scoreText = score && score !== '-' ? `Điểm ${score}` : 'Điểm -';
-  return `
-    <div class="sc-deal-summary">
-      <span class="summary-chip summary-chip-primary">${escHtml(primary)}</span>
-      <span class="summary-chip summary-chip-muted">${escHtml(scoreText)}</span>
-      <span class="summary-chip summary-chip-muted">${escHtml(timeStr)}</span>
-    </div>
-  `;
 }
 
 function signalDealImageSrc(x) {
@@ -387,7 +372,6 @@ function renderSignalDealCard(x, opts = {}) {
   };
   const roadStr = x.road_label || x.roadLabel || roadTiers[x.road_tier] || x.road_type || x.road || 'Chưa rõ';
   const metaChipsHtml = renderSignalMetaChips(x, areaLabel, roadStr);
-  const dealSummaryHtml = renderSignalDealSummary(x, mosRounded, timeStr);
   const safeTitle = escHtml(x.title || '');
   const imgSrc = signalDealImageSrc(x);
   const dataAttr = signalDealDataAttrs(x, fairPrice, imgSrc, timeStr, roadStr, profit);
@@ -421,7 +405,6 @@ function renderSignalDealCard(x, opts = {}) {
     ${mediaHtml}
     <div class="sc-body">
       <div class="sc-title" title="${safeTitle}">${safeTitle || '-'}</div>
-      ${dealSummaryHtml}
 
       <div class="price-container">
         <div class="price-actual">
