@@ -356,6 +356,70 @@ class AdminControlRoomGateTest(unittest.TestCase):
             )
         return old.lastrowid, new.lastrowid
 
+    def _insert_distinctive_area_text_pair(self, *, road_old="", road_new="", area=747.4, ward_old="Tan An", ward_new="Tan An"):
+        from db.connection import get_conn
+
+        token = uuid.uuid4().hex
+        road_text_old = f" duong {road_old}" if road_old else ""
+        road_text_new = f" duong {road_new}" if road_new else road_text_old
+        with get_conn() as conn:
+            raw_old = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", f"fb-area-old-{token}", f"https://example.test/raw-area-old-{token}", "{}"),
+            )
+            old = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, possibly_duplicate, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+                """,
+                (
+                    raw_old.lastrowid,
+                    "facebook",
+                    f"fb-area-old-{token}",
+                    f"https://example.test/area-old-{token}",
+                    "Ban lo dat dien tich dac thu",
+                    f"Can ban lo dat{road_text_old}, dien tich {area}m2, so rieng, vi tri dep.",
+                    "Thu Dau Mot",
+                    ward_old,
+                    "dat_nen",
+                    4.1,
+                    round(4.1 * 1000 / area, 2),
+                    area,
+                    "2026-05-20",
+                ),
+            )
+            raw_new = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", f"fb-area-new-{token}", f"https://example.test/raw-area-new-{token}", "{}"),
+            )
+            new = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, possibly_duplicate, duplicate_of_id, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                """,
+                (
+                    raw_new.lastrowid,
+                    "facebook",
+                    f"fb-area-new-{token}",
+                    f"https://example.test/area-new-{token}",
+                    "Moi gioi dang lai lo dat dien tich dac thu",
+                    f"Dang lai lo dat{road_text_new}, dien tich {area}m2, so rieng, vi tri dep.",
+                    "Thu Dau Mot",
+                    ward_new,
+                    "dat_nen",
+                    4.08,
+                    round(4.08 * 1000 / area, 2),
+                    area,
+                    old.lastrowid,
+                    "2026-05-28",
+                ),
+            )
+        return old.lastrowid, new.lastrowid
+
     def test_guest_control_room_renders_login_modal_gate(self):
         response = self.client.get("/admin")
 
@@ -751,7 +815,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
         self.assertNotIn((new_id, old_id), pairs)
 
-    def test_data_quality_duplicate_queue_keeps_same_phone_text_reposts_when_roads_conflict(self):
+    def test_data_quality_duplicate_queue_auto_splits_same_phone_text_reposts_when_roads_conflict(self):
         self._login_as_admin()
         old_id, new_id = self._insert_same_phone_text_duplicate_pair(road_old="DX94", road_new="DX127")
 
@@ -759,7 +823,94 @@ class AdminControlRoomGateTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
-        self.assertIn((new_id, old_id), pairs)
+        self.assertNotIn((new_id, old_id), pairs)
+
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+                (new_id,),
+            ).fetchone()
+
+        self.assertEqual(row["possibly_duplicate"], 0)
+        self.assertIsNone(row["duplicate_of_id"])
+
+    def test_data_quality_duplicate_queue_hides_distinctive_area_near_text_reposts(self):
+        self._login_as_admin()
+        old_id, new_id = self._insert_distinctive_area_text_pair(area=747.4)
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertNotIn((new_id, old_id), pairs)
+
+    def test_data_quality_duplicate_queue_auto_merges_distinctive_area_near_text_with_missing_ward(self):
+        self._login_as_admin()
+        old_id, new_id = self._insert_distinctive_area_text_pair(area=747.4, ward_new="")
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertNotIn((new_id, old_id), pairs)
+
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            override = conn.execute(
+                """
+                SELECT action, target_listing_id, note
+                FROM dedup_overrides
+                WHERE listing_id=?
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (new_id,),
+            ).fetchone()
+
+        self.assertIsNotNone(override)
+        self.assertEqual(override["action"], "merge")
+        self.assertEqual(override["target_listing_id"], old_id)
+        self.assertEqual(override["note"], "admin_qc_auto_merge_near_identical")
+
+        second_response = self.client.get("/admin/api/qc/duplicates")
+        self.assertEqual(second_response.status_code, 200)
+        with get_conn() as conn:
+            override_count = conn.execute(
+                """
+                SELECT COUNT(*) AS count
+                FROM dedup_overrides
+                WHERE listing_id=?
+                  AND target_listing_id=?
+                  AND action='merge'
+                  AND note='admin_qc_auto_merge_near_identical'
+                """,
+                (new_id, old_id),
+            ).fetchone()["count"]
+        self.assertEqual(override_count, 1)
+
+    def test_data_quality_duplicate_queue_auto_splits_distinctive_area_reposts_when_roads_conflict(self):
+        self._login_as_admin()
+        old_id, new_id = self._insert_distinctive_area_text_pair(road_old="DX94", road_new="DX127", area=747.4)
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertNotIn((new_id, old_id), pairs)
+        # Different concrete roads are considered different lots and should be auto-split, not sent to review.
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+                (new_id,),
+            ).fetchone()
+
+        self.assertEqual(row["possibly_duplicate"], 0)
+        self.assertIsNone(row["duplicate_of_id"])
 
     def test_data_quality_duplicate_queue_surfaces_unmerged_suspected_same_lot_pairs(self):
         self._login_as_admin()

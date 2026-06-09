@@ -4175,6 +4175,41 @@ def admin_api_qc_duplicates():
     with db_mod.get_conn() as conn:
         road_name_select_l = "l.road_name" if _has_listing_column(conn, "road_name") else "NULL"
         road_name_select_c = "c.road_name" if _has_listing_column(conn, "road_name") else "NULL"
+        auto_split_rows = conn.execute(f"""
+            SELECT l.id, l.title, l.url, l.source, l.source_id, l.ward, l.property_type, l.price_ty, l.area_m2,
+                   l.frontage_m, l.depth_m, l.tho_cu_m2, l.contact_phone,
+                   l.description, COALESCE(l.posted_at, l.crawled_at, l.updated_at) AS dt,
+                   l.duplicate_of_id, c.title AS canonical_title, c.url AS canonical_url,
+                   {road_name_select_l} AS road_name,
+                   c.source AS canonical_source, c.source_id AS canonical_source_id, c.ward AS canonical_ward,
+                   c.property_type AS canonical_property_type,
+                   c.price_ty AS canonical_price_ty, c.area_m2 AS canonical_area_m2,
+                   c.frontage_m AS canonical_frontage_m, c.depth_m AS canonical_depth_m,
+                   c.tho_cu_m2 AS canonical_tho_cu_m2, c.contact_phone AS canonical_contact_phone,
+                   {road_name_select_c} AS canonical_road_name, c.description AS canonical_description,
+                   COALESCE(c.posted_at, c.crawled_at, c.updated_at) AS canonical_dt
+            FROM listings l
+            JOIN listings c ON c.id = l.duplicate_of_id
+            WHERE COALESCE(l.probably_sold,0)=0
+              AND COALESCE(l.is_blacklisted,0)=0
+              AND l.possibly_duplicate=1
+              AND l.source='facebook'
+              AND c.source='facebook'
+              AND NOT (
+                l.source = c.source
+                AND (
+                     (COALESCE(l.source_id,'') <> '' AND l.source_id = c.source_id)
+                  OR (COALESCE(l.url,'') <> '' AND l.url = c.url)
+                )
+              )
+            ORDER BY l.updated_at DESC
+            LIMIT 1000
+        """).fetchall()
+        for row in auto_split_rows:
+            item = dict(row)
+            if _admin_should_auto_split_duplicate_pair(item):
+                _admin_apply_auto_duplicate_split(conn, item["id"], item["duplicate_of_id"])
+
         rows = conn.execute(f"""
             SELECT l.id, l.title, l.url, l.source, l.source_id, l.ward, l.property_type, l.price_ty, l.area_m2,
                    l.frontage_m, l.depth_m, l.tho_cu_m2, l.contact_phone,
@@ -4215,7 +4250,13 @@ def admin_api_qc_duplicates():
         items = []
         for row in rows:
             item = dict(row)
-            if _admin_same_listing_identity(item) or _admin_should_auto_merge_duplicate_pair(item):
+            if _admin_same_listing_identity(item):
+                continue
+            if _admin_should_auto_merge_duplicate_pair(item):
+                _admin_apply_auto_duplicate_merge(conn, item["id"], item["duplicate_of_id"])
+                continue
+            if _admin_should_auto_split_duplicate_pair(item):
+                _admin_apply_auto_duplicate_split(conn, item["id"], item["duplicate_of_id"])
                 continue
             items.append(_admin_duplicate_qc_item(row))
         existing_pairs = {(item["id"], item["duplicate_of_id"]) for item in items}
@@ -4308,6 +4349,49 @@ def _admin_phone_tail(value) -> str:
     return digits[-9:] if len(digits) >= 9 else ""
 
 
+def _admin_distinctive_area(value) -> bool:
+    area = _safe_float(value)
+    if area is None or area <= 0:
+        return False
+    rounded = round(area)
+    if abs(area - rounded) > 0.05:
+        return True
+    if rounded <= 0:
+        return False
+    # Common template lot sizes should not be treated as unique identifiers.
+    if rounded % 50 == 0:
+        return False
+    if area <= 400 and rounded % 25 == 0:
+        return False
+    return True
+
+
+def _admin_road_conflict(item: dict) -> bool:
+    try:
+        from cleansing.dedup import _combined_text, _road_tokens
+    except Exception:
+        return False
+
+    listing = _admin_listing_from_duplicate_item(item)
+    canonical = _admin_listing_from_duplicate_item(item, canonical=True)
+    roads_a = _road_tokens(_combined_text(listing))
+    roads_b = _road_tokens(_combined_text(canonical))
+    if roads_a and roads_b:
+        return not bool(roads_a.intersection(roads_b))
+
+    road_name_a = (listing.get("road_name") or "").strip().casefold()
+    road_name_b = (canonical.get("road_name") or "").strip().casefold()
+    return bool(road_name_a and road_name_b and road_name_a != road_name_b)
+
+
+def _admin_should_auto_split_duplicate_pair(item: dict) -> bool:
+    if _admin_same_listing_identity(item):
+        return False
+    if item.get("source") != "facebook" or item.get("canonical_source") != "facebook":
+        return False
+    return _admin_road_conflict(item)
+
+
 def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
     if _admin_same_listing_identity(item):
         return False
@@ -4317,7 +4401,8 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
     ward = (item.get("ward") or "").strip()
     canonical_ward = (item.get("canonical_ward") or "").strip()
     both_wards_missing = not ward and not canonical_ward
-    if not both_wards_missing and (not ward or ward != canonical_ward):
+    one_ward_missing = bool(ward) != bool(canonical_ward)
+    if ward and canonical_ward and ward != canonical_ward:
         return False
     if (item.get("property_type") or "") != (item.get("canonical_property_type") or ""):
         return False
@@ -4326,7 +4411,10 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
     area_b = _safe_float(item.get("canonical_area_m2"))
     both_areas_missing = (area_a is None or area_a <= 0) and (area_b is None or area_b <= 0)
     area_match = _admin_near_value(area_a, area_b, abs_tol=1.0, rel_tol=0.005)
+    distinctive_area_match = area_match and (_admin_distinctive_area(area_a) or _admin_distinctive_area(area_b))
     if not area_match and not both_areas_missing:
+        return False
+    if one_ward_missing and not distinctive_area_match:
         return False
 
     tc_a = _safe_float(item.get("tho_cu_m2"))
@@ -4349,6 +4437,7 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
     road_name_b = (canonical.get("road_name") or "").strip().casefold()
     shared_road = bool(roads_a and roads_b and roads_a.intersection(roads_b))
     same_road_name = bool(road_name_a and road_name_b and road_name_a == road_name_b)
+    road_conflict = bool((roads_a and roads_b and not shared_road) or (road_name_a and road_name_b and not same_road_name))
 
     frontage_match = _admin_near_value(item.get("frontage_m"), item.get("canonical_frontage_m"), abs_tol=0.1, rel_tol=0.005)
     depth_match = _admin_near_value(item.get("depth_m"), item.get("canonical_depth_m"), abs_tol=0.3, rel_tol=0.005)
@@ -4358,16 +4447,27 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
     phone_b = _admin_phone_tail(item.get("canonical_contact_phone"))
     same_phone = bool(phone_a and phone_a == phone_b)
 
+    if road_conflict:
+        return False
+
     if both_areas_missing:
         if not same_phone:
             return False
-        if roads_a and roads_b and not shared_road and not same_road_name:
-            return False
         return text_sim >= 0.86
 
+    if distinctive_area_match and text_sim >= 0.86:
+        return True
+
+    if distinctive_area_match and text_sim >= 0.82:
+        return bool(
+            same_phone
+            or dims_match
+            or shared_road
+            or same_road_name
+            or (ward and canonical_ward and ward == canonical_ward)
+        )
+
     if both_wards_missing:
-        if roads_a and roads_b and not shared_road and not same_road_name:
-            return False
         return bool(dims_match and (text_sim >= 0.88 or same_phone))
 
     if not shared_road and not same_road_name:
@@ -4380,6 +4480,26 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
 
 def _admin_apply_auto_duplicate_merge(conn, listing_id: int, target_id: int) -> None:
     note = "admin_qc_auto_merge_near_identical"
+    existing = conn.execute(
+        """
+        SELECT 1
+        FROM dedup_overrides
+        WHERE action='merge'
+          AND listing_id=?
+          AND target_listing_id=?
+          AND active=1
+          AND COALESCE(note,'')=?
+        LIMIT 1
+        """,
+        (listing_id, target_id, note),
+    ).fetchone()
+    if existing:
+        conn.execute(
+            "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
+            (target_id, listing_id),
+        )
+        return
+
     before = conn.execute(
         "SELECT id, possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
         (listing_id,),
@@ -4399,6 +4519,45 @@ def _admin_apply_auto_duplicate_merge(conn, listing_id: int, target_id: int) -> 
         listing_id,
         before=dict(before) if before else None,
         after={"id": listing_id, "possibly_duplicate": 1, "duplicate_of_id": target_id},
+        reason=note,
+    )
+
+
+def _admin_apply_auto_duplicate_split(conn, listing_id: int, target_id: int) -> None:
+    note = "admin_qc_auto_split_road_conflict"
+    existing = conn.execute(
+        """
+        SELECT 1
+        FROM dedup_overrides
+        WHERE action='split'
+          AND listing_id=?
+          AND target_listing_id=?
+          AND active=1
+          AND COALESCE(note,'')=?
+        LIMIT 1
+        """,
+        (listing_id, target_id, note),
+    ).fetchone()
+    if existing:
+        conn.execute("UPDATE listings SET possibly_duplicate=0, duplicate_of_id=NULL WHERE id=?", (listing_id,))
+        return
+
+    before = conn.execute(
+        "SELECT id, possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+        (listing_id,),
+    ).fetchone()
+    conn.execute("""
+        INSERT INTO dedup_overrides (action, listing_id, target_listing_id, note, active, updated_at)
+        VALUES ('split', ?, ?, ?, 1, datetime('now'))
+    """, (listing_id, target_id, note))
+    conn.execute("UPDATE listings SET possibly_duplicate=0, duplicate_of_id=NULL WHERE id=?", (listing_id,))
+    _write_admin_audit(
+        conn,
+        "dedup_auto_split",
+        "listing",
+        listing_id,
+        before=dict(before) if before else None,
+        after={"id": listing_id, "possibly_duplicate": 0, "duplicate_of_id": None},
         reason=note,
     )
 
