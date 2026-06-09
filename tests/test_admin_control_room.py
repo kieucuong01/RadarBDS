@@ -143,6 +143,79 @@ class AdminControlRoomGateTest(unittest.TestCase):
             )
         return old.lastrowid, new.lastrowid
 
+    def _insert_near_identical_dx132_pair(self):
+        from db.connection import get_conn
+
+        token = uuid.uuid4().hex
+        with get_conn() as conn:
+            raw_old = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", f"fb-near-old-{token}", f"https://example.test/raw-near-old-{token}", "{}"),
+            )
+            old = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                    road_type, road_tier, tho_cu_m2, possibly_duplicate, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+                """,
+                (
+                    raw_old.lastrowid,
+                    "facebook",
+                    f"fb-near-old-{token}",
+                    f"https://example.test/near-old-{token}",
+                    "Ban dat Tan An DX132",
+                    "Ban dat Tan An duong DX132, dien tich 1083m2, ngang 18m dai 60.2m, tho cu 200m2.",
+                    "Thu Dau Mot",
+                    "Tan An",
+                    "dat_nen",
+                    5.95,
+                    5.49,
+                    1083.0,
+                    18.0,
+                    60.2,
+                    "duong_nhua",
+                    2,
+                    200.0,
+                    "2026-04-16",
+                ),
+            )
+            raw_new = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", f"fb-near-new-{token}", f"https://example.test/raw-near-new-{token}", "{}"),
+            )
+            new = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                    road_type, road_tier, tho_cu_m2, possibly_duplicate, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+                """,
+                (
+                    raw_new.lastrowid,
+                    "facebook",
+                    f"fb-near-new-{token}",
+                    f"https://example.test/near-new-{token}",
+                    "Ban lai dat Tan An DX132",
+                    "Ban lai lo dat Tan An duong DX132, dien tich 1083.4m2, ngang 18m dai 60.2m, tho cu 200m2.",
+                    "Thu Dau Mot",
+                    "Tan An",
+                    "dat_nen",
+                    5.9,
+                    5.45,
+                    1083.4,
+                    18.0,
+                    60.2,
+                    "duong_nhua",
+                    2,
+                    200.0,
+                    "2026-05-28",
+                ),
+            )
+        return old.lastrowid, new.lastrowid
+
     def test_guest_control_room_renders_login_modal_gate(self):
         response = self.client.get("/admin")
 
@@ -477,6 +550,39 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertFalse(
             any(item.get("source_id") == same_source_id and item.get("canonical_source_id") == same_source_id for item in items)
         )
+
+    def test_data_quality_duplicate_queue_auto_merges_near_identical_unmerged_pairs(self):
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        old_id, new_id = self._insert_near_identical_dx132_pair()
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertNotIn((old_id, new_id), pairs)
+        with get_conn() as conn:
+            merged = conn.execute(
+                "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+                (old_id,),
+            ).fetchone()
+            override = conn.execute(
+                """
+                SELECT action, note
+                FROM dedup_overrides
+                WHERE listing_id=? AND target_listing_id=? AND active=1
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (old_id, new_id),
+            ).fetchone()
+
+        self.assertEqual(merged["possibly_duplicate"], 1)
+        self.assertEqual(merged["duplicate_of_id"], new_id)
+        self.assertIsNotNone(override)
+        self.assertEqual(override["action"], "merge")
+        self.assertEqual(override["note"], "admin_qc_auto_merge_near_identical")
 
     def test_data_quality_duplicate_queue_surfaces_unmerged_suspected_same_lot_pairs(self):
         self._login_as_admin()

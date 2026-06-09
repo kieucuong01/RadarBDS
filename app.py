@@ -4177,13 +4177,15 @@ def admin_api_qc_duplicates():
         road_name_select_c = "c.road_name" if _has_listing_column(conn, "road_name") else "NULL"
         rows = conn.execute(f"""
             SELECT l.id, l.title, l.url, l.source, l.source_id, l.ward, l.property_type, l.price_ty, l.area_m2,
-                   l.frontage_m, l.depth_m, l.description, COALESCE(l.posted_at, l.crawled_at, l.updated_at) AS dt,
+                   l.frontage_m, l.depth_m, l.tho_cu_m2, l.contact_phone,
+                   l.description, COALESCE(l.posted_at, l.crawled_at, l.updated_at) AS dt,
                    l.duplicate_of_id, c.title AS canonical_title, c.url AS canonical_url,
                    {road_name_select_l} AS road_name,
                    c.source AS canonical_source, c.source_id AS canonical_source_id, c.ward AS canonical_ward,
                    c.property_type AS canonical_property_type,
                    c.price_ty AS canonical_price_ty, c.area_m2 AS canonical_area_m2,
                    c.frontage_m AS canonical_frontage_m, c.depth_m AS canonical_depth_m,
+                   c.tho_cu_m2 AS canonical_tho_cu_m2, c.contact_phone AS canonical_contact_phone,
                    {road_name_select_c} AS canonical_road_name, c.description AS canonical_description,
                    COALESCE(c.posted_at, c.crawled_at, c.updated_at) AS canonical_dt,
                    li.local_path AS img_local, li.img_url AS img_url,
@@ -4210,11 +4212,12 @@ def admin_api_qc_duplicates():
             ORDER BY l.updated_at DESC
             LIMIT 500
         """).fetchall()
-        items = [
-            _admin_duplicate_qc_item(r)
-            for r in rows
-            if not _admin_same_listing_identity(dict(r))
-        ]
+        items = []
+        for row in rows:
+            item = dict(row)
+            if _admin_same_listing_identity(item) or _admin_should_auto_merge_duplicate_pair(item):
+                continue
+            items.append(_admin_duplicate_qc_item(row))
         existing_pairs = {(item["id"], item["duplicate_of_id"]) for item in items}
         if len(items) < 500:
             items.extend(_admin_suspected_duplicate_items(conn, existing_pairs, 500 - len(items)))
@@ -4286,9 +4289,99 @@ def _admin_listing_from_duplicate_item(item: dict, *, canonical: bool = False) -
         "contact_phone": item.get(f"{prefix}contact_phone"),
         "price_ty": item.get(f"{prefix}price_ty"),
         "price_per_m2": item.get(f"{prefix}price_per_m2"),
+        "tho_cu_m2": item.get(f"{prefix}tho_cu_m2"),
         "posted_at": item.get(f"{prefix}dt"),
         "crawled_at": item.get(f"{prefix}dt"),
     }
+
+
+def _admin_near_value(a, b, *, abs_tol: float, rel_tol: float) -> bool:
+    a_num = _safe_float(a)
+    b_num = _safe_float(b)
+    if a_num is None or b_num is None or a_num <= 0 or b_num <= 0:
+        return False
+    return abs(a_num - b_num) <= max(abs_tol, min(a_num, b_num) * rel_tol)
+
+
+def _admin_phone_tail(value) -> str:
+    digits = re.sub(r"\D", "", value or "")
+    return digits[-9:] if len(digits) >= 9 else ""
+
+
+def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
+    if _admin_same_listing_identity(item):
+        return False
+    if item.get("source") != "facebook" or item.get("canonical_source") != "facebook":
+        return False
+
+    ward = (item.get("ward") or "").strip()
+    canonical_ward = (item.get("canonical_ward") or "").strip()
+    if not ward or ward != canonical_ward:
+        return False
+    if (item.get("property_type") or "") != (item.get("canonical_property_type") or ""):
+        return False
+    if not _admin_near_value(item.get("area_m2"), item.get("canonical_area_m2"), abs_tol=1.0, rel_tol=0.005):
+        return False
+
+    tc_a = _safe_float(item.get("tho_cu_m2"))
+    tc_b = _safe_float(item.get("canonical_tho_cu_m2"))
+    if (tc_a is None) != (tc_b is None):
+        return False
+    if tc_a is not None and not _admin_near_value(tc_a, tc_b, abs_tol=1.0, rel_tol=0.01):
+        return False
+
+    try:
+        from cleansing.dedup import _combined_text, _road_tokens, _text_similarity
+    except Exception:
+        return False
+
+    listing = _admin_listing_from_duplicate_item(item)
+    canonical = _admin_listing_from_duplicate_item(item, canonical=True)
+    roads_a = _road_tokens(_combined_text(listing))
+    roads_b = _road_tokens(_combined_text(canonical))
+    road_name_a = (listing.get("road_name") or "").strip().casefold()
+    road_name_b = (canonical.get("road_name") or "").strip().casefold()
+    shared_road = bool(roads_a and roads_b and roads_a.intersection(roads_b))
+    same_road_name = bool(road_name_a and road_name_b and road_name_a == road_name_b)
+    if not shared_road and not same_road_name:
+        return False
+
+    frontage_match = _admin_near_value(item.get("frontage_m"), item.get("canonical_frontage_m"), abs_tol=0.1, rel_tol=0.005)
+    depth_match = _admin_near_value(item.get("depth_m"), item.get("canonical_depth_m"), abs_tol=0.3, rel_tol=0.005)
+    dims_match = frontage_match and depth_match
+    text_sim = _text_similarity(_combined_text(listing), _combined_text(canonical))
+    phone_a = _admin_phone_tail(item.get("contact_phone"))
+    phone_b = _admin_phone_tail(item.get("canonical_contact_phone"))
+    same_phone = bool(phone_a and phone_a == phone_b)
+
+    if dims_match and (text_sim >= 0.55 or same_phone):
+        return True
+    return bool(text_sim >= 0.92 and (dims_match or same_phone))
+
+
+def _admin_apply_auto_duplicate_merge(conn, listing_id: int, target_id: int) -> None:
+    note = "admin_qc_auto_merge_near_identical"
+    before = conn.execute(
+        "SELECT id, possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+        (listing_id,),
+    ).fetchone()
+    conn.execute("""
+        INSERT INTO dedup_overrides (action, listing_id, target_listing_id, note, active, updated_at)
+        VALUES ('merge', ?, ?, ?, 1, datetime('now'))
+    """, (listing_id, target_id, note))
+    conn.execute(
+        "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
+        (target_id, listing_id),
+    )
+    _write_admin_audit(
+        conn,
+        "dedup_auto_merge",
+        "listing",
+        listing_id,
+        before=dict(before) if before else None,
+        after={"id": listing_id, "possibly_duplicate": 1, "duplicate_of_id": target_id},
+        reason=note,
+    )
 
 
 def _admin_is_suspected_duplicate_pair(item: dict) -> bool:
@@ -4323,7 +4416,7 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
     candidate_rows = conn.execute(f"""
         SELECT id, source, source_id, url, title, description, area, ward, property_type,
                price_ty, price_per_m2, area_m2, frontage_m, depth_m,
-               {road_name_select_l} AS road_name, contact_phone,
+               tho_cu_m2, {road_name_select_l} AS road_name, contact_phone,
                COALESCE(posted_at, crawled_at, updated_at) AS dt
         FROM listings l
         WHERE COALESCE(probably_sold,0)=0
@@ -4431,6 +4524,7 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
                     "area_m2": older.get("area_m2"),
                     "frontage_m": older.get("frontage_m"),
                     "depth_m": older.get("depth_m"),
+                    "tho_cu_m2": older.get("tho_cu_m2"),
                     "road_name": older.get("road_name"),
                     "contact_phone": older.get("contact_phone"),
                     "price_ty": older.get("price_ty"),
@@ -4447,6 +4541,7 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
                     "canonical_area_m2": newer.get("area_m2"),
                     "canonical_frontage_m": newer.get("frontage_m"),
                     "canonical_depth_m": newer.get("depth_m"),
+                    "canonical_tho_cu_m2": newer.get("tho_cu_m2"),
                     "canonical_road_name": newer.get("road_name"),
                     "canonical_contact_phone": newer.get("contact_phone"),
                     "canonical_price_ty": newer.get("price_ty"),
@@ -4456,6 +4551,9 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
                 if not _admin_is_suspected_duplicate_pair(item_probe):
                     continue
                 seen.add(pair)
+                if _admin_should_auto_merge_duplicate_pair(item_probe):
+                    _admin_apply_auto_duplicate_merge(conn, older["id"], newer["id"])
+                    continue
                 pair_ids.append(pair)
                 if len(pair_ids) >= limit:
                     break
@@ -4469,14 +4567,15 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
         row = conn.execute(f"""
         SELECT l.id, l.title, l.url, l.source, l.source_id, l.ward, l.property_type,
                l.price_ty, l.price_per_m2, l.area_m2, l.frontage_m, l.depth_m,
-               {road_name_select_l} AS road_name, l.contact_phone,
+               l.tho_cu_m2, {road_name_select_l} AS road_name, l.contact_phone,
                l.description, COALESCE(l.posted_at, l.crawled_at, l.updated_at) AS dt,
                c.id AS duplicate_of_id, c.title AS canonical_title, c.url AS canonical_url,
                c.source AS canonical_source, c.source_id AS canonical_source_id,
                c.ward AS canonical_ward, c.property_type AS canonical_property_type,
                c.price_ty AS canonical_price_ty, c.price_per_m2 AS canonical_price_per_m2,
                c.area_m2 AS canonical_area_m2, c.frontage_m AS canonical_frontage_m,
-               c.depth_m AS canonical_depth_m, {road_name_select_c} AS canonical_road_name,
+               c.depth_m AS canonical_depth_m, c.tho_cu_m2 AS canonical_tho_cu_m2,
+               {road_name_select_c} AS canonical_road_name,
                c.contact_phone AS canonical_contact_phone,
                c.description AS canonical_description,
                COALESCE(c.posted_at, c.crawled_at, c.updated_at) AS canonical_dt,
