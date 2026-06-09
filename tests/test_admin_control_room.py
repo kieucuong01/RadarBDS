@@ -755,7 +755,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
             any(item.get("source_id") == same_source_id and item.get("canonical_source_id") == same_source_id for item in items)
         )
 
-    def test_data_quality_duplicate_queue_auto_merges_near_identical_unmerged_pairs(self):
+    def test_data_quality_duplicate_queue_hides_near_identical_unmerged_pairs_without_writing(self):
         from db.connection import get_conn
 
         self._login_as_admin()
@@ -773,20 +773,16 @@ class AdminControlRoomGateTest(unittest.TestCase):
             ).fetchone()
             override = conn.execute(
                 """
-                SELECT action, note
+                SELECT COUNT(*) AS count
                 FROM dedup_overrides
                 WHERE listing_id=? AND target_listing_id=? AND active=1
-                ORDER BY id DESC
-                LIMIT 1
                 """,
                 (old_id, new_id),
-            ).fetchone()
+            ).fetchone()["count"]
 
-        self.assertEqual(merged["possibly_duplicate"], 1)
-        self.assertEqual(merged["duplicate_of_id"], new_id)
-        self.assertIsNotNone(override)
-        self.assertEqual(override["action"], "merge")
-        self.assertEqual(override["note"], "admin_qc_auto_merge_near_identical")
+        self.assertEqual(merged["possibly_duplicate"], 0)
+        self.assertIsNone(merged["duplicate_of_id"])
+        self.assertEqual(override, 0)
 
     def test_data_quality_duplicate_queue_auto_merges_near_identical_pairs_when_both_wards_missing(self):
         from db.connection import get_conn
@@ -815,7 +811,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
         self.assertNotIn((new_id, old_id), pairs)
 
-    def test_data_quality_duplicate_queue_auto_splits_same_phone_text_reposts_when_roads_conflict(self):
+    def test_data_quality_duplicate_queue_hides_same_phone_text_reposts_when_roads_conflict_without_writing(self):
         self._login_as_admin()
         old_id, new_id = self._insert_same_phone_text_duplicate_pair(road_old="DX94", road_new="DX127")
 
@@ -833,8 +829,8 @@ class AdminControlRoomGateTest(unittest.TestCase):
                 (new_id,),
             ).fetchone()
 
-        self.assertEqual(row["possibly_duplicate"], 0)
-        self.assertIsNone(row["duplicate_of_id"])
+        self.assertEqual(row["possibly_duplicate"], 1)
+        self.assertEqual(row["duplicate_of_id"], old_id)
 
     def test_data_quality_duplicate_queue_hides_distinctive_area_near_text_reposts(self):
         self._login_as_admin()
@@ -846,7 +842,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
         self.assertNotIn((new_id, old_id), pairs)
 
-    def test_data_quality_duplicate_queue_auto_merges_distinctive_area_near_text_with_missing_ward(self):
+    def test_data_quality_duplicate_queue_hides_distinctive_area_near_text_with_missing_ward_without_writing(self):
         self._login_as_admin()
         old_id, new_id = self._insert_distinctive_area_text_pair(area=747.4, ward_new="")
 
@@ -859,21 +855,16 @@ class AdminControlRoomGateTest(unittest.TestCase):
         from db.connection import get_conn
 
         with get_conn() as conn:
-            override = conn.execute(
+            override_count = conn.execute(
                 """
-                SELECT action, target_listing_id, note
+                SELECT COUNT(*) AS count
                 FROM dedup_overrides
                 WHERE listing_id=?
-                ORDER BY id DESC
-                LIMIT 1
                 """,
                 (new_id,),
-            ).fetchone()
+            ).fetchone()["count"]
 
-        self.assertIsNotNone(override)
-        self.assertEqual(override["action"], "merge")
-        self.assertEqual(override["target_listing_id"], old_id)
-        self.assertEqual(override["note"], "admin_qc_auto_merge_near_identical")
+        self.assertEqual(override_count, 0)
 
         second_response = self.client.get("/admin/api/qc/duplicates")
         self.assertEqual(second_response.status_code, 200)
@@ -889,9 +880,9 @@ class AdminControlRoomGateTest(unittest.TestCase):
                 """,
                 (new_id, old_id),
             ).fetchone()["count"]
-        self.assertEqual(override_count, 1)
+        self.assertEqual(override_count, 0)
 
-    def test_data_quality_duplicate_queue_auto_splits_distinctive_area_reposts_when_roads_conflict(self):
+    def test_data_quality_duplicate_queue_hides_distinctive_area_reposts_when_roads_conflict_without_writing(self):
         self._login_as_admin()
         old_id, new_id = self._insert_distinctive_area_text_pair(road_old="DX94", road_new="DX127", area=747.4)
 
@@ -900,7 +891,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
         self.assertNotIn((new_id, old_id), pairs)
-        # Different concrete roads are considered different lots and should be auto-split, not sent to review.
+        # GET only reads/filters the review queue. It must not mutate production rows while loading the tab.
         from db.connection import get_conn
 
         with get_conn() as conn:
@@ -909,8 +900,8 @@ class AdminControlRoomGateTest(unittest.TestCase):
                 (new_id,),
             ).fetchone()
 
-        self.assertEqual(row["possibly_duplicate"], 0)
-        self.assertIsNone(row["duplicate_of_id"])
+        self.assertEqual(row["possibly_duplicate"], 1)
+        self.assertEqual(row["duplicate_of_id"], old_id)
 
     def test_data_quality_duplicate_queue_surfaces_unmerged_suspected_same_lot_pairs(self):
         self._login_as_admin()
@@ -971,7 +962,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".dup-source-links", css)
         self.assertIn(".dup-fact.price", css)
         self.assertIn(".dup-decision-copy", css)
-        self.assertIn("admin-v32-duplicate-review-workbench", template)
+        self.assertIn("admin-v33-duplicate-readonly", template)
 
     def test_ai_training_requires_explicit_valuation_choice_in_js(self):
         js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(

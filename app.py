@@ -4175,41 +4175,6 @@ def admin_api_qc_duplicates():
     with db_mod.get_conn() as conn:
         road_name_select_l = "l.road_name" if _has_listing_column(conn, "road_name") else "NULL"
         road_name_select_c = "c.road_name" if _has_listing_column(conn, "road_name") else "NULL"
-        auto_split_rows = conn.execute(f"""
-            SELECT l.id, l.title, l.url, l.source, l.source_id, l.ward, l.property_type, l.price_ty, l.area_m2,
-                   l.frontage_m, l.depth_m, l.tho_cu_m2, l.contact_phone,
-                   l.description, COALESCE(l.posted_at, l.crawled_at, l.updated_at) AS dt,
-                   l.duplicate_of_id, c.title AS canonical_title, c.url AS canonical_url,
-                   {road_name_select_l} AS road_name,
-                   c.source AS canonical_source, c.source_id AS canonical_source_id, c.ward AS canonical_ward,
-                   c.property_type AS canonical_property_type,
-                   c.price_ty AS canonical_price_ty, c.area_m2 AS canonical_area_m2,
-                   c.frontage_m AS canonical_frontage_m, c.depth_m AS canonical_depth_m,
-                   c.tho_cu_m2 AS canonical_tho_cu_m2, c.contact_phone AS canonical_contact_phone,
-                   {road_name_select_c} AS canonical_road_name, c.description AS canonical_description,
-                   COALESCE(c.posted_at, c.crawled_at, c.updated_at) AS canonical_dt
-            FROM listings l
-            JOIN listings c ON c.id = l.duplicate_of_id
-            WHERE COALESCE(l.probably_sold,0)=0
-              AND COALESCE(l.is_blacklisted,0)=0
-              AND l.possibly_duplicate=1
-              AND l.source='facebook'
-              AND c.source='facebook'
-              AND NOT (
-                l.source = c.source
-                AND (
-                     (COALESCE(l.source_id,'') <> '' AND l.source_id = c.source_id)
-                  OR (COALESCE(l.url,'') <> '' AND l.url = c.url)
-                )
-              )
-            ORDER BY l.updated_at DESC
-            LIMIT 1000
-        """).fetchall()
-        for row in auto_split_rows:
-            item = dict(row)
-            if _admin_should_auto_split_duplicate_pair(item):
-                _admin_apply_auto_duplicate_split(conn, item["id"], item["duplicate_of_id"])
-
         rows = conn.execute(f"""
             SELECT l.id, l.title, l.url, l.source, l.source_id, l.ward, l.property_type, l.price_ty, l.area_m2,
                    l.frontage_m, l.depth_m, l.tho_cu_m2, l.contact_phone,
@@ -4253,10 +4218,8 @@ def admin_api_qc_duplicates():
             if _admin_same_listing_identity(item):
                 continue
             if _admin_should_auto_merge_duplicate_pair(item):
-                _admin_apply_auto_duplicate_merge(conn, item["id"], item["duplicate_of_id"])
                 continue
             if _admin_should_auto_split_duplicate_pair(item):
-                _admin_apply_auto_duplicate_split(conn, item["id"], item["duplicate_of_id"])
                 continue
             items.append(_admin_duplicate_qc_item(row))
         existing_pairs = {(item["id"], item["duplicate_of_id"]) for item in items}
@@ -4730,7 +4693,6 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
                     continue
                 seen.add(pair)
                 if _admin_should_auto_merge_duplicate_pair(item_probe):
-                    _admin_apply_auto_duplicate_merge(conn, older["id"], newer["id"])
                     continue
                 pair_ids.append(pair)
                 if len(pair_ids) >= limit:

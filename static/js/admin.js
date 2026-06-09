@@ -1300,7 +1300,7 @@ function dupListingPanel(x, side) {
         ${dupSourceLinks(d)}
       </div>
       <div class="dup-ad-body">
-        <img class="ad-img" src="${esc(d.img || PLACEHOLDER)}" onerror="this.src=PLACEHOLDER" alt="">
+        <img class="ad-img" src="${esc(d.img || PLACEHOLDER)}" onerror="this.onerror=null;this.src='${PLACEHOLDER}'" loading="lazy" referrerpolicy="no-referrer" alt="">
         <div class="dup-ad-content">
           <a class="ad-title" href="${esc(d.detail)}" target="_blank" rel="noopener">${esc(d.title || 'Không có tiêu đề')}</a>
           <div class="dup-facts">
