@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v31-duplicate-review-ui">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v32-duplicate-review-workbench">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -356,7 +356,7 @@
       </div>
 
       <section id="quality-dups" class="quality-tab active">
-        <div class="notice"><strong>Ca khó AI:</strong> Nghi ngờ trùng lặp. Vùng màu vàng là nội dung cần soi kỹ trước khi quyết định.</div>
+        <div class="notice"><strong>Tin nghi trùng:</strong> Mở link tin gốc, so hai tin cạnh nhau rồi chọn gộp vào tin gốc hoặc đánh dấu khác lô.</div>
         <div id="duplicateCards" class="dup-list"></div>
       </section>
 
@@ -703,7 +703,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v31-duplicate-review-ui"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v32-duplicate-review-workbench"></script>
   {% endif %}
 </body>
 </html>

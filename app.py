@@ -4173,15 +4173,18 @@ def admin_api_qc_duplicates():
               )
     """
     with db_mod.get_conn() as conn:
+        road_name_select_l = "l.road_name" if _has_listing_column(conn, "road_name") else "NULL"
+        road_name_select_c = "c.road_name" if _has_listing_column(conn, "road_name") else "NULL"
         rows = conn.execute(f"""
-            SELECT l.id, l.title, l.url, l.source, l.ward, l.property_type, l.price_ty, l.area_m2,
+            SELECT l.id, l.title, l.url, l.source, l.source_id, l.ward, l.property_type, l.price_ty, l.area_m2,
                    l.frontage_m, l.depth_m, l.description, COALESCE(l.posted_at, l.crawled_at, l.updated_at) AS dt,
                    l.duplicate_of_id, c.title AS canonical_title, c.url AS canonical_url,
-                   c.source AS canonical_source, c.ward AS canonical_ward,
+                   {road_name_select_l} AS road_name,
+                   c.source AS canonical_source, c.source_id AS canonical_source_id, c.ward AS canonical_ward,
                    c.property_type AS canonical_property_type,
                    c.price_ty AS canonical_price_ty, c.area_m2 AS canonical_area_m2,
                    c.frontage_m AS canonical_frontage_m, c.depth_m AS canonical_depth_m,
-                   c.description AS canonical_description,
+                   {road_name_select_c} AS canonical_road_name, c.description AS canonical_description,
                    COALESCE(c.posted_at, c.crawled_at, c.updated_at) AS canonical_dt,
                    li.local_path AS img_local, li.img_url AS img_url,
                    ci.local_path AS canonical_img_local, ci.img_url AS canonical_img_url

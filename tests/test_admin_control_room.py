@@ -405,16 +405,26 @@ class AdminControlRoomGateTest(unittest.TestCase):
         root = Path(__file__).resolve().parent.parent
         js = (root / "static/js/admin.js").read_text(encoding="utf-8")
         css = (root / "static/css/admin.css").read_text(encoding="utf-8")
+        template = (root / "templates/admin_control_room.html").read_text(encoding="utf-8")
 
-        self.assertIn("Cặp nghi ngờ trùng", js)
-        self.assertIn("Tin đang kiểm tra", js)
-        self.assertIn("Tin gốc / đề xuất gộp", js)
-        self.assertIn("So nhanh", js)
-        self.assertIn("Gộp: ẩn tin bên trái", js)
-        self.assertIn("Khác lô: giữ cả hai tin", js)
+        self.assertEqual(js.count("function duplicateCard"), 1)
+        self.assertIn("Tin nghi trùng cần admin review", js)
+        self.assertIn("Tin nghi trùng", js)
+        self.assertIn("Tin gốc để so sánh", js)
+        self.assertIn("Mở tin gốc", js)
+        self.assertIn("So sánh nhanh", js)
+        self.assertIn("Tên đường", js)
+        self.assertIn("Gộp vào tin gốc", js)
+        self.assertIn("Giữ cả hai tin và không hỏi lại", js)
+        self.assertNotIn("Gộp: ẩn tin bên trái", js)
         self.assertIn("dup-summary-grid", js)
+        self.assertIn("dup-source-links", js)
+        self.assertIn("dup-facts", js)
         self.assertIn(".dup-summary-grid", css)
+        self.assertIn(".dup-source-links", css)
+        self.assertIn(".dup-fact.price", css)
         self.assertIn(".dup-decision-copy", css)
+        self.assertIn("admin-v32-duplicate-review-workbench", template)
 
     def test_ai_training_requires_explicit_valuation_choice_in_js(self):
         js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(
