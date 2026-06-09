@@ -353,7 +353,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "filter-sheet-polish-20260608",
+        "filter-sheet-gapless-20260609",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -361,6 +361,46 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
     assert ".sidebar.filter-sheet.show" in leads_css
     assert "border-radius: 22px 22px 0 0" in leads_css
     assert "aria-modal=\"true\"" in html
+
+
+def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
+    html = _read("templates/index.html")
+    filters_css = _read("static/css/main/filters.css")
+    leads_css = _read("static/css/main/leads_chat.css")
+
+    for expected in [
+        "filter-sheet-gapless-20260609",
+        ".sidebar .filter-sheet-head",
+        "position: sticky",
+        "margin: -14px -14px 8px",
+        ".sidebar .filter-title",
+        "margin-inline: -14px",
+        "border-radius: 0",
+        "background: var(--surface-solid)",
+        ".sidebar .signal-filter .filter-title",
+    ]:
+        assert expected in html or expected in filters_css or expected in leads_css
+
+
+def test_mobile_filter_sheet_scroll_is_isolated_from_signal_tab():
+    html = _read("templates/index.html")
+    filters_css = _read("static/css/main/filters.css")
+    leads_css = _read("static/css/main/leads_chat.css")
+
+    for expected in [
+        "filter-sheet-scroll-lock-20260609",
+        ".sidebar.filter-sheet.show",
+        "-webkit-overflow-scrolling: touch",
+        "overscroll-behavior: contain",
+        "touch-action: pan-y",
+        "body.sidebar-open .content",
+        "body.sidebar-open #tab-signals",
+        "pointer-events: none",
+        "overflow: hidden",
+        ".mobile-overlay.show",
+        "touch-action: none",
+    ]:
+        assert expected in html or expected in filters_css or expected in leads_css
 
 
 def test_signal_cards_do_not_render_deal_summary_strip():

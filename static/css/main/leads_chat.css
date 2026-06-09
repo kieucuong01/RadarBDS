@@ -50,6 +50,8 @@
   .mobile-overlay.show {
     display: block;
     opacity: 1;
+    touch-action: none;
+    overscroll-behavior: none;
   }
 
   .sidebar {
@@ -75,6 +77,11 @@
 
   .sidebar.filter-sheet.show {
     transform: translateY(0);
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
   }
 
   .sidebar .logo {
@@ -218,6 +225,17 @@
 
   body.sidebar-open {
     overflow: hidden;
+  }
+
+  body.sidebar-open .content,
+  body.sidebar-open #tab-signals,
+  body.sidebar-open #tab-market,
+  body.sidebar-open #tab-all,
+  body.sidebar-open #tab-insights {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+    touch-action: none;
+    pointer-events: none;
   }
 
   .cards-grid {

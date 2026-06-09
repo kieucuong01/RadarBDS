@@ -74,6 +74,75 @@ class AdminControlRoomGateTest(unittest.TestCase):
         except TypeError:
             self.client.set_cookie("localhost", SESSION_COOKIE_NAME, self.admin_token)
 
+    def _insert_suspected_dx132_pair(self):
+        from db.connection import get_conn
+
+        token = uuid.uuid4().hex
+        with get_conn() as conn:
+            raw_old = conn.execute(
+                "INSERT INTO raw_listings (source, url, raw_json) VALUES (?, ?, ?)",
+                ("facebook", f"https://example.test/raw-dx132-old-{token}", "{}"),
+            )
+            old = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, road_type,
+                    road_tier, tho_cu_m2, possibly_duplicate, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+                """,
+                (
+                    raw_old.lastrowid,
+                    "facebook",
+                    f"fb-dx132-old-{token}",
+                    f"https://example.test/dx132-old-{token}",
+                    "Old DX132 garden lot",
+                    "Ban dat Tan An mat tien DX132, dien tich 1083m2, tho cu 200m2, duong nhua 5m.",
+                    "Thu Dau Mot",
+                    "Tan An",
+                    "dat_nen",
+                    5.95,
+                    5.49,
+                    1083.0,
+                    "duong_nhua",
+                    2,
+                    200.0,
+                    "2026-04-16",
+                ),
+            )
+            raw_new = conn.execute(
+                "INSERT INTO raw_listings (source, url, raw_json) VALUES (?, ?, ?)",
+                ("facebook", f"https://example.test/raw-dx132-new-{token}", "{}"),
+            )
+            new = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, road_type,
+                    road_tier, tho_cu_m2, possibly_duplicate, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+                """,
+                (
+                    raw_new.lastrowid,
+                    "facebook",
+                    f"fb-dx132-new-{token}",
+                    f"https://example.test/dx132-new-{token}",
+                    "New DX132 garden lot",
+                    "Dat dep Tan An duong DX132, DT 1083.7m2, TC 200m2, gia tot.",
+                    "Thu Dau Mot",
+                    "Tan An",
+                    "dat_vuon",
+                    5.5,
+                    5.08,
+                    1083.7,
+                    "duong_nhua",
+                    2,
+                    200.0,
+                    "2026-05-28",
+                ),
+            )
+        return old.lastrowid, new.lastrowid
+
     def test_guest_control_room_renders_login_modal_gate(self):
         response = self.client.get("/admin")
 
@@ -295,6 +364,57 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         ids = {item["id"] for item in response.get_json()["items"]}
         self.assertNotIn(duplicate.lastrowid, ids)
+
+    def test_data_quality_duplicate_queue_surfaces_unmerged_suspected_same_lot_pairs(self):
+        self._login_as_admin()
+        old_id, new_id = self._insert_suspected_dx132_pair()
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        items = response.get_json()["items"]
+        suspected = [
+            item for item in items
+            if item["id"] == old_id and item["duplicate_of_id"] == new_id
+        ]
+        self.assertTrue(suspected)
+        self.assertTrue(suspected[0]["suspected_duplicate"])
+        self.assertIn("Nghi ngờ cùng lô", suspected[0]["qc_reasons"])
+
+    def test_data_quality_duplicate_queue_hides_suspected_pair_after_admin_split_override(self):
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        old_id, new_id = self._insert_suspected_dx132_pair()
+        with get_conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO dedup_overrides (action, listing_id, target_listing_id, note, active, updated_at)
+                VALUES ('split', ?, ?, 'not_same_lot', 1, datetime('now'))
+                """,
+                (old_id, new_id),
+            )
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertNotIn((old_id, new_id), pairs)
+
+    def test_admin_duplicate_review_ui_explains_the_decision(self):
+        root = Path(__file__).resolve().parent.parent
+        js = (root / "static/js/admin.js").read_text(encoding="utf-8")
+        css = (root / "static/css/admin.css").read_text(encoding="utf-8")
+
+        self.assertIn("Cặp nghi ngờ trùng", js)
+        self.assertIn("Tin đang kiểm tra", js)
+        self.assertIn("Tin gốc / đề xuất gộp", js)
+        self.assertIn("So nhanh", js)
+        self.assertIn("Gộp: ẩn tin bên trái", js)
+        self.assertIn("Khác lô: giữ cả hai tin", js)
+        self.assertIn("dup-summary-grid", js)
+        self.assertIn(".dup-summary-grid", css)
+        self.assertIn(".dup-decision-copy", css)
 
     def test_ai_training_requires_explicit_valuation_choice_in_js(self):
         js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(

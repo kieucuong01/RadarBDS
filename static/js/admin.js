@@ -1262,6 +1262,124 @@ function duplicateCard(x) {
   `;
 }
 
+function adPanel(x, side) {
+  const isCanon = side === 'canonical';
+  const id = isCanon ? x.duplicate_of_id : x.id;
+  const source = isCanon ? x.canonical_source : x.source;
+  const price = isCanon ? x.canonical_price_ty : x.price_ty;
+  const areaVal = isCanon ? x.canonical_area_m2 : x.area_m2;
+  const desc = isCanon ? x.canonical_description_excerpt : x.description_excerpt;
+  const img = isCanon ? x.canonical_image : x.image;
+  const dt = isCanon ? x.canonical_dt : x.dt;
+  const detail = isCanon ? x.canonical_detail_url : x.detail_url;
+  const title = isCanon ? x.canonical_title : x.title;
+  const ward = isCanon ? x.canonical_ward : x.ward;
+  const prop = isCanon ? x.canonical_property_type : x.property_type;
+  const role = isCanon ? 'Tin gốc / đề xuất gộp' : 'Tin đang kiểm tra';
+  return `
+    <div class="ad-box dup-ad-panel ${isCanon ? 'canonical' : 'candidate'}">
+      <div class="dup-ad-role">
+        <span>${role}</span>
+        <a href="${esc(detail)}" target="_blank">AD-${id}</a>
+      </div>
+      <img class="ad-img" src="${esc(img || PLACEHOLDER)}" onerror="this.src=PLACEHOLDER" alt="">
+      <div>
+        <a class="ad-title" href="${esc(detail)}" target="_blank">${esc(title || 'Không có tiêu đề')}</a>
+        <div class="ad-meta">
+          <span>${money(price)}</span>
+          <span>${area(areaVal)}</span>
+          <span>${esc(ward || '-')}</span>
+          <span>${esc(PTYPES[prop] || prop || '-')}</span>
+          <span>${shortDate(dt)}</span>
+          <span>${esc(SOURCE_NAMES[source] || source || '-')}</span>
+        </div>
+        <div class="ad-desc">${esc(desc || '-')}</div>
+      </div>
+    </div>
+  `;
+}
+
+function dupMetricRows(x) {
+  const priceA = Number(x.price_ty || 0);
+  const priceB = Number(x.canonical_price_ty || 0);
+  const areaA = Number(x.area_m2 || 0);
+  const areaB = Number(x.canonical_area_m2 || 0);
+  const priceNote = (!priceA || !priceB)
+    ? 'Thiếu giá'
+    : Math.abs(priceA - priceB) / Math.max(priceA, priceB) < 0.01
+      ? 'Gần như bằng nhau'
+      : `${priceA > priceB ? 'Tin trái cao hơn' : 'Tin phải cao hơn'} ${(Math.abs(priceA - priceB) / Math.max(priceA, priceB) * 100).toFixed(1)}%`;
+  const areaNote = (!areaA || !areaB)
+    ? 'Thiếu diện tích'
+    : `Lệch ${Math.abs(areaA - areaB).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} m²`;
+  const rows = [
+    ['Giá rao', money(x.price_ty), money(x.canonical_price_ty), priceNote],
+    ['Diện tích', area(x.area_m2), area(x.canonical_area_m2), areaNote],
+    ['Loại hình', PTYPES[x.property_type] || x.property_type || '-', PTYPES[x.canonical_property_type] || x.canonical_property_type || '-', x.property_type === x.canonical_property_type ? 'Trùng loại' : 'Cần xem lại'],
+    ['Ngày đăng', shortDate(x.dt), shortDate(x.canonical_dt), 'Tin phải là mốc đề xuất giữ']
+  ];
+  return rows.map(([label, left, right, note]) => `
+    <div class="dup-summary-row">
+      <strong>${esc(label)}</strong>
+      <span>${esc(left)}</span>
+      <span>${esc(right)}</span>
+      <em>${esc(note)}</em>
+    </div>
+  `).join('');
+}
+
+function duplicateCard(x) {
+  const confidence = Math.min(96, Math.max(72, Math.round(100 - Math.abs((x.price_ty || 0) - (x.canonical_price_ty || 0)) * 5)));
+  const title = x.suspected_duplicate ? 'Cặp nghi ngờ trùng' : 'Cặp trùng cần rà lại';
+  const subtitle = x.suspected_duplicate
+    ? 'Hệ thống chưa tự gộp vì còn thiếu dữ liệu chắc chắn. Admin quyết định để tránh merge sai.'
+    : 'Cặp này đã được đánh dấu trùng nhưng có điểm chưa chắc, cần admin xác nhận.';
+  const reasons = (x.qc_reasons || []).length
+    ? `<div class="dup-review-reasons">${x.qc_reasons.map(r => `<span>${esc(r)}</span>`).join('')}</div>`
+    : '';
+  return `
+    <article class="dup-card">
+      <div class="dup-head">
+        <div>
+          <div class="dup-kicker">${title} <span class="deal-pill">DUP-${x.id}</span></div>
+          <p>${subtitle}</p>
+        </div>
+        <div class="dup-score">
+          <span>Độ giống</span>
+          <strong>${confidence}%</strong>
+        </div>
+      </div>
+      ${reasons}
+      <div class="dup-grid">
+        ${adPanel(x, 'listing')}
+        ${adPanel(x, 'canonical')}
+      </div>
+      <div class="dup-summary">
+        <div class="dup-summary-title">So nhanh</div>
+        <div class="dup-summary-grid">
+          <div class="dup-summary-row header">
+            <strong>Tiêu chí</strong>
+            <span>Tin đang kiểm tra</span>
+            <span>Tin gốc / đề xuất gộp</span>
+            <em>Kết luận</em>
+          </div>
+          ${dupMetricRows(x)}
+        </div>
+      </div>
+      <div class="dup-actions">
+        <button class="primary-btn merge-btn" onclick="mergeDup(${x.id}, ${x.duplicate_of_id})">
+          <strong>Gộp thành 1 deal</strong>
+          <span class="dup-decision-copy">Gộp: ẩn tin bên trái, giữ tin gốc bên phải</span>
+        </button>
+        <button class="secondary-btn split-btn" onclick="splitDup(${x.id}, ${x.duplicate_of_id})">
+          <strong>Khác lô</strong>
+          <span class="dup-decision-copy">Khác lô: giữ cả hai tin và không hỏi lại cặp này</span>
+        </button>
+      </div>
+    </article>
+  `;
+}
+
 async function mergeDup(id, target) {
   await fetchJSON('/admin/api/qc/duplicates/merge', {
     method: 'POST',

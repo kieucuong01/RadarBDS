@@ -4200,18 +4200,266 @@ def admin_api_qc_duplicates():
             ORDER BY l.updated_at DESC
             LIMIT 500
         """).fetchall()
-    items = []
-    for r in rows:
-        item = dict(r)
-        item["detail_url"] = f"/listing/{item['id']}"
-        item["canonical_detail_url"] = f"/listing/{item['duplicate_of_id']}"
-        item["image"] = resolve_image_url(item.pop("img_local"), item.pop("img_url"))
-        item["canonical_image"] = resolve_image_url(item.pop("canonical_img_local"), item.pop("canonical_img_url"))
-        item["description_excerpt"] = (item.get("description") or "")[:260]
-        item["canonical_description_excerpt"] = (item.get("canonical_description") or "")[:260]
-        item["qc_reasons"] = _duplicate_qc_reasons(item)
-        items.append(item)
+        items = [_admin_duplicate_qc_item(r) for r in rows]
+        existing_pairs = {(item["id"], item["duplicate_of_id"]) for item in items}
+        if len(items) < 500:
+            items.extend(_admin_suspected_duplicate_items(conn, existing_pairs, 500 - len(items)))
     return jsonify({"items": items})
+
+
+def _admin_duplicate_qc_item(row, *, suspected: bool = False) -> dict:
+    item = dict(row)
+    item["detail_url"] = f"/listing/{item['id']}"
+    item["canonical_detail_url"] = f"/listing/{item['duplicate_of_id']}"
+    item["image"] = resolve_image_url(item.pop("img_local"), item.pop("img_url"))
+    item["canonical_image"] = resolve_image_url(item.pop("canonical_img_local"), item.pop("canonical_img_url"))
+    item["description_excerpt"] = (item.get("description") or "")[:260]
+    item["canonical_description_excerpt"] = (item.get("canonical_description") or "")[:260]
+    item["suspected_duplicate"] = bool(suspected)
+    reasons = _duplicate_qc_reasons(item)
+    item["qc_reasons"] = (["Nghi ngờ cùng lô"] + reasons) if suspected else reasons
+    for key in ("contact_phone", "canonical_contact_phone"):
+        item.pop(key, None)
+    return item
+
+
+def _has_listing_column(conn, column_name: str) -> bool:
+    try:
+        return bool(conn.execute(
+            """
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema='public'
+              AND table_name='listings'
+              AND column_name=?
+            """,
+            (column_name,),
+        ).fetchone())
+    except Exception:
+        return False
+
+
+def _admin_listing_from_duplicate_item(item: dict, *, canonical: bool = False) -> dict:
+    prefix = "canonical_" if canonical else ""
+    return {
+        "id": item.get("duplicate_of_id") if canonical else item.get("id"),
+        "source": item.get(f"{prefix}source"),
+        "source_id": item.get(f"{prefix}source_id"),
+        "title": item.get(f"{prefix}title"),
+        "description": item.get(f"{prefix}description"),
+        "ward": item.get(f"{prefix}ward"),
+        "property_type": item.get(f"{prefix}property_type"),
+        "area_m2": item.get(f"{prefix}area_m2"),
+        "frontage_m": item.get(f"{prefix}frontage_m"),
+        "depth_m": item.get(f"{prefix}depth_m"),
+        "road_name": item.get(f"{prefix}road_name"),
+        "contact_phone": item.get(f"{prefix}contact_phone"),
+        "price_ty": item.get(f"{prefix}price_ty"),
+        "price_per_m2": item.get(f"{prefix}price_per_m2"),
+        "posted_at": item.get(f"{prefix}dt"),
+        "crawled_at": item.get(f"{prefix}dt"),
+    }
+
+
+def _admin_is_suspected_duplicate_pair(item: dict) -> bool:
+    try:
+        from cleansing.dedup import _has_reliable_lot_signature
+    except Exception:
+        return False
+
+    listing = _admin_listing_from_duplicate_item(item)
+    canonical = _admin_listing_from_duplicate_item(item, canonical=True)
+    return _has_reliable_lot_signature(
+        listing,
+        canonical,
+        allow_facebook_same_price=True,
+    )
+
+
+def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]], limit: int) -> list[dict]:
+    if limit <= 0:
+        return []
+
+    try:
+        from cleansing.dedup import _combined_text, _road_tokens
+    except Exception:
+        return []
+
+    road_name_select_l = "l.road_name" if _has_listing_column(conn, "road_name") else "NULL"
+    road_name_select_c = "c.road_name" if _has_listing_column(conn, "road_name") else "NULL"
+    candidate_rows = conn.execute(f"""
+        SELECT id, source, source_id, title, description, area, ward, property_type,
+               price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+               {road_name_select_l} AS road_name, contact_phone,
+               COALESCE(posted_at, crawled_at, updated_at) AS dt
+        FROM listings l
+        WHERE COALESCE(probably_sold,0)=0
+          AND COALESCE(is_blacklisted,0)=0
+          AND COALESCE(possibly_duplicate,0)=0
+          AND duplicate_of_id IS NULL
+          AND source='facebook'
+          AND area_m2 IS NOT NULL
+          AND area_m2 > 0
+          AND property_type IN ('dat_nen','dat_vuon','nha_dat','nha_tro')
+        ORDER BY COALESCE(updated_at, crawled_at, posted_at, '') DESC
+        LIMIT 8000
+    """).fetchall()
+    split_rows = conn.execute("""
+        SELECT listing_id, target_listing_id
+        FROM dedup_overrides
+        WHERE active=1
+          AND action='split'
+          AND listing_id IS NOT NULL
+          AND target_listing_id IS NOT NULL
+    """).fetchall()
+    split_pairs = {
+        tuple(sorted((int(r["listing_id"]), int(r["target_listing_id"]))))
+        for r in split_rows
+    }
+
+    def compatible_type(a: str, b: str) -> bool:
+        return a == b or {a, b}.issubset({"dat_nen", "dat_vuon"})
+
+    from collections import defaultdict
+
+    phone_pat = re.compile(r"(?:0|\+84)\d[\d\s.()-]{7,14}\d")
+
+    def text_phone_tail(row: dict) -> str:
+        text = f"{row.get('contact_phone') or ''} {row.get('title') or ''} {row.get('description') or ''}"
+        for match in phone_pat.finditer(text):
+            digits = re.sub(r"\D", "", match.group(0))
+            if len(digits) >= 9:
+                return digits[-9:]
+        return ""
+
+    buckets = defaultdict(list)
+    for row in candidate_rows:
+        d = dict(row)
+        area = _safe_float(d.get("area_m2"))
+        if not area:
+            continue
+        ward = (d.get("ward") or "").strip()
+        prop = d.get("property_type") or ""
+        type_keys = ["dat_land"] if prop in {"dat_nen", "dat_vuon"} else [prop]
+        area_bucket = int(round(area / 10.0))
+        d["_road_tokens"] = _road_tokens(_combined_text(d))
+        d["_phone_tail"] = text_phone_tail(d)
+        for type_key in type_keys:
+            for token in d["_road_tokens"]:
+                buckets[("road", token, type_key, area_bucket)].append(d)
+            if d["_phone_tail"] and area >= 300:
+                buckets[("phone_area", d["_phone_tail"], type_key, area_bucket)].append(d)
+
+    pair_ids = []
+    seen = set(existing_pairs)
+    for bucket_rows in buckets.values():
+        if len(bucket_rows) < 2:
+            continue
+        for idx, first in enumerate(bucket_rows):
+            for second in bucket_rows[idx + 1:]:
+                if first["id"] == second["id"]:
+                    continue
+                if not compatible_type(first.get("property_type"), second.get("property_type")):
+                    continue
+                area_a = _safe_float(first.get("area_m2"))
+                area_b = _safe_float(second.get("area_m2"))
+                if not area_a or not area_b:
+                    continue
+                if abs(area_a - area_b) > max(3.0, min(area_a, area_b) * 0.01):
+                    continue
+                if first.get("ward") and second.get("ward") and first.get("ward") != second.get("ward"):
+                    continue
+                first_roads = first.get("_road_tokens") or set()
+                second_roads = second.get("_road_tokens") or set()
+                shared_road = bool(first_roads and second_roads and first_roads.intersection(second_roads))
+                same_phone = bool(first.get("_phone_tail") and first.get("_phone_tail") == second.get("_phone_tail"))
+                if first_roads and second_roads and not shared_road:
+                    continue
+                if not shared_road and not same_phone:
+                    continue
+                older, newer = sorted(
+                    (first, second),
+                    key=lambda x: ((x.get("dt") or ""), int(x.get("id") or 0)),
+                )
+                pair = (older["id"], newer["id"])
+                if pair in seen:
+                    continue
+                if tuple(sorted(pair)) in split_pairs:
+                    continue
+                item_probe = {
+                    "id": older["id"],
+                    "source": older.get("source"),
+                    "source_id": older.get("source_id"),
+                    "title": older.get("title"),
+                    "description": older.get("description"),
+                    "ward": older.get("ward"),
+                    "property_type": older.get("property_type"),
+                    "area_m2": older.get("area_m2"),
+                    "frontage_m": older.get("frontage_m"),
+                    "depth_m": older.get("depth_m"),
+                    "road_name": older.get("road_name"),
+                    "contact_phone": older.get("contact_phone"),
+                    "price_ty": older.get("price_ty"),
+                    "price_per_m2": older.get("price_per_m2"),
+                    "dt": older.get("dt"),
+                    "duplicate_of_id": newer["id"],
+                    "canonical_source": newer.get("source"),
+                    "canonical_source_id": newer.get("source_id"),
+                    "canonical_title": newer.get("title"),
+                    "canonical_description": newer.get("description"),
+                    "canonical_ward": newer.get("ward"),
+                    "canonical_property_type": newer.get("property_type"),
+                    "canonical_area_m2": newer.get("area_m2"),
+                    "canonical_frontage_m": newer.get("frontage_m"),
+                    "canonical_depth_m": newer.get("depth_m"),
+                    "canonical_road_name": newer.get("road_name"),
+                    "canonical_contact_phone": newer.get("contact_phone"),
+                    "canonical_price_ty": newer.get("price_ty"),
+                    "canonical_price_per_m2": newer.get("price_per_m2"),
+                    "canonical_dt": newer.get("dt"),
+                }
+                if not _admin_is_suspected_duplicate_pair(item_probe):
+                    continue
+                seen.add(pair)
+                pair_ids.append(pair)
+                if len(pair_ids) >= limit:
+                    break
+            if len(pair_ids) >= limit:
+                break
+        if len(pair_ids) >= limit:
+            break
+
+    items = []
+    for listing_id, target_id in pair_ids:
+        row = conn.execute(f"""
+        SELECT l.id, l.title, l.url, l.source, l.source_id, l.ward, l.property_type,
+               l.price_ty, l.price_per_m2, l.area_m2, l.frontage_m, l.depth_m,
+               {road_name_select_l} AS road_name, l.contact_phone,
+               l.description, COALESCE(l.posted_at, l.crawled_at, l.updated_at) AS dt,
+               c.id AS duplicate_of_id, c.title AS canonical_title, c.url AS canonical_url,
+               c.source AS canonical_source, c.source_id AS canonical_source_id,
+               c.ward AS canonical_ward, c.property_type AS canonical_property_type,
+               c.price_ty AS canonical_price_ty, c.price_per_m2 AS canonical_price_per_m2,
+               c.area_m2 AS canonical_area_m2, c.frontage_m AS canonical_frontage_m,
+               c.depth_m AS canonical_depth_m, {road_name_select_c} AS canonical_road_name,
+               c.contact_phone AS canonical_contact_phone,
+               c.description AS canonical_description,
+               COALESCE(c.posted_at, c.crawled_at, c.updated_at) AS canonical_dt,
+               li.local_path AS img_local, li.img_url AS img_url,
+               ci.local_path AS canonical_img_local, ci.img_url AS canonical_img_url
+        FROM listings l
+        JOIN listings c ON c.id = ?
+        LEFT JOIN listing_images li ON li.id = (
+            SELECT id FROM listing_images WHERE listing_id = l.id ORDER BY {_image_order_sql()} LIMIT 1
+        )
+        LEFT JOIN listing_images ci ON ci.id = (
+            SELECT id FROM listing_images WHERE listing_id = c.id ORDER BY {_image_order_sql()} LIMIT 1
+        )
+        WHERE l.id = ?
+        """, (target_id, listing_id)).fetchone()
+        if row:
+            items.append(_admin_duplicate_qc_item(row, suspected=True))
+    return items
 
 
 def _duplicate_qc_reasons(item: dict) -> list[str]:

@@ -1120,30 +1120,32 @@
     padding-bottom: 0;
   }
 
-  .filter-sheet-head {
+  .sidebar .filter-sheet-head {
     position: sticky;
     top: 0;
-    z-index: 4;
+    z-index: 8;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 2px 2px 12px;
-    margin-bottom: 8px;
+    padding: 14px 14px 12px;
+    margin: -14px -14px 8px;
     background: var(--surface-solid);
     border-bottom: 1px solid var(--border);
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
   }
 
-  [data-theme="light"] .filter-sheet-head {
+  [data-theme="light"] .sidebar .filter-sheet-head {
     background: #ffffff;
   }
 
-  .filter-sheet-head span,
-  .filter-sheet-head strong {
+  .sidebar .filter-sheet-head span,
+  .sidebar .filter-sheet-head strong {
     display: block;
   }
 
-  .filter-sheet-head span {
+  .sidebar .filter-sheet-head span {
     color: var(--text-muted);
     font-size: 0.68rem;
     font-weight: 850;
@@ -1151,7 +1153,7 @@
     text-transform: uppercase;
   }
 
-  .filter-sheet-head strong {
+  .sidebar .filter-sheet-head strong {
     margin-top: 2px;
     color: var(--text);
     font-size: 1rem;
@@ -1204,9 +1206,31 @@
 
   .sidebar .filter-title {
     min-height: 36px;
-    padding: 7px 9px;
-    border-radius: 11px;
+    padding: 7px 14px;
+    margin-inline: -14px;
+    border-radius: 0;
+    background: var(--surface-solid);
     font-size: 0.76rem;
+  }
+
+  [data-theme="light"] .sidebar .filter-title {
+    background: #ffffff;
+  }
+
+  .sidebar .signal-filter .filter-title,
+  .sidebar .finance-filter .filter-title {
+    margin-inline: -10px;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  .sidebar .signal-filter .filter-title {
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.22), rgba(15, 23, 42, 0.05));
+  }
+
+  .sidebar .finance-filter .filter-title {
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.12), rgba(14, 165, 233, 0.04));
   }
 
   .sidebar .city-pill,
