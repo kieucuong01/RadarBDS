@@ -420,6 +420,99 @@ class AdminControlRoomGateTest(unittest.TestCase):
             )
         return old.lastrowid, new.lastrowid
 
+    def _insert_review_duplicate_pair(
+        self,
+        *,
+        ward_old="Hiep An",
+        ward_new="Hiep An",
+        area_old=100.0,
+        area_new=100.0,
+        frontage_old=None,
+        frontage_new=None,
+        depth_old=None,
+        depth_new=None,
+        road_old="",
+        road_new="",
+        description_old="",
+        description_new="",
+        property_type="dat_nen",
+    ):
+        from db.connection import get_conn
+
+        token = uuid.uuid4().hex
+        road_text_old = f" duong {road_old}" if road_old else ""
+        road_text_new = f" duong {road_new}" if road_new else road_text_old
+        desc_old = description_old or f"Can ban lo dat{road_text_old}, so rieng, vi tri dep."
+        desc_new = description_new or f"Dang lai lo dat{road_text_new}, so rieng, vi tri dep."
+        price = 2.4
+
+        def ppm(area):
+            return round(price * 1000 / area, 2) if area else None
+
+        with get_conn() as conn:
+            raw_old = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", f"fb-review-old-{token}", f"https://example.test/raw-review-old-{token}", "{}"),
+            )
+            old = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                    possibly_duplicate, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+                """,
+                (
+                    raw_old.lastrowid,
+                    "facebook",
+                    f"fb-review-old-{token}",
+                    f"https://example.test/review-old-{token}",
+                    "Tin goc review duplicate",
+                    desc_old,
+                    "Thu Dau Mot",
+                    ward_old,
+                    property_type,
+                    price,
+                    ppm(area_old),
+                    area_old,
+                    frontage_old,
+                    depth_old,
+                    "2026-05-20",
+                ),
+            )
+            raw_new = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", f"fb-review-new-{token}", f"https://example.test/raw-review-new-{token}", "{}"),
+            )
+            new = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                    possibly_duplicate, duplicate_of_id, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                """,
+                (
+                    raw_new.lastrowid,
+                    "facebook",
+                    f"fb-review-new-{token}",
+                    f"https://example.test/review-new-{token}",
+                    "Tin dang lai review duplicate",
+                    desc_new,
+                    "Thu Dau Mot",
+                    ward_new,
+                    property_type,
+                    price,
+                    ppm(area_new),
+                    area_new,
+                    frontage_new,
+                    depth_new,
+                    old.lastrowid,
+                    "2026-05-28",
+                ),
+            )
+        return old.lastrowid, new.lastrowid
+
     def test_guest_control_room_renders_login_modal_gate(self):
         response = self.client.get("/admin")
 
@@ -902,6 +995,75 @@ class AdminControlRoomGateTest(unittest.TestCase):
 
         self.assertEqual(row["possibly_duplicate"], 1)
         self.assertEqual(row["duplicate_of_id"], old_id)
+
+    def test_data_quality_duplicate_queue_hides_missing_area_same_ward_near_text_without_writing(self):
+        self._login_as_admin()
+        old_id, new_id = self._insert_review_duplicate_pair(
+            area_old=None,
+            area_new=None,
+            description_old="Ban dat Hiep An so rieng gia tot, can ban nhanh.",
+            description_new="Ban dat Hiep An so rieng gia tot, can ban nhanh.",
+        )
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertNotIn((new_id, old_id), pairs)
+
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+                (new_id,),
+            ).fetchone()
+        self.assertEqual(row["possibly_duplicate"], 1)
+        self.assertEqual(row["duplicate_of_id"], old_id)
+
+    def test_data_quality_duplicate_queue_hides_relaxed_depth_same_road_signature(self):
+        self._login_as_admin()
+        old_id, new_id = self._insert_review_duplicate_pair(
+            area_old=119.0,
+            area_new=118.0,
+            frontage_old=5.0,
+            frontage_new=5.0,
+            depth_old=23.8,
+            depth_new=22.8,
+            road_old="DX94",
+            road_new="DX94",
+            description_old="Lo dat Hiep An DX94 5x23.8 so hong rieng.",
+            description_new="Chinh chu can ra nhanh nen DX94 kich thuoc 5m x 22.8m.",
+        )
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertNotIn((new_id, old_id), pairs)
+
+    def test_data_quality_duplicate_queue_hides_missing_ward_shared_road_matching_dimensions(self):
+        self._login_as_admin()
+        old_id, new_id = self._insert_review_duplicate_pair(
+            ward_old=None,
+            ward_new=None,
+            area_old=187.0,
+            area_new=187.0,
+            frontage_old=5.0,
+            frontage_new=5.0,
+            depth_old=38.0,
+            depth_new=38.0,
+            road_old="DX132",
+            road_new="DX132",
+            description_old="Ban dat duong DX132 ngang 5 dai 38, so rieng.",
+            description_new="Dang lai dat DX132 ngang 5 dai 38 can ban nhanh.",
+        )
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertNotIn((new_id, old_id), pairs)
 
     def test_data_quality_duplicate_queue_surfaces_unmerged_suspected_same_lot_pairs(self):
         self._login_as_admin()

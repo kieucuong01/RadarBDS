@@ -4221,6 +4221,8 @@ def admin_api_qc_duplicates():
                 continue
             if _admin_should_auto_split_duplicate_pair(item):
                 continue
+            if _admin_should_hide_safe_duplicate_review_pair(item):
+                continue
             items.append(_admin_duplicate_qc_item(row))
         existing_pairs = {(item["id"], item["duplicate_of_id"]) for item in items}
         if len(items) < 500:
@@ -4439,6 +4441,71 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
     if dims_match and (text_sim >= 0.55 or same_phone):
         return True
     return bool(text_sim >= 0.92 and (dims_match or same_phone))
+
+
+def _admin_should_hide_safe_duplicate_review_pair(item: dict) -> bool:
+    if _admin_same_listing_identity(item):
+        return False
+    if item.get("source") != "facebook" or item.get("canonical_source") != "facebook":
+        return False
+    if (item.get("property_type") or "") != (item.get("canonical_property_type") or ""):
+        return False
+
+    ward = (item.get("ward") or "").strip()
+    canonical_ward = (item.get("canonical_ward") or "").strip()
+    same_ward = bool(ward and canonical_ward and ward == canonical_ward)
+    both_wards_missing = not ward and not canonical_ward
+    if ward and canonical_ward and ward != canonical_ward:
+        return False
+
+    try:
+        from cleansing.dedup import _combined_text, _road_tokens, _text_similarity
+    except Exception:
+        return False
+
+    listing = _admin_listing_from_duplicate_item(item)
+    canonical = _admin_listing_from_duplicate_item(item, canonical=True)
+    text_a = _combined_text(listing)
+    text_b = _combined_text(canonical)
+    roads_a = _road_tokens(text_a)
+    roads_b = _road_tokens(text_b)
+    road_name_a = (listing.get("road_name") or "").strip().casefold()
+    road_name_b = (canonical.get("road_name") or "").strip().casefold()
+    shared_road = bool(roads_a and roads_b and roads_a.intersection(roads_b))
+    same_road_name = bool(road_name_a and road_name_b and road_name_a == road_name_b)
+    road_conflict = bool((roads_a and roads_b and not shared_road) or (road_name_a and road_name_b and not same_road_name))
+    if road_conflict:
+        return False
+
+    text_sim = _text_similarity(text_a, text_b)
+    area_a = _safe_float(item.get("area_m2"))
+    area_b = _safe_float(item.get("canonical_area_m2"))
+    both_areas_missing = (area_a is None or area_a <= 0) and (area_b is None or area_b <= 0)
+    area_match_1pct = _admin_near_value(area_a, area_b, abs_tol=1.0, rel_tol=0.01)
+    area_match_3pct = _admin_near_value(area_a, area_b, abs_tol=3.0, rel_tol=0.03)
+    distinctive_area_match = area_match_3pct and (_admin_distinctive_area(area_a) or _admin_distinctive_area(area_b))
+    relaxed_frontage_match = _admin_near_value(item.get("frontage_m"), item.get("canonical_frontage_m"), abs_tol=0.35, rel_tol=0.01)
+    relaxed_depth_match = _admin_near_value(item.get("depth_m"), item.get("canonical_depth_m"), abs_tol=1.05, rel_tol=0.01)
+    relaxed_dims_match = relaxed_frontage_match and relaxed_depth_match
+    same_road = shared_road or same_road_name
+
+    if both_areas_missing:
+        if same_ward and text_sim >= 0.90:
+            return True
+        if same_road and text_sim >= 0.88:
+            return True
+        return False
+
+    if same_ward and same_road and area_match_1pct and relaxed_dims_match:
+        return True
+
+    if both_wards_missing and distinctive_area_match and text_sim >= 0.80:
+        return True
+
+    if both_wards_missing and same_road and area_match_1pct and relaxed_dims_match and text_sim >= 0.70:
+        return True
+
+    return False
 
 
 def _admin_apply_auto_duplicate_merge(conn, listing_id: int, target_id: int) -> None:
