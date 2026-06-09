@@ -4316,7 +4316,8 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
 
     ward = (item.get("ward") or "").strip()
     canonical_ward = (item.get("canonical_ward") or "").strip()
-    if not ward or ward != canonical_ward:
+    both_wards_missing = not ward and not canonical_ward
+    if not both_wards_missing and (not ward or ward != canonical_ward):
         return False
     if (item.get("property_type") or "") != (item.get("canonical_property_type") or ""):
         return False
@@ -4343,8 +4344,6 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
     road_name_b = (canonical.get("road_name") or "").strip().casefold()
     shared_road = bool(roads_a and roads_b and roads_a.intersection(roads_b))
     same_road_name = bool(road_name_a and road_name_b and road_name_a == road_name_b)
-    if not shared_road and not same_road_name:
-        return False
 
     frontage_match = _admin_near_value(item.get("frontage_m"), item.get("canonical_frontage_m"), abs_tol=0.1, rel_tol=0.005)
     depth_match = _admin_near_value(item.get("depth_m"), item.get("canonical_depth_m"), abs_tol=0.3, rel_tol=0.005)
@@ -4353,6 +4352,14 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
     phone_a = _admin_phone_tail(item.get("contact_phone"))
     phone_b = _admin_phone_tail(item.get("canonical_contact_phone"))
     same_phone = bool(phone_a and phone_a == phone_b)
+
+    if both_wards_missing:
+        if roads_a and roads_b and not shared_road and not same_road_name:
+            return False
+        return bool(dims_match and (text_sim >= 0.88 or same_phone))
+
+    if not shared_road and not same_road_name:
+        return False
 
     if dims_match and (text_sim >= 0.55 or same_phone):
         return True
