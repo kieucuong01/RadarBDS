@@ -4321,7 +4321,12 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
         return False
     if (item.get("property_type") or "") != (item.get("canonical_property_type") or ""):
         return False
-    if not _admin_near_value(item.get("area_m2"), item.get("canonical_area_m2"), abs_tol=1.0, rel_tol=0.005):
+
+    area_a = _safe_float(item.get("area_m2"))
+    area_b = _safe_float(item.get("canonical_area_m2"))
+    both_areas_missing = (area_a is None or area_a <= 0) and (area_b is None or area_b <= 0)
+    area_match = _admin_near_value(area_a, area_b, abs_tol=1.0, rel_tol=0.005)
+    if not area_match and not both_areas_missing:
         return False
 
     tc_a = _safe_float(item.get("tho_cu_m2"))
@@ -4352,6 +4357,13 @@ def _admin_should_auto_merge_duplicate_pair(item: dict) -> bool:
     phone_a = _admin_phone_tail(item.get("contact_phone"))
     phone_b = _admin_phone_tail(item.get("canonical_contact_phone"))
     same_phone = bool(phone_a and phone_a == phone_b)
+
+    if both_areas_missing:
+        if not same_phone:
+            return False
+        if roads_a and roads_b and not shared_road and not same_road_name:
+            return False
+        return text_sim >= 0.86
 
     if both_wards_missing:
         if roads_a and roads_b and not shared_road and not same_road_name:

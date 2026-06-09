@@ -285,6 +285,77 @@ class AdminControlRoomGateTest(unittest.TestCase):
             )
         return old.lastrowid, new.lastrowid
 
+    def _insert_same_phone_text_duplicate_pair(self, *, road_old="DX94", road_new="DX94"):
+        from db.connection import get_conn
+
+        token = uuid.uuid4().hex
+        phone = f"09{int(token[:8], 16) % 100000000:08d}"
+        with get_conn() as conn:
+            raw_old = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", f"fb-phone-old-{token}", f"https://example.test/raw-phone-old-{token}", "{}"),
+            )
+            old = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                    contact_phone, possibly_duplicate, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+                """,
+                (
+                    raw_old.lastrowid,
+                    "facebook",
+                    f"fb-phone-old-{token}",
+                    f"https://example.test/phone-old-{token}",
+                    "Ban dat moi gioi dang lai",
+                    f"Moi gioi dang lai lo dat duong {road_old}, so rieng, gia tot, lien he {phone}.",
+                    "Thu Dau Mot",
+                    "Hiep An",
+                    "dat_nen",
+                    1.95,
+                    None,
+                    None,
+                    None,
+                    None,
+                    phone,
+                    "2026-05-20",
+                ),
+            )
+            raw_new = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", f"fb-phone-new-{token}", f"https://example.test/raw-phone-new-{token}", "{}"),
+            )
+            new = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                    contact_phone, possibly_duplicate, duplicate_of_id, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                """,
+                (
+                    raw_new.lastrowid,
+                    "facebook",
+                    f"fb-phone-new-{token}",
+                    f"https://example.test/phone-new-{token}",
+                    "Ban dat moi gioi repost",
+                    f"Moi gioi dang lai lo dat duong {road_new}, so rieng, gia tot, lien he {phone}.",
+                    "Thu Dau Mot",
+                    "Hiep An",
+                    "dat_nen",
+                    1.95,
+                    None,
+                    None,
+                    None,
+                    None,
+                    phone,
+                    old.lastrowid,
+                    "2026-05-28",
+                ),
+            )
+        return old.lastrowid, new.lastrowid
+
     def test_guest_control_room_renders_login_modal_gate(self):
         response = self.client.get("/admin")
 
@@ -669,6 +740,26 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
         self.assertNotIn((old_id, new_id), pairs)
+
+    def test_data_quality_duplicate_queue_hides_same_phone_near_identical_text_reposts(self):
+        self._login_as_admin()
+        old_id, new_id = self._insert_same_phone_text_duplicate_pair()
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertNotIn((new_id, old_id), pairs)
+
+    def test_data_quality_duplicate_queue_keeps_same_phone_text_reposts_when_roads_conflict(self):
+        self._login_as_admin()
+        old_id, new_id = self._insert_same_phone_text_duplicate_pair(road_old="DX94", road_new="DX127")
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertIn((new_id, old_id), pairs)
 
     def test_data_quality_duplicate_queue_surfaces_unmerged_suspected_same_lot_pairs(self):
         self._login_as_admin()
