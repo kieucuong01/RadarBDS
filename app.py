@@ -4199,11 +4199,22 @@ def admin_api_qc_duplicates():
             WHERE COALESCE(l.probably_sold,0)=0
               AND COALESCE(l.is_blacklisted,0)=0
               AND l.possibly_duplicate=1
+              AND NOT (
+                l.source = c.source
+                AND (
+                     (COALESCE(l.source_id,'') <> '' AND l.source_id = c.source_id)
+                  OR (COALESCE(l.url,'') <> '' AND l.url = c.url)
+                )
+              )
               {ambiguous_duplicate_sql}
             ORDER BY l.updated_at DESC
             LIMIT 500
         """).fetchall()
-        items = [_admin_duplicate_qc_item(r) for r in rows]
+        items = [
+            _admin_duplicate_qc_item(r)
+            for r in rows
+            if not _admin_same_listing_identity(dict(r))
+        ]
         existing_pairs = {(item["id"], item["duplicate_of_id"]) for item in items}
         if len(items) < 500:
             items.extend(_admin_suspected_duplicate_items(conn, existing_pairs, 500 - len(items)))
@@ -4224,6 +4235,22 @@ def _admin_duplicate_qc_item(row, *, suspected: bool = False) -> dict:
     for key in ("contact_phone", "canonical_contact_phone"):
         item.pop(key, None)
     return item
+
+
+def _admin_same_listing_identity(item: dict) -> bool:
+    source = (item.get("source") or "").strip()
+    canonical_source = (item.get("canonical_source") or "").strip()
+    if not source or source != canonical_source:
+        return False
+
+    source_id = (item.get("source_id") or "").strip()
+    canonical_source_id = (item.get("canonical_source_id") or "").strip()
+    if source_id and canonical_source_id and source_id == canonical_source_id:
+        return True
+
+    url = (item.get("url") or "").strip().rstrip("/")
+    canonical_url = (item.get("canonical_url") or "").strip().rstrip("/")
+    return bool(url and canonical_url and url == canonical_url)
 
 
 def _has_listing_column(conn, column_name: str) -> bool:
@@ -4265,6 +4292,9 @@ def _admin_listing_from_duplicate_item(item: dict, *, canonical: bool = False) -
 
 
 def _admin_is_suspected_duplicate_pair(item: dict) -> bool:
+    if _admin_same_listing_identity(item):
+        return False
+
     try:
         from cleansing.dedup import _has_reliable_lot_signature
     except Exception:
@@ -4291,7 +4321,7 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
     road_name_select_l = "l.road_name" if _has_listing_column(conn, "road_name") else "NULL"
     road_name_select_c = "c.road_name" if _has_listing_column(conn, "road_name") else "NULL"
     candidate_rows = conn.execute(f"""
-        SELECT id, source, source_id, title, description, area, ward, property_type,
+        SELECT id, source, source_id, url, title, description, area, ward, property_type,
                price_ty, price_per_m2, area_m2, frontage_m, depth_m,
                {road_name_select_l} AS road_name, contact_phone,
                COALESCE(posted_at, crawled_at, updated_at) AS dt
@@ -4393,6 +4423,7 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
                     "id": older["id"],
                     "source": older.get("source"),
                     "source_id": older.get("source_id"),
+                    "url": older.get("url"),
                     "title": older.get("title"),
                     "description": older.get("description"),
                     "ward": older.get("ward"),
@@ -4408,6 +4439,7 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
                     "duplicate_of_id": newer["id"],
                     "canonical_source": newer.get("source"),
                     "canonical_source_id": newer.get("source_id"),
+                    "canonical_url": newer.get("url"),
                     "canonical_title": newer.get("title"),
                     "canonical_description": newer.get("description"),
                     "canonical_ward": newer.get("ward"),

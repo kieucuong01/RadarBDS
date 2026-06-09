@@ -365,6 +365,119 @@ class AdminControlRoomGateTest(unittest.TestCase):
         ids = {item["id"] for item in response.get_json()["items"]}
         self.assertNotIn(duplicate.lastrowid, ids)
 
+    def test_data_quality_duplicate_queue_hides_same_facebook_post_pairs(self):
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        token = uuid.uuid4().hex
+        same_source_id = f"fb-post-{token}"
+        with get_conn() as conn:
+            raw_canonical = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", same_source_id, f"https://example.test/raw-same-post-canonical-{token}", "{}"),
+            )
+            canonical = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, area, property_type,
+                    price_ty, price_per_m2, area_m2, possibly_duplicate
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                """,
+                (
+                    raw_canonical.lastrowid,
+                    "facebook",
+                    same_source_id,
+                    f"https://example.test/same-post-canonical-{token}",
+                    "Same Facebook post canonical",
+                    "Thu Dau Mot",
+                    "dat_nen",
+                    1.8,
+                    18.0,
+                    100.0,
+                ),
+            )
+            raw_dup = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", same_source_id, f"https://example.test/raw-same-post-duplicate-{token}", "{}"),
+            )
+            duplicate = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, area, property_type,
+                    price_ty, price_per_m2, area_m2, possibly_duplicate, duplicate_of_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+                """,
+                (
+                    raw_dup.lastrowid,
+                    "facebook",
+                    same_source_id,
+                    f"https://example.test/same-post-duplicate-{token}",
+                    "Same Facebook post duplicate",
+                    "Thu Dau Mot",
+                    "dat_nen",
+                    1.82,
+                    18.2,
+                    100.0,
+                    canonical.lastrowid,
+                ),
+            )
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        ids = {item["id"] for item in response.get_json()["items"]}
+        self.assertNotIn(duplicate.lastrowid, ids)
+
+    def test_data_quality_duplicate_queue_hides_unmerged_same_facebook_post_pairs(self):
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        token = uuid.uuid4().hex
+        same_source_id = f"fb-unmerged-post-{token}"
+        with get_conn() as conn:
+            for suffix, price in (("old", 5.9), ("new", 5.8)):
+                raw = conn.execute(
+                    "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                    ("facebook", same_source_id, f"https://example.test/raw-unmerged-{suffix}-{token}", "{}"),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO listings (
+                        raw_id, source, source_id, url, title, description, area, ward,
+                        property_type, price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                        road_type, road_tier, tho_cu_m2, possibly_duplicate, posted_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+                    """,
+                    (
+                        raw.lastrowid,
+                        "facebook",
+                        same_source_id,
+                        f"https://example.test/unmerged-{suffix}-{token}",
+                        f"Same post DX132 {suffix}",
+                        "Ban dat Tan An duong DX132, dien tich 1083m2, tho cu 200m2.",
+                        "Thu Dau Mot",
+                        "Tan An",
+                        "dat_nen",
+                        price,
+                        round(price * 1000 / 1083, 2),
+                        1083.0,
+                        18.0,
+                        60.2,
+                        "duong_nhua",
+                        2,
+                        200.0,
+                        "2026-05-28",
+                    ),
+                )
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        items = response.get_json()["items"]
+        self.assertFalse(
+            any(item.get("source_id") == same_source_id and item.get("canonical_source_id") == same_source_id for item in items)
+        )
+
     def test_data_quality_duplicate_queue_surfaces_unmerged_suspected_same_lot_pairs(self):
         self._login_as_admin()
         old_id, new_id = self._insert_suspected_dx132_pair()
