@@ -11,6 +11,7 @@ from typing import List, Dict, Optional
 
 from config.settings import WATCH_AREAS, ALERT_KEYWORDS
 from config.area_profiles import detect_subward_from_street, infer_standard_lot
+from config.location_aliases import resolve_post_merger_location
 from cleansing.feature_extractor import (
     classify_property_type, extract_tho_cu, extract_road_tier,
     extract_legal, extract_phone, extract_road_type, parse_facebook_post,
@@ -210,10 +211,12 @@ _WARD_KEYWORDS = {
     "Hiệp Thành 3":     ["hiệp thành 3", "hiep-thanh-3", "hiep thanh 3", "kdc hiệp thành 3", "kdc hiep thanh 3"],
     "Hiệp Thành":       ["hiệp thành", "hiep-thanh"],
     "Phú Hòa":          ["phú hòa", "phu-hoa"],
+    "Hòa Phú":          ["hòa phú", "hoà phú", "hoa-phu", "hoaphu"],
     "Phú Lợi":          ["phú lợi", "phu-loi"],
     "Phú Mỹ":           ["phú mỹ", "phu-my"],
     "Phú Cường":        ["phú cường", "phu-cuong"],
     "Phú Tân":          ["phú tân", "phu-tan"],
+    "Phú Chánh":        ["phú chánh", "phu-chanh", "phuchanh"],
     "Phú Thọ":          ["phú thọ", "phu-tho"],
     "Chánh Mỹ":         ["chánh mỹ", "chanh-my"],
     "Chánh Nghĩa":      ["chánh nghĩa", "chanh-nghia"],
@@ -239,8 +242,8 @@ _WARD_KEYWORDS = {
 _CITY_WARDS = {
     "Thủ Dầu Một": [
         "Tân An", "Hiệp An", "Hiệp Thành 1", "Hiệp Thành 2", "Hiệp Thành 3",
-        "Hiệp Thành", "Phú Hòa", "Phú Lợi", "Phú Mỹ",
-        "Phú Cường", "Phú Tân", "Phú Thọ", "Chánh Mỹ", "Chánh Nghĩa",
+        "Hiệp Thành", "Phú Hòa", "Hòa Phú", "Phú Lợi", "Phú Mỹ",
+        "Phú Cường", "Phú Tân", "Phú Chánh", "Phú Thọ", "Chánh Mỹ", "Chánh Nghĩa",
         "Định Hòa", "Tương Bình Hiệp"
     ],
     "Bến Cát": [
@@ -459,14 +462,26 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             elif "ben-cat" in url_lower or "bến cát" in raw_addr:
                 intended_city = "Bến Cát"
 
+        post_merger_location = resolve_post_merger_location(
+            raw.get("title", ""), raw.get("description", ""),
+            raw.get("address", ""), url,
+            intended_city=intended_city,
+        )
+        if post_merger_location.has_strong_old_ward:
+            ward_from_text = post_merger_location.ward
+
+        if source_name != "facebook":
             # Text rao ghi rõ ward phải thắng raw/cache ward từ nguồn.
             # VD raw_url/raw_ward còn "Phú An" cũ, nhưng title/desc nói "Hiệp An".
-            content_ward = match_ward(
-                raw.get("title", ""), raw.get("description", ""),
-                intended_city=intended_city,
-            )
-            if content_ward and content_ward != "Tân An":
-                ward_from_text = content_ward
+            if not ward_from_text:
+                content_ward = match_ward(
+                    raw.get("title", ""), raw.get("description", ""),
+                    intended_city=intended_city,
+                )
+                if post_merger_location.blocks_broad_ward_match(content_ward):
+                    content_ward = None
+                if content_ward and content_ward != "Tân An":
+                    ward_from_text = content_ward
 
             # Tin từ web chuyên trang có phân mục rõ ràng
             if not ward_from_text and (
@@ -483,6 +498,11 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                 raw.get("address", ""), url,
                 intended_city=intended_city
             )
+            if post_merger_location.blocks_broad_ward_match(ward_from_text):
+                ward_from_text = None
+
+        if not ward_from_text and post_merger_location.has_weak_old_ward:
+            ward_from_text = post_merger_location.ward
         
         if ward_from_text:
             ward_final = ward_from_text

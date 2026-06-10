@@ -824,6 +824,89 @@ def test_normalizer_does_not_fallback_ben_cat_profile_to_tan_an():
     assert rec["area"] == "Bến Cát"
 
 
+def _post_merger_location_record(title, description="", default_area="Thủ Dầu Một"):
+    return normalize_record({
+        "source": "facebook",
+        "external_id": f"post-merger-{abs(hash(title))}",
+        "url": f"https://www.facebook.com/broker/posts/{abs(hash(title))}",
+        "default_area": default_area,
+        "title": title,
+        "description": description or "DT 5x30 thổ cư 150m, giá 2 tỷ 5",
+        "area_m2": 150,
+        "price_ty": 2.5,
+    })
+
+
+def test_normalizer_uses_khu_pho_evidence_inside_new_binh_duong_ward():
+    cases = [
+        ("KP.Phú Mỹ P.Bình Dương TP HCM", "Phú Mỹ"),
+        ("KP Hòa Phú 2, P.Bình Dương TP HCM", "Hòa Phú"),
+        ("KP Phú Tân 1, P.Bình Dương", "Phú Tân"),
+        ("KP Phú Bưng, P.Bình Dương", "Phú Chánh"),
+        ("KP Phú Trung, P.Bình Dương", "Phú Chánh"),
+        ("KP Chánh Long, P.Bình Dương", "Phú Chánh"),
+    ]
+
+    for title, expected_ward in cases:
+        rec = _post_merger_location_record(title)
+        assert rec is not None
+        assert rec["ward"] == expected_ward
+        assert rec["area"] == expected_ward
+
+
+def test_normalizer_keeps_broad_new_binh_duong_ward_out_of_old_segments():
+    rec = _post_merger_location_record("P.Bình Dương TP HCM")
+
+    assert rec is not None
+    assert rec["ward"] is None
+    assert rec["area"] == "Thủ Dầu Một"
+
+
+def test_normalizer_prefers_old_tan_dinh_evidence_over_new_hoa_loi_ward():
+    rec = _post_merger_location_record(
+        "KP2 Tân Định cũ nay thuộc phường Hòa Lợi TPHCM",
+        default_area="Bến Cát",
+    )
+
+    assert rec is not None
+    assert rec["ward"] == "Tân Định"
+    assert rec["area"] == "Tân Định"
+
+
+def test_normalizer_uses_hoa_loi_khu_pho_evidence_under_new_hoa_loi_ward():
+    rec = _post_merger_location_record(
+        "KP3 Hòa Lợi TPHCM",
+        default_area="Bến Cát",
+    )
+
+    assert rec is not None
+    assert rec["ward"] == "Hòa Lợi"
+    assert rec["area"] == "Hòa Lợi"
+
+
+def test_normalizer_keeps_broad_new_chanh_hiep_ward_out_of_old_segments():
+    rec = _post_merger_location_record("Chánh Hiệp TPHCM")
+
+    assert rec is not None
+    assert rec["ward"] is None
+    assert rec["area"] == "Thủ Dầu Một"
+
+
+def test_normalizer_uses_dx071_dx072_chanh_hiep_as_dinh_hoa_weak_evidence():
+    rec = _post_merger_location_record("Đất đường DX071 phường Chánh Hiệp TPHCM")
+
+    assert rec is not None
+    assert rec["ward"] == "Định Hòa"
+    assert rec["area"] == "Định Hòa"
+
+    stronger_old_ward = _post_merger_location_record(
+        "Đất Tương Bình Hiệp phường Chánh Hiệp TPHCM đường DX072",
+    )
+    assert stronger_old_ward is not None
+    assert stronger_old_ward["ward"] == "Tương Bình Hiệp"
+    assert stronger_old_ward["area"] == "Tương Bình Hiệp"
+
+
 def test_normalizer_marks_long_nguyen_as_outside_focus_area():
     rec = normalize_record({
         "source": "facebook",
