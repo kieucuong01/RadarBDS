@@ -29,6 +29,12 @@
   gap: 2px 8px;
 }
 
+.date-range-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px 8px;
+}
+
 .badge-recommend {
   font-size: 0.6rem;
   background: var(--accent);

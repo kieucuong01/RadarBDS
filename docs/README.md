@@ -22,6 +22,7 @@ Do not load every doc by default. The project has long crawl and product notes; 
 | Crawl-to-signal-to-Telegram workflow | `daily_crawl_flow.md#1a-workflow-kỹ-thuật-end-to-end-theo-code-hiện-tại`, `telegram_watchlist.md` | `cli/crawlers.py`, `cleansing/reprocess.py`, `services/signal_quality.py`, `services/market_data.py`, `cli/notify.py` |
 | Deploy/VPS/prod smoke/local-prod sync | `operations.md`, `dev_commands.md` | `scripts/deploy_production.ps1`, `deployment/ubuntu24/*` |
 | Dedup, lot history, price drops, quality flags | `product_rules.md`, `architecture.md` | `cleansing/dedup.py`, `cleansing/feature_extractor.py`, `db/listings.py`, tests |
+| Location normalization, post-merger wards, broker KP aliases | `product_rules.md`, `daily_crawl_flow.md`, `dev_commands.md` | `cleansing/normalizer.py`, `config/location_aliases.py`, `scripts/audit_post_merger_locations.py`, tests |
 | Dashboard/API performance | `architecture.md`, `product_rules.md` | `services/market_data.py`, `routes/*`, `app.py` |
 | Admin AI Training | `product_rules.md`, `agent_playbook.md` | `routes/admin_api.py`, `static/js/admin.js`, `templates/admin_control_room.html` |
 | Advisory investment memo / signal memo updates | `investment_memo_workflow.md`, `operations.md` | `ai_deal_review`, `cli/review.py`, `app.py` |

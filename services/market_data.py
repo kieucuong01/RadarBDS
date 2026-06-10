@@ -16,6 +16,25 @@ from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
 TIER_ORDER = {"guest": 0, "free": 1, "vip": 2, "admin": 3}
 DEFAULT_VISIBLE_SOURCES = ("facebook",)
 ADMIN_SOURCE_OPTIONS = ("facebook", "guland", "batdongsan", "muaban")
+DATE_RANGE_OPTIONS = {
+    "1w": "-7 days",
+    "1m": "-1 months",
+    "3m": "-3 months",
+    "6m": "-6 months",
+    "1y": "-1 years",
+    "all": None,
+}
+DATE_RANGE_ALIASES = {
+    "week": "1w",
+    "7d": "1w",
+    "30d": "1m",
+    "month": "1m",
+    "90d": "3m",
+    "3mo": "3m",
+    "6mo": "6m",
+    "365d": "1y",
+    "year": "1y",
+}
 _PHONE_TEXT_RE = re.compile(
     r"(?<!\d)(?:\+?84|0)(?:[\s.\-()]?\d){9,10}(?!\d)"
 )
@@ -41,6 +60,29 @@ def normalize_sources_for_tier(sources=None, tier: str = "guest"):
         if value and value in allowed and value not in normalized:
             normalized.append(value)
     return normalized or list(DEFAULT_VISIBLE_SOURCES)
+
+
+def normalize_date_range(value: str | None, default: str | None = "3m") -> str | None:
+    raw = str(value or default or "").strip().lower()
+    if not raw:
+        return None
+    raw = DATE_RANGE_ALIASES.get(raw, raw)
+    return raw if raw in DATE_RANGE_OPTIONS else default
+
+
+def listing_date_range_filter(date_range: str | None, prefix: str = ""):
+    normalized = normalize_date_range(date_range, default=None)
+    if not normalized or normalized == "all":
+        return [], []
+    interval = DATE_RANGE_OPTIONS.get(normalized)
+    if not interval:
+        return [], []
+    col = lambda name: f"{prefix}{name}" if prefix else name
+    date_expr = f"COALESCE({col('posted_at')}, {col('crawled_at')})"
+    return [
+        f"{date_expr} IS NOT NULL",
+        f"datetime({date_expr}) >= datetime('now', ?)",
+    ], [interval]
 
 
 def fresh_lock_hours_for(tier: str) -> int:
@@ -336,7 +378,7 @@ def effective_price_drop_select_sql(alias="l", lateral_alias="related_drop"):
                END AS price_first_ty"""
 
 
-def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword=""):
+def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", date_range=None):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
 
@@ -380,6 +422,9 @@ def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, 
     search_clauses, search_params = keyword_search_filter(keyword, prefix)
     where_parts.extend(search_clauses)
     params.extend(search_params)
+    date_clauses, date_params = listing_date_range_filter(date_range, prefix)
+    where_parts.extend(date_clauses)
+    params.extend(date_params)
 
     return " AND ".join(where_parts), params
 
@@ -632,7 +677,7 @@ ROAD_TYPE_LABELS = {
     "hem_ba_gac": "Hẻm ba gác",
 }
 
-_ROAD_CODE_RE = re.compile(
+_ROAD_LABEL_CODE_RE = re.compile(
     r"\b(?:dx|dh|dl|db|nl|ng|ni|na|nb|dc)\s*[-./]?\s*\d{1,3}[a-z]?\b",
     re.I,
 )
@@ -763,7 +808,7 @@ def _find_road_name_match(text):
         if m:
             return _title_case_road_name(road), m.start(), m.end()
 
-    m = _ROAD_CODE_RE.search(folded)
+    m = _ROAD_LABEL_CODE_RE.search(folded)
     if m:
         raw = re.sub(r"[\s\-./]+", "", m.group(0)).upper()
         return raw, m.start(), m.end()
@@ -866,7 +911,7 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
     return redact_for_tier(record, tier)
 
 
-def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None, area_ranges=None, price_ranges=None, keyword="", include_total=True):
+def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None, area_ranges=None, price_ranges=None, keyword="", include_total=True, date_range=None):
     # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
     # Guest still sees the full deal feed; original URLs/phones stay redacted.
     if tier == "guest":
@@ -886,6 +931,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         area_ranges=area_ranges,
         price_ranges=price_ranges,
         keyword=keyword,
+        date_range=date_range,
     )
     mos_condition, mos_params = _mos_filter(mos_min)
     signal_condition = actionable_signal_sql("v")
@@ -974,7 +1020,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     return payload
 
 
-def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=0, area_ranges=None, price_ranges=None, keyword=""):
+def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', skip_listings=False, include_trend=True, mos_min=0, include_signals=True, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=0, area_ranges=None, price_ranges=None, keyword="", date_range=None):
     conn = _open_read_conn(db_path)
 
     where_sql, params = _build_filters(
@@ -989,6 +1035,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         area_ranges=area_ranges,
         price_ranges=price_ranges,
         keyword=keyword,
+        date_range=date_range,
     )
     mos_condition, mos_params = _mos_filter(mos_min)
     signal_condition = actionable_signal_sql("v")
@@ -1194,7 +1241,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     }
 
 
-def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', include_trend=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier='guest'):
+def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', include_trend=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier='guest', date_range=None):
     if tier == "guest":
         mos_min = 0
         only_drops = False
@@ -1212,6 +1259,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         area_ranges=area_ranges,
         price_ranges=price_ranges,
         keyword=keyword,
+        date_range=date_range,
     )
 
     stats_row = conn.execute(f"""
@@ -1251,6 +1299,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         area_ranges=area_ranges,
         price_ranges=price_ranges,
         keyword=keyword,
+        date_range=date_range,
     )
     mos_condition, mos_params = _mos_filter(mos_min)
     signal_condition = actionable_signal_sql("v")
@@ -1317,7 +1366,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
     }
 
 
-def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword=""):
+def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", date_range=None):
     conn = _open_read_conn(db_path)
     where_sql, params = _build_filters(
         sources,
@@ -1331,6 +1380,7 @@ def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=F
         area_ranges=area_ranges,
         price_ranges=price_ranges,
         keyword=keyword,
+        date_range=date_range,
     )
 
     row = conn.execute(f"""

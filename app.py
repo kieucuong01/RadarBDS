@@ -39,7 +39,7 @@ from config.seo_pages import SEO_PAGES
 mimetypes.add_type("image/webp", ".webp")
 
 # Import the extracted services
-from services.market_data import load_counts, load_data, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata
+from services.market_data import load_counts, load_data, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
@@ -2058,6 +2058,10 @@ def _request_keyword(req) -> str:
     return normalize_search_keyword(req.args.get("q") or req.args.get("keyword") or "")
 
 
+def _request_date_range(req) -> str:
+    return normalize_date_range(req.args.get("date_range") or req.args.get("time_range"), default="3m") or "3m"
+
+
 def _safe_date(value):
     if not value:
         return None
@@ -2342,6 +2346,7 @@ def api_dashboard():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     range_kwargs = _request_range_filter_kwargs(request)
     keyword = _request_keyword(request)
+    date_range = _request_date_range(request)
     area_min = range_kwargs["area_min"]
     area_max = range_kwargs["area_max"]
     price_min = range_kwargs["price_min"]
@@ -2368,6 +2373,7 @@ def api_dashboard():
         tuple(range_kwargs["area_ranges"]),
         tuple(range_kwargs["price_ranges"]),
         keyword,
+        date_range,
         bool(include_trend),
     )
 
@@ -2383,6 +2389,7 @@ def api_dashboard():
             mos_min=mos_min,
             tier=tier,
             keyword=keyword,
+            date_range=date_range,
             **range_kwargs,
         )
         return {
@@ -2412,6 +2419,7 @@ def api_counts():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     range_kwargs = _request_range_filter_kwargs(request)
     keyword = _request_keyword(request)
+    date_range = _request_date_range(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     return jsonify({
@@ -2423,6 +2431,7 @@ def api_counts():
             only_drops=only_drops,
             mos_min=mos_min,
             keyword=keyword,
+            date_range=date_range,
             **range_kwargs,
         ),
         "active_city": active_city,
@@ -2437,6 +2446,7 @@ def api_signals():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     range_kwargs = _request_range_filter_kwargs(request)
     keyword = _request_keyword(request)
+    date_range = _request_date_range(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     try:
@@ -2463,6 +2473,7 @@ def api_signals():
         tuple(range_kwargs["area_ranges"]),
         tuple(range_kwargs["price_ranges"]),
         keyword,
+        date_range,
         sort,
         page,
         limit,
@@ -2483,6 +2494,7 @@ def api_signals():
             tier=tier,
             keyword=keyword,
             include_total=include_total,
+            date_range=date_range,
             **range_kwargs,
         )
 
@@ -2681,6 +2693,7 @@ def api_listings():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     range_kwargs = _request_range_filter_kwargs(request)
     keyword = _request_keyword(request)
+    date_range = _request_date_range(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     try:
@@ -2715,6 +2728,9 @@ def api_listings():
     search_clauses, search_params = keyword_search_filter(keyword, prefix="l.")
     where_parts.extend(search_clauses)
     params.extend(search_params)
+    date_clauses, date_params = listing_date_range_filter(date_range, prefix="l.")
+    where_parts.extend(date_clauses)
+    params.extend(date_params)
     where_sql = " AND ".join(where_parts)
 
     sort_col_map = {
@@ -3730,6 +3746,33 @@ def admin_api_update_lead_status(lead_id):
                 reason=status,
             )
     return jsonify({"ok": cur.rowcount > 0})
+
+
+@require_admin_auth
+def admin_api_delete_lead(lead_id):
+    with db_mod.get_conn() as conn:
+        before = conn.execute(
+            """
+            SELECT id, created_at, updated_at, listing_id, listing_url, user_id,
+                   zalo_phone, source_context, note, status
+            FROM lead_captures
+            WHERE id=?
+            """,
+            (lead_id,),
+        ).fetchone()
+        if not before:
+            return jsonify({"ok": False, "error": "not_found"}), 404
+        conn.execute("DELETE FROM lead_captures WHERE id=?", (lead_id,))
+        _write_admin_audit(
+            conn,
+            "lead_delete",
+            "lead",
+            lead_id,
+            before=dict(before),
+            after=None,
+            reason="admin_delete",
+        )
+    return jsonify({"ok": True, "id": lead_id})
 
 
 @require_admin_auth
@@ -5348,6 +5391,53 @@ def admin_api_users():
             "banned": banned,
         },
     })
+
+
+@require_admin_auth
+def admin_api_delete_user(user_id):
+    actor = current_user() or {}
+    actor_id = actor.get("id")
+    if actor_id == user_id:
+        return jsonify({"ok": False, "error": "cannot_delete_self"}), 400
+
+    with db_mod.get_conn() as conn:
+        before = conn.execute(
+            """
+            SELECT id, identifier, identifier_type, email, phone, display_name,
+                   tier, vip_expires_at, created_at, last_login_at, is_banned
+            FROM users
+            WHERE id=?
+            """,
+            (user_id,),
+        ).fetchone()
+        if not before:
+            return jsonify({"ok": False, "error": "not_found"}), 404
+        before_dict = dict(before)
+        if before_dict.get("tier") == "admin":
+            admin_count = conn.execute(
+                "SELECT COUNT(*) FROM users WHERE tier='admin'"
+            ).fetchone()[0]
+            if admin_count <= 1:
+                return jsonify({"ok": False, "error": "cannot_delete_last_admin"}), 400
+
+        conn.execute("DELETE FROM user_sessions WHERE user_id=?", (user_id,))
+        conn.execute("DELETE FROM user_watchlists WHERE user_id=?", (user_id,))
+        conn.execute("DELETE FROM notification_log WHERE user_id=?", (user_id,))
+        conn.execute(
+            "UPDATE lead_captures SET user_id=NULL, updated_at=datetime('now') WHERE user_id=?",
+            (user_id,),
+        )
+        conn.execute("DELETE FROM users WHERE id=?", (user_id,))
+        _write_admin_audit(
+            conn,
+            "user_delete",
+            "user",
+            user_id,
+            before=before_dict,
+            after={"id": user_id, "deleted": True},
+            reason="admin_delete",
+        )
+    return jsonify({"ok": True, "id": user_id})
 
 
 @require_admin_auth

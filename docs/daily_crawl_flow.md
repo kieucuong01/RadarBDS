@@ -626,6 +626,32 @@ Gọi từ `cli/crawlers.py::_facebook_crawl_to_raw` ngay trước khi insert ra
 | `"Đất Hà Nội"` | TDM | **skip** |
 | post không text | TDM | keep |
 
+### 5.4 Post-merger location resolver
+
+City filter and location normalization are separate layers:
+
+1. City filter only decides whether to keep or skip a Facebook post before insert into `raw_listings`.
+2. `cleansing.normalizer.normalize_record()` decides `area` and canonical `ward` after raw insert.
+3. `config/location_aliases.py` resolves post-merger broker text into two concepts:
+   - `new_ward`: administrative ward after merger, used as context only.
+   - `ward`: old/canonical micro-market segment used by dedup, valuation, filters, and signals.
+
+Never map from broad new ward alone. Examples:
+
+| Broker text | `new_ward` context | Canonical `ward` |
+|---|---:|---:|
+| `KP.Phú Mỹ P.Bình Dương TP HCM` | `Bình Dương` | `Phú Mỹ` |
+| `KP Hòa Phú 2, P.Bình Dương TP HCM` | `Bình Dương` | `Hòa Phú` |
+| `KP Phú Tân 1, P.Bình Dương` | `Bình Dương` | `Phú Tân` |
+| `KP Phú Bưng/Phú Trung/Chánh Long, P.Bình Dương` | `Bình Dương` | `Phú Chánh` |
+| `P.Bình Dương TP HCM` | `Bình Dương` | `None` |
+| `KP2 Tân Định cũ nay thuộc phường Hòa Lợi TPHCM` | `Hòa Lợi` | `Tân Định` |
+| `KP3 Hòa Lợi TPHCM` | `Hòa Lợi` | `Hòa Lợi` |
+| `DX071/DX072 phường Chánh Hiệp TPHCM` | `Chánh Hiệp` | `Định Hòa`, only if no stronger old ward evidence exists |
+| `Chánh Hiệp TPHCM` | `Chánh Hiệp` | `None` |
+
+This keeps the valuation baseline stable: old ward/sub-ward segments remain the training and MOS units. New ward names can be displayed or stored later if a schema field such as `location_evidence` or `new_ward` is added, but v1 keeps them transient inside the normalizer.
+
 ---
 
 ## 6. Files chạm khi thay đổi flow này
@@ -638,6 +664,7 @@ Gọi từ `cli/crawlers.py::_facebook_crawl_to_raw` ngay trước khi insert ra
 | Telegram digest format | `alerts/telegram.py` | `send_watchlist_digest`, `send_message_to` |
 | Crawl entry + notification wiring | `cli/crawlers.py::cmd_crawl`, `_facebook_crawl_to_raw` | Capture `crawl_start_ts`, gọi city filter, reprocess, tải ảnh, push VIP |
 | Deterministic signal fields | `cleansing/reprocess.py`, `cleansing/normalizer.py`, `cleansing/feature_extractor.py` | Không còn bước verify bằng LLM ngoài sau crawl |
+| Post-merger location aliases | `config/location_aliases.py`, `scripts/audit_post_merger_locations.py` | Phường mới là context; chỉ KP/phường cũ/landmark đủ mạnh mới gán `ward` |
 | Guland targets | `data/guland_sources.json`, `crawler/guland_pw.py` | Chỉ sửa JSON khi mở rộng ward |
 | Legacy BatDongSan cleanup | `crawler/batdongsan_pw.py`, `cli/data_import.py` | Disabled for daily crawl; keep only for historical cleanup unless policy changes |
 | FB profiles | `data/facebook_profiles.json`, `crawler/facebook_apify.py` | tier=int, broker_name |

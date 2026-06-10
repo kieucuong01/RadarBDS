@@ -43,7 +43,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=vietnamese-font-stack-20260605">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=filter-sheet-gapless-20260609">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=date-range-filter-20260610">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-card-density-20260609">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=modal-comps-advisor-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=area-risk-radar-20260605">
@@ -114,6 +114,32 @@
         </div>
       </div>
       {% endif %}
+
+      <div class="filter-group date-range-filter" data-collapsible>
+        <div class="filter-title" onclick="toggleFilterSection(this)">
+          <span class="filter-title-left"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M8 2v4" />
+              <path d="M16 2v4" />
+              <rect width="18" height="18" x="3" y="4" rx="2" />
+              <path d="M3 10h18" />
+            </svg> THỜI GIAN ĐĂNG</span>
+          <svg class="filter-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+        <div class="filter-body">
+          <div id="dateRangeFilters" class="date-range-grid" role="radiogroup" aria-label="Lọc theo thời gian đăng">
+            <label class="filter-option"><input type="radio" name="date_range" value="1w"> 1 tuần</label>
+            <label class="filter-option"><input type="radio" name="date_range" value="1m"> 1 tháng</label>
+            <label class="filter-option"><input type="radio" name="date_range" value="3m" checked> 3 tháng</label>
+            <label class="filter-option"><input type="radio" name="date_range" value="6m"> 6 tháng</label>
+            <label class="filter-option"><input type="radio" name="date_range" value="1y"> 1 năm</label>
+            <label class="filter-option"><input type="radio" name="date_range" value="all"> Toàn bộ</label>
+          </div>
+        </div>
+      </div>
 
       <div class="filter-group signal-filter" data-collapsible>
         <div class="filter-title" onclick="toggleFilterSection(this)">

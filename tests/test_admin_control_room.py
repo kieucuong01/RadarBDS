@@ -524,7 +524,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertNotIn("js/admin.js", html)
 
     def test_public_auth_header_keeps_vietnamese_labels(self):
-        response = self.client.get("/")
+        response = self.client.get("/dashboard")
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
@@ -532,7 +532,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("Đăng nhập tài khoản", html)
 
         self._login_as_admin()
-        response = self.client.get("/")
+        response = self.client.get("/dashboard")
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
@@ -544,6 +544,124 @@ class AdminControlRoomGateTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.get_json()["error"], "admin_required")
+
+    def test_admin_can_delete_lead_and_audit_the_action(self):
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        token = uuid.uuid4().hex
+        with get_conn() as conn:
+            lead = conn.execute(
+                """
+                INSERT INTO lead_captures (listing_url, zalo_phone, source_context, note, status)
+                VALUES (?, ?, 'card_signal', 'test lead delete', 'new')
+                """,
+                (f"https://example.test/lead-delete-{token}", f"090{token[:7]}"),
+            )
+            lead_id = lead.lastrowid
+
+        response = self.client.delete(f"/admin/api/leads/{lead_id}")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["ok"])
+        with get_conn() as conn:
+            self.assertIsNone(
+                conn.execute("SELECT id FROM lead_captures WHERE id=?", (lead_id,)).fetchone()
+            )
+            audit = conn.execute(
+                """
+                SELECT action, entity_type, entity_id, before_json, reason
+                FROM admin_audit_log
+                WHERE action='lead_delete' AND entity_id=?
+                """,
+                (lead_id,),
+            ).fetchone()
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["entity_type"], "lead")
+        self.assertEqual(audit["reason"], "admin_delete")
+        self.assertIn("zalo_phone", audit["before_json"])
+
+    def test_admin_can_delete_user_dependents_but_not_current_admin(self):
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        token = uuid.uuid4().hex
+        with get_conn() as conn:
+            admin_id = conn.execute(
+                "SELECT id FROM users WHERE identifier=?",
+                (self.admin_identifier,),
+            ).fetchone()["id"]
+            user = conn.execute(
+                """
+                INSERT INTO users (identifier, identifier_type, password_hash, tier)
+                VALUES (?, 'email', 'hash', 'vip')
+                """,
+                (f"user-delete-{token}@example.test",),
+            )
+            user_id = user.lastrowid
+            conn.execute(
+                "INSERT INTO user_sessions (token, user_id, expires_at) VALUES (?, ?, '2099-01-01T00:00:00')",
+                (f"user-delete-session-{token}", user_id),
+            )
+            conn.execute(
+                "INSERT INTO user_watchlists (user_id, name, wards, prop_types) VALUES (?, 'Watch', '[]', '[]')",
+                (user_id,),
+            )
+            raw = conn.execute(
+                "INSERT INTO raw_listings (source, url, raw_json) VALUES ('facebook', ?, '{}')",
+                (f"https://example.test/user-delete-raw-{token}",),
+            )
+            listing = conn.execute(
+                """
+                INSERT INTO listings (raw_id, source, url, title, area, property_type, price_ty, area_m2)
+                VALUES (?, 'facebook', ?, 'User delete dependent listing', 'Thu Dau Mot', 'dat_nen', 1.2, 80)
+                """,
+                (raw.lastrowid, f"https://example.test/user-delete-listing-{token}"),
+            )
+            conn.execute(
+                "INSERT INTO notification_log (user_id, listing_id, channel) VALUES (?, ?, 'email')",
+                (user_id, listing.lastrowid),
+            )
+            lead = conn.execute(
+                """
+                INSERT INTO lead_captures (user_id, listing_url, zalo_phone, source_context, note, status)
+                VALUES (?, ?, '0911222333', 'modal_signal', 'linked lead', 'called')
+                """,
+                (user_id, f"https://example.test/user-delete-lead-{token}"),
+            )
+            lead_id = lead.lastrowid
+
+        self_response = self.client.delete(f"/admin/api/users/{admin_id}")
+        response = self.client.delete(f"/admin/api/users/{user_id}")
+
+        self.assertEqual(self_response.status_code, 400)
+        self.assertEqual(self_response.get_json()["error"], "cannot_delete_self")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["ok"])
+        with get_conn() as conn:
+            self.assertIsNone(conn.execute("SELECT id FROM users WHERE id=?", (user_id,)).fetchone())
+            self.assertEqual(
+                conn.execute("SELECT COUNT(*) FROM user_sessions WHERE user_id=?", (user_id,)).fetchone()[0],
+                0,
+            )
+            self.assertEqual(
+                conn.execute("SELECT COUNT(*) FROM user_watchlists WHERE user_id=?", (user_id,)).fetchone()[0],
+                0,
+            )
+            self.assertEqual(
+                conn.execute("SELECT COUNT(*) FROM notification_log WHERE user_id=?", (user_id,)).fetchone()[0],
+                0,
+            )
+            self.assertIsNone(
+                conn.execute("SELECT user_id FROM lead_captures WHERE id=?", (lead_id,)).fetchone()["user_id"]
+            )
+            audit = conn.execute(
+                "SELECT action, entity_type, entity_id, before_json FROM admin_audit_log WHERE action='user_delete' AND entity_id=?",
+                (user_id,),
+            ).fetchone()
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["entity_type"], "user")
+        self.assertIn("identifier", audit["before_json"])
 
     def test_admin_session_loads_control_room_workspace(self):
         self._login_as_admin()
@@ -1124,7 +1242,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".dup-source-links", css)
         self.assertIn(".dup-fact.price", css)
         self.assertIn(".dup-decision-copy", css)
-        self.assertIn("admin-v38-admin-icons", template)
+        self.assertIn("admin-v39-delete-actions", template)
         self.assertIn("admin-favicon-32.png", template)
         self.assertIn("admin-apple-touch-icon.png", template)
         self.assertIn("admin.webmanifest", template)
@@ -1476,6 +1594,11 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("Mobile admin shell", css)
         self.assertIn("body.sidebar-collapsed .nav-item > span:last-child", css)
         self.assertIn(".data-table:not(.apify-token-table):not(.crawl-table) td::before", css)
+        self.assertIn("function deleteLead", js)
+        self.assertIn("/admin/api/leads/${leadId}", js)
+        self.assertIn("function deleteUser", js)
+        self.assertIn("/admin/api/users/${userId}", js)
+        self.assertIn("icon-btn danger", js)
         self.assertIn('data-label="Số Zalo"', js)
         self.assertIn('data-label="Hành động"', js)
         self.assertIn(".crawl-ops-panel", css)

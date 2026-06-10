@@ -144,6 +144,18 @@ Targeted tests:
 & $py -X utf8 -m pytest tests\test_market_data_performance.py tests\test_postgres_connection.py tests\test_market_data_trust.py
 ```
 
+Post-merger location resolver:
+
+```powershell
+& $py -X utf8 -m py_compile cleansing\normalizer.py config\location_aliases.py scripts\audit_post_merger_locations.py
+& $py -X utf8 -m pytest tests\test_feature_extractor.py tests\test_dedup.py tests\test_price_history.py -q
+
+# Read-only DB audit before any reprocess.
+.\scripts\local_postgres.ps1 start
+$env:DATABASE_URL = "postgresql://postgres@127.0.0.1:5432/radar_bds"
+& $py -X utf8 scripts\audit_post_merger_locations.py --limit 2000 --samples 3
+```
+
 Full pytest:
 
 ```powershell

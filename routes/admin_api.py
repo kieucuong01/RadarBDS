@@ -40,6 +40,11 @@ def admin_api_update_lead_status(**kwargs):
     return _impl("admin_api_update_lead_status", **kwargs)
 
 
+@bp.route("/admin/api/leads/<int:lead_id>", methods=["DELETE"])
+def admin_api_delete_lead(**kwargs):
+    return _impl("admin_api_delete_lead", **kwargs)
+
+
 @bp.route("/admin/api/facebook-crawl/config", methods=["GET", "POST"])
 def admin_api_facebook_crawl_config(**kwargs):
     return _impl("admin_api_facebook_crawl_config", **kwargs)
@@ -135,6 +140,11 @@ def admin_api_audit(**kwargs):
 @bp.route("/admin/api/users")
 def admin_api_users(**kwargs):
     return _impl("admin_api_users", **kwargs)
+
+
+@bp.route("/admin/api/users/<int:user_id>", methods=["DELETE"])
+def admin_api_delete_user(**kwargs):
+    return _impl("admin_api_delete_user", **kwargs)
 
 
 @bp.route("/admin/api/users/<int:user_id>/grant-vip", methods=["POST"])

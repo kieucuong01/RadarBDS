@@ -3,6 +3,7 @@ import sys
 import tempfile
 import unittest
 import uuid
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest import mock
 
@@ -94,9 +95,11 @@ class SourcePolicyTest(unittest.TestCase):
         image_count=0,
         frontage_m=None,
         depth_m=None,
+        posted_at=None,
     ):
         from db.connection import get_conn
         price_per_m2 = round(price_ty * 1000 / area_m2, 2) if area_m2 else None
+        posted_at = posted_at or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         with get_conn() as conn:
             cur = conn.execute(
@@ -109,7 +112,7 @@ class SourcePolicyTest(unittest.TestCase):
                 ) VALUES (
                     ?, ?, ?, ?, ?,
                     ?, ?, ?, ?, 'dat_nen', ?, ?,
-                    ?, 0, ?, ?, 0, 0, 0, datetime('now'), datetime('now')
+                    ?, 0, ?, ?, 0, 0, 0, ?, ?
                 )
                 """,
                 (
@@ -127,6 +130,8 @@ class SourcePolicyTest(unittest.TestCase):
                     price_first_ty if price_first_ty is not None else price_ty,
                     price_dropped,
                     price_drop_pct,
+                    posted_at,
+                    posted_at,
                 ),
             )
             listing_id = cur.lastrowid
@@ -222,6 +227,63 @@ class SourcePolicyTest(unittest.TestCase):
         payload = response.get_json()
         self.assertEqual(payload["total"], 1)
         self.assertEqual([s["source"] for s in payload["signals"]], ["facebook"])
+
+    def test_signal_feed_defaults_to_three_month_listing_window(self):
+        old_date = (datetime.now() - timedelta(days=130)).strftime("%Y-%m-%d %H:%M:%S")
+        self._seed_signal(
+            source="facebook",
+            title="Old default hidden signal",
+            source_id="fb-old-default-hidden",
+            posted_at=old_date,
+        )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=20")
+        self.assertEqual(response.status_code, 200)
+
+        payload = response.get_json()
+        self.assertEqual(payload["total"], 1)
+        self.assertEqual([s["title"] for s in payload["signals"]], ["Facebook source policy signal"])
+
+    def test_signal_feed_supports_all_time_listing_window(self):
+        old_date = (datetime.now() - timedelta(days=400)).strftime("%Y-%m-%d %H:%M:%S")
+        self._seed_signal(
+            source="facebook",
+            title="Old all time visible signal",
+            source_id="fb-old-all-visible",
+            posted_at=old_date,
+        )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&date_range=all&limit=20")
+        self.assertEqual(response.status_code, 200)
+
+        payload = response.get_json()
+        titles = [s["title"] for s in payload["signals"]]
+        self.assertEqual(payload["total"], 2)
+        self.assertIn("Facebook source policy signal", titles)
+        self.assertIn("Old all time visible signal", titles)
+
+    def test_all_listings_uses_same_date_range_filter(self):
+        old_date = (datetime.now() - timedelta(days=130)).strftime("%Y-%m-%d %H:%M:%S")
+        self._seed_signal(
+            source="facebook",
+            title="Old listings hidden by default",
+            source_id="fb-old-listings-hidden",
+            posted_at=old_date,
+        )
+
+        default_response = self.client.get(f"/api/listings?city=Khac&ward={self.ward}&limit=20")
+        self.assertEqual(default_response.status_code, 200)
+        default_payload = default_response.get_json()
+        self.assertEqual(default_payload["total"], 1)
+        self.assertEqual([x["title"] for x in default_payload["listings"]], ["Facebook source policy signal"])
+
+        all_response = self.client.get(f"/api/listings?city=Khac&ward={self.ward}&date_range=all&limit=20")
+        self.assertEqual(all_response.status_code, 200)
+        all_payload = all_response.get_json()
+        titles = [x["title"] for x in all_payload["listings"]]
+        self.assertEqual(all_payload["total"], 2)
+        self.assertIn("Facebook source policy signal", titles)
+        self.assertIn("Old listings hidden by default", titles)
 
     def test_signal_feed_accepts_multiple_area_ranges(self):
         self._seed_signal(source="facebook", title="Area 200 signal", source_id="fb-area-200", area_m2=200, price_ty=2.0)
@@ -477,12 +539,12 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual([row["id"] for row in payload["listings"]], [matched_id])
 
     def test_source_filter_group_only_renders_for_admin(self):
-        guest_html = self.client.get("/").get_data(as_text=True)
+        guest_html = self.client.get("/dashboard").get_data(as_text=True)
         self.assertNotIn("NGUỒN DỮ LIỆU", guest_html)
         self.assertNotIn('id="sourceFilters"', guest_html)
 
         self._login_as_admin()
-        admin_html = self.client.get("/").get_data(as_text=True)
+        admin_html = self.client.get("/dashboard").get_data(as_text=True)
 
         self.assertIn("NGUỒN DỮ LIỆU", admin_html)
         self.assertIn('id="sourceFilters"', admin_html)

@@ -32,11 +32,22 @@ Use this when a task touches user-facing deal quality, dedup/history, valuation,
 - `default_area` is city/profile context, not a ward fallback.
 - If a Facebook Bến Cát profile has no clear ward, keep `area="Bến Cát"`, `ward=None`; never default it to Tân An.
 - If no city/ward/location is clear, keep `area="Unknown"`, `ward=None` so valuation does not learn from a guessed segment.
+- Post-merger administrative ward names are context, not valuation truth. Keep valuation segments as the old/canonical ward or sub-ward until a deliberate product/schema change says otherwise.
+- `config/location_aliases.py` owns post-merger alias evidence. It returns `new_ward` for administrative context and `ward` only when old-area evidence is strong enough.
+- Strong old-area evidence wins over new ward text: explicit old ward, `cũ` phrase, and khu phố aliases. Examples:
+  - `KP.Phú Mỹ P.Bình Dương TP HCM` -> `Phú Mỹ`.
+  - `KP Hòa Phú 2, P.Bình Dương TP HCM` -> `Hòa Phú`.
+  - `KP Phú Tân 1, P.Bình Dương` -> `Phú Tân`.
+  - `KP Phú Bưng`, `KP Phú Trung`, `KP Chánh Long` under `P.Bình Dương` -> `Phú Chánh`.
+  - `KP2 Tân Định cũ nay thuộc phường Hòa Lợi TPHCM` -> `Tân Định`.
+- Broad new ward alone must not create a valuation segment. `P.Bình Dương TP HCM`, `Chánh Hiệp TPHCM`, or `phường Hòa Lợi TPHCM` without stronger old-area evidence should keep `ward=None`.
+- Weak road/landmark rules may fill a ward only when no stronger old ward exists. Current rule: `DX071`/`DX072` + `phường Chánh Hiệp TPHCM` -> `Định Hòa`; explicit old ward text such as `Tương Bình Hiệp` must override it.
 - Bến Cát patterns from review:
   - `khu L`, `DL12`, `NL5`, `DH3A` -> Mỹ Phước 3.
   - `ĐH` / `Đại học Việt Đức` -> Thới Hòa.
   - `Chà Vi` -> parent Mỹ Phước.
 - `Long Nguyên` is outside the current focus area and should normalize to `area="Other"`, `ward=None`.
+- When adding a new broker location pattern, add a resolver rule, add a regression test in `tests/test_feature_extractor.py`, then run the read-only audit script before any DB reprocess.
 
 ## Valuation Rules
 

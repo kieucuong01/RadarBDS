@@ -353,7 +353,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "filter-sheet-gapless-20260609",
+        "date-range-filter-20260610",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -369,7 +369,7 @@ def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "filter-sheet-gapless-20260609",
+        "date-range-filter-20260610",
         ".sidebar .filter-sheet-head",
         "position: sticky",
         "margin: -14px -14px 8px",
@@ -501,6 +501,24 @@ def test_price_and_area_filters_support_multi_select_range_chips():
         assert expected in html or expected in filters_js
 
     assert ".range-chip.active" in filters_css
+
+
+def test_listing_date_range_filter_is_available_below_source_filter():
+    html = _read("templates/index.html")
+    filters_css = _read("static/css/main/filters.css")
+
+    assert html.find('id="sourceFilters"') < html.find('id="dateRangeFilters"')
+    assert 'name="date_range" value="3m" checked' in html
+    for expected in [
+        'value="1w"',
+        'value="1m"',
+        'value="3m"',
+        'value="6m"',
+        'value="1y"',
+        'value="all"',
+    ]:
+        assert expected in html
+    assert ".date-range-grid" in filters_css
 
 
 def test_index_loads_css_domain_files_in_dependency_order():

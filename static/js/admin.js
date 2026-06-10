@@ -1018,6 +1018,7 @@ function renderUserRows(items) {
           <button class="icon-btn" onclick="grantVip(${u.id}, 7)">+7d</button>
           <button class="icon-btn" onclick="revokeVip(${u.id})">Revoke</button>
           <button class="icon-btn" onclick="toggleBan(${u.id}, ${u.is_banned ? 0 : 1})">${u.is_banned ? 'Unban' : 'Ban'}</button>
+          <button class="icon-btn danger" onclick="deleteUser(${u.id})">Xóa</button>
         </td>
       </tr>
     `;
@@ -1058,6 +1059,19 @@ async function toggleBan(userId, banned) {
     });
     loadUsers();
   } catch (e) { alert('Lỗi: ' + (e.message || e)); }
+}
+
+async function deleteUser(userId) {
+  if (!confirm(`Xóa user #${userId}? Session, watchlist và log thông báo sẽ bị xóa; lead cũ chỉ bỏ liên kết user.`)) return;
+  await withAdminToast(
+    'Đang xóa người dùng',
+    async () => {
+      await fetchJSON(`/admin/api/users/${userId}`, { method: 'DELETE', silent: true });
+      await loadUsers();
+    },
+    'Đã xóa người dùng',
+    'Không xóa được người dùng'
+  );
 }
 
 function leadQuery() {
@@ -1112,7 +1126,10 @@ function renderLeadRows(items) {
             ${STATUS_KEYS.map(k => `<option value="${k}" ${x.status === k ? 'selected' : ''}>${STATUS[k].label}</option>`).join('')}
           </select>
         </td>
-        <td data-label="Thao tác"><button class="icon-btn" onclick="window.open('${esc(link)}','_blank')">Mở</button></td>
+        <td data-label="Thao tác">
+          <button class="icon-btn" onclick="window.open('${esc(link)}','_blank')">Mở</button>
+          <button class="icon-btn danger" onclick="deleteLead(${x.id})">Xóa</button>
+        </td>
       </tr>
     `;
   }).join('');
@@ -1126,6 +1143,19 @@ function renderLeadRows(items) {
       loadLeads();
     });
   });
+}
+
+async function deleteLead(leadId) {
+  if (!confirm(`Xóa lead #${leadId} khỏi CRM?`)) return;
+  await withAdminToast(
+    'Đang xóa lead',
+    async () => {
+      await fetchJSON(`/admin/api/leads/${leadId}`, { method: 'DELETE', silent: true });
+      await loadLeads();
+    },
+    'Đã xóa lead',
+    'Không xóa được lead'
+  );
 }
 
 function exportLeads() {
