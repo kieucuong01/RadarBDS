@@ -667,7 +667,7 @@ function renderCrawlProfiles() {
   const body = document.getElementById('crawlProfileRows');
   if (!body) return;
   if (!crawlProfiles.length) {
-    body.innerHTML = `<tr><td colspan="6"><div class="empty">Chưa có môi giới Facebook.</div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="9"><div class="empty">Chưa có môi giới Facebook.</div></td></tr>`;
     return;
   }
   body.innerHTML = crawlProfiles.map(p => `
@@ -687,6 +687,9 @@ function renderCrawlProfiles() {
       </td>
       <td data-label="Daily"><input class="crawl-small-input" type="number" min="1" max="500" data-crawl-field="daily_limit" value="${Number(p.daily_limit || p.tier || 20)}"></td>
       <td data-label="Range"><input class="crawl-small-input" type="number" min="1" max="60" data-crawl-field="range_days" value="${Number(p.range_days || 7)}"> <small>ngày</small></td>
+      <td data-label="Nhịp đăng">${crawlActivityHtml(p.activity || {})}</td>
+      <td data-label="Gợi ý">${crawlRecommendationHtml(p)}</td>
+      <td data-label="Độ sạch">${crawlQualityHtml(p.data_quality || {})}</td>
       <td data-label="Dữ liệu">
         <div class="crawl-data-meta">
           <strong>${Number(p.raw_count || 0)}</strong>
@@ -703,6 +706,60 @@ function renderCrawlProfiles() {
       </td>
     </tr>
   `).join('');
+}
+
+function crawlActivityHtml(activity) {
+  const tier = activity.cadence_tier || 'muted';
+  const label = activity.cadence_label || 'Chưa có dữ liệu';
+  return `
+    <div class="broker-insight">
+      <span class="broker-pill ${esc(tier)}">${esc(label)}</span>
+      <strong>${Number(activity.avg_posts_per_active_day_14d || 0).toFixed(1)} bài/ngày active</strong>
+      <small>${Number(activity.posts_30d || 0)} bài / 30 ngày · ${Number(activity.active_days_30d || 0)} ngày có đăng</small>
+    </div>
+  `;
+}
+
+function crawlRecommendationHtml(profile) {
+  const activity = profile.activity || {};
+  const daily = Number(activity.recommended_daily_limit || profile.daily_limit || profile.tier || 30);
+  const weekly = Number(activity.recommended_weekly_limit || daily * 7);
+  return `
+    <div class="broker-rec">
+      <strong>${daily}/ngày</strong>
+      <small>${weekly}/tuần</small>
+      <button class="broker-apply-btn" type="button" onclick="applyCrawlRecommendedDailyLimit('${esc(profile.url)}', ${daily})">Áp dụng</button>
+    </div>
+  `;
+}
+
+function crawlQualityHtml(quality) {
+  const tier = quality.tier || 'muted';
+  const score = quality.score === null || quality.score === undefined ? '--' : Number(quality.score);
+  const reasons = Array.isArray(quality.reasons) ? quality.reasons.slice(0, 2).join(', ') : '';
+  return `
+    <div class="broker-quality">
+      <span class="broker-score ${esc(tier)}">${score}</span>
+      <div>
+        <strong>${esc(quality.label || 'Chưa đủ mẫu')}</strong>
+        <small>${Number(quality.sample_size || 0)} mẫu · giá ${Number(quality.price_pct || 0)}% · DT ${Number(quality.area_pct || 0)}%</small>
+        <em>${esc(reasons)}</em>
+      </div>
+    </div>
+  `;
+}
+
+function applyCrawlRecommendedDailyLimit(url, daily) {
+  readCrawlTableState();
+  const profile = crawlProfiles.find(p => p.url === url);
+  if (!profile) return;
+  profile.daily_limit = daily;
+  profile.tier = daily;
+  const row = Array.from(document.querySelectorAll('#crawlProfileRows tr[data-url]')).find(item => item.dataset.url === url);
+  const input = row?.querySelector('[data-crawl-field="daily_limit"]');
+  if (input) input.value = daily;
+  syncCrawlRunInputs();
+  showAdminToast('Đã áp dụng quota gợi ý cho môi giới', 'success');
 }
 
 function renderCrawlRunSelect() {

@@ -1124,7 +1124,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".dup-source-links", css)
         self.assertIn(".dup-fact.price", css)
         self.assertIn(".dup-decision-copy", css)
-        self.assertIn("admin-v33-duplicate-readonly", template)
+        self.assertIn("admin-v34-broker-insights", template)
 
     def test_ai_training_requires_explicit_valuation_choice_in_js(self):
         js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(
@@ -1350,6 +1350,96 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertEqual(ops["source_errors"][0]["source"], "batdongsan")
         self.assertEqual(ops["lock_blockers"][0]["name"], "reprocess")
 
+    def test_admin_facebook_crawl_config_scores_broker_cadence_without_penalizing_reposts(self):
+        from datetime import datetime, timedelta, timezone
+        import json
+        import app as app_module
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        token = uuid.uuid4().hex
+        profile_url = f"https://www.facebook.com/broker-{token}"
+        profile_path = self.tmpdir / "facebook_profiles.json"
+        profile_path.write_text(
+            json.dumps({
+                "Bến Cát": [{
+                    "url": profile_url,
+                    "broker_name": "Broker repost tốt",
+                    "daily_limit": 8,
+                    "range_days": 7,
+                    "active": True,
+                }]
+            }, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        with mock.patch.object(app_module, "FACEBOOK_PROFILE_PATH", profile_path):
+            with get_conn() as conn:
+                for idx in range(18):
+                    crawled_at = (now - timedelta(days=idx // 6)).strftime("%Y-%m-%d %H:%M:%S")
+                    raw_payload = {
+                        "profile_url": profile_url,
+                        "title": "Repost cập nhật cùng một lô đất DX124",
+                        "description": "Bán đất nền Tân An đường DX124, giá rõ, diện tích rõ, có ảnh thực tế.",
+                        "imgs": [f"https://example.test/image-{token}-{idx}.jpg"],
+                    }
+                    raw = conn.execute(
+                        """
+                        INSERT INTO raw_listings (source, source_id, url, raw_json, crawled_at)
+                        VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (
+                            "facebook",
+                            f"fb-broker-{token}-{idx}",
+                            f"https://example.test/broker-repost-{token}-{idx}",
+                            json.dumps(raw_payload, ensure_ascii=False),
+                            crawled_at,
+                        ),
+                    )
+                    listing = conn.execute(
+                        """
+                        INSERT INTO listings (
+                            raw_id, source, source_id, url, title, description, area, ward,
+                            property_type, price_ty, price_per_m2, area_m2, probably_sold,
+                            is_blacklisted, review_hidden, possibly_duplicate
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)
+                        """,
+                        (
+                            raw.lastrowid,
+                            "facebook",
+                            f"fb-broker-listing-{token}-{idx}",
+                            f"https://example.test/broker-listing-{token}-{idx}",
+                            "Repost cập nhật cùng một lô đất DX124",
+                            "Bán đất nền Tân An đường DX124, giá rõ, diện tích rõ, có ảnh thực tế.",
+                            "Tân An",
+                            "Tân An",
+                            "dat_nen",
+                            2.5,
+                            25.0,
+                            100.0,
+                        ),
+                    )
+                    conn.execute(
+                        """
+                        INSERT INTO valuation_results (
+                            listing_id, fair_ppm2, actual_ppm2, mos_pct, is_signal,
+                            source_quality_recheck, source_quality_flags
+                        ) VALUES (?, 30, 25, 16, 0, 0, '')
+                        """,
+                        (listing.lastrowid,),
+                    )
+
+            response = self.client.get("/admin/api/facebook-crawl/config")
+
+        self.assertEqual(response.status_code, 200)
+        profile = response.get_json()["profiles"][0]
+        self.assertEqual(profile["raw_count"], 18)
+        self.assertGreaterEqual(profile["activity"]["recommended_daily_limit"], 12)
+        self.assertEqual(profile["activity"]["posts_7d"], 18)
+        self.assertGreaterEqual(profile["data_quality"]["score"], 85)
+        self.assertEqual(profile["data_quality"]["serious_flag_pct"], 0.0)
+        self.assertNotIn("deal", json.dumps(profile["data_quality"], ensure_ascii=False).lower())
+
     def test_admin_js_renders_crawl_ops_panel(self):
         root = Path(__file__).resolve().parent.parent
         js = (root / "static/js/admin.js").read_text(encoding="utf-8")
@@ -1363,6 +1453,13 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("schedule.task_name", js)
         self.assertIn("serviceFailed", js)
         self.assertIn("crawl-ops-alert", js)
+        self.assertIn("function crawlActivityHtml", js)
+        self.assertIn("function crawlQualityHtml", js)
+        self.assertIn("recommended_daily_limit", js)
+        self.assertIn("Nhịp đăng", html)
+        self.assertIn("Độ sạch", html)
+        self.assertIn(".broker-quality", css)
+        self.assertIn(".broker-apply-btn", css)
         self.assertIn(".crawl-ops-panel", css)
         self.assertIn(".crawl-ops-alert", css)
 

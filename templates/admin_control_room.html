@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v33-duplicate-readonly">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v34-broker-insights">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -443,6 +443,9 @@
                   <th>Môi giới</th>
                   <th>Daily</th>
                   <th>Range</th>
+                  <th>Nhịp đăng</th>
+                  <th>Gợi ý</th>
+                  <th>Độ sạch</th>
                   <th>Dữ liệu</th>
                   <th>Chạy</th>
                 </tr>
@@ -703,7 +706,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v33-duplicate-readonly"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v34-broker-insights"></script>
   {% endif %}
 </body>
 </html>

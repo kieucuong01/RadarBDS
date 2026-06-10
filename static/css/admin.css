@@ -878,6 +878,97 @@ p { margin: 6px 0 0; color: var(--muted); }
   color: var(--muted);
   white-space: nowrap;
 }
+.broker-insight,
+.broker-rec {
+  display: grid;
+  gap: 4px;
+  min-width: 118px;
+}
+.broker-insight strong,
+.broker-rec strong,
+.broker-quality strong {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.2;
+}
+.broker-insight small,
+.broker-rec small,
+.broker-quality small,
+.broker-quality em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.25;
+}
+.broker-pill {
+  width: fit-content;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.broker-pill.good,
+.broker-score.good {
+  color: var(--green);
+  border-color: rgba(5, 150, 105, .28);
+  background: rgba(5, 150, 105, .08);
+}
+.broker-pill.strong,
+.broker-score.strong {
+  color: #047857;
+  border-color: rgba(4, 120, 87, .32);
+  background: rgba(16, 185, 129, .12);
+}
+.broker-pill.warn,
+.broker-score.warn {
+  color: #b45309;
+  border-color: rgba(217, 119, 6, .32);
+  background: rgba(245, 158, 11, .12);
+}
+.broker-score.danger {
+  color: var(--red);
+  border-color: rgba(225, 29, 72, .32);
+  background: rgba(225, 29, 72, .10);
+}
+.broker-apply-btn {
+  width: fit-content;
+  min-height: 26px;
+  border: 1px solid rgba(37, 99, 235, .24);
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .08);
+  color: var(--blue);
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.broker-quality {
+  display: grid;
+  grid-template-columns: 34px minmax(130px, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-width: 190px;
+}
+.broker-score {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 950;
+}
+.broker-quality > div {
+  display: grid;
+  gap: 2px;
+}
 .crawl-switch {
   display: inline-flex;
   align-items: center;

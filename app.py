@@ -253,21 +253,285 @@ def _facebook_profile_lookup(url: str) -> dict | None:
     return None
 
 
+def _empty_facebook_profile_stat() -> dict:
+    return {
+        "raw_count": 0,
+        "latest_crawled_at": None,
+        "activity": {
+            "posts_7d": 0,
+            "posts_14d": 0,
+            "posts_30d": 0,
+            "active_days_30d": 0,
+            "avg_posts_per_active_day_14d": 0.0,
+            "avg_posts_per_day_30d": 0.0,
+            "avg_posts_per_week_30d": 0.0,
+            "recommended_daily_limit": 10,
+            "recommended_weekly_limit": 30,
+            "cadence_label": "Chưa có dữ liệu",
+            "cadence_tier": "muted",
+            "confidence": "low",
+        },
+        "data_quality": {
+            "score": None,
+            "label": "Chưa đủ mẫu",
+            "tier": "muted",
+            "sample_size": 0,
+            "price_pct": 0.0,
+            "area_pct": 0.0,
+            "ward_pct": 0.0,
+            "property_type_pct": 0.0,
+            "image_pct": 0.0,
+            "description_pct": 0.0,
+            "serious_flag_pct": 0.0,
+            "reasons": ["Chưa đủ dữ liệu để đánh giá"],
+        },
+    }
+
+
+def _parse_crawl_datetime(value) -> datetime | None:
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        dt = value
+    else:
+        text = str(value).strip()
+        if not text:
+            return None
+        try:
+            dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        except ValueError:
+            try:
+                dt = datetime.strptime(text[:19], "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                return None
+    if dt.tzinfo:
+        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
+def _raw_has_images(raw: dict) -> bool:
+    candidates = [
+        raw.get("imgs"),
+        raw.get("images"),
+        raw.get("image_urls"),
+        raw.get("img_urls"),
+        raw.get("photos"),
+    ]
+    apify_raw = raw.get("_apify_raw")
+    if isinstance(apify_raw, dict):
+        candidates.extend([
+            apify_raw.get("imgs"),
+            apify_raw.get("images"),
+            apify_raw.get("image_urls"),
+            apify_raw.get("photos"),
+        ])
+    for value in candidates:
+        if isinstance(value, list) and any(str(item or "").strip() for item in value):
+            return True
+        if isinstance(value, str) and value.strip():
+            return True
+    return False
+
+
+def _present_text(*values) -> bool:
+    return any(str(value or "").strip() for value in values)
+
+
+def _pct(part: int, total: int) -> float:
+    return round((part / total) * 100, 1) if total else 0.0
+
+
+def _facebook_profile_activity(rows: list[dict]) -> dict:
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    dated: list[datetime] = []
+    for item in rows:
+        dt = _parse_crawl_datetime(item.get("crawled_at"))
+        if dt:
+            dated.append(dt)
+    posts_7d = sum(1 for dt in dated if dt >= now - timedelta(days=7))
+    posts_14d = sum(1 for dt in dated if dt >= now - timedelta(days=14))
+    posts_30d = sum(1 for dt in dated if dt >= now - timedelta(days=30))
+    days_14 = {dt.date() for dt in dated if dt >= now - timedelta(days=14)}
+    days_30 = {dt.date() for dt in dated if dt >= now - timedelta(days=30)}
+    active_days_14d = len(days_14)
+    active_days_30d = len(days_30)
+    avg_active_14d = round(posts_14d / active_days_14d, 1) if active_days_14d else 0.0
+    avg_day_30d = round(posts_30d / 30, 1) if posts_30d else 0.0
+    avg_week_30d = round(posts_30d / 30 * 7, 1) if posts_30d else 0.0
+    recommended_daily = max(10, min(120, int(round(max(avg_active_14d, avg_day_30d) * 1.35 + 5))))
+    recommended_weekly = max(30, min(500, int(round(avg_week_30d * 1.25 + 10))))
+    if not rows:
+        label, tier, confidence = "Chưa có dữ liệu", "muted", "low"
+    elif posts_30d == 0:
+        label, tier, confidence = "Ít hoạt động", "muted", "low"
+    elif active_days_30d >= 18 or avg_active_14d >= 12:
+        label, tier, confidence = "Nhịp cao", "strong", "high"
+    elif active_days_30d >= 8 or posts_30d >= 20:
+        label, tier, confidence = "Ổn định", "good", "medium"
+    else:
+        label, tier, confidence = "Rải rác", "warn", "medium"
+    return {
+        "posts_7d": posts_7d,
+        "posts_14d": posts_14d,
+        "posts_30d": posts_30d,
+        "active_days_30d": active_days_30d,
+        "avg_posts_per_active_day_14d": avg_active_14d,
+        "avg_posts_per_day_30d": avg_day_30d,
+        "avg_posts_per_week_30d": avg_week_30d,
+        "recommended_daily_limit": recommended_daily,
+        "recommended_weekly_limit": recommended_weekly,
+        "cadence_label": label,
+        "cadence_tier": tier,
+        "confidence": confidence,
+    }
+
+
+def _facebook_profile_data_quality(rows: list[dict]) -> dict:
+    serious_flags = {
+        "parsed_discount_as_price",
+        "too_low_absolute_price",
+        "down_payment_as_price",
+        "area_dimension_conflict",
+        "source_category_conflict",
+        "missing_area_evidence",
+        "ambiguous_price_text",
+        "multi_lot_listing",
+    }
+    counters = Counter()
+    sample = 0
+    for item in rows:
+        raw = item.get("raw") or {}
+        text = " ".join(str(x or "") for x in [
+            item.get("title"),
+            item.get("description"),
+            raw.get("title"),
+            raw.get("description"),
+            raw.get("text"),
+            raw.get("post_text"),
+        ]).strip()
+        sample += 1
+        if (item.get("price_ty") or 0) > 0 or _present_text(raw.get("price"), raw.get("price_ty"), raw.get("price_text")):
+            counters["price"] += 1
+        if (item.get("area_m2") or 0) > 0 or _present_text(raw.get("area"), raw.get("area_m2"), raw.get("area_text")):
+            counters["area"] += 1
+        if _present_text(item.get("ward"), raw.get("ward"), raw.get("area"), raw.get("location")):
+            counters["ward"] += 1
+        if _present_text(item.get("property_type"), raw.get("property_type"), raw.get("category")):
+            counters["property_type"] += 1
+        if item.get("image_count", 0) > 0 or _raw_has_images(raw):
+            counters["image"] += 1
+        if len(text) >= 80:
+            counters["description"] += 1
+        flags = set(split_quality_flags(item.get("source_quality_flags") or ""))
+        if flags & serious_flags:
+            counters["serious_flags"] += 1
+    if sample < 5:
+        return {
+            "score": None,
+            "label": "Chưa đủ mẫu",
+            "tier": "muted",
+            "sample_size": sample,
+            "price_pct": _pct(counters["price"], sample),
+            "area_pct": _pct(counters["area"], sample),
+            "ward_pct": _pct(counters["ward"], sample),
+            "property_type_pct": _pct(counters["property_type"], sample),
+            "image_pct": _pct(counters["image"], sample),
+            "description_pct": _pct(counters["description"], sample),
+            "serious_flag_pct": _pct(counters["serious_flags"], sample),
+            "reasons": ["Cần thêm bài đã crawl để đánh giá chắc hơn"],
+        }
+    price_pct = _pct(counters["price"], sample)
+    area_pct = _pct(counters["area"], sample)
+    ward_pct = _pct(counters["ward"], sample)
+    property_pct = _pct(counters["property_type"], sample)
+    image_pct = _pct(counters["image"], sample)
+    description_pct = _pct(counters["description"], sample)
+    serious_pct = _pct(counters["serious_flags"], sample)
+    score = round(
+        price_pct * 0.24
+        + area_pct * 0.24
+        + ward_pct * 0.18
+        + property_pct * 0.10
+        + image_pct * 0.12
+        + description_pct * 0.12
+        - serious_pct * 0.35
+    )
+    score = max(0, min(100, int(score)))
+    if score >= 82:
+        label, tier = "Dữ liệu sạch", "strong"
+    elif score >= 68:
+        label, tier = "Dữ liệu ổn", "good"
+    elif score >= 52:
+        label, tier = "Thiếu thông tin", "warn"
+    else:
+        label, tier = "Khó parse", "danger"
+    reasons = []
+    if price_pct < 80:
+        reasons.append("hay thiếu giá")
+    if area_pct < 80:
+        reasons.append("hay thiếu diện tích")
+    if ward_pct < 75:
+        reasons.append("thiếu khu vực/phường")
+    if image_pct < 60:
+        reasons.append("ít ảnh")
+    if serious_pct >= 15:
+        reasons.append("nhiều lỗi parse giá/diện tích")
+    if not reasons:
+        reasons.append("đủ trường chính, dễ parse")
+    return {
+        "score": score,
+        "label": label,
+        "tier": tier,
+        "sample_size": sample,
+        "price_pct": price_pct,
+        "area_pct": area_pct,
+        "ward_pct": ward_pct,
+        "property_type_pct": property_pct,
+        "image_pct": image_pct,
+        "description_pct": description_pct,
+        "serious_flag_pct": serious_pct,
+        "reasons": reasons[:3],
+    }
+
+
 def _facebook_profile_stats(profile_urls: list[str]) -> dict:
-    stats = {url: {"raw_count": 0, "latest_crawled_at": None} for url in profile_urls}
+    stats = {url: _empty_facebook_profile_stat() for url in profile_urls}
     if not profile_urls:
         return stats
     try:
         with get_conn() as conn:
             rows = conn.execute("""
-                SELECT raw_json, crawled_at
-                FROM raw_listings
-                WHERE source = 'facebook'
-                ORDER BY crawled_at DESC
+                SELECT
+                    r.raw_json,
+                    r.crawled_at,
+                    l.title,
+                    l.description,
+                    l.price_ty,
+                    l.area_m2,
+                    l.ward,
+                    l.property_type,
+                    COALESCE(img.image_count, 0) AS image_count,
+                    v.source_quality_flags
+                FROM raw_listings r
+                LEFT JOIN listings l ON l.raw_id = r.id
+                LEFT JOIN (
+                    SELECT listing_id, COUNT(*) AS image_count
+                    FROM listing_images
+                    GROUP BY listing_id
+                ) img ON img.listing_id = l.id
+                LEFT JOIN (
+                    SELECT listing_id, MAX(id) AS latest_id
+                    FROM valuation_results
+                    GROUP BY listing_id
+                ) latest_v ON latest_v.listing_id = l.id
+                LEFT JOIN valuation_results v ON v.id = latest_v.latest_id
+                WHERE r.source = 'facebook'
+                ORDER BY r.crawled_at DESC
                 LIMIT 8000
             """).fetchall()
     except Exception:
         return stats
+    grouped = {url: [] for url in profile_urls}
     for row in rows:
         try:
             raw = json.loads(row["raw_json"] or "{}")
@@ -282,7 +546,22 @@ def _facebook_profile_stats(profile_urls: list[str]) -> dict:
                 stats[url]["raw_count"] += 1
                 if not stats[url]["latest_crawled_at"]:
                     stats[url]["latest_crawled_at"] = row["crawled_at"]
+                grouped[url].append({
+                    "raw": raw,
+                    "crawled_at": row["crawled_at"],
+                    "title": row["title"],
+                    "description": row["description"],
+                    "price_ty": row["price_ty"],
+                    "area_m2": row["area_m2"],
+                    "ward": row["ward"],
+                    "property_type": row["property_type"],
+                    "image_count": int(row["image_count"] or 0),
+                    "source_quality_flags": row["source_quality_flags"] or "",
+                })
                 break
+    for url, items in grouped.items():
+        stats[url]["activity"] = _facebook_profile_activity(items)
+        stats[url]["data_quality"] = _facebook_profile_data_quality(items)
     return stats
 
 
