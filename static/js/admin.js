@@ -29,6 +29,7 @@ let activeInfraFilter = 'timeline';
 let crawlProfiles = [];
 let crawlSummary = {};
 let apifyTokens = [];
+let apifyTokensExpanded = false;
 let dataQualitySummary = {};
 let crawlMode = 'first';
 let crawlPollTimer = null;
@@ -294,6 +295,7 @@ async function loadCrawlConfig() {
 
 function renderApifyTokens() {
   const body = document.getElementById('apifyTokenRows');
+  renderApifyTokenShell();
   if (!body) return;
   if (!apifyTokens.length) {
     body.innerHTML = `<tr><td colspan="7"><div class="empty">Chưa có key trong pool. Nếu trống, crawler sẽ dùng APIFY_TOKEN từ .env.</div></td></tr>`;
@@ -325,6 +327,47 @@ function renderApifyTokens() {
       </tr>
     `;
   }).join('');
+}
+
+function apifyTokenStats() {
+  const total = apifyTokens.length;
+  const active = apifyTokens.filter(t => t.active).length;
+  const used = apifyTokens.reduce((sum, t) => sum + Number(t.used_this_month || 0), 0);
+  const quota = apifyTokens.reduce((sum, t) => sum + Number(t.monthly_quota || 0), 0);
+  const remaining = apifyTokens.reduce((sum, t) => sum + Math.max(0, Number(t.remaining || 0)), 0);
+  const errors = apifyTokens.filter(t => t.last_error).length;
+  const low = apifyTokens.filter(t => t.active && !t.last_error && Number(t.remaining || 0) <= 100).length;
+  return { total, active, used, quota, remaining, errors, low };
+}
+
+function renderApifyTokenShell() {
+  const panel = document.getElementById('apifyTokenPanel');
+  const body = document.getElementById('apifyTokenBody');
+  const button = document.getElementById('toggleApifyTokensBtn');
+  const summary = document.getElementById('apifyTokenSummary');
+  const miniStats = document.getElementById('apifyTokenMiniStats');
+  const stats = apifyTokenStats();
+  if (panel) panel.classList.toggle('is-collapsed', !apifyTokensExpanded);
+  if (body) body.hidden = !apifyTokensExpanded;
+  if (button) button.textContent = apifyTokensExpanded ? 'Thu gọn' : (stats.total ? 'Quản lý key' : 'Thêm key');
+  if (summary) {
+    summary.textContent = stats.total
+      ? `${stats.active}/${stats.total} key đang bật · còn ${stats.remaining.toLocaleString('vi-VN')} post tháng này`
+      : 'Chưa cấu hình key pool, crawler sẽ dùng APIFY_TOKEN từ .env.';
+  }
+  if (miniStats) {
+    const usagePct = stats.quota ? Math.min(100, Math.round((stats.used / stats.quota) * 100)) : 0;
+    miniStats.innerHTML = `
+      <span><strong>${stats.remaining.toLocaleString('vi-VN')}</strong><small>còn lại</small></span>
+      <span><strong>${usagePct}%</strong><small>đã dùng</small></span>
+      <span class="${stats.errors ? 'danger' : stats.low ? 'warn' : 'ok'}"><strong>${stats.errors || stats.low || 'OK'}</strong><small>${stats.errors ? 'lỗi key' : stats.low ? 'sắp hết' : 'quota ổn'}</small></span>
+    `;
+  }
+}
+
+function toggleApifyTokensPanel() {
+  apifyTokensExpanded = !apifyTokensExpanded;
+  renderApifyTokenShell();
 }
 
 async function saveApifyToken(payload) {
@@ -1919,6 +1962,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('refreshCrawlBtn')?.addEventListener('click', loadCrawlConfig);
   document.getElementById('saveCrawlProfilesBtn')?.addEventListener('click', saveCrawlProfiles);
   document.getElementById('addCrawlProfileBtn')?.addEventListener('click', addCrawlProfile);
+  document.getElementById('toggleApifyTokensBtn')?.addEventListener('click', toggleApifyTokensPanel);
   document.getElementById('addApifyTokenBtn')?.addEventListener('click', addApifyToken);
   document.getElementById('runCrawlBtn')?.addEventListener('click', runSelectedCrawl);
   document.getElementById('crawlRunProfile')?.addEventListener('change', syncCrawlRunInputs);

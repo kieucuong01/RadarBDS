@@ -596,28 +596,112 @@ p { margin: 6px 0 0; color: var(--muted); }
 .apify-token-panel {
   margin-bottom: 16px;
   border-radius: 10px;
+  overflow: hidden;
+}
+.apify-token-head {
+  display: grid;
+  grid-template-columns: minmax(230px, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+}
+.apify-token-title {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.apify-token-title strong {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.2;
+}
+.apify-token-title span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.apify-token-mini-stats {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.apify-token-mini-stats span {
+  display: grid;
+  min-width: 72px;
+  gap: 1px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+}
+.apify-token-mini-stats strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1;
+}
+.apify-token-mini-stats small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.apify-token-mini-stats .ok strong {
+  color: var(--green);
+}
+.apify-token-mini-stats .warn strong {
+  color: var(--orange);
+}
+.apify-token-mini-stats .danger strong {
+  color: var(--red);
+}
+.apify-token-toggle {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  box-shadow: none;
+  white-space: nowrap;
+}
+.apify-token-body {
+  border-top: 1px solid var(--line);
+}
+.apify-token-body[hidden] {
+  display: none;
 }
 .apify-token-form {
-  min-height: 62px;
+  min-height: 50px;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--soft) 70%, var(--panel));
 }
 .apify-token-form input {
   min-width: 150px;
-  height: 38px;
+  height: 34px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 12px;
 }
 #apifyTokenQuota {
-  max-width: 120px;
+  max-width: 110px;
 }
 .apify-token-form .primary-btn {
-  min-height: 38px;
+  min-height: 34px;
   box-shadow: none;
+}
+.apify-token-scroll {
+  max-height: 260px;
+  overflow: auto;
 }
 .apify-token-table th,
 .apify-token-table td {
-  padding: 10px;
+  padding: 8px 10px;
+}
+.apify-token-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel);
 }
 .apify-token-table small {
   color: var(--muted);
@@ -1153,6 +1237,21 @@ p { margin: 6px 0 0; color: var(--muted); }
     display: grid;
     grid-template-columns: 1fr;
   }
+  .apify-token-head {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .apify-token-mini-stats {
+    justify-content: stretch;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .apify-token-mini-stats span {
+    min-width: 0;
+  }
+  .apify-token-toggle {
+    width: 100%;
+  }
   .apify-token-form {
     display: grid;
     grid-template-columns: 1fr;
@@ -1164,8 +1263,9 @@ p { margin: 6px 0 0; color: var(--muted); }
     max-width: none;
     min-width: 0;
   }
-  .apify-token-panel .table-wrap {
-    overflow: visible;
+  .apify-token-scroll {
+    max-height: 340px;
+    overflow: auto;
   }
   .apify-token-table,
   .apify-token-table tbody,

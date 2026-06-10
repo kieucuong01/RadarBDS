@@ -1124,7 +1124,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".dup-source-links", css)
         self.assertIn(".dup-fact.price", css)
         self.assertIn(".dup-decision-copy", css)
-        self.assertIn("admin-v34-broker-insights", template)
+        self.assertIn("admin-v35-apify-compact", template)
 
     def test_ai_training_requires_explicit_valuation_choice_in_js(self):
         js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(
@@ -1456,6 +1456,13 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("function crawlActivityHtml", js)
         self.assertIn("function crawlQualityHtml", js)
         self.assertIn("recommended_daily_limit", js)
+        self.assertIn("function renderApifyTokenShell", js)
+        self.assertIn("toggleApifyTokensPanel", js)
+        self.assertIn('id="apifyTokenSummary"', html)
+        self.assertIn('id="apifyTokenMiniStats"', html)
+        self.assertIn('id="apifyTokenBody"', html)
+        self.assertIn(".apify-token-head", css)
+        self.assertIn(".apify-token-scroll", css)
         self.assertIn("Nhịp đăng", html)
         self.assertIn("Độ sạch", html)
         self.assertIn(".broker-quality", css)

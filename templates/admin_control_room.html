@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v34-broker-insights">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v35-apify-compact">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -402,14 +402,23 @@
       <div class="stat-grid" id="crawlStats"></div>
       <section class="surface crawl-ops-panel" id="crawlOpsPanel"></section>
 
-      <section class="surface apify-token-panel">
-        <div class="toolbar apify-token-form">
-          <input id="apifyTokenLabel" placeholder="Tên key, ví dụ Key 1">
-          <input id="apifyTokenValue" type="password" autocomplete="off" placeholder="apify_api_...">
-          <input id="apifyTokenQuota" type="number" min="1" max="10000" value="950" title="Quota post/tháng">
-          <button class="primary-btn" id="addApifyTokenBtn"><span class="btn-icon-label">{{ admin_icon('plus', 'btn-svg') }}<span>Thêm key</span></span></button>
+      <section class="surface apify-token-panel is-collapsed" id="apifyTokenPanel">
+        <div class="apify-token-head">
+          <div class="apify-token-title">
+            <strong>Apify key pool</strong>
+            <span id="apifyTokenSummary">Đang tải quota...</span>
+          </div>
+          <div class="apify-token-mini-stats" id="apifyTokenMiniStats"></div>
+          <button class="secondary-btn apify-token-toggle" id="toggleApifyTokensBtn" type="button">Quản lý key</button>
         </div>
-        <div class="table-wrap">
+        <div class="apify-token-body" id="apifyTokenBody" hidden>
+          <div class="toolbar apify-token-form">
+            <input id="apifyTokenLabel" placeholder="Tên key, ví dụ Key 1">
+            <input id="apifyTokenValue" type="password" autocomplete="off" placeholder="apify_api_...">
+            <input id="apifyTokenQuota" type="number" min="1" max="10000" value="950" title="Quota post/tháng">
+            <button class="primary-btn" id="addApifyTokenBtn"><span class="btn-icon-label">{{ admin_icon('plus', 'btn-svg') }}<span>Thêm key</span></span></button>
+          </div>
+          <div class="table-wrap apify-token-scroll">
           <table class="data-table apify-token-table">
             <thead>
               <tr>
@@ -424,6 +433,7 @@
             </thead>
             <tbody id="apifyTokenRows"></tbody>
           </table>
+          </div>
         </div>
       </section>
 
@@ -706,7 +716,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v34-broker-insights"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v35-apify-compact"></script>
   {% endif %}
 </body>
 </html>
