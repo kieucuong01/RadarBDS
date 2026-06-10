@@ -147,6 +147,7 @@ def build_parser():
     p_cd.add_argument("--source",  help="Chỉ crawl 1 nguồn")
     p_cd.add_argument("--visible", action="store_true")
     p_cd.add_argument("--no-alert", action="store_true", help="Không gửi VIP notification")
+    p_cd.add_argument("--no-groq", action="store_true", help=argparse.SUPPRESS)
 
     # schedule-setup
     p_ss = sub.add_parser("schedule-setup", help="Cài Windows Task Scheduler chạy crawl-daily")
