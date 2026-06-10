@@ -180,10 +180,39 @@ body {
   display: grid;
   place-items: center;
   border-radius: 9px;
-  color: #fff;
-  background: linear-gradient(135deg, #0f766e, #2563eb);
-  font-weight: 800;
+  position: relative;
+  overflow: visible;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--line) 74%, transparent);
   box-shadow: 0 10px 24px rgba(37, 99, 235, .2);
+}
+.brand-mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  object-fit: cover;
+  object-position: center 31%;
+}
+.brand-mark::after {
+  content: "ADMIN";
+  position: absolute;
+  right: -10px;
+  bottom: -6px;
+  height: 16px;
+  min-width: 35px;
+  padding: 0 5px;
+  border: 2px solid var(--panel);
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--orange);
+  color: #7c2d12;
+  font-size: 7px;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: .02em;
+  box-shadow: 0 6px 14px rgba(245, 158, 11, .28);
 }
 .brand-name { font-weight: 800; font-size: 18px; }
 .brand-sub, .top-title small, .admin-profile small { display: block; color: var(--muted); }
@@ -2363,25 +2392,14 @@ p { margin: 6px 0 0; color: var(--muted); }
     width: 34px;
     height: 34px;
     border-radius: 8px;
-    position: relative;
     flex: 0 0 34px;
   }
   .brand-mark::after {
-    content: "AD";
-    position: absolute;
-    right: -7px;
-    bottom: -5px;
-    min-width: 20px;
+    right: -9px;
+    bottom: -6px;
     height: 15px;
-    border: 2px solid var(--panel);
-    border-radius: 999px;
-    display: grid;
-    place-items: center;
-    background: var(--orange);
-    color: #7c2d12;
-    font-size: 8px;
-    font-weight: 950;
-    line-height: 1;
+    min-width: 32px;
+    font-size: 6px;
   }
   .brand-name,
   .brand-sub,

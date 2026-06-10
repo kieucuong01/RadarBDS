@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/admin-favicon.svg') }}?v=admin-v36-mobile-shell">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v36-mobile-shell">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/admin-favicon.svg') }}?v=admin-v37-standard-logo">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v37-standard-logo">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -179,7 +179,7 @@
   {% if admin_login_required %}
   <main class="admin-auth-gate">
     <section class="admin-auth-card" aria-label="Admin login required">
-      <div class="brand-mark">R</div>
+      <div class="brand-mark"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="RadarBDS"></div>
       <h1>RadarBDS Control Room</h1>
       <p>Cần đăng nhập bằng tài khoản admin để mở khu điều khiển. Sau khi đăng nhập thành công, trang sẽ tự tải lại.</p>
       <div class="admin-auth-actions">
@@ -231,7 +231,7 @@
   {% else %}
   <aside class="admin-sidebar">
     <div class="brand">
-      <div class="brand-mark">R</div>
+      <div class="brand-mark"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="RadarBDS"></div>
       <div>
         <div class="brand-name">RadarBDS</div>
         <div class="brand-sub">Control Room</div>
@@ -717,7 +717,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v36-mobile-shell"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v37-standard-logo"></script>
   {% endif %}
 </body>
 </html>

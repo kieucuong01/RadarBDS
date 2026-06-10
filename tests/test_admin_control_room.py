@@ -1124,8 +1124,11 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".dup-source-links", css)
         self.assertIn(".dup-fact.price", css)
         self.assertIn(".dup-decision-copy", css)
-        self.assertIn("admin-v36-mobile-shell", template)
+        self.assertIn("admin-v37-standard-logo", template)
         self.assertIn("admin-favicon.svg", template)
+        self.assertIn("images/logo.png", template)
+        self.assertIn(".brand-mark img", css)
+        self.assertIn('content: "ADMIN"', css)
 
     def test_ai_training_requires_explicit_valuation_choice_in_js(self):
         js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(
@@ -1475,6 +1478,15 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn('data-label="Hành động"', js)
         self.assertIn(".crawl-ops-panel", css)
         self.assertIn(".crawl-ops-alert", css)
+
+    def test_admin_favicon_uses_standard_app_icon_with_admin_badge(self):
+        root = Path(__file__).resolve().parent.parent
+        favicon = (root / "static/images/admin-favicon.svg").read_text(encoding="utf-8")
+
+        self.assertIn("data:image/png;base64", favicon)
+        self.assertIn("<text", favicon)
+        self.assertIn(">AD</text>", favicon)
+        self.assertNotIn("radarAdminBg", favicon)
 
     def test_admin_data_quality_summary_includes_images_tokens_errors_and_suppressed_signals(self):
         import app as app_module
