@@ -12,16 +12,36 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
 Local PostgreSQL setup:
 
+Normal local development uses the installed PostgreSQL 18 Windows service,
+managed through pgAdmin4:
+
+- service: `postgresql-x64-18`
+- host/port: `127.0.0.1:5432`
+- database: `radar_bds`
+- user: `postgres`
+- password: keep it in local `.env`; do not paste it into docs, commits, or chat
+- pgAdmin registration: host `127.0.0.1`, port `5432`, maintenance DB `radar_bds`
+
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
-.\scripts\local_postgres.ps1 start
-$env:DATABASE_URL = "postgresql://postgres@127.0.0.1:5432/radar_bds"
+Get-Service postgresql-x64-18
+# .env should set DATABASE_URL=postgresql://postgres:<local-password>@127.0.0.1:5432/radar_bds
 & $py -X utf8 radar.py inspect
 & $py -X utf8 app.py
 & $py -X utf8 radar.py reprocess
 & $py -X utf8 radar.py reprocess --full
 ```
+
+Direct `psql` access to the same local DB:
+
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -h 127.0.0.1 -p 5432 -U postgres -d radar_bds
+```
+
+The old portable PostgreSQL 17 bundle in `tools/postgresql-17.10/` and
+`.local/postgres-data` is only a fallback for isolated restore or recovery.
+Do not start it as the default local DB.
 
 Remote Supabase project ref `ozdjzfiqcjnlfuihqqjy` is kept only for sync/backup.
 The real password is in local `.env` only. Do not paste it into docs or commits.
@@ -151,8 +171,7 @@ Post-merger location resolver:
 & $py -X utf8 -m pytest tests\test_feature_extractor.py tests\test_dedup.py tests\test_price_history.py -q
 
 # Read-only DB audit before any reprocess.
-.\scripts\local_postgres.ps1 start
-$env:DATABASE_URL = "postgresql://postgres@127.0.0.1:5432/radar_bds"
+# Uses the current local PostgreSQL 18 DATABASE_URL from .env.
 & $py -X utf8 scripts\audit_post_merger_locations.py --limit 2000 --samples 3
 ```
 

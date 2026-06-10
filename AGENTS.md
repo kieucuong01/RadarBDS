@@ -45,7 +45,8 @@ Focus areas:
 ## Runtime Facts
 
 - Canonical DB: PostgreSQL via `DATABASE_URL`.
-- Local dev DB: portable PostgreSQL 17 in `tools/postgresql-17.10/`, data in `.local/postgres-data`, started by `scripts/local_postgres.ps1`.
+- Local dev DB: installed PostgreSQL 18 service `postgresql-x64-18` on `127.0.0.1:5432`, database `radar_bds`, managed with pgAdmin4. The passworded local `DATABASE_URL` lives only in `.env`; never print or commit it.
+- Portable PostgreSQL 17 in `tools/postgresql-17.10/` with data in `.local/postgres-data` is legacy/fallback for isolated restore or recovery only; it is not the normal local DB.
 - Remote Supabase project `ozdjzfiqcjnlfuihqqjy` is sync/backup only. Passwords live only in local `.env`; never print or commit them.
 - Production: Ubuntu Server 24.04 LTS, Python 3.12, systemd services, Nginx, domain `https://radarbds.vn`.
 - Production env must set `PUBLIC_BASE_URL=https://radarbds.vn` and `DASHBOARD_BASE_URL=https://radarbds.vn`.
@@ -85,8 +86,7 @@ PowerShell local dev:
 
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-.\scripts\local_postgres.ps1 start
-$env:DATABASE_URL = "postgresql://postgres@127.0.0.1:5432/radar_bds"
+# .env should set DATABASE_URL=postgresql://postgres:<local-password>@127.0.0.1:5432/radar_bds
 & $py -X utf8 radar.py inspect
 & $py -X utf8 app.py
 ```

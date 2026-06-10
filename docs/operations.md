@@ -6,7 +6,7 @@ Use this for VPS deploy, production smoke checks, DB sync, crawl logs, and one-o
 
 | Environment | Purpose | Notes |
 |---|---|---|
-| Local Windows | Development and safe reprocess/audit | Python 3.12, portable PostgreSQL 17 |
+| Local Windows | Development and safe reprocess/audit | Python 3.12, installed PostgreSQL 18 service `postgresql-x64-18`, pgAdmin4 |
 | Production VPS | Public site and daily crawl | Ubuntu Server 24.04 LTS, Python 3.12, systemd, Nginx |
 | Supabase project `ozdjzfiqcjnlfuihqqjy` | Sync/backup | Password only in local `.env`; do not print/commit |
 
@@ -107,6 +107,7 @@ Pull DB plus missing images:
 ```
 
 This is production -> local only. It creates a dump on the VPS, downloads it, backs up current local DB, then restores into local `radar_bds`.
+Local restore target is the installed PostgreSQL 18 service on `127.0.0.1:5432`.
 
 ## Cache Prewarm
 

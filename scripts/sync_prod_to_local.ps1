@@ -13,7 +13,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$PgBin = Join-Path $Root "tools\postgresql-17.10\pgsql\bin"
+$PreferredPgBin = Join-Path $env:ProgramFiles "PostgreSQL\18\bin"
+$FallbackPgBin = Join-Path $Root "tools\postgresql-17.10\pgsql\bin"
+$PgBin = $FallbackPgBin
+if (Test-Path -LiteralPath (Join-Path $PreferredPgBin "psql.exe")) {
+    $PgBin = $PreferredPgBin
+}
 $BackupDir = Join-Path $Root ".local\prod-sync"
 $ImageRoot = Join-Path $Root "data\images"
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -38,6 +43,40 @@ function Require-File {
     }
 }
 
+function Set-LocalPgPasswordFromEnv {
+    if ($env:PGPASSWORD) {
+        return
+    }
+
+    $EnvPath = Join-Path $Root ".env"
+    if (!(Test-Path -LiteralPath $EnvPath)) {
+        return
+    }
+
+    $Line = Get-Content -LiteralPath $EnvPath |
+        Where-Object { $_ -match '^DATABASE_URL=' } |
+        Select-Object -First 1
+    if (!$Line) {
+        return
+    }
+
+    $Url = $Line.Substring("DATABASE_URL=".Length).Trim().Trim('"').Trim("'")
+    if (!$Url) {
+        return
+    }
+
+    try {
+        $Parsed = [Uri] $Url
+        if ($Parsed.UserInfo -and $Parsed.UserInfo.Contains(":")) {
+            $Password = $Parsed.UserInfo.Split(":", 2)[1]
+            $env:PGPASSWORD = [Uri]::UnescapeDataString($Password)
+        }
+    }
+    catch {
+        # Keep going; libpq may still authenticate through pgpass or trust auth.
+    }
+}
+
 Require-File (Join-Path $PgBin "pg_dump.exe")
 Require-File (Join-Path $PgBin "pg_restore.exe")
 Require-File (Join-Path $PgBin "psql.exe")
@@ -47,6 +86,7 @@ Require-File (Join-Path $PgBin "pg_isready.exe")
 
 $ResolvedKey = Join-Path $Root $KeyPath
 Require-File $ResolvedKey
+Set-LocalPgPasswordFromEnv
 
 New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
 New-Item -ItemType Directory -Force -Path $ImageRoot | Out-Null
@@ -73,8 +113,17 @@ if ($LocalReady) {
     Write-Host "==> Local PostgreSQL is already running"
 }
 else {
-    Invoke-Checked "Start local PostgreSQL" {
-        & (Join-Path $Root "scripts\local_postgres.ps1") start
+    $LocalPgService = Get-Service -Name "postgresql-x64-18" -ErrorAction SilentlyContinue
+    if ($LocalPgService) {
+        Invoke-Checked "Start local PostgreSQL service" {
+            Start-Service -Name "postgresql-x64-18"
+            & (Join-Path $PgBin "pg_isready.exe") -h $LocalHost -p $LocalPort -U $LocalUser
+        }
+    }
+    else {
+        Invoke-Checked "Start fallback portable PostgreSQL" {
+            & (Join-Path $Root "scripts\local_postgres.ps1") start
+        }
     }
 }
 

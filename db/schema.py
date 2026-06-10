@@ -224,6 +224,7 @@ CREATE TABLE IF NOT EXISTS valuation_results (
     actual_ppm2     REAL,
     mos_pct         REAL,
     is_signal       INTEGER DEFAULT 0,
+    signal_score    INTEGER DEFAULT NULL,
     is_outlier      INTEGER DEFAULT 0,
     outlier_direction TEXT,
     outlier_sigma   REAL,

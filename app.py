@@ -1074,7 +1074,7 @@ def _suppressed_signal_quality_summary(conn) -> dict:
             })
     return {
         "total": len(rows),
-        "by_flag": [{"flag": flag, "count": count} for flag, count in by_flag.most_common(12)],
+        "by_flag": [{"flag": flag, "count": count} for flag, count in by_flag.most_common()],
         "by_source": [{"source": source, "count": count} for source, count in by_source.most_common()],
         "samples": samples,
     }

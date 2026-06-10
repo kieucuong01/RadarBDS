@@ -20,7 +20,9 @@ Source crawlers
 ## Runtime Data
 
 - Canonical relational DB: PostgreSQL via `DATABASE_URL`.
-- Remote Supabase project `ozdjzfiqcjnlfuihqqjy` is kept for sync/backup. Local dev normally uses portable PostgreSQL.
+- Local dev normally uses installed PostgreSQL 18 service `postgresql-x64-18` on `127.0.0.1:5432`, database `radar_bds`, managed with pgAdmin4.
+- Remote Supabase project `ozdjzfiqcjnlfuihqqjy` is kept for sync/backup.
+- Portable PostgreSQL 17 in `tools/postgresql-17.10/` is legacy/fallback for isolated restore or recovery only.
 - Legacy SQLite DB: `data/radar_bds.db` is read only by `scripts/migrate_sqlite_to_postgres.py`.
 - Local images: `data/images/`.
 - Card thumbnails: `data/images/thumbs/*.webp`.
@@ -66,7 +68,7 @@ Security boundary:
 
 Performance boundary:
 
-- `services/market_data.py` is on the hot path for Supabase-backed local dev. Use the shared read connection scope from `db.connection.get_conn()` instead of opening a fresh PostgreSQL connection per read.
+- `services/market_data.py` is on the hot path for PostgreSQL-backed local dev. Use the shared read connection scope from `db.connection.get_conn()` instead of opening a fresh PostgreSQL connection per read.
 - `/api/dashboard` is cached in-process for a short TTL by filter key. Guest dashboard rate limiting is in-memory; write-sensitive scopes such as lead capture still use DB-backed rate limiting.
 - `/api/signals` should avoid avoidable remote round-trips. The card feed query uses `COUNT(*) OVER()` and a lateral primary-image subquery so page data, total count, and thumbnail are fetched together.
 - Feed ordering depends on legal trust fields, so keep the trust/feed indexes in `db/schema.py` aligned with `_signal_sort_sql()`.

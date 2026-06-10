@@ -44,7 +44,8 @@ This playbook is the day-to-day workflow guide for AI agents. Keep it compact; p
 ## Current Traps
 
 - Do not reintroduce `C:\Users\ASUS\radar_bds.db`; runtime DB is PostgreSQL via `DATABASE_URL`.
-- Current local dev target is portable PostgreSQL; Supabase project `ozdjzfiqcjnlfuihqqjy` is sync/backup only. Never print or commit the password from `.env`.
+- Current local dev target is the installed PostgreSQL 18 service `postgresql-x64-18` on `127.0.0.1:5432`, DB `radar_bds`, managed in pgAdmin4. Supabase project `ozdjzfiqcjnlfuihqqjy` is sync/backup only. Never print or commit the password from `.env`.
+- Portable PostgreSQL 17 in `tools/postgresql-17.10/` is legacy/fallback only; do not start it as the default local DB.
 - Tests run against PostgreSQL too. Use unique URL/ward/user tokens and cleanup by those tokens; patching `DB_PATH` no longer creates an isolated SQLite DB.
 - Do not put all signals back into `/api/dashboard`; use `/api/signals`.
 - Do not put full descriptions or full image arrays into signal card payloads.

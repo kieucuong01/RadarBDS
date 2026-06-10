@@ -2,20 +2,27 @@
 
 Canonical runtime DB: PostgreSQL via `DATABASE_URL`.
 
-Legacy SQLite source: `data/radar_bds.db`, read only by `scripts/migrate_sqlite_to_postgres.py`.
+Local development uses the installed PostgreSQL 18 Windows service:
 
-For local development, use portable PostgreSQL 17 in `tools/postgresql-17.10/`
-with data in `.local/postgres-data`. Start it with:
+- service: `postgresql-x64-18`
+- host/port: `127.0.0.1:5432`
+- database: `radar_bds`
+- admin UI: pgAdmin4
+- connection source: local `.env`
 
-```powershell
-.\scripts\local_postgres.ps1 start
-```
-
-Normal local `.env` should point to:
+Normal local `.env` should point to the installed service:
 
 ```env
-DATABASE_URL=postgresql://postgres@127.0.0.1:5432/radar_bds
+DATABASE_URL=postgresql://postgres:<local-password>@127.0.0.1:5432/radar_bds
 ```
+
+Never print or commit the real local DB password.
+
+Legacy SQLite source: `data/radar_bds.db`, read only by `scripts/migrate_sqlite_to_postgres.py`.
+
+The portable PostgreSQL 17 bundle in `tools/postgresql-17.10/` with data in
+`.local/postgres-data` is legacy/fallback only. Use it only for isolated restore
+or recovery work, not as the normal local DB.
 
 Remote Supabase is for sync/backup. Do not use a remote DB for normal full
 reprocess work because the app still has many row-by-row DB operations.
@@ -61,9 +68,8 @@ Migration snapshot from 2026-05-25:
 ## Safe Checks
 
 ```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python39\python.exe"
-.\scripts\local_postgres.ps1 start
-$env:DATABASE_URL = "postgresql://postgres@127.0.0.1:5432/radar_bds"
-& $py -X utf8 scripts\migrate_sqlite_to_postgres.py --sqlite data\radar_bds.db --database-url $env:DATABASE_URL --truncate
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
+Get-Service postgresql-x64-18
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -h 127.0.0.1 -p 5432 -U postgres -d radar_bds -c "select current_database(), current_user;"
 & $py -X utf8 radar.py inspect
 ```

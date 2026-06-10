@@ -470,6 +470,21 @@ def test_schema_defines_feed_performance_indexes():
     assert "idx_images_listing_legal_order" in SCHEMA_SQL
 
 
+def test_valuation_results_create_table_contains_signal_score_for_clean_db_index():
+    import re
+
+    from db.schema import SCHEMA_SQL
+
+    match = re.search(
+        r"CREATE TABLE IF NOT EXISTS valuation_results \((.*?)\);\s*CREATE INDEX",
+        SCHEMA_SQL,
+        flags=re.S,
+    )
+
+    assert match is not None
+    assert "signal_score" in match.group(1)
+
+
 def test_dashboard_guest_rate_limit_uses_memory_without_db(monkeypatch):
     from flask import Flask
     import auth.core as auth
