@@ -1,0 +1,31 @@
+{
+  "name": "RadarBDS Admin",
+  "short_name": "RBDS Admin",
+  "description": "RadarBDS Control Room dành cho admin.",
+  "id": "https://radarbds.vn/admin/",
+  "start_url": "https://radarbds.vn/admin/facebook-crawl",
+  "scope": "https://radarbds.vn/admin/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
+  "icons": [
+    {
+      "src": "https://radarbds.vn/static/images/admin-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://radarbds.vn/static/images/admin-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://radarbds.vn/static/images/admin-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

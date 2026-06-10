@@ -1124,11 +1124,13 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".dup-source-links", css)
         self.assertIn(".dup-fact.price", css)
         self.assertIn(".dup-decision-copy", css)
-        self.assertIn("admin-v37-standard-logo", template)
-        self.assertIn("admin-favicon.svg", template)
+        self.assertIn("admin-v38-admin-icons", template)
+        self.assertIn("admin-favicon-32.png", template)
+        self.assertIn("admin-apple-touch-icon.png", template)
+        self.assertIn("admin.webmanifest", template)
         self.assertIn("images/logo.png", template)
         self.assertIn(".brand-mark img", css)
-        self.assertIn('content: "ADMIN"', css)
+        self.assertIn('content: "AD"', css)
 
     def test_ai_training_requires_explicit_valuation_choice_in_js(self):
         js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(
@@ -1479,14 +1481,25 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".crawl-ops-panel", css)
         self.assertIn(".crawl-ops-alert", css)
 
-    def test_admin_favicon_uses_standard_app_icon_with_admin_badge(self):
+    def test_admin_icons_use_standard_app_icon_with_admin_badge(self):
         root = Path(__file__).resolve().parent.parent
-        favicon = (root / "static/images/admin-favicon.svg").read_text(encoding="utf-8")
+        manifest = (root / "static/admin.webmanifest").read_text(encoding="utf-8")
 
-        self.assertIn("data:image/png;base64", favicon)
-        self.assertIn("<text", favicon)
-        self.assertIn(">AD</text>", favicon)
-        self.assertNotIn("radarAdminBg", favicon)
+        self.assertIn("RadarBDS Admin", manifest)
+        self.assertIn("admin-icon-192.png", manifest)
+        self.assertIn("admin-icon-512.png", manifest)
+        self.assertIn("admin-icon-maskable-512.png", manifest)
+        for name in [
+            "admin-favicon-16.png",
+            "admin-favicon-32.png",
+            "admin-apple-touch-icon.png",
+            "admin-icon-192.png",
+            "admin-icon-512.png",
+            "admin-icon-maskable-512.png",
+        ]:
+            path = root / "static/images" / name
+            self.assertTrue(path.exists(), name)
+            self.assertGreater(path.stat().st_size, 500, name)
 
     def test_admin_data_quality_summary_includes_images_tokens_errors_and_suppressed_signals(self):
         import app as app_module
