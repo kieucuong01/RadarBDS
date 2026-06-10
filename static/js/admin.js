@@ -993,7 +993,7 @@ function renderUserStats(s) {
 function renderUserRows(items) {
   const body = document.getElementById('userTableBody');
   if (!items.length) {
-    body.innerHTML = `<tr><td colspan="9"><div class="empty">Không có user phù hợp.</div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="10"><div class="empty">Không có user phù hợp.</div></td></tr>`;
     return;
   }
   body.innerHTML = items.map(u => {
@@ -1004,16 +1004,16 @@ function renderUserRows(items) {
     const tg = u.telegram_linked ? '✓' : '-';
     return `
       <tr>
-        <td>#${u.id}</td>
-        <td><strong>${esc(u.identifier || '-')}</strong><br><small>${esc(u.identifier_type || '')}</small></td>
-        <td>${esc(u.display_name || '-')}</td>
-        <td><strong style="color:${tierBadgeColor}">${esc((u.effective_tier || u.tier || '').toUpperCase())}</strong>${expired} ${banned}</td>
-        <td>${vipExp}</td>
-        <td>${tg}</td>
-        <td>${Number(u.watchlist_count || 0)}</td>
-        <td>${shortDate(u.created_at)}</td>
-        <td>${shortDate(u.last_login_at)}</td>
-        <td>
+        <td data-label="ID">#${u.id}</td>
+        <td data-label="Tài khoản"><strong>${esc(u.identifier || '-')}</strong><br><small>${esc(u.identifier_type || '')}</small></td>
+        <td data-label="Tên">${esc(u.display_name || '-')}</td>
+        <td data-label="Tier"><strong style="color:${tierBadgeColor}">${esc((u.effective_tier || u.tier || '').toUpperCase())}</strong>${expired} ${banned}</td>
+        <td data-label="VIP hết hạn">${vipExp}</td>
+        <td data-label="Telegram">${tg}</td>
+        <td data-label="Watchlist">${Number(u.watchlist_count || 0)}</td>
+        <td data-label="Đăng ký">${shortDate(u.created_at)}</td>
+        <td data-label="Last login">${shortDate(u.last_login_at)}</td>
+        <td data-label="Hành động">
           <button class="icon-btn" onclick="grantVip(${u.id}, 30)">+30d VIP</button>
           <button class="icon-btn" onclick="grantVip(${u.id}, 7)">+7d</button>
           <button class="icon-btn" onclick="revokeVip(${u.id})">Revoke</button>
@@ -1104,15 +1104,15 @@ function renderLeadRows(items) {
     const link = x.listing_id ? `/listing/${x.listing_id}` : (x.listing_url || '#');
     return `
       <tr>
-        <td>${shortDate(x.created_at)}</td>
-        <td class="phone">${esc(x.zalo_phone || '-')}</td>
-        <td><a class="deal-pill" href="${esc(link)}" target="_blank">${esc(listingLabel)}</a></td>
-        <td>
+        <td data-label="Ngày nhận">${shortDate(x.created_at)}</td>
+        <td data-label="Số Zalo" class="phone">${esc(x.zalo_phone || '-')}</td>
+        <td data-label="Lô đất"><a class="deal-pill" href="${esc(link)}" target="_blank">${esc(listingLabel)}</a></td>
+        <td data-label="Trạng thái">
           <select class="status-select ${st.cls}" data-lead="${x.id}">
             ${STATUS_KEYS.map(k => `<option value="${k}" ${x.status === k ? 'selected' : ''}>${STATUS[k].label}</option>`).join('')}
           </select>
         </td>
-        <td><button class="icon-btn" onclick="window.open('${esc(link)}','_blank')">Mở</button></td>
+        <td data-label="Thao tác"><button class="icon-btn" onclick="window.open('${esc(link)}','_blank')">Mở</button></td>
       </tr>
     `;
   }).join('');

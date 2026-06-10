@@ -1124,7 +1124,8 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".dup-source-links", css)
         self.assertIn(".dup-fact.price", css)
         self.assertIn(".dup-decision-copy", css)
-        self.assertIn("admin-v35-apify-compact", template)
+        self.assertIn("admin-v36-mobile-shell", template)
+        self.assertIn("admin-favicon.svg", template)
 
     def test_ai_training_requires_explicit_valuation_choice_in_js(self):
         js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(
@@ -1467,6 +1468,11 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("Độ sạch", html)
         self.assertIn(".broker-quality", css)
         self.assertIn(".broker-apply-btn", css)
+        self.assertIn("Mobile admin shell", css)
+        self.assertIn("body.sidebar-collapsed .nav-item > span:last-child", css)
+        self.assertIn(".data-table:not(.apify-token-table):not(.crawl-table) td::before", css)
+        self.assertIn('data-label="Số Zalo"', js)
+        self.assertIn('data-label="Hành động"', js)
         self.assertIn(".crawl-ops-panel", css)
         self.assertIn(".crawl-ops-alert", css)
 
