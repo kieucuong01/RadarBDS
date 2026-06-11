@@ -581,6 +581,100 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertEqual(audit["reason"], "admin_delete")
         self.assertIn("zalo_phone", audit["before_json"])
 
+    def test_public_lead_capture_creates_lead_and_audit_row(self):
+        from db.connection import get_conn
+
+        token = uuid.uuid4().hex
+        lead_id = None
+        with get_conn() as conn:
+            raw = conn.execute(
+                "INSERT INTO raw_listings (source, url, raw_json) VALUES ('facebook', ?, '{}')",
+                (f"https://example.test/lead-capture-raw-{token}",),
+            )
+            listing = conn.execute(
+                """
+                INSERT INTO listings (raw_id, source, url, title, area, property_type, price_ty, area_m2)
+                VALUES (?, 'facebook', ?, 'Lead capture listing', 'Thu Dau Mot', 'dat_nen', 1.2, 80)
+                """,
+                (raw.lastrowid, f"https://example.test/lead-capture-listing-{token}"),
+            )
+            listing_id = listing.lastrowid
+
+        response = self.client.post(
+            "/api/leads",
+            json={
+                "listing_id": listing_id,
+                "zalo_phone": "0901 222 333",
+                "source_context": "card_signal",
+                "note": "Xin tu van them",
+            },
+            environ_base={"REMOTE_ADDR": f"10.81.{int(token[:2], 16)}.{int(token[2:4], 16)}"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["ok"])
+        lead_id = data["lead_id"]
+        with get_conn() as conn:
+            lead = conn.execute(
+                "SELECT listing_id, zalo_phone, source_context, status FROM lead_captures WHERE id=?",
+                (lead_id,),
+            ).fetchone()
+            audit = conn.execute(
+                "SELECT action, listing_id FROM user_audit_log WHERE action='lead_capture' AND listing_id=?",
+                (listing_id,),
+            ).fetchone()
+            conn.execute("DELETE FROM lead_captures WHERE id=?", (lead_id,))
+
+        self.assertIsNotNone(lead)
+        self.assertEqual(lead["listing_id"], listing_id)
+        self.assertEqual(lead["zalo_phone"], "901222333")
+        self.assertEqual(lead["source_context"], "card_signal")
+        self.assertEqual(lead["status"], "new")
+        self.assertIsNotNone(audit)
+
+    def test_guest_lead_capture_defaults_note_for_existing_listing(self):
+        from db.connection import get_conn
+
+        token = uuid.uuid4().hex
+        with get_conn() as conn:
+            raw = conn.execute(
+                "INSERT INTO raw_listings (source, url, raw_json) VALUES ('facebook', ?, '{}')",
+                (f"https://example.test/guest-lead-raw-{token}",),
+            )
+            listing = conn.execute(
+                """
+                INSERT INTO listings (raw_id, source, url, title, area, property_type, price_ty, area_m2)
+                VALUES (?, 'facebook', ?, 'Guest lead listing', 'Thu Dau Mot', 'dat_nen', 1.2, 80)
+                """,
+                (raw.lastrowid, f"https://example.test/guest-lead-listing-{token}"),
+            )
+            listing_id = listing.lastrowid
+
+        response = self.client.post(
+            "/api/lead-capture-guest",
+            json={"listing_id": listing_id, "contact": "0901 222 334", "context": "modal_signal"},
+            environ_base={"REMOTE_ADDR": f"10.82.{int(token[:2], 16)}.{int(token[2:4], 16)}"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["ok"])
+        lead_id = data["lead_id"]
+        with get_conn() as conn:
+            lead = conn.execute(
+                "SELECT listing_id, zalo_phone, source_context, note, urgency FROM lead_captures WHERE id=?",
+                (lead_id,),
+            ).fetchone()
+            conn.execute("DELETE FROM lead_captures WHERE id=?", (lead_id,))
+
+        self.assertIsNotNone(lead)
+        self.assertEqual(lead["listing_id"], listing_id)
+        self.assertEqual(lead["zalo_phone"], "0901222334")
+        self.assertEqual(lead["source_context"], "modal_signal")
+        self.assertIn(f"#{listing_id}", lead["note"])
+        self.assertEqual(lead["urgency"], "guest")
+
     def test_admin_can_delete_user_dependents_but_not_current_admin(self):
         from db.connection import get_conn
 

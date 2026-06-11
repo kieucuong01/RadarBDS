@@ -25,6 +25,23 @@ def test_app_routes_are_registered_from_blueprint_modules():
     assert "@app.route" not in app_source
 
 
+def test_admin_logic_is_extracted_from_app_into_service_modules():
+    for rel_path in [
+        "services/admin_quality.py",
+        "services/admin_leads.py",
+        "services/admin_users.py",
+    ]:
+        assert (ROOT / rel_path).exists(), f"missing {rel_path}"
+
+    app_source = _read("app.py")
+    for symbol in [
+        "def _suppressed_signal_quality_summary",
+        "def _resolve_lead_ack_email",
+        "def _user_admin_row",
+    ]:
+        assert symbol not in app_source
+
+
 def test_index_loads_main_js_feature_files_in_dependency_order():
     html = _read("templates/index.html")
     expected_order = [

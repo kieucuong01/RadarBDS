@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import os
 import json
-import csv
-import io
 import logging
 import mimetypes
 import platform
@@ -13,7 +11,6 @@ import re
 import time
 import urllib.request
 import threading
-from collections import Counter
 from copy import deepcopy
 from functools import wraps
 from datetime import datetime, timedelta, timezone
@@ -47,6 +44,7 @@ from services.signal_quality import (
     split_quality_flags,
 )
 from services.advisory_memo import build_admin_valuation_workflow_markdown
+from services import admin_leads, admin_quality, admin_users
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -93,7 +91,7 @@ def add_api_cache_headers(response):
     return response
 
 
-LEAD_STATUSES = {"new", "called", "viewing", "deposit", "cancelled"}
+LEAD_STATUSES = admin_leads.LEAD_STATUSES
 POSITIVE_REVIEW_VERDICTS = {"good", "correct", "cheap_real"}
 HARD_HIDE_REVIEW_VERDICTS = {"bad", "spam", "sold", "fake_price"}
 SOFT_HIDE_REVIEW_VERDICTS = {"bad_data", "fair", "overpriced", "cannot_price"}
@@ -179,699 +177,69 @@ def _clamp_int(value, default: int, min_value: int, max_value: int) -> int:
 
 
 def _read_facebook_profile_config() -> list[dict]:
-    if not FACEBOOK_PROFILE_PATH.exists():
-        return []
-    data = json.loads(FACEBOOK_PROFILE_PATH.read_text(encoding="utf-8"))
-    profiles: list[dict] = []
-    if isinstance(data, dict):
-        iterable = ((city, items) for city, items in data.items())
-    elif isinstance(data, list):
-        iterable = ((None, data),)
-    else:
-        iterable = ()
-    for city, items in iterable:
-        for item in items or []:
-            if isinstance(item, str):
-                raw = {"url": item}
-            elif isinstance(item, dict):
-                raw = dict(item)
-            else:
-                continue
-            url = (raw.get("url") or "").strip()
-            if not url:
-                continue
-            tier = _clamp_int(raw.get("daily_limit", raw.get("tier")), 20, 1, 500)
-            profiles.append({
-                "city": (raw.get("city") or city or "").strip(),
-                "url": url,
-                "broker_name": (raw.get("broker_name") or "").strip(),
-                "tier": tier,
-                "daily_limit": tier,
-                "range_days": _clamp_int(raw.get("range_days"), 7, 1, 60),
-                "active": raw.get("active", True) is not False,
-            })
-    return profiles
+    return admin_quality.read_facebook_profile_config(FACEBOOK_PROFILE_PATH)
 
 
 def _write_facebook_profile_config(profiles: list[dict]) -> list[dict]:
-    cleaned: list[dict] = []
-    seen: set[str] = set()
-    for raw in profiles:
-        if not isinstance(raw, dict):
-            continue
-        url = (raw.get("url") or "").strip()
-        if not url or not url.startswith("https://www.facebook.com/") or url in seen:
-            continue
-        seen.add(url)
-        daily_limit = _clamp_int(raw.get("daily_limit", raw.get("tier")), 20, 1, 500)
-        cleaned.append({
-            "city": (raw.get("city") or "Bình Dương").strip(),
-            "url": url,
-            "broker_name": (raw.get("broker_name") or "").strip(),
-            "tier": daily_limit,
-            "daily_limit": daily_limit,
-            "range_days": _clamp_int(raw.get("range_days"), 7, 1, 60),
-            "active": raw.get("active", True) is not False,
-        })
-    grouped: dict[str, list[dict]] = {}
-    for item in cleaned:
-        city = item.pop("city") or "Bình Dương"
-        grouped.setdefault(city, []).append(item)
-    FACEBOOK_PROFILE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    FACEBOOK_PROFILE_PATH.write_text(
-        json.dumps(grouped, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    return _read_facebook_profile_config()
+    return admin_quality.write_facebook_profile_config(FACEBOOK_PROFILE_PATH, profiles)
 
 
 def _facebook_profile_lookup(url: str) -> dict | None:
-    normalized = (url or "").strip()
-    for profile in _read_facebook_profile_config():
-        if profile["url"] == normalized:
-            return profile
-    return None
-
-
-def _empty_facebook_profile_stat() -> dict:
-    return {
-        "raw_count": 0,
-        "latest_crawled_at": None,
-        "activity": {
-            "posts_7d": 0,
-            "posts_14d": 0,
-            "posts_30d": 0,
-            "active_days_30d": 0,
-            "avg_posts_per_active_day_14d": 0.0,
-            "avg_posts_per_day_30d": 0.0,
-            "avg_posts_per_week_30d": 0.0,
-            "recommended_daily_limit": 10,
-            "recommended_weekly_limit": 30,
-            "cadence_label": "Chưa có dữ liệu",
-            "cadence_tier": "muted",
-            "confidence": "low",
-        },
-        "data_quality": {
-            "score": None,
-            "label": "Chưa đủ mẫu",
-            "tier": "muted",
-            "sample_size": 0,
-            "price_pct": 0.0,
-            "area_pct": 0.0,
-            "ward_pct": 0.0,
-            "property_type_pct": 0.0,
-            "image_pct": 0.0,
-            "description_pct": 0.0,
-            "serious_flag_pct": 0.0,
-            "reasons": ["Chưa đủ dữ liệu để đánh giá"],
-        },
-    }
-
-
-def _parse_crawl_datetime(value) -> datetime | None:
-    if not value:
-        return None
-    if isinstance(value, datetime):
-        dt = value
-    else:
-        text = str(value).strip()
-        if not text:
-            return None
-        try:
-            dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
-        except ValueError:
-            try:
-                dt = datetime.strptime(text[:19], "%Y-%m-%d %H:%M:%S")
-            except ValueError:
-                return None
-    if dt.tzinfo:
-        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
-    return dt
-
-
-def _raw_has_images(raw: dict) -> bool:
-    candidates = [
-        raw.get("imgs"),
-        raw.get("images"),
-        raw.get("image_urls"),
-        raw.get("img_urls"),
-        raw.get("photos"),
-    ]
-    apify_raw = raw.get("_apify_raw")
-    if isinstance(apify_raw, dict):
-        candidates.extend([
-            apify_raw.get("imgs"),
-            apify_raw.get("images"),
-            apify_raw.get("image_urls"),
-            apify_raw.get("photos"),
-        ])
-    for value in candidates:
-        if isinstance(value, list) and any(str(item or "").strip() for item in value):
-            return True
-        if isinstance(value, str) and value.strip():
-            return True
-    return False
-
-
-def _present_text(*values) -> bool:
-    return any(str(value or "").strip() for value in values)
-
-
-def _pct(part: int, total: int) -> float:
-    return round((part / total) * 100, 1) if total else 0.0
-
-
-def _facebook_profile_activity(rows: list[dict]) -> dict:
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    dated: list[datetime] = []
-    for item in rows:
-        dt = _parse_crawl_datetime(item.get("crawled_at"))
-        if dt:
-            dated.append(dt)
-    posts_7d = sum(1 for dt in dated if dt >= now - timedelta(days=7))
-    posts_14d = sum(1 for dt in dated if dt >= now - timedelta(days=14))
-    posts_30d = sum(1 for dt in dated if dt >= now - timedelta(days=30))
-    days_14 = {dt.date() for dt in dated if dt >= now - timedelta(days=14)}
-    days_30 = {dt.date() for dt in dated if dt >= now - timedelta(days=30)}
-    active_days_14d = len(days_14)
-    active_days_30d = len(days_30)
-    avg_active_14d = round(posts_14d / active_days_14d, 1) if active_days_14d else 0.0
-    avg_day_30d = round(posts_30d / 30, 1) if posts_30d else 0.0
-    avg_week_30d = round(posts_30d / 30 * 7, 1) if posts_30d else 0.0
-    recommended_daily = max(10, min(120, int(round(max(avg_active_14d, avg_day_30d) * 1.35 + 5))))
-    recommended_weekly = max(30, min(500, int(round(avg_week_30d * 1.25 + 10))))
-    if not rows:
-        label, tier, confidence = "Chưa có dữ liệu", "muted", "low"
-    elif posts_30d == 0:
-        label, tier, confidence = "Ít hoạt động", "muted", "low"
-    elif active_days_30d >= 18 or avg_active_14d >= 12:
-        label, tier, confidence = "Nhịp cao", "strong", "high"
-    elif active_days_30d >= 8 or posts_30d >= 20:
-        label, tier, confidence = "Ổn định", "good", "medium"
-    else:
-        label, tier, confidence = "Rải rác", "warn", "medium"
-    return {
-        "posts_7d": posts_7d,
-        "posts_14d": posts_14d,
-        "posts_30d": posts_30d,
-        "active_days_30d": active_days_30d,
-        "avg_posts_per_active_day_14d": avg_active_14d,
-        "avg_posts_per_day_30d": avg_day_30d,
-        "avg_posts_per_week_30d": avg_week_30d,
-        "recommended_daily_limit": recommended_daily,
-        "recommended_weekly_limit": recommended_weekly,
-        "cadence_label": label,
-        "cadence_tier": tier,
-        "confidence": confidence,
-    }
-
-
-def _facebook_profile_data_quality(rows: list[dict]) -> dict:
-    serious_flags = {
-        "parsed_discount_as_price",
-        "too_low_absolute_price",
-        "down_payment_as_price",
-        "area_dimension_conflict",
-        "source_category_conflict",
-        "missing_area_evidence",
-        "ambiguous_price_text",
-        "multi_lot_listing",
-    }
-    counters = Counter()
-    sample = 0
-    for item in rows:
-        raw = item.get("raw") or {}
-        text = " ".join(str(x or "") for x in [
-            item.get("title"),
-            item.get("description"),
-            raw.get("title"),
-            raw.get("description"),
-            raw.get("text"),
-            raw.get("post_text"),
-        ]).strip()
-        sample += 1
-        if (item.get("price_ty") or 0) > 0 or _present_text(raw.get("price"), raw.get("price_ty"), raw.get("price_text")):
-            counters["price"] += 1
-        if (item.get("area_m2") or 0) > 0 or _present_text(raw.get("area"), raw.get("area_m2"), raw.get("area_text")):
-            counters["area"] += 1
-        if _present_text(item.get("ward"), raw.get("ward"), raw.get("area"), raw.get("location")):
-            counters["ward"] += 1
-        if _present_text(item.get("property_type"), raw.get("property_type"), raw.get("category")):
-            counters["property_type"] += 1
-        if item.get("image_count", 0) > 0 or _raw_has_images(raw):
-            counters["image"] += 1
-        if len(text) >= 80:
-            counters["description"] += 1
-        flags = set(split_quality_flags(item.get("source_quality_flags") or ""))
-        if flags & serious_flags:
-            counters["serious_flags"] += 1
-    if sample < 5:
-        return {
-            "score": None,
-            "label": "Chưa đủ mẫu",
-            "tier": "muted",
-            "sample_size": sample,
-            "price_pct": _pct(counters["price"], sample),
-            "area_pct": _pct(counters["area"], sample),
-            "ward_pct": _pct(counters["ward"], sample),
-            "property_type_pct": _pct(counters["property_type"], sample),
-            "image_pct": _pct(counters["image"], sample),
-            "description_pct": _pct(counters["description"], sample),
-            "serious_flag_pct": _pct(counters["serious_flags"], sample),
-            "reasons": ["Cần thêm bài đã crawl để đánh giá chắc hơn"],
-        }
-    price_pct = _pct(counters["price"], sample)
-    area_pct = _pct(counters["area"], sample)
-    ward_pct = _pct(counters["ward"], sample)
-    property_pct = _pct(counters["property_type"], sample)
-    image_pct = _pct(counters["image"], sample)
-    description_pct = _pct(counters["description"], sample)
-    serious_pct = _pct(counters["serious_flags"], sample)
-    score = round(
-        price_pct * 0.24
-        + area_pct * 0.24
-        + ward_pct * 0.18
-        + property_pct * 0.10
-        + image_pct * 0.12
-        + description_pct * 0.12
-        - serious_pct * 0.35
-    )
-    score = max(0, min(100, int(score)))
-    if score >= 82:
-        label, tier = "Dữ liệu sạch", "strong"
-    elif score >= 68:
-        label, tier = "Dữ liệu ổn", "good"
-    elif score >= 52:
-        label, tier = "Thiếu thông tin", "warn"
-    else:
-        label, tier = "Khó parse", "danger"
-    reasons = []
-    if price_pct < 80:
-        reasons.append("hay thiếu giá")
-    if area_pct < 80:
-        reasons.append("hay thiếu diện tích")
-    if ward_pct < 75:
-        reasons.append("thiếu khu vực/phường")
-    if image_pct < 60:
-        reasons.append("ít ảnh")
-    if serious_pct >= 15:
-        reasons.append("nhiều lỗi parse giá/diện tích")
-    if not reasons:
-        reasons.append("đủ trường chính, dễ parse")
-    return {
-        "score": score,
-        "label": label,
-        "tier": tier,
-        "sample_size": sample,
-        "price_pct": price_pct,
-        "area_pct": area_pct,
-        "ward_pct": ward_pct,
-        "property_type_pct": property_pct,
-        "image_pct": image_pct,
-        "description_pct": description_pct,
-        "serious_flag_pct": serious_pct,
-        "reasons": reasons[:3],
-    }
+    return admin_quality.facebook_profile_lookup(url, _read_facebook_profile_config())
 
 
 def _facebook_profile_stats(profile_urls: list[str]) -> dict:
-    stats = {url: _empty_facebook_profile_stat() for url in profile_urls}
-    if not profile_urls:
-        return stats
-    try:
-        with get_conn() as conn:
-            rows = conn.execute("""
-                SELECT
-                    r.raw_json,
-                    r.crawled_at,
-                    l.title,
-                    l.description,
-                    l.price_ty,
-                    l.area_m2,
-                    l.ward,
-                    l.property_type,
-                    COALESCE(img.image_count, 0) AS image_count,
-                    v.source_quality_flags
-                FROM raw_listings r
-                LEFT JOIN listings l ON l.raw_id = r.id
-                LEFT JOIN (
-                    SELECT listing_id, COUNT(*) AS image_count
-                    FROM listing_images
-                    GROUP BY listing_id
-                ) img ON img.listing_id = l.id
-                LEFT JOIN (
-                    SELECT listing_id, MAX(id) AS latest_id
-                    FROM valuation_results
-                    GROUP BY listing_id
-                ) latest_v ON latest_v.listing_id = l.id
-                LEFT JOIN valuation_results v ON v.id = latest_v.latest_id
-                WHERE r.source = 'facebook'
-                ORDER BY r.crawled_at DESC
-                LIMIT 8000
-            """).fetchall()
-    except Exception:
-        return stats
-    grouped = {url: [] for url in profile_urls}
-    for row in rows:
-        try:
-            raw = json.loads(row["raw_json"] or "{}")
-        except Exception:
-            continue
-        candidates = [
-            (raw.get("profile_url") or "").strip(),
-            (((raw.get("_apify_raw") or {}).get("inputUrl") or "") if isinstance(raw.get("_apify_raw"), dict) else "").strip(),
-        ]
-        for url in profile_urls:
-            if any(c and (c == url or c.startswith(url)) for c in candidates):
-                stats[url]["raw_count"] += 1
-                if not stats[url]["latest_crawled_at"]:
-                    stats[url]["latest_crawled_at"] = row["crawled_at"]
-                grouped[url].append({
-                    "raw": raw,
-                    "crawled_at": row["crawled_at"],
-                    "title": row["title"],
-                    "description": row["description"],
-                    "price_ty": row["price_ty"],
-                    "area_m2": row["area_m2"],
-                    "ward": row["ward"],
-                    "property_type": row["property_type"],
-                    "image_count": int(row["image_count"] or 0),
-                    "source_quality_flags": row["source_quality_flags"] or "",
-                })
-                break
-    for url, items in grouped.items():
-        stats[url]["activity"] = _facebook_profile_activity(items)
-        stats[url]["data_quality"] = _facebook_profile_data_quality(items)
-    return stats
+    return admin_quality.facebook_profile_stats(profile_urls, conn_factory=get_conn)
 
 
 def _missing_image_summary(conn, source: str | None = None) -> dict:
-    where_sql = ""
-    params = []
-    if source:
-        where_sql = "WHERE l.source = ?"
-        params.append(source)
-    row = conn.execute("""
-        SELECT
-            COUNT(*) AS total_image_refs,
-            COALESCE(SUM(CASE WHEN li.local_path IS NULL OR li.local_path = '' THEN 1 ELSE 0 END), 0) AS missing_image_refs,
-            COALESCE(SUM(CASE WHEN li.local_path IS NOT NULL AND li.local_path != '' THEN 1 ELSE 0 END), 0) AS downloaded_image_refs,
-            COUNT(DISTINCT li.listing_id) AS listings_with_images,
-            COUNT(DISTINCT CASE WHEN li.local_path IS NULL OR li.local_path = '' THEN li.listing_id END) AS listings_with_missing_images,
-            COUNT(DISTINCT CASE WHEN li.local_path IS NOT NULL AND li.local_path != '' THEN li.listing_id END) AS listings_with_downloaded_images
-        FROM listing_images li
-        JOIN listings l ON l.id = li.listing_id
-        {where_sql}
-    """.format(where_sql=where_sql), params).fetchone()
-    total = int(row["total_image_refs"] or 0)
-    missing = int(row["missing_image_refs"] or 0)
-    return {
-        "total_image_refs": total,
-        "missing_image_refs": missing,
-        "downloaded_image_refs": int(row["downloaded_image_refs"] or 0),
-        "listings_with_images": int(row["listings_with_images"] or 0),
-        "listings_with_missing_images": int(row["listings_with_missing_images"] or 0),
-        "listings_with_downloaded_images": int(row["listings_with_downloaded_images"] or 0),
-        "missing_pct": round((missing / total) * 100, 1) if total else 0.0,
-    }
+    return admin_quality.missing_image_summary(conn, source=source)
 
 
 def _facebook_missing_image_summary(conn) -> dict:
-    return _missing_image_summary(conn, source="facebook")
+    return admin_quality.facebook_missing_image_summary(conn)
 
 
 def _facebook_crawl_summary() -> dict:
-    try:
-        with get_conn() as conn:
-            missing_images = _facebook_missing_image_summary(conn)
-            pending = missing_images["missing_image_refs"]
-            listings = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE source='facebook'").fetchone()["n"]
-    except Exception:
-        pending = 0
-        listings = 0
-        missing_images = {
-            "total_image_refs": 0,
-            "missing_image_refs": 0,
-            "downloaded_image_refs": 0,
-            "listings_with_images": 0,
-            "listings_with_missing_images": 0,
-            "listings_with_downloaded_images": 0,
-            "missing_pct": 0.0,
-        }
-    with FACEBOOK_CRAWL_LOCK:
-        active = next(
-            (FACEBOOK_CRAWL_JOBS[jid] for jid in FACEBOOK_CRAWL_JOB_ORDER
-             if FACEBOOK_CRAWL_JOBS[jid].get("status") in {"queued", "running"}),
-            None,
-        )
-    return {
-        "pending_images": pending,
-        "missing_images": missing_images,
-        "facebook_listings": listings,
-        "active_job": _public_crawl_job(active) if active else None,
-        "ops": _crawl_ops_summary(),
-    }
+    return admin_quality.facebook_crawl_summary(
+        conn_factory=get_conn,
+        jobs=FACEBOOK_CRAWL_JOBS,
+        job_order=FACEBOOK_CRAWL_JOB_ORDER,
+        lock=FACEBOOK_CRAWL_LOCK,
+        public_job_fn=_public_crawl_job,
+        crawl_ops_summary_fn=_crawl_ops_summary,
+    )
 
 
 def _daily_crawl_schedule_status() -> dict:
-    if platform.system() == "Linux":
-        return _systemd_crawl_timer_status()
-
-    task_name = "RadarBDS_DailyCrawl"
-    status = {
-        "task_name": task_name,
-        "installed": False,
-        "state": "missing",
-        "next_run_time": "",
-        "last_run_time": "",
-        "last_result": "",
-        "run_time": "",
-        "task_to_run": "",
-        "error": "",
-    }
-    if platform.system() != "Windows":
-        status["error"] = "schedule_status_unsupported_platform"
-        return status
-    try:
-        result = subprocess.run(
-            ["schtasks", "/query", "/tn", task_name, "/fo", "LIST", "/v"],
-            capture_output=True,
-            text=True,
-            timeout=8,
-        )
-    except Exception as exc:
-        status["error"] = str(exc)
-        return status
-    if result.returncode != 0:
-        status["error"] = (result.stderr or result.stdout or "").strip()[:240]
-        return status
-    fields = _parse_schtasks_list(result.stdout)
-    status.update({
-        "installed": True,
-        "state": fields.get("Status") or fields.get("Scheduled Task State") or "installed",
-        "next_run_time": fields.get("Next Run Time", ""),
-        "last_run_time": fields.get("Last Run Time", ""),
-        "last_result": fields.get("Last Result", ""),
-        "task_to_run": fields.get("Task To Run", ""),
-        "run_time": _extract_task_run_time(fields.get("Next Run Time", "")),
-        "error": "",
-    })
-    return status
-
-
-def _systemd_crawl_timer_status() -> dict:
-    timer_name = "radar-bds-crawl.timer"
-    status = {
-        "task_name": timer_name,
-        "installed": False,
-        "state": "missing",
-        "next_run_time": "",
-        "last_run_time": "",
-        "last_result": "",
-        "run_time": "",
-        "task_to_run": "radar-bds-crawl.service",
-        "error": "",
-        "service_state": "",
-        "service_result": "",
-        "service_exit_code": "",
-        "service_failed": False,
-        "service_last_finished_at": "",
-        "service_log_hint": "logs/crawl-daily.log",
-    }
-    try:
-        result = subprocess.run(
-            [
-                "systemctl",
-                "show",
-                timer_name,
-                "--no-page",
-                "--property=LoadState,ActiveState,SubState,Unit,NextElapseUSecRealtime,LastTriggerUSec",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=8,
-        )
-    except Exception as exc:
-        status["error"] = str(exc)
-        return status
-
-    if result.returncode != 0:
-        status["error"] = (result.stderr or result.stdout or "").strip()[:240]
-        return status
-
-    fields = _parse_key_value_lines(result.stdout)
-    if fields.get("LoadState") != "loaded":
-        status["error"] = fields.get("LoadState") or "not-loaded"
-        return status
-
-    active = fields.get("ActiveState") or "loaded"
-    sub = fields.get("SubState") or ""
-    status.update({
-        "installed": True,
-        "state": f"{active}/{sub}" if sub else active,
-        "next_run_time": fields.get("NextElapseUSecRealtime", ""),
-        "last_run_time": fields.get("LastTriggerUSec", ""),
-        "task_to_run": fields.get("Unit") or status["task_to_run"],
-        "run_time": _extract_task_run_time(fields.get("NextElapseUSecRealtime", "")),
-        "error": "",
-    })
-    status.update(_systemd_crawl_service_status(status["task_to_run"]))
-
-    try:
-        cat = subprocess.run(
-            ["systemctl", "cat", timer_name, "--no-pager"],
-            capture_output=True,
-            text=True,
-            timeout=8,
-        )
-        if cat.returncode == 0:
-            run_time = _extract_systemd_on_calendar_run_time(cat.stdout)
-            if run_time:
-                status["run_time"] = run_time
-    except Exception:
-        pass
-    return status
-
-
-def _systemd_crawl_service_status(service_name: str) -> dict:
-    base = {
-        "service_state": "",
-        "service_result": "",
-        "service_exit_code": "",
-        "service_failed": False,
-        "service_last_finished_at": "",
-        "service_log_hint": "logs/crawl-daily.log",
-    }
-    service = (service_name or "radar-bds-crawl.service").strip() or "radar-bds-crawl.service"
-    try:
-        result = subprocess.run(
-            [
-                "systemctl",
-                "show",
-                service,
-                "--no-page",
-                "--property=LoadState,ActiveState,SubState,Result,ExecMainStatus,InactiveExitTimestamp",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=8,
-        )
-    except Exception as exc:
-        base["service_result"] = f"status_error:{str(exc)[:120]}"
-        return base
-
-    if result.returncode != 0:
-        err = (result.stderr or result.stdout or "").strip()[:160]
-        base["service_result"] = f"status_error:{err}" if err else "status_error"
-        return base
-
-    fields = _parse_key_value_lines(result.stdout)
-    active = fields.get("ActiveState") or ""
-    sub = fields.get("SubState") or ""
-    service_state = f"{active}/{sub}" if active and sub else active or sub
-    service_result = fields.get("Result") or ""
-    exit_code = fields.get("ExecMainStatus") or ""
-    failed = (
-        active == "failed"
-        or sub == "failed"
-        or service_result not in ("", "success")
-        or exit_code not in ("", "0")
+    return admin_quality.daily_crawl_schedule_status(
+        system_fn=platform.system,
+        run_fn=subprocess.run,
     )
-    base.update({
-        "service_state": service_state,
-        "service_result": service_result,
-        "service_exit_code": exit_code,
-        "service_failed": failed,
-        "service_last_finished_at": fields.get("InactiveExitTimestamp", ""),
-    })
-    return base
 
 
-def _parse_schtasks_list(output: str) -> dict:
-    fields: dict[str, str] = {}
-    for line in (output or "").splitlines():
-        if ":" not in line:
-            continue
-        key, value = line.split(":", 1)
-        fields[key.strip()] = value.strip()
-    return fields
+def _active_radar_lock_blockers() -> list[dict]:
+    return admin_quality.active_radar_lock_blockers(conn_factory=get_conn)
 
 
-def _parse_key_value_lines(output: str) -> dict:
-    fields: dict[str, str] = {}
-    for line in (output or "").splitlines():
-        if "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        fields[key.strip()] = value.strip()
-    return fields
+def _crawl_ops_summary() -> dict:
+    return admin_quality.crawl_ops_summary(
+        conn_factory=get_conn,
+        schedule_status_fn=_daily_crawl_schedule_status,
+        active_lock_blockers_fn=_active_radar_lock_blockers,
+    )
 
 
-def _extract_systemd_on_calendar_run_time(output: str) -> str:
-    for line in (output or "").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or not line.startswith("OnCalendar="):
-            continue
-        run_time = _extract_task_run_time(line.split("=", 1)[1])
-        if run_time:
-            return run_time
-    return ""
+def _apify_tokens_public() -> list[dict]:
+    return admin_quality.apify_tokens_public()
 
 
-def _extract_task_run_time(value: str) -> str:
-    value = (value or "").strip()
-    for fmt in ("%m/%d/%Y %I:%M:%S %p", "%d/%m/%Y %I:%M:%S %p", "%m/%d/%Y %H:%M:%S", "%d/%m/%Y %H:%M:%S"):
-        try:
-            return datetime.strptime(value, fmt).strftime("%H:%M")
-        except ValueError:
-            continue
-    match = re.search(r"\b(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?\b", value, flags=re.I)
-    if not match:
-        return ""
-    hour = int(match.group(1))
-    minute = int(match.group(2))
-    suffix = (match.group(3) or "").upper()
-    if suffix == "PM" and hour != 12:
-        hour += 12
-    elif suffix == "AM" and hour == 12:
-        hour = 0
-    return f"{hour:02d}:{minute:02d}"
-
-
-def _parse_crawl_dt(value: str):
-    value = (value or "").strip().replace("Z", "+00:00")
-    if not value:
-        return None
-    try:
-        dt = datetime.fromisoformat(value)
-    except ValueError:
-        try:
-            dt = datetime.strptime(value[:19], "%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            return None
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+def _data_quality_summary() -> dict:
+    return admin_quality.data_quality_summary(
+        conn_factory=get_conn,
+        apify_tokens_fn=_apify_tokens_public,
+        crawl_ops_summary_fn=_crawl_ops_summary,
+    )
 
 
 def _utc_now() -> datetime:
@@ -884,251 +252,6 @@ def _utc_iso(timespec: str = "seconds") -> str:
 
 def _utc_iso_z(timespec: str = "seconds") -> str:
     return _utc_now().isoformat(timespec=timespec).replace("+00:00", "Z")
-
-
-def _active_radar_lock_blockers() -> list[dict]:
-    from db.connection import _lock_id
-
-    names = ("crawl-incremental", "crawl-full", "crawl-facebook", "reprocess", "download-images")
-    blockers: list[dict] = []
-    try:
-        with get_conn() as conn:
-            for name in names:
-                lock_id = _lock_id(name)
-                row = conn.execute("SELECT pg_try_advisory_lock(?) AS locked", (lock_id,)).fetchone()
-                locked = bool(row["locked"]) if row else False
-                if locked:
-                    conn.execute("SELECT pg_advisory_unlock(?)", (lock_id,))
-                else:
-                    blockers.append({"name": name, "pid": None, "state": "locked", "age_seconds": None})
-    except Exception as exc:
-        return [{"name": "lock-check", "pid": None, "state": "error", "age_seconds": None, "error": str(exc)[:160]}]
-    return blockers
-
-
-def _crawl_ops_summary() -> dict:
-    schedule = _daily_crawl_schedule_status()
-    blockers = _active_radar_lock_blockers()
-    empty = {
-        "schedule": schedule,
-        "last_run": None,
-        "last_24h": {"runs": 0, "fetched": 0, "new": 0, "updated": 0, "skipped": 0},
-        "signal_count": 0,
-        "source_errors": [],
-        "lock_blockers": blockers,
-    }
-    try:
-        with get_conn() as conn:
-            last_rows = conn.execute(
-                """
-                SELECT id, source, area, started_at, finished_at, status,
-                       COALESCE(n_fetched,0) AS n_fetched,
-                       COALESCE(n_new,0) AS n_new,
-                       COALESCE(n_updated,0) AS n_updated,
-                       COALESCE(n_skipped,0) AS n_skipped,
-                       COALESCE(error_msg,'') AS error_msg
-                FROM crawl_runs
-                ORDER BY id DESC
-                LIMIT 12
-                """
-            ).fetchall()
-            signal_row = conn.execute(
-                "SELECT COUNT(*) AS n FROM valuation_results WHERE is_signal=1"
-            ).fetchone()
-    except Exception as exc:
-        empty["source_errors"] = [{"source": "ops", "status": "error", "error_msg": str(exc)[:180]}]
-        return empty
-    if signal_row:
-        empty["signal_count"] = signal_row["n"] or 0
-    if not last_rows:
-        return empty
-    last = last_rows[0]
-    empty["last_run"] = _crawl_run_public(last)
-    latest_dt = _parse_crawl_dt(last["started_at"])
-    if latest_dt:
-        recent = []
-        for row in last_rows:
-            dt = _parse_crawl_dt(row["started_at"])
-            if not dt:
-                continue
-            delta = (latest_dt - dt).total_seconds()
-            if 0 <= delta <= 15 * 60:
-                recent.append(row)
-        if not recent:
-            recent = [last]
-    else:
-        recent = [last]
-    empty["last_24h"] = {
-        "runs": len(recent),
-        "fetched": sum((r["n_fetched"] or 0) for r in recent),
-        "new": sum((r["n_new"] or 0) for r in recent),
-        "updated": sum((r["n_updated"] or 0) for r in recent),
-        "skipped": sum((r["n_skipped"] or 0) for r in recent),
-    }
-    errors = [
-        _crawl_run_public(r)
-        for r in last_rows
-        if (r["status"] or "") == "error" or (r["n_fetched"] or 0) == 0 or (r["error_msg"] or "")
-    ]
-    empty["source_errors"] = errors[:6]
-    return empty
-
-
-def _crawl_run_public(row) -> dict:
-    return {
-        "id": row["id"],
-        "source": row["source"] or "",
-        "area": row["area"] or "",
-        "started_at": row["started_at"] or "",
-        "finished_at": row["finished_at"] or "",
-        "status": row["status"] or "",
-        "fetched": row["n_fetched"] or 0,
-        "new": row["n_new"] or 0,
-        "updated": row["n_updated"] or 0,
-        "skipped": row["n_skipped"] or 0,
-        "error_msg": row["error_msg"] or "",
-    }
-
-
-def _apify_tokens_public() -> list[dict]:
-    from crawler.apify_token_pool import list_tokens_public
-
-    return list_tokens_public()
-
-
-def _int_metric(value) -> int:
-    try:
-        return max(0, int(value or 0))
-    except (TypeError, ValueError):
-        return 0
-
-
-def _apify_pool_summary(tokens: list[dict] | None = None) -> dict:
-    tokens = list(tokens if tokens is not None else _apify_tokens_public())
-    active_tokens = [t for t in tokens if t.get("active") is not False]
-    total_quota = sum(_int_metric(t.get("monthly_quota")) for t in active_tokens)
-    used_this_month = sum(_int_metric(t.get("used_this_month")) for t in active_tokens)
-    total_remaining = sum(_int_metric(t.get("remaining")) for t in active_tokens)
-    low_tokens = [
-        {
-            "id": t.get("id") or "",
-            "label": t.get("label") or "",
-            "remaining": _int_metric(t.get("remaining")),
-            "last_error": t.get("last_error") or "",
-        }
-        for t in active_tokens
-        if _int_metric(t.get("remaining")) <= 100 or t.get("last_error")
-    ]
-    return {
-        "tokens": tokens,
-        "total_tokens": len(tokens),
-        "active_tokens": len(active_tokens),
-        "monthly_quota": total_quota,
-        "used_this_month": used_this_month,
-        "total_remaining": total_remaining,
-        "usage_pct": round((used_this_month / total_quota) * 100, 1) if total_quota else 0.0,
-        "low_tokens": low_tokens,
-    }
-
-
-def _suppressed_signal_quality_summary(conn) -> dict:
-    listing_condition = actionable_listing_sql("l")
-    signal_condition = actionable_signal_sql("v")
-    rows = conn.execute(f"""
-        WITH {LATEST_VALUATION_CTE}
-        SELECT l.id, l.title, l.source, l.ward,
-               COALESCE(v.mos_pct,0) AS mos_pct,
-               COALESCE(v.signal_score,0) AS signal_score,
-               COALESCE(v.source_quality_recheck,0) AS source_quality_recheck,
-               COALESCE(v.source_quality_flags,'') AS source_quality_flags
-        FROM listings l
-        JOIN latest_valuation v ON v.listing_id = l.id
-        WHERE {listing_condition}
-          AND COALESCE(v.is_signal,0)=1
-          AND NOT ({signal_condition})
-        ORDER BY COALESCE(v.signal_score,0) DESC, COALESCE(v.mos_pct,0) DESC, l.id DESC
-        LIMIT 5000
-    """).fetchall()
-    by_flag: Counter[str] = Counter()
-    by_source: Counter[str] = Counter()
-    samples: list[dict] = []
-    for row in rows:
-        source = row["source"] or "unknown"
-        by_source[source] += 1
-        flags = split_quality_flags(row["source_quality_flags"])
-        if not flags and row["source_quality_recheck"]:
-            flags = {"source_quality_recheck"}
-        for flag in sorted(flags):
-            if flag == "low_segment_confidence":
-                continue
-            by_flag[flag] += 1
-        if len(samples) < 8:
-            samples.append({
-                "id": row["id"],
-                "title": row["title"] or "",
-                "source": source,
-                "ward": row["ward"] or "",
-                "mos_pct": row["mos_pct"] or 0,
-                "signal_score": row["signal_score"] or 0,
-                "source_quality_flags": row["source_quality_flags"] or "",
-            })
-    return {
-        "total": len(rows),
-        "by_flag": [{"flag": flag, "count": count} for flag, count in by_flag.most_common()],
-        "by_source": [{"source": source, "count": count} for source, count in by_source.most_common()],
-        "samples": samples,
-    }
-
-
-def _data_quality_summary() -> dict:
-    try:
-        apify_tokens = _apify_tokens_public()
-    except Exception as exc:
-        apify_tokens = []
-        apify_error = str(exc)[:180]
-    else:
-        apify_error = ""
-
-    missing_images = {
-        "total_image_refs": 0,
-        "missing_image_refs": 0,
-        "downloaded_image_refs": 0,
-        "listings_with_images": 0,
-        "listings_with_missing_images": 0,
-        "listings_with_downloaded_images": 0,
-        "missing_pct": 0.0,
-    }
-    suppressed = {"total": 0, "by_flag": [], "by_source": [], "samples": []}
-    try:
-        with get_conn() as conn:
-            missing_images = _missing_image_summary(conn)
-            suppressed = _suppressed_signal_quality_summary(conn)
-    except Exception as exc:
-        suppressed = {
-            "total": 0,
-            "by_flag": [],
-            "by_source": [],
-            "samples": [],
-            "error": str(exc)[:180],
-        }
-
-    ops = _crawl_ops_summary()
-    crawl_health = {
-        "schedule": ops.get("schedule") or {},
-        "last_run": ops.get("last_run"),
-        "last_24h": ops.get("last_24h") or {},
-        "source_errors": ops.get("source_errors") or [],
-        "lock_blockers": ops.get("lock_blockers") or [],
-    }
-    return {
-        "missing_images": missing_images,
-        "apify_pool": {
-            **_apify_pool_summary(apify_tokens),
-            "error": apify_error,
-        },
-        "crawl_health": crawl_health,
-        "suppressed_signals": suppressed,
-    }
 
 
 def _append_crawl_log(job: dict, message: str) -> None:
@@ -3350,37 +2473,6 @@ def _valid_price_drop_values(price_ty, price_first_ty):
     )
 
 
-def _resolve_lead_ack_email(conn, user_id: int | None, guest_email: str | None) -> str | None:
-    if guest_email and "@" in guest_email:
-        return guest_email
-    if user_id:
-        row = conn.execute("SELECT email FROM users WHERE id=?", (user_id,)).fetchone()
-        if row and row["email"] and "@" in (row["email"] or ""):
-            return row["email"]
-    return None
-
-
-def _send_lead_ack_safe(conn, lead_id: int, listing_id, user_id: int | None,
-                        guest_name: str | None, guest_email: str | None) -> None:
-    """Send lead acknowledgement email; mark notify_email_sent_at. Never raises."""
-    try:
-        from alerts.email import send_lead_ack
-        to_email = _resolve_lead_ack_email(conn, user_id, guest_email)
-        if not to_email:
-            return
-        listing_title = None
-        if listing_id is not None:
-            row = conn.execute("SELECT title FROM listings WHERE id=?", (listing_id,)).fetchone()
-            listing_title = row["title"] if row else None
-        if send_lead_ack(to_email, guest_name, listing_title, listing_id):
-            conn.execute(
-                "UPDATE lead_captures SET notify_email_sent_at=datetime('now') WHERE id=?",
-                (lead_id,),
-            )
-    except Exception as e:
-        logger.warning(f"lead ack email failed lead_id={lead_id}: {e}")
-
-
 def _same_price_value(a, b):
     if a is None and b is None:
         return True
@@ -3391,105 +2483,24 @@ def _same_price_value(a, b):
 
 @rate_limit("lead_capture", limits={"guest": 10, "free": 30, "vip": 120, "admin": None})
 def api_create_lead():
-    payload = request.get_json(silent=True) or {}
-    listing_id = payload.get("listing_id")
-    listing_url = (payload.get("listing_url") or "").strip()
-    source_context = (payload.get("source_context") or "signal").strip()[:50]
-    note = (payload.get("note") or "").strip()[:500]
-    phone_raw = (payload.get("zalo_phone") or "").strip()
-    phone_norm = normalize_phone(phone_raw)
-    urgency = (payload.get("urgency") or "standard").strip()[:20]
-    if urgency not in ("standard", "urgent"):
-        urgency = "standard"
-
-    if not phone_norm or len(phone_norm) < 9:
-        return jsonify({"ok": False, "error": "invalid_phone"}), 400
-
-    tier = current_tier()
-    u = current_user()
-    user_id = u["id"] if u else None
-    # VIP/admin → escalate to urgent regardless of client flag
-    if tier in ("vip", "admin"):
-        urgency = "urgent"
-
-    with db_mod.get_conn() as conn:
-        if listing_id is not None:
-            row = conn.execute("SELECT id, url FROM listings WHERE id=?", (listing_id,)).fetchone()
-            if not row:
-                return jsonify({"ok": False, "error": "listing_not_found"}), 404
-            listing_url = listing_url or row["url"] or ""
-
-        cur = conn.execute("""
-            INSERT INTO lead_captures (listing_id, listing_url, zalo_phone, source_context, note, status,
-                                       user_id, tier, urgency)
-            VALUES (?, ?, ?, ?, ?, 'new', ?, ?, ?)
-        """, (listing_id, listing_url, phone_norm, source_context, note, user_id, tier, urgency))
-        lead_id = cur.lastrowid
-        _send_lead_ack_safe(conn, lead_id, listing_id, user_id, None, None)
-
-    log_audit(
-        user_id=user_id, tier=tier, action="lead_capture",
-        listing_id=listing_id,
-        context={"urgency": urgency, "source_context": source_context},
+    payload, status = admin_leads.create_lead(
+        request.get_json(silent=True) or {},
+        tier=current_tier(),
+        user=current_user(),
+        audit_log_fn=log_audit,
     )
-    return jsonify({"ok": True, "lead_id": lead_id})
+    return jsonify(payload), status
 
 
 @rate_limit("lead_capture", limits={"guest": 10, "free": 30, "vip": 120, "admin": None})
 def api_create_guest_lead():
-    """Matchmaking request from guest/free/vip. Captures phone and default request note.
-
-    Accepts logged-in users too (admin can still see who clicked the guest form).
-    """
-    payload = request.get_json(silent=True) or {}
-    listing_id = payload.get("listing_id")
-    contact_raw = (payload.get("contact") or "").strip()
-    note = (payload.get("note") or "").strip()[:500]
-    context_ctx = (payload.get("context") or "card_signal").strip()[:50]
-
-    norm = normalize_identifier(contact_raw)
-    if not norm or norm[1] != "phone":
-        return jsonify({"ok": False, "error": "invalid_phone"}), 400
-    ident, ident_type = norm
-
-    tier = current_tier()
-    u = current_user()
-    user_id = u["id"] if u else None
-    urgency = "urgent" if tier in ("vip", "admin") else ("standard" if tier == "free" else "guest")
-
-    listing_url = (payload.get("listing_url") or "").strip()[:500]
-    with db_mod.get_conn() as conn:
-        if listing_id is not None:
-            row = conn.execute("SELECT id, url FROM listings WHERE id=?", (listing_id,)).fetchone()
-            if not row:
-                return jsonify({"ok": False, "error": "listing_not_found"}), 404
-            listing_url = row["url"] or ""
-
-        if not note:
-            lot_ref = f"#{listing_id}" if listing_id is not None else "này"
-            note = f"Tôi quan tâm lô {lot_ref}, hãy gửi thêm thông tin."
-        if tier in ("vip", "admin") and "1-1" not in note:
-            note = f"{note} Tôi muốn được tư vấn và phân tích 1-1 với chuyên gia."
-
-        cur = conn.execute("""
-            INSERT INTO lead_captures (
-                listing_id, listing_url, zalo_phone, source_context, note, status,
-                user_id, tier, urgency, guest_name, guest_email
-            ) VALUES (?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?)
-        """, (
-            listing_id, listing_url, ident, context_ctx,
-            note,
-            user_id, tier, urgency, None, None,
-        ))
-        lead_id = cur.lastrowid
-        _send_lead_ack_safe(conn, lead_id, listing_id, user_id, None, None)
-
-    log_audit(
-        user_id=user_id, tier=tier, action="lead_capture_guest",
-        listing_id=listing_id,
-        context={"contact_type": ident_type, "urgency": urgency, "source_context": context_ctx},
+    payload, status = admin_leads.create_guest_lead(
+        request.get_json(silent=True) or {},
+        tier=current_tier(),
+        user=current_user(),
+        audit_log_fn=log_audit,
     )
-    return jsonify({"ok": True, "lead_id": lead_id})
+    return jsonify(payload), status
 
 
 def admin_control_room(panel_slug=None):
@@ -3627,93 +2638,20 @@ def admin_api_facebook_crawl_jobs(job_id=None):
 
 @require_admin_auth
 def admin_api_leads():
-    status = (request.args.get("status") or "").strip()
-    q = (request.args.get("q") or "").strip()
-    where = []
-    params = []
-    if status in LEAD_STATUSES:
-        where.append("lc.status = ?")
-        params.append(status)
-    if q:
-        like = f"%{q}%"
-        where.append("""(
-            lc.zalo_phone LIKE ?
-            OR CAST(lc.listing_id AS TEXT) LIKE ?
-            OR COALESCE(l.title, '') LIKE ?
-            OR COALESCE(l.ward, '') LIKE ?
-            OR COALESCE(lc.listing_url, '') LIKE ?
-        )""")
-        params.extend([like, like, like, like, like])
-    where_sql = f"WHERE {' AND '.join(where)}" if where else ""
-    with db_mod.get_conn() as conn:
-        rows = conn.execute(f"""
-            SELECT lc.id, lc.created_at, lc.updated_at, lc.listing_id, lc.listing_url,
-                   lc.zalo_phone, lc.source_context, lc.note, lc.status,
-                   l.title AS listing_title, l.ward AS listing_ward, l.price_ty AS listing_price_ty
-            FROM lead_captures lc
-            LEFT JOIN listings l ON l.id = lc.listing_id
-            {where_sql}
-            ORDER BY lc.created_at DESC
-            LIMIT 500
-        """, params).fetchall()
-        summary_rows = conn.execute("""
-            SELECT status, COUNT(*) AS n
-            FROM lead_captures
-            GROUP BY status
-        """).fetchall()
-    summary = {r["status"]: r["n"] for r in summary_rows}
-    total = sum(summary.values())
-    return jsonify({
-        "items": [dict(r) for r in rows],
-        "summary": {
-            "total": total,
-            "new": summary.get("new", 0),
-            "called": summary.get("called", 0),
-            "viewing": summary.get("viewing", 0),
-            "deposit": summary.get("deposit", 0),
-            "cancelled": summary.get("cancelled", 0),
-        }
-    })
+    return jsonify(admin_leads.list_leads(
+        status=(request.args.get("status") or "").strip(),
+        q=(request.args.get("q") or "").strip(),
+    ))
 
 
 @require_admin_auth
 def admin_api_leads_export():
-    status = (request.args.get("status") or "").strip()
-    q = (request.args.get("q") or "").strip()
-    where = []
-    params = []
-    if status in LEAD_STATUSES:
-        where.append("lc.status = ?")
-        params.append(status)
-    if q:
-        like = f"%{q}%"
-        where.append("""(
-            lc.zalo_phone LIKE ?
-            OR CAST(lc.listing_id AS TEXT) LIKE ?
-            OR COALESCE(l.title, '') LIKE ?
-            OR COALESCE(l.ward, '') LIKE ?
-            OR COALESCE(lc.listing_url, '') LIKE ?
-        )""")
-        params.extend([like, like, like, like, like])
-    where_sql = f"WHERE {' AND '.join(where)}" if where else ""
-    with db_mod.get_conn() as conn:
-        rows = conn.execute(f"""
-            SELECT lc.created_at, lc.zalo_phone, lc.listing_id, lc.listing_url,
-                   COALESCE(l.title, '') AS listing_title,
-                   COALESCE(l.ward, '') AS listing_ward,
-                   lc.source_context, lc.status, COALESCE(lc.note, '') AS note
-            FROM lead_captures lc
-            LEFT JOIN listings l ON l.id = lc.listing_id
-            {where_sql}
-            ORDER BY lc.created_at DESC
-        """, params).fetchall()
-    out = io.StringIO()
-    writer = csv.writer(out)
-    writer.writerow(["created_at", "zalo_phone", "listing_id", "listing_title", "ward", "listing_url", "source_context", "status", "note"])
-    for r in rows:
-        writer.writerow([r["created_at"], r["zalo_phone"], r["listing_id"], r["listing_title"], r["listing_ward"], r["listing_url"], r["source_context"], r["status"], r["note"]])
+    csv_body = admin_leads.export_leads_csv(
+        status=(request.args.get("status") or "").strip(),
+        q=(request.args.get("q") or "").strip(),
+    )
     return Response(
-        "\ufeff" + out.getvalue(),
+        csv_body,
         mimetype="text/csv; charset=utf-8",
         headers={"Content-Disposition": "attachment; filename=radarbds_leads.csv"},
     )
@@ -3722,57 +2660,18 @@ def admin_api_leads_export():
 @require_admin_auth
 def admin_api_update_lead_status(lead_id):
     payload = request.get_json(silent=True) or {}
-    status = (payload.get("status") or "").strip()
-    if status not in LEAD_STATUSES:
-        return jsonify({"ok": False, "error": "invalid_status"}), 400
-    with db_mod.get_conn() as conn:
-        before = conn.execute(
-            "SELECT id, status FROM lead_captures WHERE id=?",
-            (lead_id,),
-        ).fetchone()
-        cur = conn.execute("""
-            UPDATE lead_captures
-            SET status=?, updated_at=datetime('now')
-            WHERE id=?
-        """, (status, lead_id))
-        if cur.rowcount:
-            _write_admin_audit(
-                conn,
-                "lead_status_update",
-                "lead",
-                lead_id,
-                before=dict(before) if before else None,
-                after={"id": lead_id, "status": status},
-                reason=status,
-            )
-    return jsonify({"ok": cur.rowcount > 0})
+    result, status = admin_leads.update_lead_status(
+        lead_id,
+        (payload.get("status") or "").strip(),
+        audit_writer=_write_admin_audit,
+    )
+    return jsonify(result), status
 
 
 @require_admin_auth
 def admin_api_delete_lead(lead_id):
-    with db_mod.get_conn() as conn:
-        before = conn.execute(
-            """
-            SELECT id, created_at, updated_at, listing_id, listing_url, user_id,
-                   zalo_phone, source_context, note, status
-            FROM lead_captures
-            WHERE id=?
-            """,
-            (lead_id,),
-        ).fetchone()
-        if not before:
-            return jsonify({"ok": False, "error": "not_found"}), 404
-        conn.execute("DELETE FROM lead_captures WHERE id=?", (lead_id,))
-        _write_admin_audit(
-            conn,
-            "lead_delete",
-            "lead",
-            lead_id,
-            before=dict(before),
-            after=None,
-            reason="admin_delete",
-        )
-    return jsonify({"ok": True, "id": lead_id})
+    result, status = admin_leads.delete_lead(lead_id, audit_writer=_write_admin_audit)
+    return jsonify(result), status
 
 
 @require_admin_auth
@@ -5331,200 +4230,57 @@ def admin_api_audit():
 # ═══════════════════════════════════════════════════════════════════════════
 # Admin: User management (grant/revoke VIP, ban)
 # ═══════════════════════════════════════════════════════════════════════════
-def _user_admin_row(row):
-    if not row:
-        return None
-    d = dict(row)
-    # Compute effective tier (VIP can be expired)
-    eff = _effective_tier_from_user(d)
-    d["effective_tier"] = eff
-    # Strip password_hash, telegram_link_token (sensitive)
-    d.pop("password_hash", None)
-    d.pop("telegram_link_token", None)
-    d.pop("telegram_link_expires_at", None)
-    d["telegram_linked"] = bool(d.pop("telegram_chat_id", None))
-    return d
-
-
 @require_admin_auth
 def admin_api_users():
-    tier_filter = (request.args.get("tier") or "").strip()
-    q = (request.args.get("q") or "").strip()
-    where = []
-    params = []
-    if tier_filter in ("free", "vip", "admin"):
-        where.append("tier = ?")
-        params.append(tier_filter)
-    if q:
-        like = f"%{q}%"
-        where.append("(identifier LIKE ? OR display_name LIKE ? OR email LIKE ? OR phone LIKE ?)")
-        params.extend([like, like, like, like])
-    where_sql = f"WHERE {' AND '.join(where)}" if where else ""
-    with db_mod.get_conn() as conn:
-        rows = conn.execute(f"""
-            SELECT id, identifier, identifier_type, email, phone, display_name,
-                   tier, vip_expires_at, telegram_chat_id, notify_email, notify_telegram,
-                   created_at, last_login_at, is_banned,
-                   COALESCE(wc.watchlist_count, 0) AS watchlist_count
-            FROM users u
-            LEFT JOIN (
-                SELECT user_id, COUNT(*) AS watchlist_count
-                FROM user_watchlists
-                GROUP BY user_id
-            ) wc ON wc.user_id = u.id
-            {where_sql}
-            ORDER BY created_at DESC
-            LIMIT 500
-        """, params).fetchall()
-        summary_rows = conn.execute("""
-            SELECT tier, COUNT(*) AS n FROM users WHERE is_banned=0 GROUP BY tier
-        """).fetchall()
-        banned = conn.execute("SELECT COUNT(*) FROM users WHERE is_banned=1").fetchone()[0]
-    summary = {r["tier"]: r["n"] for r in summary_rows}
-    return jsonify({
-        "items": [_user_admin_row(r) for r in rows],
-        "summary": {
-            "total": sum(summary.values()) + banned,
-            "free": summary.get("free", 0),
-            "vip": summary.get("vip", 0),
-            "admin": summary.get("admin", 0),
-            "banned": banned,
-        },
-    })
+    return jsonify(admin_users.list_users(
+        tier_filter=(request.args.get("tier") or "").strip(),
+        q=(request.args.get("q") or "").strip(),
+        effective_tier_fn=_effective_tier_from_user,
+    ))
 
 
 @require_admin_auth
 def admin_api_delete_user(user_id):
     actor = current_user() or {}
-    actor_id = actor.get("id")
-    if actor_id == user_id:
-        return jsonify({"ok": False, "error": "cannot_delete_self"}), 400
-
-    with db_mod.get_conn() as conn:
-        before = conn.execute(
-            """
-            SELECT id, identifier, identifier_type, email, phone, display_name,
-                   tier, vip_expires_at, created_at, last_login_at, is_banned
-            FROM users
-            WHERE id=?
-            """,
-            (user_id,),
-        ).fetchone()
-        if not before:
-            return jsonify({"ok": False, "error": "not_found"}), 404
-        before_dict = dict(before)
-        if before_dict.get("tier") == "admin":
-            admin_count = conn.execute(
-                "SELECT COUNT(*) FROM users WHERE tier='admin'"
-            ).fetchone()[0]
-            if admin_count <= 1:
-                return jsonify({"ok": False, "error": "cannot_delete_last_admin"}), 400
-
-        conn.execute("DELETE FROM user_sessions WHERE user_id=?", (user_id,))
-        conn.execute("DELETE FROM user_watchlists WHERE user_id=?", (user_id,))
-        conn.execute("DELETE FROM notification_log WHERE user_id=?", (user_id,))
-        conn.execute(
-            "UPDATE lead_captures SET user_id=NULL, updated_at=datetime('now') WHERE user_id=?",
-            (user_id,),
-        )
-        conn.execute("DELETE FROM users WHERE id=?", (user_id,))
-        _write_admin_audit(
-            conn,
-            "user_delete",
-            "user",
-            user_id,
-            before=before_dict,
-            after={"id": user_id, "deleted": True},
-            reason="admin_delete",
-        )
-    return jsonify({"ok": True, "id": user_id})
+    result, status = admin_users.delete_user(
+        user_id,
+        actor_id=actor.get("id"),
+        audit_writer=_write_admin_audit,
+    )
+    return jsonify(result), status
 
 
 @require_admin_auth
 def admin_api_grant_vip(user_id):
     payload = request.get_json(silent=True) or {}
-    try:
-        days = int(payload.get("days") or 30)
-    except (TypeError, ValueError):
-        return jsonify({"ok": False, "error": "invalid_days"}), 400
-    if days <= 0 or days > 3650:
-        return jsonify({"ok": False, "error": "invalid_days"}), 400
-    with db_mod.get_conn() as conn:
-        before = conn.execute(
-            "SELECT id, tier, vip_expires_at FROM users WHERE id=?", (user_id,)
-        ).fetchone()
-        if not before:
-            return jsonify({"ok": False, "error": "not_found"}), 404
-        # Extend from max(now, current vip_expires_at) so stacking days works
-        now_iso = _utc_iso()
-        cur_exp = before["vip_expires_at"]
-        base_iso = cur_exp if (cur_exp and cur_exp > now_iso) else now_iso
-        try:
-            base_dt = datetime.fromisoformat(base_iso)
-        except ValueError:
-            base_dt = _utc_now().replace(tzinfo=None)
-        new_exp = (base_dt + timedelta(days=days)).isoformat(timespec="seconds")
-        conn.execute(
-            "UPDATE users SET tier='vip', vip_expires_at=? WHERE id=?",
-            (new_exp, user_id),
-        )
-        _write_admin_audit(
-            conn, "user_grant_vip", "user", user_id,
-            before=dict(before),
-            after={"id": user_id, "tier": "vip", "vip_expires_at": new_exp},
-            reason=f"+{days}d",
-        )
-    try:
-        log_audit(user_id=user_id, tier="vip", action="vip_granted",
-                  context={"days": days, "vip_expires_at": new_exp})
-    except Exception:
-        pass
-    return jsonify({"ok": True, "vip_expires_at": new_exp, "tier": "vip"})
+    result, status = admin_users.grant_vip(
+        user_id,
+        payload.get("days"),
+        audit_writer=_write_admin_audit,
+        log_audit_fn=log_audit,
+    )
+    return jsonify(result), status
 
 
 @require_admin_auth
 def admin_api_revoke_vip(user_id):
-    with db_mod.get_conn() as conn:
-        before = conn.execute(
-            "SELECT id, tier, vip_expires_at FROM users WHERE id=?", (user_id,)
-        ).fetchone()
-        if not before:
-            return jsonify({"ok": False, "error": "not_found"}), 404
-        conn.execute(
-            "UPDATE users SET tier='free', vip_expires_at=NULL WHERE id=?",
-            (user_id,),
-        )
-        _write_admin_audit(
-            conn, "user_revoke_vip", "user", user_id,
-            before=dict(before),
-            after={"id": user_id, "tier": "free", "vip_expires_at": None},
-        )
-    try:
-        log_audit(user_id=user_id, tier="free", action="vip_revoked")
-    except Exception:
-        pass
-    return jsonify({"ok": True, "tier": "free"})
+    result, status = admin_users.revoke_vip(
+        user_id,
+        audit_writer=_write_admin_audit,
+        log_audit_fn=log_audit,
+    )
+    return jsonify(result), status
 
 
 @require_admin_auth
 def admin_api_ban_user(user_id):
     payload = request.get_json(silent=True) or {}
-    banned = 1 if payload.get("banned", True) else 0
-    with db_mod.get_conn() as conn:
-        before = conn.execute(
-            "SELECT id, is_banned FROM users WHERE id=?", (user_id,)
-        ).fetchone()
-        if not before:
-            return jsonify({"ok": False, "error": "not_found"}), 404
-        conn.execute("UPDATE users SET is_banned=? WHERE id=?", (banned, user_id))
-        if banned:
-            # Kill all active sessions
-            conn.execute("DELETE FROM user_sessions WHERE user_id=?", (user_id,))
-        _write_admin_audit(
-            conn, "user_ban" if banned else "user_unban", "user", user_id,
-            before=dict(before), after={"id": user_id, "is_banned": banned},
-        )
-    return jsonify({"ok": True, "is_banned": bool(banned)})
+    result, status = admin_users.set_banned(
+        user_id,
+        bool(payload.get("banned", True)),
+        audit_writer=_write_admin_audit,
+    )
+    return jsonify(result), status
 
 
 def _title_tokens(text):
