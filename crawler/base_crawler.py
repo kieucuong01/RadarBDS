@@ -150,6 +150,7 @@ class BaseCrawler(ABC):
         mode: 'full' | 'incremental'
         Trả về stats dict: {new, skipped, errors}
         """
+        _normalize_playwright_browser_path_env()
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
