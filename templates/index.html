@@ -41,7 +41,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
 
-  {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=lazy-shell-fix-20260611' %}
+  {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=shell-critical-fix-20260611' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=mobile-perf-lazy-20260611' %}
   {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=pagespeed-a11y-20260611' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=pagespeed-a11y-20260611' %}
@@ -53,8 +53,10 @@
   <link rel="stylesheet" href="{{ css_layout }}">
   <link rel="preload" href="{{ css_filters }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="{{ css_cards }}">
+  <link rel="preload" href="{{ css_leads }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link rel="stylesheet" href="{{ css_filters }}">
+    <link rel="stylesheet" href="{{ css_leads }}">
   </noscript>
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};

@@ -89,6 +89,9 @@ function ensureDashboardStyle(key) {
   if (lazyStylePromises[key]) return lazyStylePromises[key];
   const href = window.RADAR_STYLES && window.RADAR_STYLES[key];
   if (!href) return Promise.reject(new Error(`Missing dashboard style: ${key}`));
+  const absoluteHref = new URL(href, window.location.href).href;
+  const existingLink = Array.from(document.querySelectorAll('link[href]')).find((link) => link.href === absoluteHref);
+  if (existingLink) return Promise.resolve();
   lazyStylePromises[key] = new Promise((resolve, reject) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';

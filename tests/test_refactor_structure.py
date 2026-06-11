@@ -637,7 +637,6 @@ def test_feature_css_is_lazy_loaded_instead_of_downloaded_on_first_paint():
     lazy_assets = {
         "css/main/modal.css": "css_modal",
         "css/main/market.css": "css_market",
-        "css/main/leads_chat.css": "css_leads",
         "css/auth.css": "css_auth",
     }
     for asset, template_var in lazy_assets.items():
@@ -649,16 +648,23 @@ def test_feature_css_is_lazy_loaded_instead_of_downloaded_on_first_paint():
     assert "lazyStylePromises" in core_js
     assert "document.createElement('link')" in core_js
     assert "link.rel = 'stylesheet'" in core_js
+    assert 'rel="preload" href="{{ css_leads }}" as="style"' in head
 
 
 def test_lazy_feature_shells_are_hidden_or_positioned_before_lazy_css_loads():
     html = _read("templates/index.html")
     base_css = _read("static/css/main/base.css")
 
-    assert "css/main/base.css') ~ '?v=lazy-shell-fix-20260611'" in html
-    hidden_shell_rule = re.search(r"\.modal,\s*\.chat-window,\s*\.user-menu-dropdown\s*\{([^}]*)\}", base_css, re.S)
+    assert "css/main/base.css') ~ '?v=shell-critical-fix-20260611'" in html
+    hidden_shell_rule = re.search(
+        r"\.modal,\s*\.chat-window,\s*\.user-menu-dropdown,\s*\.mobile-app-title,\s*\.mobile-bottom-nav\s*\{([^}]*)\}",
+        base_css,
+        re.S,
+    )
     assert hidden_shell_rule
     assert "display: none;" in hidden_shell_rule.group(1)
+    assert re.search(r"\.user-menu-trigger\s*\{[^}]*display:\s*inline-flex;", base_css, re.S)
+    assert re.search(r"\.user-plan-chip\s*\{[^}]*border-radius:\s*999px;", base_css, re.S)
     assert re.search(r"\.modal\.show\s*\{[^}]*display:\s*flex", base_css, re.S)
     assert re.search(r"\.fab-ai\s*\{[^}]*position:\s*fixed;", base_css, re.S)
     assert re.search(r"\.fab-ai\s*\{[^}]*z-index:\s*80;", base_css, re.S)
