@@ -651,6 +651,17 @@ def test_feature_css_is_lazy_loaded_instead_of_downloaded_on_first_paint():
     assert "link.rel = 'stylesheet'" in core_js
 
 
+def test_lazy_feature_shells_are_hidden_or_positioned_before_lazy_css_loads():
+    base_css = _read("static/css/main/base.css")
+
+    hidden_shell_rule = re.search(r"\.modal,\s*\.chat-window,\s*\.user-menu-dropdown\s*\{([^}]*)\}", base_css, re.S)
+    assert hidden_shell_rule
+    assert "display: none;" in hidden_shell_rule.group(1)
+    assert re.search(r"\.modal\.show\s*\{[^}]*display:\s*flex", base_css, re.S)
+    assert re.search(r"\.fab-ai\s*\{[^}]*position:\s*fixed;", base_css, re.S)
+    assert re.search(r"\.fab-ai\s*\{[^}]*z-index:\s*80;", base_css, re.S)
+
+
 def test_dashboard_avoids_mobile_render_blocking_third_party_assets():
     html = _read("templates/index.html")
     base_css = _read("static/css/main/base.css")

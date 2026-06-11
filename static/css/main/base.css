@@ -50,6 +50,35 @@ body {
   transition: background 0.3s, color 0.3s;
 }
 
+.modal,
+.chat-window,
+.user-menu-dropdown {
+  display: none;
+}
+
+.modal.show {
+  display: flex !important;
+}
+
+.fab-ai {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right, 0px) + 18px);
+  bottom: max(18px, env(safe-area-inset-bottom, 0px) + 18px);
+  z-index: 80;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary), #0ea5e9);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 14px 34px rgba(79, 70, 229, 0.32);
+  cursor: pointer;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
