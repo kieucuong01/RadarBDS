@@ -53,16 +53,8 @@
   <link rel="stylesheet" href="{{ css_layout }}">
   <link rel="preload" href="{{ css_filters }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="{{ css_cards }}">
-  <link rel="preload" href="{{ css_modal }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="{{ css_market }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="{{ css_leads }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="{{ css_auth }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link rel="stylesheet" href="{{ css_filters }}">
-    <link rel="stylesheet" href="{{ css_modal }}">
-    <link rel="stylesheet" href="{{ css_market }}">
-    <link rel="stylesheet" href="{{ css_leads }}">
-    <link rel="stylesheet" href="{{ css_auth }}">
   </noscript>
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -71,7 +63,15 @@
     window.RADAR_ASSETS = {
       modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=mobile-perf-lazy-20260611",
       market: "{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611",
-      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-perf-lazy-20260611"
+      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-perf-lazy-20260611",
+      auth: "{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611",
+      authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-perf-82-20260611"
+    };
+    window.RADAR_STYLES = {
+      modal: "{{ css_modal }}",
+      market: "{{ css_market }}",
+      leads: "{{ css_leads }}",
+      auth: "{{ css_auth }}"
     };
   </script>
 </head>
@@ -1172,11 +1172,9 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/auth.js') }}?v=vip-upgrade-modal-20260606"></script>
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=loader-font-fix-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-perf-82-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=loader-font-fix-20260611"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-perf-lazy-20260611"></script>
-  <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-perf-82-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=loader-font-fix-20260611"></script>
 </body>
 

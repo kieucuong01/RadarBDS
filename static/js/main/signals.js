@@ -172,11 +172,13 @@ function setSignalLoadingUI(isLoading, message = 'Đang lọc signal...') {
   if (tab) tab.setAttribute('aria-busy', isLoading ? 'true' : 'false');
 }
 
-function renderSignalCardMedia(x, imgSrc, imageCount, overlaysHtml) {
+function renderSignalCardMedia(x, imgSrc, imageCount, overlaysHtml, mediaOpts = {}) {
   const hasImage = Boolean(imgSrc);
   const mediaClass = hasImage ? 'sc-img-wrap' : 'sc-img-wrap sc-img-wrap-empty';
+  const loadingAttr = mediaOpts.priorityImage ? 'eager' : 'lazy';
+  const fetchPriorityAttr = mediaOpts.priorityImage ? 'high' : 'auto';
   const imageHtml = hasImage
-    ? `<img class="sc-img" src="${escHtml(imgSrc)}" loading="lazy" decoding="async" width="640" height="416" alt="Ảnh tin đăng" onerror="this.closest('.sc-img-wrap').classList.add('is-image-missing');this.remove();">`
+    ? `<img class="sc-img" src="${escHtml(imgSrc)}" loading="${loadingAttr}" fetchpriority="${fetchPriorityAttr}" decoding="async" width="520" height="338" alt="Ảnh tin đăng" onerror="this.closest('.sc-img-wrap').classList.add('is-image-missing');this.remove();">`
     : '';
 
   return `
@@ -398,7 +400,7 @@ function renderSignalDealCard(x, opts = {}) {
         ${dropBadge}
         ${qualityBadgeHtml}
       </div>
-  `);
+  `, { priorityImage: Boolean(opts.priorityImage) });
   const cardLabel = `Mở chi tiết ${safeTitle || 'tin đăng'}`;
 
   return `
@@ -466,7 +468,7 @@ async function loadSignals(page = 1, opts = {}) {
       if (typeof syncMobileBadges === 'function') syncMobileBadges();
     }
     if (reset) document.getElementById('signalsGrid').innerHTML = '';
-    renderSignals(data.signals || [], { append: !reset });
+    renderSignals(data.signals || [], { append: !reset, priorityFirstImage: reset && !firstSignalsLoaded });
     signalPageNo = data.page || page;
     signalHasMore = Boolean(data.has_more);
     if (!signalHasMore && _sigObserver) _sigObserver.disconnect();
@@ -510,11 +512,11 @@ function renderSignals(signals, options = {}) {
     return;
   }
 
-  _renderSignalCards(freshSignals);
+  _renderSignalCards(freshSignals, { priorityFirstImage: Boolean(options.priorityFirstImage) });
   _setupSignalScroll();
 }
 
-function _renderSignalCards(signals) {
+function _renderSignalCards(signals, options = {}) {
   const grid = document.getElementById('signalsGrid');
   if (!signals || signals.length === 0) return;
   const renderSeq = signalRenderSeq;
@@ -523,11 +525,19 @@ function _renderSignalCards(signals) {
     if (renderSeq !== signalRenderSeq) return;
     const chunk = signals.slice(start, start + SIGNAL_RENDER_CHUNK_SIZE);
     if (chunk.length === 0) return;
-    grid.insertAdjacentHTML('beforeend', chunk.map((x) => renderSignalDealCard(x, {
-      cardContext: 'signal',
-      contactContext: 'card_signal',
-      openHandler: 'openSignal'
-    })).join(''));
+    grid.insertAdjacentHTML('beforeend', chunk.map((x, i) => {
+      const index = start + i;
+      return renderSignalDealCard(x, {
+        cardContext: 'signal',
+        contactContext: 'card_signal',
+        openHandler: 'openSignal',
+        priorityImage: Boolean(options.priorityFirstImage && index === 0)
+      });
+    }).join(''));
+    if (options.priorityFirstImage && !firstSignalRenderEventSent) {
+      firstSignalRenderEventSent = true;
+      window.dispatchEvent(new CustomEvent('radar:first-signals-rendered'));
+    }
     if (start + SIGNAL_RENDER_CHUNK_SIZE < signals.length) {
       requestAnimationFrame(() => renderChunk(start + SIGNAL_RENDER_CHUNK_SIZE));
     }

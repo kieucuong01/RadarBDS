@@ -97,8 +97,10 @@ def test_google_site_tags_are_env_driven(monkeypatch):
 
     for html in (home_html, binh_duong_html):
         assert '<meta name="google-site-verification" content="search-console-token">' in html
-        assert "https://www.googletagmanager.com/gtag/js?id=G-TEST1234" in html
-        assert 'gtag("config", "G-TEST1234");' in html
+        assert '<script async src="https://www.googletagmanager.com/gtag/js' not in html
+        assert 'const analyticsId = "G-TEST1234";' in html
+        assert 'script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(analyticsId);' in html
+        assert 'window.gtag("config", analyticsId);' in html
 
 
 def test_google_site_tags_are_omitted_without_env(monkeypatch):
@@ -120,8 +122,9 @@ def test_live_domain_renders_radarbds_ga4_by_default(monkeypatch):
 
     html = radar_app.app.test_client().get("/", base_url="https://radarbds.vn").get_data(as_text=True)
 
-    assert "https://www.googletagmanager.com/gtag/js?id=G-YRJZ26W8Y2" in html
-    assert 'gtag("config", "G-YRJZ26W8Y2");' in html
+    assert '<script async src="https://www.googletagmanager.com/gtag/js' not in html
+    assert 'const analyticsId = "G-YRJZ26W8Y2";' in html
+    assert 'window.RadarLoadAnalytics = loadRadarAnalytics;' in html
 
 
 def test_binh_duong_landing_has_dashboard_preview_metrics_and_dashboard_cta():

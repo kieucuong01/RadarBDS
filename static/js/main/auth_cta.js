@@ -293,3 +293,18 @@ async function submitGuestLead() {
     if (btn) btn.disabled = false;
   }
 }
+
+Object.assign(window, {
+  captureLeadAndOpen,
+  closeLeadCaptureModal,
+  submitLeadAndOpenZalo,
+  skipLeadAndOpenZalo,
+  toggleChat,
+  sendMessage,
+  onLockedTabClick,
+  tierCTA,
+  closeGuestLeadModal,
+  guestLeadChatZalo,
+  submitGuestLead,
+});
+window.__radarEngagementLoaded = true;

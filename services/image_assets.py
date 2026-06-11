@@ -7,8 +7,8 @@ from PIL import Image, ImageOps
 
 DATA_IMAGES_DIR = Path(__file__).resolve().parent.parent / "data" / "images"
 THUMB_DIR = DATA_IMAGES_DIR / "thumbs"
-THUMB_MAX_SIZE = (640, 416)
-THUMB_QUALITY = 72
+THUMB_MAX_SIZE = (520, 338)
+THUMB_QUALITY = 62
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 
 

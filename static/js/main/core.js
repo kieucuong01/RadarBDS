@@ -68,6 +68,8 @@ function ensureDashboardScript(key) {
   if (key === 'market' && typeof window.loadMarketCharts === 'function') return Promise.resolve();
   if (key === 'modal' && typeof window.openSignal === 'function' && window.openSignal !== lazyOpenSignal) return Promise.resolve();
   if (key === 'listings' && typeof window.loadListings === 'function') return Promise.resolve();
+  if (key === 'auth' && window.RadarAuth && window.RadarAuth.__radarAuthLoaded) return Promise.resolve();
+  if (key === 'authCta' && window.__radarEngagementLoaded) return Promise.resolve();
   if (lazyScriptPromises[key]) return lazyScriptPromises[key];
   const src = window.RADAR_ASSETS && window.RADAR_ASSETS[key];
   if (!src) return Promise.reject(new Error(`Missing dashboard script: ${key}`));
@@ -82,17 +84,41 @@ function ensureDashboardScript(key) {
   return lazyScriptPromises[key];
 }
 
+function ensureDashboardStyle(key) {
+  if (document.querySelector(`link[data-radar-style="${key}"]`)) return Promise.resolve();
+  if (lazyStylePromises[key]) return lazyStylePromises[key];
+  const href = window.RADAR_STYLES && window.RADAR_STYLES[key];
+  if (!href) return Promise.reject(new Error(`Missing dashboard style: ${key}`));
+  lazyStylePromises[key] = new Promise((resolve, reject) => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    link.dataset.radarStyle = key;
+    link.onload = resolve;
+    link.onerror = () => reject(new Error(`Failed to load dashboard style: ${key}`));
+    document.head.appendChild(link);
+  });
+  return lazyStylePromises[key];
+}
+
+function ensureDashboardStyles(keys) {
+  return Promise.all((keys || []).map((key) => ensureDashboardStyle(key)));
+}
+
 async function lazyOpenSignal(card) {
+  await ensureDashboardStyle('modal');
   await ensureDashboardScript('modal');
   return window.openSignal(card);
 }
 
 async function lazyOpenListingModal(row) {
+  await ensureDashboardStyle('modal');
   await ensureDashboardScript('modal');
   return window.openListingModal(row);
 }
 
 async function lazyOpenHistory(id, title) {
+  await ensureDashboardStyle('modal');
   await ensureDashboardScript('modal');
   return window.openHistory(id, title);
 }
@@ -100,6 +126,121 @@ async function lazyOpenHistory(id, title) {
 window.openSignal = lazyOpenSignal;
 window.openListingModal = lazyOpenListingModal;
 window.openHistory = lazyOpenHistory;
+
+function _sendTrackEvent(action, opts) {
+  opts = opts || {};
+  try {
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        action,
+        listing_id: opts.listing_id || null,
+        context: opts.context || {},
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (e) {
+    // Tracking is best effort and must not block the dashboard.
+  }
+}
+
+function ensureAuthModule() {
+  return ensureDashboardStyles(['modal', 'auth']).then(() => ensureDashboardScript('auth'));
+}
+
+function ensureEngagementModule() {
+  return ensureDashboardStyles(['modal', 'leads', 'auth']).then(() => ensureDashboardScript('authCta'));
+}
+
+function callLazyRadarAuth(method, args) {
+  return ensureAuthModule()
+    .then(() => {
+      const fn = window.RadarAuth && window.RadarAuth[method];
+      if (typeof fn === 'function') return fn.apply(window.RadarAuth, args || []);
+      throw new Error(`Missing RadarAuth method: ${method}`);
+    })
+    .catch((err) => console.error(err));
+}
+
+function callLazyEngagement(method, args) {
+  const needsAuth = method === 'onLockedTabClick';
+  const authReady = needsAuth ? ensureAuthModule() : Promise.resolve();
+  return authReady
+    .then(() => ensureEngagementModule())
+    .then(() => {
+      const fn = window[method];
+      if (typeof fn === 'function' && fn !== lazyEngagementProxy[method]) {
+        return fn.apply(window, args || []);
+      }
+      throw new Error(`Missing engagement method: ${method}`);
+    })
+    .catch((err) => console.error(err));
+}
+
+const lazyRadarAuthMethods = [
+  'openAuthModal',
+  'closeAuthModal',
+  'submitAuth',
+  'authBack',
+  'logout',
+  'toggleUserMenu',
+  'nudgeVipUpgrade',
+  'openVipUpgradeModal',
+  'closeVipUpgradeModal',
+  'chatVipUpgradeZalo',
+  'openWatchlistModal',
+  'closeWatchlistModal',
+  'selectWatchlistCity',
+  'setWatchlistCityWards',
+  'updateWatchlistWardCount',
+  'resetWatchlistForm',
+  'saveWatchlist',
+  'editWatchlist',
+  'deleteWatchlist',
+  'connectTelegram',
+  'unbindTelegram',
+];
+
+const lazyEngagementMethods = [
+  'tierCTA',
+  'toggleChat',
+  'sendMessage',
+  'captureLeadAndOpen',
+  'closeLeadCaptureModal',
+  'submitLeadAndOpenZalo',
+  'skipLeadAndOpenZalo',
+  'onLockedTabClick',
+  'closeGuestLeadModal',
+  'guestLeadChatZalo',
+  'submitGuestLead',
+];
+
+window.RadarAuth = window.RadarAuth || {};
+for (const method of lazyRadarAuthMethods) {
+  if (typeof window.RadarAuth[method] !== 'function') {
+    window.RadarAuth[method] = function (...args) {
+      return callLazyRadarAuth(method, args);
+    };
+  }
+}
+
+const lazyEngagementProxy = {};
+for (const method of lazyEngagementMethods) {
+  lazyEngagementProxy[method] = function (...args) {
+    return callLazyEngagement(method, args);
+  };
+  if (typeof window[method] !== 'function') {
+    window[method] = lazyEngagementProxy[method];
+  }
+}
+
+window.tierCTA = window.tierCTA || lazyEngagementProxy.tierCTA;
+window.toggleChat = window.toggleChat || lazyEngagementProxy.toggleChat;
+window.sendMessage = window.sendMessage || lazyEngagementProxy.sendMessage;
+window.onLockedTabClick = window.onLockedTabClick || lazyEngagementProxy.onLockedTabClick;
+window.track = window.track || _sendTrackEvent;
 
 // Global State
 let currentFilters = "";
@@ -119,6 +260,7 @@ let signalsVersion = '0';
 let signalRunSeq = 0;
 let signalRenderSeq = 0;
 let firstSignalsLoaded = false;
+let firstSignalRenderEventSent = false;
 let renderedSignalIds = new Set();
 let inflightSignalQueryKey = '';
 let inflightDashboardQueryKey = '';
@@ -135,6 +277,7 @@ let insightsLoaded = false;
 let marketIndicatorRunSeq = 0;
 let chartJsPromise = null;
 const lazyScriptPromises = {};
+const lazyStylePromises = {};
 let listingsUiInitialized = false;
 
 function initializeListingsUi() {
@@ -258,6 +401,7 @@ async function switchTab(tabId, btn) {
   syncMobileBadges();
 
   if (tabId === 'market') {
+    await ensureDashboardStyle('market');
     await ensureDashboardScript('market');
     loadMarketIndicators();
     loadMarketCharts();

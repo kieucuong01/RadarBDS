@@ -615,8 +615,29 @@
     }
   }
 
+  function initAuthDomBindings() {
+    document.addEventListener('click', closeUserMenuOnOutside);
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') closeUserMenu();
+    });
+    window.addEventListener('resize', () => {
+      const dd = document.getElementById('userMenuDropdown');
+      if (!dd || !dd.classList.contains('open')) return;
+      setUserMenuOpen(true);
+    });
+    // Submit-on-Enter inside auth modal
+    const idEl = document.getElementById('authIdentifier');
+    const pwEl = document.getElementById('authPassword');
+    [idEl, pwEl].forEach((el) => {
+      if (el) el.addEventListener('keypress', (ev) => {
+        if (ev.key === 'Enter') { ev.preventDefault(); submitAuth(); }
+      });
+    });
+  }
+
   // Expose API
   window.RadarAuth = {
+    __radarAuthLoaded: true,
     openAuthModal,
     closeAuthModal,
     submitAuth,
@@ -640,23 +661,9 @@
     unbindTelegram,
   };
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.addEventListener('click', closeUserMenuOnOutside);
-    document.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Escape') closeUserMenu();
-    });
-    window.addEventListener('resize', () => {
-      const dd = document.getElementById('userMenuDropdown');
-      if (!dd || !dd.classList.contains('open')) return;
-      setUserMenuOpen(true);
-    });
-    // Submit-on-Enter inside auth modal
-    const idEl = document.getElementById('authIdentifier');
-    const pwEl = document.getElementById('authPassword');
-    [idEl, pwEl].forEach((el) => {
-      if (el) el.addEventListener('keypress', (ev) => {
-        if (ev.key === 'Enter') { ev.preventDefault(); submitAuth(); }
-      });
-    });
-  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuthDomBindings, { once: true });
+  } else {
+    initAuthDomBindings();
+  }
 })();

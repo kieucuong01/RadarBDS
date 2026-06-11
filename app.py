@@ -970,7 +970,12 @@ def _site_meta(path="/", *, title=None, description=None, keywords=None):
 
 
 def serve_local_image(filename):
-    return send_from_directory(_DATA_IMAGES_DIR, filename)
+    is_thumb = str(filename or "").replace("\\", "/").startswith("thumbs/")
+    max_age = 30 * 86400 if is_thumb else 7 * 86400
+    response = make_response(send_from_directory(_DATA_IMAGES_DIR, filename, max_age=max_age))
+    if is_thumb:
+        response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
+    return response
 
 
 def index():

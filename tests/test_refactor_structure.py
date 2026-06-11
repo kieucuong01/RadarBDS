@@ -45,11 +45,9 @@ def test_admin_logic_is_extracted_from_app_into_service_modules():
 def test_index_loads_main_js_feature_files_in_dependency_order():
     html = _read("templates/index.html")
     expected_order = [
-        "js/auth.js",
         "js/main/core.js",
         "js/main/filters.js",
         "js/main/signals.js",
-        "js/main/auth_cta.js",
         "js/main/boot.js",
     ]
     last_idx = -1
@@ -63,13 +61,58 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
     assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=mobile-perf-lazy-20260611\"" in html
     assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611\"" in html
     assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-perf-lazy-20260611\"" in html
+    assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611\"" in html
+    assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-perf-82-20260611\"" in html
+    assert "window.RADAR_STYLES" in html
     body_scripts = html.split("window.RADAR_ASSETS", 1)[-1]
     assert '<script src="{{ url_for(\'static\', filename=\'js/main/modal.js\') }}' not in body_scripts
     assert '<script src="{{ url_for(\'static\', filename=\'js/main/market.js\') }}' not in body_scripts
     assert '<script src="{{ url_for(\'static\', filename=\'js/main/listings.js\') }}' not in body_scripts
+    assert '<script src="{{ url_for(\'static\', filename=\'js/auth.js\') }}' not in body_scripts
+    assert '<script src="{{ url_for(\'static\', filename=\'js/main/auth_cta.js\') }}' not in body_scripts
 
     main_js = ROOT / "static/js/main.js"
     assert not main_js.exists() or main_js.stat().st_size < 1200
+
+
+def test_lazy_auth_and_engagement_proxies_are_available_before_feature_scripts():
+    core_js = _read("static/js/main/core.js")
+
+    for expected in [
+        "function ensureDashboardStyle(key)",
+        "function ensureAuthModule()",
+        "function ensureEngagementModule()",
+        "function callLazyRadarAuth(method, args)",
+        "function callLazyEngagement(method, args)",
+        "const lazyRadarAuthMethods",
+        "const lazyEngagementMethods",
+        "window.RadarAuth = window.RadarAuth || {};",
+        "window.tierCTA =",
+        "window.toggleChat =",
+        "window.sendMessage =",
+        "window.track =",
+    ]:
+        assert expected in core_js
+
+    for method in [
+        "openAuthModal",
+        "toggleUserMenu",
+        "openWatchlistModal",
+        "nudgeVipUpgrade",
+        "submitAuth",
+        "connectTelegram",
+    ]:
+        assert f"'{method}'" in core_js
+
+    for method in [
+        "tierCTA",
+        "toggleChat",
+        "sendMessage",
+        "submitGuestLead",
+        "submitLeadAndOpenZalo",
+        "skipLeadAndOpenZalo",
+    ]:
+        assert f"'{method}'" in core_js
 
 
 def test_lazy_listings_module_does_not_break_dashboard_boot():
@@ -235,6 +278,18 @@ def test_signal_cards_use_professional_empty_image_state():
 
     assert ".sc-empty-media" in cards_css
     assert "pagespeed-a11y-20260611" in html
+
+
+def test_first_signal_image_is_lcp_priority_but_later_images_stay_lazy():
+    signals_js = _read("static/js/main/signals.js")
+
+    assert "priorityImage" in signals_js
+    assert 'loading="${loadingAttr}"' in signals_js
+    assert 'fetchpriority="${fetchPriorityAttr}"' in signals_js
+    assert "loadingAttr = mediaOpts.priorityImage ? 'eager' : 'lazy'" in signals_js
+    assert "fetchPriorityAttr = mediaOpts.priorityImage ? 'high' : 'auto'" in signals_js
+    assert "priorityImage: Boolean(options.priorityFirstImage && index === 0)" in signals_js
+    assert "window.dispatchEvent(new CustomEvent('radar:first-signals-rendered'))" in signals_js
 
 
 def test_signal_tab_mobile_scroll_container_is_stable():
@@ -518,7 +573,6 @@ def test_vip_upgrade_click_uses_modal_with_zalo_cta_instead_of_alert():
         "0343216024",
         "zalo.me/0343216024",
         "vip-upgrade-modal",
-        "vip-upgrade-modal-20260606",
     ]:
         assert expected in html or expected in auth_js or expected in auth_css
 
@@ -566,10 +620,6 @@ def test_index_loads_css_domain_files_in_dependency_order():
         "css/main/layout.css",
         "css/main/filters.css",
         "css/main/cards.css",
-        "css/main/modal.css",
-        "css/main/market.css",
-        "css/main/leads_chat.css",
-        "css/auth.css",
     ]
     last_idx = -1
     for asset in expected_order:
@@ -577,6 +627,28 @@ def test_index_loads_css_domain_files_in_dependency_order():
         assert idx > last_idx, f"{asset} not loaded after previous CSS file"
         last_idx = idx
         assert (ROOT / "static" / asset).exists(), f"missing static/{asset}"
+
+
+def test_feature_css_is_lazy_loaded_instead_of_downloaded_on_first_paint():
+    html = _read("templates/index.html")
+    head = html.split("</head>", 1)[0]
+    core_js = _read("static/js/main/core.js")
+
+    lazy_assets = {
+        "css/main/modal.css": "css_modal",
+        "css/main/market.css": "css_market",
+        "css/main/leads_chat.css": "css_leads",
+        "css/auth.css": "css_auth",
+    }
+    for asset, template_var in lazy_assets.items():
+        assert asset in html
+        assert f'<link rel="preload" href="{{{{ {template_var} }}}}"' not in head
+        assert f'<link rel="stylesheet" href="{{{{ {template_var} }}}}"' not in head
+
+    assert "window.RADAR_STYLES" in html
+    assert "lazyStylePromises" in core_js
+    assert "document.createElement('link')" in core_js
+    assert "link.rel = 'stylesheet'" in core_js
 
 
 def test_dashboard_avoids_mobile_render_blocking_third_party_assets():
@@ -606,9 +678,33 @@ def test_dashboard_avoids_mobile_render_blocking_third_party_assets():
     assert "await ensureChartJs();" in _read("static/js/main/market.js")
     assert "await ensureChartJs();" in _read("static/js/main/modal.js")
     assert 'rel="preload" href="{{ css_filters }}" as="style"' in html
-    assert 'rel="preload" href="{{ css_modal }}" as="style"' in html
-    assert 'rel="preload" href="{{ css_market }}" as="style"' in html
     assert "onload=\"this.onload=null;this.rel='stylesheet'\"" in html
+
+
+def test_google_analytics_is_deferred_until_interaction_or_signal_render():
+    partial = _read("templates/partials/google_site_tags.html")
+
+    assert '<meta name="google-site-verification"' in partial
+    assert '<script async src="https://www.googletagmanager.com/gtag/js' not in partial
+    assert "window.dataLayer = window.dataLayer || []" in partial
+    assert "window.gtag = window.gtag || function" in partial
+    assert "function loadRadarAnalytics()" in partial
+    assert "radar:first-signals-rendered" in partial
+    assert "setTimeout(loadRadarAnalytics, 8000)" in partial
+    assert "pointerdown" in partial
+    assert "keydown" in partial
+
+
+def test_mobile_thumbnails_and_static_cache_are_performance_tuned():
+    image_assets = _read("services/image_assets.py")
+    nginx_conf = _read("deployment/ubuntu24/nginx-radar-bds.conf")
+
+    assert "THUMB_MAX_SIZE = (520, 338)" in image_assets
+    assert "THUMB_QUALITY = 62" in image_assets
+    assert "expires 30d;" in nginx_conf
+    assert 'Cache-Control "public, max-age=2592000, immutable"' in nginx_conf
+    assert "location /data/images/thumbs/" in nginx_conf
+    assert "expires 30d;" in nginx_conf
 
 
 def test_dashboard_accessibility_controls_have_names_and_keyboard_paths():

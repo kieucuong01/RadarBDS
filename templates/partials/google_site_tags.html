@@ -2,11 +2,31 @@
 <meta name="google-site-verification" content="{{ GOOGLE_SEARCH_CONSOLE_VERIFICATION }}">
 {% endif %}
 {% if GOOGLE_ANALYTICS_ID %}
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ GOOGLE_ANALYTICS_ID | urlencode }}"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag() { dataLayer.push(arguments); }
-  gtag("js", new Date());
-  gtag("config", {{ GOOGLE_ANALYTICS_ID | tojson }});
+  window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+  (function () {
+    const analyticsId = {{ GOOGLE_ANALYTICS_ID | tojson }};
+    let analyticsLoaded = false;
+
+    function loadRadarAnalytics() {
+      if (analyticsLoaded || !analyticsId) return;
+      analyticsLoaded = true;
+      const script = document.createElement("script");
+      script.async = true;
+      script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(analyticsId);
+      document.head.appendChild(script);
+      window.gtag("js", new Date());
+      window.gtag("config", analyticsId);
+    }
+
+    window.RadarLoadAnalytics = loadRadarAnalytics;
+    ["pointerdown", "keydown", "touchstart", "scroll"].forEach((eventName) => {
+      window.addEventListener(eventName, loadRadarAnalytics, { once: true, passive: true });
+    });
+    window.addEventListener("radar:first-signals-rendered", () => {
+      setTimeout(loadRadarAnalytics, 8000);
+    }, { once: true });
+  })();
 </script>
 {% endif %}
