@@ -29,7 +29,7 @@ def dashboard(**kwargs):
 
 @bp.route("/binh-duong")
 def seo_binh_duong(**kwargs):
-    return _impl("redirect_legacy_binh_duong", **kwargs)
+    return _impl("seo_binh_duong_landing", **kwargs)
 
 
 @bp.route("/binh-duong/<path:location_slug>")

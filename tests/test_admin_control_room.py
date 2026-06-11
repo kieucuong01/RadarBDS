@@ -524,7 +524,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertNotIn("js/admin.js", html)
 
     def test_public_auth_header_keeps_vietnamese_labels(self):
-        response = self.client.get("/dashboard")
+        response = self.client.get("/")
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
@@ -532,7 +532,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("Đăng nhập tài khoản", html)
 
         self._login_as_admin()
-        response = self.client.get("/dashboard")
+        response = self.client.get("/")
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)

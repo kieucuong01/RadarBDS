@@ -974,23 +974,22 @@ def serve_local_image(filename):
 
 
 def index():
+    return render_template('index.html', wards_by_city=CITY_MAP, site_meta=_site_meta("/"))
+
+
+def dashboard():
+    return redirect("/", code=301)
+
+
+def seo_binh_duong_landing():
     page = dict(SEO_PAGES["binh-duong"])
-    page["path"] = "/"
     site_meta = _site_meta(
-        "/",
+        page["path"],
         title=page["title"],
         description=page["description"],
         keywords=page["keywords"],
     )
     return render_template("seo_landing.html", page=page, site_meta=site_meta)
-
-
-def dashboard():
-    return render_template('index.html', wards_by_city=CITY_MAP, site_meta=_site_meta("/dashboard"))
-
-
-def redirect_legacy_binh_duong():
-    return redirect("/", code=301)
 
 
 def seo_landing_page(slug):
@@ -1023,7 +1022,6 @@ def sitemap_xml():
     <priority>0.8</priority>
   </url>"""
         for slug, page in SEO_PAGES.items()
-        if slug != "binh-duong"
     )
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

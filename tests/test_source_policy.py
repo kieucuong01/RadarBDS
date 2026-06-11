@@ -539,12 +539,12 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual([row["id"] for row in payload["listings"]], [matched_id])
 
     def test_source_filter_group_only_renders_for_admin(self):
-        guest_html = self.client.get("/dashboard").get_data(as_text=True)
+        guest_html = self.client.get("/").get_data(as_text=True)
         self.assertNotIn("NGUỒN DỮ LIỆU", guest_html)
         self.assertNotIn('id="sourceFilters"', guest_html)
 
         self._login_as_admin()
-        admin_html = self.client.get("/dashboard").get_data(as_text=True)
+        admin_html = self.client.get("/").get_data(as_text=True)
 
         self.assertIn("NGUỒN DỮ LIỆU", admin_html)
         self.assertIn('id="sourceFilters"', admin_html)

@@ -29,12 +29,12 @@ def test_public_seo_defaults_point_to_radarbds_domain():
     import app as radar_app
 
     meta = radar_app._site_meta("/")
-    dashboard_meta = radar_app._site_meta("/dashboard")
+    binh_duong_meta = radar_app._site_meta("/binh-duong")
 
     assert meta["canonical_url"] == "https://radarbds.vn/"
     assert meta["og_url"] == "https://radarbds.vn/"
-    assert dashboard_meta["canonical_url"] == "https://radarbds.vn/dashboard"
-    assert dashboard_meta["og_url"] == "https://radarbds.vn/dashboard"
+    assert binh_duong_meta["canonical_url"] == "https://radarbds.vn/binh-duong"
+    assert binh_duong_meta["og_url"] == "https://radarbds.vn/binh-duong"
     assert meta["og_image"].startswith("https://radarbds.vn/")
     assert meta["og_image"].endswith("/static/images/seo/radarbds-og.png")
     assert "localhost" not in meta["canonical_url"]
@@ -51,37 +51,38 @@ def test_robots_and_sitemap_use_public_domain():
 
     assert "Sitemap: https://radarbds.vn/sitemap.xml" in robots
     assert "<loc>https://radarbds.vn/</loc>" in sitemap
-    assert "<loc>https://radarbds.vn/binh-duong</loc>" not in sitemap
+    assert "<loc>https://radarbds.vn/binh-duong</loc>" in sitemap
     assert "<loc>https://radarbds.vn/san-deal-bds</loc>" in sitemap
     assert "localhost" not in robots + sitemap
     assert "127.0.0.1" not in robots + sitemap
 
 
-def test_homepage_is_binh_duong_landing_and_dashboard_has_own_url():
+def test_homepage_is_dashboard_and_binh_duong_is_seo_landing():
     import app as radar_app
 
     client = radar_app.app.test_client()
 
     home = client.get("/")
     dashboard = client.get("/dashboard")
-    legacy_binh_duong = client.get("/binh-duong")
+    binh_duong = client.get("/binh-duong")
 
     home_html = home.get_data(as_text=True)
-    dashboard_html = dashboard.get_data(as_text=True)
+    binh_duong_html = binh_duong.get_data(as_text=True)
 
     assert home.status_code == 200
     assert '<link rel="canonical" href="https://radarbds.vn/">' in home_html
-    assert 'class="seo-page seo-page-market"' in home_html
-    assert "Săn deal nhà đất Bình Dương bằng dữ liệu" in home_html
-    assert 'href="/dashboard"' in home_html
-    assert '<a href="/dashboard">Dashboard</a>' in home_html
+    assert "window.INITIAL_WARDS_BY_CITY" in home_html
+    assert 'class="seo-page seo-page-market"' not in home_html
 
-    assert dashboard.status_code == 200
-    assert '<link rel="canonical" href="https://radarbds.vn/dashboard">' in dashboard_html
-    assert "window.INITIAL_WARDS_BY_CITY" in dashboard_html
+    assert dashboard.status_code == 301
+    assert dashboard.headers["Location"] == "/"
 
-    assert legacy_binh_duong.status_code == 301
-    assert legacy_binh_duong.headers["Location"] == "/"
+    assert binh_duong.status_code == 200
+    assert '<link rel="canonical" href="https://radarbds.vn/binh-duong">' in binh_duong_html
+    assert 'class="seo-page seo-page-market"' in binh_duong_html
+    assert "Săn deal nhà đất Bình Dương bằng dữ liệu" in binh_duong_html
+    assert 'href="/dashboard"' not in binh_duong_html
+    assert '<a href="/">Dashboard</a>' in binh_duong_html
 
 
 def test_google_site_tags_are_env_driven(monkeypatch):
@@ -92,9 +93,9 @@ def test_google_site_tags_are_env_driven(monkeypatch):
 
     client = radar_app.app.test_client()
     home_html = client.get("/", base_url="https://radarbds.vn").get_data(as_text=True)
-    dashboard_html = client.get("/dashboard", base_url="https://radarbds.vn").get_data(as_text=True)
+    binh_duong_html = client.get("/binh-duong", base_url="https://radarbds.vn").get_data(as_text=True)
 
-    for html in (home_html, dashboard_html):
+    for html in (home_html, binh_duong_html):
         assert '<meta name="google-site-verification" content="search-console-token">' in html
         assert "https://www.googletagmanager.com/gtag/js?id=G-TEST1234" in html
         assert 'gtag("config", "G-TEST1234");' in html
@@ -123,16 +124,17 @@ def test_live_domain_renders_radarbds_ga4_by_default(monkeypatch):
     assert 'gtag("config", "G-YRJZ26W8Y2");' in html
 
 
-def test_homepage_has_dashboard_preview_metrics_and_dashboard_cta():
+def test_binh_duong_landing_has_dashboard_preview_metrics_and_dashboard_cta():
     import app as radar_app
 
-    response = radar_app.app.test_client().get("/")
+    response = radar_app.app.test_client().get("/binh-duong")
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
     assert 'class="seo-dashboard-preview"' in html
     assert "/static/images/seo/dashboard-preview.png" in html
-    assert 'href="/dashboard"' in html
+    assert 'href="/"' in html
+    assert 'href="/dashboard"' not in html
     assert "Xem dashboard thật" in html
     assert "Tin rao được chuẩn hóa" in html
     assert "Tín hiệu đang theo dõi" in html
@@ -150,7 +152,7 @@ def test_foundational_seo_pages_render_canonical_content():
 
     client = radar_app.app.test_client()
     expected = {
-        "/": "Săn deal nhà đất Bình Dương bằng dữ liệu",
+        "/binh-duong": "Săn deal nhà đất Bình Dương bằng dữ liệu",
         "/san-deal-bds": "Cách Radar BDS lọc tin rẻ thật",
     }
 
@@ -230,7 +232,7 @@ def test_manifest_uses_radarbds_standalone_start_url():
     icons = {icon["src"]: icon for icon in manifest["icons"]}
 
     assert manifest["name"] == "Radar BDS"
-    assert manifest["start_url"] == "https://radarbds.vn/dashboard"
+    assert manifest["start_url"] == "https://radarbds.vn/"
     assert manifest["scope"] == "https://radarbds.vn/"
     assert manifest["display"] == "standalone"
     assert "https://radarbds.vn/static/images/app-icon-192.png" in icons
