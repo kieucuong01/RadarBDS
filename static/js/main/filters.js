@@ -163,7 +163,7 @@ function updateTrendPeriod(p, btn) {
   btn.classList.add('active');
 
   currentFilters = getFilterQuery();
-  loadTrendData(false);
+  ensureDashboardScript('market').then(() => loadTrendData(false)).catch((err) => console.error(err));
 }
 
 function deferDashboardMetaRefresh(useCache = false) {
@@ -189,15 +189,21 @@ function applyFilters() {
   }
 
   if (tab === 'market') {
-    loadMarketIndicators(false);
-    loadMarketCharts(false);
-    loadTrendData(false);
+    ensureDashboardScript('market')
+      .then(() => {
+        loadMarketIndicators(false);
+        loadMarketCharts(false);
+        loadTrendData(false);
+      })
+      .catch((err) => console.error(err));
   }
   if (tab === 'insights') {
     loadInsights(false);
   }
   if (tab === 'all') {
-    loadListings(1);
+    ensureDashboardScript('listings')
+      .then(() => loadListings(1))
+      .catch((err) => console.error(err));
   }
 }
 

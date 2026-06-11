@@ -50,6 +50,57 @@ function toggleFilterSection(titleEl) {
   }
 }
 
+function ensureChartJs() {
+  if (window.Chart) return Promise.resolve(window.Chart);
+  if (chartJsPromise) return chartJsPromise;
+  chartJsPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+    script.async = true;
+    script.onload = () => resolve(window.Chart);
+    script.onerror = () => reject(new Error('Chart.js failed to load'));
+    document.head.appendChild(script);
+  });
+  return chartJsPromise;
+}
+
+function ensureDashboardScript(key) {
+  if (key === 'market' && typeof window.loadMarketCharts === 'function') return Promise.resolve();
+  if (key === 'modal' && typeof window.openSignal === 'function' && window.openSignal !== lazyOpenSignal) return Promise.resolve();
+  if (key === 'listings' && typeof window.loadListings === 'function') return Promise.resolve();
+  if (lazyScriptPromises[key]) return lazyScriptPromises[key];
+  const src = window.RADAR_ASSETS && window.RADAR_ASSETS[key];
+  if (!src) return Promise.reject(new Error(`Missing dashboard script: ${key}`));
+  lazyScriptPromises[key] = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Failed to load dashboard script: ${key}`));
+    document.body.appendChild(script);
+  });
+  return lazyScriptPromises[key];
+}
+
+async function lazyOpenSignal(card) {
+  await ensureDashboardScript('modal');
+  return window.openSignal(card);
+}
+
+async function lazyOpenListingModal(row) {
+  await ensureDashboardScript('modal');
+  return window.openListingModal(row);
+}
+
+async function lazyOpenHistory(id, title) {
+  await ensureDashboardScript('modal');
+  return window.openHistory(id, title);
+}
+
+window.openSignal = lazyOpenSignal;
+window.openListingModal = lazyOpenListingModal;
+window.openHistory = lazyOpenHistory;
+
 // Global State
 let currentFilters = "";
 let currentPageNo = 1;
@@ -71,7 +122,7 @@ let firstSignalsLoaded = false;
 let renderedSignalIds = new Set();
 let inflightSignalQueryKey = '';
 let inflightDashboardQueryKey = '';
-const SIGNAL_PAGE_SIZE = 30;
+const SIGNAL_PAGE_SIZE = window.matchMedia && window.matchMedia('(max-width: 760px)').matches ? 12 : 30;
 const SIGNAL_RENDER_CHUNK_SIZE = 10;
 const CACHE_TTL_MS = 60000;
 const responseCache = new Map();
@@ -82,6 +133,8 @@ let dashboardRunSeq = 0;
 let insightsRunSeq = 0;
 let insightsLoaded = false;
 let marketIndicatorRunSeq = 0;
+let chartJsPromise = null;
+const lazyScriptPromises = {};
 
 const CITY_COORDS = {
   "THỦ DẦU MỘT": { lat: 10.98, lon: 106.65 },
@@ -183,7 +236,7 @@ function syncMobileBadges() {
   syncMobileBadge('badgeTotal', 'mobileBadgeTotal');
 }
 
-function switchTab(tabId, btn) {
+async function switchTab(tabId, btn) {
   document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll(`[data-tab-target="${tabId}"]`).forEach(b => b.classList.add('active'));
@@ -197,6 +250,7 @@ function switchTab(tabId, btn) {
   syncMobileBadges();
 
   if (tabId === 'market') {
+    await ensureDashboardScript('market');
     loadMarketIndicators();
     loadMarketCharts();
     loadTrendData();
@@ -205,6 +259,7 @@ function switchTab(tabId, btn) {
     loadInsights(false);
   }
   if (tabId === 'all') {
+    await ensureDashboardScript('listings');
     loadListings(1);
   }
   if (tabId === 'signals' && typeof ensureSignalScrollRoot === 'function') {

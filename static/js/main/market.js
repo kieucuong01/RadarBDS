@@ -13,6 +13,7 @@ async function loadMarketCharts(useCache = true) {
   try {
     const data = await fetchJSONCached('market', `/api/heatmap?${currentFilters}`, useCache);
     renderOpportunityList(data);
+    await ensureChartJs();
     renderOpportunityMatrix(data);
   } catch (err) {
     if (err.name !== 'AbortError') console.error("Market charts error:", err);
@@ -486,6 +487,7 @@ async function loadTrendData(useCache = true) {
   container.classList.add('loading');
   try {
     const data = await fetchJSONCached('trend', `/api/trends?${currentFilters}`, useCache);
+    await ensureChartJs();
     renderTrendChart(data.trend_data || {});
   } catch (err) {
     if (err.name !== 'AbortError') console.error('Trend chart error:', err);

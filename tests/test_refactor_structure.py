@@ -49,9 +49,6 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
         "js/main/core.js",
         "js/main/filters.js",
         "js/main/signals.js",
-        "js/main/modal.js",
-        "js/main/market.js",
-        "js/main/listings.js",
         "js/main/auth_cta.js",
         "js/main/boot.js",
     ]
@@ -61,6 +58,15 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
         assert idx > last_idx, f"{asset} not loaded after previous feature file"
         last_idx = idx
         assert (ROOT / "static" / asset).exists(), f"missing static/{asset}"
+
+    assert "window.RADAR_ASSETS" in html
+    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=mobile-perf-lazy-20260611\"" in html
+    assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611\"" in html
+    assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-perf-lazy-20260611\"" in html
+    body_scripts = html.split("window.RADAR_ASSETS", 1)[-1]
+    assert '<script src="{{ url_for(\'static\', filename=\'js/main/modal.js\') }}' not in body_scripts
+    assert '<script src="{{ url_for(\'static\', filename=\'js/main/market.js\') }}' not in body_scripts
+    assert '<script src="{{ url_for(\'static\', filename=\'js/main/listings.js\') }}' not in body_scripts
 
     main_js = ROOT / "static/js/main.js"
     assert not main_js.exists() or main_js.stat().st_size < 1200
@@ -225,7 +231,7 @@ def test_signal_tab_mobile_scroll_container_is_stable():
     cards_css = _read("static/css/main/cards.css")
 
     for expected in [
-        "dashboard-fast-path-20260608",
+        "mobile-perf-lazy-20260611",
         "ensureSignalScrollRoot",
         "refreshObserver",
         "signals-scroll-ready",
@@ -245,7 +251,7 @@ def test_mobile_sidebar_filters_are_compact_for_ward_selection():
     filters_css = _read("static/css/main/filters.css")
 
     for expected in [
-        "mobile-filter-compact-20260608",
+        "mobile-perf-lazy-20260611",
         "ward-option-name",
         ".sidebar #wardFilters",
         "grid-template-columns: repeat(2, minmax(0, 1fr))",
@@ -453,8 +459,9 @@ def test_all_listings_grid_reuses_signal_deal_card_renderer():
     assert '"street_label": badge_meta["street_label"]' in app_source
     assert '"tho_cu_label": badge_meta["tho_cu_label"]' in app_source
     assert "function listingCard(x)" in listings_js
-    assert "js/main/signals.js" in html and "js/main/listings.js" in html
-    assert html.find("js/main/signals.js") < html.find("js/main/listings.js")
+    assert "js/main/signals.js" in html
+    assert "js/main/listings.js" in html
+    assert "window.RADAR_ASSETS" in html
 
     forbidden_duplicated_markup = [
         "const imageCounterHtml",
@@ -571,6 +578,13 @@ def test_dashboard_avoids_mobile_render_blocking_third_party_assets():
         assert "fonts.gstatic.com" not in content
 
     assert "cdn.jsdelivr.net/npm/chart.js" not in head
+    assert '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>' not in html
+    assert "images/logo.png" not in html
+    assert 'class="logo-img logo-mark"' in html
+    assert "const SIGNAL_PAGE_SIZE = window.matchMedia" in _read("static/js/main/core.js")
+    assert "ensureDashboardScript" in _read("static/js/main/core.js")
+    assert "await ensureChartJs();" in _read("static/js/main/market.js")
+    assert "await ensureChartJs();" in _read("static/js/main/modal.js")
     assert 'rel="preload" href="{{ css_filters }}" as="style"' in html
     assert 'rel="preload" href="{{ css_modal }}" as="style"' in html
     assert 'rel="preload" href="{{ css_market }}" as="style"' in html

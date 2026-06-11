@@ -40,6 +40,17 @@
   padding: 0;
 }
 
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  background: linear-gradient(135deg, var(--primary), #0f766e);
+}
+
 .logo-info {
   display: flex;
   flex-direction: column;

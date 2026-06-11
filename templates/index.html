@@ -39,7 +39,7 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
 
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=pagespeed-a11y-20260611' %}
-  {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=app-icon-20260608' %}
+  {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=mobile-perf-lazy-20260611' %}
   {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=pagespeed-a11y-20260611' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=pagespeed-a11y-20260611' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=modal-comps-advisor-20260608' %}
@@ -65,6 +65,11 @@
     window.USER_TIER = {{ USER_TIER | tojson }};
     window.CURRENT_USER = {{ USER | tojson }};
     window.INITIAL_WARDS_BY_CITY = {{ wards_by_city | tojson }};
+    window.RADAR_ASSETS = {
+      modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=mobile-perf-lazy-20260611",
+      market: "{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611",
+      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-perf-lazy-20260611"
+    };
   </script>
 </head>
 
@@ -94,7 +99,7 @@
       </button>
     </div>
     <div class="logo">
-      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="RadarBDS Logo" class="logo-img">
+      <span class="logo-img logo-mark" aria-hidden="true">RB</span>
       <div class="logo-info">
         <span class="logo-text">Radar<span style="color:var(--primary)">BDS</span></span>
         <span class="logo-subtitle">CHUYÊN SÂU BÌNH DƯƠNG</span>
@@ -1164,16 +1169,12 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=vip-upgrade-modal-20260606"></script>
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=pagespeed-a11y-20260611"></script>
-  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=dashboard-fast-path-20260608"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=pagespeed-a11y-20260611"></script>
-  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=pagespeed-a11y-20260611"></script>
-  <script src="{{ url_for('static', filename='js/main/market.js') }}?v=area-risk-radar-20260605"></script>
-  <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=shared-signal-card-20260608"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-perf-lazy-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=mobile-perf-lazy-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-perf-lazy-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=mobile-filter-compact-20260608"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=mobile-perf-lazy-20260611"></script>
 </body>
 
 </html>

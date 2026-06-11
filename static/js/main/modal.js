@@ -533,6 +533,7 @@ async function _loadSignalHistoryLegacyOld(listingId, currentPrice, area, ward) 
       historyEl.innerHTML = priceHistoryHtml;
 
       // Mini chart
+      await ensureChartJs();
       const ctx = document.getElementById('sm-history-chart').getContext('2d');
       smHistoryChart = new Chart(ctx, {
         type: 'line',
@@ -1181,6 +1182,7 @@ async function loadSignalHistory(listingId, currentPrice, area, ward, currentMet
     const labels = chartTimeline.map((h) => _historyShortDate(h.date));
 
     if (labels.length > 0 && chartEl) {
+      await ensureChartJs();
       const ctx = chartEl.getContext('2d');
       smHistoryChart = new Chart(ctx, {
         type: 'line',
@@ -1299,6 +1301,7 @@ async function openHistory(id, title) {
 
     if (historyChartInstance) historyChartInstance.destroy();
 
+    await ensureChartJs();
     const ctx = document.getElementById('historyChartCanvas').getContext('2d');
     historyChartInstance = new Chart(ctx, {
       type: 'line',
