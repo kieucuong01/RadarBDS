@@ -652,8 +652,10 @@ def test_feature_css_is_lazy_loaded_instead_of_downloaded_on_first_paint():
 
 
 def test_lazy_feature_shells_are_hidden_or_positioned_before_lazy_css_loads():
+    html = _read("templates/index.html")
     base_css = _read("static/css/main/base.css")
 
+    assert "css/main/base.css') ~ '?v=lazy-shell-fix-20260611'" in html
     hidden_shell_rule = re.search(r"\.modal,\s*\.chat-window,\s*\.user-menu-dropdown\s*\{([^}]*)\}", base_css, re.S)
     assert hidden_shell_rule
     assert "display: none;" in hidden_shell_rule.group(1)
