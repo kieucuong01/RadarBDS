@@ -202,7 +202,7 @@ function applyFilters() {
   }
   if (tab === 'all') {
     ensureDashboardScript('listings')
-      .then(() => loadListings(1))
+      .then(() => { initializeListingsUi(); loadListings(1); })
       .catch((err) => console.error(err));
   }
 }

@@ -31,6 +31,9 @@
   <meta name="twitter:description" content="{{ site_meta.description }}">
   <meta name="twitter:image" content="{{ site_meta.og_image }}">
   {% include "partials/google_site_tags.html" %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 
   <!-- Favicon / install icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
@@ -38,7 +41,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
 
-  {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=pagespeed-a11y-20260611' %}
+  {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=loader-font-fix-20260611' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=mobile-perf-lazy-20260611' %}
   {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=pagespeed-a11y-20260611' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=pagespeed-a11y-20260611' %}
@@ -1170,11 +1173,11 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=vip-upgrade-modal-20260606"></script>
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-perf-lazy-20260611"></script>
-  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=mobile-perf-lazy-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=loader-font-fix-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=loader-font-fix-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-perf-lazy-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=mobile-perf-lazy-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=loader-font-fix-20260611"></script>
 </body>
 
 </html>

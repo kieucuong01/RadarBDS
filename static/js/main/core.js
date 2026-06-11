@@ -135,6 +135,14 @@ let insightsLoaded = false;
 let marketIndicatorRunSeq = 0;
 let chartJsPromise = null;
 const lazyScriptPromises = {};
+let listingsUiInitialized = false;
+
+function initializeListingsUi() {
+  if (listingsUiInitialized) return;
+  if (typeof setupListingsViewToggle === 'function') setupListingsViewToggle();
+  if (typeof setupListingsObserver === 'function') setupListingsObserver();
+  listingsUiInitialized = true;
+}
 
 const CITY_COORDS = {
   "THỦ DẦU MỘT": { lat: 10.98, lon: 106.65 },
@@ -260,6 +268,7 @@ async function switchTab(tabId, btn) {
   }
   if (tabId === 'all') {
     await ensureDashboardScript('listings');
+    initializeListingsUi();
     loadListings(1);
   }
   if (tabId === 'signals' && typeof ensureSignalScrollRoot === 'function') {

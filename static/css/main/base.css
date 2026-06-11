@@ -42,7 +42,7 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
   display: flex;
   height: 100vh;
   overflow: hidden;

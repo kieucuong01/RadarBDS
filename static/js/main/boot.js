@@ -44,8 +44,8 @@ document.addEventListener('change', (e) => {
 // Init on load
 document.addEventListener('DOMContentLoaded', () => {
   showLoader();
-  setupListingsViewToggle();
-  setupListingsObserver();
+  if (typeof setupListingsViewToggle === 'function') setupListingsViewToggle();
+  if (typeof setupListingsObserver === 'function') setupListingsObserver();
   const searchParams = new URLSearchParams(window.location.search);
   const initialTab = searchParams.get('tab') || window.location.hash.replace(/^#/, '');
   const shouldOpenInitialTab = ['signals', 'all', 'market', 'insights'].includes(initialTab);

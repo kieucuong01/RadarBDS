@@ -72,6 +72,20 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
     assert not main_js.exists() or main_js.stat().st_size < 1200
 
 
+def test_lazy_listings_module_does_not_break_dashboard_boot():
+    boot_js = _read("static/js/main/boot.js")
+    core_js = _read("static/js/main/core.js")
+    filters_js = _read("static/js/main/filters.js")
+
+    assert "typeof setupListingsViewToggle === 'function'" in boot_js
+    assert "typeof setupListingsObserver === 'function'" in boot_js
+    assert "\n  setupListingsViewToggle();" not in boot_js
+    assert "\n  setupListingsObserver();" not in boot_js
+    assert "function initializeListingsUi()" in core_js
+    assert "initializeListingsUi();" in core_js
+    assert ".then(() => { initializeListingsUi(); loadListings(1); })" in filters_js
+
+
 def test_all_listings_tab_supports_table_and_grid_views():
     html = _read("templates/index.html")
     listings_js = _read("static/js/main/listings.js")
@@ -573,7 +587,13 @@ def test_dashboard_avoids_mobile_render_blocking_third_party_assets():
     detail_html = _read("templates/listing_detail.html")
     head = html.split("</head>", 1)[0]
 
-    for content in [html, base_css, seo_html, seo_css, detail_html]:
+    assert "fonts.googleapis.com/css2?family=Plus+Jakarta+Sans" in html
+    assert "fonts.gstatic.com" in html
+    assert 'rel="preload" as="style" href="https://fonts.googleapis.com' in html
+    assert "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com" not in head
+    assert "@import url('https://fonts.googleapis.com" not in base_css
+    assert "font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;" in base_css
+    for content in [seo_html, seo_css, detail_html]:
         assert "fonts.googleapis.com" not in content
         assert "fonts.gstatic.com" not in content
 
