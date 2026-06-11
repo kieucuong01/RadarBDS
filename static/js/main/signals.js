@@ -399,9 +399,12 @@ function renderSignalDealCard(x, opts = {}) {
         ${qualityBadgeHtml}
       </div>
   `);
+  const cardLabel = `Mở chi tiết ${safeTitle || 'tin đăng'}`;
 
   return `
-  <div class="scard ${newCardClass} ${cardContext === 'all' ? 'listing-grid-card' : ''}" onclick="${openHandler}(this)" ${dataAttr}>
+  <div class="scard ${newCardClass} ${cardContext === 'all' ? 'listing-grid-card' : ''}" role="button" tabindex="0"
+    aria-label="${escHtml(cardLabel)}" onclick="${openHandler}(this)"
+    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${openHandler}(this);}" ${dataAttr}>
     ${mediaHtml}
     <div class="sc-body">
       <div class="sc-title" title="${safeTitle}">${safeTitle || '-'}</div>

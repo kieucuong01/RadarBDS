@@ -43,8 +43,10 @@ function toggleFilterSection(titleEl) {
   if (!group || !group.hasAttribute('data-collapsible')) return;
   if (group.hasAttribute('data-collapsed')) {
     group.removeAttribute('data-collapsed');
+    titleEl.setAttribute('aria-expanded', 'true');
   } else {
     group.setAttribute('data-collapsed', '');
+    titleEl.setAttribute('aria-expanded', 'false');
   }
 }
 

@@ -214,7 +214,7 @@ def test_signal_cards_use_professional_empty_image_state():
         assert expected in signals_js or expected in cards_css
 
     assert ".sc-empty-media" in cards_css
-    assert "signal-card-density-20260609" in html
+    assert "pagespeed-a11y-20260611" in html
 
 
 def test_signal_tab_mobile_scroll_container_is_stable():
@@ -284,7 +284,7 @@ def test_signal_cards_and_modal_render_compact_property_badges():
         "streetLabel",
         "thoCuLabel",
         "propertyTypeLabel",
-        "signal-card-density-20260609",
+        "pagespeed-a11y-20260611",
     ]:
         assert expected in html or expected in signals_js or expected in modal_js
 
@@ -334,7 +334,7 @@ def test_signal_feed_uses_fast_total_free_path_and_defers_dashboard_meta():
     filters_js = _read("static/js/main/filters.js")
     core_js = _read("static/js/main/core.js")
 
-    assert "signal-card-density-20260609" in html
+    assert "pagespeed-a11y-20260611" in html
     assert "params.set('include_total', '0')" in signals_js
     assert "Number.isFinite(Number(data.total))" in signals_js
     assert "deferDashboardMetaRefresh" in filters_js
@@ -348,7 +348,7 @@ def test_signal_feed_uses_css_skeleton_cards_not_inline_placeholder_blocks():
     signals_js = _read("static/js/main/signals.js")
     cards_css = _read("static/css/main/cards.css")
 
-    assert "signal-card-density-20260609" in html
+    assert "pagespeed-a11y-20260611" in html
     assert "signal-skeleton-card" in signals_js
     assert "signal-skeleton-media" in signals_js
     assert "signal-skeleton-price" in signals_js
@@ -370,7 +370,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "date-range-filter-20260610",
+        "pagespeed-a11y-20260611",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -386,7 +386,7 @@ def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "date-range-filter-20260610",
+        "pagespeed-a11y-20260611",
         ".sidebar .filter-sheet-head",
         "position: sticky",
         "margin: -14px -14px 8px",
@@ -556,6 +556,64 @@ def test_index_loads_css_domain_files_in_dependency_order():
         assert idx > last_idx, f"{asset} not loaded after previous CSS file"
         last_idx = idx
         assert (ROOT / "static" / asset).exists(), f"missing static/{asset}"
+
+
+def test_dashboard_avoids_mobile_render_blocking_third_party_assets():
+    html = _read("templates/index.html")
+    base_css = _read("static/css/main/base.css")
+    seo_html = _read("templates/seo_landing.html")
+    seo_css = _read("static/css/seo.css")
+    detail_html = _read("templates/listing_detail.html")
+    head = html.split("</head>", 1)[0]
+
+    for content in [html, base_css, seo_html, seo_css, detail_html]:
+        assert "fonts.googleapis.com" not in content
+        assert "fonts.gstatic.com" not in content
+
+    assert "cdn.jsdelivr.net/npm/chart.js" not in head
+    assert 'rel="preload" href="{{ css_filters }}" as="style"' in html
+    assert 'rel="preload" href="{{ css_modal }}" as="style"' in html
+    assert 'rel="preload" href="{{ css_market }}" as="style"' in html
+    assert "onload=\"this.onload=null;this.rel='stylesheet'\"" in html
+
+
+def test_dashboard_accessibility_controls_have_names_and_keyboard_paths():
+    html = _read("templates/index.html")
+    core_js = _read("static/js/main/core.js")
+    modal_js = _read("static/js/main/modal.js")
+    signals_js = _read("static/js/main/signals.js")
+    filters_css = _read("static/css/main/filters.css")
+    cards_css = _read("static/css/main/cards.css")
+
+    assert '<div class="filter-title" onclick="toggleFilterSection(this)">' not in html
+    assert html.count('type="button" class="filter-title"') == 5
+    assert 'aria-expanded="true"' in html
+    assert "titleEl.setAttribute('aria-expanded'" in core_js
+
+    for expected in [
+        'aria-label="Tìm phường xã"',
+        'aria-label="Giá tối thiểu tỷ đồng"',
+        'aria-label="Giá tối đa tỷ đồng"',
+        'aria-label="Diện tích tối thiểu mét vuông"',
+        'aria-label="Diện tích tối đa mét vuông"',
+        'aria-label="Tìm signal theo tên đường hoặc địa danh"',
+        'aria-label="Tìm tin rao theo tên đường hoặc địa danh"',
+        'aria-label="Biên an toàn tối thiểu"',
+        'aria-label="Đổi giao diện sáng tối"',
+        'aria-label="Mở trợ lý Radar AI"',
+        'aria-label="Đóng trợ lý Radar AI"',
+    ]:
+        assert expected in html
+
+    assert 'role="tab" aria-selected="true"' in html
+    assert 'role="tabpanel"' in html
+    assert "tab.setAttribute('aria-selected'" in modal_js
+    assert "section.setAttribute('aria-hidden'" in modal_js
+    assert 'role="button" tabindex="0"' in signals_js
+    assert "event.key==='Enter'||event.key===' '" in signals_js
+    assert 'alt="Ảnh tin đăng ${i + 1}"' in modal_js
+    assert ".filter-title:focus-visible" in filters_css
+    assert ".scard:focus-visible" in cards_css
 
 
 def test_market_tab_has_opportunity_matrix_visualization():

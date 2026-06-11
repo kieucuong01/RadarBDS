@@ -54,6 +54,10 @@
 
 /* Collapsible filter title */
 .filter-title {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-muted);
@@ -73,6 +77,14 @@
 .filter-title:hover {
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
+}
+
+.filter-title:focus-visible,
+.city-pill:focus-visible,
+.ward-action-btn:focus-visible,
+.range-chip:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 [data-theme="light"] .filter-title:hover {

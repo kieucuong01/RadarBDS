@@ -391,6 +391,11 @@
   contain-intrinsic-size: 430px;
 }
 
+.scard:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
 .scard.is-new-signal {
   border-color: rgba(249, 115, 22, 0.52);
   outline: 1px solid rgba(249, 115, 22, 0.22);

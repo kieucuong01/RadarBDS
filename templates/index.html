@@ -38,17 +38,29 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
 
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
-    rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=vietnamese-font-stack-20260605">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/layout.css') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/filters.css') }}?v=date-range-filter-20260610">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-card-density-20260609">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=modal-comps-advisor-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/market.css') }}?v=area-risk-radar-20260605">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/leads_chat.css') }}?v=filter-sheet-scroll-lock-20260609">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=account-menu-compact-20260606">
+  {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=pagespeed-a11y-20260611' %}
+  {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=app-icon-20260608' %}
+  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=pagespeed-a11y-20260611' %}
+  {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=pagespeed-a11y-20260611' %}
+  {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=modal-comps-advisor-20260608' %}
+  {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
+  {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=filter-sheet-scroll-lock-20260609' %}
+  {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=account-menu-compact-20260606' %}
+  <link rel="stylesheet" href="{{ css_base }}">
+  <link rel="stylesheet" href="{{ css_layout }}">
+  <link rel="preload" href="{{ css_filters }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="stylesheet" href="{{ css_cards }}">
+  <link rel="preload" href="{{ css_modal }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="{{ css_market }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="{{ css_leads }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="{{ css_auth }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="{{ css_filters }}">
+    <link rel="stylesheet" href="{{ css_modal }}">
+    <link rel="stylesheet" href="{{ css_market }}">
+    <link rel="stylesheet" href="{{ css_leads }}">
+    <link rel="stylesheet" href="{{ css_auth }}">
+  </noscript>
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
     window.CURRENT_USER = {{ USER | tojson }};
@@ -92,7 +104,7 @@
     <form id="filterForm">
       {% if USER_TIER == 'admin' %}
       <div class="filter-group" data-collapsible data-collapsed>
-        <div class="filter-title" onclick="toggleFilterSection(this)">
+        <button type="button" class="filter-title" onclick="toggleFilterSection(this)" aria-expanded="true">
           <span class="filter-title-left"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2">
               <path d="M4 6h16M4 12h16M4 18h16" />
@@ -116,7 +128,7 @@
       {% endif %}
 
       <div class="filter-group date-range-filter" data-collapsible>
-        <div class="filter-title" onclick="toggleFilterSection(this)">
+        <button type="button" class="filter-title" onclick="toggleFilterSection(this)" aria-expanded="false">
           <span class="filter-title-left"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2">
               <path d="M8 2v4" />
@@ -128,7 +140,7 @@
             stroke-width="2.5">
             <polyline points="6 9 12 15 18 9" />
           </svg>
-        </div>
+        </button>
         <div class="filter-body">
           <div id="dateRangeFilters" class="date-range-grid" role="radiogroup" aria-label="Lọc theo thời gian đăng">
             <label class="filter-option"><input type="radio" name="date_range" value="1w"> 1 tuần</label>
@@ -138,11 +150,11 @@
             <label class="filter-option"><input type="radio" name="date_range" value="1y"> 1 năm</label>
             <label class="filter-option"><input type="radio" name="date_range" value="all"> Toàn bộ</label>
           </div>
-        </div>
+        </button>
       </div>
 
       <div class="filter-group signal-filter" data-collapsible>
-        <div class="filter-title" onclick="toggleFilterSection(this)">
+        <button type="button" class="filter-title" onclick="toggleFilterSection(this)" aria-expanded="true">
           <span class="filter-title-left"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -152,7 +164,7 @@
             stroke-width="2.5">
             <polyline points="6 9 12 15 18 9" />
           </svg>
-        </div>
+        </button>
         <div class="filter-body">
           <div class="city-pills">
             <button type="button" class="city-pill active" data-city="THỦ DẦU MỘT" onclick="selectCity(this)">Thủ Dầu
@@ -160,7 +172,8 @@
             <button type="button" class="city-pill" data-city="BẾN CÁT" onclick="selectCity(this)">Bến Cát</button>
           </div>
           <input type="hidden" name="city" id="cityInput" value="THỦ DẦU MỘT">
-          <input type="text" class="ward-search" id="wardSearch" placeholder="Tìm phường/xã..."
+          <input type="text" class="ward-search" id="wardSearch" aria-label="Tìm phường xã"
+            placeholder="Tìm phường/xã..."
             oninput="filterWards(this.value)">
           <div class="ward-bulk-actions">
             <button type="button" class="ward-action-btn" onclick="setAllWards(true)">Chọn tất cả</button>
@@ -174,7 +187,7 @@
       </div>
 
       <div class="filter-group finance-filter" data-collapsible>
-        <div class="filter-title" onclick="toggleFilterSection(this)">
+        <button type="button" class="filter-title" onclick="toggleFilterSection(this)" aria-expanded="true">
           <span class="filter-title-left"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2">
               <path d="M3 21h18" />
@@ -185,14 +198,16 @@
             stroke-width="2.5">
             <polyline points="6 9 12 15 18 9" />
           </svg>
-        </div>
+        </button>
         <div class="filter-body">
           <div class="range-block">
             <div class="range-label">Khoảng giá (Tỷ VNĐ)</div>
             <div class="range-grid">
               <input type="number" class="range-input" name="price_min" id="priceMin" min="0" step="0.01"
+                aria-label="Giá tối thiểu tỷ đồng"
                 placeholder="Từ" inputmode="decimal" onchange="onManualRangeInput('price')" oninput="onManualRangeInput('price')">
               <input type="number" class="range-input" name="price_max" id="priceMax" min="0" step="0.01"
+                aria-label="Giá tối đa tỷ đồng"
                 placeholder="Đến" inputmode="decimal" onchange="onManualRangeInput('price')"
                 oninput="onManualRangeInput('price')">
             </div>
@@ -212,8 +227,10 @@
             <div class="range-label">Diện tích (m²)</div>
             <div class="range-grid">
               <input type="number" class="range-input" name="area_min" id="areaMin" min="0" step="1" placeholder="Từ"
+                aria-label="Diện tích tối thiểu mét vuông"
                 inputmode="numeric" onchange="onManualRangeInput('area')" oninput="onManualRangeInput('area')">
               <input type="number" class="range-input" name="area_max" id="areaMax" min="0" step="1" placeholder="Đến"
+                aria-label="Diện tích tối đa mét vuông"
                 inputmode="numeric" onchange="onManualRangeInput('area')" oninput="onManualRangeInput('area')">
             </div>
             <div class="range-chips">
@@ -231,7 +248,7 @@
       </div>
 
       <div class="filter-group" data-collapsible>
-        <div class="filter-title" onclick="toggleFilterSection(this)">
+        <button type="button" class="filter-title" onclick="toggleFilterSection(this)" aria-expanded="true">
           <span class="filter-title-left"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -241,7 +258,7 @@
             stroke-width="2.5">
             <polyline points="6 9 12 15 18 9" />
           </svg>
-        </div>
+        </button>
         <div class="filter-body">
           <div class="filter-grid">
             <label class="filter-option"><input type="checkbox" name="prop_type" value="dat_nen" checked> Đất
@@ -418,7 +435,7 @@
           <span>Đăng nhập</span>
         </button>
         {% endif %}
-        <button class="header-icon-btn" onclick="toggleTheme()" title="Đổi giao diện">
+        <button class="header-icon-btn" onclick="toggleTheme()" title="Đổi giao diện" aria-label="Đổi giao diện sáng tối">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path
               d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -438,7 +455,8 @@
               <path d="M16.5 16.5 21 21"></path>
             </svg>
             <input id="keywordSearchSignals" class="keyword-search-input" type="search" inputmode="search"
-              autocomplete="off" placeholder="Tìm tên đường, địa danh..." oninput="onKeywordSearchInput(this)">
+              autocomplete="off" aria-label="Tìm signal theo tên đường hoặc địa danh"
+              placeholder="Tìm tên đường, địa danh..." oninput="onKeywordSearchInput(this)">
             <button type="button" class="keyword-clear" aria-label="Xóa tìm kiếm" onclick="clearKeywordSearch()">×</button>
           </label>
         </div>
@@ -461,6 +479,7 @@
               <div class="command-mos-track">
                 <input type="range" name="mos_min" id="mosSlider" min="0" max="70" step="5" value="10" {% if
                   USER_TIER=='guest' %}disabled{% endif %}
+                  aria-label="Biên an toàn tối thiểu"
                   oninput="document.getElementById('mosValue').textContent=this.value"
                   onchange="scheduleApplyFilters()">
               </div>
@@ -699,7 +718,8 @@
               <path d="M16.5 16.5 21 21"></path>
             </svg>
             <input id="keywordSearchListings" class="keyword-search-input" type="search" inputmode="search"
-              autocomplete="off" placeholder="Tìm tên đường, địa danh..." oninput="onKeywordSearchInput(this)">
+              autocomplete="off" aria-label="Tìm tin rao theo tên đường hoặc địa danh"
+              placeholder="Tìm tên đường, địa danh..." oninput="onKeywordSearchInput(this)">
             <button type="button" class="keyword-clear" aria-label="Xóa tìm kiếm" onclick="clearKeywordSearch()">×</button>
           </label>
           <div class="listings-view-bar" aria-label="Chọn kiểu hiển thị tin rao">
@@ -750,7 +770,7 @@
   <div id="signalModal" class="modal">
     <div class="modal-content signal-modal-content"
       style="max-width:960px; padding:0; overflow-y:auto; overflow-x:hidden; border-radius:20px;">
-      <button class="close-modal" onclick="closeModal('signalModal')"
+      <button class="close-modal" onclick="closeModal('signalModal')" aria-label="Đóng chi tiết signal"
         style="top:12px; right:12px; z-index:20;">&times;</button>
       <!-- Content — 2-column layout on desktop -->
       <div class="sm-content">
@@ -764,9 +784,9 @@
             <div
               style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%); pointer-events:none;">
             </div>
-            <button id="sm-prev" onclick="slideSignal(-1)"
+            <button id="sm-prev" onclick="slideSignal(-1)" aria-label="Xem ảnh trước"
               style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:none; background:rgba(0,0,0,0.5); color:#fff; font-size:1.1rem; cursor:pointer; z-index:10; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); transition:background 0.2s;">&#8249;</button>
-            <button id="sm-next" onclick="slideSignal(1)"
+            <button id="sm-next" onclick="slideSignal(1)" aria-label="Xem ảnh tiếp theo"
               style="position:absolute; right:10px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:none; background:rgba(0,0,0,0.5); color:#fff; font-size:1.1rem; cursor:pointer; z-index:10; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); transition:background 0.2s;">&#8250;</button>
             <div id="sm-dots"
               style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); display:flex; gap:5px; z-index:10;">
@@ -816,20 +836,20 @@
           </div>
 
           <div class="sm-mobile-tabs" role="tablist" aria-label="Nội dung chi tiết signal">
-            <button type="button" class="sm-tab active" data-sm-tab="desc" onclick="switchSignalPanel('desc', this)">Mô tả</button>
-            <button type="button" class="sm-tab" data-sm-tab="history" onclick="switchSignalPanel('history', this)">Lịch sử</button>
-            <button type="button" class="sm-tab" data-sm-tab="comps" onclick="switchSignalPanel('comps', this)">So sánh</button>
-            <button type="button" class="sm-tab" data-sm-tab="memo" onclick="switchSignalPanel('memo', this)">Cố vấn</button>
+            <button type="button" class="sm-tab active" role="tab" aria-selected="true" aria-controls="sm-panel-desc" data-sm-tab="desc" onclick="switchSignalPanel('desc', this)">Mô tả</button>
+            <button type="button" class="sm-tab" role="tab" aria-selected="false" aria-controls="sm-history-section" data-sm-tab="history" onclick="switchSignalPanel('history', this)">Lịch sử</button>
+            <button type="button" class="sm-tab" role="tab" aria-selected="false" aria-controls="sm-panel-comps" data-sm-tab="comps" onclick="switchSignalPanel('comps', this)">So sánh</button>
+            <button type="button" class="sm-tab" role="tab" aria-selected="false" aria-controls="sm-memo-section" data-sm-tab="memo" onclick="switchSignalPanel('memo', this)">Cố vấn</button>
           </div>
 
           <!-- Description -->
-          <div class="sm-section sm-panel active" data-sm-panel="desc">
+          <div class="sm-section sm-panel active" data-sm-panel="desc" id="sm-panel-desc" role="tabpanel">
             <div class="sm-section-label">NGUYÊN VĂN TIN RAO</div>
             <div id="sm-desc" class="sm-desc-text"></div>
           </div>
 
           <!-- COMPS list -->
-          <div class="sm-section sm-panel" data-sm-panel="comps">
+          <div class="sm-section sm-panel" data-sm-panel="comps" id="sm-panel-comps" role="tabpanel" aria-hidden="true">
             <div class="sm-section-label">📊 SO SÁNH LÔ TƯƠNG TỰ</div>
             <div class="sm-comps-list" id="sm-comps-body"></div>
           </div>
@@ -838,7 +858,7 @@
         <!-- RIGHT COLUMN -->
         <div class="sm-right">
           <!-- Advisory note -->
-          <div class="sm-ai-section sm-memo-section sm-panel" data-sm-panel="memo" id="sm-memo-section" hidden aria-hidden="true" style="display:none;">
+          <div class="sm-ai-section sm-memo-section sm-panel" data-sm-panel="memo" id="sm-memo-section" role="tabpanel" hidden aria-hidden="true" style="display:none;">
             <div class="sm-ai-label">Cố vấn đầu tư</div>
             <div id="sm-memo-body" class="sm-ai-text sm-memo-body">
               <div class="sm-empty-state">Đang tải cố vấn...</div>
@@ -851,7 +871,7 @@
             <div id="sm-ai-text" class="sm-ai-text"></div>
           </div>
 
-          <div class="sm-section sm-panel" data-sm-panel="history" id="sm-history-section">
+          <div class="sm-section sm-panel" data-sm-panel="history" id="sm-history-section" role="tabpanel" aria-hidden="true">
             <div class="sm-history-chart-shell">
               <canvas id="sm-history-chart"></canvas>
             </div>
@@ -876,10 +896,10 @@
   <div id="galleryModal" class="modal" onclick="if(event.target===this)closeGallery()">
     <div class="modal-content"
       style="max-width:1100px; width:94%; padding:0; overflow:hidden; background:#0f172a; border-radius:16px;">
-      <button class="close-modal" onclick="closeGallery()" style="top:12px; right:12px; z-index:6;">&times;</button>
-      <button class="gallery-nav gallery-prev" onclick="slideGallery(-1)">&#8249;</button>
-      <button class="gallery-nav gallery-next" onclick="slideGallery(1)">&#8250;</button>
-      <img id="galleryImage" src="" alt="Gallery image"
+      <button class="close-modal" onclick="closeGallery()" aria-label="Đóng thư viện ảnh" style="top:12px; right:12px; z-index:6;">&times;</button>
+      <button class="gallery-nav gallery-prev" onclick="slideGallery(-1)" aria-label="Ảnh trước">&#8249;</button>
+      <button class="gallery-nav gallery-next" onclick="slideGallery(1)" aria-label="Ảnh tiếp theo">&#8250;</button>
+      <img id="galleryImage" src="" alt="Ảnh tin đăng"
         style="width:100%; max-height:78vh; object-fit:contain; display:block; background:#0f172a;">
       <div id="galleryCounter"
         style="position:absolute; bottom:14px; right:14px; color:#e2e8f0; font-size:0.8rem; background:rgba(0,0,0,0.45); padding:4px 10px; border-radius:999px;">
@@ -890,7 +910,7 @@
   <!-- Modal History -->
   <div id="historyModal" class="modal">
     <div class="modal-content">
-      <button class="close-modal" onclick="closeModal('historyModal')">&times;</button>
+      <button class="close-modal" onclick="closeModal('historyModal')" aria-label="Đóng lịch sử giá">&times;</button>
       <h2 class="section-title" id="historyTitle" style="margin-bottom:24px;">Lịch sử giá</h2>
       <div style="height: 350px;">
         <canvas id="historyChartCanvas"></canvas>
@@ -901,7 +921,7 @@
   <!-- Auth Modal (unified login/register) -->
   <div id="authModal" class="modal" onclick="if(event.target===this)RadarAuth.closeAuthModal()">
     <div class="modal-content auth-modal-content">
-      <button class="close-modal" onclick="RadarAuth.closeAuthModal()" style="top:12px; right:12px;">&times;</button>
+      <button class="close-modal" onclick="RadarAuth.closeAuthModal()" aria-label="Đóng đăng nhập" style="top:12px; right:12px;">&times;</button>
       <h3 id="authTitle">Đăng nhập / Đăng ký</h3>
       <p class="auth-sub" id="authSub">Nhập số điện thoại hoặc email để tiếp tục.</p>
       <div id="authReasonBanner" class="auth-trial-banner"
@@ -929,7 +949,7 @@
   <!-- VIP Upgrade Modal -->
   <div id="vipUpgradeModal" class="modal" onclick="if(event.target===this)RadarAuth.closeVipUpgradeModal()">
     <div class="modal-content auth-modal-content vip-upgrade-modal">
-      <button class="close-modal" onclick="RadarAuth.closeVipUpgradeModal()" style="top:12px; right:12px;">&times;</button>
+      <button class="close-modal" onclick="RadarAuth.closeVipUpgradeModal()" aria-label="Đóng nâng cấp VIP" style="top:12px; right:12px;">&times;</button>
       <div class="vip-upgrade-icon" aria-hidden="true">💎</div>
       <h3>Nâng cấp VIP</h3>
       <p class="auth-sub" id="vipUpgradeReason">Nhận tin mới sớm, cảnh báo theo khu vực quan tâm và phân tích chuyên sâu.</p>
@@ -952,7 +972,7 @@
   <!-- Watchlist / Telegram Notification Modal -->
   <div id="watchlistModal" class="modal" onclick="if(event.target===this)RadarAuth.closeWatchlistModal()">
     <div class="modal-content watchlist-modal-content">
-      <button class="close-modal" onclick="RadarAuth.closeWatchlistModal()" style="top:12px; right:12px;">&times;</button>
+      <button class="close-modal" onclick="RadarAuth.closeWatchlistModal()" aria-label="Đóng khu vực quan tâm" style="top:12px; right:12px;">&times;</button>
       <div class="watchlist-head">
         <div>
           <h3>Khu vực quan tâm</h3>
@@ -1049,7 +1069,7 @@
   <!-- Guest Lead Capture Modal (matchmaking without account) -->
   <div id="guestLeadModal" class="modal" onclick="if(event.target===this)closeGuestLeadModal()">
     <div class="modal-content auth-modal-content">
-      <button class="close-modal" onclick="closeGuestLeadModal()" style="top:12px; right:12px;">&times;</button>
+      <button class="close-modal" onclick="closeGuestLeadModal()" aria-label="Đóng form tư vấn" style="top:12px; right:12px;">&times;</button>
       <h3 id="guestLeadTitle">Yêu cầu RadarBDS ráp mối</h3>
       <p class="auth-sub" id="guestLeadSub">Để lại SĐT, admin sẽ gửi thêm thông tin lô đất phù hợp.</p>
       <div id="guestLeadVipNote" class="auth-trial-banner lead-vip-note" style="display:none;"></div>
@@ -1079,7 +1099,8 @@
       <button class="close-modal" onclick="closeLeadCaptureModal()" style="top:12px; right:12px;">&times;</button>
       <h3 class="lead-title">Để lại Zalo để hỗ trợ nhanh hơn</h3>
       <p class="lead-sub">Bạn có thể bỏ qua bước này và vẫn chat Zalo ngay.</p>
-      <input id="leadPhoneInput" type="text" class="lead-input" placeholder="Nhập số Zalo (tuỳ chọn)">
+      <input id="leadPhoneInput" type="text" class="lead-input" aria-label="Số Zalo liên hệ"
+        placeholder="Nhập số Zalo (tuỳ chọn)">
       <div id="leadError" class="lead-error"></div>
       <div class="lead-actions">
         <button class="lead-btn lead-btn-primary" onclick="submitLeadAndOpenZalo()">Gửi & mở Zalo</button>
@@ -1089,7 +1110,7 @@
   </div>
 
   <div class="floating-actions">
-    <button class="fab fab-ai" onclick="toggleChat()" title="Radar AI">AI</button>
+    <button class="fab fab-ai" onclick="toggleChat()" title="Radar AI" aria-label="Mở trợ lý Radar AI">AI</button>
   </div>
 
   <nav class="mobile-bottom-nav" aria-label="Điều hướng chính">
@@ -1128,7 +1149,7 @@
   <div class="chat-window" id="chatWindow">
     <div class="chat-header">
       <span>🤖 RadarBDS AI Assistant</span>
-      <button onclick="toggleChat()"
+      <button onclick="toggleChat()" aria-label="Đóng trợ lý Radar AI"
         style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem;">×</button>
     </div>
     <div class="chat-messages" id="chatMessages">
@@ -1136,17 +1157,19 @@
         nay?</div>
     </div>
     <div class="chat-input-area">
-      <input type="text" class="chat-input" id="chatInput" placeholder="Nhập câu hỏi của bạn..."
+      <input type="text" class="chat-input" id="chatInput" aria-label="Nhập câu hỏi cho Radar AI"
+        placeholder="Nhập câu hỏi của bạn..."
         onkeypress="if(event.key==='Enter') sendMessage()">
       <button class="chat-send" onclick="sendMessage()">Gửi</button>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=vip-upgrade-modal-20260606"></script>
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=dashboard-fast-path-20260608"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=pagespeed-a11y-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=dashboard-fast-path-20260608"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=signal-card-density-20260609"></script>
-  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=modal-comps-advisor-20260608"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=pagespeed-a11y-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/modal.js') }}?v=pagespeed-a11y-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/market.js') }}?v=area-risk-radar-20260605"></script>
   <script src="{{ url_for('static', filename='js/main/listings.js') }}?v=shared-signal-card-20260608"></script>
   <script src="{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-app-shell-20260602"></script>

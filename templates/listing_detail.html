@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chi tiết lô đất — {{ l['title'] }}</title>
 {% include "partials/google_site_tags.html" %}
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root {
   --bg: #09090b;
@@ -21,7 +19,7 @@
   --text: #f4f4f5;
   --text-muted: #a1a1aa;
   --radius: 16px;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
 }
 body {
   background: var(--bg); color: var(--text); font-family: var(--font-sans);
@@ -151,6 +149,7 @@ body {
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function changeImg(el, src) {
   document.getElementById('mainImg').src = src;

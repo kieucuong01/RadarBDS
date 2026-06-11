@@ -65,7 +65,7 @@ function renderSignalThumbs() {
   const thumbsEl = document.getElementById('sm-thumbs');
   if (!thumbsEl) return;
   thumbsEl.innerHTML = _smSlideImgs.length > 1
-    ? _smSlideImgs.map((src, i) => `<img class="sm-thumb ${i === _smSlideIdx ? 'active' : ''}" src="${escHtml(src)}" onclick="setSignalSlide(${i})" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
+    ? _smSlideImgs.map((src, i) => `<img class="sm-thumb ${i === _smSlideIdx ? 'active' : ''}" src="${escHtml(src)}" alt="Ảnh tin đăng ${i + 1}" role="button" tabindex="0" onclick="setSignalSlide(${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setSignalSlide(${i});}" ondblclick="openGallery(${i})" onerror="this.style.display='none'">`).join('')
     : '';
 }
 
@@ -90,7 +90,11 @@ function buildSlider(imgs) {
   slides.innerHTML = _smSlideImgs.map((src, i) => `
     <div class="sm-slide">
       <img class="sm-slide-img" src="${escHtml(src)}"
+        alt="Ảnh tin đăng ${i + 1}"
+        role="button"
+        tabindex="0"
         onclick="openGallery(${i})"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGallery(${i});}"
         onerror="this.onerror=null;this.src=PLACEHOLDER_IMG;">
     </div>`
   ).join('');
@@ -292,10 +296,14 @@ function switchSignalPanel(panel = 'desc', btn = null) {
   if (!modal) return;
   modal.dataset.activePanel = panel;
   modal.querySelectorAll('.sm-tab').forEach((tab) => {
-    tab.classList.toggle('active', tab === btn || (!btn && tab.dataset.smTab === panel));
+    const isActive = tab === btn || (!btn && tab.dataset.smTab === panel);
+    tab.classList.toggle('active', isActive);
+    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
   });
   modal.querySelectorAll('.sm-panel[data-sm-panel]').forEach((section) => {
-    section.classList.toggle('active', section.dataset.smPanel === panel);
+    const isActive = section.dataset.smPanel === panel;
+    section.classList.toggle('active', isActive);
+    section.setAttribute('aria-hidden', isActive ? 'false' : 'true');
   });
   if (panel === 'history' && smHistoryChart) {
     setTimeout(() => smHistoryChart.resize(), 0);

@@ -1,5 +1,4 @@
 /* Base tokens, reset, body, scrollbar, and shared primitives. */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
   --bg: #0f172a;
@@ -43,7 +42,7 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
   display: flex;
   height: 100vh;
   overflow: hidden;
