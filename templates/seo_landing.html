@@ -64,7 +64,25 @@
           }{% if not loop.last %},{% endif %}
           {% endfor %}
         ]
+      }{% if page.report %},
+      {
+        "@type": "Article",
+        "headline": {{ site_meta.title | tojson }},
+        "description": {{ site_meta.description | tojson }},
+        "datePublished": {{ page.report.published_at | tojson }},
+        "dateModified": {{ page.report.published_at | tojson }},
+        "author": {
+          "@type": "Organization",
+          "name": "Radar BDS"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Radar BDS",
+          "url": "https://radarbds.vn/"
+        },
+        "mainEntityOfPage": {{ site_meta.canonical_url | tojson }}
       }
+      {% endif %}
     ]
   }
   </script>
@@ -85,6 +103,8 @@
       </a>
       <nav class="seo-nav" aria-label="Điều hướng">
         <a href="/binh-duong" {% if page.path == "/binh-duong" %}aria-current="page"{% endif %}>Bình Dương</a>
+        <a href="/ban-dat-binh-duong" {% if page.path == "/ban-dat-binh-duong" %}aria-current="page"{% endif %}>Bán đất</a>
+        <a href="/bao-cao/bds-binh-duong-thang-06-2026" {% if page.path.startswith("/bao-cao/") %}aria-current="page"{% endif %}>Báo cáo</a>
         <a href="/san-deal-bds" {% if page.path == "/san-deal-bds" %}aria-current="page"{% endif %}>Săn deal BĐS</a>
       </nav>
       <a class="seo-nav-cta" href="/">Mở dashboard</a>
@@ -213,6 +233,111 @@
     </section>
     {% endif %}
 
+    {% if page.report %}
+    <section class="seo-report-block" aria-label="{{ page.report.period }}">
+      <div class="seo-shell report-shell">
+        <div class="report-head">
+          <span>{{ page.report.updated_label }}</span>
+          <h2>Nhận định từ dữ liệu Radar</h2>
+          <p>{{ page.report.source_note }}</p>
+        </div>
+        <div class="report-metric-grid">
+          {% for metric in page.report.metrics %}
+          <article>
+            <span>{{ metric.label }}</span>
+            <strong>{{ metric.value }}</strong>
+            <p>{{ metric.note }}</p>
+          </article>
+          {% endfor %}
+        </div>
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th scope="col">Khu vực</th>
+                <th scope="col">Số tin mới</th>
+                <th scope="col">Giá/m² trung vị</th>
+                <th scope="col">Khu giảm giá</th>
+                <th scope="col">Khu nhiều tín hiệu</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in page.report.area_rows %}
+              <tr>
+                <th scope="row">{{ row.area }}</th>
+                <td>{{ row.new_listings }}</td>
+                <td>{{ row.median_price }}</td>
+                <td>{{ row.drop_signal }}</td>
+                <td>{{ row.radar_signal }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="report-insight-grid">
+          {% for insight in page.report.insights %}
+          <article>
+            <h3>{{ insight.title }}</h3>
+            <p>{{ insight.body }}</p>
+          </article>
+          {% endfor %}
+        </div>
+        <div class="report-methodology">
+          <h3>Phương pháp đọc dữ liệu</h3>
+          <ul>
+            {% for item in page.report.methodology %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    {% if page.market_snapshot %}
+    <section class="seo-market-snapshot" aria-label="{{ page.market_snapshot.title }}">
+      <div class="seo-shell market-snapshot-shell">
+        <div class="market-snapshot-head">
+          <span>{{ page.market_snapshot.eyebrow }}</span>
+          <h2>{{ page.market_snapshot.title }}</h2>
+          <p>{{ page.market_snapshot.body }}</p>
+        </div>
+        <div class="market-snapshot-grid">
+          <div class="market-table-wrap">
+            <table class="market-table">
+              <thead>
+                <tr>
+                  {% for column in page.market_snapshot.columns %}
+                  <th scope="col">{{ column }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in page.market_snapshot.rows %}
+                <tr>
+                  <th scope="row">{{ row.area }}</th>
+                  <td>{{ row.price }}</td>
+                  <td>{{ row.tracked }}</td>
+                  <td>{{ row.signal }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="market-signal-cards">
+            {% for card in page.market_snapshot.cards %}
+            <article>
+              <span>{{ card.title }}</span>
+              <strong>{{ card.value }}</strong>
+              <p>{{ card.body }}</p>
+            </article>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
     {% if page.local_links %}
     <section class="seo-local-links" aria-label="Khu vực liên quan">
       <div class="seo-shell local-links-shell">
@@ -308,6 +433,8 @@
       <nav aria-label="Sản phẩm">
         <strong>Sản phẩm</strong>
         <a href="/">Dashboard</a>
+        <a href="/ban-dat-binh-duong">Bán đất Bình Dương</a>
+        <a href="/bao-cao/bds-binh-duong-thang-06-2026">Báo cáo thị trường</a>
         <a href="/san-deal-bds">Tín hiệu</a>
         <a href="/binh-duong">Thị trường</a>
       </nav>

@@ -80,7 +80,7 @@ def test_homepage_is_dashboard_and_binh_duong_is_seo_landing():
     assert binh_duong.status_code == 200
     assert '<link rel="canonical" href="https://radarbds.vn/binh-duong">' in binh_duong_html
     assert 'class="seo-page seo-page-market"' in binh_duong_html
-    assert "Săn deal nhà đất Bình Dương bằng dữ liệu" in binh_duong_html
+    assert "Nhà đất Bình Dương: radar săn deal giá tốt theo dữ liệu thị trường" in binh_duong_html
     assert 'href="/dashboard"' not in binh_duong_html
     assert '<a href="/">Dashboard</a>' in binh_duong_html
 
@@ -155,7 +155,8 @@ def test_foundational_seo_pages_render_canonical_content():
 
     client = radar_app.app.test_client()
     expected = {
-        "/binh-duong": "Săn deal nhà đất Bình Dương bằng dữ liệu",
+        "/binh-duong": "Nhà đất Bình Dương: radar săn deal giá tốt theo dữ liệu thị trường",
+        "/ban-dat-binh-duong": "Bán đất Bình Dương: lọc đất nền, đất thổ cư có biên an toàn",
         "/san-deal-bds": "Cách Radar BDS lọc tin rẻ thật",
     }
 
@@ -171,6 +172,55 @@ def test_foundational_seo_pages_render_canonical_content():
         assert "127.0.0.1" not in html
 
 
+def test_ban_dat_binh_duong_is_distinct_land_landing():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    response = client.get("/ban-dat-binh-duong")
+    html = response.get_data(as_text=True)
+
+    with radar_app.app.test_request_context("/sitemap.xml"):
+        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert '<link rel="canonical" href="https://radarbds.vn/ban-dat-binh-duong">' in html
+    assert "<loc>https://radarbds.vn/ban-dat-binh-duong</loc>" in sitemap
+    assert "đất Bình Dương" in html
+    assert "bán đất Bình Dương" in html
+    assert "đất nền" in html
+    assert "đất thổ cư" in html
+    assert "Bảng giá/m² tham chiếu" in html
+    assert "Tin đang theo dõi" in html
+    assert "Khu có tín hiệu MOS tốt" in html
+    assert "Cảnh báo tin giá ảo" in html
+    assert "dat binh duong" in html
+
+
+def test_binh_duong_market_report_page_is_indexed_and_citable():
+    import app as radar_app
+
+    path = "/bao-cao/bds-binh-duong-thang-06-2026"
+    client = radar_app.app.test_client()
+    response = client.get(path)
+    html = response.get_data(as_text=True)
+
+    with radar_app.app.test_request_context("/sitemap.xml"):
+        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
+    assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
+    assert "Báo cáo thị trường BĐS Bình Dương tháng 06/2026" in html
+    assert "Số tin mới" in html
+    assert "Giá/m² trung vị" in html
+    assert "Khu giảm giá" in html
+    assert "Khu nhiều tín hiệu" in html
+    assert "Nhận định từ dữ liệu Radar" in html
+    assert "application/ld+json" in html
+    assert '"@type": "Article"' in html
+    assert "datePublished" in html
+
+
 def test_binh_duong_location_landing_pages_render_and_are_indexed():
     import app as radar_app
 
@@ -182,6 +232,9 @@ def test_binh_duong_location_landing_pages_render_and_are_indexed():
         "/binh-duong/phuong-tuong-binh-hiep": "Tương Bình Hiệp",
         "/binh-duong/phuong-tan-dinh": "Tân Định",
         "/binh-duong/phuong-chanh-phu-hoa": "Chánh Phú Hòa",
+        "/binh-duong/my-phuoc-1": "Mỹ Phước 1",
+        "/binh-duong/my-phuoc-2": "Mỹ Phước 2",
+        "/binh-duong/my-phuoc-3": "Mỹ Phước 3",
     }
 
     with radar_app.app.test_request_context("/sitemap.xml"):
