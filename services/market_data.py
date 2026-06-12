@@ -791,7 +791,7 @@ def _title_case_road_name(value):
     words = []
     for part in str(value or "").split():
         lower = part.lower()
-        code_match = re.fullmatch(r"(dx|dh|dl|db|nl|ng|ni|na|nb|dc|ql)(\d{1,3}[a-z]?)", lower)
+        code_match = re.fullmatch(r"([a-z]{1,3})(\d{1,3}[a-z]?)", lower)
         if code_match:
             words.append(f"{code_match.group(1).upper()}{code_match.group(2).upper()}")
         elif lower in {"dx", "dh", "dl", "db", "nl", "ng", "ni", "na", "nb", "dc", "ql"}:
@@ -827,8 +827,7 @@ def _find_stored_road_name_match(road_name, text):
     if not tokens:
         return _title_case_road_name(road), 0, 0
 
-    code_prefixes = {"dx", "dh", "dl", "db", "nl", "ng", "ni", "na", "nb", "dc", "ql"}
-    separator = r"[\s\-./]*" if len(tokens) == 2 and tokens[0] in code_prefixes else r"[\s\-./]+"
+    separator = r"[\s\-./]*" if len(tokens) == 2 and 1 <= len(tokens[0]) <= 3 else r"[\s\-./]+"
     pattern = rf"(?<![a-z0-9]){separator.join(re.escape(token) for token in tokens)}(?![a-z0-9])"
     m = re.search(pattern, _ascii_fold(text or ""))
     if m:
@@ -838,19 +837,10 @@ def _find_stored_road_name_match(road_name, text):
 
 def _street_prefix(folded, start, end, road_tier):
     window = folded[max(0, start - 50): min(len(folded), end + 50)]
-    before = folded[max(0, start - 45): start]
     tier = int(_as_float(road_tier) or 0)
     if re.search(r"\b(?:mat\s*tien|mt)\b", window) or tier == 1:
         return "Mặt tiền"
-    if re.search(r"\b(?:nhanh|xet|xec|1\s*xet|1\s*xec)\b", window):
-        return "Nhánh"
-    if re.search(r"\b(?:hem|ngo)\b", window) or tier in (3, 4, 5):
-        return "Hẻm"
-    if re.search(r"\b(?:gan|cach)\b", before):
-        return "Nhánh"
-    if tier == 2:
-        return "Đường"
-    return "Đường"
+    return "Hẻm"
 
 
 def _format_street_label(r, text):
@@ -858,8 +848,6 @@ def _format_street_label(r, text):
     if stored_road_name:
         road_name, start, end = _find_stored_road_name_match(stored_road_name, text)
     else:
-        road_name, start, end = _find_road_name_match(text)
-    if not road_name:
         return None
     folded = _ascii_fold(text or "")
     prefix = _street_prefix(folded, start, end, _row_get(r, "road_tier"))

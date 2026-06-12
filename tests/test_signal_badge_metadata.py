@@ -12,6 +12,7 @@ def test_signal_badge_metadata_formats_optional_property_badges():
         "description": "DT ngang 9m tc80m tổng 215m2, đường nhựa 5m thông.",
         "property_type": "nha_dat",
         "area_m2": 215,
+        "road_name": "Hồ Văn Cống",
         "road_tier": 2,
         "road_type": "duong_nhua",
         "road_width_m": None,
@@ -35,6 +36,7 @@ def test_signal_badge_metadata_formats_dx_branch_and_hides_missing_optionals():
         "description": "Hẻm ô tô 4m, sổ sẵn.",
         "property_type": "dat_nen",
         "area_m2": 96,
+        "road_name": "DX127",
         "road_tier": 3,
         "road_type": "hem_xe_hoi",
     })
@@ -48,7 +50,7 @@ def test_signal_badge_metadata_formats_dx_branch_and_hides_missing_optionals():
 
     assert branch["property_type_label"] == "Đất nền"
     assert branch["road_label"] == "Hẻm xe hơi 4m"
-    assert branch["street_label"] == "Nhánh DX127"
+    assert branch["street_label"] == "Hẻm DX127"
     assert branch["tho_cu_m2"] is None
     assert branch["tho_cu_label"] is None
 
@@ -72,7 +74,39 @@ def test_signal_badge_metadata_prefers_stored_road_name_over_nearby_arterial():
         "tho_cu_m2": 75,
     })
 
-    assert meta["street_label"] == "\u0110\u01b0\u1eddng DX73"
+    assert meta["street_label"] == "Hẻm DX73"
+
+
+def test_signal_badge_metadata_uses_frontage_prefix_for_stored_d_road_code():
+    from services.market_data import signal_badge_metadata
+
+    meta = signal_badge_metadata({
+        "title": "Mat tien duong D8 TDC Phu My",
+        "description": "KP Phu Tan 1. DT 5x30.",
+        "property_type": "dat_nen",
+        "area_m2": 150,
+        "road_name": "D8",
+        "road_tier": 2,
+        "road_type": "unknown",
+    })
+
+    assert meta["street_label"] == "Mặt tiền D8"
+
+
+def test_signal_badge_metadata_does_not_guess_street_from_landmark_without_road_name():
+    from services.market_data import signal_badge_metadata
+
+    meta = signal_badge_metadata({
+        "title": "Ban dat Tan An",
+        "description": "Mt duong nhua 5,5m thong, gan truong hoc Tran Binh Trong. Dt 5,5x45.",
+        "property_type": "dat_nen",
+        "area_m2": 247,
+        "road_name": None,
+        "road_tier": 1,
+        "road_type": "duong_nhua",
+    })
+
+    assert meta["street_label"] is None
 
 
 def test_signal_badge_metadata_does_not_treat_tho_cu_or_distance_as_road_code():
@@ -89,6 +123,7 @@ def test_signal_badge_metadata_does_not_treat_tho_cu_or_distance_as_road_code():
         "title": "Đất nhánh Nguyễn Chí Thanh",
         "description": "Đường nhựa ô tô 1 xẹt Nguyễn Chí Thanh vào 50m, hẻm xe hơi.",
         "area_m2": 120,
+        "road_name": "Nguyễn Chí Thanh",
         "road_tier": 3,
         "property_type": "dat_nen",
     })
@@ -97,7 +132,7 @@ def test_signal_badge_metadata_does_not_treat_tho_cu_or_distance_as_road_code():
     assert tc_only["road_label"] == "Hẻm xe hơi"
     assert tc_only["tho_cu_label"] == "TC 80 m²"
 
-    assert distance["street_label"] == "Nhánh Nguyễn Chí Thanh"
+    assert distance["street_label"] == "Hẻm Nguyễn Chí Thanh"
     assert distance["road_width_m"] is None
     assert distance["road_label"] == "Hẻm xe hơi"
 
