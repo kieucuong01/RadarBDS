@@ -37,6 +37,7 @@ mimetypes.add_type("image/webp", ".webp")
 
 # Import the extracted services
 from services.market_data import load_counts, load_data, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter
+from services.market_data import LATEST_SHADOW_VALUATION_CTE, _display_fair_sql, _display_mos_sql
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
@@ -1864,9 +1865,15 @@ def api_listings():
     params.extend(date_params)
     where_sql = " AND ".join(where_parts)
 
+    actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
+    display_fair_expr = _display_fair_sql("v", "sv")
+    display_mos_expr = _display_mos_sql("v", "sv", actual_expr)
+    old_signal_condition = actionable_signal_sql("v")
+    new_signal_condition = actionable_signal_sql("sv")
+    signal_condition = f"({old_signal_condition}) AND ({new_signal_condition})"
     sort_col_map = {
         "area": "l.area_m2", "price": "l.price_ty", "price_m2": "l.price_per_m2",
-        "fair": "v.fair_ppm2", "date": "COALESCE(l.posted_at, l.crawled_at)",
+        "fair": f"({display_fair_expr})", "date": "COALESCE(l.posted_at, l.crawled_at)",
         "ward": "l.ward", "prop_type": "l.property_type",
     }
     # Default sort = newest first (date DESC). Client can override.
@@ -1877,14 +1884,25 @@ def api_listings():
 
     tier = current_tier()
     fresh_flag = "0 AS is_fresh_locked"
-    signal_condition = actionable_signal_sql("v")
     query = f"""
-        WITH {LATEST_VALUATION_CTE}
-        SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
+        WITH {LATEST_VALUATION_CTE},
+             {LATEST_SHADOW_VALUATION_CTE}
+        SELECT l.*,
+               CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS is_signal,
+               ({display_mos_expr}) AS mos_pct,
+               ({display_fair_expr}) AS fair_ppm2,
+               v.fair_ppm2 AS fair_ppm2_old,
+               sv.fair_ppm2 AS fair_ppm2_new,
+               v.mos_pct AS mos_pct_old,
+               sv.mos_pct AS mos_pct_new,
+               ({display_fair_expr}) AS fair_ppm2_display,
+               ({display_mos_expr}) AS mos_pct_display,
+               GREATEST(COALESCE(v.signal_score,0), COALESCE(sv.signal_score,0)) AS signal_score,
                CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS actionable_signal,
                {fresh_flag}
         FROM listings l
         LEFT JOIN latest_valuation v ON l.id = v.listing_id
+        LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
         WHERE {where_sql}
         ORDER BY {order_expr} {sort_dir} NULLS LAST
         LIMIT ? OFFSET ?
@@ -1958,6 +1976,12 @@ def api_listings():
             "tho_cu_label": badge_meta["tho_cu_label"],
             "ward": r['ward'], "url": r['url'], "is_signal": bool(r['actionable_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
             "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
+            "fair_ppm2_old": round(r["fair_ppm2_old"], 1) if r.get("fair_ppm2_old") else None,
+            "fair_ppm2_new": round(r["fair_ppm2_new"], 1) if r.get("fair_ppm2_new") else None,
+            "mos_pct_old": round(r["mos_pct_old"], 1) if r.get("mos_pct_old") else 0,
+            "mos_pct_new": round(r["mos_pct_new"], 1) if r.get("mos_pct_new") else 0,
+            "fair_ppm2_display": round(r["fair_ppm2_display"], 1) if r.get("fair_ppm2_display") else (round(r["fair_ppm2"], 1) if r["fair_ppm2"] else None),
+            "mos_pct_display": round(r["mos_pct_display"], 1) if r.get("mos_pct_display") else (round(r["mos_pct"], 1) if r["mos_pct"] else 0),
             "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": price_dropped,
             "suspicious_bait": bool(r['suspicious_bait']),
             "drop_pct": drop_pct, "price_first_ty": price_first_ty, "duplicate_of_id": r['duplicate_of_id'],

@@ -1180,16 +1180,34 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
     # 3. All Listings
     all_rows = []
     if not skip_listings:
+        all_actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
+        all_display_fair_expr = _display_fair_sql("v", "sv")
+        all_display_mos_expr = _display_mos_sql("v", "sv", all_actual_expr)
+        old_signal_condition = actionable_signal_sql("v")
+        new_signal_condition = actionable_signal_sql("sv")
+        all_signal_condition = f"({old_signal_condition}) AND ({new_signal_condition})"
         all_query = f"""
-            WITH {LATEST_VALUATION_CTE}
-            SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
-                   COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,
-                   COALESCE(v.trust_score, 0) AS trust_score,
-                   COALESCE(v.legal_status, 'unverified') AS legal_status,
-                   COALESCE(v.legal_flags, '') AS legal_flags,
+            WITH {LATEST_VALUATION_CTE},
+                 {LATEST_SHADOW_VALUATION_CTE}
+            SELECT l.*,
+                   CASE WHEN {all_signal_condition} THEN 1 ELSE 0 END AS is_signal,
+                   ({all_display_mos_expr}) AS mos_pct,
+                   ({all_display_fair_expr}) AS fair_ppm2,
+                   v.fair_ppm2 AS fair_ppm2_old,
+                   sv.fair_ppm2 AS fair_ppm2_new,
+                   v.mos_pct AS mos_pct_old,
+                   sv.mos_pct AS mos_pct_new,
+                   ({all_display_fair_expr}) AS fair_ppm2_display,
+                   ({all_display_mos_expr}) AS mos_pct_display,
+                   GREATEST(COALESCE(v.signal_score,0), COALESCE(sv.signal_score,0)) AS signal_score,
+                   COALESCE(v.trust_tier, sv.trust_tier, 'candidate_signal') AS trust_tier,
+                   COALESCE(v.trust_score, sv.trust_score, 0) AS trust_score,
+                   COALESCE(v.legal_status, sv.legal_status, 'unverified') AS legal_status,
+                   COALESCE(v.legal_flags, sv.legal_flags, '') AS legal_flags,
                    {fresh_flag}
             FROM listings l
             LEFT JOIN latest_valuation v ON l.id = v.listing_id
+            LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
             WHERE {where_sql}
             ORDER BY l.price_per_m2 ASC
         """
@@ -1306,6 +1324,12 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
             "ward": r['ward'], "url": r['url'], "is_signal": bool(r['is_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
             "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
+            "fair_ppm2_old": round(_row_get(r, "fair_ppm2_old"), 1) if _row_get(r, "fair_ppm2_old") else None,
+            "fair_ppm2_new": round(_row_get(r, "fair_ppm2_new"), 1) if _row_get(r, "fair_ppm2_new") else None,
+            "mos_pct_old": round(_row_get(r, "mos_pct_old"), 1) if _row_get(r, "mos_pct_old") else 0,
+            "mos_pct_new": round(_row_get(r, "mos_pct_new"), 1) if _row_get(r, "mos_pct_new") else 0,
+            "fair_ppm2_display": round(_row_get(r, "fair_ppm2_display"), 1) if _row_get(r, "fair_ppm2_display") else (round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None),
+            "mos_pct_display": round(_row_get(r, "mos_pct_display"), 1) if _row_get(r, "mos_pct_display") else (round(r['mos_pct'], 1) if r['mos_pct'] else 0),
             "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": bool(r['price_dropped']),
             "suspicious_bait": bool(r['suspicious_bait']),
             "drop_pct": r['price_drop_pct'], "price_first_ty": r['price_first_ty'], "duplicate_of_id": r['duplicate_of_id'],

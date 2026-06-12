@@ -364,15 +364,16 @@ function signalActualPriceClass(x) {
 
 function signalValuationHtml(x) {
   const items = signalValuationItems(x);
-  if (!items.length) return '<div class="price-val-fair">-</div><div class="price-m2">-</div>';
-  const values = items.map((item) => `
-    <span class="valuation-model">
-      <strong>${escHtml(item.totalLabel)} tỷ</strong>
-      <span>${escHtml(item.ppm2.toFixed(1).replace(/\.0$/, ''))} tr/m²</span>
-    </span>
-  `).join('<span class="valuation-sep">~</span>');
+  if (!items.length) return '<div class="price-val price-val-fair">-</div><div class="price-m2">-</div>';
+  const totals = items.map((item) => (
+    `<span class="valuation-value">${escHtml(item.totalLabel)} tỷ</span>`
+  )).join('<span class="valuation-sep">~</span>');
+  const ppm2Values = items.map((item) => (
+    `<span class="valuation-ppm2">${escHtml(item.ppm2.toFixed(1).replace(/\.0$/, ''))} tr/m²</span>`
+  )).join('<span class="valuation-ppm2-gap"></span>');
   return `
-    <div class="price-val-fair valuation-range">${values}</div>
+    <div class="price-val price-val-fair valuation-total-row">${totals}</div>
+    <div class="price-m2 valuation-ppm2-row">${ppm2Values}</div>
   `;
 }
 

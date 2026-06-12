@@ -745,6 +745,10 @@
 
 .price-actual,
 .price-fair {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  align-content: center;
+  row-gap: 2px;
   padding: 10px 12px;
   text-align: center;
 }
@@ -757,9 +761,10 @@
   font-size: 0.65rem;
   font-weight: 800;
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 0;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  line-height: 1.05;
 }
 
 .price-label-actual {
@@ -774,6 +779,7 @@
   font-size: 1.3rem;
   font-weight: 800;
   color: #2563eb;
+  line-height: 1.05;
 }
 
 .price-val-fair {
@@ -784,51 +790,42 @@
   font-style: normal;
 }
 
-.valuation-range {
+.valuation-total-row,
+.valuation-ppm2-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   gap: 5px;
-  line-height: 1.08;
   white-space: nowrap;
 }
 
-.valuation-model {
-  min-width: 0;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-}
-
-.valuation-model strong {
-  max-width: 100%;
-  font-size: 1em;
-  font-weight: inherit;
-  line-height: 1;
+.valuation-value,
+.valuation-ppm2 {
   white-space: nowrap;
 }
 
-.valuation-model span {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1.1;
-  white-space: nowrap;
+.valuation-ppm2-row {
+  gap: 10px;
 }
 
 .valuation-sep {
   color: var(--text-muted);
   font-size: 0.9rem;
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1;
+}
+
+.valuation-ppm2-gap {
+  width: 6px;
+  flex: 0 0 6px;
 }
 
 .price-m2 {
   font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 500;
-  margin-top: 2px;
+  line-height: 1.1;
+  margin-top: 0;
 }
 
 .price-label-actual.price-deal,
@@ -1127,7 +1124,7 @@
   }
 
   .price-label {
-    margin-bottom: 2px;
+    margin-bottom: 0;
     font-size: 0.58rem;
     letter-spacing: 0.06em;
   }
@@ -1140,16 +1137,25 @@
     font-size: 1.02rem;
   }
 
-  .valuation-range {
+  .valuation-total-row {
     gap: 3px;
   }
 
-  .valuation-model span {
+  .valuation-ppm2-row {
+    gap: 6px;
+  }
+
+  .valuation-ppm2-gap {
+    width: 4px;
+    flex-basis: 4px;
+  }
+
+  .valuation-ppm2 {
     font-size: 0.66rem;
   }
 
   .price-m2 {
-    margin-top: 1px;
+    margin-top: 0;
     font-size: 0.66rem;
   }
 

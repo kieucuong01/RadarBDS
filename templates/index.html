@@ -44,8 +44,8 @@
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-input-zoom-20260612' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=mobile-perf-lazy-20260611' %}
   {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=pagespeed-a11y-20260611' %}
-  {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=pagespeed-a11y-20260611' %}
-  {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=modal-close-safe-20260612' %}
+  {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=valuation-card-align-20260612' %}
+  {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=valuation-card-align-20260612' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
   {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=filter-sheet-scroll-lock-20260609' %}
   {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=account-menu-compact-20260606' %}
@@ -63,9 +63,9 @@
     window.CURRENT_USER = {{ USER | tojson }};
     window.INITIAL_WARDS_BY_CITY = {{ wards_by_city | tojson }};
     window.RADAR_ASSETS = {
-      modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=mobile-perf-lazy-20260611",
+      modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=valuation-card-align-20260612",
       market: "{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611",
-      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-perf-lazy-20260611",
+      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=valuation-card-align-20260612",
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-perf-82-20260611"
     };
@@ -1176,7 +1176,7 @@
 
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-perf-82-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=loader-font-fix-20260611"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-perf-82-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=valuation-card-align-20260612"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=loader-font-fix-20260611"></script>
 </body>
 
