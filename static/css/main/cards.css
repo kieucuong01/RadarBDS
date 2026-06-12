@@ -736,7 +736,7 @@
 /* Price Section */
 .price-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
   gap: 0;
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -746,6 +746,7 @@
 .price-actual,
 .price-fair {
   padding: 10px 12px;
+  text-align: center;
 }
 
 .price-actual {
@@ -776,11 +777,50 @@
 }
 
 .price-val-fair {
-  font-size: 1.2rem;
+  font-size: 1.06rem;
   font-weight: 850;
   color: var(--text);
   opacity: 1;
   font-style: normal;
+}
+
+.valuation-range {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  line-height: 1.08;
+  white-space: nowrap;
+}
+
+.valuation-model {
+  min-width: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.valuation-model strong {
+  max-width: 100%;
+  font-size: 1em;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.valuation-model span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.valuation-sep {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .price-m2 {
@@ -798,6 +838,11 @@
 .price-label-actual.price-over,
 .price-val.price-over {
   color: #dc2626;
+}
+
+.price-label-actual.price-neutral,
+.price-val.price-neutral {
+  color: #d97706;
 }
 
 /* Meta Grid */
@@ -1091,7 +1136,15 @@
   }
 
   .price-val-fair {
-    font-size: 0.96rem;
+    font-size: 0.82rem;
+  }
+
+  .valuation-range {
+    gap: 3px;
+  }
+
+  .valuation-model span {
+    font-size: 0.6rem;
   }
 
   .price-m2 {

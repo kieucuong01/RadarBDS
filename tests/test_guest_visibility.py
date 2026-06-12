@@ -20,6 +20,8 @@ class GuestVisibilityTest(unittest.TestCase):
         self.token = uuid.uuid4().hex
         self.url_prefix = f"https://guest-visibility-{self.token}.test"
         self.ward = f"GuestWard{self.token[:8]}"
+        self.session_token = f"guest-visibility-free-{self.token}"
+        self.user_identifier = f"guest-visibility-{self.token}@test.local"
         self.listing_ids = []
         connection.close_all()
         self.patches = [
@@ -47,6 +49,8 @@ class GuestVisibilityTest(unittest.TestCase):
         from db.connection import get_conn
 
         with get_conn() as conn:
+            conn.execute("DELETE FROM user_sessions WHERE token = ?", (self.session_token,))
+            conn.execute("DELETE FROM users WHERE identifier = ?", (self.user_identifier,))
             rows = conn.execute(
                 "SELECT id FROM listings WHERE url LIKE ?",
                 (f"{self.url_prefix}%",),
@@ -59,9 +63,37 @@ class GuestVisibilityTest(unittest.TestCase):
             params = list(ids)
             conn.execute(f"DELETE FROM price_history WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM valuation_results WHERE listing_id IN ({placeholders})", params)
+            try:
+                conn.execute(f"DELETE FROM valuation_shadow_results WHERE listing_id IN ({placeholders})", params)
+            except Exception:
+                pass
             conn.execute(f"DELETE FROM listing_images WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
+
+    def _login_as_free(self):
+        from auth.core import SESSION_COOKIE_NAME
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO users (identifier, identifier_type, password_hash, tier)
+                VALUES (?, 'email', 'hash', 'free')
+                """,
+                (self.user_identifier,),
+            )
+            conn.execute(
+                """
+                INSERT INTO user_sessions (token, user_id, expires_at)
+                VALUES (?, ?, '2099-01-01T00:00:00')
+                """,
+                (self.session_token, cur.lastrowid),
+            )
+        try:
+            self.client.set_cookie(SESSION_COOKIE_NAME, self.session_token)
+        except TypeError:
+            self.client.set_cookie("localhost", SESSION_COOKIE_NAME, self.session_token)
 
     def _seed_fresh_signal(self):
         from db.connection import get_conn
@@ -93,6 +125,21 @@ class GuestVisibilityTest(unittest.TestCase):
                 ) VALUES (?, 30.0, 20.0, 33.3, 1, 70)
                 """,
                 (listing_id,),
+            )
+            run_id = conn.execute(
+                """
+                INSERT INTO valuation_model_runs (model_name, model_version, status)
+                VALUES ('median_road_tier', 'median_road_tier_v1', 'complete')
+                """
+            ).lastrowid
+            conn.execute(
+                """
+                INSERT INTO valuation_shadow_results (
+                    model_run_id, listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score, source_quality_flags
+                ) VALUES (?, ?, 30.0, 20.0, 33.3, 1, 70, '')
+                """,
+                (run_id, listing_id),
             )
             return listing_id
 
@@ -130,12 +177,115 @@ class GuestVisibilityTest(unittest.TestCase):
         self.assertEqual(payload["total"], 1)
         self.assertEqual(len(payload["signals"]), 1)
         self.assertEqual(payload["signals"][0]["id"], self.listing_id)
-        self.assertEqual(payload["signals"][0]["mos_pct"], 50.0)
+        self.assertEqual(payload["signals"][0]["fair_ppm2_old"], 40.0)
+        self.assertEqual(payload["signals"][0]["mos_pct_display"], 33.3)
         self.assertEqual(payload["signals"][0]["signal_score"], 90)
 
         dashboard = self.client.get(f"/api/dashboard?city=Khac&ward={self.ward}")
         self.assertEqual(dashboard.status_code, 200)
         self.assertEqual(dashboard.get_json()["stats"]["signals"], 1)
+
+    def test_signal_feed_requires_conservative_mos_from_lower_model(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, description, ward,
+                    area_m2, property_type, price_ty, price_per_m2,
+                    is_hot, price_dropped, suspicious_bait,
+                    probably_sold, possibly_duplicate, posted_at, crawled_at
+                ) VALUES (
+                    'facebook', ?, ?,
+                    'New model only signal', 'Fresh listing description',
+                    ?, 100, 'dat_nen', 2.0, 20.0,
+                    0, 0, 0, 0, 0, datetime('now'), datetime('now')
+                )
+                """,
+                (f"new-model-only-{self.token}", f"{self.url_prefix}/new-model-only", self.ward),
+            )
+            listing_id = cur.lastrowid
+            self.listing_ids.append(listing_id)
+            conn.execute(
+                """
+                INSERT INTO valuation_results (
+                    listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score
+                ) VALUES (?, 21.0, 20.0, 4.8, 0, 0)
+                """,
+                (listing_id,),
+            )
+            run_id = conn.execute(
+                """
+                INSERT INTO valuation_model_runs (model_name, model_version, status)
+                VALUES ('median_road_tier', 'median_road_tier_v1', 'complete')
+                """
+            ).lastrowid
+            conn.execute(
+                """
+                INSERT INTO valuation_shadow_results (
+                    model_run_id, listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score, source_quality_flags
+                ) VALUES (?, ?, 24.0, 20.0, 16.7, 1, 55, '')
+                """,
+                (run_id, listing_id),
+            )
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, description, ward,
+                    area_m2, property_type, price_ty, price_per_m2,
+                    is_hot, price_dropped, suspicious_bait,
+                    probably_sold, possibly_duplicate, posted_at, crawled_at
+                ) VALUES (
+                    'facebook', ?, ?,
+                    'Both models conservative signal', 'Fresh listing description',
+                    ?, 100, 'dat_nen', 2.0, 20.0,
+                    0, 0, 0, 0, 0, datetime('now'), datetime('now')
+                )
+                """,
+                (f"both-models-{self.token}", f"{self.url_prefix}/both-models", self.ward),
+            )
+            both_id = cur.lastrowid
+            self.listing_ids.append(both_id)
+            conn.execute(
+                """
+                INSERT INTO valuation_results (
+                    listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score
+                ) VALUES (?, 26.0, 20.0, 23.1, 1, 60)
+                """,
+                (both_id,),
+            )
+            conn.execute(
+                """
+                INSERT INTO valuation_shadow_results (
+                    model_run_id, listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score, source_quality_flags
+                ) VALUES (?, ?, 24.0, 20.0, 16.7, 1, 55, '')
+                """,
+                (run_id, both_id),
+            )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=10")
+        self.assertEqual(response.status_code, 200)
+        rows = {row["id"]: row for row in response.get_json()["signals"]}
+
+        self.assertNotIn(listing_id, rows)
+        self.assertIn(both_id, rows)
+        row = rows[both_id]
+        self.assertEqual(row["signal_model"], "both")
+        self.assertEqual(row["fair_ppm2_old"], 26.0)
+        self.assertEqual(row["fair_ppm2_new"], 24.0)
+        self.assertEqual(row["fair_ppm2_display"], 24.0)
+        self.assertAlmostEqual(row["mos_pct_display"], 16.7, places=1)
+
+        self._login_as_free()
+        filtered = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=10&mos_min=20")
+        self.assertEqual(filtered.status_code, 200)
+        filtered_ids = {row["id"] for row in filtered.get_json()["signals"]}
+        self.assertNotIn(both_id, filtered_ids)
 
     def test_drop_filter_includes_canonical_with_higher_price_repost(self):
         from db.connection import get_conn

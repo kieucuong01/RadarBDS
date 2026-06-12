@@ -11,6 +11,7 @@ from analytics.valuation import (
     Listing, SegmentModel, ValuationEngine,
     compute_signal_score, proximity_score_for_ward, remove_outliers,
 )
+from analytics.hierarchical_valuation import MedianRoadTierValuationEngine
 
 
 def _make_listing(lid: int, ppm2: float, area: float = 100, **kw) -> Listing:
@@ -74,6 +75,78 @@ def test_engine_signal_threshold():
     target2 = _make_listing(1000, 15.0, area=100)
     result2 = engine.valuate(target2)
     assert result2 is not None and result2.is_signal is False
+
+
+def test_median_road_tier_area_adjustment_is_segment_relative():
+    listings = [_make_listing(i, 20.0, area=100.0, road_tier=2) for i in range(20)]
+    engine = MedianRoadTierValuationEngine()
+    engine.fit(listings)
+
+    standard = engine.valuate(_make_listing(1001, 18.0, area=100.0, road_tier=2))
+    small = engine.valuate(_make_listing(1002, 18.0, area=60.0, road_tier=2))
+    large = engine.valuate(_make_listing(1003, 18.0, area=400.0, road_tier=2))
+
+    assert standard is not None and small is not None and large is not None
+    assert small.price_per_m2_fair == round(standard.price_per_m2_fair * 1.05, 2)
+    assert large.price_per_m2_fair == round(standard.price_per_m2_fair * 0.80, 2)
+    assert "large_lot_model_risk" not in large.source_quality_flags
+
+
+def test_median_road_tier_very_large_lot_gets_risk_flag_and_stronger_penalty():
+    listings = [_make_listing(i, 20.0, area=100.0, road_tier=2) for i in range(20)]
+    engine = MedianRoadTierValuationEngine()
+    engine.fit(listings)
+
+    standard = engine.valuate(_make_listing(1101, 18.0, area=100.0, road_tier=2))
+    very_large = engine.valuate(_make_listing(1102, 18.0, area=700.0, road_tier=2))
+
+    assert standard is not None and very_large is not None
+    assert very_large.price_per_m2_fair == round(standard.price_per_m2_fair * 0.65, 2)
+    assert "large_lot_model_risk" in very_large.source_quality_flags
+
+
+def test_median_road_tier_uses_bucket_median_and_small_road_penalties():
+    samples = []
+    for i in range(8):
+        samples.append(_make_listing(2000 + i, 20.0, road_tier=1))
+    samples.append(_make_listing(2099, 80.0, road_tier=1))
+    for i in range(20):
+        samples.append(_make_listing(3000 + i, 20.0, road_tier=2))
+        samples.append(_make_listing(4000 + i, 12.0, road_tier=3))
+    engine = MedianRoadTierValuationEngine()
+    engine.fit(samples)
+
+    tier1 = engine.valuate(_make_listing(5101, 15.0, road_tier=1))
+    tier2 = engine.valuate(_make_listing(5102, 15.0, road_tier=2))
+    tier3 = engine.valuate(_make_listing(5103, 15.0, road_tier=3))
+    tier4 = engine.valuate(_make_listing(5104, 15.0, road_tier=4))
+    tier5 = engine.valuate(_make_listing(5105, 15.0, road_tier=5))
+    tier0 = engine.valuate(_make_listing(5106, 15.0, road_tier=0))
+
+    assert tier1 and tier2 and tier3 and tier4 and tier5 and tier0
+    assert tier1.price_per_m2_fair == tier2.price_per_m2_fair
+    assert tier1.price_per_m2_fair == round(20.0 * 0.95, 2)
+    assert tier2.price_per_m2_fair > tier3.price_per_m2_fair
+    assert tier4.price_per_m2_fair == round(tier3.price_per_m2_fair * 0.85, 2)
+    assert tier5.price_per_m2_fair == round(tier3.price_per_m2_fair * 0.75, 2)
+    assert "low_road_confidence" in tier0.source_quality_flags
+
+
+def test_median_road_tier_sparse_bucket_falls_back_to_segment_median():
+    samples = []
+    for i in range(2):
+        samples.append(_make_listing(6000 + i, 80.0, road_tier=1))
+    for i in range(18):
+        samples.append(_make_listing(6100 + i, 20.0, road_tier=2))
+    for i in range(18):
+        samples.append(_make_listing(6200 + i, 12.0, road_tier=3))
+    engine = MedianRoadTierValuationEngine()
+    engine.fit(samples)
+
+    tier1 = engine.valuate(_make_listing(6301, 15.0, road_tier=1))
+
+    assert tier1 is not None
+    assert tier1.price_per_m2_fair == round(20.0 * 0.95, 2)
 
 
 def test_social_housing_is_not_valuated_against_landed_house_market():

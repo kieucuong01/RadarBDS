@@ -306,12 +306,74 @@ function signalDealImageSrc(x) {
 
 function signalDealFairPrice(x) {
   if (!x) return '-';
+  const valuationItems = signalValuationItems(x);
+  if (valuationItems.length) return valuationItems[0].totalLabel;
   if (x.fair_total_ty) return Number(x.fair_total_ty).toFixed(2).replace(/\.?0+$/, '');
   if (x.fair) return String(x.fair);
   const fairPpm2 = Number(x.fair_ppm2);
   const area = Number(x.area_m2 || x.area);
   if (!Number.isFinite(fairPpm2) || !Number.isFinite(area) || area <= 0) return '-';
   return (fairPpm2 * area / 1000).toFixed(2);
+}
+
+function _signalFormatTy(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return '-';
+  return n.toFixed(2).replace(/\.?0+$/, '');
+}
+
+function signalValuationItems(x) {
+  if (!x) return [];
+  const area = Number(x.area_m2 || x.area);
+  if (!Number.isFinite(area) || area <= 0) return [];
+  const items = [];
+  const oldPpm2 = Number(x.fair_ppm2_old);
+  const newPpm2 = Number(x.fair_ppm2_new);
+  if (Number.isFinite(oldPpm2) && oldPpm2 > 0) {
+    const total = oldPpm2 * area / 1000;
+    items.push({ key: 'old', ppm2: oldPpm2, total, totalLabel: _signalFormatTy(total) });
+  }
+  if (Number.isFinite(newPpm2) && newPpm2 > 0) {
+    const total = newPpm2 * area / 1000;
+    items.push({ key: 'new', ppm2: newPpm2, total, totalLabel: _signalFormatTy(total) });
+  }
+  if (!items.length) {
+    const fairPpm2 = Number(x.fair_ppm2 || x.fppm2);
+    if (Number.isFinite(fairPpm2) && fairPpm2 > 0) {
+      const total = fairPpm2 * area / 1000;
+      items.push({ key: 'legacy', ppm2: fairPpm2, total, totalLabel: _signalFormatTy(total) });
+    }
+  }
+  return items.sort((a, b) => a.total - b.total);
+}
+
+function signalActualPriceClass(x) {
+  const actualPpm2 = _signalNumber(x && (x.actual_ppm2 || x.price_per_m2 || x.ppm2));
+  const valuationItems = signalValuationItems(x);
+  const fairPpm2Values = valuationItems
+    .map((item) => _signalNumber(item.ppm2))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  if (!Number.isFinite(actualPpm2) || actualPpm2 <= 0 || !fairPpm2Values.length) return 'price-deal';
+
+  const lowFairPpm2 = Math.min(...fairPpm2Values);
+  const highFairPpm2 = Math.max(...fairPpm2Values);
+  if (actualPpm2 < lowFairPpm2) return 'price-deal';
+  if (actualPpm2 > highFairPpm2) return 'price-over';
+  return 'price-neutral';
+}
+
+function signalValuationHtml(x) {
+  const items = signalValuationItems(x);
+  if (!items.length) return '<div class="price-val-fair">-</div><div class="price-m2">-</div>';
+  const values = items.map((item) => `
+    <span class="valuation-model">
+      <strong>${escHtml(item.totalLabel)} tỷ</strong>
+      <span>${escHtml(item.ppm2.toFixed(1).replace(/\.0$/, ''))} tr/m²</span>
+    </span>
+  `).join('<span class="valuation-sep">~</span>');
+  return `
+    <div class="price-val-fair valuation-range">${values}</div>
+  `;
 }
 
 function signalDealDataAttrs(x, fairPrice, imgSrc, timeStr, roadStr, profit) {
@@ -335,7 +397,7 @@ function signalDealDataAttrs(x, fairPrice, imgSrc, timeStr, roadStr, profit) {
     ['prop-label', _signalPropertyTypeLabel(x)],
     ['time', timeStr || ''],
     ['profit', profit || ''],
-    ['mos', x.mos_pct || x.mos || ''],
+    ['mos', x.mos_pct_display || x.mos_pct || x.mos || ''],
     ['source', sourceNames[x.source] || x.source || ''],
     ['drop', x.drop_pct || x.drop || ''],
     ['score', x.signal_score || x.score || '-'],
@@ -354,9 +416,9 @@ function renderSignalDealCard(x, opts = {}) {
   const priceNum = parseFloat(x.price_ty || x.price);
   const priceLabel = x.price_label || (x.price_ty ? `${x.price_ty} tỷ` : (x.price ? `${x.price} tỷ` : '-'));
   const profit = fairPrice !== '-' && Number.isFinite(priceNum) ? (fairNum - priceNum).toFixed(2) : '-';
-  const isOverpriced = Number.isFinite(priceNum) && Number.isFinite(fairNum) && priceNum > fairNum;
-  const actualClass = isOverpriced ? 'price-over' : 'price-deal';
-  const mosNum = _signalNumber(x.mos_pct || x.mos);
+  const actualClass = signalActualPriceClass(x);
+  const fairHtml = signalValuationHtml(x);
+  const mosNum = _signalNumber(x.mos_pct_display || x.mos_pct || x.mos);
   const mosRounded = Math.round(mosNum || 0);
   const areaLabel = _signalAreaLabel(x);
   const qualityBadgeHtml = _signalQualityBadges(x).map((badge) => (
@@ -419,8 +481,7 @@ function renderSignalDealCard(x, opts = {}) {
         </div>
         <div class="price-fair">
           <span class="price-label price-label-fair">ĐỊNH GIÁ</span>
-          <div class="price-val-fair">${fairPrice !== '-' ? `${escHtml(fairPrice)} tỷ` : '-'}</div>
-          <div class="price-m2">${escHtml(fairPpm2)}${fairPpm2 !== '-' ? ' tr/m²' : ''}</div>
+          ${fairHtml}
         </div>
       </div>
 

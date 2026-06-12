@@ -10,6 +10,14 @@ from db.connection import get_conn
 from services.image_assets import resolve_image_url
 from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
 
+LATEST_SHADOW_VALUATION_CTE = """
+latest_shadow_valuation AS (
+    SELECT DISTINCT ON (vsr.listing_id) vsr.*
+    FROM valuation_shadow_results vsr
+    ORDER BY vsr.listing_id, vsr.computed_at DESC, vsr.id DESC
+)
+"""
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Tier-aware masking (server-side). Address + tên đường KHÔNG che (decision 2026-05-14)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -500,6 +508,42 @@ def _mos_filter(mos_min=0):
     return mos_condition, mos_params
 
 
+def _display_fair_sql(old_alias="v", new_alias="sv") -> str:
+    return f"""
+        CASE
+            WHEN {old_alias}.fair_ppm2 IS NOT NULL
+             AND {new_alias}.fair_ppm2 IS NOT NULL
+             AND {old_alias}.fair_ppm2 > 0
+             AND {new_alias}.fair_ppm2 > 0
+                THEN LEAST({old_alias}.fair_ppm2, {new_alias}.fair_ppm2)
+            WHEN {new_alias}.fair_ppm2 IS NOT NULL AND {new_alias}.fair_ppm2 > 0
+                THEN {new_alias}.fair_ppm2
+            ELSE {old_alias}.fair_ppm2
+        END
+    """
+
+
+def _display_mos_sql(old_alias="v", new_alias="sv", actual_expr="COALESCE(v.actual_ppm2, sv.actual_ppm2)") -> str:
+    fair_expr = _display_fair_sql(old_alias, new_alias)
+    return f"""
+        CASE
+            WHEN ({fair_expr}) IS NOT NULL AND ({fair_expr}) > 0
+                THEN ((({fair_expr}) - ({actual_expr})) / ({fair_expr})) * 100.0
+            ELSE COALESCE({old_alias}.mos_pct, {new_alias}.mos_pct, 0)
+        END
+    """
+
+
+def _conservative_signal_sql(display_mos_expr: str, mos_min: float, old_alias="v", new_alias="sv") -> str:
+    legacy_signal_condition = actionable_signal_sql(old_alias)
+    shadow_signal_condition = actionable_signal_sql(new_alias)
+    return f"""
+        ({legacy_signal_condition})
+        AND ({shadow_signal_condition})
+        AND ({display_mos_expr}) >= {float(mos_min)}
+    """
+
+
 def _signal_sort_sql(sort_key: str) -> str:
     if LEGAL_IMAGE_EVIDENCE_ENABLED:
         trust_rank = (
@@ -889,6 +933,13 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
         "actual_ppm2": round(r['actual_ppm2'], 1) if r['actual_ppm2'] else 0,
         "fair_ppm2": fair_ppm2,
+        "fair_ppm2_old": round(_row_get(r, "fair_ppm2_old"), 1) if _row_get(r, "fair_ppm2_old") else None,
+        "fair_ppm2_new": round(_row_get(r, "fair_ppm2_new"), 1) if _row_get(r, "fair_ppm2_new") else None,
+        "mos_pct_old": round(_row_get(r, "mos_pct_old"), 1) if _row_get(r, "mos_pct_old") else 0,
+        "mos_pct_new": round(_row_get(r, "mos_pct_new"), 1) if _row_get(r, "mos_pct_new") else 0,
+        "fair_ppm2_display": round(_row_get(r, "fair_ppm2_display"), 1) if _row_get(r, "fair_ppm2_display") else fair_ppm2,
+        "mos_pct_display": round(_row_get(r, "mos_pct_display"), 1) if _row_get(r, "mos_pct_display") else (round(r['mos_pct'], 1) if r['mos_pct'] else 0),
+        "signal_model": _row_get(r, "signal_model", "legacy") or "legacy",
         "area_m2": r['area_m2'],
         "frontage_m": _row_get(r, "frontage_m"),
         "depth_m": _row_get(r, "depth_m"),
@@ -934,7 +985,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
     # Guest still sees the full deal feed; original URLs/phones stay redacted.
     if tier == "guest":
-        mos_min = 0
+        mos_min = 10
         only_drops = False
     conn = _open_read_conn(db_path)
     where_sql, params = _build_filters(
@@ -952,41 +1003,63 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         keyword=keyword,
         date_range=date_range,
     )
-    mos_condition, mos_params = _mos_filter(mos_min)
-    signal_condition = actionable_signal_sql("v")
+    actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
+    display_fair_expr = _display_fair_sql("v", "sv")
+    display_mos_expr = _display_mos_sql("v", "sv", actual_expr)
+    effective_mos_min = float(mos_min if mos_min is not None else 10)
+    signal_condition = _conservative_signal_sql(display_mos_expr, effective_mos_min)
     page = max(int(page or 1), 1)
     limit = min(max(int(limit or 30), 1), 100)
     offset = (page - 1) * limit
     query_limit = limit if include_total else limit + 1
     order_sql = _signal_sort_sql(sort)
+    if sort == "mos_desc":
+        order_sql = f"({display_mos_expr}) DESC, l.id DESC"
+    elif sort == "score_desc":
+        order_sql = f"GREATEST(COALESCE(v.signal_score,0), COALESCE(sv.signal_score,0)) DESC, ({display_mos_expr}) DESC, l.id DESC"
     lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
     fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
     total_select = "COUNT(*) OVER() AS total_count," if include_total else ""
 
     rows = conn.execute(f"""
-        WITH {LATEST_VALUATION_CTE}
+        WITH {LATEST_VALUATION_CTE},
+             {LATEST_SHADOW_VALUATION_CTE}
         SELECT {total_select}
-               v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
+               ({display_mos_expr}) AS mos_pct,
+               {actual_expr} AS actual_ppm2,
+               ({display_fair_expr}) AS fair_ppm2,
+               CASE WHEN ({signal_condition}) THEN 1 ELSE 0 END AS is_signal,
+               v.fair_ppm2 AS fair_ppm2_old,
+               sv.fair_ppm2 AS fair_ppm2_new,
+               v.mos_pct AS mos_pct_old,
+               sv.mos_pct AS mos_pct_new,
+               ({display_fair_expr}) AS fair_ppm2_display,
+               ({display_mos_expr}) AS mos_pct_display,
+               CASE
+                   WHEN ({signal_condition}) THEN 'both'
+                   ELSE 'legacy'
+               END AS signal_model,
                l.id, l.title, l.description, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
                l.property_type, l.road_name, l.road_type, l.road_width_m, l.tho_cu_m2, l.tho_cu_ratio, l.is_hot,
                {effective_price_drop_select_sql("l", "related_drop")},
                l.suspicious_bait,
                l.duplicate_of_id,
                l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
-               COALESCE(v.signal_score, 0) as signal_score,
-               COALESCE(v.trust_tier, 'candidate_signal') as trust_tier,
-               COALESCE(v.trust_score, 0) as trust_score,
-               COALESCE(v.legal_status, 'unverified') as legal_status,
-               COALESCE(v.legal_flags, '') as legal_flags,
-               COALESCE(v.source_quality_flags, '') AS source_quality_flags,
-               COALESCE(v.source_quality_recheck, 0) AS source_quality_recheck,
+               GREATEST(COALESCE(v.signal_score, 0), COALESCE(sv.signal_score, 0)) as signal_score,
+               COALESCE(v.trust_tier, sv.trust_tier, 'candidate_signal') as trust_tier,
+               COALESCE(v.trust_score, sv.trust_score, 0) as trust_score,
+               COALESCE(v.legal_status, sv.legal_status, 'unverified') as legal_status,
+               COALESCE(v.legal_flags, sv.legal_flags, '') as legal_flags,
+               COALESCE(v.source_quality_flags, sv.source_quality_flags, '') AS source_quality_flags,
+               COALESCE(v.source_quality_recheck, sv.source_quality_recheck, 0) AS source_quality_recheck,
                {LEGAL_DOC_IMAGE_SELECT_SQL} AS has_legal_doc_image,
                primary_img.local_path AS primary_local_path,
                primary_img.img_url AS primary_img_url,
                COALESCE(img_count.image_count, 0) AS image_count,
                {fresh_flag}
-        FROM latest_valuation v
-        JOIN listings l ON v.listing_id = l.id
+        FROM listings l
+        LEFT JOIN latest_valuation v ON v.listing_id = l.id
+        LEFT JOIN latest_shadow_valuation sv ON sv.listing_id = l.id
         LEFT JOIN LATERAL (
             SELECT li.local_path, li.img_url
             FROM listing_images li
@@ -1000,10 +1073,10 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
             WHERE li.listing_id = l.id
         ) img_count ON TRUE
         {related_price_drop_lateral_sql("l", "related_drop")}
-        WHERE {signal_condition} AND {where_sql}{mos_condition}
+        WHERE ({signal_condition}) AND {where_sql}
         ORDER BY {order_sql}
         LIMIT ? OFFSET ?
-    """, params + mos_params + [query_limit, offset]).fetchall()
+    """, params + [query_limit, offset]).fetchall()
 
     conn.close()
 
@@ -1262,7 +1335,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
 
 def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', include_trend=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier='guest', date_range=None):
     if tier == "guest":
-        mos_min = 0
+        mos_min = 10
         only_drops = False
 
     conn = _open_read_conn(db_path)
@@ -1320,15 +1393,19 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         keyword=keyword,
         date_range=date_range,
     )
-    mos_condition, mos_params = _mos_filter(mos_min)
-    signal_condition = actionable_signal_sql("v")
+    actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
+    display_mos_expr = _display_mos_sql("v", "sv", actual_expr)
+    effective_mos_min = float(mos_min if mos_min is not None else 10)
+    signal_condition = _conservative_signal_sql(display_mos_expr, effective_mos_min)
     signal_row = conn.execute(f"""
-        WITH {LATEST_VALUATION_CTE}
+        WITH {LATEST_VALUATION_CTE},
+             {LATEST_SHADOW_VALUATION_CTE}
         SELECT COUNT(*) AS signals
         FROM listings l
-        JOIN latest_valuation v ON l.id = v.listing_id
-        WHERE {signal_condition} AND {signal_where_sql}{mos_condition}
-    """, signal_params + mos_params).fetchone()
+        LEFT JOIN latest_valuation v ON l.id = v.listing_id
+        LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
+        WHERE ({signal_condition}) AND {signal_where_sql}
+    """, signal_params).fetchone()
     stats["signals"] = int(_row_get(signal_row, "signals", 0) or 0)
 
     market = []
@@ -1815,13 +1892,32 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=No
     conn = _open_read_conn(db_path)
     lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
     fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
+    actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
+    display_fair_expr = _display_fair_sql("v", "sv")
+    display_mos_expr = _display_mos_sql("v", "sv", actual_expr)
     listing = conn.execute(f"""
-        WITH {LATEST_VALUATION_CTE}
-        SELECT l.*, v.is_signal, v.mos_pct, v.fair_ppm2, v.signal_score,
-               COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,
-               COALESCE(v.trust_score, 0) AS trust_score,
-               COALESCE(v.legal_status, 'unverified') AS legal_status,
-               COALESCE(v.legal_flags, '') AS legal_flags,
+        WITH {LATEST_VALUATION_CTE},
+             {LATEST_SHADOW_VALUATION_CTE}
+        SELECT l.*,
+               CASE WHEN COALESCE(v.is_signal,0)=1 OR COALESCE(sv.is_signal,0)=1 THEN 1 ELSE 0 END AS is_signal,
+               ({display_mos_expr}) AS mos_pct,
+               ({display_fair_expr}) AS fair_ppm2,
+               v.fair_ppm2 AS fair_ppm2_old,
+               sv.fair_ppm2 AS fair_ppm2_new,
+               v.mos_pct AS mos_pct_old,
+               sv.mos_pct AS mos_pct_new,
+               ({display_fair_expr}) AS fair_ppm2_display,
+               ({display_mos_expr}) AS mos_pct_display,
+               CASE
+                   WHEN COALESCE(v.is_signal,0)=1 AND COALESCE(sv.is_signal,0)=1 THEN 'both'
+                   WHEN COALESCE(sv.is_signal,0)=1 THEN 'new'
+                   ELSE 'legacy'
+               END AS signal_model,
+               GREATEST(COALESCE(v.signal_score,0), COALESCE(sv.signal_score,0)) AS signal_score,
+               COALESCE(v.trust_tier, sv.trust_tier, 'candidate_signal') AS trust_tier,
+               COALESCE(v.trust_score, sv.trust_score, 0) AS trust_score,
+               COALESCE(v.legal_status, sv.legal_status, 'unverified') AS legal_status,
+               COALESCE(v.legal_flags, sv.legal_flags, '') AS legal_flags,
                lv.status AS legal_verification_status,
                lv.confidence_score AS legal_confidence_score,
                lv.thua_so AS legal_thua_so,
@@ -1837,6 +1933,7 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=No
                {fresh_flag}
         FROM listings l
         LEFT JOIN latest_valuation v ON l.id = v.listing_id
+        LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
         LEFT JOIN legal_verifications lv ON lv.listing_id = l.id
         WHERE l.id = ?
           AND COALESCE(l.is_blacklisted,0)=0
@@ -1900,9 +1997,9 @@ def get_base_filters(req):
     only_drops = req.args.get("only_drops") == "1"
     trend_period = req.args.get("trend_period", "day")
     try:
-        mos_min = int(req.args.get("mos_min", 0))
+        mos_min = int(req.args.get("mos_min", 10))
     except (ValueError, TypeError):
-        mos_min = 0
+        mos_min = 10
 
     tier = "guest"
 
@@ -1911,7 +2008,7 @@ def get_base_filters(req):
         from auth.core import current_tier as _current_tier
         tier = _current_tier()
         if tier == "guest":
-            mos_min = 0
+            mos_min = 10
             only_drops = False
     except Exception:
         pass

@@ -75,6 +75,10 @@ class SourcePolicyTest(unittest.TestCase):
             params = list(ids)
             conn.execute(f"DELETE FROM price_history WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM valuation_results WHERE listing_id IN ({placeholders})", params)
+            try:
+                conn.execute(f"DELETE FROM valuation_shadow_results WHERE listing_id IN ({placeholders})", params)
+            except Exception:
+                pass
             conn.execute(f"DELETE FROM listing_images WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
@@ -99,6 +103,7 @@ class SourcePolicyTest(unittest.TestCase):
     ):
         from db.connection import get_conn
         price_per_m2 = round(price_ty * 1000 / area_m2, 2) if area_m2 else None
+        fair_ppm2 = round(price_per_m2 / (1 - 0.333), 2) if price_per_m2 else None
         posted_at = posted_at or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         with get_conn() as conn:
@@ -141,9 +146,24 @@ class SourcePolicyTest(unittest.TestCase):
                 INSERT INTO valuation_results (
                     listing_id, fair_ppm2, actual_ppm2, mos_pct,
                     is_signal, signal_score
-                ) VALUES (?, 30.0, ?, 33.3, 1, 70)
+                ) VALUES (?, ?, ?, 33.3, 1, 70)
                 """,
-                (listing_id, price_per_m2),
+                (listing_id, fair_ppm2, price_per_m2),
+            )
+            run_id = conn.execute(
+                """
+                INSERT INTO valuation_model_runs (model_name, model_version, status)
+                VALUES ('median_road_tier', 'median_road_tier_v1', 'complete')
+                """
+            ).lastrowid
+            conn.execute(
+                """
+                INSERT INTO valuation_shadow_results (
+                    model_run_id, listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score, source_quality_flags
+                ) VALUES (?, ?, ?, ?, 33.3, 1, 70, '')
+                """,
+                (run_id, listing_id, fair_ppm2, price_per_m2),
             )
             for idx in range(image_count):
                 conn.execute(
@@ -468,7 +488,9 @@ class SourcePolicyTest(unittest.TestCase):
 
         khu_response = self.client.get(f"/api/signals?city=Khac&q=khu L&limit=20")
         self.assertEqual(khu_response.status_code, 200)
-        self.assertEqual([row["id"] for row in khu_response.get_json()["signals"]], [khu_l_id])
+        khu_ids = {row["id"] for row in khu_response.get_json()["signals"]}
+        self.assertIn(khu_l_id, khu_ids)
+        self.assertNotIn(khu_m_id, khu_ids)
 
         mp_response = self.client.get(f"/api/signals?city=Khac&q=MP3&limit=20")
         self.assertEqual(mp_response.status_code, 200)

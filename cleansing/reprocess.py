@@ -290,6 +290,65 @@ def _batch_save_valuations(results, id_map):
             """, (int(r.is_outlier), r.outlier_direction or None,
                   r.outlier_sigma or None, r.listing_id))
 
+
+def _batch_save_shadow_valuations(results, id_map, model_name: str, model_version: str):
+    import json
+
+    with get_conn() as conn:
+        run_id = conn.execute(
+            """
+            INSERT INTO valuation_model_runs (
+                model_name, model_version, status, total_count, signal_count
+            ) VALUES (?, ?, 'complete', ?, ?)
+            """,
+            (model_name, model_version, len(results), sum(1 for r in results if r.is_signal)),
+        ).lastrowid
+        for r in results:
+            listing = id_map.get(r.listing_id)
+            audit = {}
+            if r.note:
+                try:
+                    audit = json.loads(r.note)
+                except Exception:
+                    audit = {}
+            conn.execute(
+                """
+                INSERT INTO valuation_shadow_results
+                    (model_run_id, listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                     is_signal, signal_score, road_tier, segment, n_segment,
+                     source_quality_flags, source_quality_recheck,
+                     legal_status, trust_tier, trust_score, legal_flags,
+                     area_ratio, area_adjustment, road_model_tier, road_penalty,
+                     fallback_level, audit_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """,
+                (
+                    run_id,
+                    r.listing_id,
+                    r.price_per_m2_fair,
+                    r.price_per_m2_actual,
+                    r.discount_pct,
+                    int(r.is_signal),
+                    r.signal_score,
+                    listing.road_tier if listing else 0,
+                    audit.get("segment") or f"{r.area}|{r.property_type}",
+                    r.segment_n,
+                    ",".join(r.source_quality_flags or ()),
+                    int(bool(r.source_quality_recheck)),
+                    r.legal_status,
+                    r.trust_tier,
+                    r.trust_score,
+                    ",".join(r.legal_flags or ()),
+                    audit.get("area_ratio"),
+                    audit.get("area_adjustment"),
+                    audit.get("road_model_tier"),
+                    audit.get("road_penalty"),
+                    audit.get("fallback_level"),
+                    json.dumps(audit, ensure_ascii=False),
+                ),
+            )
+    return run_id
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -369,6 +428,11 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
     Bước 2: listings → valuation_results (chạy lại engine).
     Nếu incremental_ids có giá trị, chỉ tính định giá cho các ID đó.
     """
+    from analytics.hierarchical_valuation import (
+        MODEL_NAME as SHADOW_MODEL_NAME,
+        MODEL_VERSION as SHADOW_MODEL_VERSION,
+        MedianRoadTierValuationEngine,
+    )
     from analytics.valuation import ValuationEngine, Listing
     from datetime import date
 
@@ -381,6 +445,8 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
             # Full run: Xóa valuation cũ để tính lại sạch
             logger.info("Valuation: Full reprocess, clearing old results...")
             conn.execute("DELETE FROM valuation_results")
+            conn.execute("DELETE FROM valuation_shadow_results")
+            conn.execute("DELETE FROM valuation_model_runs WHERE model_name = ?", (SHADOW_MODEL_NAME,))
             
         # 1. Lấy dữ liệu để TRAIN model (Fit). Chỉ lấy 30k tin gần nhất để đảm bảo hiệu năng và độ tươi.
         # Với 500k tin, việc load toàn bộ là không cần thiết vì có TIME_DECAY.
@@ -533,9 +599,19 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
         with get_conn() as conn:
             placeholders = ",".join(["?"] * len(incremental_ids))
             conn.execute(f"DELETE FROM valuation_results WHERE listing_id IN ({placeholders})", incremental_ids)
+            conn.execute(f"DELETE FROM valuation_shadow_results WHERE listing_id IN ({placeholders})", incremental_ids)
             conn.execute(f"UPDATE listings SET is_outlier=0 WHERE id IN ({placeholders})", incremental_ids)
 
     _batch_save_valuations(results, id_map)
+    shadow_engine = MedianRoadTierValuationEngine()
+    shadow_engine.fit(train_listings)
+    shadow_results = shadow_engine.valuate_batch(valuate_listings)
+    _batch_save_shadow_valuations(
+        shadow_results,
+        id_map,
+        SHADOW_MODEL_NAME,
+        SHADOW_MODEL_VERSION,
+    )
     n_signal  = sum(1 for r in results if r.is_signal)
     n_outlier = sum(1 for r in results if r.is_outlier)
 
@@ -543,6 +619,8 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
         "total":    len(results),
         "signals":  n_signal,
         "outliers": n_outlier,
+        "shadow_total": len(shadow_results),
+        "shadow_signals": sum(1 for r in shadow_results if r.is_signal),
     }
     logger.info(f"Valuation done: {stats}")
     return stats

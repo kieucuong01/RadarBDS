@@ -51,6 +51,8 @@ ID_TABLES = {
     "user_watchlists",
     "users",
     "valuation_results",
+    "valuation_model_runs",
+    "valuation_shadow_results",
 }
 
 

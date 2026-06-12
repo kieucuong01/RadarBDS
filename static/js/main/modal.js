@@ -268,6 +268,40 @@ function _modalSetText(id, value) {
   if (el) el.textContent = value;
 }
 
+function _modalValuationItems(data = {}) {
+  const area = _modalNumber(data.area_m2 ?? data.area);
+  if (!Number.isFinite(area) || area <= 0) return [];
+  const items = [];
+  const oldPpm2 = _modalNumber(data.fair_ppm2_old);
+  const newPpm2 = _modalNumber(data.fair_ppm2_new);
+  if (Number.isFinite(oldPpm2) && oldPpm2 > 0) {
+    items.push({ key: 'old', ppm2: oldPpm2, total: oldPpm2 * area / 1000 });
+  }
+  if (Number.isFinite(newPpm2) && newPpm2 > 0) {
+    items.push({ key: 'new', ppm2: newPpm2, total: newPpm2 * area / 1000 });
+  }
+  if (!items.length) {
+    const fairPpm2 = _modalNumber(data.fair_ppm2 ?? data.fppm2);
+    if (Number.isFinite(fairPpm2) && fairPpm2 > 0) {
+      items.push({ key: 'legacy', ppm2: fairPpm2, total: fairPpm2 * area / 1000 });
+    }
+  }
+  return items.sort((a, b) => a.total - b.total);
+}
+
+function _modalActualPriceState(actualPpm2, valuationItems = []) {
+  const fairPpm2Values = valuationItems
+    .map((item) => _modalNumber(item.ppm2))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  if (!Number.isFinite(actualPpm2) || actualPpm2 <= 0 || !fairPpm2Values.length) return '';
+
+  const lowFairPpm2 = Math.min(...fairPpm2Values);
+  const highFairPpm2 = Math.max(...fairPpm2Values);
+  if (actualPpm2 < lowFairPpm2) return 'is-actual-below';
+  if (actualPpm2 > highFairPpm2) return 'is-actual-above';
+  return 'is-actual-within';
+}
+
 function updateSignalSummary(data = {}) {
   const price = _modalNumber(data.price_ty ?? data.price);
   const area = _modalNumber(data.area_m2 ?? data.area);
@@ -280,13 +314,25 @@ function updateSignalSummary(data = {}) {
   const computedActualPpm2 = Number.isFinite(actualPpm2)
     ? actualPpm2
     : (Number.isFinite(price) && Number.isFinite(area) && area > 0 ? price * 1000 / area : NaN);
-  const mos = _modalNumber(data.mos_pct ?? data.mos);
+  const valuationItems = _modalValuationItems(data);
+  const mos = _modalNumber(data.mos_pct_display ?? data.mos_pct ?? data.mos);
   const score = _modalNumber(data.signal_score ?? data.score);
 
   _modalSetText('sm-sum-price', _modalFormatTy(price));
   _modalSetText('sm-sum-price-m2', _modalFormatPpm2(computedActualPpm2));
-  _modalSetText('sm-sum-fair', _modalFormatTy(fairTotal));
-  _modalSetText('sm-sum-fair-m2', _modalFormatPpm2(fairPpm2));
+  if (valuationItems.length) {
+    _modalSetText('sm-sum-fair', valuationItems.map((item) => _modalFormatTy(item.total)).join(' ~ '));
+    _modalSetText('sm-sum-fair-m2', valuationItems.map((item) => _modalFormatPpm2(item.ppm2)).join(' ~ '));
+  } else {
+    _modalSetText('sm-sum-fair', _modalFormatTy(fairTotal));
+    _modalSetText('sm-sum-fair-m2', _modalFormatPpm2(fairPpm2));
+  }
+  const priceCard = document.querySelector('.sm-summary-price');
+  if (priceCard) {
+    priceCard.classList.remove('is-actual-below', 'is-actual-above', 'is-actual-within');
+    const priceState = _modalActualPriceState(computedActualPpm2, valuationItems);
+    if (priceState) priceCard.classList.add(priceState);
+  }
   _modalSetText('sm-sum-mos', Number.isFinite(mos) ? `${mos.toFixed(1).replace(/\.0$/, '')}%` : '-');
   _modalSetText('sm-sum-score', Number.isFinite(score) ? `Score ${Math.round(score)}` : 'Score -');
 }
@@ -395,9 +441,10 @@ function _openSignalLegacy(card) {
   renderSignalThumbs();
 
   // Signal badge
-  const mosNum = parseFloat(d.mos) || 0;
+  const mosValue = d.mos_pct_display ?? d.mos_pct ?? d.mos;
+  const mosNum = parseFloat(mosValue) || 0;
   const badgeLabel = mosNum >= 25 ? 'TÍN HIỆU MẠNH' : 'TÍN HIỆU';
-  document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} · -${d.mos}%</span>`;
+  document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} · -${mosNum.toFixed(1).replace(/\.0$/, '')}%</span>`;
 
   // Title
   document.getElementById('sm-title').innerText = d.title;
@@ -898,9 +945,10 @@ function _openSignalFromData(d, opts = {}) {
   galleryImages = imgs.length ? imgs : [PLACEHOLDER_IMG];
   renderSignalThumbs();
 
-  const mosNum = parseFloat(d.mos) || 0;
+  const mosValue = d.mos_pct_display ?? d.mos_pct ?? d.mos;
+  const mosNum = parseFloat(mosValue) || 0;
   const badgeLabel = mosNum >= 25 ? 'TÍN HIỆU MẠNH' : 'TÍN HIỆU';
-  document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} · -${d.mos}%</span>`;
+  document.getElementById('sm-signal-badge').innerHTML = `<span>${badgeLabel} · -${mosNum.toFixed(1).replace(/\.0$/, '')}%</span>`;
   renderModalTitle(d.title || '');
   renderModalMetaLine(d);
   document.getElementById('sm-desc').innerText = 'Đang tải mô tả chi tiết...';

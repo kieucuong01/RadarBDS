@@ -226,7 +226,7 @@
 
 .sm-summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.45fr) minmax(0, 0.9fr);
   gap: 8px;
   margin: 10px 0 14px;
 }
@@ -237,6 +237,7 @@
   border-radius: 12px;
   background: rgba(248, 250, 252, 0.78);
   padding: 10px 11px;
+  text-align: center;
 }
 
 .sm-summary-item span,
@@ -276,6 +277,18 @@
 .sm-summary-price strong,
 .sm-summary-mos strong {
   color: #047857;
+}
+
+.sm-summary-price.is-actual-below strong {
+  color: #047857;
+}
+
+.sm-summary-price.is-actual-within strong {
+  color: #d97706;
+}
+
+.sm-summary-price.is-actual-above strong {
+  color: #dc2626;
 }
 
 .sm-mobile-tabs {

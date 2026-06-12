@@ -257,6 +257,53 @@ CREATE INDEX IF NOT EXISTS idx_valuation_signal_trust_score
     )
     WHERE is_signal = 1;
 
+CREATE TABLE IF NOT EXISTS valuation_model_runs (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    model_name      TEXT NOT NULL,
+    model_version   TEXT NOT NULL,
+    status          TEXT DEFAULT 'complete',
+    config_json     TEXT,
+    metrics_json    TEXT,
+    total_count     INTEGER DEFAULT 0,
+    signal_count    INTEGER DEFAULT 0,
+    computed_at     TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_valuation_model_runs_latest
+    ON valuation_model_runs(model_name, model_version, computed_at DESC, id DESC);
+
+CREATE TABLE IF NOT EXISTS valuation_shadow_results (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    model_run_id    INTEGER REFERENCES valuation_model_runs(id) ON DELETE CASCADE,
+    listing_id      INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    fair_ppm2       REAL,
+    actual_ppm2     REAL,
+    mos_pct         REAL,
+    is_signal       INTEGER DEFAULT 0,
+    signal_score    INTEGER DEFAULT NULL,
+    road_tier       INTEGER DEFAULT 0,
+    segment         TEXT,
+    n_segment       INTEGER,
+    source_quality_flags TEXT,
+    source_quality_recheck INTEGER DEFAULT 0,
+    legal_status    TEXT DEFAULT 'unverified',
+    trust_tier      TEXT DEFAULT 'candidate_signal',
+    trust_score     INTEGER DEFAULT 0,
+    legal_flags     TEXT,
+    area_ratio      REAL,
+    area_adjustment REAL,
+    road_model_tier INTEGER DEFAULT 3,
+    road_penalty    REAL DEFAULT 1.0,
+    fallback_level  TEXT,
+    audit_json      TEXT,
+    computed_at     TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_shadow_valuation_listing_computed
+    ON valuation_shadow_results(listing_id, computed_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_shadow_valuation_signal
+    ON valuation_shadow_results(is_signal, mos_pct DESC);
+
 
 -- ═══════════════════════════════════════════════════════════════════
 -- Admin Control Room
