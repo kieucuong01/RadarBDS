@@ -35,12 +35,24 @@ _CAP_TRO_RE = re.compile(
 _NHA_TRO_CAP_PRICE_THRESHOLD = 2.5  # tỷ
 
 _ROAD_PREFIX_PAT = re.compile(
-    r"\b(?:dx|dj|dh|dl|ql|tl|ni|nj|dk|nk|nl|nh|d|n)\s*0*(\d{1,4})\b",
+    r"\b(?:dx|dj|dh|dl|db|ql|tl|ni|nj|dk|nk|nl|nh|d|n)\s*0*(\d{1,4})\b",
     re.IGNORECASE,
 )
 _NUMBERED_ROAD_PAT = re.compile(
     r"\b(?:duong|mat\s*tien|mt|goc|hem|hẻm|duong\s+so|đường|đường\s+số)\s*"
-    r"0*(\d{2,4}\s*[a-d])\b",
+    r"0*(\d{1,4}\s*[a-d])\b",
+    re.IGNORECASE,
+)
+_ROAD_NUMBER_ONLY_PAT = re.compile(
+    r"\b(?:duong|mat\s*tien|mt|mtkd)\s*(?:so\s*)0*(\d{1,4})\b",
+    re.IGNORECASE,
+)
+_HEM_NAMED_ROAD_PAT = re.compile(
+    r"\b(?:1/\s*)?hem\s*0*(\d{1,4})\s+([a-z][a-z\s]{3,60})(?=$|[,\.\n\r\-–—])",
+    re.IGNORECASE,
+)
+_NAMED_ROAD_PAT = re.compile(
+    r"\b(?:mat\s*tien|mtkd|mt|duong|nhanh|1/\s*duong)\s+([a-z][a-z\s]{3,60})(?=$|[,\.\n\r\-–—])",
     re.IGNORECASE,
 )
 
@@ -49,16 +61,74 @@ def extract_road_name(text: str) -> str | None:
     """Return a compact road code/name for dedup/debug, e.g. D12, DX89, 110B."""
     folded = _ascii_fold(text or "")
     for m in re.finditer(r"\bquoc\s*lo\s*0*(\d{1,4})\b", folded, re.IGNORECASE):
+        if _has_road_proximity_prefix(folded, m.start()):
+            continue
         return f"QL{int(m.group(1))}"
     for m in _NUMBERED_ROAD_PAT.finditer(folded):
+        if _has_road_proximity_prefix(folded, m.start()):
+            continue
         return re.sub(r"\s+", "", m.group(1)).upper()
+    for m in _ROAD_NUMBER_ONLY_PAT.finditer(folded):
+        if _has_road_proximity_prefix(folded, m.start()):
+            continue
+        return f"Duong So {int(m.group(1))}"
     for m in _ROAD_PREFIX_PAT.finditer(folded):
+        if _has_road_proximity_prefix(folded, m.start()):
+            continue
         raw = re.sub(r"\s+", "", m.group(0).lower())
         prefix_match = re.match(r"[a-z]+", raw)
         if not prefix_match:
             continue
         return f"{prefix_match.group(0).upper()}{int(m.group(1))}"
+    for m in _HEM_NAMED_ROAD_PAT.finditer(folded):
+        if _has_road_proximity_prefix(folded, m.start()):
+            continue
+        name = _clean_named_road(m.group(2))
+        if name:
+            return f"Hem {int(m.group(1))} {name}"
+    for m in _NAMED_ROAD_PAT.finditer(folded):
+        if _has_road_proximity_prefix(folded, m.start()):
+            continue
+        name = _clean_named_road(m.group(1))
+        if name:
+            return name
     return None
+
+
+def _has_road_proximity_prefix(folded: str, start: int) -> bool:
+    context = folded[max(0, start - 34):start]
+    if re.search(
+        r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|ra|nhanh)\s+(?:duong\s+)?$",
+        context,
+        re.IGNORECASE,
+    ):
+        return True
+    clause = re.split(r"[\.,;\n\r]", folded[max(0, start - 80):start])[-1]
+    return bool(re.search(
+        r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|ra|nhanh)\b",
+        clause,
+        re.IGNORECASE,
+    ))
+
+
+def _clean_named_road(value: str) -> str | None:
+    name = re.sub(r"\s+", " ", value or "").strip()
+    for stop in (
+        " gia ", " dt ", " dien tich ", " tho cu ", " phuong ", " tp ",
+        " ben cat", " thu dau mot", " duong ", " hem ", " gan ", " cach ",
+        " khu ", " kdc ", " ngay ",
+    ):
+        idx = f" {name} ".find(stop)
+        if idx >= 0:
+            name = name[:idx].strip()
+    name = re.sub(r"\b(?:p|tp|tphcm|bd|binh duong)$", "", name).strip()
+    if not name:
+        return None
+    if re.match(r"^(?:nhua|be tong|o to|oto|xe hoi|thong|rong|lon|nho|so)\b", name):
+        return None
+    if len(name.split()) < 2 and not re.search(r"\d", name):
+        return None
+    return " ".join(part.capitalize() if not part.isdigit() else part for part in name.split())
 
 
 def _infer_nha_tro_area(title: str, description: str, price_ty: Optional[float]) -> float:
@@ -261,6 +331,19 @@ def _is_intended_city(intended_city: Optional[str], city_name: str) -> bool:
 def _has_ben_cat_context(text: str, intended_city: Optional[str]) -> bool:
     folded = _ascii_fold(text)
     return _is_intended_city(intended_city, "Bến Cát") or "ben cat" in folded
+
+
+def _has_explicit_ward_marker(ward: Optional[str], *texts: str) -> bool:
+    if not ward:
+        return False
+    folded = _ascii_fold(" ".join(t for t in texts if t))
+    ward_folded = _ascii_fold(ward)
+    if not folded or not ward_folded:
+        return False
+    return bool(
+        re.search(rf"\b(?:p|phuong|kp|khu\s+pho)\s*{re.escape(ward_folded)}\b", folded)
+        or re.search(rf"\b{re.escape(ward_folded)}\b\s*(?:tp\s*)?(?:hcm|ho\s+chi\s+minh)\b", folded)
+    )
 
 
 def _ward_keyword_items(intended_city: Optional[str] = None):
@@ -501,6 +584,23 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             if post_merger_location.blocks_broad_ward_match(ward_from_text):
                 ward_from_text = None
 
+        if not ward_from_text:
+            unscoped_ward = match_ward(
+                raw.get("title", ""), raw.get("description", ""),
+                raw.get("address", ""), url,
+            )
+            blocked_unscoped = post_merger_location.blocks_broad_ward_match(unscoped_ward)
+            if blocked_unscoped and _ascii_fold(unscoped_ward or "") != "phu an":
+                blocked_unscoped = not _has_explicit_ward_marker(
+                    unscoped_ward,
+                    raw.get("title", ""), raw.get("description", ""),
+                    raw.get("address", ""), url,
+                )
+            if blocked_unscoped:
+                unscoped_ward = None
+            if unscoped_ward:
+                ward_from_text = unscoped_ward
+
         if not ward_from_text and post_merger_location.has_weak_old_ward:
             ward_from_text = post_merger_location.ward
         
@@ -614,14 +714,16 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         current_area = _float_or_none(area_m2)
         parsed_area_is_declared_total = False
         if (
-            source_name == "facebook"
-                and parsed_area
-                and current_area
-                and 10 < parsed_area < 100000
-                and _has_reported_area
+            parsed_area
+            and current_area
+            and 10 < parsed_area < 100000
+            and _has_reported_area
         ):
             parsed_frontage_num = _float_or_none(parsed_frontage)
             parsed_depth_num = _float_or_none(parsed_depth)
+            parsed_matches_current = abs(parsed_area - current_area) <= max(1.0, parsed_area * 0.03)
+            if parsed_matches_current:
+                parsed_area_is_declared_total = True
             if parsed_frontage_num and parsed_depth_num:
                 dim_area = round(parsed_frontage_num * parsed_depth_num, 1)
                 current_tracks_dim = abs(current_area - dim_area) <= max(1.0, dim_area * 0.03)
@@ -673,7 +775,9 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             price_per_m2 = price_per_m2,
             url_hint    = url_hint,
         )
-        road_tier = extract_road_tier(title, road_text)
+        road_tier = extract_road_tier(title, description)
+        if not road_tier:
+            road_tier = extract_road_tier(title, road_text)
 
         # Nha_tro: fill area_m2 mặc định khi thiếu (sau classify để biết prop_type)
         if prop_type == 'nha_tro' and not area_m2:

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Signal Extraction LLM QC"
+  short_description: "Manual Codex review workflow for new Radar BDS signal extraction errors."
+  default_prompt: "Review new Radar BDS signals for extraction mismatches using manual LLM reading."
+
+policy:
+  allow_implicit_invocation: true

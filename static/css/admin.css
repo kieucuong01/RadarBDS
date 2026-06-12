@@ -1984,6 +1984,50 @@ p { margin: 6px 0 0; color: var(--muted); }
   margin-top: 10px;
 }
 .legal-qc-box { border-color: rgba(16, 185, 129, 0.35); }
+.extraction-qc-box { border-color: rgba(245, 158, 11, 0.45); }
+.extraction-finding-list {
+  display: grid;
+  gap: 8px;
+}
+.extraction-finding {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 8px;
+}
+.extraction-finding-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+.extraction-finding-head span {
+  font-weight: 800;
+  color: var(--ink);
+}
+.extraction-finding-head small {
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.35;
+}
+.extraction-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 7px;
+  font-size: 12px;
+}
+.extraction-finding blockquote {
+  margin: 8px 0 0;
+  padding-left: 9px;
+  border-left: 3px solid rgba(245, 158, 11, 0.55);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.extraction-source-link {
+  margin-top: 10px;
+}
 .legal-qc-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

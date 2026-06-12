@@ -192,6 +192,12 @@ function ppm2(v) {
   return `${n.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tr/m²`;
 }
 
+function formatAuditValue(v) {
+  if (v === null || v === undefined || v === '') return '-';
+  if (typeof v === 'number') return v.toLocaleString('vi-VN', { maximumFractionDigits: 3 });
+  return String(v);
+}
+
 function shortDate(v) {
   return (v || '').replace('T', ' ').slice(0, 16) || '-';
 }
@@ -1179,6 +1185,7 @@ function switchQualityTab(name) {
 function qualityQueueRoot(queue) {
   return {
     recheck: 'qualityRecheckGrid',
+    extraction_qc: 'qualityExtractionQcGrid',
     source_qc: 'qualitySourceQcGrid',
     legal_qc: 'qualityLegalQcGrid'
   }[queue] || '';
@@ -1886,6 +1893,29 @@ function dataQualityReviewCard(x, queue) {
   const legal = x.legal_summary || {};
   const legalFlags = String(legal.flags || '').split(',').filter(Boolean);
   const showLegalTools = queue === 'legal_qc' && String(legal.status || '').trim() !== 'has_document';
+  const audit = x.extraction_audit || {};
+  const auditFindings = Array.isArray(audit.findings) ? audit.findings : [];
+  const auditSourceLabel = String(audit.source || '').includes('manual_llm') ? 'Manual LLM' : 'Auto audit';
+  const extractionAuditBox = queue === 'extraction_qc' && auditFindings.length ? `
+        <div class="review-box extraction-qc-box">
+          <div class="review-title">Extraction QC · ${auditSourceLabel} · ${auditFindings.length} field · score ${Number(audit.score || 0)}</div>
+          <div class="extraction-finding-list">
+            ${auditFindings.map((finding) => `
+              <div class="extraction-finding">
+                <div class="extraction-finding-head">
+                  <span>${esc(finding.field || '-')}</span>
+                  <small>${esc(finding.reason || '')}</small>
+                </div>
+                <div class="extraction-compare">
+                  <span>DB: <strong>${esc(formatAuditValue(finding.actual))}</strong></span>
+                  <span>Text: <strong>${esc(formatAuditValue(finding.expected))}</strong></span>
+                </div>
+                ${finding.evidence ? `<blockquote>${esc(finding.evidence)}</blockquote>` : ''}
+              </div>
+            `).join('')}
+          </div>
+          ${x.url ? `<a class="secondary-btn extraction-source-link" href="${esc(x.url)}" target="_blank" rel="noopener">Mở tin gốc</a>` : ''}
+        </div>` : '';
   const legalTools = showLegalTools ? `
         <div class="review-box legal-qc-box">
           <div class="review-title">Legal QC · ${esc(legal.status || 'unverified')} · ${Math.round(legal.trust_score || legal.confidence_score || 0)}%</div>
@@ -1931,6 +1961,7 @@ function dataQualityReviewCard(x, queue) {
             <div class="train-desc">${esc(desc)}</div>
             <button type="button" class="train-desc-toggle" data-desc-toggle="${x.id}" onclick="trnToggleDesc(${x.id})" hidden>Xem thêm</button>
           </div>` : ''}
+        ${extractionAuditBox}
         ${legalTools}
         <div class="review-box">
           <div class="review-title">Thông tin kiểm dịch</div>

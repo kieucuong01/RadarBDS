@@ -21,6 +21,7 @@ Use this skill for Radar BDS advisory memo work. The user expects Codex to read 
 - Use append-only writes; latest valid row wins by `created_at DESC, id DESC`.
 - Mark map/legal/location-dependent deals with `needs_map_check=1`.
 - User-facing memo must be Vietnamese-only. Avoid: `Invest memo`, `Verdict`, `MOS`, `stress test`, `comps`, `market approach`, `income approach`, `unknown`.
+- For daily newly crawled signals, run `signal-extraction-llm-qc` first. Do not save a confident memo for a listing with unresolved blocking extraction errors in price, area, ward, road, property type, frontage/depth, or tho cu.
 
 ## Data To Read Per Signal
 

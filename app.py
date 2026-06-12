@@ -43,6 +43,11 @@ from services.signal_quality import (
     actionable_signal_sql,
     split_quality_flags,
 )
+from services.extraction_audit import (
+    audit_listing_extraction,
+    load_manual_extraction_qc,
+    merge_extraction_audits,
+)
 from services.advisory_memo import build_admin_valuation_workflow_markdown
 from services import admin_leads, admin_quality, admin_users
 
@@ -2906,7 +2911,7 @@ def admin_api_ai_training_items():
 @require_admin_auth
 def admin_api_data_quality_items():
     return _admin_review_items_response(
-        allowed_queues=("recheck", "source_qc", "legal_qc"),
+        allowed_queues=("recheck", "source_qc", "legal_qc", "extraction_qc"),
         default_queue="source_qc",
     )
 
@@ -2954,6 +2959,9 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
             "COALESCE(l.review_hidden,0)=0",
             "COALESCE(v.source_quality_recheck,0)=1",
         ])
+    elif queue == "extraction_qc":
+        where.append(signal_condition)
+        where.append(listing_condition)
     elif queue == "needs_valuation":
         where.extend([
             model_signal_condition,
@@ -3023,6 +3031,8 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
     """
 
     with db_mod.get_conn() as conn:
+        sql_limit = 1000 if queue == "extraction_qc" else limit
+        sql_offset = 0 if queue == "extraction_qc" else offset
         rows = conn.execute(f"""
             WITH {LATEST_VALUATION_CTE}
             SELECT l.id, l.title, l.url, l.source, l.ward, l.property_type,
@@ -3059,7 +3069,7 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
             WHERE {where_sql}
             ORDER BY {order_sql}
             LIMIT ? OFFSET ?
-        """, params + [limit, offset]).fetchall()
+        """, params + [sql_limit, sql_offset]).fetchall()
 
         pending = conn.execute(f"""
             WITH {LATEST_VALUATION_CTE}
@@ -3104,6 +3114,9 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
                 "COALESCE(l.review_hidden,0)=0",
                 "COALESCE(v.source_quality_recheck,0)=1",
             ])
+        elif queue == "extraction_qc":
+            ward_where.append(signal_condition)
+            ward_where.append(listing_condition)
         elif queue == "needs_valuation":
             ward_where.extend([
                 model_signal_condition,
@@ -3139,6 +3152,7 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
         ward_cities = {c: [ww for ww in ws if ww in wards] for c, ws in CITY_MAP.items()}
         ward_cities = {c: ws for c, ws in ward_cities.items() if ws}
 
+        manual_extraction_qc = load_manual_extraction_qc() if queue == "extraction_qc" else {}
         items = []
         for r in rows:
             d = dict(r)
@@ -3172,6 +3186,7 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
             d["is_source_qc"] = queue == "source_qc"
             d["is_needs_valuation"] = queue == "needs_valuation"
             d["is_legal_qc"] = queue == "legal_qc"
+            d["is_extraction_qc"] = queue == "extraction_qc"
             d["legal_summary"] = {
                 "status": d.get("legal_status") or "unverified",
                 "trust_tier": d.get("trust_tier") or "candidate_signal",
@@ -3205,7 +3220,19 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
                 "actual_ty": d.get("price_ty"),
                 "missing_fields": missing,
             }
+            if queue == "extraction_qc":
+                manual_audit = manual_extraction_qc.get(int(d["id"]))
+                rule_audit = audit_listing_extraction(d)
+                d["extraction_audit"] = merge_extraction_audits(manual_audit, rule_audit)
             items.append(d)
+        if queue == "extraction_qc":
+            extraction_items = [
+                item for item in items
+                if (item.get("extraction_audit") or {}).get("findings")
+            ]
+            total = len(extraction_items)
+            pending = total
+            items = extraction_items[offset:offset + limit]
     return jsonify({
         "items": items,
         "pending": pending,
@@ -3219,6 +3246,7 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
             "Recheck sau fix" if queue == "recheck"
             else "Guland QC" if queue == "source_qc"
             else "Legal QC" if queue == "legal_qc"
+            else "Extraction QC" if queue == "extraction_qc"
             else "Cần phân loại valuation" if queue == "needs_valuation"
             else "Review mới"
         ),

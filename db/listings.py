@@ -195,11 +195,18 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
         else:
             listing_id  = existing["id"]
             first_price = existing["price_first_ty"] or existing["price_ty"]
+            clear_stale_measurements = bool(rec.get("_clear_stale_measurements"))
             new_price = _prefer_new_value(rec.get("price_ty"), existing["price_ty"])
-            new_area = _prefer_new_value(rec.get("area_m2"), existing["area_m2"])
-            new_ppm2 = _prefer_new_value(rec.get("price_per_m2"), existing["price_per_m2"])
-            new_frontage = _prefer_new_value(rec.get("frontage_m"), existing["frontage_m"])
-            new_depth = _prefer_new_value(rec.get("depth_m"), existing["depth_m"])
+            if clear_stale_measurements:
+                new_area = rec.get("area_m2")
+                new_ppm2 = rec.get("price_per_m2")
+                new_frontage = rec.get("frontage_m")
+                new_depth = rec.get("depth_m")
+            else:
+                new_area = _prefer_new_value(rec.get("area_m2"), existing["area_m2"])
+                new_ppm2 = _prefer_new_value(rec.get("price_per_m2"), existing["price_per_m2"])
+                new_frontage = _prefer_new_value(rec.get("frontage_m"), existing["frontage_m"])
+                new_depth = _prefer_new_value(rec.get("depth_m"), existing["depth_m"])
             if not _present(new_depth):
                 derived_depth = _derive_depth_from_area_frontage(new_area, new_frontage)
                 if derived_depth is not None:

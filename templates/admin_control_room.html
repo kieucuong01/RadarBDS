@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RadarBDS Control Room</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/admin-favicon-32.png') }}?v=admin-v39-delete-actions">
-  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/admin-favicon-16.png') }}?v=admin-v39-delete-actions">
-  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/admin-apple-touch-icon.png') }}?v=admin-v39-delete-actions">
-  <link rel="manifest" href="{{ url_for('static', filename='admin.webmanifest') }}?v=admin-v39-delete-actions">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v39-delete-actions">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/admin-favicon-32.png') }}?v=admin-v40-extraction-qc">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/admin-favicon-16.png') }}?v=admin-v40-extraction-qc">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/admin-apple-touch-icon.png') }}?v=admin-v40-extraction-qc">
+  <link rel="manifest" href="{{ url_for('static', filename='admin.webmanifest') }}?v=admin-v40-extraction-qc">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v40-extraction-qc">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -355,6 +355,7 @@
         <button class="segment active" data-quality-tab="dups">Tin trùng <span id="dupCount">0</span></button>
         <button class="segment" data-quality-tab="blacklist">Hắc danh sách <span id="blacklistCount">0</span></button>
         <button class="segment" data-quality-tab="recheck">Recheck sau fix</button>
+        <button class="segment" data-quality-tab="extraction_qc">Extraction QC</button>
         <button class="segment" data-quality-tab="source_qc">Guland QC</button>
         <button class="segment" data-quality-tab="legal_qc">Legal QC</button>
       </div>
@@ -378,6 +379,11 @@
       <section id="quality-recheck" class="quality-tab">
         <div class="notice"><strong>Recheck sau fix:</strong> Tin từng bị đánh dấu sai dữ liệu, dùng để agent/admin kiểm lại sau khi parser hoặc rule được sửa.</div>
         <div id="qualityRecheckGrid" class="training-grid quality-review-grid"></div>
+      </section>
+
+      <section id="quality-extraction_qc" class="quality-tab">
+        <div class="notice"><strong>Extraction QC:</strong> Signal đang lên feed nhưng parser đọc lệch giá, diện tích, phường, đường, loại tài sản hoặc thổ cư so với text tin rao.</div>
+        <div id="qualityExtractionQcGrid" class="training-grid quality-review-grid"></div>
       </section>
 
       <section id="quality-source_qc" class="quality-tab">
@@ -720,7 +726,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v39-delete-actions"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v40-extraction-qc"></script>
   {% endif %}
 </body>
 </html>

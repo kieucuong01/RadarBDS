@@ -1,0 +1,7 @@
+interface:
+  display_name: "Daily Signal LLM Review"
+  short_description: "Daily Radar BDS flow: extraction QC first, advisory memo second."
+  default_prompt: "Run the daily Radar BDS LLM review for new signals: extraction QC, then advisory memos."
+
+policy:
+  allow_implicit_invocation: true

@@ -773,6 +773,94 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertTrue(item["is_source_qc"])
             self.assertEqual(item["source_quality_flags"], "old_guland_post")
 
+    def test_data_quality_extraction_qc_queue_shows_audited_signal_mismatches(self):
+        import app as app_module
+        from db.connection import get_conn
+
+        lid = self._insert_signal(url="https://t.test/extraction-qc-price")
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                   SET source='facebook',
+                       title='Giam 400 trieu gia 4,2 ty chi con 3,8 ty',
+                       description='Ban nha Phu Loi, dien tich 100m2, gia con 3,8 ty',
+                       price_ty=4.2,
+                       area_m2=100,
+                       ward='Phú Lợi',
+                       property_type='nha_dat',
+                       road_tier=3
+                 WHERE id=?
+                """,
+                (lid,),
+            )
+
+        with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path):
+            client = app_module.app.test_client()
+            self._login_admin(client)
+
+            resp = client.get("/admin/api/data-quality/items?queue=extraction_qc&limit=200")
+            self.assertEqual(resp.status_code, 200)
+            data = resp.get_json()
+            self.assertEqual(data["queue"], "extraction_qc")
+            self.assertIn(lid, {it["id"] for it in data["items"]})
+            item = next(it for it in data["items"] if it["id"] == lid)
+            self.assertTrue(item["is_extraction_qc"])
+            self.assertIn("extraction_audit", item)
+            self.assertIn("price_ty", item["extraction_audit"]["fields"])
+
+    def test_data_quality_extraction_qc_queue_includes_manual_llm_findings(self):
+        import app as app_module
+        import services.extraction_audit as extraction_audit_module
+        from db.connection import get_conn
+
+        lid = self._insert_signal(url="https://t.test/manual-extraction-qc")
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                   SET source='facebook',
+                       title='Ban dat Tan An gia 2 ty',
+                       description='DT 5x20 tho cu 100m2 duong nhua 6m',
+                       price_ty=2.0,
+                       area_m2=100,
+                       ward='Tân An',
+                       property_type='dat_nen',
+                       road_tier=2,
+                       road_name=NULL,
+                       tho_cu_m2=100
+                 WHERE id=?
+                """,
+                (lid,),
+            )
+
+        manual_report = self.tmpdir / "manual_findings.md"
+        manual_report.write_text(
+            f"""
+# Manual LLM Signal Extraction Review
+
+| ID | Fields | Manual expected / issue | Why stored value looks wrong |
+|---:|---|---|---|
+| {lid} | road_name | Manual LLM says road detail needs review | Text should be checked by admin from manual read. |
+""",
+            encoding="utf-8",
+        )
+
+        with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path), \
+             mock.patch.object(extraction_audit_module, "DEFAULT_MANUAL_QC_PATH", manual_report):
+            client = app_module.app.test_client()
+            self._login_admin(client)
+
+            resp = client.get("/admin/api/data-quality/items?queue=extraction_qc&limit=200")
+            self.assertEqual(resp.status_code, 200)
+            data = resp.get_json()
+            self.assertIn(lid, {it["id"] for it in data["items"]})
+            item = next(it for it in data["items"] if it["id"] == lid)
+            audit = item["extraction_audit"]
+            self.assertEqual(audit["source"], "manual_llm")
+            self.assertIn("road_name", audit["fields"])
+            self.assertEqual(audit["findings"][0]["expected"], "Manual LLM says road detail needs review")
+
     def test_ai_training_ignores_legacy_qc_queue_params(self):
         import app as app_module
         from db.connection import get_conn

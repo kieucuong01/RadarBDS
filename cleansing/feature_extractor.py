@@ -94,6 +94,17 @@ def extract_price(text: str) -> Optional[float]:
         elif v >= 10:  return round(ty + v / 100,  4)
         else:          return round(ty + v / 10,   4)
 
+    m = re.search(
+        r'\b(?:giam|ha|bot)\b.{0,80}?\b(?:con|xuong|chi\s*con)\s*'
+        r'(\d+[,.]?\d*)\s*(?:ty|ti)\s*(\d{1,3})?(?!\d)',
+        t_fold,
+        re.IGNORECASE,
+    )
+    if m:
+        if m.group(2):
+            return _parse_ty_rest(m.group(1), m.group(2))
+        return round(float(m.group(1).replace(',', '.')), 4)
+
     # If the post has both exact compact price and later fuzzy shorthand,
     # trust the exact value: "1ty350tr ... 1ty3xx" -> 1.35, not 1.3.
     m = re.search(r'\b(\d+)\s*(?:ty|ti)\s*(\d{2,3})(?:\s*(?:tr|trieu))?\b', t_fold, re.IGNORECASE)
@@ -353,8 +364,9 @@ def extract_area(text: str) -> Optional[float]:
         val = float(m.group(1).replace(',', '.'))
         if 5 < val < 10000:
             return val
-    m = re.search(r'\b([\d]+[,.]?[\d]*)\s*mv\b', t_clean, re.IGNORECASE)
-    if m:
+    for m in re.finditer(r'\b([\d]+[,.]?[\d]*)\s*mv\b', t_clean, re.IGNORECASE):
+        if _is_non_land_area_context(t_fold, m.start(), m.end()):
+            continue
         val = float(m.group(1).replace(',', '.'))
         if 5 < val < 10000:
             return val
@@ -401,8 +413,9 @@ def extract_area(text: str) -> Optional[float]:
     # Ưu tiên 3: dấu phân cách hàng nghìn kiểu VN:
     #   "1.826 m²"   → 1826   (dấu chấm hàng nghìn)
     #   "2.546,3 m²" → 2546.3 (chấm hàng nghìn + phẩy thập phân)
-    m = re.search(r'([\d]{1,3}(?:\.\d{3})+(?:,\d+)?)\s*m[²2]', t_clean, re.IGNORECASE)
-    if m:
+    for m in re.finditer(r'([\d]{1,3}(?:\.\d{3})+(?:,\d+)?)\s*m[²2]', t_clean, re.IGNORECASE):
+        if _is_non_land_area_context(t_fold, m.start(), m.end()):
+            continue
         raw = m.group(1).replace('.', '').replace(',', '.')
         return float(raw)
 
@@ -427,14 +440,29 @@ def extract_area(text: str) -> Optional[float]:
         return area
 
     # Pattern thông thường "Xm²" — dùng t_clean để loại thổ cư
-    m = re.search(r'([\d]+[,.]?[\d]*)\s*m[²2]', t_clean, re.IGNORECASE)
-    if m:
+    for m in re.finditer(r'([\d]+[,.]?[\d]*)\s*m[²2]', t_clean, re.IGNORECASE):
+        if _is_non_land_area_context(t_fold, m.start(), m.end()):
+            continue
         val = float(m.group(1).replace(',', '.'))
         if val > 5 and val < 100000:
             return val
 
     # Fallback: tính từ kích thước tự do "4x20", "5 x 18"
     return _first_valid_dimension_area(t_clean)
+
+
+def _is_non_land_area_context(folded_text: str, start: int, end: int) -> bool:
+    prefix = folded_text[max(0, start - 42):start]
+    suffix = folded_text[end:min(len(folded_text), end + 18)]
+    return bool(
+        re.search(
+            r'(?:tong\s+)?dien\s*tich\s*(?:san|xay\s*dung|su\s*dung)|'
+            r'\b(?:dtsd|dt\s*sd|san|xay\s*dung|su\s*dung)\s*$',
+            prefix,
+            re.IGNORECASE,
+        )
+        or re.search(r'^\s*(?:san|su\s*dung)', suffix, re.IGNORECASE)
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -690,7 +718,10 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
     label_before_re = rf'(?<![a-z0-9]){label}{filler}\s*{num}(?!\d)(?![,.]\d)(?!\s*%)(?:\s*{unit})?(?![a-z])'
     for m in re.finditer(label_before_re, folded):
         val = _value(m.group(1))
+        before = folded[max(0, m.start() - 12):m.start()]
         after = folded[m.end():m.end() + 12]
+        if re.search(r'\bphong\s*$', before) or re.match(r'\s*phong\s+', after):
+            continue
         if re.match(r'\s*(?:m\s*)?[x\u00d7\*]\s*\d', after):
             continue
         if val is not None and 5 <= val <= 10000 and not _negated(m.start()):
@@ -1352,9 +1383,25 @@ _CHUNG_CU_RE = re.compile(
 )
 
 
+_POTENTIAL_USE_BUILDING_RE = re.compile(
+    r'\b(?:phu\s*hop|thich\s*hop|co\s*the|dat\s*de|de)\b.{0,80}'
+    r'\b(?:lam|xay|xay\s*dung|kinh\s*doanh)\b.{0,180}'
+    r'\b(?:toa\s*nha|van\s*phong|cong\s*ty|khach\s*san|can\s*ho|'
+    r'chung\s*cu|nha\s*nghi|biet\s*thu|villa|nha\s*tro|phong\s*tro)\b',
+    re.IGNORECASE,
+)
+
+
+def _strip_potential_use_building_context(text: str) -> str:
+    folded = _ascii_fold(text).replace("Ã„â€˜", "d").replace("Ã„Â", "d")
+    folded = _ascii_fold(text)
+    return _POTENTIAL_USE_BUILDING_RE.sub(" ", folded)
+
+
 def _strip_nearby_chung_cu_context(text: str) -> str:
     """Remove apartment keywords when they describe a nearby landmark, not the asset."""
     folded = _ascii_fold(text).replace("Ä‘", "d").replace("Ä", "d")
+    folded = _strip_potential_use_building_context(text)
     folded = re.sub(
         r'\b(?:gan|sat|canh|ke|doi\s*dien|cach|duong\s*vao)\b.{0,120}'
         r'\b(?:khu\s*do\s*thi|toa\s*nha|block|chung\s*cu|can\s*ho)\b.{0,80}'
@@ -1534,6 +1581,20 @@ def _has_no_tho_cu_land(text: str) -> bool:
     return bool(re.search(r'\bchua\s*(?:co\s*)?tho\s*cu\b', folded))
 
 
+def _has_land_with_bonus_house(text: str) -> bool:
+    folded = _ascii_fold(text).replace("Ä‘", "d").replace("Ä", "d")
+    has_land_asset = bool(re.search(
+        r'\b(?:ban\s+)?(?:lo\s+)?dat\b|\blo\s+dat\b|\bdat\s+(?:nen|tho\s*cu|kdc)\b',
+        folded,
+    ))
+    has_bonus_house = bool(re.search(
+        r'\btang\s+(?:can\s+)?(?:nha|nha\s*cap\s*4)\b|'
+        r'\btang\s+(?:gpxd|gp\s*xd|giay\s*phep\s*xay\s*dung)\b',
+        folded,
+    ))
+    return has_land_asset and has_bonus_house
+
+
 def classify_property_type(
     title: str,
     description: str,
@@ -1572,6 +1633,14 @@ def classify_property_type(
         )
 
     # ── Bước 0: url_hint short-circuit cho chung_cu / kho_xuong ──
+    if (
+        area_m2
+        and area_m2 >= _AREA_VUON_THRESHOLD
+        and _has_no_tho_cu_land(text)
+        and not any(kw in text for kw in _LAND_ONLY_KW)
+    ):
+        return 'dat_vuon'
+
     if url_hint == 'chung_cu':
         return 'chung_cu'
     if url_hint == 'kho_xuong':
@@ -1592,6 +1661,11 @@ def classify_property_type(
     # step 3 (thổ cư < 5%). VD: mô tả pháp lý "thổ cư 100m², đất trồng cây 309m²" chứa
     # "đất trồng" (vuon_kw) nhưng cũng có "mặt tiền" (land_only_kw) → thực tế là đất nền.
     has_land_only_kw = any(kw in text for kw in _LAND_ONLY_KW)
+    if _has_land_with_bonus_house(text):
+        return _classify_dat_only(
+            text, area_m2, tho_cu_m2, price_per_m2,
+            True, raw_source_label,
+        )
 
     # 2026-05-06: Pre-compute has_house_kw TRƯỚC step 1 để block vuon_kw khi listing
     # có BOTH "đất trồng" (vuon) VÀ "nhà cấp 4"/"phòng ngủ"/"trệt lầu" (nhà).
@@ -1610,7 +1684,7 @@ def classify_property_type(
         r'(?:xây|cất|làm)(?:\s*dựng)?\s*(?:đc|được|đk)?\s*\d+\s*(?:căn\s*|ngôi\s*)?(?:nhà|biệt\s*thự|villa)',
         ' ', text_for_nha, flags=re.IGNORECASE,
     )
-    text_for_nha_ascii = _ascii_fold(text_for_nha).replace("đ", "d").replace("Đ", "d")
+    text_for_nha_ascii = _strip_potential_use_building_context(text_for_nha)
     text_for_nha_ascii = re.sub(
         r'\b(?:gan|sat|canh|ke|doi\s*dien|cach|duong\s*vao)\b.{0,50}'
         r'\bnha\s*(?:o\s*)?xa\s*hoi\b',

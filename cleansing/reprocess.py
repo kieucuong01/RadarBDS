@@ -329,6 +329,8 @@ def reprocess_listings(source: str = None, since: str = None, full: bool = False
             rec["raw_id"]   = raw["id"]
             rec["source"]   = raw["source"]
             rec["source_id"] = raw.get("source_id") or rec.get("source_id", "")
+            if full or raw_ids is not None:
+                rec["_clear_stale_measurements"] = True
 
             with get_conn() as conn:
                 blocked, _ = is_phone_blacklisted(conn, rec.get("contact_phone"))

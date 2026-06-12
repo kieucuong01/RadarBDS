@@ -188,6 +188,45 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual(row["price_per_m2"], 15.4)
         self.assertEqual(row["area_m2"], 113.0)
 
+    def test_upsert_listing_full_reprocess_clears_stale_missing_measurements(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(price_ty=3.8, price_per_m2=11.912, area_m2=319.0, tho_cu_m2=5.0),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+
+        same_listing_id, is_new = upsert_listing(
+            self._rec(
+                price_ty=3.8,
+                price_per_m2=None,
+                area_m2=None,
+                frontage_m=None,
+                depth_m=None,
+                tho_cu_m2=None,
+                tho_cu_ratio=None,
+                _clear_stale_measurements=True,
+            ),
+            crawl_run_id=2,
+        )
+
+        self.assertEqual(same_listing_id, listing_id)
+        self.assertFalse(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT price_ty, price_per_m2, area_m2, frontage_m, depth_m, tho_cu_m2 FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(row["price_ty"], 3.8)
+        self.assertIsNone(row["price_per_m2"])
+        self.assertIsNone(row["area_m2"])
+        self.assertIsNone(row["frontage_m"])
+        self.assertIsNone(row["depth_m"])
+        self.assertIsNone(row["tho_cu_m2"])
+
     def test_upsert_listing_existing_row_enriches_dimensions_from_new_parse(self):
         from db.connection import get_conn
         from db.listings import upsert_listing

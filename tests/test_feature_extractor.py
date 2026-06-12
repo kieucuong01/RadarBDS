@@ -11,9 +11,9 @@ from cleansing.feature_extractor import (
     extract_price, extract_area, extract_dimensions,
     extract_tho_cu, extract_road_tier, extract_legal,
     classify_property_type, extract_road_type, is_multi_lot_listing,
-    extract_price_per_m2,
+    extract_price_per_m2, parse_facebook_post,
 )
-from cleansing.normalizer import normalize_record, match_ward
+from cleansing.normalizer import normalize_record, match_ward, extract_road_name
 from services.market_data import _format_price_label
 
 
@@ -60,6 +60,8 @@ def test_extract_price_handles_real_unicode_ty_patterns():
     assert extract_price("Gi\u00e1 2txx") is None
     assert extract_price("Gi\u00e1 12.x t\u1ef7") is None
     assert extract_price("NH ho tro 500tr") is None
+    assert extract_price("MT Th\u00edch Qu\u1ea3ng \u0110\u1ee9c gi\u1ea3m 2t\u1ef7 c\u00f2n 14t\u1ef7") == 14.0
+    assert extract_price("Gi\u1ea3m 400 tri\u1ec7u gi\u00e1 4,2 t\u1ef7 ch\u1ec9 c\u00f2n 3,8 t\u1ef7") == 3.8
 
 
 def test_extract_price_per_m2_handles_per_meter_shorthand():
@@ -99,6 +101,12 @@ def test_extract_area_prefers_explicit_reported_area_for_irregular_lots():
     assert extract_area("Di\u1ec7n t\u00edch : 7x38m n\u1edf h\u1eadu 9m ~ 309m2 th\u1ed5 c\u01b0 100m2") == 309.0
     assert extract_area("9.1 x 30 = 253 m\u00e9t vu\u00f4ng n\u1edf h\u1eadu 11 ch\u01b0a th\u1ed5 c\u01b0") == 253.0
     assert extract_area("Di\u1ec7n t\u00edch 10 x 69, c\u00f3 400mv th\u1ed5 c\u01b0") == 690.0
+
+
+def test_extract_area_ignores_floor_or_usable_area_when_land_area_missing():
+    assert extract_area("Nhà 1 trệt 2 lầu, tổng diện tích sàn 319m2, 5 phòng ngủ") is None
+    assert extract_area("Diện tích xây dựng 180m2 sàn, nhà Phú Lợi") is None
+    assert extract_area("Sổ 48m2, diện tích sử dụng 60m2") == 48.0
 
 
 def test_extract_area_skips_truncated_invalid_dimension_before_full_description():
@@ -269,6 +277,8 @@ def test_extract_tho_cu_does_not_read_dimension_depth_as_tc_value():
     assert extract_tho_cu("dt 5x37tc.75m", 185)["tho_cu_m2"] == 75
     assert extract_tho_cu("\u0111\u01b0\u1eddng TC 1A M\u1ef9 Ph\u01b0\u1edbc", 150)["tho_cu_m2"] is None
     assert extract_tho_cu("6x31 ch\u01b0a th\u1ed5 c\u01b0", 186)["tho_cu_m2"] is None
+    assert extract_tho_cu("Tổng diện tích sàn 319m2, nhà 5 phòng ngủ", 319)["tho_cu_m2"] is None
+    assert extract_tho_cu("Nhà gồm 1 phòng khách, 1 phòng thờ, 5 phòng ngủ", None)["tho_cu_m2"] is None
 
 
 def test_extract_tho_cu_treats_land_label_before_dimensions_as_full_lot():
@@ -681,7 +691,45 @@ def test_extract_road_type_small_access_patterns():
     assert extract_road_type("Duong oto vao tan dat") == "hem_xe_hoi"
     assert extract_road_type(("GIAM GIA BAN LE " * 12) + "1/ Dx 072 duong Oto") == "be_tong"
     assert extract_road_type("Nha dep cach nhua 20m thoi") == "unknown"
+
+
+def test_extract_road_name_ignores_proximity_but_keeps_actual_roads():
+    assert extract_road_name("Nhà khu 1 Tân Định. Cách QL14 chỉ 70m") is None
+    assert extract_road_name("Sát QL13 và QL14, dân cư đông đúc") is None
+    assert extract_road_name("Mặt tiền QL13 kinh doanh tốt") == "QL13"
+    assert extract_road_name("Nhà nhánh Nguyễn Đức Thuận, đường ô tô 4m") == "Nguyen Duc Thuan"
+    assert extract_road_name("Nhà 1/ hẻm 232 Nguyễn Đức Thuận, Hiệp Thành") == "Hem 232 Nguyen Duc Thuan"
+    assert extract_road_name("Đất MT Đường Số 76 – Thành phố mới") == "Duong So 76"
+    assert extract_road_name("Đường DB12 _ Khu Đô Thị Mới") == "DB12"
+    assert extract_road_name("Mặt Tiền Đường 5C TĐC Định Hoà") == "5C"
     assert extract_road_type("5x41tc 80m đường đất 4m chuẩn bị lên nhựa") == "duong_dat"
+
+
+def test_classify_property_type_ignores_potential_use_apartment_words():
+    title = "Chu gui ban gap sieu pham duong DB12"
+    description = (
+        "DT: 6,6x30m full tho cu. "
+        "Phu hop lam toa nha van phong, cong ty, khach san, "
+        "can ho dich vu, nha nghi, biet thu."
+    )
+
+    assert classify_property_type(title, description, 198.0, 198.0) == "dat_nen"
+
+
+def test_parse_facebook_post_ignores_floor_area_and_bedroom_counts_from_manual_qc():
+    floor_area = parse_facebook_post(
+        "Ban nha trung tam Thu Dau Mot gia 3,8 ty\n"
+        "Nha thiet ke 1 tret 3 lau, tong dien tich san 319m2, "
+        "gom 1 phong khach, 5 phong ngu, 4wc."
+    )
+    construction_area = parse_facebook_post(
+        "Nha tret 2 lau Phu Loi ngang 7m\n"
+        "Dien tich xay dung 180m2 san. Nha gom 4 phong ngu, 3wc."
+    )
+
+    assert floor_area["area_m2"] is None
+    assert floor_area["tho_cu_m2"] is None
+    assert construction_area["area_m2"] is None
 
 
 def test_match_ward_detects_hiep_thanh_subwards_directly():
@@ -824,6 +872,89 @@ def test_normalizer_does_not_fallback_ben_cat_profile_to_tan_an():
     assert rec["area"] == "Bến Cát"
 
 
+def test_normalizer_uses_explicit_ward_even_when_profile_city_is_wrong():
+    hoa_loi = normalize_record({
+        "source": "facebook",
+        "external_id": "wrong-profile-hoa-loi",
+        "url": "https://www.facebook.com/example/posts/hoa-loi",
+        "default_area": "Thủ Dầu Một",
+        "title": "P Hòa Lợi TP HCM, DT 6,2x22m thổ cư 60m2",
+        "description": "Giá 1ty, đường nhựa kinh doanh.",
+    })
+    assert hoa_loi is not None
+    assert hoa_loi["ward"] == "Hòa Lợi"
+
+    tan_dinh = normalize_record({
+        "source": "facebook",
+        "external_id": "wrong-profile-tan-dinh",
+        "url": "https://www.facebook.com/example/posts/tan-dinh",
+        "default_area": "Thủ Dầu Một",
+        "title": "Đất Tân Định gần Đại Nam 5x20m",
+        "description": "Thổ cư 75m2, giá 1ty6.",
+    })
+    assert tan_dinh is not None
+    assert tan_dinh["ward"] == "Tân Định"
+
+    dinh_hoa = normalize_record({
+        "source": "facebook",
+        "external_id": "wrong-profile-dinh-hoa",
+        "url": "https://www.facebook.com/example/posts/dinh-hoa",
+        "default_area": "Bến Cát",
+        "title": "Nhà cấp 4 Định Hòa kế bên trường tiểu học",
+        "description": "DT 7x17 thổ cư 60m, giá 1 tỷ 780.",
+    })
+    assert dinh_hoa is not None
+    assert dinh_hoa["ward"] == "Định Hòa"
+
+
+def test_normalizer_prefers_reported_total_area_over_dimension_product_for_all_sources():
+    rec = normalize_record({
+        "source": "guland",
+        "external_id": "reported-area-wins",
+        "url": "https://guland.vn/post/reported-area-wins",
+        "title": "Đất Phú Hoà nhựa oto 4m",
+        "description": "Dt 6*21=100m (tc 60m2) Tây Nam",
+        "ward": "Phú Hòa",
+        "area_m2": 100.0,
+        "price_ty": 2.05,
+    })
+    assert rec is not None
+    assert rec["area_m2"] == 100.0
+    assert rec["frontage_m"] == 6.0
+    assert rec["depth_m"] == 21.0
+
+    rec2 = normalize_record({
+        "source": "guland",
+        "external_id": "reported-area-from-text",
+        "url": "https://guland.vn/post/reported-area-from-text",
+        "title": "Nhà 1 trệt 2 lầu",
+        "description": "Dt 11,7*18,6=165m (tc 124,7m2) Tây Bắc",
+        "ward": "Phú Hòa",
+        "area_m2": 217.6,
+        "price_ty": 5.55,
+    })
+    assert rec2 is not None
+    assert rec2["area_m2"] == 165.0
+    assert rec2["property_type"] == "nha_dat"
+
+
+def test_normalizer_does_not_let_generic_source_road_type_override_alley_text():
+    rec = normalize_record({
+        "source": "guland",
+        "external_id": "raw-road-type-too-broad",
+        "url": "https://guland.vn/post/raw-road-type-too-broad",
+        "title": "Đất Chánh Nghĩa 100m2",
+        "description": "Hẻm Bùi Quốc Khánh. Đường ô tô. Diện tích 5x20 thổ cư 80m.",
+        "address": "Phường Chánh Nghĩa, Thủ Dầu Một",
+        "road_type_raw": "Đường nhựa",
+        "ward": "Chánh Nghĩa",
+        "area_m2": 100.0,
+        "price_ty": 1.9,
+    })
+    assert rec is not None
+    assert rec["road_tier"] == 3
+
+
 def _post_merger_location_record(title, description="", default_area="Thủ Dầu Một"):
     return normalize_record({
         "source": "facebook",
@@ -882,6 +1013,20 @@ def test_normalizer_uses_hoa_loi_khu_pho_evidence_under_new_hoa_loi_ward():
     assert rec is not None
     assert rec["ward"] == "Hòa Lợi"
     assert rec["area"] == "Hòa Lợi"
+
+
+def test_normalizer_uses_tdc_phu_chanh_and_phu_nghi_evidence():
+    cases = [
+        ("Duong so 110B TDC Phu Chanh D, KP Phu Tan, P Binh Duong TP HCM", "Ph\u00fa Ch\u00e1nh"),
+        ("Duong so 3 TDC Phu Chanh B, KP Hoa Phu, P Binh Duong TP HCM", "Ph\u00fa Ch\u00e1nh"),
+        ("KP Phu Nghi, P Hoa Loi TP HCM, gan nga 3 Phu Hoa", "H\u00f2a L\u1ee3i"),
+    ]
+
+    for title, expected_ward in cases:
+        rec = _post_merger_location_record(title, default_area="B\u1ebfn C\u00e1t")
+        assert rec is not None
+        assert rec["ward"] == expected_ward
+        assert rec["area"] == expected_ward
 
 
 def test_normalizer_keeps_broad_new_chanh_hiep_ward_out_of_old_segments():
@@ -1076,6 +1221,33 @@ def test_classify_property_type():
         100,
         price_per_m2=26.5,
     ) == "dat_nen"
+
+
+def test_classify_property_type_treats_land_with_bonus_house_as_land():
+    assert classify_property_type(
+        "BÁN ĐẤT TẶNG NHÀ - KDC TÂN AN",
+        "Diện tích 5x30m, thổ cư 100%, hiện trạng có nhà cấp 4 đang cho thuê",
+        150,
+        150,
+    ) == "dat_nen"
+    assert classify_property_type(
+        "Bán đất Phú Lợi tặng nhà cấp 4",
+        "Đất lô góc 2 mặt tiền, giá rẻ ngang đất",
+        120,
+        60,
+    ) == "dat_nen"
+    assert classify_property_type(
+        "Bán lô đất tặng GPXD",
+        "Đất nền xây tự do, tặng giấy phép xây dựng 1 trệt 2 lầu",
+        100,
+        100,
+    ) == "dat_nen"
+    assert classify_property_type(
+        "Bán nhà cấp 4 Hiệp An",
+        "Nhà có 2 phòng ngủ, bếp, sân ô tô",
+        80,
+        60,
+    ) == "nha_dat"
 
 
 if __name__ == "__main__":
