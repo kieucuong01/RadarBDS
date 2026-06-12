@@ -836,9 +836,8 @@ def _find_stored_road_name_match(road_name, text):
 
 
 def _street_prefix(folded, start, end, road_tier):
-    window = folded[max(0, start - 50): min(len(folded), end + 50)]
     tier = int(_as_float(road_tier) or 0)
-    if re.search(r"\b(?:mat\s*tien|mt)\b", window) or tier == 1:
+    if tier in (1, 2):
         return "Mặt tiền"
     return "Hẻm"
 

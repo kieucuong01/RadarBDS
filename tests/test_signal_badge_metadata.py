@@ -74,7 +74,7 @@ def test_signal_badge_metadata_prefers_stored_road_name_over_nearby_arterial():
         "tho_cu_m2": 75,
     })
 
-    assert meta["street_label"] == "Hẻm DX73"
+    assert meta["street_label"] == "Mặt tiền DX73"
 
 
 def test_signal_badge_metadata_uses_frontage_prefix_for_stored_d_road_code():
@@ -107,6 +107,32 @@ def test_signal_badge_metadata_does_not_guess_street_from_landmark_without_road_
     })
 
     assert meta["street_label"] is None
+
+
+def test_signal_badge_metadata_uses_road_tier_not_text_for_frontage_prefix():
+    from services.market_data import signal_badge_metadata
+
+    unknown_tier = signal_badge_metadata({
+        "title": "Mat tien duong D9",
+        "description": "Duong nhua thong, thong tin moi gioi ghi mat tien.",
+        "property_type": "dat_nen",
+        "area_m2": 100,
+        "road_name": "D9",
+        "road_tier": 0,
+        "road_type": "unknown",
+    })
+    tier_two = signal_badge_metadata({
+        "title": "Dat DX73 sat duong lon",
+        "description": "Khong ghi mat tien trong noi dung.",
+        "property_type": "dat_nen",
+        "area_m2": 140,
+        "road_name": "DX73",
+        "road_tier": 2,
+        "road_type": "duong_nhua",
+    })
+
+    assert unknown_tier["street_label"] == "Hẻm D9"
+    assert tier_two["street_label"] == "Mặt tiền DX73"
 
 
 def test_signal_badge_metadata_does_not_treat_tho_cu_or_distance_as_road_code():
