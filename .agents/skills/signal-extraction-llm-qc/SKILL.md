@@ -60,13 +60,30 @@ Use `--since "2026-06-12T00:00:00+07:00"` for an exact window, or `--limit N` fo
 
 Treat this as supporting evidence only. It cannot replace the manual LLM reading.
 
-6. If there is a repeated, clear extraction pattern, use test-first fixes:
+6. If the manual LLM read produced structured facts that are clearly correct for
+   an existing listing, save them as an explicit extraction override. This is the
+   only LLM parse path that may override Python extraction; it must be manual or
+   explicit workflow output, not automatic crawl enrichment.
+
+```powershell
+& $py -X utf8 -c "from db.listings import save_llm_extraction_override; save_llm_extraction_override(123, {'price_ty': None, 'area_m2': 120, 'ward': 'Hòa Lợi'}, actor='codex', model='manual-llm', note='manual signal QC parse')"
+& $py -X utf8 radar.py reprocess --full
+```
+
+Supported override fields: `price_ty`, `price_per_m2`, `area_m2`, `ward`,
+`property_type`, `frontage_m`, `depth_m`, `road_name`, `road_type`,
+`road_tier`, `tho_cu_m2`, `tho_cu_ratio`, `has_so`. Use JSON/null semantics:
+`price_ty: None` means the LLM determined the asking price is unknown and should
+clear a stale Python/source value. If no explicit override is saved, the normal
+Python extractor remains canonical.
+
+7. If there is a repeated, clear extraction pattern, use test-first fixes:
 
 - Add focused regression cases in `tests/test_feature_extractor.py`, `tests/test_price_history.py`, or `tests/test_extraction_audit.py`.
 - Patch the smallest relevant code path, usually `cleansing/feature_extractor.py`, `cleansing/normalizer.py`, `db/listings.py`, or `services/extraction_audit.py`.
 - Reprocess only affected rows when possible, then rerun the audit.
 
-7. Mark the queue reviewed only after the findings/report are saved:
+8. Mark the queue reviewed only after the findings/report are saved:
 
 ```powershell
 & $py -X utf8 scripts\export_signal_llm_review_queue.py --since "<same Since value printed by the reviewed queue>" --commit-state

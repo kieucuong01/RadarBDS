@@ -1,4 +1,5 @@
 ﻿"""Processed listing repository helpers."""
+import json
 import logging
 from datetime import datetime
 from typing import Optional
@@ -66,6 +67,148 @@ def _coerce_listing_measurements(rec: dict) -> dict:
     return out
 
 
+_LLM_EXTRACTION_OVERRIDE_FIELDS = {
+    "price_ty",
+    "price_per_m2",
+    "area_m2",
+    "ward",
+    "property_type",
+    "frontage_m",
+    "depth_m",
+    "road_name",
+    "road_type",
+    "road_tier",
+    "tho_cu_m2",
+    "tho_cu_ratio",
+    "has_so",
+}
+_LLM_FLOAT_FIELDS = {
+    "price_ty",
+    "price_per_m2",
+    "area_m2",
+    "frontage_m",
+    "depth_m",
+    "tho_cu_m2",
+    "tho_cu_ratio",
+}
+
+
+def _json_dict(value) -> dict:
+    if isinstance(value, dict):
+        return value
+    if not value:
+        return {}
+    try:
+        parsed = json.loads(value)
+    except (TypeError, ValueError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _explicit_llm_override_fields(notes) -> dict:
+    data = _json_dict(notes)
+    override = data.get("extraction_override") or data.get("llm_extraction_override")
+    if not isinstance(override, dict):
+        return {}
+    if override.get("active") is False:
+        return {}
+    fields = override.get("fields") if isinstance(override.get("fields"), dict) else override
+    return {k: v for k, v in fields.items() if k in _LLM_EXTRACTION_OVERRIDE_FIELDS}
+
+
+def _coerce_llm_override_value(field: str, value):
+    if value in ("", "unknown", "null"):
+        return None
+    if field in _LLM_FLOAT_FIELDS:
+        return _float_or_none(value)
+    if field == "road_tier":
+        try:
+            return int(value or 0)
+        except (TypeError, ValueError):
+            return 0
+    if field == "has_so":
+        return int(bool(value))
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _apply_explicit_llm_extraction_override(rec: dict, existing=None) -> dict:
+    override_fields = {}
+    if existing is not None and "llm_notes" in existing.keys():
+        override_fields.update(_explicit_llm_override_fields(existing["llm_notes"]))
+    override_fields.update(_explicit_llm_override_fields(rec.get("llm_notes")))
+    override_fields.update(_explicit_llm_override_fields(rec.get("llm_extraction_override")))
+    if not override_fields:
+        return rec
+
+    out = dict(rec)
+    touched = set()
+    for field, value in override_fields.items():
+        out[field] = _coerce_llm_override_value(field, value)
+        touched.add(field)
+
+    if touched & {"price_ty", "area_m2", "price_per_m2"} and "price_per_m2" not in touched:
+        price_ty = _float_or_none(out.get("price_ty"))
+        area_m2 = _float_or_none(out.get("area_m2"))
+        out["price_per_m2"] = round(price_ty * 1000 / area_m2, 3) if price_ty is not None and area_m2 else None
+
+    if touched & {"tho_cu_m2", "area_m2", "tho_cu_ratio"} and "tho_cu_ratio" not in touched:
+        tho_cu_m2 = _float_or_none(out.get("tho_cu_m2"))
+        area_m2 = _float_or_none(out.get("area_m2"))
+        out["tho_cu_ratio"] = round(tho_cu_m2 / area_m2, 3) if tho_cu_m2 is not None and area_m2 else None
+
+    out["_llm_extraction_override_fields"] = sorted(touched)
+    return out
+
+
+def save_llm_extraction_override(
+    listing_id: int,
+    fields: dict,
+    *,
+    actor: str = "llm",
+    model: str | None = None,
+    note: str | None = None,
+) -> None:
+    cleaned = {
+        key: value
+        for key, value in (fields or {}).items()
+        if key in _LLM_EXTRACTION_OVERRIDE_FIELDS
+    }
+    if not cleaned:
+        raise ValueError("No supported extraction override fields provided")
+
+    now = datetime.now().isoformat()
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT llm_notes FROM listings WHERE id=?",
+            (listing_id,),
+        ).fetchone()
+        if row is None:
+            raise ValueError(f"Listing not found: {listing_id}")
+
+        notes = _json_dict(row["llm_notes"])
+        notes["extraction_override"] = {
+            "active": True,
+            "fields": cleaned,
+            "actor": actor,
+            "model": model,
+            "note": note,
+            "updated_at": now,
+        }
+        conn.execute(
+            """
+            UPDATE listings
+            SET llm_verified=1,
+                llm_notes=?,
+                updated_at=?
+            WHERE id=?
+            """,
+            (json.dumps(notes, ensure_ascii=False, sort_keys=True), now, listing_id),
+        )
+
+
 def _has_listing_column(conn, column: str) -> bool:
     try:
         return bool(conn.execute(
@@ -124,12 +267,14 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             """
             SELECT id, price_ty, price_per_m2, area_m2,
                    frontage_m, depth_m,
-                   price_first_ty, price_dropped, suspicious_bait
+                   price_first_ty, price_dropped, suspicious_bait,
+                   llm_notes
             FROM listings
             WHERE url = ?
             """,
             (rec["url"],)
         ).fetchone()
+        rec = _apply_explicit_llm_extraction_override(rec, existing)
 
         now = datetime.now().isoformat()
 
@@ -196,17 +341,39 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             listing_id  = existing["id"]
             first_price = existing["price_first_ty"] or existing["price_ty"]
             clear_stale_measurements = bool(rec.get("_clear_stale_measurements"))
-            new_price = _prefer_new_value(rec.get("price_ty"), existing["price_ty"])
+            override_fields = set(rec.get("_llm_extraction_override_fields") or [])
+            new_price = (
+                rec.get("price_ty")
+                if "price_ty" in override_fields
+                else _prefer_new_value(rec.get("price_ty"), existing["price_ty"])
+            )
             if clear_stale_measurements:
                 new_area = rec.get("area_m2")
                 new_ppm2 = rec.get("price_per_m2")
                 new_frontage = rec.get("frontage_m")
                 new_depth = rec.get("depth_m")
             else:
-                new_area = _prefer_new_value(rec.get("area_m2"), existing["area_m2"])
-                new_ppm2 = _prefer_new_value(rec.get("price_per_m2"), existing["price_per_m2"])
-                new_frontage = _prefer_new_value(rec.get("frontage_m"), existing["frontage_m"])
-                new_depth = _prefer_new_value(rec.get("depth_m"), existing["depth_m"])
+                new_area = (
+                    rec.get("area_m2")
+                    if "area_m2" in override_fields
+                    else _prefer_new_value(rec.get("area_m2"), existing["area_m2"])
+                )
+                if "price_per_m2" in override_fields:
+                    new_ppm2 = rec.get("price_per_m2")
+                elif override_fields & {"price_ty", "area_m2"}:
+                    new_ppm2 = None
+                else:
+                    new_ppm2 = _prefer_new_value(rec.get("price_per_m2"), existing["price_per_m2"])
+                new_frontage = (
+                    rec.get("frontage_m")
+                    if "frontage_m" in override_fields
+                    else _prefer_new_value(rec.get("frontage_m"), existing["frontage_m"])
+                )
+                new_depth = (
+                    rec.get("depth_m")
+                    if "depth_m" in override_fields
+                    else _prefer_new_value(rec.get("depth_m"), existing["depth_m"])
+                )
             if not _present(new_depth):
                 derived_depth = _derive_depth_from_area_frontage(new_area, new_frontage)
                 if derived_depth is not None:
@@ -217,7 +384,11 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             price_drop_pct = None
             suspicious_bait = existing["suspicious_bait"] if "suspicious_bait" in existing.keys() else 0
 
-            if new_price and first_price and new_price < first_price * 0.99:
+            if "price_ty" in override_fields and not new_price:
+                price_dropped = 0
+                price_drop_pct = None
+                suspicious_bait = 0
+            elif new_price and first_price and new_price < first_price * 0.99:
                 drop_pct = round((first_price - new_price) / first_price * 100, 2)
                 if drop_pct > 40.0:
                     price_dropped = 0

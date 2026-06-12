@@ -61,11 +61,14 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 5. Route each listing:
 
 - `clean`: no blocking extraction mismatch; eligible for advisory memo.
-- `fixed`: parser/data fixed and targeted reprocess passed; eligible for advisory memo.
+- `override_fixed`: manual/explicit LLM parse was saved with `db.listings.save_llm_extraction_override(...)`, targeted/full reprocess passed, and the listing fields now match the read text; eligible for advisory memo.
+- `parser_fixed`: repeated deterministic parser bug fixed with regression tests and targeted/full reprocess passed; eligible for advisory memo.
 - `blocked`: price, area, ward, road, type, or tho cu is unresolved; skip normal memo and send to admin extraction QC.
 - `ambiguous`: text is not enough to decide; send to admin extraction QC and use `needs_map_check` if a memo is later written.
 
-6. Write/update advisory memos only for `clean` or `fixed` listings. Use `update-investment-memos` standards:
+Use explicit LLM extraction overrides only when the LLM read is a deliberate workflow output. If no override is saved, Python extraction remains canonical.
+
+6. Write/update advisory memos only for `clean`, `override_fixed`, or `parser_fixed` listings. Use `update-investment-memos` standards:
 
 - Read listing, valuation, price history, lot/repost context, legal/source flags.
 - Write Vietnamese investor-grade memo, not a template.

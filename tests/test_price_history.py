@@ -491,6 +491,162 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual(row["road_type"], "unknown")
         self.assertEqual(row["road_tier"], 0)
 
+    def test_upsert_listing_applies_explicit_llm_extraction_override(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(
+                price_ty=1.0,
+                area_m2=100.0,
+                price_per_m2=10.0,
+                ward="Phu Hoa",
+                property_type="nha_dat",
+                road_name="QL13",
+                road_type="duong_nhua",
+                road_tier=2,
+                tho_cu_m2=100.0,
+                tho_cu_ratio=1.0,
+            ),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                SET llm_verified=1,
+                    llm_notes='{"extraction_override":{"price_ty":null,"area_m2":120,"ward":"Hoa Loi","property_type":"dat_nen","road_name":"Bui Quoc Khanh","road_type":"hem_xe_hoi","road_tier":3,"tho_cu_m2":60}}'
+                WHERE id=?
+                """,
+                (listing_id,),
+            )
+
+        same_listing_id, is_new = upsert_listing(
+            self._rec(
+                price_ty=1.0,
+                area_m2=100.0,
+                price_per_m2=10.0,
+                ward="Phu Hoa",
+                property_type="nha_dat",
+                road_name="QL13",
+                road_type="duong_nhua",
+                road_tier=2,
+                tho_cu_m2=100.0,
+                tho_cu_ratio=1.0,
+            ),
+            crawl_run_id=2,
+        )
+
+        self.assertEqual(same_listing_id, listing_id)
+        self.assertFalse(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                SELECT price_ty, price_per_m2, area_m2, ward, property_type,
+                       road_name, road_type, road_tier, tho_cu_m2, tho_cu_ratio
+                FROM listings
+                WHERE id=?
+                """,
+                (listing_id,),
+            ).fetchone()
+
+        self.assertIsNone(row["price_ty"])
+        self.assertIsNone(row["price_per_m2"])
+        self.assertEqual(row["area_m2"], 120.0)
+        self.assertEqual(row["ward"], "Hoa Loi")
+        self.assertEqual(row["property_type"], "dat_nen")
+        self.assertEqual(row["road_name"], "Bui Quoc Khanh")
+        self.assertEqual(row["road_type"], "hem_xe_hoi")
+        self.assertEqual(row["road_tier"], 3)
+        self.assertEqual(row["tho_cu_m2"], 60.0)
+        self.assertEqual(row["tho_cu_ratio"], 0.5)
+
+    def test_upsert_listing_recomputes_ppm2_from_llm_price_and_area_override(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(price_ty=2.0, area_m2=100.0, price_per_m2=20.0),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                SET llm_verified=1,
+                    llm_notes='{"extraction_override":{"price_ty":3.6,"area_m2":120}}'
+                WHERE id=?
+                """,
+                (listing_id,),
+            )
+
+        upsert_listing(self._rec(price_ty=2.0, area_m2=100.0, price_per_m2=20.0), crawl_run_id=2)
+
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT price_ty, area_m2, price_per_m2 FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(row["price_ty"], 3.6)
+        self.assertEqual(row["area_m2"], 120.0)
+        self.assertEqual(row["price_per_m2"], 30.0)
+
+    def test_save_llm_extraction_override_marks_listing_for_next_reprocess(self):
+        import json
+        from db.connection import get_conn
+        from db.listings import save_llm_extraction_override, upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(price_ty=2.0, area_m2=100.0, price_per_m2=20.0, ward="Phu Hoa"),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+        with get_conn() as conn:
+            conn.execute(
+                "UPDATE listings SET llm_notes=? WHERE id=?",
+                ('{"memo":"keep this"}', listing_id),
+            )
+
+        save_llm_extraction_override(
+            listing_id,
+            {"price_ty": 3.6, "area_m2": 120, "ward": "Hoa Loi", "ignored": "x"},
+            actor="codex",
+            model="manual-llm",
+            note="manual parsed facts",
+        )
+
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT llm_verified, llm_notes FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+        notes = json.loads(row["llm_notes"])
+
+        self.assertEqual(row["llm_verified"], 1)
+        self.assertEqual(notes["memo"], "keep this")
+        self.assertEqual(notes["extraction_override"]["actor"], "codex")
+        self.assertEqual(notes["extraction_override"]["model"], "manual-llm")
+        self.assertEqual(notes["extraction_override"]["fields"], {
+            "price_ty": 3.6,
+            "area_m2": 120,
+            "ward": "Hoa Loi",
+        })
+
+        upsert_listing(self._rec(price_ty=2.0, area_m2=100.0, price_per_m2=20.0, ward="Phu Hoa"), crawl_run_id=2)
+        with get_conn() as conn:
+            applied = conn.execute(
+                "SELECT price_ty, area_m2, price_per_m2, ward FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertEqual(applied["price_ty"], 3.6)
+        self.assertEqual(applied["area_m2"], 120.0)
+        self.assertEqual(applied["price_per_m2"], 30.0)
+        self.assertEqual(applied["ward"], "Hoa Loi")
+
     def test_upsert_listing_over_40pct_drop_marks_suspicious_bait(self):
         from db.connection import get_conn
         from db.listings import upsert_listing
