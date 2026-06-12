@@ -21,6 +21,7 @@ from services.signal_quality import (
 
 DEFAULT_STATE_PATH = PROJECT_ROOT / ".local" / "llm-review" / "state.json"
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / ".local" / "llm-review" / "daily"
+DEFAULT_RAW_OUTPUT_DIR = PROJECT_ROOT / ".local" / "llm-review" / "raw"
 REVIEW_FIELDS = (
     "price_ty",
     "area_m2",
@@ -38,8 +39,8 @@ REVIEW_FIELDS = (
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Export new actionable signal listings to a markdown queue for manual Codex/LLM "
-            "extraction review. This script does not judge correctness."
+            "Export actionable signal listings to a queue for manual Codex/LLM "
+            "extraction review. This script prepares raw context only; it does not judge correctness."
         )
     )
     parser.add_argument("--since", default=None, help="ISO timestamp/date lower bound for new signals.")
@@ -50,7 +51,19 @@ def main() -> int:
         help="Fallback lookback window when no state or --since is available.",
     )
     parser.add_argument("--limit", type=int, default=0, help="Optional max rows to export.")
-    parser.add_argument("--output", type=Path, default=None, help="Optional markdown output path.")
+    parser.add_argument("--output", type=Path, default=None, help="Optional output path.")
+    parser.add_argument(
+        "--format",
+        choices=("markdown", "jsonl", "json"),
+        default="markdown",
+        help="Queue format. JSONL/JSON are better for LLM structured extraction batches.",
+    )
+    parser.add_argument(
+        "--sort",
+        choices=("review_at_asc", "signal_desc"),
+        default="review_at_asc",
+        help="review_at_asc keeps daily state order; signal_desc reviews strongest deals first.",
+    )
     parser.add_argument("--state", type=Path, default=DEFAULT_STATE_PATH, help="Review state JSON path.")
     parser.add_argument(
         "--commit-state",
@@ -61,14 +74,18 @@ def main() -> int:
 
     state = load_state(args.state)
     since = resolve_since(args.since, state, args.days)
-    rows = load_new_signals(since, args.limit)
+    rows = load_new_signals(since, args.limit, sort=args.sort)
     generated_at = datetime.now().astimezone()
-    output = args.output or default_output_path(generated_at)
+    output = args.output or default_output_path(generated_at, args.format)
     output.parent.mkdir(parents=True, exist_ok=True)
 
     max_seen = max((str(row.get("review_sort_at") or "") for row in rows), default="")
-    markdown = render_markdown(rows, since=since, generated_at=generated_at, max_seen=max_seen)
-    output.write_text(markdown, encoding="utf-8")
+    if args.format == "jsonl":
+        output.write_text(render_jsonl(rows, since=since, generated_at=generated_at, max_seen=max_seen), encoding="utf-8")
+    elif args.format == "json":
+        output.write_text(render_json(rows, since=since, generated_at=generated_at, max_seen=max_seen), encoding="utf-8")
+    else:
+        output.write_text(render_markdown(rows, since=since, generated_at=generated_at, max_seen=max_seen), encoding="utf-8")
 
     if args.commit_state:
         if max_seen:
@@ -124,16 +141,25 @@ def resolve_since(raw_since: str | None, state: dict[str, Any], days: int) -> st
     return since.isoformat(timespec="seconds")
 
 
-def default_output_path(generated_at: datetime) -> Path:
+def default_output_path(generated_at: datetime, output_format: str = "markdown") -> Path:
     stamp = generated_at.strftime("%Y%m%d-%H%M%S")
+    if output_format == "jsonl":
+        return DEFAULT_RAW_OUTPUT_DIR / f"signal-llm-qc-{stamp}.jsonl"
+    if output_format == "json":
+        return DEFAULT_RAW_OUTPUT_DIR / f"signal-llm-qc-{stamp}.json"
     return DEFAULT_OUTPUT_DIR / f"signal-llm-qc-{stamp}.md"
 
 
-def load_new_signals(since: str, limit: int = 0) -> list[dict[str, Any]]:
+def load_new_signals(since: str, limit: int = 0, *, sort: str = "review_at_asc") -> list[dict[str, Any]]:
     signal_condition = actionable_signal_sql("v")
     listing_condition = actionable_listing_sql("l")
     date_expr = "COALESCE(l.first_seen_at, l.crawled_at, l.updated_at, l.posted_at)"
     limit_sql = "LIMIT ?" if limit and limit > 0 else ""
+    order_sql = (
+        "ORDER BY COALESCE(v.mos_pct, 0) DESC, COALESCE(v.signal_score, 0) DESC, l.id DESC"
+        if sort == "signal_desc"
+        else f"ORDER BY {date_expr} ASC, l.id ASC"
+    )
     params: list[Any] = [since]
     if limit and limit > 0:
         params.append(limit)
@@ -149,18 +175,136 @@ def load_new_signals(since: str, limit: int = 0) -> list[dict[str, Any]]:
                    l.has_so, l.first_seen_at, l.posted_at, l.crawled_at, l.updated_at,
                    {date_expr} AS review_sort_at,
                    v.mos_pct, v.signal_score, v.actual_ppm2, v.fair_ppm2,
-                   v.source_quality_flags, v.source_quality_recheck
+                   v.source_quality_flags, v.source_quality_recheck,
+                   r.raw_json
             FROM listings l
             JOIN latest_valuation v ON v.listing_id = l.id
+            LEFT JOIN raw_listings r ON r.id = l.raw_id
             WHERE {signal_condition}
               AND {listing_condition}
               AND {date_expr} >= ?
-            ORDER BY {date_expr} ASC, l.id ASC
+            {order_sql}
             {limit_sql}
             """,
             params,
         ).fetchall()
     return [dict(row.items()) if hasattr(row, "items") else dict(row) for row in rows]
+
+
+def render_jsonl(
+    rows: list[dict[str, Any]],
+    *,
+    since: str,
+    generated_at: datetime,
+    max_seen: str,
+) -> str:
+    lines = [
+        json.dumps(
+            build_review_item(index, row, since=since, generated_at=generated_at, max_seen=max_seen),
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        for index, row in enumerate(rows, start=1)
+    ]
+    return "\n".join(lines) + ("\n" if lines else "")
+
+
+def render_json(
+    rows: list[dict[str, Any]],
+    *,
+    since: str,
+    generated_at: datetime,
+    max_seen: str,
+) -> str:
+    payload = {
+        "generated_at": generated_at.isoformat(timespec="seconds"),
+        "scope": {
+            "since": since,
+            "exported_signals": len(rows),
+            "newest_exported_timestamp": max_seen or None,
+        },
+        "review_fields": list(REVIEW_FIELDS),
+        "items": [
+            build_review_item(index, row, since=since, generated_at=generated_at, max_seen=max_seen)
+            for index, row in enumerate(rows, start=1)
+        ],
+    }
+    return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+
+
+def build_review_item(
+    index: int,
+    row: dict[str, Any],
+    *,
+    since: str,
+    generated_at: datetime,
+    max_seen: str,
+) -> dict[str, Any]:
+    return {
+        "review_index": index,
+        "listing_id": row.get("id"),
+        "source": row.get("source"),
+        "source_id": row.get("source_id"),
+        "url": row.get("url"),
+        "raw_id": row.get("raw_id"),
+        "review_sort_at": row.get("review_sort_at"),
+        "export_meta": {
+            "generated_at": generated_at.isoformat(timespec="seconds"),
+            "since": since,
+            "newest_exported_timestamp": max_seen or None,
+        },
+        "valuation": {
+            "mos_pct": row.get("mos_pct"),
+            "signal_score": row.get("signal_score"),
+            "actual_ppm2": row.get("actual_ppm2"),
+            "fair_ppm2": row.get("fair_ppm2"),
+            "source_quality_flags": parse_json_value(row.get("source_quality_flags")),
+            "source_quality_recheck": row.get("source_quality_recheck"),
+        },
+        "stored_extraction": {field: row.get(field) for field in REVIEW_FIELDS},
+        "listing_text": {
+            "title": clean_text(row.get("title")),
+            "description": clean_text(row.get("description")),
+        },
+        "raw_facts": extract_raw_facts(row.get("raw_json")),
+    }
+
+
+def extract_raw_facts(raw_json: Any) -> dict[str, Any]:
+    raw = parse_json_value(raw_json)
+    if not isinstance(raw, dict):
+        return {}
+    facts: dict[str, Any] = {}
+    for key in (
+        "address",
+        "area_m2",
+        "price_ty",
+        "price_per_m2",
+        "area_name",
+        "ward",
+        "property_type_raw",
+        "road_type_raw",
+        "road_width_raw",
+        "location_type_raw",
+        "legal_raw",
+        "default_area",
+        "tx_type",
+    ):
+        value = raw.get(key)
+        if value not in (None, "", [], {}):
+            facts[key] = value
+    return facts
+
+
+def parse_json_value(value: Any) -> Any:
+    if isinstance(value, (dict, list)):
+        return value
+    if not value:
+        return None
+    try:
+        return json.loads(value)
+    except (TypeError, ValueError):
+        return value
 
 
 def render_markdown(

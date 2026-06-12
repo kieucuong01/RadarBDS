@@ -27,6 +27,16 @@ Do extraction QC first. A memo built on wrong price, area, ward, road, property 
 - Advisory memo rows go only to `ai_deal_review`, append-only.
 - Do not save confident advisory memos for listings with unresolved blocking extraction mismatches.
 - Ambiguous extraction cases should go to admin extraction QC instead of forcing parser changes.
+- `ward` remains the old canonical valuation ward. Treat new post-merger ward
+  names as context for reverse-mapping only; do not overwrite a correct old ward
+  with broad new names like `Bình Dương`, `Chánh Hiệp`, `Phú Lợi`, or `Phú An`.
+  Example: `TĐC Phú Chánh` maps to old `Phú Tân`, and `Tân Định cũ nay Hòa Lợi`
+  stays `Tân Định`.
+- Treat KDC/TĐC names as landmarks unless the text also states a stronger old
+  ward. Current alias memory: `KDC Hiệp Thành 1/2/3` and `KDC K8 Hiệp Thành`
+  map to old `Hiệp Thành`; `TĐC Phú Chánh` maps to old `Phú Tân`. If a listing
+  says old `Phú Mỹ` and merely mentions nearby `KDC Hiệp Thành 3`, keep
+  `ward=Phú Mỹ`.
 
 ## Daily Flow
 
@@ -36,14 +46,17 @@ Do extraction QC first. A memo built on wrong price, area, ward, road, property 
 .\scripts\sync_prod_to_local.ps1
 ```
 
-2. Export new actionable signals for manual LLM extraction QC:
+2. Export new actionable signals for manual LLM extraction QC as raw JSONL:
 
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 scripts\export_signal_llm_review_queue.py --days 1
+& $py -X utf8 scripts\export_signal_llm_review_queue.py --days 1 --format jsonl
 ```
 
-3. Read the generated `.local/llm-review/daily/signal-llm-qc-*.md` sequentially. For every listing, compare the stored fields against the title/description by your own LLM reading:
+3. Read the generated `.local/llm-review/raw/signal-llm-qc-*.jsonl` sequentially in
+small batches. For every listing, compare the stored fields against the
+title/description by your own LLM reading, then save one structured JSONL result
+line with `listing_id`, `status`, `llm_extract`, and `reason`:
 
 - price and price per m2
 - area, frontage, depth
@@ -52,9 +65,12 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 - property type
 - tho cu
 
-4. Save extraction findings to `.local/llm-review/manual_findings.md`. Then run:
+4. Dry-run/apply extraction overrides from the structured result file, then run:
 
 ```powershell
+& $py -X utf8 scripts\apply_llm_extraction_results.py .local\llm-review\structured\signal-llm-qc-results-YYYYMMDD.jsonl
+& $py -X utf8 scripts\apply_llm_extraction_results.py .local\llm-review\structured\signal-llm-qc-results-YYYYMMDD.jsonl --apply --model manual-llm-signal-qc-YYYYMMDD
+& $py -X utf8 radar.py reprocess --valuation-only
 & $py -X utf8 scripts\audit_signal_extraction.py
 ```
 

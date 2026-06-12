@@ -286,10 +286,16 @@ _WARD_KEYWORDS = {
     # Thủ Dầu Một
     "Tân An":           ["tân an", "tan-an", "tanan", "phú an mới", "phu-an-moi", "phu an moi"],
     "Hiệp An":          ["hiệp an", "hiep-an"],
-    "Hiệp Thành 1":     ["hiệp thành 1", "hiep-thanh-1", "hiep thanh 1", "kdc hiệp thành 1", "kdc hiep thanh 1"],
-    "Hiệp Thành 2":     ["hiệp thành 2", "hiep-thanh-2", "hiep thanh 2", "kdc hiệp thành 2", "kdc hiep thanh 2"],
-    "Hiệp Thành 3":     ["hiệp thành 3", "hiep-thanh-3", "hiep thanh 3", "kdc hiệp thành 3", "kdc hiep thanh 3"],
-    "Hiệp Thành":       ["hiệp thành", "hiep-thanh"],
+    "Hiệp Thành":       [
+        "hiệp thành", "hiep-thanh",
+        "hiệp thành 1", "hiep-thanh-1", "hiep thanh 1",
+        "hiệp thành 2", "hiep-thanh-2", "hiep thanh 2",
+        "hiệp thành 3", "hiep-thanh-3", "hiep thanh 3",
+        "kdc hiệp thành 1", "kdc hiep thanh 1",
+        "kdc hiệp thành 2", "kdc hiep thanh 2",
+        "kdc hiệp thành 3", "kdc hiep thanh 3",
+        "kdc k8", "k8 hiệp thành", "k8 hiep thanh",
+    ],
     "Phú Hòa":          ["phú hòa", "phu-hoa"],
     "Hòa Phú":          ["hòa phú", "hoà phú", "hoa-phu", "hoaphu"],
     "Phú Lợi":          ["phú lợi", "phu-loi"],
@@ -379,6 +385,28 @@ def _keyword_in_text(text: str, keyword: str) -> bool:
     if " " in keyword:
         return re.search(r"(?<!\w)" + re.escape(keyword) + r"(?!\w)", text) is not None
     return keyword in text
+
+
+_HIEP_THANH_LANDMARK_PATTERNS = [
+    r"\bkdc\s+hiep\s+thanh\s*[123]\b",
+    r"\bhiep\s+thanh\s*[123]\b",
+    r"\bkdc\s*k\s*8\b",
+    r"\bk\s*8\s+hiep\s+thanh\b",
+]
+
+
+def _strip_hiep_thanh_landmark_phrases(folded_text: str) -> str:
+    text = folded_text or ""
+    for pattern in _HIEP_THANH_LANDMARK_PATTERNS:
+        text = re.sub(pattern, " ", text)
+    return text
+
+
+def _match_hiep_thanh_landmark_ward(text: str) -> Optional[str]:
+    folded = _ascii_fold(text or "")
+    if any(re.search(pattern, folded) for pattern in _HIEP_THANH_LANDMARK_PATTERNS):
+        return "Hiệp Thành"
+    return None
 
 
 def _match_ben_cat_landmark_ward(text: str) -> Optional[str]:
@@ -491,15 +519,17 @@ def match_ward(*texts: str, intended_city: Optional[str] = None) -> Optional[str
             landmark_ward = _match_ben_cat_landmark_ward(text_lower)
             if landmark_ward:
                 return landmark_ward
-        
-        for ward, keyword in ward_keywords:
-            if _keyword_in_text(text_lower, keyword):
-                return ward
 
         text_ascii = _ascii_fold(text_lower)
+        text_without_hiep_thanh_landmarks = _strip_hiep_thanh_landmark_phrases(text_ascii)
+
         for ward, keyword in ward_keywords:
-            if _keyword_in_text(text_ascii, _ascii_fold(keyword)):
+            if _keyword_in_text(text_without_hiep_thanh_landmarks, _ascii_fold(keyword)):
                 return ward
+
+        landmark_ward = _match_hiep_thanh_landmark_ward(text_lower)
+        if landmark_ward:
+            return landmark_ward
     return None
 
 def extract_keywords(title: str, description: str) -> List[str]:
@@ -803,7 +833,10 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             full_text_for_street,
             parent_filter=ward_final,
         )
-        if _st_sw and ward_final in ("Mỹ Phước", "Hiệp Thành"):
+        # KDC Hiệp Thành 1/2/3 and KDC K8 are landmarks inside old Hiệp Thành.
+        # Keep `ward` as the old canonical ward; only Mỹ Phước sub-zones remain
+        # valuation segments here.
+        if _st_sw and ward_final == "Mỹ Phước":
             ward_final = _st_sw
             area_name = _st_sw
         if not road_tier and _st_tier is not None:

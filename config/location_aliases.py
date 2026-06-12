@@ -85,7 +85,7 @@ _NEW_WARD_PATTERNS = {
 
 
 _KHU_PHO_RULES: tuple[tuple[str, str, str], ...] = (
-    ("Ph\u00fa Ch\u00e1nh", r"\b(?:tdc|tai\s+dinh\s+cu|khu\s+tdc)\s+phu\s+chanh(?:\s*[a-d])?\b", "tdc_phu_chanh"),
+    ("Ph\u00fa T\u00e2n", r"\b(?:tdc|tai\s+dinh\s+cu|khu\s+tdc)\s+phu\s+chanh(?:\s*[a-d])?\b", "tdc_phu_chanh"),
     ("H\u00f2a L\u1ee3i", r"\b(?:kp|khu\s+pho)\s*phu\s+nghi\b", "khu_pho_phu_nghi"),
     ("Phú Mỹ", r"\b(?:kp|khu\s+pho)\s*phu\s+my(?:\s*[1-8])?\b", "khu_pho_phu_my"),
     ("Hòa Phú", r"\b(?:kp|khu\s+pho)\s*hoa\s+phu(?:\s*[1-5])?\b", "khu_pho_hoa_phu"),

@@ -14,6 +14,17 @@ Use this skill to review new actionable signal listings by manual Codex/LLM read
 - Do not write Claude/Codex conclusions to `ai_training_feedback`.
 - Keep human/admin labels separate; extraction QC findings can be local reports or admin data-quality review items.
 - Do not mark the review done until every exported listing has been read by the agent.
+- `ward` is the canonical old valuation ward used by the system. New post-merger
+  ward names are context only: use them to infer the old ward, but do not write a
+  broad new ward such as `Bình Dương`, `Chánh Hiệp`, `Phú Lợi`, or `Phú An`
+  unless the system has explicitly migrated to new wards. Example: `TĐC Phú
+  Chánh` is treated as old `Phú Tân`; `Tân Định cũ nay Hòa Lợi` stays
+  `Tân Định`.
+- Treat KDC/TĐC names as landmarks unless the text also states a stronger old
+  ward. Current alias memory: `KDC Hiệp Thành 1/2/3` and `KDC K8 Hiệp Thành`
+  map to old `Hiệp Thành`; `TĐC Phú Chánh` maps to old `Phú Tân`. If a listing
+  says old `Phú Mỹ` and merely mentions nearby `KDC Hiệp Thành 3`, keep
+  `ward=Phú Mỹ`.
 
 ## Daily Workflow
 
@@ -23,16 +34,47 @@ Use this skill to review new actionable signal listings by manual Codex/LLM read
 .\scripts\sync_prod_to_local.ps1
 ```
 
-2. Export new actionable signals to a markdown queue:
+2. Export new actionable signals to a raw JSONL queue:
 
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 scripts\export_signal_llm_review_queue.py --days 1
+& $py -X utf8 scripts\export_signal_llm_review_queue.py --days 1 --format jsonl
 ```
 
-Use `--since "2026-06-12T00:00:00+07:00"` for an exact window, or `--limit N` for a smaller pass.
+Use `--since "2026-06-12T00:00:00+07:00"` for an exact window, `--sort signal_desc`
+for strongest deals first, or `--limit N` for a smaller pass.
 
-3. Open the generated `.local/llm-review/daily/signal-llm-qc-*.md`. For each listing, read title and description yourself, then compare:
+3. Read the generated `.local/llm-review/raw/signal-llm-qc-*.jsonl` in small batches.
+Each raw line contains `listing_id`, `stored_extraction`, `listing_text`, `raw_facts`,
+and valuation context. For each listing, read title and description yourself, then
+write a structured result line:
+
+```json
+{
+  "listing_id": 123,
+  "status": "ok",
+  "llm_extract": {
+    "price_ty": 1.3,
+    "area_m2": 120,
+    "ward": "Hòa Lợi",
+    "road_type": "duong_nhua",
+    "road_tier": 2,
+    "road_name": null,
+    "property_type": "dat_nen",
+    "tho_cu_m2": 60,
+    "frontage_m": 5,
+    "depth_m": 24
+  },
+  "reason": "Stored extraction matches listing text."
+}
+```
+
+Use `status="override"` only when the LLM read is confident. Use
+`status="admin_review"` when the text is ambiguous or needs map/legal checking.
+Save all result lines to a JSONL file such as
+`.local/llm-review/structured/signal-llm-qc-results-YYYYMMDD.jsonl`.
+
+Review fields:
 
 - `price_ty`
 - `area_m2`
@@ -42,17 +84,20 @@ Use `--since "2026-06-12T00:00:00+07:00"` for an exact window, or `--limit N` fo
 - `tho_cu_m2`
 - `frontage_m`, `depth_m`
 
-4. Append findings to `.local/llm-review/manual_findings.md` with this shape:
+4. Dry-run the structured result before writing DB changes:
 
-```markdown
-## YYYY-MM-DD LLM QC
-
-| listing_id | fields | manual_expected | why_system_was_wrong | action |
-|---|---|---|---|---|
-| 123 | road_name | DB12 | Parser ignored explicit road code after location phrase. | parser_fix |
+```powershell
+& $py -X utf8 scripts\apply_llm_extraction_results.py .local\llm-review\structured\signal-llm-qc-results-YYYYMMDD.jsonl
 ```
 
-5. Run deterministic support audit after manual review:
+5. Apply only confident overrides, then reprocess:
+
+```powershell
+& $py -X utf8 scripts\apply_llm_extraction_results.py .local\llm-review\structured\signal-llm-qc-results-YYYYMMDD.jsonl --apply --model manual-llm-signal-qc-YYYYMMDD
+& $py -X utf8 radar.py reprocess --valuation-only
+```
+
+6. Run deterministic support audit after manual review:
 
 ```powershell
 & $py -X utf8 scripts\audit_signal_extraction.py
@@ -60,7 +105,7 @@ Use `--since "2026-06-12T00:00:00+07:00"` for an exact window, or `--limit N` fo
 
 Treat this as supporting evidence only. It cannot replace the manual LLM reading.
 
-6. If the manual LLM read produced structured facts that are clearly correct for
+7. If the manual LLM read produced structured facts that are clearly correct for
    an existing listing, save them as an explicit extraction override. This is the
    only LLM parse path that may override Python extraction; it must be manual or
    explicit workflow output, not automatic crawl enrichment.
@@ -77,13 +122,13 @@ Supported override fields: `price_ty`, `price_per_m2`, `area_m2`, `ward`,
 clear a stale Python/source value. If no explicit override is saved, the normal
 Python extractor remains canonical.
 
-7. If there is a repeated, clear extraction pattern, use test-first fixes:
+8. If there is a repeated, clear extraction pattern, use test-first fixes:
 
 - Add focused regression cases in `tests/test_feature_extractor.py`, `tests/test_price_history.py`, or `tests/test_extraction_audit.py`.
 - Patch the smallest relevant code path, usually `cleansing/feature_extractor.py`, `cleansing/normalizer.py`, `db/listings.py`, or `services/extraction_audit.py`.
 - Reprocess only affected rows when possible, then rerun the audit.
 
-8. Mark the queue reviewed only after the findings/report are saved:
+9. Mark the queue reviewed only after the structured result/report is saved:
 
 ```powershell
 & $py -X utf8 scripts\export_signal_llm_review_queue.py --since "<same Since value printed by the reviewed queue>" --commit-state

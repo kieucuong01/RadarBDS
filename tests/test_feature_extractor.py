@@ -743,9 +743,48 @@ def test_parse_facebook_post_ignores_floor_area_and_bedroom_counts_from_manual_q
     assert construction_area["area_m2"] is None
 
 
-def test_match_ward_detects_hiep_thanh_subwards_directly():
-    assert match_ward("Gần KDC Hiệp Thành 3", intended_city="Thủ Dầu Một") == "Hiệp Thành 3"
-    assert match_ward("ĐỐI DIỆN KDC HIỆP THÀNH 3", intended_city="Thủ Dầu Một") == "Hiệp Thành 3"
+def test_match_ward_maps_hiep_thanh_kdc_landmarks_to_parent_old_ward():
+    assert match_ward("Gần KDC Hiệp Thành 3", intended_city="Thủ Dầu Một") == "Hiệp Thành"
+    assert match_ward("ĐỐI DIỆN KDC HIỆP THÀNH 3", intended_city="Thủ Dầu Một") == "Hiệp Thành"
+    assert match_ward("Gần Hiệp Thành 3", intended_city="Thủ Dầu Một") == "Hiệp Thành"
+    assert match_ward("Đối diện KDC K8 Hiệp Thành", intended_city="Thủ Dầu Một") == "Hiệp Thành"
+    assert (
+        match_ward(
+            "Nhà Phú Mỹ, nhánh Phạm Ngọc Thạch, gần KDC Hiệp Thành 3",
+            intended_city="Thủ Dầu Một",
+        )
+        == "Phú Mỹ"
+    )
+
+
+def test_normalizer_keeps_hiep_thanh_kdc_landmark_as_parent_old_ward():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "hiep-thanh-kdc-old-ward",
+        "url": "https://facebook.com/posts/hiep-thanh-kdc-old-ward",
+        "title": "Bán nhà đối diện KDC K8 Hiệp Thành",
+        "description": "Ngang 4m dài 25m, thổ cư 80m2, giá 4 tỷ 5.",
+        "default_area": "Thủ Dầu Một",
+    })
+
+    assert rec is not None
+    assert rec["ward"] == "Hiệp Thành"
+    assert rec["area"] == "Hiệp Thành"
+
+
+def test_normalizer_prefers_explicit_old_ward_over_hiep_thanh_kdc_landmark():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "phu-my-near-hiep-thanh-3",
+        "url": "https://facebook.com/posts/phu-my-near-hiep-thanh-3",
+        "title": "Nhà Phú Mỹ, nhánh Phạm Ngọc Thạch, gần KDC Hiệp Thành 3",
+        "description": "Diện tích 5x20, thổ cư 60m2, giá 2 tỷ 5.",
+        "default_area": "Thủ Dầu Một",
+    })
+
+    assert rec is not None
+    assert rec["ward"] == "Phú Mỹ"
+    assert rec["area"] == "Phú Mỹ"
 
 
 def test_normalizer_uses_structured_address_for_road_tier():
@@ -1026,10 +1065,10 @@ def test_normalizer_uses_hoa_loi_khu_pho_evidence_under_new_hoa_loi_ward():
     assert rec["area"] == "Hòa Lợi"
 
 
-def test_normalizer_uses_tdc_phu_chanh_and_phu_nghi_evidence():
+def test_normalizer_maps_tdc_phu_chanh_to_old_phu_tan_segment():
     cases = [
-        ("Duong so 110B TDC Phu Chanh D, KP Phu Tan, P Binh Duong TP HCM", "Ph\u00fa Ch\u00e1nh"),
-        ("Duong so 3 TDC Phu Chanh B, KP Hoa Phu, P Binh Duong TP HCM", "Ph\u00fa Ch\u00e1nh"),
+        ("Duong so 110B TDC Phu Chanh D, KP Phu Tan, P Binh Duong TP HCM", "Ph\u00fa T\u00e2n"),
+        ("Duong so 3 TDC Phu Chanh B, KP Hoa Phu, P Binh Duong TP HCM", "Ph\u00fa T\u00e2n"),
         ("KP Phu Nghi, P Hoa Loi TP HCM, gan nga 3 Phu Hoa", "H\u00f2a L\u1ee3i"),
     ]
 
