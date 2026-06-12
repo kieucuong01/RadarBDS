@@ -1325,6 +1325,18 @@
     backdrop-filter: none;
   }
 
+  #signalModal::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(env(safe-area-inset-top, 0px) + 74px);
+    z-index: 50;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.28), transparent);
+  }
+
   #signalModal .signal-modal-content {
     width: 100vw !important;
     max-width: none !important;
@@ -1349,16 +1361,19 @@
 
   #signalModal .close-modal {
     position: fixed !important;
-    top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+    top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
     right: calc(env(safe-area-inset-right, 0px) + 12px) !important;
-    z-index: 30 !important;
-    width: 42px;
-    height: 42px;
+    z-index: 60 !important;
+    width: 52px;
+    height: 52px;
+    font-size: 34px;
+    line-height: 1;
     color: #fff;
-    background: rgba(15, 23, 42, 0.68);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(15, 23, 42, 0.84);
+    border: 1px solid rgba(255, 255, 255, 0.26);
     backdrop-filter: blur(14px);
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.22);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+    touch-action: manipulation;
   }
 
   .sm-content {

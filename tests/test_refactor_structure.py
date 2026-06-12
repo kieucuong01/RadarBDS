@@ -222,13 +222,24 @@ def test_signal_modal_close_button_respects_mobile_safe_area():
 
     assert 'class="close-modal"' in html
     assert 'style="top:12px; right:12px; z-index:20;"' in html
+    assert "css/main/modal.css') ~ '?v=modal-close-safe-20260612'" in html
+    header_rule = re.search(r"#signalModal::before\s*\{(?P<body>[^}]+)\}", modal_css, re.S)
+    assert header_rule, "missing mobile signal modal top close zone"
+    header_body = header_rule.group("body")
+    assert "height: calc(env(safe-area-inset-top, 0px) + 74px)" in header_body
+    assert "pointer-events: none" in header_body
+    assert "z-index: 50" in header_body
+
     close_rule = re.search(r"#signalModal\s+\.close-modal\s*\{(?P<body>[^}]+)\}", modal_css, re.S)
     assert close_rule, "missing mobile signal modal close rule"
     body = close_rule.group("body")
     assert "position: fixed !important" in body
-    assert "top: calc(env(safe-area-inset-top, 0px) + 12px) !important" in body
+    assert "top: calc(env(safe-area-inset-top, 0px) + 10px) !important" in body
     assert "right: calc(env(safe-area-inset-right, 0px) + 12px) !important" in body
-    assert "z-index: 30 !important" in body
+    assert "z-index: 60 !important" in body
+    assert "width: 52px" in body
+    assert "height: 52px" in body
+    assert "touch-action: manipulation" in body
 
 
 def test_signal_modal_tabs_meta_and_comps_are_investor_friendly():
