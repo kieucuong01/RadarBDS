@@ -58,6 +58,23 @@ def test_signal_badge_metadata_formats_dx_branch_and_hides_missing_optionals():
     assert sparse["road_label"] == "Hẻm xe hơi"
 
 
+def test_signal_badge_metadata_prefers_stored_road_name_over_nearby_arterial():
+    from services.market_data import signal_badge_metadata
+
+    meta = signal_badge_metadata({
+        "title": "Dat dinh hoa DX73 sat duong My Phuoc Tan Van",
+        "description": "Duong nhua thong, phuong Chanh Hiep. Dt 5x28 TC 75m.",
+        "property_type": "dat_nen",
+        "area_m2": 140,
+        "road_name": "DX73",
+        "road_tier": 2,
+        "road_type": "duong_nhua",
+        "tho_cu_m2": 75,
+    })
+
+    assert meta["street_label"] == "\u0110\u01b0\u1eddng DX73"
+
+
 def test_signal_badge_metadata_does_not_treat_tho_cu_or_distance_as_road_code():
     from services.market_data import signal_badge_metadata
 

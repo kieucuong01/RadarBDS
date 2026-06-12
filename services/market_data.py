@@ -791,7 +791,10 @@ def _title_case_road_name(value):
     words = []
     for part in str(value or "").split():
         lower = part.lower()
-        if lower in {"dx", "dh", "dl", "db", "ql"}:
+        code_match = re.fullmatch(r"(dx|dh|dl|db|nl|ng|ni|na|nb|dc|ql)(\d{1,3}[a-z]?)", lower)
+        if code_match:
+            words.append(f"{code_match.group(1).upper()}{code_match.group(2).upper()}")
+        elif lower in {"dx", "dh", "dl", "db", "nl", "ng", "ni", "na", "nb", "dc", "ql"}:
             words.append(lower.upper())
         else:
             words.append(lower[:1].upper() + lower[1:])
@@ -815,6 +818,24 @@ def _find_road_name_match(text):
     return None, None, None
 
 
+def _find_stored_road_name_match(road_name, text):
+    road = str(road_name or "").strip()
+    if not road:
+        return None, None, None
+    folded_road = _ascii_fold(road)
+    tokens = re.findall(r"[a-z]+|\d+[a-z]?", folded_road)
+    if not tokens:
+        return _title_case_road_name(road), 0, 0
+
+    code_prefixes = {"dx", "dh", "dl", "db", "nl", "ng", "ni", "na", "nb", "dc", "ql"}
+    separator = r"[\s\-./]*" if len(tokens) == 2 and tokens[0] in code_prefixes else r"[\s\-./]+"
+    pattern = rf"(?<![a-z0-9]){separator.join(re.escape(token) for token in tokens)}(?![a-z0-9])"
+    m = re.search(pattern, _ascii_fold(text or ""))
+    if m:
+        return _title_case_road_name(road), m.start(), m.end()
+    return _title_case_road_name(road), 0, 0
+
+
 def _street_prefix(folded, start, end, road_tier):
     window = folded[max(0, start - 50): min(len(folded), end + 50)]
     before = folded[max(0, start - 45): start]
@@ -833,7 +854,11 @@ def _street_prefix(folded, start, end, road_tier):
 
 
 def _format_street_label(r, text):
-    road_name, start, end = _find_road_name_match(text)
+    stored_road_name = _row_get(r, "road_name")
+    if stored_road_name:
+        road_name, start, end = _find_stored_road_name_match(stored_road_name, text)
+    else:
+        road_name, start, end = _find_road_name_match(text)
     if not road_name:
         return None
     folded = _ascii_fold(text or "")
@@ -949,7 +974,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         SELECT {total_select}
                v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                l.id, l.title, l.description, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
-               l.property_type, l.road_type, l.road_width_m, l.tho_cu_m2, l.tho_cu_ratio, l.is_hot,
+               l.property_type, l.road_name, l.road_type, l.road_width_m, l.tho_cu_m2, l.tho_cu_ratio, l.is_hot,
                {effective_price_drop_select_sql("l", "related_drop")},
                l.suspicious_bait,
                l.duplicate_of_id,
@@ -1064,7 +1089,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             WITH {LATEST_VALUATION_CTE}
             SELECT v.mos_pct, v.actual_ppm2, v.fair_ppm2, v.is_signal,
                    l.id, l.title, l.description, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
-                   l.property_type, l.road_type, l.road_width_m, l.tho_cu_m2, l.tho_cu_ratio, l.is_hot,
+                   l.property_type, l.road_name, l.road_type, l.road_width_m, l.tho_cu_m2, l.tho_cu_ratio, l.is_hot,
                    {effective_price_drop_select_sql("l", "related_drop")},
                    l.suspicious_bait,
                    l.duplicate_of_id,

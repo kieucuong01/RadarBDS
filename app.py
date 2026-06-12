@@ -2231,7 +2231,7 @@ def get_price_history(listing_id):
 
             comp_rows = conn.execute(f"""
                 SELECT id, title, description, url, ward, price_ty, area_m2, frontage_m, depth_m,
-                       price_per_m2, property_type, road_tier, road_type, road_width_m,
+                       price_per_m2, property_type, road_tier, road_name, road_type, road_width_m,
                        tho_cu_m2, tho_cu_ratio,
                        COALESCE(posted_at, crawled_at) as dt
                 FROM listings
