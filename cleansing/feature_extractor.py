@@ -1758,7 +1758,8 @@ def classify_property_type(
         r'\btret\s*lau\b|\bgac\s*lung\b|'
         r'\b\d+\s*pn\b|\b\d+\s*wc\b|'
         r'\bphong\s*(?:ngu|khach|tho)\b|'
-        r'\bbep\b|\bmay\s*lanh\b|\bsan\s*o\s*to\b|\bsan\s*oto\b',
+        r'\bbep\b|\bmay\s*lanh\b|\bsan\s*o\s*to\b|\bsan\s*oto\b|'
+        r'\bxem\s*nha\b(?!\s*dat\b)',
         text_ascii,
         re.IGNORECASE,
     ))
@@ -1772,7 +1773,7 @@ def classify_property_type(
     )
     if has_land_only_kw:
         text_for_tro = re.sub(r'\bphong\s*tro\s*dau\s*tu\b', ' ', text_for_tro, flags=re.IGNORECASE)
-    if re.search(r'nha\s*tro|phong\s*tro|day\s*tro|khu\s*tro|kinh\s*doanh\s*tro', text_for_tro):
+    if re.search(r'nha\s*tro\b|phong\s*tro\b|day\s*tro\b|khu\s*tro\b|kinh\s*doanh\s*tro\b', text_for_tro):
         return 'nha_tro'
 
     # ── url_hint branching ──

@@ -1327,6 +1327,25 @@ def test_classify_property_type_treats_land_with_bonus_house_as_land():
     ) == "nha_dat"
 
 
+def test_classify_property_type_does_not_confuse_nha_trong_with_nha_tro():
+    assert classify_property_type(
+        "Nhà trong KDC Hiệp Thành 1",
+        "Công năng nhà gồm phòng khách, bếp, 2 phòng ngủ. Diện tích 5x15, thổ cư full.",
+        75,
+        75,
+    ) == "nha_dat"
+
+
+def test_classify_property_type_treats_xem_nha_listing_as_house():
+    assert classify_property_type(
+        "Giảm bán nhanh mặt tiền đường nhựa nhà Phú Mỹ",
+        "Đường nhựa 6m thông tứ hướng, diện tích 5x28 thổ cư 100%, đang vay ngân hàng, lh xem nhà.",
+        140,
+        140,
+        price_per_m2=22.14,
+    ) == "nha_dat"
+
+
 if __name__ == "__main__":
     # Chạy tay khi không có pytest
     tests = [v for k, v in globals().items() if k.startswith("test_") and callable(v)]
