@@ -342,11 +342,14 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             first_price = existing["price_first_ty"] or existing["price_ty"]
             clear_stale_measurements = bool(rec.get("_clear_stale_measurements"))
             override_fields = set(rec.get("_llm_extraction_override_fields") or [])
-            new_price = (
-                rec.get("price_ty")
-                if "price_ty" in override_fields
-                else _prefer_new_value(rec.get("price_ty"), existing["price_ty"])
-            )
+            if clear_stale_measurements:
+                new_price = rec.get("price_ty")
+            else:
+                new_price = (
+                    rec.get("price_ty")
+                    if "price_ty" in override_fields
+                    else _prefer_new_value(rec.get("price_ty"), existing["price_ty"])
+                )
             if clear_stale_measurements:
                 new_area = rec.get("area_m2")
                 new_ppm2 = rec.get("price_per_m2")
@@ -384,7 +387,8 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             price_drop_pct = None
             suspicious_bait = existing["suspicious_bait"] if "suspicious_bait" in existing.keys() else 0
 
-            if "price_ty" in override_fields and not new_price:
+            clear_price = clear_stale_measurements and not _present(new_price)
+            if (("price_ty" in override_fields) or clear_stale_measurements) and not new_price:
                 price_dropped = 0
                 price_drop_pct = None
                 suspicious_bait = 0
@@ -418,6 +422,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     ward                = :ward,                 -- cho phép NULL overwrite (re-normalize có thể loại ward sai khi text chứa địa danh non-TDM)
                     has_so              = :has_so,
                     is_hot              = :is_hot,
+                    price_first_ty      = CASE WHEN :clear_price <> 0 THEN NULL ELSE price_first_ty END,
                     price_dropped       = :price_dropped,
                     price_drop_pct      = :price_drop_pct,
                     suspicious_bait     = :suspicious_bait,
@@ -450,6 +455,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "price_dropped": price_dropped,
                 "price_drop_pct": price_drop_pct,
                 "suspicious_bait": suspicious_bait,
+                "clear_price":    int(clear_price),
                 "updated_at":    now,
                 "posted_at":     rec.get("post_date"),
             })

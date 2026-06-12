@@ -90,6 +90,24 @@ def test_price_label_marks_tens_level_approximate_prices():
     assert _format_price_label("Gi\u00e1 3ty**") is None
 
 
+def test_normalize_facebook_ambiguous_masked_price_clears_structured_price():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "masked-price",
+        "url": "https://facebook.test/masked-price",
+        "title": "Hang dep gia chi 3ty**",
+        "description": "DT 5x30 mat tien D8, gia chi 3ty** ngay chu",
+        "price_ty": 3.0,
+        "price_per_m2": 20.0,
+        "area_m2": 150.0,
+    })
+
+    assert rec["price_ty"] is None
+    assert rec["price_per_m2"] is None
+    assert rec["area_m2"] == 150.0
+    assert rec["_clear_stale_measurements"] is True
+
+
 def test_extract_area():
     assert extract_area("1.826 m²") == 1826.0
     assert extract_area("110m2") == 110.0

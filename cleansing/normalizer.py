@@ -15,7 +15,7 @@ from config.location_aliases import resolve_post_merger_location
 from cleansing.feature_extractor import (
     classify_property_type, extract_tho_cu, extract_road_tier,
     extract_legal, extract_phone, extract_road_type, parse_facebook_post,
-    extract_area, extract_url_hint,
+    extract_area, extract_url_hint, has_ambiguous_masked_price,
 )  # extract_legal đã có sẵn — dùng cho has_so detection
 
 logger = logging.getLogger(__name__)
@@ -695,6 +695,10 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         # Vẫn parse khi thiếu dimensions, kể cả area structured đã có sẵn.
         _fb_parsed: dict = {}
         _parse_text = "\n".join(part for part in [title, description] if part)
+        _has_ambiguous_masked_price = source_name == "facebook" and has_ambiguous_masked_price(_parse_text)
+        if _has_ambiguous_masked_price:
+            price_ty = None
+            price_per_m2 = None
         _has_reported_area = _has_reported_total_area_marker(_parse_text)
         _fb_area_is_declared_total = False
         if (
@@ -707,7 +711,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             or raw.get("road_width_m") is None
         ):
             _fb_parsed = parse_facebook_post(_parse_text) or {}
-            if price_ty is None:
+            if price_ty is None and not _has_ambiguous_masked_price:
                 price_ty = _fb_parsed.get("price_total")
             if area_m2 is None:
                 parsed_area_from_text = _fb_parsed.get("area_m2") or None
@@ -782,7 +786,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             area_m2 = corrected_area
             price_per_m2 = None
 
-        if not price_ty and price_per_m2 and area_m2 and area_m2 > 0:
+        if not _has_ambiguous_masked_price and not price_ty and price_per_m2 and area_m2 and area_m2 > 0:
             price_ty = round((price_per_m2 * area_m2) / 1_000, 4)
         if price_ty and area_m2 and area_m2 > 0 and not price_per_m2:
             price_per_m2 = round((price_ty * 1_000) / area_m2, 3)
@@ -893,6 +897,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             "post_date":     parse_post_date(raw.get("date_raw", ""), raw.get("crawled_at", "")),
             "img_urls":      raw.get("imgs") or raw.get("img_urls") or [],
             "raw_json":      raw,
+            "_clear_stale_measurements": bool(_has_ambiguous_masked_price),
         }
     except Exception as e:
         logger.error(f"Normalize error: {e} | url={raw.get('url', '')}")

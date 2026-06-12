@@ -18,7 +18,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from cleansing.normalizer import normalize_record, compute_content_hash
-from cleansing.feature_extractor import extract_area, extract_url_hint, is_multi_lot_listing
+from cleansing.feature_extractor import (
+    extract_area,
+    extract_url_hint,
+    has_ambiguous_masked_price,
+    is_multi_lot_listing,
+)
 from db.analytics import save_valuation_result
 from db.connection import advisory_lock, get_conn
 from db.crawl_runs import finish_crawl_run, start_crawl_run
@@ -120,11 +125,7 @@ def _valuation_quality_flags(row) -> tuple:
         re.search(rf"\b\d+\s*(?:t|ty|ti)\s*\d+\s*[x*]+\s*(?:tr|trieu)?{masked_price_suffix}", text)
         or re.search(rf"\b\d+\s*(?:t|ty|ti)\s+\d+\s*[x*]+\s*(?:tr|trieu)?{masked_price_suffix}", text)
     )
-    ambiguous_price = bool(
-        re.search(rf"\b\d+\s*t\s*[x*]+{masked_price_suffix}", text)
-        or re.search(rf"\b\d+\s*(?:ty|ti)\s*[x*]+\s*(?:tr|trieu)?{masked_price_suffix}", text)
-        or re.search(r"\b\d+\s*[,\.]\s*x\s*(?:ty|ti)\b", text)
-    )
+    ambiguous_price = has_ambiguous_masked_price(text)
     if approximate_price:
         flags.append("approximate_price_text")
     if ambiguous_price:

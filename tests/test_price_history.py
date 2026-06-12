@@ -227,6 +227,47 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertIsNone(row["depth_m"])
         self.assertIsNone(row["tho_cu_m2"])
 
+    def test_upsert_listing_clear_stale_measurements_can_clear_stale_price(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(price_ty=3.0, price_per_m2=20.0, area_m2=150.0),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+
+        same_listing_id, is_new = upsert_listing(
+            self._rec(
+                price_ty=None,
+                price_per_m2=None,
+                area_m2=150.0,
+                _clear_stale_measurements=True,
+            ),
+            crawl_run_id=2,
+        )
+
+        self.assertEqual(same_listing_id, listing_id)
+        self.assertFalse(is_new)
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                SELECT price_ty, price_per_m2, price_first_ty,
+                       price_dropped, price_drop_pct, suspicious_bait, area_m2
+                FROM listings
+                WHERE id=?
+                """,
+                (listing_id,),
+            ).fetchone()
+
+        self.assertIsNone(row["price_ty"])
+        self.assertIsNone(row["price_per_m2"])
+        self.assertIsNone(row["price_first_ty"])
+        self.assertEqual(row["price_dropped"], 0)
+        self.assertIsNone(row["price_drop_pct"])
+        self.assertEqual(row["suspicious_bait"], 0)
+        self.assertEqual(row["area_m2"], 150.0)
+
     def test_upsert_listing_existing_row_enriches_dimensions_from_new_parse(self):
         from db.connection import get_conn
         from db.listings import upsert_listing

@@ -44,6 +44,17 @@ def _contains_folded_keyword(text_ascii: str, keyword: str) -> bool:
     return bool(re.search(pattern, text_ascii, re.IGNORECASE))
 
 
+_MASKED_PRICE_SUFFIX = r'(?=\s*(?:tr|trieu|lh|lien|alo|zalo)\b|[^a-z0-9]|$)'
+
+
+def has_ambiguous_masked_price(text: str) -> bool:
+    folded = _ascii_fold(text)
+    return bool(
+        re.search(rf'\b\d+\s*(?:t|ty|ti)\s*[x*]+\s*(?:tr|trieu)?{_MASKED_PRICE_SUFFIX}', folded, re.IGNORECASE)
+        or re.search(r'\b\d+\s*[,\.]\s*x\s*(?:ty|ti)\b', folded, re.IGNORECASE)
+    )
+
+
 _NON_ASKING_PRICE_PATTERNS = [
     # "Rẻ hơn thị trường 100 triệu" / "thấp hơn 1 tỷ" is a delta, not asking price.
     r'(?:rẻ\s*hơn|re\s*hon|thấp\s*hơn|thap\s*hon)\s*(?:thị\s*trường|thi\s*truong)?\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
@@ -135,9 +146,8 @@ def extract_price(text: str) -> Optional[float]:
         return _parse_ty_rest(m.group(1), m.group(2))
 
     # Masked shorthand: "3ty**" hides hundreds, but "3t5x" keeps hundreds clear.
-    fuzzy_price_suffix = r'(?=\s*(?:tr|trieu|lh|lien|alo|zalo)\b|[^a-z0-9]|$)'
-    if re.search(rf'\d+\s*(?:t|ty|ti)\s*\d+\s*[x*]+\s*(?:tr|trieu)?{fuzzy_price_suffix}', t_fold, re.IGNORECASE):
-        m = re.search(rf'\b(\d+)\s*(?:t|ty|ti)\s*(\d{{1,3}})\s*[x*]+\s*(?:tr|trieu)?{fuzzy_price_suffix}', t_fold, re.IGNORECASE)
+    if re.search(rf'\d+\s*(?:t|ty|ti)\s*\d+\s*[x*]+\s*(?:tr|trieu)?{_MASKED_PRICE_SUFFIX}', t_fold, re.IGNORECASE):
+        m = re.search(rf'\b(\d+)\s*(?:t|ty|ti)\s*(\d{{1,3}})\s*[x*]+\s*(?:tr|trieu)?{_MASKED_PRICE_SUFFIX}', t_fold, re.IGNORECASE)
         if m:
             ty = float(m.group(1).replace(',', '.'))
             rest = float(m.group(2))
@@ -147,7 +157,7 @@ def extract_price(text: str) -> Optional[float]:
                 return round(ty + rest / 100, 4)
             return round(ty + rest / 10, 4)
         return None
-    if re.search(rf'\b\d+\s*(?:t|ty|ti)\s*[x*]+\s*(?:tr|trieu)?{fuzzy_price_suffix}', t_fold, re.IGNORECASE):
+    if has_ambiguous_masked_price(t_fold):
         return None
 
     # "12,x tỷ" / "12.x ty" is an intentional fuzzy price. Use midpoint
