@@ -134,12 +134,10 @@ def extract_price(text: str) -> Optional[float]:
     if m:
         return _parse_ty_rest(m.group(1), m.group(2))
 
-    # GUARD: "1txx" / "2txx" / "1 tỷ xxx" — môi giới ám chỉ "1 tỷ mấy trăm"
-    # nhưng KHÔNG xác định → trả None thay vì guess.
-    # (user feedback L#675: "1tỷ xxx lấy hết giá tốt" → "1txx k phải 1 tỷ").
+    # Masked shorthand: "3ty**" hides hundreds, but "3t5x" keeps hundreds clear.
     fuzzy_price_suffix = r'(?=\s*(?:tr|trieu|lh|lien|alo|zalo)\b|[^a-z0-9]|$)'
-    if re.search(rf'\d+\s*(?:t|ty|ti)\s*\d*x+\s*(?:tr|trieu)?{fuzzy_price_suffix}', t_fold, re.IGNORECASE):
-        m = re.search(rf'\b(\d+)\s*(?:ty|ti)\s*(\d{{1,3}})x+\s*(?:tr|trieu)?{fuzzy_price_suffix}', t_fold, re.IGNORECASE)
+    if re.search(rf'\d+\s*(?:t|ty|ti)\s*\d+\s*[x*]+\s*(?:tr|trieu)?{fuzzy_price_suffix}', t_fold, re.IGNORECASE):
+        m = re.search(rf'\b(\d+)\s*(?:t|ty|ti)\s*(\d{{1,3}})\s*[x*]+\s*(?:tr|trieu)?{fuzzy_price_suffix}', t_fold, re.IGNORECASE)
         if m:
             ty = float(m.group(1).replace(',', '.'))
             rest = float(m.group(2))
@@ -149,7 +147,7 @@ def extract_price(text: str) -> Optional[float]:
                 return round(ty + rest / 100, 4)
             return round(ty + rest / 10, 4)
         return None
-    if re.search(r'\d+\s*(?:t|tỷ|ty|tỉ)\s*\d*x{2,}', t, re.IGNORECASE):
+    if re.search(rf'\b\d+\s*(?:t|ty|ti)\s*[x*]+\s*(?:tr|trieu)?{fuzzy_price_suffix}', t_fold, re.IGNORECASE):
         return None
 
     # "12,x tỷ" / "12.x ty" is an intentional fuzzy price. Use midpoint

@@ -115,13 +115,14 @@ def _valuation_quality_flags(row) -> tuple:
     if _fold_text(title).strip() in {"tin test", "test"} or _fold_text(source_id).startswith("test"):
         flags.append("test_artifact")
 
+    masked_price_suffix = r"(?=\s*(?:tr|trieu|lh|lien|alo|zalo)\b|[^a-z0-9]|$)"
     approximate_price = bool(
-        re.search(r"\b\d+\s*(?:ty|ti)\s*\d+x+\s*(?:tr|trieu)?\b", text)
-        or re.search(r"\b\d+\s*(?:ty|ti)\s+\d+x+\s*(?:tr|trieu)?\b", text)
+        re.search(rf"\b\d+\s*(?:t|ty|ti)\s*\d+\s*[x*]+\s*(?:tr|trieu)?{masked_price_suffix}", text)
+        or re.search(rf"\b\d+\s*(?:t|ty|ti)\s+\d+\s*[x*]+\s*(?:tr|trieu)?{masked_price_suffix}", text)
     )
     ambiguous_price = bool(
-        re.search(r"\b\d+\s*t\s*x+\b", text)
-        or re.search(r"\b\d+\s*(?:ty|ti)\s*x+\s*(?:tr|trieu)?\b", text)
+        re.search(rf"\b\d+\s*t\s*[x*]+{masked_price_suffix}", text)
+        or re.search(rf"\b\d+\s*(?:ty|ti)\s*[x*]+\s*(?:tr|trieu)?{masked_price_suffix}", text)
         or re.search(r"\b\d+\s*[,\.]\s*x\s*(?:ty|ti)\b", text)
     )
     if approximate_price:

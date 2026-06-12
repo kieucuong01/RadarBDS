@@ -58,6 +58,12 @@ def test_extract_price_handles_real_unicode_ty_patterns():
     assert extract_price("gi\u00e1 ch\u1ec9 1ty3xxlh 0986694832 v\u00e0o vi\u1ec7c") == 1.3
     assert extract_price("Ch\u1ee7 b\u00e1n gi\u00e1 1ty350tr, sau \u0111\u00f3 ghi gia 1ty3xx") == 1.35
     assert extract_price("Gi\u00e1 2txx") is None
+    assert extract_price("Gi\u00e1 3ty**") is None
+    assert extract_price("Gi\u00e1 3t\u1ef7**") is None
+    assert extract_price("Gi\u00e1 3 t\u1ef7 xx") is None
+    assert extract_price("Gi\u00e1 3t5x") == 3.5
+    assert extract_price("Gi\u00e1 3ty5*") == 3.5
+    assert extract_price("Gi\u00e1 3 t\u1ef7 5 *") == 3.5
     assert extract_price("Gi\u00e1 12.x t\u1ef7") is None
     assert extract_price("NH ho tro 500tr") is None
     assert extract_price("MT Th\u00edch Qu\u1ea3ng \u0110\u1ee9c gi\u1ea3m 2t\u1ef7 c\u00f2n 14t\u1ef7") == 14.0
@@ -78,7 +84,10 @@ def test_extract_price_per_m2_handles_per_meter_shorthand():
 def test_price_label_marks_tens_level_approximate_prices():
     assert _format_price_label("M\u1eb7t ti\u1ec1n gi\u00e1 1ty3xxtr") == "~1.3 t\u1ef7"
     assert _format_price_label("Nh\u00e0 ng\u1ed9p gi\u00e1 2ty1x") == "~2.1 t\u1ef7"
+    assert _format_price_label("Gi\u00e1 3t5x") == "~3.5 t\u1ef7"
+    assert _format_price_label("Gi\u00e1 3ty5*") == "~3.5 t\u1ef7"
     assert _format_price_label("Gi\u00e1 12.x t\u1ef7") is None
+    assert _format_price_label("Gi\u00e1 3ty**") is None
 
 
 def test_extract_area():

@@ -468,6 +468,45 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
         self.assertIn("multi_lot_listing", _valuation_quality_flags(row))
 
+    def test_quality_flags_distinguish_masked_price_precision(self):
+        from cleansing.reprocess import _valuation_quality_flags
+
+        class Row(dict):
+            def __missing__(self, key):
+                return None
+
+        base = {
+            "source": "facebook",
+            "source_id": "masked-price",
+            "url": "https://t.test/masked-price",
+            "price_ty": 3.5,
+            "price_per_m2": 20.0,
+            "area_m2": 175.0,
+            "property_type": "dat_nen",
+        }
+
+        approximate = Row({
+            **base,
+            "title": "Gia 3t5x",
+            "description": "Hang chuc trieu bi che nhung hang tram trieu da ro.",
+        })
+        approximate_star = Row({
+            **base,
+            "title": "Gia 3ty5*",
+            "description": "Hang chuc trieu bi che nhung hang tram trieu da ro.",
+        })
+        ambiguous = Row({
+            **base,
+            "title": "Gia 3ty**",
+            "description": "Hang tram trieu bi che nen khong duoc coi la gia 3 ty.",
+        })
+
+        self.assertIn("approximate_price_text", _valuation_quality_flags(approximate))
+        self.assertNotIn("ambiguous_price_text", _valuation_quality_flags(approximate))
+        self.assertIn("approximate_price_text", _valuation_quality_flags(approximate_star))
+        self.assertNotIn("ambiguous_price_text", _valuation_quality_flags(approximate_star))
+        self.assertIn("ambiguous_price_text", _valuation_quality_flags(ambiguous))
+
     def test_reprocess_marks_old_guland_signal_for_source_qc_without_pushing_signal(self):
         from cleansing.reprocess import reprocess_valuation
         from db.connection import get_conn

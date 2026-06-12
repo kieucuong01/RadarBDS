@@ -631,7 +631,12 @@ def _format_has_so(r):
 
 def _format_price_label(*texts):
     folded = _ascii_fold(" ".join(str(t or "") for t in texts))
-    m = re.search(r'\b(\d+)\s*(?:ty|ti)\s*(\d{1,3})x+\s*(?:tr|trieu)?\b', folded, re.I)
+    fuzzy_price_suffix = r'(?=\s*(?:tr|trieu|lh|lien|alo|zalo)\b|[^a-z0-9]|$)'
+    m = re.search(
+        rf'\b(\d+)\s*(?:t|ty|ti)\s*(\d{{1,3}})\s*[x*]+\s*(?:tr|trieu)?{fuzzy_price_suffix}',
+        folded,
+        re.I,
+    )
     if m:
         ty = float(m.group(1).replace(',', '.'))
         rest = float(m.group(2))
@@ -643,6 +648,8 @@ def _format_price_label(*texts):
             value = round(ty + rest / 10, 4)
         label = f"{value:.3f}".rstrip("0").rstrip(".")
         return f"~{label} tỷ"
+    if re.search(rf'\b\d+\s*(?:t|ty|ti)\s*[x*]+\s*(?:tr|trieu)?{fuzzy_price_suffix}', folded, re.I):
+        return None
     if re.search(r'\b\d+\s*[,\.]\s*x\b\s*(?:ty|ti)\b', folded, re.I):
         return None
     m = re.search(r'\b(\d+)\s*[,\.]\s*x\b\s*(?:ty|ti)\b', folded, re.I)
