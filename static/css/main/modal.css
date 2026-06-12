@@ -1349,8 +1349,8 @@
 
   #signalModal .close-modal {
     position: fixed !important;
-    top: max(12px, env(safe-area-inset-top));
-    right: 12px !important;
+    top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+    right: calc(env(safe-area-inset-right, 0px) + 12px) !important;
     z-index: 30 !important;
     width: 42px;
     height: 42px;
