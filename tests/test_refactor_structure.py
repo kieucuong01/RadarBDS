@@ -670,7 +670,7 @@ def test_lazy_feature_shells_are_hidden_or_positioned_before_lazy_css_loads():
     html = _read("templates/index.html")
     base_css = _read("static/css/main/base.css")
 
-    assert "css/main/base.css') ~ '?v=shell-critical-fix-20260611'" in html
+    assert "css/main/base.css') ~ '?v=mobile-input-zoom-20260612'" in html
     hidden_shell_rule = re.search(
         r"\.modal,\s*\.chat-window,\s*\.user-menu-dropdown,\s*\.mobile-app-title,\s*\.mobile-bottom-nav\s*\{([^}]*)\}",
         base_css,
@@ -683,6 +683,29 @@ def test_lazy_feature_shells_are_hidden_or_positioned_before_lazy_css_loads():
     assert re.search(r"\.modal\.show\s*\{[^}]*display:\s*flex", base_css, re.S)
     assert re.search(r"\.fab-ai\s*\{[^}]*position:\s*fixed;", base_css, re.S)
     assert re.search(r"\.fab-ai\s*\{[^}]*z-index:\s*80;", base_css, re.S)
+
+
+def test_mobile_form_controls_prevent_ios_focus_zoom_without_disabling_user_zoom():
+    html = _read("templates/index.html")
+    base_css = _read("static/css/main/base.css")
+
+    viewport = re.search(r'<meta name="viewport" content="([^"]+)"', html)
+    assert viewport
+    viewport_content = viewport.group(1)
+    assert "viewport-fit=cover" in viewport_content
+    assert "user-scalable=no" not in viewport_content
+    assert "maximum-scale" not in viewport_content
+
+    guard = re.search(r"@media\s*\(max-width:\s*768px\)\s*\{(?P<body>.*?)\n\}", base_css, re.S)
+    assert guard, "missing mobile CSS guard"
+    body = guard.group("body")
+    for expected in [
+        'input:not([type="checkbox"]):not([type="radio"]):not([type="range"])',
+        "select",
+        "textarea",
+        "font-size: 16px !important",
+    ]:
+        assert expected in body
 
 
 def test_dashboard_avoids_mobile_render_blocking_third_party_assets():
