@@ -264,6 +264,10 @@
   white-space: nowrap;
 }
 
+.sm-summary-fair strong {
+  font-size: 0.98rem;
+}
+
 .sm-summary-item small {
   margin-top: 3px;
   color: var(--text-muted);
@@ -1516,6 +1520,10 @@
 
   .sm-summary-item strong {
     font-size: 0.96rem;
+  }
+
+  .sm-summary-fair strong {
+    font-size: 0.9rem;
   }
 
   .sm-summary-item small {
