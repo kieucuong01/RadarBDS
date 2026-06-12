@@ -274,6 +274,11 @@
   text-overflow: ellipsis;
 }
 
+.sm-summary-fair small {
+  overflow: visible;
+  text-overflow: clip;
+}
+
 .sm-summary-price strong,
 .sm-summary-mos strong {
   color: #047857;

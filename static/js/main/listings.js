@@ -59,7 +59,7 @@ function renderListingSkeletonCards(grid) {
 }
 
 function listingFairPrice(x) {
-  const fairPpm2 = Number(x.fair_ppm2);
+  const fairPpm2 = Number(x.fair_ppm2_display || x.fair_ppm2);
   const area = Number(x.area_m2);
   if (!Number.isFinite(fairPpm2) || !Number.isFinite(area) || area <= 0) return '-';
   return (fairPpm2 * area / 1000).toFixed(2);
@@ -81,12 +81,17 @@ function listingDataAttrs(x, fair, imgSrc) {
     ['ppm2', x.price_per_m2 || ''],
     ['fair', fair !== '-' ? fair : ''],
     ['fppm2', x.fair_ppm2 || ''],
+    ['fair-ppm2-old', x.fair_ppm2_old || ''],
+    ['fair-ppm2-new', x.fair_ppm2_new || ''],
+    ['mos-pct-old', x.mos_pct_old || ''],
+    ['mos-pct-new', x.mos_pct_new || ''],
+    ['mos-pct-display', x.mos_pct_display || ''],
     ['area', x.area_m2 || ''],
     ['ward', x.ward || ''],
     ['road', x.road_type || x.road_tier || ''],
     ['time', _timeAgoText(x.days_ago)],
     ['profit', profit],
-    ['mos', x.mos_pct || ''],
+    ['mos', x.mos_pct_display || x.mos_pct || ''],
     ['source', sourceNames[x.source] || x.source || ''],
     ['drop', x.drop_pct || ''],
     ['score', x.signal_score || ''],
@@ -112,7 +117,7 @@ function listingTableRow(x) {
       </td>
       <td>
         <div style="color:var(--primary); font-weight:800;">${fair !== '-' ? `${fair} tỷ` : '-'}</div>
-        <div style="font-size:0.75rem; color:var(--primary); opacity:0.8; margin-top:2px;">${x.fair_ppm2 ? `${escHtml(x.fair_ppm2)} tr/m²` : '-'}</div>
+        <div style="font-size:0.75rem; color:var(--primary); opacity:0.8; margin-top:2px;">${x.fair_ppm2_display || x.fair_ppm2 ? `${escHtml(x.fair_ppm2_display || x.fair_ppm2)} tr/m²` : '-'}</div>
       </td>
       <td style="white-space:nowrap; font-size:0.8rem; color:var(--text-muted);">
         <div>${escHtml(x.posted_at || '-')}</div>

@@ -272,8 +272,8 @@ function _modalValuationItems(data = {}) {
   const area = _modalNumber(data.area_m2 ?? data.area);
   if (!Number.isFinite(area) || area <= 0) return [];
   const items = [];
-  const oldPpm2 = _modalNumber(data.fair_ppm2_old);
-  const newPpm2 = _modalNumber(data.fair_ppm2_new);
+  const oldPpm2 = _modalNumber(data.fair_ppm2_old ?? data.fairPpm2Old);
+  const newPpm2 = _modalNumber(data.fair_ppm2_new ?? data.fairPpm2New);
   if (Number.isFinite(oldPpm2) && oldPpm2 > 0) {
     items.push({ key: 'old', ppm2: oldPpm2, total: oldPpm2 * area / 1000 });
   }
@@ -281,7 +281,7 @@ function _modalValuationItems(data = {}) {
     items.push({ key: 'new', ppm2: newPpm2, total: newPpm2 * area / 1000 });
   }
   if (!items.length) {
-    const fairPpm2 = _modalNumber(data.fair_ppm2 ?? data.fppm2);
+    const fairPpm2 = _modalNumber(data.fair_ppm2_display ?? data.fairPpm2Display ?? data.fair_ppm2 ?? data.fppm2);
     if (Number.isFinite(fairPpm2) && fairPpm2 > 0) {
       items.push({ key: 'legacy', ppm2: fairPpm2, total: fairPpm2 * area / 1000 });
     }
@@ -305,8 +305,8 @@ function _modalActualPriceState(actualPpm2, valuationItems = []) {
 function updateSignalSummary(data = {}) {
   const price = _modalNumber(data.price_ty ?? data.price);
   const area = _modalNumber(data.area_m2 ?? data.area);
-  const actualPpm2 = _modalNumber(data.actual_ppm2 ?? data.ppm2);
-  const fairPpm2 = _modalNumber(data.fair_ppm2 ?? data.fppm2);
+  const actualPpm2 = _modalNumber(data.actual_ppm2 ?? data.actualPpm2 ?? data.price_per_m2 ?? data.pricePerM2 ?? data.ppm2);
+  const fairPpm2 = _modalNumber(data.fair_ppm2_display ?? data.fairPpm2Display ?? data.fair_ppm2 ?? data.fppm2);
   let fairTotal = _modalNumber(data.fair_total_ty ?? data.fair);
   if ((!Number.isFinite(fairTotal) || fairTotal <= 0) && Number.isFinite(fairPpm2) && Number.isFinite(area) && area > 0) {
     fairTotal = fairPpm2 * area / 1000;
@@ -315,7 +315,7 @@ function updateSignalSummary(data = {}) {
     ? actualPpm2
     : (Number.isFinite(price) && Number.isFinite(area) && area > 0 ? price * 1000 / area : NaN);
   const valuationItems = _modalValuationItems(data);
-  const mos = _modalNumber(data.mos_pct_display ?? data.mos_pct ?? data.mos);
+  const mos = _modalNumber(data.mos_pct_display ?? data.mosPctDisplay ?? data.mos_pct ?? data.mos);
   const score = _modalNumber(data.signal_score ?? data.score);
 
   _modalSetText('sm-sum-price', _modalFormatTy(price));
@@ -1017,6 +1017,12 @@ function openListingModal(row) {
     time: d.time,
     profit: d.profit,
     mos: d.mos,
+    mos_pct_display: d.mosPctDisplay,
+    mos_pct_old: d.mosPctOld,
+    mos_pct_new: d.mosPctNew,
+    fair_ppm2_old: d.fairPpm2Old,
+    fair_ppm2_new: d.fairPpm2New,
+    fair_ppm2_display: d.fairPpm2Display,
     source: d.source,
     drop: d.drop,
     score: d.score,

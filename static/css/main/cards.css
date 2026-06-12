@@ -777,8 +777,8 @@
 }
 
 .price-val-fair {
-  font-size: 1.06rem;
-  font-weight: 850;
+  font-size: 1.3rem;
+  font-weight: 800;
   color: var(--text);
   opacity: 1;
   font-style: normal;
@@ -804,14 +804,15 @@
 .valuation-model strong {
   max-width: 100%;
   font-size: 1em;
-  font-weight: 850;
+  font-weight: inherit;
+  line-height: 1;
   white-space: nowrap;
 }
 
 .valuation-model span {
   color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
   line-height: 1.1;
   white-space: nowrap;
 }
@@ -1136,7 +1137,7 @@
   }
 
   .price-val-fair {
-    font-size: 0.82rem;
+    font-size: 1.02rem;
   }
 
   .valuation-range {
@@ -1144,7 +1145,7 @@
   }
 
   .valuation-model span {
-    font-size: 0.6rem;
+    font-size: 0.66rem;
   }
 
   .price-m2 {
