@@ -51,6 +51,10 @@ _HEM_NAMED_ROAD_PAT = re.compile(
     r"\b(?:1/\s*)?hem\s*0*(\d{1,4})\s+([a-z][a-z\s]{3,60})(?=$|[,\.\n\r\-–—])",
     re.IGNORECASE,
 )
+_HEM_BARE_NAMED_ROAD_PAT = re.compile(
+    r"\b(?:1/\s*)?hem\s+([a-z][a-z\s]{3,60})(?=$|[,\.\n\r\-–—])",
+    re.IGNORECASE,
+)
 _NAMED_ROAD_PAT = re.compile(
     r"\b(?:mat\s*tien|mtkd|mt|duong|nhanh|1/\s*duong)\s+([a-z][a-z\s]{3,60})(?=$|[,\.\n\r\-–—])",
     re.IGNORECASE,
@@ -86,6 +90,12 @@ def extract_road_name(text: str) -> str | None:
         name = _clean_named_road(m.group(2))
         if name:
             return f"Hem {int(m.group(1))} {name}"
+    for m in _HEM_BARE_NAMED_ROAD_PAT.finditer(folded):
+        if _has_road_proximity_prefix(folded, m.start()):
+            continue
+        name = _clean_named_road(m.group(1))
+        if name:
+            return name
     for m in _NAMED_ROAD_PAT.finditer(folded):
         if _has_road_proximity_prefix(folded, m.start()):
             continue
@@ -105,7 +115,7 @@ def _has_road_proximity_prefix(folded: str, start: int) -> bool:
         return True
     clause = re.split(r"[\.,;\n\r]", folded[max(0, start - 80):start])[-1]
     return bool(re.search(
-        r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|ra|nhanh)\b",
+        r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|ra)\b",
         clause,
         re.IGNORECASE,
     ))

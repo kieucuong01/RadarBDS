@@ -63,6 +63,27 @@ def _strip_non_asking_price_phrases(text: str) -> str:
     return out
 
 
+def _strip_folded_non_asking_price_phrases(text_ascii: str) -> str:
+    out = text_ascii or ""
+    return re.sub(
+        r'\b(?:full\s+)?noi\s+that(?:\s+\w+){0,5}?\s+'
+        r'(?:tri\s*gia\s*)?(?:hon\s*)?[\d,.]+\s*(?:ty|ti|trieu|tr)\b',
+        ' ',
+        out,
+        flags=re.IGNORECASE,
+    )
+
+
+def _strip_unicode_non_asking_price_phrases(text: str) -> str:
+    out = text or ""
+    interior_value_pattern = (
+        "\\b(?:full\\s+)?n\\u1ed9i\\s+th\\u1ea5t(?:\\s+\\w+){0,5}?\\s+"
+        "(?:tr\\u1ecb\\s*gi\\u00e1\\s*)?(?:h\\u01a1n\\s*)?"
+        "[\\d,.]+\\s*(?:t\\u1ef7|t\\u1ec9|tri\\u1ec7u|tr)\\b"
+    )
+    return re.sub(interior_value_pattern, " ", out, flags=re.IGNORECASE)
+
+
 # ═══════════════════════════════════════════════════════════════════
 # 1. GIÁ
 # ═══════════════════════════════════════════════════════════════════
@@ -84,7 +105,9 @@ def extract_price(text: str) -> Optional[float]:
     # Normalize "tỉ" (biến thể không chuẩn) → "tỷ" để pattern match thống nhất
     t = t.replace('tỉ', 'tỷ')
     t = _strip_non_asking_price_phrases(t)
+    t = _strip_unicode_non_asking_price_phrases(t)
     t_fold = _ascii_fold(t)
+    t_fold = _strip_folded_non_asking_price_phrases(t_fold)
 
     def _parse_ty_rest(ty_str: str, rest: str) -> float:
         """Helper: X tỷ + Y phần lẻ → tỷ (ví dụ 2 + '550' = 2.55, 2 + '8' = 2.8)."""

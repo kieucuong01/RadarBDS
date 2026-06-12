@@ -64,6 +64,12 @@ def test_extract_price_handles_real_unicode_ty_patterns():
     assert extract_price("Gi\u1ea3m 400 tri\u1ec7u gi\u00e1 4,2 t\u1ef7 ch\u1ec9 c\u00f2n 3,8 t\u1ef7") == 3.8
 
 
+def test_extract_price_ignores_interior_value_when_asking_price_is_vague():
+    assert extract_price("Gi\u00e1 thi\u1ec7n ch\u00ed, full n\u1ed9i th\u1ea5t cao c\u1ea5p h\u01a1n 1 t\u1ef7") is None
+    assert extract_price("Full n\u1ed9i th\u1ea5t h\u01a1n 1 t\u1ef7, gi\u00e1 g\u1eb7p ch\u1ee7 th\u01b0\u01a1ng l\u01b0\u1ee3ng") is None
+    assert extract_price("N\u1ed9i th\u1ea5t tr\u1ecb gi\u00e1 800 tri\u1ec7u, gi\u00e1 b\u00e1n 5,2 t\u1ef7") == 5.2
+
+
 def test_extract_price_per_m2_handles_per_meter_shorthand():
     assert extract_price_per_m2("10Tri\u1ec7u/m. R\u1eba QU\u00c1 R\u1eba") == 10
     assert extract_price_per_m2("Gi\u00e1 9,5 tr/m, di\u1ec7n t\u00edch 5x30") == 9.5
@@ -703,6 +709,11 @@ def test_extract_road_name_ignores_proximity_but_keeps_actual_roads():
     assert extract_road_name("Đường DB12 _ Khu Đô Thị Mới") == "DB12"
     assert extract_road_name("Mặt Tiền Đường 5C TĐC Định Hoà") == "5C"
     assert extract_road_type("5x41tc 80m đường đất 4m chuẩn bị lên nhựa") == "duong_dat"
+
+
+def test_extract_road_name_captures_named_alley_without_house_number():
+    assert extract_road_name("Nh\u00e0 h\u1ebbm B\u00f9i Qu\u1ed1c Kh\u00e1nh, \u0111\u01b0\u1eddng xe h\u01a1i") == "Bui Quoc Khanh"
+    assert extract_road_name("H\u1ebbm Hu\u1ef3nh V\u0103n L\u0169y, l\u00f4 g\u00f3c 2 m\u1eb7t ti\u1ec1n") == "Huynh Van Luy"
 
 
 def test_classify_property_type_ignores_potential_use_apartment_words():
