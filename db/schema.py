@@ -498,6 +498,64 @@ CREATE INDEX IF NOT EXISTS idx_audit_action_time ON user_audit_log(action, creat
 CREATE INDEX IF NOT EXISTS idx_audit_listing     ON user_audit_log(listing_id, created_at DESC);
 
 
+CREATE TABLE IF NOT EXISTS assistant_sessions (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_token           TEXT NOT NULL UNIQUE,
+    user_id                 INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    tier                    TEXT,
+    investment_profile_json TEXT,
+    page_context_json       TEXT,
+    last_intent             TEXT,
+    created_at              TEXT DEFAULT (datetime('now')),
+    updated_at              TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_assistant_sessions_user
+    ON assistant_sessions(user_id, updated_at DESC);
+
+
+CREATE TABLE IF NOT EXISTS assistant_messages (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id        INTEGER NOT NULL REFERENCES assistant_sessions(id) ON DELETE CASCADE,
+    role              TEXT NOT NULL,
+    message           TEXT NOT NULL,
+    intent            TEXT,
+    entities_json     TEXT,
+    tool_name         TEXT,
+    tool_payload_json TEXT,
+    actions_json      TEXT,
+    created_at        TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_assistant_messages_session
+    ON assistant_messages(session_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_assistant_messages_intent
+    ON assistant_messages(intent, created_at DESC);
+
+
+CREATE TABLE IF NOT EXISTS assistant_feedback (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    message_id INTEGER REFERENCES assistant_messages(id) ON DELETE CASCADE,
+    user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    rating     TEXT NOT NULL,
+    note       TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_assistant_feedback_message
+    ON assistant_feedback(message_id);
+
+
+CREATE TABLE IF NOT EXISTS assistant_user_profiles (
+    user_id          INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    budget_min_ty    REAL,
+    budget_max_ty    REAL,
+    strategy         TEXT,
+    risk_appetite    TEXT,
+    preferred_wards  TEXT,
+    property_types   TEXT,
+    road_tiers       TEXT,
+    updated_at       TEXT DEFAULT (datetime('now'))
+);
+
+
 CREATE TABLE IF NOT EXISTS rate_limits (
     key          TEXT PRIMARY KEY,       -- 'listings:user:42' | 'listings:ip:1.2.3.4'
     window_start TEXT,

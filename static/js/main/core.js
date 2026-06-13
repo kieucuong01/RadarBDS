@@ -210,6 +210,7 @@ const lazyEngagementMethods = [
   'tierCTA',
   'toggleChat',
   'sendMessage',
+  'sendAssistantPrompt',
   'captureLeadAndOpen',
   'closeLeadCaptureModal',
   'submitLeadAndOpenZalo',
@@ -242,6 +243,7 @@ for (const method of lazyEngagementMethods) {
 window.tierCTA = window.tierCTA || lazyEngagementProxy.tierCTA;
 window.toggleChat = window.toggleChat || lazyEngagementProxy.toggleChat;
 window.sendMessage = window.sendMessage || lazyEngagementProxy.sendMessage;
+window.sendAssistantPrompt = window.sendAssistantPrompt || lazyEngagementProxy.sendAssistantPrompt;
 window.onLockedTabClick = window.onLockedTabClick || lazyEngagementProxy.onLockedTabClick;
 window.track = window.track || _sendTrackEvent;
 

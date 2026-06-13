@@ -977,25 +977,15 @@
   position: relative;
   overflow: hidden;
   padding: 10px 13px 9px;
-  border: 1px solid rgba(16, 185, 129, 0.28);
-  border-radius: 18px;
-  background:
-    linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(99, 102, 241, 0.10) 46%, rgba(245, 158, 11, 0.10)),
-    rgba(15, 23, 42, 0.18);
-  box-shadow:
-    0 14px 34px rgba(16, 185, 129, 0.13),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   isolation: isolate;
 }
 
 .command-mos::before {
-  content: '';
-  position: absolute;
-  inset: -55% -18%;
-  z-index: -1;
-  background: linear-gradient(110deg, transparent 28%, rgba(255, 255, 255, 0.22) 50%, transparent 72%);
-  transform: translateX(-54%);
-  animation: coreFilterSweep 4.8s ease-in-out infinite;
+  content: none;
 }
 
 .command-mos::after {

@@ -104,7 +104,9 @@
       </button>
     </div>
     <div class="logo">
-      <span class="logo-img logo-mark" aria-hidden="true">RB</span>
+      <span class="logo-img logo-mark logo-mark-image" aria-hidden="true">
+        <img src="{{ url_for('static', filename='images/app-icon-192.png') }}" alt="">
+      </span>
       <div class="logo-info">
         <span class="logo-text">Radar<span style="color:var(--primary)">BDS</span></span>
         <span class="logo-subtitle">CHUYÊN SÂU BÌNH DƯƠNG</span>
@@ -1158,13 +1160,21 @@
 
   <div class="chat-window" id="chatWindow">
     <div class="chat-header">
-      <span>🤖 RadarBDS AI Assistant</span>
+      <span>Radar Assistant</span>
       <button onclick="toggleChat()" aria-label="Đóng trợ lý Radar AI"
         style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem;">×</button>
     </div>
+    <div class="chat-quick-prompts" id="chatQuickPrompts" aria-label="Gợi ý câu hỏi Radar Assistant">
+      <button type="button" onclick="sendAssistantPrompt('Tìm deal theo ngân sách')">Tìm deal theo ngân sách</button>
+      <button type="button" onclick="sendAssistantPrompt('Hôm nay có gì đáng xem?')">Hôm nay có gì đáng xem?</button>
+      <button type="button" onclick="sendAssistantPrompt('Tạo bộ lọc săn deal')">Tạo bộ lọc săn deal</button>
+      <button type="button" onclick="sendAssistantPrompt('So sánh Tân An và Chánh Nghĩa')">So sánh khu vực</button>
+      <button type="button" onclick="sendAssistantPrompt('Tạo watchlist Tân An dưới 3 tỷ MOS 15%')">Tạo watchlist</button>
+      <button type="button" onclick="sendAssistantPrompt('Checklist đi xem đất')">Checklist đi xem đất</button>
+      <button type="button" onclick="sendAssistantPrompt('Giải thích MOS')">Giải thích MOS</button>
+    </div>
     <div class="chat-messages" id="chatMessages">
-      <div class="message bot">Xin chào! Tôi là trợ lý AI của RadarBDS. Tôi có thể giúp gì cho bạn về bất động sản hôm
-        nay?</div>
+      <div class="message bot">Bạn đang săn khu nào và ngân sách khoảng bao nhiêu? Mình sẽ dựng shortlist thật nhanh.</div>
     </div>
     <div class="chat-input-area">
       <input type="text" class="chat-input" id="chatInput" aria-label="Nhập câu hỏi cho Radar AI"

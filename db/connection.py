@@ -33,6 +33,9 @@ _local = threading.local()
 
 ID_TABLES = {
     "admin_audit_log",
+    "assistant_feedback",
+    "assistant_messages",
+    "assistant_sessions",
     "ai_deal_review",
     "ai_training_feedback",
     "broker_blacklist",

@@ -50,6 +50,7 @@ from services.extraction_audit import (
     merge_extraction_audits,
 )
 from services.advisory_memo import build_admin_valuation_workflow_markdown
+from services.radar_assistant import build_assistant_response
 from services import admin_leads, admin_quality, admin_users
 
 # RBAC (4-tier auth)
@@ -4360,11 +4361,21 @@ def _jaccard(a, b):
         return 0.0
     return inter / union
 
+@rate_limit("assistant_chat", limits={"guest": 40, "free": 160, "vip": 500, "admin": None})
 def api_chat():
-    return jsonify({
-        "response": "Tính năng chat AI đã được tắt. Hệ thống hiện chỉ dùng dữ liệu parser và định giá nội bộ.",
-        "disabled": True,
-    }), 410
+    payload = request.get_json(silent=True) or {}
+    message = (payload.get("message") or "").strip()
+    if not message:
+        return jsonify({"ok": False, "error": "empty_message"}), 400
+    response = build_assistant_response(
+        message,
+        session_id=payload.get("session_id"),
+        page_context=payload.get("page_context") or {},
+        current_filters=payload.get("current_filters") or {},
+        tier=current_tier(),
+        user=current_user(),
+    )
+    return jsonify(response)
 
 from routes import register_blueprints
 
