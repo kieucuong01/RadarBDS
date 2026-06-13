@@ -820,10 +820,10 @@ function renderInvestmentMemoLocked() {
   if (!body) return;
   body.innerHTML = `
     <div class="sm-memo-locked">
-      <b>Cố vấn đầu tư dành cho VIP</b><br>
-      Nâng cấp VIP để xem ghi chú cố vấn riêng cho từng tín hiệu: định giá, rủi ro cần kiểm tra và góc nhìn đầu tư.
+      <b>Đăng nhập để xem Cố vấn</b><br>
+      Tài khoản miễn phí có thể xem ghi chú cố vấn cho từng tín hiệu: định giá, rủi ro cần kiểm tra và góc nhìn đầu tư.
       <div style="margin-top:10px;">
-        <button type="button" class="sm-comps-toggle" onclick="RadarAuth.openAuthModal('Đăng nhập hoặc nâng cấp VIP để xem cố vấn đầu tư.')">Đăng nhập</button>
+        <button type="button" class="sm-comps-toggle" onclick="RadarAuth.openAuthModal('Đăng nhập miễn phí để xem cố vấn đầu tư.')">Đăng nhập</button>
       </div>
     </div>
   `;

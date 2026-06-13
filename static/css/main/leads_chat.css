@@ -347,6 +347,8 @@
     max-width: none;
     flex: none;
     gap: 4px;
+    padding: 8px 10px;
+    border-radius: 14px;
   }
 
   .command-mos-label {
@@ -357,7 +359,7 @@
   }
 
   .command-mos-track #mosSlider {
-    height: 4px;
+    height: 5px;
   }
 
   .command-mos-markers {

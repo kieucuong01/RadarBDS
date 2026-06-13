@@ -27,6 +27,25 @@ function getKeywordSearchValue() {
   return input ? input.value.trim().replace(/\s+/g, ' ').slice(0, 80) : '';
 }
 
+function syncCoreFilterVisuals() {
+  const mosSlider = document.getElementById('mosSlider');
+  const mosValue = document.getElementById('mosValue');
+  const mosShell = document.querySelector('.command-mos');
+  if (mosSlider) {
+    const min = Number(mosSlider.min || 0);
+    const max = Number(mosSlider.max || 70);
+    const value = Number(mosSlider.value || 0);
+    const pct = max > min ? Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100)) : 0;
+    mosSlider.style.setProperty('--mos-progress', `${pct}%`);
+    if (mosShell) mosShell.dataset.mosLevel = value >= 25 ? 'strong' : value >= 10 ? 'active' : 'open';
+    if (mosValue) mosValue.textContent = String(value);
+  }
+
+  const onlyDrops = document.querySelector('input[name="only_drops"]');
+  const dropShell = onlyDrops ? onlyDrops.closest('.command-drop-toggle') : null;
+  if (dropShell) dropShell.classList.toggle('is-active', Boolean(onlyDrops.checked));
+}
+
 function syncKeywordSearchInputs(value, source = null) {
   const normalized = String(value || '').slice(0, 80);
   document.querySelectorAll('.keyword-search-input').forEach(input => {
@@ -141,8 +160,17 @@ function activateSuperSignal() {
     onlyDrops.checked = true;
     onlyDrops.dispatchEvent(new Event('change', { bubbles: true }));
   }
+  syncCoreFilterVisuals();
   scheduleApplyFilters();
 }
+
+document.addEventListener('input', (e) => {
+  if (e.target && e.target.id === 'mosSlider') syncCoreFilterVisuals();
+});
+
+document.addEventListener('change', (e) => {
+  if (e.target && (e.target.id === 'mosSlider' || e.target.name === 'only_drops')) syncCoreFilterVisuals();
+});
 
 function syncSignalSortSelect() {
   const select = document.getElementById('signalSortSelect');

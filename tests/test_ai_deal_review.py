@@ -397,22 +397,23 @@ class AiDealReviewTest(unittest.TestCase):
         self.assertIn("gia_nen_tra_khi_con_rui_ro_ty", dossier["action_pricing"])
         self.assertGreaterEqual(len(dossier["action_pricing"]["due_diligence_questions"]), 3)
 
-    def test_listing_memo_api_is_vip_only_and_returns_pending_or_latest_memo(self):
+    def test_listing_memo_api_is_login_only_and_returns_pending_or_latest_memo(self):
         import app as app_module
 
         lid = self._insert_signal(url="https://t.test/api-memo")
 
         with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path):
-            client = app_module.app.test_client()
+            guest_client = app_module.app.test_client()
 
-            guest = client.get(f"/api/listing/{lid}/memo")
+            guest = guest_client.get(f"/api/listing/{lid}/memo")
             self.assertEqual(guest.status_code, 403)
             self.assertEqual(guest.get_json()["reason"], "login_required")
 
-            self._login_tier(client, "free")
-            free = client.get(f"/api/listing/{lid}/memo")
-            self.assertEqual(free.status_code, 403)
-            self.assertEqual(free.get_json()["reason"], "vip_required")
+            free_client = app_module.app.test_client()
+            self._login_tier(free_client, "free")
+            free = free_client.get(f"/api/listing/{lid}/memo")
+            self.assertEqual(free.status_code, 200)
+            self.assertTrue(free.get_json()["pending"])
 
             client = app_module.app.test_client()
             self._login_tier(client, "vip")
@@ -471,13 +472,13 @@ class AiDealReviewTest(unittest.TestCase):
                     (lid,),
                 )
 
-            full = client.get(f"/api/listing/{lid}/memo")
+            full = free_client.get(f"/api/listing/{lid}/memo")
             data = full.get_json()
             self.assertEqual(full.status_code, 200)
             self.assertFalse(data["pending"])
             self.assertEqual(data["memo_markdown"], memo_text)
             self.assertEqual(data["verdict"], "cheap_real")
-            self.assertEqual(data["tier"], "vip")
+            self.assertEqual(data["tier"], "free")
             self.assertNotIn("admin_valuation_workflow_markdown", data)
 
             admin_client = app_module.app.test_client()

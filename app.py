@@ -2073,8 +2073,6 @@ def api_listing_memo(listing_id):
     tier = current_tier()
     if tier == "guest":
         return jsonify({"locked": True, "reason": "login_required"}), 403
-    if tier not in ("vip", "admin"):
-        return jsonify({"locked": True, "reason": "vip_required"}), 403
 
     with db_mod.get_conn() as conn:
         listing = conn.execute(

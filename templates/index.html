@@ -476,7 +476,7 @@
               🔥 TÍN HIỆU MẠNH
             </button> -->
 
-            <div class="command-mos {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}" {% if USER_TIER=='guest'
+            <div class="command-mos core-filter-callout {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}" {% if USER_TIER=='guest'
               %}onclick="window.track('locked_filter_click',{context:{filter:'mos_min'}}); RadarAuth.openAuthModal('Đăng ký miễn phí để lọc theo định giá')"
               title="Đăng ký để dùng bộ lọc này" {% endif %}>
               <div class="command-mos-head">
@@ -490,7 +490,7 @@
                 <input type="range" name="mos_min" id="mosSlider" min="0" max="70" step="5" value="10" {% if
                   USER_TIER=='guest' %}disabled{% endif %}
                   aria-label="Biên an toàn tối thiểu"
-                  oninput="document.getElementById('mosValue').textContent=this.value"
+                  oninput="syncCoreFilterVisuals()"
                   onchange="scheduleApplyFilters()">
               </div>
 

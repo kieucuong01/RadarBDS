@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof syncKeywordSearchInputs === 'function') {
     syncKeywordSearchInputs(searchParams.get('q') || searchParams.get('keyword') || '');
   }
+  if (typeof syncCoreFilterVisuals === 'function') syncCoreFilterVisuals();
   if (window.INITIAL_WARDS_BY_CITY) {
     globalWardsByCity = window.INITIAL_WARDS_BY_CITY;
     updateWardFilters(globalWardsByCity, [], { preserveScroll: false, preserveSearch: false });
