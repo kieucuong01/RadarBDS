@@ -8,7 +8,7 @@ from cleansing.feature_extractor import _NAMED_ROADS, extract_road_width, extrac
 from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
 from db.connection import get_conn
 from services.image_assets import resolve_image_url
-from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
+from services.signal_quality import ACTIONABLE_SUPPRESS_FLAGS, LATEST_VALUATION_CTE, actionable_signal_sql
 
 LATEST_SHADOW_VALUATION_CTE = """
 latest_shadow_valuation AS (
@@ -534,9 +534,23 @@ def _display_mos_sql(old_alias="v", new_alias="sv", actual_expr="COALESCE(v.actu
     """
 
 
+def _valuation_quality_sql(alias: str) -> str:
+    flags_expr = f"COALESCE({alias}.source_quality_flags,'')"
+    parts = [
+        f"COALESCE({alias}.fair_ppm2,0) > 0",
+        (
+            f"(COALESCE({alias}.source_quality_recheck,0)=0 OR "
+            f"({flags_expr} LIKE '%low_segment_confidence%'))"
+        ),
+    ]
+    for flag in sorted(ACTIONABLE_SUPPRESS_FLAGS):
+        parts.append(f"{flags_expr} NOT LIKE '%{flag}%'")
+    return " AND ".join(parts)
+
+
 def _conservative_signal_sql(display_mos_expr: str, mos_min: float, old_alias="v", new_alias="sv") -> str:
-    legacy_signal_condition = actionable_signal_sql(old_alias)
-    shadow_signal_condition = actionable_signal_sql(new_alias)
+    legacy_signal_condition = _valuation_quality_sql(old_alias)
+    shadow_signal_condition = _valuation_quality_sql(new_alias)
     return f"""
         ({legacy_signal_condition})
         AND ({shadow_signal_condition})

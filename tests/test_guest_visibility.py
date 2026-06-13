@@ -287,6 +287,65 @@ class GuestVisibilityTest(unittest.TestCase):
         filtered_ids = {row["id"] for row in filtered.get_json()["signals"]}
         self.assertNotIn(both_id, filtered_ids)
 
+    def test_free_user_can_filter_signal_feed_below_default_mos_threshold(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, description, ward,
+                    area_m2, property_type, price_ty, price_per_m2,
+                    is_hot, price_dropped, suspicious_bait,
+                    probably_sold, possibly_duplicate, posted_at, crawled_at
+                ) VALUES (
+                    'facebook', ?, ?,
+                    'Below ten percent conservative deal', 'Fresh listing description',
+                    ?, 100, 'dat_nen', 2.0, 20.0,
+                    0, 0, 0, 0, 0, datetime('now'), datetime('now')
+                )
+                """,
+                (f"below-ten-{self.token}", f"{self.url_prefix}/below-ten", self.ward),
+            )
+            listing_id = cur.lastrowid
+            self.listing_ids.append(listing_id)
+            conn.execute(
+                """
+                INSERT INTO valuation_results (
+                    listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score, source_quality_flags
+                ) VALUES (?, 21.8, 20.0, 8.3, 0, 20, '')
+                """,
+                (listing_id,),
+            )
+            run_id = conn.execute(
+                """
+                INSERT INTO valuation_model_runs (model_name, model_version, status)
+                VALUES ('median_road_tier', 'median_road_tier_v1', 'complete')
+                """
+            ).lastrowid
+            conn.execute(
+                """
+                INSERT INTO valuation_shadow_results (
+                    model_run_id, listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score, source_quality_flags
+                ) VALUES (?, ?, 22.5, 20.0, 11.1, 0, 25, '')
+                """,
+                (run_id, listing_id),
+            )
+
+        default_response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=20")
+        self.assertEqual(default_response.status_code, 200)
+        default_ids = {row["id"] for row in default_response.get_json()["signals"]}
+        self.assertNotIn(listing_id, default_ids)
+
+        self._login_as_free()
+        filtered_response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=20&mos_min=5")
+        self.assertEqual(filtered_response.status_code, 200)
+        rows = {row["id"]: row for row in filtered_response.get_json()["signals"]}
+        self.assertIn(listing_id, rows)
+        self.assertAlmostEqual(rows[listing_id]["mos_pct_display"], 8.3, places=1)
+
     def test_drop_filter_includes_canonical_with_higher_price_repost(self):
         from db.connection import get_conn
         from services.market_data import load_signals
