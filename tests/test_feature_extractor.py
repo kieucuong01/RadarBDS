@@ -752,6 +752,11 @@ def test_extract_road_name_captures_named_alley_without_house_number():
     assert extract_road_name("H\u1ebbm Hu\u1ef3nh V\u0103n L\u0169y, l\u00f4 g\u00f3c 2 m\u1eb7t ti\u1ec1n") == "Huynh Van Luy"
 
 
+def test_extract_road_name_keeps_nhanh_dx_codes():
+    assert extract_road_name("\u0110\u1ea5t \u0110\u1ecbnh H\u00f2a nh\u00e1nh DX72 d\u00e2n c\u01b0 \u0111\u00f4ng") == "DX72"
+    assert extract_road_name("Nh\u00e0 c\u1ea5p 4 Hi\u1ec7p An nh\u00e1nh dx088 \u0111\u01b0\u1eddng b\u00ea t\u00f4ng 3,7m") == "DX88"
+
+
 def test_classify_property_type_ignores_potential_use_apartment_words():
     title = "Chu gui ban gap sieu pham duong DB12"
     description = (
@@ -1353,6 +1358,16 @@ def test_classify_property_type_treats_xem_nha_listing_as_house():
         140,
         price_per_m2=22.14,
     ) == "nha_dat"
+
+
+def test_classify_property_type_ignores_buildability_storey_phrase_for_land():
+    assert classify_property_type(
+        "\u0110\u1ea5t \u0111\u01b0\u1eddng N1 khu H\u01b0ng Ph\u00e1t An \u0110i\u1ec1n",
+        "Di\u1ec7n t\u00edch 5x16 th\u1ed5 c\u01b0 full. X\u00e2y d\u1ef1ng 1 tr\u1ec7t 1 l\u1ea7u, h\u1ea1 t\u1ea7ng ho\u00e0n thi\u1ec7n, d\u00e2n c\u01b0 v\u00e0 nh\u00e0 \u1edf xung quanh \u0111\u00f4ng.",
+        80,
+        80,
+        price_per_m2=13.75,
+    ) == "dat_nen"
 
 
 if __name__ == "__main__":

@@ -108,7 +108,7 @@ def extract_road_name(text: str) -> str | None:
 def _has_road_proximity_prefix(folded: str, start: int) -> bool:
     context = folded[max(0, start - 34):start]
     if re.search(
-        r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|ra|nhanh)\s+(?:duong\s+)?$",
+r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|ra)\s+(?:duong\s+)?$",
         context,
         re.IGNORECASE,
     ):

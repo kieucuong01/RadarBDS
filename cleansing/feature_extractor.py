@@ -1750,7 +1750,15 @@ def classify_property_type(
         ' ', text_for_nha_ascii, flags=re.IGNORECASE,
     )
     text_for_nha_ascii = re.sub(
+        r'\bxay(?:\s*dung)?\s*(?:\d+\s*)?tret(?:\s*(?:\d+\s*)?(?:lau|tang))+\b',
+        ' ', text_for_nha_ascii, flags=re.IGNORECASE,
+    )
+    text_for_nha_ascii = re.sub(
         r'\b(?:xung\s*quanh|hang\s*xom|khu\s*vuc|sat\s*ben)\b.{0,70}\bnha\s*(?:lau|cap|moi|o)?\b',
+        ' ', text_for_nha_ascii, flags=re.IGNORECASE,
+    )
+    text_for_nha_ascii = re.sub(
+        r'\b(?:dan\s*cu(?:\s*va)?\s*)?nha\s*o\s*xung\s*quanh\b.{0,30}\b(?:dong|hien\s*huu)\b',
         ' ', text_for_nha_ascii, flags=re.IGNORECASE,
     )
     text_ascii = text_for_nha_ascii
