@@ -60,6 +60,7 @@ def test_extract_price_handles_real_unicode_ty_patterns():
     assert extract_price("Gi\u00e1 2txx") is None
     assert extract_price("Gi\u00e1 3ty**") is None
     assert extract_price("Gi\u00e1 3t\u1ef7**") is None
+    assert extract_price("_______\\\\\\_2ty** ( ** nhỏ xíu, Ngay Chủ )") is None
     assert extract_price("Gi\u00e1 3 t\u1ef7 xx") is None
     assert extract_price("Gi\u00e1 3t5x") == 3.5
     assert extract_price("Gi\u00e1 3ty5*") == 3.5

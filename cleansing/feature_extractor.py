@@ -45,13 +45,14 @@ def _contains_folded_keyword(text_ascii: str, keyword: str) -> bool:
 
 
 _MASKED_PRICE_SUFFIX = r'(?=\s*(?:tr|trieu|lh|lien|alo|zalo)\b|[^a-z0-9]|$)'
+_PRICE_LEFT_BOUNDARY = r'(?<![a-z0-9])'
 
 
 def has_ambiguous_masked_price(text: str) -> bool:
     folded = _ascii_fold(text)
     return bool(
-        re.search(rf'\b\d+\s*(?:t|ty|ti)\s*[x*]+\s*(?:tr|trieu)?{_MASKED_PRICE_SUFFIX}', folded, re.IGNORECASE)
-        or re.search(r'\b\d+\s*[,\.]\s*x\s*(?:ty|ti)\b', folded, re.IGNORECASE)
+        re.search(rf'{_PRICE_LEFT_BOUNDARY}\d+\s*(?:t|ty|ti)\s*[x*]+\s*(?:tr|trieu)?{_MASKED_PRICE_SUFFIX}', folded, re.IGNORECASE)
+        or re.search(rf'{_PRICE_LEFT_BOUNDARY}\d+\s*[,\.]\s*x\s*(?:ty|ti)\b', folded, re.IGNORECASE)
     )
 
 
