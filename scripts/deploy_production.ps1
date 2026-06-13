@@ -19,6 +19,9 @@ $sshArgs = @(
     "-o", "ConnectTimeout=15",
     $sshTarget
 )
+$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$RemoteScriptPath = "/tmp/radar-bds-deploy-$Stamp.sh"
+$LocalScriptPath = Join-Path $env:TEMP "radar-bds-deploy-$Stamp.sh"
 
 $remoteScript = @"
 set -e
@@ -91,4 +94,20 @@ after=`$(git rev-parse --short HEAD)
 echo "deployed `$before -> `$after"
 "@
 
-$remoteScript | ssh @sshArgs "bash -s"
+try {
+    [System.IO.File]::WriteAllText($LocalScriptPath, $remoteScript, [System.Text.UTF8Encoding]::new($false))
+    & scp -i $KeyPath -o BatchMode=yes -o ConnectTimeout=15 $LocalScriptPath "${sshTarget}:$RemoteScriptPath"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Remote script upload failed with exit code $LASTEXITCODE"
+    }
+    & ssh @sshArgs "bash '$RemoteScriptPath'"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Remote deploy failed with exit code $LASTEXITCODE"
+    }
+}
+finally {
+    if (Test-Path $LocalScriptPath) {
+        Remove-Item -LiteralPath $LocalScriptPath -Force
+    }
+    & ssh @sshArgs "rm -f '$RemoteScriptPath'" | Out-Null
+}

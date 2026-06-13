@@ -23,7 +23,9 @@ if (-not (Test-Path $KeyPath)) {
 
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $RemoteOutput = "/tmp/signal-llm-qc-$Stamp.jsonl"
+$RemoteScriptPath = "/tmp/radar-bds-export-queue-$Stamp.sh"
 $LocalOutput = Join-Path $LocalOutputDir "signal-llm-qc-$Stamp.jsonl"
+$LocalScriptPath = Join-Path $env:TEMP "radar-bds-export-queue-$Stamp.sh"
 
 $sshTarget = "$User@$HostName"
 $sshArgs = @(
@@ -39,11 +41,13 @@ $scpArgs = @(
 )
 
 $SinceEscaped = $Since.Replace('"', '\"')
-$CommitFlag = if ($CommitState) { "--commit-state" } else { "" }
-$LimitFlag = if ($Limit -gt 0) { "--limit $Limit" } else { "" }
+$CommitFlag = if ($CommitState) { "1" } else { "0" }
 
 $remoteScript = @"
 set -e
+set -a
+. /etc/radar-bds/radar.env
+set +a
 cd "$RemotePath"
 
 cmd=(/opt/radar-bds/.venv/bin/python -X utf8 scripts/export_signal_llm_review_queue.py --format jsonl --sort "$Sort" --output "$RemoteOutput")
@@ -52,25 +56,36 @@ if [ -n "$SinceEscaped" ]; then
 else
   cmd+=(--days "$Days")
 fi
-if [ -n "$LimitFlag" ]; then
-  cmd+=($LimitFlag)
+if [ "$Limit" -gt 0 ]; then
+  cmd+=(--limit "$Limit")
 fi
-if [ -n "$CommitFlag" ]; then
-  cmd+=($CommitFlag)
+if [ "$CommitFlag" = "1" ]; then
+  cmd+=(--commit-state)
 fi
 
-"\${cmd[@]}"
+"`${cmd[@]}"
 "@
 
 try {
-    $remoteScript | ssh @sshArgs "bash -s"
+    [System.IO.File]::WriteAllText($LocalScriptPath, $remoteScript, [System.Text.UTF8Encoding]::new($false))
+    & scp @scpArgs $LocalScriptPath "${sshTarget}:$RemoteScriptPath"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Remote script upload failed with exit code $LASTEXITCODE"
+    }
+    & ssh @sshArgs "bash '$RemoteScriptPath'"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Remote export failed with exit code $LASTEXITCODE"
+    }
     & scp @scpArgs "${sshTarget}:$RemoteOutput" $LocalOutput
     if ($LASTEXITCODE -ne 0) {
         throw "Download failed with exit code $LASTEXITCODE"
     }
 }
 finally {
-    & ssh @sshArgs "rm -f '$RemoteOutput'" | Out-Null
+    if (Test-Path $LocalScriptPath) {
+        Remove-Item -LiteralPath $LocalScriptPath -Force
+    }
+    & ssh @sshArgs "rm -f '$RemoteOutput' '$RemoteScriptPath'" | Out-Null
 }
 
 Write-Host "Local queue: $LocalOutput"
