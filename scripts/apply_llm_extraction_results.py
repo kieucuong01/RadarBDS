@@ -52,6 +52,11 @@ def main() -> int:
     )
     parser.add_argument("input", type=Path, help="Structured LLM result .jsonl or .json file.")
     parser.add_argument("--apply", action="store_true", help="Write override markers and refresh affected listing rows.")
+    parser.add_argument(
+        "--revalue",
+        action="store_true",
+        help="After apply, refresh valuation_results only for the touched listing IDs.",
+    )
     parser.add_argument("--actor", default="codex", help="Override actor marker.")
     parser.add_argument("--model", default="manual-llm-signal-qc", help="Override model/workflow marker.")
     parser.add_argument(
@@ -127,6 +132,14 @@ def main() -> int:
     printable = dict(summary)
     printable["status_counts"] = dict(summary["status_counts"])
     printable["override_field_counts"] = dict(summary["override_field_counts"])
+    if args.apply and args.revalue and summary["applied_listing_ids"]:
+        from cleansing.reprocess import reprocess_valuation
+
+        value_stats = reprocess_valuation(incremental_ids=summary["applied_listing_ids"])
+        printable["revalue"] = {
+            "listing_ids": list(summary["applied_listing_ids"]),
+            "stats": value_stats,
+        }
     print(json.dumps(printable, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 

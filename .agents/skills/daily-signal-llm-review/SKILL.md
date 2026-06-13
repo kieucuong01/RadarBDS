@@ -40,17 +40,16 @@ Do extraction QC first. A memo built on wrong price, area, ward, road, property 
 
 ## Daily Flow
 
-1. Sync production data to local if the task needs current production signals:
+1. Export only the new production review queue to local. Do not sync the full production DB for this daily workflow:
 
 ```powershell
-.\scripts\sync_prod_to_local.ps1
+.\scripts\export_prod_signal_llm_review_queue.ps1
 ```
 
-2. Export new actionable signals for manual LLM extraction QC as raw JSONL:
+2. Or export an exact production window:
 
 ```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 scripts\export_signal_llm_review_queue.py --days 1 --format jsonl
+.\scripts\export_prod_signal_llm_review_queue.ps1 -Since "2026-06-14T00:00:00+07:00"
 ```
 
 3. Read the generated `.local/llm-review/raw/signal-llm-qc-*.jsonl` sequentially in
@@ -65,36 +64,32 @@ line with `listing_id`, `status`, `llm_extract`, and `reason`:
 - property type
 - tho cu
 
-4. Dry-run/apply extraction overrides from the structured result file, then run:
+4. Apply only confident extraction overrides back to production, then refresh valuation for only the touched listing IDs:
 
 ```powershell
-& $py -X utf8 scripts\apply_llm_extraction_results.py .local\llm-review\structured\signal-llm-qc-results-YYYYMMDD.jsonl
-& $py -X utf8 scripts\apply_llm_extraction_results.py .local\llm-review\structured\signal-llm-qc-results-YYYYMMDD.jsonl --apply --model manual-llm-signal-qc-YYYYMMDD
-& $py -X utf8 radar.py reprocess --valuation-only
-& $py -X utf8 scripts\audit_signal_extraction.py
+.\scripts\apply_prod_signal_llm_review_results.ps1 -InputPath .local\llm-review\structured\signal-llm-qc-results-YYYYMMDD.jsonl -Revalue
 ```
 
 5. Route each listing:
 
 - `clean`: no blocking extraction mismatch; eligible for advisory memo.
-- `override_fixed`: manual/explicit LLM parse was saved with `db.listings.save_llm_extraction_override(...)`, targeted/full reprocess passed, and the listing fields now match the read text; eligible for advisory memo.
-- `parser_fixed`: repeated deterministic parser bug fixed with regression tests and targeted/full reprocess passed; eligible for advisory memo.
+- `override_fixed`: manual/explicit LLM parse was saved with `db.listings.save_llm_extraction_override(...)`, production valuation refresh passed, and the listing fields now match the read text; eligible for advisory memo.
 - `blocked`: price, area, ward, road, type, or tho cu is unresolved; skip normal memo and send to admin extraction QC.
 - `ambiguous`: text is not enough to decide; send to admin extraction QC and use `needs_map_check` if a memo is later written.
 
-Use explicit LLM extraction overrides only when the LLM read is a deliberate workflow output. If no override is saved, Python extraction remains canonical.
+Use explicit LLM extraction overrides only when the LLM read is a deliberate workflow output. If no override is saved, Python extraction remains canonical. Do not expand the daily workflow into parser/normalizer fixes; log repeated parser bugs separately for non-daily maintenance.
 
-6. Write/update advisory memos only for `clean`, `override_fixed`, or `parser_fixed` listings. Use `update-investment-memos` standards:
+6. Write/update advisory memos only for `clean` or `override_fixed` listings. Use `update-investment-memos` standards:
 
 - Read listing, valuation, price history, lot/repost context, legal/source flags.
 - Write Vietnamese investor-grade memo, not a template.
 - Save append-only to `ai_deal_review` with a fresh model marker.
 - Mark `needs_map_check=1` when conclusion depends on exact road, coordinates, zoning, legal status, or location reality.
 
-7. Commit the extraction QC state only after findings and memo decisions are saved:
+7. Commit the production review state only after findings and memo decisions are saved:
 
 ```powershell
-& $py -X utf8 scripts\export_signal_llm_review_queue.py --since "<same Since value printed by the reviewed queue>" --commit-state
+.\scripts\export_prod_signal_llm_review_queue.ps1 -Since "<same Since value printed by the reviewed queue>" -CommitState
 ```
 
 ## Report Back
@@ -105,7 +100,7 @@ Report in Vietnamese:
 - extraction mismatches by field
 - listings skipped from memo because extraction was blocked
 - memo rows written or updated
-- tests/reprocess/audit evidence
+- override/revalue evidence
 - remaining admin-review items
 
 ## Design Rule

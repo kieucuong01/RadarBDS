@@ -98,9 +98,6 @@ from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
     cmd_clean_broker_images,
-    cmd_classify_legal_images,
-    cmd_clean_legal_image_tags,
-    cmd_verify_legal_signals,
 )
 
 def build_parser():
@@ -237,26 +234,6 @@ def build_parser():
                        help="Lọc thận trọng hơn, ít xóa ảnh có người")
     p_cbi.set_defaults(strong=True)
 
-    # classify-legal-images
-    p_cli = sub.add_parser("classify-legal-images", help="Nhan dien anh so hong/so do trong listing_images")
-    p_cli.add_argument("--source", help="Loc source: guland | facebook | batdongsan")
-    p_cli.add_argument("--limit", type=int, help="Gioi han so anh scan")
-    p_cli.add_argument("--apply", action="store_true", help="Update img_type='so_hong' (mac dinh dry-run)")
-
-    # clean-legal-image-tags
-    p_clit = sub.add_parser("clean-legal-image-tags", help="Go tag so_hong sai khoi anh hien trang/nha/duong")
-    p_clit.add_argument("--source", help="Loc source: guland | facebook | batdongsan")
-    p_clit.add_argument("--limit", type=int, help="Gioi han so anh scan")
-    p_clit.add_argument("--signals-only", action="store_true", dest="signals_only", help="Chi audit signal hien tai")
-    p_clit.add_argument("--apply", action="store_true", help="Demote img_type sai ve cover/unknown (mac dinh dry-run)")
-
-    # verify-legal-signals
-    p_vls = sub.add_parser("verify-legal-signals", help="Tinh trust tier tu viec co anh so hong/so do")
-    p_vls.add_argument("--source", help="Loc source: guland | facebook | batdongsan")
-    p_vls.add_argument("--listing-id", type=int, dest="listing_id", help="Listing ID cu the")
-    p_vls.add_argument("--limit", type=int, help="Gioi han so listing scan")
-    p_vls.add_argument("--apply", action="store_true", help="Update legal_verifications va trust fields")
-
     # db-cleanup
     p_cl = sub.add_parser("db-cleanup", help="Prune stale rows + orphan image files (dry-run default)")
     p_cl.add_argument("--apply", action="store_true", help="Actually delete (default = dry run)")
@@ -325,12 +302,6 @@ def main():
         cmd_download_images(args)
     elif args.cmd == "clean-broker-images":
         cmd_clean_broker_images(args)
-    elif args.cmd == "classify-legal-images":
-        cmd_classify_legal_images(args)
-    elif args.cmd == "clean-legal-image-tags":
-        cmd_clean_legal_image_tags(args)
-    elif args.cmd == "verify-legal-signals":
-        cmd_verify_legal_signals(args)
     elif args.cmd == "db-cleanup":
         cmd_db_cleanup(args)
     elif args.cmd == "inspect":

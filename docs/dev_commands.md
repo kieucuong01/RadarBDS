@@ -76,6 +76,21 @@ For daily use on Windows, create a Task Scheduler job that runs the same command
 from the repo root. Keep the generated backups in `.local/prod-sync/` ignored by
 git.
 
+For the daily signal LLM review workflow, do not sync the full production DB.
+Export only the new production review queue to local:
+
+```powershell
+.\scripts\export_prod_signal_llm_review_queue.ps1
+.\scripts\export_prod_signal_llm_review_queue.ps1 -Since "2026-06-14T00:00:00+07:00"
+```
+
+Apply manual extraction overrides back to production and refresh valuation only
+for the touched listing IDs:
+
+```powershell
+.\scripts\apply_prod_signal_llm_review_results.ps1 -InputPath .local\llm-review\structured\signal-llm-qc-results-YYYYMMDD.jsonl -Revalue
+```
+
 ## Ubuntu 24.04 Production Target
 
 Production is Ubuntu Server 24.04 LTS with Python 3.12, native systemd
@@ -135,9 +150,6 @@ The script uses the local deploy key at
 
 ```powershell
 & $py -X utf8 radar.py download-images
-& $py -X utf8 radar.py classify-legal-images --limit 500
-& $py -X utf8 radar.py verify-legal-signals --limit 500
-& $py -X utf8 radar.py verify-legal-signals --apply
 & $py -X utf8 scripts\generate_thumbnails.py --signals 300
 & $py -X utf8 scripts\generate_thumbnails.py --limit 1000
 ```
@@ -146,7 +158,7 @@ The script uses the local deploy key at
 
 ```powershell
 & $py -X utf8 -m py_compile app.py services\market_data.py services\image_assets.py cleansing\download_images.py
-& $py -X utf8 -m py_compile cleansing\legal_verification.py analytics\valuation.py
+& $py -X utf8 -m py_compile analytics\valuation.py scripts\apply_llm_extraction_results.py
 node --check static\js\main.js
 node --check static\js\auth.js
 ```
@@ -160,7 +172,6 @@ Targeted tests:
 & $py -X utf8 -m pytest tests\test_drop_filter.py
 & $py -X utf8 -m pytest tests\test_feature_extractor.py
 & $py -X utf8 -m pytest tests\test_valuation.py
-& $py -X utf8 -m pytest tests\test_legal_verification.py tests\test_market_data_trust.py
 & $py -X utf8 -m pytest tests\test_market_data_performance.py tests\test_postgres_connection.py tests\test_market_data_trust.py
 ```
 

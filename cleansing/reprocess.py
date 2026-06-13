@@ -458,15 +458,14 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
                    l.has_so, l.is_hot, l.price_dropped, l.crawled_at, l.posted_at,
                    l.url, l.contact_phone, l.source, l.source_id, l.suspicious_bait,
                    l.review_hidden, l.duplicate_of_id,
-                   COALESCE(lv.status, 'unverified') AS legal_status,
-                   COALESCE(lv.trust_tier, 'candidate_signal') AS trust_tier,
-                   COALESCE(lv.confidence_score, 0) AS trust_score,
-                   COALESCE(lv.conflict_flags, '') AS legal_flags,
+                   COALESCE(l.legal_status, 'unverified') AS legal_status,
+                   COALESCE(l.trust_tier, 'candidate_signal') AS trust_tier,
+                   COALESCE(l.trust_score, 0) AS trust_score,
+                   COALESCE(l.legal_flags, '') AS legal_flags,
                    f.verdict AS feedback_verdict,
                    f.extraction_verdict AS feedback_extraction_verdict,
                    f.valuation_verdict AS feedback_valuation_verdict
             FROM listings l
-            LEFT JOIN legal_verifications lv ON lv.listing_id = l.id
             LEFT JOIN ai_training_feedback f ON f.id = (
                 SELECT id FROM ai_training_feedback
                 WHERE listing_id = l.id
@@ -728,29 +727,13 @@ def _run_full_reprocess(source: str = None, since: str = None, use_gemini: bool 
     listing_stats = reprocess_listings(source=source, since=since, full=full, raw_ids=raw_ids)
     processed_ids = listing_stats.get("processed_ids", [])
 
-    from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
-    if LEGAL_IMAGE_EVIDENCE_ENABLED:
-        from cleansing.legal_verification import refresh_legal_verifications
-        if full:
-            legal_stats = refresh_legal_verifications(source=source, apply=True)
-        else:
-            legal_stats = {"apply": True, "scanned": 0, "updated": 0, "statuses": {}, "trust_tiers": {}}
-            for lid in processed_ids:
-                one = refresh_legal_verifications(listing_id=lid, apply=True)
-                legal_stats["scanned"] += one.get("scanned", 0)
-                legal_stats["updated"] += one.get("updated", 0)
-                for key, val in one.get("statuses", {}).items():
-                    legal_stats["statuses"][key] = legal_stats["statuses"].get(key, 0) + val
-                for key, val in one.get("trust_tiers", {}).items():
-                    legal_stats["trust_tiers"][key] = legal_stats["trust_tiers"].get(key, 0) + val
-    else:
-        legal_stats = {
-            "apply": False,
-            "scanned": 0,
-            "updated": 0,
-            "statuses": {"disabled": 1},
-            "trust_tiers": {},
-        }
+    legal_stats = {
+        "apply": False,
+        "scanned": 0,
+        "updated": 0,
+        "statuses": {"removed_from_pipeline": 1},
+        "trust_tiers": {},
+    }
     
     # Valuation: Nếu full=False, chỉ định giá các tin vừa mới xử lý
     val_stats = reprocess_valuation(incremental_ids=None if full else processed_ids)

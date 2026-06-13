@@ -9,8 +9,6 @@ Source crawlers
   -> raw_listings
   -> cleansing/normalizer.py
   -> listings
-  -> cleansing/legal_image_classifier.py
-  -> cleansing/legal_verification.py -> legal_verifications
   -> cleansing/dedup.py
   -> analytics/valuation.py
   -> valuation_results
@@ -38,8 +36,7 @@ PostgreSQL migration status:
 ## Main Boundaries
 
 - `crawler/`: fetch source data and store raw rows. Avoid valuation or dashboard logic here.
-- `cleansing/`: normalize text, extract features, deduplicate, verify legal image evidence, and prepare listings.
-- `cleansing/legal_verification.py`: mark listings with detected so hong/so do images as `has_legal_doc`. OCR/parsing is disabled for now.
+- `cleansing/`: normalize text, extract features, deduplicate, and prepare listings.
 - `analytics/`: valuation and market signal logic. No crawler calls.
 - `db/`: schema, connection, migrations, and write-side repository helpers.
 - `services/`: read models for API/dashboard; keep expensive shaping here, not in routes.
@@ -71,7 +68,7 @@ Performance boundary:
 - `services/market_data.py` is on the hot path for PostgreSQL-backed local dev. Use the shared read connection scope from `db.connection.get_conn()` instead of opening a fresh PostgreSQL connection per read.
 - `/api/dashboard` is cached in-process for a short TTL by filter key. Guest dashboard rate limiting is in-memory; write-sensitive scopes such as lead capture still use DB-backed rate limiting.
 - `/api/signals` should avoid avoidable remote round-trips. The card feed query uses `COUNT(*) OVER()` and a lateral primary-image subquery so page data, total count, and thumbnail are fetched together.
-- Feed ordering depends on legal trust fields, so keep the trust/feed indexes in `db/schema.py` aligned with `_signal_sort_sql()`.
+- Feed ordering should not depend on retired legal-image verification paths.
 
 ## Signal Filter Runtime Flow
 
@@ -81,17 +78,15 @@ Performance boundary:
 - `insights` data is not part of normal signal-filter refresh and should load on Insights tab activation.
 - Infinite scroll must dedupe by listing id on client render to avoid race-condition duplicates.
 
-## Legal Trust Layer
+## Trust Layer
 
 - `valuation_results.is_signal` still means "cheap by model"; trust is tracked separately.
-- Runtime signal fields are deterministic: parser/normalizer/feature extractor, dedup, legal image verification, and valuation. Crawl/reprocess does not call external LLM verification.
+- Runtime signal fields are deterministic: parser/normalizer/feature extractor, dedup, and valuation. Crawl/reprocess does not call external LLM verification.
 - User/VIP-facing queues use latest actionable valuation from `services.signal_quality`, which excludes duplicate reposts, `source_quality_recheck`, and fatal quality flags while preserving model-cheap rows for admin QC.
 - Valuation training is Facebook-primary. Thin canonical Facebook segments (`n < 35`) can be supplemented by strict-pass Guland rows at weight 0.4; this improves sparse segments without letting Guland promote itself directly to user/VIP surfaces.
 - Regression valuation caps tier-3 roads at max 80% of the same-listing tier-2 counterfactual, so learned coefficients cannot make tier 3 equal to or higher than tier 2.
-- Trust tiers currently used by the feed are `candidate_signal` and `has_legal_doc`.
-- `legal_verifications` currently tracks whether a listing has a detected document image. Existing OCR columns remain in schema for old data/admin notes, but runtime OCR code is not shipped or called.
-- Hard legal conflict inference from OCR is disabled until OCR is intentionally re-enabled with a fresh module and tests.
-- `/api/signals`, `/api/listing/<id>`, investment memo, and VIP push expose or prioritize trust fields without exposing source URL/phone to non-admin users.
+- Trust tiers should now be treated as listing/valuation metadata, not as a live legal-image verification product path.
+- `/api/signals`, `/api/listing/<id>`, investment memo, and VIP push must keep source URL/phone redacted for non-admin users.
 
 ## Dedup and Price Drop Policy
 

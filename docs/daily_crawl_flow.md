@@ -43,8 +43,7 @@ Pipeline lõi sau crawl giữ nguyên: `raw_listings → listings → valuation_
 
 Sau khi gỡ LLM verification, daily crawl không còn bước gọi API ngoài để sửa
 `property_type`, `road_tier`, giá, diện tích, pháp lý hoặc phường. Những field
-này đến từ parser/normalizer/feature extractor, dedup, legal image verification
-và valuation.
+này đến từ parser/normalizer/feature extractor, dedup và valuation.
 
 ---
 
@@ -131,28 +130,9 @@ run_full_reprocess()
 Sau bước này, một raw có thể vẫn không thành listing nếu parser không đủ dữ
 liệu, URL thiếu, phone blacklist, hoặc trùng trong batch.
 
-### Bước 4 — legal image verification
+### Bước 4 — `listings` → `valuation_results`
 
-Sau `reprocess_listings()`, `_run_full_reprocess()` kiểm tra
-`LEGAL_IMAGE_EVIDENCE_ENABLED`.
-
-Nếu bật:
-
-- Full reprocess: gọi `refresh_legal_verifications(source=..., apply=True)`.
-- Incremental: gọi `refresh_legal_verifications(listing_id=..., apply=True)`
-  cho từng listing vừa xử lý.
-
-Bước này cập nhật `legal_verifications` và trust tier như:
-
-- `candidate_signal`
-- `has_legal_doc`
-
-Hiện tại OCR chi tiết không phải nguồn quyết định chính; có ảnh sổ đỏ/sổ hồng
-là trust boost đang dùng.
-
-### Bước 5 — `listings` → `valuation_results`
-
-Sau legal verification, `_run_full_reprocess()` gọi:
+Sau `reprocess_listings()`, `_run_full_reprocess()` gọi:
 
 ```text
 reprocess_valuation(incremental_ids=processed_ids)
@@ -164,8 +144,7 @@ Trong `reprocess_valuation()`:
 2. Lấy tập cần định giá:
    - incremental: chỉ các listing vừa xử lý;
    - full: toàn bộ listing đủ điều kiện.
-3. Join thêm `legal_verifications` và feedback mới nhất từ
-   `ai_training_feedback` để tạo quality flags.
+3. Join feedback mới nhất từ `ai_training_feedback` để tạo quality flags.
 4. Dựng object `analytics.valuation.Listing`.
 5. Fit `analytics.valuation.ValuationEngine()`.
 6. Gọi `engine.valuate_batch(...)`.
@@ -176,7 +155,7 @@ Trong `reprocess_valuation()`:
 value theo MOS threshold. Đây là **model signal**, chưa chắc được hiện lên UI
 hoặc bắn Telegram.
 
-### Bước 6 — các tác vụ sau valuation
+### Bước 5 — các tác vụ sau valuation
 
 Vẫn trong `_run_full_reprocess()`:
 
@@ -419,7 +398,7 @@ print(dict(row))
 
 Daily crawl no longer calls external LLM verification after reprocess and image
 download. Signal fields used for valuation now come from the deterministic
-parser, normalizer, dedup, legal image verification, and valuation pipeline
+parser, normalizer, dedup, and valuation pipeline
 only.
 
 Current CLI shape:

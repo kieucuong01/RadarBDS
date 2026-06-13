@@ -30,23 +30,7 @@ def _get_crawlers(source_filter=None):
 
 
 def _clean_broker_images_after_download(source=None, limit=None):
-    from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
     from cleansing.image_cleanup import clean_broker_images
-    if LEGAL_IMAGE_EVIDENCE_ENABLED:
-        from cleansing.legal_image_classifier import classify_legal_images
-        from cleansing.legal_verification import refresh_legal_verifications
-        legal_stats = classify_legal_images(source=source, apply=True, limit=limit)
-        print(
-            f"Classify legal images: scanned={legal_stats.get('scanned', 0)} | "
-            f"updated={legal_stats.get('updated', 0)} | reasons={legal_stats.get('reasons', {})}"
-        )
-        verify_stats = refresh_legal_verifications(source=source, apply=True, limit=limit)
-        print(
-            f"Verify legal trust: scanned={verify_stats.get('scanned', 0)} | "
-            f"updated={verify_stats.get('updated', 0)} | statuses={verify_stats.get('statuses', {})}"
-        )
-    else:
-        print("Legal image evidence is disabled for the later OCR/extraction phase.")
     stats = clean_broker_images(source=source, apply=True, limit=limit, strong=True)
     print(
         f"Clean broker images: scanned={stats.get('scanned', 0)} | "
