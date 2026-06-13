@@ -700,6 +700,14 @@ def test_extract_road_tier_data_quality_patterns():
         "Nha ngop Tuong Binh Hiep",
         "cach nhua 20m thoi, nha dep, gia 2ty1x",
     ) == 3
+    assert extract_road_tier(
+        "Dat Chanh Nghia trung tam Thu Dau Mot. 1 sec",
+        "1 sec 30 thang 4 vao. Duong nhua thong dep kinh doanh buon ban tot.",
+    ) == 3
+    assert extract_road_tier(
+        "Đất Chánh Nghĩa trung tâm Thủ Dầu Một. 1 sẹc",
+        "1 sẹc 30 tháng 4 vào. Đường nhựa thông đẹp kinh doanh buôn bán tốt.",
+    ) == 3
     # Through-road with no width/type is usable evidence but not a main road.
     assert extract_road_tier("Nhà đẹp", "Đường thông tứ hướng, khu dân cư đông") == 3
     # Mỹ Phước grid street codes in description should be picked up, not only title.

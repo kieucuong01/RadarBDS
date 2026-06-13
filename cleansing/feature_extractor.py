@@ -1045,7 +1045,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
         r'\bnhánh\b|\bnhanh\s+(?:\d+|đường|duong|dx\d*|hẻm|hem)\b|\bx[ẹe][ct]\b|1\s*x[ẹe][ct]|\b\d+\s*/',
         title_lower, re.IGNORECASE,
     ) or re.search(
-        r'\bnhanh\s+(?:\d+|duong|dx\d*|hem)\b|\bx[ee][ct]\b|1\s*x[ee][ct]|\b\d+\s*/',
+        r'\bnhanh\s+(?:\d+|duong|dx\d*|hem)\b|\bx[ee][ct]\b|1\s*x[ee][ct]|\b(?:1\s*)?s(?:ec|et)\b|\b\d+\s*/',
         title_fold, re.IGNORECASE,
     ))
 
@@ -1066,6 +1066,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
     # "nhánh 114" / "1 xẹt Huỳnh Thị Hiếu" → nên là Tier 3 dù không có width / DX.
     has_nhanh_strong = bool(
         _NHANH_XEET_RE.search(text)
+        or re.search(r'\b(?:1\s*)?s(?:ec|et)\b', text_fold, re.IGNORECASE)
         or re.search(r'(?:^|\D)\d+\s*/\s*[a-z]', text_fold, re.IGNORECASE)
     )
     near_nhua_only = bool(re.search(r'\b(?:cach|gan)\s+(?:duong\s+)?nhua\b', text_fold))

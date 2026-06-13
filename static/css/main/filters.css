@@ -801,13 +801,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 16px;
+  padding: 0;
   margin-bottom: 18px;
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.58), rgba(15, 23, 42, 0.42));
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(16px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .signal-loading-bar {
@@ -847,9 +847,9 @@
 }
 
 [data-theme="light"] .command-bar {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.88));
-  border-color: rgba(99, 102, 241, 0.16);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .command-bar-left {
@@ -858,6 +858,9 @@
   gap: 12px;
   flex-wrap: wrap;
   min-width: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .command-bar-right {
