@@ -965,6 +965,57 @@ def test_facebook_land_subtype_large_lot_drop_shares_candidate_bucket():
     assert _is_reliable_price_drop(old, new)
 
 
+def test_facebook_same_dimensions_price_tho_cu_duplicate_without_location_signal():
+    old = _listing(
+        source="facebook", source_id="fb-11x60-old", posted_at="2026-05-29",
+        ward="Tan An", property_type="dat_nen", area_m2=660.0,
+        frontage_m=11.0, depth_m=60.0, tho_cu_m2=160.0,
+        price_ty=4.8, price_per_m2=7.273,
+        description=(
+            "Chu ket ha gia con 4 ty 8. Dat Tan An. "
+            "Dien tich 11 x 60, tho cu 160m2. Da tach ra 2 lo."
+        ),
+    )
+    new = _listing(
+        source="facebook", source_id="fb-11x60-new", posted_at="2026-06-05",
+        ward="Tan An", property_type="dat_nen", area_m2=652.0,
+        frontage_m=11.0, depth_m=60.0, tho_cu_m2=160.0,
+        price_ty=4.8, price_per_m2=7.362,
+        description=(
+            "Giam manh chot gap gia 4 ty 800tr. "
+            "Dien tich tong 11 x 60 = 652m2, tho cu 160m2."
+        ),
+    )
+
+    assert _candidate_keys(old).intersection(_candidate_keys(new))
+    assert _is_duplicate(old, new)
+
+
+def test_facebook_large_land_subtype_same_numeric_signature_duplicate():
+    old = _listing(
+        source="facebook", source_id="fb-1083-old", posted_at="2026-04-15",
+        ward="Tan An", property_type="dat_vuon", area_m2=1083.7,
+        tho_cu_m2=200.0, price_ty=5.95, price_per_m2=5.49,
+        description=(
+            "Ban dat Tan An tong dien tich 1083.7m2 tho cu 200m2. "
+            "Nhanh Le Chi Dan vao 200m, gia 5 ty 950."
+        ),
+    )
+    new = _listing(
+        source="facebook", source_id="fb-1083-new", posted_at="2026-05-28",
+        ward="Tan An", property_type="dat_nen", area_m2=1083.7,
+        tho_cu_m2=200.0, price_ty=5.5, price_per_m2=5.075,
+        description=(
+            "Dat dep Phu An thich hop lam kho biet thu. "
+            "DX132 Tan An, dien tich 1083.7m2, tho cu 200m2, gia 5 ty 500."
+        ),
+    )
+
+    assert _candidate_keys(old).intersection(_candidate_keys(new))
+    assert _is_duplicate(old, new)
+    assert _is_reliable_price_drop(old, new)
+
+
 def test_facebook_land_subtype_large_lot_key_requires_phone():
     listing = _listing(
         source="facebook", source_id="fb-1212-no-phone", posted_at="2025-07-22",
@@ -1139,10 +1190,12 @@ if __name__ == "__main__":
         test_reliable_drop_rejects_same_dims_different_location,
         test_reliable_drop_rejects_same_road_different_block,
         test_reliable_drop_same_phone_area_anchor,
-        test_reliable_drop_uses_price_per_m2_when_total_price_same,
+        test_reliable_drop_ignores_price_per_m2_when_total_price_same,
         test_suspicious_bait_over_40pct_not_reliable_drop,
         test_facebook_same_price_repost_counts_duplicate,
         test_guland_same_price_repost_not_duplicate_for_history,
+        test_facebook_same_dimensions_price_tho_cu_duplicate_without_location_signal,
+        test_facebook_large_land_subtype_same_numeric_signature_duplicate,
         test_guland_phu_tan_template_same_phone_not_same_lot,
         test_guland_phu_hoa_same_phone_area_without_road_not_same_lot,
         test_guland_phu_my_dx006_same_road_not_duplicate_without_same_source_id,

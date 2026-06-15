@@ -174,6 +174,15 @@ def _property_text_conflict(l1: dict, l2: dict) -> bool:
 
 
 def _tho_cu_m2(listing: dict) -> Optional[float]:
+    field_value = listing.get("tho_cu_m2")
+    if field_value not in (None, ""):
+        try:
+            parsed = float(str(field_value).replace(",", "."))
+        except (TypeError, ValueError):
+            parsed = None
+        if parsed and parsed > 0:
+            return parsed
+
     text = _ascii_fold(_combined_text(listing))
     area = listing.get("area_m2")
     if area and re.search(r"\b(?:tho\s*cu|tc)\s*full\b|\bfull\s*(?:tho\s*cu|tc)\b", text):
@@ -260,9 +269,9 @@ def _lot_attribute_conflict(l1: dict, l2: dict) -> bool:
 
     roads1 = _road_tokens(text1)
     roads2 = _road_tokens(text2)
-    loc1 = roads1 | _named_location_tokens(text1)
-    loc2 = roads2 | _named_location_tokens(text2)
-    if loc1 and loc2 and not loc1.intersection(loc2):
+    named1 = _named_location_tokens(text1)
+    named2 = _named_location_tokens(text2)
+    if named1 and named2 and not named1.intersection(named2) and not roads1.intersection(roads2):
         return True
 
     return False
@@ -383,6 +392,9 @@ def _has_reliable_lot_signature(l1: dict, l2: dict, *, allow_facebook_same_price
     if _lot_attribute_conflict(l1, l2):
         return False
 
+    if _strong_numeric_lot_signature(l1, l2):
+        return True
+
     area_match = _near(l1.get("area_m2"), l2.get("area_m2"), 0.01)
     if _same_phone(l1, l2) and area_match and _same_tho_cu(l1, l2):
         return True
@@ -480,6 +492,42 @@ def _same_price_for_dedup(a: Optional[float], b: Optional[float]) -> bool:
     return abs(float(a) - float(b)) / max(float(a), float(b)) <= 0.005
 
 
+def _same_price_level(l1: dict, l2: dict, tol: float = 0.10) -> bool:
+    p1 = _numeric(l1.get("price_ty"))
+    p2 = _numeric(l2.get("price_ty"))
+    if p1 is not None and p2 is not None and abs(p1 - p2) / max(p1, p2) <= tol:
+        return True
+
+    ppm1 = _numeric(l1.get("price_per_m2"))
+    ppm2 = _numeric(l2.get("price_per_m2"))
+    return bool(ppm1 is not None and ppm2 is not None and abs(ppm1 - ppm2) / max(ppm1, ppm2) <= tol)
+
+
+def _strong_numeric_lot_signature(l1: dict, l2: dict) -> bool:
+    text1 = _combined_text(l1)
+    text2 = _combined_text(l2)
+    blocks1 = _block_tokens(text1)
+    blocks2 = _block_tokens(text2)
+    if blocks1 and blocks2 and not blocks1.intersection(blocks2):
+        return False
+
+    a1 = _numeric(l1.get("area_m2"))
+    a2 = _numeric(l2.get("area_m2"))
+    area_match = bool(a1 is not None and a2 is not None and abs(a1 - a2) / max(a1, a2) <= 0.02)
+    front_depth_match = (
+        _near(l1.get("frontage_m"), l2.get("frontage_m"), 0.0)
+        and _near(l1.get("depth_m"), l2.get("depth_m"), 0.0)
+    )
+    same_tc = _same_tho_cu(l1, l2)
+    same_price = _same_price_level(l1, l2)
+
+    if front_depth_match and (area_match or same_tc) and same_price:
+        return True
+    if area_match and same_tc and same_price and max(a1 or 0, a2 or 0) >= 600:
+        return True
+    return False
+
+
 def _candidate_keys(listing: dict) -> set[tuple]:
     ward = (listing.get("ward") or "").strip()
     prop_type = listing.get("property_type") or ""
@@ -490,6 +538,9 @@ def _candidate_keys(listing: dict) -> set[tuple]:
     source_id = (listing.get("source_id") or "").strip()
     if source and source_id:
         keys.add(base + ("source_id", source, source_id))
+    content_hash = (listing.get("content_hash") or "").strip()
+    if source and content_hash:
+        keys.add(base + ("content_hash", source, content_hash))
 
     if source.lower() != "facebook":
         return keys
@@ -501,6 +552,8 @@ def _candidate_keys(listing: dict) -> set[tuple]:
     area = listing.get("area_m2")
     if area and area > 0:
         keys.add(base + ("area", round(float(area), 1)))
+        if ward and prop_type in {"dat_nen", "dat_vuon"} and float(area) >= 300:
+            keys.add(("facebook_land_area", ward, int(round(float(area) / 10.0))))
         phone = _phone_value(listing)
         if phone and float(area) >= 300:
             area_bucket = int(round(float(area) / 10.0))
@@ -789,7 +842,8 @@ def flag_duplicates_in_db(conn: Any) -> dict:
     rows = conn.execute(f"""
         SELECT id, source, source_id, url, title, area, ward,
                property_type, area_m2, price_ty, price_per_m2, crawled_at, posted_at,
-               frontage_m, depth_m, {road_name_select}, contact_phone, has_so, description
+               frontage_m, depth_m, tho_cu_m2, {road_name_select}, contact_phone,
+               has_so, description, content_hash
         FROM listings
         WHERE probably_sold = 0
         ORDER BY crawled_at ASC
