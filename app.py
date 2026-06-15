@@ -281,6 +281,7 @@ def _public_crawl_job(job: dict | None) -> dict | None:
         "stage": job.get("stage"),
         "mode": job.get("mode"),
         "profile_url": job.get("profile_url"),
+        "source": job.get("source"),
         "broker_name": job.get("broker_name"),
         "limit": job.get("limit"),
         "days": job.get("days"),
@@ -392,7 +393,7 @@ def _run_admin_facebook_crawl_job(job_id: str) -> None:
                 reprocess_kwargs = {"source": "facebook", "full": False}
                 if changed_raw_ids:
                     reprocess_kwargs["raw_ids"] = changed_raw_ids
-                    _append_crawl_log(job, f"Reprocess {len(changed_raw_ids)} raw vua crawl/refresh.")
+                    _append_crawl_log(job, f"Reprocess {len(changed_raw_ids)} raw vừa crawl/refresh.")
                 reprocess_stats = run_full_reprocess(**reprocess_kwargs)
                 job["stats"]["reprocess"] = reprocess_stats
                 processed_ids = reprocess_stats.get("listings", {}).get("processed_ids") or []
@@ -468,15 +469,15 @@ def _run_admin_crawl_maintenance_job(job_id: str) -> None:
         job["status"] = "running"
         job["started_at"] = _utc_iso_z()
         job["progress_pct"] = 3
-        job["progress_label"] = "Dang chuan bi"
+        job["progress_label"] = "Đang chuẩn bị"
 
     try:
         action = job.get("maintenance_action")
         lock_name = "reprocess" if action == "valuation_only" else "admin-manual-reprocess"
         with advisory_lock(lock_name):
             if action == "valuation_only":
-                _set_crawl_progress(job, 12, "valuation", "Dang chay valuation-only")
-                _append_crawl_log(job, "Valuation-only full rerun bat dau.")
+                _set_crawl_progress(job, 12, "valuation", "Đang chạy valuation-only")
+                _append_crawl_log(job, "Valuation-only full rerun bắt đầu.")
                 stats = reprocess_valuation(incremental_ids=None)
                 job.setdefault("stats", {})["valuation"] = stats
                 _append_crawl_log(
@@ -487,8 +488,8 @@ def _run_admin_crawl_maintenance_job(job_id: str) -> None:
                     f"outliers={stats.get('outliers', 0)}",
                 )
             else:
-                _set_crawl_progress(job, 12, "reprocess", "Dang reprocess Facebook")
-                _append_crawl_log(job, "Manual Facebook reprocess bat dau.")
+                _set_crawl_progress(job, 12, "reprocess", "Đang reprocess Facebook")
+                _append_crawl_log(job, "Manual Facebook reprocess bắt đầu.")
                 stats = run_full_reprocess(source="facebook", full=False)
                 job.setdefault("stats", {})["reprocess"] = stats
                 listing_stats = stats.get("listings", {})
@@ -508,15 +509,141 @@ def _run_admin_crawl_maintenance_job(job_id: str) -> None:
             job["status"] = "succeeded"
             job["stage"] = "done"
             job["progress_pct"] = 100
-            job["progress_label"] = "Hoan tat"
+            job["progress_label"] = "Hoàn tất"
             job["finished_at"] = _utc_iso_z()
     except Exception as exc:
         logger.exception("Admin crawl maintenance job failed")
-        _append_crawl_log(job, f"Loi: {exc}")
+        _append_crawl_log(job, f"Lỗi: {exc}")
         with FACEBOOK_CRAWL_LOCK:
             job["status"] = "failed"
             job["stage"] = "failed"
-            job["progress_label"] = "Loi khi chay tac vu"
+            job["progress_label"] = "Lỗi khi chạy tác vụ"
+            job["error"] = str(exc)
+            job["finished_at"] = _utc_iso_z()
+
+
+def _run_admin_data_quality_image_job(job_id: str) -> None:
+    from cleansing.download_images import download_images
+
+    with FACEBOOK_CRAWL_LOCK:
+        job = FACEBOOK_CRAWL_JOBS[job_id]
+        job["status"] = "running"
+        job["started_at"] = _utc_iso_z()
+        job["progress_pct"] = 5
+        job["progress_label"] = "Đang chuẩn bị tải ảnh thiếu"
+
+    try:
+        limit = _clamp_int(job.get("limit"), 500, 1, 5000)
+
+        def _download_progress(done, total, success):
+            if total:
+                _set_crawl_progress(
+                    job,
+                    10 + int((done / total) * 85),
+                    "download_images",
+                    f"Đang tải ảnh thiếu {done}/{total} (ok {success})",
+                )
+
+        _append_crawl_log(job, f"Tải ảnh thiếu bắt đầu | limit={limit}")
+        downloaded = download_images(limit=limit, progress_callback=_download_progress)
+        job.setdefault("stats", {})["downloaded_images"] = downloaded
+        _append_crawl_log(job, f"Tải ảnh thiếu xong: {downloaded} ảnh")
+
+        with FACEBOOK_CRAWL_LOCK:
+            job["status"] = "succeeded"
+            job["stage"] = "done"
+            job["progress_pct"] = 100
+            job["progress_label"] = "Hoàn tất tải ảnh thiếu"
+            job["finished_at"] = _utc_iso_z()
+    except Exception as exc:
+        logger.exception("Admin missing image download job failed")
+        _append_crawl_log(job, f"Lỗi: {exc}")
+        with FACEBOOK_CRAWL_LOCK:
+            job["status"] = "failed"
+            job["stage"] = "failed"
+            job["progress_label"] = "Lỗi khi tải ảnh thiếu"
+            job["error"] = str(exc)
+            job["finished_at"] = _utc_iso_z()
+
+
+def _run_admin_source_retry_job(job_id: str) -> None:
+    from db.connection import advisory_lock
+    from cli.crawlers import _clean_broker_images_after_download, _facebook_crawl_to_raw, _get_crawlers
+    from cleansing.download_images import download_images
+    from cleansing.reprocess import run_full_reprocess
+
+    with FACEBOOK_CRAWL_LOCK:
+        job = FACEBOOK_CRAWL_JOBS[job_id]
+        job["status"] = "running"
+        job["started_at"] = _utc_iso_z()
+        job["progress_pct"] = 3
+        job["progress_label"] = "Đang chuẩn bị crawl lại nguồn"
+
+    source = (job.get("source") or "").strip().lower()
+    try:
+        with advisory_lock(f"admin-retry-{source}-crawl"):
+            total_new = 0
+            if source == "facebook":
+                _set_crawl_progress(job, 12, "crawl", "Đang crawl lại Facebook")
+                stats = _facebook_crawl_to_raw(mode="incremental") or {}
+                job.setdefault("stats", {})["crawl"] = stats
+                total_new = int(stats.get("inserted", 0) or 0) + int(stats.get("refreshed_images", 0) or 0)
+                _append_crawl_log(
+                    job,
+                    "Facebook retry xong: "
+                    f"fetched={stats.get('fetched', 0)}, imported={stats.get('inserted', 0)}, "
+                    f"refreshed={stats.get('refreshed_images', 0)}, skipped={stats.get('skipped', 0)}",
+                )
+                changed_raw_ids = list(dict.fromkeys(
+                    (stats.get("inserted_raw_ids") or []) + (stats.get("refreshed_raw_ids") or [])
+                ))
+                reprocess_kwargs = {"source": "facebook", "full": False}
+                if changed_raw_ids:
+                    reprocess_kwargs["raw_ids"] = changed_raw_ids
+            else:
+                _set_crawl_progress(job, 12, "crawl", f"Đang crawl lại {source}")
+                crawlers = _get_crawlers(source)
+                source_stats = []
+                for crawler in crawlers:
+                    stats = crawler.run(mode="incremental", headless=True)
+                    source_stats.append(stats)
+                    total_new += int(stats.get("new", 0) or 0)
+                    _append_crawl_log(
+                        job,
+                        f"{crawler.SOURCE_NAME} retry xong: "
+                        f"new={stats.get('new', 0)}, skipped={stats.get('skipped', 0)}, errors={stats.get('errors', 0)}",
+                    )
+                job.setdefault("stats", {})["crawl"] = {"source": source, "runs": source_stats, "new": total_new}
+                reprocess_kwargs = {"source": source, "full": False}
+
+            if total_new > 0:
+                _set_crawl_progress(job, 55, "reprocess", "Đang reprocess dữ liệu vừa crawl")
+                reprocess_stats = run_full_reprocess(**reprocess_kwargs)
+                job.setdefault("stats", {})["reprocess"] = reprocess_stats
+                processed_ids = reprocess_stats.get("listings", {}).get("processed_ids") or []
+                _set_crawl_progress(job, 78, "download_images", "Đang tải ảnh sau crawl")
+                downloaded = download_images(limit=500, listing_ids=processed_ids or None)
+                _clean_broker_images_after_download(source=source, limit=500)
+            else:
+                _set_crawl_progress(job, 78, "download_images", "Không có tin mới, tải backlog ảnh")
+                downloaded = download_images(limit=200)
+                _clean_broker_images_after_download(source=source, limit=200)
+            job.setdefault("stats", {})["downloaded_images"] = downloaded
+            _append_crawl_log(job, f"Ảnh tải thêm: {downloaded}")
+
+        with FACEBOOK_CRAWL_LOCK:
+            job["status"] = "succeeded"
+            job["stage"] = "done"
+            job["progress_pct"] = 100
+            job["progress_label"] = "Hoàn tất crawl lại nguồn"
+            job["finished_at"] = _utc_iso_z()
+    except Exception as exc:
+        logger.exception("Admin source retry crawl job failed")
+        _append_crawl_log(job, f"Lỗi: {exc}")
+        with FACEBOOK_CRAWL_LOCK:
+            job["status"] = "failed"
+            job["stage"] = "failed"
+            job["progress_label"] = "Lỗi khi crawl lại nguồn"
             job["error"] = str(exc)
             job["finished_at"] = _utc_iso_z()
 
@@ -907,7 +1034,7 @@ def api_telegram_sync():
         )
     try:
         from alerts.telegram import send_message_to
-        send_message_to(chat_id, "Da ket noi tai khoan RadarBDS. Ban se nhan thong bao deal khop khu vuc quan tam.")
+        send_message_to(chat_id, "Đã kết nối tài khoản RadarBDS. Bạn sẽ nhận thông báo deal khớp khu vực quan tâm.")
     except Exception:
         pass
     return jsonify({"ok": True, "linked": True})
@@ -2755,7 +2882,7 @@ def admin_api_facebook_crawl_maintenance():
         "started_at": None,
         "finished_at": None,
         "progress_pct": 0,
-        "progress_label": "Dang cho chay",
+        "progress_label": "Đang chờ chạy",
         "stats": {},
         "logs": [],
     }
@@ -3011,6 +3138,73 @@ def admin_api_qc_signals():
 @require_admin_auth
 def admin_api_data_quality_summary():
     return jsonify(_data_quality_summary())
+
+
+@require_admin_auth
+def admin_api_data_quality_download_missing_images():
+    payload = request.get_json(silent=True) or {}
+    active = _active_facebook_crawl_job()
+    if active:
+        return jsonify({"ok": False, "error": "crawl_already_running", "job": _public_crawl_job(active)}), 409
+
+    limit = _clamp_int(payload.get("limit"), 500, 1, 5000)
+    job = {
+        "id": uuid4().hex[:12],
+        "status": "queued",
+        "stage": "queued",
+        "mode": "download missing images",
+        "source": "",
+        "profile_url": "",
+        "broker_name": "Data Quality",
+        "limit": limit,
+        "days": None,
+        "download_images": True,
+        "maintenance_action": "download_missing_images",
+        "created_at": _utc_iso_z(),
+        "started_at": None,
+        "finished_at": None,
+        "progress_pct": 0,
+        "progress_label": "Đang chờ tải ảnh thiếu",
+        "stats": {},
+        "logs": [],
+    }
+    _enqueue_facebook_crawl_job(job, _run_admin_data_quality_image_job)
+    return jsonify({"ok": True, "job": _public_crawl_job(job)})
+
+
+@require_admin_auth
+def admin_api_data_quality_retry_source_crawl():
+    payload = request.get_json(silent=True) or {}
+    source = (payload.get("source") or "").strip().lower()
+    if source not in {"facebook", "guland"}:
+        return jsonify({"ok": False, "error": "invalid_source"}), 400
+
+    active = _active_facebook_crawl_job()
+    if active:
+        return jsonify({"ok": False, "error": "crawl_already_running", "job": _public_crawl_job(active)}), 409
+
+    job = {
+        "id": uuid4().hex[:12],
+        "status": "queued",
+        "stage": "queued",
+        "mode": f"retry {source}",
+        "source": source,
+        "profile_url": "",
+        "broker_name": f"Retry {source}",
+        "limit": None,
+        "days": None,
+        "download_images": True,
+        "maintenance_action": "retry_source_crawl",
+        "created_at": _utc_iso_z(),
+        "started_at": None,
+        "finished_at": None,
+        "progress_pct": 0,
+        "progress_label": "Đang chờ crawl lại nguồn",
+        "stats": {},
+        "logs": [],
+    }
+    _enqueue_facebook_crawl_job(job, _run_admin_source_retry_job)
+    return jsonify({"ok": True, "job": _public_crawl_job(job)})
 
 
 @require_admin_auth

@@ -97,6 +97,16 @@ def admin_api_data_quality_items(**kwargs):
     return _impl("admin_api_data_quality_items", **kwargs)
 
 
+@bp.route("/admin/api/data-quality/download-missing-images", methods=["POST"])
+def admin_api_data_quality_download_missing_images(**kwargs):
+    return _impl("admin_api_data_quality_download_missing_images", **kwargs)
+
+
+@bp.route("/admin/api/data-quality/retry-source-crawl", methods=["POST"])
+def admin_api_data_quality_retry_source_crawl(**kwargs):
+    return _impl("admin_api_data_quality_retry_source_crawl", **kwargs)
+
+
 @bp.route("/admin/api/ai-training/feedback", methods=["POST"])
 def admin_api_ai_training_feedback(**kwargs):
     return _impl("admin_api_ai_training_feedback", **kwargs)

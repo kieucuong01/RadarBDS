@@ -1336,7 +1336,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".dup-source-links", css)
         self.assertIn(".dup-fact.price", css)
         self.assertIn(".dup-decision-copy", css)
-        self.assertIn("admin-v39-delete-actions", template)
+        self.assertIn("admin-v41-quality-slim", template)
         self.assertIn("admin-favicon-32.png", template)
         self.assertIn("admin-apple-touch-icon.png", template)
         self.assertIn("admin.webmanifest", template)
@@ -1894,12 +1894,71 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("function renderDataQualitySummary", js)
         self.assertIn("loadDataQualitySummary", js)
         self.assertIn("qualityOverview", js)
+        self.assertIn("/admin/api/data-quality/download-missing-images", js)
+        self.assertIn("/admin/api/data-quality/retry-source-crawl", js)
+        self.assertIn("downloadMissingImagesFromQuality", js)
+        self.assertIn("retryDataQualitySourceCrawl", js)
+        self.assertIn("Tải ảnh thiếu", js)
+        self.assertIn("Crawl lại nguồn", js)
         self.assertNotIn("qualityExtractionQcGrid", js)
         self.assertNotIn("qualityRecheckGrid", js)
         self.assertNotIn("extraction_audit", js)
         self.assertNotIn("Manual LLM", js)
+        for bad_text in ("Ä", "Ã", "á»", "áº", "Â·", "ðŸ"):
+            self.assertNotIn(bad_text, js)
         self.assertIn(".quality-kpi-grid", css)
         self.assertIn(".quality-detail-grid", css)
+        self.assertIn(".quality-action-btn", css)
+
+    def test_admin_data_quality_can_enqueue_missing_image_download(self):
+        import app as app_module
+
+        self._login_as_admin()
+        enqueued = {}
+
+        def fake_enqueue(job, target):
+            enqueued["job"] = job
+            enqueued["target"] = target
+
+        with mock.patch.object(app_module, "_enqueue_facebook_crawl_job", side_effect=fake_enqueue):
+            response = self.client.post(
+                "/admin/api/data-quality/download-missing-images",
+                json={"limit": 123},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["ok"])
+        self.assertEqual(enqueued["job"]["maintenance_action"], "download_missing_images")
+        self.assertEqual(enqueued["job"]["source"], "")
+        self.assertEqual(enqueued["job"]["limit"], 123)
+        self.assertEqual(enqueued["target"], app_module._run_admin_data_quality_image_job)
+        self.assertEqual(data["job"]["maintenance_action"], "download_missing_images")
+
+    def test_admin_data_quality_can_enqueue_retry_source_crawl(self):
+        import app as app_module
+
+        self._login_as_admin()
+        enqueued = {}
+
+        def fake_enqueue(job, target):
+            enqueued["job"] = job
+            enqueued["target"] = target
+
+        with mock.patch.object(app_module, "_enqueue_facebook_crawl_job", side_effect=fake_enqueue):
+            response = self.client.post(
+                "/admin/api/data-quality/retry-source-crawl",
+                json={"source": "guland"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["ok"])
+        self.assertEqual(enqueued["job"]["maintenance_action"], "retry_source_crawl")
+        self.assertEqual(enqueued["job"]["source"], "guland")
+        self.assertEqual(enqueued["job"]["mode"], "retry guland")
+        self.assertEqual(enqueued["target"], app_module._run_admin_source_retry_job)
+        self.assertEqual(data["job"]["source"], "guland")
 
     def test_daily_crawl_schedule_status_reads_linux_systemd_timer(self):
         import app as app_module

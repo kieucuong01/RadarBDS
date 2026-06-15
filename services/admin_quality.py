@@ -218,9 +218,9 @@ def facebook_profile_activity(rows: list[dict]) -> dict:
     elif posts_30d == 0:
         label, tier, confidence = "Ít hoạt động", "muted", "low"
     elif active_days_30d >= 18 or avg_active_14d >= 12:
-        label, tier, confidence = "Nhá»‹p cao", "strong", "high"
+        label, tier, confidence = "Nhịp cao", "strong", "high"
     elif active_days_30d >= 8 or posts_30d >= 20:
-        label, tier, confidence = "á»”n Ä‘á»‹nh", "good", "medium"
+        label, tier, confidence = "Ổn định", "good", "medium"
     else:
         label, tier, confidence = "Rải rác", "warn", "medium"
     return {
@@ -311,9 +311,9 @@ def facebook_profile_data_quality(rows: list[dict]) -> dict:
     )
     score = max(0, min(100, int(score)))
     if score >= 82:
-        label, tier = "Dá»¯ liá»‡u sáº¡ch", "strong"
+        label, tier = "Dữ liệu sạch", "strong"
     elif score >= 68:
-        label, tier = "Dá»¯ liá»‡u á»•n", "good"
+        label, tier = "Dữ liệu ổn", "good"
     elif score >= 52:
         label, tier = "Thiếu thông tin", "warn"
     else:

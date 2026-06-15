@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="utf-8">
@@ -184,14 +184,14 @@
     <section class="admin-auth-card" aria-label="Admin login required">
       <div class="brand-mark"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="RadarBDS"></div>
       <h1>RadarBDS Control Room</h1>
-      <p>Cáº§n Ä‘Äƒng nháº­p báº±ng tÃ i khoáº£n admin Ä‘á»ƒ má»Ÿ khu Ä‘iá»u khiá»ƒn. Sau khi Ä‘Äƒng nháº­p thÃ nh cÃ´ng, trang sáº½ tá»± táº£i láº¡i.</p>
+      <p>Cần đăng nhập bằng tài khoản admin để mở khu điều khiển. Sau khi đăng nhập thành công, trang sẽ tự tải lại.</p>
       <div class="admin-auth-actions">
         <button class="primary-btn" type="button"
-          onclick="RadarAuth.openAuthModal('ÄÄƒng nháº­p tÃ i khoáº£n admin Ä‘á»ƒ vÃ o Control Room.')">
-          <span class="btn-icon-label">{{ admin_icon('user-cog', 'btn-svg') }}<span>ÄÄƒng nháº­p admin</span></span>
+          onclick="RadarAuth.openAuthModal('Đăng nhập tài khoản admin để vào Control Room.')">
+          <span class="btn-icon-label">{{ admin_icon('user-cog', 'btn-svg') }}<span>Đăng nhập admin</span></span>
         </button>
         <a class="secondary-btn" href="/">
-          <span class="btn-icon-label">{{ admin_icon('home', 'btn-svg') }}<span>Vá» dashboard</span></span>
+          <span class="btn-icon-label">{{ admin_icon('home', 'btn-svg') }}<span>Về dashboard</span></span>
         </a>
       </div>
     </section>
@@ -200,25 +200,25 @@
   <div id="authModal" class="modal" onclick="if(event.target===this)RadarAuth.closeAuthModal()">
     <div class="modal-content auth-modal-content">
       <button class="close-modal" onclick="RadarAuth.closeAuthModal()" style="top:12px; right:12px;">&times;</button>
-      <h3 id="authTitle">ÄÄƒng nháº­p / ÄÄƒng kÃ½</h3>
-      <p class="auth-sub" id="authSub">Nháº­p sá»‘ Ä‘iá»‡n thoáº¡i hoáº·c email Ä‘á»ƒ tiáº¿p tá»¥c.</p>
+      <h3 id="authTitle">Đăng nhập / Đăng ký</h3>
+      <p class="auth-sub" id="authSub">Nhập số điện thoại hoặc email để tiếp tục.</p>
       <div id="authReasonBanner" class="auth-trial-banner"
         style="display:none; background: rgba(15,118,110,.1); border-color: rgba(15,118,110,.3); color: #0f766e;"></div>
       <div id="authError" class="auth-error"></div>
       <div class="auth-field">
-        <label for="authIdentifier">Sá»‘ Ä‘iá»‡n thoáº¡i</label>
+        <label for="authIdentifier">Số điện thoại</label>
         <input type="tel" id="authIdentifier" autocomplete="tel" placeholder="0901234567">
       </div>
       <div class="auth-field" id="authPasswordField" style="display:none;">
-        <label for="authPassword">Máº­t kháº©u</label>
-        <input type="password" id="authPassword" autocomplete="current-password" placeholder="Ãt nháº¥t 6 kÃ½ tá»±">
+        <label for="authPassword">Mật khẩu</label>
+        <input type="password" id="authPassword" autocomplete="current-password" placeholder="Ít nhất 6 ký tự">
       </div>
       <div id="authTrialBanner" class="auth-trial-banner" style="display:none;"></div>
       <div class="auth-actions">
-        <button class="auth-btn auth-btn-primary" id="authSubmitBtn" onclick="RadarAuth.submitAuth()">Tiáº¿p tá»¥c</button>
+        <button class="auth-btn auth-btn-primary" id="authSubmitBtn" onclick="RadarAuth.submitAuth()">Tiếp tục</button>
       </div>
       <p class="auth-hint">
-        Báº±ng viá»‡c Ä‘Äƒng nháº­p, báº¡n Ä‘á»“ng Ã½ sá»­ dá»¥ng RadarBDS theo quyá»n tÃ i khoáº£n hiá»‡n táº¡i.
+        Bằng việc đăng nhập, bạn đồng ý sử dụng RadarBDS theo quyền tài khoản hiện tại.
       </p>
     </div>
   </div>
@@ -227,7 +227,7 @@
   <script>
     window.addEventListener('DOMContentLoaded', function () {
       if (window.RadarAuth) {
-        window.RadarAuth.openAuthModal('ÄÄƒng nháº­p tÃ i khoáº£n admin Ä‘á»ƒ vÃ o Control Room.');
+        window.RadarAuth.openAuthModal('Đăng nhập tài khoản admin để vào Control Room.');
       }
     });
   </script>
@@ -245,27 +245,27 @@
       <div class="nav-label">Workspace</div>
       <button class="nav-item {% if admin_initial_panel|default('crm') == 'crm' %}active{% endif %}" data-panel="crm" data-panel-slug="crm">
         <span class="nav-icon">{{ admin_icon('users', 'nav-svg') }}</span>
-        <span><strong>Lead CRM</strong><small>Quáº£n lÃ½ khÃ¡ch hÃ ng</small></span>
+        <span><strong>Lead CRM</strong><small>Quản lý khách hàng</small></span>
       </button>
       <button class="nav-item {% if admin_initial_panel|default('crm') == 'quality' %}active{% endif %}" data-panel="quality" data-panel-slug="data-quality">
         <span class="nav-icon">{{ admin_icon('shield-check', 'nav-svg') }}</span>
-        <span><strong>Data Quality</strong><small>Tráº¡m kiá»ƒm dá»‹ch data</small></span>
+        <span><strong>Data Quality</strong><small>Trạm kiểm dịch data</small></span>
       </button>
       <button class="nav-item {% if admin_initial_panel|default('crm') == 'crawl' %}active{% endif %}" data-panel="crawl" data-panel-slug="facebook-crawl">
         <span class="nav-icon">{{ admin_icon('radio', 'nav-svg') }}</span>
-        <span><strong>Facebook Crawl</strong><small>MÃ´i giá»›i, daily, range</small></span>
+        <span><strong>Facebook Crawl</strong><small>Môi giới, daily, range</small></span>
       </button>
       <button class="nav-item {% if admin_initial_panel|default('crm') == 'training' %}active{% endif %}" data-panel="training" data-panel-slug="ai-training">
         <span class="nav-icon">{{ admin_icon('brain', 'nav-svg') }}</span>
-        <span><strong>AI Training</strong><small>Tráº¡m huáº¥n luyá»‡n Ä‘á»‹nh giÃ¡</small></span>
+        <span><strong>AI Training</strong><small>Trạm huấn luyện định giá</small></span>
       </button>
       <button class="nav-item {% if admin_initial_panel|default('crm') == 'infra' %}active{% endif %}" data-panel="infra" data-panel-slug="infrastructure">
         <span class="nav-icon">{{ admin_icon('map', 'nav-svg') }}</span>
-        <span><strong>Háº¡ táº§ng</strong><small>Insights timeline vÃ  policy</small></span>
+        <span><strong>Hạ tầng</strong><small>Insights timeline và policy</small></span>
       </button>
       <button class="nav-item {% if admin_initial_panel|default('crm') == 'users' %}active{% endif %}" data-panel="users" data-panel-slug="users">
         <span class="nav-icon">{{ admin_icon('user-cog', 'nav-svg') }}</span>
-        <span><strong>NgÆ°á»i dÃ¹ng</strong><small>Cáº¥p / thu há»“i VIP, ban</small></span>
+        <span><strong>Người dùng</strong><small>Cấp / thu hồi VIP, ban</small></span>
       </button>
     </nav>
 
@@ -281,27 +281,27 @@
   <main class="admin-main">
     <header class="topbar">
       <div class="topbar-left">
-        <button class="icon-btn icon-only" id="toggleSidebar" title="Thu gá»n sidebar">{{ admin_icon('menu', 'btn-svg') }}</button>
+        <button class="icon-btn icon-only" id="toggleSidebar" title="Thu gọn sidebar">{{ admin_icon('menu', 'btn-svg') }}</button>
         <div class="top-title">
           <strong>RadarBDS Control Room</strong>
-          <small>BÃ¬nh DÆ°Æ¡ng Â· Realtime</small>
+          <small>Bình Dương · Realtime</small>
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" id="adminThemeToggle" title="Äá»•i theme">
+        <button class="icon-btn" id="adminThemeToggle" title="Đổi theme">
           <span class="btn-icon-label">{{ admin_icon('moon', 'btn-svg') }}<span>Theme</span></span>
         </button>
-        <a class="system-status" href="/" title="Vá» dashboard user"><span></span>{{ admin_icon('home', 'status-svg') }}Há»‡ thá»‘ng á»•n Ä‘á»‹nh</a>
+        <a class="system-status" href="/" title="Về dashboard user"><span></span>{{ admin_icon('home', 'status-svg') }}Hệ thống ổn định</a>
       </div>
     </header>
 
     <section id="panel-crm" class="workspace-panel {% if admin_initial_panel|default('crm') == 'crm' %}active{% endif %}">
       <div class="page-head">
         <div>
-          <h1>Mini CRM â€” Lead SÄƒn Deal</h1>
-          <p>Lead phÃ¡t sinh tá»« RadarBDS, cáº­p nháº­t realtime.</p>
+          <h1>Mini CRM — Lead Săn Deal</h1>
+          <p>Lead phát sinh từ RadarBDS, cập nhật realtime.</p>
         </div>
-        <button class="secondary-btn" id="exportLeadsBtn"><span class="btn-icon-label">{{ admin_icon('download', 'btn-svg') }}<span>Xuáº¥t CSV</span></span></button>
+        <button class="secondary-btn" id="exportLeadsBtn"><span class="btn-icon-label">{{ admin_icon('download', 'btn-svg') }}<span>Xuất CSV</span></span></button>
       </div>
 
       <div class="stat-grid" id="leadStats"></div>
@@ -310,15 +310,15 @@
         <div class="toolbar">
           <label class="searchbox">
             <span>Search</span>
-            <input id="leadSearch" placeholder="TÃ¬m theo SÄT, lÃ´ Ä‘áº¥t...">
+            <input id="leadSearch" placeholder="Tìm theo SĐT, lô đất...">
           </label>
           <select id="leadStatusFilter" class="select-control">
-            <option value="">Táº¥t cáº£ tráº¡ng thÃ¡i</option>
-            <option value="new">Chá» xá»­ lÃ½</option>
-            <option value="called">Äang tÆ° váº¥n</option>
-            <option value="viewing">Äi xem Ä‘áº¥t</option>
-            <option value="deposit">Chá»‘t cá»c</option>
-            <option value="cancelled">Há»§y</option>
+            <option value="">Tất cả trạng thái</option>
+            <option value="new">Chờ xử lý</option>
+            <option value="called">Đang tư vấn</option>
+            <option value="viewing">Đi xem đất</option>
+            <option value="deposit">Chốt cọc</option>
+            <option value="cancelled">Hủy</option>
           </select>
           <div class="toolbar-meta" id="leadCountMeta"></div>
         </div>
@@ -326,11 +326,11 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>NgÃ y nháº­n</th>
-                <th>Sá»‘ Zalo</th>
-                <th>LÃ´ Ä‘áº¥t quan tÃ¢m</th>
-                <th>Tráº¡ng thÃ¡i</th>
-                <th>Thao tÃ¡c</th>
+                <th>Ngày nhận</th>
+                <th>Số Zalo</th>
+                <th>Lô đất quan tâm</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody id="leadRows"></tbody>
@@ -342,33 +342,33 @@
     <section id="panel-quality" class="workspace-panel {% if admin_initial_panel|default('crm') == 'quality' %}active{% endif %}">
       <div class="page-head">
         <div>
-          <h1>Tráº¡m Kiá»ƒm Dá»‹ch Data</h1>
-          <p>Xá»­ lÃ½ conflict do AI flag, giá»¯ cháº¥t lÆ°á»£ng data sáº¡ch trÆ°á»›c khi lÃªn feed.</p>
+          <h1>Trạm Kiểm Dịch Data</h1>
+          <p>Xử lý conflict do AI flag, giữ chất lượng data sạch trước khi lên feed.</p>
         </div>
       </div>
 
       <section id="qualityOverview" class="quality-overview" data-quality-overview>
-        <div class="empty">Äang táº£i data quality...</div>
+        <div class="empty">Đang tải data quality...</div>
       </section>
 
       <div class="segmented">
-        <button class="segment active" data-quality-tab="dups">Tin trÃ¹ng <span id="dupCount">0</span></button>
-        <button class="segment" data-quality-tab="blacklist">Háº¯c danh sÃ¡ch <span id="blacklistCount">0</span></button>
+        <button class="segment active" data-quality-tab="dups">Tin trùng <span id="dupCount">0</span></button>
+        <button class="segment" data-quality-tab="blacklist">Hắc danh sách <span id="blacklistCount">0</span></button>
         <button class="segment" data-quality-tab="source_qc">Guland QC</button>
         <button class="segment" data-quality-tab="legal_qc">Legal QC</button>
       </div>
 
       <section id="quality-dups" class="quality-tab active">
-        <div class="notice"><strong>Tin nghi trÃ¹ng:</strong> Má»Ÿ link tin gá»‘c, so hai tin cáº¡nh nhau rá»“i chá»n gá»™p vÃ o tin gá»‘c hoáº·c Ä‘Ã¡nh dáº¥u khÃ¡c lÃ´.</div>
+        <div class="notice"><strong>Tin nghi trùng:</strong> Mở link tin gốc, so hai tin cạnh nhau rồi chọn gộp vào tin gốc hoặc đánh dấu khác lô.</div>
         <div id="duplicateCards" class="dup-list"></div>
       </section>
 
       <section id="quality-blacklist" class="quality-tab">
         <div class="surface blacklist-panel">
           <div class="toolbar">
-            <input id="blacklistPhone" placeholder="SÄT mÃ´i giá»›i cáº§n cháº·n">
-            <input id="blacklistReason" placeholder="LÃ½ do">
-            <button class="primary-btn" id="addBlacklistBtn">ThÃªm vÃ o blacklist</button>
+            <input id="blacklistPhone" placeholder="SĐT môi giới cần chặn">
+            <input id="blacklistReason" placeholder="Lý do">
+            <button class="primary-btn" id="addBlacklistBtn">Thêm vào blacklist</button>
           </div>
           <div id="blacklistRows" class="blacklist-list"></div>
         </div>
@@ -376,12 +376,12 @@
 
 
       <section id="quality-source_qc" class="quality-tab">
-        <div class="notice"><strong>Guland QC:</strong> Signal model-cheap bá»‹ cháº·n bá»Ÿi quality flags nguá»“n, khÃ´ng Ä‘Æ°a vÃ o feed cho Ä‘áº¿n khi pipeline Ä‘á»§ tin cáº­y.</div>
+        <div class="notice"><strong>Guland QC:</strong> Signal model-cheap bị chặn bởi quality flags nguồn, không đưa vào feed cho đến khi pipeline đủ tin cậy.</div>
         <div id="qualitySourceQcGrid" class="training-grid quality-review-grid"></div>
       </section>
 
       <section id="quality-legal_qc" class="quality-tab">
-        <div class="notice"><strong>Legal QC:</strong> Case thiáº¿u hoáº·c cáº§n soi láº¡i báº±ng chá»©ng phÃ¡p lÃ½. HÃ nh Ä‘á»™ng xÃ¡c minh sá»• náº±m táº¡i Ä‘Ã¢y, khÃ´ng á»Ÿ AI Training.</div>
+        <div class="notice"><strong>Legal QC:</strong> Case thiếu hoặc cần soi lại bằng chứng pháp lý. Hành động xác minh sổ nằm tại đây, không ở AI Training.</div>
         <div id="qualityLegalQcGrid" class="training-grid quality-review-grid"></div>
       </section>
     </section>
@@ -390,11 +390,11 @@
       <div class="page-head">
         <div>
           <h1>Facebook Crawl</h1>
-          <p>Quáº£n lÃ½ mÃ´i giá»›i tin cáº­y, cháº¡y crawl láº§n Ä‘áº§u, daily hoáº·c theo sá»‘ ngÃ y gáº§n Ä‘Ã¢y.</p>
+          <p>Quản lý môi giới tin cậy, chạy crawl lần đầu, daily hoặc theo số ngày gần đây.</p>
         </div>
         <div class="page-actions">
-          <button class="secondary-btn" id="refreshCrawlBtn"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>LÃ m má»›i</span></span></button>
-          <button class="primary-btn" id="saveCrawlProfilesBtn"><span class="btn-icon-label">{{ admin_icon('save', 'btn-svg') }}<span>LÆ°u danh sÃ¡ch</span></span></button>
+          <button class="secondary-btn" id="refreshCrawlBtn"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>Làm mới</span></span></button>
+          <button class="primary-btn" id="saveCrawlProfilesBtn"><span class="btn-icon-label">{{ admin_icon('save', 'btn-svg') }}<span>Lưu danh sách</span></span></button>
         </div>
       </div>
 
@@ -405,29 +405,29 @@
         <div class="apify-token-head">
           <div class="apify-token-title">
             <strong>Apify key pool</strong>
-            <span id="apifyTokenSummary">Äang táº£i quota...</span>
+            <span id="apifyTokenSummary">Đang tải quota...</span>
           </div>
           <div class="apify-token-mini-stats" id="apifyTokenMiniStats"></div>
-          <button class="secondary-btn apify-token-toggle" id="toggleApifyTokensBtn" type="button">Quáº£n lÃ½ key</button>
+          <button class="secondary-btn apify-token-toggle" id="toggleApifyTokensBtn" type="button">Quản lý key</button>
         </div>
         <div class="apify-token-body" id="apifyTokenBody" hidden>
           <div class="toolbar apify-token-form">
-            <input id="apifyTokenLabel" placeholder="TÃªn key, vÃ­ dá»¥ Key 1">
+            <input id="apifyTokenLabel" placeholder="Tên key, ví dụ Key 1">
             <input id="apifyTokenValue" type="password" autocomplete="off" placeholder="apify_api_...">
-            <input id="apifyTokenQuota" type="number" min="1" max="10000" value="950" title="Quota post/thÃ¡ng">
-            <button class="primary-btn" id="addApifyTokenBtn"><span class="btn-icon-label">{{ admin_icon('plus', 'btn-svg') }}<span>ThÃªm key</span></span></button>
+            <input id="apifyTokenQuota" type="number" min="1" max="10000" value="950" title="Quota post/tháng">
+            <button class="primary-btn" id="addApifyTokenBtn"><span class="btn-icon-label">{{ admin_icon('plus', 'btn-svg') }}<span>Thêm key</span></span></button>
           </div>
           <div class="table-wrap apify-token-scroll">
           <table class="data-table apify-token-table">
             <thead>
               <tr>
-                <th>Báº­t</th>
+                <th>Bật</th>
                 <th>Key</th>
-                <th>Quota thÃ¡ng</th>
-                <th>ÄÃ£ dÃ¹ng</th>
-                <th>CÃ²n láº¡i</th>
-                <th>Tráº¡ng thÃ¡i</th>
-                <th>Thao tÃ¡c</th>
+                <th>Quota tháng</th>
+                <th>Đã dùng</th>
+                <th>Còn lại</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody id="apifyTokenRows"></tbody>
@@ -439,24 +439,24 @@
       <section class="crawl-layout">
         <div class="surface crawl-profiles-panel">
           <div class="toolbar crawl-add-row">
-            <input id="crawlBrokerName" placeholder="TÃªn mÃ´i giá»›i">
+            <input id="crawlBrokerName" placeholder="Tên môi giới">
             <input id="crawlProfileUrl" placeholder="https://www.facebook.com/...">
-            <input id="crawlCity" placeholder="Khu vá»±c" value="Báº¿n CÃ¡t">
-            <button class="primary-btn" id="addCrawlProfileBtn"><span class="btn-icon-label">{{ admin_icon('plus', 'btn-svg') }}<span>ThÃªm</span></span></button>
+            <input id="crawlCity" placeholder="Khu vực" value="Bến Cát">
+            <button class="primary-btn" id="addCrawlProfileBtn"><span class="btn-icon-label">{{ admin_icon('plus', 'btn-svg') }}<span>Thêm</span></span></button>
           </div>
           <div class="table-wrap">
             <table class="data-table crawl-table">
               <thead>
                 <tr>
-                  <th>Báº­t</th>
-                  <th>MÃ´i giá»›i</th>
+                  <th>Bật</th>
+                  <th>Môi giới</th>
                   <th>Daily</th>
                   <th>Range</th>
-                  <th>Nhá»‹p Ä‘Äƒng</th>
-                  <th>Gá»£i Ã½</th>
-                  <th>Äá»™ sáº¡ch</th>
-                  <th>Dá»¯ liá»‡u</th>
-                  <th>Cháº¡y</th>
+                  <th>Nhịp đăng</th>
+                  <th>Gợi ý</th>
+                  <th>Độ sạch</th>
+                  <th>Dữ liệu</th>
+                  <th>Chạy</th>
                 </tr>
               </thead>
               <tbody id="crawlProfileRows"></tbody>
@@ -466,37 +466,37 @@
 
         <aside class="surface crawl-run-panel">
           <div class="crawl-run-head">
-            <strong>Cháº¡y crawl thá»§ cÃ´ng</strong>
+            <strong>Chạy crawl thủ công</strong>
             <span id="crawlJobStatus" class="crawl-status">Idle</span>
           </div>
-          <label class="crawl-field">MÃ´i giá»›i
+          <label class="crawl-field">Môi giới
             <select id="crawlRunProfile" class="select-control"></select>
           </label>
           <div class="segmented crawl-mode">
-            <button class="segment active" data-crawl-mode="first">Láº§n Ä‘áº§u</button>
+            <button class="segment active" data-crawl-mode="first">Lần đầu</button>
             <button class="segment" data-crawl-mode="daily">Daily</button>
             <button class="segment" data-crawl-mode="range">Range days</button>
           </div>
           <div class="crawl-two" id="crawlRunFields">
-            <label class="crawl-field">Sá»‘ bÃ i
+            <label class="crawl-field">Số bài
               <input id="crawlRunLimit" type="number" min="1" max="950" value="330">
             </label>
-            <label class="crawl-field crawl-days-field">Sá»‘ ngÃ y
+            <label class="crawl-field crawl-days-field">Số ngày
               <input id="crawlRunDays" type="number" min="1" max="60" value="7">
             </label>
           </div>
           <label class="toggle-line">
             <input id="crawlDownloadImages" type="checkbox" checked>
-            <span>Táº£i áº£nh sau khi reprocess</span>
+            <span>Tải ảnh sau khi reprocess</span>
           </label>
-          <button class="primary-btn crawl-run-btn" id="runCrawlBtn"><span class="btn-icon-label">{{ admin_icon('play', 'btn-svg') }}<span>Cháº¡y crawl</span></span></button>
+          <button class="primary-btn crawl-run-btn" id="runCrawlBtn"><span class="btn-icon-label">{{ admin_icon('play', 'btn-svg') }}<span>Chạy crawl</span></span></button>
           <div class="crawl-maintenance-actions">
             <button class="secondary-btn" id="runManualReprocessBtn" type="button"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>Reprocess</span></span></button>
             <button class="secondary-btn" id="runValuationOnlyBtn" type="button"><span class="btn-icon-label">{{ admin_icon('brain', 'btn-svg') }}<span>Valuation-only</span></span></button>
           </div>
           <div class="crawl-progress">
             <div class="crawl-progress-top">
-              <span id="crawlProgressLabel">ChÆ°a cháº¡y</span>
+              <span id="crawlProgressLabel">Chưa chạy</span>
               <strong id="crawlProgressPct">0%</strong>
             </div>
             <div class="crawl-progress-track">
@@ -504,7 +504,7 @@
             </div>
           </div>
           <div id="crawlJobMeta" class="crawl-job-meta"></div>
-          <pre id="crawlJobLog" class="crawl-log">ChÆ°a cÃ³ job crawl.</pre>
+          <pre id="crawlJobLog" class="crawl-log">Chưa có job crawl.</pre>
         </aside>
       </section>
     </section>
@@ -513,20 +513,20 @@
       <div class="page-head">
         <div>
           <h1>AI Training <span id="trainingCount" class="count-badge">0</span></h1>
-          <p>Chá»‰ cháº¥m nhÃ£n Ä‘á»‹nh giÃ¡ Ä‘á»ƒ táº¡o ground truth cho thuáº­t toÃ¡n valuation. <span id="trainingMeta" class="muted-inline"></span></p>
+          <p>Chỉ chấm nhãn định giá để tạo ground truth cho thuật toán valuation. <span id="trainingMeta" class="muted-inline"></span></p>
         </div>
-        <button class="secondary-btn" id="refreshTrainingBtn"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>LÃ m má»›i queue</span></span></button>
+        <button class="secondary-btn" id="refreshTrainingBtn"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>Làm mới queue</span></span></button>
       </div>
       <div class="train-filterbar">
-        <label>ThÃ nh phá»‘
-          <select id="trnCity"><option value="">Táº¥t cáº£ TP</option></select>
+        <label>Thành phố
+          <select id="trnCity"><option value="">Tất cả TP</option></select>
         </label>
-        <label>PhÆ°á»ng
-          <select id="trnWard"><option value="">Táº¥t cáº£ phÆ°á»ng</option></select>
+        <label>Phường
+          <select id="trnWard"><option value="">Tất cả phường</option></select>
         </label>
-        <label>BiÃªn an toÃ n â‰¥
+        <label>Biên an toàn ≥
           <select id="trnMos">
-            <option value="0">Táº¥t cáº£</option>
+            <option value="0">Tất cả</option>
             <option value="30">30%</option>
             <option value="40">40%</option>
             <option value="50">50%</option>
@@ -534,33 +534,33 @@
             <option value="70">70%</option>
           </select>
         </label>
-        <label>Sáº¯p xáº¿p
+        <label>Sắp xếp
           <select id="trnSort">
-            <option value="default">Æ¯u tiÃªn review (máº·c Ä‘á»‹nh)</option>
-            <option value="newest">Má»›i nháº¥t</option>
-            <option value="cheapest">GiÃ¡ tháº¥p nháº¥t</option>
-            <option value="mos">BiÃªn an toÃ n cao nháº¥t</option>
-            <option value="score">Score cao nháº¥t</option>
+            <option value="default">Ưu tiên review (mặc định)</option>
+            <option value="newest">Mới nhất</option>
+            <option value="cheapest">Giá thấp nhất</option>
+            <option value="mos">Biên an toàn cao nhất</option>
+            <option value="score">Score cao nhất</option>
           </select>
         </label>
-        <label>Hiá»ƒn thá»‹
+        <label>Hiển thị
           <div class="trn-view-toggle">
-            <button type="button" id="trnViewGrid" class="trn-view-btn active" data-view="grid">LÆ°á»›i</button>
-            <button type="button" id="trnViewList" class="trn-view-btn" data-view="list">DÃ²ng</button>
+            <button type="button" id="trnViewGrid" class="trn-view-btn active" data-view="grid">Lưới</button>
+            <button type="button" id="trnViewList" class="trn-view-btn" data-view="list">Dòng</button>
           </div>
         </label>
       </div>
       <div id="trainingGrid" class="training-grid"></div>
-      <div id="trnSentinel" style="display:none;text-align:center;padding:18px;color:var(--muted,#888);font-size:12px">Äang táº£i thÃªmâ€¦</div>
+      <div id="trnSentinel" style="display:none;text-align:center;padding:18px;color:var(--muted,#888);font-size:12px">Đang tải thêm…</div>
     </section>
 
     <section id="panel-infra" class="workspace-panel {% if admin_initial_panel|default('crm') == 'infra' %}active{% endif %}">
       <div class="page-head">
         <div>
-          <h1>Háº¡ táº§ng Insights</h1>
-          <p>Quáº£n trá»‹ dá»¯ liá»‡u dá»± Ã¡n háº¡ táº§ng vÃ  policy alerts hiá»ƒn thá»‹ cho user.</p>
+          <h1>Hạ tầng Insights</h1>
+          <p>Quản trị dữ liệu dự án hạ tầng và policy alerts hiển thị cho user.</p>
         </div>
-        <button class="secondary-btn" id="refreshInfraBtn"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>LÃ m má»›i</span></span></button>
+        <button class="secondary-btn" id="refreshInfraBtn"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>Làm mới</span></span></button>
       </div>
 
       <section class="surface infra-surface">
@@ -568,31 +568,31 @@
           <form id="infraForm" class="infra-form" onsubmit="return false;">
             <input type="hidden" id="infraId">
             <div class="infra-row">
-              <label>Loáº¡i</label>
+              <label>Loại</label>
               <select id="infraKind" class="select-control">
                 <option value="timeline">Timeline</option>
-                <option value="policy">Cáº£nh bÃ¡o chÃ­nh sÃ¡ch</option>
+                <option value="policy">Cảnh báo chính sách</option>
               </select>
             </div>
             <div class="infra-row">
-              <label>TiÃªu Ä‘á»</label>
-              <input id="infraTitle" placeholder="VÃ­ dá»¥: Khá»Ÿi cÃ´ng VÃ nh Ä‘ai 4 Ä‘oáº¡n BÃ¬nh DÆ°Æ¡ng">
+              <label>Tiêu đề</label>
+              <input id="infraTitle" placeholder="Ví dụ: Khởi công Vành đai 4 đoạn Bình Dương">
             </div>
             <div class="infra-row">
-              <label>MÃ´ táº£ ngáº¯n</label>
-              <input id="infraSubtitle" placeholder="VÃ­ dá»¥: Giáº£i phÃ³ng máº·t báº±ng 78%">
+              <label>Mô tả ngắn</label>
+              <input id="infraSubtitle" placeholder="Ví dụ: Giải phóng mặt bằng 78%">
             </div>
             <div class="infra-row">
-              <label>Ná»™i dung chi tiáº¿t</label>
-              <textarea id="infraSummary" rows="4" placeholder="Ná»™i dung update cho card"></textarea>
+              <label>Nội dung chi tiết</label>
+              <textarea id="infraSummary" rows="4" placeholder="Nội dung update cho card"></textarea>
             </div>
             <div class="infra-two">
               <div class="infra-row">
-                <label>Ward/Khu vá»±c</label>
-                <input id="infraWard" placeholder="PhÃº Má»¹, Báº¿n CÃ¡t...">
+                <label>Ward/Khu vực</label>
+                <input id="infraWard" placeholder="Phú Mỹ, Bến Cát...">
               </div>
               <div class="infra-row">
-                <label>ÄÆ°á»ng/Reference</label>
+                <label>Đường/Reference</label>
                 <input id="infraRoadRef" placeholder="QL13, DX006...">
               </div>
             </div>
@@ -632,7 +632,7 @@
                 <input id="infraProgress" type="number" min="0" max="100" step="1" placeholder="0-100">
               </div>
               <div class="infra-row">
-                <label>NgÃ y sá»± kiá»‡n</label>
+                <label>Ngày sự kiện</label>
                 <input id="infraDate" type="date">
               </div>
             </div>
@@ -642,12 +642,12 @@
                 <input id="infraSortOrder" type="number" step="1" value="0">
               </div>
               <div class="infra-row">
-                <label>Nguá»“n URL</label>
+                <label>Nguồn URL</label>
                 <input id="infraSourceUrl" placeholder="https://...">
               </div>
             </div>
             <div class="infra-actions">
-              <button class="primary-btn" id="saveInfraBtn"><span class="btn-icon-label">{{ admin_icon('save', 'btn-svg') }}<span>LÆ°u item</span></span></button>
+              <button class="primary-btn" id="saveInfraBtn"><span class="btn-icon-label">{{ admin_icon('save', 'btn-svg') }}<span>Lưu item</span></span></button>
               <button class="secondary-btn" id="resetInfraBtn" type="button"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>Reset form</span></span></button>
             </div>
           </form>
@@ -667,10 +667,10 @@
     <section id="panel-users" class="workspace-panel {% if admin_initial_panel|default('crm') == 'users' %}active{% endif %}">
       <div class="page-head">
         <div>
-          <h1>Quáº£n lÃ½ NgÆ°á»i dÃ¹ng</h1>
-          <p>Cáº¥p / thu há»“i VIP, ban tÃ i khoáº£n. VIP auto-expire theo `vip_expires_at`.</p>
+          <h1>Quản lý Người dùng</h1>
+          <p>Cấp / thu hồi VIP, ban tài khoản. VIP auto-expire theo `vip_expires_at`.</p>
         </div>
-        <button class="secondary-btn" id="refreshUsersBtn"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>LÃ m má»›i</span></span></button>
+        <button class="secondary-btn" id="refreshUsersBtn"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>Làm mới</span></span></button>
       </div>
 
       <div class="stat-grid" id="userStats"></div>
@@ -679,10 +679,10 @@
         <div class="toolbar">
           <label class="searchbox">
             <span>Search</span>
-            <input id="userSearch" placeholder="SÄT, email, tÃªn...">
+            <input id="userSearch" placeholder="SĐT, email, tên...">
           </label>
           <select id="userTierFilter" class="select-control">
-            <option value="">Táº¥t cáº£ tier</option>
+            <option value="">Tất cả tier</option>
             <option value="free">Free</option>
             <option value="vip">VIP</option>
             <option value="admin">Admin</option>
@@ -694,14 +694,14 @@
               <tr>
                 <th>ID</th>
                 <th>Identifier</th>
-                <th>TÃªn</th>
+                <th>Tên</th>
                 <th>Tier</th>
-                <th>VIP háº¿t háº¡n</th>
+                <th>VIP hết hạn</th>
                 <th>TG</th>
                 <th>Watchlist</th>
-                <th>ÄÄƒng kÃ½</th>
+                <th>Đăng ký</th>
                 <th>Last login</th>
-                <th>HÃ nh Ä‘á»™ng</th>
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody id="userTableBody"></tbody>

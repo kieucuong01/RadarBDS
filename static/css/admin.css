@@ -1523,6 +1523,39 @@ p { margin: 6px 0 0; color: var(--muted); }
   color: var(--ink);
   font-size: 15px;
 }
+.quality-detail-note {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.quality-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.quality-card-actions .primary-btn:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+.quality-action-btn {
+  justify-self: end;
+  min-height: 30px;
+  border: 1px solid rgba(37, 99, 235, .22);
+  border-radius: 8px;
+  background: rgba(37, 99, 235, .08);
+  color: var(--blue);
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.quality-action-btn.danger {
+  border-color: rgba(225, 29, 72, .24);
+  background: rgba(225, 29, 72, .08);
+  color: var(--red);
+}
 .quality-list {
   list-style: none;
   display: grid;
