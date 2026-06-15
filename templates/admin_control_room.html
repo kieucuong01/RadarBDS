@@ -501,6 +501,10 @@
             <span>Tải ảnh sau khi reprocess</span>
           </label>
           <button class="primary-btn crawl-run-btn" id="runCrawlBtn"><span class="btn-icon-label">{{ admin_icon('play', 'btn-svg') }}<span>Chạy crawl</span></span></button>
+          <div class="crawl-maintenance-actions">
+            <button class="secondary-btn" id="runManualReprocessBtn" type="button"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>Reprocess</span></span></button>
+            <button class="secondary-btn" id="runValuationOnlyBtn" type="button"><span class="btn-icon-label">{{ admin_icon('brain', 'btn-svg') }}<span>Valuation-only</span></span></button>
+          </div>
           <div class="crawl-progress">
             <div class="crawl-progress-top">
               <span id="crawlProgressLabel">Chưa chạy</span>

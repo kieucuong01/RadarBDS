@@ -913,6 +913,20 @@ async function runSelectedCrawl() {
   await runCrawlForUrl(url, crawlMode);
 }
 
+async function runCrawlMaintenance(action) {
+  const label = action === 'valuation_only' ? 'valuation-only' : 'reprocess';
+  await withAdminToast(`Dang tao job ${label}`, async () => {
+    const data = await fetchJSON('/admin/api/facebook-crawl/maintenance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    });
+    activeCrawlJobId = data.job.id;
+    renderCrawlJob(data.job);
+    startCrawlPolling(activeCrawlJobId);
+  }, `Da tao job ${label}`, `Khong tao duoc job ${label}`);
+}
+
 function renderCrawlJob(job) {
   const status = document.getElementById('crawlJobStatus');
   const meta = document.getElementById('crawlJobMeta');
@@ -931,8 +945,17 @@ function renderCrawlJob(job) {
   if (progressText) progressText.textContent = progressLabel;
   const crawl = job.stats?.crawl || {};
   const reprocess = job.stats?.reprocess?.listings || {};
+  const valuation = job.stats?.valuation || job.stats?.reprocess?.valuation || {};
   const downloaded = job.stats?.downloaded_images;
-  if (meta) {
+  if (meta && job.maintenance_action) {
+    meta.innerHTML = `
+      <strong>${esc(job.mode || 'maintenance')}</strong>
+      ${job.stats?.reprocess ? `<span>Reprocess new ${Number(reprocess.new || 0)} · updated ${Number(reprocess.updated || 0)} · skipped ${Number(reprocess.skipped || 0)}</span>` : ''}
+      ${valuation.total !== undefined ? `<span>Valuation total ${Number(valuation.total || 0)} · signals ${Number(valuation.signals || 0)} · outliers ${Number(valuation.outliers || 0)}</span>` : ''}
+      ${job.error ? `<span class="crawl-error">${esc(job.error)}</span>` : ''}
+    `;
+  }
+  if (meta && !job.maintenance_action) {
     meta.innerHTML = `
       <strong>${esc(job.broker_name || job.profile_url || '')}</strong>
       <span>${esc(job.mode || '')} · limit ${esc(job.limit || '')}${job.mode === 'range' ? ' · ' + esc(job.days || '') + ' ngày' : ''}</span>
@@ -2026,6 +2049,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('toggleApifyTokensBtn')?.addEventListener('click', toggleApifyTokensPanel);
   document.getElementById('addApifyTokenBtn')?.addEventListener('click', addApifyToken);
   document.getElementById('runCrawlBtn')?.addEventListener('click', runSelectedCrawl);
+  document.getElementById('runManualReprocessBtn')?.addEventListener('click', () => runCrawlMaintenance('reprocess'));
+  document.getElementById('runValuationOnlyBtn')?.addEventListener('click', () => runCrawlMaintenance('valuation_only'));
   document.getElementById('crawlRunProfile')?.addEventListener('change', syncCrawlRunInputs);
   document.querySelectorAll('[data-crawl-mode]').forEach(btn => btn.addEventListener('click', () => setCrawlMode(btn.dataset.crawlMode)));
   document.getElementById('refreshTrainingBtn').addEventListener('click', loadTrainingItems);

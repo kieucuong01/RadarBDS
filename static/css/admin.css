@@ -891,6 +891,17 @@ p { margin: 6px 0 0; color: var(--muted); }
   margin: 2px 0 12px;
   box-shadow: none;
 }
+.crawl-maintenance-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: -4px 0 12px;
+}
+.crawl-maintenance-actions .secondary-btn {
+  min-height: 38px;
+  padding: 0 10px;
+  box-shadow: none;
+}
 .crawl-progress {
   margin: 0 0 12px;
 }
@@ -1332,6 +1343,9 @@ p { margin: 6px 0 0; color: var(--muted); }
     padding: 14px;
   }
   .crawl-mode {
+    grid-template-columns: 1fr;
+  }
+  .crawl-maintenance-actions {
     grid-template-columns: 1fr;
   }
   .crawl-two {

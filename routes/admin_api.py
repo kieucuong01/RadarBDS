@@ -55,6 +55,11 @@ def admin_api_facebook_crawl_run(**kwargs):
     return _impl("admin_api_facebook_crawl_run", **kwargs)
 
 
+@bp.route("/admin/api/facebook-crawl/maintenance", methods=["POST"])
+def admin_api_facebook_crawl_maintenance(**kwargs):
+    return _impl("admin_api_facebook_crawl_maintenance", **kwargs)
+
+
 @bp.route("/admin/api/facebook-crawl/tokens", methods=["GET", "POST"])
 @bp.route("/admin/api/facebook-crawl/tokens/<token_id>", methods=["DELETE", "PATCH"])
 def admin_api_facebook_crawl_tokens(**kwargs):

@@ -290,6 +290,7 @@ def _public_crawl_job(job: dict | None) -> dict | None:
         "limit": job.get("limit"),
         "days": job.get("days"),
         "download_images": job.get("download_images"),
+        "maintenance_action": job.get("maintenance_action"),
         "started_at": job.get("started_at"),
         "finished_at": job.get("finished_at"),
         "progress_pct": job.get("progress_pct", 0),
@@ -298,6 +299,24 @@ def _public_crawl_job(job: dict | None) -> dict | None:
         "error": job.get("error"),
         "logs": job.get("logs") or [],
     }
+
+
+def _active_facebook_crawl_job() -> dict | None:
+    with FACEBOOK_CRAWL_LOCK:
+        return next(
+            (FACEBOOK_CRAWL_JOBS[jid] for jid in FACEBOOK_CRAWL_JOB_ORDER
+             if FACEBOOK_CRAWL_JOBS[jid].get("status") in {"queued", "running"}),
+            None,
+        )
+
+
+def _enqueue_facebook_crawl_job(job: dict, target) -> None:
+    with FACEBOOK_CRAWL_LOCK:
+        FACEBOOK_CRAWL_JOBS[job["id"]] = job
+        FACEBOOK_CRAWL_JOB_ORDER.insert(0, job["id"])
+        del FACEBOOK_CRAWL_JOB_ORDER[20:]
+    thread = threading.Thread(target=target, args=(job["id"],), daemon=True)
+    thread.start()
 
 
 def _run_admin_facebook_crawl_job(job_id: str) -> None:
@@ -445,6 +464,68 @@ def _run_admin_facebook_crawl_job(job_id: str) -> None:
 # ═══════════════════════════════════════════════════════════════════════════
 # RBAC: session cookie helpers + /api/auth/* endpoints
 # ═══════════════════════════════════════════════════════════════════════════
+def _run_admin_crawl_maintenance_job(job_id: str) -> None:
+    from db.connection import advisory_lock
+    from cleansing.reprocess import reprocess_valuation, run_full_reprocess
+
+    with FACEBOOK_CRAWL_LOCK:
+        job = FACEBOOK_CRAWL_JOBS[job_id]
+        job["status"] = "running"
+        job["started_at"] = _utc_iso_z()
+        job["progress_pct"] = 3
+        job["progress_label"] = "Dang chuan bi"
+
+    try:
+        action = job.get("maintenance_action")
+        lock_name = "reprocess" if action == "valuation_only" else "admin-manual-reprocess"
+        with advisory_lock(lock_name):
+            if action == "valuation_only":
+                _set_crawl_progress(job, 12, "valuation", "Dang chay valuation-only")
+                _append_crawl_log(job, "Valuation-only full rerun bat dau.")
+                stats = reprocess_valuation(incremental_ids=None)
+                job.setdefault("stats", {})["valuation"] = stats
+                _append_crawl_log(
+                    job,
+                    "Valuation-only xong: "
+                    f"total={stats.get('total', 0)}, "
+                    f"signals={stats.get('signals', 0)}, "
+                    f"outliers={stats.get('outliers', 0)}",
+                )
+            else:
+                _set_crawl_progress(job, 12, "reprocess", "Dang reprocess Facebook")
+                _append_crawl_log(job, "Manual Facebook reprocess bat dau.")
+                stats = run_full_reprocess(source="facebook", full=False)
+                job.setdefault("stats", {})["reprocess"] = stats
+                listing_stats = stats.get("listings", {})
+                valuation_stats = stats.get("valuation", {})
+                _append_crawl_log(
+                    job,
+                    "Manual reprocess xong: "
+                    f"processed={len(listing_stats.get('processed_ids') or [])}, "
+                    f"new={listing_stats.get('new', 0)}, "
+                    f"updated={listing_stats.get('updated', 0)}, "
+                    f"skipped={listing_stats.get('skipped', 0)}, "
+                    f"valuated={valuation_stats.get('total', 0)}, "
+                    f"signals={valuation_stats.get('signals', 0)}",
+                )
+
+        with FACEBOOK_CRAWL_LOCK:
+            job["status"] = "succeeded"
+            job["stage"] = "done"
+            job["progress_pct"] = 100
+            job["progress_label"] = "Hoan tat"
+            job["finished_at"] = _utc_iso_z()
+    except Exception as exc:
+        logger.exception("Admin crawl maintenance job failed")
+        _append_crawl_log(job, f"Loi: {exc}")
+        with FACEBOOK_CRAWL_LOCK:
+            job["status"] = "failed"
+            job["stage"] = "failed"
+            job["progress_label"] = "Loi khi chay tac vu"
+            job["error"] = str(exc)
+            job["finished_at"] = _utc_iso_z()
+
+
 def _cookie_kwargs():
     """HttpOnly + SameSite=Lax; Secure only when request is HTTPS (prod)."""
     return dict(
@@ -2621,14 +2702,9 @@ def admin_api_facebook_crawl_run():
     if mode not in {"first", "daily", "range"}:
         return jsonify({"ok": False, "error": "invalid_mode"}), 400
 
-    with FACEBOOK_CRAWL_LOCK:
-        active = next(
-            (FACEBOOK_CRAWL_JOBS[jid] for jid in FACEBOOK_CRAWL_JOB_ORDER
-             if FACEBOOK_CRAWL_JOBS[jid].get("status") in {"queued", "running"}),
-            None,
-        )
-        if active:
-            return jsonify({"ok": False, "error": "crawl_already_running", "job": _public_crawl_job(active)}), 409
+    active = _active_facebook_crawl_job()
+    if active:
+        return jsonify({"ok": False, "error": "crawl_already_running", "job": _public_crawl_job(active)}), 409
 
     configured = _facebook_profile_lookup(url) or {}
     limit_default = 330 if mode == "first" else configured.get("daily_limit", 30)
@@ -2653,12 +2729,42 @@ def admin_api_facebook_crawl_run():
         "stats": {},
         "logs": [],
     }
-    with FACEBOOK_CRAWL_LOCK:
-        FACEBOOK_CRAWL_JOBS[job["id"]] = job
-        FACEBOOK_CRAWL_JOB_ORDER.insert(0, job["id"])
-        del FACEBOOK_CRAWL_JOB_ORDER[20:]
-    thread = threading.Thread(target=_run_admin_facebook_crawl_job, args=(job["id"],), daemon=True)
-    thread.start()
+    _enqueue_facebook_crawl_job(job, _run_admin_facebook_crawl_job)
+    return jsonify({"ok": True, "job": _public_crawl_job(job)})
+
+
+@require_admin_auth
+def admin_api_facebook_crawl_maintenance():
+    payload = request.get_json(silent=True) or {}
+    action = (payload.get("action") or "").strip().lower()
+    if action not in {"reprocess", "valuation_only"}:
+        return jsonify({"ok": False, "error": "invalid_action"}), 400
+
+    active = _active_facebook_crawl_job()
+    if active:
+        return jsonify({"ok": False, "error": "crawl_already_running", "job": _public_crawl_job(active)}), 409
+
+    label = "valuation-only" if action == "valuation_only" else "manual reprocess"
+    job = {
+        "id": uuid4().hex[:12],
+        "status": "queued",
+        "stage": "queued",
+        "mode": label,
+        "profile_url": "",
+        "broker_name": "Maintenance",
+        "limit": None,
+        "days": None,
+        "download_images": False,
+        "maintenance_action": action,
+        "created_at": _utc_iso_z(),
+        "started_at": None,
+        "finished_at": None,
+        "progress_pct": 0,
+        "progress_label": "Dang cho chay",
+        "stats": {},
+        "logs": [],
+    }
+    _enqueue_facebook_crawl_job(job, _run_admin_crawl_maintenance_job)
     return jsonify({"ok": True, "job": _public_crawl_job(job)})
 
 
