@@ -520,8 +520,24 @@ def _strong_numeric_lot_signature(l1: dict, l2: dict) -> bool:
     )
     same_tc = _same_tho_cu(l1, l2)
     same_price = _same_price_level(l1, l2)
+    road_match = bool(_road_tokens(text1).intersection(_road_tokens(text2)))
+    medium_land_same_road = (
+        (l1.get("source") or "").lower() == "facebook"
+        and (l2.get("source") or "").lower() == "facebook"
+        and (l1.get("property_type") or "") in {"dat_nen", "dat_vuon"}
+        and (l2.get("property_type") or "") in {"dat_nen", "dat_vuon"}
+        and max(a1 or 0, a2 or 0) >= 500
+        and area_match
+        and road_match
+        and _near(l1.get("frontage_m"), l2.get("frontage_m"), 0.0)
+        and _near(l1.get("depth_m"), l2.get("depth_m"), 1.0)
+        and same_tc
+        and same_price
+    )
 
     if front_depth_match and (area_match or same_tc) and same_price:
+        return True
+    if medium_land_same_road:
         return True
     if area_match and same_tc and same_price and max(a1 or 0, a2 or 0) >= 600:
         return True

@@ -1016,6 +1016,24 @@ def test_facebook_large_land_subtype_same_numeric_signature_duplicate():
     assert _is_reliable_price_drop(old, new)
 
 
+def test_facebook_medium_land_same_road_numeric_signature_duplicate():
+    old = _listing(
+        source="facebook", source_id="fb-dx124-old", posted_at="2026-04-20",
+        ward="Tan An", property_type="dat_nen", area_m2=516.0,
+        frontage_m=7.5, depth_m=69.0, tho_cu_m2=60.0, price_ty=2.2,
+        description="Ban dat DX124 Tan An dien tich 7.5x69 tho cu 60m2 gia 2.2 ty."
+    )
+    new = _listing(
+        source="facebook", source_id="fb-dx124-new", posted_at="2026-05-29",
+        ward="Tan An", property_type="dat_nen", area_m2=525.0,
+        frontage_m=7.5, depth_m=70.0, tho_cu_m2=60.0, price_ty=2.2,
+        description="Gia ha con 2 ty 200tr DX124 Tan An ngang 7.5 dai 70 tho cu 60m2."
+    )
+
+    assert _candidate_keys(old).intersection(_candidate_keys(new))
+    assert _is_duplicate(old, new)
+
+
 def test_facebook_land_subtype_large_lot_key_requires_phone():
     listing = _listing(
         source="facebook", source_id="fb-1212-no-phone", posted_at="2025-07-22",
@@ -1196,6 +1214,7 @@ if __name__ == "__main__":
         test_guland_same_price_repost_not_duplicate_for_history,
         test_facebook_same_dimensions_price_tho_cu_duplicate_without_location_signal,
         test_facebook_large_land_subtype_same_numeric_signature_duplicate,
+        test_facebook_medium_land_same_road_numeric_signature_duplicate,
         test_guland_phu_tan_template_same_phone_not_same_lot,
         test_guland_phu_hoa_same_phone_area_without_road_not_same_lot,
         test_guland_phu_my_dx006_same_road_not_duplicate_without_same_source_id,

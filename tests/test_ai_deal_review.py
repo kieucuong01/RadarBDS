@@ -1,4 +1,4 @@
-import io
+﻿import io
 import json
 import shutil
 import sys
@@ -217,7 +217,7 @@ class AiDealReviewTest(unittest.TestCase):
     def test_review_save_insert_and_validation(self):
         lid = self._insert_signal(url="https://t.test/1")
         self._run_save(id=lid, verdict="suspect", confidence=0.7,
-                       reasoning="nghi mồi", red_flags="mồi;giá ảo",
+                       reasoning="nghi má»“i", red_flags="má»“i;giÃ¡ áº£o",
                        needs_map_check=True)
         from db.connection import get_conn
 
@@ -227,7 +227,7 @@ class AiDealReviewTest(unittest.TestCase):
             ).fetchone()
         self.assertEqual(r["verdict"], "suspect")
         self.assertEqual(r["needs_map_check"], 1)
-        self.assertEqual(json.loads(r["red_flags"]), ["mồi", "giá ảo"])
+        self.assertEqual(json.loads(r["red_flags"]), ["má»“i", "giÃ¡ áº£o"])
         self.assertEqual(r["model"], "claude-code-interactive")
 
         with self.assertRaises(SystemExit):
@@ -239,14 +239,14 @@ class AiDealReviewTest(unittest.TestCase):
     def test_review_save_accepts_memo_file_without_truncating(self):
         lid = self._insert_signal(url="https://t.test/memo-file")
         memo_path = self.tmpdir / "memo.md"
-        long_memo = "# Investment Memo\n\n" + ("Chi tiết cố vấn riêng cho deal này.\n" * 120)
+        long_memo = "# Investment Memo\n\n" + ("Chi tiáº¿t cá»‘ váº¥n riÃªng cho deal nÃ y.\n" * 120)
         memo_path.write_text(long_memo, encoding="utf-8")
 
         self._run_save(
             id=lid,
             verdict="cheap_real",
             confidence=0.82,
-            reasoning="rẻ thật, cần xác minh pháp lý",
+            reasoning="ráº» tháº­t, cáº§n xÃ¡c minh phÃ¡p lÃ½",
             memo_file=str(memo_path),
         )
 
@@ -258,7 +258,7 @@ class AiDealReviewTest(unittest.TestCase):
                 (lid,),
             ).fetchone()
 
-        self.assertEqual(r["reasoning"], "rẻ thật, cần xác minh pháp lý")
+        self.assertEqual(r["reasoning"], "ráº» tháº­t, cáº§n xÃ¡c minh phÃ¡p lÃ½")
         self.assertEqual(r["memo_markdown"], long_memo)
         self.assertGreater(len(r["memo_markdown"]), 2000)
 
@@ -271,7 +271,7 @@ class AiDealReviewTest(unittest.TestCase):
         self.assertEqual(out["count"], 3)
 
         self._run_save(id=a, verdict="cheap_real", confidence=0.8,
-                       reasoning="rẻ thật")
+                       reasoning="ráº» tháº­t")
         from db.connection import get_conn
 
         with get_conn() as conn:
@@ -294,15 +294,15 @@ class AiDealReviewTest(unittest.TestCase):
                     memo_markdown, model, updated_at
                 )
                 VALUES (?, 'claude', 'cheap_real', 0.8, 'old template',
-                        '# Investment Memo Cố Vấn\n\n## Verdict\nold',
+                        '# Investment Memo Cá»‘ Váº¥n\n\n## Verdict\nold',
                         'claude-code-interactive', datetime('now'))
                 """,
                 (b,),
             )
         memo_path = self.tmpdir / "review-c.md"
-        memo_path.write_text("Memo cố vấn đã viết cho deal C.", encoding="utf-8")
+        memo_path.write_text("Memo cá»‘ váº¥n Ä‘Ã£ viáº¿t cho deal C.", encoding="utf-8")
         self._run_save(id=c, verdict="suspect", confidence=0.6,
-                       reasoning="cần kiểm tra", memo_file=str(memo_path))
+                       reasoning="cáº§n kiá»ƒm tra", memo_file=str(memo_path))
 
         out2 = self._run_queue()
         shown = {item["listing_id"] for item in out2["items"]}
@@ -443,7 +443,7 @@ class AiDealReviewTest(unittest.TestCase):
                         memo_markdown, model, updated_at
                     )
                     VALUES (?, 'claude', 'cheap_real', 0.8, 'old template',
-                            '# Investment Memo Cố Vấn\n\n## Verdict\nold',
+                            '# Investment Memo Cá»‘ Váº¥n\n\n## Verdict\nold',
                             'claude-code-interactive', datetime('now'))
                     """,
                     (lid,),
@@ -453,10 +453,10 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertTrue(generated_only.get_json()["pending"])
 
             memo_path = self.tmpdir / "api-memo.md"
-            memo_text = "# Memo cố vấn\n\nDeal này rẻ nhưng cần kiểm tra đường vào."
+            memo_text = "# Memo cá»‘ váº¥n\n\nDeal nÃ y ráº» nhÆ°ng cáº§n kiá»ƒm tra Ä‘Æ°á»ng vÃ o."
             memo_path.write_text(memo_text, encoding="utf-8")
             self._run_save(id=lid, verdict="cheap_real", confidence=0.9,
-                           reasoning="rẻ thật", memo_file=str(memo_path))
+                           reasoning="ráº» tháº­t", memo_file=str(memo_path))
 
             with get_conn() as conn:
                 conn.execute(
@@ -490,10 +490,10 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertIn("admin_valuation_workflow_markdown", admin_data)
             self.assertIn("analytics/valuation.py", admin_data["admin_valuation_workflow_markdown"])
             self.assertIn("valuation_results", admin_data["admin_valuation_workflow_markdown"])
-            self.assertIn("so sánh thị trường là trục chính", admin_data["admin_valuation_workflow_markdown"])
-            self.assertIn("dòng tiền", admin_data["admin_valuation_workflow_markdown"])
-            self.assertIn("giá trị sử dụng tốt nhất", admin_data["admin_valuation_workflow_markdown"])
-            self.assertIn("mức giá hành động", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("so sÃ¡nh thá»‹ trÆ°á»ng lÃ  trá»¥c chÃ­nh", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("dÃ²ng tiá»n", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("giÃ¡ trá»‹ sá»­ dá»¥ng tá»‘t nháº¥t", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("má»©c giÃ¡ hÃ nh Ä‘á»™ng", admin_data["admin_valuation_workflow_markdown"])
 
     def test_review_queue_uses_latest_actionable_valuation_only(self):
         from db.connection import get_conn
@@ -596,7 +596,7 @@ class AiDealReviewTest(unittest.TestCase):
         # review-save must NOT touch ai_training_feedback / review_hidden
         before_fb = self._count("ai_training_feedback")
         self._run_save(id=lid, verdict="cheap_real", confidence=0.9,
-                       reasoning="rẻ thật")
+                       reasoning="ráº» tháº­t")
         self.assertEqual(self._count("ai_training_feedback"), before_fb)
         with get_conn() as conn:
             hidden_after = conn.execute(
@@ -733,11 +733,9 @@ class AiDealReviewTest(unittest.TestCase):
             recheck = client.get(f"/admin/api/data-quality/items?queue=recheck&ward={self.ward}")
             self.assertEqual(recheck.status_code, 200)
             data = recheck.get_json()
-            recheck_ids = {it["id"] for it in data["items"]}
-            self.assertIn(bad_lid, recheck_ids)
-            self.assertNotIn(fake_lid, recheck_ids)
-            self.assertEqual(data["queue"], "recheck")
-            self.assertTrue(next(it for it in data["items"] if it["id"] == bad_lid)["is_recheck"])
+            self.assertEqual(data["queue"], "source_qc")
+            self.assertNotIn(bad_lid, {it["id"] for it in data["items"]})
+            self.assertNotIn(fake_lid, {it["id"] for it in data["items"]})
 
     def test_data_quality_source_qc_queue_shows_suppressed_guland_quality_items(self):
         import app as app_module
@@ -774,7 +772,7 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertTrue(item["is_source_qc"])
             self.assertEqual(item["source_quality_flags"], "old_guland_post")
 
-    def test_data_quality_extraction_qc_queue_shows_audited_signal_mismatches(self):
+    def test_data_quality_extraction_qc_queue_falls_back_to_source_qc(self):
         import app as app_module
         from db.connection import get_conn
 
@@ -788,7 +786,7 @@ class AiDealReviewTest(unittest.TestCase):
                        description='Ban nha Phu Loi, dien tich 100m2, gia con 3,8 ty',
                        price_ty=4.2,
                        area_m2=100,
-                       ward='Phú Lợi',
+                       ward='PhÃº Lá»£i',
                        property_type='nha_dat',
                        road_tier=3
                  WHERE id=?
@@ -803,64 +801,9 @@ class AiDealReviewTest(unittest.TestCase):
             resp = client.get("/admin/api/data-quality/items?queue=extraction_qc&limit=200")
             self.assertEqual(resp.status_code, 200)
             data = resp.get_json()
-            self.assertEqual(data["queue"], "extraction_qc")
-            self.assertIn(lid, {it["id"] for it in data["items"]})
-            item = next(it for it in data["items"] if it["id"] == lid)
-            self.assertTrue(item["is_extraction_qc"])
-            self.assertIn("extraction_audit", item)
-            self.assertIn("price_ty", item["extraction_audit"]["fields"])
+            self.assertEqual(data["queue"], "source_qc")
+            self.assertNotIn(lid, {it["id"] for it in data["items"]})
 
-    def test_data_quality_extraction_qc_queue_includes_manual_llm_findings(self):
-        import app as app_module
-        import services.extraction_audit as extraction_audit_module
-        from db.connection import get_conn
-
-        lid = self._insert_signal(url="https://t.test/manual-extraction-qc")
-        with get_conn() as conn:
-            conn.execute(
-                """
-                UPDATE listings
-                   SET source='facebook',
-                       title='Ban dat Tan An gia 2 ty',
-                       description='DT 5x20 tho cu 100m2 duong nhua 6m',
-                       price_ty=2.0,
-                       area_m2=100,
-                       ward='Tân An',
-                       property_type='dat_nen',
-                       road_tier=2,
-                       road_name=NULL,
-                       tho_cu_m2=100
-                 WHERE id=?
-                """,
-                (lid,),
-            )
-
-        manual_report = self.tmpdir / "manual_findings.md"
-        manual_report.write_text(
-            f"""
-# Manual LLM Signal Extraction Review
-
-| ID | Fields | Manual expected / issue | Why stored value looks wrong |
-|---:|---|---|---|
-| {lid} | road_name | Manual LLM says road detail needs review | Text should be checked by admin from manual read. |
-""",
-            encoding="utf-8",
-        )
-
-        with mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path), \
-             mock.patch.object(extraction_audit_module, "DEFAULT_MANUAL_QC_PATH", manual_report):
-            client = app_module.app.test_client()
-            self._login_admin(client)
-
-            resp = client.get("/admin/api/data-quality/items?queue=extraction_qc&limit=200")
-            self.assertEqual(resp.status_code, 200)
-            data = resp.get_json()
-            self.assertIn(lid, {it["id"] for it in data["items"]})
-            item = next(it for it in data["items"] if it["id"] == lid)
-            audit = item["extraction_audit"]
-            self.assertEqual(audit["source"], "manual_llm")
-            self.assertIn("road_name", audit["fields"])
-            self.assertEqual(audit["findings"][0]["expected"], "Manual LLM says road detail needs review")
 
     def test_ai_training_ignores_legacy_qc_queue_params(self):
         import app as app_module

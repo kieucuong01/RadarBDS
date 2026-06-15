@@ -1878,11 +1878,12 @@ class AdminControlRoomGateTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn('id="qualityOverview"', html)
         self.assertIn("data-quality-overview", html)
-        self.assertIn('data-quality-tab="recheck"', html)
-        self.assertIn('data-quality-tab="extraction_qc"', html)
+        self.assertNotIn('data-quality-tab="recheck"', html)
+        self.assertNotIn('data-quality-tab="extraction_qc"', html)
         self.assertIn('data-quality-tab="source_qc"', html)
         self.assertIn('data-quality-tab="legal_qc"', html)
-        self.assertIn('id="qualityExtractionQcGrid"', html)
+        self.assertNotIn('id="qualityRecheckGrid"', html)
+        self.assertNotIn('id="qualityExtractionQcGrid"', html)
 
     def test_admin_js_loads_data_quality_summary_for_quality_panel(self):
         root = Path(__file__).resolve().parent.parent
@@ -1893,9 +1894,10 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("function renderDataQualitySummary", js)
         self.assertIn("loadDataQualitySummary", js)
         self.assertIn("qualityOverview", js)
-        self.assertIn("qualityExtractionQcGrid", js)
-        self.assertIn("extraction_audit", js)
-        self.assertIn("Manual LLM", js)
+        self.assertNotIn("qualityExtractionQcGrid", js)
+        self.assertNotIn("qualityRecheckGrid", js)
+        self.assertNotIn("extraction_audit", js)
+        self.assertNotIn("Manual LLM", js)
         self.assertIn(".quality-kpi-grid", css)
         self.assertIn(".quality-detail-grid", css)
 
