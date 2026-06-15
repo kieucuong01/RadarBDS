@@ -34,12 +34,10 @@ from db.schema import init_schema
 
 
 GULAND_EXTREME_PPM2 = 80.0
-GULAND_OLD_POST_DAYS = 14
 GULAND_CLUSTER_MIN_SIZE = 4
 BAD_VALUATION_VERDICTS = {"fake_price", "cannot_price", "overpriced"}
 GOOD_VALUATION_VERDICTS = {"cheap_real", "correct", "good"}
 LOW_ABSOLUTE_PRICE_TY = 0.5
-DOWN_PAYMENT_PRICE_TY = 0.8
 LARGE_LOT_AREA_M2 = 1000.0
 
 
@@ -86,15 +84,12 @@ def _source_quality_flags(row) -> tuple:
     if source != "guland":
         return tuple(sorted(set(flags)))
 
+    posted = _date_prefix(row["posted_at"])
+    crawled = _date_prefix(row["crawled_at"])
     if int(row["suspicious_bait"] or 0):
         flags.append("suspicious_bait")
     if float(row["price_per_m2"] or 0) >= GULAND_EXTREME_PPM2:
         flags.append("extreme_guland_ppm2")
-
-    posted = _date_prefix(row["posted_at"])
-    crawled = _date_prefix(row["crawled_at"])
-    if posted and crawled and (crawled - posted).days >= GULAND_OLD_POST_DAYS:
-        flags.append("old_guland_post")
 
     if valuation in BAD_VALUATION_VERDICTS or verdict in {"fake_price", "overpriced", "cannot_price"}:
         flags.append("review_bad_valuation")
@@ -117,8 +112,7 @@ def _valuation_quality_flags(row) -> tuple:
     source = (row["source"] or "").lower()
     url_hint = extract_url_hint(row["url"] or "")
 
-    if _fold_text(title).strip() in {"tin test", "test"} or _fold_text(source_id).startswith("test"):
-        flags.append("test_artifact")
+    # keep parsed text as-is; test marker is no longer a hard gating signal criteria.
 
     masked_price_suffix = r"(?=\s*(?:tr|trieu|lh|lien|alo|zalo)\b|[^a-z0-9]|$)"
     approximate_price = bool(
@@ -131,32 +125,11 @@ def _valuation_quality_flags(row) -> tuple:
     if ambiguous_price:
         flags.append("ambiguous_price_text")
 
-    discount_as_price = bool(re.search(
-        r"(?:re\s*hon|thap\s*hon)\s*(?:thi\s*truong\s*)?\d+(?:[,.]\d+)?\s*(?:ty|ti|trieu|tr|m|k)\b",
-        text,
-    )) or bool(re.search(
-        r"(?:ha|bot|giam(?!\s*con)|giam\s+sau|giam\s+manh)"
-        r"(?:\s+\w+){0,3}\s+\d+(?:[,.]\d+)?\s*(?:ty|ti|trieu|tr|m|k)\b",
-        text,
-    ))
-    if price_ty and price_ty <= LOW_ABSOLUTE_PRICE_TY and discount_as_price:
-        flags.append("parsed_discount_as_price")
-
-    down_payment = bool(re.search(
-        r"(?:dua\s*truoc|tra\s*truoc|dat\s*coc|coc|ngan\s*hang|vietcombank|ho\s*tro\s*tra\s*gop)",
-        text,
-    ))
-    if price_ty and price_ty <= DOWN_PAYMENT_PRICE_TY and down_payment:
-        flags.append("down_payment_as_price")
-
     if prop_type in {"dat_nen", "nha_dat"} and price_ty and price_ty <= LOW_ABSOLUTE_PRICE_TY:
         flags.append("too_low_absolute_price")
 
     if source == "facebook" and prop_type in {"dat_nen", "nha_dat"} and area_m2 and not _float_value(extract_area(title + "\n" + description)):
         flags.append("missing_area_evidence")
-
-    if prop_type in {"dat_nen", "nha_dat"} and area_m2 >= LARGE_LOT_AREA_M2:
-        flags.append("large_lot_model_risk")
 
     category_text_conflict = bool(re.search(
         r"\b(?:can\s*ho|chung\s*cu|kho\s*xuong|nha\s*xuong)\b",

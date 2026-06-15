@@ -1,19 +1,14 @@
 """Shared helpers for separating model signals from actionable signals."""
 
 ACTIONABLE_SUPPRESS_FLAGS = frozenset({
-    "parsed_discount_as_price",
-    "down_payment_as_price",
     "too_low_absolute_price",
-    "large_lot_model_risk",
     "missing_area_evidence",
-    "test_artifact",
     "area_dimension_conflict",
     "ambiguous_price_text",
     "source_category_conflict",
     "multi_lot_listing",
     "guland_weak_signal",
     "guland_user_facing_risk",
-    "old_guland_post",
     "extreme_guland_ppm2",
     "suspicious_bait",
     "guland_cluster_flood",
