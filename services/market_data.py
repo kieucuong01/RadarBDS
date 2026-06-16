@@ -233,7 +233,8 @@ _GENERIC_SEARCH_WORDS = {
     "thanh",
     "pho",
 }
-_ROAD_CODE_RE = re.compile(r"\b(dx|dh|dl|nl)\s*[-./_]?\s*(\d{1,3}[a-z]?)\b")
+_ROAD_CODE_RE = re.compile(r"\b(dx|dh|dl|nl|d)\s*[-./_]?\s*(\d{1,3}[a-z]?)\b")
+_DIMENSION_RE = re.compile(r"\b(\d{1,3}(?:[.,]\d{1,2})?)\s*([*x×])\s*(\d{1,3}(?:[.,]\d{1,2})?)\b")
 _MY_PHUOC_RE = re.compile(r"\bmy\s+phuoc\s+([1-4])\b")
 _MY_PHUOC_SHORT_RE = re.compile(r"\bmp\s*[-./_]?\s*([1-4])\b")
 _AREA_CODE_RE = re.compile(r"\bkhu\s+([a-z]\d?)\b")
@@ -247,12 +248,22 @@ def _dedupe_search_tokens(tokens):
         if value and key not in seen:
             seen.add(key)
             out.append(key)
-    return out[:6]
+    return out[:12]
+
+
+def _normalize_dimension_part(value: str) -> str:
+    return str(value or "").replace(",", ".")
+
+
+def _dimension_variants(value: str):
+    if "x" not in value:
+        return [value]
+    left, right = value.split("x", 1)
+    return [f"{left}x{right}", f"{left}*{right}", f"{left}×{right}"]
 
 
 def _search_tokens(keyword):
     folded = _ascii_fold(normalize_search_keyword(keyword))
-    folded = re.sub(r"[-./_]+", " ", folded)
     folded = re.sub(r"\s+", " ", folded).strip()
     if not folded:
         return []
@@ -261,6 +272,13 @@ def _search_tokens(keyword):
     remainder = folded
 
     for pattern, repl in (
+        (
+            _DIMENSION_RE,
+            lambda m: tokens.append((
+                "dimension",
+                f"{_normalize_dimension_part(m.group(1))}x{_normalize_dimension_part(m.group(3))}",
+            )) or " ",
+        ),
         (_ROAD_CODE_RE, lambda m: tokens.append(("compact", f"{m.group(1)}{m.group(2)}")) or " "),
         (_MY_PHUOC_RE, lambda m: tokens.append(("phrase", f"my phuoc {m.group(1)}")) or " "),
         (_MY_PHUOC_SHORT_RE, lambda m: tokens.append(("phrase", f"my phuoc {m.group(1)}")) or " "),
@@ -268,13 +286,17 @@ def _search_tokens(keyword):
     ):
         remainder = pattern.sub(repl, remainder)
 
+    remainder = re.sub(r"[-./_]+", " ", remainder)
     words = [
         word
-        for word in re.split(r"\s+", remainder.strip())
+        for word in re.split(r"[^a-z0-9]+", remainder.strip())
         if word and word not in _GENERIC_SEARCH_WORDS
     ]
-    if words:
-        tokens.append(("phrase", " ".join(words[:6])))
+    for word in words[:12]:
+        if word in {"ty", "ti"}:
+            tokens.append(("money_unit", "ty"))
+        else:
+            tokens.append(("word", word))
 
     return _dedupe_search_tokens(tokens)
 
@@ -301,20 +323,62 @@ def _compact_search_text_expr(prefix=""):
     return expr
 
 
+def _word_search_text_expr(prefix=""):
+    expr = _search_text_expr(prefix)
+    for separator in (
+        "\r",
+        "\n",
+        "\t",
+        "-",
+        ".",
+        "/",
+        "_",
+        ",",
+        ":",
+        ";",
+        "(",
+        ")",
+        "[",
+        "]",
+        "{",
+        "}",
+        "*",
+        "×",
+        "+",
+        "=",
+        "|",
+        "\\",
+    ):
+        expr = f"REPLACE({expr}, '{separator}', ' ')"
+    return f"' ' || {expr} || ' '"
+
+
 def keyword_search_filter(keyword, prefix=""):
     tokens = _search_tokens(keyword)
     if not tokens:
         return [], []
     phrase_expr = _search_text_expr(prefix)
     compact_expr = _compact_search_text_expr(prefix)
+    word_expr = _word_search_text_expr(prefix)
     clauses = []
     params = []
     for mode, value in tokens:
         if mode == "compact":
             clauses.append(f"{compact_expr} LIKE ?")
+            params.append(f"%{value}%")
+        elif mode == "dimension":
+            variants = _dimension_variants(value)
+            clauses.append("(" + " OR ".join([f"{compact_expr} LIKE ?"] * len(variants)) + ")")
+            params.extend(f"%{variant}%" for variant in variants)
+        elif mode == "money_unit":
+            clauses.append(f"({word_expr} LIKE ? OR {word_expr} LIKE ?)")
+            params.extend(["% ty %", "% ti %"])
+        elif mode == "word":
+            clauses.append(f"{word_expr} LIKE ?")
+            params.append(f"% {value} %")
         else:
             clauses.append(f"{phrase_expr} LIKE ?")
-        params.append(f"%{value}%")
+            params.append(f"%{value}%")
     return clauses, params
 
 
