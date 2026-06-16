@@ -2398,12 +2398,16 @@ def get_price_history(listing_id):
         placeholders = ",".join("?" for _ in cluster_ids)
         rows = conn.execute(f"""
             SELECT ph.listing_id, ph.recorded_at, ph.price_ty, ph.price_per_m2,
+                   CASE
+                     WHEN ph.listing_id = ? THEN ph.recorded_at
+                     ELSE COALESCE(NULLIF(l.posted_at, ''), ph.recorded_at, l.crawled_at, l.updated_at)
+                   END AS history_date,
                    l.url
             FROM price_history ph
             LEFT JOIN listings l ON l.id = ph.listing_id
             WHERE ph.listing_id IN ({placeholders})
-            ORDER BY ph.recorded_at ASC, ph.id ASC
-        """, list(cluster_ids)).fetchall()
+            ORDER BY history_date ASC, ph.recorded_at ASC, ph.id ASC
+        """, [listing_id, *cluster_ids]).fetchall()
         history = []
         last_price = None
         has_last = False
@@ -2412,7 +2416,7 @@ def get_price_history(listing_id):
             same_as_last = has_last and _same_price_value(price_ty, last_price)
             if same_as_last:
                 continue
-            item = {'date': (r["recorded_at"] or '')[:10], 'price_ty': price_ty}
+            item = {'date': (r["history_date"] or '')[:10], 'price_ty': price_ty}
             if tier == "admin" and r["url"]:
                 item["url"] = r["url"]
             history.append(item)

@@ -161,7 +161,7 @@ class LotHistoryApiTest(unittest.TestCase):
         self.assertIn(self.guland_drop_id, ids)
         self.assertNotIn(self.guland_same_price_id, ids)
 
-    def test_price_history_includes_snapshots_from_merged_duplicate(self):
+    def test_price_history_uses_post_date_for_merged_duplicate_snapshot(self):
         from db.connection import get_conn
 
         with get_conn() as conn:
@@ -172,7 +172,7 @@ class LotHistoryApiTest(unittest.TestCase):
             conn.execute("""
                 INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
                 VALUES (?, ?, ?, ?)
-            """, (self.facebook_same_price_id, 1.95, 19.5, "2026-05-03 08:00:00"))
+            """, (self.facebook_same_price_id, 1.95, 19.5, "2026-06-03 08:00:00"))
 
         response = self.client.get(f"/api/history/{self.canonical_id}")
         self.assertEqual(response.status_code, 200)
