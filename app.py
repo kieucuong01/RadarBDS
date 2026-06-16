@@ -3746,6 +3746,14 @@ def _admin_duplicate_review_items(conn) -> list[dict]:
               OR (COALESCE(l.url,'') <> '' AND l.url = c.url)
             )
           )
+          AND NOT EXISTS (
+            SELECT 1
+            FROM dedup_overrides o
+            WHERE o.active=1
+              AND o.action='merge'
+              AND o.listing_id=l.id
+              AND o.target_listing_id=c.id
+          )
           {ambiguous_duplicate_sql}
         ORDER BY l.updated_at DESC
         LIMIT 500

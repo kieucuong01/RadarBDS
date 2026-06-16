@@ -1022,6 +1022,46 @@ class AdminControlRoomGateTest(unittest.TestCase):
             [(1, root_id), (1, root_id)],
         )
 
+    def test_data_quality_duplicate_pair_disappears_after_admin_merge(self):
+        self._login_as_admin()
+        root_id, child_id = self._insert_review_duplicate_pair(area_old=100.0, area_new=112.0)
+
+        merge_response = self.client.post(
+            "/admin/api/qc/duplicates/merge",
+            json={
+                "listing_id": child_id,
+                "target_listing_id": root_id,
+                "note": "admin_control_room_merge",
+            },
+        )
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(merge_response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in response.get_json()["items"]}
+        self.assertNotIn((child_id, root_id), pairs)
+
+    def test_data_quality_duplicate_group_disappears_after_admin_bulk_merge(self):
+        self._login_as_admin()
+        root_id, child_ids = self._insert_review_duplicate_cluster()
+
+        merge_response = self.client.post(
+            "/admin/api/qc/duplicates/merge-bulk",
+            json={
+                "target_listing_id": root_id,
+                "listing_ids": child_ids,
+                "note": "admin_cluster_merge",
+            },
+        )
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(merge_response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
+        reviewed_ids = {root_id, *child_ids}
+        for group in response.get_json()["groups"]:
+            member_ids = {member["id"] for member in group["members"]}
+            self.assertFalse(reviewed_ids.issubset(member_ids))
+
     def test_data_quality_duplicate_queue_hides_high_confidence_pairs(self):
         from db.connection import get_conn
 
