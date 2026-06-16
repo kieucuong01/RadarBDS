@@ -1995,6 +1995,53 @@ p { margin: 6px 0 0; color: var(--muted); }
   font-size: 11px;
   font-weight: 900;
 }
+.dup-group-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.dup-group-source-links a,
+.dup-member-split-btn {
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+  color: var(--blue);
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+}
+.dup-member-split-btn {
+  color: var(--red);
+  border-color: rgba(225, 29, 72, .24);
+  background: rgba(225, 29, 72, .08);
+}
+.dup-group-pair-list {
+  display: grid;
+  gap: 14px;
+}
+.dup-group-pair-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(14, 165, 233, .22);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 14px 16px;
+}
+.dup-group-pair-head strong,
+.dup-group-pair-head span {
+  display: block;
+}
+.dup-group-pair-head span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+}
 
 .blacklist-panel { max-width: 980px; }
 .blacklist-list { padding: 8px 20px 20px; }

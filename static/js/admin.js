@@ -27,6 +27,7 @@ let leadTimer = null;
 let activeQualityTab = 'dups';
 let activeInfraFilter = 'timeline';
 let duplicateGroupState = new Map();
+let duplicatePairModeGroups = new Set();
 let crawlProfiles = [];
 let crawlSummary = {};
 let apifyTokens = [];
@@ -1435,6 +1436,7 @@ async function loadDuplicates() {
     return;
   }
   root.innerHTML = groups.map(group => {
+    if (duplicatePairModeGroups.has(String(group.group_id))) return duplicateGroupPairList(group);
     if (Number(group.member_count || 0) > 2) return duplicateGroupCard(group);
     const pair = (group.pairs || [])[0];
     return pair ? duplicateCard(pair) : '';
@@ -1661,6 +1663,12 @@ function dupGroupMemberFacts(member) {
 
 function dupGroupMemberRow(member, targetId) {
   const isTarget = Number(member.id) === Number(targetId);
+  const sourceLink = member.url
+    ? `<a href="${esc(member.url)}" target="_blank" rel="noopener">Mở tin gốc</a>`
+    : '';
+  const splitButton = !isTarget
+    ? `<button type="button" class="dup-member-split-btn" onclick="splitDup(${Number(member.id || 0)}, ${Number(targetId || 0)})">Tách tin này</button>`
+    : '';
   return `
     <div class="dup-group-member ${isTarget ? 'is-target' : ''}">
       <img class="ad-img" src="${esc(member.image || PLACEHOLDER)}" onerror="this.onerror=null;this.src='${PLACEHOLDER}'" loading="lazy" referrerpolicy="no-referrer" alt="">
@@ -1668,6 +1676,11 @@ function dupGroupMemberRow(member, targetId) {
         <div class="dup-group-member-top">
           <a class="ad-title" href="${esc(member.detail_url || '#')}" target="_blank" rel="noopener">${esc(member.title || 'Không có tiêu đề')}</a>
           <span>${isTarget ? 'Tin giữ lại' : `AD-${esc(member.id)}`}</span>
+        </div>
+        <div class="dup-group-source-links">
+          <a href="${esc(member.detail_url || '#')}" target="_blank" rel="noopener">AD-${esc(member.id)}</a>
+          ${sourceLink}
+          ${splitButton}
         </div>
         <div class="dup-facts">${dupGroupMemberFacts(member)}</div>
         <div class="ad-desc">${esc(member.description_excerpt || '-')}</div>
@@ -1715,13 +1728,39 @@ function duplicateGroupCard(group) {
           <strong>Gộp toàn bộ cụm</strong>
           <span class="dup-decision-copy">Giữ tin đã chọn, các tin còn lại vào lot history</span>
         </button>
-        <button class="secondary-btn split-btn" onclick="loadDuplicates()">
+        <button class="secondary-btn split-btn" onclick="showDupGroupPairs('${esc(group.group_id)}')">
           <strong>Để xử lý từng cặp</strong>
           <span class="dup-decision-copy">Không ghi dữ liệu, chỉ tải lại hàng chờ</span>
         </button>
       </div>
     </article>
   `;
+}
+
+function duplicateGroupPairList(group) {
+  const pairs = group.pairs || [];
+  return `
+    <div class="dup-group-pair-list">
+      <div class="dup-group-pair-head">
+        <div>
+          <strong>Xử lý từng cặp trong cụm ${esc(group.member_count || '')} tin</strong>
+          <span>Mỗi cặp có thể gộp hoặc tách riêng; các tin khác trong cụm không bị ảnh hưởng.</span>
+        </div>
+        <button class="secondary-btn" onclick="hideDupGroupPairs('${esc(group.group_id)}')">Quay lại cụm</button>
+      </div>
+      ${pairs.map(pair => duplicateCard(pair)).join('')}
+    </div>
+  `;
+}
+
+function showDupGroupPairs(groupId) {
+  duplicatePairModeGroups.add(String(groupId));
+  loadDuplicates();
+}
+
+function hideDupGroupPairs(groupId) {
+  duplicatePairModeGroups.delete(String(groupId));
+  loadDuplicates();
 }
 
 async function mergeDup(id, target) {
