@@ -4499,6 +4499,80 @@ def _safe_float(value):
         return None
 
 
+def _hydrate_duplicate_canonical(conn, target_id: int, listing_ids: list[int]) -> None:
+    source_ids = [int(value) for value in listing_ids if value and int(value) != int(target_id)]
+    if not target_id or not source_ids:
+        return
+
+    fields = [
+        "title",
+        "description",
+        "ward",
+        "property_type",
+        "area_m2",
+        "frontage_m",
+        "depth_m",
+        "tho_cu_m2",
+        "road_name",
+        "road_type",
+        "road_width_m",
+        "price_ty",
+        "price_per_m2",
+        "price_first_ty",
+    ]
+    select_fields = ", ".join(fields)
+    target = conn.execute(
+        f"SELECT id, {select_fields} FROM listings WHERE id=?",
+        (target_id,),
+    ).fetchone()
+    if not target:
+        return
+    placeholders = ",".join("?" for _ in source_ids)
+    sources = conn.execute(
+        f"""
+        SELECT id, {select_fields}, COALESCE(posted_at, crawled_at, updated_at) AS dt
+        FROM listings
+        WHERE id IN ({placeholders})
+        ORDER BY COALESCE(posted_at, crawled_at, updated_at) DESC, id DESC
+        """,
+        source_ids,
+    ).fetchall()
+
+    def has_value(value):
+        if value is None:
+            return False
+        if isinstance(value, str):
+            return bool(value.strip())
+        try:
+            return float(value) != 0
+        except (TypeError, ValueError):
+            return True
+
+    updates = {}
+    for field in fields:
+        if has_value(target[field]):
+            continue
+        for source in sources:
+            value = source[field]
+            if has_value(value):
+                updates[field] = value
+                break
+
+    if "price_per_m2" not in updates and not has_value(target["price_per_m2"]):
+        price = updates.get("price_ty", target["price_ty"])
+        area = updates.get("area_m2", target["area_m2"])
+        if has_value(price) and has_value(area):
+            updates["price_per_m2"] = round(float(price) * 1000 / float(area), 3)
+
+    if not updates:
+        return
+    set_sql = ", ".join(f"{field}=?" for field in updates)
+    conn.execute(
+        f"UPDATE listings SET {set_sql}, updated_at=datetime('now') WHERE id=?",
+        [*updates.values(), target_id],
+    )
+
+
 @require_admin_auth
 def admin_api_qc_duplicates_merge():
     payload = request.get_json(silent=True) or {}
@@ -4520,6 +4594,7 @@ def admin_api_qc_duplicates_merge():
             "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
             (target_id, listing_id),
         )
+        _hydrate_duplicate_canonical(conn, target_id, [listing_id])
         _write_admin_audit(
             conn,
             "dedup_merge",
@@ -4582,6 +4657,7 @@ def admin_api_qc_duplicates_merge_bulk():
                 reason=note or "bulk_merge",
             )
             merged += 1
+        _hydrate_duplicate_canonical(conn, target_id, listing_ids)
     return jsonify({"ok": True, "merged": merged, "target_listing_id": target_id, "listing_ids": listing_ids})
 
 

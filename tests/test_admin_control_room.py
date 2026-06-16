@@ -1022,6 +1022,72 @@ class AdminControlRoomGateTest(unittest.TestCase):
             [(1, root_id), (1, root_id)],
         )
 
+    def test_data_quality_duplicate_merge_hydrates_canonical_from_richer_duplicate(self):
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        root_id, child_id = self._insert_review_duplicate_pair()
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                   SET price_ty=NULL,
+                       price_per_m2=NULL,
+                       price_first_ty=NULL,
+                       frontage_m=NULL,
+                       depth_m=NULL
+                 WHERE id=?
+                """,
+                (root_id,),
+            )
+            conn.execute(
+                """
+                UPDATE listings
+                   SET price_ty=2.4,
+                       price_per_m2=24.0,
+                       price_first_ty=2.4,
+                       frontage_m=5.0,
+                       depth_m=20.0
+                 WHERE id=?
+                """,
+                (child_id,),
+            )
+
+        merge_response = self.client.post(
+            "/admin/api/qc/duplicates/merge",
+            json={
+                "listing_id": child_id,
+                "target_listing_id": root_id,
+                "note": "admin_control_room_merge",
+            },
+        )
+
+        self.assertEqual(merge_response.status_code, 200)
+        with get_conn() as conn:
+            root = conn.execute(
+                """
+                SELECT price_ty, price_per_m2, price_first_ty, frontage_m, depth_m,
+                       possibly_duplicate, duplicate_of_id
+                FROM listings
+                WHERE id=?
+                """,
+                (root_id,),
+            ).fetchone()
+            child = conn.execute(
+                "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+                (child_id,),
+            ).fetchone()
+
+        self.assertEqual(root["price_ty"], 2.4)
+        self.assertEqual(root["price_per_m2"], 24.0)
+        self.assertEqual(root["price_first_ty"], 2.4)
+        self.assertEqual(root["frontage_m"], 5.0)
+        self.assertEqual(root["depth_m"], 20.0)
+        self.assertEqual(root["possibly_duplicate"], 0)
+        self.assertIsNone(root["duplicate_of_id"])
+        self.assertEqual(child["possibly_duplicate"], 1)
+        self.assertEqual(child["duplicate_of_id"], root_id)
+
     def test_data_quality_duplicate_pair_disappears_after_admin_merge(self):
         self._login_as_admin()
         root_id, child_id = self._insert_review_duplicate_pair(area_old=100.0, area_new=112.0)
