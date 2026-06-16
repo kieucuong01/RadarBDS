@@ -2388,29 +2388,33 @@ def _admin_valuation_workflow_markdown(listing_id):
 def get_price_history(listing_id):
     tier = current_tier()
     with db_mod.get_conn() as conn:
-        rows = conn.execute("""
-            SELECT recorded_at, price_ty, price_per_m2
-            FROM price_history
-            WHERE listing_id = ?
-            ORDER BY recorded_at ASC, id ASC
-        """, (listing_id,)).fetchall()
         curr = conn.execute("""
             SELECT updated_at, price_ty, ward, area_m2, property_type, road_tier,
                    price_per_m2, title, url
             FROM listings
             WHERE id = ?
         """, (listing_id,)).fetchone()
+        cluster_ids = _listing_cluster_ids(conn, listing_id)
+        placeholders = ",".join("?" for _ in cluster_ids)
+        rows = conn.execute(f"""
+            SELECT ph.listing_id, ph.recorded_at, ph.price_ty, ph.price_per_m2,
+                   l.url
+            FROM price_history ph
+            LEFT JOIN listings l ON l.id = ph.listing_id
+            WHERE ph.listing_id IN ({placeholders})
+            ORDER BY ph.recorded_at ASC, ph.id ASC
+        """, list(cluster_ids)).fetchall()
         history = []
         last_price = None
         has_last = False
         for r in rows:
-            price_ty = r[1]
+            price_ty = r["price_ty"]
             same_as_last = has_last and _same_price_value(price_ty, last_price)
             if same_as_last:
                 continue
-            item = {'date': (r[0] or '')[:10], 'price_ty': price_ty}
-            if tier == "admin" and curr and curr["url"]:
-                item["url"] = curr["url"]
+            item = {'date': (r["recorded_at"] or '')[:10], 'price_ty': price_ty}
+            if tier == "admin" and r["url"]:
+                item["url"] = r["url"]
             history.append(item)
             last_price = price_ty
             has_last = True

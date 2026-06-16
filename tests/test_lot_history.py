@@ -161,6 +161,28 @@ class LotHistoryApiTest(unittest.TestCase):
         self.assertIn(self.guland_drop_id, ids)
         self.assertNotIn(self.guland_same_price_id, ids)
 
+    def test_price_history_includes_snapshots_from_merged_duplicate(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            conn.execute("""
+                INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
+                VALUES (?, ?, ?, ?)
+            """, (self.canonical_id, 2.0, 20.0, "2026-05-01 08:00:00"))
+            conn.execute("""
+                INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
+                VALUES (?, ?, ?, ?)
+            """, (self.facebook_same_price_id, 1.95, 19.5, "2026-05-03 08:00:00"))
+
+        response = self.client.get(f"/api/history/{self.canonical_id}")
+        self.assertEqual(response.status_code, 200)
+
+        history = response.get_json()["history"]
+        self.assertIn(
+            {"date": "2026-05-03", "price_ty": 1.95},
+            [{"date": row["date"], "price_ty": row["price_ty"]} for row in history],
+        )
+
     def test_lot_history_filters_conflicting_road_code_child(self):
         from db.connection import get_conn
 
