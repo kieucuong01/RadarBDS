@@ -1927,6 +1927,74 @@ p { margin: 6px 0 0; color: var(--muted); }
 .split-btn {
   background: #fff;
 }
+.dup-group-card {
+  border-color: rgba(14, 165, 233, .22);
+}
+.dup-group-toolbar {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+  padding: 12px;
+}
+.dup-group-toolbar label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.dup-group-toolbar select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  padding: 9px 10px;
+  font-weight: 800;
+}
+.dup-group-members {
+  display: grid;
+  gap: 10px;
+}
+.dup-group-member {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+}
+.dup-group-member.is-target {
+  border-color: rgba(5, 150, 105, .26);
+  background: linear-gradient(180deg, #ecfdf5, #fff);
+}
+.dup-group-member .ad-img {
+  width: 104px;
+  height: 92px;
+}
+.dup-group-member-body {
+  min-width: 0;
+}
+.dup-group-member-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.dup-group-member-top span {
+  flex: 0 0 auto;
+  border: 1px solid rgba(37, 99, 235, .18);
+  border-radius: 999px;
+  background: #eff6ff;
+  color: var(--blue);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 900;
+}
 
 .blacklist-panel { max-width: 980px; }
 .blacklist-list { padding: 8px 20px 20px; }

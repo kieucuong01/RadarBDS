@@ -26,6 +26,7 @@ const ADMIN_SLUG_TO_PANEL = Object.entries(ADMIN_PANEL_SLUGS).reduce((acc, [pane
 let leadTimer = null;
 let activeQualityTab = 'dups';
 let activeInfraFilter = 'timeline';
+let duplicateGroupState = new Map();
 let crawlProfiles = [];
 let crawlSummary = {};
 let apifyTokens = [];
@@ -1414,13 +1415,30 @@ async function deactivateInfra(id) {
 async function loadDuplicates() {
   const data = await fetchJSON('/admin/api/qc/duplicates');
   const items = data.items || [];
-  document.getElementById('dupCount').textContent = items.length;
+  const groups = (data.groups && data.groups.length)
+    ? data.groups
+    : items.map(x => ({
+        group_id: `pair-${x.id}-${x.duplicate_of_id}`,
+        default_target_id: x.duplicate_of_id,
+        member_count: 2,
+        pair_count: 1,
+        members: [],
+        pairs: [x],
+        qc_reasons: x.qc_reasons || [],
+        suspected_duplicate: !!x.suspected_duplicate
+      }));
+  duplicateGroupState = new Map(groups.map(group => [String(group.group_id), group]));
+  document.getElementById('dupCount').textContent = groups.length ? `${groups.length}/${items.length}` : '0';
   const root = document.getElementById('duplicateCards');
-  if (!items.length) {
+  if (!groups.length) {
     root.innerHTML = `<div class="empty">Không còn cặp tin nghi trùng cần xử lý.</div>`;
     return;
   }
-  root.innerHTML = items.map(x => duplicateCard(x)).join('');
+  root.innerHTML = groups.map(group => {
+    if (Number(group.member_count || 0) > 2) return duplicateGroupCard(group);
+    const pair = (group.pairs || [])[0];
+    return pair ? duplicateCard(pair) : '';
+  }).join('');
 }
 
 function dupSideData(x, side) {
@@ -1620,11 +1638,114 @@ function duplicateCard(x) {
   `;
 }
 
+function dupGroupDomId(group) {
+  return String(group.group_id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+function dupGroupMemberFacts(member) {
+  const sourceName = SOURCE_NAMES[member.source] || member.source || '-';
+  return `
+    ${dupFact('Giá', money(member.price_ty), 'price')}
+    ${dupFact('DT', dupLotSize({
+      area: member.area_m2,
+      frontage: member.frontage_m,
+      depth: member.depth_m
+    }))}
+    ${dupFact('Khu vực', member.ward)}
+    ${dupFact('Đường', member.road_name)}
+    ${dupFact('Loại', PTYPES[member.property_type] || member.property_type)}
+    ${dupFact('Nguồn', sourceName)}
+    ${dupFact('Ngày', shortDate(member.dt))}
+  `;
+}
+
+function dupGroupMemberRow(member, targetId) {
+  const isTarget = Number(member.id) === Number(targetId);
+  return `
+    <div class="dup-group-member ${isTarget ? 'is-target' : ''}">
+      <img class="ad-img" src="${esc(member.image || PLACEHOLDER)}" onerror="this.onerror=null;this.src='${PLACEHOLDER}'" loading="lazy" referrerpolicy="no-referrer" alt="">
+      <div class="dup-group-member-body">
+        <div class="dup-group-member-top">
+          <a class="ad-title" href="${esc(member.detail_url || '#')}" target="_blank" rel="noopener">${esc(member.title || 'Không có tiêu đề')}</a>
+          <span>${isTarget ? 'Tin giữ lại' : `AD-${esc(member.id)}`}</span>
+        </div>
+        <div class="dup-facts">${dupGroupMemberFacts(member)}</div>
+        <div class="ad-desc">${esc(member.description_excerpt || '-')}</div>
+      </div>
+    </div>
+  `;
+}
+
+function duplicateGroupCard(group) {
+  const gid = dupGroupDomId(group);
+  const members = group.members || [];
+  const targetId = Number(group.default_target_id || members[0]?.id || 0);
+  const title = group.suspected_duplicate ? 'Cụm tin nghi trùng cần admin review' : 'Cụm tin trùng cần rà lại';
+  const reasons = (group.qc_reasons || []).length
+    ? `<div class="dup-review-reasons"><b>Lý do vào hàng chờ</b>${group.qc_reasons.map(r => `<span>${esc(r)}</span>`).join('')}</div>`
+    : '';
+  return `
+    <article class="dup-card dup-group-card">
+      <div class="dup-head">
+        <div>
+          <div class="dup-kicker">${title} <span class="deal-pill">Cụm ${esc(group.member_count || members.length)} tin</span></div>
+          <p>Chọn một tin giữ lại làm deal chính, sau đó gộp các tin còn lại vào cùng lot history bằng override pairwise.</p>
+        </div>
+        <div class="dup-score">
+          <span>Cặp review</span>
+          <strong>${esc(group.pair_count || 0)}</strong>
+        </div>
+      </div>
+      ${reasons}
+      <div class="dup-group-toolbar">
+        <label for="dup-target-${esc(gid)}">Tin giữ lại</label>
+        <select id="dup-target-${esc(gid)}">
+          ${members.map(member => `
+            <option value="${esc(member.id)}" ${Number(member.id) === targetId ? 'selected' : ''}>
+              AD-${esc(member.id)} · ${esc(member.ward || '-')} · ${money(member.price_ty)} · ${area(member.area_m2)}
+            </option>
+          `).join('')}
+        </select>
+      </div>
+      <div class="dup-group-members">
+        ${members.map(member => dupGroupMemberRow(member, targetId)).join('')}
+      </div>
+      <div class="dup-actions">
+        <button class="primary-btn merge-btn" onclick="mergeDupGroup('${esc(group.group_id)}')">
+          <strong>Gộp toàn bộ cụm</strong>
+          <span class="dup-decision-copy">Giữ tin đã chọn, các tin còn lại vào lot history</span>
+        </button>
+        <button class="secondary-btn split-btn" onclick="loadDuplicates()">
+          <strong>Để xử lý từng cặp</strong>
+          <span class="dup-decision-copy">Không ghi dữ liệu, chỉ tải lại hàng chờ</span>
+        </button>
+      </div>
+    </article>
+  `;
+}
+
 async function mergeDup(id, target) {
   await fetchJSON('/admin/api/qc/duplicates/merge', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ listing_id: id, target_listing_id: target, note: 'admin_control_room_merge' })
+  });
+  loadDuplicates();
+}
+
+async function mergeDupGroup(groupId) {
+  const group = duplicateGroupState.get(String(groupId));
+  if (!group) return;
+  const gid = dupGroupDomId(group);
+  const target = Number(document.getElementById(`dup-target-${gid}`)?.value || group.default_target_id || 0);
+  const listingIds = (group.members || [])
+    .map(member => Number(member.id || 0))
+    .filter(id => id && id !== target);
+  if (!target || !listingIds.length) return;
+  await fetchJSON('/admin/api/qc/duplicates/merge-bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ listing_ids: listingIds, target_listing_id: target, note: 'admin_control_room_cluster_merge' })
   });
   loadDuplicates();
 }

@@ -3674,6 +3674,13 @@ def admin_api_ai_training_disagreements():
 
 @require_admin_auth
 def admin_api_qc_duplicates():
+    with db_mod.get_conn() as conn:
+        items = _admin_duplicate_review_items(conn)
+        groups = _admin_duplicate_review_groups(items)
+    return jsonify({"items": items, "groups": groups})
+
+
+def _admin_duplicate_review_items(conn) -> list[dict]:
     ambiguous_duplicate_sql = """
               AND (
                    l.source <> 'facebook'
@@ -3704,62 +3711,61 @@ def admin_api_qc_duplicates():
                 )
               )
     """
-    with db_mod.get_conn() as conn:
-        road_name_select_l = "l.road_name" if _has_listing_column(conn, "road_name") else "NULL"
-        road_name_select_c = "c.road_name" if _has_listing_column(conn, "road_name") else "NULL"
-        rows = conn.execute(f"""
-            SELECT l.id, l.title, l.url, l.source, l.source_id, l.ward, l.property_type, l.price_ty, l.area_m2,
-                   l.frontage_m, l.depth_m, l.tho_cu_m2, l.contact_phone,
-                   l.description, COALESCE(l.posted_at, l.crawled_at, l.updated_at) AS dt,
-                   l.duplicate_of_id, c.title AS canonical_title, c.url AS canonical_url,
-                   {road_name_select_l} AS road_name,
-                   c.source AS canonical_source, c.source_id AS canonical_source_id, c.ward AS canonical_ward,
-                   c.property_type AS canonical_property_type,
-                   c.price_ty AS canonical_price_ty, c.area_m2 AS canonical_area_m2,
-                   c.frontage_m AS canonical_frontage_m, c.depth_m AS canonical_depth_m,
-                   c.tho_cu_m2 AS canonical_tho_cu_m2, c.contact_phone AS canonical_contact_phone,
-                   {road_name_select_c} AS canonical_road_name, c.description AS canonical_description,
-                   COALESCE(c.posted_at, c.crawled_at, c.updated_at) AS canonical_dt,
-                   li.local_path AS img_local, li.img_url AS img_url,
-                   ci.local_path AS canonical_img_local, ci.img_url AS canonical_img_url
-            FROM listings l
-            JOIN listings c ON c.id = l.duplicate_of_id
-            LEFT JOIN listing_images li ON li.id = (
-                SELECT id FROM listing_images WHERE listing_id = l.id ORDER BY {_image_order_sql()} LIMIT 1
+    road_name_select_l = "l.road_name" if _has_listing_column(conn, "road_name") else "NULL"
+    road_name_select_c = "c.road_name" if _has_listing_column(conn, "road_name") else "NULL"
+    rows = conn.execute(f"""
+        SELECT l.id, l.title, l.url, l.source, l.source_id, l.ward, l.property_type, l.price_ty, l.area_m2,
+               l.frontage_m, l.depth_m, l.tho_cu_m2, l.contact_phone,
+               l.description, COALESCE(l.posted_at, l.crawled_at, l.updated_at) AS dt,
+               l.duplicate_of_id, c.title AS canonical_title, c.url AS canonical_url,
+               {road_name_select_l} AS road_name,
+               c.source AS canonical_source, c.source_id AS canonical_source_id, c.ward AS canonical_ward,
+               c.property_type AS canonical_property_type,
+               c.price_ty AS canonical_price_ty, c.area_m2 AS canonical_area_m2,
+               c.frontage_m AS canonical_frontage_m, c.depth_m AS canonical_depth_m,
+               c.tho_cu_m2 AS canonical_tho_cu_m2, c.contact_phone AS canonical_contact_phone,
+               {road_name_select_c} AS canonical_road_name, c.description AS canonical_description,
+               COALESCE(c.posted_at, c.crawled_at, c.updated_at) AS canonical_dt,
+               li.local_path AS img_local, li.img_url AS img_url,
+               ci.local_path AS canonical_img_local, ci.img_url AS canonical_img_url
+        FROM listings l
+        JOIN listings c ON c.id = l.duplicate_of_id
+        LEFT JOIN listing_images li ON li.id = (
+            SELECT id FROM listing_images WHERE listing_id = l.id ORDER BY {_image_order_sql()} LIMIT 1
+        )
+        LEFT JOIN listing_images ci ON ci.id = (
+            SELECT id FROM listing_images WHERE listing_id = c.id ORDER BY {_image_order_sql()} LIMIT 1
+        )
+        WHERE COALESCE(l.probably_sold,0)=0
+          AND COALESCE(l.is_blacklisted,0)=0
+          AND l.possibly_duplicate=1
+          AND NOT (
+            l.source = c.source
+            AND (
+                 (COALESCE(l.source_id,'') <> '' AND l.source_id = c.source_id)
+              OR (COALESCE(l.url,'') <> '' AND l.url = c.url)
             )
-            LEFT JOIN listing_images ci ON ci.id = (
-                SELECT id FROM listing_images WHERE listing_id = c.id ORDER BY {_image_order_sql()} LIMIT 1
-            )
-            WHERE COALESCE(l.probably_sold,0)=0
-              AND COALESCE(l.is_blacklisted,0)=0
-              AND l.possibly_duplicate=1
-              AND NOT (
-                l.source = c.source
-                AND (
-                     (COALESCE(l.source_id,'') <> '' AND l.source_id = c.source_id)
-                  OR (COALESCE(l.url,'') <> '' AND l.url = c.url)
-                )
-              )
-              {ambiguous_duplicate_sql}
-            ORDER BY l.updated_at DESC
-            LIMIT 500
-        """).fetchall()
-        items = []
-        for row in rows:
-            item = dict(row)
-            if _admin_same_listing_identity(item):
-                continue
-            if _admin_should_auto_merge_duplicate_pair(item):
-                continue
-            if _admin_should_auto_split_duplicate_pair(item):
-                continue
-            if _admin_should_hide_safe_duplicate_review_pair(item):
-                continue
-            items.append(_admin_duplicate_qc_item(row))
-        existing_pairs = {(item["id"], item["duplicate_of_id"]) for item in items}
-        if len(items) < 500:
-            items.extend(_admin_suspected_duplicate_items(conn, existing_pairs, 500 - len(items)))
-    return jsonify({"items": items})
+          )
+          {ambiguous_duplicate_sql}
+        ORDER BY l.updated_at DESC
+        LIMIT 500
+    """).fetchall()
+    items = []
+    for row in rows:
+        item = dict(row)
+        if _admin_same_listing_identity(item):
+            continue
+        if _admin_should_auto_merge_duplicate_pair(item):
+            continue
+        if _admin_should_auto_split_duplicate_pair(item):
+            continue
+        if _admin_should_hide_safe_duplicate_review_pair(item):
+            continue
+        items.append(_admin_duplicate_qc_item(row))
+    existing_pairs = {(item["id"], item["duplicate_of_id"]) for item in items}
+    if len(items) < 500:
+        items.extend(_admin_suspected_duplicate_items(conn, existing_pairs, 500 - len(items)))
+    return items
 
 
 def _admin_duplicate_qc_item(row, *, suspected: bool = False) -> dict:
@@ -3776,6 +3782,110 @@ def _admin_duplicate_qc_item(row, *, suspected: bool = False) -> dict:
     for key in ("contact_phone", "canonical_contact_phone"):
         item.pop(key, None)
     return item
+
+
+def _admin_duplicate_member_from_item(item: dict, *, canonical: bool = False) -> dict:
+    prefix = "canonical_" if canonical else ""
+    return {
+        "id": item.get("duplicate_of_id") if canonical else item.get("id"),
+        "source": item.get(f"{prefix}source"),
+        "source_id": item.get(f"{prefix}source_id"),
+        "url": item.get(f"{prefix}url"),
+        "title": item.get(f"{prefix}title"),
+        "ward": item.get(f"{prefix}ward"),
+        "property_type": item.get(f"{prefix}property_type"),
+        "price_ty": item.get(f"{prefix}price_ty"),
+        "area_m2": item.get(f"{prefix}area_m2"),
+        "frontage_m": item.get(f"{prefix}frontage_m"),
+        "depth_m": item.get(f"{prefix}depth_m"),
+        "tho_cu_m2": item.get(f"{prefix}tho_cu_m2"),
+        "road_name": item.get(f"{prefix}road_name"),
+        "dt": item.get(f"{prefix}dt"),
+        "detail_url": item.get("canonical_detail_url") if canonical else item.get("detail_url"),
+        "image": item.get("canonical_image") if canonical else item.get("image"),
+        "description_excerpt": item.get("canonical_description_excerpt") if canonical else item.get("description_excerpt"),
+    }
+
+
+def _admin_duplicate_review_groups(items: list[dict]) -> list[dict]:
+    parent: dict[int, int] = {}
+
+    def find(node: int) -> int:
+        parent.setdefault(node, node)
+        while parent[node] != node:
+            parent[node] = parent[parent[node]]
+            node = parent[node]
+        return node
+
+    def union(a: int, b: int) -> None:
+        root_a, root_b = find(a), find(b)
+        if root_a != root_b:
+            parent[root_a] = root_b
+
+    for item in items:
+        try:
+            union(int(item["id"]), int(item["duplicate_of_id"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+
+    components: dict[int, dict] = {}
+    for item in items:
+        try:
+            listing_id = int(item["id"])
+            target_id = int(item["duplicate_of_id"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        root = find(listing_id)
+        component = components.setdefault(
+            root,
+            {
+                "pairs": [],
+                "members": {},
+                "incoming": {},
+                "qc_reasons": [],
+                "suspected_duplicate": False,
+                "first_seen": len(components),
+            },
+        )
+        component["pairs"].append(item)
+        component["incoming"][target_id] = component["incoming"].get(target_id, 0) + 1
+        component["members"][listing_id] = _admin_duplicate_member_from_item(item)
+        component["members"][target_id] = _admin_duplicate_member_from_item(item, canonical=True)
+        component["suspected_duplicate"] = component["suspected_duplicate"] or bool(item.get("suspected_duplicate"))
+        for reason in item.get("qc_reasons") or []:
+            if reason not in component["qc_reasons"]:
+                component["qc_reasons"].append(reason)
+
+    groups = []
+    for component in components.values():
+        members_by_id = component["members"]
+        if len(members_by_id) < 2:
+            continue
+        default_target_id = max(
+            members_by_id,
+            key=lambda member_id: (component["incoming"].get(member_id, 0), member_id),
+        )
+        members = sorted(
+            members_by_id.values(),
+            key=lambda member: (member["id"] != default_target_id, -int(member["id"] or 0)),
+        )
+        member_ids = sorted(int(member["id"]) for member in members if member.get("id"))
+        groups.append({
+            "group_id": f"dup-{member_ids[0]}-{member_ids[-1]}",
+            "default_target_id": default_target_id,
+            "member_count": len(members),
+            "pair_count": len(component["pairs"]),
+            "members": members,
+            "pairs": component["pairs"],
+            "qc_reasons": component["qc_reasons"],
+            "suspected_duplicate": component["suspected_duplicate"],
+            "_first_seen": component["first_seen"],
+        })
+
+    groups.sort(key=lambda group: (group["_first_seen"], -group["member_count"]))
+    for group in groups:
+        group.pop("_first_seen", None)
+    return groups
 
 
 def _admin_same_listing_identity(item: dict) -> bool:
@@ -4408,6 +4518,59 @@ def admin_api_qc_duplicates_merge():
             reason=note or "merge",
         )
     return jsonify({"ok": True})
+
+
+@require_admin_auth
+def admin_api_qc_duplicates_merge_bulk():
+    payload = request.get_json(silent=True) or {}
+    target_id = int(payload.get("target_listing_id") or 0)
+    note = (payload.get("note") or "").strip()[:500]
+    try:
+        listing_ids = [int(value) for value in (payload.get("listing_ids") or [])]
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "error": "invalid_ids"}), 400
+    listing_ids = list(dict.fromkeys([listing_id for listing_id in listing_ids if listing_id and listing_id != target_id]))
+    if not target_id or not listing_ids:
+        return jsonify({"ok": False, "error": "invalid_ids"}), 400
+
+    with db_mod.get_conn() as conn:
+        groups = _admin_duplicate_review_groups(_admin_duplicate_review_items(conn))
+        group = None
+        for candidate in groups:
+            member_ids = {int(member["id"]) for member in candidate.get("members") or [] if member.get("id")}
+            if target_id in member_ids and set(listing_ids).issubset(member_ids):
+                group = candidate
+                break
+        if not group:
+            return jsonify({"ok": False, "error": "not_in_duplicate_review_group"}), 400
+
+        merged = 0
+        for listing_id in listing_ids:
+            before = conn.execute(
+                "SELECT id, possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+            if not before:
+                continue
+            conn.execute("""
+                INSERT INTO dedup_overrides (action, listing_id, target_listing_id, note, active, updated_at)
+                VALUES ('merge', ?, ?, ?, 1, datetime('now'))
+            """, (listing_id, target_id, note or None))
+            conn.execute(
+                "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
+                (target_id, listing_id),
+            )
+            _write_admin_audit(
+                conn,
+                "dedup_bulk_merge",
+                "listing",
+                listing_id,
+                before=dict(before) if before else None,
+                after={"id": listing_id, "possibly_duplicate": 1, "duplicate_of_id": target_id},
+                reason=note or "bulk_merge",
+            )
+            merged += 1
+    return jsonify({"ok": True, "merged": merged, "target_listing_id": target_id, "listing_ids": listing_ids})
 
 
 @require_admin_auth

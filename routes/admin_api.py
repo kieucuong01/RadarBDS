@@ -137,6 +137,11 @@ def admin_api_qc_duplicates_merge(**kwargs):
     return _impl("admin_api_qc_duplicates_merge", **kwargs)
 
 
+@bp.route("/admin/api/qc/duplicates/merge-bulk", methods=["POST"])
+def admin_api_qc_duplicates_merge_bulk(**kwargs):
+    return _impl("admin_api_qc_duplicates_merge_bulk", **kwargs)
+
+
 @bp.route("/admin/api/qc/duplicates/split", methods=["POST"])
 def admin_api_qc_duplicates_split(**kwargs):
     return _impl("admin_api_qc_duplicates_split", **kwargs)

@@ -513,6 +513,82 @@ class AdminControlRoomGateTest(unittest.TestCase):
             )
         return old.lastrowid, new.lastrowid
 
+    def _insert_review_duplicate_cluster(self):
+        from db.connection import get_conn
+
+        token = uuid.uuid4().hex
+        with get_conn() as conn:
+            raw_root = conn.execute(
+                "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                ("facebook", f"fb-cluster-root-{token}", f"https://example.test/raw-cluster-root-{token}", "{}"),
+            )
+            root = conn.execute(
+                """
+                INSERT INTO listings (
+                    raw_id, source, source_id, url, title, description, area, ward,
+                    property_type, price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                    possibly_duplicate, posted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+                """,
+                (
+                    raw_root.lastrowid,
+                    "facebook",
+                    f"fb-cluster-root-{token}",
+                    f"https://example.test/cluster-root-{token}",
+                    "Tin goc cum review duplicate",
+                    "Can ban lo dat Hiep An duong DX132, so rieng, vi tri dep.",
+                    "Thu Dau Mot",
+                    "Hiep An",
+                    "dat_nen",
+                    2.4,
+                    24.0,
+                    100.0,
+                    5.0,
+                    20.0,
+                    "2026-05-20",
+                ),
+            )
+            child_ids = []
+            for idx, area in enumerate((112.0, 124.0), start=1):
+                raw_child = conn.execute(
+                    "INSERT INTO raw_listings (source, source_id, url, raw_json) VALUES (?, ?, ?, ?)",
+                    (
+                        "facebook",
+                        f"fb-cluster-child-{idx}-{token}",
+                        f"https://example.test/raw-cluster-child-{idx}-{token}",
+                        "{}",
+                    ),
+                )
+                child = conn.execute(
+                    """
+                    INSERT INTO listings (
+                        raw_id, source, source_id, url, title, description, area, ward,
+                        property_type, price_ty, price_per_m2, area_m2, frontage_m, depth_m,
+                        possibly_duplicate, duplicate_of_id, posted_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                    """,
+                    (
+                        raw_child.lastrowid,
+                        "facebook",
+                        f"fb-cluster-child-{idx}-{token}",
+                        f"https://example.test/cluster-child-{idx}-{token}",
+                        f"Tin dang lai cum review duplicate {idx}",
+                        "Dang lai lo dat Hiep An duong DX132, can admin soi lai dien tich.",
+                        "Thu Dau Mot",
+                        "Hiep An",
+                        "dat_nen",
+                        2.4,
+                        round(2.4 * 1000 / area, 2),
+                        area,
+                        5.0,
+                        20.0,
+                        root.lastrowid,
+                        f"2026-05-2{idx}",
+                    ),
+                )
+                child_ids.append(child.lastrowid)
+        return root.lastrowid, child_ids
+
     def test_guest_control_room_renders_login_modal_gate(self):
         response = self.client.get("/admin")
 
@@ -878,6 +954,73 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         items = response.get_json()["items"]
         self.assertTrue(any(item["canonical_title"] == "Canonical lot" for item in items))
+
+    def test_data_quality_duplicate_queue_groups_review_pairs_by_lot_cluster(self):
+        self._login_as_admin()
+        root_id, child_ids = self._insert_review_duplicate_cluster()
+
+        response = self.client.get("/admin/api/qc/duplicates")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        groups = payload["groups"]
+        group = next(
+            item for item in groups
+            if root_id in {member["id"] for member in item["members"]}
+        )
+        self.assertEqual(group["member_count"], 3)
+        self.assertEqual(group["pair_count"], 2)
+        self.assertEqual(group["default_target_id"], root_id)
+        self.assertEqual(
+            {member["id"] for member in group["members"]},
+            {root_id, *child_ids},
+        )
+
+    def test_data_quality_duplicate_bulk_merge_writes_pairwise_overrides_for_group(self):
+        from db.connection import get_conn
+
+        self._login_as_admin()
+        root_id, child_ids = self._insert_review_duplicate_cluster()
+
+        response = self.client.post(
+            "/admin/api/qc/duplicates/merge-bulk",
+            json={
+                "target_listing_id": root_id,
+                "listing_ids": child_ids,
+                "note": "admin_cluster_merge",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["merged"], 2)
+        with get_conn() as conn:
+            rows = conn.execute(
+                f"""
+                SELECT id, possibly_duplicate, duplicate_of_id
+                FROM listings
+                WHERE id IN ({','.join(['?'] * len(child_ids))})
+                ORDER BY id
+                """,
+                child_ids,
+            ).fetchall()
+            override_count = conn.execute(
+                f"""
+                SELECT COUNT(*) AS count
+                FROM dedup_overrides
+                WHERE action='merge'
+                  AND target_listing_id=?
+                  AND listing_id IN ({','.join(['?'] * len(child_ids))})
+                  AND note='admin_cluster_merge'
+                  AND active=1
+                """,
+                [root_id, *child_ids],
+            ).fetchone()["count"]
+
+        self.assertEqual(override_count, 2)
+        self.assertEqual(
+            [(r["possibly_duplicate"], r["duplicate_of_id"]) for r in rows],
+            [(1, root_id), (1, root_id)],
+        )
 
     def test_data_quality_duplicate_queue_hides_high_confidence_pairs(self):
         from db.connection import get_conn
@@ -1332,11 +1475,15 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("dup-summary-grid", js)
         self.assertIn("dup-source-links", js)
         self.assertIn("dup-facts", js)
+        self.assertIn("function duplicateGroupCard", js)
+        self.assertIn("/admin/api/qc/duplicates/merge-bulk", js)
+        self.assertIn("Gộp toàn bộ cụm", js)
         self.assertIn(".dup-summary-grid", css)
         self.assertIn(".dup-source-links", css)
         self.assertIn(".dup-fact.price", css)
+        self.assertIn(".dup-group-members", css)
         self.assertIn(".dup-decision-copy", css)
-        self.assertIn("admin-v41-quality-slim", template)
+        self.assertIn("admin-v42-dup-clusters", template)
         self.assertIn("admin-favicon-32.png", template)
         self.assertIn("admin-apple-touch-icon.png", template)
         self.assertIn("admin.webmanifest", template)
