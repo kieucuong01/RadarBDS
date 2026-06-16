@@ -851,34 +851,39 @@
 }
 
 .sc-meta-chips {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  grid-auto-rows: 22px;
-  gap: 4px;
-  overflow: visible;
+  display: flex;
+  flex-wrap: wrap;
   align-content: flex-start;
+  gap: 6px;
+  max-height: 52px;
+  overflow: hidden;
 }
 
 .meta-chip {
+  --chip-accent: #64748b;
+  --chip-fg: #334155;
+  --chip-bg: rgba(100, 116, 139, 0.1);
+  --chip-border: rgba(100, 116, 139, 0.22);
   min-width: 0;
-  min-height: 22px;
+  min-height: 23px;
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 3px;
+  gap: 4px;
+  flex: 0 1 auto;
   max-width: 100%;
-  padding: 3px 5px;
-  border: 1px solid var(--border);
+  padding: 4px 7px 4px 6px;
+  border: 1px solid var(--chip-border);
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.08);
-  color: var(--text-muted);
-  font-size: 0.64rem;
-  font-weight: 700;
+  background: linear-gradient(180deg, rgba(255,255,255,0.72), var(--chip-bg));
+  color: var(--chip-fg);
+  box-shadow: inset 2px 0 0 var(--chip-accent), 0 1px 2px rgba(15, 23, 42, 0.04);
+  font-size: 0.66rem;
+  font-weight: 800;
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  grid-column: span 4;
 }
 
 .meta-chip-label {
@@ -888,50 +893,72 @@
 }
 
 .meta-chip-street {
-  grid-column: span 5;
-  max-width: 100%;
-  font-size: 0.62rem;
-  color: var(--text);
-  background: rgba(99, 102, 241, 0.08);
-  border-color: rgba(99, 102, 241, 0.18);
+  --chip-accent: #7c3aed;
+  --chip-fg: #5b21b6;
+  --chip-fg-dark: #c4b5fd;
+  --chip-bg: rgba(124, 58, 237, 0.1);
+  --chip-border: rgba(124, 58, 237, 0.22);
+  max-width: min(100%, 18rem);
 }
 
 .meta-chip-ward {
-  grid-column: span 3;
+  --chip-accent: #0f766e;
+  --chip-fg: #115e59;
+  --chip-fg-dark: #7dd3fc;
+  --chip-bg: rgba(15, 118, 110, 0.1);
+  --chip-border: rgba(15, 118, 110, 0.24);
+  max-width: min(100%, 12rem);
 }
 
 .meta-chip-area {
-  grid-column: span 5;
+  --chip-accent: #d97706;
+  --chip-fg: #92400e;
+  --chip-fg-dark: #fbbf24;
+  --chip-bg: rgba(217, 119, 6, 0.12);
+  --chip-border: rgba(217, 119, 6, 0.26);
+  max-width: min(100%, 14rem);
 }
 
 .meta-chip-property {
-  grid-column: span 2;
-  background: rgba(14, 165, 233, 0.07);
+  --chip-accent: #2563eb;
+  --chip-fg: #1d4ed8;
+  --chip-fg-dark: #93c5fd;
+  --chip-bg: rgba(37, 99, 235, 0.1);
+  --chip-border: rgba(37, 99, 235, 0.22);
+  max-width: min(100%, 10rem);
 }
 
 .meta-chip-land {
-  grid-column: span 3;
-  background: rgba(14, 165, 233, 0.07);
+  --chip-accent: #16a34a;
+  --chip-fg: #166534;
+  --chip-fg-dark: #86efac;
+  --chip-bg: rgba(22, 163, 74, 0.1);
+  --chip-border: rgba(22, 163, 74, 0.24);
+  max-width: min(100%, 12rem);
 }
 
-.meta-chip-property,
-.meta-chip-land {
-  justify-content: center;
-  gap: 2px;
-  padding-inline: 4px;
-  font-size: 0.58rem;
+.meta-chip-road {
+  --chip-accent: #475569;
+  --chip-fg: #334155;
+  --chip-fg-dark: #cbd5e1;
+  --chip-bg: rgba(71, 85, 105, 0.1);
+  --chip-border: rgba(71, 85, 105, 0.24);
+  max-width: min(100%, 13rem);
 }
 
-.meta-chip-property svg,
-.meta-chip-land svg {
-  display: none;
+[data-theme="dark"] .meta-chip {
+  color: var(--chip-fg-dark, #cbd5e1);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.82), var(--chip-bg));
+  border-color: var(--chip-border);
+  box-shadow: inset 2px 0 0 var(--chip-accent), 0 1px 2px rgba(0, 0, 0, 0.18);
 }
 
 .meta-chip svg {
-  flex: 0 0 11px;
-  width: 11px;
-  height: 11px;
-  opacity: 0.58;
+  flex: 0 0 13px;
+  width: 13px;
+  height: 13px;
+  opacity: 0.86;
+  color: var(--chip-accent);
 }
 
 .meta-item {
@@ -1160,30 +1187,21 @@
   }
 
   .sc-meta-chips {
-    grid-auto-rows: 20px;
-    gap: 3px;
+    gap: 4px;
+    max-height: 46px;
   }
 
   .meta-chip {
-    min-height: 20px;
-    padding: 3px 4px;
-    font-size: 0.58rem;
-  }
-
-  .meta-chip-street {
-    font-size: 0.58rem;
-  }
-
-  .meta-chip-property,
-  .meta-chip-land {
-    font-size: 0.54rem;
-    padding-inline: 3px;
+    min-height: 21px;
+    padding: 3px 6px 3px 5px;
+    font-size: 0.6rem;
+    gap: 3px;
   }
 
   .meta-chip svg {
-    width: 10px;
-    height: 10px;
-    flex-basis: 10px;
+    width: 11px;
+    height: 11px;
+    flex-basis: 11px;
   }
 
   .sc-actions {
