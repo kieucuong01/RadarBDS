@@ -2389,7 +2389,7 @@ def get_price_history(listing_id):
     tier = current_tier()
     with db_mod.get_conn() as conn:
         curr = conn.execute("""
-            SELECT updated_at, price_ty, ward, area_m2, property_type, road_tier,
+            SELECT posted_at, crawled_at, updated_at, price_ty, ward, area_m2, property_type, road_tier,
                    price_per_m2, title, url
             FROM listings
             WHERE id = ?
@@ -2398,16 +2398,13 @@ def get_price_history(listing_id):
         placeholders = ",".join("?" for _ in cluster_ids)
         rows = conn.execute(f"""
             SELECT ph.listing_id, ph.recorded_at, ph.price_ty, ph.price_per_m2,
-                   CASE
-                     WHEN ph.listing_id = ? THEN ph.recorded_at
-                     ELSE COALESCE(NULLIF(l.posted_at, ''), ph.recorded_at, l.crawled_at, l.updated_at)
-                   END AS history_date,
+                   COALESCE(NULLIF(l.posted_at, ''), ph.recorded_at, l.crawled_at, l.updated_at) AS history_date,
                    l.url
             FROM price_history ph
             LEFT JOIN listings l ON l.id = ph.listing_id
             WHERE ph.listing_id IN ({placeholders})
             ORDER BY history_date ASC, ph.recorded_at ASC, ph.id ASC
-        """, [listing_id, *cluster_ids]).fetchall()
+        """, list(cluster_ids)).fetchall()
         history = []
         last_price = None
         has_last = False
@@ -2427,7 +2424,12 @@ def get_price_history(listing_id):
             current_price = curr["price_ty"]
             if not history or not _same_price_value(history[-1]['price_ty'], current_price):
                 item = {
-                    'date': (curr["updated_at"] or '')[:10],
+                    'date': (
+                        curr["posted_at"]
+                        or curr["crawled_at"]
+                        or curr["updated_at"]
+                        or ''
+                    )[:10],
                     'price_ty': current_price,
                     'is_current': True,
                 }

@@ -168,7 +168,7 @@ class LotHistoryApiTest(unittest.TestCase):
             conn.execute("""
                 INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
                 VALUES (?, ?, ?, ?)
-            """, (self.canonical_id, 2.0, 20.0, "2026-05-01 08:00:00"))
+            """, (self.canonical_id, 2.0, 20.0, "2026-06-01 08:00:00"))
             conn.execute("""
                 INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
                 VALUES (?, ?, ?, ?)
@@ -178,6 +178,10 @@ class LotHistoryApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         history = response.get_json()["history"]
+        self.assertIn(
+            {"date": "2026-05-01", "price_ty": 2.0},
+            [{"date": row["date"], "price_ty": row["price_ty"]} for row in history],
+        )
         self.assertIn(
             {"date": "2026-05-03", "price_ty": 1.95},
             [{"date": row["date"], "price_ty": row["price_ty"]} for row in history],
