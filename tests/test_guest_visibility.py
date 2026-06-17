@@ -275,7 +275,7 @@ class GuestVisibilityTest(unittest.TestCase):
         self.assertNotIn(listing_id, rows)
         self.assertIn(both_id, rows)
         row = rows[both_id]
-        self.assertEqual(row["signal_model"], "both")
+        self.assertEqual(row["signal_model"], "display_mos")
         self.assertEqual(row["fair_ppm2_old"], 26.0)
         self.assertEqual(row["fair_ppm2_new"], 24.0)
         self.assertEqual(row["fair_ppm2_display"], 24.0)
@@ -345,6 +345,65 @@ class GuestVisibilityTest(unittest.TestCase):
         rows = {row["id"]: row for row in filtered_response.get_json()["signals"]}
         self.assertIn(listing_id, rows)
         self.assertAlmostEqual(rows[listing_id]["mos_pct_display"], 8.3, places=1)
+
+    def test_signal_feed_does_not_hide_display_mos_deals_for_quality_flags(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, description, ward,
+                    area_m2, property_type, price_ty, price_per_m2,
+                    is_hot, price_dropped, suspicious_bait,
+                    probably_sold, possibly_duplicate, posted_at, crawled_at
+                ) VALUES (
+                    'facebook', ?, ?,
+                    'QC flagged display MOS deal', 'Fresh listing description',
+                    ?, 100, 'dat_nen', 2.0, 20.0,
+                    0, 0, 0, 0, 0, datetime('now'), datetime('now')
+                )
+                """,
+                (f"qc-flagged-deal-{self.token}", f"{self.url_prefix}/qc-flagged-deal", self.ward),
+            )
+            listing_id = cur.lastrowid
+            self.listing_ids.append(listing_id)
+            conn.execute(
+                """
+                INSERT INTO valuation_results (
+                    listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score, source_quality_recheck, source_quality_flags
+                ) VALUES (?, 30.0, 20.0, 33.3, 0, 10, 1, 'review_bad_extraction')
+                """,
+                (listing_id,),
+            )
+            run_id = conn.execute(
+                """
+                INSERT INTO valuation_model_runs (model_name, model_version, status)
+                VALUES ('median_road_tier', 'median_road_tier_v1', 'complete')
+                """
+            ).lastrowid
+            conn.execute(
+                """
+                INSERT INTO valuation_shadow_results (
+                    model_run_id, listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                    is_signal, signal_score, source_quality_recheck, source_quality_flags
+                ) VALUES (?, ?, 28.0, 20.0, 28.6, 0, 10, 1, 'review_bad_extraction')
+                """,
+                (run_id, listing_id),
+            )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=20")
+        self.assertEqual(response.status_code, 200)
+        rows = {row["id"]: row for row in response.get_json()["signals"]}
+        self.assertIn(listing_id, rows)
+        self.assertAlmostEqual(rows[listing_id]["mos_pct_display"], 28.6, places=1)
+        self.assertTrue(rows[listing_id]["source_quality_recheck"])
+        self.assertEqual(rows[listing_id]["source_quality_flags"], "review_bad_extraction")
+
+        dashboard = self.client.get(f"/api/dashboard?city=Khac&ward={self.ward}")
+        self.assertEqual(dashboard.status_code, 200)
+        self.assertEqual(dashboard.get_json()["stats"]["signals"], 2)
 
     def test_drop_filter_includes_canonical_with_higher_price_repost(self):
         from db.connection import get_conn

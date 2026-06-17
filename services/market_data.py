@@ -8,7 +8,7 @@ from cleansing.feature_extractor import _NAMED_ROADS, extract_road_width, extrac
 from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
 from db.connection import get_conn
 from services.image_assets import resolve_image_url
-from services.signal_quality import ACTIONABLE_SUPPRESS_FLAGS, LATEST_VALUATION_CTE, actionable_signal_sql
+from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
 
 LATEST_SHADOW_VALUATION_CTE = """
 latest_shadow_valuation AS (
@@ -598,28 +598,13 @@ def _display_mos_sql(old_alias="v", new_alias="sv", actual_expr="COALESCE(v.actu
     """
 
 
-def _valuation_quality_sql(alias: str) -> str:
-    flags_expr = f"COALESCE({alias}.source_quality_flags,'')"
-    parts = [
-        f"COALESCE({alias}.fair_ppm2,0) > 0",
-        (
-            f"(COALESCE({alias}.source_quality_recheck,0)=0 OR "
-            f"({flags_expr} LIKE '%low_segment_confidence%'))"
-        ),
-    ]
-    for flag in sorted(ACTIONABLE_SUPPRESS_FLAGS):
-        parts.append(f"{flags_expr} NOT LIKE '%{flag}%'")
-    return " AND ".join(parts)
+def _deal_mos_signal_sql(display_mos_expr: str, mos_min: float) -> str:
+    """Săn deal mirrors the all-listings visible MOS filter.
 
-
-def _conservative_signal_sql(display_mos_expr: str, mos_min: float, old_alias="v", new_alias="sv") -> str:
-    legacy_signal_condition = _valuation_quality_sql(old_alias)
-    shadow_signal_condition = _valuation_quality_sql(new_alias)
-    return f"""
-        ({legacy_signal_condition})
-        AND ({shadow_signal_condition})
-        AND ({display_mos_expr}) >= {float(mos_min)}
+    QC flags remain visible as warnings on cards/admin workflows, but they do
+    not hide rows that match the user's displayed MOS threshold.
     """
+    return f"COALESCE(({display_mos_expr}), 0) >= {float(mos_min)}"
 
 
 def _signal_sort_sql(sort_key: str) -> str:
@@ -1085,7 +1070,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     display_fair_expr = _display_fair_sql("v", "sv")
     display_mos_expr = _display_mos_sql("v", "sv", actual_expr)
     effective_mos_min = float(mos_min if mos_min is not None else 10)
-    signal_condition = _conservative_signal_sql(display_mos_expr, effective_mos_min)
+    signal_condition = _deal_mos_signal_sql(display_mos_expr, effective_mos_min)
     page = max(int(page or 1), 1)
     limit = min(max(int(limit or 30), 1), 100)
     offset = (page - 1) * limit
@@ -1113,10 +1098,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
                sv.mos_pct AS mos_pct_new,
                ({display_fair_expr}) AS fair_ppm2_display,
                ({display_mos_expr}) AS mos_pct_display,
-               CASE
-                   WHEN ({signal_condition}) THEN 'both'
-                   ELSE 'legacy'
-               END AS signal_model,
+               'display_mos' AS signal_model,
                l.id, l.title, l.description, l.source, l.area_m2, l.frontage_m, l.depth_m, l.price_ty,
                l.property_type, l.road_name, l.road_type, l.road_width_m, l.tho_cu_m2, l.tho_cu_ratio, l.is_hot,
                {effective_price_drop_select_sql("l", "related_drop")},
@@ -1498,7 +1480,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
     actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
     display_mos_expr = _display_mos_sql("v", "sv", actual_expr)
     effective_mos_min = float(mos_min if mos_min is not None else 10)
-    signal_condition = _conservative_signal_sql(display_mos_expr, effective_mos_min)
+    signal_condition = _deal_mos_signal_sql(display_mos_expr, effective_mos_min)
     signal_row = conn.execute(f"""
         WITH {LATEST_VALUATION_CTE},
              {LATEST_SHADOW_VALUATION_CTE}
