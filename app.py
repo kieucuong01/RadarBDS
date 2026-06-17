@@ -18,6 +18,7 @@ from pathlib import Path
 from uuid import uuid4
 from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response, abort, redirect
 from config import database_sqlite as db_mod
+from config.property_types import normalize_property_types
 from db.connection import connect, get_conn
 from db.moderation import normalize_phone
 from config.settings import (
@@ -835,6 +836,7 @@ def _validate_watchlist_payload(payload: dict) -> tuple[dict, str | None]:
     prop_types = payload.get("prop_types") or []
     if not isinstance(wards, list) or not isinstance(prop_types, list):
         return {}, "invalid_array"
+    prop_types = normalize_property_types(prop_types)
 
     def _opt_num(key):
         v = payload.get(key)
@@ -2690,10 +2692,7 @@ def _lot_history_property_type_compatible(anchor_type, candidate_type):
     if not anchor_type or not candidate_type or anchor_type == candidate_type:
         return True
     pair = {anchor_type, candidate_type}
-    return (
-        pair.issubset({"dat_nen", "dat_vuon"})
-        or pair.issubset({"nha_dat", "nha_tro"})
-    )
+    return pair.issubset({"nha_dat", "nha_tro"})
 
 
 def _lot_history_area_compatible(anchor_area, candidate_area, max_gap=0.05):
@@ -4294,7 +4293,7 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
           AND source='facebook'
           AND area_m2 IS NOT NULL
           AND area_m2 > 0
-          AND property_type IN ('dat_nen','dat_vuon','nha_dat','nha_tro')
+          AND property_type IN ('dat_nen','nha_dat','nha_tro')
         ORDER BY COALESCE(updated_at, crawled_at, posted_at, '') DESC
         LIMIT 8000
     """).fetchall()
@@ -4312,7 +4311,7 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
     }
 
     def compatible_type(a: str, b: str) -> bool:
-        return a == b or {a, b}.issubset({"dat_nen", "dat_vuon"})
+        return a == b
 
     from collections import defaultdict
 
@@ -4334,7 +4333,7 @@ def _admin_suspected_duplicate_items(conn, existing_pairs: set[tuple[int, int]],
             continue
         ward = (d.get("ward") or "").strip()
         prop = d.get("property_type") or ""
-        type_keys = ["dat_land"] if prop in {"dat_nen", "dat_vuon"} else [prop]
+        type_keys = ["dat_land"] if prop == "dat_nen" else [prop]
         area_bucket = int(round(area / 10.0))
         d["_road_tokens"] = _road_tokens(_combined_text(d))
         d["_phone_tail"] = text_phone_tail(d)

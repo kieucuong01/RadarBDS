@@ -131,7 +131,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
                     "Dat dep Tan An duong DX132, DT 1083.7m2, TC 200m2, gia tot.",
                     "Thu Dau Mot",
                     "Tan An",
-                    "dat_vuon",
+                    "dat_nen",
                     5.5,
                     5.08,
                     1083.7,

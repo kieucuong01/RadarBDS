@@ -324,18 +324,18 @@ def test_supplemental_guland_requires_strict_training_quality():
 
 def test_supplemental_guland_large_lot_requires_known_road_tier():
     facebook_samples = [
-        _make_listing(i, 5.0, area=1200.0, property_type="dat_vuon", source="facebook", road_tier=3)
+        _make_listing(i, 5.0, area=1200.0, property_type="dat_nen", source="facebook", road_tier=3)
         for i in range(10)
     ]
     unknown_tier_guland_samples = [
-        _make_listing(600 + i, 2.0, area=1200.0, property_type="dat_vuon", source="guland", road_tier=0)
+        _make_listing(600 + i, 2.0, area=1200.0, property_type="dat_nen", source="guland", road_tier=0)
         for i in range(20)
     ]
     engine = ValuationEngine()
     engine.fit(facebook_samples + unknown_tier_guland_samples)
 
     result = engine.valuate(
-        _make_listing(999, 3.0, area=1200.0, property_type="dat_vuon", source="facebook", road_tier=3)
+        _make_listing(999, 3.0, area=1200.0, property_type="dat_nen", source="facebook", road_tier=3)
     )
 
     assert result is not None

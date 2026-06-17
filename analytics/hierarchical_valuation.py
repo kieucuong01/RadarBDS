@@ -176,7 +176,7 @@ class MedianRoadTierValuationEngine:
             return False
         if not listing.price_total or not listing.price_per_m2 or not listing.area_m2:
             return False
-        if listing.property_type == "dat_vuon" or listing.area_m2 >= SUPPLEMENTAL_LARGE_LOT_AREA_M2:
+        if listing.area_m2 >= SUPPLEMENTAL_LARGE_LOT_AREA_M2:
             if (listing.road_tier or 0) <= 0:
                 return False
         posted = getattr(listing, "posted_at", None)

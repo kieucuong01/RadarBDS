@@ -295,10 +295,7 @@ def _same_required_segment(l1: dict, l2: dict) -> bool:
     pt1, pt2 = l1.get("property_type"), l2.get("property_type")
     w1 = (l1.get("ward") or "").strip()
     w2 = (l2.get("ward") or "").strip()
-    same_or_compatible_type = (
-        pt1 == pt2
-        or {pt1, pt2}.issubset({"dat_nen", "dat_vuon"})
-    )
+    same_or_compatible_type = pt1 == pt2
     return bool(
         pt1 and pt2 and same_or_compatible_type
         and w1 and w2 and w1 == w2
@@ -524,8 +521,8 @@ def _strong_numeric_lot_signature(l1: dict, l2: dict) -> bool:
     medium_land_same_road = (
         (l1.get("source") or "").lower() == "facebook"
         and (l2.get("source") or "").lower() == "facebook"
-        and (l1.get("property_type") or "") in {"dat_nen", "dat_vuon"}
-        and (l2.get("property_type") or "") in {"dat_nen", "dat_vuon"}
+        and (l1.get("property_type") or "") == "dat_nen"
+        and (l2.get("property_type") or "") == "dat_nen"
         and max(a1 or 0, a2 or 0) >= 500
         and area_match
         and road_match
@@ -568,13 +565,13 @@ def _candidate_keys(listing: dict) -> set[tuple]:
     area = listing.get("area_m2")
     if area and area > 0:
         keys.add(base + ("area", round(float(area), 1)))
-        if ward and prop_type in {"dat_nen", "dat_vuon"} and float(area) >= 300:
+        if ward and prop_type == "dat_nen" and float(area) >= 300:
             keys.add(("facebook_land_area", ward, int(round(float(area) / 10.0))))
         phone = _phone_value(listing)
         if phone and float(area) >= 300:
             area_bucket = int(round(float(area) / 10.0))
             keys.add(base + ("phone_large_area", phone[-9:], area_bucket))
-            if ward and prop_type in {"dat_nen", "dat_vuon"}:
+            if ward and prop_type == "dat_nen":
                 keys.add((ward, "dat_land", "phone_large_area", phone[-9:], area_bucket))
 
     frontage = listing.get("frontage_m")

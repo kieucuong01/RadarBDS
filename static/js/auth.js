@@ -367,7 +367,7 @@
     set('watchAreaMin', '');
     set('watchAreaMax', '');
     document.querySelectorAll('input[name="watchProp"]').forEach((el) => {
-      el.checked = ['dat_nen', 'nha_dat', 'dat_vuon'].includes(el.value);
+      el.checked = ['dat_nen', 'nha_dat'].includes(el.value);
     });
     const tg = document.getElementById('watchNotifyTelegram');
     if (tg) tg.checked = true;

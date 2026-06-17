@@ -312,12 +312,10 @@ const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000
 const sourceNames = { 'batdongsan': 'BDS.vn', 'facebook': 'Facebook', 'guland': 'Guland' };
 const sourceClasses = { 'batdongsan': 'source-bds', 'facebook': 'source-fb', 'guland': 'source-gl' };
 const PROPERTY_TYPE_LABELS = {
-  dat_nen: 'Đất nền',
-  dat_vuon: 'Đất vườn',
+  dat_nen: 'Đất',
   nha_dat: 'Nhà đất',
   nha_tro: 'Nhà trọ',
-  chung_cu: 'Chung cư',
-  nha_o_xa_hoi: 'Nhà ở xã hội'
+  chung_cu: 'Chung cư'
 };
 const CONTACT_CTA_LABEL = 'Liên hệ tư vấn';
 

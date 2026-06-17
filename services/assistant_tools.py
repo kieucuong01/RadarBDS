@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from config.property_types import normalize_property_types
 from services.market_data import load_dashboard_summary, load_signals, load_trend_data
 
 
@@ -42,7 +43,7 @@ def normalize_filter_draft(filter_draft: dict[str, Any] | None) -> dict[str, Any
 
     normalized = {
         "ward": [str(w).strip() for w in wards if str(w).strip()],
-        "property_type": [str(p).strip() for p in prop_types if str(p).strip()],
+        "property_type": normalize_property_types(str(p).strip() for p in prop_types if str(p).strip()),
         "mos_min": as_mos(raw.get("mos_min")),
         "only_drops": as_bool(raw.get("only_drops")),
         "price_min": as_num(raw.get("price_min")),

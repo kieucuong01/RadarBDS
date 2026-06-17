@@ -221,6 +221,20 @@ def test_extract_dimensions_handles_m2_typo_after_frontage():
     assert d["depth_m"] == 12.6
 
 
+def test_extract_area_and_dimensions_handle_compact_decimal_frontage():
+    text = "Đất Chánh nghĩa gần chợ TDM 1/ Nguyễn Tri Phương. Dt 5m7x22m thổ cư 80m."
+    assert extract_area(text) == 125.4
+    dims = extract_dimensions(text)
+    assert dims["frontage_m"] == 5.7
+    assert dims["depth_m"] == 22.0
+
+
+def test_extract_dimensions_keeps_bare_ngang_value_before_no_hau_phrase():
+    dims = extract_dimensions("Đất chánh mỹ ngang 13 nở hậu tdt 432m2 thổ cư 25m2")
+    assert dims["frontage_m"] == 13.0
+    assert dims["depth_m"] is None
+
+
 def test_extract_area_and_dimensions_skip_truncated_dimension_prefix():
     text = (
         "Dat mat tien DX90 Hiep An\n"
@@ -1209,20 +1223,20 @@ def test_classify_property_type():
         1750,
         price_per_m2=8.57,
         url_hint="chung_cu",
-    ) == "dat_vuon"
+    ) == "dat_nen"
     assert classify_property_type(
         dinh_hoa_large_land_title,
         dinh_hoa_large_land_desc,
         1750,
         price_per_m2=8.57,
-    ) == "dat_vuon"
+    ) == "dat_nen"
 
     # Hard vườn
-    assert classify_property_type("Đất vườn Tân An", "cây ăn trái", 2000) == "dat_vuon"
+    assert classify_property_type("Đất vườn Tân An", "cây ăn trái", 2000) == "dat_nen"
     # Hard nhà
     assert classify_property_type("Bán nhà 3 tầng", "nhà 3 tầng có sân thượng") == "nha_dat"
     # Area >=500m² no nhà → vườn
-    assert classify_property_type("Đất Tân An giá tốt", "đất đẹp", 800) == "dat_vuon"
+    assert classify_property_type("Đất Tân An giá tốt", "đất đẹp", 800) == "dat_nen"
     # Default dat_nen
     assert classify_property_type("Đất nền Tân An", "đất phân lô kdc", 100) == "dat_nen"
     # Broker service boilerplate is not proof of an existing house on the lot.
@@ -1367,6 +1381,49 @@ def test_classify_property_type_ignores_buildability_storey_phrase_for_land():
         80,
         80,
         price_per_m2=13.75,
+    ) == "dat_nen"
+
+
+def test_classify_property_type_keeps_land_when_house_words_are_only_context_ascii():
+    assert classify_property_type(
+        "Dat Phu Hoa, Thu Dau Mot",
+        "Duong nhua 6m thong, vi tri toan nha lau, biet thu. Co 2 lo dong gia, dien tich 4x19 tho cu 60.",
+        76,
+        60,
+        price_per_m2=36.18,
+    ) == "dat_nen"
+    assert classify_property_type(
+        "DAT HEM HUYNH VAN LUY - CACH HVL 30M - GIA 2 TY 999",
+        "Dien tich 5.5x24m - TC 60m2. Dat vuong vuc, khu dan cu hien huu, khong quy hoach, thich hop xay nha o, biet thu mini hoac dau tu lau dai.",
+        132,
+        60,
+        price_per_m2=22.72,
+    ) == "dat_nen"
+    assert classify_property_type(
+        "DAT DX95 - VI TRI DEP KINH DOANH - GIA 1 TY 9XX",
+        "Dien tich 7.1x15m - TC 50m2. Vi tri dep, de thiet ke nha o, cua hang hoac van phong nho. #DatKinhDoanh #DatThoCu #BinhDuong",
+        106.5,
+        50,
+        price_per_m2=17.84,
+    ) == "dat_nen"
+
+
+def test_classify_property_type_merges_garden_land_into_land():
+    assert classify_property_type(
+        "Bán đất vườn Tân An 1200m2",
+        "Đất cây lâu năm, chưa có thổ cư, đường xe hơi.",
+        1200,
+        0,
+        price_per_m2=5.0,
+    ) == "dat_nen"
+    assert classify_property_type(
+        "Bán đất CLN diện tích lớn",
+        "Đất nông nghiệp 2000m2 phù hợp làm nhà vườn.",
+        2000,
+        None,
+        price_per_m2=4.5,
+        raw_source_label="dat_vuon",
+        url_hint="dat",
     ) == "dat_nen"
 
 

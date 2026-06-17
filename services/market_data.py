@@ -5,6 +5,7 @@ import re
 import unicodedata
 
 from cleansing.feature_extractor import _NAMED_ROADS, extract_road_width, extract_tho_cu
+from config.property_types import PROPERTY_TYPE_LABELS, normalize_property_types
 from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
 from db.connection import get_conn
 from services.image_assets import resolve_image_url
@@ -453,6 +454,7 @@ def effective_price_drop_select_sql(alias="l", lateral_alias="related_drop"):
 def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", date_range=None):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
+    prop_types = normalize_property_types(prop_types)
 
     # Common filters. Normal views hide duplicates; drop-only views show reliable
     # repost drops even when the lower-price repost is marked duplicate.
@@ -764,15 +766,6 @@ def _format_price_label(*texts):
         return f"khoảng {m.group(1)}.x tỷ"
     return None
 
-
-PROPERTY_TYPE_LABELS = {
-    "dat_nen": "Đất nền",
-    "dat_vuon": "Đất vườn",
-    "nha_dat": "Nhà đất",
-    "nha_tro": "Nhà trọ",
-    "chung_cu": "Chung cư",
-    "nha_o_xa_hoi": "Nhà ở xã hội",
-}
 
 ROAD_TIER_LABELS = {
     1: "Mặt tiền",
@@ -1303,13 +1296,12 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
         GROUP BY property_type
         HAVING COUNT(*) >= 1
     """, params).fetchall()
-    type_label = {'dat_nen': 'Đất nền', 'dat_vuon': 'Đất vườn', 'nha_dat': 'Nhà đất', 'nha_tro': 'Nhà trọ', 'chung_cu': 'Chung cư'}
     for s in summary_rows:
         if s['mean_ppm2'] is None:
             continue
         market.append({
             'type': s['property_type'],
-            'label': type_label.get(s['property_type'], s['property_type']),
+            'label': PROPERTY_TYPE_LABELS.get(s['property_type'], s['property_type']),
             'median': round(s['mean_ppm2'], 1),
             'n': s['n_samples']
         })
@@ -1500,7 +1492,6 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         GROUP BY property_type
         HAVING COUNT(*) >= 1
     """, params).fetchall()
-    type_label = {'dat_nen': 'Đất nền', 'dat_vuon': 'Đất vườn', 'nha_dat': 'Nhà đất', 'nha_tro': 'Nhà trọ', 'chung_cu': 'Chung cư'}
     for row in summary_rows:
         mean_ppm2 = _row_get(row, "mean_ppm2")
         if mean_ppm2 is None:
@@ -1508,7 +1499,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         prop_type = _row_get(row, "property_type")
         market.append({
             "type": prop_type,
-            "label": type_label.get(prop_type, prop_type),
+            "label": PROPERTY_TYPE_LABELS.get(prop_type, prop_type),
             "median": round(mean_ppm2, 1),
             "n": _row_get(row, "n_samples", 0),
         })
@@ -1591,6 +1582,7 @@ def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=F
 def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword=""):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
+    prop_types = normalize_property_types(prop_types)
 
     conn = _open_read_conn(db_path)
 
@@ -1684,6 +1676,7 @@ def _market_indicator_filters(sources=None, wards=None, prop_types=None, prefix=
                               area_ranges=None, price_ranges=None):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
+    prop_types = normalize_property_types(prop_types)
 
     col = lambda name: f"{prefix}{name}" if prefix else name
     where_parts = [
@@ -2075,7 +2068,7 @@ def get_base_filters(req):
     active_city = req.args.get("city")
     wards = req.args.getlist("ward[]") or req.args.getlist("ward")
     sources = req.args.getlist("source[]") or req.args.getlist("source")
-    prop_types = req.args.getlist("prop_type[]") or req.args.getlist("prop_type")
+    prop_types = normalize_property_types(req.args.getlist("prop_type[]") or req.args.getlist("prop_type"))
     if req.args.get("ward_mode") == "none":
         wards = ["__NO_WARD_SELECTED__"]
     only_drops = req.args.get("only_drops") == "1"

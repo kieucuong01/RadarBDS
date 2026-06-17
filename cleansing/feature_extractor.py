@@ -19,6 +19,8 @@ import logging
 import unicodedata
 from typing import Optional, Dict, Any
 
+from config.property_types import normalize_property_type
+
 logger = logging.getLogger(__name__)
 
 
@@ -262,6 +264,13 @@ _DIM_PAIR_RE = re.compile(
 )
 
 
+_COMPACT_DIM_VALUE_RE = re.compile(r'(?<!\d)(\d{1,2})m(\d{1,2})(?=[xÃ—\*])', re.IGNORECASE)
+
+
+def _normalize_compact_dimension_text(text: str) -> str:
+    return _COMPACT_DIM_VALUE_RE.sub(r'\1.\2', text or '')
+
+
 def _parse_dim_value(raw: str) -> float:
     return float(str(raw).replace(',', '.'))
 
@@ -310,7 +319,9 @@ def extract_area(text: str) -> Optional[float]:
       "124 m²" → 124.0
     Tránh nhầm với thổ cư: luôn loại trừ context "thổ cư / TC" ngay trước số.
     """
-    t = unicodedata.normalize("NFKC", text or "").replace('\n', ' ')
+    t = _normalize_compact_dimension_text(
+        unicodedata.normalize("NFKC", text or "").replace('\n', ' ')
+    )
 
     # Bước 0: Loại bỏ phần "thổ cư Xm²" / "TC Xm²" khỏi text trước khi parse
     # để tránh nhầm thổ cư với tổng DT
@@ -616,7 +627,9 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
       "5x25 (nở hậu)"
       "DT:4x34 =138m2"
     """
-    t = unicodedata.normalize("NFKC", text or "").lower().replace('\n', ' ')
+    t = _normalize_compact_dimension_text(
+        unicodedata.normalize("NFKC", text or "").lower().replace('\n', ' ')
+    )
     t_fold = _ascii_fold(t)
     result = {'frontage_m': None, 'depth_m': None}
 
@@ -666,6 +679,26 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
     m = re.search(r'(?:ngang|mặt tiền|mt)\s*([\d]+[,.]?[\d]*)\s*m\b', t)
     if m:
         result['frontage_m'] = float(m.group(1).replace(',', '.'))
+        return result
+
+    m = re.search(
+        r'(?:ngang|máº·t tiá»n|mt)\s*([\d]+[,.]?[\d]*)'
+        r'(?=\s*(?:ná»Ÿ\s*h[áº­a]u|no\s*hau|tdt\b|thá»•\s*cÆ°|tho\s*cu|tc\b|$))',
+        t,
+        re.IGNORECASE,
+    )
+    if m:
+        result['frontage_m'] = float(m.group(1).replace(',', '.'))
+
+    if result['frontage_m'] is None:
+        m = re.search(
+            r'(?:ngang|mat\s*tien|mt)\s*([\d]+[,.]?[\d]*)'
+            r'(?=\s*(?:no\s*hau|tdt\b|tho\s*cu|tc\b|$))',
+            t_fold,
+            re.IGNORECASE,
+        )
+        if m:
+            result['frontage_m'] = float(m.group(1).replace(',', '.'))
 
     return result
 
@@ -1297,7 +1330,7 @@ def extract_legal(text: str) -> Dict[str, Any]:
 # 9. LOẠI TÀI SẢN
 # ═══════════════════════════════════════════════════════════════════
 # Slug → broad type ("dat" | "nha" | "chung_cu" | "kho_xuong" | None)
-# chốt nhánh trước, content refine trong nhánh (dat_nen vs dat_vuon, nha_dat vs nha_tro).
+# chốt nhánh trước, content refine trong nhánh (dat_nen, nha_dat vs nha_tro).
 # Facebook (url_hint=None) đi cascade cũ với bổ sung kho_xuong detection.
 #
 # Thứ tự pattern matter: chung_cu / kho_xuong khớp TRƯỚC dat/nha vì có substring trùng.
@@ -1332,12 +1365,12 @@ def extract_url_hint(url: str) -> Optional[str]:
 
 
 # ═══════════════════════════════════════════════════════════════════
-# 3 loại canonical cho Tân An: dat_vuon | dat_nen | nha_dat
+# Các loại canonical user-facing: dat_nen | nha_dat | chung_cu | nha_tro
 #
 # Cascade logic (ưu tiên từ trên xuống):
-#   1. Keyword cứng vườn/CLN → dat_vuon
+#   1. Keyword cứng vườn/CLN → dat_nen
 #   2. Keyword cứng nhà/công trình → nha_dat
-#   3. area > 1000m² + không có nhà → dat_vuon
+#   3. area > 1000m² + không có nhà → dat_nen
 #   4. Còn lại → dat_nen (default Tân An)
 #
 # Source label mapping: normalize nhãn từ Guland/BDS về canonical.
@@ -1346,26 +1379,26 @@ def extract_url_hint(url: str) -> Optional[str]:
 # Map nhãn raw từ nguồn → canonical (trước khi chạy cascade)
 _SOURCE_LABEL_MAP = {
     # Guland labels
-    'đất vườn':     'dat_vuon',
+    'đất vườn':     'dat_nen',
     'đất nền':      'dat_nen',
     'nhà phố':      'nha_dat',   # Guland dùng "Nhà phố" cho cả nhà đất
     'nhà':          'nha_dat',
     'nhà trọ':      'nha_tro',
     # BatDongSan labels
     'Đất nền':      'dat_nen',
-    'Đất vườn':     'dat_vuon',
+    'Đất vườn':     'dat_nen',
     'Nhà phố':      'nha_dat',
     'Nhà':          'nha_dat',
     'Nhà trọ':      'nha_tro',
     # Legacy extractor labels
     'dat_nen':      'dat_nen',
-    'dat_vuon':     'dat_vuon',
+    'dat_vuon':     'dat_nen',
     'nha_dat':      'nha_dat',
     'nha_pho':      'nha_dat',
     'nha_cap4':     'nha_dat',
     'nha':          'nha_dat',
     'nha_tro':      'nha_tro',
-    'dat_lon':      'dat_vuon',   # đất lớn → vườn (gần nhất)
+    'dat_lon':      'dat_nen',
     # Kho/nhà xưởng — Guland / BDS
     'nhà kho/nhà xưởng': 'kho_xuong',
     'kho, nhà xưởng':    'kho_xuong',
@@ -1382,7 +1415,7 @@ _SOURCE_LABEL_MAP = {
     'chung_cu':          'chung_cu',
 }
 
-# Keyword hard → dat_vuon (độ tin cậy cao)
+# Keyword hard vườn/CLN vẫn nhận diện là đất.
 _VUON_KW = [
     'đất vườn', 'đất cln', 'đất cây lâu năm', 'đất nông nghiệp',
     'đất rẫy', 'đất trồng', 'ao vườn', 'vườn cây', 'vườn trái cây',
@@ -1495,7 +1528,7 @@ def _is_kho_xuong_text(text: str) -> bool:
     return any(kw in text for kw in _KHO_XUONG_KW)
 
 # Keyword phủ định nhà (dùng để loại false positive nha_dat)
-# 2026-05-05: cũng dùng để CHẶN dat_vuon — nếu có keyword này thì là dat_nen, không phải đất nông nghiệp
+# 2026-05-05: cũng dùng để chặn nhầm đất nông nghiệp thành loại riêng.
 _LAND_ONLY_KW = [
     'đất trống', 'không có nhà', 'chưa có nhà', 'đất ở',
     'đất thổ cư', 'đất phân lô', 'đất kdc', 'đất khu dân cư',
@@ -1504,10 +1537,10 @@ _LAND_ONLY_KW = [
     'mặt tiền', 'mt kinh doanh', 'mt đường',
 ]
 
-# Ngưỡng diện tích: >= 500m² + không có nhà + không phải DX → dat_vuon
+# Ngưỡng diện tích legacy; hiện mọi biến thể đất gom về dat_nen.
 _AREA_VUON_THRESHOLD = 500.0
 
-# Ngưỡng thổ cư: ratio < 5% → dat_vuon (gần như toàn bộ CLN)
+# Ngưỡng thổ cư legacy; hiện mọi biến thể đất gom về dat_nen.
 _THO_CU_VUON_RATIO = 0.05
 
 # Pattern đường DX (đường nhựa nội thị Bình Dương) → KHÔNG phải đất vườn
@@ -1532,21 +1565,21 @@ def _classify_dat_only(
     has_land_only_kw: bool,
     raw_source_label: str,
 ) -> str:
-    """Nhánh khi slug đã chốt là 'dat' — chỉ chọn dat_nen / dat_vuon.
+    """Nhánh khi slug đã chốt là 'dat' — chỉ chọn dat_nen.
 
     Bỏ qua nha_kw / strong_house. Vẫn áp các blocker (land_only_kw, price,
-    DX road, area threshold) để phân biệt dat_nen vs dat_vuon.
+    DX road, area threshold) nhưng không tách đất vườn thành loại riêng.
     """
     _price_ok = (price_per_m2 is None or price_per_m2 <= _PRICE_VUON_MAX)
 
     # 1. Keyword vườn/CLN (blocked by land_only_kw / price)
     if any(kw in text for kw in _VUON_KW) and not has_land_only_kw and _price_ok:
-        return 'dat_vuon'
+        return 'dat_nen'
 
     # 2. Thổ cư < 5% — gần như toàn CLN
     if tho_cu_m2 is not None and area_m2 and area_m2 > 0:
         if (tho_cu_m2 / area_m2) < _THO_CU_VUON_RATIO and not has_land_only_kw:
-            return 'dat_vuon'
+            return 'dat_nen'
 
     # 3. Land-only keyword (lô đất, đất nền, mặt tiền) → dat_nen
     if has_land_only_kw:
@@ -1556,17 +1589,17 @@ def _classify_dat_only(
     if _is_dx_road(text):
         return 'dat_nen'
 
-    # 5. Area >= 500m² + không DX → dat_vuon (trừ thổ cư cao / giá cao)
+    # 5. Area >= 500m² + không DX vẫn là dat_nen.
     if area_m2 and area_m2 >= _AREA_VUON_THRESHOLD:
         if tho_cu_m2 is not None and area_m2 > 0 and (tho_cu_m2 / area_m2) >= 0.20:
             return 'dat_nen'
         if price_per_m2 is not None and price_per_m2 > _PRICE_VUON_MAX:
             return 'dat_nen'
-        return 'dat_vuon'
+        return 'dat_nen'
 
-    # 6. Source label hint (chỉ accept dat_vuon)
-    if _SOURCE_LABEL_MAP.get(raw_source_label) == 'dat_vuon':
-        return 'dat_vuon'
+    # 6. Source label hint legacy.
+    if normalize_property_type(_SOURCE_LABEL_MAP.get(raw_source_label)) == 'dat_nen':
+        return 'dat_nen'
 
     # 7. Default — đất đô thị
     return 'dat_nen'
@@ -1642,11 +1675,11 @@ def classify_property_type(
 
     `url_hint` ('dat' | 'nha' | 'chung_cu' | 'kho_xuong' | None) chốt nhánh:
       - 'chung_cu' / 'kho_xuong'  → short-circuit return ngay
-      - 'dat'                      → chỉ chọn dat_nen / dat_vuon (bỏ qua nhánh nhà)
+      - 'dat'                      → chỉ chọn dat_nen (bỏ qua nhánh nhà)
       - 'nha'                      → chỉ chọn nha_dat / nha_tro (bỏ qua nhánh đất)
       - None (Facebook)            → cascade cũ (đầy đủ keyword logic) + kho_xuong fallback
 
-    Trả về một trong 7 giá trị: dat_vuon | dat_nen | nha_dat | nha_tro | chung_cu | kho_xuong | nha_o_xa_hoi.
+    Trả về một trong 6 giá trị: dat_nen | nha_dat | nha_tro | chung_cu | kho_xuong | nha_o_xa_hoi.
     """
     text = (title + ' ' + (description or '')).lower().strip()
 
@@ -1658,7 +1691,7 @@ def classify_property_type(
         text, area_m2, tho_cu_m2, url_hint,
     )
     if source_category_land_override and area_m2 and area_m2 >= _AREA_VUON_THRESHOLD and _has_no_tho_cu_land(text):
-        return 'dat_vuon'
+        return 'dat_nen'
     if source_category_land_override:
         return _classify_dat_only(
             text, area_m2, tho_cu_m2, price_per_m2,
@@ -1672,7 +1705,7 @@ def classify_property_type(
         and _has_no_tho_cu_land(text)
         and not any(kw in text for kw in _LAND_ONLY_KW)
     ):
-        return 'dat_vuon'
+        return 'dat_nen'
 
     if url_hint == 'chung_cu':
         return 'chung_cu'
@@ -1690,7 +1723,7 @@ def classify_property_type(
         return 'kho_xuong'
 
     # --- Pre-compute flags TRƯỚC tất cả steps ---
-    # 2026-05-05: compute sớm để block false-positive dat_vuon từ step 1 (vuon_kw) và
+    # 2026-05-05: compute sớm để block false-positive garden-land heuristics từ step 1 (vuon_kw) và
     # step 3 (thổ cư < 5%). VD: mô tả pháp lý "thổ cư 100m², đất trồng cây 309m²" chứa
     # "đất trồng" (vuon_kw) nhưng cũng có "mặt tiền" (land_only_kw) → thực tế là đất nền.
     has_land_only_kw = any(kw in text for kw in _LAND_ONLY_KW)
@@ -1808,10 +1841,34 @@ def classify_property_type(
     ))
 
     # --- Bước 1: Strong house → nha_dat (trước vuon) ---
+    title_ascii = _ascii_fold(title or '')
+    has_title_land_intent = bool(re.match(r'^\s*(?:ban\s+)?(?:lo\s+)?dat\b', title_ascii))
+    has_existing_house_layout = bool(re.search(
+        r'\bnha\s*cap\s*4\b|'
+        r'\bnha\s*(?:tret|moi)\b|'
+        r'\btret\s*lau\b|\bgac\s*lung\b|'
+        r'\b\d+\s*pn\b|\b\d+\s*wc\b|'
+        r'\bphong\s*(?:ngu|khach|tho)\b|'
+        r'\bbep\b|\bsan\s*o\s*to\b|\bsan\s*oto\b|'
+        r'\bxem\s*nha\b',
+        text_ascii,
+        re.IGNORECASE,
+    ))
+    if (
+        has_title_land_intent
+        and not has_strong_house
+        and not has_existing_house_layout
+        and not any(kw in text for kw in _VUON_KW)
+        and not (area_m2 and area_m2 >= _AREA_VUON_THRESHOLD and tho_cu_m2 is None)
+    ):
+        return _classify_dat_only(
+            text, area_m2, tho_cu_m2, price_per_m2,
+            True, raw_source_label,
+        )
     if has_strong_house:
         return 'nha_dat'
 
-    # --- Bước 2: Keyword cứng → dat_vuon ---
+    # --- Bước 2: Keyword cứng vườn/CLN → dat_nen ---
     # Chỉ fire khi KHÔNG có land_only_kw, house_kw, hoặc giá > 8 tr/m² contradicting.
     # VD 1: "đất trồng cây" + "mặt tiền" → land_only blocks → dat_nen
     # VD 2: "đất trồng cây" + "nhà cấp 4" → house blocks → nha_dat
@@ -1821,7 +1878,7 @@ def classify_property_type(
     # đất đô thị có zoning nông nghiệp, không phải đất vườn thuần.
     _price_ok = (price_per_m2 is None or price_per_m2 <= _PRICE_VUON_MAX)
     if any(kw in text for kw in _VUON_KW) and not has_land_only_kw and not has_house_kw and _price_ok:
-        return 'dat_vuon'
+        return 'dat_nen'
 
     # --- Bước 3: Keyword cứng → nha_dat ---
     # 2026-05-06: bỏ "not has_land_only_kw" — nhà luôn thắng đất. VD: "bán nhà 3 tầng
@@ -1830,14 +1887,14 @@ def classify_property_type(
     if has_house_kw:
         return 'nha_dat'
 
-    # --- Bước 3: Thổ cư < 5% → dat_vuon (gần như toàn CLN) ---
+    # --- Bước 3: Thổ cư < 5% vẫn là dat_nen ---
     # Chỉ áp dụng khi KHÔNG có land_only_kw contradicting. VD: "lô góc 2 mặt tiền" +
-    # thổ cư 30/908m² = 3.3% → step 3 cũ gán dat_vuon, nhưng "lô đất"+"mặt tiền" cho thấy
+    # thổ cư 30/908m² = 3.3% từng bị tách loại, nhưng "lô đất"+"mặt tiền" cho thấy
     # đây là đất nền trong khu TĐC giá 60 tr/m². land_only_kw → block → dat_nen (step 4).
     if tho_cu_m2 is not None and area_m2 and area_m2 > 0:
         tho_cu_ratio = tho_cu_m2 / area_m2
         if tho_cu_ratio < _THO_CU_VUON_RATIO and not has_land_only_kw:
-            return 'dat_vuon'
+            return 'dat_nen'
 
     # --- Bước 4: Land-only keyword → dat_nen ---
     # 2026-05-05: compute sớm (trước step 1) và dùng làm blocker cho vuon/thổ cư rules.
@@ -1849,7 +1906,7 @@ def classify_property_type(
     # --- Bước 5: Đường DX → chặn vườn, giữ lại dat_nen ---
     on_dx_road = _is_dx_road(text)
 
-    # --- Bước 6: Numeric rule — area >= 500m² + không nhà + không DX → dat_vuon ---
+    # --- Bước 6: Numeric rule — area >= 500m² + không nhà + không DX vẫn là dat_nen ---
     # 2026-05-05: hạ thổ cư exception từ 80% → 20%. Lý do: thổ cư 54% (500/932m²)
     # rõ ràng KHÔNG phải đất nông nghiệp thuần, nhưng ngưỡng 80% bỏ sót toàn bộ.
     # Thực tế TDM: đất vườn thuần có thổ cư 0-5%, đất hỗn hợp 20%+ là đất ở + vườn phụ.
@@ -1861,7 +1918,7 @@ def classify_property_type(
             return 'dat_nen'
         if price_per_m2 is not None and price_per_m2 > _PRICE_VUON_MAX:
             return 'dat_nen'
-        return 'dat_vuon'
+        return 'dat_nen'
 
     # NOTE: Đã thử rule "lô >=500m² trên DX → unknown" (loại khỏi regression)
     # nhưng làm mất user-validated good signal (L#1061 "đất mặt tiền dx 516m² giá rẻ
@@ -1869,11 +1926,9 @@ def classify_property_type(
     # size_multiplier (line 254-257 valuation.py).
 
     # --- Bước 7: Source label hint ---
-    mapped = _SOURCE_LABEL_MAP.get(raw_source_label, '')
-    if mapped in ('dat_vuon', 'nha_dat'):
+    mapped = normalize_property_type(_SOURCE_LABEL_MAP.get(raw_source_label, ''))
+    if mapped in ('dat_nen', 'nha_dat'):
         return mapped
-    if mapped == 'dat_nen':
-        return 'dat_nen'
 
     # --- Bước 8: Default → dat_nen ---
     return 'dat_nen'

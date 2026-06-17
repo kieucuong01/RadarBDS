@@ -1,7 +1,9 @@
 ﻿"""PostgreSQL schema and idempotent migrations for Radar BDS."""
+import json
 import logging
 from typing import Any
 
+from config.property_types import LEGACY_PROPERTY_TYPE_ALIASES, normalize_property_types
 from db.connection import get_conn
 
 logger = logging.getLogger(__name__)
@@ -723,6 +725,83 @@ def _run_migrations(conn: Any) -> None:
     _normalize_ai_training_feedback_labels(conn)
     _migrate_legal_verifications(conn)
     _migrate_notification_log(conn)
+    _migrate_property_type_aliases(conn)
+
+
+def _normalize_json_type_array(raw: str | None) -> str | None:
+    if not raw:
+        return raw
+    try:
+        parsed = json.loads(raw)
+    except (TypeError, ValueError):
+        return raw
+    if not isinstance(parsed, list):
+        return raw
+    return json.dumps(normalize_property_types(parsed), ensure_ascii=False)
+
+
+def _migrate_json_type_array_column(conn: Any, table: str, column: str, key_column: str = "id") -> None:
+    columns = _table_columns(conn, table) if _table_exists(conn, table) else set()
+    if column not in columns or key_column not in columns:
+        return
+    try:
+        rows = conn.execute(
+            f"SELECT {key_column}, {column} FROM {table} "
+            f"WHERE {column} LIKE '%dat_vuon%' OR {column} LIKE '%dat_lon%'"
+        ).fetchall()
+        for row in rows:
+            normalized = _normalize_json_type_array(row[column])
+            if normalized != row[column]:
+                conn.execute(
+                    f"UPDATE {table} SET {column}=? WHERE {key_column}=?",
+                    (normalized, row[key_column]),
+                )
+    except Exception as e:
+        logger.warning(f"Property type JSON alias migration skipped for {table}.{column}: {e}")
+
+
+def _migrate_property_type_aliases(conn: Any) -> None:
+    """Collapse legacy garden/large-land buckets into the active land type."""
+    aliases = tuple(LEGACY_PROPERTY_TYPE_ALIASES)
+    if not aliases:
+        return
+    placeholders = ",".join("?" for _ in aliases)
+
+    if _table_exists(conn, "listings") and "property_type" in _table_columns(conn, "listings"):
+        try:
+            conn.execute(
+                f"UPDATE listings SET property_type='dat_nen' WHERE property_type IN ({placeholders})",
+                aliases,
+            )
+        except Exception as e:
+            logger.warning(f"Listing property type alias migration skipped: {e}")
+
+    if _table_exists(conn, "market_weekly") and "property_type" in _table_columns(conn, "market_weekly"):
+        try:
+            # Derived table with a unique key by type; remove stale buckets and recompute trends.
+            conn.execute(
+                f"DELETE FROM market_weekly WHERE property_type IN ({placeholders})",
+                aliases,
+            )
+        except Exception as e:
+            logger.warning(f"Market weekly property type alias cleanup skipped: {e}")
+
+    _migrate_json_type_array_column(conn, "user_watchlists", "prop_types")
+    _migrate_json_type_array_column(conn, "assistant_user_profiles", "property_types", "user_id")
+
+    for table in ("valuation_results", "valuation_shadow_results"):
+        if not _table_exists(conn, table) or "segment" not in _table_columns(conn, table):
+            continue
+        try:
+            conn.execute(
+                f"""
+                UPDATE {table}
+                   SET segment=REPLACE(REPLACE(segment, 'dat_vuon', 'dat_nen'), 'dat_lon', 'dat_nen')
+                 WHERE segment LIKE '%dat_vuon%' OR segment LIKE '%dat_lon%'
+                """
+            )
+        except Exception as e:
+            logger.warning(f"Valuation segment alias cleanup skipped for {table}: {e}")
 
 
 def _migrate_notification_log(conn: Any) -> None:

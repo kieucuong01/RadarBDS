@@ -95,12 +95,12 @@ def _parse_mos(text_folded: str) -> int | None:
 
 def _detect_property_types(text_folded: str) -> list[str]:
     prop_types: list[str] = []
-    if re.search(r"\b(dat nen|dat tho cu|lo dat|dat o)\b", text_folded):
+    if re.search(r"\b(dat nen|dat tho cu|lo dat|dat o|dat vuon|vuon|mau|sao)\b", text_folded):
         prop_types.append("dat_nen")
     if re.search(r"\b(nha dat|nha pho|nha rieng|nha cap)\b", text_folded):
         prop_types.append("nha_dat")
-    if re.search(r"\b(dat vuon|vuon|mau|sao)\b", text_folded):
-        prop_types.append("dat_vuon")
+    if re.search(r"\b(chung cu|can ho|apartment)\b", text_folded):
+        prop_types.append("chung_cu")
     if re.search(r"\b(nha tro|phong tro|day tro)\b", text_folded):
         prop_types.append("nha_tro")
     return prop_types or (["dat_nen"] if "dat" in text_folded and "nha" not in text_folded else [])

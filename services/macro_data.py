@@ -50,7 +50,7 @@ STRATEGIES = {
             {"icon": "x-circle", "text": "Hạn chế đất nông nghiệp vùng ven không có thổ cư"},
         ],
         "filter_hint": "Tự động ẩn đất nông nghiệp vùng ven không có thổ cư trong Bộ lọc.",
-        "auto_hide_prop_types": ["dat_vuon"],
+        "auto_hide_prop_types": [],
     },
     "neutral": {
         "label": "Trung lập",

@@ -22,6 +22,24 @@ class RadarAssistantIntentTest(unittest.TestCase):
         self.assertTrue(parsed["entities"]["only_drops"])
         self.assertEqual(parsed["filter"]["mos_min"], 10)
 
+    def test_parse_garden_land_as_land_filter(self):
+        from services.assistant_intents import parse_assistant_intent
+
+        parsed = parse_assistant_intent("Tim dat vuon Tan An tren 500m2")
+
+        self.assertEqual(parsed["intent"], "build_filter")
+        self.assertEqual(parsed["entities"]["prop_types"], ["dat_nen"])
+        self.assertEqual(parsed["filter"]["property_type"], ["dat_nen"])
+
+    def test_parse_apartment_filter(self):
+        from services.assistant_intents import parse_assistant_intent
+
+        parsed = parse_assistant_intent("Tim chung cu Thu Dau Mot gia tot")
+
+        self.assertEqual(parsed["intent"], "build_filter")
+        self.assertEqual(parsed["entities"]["prop_types"], ["chung_cu"])
+        self.assertEqual(parsed["filter"]["property_type"], ["chung_cu"])
+
     def test_parse_listing_specific_redirect(self):
         from services.assistant_intents import parse_assistant_intent
 

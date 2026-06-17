@@ -294,7 +294,7 @@ class LotHistoryApiTest(unittest.TestCase):
                 title="Tan An garden lot current",
                 ward="Tan An",
                 area_m2=1212.0,
-                property_type="dat_vuon",
+                property_type="dat_nen",
                 price_ty=2.9,
                 price_per_m2=2.39,
                 price_first_ty=3.5,

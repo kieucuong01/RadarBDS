@@ -49,10 +49,10 @@ def _filter_label(filt: dict[str, Any]) -> str:
         parts.append(", ".join(wards))
     if props:
         labels = {
-            "dat_nen": "đất nền",
+            "dat_nen": "đất",
             "nha_dat": "nhà đất",
-            "dat_vuon": "đất vườn",
             "nha_tro": "nhà trọ",
+            "chung_cu": "chung cư",
         }
         parts.append(", ".join(labels.get(p, p) for p in props))
     if filt.get("price_max"):

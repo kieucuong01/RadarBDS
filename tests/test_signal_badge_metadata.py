@@ -48,7 +48,7 @@ def test_signal_badge_metadata_formats_dx_branch_and_hides_missing_optionals():
         "property_type": None,
     })
 
-    assert branch["property_type_label"] == "Đất nền"
+    assert branch["property_type_label"] == "Đất"
     assert branch["road_label"] == "Hẻm xe hơi 4m"
     assert branch["street_label"] == "Hẻm DX127"
     assert branch["tho_cu_m2"] is None

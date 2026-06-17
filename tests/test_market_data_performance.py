@@ -216,7 +216,6 @@ def test_load_dashboard_summary_uses_compact_read_model(monkeypatch):
             if "GROUP BY property_type" in sql:
                 return _FakeCursor(rows=[
                     {"property_type": "dat_nen", "mean_ppm2": 25.5, "n_samples": 12},
-                    {"property_type": "dat_vuon", "mean_ppm2": 12.0, "n_samples": 4},
                     {"property_type": "nha_dat", "mean_ppm2": 30.0, "n_samples": 8},
                     {"property_type": "nha_tro", "mean_ppm2": 18.0, "n_samples": 3},
                     {"property_type": "chung_cu", "mean_ppm2": 35.0, "n_samples": 2},
@@ -257,8 +256,7 @@ def test_load_dashboard_summary_uses_compact_read_model(monkeypatch):
     assert result["stats"]["signals"] == 7
     assert result["market"][0]["type"] == "dat_nen"
     assert [item["label"] for item in result["market"]] == [
-        "Đất nền",
-        "Đất vườn",
+        "Đất",
         "Nhà đất",
         "Nhà trọ",
         "Chung cư",

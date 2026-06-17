@@ -919,7 +919,7 @@ def test_facebook_conflicting_dx_roads_do_not_count_price_drop():
 def test_facebook_same_phone_near_area_reposts_share_candidate_bucket():
     old = _listing(
         source="facebook", source_id="fb-1212-old", posted_at="2024-09-07",
-        ward="Tan An", property_type="dat_vuon", area_m2=1212.5,
+        ward="Tan An", property_type="dat_nen", area_m2=1212.5,
         price_ty=3.5, contact_phone="0902861961",
         description=(
             "Sau cho Ben The nhanh Dx126 cach Huynh Thi Hieu 200m. "
@@ -928,7 +928,7 @@ def test_facebook_same_phone_near_area_reposts_share_candidate_bucket():
     )
     new = _listing(
         source="facebook", source_id="fb-1212-new", posted_at="2025-07-22",
-        ward="Tan An", property_type="dat_vuon", area_m2=1212.0,
+        ward="Tan An", property_type="dat_nen", area_m2=1212.0,
         price_ty=2.9, contact_phone="0902-861-961",
         description=(
             "Ban dat phuong Tan An lam vuon gia tot duong ba gac. "
@@ -952,7 +952,7 @@ def test_facebook_land_subtype_large_lot_drop_shares_candidate_bucket():
     )
     new = _listing(
         source="facebook", source_id="fb-1212-new-subtype", posted_at="2025-07-22",
-        ward="Tan An", property_type="dat_vuon", area_m2=1212.0,
+        ward="Tan An", property_type="dat_nen", area_m2=1212.0,
         price_ty=2.9, contact_phone="0902-861-961",
         description=(
             "Ban dat phuong Tan An lam vuon gia tot duong ba gac. "
@@ -994,7 +994,7 @@ def test_facebook_same_dimensions_price_tho_cu_duplicate_without_location_signal
 def test_facebook_large_land_subtype_same_numeric_signature_duplicate():
     old = _listing(
         source="facebook", source_id="fb-1083-old", posted_at="2026-04-15",
-        ward="Tan An", property_type="dat_vuon", area_m2=1083.7,
+        ward="Tan An", property_type="dat_nen", area_m2=1083.7,
         tho_cu_m2=200.0, price_ty=5.95, price_per_m2=5.49,
         description=(
             "Ban dat Tan An tong dien tich 1083.7m2 tho cu 200m2. "
@@ -1037,7 +1037,7 @@ def test_facebook_medium_land_same_road_numeric_signature_duplicate():
 def test_facebook_land_subtype_large_lot_key_requires_phone():
     listing = _listing(
         source="facebook", source_id="fb-1212-no-phone", posted_at="2025-07-22",
-        ward="Tan An", property_type="dat_vuon", area_m2=1212.0,
+        ward="Tan An", property_type="dat_nen", area_m2=1212.0,
         price_ty=2.9, contact_phone=None,
         description="Ban dat Tan An dien tich 1212m2 gia 2ty9.",
     )
@@ -1144,7 +1144,7 @@ def test_facebook_same_dims_different_tho_cu_or_location_not_duplicate():
 def test_facebook_same_phone_area_tho_cu_without_repeated_location_is_drop():
     old = _listing(
         source="facebook", source_id="fb-garden-old", posted_at="2026-04-08",
-        ward="Tan An", property_type="dat_vuon", area_m2=1212.0,
+        ward="Tan An", property_type="dat_nen", area_m2=1212.0,
         price_ty=3.5, price_per_m2=2.89, contact_phone="0933630130",
         description=(
             "Ban 1.212 m2 Dat Tan An Sau cho Ben The cach Huynh Thi Hieu 200m, "
@@ -1154,7 +1154,7 @@ def test_facebook_same_phone_area_tho_cu_without_repeated_location_is_drop():
     )
     new = _listing(
         source="facebook", source_id="fb-garden-new", posted_at="2026-05-08",
-        ward="Tan An", property_type="dat_vuon", area_m2=1212.0,
+        ward="Tan An", property_type="dat_nen", area_m2=1212.0,
         price_ty=2.9, price_per_m2=2.39, contact_phone="0933630130",
         description=(
             "Ban dat phuong Tan an lam vuon gia tot duong ba gac "

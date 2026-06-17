@@ -229,7 +229,7 @@ def load_data(db_path: str) -> dict:
 
     # Market pulse
     range_map = {r[0]: (r[1], r[2]) for r in range_rows}
-    type_label = {"dat_nen": "Đất nền", "dat_vuon": "Đất vườn", "nha_dat": "Nhà đất"}
+    type_label = {"dat_nen": "Đất", "nha_dat": "Nhà đất"}
     market = []
     for r in mw_rows:
         ptype = r[0]
@@ -252,7 +252,7 @@ def load_data(db_path: str) -> dict:
 
 
 # ──────────────────────────────────────────────────────────
-PROP_LABELS = {"dat_nen": "Đất nền", "dat_vuon": "Đất vườn", "nha_dat": "Nhà đất", "khac": "Khác"}
+PROP_LABELS = {"dat_nen": "Đất", "nha_dat": "Nhà đất", "khac": "Khác"}
 
 
 def build_html(data: dict, generated_at: str) -> str:
@@ -527,8 +527,7 @@ td.title-cell{{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-spac
     </div>
     <div class="filters" id="sigFilters">
       <button class="fb active" data-filter="all">Tất cả</button>
-      <button class="fb" data-filter="dat_nen">Đất nền</button>
-      <button class="fb" data-filter="dat_vuon">Đất vườn</button>
+      <button class="fb" data-filter="dat_nen">Đất</button>
       <button class="fb" data-filter="nha_dat">Nhà đất</button>
       <button class="fb" data-filter="hot">🔥 Hot</button>
       <button class="fb" data-filter="drop">💰 Giảm giá</button>
@@ -573,8 +572,7 @@ td.title-cell{{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-spac
     <div class="filters" id="tblFilters">
       <button class="fb active" data-filter="all">Tất cả</button>
       <button class="fb" data-filter="signal">🟢 Signal</button>
-      <button class="fb" data-filter="dat_nen">Đất nền</button>
-      <button class="fb" data-filter="dat_vuon">Đất vườn</button>
+      <button class="fb" data-filter="dat_nen">Đất</button>
       <button class="fb" data-filter="nha_dat">Nhà đất</button>
     </div>
     <div class="table-wrap">
@@ -617,8 +615,8 @@ const SIGNALS = {signals_json};
 const ALL_LISTINGS = {all_json};
 const MARKET = {market_json};
 
-const PROP_LABELS = {{ dat_nen:'Đất nền', dat_vuon:'Đất vườn', nha_dat:'Nhà đất', khac:'Khác' }};
-const PROP_CLASS  = {{ dat_vuon:'vuon', nha_dat:'nha' }};
+const PROP_LABELS = {{ dat_nen:'Đất', nha_dat:'Nhà đất', khac:'Khác' }};
+const PROP_CLASS  = {{ nha_dat:'nha' }};
 const TIER_LABELS = {{ 1:'MT đường tên', 2:'MT/đường lớn', 3:'Ô tô/hẻm 5m+', 4:'Hẻm 3-5m', 5:'Hẻm <3m' }};
 
 // ── Lightbox ───────────────────────────────
@@ -926,7 +924,6 @@ function filteredTable() {{
   let list = [...ALL_LISTINGS];
   if (tblFilter === 'signal')         list = list.filter(l => l.is_signal);
   else if (tblFilter === 'dat_nen')   list = list.filter(l => l.prop_type === 'dat_nen');
-  else if (tblFilter === 'dat_vuon')  list = list.filter(l => l.prop_type === 'dat_vuon');
   else if (tblFilter === 'nha_dat')   list = list.filter(l => l.prop_type === 'nha_dat');
   if (tblSearch) {{
     const q = tblSearch.toLowerCase();

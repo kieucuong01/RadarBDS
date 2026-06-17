@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 
+from config.property_types import normalize_property_type
 from db.connection import get_conn
 
 logger = logging.getLogger(__name__)
@@ -131,6 +132,8 @@ def _coerce_llm_override_value(field: str, value):
     if value is None:
         return None
     text = str(value).strip()
+    if field == "property_type":
+        text = normalize_property_type(text)
     return text or None
 
 
@@ -176,6 +179,8 @@ def save_llm_extraction_override(
         for key, value in (fields or {}).items()
         if key in _LLM_EXTRACTION_OVERRIDE_FIELDS
     }
+    if "property_type" in cleaned:
+        cleaned["property_type"] = normalize_property_type(cleaned["property_type"])
     if not cleaned:
         raise ValueError("No supported extraction override fields provided")
 
@@ -275,6 +280,8 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             (rec["url"],)
         ).fetchone()
         rec = _apply_explicit_llm_extraction_override(rec, existing)
+        if rec.get("property_type"):
+            rec["property_type"] = normalize_property_type(rec.get("property_type"))
 
         now = datetime.now().isoformat()
 
