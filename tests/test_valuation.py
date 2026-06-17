@@ -167,6 +167,23 @@ def test_main_valuation_falls_back_to_market_cluster_same_road_tier():
     assert "basis=market_cluster:tdm_tan_an_west:road_bucket_3" in result.note
 
 
+def test_main_valuation_enforces_monotonic_road_bucket_order():
+    samples = []
+    for i in range(12):
+        samples.append(_make_listing(8000 + i, 10.0, ward="Tân An", road_tier=2))
+        samples.append(_make_listing(8100 + i, 15.0, ward="Tân An", road_tier=3))
+
+    engine = ValuationEngine()
+    engine.fit(samples)
+
+    tier2 = engine.valuate(_make_listing(8998, 10.0, ward="Tân An", road_tier=2))
+    tier3 = engine.valuate(_make_listing(8999, 10.0, ward="Tân An", road_tier=3))
+
+    assert tier2 is not None and tier3 is not None
+    assert tier2.price_per_m2_fair > tier3.price_per_m2_fair
+    assert tier3.price_per_m2_fair <= round(tier2.price_per_m2_fair * 0.85, 2)
+
+
 def test_social_housing_is_not_valuated_against_landed_house_market():
     listings = (
         [_make_listing(i, 15.0, property_type="nha_dat") for i in range(30)]

@@ -531,7 +531,18 @@ class RoadTierSegmentModel:
         for bucket, prices in by_bucket.items():
             self.bucket_counts[bucket] = len(prices)
             self.bucket_medians[bucket] = _weighted_center(bucket_items[bucket])
+        self._enforce_monotonic_road_buckets()
         self.fitted = True
+
+    def _enforce_monotonic_road_buckets(self):
+        if 3 in self.bucket_medians and 4 in self.bucket_medians:
+            self.bucket_medians[3] = max(self.bucket_medians[3], self.bucket_medians[4] / 0.75)
+        if 2 in self.bucket_medians and 4 in self.bucket_medians and 3 not in self.bucket_medians:
+            self.bucket_medians[2] = max(self.bucket_medians[2], self.bucket_medians[4] / (0.85 * 0.75))
+        if 2 in self.bucket_medians and 3 in self.bucket_medians:
+            self.bucket_medians[2] = max(self.bucket_medians[2], self.bucket_medians[3] / 0.85)
+        if 1 in self.bucket_medians and 2 in self.bucket_medians:
+            self.bucket_medians[1] = max(self.bucket_medians[1], self.bucket_medians[2] * 1.15)
 
     def bucket_base_ppm2(
         self,
