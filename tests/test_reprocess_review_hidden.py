@@ -468,6 +468,34 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
         self.assertIn("multi_lot_listing", _valuation_quality_flags(row))
 
+    def test_quality_flags_allow_land_use_for_warehouse_text(self):
+        from cleansing.reprocess import _valuation_quality_flags
+
+        class Row(dict):
+            def __missing__(self, key):
+                return None
+
+        land_use = Row({
+            "source": "facebook",
+            "source_id": "land-use-warehouse",
+            "url": "https://facebook.com/test/land-use-warehouse",
+            "title": "Dat dep phu hop lam kho xuong biet thu",
+            "description": "Ban dat 1083m2 tho cu 200m, khu dat rong phu hop lam kho xuong.",
+            "price_ty": 5.5,
+            "price_per_m2": 5.1,
+            "area_m2": 1083.0,
+            "property_type": "dat_nen",
+        })
+        wrong_category = Row({
+            **land_use,
+            "source": "guland",
+            "url": "https://guland.vn/mua-ban-kho-xuong-dinh-hoa/source-category-conflict",
+            "source_id": "wrong-category",
+        })
+
+        self.assertNotIn("source_category_conflict", _valuation_quality_flags(land_use))
+        self.assertIn("source_category_conflict", _valuation_quality_flags(wrong_category))
+
     def test_quality_flags_distinguish_masked_price_precision(self):
         from cleansing.reprocess import _valuation_quality_flags
 

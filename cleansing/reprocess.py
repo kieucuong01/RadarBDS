@@ -132,11 +132,18 @@ def _valuation_quality_flags(row) -> tuple:
         flags.append("missing_area_evidence")
 
     category_text_conflict = bool(re.search(
-        r"\b(?:can\s*ho|chung\s*cu|kho\s*xuong|nha\s*xuong)\b",
+        r"\b(?:can\s*ho|chung\s*cu)\b",
         text,
     )) and bool(re.search(r"\b(?:dat|lo\s*dat|chua\s*(?:co\s*)?tho\s*cu)\b", text))
+    industrial_text = bool(re.search(r"\b(?:kho\s*xuong|nha\s*xuong)\b", text))
+    industrial_use_intent = bool(re.search(
+        r"\b(?:phu\s*hop|thich\s*hop|lam|xay|cho\s*thue|kinh\s*doanh|mo)\b.{0,40}"
+        r"(?:kho\s*xuong|nha\s*xuong)\b",
+        text,
+    ))
+    industrial_category_conflict = industrial_text and not industrial_use_intent
     if prop_type in {"dat_nen", "dat_vuon"} and (
-        url_hint in {"chung_cu", "kho_xuong"} or category_text_conflict
+        url_hint in {"chung_cu", "kho_xuong"} or category_text_conflict or industrial_category_conflict
     ):
         flags.append("source_category_conflict")
 
