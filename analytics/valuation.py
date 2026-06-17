@@ -74,6 +74,15 @@ ROAD_TIER_MULTIPLIER = {
 }
 _ROAD_TIER_PROP_TYPES = {'dat_nen', 'nha_dat', 'nha_tro'}
 SPECIAL_MARKET_SKIP_TYPES = {'kho_xuong', 'nha_o_xa_hoi'}
+MAIN_MODEL_VERSION = "road_tier_hierarchical_v1"
+MIN_ROAD_BUCKET_SAMPLES = 8
+SHRINKAGE_PRIOR_N = 12
+ROAD_BUCKET_FALLBACK_MULTIPLIER = {
+    1: 1.15,
+    2: 1.00,
+    3: 0.85,
+    4: 0.65,
+}
 
 # ── Data models ───────────────────────────────────────────────────────────────
 
@@ -309,6 +318,28 @@ def weighted_ols(X: np.ndarray, y: np.ndarray, w: np.ndarray, ridge: float = RID
         return np.linalg.solve(XtWX + reg, XtW @ y)
     except Exception: return None
 
+
+def _road_bucket(road_tier: Optional[int]) -> int:
+    tier = int(road_tier or 0)
+    if tier == 1:
+        return 1
+    if tier == 2:
+        return 2
+    if tier == 3:
+        return 3
+    if tier >= 4:
+        return 4
+    return 3
+
+
+def _weighted_center(items: List[Listing]) -> float:
+    prices = np.array([float(item.price_per_m2) for item in items], dtype=float)
+    weights = np.array([
+        max(float(getattr(item, "baseline_weight", 1.0) or 1.0), 0.01)
+        for item in items
+    ], dtype=float)
+    return float(np.average(prices, weights=weights))
+
 # ── Core Models ──────────────────────────────────────────────────────────────
 
 class SegmentModel:
@@ -423,6 +454,150 @@ class SegmentModel:
         from config.settings import SIGNAL_MOS_THRESHOLD
         return SIGNAL_MOS_THRESHOLD
 
+
+class RoadTierSegmentModel:
+    """Main valuation segment model using road buckets, not regression."""
+
+    def __init__(self, segment_key: Tuple[str, str, str], fallback_level: str = "exact"):
+        self.segment_key = segment_key
+        self.fallback_level = fallback_level
+        self.beta = None
+        self.median_ppm2 = 0.0
+        self.mean_ppm2 = 0.0
+        self.std_ppm2 = 0.0
+        self.std_ppm2_core = 0.0
+        self.ref_area_m2 = 0.0
+        self.n_samples = 0
+        self.fitted = False
+        self.bucket_medians: Dict[int, float] = {}
+        self.bucket_counts: Dict[int, int] = {}
+
+    def fit(self, listings: List[Listing]):
+        if not listings:
+            return
+        today = date.today()
+        deduped = []
+        seen_urls = set()
+        for listing in sorted(listings, key=lambda x: x.crawled_at or date.min, reverse=True):
+            if listing.crawled_at and (today - listing.crawled_at).days > 180:
+                continue
+            if listing.url and listing.url not in seen_urls:
+                seen_urls.add(listing.url)
+                deduped.append(listing)
+            elif not listing.url:
+                deduped.append(listing)
+
+        known = [
+            listing for listing in deduped
+            if listing.price_per_m2 and listing.area_m2 and listing.area_m2 > 0
+            and (listing.road_tier or 0) > 0
+        ]
+        if len(known) < 3:
+            return
+
+        ppm2 = np.array([listing.price_per_m2 for listing in known], dtype=float)
+        mean, std = float(np.mean(ppm2)), float(np.std(ppm2))
+        if std > 0:
+            known = [
+                listing for listing in known
+                if mean - 2 * std <= listing.price_per_m2 <= mean + 2 * std
+            ]
+        if len(known) >= 3:
+            ppm2 = np.array([listing.price_per_m2 for listing in known], dtype=float)
+            mean, std = float(np.mean(ppm2)), float(np.std(ppm2))
+            if std > 0:
+                known = [
+                    listing for listing in known
+                    if mean - 2 * std <= listing.price_per_m2 <= mean + 2 * std
+                ]
+        if len(known) < 3:
+            return
+
+        values = [float(listing.price_per_m2) for listing in known]
+        self.n_samples = len(known)
+        self.median_ppm2 = _weighted_center(known)
+        self.mean_ppm2 = float(np.mean(values))
+        self.std_ppm2 = float(np.std(values))
+        self.std_ppm2_core = self.std_ppm2
+        areas = [float(listing.area_m2) for listing in known if listing.area_m2 and listing.area_m2 > 0]
+        self.ref_area_m2 = float(np.median(areas)) if areas else 100.0
+
+        by_bucket: Dict[int, List[float]] = {}
+        bucket_items: Dict[int, List[Listing]] = {}
+        for listing in known:
+            bucket = _road_bucket(listing.road_tier)
+            by_bucket.setdefault(bucket, []).append(float(listing.price_per_m2))
+            bucket_items.setdefault(bucket, []).append(listing)
+        for bucket, prices in by_bucket.items():
+            self.bucket_counts[bucket] = len(prices)
+            self.bucket_medians[bucket] = _weighted_center(bucket_items[bucket])
+        self.fitted = True
+
+    def bucket_base_ppm2(
+        self,
+        listing: Listing,
+        min_samples: int = MIN_ROAD_BUCKET_SAMPLES,
+    ) -> Tuple[Optional[float], str, int]:
+        bucket = _road_bucket(listing.road_tier)
+        count = self.bucket_counts.get(bucket, 0)
+        if count >= min_samples and bucket in self.bucket_medians:
+            return self.bucket_medians[bucket], f"road_bucket_{bucket}", count
+        return None, f"road_bucket_{bucket}_sparse", count
+
+    def sparse_bucket_base_ppm2(self, listing: Listing) -> Tuple[Optional[float], str, int]:
+        bucket = _road_bucket(listing.road_tier)
+        count = self.bucket_counts.get(bucket, 0)
+        if count > 0 and bucket in self.bucket_medians:
+            return self.bucket_medians[bucket], f"road_bucket_{bucket}_sparse", count
+        return None, f"road_bucket_{bucket}_missing", 0
+
+    def fallback_base_ppm2(self, listing: Listing) -> Tuple[Optional[float], str, int]:
+        if not self.median_ppm2:
+            return None, "missing", 0
+        bucket = _road_bucket(listing.road_tier)
+        multiplier = ROAD_BUCKET_FALLBACK_MULTIPLIER.get(bucket, 1.0)
+        count = self.bucket_counts.get(bucket, 0)
+        return self.median_ppm2 * multiplier, f"segment_median_adjusted_bucket_{bucket}", count
+
+    def predict_fair_ppm2(self, listing: Listing, base_override: Optional[float] = None) -> Optional[float]:
+        if not self.fitted:
+            return None
+        base_fair = base_override
+        if base_fair is None:
+            base_fair, _, _ = self.bucket_base_ppm2(listing)
+        if base_fair is None:
+            base_fair, _, _ = self.fallback_base_ppm2(listing)
+        if not base_fair or base_fair <= 0:
+            return None
+
+        alpha = SIZE_DISCOUNT_ALPHA.get(self.segment_key[1])
+        if alpha and listing.area_m2 and self.ref_area_m2:
+            cap_min, cap_max = SIZE_DISCOUNT_CAP
+            mult = max(cap_min, min(cap_max, (self.ref_area_m2 / listing.area_m2) ** alpha))
+            base_fair *= mult
+
+        feat = extract_regex_features(f"{listing.title} {listing.description}")
+        if feat.get('is_corner'): base_fair *= 1.10
+        if feat.get('is_nở_hậu'): base_fair *= 1.05
+        if feat.get('is_thắt_hậu'): base_fair *= 0.90
+        if feat.get('is_đường_đâm'): base_fair *= 0.85
+        if feat.get('near_grave'): base_fair *= 0.80
+
+        if not _effective_has_so(listing):
+            base_fair *= 0.75
+        base_fair *= EXPECTED_NEGOTIATION_RATIO
+        return round(base_fair, 2) if base_fair > 0 else None
+
+    def confidence_level(self):
+        if self.n_samples >= 45:
+            return 'high'
+        return 'medium' if self.n_samples >= MIN_RELIABLE_N_FOR_SIGNAL else 'low'
+
+    def mos_threshold(self):
+        from config.settings import SIGNAL_MOS_THRESHOLD
+        return SIGNAL_MOS_THRESHOLD
+
+
 def get_segment_priors(conn) -> Dict[str, int]:
     """Legacy hook kept as no-op; Admin Control Room feedback is the source of truth."""
     return {}
@@ -449,6 +624,13 @@ class ValuationEngine:
         parent = ALL_SUBWARDS.get(l.ward)
         if parent:
             return (parent, l.property_type, l.tx_type)
+        return None
+
+    def _cluster_key(self, l):
+        from config.market_clusters import cluster_for_ward
+        cluster = cluster_for_ward(l.ward)
+        if cluster:
+            return (f"market_cluster:{cluster.cluster_id}", l.property_type, l.tx_type)
         return None
 
     def _dedupe_training_lots(self, listings: List[Listing]) -> List[Listing]:
@@ -494,9 +676,12 @@ class ValuationEngine:
             return False
         return True
 
-    def _add_training_listing(self, groups, parent_groups, fallback_groups, listing: Listing):
+    def _add_training_listing(self, groups, cluster_groups, parent_groups, fallback_groups, listing: Listing):
         from config.area_profiles import ALL_SUBWARDS
         groups[self._key(listing)].append(listing)
+        cluster_key = self._cluster_key(listing)
+        if cluster_key:
+            cluster_groups[cluster_key].append(listing)
         fallback_groups[self._fallback_key(listing)].append(listing)
         parent = ALL_SUBWARDS.get(listing.ward)
         if parent:
@@ -518,9 +703,11 @@ class ValuationEngine:
         from collections import defaultdict
         listings = self._dedupe_training_lots(listings)
         primary_segs = defaultdict(list)
+        primary_cluster_segs = defaultdict(list)
         primary_fallback_segs = defaultdict(list)
         primary_parent_segs = defaultdict(list)
         supplemental_segs = defaultdict(list)
+        supplemental_cluster_segs = defaultdict(list)
         supplemental_fallback_segs = defaultdict(list)
         supplemental_parent_segs = defaultdict(list)
         for l in listings:
@@ -533,14 +720,17 @@ class ValuationEngine:
             if self._is_primary_baseline_source(l):
                 l.baseline_weight = 1.0
                 self._add_training_listing(
-                    primary_segs, primary_parent_segs, primary_fallback_segs, l
+                    primary_segs, primary_cluster_segs, primary_parent_segs, primary_fallback_segs, l
                 )
             elif self._is_strict_supplemental_baseline(l):
                 l.baseline_weight = SUPPLEMENTAL_BASELINE_WEIGHT
                 self._add_training_listing(
-                    supplemental_segs, supplemental_parent_segs, supplemental_fallback_segs, l
+                    supplemental_segs, supplemental_cluster_segs, supplemental_parent_segs, supplemental_fallback_segs, l
                 )
         segs = self._combine_primary_and_supplemental(primary_segs, supplemental_segs)
+        cluster_segs = self._combine_primary_and_supplemental(
+            primary_cluster_segs, supplemental_cluster_segs
+        )
         parent_segs = self._combine_primary_and_supplemental(
             primary_parent_segs, supplemental_parent_segs
         )
@@ -548,21 +738,72 @@ class ValuationEngine:
             primary_fallback_segs, supplemental_fallback_segs
         )
         for k, ls in segs.items():
-            m = SegmentModel(k)
+            m = RoadTierSegmentModel(k, fallback_level="exact")
+            m.fit(ls)
+            self._models[k] = m
+        for k, ls in cluster_segs.items():
+            m = RoadTierSegmentModel(k, fallback_level=k[0])
             m.fit(ls)
             self._models[k] = m
         # Parent ward aggregate (e.g. "Mỹ Phước" from MP1+MP2+MP3+MP4 + generic)
         for k, ls in parent_segs.items():
             existing = segs.get(k, [])
             combined = existing + ls
-            m = SegmentModel(k)
+            m = RoadTierSegmentModel(k, fallback_level="parent")
             m.fit(combined)
             self._models[k] = m
         # SELECTED_REGION: fallback cho ward=null/unknown
         for k, ls in fallback_segs.items():
-            m = SegmentModel(k)
+            m = RoadTierSegmentModel(k, fallback_level="region")
             m.fit(ls)
             self._models[k] = m
+
+    def _candidate_models(self, listing: Listing) -> List[RoadTierSegmentModel]:
+        keys = [self._key(listing), self._cluster_key(listing), self._parent_ward_key(listing), self._fallback_key(listing)]
+        models = []
+        seen = set()
+        for key in keys:
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            model = self._models.get(key)
+            if model and model.fitted:
+                models.append(model)
+        return models
+
+    def _select_pricing_basis(
+        self,
+        listing: Listing,
+    ) -> Optional[Tuple[RoadTierSegmentModel, float, str, int]]:
+        candidates = self._candidate_models(listing)
+        if not candidates:
+            return None
+
+        exact = candidates[0]
+        exact_base, exact_basis, exact_count = exact.bucket_base_ppm2(listing)
+        if exact_base is not None:
+            return exact, exact_base, f"{exact.fallback_level}:{exact_basis}", exact_count
+
+        sparse_base, sparse_basis, sparse_count = exact.sparse_bucket_base_ppm2(listing)
+        for model in candidates[1:]:
+            broad_base, broad_basis, broad_count = model.bucket_base_ppm2(listing)
+            if broad_base is None:
+                continue
+            if sparse_base is not None and sparse_count > 0:
+                weight = sparse_count / (sparse_count + SHRINKAGE_PRIOR_N)
+                blended = sparse_base * weight + broad_base * (1.0 - weight)
+                basis = (
+                    f"shrink:{exact.fallback_level}:{sparse_basis}:n={sparse_count}"
+                    f"+{model.fallback_level}:{broad_basis}:n={broad_count}"
+                )
+                return model, blended, basis, broad_count
+            return model, broad_base, f"{model.fallback_level}:{broad_basis}", broad_count
+
+        for model in candidates:
+            fallback_base, fallback_basis, fallback_count = model.fallback_base_ppm2(listing)
+            if fallback_base is not None:
+                return model, fallback_base, f"{model.fallback_level}:{fallback_basis}", fallback_count
+        return None
 
     def valuate(self, listing: Listing) -> Optional[ValuationResult]:
         # Special markets: giá/m² và logic định giá khác đất/nhà, chưa đủ data để
@@ -570,21 +811,19 @@ class ValuationEngine:
         # không có fair_value/MOS. Khi đủ data (n≥30) sẽ build model riêng.
         if listing.property_type in SPECIAL_MARKET_SKIP_TYPES:
             return None
-        m = self._models.get(self._key(listing))
-        if not m or not m.fitted:
-            pk = self._parent_ward_key(listing)
-            if pk:
-                m = self._models.get(pk)
-            if not m or not m.fitted:
-                m = self._models.get(self._fallback_key(listing))
-        if not m or not m.fitted or not listing.price_per_m2: return None
-        fair = m.predict_fair_ppm2(listing)
+        selection = self._select_pricing_basis(listing)
+        if not selection or not listing.price_per_m2:
+            return None
+        m, base_ppm2, price_basis, basis_count = selection
+        fair = m.predict_fair_ppm2(listing, base_override=base_ppm2)
         if not fair: return None
         actual = listing.price_per_m2
         discount = (fair - actual) / fair
         base_threshold = m.mos_threshold()
         provisional_score = compute_signal_score(listing, discount * 100)
         quality_flags = set(_source_flags(listing))
+        if (listing.road_tier or 0) <= 0:
+            quality_flags.add("low_road_confidence")
         model_signal = discount >= base_threshold
         source_gate_pass = _passes_source_signal_gate(
             listing, discount, base_threshold, provisional_score
@@ -608,7 +847,7 @@ class ValuationEngine:
         ):
             quality_flags.add("low_segment_confidence")
         source_quality_recheck = bool(
-            model_signal and (quality_flags & ACTIONABLE_SUPPRESS_FLAGS)
+            model_signal and (quality_flags & (ACTIONABLE_SUPPRESS_FLAGS | SOURCE_SIGNAL_SUPPRESS_FLAGS))
         )
         is_sig = model_signal
         # Tin có ward=NULL/unknown → KHÔNG signal: hoặc nằm ngoài TDM (bị blacklist),
@@ -629,7 +868,11 @@ class ValuationEngine:
         if listing.ward in ["Tân An", "Tương Bình Hiệp", "Định Hòa", "Hiệp An"] and actual > 100:
             is_hard_outlier = True
 
-        note = []
+        note = [
+            f"model={MAIN_MODEL_VERSION}",
+            f"basis={price_basis}",
+            f"basis_n={basis_count}",
+        ]
         if listing.is_hot: note.append("🔴 Tin ngộp")
         if not _effective_has_so(listing): note.append("⚠️ Chưa sổ")
         if is_sig: note.append(f"✅ MOS {discount:.0%}")

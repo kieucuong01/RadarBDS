@@ -149,6 +149,24 @@ def test_median_road_tier_sparse_bucket_falls_back_to_segment_median():
     assert tier1.price_per_m2_fair == round(20.0 * 0.95, 2)
 
 
+def test_main_valuation_falls_back_to_market_cluster_same_road_tier():
+    samples = []
+    for i in range(10):
+        samples.append(_make_listing(7000 + i, 20.0, ward="Tân An", road_tier=2))
+    for offset, ward in enumerate(("Chánh Mỹ", "Tương Bình Hiệp", "Hiệp An")):
+        for i in range(8):
+            samples.append(_make_listing(7100 + offset * 100 + i, 12.0, ward=ward, road_tier=3))
+
+    engine = ValuationEngine()
+    engine.fit(samples)
+
+    result = engine.valuate(_make_listing(7999, 10.0, ward="Tân An", road_tier=3))
+
+    assert result is not None
+    assert result.price_per_m2_fair == 11.4
+    assert "basis=market_cluster:tdm_tan_an_west:road_bucket_3" in result.note
+
+
 def test_social_housing_is_not_valuated_against_landed_house_market():
     listings = (
         [_make_listing(i, 15.0, property_type="nha_dat") for i in range(30)]
