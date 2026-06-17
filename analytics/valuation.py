@@ -810,6 +810,9 @@ class ValuationEngine:
                 return model, blended, basis, broad_count
             return model, broad_base, f"{model.fallback_level}:{broad_basis}", broad_count
 
+        if sparse_base is not None and sparse_count > 0:
+            return exact, sparse_base, f"{exact.fallback_level}:{sparse_basis}", sparse_count
+
         for model in candidates:
             fallback_base, fallback_basis, fallback_count = model.fallback_base_ppm2(listing)
             if fallback_base is not None:

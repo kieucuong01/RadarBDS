@@ -184,6 +184,24 @@ def test_main_valuation_enforces_monotonic_road_bucket_order():
     assert tier3.price_per_m2_fair <= round(tier2.price_per_m2_fair * 0.85, 2)
 
 
+def test_main_valuation_uses_sparse_monotonic_bucket_before_segment_fallback():
+    samples = []
+    for i in range(7):
+        samples.append(_make_listing(8200 + i, 10.0, ward="Tân An", road_tier=2))
+    for i in range(12):
+        samples.append(_make_listing(8300 + i, 15.0, ward="Tân An", road_tier=3))
+
+    engine = ValuationEngine()
+    engine.fit(samples)
+
+    tier2 = engine.valuate(_make_listing(8996, 10.0, ward="Tân An", road_tier=2))
+    tier3 = engine.valuate(_make_listing(8997, 10.0, ward="Tân An", road_tier=3))
+
+    assert tier2 is not None and tier3 is not None
+    assert tier2.price_per_m2_fair > tier3.price_per_m2_fair
+    assert "basis=exact:road_bucket_2_sparse" in tier2.note
+
+
 def test_social_housing_is_not_valuated_against_landed_house_market():
     listings = (
         [_make_listing(i, 15.0, property_type="nha_dat") for i in range(30)]
