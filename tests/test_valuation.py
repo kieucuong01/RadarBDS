@@ -202,6 +202,22 @@ def test_main_valuation_uses_sparse_monotonic_bucket_before_segment_fallback():
     assert "basis=exact:road_bucket_2_sparse" in tier2.note
 
 
+def test_main_valuation_moderate_area_difference_does_not_erase_road_tier_order():
+    samples = []
+    for i in range(20):
+        samples.append(_make_listing(8400 + i, 16.8, area=130.0, ward="Tân An", road_tier=2))
+        samples.append(_make_listing(8500 + i, 14.2, area=130.0, ward="Tân An", road_tier=3))
+
+    engine = ValuationEngine()
+    engine.fit(samples)
+
+    frontage = engine.valuate(_make_listing(8994, 10.0, area=188.0, ward="Tân An", road_tier=2))
+    alley = engine.valuate(_make_listing(8995, 10.0, area=120.0, ward="Tân An", road_tier=3))
+
+    assert frontage is not None and alley is not None
+    assert frontage.price_per_m2_fair > alley.price_per_m2_fair
+
+
 def test_social_housing_is_not_valuated_against_landed_house_market():
     listings = (
         [_make_listing(i, 15.0, property_type="nha_dat") for i in range(30)]
@@ -535,7 +551,7 @@ def test_road_tier_adjustment():
     assert r1.price_per_m2_fair > r4.price_per_m2_fair
 
 
-def test_small_land_lot_size_premium_is_capped_at_twenty_percent():
+def test_small_land_lot_size_premium_uses_stepwise_adjustment():
     listings = [_make_listing(i, 20.0, area=135.0, road_tier=2) for i in range(10)]
     engine = ValuationEngine()
     engine.fit(listings)
@@ -544,7 +560,7 @@ def test_small_land_lot_size_premium_is_capped_at_twenty_percent():
     result = engine.valuate(target)
 
     assert result is not None
-    assert result.price_per_m2_fair == 22.8
+    assert result.price_per_m2_fair == 19.95
 
 
 def test_regression_model_does_not_apply_extra_size_premium():

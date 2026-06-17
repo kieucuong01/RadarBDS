@@ -340,6 +340,21 @@ def _weighted_center(items: List[Listing]) -> float:
     ], dtype=float)
     return float(np.average(prices, weights=weights))
 
+
+def _main_area_adjustment(area_m2: Optional[float], ref_area_m2: Optional[float]) -> float:
+    if not area_m2 or not ref_area_m2 or area_m2 <= 0 or ref_area_m2 <= 0:
+        return 1.0
+    ratio = float(area_m2) / float(ref_area_m2)
+    if ratio <= 0.7:
+        return 1.05
+    if ratio <= 1.5:
+        return 1.0
+    if ratio <= 3.0:
+        return 0.90
+    if ratio <= 6.0:
+        return 0.80
+    return 0.65
+
 # ── Core Models ──────────────────────────────────────────────────────────────
 
 class SegmentModel:
@@ -581,11 +596,8 @@ class RoadTierSegmentModel:
         if not base_fair or base_fair <= 0:
             return None
 
-        alpha = SIZE_DISCOUNT_ALPHA.get(self.segment_key[1])
-        if alpha and listing.area_m2 and self.ref_area_m2:
-            cap_min, cap_max = SIZE_DISCOUNT_CAP
-            mult = max(cap_min, min(cap_max, (self.ref_area_m2 / listing.area_m2) ** alpha))
-            base_fair *= mult
+        if self.segment_key[1] in SIZE_DISCOUNT_ALPHA:
+            base_fair *= _main_area_adjustment(listing.area_m2, self.ref_area_m2)
 
         feat = extract_regex_features(f"{listing.title} {listing.description}")
         if feat.get('is_corner'): base_fair *= 1.10
