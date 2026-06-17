@@ -600,6 +600,13 @@ def init_schema() -> None:
                 except Exception:
                     pass
                 if _core_schema_exists(conn):
+                    try:
+                        _migrate_property_type_aliases(conn)
+                    except Exception as migration_exc:
+                        logger.warning(
+                            "Data-only property type alias migration skipped after DDL privilege failure: %s",
+                            migration_exc,
+                        )
                     logger.warning(
                         "PostgreSQL schema init skipped because this DB role lacks DDL ownership; "
                         "existing core tables are present. Error: %s",
