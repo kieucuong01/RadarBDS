@@ -24,7 +24,7 @@ latest_shadow_valuation AS (
 # ─────────────────────────────────────────────────────────────────────────────
 TIER_ORDER = {"guest": 0, "free": 1, "vip": 2, "admin": 3}
 DEFAULT_VISIBLE_SOURCES = ("facebook",)
-ADMIN_SOURCE_OPTIONS = ("facebook", "guland", "batdongsan", "muaban")
+ADMIN_SOURCE_OPTIONS = ("facebook", "guland")
 DATE_RANGE_OPTIONS = {
     "1w": "-7 days",
     "1m": "-1 months",
@@ -44,6 +44,12 @@ DATE_RANGE_ALIASES = {
     "365d": "1y",
     "year": "1y",
 }
+
+
+def _max_sql(left: str, right: str) -> str:
+    return f"(CASE WHEN ({left}) >= ({right}) THEN ({left}) ELSE ({right}) END)"
+
+
 _PHONE_TEXT_RE = re.compile(
     r"(?<!\d)(?:\+?84|0)(?:[\s.\-()]?\d){9,10}(?!\d)"
 )
@@ -1072,7 +1078,8 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     if sort == "mos_desc":
         order_sql = f"({display_mos_expr}) DESC, l.id DESC"
     elif sort == "score_desc":
-        order_sql = f"GREATEST(COALESCE(v.signal_score,0), COALESCE(sv.signal_score,0)) DESC, ({display_mos_expr}) DESC, l.id DESC"
+        score_expr = _max_sql("COALESCE(v.signal_score,0)", "COALESCE(sv.signal_score,0)")
+        order_sql = f"{score_expr} DESC, ({display_mos_expr}) DESC, l.id DESC"
     lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
     fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
     total_select = "COUNT(*) OVER() AS total_count," if include_total else ""
@@ -1098,7 +1105,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
                l.suspicious_bait,
                l.duplicate_of_id,
                l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
-               GREATEST(COALESCE(v.signal_score, 0), COALESCE(sv.signal_score, 0)) as signal_score,
+                {_max_sql("COALESCE(v.signal_score, 0)", "COALESCE(sv.signal_score, 0)")} as signal_score,
                COALESCE(v.trust_tier, sv.trust_tier, 'candidate_signal') as trust_tier,
                COALESCE(v.trust_score, sv.trust_score, 0) as trust_score,
                COALESCE(v.legal_status, sv.legal_status, 'unverified') as legal_status,
@@ -1252,7 +1259,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
                    sv.mos_pct AS mos_pct_new,
                    ({all_display_fair_expr}) AS fair_ppm2_display,
                    ({all_display_mos_expr}) AS mos_pct_display,
-                   GREATEST(COALESCE(v.signal_score,0), COALESCE(sv.signal_score,0)) AS signal_score,
+                    {_max_sql("COALESCE(v.signal_score,0)", "COALESCE(sv.signal_score,0)")} AS signal_score,
                    COALESCE(v.trust_tier, sv.trust_tier, 'candidate_signal') AS trust_tier,
                    COALESCE(v.trust_score, sv.trust_score, 0) AS trust_score,
                    COALESCE(v.legal_status, sv.legal_status, 'unverified') AS legal_status,
@@ -1990,7 +1997,7 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=No
                    WHEN COALESCE(sv.is_signal,0)=1 THEN 'new'
                    ELSE 'legacy'
                END AS signal_model,
-               GREATEST(COALESCE(v.signal_score,0), COALESCE(sv.signal_score,0)) AS signal_score,
+               {_max_sql("COALESCE(v.signal_score,0)", "COALESCE(sv.signal_score,0)")} AS signal_score,
                COALESCE(v.trust_tier, sv.trust_tier, 'candidate_signal') AS trust_tier,
                COALESCE(v.trust_score, sv.trust_score, 0) AS trust_score,
                COALESCE(v.legal_status, sv.legal_status, 'unverified') AS legal_status,

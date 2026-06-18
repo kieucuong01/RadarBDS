@@ -134,17 +134,16 @@ def build_parser():
     p_db2.add_argument("--yes", "-y", action="store_true")
 
     # crawl-all
-    p_ca = sub.add_parser("crawl-all", help="Full crawl Guland + BatDongSan → DB trực tiếp")
-    p_ca.add_argument("--source",  help="Chỉ crawl 1 nguồn: guland | batdongsan")
+    p_ca = sub.add_parser("crawl-all", help="Full crawl Guland → DB trực tiếp")
+    p_ca.add_argument("--source", choices=["guland"], help="Chỉ crawl 1 nguồn")
     p_ca.add_argument("--visible", action="store_true", help="Hiện browser (debug)")
     p_ca.add_argument("--no-reprocess", action="store_true", help="Không reprocess sau crawl")
 
     # crawl-daily
     p_cd = sub.add_parser("crawl-daily", help="Crawl tin mới hôm nay → reprocess → VIP notification")
-    p_cd.add_argument("--source",  help="Chỉ crawl 1 nguồn")
+    p_cd.add_argument("--source", choices=["guland"], help="Chỉ crawl 1 nguồn")
     p_cd.add_argument("--visible", action="store_true")
     p_cd.add_argument("--no-alert", action="store_true", help="Không gửi VIP notification")
-    p_cd.add_argument("--no-groq", action="store_true", help=argparse.SUPPRESS)
 
     # schedule-setup
     p_ss = sub.add_parser("schedule-setup", help="Cài Windows Task Scheduler chạy crawl-daily")
@@ -176,7 +175,7 @@ def build_parser():
 
     # repair-missing
     p_rm = sub.add_parser("repair-missing", help="Re-fetch price/area cho listings thiếu data")
-    p_rm.add_argument("--source",  default="guland", help="Source cần repair")
+    p_rm.add_argument("--source", choices=["guland"], default="guland", help="Source cần repair")
     p_rm.add_argument("--visible", action="store_true", help="Hiện browser (debug)")
     p_rm.add_argument("--limit",   type=int, default=0, help="Giới hạn số records")
 
@@ -227,7 +226,7 @@ def build_parser():
 
     # clean-broker-images
     p_cbi = sub.add_parser("clean-broker-images", help="Xóa ảnh avatar/selfie/profile môi giới khỏi listing_images")
-    p_cbi.add_argument("--source", help="Lọc source: guland | facebook | batdongsan")
+    p_cbi.add_argument("--source", help="Lọc source: guland | facebook")
     p_cbi.add_argument("--limit", type=int, help="Giới hạn số ảnh scan")
     p_cbi.add_argument("--apply", action="store_true", help="Xóa thật (mặc định dry-run)")
     p_cbi.add_argument("--conservative", action="store_false", dest="strong",
@@ -256,9 +255,20 @@ def build_parser():
     return parser
 
 
+def _parse_args(parser, argv=None):
+    args, unknown = parser.parse_known_args(argv)
+    if unknown:
+        can_ignore_removed_no_flags = args.cmd == "crawl-daily" and all(
+            item.startswith("--no-") and "=" not in item for item in unknown
+        )
+        if not can_ignore_removed_no_flags:
+            parser.error(f"unrecognized arguments: {' '.join(unknown)}")
+    return args
+
+
 def main():
     parser = build_parser()
-    args = parser.parse_args()
+    args = _parse_args(parser)
 
     if args.cmd == "reprocess":
         cmd_reprocess(args)

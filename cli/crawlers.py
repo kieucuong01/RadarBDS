@@ -14,11 +14,9 @@ from db.schema import init_schema
 
 def _get_crawlers(source_filter=None):
     from crawler.guland_pw import GulandCrawler
-    from crawler.batdongsan_pw import BatDongSanCrawler
 
     all_crawlers = {
         "guland":     GulandCrawler,
-        "batdongsan": BatDongSanCrawler,
     }
     if source_filter:
         cls = all_crawlers.get(source_filter)
@@ -547,39 +545,6 @@ def _repair_guland(crawler, rows, headless):
         browser.close()
     print(f"\n[repair] Xong: {repaired}/{len(rows)} records cập nhật data")
 
-def _repair_batdongsan(crawler, rows, headless):
-    from playwright.sync_api import sync_playwright
-
-    repaired = 0
-    with sync_playwright() as pw:
-        browser, ctx = crawler._launch(pw, headless=headless)
-        page = ctx.new_page()
-
-        for i, row in enumerate(rows):
-            raw_id, url, raw_json_str = row[0], row[1], row[2]
-            raw_data = json.loads(raw_json_str)
-            try:
-                detail = crawler._fetch_detail(page, url)
-                if detail:
-                    for field in ["price_raw_detail","area_raw_detail","description",
-                                  "address","legal_raw","road_type_raw","frontage_raw","contact_phone"]:
-                        v = detail.get(field, "")
-                        if v and v not in ("", "—"):
-                            raw_data[field] = v
-                    if detail.get("detail_imgs"):
-                        raw_data["imgs"] = detail["detail_imgs"]
-                    with get_conn() as conn:
-                        conn.execute("UPDATE raw_listings SET raw_json=? WHERE id=?",
-                                     (json.dumps(raw_data, ensure_ascii=False), raw_id))
-                    repaired += 1
-                    print(f"  [repair] [{i+1}/{len(rows)}] OK: {url[-50:]}")
-            except Exception as e:
-                print(f"  [repair] [{i+1}/{len(rows)}] Error {url[-40:]}: {e}")
-            time.sleep(1)
-
-        browser.close()
-    print(f"\n[repair] Xong: {repaired}/{len(rows)} records cập nhật data")
-
 def cmd_repair_missing(args):
     source  = args.source
     limit   = args.limit
@@ -606,10 +571,6 @@ def cmd_repair_missing(args):
         from crawler.guland_pw import GulandCrawler
         crawler = GulandCrawler()
         _repair_guland(crawler, rows, headless)
-    elif source == "batdongsan":
-        from crawler.batdongsan_pw import BatDongSanCrawler
-        crawler = BatDongSanCrawler()
-        _repair_batdongsan(crawler, rows, headless)
     else:
         print(f"[repair] Source '{source}' chưa hỗ trợ repair")
         return

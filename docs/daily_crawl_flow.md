@@ -645,7 +645,7 @@ This keeps the valuation baseline stable: old ward/sub-ward segments remain the 
 | Deterministic signal fields | `cleansing/reprocess.py`, `cleansing/normalizer.py`, `cleansing/feature_extractor.py` | Không còn bước verify bằng LLM ngoài sau crawl |
 | Post-merger location aliases | `config/location_aliases.py`, `scripts/audit_post_merger_locations.py` | Phường mới là context; chỉ KP/phường cũ/landmark đủ mạnh mới gán `ward` |
 | Guland targets | `data/guland_sources.json`, `crawler/guland_pw.py` | Chỉ sửa JSON khi mở rộng ward |
-| Legacy BatDongSan cleanup | `crawler/batdongsan_pw.py`, `cli/data_import.py` | Disabled for daily crawl; keep only for historical cleanup unless policy changes |
+| Legacy BatDongSan cleanup | `cli/data_import.py` | Disabled for daily crawl; keep only import/delete helpers for historical cleanup unless policy changes |
 | FB profiles | `data/facebook_profiles.json`, `crawler/facebook_apify.py` | tier=int, broker_name |
 | City filter | `config/area_profiles.py` | `OTHER_CITY_KEYWORDS`, `CITY_OWN_KEYWORDS`, `post_mentions_other_city` |
 
