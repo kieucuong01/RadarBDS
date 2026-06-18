@@ -408,8 +408,9 @@ def _cmd_crawl(args, mode: str = "full"):
 
         print(f"\nĐang tải ảnh về local...")
         from cleansing.download_images import download_images
-        download_images()
-        _clean_broker_images_after_download(source=source_filter)
+        image_limit = 500 if source_filter else 1000
+        download_images(limit=image_limit)
+        _clean_broker_images_after_download(source=source_filter, limit=image_limit)
 
     class _FakeArgs:
         out = None

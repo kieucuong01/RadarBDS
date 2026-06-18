@@ -166,6 +166,48 @@ def test_facebook_apify_batch_uses_per_profile_results_limit(monkeypatch):
     assert calls[0][1] == 30
 
 
+def test_facebook_apify_clamps_actor_overfetch_per_profile(monkeypatch):
+    crawler = FacebookApifyCrawler.__new__(FacebookApifyCrawler)
+    crawler._use_token_pool = False
+    crawler.actor = "apify/facebook-posts-scraper"
+
+    def fake_run_actor(run_input, required_posts):
+        assert required_posts == 4
+        return [
+            {
+                "text": f"Ban dat Tan An {i}",
+                "url": f"https://facebook.test/a/{i}",
+                "postId": f"a-{i}",
+                "timestamp": 1893456000,
+                "inputUrl": "https://facebook.com/a",
+            }
+            for i in range(5)
+        ] + [
+            {
+                "text": f"Ban dat Hiep An {i}",
+                "url": f"https://facebook.test/b/{i}",
+                "postId": f"b-{i}",
+                "timestamp": 1893456000,
+                "inputUrl": "https://facebook.com/b/",
+            }
+            for i in range(5)
+        ]
+
+    monkeypatch.setattr(crawler, "_run_actor", fake_run_actor)
+
+    posts = crawler.crawl_all(
+        [
+            {"url": "https://facebook.com/a", "tier": 2, "broker_name": "A", "default_area": "TDM"},
+            {"url": "https://facebook.com/b", "tier": 2, "broker_name": "B", "default_area": "TDM"},
+        ],
+        mode="incremental",
+    )
+
+    assert len(posts) == 4
+    assert [p["broker_name"] for p in posts].count("A") == 2
+    assert [p["broker_name"] for p in posts].count("B") == 2
+
+
 def test_facebook_apify_pool_treats_remaining_usage_error_as_exhausted(tmp_path, monkeypatch):
     monkeypatch.setattr(pool, "TOKEN_PATH", tmp_path / "apify_tokens.json")
     tokens = pool.upsert_token({

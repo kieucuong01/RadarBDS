@@ -205,15 +205,19 @@ class FacebookApifyCrawler:
                 f"(limit={per_profile}/profile, expected_max={expected_total})."
             )
 
-            for item in items:
+            limited_items = self._limit_items_per_profile(items, batch_profiles, per_profile)
+            if len(limited_items) < len(items):
+                print(
+                    f"[facebook-apify] Clamp actor overfetch: {len(items)} -> {len(limited_items)} "
+                    f"items theo limit/profile."
+                )
+
+            for item, profile in limited_items:
                 post = self._adapt(item)
                 if post:
-                    input_url = item.get("inputUrl", "")
-                    for p in batch_profiles:
-                        if input_url and p["url"] in input_url:
-                            post["default_area"] = p.get("default_area")
-                            post["broker_name"] = p.get("broker_name")
-                            break
+                    if profile:
+                        post["default_area"] = profile.get("default_area")
+                        post["broker_name"] = profile.get("broker_name")
                     adapted_all.append(post)
 
         # Incremental filter
@@ -267,6 +271,48 @@ class FacebookApifyCrawler:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _profile_key(url: str) -> str:
+        return (url or "").strip().rstrip("/").lower()
+
+    @classmethod
+    def _match_profile(cls, input_url: str, profiles: list[dict]) -> Optional[dict]:
+        key = cls._profile_key(input_url)
+        if not key:
+            return None
+        for profile in profiles:
+            profile_key = cls._profile_key(profile.get("url") or "")
+            if profile_key and (profile_key in key or key in profile_key):
+                return profile
+        return None
+
+    @classmethod
+    def _limit_items_per_profile(
+        cls,
+        items: list[dict],
+        profiles: list[dict],
+        per_profile: int,
+    ) -> list[tuple[dict, Optional[dict]]]:
+        counts: dict[str, int] = {}
+        limited: list[tuple[dict, Optional[dict]]] = []
+        unknown_budget = per_profile * len(profiles)
+
+        for item in items:
+            profile = cls._match_profile(str(item.get("inputUrl") or ""), profiles)
+            if profile:
+                key = cls._profile_key(profile.get("url") or "")
+                current = counts.get(key, 0)
+                if current >= per_profile:
+                    continue
+                counts[key] = current + 1
+                limited.append((item, profile))
+            elif unknown_budget > 0:
+                # Keep a bounded fallback for actor outputs missing inputUrl.
+                unknown_budget -= 1
+                limited.append((item, None))
+
+        return limited
 
     def _adapt(self, item: dict) -> Optional[dict]:
         """

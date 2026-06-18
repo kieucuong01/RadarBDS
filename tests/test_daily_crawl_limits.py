@@ -136,3 +136,37 @@ def test_daily_primary_does_not_load_secondary_crawlers():
          mock.patch.object(crawlers, "_maybe_send_ops_alert"), \
          mock.patch.object(crawlers, "_prewarm_dashboard_cache"):
         crawlers._cmd_crawl(args, mode="incremental")
+
+
+def test_secondary_crawl_limits_image_backfill():
+    calls = {}
+
+    class _NewCrawler:
+        SOURCE_NAME = "guland"
+
+        def run(self, mode, headless=True):
+            return {"new": 1, "skipped": 0, "errors": 0}
+
+    args = SimpleNamespace(
+        source="guland",
+        visible=False,
+        no_reprocess=False,
+        no_alert=True,
+    )
+
+    with mock.patch.object(crawlers, "init_schema"), \
+         mock.patch.object(crawlers, "get_conn", return_value=_FakeDbContext()), \
+         mock.patch.object(crawlers, "_get_crawlers", return_value=[_NewCrawler()]), \
+         mock.patch("cleansing.reprocess.run_full_reprocess", return_value={
+             "listings": {"new": 1, "updated": 0},
+             "valuation": {"total": 1, "signals": 0, "outliers": 0},
+         }), \
+         mock.patch("cleansing.download_images.download_images", side_effect=lambda **kwargs: calls.setdefault("download", kwargs)), \
+         mock.patch.object(crawlers, "_clean_broker_images_after_download", side_effect=lambda **kwargs: calls.setdefault("clean", kwargs)), \
+         mock.patch.object(crawlers, "cmd_export_raw"), \
+         mock.patch.object(crawlers, "_maybe_send_ops_alert"), \
+         mock.patch.object(crawlers, "_prewarm_dashboard_cache"):
+        crawlers._cmd_crawl(args, mode="incremental")
+
+    assert calls["download"] == {"limit": 500}
+    assert calls["clean"] == {"source": "guland", "limit": 500}
