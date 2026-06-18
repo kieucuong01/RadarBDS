@@ -178,20 +178,20 @@ class FacebookApifyCrawler:
         adapted_all = []
 
         for per_profile, batch_profiles in by_limit.items():
-            total_limit = per_profile * len(batch_profiles)
+            expected_total = per_profile * len(batch_profiles)
             urls = [p["url"] for p in batch_profiles]
             run_input = {
                 "startUrls": [{"url": u} for u in urls],
-                "resultsLimit": total_limit,
+                "resultsLimit": per_profile,
             }
 
             print(
                 f"[facebook-apify] Batch limit={per_profile}/profile | "
-                f"{len(urls)} profiles | total={total_limit} | mode={mode}"
+                f"{len(urls)} profiles | expected_max={expected_total} | mode={mode}"
             )
 
             try:
-                items = self._run_actor(run_input, required_posts=total_limit)
+                items = self._run_actor(run_input, required_posts=expected_total)
             except Exception as exc:
                 msg = str(exc)
                 if "401" in msg or "Unauthorized" in msg:
@@ -200,7 +200,10 @@ class FacebookApifyCrawler:
                     raise RuntimeError("Het Apify credits. Nap them hoac giam --limit.") from exc
                 raise
 
-            print(f"[facebook-apify] Nhan duoc {len(items)} raw items (limit={per_profile}/profile).")
+            print(
+                f"[facebook-apify] Nhan duoc {len(items)} raw items "
+                f"(limit={per_profile}/profile, expected_max={expected_total})."
+            )
 
             for item in items:
                 post = self._adapt(item)

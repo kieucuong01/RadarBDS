@@ -131,6 +131,41 @@ def test_facebook_apify_pool_disables_limited_key_and_retries_next(tmp_path, mon
     assert key_a_public["active"] is False
 
 
+def test_facebook_apify_batch_uses_per_profile_results_limit(monkeypatch):
+    crawler = FacebookApifyCrawler.__new__(FacebookApifyCrawler)
+    crawler._use_token_pool = False
+    crawler.actor = "apify/facebook-posts-scraper"
+    calls = []
+
+    def fake_run_actor(run_input, required_posts):
+        calls.append((run_input, required_posts))
+        return [
+            {
+                "text": "Ban dat Tan An",
+                "url": "https://facebook.test/posts/1",
+                "postId": "1",
+                "timestamp": 1893456000,
+                "inputUrl": "https://facebook.com/a",
+            }
+        ]
+
+    monkeypatch.setattr(crawler, "_run_actor", fake_run_actor)
+
+    posts = crawler.crawl_all(
+        [
+            {"url": "https://facebook.com/a", "tier": 10, "broker_name": "A", "default_area": "TDM"},
+            {"url": "https://facebook.com/b", "tier": 10, "broker_name": "B", "default_area": "TDM"},
+            {"url": "https://facebook.com/c", "tier": 10, "broker_name": "C", "default_area": "TDM"},
+        ],
+        mode="incremental",
+    )
+
+    assert len(posts) == 1
+    assert calls[0][0]["resultsLimit"] == 10
+    assert len(calls[0][0]["startUrls"]) == 3
+    assert calls[0][1] == 30
+
+
 def test_facebook_apify_pool_treats_remaining_usage_error_as_exhausted(tmp_path, monkeypatch):
     monkeypatch.setattr(pool, "TOKEN_PATH", tmp_path / "apify_tokens.json")
     tokens = pool.upsert_token({

@@ -58,7 +58,7 @@ class BaseCrawler(ABC):
 
     def __init__(self):
         self.logger = logging.getLogger(f"crawler.{self.SOURCE_NAME or self.__class__.__name__}")
-        self._stats = {"new": 0, "skipped": 0, "errors": 0, "error_details": []}
+        self._stats = {"fetched": 0, "new": 0, "skipped": 0, "errors": 0, "error_details": []}
 
     # ── User-Agent pool ─────────────────────────────────────────────────────
 
@@ -162,7 +162,7 @@ class BaseCrawler(ABC):
 
         from db.crawl_runs import start_crawl_run, finish_crawl_run, get_incomplete_run, mark_url_done
 
-        self._stats = {"new": 0, "skipped": 0, "errors": 0, "error_details": []}
+        self._stats = {"fetched": 0, "new": 0, "skipped": 0, "errors": 0, "error_details": []}
 
         # Check for incomplete run to resume
         incomplete = get_incomplete_run(self.SOURCE_NAME)
@@ -211,7 +211,8 @@ class BaseCrawler(ABC):
 
         self.logger.info(
             f"[{self.SOURCE_NAME}] Done — "
-            f"new={self._stats['new']} skipped={self._stats['skipped']} errors={self._stats['errors']}"
+            f"fetched={self._stats['fetched']} new={self._stats['new']} "
+            f"skipped={self._stats['skipped']} errors={self._stats['errors']}"
         )
         return dict(self._stats)
 

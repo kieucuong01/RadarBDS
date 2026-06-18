@@ -97,6 +97,15 @@ class OpsAlertTest(unittest.TestCase):
         self.assertTrue(unhealthy)
         self.assertIn("⚠️ ZERO FETCHED batdongsan", msg)
 
+    def test_summarize_treats_new_records_as_healthy_even_if_fetched_missing(self):
+        from alerts.ops import summarize_crawl_health
+
+        row = {"source": "guland", "status": "done", "n_fetched": 0,
+               "n_new": 29, "error_msg": ""}
+        unhealthy, msg = summarize_crawl_health([row])
+        self.assertFalse(unhealthy)
+        self.assertIn("OK guland", msg)
+
     def test_summarize_healthy_run(self):
         from alerts.ops import summarize_crawl_health
 

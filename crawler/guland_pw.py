@@ -428,6 +428,7 @@ class GulandCrawler(BaseCrawler):
         # Phase 1: Scroll/load tất cả cards
         self.logger.info(f"Phase 1 — scroll cards ({'incremental' if incremental else 'full'})")
         all_cards = self._scroll_all_cards(page, base_url, incremental=incremental)
+        self._stats["fetched"] = self._stats.get("fetched", 0) + len(all_cards)
 
         # Filter chỉ lấy URL mới chưa có trong DB
         new_cards = [c for c in all_cards if not self.url_exists(c["url"])]
