@@ -641,19 +641,19 @@ def test_extract_road_tier():
 
 
 def test_extract_road_tier_new_patterns():
-    # Mặt tiền đơn độc (không có tên đường whitelist) → Tier 2
-    assert extract_road_tier("Bán đất mặt tiền 72m² Phường Phú An") == 2
+    # Generic frontage without a clear road name/code is not tier 1/2 evidence.
+    assert extract_road_tier("Bán đất mặt tiền 72m² Phường Phú An") == 3
     # Đường xe tải / xe hơi → Tier 3
     assert extract_road_tier("Bán đất 130m², đường xe tải, gần chợ") == 3
     assert extract_road_tier("Đường xe hơi vào tận nhà") == 3
     # Biến thể "ôtô" liền, "oto" không dấu → Tier 3
     assert extract_road_tier("Hẻm ôtô thông 5m") == 3
     assert extract_road_tier("Oto vào đến cửa") == 3
-    # MTKD / kinh doanh → Tier 2
-    assert extract_road_tier("Bán nhà MTKD Phường Phú An") == 2
-    assert extract_road_tier("Mặt tiền kinh doanh sầm uất") == 2
-    # Đê bao sông → Tier 2
-    assert extract_road_tier("Đất mặt tiền đê bao sông Sài Gòn") == 2
+    # MTKD / kinh doanh without a clear road name/code remains tier 3.
+    assert extract_road_tier("Bán nhà MTKD Phường Phú An") == 3
+    assert extract_road_tier("Mặt tiền kinh doanh sầm uất") == 3
+    # Generic road class without a clear street name/code remains tier 3.
+    assert extract_road_tier("Đất mặt tiền đê bao sông Sài Gòn") == 3
     # Width-only road evidence is tier 3 unless a clear road name/code is present.
     assert extract_road_tier("Lộ giới 8m phường Tân An") == 3
     # "ngang Xm" = chiều rộng lô đất KHÔNG phải đường → không nâng tier
@@ -680,6 +680,10 @@ def test_extract_road_tier_data_quality_patterns():
     assert extract_road_tier(
         "Nhà trệt lửng Định Hòa, nhanh dx67",
         "Đường xe hơi tới nhà. Sân xe hơi, phòng khách, bếp",
+    ) == 3
+    assert extract_road_tier(
+        "Bán đất Tân An. Thủ Dầu Một. Bình Dương Mt đường nhựa 5,5m thông, lề đường 2,2m",
+        "gần trường đào tạo lái xe, trường học Trần Bình Trọng. Dt 5,5x45=247m2.",
     ) == 3
     assert extract_road_tier(
         "Chủ hạ giá bán nhanh lô đất KP4 Tân Định",

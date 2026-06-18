@@ -1025,6 +1025,34 @@ _MP_CODED_ROAD_RE = re.compile(
 _HEM_RE = re.compile(r'\b(?:hẻm|hem|hẽm|ngõ|ngo)\b', re.IGNORECASE)
 
 
+def _has_clear_named_road_reference(text: str) -> bool:
+    if not text:
+        return False
+    folded = _ascii_fold(unicodedata.normalize("NFKC", text).lower())
+    road_context_re = re.compile(
+        r'(?:duong|mat\s*tien|mat\s*duong|\bmt\b|tiep\s*giap|sat\s*duong|lo\s*gioi)'
+        r'[^,.;\n]{0,35}$',
+        re.IGNORECASE,
+    )
+    landmark_context_re = re.compile(
+        r'(?:gan|cach|truong|cho|benh\s*vien|bv|ubnd|kcn|khu\s*cong\s*nghiep)'
+        r'[^,.;\n]{0,35}$',
+        re.IGNORECASE,
+    )
+    for road in _NAMED_ROADS:
+        needle = _ascii_fold(road)
+        start = 0
+        while True:
+            idx = folded.find(needle, start)
+            if idx < 0:
+                break
+            before = folded[max(0, idx - 60):idx]
+            if road_context_re.search(before) and not landmark_context_re.search(before):
+                return True
+            start = idx + len(needle)
+    return False
+
+
 def extract_road_tier(title: str, description: str = '') -> int:
     """
     Phân loại đường thành 4 tier cho mục đích định giá.
@@ -1128,7 +1156,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
     _has_hem_road_in_desc = bool(_BT_WIDTH_RE.search(desc_lower))
 
     # PRIMARY: named road trong TITLE + MT (title hoặc desc) + không hẻm/nhánh trong title
-    _road_in_title = any(rd in title_lower for rd in _NAMED_ROADS)
+    _road_in_title = _has_clear_named_road_reference(title_lower)
     if _road_in_title and not _DX_RE.search(title_lower) and not has_hem_title and not has_nhanh_title:
         # Cần tín hiệu MT — loại "cách Nguyễn Chí Thanh 50m" (proximity, không có MT)
         if has_mt_title or has_kd_title or has_mt or has_kd:
@@ -1138,7 +1166,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
     # Bắt các listing mà agent ghi tên đường trong desc (e.g., "NHÀ MẶT TIỀN – Hồ Văn Cống")
     # Điều kiện chặt hơn PRIMARY để tránh false positive từ landmark mentions.
     if not has_hem and not has_nhanh_strong and not _DX_RE.search(text):
-        _road_in_desc = any(rd in desc_lower for rd in _NAMED_ROADS)
+        _road_in_desc = _has_clear_named_road_reference(desc_lower)
         if _road_in_desc and not _road_in_title:
             # MT phải có trong TITLE (không chỉ desc) — loại "gần đường XYZ" trong title
             if has_mt_title or has_kd_title:
@@ -1183,9 +1211,9 @@ def extract_road_tier(title: str, description: str = '') -> int:
     ):
         return 3
 
-    # Logic giá trị: MT/MTKD đơn độc (không hẻm title, không hẻm đo được trong desc) → Tier 2
+    # Generic MT/MTKD without a clear road name/code is not tier 1/2 evidence.
     if (has_mt or has_kd) and not has_hem_title and not _has_hem_road_in_desc:
-        return 2
+        return 3
 
     # --- Tier 2: Đường nhựa thông thường, không hẻm title ---
     if has_nhua and not has_hem_title and not _has_hem_road_in_desc:
@@ -1280,9 +1308,9 @@ def extract_road_tier(title: str, description: str = '') -> int:
     if has_hem:
         return 3
 
-    # Logic giá trị: đê bao / bờ kè / đường tỉnh — đường lớn ven sông/ngoại thị → Tier 2
+    # Generic road class without a clear street name/code remains tier 3.
     if any(kw in text for kw in ['đê bao', 'de bao', 'bờ kè', 'bo ke', 'đường tỉnh', 'duong tinh', 'đường liên xã', 'duong lien xa', 'đường liên huyện', 'duong lien huyen']):
-        return 2
+        return 3
 
     # --- Xe máy / hẻm nhỏ → Tier 4 ---
     if _SMALL_ACCESS_RE.search(text):
