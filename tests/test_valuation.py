@@ -92,6 +92,24 @@ def test_median_road_tier_area_adjustment_is_segment_relative():
     assert "large_lot_model_risk" not in large.source_quality_flags
 
 
+def test_median_road_tier_deep_lots_get_lower_ppm2_than_standard_lots():
+    listings = [_make_listing(i, 20.0, area=100.0, frontage_m=5.0, depth_m=20.0, road_tier=2) for i in range(20)]
+    engine = MedianRoadTierValuationEngine()
+    engine.fit(listings)
+
+    lot_5x20 = engine.valuate(_make_listing(1201, 18.0, area=100.0, frontage_m=5.0, depth_m=20.0, road_tier=2))
+    lot_5x30 = engine.valuate(_make_listing(1202, 18.0, area=150.0, frontage_m=5.0, depth_m=30.0, road_tier=2))
+    lot_5x40 = engine.valuate(_make_listing(1203, 18.0, area=200.0, frontage_m=5.0, depth_m=40.0, road_tier=2))
+    lot_5x60 = engine.valuate(_make_listing(1204, 18.0, area=300.0, frontage_m=5.0, depth_m=60.0, road_tier=2))
+
+    assert lot_5x20 and lot_5x30 and lot_5x40 and lot_5x60
+    assert lot_5x20.price_per_m2_fair > lot_5x30.price_per_m2_fair
+    assert lot_5x30.price_per_m2_fair > lot_5x40.price_per_m2_fair
+    assert lot_5x40.price_per_m2_fair > lot_5x60.price_per_m2_fair
+    assert "deep_lot_model_risk" in lot_5x60.source_quality_flags
+    assert '"shape_adjustment": 0.78' in lot_5x60.note
+
+
 def test_median_road_tier_very_large_lot_gets_risk_flag_and_stronger_penalty():
     listings = [_make_listing(i, 20.0, area=100.0, road_tier=2) for i in range(20)]
     engine = MedianRoadTierValuationEngine()

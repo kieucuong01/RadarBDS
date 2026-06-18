@@ -490,10 +490,10 @@ class AiDealReviewTest(unittest.TestCase):
             self.assertIn("admin_valuation_workflow_markdown", admin_data)
             self.assertIn("analytics/valuation.py", admin_data["admin_valuation_workflow_markdown"])
             self.assertIn("valuation_results", admin_data["admin_valuation_workflow_markdown"])
-            self.assertIn("so sÃ¡nh thá»‹ trÆ°á»ng lÃ  trá»¥c chÃ­nh", admin_data["admin_valuation_workflow_markdown"])
-            self.assertIn("dÃ²ng tiá»n", admin_data["admin_valuation_workflow_markdown"])
-            self.assertIn("giÃ¡ trá»‹ sá»­ dá»¥ng tá»‘t nháº¥t", admin_data["admin_valuation_workflow_markdown"])
-            self.assertIn("má»©c giÃ¡ hÃ nh Ä‘á»™ng", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("so sánh thị trường là trục chính", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("dòng tiền", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("giá trị sử dụng tốt nhất", admin_data["admin_valuation_workflow_markdown"])
+            self.assertIn("mức giá hành động", admin_data["admin_valuation_workflow_markdown"])
 
     def test_review_queue_uses_latest_actionable_valuation_only(self):
         from db.connection import get_conn

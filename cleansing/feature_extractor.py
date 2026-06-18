@@ -900,7 +900,7 @@ def extract_road_type(text: str) -> str:
 
 # ── Road Tier ────────────────────────────────────────────────────────
 # Tier 1 — Mặt tiền đường có tên (lộ giới phân biệt sau khi có đủ data)
-# Tier 2 — Mặt tiền đường DX / đường nhựa
+# Tier 2 — Mặt tiền đường DX / đường có mã hoặc tên rõ.
 # Tier 3 — Đường hẻm/bê tông ≥5m (ô tô thoải mái) + hẻm default (no width info)
 # Tier 4 — Đường hẻm/bê tông 3–5m (ô tô khó)
 # Tier 5 — Đường hẻm/bê tông <3m (xe máy)
@@ -1032,21 +1032,21 @@ def extract_road_tier(title: str, description: str = '') -> int:
     Returns:
         0 — không rõ (neutral, treat như Tier 2 — không apply multiplier)
         1 — Mặt tiền đường có tên (Lê Chí Dân, Nguyễn Thị Hiếu...) — 2x DX
-        2 — Đường DX / đường nhựa — baseline (= median)
+        2 — Đường DX / đường có mã hoặc tên rõ — baseline (= median)
         3 — Hẻm bê tông xe hơi vào được (>3m)
         4 — Hẻm xe máy (<3m)
 
     Calibration (từ user):
         Đường tên ≥ 2× đường DX
-        Đường nhựa/DX ≥ 2× hẻm base
+        Đường có mã/tên rõ ≥ đường nhựa không tên/hẻm base
         Ngưỡng phân biệt: 3m (xe hơi vào được hay không)
         QL13 → KHÔNG phân Tier 1 (commercial, bỏ qua)
 
     Cascade (ưu tiên từ trên xuống):
         1. Tên đường whitelist + mặt tiền → Tier 1
         2. DX (bất kể MT hay không) → Tier 2
-        3. Mặt tiền đường nhựa (không hẻm context) → Tier 2
-        4. Đường nhựa thông thường (không hẻm context) → Tier 2
+        3. Mặt tiền/đường nhựa không tên (không hẻm context) → Tier 3
+        4. Đường nhựa thông thường (không hẻm context) → Tier 3
         5. Parse width "bê tông/hẻm Xm": ≥3m → Tier 3, <3m → Tier 4
         6. Keyword ô tô/xe tải không có width → Tier 3
         7. Keyword hẻm/ngõ không có width → Tier 3 (default xe hơi vào được)
@@ -1164,7 +1164,7 @@ def extract_road_tier(title: str, description: str = '') -> int:
             return 3
         return 2
 
-    # --- Tier 2: Mặt tiền đường nhựa/kinh doanh ---
+    # --- Unnamed asphalt road / business frontage ---
     # Block bằng has_hem_title + _has_hem_road_in_desc:
     #   has_hem_title: hẻm trong TITLE → không phải mặt tiền đường lớn
     #   _has_hem_road_in_desc: desc có "hẻm Xm" có số đo → đó là đường vào thực, không phải hẻm lân cận
@@ -1174,10 +1174,8 @@ def extract_road_tier(title: str, description: str = '') -> int:
         # Nhánh/xẹt đường nhựa → Tier 3 (user: "1 xẹt đường nhựa thuộc tier 3")
         if has_nhanh_strong:
             return 3
-        # Đường nhựa hẹp (<5m): hẻm-sized → Tier 3
-        if road_width is not None and road_width < 5:
-            return 3
-        return 2
+        # Unnamed asphalt road is not enough evidence for tier 2.
+        return 3
 
     if (
         any(kw in text for kw in ['bê tông', 'be tong'])
@@ -1196,10 +1194,8 @@ def extract_road_tier(title: str, description: str = '') -> int:
         # Nhánh/xẹt đường nhựa → Tier 3
         if has_nhanh_strong:
             return 3
-        # Đường nhựa hẹp (<5m): hẻm-sized → Tier 3 (user: "Đường nhựa 3m ô tô" = tier 3)
-        if road_width is not None and road_width < 5:
-            return 3
-        return 2
+        # Unnamed asphalt road is not enough evidence for tier 2.
+        return 3
 
     # --- Tier 2: Signals bổ sung (2026-05-07) ---
     # "Mặt lộ" / "tiếp giáp đường" / "sát đường lớn" — viết tắt/biến thể của mặt tiền
@@ -1218,12 +1214,12 @@ def extract_road_tier(title: str, description: str = '') -> int:
     if _MP_CODED_ROAD_RE.search(text) and not has_hem_title:
         return 2
 
-    # "Lộ giới" không có số đo cụ thể — vẫn là tín hiệu có đường rõ ràng
+    # "Lộ giới" without a clear road code/name is width-only road evidence.
     if ('lộ giới' in text or 'lo gioi' in text) and not has_hem_title:
-        return 2
+        return 3
 
     # Logic giá trị: lộ giới/đường có width đo được — width quyết định tier.
-    # "đường 6m" / "lộ giới 8m" không hẻm + có chỉ dấu mặt tiền/nhựa → Tier 2.
+    # "đường 6m" / "lộ giới 8m" không hẻm + có chỉ dấu mặt tiền/nhựa → Tier 3 nếu không có mã/tên đường rõ.
     # "lộ 6m" / "đường 3m" hoặc "đường 4m bê tông" hoặc "nhánh đường 5m" → Tier 3.
     m_road = _ROAD_WIDTH_RE.search(text) or _ROAD_WIDTH_M2_TYPO_RE.search(text)
     if m_road and not has_hem_title:
@@ -1238,13 +1234,10 @@ def extract_road_tier(title: str, description: str = '') -> int:
                 # Đường bê tông (xe hơi vào được nhưng KHÔNG phải đường nhựa lớn) → Tier 3
                 if any(kw in text for kw in ['bê tông', 'be tong']):
                     return 3
-                # Width nhỏ và KHÔNG có chỉ dấu mặt tiền/nhựa/KD:
-                #   3–5m → Tier 3 (xe hơi vào được)
-                #   <3m  → Tier 4 (xe máy)
-                # (User: "hẻm bê tông <3m mới là tier 4, 3-5m vẫn là tier 3")
+                # Width-only evidence is tier 3 unless an earlier clear road name/code matched.
                 if width < 5 and not has_mt and not has_kd and not has_nhua:
                     return 4 if width < 3 else 3
-                return 2
+                return 3
         except (ValueError, IndexError):
             pass
 

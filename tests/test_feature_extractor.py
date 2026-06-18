@@ -627,8 +627,9 @@ def test_extract_road_tier():
     assert extract_road_tier("Mặt tiền đường Lê Chí Dân") == 1
     # Tier 2 — DX
     assert extract_road_tier("Đường DX117 Tân An") == 2
-    # Tier 2 — nhựa không hẻm
-    assert extract_road_tier("Đường nhựa rộng 6m") == 2
+    # Tier 3 - unnamed asphalt road is not enough evidence for tier 2.
+    assert extract_road_tier("Đường nhựa rộng 6m") == 3
+    assert extract_road_tier("Đường nhựa 5m thông") == 3
     # Tier 3 — hẻm ≥5m
     assert extract_road_tier("Hẻm bê tông 6m", "") == 3
     # Tier 3 — hẻm 3-5m can fit a car.
@@ -653,8 +654,8 @@ def test_extract_road_tier_new_patterns():
     assert extract_road_tier("Mặt tiền kinh doanh sầm uất") == 2
     # Đê bao sông → Tier 2
     assert extract_road_tier("Đất mặt tiền đê bao sông Sài Gòn") == 2
-    # Lộ giới 8m → Tier 2
-    assert extract_road_tier("Lộ giới 8m phường Tân An") == 2
+    # Width-only road evidence is tier 3 unless a clear road name/code is present.
+    assert extract_road_tier("Lộ giới 8m phường Tân An") == 3
     # "ngang Xm" = chiều rộng lô đất KHÔNG phải đường → không nâng tier
     assert extract_road_tier("Đất 4482m² ngang 78m giá 9 tỷ") == 0
 
@@ -683,7 +684,7 @@ def test_extract_road_tier_data_quality_patterns():
     assert extract_road_tier(
         "Chủ hạ giá bán nhanh lô đất KP4 Tân Định",
         "đường nhựa thông giá 1ty8",
-    ) == 2
+    ) == 3
     assert extract_road_tier(
         "📣chốt nhanh mới kịp\n"
         "🌷🌷 Bán Đất Tặng nhà Cấp 4 Hiệp An Thủ Dầu Một nay là phường Chánh Hiệp TpHCM . C",

@@ -256,8 +256,9 @@ def _explain_response(message: str) -> tuple[str, list[dict[str, Any]], list[dic
         )
     elif "road" in text or "tier" in text:
         answer = (
-            "Road tier là cấp đường dùng trong định giá: tier 1 mặt tiền/đường lớn, tier 2 đường nhựa/DX, "
-            "tier 3 hẻm xe hơi hoặc nhánh/xẹt, tier 4-5 hẻm nhỏ hơn. Nếu một tin cụ thể sai, cần sửa parser rồi reprocess."
+            "Road tier là cấp đường dùng trong định giá: tier 1 mặt tiền/đường lớn có tên rõ, "
+            "tier 2 đường có mã/tên rõ như DX, tier 3 đường nhựa không tên/hẻm xe hơi/nhánh/xẹt, "
+            "tier 4-5 hẻm nhỏ hơn. Nếu một tin cụ thể sai, cần sửa parser rồi reprocess."
         )
     elif "giam" in text or "giảm" in text:
         answer = (

@@ -29,6 +29,7 @@ from analytics.valuation import (
     ValuationResult,
     _effective_has_so,
     _has_legal_conflict,
+    _lot_shape_adjustment,
     _source_flags,
     compute_signal_score,
     extract_regex_features,
@@ -258,11 +259,13 @@ class MedianRoadTierValuationEngine:
 
         quality_flags = set(_source_flags(listing))
         area_factor, area_flags, area_audit = _area_adjustment(listing.area_m2, model.ref_area_m2)
+        shape_factor, shape_flags, shape_audit = _lot_shape_adjustment(listing.frontage_m, listing.depth_m)
         road_factor, road_flags = _road_penalty(listing.road_tier)
         quality_flags.update(area_flags)
+        quality_flags.update(shape_flags)
         quality_flags.update(road_flags)
 
-        fair = base_fair * area_factor * road_factor
+        fair = base_fair * area_factor * shape_factor * road_factor
         feat = extract_regex_features(f"{listing.title} {listing.description}")
         if feat.get("is_corner"):
             fair *= 1.10
@@ -303,6 +306,7 @@ class MedianRoadTierValuationEngine:
             "road_bucket_counts": model.bucket_counts,
             "road_penalty": road_factor,
             **area_audit,
+            **shape_audit,
         }
 
         return ValuationResult(

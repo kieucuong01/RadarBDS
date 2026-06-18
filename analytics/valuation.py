@@ -62,6 +62,8 @@ SIZE_DISCOUNT_ALPHA = {
     'nha_tro':  0.40,
 }
 SIZE_DISCOUNT_CAP   = (0.65, 1.20)
+DEEP_LOT_MODEL_RISK_RATIO = 12.0
+LOT_SHAPE_PROP_TYPES = {'dat_nen', 'nha_dat', 'nha_tro'}
 
 # Multipliers chỉ dùng làm fallback khi dùng Median
 # tier-0 (unknown) → 0.50 như tier-3: tin không đọc được tier thường là hẻm
@@ -355,6 +357,40 @@ def _main_area_adjustment(area_m2: Optional[float], ref_area_m2: Optional[float]
         return 0.80
     return 0.65
 
+
+def _lot_shape_adjustment(
+    frontage_m: Optional[float],
+    depth_m: Optional[float],
+) -> Tuple[float, Tuple[str, ...], Dict[str, Optional[float]]]:
+    audit = {
+        "frontage_m": round(float(frontage_m), 2) if frontage_m else None,
+        "depth_m": round(float(depth_m), 2) if depth_m else None,
+        "depth_ratio": None,
+        "shape_adjustment": 1.0,
+    }
+    if not frontage_m or not depth_m:
+        return 1.0, (), audit
+    frontage = float(frontage_m)
+    depth = float(depth_m)
+    if frontage <= 0 or depth <= 0 or frontage < 2 or frontage > 50 or depth < 5 or depth > 500:
+        return 1.0, (), audit
+
+    ratio = depth / frontage
+    audit["depth_ratio"] = round(ratio, 2)
+    if ratio <= 4.5:
+        factor = 1.0
+    elif ratio <= 6.5:
+        factor = 0.95
+    elif ratio <= 8.5:
+        factor = 0.88
+    elif ratio <= DEEP_LOT_MODEL_RISK_RATIO:
+        factor = 0.78
+    else:
+        factor = 0.68
+    audit["shape_adjustment"] = factor
+    flags = ("deep_lot_model_risk",) if ratio >= DEEP_LOT_MODEL_RISK_RATIO else ()
+    return factor, flags, audit
+
 # ── Core Models ──────────────────────────────────────────────────────────────
 
 class SegmentModel:
@@ -448,6 +484,9 @@ class SegmentModel:
             cap_min, cap_max = SIZE_DISCOUNT_CAP
             mult = max(cap_min, min(cap_max, (self.ref_area_m2 / listing.area_m2) ** alpha))
             base_fair *= mult
+        if prop_type in LOT_SHAPE_PROP_TYPES:
+            shape_factor, _, _ = _lot_shape_adjustment(listing.frontage_m, listing.depth_m)
+            base_fair *= shape_factor
         
         # Regex
         feat = extract_regex_features(f"{listing.title} {listing.description}")
@@ -598,6 +637,9 @@ class RoadTierSegmentModel:
 
         if self.segment_key[1] in SIZE_DISCOUNT_ALPHA:
             base_fair *= _main_area_adjustment(listing.area_m2, self.ref_area_m2)
+        if self.segment_key[1] in LOT_SHAPE_PROP_TYPES:
+            shape_factor, _, _ = _lot_shape_adjustment(listing.frontage_m, listing.depth_m)
+            base_fair *= shape_factor
 
         feat = extract_regex_features(f"{listing.title} {listing.description}")
         if feat.get('is_corner'): base_fair *= 1.10
