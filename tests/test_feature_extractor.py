@@ -660,6 +660,13 @@ def test_extract_road_tier_new_patterns():
     assert extract_road_tier("Đất 4482m² ngang 78m giá 9 tỷ") == 0
 
 
+def test_extract_road_width_ignores_lot_frontage_phrasing():
+    from cleansing.feature_extractor import extract_road_width
+
+    assert extract_road_width("Dien tich 7.1x15m. Mat tien rong 7.1m, de thiet ke cua hang.") is None
+    assert extract_road_width("Duong nhua rong 6m xe hoi quay dau") == 6.0
+
+
 def test_extract_road_tier_data_quality_patterns():
     # "sân xe hơi" alone is parking/yard, not road access.
     assert extract_road_tier("Nhà có sân xe hơi rộng, gần chợ") == 0
@@ -737,6 +744,26 @@ def test_extract_road_tier_data_quality_patterns():
 
 def test_extract_road_tier_signal_audit_edge_cases():
     assert extract_road_tier(
+        "Mat tien Dx 142. Tuong Binh Hiep. Nhanh Nguyen Chi Thanh.",
+        "Duong nhua rong 6m xe hoi quay dau.",
+    ) == 2
+    assert extract_road_tier(
+        "Mặt tiền Dx 142. Tương Bình Hiệp. Nhánh Nguyễn Chí Thanh.",
+        "Đường nhựa rộng 6m xe hơi quay đầu.",
+    ) == 2
+    assert extract_road_tier(
+        "Mặt tiền đường ĐX064 Định Hoà",
+        "Mặt tiền nhựa 6m thông xe.",
+    ) == 2
+    assert extract_road_tier(
+        "Đất nhánh ĐX171 Định Hòa",
+        "Đường bê tông ô tô thông.",
+    ) == 3
+    assert extract_road_tier(
+        "Ban dat Dinh Hoa",
+        "Duong betong oto thong, ngay DX71. Cach My Phuoc Tan Van 200m.",
+    ) == 3
+    assert extract_road_tier(
         "Bán Đất Mặt Tiền Dx44 Phú Mỹ. Gần quán 2Nù . Phạm Ngọc Thạch. Hiệp Thành 3.",
         "Dt 193m thổ cư 100%. Đường Nhựa 8m thông.",
     ) == 2
@@ -752,6 +779,7 @@ def test_extract_road_type_small_access_patterns():
     assert extract_road_type("Duong oto vao tan dat") == "hem_xe_hoi"
     assert extract_road_type(("GIAM GIA BAN LE " * 12) + "1/ Dx 072 duong Oto") == "be_tong"
     assert extract_road_type("Nha dep cach nhua 20m thoi") == "unknown"
+    assert extract_road_type("Can ban nha mat tien dx phuong Hiep An") == "duong_nhua"
 
 
 def test_extract_road_name_ignores_proximity_but_keeps_actual_roads():
@@ -763,6 +791,8 @@ def test_extract_road_name_ignores_proximity_but_keeps_actual_roads():
     assert extract_road_name("Đất MT Đường Số 76 – Thành phố mới") == "Duong So 76"
     assert extract_road_name("Đường DB12 _ Khu Đô Thị Mới") == "DB12"
     assert extract_road_name("Mặt Tiền Đường 5C TĐC Định Hoà") == "5C"
+    assert extract_road_name("Mat tien duong Lo Lu Tuong Binh Hiep") == "Lo Lu"
+    assert extract_road_name("Mat tien Dx Nhua Thong gan nga tu") is None
     assert extract_road_type("5x41tc 80m đường đất 4m chuẩn bị lên nhựa") == "duong_dat"
 
 

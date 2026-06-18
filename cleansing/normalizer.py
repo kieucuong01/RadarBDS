@@ -64,6 +64,12 @@ _NAMED_ROAD_PAT = re.compile(
 def extract_road_name(text: str) -> str | None:
     """Return a compact road code/name for dedup/debug, e.g. D12, DX89, 110B."""
     folded = _ascii_fold(text or "")
+    for road_folded, label in (("lo lu", "Lo Lu"),):
+        m = re.search(rf"(?<![a-z0-9]){re.escape(road_folded)}(?![a-z0-9])", folded)
+        if m and not _has_road_proximity_prefix(folded, m.start()):
+            before = folded[max(0, m.start() - 32):m.start()]
+            if re.search(r"(?:mat\s*tien|mt|duong)\s+$", before):
+                return label
     for m in re.finditer(r"\bquoc\s*lo\s*0*(\d{1,4})\b", folded, re.IGNORECASE):
         if _has_road_proximity_prefix(folded, m.start()):
             continue
@@ -133,6 +139,9 @@ def _clean_named_road(value: str) -> str | None:
             name = name[:idx].strip()
     name = re.sub(r"\b(?:p|tp|tphcm|bd|binh duong)$", "", name).strip()
     if not name:
+        return None
+    folded = _ascii_fold(name)
+    if re.match(r"^dx\s+(?:nhua|be\s*tong|thong|rong|duong)\b", folded):
         return None
     if re.match(r"^(?:nhua|be tong|o to|oto|xe hoi|thong|rong|lon|nho|so)\b", name):
         return None

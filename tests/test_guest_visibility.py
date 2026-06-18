@@ -185,6 +185,58 @@ class GuestVisibilityTest(unittest.TestCase):
         self.assertEqual(dashboard.status_code, 200)
         self.assertEqual(dashboard.get_json()["stats"]["signals"], 1)
 
+    def test_signal_feed_requires_price_and_area_even_with_stale_valuation(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cases = [
+                ("missing-price", None, 10.5, 95.0, 15.8, 10.5),
+                ("missing-area", 1.77, 6.2, None, 12.2, 6.2),
+            ]
+            for slug, price_ty, price_per_m2, area_m2, fair_ppm2, actual_ppm2 in cases:
+                cur = conn.execute(
+                    """
+                    INSERT INTO listings (
+                        source, source_id, url, title, description, ward,
+                        area_m2, property_type, price_ty, price_per_m2,
+                        is_hot, price_dropped, suspicious_bait,
+                        probably_sold, possibly_duplicate, posted_at, crawled_at
+                    ) VALUES (
+                        'facebook', ?, ?,
+                        ?, 'Incomplete stale valuation listing',
+                        ?, ?, 'dat_nen', ?, ?,
+                        0, 0, 0, 0, 0, datetime('now'), datetime('now')
+                    )
+                    """,
+                    (
+                        f"{slug}-{self.token}",
+                        f"{self.url_prefix}/{slug}",
+                        f"Incomplete {slug}",
+                        self.ward,
+                        area_m2,
+                        price_ty,
+                        price_per_m2,
+                    ),
+                )
+                listing_id = cur.lastrowid
+                self.listing_ids.append(listing_id)
+                conn.execute(
+                    """
+                    INSERT INTO valuation_results (
+                        listing_id, fair_ppm2, actual_ppm2, mos_pct,
+                        is_signal, signal_score
+                    ) VALUES (?, ?, ?, 35.0, 1, 70)
+                    """,
+                    (listing_id, fair_ppm2, actual_ppm2),
+                )
+
+        response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=20")
+        self.assertEqual(response.status_code, 200)
+
+        payload = response.get_json()
+        self.assertEqual(payload["total"], 1)
+        self.assertEqual([row["id"] for row in payload["signals"]], [self.listing_id])
+
     def test_signal_feed_requires_conservative_mos_from_lower_model(self):
         from db.connection import get_conn
 

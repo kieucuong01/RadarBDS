@@ -436,9 +436,31 @@
 /* Table */
 .listings-view-bar {
   display: flex;
+  align-items: center;
+  gap: 8px;
   justify-content: flex-end;
   margin-bottom: 12px;
   flex-shrink: 0;
+}
+
+.listings-quality-toggle {
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.listings-quality-toggle.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
 }
 
 .listings-view-toggle {

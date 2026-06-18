@@ -102,7 +102,7 @@ class SourcePolicyTest(unittest.TestCase):
         posted_at=None,
     ):
         from db.connection import get_conn
-        price_per_m2 = round(price_ty * 1000 / area_m2, 2) if area_m2 else None
+        price_per_m2 = round(price_ty * 1000 / area_m2, 2) if price_ty and area_m2 else None
         fair_ppm2 = round(price_per_m2 / (1 - 0.333), 2) if price_per_m2 else None
         posted_at = posted_at or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -126,7 +126,7 @@ class SourcePolicyTest(unittest.TestCase):
                     f"{self.url_prefix}/{source_id}",
                     title,
                     description or "Source policy listing",
-                    ward or self.ward,
+                    ward if ward is not None else self.ward,
                     area_m2,
                     frontage_m,
                     depth_m,
@@ -304,6 +304,46 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(all_payload["total"], 2)
         self.assertIn("Facebook source policy signal", titles)
         self.assertIn("Old listings hidden by default", titles)
+
+    def test_all_listings_complete_filter_requires_ward_price_and_area(self):
+        complete_id = self._seed_signal(
+            source="facebook",
+            title="Complete info filter match",
+            source_id="fb-complete-info-match",
+        )
+        self._seed_signal(
+            source="facebook",
+            title="Complete info filter missing ward",
+            source_id="fb-complete-info-missing-ward",
+            ward="",
+        )
+        self._seed_signal(
+            source="facebook",
+            title="Complete info filter missing price",
+            source_id="fb-complete-info-missing-price",
+            price_ty=None,
+        )
+        self._seed_signal(
+            source="facebook",
+            title="Complete info filter missing area",
+            source_id="fb-complete-info-missing-area",
+            area_m2=None,
+        )
+
+        response = self.client.get(
+            "/api/listings?city=Khac&q=complete info filter&complete=1&limit=20"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        payload = response.get_json()
+        self.assertEqual(payload["total"], 1)
+        self.assertEqual([row["id"] for row in payload["listings"]], [complete_id])
+
+    def test_all_listings_complete_filter_button_renders(self):
+        html = self.client.get("/").get_data(as_text=True)
+
+        self.assertIn('id="completeListingsOnly"', html)
+        self.assertIn("Tin đủ thông tin", html)
 
     def test_signal_feed_accepts_multiple_area_ranges(self):
         self._seed_signal(source="facebook", title="Area 200 signal", source_id="fb-area-200", area_m2=200, price_ty=2.0)

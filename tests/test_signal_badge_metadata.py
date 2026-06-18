@@ -93,6 +93,26 @@ def test_signal_badge_metadata_uses_frontage_prefix_for_stored_d_road_code():
     assert meta["street_label"] == "Mặt tiền D8"
 
 
+def test_signal_badge_metadata_does_not_use_lot_frontage_as_road_width():
+    from services.market_data import signal_badge_metadata
+
+    meta = signal_badge_metadata({
+        "title": "Dat DX95 vi tri dep kinh doanh",
+        "description": "Dien tich huong 7.1x15m. Mat tien rong 7.1m, de thiet ke cua hang.",
+        "property_type": "nha_dat",
+        "area_m2": 106.5,
+        "frontage_m": 7.1,
+        "road_name": "DX95",
+        "road_tier": 2,
+        "road_type": "duong_nhua",
+        "road_width_m": None,
+    })
+
+    assert meta["road_width_m"] is None
+    assert "7.1m" not in meta["road_label"]
+    assert meta["street_label"] == "Mặt tiền DX95"
+
+
 def test_signal_badge_metadata_does_not_guess_street_from_landmark_without_road_name():
     from services.market_data import signal_badge_metadata
 

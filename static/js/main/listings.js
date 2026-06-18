@@ -1,5 +1,7 @@
 // All-listings table/grid filtering, sorting, pagination, and lazy loading.
 let tableSort = { col: 'date', dir: 'desc' };
+let completeListingsOnly = false;
+let listingsToggleHandlersBound = false;
 
 function sortTable(th) {
   const col = th.dataset.col;
@@ -187,12 +189,33 @@ function setListingsView(view, options = {}) {
   }
 }
 
+function syncCompleteListingsToggle() {
+  const btn = document.getElementById('completeListingsOnly');
+  if (!btn) return;
+  btn.classList.toggle('active', completeListingsOnly);
+  btn.setAttribute('aria-pressed', String(completeListingsOnly));
+}
+
 function setupListingsViewToggle() {
   let savedView = 'grid';
   try { savedView = localStorage.getItem('listingsViewV2') || 'grid'; } catch (e) {}
   setListingsView(savedView, { render: false });
+  try {
+    const urlComplete = new URLSearchParams(window.location.search).get('complete');
+    completeListingsOnly = ['1', 'true', 'yes', 'on'].includes(String(urlComplete || '').toLowerCase())
+      || localStorage.getItem('completeListingsOnly') === '1';
+  } catch (e) {}
+  syncCompleteListingsToggle();
+  if (listingsToggleHandlersBound) return;
+  listingsToggleHandlersBound = true;
   document.querySelectorAll('.listings-view-btn').forEach(btn => {
     btn.addEventListener('click', () => setListingsView(btn.dataset.view || 'table'));
+  });
+  document.getElementById('completeListingsOnly')?.addEventListener('click', () => {
+    completeListingsOnly = !completeListingsOnly;
+    try { localStorage.setItem('completeListingsOnly', completeListingsOnly ? '1' : '0'); } catch (e) {}
+    syncCompleteListingsToggle();
+    loadListings(1);
   });
 }
 
@@ -223,6 +246,7 @@ async function loadListings(page) {
     if (areaMax) tableParams += `&area_max=${areaMax}`;
     if (priceMin) tableParams += `&price_min=${priceMin}`;
     if (priceMax) tableParams += `&price_max=${priceMax}`;
+    if (completeListingsOnly) tableParams += '&complete=1';
     currentPageNo = page;
     const data = await fetchJSONCached('listings', `/api/listings?${currentFilters}${tableParams}&sort_by=${tableSort.col}&sort_dir=${tableSort.dir}&page=${page}&limit=50`);
     listingsHasMore = (typeof data.has_more === 'boolean') ? data.has_more : ((data.listings || []).length >= 50);

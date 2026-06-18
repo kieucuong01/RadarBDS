@@ -615,6 +615,16 @@ def _deal_mos_signal_sql(display_mos_expr: str, mos_min: float) -> str:
     return f"COALESCE(({display_mos_expr}), 0) >= {float(mos_min)}"
 
 
+def _signal_listing_data_sql(alias: str = "l") -> str:
+    col = lambda name: f"{alias}.{name}" if alias else name
+    return " AND ".join([
+        f"NULLIF(TRIM(COALESCE({col('ward')},'')), '') IS NOT NULL",
+        f"{col('price_ty')} IS NOT NULL AND {col('price_ty')} > 0",
+        f"{col('area_m2')} IS NOT NULL AND {col('area_m2')} > 0",
+        f"{col('price_per_m2')} IS NOT NULL AND {col('price_per_m2')} > 0",
+    ])
+
+
 def _signal_sort_sql(sort_key: str) -> str:
     if LEGAL_IMAGE_EVIDENCE_ENABLED:
         trust_rank = (
@@ -829,6 +839,22 @@ def _listing_badge_text(r):
     return "\n".join(parts)
 
 
+def _looks_like_lot_frontage_width(r, folded, value, start=None):
+    frontage = _as_float(_row_get(r, "frontage_m"))
+    width = _as_float(value)
+    if frontage is None or width is None or abs(frontage - width) > 0.06:
+        return False
+    text = folded or ""
+    if start is not None:
+        text = text[max(0, start - 28):start + 48]
+    return bool(re.search(
+        r"\b(?:mat\s*tien|ngang|mat\s+ngang)\s*(?:dat\s*)?(?:rong\s*)?"
+        r"\d+(?:[,.]\d+)?\s*m\b",
+        text,
+        re.I,
+    ))
+
+
 def _infer_road_width_m(r, text):
     explicit = _as_float(_row_get(r, "road_width_m"))
     if explicit:
@@ -840,7 +866,7 @@ def _infer_road_width_m(r, text):
         re.I,
     )
     inferred = extract_road_width(text or "")
-    if inferred and not (distance_context and float(inferred) >= 20):
+    if inferred and not _looks_like_lot_frontage_width(r, folded, inferred) and not (distance_context and float(inferred) >= 20):
         return float(inferred)
     for m in _ROAD_WIDTH_FALLBACK_RE.finditer(folded):
         before = folded[max(0, m.start() - 18):m.start()]
@@ -848,6 +874,8 @@ def _infer_road_width_m(r, text):
         if re.search(r"\b(?:cach|gan|vao)\s*$", before, re.I) or re.search(r"\bvao\s+\d+(?:[,.]\d+)?\s*m\b", match_text, re.I):
             continue
         value = _as_float(m.group(1))
+        if _looks_like_lot_frontage_width(r, folded, value, m.start()):
+            continue
         if value and 2 <= value <= 60:
             return value
     return None
@@ -1133,7 +1161,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
             WHERE li.listing_id = l.id
         ) img_count ON TRUE
         {related_price_drop_lateral_sql("l", "related_drop")}
-        WHERE ({signal_condition}) AND {where_sql}
+        WHERE ({signal_condition}) AND {_signal_listing_data_sql("l")} AND {where_sql}
         ORDER BY {order_sql}
         LIMIT ? OFFSET ?
     """, params + [query_limit, offset]).fetchall()
@@ -1199,7 +1227,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
              {LATEST_VALUATION_CTE}
         SELECT
             (SELECT COUNT(*) FROM filtered) as total,
-            (SELECT COUNT(*) FROM filtered l JOIN latest_valuation v ON l.id = v.listing_id WHERE {signal_condition}{mos_condition}) as signals,
+            (SELECT COUNT(*) FROM filtered l JOIN latest_valuation v ON l.id = v.listing_id WHERE {signal_condition} AND {_signal_listing_data_sql("l")}{mos_condition}) as signals,
             (SELECT COUNT(*) FROM filtered WHERE is_hot = 1) as hot,
             (SELECT COUNT(*) FROM filtered WHERE (
                 COALESCE(posted_at, crawled_at) IS NOT NULL
@@ -1232,7 +1260,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
             FROM latest_valuation v
             JOIN listings l ON v.listing_id = l.id
             {related_price_drop_lateral_sql("l", "related_drop")}
-            WHERE {signal_condition} AND {where_sql}{mos_condition}
+            WHERE {signal_condition} AND {_signal_listing_data_sql("l")} AND {where_sql}{mos_condition}
             ORDER BY {_signal_sort_sql('score_desc')}
         """
         sig_rows = conn.execute(sig_query, params + mos_params).fetchall()
@@ -1487,7 +1515,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         FROM listings l
         LEFT JOIN latest_valuation v ON l.id = v.listing_id
         LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
-        WHERE ({signal_condition}) AND {signal_where_sql}
+        WHERE ({signal_condition}) AND {_signal_listing_data_sql("l")} AND {signal_where_sql}
     """, signal_params).fetchone()
     stats["signals"] = int(_row_get(signal_row, "signals", 0) or 0)
 

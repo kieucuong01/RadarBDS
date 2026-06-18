@@ -849,8 +849,12 @@ def extract_road_width(text: str) -> Optional[float]:
       "đường nhựa lớn 22m thông" → 22.0
     """
     t = text.lower()
+    folded = _ascii_fold(t)
 
     patterns = [
+        r'lo\s*gioi\s*([\d]+[,.]?[\d]*)\s*m',
+        r'duong\s*(?:nhua|be\s*tong|dat|lien\s*xa|noi\s*bo)?(?:\s*rong)?\s*([\d]+[,.]?[\d]*)\s*m',
+        r'rong\s*([\d]+[,.]?[\d]*)\s*m\b',
         r'lộ\s*giới\s*([\d]+[,.]?[\d]*)\s*m',
         r'đường\s*(?:nhựa|bê\s*tông|đất|liên\s*xã|nội\s*bộ)?(?:\s*rộng)?\s*([\d]+[,.]?[\d]*)\s*m',
         r'rộng\s*([\d]+[,.]?[\d]*)\s*m\b',
@@ -860,6 +864,13 @@ def extract_road_width(text: str) -> Optional[float]:
         if m:
             val = float(m.group(1).replace(',', '.'))
             if 2 <= val <= 60:  # lộ giới hợp lý
+                local = folded[max(0, m.start() - 26):m.end() + 8]
+                if re.search(
+                    r"\b(?:mat\s*tien|ngang|mat\s+ngang)\s*(?:dat\s*)?(?:rong\s*)?"
+                    r"\d+(?:[,.]\d+)?\s*m\b",
+                    local,
+                ):
+                    continue
                 return val
     return None
 
@@ -891,6 +902,8 @@ def extract_road_type(text: str) -> str:
         return 'unknown'
     if 'nhựa' in t or 'nhua' in folded or 'asphalt' in folded:
         return 'duong_nhua'
+    if re.search(r'\b(?:mat\s*tien|\bmt\b)\s+(?:duong\s+)?d?x\b', folded):
+        return 'duong_nhua'
     if re.search(r'\bdx\s*\d{2,3}\b', folded):
         return 'duong_nhua'
     if re.search(r'\b(?:db|dh|dha|da|dl|dj|ni|nj|ng|nh|ne|de|na|nf|dk)\s*\d+[\da-z]*\b', folded):
@@ -913,7 +926,7 @@ def extract_road_type(text: str) -> str:
 _NAMED_ROADS = [
     # --- Tân An / TBH (original 14) ---
     'lê chí dân', 'mạc đĩnh chi', 'phan đăng lưu', 'nguyễn thị hiếu',
-    'hồ văn cống', 'huỳnh thị hiếu', 'võ cái', 'nguyễn tri phương',
+    'hồ văn cống', 'huỳnh thị hiếu', 'võ cái', 'lò lu', 'nguyễn tri phương',
     'trần văn ơn', 'đinh bộ lĩnh', 'hùng vương', 'trần hưng đạo',
     'lê hồng phong', 'cách mạng tháng 8',
     # --- Mở rộng TDM (from data analysis 2026-05-06) ---
@@ -967,7 +980,7 @@ _AUTO_ROAD_RE = re.compile(
 )
 
 # DX road pattern
-_DX_RE = re.compile(r'\bdx\s*\d{2,3}\b', re.IGNORECASE)
+_DX_RE = re.compile(r'\b(?:d|đ)x\s*\d{2,3}\b', re.IGNORECASE)
 
 # Chỉ dấu "không phải mặt tiền chính" — áp cho cả DX và đường nhựa.
 # (User feedback: "nhánh DX là tier 3", "gần DX65 chứ k phải thuộc DX65",
@@ -980,7 +993,7 @@ _NHANH_XEET_RE = re.compile(
 )
 # Tín hiệu "gần/cách" — chỉ có ý nghĩa khi nằm TRƯỚC DX/đường.
 # "gần DX65" = không trên DX → tier 3. "DX25 gần chợ" = trên DX, gần chợ → tier 2.
-_GAN_CACH_RE = re.compile(r'\bg[ầa]n\b|\bc[áa]ch\b', re.IGNORECASE)
+_GAN_CACH_RE = re.compile(r'\bg[ầa]n\b|\bc[áa]ch\b|\bngay\b', re.IGNORECASE)
 
 # "Sân ô tô / chỗ đậu ô tô" = vị trí đậu xe TRONG nhà, KHÔNG phải đường vào.
 # (User feedback: "sân ô tô chứ không phải đường ô tô")
@@ -1139,12 +1152,12 @@ def extract_road_tier(title: str, description: str = '') -> int:
     if _mp_tier is not None:
         return _mp_tier
 
-    if has_nhanh_strong:
+    if has_nhanh_strong and not _DX_RE.search(text):
         return 3
 
     # "Đất 1/ Lê Hồng Phong" is a branch/alley address, even if the broker
     # later writes "mặt tiền kinh doanh nhựa"; treat as concrete car alley.
-    if has_nhanh_title:
+    if has_nhanh_title and not _DX_RE.search(text):
         return 3
 
     # --- Tier 1: Mặt tiền đường có tên (whitelist) ---
@@ -1181,12 +1194,12 @@ def extract_road_tier(title: str, description: str = '') -> int:
     m_dx = _DX_RE.search(text)
     if m_dx:
         s, e = m_dx.span()
-        around = text[max(0, s - 25):min(len(text), e + 25)]
+        branch_context = text[max(0, s - 25):min(len(text), e + 10)]
         before_dx = text[max(0, s - 25):s]
         hem_before = bool(_HEM_RE.search(before_dx))
         if re.search(r'(?:^|\D)\d+\s*/\s*$', before_dx, re.IGNORECASE):
             return 3
-        if (_NHANH_XEET_RE.search(around)          # nhánh/xẹt bất kỳ
+        if (_NHANH_XEET_RE.search(branch_context)  # nhánh/xẹt tied to the DX code
                 or _GAN_CACH_RE.search(before_dx)   # gần/cách TRƯỚC DX
                 or hem_before):                     # hẻm TRƯỚC DX
             return 3

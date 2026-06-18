@@ -2032,6 +2032,7 @@ def api_listings():
     range_kwargs = _request_range_filter_kwargs(request)
     keyword = _request_keyword(request)
     date_range = _request_date_range(request)
+    complete_only = (request.args.get("complete") or "").strip().lower() in {"1", "true", "yes", "on"}
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     try:
@@ -2060,6 +2061,12 @@ def api_listings():
     if prop_types:
         where_parts.append(f"l.property_type IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
+    if complete_only:
+        where_parts.extend([
+            "NULLIF(TRIM(COALESCE(l.ward,'')), '') IS NOT NULL",
+            "l.price_ty IS NOT NULL AND l.price_ty > 0",
+            "l.area_m2 IS NOT NULL AND l.area_m2 > 0",
+        ])
     range_clauses, range_params = _range_filters(prefix="l.", **range_kwargs)
     where_parts.extend(range_clauses)
     params.extend(range_params)

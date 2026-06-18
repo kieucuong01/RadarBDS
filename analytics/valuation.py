@@ -879,6 +879,8 @@ class ValuationEngine:
         # không có fair_value/MOS. Khi đủ data (n≥30) sẽ build model riêng.
         if listing.property_type in SPECIAL_MARKET_SKIP_TYPES:
             return None
+        if not (listing.price_total and listing.price_per_m2 and listing.area_m2):
+            return None
         selection = self._select_pricing_basis(listing)
         if not selection or not listing.price_per_m2:
             return None

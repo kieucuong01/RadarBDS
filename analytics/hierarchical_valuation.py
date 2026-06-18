@@ -248,7 +248,7 @@ class MedianRoadTierValuationEngine:
         return self._models.get(self._fallback_key(listing))
 
     def valuate(self, listing: Listing) -> Optional[ValuationResult]:
-        if not listing.price_per_m2:
+        if not (listing.price_total and listing.price_per_m2 and listing.area_m2):
             return None
         model = self._model_for(listing)
         if not model:
