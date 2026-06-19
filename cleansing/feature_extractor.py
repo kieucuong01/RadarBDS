@@ -1821,6 +1821,11 @@ def classify_property_type(
         ' ', text_for_nha_ascii, flags=re.IGNORECASE,
     )
     text_for_nha_ascii = re.sub(
+        r'\b(?:xung\s*quanh|hang\s*xom|khu\s*vuc|sat\s*ben|noi\s*co)\b.{0,120}'
+        r'\b(?:nha\s*(?:lau|cap|moi|o)?|biet\s*thu|villa)\b',
+        ' ', text_for_nha_ascii, flags=re.IGNORECASE,
+    )
+    text_for_nha_ascii = re.sub(
         r'\b(?:xung\s*quanh|hang\s*xom|khu\s*vuc|sat\s*ben)\b.{0,70}\bnha\s*(?:lau|cap|moi|o)?\b',
         ' ', text_for_nha_ascii, flags=re.IGNORECASE,
     )
@@ -1876,7 +1881,10 @@ def classify_property_type(
 
     # --- Bước 1: Strong house → nha_dat (trước vuon) ---
     title_ascii = _ascii_fold(title or '')
-    has_title_land_intent = bool(re.match(r'^\s*(?:ban\s+)?(?:lo\s+)?dat\b', title_ascii))
+    has_title_land_intent = bool(re.match(
+        r'^\s*(?:giap\s*chu\s+|chinh\s*chu\s+|can\s+ban\s+)?(?:ban\s+)?(?:lo\s+)?dat\b',
+        title_ascii,
+    ))
     has_existing_house_layout = bool(re.search(
         r'\bnha\s*cap\s*4\b|'
         r'\bnha\s*(?:tret|moi)\b|'

@@ -113,6 +113,23 @@ def test_signal_badge_metadata_does_not_use_lot_frontage_as_road_width():
     assert meta["street_label"] == "Mặt tiền DX95"
 
 
+def test_signal_badge_metadata_labels_unnamed_asphalt_as_road_not_alley():
+    from services.market_data import signal_badge_metadata
+
+    meta = signal_badge_metadata({
+        "title": "Mat tien dx nhua thong phuong Hiep An",
+        "description": "Dien tich 5.5 x 39, tho cu 130m2.",
+        "property_type": "nha_dat",
+        "area_m2": 214,
+        "road_name": None,
+        "road_tier": 3,
+        "road_type": "duong_nhua",
+        "road_width_m": None,
+    })
+
+    assert meta["road_label"] == "Đường nhựa"
+
+
 def test_signal_badge_metadata_does_not_guess_street_from_landmark_without_road_name():
     from services.market_data import signal_badge_metadata
 

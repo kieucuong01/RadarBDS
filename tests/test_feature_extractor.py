@@ -1421,6 +1421,16 @@ def test_classify_property_type_ignores_buildability_storey_phrase_for_land():
 
 def test_classify_property_type_keeps_land_when_house_words_are_only_context_ascii():
     assert classify_property_type(
+        "Giap chu Ban dat mat tien DX142, P. Tuong Binh Hiep",
+        (
+            "DT 6 x 50m. Tho cu 30m2. Duong nhua 6m thong. "
+            "Xung quanh toan nha lau biet thu, con duong dep va yen tinh."
+        ),
+        300,
+        30,
+        price_per_m2=9.333,
+    ) == "dat_nen"
+    assert classify_property_type(
         "Dat Phu Hoa, Thu Dau Mot",
         "Duong nhua 6m thong, vi tri toan nha lau, biet thu. Co 2 lo dong gia, dien tich 4x19 tho cu 60.",
         76,

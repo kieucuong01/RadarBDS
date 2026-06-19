@@ -914,9 +914,11 @@ def _infer_tho_cu_ratio(r, tho_cu_m2):
 
 def _road_base_label(r):
     tier = int(_as_float(_row_get(r, "road_tier")) or 0)
+    road_type = str(_row_get(r, "road_type", "") or "")
+    if tier == 3 and road_type in {"duong_nhua", "be_tong", "duong_dat"}:
+        return ROAD_TYPE_LABELS.get(road_type)
     if tier in ROAD_TIER_LABELS:
         return ROAD_TIER_LABELS[tier]
-    road_type = str(_row_get(r, "road_type", "") or "")
     return ROAD_TYPE_LABELS.get(road_type) or "Chưa rõ"
 
 
