@@ -121,33 +121,93 @@ def test_same_broker_same_dimensions_different_tdc_roads_not_duplicate():
     assert not _is_reliable_price_drop(d12, road_110b)
 
 
-def test_history_signature_matches_quoc_lo_written_as_words():
-    parent = _listing(
+def test_same_standard_house_dimensions_near_ql13_need_stronger_price_change_identity():
+    current_house = _listing(
         source="facebook",
-        source_id="fb-ql13-new",
+        source_id="fb-dx88-current",
+        posted_at="2026-06-20",
+        ward="Hiệp An",
+        property_type="nha_dat",
+        area_m2=125.0,
+        frontage_m=5.0,
+        depth_m=25.0,
+        tho_cu_m2=60.0,
+        price_ty=2.25,
+        contact_phone="0382941231",
+        description=(
+            "Nhà cấp 4 Hiệp An nhánh DX88, cách QL13 200m, gần ngã tư Sở Sao. "
+            "Diện tích 5x25, thổ cư 60m2, giá 2 tỷ 250tr."
+        ),
+    )
+    loft_house = _listing(
+        source="facebook",
+        source_id="fb-dx88-loft",
+        posted_at="2026-04-18",
+        ward="Hiệp An",
+        property_type="nha_dat",
+        area_m2=125.0,
+        frontage_m=5.0,
+        depth_m=25.0,
+        tho_cu_m2=60.0,
+        price_ty=2.35,
+        contact_phone="0987554839",
+        description=(
+            "Nhà cấp 4 có gác Hiệp An nhánh DX088 gần chợ Bưng Cầu, cách QL13 200m. "
+            "Diện tích 5x25, thổ cư 60m2, 2 phòng ngủ, có gác đổ, giá 2 tỷ 350."
+        ),
+    )
+
+    assert not _has_reliable_lot_signature(
+        current_house,
+        loft_house,
+        allow_facebook_same_price=False,
+    )
+    assert not _is_duplicate(current_house, loft_house)
+    assert not _is_reliable_price_drop(loft_house, current_house)
+
+
+def test_rewritten_house_price_drop_can_match_by_phone_in_description():
+    current_house = _listing(
+        source="facebook",
+        source_id="fb-dx88-current-phone",
+        posted_at="2026-06-20",
+        ward="Hiệp An",
+        property_type="nha_dat",
+        area_m2=125.0,
+        frontage_m=5.0,
+        depth_m=25.0,
+        tho_cu_m2=60.0,
+        price_ty=2.25,
+        description=(
+            "Nhà cấp 4 Hiệp An nhánh DX88 cách QL13 200m. "
+            "Diện tích 5x25, thổ cư 60m2, giá 2 tỷ 250. "
+            "Liên hệ 0382941231."
+        ),
+    )
+    older_house = _listing(
+        source="facebook",
+        source_id="fb-dx88-old-phone",
         posted_at="2026-06-01",
         ward="Hiệp An",
         property_type="nha_dat",
         area_m2=125.0,
         frontage_m=5.0,
         depth_m=25.0,
+        tho_cu_m2=60.0,
         price_ty=2.29,
-        description="Nhà cấp 4 Hiệp An 1 sẹt QL13, diện tích 5x25, thổ cư 60m2.",
-    )
-    child = _listing(
-        source="facebook",
-        source_id="fb-quoc-lo-old",
-        posted_at="2026-04-02",
-        ward="Hiệp An",
-        property_type="nha_dat",
-        area_m2=125.0,
-        frontage_m=5.0,
-        depth_m=25.0,
-        price_ty=2.35,
-        description="Bán nhà Hiệp An 1 sẹt quốc lộ 13 gần trạm thu phí Suối Giữa, 5x25.",
+        description=(
+            "Nhà 1 phòng khách, 2 phòng ngủ, bếp, 2 nhà vệ sinh. "
+            "Đường bê tông nhánh DX088, cách QL13 100m. "
+            "Diện tích 5x25, thổ cư 60m, giá 2ty290. Alo 038 294 1231."
+        ),
     )
 
-    assert _has_reliable_lot_signature(parent, child, allow_facebook_same_price=False)
+    assert _has_reliable_lot_signature(
+        current_house,
+        older_house,
+        allow_facebook_same_price=False,
+    )
+    assert _is_reliable_price_drop(older_house, current_house)
 
 
 def test_same_price_history_escape_does_not_override_area_mismatch_when_prices_differ():

@@ -326,13 +326,30 @@ def _facebook_pair(l1: dict, l2: dict) -> bool:
 
 
 def _phone_value(listing: dict) -> str:
-    return re.sub(r"\D", "", listing.get("contact_phone") or "")
+    phone = re.sub(r"\D", "", listing.get("contact_phone") or "")
+    if len(phone) >= 9:
+        return phone
+    match = re.search(
+        r"(?<!\d)(0[3-9](?:[\s.\-]*\d){8})(?!\d)",
+        _combined_text(listing),
+    )
+    return re.sub(r"\D", "", match.group(1)) if match else ""
 
 
 def _same_phone(l1: dict, l2: dict) -> bool:
     p1 = _phone_value(l1)
     p2 = _phone_value(l2)
     return bool(len(p1) >= 9 and len(p2) >= 9 and p1[-9:] == p2[-9:])
+
+
+def _house_price_change_lacks_identity(l1: dict, l2: dict) -> bool:
+    return bool(
+        l1.get("property_type") == "nha_dat"
+        and l2.get("property_type") == "nha_dat"
+        and not _same_price_for_dedup(l1.get("price_ty"), l2.get("price_ty"))
+        and not _same_phone(l1, l2)
+        and _text_similarity(_combined_text(l1), _combined_text(l2)) < 0.72
+    )
 
 
 def _different_days(l1: dict, l2: dict) -> bool:
@@ -387,6 +404,9 @@ def _has_reliable_lot_signature(l1: dict, l2: dict, *, allow_facebook_same_price
         return False
 
     if _lot_attribute_conflict(l1, l2):
+        return False
+
+    if _house_price_change_lacks_identity(l1, l2):
         return False
 
     if _strong_numeric_lot_signature(l1, l2):
@@ -638,6 +658,8 @@ def _is_duplicate(l1: dict, l2: dict) -> bool:
     if _same_source_id(l1, l2):
         return True
     if not _facebook_pair(l1, l2):
+        return False
+    if _house_price_change_lacks_identity(l1, l2):
         return False
     if _same_price_for_dedup(l1.get("price_ty"), l2.get("price_ty")) and not _same_source(l1, l2, "facebook"):
         return False

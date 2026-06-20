@@ -2406,13 +2406,22 @@ def get_price_history(listing_id):
         cluster_ids = _listing_cluster_ids(conn, listing_id)
         placeholders = ",".join("?" for _ in cluster_ids)
         rows = conn.execute(f"""
-            SELECT ph.listing_id, ph.recorded_at, ph.price_ty, ph.price_per_m2,
-                   COALESCE(NULLIF(l.posted_at, ''), ph.recorded_at, l.crawled_at, l.updated_at) AS history_date,
-                   l.url
-            FROM price_history ph
-            LEFT JOIN listings l ON l.id = ph.listing_id
-            WHERE ph.listing_id IN ({placeholders})
-            ORDER BY history_date ASC, ph.recorded_at ASC, ph.id ASC
+            WITH ranked_snapshots AS (
+                SELECT ph.id, ph.listing_id, ph.recorded_at, ph.price_ty, ph.price_per_m2,
+                       COALESCE(NULLIF(l.posted_at, ''), ph.recorded_at, l.crawled_at, l.updated_at) AS history_date,
+                       l.url,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY ph.listing_id, substr(ph.recorded_at, 1, 10)
+                           ORDER BY ph.recorded_at DESC, ph.id DESC
+                       ) AS same_day_rank
+                FROM price_history ph
+                LEFT JOIN listings l ON l.id = ph.listing_id
+                WHERE ph.listing_id IN ({placeholders})
+            )
+            SELECT listing_id, recorded_at, price_ty, price_per_m2, history_date, url
+            FROM ranked_snapshots
+            WHERE same_day_rank = 1
+            ORDER BY history_date ASC, recorded_at ASC, id ASC
         """, list(cluster_ids)).fetchall()
         history = []
         last_price = None

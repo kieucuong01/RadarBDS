@@ -781,6 +781,41 @@ class PriceHistoryTest(unittest.TestCase):
         admin_history = admin_response.get_json()["history"]
         self.assertEqual(admin_history[0]["url"], f"{self.url_prefix}/dx84")
 
+    def test_history_api_keeps_only_final_same_day_parser_snapshot(self):
+        from app import app
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute("""
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, posted_at, updated_at, probably_sold
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+            """, (
+                "facebook", f"{self.source_id}-same-day-fix",
+                f"{self.url_prefix}/same-day-fix",
+                "Bán nhà Hiệp An 5x25 giá 2ty350",
+                "Hiệp An", 125.0, "nha_dat", 2.35, 18.8,
+                "2026-04-02", "2026-04-24T20:19:09",
+            ))
+            listing_id = self._track(cur.lastrowid)
+            conn.executemany("""
+                INSERT INTO price_history (
+                    listing_id, price_ty, price_per_m2, recorded_at, crawl_run_id
+                ) VALUES (?, ?, ?, ?, ?)
+            """, [
+                (listing_id, 2.0, 16.0, "2026-04-24 20:17:40", 5),
+                (listing_id, 2.35, 18.8, "2026-04-24 20:19:09", 6),
+            ])
+
+        response = app.test_client().get(f"/api/history/{listing_id}")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get_json()["history"],
+            [{"date": "2026-04-02", "price_ty": 2.35}],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
