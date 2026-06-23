@@ -459,6 +459,60 @@
       </div>
     </div>
   </footer>
+  <script>
+    (function () {
+      const pageMeta = {
+        path: {{ page.path | tojson }},
+        page_slug: {{ page.path.strip('/') | tojson }},
+        variant: {{ page.get('variant', 'market') | tojson }},
+      };
+
+      function sendRadarEvent(action, context) {
+        const payload = Object.assign({}, pageMeta, context || {});
+        try {
+          fetch('/api/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: action, context: payload }),
+            keepalive: true,
+          }).catch(function () {});
+        } catch (err) {}
+        try {
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', action, payload);
+          }
+        } catch (err) {}
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('utm_source')) {
+        sendRadarEvent('social_utm_visit', {
+          utm_source: params.get('utm_source') || '',
+          utm_medium: params.get('utm_medium') || '',
+          utm_campaign: params.get('utm_campaign') || '',
+          utm_content: params.get('utm_content') || '',
+        });
+      }
+
+      sendRadarEvent(pageMeta.path.indexOf('/bao-cao/') === 0 ? 'report_viewed' : 'seo_landing_viewed');
+
+      document.addEventListener('click', function (event) {
+        const link = event.target.closest && event.target.closest('a');
+        if (!link) return;
+        const isCta = link.classList.contains('seo-button') ||
+          link.classList.contains('seo-nav-cta') ||
+          link.classList.contains('dashboard-preview-frame');
+        if (!isCta) return;
+        const section = link.closest('section, header, footer');
+        sendRadarEvent('cta_clicked', {
+          location: section ? (section.className || section.tagName).toString().slice(0, 80) : 'unknown',
+          target: link.getAttribute('href') || '',
+          button_text: (link.textContent || link.getAttribute('aria-label') || '').trim().slice(0, 120),
+        });
+      }, { passive: true });
+    })();
+  </script>
 </body>
 
 </html>

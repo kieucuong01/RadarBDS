@@ -420,6 +420,7 @@ function handleAssistantAction(action) {
    ─────────────────────────────────────────────────────────────── */
 window.track = function (action, opts) {
   opts = opts || {};
+  const context = opts.context || {};
   try {
     fetch('/api/track', {
       method: 'POST',
@@ -428,10 +429,18 @@ window.track = function (action, opts) {
       body: JSON.stringify({
         action: action,
         listing_id: opts.listing_id || null,
-        context: opts.context || {},
+        context: context,
       }),
       keepalive: true,
     }).catch(() => { });
+  } catch (e) { /* silent */ }
+  try {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', action, {
+        ...context,
+        listing_id: opts.listing_id || undefined,
+      });
+    }
   } catch (e) { /* silent */ }
 };
 

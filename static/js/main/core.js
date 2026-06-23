@@ -132,6 +132,7 @@ window.openHistory = lazyOpenHistory;
 
 function _sendTrackEvent(action, opts) {
   opts = opts || {};
+  const context = opts.context || {};
   try {
     fetch('/api/track', {
       method: 'POST',
@@ -140,12 +141,22 @@ function _sendTrackEvent(action, opts) {
       body: JSON.stringify({
         action,
         listing_id: opts.listing_id || null,
-        context: opts.context || {},
+        context,
       }),
       keepalive: true,
     }).catch(() => {});
   } catch (e) {
     // Tracking is best effort and must not block the dashboard.
+  }
+  try {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', action, {
+        ...context,
+        listing_id: opts.listing_id || undefined,
+      });
+    }
+  } catch (e) {
+    // Analytics is best effort and must not block interaction.
   }
 }
 

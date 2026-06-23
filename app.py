@@ -902,8 +902,17 @@ def api_create_watchlist():
         ))
         wid = cur.lastrowid
         row = conn.execute("SELECT * FROM user_watchlists WHERE id=?", (wid,)).fetchone()
-    log_audit(user_id=u["id"], tier=current_tier(), action="watchlist_create",
-              context={"id": wid, "name": data["name"]})
+    log_audit(
+        user_id=u["id"],
+        tier=current_tier(),
+        action="watchlist_create",
+        context={
+            "id": wid,
+            "ward_count": len(json.loads(data["wards"] or "[]")),
+            "prop_count": len(json.loads(data["prop_types"] or "[]")),
+            "notify_telegram": bool(data["notify_telegram"]),
+        },
+    )
     return jsonify({"ok": True, "item": _serialize_watchlist(row)})
 
 
@@ -1039,6 +1048,15 @@ def api_telegram_sync():
         send_message_to(chat_id, "Đã kết nối tài khoản RadarBDS. Bạn sẽ nhận thông báo deal khớp khu vực quan tâm.")
     except Exception:
         pass
+    try:
+        log_audit(
+            user_id=u["id"],
+            tier=current_tier(),
+            action="telegram_linked",
+            context={"source": "sync"},
+        )
+    except Exception:
+        pass
     return jsonify({"ok": True, "linked": True})
 
 
@@ -1099,7 +1117,7 @@ def api_telegram_webhook():
         pass
     try:
         log_audit(user_id=user_id, tier=None, action="telegram_linked",
-                  context={"chat_id": str(chat_id)})
+                  context={"source": "webhook"})
     except Exception:
         pass
     return jsonify({"ok": True, "matched": True, "user_id": user_id})
@@ -1109,6 +1127,10 @@ def api_telegram_webhook():
 # Conversion tracking (/api/track) — open to guests, used to measure funnel
 # ─────────────────────────────────────────────────────────────────────────────
 ALLOWED_TRACK_ACTIONS = {
+    "seo_landing_viewed",
+    "report_viewed",
+    "social_utm_visit",
+    "cta_clicked",
     "teaser_hit_12",
     "locked_tab_click",
     "locked_fresh_click",
@@ -1116,6 +1138,10 @@ ALLOWED_TRACK_ACTIONS = {
     "vip_cta_click",
     "cta_signup",
     "cta_vip",
+    "lead_vip_click",
+    "signup_completed",
+    "watchlist_create",
+    "telegram_linked",
     "modal_open",
 }
 
