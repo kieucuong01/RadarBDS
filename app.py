@@ -1207,6 +1207,52 @@ def _site_meta(path="/", *, title=None, description=None, keywords=None):
     }
 
 
+def _page_breadcrumb_label(page: dict) -> str:
+    label = (page.get("breadcrumb_label") or "").strip()
+    if label:
+        return label
+
+    path = str(page.get("path") or "").strip()
+    if path == "/binh-duong":
+        return "Nhà đất Bình Dương"
+    if path == "/ban-dat-binh-duong":
+        return "Bán đất Bình Dương"
+    if path == "/san-deal-bds":
+        return "Săn deal BĐS"
+    if path.startswith("/bao-cao/"):
+        period = ((page.get("report") or {}).get("period") or "").strip()
+        return f"Báo cáo {period}" if period else "Báo cáo thị trường"
+    if path.startswith("/binh-duong/"):
+        map_label = str(page.get("map_label") or "").strip()
+        if " / " in map_label:
+            return map_label.split(" / ", 1)[-1].strip()
+
+    for key in ("hero_title", "title"):
+        value = str(page.get(key) or "").strip()
+        if value:
+            return value
+    return "Radar BDS"
+
+
+def _page_breadcrumbs(page: dict) -> list[dict]:
+    path = "/" + str(page.get("path") or "/").lstrip("/")
+    breadcrumbs = [{"name": "Radar BDS", "href": "/"}]
+
+    if path.startswith("/binh-duong/"):
+        breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
+    elif path.startswith("/bao-cao/"):
+        breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
+
+    current = {"name": _page_breadcrumb_label(page), "href": path}
+    if breadcrumbs[-1]["href"] != current["href"]:
+        breadcrumbs.append(current)
+    else:
+        breadcrumbs[-1] = current
+    for crumb in breadcrumbs:
+        crumb["url"] = _public_url(crumb["href"])
+    return breadcrumbs
+
+
 def serve_local_image(filename):
     is_thumb = str(filename or "").replace("\\", "/").startswith("thumbs/")
     max_age = 30 * 86400 if is_thumb else 7 * 86400
@@ -1226,6 +1272,7 @@ def dashboard():
 
 def seo_binh_duong_landing():
     page = dict(SEO_PAGES["binh-duong"])
+    page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(
         page["path"],
         title=page["title"],
@@ -1239,6 +1286,8 @@ def seo_landing_page(slug):
     page = SEO_PAGES.get(slug)
     if not page:
         abort(404)
+    page = dict(page)
+    page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(
         page["path"],
         title=page["title"],

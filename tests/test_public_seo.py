@@ -136,7 +136,7 @@ def test_binh_duong_landing_has_dashboard_preview_metrics_and_dashboard_cta():
     assert response.status_code == 200
     assert 'class="seo-dashboard-preview"' in html
     assert "/static/images/seo/dashboard-preview.png" in html
-    assert 'href="/"' in html
+    assert 'href="/?tab=signals&amp;intent=watchlist"' in html
     assert 'href="/dashboard"' not in html
     assert "Xem dashboard thật" in html
     assert "Tin rao được chuẩn hóa" in html

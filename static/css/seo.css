@@ -124,6 +124,33 @@ svg {
   box-shadow: 0 10px 22px rgba(18, 99, 241, 0.22);
 }
 
+.seo-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 0 0;
+  color: #5a6e89;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.seo-breadcrumbs a {
+  color: var(--blue);
+}
+
+.seo-breadcrumbs a:hover {
+  color: var(--blue-strong);
+}
+
+.seo-breadcrumbs span[aria-current="page"] {
+  color: var(--ink);
+}
+
+.breadcrumb-sep {
+  color: #9fb0c3;
+}
+
 .seo-hero {
   position: relative;
   min-height: 555px;
