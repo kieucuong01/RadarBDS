@@ -524,7 +524,7 @@ def test_mobile_filter_sheet_scroll_is_isolated_from_signal_tab():
 
 def test_mobile_command_bar_actions_share_one_row_without_overlapping_left_controls():
     leads_css = _read("static/css/main/leads_chat.css")
-    mobile_css = leads_css.split("@media (max-width: 768px)", 1)[-1]
+    mobile_css = leads_css.split("@media (max-width: 1024px)", 1)[-1]
 
     command_bar = re.search(r"\.command-bar\s*\{([^}]*)\}", mobile_css, re.S)
     command_actions = re.search(r"\.command-bar-actions\s*\{([^}]*)\}", mobile_css, re.S)
