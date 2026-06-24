@@ -58,12 +58,13 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
         assert (ROOT / "static" / asset).exists(), f"missing static/{asset}"
 
     assert "window.RADAR_ASSETS" in html
-    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=mobile-perf-lazy-20260611\"" in html
+    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=valuation-card-align-20260612\"" in html
     assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611\"" in html
-    assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-perf-lazy-20260611\"" in html
+    assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=valuation-card-align-20260612\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611\"" in html
-    assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-perf-82-20260611\"" in html
+    assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=zalo-new-tab-20260624\"" in html
     assert "window.RADAR_STYLES" in html
+    assert '{{ css_auth }}' in html
     body_scripts = html.split("window.RADAR_ASSETS", 1)[-1]
     assert '<script src="{{ url_for(\'static\', filename=\'js/main/modal.js\') }}' not in body_scripts
     assert '<script src="{{ url_for(\'static\', filename=\'js/main/market.js\') }}' not in body_scripts
@@ -200,7 +201,7 @@ def test_signal_modal_history_uses_compact_timeline_ui():
         "renderSignalHistoryRows",
         "_historyChartTimeline",
         "const chartTimeline = _historyChartTimeline(decoratedTimeline)",
-        "modal-comps-advisor-20260608",
+        "valuation-card-align-20260612",
         "toggleSignalHistoryRows",
         "sm-history-summary",
         "sm-history-toggle",
@@ -222,7 +223,7 @@ def test_signal_modal_close_button_respects_mobile_safe_area():
 
     assert 'class="close-modal"' in html
     assert 'style="top:12px; right:12px; z-index:20;"' in html
-    assert "css/main/modal.css') ~ '?v=modal-close-safe-20260612'" in html
+    assert "css/main/modal.css') ~ '?v=valuation-card-align-20260612'" in html
     header_rule = re.search(r"#signalModal::before\s*\{(?P<body>[^}]+)\}", modal_css, re.S)
     assert header_rule, "missing mobile signal modal top close zone"
     header_body = header_rule.group("body")
@@ -392,13 +393,13 @@ def test_signal_cards_and_modal_render_compact_property_badges():
     assert ".meta-chip-label" in cards_css
     assert ".meta-chip-street" in cards_css
     assert ".sm-tags-wrap .sm-tag-chip" in modal_css
-    assert "grid-template-columns: repeat(12, minmax(0, 1fr))" in cards_css
-    assert re.search(r"\.meta-chip-ward\s*\{[^}]*grid-column: span 3;", cards_css, re.S)
-    assert re.search(r"\.meta-chip-area\s*\{[^}]*grid-column: span 5;", cards_css, re.S)
-    assert re.search(r"\.meta-chip-street\s*\{[^}]*grid-column: span 5;", cards_css, re.S)
-    assert re.search(r"\.meta-chip-property\s*\{[^}]*grid-column: span 2;", cards_css, re.S)
-    assert re.search(r"\.meta-chip-land\s*\{[^}]*grid-column: span 3;", cards_css, re.S)
-    assert "grid-auto-rows: 22px" in cards_css
+    assert re.search(r"\.sc-meta-chips\s*\{[^}]*display: flex;", cards_css, re.S)
+    assert re.search(r"\.sc-meta-chips\s*\{[^}]*flex-wrap: wrap;", cards_css, re.S)
+    assert re.search(r"\.meta-chip-ward\s*\{[^}]*max-width: min\(100%, 12rem\);", cards_css, re.S)
+    assert re.search(r"\.meta-chip-area\s*\{[^}]*max-width: min\(100%, 14rem\);", cards_css, re.S)
+    assert re.search(r"\.meta-chip-street\s*\{[^}]*max-width: min\(100%, 18rem\);", cards_css, re.S)
+    assert re.search(r"\.meta-chip-property\s*\{[^}]*max-width: min\(100%, 10rem\);", cards_css, re.S)
+    assert re.search(r"\.meta-chip-land\s*\{[^}]*max-width: min\(100%, 12rem\);", cards_css, re.S)
     assert "flex-wrap: wrap" in modal_css
     assert "font-style: normal" in cards_css
     assert "linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)" in cards_css
@@ -506,7 +507,7 @@ def test_mobile_filter_sheet_scroll_is_isolated_from_signal_tab():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "filter-sheet-scroll-lock-20260609",
+        "mobile-command-bar-20260624",
         ".sidebar.filter-sheet.show",
         "-webkit-overflow-scrolling: touch",
         "overscroll-behavior: contain",
@@ -519,6 +520,21 @@ def test_mobile_filter_sheet_scroll_is_isolated_from_signal_tab():
         "touch-action: none",
     ]:
         assert expected in html or expected in filters_css or expected in leads_css
+
+
+def test_mobile_command_bar_actions_share_one_row_without_overlapping_left_controls():
+    leads_css = _read("static/css/main/leads_chat.css")
+    mobile_css = leads_css.split("@media (max-width: 768px)", 1)[-1]
+
+    command_bar = re.search(r"\.command-bar\s*\{([^}]*)\}", mobile_css, re.S)
+    command_actions = re.search(r"\.command-bar-actions\s*\{([^}]*)\}", mobile_css, re.S)
+
+    assert command_bar
+    assert "gap: 10px" in command_bar.group(1)
+    assert command_actions
+    assert "grid-template-columns: minmax(0, auto) minmax(0, 1fr)" in command_actions.group(1)
+    assert "gap: 8px" in command_actions.group(1)
+    assert "margin-top: 2px" in command_actions.group(1)
 
 
 def test_signal_cards_do_not_render_deal_summary_strip():
@@ -605,6 +621,21 @@ def test_vip_upgrade_click_uses_modal_with_zalo_cta_instead_of_alert():
     assert "alert('💎 Nâng cấp VIP" not in auth_js
 
 
+def test_guest_lead_zalo_cta_opens_new_tab_without_replacing_current_tab():
+    html = _read("templates/index.html")
+    auth_cta_js = _read("static/js/main/auth_cta.js")
+
+    for expected in [
+        'href="https://zalo.me/0343216024"',
+        'target="_blank"',
+        'rel="noopener noreferrer"',
+        "closeGuestLeadModal()",
+    ]:
+        assert expected in html or expected in auth_cta_js
+
+    assert "window.location.href = zaloHref" not in auth_cta_js
+
+
 def test_price_and_area_filters_support_multi_select_range_chips():
     html = _read("templates/index.html")
     filters_js = _read("static/js/main/filters.js")
@@ -655,7 +686,7 @@ def test_index_loads_css_domain_files_in_dependency_order():
         assert (ROOT / "static" / asset).exists(), f"missing static/{asset}"
 
 
-def test_feature_css_is_lazy_loaded_instead_of_downloaded_on_first_paint():
+def test_feature_css_load_strategy_keeps_auth_ready_on_first_paint():
     html = _read("templates/index.html")
     head = html.split("</head>", 1)[0]
     core_js = _read("static/js/main/core.js")
@@ -663,13 +694,13 @@ def test_feature_css_is_lazy_loaded_instead_of_downloaded_on_first_paint():
     lazy_assets = {
         "css/main/modal.css": "css_modal",
         "css/main/market.css": "css_market",
-        "css/auth.css": "css_auth",
     }
     for asset, template_var in lazy_assets.items():
         assert asset in html
         assert f'<link rel="preload" href="{{{{ {template_var} }}}}"' not in head
         assert f'<link rel="stylesheet" href="{{{{ {template_var} }}}}"' not in head
 
+    assert '<link rel="stylesheet" href="{{ css_auth }}">' in head
     assert "window.RADAR_STYLES" in html
     assert "lazyStylePromises" in core_js
     assert "document.createElement('link')" in core_js
@@ -740,7 +771,7 @@ def test_dashboard_avoids_mobile_render_blocking_third_party_assets():
     assert "cdn.jsdelivr.net/npm/chart.js" not in head
     assert '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>' not in html
     assert "images/logo.png" not in html
-    assert 'class="logo-img logo-mark"' in html
+    assert 'class="logo-img logo-mark logo-mark-image"' in html
     assert "const SIGNAL_PAGE_SIZE = window.matchMedia" in _read("static/js/main/core.js")
     assert "ensureDashboardScript" in _read("static/js/main/core.js")
     assert "await ensureChartJs();" in _read("static/js/main/market.js")
@@ -798,7 +829,6 @@ def test_dashboard_accessibility_controls_have_names_and_keyboard_paths():
         'aria-label="Tìm tin rao theo tên đường hoặc địa danh"',
         'aria-label="Biên an toàn tối thiểu"',
         'aria-label="Đổi giao diện sáng tối"',
-        'aria-label="Mở trợ lý Radar AI"',
         'aria-label="Đóng trợ lý Radar AI"',
     ]:
         assert expected in html

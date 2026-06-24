@@ -23,8 +23,7 @@ function closeLeadCaptureModal() {
 
 function _openZaloDirect() {
   const zaloHref = 'https://zalo.me/0343216024';
-  const w = window.open(zaloHref, '_blank', 'noopener,noreferrer');
-  if (!w) window.location.href = zaloHref;
+  window.open(zaloHref, '_blank', 'noopener,noreferrer');
 }
 
 function _isLikelyPhone(v) {

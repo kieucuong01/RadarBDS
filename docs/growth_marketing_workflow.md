@@ -110,6 +110,47 @@ Short video structure:
 
 Do not auto-post to external platforms from Codex automations. Produce packs for manual publishing.
 
+## Distribution Pack Anti-Duplication
+
+Distribution packs must optimize for novelty of angle, not volume.
+
+Before producing a pack:
+
+1. Read the latest automation memory if available: `$CODEX_HOME/automations/radar-bds-distribution-pack/memory.md`.
+2. Read `.agents/distribution-pack-history.md`.
+3. Compare the candidate pack against at least the last 3 shipped entries.
+
+Treat a pack as a duplicate if it reuses the same combination of:
+
+- source asset/page
+- primary content atom or insight
+- opening hook
+- audience pain being addressed
+
+Allowed reuse:
+
+- Same source asset is allowed only when the new pack changes the angle materially.
+- Material change means at least 2 of these change: pillar, core insight, hook, CTA path, target audience pain.
+
+Required behavior:
+
+- If the latest verified asset has already been used recently, first look for a different verified content atom inside that same asset.
+- If no fresh atom exists, reuse a different verified public page/report.
+- If no fresh verified angle exists at all, output `Mode: skipped` with the duplicate reason instead of forcing a near-copy.
+
+When a pack ships, append one short log entry to `.agents/distribution-pack-history.md` with:
+
+- date
+- source asset
+- pillar
+- primary atom
+- opening hook
+- audience pain
+- CTA path
+- UTM content slug
+
+Do not treat minor copy edits, synonym swaps, or different caption lengths as a new angle.
+
 ## Analytics Events
 
 Use lowercase snake_case. Put context in properties, not event names.
@@ -175,6 +216,8 @@ Distribution pack output:
 - Telegram teaser
 - UTM links
 - Manual publishing notes
+- Source asset/page used
+- One-line novelty note versus the most recent pack, or `Mode: skipped` if novelty failed
 
 Measurement review output:
 

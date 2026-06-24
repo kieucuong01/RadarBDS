@@ -276,10 +276,10 @@
     display: flex;
     flex-wrap: wrap;
     align-items: stretch;
-    gap: 6px;
+    gap: 10px;
     width: 100%;
     max-width: 100%;
-    margin: 0 0 12px;
+    margin: 0 0 14px;
     padding: 7px;
     border-radius: 14px;
     min-height: 142px;
@@ -300,12 +300,13 @@
 
   .command-bar-actions {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: stretch;
-    gap: 6px;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
     width: 100%;
     min-width: 0;
     margin-left: 0;
+    margin-top: 2px;
     flex: 1 1 100%;
   }
 
@@ -375,17 +376,19 @@
   }
 
   .command-drop-toggle {
-    width: 100%;
+    width: auto;
   }
 
   .command-sort {
     width: 100%;
-    justify-content: stretch;
-    gap: 0;
+    min-width: 0;
+    justify-content: flex-end;
+    gap: 6px;
   }
 
   .command-sort-label {
-    display: none;
+    display: inline;
+    font-size: 0.68rem;
   }
 
   .command-sort-select {

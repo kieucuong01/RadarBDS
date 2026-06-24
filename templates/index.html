@@ -47,12 +47,13 @@
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=meta-chip-flex-20260616' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=valuation-card-align-20260612' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
-  {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=filter-sheet-scroll-lock-20260609' %}
+  {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=mobile-command-bar-20260624' %}
   {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=account-menu-compact-20260606' %}
   <link rel="stylesheet" href="{{ css_base }}">
   <link rel="stylesheet" href="{{ css_layout }}">
   <link rel="preload" href="{{ css_filters }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="{{ css_cards }}">
+  <link rel="stylesheet" href="{{ css_auth }}">
   <link rel="preload" href="{{ css_leads }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link rel="stylesheet" href="{{ css_filters }}">
@@ -67,7 +68,7 @@
       market: "{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611",
       listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=valuation-card-align-20260612",
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611",
-      authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=mobile-perf-82-20260611"
+      authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=zalo-new-tab-20260624"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
@@ -1092,7 +1093,8 @@
       <div class="auth-actions">
         <button class="auth-btn auth-btn-primary" id="guestLeadSubmitBtn" onclick="submitGuestLead()">Gửi yêu
           cầu</button>
-        <button class="auth-btn auth-btn-ghost" onclick="guestLeadChatZalo()">Chat Zalo trực tiếp</button>
+        <a class="auth-btn auth-btn-ghost" href="https://zalo.me/0343216024" target="_blank" rel="noopener noreferrer"
+          onclick="closeGuestLeadModal()">Chat Zalo trực tiếp</a>
       </div>
       <p class="auth-hint">
         Gửi yêu cầu để RadarBDS giữ lại thông tin lô này và hỗ trợ bạn nhanh hơn.
