@@ -1034,6 +1034,36 @@ def flag_duplicates_in_db(conn: Any) -> dict:
     return stats
 
 
+def _resolve_duplicate_targets(parent_by_id: dict[int, int]) -> dict[int, int]:
+    resolved: dict[int, int] = {}
+    for listing_id, initial_target_id in parent_by_id.items():
+        target_id = initial_target_id
+        seen = {listing_id}
+        while target_id in parent_by_id and target_id not in seen:
+            seen.add(target_id)
+            target_id = parent_by_id[target_id]
+        resolved[listing_id] = initial_target_id if target_id in seen else target_id
+    return resolved
+
+
+def _flatten_duplicate_chains(conn: Any) -> None:
+    rows = conn.execute(
+        "SELECT id, duplicate_of_id FROM listings WHERE duplicate_of_id IS NOT NULL"
+    ).fetchall()
+    parent_by_id = {
+        int(row["id"]): int(row["duplicate_of_id"])
+        for row in rows
+        if row["duplicate_of_id"] is not None
+    }
+    for listing_id, target_id in _resolve_duplicate_targets(parent_by_id).items():
+        if target_id == parent_by_id[listing_id]:
+            continue
+        conn.execute(
+            "UPDATE listings SET duplicate_of_id=? WHERE id=?",
+            (target_id, listing_id),
+        )
+
+
 def _apply_dedup_overrides(conn: Any) -> None:
     try:
         rows = conn.execute("""
@@ -1060,6 +1090,7 @@ def _apply_dedup_overrides(conn: Any) -> None:
                 "UPDATE listings SET possibly_duplicate=0, duplicate_of_id=NULL WHERE id IN (?, ?)",
                 (lid, tid),
             )
+    _flatten_duplicate_chains(conn)
 
 
 def get_dedup_stats(conn: Any) -> dict:

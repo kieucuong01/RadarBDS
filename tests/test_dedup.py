@@ -64,6 +64,18 @@ def _normalize_fb(text, source_id="test", posted_at="2026-05-08"):
     return normalize_record(raw)
 
 
+def test_resolve_duplicate_targets_flattens_nested_canonical_chain():
+    parent_by_id = {
+        635: 51480,
+        51480: 56447,
+    }
+
+    assert dedup_module._resolve_duplicate_targets(parent_by_id) == {
+        635: 56447,
+        51480: 56447,
+    }
+
+
 def test_ascii_fold_normalizes_vietnamese_d_stroke_for_location_matching():
     assert _ascii_fold("Phan Đăng Lưu - đường ĐX85 - quốc lộ 13 - Ðăng") == (
         "phan dang luu - duong dx85 - quoc lo 13 - dang"
