@@ -449,8 +449,18 @@ SEO_PAGES = {
             "body": "Mở dashboard Radar BDS để lọc tin mới, giá/m², lịch sử giá, MOS và các khu có tín hiệu đáng kiểm tra.",
             "button": "Mở dashboard Radar BDS",
         },
-        "local_links_title": "Trang liên quan",
+        "local_links_title": "Phường nên mở tiếp từ báo cáo",
         "local_links": [
+            {
+                "label": "Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Phường đang có nguồn cung active lớn nhất và đồng dẫn đầu actionable signals trong snapshot hiện tại.",
+            },
+            {
+                "label": "Hiệp An",
+                "href": "/binh-duong/phuong-hiep-an",
+                "description": "Phường đồng dẫn đầu actionable signals, phù hợp mở tiếp để lọc MOS và giá/m² theo ward.",
+            },
             {
                 "label": "Nhà đất Bình Dương",
                 "href": "/binh-duong",

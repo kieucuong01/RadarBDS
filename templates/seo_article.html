@@ -15,7 +15,7 @@
   <meta name="author" content="Radar BDS">
   <link rel="canonical" href="{{ site_meta.canonical_url }}">
   <meta property="og:locale" content="vi_VN">
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="article">
   <meta property="og:site_name" content="{{ site_meta.name }}">
   <meta property="og:title" content="{{ site_meta.title }}">
   <meta property="og:description" content="{{ site_meta.description }}">
@@ -77,13 +77,13 @@
           }{% if not loop.last %},{% endif %}
           {% endfor %}
         ]
-      }{% if page.report or page.article %},
+      },
       {
         "@type": "Article",
         "headline": {{ site_meta.title | tojson }},
         "description": {{ site_meta.description | tojson }},
-        "datePublished": {{ (page.article.published_at if page.article else page.report.published_at) | tojson }},
-        "dateModified": {{ (page.article.modified_at if page.article else page.report.published_at) | tojson }},
+        "datePublished": {{ page.article.published_at | tojson }},
+        "dateModified": {{ page.article.modified_at | tojson }},
         "author": {
           "@type": "Organization",
           "name": "Radar BDS"
@@ -95,13 +95,12 @@
         },
         "mainEntityOfPage": {{ site_meta.canonical_url | tojson }}
       }
-      {% endif %}
     ]
   }
   </script>
 </head>
 
-<body class="seo-page seo-page-{{ page.get('variant', 'market') }}">
+<body class="seo-page seo-page-{{ page.get('variant', 'knowledge') }}">
   {% set watchlist_href = "/?tab=signals&intent=watchlist" %}
   <header class="seo-topbar">
     <div class="seo-shell topbar-shell">
@@ -116,12 +115,12 @@
         <span>Radar BDS</span>
       </a>
       <nav class="seo-nav" aria-label="Điều hướng">
-        <a href="/binh-duong" {% if page.path == "/binh-duong" %}aria-current="page"{% endif %}>Bình Dương</a>
-        <a href="/ban-dat-binh-duong" {% if page.path == "/ban-dat-binh-duong" %}aria-current="page"{% endif %}>Bán đất</a>
-        <a href="/bao-cao/bds-binh-duong-thang-06-2026" {% if page.path.startswith("/bao-cao/") %}aria-current="page"{% endif %}>Báo cáo</a>
-        <a href="/san-deal-bds" {% if page.path == "/san-deal-bds" %}aria-current="page"{% endif %}>Săn deal BĐS</a>
+        <a href="/binh-duong">Bình Dương</a>
+        <a href="/ban-dat-binh-duong">Bán đất</a>
+        <a href="/bao-cao/bds-binh-duong-thang-06-2026">Báo cáo</a>
+        <a href="/san-deal-bds">Săn deal BĐS</a>
       </nav>
-      <a class="seo-nav-cta" href="/">Mở dashboard</a>
+      <a class="seo-nav-cta" href="{{ watchlist_href }}">Lưu watchlist</a>
     </div>
   </header>
 
@@ -138,49 +137,6 @@
     </nav>
 
     <section class="seo-hero">
-      <aside class="hero-map-stage" aria-label="Mô phỏng Radar BDS phân tích thị trường">
-        <div class="map-label">{{ page.map_label }}</div>
-        <div class="price-tag tag-one">2.3 tỷ</div>
-        <div class="price-tag tag-two">2.1 tỷ</div>
-        <div class="price-tag tag-three">2.2 tỷ</div>
-        <div class="price-tag tag-four">2.3 tỷ</div>
-        <div class="price-tag tag-five">2.6 tỷ</div>
-        <div class="signal-counter">
-          <span>{{ page.hero_metric.label }}</span>
-          <strong>{{ page.hero_metric.value }} <small>{{ page.hero_metric.delta }}</small></strong>
-          <em>{{ page.hero_metric.note }}</em>
-          <svg viewBox="0 0 160 54" aria-hidden="true">
-            <polyline points="0,42 18,34 35,39 52,25 70,31 88,18 107,24 126,11 148,4" />
-          </svg>
-        </div>
-        <div class="property-card">
-          <div class="property-image">
-            <span class="property-status">{{ page.property_card.status }}</span>
-          </div>
-          <div class="property-copy">
-            <strong>{{ page.property_card.title }}</strong>
-            <p>{{ page.property_card.price }}</p>
-            <div class="property-metrics">
-              <span>{{ page.property_card.metric_a }} <b>{{ page.property_card.metric_a_value }}</b></span>
-              <span>{{ page.property_card.metric_b }} <b>{{ page.property_card.metric_b_value }}</b></span>
-            </div>
-            <a href="/" aria-label="Xem chi tiết tin tốt">Xem chi tiết
-              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
-            </a>
-          </div>
-        </div>
-        <div class="chart-card">
-          <span>Mức giá theo khu vực (tr/m²)</span>
-          <svg viewBox="0 0 220 92" aria-hidden="true">
-            <line x1="0" y1="78" x2="220" y2="78" />
-            <line x1="0" y1="52" x2="220" y2="52" />
-            <line x1="0" y1="26" x2="220" y2="26" />
-            <polyline points="2,74 42,58 82,44 122,50 164,30 218,18" />
-          </svg>
-          <div class="chart-labels"><span>TDM</span><span>Thuận An</span><span>Dĩ An</span><span>Bến Cát</span></div>
-        </div>
-      </aside>
-
       <div class="seo-shell hero-shell">
         <div class="seo-hero-copy">
           <div class="hero-badge">
@@ -189,7 +145,7 @@
           </div>
           <h1>{{ page.hero_title }}</h1>
           <p class="seo-lead">{{ page.hero_text }}</p>
-          <div class="hero-checks" aria-label="Cam kết dữ liệu">
+          <div class="hero-checks" aria-label="Ý chính">
             {% for check in page.hero_checks %}
             <span>{{ check }}</span>
             {% endfor %}
@@ -200,17 +156,11 @@
             </a>
             <a class="seo-button seo-button-secondary" href="{{ page.secondary_href }}">{{ page.secondary_cta }}</a>
           </div>
-          <div class="investor-proof" aria-label="Niềm tin người dùng">
-            <div class="avatar-stack" aria-hidden="true">
-              <span></span><span></span><span></span><span></span>
-            </div>
-            <p>Hơn 1.000 nhà đầu tư tin dùng Radar BDS</p>
-          </div>
         </div>
       </div>
     </section>
 
-    <section class="seo-value-strip" aria-label="Giá trị chính của Radar BDS">
+    <section class="seo-value-strip" aria-label="Ý chính của bài viết">
       <div class="seo-shell value-grid">
         {% for section in page.value_cards %}
         <article class="seo-value-item">
@@ -232,14 +182,13 @@
       </div>
     </section>
 
-    {% if page.dashboard_preview %}
-    <section class="seo-dashboard-preview" aria-label="Preview dashboard Radar BDS">
+    <section class="seo-dashboard-preview" aria-label="Funnel sản phẩm">
       <div class="seo-shell dashboard-preview-shell">
         <div class="dashboard-preview-copy">
           <span>{{ page.dashboard_preview.eyebrow }}</span>
           <h2>{{ page.dashboard_preview.title }}</h2>
           <p>{{ page.dashboard_preview.body }}</p>
-          <div class="dashboard-preview-metrics" aria-label="Số liệu nổi bật">
+          <div class="dashboard-preview-metrics" aria-label="Điểm chạm funnel">
             {% for metric in page.dashboard_preview.metrics %}
             <div>
               <strong>{{ metric.value }}</strong>
@@ -256,70 +205,7 @@
         </a>
       </div>
     </section>
-    {% endif %}
 
-    {% if page.report %}
-    <section class="seo-report-block" aria-label="{{ page.report.period }}">
-      <div class="seo-shell report-shell">
-        <div class="report-head">
-          <span>{{ page.report.updated_label }}</span>
-          <h2>Nhận định từ dữ liệu Radar</h2>
-          <p>{{ page.report.source_note }}</p>
-        </div>
-        <div class="report-metric-grid">
-          {% for metric in page.report.metrics %}
-          <article>
-            <span>{{ metric.label }}</span>
-            <strong>{{ metric.value }}</strong>
-            <p>{{ metric.note }}</p>
-          </article>
-          {% endfor %}
-        </div>
-        <div class="report-table-wrap">
-          <table class="report-table">
-            <thead>
-              <tr>
-                <th scope="col">Khu vực</th>
-                <th scope="col">Số tin mới</th>
-                <th scope="col">Giá/m² trung vị</th>
-                <th scope="col">Khu giảm giá</th>
-                <th scope="col">Khu nhiều tín hiệu</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in page.report.area_rows %}
-              <tr>
-                <th scope="row">{{ row.area }}</th>
-                <td>{{ row.new_listings }}</td>
-                <td>{{ row.median_price }}</td>
-                <td>{{ row.drop_signal }}</td>
-                <td>{{ row.radar_signal }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <div class="report-insight-grid">
-          {% for insight in page.report.insights %}
-          <article>
-            <h3>{{ insight.title }}</h3>
-            <p>{{ insight.body }}</p>
-          </article>
-          {% endfor %}
-        </div>
-        <div class="report-methodology">
-          <h3>Phương pháp đọc dữ liệu</h3>
-          <ul>
-            {% for item in page.report.methodology %}
-            <li>{{ item }}</li>
-            {% endfor %}
-          </ul>
-        </div>
-      </div>
-    </section>
-    {% endif %}
-
-    {% if page.market_snapshot %}
     <section class="seo-market-snapshot" aria-label="{{ page.market_snapshot.title }}">
       <div class="seo-shell market-snapshot-shell">
         <div class="market-snapshot-head">
@@ -361,15 +247,13 @@
         </div>
       </div>
     </section>
-    {% endif %}
 
-    {% if page.local_links %}
-    <section class="seo-local-links" aria-label="Khu vực liên quan">
+    <section class="seo-local-links" aria-label="Trang nên mở tiếp">
       <div class="seo-shell local-links-shell">
         <div class="local-links-head">
-          <span>SEO địa phương</span>
-          <h2>{{ page.local_links_title or "Khu vực liên quan" }}</h2>
-          <p>Theo dõi thêm các phường và khu vực có dữ liệu liên quan để so giá đúng mặt bằng hơn.</p>
+          <span>Internal links</span>
+          <h2>{{ page.local_links_title }}</h2>
+          <p>Mục tiêu của bài là dẫn bạn đi đúng hướng: bài viết -> dashboard -> watchlist -> Telegram/VIP lead.</p>
         </div>
         <div class="local-link-grid">
           {% for link in page.local_links %}
@@ -381,7 +265,6 @@
         </div>
       </div>
     </section>
-    {% endif %}
 
     <section class="seo-process">
       <div class="seo-shell">
@@ -463,25 +346,6 @@
         <a href="/san-deal-bds">Tín hiệu</a>
         <a href="/binh-duong">Thị trường</a>
       </nav>
-      <nav aria-label="Về chúng tôi">
-        <strong>Về chúng tôi</strong>
-        <a href="/san-deal-bds">Giới thiệu</a>
-        <a href="/san-deal-bds">Phương pháp</a>
-        <a href="/">Liên hệ</a>
-      </nav>
-      <nav aria-label="Pháp lý">
-        <strong>Pháp lý</strong>
-        <a href="/">Điều khoản sử dụng</a>
-        <a href="/">Chính sách bảo mật</a>
-      </nav>
-      <div class="footer-social">
-        <strong>Kết nối</strong>
-        <div>
-          <a href="/" aria-label="Facebook">f</a>
-          <a href="/" aria-label="Telegram">↗</a>
-          <a href="/" aria-label="Email">✉</a>
-        </div>
-      </div>
     </div>
   </footer>
   <script>
@@ -489,7 +353,7 @@
       const pageMeta = {
         path: {{ page.path | tojson }},
         page_slug: {{ page.path.strip('/') | tojson }},
-        variant: {{ page.get('variant', 'market') | tojson }},
+        variant: {{ page.get('variant', 'knowledge') | tojson }},
       };
 
       function sendRadarEvent(action, context) {
@@ -510,17 +374,7 @@
         } catch (err) {}
       }
 
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('utm_source')) {
-        sendRadarEvent('social_utm_visit', {
-          utm_source: params.get('utm_source') || '',
-          utm_medium: params.get('utm_medium') || '',
-          utm_campaign: params.get('utm_campaign') || '',
-          utm_content: params.get('utm_content') || '',
-        });
-      }
-
-      sendRadarEvent(pageMeta.path.indexOf('/bao-cao/') === 0 ? 'report_viewed' : 'seo_landing_viewed');
+      sendRadarEvent('seo_landing_viewed');
 
       document.addEventListener('click', function (event) {
         const link = event.target.closest && event.target.closest('a');

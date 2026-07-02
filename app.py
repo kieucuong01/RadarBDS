@@ -32,6 +32,7 @@ from config.settings import (
     SITE_OG_IMAGE,
     SITE_TITLE,
 )
+from config.seo_articles import SEO_ARTICLES
 from config.seo_pages import SEO_PAGES
 
 mimetypes.add_type("image/webp", ".webp")
@@ -1219,6 +1220,8 @@ def _page_breadcrumb_label(page: dict) -> str:
         return "Bán đất Bình Dương"
     if path == "/san-deal-bds":
         return "Săn deal BĐS"
+    if path.startswith("/kien-thuc/"):
+        return "Kiến thức BĐS Bình Dương"
     if path.startswith("/bao-cao/"):
         period = ((page.get("report") or {}).get("period") or "").strip()
         return f"Báo cáo {period}" if period else "Báo cáo thị trường"
@@ -1239,6 +1242,8 @@ def _page_breadcrumbs(page: dict) -> list[dict]:
     breadcrumbs = [{"name": "Radar BDS", "href": "/"}]
 
     if path.startswith("/binh-duong/"):
+        breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
+    elif path.startswith("/kien-thuc/"):
         breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
     elif path.startswith("/bao-cao/"):
         breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
@@ -1272,6 +1277,11 @@ def dashboard():
 
 def seo_binh_duong_landing():
     page = dict(SEO_PAGES["binh-duong"])
+    return _render_public_page(page)
+
+
+def _render_public_page(page: dict):
+    page = dict(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(
         page["path"],
@@ -1286,6 +1296,13 @@ def seo_landing_page(slug):
     page = SEO_PAGES.get(slug)
     if not page:
         abort(404)
+    return _render_public_page(page)
+
+
+def seo_article_page(slug):
+    page = SEO_ARTICLES.get(slug)
+    if not page:
+        abort(404)
     page = dict(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(
@@ -1294,7 +1311,7 @@ def seo_landing_page(slug):
         description=page["description"],
         keywords=page["keywords"],
     )
-    return render_template("seo_landing.html", page=page, site_meta=site_meta)
+    return render_template("seo_article.html", page=page, site_meta=site_meta)
 
 
 def robots_txt():
@@ -1315,6 +1332,14 @@ def sitemap_xml():
   </url>"""
         for slug, page in SEO_PAGES.items()
     )
+    article_urls = "\n".join(
+        f"""  <url>
+    <loc>{_public_url(page["path"])}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>"""
+        for slug, page in SEO_ARTICLES.items()
+    )
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -1323,6 +1348,7 @@ def sitemap_xml():
     <priority>1.0</priority>
   </url>
 {seo_urls}
+{article_urls}
 </urlset>
 """
     return Response(body, mimetype="application/xml; charset=utf-8")

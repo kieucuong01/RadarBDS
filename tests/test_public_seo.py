@@ -52,6 +52,7 @@ def test_robots_and_sitemap_use_public_domain():
     assert "Sitemap: https://radarbds.vn/sitemap.xml" in robots
     assert "<loc>https://radarbds.vn/</loc>" in sitemap
     assert "<loc>https://radarbds.vn/binh-duong</loc>" in sitemap
+    assert "<loc>https://radarbds.vn/kien-thuc/ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra</loc>" in sitemap
     assert "<loc>https://radarbds.vn/san-deal-bds</loc>" in sitemap
     assert "localhost" not in robots + sitemap
     assert "127.0.0.1" not in robots + sitemap
@@ -219,6 +220,10 @@ def test_binh_duong_market_report_page_is_indexed_and_citable():
     assert "application/ld+json" in html
     assert '"@type": "Article"' in html
     assert "datePublished" in html
+    assert "Phường nên mở tiếp từ báo cáo" in html
+    assert 'href="/binh-duong/phuong-phu-my"' in html
+    assert 'href="/binh-duong/phuong-hiep-an"' in html
+    assert "đồng dẫn đầu actionable signals" in html
 
 
 def test_binh_duong_location_landing_pages_render_and_are_indexed():
@@ -228,6 +233,7 @@ def test_binh_duong_location_landing_pages_render_and_are_indexed():
     expected = {
         "/binh-duong/thu-dau-mot": "Thủ Dầu Một",
         "/binh-duong/ben-cat": "Bến Cát",
+        "/binh-duong/phuong-hiep-an": "Hiệp An",
         "/binh-duong/phuong-phu-my": "Phú Mỹ",
         "/binh-duong/phuong-tuong-binh-hiep": "Tương Bình Hiệp",
         "/binh-duong/phuong-tan-dinh": "Tân Định",
@@ -283,6 +289,40 @@ def test_unknown_binh_duong_location_seo_page_404s():
     assert response.status_code == 404
 
 
+def test_knowledge_article_renders_canonical_content_and_funnel_markers():
+    import app as radar_app
+
+    path = "/kien-thuc/ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra"
+    client = radar_app.app.test_client()
+    response = client.get(path)
+    html = response.get_data(as_text=True)
+
+    with radar_app.app.test_request_context("/sitemap.xml"):
+        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
+    assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
+    assert "Bán đất Bình Dương: cách lọc tin đáng kiểm tra trước khi đi xem" in html
+    assert "6 dấu hiệu để biết một tin bán đất Bình Dương có đáng kiểm tra hay không" in html
+    assert 'href="/?tab=signals&amp;intent=watchlist"' in html
+    assert "Watchlist -&gt; Telegram -&gt; VIP lead" in html
+    assert "Radar BDS là bộ lọc dữ liệu" in html
+    assert 'href="/ban-dat-binh-duong"' in html
+    assert 'href="/binh-duong/ben-cat"' in html
+    assert 'href="/san-deal-bds"' in html
+    assert '"@type": "Article"' in html
+    assert "datePublished" in html
+
+
+def test_unknown_knowledge_article_404s():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get("/kien-thuc/khong-ton-tai")
+
+    assert response.status_code == 404
+
+
 def test_manifest_uses_radarbds_standalone_start_url():
     manifest = json.loads(Path("static/manifest.webmanifest").read_text(encoding="utf-8"))
     icons = {icon["src"]: icon for icon in manifest["icons"]}
@@ -302,8 +342,9 @@ def test_manifest_uses_radarbds_standalone_start_url():
 def test_seo_and_home_screen_icon_assets_are_wired_and_sized():
     dashboard_html = Path("templates/index.html").read_text(encoding="utf-8")
     seo_html = Path("templates/seo_landing.html").read_text(encoding="utf-8")
+    article_html = Path("templates/seo_article.html").read_text(encoding="utf-8")
 
-    for html in (dashboard_html, seo_html):
+    for html in (dashboard_html, seo_html, article_html):
         assert "images/favicon-32.png" in html
         assert "images/favicon-16.png" in html
         assert "images/apple-touch-icon.png" in html

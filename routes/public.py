@@ -52,6 +52,11 @@ def seo_san_deal_bds(**kwargs):
     return _impl("seo_landing_page", slug="san-deal-bds", **kwargs)
 
 
+@bp.route("/kien-thuc/<path:article_slug>")
+def seo_article(article_slug, **kwargs):
+    return _impl("seo_article_page", slug=article_slug, **kwargs)
+
+
 @bp.route("/robots.txt")
 def robots_txt(**kwargs):
     return _impl("robots_txt", **kwargs)
