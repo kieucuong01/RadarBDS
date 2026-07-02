@@ -43,6 +43,7 @@ def test_public_seo_defaults_point_to_radarbds_domain():
 
 def test_robots_and_sitemap_use_public_domain():
     import app as radar_app
+    from config.seo_articles import SEO_ARTICLES
 
     with radar_app.app.test_request_context("/robots.txt"):
         robots = radar_app.robots_txt().get_data(as_text=True)
@@ -52,8 +53,9 @@ def test_robots_and_sitemap_use_public_domain():
     assert "Sitemap: https://radarbds.vn/sitemap.xml" in robots
     assert "<loc>https://radarbds.vn/</loc>" in sitemap
     assert "<loc>https://radarbds.vn/binh-duong</loc>" in sitemap
-    assert "<loc>https://radarbds.vn/kien-thuc/ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra</loc>" in sitemap
     assert "<loc>https://radarbds.vn/san-deal-bds</loc>" in sitemap
+    for article in SEO_ARTICLES.values():
+        assert f"<loc>https://radarbds.vn{article['path']}</loc>" in sitemap
     assert "localhost" not in robots + sitemap
     assert "127.0.0.1" not in robots + sitemap
 
@@ -313,6 +315,32 @@ def test_knowledge_article_renders_canonical_content_and_funnel_markers():
     assert 'href="/san-deal-bds"' in html
     assert '"@type": "Article"' in html
     assert "datePublished" in html
+
+
+def test_all_knowledge_articles_are_indexed_and_render_funnel_markers():
+    import app as radar_app
+    from config.seo_articles import SEO_ARTICLES
+
+    client = radar_app.app.test_client()
+
+    with radar_app.app.test_request_context("/sitemap.xml"):
+        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
+
+    for article in SEO_ARTICLES.values():
+        path = article["path"]
+        response = client.get(path)
+        html = response.get_data(as_text=True)
+
+        assert response.status_code == 200
+        assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
+        assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
+        assert article["hero_title"] in html
+        assert article["market_snapshot"]["title"] in html
+        assert article["final_cta"]["button"] in html
+        assert 'href="/?tab=signals&amp;intent=watchlist"' in html
+        assert "Telegram" in html
+        assert '"@type": "Article"' in html
+        assert "datePublished" in html
 
 
 def test_unknown_knowledge_article_404s():

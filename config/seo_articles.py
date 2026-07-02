@@ -261,5 +261,266 @@ SEO_ARTICLES = {
             ),
             "button": "Mở dashboard và lưu watchlist",
         },
-    }
+    },
+    "dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia": {
+        "variant": "knowledge",
+        "path": "/kien-thuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
+        "title": "Đất Mỹ Phước Bình Dương: cách tách Mỹ Phước 1, 2, 3 để không so sai giá",
+        "description": (
+            "Hướng dẫn lọc đất Mỹ Phước Bình Dương bằng cách tách Mỹ Phước 1, 2, 3, "
+            "so đúng cụm Bến Cát, đọc giá/m2, MOS và lưu watchlist Radar BDS trước khi đi xem."
+        ),
+        "keywords": (
+            "đất Mỹ Phước Bình Dương, đất Mỹ Phước, đất Bến Cát Bình Dương, đất Mỹ Phước 1, "
+            "đất Mỹ Phước 2, đất Mỹ Phước 3, giá/m2 Mỹ Phước, watchlist Radar BDS"
+        ),
+        "breadcrumb_label": "Đất Mỹ Phước Bình Dương: tách Mỹ Phước 1, 2, 3",
+        "hero_badge": "Kiến thức đất Mỹ Phước Bình Dương",
+        "hero_title": "Đất Mỹ Phước Bình Dương: cách tách Mỹ Phước 1, 2, 3 để không so sai giá",
+        "hero_text": (
+            "Khi tìm đất Mỹ Phước Bình Dương, sai lầm phổ biến nhất là gom Mỹ Phước 1, 2, 3 "
+            "thành một mặt bằng giá duy nhất. Radar BDS giúp bạn tách đúng cụm, so đúng nguồn "
+            "Bến Cát liên quan, rồi mới dùng giá/m2, MOS và watchlist để biết tin nào đáng kiểm tra."
+        ),
+        "hero_checks": [
+            "Tách Mỹ Phước 1, 2, 3 trước khi so giá",
+            "So cùng cụm Bến Cát thay vì quét cả tỉnh",
+            "Watchlist -> Telegram -> VIP lead",
+        ],
+        "primary_cta": "Mở dashboard để lưu watchlist Mỹ Phước",
+        "secondary_cta": "Xem landing đất Mỹ Phước",
+        "secondary_href": "/binh-duong/my-phuoc",
+        "map_label": "Knowledge / My Phuoc",
+        "hero_metric": {
+            "label": "Cụm cần tách",
+            "value": "3",
+            "delta": "tiểu khu",
+            "note": "Mỹ Phước 1, 2, 3",
+        },
+        "property_card": {
+            "status": "So đúng cụm",
+            "title": "Tin đất Mỹ Phước rẻ nhưng phải tách đúng 1, 2, 3",
+            "price": "Đừng chốt nhanh khi tin chỉ ghi Mỹ Phước chung chung mà chưa rõ cụm và loại đất",
+            "metric_a": "Ưu tiên",
+            "metric_a_value": "giá/m2 theo cụm",
+            "metric_b": "Bước kế tiếp",
+            "metric_b_value": "lưu watchlist",
+        },
+        "value_cards": [
+            {
+                "title": "Tách Mỹ Phước 1, 2, 3 để tránh so nhầm mặt bằng",
+                "body": (
+                    "Cùng là Mỹ Phước nhưng bối cảnh khu dân cư, trục công nghiệp, loại đất và nhịp nguồn hàng "
+                    "không giống nhau. Tách đúng cụm giúp giá/m2 và fair value bớt lệch ngay từ bước đầu."
+                ),
+            },
+            {
+                "title": "Chỉ gọi trước những tin vừa rẻ vừa rõ vị trí",
+                "body": (
+                    "Tin đất Mỹ Phước đáng kiểm tra thường nêu rõ cụm, tuyến vào, diện tích, thổ cư và logic giá/m2. "
+                    "Tin ghi Mỹ Phước quá chung chung nên bị xem là cần soi kỹ hơn trước khi gọi môi giới."
+                ),
+            },
+            {
+                "title": "Biến hiểu biết khu vực thành watchlist có thể lặp lại",
+                "body": (
+                    "Sau khi chốt cụm phù hợp, hãy lưu watchlist theo khu, ngân sách và tiêu chí MOS trên dashboard. "
+                    "Đó là cầu nối từ bài SEO sang Telegram và nhu cầu VIP khi bạn muốn phản ứng nhanh hơn."
+                ),
+            },
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Funnel sản phẩm",
+            "title": "Hiểu khác biệt Mỹ Phước 1, 2, 3 rồi thì phải chuyển sang watchlist",
+            "body": (
+                "Bài viết này giúp bạn đặt bộ lọc đúng cho đất Mỹ Phước Bình Dương. Dashboard mới là nơi xem "
+                "nguồn tin đang có, đối chiếu giá/m2, MOS, cảnh báo nguồn và lưu watchlist để nhận deal mới qua Telegram."
+            ),
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS để lọc đất Mỹ Phước Bình Dương theo watchlist",
+            "cta": "Lưu watchlist Mỹ Phước",
+            "metrics": [
+                {"value": "Dashboard", "label": "mở feed Mỹ Phước đang có"},
+                {"value": "Watchlist", "label": "giữ đúng cụm 1, 2, 3 bạn theo"},
+                {"value": "Telegram", "label": "nhận deal mới thay vì lọc lại từ đầu"},
+            ],
+        },
+        "market_snapshot": {
+            "eyebrow": "Checklist lọc cụm",
+            "title": "6 dấu hiệu để biết một tin đất Mỹ Phước Bình Dương đang được so đúng hay đang bị gom sai cụm",
+            "body": (
+                "Mục tiêu của checklist này là giúp người mua và nhà đầu tư nhìn đúng cụm trước khi kết luận rẻ hay đắt. "
+                "Radar BDS là bộ lọc dữ liệu ban đầu, không phải thẩm định pháp lý hay cam kết lợi nhuận."
+            ),
+            "columns": ["Dấu hiệu", "Vì sao cần tách", "Việc nên làm"],
+            "rows": [
+                {
+                    "area": "Tin chỉ ghi Mỹ Phước chung chung",
+                    "price": "Dễ gom sai 1, 2, 3",
+                    "tracked": "Mở trang cụm liên quan",
+                    "signal": "Không so giá trước khi biết tin nghiêng về Mỹ Phước 1, 2 hay 3",
+                },
+                {
+                    "area": "Nhắc gần KCN nhưng không rõ cụm",
+                    "price": "Khoảng cách và nhu cầu thuê khác nhau",
+                    "tracked": "Đối chiếu với Bến Cát và cụm lân cận",
+                    "signal": "So cùng bối cảnh công nghiệp chứ không so cả Bình Dương",
+                },
+                {
+                    "area": "Có giá/m2 nhưng thiếu thông tin thổ cư",
+                    "price": "Giá/m2 dễ nhìn rẻ giả",
+                    "tracked": "Xem lại mô tả và nhóm cùng phân khúc",
+                    "signal": "Ưu tiên tin nêu rõ đất nền, thổ cư, diện tích và hướng tiếp cận",
+                },
+                {
+                    "area": "Tin ở trục lớn và tin trong khu dân cư bị trộn chung",
+                    "price": "Mặt bằng cụm bị méo",
+                    "tracked": "Tách theo vị trí vào khu và loại tài sản",
+                    "signal": "MOS chỉ hữu ích khi đầu vào đã tách đúng cụm",
+                },
+                {
+                    "area": "Tin nhà trọ và đất nền bị so cùng nhau",
+                    "price": "Sai kỳ vọng lợi suất và giá đất",
+                    "tracked": "Chốt đúng mục tiêu mua trước khi lọc",
+                    "signal": "Không trộn nhu cầu ở thật với nhu cầu đầu tư dòng tiền",
+                },
+                {
+                    "area": "Khu bạn theo xuất hiện đều mỗi ngày",
+                    "price": "Đã đủ nhịp để theo dõi liên tục",
+                    "tracked": "Lưu watchlist theo cụm và ngân sách",
+                    "signal": "Watchlist + Telegram tốt hơn việc tự quét lại nguồn hàng mỗi ngày",
+                },
+            ],
+            "cards": [
+                {
+                    "title": "Sai lầm phổ biến",
+                    "value": "Gom cả Mỹ Phước",
+                    "body": "Một tin rẻ ở Mỹ Phước 3 không nên được kết luận bằng mặt bằng rút gọn của cả cụm Mỹ Phước.",
+                },
+                {
+                    "title": "Tín hiệu nên ưu tiên",
+                    "value": "Cụm rõ + nguồn rõ",
+                    "body": "Ưu tiên tin nêu rõ Mỹ Phước 1, 2 hoặc 3, loại đất, diện tích và logic giá/m2 cùng nhóm.",
+                },
+                {
+                    "title": "Bước kích hoạt",
+                    "value": "Lưu watchlist",
+                    "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng cụm bạn đang theo và nhận nhịp deal mới.",
+                },
+            ],
+        },
+        "local_links_title": "Trang nên mở cùng bài này",
+        "local_links": [
+            {
+                "label": "Đất Mỹ Phước",
+                "href": "/binh-duong/my-phuoc",
+                "description": "Landing tổng cho cụm Mỹ Phước trước khi đi sâu vào từng tiểu khu 1, 2, 3.",
+            },
+            {
+                "label": "Mỹ Phước 1",
+                "href": "/binh-duong/my-phuoc-1",
+                "description": "Phù hợp khi bạn đang lọc đất nền, nhà trọ và lô thổ cư ở cụm nguồn hàng lâu đời hơn.",
+            },
+            {
+                "label": "Mỹ Phước 2",
+                "href": "/binh-duong/my-phuoc-2",
+                "description": "Nên mở khi cần tách rõ khu gần trục công nghiệp và nhóm nhà phố, đất nền đang được rao dày.",
+            },
+            {
+                "label": "Mỹ Phước 3",
+                "href": "/binh-duong/my-phuoc-3",
+                "description": "Hữu ích khi bạn theo dõi lô gần khu công nghiệp, đất nền đầu tư và nguồn tin có nhịp nhanh hơn.",
+            },
+            {
+                "label": "Bến Cát",
+                "href": "/binh-duong/ben-cat",
+                "description": "Giúp đặt Mỹ Phước vào đúng bối cảnh Bến Cát thay vì so chéo với toàn tỉnh Bình Dương.",
+            },
+            {
+                "label": "Cách Radar BDS lọc tin rẻ thật",
+                "href": "/san-deal-bds",
+                "description": "Trang phương pháp để hiểu vì sao Radar BDS dùng fair value, MOS và cảnh báo nguồn trước khi đẩy CTA.",
+            },
+        ],
+        "process_title": "Cách lọc đất Mỹ Phước Bình Dương trước khi đi xem",
+        "process": [
+            {
+                "title": "1. Chốt đúng cụm Mỹ Phước trước khi chốt giá",
+                "body": (
+                    "Đừng bắt đầu bằng câu hỏi rẻ hay đắt. Hãy bắt đầu bằng câu hỏi tin này nghiêng về Mỹ Phước 1, 2 hay 3 "
+                    "và thuộc loại đất nào."
+                ),
+            },
+            {
+                "title": "2. So cùng cụm Bến Cát liên quan",
+                "body": (
+                    "Nếu tin nằm gần Tân Định, Thới Hòa hay trục công nghiệp, hãy so với nhóm Bến Cát liên quan thay vì "
+                    "kéo mặt bằng cả Bình Dương vào cùng một bảng giá."
+                ),
+            },
+            {
+                "title": "3. Dùng giá/m2 và MOS để xếp thứ tự gọi",
+                "body": (
+                    "Khi cụm đã đúng, giá/m2 và MOS mới trở thành tín hiệu hữu ích để biết tin nào nên mở trước, "
+                    "tin nào chỉ nên để theo dõi thêm."
+                ),
+            },
+            {
+                "title": "4. Kiểm tra cảnh báo nguồn trước khi tin vào chữ rẻ",
+                "body": (
+                    "Tin thiếu cụm, thiếu thổ cư, thiếu logic vị trí hoặc có dấu hiệu repost nên bị xem là tín hiệu cần thẩm tra, "
+                    "không phải bằng chứng chắc chắn của một deal tốt."
+                ),
+            },
+            {
+                "title": "5. Lưu watchlist để biến bài đọc thành nhịp theo dõi",
+                "body": (
+                    "Sau khi xác định cụm, ngân sách và tiêu chí MOS phù hợp, lưu watchlist trên dashboard để nhận deal mới qua Telegram "
+                    "và mở đường cho nhu cầu VIP lead khi bạn cần phản ứng nhanh hơn."
+                ),
+            },
+        ],
+        "faq": [
+            {
+                "q": "Vì sao phải tách Mỹ Phước 1, 2, 3 khi tìm đất Mỹ Phước Bình Dương?",
+                "a": (
+                    "Vì nguồn hàng, bối cảnh công nghiệp, loại đất và nhịp giá của từng cụm không hoàn toàn giống nhau. "
+                    "Gom chung cả Mỹ Phước dễ khiến một tin tưởng rẻ hóa ra chỉ đang đứng ở cụm vốn có mặt bằng thấp hơn."
+                ),
+            },
+            {
+                "q": "Tôi có nên so đất Mỹ Phước trực tiếp với toàn Bến Cát không?",
+                "a": (
+                    "Chỉ nên dùng Bến Cát như bối cảnh rộng. Khi quyết định gọi hay đi xem, vẫn cần thu hẹp về đúng cụm Mỹ Phước 1, 2 hoặc 3 "
+                    "và đúng loại đất để giá/m2 và MOS có ý nghĩa hơn."
+                ),
+            },
+            {
+                "q": "MOS giúp gì khi lọc đất Mỹ Phước Bình Dương?",
+                "a": (
+                    "MOS là biên an toàn giữa giá rao và mức fair value ước tính. Nó giúp bạn xếp thứ tự ưu tiên kiểm tra trước, "
+                    "nhưng không thay thế kiểm tra pháp lý, quy hoạch hay hiện trạng thực địa."
+                ),
+            },
+            {
+                "q": "Radar BDS có thay thẩm định pháp lý hay cam kết lợi nhuận không?",
+                "a": (
+                    "Không. Radar BDS là bộ lọc dữ liệu để giảm thời gian đọc tin và ưu tiên cơ hội đáng kiểm tra. "
+                    "Quyết định cuối cùng vẫn cần kiểm tra pháp lý, quy hoạch, hiện trạng và thương lượng thực tế."
+                ),
+            },
+        ],
+        "article": {
+            "published_at": "2026-07-02",
+            "modified_at": "2026-07-02",
+        },
+        "final_cta": {
+            "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng cụm Mỹ Phước trên dashboard",
+            "body": (
+                "Bài viết giúp bạn tránh so sai cụm. Dashboard giúp bạn biến hiểu biết đó thành watchlist, theo dõi deal mới qua Telegram "
+                "và tiến dần sang nhu cầu VIP khi cần tốc độ cùng chiều sâu hơn."
+            ),
+            "button": "Mở dashboard và lưu watchlist Mỹ Phước",
+        },
+    },
 }
