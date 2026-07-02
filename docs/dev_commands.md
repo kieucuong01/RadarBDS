@@ -77,11 +77,11 @@ from the repo root. Keep the generated backups in `.local/prod-sync/` ignored by
 git.
 
 For the daily signal LLM review workflow, do not sync the full production DB.
-Export only the new production review queue to local:
+Export the production queue of actionable signals still missing LLM review coverage:
 
 ```powershell
-.\scripts\export_prod_signal_llm_review_queue.ps1
-.\scripts\export_prod_signal_llm_review_queue.ps1 -Since "2026-06-14T00:00:00+07:00"
+.\scripts\export_prod_signal_llm_review_queue.ps1 -MissingReviewOnly
+.\scripts\export_prod_signal_llm_review_queue.ps1 -MissingReviewOnly -Since "2026-06-14T00:00:00+07:00"
 ```
 
 Apply manual extraction overrides back to production and refresh valuation only
@@ -137,6 +137,18 @@ The script uses the local deploy key at
 `$env:USERPROFILE\.ssh\radar_bds_deploy_rsa`, preserves production-only
 `data/facebook_profiles.json` edits, pulls with `--ff-only`, restarts
 `radar-bds.service`, and smokes `/api/dashboard` plus `/api/signals`.
+It also auto-archives a small allowlist of known temporary audit/report files
+from the VPS checkout before deploy continues, but still fails on any other
+unexpected dirty file.
+
+Verify a live SEO article after deploy:
+
+```powershell
+.\scripts\verify_live_seo_article.ps1 `
+  -Url "https://radarbds.vn/kien-thuc/<slug>" `
+  -HeadingContains "heading marker" `
+  -RequireWatchlistIntent
+```
 
 ## Crawl and Jobs
 

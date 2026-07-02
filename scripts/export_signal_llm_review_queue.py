@@ -64,6 +64,11 @@ def main() -> int:
         default="review_at_asc",
         help="review_at_asc keeps daily state order; signal_desc reviews strongest deals first.",
     )
+    parser.add_argument(
+        "--missing-review-only",
+        action="store_true",
+        help="Limit the queue to actionable signals that still lack a saved advisory memo in ai_deal_review.",
+    )
     parser.add_argument("--state", type=Path, default=DEFAULT_STATE_PATH, help="Review state JSON path.")
     parser.add_argument(
         "--commit-state",
@@ -73,19 +78,51 @@ def main() -> int:
     args = parser.parse_args()
 
     state = load_state(args.state)
-    since = resolve_since(args.since, state, args.days)
-    rows = load_new_signals(since, args.limit, sort=args.sort)
+    since = resolve_since(args.since, state, args.days, missing_review_only=args.missing_review_only)
+    rows = load_new_signals(
+        since,
+        args.limit,
+        sort=args.sort,
+        missing_review_only=args.missing_review_only,
+    )
     generated_at = datetime.now().astimezone()
     output = args.output or default_output_path(generated_at, args.format)
     output.parent.mkdir(parents=True, exist_ok=True)
 
     max_seen = max((str(row.get("review_sort_at") or "") for row in rows), default="")
     if args.format == "jsonl":
-        output.write_text(render_jsonl(rows, since=since, generated_at=generated_at, max_seen=max_seen), encoding="utf-8")
+        output.write_text(
+            render_jsonl(
+                rows,
+                since=since,
+                generated_at=generated_at,
+                max_seen=max_seen,
+                missing_review_only=args.missing_review_only,
+            ),
+            encoding="utf-8",
+        )
     elif args.format == "json":
-        output.write_text(render_json(rows, since=since, generated_at=generated_at, max_seen=max_seen), encoding="utf-8")
+        output.write_text(
+            render_json(
+                rows,
+                since=since,
+                generated_at=generated_at,
+                max_seen=max_seen,
+                missing_review_only=args.missing_review_only,
+            ),
+            encoding="utf-8",
+        )
     else:
-        output.write_text(render_markdown(rows, since=since, generated_at=generated_at, max_seen=max_seen), encoding="utf-8")
+        output.write_text(
+            render_markdown(
+                rows,
+                since=since,
+                generated_at=generated_at,
+                max_seen=max_seen,
+                missing_review_only=args.missing_review_only,
+            ),
+            encoding="utf-8",
+        )
 
     if args.commit_state:
         if max_seen:
@@ -106,7 +143,8 @@ def main() -> int:
             )
         save_state(args.state, state)
 
-    print(f"Since: {since}")
+    scope_label = format_scope_label(since, args.missing_review_only)
+    print(f"Since: {scope_label}")
     print(f"Exported signals: {len(rows)}")
     print(f"Newest signal timestamp: {max_seen or 'n/a'}")
     print(f"Queue: {output}")
@@ -131,9 +169,17 @@ def save_state(path: Path, state: dict[str, Any]) -> None:
     path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def resolve_since(raw_since: str | None, state: dict[str, Any], days: int) -> str:
+def resolve_since(
+    raw_since: str | None,
+    state: dict[str, Any],
+    days: int,
+    *,
+    missing_review_only: bool = False,
+) -> str | None:
     if raw_since:
         return raw_since
+    if missing_review_only:
+        return None
     state_since = str(state.get("last_reviewed_signal_at") or "").strip()
     if state_since:
         return state_since
@@ -150,7 +196,13 @@ def default_output_path(generated_at: datetime, output_format: str = "markdown")
     return DEFAULT_OUTPUT_DIR / f"signal-llm-qc-{stamp}.md"
 
 
-def load_new_signals(since: str, limit: int = 0, *, sort: str = "review_at_asc") -> list[dict[str, Any]]:
+def load_new_signals(
+    since: str | None,
+    limit: int = 0,
+    *,
+    sort: str = "review_at_asc",
+    missing_review_only: bool = False,
+) -> list[dict[str, Any]]:
     signal_condition = actionable_signal_sql("v")
     listing_condition = actionable_listing_sql("l")
     date_expr = "COALESCE(l.first_seen_at, l.crawled_at, l.updated_at, l.posted_at)"
@@ -160,9 +212,18 @@ def load_new_signals(since: str, limit: int = 0, *, sort: str = "review_at_asc")
         if sort == "signal_desc"
         else f"ORDER BY {date_expr} ASC, l.id ASC"
     )
-    params: list[Any] = [since]
+    params: list[Any] = []
+    extra_filters: list[str] = []
+    if since:
+        extra_filters.append(f"{date_expr} >= ?")
+        params.append(since)
+    if missing_review_only:
+        extra_filters.append("memo.id IS NULL")
     if limit and limit > 0:
         params.append(limit)
+    extra_where = ""
+    if extra_filters:
+        extra_where = "\n              AND " + "\n              AND ".join(extra_filters)
 
     with connect() as conn:
         rows = conn.execute(
@@ -179,10 +240,19 @@ def load_new_signals(since: str, limit: int = 0, *, sort: str = "review_at_asc")
                    r.raw_json
             FROM listings l
             JOIN latest_valuation v ON v.listing_id = l.id
+            LEFT JOIN ai_deal_review memo
+                   ON memo.id = (
+                        SELECT id
+                          FROM ai_deal_review
+                         WHERE listing_id = l.id
+                           AND NULLIF(TRIM(COALESCE(memo_markdown, '')), '') IS NOT NULL
+                         ORDER BY created_at DESC, id DESC
+                         LIMIT 1
+                   )
             LEFT JOIN raw_listings r ON r.id = l.raw_id
             WHERE {signal_condition}
               AND {listing_condition}
-              AND {date_expr} >= ?
+            {extra_where}
             {order_sql}
             {limit_sql}
             """,
@@ -194,13 +264,21 @@ def load_new_signals(since: str, limit: int = 0, *, sort: str = "review_at_asc")
 def render_jsonl(
     rows: list[dict[str, Any]],
     *,
-    since: str,
+    since: str | None,
     generated_at: datetime,
     max_seen: str,
+    missing_review_only: bool,
 ) -> str:
     lines = [
         json.dumps(
-            build_review_item(index, row, since=since, generated_at=generated_at, max_seen=max_seen),
+            build_review_item(
+                index,
+                row,
+                since=since,
+                generated_at=generated_at,
+                max_seen=max_seen,
+                missing_review_only=missing_review_only,
+            ),
             ensure_ascii=False,
             sort_keys=True,
         )
@@ -212,20 +290,29 @@ def render_jsonl(
 def render_json(
     rows: list[dict[str, Any]],
     *,
-    since: str,
+    since: str | None,
     generated_at: datetime,
     max_seen: str,
+    missing_review_only: bool,
 ) -> str:
     payload = {
         "generated_at": generated_at.isoformat(timespec="seconds"),
         "scope": {
             "since": since,
+            "missing_review_only": missing_review_only,
             "exported_signals": len(rows),
             "newest_exported_timestamp": max_seen or None,
         },
         "review_fields": list(REVIEW_FIELDS),
         "items": [
-            build_review_item(index, row, since=since, generated_at=generated_at, max_seen=max_seen)
+            build_review_item(
+                index,
+                row,
+                since=since,
+                generated_at=generated_at,
+                max_seen=max_seen,
+                missing_review_only=missing_review_only,
+            )
             for index, row in enumerate(rows, start=1)
         ],
     }
@@ -236,9 +323,10 @@ def build_review_item(
     index: int,
     row: dict[str, Any],
     *,
-    since: str,
+    since: str | None,
     generated_at: datetime,
     max_seen: str,
+    missing_review_only: bool,
 ) -> dict[str, Any]:
     return {
         "review_index": index,
@@ -251,6 +339,7 @@ def build_review_item(
         "export_meta": {
             "generated_at": generated_at.isoformat(timespec="seconds"),
             "since": since,
+            "missing_review_only": missing_review_only,
             "newest_exported_timestamp": max_seen or None,
         },
         "valuation": {
@@ -310,15 +399,25 @@ def parse_json_value(value: Any) -> Any:
 def render_markdown(
     rows: list[dict[str, Any]],
     *,
-    since: str,
+    since: str | None,
     generated_at: datetime,
     max_seen: str,
+    missing_review_only: bool,
 ) -> str:
+    scope_text = (
+        "actionable signals still missing advisory memo coverage in `ai_deal_review`"
+        if missing_review_only and not since
+        else (
+            f"actionable signals missing advisory memo coverage with first-seen/crawl timestamp >= `{since}`"
+            if missing_review_only
+            else f"actionable signals with first-seen/crawl timestamp >= `{since}`"
+        )
+    )
     lines: list[str] = [
         "# Signal Extraction LLM QC Queue",
         "",
         f"- Generated at: {generated_at.isoformat(timespec='seconds')}",
-        f"- Scope: actionable signals with first-seen/crawl timestamp >= `{since}`",
+        f"- Scope: {scope_text}",
         f"- Exported signals: {len(rows)}",
         f"- Newest exported timestamp: `{max_seen or 'n/a'}`",
         "",
@@ -345,6 +444,14 @@ def render_markdown(
     for idx, row in enumerate(rows, start=1):
         lines.extend(render_listing(idx, row))
     return "\n".join(lines)
+
+
+def format_scope_label(since: str | None, missing_review_only: bool) -> str:
+    if missing_review_only and not since:
+        return "all actionable signals missing ai_deal_review memo coverage"
+    if missing_review_only and since:
+        return f"{since} (missing ai_deal_review memo coverage only)"
+    return since or "n/a"
 
 
 def render_listing(index: int, row: dict[str, Any]) -> list[str]:

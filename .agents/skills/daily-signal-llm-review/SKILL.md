@@ -1,6 +1,6 @@
 ---
 name: daily-signal-llm-review
-description: Use when running the daily Radar BDS LLM workflow for newly crawled signal deals, including extraction QC and advisory investment memos for new actionable signals.
+description: Use when running the daily Radar BDS LLM workflow for actionable signal deals that still lack LLM review coverage, including extraction QC and advisory investment memos.
 ---
 
 # Daily Signal LLM Review
@@ -40,16 +40,16 @@ Do extraction QC first. A memo built on wrong price, area, ward, road, property 
 
 ## Daily Flow
 
-1. Export only the new production review queue to local. Do not sync the full production DB for this daily workflow:
+1. Export the production review queue of actionable signal deals still missing LLM review coverage to local. Do not sync the full production DB for this daily workflow:
 
 ```powershell
-.\scripts\export_prod_signal_llm_review_queue.ps1
+.\scripts\export_prod_signal_llm_review_queue.ps1 -MissingReviewOnly
 ```
 
-2. Or export an exact production window:
+2. Or export an exact production window, still limited to missing-review signals:
 
 ```powershell
-.\scripts\export_prod_signal_llm_review_queue.ps1 -Since "2026-06-14T00:00:00+07:00"
+.\scripts\export_prod_signal_llm_review_queue.ps1 -MissingReviewOnly -Since "2026-06-14T00:00:00+07:00"
 ```
 
 3. Read the generated `.local/llm-review/raw/signal-llm-qc-*.jsonl` sequentially in
@@ -86,10 +86,11 @@ Use explicit LLM extraction overrides only when the LLM read is a deliberate wor
 - Save append-only to `ai_deal_review` with a fresh model marker.
 - Mark `needs_map_check=1` when conclusion depends on exact road, coordinates, zoning, legal status, or location reality.
 
-7. Commit the production review state only after findings and memo decisions are saved:
+7. Commit the production review state only after findings and memo decisions are saved. Reuse the same scope as the export command:
 
 ```powershell
-.\scripts\export_prod_signal_llm_review_queue.ps1 -Since "<same Since value printed by the reviewed queue>" -CommitState
+.\scripts\export_prod_signal_llm_review_queue.ps1 -MissingReviewOnly -CommitState
+.\scripts\export_prod_signal_llm_review_queue.ps1 -MissingReviewOnly -Since "<same Since value printed by the reviewed queue>" -CommitState
 ```
 
 ## Report Back

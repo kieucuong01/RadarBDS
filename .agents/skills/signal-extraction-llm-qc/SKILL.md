@@ -1,11 +1,11 @@
 ---
 name: signal-extraction-llm-qc
-description: Use when reviewing Radar BDS signal listings for extraction mistakes in price, area, ward, road, property type, frontage/depth, or tho cu, especially daily Codex/LLM quality checks on newly crawled production signals.
+description: Use when reviewing Radar BDS signal listings for extraction mistakes in price, area, ward, road, property type, frontage/depth, or tho cu, especially daily Codex/LLM quality checks on actionable production signals still missing LLM review coverage.
 ---
 
 # Signal Extraction LLM QC
 
-Use this skill to review new actionable signal listings by manual Codex/LLM reading. The script only prepares the queue; correctness comes from the agent reading each listing text sequentially.
+Use this skill to review actionable signal listings that still lack LLM review coverage by manual Codex/LLM reading. The script only prepares the queue; correctness comes from the agent reading each listing text sequentially.
 
 ## Guardrails
 
@@ -19,16 +19,16 @@ Use this skill to review new actionable signal listings by manual Codex/LLM read
 
 ## Daily Workflow
 
-1. Export only the new production review queue to local. Do not sync the full production DB for this daily QC workflow:
+1. Export only the production review queue of actionable signals still missing LLM review coverage to local. Do not sync the full production DB for this daily QC workflow:
 
 ```powershell
-.\scripts\export_prod_signal_llm_review_queue.ps1
+.\scripts\export_prod_signal_llm_review_queue.ps1 -MissingReviewOnly
 ```
 
-2. Or export an exact production window:
+2. Or export an exact production window, still limited to missing-review signals:
 
 ```powershell
-.\scripts\export_prod_signal_llm_review_queue.ps1 -Since "2026-06-14T00:00:00+07:00"
+.\scripts\export_prod_signal_llm_review_queue.ps1 -MissingReviewOnly -Since "2026-06-14T00:00:00+07:00"
 ```
 
 3. Read the generated `.local/llm-review/raw/signal-llm-qc-*.jsonl` in small batches. Each raw line contains `listing_id`, `stored_extraction`, `listing_text`, `raw_facts`, and valuation context. For each listing, read title and description yourself, then write a structured result line:
@@ -84,10 +84,11 @@ Treat this as supporting evidence only. It cannot replace the manual LLM reading
 
 7. Do not expand the daily QC workflow into parser/normalizer fixes. If a repeated parser bug becomes obvious, log it separately for non-daily maintenance instead of fixing it inside the daily run.
 
-8. Mark the production queue reviewed only after the structured result/report is saved:
+8. Mark the production queue reviewed only after the structured result/report is saved. Reuse the same scope as the export command:
 
 ```powershell
-.\scripts\export_prod_signal_llm_review_queue.ps1 -Since "<same Since value printed by the reviewed queue>" -CommitState
+.\scripts\export_prod_signal_llm_review_queue.ps1 -MissingReviewOnly -CommitState
+.\scripts\export_prod_signal_llm_review_queue.ps1 -MissingReviewOnly -Since "<same Since value printed by the reviewed queue>" -CommitState
 ```
 
 ## Admin Review

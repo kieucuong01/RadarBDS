@@ -8,6 +8,7 @@ param(
     [int] $Limit = 0,
     [ValidateSet("review_at_asc", "signal_desc")]
     [string] $Sort = "review_at_asc",
+    [switch] $MissingReviewOnly,
     [switch] $CommitState
 )
 
@@ -41,6 +42,7 @@ $scpArgs = @(
 )
 
 $SinceEscaped = $Since.Replace('"', '\"')
+$MissingReviewOnlyFlag = if ($MissingReviewOnly) { "1" } else { "0" }
 $CommitFlag = if ($CommitState) { "1" } else { "0" }
 
 $remoteScript = @"
@@ -58,6 +60,9 @@ else
 fi
 if [ "$Limit" -gt 0 ]; then
   cmd+=(--limit "$Limit")
+fi
+if [ "$MissingReviewOnlyFlag" = "1" ]; then
+  cmd+=(--missing-review-only)
 fi
 if [ "$CommitFlag" = "1" ]; then
   cmd+=(--commit-state)

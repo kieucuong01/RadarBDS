@@ -11,6 +11,28 @@ Rules:
 
 ## Entries
 
+### 2026-06-27 / shipped
+
+- source_asset: `/bao-cao/bds-binh-duong-thang-06-2026`
+- pillar: `Lọc deal và MOS`
+- primary_atom: `Phú Mỹ có 3 tin giảm giá còn Hiệp An đồng dẫn 32 actionable signals; price drop và actionable signal trả lời hai câu hỏi khác nhau`
+- opening_hook: `Nếu bạn dùng cùng một badge cho cả việc săn biến động giá và việc chọn phường nên mở trước, bạn đang lọc sai việc`
+- audience_pain: `Mất thời gian vì dùng sai tín hiệu cho sai quyết định: muốn săn biến động lại mở ward đông tín hiệu, muốn lọc deal lại chỉ nhìn price drop`
+- cta_path: `report -> dashboard/watchlist intent -> watchlist -> telegram`
+- utm_content_slug: `drop_vs_signal_two_jobs`
+- duplicate_guard: `Không quay lại angle so vai trò price drop và actionable signal trong cùng report nếu chưa có snapshot public mới hoặc chưa đổi hẳn pain/CTA`
+
+### 2026-06-26 / shipped
+
+- source_asset: `/bao-cao/bds-binh-duong-thang-06-2026`
+- pillar: `Lọc deal và MOS`
+- primary_atom: `Hiệp Thành vẫn có 29 actionable signals dù không có tin giảm giá; đừng chỉ săn cờ price drop`
+- opening_hook: `Nhiều người chỉ mở dashboard khi thấy cờ giảm giá, nhưng có phường không giảm giá vẫn ra việc`
+- audience_pain: `Dễ bỏ sót khu đáng soi vì quá lệ thuộc vào badge giảm giá`
+- cta_path: `report -> dashboard filtered hiep-thanh -> watchlist -> telegram`
+- utm_content_slug: `dont_chase_price_drop_only`
+- duplicate_guard: `Không quay lại hook price drop này nếu chưa có snapshot public mới hoặc chưa đổi hẳn sang phường hoặc pain khác`
+
 ### 2026-06-24 / shipped
 
 - source_asset: `/bao-cao/bds-binh-duong-thang-06-2026`
