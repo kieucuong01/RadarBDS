@@ -10,12 +10,37 @@ Telegram/VIP funnel.
 2. `../.agents/product-marketing.md`
 3. `README.md`
 4. `growth_marketing_workflow.md`
-5. `config/seo_pages.py`
-6. `config/seo_locations.py`
-7. `config/seo_articles.py`
-8. `../.agents/seo-publish-history.md`
+5. `.agents/skills/marketing-loops/SKILL.md`
+6. `.agents/skills/content-strategy/SKILL.md`
+7. `.agents/skills/seo-audit/SKILL.md`
+8. `.agents/skills/site-architecture/SKILL.md`
+9. `.agents/skills/cro/SKILL.md`
+10. `config/seo_pages.py`
+11. `config/seo_locations.py`
+12. `config/seo_articles.py`
+13. `../.agents/seo-publish-history.md`
 
 Read `operations.md` only when the run reaches push/deploy/live verification.
+
+## Loop Contract
+
+This workflow is the first Radar BDS acquisition loop. It must obey the
+`marketing-loops` anatomy:
+
+| Part | Radar BDS setting |
+|---|---|
+| Check cadence | Daily at the configured Codex automation time |
+| Acts when | There is an unpublished topic with real search intent and a safe implementation path |
+| Purpose | Bring qualified Bình Dương buyers/investors into dashboard -> watchlist -> Telegram/VIP |
+| Skills used | `product-marketing`, `content-strategy`, `seo-audit`, `site-architecture`, `cro`, `schema`, `ai-seo`, `copywriting` |
+| Self-check | No duplicate primary keyword + intent, no doorway page, canonical/sitemap/render verified |
+| State / idempotency | `.agents/seo-publish-history.md` plus `.agents/loops/daily-seo-publisher.log` |
+| Stop / bail-out | Real blocker prevents publishing/deploy/live verification; report production unchanged |
+| Output | One live SEO URL, verification evidence, next topic candidate |
+
+Do not let this become a generic "write one article" habit. Each published URL
+must strengthen at least one of: topical authority, internal linking, CTA path,
+watchlist activation, or a future free-tool/checklist path.
 
 ## Topic Selection Rules
 
@@ -26,6 +51,12 @@ Read `operations.md` only when the run reaches push/deploy/live verification.
 - For the first money-keyword cluster, use broad keywords only once, then move
   to the next location or buyer-education angle instead of rewriting the same
   intent.
+- Run a light `seo-audit` / `site-architecture` check before choosing the topic:
+  avoid cannibalizing an existing URL, avoid orphan pages, and prefer topics that
+  can link to an existing hub/location/method page.
+- If the best 80/20 opportunity is a free tool or checklist, still ship one
+  supporting `/kien-thuc/<slug>` URL for that run and log the tool as the next
+  build candidate. Do not silently change the daily publisher into a tool build.
 
 ## URL And Content Contract
 
@@ -41,9 +72,19 @@ Read `operations.md` only when the run reaches push/deploy/live verification.
 
 - Add or update `config/seo_articles.py`.
 - Append one shipped entry to `../.agents/seo-publish-history.md`.
+- Append one run entry to `../.agents/loops/daily-seo-publisher.log`.
 - Add or update focused tests in `tests/test_public_seo.py`.
 - If the article changes shared public SEO behavior, document that in the same
   commit instead of leaving workflow knowledge only in chat.
+
+Run log format:
+
+```text
+2026-07-02T09:00+07:00 checked=1 acted=1 url="/kien-thuc/..." note="published article -> watchlist"
+```
+
+For blocked runs, log `acted=0` with the blocker. Do not log secrets, phone
+numbers, original listing URLs, or other PII.
 
 ## Verification Contract
 

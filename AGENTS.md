@@ -10,6 +10,7 @@ Read this first in every new AI/dev session. It is the token-light map, not the 
 
 | Task | Read |
 |---|---|
+| Growth marketing, SEO strategy, CRO, marketing loops | `docs/growth_marketing_workflow.md` + relevant `.agents/skills/<skill>/SKILL.md` |
 | Code workflow, traps, verification | `docs/agent_playbook.md` |
 | Module boundaries, API shape, refactor target | `docs/architecture.md` |
 | Crawl jobs, signal creation, daily automation | `docs/daily_crawl_flow.md` |
@@ -42,6 +43,13 @@ Focus areas:
 - Thủ Dầu Một wards.
 - Bến Cát wards and Mỹ Phước sub-zones.
 - Production sources: Facebook primary, Guland secondary. BatDongSan is legacy/disabled and must not be added back into daily crawl without an explicit product decision.
+
+Marketing skills:
+
+- Project-local marketing skills from `coreyhaines31/marketingskills` live in `.agents/skills/`.
+- For Radar BDS marketing work, prefer these project-local skills over global skill copies.
+- Start with `.agents/product-marketing.md`, then use the smallest relevant skill (`marketing-loops`, `content-strategy`, `seo-audit`, `site-architecture`, `cro`, `analytics`, `schema`, `free-tools`, etc.).
+- Do not treat the daily SEO publisher as the entire marketing strategy; it is one acquisition loop inside the broader dashboard -> watchlist -> Telegram/VIP funnel.
 
 ## Runtime Facts
 

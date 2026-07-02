@@ -9,6 +9,7 @@ Radar BDS uses the `coreyhaines31/marketingskills` framework:
 - `product-marketing` is the source of truth for positioning, ICP, customer language, and proof points.
 - AARRR is the operating structure: Acquisition, Activation, Retention, Referral, Revenue.
 - Channel skills execute stage-specific work: `content-strategy`, `ai-seo`, `schema`, `social`, `community-marketing`, `cro`, `lead-magnets`, `free-tools`, and `analytics`.
+- Project-local marketing skills live in `.agents/skills/`. Prefer those project skills over global copies so Radar BDS keeps its own marketing operating rules.
 
 Read order for growth work:
 
@@ -17,6 +18,24 @@ Read order for growth work:
 3. `docs/README.md`
 4. This file
 5. The smallest task-specific product/operations doc needed for data truth
+
+## Installed Marketing Skill Stack
+
+Use the smallest skill set that matches the task. Do not run every skill just
+because it is installed.
+
+| Job | Primary skills |
+|---|---|
+| Decide positioning, ICP, objections, customer language | `product-marketing`, `customer-research` |
+| Choose what to publish | `content-strategy`, `seo-audit`, `site-architecture` |
+| Write or improve pages | `copywriting`, `copy-editing`, `cro`, `ai-seo` |
+| Publish SEO pages safely | `seo-audit`, `schema`, `programmatic-seo` |
+| Build acquisition loops | `marketing-loops`, `analytics`, `content-strategy` |
+| Build lead capture / utility | `free-tools`, `lead-magnets`, `cro` |
+| Draft manual social/community distribution | `social`, `community-marketing`, `copywriting` |
+
+Do not prioritize `ads`, cold outreach, PR, referrals, pricing, or paywall work
+until Radar BDS has trustworthy activation metrics for SEO visitors.
 
 ## 80/20 Priorities
 
@@ -27,6 +46,34 @@ Read order for growth work:
 | 3 | Retention | Watchlist and Telegram loop | Gives users a reason to return when new listings appear |
 | 4 | Referral | Shareable market notes | Useful local insights travel better than generic promotion |
 | 5 | Revenue | VIP lead and advisory CTA | Monetizes high-intent users without forcing paid ads |
+
+Operational interpretation:
+
+- The daily SEO publisher is the first Acquisition loop, not the whole marketing
+  strategy.
+- Before adding more scheduled loops, keep the measurement layer trustworthy:
+  `seo_landing_viewed`, `cta_clicked`, `watchlist_create`, `telegram_linked`,
+  and VIP lead events must be reviewable.
+- The next high-value loop after daily publishing is not more social volume; it
+  is either `tracking-QA` / weekly marketing review or a focused free-tool /
+  lead-capture build if SEO traffic starts but watchlist activation is weak.
+- If a past campaign conflicts with these rules, fix the workflow instead of
+  preserving it for consistency.
+
+## Radar BDS Marketing Operating System
+
+Adopt loops one at a time. Each loop must define cadence, action condition,
+self-check, state/idempotency, stop condition, and output.
+
+| Stage | Loop | Cadence | Autonomous action | Human/gated action |
+|---|---|---:|---|---|
+| Foundation | Tracking QA | Weekly and after deploy | Verify events, sitemap, canonical, CTA target | Any analytics schema change that risks losing production data |
+| Foundation | Weekly marketing review | Weekly | Summarize AARRR movement and choose one next action | Revenue/pricing decisions |
+| Acquisition | Daily SEO publisher | Daily | Publish exactly one new SEO URL when local + deploy + live checks pass | External posting, paid ads, broad DB sync |
+| Activation | Landing/watchlist CRO | Weekly when traffic exists | Propose one CTA/form/watchlist improvement | Major UX or tier-gating changes |
+| Lead capture | Free tool / checklist loop | Monthly or when SEO traffic exists | Stage a tool/checklist improvement | Collecting personal data or outbound follow-up |
+
+Loop state should live in `.agents/loops/`. Never keep loop memory only in chat.
 
 ## Content Pillars
 
