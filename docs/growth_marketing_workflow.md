@@ -189,6 +189,19 @@ All growth automations must:
 - Never write marketing/advisory/AI verdicts into `ai_training_feedback`.
 - Keep production URLs, CTAs, schema, and sitemap visibility verifiable before claiming success.
 
+## Daily SEO Publisher Guardrail
+
+Use `daily_seo_publisher.md` for the exact one-URL-per-run workflow.
+
+Extra rules for daily SEO publishing:
+
+- Read `.agents/seo-publish-history.md` before choosing the topic.
+- Treat repeated primary keyword + search intent as a duplicate, even if the slug changes.
+- A local render is not enough; the run is only `shipped` after live URL + canonical + sitemap verification pass.
+- Prefer the reusable verifier command over ad-hoc manual checks:
+  `.\scripts\verify_live_seo_article.ps1 -Url "https://radarbds.vn/kien-thuc/<slug>" -HeadingContains "..." -RequireWatchlistIntent`
+- If deploy is blocked by known temporary audit/report files on the VPS checkout, let `scripts/deploy_production.ps1` auto-archive only its built-in allowlist; if any other dirty file remains, stop and report the blocker.
+
 ## Automation Output Shapes
 
 Weekly strategy output:

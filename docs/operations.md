@@ -26,10 +26,14 @@ The deploy script:
 - fast-forwards the VPS checkout,
 - preserves production-only `data/facebook_profiles.json`,
 - allows runtime `data/raw_backup.json` to stay dirty on the VPS,
+- auto-archives a small allowlist of known temporary audit/report files from the VPS checkout to `/tmp/radar-bds-deploy-known-temp-*.tgz`,
 - restarts `radar-bds.service`,
 - smokes `/api/dashboard` and `/api/signals`,
 - prewarms dashboard cache,
 - installs/falls back Guland secondary scheduling when needed.
+
+The archive cleanup is intentionally narrow. If any dirty production file remains
+outside the built-in allowlist, deploy must still stop and report the exact file list.
 
 Deploy does not automatically run a full production reprocess for every code change. For parser, dedup, valuation, schema, or quality-gate changes, run an explicit reprocess after deploy.
 

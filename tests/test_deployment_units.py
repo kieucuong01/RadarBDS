@@ -21,3 +21,23 @@ def test_deploy_script_installs_guland_cron_fallback_when_systemd_install_is_res
     assert "15 23 * * *" in script
     assert "/run/lock/radar-bds-guland-crawl.lock" in script
     assert "crontab -" in script
+
+
+def test_deploy_script_can_archive_known_temp_blockers_before_failing():
+    script = Path("scripts/deploy_production.ps1").read_text(encoding="utf-8")
+
+    assert "[switch] $ArchiveKnownTempFiles = $true" in script
+    assert 'known_temp_archive="/tmp/radar-bds-deploy-known-temp-' in script
+    assert '"_radar_audit.py"' in script
+    assert '"scripts/radar_report.py"' in script
+    assert 'rm -f -- "`$path"' in script
+    assert "Unexpected dirty production files:" in script
+
+
+def test_live_seo_article_verifier_checks_canonical_and_sitemap():
+    script = Path("scripts/verify_live_seo_article.ps1").read_text(encoding="utf-8")
+
+    assert 'Invoke-WebRequest -UseBasicParsing -Uri $Url' in script
+    assert 'Canonical tag missing' in script
+    assert 'Article URL missing from sitemap' in script
+    assert "RequireWatchlistIntent" in script

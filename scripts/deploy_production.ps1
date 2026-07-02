@@ -3,7 +3,8 @@ param(
     [string] $User = "deploy",
     [string] $KeyPath = "$env:USERPROFILE\.ssh\radar_bds_deploy_rsa",
     [string] $RemotePath = "/opt/radar-bds/current",
-    [string] $Branch = "main"
+    [string] $Branch = "main",
+    [switch] $ArchiveKnownTempFiles = $true
 )
 
 $ErrorActionPreference = "Stop"
@@ -20,6 +21,7 @@ $sshArgs = @(
     $sshTarget
 )
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$ArchiveKnownTempFilesFlag = if ($ArchiveKnownTempFiles) { "1" } else { "0" }
 $RemoteScriptPath = "/tmp/radar-bds-deploy-$Stamp.sh"
 $LocalScriptPath = Join-Path $env:TEMP "radar-bds-deploy-$Stamp.sh"
 
@@ -29,7 +31,67 @@ cd "$RemotePath"
 
 before=`$(git rev-parse --short HEAD)
 stash_ref=""
+archive_known_temp_files="$ArchiveKnownTempFilesFlag"
+known_temp_archive=""
+known_temp_files=(
+  "_check_cols2.py"
+  "_check_db.py"
+  "_cols.py"
+  "_radar_audit.py"
+  "_radar_audit2.py"
+  "_radar_audit3.py"
+  "_radar_chain.py"
+  "_radar_double.py"
+  "_radar_exact.py"
+  "_radar_final.py"
+  "_radar_final_report.py"
+  "_radar_lots.py"
+  "_radar_report_check.py"
+  "_radar_report_check2.py"
+  "_radar_today.py"
+  "_radar_today2.py"
+  "scripts/radar_daily_report.py"
+  "scripts/radar_full_report.py"
+  "scripts/radar_report.py"
+)
 dirty_files=`$(git status --porcelain | awk '{print `$2}' | grep -Ev '^(data/facebook_profiles.json|data/raw_backup.json)`$' || true)
+
+if [ -n "`$dirty_files" ] && [ "`$archive_known_temp_files" = "1" ]; then
+  known_dirty=""
+  unknown_dirty=""
+  while IFS= read -r path; do
+    [ -z "`$path" ] && continue
+    match=0
+    for known in "`${known_temp_files[@]}"; do
+      if [ "`$path" = "`$known" ]; then
+        match=1
+        break
+      fi
+    done
+    if [ "`$match" -eq 1 ]; then
+      known_dirty="`${known_dirty}`$path
+"
+    else
+      unknown_dirty="`${unknown_dirty}`$path
+"
+    fi
+  done <<EOF_DIRTY
+`$dirty_files
+EOF_DIRTY
+
+  if [ -n "`$known_dirty" ] && [ -z "`$unknown_dirty" ]; then
+    known_temp_archive="/tmp/radar-bds-deploy-known-temp-$Stamp.tgz"
+    printf '%s' "`$known_dirty" | tar -czf "`$known_temp_archive" -T -
+    while IFS= read -r path; do
+      [ -z "`$path" ] && continue
+      rm -f -- "`$path"
+    done <<EOF_KNOWN
+`$known_dirty
+EOF_KNOWN
+    echo "archived known temporary deploy blockers to `$known_temp_archive"
+    dirty_files=`$(git status --porcelain | awk '{print `$2}' | grep -Ev '^(data/facebook_profiles.json|data/raw_backup.json)`$' || true)
+  fi
+fi
 
 if [ -n "`$dirty_files" ]; then
   echo "Unexpected dirty production files:"
@@ -92,6 +154,7 @@ done
 
 after=`$(git rev-parse --short HEAD)
 echo "deployed `$before -> `$after"
+[ -n "`$known_temp_archive" ] && echo "known temp archive: `$known_temp_archive"
 "@
 
 try {
