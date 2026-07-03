@@ -51,6 +51,20 @@
         }
       },
       {
+        "@type": "Organization",
+        "name": "Radar BDS",
+        "url": "https://radarbds.vn/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://radarbds.vn/static/images/app-icon-512.png"
+        }
+      },
+      {
+        "@type": "WebSite",
+        "name": "Radar BDS",
+        "url": "https://radarbds.vn/"
+      },
+      {
         "@type": "BreadcrumbList",
         "itemListElement": [
           {% for crumb in page.breadcrumbs %}
@@ -115,10 +129,10 @@
         <span>Radar BDS</span>
       </a>
       <nav class="seo-nav" aria-label="Điều hướng">
-        <a href="/binh-duong">Bình Dương</a>
-        <a href="/ban-dat-binh-duong">Bán đất</a>
-        <a href="/bao-cao/bds-binh-duong-thang-06-2026">Báo cáo</a>
-        <a href="/san-deal-bds">Săn deal BĐS</a>
+        <a href="/binh-duong" {% if page.path.startswith("/binh-duong") or page.path.startswith("/kien-thuc/") or page.path.startswith("/bao-cao/") %}aria-current="page"{% endif %}>Bình Dương</a>
+        <a href="/ban-dat-binh-duong" {% if page.path == "/ban-dat-binh-duong" %}aria-current="page"{% endif %}>Bán đất</a>
+        <a href="/bao-cao/bds-binh-duong-thang-06-2026" {% if page.path.startswith("/bao-cao/") %}aria-current="page"{% endif %}>Báo cáo</a>
+        <a href="/san-deal-bds" {% if page.path == "/san-deal-bds" %}aria-current="page"{% endif %}>Săn deal BĐS</a>
       </nav>
       <a class="seo-nav-cta" href="{{ watchlist_href }}">Lưu watchlist</a>
     </div>
@@ -137,6 +151,49 @@
     </nav>
 
     <section class="seo-hero">
+      <aside class="hero-map-stage" aria-label="Mô phỏng Radar BDS phân tích khu vực">
+        <div class="map-label">{{ page.map_label }}</div>
+        <div class="price-tag tag-one">23 tr/m²</div>
+        <div class="price-tag tag-two">19 tr/m²</div>
+        <div class="price-tag tag-three">31 tr/m²</div>
+        <div class="price-tag tag-four">MOS 14%</div>
+        <div class="price-tag tag-five">Watchlist</div>
+        <div class="signal-counter">
+          <span>{{ page.hero_metric.label }}</span>
+          <strong>{{ page.hero_metric.value }} <small>{{ page.hero_metric.delta }}</small></strong>
+          <em>{{ page.hero_metric.note }}</em>
+          <svg viewBox="0 0 160 54" aria-hidden="true">
+            <polyline points="0,42 18,34 35,39 52,25 70,31 88,18 107,24 126,11 148,4" />
+          </svg>
+        </div>
+        <div class="property-card">
+          <div class="property-image">
+            <span class="property-status">{{ page.property_card.status }}</span>
+          </div>
+          <div class="property-copy">
+            <strong>{{ page.property_card.title }}</strong>
+            <p>{{ page.property_card.price }}</p>
+            <div class="property-metrics">
+              <span>{{ page.property_card.metric_a }} <b>{{ page.property_card.metric_a_value }}</b></span>
+              <span>{{ page.property_card.metric_b }} <b>{{ page.property_card.metric_b_value }}</b></span>
+            </div>
+            <a href="{{ watchlist_href }}" aria-label="{{ page.primary_cta }}">{{ page.primary_cta }}
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
+            </a>
+          </div>
+        </div>
+        <div class="chart-card">
+          <span>Nhịp giá theo phường / khu</span>
+          <svg viewBox="0 0 220 92" aria-hidden="true">
+            <line x1="0" y1="78" x2="220" y2="78" />
+            <line x1="0" y1="52" x2="220" y2="52" />
+            <line x1="0" y1="26" x2="220" y2="26" />
+            <polyline points="2,74 42,58 82,44 122,50 164,30 218,18" />
+          </svg>
+          <div class="chart-labels"><span>TDM</span><span>Phú Mỹ</span><span>Hiệp An</span><span>Bến Cát</span></div>
+        </div>
+      </aside>
+
       <div class="seo-shell hero-shell">
         <div class="seo-hero-copy">
           <div class="hero-badge">
@@ -155,6 +212,12 @@
               <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
             </a>
             <a class="seo-button seo-button-secondary" href="{{ page.secondary_href }}">{{ page.secondary_cta }}</a>
+          </div>
+          <div class="investor-proof" aria-label="Niềm tin người dùng">
+            <div class="avatar-stack" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <p>Người mua dùng bài viết này để lọc đúng phường rồi mới chuyển sang watchlist.</p>
           </div>
         </div>
       </div>
@@ -323,31 +386,7 @@
     </section>
   </main>
 
-  <footer class="seo-footer">
-    <div class="seo-shell footer-grid">
-      <div class="footer-brand">
-        <a class="seo-brand" href="/" aria-label="Radar BDS">
-          <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
-            <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="4" />
-            <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="4" />
-            <circle cx="24" cy="24" r="3.6" fill="currentColor" />
-            <path d="M24 4v7M24 37v7M4 24h7M37 24h7" stroke="currentColor" stroke-linecap="round" stroke-width="4" />
-          </svg>
-          <span>Radar BDS</span>
-        </a>
-        <p>Dữ liệu thật - Phân tích sâu - Deal chất</p>
-        <small>© 2024 Radar BDS. All rights reserved.</small>
-      </div>
-      <nav aria-label="Sản phẩm">
-        <strong>Sản phẩm</strong>
-        <a href="/">Dashboard</a>
-        <a href="/ban-dat-binh-duong">Bán đất Bình Dương</a>
-        <a href="/bao-cao/bds-binh-duong-thang-06-2026">Báo cáo thị trường</a>
-        <a href="/san-deal-bds">Tín hiệu</a>
-        <a href="/binh-duong">Thị trường</a>
-      </nav>
-    </div>
-  </footer>
+  {% include "partials/seo_footer.html" %}
   <script>
     (function () {
       const pageMeta = {

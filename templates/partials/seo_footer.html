@@ -1,0 +1,54 @@
+<footer class="seo-footer">
+  <div class="seo-shell footer-grid">
+    <div class="footer-brand">
+      <a class="seo-brand" href="/" aria-label="Radar BDS">
+        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="4" />
+          <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="4" />
+          <circle cx="24" cy="24" r="3.6" fill="currentColor" />
+          <path d="M24 4v7M24 37v7M4 24h7M37 24h7" stroke="currentColor" stroke-linecap="round" stroke-width="4" />
+        </svg>
+        <span>Radar BDS</span>
+      </a>
+      <p>Radar BDS giúp lọc tin nhà đất Bình Dương bằng fair value, MOS, lịch sử giá và cảnh báo nguồn.</p>
+      <small>Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.</small>
+    </div>
+
+    <nav aria-label="Sản phẩm">
+      <strong>Sản phẩm</strong>
+      <a href="/">Dashboard</a>
+      <a href="/binh-duong">Nhà đất Bình Dương</a>
+      <a href="/ban-dat-binh-duong">Bán đất Bình Dương</a>
+      <a href="/bao-cao/bds-binh-duong-thang-06-2026">Báo cáo thị trường</a>
+      <a href="/san-deal-bds">Săn deal BĐS</a>
+    </nav>
+
+    <nav aria-label="Khu vực trọng điểm">
+      <strong>Khu vực trọng điểm</strong>
+      <a href="/binh-duong/thu-dau-mot">Thủ Dầu Một</a>
+      <a href="/binh-duong/ben-cat">Bến Cát</a>
+      <a href="/binh-duong/my-phuoc">Mỹ Phước</a>
+      <a href="/binh-duong/phuong-phu-my">Phú Mỹ</a>
+      <a href="/binh-duong/phuong-hiep-an">Hiệp An</a>
+    </nav>
+
+    <nav aria-label="Đọc tiếp">
+      <strong>Đọc tiếp</strong>
+      {% if page.local_links %}
+      {% for link in page.local_links[:3] %}
+      <a href="{{ link.href }}">{{ link.label }}</a>
+      {% endfor %}
+      {% else %}
+      <a href="/san-deal-bds">Cách Radar BDS lọc tin rẻ thật</a>
+      <a href="/binh-duong">Hub nhà đất Bình Dương</a>
+      <a href="/bao-cao/bds-binh-duong-thang-06-2026">Báo cáo thị trường</a>
+      {% endif %}
+    </nav>
+
+    <section class="footer-cta-card" aria-label="Đi tiếp từ bài này">
+      <strong>Đi tiếp từ bài này</strong>
+      <p>Mở dashboard để lưu watchlist, theo dõi deal mới qua Telegram và chuyển bài đọc thành nhịp theo dõi có thể lặp lại.</p>
+      <a class="seo-button seo-button-primary" href="{{ watchlist_href }}">Mở dashboard</a>
+    </section>
+  </div>
+</footer>

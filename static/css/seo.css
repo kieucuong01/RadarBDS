@@ -216,6 +216,54 @@ svg {
   color: #047857;
 }
 
+.seo-page-knowledge .seo-hero {
+  min-height: 610px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+}
+
+.seo-page-knowledge .hero-shell {
+  min-height: 610px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+}
+
+.seo-page-knowledge .hero-map-stage {
+  left: 47.5%;
+}
+
+.seo-page-knowledge .hero-map-stage::before {
+  background:
+    linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0.95) 12%, rgba(255, 255, 255, 0.78) 24%, rgba(255, 255, 255, 0.2) 42%, rgba(255, 255, 255, 0.04) 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 36%, rgba(255, 255, 255, 0.18) 100%);
+}
+
+.seo-page-knowledge .seo-hero-copy {
+  width: auto;
+  max-width: 640px;
+  padding: 18px 0 24px;
+}
+
+.seo-page-knowledge .seo-hero-copy h1 {
+  max-width: 720px;
+  font-size: clamp(3.2rem, 4.8vw, 4.65rem);
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.seo-page-knowledge .seo-lead {
+  max-width: 600px;
+  font-size: 1.02rem;
+}
+
+.seo-page-knowledge .hero-checks {
+  max-width: 620px;
+}
+
+.seo-page-knowledge .investor-proof p {
+  max-width: 280px;
+}
+
 .seo-hero-copy h1 {
   max-width: 382px;
   margin: 0;
@@ -1408,14 +1456,14 @@ svg {
 
 .seo-footer {
   border-top: 1px solid var(--line);
-  background: #ffffff;
+  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
 }
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.65fr repeat(4, minmax(120px, 1fr));
-  gap: 30px;
-  padding: 14px 0 10px;
+  grid-template-columns: 1.45fr repeat(3, minmax(132px, 1fr)) minmax(220px, 1.15fr);
+  gap: 32px;
+  padding: 28px 0 24px;
   color: var(--muted);
 }
 
@@ -1431,25 +1479,27 @@ svg {
 .footer-brand p,
 .footer-brand small {
   display: block;
-  margin: 6px 0 0;
-  font-size: 0.72rem;
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.65;
 }
 
 .footer-brand small {
-  margin-top: 14px;
+  margin-top: 12px;
+  color: #62748a;
 }
 
 .seo-footer nav,
-.footer-social {
+.footer-cta-card {
   display: grid;
   align-content: start;
-  gap: 7px;
-  font-size: 0.76rem;
+  gap: 8px;
+  font-size: 0.78rem;
 }
 
 .seo-footer strong {
   color: var(--ink);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 900;
 }
 
@@ -1458,24 +1508,28 @@ svg {
   font-weight: 700;
 }
 
-.footer-social div {
-  display: flex;
-  gap: 10px;
-  margin-top: 6px;
+.seo-footer a:hover {
+  color: var(--blue);
 }
 
-.footer-social a {
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--blue);
+.footer-cta-card {
+  gap: 12px;
+  padding: 18px;
   border: 1px solid var(--line);
-  border-radius: 50%;
-  background: #ffffff;
-  font-size: 0.82rem;
-  font-weight: 900;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, #eef5ff 100%);
+  box-shadow: var(--soft-shadow);
+}
+
+.footer-cta-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.65;
+}
+
+.footer-cta-card .seo-button {
+  width: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {

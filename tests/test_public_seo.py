@@ -310,10 +310,13 @@ def test_knowledge_article_renders_canonical_content_and_funnel_markers():
     assert 'href="/?tab=signals&amp;intent=watchlist"' in html
     assert "Watchlist -&gt; Telegram -&gt; VIP lead" in html
     assert "Radar BDS là bộ lọc dữ liệu" in html
+    assert 'class="hero-map-stage"' in html
+    assert "Đi tiếp từ bài này" in html
     assert 'href="/ban-dat-binh-duong"' in html
     assert 'href="/binh-duong/ben-cat"' in html
     assert 'href="/san-deal-bds"' in html
     assert '"@type": "Article"' in html
+    assert '"@type": "Organization"' in html
     assert "datePublished" in html
 
 
@@ -363,11 +366,14 @@ def test_all_knowledge_articles_are_indexed_and_render_funnel_markers():
         assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
         assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
         assert article["hero_title"] in html
+        assert 'class="hero-map-stage"' in html
         assert article["market_snapshot"]["title"] in html
         assert article["final_cta"]["button"] in html
+        assert "Đi tiếp từ bài này" in html
         assert 'href="/?tab=signals&amp;intent=watchlist"' in html
         assert "Telegram" in html
         assert '"@type": "Article"' in html
+        assert '"@type": "Organization"' in html
         assert "datePublished" in html
 
 
