@@ -523,4 +523,262 @@ SEO_ARTICLES = {
             "button": "Mở dashboard và lưu watchlist Mỹ Phước",
         },
     },
+    "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia": {
+        "variant": "knowledge",
+        "path": "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia",
+        "title": "Giá đất Thủ Dầu Một theo phường: vì sao phải tách Phú Mỹ, Hiệp An, Chánh Nghĩa trước khi so giá",
+        "description": (
+            "Hướng dẫn đọc giá đất Thủ Dầu Một theo phường bằng cách tách Phú Mỹ, Hiệp An, Chánh Nghĩa, "
+            "so đúng giá/m2, MOS và lưu watchlist Radar BDS trước khi đi xem."
+        ),
+        "keywords": (
+            "giá đất Thủ Dầu Một theo phường, nhà đất Thủ Dầu Một, giá đất Phú Mỹ Thủ Dầu Một, "
+            "giá đất Hiệp An Thủ Dầu Một, giá đất Chánh Nghĩa Thủ Dầu Một, watchlist Radar BDS"
+        ),
+        "breadcrumb_label": "Giá đất Thủ Dầu Một theo phường: tách Phú Mỹ, Hiệp An, Chánh Nghĩa",
+        "hero_badge": "Kiến thức nhà đất Thủ Dầu Một",
+        "hero_title": "Giá đất Thủ Dầu Một theo phường: vì sao phải tách Phú Mỹ, Hiệp An, Chánh Nghĩa trước khi so giá",
+        "hero_text": (
+            "Sai lầm phổ biến khi đọc giá đất Thủ Dầu Một là gom các phường thành một mặt bằng chung rồi kết luận rẻ hay đắt. "
+            "Radar BDS giúp bạn tách đúng Phú Mỹ, Hiệp An, Chánh Nghĩa, rồi mới dùng giá/m2, MOS và watchlist để biết tin nào đáng kiểm tra."
+        ),
+        "hero_checks": [
+            "Tách Phú Mỹ, Hiệp An, Chánh Nghĩa trước khi so giá",
+            "Giá/m2 + MOS + cảnh báo nguồn",
+            "Dashboard -> Watchlist -> Telegram/VIP lead",
+        ],
+        "primary_cta": "Mở dashboard để lưu watchlist Thủ Dầu Một",
+        "secondary_cta": "Xem landing Thủ Dầu Một",
+        "secondary_href": "/binh-duong/thu-dau-mot",
+        "map_label": "Knowledge / Thu Dau Mot",
+        "hero_metric": {
+            "label": "Phường cần tách",
+            "value": "3",
+            "delta": "phường",
+            "note": "Phú Mỹ, Hiệp An, Chánh Nghĩa",
+        },
+        "property_card": {
+            "status": "So đúng phường",
+            "title": "Một tin Hiệp An không nên so bằng mặt bằng Chánh Nghĩa",
+            "price": "Đừng kết luận rẻ khi tin chỉ ghi Thủ Dầu Một chung chung mà chưa rõ phường và phân khúc",
+            "metric_a": "Ưu tiên",
+            "metric_a_value": "giá/m2 theo phường",
+            "metric_b": "Bước kế tiếp",
+            "metric_b_value": "lưu watchlist",
+        },
+        "value_cards": [
+            {
+                "title": "Tách đúng phường trước rồi mới nói chuyện giá",
+                "body": (
+                    "Phú Mỹ, Hiệp An và Chánh Nghĩa đều thuộc Thủ Dầu Một nhưng nguồn hàng, độ trung tâm, loại tài sản và nhịp giá khác nhau. "
+                    "Tách đúng phường giúp giá/m2 và fair value bớt lệch ngay từ bước đầu."
+                ),
+            },
+            {
+                "title": "Tin đáng kiểm tra không chỉ là tin nghe rẻ",
+                "body": (
+                    "Một tin nhà đất Thủ Dầu Một đáng mở tiếp thường nêu rõ phường, diện tích, thổ cư và logic vị trí. "
+                    "Tin quá rẻ nhưng mờ phường hoặc nguồn thiếu nhất quán nên bị xem là tín hiệu cần soi kỹ hơn."
+                ),
+            },
+            {
+                "title": "Biến hiểu biết phường thành watchlist có thể lặp lại",
+                "body": (
+                    "Sau khi chốt phường và ngưỡng giá hợp lý, hãy lưu watchlist trên dashboard. "
+                    "Đó là cầu nối từ bài SEO sang Telegram và nhu cầu VIP khi bạn muốn theo dõi deal mới nhanh hơn."
+                ),
+            },
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Funnel sản phẩm",
+            "title": "Hiểu đúng giá đất Thủ Dầu Một theo phường rồi thì phải chuyển sang watchlist",
+            "body": (
+                "Bài viết này giúp bạn tránh so sai phường. Dashboard mới là nơi bạn mở các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá "
+                "và cảnh báo nguồn trước khi lưu watchlist để nhận deal mới qua Telegram."
+            ),
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS để lọc nhà đất Thủ Dầu Một theo watchlist",
+            "cta": "Lưu watchlist Thủ Dầu Một",
+            "metrics": [
+                {"value": "Dashboard", "label": "mở feed Thủ Dầu Một đang có"},
+                {"value": "Watchlist", "label": "giữ đúng phường và ngưỡng giá bạn theo"},
+                {"value": "Telegram", "label": "nhận deal mới thay vì quét lại từ đầu"},
+            ],
+        },
+        "market_snapshot": {
+            "eyebrow": "Checklist so giá",
+            "title": "6 dấu hiệu để biết bạn đang so đúng giá đất Thủ Dầu Một theo phường hay đang gom sai mặt bằng",
+            "body": (
+                "Checklist này giúp người mua và nhà đầu tư đọc đúng bối cảnh phường trước khi kết luận rẻ hay đắt. "
+                "Radar BDS là bộ lọc dữ liệu ban đầu, không phải thẩm định pháp lý hay cam kết lợi nhuận."
+            ),
+            "columns": ["Dấu hiệu", "Vì sao cần tách", "Việc nên làm"],
+            "rows": [
+                {
+                    "area": "Tin chỉ ghi Thủ Dầu Một chung chung",
+                    "price": "Dễ gom sai phường",
+                    "tracked": "Mở landing khu hoặc phường liên quan",
+                    "signal": "Không so giá trước khi biết tin nghiêng về Phú Mỹ, Hiệp An hay Chánh Nghĩa",
+                },
+                {
+                    "area": "Tin gần trung tâm nhưng thiếu phường",
+                    "price": "Mặt bằng Chánh Nghĩa lệch rõ so với Hiệp An",
+                    "tracked": "Đối chiếu đúng phường và loại tài sản",
+                    "signal": "Cùng là Thủ Dầu Một nhưng giá/m2 chỉ có nghĩa khi so cùng nhóm",
+                },
+                {
+                    "area": "Có giá/m2 nhưng thiếu thổ cư hoặc diện tích rõ",
+                    "price": "Giá/m2 dễ nhìn rẻ giả",
+                    "tracked": "Xem lại mô tả và nhóm cùng phân khúc",
+                    "signal": "Ưu tiên tin nêu rõ thổ cư, diện tích và lối vào thực tế",
+                },
+                {
+                    "area": "Tin có MOS nhưng nguồn mờ hoặc repost",
+                    "price": "MOS có thể bị kéo lệch bởi dữ liệu đầu vào",
+                    "tracked": "Kiểm tra cảnh báo nguồn và lịch sử giá",
+                    "signal": "Không gọi chỉ vì thấy badge rẻ một lần",
+                },
+                {
+                    "area": "Tin nêu rõ phường, diện tích, loại tài sản",
+                    "price": "Dễ đọc đúng mặt bằng hơn",
+                    "tracked": "Đưa vào dashboard để soi tiếp",
+                    "signal": "Đây là nhóm phù hợp để ưu tiên thứ tự gọi và đi xem",
+                },
+                {
+                    "area": "Bạn muốn theo dõi đều một phường cụ thể",
+                    "price": "Tự quét lại mỗi ngày rất tốn thời gian",
+                    "tracked": "Lưu watchlist theo phường và ngân sách",
+                    "signal": "Watchlist + Telegram hợp lý hơn cho nhịp theo dõi lặp lại",
+                },
+            ],
+            "cards": [
+                {
+                    "title": "Sai lầm phổ biến",
+                    "value": "So chung cả Thủ Dầu Một",
+                    "body": "Một tin ở Hiệp An có thể chỉ trông rẻ khi bạn vô tình kéo mặt bằng trung tâm Chánh Nghĩa vào cùng phép so.",
+                },
+                {
+                    "title": "Tín hiệu nên ưu tiên",
+                    "value": "Phường rõ + nguồn rõ",
+                    "body": "Ưu tiên tin nêu rõ phường, loại tài sản, diện tích và còn giữ được logic giá/m2 cùng nhóm.",
+                },
+                {
+                    "title": "Bước kích hoạt",
+                    "value": "Lưu watchlist",
+                    "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng phường bạn đang theo và nhận deal mới nhanh hơn.",
+                },
+            ],
+        },
+        "local_links_title": "Trang nên mở cùng bài này",
+        "local_links": [
+            {
+                "label": "Thủ Dầu Một",
+                "href": "/binh-duong/thu-dau-mot",
+                "description": "Landing tổng cho nhà đất Thủ Dầu Một trước khi đi sâu vào từng phường trọng điểm.",
+            },
+            {
+                "label": "Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Phù hợp khi bạn muốn so nhóm đất dân cư, hẻm xe hơi và khu có nguồn hàng dày hơn.",
+            },
+            {
+                "label": "Hiệp An",
+                "href": "/binh-duong/phuong-hiep-an",
+                "description": "Nên mở khi bạn đang lọc đất dân cư, đất vườn và nhóm tin cần chuẩn hóa diện tích kỹ hơn.",
+            },
+            {
+                "label": "Chánh Nghĩa",
+                "href": "/binh-duong/phuong-chanh-nghia",
+                "description": "Giúp đặt đúng bối cảnh trung tâm để tránh kéo mặt bằng giá cao áp vào các phường khác.",
+            },
+            {
+                "label": "Báo cáo BĐS Bình Dương tháng 06/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-06-2026",
+                "description": "Bản public snapshot để thấy vì sao cùng Thủ Dầu Một nhưng từng phường vẫn cần so tách riêng.",
+            },
+            {
+                "label": "Cách Radar BDS lọc tin rẻ thật",
+                "href": "/san-deal-bds",
+                "description": "Trang phương pháp để hiểu fair value, MOS và cảnh báo nguồn trước khi bấm CTA.",
+            },
+        ],
+        "process_title": "Cách đọc giá đất Thủ Dầu Một theo phường trước khi đi xem",
+        "process": [
+            {
+                "title": "1. Chốt đúng phường trước khi chốt giá",
+                "body": (
+                    "Đừng bắt đầu bằng câu hỏi rẻ hay đắt. Hãy bắt đầu bằng việc tin này nghiêng về Phú Mỹ, Hiệp An, Chánh Nghĩa hay một phường khác của Thủ Dầu Một."
+                ),
+            },
+            {
+                "title": "2. So cùng nhóm tài sản trong cùng phường",
+                "body": (
+                    "Nhà phố trung tâm, đất hẻm, đất dân cư hay đất diện tích lớn không nên bị trộn vào cùng một mặt bằng so giá. "
+                    "Thu hẹp về đúng phường và đúng loại tài sản rồi mới đọc giá/m2."
+                ),
+            },
+            {
+                "title": "3. Dùng MOS để xếp thứ tự kiểm tra",
+                "body": (
+                    "Khi phường đã đúng, MOS mới trở thành tín hiệu hữu ích để biết tin nào nên mở trước trong danh sách nhà đất Thủ Dầu Một."
+                ),
+            },
+            {
+                "title": "4. Kiểm tra cảnh báo nguồn trước khi tin vào chữ rẻ",
+                "body": (
+                    "Tin thiếu phường, thiếu thổ cư, thiếu logic vị trí hoặc có dấu hiệu repost nên bị xem là tín hiệu cần thẩm tra, "
+                    "không phải bằng chứng chắc chắn của một deal tốt."
+                ),
+            },
+            {
+                "title": "5. Lưu watchlist để biến bài đọc thành nhịp theo dõi",
+                "body": (
+                    "Sau khi xác định phường, ngân sách và tiêu chí MOS phù hợp, lưu watchlist trên dashboard để nhận deal mới qua Telegram "
+                    "và mở đường cho nhu cầu VIP lead khi bạn cần phản ứng nhanh hơn."
+                ),
+            },
+        ],
+        "faq": [
+            {
+                "q": "Vì sao phải tách Phú Mỹ, Hiệp An, Chánh Nghĩa khi đọc giá đất Thủ Dầu Một?",
+                "a": (
+                    "Vì nguồn hàng, độ trung tâm, loại tài sản và nhịp giá của các phường này không hoàn toàn giống nhau. "
+                    "Gom chung cả Thủ Dầu Một dễ khiến một tin tưởng rẻ hóa ra chỉ đang đứng ở phường vốn có mặt bằng thấp hơn."
+                ),
+            },
+            {
+                "q": "Tôi có nên so giá đất Thủ Dầu Một bằng số trung bình toàn khu không?",
+                "a": (
+                    "Chỉ nên dùng số tổng như bối cảnh rộng. Khi quyết định gọi hay đi xem, bạn vẫn cần thu hẹp về đúng phường và đúng loại tài sản "
+                    "để giá/m2 và MOS có ý nghĩa hơn."
+                ),
+            },
+            {
+                "q": "MOS giúp gì khi lọc nhà đất Thủ Dầu Một?",
+                "a": (
+                    "MOS là biên an toàn giữa giá rao và mức fair value ước tính. Nó giúp bạn ưu tiên thứ tự kiểm tra trước, "
+                    "nhưng không thay thế việc xem pháp lý, quy hoạch hay hiện trạng thực địa."
+                ),
+            },
+            {
+                "q": "Radar BDS có thay thẩm định pháp lý hay cam kết lợi nhuận không?",
+                "a": (
+                    "Không. Radar BDS là bộ lọc dữ liệu để giảm thời gian đọc tin và ưu tiên cơ hội đáng kiểm tra. "
+                    "Quyết định cuối cùng vẫn cần kiểm tra pháp lý, quy hoạch, hiện trạng và thương lượng thực tế."
+                ),
+            },
+        ],
+        "article": {
+            "published_at": "2026-07-03",
+            "modified_at": "2026-07-03",
+        },
+        "final_cta": {
+            "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng phường Thủ Dầu Một trên dashboard",
+            "body": (
+                "Bài viết giúp bạn tránh gom sai mặt bằng. Dashboard giúp bạn biến hiểu biết đó thành watchlist, theo dõi deal mới qua Telegram "
+                "và tiến dần sang nhu cầu VIP khi cần tốc độ cùng chiều sâu hơn."
+            ),
+            "button": "Mở dashboard và lưu watchlist Thủ Dầu Một",
+        },
+    },
 }
