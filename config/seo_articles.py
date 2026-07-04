@@ -781,4 +781,261 @@ SEO_ARTICLES = {
             "button": "Mở dashboard và lưu watchlist Thủ Dầu Một",
         },
     },
+    "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin": {
+        "variant": "knowledge",
+        "path": "/kien-thuc/dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin",
+        "title": "Đất Bình Dương: vì sao không nên so giá toàn tỉnh trước khi lọc tin",
+        "description": (
+            "Hướng dẫn đọc đất Bình Dương theo đúng cụm Thủ Dầu Một, Bến Cát, Mỹ Phước thay vì gom cả tỉnh, "
+            "rồi dùng giá/m2, MOS và watchlist Radar BDS để lọc tin đáng kiểm tra."
+        ),
+        "keywords": (
+            "đất Bình Dương, dat binh duong, giá đất Bình Dương, mua đất Bình Dương, bán đất Bình Dương, watchlist Radar BDS"
+        ),
+        "breadcrumb_label": "Đất Bình Dương: đừng so giá toàn tỉnh",
+        "hero_badge": "Kiến thức đất Bình Dương",
+        "hero_title": "Đất Bình Dương: vì sao không nên so giá toàn tỉnh trước khi lọc tin",
+        "hero_text": (
+            "Sai lầm phổ biến khi đọc đất Bình Dương là gom Thủ Dầu Một, Bến Cát, Mỹ Phước vào cùng một mặt bằng rồi kết luận rẻ hay đắt. "
+            "Radar BDS giúp bạn tách đúng cụm trước, rồi mới dùng giá/m2, MOS và watchlist để biết tin nào đáng kiểm tra."
+        ),
+        "hero_checks": [
+            "Tách Thủ Dầu Một, Bến Cát, Mỹ Phước trước khi so giá",
+            "Giá/m2 + MOS + cảnh báo nguồn",
+            "Dashboard -> Watchlist -> Telegram/VIP lead",
+        ],
+        "primary_cta": "Mở dashboard để lưu watchlist đất Bình Dương",
+        "secondary_cta": "Xem hub đất Bình Dương",
+        "secondary_href": "/ban-dat-binh-duong",
+        "map_label": "Knowledge / Binh Duong Land",
+        "hero_metric": {
+            "label": "Cụm nên tách",
+            "value": "3",
+            "delta": "vùng",
+            "note": "Thủ Dầu Một, Bến Cát, Mỹ Phước",
+        },
+        "property_card": {
+            "status": "So đúng cụm",
+            "title": "Một tin đất Bến Cát không nên so bằng mặt bằng Thủ Dầu Một",
+            "price": "Đừng kết luận rẻ khi tin chỉ ghi Bình Dương chung chung mà chưa rõ cụm, phường và phân khúc",
+            "metric_a": "Ưu tiên",
+            "metric_a_value": "giá/m2 theo khu",
+            "metric_b": "Bước kế tiếp",
+            "metric_b_value": "lưu watchlist",
+        },
+        "value_cards": [
+            {
+                "title": "So giá toàn tỉnh làm lệch kỳ vọng rất nhanh",
+                "body": (
+                    "Mặt bằng đất Bình Dương giữa Thủ Dầu Một, Bến Cát và Mỹ Phước khác nhau rõ về độ trung tâm, nguồn hàng và loại tài sản. "
+                    "Gom chung cả tỉnh khiến một tin nhìn rẻ giả hoặc đắt giả ngay từ bước đầu."
+                ),
+            },
+            {
+                "title": "Tin đáng kiểm tra phải đúng khu trước khi đúng giá",
+                "body": (
+                    "Một tin đất Bình Dương đáng mở tiếp thường nêu rõ khu, phường, diện tích, thổ cư và logic vị trí. "
+                    "Nếu mới biết tin nằm ở Bình Dương chung chung, kết luận giá còn quá sớm."
+                ),
+            },
+            {
+                "title": "Tách cụm xong rồi biến nó thành watchlist lặp lại",
+                "body": (
+                    "Sau khi chốt cụm và ngưỡng giá hợp lý, hãy lưu watchlist trên dashboard. "
+                    "Đó là cầu nối từ bài SEO sang Telegram và nhu cầu VIP khi bạn muốn theo dõi deal mới nhanh hơn."
+                ),
+            },
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Funnel sản phẩm",
+            "title": "Hiểu đúng đất Bình Dương rồi thì phải chuyển sang watchlist theo khu",
+            "body": (
+                "Bài viết này giúp bạn tránh gom sai mặt bằng toàn tỉnh. Dashboard mới là nơi bạn mở các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá "
+                "và cảnh báo nguồn trước khi lưu watchlist để nhận deal mới qua Telegram."
+            ),
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS để lọc đất Bình Dương theo khu và watchlist",
+            "cta": "Lưu watchlist đất Bình Dương",
+            "metrics": [
+                {"value": "Dashboard", "label": "mở feed đất Bình Dương đang có"},
+                {"value": "Watchlist", "label": "giữ đúng khu và ngưỡng giá bạn theo"},
+                {"value": "Telegram", "label": "nhận deal mới thay vì so lại từ đầu"},
+            ],
+        },
+        "market_snapshot": {
+            "eyebrow": "Checklist so giá",
+            "title": "6 dấu hiệu cho thấy bạn đang so đất Bình Dương đúng khu hay đang gom sai cả tỉnh",
+            "body": (
+                "Checklist này giúp người mua và nhà đầu tư biết khi nào nên tách Thủ Dầu Một, Bến Cát, Mỹ Phước thành các mặt bằng khác nhau. "
+                "Radar BDS là bộ lọc dữ liệu ban đầu, không phải thẩm định pháp lý hay cam kết lợi nhuận."
+            ),
+            "columns": ["Dấu hiệu", "Vì sao dễ lệch", "Việc nên làm"],
+            "rows": [
+                {
+                    "area": "Tin chỉ ghi Bình Dương chung chung",
+                    "price": "Dễ gom sai mặt bằng tỉnh",
+                    "tracked": "Mở hub hoặc landing khu liên quan",
+                    "signal": "Không so giá trước khi biết tin nghiêng về Thủ Dầu Một, Bến Cát hay Mỹ Phước",
+                },
+                {
+                    "area": "Tin ở Bến Cát nhưng bị so với trung tâm Thủ Dầu Một",
+                    "price": "Giá/m2 lệch kỳ vọng rõ",
+                    "tracked": "Thu hẹp về đúng khu và loại tài sản",
+                    "signal": "Cùng là đất Bình Dương nhưng mỗi cụm có nhịp giá riêng",
+                },
+                {
+                    "area": "Tin Mỹ Phước chưa tách 1, 2, 3",
+                    "price": "Dễ nhìn rẻ hoặc đắt giả",
+                    "tracked": "Mở tiếp bài tách cụm Mỹ Phước",
+                    "signal": "So đúng cụm trước rồi mới đọc MOS",
+                },
+                {
+                    "area": "Có giá/m2 nhưng thiếu thổ cư hoặc diện tích rõ",
+                    "price": "Giá/m2 có thể đánh lừa",
+                    "tracked": "Xem lại mô tả và nhóm cùng phân khúc",
+                    "signal": "Ưu tiên tin nêu rõ thổ cư, diện tích và lối vào",
+                },
+                {
+                    "area": "Tin có MOS nhưng nguồn mờ hoặc repost",
+                    "price": "MOS có thể bị kéo lệch",
+                    "tracked": "Kiểm tra cảnh báo nguồn và lịch sử giá",
+                    "signal": "Không gọi chỉ vì thấy badge rẻ một lần",
+                },
+                {
+                    "area": "Bạn muốn theo dõi đều một khu cụ thể",
+                    "price": "Tự quét lại mỗi ngày rất tốn thời gian",
+                    "tracked": "Lưu watchlist theo khu và ngân sách",
+                    "signal": "Watchlist + Telegram hợp lý hơn cho nhịp theo dõi lặp lại",
+                },
+            ],
+            "cards": [
+                {
+                    "title": "Sai lầm phổ biến",
+                    "value": "So chung cả Bình Dương",
+                    "body": "Một tin ở Bến Cát có thể trông rẻ khi bạn vô tình kéo mặt bằng trung tâm Thủ Dầu Một vào cùng phép so.",
+                },
+                {
+                    "title": "Tín hiệu nên ưu tiên",
+                    "value": "Khu rõ + nguồn rõ",
+                    "body": "Ưu tiên tin nêu rõ cụm, phường, loại tài sản, diện tích và còn giữ được logic giá/m2 cùng nhóm.",
+                },
+                {
+                    "title": "Bước kích hoạt",
+                    "value": "Lưu watchlist",
+                    "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng khu bạn đang theo và nhận deal mới nhanh hơn.",
+                },
+            ],
+        },
+        "local_links_title": "Trang nên mở ngay sau bài này",
+        "local_links": [
+            {
+                "label": "Hub đất Bình Dương",
+                "href": "/ban-dat-binh-duong",
+                "description": "Trang hub để xem mặt bằng đất Bình Dương, tín hiệu theo khu và CTA vào dashboard.",
+            },
+            {
+                "label": "Thủ Dầu Một",
+                "href": "/binh-duong/thu-dau-mot",
+                "description": "Phù hợp khi bạn đang lọc nhóm đất gần trung tâm và cần tách tiếp theo phường.",
+            },
+            {
+                "label": "Bến Cát",
+                "href": "/binh-duong/ben-cat",
+                "description": "Nên mở khi bạn theo nhóm đất nền, nhà phố và nguồn hàng công nghiệp mở rộng.",
+            },
+            {
+                "label": "Mỹ Phước",
+                "href": "/binh-duong/my-phuoc",
+                "description": "Giúp thu hẹp tiếp về cụm Mỹ Phước trước khi tách 1, 2, 3 và đọc đúng mặt bằng.",
+            },
+            {
+                "label": "Đất Mỹ Phước Bình Dương",
+                "href": "/kien-thuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
+                "description": "Bài hỗ trợ khi bạn đã biết nên so theo khu và muốn đi sâu vào cụm Mỹ Phước.",
+            },
+            {
+                "label": "Cách Radar BDS lọc tin rẻ thật",
+                "href": "/san-deal-bds",
+                "description": "Trang phương pháp để hiểu fair value, MOS và cảnh báo nguồn trước khi bấm CTA.",
+            },
+        ],
+        "process_title": "Cách đọc đất Bình Dương trước khi đi xem",
+        "process": [
+            {
+                "title": "1. Chốt đúng cụm trước khi chốt giá",
+                "body": (
+                    "Đừng bắt đầu bằng câu hỏi rẻ hay đắt trên phạm vi cả tỉnh. Hãy bắt đầu bằng việc tin này nghiêng về Thủ Dầu Một, Bến Cát, Mỹ Phước hay một cụm khác."
+                ),
+            },
+            {
+                "title": "2. So cùng nhóm tài sản trong cùng khu",
+                "body": (
+                    "Đất hẻm trung tâm, đất dân cư ven đô, lô gần khu công nghiệp hay đất diện tích lớn không nên bị trộn vào cùng một mặt bằng so giá. "
+                    "Thu hẹp về đúng khu và đúng loại tài sản rồi mới đọc giá/m2."
+                ),
+            },
+            {
+                "title": "3. Dùng MOS để xếp thứ tự kiểm tra",
+                "body": (
+                    "Khi khu đã đúng, MOS mới trở thành tín hiệu hữu ích để biết tin nào nên mở trước trong danh sách đất Bình Dương."
+                ),
+            },
+            {
+                "title": "4. Kiểm tra cảnh báo nguồn trước khi tin vào chữ rẻ",
+                "body": (
+                    "Tin thiếu khu, thiếu thổ cư, thiếu logic vị trí hoặc có dấu hiệu repost nên bị xem là tín hiệu cần thẩm tra, "
+                    "không phải bằng chứng chắc chắn của một deal tốt."
+                ),
+            },
+            {
+                "title": "5. Lưu watchlist để biến bài đọc thành nhịp theo dõi",
+                "body": (
+                    "Sau khi xác định khu, ngân sách và tiêu chí MOS phù hợp, lưu watchlist trên dashboard để nhận deal mới qua Telegram "
+                    "và mở đường cho nhu cầu VIP lead khi bạn cần phản ứng nhanh hơn."
+                ),
+            },
+        ],
+        "faq": [
+            {
+                "q": "Vì sao không nên so giá đất Bình Dương bằng một mặt bằng toàn tỉnh?",
+                "a": (
+                    "Vì mặt bằng giữa Thủ Dầu Một, Bến Cát, Mỹ Phước và các cụm khác khác nhau về độ trung tâm, loại tài sản và nguồn hàng. "
+                    "Gom chung cả tỉnh dễ khiến một tin tưởng rẻ hóa ra chỉ đang đứng ở khu vốn có mặt bằng thấp hơn."
+                ),
+            },
+            {
+                "q": "Tôi nên tách đất Bình Dương theo khu như thế nào trước khi đọc giá?",
+                "a": (
+                    "Hãy tách ít nhất theo cụm lớn như Thủ Dầu Một, Bến Cát, Mỹ Phước rồi mới đi sâu xuống phường hoặc cụm con. "
+                    "Khi quyết định gọi hay đi xem, càng thu hẹp đúng khu thì giá/m2 và MOS càng có ý nghĩa."
+                ),
+            },
+            {
+                "q": "MOS giúp gì khi lọc đất Bình Dương?",
+                "a": (
+                    "MOS là biên an toàn giữa giá rao và mức fair value ước tính. Nó giúp bạn ưu tiên thứ tự kiểm tra trước, "
+                    "nhưng không thay thế việc xem pháp lý, quy hoạch hay hiện trạng thực địa."
+                ),
+            },
+            {
+                "q": "Radar BDS có thay thẩm định pháp lý hay cam kết lợi nhuận không?",
+                "a": (
+                    "Không. Radar BDS là bộ lọc dữ liệu để giảm thời gian đọc tin và ưu tiên cơ hội đáng kiểm tra. "
+                    "Quyết định cuối cùng vẫn cần kiểm tra pháp lý, quy hoạch, hiện trạng và thương lượng thực tế."
+                ),
+            },
+        ],
+        "article": {
+            "published_at": "2026-07-04",
+            "modified_at": "2026-07-04",
+        },
+        "final_cta": {
+            "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng khu đất Bình Dương trên dashboard",
+            "body": (
+                "Bài viết giúp bạn tránh gom sai mặt bằng toàn tỉnh. Dashboard giúp bạn biến hiểu biết đó thành watchlist, theo dõi deal mới qua Telegram "
+                "và tiến dần sang nhu cầu VIP khi cần tốc độ cùng chiều sâu hơn."
+            ),
+            "button": "Mở dashboard và lưu watchlist đất Bình Dương",
+        },
+    },
 }

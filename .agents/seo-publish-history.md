@@ -10,6 +10,15 @@ Rules:
 
 ## Entries
 
+### 2026-07-04 / shipped
+
+- slug: `/kien-thuc/dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin`
+- primary_keyword: `đất Bình Dương`
+- search_intent: `informational + commercial local evaluation`
+- angle: `không so giá toàn tỉnh; tách Thủ Dầu Một, Bến Cát, Mỹ Phước trước rồi mới đọc giá/m2, MOS và lưu watchlist`
+- funnel_path: `article -> dashboard -> watchlist -> Telegram/VIP lead`
+- note: `Bài broad money-keyword còn thiếu nhưng đi theo buyer-education angle để tránh lặp intent bài bán đất Bình Dương và đẩy người đọc vào location hubs/watchlist`
+
 ### 2026-07-03 / shipped
 
 - slug: `/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia`

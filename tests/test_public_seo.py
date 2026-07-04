@@ -348,6 +348,34 @@ def test_thu_dau_mot_ward_pricing_article_renders_canonical_content_and_funnel_m
     assert "datePublished" in html
 
 
+def test_binh_duong_land_pricing_scope_article_renders_canonical_content_and_funnel_markers():
+    import app as radar_app
+
+    path = "/kien-thuc/dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin"
+    client = radar_app.app.test_client()
+    response = client.get(path)
+    html = response.get_data(as_text=True)
+
+    with radar_app.app.test_request_context("/sitemap.xml"):
+        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
+    assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
+    assert "Đất Bình Dương: vì sao không nên so giá toàn tỉnh trước khi lọc tin" in html
+    assert "6 dấu hiệu cho thấy bạn đang so đất Bình Dương đúng khu hay đang gom sai cả tỉnh" in html
+    assert 'href="/?tab=signals&amp;intent=watchlist"' in html
+    assert "Dashboard -&gt; Watchlist -&gt; Telegram/VIP lead" in html
+    assert "Radar BDS là bộ lọc dữ liệu ban đầu" in html
+    assert 'href="/ban-dat-binh-duong"' in html
+    assert 'href="/binh-duong/thu-dau-mot"' in html
+    assert 'href="/binh-duong/ben-cat"' in html
+    assert 'href="/binh-duong/my-phuoc"' in html
+    assert 'href="/san-deal-bds"' in html
+    assert '"@type": "Article"' in html
+    assert "datePublished" in html
+
+
 def test_all_knowledge_articles_are_indexed_and_render_funnel_markers():
     import app as radar_app
     from config.seo_articles import SEO_ARTICLES
