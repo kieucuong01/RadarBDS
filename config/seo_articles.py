@@ -1038,4 +1038,268 @@ SEO_ARTICLES = {
             "button": "Mở dashboard và lưu watchlist đất Bình Dương",
         },
     },
+    "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia": {
+        "variant": "knowledge",
+        "path": "/kien-thuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia",
+        "title": "Nhà đất Phú Mỹ Thủ Dầu Một: cách so đúng với Hiệp An, Chánh Nghĩa trước khi xuống tiền",
+        "description": (
+            "Hướng dẫn đọc nhà đất Phú Mỹ Thủ Dầu Một bằng cách so đúng với Hiệp An, Chánh Nghĩa, "
+            "rồi dùng giá/m2, MOS và watchlist Radar BDS để lọc tin đáng kiểm tra."
+        ),
+        "keywords": (
+            "nhà đất Phú Mỹ Thủ Dầu Một, giá đất Phú Mỹ Thủ Dầu Một, nhà đất Phú Mỹ, nhà đất Hiệp An, "
+            "nhà đất Chánh Nghĩa, giá/m2 Phú Mỹ, watchlist Radar BDS"
+        ),
+        "breadcrumb_label": "Nhà đất Phú Mỹ Thủ Dầu Một: so đúng với Hiệp An, Chánh Nghĩa",
+        "hero_badge": "Kiến thức nhà đất Phú Mỹ Thủ Dầu Một",
+        "hero_title": "Nhà đất Phú Mỹ Thủ Dầu Một: cách so đúng với Hiệp An, Chánh Nghĩa trước khi xuống tiền",
+        "hero_text": (
+            "Người mua nhà đất Phú Mỹ Thủ Dầu Một hay gặp một lỗi quen thuộc: thấy tin ở Phú Mỹ rồi kéo mặt bằng "
+            "Hiệp An hoặc Chánh Nghĩa vào để kết luận rẻ hay đắt quá sớm. Radar BDS giúp bạn chốt đúng ward, "
+            "đúng loại tài sản, rồi mới dùng giá/m2, MOS và watchlist để biết tin nào đáng mở tiếp."
+        ),
+        "hero_checks": [
+            "Chốt đúng Phú Mỹ trước khi so giá",
+            "Không kéo mặt bằng Hiệp An, Chánh Nghĩa vào sai chỗ",
+            "Dashboard -> Watchlist -> Telegram/VIP lead",
+        ],
+        "primary_cta": "Mở dashboard để lưu watchlist Phú Mỹ",
+        "secondary_cta": "Xem landing Phú Mỹ",
+        "secondary_href": "/binh-duong/phuong-phu-my",
+        "map_label": "Knowledge / Phu My Thu Dau Mot",
+        "hero_metric": {
+            "label": "Ward cần tách",
+            "value": "3",
+            "delta": "ward",
+            "note": "Phú Mỹ, Hiệp An, Chánh Nghĩa",
+        },
+        "property_card": {
+            "status": "So đúng ward",
+            "title": "Tin Phú Mỹ không nên bị so bằng mặt bằng trung tâm rộng hơn hoặc rẻ hơn kế bên",
+            "price": "Cùng là Thủ Dầu Một nhưng Phú Mỹ, Hiệp An, Chánh Nghĩa có nhịp giá và nguồn hàng khác nhau",
+            "metric_a": "Ưu tiên",
+            "metric_a_value": "giá/m2 đúng ward",
+            "metric_b": "Bước kế tiếp",
+            "metric_b_value": "lưu watchlist",
+        },
+        "value_cards": [
+            {
+                "title": "Phú Mỹ cần mặt bằng riêng trước khi nói rẻ hay đắt",
+                "body": (
+                    "Nhà đất Phú Mỹ Thủ Dầu Một có nhiều tin đất hẻm, đất gần chợ, nhà phố dân cư và các lô thổ cư "
+                    "cần bóc tách vị trí khá kỹ. Nếu kéo giá của Hiệp An hoặc Chánh Nghĩa vào so ngay từ đầu, "
+                    "kỳ vọng giá/m2 rất dễ lệch."
+                ),
+            },
+            {
+                "title": "So đúng ward rồi mới đến MOS",
+                "body": (
+                    "MOS chỉ hữu ích khi tin đã đứng đúng nhóm so sánh. Với Phú Mỹ, bước đúng là xác nhận ward, "
+                    "loại tài sản, diện tích và logic lối vào trước, rồi mới ưu tiên tin nên gọi trước."
+                ),
+            },
+            {
+                "title": "Biến hiểu biết địa phương thành watchlist lặp lại",
+                "body": (
+                    "Sau khi chốt được nhóm Phú Mỹ phù hợp ngân sách, hãy lưu watchlist trên dashboard. "
+                    "Đó là cầu nối từ bài SEO sang Telegram và nhu cầu VIP khi bạn muốn theo deal mới nhanh hơn."
+                ),
+            },
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Funnel sản phẩm",
+            "title": "Đọc đúng Phú Mỹ rồi thì bước tiếp theo phải là watchlist theo ward",
+            "body": (
+                "Bài viết này giúp bạn tránh so sai mặt bằng trong cùng Thủ Dầu Một. Dashboard mới là nơi bạn mở "
+                "các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lưu watchlist "
+                "để nhận deal mới qua Telegram."
+            ),
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS để lọc nhà đất Phú Mỹ Thủ Dầu Một theo watchlist",
+            "cta": "Lưu watchlist Phú Mỹ",
+            "metrics": [
+                {"value": "Dashboard", "label": "mở feed Thủ Dầu Một đang có"},
+                {"value": "Watchlist", "label": "giữ đúng ward và ngưỡng giá bạn theo"},
+                {"value": "Telegram", "label": "nhận deal mới thay vì tự rà lại mỗi ngày"},
+            ],
+        },
+        "market_snapshot": {
+            "eyebrow": "Checklist so ward",
+            "title": "6 dấu hiệu cho thấy bạn đang so nhà đất Phú Mỹ đúng cách hay đang kéo nhầm mặt bằng của ward khác",
+            "body": (
+                "Checklist này dành cho người mua và nhà đầu tư đang nhìn vào Phú Mỹ nhưng vẫn bị nhiễu bởi các tin "
+                "ở Hiệp An hoặc Chánh Nghĩa. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thế thẩm định pháp lý "
+                "hay cam kết lợi nhuận."
+            ),
+            "columns": ["Dấu hiệu", "Vì sao dễ lệch", "Việc nên làm"],
+            "rows": [
+                {
+                    "area": "Tin ghi Phú Mỹ nhưng mô tả nghiêng về khu giáp ward khác",
+                    "price": "Dễ kéo sai mặt bằng so giá",
+                    "tracked": "Mở landing Phú Mỹ và các ward liên quan",
+                    "signal": "Xác nhận đúng ward trước khi kết luận rẻ",
+                },
+                {
+                    "area": "Tin Phú Mỹ bị so trực tiếp với Chánh Nghĩa",
+                    "price": "Độ trung tâm và nhịp giá khác",
+                    "tracked": "Thu hẹp về đúng ward và loại tài sản",
+                    "signal": "Không dùng một mức giá/m2 chung cho cả Thủ Dầu Một",
+                },
+                {
+                    "area": "Tin Phú Mỹ bị kéo về mặt bằng Hiệp An",
+                    "price": "Nguồn đất dân cư và diện tích thường khác",
+                    "tracked": "So cùng nhóm hẻm, thổ cư, lối vào",
+                    "signal": "Phải đúng nhóm tài sản rồi mới đọc MOS",
+                },
+                {
+                    "area": "Có giá/m2 nhưng thiếu logic vị trí hoặc thổ cư",
+                    "price": "Giá/m2 có thể đánh lừa",
+                    "tracked": "Xem lại mô tả, diện tích, pháp lý và cụm dân cư",
+                    "signal": "Ưu tiên tin nêu rõ ward, thổ cư, lối vào",
+                },
+                {
+                    "area": "Tin có MOS nhưng nguồn mờ hoặc repost",
+                    "price": "MOS có thể bị kéo lệch",
+                    "tracked": "Kiểm tra cảnh báo nguồn và lịch sử giá",
+                    "signal": "Không gọi chỉ vì thấy rẻ một lần",
+                },
+                {
+                    "area": "Bạn muốn theo đều một nhóm Phú Mỹ cụ thể",
+                    "price": "Tự quét lại mỗi ngày rất tốn thời gian",
+                    "tracked": "Lưu watchlist theo ward và ngân sách",
+                    "signal": "Watchlist + Telegram hợp lý hơn cho nhịp theo dõi lặp lại",
+                },
+            ],
+            "cards": [
+                {
+                    "title": "Sai lầm phổ biến",
+                    "value": "So chung Thủ Dầu Một",
+                    "body": "Chỉ vì cùng thành phố không có nghĩa Phú Mỹ, Hiệp An, Chánh Nghĩa dùng chung một mặt bằng đọc giá.",
+                },
+                {
+                    "title": "Tín hiệu nên ưu tiên",
+                    "value": "Ward rõ + nguồn rõ",
+                    "body": "Ưu tiên tin nêu rõ Phú Mỹ, loại tài sản, diện tích và còn giữ được logic giá/m2 cùng nhóm.",
+                },
+                {
+                    "title": "Bước kích hoạt",
+                    "value": "Lưu watchlist",
+                    "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng nhóm Phú Mỹ bạn đang theo.",
+                },
+            ],
+        },
+        "local_links_title": "Trang nên mở ngay sau bài này",
+        "local_links": [
+            {
+                "label": "Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Landing chính cho nhà đất Phú Mỹ Thủ Dầu Một và CTA vào dashboard/watchlist.",
+            },
+            {
+                "label": "Hiệp An",
+                "href": "/binh-duong/phuong-hiep-an",
+                "description": "Dùng để so lại đúng ward liền kề thay vì kéo mặt bằng Phú Mỹ sang sai chỗ.",
+            },
+            {
+                "label": "Chánh Nghĩa",
+                "href": "/binh-duong/phuong-chanh-nghia",
+                "description": "Hữu ích khi bạn đang vô thức lấy mặt bằng trung tâm hơn để kết luận giá ở Phú Mỹ.",
+            },
+            {
+                "label": "Thủ Dầu Một",
+                "href": "/binh-duong/thu-dau-mot",
+                "description": "Hub lớn hơn để thấy rõ vì sao cùng thành phố nhưng cần tách ward trước khi đọc giá.",
+            },
+            {
+                "label": "Giá đất Thủ Dầu Một theo phường",
+                "href": "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia",
+                "description": "Bài hub-supporting đi từ góc nhìn so ward toàn thành phố trước khi zoom sâu vào Phú Mỹ.",
+            },
+            {
+                "label": "Cách Radar BDS lọc tin rẻ thật",
+                "href": "/san-deal-bds",
+                "description": "Trang phương pháp để hiểu fair value, MOS và cảnh báo nguồn trước khi bấm CTA.",
+            },
+        ],
+        "process_title": "Cách đọc nhà đất Phú Mỹ Thủ Dầu Một trước khi gọi môi giới",
+        "process": [
+            {
+                "title": "1. Chốt đúng ward trước khi chốt giá",
+                "body": (
+                    "Đừng bắt đầu bằng câu hỏi rẻ hay đắt. Hãy bắt đầu bằng việc tin này có thật sự nằm ở Phú Mỹ "
+                    "hay chỉ đang dùng tên khu lân cận để tạo cảm giác gần trung tâm hơn."
+                ),
+            },
+            {
+                "title": "2. So cùng nhóm tài sản trong đúng ward",
+                "body": (
+                    "Đất hẻm, đất thổ cư, nhà phố dân cư và các lô gần chợ hoặc trục chính không nên bị trộn vào "
+                    "cùng một mặt bằng đọc giá. Thu hẹp đúng ward và đúng loại tài sản rồi mới đọc giá/m2."
+                ),
+            },
+            {
+                "title": "3. Dùng Hiệp An, Chánh Nghĩa như điểm đối chiếu chứ không phải mặt bằng thay thế",
+                "body": (
+                    "Hai ward này giúp bạn hiểu vị trí tương đối của Phú Mỹ trong Thủ Dầu Một, nhưng không nên trở thành "
+                    "mức giá gốc để chấm mọi tin ở Phú Mỹ."
+                ),
+            },
+            {
+                "title": "4. Dùng MOS để xếp thứ tự kiểm tra",
+                "body": (
+                    "Khi ward và nhóm tài sản đã đúng, MOS mới trở thành tín hiệu hữu ích để biết tin nào nên mở trước, "
+                    "không phải lời hứa lợi nhuận hay thay thế kiểm tra thực địa."
+                ),
+            },
+            {
+                "title": "5. Lưu watchlist để biến bài đọc thành nhịp theo dõi",
+                "body": (
+                    "Sau khi xác định được nhóm Phú Mỹ phù hợp, lưu watchlist trên dashboard để nhận deal mới qua Telegram "
+                    "và mở đường cho nhu cầu VIP khi bạn cần phản ứng nhanh hơn."
+                ),
+            },
+        ],
+        "faq": [
+            {
+                "q": "Vì sao nhà đất Phú Mỹ Thủ Dầu Một không nên so trực tiếp với Hiệp An hoặc Chánh Nghĩa?",
+                "a": (
+                    "Vì cùng là Thủ Dầu Một nhưng ba ward này khác nhau về độ trung tâm, loại nguồn hàng, nhịp giá và nhóm tài sản nổi bật. "
+                    "So trực tiếp mà không tách ward dễ làm bạn kết luận sai giá/m2 và thứ tự ưu tiên kiểm tra."
+                ),
+            },
+            {
+                "q": "Tôi nên bắt đầu lọc nhà đất Phú Mỹ Thủ Dầu Một như thế nào?",
+                "a": (
+                    "Hãy xác nhận đúng ward, đúng loại tài sản và khoảng diện tích trước. Sau đó mở dashboard để xem giá/m2, MOS, "
+                    "lịch sử giá và cảnh báo nguồn thay vì chỉ bám vào một giá rao nghe hấp dẫn."
+                ),
+            },
+            {
+                "q": "MOS giúp gì khi đọc nhà đất Phú Mỹ?",
+                "a": (
+                    "MOS là biên an toàn giữa giá rao và mức fair value ước tính. Nó giúp bạn ưu tiên thứ tự kiểm tra trước, "
+                    "nhưng không thay thế việc xem pháp lý, quy hoạch, hiện trạng hay thương lượng thực tế."
+                ),
+            },
+            {
+                "q": "Radar BDS có thay thẩm định pháp lý hay cam kết lợi nhuận không?",
+                "a": (
+                    "Không. Radar BDS là bộ lọc dữ liệu để giảm thời gian đọc tin và ưu tiên cơ hội đáng kiểm tra. "
+                    "Quyết định cuối cùng vẫn cần kiểm tra pháp lý, quy hoạch, hiện trạng và thương lượng thực tế."
+                ),
+            },
+        ],
+        "article": {
+            "published_at": "2026-07-05",
+            "modified_at": "2026-07-05",
+        },
+        "final_cta": {
+            "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng nhóm Phú Mỹ trên dashboard",
+            "body": (
+                "Bài viết giúp bạn tránh kéo nhầm mặt bằng ward khác vào Phú Mỹ. Dashboard giúp bạn biến hiểu biết đó thành watchlist, "
+                "theo dõi deal mới qua Telegram và tiến dần sang nhu cầu VIP khi cần tốc độ cùng chiều sâu hơn."
+            ),
+            "button": "Mở dashboard và lưu watchlist Phú Mỹ",
+        },
+    },
 }

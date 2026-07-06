@@ -10,6 +10,15 @@ Rules:
 
 ## Entries
 
+### 2026-07-05 / shipped
+
+- slug: `/kien-thuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia`
+- primary_keyword: `nhà đất Phú Mỹ Thủ Dầu Một`
+- search_intent: `informational + commercial ward evaluation`
+- angle: `chốt đúng Phú Mỹ rồi mới dùng Hiệp An, Chánh Nghĩa làm điểm đối chiếu; đọc giá/m2, MOS và lưu watchlist theo ward`
+- funnel_path: `article -> dashboard -> watchlist -> Telegram/VIP lead`
+- note: `Bài spoke sâu hơn landing Phú Mỹ và khác bài giá đất Thủ Dầu Một theo phường vì neo vào một ward cụ thể với buyer intent rõ`
+
 ### 2026-07-04 / shipped
 
 - slug: `/kien-thuc/dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin`
