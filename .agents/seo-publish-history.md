@@ -10,6 +10,15 @@ Rules:
 
 ## Entries
 
+### 2026-07-06 / shipped
+
+- slug: `/kien-thuc/nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia`
+- primary_keyword: `nhà đất Bến Cát Bình Dương`
+- search_intent: `informational + commercial local evaluation`
+- angle: `tách Mỹ Phước, Tân Định, Thới Hòa trước khi so giá/m2, đọc MOS và lưu watchlist theo đúng cụm Bến Cát`
+- funnel_path: `article -> dashboard -> watchlist -> Telegram/VIP lead`
+- note: `Bài cluster-level 80/20 cho Bến Cát, đứng giữa broad bài đất Bình Dương và bài Mỹ Phước; khác intent landing Bến Cát vì neo vào buyer education tránh gom sai cụm`
+
 ### 2026-07-05 / shipped
 
 - slug: `/kien-thuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia`

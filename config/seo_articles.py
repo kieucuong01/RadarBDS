@@ -1302,4 +1302,264 @@ SEO_ARTICLES = {
             "button": "Mở dashboard và lưu watchlist Phú Mỹ",
         },
     },
+    "nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia": {
+        "variant": "knowledge",
+        "path": "/kien-thuc/nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia",
+        "title": "Nhà đất Bến Cát Bình Dương: cách tách Mỹ Phước, Tân Định, Thới Hòa trước khi so giá",
+        "description": (
+            "Hướng dẫn đọc nhà đất Bến Cát Bình Dương bằng cách tách Mỹ Phước, Tân Định, Thới Hòa, "
+            "rồi dùng giá/m2, MOS và watchlist Radar BDS để lọc tin đáng kiểm tra."
+        ),
+        "keywords": (
+            "nhà đất Bến Cát Bình Dương, nhà đất Bến Cát, giá đất Bến Cát, nhà đất Mỹ Phước, "
+            "nhà đất Tân Định Bến Cát, nhà đất Thới Hòa Bến Cát, watchlist Radar BDS"
+        ),
+        "breadcrumb_label": "Nhà đất Bến Cát Bình Dương: tách Mỹ Phước, Tân Định, Thới Hòa",
+        "hero_badge": "Kiến thức nhà đất Bến Cát Bình Dương",
+        "hero_title": "Nhà đất Bến Cát Bình Dương: cách tách Mỹ Phước, Tân Định, Thới Hòa trước khi so giá",
+        "hero_text": (
+            "Người mua nhà đất Bến Cát Bình Dương hay bị nhiễu vì gom Mỹ Phước, Tân Định và Thới Hòa vào cùng một mặt bằng. "
+            "Radar BDS giúp bạn chốt đúng cụm, đúng loại tài sản, rồi mới dùng giá/m2, MOS và watchlist để biết tin nào đáng mở tiếp."
+        ),
+        "hero_checks": [
+            "Tách Mỹ Phước, Tân Định, Thới Hòa trước khi so giá",
+            "Không gom cả Bến Cát vào một mặt bằng chung",
+            "Dashboard -> Watchlist -> Telegram/VIP lead",
+        ],
+        "primary_cta": "Mở dashboard để lưu watchlist Bến Cát",
+        "secondary_cta": "Xem landing Bến Cát",
+        "secondary_href": "/binh-duong/ben-cat",
+        "map_label": "Knowledge / Ben Cat Binh Duong",
+        "hero_metric": {
+            "label": "Cụm cần tách",
+            "value": "4",
+            "delta": "cụm",
+            "note": "Bến Cát, Mỹ Phước, Tân Định, Thới Hòa",
+        },
+        "property_card": {
+            "status": "So đúng cụm",
+            "title": "Tin Bến Cát không nên bị so bằng mặt bằng Mỹ Phước, Tân Định hay Thới Hòa một cách máy móc",
+            "price": "Cùng là Bến Cát nhưng mỗi cụm có nhịp giá, nguồn hàng và buyer intent khác nhau",
+            "metric_a": "Ưu tiên",
+            "metric_a_value": "giá/m2 đúng cụm",
+            "metric_b": "Bước kế tiếp",
+            "metric_b_value": "lưu watchlist",
+        },
+        "value_cards": [
+            {
+                "title": "Bến Cát cần tách cụm trước khi nói rẻ hay đắt",
+                "body": (
+                    "Nhà đất Bến Cát Bình Dương trải từ cụm Mỹ Phước đến Tân Định, Thới Hòa và các trục công nghiệp lân cận. "
+                    "Nếu gom chung ngay từ đầu, kỳ vọng giá/m2 sẽ lệch rất nhanh."
+                ),
+            },
+            {
+                "title": "So đúng cụm rồi mới đến MOS",
+                "body": (
+                    "MOS chỉ hữu ích khi tin đã đứng đúng nhóm so sánh. Với Bến Cát, bước đúng là xác nhận cụm, loại tài sản, "
+                    "diện tích và logic vị trí trước, rồi mới ưu tiên tin nên gọi trước."
+                ),
+            },
+            {
+                "title": "Biến hiểu biết Bến Cát thành watchlist lặp lại",
+                "body": (
+                    "Sau khi chốt được cụm Bến Cát phù hợp ngân sách, hãy lưu watchlist trên dashboard. "
+                    "Đó là cầu nối từ bài SEO sang Telegram và nhu cầu VIP khi bạn muốn theo deal mới nhanh hơn."
+                ),
+            },
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Funnel sản phẩm",
+            "title": "Đọc đúng Bến Cát rồi thì bước tiếp theo phải là watchlist theo cụm",
+            "body": (
+                "Bài viết này giúp bạn tránh gom sai mặt bằng trong cùng Bến Cát. Dashboard mới là nơi bạn mở các tin đang có, "
+                "đối chiếu giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lưu watchlist để nhận deal mới qua Telegram."
+            ),
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS để lọc nhà đất Bến Cát Bình Dương theo watchlist",
+            "cta": "Lưu watchlist Bến Cát",
+            "metrics": [
+                {"value": "Dashboard", "label": "mở feed Bến Cát đang có"},
+                {"value": "Watchlist", "label": "giữ đúng cụm và ngưỡng giá bạn theo"},
+                {"value": "Telegram", "label": "nhận deal mới thay vì tự rà lại mỗi ngày"},
+            ],
+        },
+        "market_snapshot": {
+            "eyebrow": "Checklist so cụm",
+            "title": "6 dấu hiệu cho thấy bạn đang so nhà đất Bến Cát đúng cụm hay đang kéo nhầm mặt bằng giữa Mỹ Phước, Tân Định, Thới Hòa",
+            "body": (
+                "Checklist này dành cho người mua và nhà đầu tư đang nhìn vào Bến Cát nhưng vẫn bị nhiễu bởi các cụm con khác nhau. "
+                "Radar BDS là bộ lọc dữ liệu ban đầu, không thay thế thẩm định pháp lý hay cam kết lợi nhuận."
+            ),
+            "columns": ["Dấu hiệu", "Vì sao dễ lệch", "Việc nên làm"],
+            "rows": [
+                {
+                    "area": "Tin chỉ ghi Bến Cát chung chung",
+                    "price": "Dễ gom sai mặt bằng cả khu",
+                    "tracked": "Mở landing Bến Cát và cụm liên quan",
+                    "signal": "Xác nhận tin nghiêng về Mỹ Phước, Tân Định hay Thới Hòa trước khi kết luận rẻ",
+                },
+                {
+                    "area": "Tin Tân Định bị so trực tiếp với Mỹ Phước",
+                    "price": "Nguồn hàng và nhịp giá khác",
+                    "tracked": "Thu hẹp về đúng cụm và loại tài sản",
+                    "signal": "Không dùng một mức giá/m2 chung cho toàn bộ Bến Cát",
+                },
+                {
+                    "area": "Tin Thới Hòa được kéo về mặt bằng khu gần công nghiệp khác",
+                    "price": "Buyer intent và logic vị trí lệch",
+                    "tracked": "So cùng nhóm lô ở, nhà trọ, đất nền và trục vào",
+                    "signal": "Phải đúng cụm rồi mới đọc MOS",
+                },
+                {
+                    "area": "Có giá/m2 nhưng thiếu thổ cư hoặc logic vị trí",
+                    "price": "Giá/m2 có thể đánh lừa",
+                    "tracked": "Xem lại mô tả, diện tích, pháp lý và cụm dân cư",
+                    "signal": "Ưu tiên tin nêu rõ cụm, thổ cư, lối vào và diện tích",
+                },
+                {
+                    "area": "Tin có MOS nhưng nguồn mờ hoặc repost",
+                    "price": "MOS có thể bị kéo lệch",
+                    "tracked": "Kiểm tra cảnh báo nguồn và lịch sử giá",
+                    "signal": "Không gọi chỉ vì thấy rẻ một lần",
+                },
+                {
+                    "area": "Bạn muốn theo đều một nhóm Bến Cát cụ thể",
+                    "price": "Tự quét lại mỗi ngày rất tốn thời gian",
+                    "tracked": "Lưu watchlist theo cụm và ngân sách",
+                    "signal": "Watchlist + Telegram hợp lý hơn cho nhịp theo dõi lặp lại",
+                },
+            ],
+            "cards": [
+                {
+                    "title": "Sai lầm phổ biến",
+                    "value": "So chung cả Bến Cát",
+                    "body": "Chỉ vì cùng là Bến Cát không có nghĩa Mỹ Phước, Tân Định và Thới Hòa dùng chung một mặt bằng đọc giá.",
+                },
+                {
+                    "title": "Tín hiệu nên ưu tiên",
+                    "value": "Cụm rõ + nguồn rõ",
+                    "body": "Ưu tiên tin nêu rõ cụm, loại tài sản, diện tích và còn giữ được logic giá/m2 cùng nhóm.",
+                },
+                {
+                    "title": "Bước kích hoạt",
+                    "value": "Lưu watchlist",
+                    "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng nhóm Bến Cát bạn đang theo.",
+                },
+            ],
+        },
+        "local_links_title": "Trang nên mở ngay sau bài này",
+        "local_links": [
+            {
+                "label": "Bến Cát",
+                "href": "/binh-duong/ben-cat",
+                "description": "Landing chính cho nhà đất Bến Cát Bình Dương và CTA vào dashboard/watchlist.",
+            },
+            {
+                "label": "Mỹ Phước",
+                "href": "/binh-duong/my-phuoc",
+                "description": "Dùng để zoom sâu hơn vào cụm Mỹ Phước trước khi tách tiếp 1, 2, 3.",
+            },
+            {
+                "label": "Tân Định",
+                "href": "/binh-duong/phuong-tan-dinh",
+                "description": "Hữu ích khi bạn đang vô thức lấy mặt bằng Mỹ Phước hoặc cụm khác để kết luận giá ở Tân Định.",
+            },
+            {
+                "label": "Thới Hòa",
+                "href": "/binh-duong/phuong-thoi-hoa",
+                "description": "Nên mở khi tin nghiêng về cụm gần Việt Đức hoặc trục công nghiệp nhưng vẫn bị ghi Bến Cát chung chung.",
+            },
+            {
+                "label": "Đất Mỹ Phước Bình Dương",
+                "href": "/kien-thuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
+                "description": "Bài hỗ trợ khi bạn đã chốt cụm Bến Cát và muốn đi sâu vào Mỹ Phước 1, 2, 3.",
+            },
+            {
+                "label": "Cách Radar BDS lọc tin rẻ thật",
+                "href": "/san-deal-bds",
+                "description": "Trang phương pháp để hiểu fair value, MOS và cảnh báo nguồn trước khi bấm CTA.",
+            },
+        ],
+        "process_title": "Cách đọc nhà đất Bến Cát Bình Dương trước khi gọi môi giới",
+        "process": [
+            {
+                "title": "1. Chốt đúng cụm trước khi chốt giá",
+                "body": (
+                    "Đừng bắt đầu bằng câu hỏi rẻ hay đắt trên phạm vi cả Bến Cát. Hãy bắt đầu bằng việc tin này nghiêng về Mỹ Phước, "
+                    "Tân Định, Thới Hòa hay một cụm khác trong Bến Cát."
+                ),
+            },
+            {
+                "title": "2. So cùng nhóm tài sản trong đúng cụm",
+                "body": (
+                    "Đất nền, nhà phố, lô gần khu công nghiệp, nhà trọ hay đất dân cư không nên bị trộn vào cùng một mặt bằng đọc giá. "
+                    "Thu hẹp đúng cụm và đúng loại tài sản rồi mới đọc giá/m2."
+                ),
+            },
+            {
+                "title": "3. Dùng Mỹ Phước, Tân Định, Thới Hòa như điểm đối chiếu chứ không phải mặt bằng thay thế",
+                "body": (
+                    "Ba cụm này giúp bạn hiểu vị trí tương đối của từng nguồn hàng trong Bến Cát, nhưng không nên trở thành một mức giá "
+                    "gốc để chấm mọi tin trên toàn khu."
+                ),
+            },
+            {
+                "title": "4. Dùng MOS để xếp thứ tự kiểm tra",
+                "body": (
+                    "Khi cụm và nhóm tài sản đã đúng, MOS mới trở thành tín hiệu hữu ích để biết tin nào nên mở trước, "
+                    "không phải lời hứa lợi nhuận hay thay thế kiểm tra thực địa."
+                ),
+            },
+            {
+                "title": "5. Lưu watchlist để biến bài đọc thành nhịp theo dõi",
+                "body": (
+                    "Sau khi xác định được nhóm Bến Cát phù hợp, lưu watchlist trên dashboard để nhận deal mới qua Telegram "
+                    "và mở đường cho nhu cầu VIP khi bạn cần phản ứng nhanh hơn."
+                ),
+            },
+        ],
+        "faq": [
+            {
+                "q": "Vì sao nhà đất Bến Cát Bình Dương không nên so chung một mặt bằng?",
+                "a": (
+                    "Vì cùng là Bến Cát nhưng Mỹ Phước, Tân Định, Thới Hòa và các cụm lân cận khác nhau về nguồn hàng, buyer intent, nhịp giá "
+                    "và loại tài sản nổi bật. So chung dễ làm bạn kết luận sai giá/m2 và thứ tự ưu tiên kiểm tra."
+                ),
+            },
+            {
+                "q": "Tôi nên bắt đầu lọc nhà đất Bến Cát như thế nào?",
+                "a": (
+                    "Hãy xác nhận đúng cụm, đúng loại tài sản và khoảng diện tích trước. Sau đó mở dashboard để xem giá/m2, MOS, lịch sử giá "
+                    "và cảnh báo nguồn thay vì chỉ bám vào một giá rao nghe hấp dẫn."
+                ),
+            },
+            {
+                "q": "MOS giúp gì khi đọc nhà đất Bến Cát?",
+                "a": (
+                    "MOS là biên an toàn giữa giá rao và mức fair value ước tính. Nó giúp bạn ưu tiên thứ tự kiểm tra trước, "
+                    "nhưng không thay thế việc xem pháp lý, quy hoạch, hiện trạng hay thương lượng thực tế."
+                ),
+            },
+            {
+                "q": "Radar BDS có thay thẩm định pháp lý hay cam kết lợi nhuận không?",
+                "a": (
+                    "Không. Radar BDS là bộ lọc dữ liệu để giảm thời gian đọc tin và ưu tiên cơ hội đáng kiểm tra. "
+                    "Quyết định cuối cùng vẫn cần kiểm tra pháp lý, quy hoạch, hiện trạng và thương lượng thực tế."
+                ),
+            },
+        ],
+        "article": {
+            "published_at": "2026-07-06",
+            "modified_at": "2026-07-06",
+        },
+        "final_cta": {
+            "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng nhóm Bến Cát trên dashboard",
+            "body": (
+                "Bài viết giúp bạn tránh gom sai mặt bằng giữa Mỹ Phước, Tân Định và Thới Hòa. Dashboard giúp bạn biến hiểu biết đó thành watchlist, "
+                "theo dõi deal mới qua Telegram và tiến dần sang nhu cầu VIP khi cần tốc độ cùng chiều sâu hơn."
+            ),
+            "button": "Mở dashboard và lưu watchlist Bến Cát",
+        },
+    },
 }

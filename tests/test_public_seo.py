@@ -404,6 +404,38 @@ def test_phu_my_ward_comparison_article_renders_canonical_content_and_funnel_mar
     assert "datePublished" in html
 
 
+def test_ben_cat_cluster_article_renders_canonical_content_and_funnel_markers():
+    import app as radar_app
+    from config.seo_articles import SEO_ARTICLES
+
+    path = "/kien-thuc/nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia"
+    article = SEO_ARTICLES["nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia"]
+    client = radar_app.app.test_client()
+    response = client.get(path)
+    html = response.get_data(as_text=True)
+
+    with radar_app.app.test_request_context("/sitemap.xml"):
+        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
+    assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
+    assert article["hero_title"] in html
+    assert article["market_snapshot"]["title"] in html
+    assert article["market_snapshot"]["body"] in html
+    assert 'href="/?tab=signals&amp;intent=watchlist"' in html
+    assert "Dashboard -&gt; Watchlist -&gt; Telegram/VIP lead" in html
+    assert "Knowledge / Ben Cat Binh Duong" in html
+    assert 'href="/binh-duong/ben-cat"' in html
+    assert 'href="/binh-duong/my-phuoc"' in html
+    assert 'href="/binh-duong/phuong-tan-dinh"' in html
+    assert 'href="/binh-duong/phuong-thoi-hoa"' in html
+    assert 'href="/kien-thuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia"' in html
+    assert 'href="/san-deal-bds"' in html
+    assert '"@type": "Article"' in html
+    assert "datePublished" in html
+
+
 def test_all_knowledge_articles_are_indexed_and_render_funnel_markers():
     import app as radar_app
     from config.seo_articles import SEO_ARTICLES
