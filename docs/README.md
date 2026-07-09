@@ -22,6 +22,7 @@ Do not load every doc by default. The project has long crawl and product notes; 
 | Crawl failed, daily automation, Apify/Facebook/Guland | `daily_crawl_flow.md`, `operations.md` | `cli/crawlers.py`, `crawler/*`, systemd/logs |
 | Crawl-to-signal-to-Telegram workflow | `daily_crawl_flow.md#1a-workflow-kỹ-thuật-end-to-end-theo-code-hiện-tại`, `telegram_watchlist.md` | `cli/crawlers.py`, `cleansing/reprocess.py`, `services/signal_quality.py`, `services/market_data.py`, `cli/notify.py` |
 | Daily SEO article publishing | `daily_seo_publisher.md`, `growth_marketing_workflow.md` | `config/seo_articles.py`, `app.py`, `routes/public.py`, `tests/test_public_seo.py` |
+| Monthly market reports (`/bao-cao/*`) | `seo-monthly-reports.md` | `scripts/generate_monthly_report.py`, `config/seo_pages.py`, `templates/seo_landing.html` |
 | Deploy/VPS/prod smoke/local-prod sync | `operations.md`, `dev_commands.md` | `scripts/deploy_production.ps1`, `deployment/ubuntu24/*` |
 | Dedup, lot history, price drops, quality flags | `product_rules.md`, `architecture.md` | `cleansing/dedup.py`, `cleansing/feature_extractor.py`, `db/listings.py`, tests |
 | Location normalization, post-merger wards, broker KP aliases | `product_rules.md`, `daily_crawl_flow.md`, `dev_commands.md` | `cleansing/normalizer.py`, `config/location_aliases.py`, `scripts/audit_post_merger_locations.py`, tests |

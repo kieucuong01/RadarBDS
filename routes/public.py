@@ -42,6 +42,11 @@ def seo_ban_dat_binh_duong(**kwargs):
     return _impl("seo_landing_page", slug="ban-dat-binh-duong", **kwargs)
 
 
+@bp.route("/bao-cao")
+def seo_bao_cao_index(**kwargs):
+    return _impl("seo_landing_page", slug="bao-cao", **kwargs)
+
+
 @bp.route("/bao-cao/<path:report_slug>")
 def seo_market_report(report_slug, **kwargs):
     return _impl("seo_landing_page", slug=f"bao-cao/{report_slug}", **kwargs)
