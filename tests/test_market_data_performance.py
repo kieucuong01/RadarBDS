@@ -146,6 +146,23 @@ def test_load_signals_fast_page_skips_total_count_and_uses_limit_plus_one(monkey
     assert conn.closed is False
 
 
+def test_signal_feed_materializes_latest_valuation_ctes():
+    import services.market_data as market_data
+
+    assert "latest_valuation AS MATERIALIZED (" in market_data.LATEST_VALUATION_CTE
+    assert "latest_shadow_valuation AS MATERIALIZED (" in market_data.LATEST_SHADOW_VALUATION_CTE
+
+
+def test_related_price_drop_join_aggregates_duplicate_rows_once():
+    from services.market_data import related_price_drop_join_sql
+
+    sql = related_price_drop_join_sql("l", "related_drop")
+
+    assert "LEFT JOIN LATERAL" not in sql
+    assert "GROUP BY drop_child.duplicate_of_id" in sql
+    assert "related_drop.listing_id = l.id" in sql
+
+
 def test_score_sort_does_not_emit_invalid_order_by_zero():
     import services.market_data as market_data
 

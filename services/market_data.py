@@ -11,8 +11,10 @@ from db.connection import get_conn
 from services.image_assets import resolve_image_url
 from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
 
+# Match the materialized latest valuation read model so filter cache misses do
+# not repeatedly scan the complete shadow valuation set on conservative plans.
 LATEST_SHADOW_VALUATION_CTE = """
-latest_shadow_valuation AS (
+latest_shadow_valuation AS MATERIALIZED (
     SELECT DISTINCT ON (vsr.listing_id) vsr.*
     FROM valuation_shadow_results vsr
     ORDER BY vsr.listing_id, vsr.computed_at DESC, vsr.id DESC
@@ -420,20 +422,28 @@ def _valid_price_drop_sql(prefix=""):
     )"""
 
 
-def related_price_drop_lateral_sql(alias="l", lateral_alias="related_drop"):
+def related_price_drop_join_sql(alias="l", join_alias="related_drop"):
+    """Aggregate related repost drops once instead of scanning per feed row.
+
+    This remains fast when the runtime DB role cannot create the optional
+    ``listings(duplicate_of_id)`` index owned by the database administrator.
+    """
     return f"""
-        LEFT JOIN LATERAL (
-            SELECT MAX(drop_child.price_ty) AS first_price
+        LEFT JOIN (
+            SELECT drop_child.duplicate_of_id AS listing_id,
+                   MAX(drop_child.price_ty) AS first_price
             FROM listings drop_child
-            WHERE drop_child.duplicate_of_id = {alias}.id
+            JOIN listings drop_parent ON drop_parent.id = drop_child.duplicate_of_id
+            WHERE drop_child.duplicate_of_id IS NOT NULL
               AND COALESCE(drop_child.probably_sold,0)=0
               AND COALESCE(drop_child.is_blacklisted,0)=0
               AND COALESCE(drop_child.review_hidden,0)=0
               AND drop_child.price_ty IS NOT NULL
-              AND {alias}.price_ty IS NOT NULL
-              AND drop_child.price_ty > {alias}.price_ty * 1.01
-              AND {alias}.price_ty >= drop_child.price_ty * 0.60
-        ) {lateral_alias} ON TRUE
+              AND drop_parent.price_ty IS NOT NULL
+              AND drop_child.price_ty > drop_parent.price_ty * 1.01
+              AND drop_parent.price_ty >= drop_child.price_ty * 0.60
+            GROUP BY drop_child.duplicate_of_id
+        ) {join_alias} ON {join_alias}.listing_id = {alias}.id
     """
 
 
@@ -1162,7 +1172,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
             FROM listing_images li
             WHERE li.listing_id = l.id
         ) img_count ON TRUE
-        {related_price_drop_lateral_sql("l", "related_drop")}
+        {related_price_drop_join_sql("l", "related_drop")}
         WHERE ({signal_condition}) AND {_signal_listing_data_sql("l")} AND {where_sql}
         ORDER BY {order_sql}
         LIMIT ? OFFSET ?
@@ -1261,7 +1271,7 @@ def load_data(db_path, sources=None, wards=None, prop_types=None, only_drops=Fal
                    {fresh_flag}
             FROM latest_valuation v
             JOIN listings l ON v.listing_id = l.id
-            {related_price_drop_lateral_sql("l", "related_drop")}
+            {related_price_drop_join_sql("l", "related_drop")}
             WHERE {signal_condition} AND {_signal_listing_data_sql("l")} AND {where_sql}{mos_condition}
             ORDER BY {_signal_sort_sql('score_desc')}
         """

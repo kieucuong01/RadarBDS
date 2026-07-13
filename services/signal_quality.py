@@ -21,8 +21,10 @@ NON_BLOCKING_RECHECK_FLAGS = frozenset({
 })
 
 
+# Keep the latest-row set stable even when PostgreSQL underestimates a highly
+# filtered feed and would otherwise rerun DISTINCT ON for every candidate row.
 LATEST_VALUATION_CTE = """
-latest_valuation AS (
+latest_valuation AS MATERIALIZED (
     SELECT DISTINCT ON (vr.listing_id) vr.*
     FROM valuation_results vr
     ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
