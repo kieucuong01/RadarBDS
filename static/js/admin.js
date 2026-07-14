@@ -16,7 +16,8 @@ const ADMIN_PANEL_SLUGS = Object.assign({
   crawl: 'facebook-crawl',
   training: 'ai-training',
   infra: 'infrastructure',
-  users: 'users'
+  users: 'users',
+  growth: 'tang-truong',
 }, window.ADMIN_CONTROL_ROOM_PANEL_SLUGS || {});
 const ADMIN_SLUG_TO_PANEL = Object.entries(ADMIN_PANEL_SLUGS).reduce((acc, [panel, slug]) => {
   acc[slug] = panel;
@@ -49,6 +50,7 @@ function toggleAdminTheme() {
   const next = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem(ADMIN_THEME_KEY, next);
+  if (document.getElementById('panel-growth')?.classList.contains('active')) loadGrowth();
 }
 
 function esc(v) {
@@ -243,6 +245,7 @@ function switchPanel(name, options = {}) {
   document.querySelectorAll('.workspace-panel').forEach(panel => panel.classList.toggle('active', panel.id === `panel-${name}`));
   if (options.updateUrl !== false) syncPanelUrl(name);
   const panelLabels = { crm: 'CRM', quality: 'Quality', training: 'AI Training', infra: 'Hạ tầng', users: 'Users', crawl: 'Facebook Crawl' };
+  panelLabels.growth = 'T?ng tr??ng';
   let loader = null;
   if (name === 'crm') loader = loadLeads;
   if (name === 'quality') {
@@ -257,6 +260,7 @@ function switchPanel(name, options = {}) {
   if (name === 'infra') loader = loadInfraItems;
   if (name === 'users') loader = loadUsers;
   if (name === 'crawl') loader = loadCrawlConfig;
+  if (name === 'growth') loader = loadGrowth;
   if (loader) {
     withAdminToast(`Đang mở ${panelLabels[name] || 'tab'}`, loader, `Đã mở ${panelLabels[name] || 'tab'}`, 'Không tải được tab');
   }
@@ -2213,8 +2217,77 @@ async function saveTraining(id) {
   card.remove();
 }
 
+let growthPeriod = 'day', growthCharts = {};
+const growthFmt = value => Number(value || 0).toLocaleString('vi-VN');
+const growthDelta = value => value == null ? '?' : (value > 0 ? '+' : '') + Number(value).toLocaleString('vi-VN') + '%';
+
+function growthOptions() {
+  const text = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#334155';
+  return { responsive: true, maintainAspectRatio: false, locale: 'vi-VN',
+    animation: matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { duration: 300 },
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { labels: { color: text, usePointStyle: true } } },
+    scales: { x: { ticks: { color: text, maxRotation: 0 }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: text, precision: 0 } } } };
+}
+
+function renderGrowthCharts(data) {
+  if (!window.Chart) return;
+  Object.values(growthCharts).forEach(chart => chart.destroy());
+  const labels = data.series.map(row => row.label), datasets = [];
+  data.filters.sources.forEach(source => {
+    const fb = source === 'facebook', name = fb ? 'Facebook' : 'Guland';
+    datasets.push({ type: 'bar', label: 'Tin c?o ? ' + name, data: data.series.map(row => row.by_source[source].crawled), backgroundColor: fb ? '#2563eb99' : '#f59e0b99', borderColor: fb ? '#2563eb' : '#f59e0b', borderWidth: 1 });
+    datasets.push({ type: 'line', label: 'Signal ? ' + name, data: data.series.map(row => row.by_source[source].signals), borderColor: fb ? '#16a34a' : '#dc2626', pointStyle: fb ? 'circle' : 'triangle', borderDash: fb ? [] : [6, 4], tension: .25 });
+  });
+  growthCharts.source = new Chart('growthSourceChart', { data: { labels, datasets }, options: growthOptions() });
+  const one = (id, label, key, color) => new Chart(id, { type: 'line', data: { labels, datasets: [{ label, data: data.series.map(row => row[key]), borderColor: color, backgroundColor: color + '22', fill: true, tension: .25 }] }, options: growthOptions() });
+  growthCharts.unique = one('growthUniqueChart', 'B?S unique ? ngu?n ?? ch?n', 'unique_lots', '#7c3aed');
+  growthCharts.drop = one('growthDropChart', 'Gi?m gi? ? ngu?n ?? ch?n', 'price_drops', '#dc2626');
+  growthCharts.users = new Chart('growthUserChart', { type: 'line', data: { labels, datasets: [
+    { label: '??ng k? ? to?n h? th?ng', data: data.series.map(row => row.signups), borderColor: '#7c3aed', tension: .25 },
+    { label: 'Lead ? ngu?n ?? ch?n', data: data.series.map(row => row.leads), borderColor: '#16a34a', borderDash: [6, 4], pointStyle: 'rectRot', tension: .25 }
+  ] }, options: growthOptions() });
+}
+
+function renderGrowth(data) {
+  const metrics = [['crawled','Tin c?o','Ngu?n ?? ch?n'],['signals','Signal','Actionable hi?n t?i'],['price_drops','Tin gi?m gi?','L?n gi?m tin c?y ??u ti?n'],['unique_lots','B?S unique','Kh?ng t?nh repost'],['signups','Ng??i d?ng ??ng k?','To?n h? th?ng ? kh?ng ph? thu?c ngu?n'],['leads','Lead h?i ??t','Ngu?n ?? ch?n']];
+  growthKpis.innerHTML = metrics.map(([key,label,note]) => {
+    const item = data.summary[key];
+    const parts = item.by_source ? data.filters.sources.map(source => (source === 'facebook' ? 'Facebook' : 'Guland') + ': ' + growthFmt(item.by_source[source].current)).join(' ? ') : '';
+    const unknown = key === 'leads' ? ' ? Kh?ng x?c ??nh ngu?n: ' + growthFmt(item.unattributed_current) : '';
+    return '<article class="surface growth-kpi"><span>' + esc(label) + '</span><strong>' + growthFmt(item.current) + '</strong><small>' + growthDelta(item.delta_pct) + ' so k? tr??c ? L?y k? ' + growthFmt(item.overall) + '</small><p>' + esc(note + (parts ? ' ? ' + parts : '') + unknown) + '</p></article>';
+  }).join('');
+  const ratios = [['Signal yield',data.ratios.signal_yield_pct,'%','Ngu?n ?? ch?n'],['Unique-lot yield',data.ratios.unique_lot_yield_pct,'%','Ngu?n ?? ch?n'],['Active users',data.ratios.active_users,'','To?n h? th?ng ? kh?ng ph? thu?c ngu?n'],['Lead ? ??t c?c',data.ratios.lead_to_deposit_pct,'%','Lead g?n ngu?n ?? ch?n']];
+  growthRatios.innerHTML = ratios.map(([label,value,suffix,note]) => '<article class="surface growth-ratio"><span>' + esc(label) + '</span><strong>' + (value == null ? '?' : growthFmt(value) + suffix) + '</strong><small>' + esc(note) + '</small></article>').join('');
+  growthTableBody.innerHTML = data.series.map(row => '<tr><td>' + esc(row.label) + '</td><td>' + growthFmt(row.crawled) + '</td><td>' + growthFmt(row.signals) + '</td><td>' + growthFmt(row.unique_lots) + '</td><td>' + growthFmt(row.price_drops) + '</td><td>' + growthFmt(row.signups) + '</td><td>' + growthFmt(row.leads) + '</td></tr>').join('');
+  growthEmpty.hidden = !data.series.every(row => !row.crawled && !row.signals && !row.unique_lots && !row.price_drops && !row.leads);
+  renderGrowthCharts(data);
+}
+
+async function loadGrowth() {
+  growthError.hidden = true;
+  const include = growthIncludeGuland.checked ? 1 : 0;
+  try {
+    const url = '/admin/api/growth?period=' + growthPeriod + '&anchor=' + encodeURIComponent(growthAnchor.value) + '&include_guland=' + include;
+    renderGrowth(await fetchJSON(url, { silent: true }));
+  } catch (error) { growthError.hidden = false; throw error; }
+}
+
+function initGrowth() {
+  growthAnchor.value = new Date().toLocaleDateString('en-CA');
+  document.querySelectorAll('[data-growth-period]').forEach(button => button.addEventListener('click', () => {
+    growthPeriod = button.dataset.growthPeriod;
+    document.querySelectorAll('[data-growth-period]').forEach(item => item.classList.toggle('active', item === button));
+    loadGrowth();
+  }));
+  growthAnchor.addEventListener('change', loadGrowth);
+  growthIncludeGuland.addEventListener('change', loadGrowth);
+  growthRetry.addEventListener('click', loadGrowth);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initAdminTheme();
+  initGrowth();
   document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => switchPanel(btn.dataset.panel)));
   window.addEventListener('popstate', () => switchPanel(panelFromLocation(), { updateUrl: false }));
   document.querySelectorAll('.segment[data-quality-tab]').forEach(btn => btn.addEventListener('click', () => switchQualityTab(btn.dataset.qualityTab)));

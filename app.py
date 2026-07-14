@@ -48,7 +48,7 @@ from services.signal_quality import (
 )
 from services.advisory_memo import build_admin_valuation_workflow_markdown
 from services.radar_assistant import build_assistant_response
-from services import admin_leads, admin_quality, admin_users
+from services import admin_growth, admin_leads, admin_quality, admin_users
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -101,6 +101,7 @@ HARD_HIDE_REVIEW_VERDICTS = {"bad", "spam", "sold", "fake_price"}
 SOFT_HIDE_REVIEW_VERDICTS = {"bad_data", "fair", "overpriced", "cannot_price"}
 ADMIN_CONTROL_ROOM_PANEL_SLUGS = {
     "crm": "crm",
+    "growth": "tang-truong",
     "quality": "data-quality",
     "crawl": "facebook-crawl",
     "training": "ai-training",
@@ -3026,6 +3027,25 @@ def admin_api_facebook_crawl_jobs(job_id=None):
             return jsonify({"job": _public_crawl_job(job)})
         jobs = [_public_crawl_job(FACEBOOK_CRAWL_JOBS[jid]) for jid in FACEBOOK_CRAWL_JOB_ORDER]
     return jsonify({"jobs": jobs})
+
+@require_admin_auth
+def admin_api_growth():
+    period = (request.args.get("period") or "day").strip().lower()
+    if period not in admin_growth.VALID_PERIODS:
+        return jsonify({"error": "invalid_period"}), 400
+    anchor_value = (request.args.get("anchor") or datetime.now().date().isoformat()).strip()
+    try:
+        anchor = datetime.strptime(anchor_value, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({"error": "invalid_anchor"}), 400
+    include_value = (request.args.get("include_guland") or "0").strip()
+    if include_value not in {"0", "1"}:
+        return jsonify({"error": "invalid_include_guland"}), 400
+    return jsonify(admin_growth.get_growth_dashboard(
+        period=period,
+        anchor=anchor,
+        include_guland=include_value == "1",
+    ))
 
 
 @require_admin_auth

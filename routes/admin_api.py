@@ -25,6 +25,10 @@ def admin_control_room(panel_slug=None, **kwargs):
     return _impl("admin_control_room", panel_slug=panel_slug, **kwargs)
 
 
+@bp.route("/admin/api/growth")
+def admin_api_growth(**kwargs):
+    return _impl("admin_api_growth", **kwargs)
+
 @bp.route("/admin/api/leads")
 def admin_api_leads(**kwargs):
     return _impl("admin_api_leads", **kwargs)
