@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  {% include "partials/seo_head.html" %}
+</head>
+<body class="seo-page report-hub">
+  {% include "partials/seo_header.html" %}
+  <main id="main-content" class="seo-shell">
+    {% include "partials/seo_breadcrumbs.html" %}
+    <section class="hub-hero">
+      <p class="seo-eyebrow">Kho dữ liệu thị trường</p>
+      <h1>{{ page.hero_title }}</h1>
+      <p>{{ page.hero_text }}</p>
+      <span class="scope-chip">{{ page.scope_label }}</span>
+    </section>
+
+    {% if reports %}
+    {% set latest = reports[0] %}
+    <section class="hub-featured" aria-labelledby="latest-report">
+      <div>
+        <p class="seo-eyebrow">Báo cáo mới nhất</p>
+        <h2 id="latest-report">{{ latest.hero_title }}</h2>
+        <p>{{ latest.description }}</p>
+        <div class="card-meta">
+          <span>{{ latest.scope_label }}</span>
+          <span>Kỳ {{ latest.report.period }}</span>
+          <span>Cập nhật {{ latest.report.published_at }}</span>
+        </div>
+      </div>
+      <a class="seo-primary-cta" href="{{ latest.path }}" data-track-cta="latest_report">Đọc báo cáo</a>
+    </section>
+    {% endif %}
+
+    <section class="hub-archive" aria-labelledby="report-archive">
+      <div class="section-heading">
+        <p class="seo-eyebrow">Theo thời gian</p>
+        <h2 id="report-archive">Kho báo cáo</h2>
+        <p>Báo cáo được sắp theo ngày công bố mới nhất.</p>
+      </div>
+      <div class="hub-card-grid">
+        {% for report in reports %}
+        <article class="hub-card">
+          <span class="scope-chip">{{ report.scope_label }}</span>
+          <h3><a href="{{ report.path }}">{{ report.hero_title }}</a></h3>
+          <p>{{ report.description }}</p>
+          <div class="card-meta">
+            <span>Kỳ {{ report.report.period }}</span>
+            <time datetime="{{ report.report.published_at }}">{{ report.report.published_at }}</time>
+          </div>
+          <a class="text-link" href="{{ report.path }}">Xem phạm vi và chỉ số <span aria-hidden="true">→</span></a>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+  </main>
+  {% include "partials/seo_footer.html" %}
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {"@type": "CollectionPage", "name": {{ page.hero_title|tojson }}, "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.description|tojson }}},
+      {"@type": "ItemList", "itemListElement": [
+        {% for report in reports %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ report.hero_title|tojson }}, "url": {{ (site_meta.canonical_url.rsplit('/bao-cao', 1)[0] ~ report.path)|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
+      ]},
+      {"@type": "BreadcrumbList", "itemListElement": [
+        {% for crumb in page.breadcrumbs %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ crumb.name|tojson }}, "item": {{ crumb.url|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
+      ]}
+    ]
+  }
+  </script>
+  {% set view_event = "report_viewed" %}
+  {% include "partials/seo_tracking.html" %}
+</body>
+</html>

@@ -119,29 +119,9 @@
 
 <body class="seo-page seo-page-{{ page.get('variant', 'market') }}">
   {% set watchlist_href = "/?tab=signals&intent=watchlist" %}
-  <header class="seo-topbar">
-    <div class="seo-shell topbar-shell">
-      <a class="seo-brand" href="/" aria-label="Radar BDS">
-        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
-          <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="4" />
-          <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="4" />
-          <circle cx="24" cy="24" r="3.6" fill="currentColor" />
-          <path d="M24 4v7M24 37v7M4 24h7M37 24h7" stroke="currentColor" stroke-linecap="round" stroke-width="4" />
-          <path d="M35.5 8.5 40 4" stroke="currentColor" stroke-linecap="round" stroke-width="4" />
-        </svg>
-        <span>Radar BDS</span>
-      </a>
-      <nav class="seo-nav" aria-label="Điều hướng">
-        <a href="/binh-duong" {% if page.path == "/binh-duong" %}aria-current="page"{% endif %}>Bình Dương</a>
-        <a href="/ban-dat-binh-duong" {% if page.path == "/ban-dat-binh-duong" %}aria-current="page"{% endif %}>Bán đất</a>
-        <a href="/bao-cao/bds-binh-duong-thang-06-2026" {% if page.path.startswith("/bao-cao/") %}aria-current="page"{% endif %}>Báo cáo</a>
-        <a href="/san-deal-bds" {% if page.path == "/san-deal-bds" %}aria-current="page"{% endif %}>Săn deal BĐS</a>
-      </nav>
-      <a class="seo-nav-cta" href="/">Mở dashboard</a>
-    </div>
-  </header>
+  {% include "partials/seo_header.html" %}
 
-  <main>
+  <main id="main-content">
     <nav class="seo-shell seo-breadcrumbs" aria-label="Breadcrumb">
       {% for crumb in page.breadcrumbs %}
       {% if loop.last %}
@@ -398,7 +378,7 @@
     <section class="seo-local-links" aria-label="Khu vực liên quan">
       <div class="seo-shell local-links-shell">
         <div class="local-links-head">
-          <span>SEO địa phương</span>
+          <span>Khu vực liên quan</span>
           <h2>{{ page.local_links_title or "Khu vực liên quan" }}</h2>
           <p>Theo dõi thêm các phường và khu vực có dữ liệu liên quan để so giá đúng mặt bằng hơn.</p>
         </div>

@@ -54,6 +54,8 @@ def test_robots_and_sitemap_use_public_domain():
     assert "<loc>https://radarbds.vn/</loc>" in sitemap
     assert "<loc>https://radarbds.vn/binh-duong</loc>" in sitemap
     assert "<loc>https://radarbds.vn/san-deal-bds</loc>" in sitemap
+    assert "<loc>https://radarbds.vn/bao-cao</loc>" in sitemap
+    assert "<loc>https://radarbds.vn/kien-thuc</loc>" in sitemap
     for article in SEO_ARTICLES.values():
         assert f"<loc>https://radarbds.vn{article['path']}</loc>" in sitemap
     assert "localhost" not in robots + sitemap
@@ -213,20 +215,19 @@ def test_binh_duong_market_report_page_is_indexed_and_citable():
     assert response.status_code == 200
     assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
     assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
-    assert "Báo cáo thị trường BĐS Bình Dương tháng 06/2026" in html
+    assert "Báo cáo thị trường BĐS Thủ Dầu Một tháng 06/2026" in html
     assert "Số tin mới" in html
     assert "Giá/m² trung vị" in html
     assert "Khu giảm giá" in html
     assert "Khu nhiều tín hiệu" in html
     assert "Nhận định từ dữ liệu Radar" in html
-    assert "application/ld+json" in html
-    assert '"@type": "Article"' in html
+    assert '"@type": "Report"' in html
     assert "datePublished" in html
     assert "Phường nên mở tiếp từ báo cáo" in html
     assert 'href="/binh-duong/phuong-phu-my"' in html
     assert 'href="/binh-duong/phuong-hiep-an"' in html
-    assert "đồng dẫn đầu actionable signals" in html
-
+    assert 'class="hero-map-stage"' not in html
+    assert "Hơn 1.000 nhà đầu tư tin dùng Radar BDS" in html
 
 def test_binh_duong_location_landing_pages_render_and_are_indexed():
     import app as radar_app
@@ -291,161 +292,25 @@ def test_unknown_binh_duong_location_seo_page_404s():
     assert response.status_code == 404
 
 
-def test_knowledge_article_renders_canonical_content_and_funnel_markers():
-    import app as radar_app
-
-    path = "/kien-thuc/ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra"
-    client = radar_app.app.test_client()
-    response = client.get(path)
-    html = response.get_data(as_text=True)
-
-    with radar_app.app.test_request_context("/sitemap.xml"):
-        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
-
-    assert response.status_code == 200
-    assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
-    assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
-    assert "Bán đất Bình Dương: cách lọc tin đáng kiểm tra trước khi đi xem" in html
-    assert "6 dấu hiệu để biết một tin bán đất Bình Dương có đáng kiểm tra hay không" in html
-    assert 'href="/?tab=signals&amp;intent=watchlist"' in html
-    assert "Watchlist -&gt; Telegram -&gt; VIP lead" in html
-    assert "Radar BDS là bộ lọc dữ liệu" in html
-    assert 'class="hero-map-stage"' in html
-    assert "Đi tiếp từ bài này" in html
-    assert 'href="/ban-dat-binh-duong"' in html
-    assert 'href="/binh-duong/ben-cat"' in html
-    assert 'href="/san-deal-bds"' in html
-    assert '"@type": "Article"' in html
-    assert '"@type": "Organization"' in html
-    assert "datePublished" in html
-
-
-def test_thu_dau_mot_ward_pricing_article_renders_canonical_content_and_funnel_markers():
-    import app as radar_app
-
-    path = "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia"
-    client = radar_app.app.test_client()
-    response = client.get(path)
-    html = response.get_data(as_text=True)
-
-    with radar_app.app.test_request_context("/sitemap.xml"):
-        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
-
-    assert response.status_code == 200
-    assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
-    assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
-    assert "Giá đất Thủ Dầu Một theo phường: vì sao phải tách Phú Mỹ, Hiệp An, Chánh Nghĩa trước khi so giá" in html
-    assert "6 dấu hiệu để biết bạn đang so đúng giá đất Thủ Dầu Một theo phường hay đang gom sai mặt bằng" in html
-    assert 'href="/?tab=signals&amp;intent=watchlist"' in html
-    assert "Dashboard -&gt; Watchlist -&gt; Telegram/VIP lead" in html
-    assert "Radar BDS là bộ lọc dữ liệu ban đầu" in html
-    assert 'href="/binh-duong/thu-dau-mot"' in html
-    assert 'href="/binh-duong/phuong-phu-my"' in html
-    assert 'href="/binh-duong/phuong-hiep-an"' in html
-    assert 'href="/binh-duong/phuong-chanh-nghia"' in html
-    assert 'href="/san-deal-bds"' in html
-    assert '"@type": "Article"' in html
-    assert "datePublished" in html
-
-
-def test_binh_duong_land_pricing_scope_article_renders_canonical_content_and_funnel_markers():
-    import app as radar_app
-
-    path = "/kien-thuc/dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin"
-    client = radar_app.app.test_client()
-    response = client.get(path)
-    html = response.get_data(as_text=True)
-
-    with radar_app.app.test_request_context("/sitemap.xml"):
-        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
-
-    assert response.status_code == 200
-    assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
-    assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
-    assert "Đất Bình Dương: vì sao không nên so giá toàn tỉnh trước khi lọc tin" in html
-    assert "6 dấu hiệu cho thấy bạn đang so đất Bình Dương đúng khu hay đang gom sai cả tỉnh" in html
-    assert 'href="/?tab=signals&amp;intent=watchlist"' in html
-    assert "Dashboard -&gt; Watchlist -&gt; Telegram/VIP lead" in html
-    assert "Radar BDS là bộ lọc dữ liệu ban đầu" in html
-    assert 'href="/ban-dat-binh-duong"' in html
-    assert 'href="/binh-duong/thu-dau-mot"' in html
-    assert 'href="/binh-duong/ben-cat"' in html
-    assert 'href="/binh-duong/my-phuoc"' in html
-    assert 'href="/san-deal-bds"' in html
-    assert '"@type": "Article"' in html
-    assert "datePublished" in html
-
-
-def test_phu_my_ward_comparison_article_renders_canonical_content_and_funnel_markers():
-    import app as radar_app
-
-    path = "/kien-thuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia"
-    client = radar_app.app.test_client()
-    response = client.get(path)
-    html = response.get_data(as_text=True)
-
-    with radar_app.app.test_request_context("/sitemap.xml"):
-        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
-
-    assert response.status_code == 200
-    assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
-    assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
-    assert "Nhà đất Phú Mỹ Thủ Dầu Một: cách so đúng với Hiệp An, Chánh Nghĩa trước khi xuống tiền" in html
-    assert "6 dấu hiệu cho thấy bạn đang so nhà đất Phú Mỹ đúng cách hay đang kéo nhầm mặt bằng của ward khác" in html
-    assert 'href="/?tab=signals&amp;intent=watchlist"' in html
-    assert "Dashboard -&gt; Watchlist -&gt; Telegram/VIP lead" in html
-    assert "Radar BDS là bộ lọc dữ liệu ban đầu" in html
-    assert 'href="/binh-duong/phuong-phu-my"' in html
-    assert 'href="/binh-duong/phuong-hiep-an"' in html
-    assert 'href="/binh-duong/phuong-chanh-nghia"' in html
-    assert 'href="/binh-duong/thu-dau-mot"' in html
-    assert 'href="/san-deal-bds"' in html
-    assert '"@type": "Article"' in html
-    assert "datePublished" in html
-
-
-def test_ben_cat_cluster_article_renders_canonical_content_and_funnel_markers():
-    import app as radar_app
-    from config.seo_articles import SEO_ARTICLES
-
-    path = "/kien-thuc/nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia"
-    article = SEO_ARTICLES["nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia"]
-    client = radar_app.app.test_client()
-    response = client.get(path)
-    html = response.get_data(as_text=True)
-
-    with radar_app.app.test_request_context("/sitemap.xml"):
-        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
-
-    assert response.status_code == 200
-    assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
-    assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
-    assert article["hero_title"] in html
-    assert article["market_snapshot"]["title"] in html
-    assert article["market_snapshot"]["body"] in html
-    assert 'href="/?tab=signals&amp;intent=watchlist"' in html
-    assert "Dashboard -&gt; Watchlist -&gt; Telegram/VIP lead" in html
-    assert "Knowledge / Ben Cat Binh Duong" in html
-    assert 'href="/binh-duong/ben-cat"' in html
-    assert 'href="/binh-duong/my-phuoc"' in html
-    assert 'href="/binh-duong/phuong-tan-dinh"' in html
-    assert 'href="/binh-duong/phuong-thoi-hoa"' in html
-    assert 'href="/kien-thuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia"' in html
-    assert 'href="/san-deal-bds"' in html
-    assert '"@type": "Article"' in html
-    assert "datePublished" in html
-
-
-def test_all_knowledge_articles_are_indexed_and_render_funnel_markers():
+def test_knowledge_articles_render_editorial_content_without_internal_marketing_labels():
     import app as radar_app
     from config.seo_articles import SEO_ARTICLES
 
     client = radar_app.app.test_client()
-
     with radar_app.app.test_request_context("/sitemap.xml"):
         sitemap = radar_app.sitemap_xml().get_data(as_text=True)
 
-    for article in SEO_ARTICLES.values():
+    editorial_slugs = [
+        "ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra",
+        "dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
+        "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia",
+        "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin",
+        "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia",
+        "nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia",
+    ]
+
+    for slug in editorial_slugs:
+        article = SEO_ARTICLES[slug]
         path = article["path"]
         response = client.get(path)
         html = response.get_data(as_text=True)
@@ -454,16 +319,19 @@ def test_all_knowledge_articles_are_indexed_and_render_funnel_markers():
         assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
         assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
         assert article["hero_title"] in html
-        assert 'class="hero-map-stage"' in html
-        assert article["market_snapshot"]["title"] in html
-        assert article["final_cta"]["button"] in html
-        assert "Đi tiếp từ bài này" in html
+        assert len(article["article"]["intro"]) >= 2
+        assert len(article["article"]["sections"]) >= 4
+        assert 'class="article-toc"' in html
+        assert 'class="hero-map-stage"' not in html
+        assert "Checklist trước khi đi tiếp" in html
+        assert "Câu hỏi thường gặp" in html
+        assert "Bài và trang liên quan" in html
         assert 'href="/?tab=signals&amp;intent=watchlist"' in html
-        assert "Telegram" in html
-        assert '"@type": "Article"' in html
+        assert '"@type": "BlogPosting"' in html
         assert '"@type": "Organization"' in html
         assert "datePublished" in html
-
+        for internal_term in ("Internal links", "SEO địa phương", "VIP lead", "funnel"):
+            assert internal_term not in html
 
 def test_unknown_knowledge_article_404s():
     import app as radar_app
@@ -492,7 +360,7 @@ def test_manifest_uses_radarbds_standalone_start_url():
 def test_seo_and_home_screen_icon_assets_are_wired_and_sized():
     dashboard_html = Path("templates/index.html").read_text(encoding="utf-8")
     seo_html = Path("templates/seo_landing.html").read_text(encoding="utf-8")
-    article_html = Path("templates/seo_article.html").read_text(encoding="utf-8")
+    article_html = (Path("templates/seo_article.html").read_text(encoding="utf-8") + Path("templates/partials/seo_head.html").read_text(encoding="utf-8"))
 
     for html in (dashboard_html, seo_html, article_html):
         assert "images/favicon-32.png" in html

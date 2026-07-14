@@ -361,7 +361,7 @@ def _page(item: dict) -> dict:
         "title": title,
         "description": description,
         "keywords": f"{item['intent']}, nhà đất Bình Dương, Radar BDS, săn deal BĐS, định giá bất động sản, MOS BĐS",
-        "hero_badge": f"SEO địa phương - {kind.title()} Bình Dương",
+        "hero_badge": f"Khu vực {kind.title()} Bình Dương",
         "hero_title": f"{intent_label} bằng dữ liệu",
         "hero_text": (
             f"{name} là {item['context']} Radar BDS giúp gom tin rao, chuẩn hóa vị trí, "

@@ -1,0 +1,9 @@
+<nav class="seo-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    {% for crumb in page.breadcrumbs %}
+    <li>
+      {% if loop.last %}<span aria-current="page">{{ crumb.name }}</span>{% else %}<a href="{{ crumb.href }}">{{ crumb.name }}</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</nav>

@@ -1,4 +1,5 @@
 """Public page and static asset routes."""
+
 from __future__ import annotations
 
 from flask import Blueprint
@@ -44,7 +45,7 @@ def seo_ban_dat_binh_duong(**kwargs):
 
 @bp.route("/bao-cao")
 def seo_bao_cao_index(**kwargs):
-    return _impl("seo_landing_page", slug="bao-cao", **kwargs)
+    return _impl("seo_report_hub_page", **kwargs)
 
 
 @bp.route("/bao-cao/<path:report_slug>")
@@ -55,6 +56,11 @@ def seo_market_report(report_slug, **kwargs):
 @bp.route("/san-deal-bds")
 def seo_san_deal_bds(**kwargs):
     return _impl("seo_landing_page", slug="san-deal-bds", **kwargs)
+
+
+@bp.route("/kien-thuc")
+def seo_knowledge_index(**kwargs):
+    return _impl("seo_knowledge_hub_page", **kwargs)
 
 
 @bp.route("/kien-thuc/<path:article_slug>")

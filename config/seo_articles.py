@@ -1,4 +1,4 @@
-"""Curated knowledge articles for public Radar BDS SEO pages."""
+﻿"""Curated knowledge articles for public Radar BDS SEO pages."""
 
 SEO_ARTICLES = {
     "ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra": {
@@ -1886,3 +1886,160 @@ SEO_ARTICLES = {
     }
 },
 }
+
+KNOWLEDGE_HUB = {
+    "path": "/kien-thuc",
+    "title": "Kiến thức BĐS Bình Dương | Radar BDS",
+    "description": "Hướng dẫn đọc tin, so giá và thẩm định bất động sản Bình Dương; nội dung hiện ưu tiên Thủ Dầu Một.",
+    "keywords": "kiến thức BĐS Bình Dương, giá đất Thủ Dầu Một, cách lọc tin nhà đất",
+    "hero_title": "Kiến thức BĐS Bình Dương",
+    "hero_text": "Hướng dẫn thực hành để chọn đúng phạm vi, so đúng nhóm tài sản và chuẩn bị tốt hơn trước khi đi xem.",
+    "scope_label": "Hiện ưu tiên Thủ Dầu Một",
+    "featured_slug": "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia",
+}
+
+
+def _editorial_article(intro, sections, checklist, published_at):
+    return {
+        "published_at": published_at,
+        "modified_at": "2026-07-14",
+        "intro": intro,
+        "sections": [
+            {"id": section[0], "heading": section[1], "paragraphs": list(section[2:4]), "bullets": list(section[4]) if len(section) > 4 else []}
+            for section in sections
+        ],
+        "checklist": checklist,
+    }
+
+
+_ARTICLE_EDITORIAL = {
+    "ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra": {
+        "hero_title": "Cách lọc tin bán đất Bình Dương trước khi đi xem",
+        "title": "Cách lọc tin bán đất Bình Dương trước khi đi xem | Radar BDS",
+        "description": "Quy trình lọc tin bán đất Bình Dương theo khu vực, loại tài sản, giá trên mét vuông và thông tin cần xác minh.",
+        "scope_label": "Bình Dương · Hướng dẫn nền tảng",
+        "article": _editorial_article(
+            [
+                "Một tin rao có giá hấp dẫn chưa đủ để quyết định đi xem. Trước hết, người mua cần biết tin đó nằm ở đâu, thuộc loại tài sản nào và còn thiếu dữ kiện quan trọng nào.",
+                "Quy trình dưới đây giúp thu hẹp danh sách theo thứ tự hợp lý. Radar BDS hỗ trợ sàng lọc ban đầu; pháp lý, quy hoạch, hiện trạng và khả năng giao dịch vẫn cần được kiểm tra độc lập.",
+            ],
+            [
+                ("chon-pham-vi", "Chọn đúng phạm vi trước khi nhìn vào giá rao", "Bình Dương gồm nhiều thị trường nhỏ với hạ tầng, nhu cầu và nguồn cung khác nhau. So hai lô chỉ vì cùng tỉnh thường tạo ra kết luận sai.", "Hãy chốt thành phố, phường hoặc cụm khu thực tế trước. Khi địa danh còn mơ hồ, cần hỏi lại vị trí có thể kiểm chứng thay vì tự suy đoán.", ["Thành phố và phường", "Tên đường hoặc mốc có thể kiểm chứng", "Khoảng cách tới nhu cầu sử dụng chính"]),
+                ("chuan-hoa-tai-san", "Đưa tin rao về cùng một nhóm tài sản", "Đất nền, đất có nhà, đất vườn và lô diện tích lớn không nên nằm chung một nhóm so sánh. Công năng và điều kiện pháp lý khác nhau làm giá khác nhau.", "Ghi lại diện tích, ngang dài, thổ cư, đường tiếp cận và tình trạng công trình. Trường quan trọng chưa rõ phải được đánh dấu là chưa xác minh.", ["Loại tài sản", "Diện tích và kích thước", "Thổ cư", "Đường tiếp cận"]),
+                ("doc-gia", "Đọc cả giá tổng và giá trên mét vuông", "Giá tổng cho biết lô đất có phù hợp ngân sách; giá trên mét vuông giúp so với các lô tương đồng. Cả hai chỉ có ý nghĩa khi dữ liệu đã được chuẩn hóa.", "Một mức thấp bất thường là tín hiệu để kiểm tra thêm, không phải bằng chứng chắc chắn của một giao dịch tốt. Sai diện tích hoặc vị trí có thể tạo chênh lệch giả."),
+                ("kiem-tra-nguon", "Kiểm tra nguồn tin và lịch sử đăng", "Đối chiếu mô tả, hình ảnh, số liên hệ và thời điểm đăng để nhận ra tin lặp hoặc thông tin thay đổi. Cùng một lô có thể xuất hiện với nhiều mức giá.", "Khi gọi, xác nhận lại giá, vị trí, người có quyền giao dịch và giấy tờ có thể xem. Không chuyển tiền chỉ dựa trên nội dung tin rao."),
+                ("truoc-khi-di-xem", "Chuẩn bị danh sách câu hỏi trước khi đi xem", "Một cuộc gọi có cấu trúc giúp loại bớt chuyến đi không cần thiết. Ưu tiên tin trả lời rõ và khớp nhu cầu đã đặt ra.", "Nếu tin đáng xem, lưu vào watchlist cùng ghi chú còn thiếu. Tại thực địa, kiểm tra ranh, lối vào, môi trường và đối chiếu hồ sơ với nguồn phù hợp."),
+            ],
+            ["Đã chốt đúng phường hoặc cụm khu", "Đã xác nhận loại tài sản và diện tích", "Đã tính lại giá trên mét vuông", "Đã hỏi pháp lý và quy hoạch", "Đã lưu điểm cần kiểm tra tại thực địa"],
+            "2026-06-26",
+        ),
+    },
+    "dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia": {
+        "hero_title": "Cách tách Mỹ Phước 1, 2, 3 trước khi so giá",
+        "title": "Cách tách Mỹ Phước 1, 2, 3 trước khi so giá | Radar BDS",
+        "description": "Hướng dẫn phân biệt Mỹ Phước 1, 2, 3 để tránh trộn sai vị trí, loại tài sản và mục đích sử dụng khi so tin rao.",
+        "scope_label": "Bến Cát · Nội dung hướng dẫn",
+        "article": _editorial_article(
+            [
+                "Tên gọi Mỹ Phước thường được dùng rộng trong tin rao, nhưng không phải tin nào cũng chỉ đúng cùng một tiểu khu. Bỏ qua vị trí khiến người mua ghép các lô không tương đồng.",
+                "Bài này là hướng dẫn đọc tin và thẩm định. Mỹ Phước không phải vùng báo cáo dữ liệu trọng tâm hiện tại của Radar BDS; không nên suy diễn độ phủ từ nội dung hướng dẫn.",
+            ],
+            [
+                ("ba-tieu-khu", "Mỹ Phước 1, 2, 3 cần được đọc như ba tiểu khu", "Mỗi tiểu khu có bối cảnh đường sá, tiện ích, mật độ sử dụng và nhóm tài sản khác nhau. Một tên gọi chung không đủ để tạo nhóm so sánh.", "Yêu cầu vị trí cụ thể, tên đường hoặc mốc có thể kiểm chứng. Nếu chỉ có cụm từ “đất Mỹ Phước”, hãy giữ tin ở trạng thái chưa xác định.", ["Tên tiểu khu", "Tên đường hoặc lô", "Mốc tiếp cận", "Phường hiện tại"]),
+                ("nhom-tai-san", "Tách loại tài sản trước khi tách mức giá", "Lô phục vụ ở, lô gần khu sản xuất và tài sản có công trình sẵn có hướng tới nhu cầu khác nhau. Giá không nên được gom chỉ theo diện tích.", "So các lô có mục đích sử dụng, pháp lý, đường tiếp cận và hình dạng tương đồng. Tránh dùng lô diện tích lớn làm chuẩn cho lô nhỏ khi công năng khác."),
+                ("doi-chieu-dia-danh", "Đối chiếu địa danh trong mô tả với vị trí thực tế", "Tin rao có thể dùng tên khu quen thuộc dù vị trí thực tế nằm ngoài phần người mua đang nghĩ tới. Cần đối chiếu bản đồ, giấy tờ và địa chỉ hành chính.", "Không dùng lời mô tả “ngay khu” làm dữ kiện duy nhất. Vị trí phải được xác nhận trước khi đưa giá vào bảng so sánh."),
+                ("lap-bang-so", "Lập bảng so sánh riêng cho từng tiểu khu", "Mỗi bảng nên ghi giá tổng, giá trên mét vuông, diện tích, ngang dài, đường tiếp cận, thổ cư và trạng thái xác minh.", "Mục tiêu không phải tìm một con số đại diện cho toàn Mỹ Phước, mà là nhận ra tin nào lệch so với nhóm gần nhất và vì sao."),
+                ("tham-dinh", "Xác minh trước khi đặt cọc", "Sau khi lọc, cần kiểm tra hiện trạng, ranh giới, lối đi, quy hoạch và giấy tờ. Dashboard hay tin rao không thay thế hồ sơ gốc.", "Nếu mô tả và thực địa không khớp, hãy dừng so giá tới khi làm rõ. Một mức giá thấp không bù được rủi ro chưa hiểu."),
+            ],
+            ["Xác định rõ Mỹ Phước 1, 2 hay 3", "Đối chiếu tên đường và vị trí", "So cùng loại tài sản", "Tách tin thiếu dữ kiện", "Kiểm tra pháp lý và quy hoạch độc lập"],
+            "2026-06-29",
+        ),
+    },
+    "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia": {
+        "hero_title": "Cách đọc giá đất Thủ Dầu Một theo từng phường",
+        "title": "Cách đọc giá đất Thủ Dầu Một theo từng phường | Radar BDS",
+        "description": "Cách lập nhóm so sánh giá đất Thủ Dầu Một theo phường, loại tài sản và điều kiện tiếp cận trước khi đi xem.",
+        "scope_label": "Thủ Dầu Một · Bài ưu tiên",
+        "article": _editorial_article(
+            [
+                "Thủ Dầu Một là phạm vi nội dung và báo cáo công khai được Radar BDS ưu tiên hiện tại. Tuy vậy, giá rao trong thành phố vẫn không nên được đọc như một mặt bằng duy nhất.",
+                "Cách an toàn hơn là đi từ phường, tuyến đường và nhóm tài sản. Dữ liệu giúp sàng lọc nhanh, còn quyết định giao dịch cần kiểm tra hồ sơ và hiện trạng.",
+            ],
+            [
+                ("ba-phuong", "Ba phường, ba bối cảnh so sánh khác nhau", "Phú Mỹ, Hiệp An và Chánh Nghĩa khác nhau về vị trí, nhịp phát triển, loại nguồn hàng và nhu cầu sử dụng. Chỉ nên so các tài sản cùng bối cảnh.", "Tên phường là lớp lọc đầu tiên, không phải kết luận cuối. Trong cùng phường vẫn cần tách tuyến đường, khả năng tiếp cận, quy mô lô và pháp lý.", ["Phường", "Cụm đường", "Loại tài sản", "Mục đích sử dụng"]),
+                ("gia-moi-met-vuong", "Dùng giá trên mét vuông sau khi chuẩn hóa dữ liệu", "Giá trên mét vuông giúp đối chiếu các lô khác tổng giá, nhưng chỉ đáng tin khi diện tích và loại tài sản đúng. Một trường sai có thể làm tín hiệu lệch.", "Nên giữ song song giá tổng để kiểm tra sức mua thực tế. Tin có đơn giá thấp nhưng vượt ngân sách hoặc khó sử dụng chưa chắc phù hợp."),
+                ("bien-an-toan", "Xem biên an toàn như tín hiệu ưu tiên, không phải kết luận", "MOS giúp xếp thứ tự tin nên kiểm tra trước so với mức tham chiếu của nhóm. Nó không xác nhận pháp lý, quy hoạch hay khả năng thương lượng.", "Khi MOS cao bất thường, cần kiểm tra lại vị trí, diện tích, loại tài sản và lịch sử tin. Giá rẻ có thể đến từ dữ liệu thiếu."),
+                ("doc-bao-cao", "Kết hợp báo cáo tháng với tin rao cụ thể", "Báo cáo tháng cho biết phạm vi, kỳ dữ liệu, chỉ số và phương pháp. Tin cụ thể cần đặt vào đúng phường và đúng kỳ để tránh dùng bối cảnh cũ.", "Khi nguồn tin biến động, ưu tiên dữ kiện có ngày cập nhật rõ. Không biến một chỉ số tổng hợp thành giá chắc chắn cho từng lô."),
+                ("kiem-tra-thuc-dia", "Hoàn tất bằng kiểm tra hồ sơ và thực địa", "Sau sàng lọc, cần xem ranh, lối vào, hiện trạng và môi trường xung quanh. Những yếu tố này giải thích chênh lệch trong cùng phường.", "Kiểm tra giấy tờ, quy hoạch và điều kiện giao dịch với nguồn phù hợp trước khi đặt cọc. Radar BDS không thay thế thẩm định pháp lý."),
+            ],
+            ["Đúng phường và cụm đường", "Cùng loại tài sản", "Giá tổng trong ngân sách", "Đơn giá đã tính lại", "Đã đọc MOS và cảnh báo nguồn", "Đã kiểm tra hồ sơ và thực địa"],
+            "2026-07-02",
+        ),
+    },
+    "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin": {
+        "hero_title": "Vì sao không nên dùng một mặt bằng giá cho toàn Bình Dương",
+        "title": "Vì sao không nên dùng một mặt bằng giá cho toàn Bình Dương | Radar BDS",
+        "description": "Vì sao cần thu hẹp từ tỉnh xuống thành phố, phường và nhóm tài sản trước khi so giá đất Bình Dương.",
+        "scope_label": "Bình Dương · Hướng dẫn nền tảng",
+        "article": _editorial_article(
+            [
+                "Một con số trung bình toàn tỉnh có thể giúp nhìn bức tranh rộng nhưng không đủ để đánh giá một lô cụ thể. Khoảng cách giữa các thị trường nhỏ thường rất đáng kể.",
+                "Radar BDS hiện ưu tiên dữ liệu công khai tại Thủ Dầu Một. Nội dung về khu vực khác cung cấp phương pháp, không phải tuyên bố về độ phủ báo cáo tương đương.",
+            ],
+            [
+                ("khong-mot-mat-bang", "Một con số toàn tỉnh không trả lời được lô đất có đáng xem hay không", "Giá chịu ảnh hưởng bởi vị trí, đường tiếp cận, loại tài sản, pháp lý và nhu cầu tại chỗ. Gộp tất cả vào một mức chung làm mất thông tin.", "Một lô thấp hơn trung bình tỉnh có thể vẫn cao so với khu gần nhất; lô cao hơn có thể phản ánh điều kiện sử dụng tốt hơn."),
+                ("thu-hep-pham-vi", "Thu hẹp từ tỉnh xuống thành phố, phường và cụm đường", "Bắt đầu bằng khu vực phù hợp nhu cầu ở, đầu tư hoặc kinh doanh. Sau đó chọn phường và cụm đường có điều kiện tiếp cận tương đồng.", "Chỉ khi phạm vi đủ hẹp, giá rao mới có thể so sánh. Tin không xác định được vị trí nên đứng ngoài nhóm tham chiếu.", ["Tỉnh", "Thành phố", "Phường", "Cụm đường", "Lô so sánh"]),
+                ("tach-loai-tai-san", "Tách loại tài sản và quy mô lô", "Đất ở, đất có công trình và đất diện tích lớn không có cùng nhóm người mua. Thanh khoản và cách hình thành giá cũng khác.", "Ghi rõ diện tích, ngang dài, thổ cư và đường tiếp cận. Những trường chưa xác minh phải thể hiện rõ trong bảng so sánh."),
+                ("doc-du-lieu", "Đọc dữ liệu theo phạm vi được công bố", "Mỗi báo cáo cần nêu rõ kỳ dữ liệu, khu vực và phương pháp. Không nên mở rộng kết luận ra ngoài phạm vi đã công bố.", "Nội dung công khai hiện ưu tiên Thủ Dầu Một. Cấu trúc sẽ mở rộng dần ra Bình Dương khi có dữ liệu và kiểm chứng phù hợp."),
+                ("quyet-dinh", "Dùng dữ liệu để chọn việc cần kiểm tra tiếp", "Kết quả sàng lọc tốt là danh sách ngắn kèm lý do: đúng khu, đúng tài sản, giá đáng chú ý và dữ kiện còn thiếu. Đây chưa phải khuyến nghị xuống tiền.", "Trước giao dịch, kiểm tra pháp lý, quy hoạch, hiện trạng, nghĩa vụ tài chính và thẩm quyền bên bán bằng nguồn phù hợp."),
+            ],
+            ["Không dùng trung bình toàn tỉnh để định giá lô", "Thu hẹp tới phường và cụm đường", "So đúng loại tài sản", "Đọc rõ phạm vi báo cáo", "Xác minh độc lập trước giao dịch"],
+            "2026-07-05",
+        ),
+    },
+    "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia": {
+        "hero_title": "Cách so Phú Mỹ với Hiệp An và Chánh Nghĩa",
+        "title": "Cách so Phú Mỹ với Hiệp An và Chánh Nghĩa | Radar BDS",
+        "description": "Cách chọn nhóm tài sản tương đồng khi so nhà đất Phú Mỹ, Hiệp An và Chánh Nghĩa tại Thủ Dầu Một.",
+        "scope_label": "Thủ Dầu Một · So sánh theo phường",
+        "article": _editorial_article(
+            [
+                "Phú Mỹ, Hiệp An và Chánh Nghĩa đều thuộc Thủ Dầu Một nhưng phục vụ những bối cảnh sử dụng khác nhau. So trực tiếp mọi tin dễ tạo mức tham chiếu thiếu chính xác.",
+                "Bài viết tập trung vào cách chọn mẫu so sánh, không đưa ra một mức giá cố định. Người mua vẫn cần kiểm tra từng lô và hồ sơ tương ứng.",
+            ],
+            [
+                ("khong-ban-sao", "Phú Mỹ không phải bản sao giá của Hiệp An hay Chánh Nghĩa", "Mỗi phường có mạng lưới đường, tiện ích, nhịp phát triển và nguồn hàng riêng. Tên thành phố chung không xóa đi những khác biệt này.", "Chỉ so chéo phường khi có lý do rõ và kiểm soát được khác biệt. Nếu chưa làm được, nhóm trong cùng phường thường đáng tin hơn."),
+                ("xac-dinh-nhu-cau", "Xác định nhu cầu sử dụng trước khi chọn phường", "Nhu cầu ở, cho thuê, kinh doanh hoặc giữ tài sản dài hạn dẫn tới tiêu chí vị trí khác nhau. Giá thấp chưa chắc đáp ứng đúng công năng.", "Viết ra các tiêu chí quan trọng trước khi mở tin để không chạy theo mức rao mà bỏ quên nhu cầu.", ["Mục đích mua", "Ngân sách", "Khả năng tiếp cận", "Thời gian nắm giữ dự kiến"]),
+                ("chon-mau-so", "Chọn mẫu so sánh có cùng đặc điểm", "Các lô nên gần nhau về loại tài sản, diện tích, ngang dài, thổ cư và đường tiếp cận. Khác biệt lớn phải được ghi chú.", "Giá rao chỉ là điểm bắt đầu. Lịch sử tin, độ rõ vị trí và khả năng xác minh giúp chọn mẫu nên giữ."),
+                ("so-cheo-phuong", "Chỉ so chéo phường với điều chỉnh rõ ràng", "Nếu so Phú Mỹ với Hiệp An hoặc Chánh Nghĩa, hãy nêu khác biệt về đường, khoảng cách, công năng và pháp lý. Không dùng tỷ lệ tùy ý.", "Khi không đủ dữ kiện, kết luận đúng là chưa thể so. Giữ lại sự không chắc chắn an toàn hơn tạo một mức giá có vẻ chính xác."),
+                ("tham-dinh-phu-my", "Kiểm tra lô Phú Mỹ ngoài dữ liệu tin rao", "Đi thực địa để kiểm tra ranh, lối vào, hạ tầng và môi trường. Đối chiếu mô tả với vị trí và giấy tờ được cung cấp.", "Tra cứu quy hoạch, pháp lý và điều kiện giao dịch qua nguồn có thẩm quyền hoặc chuyên gia phù hợp. Không đặt cọc khi thông tin còn mâu thuẫn."),
+            ],
+            ["Đã xác định mục đích mua", "Đã chọn đúng phường", "Mẫu so sánh cùng loại tài sản", "Khác biệt khi so chéo được ghi rõ", "Đã kiểm tra thực địa và hồ sơ"],
+            "2026-07-08",
+        ),
+    },
+    "nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia": {
+        "hero_title": "Cách tách Mỹ Phước, Tân Định và Thới Hòa khi đọc Bến Cát",
+        "title": "Cách tách Mỹ Phước, Tân Định và Thới Hòa khi đọc Bến Cát | Radar BDS",
+        "description": "Hướng dẫn tách Mỹ Phước, Tân Định và Thới Hòa theo vị trí, loại tài sản và nhu cầu trước khi so tin Bến Cát.",
+        "scope_label": "Bến Cát · Nội dung hướng dẫn",
+        "article": _editorial_article(
+            [
+                "Bến Cát xuất hiện trong nhiều tin rao với địa danh và cách mô tả khác nhau. Nếu gom Mỹ Phước, Tân Định và Thới Hòa vào một bảng giá, kết quả sẽ khó dùng.",
+                "Đây là nội dung hướng dẫn phương pháp. Báo cáo dữ liệu công khai hiện ưu tiên Thủ Dầu Một, nên bài viết không ngụ ý Bến Cát có độ phủ tương đương.",
+            ],
+            [
+                ("pham-vi-rong", "Bến Cát là phạm vi rộng, không phải một mặt bằng giá duy nhất", "Các khu trong Bến Cát khác nhau về hạ tầng, công năng và nhóm người mua. Nhãn thành phố chung chỉ phù hợp để bắt đầu tìm kiếm.", "Trước khi ghi nhận giá, cần xác định tin thuộc Mỹ Phước, Tân Định hay Thới Hòa và vị trí cụ thể hơn."),
+                ("tach-ba-khu", "Tách Mỹ Phước, Tân Định và Thới Hòa", "Mỗi khu cần một nhóm tin riêng với địa danh có thể kiểm chứng. Tránh suy ra vị trí từ tiêu đề quảng cáo hoặc mốc khoảng cách mơ hồ.", "Nếu tin dùng nhiều địa danh, hãy hỏi địa chỉ hành chính và vị trí thực tế. Chỉ đưa vào nhóm sau khi hai thông tin nhất quán.", ["Địa chỉ hành chính", "Tên đường", "Mốc tiếp cận", "Vị trí trên giấy tờ"]),
+                ("muc-dich-su-dung", "So theo mục đích sử dụng và loại tài sản", "Tài sản phục vụ ở, cho thuê, kinh doanh hoặc diện tích lớn có nhóm nhu cầu khác nhau. Giá thấp hơn không đồng nghĩa phù hợp hơn.", "Tạo nhóm theo loại tài sản, diện tích, thổ cư và đường tiếp cận. Khi dữ kiện thiếu, giữ tin ngoài nhóm tham chiếu chính."),
+                ("kiem-tra-tin", "Kiểm tra tin lặp và thông tin thay đổi", "Cùng một tài sản có thể được đăng lại với tiêu đề hoặc giá khác. Đối chiếu mô tả, hình ảnh, số liên hệ và thời điểm đăng.", "Khi giá thay đổi, cần hỏi nguyên nhân và xác nhận mức hiện tại. Không dùng phiên bản cũ làm căn cứ nếu chưa kiểm tra."),
+                ("gioi-han-du-lieu", "Tôn trọng giới hạn dữ liệu trước khi ra quyết định", "Nội dung hướng dẫn không thay thế báo cáo theo khu vực và kỳ dữ liệu. Cần phân biệt phương pháp chung với phạm vi thực sự được công bố.", "Trước đặt cọc, kiểm tra quy hoạch, pháp lý, ranh giới, lối vào và thẩm quyền giao dịch qua nguồn phù hợp."),
+            ],
+            ["Đã tách đúng Mỹ Phước, Tân Định hoặc Thới Hòa", "Địa danh và vị trí nhất quán", "So cùng mục đích sử dụng", "Đã rà tin lặp", "Hiểu giới hạn dữ liệu", "Kiểm tra pháp lý độc lập"],
+            "2026-07-11",
+        ),
+    },
+}
+
+for _slug, _editorial in _ARTICLE_EDITORIAL.items():
+    SEO_ARTICLES[_slug].update(_editorial)

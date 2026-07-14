@@ -288,6 +288,7 @@ def generate_ward_report(ward, month, year):
 
     entry = {
         "variant": "report",
+        "scope_label": f"Thủ Dầu Một · {ward}",
         "path": f"/bao-cao/{slug}-thang-{m_str}-{year}",
         "title": f"Báo cáo thị trường {ward} Thủ Dầu Một tháng {m_str}/{year} — Radar BDS",
         "description": f"Báo cáo thị trường BĐS phường {ward}, Thủ Dầu Một tháng {m_str}/{year}: {dn.get('median_m2', '—')} tr/m² đất nền, {stats['total']} tin rao, {stats['signals']} tín hiệu.",
@@ -437,12 +438,13 @@ def generate_master_report(month, year):
 
     entry = {
         "variant": "report",
+        "scope_label": "Thủ Dầu Một",
         "path": f"/bao-cao/bds-binh-duong-thang-{m_str}-{year}",
-        "title": f"Báo cáo thị trường BĐS Bình Dương tháng {m_str}/{year} — Radar BDS",
+        "title": f"Báo cáo thị trường BĐS Thủ Dầu Một tháng {m_str}/{year} — Radar BDS",
         "description": f"Báo cáo thị trường BĐS Bình Dương {m_label}: {total_listings} tin rao, giá đất nền {tdm_median} tr/m². Phân tích 13 phường TDM.",
         "keywords": f"báo cáo thị trường BĐS Bình Dương, báo cáo Thủ Dầu Một, tháng {m_str} {year}, radar bds",
         "hero_badge": f"Báo cáo thị trường — {m_label}",
-        "hero_title": f"Báo cáo thị trường BĐS Bình Dương {m_label}",
+        "hero_title": f"Báo cáo thị trường BĐS Thủ Dầu Một {m_label}",
         "hero_text": f"Báo cáo {m_label} tập trung 13 phường Thủ Dầu Một. {total_listings} tin rao, giá đất nền {tdm_median} tr/m², {total_signals} tín hiệu.",
         "hero_checks": [f"13 phường Thủ Dầu Một", f"{total_listings:,}".replace(",", ".") + " tin rao",
                         f"Giá/m² trung vị {tdm_median} tr/m²"],
