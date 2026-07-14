@@ -1,0 +1,19 @@
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="seo-header">
+  <div class="seo-header-inner">
+    <a class="seo-brand" href="/" aria-label="Radar BDS - Trang chủ">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="" width="40" height="40">
+      <span>
+        <strong>Radar BDS</strong>
+        <small>Dữ liệu nhà đất Bình Dương</small>
+      </span>
+    </a>
+    <nav class="seo-nav" aria-label="Điều hướng chính">
+      <a href="/binh-duong" data-nav="binh-duong"{% if active_nav == 'binh-duong' %} aria-current="page"{% endif %}>Bình Dương</a>
+      <a href="/bao-cao" data-nav="bao-cao"{% if active_nav == 'bao-cao' %} aria-current="page"{% endif %}>Báo cáo</a>
+      <a href="/kien-thuc" data-nav="kien-thuc"{% if active_nav == 'kien-thuc' %} aria-current="page"{% endif %}>Kiến thức</a>
+      <a href="/san-deal-bds" data-nav="san-deal"{% if active_nav == 'san-deal' %} aria-current="page"{% endif %}>Săn deal BĐS</a>
+    </nav>
+    <a class="seo-header-cta" href="/?tab=signals&amp;intent=watchlist" data-track-cta="header_watchlist">Mở dashboard</a>
+  </div>
+</header>

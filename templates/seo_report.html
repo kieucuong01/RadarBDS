@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  {% include "partials/seo_head.html" %}
+</head>
+<body class="seo-page report-detail">
+  {% include "partials/seo_header.html" %}
+  <main id="main-content" class="seo-shell">
+    {% include "partials/seo_breadcrumbs.html" %}
+
+    <article class="report-layout">
+      <header class="report-header">
+        <span class="scope-chip">{{ page.scope_label }}</span>
+        <p class="seo-eyebrow">{{ page.hero_badge }}</p>
+        <h1>{{ page.hero_title }}</h1>
+        <p>{{ page.hero_text }}</p>
+        <div class="report-context">
+          <div><span>Phạm vi dữ liệu</span><strong>{{ page.scope_label }}</strong></div>
+          <div><span>Kỳ dữ liệu</span><strong>{{ page.report.period }}</strong></div>
+          <div><span>Nguồn và trạng thái</span><strong>Dữ liệu Radar BDS đã sàng lọc</strong></div>
+        </div>
+      </header>
+
+      <section class="seo-report-block" aria-labelledby="report-metrics">
+        <div class="section-heading">
+          <p class="seo-eyebrow">Chỉ số chính</p>
+          <h2 id="report-metrics">Ảnh chụp thị trường trong kỳ</h2>
+          <p>{{ page.report.source_note }}</p>
+        </div>
+        <div class="report-metric-grid">
+          {% for metric in page.report.metrics %}
+          <article><span>{{ metric.label }}</span><strong>{{ metric.value }}</strong><p>{{ metric.note }}</p></article>
+          {% endfor %}
+        </div>
+
+        <div class="section-heading report-table-heading">
+          <p class="seo-eyebrow">So sánh theo phường</p>
+          <h2>Chỉ số theo khu vực</h2>
+        </div>
+        <p class="table-scroll-hint">Trên màn hình nhỏ, vuốt ngang để xem đủ các cột.</p>
+        <div class="report-table-wrap" role="region" aria-label="Bảng chỉ số theo phường" tabindex="0">
+          <table>
+            <thead>
+              <tr><th>Phường</th><th>Số tin mới</th><th>Giá/m² trung vị</th><th>Khu giảm giá</th><th>Khu nhiều tín hiệu</th></tr>
+            </thead>
+            <tbody>
+              {% for row in page.report.area_rows %}
+              <tr><th scope="row">{{ row.area }}</th><td>{{ row.new_listings }}</td><td>{{ row.median_price }}</td><td>{{ row.drop_signal }}</td><td>{{ row.radar_signal }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="report-insights" aria-labelledby="report-insights">
+        <div class="section-heading"><p class="seo-eyebrow">Phân tích</p><h2 id="report-insights">Nhận định từ dữ liệu Radar</h2></div>
+        <div class="insight-grid">
+          {% for insight in page.report.insights %}
+          <article><h3>{{ insight.title }}</h3><p>{{ insight.body }}</p></article>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="report-method" aria-labelledby="report-method">
+        <div class="section-heading"><p class="seo-eyebrow">Minh bạch dữ liệu</p><h2 id="report-method">Phương pháp và giới hạn</h2></div>
+        <ol>{% for item in page.report.methodology %}<li>{{ item }}</li>{% endfor %}</ol>
+      </section>
+
+      <section class="report-related" aria-labelledby="report-related">
+        <div class="section-heading"><p class="seo-eyebrow">Đọc sâu hơn</p><h2 id="report-related">{{ page.local_links_title }}</h2></div>
+        <div class="related-link-grid">
+          {% for link in page.local_links %}
+          <a href="{{ link.href }}"><strong>{{ link.label }}</strong><span>{{ link.description }}</span></a>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="proof-block">
+        <strong>Hơn 1.000 nhà đầu tư tin dùng Radar BDS</strong>
+        <span>Dùng dữ liệu để thu hẹp danh sách trước khi thẩm định thực tế.</span>
+      </section>
+
+      <section class="seo-final-cta">
+        <div><p class="seo-eyebrow">Mở dữ liệu phía sau báo cáo</p><h2>{{ page.final_cta.title }}</h2><p>{{ page.final_cta.body }}</p></div>
+        <a class="seo-primary-cta" href="/?tab=signals&amp;intent=watchlist" data-track-cta="report_watchlist">{{ page.final_cta.button }}</a>
+      </section>
+    </article>
+  </main>
+  {% include "partials/seo_footer.html" %}
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Report",
+        "name": {{ page.hero_title|tojson }},
+        "description": {{ page.description|tojson }},
+        "url": {{ site_meta.canonical_url|tojson }},
+        "datePublished": {{ page.report.published_at|tojson }},
+        "dateModified": {{ page.report.published_at|tojson }},
+        "publisher": {"@type": "Organization", "name": "Radar BDS"},
+        "spatialCoverage": {{ page.scope_label|tojson }}
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {% for crumb in page.breadcrumbs %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ crumb.name|tojson }}, "item": {{ crumb.url|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
+        ]
+      }
+    ]
+  }
+  </script>
+  {% set view_event = "report_viewed" %}
+  {% include "partials/seo_tracking.html" %}
+</body>
+</html>

@@ -32,8 +32,8 @@ from config.settings import (
     SITE_OG_IMAGE,
     SITE_TITLE,
 )
-from config.seo_articles import SEO_ARTICLES
-from config.seo_pages import SEO_PAGES
+from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
+from config.seo_pages import REPORT_HUB, SEO_PAGES
 
 mimetypes.add_type("image/webp", ".webp")
 
@@ -1240,14 +1240,14 @@ def _page_breadcrumb_label(page: dict) -> str:
 
 def _page_breadcrumbs(page: dict) -> list[dict]:
     path = "/" + str(page.get("path") or "/").lstrip("/")
-    breadcrumbs = [{"name": "Radar BDS", "href": "/"}]
+    breadcrumbs = [{"name": "Trang chủ", "href": "/"}]
 
     if path.startswith("/binh-duong/"):
         breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
     elif path.startswith("/kien-thuc/"):
-        breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
+        breadcrumbs.append({"name": "Kiến thức", "href": "/kien-thuc"})
     elif path.startswith("/bao-cao/"):
-        breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
+        breadcrumbs.append({"name": "Báo cáo", "href": "/bao-cao"})
 
     current = {"name": _page_breadcrumb_label(page), "href": path}
     if breadcrumbs[-1]["href"] != current["href"]:
@@ -1281,6 +1281,16 @@ def seo_binh_duong_landing():
     return _render_public_page(page)
 
 
+def _active_public_nav(path: str) -> str:
+    if path.startswith("/bao-cao"):
+        return "bao-cao"
+    if path.startswith("/kien-thuc"):
+        return "kien-thuc"
+    if path == "/san-deal-bds":
+        return "san-deal"
+    return "binh-duong"
+
+
 def _render_public_page(page: dict):
     page = dict(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)
@@ -1290,8 +1300,45 @@ def _render_public_page(page: dict):
         description=page["description"],
         keywords=page["keywords"],
     )
-    return render_template("seo_landing.html", page=page, site_meta=site_meta)
+    template = "seo_report.html" if page.get("variant") == "report" else "seo_landing.html"
+    return render_template(
+        template,
+        page=page,
+        site_meta=site_meta,
+        active_nav=_active_public_nav(page["path"]),
+    )
 
+
+def seo_report_hub_page():
+    page = dict(REPORT_HUB)
+    page["breadcrumbs"] = _page_breadcrumbs(page)
+    reports = sorted(
+        (dict(item) for item in SEO_PAGES.values() if item.get("variant") == "report"),
+        key=lambda item: (item.get("report") or {}).get("published_at", ""),
+        reverse=True,
+    )
+    site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
+    return render_template("seo_report_hub.html", page=page, reports=reports, site_meta=site_meta, active_nav="bao-cao")
+
+
+def seo_knowledge_hub_page():
+    page = dict(KNOWLEDGE_HUB)
+    page["breadcrumbs"] = _page_breadcrumbs(page)
+    featured = dict(SEO_ARTICLES[page["featured_slug"]])
+    articles = sorted(
+        (dict(item) for slug, item in SEO_ARTICLES.items() if slug != page["featured_slug"]),
+        key=lambda item: ((item.get("article") or {}).get("modified_at", ""), (item.get("article") or {}).get("published_at", "")),
+        reverse=True,
+    )
+    site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
+    return render_template(
+        "seo_knowledge_hub.html",
+        page=page,
+        featured=featured,
+        articles=articles,
+        site_meta=site_meta,
+        active_nav="kien-thuc",
+    )
 
 def seo_landing_page(slug):
     page = SEO_PAGES.get(slug)
@@ -1312,7 +1359,7 @@ def seo_article_page(slug):
         description=page["description"],
         keywords=page["keywords"],
     )
-    return render_template("seo_article.html", page=page, site_meta=site_meta)
+    return render_template("seo_article.html", page=page, site_meta=site_meta, active_nav="kien-thuc")
 
 
 def robots_txt():
@@ -1331,7 +1378,7 @@ def sitemap_xml():
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>"""
-        for slug, page in SEO_PAGES.items()
+        for page in [REPORT_HUB, KNOWLEDGE_HUB, *SEO_PAGES.values()]
     )
     article_urls = "\n".join(
         f"""  <url>

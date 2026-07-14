@@ -1,0 +1,32 @@
+<script>
+(() => {
+  const analyticsId = {{ google_analytics_id|default('', true)|tojson }};
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+  if (analyticsId) {
+    window.gtag("js", new Date());
+    window.gtag("config", analyticsId);
+    const loadAnalytics = () => {
+      if (document.querySelector('script[data-radar-analytics]')) return;
+      const script = document.createElement("script");
+      script.async = true;
+      script.dataset.radarAnalytics = "true";
+      script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(analyticsId);
+      document.head.appendChild(script);
+    };
+    window.addEventListener("load", () => window.setTimeout(loadAnalytics, 1200), { once: true });
+  }
+  window.gtag("event", {{ view_event|default('seo_landing_viewed')|tojson }}, {
+    page_path: window.location.pathname,
+    page_title: document.title
+  });
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest("[data-track-cta]");
+    if (!link) return;
+    window.gtag("event", "cta_clicked", {
+      cta_name: link.dataset.trackCta || "unknown",
+      destination: link.getAttribute("href") || ""
+    });
+  });
+})();
+</script>

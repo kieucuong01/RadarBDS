@@ -1,4 +1,4 @@
-"""SEO landing page content for public Radar BDS pages."""
+﻿"""SEO landing page content for public Radar BDS pages."""
 
 SEO_PAGES = {
     "bao-cao": {
@@ -1043,3 +1043,52 @@ SEO_PAGES["ban-dat-binh-duong"]["local_links"] = [
     }
     for page in SEO_PAGES["ban-dat-binh-duong"]["local_links"]
 ]
+
+REPORT_HUB = {
+    "path": "/bao-cao",
+    "title": "Báo cáo thị trường BĐS Bình Dương | Radar BDS",
+    "description": "Kho báo cáo thị trường bất động sản Bình Dương; hiện ưu tiên dữ liệu Thủ Dầu Một.",
+    "keywords": "báo cáo BĐS Bình Dương, báo cáo Thủ Dầu Một, thị trường bất động sản",
+    "hero_title": "Báo cáo thị trường BĐS Bình Dương",
+    "hero_text": "Theo dõi phạm vi, kỳ dữ liệu, chỉ số và phương pháp trước khi đi sâu vào từng báo cáo.",
+    "scope_label": "Hiện ưu tiên Thủ Dầu Một",
+}
+
+_REPORT_JUNE_2026 = SEO_PAGES["bao-cao/bds-binh-duong-thang-06-2026"]
+_REPORT_JUNE_2026.update(
+    {
+        "title": "Báo cáo thị trường BĐS Thủ Dầu Một tháng 06/2026 | Radar BDS",
+        "hero_title": "Báo cáo thị trường BĐS Thủ Dầu Một tháng 06/2026",
+        "hero_text": "Báo cáo tháng 06/2026 chỉ tập trung các phường Thủ Dầu Một, trình bày phạm vi, kỳ dữ liệu, chỉ số và phương pháp trước khi đi vào từng nhóm giá.",
+        "breadcrumb_label": "Báo cáo tháng 06/2026",
+        "scope_label": "Thủ Dầu Một",
+        "description": "Báo cáo thị trường BĐS Thủ Dầu Một tháng 06/2026 với phạm vi, kỳ dữ liệu, chỉ số và phương pháp của Radar BDS.",
+        "value_cards": [
+            {
+                "title": "Phạm vi dữ liệu rõ ràng",
+                "body": "Báo cáo này chỉ tập trung các phường Thủ Dầu Một, không dùng dữ liệu Bến Cát hay Mỹ Phước để kéo lệch mặt bằng.",
+            },
+            {
+                "title": "Đọc theo phường trước khi đọc giá chung",
+                "body": "Chênh lệch giữa Phú Mỹ, Hiệp An, Định Hòa và Hiệp Thành đủ lớn để cần tách nhóm trước khi so tin.",
+            },
+            {
+                "title": "Dùng báo cáo để mở dashboard đúng chỗ",
+                "body": "Sau khi nắm mặt bằng tháng, mở dashboard để lọc từng phường, loại tài sản và ngân sách cụ thể.",
+            },
+        ],
+        "local_links_title": "Phường nên mở tiếp từ báo cáo",
+        "local_links": [
+            {
+                "label": "Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Khu vực cần tách riêng khi đọc giá Thủ Dầu Một.",
+            },
+            {
+                "label": "Hiệp An",
+                "href": "/binh-duong/phuong-hiep-an",
+                "description": "Nguồn cung lớn, nên so riêng theo loại tài sản và tuyến đường.",
+            },
+        ],
+    }
+)
