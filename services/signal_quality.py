@@ -22,7 +22,7 @@ NON_BLOCKING_RECHECK_FLAGS = frozenset({
 
 
 LATEST_VALUATION_CTE = """
-latest_valuation AS (
+latest_valuation AS MATERIALIZED (
     SELECT DISTINCT ON (vr.listing_id) vr.*
     FROM valuation_results vr
     ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
