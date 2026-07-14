@@ -1562,4 +1562,327 @@ SEO_ARTICLES = {
             "button": "Mở dashboard và lưu watchlist Bến Cát",
         },
     },
+
+
+
+
+    "gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026": {
+        "variant": "knowledge",
+        "path": "/kien-thuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026",
+        "title": "Giá đất Hiệp An Thủ Dầu Một cập nhật tháng 7/2026 — hơn 1.000 tin rao từ Facebook",
+        "description": "Hiệp An có hơn 1.000 tin rao từ Facebook — nhiều nhất Thủ Dầu Một. Giá đất nền ~18.5 tr/m², nhà đất ~24 tr/m². Cập nhật tháng 7/2026 từ Radar BDS.",
+        "keywords": "giá đất Hiệp An Thủ Dầu Một, nhà đất Hiệp An, đất nền Hiệp An, giá đất Hiệp An, radar bds",
+        "breadcrumb_label": "Giá đất Hiệp An Thủ Dầu Một tháng 7/2026",
+        "hero_badge": "Kiến thức nhà đất Thủ Dầu Một",
+        "hero_title": "Giá đất Hiệp An Thủ Dầu Một cập nhật tháng 7/2026",
+        "hero_text": "Hiệp An có hơn 1.080 tin rao từ Facebook — nhiều nhất Thủ Dầu Một. Bài viết này dùng dữ liệu thực từ Radar BDS để bạn có mặt bằng giá chuẩn trước khi đi xem.",
+        "hero_checks": [
+            "Đất nền Hiệp An: ~18-25 tr/m² — nguồn cung lớn nhất TDM",
+            "Nhà đất Hiệp An: ~24 tr/m² — chủ yếu nhà cấp 4 và nhà lầu",
+            "94 tín hiệu đáng chú ý — gồm tin giảm giá và tin hot"
+        ],
+        "primary_cta": "Mở dashboard để lọc watchlist Hiệp An",
+        "secondary_cta": "Xem dashboard",
+        "secondary_href": "/dashboard",
+        "map_label": "Knowledge / Hiệp An",
+        "hero_metric": {
+            "label": "Tin rao từ Facebook",
+            "value": "1.080+",
+            "delta": "tin",
+            "note": "cao nhất TDM"
+        },
+        "property_card": {
+            "status": "Đất nền giá mềm",
+            "title": "Một lô đất Hiệp An 100m²: ~2.4 tỷ",
+            "price": "16-25 tr/m² — rẻ hơn Phú Mỹ khoảng 10 tr/m²",
+            "metric_a": "Giá phổ biến",
+            "metric_a_value": "2-3 tỷ",
+            "metric_b": "Phân khúc chính",
+            "metric_b_value": "đất nền"
+        },
+        "value_cards": [
+            {
+                "title": "Hiệp An — nguồn cung số 1 Thủ Dầu Một",
+                "body": "Hiệp An có hơn 1.080 tin rao từ Facebook, nhiều nhất trong 13 phường của TDM. Phân khúc chủ đạo là đất nền, kế đến là nhà đất. Giá đất Hiệp An ở mức trung bình so với mặt bằng TDM, phù hợp người mua tài chính 2-4 tỷ."
+            },
+            {
+                "title": "Giá đất nền Hiệp An: 16-25 tr/m²",
+                "body": "Trung bình ~18.5 tr/m², biên độ từ 16 tr/m² (đất trong hẻm nhỏ) đến hơn 25 tr/m² (đất mặt tiền đường lớn). Với hơn 1.000 tin, bạn có đủ dữ liệu để so sánh giá giữa các khu."
+            },
+            {
+                "title": "Nhà đất Hiệp An: ~24 tr/m²",
+                "body": "Nhà cấp 4 phổ biến (2-3 tỷ) và nhà 1 trệt 1 lầu (3-4.5 tỷ). Nhiều tin nhà Hiệp An có giá/m² dưới 20 tr/m² — có thể là nhà cũ cần sửa hoặc nhà diện tích lớn."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ bài viết sang watchlist",
+            "title": "Watchlist giúp bạn theo kịp tin mới Hiệp An",
+            "body": "Mỗi tuần có thêm 40-60 tin mới ở Hiệp An. Watchlist trên Radar BDS sẽ gom tin mới, tin giảm giá về đúng phường và ngân sách bạn chọn.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS với watchlist Hiệp An",
+            "cta": "Lưu watchlist",
+            "metrics": [
+                {"value": "Dashboard", "label": "mở feed Hiệp An"},
+                {"value": "Watchlist", "label": "giữ đúng phường, loại hình, ngân sách"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Thị trường Hiệp An — số liệu thực từ Radar BDS",
+            "title": "So sánh Hiệp An với các phường lân cận",
+            "body": "Bảng dưới đây so sánh Hiệp An với các phường lân cận cùng nhóm.",
+            "columns": ["Khu vực", "Tổng tin FB", "Đất nền (tr/m²)", "Nhà đất (tr/m²)", "Giá phổ biến", "Tín hiệu"],
+            "rows": [
+                {"area": "Hiệp An", "price": "1.081", "tracked": "18.5", "signal": "24.1", "area_m2": "2-3 tỷ", "note": "94"},
+                {"area": "Tân An", "price": "898", "tracked": "17.8", "signal": "23.5", "area_m2": "2-3 tỷ", "note": "40"},
+                {"area": "Phú Mỹ", "price": "566", "tracked": "28.3", "signal": "31.0", "area_m2": "3-4 tỷ", "note": "112"},
+                {"area": "Tương Bình Hiệp", "price": "611", "tracked": "21.2", "signal": "26.0", "area_m2": "2.5-3.5 tỷ", "note": "40"},
+                {"area": "Định Hòa", "price": "635", "tracked": "17.7", "signal": "25.0", "area_m2": "2-4 tỷ", "note": "88"}
+            ],
+            "cards": [
+                {"title": "Nguồn cung số 1", "value": "1.081 tin", "body": "Nhiều nhất TDM"},
+                {"title": "Giá đất nền", "value": "~18.5 tr/m²", "body": "Rẻ hơn Phú Mỹ 10 tr/m²"},
+                {"title": "94 tín hiệu", "value": "94 signals", "body": "Lọc trên dashboard"}
+            ]
+        },
+        "local_links_title": "Xem thêm",
+        "local_links": [
+            {"label": "Dashboard", "href": "/dashboard", "description": "Dashboard Radar BDS để lọc nhà đất Hiệp An"},
+            {"label": "Giá đất TDM tổng quan", "href": "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia", "description": "Bài hub hướng dẫn cách tách phường trước khi so giá TDM"}
+        ],
+        "process_title": "Cách đọc giá đất Hiệp An trước khi gọi môi giới",
+        "process": [
+            {"title": "1. Xác định loại hình bạn cần", "body": "Đất nền ~18.5 tr/m², nhà đất ~24 tr/m². Lọc đúng loại hình trên dashboard trước khi so giá."},
+            {"title": "2. Đọc giá theo phường", "body": "Dùng bảng so sánh bên trên để đối chiếu Hiệp An với Tân An, Phú Mỹ, Định Hòa."},
+            {"title": "3. Kiểm tra MOS", "body": "Không phải tin rẻ nào cũng đáng gọi. MOS giúp bạn ưu tiên tin nên kiểm tra trước."},
+            {"title": "4. Lưu watchlist", "body": "Tạo watchlist Hiệp An trên dashboard để gom tin mới về một chỗ."}
+        ],
+        "faq": [
+            {"q": "Giá đất Hiệp An hiện tại bao nhiêu một mét vuông?", "a": "Đất nền trung bình ~18.5 tr/m², nhà đất ~24 tr/m². Số liệu từ tin rao Facebook thực tế tháng 7/2026."},
+            {"q": "Hiệp An có bao nhiêu tin rao nhà đất?", "a": "Hơn 1.080 tin từ Facebook, nhiều nhất trong 13 phường của Thủ Dầu Một."},
+            {"q": "Đất Hiệp An rẻ hơn Phú Mỹ bao nhiêu?", "a": "Chênh khoảng 10 tr/m². Hiệp An ~18.5 tr/m², Phú Mỹ ~28.3 tr/m²."},
+            {"q": "Có nên mua đất Hiệp An năm 2026 không?", "a": "Nguồn cung lớn, giá ở mức trung bình — phù hợp mua để ở hoặc đầu tư tầm trung. Luôn kiểm tra sổ và đi xem đất trước khi giao dịch."},
+            {"q": "Làm sao để nhận tin mới Hiệp An tự động?", "a": "Đăng nhập Radar BDS, tạo watchlist với phường Hiệp An. Dashboard sẽ gom tin mới cho bạn."}
+        ],
+        "article": {"published_at": "2026-07-06 12:00", "modified_at": "2026-07-06 12:00"},
+        "final_cta": {
+            "title": "Bắt đầu lọc thực tế",
+            "body": "Mở dashboard, lọc Hiệp An, chọn loại hình và mức giá — bạn sẽ thấy các tin đang bán.",
+            "cta": "Mở dashboard"
+        }
+    },
+
+
+    "gia-dat-tan-an-thu-dau-mot-cap-nhat-thang-7-2026": {
+        "variant": "knowledge",
+        "path": "/kien-thuc/gia-dat-tan-an-thu-dau-mot-cap-nhat-thang-7-2026",
+        "title": "Giá đất Tân An Thủ Dầu Một — phường giá rẻ nhất với gần 900 tin rao Facebook",
+        "description": "Tân An có gần 900 tin rao từ Facebook. Đất nền chỉ ~16.2 tr/m², nhà đất ~22.9 tr/m² — rẻ nhất TDM. Cập nhật tháng 7/2026 từ Radar BDS.",
+        "keywords": "giá đất Tân An Thủ Dầu Một, giá đất Tân An, nhà đất Tân An, đất nền Tân An, radar bds",
+        "breadcrumb_label": "Giá đất Tân An Thủ Dầu Một tháng 7/2026",
+        "hero_badge": "Kiến thức nhà đất Thủ Dầu Một",
+        "hero_title": "Giá đất Tân An Thủ Dầu Một — phường giá rẻ nhất với gần 900 tin rao Facebook",
+        "hero_text": "Tân An là phường có giá đất rẻ nhất Thủ Dầu Một, với đất nền chỉ ~16.2 tr/m² — thấp hơn mặt bằng TDM gần 8 tr/m². Gần 900 tin rao từ Facebook cho thấy đây là khu vực có nguồn cung dồi dào cho người mua tài chính thấp.",
+        "hero_checks": [
+            "Đất nền Tân An: ~16.2 tr/m² — rẻ nhất TDM",
+            "Nhà đất Tân An: ~22.9 tr/m² — chủ yếu nhà cấp 4 diện tích lớn",
+            "Diện tích trung bình: 172 m² — đất rộng hơn các phường khác"
+        ],
+        "primary_cta": "Mở dashboard để lọc watchlist Tân An",
+        "secondary_cta": "Xem dashboard",
+        "secondary_href": "/dashboard",
+        "map_label": "Knowledge / Tân An",
+        "hero_metric": {
+            "label": "Giá đất nền",
+            "value": "~16.2",
+            "delta": "tr/m²",
+            "note": "rẻ nhất TDM"
+        },
+        "property_card": {
+            "status": "Đất nền giá rẻ",
+            "title": "Một lô đất Tân An 100m²: chỉ ~1.8 tỷ",
+            "price": "16.2 tr/m² — rẻ hơn Hiệp An ~2 tr/m², rẻ hơn Phú Mỹ ~12 tr/m²",
+            "metric_a": "Khoảng giá phổ biến",
+            "metric_a_value": "1.5-3 tỷ",
+            "metric_b": "Phân khúc chủ lực",
+            "metric_b_value": "đất nền"
+        },
+        "value_cards": [
+            {
+                "title": "Tân An — phường giá rẻ, diện tích lớn",
+                "body": "Tân An nằm phía Tây Nam Thủ Dầu Một, giáp Hiệp An và Tương Bình Hiệp. Với gần 900 tin rao từ Facebook, đây là phường có nguồn cung lớn thứ hai TDM. Điểm đặc biệt: diện tích đất trung bình 172 m² — rộng hơn hầu hết phường khác, nhưng giá chỉ ~16.2 tr/m² (đất nền)."
+            },
+            {
+                "title": "Giá đất nền Tân An: 11-19 tr/m² — ngưỡng an toàn cho người mua",
+                "body": "25% số tin đất nền Tân An có giá dưới 11.7 tr/m², một nửa dưới 16.2 tr/m². Chỉ 25% tin trên 19.1 tr/m². Biên độ giá hẹp cho thấy thị trường Tân An ổn định, ít bị đẩy giá. Nếu bạn thấy tin đất Tân An giá dưới 11 tr/m², đó có thể là đất vườn hoặc cần kiểm tra pháp lý kỹ."
+            },
+            {
+                "title": "Nhà đất Tân An: ~22.9 tr/m² — rẻ hơn Hiệp An 1.5 tr/m²",
+                "body": "Nhà đất Tân An chủ yếu là nhà cấp 4 trên nền đất rộng, phù hợp gia đình mua để ở. Giá phổ biến 2-3 tỷ cho nhà 100-150 m². So với các phường lân cận như Hiệp An (24 tr/m²) hay Phú Mỹ (31 tr/m²), Tân An là lựa chọn tiết kiệm hơn rõ rệt."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ bài viết sang watchlist",
+            "title": "Watchlist Tân An giúp bạn bắt tin giá rẻ trước người khác",
+            "body": "Với gần 900 tin đang bán và khoảng 40-60 tin mới mỗi tuần, watchlist Tân An trên Radar BDS sẽ gom đúng tin phù hợp ngân sách của bạn — không cần tự lọc lại mỗi ngày.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS với watchlist Tân An",
+            "cta": "Lưu watchlist Tân An",
+            "metrics": [
+                {"value": "Dashboard", "label": "mở feed Tân An đang có"},
+                {"value": "Watchlist", "label": "giữ đúng ngân sách và loại hình"},
+                {"value": "Telegram", "label": "nhận tin mới Tân An tự động"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Thị trường Tân An — số liệu thực từ Radar BDS",
+            "title": "So sánh giá Tân An với các phường lân cận",
+            "body": "Bảng dưới đây so sánh Tân An với Hiệp An, Phú Mỹ và Định Hòa — những phường cùng khu vực Nam TDM.",
+            "columns": ["Khu vực", "Tổng tin FB", "Đất nền (tr/m²)", "Nhà đất (tr/m²)", "Giá phổ biến", "Diện tích TB"],
+            "rows": [
+                {"area": "Tân An", "price": "898", "tracked": "16.2", "signal": "22.9", "area_m2": "1.5-3 tỷ", "note": "172 m²"},
+                {"area": "Hiệp An", "price": "1.081", "tracked": "18.5", "signal": "24.1", "area_m2": "2-3 tỷ", "note": "—"},
+                {"area": "Phú Mỹ", "price": "566", "tracked": "28.3", "signal": "31.0", "area_m2": "3-4 tỷ", "note": "—"},
+                {"area": "Định Hòa", "price": "635", "tracked": "17.7", "signal": "25.0", "area_m2": "2-4 tỷ", "note": "—"}
+            ],
+            "cards": [
+                {"title": "Rẻ nhất TDM", "value": "~16.2 tr/m²", "body": "Thấp hơn mặt bằng TDM ~8 tr/m²"},
+                {"title": "Đất rộng", "value": "172 m² TB", "body": "Diện tích trung bình lớn hơn các phường khác"},
+                {"title": "Giá ổn định", "value": "Biên hẹp", "body": "75% tin trong khoảng 11-19 tr/m²"}
+            ]
+        },
+        "local_links_title": "Xem thêm",
+        "local_links": [
+            {"label": "Dashboard Tân An", "href": "/dashboard", "description": "Mở dashboard để lọc đất nền Tân An với ngân sách của bạn"},
+            {"label": "Giá đất Hiệp An", "href": "/kien-thuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Phường lân cận — nguồn cung số 1 TDM với giá ~18.5 tr/m²"},
+            {"label": "Giá đất TDM tổng quan", "href": "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia", "description": "Bài hub hướng dẫn cách tách phường trước khi so giá"}
+        ],
+        "process_title": "Cách tìm đất giá rẻ Tân An",
+        "process": [
+            {"title": "1. Xác định ngân sách và loại hình", "body": "Đất nền Tân An phổ biến 1.5-3 tỷ. Nhà đất 2-3 tỷ. Lọc đúng loại hình trên dashboard."},
+            {"title": "2. So sánh với phường lân cận", "body": "Tân An rẻ hơn Hiệp An ~2 tr/m² và rẻ hơn Phú Mỹ ~12 tr/m². Nếu ngân sách dưới 2 tỷ, Tân An là lựa chọn tốt nhất."},
+            {"title": "3. Kiểm tra pháp lý đất giá rẻ", "body": "Đất giá dưới 11 tr/m² ở Tân An thường là đất vườn hoặc thiếu thổ cư. Luôn kiểm tra sổ đỏ trước khi giao dịch."},
+            {"title": "4. Lưu watchlist", "body": "Tạo watchlist Tân An trên dashboard. Khoảng 40-60 tin mới mỗi tuần — watchlist gom sẵn cho bạn."}
+        ],
+        "faq": [
+            {"q": "Giá đất Tân An bao nhiêu một mét vuông?", "a": "Đất nền Tân An trung bình ~16.2 tr/m², nhà đất ~22.9 tr/m². Đây là mức rẻ nhất Thủ Dầu Một theo dữ liệu từ Radar BDS tháng 7/2026."},
+            {"q": "Tân An có bao nhiêu tin rao nhà đất?", "a": "Gần 900 tin từ Facebook, nhiều thứ hai TDM (sau Hiệp An). Chủ yếu là đất nền (556 tin) và nhà đất (331 tin)."},
+            {"q": "Đất Tân An rẻ hơn Hiệp An bao nhiêu?", "a": "Đất nền Tân An ~16.2 tr/m², Hiệp An ~18.5 tr/m² — chênh khoảng 2 tr/m². Với lô 100m², bạn tiết kiệm được ~200 triệu."},
+            {"q": "Đất rẻ Tân An có vấn đề gì không?", "a": "25% số tin đất nền Tân An có giá dưới 11.7 tr/m². Đây thường là đất vườn, thiếu thổ cư hoặc ở vị trí hẻm sâu. Luôn kiểm tra sổ đỏ và quy hoạch trước khi giao dịch."},
+            {"q": "Có nên mua đất Tân An năm 2026 không?", "a": "Tân An phù hợp nếu bạn có ngân sách hạn chế (dưới 2 tỷ) và muốn đất rộng. Giá ổn định, biên độ hẹp — ít rủi ro đầu cơ. Tuy nhiên, vị trí không trung tâm bằng Phú Mỹ hay Hiệp An."}
+        ],
+        "article": {"published_at": "2026-07-06 18:00", "modified_at": "2026-07-06 18:00"},
+        "final_cta": {
+            "title": "Tân An giá rẻ — bắt đầu lọc ngay",
+            "body": "Mở dashboard, lọc phường Tân An, chọn loại hình và ngân sách — bạn sẽ thấy các tin đất nền và nhà đất đang bán.",
+            "cta": "Mở dashboard"
+        }
+    },
+
+    "gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026": {
+    "variant": "knowledge",
+    "path": "/kien-thuc/gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026",
+    "title": "Giá đất Phú Mỹ Thủ Dầu Một cập nhật tháng 7/2026 — phường ven sông với 700+ tin rao",
+    "description": "Giá đất Phú Mỹ Thủ Dầu Một cập nhật tháng 7/2026: đất nền 22-28 tr/m², nhà đất 30-40 tr/m², 716 tin rao Facebook. Phân tích giá, tín hiệu thị trường và so sánh với các phường lân cận.",
+    "keywords": "giá đất Phú Mỹ Thủ Dầu Một, giá đất Phú Mỹ TDM, bán đất Phú Mỹ, nhà đất Phú Mỹ, Phú Mỹ Thủ Dầu Một, đất nền Phú Mỹ, radar bds",
+    "breadcrumb_label": "Giá đất Phú Mỹ Thủ Dầu Một tháng 7/2026",
+    "hero_badge": "Kiến thức nhà đất Thủ Dầu Một",
+    "hero_title": "Giá đất Phú Mỹ — phường ven sông với hơn 700 tin rao từ Facebook",
+    "hero_text": "Phú Mỹ là phường ven sông Sài Gòn, có nguồn cung đa dạng với hơn 700 tin rao Facebook. Giá đất nền median 22.9 tr/m², nhà đất median 39.3 tr/m². Với 119 tín hiệu giảm giá và tin nóng, Phú Mỹ đang là khu vực sôi động bậc nhất Thủ Dầu Một.",
+    "hero_checks": [
+        "Đất nền Phú Mỹ: ~22.9 tr/m² — 258 tin đang bán",
+        "Nhà đất Phú Mỹ: ~39.3 tr/m² — 316 tin đang bán",
+        "119 tín hiệu giảm giá và tin nóng trong tháng",
+        "Phường ven sông Sài Gòn — tiềm năng phát triển dài hạn"
+    ],
+    "primary_cta": "Mở dashboard để lọc watchlist Phú Mỹ",
+    "secondary_cta": "Xem dashboard",
+    "secondary_href": "/dashboard",
+    "map_label": "Knowledge / Phú Mỹ",
+    "hero_metric": {
+        "label": "Giá đất nền median",
+        "value": "~22.9",
+        "delta": "tr/m²",
+        "note": "258 tin đất nền"
+    },
+    "property_card": {
+        "status": "Đất nền — tin rao sôi động",
+        "title": "Một lô đất Phú Mỹ 100m²: khoảng 2.3-3 tỷ",
+        "price": "22.9 tr/m² — cao hơn Hiệp An ~4 tr/m², thấp hơn Phú Lợi ~13 tr/m²",
+        "metric_a": "Khoảng giá phổ biến",
+        "metric_a_value": "2-4 tỷ",
+        "metric_b": "Phân khúc chủ lực",
+        "metric_b_value": "đất nền + nhà đất"
+    },
+    "value_cards": [
+        {
+            "title": "Đất nền Phú Mỹ: ~22.9 tr/m² — mức giá trung bình khá tại TDM",
+            "body": "Phú Mỹ có 258 tin đất nền đang bán với giá median 22.9 tr/m², dao động 7-65 tr/m². So với các phường lân cận, Phú Mỹ đắt hơn Hiệp An (~18.5 tr/m²) và Tân An (~16.2 tr/m²) nhưng rẻ hơn Phú Lợi (35.9 tr/m²) và Chánh Nghĩa (39.6 tr/m²). Diện tích phổ biến 80-200 m²."
+        },
+        {
+            "title": "Nhà đất Phú Mỹ: ~39.3 tr/m² — chủ yếu nhà cấp 4, nhà phố",
+            "body": "316 tin nhà đất đang bán với giá median 39.3 tr/m² (khoảng 15-65 tr/m²). Giá tổng median 3.55 tỷ. Phú Mỹ có nhiều nhà cấp 4 trên đất rộng và nhà phố mới xây, phù hợp gia đình mua để ở. Khu vực gần sông Sài Gòn thường có giá cao hơn mặt bằng chung."
+        },
+        {
+            "title": "119 tín hiệu giảm giá — cơ hội cho người mua tiền mặt",
+            "body": "Trong 716 tin đang hoạt động tại Phú Mỹ, có 119 tín hiệu (tin nóng + giảm giá). Đây là tỷ lệ cao, cho thấy nhiều chủ đang hạ giá để thoát hàng. Người mua có sẵn tiền mặt nên tận dụng cơ hội này, nhưng luôn kiểm tra pháp lý kỹ trước khi giao dịch."
+        }
+    ],
+    "dashboard_preview": {
+        "eyebrow": "Từ bài viết sang watchlist",
+        "title": "Watchlist Phú Mỹ giúp bạn bắt tin giá tốt trước người khác",
+        "body": "Với hơn 700 tin đang bán và khoảng 30-50 tin mới mỗi tuần, watchlist Phú Mỹ trên Radar BDS sẽ gom đúng tin phù hợp ngân sách của bạn — không cần tự lọc lại mỗi ngày.",
+        "image": "/static/images/seo/dashboard-preview.png",
+        "alt": "Dashboard Radar BDS với watchlist Phú Mỹ",
+        "cta": "Lưu watchlist Phú Mỹ",
+        "metrics": [
+            {"value": "Dashboard", "label": "mở feed Phú Mỹ đang có"},
+            {"value": "Watchlist", "label": "giữ đúng ngân sách và loại hình"},
+            {"value": "Telegram", "label": "nhận tin mới Phú Mỹ tự động"}
+        ]
+    },
+    "market_snapshot": {
+        "eyebrow": "Thị trường Phú Mỹ — số liệu thực từ Radar BDS",
+        "title": "So sánh giá Phú Mỹ với các phường lân cận",
+        "body": "Bảng dưới đây so sánh Phú Mỹ với Hiệp An, Tân An và Phú Lợi — những phường cùng khu vực TDM.",
+        "columns": ["Khu vực", "Tổng tin FB", "Đất nền (tr/m²)", "Nhà đất (tr/m²)", "Giá phổ biến", "Tín hiệu"],
+        "rows": [
+            {"area": "Phú Mỹ", "price": "716", "tracked": "22.9", "signal": "39.3", "area_m2": "2-4 tỷ", "note": "119 🔥"},
+            {"area": "Hiệp An", "price": "1.081", "tracked": "18.5", "signal": "24.1", "area_m2": "2-3 tỷ", "note": "94"},
+            {"area": "Tân An", "price": "898", "tracked": "16.2", "signal": "22.9", "area_m2": "1.5-3 tỷ", "note": "40"},
+            {"area": "Phú Lợi", "price": "256", "tracked": "35.9", "signal": "—", "area_m2": "3-6 tỷ", "note": "51"}
+        ],
+        "cards": [
+            {"title": "Nguồn cung dồi dào", "value": "716 tin FB", "body": "Lớn thứ ba TDM sau Hiệp An và Tân An"},
+            {"title": "Đất nền 22.9 tr/m²", "value": "Ngưỡng TB khá", "body": "Cao hơn Hiệp An ~4 tr/m², thấp hơn Phú Lợi ~13 tr/m²"},
+            {"title": "119 tín hiệu", "value": "Cơ hội giảm giá", "body": "Nhiều chủ đang hạ giá — kiểm tra kỹ pháp lý"}
+        ]
+    },
+    "local_links_title": "Xem thêm",
+    "local_links": [
+        {"label": "Dashboard Phú Mỹ", "href": "/dashboard", "description": "Mở dashboard để lọc đất nền Phú Mỹ với ngân sách của bạn"},
+        {"label": "Giá đất TDM tổng quan", "href": "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia", "description": "Bài hub hướng dẫn cách tách phường trước khi so giá"},
+        {"label": "Giá đất Hiệp An", "href": "/kien-thuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Phường lân cận — nguồn cung số 1 TDM với giá ~18.5 tr/m²"},
+        {"label": "Giá đất Tân An", "href": "/kien-thuc/gia-dat-tan-an-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Phường giá rẻ nhất TDM — đất nền chỉ ~16.2 tr/m²"}
+    ],
+    "process_title": "Cách tìm đất Phú Mỹ giá hợp lý",
+    "process": [
+        {"title": "1. Xác định ngân sách và loại hình", "body": "Đất nền Phú Mỹ phổ biến 2-4 tỷ. Nhà đất 2.5-5 tỷ. Lọc đúng loại hình trên dashboard."},
+        {"title": "2. So sánh với phường lân cận", "body": "Phú Mỹ đắt hơn Hiệp An ~4 tr/m² nhưng rẻ hơn Phú Lợi ~13 tr/m². Nếu ngân sách dưới 2 tỷ, nên xem Tân An hoặc Hiệp An trước."},
+        {"title": "3. Tận dụng tín hiệu giảm giá", "body": "119 tín hiệu giảm giá và tin nóng — dùng bộ lọc MOS và giá giảm trên dashboard để săn deal."},
+        {"title": "4. Lưu watchlist", "body": "Tạo watchlist Phú Mỹ trên dashboard. Khoảng 30-50 tin mới mỗi tuần — watchlist gom sẵn cho bạn."}
+    ],
+    "faq": [
+        {"q": "Giá đất Phú Mỹ Thủ Dầu Một bao nhiêu một mét vuông?", "a": "Đất nền Phú Mỹ có giá median 22.9 tr/m², dao động 7-65 tr/m². Nhà đất giá median 39.3 tr/m², khoảng 15-65 tr/m² theo dữ liệu từ 716 tin rao Facebook tháng 7/2026."},
+        {"q": "Phú Mỹ có bao nhiêu tin rao nhà đất?", "a": "716 tin rao Facebook còn hoạt động, trong đó 258 tin đất nền và 316 tin nhà đất. Nguồn cung lớn thứ ba TDM sau Hiệp An và Tân An."},
+        {"q": "Giá đất Phú Mỹ cao hơn Hiệp An bao nhiêu?", "a": "Đất nền Phú Mỹ ~22.9 tr/m², Hiệp An ~18.5 tr/m² — chênh khoảng 4 tr/m². Với lô 100m², Phú Mỹ đắt hơn ~400 triệu. Tuy nhiên Phú Mỹ ven sông Sài Gòn, có tiềm năng tăng giá tốt hơn."},
+        {"q": "Phú Mỹ có nhiều tin giảm giá không?", "a": "Có. 119/716 tin có tín hiệu giảm giá hoặc tin nóng — tỷ lệ ~17%. Đây là cơ hội cho người mua có sẵn tiền mặt, nhưng cần kiểm tra pháp lý kỹ trước khi giao dịch."},
+        {"q": "Có nên mua đất Phú Mỹ năm 2026 không?", "a": "Phú Mỹ là phường ven sông Sài Gòn, có hạ tầng phát triển và tiềm năng dài hạn. Giá đất ở mức trung bình khá tại TDM — phù hợp người mua để ở hoặc đầu tư trung hạn. Tuy nhiên, mỗi giao dịch cần kiểm tra quy hoạch và pháp lý thực tế."}
+    ],
+    "article": {"published_at": "2026-07-09 09:00", "modified_at": "2026-07-09 09:00"},
+    "final_cta": {
+        "title": "Phú Mỹ — bắt đầu lọc ngay",
+        "body": "Mở dashboard, lọc phường Phú Mỹ, chọn loại hình và ngân sách — bạn sẽ thấy các tin đất nền và nhà đất đang bán.",
+        "cta": "Mở dashboard"
+    }
+},
 }

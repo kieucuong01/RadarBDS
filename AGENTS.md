@@ -89,17 +89,6 @@ Marketing skills:
 - Daily production crawl is Facebook-first. Guland runs as a secondary timer/fallback cron. Do not put slow secondary crawl before Facebook.
 - Do not reintroduce external LLM verification into crawl/reprocess. Advisory notes and Claude review stay manual/explicit and write only to `ai_deal_review`.
 
-## Lean Agent Workflow
-
-- Default to narrow implementation plus targeted verification; do not create broad strategy, new loops, or speculative refactors for a small request.
-- Preserve unrelated dirty work. If committing or deploying, include only files directly tied to the task.
-- For marketing/growth tasks, write Vietnamese output and tie work to `watchlist`, `Telegram`, `VIP lead activation`, or a verified public SEO asset.
-- Daily SEO publishing must ship exactly one non-duplicate article intent: read `.agents/seo-publish-history.md`, update `config/seo_articles.py`, and verify with `tests/test_public_seo.py`.
-- Daily signal review stays queue-only and manual: no external LLM APIs, no `ai_training_feedback`, and unresolved rows go to admin/source QC surfaces.
-- Weekly marketing review must choose one 80/20 action; if no safe code change is justified, update the loop state instead of inventing more work.
-- Use `ui-ux-pro-max` only for visible UI/dashboard/landing changes, `security-and-hardening` for auth/input/session/API exposure, and `performance-optimization` for slow queries/pages/builds.
-- Avoid installing new frameworks, MCPs, crawlers, or workflow packs unless the user explicitly asks.
-
 ## Fast Commands
 
 PowerShell local dev:
