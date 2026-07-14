@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/admin-favicon-16.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/admin-apple-touch-icon.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="manifest" href="{{ url_for('static', filename='admin.webmanifest') }}?v=admin-v43-dup-cluster-pairs">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v44-growth">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v45-growth-font">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -249,7 +249,7 @@
       </button>
       <button class="nav-item {% if admin_initial_panel|default('crm') == 'growth' %}active{% endif %}" data-panel="growth" data-panel-slug="tang-truong">
         <span class="nav-icon">{{ admin_icon('radio', 'nav-svg') }}</span>
-        <span><strong>T?ng tr??ng</strong><small>KPI v? xu h??ng h? th?ng</small></span>
+        <span><strong>Tăng trưởng</strong><small>KPI và xu hướng hệ thống</small></span>
       </button>
       <button class="nav-item {% if admin_initial_panel|default('crm') == 'quality' %}active{% endif %}" data-panel="quality" data-panel-slug="data-quality">
         <span class="nav-icon">{{ admin_icon('shield-check', 'nav-svg') }}</span>
@@ -670,31 +670,31 @@
 
     <section id="panel-growth" class="workspace-panel {% if admin_initial_panel|default('crm') == 'growth' %}active{% endif %}">
       <div class="page-head growth-head">
-        <div><h1>T?ng tr??ng Radar BDS</h1><p>Facebook m?c ??nh ? k? l?ch Vi?t Nam ? so s?nh k? tr??c.</p></div>
-        <div class="growth-controls" aria-label="B? l?c t?ng tr??ng">
-          <div class="growth-period" role="group" aria-label="Ch?n k?">
-            <button type="button" class="segment active" data-growth-period="day">Ng?y</button>
-            <button type="button" class="segment" data-growth-period="week">Tu?n</button>
-            <button type="button" class="segment" data-growth-period="month">Th?ng</button>
-            <button type="button" class="segment" data-growth-period="year">N?m</button>
+        <div><h1>Tăng trưởng Radar BDS</h1><p>Facebook mặc định · kỳ lịch Việt Nam · so sánh kỳ trước.</p></div>
+        <div class="growth-controls" aria-label="Bộ lọc tăng trưởng">
+          <div class="growth-period" role="group" aria-label="Chọn kỳ">
+            <button type="button" class="segment active" data-growth-period="day">Ngày</button>
+            <button type="button" class="segment" data-growth-period="week">Tuần</button>
+            <button type="button" class="segment" data-growth-period="month">Tháng</button>
+            <button type="button" class="segment" data-growth-period="year">Năm</button>
           </div>
-          <label class="growth-date">Ng?y m?c <input type="date" id="growthAnchor"></label>
-          <label class="growth-source"><input type="checkbox" id="growthIncludeGuland"> Th?m Guland</label>
+          <label class="growth-date">Ngày mốc <input type="date" id="growthAnchor"></label>
+          <label class="growth-source"><input type="checkbox" id="growthIncludeGuland"> Thêm Guland</label>
         </div>
       </div>
-      <div id="growthError" class="growth-state" hidden role="alert">Kh?ng t?i ???c d? li?u. <button type="button" id="growthRetry">Th? l?i</button></div>
-      <div id="growthEmpty" class="growth-state" hidden>Ch?a c? d? li?u ngu?n ?? ch?n trong k? n?y.</div>
+      <div id="growthError" class="growth-state" hidden role="alert">Không tải được dữ liệu. <button type="button" id="growthRetry">Thử lại</button></div>
+      <div id="growthEmpty" class="growth-state" hidden>Chưa có dữ liệu nguồn đã chọn trong kỳ này.</div>
       <div class="growth-kpis" id="growthKpis" aria-live="polite"></div>
       <div class="growth-ratios" id="growthRatios"></div>
       <div class="growth-chart-grid">
-        <section class="surface growth-chart growth-chart-wide"><h2>Tin c?o v? signal theo ngu?n</h2><canvas id="growthSourceChart" role="img" aria-label="Bi?u ?? tin c?o v? signal theo ngu?n"></canvas></section>
-        <section class="surface growth-chart"><h2>B?S unique</h2><canvas id="growthUniqueChart" role="img" aria-label="Bi?u ?? b?t ??ng s?n unique"></canvas></section>
-        <section class="surface growth-chart"><h2>Tin gi?m gi?</h2><canvas id="growthDropChart" role="img" aria-label="Bi?u ?? tin gi?m gi?"></canvas></section>
-        <section class="surface growth-chart growth-chart-wide"><h2>Ng??i d?ng v? lead</h2><canvas id="growthUserChart" role="img" aria-label="??ng k? to?n h? th?ng v? lead ngu?n ?? ch?n"></canvas></section>
+        <section class="surface growth-chart growth-chart-wide"><h2>Tin cào và signal theo nguồn</h2><canvas id="growthSourceChart" role="img" aria-label="Biểu đồ tin cào và signal theo nguồn"></canvas></section>
+        <section class="surface growth-chart"><h2>BĐS unique</h2><canvas id="growthUniqueChart" role="img" aria-label="Biểu đồ bất động sản unique"></canvas></section>
+        <section class="surface growth-chart"><h2>Tin giảm giá</h2><canvas id="growthDropChart" role="img" aria-label="Biểu đồ tin giảm giá"></canvas></section>
+        <section class="surface growth-chart growth-chart-wide"><h2>Người dùng và lead</h2><canvas id="growthUserChart" role="img" aria-label="Đăng ký toàn hệ thống và lead nguồn đã chọn"></canvas></section>
       </div>
       <details class="surface growth-table-details">
-        <summary>B?ng d? li?u theo bucket</summary>
-        <div class="table-wrap"><table class="data-table"><thead><tr><th>Th?i gian</th><th>Tin c?o</th><th>Signal</th><th>B?S unique</th><th>Gi?m gi?</th><th>??ng k?</th><th>Lead</th></tr></thead><tbody id="growthTableBody"></tbody></table></div>
+        <summary>Bảng dữ liệu theo bucket</summary>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Thời gian</th><th>Tin cào</th><th>Signal</th><th>BĐS unique</th><th>Giảm giá</th><th>Đăng ký</th><th>Lead</th></tr></thead><tbody id="growthTableBody"></tbody></table></div>
       </details>
     </section>
 
@@ -754,7 +754,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v44-growth"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v45-growth-font"></script>
   {% endif %}
 </body>
 </html>
