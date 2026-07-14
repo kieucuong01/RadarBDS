@@ -23,6 +23,12 @@ def test_growth_admin_ui_contract():
     ):
         assert marker in template
     assert "growth: 'tang-truong'" in script
+    assert template.index('id="panel-infra"') < template.index('id="panel-growth"') < template.index('id="panel-users"')
+    assert template.index("chart.js@4.4.4") < template.index("js/admin.js")
+    assert template.index("chart.js@4.4.4") > template.index("</main>")
+    user_select = template[template.index('id="userTierFilter"'):template.index('id="userTable"', template.index('id="userTierFilter"'))]
+    assert "chart.js@4.4.4" not in user_select
+    assert "admin-v44-growth" in template
     assert "/admin/api/growth?period=" in script
     assert "include_guland=" in script
     assert "prefers-reduced-motion" in script
