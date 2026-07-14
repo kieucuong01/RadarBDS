@@ -158,6 +158,7 @@ echo "deployed `$before -> `$after"
 "@
 
 try {
+    $remoteScript = $remoteScript -replace "`r`n?", "`n"
     [System.IO.File]::WriteAllText($LocalScriptPath, $remoteScript, [System.Text.UTF8Encoding]::new($false))
     & scp -i $KeyPath -o BatchMode=yes -o ConnectTimeout=15 $LocalScriptPath "${sshTarget}:$RemoteScriptPath"
     if ($LASTEXITCODE -ne 0) {
