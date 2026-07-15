@@ -1003,6 +1003,49 @@
   border-color: var(--text-muted);
 }
 
+.favorite-btn {
+  flex: 0 0 82px;
+  min-height: 42px;
+  padding: 0 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.favorite-btn svg {
+  flex: 0 0 auto;
+}
+
+.favorite-btn.is-favorite {
+  color: #e11d48;
+  border-color: rgba(225, 29, 72, 0.42);
+  background: rgba(225, 29, 72, 0.08);
+}
+
+.favorite-btn.is-favorite svg {
+  fill: currentColor;
+}
+
+.favorite-btn:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.favorite-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 [data-theme="light"] .btn-zalo:hover {
   background: rgba(0, 0, 0, 0.03);
 }
@@ -1213,5 +1256,13 @@
     padding: 7px 10px;
     border-radius: 10px;
     font-size: 0.78rem;
+  }
+
+  .favorite-btn {
+    flex-basis: 74px;
+    min-height: 34px;
+    padding: 0 8px;
+    border-radius: 10px;
+    font-size: 0.76rem;
   }
 }

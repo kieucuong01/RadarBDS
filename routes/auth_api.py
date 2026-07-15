@@ -52,6 +52,21 @@ def api_update_watchlist(**kwargs):
     return _impl("api_update_watchlist", **kwargs)
 
 
+@bp.route("/api/favorites", methods=["GET"])
+def api_list_favorites(**kwargs):
+    return _impl("api_list_favorites", **kwargs)
+
+
+@bp.route("/api/favorites/<int:listing_id>", methods=["POST"])
+def api_add_favorite(**kwargs):
+    return _impl("api_add_favorite", **kwargs)
+
+
+@bp.route("/api/favorites/<int:listing_id>", methods=["DELETE"])
+def api_remove_favorite(**kwargs):
+    return _impl("api_remove_favorite", **kwargs)
+
+
 @bp.route("/api/auth/telegram/start", methods=["POST"])
 def api_telegram_start(**kwargs):
     return _impl("api_telegram_start", **kwargs)

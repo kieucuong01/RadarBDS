@@ -1,5 +1,133 @@
 // Signal feed, insights panels, and infinite-scroll card rendering.
 let _sigObserver = null;
+let favoriteListingIds = new Set();
+let favoriteListingsLoaded = false;
+let favoriteListingsPromise = null;
+let favoriteListingsUserKey = null;
+
+function favoriteIconSvg() {
+  return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>';
+}
+
+function favoriteButtonHtml(listingId) {
+  const id = Number(listingId);
+  const active = favoriteListingIds.has(id);
+  return `
+    <button type="button" class="favorite-btn ${active ? 'is-favorite' : ''}"
+      data-listing-id="${escHtml(id)}"
+      aria-pressed="${active ? 'true' : 'false'}"
+      title="${active ? 'Bỏ lưu lô này' : 'Lưu lô này'}"
+      onclick="toggleFavoriteListing(${escHtml(id)}, event)">
+      ${favoriteIconSvg()}
+      <span>${active ? 'Đã lưu' : 'Lưu'}</span>
+    </button>
+  `;
+}
+
+function updateFavoriteButtonState(btn, favorite) {
+  if (!btn) return;
+  btn.classList.toggle('is-favorite', favorite);
+  btn.setAttribute('aria-pressed', favorite ? 'true' : 'false');
+  btn.title = favorite ? 'Bỏ lưu lô này' : 'Lưu lô này';
+  const label = btn.querySelector('span');
+  if (label) label.textContent = favorite ? 'Đã lưu' : 'Lưu';
+}
+
+function refreshFavoriteButtons() {
+  document.querySelectorAll('.favorite-btn[data-listing-id]').forEach((btn) => {
+    const id = Number(btn.dataset.listingId);
+    updateFavoriteButtonState(btn, favoriteListingIds.has(id));
+  });
+}
+
+async function loadFavoriteListings() {
+  const userKey = window.CURRENT_USER ? String(window.CURRENT_USER.id || window.CURRENT_USER.email || window.CURRENT_USER.phone || 'user') : 'guest';
+  if (favoriteListingsUserKey !== userKey) {
+    favoriteListingIds = new Set();
+    favoriteListingsLoaded = false;
+    favoriteListingsPromise = null;
+    favoriteListingsUserKey = userKey;
+  }
+  if (!window.CURRENT_USER) {
+    favoriteListingIds = new Set();
+    favoriteListingsLoaded = true;
+    refreshFavoriteButtons();
+    return;
+  }
+  if (favoriteListingsLoaded) {
+    refreshFavoriteButtons();
+    return;
+  }
+  if (!favoriteListingsPromise) {
+    favoriteListingsPromise = fetch('/api/favorites', { credentials: 'same-origin', cache: 'no-store' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`favorites ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        favoriteListingIds = new Set((data.listing_ids || []).map(Number));
+        favoriteListingsLoaded = true;
+      })
+      .catch(() => {
+        favoriteListingsLoaded = true;
+      })
+      .finally(() => {
+        favoriteListingsPromise = null;
+        refreshFavoriteButtons();
+      });
+  }
+  return favoriteListingsPromise;
+}
+
+function setFavoriteListingState(listingId, favorite) {
+  const id = Number(listingId);
+  if (favorite) favoriteListingIds.add(id);
+  else favoriteListingIds.delete(id);
+  favoriteListingsLoaded = true;
+  refreshFavoriteButtons();
+}
+
+async function toggleFavoriteListing(listingId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const id = Number(listingId);
+  if (!Number.isFinite(id) || id <= 0) return;
+  if (!window.CURRENT_USER) {
+    if (window.RadarAuth && typeof window.RadarAuth.openAuthModal === 'function') {
+      window.RadarAuth.openAuthModal('Đăng nhập để lưu lô đất ưa thích.');
+    }
+    return;
+  }
+  const favorite = favoriteListingIds.has(id);
+  const buttons = Array.from(document.querySelectorAll(`.favorite-btn[data-listing-id="${id}"]`));
+  buttons.forEach((btn) => { btn.disabled = true; });
+  try {
+    const res = await fetch(`/api/favorites/${encodeURIComponent(id)}`, {
+      method: favorite ? 'DELETE' : 'POST',
+      credentials: 'same-origin',
+    });
+    if (res.status === 403 && window.RadarAuth && typeof window.RadarAuth.openAuthModal === 'function') {
+      window.RadarAuth.openAuthModal('Đăng nhập để lưu lô đất ưa thích.');
+      return;
+    }
+    if (!res.ok) throw new Error(`favorite ${res.status}`);
+    const data = await res.json();
+    setFavoriteListingState(id, Boolean(data.favorite));
+  } catch (e) {
+    refreshFavoriteButtons();
+  } finally {
+    buttons.forEach((btn) => { btn.disabled = false; });
+  }
+}
+
+window.toggleFavoriteListing = toggleFavoriteListing;
+window.RadarFavorites = {
+  load: loadFavoriteListings,
+  refresh: refreshFavoriteButtons,
+  set: setFavoriteListingState,
+};
 
 function signalQuery(page) {
   const params = new URLSearchParams(currentFilters);
@@ -496,6 +624,7 @@ function renderSignalDealCard(x, opts = {}) {
       </div>
 
       <div class="sc-actions" onclick="event.stopPropagation()">
+        ${favoriteButtonHtml(x.id)}
         <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'${contactContext}');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${ctaLabel}</a>
       </div>
     </div>
@@ -601,6 +730,7 @@ function _renderSignalCards(signals, options = {}) {
         priorityImage: Boolean(options.priorityFirstImage && index === 0)
       });
     }).join(''));
+    loadFavoriteListings();
     if (options.priorityFirstImage && !firstSignalRenderEventSent) {
       firstSignalRenderEventSent = true;
       window.dispatchEvent(new CustomEvent('radar:first-signals-rendered'));

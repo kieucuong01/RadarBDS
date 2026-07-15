@@ -484,6 +484,19 @@ CREATE TABLE IF NOT EXISTS user_watchlists (
 CREATE INDEX IF NOT EXISTS idx_watchlists_user_active ON user_watchlists(user_id, active);
 
 
+CREATE TABLE IF NOT EXISTS user_favorite_listings (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    listing_id  INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    created_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(user_id, listing_id)
+);
+CREATE INDEX IF NOT EXISTS idx_favorites_user_created
+    ON user_favorite_listings(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_favorites_listing
+    ON user_favorite_listings(listing_id);
+
+
 CREATE TABLE IF NOT EXISTS user_audit_log (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id     INTEGER,                  -- nullable: guest tracking

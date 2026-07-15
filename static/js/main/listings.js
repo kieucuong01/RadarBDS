@@ -153,6 +153,7 @@ function renderListingCards(items, options = {}) {
   if (!grid) return;
   if (!options.append) grid.innerHTML = '';
   grid.insertAdjacentHTML('beforeend', (items || []).map(listingCard).join(''));
+  if (window.RadarFavorites) window.RadarFavorites.load();
 }
 
 function renderLoadedListings() {

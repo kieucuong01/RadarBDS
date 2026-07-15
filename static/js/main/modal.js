@@ -245,6 +245,16 @@ function renderModalMetaLine(data = {}) {
     : '<span>Đăng gần đây</span>';
 }
 
+function syncModalFavoriteButton(listingId) {
+  const btn = document.getElementById('sm-favorite');
+  if (!btn) return;
+  btn.dataset.listingId = String(listingId || '');
+  if (window.RadarFavorites) {
+    window.RadarFavorites.load();
+    window.RadarFavorites.refresh();
+  }
+}
+
 function _modalNumber(value) {
   if (value === null || value === undefined || value === '' || value === '-') return NaN;
   const n = Number(String(value).replace(',', '.'));
@@ -487,6 +497,7 @@ function _openSignalLegacy(card) {
   document.getElementById('sm-zalo').dataset.listingId = d.id;
   document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
   { const _d = document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
+  syncModalFavoriteButton(d.id);
 
   // Load price history + comps
   loadSignalHistory(d.id, price, area, d.ward, {
@@ -522,6 +533,7 @@ async function _hydrateSignalDetailLegacy(listingId) {
     document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
     document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
     { const _d = document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
+    syncModalFavoriteButton(data.id || listingId);
     renderSignalTags({
       area: data.area_m2,
       frontage: data.frontage_m,
@@ -977,6 +989,7 @@ function _openSignalFromData(d, opts = {}) {
   document.getElementById('sm-zalo').dataset.listingId = d.id;
   document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
   { const _d = document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
+  syncModalFavoriteButton(d.id);
 
   loadSignalHistory(d.id, price, area, d.ward, {
     frontage_m: d.frontage,
@@ -1053,6 +1066,7 @@ async function hydrateSignalDetail(listingId) {
     document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
     document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
     { const _d = document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
+    syncModalFavoriteButton(data.id || listingId);
     renderSignalTags({
       area: data.area_m2,
       frontage: data.frontage_m,

@@ -44,8 +44,8 @@
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-input-zoom-20260612' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=mobile-perf-lazy-20260611' %}
   {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=pagespeed-a11y-20260611' %}
-  {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=meta-chip-flex-20260616' %}
-  {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=valuation-card-align-20260612' %}
+  {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=favorite-listings-20260715' %}
+  {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=favorite-listings-20260715' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
   {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=mobile-command-bar-20260624' %}
   {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=account-menu-compact-20260606' %}
@@ -64,9 +64,9 @@
     window.CURRENT_USER = {{ USER | tojson }};
     window.INITIAL_WARDS_BY_CITY = {{ wards_by_city | tojson }};
     window.RADAR_ASSETS = {
-      modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=valuation-card-align-20260612",
+      modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=favorite-listings-20260715",
       market: "{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611",
-      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=valuation-card-align-20260612",
+      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=favorite-listings-20260715",
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=zalo-new-tab-20260624"
     };
@@ -889,6 +889,13 @@
 
           <!-- Action buttons -->
           <div class="sm-action-bar">
+            <button id="sm-favorite" type="button" class="sm-btn-favorite favorite-btn" data-listing-id=""
+              aria-pressed="false" onclick="toggleFavoriteListing(this.dataset.listingId,event);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>
+              </svg>
+              <span>Lưu</span>
+            </button>
             <a id="sm-zalo" href="#" target="_blank" class="sm-btn-zalo"
               onclick="event.preventDefault();tierCTA(this.dataset.listingId,this.dataset.listingUrl,'modal_signal');">💬
               Liên hệ tư vấn </a>
@@ -1183,7 +1190,7 @@
 
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-perf-82-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=loader-font-fix-20260611"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=valuation-card-align-20260612"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=favorite-listings-20260715"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=loader-font-fix-20260611"></script>
 </body>
 

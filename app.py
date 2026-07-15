@@ -947,6 +947,65 @@ def api_update_watchlist(wid):
     return jsonify({"ok": True, "item": _serialize_watchlist(row)})
 
 
+@require_tier("free")
+def api_list_favorites():
+    u = current_user()
+    with db_mod.get_conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT listing_id
+              FROM user_favorite_listings
+             WHERE user_id=?
+             ORDER BY created_at DESC, id DESC
+            """,
+            (u["id"],),
+        ).fetchall()
+    return jsonify({"ok": True, "listing_ids": [int(r["listing_id"]) for r in rows]})
+
+
+def _favorite_listing_exists(conn, listing_id: int) -> bool:
+    return bool(conn.execute(
+        """
+        SELECT 1
+          FROM listings
+         WHERE id=?
+           AND COALESCE(is_blacklisted,0)=0
+           AND COALESCE(review_hidden,0)=0
+        """,
+        (listing_id,),
+    ).fetchone())
+
+
+@require_tier("free")
+def api_add_favorite(listing_id):
+    u = current_user()
+    with db_mod.get_conn() as conn:
+        if not _favorite_listing_exists(conn, listing_id):
+            return jsonify({"ok": False, "error": "not_found"}), 404
+        conn.execute(
+            """
+            INSERT INTO user_favorite_listings (user_id, listing_id)
+            VALUES (?, ?)
+            ON CONFLICT(user_id, listing_id) DO NOTHING
+            """,
+            (u["id"], listing_id),
+        )
+    log_audit(u["id"], current_tier(), "favorite_listing_add", listing_id=listing_id)
+    return jsonify({"ok": True, "listing_id": listing_id, "favorite": True})
+
+
+@require_tier("free")
+def api_remove_favorite(listing_id):
+    u = current_user()
+    with db_mod.get_conn() as conn:
+        conn.execute(
+            "DELETE FROM user_favorite_listings WHERE user_id=? AND listing_id=?",
+            (u["id"], listing_id),
+        )
+    log_audit(u["id"], current_tier(), "favorite_listing_remove", listing_id=listing_id)
+    return jsonify({"ok": True, "listing_id": listing_id, "favorite": False})
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Telegram bind: deep-link token → /start <token> → bot webhook updates chat_id
 # ─────────────────────────────────────────────────────────────────────────────

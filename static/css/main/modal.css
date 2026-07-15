@@ -1308,6 +1308,11 @@
   color: #fff;
 }
 
+.sm-btn-favorite {
+  flex: 0 0 104px;
+  min-height: 44px;
+}
+
 .sm-btn-detail {
   flex: 1;
   display: flex;
@@ -1761,6 +1766,7 @@
   }
 
   .sm-btn-zalo,
+  .sm-btn-favorite,
   .sm-btn-detail {
     min-height: 48px;
     padding: 12px 10px;

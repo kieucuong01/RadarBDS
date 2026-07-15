@@ -51,6 +51,7 @@ ID_TABLES = {
     "price_history",
     "raw_listings",
     "user_audit_log",
+    "user_favorite_listings",
     "user_watchlists",
     "users",
     "valuation_results",
