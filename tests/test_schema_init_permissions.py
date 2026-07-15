@@ -15,8 +15,10 @@ class _FakeConn:
     def __init__(self, existing_tables):
         self.existing_tables = set(existing_tables)
         self.rolled_back = False
+        self.executed = []
 
     def execute(self, sql, params=None):
+        self.executed.append(sql)
         if "CREATE TABLE IF NOT EXISTS schema_migrations" in sql:
             return _FakeCursor()
         if "information_schema.tables" in sql:
@@ -44,6 +46,7 @@ def test_init_schema_skips_ddl_when_existing_schema_lacks_owner(monkeypatch):
     schema.init_schema()
 
     assert conn.rolled_back
+    assert any("CREATE TABLE IF NOT EXISTS user_favorite_listings" in sql for sql in conn.executed)
 
 
 def test_init_schema_still_raises_when_core_schema_missing(monkeypatch):

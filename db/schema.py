@@ -614,10 +614,11 @@ def init_schema() -> None:
                     pass
                 if _core_schema_exists(conn):
                     try:
+                        _migrate_user_favorite_listings(conn)
                         _migrate_property_type_aliases(conn)
                     except Exception as migration_exc:
                         logger.warning(
-                            "Data-only property type alias migration skipped after DDL privilege failure: %s",
+                            "Limited schema migration skipped after DDL privilege failure: %s",
                             migration_exc,
                         )
                     logger.warning(
@@ -745,6 +746,7 @@ def _run_migrations(conn: Any) -> None:
     _normalize_ai_training_feedback_labels(conn)
     _migrate_legal_verifications(conn)
     _migrate_notification_log(conn)
+    _migrate_user_favorite_listings(conn)
     _migrate_property_type_aliases(conn)
 
 
@@ -841,6 +843,30 @@ def _migrate_notification_log(conn: Any) -> None:
         )
     except Exception as e:
         logger.warning(f"Index skip idx_notif_user_listing: {e}")
+
+
+def _migrate_user_favorite_listings(conn: Any) -> None:
+    """Create the saved-listings table even when old core tables are not owned by this role."""
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS user_favorite_listings (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                listing_id  INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+                created_at  TEXT DEFAULT (datetime('now')),
+                UNIQUE(user_id, listing_id)
+            )
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_favorites_user_created
+            ON user_favorite_listings(user_id, created_at DESC)
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_favorites_listing
+            ON user_favorite_listings(listing_id)
+        """)
+    except Exception as e:
+        logger.warning(f"Favorite listings migration skipped: {e}")
 
 
 def _migrate_legal_verifications(conn: Any) -> None:
