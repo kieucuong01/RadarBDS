@@ -1,6 +1,13 @@
 from contextlib import contextmanager
 
 
+def test_city_map_includes_phu_tho_under_thu_dau_mot():
+    import services.market_data as market_data
+
+    assert "Phú Thọ" in market_data.CITY_MAP["THỦ DẦU MỘT"]
+    assert market_data.get_city_for_ward("Phú Thọ") == "THỦ DẦU MỘT"
+
+
 class _FakeCursor:
     def __init__(self, row=None, rows=None):
         self._row = row

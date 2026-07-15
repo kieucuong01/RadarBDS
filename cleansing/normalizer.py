@@ -387,13 +387,19 @@ def _ward_keyword_items(intended_city: Optional[str] = None):
     )
 
 
-def _keyword_in_text(text: str, keyword: str) -> bool:
+def _keyword_match_start(text: str, keyword: str) -> Optional[int]:
     keyword = (keyword or "").strip().lower()
     if not keyword:
-        return False
+        return None
     if " " in keyword:
-        return re.search(r"(?<!\w)" + re.escape(keyword) + r"(?!\w)", text) is not None
-    return keyword in text
+        m = re.search(r"(?<!\w)" + re.escape(keyword) + r"(?!\w)", text)
+        return m.start() if m else None
+    idx = text.find(keyword)
+    return idx if idx >= 0 else None
+
+
+def _keyword_in_text(text: str, keyword: str) -> bool:
+    return _keyword_match_start(text, keyword) is not None
 
 
 _HIEP_THANH_LANDMARK_PATTERNS = [
@@ -532,9 +538,17 @@ def match_ward(*texts: str, intended_city: Optional[str] = None) -> Optional[str
         text_ascii = _ascii_fold(text_lower)
         text_without_hiep_thanh_landmarks = _strip_hiep_thanh_landmark_phrases(text_ascii)
 
+        best_match = None
         for ward, keyword in ward_keywords:
-            if _keyword_in_text(text_without_hiep_thanh_landmarks, _ascii_fold(keyword)):
-                return ward
+            folded_keyword = _ascii_fold(keyword)
+            start = _keyword_match_start(text_without_hiep_thanh_landmarks, folded_keyword)
+            if start is None:
+                continue
+            rank = (start, -len(folded_keyword))
+            if best_match is None or rank < best_match[0]:
+                best_match = (rank, ward)
+        if best_match:
+            return best_match[1]
 
         landmark_ward = _match_hiep_thanh_landmark_ward(text_lower)
         if landmark_ward:

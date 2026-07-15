@@ -847,6 +847,26 @@ def test_match_ward_maps_hiep_thanh_kdc_landmarks_to_parent_old_ward():
     )
 
 
+def test_match_ward_prefers_phu_tho_before_neighbor_context():
+    title = "Đất Phú Thọ sát Phú Hoà( Phường Thủ Dầu Một Tp HCM)"
+
+    assert match_ward(title, intended_city="Thủ Dầu Một") == "Phú Thọ"
+
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "phu-tho-sat-phu-hoa",
+        "url": "https://facebook.com/posts/phu-tho-sat-phu-hoa",
+        "title": title,
+        "description": "1/ Lê Hồng Phong - đường nhựa 6m. Giá 2 tỷ 950. DT 100m2.",
+        "default_area": "Thủ Dầu Một",
+        "price_ty": 2.95,
+        "area_m2": 100,
+    })
+    assert rec is not None
+    assert rec["ward"] == "Phú Thọ"
+    assert rec["area"] == "Phú Thọ"
+
+
 def test_normalizer_keeps_hiep_thanh_kdc_landmark_as_parent_old_ward():
     rec = normalize_record({
         "source": "facebook",
