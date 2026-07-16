@@ -1328,7 +1328,21 @@ def serve_local_image(filename):
 
 
 def index():
-    return render_template('index.html', wards_by_city=CITY_MAP, site_meta=_site_meta("/"))
+    return render_template('index.html', wards_by_city=CITY_MAP, site_meta=_site_meta("/"), saved_page=False)
+
+
+def saved_listings_page():
+    return render_template(
+        'index.html',
+        wards_by_city=CITY_MAP,
+        saved_page=True,
+        site_meta=_site_meta(
+            "/bds-da-luu",
+            title="BĐS đã lưu | Radar BDS",
+            description="Danh sách các lô đất đã lưu trong tài khoản Radar BDS.",
+            keywords="BĐS đã lưu, lô đất đã lưu, Radar BDS",
+        ),
+    )
 
 
 def dashboard():

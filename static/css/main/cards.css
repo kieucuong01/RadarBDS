@@ -259,6 +259,128 @@
   border-color: #38bdf8;
 }
 
+.saved-route .sidebar,
+.saved-route .mobile-overlay,
+.saved-route .header-nav,
+.saved-route .live-scan,
+.saved-route .header-stats,
+.saved-route .menu-btn,
+.saved-route .mobile-bottom-nav,
+.saved-route .tab-content {
+  display: none !important;
+}
+
+.saved-route .main {
+  background:
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 42%),
+    var(--bg);
+}
+
+.saved-route .content {
+  overflow-y: auto;
+}
+
+.saved-listings-page {
+  display: none;
+}
+
+.saved-route .saved-listings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+.saved-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 18px;
+}
+
+.saved-page-head h1 {
+  margin: 8px 0 4px;
+  color: var(--text);
+  font-size: clamp(1.6rem, 2.4vw, 2.25rem);
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.saved-page-head p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.saved-page-back,
+.saved-page-refresh {
+  min-height: 42px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+.saved-page-back {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.saved-page-back:hover {
+  color: var(--text);
+}
+
+.saved-page-refresh {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.saved-page-refresh:hover {
+  border-color: var(--text-muted);
+}
+
+.saved-page-status {
+  min-height: 48px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text-muted);
+  background: rgba(148, 163, 184, 0.08);
+  font-weight: 700;
+}
+
+.saved-page-status[hidden] {
+  display: none;
+}
+
+.saved-inline-login {
+  min-height: 34px;
+  margin-left: 10px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.saved-listings-grid:empty {
+  display: none;
+}
+
 /* Signal Cards Grid */
 .cards-grid {
   display: grid;
@@ -1079,6 +1201,30 @@
 }
 
 @media (max-width: 720px) {
+  .saved-route .header {
+    padding: 0 14px;
+  }
+
+  .saved-route .content {
+    padding: 16px 14px 84px;
+  }
+
+  .saved-page-head {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .saved-page-refresh {
+    width: 100%;
+  }
+
+  .saved-page-status {
+    min-height: 44px;
+    padding: 12px 14px;
+    font-size: 0.86rem;
+  }
+
   .cards-grid {
     gap: 10px;
   }

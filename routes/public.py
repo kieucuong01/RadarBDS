@@ -28,6 +28,11 @@ def dashboard(**kwargs):
     return _impl("dashboard", **kwargs)
 
 
+@bp.route("/bds-da-luu")
+def saved_listings_page(**kwargs):
+    return _impl("saved_listings_page", **kwargs)
+
+
 @bp.route("/binh-duong")
 def seo_binh_duong(**kwargs):
     return _impl("seo_binh_duong_landing", **kwargs)

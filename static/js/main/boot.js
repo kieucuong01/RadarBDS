@@ -46,6 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
   showLoader();
   if (typeof setupListingsViewToggle === 'function') setupListingsViewToggle();
   if (typeof setupListingsObserver === 'function') setupListingsObserver();
+  if (window.RADAR_SAVED_PAGE) {
+    if (typeof loadSavedListingsPage === 'function') {
+      loadSavedListingsPage(false);
+    } else {
+      hideLoader();
+    }
+    return;
+  }
   const searchParams = new URLSearchParams(window.location.search);
   const initialTab = searchParams.get('tab') || window.location.hash.replace(/^#/, '');
   const shouldOpenInitialTab = ['signals', 'all', 'market', 'insights'].includes(initialTab);

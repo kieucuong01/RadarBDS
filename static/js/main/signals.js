@@ -85,6 +85,11 @@ function setFavoriteListingState(listingId, favorite) {
   else favoriteListingIds.delete(id);
   favoriteListingsLoaded = true;
   refreshFavoriteButtons();
+  if (window.RADAR_SAVED_PAGE && !favorite) {
+    const savedCard = document.querySelector(`#savedListingsGrid .scard[data-id="${id}"]`);
+    if (savedCard) savedCard.remove();
+    updateSavedListingsEmptyState();
+  }
 }
 
 async function toggleFavoriteListing(listingId, event) {
@@ -128,6 +133,135 @@ window.RadarFavorites = {
   refresh: refreshFavoriteButtons,
   set: setFavoriteListingState,
 };
+
+function setSavedListingsStatus(message, opts = {}) {
+  const status = document.getElementById('savedListingsStatus');
+  if (!status) return;
+  if (!message) {
+    status.hidden = true;
+    status.innerHTML = '';
+    return;
+  }
+  status.hidden = false;
+  status.innerHTML = opts.html ? message : escHtml(message);
+}
+
+function updateSavedListingsEmptyState() {
+  if (!window.RADAR_SAVED_PAGE) return;
+  const grid = document.getElementById('savedListingsGrid');
+  if (!grid) return;
+  if (grid.children.length === 0) {
+    setSavedListingsStatus('Bạn chưa lưu BDS nào. Quay lại Săn Deal và bấm Lưu trên các lô muốn theo dõi.');
+  } else {
+    setSavedListingsStatus('');
+  }
+}
+
+function savedListingToSignalCard(data) {
+  const images = Array.isArray(data.imgs) ? data.imgs.filter(Boolean) : [];
+  const priceLabel = data.price_ty ? `${data.price_ty} tỷ` : '-';
+  return {
+    id: data.id,
+    title: data.title || '',
+    description: data.description || '',
+    price_ty: data.price_ty,
+    price_label: priceLabel,
+    actual_ppm2: data.actual_ppm2,
+    fair_ppm2: data.fair_ppm2_display || data.fair_ppm2,
+    fair_ppm2_display: data.fair_ppm2_display,
+    fair_ppm2_old: data.fair_ppm2_old,
+    fair_ppm2_new: data.fair_ppm2_new,
+    mos_pct: data.mos_pct,
+    mos_pct_display: data.mos_pct_display,
+    mos_pct_old: data.mos_pct_old,
+    mos_pct_new: data.mos_pct_new,
+    area_m2: data.area_m2,
+    frontage_m: data.frontage_m,
+    depth_m: data.depth_m,
+    ward: data.ward,
+    road_type: data.road_type,
+    road_tier: data.road_tier,
+    road_label: data.road_label,
+    street_label: data.street_label,
+    tho_cu_m2: data.tho_cu_m2,
+    tho_cu_ratio: data.tho_cu_ratio,
+    tho_cu_label: data.tho_cu_label,
+    property_type: data.property_type,
+    property_type_label: data.property_type_label,
+    source: data.source,
+    url: data.url || `/listing/${data.id}`,
+    price_dropped: Boolean(data.price_dropped),
+    drop_pct: data.drop_pct,
+    price_first_ty: data.price_first_ty,
+    signal_score: data.signal_score,
+    trust_tier: data.trust_tier,
+    trust_score: data.trust_score,
+    legal_status: data.legal_status,
+    legal_flags: data.legal_flags,
+    days_ago: data.days_ago,
+    primary_image: images[0] || '',
+    images,
+  };
+}
+
+async function fetchSavedListingDetail(listingId) {
+  const res = await fetch(`/api/listing/${encodeURIComponent(listingId)}`, {
+    credentials: 'same-origin',
+    cache: 'no-store',
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`listing ${listingId} ${res.status}`);
+  return res.json();
+}
+
+async function loadSavedListingsPage(force = false) {
+  if (!window.RADAR_SAVED_PAGE) return;
+  const grid = document.getElementById('savedListingsGrid');
+  if (!grid) return;
+  if (!window.CURRENT_USER) {
+    grid.innerHTML = '';
+    setSavedListingsStatus(
+      'Đăng nhập để xem BDS đã lưu trong tài khoản. <button type="button" class="saved-inline-login" onclick="RadarAuth.openAuthModal()">Đăng nhập</button>',
+      { html: true }
+    );
+    if (typeof hideLoader === 'function') hideLoader();
+    return;
+  }
+
+  setSavedListingsStatus('Đang tải BDS đã lưu...');
+  if (force) grid.innerHTML = '';
+  try {
+    favoriteListingsLoaded = false;
+    await loadFavoriteListings();
+    const ids = Array.from(favoriteListingIds).filter((id) => Number.isFinite(Number(id)) && Number(id) > 0);
+    if (ids.length === 0) {
+      grid.innerHTML = '';
+      updateSavedListingsEmptyState();
+      return;
+    }
+    const details = await Promise.all(ids.map((id) => fetchSavedListingDetail(id).catch(() => null)));
+    const cards = details.filter(Boolean).map(savedListingToSignalCard);
+    grid.innerHTML = cards.map((x, index) => renderSignalDealCard(x, {
+      cardContext: 'saved',
+      contactContext: 'card_saved',
+      openHandler: 'openSignal',
+      priorityImage: index === 0,
+    })).join('');
+    refreshFavoriteButtons();
+    if (cards.length === 0) {
+      setSavedListingsStatus('Các BDS đã lưu hiện không còn hiển thị.');
+    } else {
+      setSavedListingsStatus('');
+    }
+  } catch (err) {
+    console.error(err);
+    setSavedListingsStatus('Không tải được BDS đã lưu. Vui lòng thử lại.');
+  } finally {
+    if (typeof hideLoader === 'function') hideLoader();
+  }
+}
+
+window.loadSavedListingsPage = loadSavedListingsPage;
 
 function signalQuery(page) {
   const params = new URLSearchParams(currentFilters);

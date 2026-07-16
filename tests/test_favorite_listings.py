@@ -138,6 +138,27 @@ class FavoriteListingsTest(unittest.TestCase):
         self.assertEqual(res.status_code, 404)
         self.assertEqual(res.get_json(), {"ok": False, "error": "not_found"})
 
+    def test_saved_listings_page_renders_grid_and_reuses_signal_modal(self):
+        res = self.client.get("/bds-da-luu")
+
+        self.assertEqual(res.status_code, 200)
+        html = res.get_data(as_text=True)
+        self.assertIn("window.RADAR_SAVED_PAGE = true;", html)
+        self.assertIn('id="savedListingsGrid"', html)
+        self.assertIn('id="signalModal"', html)
+        self.assertIn("loadSavedListingsPage(true)", html)
+
+    def test_account_menu_links_to_saved_listings_after_watchlist(self):
+        self._login_as_free()
+
+        res = self.client.get("/bds-da-luu")
+
+        self.assertEqual(res.status_code, 200)
+        html = res.get_data(as_text=True)
+        menu = html[html.index('id="userMenuDropdown"'):html.index("RadarAuth.logout()", html.index('id="userMenuDropdown"'))]
+        self.assertLess(menu.index("RadarAuth.openWatchlistModal()"), menu.index("window.location.href='/bds-da-luu'"))
+        self.assertIn("window.location.href='/bds-da-luu'", menu)
+
 
 if __name__ == "__main__":
     unittest.main()
