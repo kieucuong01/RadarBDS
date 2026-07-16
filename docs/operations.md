@@ -14,7 +14,21 @@ Public domain: `https://radarbds.vn`. Production env file: `/etc/radar-bds/radar
 
 ## Deploy Flow
 
-After code is committed and pushed to `origin/main`:
+For the normal local one-command ship:
+
+```powershell
+.\scripts\ship_production.ps1 -Message "Short commit message" -All
+```
+
+Use `-Path file1,file2` instead of `-All` when the worktree has unrelated dirty
+files that should not be committed.
+
+The ship script stages the requested files, commits, pushes `origin/main`, then
+runs production deploy. If the VPS checkout cannot fetch from GitHub because of
+the `github.com-radarbds` alias/auth path, it automatically deploys the pushed
+commit through a local `git bundle` fallback.
+
+After code is already committed and pushed to `origin/main`:
 
 ```powershell
 .\scripts\deploy_production.ps1
