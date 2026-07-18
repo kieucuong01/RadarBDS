@@ -14,6 +14,6 @@
       <a href="/kien-thuc" data-nav="kien-thuc"{% if active_nav == 'kien-thuc' %} aria-current="page"{% endif %}>Kiến thức</a>
       <a href="/san-deal-bds" data-nav="san-deal"{% if active_nav == 'san-deal' %} aria-current="page"{% endif %}>Săn deal BĐS</a>
     </nav>
-    <a class="seo-header-cta" href="/?tab=signals&amp;intent=watchlist" data-track-cta="header_watchlist">Mở dashboard</a>
+    <a class="seo-header-cta" href="{{ watchlist_href|default('/?tab=signals&intent=watchlist') }}" data-track-cta="header_watchlist">Mở dashboard</a>
   </div>
 </header>

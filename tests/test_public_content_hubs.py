@@ -70,7 +70,8 @@ def test_report_detail_is_data_first_tdm_report():
     assert 'class="seo-report-block"' in html
     assert 'class="hero-map-stage"' not in html
     assert '"@type": "Report"' in html
-    assert "Hơn 1.000 nhà đầu tư tin dùng Radar BDS" in html
+    assert "Hơn 1.000 nhà đầu tư tin dùng Radar BDS" not in html
+    assert "Dữ liệu tổng hợp từ tin rao công khai" in html
     assert "Phạm vi dữ liệu" in html
     assert "Kỳ dữ liệu" in html
     assert 'data-nav="bao-cao" aria-current="page"' in html

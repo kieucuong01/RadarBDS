@@ -227,7 +227,8 @@ def test_binh_duong_market_report_page_is_indexed_and_citable():
     assert 'href="/binh-duong/phuong-phu-my"' in html
     assert 'href="/binh-duong/phuong-hiep-an"' in html
     assert 'class="hero-map-stage"' not in html
-    assert "Hơn 1.000 nhà đầu tư tin dùng Radar BDS" in html
+    assert "Hơn 1.000 nhà đầu tư tin dùng Radar BDS" not in html
+    assert "Dữ liệu tổng hợp từ tin rao công khai" in html
 
 def test_binh_duong_location_landing_pages_render_and_are_indexed():
     import app as radar_app

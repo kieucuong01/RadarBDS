@@ -10,6 +10,7 @@ import statistics
 import re
 import time
 import urllib.request
+import urllib.parse
 import threading
 from copy import deepcopy
 from functools import wraps
@@ -1191,6 +1192,7 @@ ALLOWED_TRACK_ACTIONS = {
     "seo_landing_viewed",
     "report_viewed",
     "social_utm_visit",
+    "ai_referral_visit",
     "cta_clicked",
     "teaser_hit_12",
     "locked_tab_click",
@@ -1364,8 +1366,200 @@ def _active_public_nav(path: str) -> str:
     return "binh-duong"
 
 
+_BANGKOK_TZ = timezone(timedelta(hours=7))
+_PRIORITY_TDM_WARDS = {
+    "hiep-thanh": "Hiệp Thành",
+    "phu-hoa": "Phú Hòa",
+    "phu-my": "Phú Mỹ",
+    "dinh-hoa": "Định Hòa",
+    "phu-loi": "Phú Lợi",
+    "tan-an": "Tân An",
+    "hiep-an": "Hiệp An",
+    "chanh-nghia": "Chánh Nghĩa",
+}
+
+
+def _vi_decimal(value, digits: int = 1) -> str:
+    try:
+        return f"{float(value):.{digits}f}".replace(".", ",")
+    except (TypeError, ValueError):
+        return ""
+
+
+def _latest_ward_report(ward_slug: str) -> dict | None:
+    prefix = f"/bao-cao/{ward_slug}-thang-"
+    today = datetime.now(_BANGKOK_TZ).date().isoformat()
+    candidates = [
+        page
+        for page in SEO_PAGES.values()
+        if page.get("path", "").startswith(prefix)
+        and page.get("report")
+        and (
+            not (page.get("report") or {}).get("published_at")
+            or (page.get("report") or {}).get("published_at") <= today
+        )
+    ]
+    if not candidates:
+        return None
+    return max(
+        candidates,
+        key=lambda page: (
+            (page.get("report") or {}).get("published_at", ""),
+            page.get("path", ""),
+        ),
+    )
+
+
+def _build_live_location_snapshot(page: dict) -> dict:
+    ward = page["live_ward"]
+    now = datetime.now(_BANGKOK_TZ)
+    snapshot = {
+        "available": False,
+        "ward": ward,
+        "updated_iso": now.date().isoformat(),
+        "updated_label": now.strftime("%d/%m/%Y"),
+        "period_label": now.strftime("%m/%Y"),
+        "total": 0,
+        "signal_count": 0,
+        "market_rows": [],
+        "signals": [],
+        "methodology": [
+            "Nguồn dữ liệu: tin rao công khai mà Radar BDS đang theo dõi.",
+            "Giá tham khảo trung bình được tính theo loại tài sản từ các mẫu không bị đánh dấu ngoại lệ.",
+            "Tín hiệu chỉ là bộ lọc ưu tiên; không thay thế kiểm tra thực địa, quy hoạch và pháp lý.",
+        ],
+    }
+    try:
+        summary = _cached_dashboard_payload(
+            ("seo-location-summary", ward),
+            lambda: load_dashboard_summary(
+                _db_handle(),
+                wards=[ward],
+                tier="guest",
+                include_trend=False,
+            ),
+            ttl_seconds=300,
+        )
+        signal_payload = _cached_signal_payload(
+            ("seo-location-signals", ward, 5),
+            lambda: load_signals(
+                _db_handle(),
+                wards=[ward],
+                tier="guest",
+                page=1,
+                limit=5,
+                sort="newest",
+                include_total=False,
+            ),
+            ttl_seconds=300,
+        )
+        stats = summary.get("stats") or {}
+        market_rows = []
+        for row in summary.get("market") or []:
+            average = row.get("median")
+            average_label = _vi_decimal(average)
+            if not average_label:
+                continue
+            market_rows.append(
+                {
+                    "label": row.get("label") or row.get("type") or "Khác",
+                    "average_label": f"{average_label} tr/m²",
+                    "sample_count": int(row.get("n") or 0),
+                }
+            )
+        market_rows.sort(key=lambda row: row["sample_count"], reverse=True)
+
+        signals = []
+        for item in (signal_payload.get("signals") or [])[:5]:
+            price_label = item.get("price_label")
+            if not price_label and item.get("price_ty") is not None:
+                price_label = f"{_vi_decimal(item.get('price_ty'))} tỷ"
+            area_label = ""
+            if item.get("area_m2") is not None:
+                area_label = f"{_vi_decimal(item.get('area_m2'))} m²"
+            ppm2_label = ""
+            if item.get("actual_ppm2"):
+                ppm2_label = f"{_vi_decimal(item.get('actual_ppm2'))} tr/m²"
+            mos_label = ""
+            if item.get("mos_pct") is not None:
+                mos_label = f"MOS {_vi_decimal(item.get('mos_pct'))}%"
+            signals.append(
+                {
+                    "id": item.get("id"),
+                    "title": item.get("title") or f"Tin tại {ward}",
+                    "price_label": price_label or "Liên hệ",
+                    "area_label": area_label,
+                    "actual_ppm2_label": ppm2_label,
+                    "mos_label": mos_label,
+                }
+            )
+
+        snapshot.update(
+            {
+                "available": True,
+                "total": int(stats.get("total") or 0),
+                "signal_count": int(stats.get("signals") or 0),
+                "market_rows": market_rows[:5],
+                "signals": signals,
+            }
+        )
+    except Exception:
+        logger.warning("Unable to render live SEO snapshot for ward %s", ward, exc_info=True)
+    return snapshot
+
+
+def _hydrate_live_location_page(page: dict) -> dict:
+    if not page.get("live_ward"):
+        return page
+
+    snapshot = _build_live_location_snapshot(page)
+    ward = page["live_ward"]
+    period = snapshot["period_label"]
+    title = f"Giá nhà đất {ward}, Thủ Dầu Một tháng {period}"
+    page["title"] = f"{title} | Radar BDS"
+    page["hero_title"] = title
+    page["hero_badge"] = f"Thủ Dầu Một – Bình Dương cũ · truy vấn {snapshot['updated_label']}"
+    page["map_label"] = f"Thủ Dầu Một – Bình Dương cũ / {ward}"
+    page["dashboard_href"] = "/?" + urllib.parse.urlencode(
+        {"tab": "signals", "ward": ward}
+    )
+    if snapshot["available"]:
+        page["hero_text"] = (
+            f"Radar BDS đang theo dõi {snapshot['total']} tin tại {ward} và ghi nhận "
+            f"{snapshot['signal_count']} tín hiệu đáng kiểm tra. Trang hiển thị giá tham khảo "
+            f"trung bình theo loại tài sản cùng tối đa 5 tín hiệu mới, truy vấn ngày "
+            f"{snapshot['updated_label']}. Đây là dữ liệu tin rao; cần xác minh thực địa và pháp lý."
+        )
+        page["description"] = (
+            f"Giá nhà đất {ward}, Thủ Dầu Một tháng {period}: "
+            f"{snapshot['total']} tin đang theo dõi, {snapshot['signal_count']} tín hiệu, "
+            "giá tham khảo, nguồn dữ liệu và ngày cập nhật."
+        )
+    else:
+        page["hero_text"] = (
+            f"Trang dữ liệu {ward}, Thủ Dầu Một – Bình Dương cũ. "
+            "Dữ liệu trực tiếp tạm thời chưa khả dụng; vui lòng quay lại sau. "
+            "Radar BDS chỉ tổng hợp tin rao tham khảo, không thay thế kiểm tra thực địa và pháp lý."
+        )
+        page["description"] = (
+            f"Trang giá nhà đất {ward}, Thủ Dầu Một với nguồn, phương pháp và dữ liệu cập nhật từ Radar BDS."
+        )
+    report = _latest_ward_report(page["ward_slug"])
+    if report:
+        page["latest_report_href"] = report["path"]
+        report_period = (report.get("report") or {}).get("period", period)
+        page["latest_report_label"] = (
+            f"Báo cáo {report_period}"
+            if str(report_period).lower().startswith("tháng")
+            else f"Báo cáo tháng {report_period}"
+        )
+    page["live_snapshot"] = snapshot
+    return page
+
+
 def _render_public_page(page: dict):
     page = dict(page)
+    page = _hydrate_live_location_page(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(
         page["path"],
@@ -1420,6 +1614,16 @@ def seo_landing_page(slug):
     return _render_public_page(page)
 
 
+def seo_tdm_ward_redirect(ward_slug: str):
+    if ward_slug not in _PRIORITY_TDM_WARDS:
+        abort(404)
+    target = f"/binh-duong/phuong-{ward_slug}"
+    query = request.query_string.decode("ascii", errors="ignore")
+    if query:
+        target = f"{target}?{query}"
+    return redirect(target, code=301)
+
+
 def seo_article_page(slug):
     page = SEO_ARTICLES.get(slug)
     if not page:
@@ -1441,17 +1645,52 @@ Allow: /
 
 Sitemap: {_public_url('/sitemap.xml')}
 """
-    return Response(body, mimetype="text/plain; charset=utf-8")
+    return Response(body, mimetype="text/plain")
+
+
+def llms_txt():
+    ward_lines = "\n".join(
+        f"- {name}: {_public_url(f'/binh-duong/phuong-{slug}')}"
+        for slug, name in _PRIORITY_TDM_WARDS.items()
+    )
+    body = f"""# Radar BDS
+
+> Radar BDS tổng hợp và chuẩn hóa dữ liệu tin rao bất động sản Bình Dương để người dùng tham khảo trước khi kiểm tra từng tài sản.
+
+## Phạm vi ưu tiên
+- Thủ Dầu Một: {_public_url('/binh-duong/thu-dau-mot')}
+{ward_lines}
+
+## Cách đọc dữ liệu
+- Số tin là lượng tin rao công khai Radar BDS đang theo dõi trong bộ lọc hiện hành.
+- Giá/m² trên trang phường là giá tham khảo từ dữ liệu tin rao, không phải giá giao dịch chính thức.
+- Tín hiệu là bộ lọc ưu tiên kiểm tra, không phải khuyến nghị mua.
+- Dữ liệu không thay thế kiểm tra thực địa, quy hoạch và pháp lý.
+
+## Trang chính
+- Thị trường Bình Dương: {_public_url('/binh-duong')}
+- Báo cáo dữ liệu: {_public_url('/bao-cao')}
+- Phương pháp lọc deal: {_public_url('/san-deal-bds')}
+"""
+    return Response(body, mimetype="text/plain")
 
 
 def sitemap_xml():
+    unique_pages = []
+    seen_paths = set()
+    for page in [REPORT_HUB, KNOWLEDGE_HUB, *SEO_PAGES.values()]:
+        path = page.get("path")
+        if not path or path in seen_paths:
+            continue
+        seen_paths.add(path)
+        unique_pages.append(page)
     seo_urls = "\n".join(
         f"""  <url>
     <loc>{_public_url(page["path"])}</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>"""
-        for page in [REPORT_HUB, KNOWLEDGE_HUB, *SEO_PAGES.values()]
+        for page in unique_pages
     )
     article_urls = "\n".join(
         f"""  <url>
@@ -1472,7 +1711,7 @@ def sitemap_xml():
 {article_urls}
 </urlset>
 """
-    return Response(body, mimetype="application/xml; charset=utf-8")
+    return Response(body, mimetype="application/xml")
 
 
 _DASHBOARD_CACHE = {}

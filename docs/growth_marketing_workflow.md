@@ -206,7 +206,8 @@ Use lowercase snake_case. Put context in properties, not event names.
 |---|---|---|
 | `seo_landing_viewed` | Public SEO/area page view | `path`, `page_slug`, `variant` |
 | `report_viewed` | Public report page view | `path`, `page_slug`, `variant` |
-| `social_utm_visit` | Pageview with `utm_source` | `utm_source`, `utm_medium`, `utm_campaign`, `path` |
+| `social_utm_visit` | Pageview with a recognized social source or social medium | `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `path` |
+| `ai_referral_visit` | Recognized ChatGPT, Gemini, Perplexity, or Copilot UTM/referrer host | `ai_source`, `referrer_host`, `path`, `page_slug` |
 | `cta_clicked` | Public-page CTA click | `location`, `target`, `page_slug`, `button_text` |
 | `signup_completed` | Account created | `type` |
 | `watchlist_create` | Watchlist saved | `ward_count`, `prop_count`, `notify_telegram` |
@@ -219,6 +220,7 @@ Measurement questions:
 
 - Which public pages produce `watchlist_create` and `telegram_linked`?
 - Which social UTM sources produce qualified activation, not just visits?
+- Which public pages receive attributable visits from AI assistants? Some AI apps strip referrers, so treat this as a lower bound.
 - Which CTA locations produce VIP inquiries?
 - Which content themes lead to repeated dashboard use?
 

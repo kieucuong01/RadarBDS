@@ -43,6 +43,11 @@ def seo_binh_duong_location(location_slug, **kwargs):
     return _impl("seo_landing_page", slug=f"binh-duong/{location_slug}", **kwargs)
 
 
+@bp.route("/binh-duong/thu-dau-mot/<ward_slug>")
+def seo_thu_dau_mot_ward_redirect(ward_slug, **kwargs):
+    return _impl("seo_tdm_ward_redirect", ward_slug=ward_slug, **kwargs)
+
+
 @bp.route("/ban-dat-binh-duong")
 def seo_ban_dat_binh_duong(**kwargs):
     return _impl("seo_landing_page", slug="ban-dat-binh-duong", **kwargs)
@@ -76,6 +81,11 @@ def seo_article(article_slug, **kwargs):
 @bp.route("/robots.txt")
 def robots_txt(**kwargs):
     return _impl("robots_txt", **kwargs)
+
+
+@bp.route("/llms.txt")
+def llms_txt(**kwargs):
+    return _impl("llms_txt", **kwargs)
 
 
 @bp.route("/sitemap.xml")

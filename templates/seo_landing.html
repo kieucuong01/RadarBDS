@@ -44,12 +44,48 @@
         "name": {{ site_meta.title | tojson }},
         "description": {{ site_meta.description | tojson }},
         "url": {{ site_meta.canonical_url | tojson }},
+        {% if page.live_snapshot and page.live_snapshot.available %}
+        "dateModified": {{ page.live_snapshot.updated_iso | tojson }},
+        "about": {
+          "@type": "Place",
+          "name": {{ (page.live_ward ~ ", Thủ Dầu Một – Bình Dương cũ") | tojson }}
+        },
+        {% endif %}
         "isPartOf": {
           "@type": "WebSite",
           "name": "Radar BDS",
           "url": "https://radarbds.vn/"
         }
-      },
+      }{% if page.live_snapshot and page.live_snapshot.available %},
+      {
+        "@type": "Dataset",
+        "name": {{ ("Dữ liệu giá nhà đất " ~ page.live_ward ~ ", Thủ Dầu Một") | tojson }},
+        "description": {{ page.hero_text | tojson }},
+        "url": {{ site_meta.canonical_url | tojson }},
+        "dateModified": {{ page.live_snapshot.updated_iso | tojson }},
+        "creator": {
+          "@type": "Organization",
+          "name": "Radar BDS",
+          "url": "https://radarbds.vn/"
+        },
+        "spatialCoverage": {
+          "@type": "Place",
+          "name": {{ (page.live_ward ~ ", Thủ Dầu Một – Bình Dương cũ") | tojson }}
+        },
+        "variableMeasured": [
+          {
+            "@type": "PropertyValue",
+            "name": "Tin đang theo dõi",
+            "value": {{ page.live_snapshot.total }}
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "Tín hiệu đáng kiểm tra",
+            "value": {{ page.live_snapshot.signal_count }}
+          }
+        ]
+      }
+      {% endif %},
       {
         "@type": "Organization",
         "name": "Radar BDS",
@@ -118,7 +154,7 @@
 </head>
 
 <body class="seo-page seo-page-{{ page.get('variant', 'market') }}">
-  {% set watchlist_href = "/?tab=signals&intent=watchlist" %}
+  {% set watchlist_href = page.dashboard_href or "/?tab=signals&intent=watchlist" %}
   {% include "partials/seo_header.html" %}
 
   <main id="main-content">
@@ -134,6 +170,60 @@
     </nav>
 
     <section class="seo-hero">
+      {% if page.live_snapshot %}
+      <aside class="hero-map-stage" aria-label="Ảnh chụp dữ liệu {{ page.live_ward }}">
+        <div class="map-label">{{ page.map_label }}</div>
+        {% if page.live_snapshot.available %}
+        <div class="price-tag tag-one">{{ page.live_snapshot.total }} tin</div>
+        <div class="price-tag tag-two">{{ page.live_snapshot.signal_count }} tín hiệu</div>
+        {% for market in page.live_snapshot.market_rows[:3] %}
+        <div class="price-tag tag-{{ ['three', 'four', 'five'][loop.index0] }}">{{ market.average_label }}</div>
+        {% endfor %}
+        <div class="signal-counter">
+          <span>Truy vấn {{ page.live_snapshot.updated_label }}</span>
+          <strong>{{ page.live_snapshot.signal_count }} <small>tín hiệu</small></strong>
+          <em>trên {{ page.live_snapshot.total }} tin đang theo dõi</em>
+        </div>
+        {% if page.live_snapshot.signals %}
+        {% set featured_signal = page.live_snapshot.signals[0] %}
+        <div class="property-card">
+          <div class="property-image">
+            <span class="property-status">Cần kiểm tra</span>
+          </div>
+          <div class="property-copy">
+            <strong>{{ featured_signal.title }}</strong>
+            <p>{{ featured_signal.price_label }}{% if featured_signal.area_label %} · {{ featured_signal.area_label }}{% endif %}</p>
+            <div class="property-metrics">
+              <span>Giá/m² <b>{{ featured_signal.actual_ppm2_label or "Đang cập nhật" }}</b></span>
+              <span>Biên tham khảo <b>{{ featured_signal.mos_label or "Đang cập nhật" }}</b></span>
+            </div>
+            {% if featured_signal.id %}
+            <a href="/listing/{{ featured_signal.id }}" aria-label="Xem {{ featured_signal.title }}">Xem chi tiết
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        <div class="chart-card">
+          <span>Giá tham khảo trung bình theo loại tài sản</span>
+          <p>
+            {% if page.live_snapshot.market_rows %}
+            {{ page.live_snapshot.market_rows[0].label }}: {{ page.live_snapshot.market_rows[0].average_label }}
+            {% else %}
+            Chưa đủ mẫu giá hợp lệ để hiển thị.
+            {% endif %}
+          </p>
+        </div>
+        {% else %}
+        <div class="signal-counter">
+          <span>Truy vấn {{ page.live_snapshot.updated_label }}</span>
+          <strong>Dữ liệu <small>đang tải lại</small></strong>
+          <em>Dữ liệu trực tiếp tạm thời chưa khả dụng</em>
+        </div>
+        {% endif %}
+      </aside>
+      {% else %}
       <aside class="hero-map-stage" aria-label="Mô phỏng Radar BDS phân tích thị trường">
         <div class="map-label">{{ page.map_label }}</div>
         <div class="price-tag tag-one">2.3 tỷ</div>
@@ -176,6 +266,7 @@
           <div class="chart-labels"><span>TDM</span><span>Thuận An</span><span>Dĩ An</span><span>Bến Cát</span></div>
         </div>
       </aside>
+      {% endif %}
 
       <div class="seo-shell hero-shell">
         <div class="seo-hero-copy">
@@ -200,11 +291,124 @@
             <div class="avatar-stack" aria-hidden="true">
               <span></span><span></span><span></span><span></span>
             </div>
-            <p>Hơn 1.000 nhà đầu tư tin dùng Radar BDS</p>
+            <p>Dữ liệu tổng hợp từ tin rao công khai; có ngày truy vấn và phương pháp trên từng trang.</p>
           </div>
         </div>
       </div>
     </section>
+
+    {% if page.live_snapshot %}
+    <section class="seo-report-block" aria-label="Dữ liệu nhà đất {{ page.live_ward }}">
+      <div class="seo-shell report-shell">
+        <div class="report-head">
+          <span>Ảnh chụp truy vấn ngày {{ page.live_snapshot.updated_label }}</span>
+          <h2>Dữ liệu giá nhà đất {{ page.live_ward }}</h2>
+          {% if page.live_snapshot.available %}
+          <p>
+            Radar BDS đang theo dõi {{ page.live_snapshot.total }} tin và ghi nhận
+            {{ page.live_snapshot.signal_count }} tín hiệu tại {{ page.live_ward }}.
+            Các số liệu dưới đây được dựng trực tiếp trong HTML để người đọc và công cụ tìm kiếm có thể kiểm chứng phạm vi.
+          </p>
+          {% else %}
+          <p>Dữ liệu trực tiếp tạm thời chưa khả dụng. Trang vẫn giữ nguồn, phương pháp và phạm vi để người đọc biết cách diễn giải khi dữ liệu trở lại.</p>
+          {% endif %}
+        </div>
+
+        {% if page.live_snapshot.available %}
+        <div class="report-metric-grid">
+          <article>
+            <span>Tin đang theo dõi</span>
+            <strong>{{ page.live_snapshot.total }} tin</strong>
+            <p>Tin rao công khai còn nằm trong bộ lọc hiện hành.</p>
+          </article>
+          <article>
+            <span>Tín hiệu đáng kiểm tra</span>
+            <strong>{{ page.live_snapshot.signal_count }} tín hiệu</strong>
+            <p>Bộ lọc ưu tiên, không phải kết luận đầu tư.</p>
+          </article>
+        </div>
+
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th scope="col">Loại tài sản</th>
+                <th scope="col">Giá tham khảo trung bình</th>
+                <th scope="col">Số mẫu</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in page.live_snapshot.market_rows %}
+              <tr>
+                <th scope="row">{{ row.label }}</th>
+                <td>{{ row.average_label }}</td>
+                <td>{{ row.sample_count }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <th scope="row">Chưa đủ dữ liệu</th>
+                <td>—</td>
+                <td>0</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="report-head">
+          <span>Tối đa 5 tin mới</span>
+          <h2>Tín hiệu mới đáng xem trước</h2>
+          <p>Ưu tiên để kiểm tra, không thay thế việc đọc tin gốc và xác minh tài sản.</p>
+        </div>
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th scope="col">Tin</th>
+                <th scope="col">Giá / diện tích</th>
+                <th scope="col">Giá/m²</th>
+                <th scope="col">Biên tham khảo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for signal in page.live_snapshot.signals %}
+              <tr>
+                <th scope="row">
+                  {% if signal.id %}<a href="/listing/{{ signal.id }}">{% endif %}
+                  {{ signal.title }}
+                  {% if signal.id %}</a>{% endif %}
+                </th>
+                <td>{{ signal.price_label }}{% if signal.area_label %} · {{ signal.area_label }}{% endif %}</td>
+                <td>{{ signal.actual_ppm2_label or "—" }}</td>
+                <td>{{ signal.mos_label or "—" }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <th scope="row">Chưa có tín hiệu phù hợp</th>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+
+        <div class="report-methodology">
+          <h3>Nguồn dữ liệu và phương pháp</h3>
+          <ul>
+            {% for item in page.live_snapshot.methodology %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% if page.latest_report_href %}
+          <p><a href="{{ page.latest_report_href }}">{{ page.latest_report_label or "Xem báo cáo tháng gần nhất" }}</a></p>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
 
     <section class="seo-value-strip" aria-label="Giá trị chính của Radar BDS">
       <div class="seo-shell value-grid">
@@ -479,12 +683,55 @@
       }
 
       const params = new URLSearchParams(window.location.search);
-      if (params.get('utm_source')) {
+      const utmSource = (params.get('utm_source') || '').trim().toLowerCase();
+      const utmMedium = (params.get('utm_medium') || '').trim().toLowerCase();
+      const socialSources = ['facebook', 'fb', 'instagram', 'linkedin', 'tiktok', 'twitter', 'x'];
+      const socialMediums = ['social', 'organic_social', 'social_organic', 'paid_social'];
+      if (socialSources.indexOf(utmSource) !== -1 || socialMediums.indexOf(utmMedium) !== -1) {
         sendRadarEvent('social_utm_visit', {
-          utm_source: params.get('utm_source') || '',
-          utm_medium: params.get('utm_medium') || '',
+          utm_source: utmSource,
+          utm_medium: utmMedium,
           utm_campaign: params.get('utm_campaign') || '',
           utm_content: params.get('utm_content') || '',
+        });
+      }
+
+      const aiUtmSources = {
+        'chatgpt': 'chatgpt',
+        'chatgpt.com': 'chatgpt',
+        'openai': 'chatgpt',
+        'chat.openai.com': 'chatgpt',
+        'openai.com': 'chatgpt',
+        'gemini': 'gemini',
+        'gemini.google.com': 'gemini',
+        'perplexity': 'perplexity',
+        'perplexity.ai': 'perplexity',
+        'copilot': 'copilot',
+        'copilot.microsoft.com': 'copilot',
+      };
+      let referrerHost = '';
+      try {
+        referrerHost = new URL(document.referrer).hostname.toLowerCase().replace(/^www\./, '');
+      } catch (err) {}
+      let aiSource = aiUtmSources[utmSource] || '';
+      if (!aiSource && referrerHost) {
+        if (referrerHost === 'chatgpt.com' || referrerHost.endsWith('.chatgpt.com') ||
+            referrerHost === 'chat.openai.com' || referrerHost.endsWith('.openai.com')) {
+          aiSource = 'chatgpt';
+        } else if (referrerHost === 'gemini.google.com') {
+          aiSource = 'gemini';
+        } else if (referrerHost === 'perplexity.ai' || referrerHost.endsWith('.perplexity.ai')) {
+          aiSource = 'perplexity';
+        } else if (referrerHost === 'copilot.microsoft.com') {
+          aiSource = 'copilot';
+        }
+      }
+      if (aiSource) {
+        sendRadarEvent('ai_referral_visit', {
+          ai_source: aiSource,
+          referrer_host: referrerHost,
+          path: pageMeta.path,
+          page_slug: pageMeta.page_slug,
         });
       }
 

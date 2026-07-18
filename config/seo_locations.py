@@ -63,6 +63,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-phu-my",
+        "live_ward": "Phú Mỹ",
+        "ward_slug": "phu-my",
         "kind": "phường",
         "name": "Phú Mỹ",
         "context": "phường có nhiều tin đất hẻm, đất gần chợ và nhà phố dân cư cần bóc tách đúng vị trí trước khi so giá.",
@@ -72,6 +74,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-chanh-nghia",
+        "live_ward": "Chánh Nghĩa",
+        "ward_slug": "chanh-nghia",
         "kind": "phường",
         "name": "Chánh Nghĩa",
         "context": "khu trung tâm có mặt bằng giá cao hơn, nhiều tin nhà đất cần phân biệt giữa nhà ở thật và tin đầu tư.",
@@ -81,6 +85,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-hiep-an",
+        "live_ward": "Hiệp An",
+        "ward_slug": "hiep-an",
         "kind": "phường",
         "name": "Hiệp An",
         "context": "khu có nhiều tin đất dân cư, đất vườn và hẻm xe hơi, cần chuẩn hóa diện tích để tránh định giá lệch.",
@@ -90,6 +96,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-tan-an",
+        "live_ward": "Tân An",
+        "ward_slug": "tan-an",
         "kind": "phường",
         "name": "Tân An",
         "context": "phường ven đô của Thủ Dầu Một, hay có tin đất diện tích vừa và lớn cần so với mặt bằng cùng phân khúc.",
@@ -117,6 +125,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-dinh-hoa",
+        "live_ward": "Định Hòa",
+        "ward_slug": "dinh-hoa",
         "kind": "phường",
         "name": "Định Hòa",
         "context": "phường có nguồn tin đất nền, nhà phố và đất diện tích vừa cần so với nhóm lân cận.",
@@ -144,6 +154,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-phu-hoa",
+        "live_ward": "Phú Hòa",
+        "ward_slug": "phu-hoa",
         "kind": "phường",
         "name": "Phú Hòa",
         "context": "phường dân cư sôi động, có nhiều tin nhà phố, đất nền nhỏ và nhu cầu ở thật.",
@@ -153,6 +165,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-phu-loi",
+        "live_ward": "Phú Lợi",
+        "ward_slug": "phu-loi",
         "kind": "phường",
         "name": "Phú Lợi",
         "context": "phường có nhiều tin nhà phố và đất dân cư, cần so giá theo vị trí và loại tài sản.",
@@ -162,6 +176,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-hiep-thanh",
+        "live_ward": "Hiệp Thành",
+        "ward_slug": "hiep-thanh",
         "kind": "phường",
         "name": "Hiệp Thành",
         "context": "phường rộng, nguồn tin đa dạng nên cần tách kỹ phân khúc nhà phố, đất nền và hẻm.",
@@ -350,23 +366,39 @@ def _page(item: dict) -> dict:
     kind = item["kind"]
     watch_text = ", ".join(item["watch"][:3])
     intent_label = _sentence_case(item["intent"])
-    title = f"{intent_label} - Radar BDS lọc deal bằng dữ liệu"
-    description = (
-        f"Landing {kind} {name} Bình Dương: theo dõi {item['intent']}, so giá theo dữ liệu, "
-        "tính fair value, MOS và lọc tin rẻ đáng kiểm tra."
-    )
+    if item.get("live_ward"):
+        title = f"Giá nhà đất {name}, Thủ Dầu Một | Radar BDS"
+        description = (
+            f"Giá nhà đất {name}, Thủ Dầu Một theo dữ liệu tin rao Radar BDS: "
+            "số tin đang theo dõi, tín hiệu, giá tham khảo và ngày cập nhật."
+        )
+        hero_title = f"Giá nhà đất {name}, Thủ Dầu Một"
+        hero_text = (
+            f"Trang dữ liệu {name}, Thủ Dầu Một – Bình Dương cũ, tổng hợp tin rao công khai "
+            "để tham khảo mặt bằng giá và ưu tiên các tín hiệu cần kiểm tra."
+        )
+    else:
+        title = f"{intent_label} - Radar BDS lọc deal bằng dữ liệu"
+        description = (
+            f"Landing {kind} {name} Bình Dương: theo dõi {item['intent']}, so giá theo dữ liệu, "
+            "tính fair value, MOS và lọc tin rẻ đáng kiểm tra."
+        )
+        hero_title = f"{intent_label} bằng dữ liệu"
+        hero_text = (
+            f"{name} là {item['context']} Radar BDS giúp gom tin rao, chuẩn hóa vị trí, "
+            "so giá theo mặt bằng gần nhất và ưu tiên những tin có biên an toàn rõ ràng."
+        )
     return {
         "variant": "location",
+        "live_ward": item.get("live_ward"),
+        "ward_slug": item.get("ward_slug"),
         "path": f"/binh-duong/{item['slug']}",
         "title": title,
         "description": description,
         "keywords": f"{item['intent']}, nhà đất Bình Dương, Radar BDS, săn deal BĐS, định giá bất động sản, MOS BĐS",
         "hero_badge": f"Khu vực {kind.title()} Bình Dương",
-        "hero_title": f"{intent_label} bằng dữ liệu",
-        "hero_text": (
-            f"{name} là {item['context']} Radar BDS giúp gom tin rao, chuẩn hóa vị trí, "
-            "so giá theo mặt bằng gần nhất và ưu tiên những tin có biên an toàn rõ ràng."
-        ),
+        "hero_title": hero_title,
+        "hero_text": hero_text,
         "hero_checks": [watch_text, "Fair value theo khu", "Cảnh báo tin nhiễu"],
         "primary_cta": f"Xem tin {name}",
         "secondary_cta": "Cách lọc deal",
