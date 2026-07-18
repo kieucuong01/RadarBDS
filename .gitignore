@@ -39,6 +39,7 @@ zrok.exe
 data/images/
 data/fb_photos/
 data/apify_tokens.json
+data/raw_backup.json
 logs/
 reports/
 scratch/

@@ -182,7 +182,7 @@
   {% if admin_login_required %}
   <main class="admin-auth-gate">
     <section class="admin-auth-card" aria-label="Admin login required">
-      <div class="brand-mark"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="RadarBDS"></div>
+      <div class="brand-mark"><img src="{{ url_for('static', filename='images/logo-80.webp') }}" srcset="{{ url_for('static', filename='images/logo-80.webp') }} 1x, {{ url_for('static', filename='images/logo-160.webp') }} 2x" alt="RadarBDS"></div>
       <h1>RadarBDS Control Room</h1>
       <p>Cần đăng nhập bằng tài khoản admin để mở khu điều khiển. Sau khi đăng nhập thành công, trang sẽ tự tải lại.</p>
       <div class="admin-auth-actions">
@@ -234,7 +234,7 @@
   {% else %}
   <aside class="admin-sidebar">
     <div class="brand">
-      <div class="brand-mark"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="RadarBDS"></div>
+      <div class="brand-mark"><img src="{{ url_for('static', filename='images/logo-80.webp') }}" srcset="{{ url_for('static', filename='images/logo-80.webp') }} 1x, {{ url_for('static', filename='images/logo-160.webp') }} 2x" alt="RadarBDS"></div>
       <div>
         <div class="brand-name">RadarBDS</div>
         <div class="brand-sub">Control Room</div>

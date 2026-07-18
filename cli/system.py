@@ -29,7 +29,6 @@ def _cmd_reprocess(args):
         result = run_full_reprocess(
             source=getattr(args, "source", None), 
             since=getattr(args, "since", None),
-            use_gemini=getattr(args, 'gemini', False),
             full=full
         )
         r = result["listings"]

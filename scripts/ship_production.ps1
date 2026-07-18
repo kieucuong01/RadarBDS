@@ -84,9 +84,51 @@ $script = @"
 set -e
 cd "$RemotePath"
 
+before_commit=`$(git rev-parse HEAD)
 before=`$(git rev-parse --short HEAD)
 raw_backup="/tmp/radar-bds-raw-backup-before-$short-$stamp.json"
 stash_ref=""
+deploy_started="0"
+
+smoke_service() {
+  for url in "http://127.0.0.1:5000/api/dashboard" "http://127.0.0.1:5000/api/signals?page=1&limit=3"; do
+    for attempt in `$(seq 1 20); do
+      if curl -fsS "`$url" >/dev/null 2>&1; then
+        break
+      fi
+      if [ "`$attempt" -eq 20 ]; then
+        echo "smoke failed: `$url"
+        return 1
+      fi
+      sleep 1
+    done
+  done
+}
+
+rollback_to_before() {
+  status=`$?
+  trap - ERR
+  if [ "`$deploy_started" = "1" ]; then
+    echo "deploy failed; rolling back to `$before"
+    git reset --hard "`$before_commit" >/dev/null || true
+    if [ -f "`$raw_backup" ]; then
+      mkdir -p data
+      cp -f "`$raw_backup" data/raw_backup.json || true
+    fi
+    if [ -n "`$stash_ref" ]; then
+      git stash pop >/dev/null || true
+      stash_ref=""
+    fi
+    sudo systemctl restart radar-bds.service || true
+    if smoke_service; then
+      echo "rollback smoke passed"
+    else
+      echo "rollback smoke failed"
+    fi
+  fi
+  exit "`$status"
+}
+trap 'rollback_to_before' ERR
 
 dirty_files=`$(git status --porcelain | awk '{print `$2}' | grep -Ev '^(data/facebook_profiles.json|data/raw_backup.json)`$' || true)
 if [ -n "`$dirty_files" ]; then
@@ -96,6 +138,7 @@ if [ -n "`$dirty_files" ]; then
 fi
 
 cp -f data/raw_backup.json "`$raw_backup" 2>/dev/null || true
+deploy_started="1"
 if ! git diff --quiet -- data/facebook_profiles.json; then
   git stash push -m "preserve production facebook profiles before bundle deploy" -- data/facebook_profiles.json >/dev/null
   stash_ref="1"
@@ -105,33 +148,25 @@ git fetch "$remoteBundle" "$Branch"
 git reset --hard FETCH_HEAD
 
 if [ -f "`$raw_backup" ]; then
+  mkdir -p data
   cp -f "`$raw_backup" data/raw_backup.json
 fi
 if [ -n "`$stash_ref" ]; then
   git stash pop >/dev/null
+  stash_ref=""
 fi
 
 set -a
 . /etc/radar-bds/radar.env
 set +a
 
+/opt/radar-bds/.venv/bin/python -X utf8 -m pip install -r requirements.txt
 /opt/radar-bds/.venv/bin/python -X utf8 -m py_compile app.py routes/public.py services/market_data.py services/image_assets.py
 /opt/radar-bds/.venv/bin/python -X utf8 -c "from db.schema import init_schema; init_schema()"
 sudo systemctl restart radar-bds.service
 sudo systemctl is-active radar-bds.service
 
-for url in "http://127.0.0.1:5000/api/dashboard" "http://127.0.0.1:5000/api/signals?page=1&limit=3"; do
-  for attempt in `$(seq 1 20); do
-    if curl -fsS "`$url" >/dev/null 2>&1; then
-      break
-    fi
-    if [ "`$attempt" -eq 20 ]; then
-      echo "smoke failed: `$url"
-      exit 1
-    fi
-    sleep 1
-  done
-done
+smoke_service
 
 curl -fsS "http://127.0.0.1:5000/api/dashboard?cache_refresh=1" >/dev/null
 after=`$(git rev-parse --short HEAD)

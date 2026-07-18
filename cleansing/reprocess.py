@@ -605,87 +605,6 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
     return stats
 
 
-def enrich_listings_with_gemini(limit=50):
-    """
-    Bước 3: Làm giàu dữ liệu bằng Gemini (Hybrid Layer).
-    - Fix missing ward/road_type.
-    - Double check hot deals.
-    """
-    from cleansing.gemini_enricher import GeminiEnricher
-    enricher = GeminiEnricher()
-    if not enricher.model:
-        logger.warning("Gemini API Key missing, skipping enrichment.")
-        return 0
-
-    from analytics.valuation import ValuationEngine, Listing
-    from datetime import date
-
-    with get_conn() as conn:
-        # Lấy tin thiếu thông tin cơ bản
-        rows = conn.execute("""
-            SELECT id, title, description FROM listings
-            WHERE (ward = 'unknown' OR road_type = 'unknown' OR road_type IS NULL)
-               AND llm_verified = 0
-            LIMIT ?
-        """, (limit,)).fetchall()
-        
-        # Lấy các deal ngộp cần xác minh lại
-        hot_rows = conn.execute("""
-            SELECT l.id, l.title, l.description FROM listings l
-            JOIN valuation_results v ON l.id = v.listing_id
-            WHERE v.is_signal = 1 AND l.llm_verified = 0
-            LIMIT ?
-        """, (limit,)).fetchall()
-        
-        # Gộp và loại trùng
-        to_process = {r['id']: r for r in list(rows) + list(hot_rows)}
-    
-    if not to_process:
-        return 0
-
-    logger.info(f"Gemini Enrichment: Processing {len(to_process)} listings...")
-    count = 0
-    import time
-    for lid, row in to_process.items():
-        res = enricher.enrich_listing(row['title'], row['description'])
-        if not res:
-            # Nghỉ một chút nếu lỗi (có thể do rate limit)
-            time.sleep(5)
-            continue
-        
-        # Cập nhật DB
-        with get_conn() as conn:
-            p = res.get('price_ty')
-            a = res.get('area_m2')
-            ppm2 = None
-            if p and a and a > 0:
-                ppm2 = round((p * 1000) / a, 3)
-
-            conn.execute("""
-                UPDATE listings SET
-                    ward = COALESCE(?, ward),
-                    road_type = COALESCE(?, road_type),
-                    price_ty = COALESCE(?, price_ty),
-                    area_m2 = COALESCE(?, area_m2),
-                    price_per_m2 = COALESCE(?, price_per_m2),
-                    llm_verified = 1,
-                    llm_notes = ?
-                WHERE id = ?
-            """, (
-                res.get('ward'), res.get('road_type'),
-                p, a, ppm2,
-                res.get('reason', ''),
-                lid
-            ))
-            count += 1
-        
-        # Nghỉ để tránh rate limit (Free tier: 15 RPM)
-        time.sleep(4)
-    
-    logger.info(f"Gemini Enrichment: Done {count} listings.")
-    return count
-
-
 def _parse_raw_json(raw_json_str: str) -> dict:
     import json
     try:
@@ -694,12 +613,12 @@ def _parse_raw_json(raw_json_str: str) -> dict:
         return {}
 
 
-def run_full_reprocess(source: str = None, since: str = None, use_gemini: bool = False, full: bool = False, raw_ids: list = None):
+def run_full_reprocess(source: str = None, since: str = None, full: bool = False, raw_ids: list = None):
     with advisory_lock("reprocess"):
-        return _run_full_reprocess(source=source, since=since, use_gemini=use_gemini, full=full, raw_ids=raw_ids)
+        return _run_full_reprocess(source=source, since=since, full=full, raw_ids=raw_ids)
 
 
-def _run_full_reprocess(source: str = None, since: str = None, use_gemini: bool = False, full: bool = False, raw_ids: list = None):
+def _run_full_reprocess(source: str = None, since: str = None, full: bool = False, raw_ids: list = None):
     """Chạy pipeline reprocess: raw → listings → valuation."""
     logger.info("=" * 55)
     logger.info(f"{'FULL' if full else 'INCREMENTAL'} REPROCESS START")
@@ -718,11 +637,6 @@ def _run_full_reprocess(source: str = None, since: str = None, use_gemini: bool 
     # Valuation: Nếu full=False, chỉ định giá các tin vừa mới xử lý
     val_stats = reprocess_valuation(incremental_ids=None if full else processed_ids)
 
-    if use_gemini:
-        n_enriched = enrich_listings_with_gemini(limit=50)
-        if n_enriched > 0:
-            logger.info("Re-valuating after Gemini enrichment...")
-            val_stats = reprocess_valuation()
 
     # Price drops — BUG FIX: chưa từng được gọi trong pipeline
     from analytics.market_trend import compute_weekly_trend, compute_monthly_trend, compute_daily_trend, detect_price_drops
@@ -774,7 +688,6 @@ if __name__ == "__main__":
     parser.add_argument("--listings-only", action="store_true", help="Chỉ reprocess listings, không valuation")
     parser.add_argument("--valuation-only", action="store_true", help="Chỉ chạy lại valuation")
     parser.add_argument("--full",           action="store_true", help="Chạy toàn bộ dữ liệu (mặc định là incremental)")
-    parser.add_argument("--gemini",        action="store_true", help="Bật làm giàu dữ liệu bằng Gemini")
     args = parser.parse_args()
 
     init_schema()
@@ -784,4 +697,4 @@ if __name__ == "__main__":
     elif args.listings_only:
         reprocess_listings(source=args.source, since=args.since, full=args.full)
     else:
-        run_full_reprocess(source=args.source, since=args.since, use_gemini=args.gemini, full=args.full)
+        run_full_reprocess(source=args.source, since=args.since, full=args.full)

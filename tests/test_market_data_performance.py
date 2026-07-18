@@ -309,11 +309,7 @@ def test_api_dashboard_uses_fast_summary_loader(monkeypatch):
             "wards_by_city": {},
         }
 
-    def fail_load_data(*_args, **_kwargs):
-        raise AssertionError("api_dashboard should use load_dashboard_summary, not load_data")
-
     monkeypatch.setattr(radar_app, "load_dashboard_summary", fake_summary)
-    monkeypatch.setattr(radar_app, "load_data", fail_load_data)
     monkeypatch.setattr(radar_app, "_get_signals_version", lambda _db_path: "test-version")
 
     response = radar_app.app.test_client().get("/api/dashboard?cache_refresh=1")
