@@ -1908,7 +1908,10 @@ class AdminControlRoomGateTest(unittest.TestCase):
             response = self.client.get("/admin/api/facebook-crawl/config")
 
         self.assertEqual(response.status_code, 200)
-        profile = response.get_json()["profiles"][0]
+        payload = response.get_json()
+        self.assertIn("duplicate_comparisons", payload)
+        self.assertIsInstance(payload["duplicate_comparisons"], list)
+        profile = payload["profiles"][0]
         self.assertEqual(profile["raw_count"], 18)
         self.assertGreaterEqual(profile["activity"]["recommended_daily_limit"], 12)
         self.assertEqual(profile["activity"]["posts_7d"], 18)

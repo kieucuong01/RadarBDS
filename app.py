@@ -198,6 +198,10 @@ def _facebook_profile_stats(profile_urls: list[str]) -> dict:
     return admin_quality.facebook_profile_stats(profile_urls, conn_factory=get_conn)
 
 
+def _facebook_profile_duplicate_analysis(profiles: list[dict], stats: dict) -> dict:
+    return admin_quality.facebook_profile_duplicate_analysis(profiles, stats, conn_factory=get_conn)
+
+
 def _missing_image_summary(conn, source: str | None = None) -> dict:
     return admin_quality.missing_image_summary(conn, source=source)
 
@@ -3251,10 +3255,13 @@ def admin_api_facebook_crawl_config():
     if request.method == "GET":
         profiles = _read_facebook_profile_config()
         stats = _facebook_profile_stats([p["url"] for p in profiles])
+        duplicate_analysis = _facebook_profile_duplicate_analysis(profiles, stats)
         for profile in profiles:
             profile.update(stats.get(profile["url"], {}))
+            profile["duplicate_overlap"] = duplicate_analysis["by_profile"].get(profile["url"])
         return jsonify({
             "profiles": profiles,
+            "duplicate_comparisons": duplicate_analysis["comparisons"],
             "summary": _facebook_crawl_summary(),
             "apify_tokens": _apify_tokens_public(),
         })
@@ -3263,11 +3270,14 @@ def admin_api_facebook_crawl_config():
     profiles = payload.get("profiles") or []
     saved = _write_facebook_profile_config(profiles)
     stats = _facebook_profile_stats([p["url"] for p in saved])
+    duplicate_analysis = _facebook_profile_duplicate_analysis(saved, stats)
     for profile in saved:
         profile.update(stats.get(profile["url"], {}))
+        profile["duplicate_overlap"] = duplicate_analysis["by_profile"].get(profile["url"])
     return jsonify({
         "ok": True,
         "profiles": saved,
+        "duplicate_comparisons": duplicate_analysis["comparisons"],
         "summary": _facebook_crawl_summary(),
         "apify_tokens": _apify_tokens_public(),
     })

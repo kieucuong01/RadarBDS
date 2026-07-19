@@ -9,7 +9,8 @@ import json
 import platform
 import re
 import subprocess
-from collections import Counter
+from collections import Counter, defaultdict
+from itertools import combinations
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Iterable
@@ -426,6 +427,129 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
         stats[url]["activity"] = facebook_profile_activity(items)
         stats[url]["data_quality"] = facebook_profile_data_quality(items)
     return stats
+
+
+def normalize_facebook_profile_url(value) -> str:
+    return str(value or "").strip().rstrip("/")
+
+
+def build_facebook_duplicate_analysis(
+    profiles: list[dict],
+    stats: dict,
+    rows: list[dict],
+) -> dict:
+    configured: dict[str, dict] = {}
+    ordered_urls: list[str] = []
+    for profile in profiles:
+        url = normalize_facebook_profile_url(profile.get("url"))
+        if not url or url in configured:
+            continue
+        configured[url] = {**profile, "url": url}
+        ordered_urls.append(url)
+
+    clusters: dict[str, set] = defaultdict(set)
+    for row in rows:
+        url = normalize_facebook_profile_url(row.get("profile_url"))
+        cluster_id = row.get("cluster_id")
+        if url in configured and cluster_id is not None:
+            clusters[url].add(cluster_id)
+
+    totals = {url: len(clusters[url]) for url in ordered_urls}
+    normalized_stats = {normalize_facebook_profile_url(url): value for url, value in stats.items()}
+
+    def quality_score(url: str):
+        return ((normalized_stats.get(url) or {}).get("data_quality") or {}).get("score")
+
+    def broker_rank(url: str, shared: int) -> tuple:
+        score = quality_score(url)
+        latest = parse_crawl_datetime((normalized_stats.get(url) or {}).get("latest_crawled_at"))
+        return (
+            float(score) if score is not None else -1.0,
+            totals[url] - shared,
+            latest or datetime.min,
+        )
+
+    comparisons_out = []
+    for url_a, url_b in combinations(ordered_urls, 2):
+        profile_a = configured[url_a]
+        profile_b = configured[url_b]
+        city_a = str(profile_a.get("city") or "").strip()
+        city_b = str(profile_b.get("city") or "").strip()
+        if not city_a or city_a.casefold() != city_b.casefold():
+            continue
+        if totals[url_a] < 10 or totals[url_b] < 10:
+            continue
+        shared = len(clusters[url_a] & clusters[url_b])
+        if shared < 5:
+            continue
+
+        overlap_a = pct(shared, totals[url_a])
+        overlap_b = pct(shared, totals[url_b])
+        keep_url, reduce_url = (url_a, url_b)
+        if broker_rank(url_b, shared) > broker_rank(url_a, shared):
+            keep_url, reduce_url = url_b, url_a
+        reduce_overlap = overlap_a if reduce_url == url_a else overlap_b
+        recommended_days = 7 if reduce_overlap >= 70 else 3 if reduce_overlap >= 50 else None
+        comparisons_out.append({
+            "city": city_a,
+            "broker_a_url": url_a,
+            "broker_a_name": profile_a.get("broker_name") or url_a,
+            "broker_a_total_lots": totals[url_a],
+            "broker_a_overlap_pct": overlap_a,
+            "broker_a_quality_score": quality_score(url_a),
+            "broker_b_url": url_b,
+            "broker_b_name": profile_b.get("broker_name") or url_b,
+            "broker_b_total_lots": totals[url_b],
+            "broker_b_overlap_pct": overlap_b,
+            "broker_b_quality_score": quality_score(url_b),
+            "shared_lots": shared,
+            "keep_url": keep_url,
+            "reduce_url": reduce_url,
+            "recommended_crawl_every_days": recommended_days,
+        })
+
+    def reduced_overlap(item: dict) -> float:
+        if item["reduce_url"] == item["broker_a_url"]:
+            return item["broker_a_overlap_pct"]
+        return item["broker_b_overlap_pct"]
+
+    comparisons_out.sort(
+        key=lambda item: (reduced_overlap(item), item["shared_lots"]),
+        reverse=True,
+    )
+    by_profile = {}
+    for item in comparisons_out:
+        for url, other_url, overlap in (
+            (item["broker_a_url"], item["broker_b_url"], item["broker_a_overlap_pct"]),
+            (item["broker_b_url"], item["broker_a_url"], item["broker_b_overlap_pct"]),
+        ):
+            current = by_profile.get(url)
+            if current and (current["overlap_pct"], current["shared_lots"]) >= (overlap, item["shared_lots"]):
+                continue
+            by_profile[url] = {**item, "other_url": other_url, "overlap_pct": overlap}
+    return {"comparisons": comparisons_out, "by_profile": by_profile}
+
+
+def facebook_profile_duplicate_analysis(profiles: list[dict], stats: dict, conn_factory=get_conn) -> dict:
+    try:
+        with conn_factory() as conn:
+            fetched = conn.execute("""
+                SELECT COALESCE(l.duplicate_of_id, l.id) AS cluster_id,
+                       COALESCE(NULLIF(r.raw_json::jsonb ->> 'profile_url', ''),
+                                NULLIF(r.raw_json::jsonb -> '_apify_raw' ->> 'inputUrl', '')) AS profile_url
+                FROM listings l
+                JOIN raw_listings r ON r.id = l.raw_id
+                WHERE l.source = 'facebook'
+                  AND COALESCE(NULLIF(l.crawled_at, ''), NULLIF(r.crawled_at, ''))::timestamp
+                      >= CURRENT_TIMESTAMP - INTERVAL '90 days'
+            """).fetchall()
+        rows = [
+            {"cluster_id": row["cluster_id"], "profile_url": row["profile_url"]}
+            for row in fetched
+        ]
+    except Exception:
+        return {"comparisons": [], "by_profile": {}}
+    return build_facebook_duplicate_analysis(profiles, stats, rows)
 
 
 def missing_image_summary(conn, source: str | None = None) -> dict:
