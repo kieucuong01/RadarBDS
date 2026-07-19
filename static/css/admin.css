@@ -788,6 +788,68 @@ p { margin: 6px 0 0; color: var(--muted); }
 .crawl-profiles-panel {
   border-radius: 10px;
 }
+.crawl-list-tools {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 12px 0;
+}
+.crawl-list-tools .crawl-field {
+  width: min(260px, 100%);
+}
+.crawl-duplicate-panel {
+  margin: 10px 12px 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+}
+.crawl-duplicate-head,
+.crawl-duplicate-pair,
+.crawl-duplicate-guidance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.crawl-duplicate-head small,
+.crawl-duplicate-pair span,
+.crawl-duplicate-metrics,
+.crawl-duplicate-empty {
+  color: var(--muted);
+  font-size: 12px;
+}
+.crawl-duplicate-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+.crawl-duplicate-item {
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+}
+.crawl-duplicate-pair strong {
+  font-size: 13px;
+}
+.crawl-duplicate-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.crawl-duplicate-guidance {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.crawl-duplicate-guidance .broker-apply-btn {
+  margin-left: auto;
+}
+.crawl-duplicate-empty {
+  padding-top: 10px;
+}
 .crawl-run-panel {
   position: sticky;
   top: 90px;
@@ -1338,6 +1400,31 @@ p { margin: 6px 0 0; color: var(--muted); }
   .crawl-add-row .primary-btn {
     width: 100%;
     min-width: 0;
+  }
+  .crawl-list-tools {
+    justify-content: stretch;
+  }
+  .crawl-list-tools .crawl-field {
+    width: 100%;
+  }
+  .crawl-duplicate-panel {
+    margin: 10px 8px;
+  }
+  .crawl-duplicate-head,
+  .crawl-duplicate-pair,
+  .crawl-duplicate-guidance {
+    align-items: flex-start;
+  }
+  .crawl-duplicate-head,
+  .crawl-duplicate-pair {
+    flex-direction: column;
+  }
+  .crawl-duplicate-metrics {
+    grid-template-columns: 1fr;
+  }
+  .crawl-duplicate-guidance .broker-apply-btn {
+    width: 100%;
+    margin-left: 0;
   }
   .crawl-run-panel {
     padding: 14px;

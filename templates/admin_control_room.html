@@ -448,6 +448,18 @@
             <input id="crawlCity" placeholder="Khu vực" value="Bến Cát">
             <button class="primary-btn" id="addCrawlProfileBtn"><span class="btn-icon-label">{{ admin_icon('plus', 'btn-svg') }}<span>Thêm</span></span></button>
           </div>
+          <div class="crawl-list-tools">
+            <label class="crawl-field">Thành phố
+              <select id="crawlCityFilter" class="select-control"></select>
+            </label>
+          </div>
+          <section class="crawl-duplicate-panel" aria-labelledby="crawlDuplicateTitle">
+            <div class="crawl-duplicate-head">
+              <strong id="crawlDuplicateTitle">Cặp môi giới trùng nhiều</strong>
+              <small>Chỉ áp dụng sau khi bấm Lưu danh sách</small>
+            </div>
+            <div id="crawlDuplicateRecommendations"></div>
+          </section>
           <div class="table-wrap">
             <table class="data-table crawl-table">
               <thead>
@@ -456,6 +468,7 @@
                   <th>Môi giới</th>
                   <th>Daily</th>
                   <th>Range</th>
+                  <th>Chu kỳ</th>
                   <th>Nhịp đăng</th>
                   <th>Gợi ý</th>
                   <th>Độ sạch</th>

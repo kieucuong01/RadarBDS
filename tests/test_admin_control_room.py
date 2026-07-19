@@ -1958,6 +1958,14 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn('data-label="Hành động"', js)
         self.assertIn(".crawl-ops-panel", css)
         self.assertIn(".crawl-ops-alert", css)
+        self.assertIn('id="crawlCityFilter"', html)
+        self.assertIn('id="crawlDuplicateRecommendations"', html)
+        self.assertIn("crawl_every_days", js)
+        self.assertIn("function renderCrawlCityFilter", js)
+        self.assertIn("function renderCrawlDuplicateRecommendations", js)
+        self.assertIn("function applyCrawlDuplicateRecommendation", js)
+        self.assertIn(".crawl-duplicate-panel", css)
+        self.assertIn("C\u1eb7p m\u00f4i gi\u1edbi tr\u00f9ng nhi\u1ec1u", html)
 
     def test_admin_icons_use_standard_app_icon_with_admin_badge(self):
         root = Path(__file__).resolve().parent.parent

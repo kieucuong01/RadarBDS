@@ -31,6 +31,8 @@ let duplicateGroupState = new Map();
 let duplicatePairModeGroups = new Set();
 let crawlProfiles = [];
 let crawlSummary = {};
+let crawlDuplicateComparisons = [];
+let crawlCityFilter = '';
 let apifyTokens = [];
 let apifyTokensExpanded = false;
 let dataQualitySummary = {};
@@ -285,17 +287,21 @@ function readCrawlTableState() {
     p.daily_limit = Number(row.querySelector('[data-crawl-field="daily_limit"]')?.value || p.daily_limit || 20);
     p.tier = p.daily_limit;
     p.range_days = Number(row.querySelector('[data-crawl-field="range_days"]')?.value || p.range_days || 7);
+    p.crawl_every_days = Number(row.querySelector('[data-crawl-field="crawl_every_days"]')?.value || p.crawl_every_days || 1);
   });
 }
 
 async function loadCrawlConfig() {
   const data = await fetchJSON('/admin/api/facebook-crawl/config');
   crawlProfiles = data.profiles || [];
+  crawlDuplicateComparisons = data.duplicate_comparisons || [];
   crawlSummary = data.summary || {};
   apifyTokens = data.apify_tokens || [];
   renderCrawlStats(crawlSummary);
   renderCrawlOps(crawlSummary.ops || {});
   renderApifyTokens();
+  renderCrawlCityFilter();
+  renderCrawlDuplicateRecommendations();
   renderCrawlProfiles();
   renderCrawlRunSelect();
   if (data.summary?.active_job?.id) {
@@ -767,14 +773,85 @@ async function retryDataQualitySourceCrawl(source) {
   }, `Đã tạo job crawl lại ${label}`, `Không tạo được job crawl lại ${label}`);
 }
 
+function renderCrawlCityFilter() {
+  const select = document.getElementById('crawlCityFilter');
+  if (!select) return;
+  const cities = [...new Set(crawlProfiles.map(profile => String(profile.city || '').trim()).filter(Boolean))];
+  if (crawlCityFilter && !cities.includes(crawlCityFilter)) crawlCityFilter = '';
+  select.innerHTML = [
+    '<option value="">Tất cả thành phố</option>',
+    ...cities.map(city => `<option value="${esc(city)}">${esc(city)}</option>`),
+  ].join('');
+  select.value = crawlCityFilter;
+}
+
+function renderCrawlDuplicateRecommendations() {
+  const root = document.getElementById('crawlDuplicateRecommendations');
+  if (!root) return;
+  const configuredUrls = new Set(crawlProfiles.map(profile => profile.url));
+  const items = crawlDuplicateComparisons.filter(item => {
+    if (crawlCityFilter && item.city !== crawlCityFilter) return false;
+    return configuredUrls.has(item.broker_a_url) && configuredUrls.has(item.broker_b_url);
+  });
+  if (!items.length) {
+    root.innerHTML = '<div class="crawl-duplicate-empty">Chưa đủ dữ liệu trùng để khuyến nghị.</div>';
+    return;
+  }
+  root.innerHTML = `<div class="crawl-duplicate-list">${items.map(item => {
+    const keep = crawlProfiles.find(profile => profile.url === item.keep_url) || {};
+    const reduce = crawlProfiles.find(profile => profile.url === item.reduce_url) || {};
+    const keepName = keep.broker_name || item.keep_url;
+    const reduceName = reduce.broker_name || item.reduce_url;
+    const cadence = Number(item.recommended_crawl_every_days || 0);
+    const cadenceText = cadence === 7 ? '7 ngày' : cadence === 3 ? '3 ngày' : 'theo dõi thêm';
+    const scoreA = item.broker_a_quality_score ?? '--';
+    const scoreB = item.broker_b_quality_score ?? '--';
+    const applyButton = [3, 7].includes(cadence)
+      ? `<button class="broker-apply-btn" type="button" onclick="applyCrawlDuplicateRecommendation('${esc(item.reduce_url)}', ${cadence})">Áp dụng gợi ý</button>`
+      : '';
+    return `
+      <article class="crawl-duplicate-item">
+        <div class="crawl-duplicate-pair">
+          <strong>${esc(item.broker_a_name)} ↔ ${esc(item.broker_b_name)}</strong>
+          <span>${esc(item.city)}</span>
+        </div>
+        <div class="crawl-duplicate-metrics">
+          <span><b>${Number(item.shared_lots || 0)}</b> lô chung</span>
+          <span>${esc(item.broker_a_name)}: <b>${Number(item.broker_a_overlap_pct || 0).toFixed(1)}%</b> · sạch ${esc(scoreA)}</span>
+          <span>${esc(item.broker_b_name)}: <b>${Number(item.broker_b_overlap_pct || 0).toFixed(1)}%</b> · sạch ${esc(scoreB)}</span>
+        </div>
+        <div class="crawl-duplicate-guidance">
+          <span>Giữ <strong>${esc(keepName)}</strong></span>
+          <span>Giảm <strong>${esc(reduceName)}</strong> xuống ${esc(cadenceText)}</span>
+          ${applyButton}
+        </div>
+      </article>
+    `;
+  }).join('')}</div>`;
+}
+
+function applyCrawlDuplicateRecommendation(url, days) {
+  readCrawlTableState();
+  const profile = crawlProfiles.find(item => item.url === url);
+  const cadence = Number(days);
+  if (!profile || ![3, 7].includes(cadence)) return;
+  profile.crawl_every_days = cadence;
+  renderCrawlProfiles();
+  renderCrawlDuplicateRecommendations();
+  showAdminToast('Đã áp dụng chu kỳ gợi ý vào bản nháp', 'success');
+}
+
 function renderCrawlProfiles() {
   const body = document.getElementById('crawlProfileRows');
   if (!body) return;
-  if (!crawlProfiles.length) {
-    body.innerHTML = `<tr><td colspan="9"><div class="empty">Chưa có môi giới Facebook.</div></td></tr>`;
+  const visibleProfiles = crawlCityFilter
+    ? crawlProfiles.filter(profile => profile.city === crawlCityFilter)
+    : crawlProfiles;
+  if (!visibleProfiles.length) {
+    body.innerHTML = `<tr><td colspan="10"><div class="empty">Chưa có môi giới Facebook trong thành phố này.</div></td></tr>`;
     return;
   }
-  body.innerHTML = crawlProfiles.map(p => `
+  body.innerHTML = visibleProfiles.map(p => `
     <tr data-url="${esc(p.url)}">
       <td data-label="Bật">
         <label class="crawl-switch">
@@ -791,6 +868,13 @@ function renderCrawlProfiles() {
       </td>
       <td data-label="Daily"><input class="crawl-small-input" type="number" min="1" max="500" data-crawl-field="daily_limit" value="${Number(p.daily_limit || p.tier || 20)}"></td>
       <td data-label="Range"><input class="crawl-small-input" type="number" min="1" max="60" data-crawl-field="range_days" value="${Number(p.range_days || 7)}"> <small>ngày</small></td>
+      <td data-label="Chu kỳ">
+        <select class="crawl-small-input" data-crawl-field="crawl_every_days">
+          <option value="1" ${Number(p.crawl_every_days || 1) === 1 ? 'selected' : ''}>Hàng ngày</option>
+          <option value="3" ${Number(p.crawl_every_days || 1) === 3 ? 'selected' : ''}>3 ngày</option>
+          <option value="7" ${Number(p.crawl_every_days || 1) === 7 ? 'selected' : ''}>7 ngày</option>
+        </select>
+      </td>
       <td data-label="Nhịp đăng">${crawlActivityHtml(p.activity || {})}</td>
       <td data-label="Gợi ý">${crawlRecommendationHtml(p)}</td>
       <td data-label="Độ sạch">${crawlQualityHtml(p.data_quality || {})}</td>
@@ -899,9 +983,11 @@ function addCrawlProfile() {
   const city = document.getElementById('crawlCity').value.trim() || 'Bình Dương';
   if (!url.startsWith('https://www.facebook.com/')) return alert('URL Facebook chưa hợp lệ.');
   if (crawlProfiles.some(p => p.url === url)) return alert('Môi giới này đã có trong danh sách.');
-  crawlProfiles.push({ broker_name: broker, url, city, active: true, daily_limit: 30, tier: 30, range_days: 7 });
+  crawlProfiles.push({ broker_name: broker, url, city, active: true, daily_limit: 30, tier: 30, range_days: 7, crawl_every_days: 1 });
   document.getElementById('crawlBrokerName').value = '';
   document.getElementById('crawlProfileUrl').value = '';
+  renderCrawlCityFilter();
+  renderCrawlDuplicateRecommendations();
   renderCrawlProfiles();
   renderCrawlRunSelect();
   showAdminToast('Đã thêm môi giới vào danh sách tạm', 'success');
@@ -910,6 +996,8 @@ function addCrawlProfile() {
 function removeCrawlProfile(url) {
   if (!confirm('Xóa môi giới này khỏi danh sách crawl?')) return;
   crawlProfiles = crawlProfiles.filter(p => p.url !== url);
+  renderCrawlCityFilter();
+  renderCrawlDuplicateRecommendations();
   renderCrawlProfiles();
   renderCrawlRunSelect();
   showAdminToast('Đã xóa môi giới khỏi danh sách tạm', 'success');
@@ -926,7 +1014,10 @@ async function saveCrawlProfiles() {
     crawlProfiles = data.profiles || [];
     crawlSummary = data.summary || {};
     renderCrawlStats(crawlSummary);
+    crawlDuplicateComparisons = data.duplicate_comparisons || [];
     renderCrawlOps(crawlSummary.ops || {});
+    renderCrawlCityFilter();
+    renderCrawlDuplicateRecommendations();
     renderCrawlProfiles();
     renderCrawlRunSelect();
   }, 'Đã lưu danh sách môi giới', 'Không lưu được danh sách');
@@ -2307,6 +2398,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('runCrawlBtn')?.addEventListener('click', runSelectedCrawl);
   document.getElementById('runManualReprocessBtn')?.addEventListener('click', () => runCrawlMaintenance('reprocess'));
   document.getElementById('runValuationOnlyBtn')?.addEventListener('click', () => runCrawlMaintenance('valuation_only'));
+  document.getElementById('crawlCityFilter')?.addEventListener('change', event => {
+    readCrawlTableState();
+    crawlCityFilter = event.target.value;
+    renderCrawlProfiles();
+    renderCrawlDuplicateRecommendations();
+  });
   document.getElementById('crawlRunProfile')?.addEventListener('change', syncCrawlRunInputs);
   document.querySelectorAll('[data-crawl-mode]').forEach(btn => btn.addEventListener('click', () => setCrawlMode(btn.dataset.crawlMode)));
   document.getElementById('refreshTrainingBtn').addEventListener('click', loadTrainingItems);
