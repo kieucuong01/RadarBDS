@@ -49,6 +49,7 @@ tools/
 .local/
 
 # Agent/runtime worktrees and local state
+.worktrees/
 .claude/worktrees/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
