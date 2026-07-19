@@ -67,6 +67,7 @@ def test_daily_facebook_crawl_uses_profile_daily_limits():
 
     assert captured["mode"] == "incremental"
     assert captured.get("limit_override") is None
+    assert captured["scheduled_only"] is True
 
 
 def test_daily_crawl_reprocesses_facebook_without_running_secondary_sources():

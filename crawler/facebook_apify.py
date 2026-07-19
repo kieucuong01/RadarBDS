@@ -12,9 +12,10 @@ Output mỗi post (tương thích build_record trong facebook_chrome.py):
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -50,6 +51,29 @@ def _coerce_tier(raw) -> int:
             print(f"[facebook] WARN: tier='{raw}' không parse được -> default={_DEFAULT_TIER}")
             return _DEFAULT_TIER
     return _DEFAULT_TIER
+
+
+def _coerce_crawl_every_days(raw) -> int:
+    try:
+        cadence = int(raw)
+    except (TypeError, ValueError):
+        return 1
+    return cadence if cadence in {1, 3, 7} else 1
+
+
+def profile_due_on(profile: dict, on_date: date | None = None) -> bool:
+    """Spread 3/7-day profiles across stable calendar buckets by URL."""
+    cadence = _coerce_crawl_every_days(profile.get("crawl_every_days"))
+    if cadence == 1:
+        return True
+    day = on_date or datetime.now(timezone.utc).date()
+    url = (profile.get("url") or "").strip().encode("utf-8")
+    bucket = int.from_bytes(hashlib.sha256(url).digest()[:4], "big") % cadence
+    return day.toordinal() % cadence == bucket
+
+
+def profiles_due_on(profiles: list[dict], on_date: date | None = None) -> list[dict]:
+    return [profile for profile in profiles if profile_due_on(profile, on_date)]
 
 
 def _is_apify_limit_error(message: str) -> bool:
@@ -92,6 +116,7 @@ def load_profiles(path: str | Path = PROFILES_FILE, area_filter: Optional[str] =
                 "tier": _DEFAULT_TIER,
                 "broker_name": None,
                 "default_area": area,
+                "crawl_every_days": 1,
             }
         if isinstance(item, dict):
             if item.get("active", True) is False:
@@ -101,6 +126,7 @@ def load_profiles(path: str | Path = PROFILES_FILE, area_filter: Optional[str] =
                 "tier": _coerce_tier(item.get("daily_limit", item.get("tier"))),
                 "broker_name": (item.get("broker_name") or "").strip() or None,
                 "default_area": area,
+                "crawl_every_days": _coerce_crawl_every_days(item.get("crawl_every_days")),
             }
         return None
 

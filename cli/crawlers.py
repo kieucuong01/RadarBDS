@@ -97,8 +97,9 @@ def _facebook_crawl_to_raw(
     area_filter=None,
     max_age_days=None,
     progress_callback=None,
+    scheduled_only=False,
 ):
-    from crawler.facebook_apify import FacebookApifyCrawler, load_profiles
+    from crawler.facebook_apify import FacebookApifyCrawler, load_profiles, profiles_due_on
     from crawler.facebook_chrome import build_record, is_relevant
     from config.area_profiles import post_mentions_other_city
 
@@ -107,6 +108,17 @@ def _facebook_crawl_to_raw(
     if not profiles:
         print("[facebook] Khong co profile nao. Kiem tra data/facebook_profiles.json hoac --area")
         return None
+    if scheduled_only:
+        profiles = profiles_due_on(profiles)
+        if not profiles:
+            print("[facebook] Khong co profile den lich hom nay.")
+            return {
+                "fetched": 0, "inserted": 0, "skipped": 0,
+                "irrelevant": 0, "out_of_area": 0, "range_filtered": 0,
+                "refreshed_images": 0, "inserted_raw_ids": [],
+                "refreshed_raw_ids": [],
+            }
+
 
     try:
         crawler = FacebookApifyCrawler()
@@ -309,7 +321,7 @@ def _cmd_crawl_daily_facebook_first(args, crawlers, headless: bool, crawl_start_
     _ = (crawlers, headless)
 
     print(f"\n[facebook] Crawling by profile daily_limit (incremental)...")
-    fb_stats = _facebook_crawl_to_raw(mode="incremental")
+    fb_stats = _facebook_crawl_to_raw(mode="incremental", scheduled_only=True)
     if fb_stats:
         _print_facebook_import_stats(fb_stats)
         fb_new = fb_stats["inserted"] + fb_stats.get("refreshed_images", 0)

@@ -31,6 +31,14 @@ def clamp_int(value, default: int, min_value: int, max_value: int) -> int:
     return max(min_value, min(max_value, n))
 
 
+def normalize_crawl_every_days(value) -> int:
+    try:
+        cadence = int(value)
+    except (TypeError, ValueError):
+        return 1
+    return cadence if cadence in {1, 3, 7} else 1
+
+
 def read_facebook_profile_config(path: Path) -> list[dict]:
     if not path.exists():
         return []
@@ -61,6 +69,7 @@ def read_facebook_profile_config(path: Path) -> list[dict]:
                 "tier": tier,
                 "daily_limit": tier,
                 "range_days": clamp_int(raw.get("range_days"), 7, 1, 60),
+                "crawl_every_days": normalize_crawl_every_days(raw.get("crawl_every_days")),
                 "active": raw.get("active", True) is not False,
             })
     return profiles
@@ -84,6 +93,7 @@ def write_facebook_profile_config(path: Path, profiles: list[dict]) -> list[dict
             "tier": daily_limit,
             "daily_limit": daily_limit,
             "range_days": clamp_int(raw.get("range_days"), 7, 1, 60),
+            "crawl_every_days": normalize_crawl_every_days(raw.get("crawl_every_days")),
             "active": raw.get("active", True) is not False,
         })
     grouped: dict[str, list[dict]] = {}
