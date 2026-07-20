@@ -9,7 +9,11 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=listing-detail-modal-ui-20260720">
 <style>
 body.listing-detail-page {
+  display: block;
+  height: auto;
   min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: var(--bg);
   color: var(--text);
 }
@@ -232,6 +236,88 @@ body.listing-detail-page {
 .listing-detail-page .ph-change {
   white-space: nowrap;
 }
+.listing-gallery-zoom,
+.listing-gallery-nav,
+.listing-gallery-close {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+.listing-gallery-zoom {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  z-index: 12;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.78);
+  font-weight: 850;
+  backdrop-filter: blur(12px);
+}
+.listing-gallery-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 12;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.74);
+  font-size: 1.35rem;
+  font-weight: 900;
+  transform: translateY(-50%);
+}
+.listing-gallery-nav.is-prev {
+  left: 14px;
+}
+.listing-gallery-nav.is-next {
+  right: 14px;
+}
+.listing-gallery {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 6, 23, 0.94);
+  padding: 54px 18px 42px;
+}
+.listing-gallery[hidden] {
+  display: none;
+}
+.listing-gallery-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+}
+.listing-gallery-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.82);
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+.listing-gallery-count {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  color: #fff;
+  background: rgba(15, 23, 42, 0.78);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
 @media (max-width: 768px) {
   .listing-detail-shell {
     padding: 0 0 calc(84px + env(safe-area-inset-bottom));
@@ -268,6 +354,17 @@ body.listing-detail-page {
   }
   .listing-detail-page .sm-right {
     display: block;
+    margin-top: 14px;
+  }
+  .listing-detail-page .sm-content {
+    display: block;
+    min-height: auto;
+  }
+  .listing-detail-page .sm-mobile-tabs {
+    display: none;
+  }
+  .listing-detail-page .sm-panel {
+    display: block !important;
   }
   .listing-detail-page .sm-detail-title {
     font-size: 0.98rem;
@@ -308,6 +405,17 @@ body.listing-detail-page {
   .listing-detail-page .sm-action-bar {
     position: fixed;
   }
+  .listing-gallery-zoom {
+    top: 12px;
+    right: 12px;
+    min-height: 34px;
+    padding: 7px 11px;
+    font-size: 0.78rem;
+  }
+  .listing-gallery-nav {
+    width: 38px;
+    height: 38px;
+  }
 }
 </style>
 </head>
@@ -328,9 +436,16 @@ body.listing-detail-page {
   <main class="modal-content signal-modal-content listing-detail-card">
     <div class="sm-content">
       <section class="sm-left">
-        <div class="sm-slider" style="position:relative; background:#0f172a; overflow:hidden; flex-shrink:0; user-select:none;">
+        <div class="sm-slider" style="position:relative; background:#0f172a; overflow:hidden; flex-shrink:0; user-select:none;" onclick="openGallery(currentImageIndex)">
           <div id="mainImg" class="listing-detail-hero" role="img" aria-label="Ảnh tin đăng" style="{% if imgs %}background-image:url('{{ imgs[0] }}'){% endif %}"></div>
           <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 55%); pointer-events:none;"></div>
+          {% if imgs %}
+          <button type="button" class="listing-gallery-zoom" onclick="openGallery(currentImageIndex,event)">Phóng to</button>
+          {% if imgs|length > 1 %}
+          <button type="button" class="listing-gallery-nav is-prev" onclick="moveGallery(-1,event)" aria-label="Ảnh trước">&lt;</button>
+          <button type="button" class="listing-gallery-nav is-next" onclick="moveGallery(1,event)" aria-label="Ảnh tiếp theo">&gt;</button>
+          {% endif %}
+          {% endif %}
           <div style="position:absolute; bottom:14px; left:16px; display:flex; gap:8px; flex-wrap:wrap; z-index:10;">
             {% if mos and mos > 0 %}
             <span id="sm-mos-badge" style="background:linear-gradient(135deg,#10b981,#047857); color:#fff; font-weight:800; font-size:1rem; padding:5px 14px; border-radius:10px;">Rẻ hơn {{ mos|round(0)|int }}%</span>
@@ -345,7 +460,7 @@ body.listing-detail-page {
         {% if imgs|length > 1 %}
         <div class="sm-thumbs">
           {% for src in imgs[:10] %}
-          <button type="button" data-src="{{ src }}" aria-label="Ảnh {{ loop.index }}" class="listing-detail-thumb {% if loop.first %}active{% endif %}" style="background-image:url('{{ src }}')" onclick="changeImg(this)"></button>
+          <button type="button" data-src="{{ src }}" data-index="{{ loop.index0 }}" aria-label="Ảnh {{ loop.index }}" class="listing-detail-thumb {% if loop.first %}active{% endif %}" style="background-image:url('{{ src }}')" onclick="changeImg(this)"></button>
           {% endfor %}
         </div>
         {% endif %}
@@ -457,12 +572,64 @@ body.listing-detail-page {
   </main>
 </div>
 
+<div id="listingGallery" class="listing-gallery" hidden onclick="closeGallery()">
+  <button type="button" class="listing-gallery-close" onclick="closeGallery(event)" aria-label="Đóng">x</button>
+  {% if imgs|length > 1 %}
+  <button type="button" class="listing-gallery-nav is-prev" onclick="moveGallery(-1,event)" aria-label="Ảnh trước">&lt;</button>
+  <button type="button" class="listing-gallery-nav is-next" onclick="moveGallery(1,event)" aria-label="Ảnh tiếp theo">&gt;</button>
+  {% endif %}
+  <img id="listingGalleryImg" class="listing-gallery-img" alt="Ảnh tin đăng phóng to" onclick="event.stopPropagation()">
+  <div id="listingGalleryCount" class="listing-gallery-count"></div>
+</div>
+
 <script>
-function changeImg(el) {
-  const src = el.dataset.src || '';
+const listingImages = {{ imgs|tojson }};
+let currentImageIndex = 0;
+
+function setMainImage(index) {
+  if (!listingImages.length) return;
+  currentImageIndex = (index + listingImages.length) % listingImages.length;
+  const src = listingImages[currentImageIndex] || '';
   document.getElementById('mainImg').style.backgroundImage = src ? `url("${src.replace(/"/g, '\\"')}")` : '';
-  document.querySelectorAll('.listing-detail-thumb').forEach((thumb) => thumb.classList.remove('active'));
-  el.classList.add('active');
+  document.querySelectorAll('.listing-detail-thumb').forEach((thumb) => {
+    thumb.classList.toggle('active', Number(thumb.dataset.index) === currentImageIndex);
+  });
+}
+
+function changeImg(el) {
+  setMainImage(Number(el.dataset.index || 0));
+}
+
+function renderGalleryImage() {
+  const img = document.getElementById('listingGalleryImg');
+  const count = document.getElementById('listingGalleryCount');
+  if (!img || !count || !listingImages.length) return;
+  img.src = listingImages[currentImageIndex] || '';
+  count.textContent = `${currentImageIndex + 1} / ${listingImages.length}`;
+}
+
+function openGallery(index, event) {
+  if (event) event.stopPropagation();
+  if (!listingImages.length) return;
+  setMainImage(Number(index || 0));
+  renderGalleryImage();
+  document.getElementById('listingGallery').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeGallery(event) {
+  if (event) event.stopPropagation();
+  const gallery = document.getElementById('listingGallery');
+  if (!gallery) return;
+  gallery.hidden = true;
+  document.body.style.overflow = '';
+}
+
+function moveGallery(delta, event) {
+  if (event) event.stopPropagation();
+  if (!listingImages.length) return;
+  setMainImage(currentImageIndex + delta);
+  if (!document.getElementById('listingGallery').hidden) renderGalleryImage();
 }
 
 function switchListingPanel(panel, btn) {
@@ -625,6 +792,14 @@ function renderHistoryChart(rows) {
 })();
 
 renderMemo();
+
+document.addEventListener('keydown', (event) => {
+  const gallery = document.getElementById('listingGallery');
+  if (!gallery || gallery.hidden) return;
+  if (event.key === 'Escape') closeGallery(event);
+  if (event.key === 'ArrowLeft') moveGallery(-1, event);
+  if (event.key === 'ArrowRight') moveGallery(1, event);
+});
 </script>
 </body>
 </html>
