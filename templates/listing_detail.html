@@ -20,23 +20,150 @@ body.listing-detail-page {
 .listing-detail-shell {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 16px 22px 34px;
+  padding: 0 22px 34px;
 }
 .listing-detail-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 16px;
+  min-height: 68px;
+  margin: 0 -22px 16px;
+  padding: 0 22px;
+  background: rgba(248, 250, 252, 0.94);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px);
 }
 .listing-detail-back {
   color: var(--text-muted);
   font-weight: 800;
   text-decoration: none;
 }
-.listing-detail-brand {
+.listing-detail-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
   color: var(--text);
+  text-decoration: none;
+}
+.listing-detail-logo img {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+}
+.listing-detail-logo strong,
+.listing-detail-logo span {
+  display: block;
+}
+.listing-detail-logo strong {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 950;
+  line-height: 1.1;
+}
+.listing-detail-logo span {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.listing-detail-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.listing-detail-live,
+.listing-detail-stats {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.listing-detail-live {
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 999px;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.08);
+  font-size: 0.78rem;
   font-weight: 900;
+}
+.listing-detail-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #10b981;
+}
+.listing-detail-stats {
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+.listing-detail-stats b {
+  color: #4f46e5;
+}
+.listing-detail-account {
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 4px 10px 4px 5px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(248,250,252,.92));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
+}
+.listing-detail-account-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #10b981);
+}
+.listing-detail-tier {
+  min-height: 24px;
+  padding: 0 9px;
+  border: 1px solid rgba(59, 130, 246, .2);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  color: #1d4ed8;
+  background: rgba(59, 130, 246, .1);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+.listing-detail-tier[data-tier="admin"] {
+  color: #b91c1c;
+  border-color: rgba(220,38,38,.25);
+  background: rgba(220,38,38,.1);
+}
+.listing-detail-theme {
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: rgba(255,255,255,.72);
+  cursor: pointer;
 }
 .listing-detail-card.signal-modal-content {
   width: 100%;
@@ -130,6 +257,21 @@ body.listing-detail-page {
   border-left: 4px solid #10b981;
   padding: 16px 20px 18px;
 }
+.listing-detail-advisor .sm-memo-markdown h4 {
+  margin: 10px 0 6px;
+  color: var(--text);
+  font-size: 0.94rem;
+  font-weight: 900;
+}
+.listing-detail-advisor .sm-memo-markdown p,
+.listing-detail-advisor .sm-memo-markdown li {
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.62;
+}
+.listing-detail-advisor .sm-memo-markdown ul {
+  margin: 6px 0 10px 18px;
+}
 .listing-detail-advisor .advisor-verdict {
   display: inline-flex;
   align-items: center;
@@ -199,7 +341,7 @@ body.listing-detail-page {
 .listing-chart-svg {
   display: block;
   width: 100%;
-  height: 172px;
+  height: 200px;
 }
 .listing-history-stats {
   display: grid;
@@ -217,6 +359,9 @@ body.listing-detail-page {
 .listing-history-stat strong,
 .listing-history-stat span {
   display: block;
+}
+.listing-detail-page .sm-comps-list {
+  margin-top: 10px;
 }
 .listing-history-stat strong {
   color: var(--text);
@@ -289,9 +434,11 @@ body.listing-detail-page {
 }
 .listing-gallery-img {
   max-width: 100%;
-  max-height: 100%;
+  max-height: calc(100% - 76px);
   object-fit: contain;
   border-radius: 10px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.45);
+  transition: transform 0.18s ease, opacity 0.18s ease;
 }
 .listing-gallery-close {
   position: absolute;
@@ -318,19 +465,59 @@ body.listing-detail-page {
   font-size: 0.82rem;
   font-weight: 850;
 }
+.listing-gallery-thumbs {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 52px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+.listing-gallery-thumb {
+  width: 58px;
+  height: 44px;
+  flex: 0 0 58px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #0f172a center/cover no-repeat;
+  opacity: 0.62;
+  cursor: pointer;
+}
+.listing-gallery-thumb.active {
+  border-color: #fff;
+  opacity: 1;
+}
 @media (max-width: 768px) {
   .listing-detail-shell {
     padding: 0 0 calc(84px + env(safe-area-inset-bottom));
   }
   .listing-detail-topbar {
-    position: sticky;
-    top: 0;
-    z-index: 30;
     margin: 0;
-    padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
-    background: rgba(248, 250, 252, 0.96);
-    border-bottom: 1px solid var(--border);
-    backdrop-filter: blur(18px);
+    padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+  }
+  .listing-detail-logo span,
+  .listing-detail-stats,
+  .listing-detail-account span:not(.listing-detail-account-icon),
+  .listing-detail-tier {
+    display: none;
+  }
+  .listing-detail-header-right {
+    gap: 8px;
+  }
+  .listing-detail-live {
+    min-height: 34px;
+    padding: 0 12px;
+  }
+  .listing-detail-account {
+    min-height: 40px;
+    padding: 3px;
+  }
+  .listing-detail-theme {
+    width: 40px;
+    height: 40px;
   }
   .listing-detail-card.signal-modal-content {
     width: 100% !important;
@@ -394,7 +581,7 @@ body.listing-detail-page {
     font-size: 0.92rem;
   }
   .listing-chart-svg {
-    height: 150px;
+    height: 180px;
   }
   .listing-detail-page .sm-thumbs .listing-detail-thumb {
     width: 64px;
@@ -420,6 +607,7 @@ body.listing-detail-page {
 </style>
 </head>
 <body class="listing-detail-page">
+{% set tier_display = 'Gói Free' if USER_TIER == 'free' else ('VIP' if USER_TIER == 'vip' else ('Admin' if USER_TIER == 'admin' else 'Khách')) %}
 {% set price = l.get('price_ty') %}
 {% set area = l.get('area_m2') %}
 {% set actual_ppm2 = l.get('price_per_m2') %}
@@ -429,8 +617,32 @@ body.listing-detail-page {
 {% set mos = l.get('mos_pct_display') if l.get('mos_pct_display') is not none else l.get('mos_pct') %}
 <div class="listing-detail-shell">
   <div class="listing-detail-topbar">
-    <a class="listing-detail-back" href="/?signal={{ l['id'] }}">← Dashboard</a>
-    <div class="listing-detail-brand">Radar<span style="color:var(--primary)">BDS</span></div>
+    <a class="listing-detail-logo" href="/?signal={{ l['id'] }}" aria-label="Về Radar BDS">
+      <img src="{{ url_for('static', filename='images/app-icon-192.png') }}" alt="">
+      <span>
+        <strong>Radar<span style="color:var(--primary)">BDS</span></strong>
+        <span>Chuyên sâu Bình Dương</span>
+      </span>
+    </a>
+    <div class="listing-detail-header-right">
+      <div class="listing-detail-live"><span class="listing-detail-live-dot"></span>LIVE</div>
+      <div class="listing-detail-stats" id="detailTopStats">Đang tải tin bán...</div>
+      <a class="listing-detail-account" href="/" aria-label="Tài khoản">
+        <span class="listing-detail-account-icon" aria-hidden="true">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21a8 8 0 0 0-16 0" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </span>
+        <span>Tài khoản</span>
+        <span class="listing-detail-tier" data-tier="{{ USER_TIER }}">{{ tier_display }}</span>
+      </a>
+      <button type="button" class="listing-detail-theme" onclick="toggleTheme()" title="Đổi giao diện" aria-label="Đổi giao diện sáng tối">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      </button>
+    </div>
   </div>
 
   <main class="modal-content signal-modal-content listing-detail-card">
@@ -527,6 +739,13 @@ body.listing-detail-page {
           <div class="sm-section-label">Nguyên văn tin rao</div>
           <div class="sm-desc-text">{{ l.get('description') or 'Không có mô tả.' }}</div>
         </section>
+
+        <section class="sm-section sm-panel" data-sm-panel="comps" role="tabpanel">
+          <div class="sm-section-label">Lô tương tự</div>
+          <div id="detail-comps-body" class="sm-comps-list">
+            <div class="sm-empty-state">Đang tải lô tương tự...</div>
+          </div>
+        </section>
       </section>
 
       <aside class="sm-right">
@@ -542,7 +761,7 @@ body.listing-detail-page {
         </section>
 
         <section class="sm-section sm-panel" data-sm-panel="history" role="tabpanel">
-          <div class="sm-section-label">Lịch sử giá lô này</div>
+          <div class="sm-section-label">Lịch sử giá lô bất động sản</div>
           <div id="detail-history-stats" class="listing-history-stats"></div>
           <div id="detail-history-rows" class="sm-price-history">
             <div class="sm-empty-state">Đang tải lịch sử...</div>
@@ -579,12 +798,44 @@ body.listing-detail-page {
   <button type="button" class="listing-gallery-nav is-next" onclick="moveGallery(1,event)" aria-label="Ảnh tiếp theo">&gt;</button>
   {% endif %}
   <img id="listingGalleryImg" class="listing-gallery-img" alt="Ảnh tin đăng phóng to" onclick="event.stopPropagation()">
+  <div id="listingGalleryThumbs" class="listing-gallery-thumbs" onclick="event.stopPropagation()"></div>
   <div id="listingGalleryCount" class="listing-gallery-count"></div>
 </div>
 
 <script>
 const listingImages = {{ imgs|tojson }};
+const currentListing = {
+  title: {{ l.get('title')|tojson }},
+  ward: {{ l.get('ward')|tojson }},
+  area_m2: {{ area|tojson }},
+  price_ty: {{ price|tojson }},
+  price_per_m2: {{ actual_ppm2|tojson }},
+  road_label: {{ (l.get('street_label') or l.get('road_label') or l.get('road_type'))|tojson }},
+  property_type_label: {{ (l.get('property_type_label') or l.get('property_type'))|tojson }},
+  tho_cu_label: {{ (l.get('tho_cu_label') or (('TC ' ~ l.get('tho_cu_m2') ~ ' m²') if l.get('tho_cu_m2') else None))|tojson }},
+  frontage_m: {{ l.get('frontage_m')|tojson }},
+  depth_m: {{ l.get('depth_m')|tojson }}
+};
 let currentImageIndex = 0;
+let galleryTouchStartX = 0;
+
+function toggleTheme() {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+
+async function renderTopStats() {
+  const target = document.getElementById('detailTopStats');
+  if (!target) return;
+  try {
+    const res = await fetch('/api/dashboard', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`${res.status}`);
+    const stats = (await res.json()).stats || {};
+    target.innerHTML = `<span>${Number(stats.total || 0).toLocaleString('vi-VN')}</span><span>Tin bán -</span><b>${Number(stats.new_recent_days_7 || 0).toLocaleString('vi-VN')}</b><span>Tin Mới (1 tuần)</span>`;
+  } catch (err) {
+    target.textContent = 'Tin bán đang cập nhật';
+  }
+}
 
 function setMainImage(index) {
   if (!listingImages.length) return;
@@ -606,6 +857,15 @@ function renderGalleryImage() {
   if (!img || !count || !listingImages.length) return;
   img.src = listingImages[currentImageIndex] || '';
   count.textContent = `${currentImageIndex + 1} / ${listingImages.length}`;
+  const thumbs = document.getElementById('listingGalleryThumbs');
+  if (thumbs && !thumbs.children.length) {
+    thumbs.innerHTML = listingImages.map((src, index) => (
+      `<button type="button" class="listing-gallery-thumb" data-index="${index}" style="background-image:url('${escHtml(src)}')" onclick="setMainImage(${index});renderGalleryImage()" aria-label="Ảnh ${index + 1}"></button>`
+    )).join('');
+  }
+  document.querySelectorAll('.listing-gallery-thumb').forEach((thumb) => {
+    thumb.classList.toggle('active', Number(thumb.dataset.index) === currentImageIndex);
+  });
 }
 
 function openGallery(index, event) {
@@ -654,16 +914,150 @@ function escHtml(value) {
   }[ch]));
 }
 
-function memoSection(markdown, heading) {
-  const text = String(markdown || '');
-  const match = text.match(new RegExp(`##\\s*${heading}\\s*\\n+([\\s\\S]*?)(?=\\n##\\s|$)`, 'i'));
-  return match ? match[1].trim() : '';
+function _memoDisplayText(text) {
+  return String(text || '')
+    .replace(/Investment Memo Cố Vấn/gi, 'Ghi chú cố vấn đầu tư')
+    .replace(/Investment Memo/gi, 'Ghi chú cố vấn đầu tư')
+    .replace(/\bVerdict\b/gi, 'Kết luận')
+    .replace(/\bMOS\b/g, 'biên an toàn')
+    .replace(/Stress test/gi, 'Kiểm tra giả định')
+    .replace(/fair value/gi, 'giá trị tham chiếu')
+    .replace(/signal score/gi, 'điểm tín hiệu')
+    .replace(/\bcomps?\b/gi, 'lô so sánh')
+    .replace(/due diligence/gi, 'kiểm tra trước khi đặt cọc')
+    .replace(/\bsignal\b/gi, 'tín hiệu')
+    .replace(/\bdeal\b/gi, 'thương vụ')
+    .replace(/\bsource\b/gi, 'nguồn')
+    .replace(/\blegal\b/gi, 'pháp lý');
 }
 
-function firstMemoParagraph(markdown) {
-  const conclusion = memoSection(markdown, 'Kết luận') || memoSection(markdown, 'Ket luan');
-  const source = conclusion || String(markdown || '').replace(/^#.*$/m, '').trim();
-  return source.split(/\n{2,}/).map((x) => x.replace(/^[-*]\s*/, '').trim()).filter(Boolean)[0] || '';
+function _memoMarkdownToHtml(markdown) {
+  const lines = _memoDisplayText(markdown).split(/\r?\n/);
+  const html = [];
+  let listOpen = false;
+  const closeList = () => {
+    if (listOpen) {
+      html.push('</ul>');
+      listOpen = false;
+    }
+  };
+  lines.forEach((raw) => {
+    const line = raw.trim();
+    if (!line) {
+      closeList();
+      return;
+    }
+    if (/^#{1,3}\s+/.test(line)) {
+      closeList();
+      html.push(`<h4>${escHtml(line.replace(/^#{1,3}\s+/, ''))}</h4>`);
+      return;
+    }
+    if (/^[-*]\s+/.test(line)) {
+      if (!listOpen) {
+        html.push('<ul class="sm-memo-list">');
+        listOpen = true;
+      }
+      html.push(`<li>${escHtml(line.replace(/^[-*]\s+/, ''))}</li>`);
+      return;
+    }
+    closeList();
+    html.push(`<p>${escHtml(line)}</p>`);
+  });
+  closeList();
+  return html.join('');
+}
+
+function _splitMemoForPreview(markdown) {
+  const lines = _memoDisplayText(markdown).split(/\r?\n/);
+  const isH1 = (line) => /^#\s+/.test(line.trim());
+  const isH2 = (line) => /^##\s+/.test(line.trim());
+  const splitDenseSection = (startIdx, endIdx) => {
+    const section = lines.slice(startIdx, endIdx);
+    let paragraphCount = 0;
+    let previewEnd = section.length;
+    for (let i = 1; i < section.length; i += 1) {
+      const line = section[i].trim();
+      if (!line) {
+        if (paragraphCount >= 2) {
+          previewEnd = i + 1;
+          break;
+        }
+        continue;
+      }
+      paragraphCount += 1;
+    }
+    if (previewEnd < section.length) {
+      return {
+        preview: section.slice(0, previewEnd).join('\n').trim(),
+        rest: ['## Chi tiết cố vấn', ...section.slice(previewEnd), ...lines.slice(endIdx)].join('\n').trim(),
+      };
+    }
+    return {
+      preview: section.join('\n').trim(),
+      rest: lines.slice(endIdx).join('\n').trim(),
+    };
+  };
+  const conclusionIdx = lines.findIndex((line) => /^##\s+Kết luận\b/i.test(line.trim()));
+  if (conclusionIdx >= 0) {
+    let endIdx = lines.length;
+    for (let i = conclusionIdx + 1; i < lines.length; i += 1) {
+      if (isH2(lines[i])) {
+        endIdx = i;
+        break;
+      }
+    }
+    return splitDenseSection(conclusionIdx, endIdx);
+  }
+
+  const firstContent = lines.findIndex((line) => line.trim() && !isH1(line));
+  const start = firstContent >= 0 ? firstContent : 0;
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i += 1) {
+    if (isH2(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+  return {
+    preview: lines.slice(start, end).join('\n').trim(),
+    rest: lines.slice(end).join('\n').trim(),
+  };
+}
+
+function _memoVerdictLabel(verdict) {
+  const labels = {
+    cheap_real: 'Rẻ thật',
+    fair: 'Giá hợp lý',
+    overpriced: 'Giá cao',
+    fake_price: 'Nghi giá mồi',
+    cannot_price: 'Không đủ dữ liệu định giá',
+    suspect: 'Cần nghi ngờ',
+    not_cheap: 'Chưa đủ rẻ',
+    insufficient_info: 'Thiếu thông tin',
+    memo: 'Cố vấn',
+  };
+  return labels[verdict] || _memoDisplayText(verdict).replace(/_/g, ' ') || 'Cố vấn';
+}
+
+function _memoFlagLabel(flag) {
+  const labels = {
+    low_segment_confidence: 'mẫu so sánh mỏng',
+    approximate_price_text: 'giá ghi ước lượng',
+    missing_road_info: 'thiếu thông tin đường',
+    missing_location_detail: 'thiếu vị trí cụ thể',
+    planning_or_tho_cu_dependency: 'phụ thuộc quy hoạch/thổ cư',
+    needs_location_check: 'cần kiểm tra vị trí',
+    needs_map_check: 'cần kiểm tra bản đồ',
+    legal_unverified: 'pháp lý chưa xác minh',
+    many_reposts: 'đăng lại nhiều lần',
+    repost_history: 'có lịch sử đăng lại',
+    high_total_price: 'giá tổng cao',
+    thin_margin: 'biên an toàn mỏng',
+    parsed_price_mismatch: 'giá đọc được có thể lệch',
+    needs_price_confirmation: 'cần xác nhận giá chốt',
+    verify_exact_lot: 'cần xác minh đúng lô',
+  };
+  return labels[flag] || _memoDisplayText(flag).replace(/_/g, ' ');
 }
 
 async function renderMemo() {
@@ -687,21 +1081,29 @@ async function renderMemo() {
       return;
     }
     const markdown = data.memo_markdown || data.reasoning || '';
-    const verdict = data.verdict ? String(data.verdict).replace(/_/g, ' ') : 'Đã đánh giá';
-    const summary = firstMemoParagraph(markdown) || data.reasoning || 'Đã có ghi chú cố vấn cho lô này.';
-    const flow = memoSection(markdown, 'Định giá chuẩn tắc')
-      || memoSection(markdown, 'Dinh gia chuan tac')
-      || data.admin_valuation_workflow_markdown
-      || '';
-    const flags = Array.isArray(data.red_flags) ? data.red_flags.filter(Boolean).join(', ') : '';
+    const verdict = data.verdict || 'memo';
+    const confidence = Number(data.confidence);
+    const confidenceText = Number.isFinite(confidence)
+      ? ` · ${Math.round((confidence <= 1 ? confidence * 100 : confidence))}%`
+      : '';
+    const memoParts = _splitMemoForPreview(markdown);
+    const flags = Array.isArray(data.red_flags) ? data.red_flags.filter(Boolean) : [];
+    const workflow = data.admin_valuation_workflow_markdown || '';
+    const restHtml = memoParts.rest
+      ? `<details class="sm-memo-more"><summary>Xem thêm</summary><div class="sm-memo-markdown sm-memo-more-body">${_memoMarkdownToHtml(memoParts.rest)}</div></details>`
+      : '';
+    const workflowHtml = workflow
+      ? `<details class="sm-memo-admin-tech"><summary>Luồng định giá kỹ thuật</summary><div class="sm-memo-markdown sm-memo-admin-markdown">${_memoMarkdownToHtml(workflow)}</div></details>`
+      : '';
     body.innerHTML = `
-      <div class="advisor-verdict">${escHtml(verdict)}${data.confidence ? ` · ${escHtml(data.confidence)}%` : ''}</div>
-      <h3>Kết luận</h3>
-      <p>${escHtml(summary)}</p>
-      ${markdown.length > summary.length ? '<button type="button" class="advisor-more" onclick="this.nextElementSibling.hidden=!this.nextElementSibling.hidden">Xem thêm</button>' : ''}
-      ${markdown.length > summary.length ? `<div class="advisor-flow-body" hidden>${escHtml(markdown)}</div>` : ''}
-      ${flow ? `<details class="advisor-flow"><summary>Luồng định giá kỹ thuật</summary><div class="advisor-flow-body">${escHtml(flow)}</div></details>` : ''}
-      ${flags ? `<p class="sm-memo-note">Điểm cần lưu ý: ${escHtml(flags)}</p>` : ''}
+      <div class="sm-memo-head">
+        <span class="sm-memo-verdict ${escHtml(verdict)}">${escHtml(_memoVerdictLabel(verdict))}${confidenceText}</span>
+        ${!markdown && data.reasoning ? `<p class="sm-memo-summary">${escHtml(_memoDisplayText(data.reasoning))}</p>` : ''}
+      </div>
+      <div class="sm-memo-markdown">${_memoMarkdownToHtml(memoParts.preview || markdown || data.reasoning || 'Đã có ghi chú cố vấn cho lô này.')}</div>
+      ${restHtml}
+      ${workflowHtml}
+      ${flags.length ? `<div class="sm-memo-note">Điểm cần lưu ý: ${escHtml(flags.map(_memoFlagLabel).join(', '))}</div>` : ''}
     `;
   } catch (err) {
     body.innerHTML = '<div class="sm-empty-state">Không tải được cố vấn đầu tư.</div>';
@@ -722,6 +1124,49 @@ function historyChangeLabel(current, prev) {
   const pct = ((a - b) / b) * 100;
   if (Math.abs(pct) < 0.05) return '<span class="ph-change is-flat">Không đổi</span>';
   return `<span class="ph-change ${pct < 0 ? 'is-down' : 'is-up'}">${pct > 0 ? '+' : ''}${pct.toFixed(1)}%</span>`;
+}
+
+function shortDate(value) {
+  const text = String(value || '').slice(0, 10);
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : (text || '-');
+}
+
+function decorateHistoryTimeline(rows) {
+  let previousPrice = null;
+  return rows.map((row, index) => {
+    const price = Number(row.price_ty);
+    let changePct = null;
+    if (previousPrice && Number.isFinite(price) && previousPrice > 0) {
+      changePct = ((price - previousPrice) / previousPrice) * 100;
+    }
+    if (Number.isFinite(price)) previousPrice = price;
+    return { ...row, _change_pct: changePct, _is_latest: index === rows.length - 1 };
+  });
+}
+
+function combinedHistory(data) {
+  const fallbackRows = {{ history_json | safe }};
+  const rows = data
+    ? [...(Array.isArray(data.history) ? data.history : []), ...(Array.isArray(data.lot_history) ? data.lot_history : [])]
+    : (Array.isArray(fallbackRows) ? fallbackRows : []);
+  const byKey = new Map();
+  rows
+    .filter((row) => row && row.date && Number.isFinite(Number(row.price_ty)))
+    .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))
+    .forEach((row) => {
+      const price = Number(row.price_ty);
+      const key = `${String(row.date).slice(0, 10)}|${price.toFixed(6)}`;
+      const existing = byKey.get(key);
+      if (!existing) {
+        byKey.set(key, { ...row, price_ty: price });
+        return;
+      }
+      if (!existing.url && row.url) existing.url = row.url;
+      if (!existing.detail_url && row.detail_url) existing.detail_url = row.detail_url;
+      if (!existing.is_current && row.is_current) existing.is_current = true;
+    });
+  return Array.from(byKey.values());
 }
 
 function renderHistoryStats(rows) {
@@ -745,53 +1190,194 @@ function renderHistoryChart(rows) {
   }
   const w = 520, h = 172, padL = 46, padR = 14, padT = 14, padB = 30;
   const values = rows.map((r) => Number(r.price_ty)).filter(Number.isFinite);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = Math.max(0.01, max - min);
-  const x = (i) => padL + (rows.length === 1 ? 0 : i * (w - padL - padR) / (rows.length - 1));
-  const y = (v) => padT + (max - Number(v)) * (h - padT - padB) / span;
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const priceSpread = maxValue - minValue;
+  const yMin = Math.max(0, minValue - Math.max(0.02, priceSpread * 0.14));
+  const yMax = maxValue + Math.max(0.02, priceSpread * 0.14);
+  const span = Math.max(0.01, yMax - yMin);
+  const x = (i) => rows.length === 1
+    ? (padL + w - padR) / 2
+    : padL + i * (w - padL - padR) / (rows.length - 1);
+  const y = (v) => padT + (yMax - Number(v)) * (h - padT - padB) / span;
   const points = rows.map((r, i) => `${x(i).toFixed(1)},${y(r.price_ty).toFixed(1)}`).join(' ');
   const area = `${padL},${h - padB} ${points} ${w - padR},${h - padB}`;
-  const ticks = [min, min + span / 2, max];
+  const ticks = [yMin, yMin + span / 2, yMax];
   target.innerHTML = `
     <svg class="listing-chart-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="Biểu đồ lịch sử giá">
       ${ticks.map((t) => `<line x1="${padL}" y1="${y(t).toFixed(1)}" x2="${w - padR}" y2="${y(t).toFixed(1)}" stroke="rgba(148,163,184,.22)"/><text x="4" y="${(y(t) + 4).toFixed(1)}" fill="#64748b" font-size="11" font-weight="700">${priceLabel(t)}</text>`).join('')}
       <polygon points="${area}" fill="rgba(37,99,235,.13)"></polygon>
       <polyline points="${points}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></polyline>
       ${rows.map((r, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(r.price_ty).toFixed(1)}" r="3.5" fill="${i === rows.length - 1 ? '#10b981' : '#2563eb'}" stroke="#fff" stroke-width="2"></circle>`).join('')}
-      <text x="${padL}" y="${h - 8}" fill="#64748b" font-size="11" font-weight="800">${escHtml(String(rows[0].date || '').slice(0, 10))}</text>
-      <text x="${w - padR}" y="${h - 8}" fill="#64748b" font-size="11" font-weight="800" text-anchor="end">${escHtml(String(rows[rows.length - 1].date || '').slice(0, 10))}</text>
+      <text x="${padL}" y="${h - 8}" fill="#64748b" font-size="11" font-weight="800">${escHtml(shortDate(rows[0].date))}</text>
+      <text x="${w - padR}" y="${h - 8}" fill="#64748b" font-size="11" font-weight="800" text-anchor="end">${escHtml(shortDate(rows[rows.length - 1].date))}</text>
     </svg>
   `;
 }
 
-(function renderHistory() {
-  const rows = {{ history_json | safe }};
-  const target = document.getElementById('detail-history-rows');
-  if (!target) return;
-  if (!Array.isArray(rows) || rows.length === 0) {
-    target.innerHTML = '<div class="sm-empty-state">Chưa có lịch sử giá cho lô này.</div>';
-    renderHistoryChart([]);
-    return;
-  }
-  renderHistoryStats(rows);
-  renderHistoryChart(rows);
-  target.innerHTML = `<div class="sm-history-timeline">${rows.slice().reverse().map((row, index, reversed) => {
-    const prev = reversed[index + 1];
+function renderHistoryRows(rows) {
+  const visibleLimit = 8;
+  const html = rows.slice().reverse().map((row, index) => {
+    const change = Number(row._change_pct);
+    const changeHtml = Number.isFinite(change)
+      ? `<span class="ph-change ${change < 0 ? 'is-down' : (change > 0 ? 'is-up' : 'is-flat')}">${Math.abs(change) < 0.05 ? 'Không đổi' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`}</span>`
+      : '<span class="ph-change is-flat">Mốc đầu</span>';
+    const hidden = index >= visibleLimit;
+    const originLink = {{ 'true' if USER_TIER == 'admin' else 'false' }} && row.url
+      ? `<a class="ph-lot-link" href="${escHtml(row.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Tin gốc</a>`
+      : '';
     return `
-    <div class="ph-row ${index === 0 ? 'is-latest' : ''}">
+    <div class="ph-row ph-price-row ${row._is_latest ? 'is-latest' : ''} ${hidden ? 'is-history-extra' : ''}"${hidden ? ' hidden' : ''}>
       <span class="ph-dot" aria-hidden="true"></span>
       <div class="ph-main">
-        <span class="ph-date">${String(row.date || '').slice(0, 10) || '-'}</span>
-        <span class="ph-sub">${index === 0 ? 'Giá mới nhất' : 'Mốc lịch sử'}</span>
+        <span class="ph-date">${escHtml(shortDate(row.date))}</span>
+        <span class="ph-sub">${row._is_latest ? 'Giá mới nhất' : 'Mốc lịch sử'}</span>
       </div>
       <span class="ph-price">${priceLabel(row.price_ty)}</span>
-      ${historyChangeLabel(row.price_ty, prev && prev.price_ty)}
+      ${changeHtml}
+      ${originLink}
     </div>`;
-  }).join('')}</div>`;
-})();
+  }).join('');
+  const hiddenCount = Math.max(0, rows.length - visibleLimit);
+  const toggle = hiddenCount > 0
+    ? `<button type="button" class="sm-history-toggle" data-collapsed-text="Xem thêm ${hiddenCount} mốc" data-expanded-text="Thu gọn lịch sử" onclick="toggleSignalHistoryRows(this)">Xem thêm ${hiddenCount} mốc</button>`
+    : '';
+  return `${html}${toggle}`;
+}
 
+function toggleSignalHistoryRows(button) {
+  const root = button && button.closest('.sm-price-history');
+  if (!root) return;
+  const expanded = root.classList.toggle('is-expanded');
+  root.querySelectorAll('.is-history-extra').forEach((row) => {
+    row.hidden = !expanded;
+  });
+  button.textContent = expanded
+    ? (button.dataset.expandedText || 'Thu gọn lịch sử')
+    : (button.dataset.collapsedText || 'Xem thêm');
+}
+
+function compText(value) {
+  return String(value ?? '').trim();
+}
+
+function formatPpm2(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? `${n.toFixed(1).replace(/\.0$/, '')} tr/m²` : '-';
+}
+
+function compInfoTag(icon, label, extraClass = '') {
+  const text = compText(label);
+  return text ? `<span class="sm-comp-tag ${extraClass}"><span class="sm-comp-tag-icon">${escHtml(icon)}</span><span>${escHtml(text)}</span></span>` : '';
+}
+
+function renderCompTags(c = {}) {
+  const area = c.area_m2 || c.area;
+  const dimensions = c.frontage_m && c.depth_m ? `${c.frontage_m}×${c.depth_m}` : '';
+  const areaLabel = area ? `${dimensions ? `${dimensions} · ` : ''}${Number(area).toFixed(1).replace(/\.0$/, '')} m²` : '';
+  const roadLabel = c.street_label || c.streetLabel || c.road_label || c.roadLabel || c.road_type || c.road;
+  const propertyLabel = c.property_type_label || c.prop_type_label || c.property_type || c.ptype;
+  const landLabel = c.tho_cu_label || c.thoCuLabel || (c.tho_cu_m2 || c.thoCu ? `TC ${c.tho_cu_m2 || c.thoCu} m²` : '');
+  return [
+    compInfoTag('📍', c.ward, 'sm-comp-ward'),
+    compInfoTag('📐', areaLabel, 'sm-comp-area'),
+    compInfoTag('↱', roadLabel, 'sm-comp-road'),
+    compInfoTag('🏷', propertyLabel, 'sm-comp-property'),
+    compInfoTag('▣', landLabel, 'sm-comp-land'),
+    compInfoTag('₫', formatPpm2(c.price_per_m2 || c.actual_ppm2 || c.ppm2), 'sm-comp-ppm2'),
+  ].filter(Boolean).join('');
+}
+
+function renderCompRow(c, opts = {}) {
+  const isCurrent = Boolean(opts.isCurrent);
+  const hidden = Boolean(opts.hidden);
+  const title = escHtml(c.title || (isCurrent ? currentListing.title : 'Tin tương tự'));
+  const score = Number(c.match_score);
+  const scoreText = Number.isFinite(score) ? `${Math.round(score)}% khớp` : (isCurrent ? 'Lô đang xem' : 'Lô gần giống');
+  const rowHref = isCurrent ? '' : ({{ 'true' if USER_TIER == 'admin' else 'false' }} && c.url ? c.url : (c.detail_url || ''));
+  const clickAttrs = rowHref
+    ? ` role="link" tabindex="0" data-href="${escHtml(rowHref)}" onclick="window.open(this.dataset.href,'_blank','noopener,noreferrer')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"`
+    : '';
+  const sourceBadge = {{ 'true' if USER_TIER == 'admin' else 'false' }} && c.url ? '<span class="sm-comp-source-badge">TIN GỐC</span>' : '';
+  return `<article class="sm-comp-card sm-comp-row ${isCurrent ? 'is-current' : ''} ${hidden ? 'sm-comp-extra' : ''} ${rowHref ? 'is-clickable' : ''}"${hidden ? ' hidden' : ''}${clickAttrs}>
+    <div class="sm-comp-main">
+      <div class="sm-comp-title-line">
+        <div class="sm-comp-title" title="${title}">${title}</div>
+        <div class="sm-comp-badges">
+          ${isCurrent ? '<span class="sm-current-badge">Đang xem</span>' : sourceBadge}
+          <span class="sm-comp-score">${escHtml(scoreText)}</span>
+        </div>
+      </div>
+      <div class="sm-comp-price-strip">
+        <span><small>Giá</small><b>${escHtml(priceLabel(c.price_ty || c.price))}</b></span>
+        <span><small>Đơn giá</small><b>${escHtml(formatPpm2(c.price_per_m2 || c.actual_ppm2 || c.ppm2))}</b></span>
+      </div>
+      <div class="sm-comp-tags">${renderCompTags(c)}</div>
+    </div>
+  </article>`;
+}
+
+function toggleModalComps(button) {
+  const list = button && button.closest('.sm-comps-list');
+  if (!list) return;
+  const expanded = list.classList.toggle('is-expanded');
+  list.querySelectorAll('.sm-comp-extra').forEach((row) => {
+    row.hidden = !expanded;
+  });
+  const count = button.dataset.count || '0';
+  button.textContent = expanded ? 'Thu gọn' : `Xem thêm ${count} lô`;
+}
+
+function renderComps(comps = []) {
+  const target = document.getElementById('detail-comps-body');
+  if (!target) return;
+  const baseline = renderCompRow(currentListing, { isCurrent: true });
+  const compRows = comps.length
+    ? comps.map((comp, index) => renderCompRow(comp, { hidden: index >= 3 })).join('')
+    : '<div class="sm-empty-state">Chưa có lô tương tự phù hợp.</div>';
+  const extraCount = Math.max(0, comps.length - 3);
+  const toggle = extraCount > 0
+    ? `<button type="button" class="sm-comps-toggle" data-count="${extraCount}" onclick="toggleModalComps(this)">Xem thêm ${extraCount} lô</button>`
+    : '';
+  target.classList.remove('is-expanded');
+  target.innerHTML = baseline + compRows + toggle;
+}
+
+async function renderHistoryAndComps() {
+  const target = document.getElementById('detail-history-rows');
+  if (!target) return;
+  try {
+    const res = await fetch(`/api/history/{{ l['id'] }}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const data = await res.json();
+    const rows = decorateHistoryTimeline(combinedHistory(data));
+    if (!rows.length) {
+      target.innerHTML = '<div class="sm-empty-state">Chưa có lịch sử giá cho lô này.</div>';
+      renderHistoryStats([]);
+      renderHistoryChart([]);
+    } else {
+      renderHistoryStats(rows);
+      renderHistoryChart(rows);
+      target.innerHTML = `<div class="sm-history-timeline">${renderHistoryRows(rows)}</div>`;
+    }
+    renderComps(Array.isArray(data.comps) ? data.comps : []);
+  } catch (err) {
+    const rows = decorateHistoryTimeline(combinedHistory(null));
+    if (!rows.length) {
+      target.innerHTML = '<div class="sm-empty-state">Không tải được lịch sử giá.</div>';
+      renderHistoryChart([]);
+    } else {
+      renderHistoryStats(rows);
+      renderHistoryChart(rows);
+      target.innerHTML = `<div class="sm-history-timeline">${renderHistoryRows(rows)}</div>`;
+    }
+    renderComps([]);
+  }
+}
+
+renderTopStats();
 renderMemo();
+renderHistoryAndComps();
 
 document.addEventListener('keydown', (event) => {
   const gallery = document.getElementById('listingGallery');
@@ -800,6 +1386,17 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowLeft') moveGallery(-1, event);
   if (event.key === 'ArrowRight') moveGallery(1, event);
 });
+
+const listingGallery = document.getElementById('listingGallery');
+if (listingGallery) {
+  listingGallery.addEventListener('touchstart', (event) => {
+    galleryTouchStartX = event.changedTouches[0].clientX;
+  }, { passive: true });
+  listingGallery.addEventListener('touchend', (event) => {
+    const deltaX = event.changedTouches[0].clientX - galleryTouchStartX;
+    if (Math.abs(deltaX) > 45) moveGallery(deltaX < 0 ? 1 : -1, event);
+  }, { passive: false });
+}
 </script>
 </body>
 </html>
