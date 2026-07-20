@@ -1,192 +1,309 @@
-﻿<!DOCTYPE html>
-<html lang="vi">
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chi tiết lô đất — {{ l['title'] }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Chi tiết lô đất - {{ l['title'] }}</title>
 {% include "partials/google_site_tags.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=mobile-input-zoom-20260612">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=listing-detail-modal-ui-20260720">
 <style>
-:root {
-  --bg: #09090b;
-  --surface: rgba(24, 24, 27, 0.65);
-  --surface-solid: #18181b;
-  --card: rgba(39, 39, 42, 0.6);
-  --border: rgba(255, 255, 255, 0.08);
-  --primary: #3b82f6;
-  --accent: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --text: #f4f4f5;
-  --text-muted: #a1a1aa;
-  --radius: 16px;
-  --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+body.listing-detail-page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
 }
-body {
-  background: var(--bg); color: var(--text); font-family: var(--font-sans);
-  margin: 0; padding: 0; min-height: 100vh;
+.listing-detail-shell {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 18px 18px 34px;
 }
-.header {
-  padding: 16px 32px; background: var(--surface); border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(16px); display: flex; justify-content: space-between; align-items: center;
-  position: sticky; top: 0; z-index: 100;
+.listing-detail-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
 }
-.back-btn { color: var(--text-muted); font-weight: 600; text-decoration: none; transition: color 0.2s; }
-.back-btn:hover { color: var(--text); }
-.container { max-width: 1200px; margin: 0 auto; padding: 32px; display: grid; grid-template-columns: 2fr 1fr; gap: 32px; }
-.hero-img { width: 100%; height: 400px; object-fit: cover; border-radius: var(--radius); background: var(--surface-solid); }
-.img-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
-.thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; opacity: 0.6; transition: 0.2s; }
-.thumb:hover, .thumb.active { opacity: 1; border: 2px solid var(--primary); }
-
-.sidebar { display: flex; flex-direction: column; gap: 24px; }
-.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
-.price-block { margin-bottom: 20px; }
-.price { font-size: 2.5rem; font-weight: 900; color: var(--accent); line-height: 1; }
-.ppm2 { font-size: 1rem; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
-.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-.metric { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
-.metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
-.metric-val { font-size: 1.1rem; font-weight: 800; }
-.metric.highlight { border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
-.metric.highlight .metric-val { color: var(--accent); }
-
-.btn-primary {
-  display: block; width: 100%; text-align: center; padding: 14px;
-  background: var(--primary); color: #fff; font-weight: 800; border-radius: 8px;
-  text-decoration: none; transition: 0.2s;
-}
-.btn-primary:hover { background: #2563eb; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
-
-.content-block { margin-top: 32px; }
-.content-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.description {
-  font-size: 0.95rem;
-  line-height: 1.6;
+.listing-detail-back {
   color: var(--text-muted);
-  white-space: pre-wrap;
-  text-align: justify;
-  text-align-last: left;
-  text-justify: inter-word;
+  font-weight: 800;
+  text-decoration: none;
 }
-
-.attr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
-.attr-item { font-size: 0.9rem; }
-.attr-label { color: var(--text-muted); margin-right: 8px; }
-.attr-val { font-weight: 600; }
-@media(max-width: 900px) { .container { grid-template-columns: 1fr; } }
+.listing-detail-brand {
+  color: var(--text);
+  font-weight: 900;
+}
+.listing-detail-card.signal-modal-content {
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  border-radius: 20px;
+}
+.listing-detail-page .sm-left,
+.listing-detail-page .sm-right {
+  max-height: none;
+}
+.listing-detail-page .sm-slider {
+  height: 300px;
+}
+.listing-detail-hero {
+  width: 100%;
+  height: 100%;
+  background-color: #0f172a;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.listing-detail-page .sm-thumbs .listing-detail-thumb {
+  width: 80px;
+  height: 56px;
+  flex: 0 0 80px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-color: #0f172a;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  cursor: pointer;
+}
+.listing-detail-page .sm-thumbs .listing-detail-thumb.active,
+.listing-detail-page .sm-thumbs .listing-detail-thumb:hover {
+  border-color: var(--primary);
+}
+.listing-detail-page .sm-meta-line span::after {
+  content: "";
+}
+.listing-detail-page .sm-action-bar {
+  margin-top: 14px;
+}
+.listing-detail-page .sm-mobile-tabs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.listing-detail-source {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+@media (max-width: 768px) {
+  .listing-detail-shell {
+    padding: 0 0 calc(84px + env(safe-area-inset-bottom));
+  }
+  .listing-detail-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin: 0;
+    padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+    background: rgba(248, 250, 252, 0.96);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(18px);
+  }
+  .listing-detail-card.signal-modal-content {
+    width: 100% !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .listing-detail-page .sm-slider {
+    height: auto !important;
+    aspect-ratio: 4 / 3;
+    max-height: 46vh;
+    margin: 0 -16px 10px;
+    border-radius: 0 0 18px 18px;
+  }
+  .listing-detail-page .sm-slider img {
+    object-fit: contain !important;
+  }
+  .listing-detail-page .sm-thumbs .listing-detail-thumb {
+    width: 64px;
+    height: 48px;
+    flex-basis: 64px;
+    border-radius: 9px;
+  }
+  .listing-detail-page .sm-action-bar {
+    position: fixed;
+  }
+}
 </style>
 </head>
-<body>
-<header class="header">
-  <a href="/" class="back-btn">← Quay lại Dashboard</a>
-  <div style="font-weight: 800; color: #fff;">Radar <span style="color: var(--accent);">BDS</span></div>
-</header>
-<div class="container">
-  <div class="main-col">
-    <div class="gallery">
-      <img src="{% if imgs %}{{ imgs[0] }}{% else %}https://placehold.co/800x400/181b33/7a80a8?text=No+Image{% endif %}" id="mainImg" class="hero-img">
-      <div class="img-grid">
-        {% for src in imgs[:8] %}
-          <img src="{{ src }}" class="thumb {% if loop.first %}active{% endif %}" onclick="changeImg(this, '{{ src }}')">
-        {% endfor %}
-      </div>
-    </div>
+<body class="listing-detail-page">
+{% set price = l.get('price_ty') %}
+{% set area = l.get('area_m2') %}
+{% set actual_ppm2 = l.get('price_per_m2') %}
+{% set fair_ppm2 = l.get('fair_ppm2_display') or l.get('fair_ppm2') %}
+{% set fair_old = l.get('fair_ppm2_old') %}
+{% set fair_new = l.get('fair_ppm2_new') %}
+{% set mos = l.get('mos_pct_display') if l.get('mos_pct_display') is not none else l.get('mos_pct') %}
+<div class="listing-detail-shell">
+  <div class="listing-detail-topbar">
+    <a class="listing-detail-back" href="/?signal={{ l['id'] }}">← Dashboard</a>
+    <div class="listing-detail-brand">Radar<span style="color:var(--primary)">BDS</span></div>
+  </div>
 
-    <div class="content-block">
-      <h1 style="font-size: 1.5rem; margin: 0 0 16px 0;">{{ l['title'] }}</h1>
-      <div class="attr-grid">
-        <div class="attr-item"><span class="attr-label">Khu vực:</span><span class="attr-val">{{ l['ward'] or '-' }}</span></div>
-        <div class="attr-item"><span class="attr-label">Loại hình:</span><span class="attr-val">{{ l['property_type'] }}</span></div>
-        <div class="attr-item"><span class="attr-label">Đường:</span><span class="attr-val">{{ l['road_type'] }}</span></div>
-        <div class="attr-item"><span class="attr-label">Mặt tiền:</span><span class="attr-val">{{ l['frontage_m'] or '-' }} m</span></div>
-        <div class="attr-item"><span class="attr-label">Sổ hồng:</span><span class="attr-val">{{ 'Có' if l['has_so'] else 'Không rõ' }}</span></div>
-        <div class="attr-item"><span class="attr-label">Người bán:</span><span class="attr-val">{{ l['seller_name'] or '-' }}</span></div>
-        <div class="attr-item"><span class="attr-label">SĐT:</span><span class="attr-val">{{ l['contact_phone'] or 'Đã ẩn' }}</span></div>
-      </div>
-    </div>
-    
-    <div class="content-block">
-      <div class="content-title">Mô tả</div>
-      <div class="description">{{ desc_html | safe }}</div>
-    </div>
-  </div>
-  
-  <div class="sidebar">
-    <div class="card">
-      <div class="price-block">
-        <div class="price">{{ l['price_ty'] }} tỷ</div>
-        <div class="ppm2">{% if l['price_per_m2'] %}{{ l['price_per_m2']|round(1) }}{% else %}-{% endif %} triệu/m²</div>
-      </div>
-      
-      <div class="metrics-grid">
-        <div class="metric">
-          <div class="metric-label">Fair Value</div>
-          <div class="metric-val">{% if l['fair_ppm2'] %}{{ l['fair_ppm2']|round(1) }}{% else %}-{% endif %} tr/m²</div>
+  <main class="modal-content signal-modal-content listing-detail-card">
+    <div class="sm-content">
+      <section class="sm-left">
+        <div class="sm-slider" style="position:relative; background:#0f172a; overflow:hidden; flex-shrink:0; user-select:none;">
+          <div id="mainImg" class="listing-detail-hero" role="img" aria-label="Ảnh tin đăng" style="{% if imgs %}background-image:url('{{ imgs[0] }}'){% endif %}"></div>
+          <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 55%); pointer-events:none;"></div>
+          <div style="position:absolute; bottom:14px; left:16px; display:flex; gap:8px; flex-wrap:wrap; z-index:10;">
+            {% if mos and mos > 0 %}
+            <span id="sm-mos-badge" style="background:linear-gradient(135deg,#10b981,#047857); color:#fff; font-weight:800; font-size:1rem; padding:5px 14px; border-radius:10px;">Rẻ hơn {{ mos|round(0)|int }}%</span>
+            {% endif %}
+            {% if l.get('price_dropped') %}
+            <span id="sm-drop-badge" style="background:linear-gradient(135deg,#ef4444,#b91c1c); color:#fff; font-weight:700; font-size:0.82rem; padding:5px 12px; border-radius:8px;">Chủ hạ giá</span>
+            {% endif %}
+          </div>
+          <span id="sm-img-count" style="position:absolute; bottom:14px; right:14px; font-size:0.75rem; color:rgba(255,255,255,0.78); z-index:10; background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:6px;">{{ imgs|length }} ảnh</span>
         </div>
-        <div class="metric highlight">
-          <div class="metric-label">Margin of Safety</div>
-          <div class="metric-val">-{% if l['mos_pct'] %}{{ l['mos_pct']|round(1) }}{% else %}0{% endif %}%</div>
+
+        {% if imgs|length > 1 %}
+        <div class="sm-thumbs">
+          {% for src in imgs[:10] %}
+          <button type="button" data-src="{{ src }}" aria-label="Ảnh {{ loop.index }}" class="listing-detail-thumb {% if loop.first %}active{% endif %}" style="background-image:url('{{ src }}')" onclick="changeImg(this)"></button>
+          {% endfor %}
         </div>
-        <div class="metric">
-          <div class="metric-label">Signal Score</div>
-          <div class="metric-val">{{ l['signal_score'] or 0 }}</div>
+        {% endif %}
+
+        <div class="sm-overview-panel">
+          <div class="sm-signal-badge"><span>Signal #{{ l['id'] }}</span></div>
+          <h1 class="sm-detail-title">
+            <span class="sm-title-main">{{ l['title'] }}</span>
+            <span class="sm-title-sub">{{ l.get('street_label') or l.get('road_label') or l.get('ward') or 'Bình Dương' }}</span>
+          </h1>
+          <div class="sm-meta-line">
+            <span>{{ l.get('ward') or 'Chưa rõ khu vực' }}</span>
+            <span class="listing-detail-source">{{ l.get('source') or 'Nguồn tin' }}</span>
+          </div>
+
+          <div class="sm-summary-grid" aria-label="Tóm tắt giá và biên an toàn">
+            <div class="sm-summary-item sm-summary-price">
+              <span>Giá rao</span>
+              <strong>{% if price %}{{ "%.2f"|format(price)|replace(".00", "") }} tỷ{% else %}-{% endif %}</strong>
+              <small>{% if actual_ppm2 %}{{ actual_ppm2|round(1) }} tr/m²{% else %}-{% endif %}</small>
+            </div>
+            <div class="sm-summary-item sm-summary-fair">
+              <span>Định giá</span>
+              <strong>
+                {% if area and fair_old and fair_new %}
+                  {{ "%.2f"|format(fair_old * area / 1000)|replace(".00", "") }} ~ {{ "%.2f"|format(fair_new * area / 1000)|replace(".00", "") }} tỷ
+                {% elif area and fair_ppm2 %}
+                  {{ "%.2f"|format(fair_ppm2 * area / 1000)|replace(".00", "") }} tỷ
+                {% else %}-{% endif %}
+              </strong>
+              <small>
+                {% if fair_old and fair_new %}
+                  {{ fair_old|round(1) }} ~ {{ fair_new|round(1) }} tr/m²
+                {% elif fair_ppm2 %}
+                  {{ fair_ppm2|round(1) }} tr/m²
+                {% else %}-{% endif %}
+              </small>
+            </div>
+            <div class="sm-summary-item sm-summary-mos">
+              <span>Biên an toàn</span>
+              <strong>{% if mos is not none %}{{ mos|round(1) }}%{% else %}-{% endif %}</strong>
+              <small>Score {{ l.get('signal_score') or 0 }}</small>
+            </div>
+          </div>
+
+          <div class="sm-tags-wrap">
+            {% if l.get('ward') %}<span class="sm-tag-chip"><span class="sm-tag-icon">📍</span><span class="sm-tag-text">{{ l.get('ward') }}</span></span>{% endif %}
+            {% if area %}<span class="sm-tag-chip"><span class="sm-tag-icon">📐</span><span class="sm-tag-text">{{ area|round(1) }} m²</span></span>{% endif %}
+            {% if l.get('road_label') or l.get('road_type') %}<span class="sm-tag-chip"><span class="sm-tag-icon">↱</span><span class="sm-tag-text">{{ l.get('road_label') or l.get('road_type') }}</span></span>{% endif %}
+            {% if l.get('property_type_label') or l.get('property_type') %}<span class="sm-tag-chip"><span class="sm-tag-icon">🏷</span><span class="sm-tag-text">{{ l.get('property_type_label') or l.get('property_type') }}</span></span>{% endif %}
+            {% if l.get('frontage_m') %}<span class="sm-tag-chip"><span class="sm-tag-icon">↔</span><span class="sm-tag-text">MT {{ l.get('frontage_m') }} m</span></span>{% endif %}
+            {% if l.get('tho_cu_label') or l.get('tho_cu_m2') %}<span class="sm-tag-chip"><span class="sm-tag-icon">▣</span><span class="sm-tag-text">{{ l.get('tho_cu_label') or ('TC ' ~ l.get('tho_cu_m2') ~ ' m²') }}</span></span>{% endif %}
+          </div>
         </div>
-        <div class="metric">
-          <div class="metric-label">Diện tích</div>
-          <div class="metric-val">{{ l['area_m2'] }} m²</div>
+
+        <div class="sm-mobile-tabs" role="tablist" aria-label="Nội dung chi tiết">
+          <button type="button" class="sm-tab active" role="tab" aria-selected="true" data-sm-tab="desc" onclick="switchListingPanel('desc', this)">Mô tả</button>
+          <button type="button" class="sm-tab" role="tab" aria-selected="false" data-sm-tab="history" onclick="switchListingPanel('history', this)">Lịch sử</button>
+          <button type="button" class="sm-tab" role="tab" aria-selected="false" data-sm-tab="info" onclick="switchListingPanel('info', this)">Thông tin</button>
         </div>
-      </div>
-      
-      <a href="{{ l['url'] }}" target="_blank" class="btn-primary">Xem bài gốc trên {{ l['source']|capitalize }}</a>
+
+        <section class="sm-section sm-panel active" data-sm-panel="desc" role="tabpanel">
+          <div class="sm-section-label">Nguyên văn tin rao</div>
+          <div class="sm-desc-text">{{ l.get('description') or 'Không có mô tả.' }}</div>
+        </section>
+      </section>
+
+      <aside class="sm-right">
+        <section class="sm-ai-section sm-panel" data-sm-panel="info" role="tabpanel">
+          <div class="sm-ai-label">Thông tin lô đất</div>
+          <div class="sm-memo-metrics">
+            <div class="sm-memo-metric"><span>Khu vực</span><b>{{ l.get('ward') or '-' }}</b></div>
+            <div class="sm-memo-metric"><span>Loại hình</span><b>{{ l.get('property_type_label') or l.get('property_type') or '-' }}</b></div>
+            <div class="sm-memo-metric"><span>Đường</span><b>{{ l.get('road_label') or l.get('road_type') or '-' }}</b></div>
+            <div class="sm-memo-metric"><span>Ngang / Dài</span><b>{{ l.get('frontage_m') or '-' }} m / {{ l.get('depth_m') or '-' }} m</b></div>
+            <div class="sm-memo-metric"><span>Sổ hồng</span><b>{% if l.get('has_so') is sameas true %}Có{% elif l.get('has_so') is sameas false %}Không rõ{% else %}-{% endif %}</b></div>
+            <div class="sm-memo-metric"><span>Người bán</span><b>{{ l.get('seller_name') or '-' }}</b></div>
+          </div>
+        </section>
+
+        <section class="sm-section sm-panel" data-sm-panel="history" role="tabpanel">
+          <div class="sm-section-label">Lịch sử giá lô này</div>
+          <div id="detail-history-rows" class="sm-price-history">
+            <div class="sm-empty-state">Đang tải lịch sử...</div>
+          </div>
+        </section>
+
+        <div class="sm-action-bar">
+          <a class="sm-btn-zalo" href="/?signal={{ l['id'] }}">Liên hệ tư vấn</a>
+          {% if l.get('url') %}
+          <a class="sm-btn-detail" href="{{ l.get('url') }}" target="_blank" rel="noopener noreferrer">Xem tin gốc</a>
+          {% endif %}
+        </div>
+      </aside>
     </div>
-    
-    <div class="card">
-      <div class="content-title" style="font-size: 1rem; border: none;">Lịch sử giá</div>
-      <div style="height: 200px;">
-        <canvas id="histChart"></canvas>
-      </div>
-    </div>
-  </div>
+  </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-function changeImg(el, src) {
-  document.getElementById('mainImg').src = src;
-  document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+function changeImg(el) {
+  const src = el.dataset.src || '';
+  document.getElementById('mainImg').style.backgroundImage = src ? `url("${src.replace(/"/g, '\\"')}")` : '';
+  document.querySelectorAll('.listing-detail-thumb').forEach((thumb) => thumb.classList.remove('active'));
   el.classList.add('active');
 }
 
-const histData = {{ history_json | safe }};
-if(histData.length > 0) {
-  const ctx = document.getElementById('histChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: histData.map(d => d.date),
-      datasets: [{
-        data: histData.map(d => d.price_ty),
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        borderWidth: 3,
-        tension: 0.1,
-        fill: true,
-        pointBackgroundColor: '#18181b',
-        pointBorderColor: '#10b981',
-        stepped: true
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { grid: { color: 'rgba(255,255,255,0.05)' } },
-        x: { grid: { display: false } }
-      }
-    }
+function switchListingPanel(panel, btn) {
+  document.querySelectorAll('[data-sm-panel]').forEach((el) => {
+    el.classList.toggle('active', el.dataset.smPanel === panel);
+  });
+  document.querySelectorAll('.sm-tab').forEach((tab) => {
+    const active = tab === btn;
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', active ? 'true' : 'false');
   });
 }
+
+function priceLabel(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? `${n.toFixed(2).replace(/\.?0+$/, '')} tỷ` : '-';
+}
+
+(function renderHistory() {
+  const rows = {{ history_json | safe }};
+  const target = document.getElementById('detail-history-rows');
+  if (!target) return;
+  if (!Array.isArray(rows) || rows.length === 0) {
+    target.innerHTML = '<div class="sm-empty-state">Chưa có lịch sử giá cho lô này.</div>';
+    return;
+  }
+  target.innerHTML = `<div class="sm-history-timeline">${rows.slice().reverse().map((row, index) => `
+    <div class="ph-row ${index === 0 ? 'is-latest' : ''}">
+      <span class="ph-dot" aria-hidden="true"></span>
+      <div class="ph-main">
+        <span class="ph-date">${String(row.date || '').slice(0, 10) || '-'}</span>
+        <span class="ph-sub">${index === 0 ? 'Giá mới nhất' : 'Mốc lịch sử'}</span>
+      </div>
+      <span class="ph-price">${priceLabel(row.price_ty)}</span>
+    </div>`).join('')}</div>`;
+})();
 </script>
 </body>
 </html>
-
