@@ -14,9 +14,9 @@ body.listing-detail-page {
   color: var(--text);
 }
 .listing-detail-shell {
-  max-width: 1024px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 18px 18px 34px;
+  padding: 16px 22px 34px;
 }
 .listing-detail-topbar {
   display: flex;
@@ -48,6 +48,7 @@ body.listing-detail-page {
 }
 .listing-detail-page .sm-slider {
   height: 300px;
+  border-radius: 12px;
 }
 .listing-detail-hero {
   width: 100%;
@@ -80,12 +81,156 @@ body.listing-detail-page {
   margin-top: 14px;
 }
 .listing-detail-page .sm-mobile-tabs {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .listing-detail-source {
   color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 800;
+}
+.listing-detail-page .sm-content {
+  min-height: calc(100vh - 70px);
+}
+.listing-detail-page .sm-left,
+.listing-detail-page .sm-right {
+  padding: 20px 24px 28px;
+}
+.listing-detail-page .sm-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.listing-detail-page .sm-detail-title {
+  font-size: 1.08rem;
+}
+.listing-detail-page .sm-title-main {
+  color: var(--text);
+  font-size: 1.15rem;
+}
+.listing-detail-page .sm-title-main,
+.listing-detail-page .sm-title-sub {
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: initial;
+  overflow: visible;
+}
+.listing-detail-page .sm-summary-grid {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.55fr) minmax(0, 0.95fr);
+  gap: 10px;
+}
+.listing-detail-advisor {
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(236, 253, 245, 0.96), rgba(240, 253, 250, 0.72));
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-left: 4px solid #10b981;
+  padding: 16px 20px 18px;
+}
+.listing-detail-advisor .advisor-verdict {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  margin: 8px 0 14px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  color: #334155;
+  background: rgba(226, 232, 240, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+.listing-detail-advisor h3 {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 0.98rem;
+  font-weight: 900;
+}
+.listing-detail-advisor p {
+  margin: 0 0 11px;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.62;
+}
+.advisor-more {
+  min-height: 38px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 9px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #4f46e5;
+  font-family: inherit;
+  font-weight: 850;
+  padding: 8px 13px;
+  cursor: pointer;
+}
+.advisor-more:hover {
+  background: rgba(37, 99, 235, 0.13);
+}
+.advisor-flow {
+  margin-top: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.76);
+}
+.advisor-flow summary {
+  min-height: 40px;
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 900;
+}
+.advisor-flow-body {
+  max-height: 260px;
+  overflow: auto;
+  padding: 0 12px 12px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.listing-chart-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.72);
+  padding: 10px 12px;
+}
+.listing-chart-svg {
+  display: block;
+  width: 100%;
+  height: 172px;
+}
+.listing-history-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.listing-history-stat {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: rgba(248, 250, 252, 0.86);
+  padding: 10px 12px;
+}
+.listing-history-stat strong,
+.listing-history-stat span {
+  display: block;
+}
+.listing-history-stat strong {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 950;
+}
+.listing-history-stat span {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+.listing-detail-page .ph-row {
+  grid-template-columns: 18px minmax(0, 1fr) auto auto;
+}
+.listing-detail-page .ph-change {
+  white-space: nowrap;
 }
 @media (max-width: 768px) {
   .listing-detail-shell {
@@ -116,6 +261,43 @@ body.listing-detail-page {
   }
   .listing-detail-page .sm-slider img {
     object-fit: contain !important;
+  }
+  .listing-detail-page .sm-left,
+  .listing-detail-page .sm-right {
+    padding: 0 16px;
+  }
+  .listing-detail-page .sm-right {
+    display: block;
+  }
+  .listing-detail-page .sm-detail-title {
+    font-size: 0.98rem;
+  }
+  .listing-detail-page .sm-title-main {
+    font-size: 1.04rem;
+  }
+  .listing-detail-page .sm-title-main,
+  .listing-detail-page .sm-title-sub {
+    display: block;
+    -webkit-line-clamp: unset;
+    -webkit-box-orient: initial;
+    overflow: visible;
+  }
+  .listing-detail-page .listing-chart-card,
+  .listing-detail-page .listing-detail-advisor {
+    margin-bottom: 14px;
+  }
+  .listing-history-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .listing-history-stat {
+    padding: 9px 10px;
+  }
+  .listing-history-stat strong {
+    font-size: 0.92rem;
+  }
+  .listing-chart-svg {
+    height: 150px;
   }
   .listing-detail-page .sm-thumbs .listing-detail-thumb {
     width: 64px;
@@ -222,6 +404,7 @@ body.listing-detail-page {
         <div class="sm-mobile-tabs" role="tablist" aria-label="Nội dung chi tiết">
           <button type="button" class="sm-tab active" role="tab" aria-selected="true" data-sm-tab="desc" onclick="switchListingPanel('desc', this)">Mô tả</button>
           <button type="button" class="sm-tab" role="tab" aria-selected="false" data-sm-tab="history" onclick="switchListingPanel('history', this)">Lịch sử</button>
+          <button type="button" class="sm-tab" role="tab" aria-selected="false" data-sm-tab="memo" onclick="switchListingPanel('memo', this)">Cố vấn</button>
           <button type="button" class="sm-tab" role="tab" aria-selected="false" data-sm-tab="info" onclick="switchListingPanel('info', this)">Thông tin</button>
         </div>
 
@@ -232,6 +415,25 @@ body.listing-detail-page {
       </section>
 
       <aside class="sm-right">
+        <section class="listing-detail-advisor sm-panel" data-sm-panel="memo" role="tabpanel">
+          <div class="sm-ai-label">Cố vấn đầu tư</div>
+          <div id="detail-memo-body">
+            <div class="sm-empty-state">Đang tải cố vấn...</div>
+          </div>
+        </section>
+
+        <section class="listing-chart-card sm-panel" data-sm-panel="history" role="tabpanel">
+          <div id="detail-history-chart"></div>
+        </section>
+
+        <section class="sm-section sm-panel" data-sm-panel="history" role="tabpanel">
+          <div class="sm-section-label">Lịch sử giá lô này</div>
+          <div id="detail-history-stats" class="listing-history-stats"></div>
+          <div id="detail-history-rows" class="sm-price-history">
+            <div class="sm-empty-state">Đang tải lịch sử...</div>
+          </div>
+        </section>
+
         <section class="sm-ai-section sm-panel" data-sm-panel="info" role="tabpanel">
           <div class="sm-ai-label">Thông tin lô đất</div>
           <div class="sm-memo-metrics">
@@ -241,13 +443,6 @@ body.listing-detail-page {
             <div class="sm-memo-metric"><span>Ngang / Dài</span><b>{{ l.get('frontage_m') or '-' }} m / {{ l.get('depth_m') or '-' }} m</b></div>
             <div class="sm-memo-metric"><span>Sổ hồng</span><b>{% if l.get('has_so') is sameas true %}Có{% elif l.get('has_so') is sameas false %}Không rõ{% else %}-{% endif %}</b></div>
             <div class="sm-memo-metric"><span>Người bán</span><b>{{ l.get('seller_name') or '-' }}</b></div>
-          </div>
-        </section>
-
-        <section class="sm-section sm-panel" data-sm-panel="history" role="tabpanel">
-          <div class="sm-section-label">Lịch sử giá lô này</div>
-          <div id="detail-history-rows" class="sm-price-history">
-            <div class="sm-empty-state">Đang tải lịch sử...</div>
           </div>
         </section>
 
@@ -286,15 +481,137 @@ function priceLabel(value) {
   return Number.isFinite(n) && n > 0 ? `${n.toFixed(2).replace(/\.?0+$/, '')} tỷ` : '-';
 }
 
+function escHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function memoSection(markdown, heading) {
+  const text = String(markdown || '');
+  const match = text.match(new RegExp(`##\\s*${heading}\\s*\\n+([\\s\\S]*?)(?=\\n##\\s|$)`, 'i'));
+  return match ? match[1].trim() : '';
+}
+
+function firstMemoParagraph(markdown) {
+  const conclusion = memoSection(markdown, 'Kết luận') || memoSection(markdown, 'Ket luan');
+  const source = conclusion || String(markdown || '').replace(/^#.*$/m, '').trim();
+  return source.split(/\n{2,}/).map((x) => x.replace(/^[-*]\s*/, '').trim()).filter(Boolean)[0] || '';
+}
+
+async function renderMemo() {
+  const body = document.getElementById('detail-memo-body');
+  if (!body) return;
+  const userTier = {{ USER_TIER|tojson }};
+  if (userTier === 'guest') {
+    body.innerHTML = '<div class="advisor-verdict">Cần đăng nhập</div><h3>Kết luận</h3><p>Đăng nhập để xem ghi chú cố vấn đầu tư cho lô này.</p>';
+    return;
+  }
+  try {
+    const res = await fetch(`/api/listing/{{ l['id'] }}/memo`, { cache: 'no-store' });
+    if (res.status === 403) {
+      body.innerHTML = '<div class="advisor-verdict">Cần đăng nhập</div><h3>Kết luận</h3><p>Đăng nhập để xem ghi chú cố vấn đầu tư cho lô này.</p>';
+      return;
+    }
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const data = await res.json();
+    if (data.pending) {
+      body.innerHTML = '<div class="advisor-verdict">Chưa có cố vấn</div><h3>Kết luận</h3><p>Chưa có ghi chú cố vấn đầu tư cho lô này.</p>';
+      return;
+    }
+    const markdown = data.memo_markdown || data.reasoning || '';
+    const verdict = data.verdict ? String(data.verdict).replace(/_/g, ' ') : 'Đã đánh giá';
+    const summary = firstMemoParagraph(markdown) || data.reasoning || 'Đã có ghi chú cố vấn cho lô này.';
+    const flow = memoSection(markdown, 'Định giá chuẩn tắc')
+      || memoSection(markdown, 'Dinh gia chuan tac')
+      || data.admin_valuation_workflow_markdown
+      || '';
+    const flags = Array.isArray(data.red_flags) ? data.red_flags.filter(Boolean).join(', ') : '';
+    body.innerHTML = `
+      <div class="advisor-verdict">${escHtml(verdict)}${data.confidence ? ` · ${escHtml(data.confidence)}%` : ''}</div>
+      <h3>Kết luận</h3>
+      <p>${escHtml(summary)}</p>
+      ${markdown.length > summary.length ? '<button type="button" class="advisor-more" onclick="this.nextElementSibling.hidden=!this.nextElementSibling.hidden">Xem thêm</button>' : ''}
+      ${markdown.length > summary.length ? `<div class="advisor-flow-body" hidden>${escHtml(markdown)}</div>` : ''}
+      ${flow ? `<details class="advisor-flow"><summary>Luồng định giá kỹ thuật</summary><div class="advisor-flow-body">${escHtml(flow)}</div></details>` : ''}
+      ${flags ? `<p class="sm-memo-note">Điểm cần lưu ý: ${escHtml(flags)}</p>` : ''}
+    `;
+  } catch (err) {
+    body.innerHTML = '<div class="sm-empty-state">Không tải được cố vấn đầu tư.</div>';
+  }
+}
+
+function historyDelta(rows) {
+  if (rows.length < 2) return 0;
+  const first = Number(rows[0].price_ty);
+  const last = Number(rows[rows.length - 1].price_ty);
+  return Number.isFinite(first) && first > 0 && Number.isFinite(last) ? ((last - first) / first) * 100 : 0;
+}
+
+function historyChangeLabel(current, prev) {
+  const a = Number(current);
+  const b = Number(prev);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= 0) return '<span class="ph-change is-flat">Mốc đầu</span>';
+  const pct = ((a - b) / b) * 100;
+  if (Math.abs(pct) < 0.05) return '<span class="ph-change is-flat">Không đổi</span>';
+  return `<span class="ph-change ${pct < 0 ? 'is-down' : 'is-up'}">${pct > 0 ? '+' : ''}${pct.toFixed(1)}%</span>`;
+}
+
+function renderHistoryStats(rows) {
+  const target = document.getElementById('detail-history-stats');
+  if (!target) return;
+  const latest = rows[rows.length - 1];
+  const delta = historyDelta(rows);
+  target.innerHTML = `
+    <div class="listing-history-stat"><strong>${rows.length}</strong><span>Mốc giá</span></div>
+    <div class="listing-history-stat"><strong>${priceLabel(latest && latest.price_ty)}</strong><span>Mới nhất</span></div>
+    <div class="listing-history-stat"><strong>${delta > 0 ? '+' : ''}${delta.toFixed(1)}%</strong><span>Biến động</span></div>
+  `;
+}
+
+function renderHistoryChart(rows) {
+  const target = document.getElementById('detail-history-chart');
+  if (!target) return;
+  if (!rows.length) {
+    target.innerHTML = '<div class="sm-empty-state">Chưa có dữ liệu biểu đồ.</div>';
+    return;
+  }
+  const w = 520, h = 172, padL = 46, padR = 14, padT = 14, padB = 30;
+  const values = rows.map((r) => Number(r.price_ty)).filter(Number.isFinite);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = Math.max(0.01, max - min);
+  const x = (i) => padL + (rows.length === 1 ? 0 : i * (w - padL - padR) / (rows.length - 1));
+  const y = (v) => padT + (max - Number(v)) * (h - padT - padB) / span;
+  const points = rows.map((r, i) => `${x(i).toFixed(1)},${y(r.price_ty).toFixed(1)}`).join(' ');
+  const area = `${padL},${h - padB} ${points} ${w - padR},${h - padB}`;
+  const ticks = [min, min + span / 2, max];
+  target.innerHTML = `
+    <svg class="listing-chart-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="Biểu đồ lịch sử giá">
+      ${ticks.map((t) => `<line x1="${padL}" y1="${y(t).toFixed(1)}" x2="${w - padR}" y2="${y(t).toFixed(1)}" stroke="rgba(148,163,184,.22)"/><text x="4" y="${(y(t) + 4).toFixed(1)}" fill="#64748b" font-size="11" font-weight="700">${priceLabel(t)}</text>`).join('')}
+      <polygon points="${area}" fill="rgba(37,99,235,.13)"></polygon>
+      <polyline points="${points}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></polyline>
+      ${rows.map((r, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(r.price_ty).toFixed(1)}" r="3.5" fill="${i === rows.length - 1 ? '#10b981' : '#2563eb'}" stroke="#fff" stroke-width="2"></circle>`).join('')}
+      <text x="${padL}" y="${h - 8}" fill="#64748b" font-size="11" font-weight="800">${escHtml(String(rows[0].date || '').slice(0, 10))}</text>
+      <text x="${w - padR}" y="${h - 8}" fill="#64748b" font-size="11" font-weight="800" text-anchor="end">${escHtml(String(rows[rows.length - 1].date || '').slice(0, 10))}</text>
+    </svg>
+  `;
+}
+
 (function renderHistory() {
   const rows = {{ history_json | safe }};
   const target = document.getElementById('detail-history-rows');
   if (!target) return;
   if (!Array.isArray(rows) || rows.length === 0) {
     target.innerHTML = '<div class="sm-empty-state">Chưa có lịch sử giá cho lô này.</div>';
+    renderHistoryChart([]);
     return;
   }
-  target.innerHTML = `<div class="sm-history-timeline">${rows.slice().reverse().map((row, index) => `
+  renderHistoryStats(rows);
+  renderHistoryChart(rows);
+  target.innerHTML = `<div class="sm-history-timeline">${rows.slice().reverse().map((row, index, reversed) => {
+    const prev = reversed[index + 1];
+    return `
     <div class="ph-row ${index === 0 ? 'is-latest' : ''}">
       <span class="ph-dot" aria-hidden="true"></span>
       <div class="ph-main">
@@ -302,8 +619,12 @@ function priceLabel(value) {
         <span class="ph-sub">${index === 0 ? 'Giá mới nhất' : 'Mốc lịch sử'}</span>
       </div>
       <span class="ph-price">${priceLabel(row.price_ty)}</span>
-    </div>`).join('')}</div>`;
+      ${historyChangeLabel(row.price_ty, prev && prev.price_ty)}
+    </div>`;
+  }).join('')}</div>`;
 })();
+
+renderMemo();
 </script>
 </body>
 </html>
