@@ -7,6 +7,7 @@
 {% include "partials/google_site_tags.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=mobile-input-zoom-20260612">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=listing-detail-modal-ui-20260720">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.css">
 <style>
 body.listing-detail-page {
   display: block;
@@ -490,6 +491,20 @@ body.listing-detail-page {
   border-color: #fff;
   opacity: 1;
 }
+.pswp--listing-detail {
+  --pswp-bg: rgba(2, 6, 23, 0.96);
+  --pswp-icon-color: #fff;
+  --pswp-icon-color-secondary: rgba(255, 255, 255, 0.78);
+  --pswp-icon-stroke-color: rgba(15, 23, 42, 0.46);
+  --pswp-icon-stroke-width: 1.5px;
+}
+.pswp--listing-detail .pswp__top-bar {
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0.72), transparent);
+}
+.pswp--listing-detail .pswp__button {
+  width: 48px;
+  height: 48px;
+}
 @media (max-width: 768px) {
   .listing-detail-shell {
     padding: 0 0 calc(84px + env(safe-area-inset-bottom));
@@ -804,6 +819,15 @@ body.listing-detail-page {
 
 <script>
 const listingImages = {{ imgs|tojson }};
+const listingPhotoSwipeItems = listingImages.map((src, index) => ({
+  src,
+  msrc: src,
+  width: 1200,
+  height: 1600,
+  alt: `Ảnh ${index + 1} tin đăng`
+}));
+window.listingPhotoSwipeItems = listingPhotoSwipeItems;
+window.listingPhotoSwipeOpen = null;
 const currentListing = {
   title: {{ l.get('title')|tojson }},
   ward: {{ l.get('ward')|tojson }},
@@ -851,6 +875,19 @@ function changeImg(el) {
   setMainImage(Number(el.dataset.index || 0));
 }
 
+function hydratePhotoSwipeImageSizes() {
+  listingPhotoSwipeItems.forEach((item) => {
+    const image = new Image();
+    image.onload = () => {
+      if (image.naturalWidth && image.naturalHeight) {
+        item.width = image.naturalWidth;
+        item.height = image.naturalHeight;
+      }
+    };
+    image.src = item.src;
+  });
+}
+
 function renderGalleryImage() {
   const img = document.getElementById('listingGalleryImg');
   const count = document.getElementById('listingGalleryCount');
@@ -872,6 +909,10 @@ function openGallery(index, event) {
   if (event) event.stopPropagation();
   if (!listingImages.length) return;
   setMainImage(Number(index || 0));
+  if (typeof window.listingPhotoSwipeOpen === 'function') {
+    window.listingPhotoSwipeOpen(currentImageIndex);
+    return;
+  }
   renderGalleryImage();
   document.getElementById('listingGallery').hidden = false;
   document.body.style.overflow = 'hidden';
@@ -1378,6 +1419,7 @@ async function renderHistoryAndComps() {
 renderTopStats();
 renderMemo();
 renderHistoryAndComps();
+hydratePhotoSwipeImageSizes();
 
 document.addEventListener('keydown', (event) => {
   const gallery = document.getElementById('listingGallery');
@@ -1396,6 +1438,36 @@ if (listingGallery) {
     const deltaX = event.changedTouches[0].clientX - galleryTouchStartX;
     if (Math.abs(deltaX) > 45) moveGallery(deltaX < 0 ? 1 : -1, event);
   }, { passive: false });
+}
+</script>
+<script type="module">
+import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.js';
+
+const items = window.listingPhotoSwipeItems || [];
+if (items.length) {
+  const lightbox = new PhotoSwipeLightbox({
+    dataSource: items,
+    bgOpacity: 0.96,
+    mainClass: 'pswp--listing-detail',
+    showHideAnimationType: 'zoom',
+    wheelToZoom: true,
+    preload: [1, 2],
+    paddingFn: () => ({ top: 28, bottom: 28, left: 12, right: 12 }),
+    pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.esm.js'),
+  });
+  lightbox.addFilter('thumbEl', (thumbEl, data, index) => (
+    document.querySelector(`.listing-detail-thumb[data-index="${index}"]`)
+    || document.getElementById('mainImg')
+    || thumbEl
+  ));
+  lightbox.addFilter('placeholderSrc', (placeholderSrc, slide) => slide.data.msrc || placeholderSrc);
+  lightbox.on('change', () => {
+    if (lightbox.pswp && typeof window.setMainImage === 'function') {
+      window.setMainImage(lightbox.pswp.currIndex);
+    }
+  });
+  lightbox.init();
+  window.listingPhotoSwipeOpen = (index = 0) => lightbox.loadAndOpen(Number(index) || 0);
 }
 </script>
 </body>
