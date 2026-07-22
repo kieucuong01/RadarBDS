@@ -35,6 +35,27 @@
           {% endfor %}
         </section>
         {% endif %}
+        <section class="article-action-strip" aria-label="Hành động nhanh">
+          <div>
+            <span>Đọc nhanh rồi lọc dữ liệu thật</span>
+            <strong>{{ page.hero_metric.value if page.hero_metric else page.article.summary_cards[0].value }} · {{ page.scope_label }}</strong>
+          </div>
+          <div class="article-action-buttons">
+            <a class="seo-primary-cta" href="{{ page.primary_href or '/?tab=signals' }}" data-track-cta="article_top_dashboard">{{ page.primary_cta or 'Mở dashboard' }}</a>
+            {% if page.secondary_href %}<a class="seo-secondary-cta" href="{{ page.secondary_href }}" data-track-cta="article_top_secondary">{{ page.secondary_cta or 'Xem báo cáo' }}</a>{% endif %}
+          </div>
+        </section>
+
+        <nav class="article-toc" aria-labelledby="toc-title">
+          <h2 id="toc-title">Trong bài này</h2>
+          <ol>
+            {% for section in page.article.sections %}
+            <li><a href="#{{ section.id }}">{{ section.heading }}</a></li>
+            {% endfor %}
+            <li><a href="#checklist">Checklist trước khi đi tiếp</a></li>
+            <li><a href="#faq">Câu hỏi thường gặp</a></li>
+          </ol>
+        </nav>
 
         {% if page.article.illustration %}
         <figure class="article-visual-figure">
@@ -97,17 +118,6 @@
         </section>
         {% endif %}
 
-        <nav class="article-toc" aria-labelledby="toc-title">
-          <h2 id="toc-title">Trong bài này</h2>
-          <ol>
-            {% for section in page.article.sections %}
-            <li><a href="#{{ section.id }}">{{ section.heading }}</a></li>
-            {% endfor %}
-            <li><a href="#checklist">Checklist trước khi đi tiếp</a></li>
-            <li><a href="#faq">Câu hỏi thường gặp</a></li>
-          </ol>
-        </nav>
-
         <div class="article-content">
           {% for section in page.article.sections %}
           <section id="{{ section.id }}" class="article-section">
@@ -149,7 +159,7 @@
           <h2>Bài và trang liên quan</h2>
           <div class="related-link-grid">
             {% for link in page.local_links[:4] %}
-            <a href="{{ link.href }}"><strong>{{ link.label }}</strong><span>Xem nội dung liên quan</span></a>
+            <a href="{{ link.href }}"><strong>{{ link.label }}</strong><span>{{ link.description or 'Xem nội dung liên quan' }}</span></a>
             {% endfor %}
           </div>
         </section>
@@ -160,7 +170,7 @@
             <h2>Mở dashboard để lọc signal phù hợp</h2>
             <p>Mở dashboard để lọc tin theo khu vực, xem các signal đang phù hợp và bấm liên hệ khi có tin đáng kiểm tra.</p>
           </div>
-          <a class="seo-primary-cta" href="/?tab=signals" data-track-cta="article_signals">Mở dashboard</a>
+          <a class="seo-primary-cta" href="{{ page.primary_href or '/?tab=signals' }}" data-track-cta="article_signals">{{ page.primary_cta or 'Mở dashboard' }}</a>
         </section>
       </div>
     </article>

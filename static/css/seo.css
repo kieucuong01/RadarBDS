@@ -3196,3 +3196,249 @@ summary:focus-visible,
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+/* Hermes article UI/UX refresh 2026-07-22 — Agency UI Designer + UX Architect */
+.seo-article-page {
+  background: linear-gradient(180deg, #fbfefc 0, #ffffff 420px);
+}
+
+.seo-article-page .article-header {
+  padding-top: clamp(30px, 5vw, 64px);
+  padding-bottom: 22px;
+}
+
+.seo-article-page .article-header h1 {
+  max-width: 780px;
+  margin-bottom: 18px;
+  font-size: clamp(2.35rem, 5.8vw, 4.35rem);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.seo-article-page .article-deck {
+  max-width: 720px;
+  color: #4b635a;
+  font-size: clamp(1.02rem, 1.8vw, 1.18rem);
+  line-height: 1.62;
+}
+
+.seo-article-page .card-meta {
+  margin-top: 18px;
+}
+
+.article-reading-column {
+  width: min(780px, 100%);
+}
+
+.article-intro {
+  padding: 22px 24px;
+  border: 1px solid #d7e8df;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fcf9 100%);
+  box-shadow: 0 12px 34px rgba(16, 43, 34, 0.05);
+}
+
+.article-intro p:first-child {
+  margin-top: 0;
+  color: #18382e;
+  font-size: 1.12rem;
+  font-weight: 650;
+}
+
+.article-intro p:last-child {
+  margin-bottom: 0;
+}
+
+.article-action-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  margin: 18px 0 24px;
+  padding: 18px;
+  border: 1px solid #bee7d6;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #e9fff4 0%, #f7fffb 56%, #eef8ff 100%);
+  box-shadow: 0 16px 36px rgba(18, 74, 58, 0.08);
+}
+
+.article-action-strip span {
+  display: block;
+  color: #0f6b53;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.article-action-strip strong {
+  display: block;
+  margin-top: 4px;
+  color: #10211b;
+  font-size: 1.04rem;
+  line-height: 1.35;
+}
+
+.article-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.article-action-buttons .seo-primary-cta,
+.article-action-buttons .seo-secondary-cta {
+  min-height: 44px;
+  padding: 11px 16px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+
+.article-action-buttons .seo-secondary-cta {
+  border: 1px solid #b8dcca;
+  background: rgba(255,255,255,0.72);
+  color: #0b5d46;
+  box-shadow: none;
+}
+
+.seo-article-page .article-toc {
+  margin: 18px 0 32px;
+  padding: 18px 20px;
+  border: 1px solid #d7e8df;
+  border-left: 4px solid #0b5d46;
+  border-radius: 18px;
+  background: #f7fbf8;
+}
+
+.seo-article-page .article-toc ol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 22px;
+  row-gap: 4px;
+}
+
+.seo-article-page .article-toc a {
+  min-height: 30px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.article-data-overview {
+  gap: 14px;
+  margin: 24px 0 20px;
+}
+
+.article-data-overview article {
+  position: relative;
+  overflow: hidden;
+  min-height: 128px;
+}
+
+.article-data-overview article::after {
+  content: "";
+  position: absolute;
+  inset: auto -32px -44px auto;
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.10);
+}
+
+.article-visual-figure,
+.article-data-table-card,
+.article-chart-card {
+  border-radius: 22px;
+}
+
+.article-data-table-wrap {
+  position: relative;
+  max-width: 100%;
+}
+
+.article-data-table {
+  min-width: 700px;
+}
+
+.article-data-table th,
+.article-data-table td {
+  padding: 14px 13px;
+}
+
+.article-data-table td {
+  line-height: 1.55;
+}
+
+.article-data-table th:first-child,
+.article-data-table td:first-child {
+  width: 112px;
+}
+
+.article-chart-section {
+  margin-top: 26px;
+}
+
+.article-chart-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfefc 100%);
+}
+
+.related-link-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.related-link-grid a {
+  min-height: 88px;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.related-link-grid a:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(16, 43, 34, 0.08);
+}
+
+.related-link-grid span {
+  line-height: 1.45;
+}
+
+.seo-article-page .seo-final-cta {
+  margin-top: 62px;
+  padding: 24px 28px;
+  border-radius: 18px;
+}
+
+.seo-article-page .seo-final-cta .seo-primary-cta {
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .seo-article-page .article-header {
+    padding-top: 24px;
+  }
+  .seo-article-page .article-header h1 {
+    font-size: clamp(2.05rem, 12vw, 3.1rem);
+    line-height: 1.03;
+  }
+  .article-intro {
+    padding: 18px;
+  }
+  .article-action-strip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .article-action-buttons {
+    justify-content: stretch;
+  }
+  .article-action-buttons .seo-primary-cta,
+  .article-action-buttons .seo-secondary-cta {
+    flex: 1 1 180px;
+    justify-content: center;
+  }
+  .seo-article-page .article-toc ol,
+  .related-link-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .article-data-table {
+    min-width: 640px;
+  }
+}
