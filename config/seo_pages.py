@@ -1,4 +1,4 @@
-﻿"""SEO landing page content for public Radar BDS pages."""
+"""SEO landing page content for public Radar BDS pages."""
 
 SEO_PAGES = {
     "bao-cao": {
@@ -1092,3 +1092,44 @@ _REPORT_JUNE_2026.update(
         ],
     }
 )
+
+# --- Hermes Phu Tan internal links 2026-07-22 ---
+def _rb_prepend_unique_page_link(page_slug, link):
+    page = SEO_PAGES.get(page_slug)
+    if not page:
+        return
+    links = list(page.get("local_links") or [])
+    href = link.get("href")
+    links = [item for item in links if item.get("href") != href]
+    page["local_links"] = [link] + links
+    if not page.get("local_links_title"):
+        page["local_links_title"] = "Đọc tiếp từ dữ liệu Radar"
+
+_PHU_TAN_ARTICLE_LINK = {
+    "label": "Giá đất Phú Tân tháng 7/2026",
+    "href": "/kien-thuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
+    "description": "Bài phân tích data-driven: 708 tin active, 321 tín hiệu, đất nền trung vị 23,8 tr/m².",
+}
+_PHU_TAN_REPORT_LINK = {
+    "label": "Báo cáo Phú Tân tháng 07/2026",
+    "href": "/bao-cao/phu-tan-thang-07-2026",
+    "description": "Báo cáo tháng có bảng loại hình, biểu đồ và phương pháp tính giá/m².",
+}
+_MASTER_REPORT_LINK = {
+    "label": "Báo cáo Thủ Dầu Một tháng 07/2026",
+    "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+    "description": "So Phú Tân với 12 phường còn lại trong cùng kỳ dữ liệu.",
+}
+_WARD_LINK = {
+    "label": "Trang phường Phú Tân",
+    "href": "/binh-duong/phuong-phu-tan",
+    "description": "Landing nhà đất Phú Tân để mở dashboard theo khu vực.",
+}
+_rb_prepend_unique_page_link("binh-duong/phuong-phu-tan", _PHU_TAN_ARTICLE_LINK)
+_rb_prepend_unique_page_link("binh-duong/phuong-phu-tan", _PHU_TAN_REPORT_LINK)
+_rb_prepend_unique_page_link("bao-cao/phu-tan-thang-07-2026", _PHU_TAN_ARTICLE_LINK)
+_rb_prepend_unique_page_link("bao-cao/phu-tan-thang-07-2026", _WARD_LINK)
+_rb_prepend_unique_page_link("bao-cao/phu-tan-thang-07-2026", _MASTER_REPORT_LINK)
+_rb_prepend_unique_page_link("san-deal-bds", _PHU_TAN_ARTICLE_LINK)
+_rb_prepend_unique_page_link("san-deal-bds", _PHU_TAN_REPORT_LINK)
+_rb_prepend_unique_page_link("binh-duong/thu-dau-mot", _PHU_TAN_ARTICLE_LINK)
