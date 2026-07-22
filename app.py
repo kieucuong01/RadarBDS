@@ -1584,6 +1584,15 @@ def _hydrate_live_location_page(page: dict) -> dict:
 def _render_public_page(page: dict):
     page = dict(page)
     page = _hydrate_live_location_page(page)
+    if page.get("variant") == "report" and not page.get("scope_label"):
+        # Older generated market reports predate `scope_label`, but
+        # templates/seo_report.html serializes it into JSON-LD.  Provide a
+        # safe runtime fallback so legacy report URLs don't return HTTP 500.
+        map_label = str(page.get("map_label") or "")
+        if " / " in map_label:
+            page["scope_label"] = map_label.split(" / ", 1)[1]
+        else:
+            page["scope_label"] = "Thủ Dầu Một"
     page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(
         page["path"],
