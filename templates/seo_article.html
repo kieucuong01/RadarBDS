@@ -37,11 +37,11 @@
         {% endif %}
         <section class="article-action-strip" aria-label="Hành động nhanh">
           <div>
-            <span>Đọc nhanh rồi lọc dữ liệu thật</span>
+            <span>Đọc nhanh rồi xem tin thực tế</span>
             <strong>{{ page.hero_metric.value if page.hero_metric else page.article.summary_cards[0].value }} · {{ page.scope_label }}</strong>
           </div>
           <div class="article-action-buttons">
-            <a class="seo-primary-cta" href="{{ page.primary_href or '/?tab=signals' }}" data-track-cta="article_top_dashboard">{{ page.primary_cta or 'Mở dashboard' }}</a>
+            <a class="seo-primary-cta" href="{{ page.primary_href or '/?tab=signals' }}" data-track-cta="article_top_dashboard">{{ page.primary_cta or 'Mở Radar' }}</a>
             {% if page.secondary_href %}<a class="seo-secondary-cta" href="{{ page.secondary_href }}" data-track-cta="article_top_secondary">{{ page.secondary_cta or 'Xem báo cáo' }}</a>{% endif %}
           </div>
         </section>
@@ -166,11 +166,11 @@
 
         <section class="seo-final-cta">
           <div>
-            <p class="seo-eyebrow">Áp dụng vào dữ liệu thực tế</p>
-            <h2>Mở dashboard để lọc signal phù hợp</h2>
-            <p>Mở dashboard để lọc tin theo khu vực, xem các signal đang phù hợp và bấm liên hệ khi có tin đáng kiểm tra.</p>
+            <p class="seo-eyebrow">Xem tin thực tế</p>
+            <h2>Mở Radar để lọc tin đáng kiểm tra</h2>
+            <p>Mở Radar để lọc tin theo phường, xem giá theo loại nhà đất và chọn tin đáng kiểm tra trước khi liên hệ.</p>
           </div>
-          <a class="seo-primary-cta" href="{{ page.primary_href or '/?tab=signals' }}" data-track-cta="article_signals">{{ page.primary_cta or 'Mở dashboard' }}</a>
+          <a class="seo-primary-cta" href="{{ page.primary_href or '/?tab=signals' }}" data-track-cta="article_signals">{{ page.primary_cta or 'Mở Radar' }}</a>
         </section>
       </div>
     </article>

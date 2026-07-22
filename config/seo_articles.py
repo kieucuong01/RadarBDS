@@ -24,9 +24,9 @@ SEO_ARTICLES = {
         "hero_checks": [
             "Giá/m2 theo từng phường",
             "MOS để ưu tiên tin nên gọi trước",
-            "Dashboard filter -> signal -> liên hệ",
+            "Dashboard filter -> tin đáng kiểm tra -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lọc signal",
+        "primary_cta": "Mở dashboard để lọc tin đáng kiểm tra",
         "secondary_cta": "Xem feed bán đất Bình Dương",
         "secondary_href": "/ban-dat-binh-duong",
         "map_label": "Knowledge / Binh Duong Land",
@@ -43,7 +43,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lọc signal",
+            "metric_b_value": "lọc tin đáng kiểm tra",
         },
         "value_cards": [
             {
@@ -51,7 +51,7 @@ SEO_ARTICLES = {
                 "body": (
                     "Đất Bình Dương trải rộng từ Thủ Dầu Một đến Bến Cát và Mỹ Phước. "
                     "Một tin rẻ chỉ có ý nghĩa khi so với đúng phường, đúng loại đất "
-                    "và đúng mặt bằng giá/m2 cùng khu."
+                    "và đúng mức giá phổ biến/m2 cùng khu."
                 ),
             },
             {
@@ -65,7 +65,7 @@ SEO_ARTICLES = {
             {
                 "title": "Dùng bộ lọc để không lọc lại từ đầu mỗi ngày",
                 "body": (
-                    "Sau khi chọn khu và ngưỡng giá hợp lý, hãy lọc signal trên "
+                    "Sau khi chọn khu và ngưỡng giá hợp lý, hãy lọc tin đáng kiểm tra trên "
                     "dashboard. Đó là cây cầu từ bài SEO sang dashboard và bước liên hệ "
                     "khi bạn muốn theo dõi deal mới nhanh hơn."
                 ),
@@ -76,16 +76,16 @@ SEO_ARTICLES = {
             "title": "Từ bài viết sang dashboard để lọc tin thực sự đáng mở",
             "body": (
                 "Bài viết này chỉ giúp bạn đặt bộ lọc đúng. Dashboard mới là nơi bạn "
-                "xem giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lọc signal "
-                "và xem signal mới trên dashboard."
+                "xem giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lọc tin đáng kiểm tra "
+                "và xem tin đáng kiểm tra mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
             "alt": "Dashboard Radar BDS để lọc tin bán đất Bình Dương theo bộ lọc",
-            "cta": "Lọc signal Bình Dương",
+            "cta": "Lọc tin đáng kiểm tra Bình Dương",
             "metrics": [
                 {"value": "Dashboard", "label": "mở các tin MOS cao cần soi"},
                 {"value": "Bộ lọc", "label": "giữ đúng khu và ngưỡng giá bạn theo"},
-                {"value": "dashboard", "label": "xem signal phù hợp thay vì tự rà lại mỗi ngày"},
+                {"value": "dashboard", "label": "xem tin đáng kiểm tra phù hợp thay vì tự rà lại mỗi ngày"},
             ],
         },
         "market_snapshot": {
@@ -102,37 +102,37 @@ SEO_ARTICLES = {
                     "area": "Giá rẻ nhưng thiếu ward",
                     "price": "Có thể đang so sai khu",
                     "tracked": "Mở trang khu/phường liên quan",
-                    "signal": "Không so chéo toàn tỉnh trước khi lọc đúng phường",
+                    "tin đáng kiểm tra": "Không so chéo toàn tỉnh trước khi lọc đúng phường",
                 },
                 {
                     "area": "Có giá/m2 nhưng thiếu thổ cư",
                     "price": "Giá/m2 dễ bị đánh lừa",
                     "tracked": "Xem lại mô tả và nhóm cùng phân khúc",
-                    "signal": "Ưu tiên tin mô tả rõ đất nền, thổ cư, diện tích",
+                    "tin đáng kiểm tra": "Ưu tiên tin mô tả rõ đất nền, thổ cư, diện tích",
                 },
                 {
                     "area": "Mô tả rõ, ward rõ, giá không quá thấp",
                     "price": "Thường đáng kiểm tra hơn tin giật sốc",
                     "tracked": "Đưa vào dashboard để soi MOS",
-                    "signal": "MOS giúp ưu tiên tin nên gọi trước",
+                    "tin đáng kiểm tra": "MOS giúp ưu tiên tin nên gọi trước",
                 },
                 {
                     "area": "Tin lặp lại nhiều lần",
                     "price": "Có thể chỉ là repost hoặc kéo khách",
                     "tracked": "Xem cảnh báo nguồn và lịch sử giá",
-                    "signal": "Không gọi chỉ vì thấy badge rẻ một lần",
+                    "tin đáng kiểm tra": "Không gọi chỉ vì thấy badge rẻ một lần",
                 },
                 {
                     "area": "Khu bạn theo xuất hiện đều",
                     "price": "Dễ tạo nhịp theo dõi liên tục",
-                    "tracked": "Lọc signal theo ward và ngân sách",
-                    "signal": "Bộ lọc tốt hơn việc tìm lại thủ công mỗi ngày",
+                    "tracked": "Lọc tin đáng kiểm tra theo ward và ngân sách",
+                    "tin đáng kiểm tra": "Bộ lọc tốt hơn việc tìm lại thủ công mỗi ngày",
                 },
                 {
                     "area": "Muốn phản ứng nhanh khi có deal mới",
                     "price": "Độ trễ làm mất cơ hội",
                     "tracked": "Nối bộ lọc với dashboard/contact",
-                    "signal": "liên hệ phù hợp khi bạn cần nhận tin sớm và sâu hơn",
+                    "tin đáng kiểm tra": "liên hệ phù hợp khi bạn cần nhận tin sớm và sâu hơn",
                 },
             ],
             "cards": [
@@ -142,13 +142,13 @@ SEO_ARTICLES = {
                     "body": "Một tin ở Thủ Dầu Một không nên so chung với nguồn hàng Bến Cát hay Mỹ Phước.",
                 },
                 {
-                    "title": "Tín hiệu nên ưu tiên",
+                    "title": "Dấu hiệu đáng chú ý nên ưu tiên",
                     "value": "MOS + nguồn rõ",
                     "body": "Ưu tiên tin có mô tả đủ, ward rõ và hợp lý khi so giá/m2 cùng nhóm.",
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lọc signal",
+                    "value": "Lọc tin đáng kiểm tra",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để biến hiểu biết thành bộ lọc có thể lặp lại.",
                 },
             ],
@@ -207,14 +207,14 @@ SEO_ARTICLES = {
             {
                 "title": "4. Kiểm tra cảnh báo nguồn trước khi tin rằng giá rẻ",
                 "body": (
-                    "Tin thiếu vị trí, thiếu thổ cư, sai ward hoặc có dấu hiệu repost nên bị xem là tín hiệu "
+                    "Tin thiếu vị trí, thiếu thổ cư, sai ward hoặc có dấu hiệu repost nên bị xem là dấu hiệu đáng chú ý "
                     "cần thẩm tra, không phải bằng chứng chắc chắn của một deal tốt."
                 ),
             },
             {
                 "title": "5. Chuyển sang bộ lọc để nhận nhịp theo dõi lặp lại",
                 "body": (
-                    "Sau khi lọc được khu, ngân sách và tiêu chí MOS, lọc signal trên dashboard. "
+                    "Sau khi lọc được khu, ngân sách và tiêu chí MOS, lọc tin đáng kiểm tra trên dashboard. "
                     "Đó là bước nối bài viết này sang dashboard và bước liên hệ khi bạn cần deal mới nhanh hơn."
                 ),
             },
@@ -256,10 +256,10 @@ SEO_ARTICLES = {
         "final_cta": {
             "title": "Đọc xong rồi, bước kế tiếp nên là dashboard chứ không phải lướt thêm tin rải rác",
             "body": (
-                "Mở dashboard để lọc theo khu bạn quan tâm, lọc signal và chuẩn bị xem signal mới trên dashboard. "
+                "Mở dashboard để lọc theo khu bạn quan tâm, lọc tin đáng kiểm tra và chuẩn bị xem tin đáng kiểm tra mới trên dashboard. "
                 "Nếu cần tốc độ và chiều sâu hơn, đó cũng là lúc đường dẫn sang liên hệ trở nên hợp lý."
             ),
-            "button": "Mở dashboard lọc signal",
+            "button": "Mở dashboard lọc tin đáng kiểm tra",
         },
     },
     "dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia": {
@@ -268,7 +268,7 @@ SEO_ARTICLES = {
         "title": "Đất Mỹ Phước Bình Dương: cách tách Mỹ Phước 1, 2, 3 để không so sai giá",
         "description": (
             "Hướng dẫn lọc đất Mỹ Phước Bình Dương bằng cách tách Mỹ Phước 1, 2, 3, "
-            "so đúng cụm Bến Cát, đọc giá/m2, MOS và lọc signal Radar BDS trước khi đi xem."
+            "so đúng cụm Bến Cát, đọc giá/m2, MOS và lọc tin đáng kiểm tra Radar BDS trước khi đi xem."
         ),
         "keywords": (
             "đất Mỹ Phước Bình Dương, đất Mỹ Phước, đất Bến Cát Bình Dương, đất Mỹ Phước 1, "
@@ -279,15 +279,15 @@ SEO_ARTICLES = {
         "hero_title": "Đất Mỹ Phước Bình Dương: cách tách Mỹ Phước 1, 2, 3 để không so sai giá",
         "hero_text": (
             "Khi tìm đất Mỹ Phước Bình Dương, sai lầm phổ biến nhất là gom Mỹ Phước 1, 2, 3 "
-            "thành một mặt bằng giá duy nhất. Radar BDS giúp bạn tách đúng cụm, so đúng nguồn "
+            "thành một mức giá phổ biến duy nhất. Radar BDS giúp bạn tách đúng cụm, so đúng nguồn "
             "Bến Cát liên quan, rồi mới dùng giá/m2, MOS và bộ lọc để biết tin nào đáng kiểm tra."
         ),
         "hero_checks": [
             "Tách Mỹ Phước 1, 2, 3 trước khi so giá",
             "So cùng cụm Bến Cát thay vì quét cả tỉnh",
-            "Dashboard filter -> signal -> liên hệ",
+            "Dashboard filter -> tin đáng kiểm tra -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lọc signal Mỹ Phước",
+        "primary_cta": "Mở dashboard để lọc tin đáng kiểm tra Mỹ Phước",
         "secondary_cta": "Xem landing đất Mỹ Phước",
         "secondary_href": "/binh-duong/my-phuoc",
         "map_label": "Knowledge / My Phuoc",
@@ -304,7 +304,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2 theo cụm",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lọc signal",
+            "metric_b_value": "lọc tin đáng kiểm tra",
         },
         "value_cards": [
             {
@@ -324,7 +324,7 @@ SEO_ARTICLES = {
             {
                 "title": "Biến hiểu biết khu vực thành bộ lọc có thể lặp lại",
                 "body": (
-                    "Sau khi chốt cụm phù hợp, hãy lọc signal theo khu, ngân sách và tiêu chí MOS trên dashboard. "
+                    "Sau khi chốt cụm phù hợp, hãy lọc tin đáng kiểm tra theo khu, ngân sách và tiêu chí MOS trên dashboard. "
                     "Đó là cầu nối từ bài SEO sang dashboard và bước liên hệ khi bạn muốn phản ứng nhanh hơn."
                 ),
             },
@@ -334,15 +334,15 @@ SEO_ARTICLES = {
             "title": "Hiểu khác biệt Mỹ Phước 1, 2, 3 rồi thì phải chuyển sang bộ lọc",
             "body": (
                 "Bài viết này giúp bạn đặt bộ lọc đúng cho đất Mỹ Phước Bình Dương. Dashboard mới là nơi xem "
-                "nguồn tin đang có, đối chiếu giá/m2, MOS, cảnh báo nguồn và lọc signal để xem signal mới trên dashboard."
+                "nguồn tin đang có, đối chiếu giá/m2, MOS, cảnh báo nguồn và lọc tin đáng kiểm tra để xem tin đáng kiểm tra mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
             "alt": "Dashboard Radar BDS để lọc đất Mỹ Phước Bình Dương theo bộ lọc",
-            "cta": "Lọc signal Mỹ Phước",
+            "cta": "Lọc tin đáng kiểm tra Mỹ Phước",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Mỹ Phước đang có"},
                 {"value": "Bộ lọc", "label": "giữ đúng cụm 1, 2, 3 bạn theo"},
-                {"value": "dashboard", "label": "xem signal phù hợp thay vì lọc lại từ đầu"},
+                {"value": "dashboard", "label": "xem tin đáng kiểm tra phù hợp thay vì lọc lại từ đầu"},
             ],
         },
         "market_snapshot": {
@@ -358,37 +358,37 @@ SEO_ARTICLES = {
                     "area": "Tin chỉ ghi Mỹ Phước chung chung",
                     "price": "Dễ gom sai 1, 2, 3",
                     "tracked": "Mở trang cụm liên quan",
-                    "signal": "Không so giá trước khi biết tin nghiêng về Mỹ Phước 1, 2 hay 3",
+                    "tin đáng kiểm tra": "Không so giá trước khi biết tin nghiêng về Mỹ Phước 1, 2 hay 3",
                 },
                 {
                     "area": "Nhắc gần KCN nhưng không rõ cụm",
                     "price": "Khoảng cách và nhu cầu thuê khác nhau",
                     "tracked": "Đối chiếu với Bến Cát và cụm lân cận",
-                    "signal": "So cùng bối cảnh công nghiệp chứ không so cả Bình Dương",
+                    "tin đáng kiểm tra": "So cùng bối cảnh công nghiệp chứ không so cả Bình Dương",
                 },
                 {
                     "area": "Có giá/m2 nhưng thiếu thông tin thổ cư",
                     "price": "Giá/m2 dễ nhìn rẻ giả",
                     "tracked": "Xem lại mô tả và nhóm cùng phân khúc",
-                    "signal": "Ưu tiên tin nêu rõ đất nền, thổ cư, diện tích và hướng tiếp cận",
+                    "tin đáng kiểm tra": "Ưu tiên tin nêu rõ đất nền, thổ cư, diện tích và hướng tiếp cận",
                 },
                 {
                     "area": "Tin ở trục lớn và tin trong khu dân cư bị trộn chung",
                     "price": "Mặt bằng cụm bị méo",
                     "tracked": "Tách theo vị trí vào khu và loại tài sản",
-                    "signal": "MOS chỉ hữu ích khi đầu vào đã tách đúng cụm",
+                    "tin đáng kiểm tra": "MOS chỉ hữu ích khi đầu vào đã tách đúng cụm",
                 },
                 {
                     "area": "Tin nhà trọ và đất nền bị so cùng nhau",
                     "price": "Sai kỳ vọng lợi suất và giá đất",
                     "tracked": "Chốt đúng mục tiêu mua trước khi lọc",
-                    "signal": "Không trộn nhu cầu ở thật với nhu cầu đầu tư dòng tiền",
+                    "tin đáng kiểm tra": "Không trộn nhu cầu ở thật với nhu cầu đầu tư dòng tiền",
                 },
                 {
                     "area": "Khu bạn theo xuất hiện đều mỗi ngày",
                     "price": "Đã đủ nhịp để theo dõi liên tục",
-                    "tracked": "Lọc signal theo cụm và ngân sách",
-                    "signal": "Bộ lọc + dashboard tốt hơn việc tự quét lại nguồn hàng mỗi ngày",
+                    "tracked": "Lọc tin đáng kiểm tra theo cụm và ngân sách",
+                    "tin đáng kiểm tra": "Bộ lọc + dashboard tốt hơn việc tự quét lại nguồn hàng mỗi ngày",
                 },
             ],
             "cards": [
@@ -398,13 +398,13 @@ SEO_ARTICLES = {
                     "body": "Một tin rẻ ở Mỹ Phước 3 không nên được kết luận bằng mặt bằng rút gọn của cả cụm Mỹ Phước.",
                 },
                 {
-                    "title": "Tín hiệu nên ưu tiên",
+                    "title": "Dấu hiệu đáng chú ý nên ưu tiên",
                     "value": "Cụm rõ + nguồn rõ",
                     "body": "Ưu tiên tin nêu rõ Mỹ Phước 1, 2 hoặc 3, loại đất, diện tích và logic giá/m2 cùng nhóm.",
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lọc signal",
+                    "value": "Lọc tin đáng kiểm tra",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng cụm bạn đang theo và nhận nhịp deal mới.",
                 },
             ],
@@ -461,21 +461,21 @@ SEO_ARTICLES = {
             {
                 "title": "3. Dùng giá/m2 và MOS để xếp thứ tự gọi",
                 "body": (
-                    "Khi cụm đã đúng, giá/m2 và MOS mới trở thành tín hiệu hữu ích để biết tin nào nên mở trước, "
+                    "Khi cụm đã đúng, giá/m2 và MOS mới trở thành dấu hiệu đáng chú ý hữu ích để biết tin nào nên mở trước, "
                     "tin nào chỉ nên để theo dõi thêm."
                 ),
             },
             {
                 "title": "4. Kiểm tra cảnh báo nguồn trước khi tin vào chữ rẻ",
                 "body": (
-                    "Tin thiếu cụm, thiếu thổ cư, thiếu logic vị trí hoặc có dấu hiệu repost nên bị xem là tín hiệu cần thẩm tra, "
+                    "Tin thiếu cụm, thiếu thổ cư, thiếu logic vị trí hoặc có dấu hiệu repost nên bị xem là dấu hiệu đáng chú ý cần thẩm tra, "
                     "không phải bằng chứng chắc chắn của một deal tốt."
                 ),
             },
             {
-                "title": "5. Lọc signal để biến bài đọc thành nhịp theo dõi",
+                "title": "5. Lọc tin đáng kiểm tra để biến bài đọc thành nhịp theo dõi",
                 "body": (
-                    "Sau khi xác định cụm, ngân sách và tiêu chí MOS phù hợp, lọc signal trên dashboard để xem signal mới trên dashboard "
+                    "Sau khi xác định cụm, ngân sách và tiêu chí MOS phù hợp, lọc tin đáng kiểm tra trên dashboard để xem tin đáng kiểm tra mới trên dashboard "
                     "và mở đường cho nhu cầu liên hệ khi bạn cần phản ứng nhanh hơn."
                 ),
             },
@@ -517,10 +517,10 @@ SEO_ARTICLES = {
         "final_cta": {
             "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng cụm Mỹ Phước trên dashboard",
             "body": (
-                "Bài viết giúp bạn tránh so sai cụm. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, xem signal mới trên dashboard "
+                "Bài viết giúp bạn tránh so sai cụm. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, xem tin đáng kiểm tra mới trên dashboard "
                 "và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
             ),
-            "button": "Mở dashboard lọc signal Mỹ Phước",
+            "button": "Mở dashboard lọc tin đáng kiểm tra Mỹ Phước",
         },
     },
     "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia": {
@@ -529,7 +529,7 @@ SEO_ARTICLES = {
         "title": "Giá đất Thủ Dầu Một theo phường: vì sao phải tách Phú Mỹ, Hiệp An, Chánh Nghĩa trước khi so giá",
         "description": (
             "Hướng dẫn đọc giá đất Thủ Dầu Một theo phường bằng cách tách Phú Mỹ, Hiệp An, Chánh Nghĩa, "
-            "so đúng giá/m2, MOS và lọc signal Radar BDS trước khi đi xem."
+            "so đúng giá/m2, MOS và lọc tin đáng kiểm tra Radar BDS trước khi đi xem."
         ),
         "keywords": (
             "giá đất Thủ Dầu Một theo phường, nhà đất Thủ Dầu Một, giá đất Phú Mỹ Thủ Dầu Một, "
@@ -545,9 +545,9 @@ SEO_ARTICLES = {
         "hero_checks": [
             "Tách Phú Mỹ, Hiệp An, Chánh Nghĩa trước khi so giá",
             "Giá/m2 + MOS + cảnh báo nguồn",
-            "Dashboard filter -> signal -> liên hệ",
+            "Dashboard filter -> tin đáng kiểm tra -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lọc signal Thủ Dầu Một",
+        "primary_cta": "Mở dashboard để lọc tin đáng kiểm tra Thủ Dầu Một",
         "secondary_cta": "Xem landing Thủ Dầu Một",
         "secondary_href": "/binh-duong/thu-dau-mot",
         "map_label": "Knowledge / Thu Dau Mot",
@@ -564,7 +564,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2 theo phường",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lọc signal",
+            "metric_b_value": "lọc tin đáng kiểm tra",
         },
         "value_cards": [
             {
@@ -578,13 +578,13 @@ SEO_ARTICLES = {
                 "title": "Tin đáng kiểm tra không chỉ là tin nghe rẻ",
                 "body": (
                     "Một tin nhà đất Thủ Dầu Một đáng mở tiếp thường nêu rõ phường, diện tích, thổ cư và logic vị trí. "
-                    "Tin quá rẻ nhưng mờ phường hoặc nguồn thiếu nhất quán nên bị xem là tín hiệu cần soi kỹ hơn."
+                    "Tin quá rẻ nhưng mờ phường hoặc nguồn thiếu nhất quán nên bị xem là dấu hiệu đáng chú ý cần soi kỹ hơn."
                 ),
             },
             {
                 "title": "Biến hiểu biết phường thành bộ lọc có thể lặp lại",
                 "body": (
-                    "Sau khi chốt phường và ngưỡng giá hợp lý, hãy lọc signal trên dashboard. "
+                    "Sau khi chốt phường và ngưỡng giá hợp lý, hãy lọc tin đáng kiểm tra trên dashboard. "
                     "Đó là cầu nối từ bài SEO sang dashboard và bước liên hệ khi bạn muốn theo dõi deal mới nhanh hơn."
                 ),
             },
@@ -594,15 +594,15 @@ SEO_ARTICLES = {
             "title": "Hiểu đúng giá đất Thủ Dầu Một theo phường rồi thì phải chuyển sang bộ lọc",
             "body": (
                 "Bài viết này giúp bạn tránh so sai phường. Dashboard mới là nơi bạn mở các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá "
-                "và cảnh báo nguồn trước khi lọc signal để xem signal mới trên dashboard."
+                "và cảnh báo nguồn trước khi lọc tin đáng kiểm tra để xem tin đáng kiểm tra mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
             "alt": "Dashboard Radar BDS để lọc nhà đất Thủ Dầu Một theo bộ lọc",
-            "cta": "Lọc signal Thủ Dầu Một",
+            "cta": "Lọc tin đáng kiểm tra Thủ Dầu Một",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Thủ Dầu Một đang có"},
                 {"value": "Bộ lọc", "label": "giữ đúng phường và ngưỡng giá bạn theo"},
-                {"value": "dashboard", "label": "xem signal phù hợp thay vì quét lại từ đầu"},
+                {"value": "dashboard", "label": "xem tin đáng kiểm tra phù hợp thay vì quét lại từ đầu"},
             ],
         },
         "market_snapshot": {
@@ -618,37 +618,37 @@ SEO_ARTICLES = {
                     "area": "Tin chỉ ghi Thủ Dầu Một chung chung",
                     "price": "Dễ gom sai phường",
                     "tracked": "Mở landing khu hoặc phường liên quan",
-                    "signal": "Không so giá trước khi biết tin nghiêng về Phú Mỹ, Hiệp An hay Chánh Nghĩa",
+                    "tin đáng kiểm tra": "Không so giá trước khi biết tin nghiêng về Phú Mỹ, Hiệp An hay Chánh Nghĩa",
                 },
                 {
                     "area": "Tin gần trung tâm nhưng thiếu phường",
                     "price": "Mặt bằng Chánh Nghĩa lệch rõ so với Hiệp An",
                     "tracked": "Đối chiếu đúng phường và loại tài sản",
-                    "signal": "Cùng là Thủ Dầu Một nhưng giá/m2 chỉ có nghĩa khi so cùng nhóm",
+                    "tin đáng kiểm tra": "Cùng là Thủ Dầu Một nhưng giá/m2 chỉ có nghĩa khi so cùng nhóm",
                 },
                 {
                     "area": "Có giá/m2 nhưng thiếu thổ cư hoặc diện tích rõ",
                     "price": "Giá/m2 dễ nhìn rẻ giả",
                     "tracked": "Xem lại mô tả và nhóm cùng phân khúc",
-                    "signal": "Ưu tiên tin nêu rõ thổ cư, diện tích và lối vào thực tế",
+                    "tin đáng kiểm tra": "Ưu tiên tin nêu rõ thổ cư, diện tích và lối vào thực tế",
                 },
                 {
                     "area": "Tin có MOS nhưng nguồn mờ hoặc repost",
                     "price": "MOS có thể bị kéo lệch bởi dữ liệu đầu vào",
                     "tracked": "Kiểm tra cảnh báo nguồn và lịch sử giá",
-                    "signal": "Không gọi chỉ vì thấy badge rẻ một lần",
+                    "tin đáng kiểm tra": "Không gọi chỉ vì thấy badge rẻ một lần",
                 },
                 {
                     "area": "Tin nêu rõ phường, diện tích, loại tài sản",
                     "price": "Dễ đọc đúng mặt bằng hơn",
                     "tracked": "Đưa vào dashboard để soi tiếp",
-                    "signal": "Đây là nhóm phù hợp để ưu tiên thứ tự gọi và đi xem",
+                    "tin đáng kiểm tra": "Đây là nhóm phù hợp để ưu tiên thứ tự gọi và đi xem",
                 },
                 {
                     "area": "Bạn muốn theo dõi đều một phường cụ thể",
                     "price": "Tự quét lại mỗi ngày rất tốn thời gian",
-                    "tracked": "Lọc signal theo phường và ngân sách",
-                    "signal": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
+                    "tracked": "Lọc tin đáng kiểm tra theo phường và ngân sách",
+                    "tin đáng kiểm tra": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
                 },
             ],
             "cards": [
@@ -658,13 +658,13 @@ SEO_ARTICLES = {
                     "body": "Một tin ở Hiệp An có thể chỉ trông rẻ khi bạn vô tình kéo mặt bằng trung tâm Chánh Nghĩa vào cùng phép so.",
                 },
                 {
-                    "title": "Tín hiệu nên ưu tiên",
+                    "title": "Dấu hiệu đáng chú ý nên ưu tiên",
                     "value": "Phường rõ + nguồn rõ",
                     "body": "Ưu tiên tin nêu rõ phường, loại tài sản, diện tích và còn giữ được logic giá/m2 cùng nhóm.",
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lọc signal",
+                    "value": "Lọc tin đáng kiểm tra",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng phường bạn đang theo và nhận deal mới nhanh hơn.",
                 },
             ],
@@ -689,7 +689,7 @@ SEO_ARTICLES = {
             {
                 "label": "Chánh Nghĩa",
                 "href": "/binh-duong/phuong-chanh-nghia",
-                "description": "Giúp đặt đúng bối cảnh trung tâm để tránh kéo mặt bằng giá cao áp vào các phường khác.",
+                "description": "Giúp đặt đúng bối cảnh trung tâm để tránh kéo mức giá phổ biến cao áp vào các phường khác.",
             },
             {
                 "label": "Báo cáo BĐS Bình Dương tháng 06/2026",
@@ -720,20 +720,20 @@ SEO_ARTICLES = {
             {
                 "title": "3. Dùng MOS để xếp thứ tự kiểm tra",
                 "body": (
-                    "Khi phường đã đúng, MOS mới trở thành tín hiệu hữu ích để biết tin nào nên mở trước trong danh sách nhà đất Thủ Dầu Một."
+                    "Khi phường đã đúng, MOS mới trở thành dấu hiệu đáng chú ý hữu ích để biết tin nào nên mở trước trong danh sách nhà đất Thủ Dầu Một."
                 ),
             },
             {
                 "title": "4. Kiểm tra cảnh báo nguồn trước khi tin vào chữ rẻ",
                 "body": (
-                    "Tin thiếu phường, thiếu thổ cư, thiếu logic vị trí hoặc có dấu hiệu repost nên bị xem là tín hiệu cần thẩm tra, "
+                    "Tin thiếu phường, thiếu thổ cư, thiếu logic vị trí hoặc có dấu hiệu repost nên bị xem là dấu hiệu đáng chú ý cần thẩm tra, "
                     "không phải bằng chứng chắc chắn của một deal tốt."
                 ),
             },
             {
-                "title": "5. Lọc signal để biến bài đọc thành nhịp theo dõi",
+                "title": "5. Lọc tin đáng kiểm tra để biến bài đọc thành nhịp theo dõi",
                 "body": (
-                    "Sau khi xác định phường, ngân sách và tiêu chí MOS phù hợp, lọc signal trên dashboard để xem signal mới trên dashboard "
+                    "Sau khi xác định phường, ngân sách và tiêu chí MOS phù hợp, lọc tin đáng kiểm tra trên dashboard để xem tin đáng kiểm tra mới trên dashboard "
                     "và mở đường cho nhu cầu liên hệ khi bạn cần phản ứng nhanh hơn."
                 ),
             },
@@ -775,10 +775,10 @@ SEO_ARTICLES = {
         "final_cta": {
             "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng phường Thủ Dầu Một trên dashboard",
             "body": (
-                "Bài viết giúp bạn tránh gom sai mặt bằng. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, xem signal mới trên dashboard "
+                "Bài viết giúp bạn tránh gom sai mặt bằng. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, xem tin đáng kiểm tra mới trên dashboard "
                 "và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
             ),
-            "button": "Mở dashboard lọc signal Thủ Dầu Một",
+            "button": "Mở dashboard lọc tin đáng kiểm tra Thủ Dầu Một",
         },
     },
     "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin": {
@@ -802,9 +802,9 @@ SEO_ARTICLES = {
         "hero_checks": [
             "Tách Thủ Dầu Một, Bến Cát, Mỹ Phước trước khi so giá",
             "Giá/m2 + MOS + cảnh báo nguồn",
-            "Dashboard filter -> signal -> liên hệ",
+            "Dashboard filter -> tin đáng kiểm tra -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lọc signal đất Bình Dương",
+        "primary_cta": "Mở dashboard để lọc tin đáng kiểm tra đất Bình Dương",
         "secondary_cta": "Xem hub đất Bình Dương",
         "secondary_href": "/ban-dat-binh-duong",
         "map_label": "Knowledge / Binh Duong Land",
@@ -821,7 +821,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2 theo khu",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lọc signal",
+            "metric_b_value": "lọc tin đáng kiểm tra",
         },
         "value_cards": [
             {
@@ -841,7 +841,7 @@ SEO_ARTICLES = {
             {
                 "title": "Tách cụm xong rồi biến nó thành bộ lọc lặp lại",
                 "body": (
-                    "Sau khi chốt cụm và ngưỡng giá hợp lý, hãy lọc signal trên dashboard. "
+                    "Sau khi chốt cụm và ngưỡng giá hợp lý, hãy lọc tin đáng kiểm tra trên dashboard. "
                     "Đó là cầu nối từ bài SEO sang dashboard và bước liên hệ khi bạn muốn theo dõi deal mới nhanh hơn."
                 ),
             },
@@ -851,15 +851,15 @@ SEO_ARTICLES = {
             "title": "Hiểu đúng đất Bình Dương rồi thì phải chuyển sang bộ lọc theo khu",
             "body": (
                 "Bài viết này giúp bạn tránh gom sai mặt bằng toàn tỉnh. Dashboard mới là nơi bạn mở các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá "
-                "và cảnh báo nguồn trước khi lọc signal để xem signal mới trên dashboard."
+                "và cảnh báo nguồn trước khi lọc tin đáng kiểm tra để xem tin đáng kiểm tra mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
             "alt": "Dashboard Radar BDS để lọc đất Bình Dương theo khu và bộ lọc",
-            "cta": "Lọc signal đất Bình Dương",
+            "cta": "Lọc tin đáng kiểm tra đất Bình Dương",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed đất Bình Dương đang có"},
                 {"value": "Bộ lọc", "label": "giữ đúng khu và ngưỡng giá bạn theo"},
-                {"value": "dashboard", "label": "xem signal phù hợp thay vì so lại từ đầu"},
+                {"value": "dashboard", "label": "xem tin đáng kiểm tra phù hợp thay vì so lại từ đầu"},
             ],
         },
         "market_snapshot": {
@@ -875,37 +875,37 @@ SEO_ARTICLES = {
                     "area": "Tin chỉ ghi Bình Dương chung chung",
                     "price": "Dễ gom sai mặt bằng tỉnh",
                     "tracked": "Mở hub hoặc landing khu liên quan",
-                    "signal": "Không so giá trước khi biết tin nghiêng về Thủ Dầu Một, Bến Cát hay Mỹ Phước",
+                    "tin đáng kiểm tra": "Không so giá trước khi biết tin nghiêng về Thủ Dầu Một, Bến Cát hay Mỹ Phước",
                 },
                 {
                     "area": "Tin ở Bến Cát nhưng bị so với trung tâm Thủ Dầu Một",
                     "price": "Giá/m2 lệch kỳ vọng rõ",
                     "tracked": "Thu hẹp về đúng khu và loại tài sản",
-                    "signal": "Cùng là đất Bình Dương nhưng mỗi cụm có nhịp giá riêng",
+                    "tin đáng kiểm tra": "Cùng là đất Bình Dương nhưng mỗi cụm có nhịp giá riêng",
                 },
                 {
                     "area": "Tin Mỹ Phước chưa tách 1, 2, 3",
                     "price": "Dễ nhìn rẻ hoặc đắt giả",
                     "tracked": "Mở tiếp bài tách cụm Mỹ Phước",
-                    "signal": "So đúng cụm trước rồi mới đọc MOS",
+                    "tin đáng kiểm tra": "So đúng cụm trước rồi mới đọc MOS",
                 },
                 {
                     "area": "Có giá/m2 nhưng thiếu thổ cư hoặc diện tích rõ",
                     "price": "Giá/m2 có thể đánh lừa",
                     "tracked": "Xem lại mô tả và nhóm cùng phân khúc",
-                    "signal": "Ưu tiên tin nêu rõ thổ cư, diện tích và lối vào",
+                    "tin đáng kiểm tra": "Ưu tiên tin nêu rõ thổ cư, diện tích và lối vào",
                 },
                 {
                     "area": "Tin có MOS nhưng nguồn mờ hoặc repost",
                     "price": "MOS có thể bị kéo lệch",
                     "tracked": "Kiểm tra cảnh báo nguồn và lịch sử giá",
-                    "signal": "Không gọi chỉ vì thấy badge rẻ một lần",
+                    "tin đáng kiểm tra": "Không gọi chỉ vì thấy badge rẻ một lần",
                 },
                 {
                     "area": "Bạn muốn theo dõi đều một khu cụ thể",
                     "price": "Tự quét lại mỗi ngày rất tốn thời gian",
-                    "tracked": "Lọc signal theo khu và ngân sách",
-                    "signal": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
+                    "tracked": "Lọc tin đáng kiểm tra theo khu và ngân sách",
+                    "tin đáng kiểm tra": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
                 },
             ],
             "cards": [
@@ -915,13 +915,13 @@ SEO_ARTICLES = {
                     "body": "Một tin ở Bến Cát có thể trông rẻ khi bạn vô tình kéo mặt bằng trung tâm Thủ Dầu Một vào cùng phép so.",
                 },
                 {
-                    "title": "Tín hiệu nên ưu tiên",
+                    "title": "Dấu hiệu đáng chú ý nên ưu tiên",
                     "value": "Khu rõ + nguồn rõ",
                     "body": "Ưu tiên tin nêu rõ cụm, phường, loại tài sản, diện tích và còn giữ được logic giá/m2 cùng nhóm.",
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lọc signal",
+                    "value": "Lọc tin đáng kiểm tra",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng khu bạn đang theo và nhận deal mới nhanh hơn.",
                 },
             ],
@@ -931,7 +931,7 @@ SEO_ARTICLES = {
             {
                 "label": "Hub đất Bình Dương",
                 "href": "/ban-dat-binh-duong",
-                "description": "Trang hub để xem mặt bằng đất Bình Dương, tín hiệu theo khu và CTA vào dashboard.",
+                "description": "Trang hub để xem mặt bằng đất Bình Dương, dấu hiệu đáng chú ý theo khu và CTA vào dashboard.",
             },
             {
                 "label": "Thủ Dầu Một",
@@ -977,20 +977,20 @@ SEO_ARTICLES = {
             {
                 "title": "3. Dùng MOS để xếp thứ tự kiểm tra",
                 "body": (
-                    "Khi khu đã đúng, MOS mới trở thành tín hiệu hữu ích để biết tin nào nên mở trước trong danh sách đất Bình Dương."
+                    "Khi khu đã đúng, MOS mới trở thành dấu hiệu đáng chú ý hữu ích để biết tin nào nên mở trước trong danh sách đất Bình Dương."
                 ),
             },
             {
                 "title": "4. Kiểm tra cảnh báo nguồn trước khi tin vào chữ rẻ",
                 "body": (
-                    "Tin thiếu khu, thiếu thổ cư, thiếu logic vị trí hoặc có dấu hiệu repost nên bị xem là tín hiệu cần thẩm tra, "
+                    "Tin thiếu khu, thiếu thổ cư, thiếu logic vị trí hoặc có dấu hiệu repost nên bị xem là dấu hiệu đáng chú ý cần thẩm tra, "
                     "không phải bằng chứng chắc chắn của một deal tốt."
                 ),
             },
             {
-                "title": "5. Lọc signal để biến bài đọc thành nhịp theo dõi",
+                "title": "5. Lọc tin đáng kiểm tra để biến bài đọc thành nhịp theo dõi",
                 "body": (
-                    "Sau khi xác định khu, ngân sách và tiêu chí MOS phù hợp, lọc signal trên dashboard để xem signal mới trên dashboard "
+                    "Sau khi xác định khu, ngân sách và tiêu chí MOS phù hợp, lọc tin đáng kiểm tra trên dashboard để xem tin đáng kiểm tra mới trên dashboard "
                     "và mở đường cho nhu cầu liên hệ khi bạn cần phản ứng nhanh hơn."
                 ),
             },
@@ -1032,10 +1032,10 @@ SEO_ARTICLES = {
         "final_cta": {
             "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng khu đất Bình Dương trên dashboard",
             "body": (
-                "Bài viết giúp bạn tránh gom sai mặt bằng toàn tỉnh. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, xem signal mới trên dashboard "
+                "Bài viết giúp bạn tránh gom sai mặt bằng toàn tỉnh. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, xem tin đáng kiểm tra mới trên dashboard "
                 "và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
             ),
-            "button": "Mở dashboard lọc signal đất Bình Dương",
+            "button": "Mở dashboard lọc tin đáng kiểm tra đất Bình Dương",
         },
     },
     "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia": {
@@ -1061,9 +1061,9 @@ SEO_ARTICLES = {
         "hero_checks": [
             "Chốt đúng Phú Mỹ trước khi so giá",
             "Không kéo mặt bằng Hiệp An, Chánh Nghĩa vào sai chỗ",
-            "Dashboard filter -> signal -> liên hệ",
+            "Dashboard filter -> tin đáng kiểm tra -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lọc signal Phú Mỹ",
+        "primary_cta": "Mở dashboard để lọc tin đáng kiểm tra Phú Mỹ",
         "secondary_cta": "Xem landing Phú Mỹ",
         "secondary_href": "/binh-duong/phuong-phu-my",
         "map_label": "Knowledge / Phu My Thu Dau Mot",
@@ -1080,7 +1080,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2 đúng ward",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lọc signal",
+            "metric_b_value": "lọc tin đáng kiểm tra",
         },
         "value_cards": [
             {
@@ -1101,7 +1101,7 @@ SEO_ARTICLES = {
             {
                 "title": "Biến hiểu biết địa phương thành bộ lọc lặp lại",
                 "body": (
-                    "Sau khi chốt được nhóm Phú Mỹ phù hợp ngân sách, hãy lọc signal trên dashboard. "
+                    "Sau khi chốt được nhóm Phú Mỹ phù hợp ngân sách, hãy lọc tin đáng kiểm tra trên dashboard. "
                     "Đó là cầu nối từ bài SEO sang dashboard và bước liên hệ khi bạn muốn theo deal mới nhanh hơn."
                 ),
             },
@@ -1111,16 +1111,16 @@ SEO_ARTICLES = {
             "title": "Đọc đúng Phú Mỹ rồi thì bước tiếp theo phải là bộ lọc theo ward",
             "body": (
                 "Bài viết này giúp bạn tránh so sai mặt bằng trong cùng Thủ Dầu Một. Dashboard mới là nơi bạn mở "
-                "các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lọc signal "
-                "để xem signal mới trên dashboard."
+                "các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lọc tin đáng kiểm tra "
+                "để xem tin đáng kiểm tra mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
             "alt": "Dashboard Radar BDS để lọc nhà đất Phú Mỹ Thủ Dầu Một theo bộ lọc",
-            "cta": "Lọc signal Phú Mỹ",
+            "cta": "Lọc tin đáng kiểm tra Phú Mỹ",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Thủ Dầu Một đang có"},
                 {"value": "Bộ lọc", "label": "giữ đúng ward và ngưỡng giá bạn theo"},
-                {"value": "dashboard", "label": "xem signal phù hợp thay vì tự rà lại mỗi ngày"},
+                {"value": "dashboard", "label": "xem tin đáng kiểm tra phù hợp thay vì tự rà lại mỗi ngày"},
             ],
         },
         "market_snapshot": {
@@ -1137,37 +1137,37 @@ SEO_ARTICLES = {
                     "area": "Tin ghi Phú Mỹ nhưng mô tả nghiêng về khu giáp ward khác",
                     "price": "Dễ kéo sai mặt bằng so giá",
                     "tracked": "Mở landing Phú Mỹ và các ward liên quan",
-                    "signal": "Xác nhận đúng ward trước khi kết luận rẻ",
+                    "tin đáng kiểm tra": "Xác nhận đúng ward trước khi kết luận rẻ",
                 },
                 {
                     "area": "Tin Phú Mỹ bị so trực tiếp với Chánh Nghĩa",
                     "price": "Độ trung tâm và nhịp giá khác",
                     "tracked": "Thu hẹp về đúng ward và loại tài sản",
-                    "signal": "Không dùng một mức giá/m2 chung cho cả Thủ Dầu Một",
+                    "tin đáng kiểm tra": "Không dùng một mức giá/m2 chung cho cả Thủ Dầu Một",
                 },
                 {
                     "area": "Tin Phú Mỹ bị kéo về mặt bằng Hiệp An",
                     "price": "Nguồn đất dân cư và diện tích thường khác",
                     "tracked": "So cùng nhóm hẻm, thổ cư, lối vào",
-                    "signal": "Phải đúng nhóm tài sản rồi mới đọc MOS",
+                    "tin đáng kiểm tra": "Phải đúng nhóm tài sản rồi mới đọc MOS",
                 },
                 {
                     "area": "Có giá/m2 nhưng thiếu logic vị trí hoặc thổ cư",
                     "price": "Giá/m2 có thể đánh lừa",
                     "tracked": "Xem lại mô tả, diện tích, pháp lý và cụm dân cư",
-                    "signal": "Ưu tiên tin nêu rõ ward, thổ cư, lối vào",
+                    "tin đáng kiểm tra": "Ưu tiên tin nêu rõ ward, thổ cư, lối vào",
                 },
                 {
                     "area": "Tin có MOS nhưng nguồn mờ hoặc repost",
                     "price": "MOS có thể bị kéo lệch",
                     "tracked": "Kiểm tra cảnh báo nguồn và lịch sử giá",
-                    "signal": "Không gọi chỉ vì thấy rẻ một lần",
+                    "tin đáng kiểm tra": "Không gọi chỉ vì thấy rẻ một lần",
                 },
                 {
                     "area": "Bạn muốn theo đều một nhóm Phú Mỹ cụ thể",
                     "price": "Tự quét lại mỗi ngày rất tốn thời gian",
-                    "tracked": "Lọc signal theo ward và ngân sách",
-                    "signal": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
+                    "tracked": "Lọc tin đáng kiểm tra theo ward và ngân sách",
+                    "tin đáng kiểm tra": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
                 },
             ],
             "cards": [
@@ -1177,13 +1177,13 @@ SEO_ARTICLES = {
                     "body": "Chỉ vì cùng thành phố không có nghĩa Phú Mỹ, Hiệp An, Chánh Nghĩa dùng chung một mặt bằng đọc giá.",
                 },
                 {
-                    "title": "Tín hiệu nên ưu tiên",
+                    "title": "Dấu hiệu đáng chú ý nên ưu tiên",
                     "value": "Ward rõ + nguồn rõ",
                     "body": "Ưu tiên tin nêu rõ Phú Mỹ, loại tài sản, diện tích và còn giữ được logic giá/m2 cùng nhóm.",
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lọc signal",
+                    "value": "Lọc tin đáng kiểm tra",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng nhóm Phú Mỹ bạn đang theo.",
                 },
             ],
@@ -1193,7 +1193,7 @@ SEO_ARTICLES = {
             {
                 "label": "Phú Mỹ",
                 "href": "/binh-duong/phuong-phu-my",
-                "description": "Landing chính cho nhà đất Phú Mỹ Thủ Dầu Một và CTA vào dashboard/signal.",
+                "description": "Landing chính cho nhà đất Phú Mỹ Thủ Dầu Một và CTA vào dashboard/tin đáng kiểm tra.",
             },
             {
                 "label": "Hiệp An",
@@ -1247,14 +1247,14 @@ SEO_ARTICLES = {
             {
                 "title": "4. Dùng MOS để xếp thứ tự kiểm tra",
                 "body": (
-                    "Khi ward và nhóm tài sản đã đúng, MOS mới trở thành tín hiệu hữu ích để biết tin nào nên mở trước, "
+                    "Khi ward và nhóm tài sản đã đúng, MOS mới trở thành dấu hiệu đáng chú ý hữu ích để biết tin nào nên mở trước, "
                     "không phải lời hứa lợi nhuận hay thay thế kiểm tra thực địa."
                 ),
             },
             {
-                "title": "5. Lọc signal để biến bài đọc thành nhịp theo dõi",
+                "title": "5. Lọc tin đáng kiểm tra để biến bài đọc thành nhịp theo dõi",
                 "body": (
-                    "Sau khi xác định được nhóm Phú Mỹ phù hợp, lọc signal trên dashboard để xem signal mới trên dashboard "
+                    "Sau khi xác định được nhóm Phú Mỹ phù hợp, lọc tin đáng kiểm tra trên dashboard để xem tin đáng kiểm tra mới trên dashboard "
                     "và mở đường cho nhu cầu liên hệ khi bạn cần phản ứng nhanh hơn."
                 ),
             },
@@ -1297,9 +1297,9 @@ SEO_ARTICLES = {
             "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng nhóm Phú Mỹ trên dashboard",
             "body": (
                 "Bài viết giúp bạn tránh kéo nhầm mặt bằng ward khác vào Phú Mỹ. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, "
-                "xem signal mới trên dashboard và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
+                "xem tin đáng kiểm tra mới trên dashboard và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
             ),
-            "button": "Mở dashboard lọc signal Phú Mỹ",
+            "button": "Mở dashboard lọc tin đáng kiểm tra Phú Mỹ",
         },
     },
     "nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia": {
@@ -1324,9 +1324,9 @@ SEO_ARTICLES = {
         "hero_checks": [
             "Tách Mỹ Phước, Tân Định, Thới Hòa trước khi so giá",
             "Không gom cả Bến Cát vào một mặt bằng chung",
-            "Dashboard filter -> signal -> liên hệ",
+            "Dashboard filter -> tin đáng kiểm tra -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lọc signal Bến Cát",
+        "primary_cta": "Mở dashboard để lọc tin đáng kiểm tra Bến Cát",
         "secondary_cta": "Xem landing Bến Cát",
         "secondary_href": "/binh-duong/ben-cat",
         "map_label": "Knowledge / Ben Cat Binh Duong",
@@ -1343,7 +1343,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2 đúng cụm",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lọc signal",
+            "metric_b_value": "lọc tin đáng kiểm tra",
         },
         "value_cards": [
             {
@@ -1363,7 +1363,7 @@ SEO_ARTICLES = {
             {
                 "title": "Biến hiểu biết Bến Cát thành bộ lọc lặp lại",
                 "body": (
-                    "Sau khi chốt được cụm Bến Cát phù hợp ngân sách, hãy lọc signal trên dashboard. "
+                    "Sau khi chốt được cụm Bến Cát phù hợp ngân sách, hãy lọc tin đáng kiểm tra trên dashboard. "
                     "Đó là cầu nối từ bài SEO sang dashboard và bước liên hệ khi bạn muốn theo deal mới nhanh hơn."
                 ),
             },
@@ -1373,15 +1373,15 @@ SEO_ARTICLES = {
             "title": "Đọc đúng Bến Cát rồi thì bước tiếp theo phải là bộ lọc theo cụm",
             "body": (
                 "Bài viết này giúp bạn tránh gom sai mặt bằng trong cùng Bến Cát. Dashboard mới là nơi bạn mở các tin đang có, "
-                "đối chiếu giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lọc signal để xem signal mới trên dashboard."
+                "đối chiếu giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lọc tin đáng kiểm tra để xem tin đáng kiểm tra mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
             "alt": "Dashboard Radar BDS để lọc nhà đất Bến Cát Bình Dương theo bộ lọc",
-            "cta": "Lọc signal Bến Cát",
+            "cta": "Lọc tin đáng kiểm tra Bến Cát",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Bến Cát đang có"},
                 {"value": "Bộ lọc", "label": "giữ đúng cụm và ngưỡng giá bạn theo"},
-                {"value": "dashboard", "label": "xem signal phù hợp thay vì tự rà lại mỗi ngày"},
+                {"value": "dashboard", "label": "xem tin đáng kiểm tra phù hợp thay vì tự rà lại mỗi ngày"},
             ],
         },
         "market_snapshot": {
@@ -1397,37 +1397,37 @@ SEO_ARTICLES = {
                     "area": "Tin chỉ ghi Bến Cát chung chung",
                     "price": "Dễ gom sai mặt bằng cả khu",
                     "tracked": "Mở landing Bến Cát và cụm liên quan",
-                    "signal": "Xác nhận tin nghiêng về Mỹ Phước, Tân Định hay Thới Hòa trước khi kết luận rẻ",
+                    "tin đáng kiểm tra": "Xác nhận tin nghiêng về Mỹ Phước, Tân Định hay Thới Hòa trước khi kết luận rẻ",
                 },
                 {
                     "area": "Tin Tân Định bị so trực tiếp với Mỹ Phước",
                     "price": "Nguồn hàng và nhịp giá khác",
                     "tracked": "Thu hẹp về đúng cụm và loại tài sản",
-                    "signal": "Không dùng một mức giá/m2 chung cho toàn bộ Bến Cát",
+                    "tin đáng kiểm tra": "Không dùng một mức giá/m2 chung cho toàn bộ Bến Cát",
                 },
                 {
                     "area": "Tin Thới Hòa được kéo về mặt bằng khu gần công nghiệp khác",
                     "price": "Buyer intent và logic vị trí lệch",
                     "tracked": "So cùng nhóm lô ở, nhà trọ, đất nền và trục vào",
-                    "signal": "Phải đúng cụm rồi mới đọc MOS",
+                    "tin đáng kiểm tra": "Phải đúng cụm rồi mới đọc MOS",
                 },
                 {
                     "area": "Có giá/m2 nhưng thiếu thổ cư hoặc logic vị trí",
                     "price": "Giá/m2 có thể đánh lừa",
                     "tracked": "Xem lại mô tả, diện tích, pháp lý và cụm dân cư",
-                    "signal": "Ưu tiên tin nêu rõ cụm, thổ cư, lối vào và diện tích",
+                    "tin đáng kiểm tra": "Ưu tiên tin nêu rõ cụm, thổ cư, lối vào và diện tích",
                 },
                 {
                     "area": "Tin có MOS nhưng nguồn mờ hoặc repost",
                     "price": "MOS có thể bị kéo lệch",
                     "tracked": "Kiểm tra cảnh báo nguồn và lịch sử giá",
-                    "signal": "Không gọi chỉ vì thấy rẻ một lần",
+                    "tin đáng kiểm tra": "Không gọi chỉ vì thấy rẻ một lần",
                 },
                 {
                     "area": "Bạn muốn theo đều một nhóm Bến Cát cụ thể",
                     "price": "Tự quét lại mỗi ngày rất tốn thời gian",
-                    "tracked": "Lọc signal theo cụm và ngân sách",
-                    "signal": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
+                    "tracked": "Lọc tin đáng kiểm tra theo cụm và ngân sách",
+                    "tin đáng kiểm tra": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
                 },
             ],
             "cards": [
@@ -1437,13 +1437,13 @@ SEO_ARTICLES = {
                     "body": "Chỉ vì cùng là Bến Cát không có nghĩa Mỹ Phước, Tân Định và Thới Hòa dùng chung một mặt bằng đọc giá.",
                 },
                 {
-                    "title": "Tín hiệu nên ưu tiên",
+                    "title": "Dấu hiệu đáng chú ý nên ưu tiên",
                     "value": "Cụm rõ + nguồn rõ",
                     "body": "Ưu tiên tin nêu rõ cụm, loại tài sản, diện tích và còn giữ được logic giá/m2 cùng nhóm.",
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lọc signal",
+                    "value": "Lọc tin đáng kiểm tra",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng nhóm Bến Cát bạn đang theo.",
                 },
             ],
@@ -1453,7 +1453,7 @@ SEO_ARTICLES = {
             {
                 "label": "Bến Cát",
                 "href": "/binh-duong/ben-cat",
-                "description": "Landing chính cho nhà đất Bến Cát Bình Dương và CTA vào dashboard/signal.",
+                "description": "Landing chính cho nhà đất Bến Cát Bình Dương và CTA vào dashboard/tin đáng kiểm tra.",
             },
             {
                 "label": "Mỹ Phước",
@@ -1507,14 +1507,14 @@ SEO_ARTICLES = {
             {
                 "title": "4. Dùng MOS để xếp thứ tự kiểm tra",
                 "body": (
-                    "Khi cụm và nhóm tài sản đã đúng, MOS mới trở thành tín hiệu hữu ích để biết tin nào nên mở trước, "
+                    "Khi cụm và nhóm tài sản đã đúng, MOS mới trở thành dấu hiệu đáng chú ý hữu ích để biết tin nào nên mở trước, "
                     "không phải lời hứa lợi nhuận hay thay thế kiểm tra thực địa."
                 ),
             },
             {
-                "title": "5. Lọc signal để biến bài đọc thành nhịp theo dõi",
+                "title": "5. Lọc tin đáng kiểm tra để biến bài đọc thành nhịp theo dõi",
                 "body": (
-                    "Sau khi xác định được nhóm Bến Cát phù hợp, lọc signal trên dashboard để xem signal mới trên dashboard "
+                    "Sau khi xác định được nhóm Bến Cát phù hợp, lọc tin đáng kiểm tra trên dashboard để xem tin đáng kiểm tra mới trên dashboard "
                     "và mở đường cho nhu cầu liên hệ khi bạn cần phản ứng nhanh hơn."
                 ),
             },
@@ -1557,9 +1557,9 @@ SEO_ARTICLES = {
             "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng nhóm Bến Cát trên dashboard",
             "body": (
                 "Bài viết giúp bạn tránh gom sai mặt bằng giữa Mỹ Phước, Tân Định và Thới Hòa. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, "
-                "xem signal mới trên dashboard và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
+                "xem tin đáng kiểm tra mới trên dashboard và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
             ),
-            "button": "Mở dashboard lọc signal Bến Cát",
+            "button": "Mở dashboard lọc tin đáng kiểm tra Bến Cát",
         },
     },
 
@@ -1575,11 +1575,11 @@ SEO_ARTICLES = {
         "breadcrumb_label": "Giá đất Hiệp An Thủ Dầu Một tháng 7/2026",
         "hero_badge": "Kiến thức nhà đất Thủ Dầu Một",
         "hero_title": "Giá đất Hiệp An Thủ Dầu Một cập nhật tháng 7/2026",
-        "hero_text": "Hiệp An có hơn 1.080 tin rao từ Facebook — nhiều nhất Thủ Dầu Một. Bài viết này dùng dữ liệu thực từ Radar BDS để bạn có mặt bằng giá chuẩn trước khi đi xem.",
+        "hero_text": "Hiệp An có hơn 1.080 tin rao từ Facebook — nhiều nhất Thủ Dầu Một. Bài viết này dùng dữ liệu thực từ Radar BDS để bạn có mức giá phổ biến chuẩn trước khi đi xem.",
         "hero_checks": [
             "Đất nền Hiệp An: ~18-25 tr/m² — nguồn cung lớn nhất TDM",
             "Nhà đất Hiệp An: ~24 tr/m² — chủ yếu nhà cấp 4 và nhà lầu",
-            "94 tín hiệu đáng chú ý — gồm tin giảm giá và tin hot"
+            "94 dấu hiệu đáng chú ý đáng chú ý — gồm tin giảm giá và tin hot"
         ],
         "primary_cta": "Mở dashboard để lọc bộ lọc Hiệp An",
         "secondary_cta": "Xem dashboard",
@@ -1620,7 +1620,7 @@ SEO_ARTICLES = {
             "body": "Mỗi tuần có thêm 40-60 tin mới ở Hiệp An. Bộ lọc trên Radar BDS sẽ gom tin mới, tin giảm giá về đúng phường và ngân sách bạn chọn.",
             "image": "/static/images/seo/dashboard-preview.png",
             "alt": "Dashboard Radar BDS với bộ lọc Hiệp An",
-            "cta": "Lọc signal",
+            "cta": "Lọc tin đáng kiểm tra",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Hiệp An"},
                 {"value": "Bộ lọc", "label": "giữ đúng phường, loại hình, ngân sách"}
@@ -1630,18 +1630,18 @@ SEO_ARTICLES = {
             "eyebrow": "Thị trường Hiệp An — số liệu thực từ Radar BDS",
             "title": "So sánh Hiệp An với các phường lân cận",
             "body": "Bảng dưới đây so sánh Hiệp An với các phường lân cận cùng nhóm.",
-            "columns": ["Khu vực", "Tổng tin FB", "Đất nền (tr/m²)", "Nhà đất (tr/m²)", "Giá phổ biến", "Tín hiệu"],
+            "columns": ["Khu vực", "Tổng tin FB", "Đất nền (tr/m²)", "Nhà đất (tr/m²)", "Giá phổ biến", "Dấu hiệu đáng chú ý"],
             "rows": [
-                {"area": "Hiệp An", "price": "1.081", "tracked": "18.5", "signal": "24.1", "area_m2": "2-3 tỷ", "note": "94"},
-                {"area": "Tân An", "price": "898", "tracked": "17.8", "signal": "23.5", "area_m2": "2-3 tỷ", "note": "40"},
-                {"area": "Phú Mỹ", "price": "566", "tracked": "28.3", "signal": "31.0", "area_m2": "3-4 tỷ", "note": "112"},
-                {"area": "Tương Bình Hiệp", "price": "611", "tracked": "21.2", "signal": "26.0", "area_m2": "2.5-3.5 tỷ", "note": "40"},
-                {"area": "Định Hòa", "price": "635", "tracked": "17.7", "signal": "25.0", "area_m2": "2-4 tỷ", "note": "88"}
+                {"area": "Hiệp An", "price": "1.081", "tracked": "18.5", "tin đáng kiểm tra": "24.1", "area_m2": "2-3 tỷ", "note": "94"},
+                {"area": "Tân An", "price": "898", "tracked": "17.8", "tin đáng kiểm tra": "23.5", "area_m2": "2-3 tỷ", "note": "40"},
+                {"area": "Phú Mỹ", "price": "566", "tracked": "28.3", "tin đáng kiểm tra": "31.0", "area_m2": "3-4 tỷ", "note": "112"},
+                {"area": "Tương Bình Hiệp", "price": "611", "tracked": "21.2", "tin đáng kiểm tra": "26.0", "area_m2": "2.5-3.5 tỷ", "note": "40"},
+                {"area": "Định Hòa", "price": "635", "tracked": "17.7", "tin đáng kiểm tra": "25.0", "area_m2": "2-4 tỷ", "note": "88"}
             ],
             "cards": [
                 {"title": "Nguồn cung số 1", "value": "1.081 tin", "body": "Nhiều nhất TDM"},
                 {"title": "Giá đất nền", "value": "~18.5 tr/m²", "body": "Rẻ hơn Phú Mỹ 10 tr/m²"},
-                {"title": "94 tín hiệu", "value": "94 signals", "body": "Lọc trên dashboard"}
+                {"title": "94 dấu hiệu đáng chú ý", "value": "94 tin đáng kiểm tras", "body": "Lọc trên dashboard"}
             ]
         },
         "local_links_title": "Xem thêm",
@@ -1654,7 +1654,7 @@ SEO_ARTICLES = {
             {"title": "1. Xác định loại hình bạn cần", "body": "Đất nền ~18.5 tr/m², nhà đất ~24 tr/m². Lọc đúng loại hình trên dashboard trước khi so giá."},
             {"title": "2. Đọc giá theo phường", "body": "Dùng bảng so sánh bên trên để đối chiếu Hiệp An với Tân An, Phú Mỹ, Định Hòa."},
             {"title": "3. Kiểm tra MOS", "body": "Không phải tin rẻ nào cũng đáng gọi. MOS giúp bạn ưu tiên tin nên kiểm tra trước."},
-            {"title": "4. Lọc signal", "body": "Tạo bộ lọc Hiệp An trên dashboard để gom tin mới về một chỗ."}
+            {"title": "4. Lọc tin đáng kiểm tra", "body": "Tạo bộ lọc Hiệp An trên dashboard để gom tin mới về một chỗ."}
         ],
         "faq": [
             {"q": "Giá đất Hiệp An hiện tại bao nhiêu một mét vuông?", "a": "Đất nền trung bình ~18.5 tr/m², nhà đất ~24 tr/m². Số liệu từ tin rao Facebook thực tế tháng 7/2026."},
@@ -1726,7 +1726,7 @@ SEO_ARTICLES = {
             "body": "Với gần 900 tin đang bán và khoảng 40-60 tin mới mỗi tuần, bộ lọc Tân An trên Radar BDS sẽ gom đúng tin phù hợp ngân sách của bạn — không cần tự lọc lại mỗi ngày.",
             "image": "/static/images/seo/dashboard-preview.png",
             "alt": "Dashboard Radar BDS với bộ lọc Tân An",
-            "cta": "Lọc signal Tân An",
+            "cta": "Lọc tin đáng kiểm tra Tân An",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Tân An đang có"},
                 {"value": "Bộ lọc", "label": "giữ đúng ngân sách và loại hình"},
@@ -1739,10 +1739,10 @@ SEO_ARTICLES = {
             "body": "Bảng dưới đây so sánh Tân An với Hiệp An, Phú Mỹ và Định Hòa — những phường cùng khu vực Nam TDM.",
             "columns": ["Khu vực", "Tổng tin FB", "Đất nền (tr/m²)", "Nhà đất (tr/m²)", "Giá phổ biến", "Diện tích TB"],
             "rows": [
-                {"area": "Tân An", "price": "898", "tracked": "16.2", "signal": "22.9", "area_m2": "1.5-3 tỷ", "note": "172 m²"},
-                {"area": "Hiệp An", "price": "1.081", "tracked": "18.5", "signal": "24.1", "area_m2": "2-3 tỷ", "note": "—"},
-                {"area": "Phú Mỹ", "price": "566", "tracked": "28.3", "signal": "31.0", "area_m2": "3-4 tỷ", "note": "—"},
-                {"area": "Định Hòa", "price": "635", "tracked": "17.7", "signal": "25.0", "area_m2": "2-4 tỷ", "note": "—"}
+                {"area": "Tân An", "price": "898", "tracked": "16.2", "tin đáng kiểm tra": "22.9", "area_m2": "1.5-3 tỷ", "note": "172 m²"},
+                {"area": "Hiệp An", "price": "1.081", "tracked": "18.5", "tin đáng kiểm tra": "24.1", "area_m2": "2-3 tỷ", "note": "—"},
+                {"area": "Phú Mỹ", "price": "566", "tracked": "28.3", "tin đáng kiểm tra": "31.0", "area_m2": "3-4 tỷ", "note": "—"},
+                {"area": "Định Hòa", "price": "635", "tracked": "17.7", "tin đáng kiểm tra": "25.0", "area_m2": "2-4 tỷ", "note": "—"}
             ],
             "cards": [
                 {"title": "Rẻ nhất TDM", "value": "~16.2 tr/m²", "body": "Thấp hơn mặt bằng TDM ~8 tr/m²"},
@@ -1761,7 +1761,7 @@ SEO_ARTICLES = {
             {"title": "1. Xác định ngân sách và loại hình", "body": "Đất nền Tân An phổ biến 1.5-3 tỷ. Nhà đất 2-3 tỷ. Lọc đúng loại hình trên dashboard."},
             {"title": "2. So sánh với phường lân cận", "body": "Tân An rẻ hơn Hiệp An ~2 tr/m² và rẻ hơn Phú Mỹ ~12 tr/m². Nếu ngân sách dưới 2 tỷ, Tân An là lựa chọn tốt nhất."},
             {"title": "3. Kiểm tra pháp lý đất giá rẻ", "body": "Đất giá dưới 11 tr/m² ở Tân An thường là đất vườn hoặc thiếu thổ cư. Luôn kiểm tra sổ đỏ trước khi giao dịch."},
-            {"title": "4. Lọc signal", "body": "Tạo bộ lọc Tân An trên dashboard. Khoảng 40-60 tin mới mỗi tuần — bộ lọc gom sẵn cho bạn."}
+            {"title": "4. Lọc tin đáng kiểm tra", "body": "Tạo bộ lọc Tân An trên dashboard. Khoảng 40-60 tin mới mỗi tuần — bộ lọc gom sẵn cho bạn."}
         ],
         "faq": [
             {"q": "Giá đất Tân An bao nhiêu một mét vuông?", "a": "Đất nền Tân An trung bình ~16.2 tr/m², nhà đất ~22.9 tr/m². Đây là mức rẻ nhất Thủ Dầu Một theo dữ liệu từ Radar BDS tháng 7/2026."},
@@ -1782,16 +1782,16 @@ SEO_ARTICLES = {
     "variant": "knowledge",
     "path": "/kien-thuc/gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026",
     "title": "Giá đất Phú Mỹ Thủ Dầu Một cập nhật tháng 7/2026 — phường ven sông với 700+ tin rao",
-    "description": "Giá đất Phú Mỹ Thủ Dầu Một cập nhật tháng 7/2026: đất nền 22-28 tr/m², nhà đất 30-40 tr/m², 716 tin rao Facebook. Phân tích giá, tín hiệu thị trường và so sánh với các phường lân cận.",
+    "description": "Giá đất Phú Mỹ Thủ Dầu Một cập nhật tháng 7/2026: đất nền 22-28 tr/m², nhà đất 30-40 tr/m², 716 tin rao Facebook. Phân tích giá, dấu hiệu đáng chú ý thị trường và so sánh với các phường lân cận.",
     "keywords": "giá đất Phú Mỹ Thủ Dầu Một, giá đất Phú Mỹ TDM, bán đất Phú Mỹ, nhà đất Phú Mỹ, Phú Mỹ Thủ Dầu Một, đất nền Phú Mỹ, radar bds",
     "breadcrumb_label": "Giá đất Phú Mỹ Thủ Dầu Một tháng 7/2026",
     "hero_badge": "Kiến thức nhà đất Thủ Dầu Một",
     "hero_title": "Giá đất Phú Mỹ — phường ven sông với hơn 700 tin rao từ Facebook",
-    "hero_text": "Phú Mỹ là phường ven sông Sài Gòn, có nguồn cung đa dạng với hơn 700 tin rao Facebook. Giá đất nền median 22.9 tr/m², nhà đất median 39.3 tr/m². Với 119 tín hiệu giảm giá và tin nóng, Phú Mỹ đang là khu vực sôi động bậc nhất Thủ Dầu Một.",
+    "hero_text": "Phú Mỹ là phường ven sông Sài Gòn, có nguồn cung đa dạng với hơn 700 tin rao Facebook. Giá đất nền median 22.9 tr/m², nhà đất median 39.3 tr/m². Với 119 dấu hiệu đáng chú ý giảm giá và tin nóng, Phú Mỹ đang là khu vực sôi động bậc nhất Thủ Dầu Một.",
     "hero_checks": [
         "Đất nền Phú Mỹ: ~22.9 tr/m² — 258 tin đang bán",
         "Nhà đất Phú Mỹ: ~39.3 tr/m² — 316 tin đang bán",
-        "119 tín hiệu giảm giá và tin nóng trong tháng",
+        "119 dấu hiệu đáng chú ý giảm giá và tin nóng trong tháng",
         "Phường ven sông Sài Gòn — tiềm năng phát triển dài hạn"
     ],
     "primary_cta": "Mở dashboard để lọc bộ lọc Phú Mỹ",
@@ -1823,8 +1823,8 @@ SEO_ARTICLES = {
             "body": "316 tin nhà đất đang bán với giá median 39.3 tr/m² (khoảng 15-65 tr/m²). Giá tổng median 3.55 tỷ. Phú Mỹ có nhiều nhà cấp 4 trên đất rộng và nhà phố mới xây, phù hợp gia đình mua để ở. Khu vực gần sông Sài Gòn thường có giá cao hơn mặt bằng chung."
         },
         {
-            "title": "119 tín hiệu giảm giá — cơ hội cho người mua tiền mặt",
-            "body": "Trong 716 tin đang hoạt động tại Phú Mỹ, có 119 tín hiệu (tin nóng + giảm giá). Đây là tỷ lệ cao, cho thấy nhiều chủ đang hạ giá để thoát hàng. Người mua có sẵn tiền mặt nên tận dụng cơ hội này, nhưng luôn kiểm tra pháp lý kỹ trước khi giao dịch."
+            "title": "119 dấu hiệu đáng chú ý giảm giá — cơ hội cho người mua tiền mặt",
+            "body": "Trong 716 tin đang hoạt động tại Phú Mỹ, có 119 dấu hiệu đáng chú ý (tin nóng + giảm giá). Đây là tỷ lệ cao, cho thấy nhiều chủ đang hạ giá để thoát hàng. Người mua có sẵn tiền mặt nên tận dụng cơ hội này, nhưng luôn kiểm tra pháp lý kỹ trước khi giao dịch."
         }
     ],
     "dashboard_preview": {
@@ -1833,7 +1833,7 @@ SEO_ARTICLES = {
         "body": "Với hơn 700 tin đang bán và khoảng 30-50 tin mới mỗi tuần, bộ lọc Phú Mỹ trên Radar BDS sẽ gom đúng tin phù hợp ngân sách của bạn — không cần tự lọc lại mỗi ngày.",
         "image": "/static/images/seo/dashboard-preview.png",
         "alt": "Dashboard Radar BDS với bộ lọc Phú Mỹ",
-        "cta": "Lọc signal Phú Mỹ",
+        "cta": "Lọc tin đáng kiểm tra Phú Mỹ",
         "metrics": [
             {"value": "Dashboard", "label": "mở feed Phú Mỹ đang có"},
             {"value": "Bộ lọc", "label": "giữ đúng ngân sách và loại hình"},
@@ -1844,17 +1844,17 @@ SEO_ARTICLES = {
         "eyebrow": "Thị trường Phú Mỹ — số liệu thực từ Radar BDS",
         "title": "So sánh giá Phú Mỹ với các phường lân cận",
         "body": "Bảng dưới đây so sánh Phú Mỹ với Hiệp An, Tân An và Phú Lợi — những phường cùng khu vực TDM.",
-        "columns": ["Khu vực", "Tổng tin FB", "Đất nền (tr/m²)", "Nhà đất (tr/m²)", "Giá phổ biến", "Tín hiệu"],
+        "columns": ["Khu vực", "Tổng tin FB", "Đất nền (tr/m²)", "Nhà đất (tr/m²)", "Giá phổ biến", "Dấu hiệu đáng chú ý"],
         "rows": [
-            {"area": "Phú Mỹ", "price": "716", "tracked": "22.9", "signal": "39.3", "area_m2": "2-4 tỷ", "note": "119 🔥"},
-            {"area": "Hiệp An", "price": "1.081", "tracked": "18.5", "signal": "24.1", "area_m2": "2-3 tỷ", "note": "94"},
-            {"area": "Tân An", "price": "898", "tracked": "16.2", "signal": "22.9", "area_m2": "1.5-3 tỷ", "note": "40"},
-            {"area": "Phú Lợi", "price": "256", "tracked": "35.9", "signal": "—", "area_m2": "3-6 tỷ", "note": "51"}
+            {"area": "Phú Mỹ", "price": "716", "tracked": "22.9", "tin đáng kiểm tra": "39.3", "area_m2": "2-4 tỷ", "note": "119 🔥"},
+            {"area": "Hiệp An", "price": "1.081", "tracked": "18.5", "tin đáng kiểm tra": "24.1", "area_m2": "2-3 tỷ", "note": "94"},
+            {"area": "Tân An", "price": "898", "tracked": "16.2", "tin đáng kiểm tra": "22.9", "area_m2": "1.5-3 tỷ", "note": "40"},
+            {"area": "Phú Lợi", "price": "256", "tracked": "35.9", "tin đáng kiểm tra": "—", "area_m2": "3-6 tỷ", "note": "51"}
         ],
         "cards": [
             {"title": "Nguồn cung dồi dào", "value": "716 tin FB", "body": "Lớn thứ ba TDM sau Hiệp An và Tân An"},
             {"title": "Đất nền 22.9 tr/m²", "value": "Ngưỡng TB khá", "body": "Cao hơn Hiệp An ~4 tr/m², thấp hơn Phú Lợi ~13 tr/m²"},
-            {"title": "119 tín hiệu", "value": "Cơ hội giảm giá", "body": "Nhiều chủ đang hạ giá — kiểm tra kỹ pháp lý"}
+            {"title": "119 dấu hiệu đáng chú ý", "value": "Cơ hội giảm giá", "body": "Nhiều chủ đang hạ giá — kiểm tra kỹ pháp lý"}
         ]
     },
     "local_links_title": "Xem thêm",
@@ -1868,14 +1868,14 @@ SEO_ARTICLES = {
     "process": [
         {"title": "1. Xác định ngân sách và loại hình", "body": "Đất nền Phú Mỹ phổ biến 2-4 tỷ. Nhà đất 2.5-5 tỷ. Lọc đúng loại hình trên dashboard."},
         {"title": "2. So sánh với phường lân cận", "body": "Phú Mỹ đắt hơn Hiệp An ~4 tr/m² nhưng rẻ hơn Phú Lợi ~13 tr/m². Nếu ngân sách dưới 2 tỷ, nên xem Tân An hoặc Hiệp An trước."},
-        {"title": "3. Tận dụng tín hiệu giảm giá", "body": "119 tín hiệu giảm giá và tin nóng — dùng bộ lọc MOS và giá giảm trên dashboard để săn deal."},
-        {"title": "4. Lọc signal", "body": "Tạo bộ lọc Phú Mỹ trên dashboard. Khoảng 30-50 tin mới mỗi tuần — bộ lọc gom sẵn cho bạn."}
+        {"title": "3. Tận dụng dấu hiệu đáng chú ý giảm giá", "body": "119 dấu hiệu đáng chú ý giảm giá và tin nóng — dùng bộ lọc MOS và giá giảm trên dashboard để săn deal."},
+        {"title": "4. Lọc tin đáng kiểm tra", "body": "Tạo bộ lọc Phú Mỹ trên dashboard. Khoảng 30-50 tin mới mỗi tuần — bộ lọc gom sẵn cho bạn."}
     ],
     "faq": [
         {"q": "Giá đất Phú Mỹ Thủ Dầu Một bao nhiêu một mét vuông?", "a": "Đất nền Phú Mỹ có giá median 22.9 tr/m², dao động 7-65 tr/m². Nhà đất giá median 39.3 tr/m², khoảng 15-65 tr/m² theo dữ liệu từ 716 tin rao Facebook tháng 7/2026."},
         {"q": "Phú Mỹ có bao nhiêu tin rao nhà đất?", "a": "716 tin rao Facebook còn hoạt động, trong đó 258 tin đất nền và 316 tin nhà đất. Nguồn cung lớn thứ ba TDM sau Hiệp An và Tân An."},
         {"q": "Giá đất Phú Mỹ cao hơn Hiệp An bao nhiêu?", "a": "Đất nền Phú Mỹ ~22.9 tr/m², Hiệp An ~18.5 tr/m² — chênh khoảng 4 tr/m². Với lô 100m², Phú Mỹ đắt hơn ~400 triệu. Tuy nhiên Phú Mỹ ven sông Sài Gòn, có tiềm năng tăng giá tốt hơn."},
-        {"q": "Phú Mỹ có nhiều tin giảm giá không?", "a": "Có. 119/716 tin có tín hiệu giảm giá hoặc tin nóng — tỷ lệ ~17%. Đây là cơ hội cho người mua có sẵn tiền mặt, nhưng cần kiểm tra pháp lý kỹ trước khi giao dịch."},
+        {"q": "Phú Mỹ có nhiều tin giảm giá không?", "a": "Có. 119/716 tin có dấu hiệu đáng chú ý giảm giá hoặc tin nóng — tỷ lệ ~17%. Đây là cơ hội cho người mua có sẵn tiền mặt, nhưng cần kiểm tra pháp lý kỹ trước khi giao dịch."},
         {"q": "Có nên mua đất Phú Mỹ năm 2026 không?", "a": "Phú Mỹ là phường ven sông Sài Gòn, có hạ tầng phát triển và tiềm năng dài hạn. Giá đất ở mức trung bình khá tại TDM — phù hợp người mua để ở hoặc đầu tư trung hạn. Tuy nhiên, mỗi giao dịch cần kiểm tra quy hoạch và pháp lý thực tế."}
     ],
     "article": {"published_at": "2026-07-09 09:00", "modified_at": "2026-07-09 09:00"},
@@ -1889,36 +1889,36 @@ SEO_ARTICLES = {
         "variant": "knowledge",
         "path": "/kien-thuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
         "title": "Giá đất Phú Tân Thủ Dầu Một cập nhật tháng 7/2026 | Radar BDS",
-        "description": "Giá đất Phú Tân Thủ Dầu Một tháng 7/2026: đất nền trung vị 23,8 tr/m², nhà đất 34,8 tr/m², 708 tin active và 321 tín hiệu từ Radar BDS.",
+        "description": "Giá đất Phú Tân Thủ Dầu Một tháng 7/2026: đất nền có mức giá ở giữa 23,8 tr/m², nhà đất có mức giá ở giữa 34,8 tr/m², 708 tin đang theo dõi và 321 dấu hiệu đáng chú ý do Radar BDS ghi nhận.",
         "keywords": "giá đất Phú Tân Thủ Dầu Một, nhà đất Phú Tân, đất nền Phú Tân, báo cáo Phú Tân, Radar BDS",
         "breadcrumb_label": "Giá đất Phú Tân Thủ Dầu Một tháng 7/2026",
         "hero_badge": "Kiến thức nhà đất Thủ Dầu Một",
         "hero_title": "Giá đất Phú Tân Thủ Dầu Một cập nhật tháng 7/2026",
-        "hero_text": "Trong dữ liệu Facebook active của Radar BDS cập nhật đến 19/07/2026, Phú Tân có 708 tin đang theo dõi và 321 tín hiệu đáng chú ý. Đất nền có trung vị 23,8 tr/m², nhà đất 34,8 tr/m²; hai mức giá này cần đọc riêng để tránh so sai loại tài sản.",
+        "hero_text": "Trong dữ liệu tin Facebook đang theo dõi của Radar BDS cập nhật đến 19/07/2026, Phú Tân có 708 tin đang theo dõi và 321 dấu hiệu đáng chú ý đáng chú ý. Đất nền có mức giá ở giữa 23,8 tr/m², nhà đất có mức giá ở giữa 34,8 tr/m²; hai mức giá này cần đọc riêng để tránh so sai loại tài sản.",
         "scope_label": "Thủ Dầu Một · Phú Tân",
         "hero_checks": [
-            "708 tin Facebook active tại Phú Tân",
-            "Đất nền: 383 tin có giá/m², trung vị 23,8 tr/m²",
-            "Nhà đất: 67 tin có giá/m², trung vị 34,8 tr/m²",
-            "321 tín hiệu hot hoặc giảm giá cần lọc tiếp trên dashboard"
+            "708 tin tin Facebook đang theo dõi ở Phú Tân",
+            "Đất nền: 383 tin có giá/m², mức giá ở giữa 23,8 tr/m²",
+            "Nhà đất: 67 tin có giá/m², mức giá ở giữa 34,8 tr/m²",
+            "321 dấu hiệu được quan tâm hoặc có giảm giá cần lọc tiếp trên dashboard"
         ],
         "primary_cta": "Mở dashboard lọc Phú Tân",
         "secondary_cta": "Xem báo cáo Phú Tân tháng 07/2026",
         "secondary_href": "/bao-cao/phu-tan-thang-07-2026",
         "map_label": "Knowledge / Phú Tân",
         "hero_metric": {
-            "label": "Đất nền trung vị",
+            "label": "Đất nền mức giá ở giữa",
             "value": "23,8",
             "delta": "tr/m²",
             "note": "383 tin đất nền có giá/m²"
         },
         "property_card": {
-            "status": "Phú Tân — dữ liệu active",
+            "status": "Phú Tân — dữ liệu tin đang theo dõi",
             "title": "Đất nền phổ biến quanh 2,9 tỷ",
-            "price": "23,8 tr/m² · 2,9 tỷ trung vị đất nền",
-            "metric_a": "Tin active",
+            "price": "23,8 tr/m² · 2,9 tỷ mức giá ở giữa đất nền",
+            "metric_a": "Tin đang theo dõi",
             "metric_a_value": "708",
-            "metric_b": "Tín hiệu",
+            "metric_b": "Dấu hiệu đáng chú ý",
             "metric_b_value": "321"
         },
         "local_links_title": "Đọc tiếp về Phú Tân",
@@ -1947,15 +1947,15 @@ SEO_ARTICLES = {
         "faq": [
             {
                 "q": "Giá đất nền Phú Tân Thủ Dầu Một hiện khoảng bao nhiêu?",
-                "a": "Theo dữ liệu Facebook active của Radar BDS cập nhật đến 19/07/2026, đất nền Phú Tân có trung vị 23,8 tr/m² từ 383 tin có giá/m². Đây là giá rao tham khảo, không phải giá giao dịch chính thức."
+                "a": "Theo dữ liệu tin Facebook đang theo dõi của Radar BDS cập nhật đến 19/07/2026, đất nền Phú Tân có mức giá ở giữa 23,8 tr/m² từ 383 tin có giá/m². Đây là giá rao tham khảo, chưa chắc là giá chốt mua bán."
             },
             {
                 "q": "Nhà đất Phú Tân có cùng mặt bằng với đất nền không?",
-                "a": "Không nên đọc chung. Nhà đất Phú Tân có trung vị 34,8 tr/m² và khoảng 4,0 tỷ tổng giá, cao hơn đất nền vì có công trình, vị trí và công năng khác."
+                "a": "Không nên đọc chung. Nhà đất Phú Tân có mức giá ở giữa 34,8 tr/m² và khoảng 4,0 tỷ tổng giá, cao hơn đất nền vì có công trình, vị trí và công năng khác."
             },
             {
-                "q": "Phú Tân có nhiều tín hiệu đáng chú ý không?",
-                "a": "Có. Radar BDS ghi nhận 321 tín hiệu hot hoặc giảm giá trong 708 tin active. Đây là nhóm nên lọc tiếp trên dashboard trước khi gọi hoặc đi xem."
+                "q": "Phú Tân có nhiều dấu hiệu đáng chú ý đáng chú ý không?",
+                "a": "Có. Radar BDS ghi nhận 321 dấu hiệu được quan tâm hoặc có giảm giá trong 708 tin đang theo dõi. Đây là nhóm nên lọc tiếp trên dashboard trước khi gọi hoặc đi xem."
             },
             {
                 "q": "Nên so Phú Tân với phường nào?",
@@ -1966,50 +1966,50 @@ SEO_ARTICLES = {
             "published_at": "2026-07-22",
             "modified_at": "2026-07-22",
             "intro": [
-                "Phú Tân là một trong những phường có nhiều tín hiệu nhất trong dữ liệu Radar BDS hiện tại. Nếu chỉ nhìn một mức giá chung, người mua rất dễ trộn đất nền, nhà đất, kho xưởng và tin có công trình vào cùng một nhóm.",
-                "Bài viết này dùng dữ liệu Facebook active đã lọc của Radar BDS để trả lời nhanh: giá đất Phú Tân đang ở vùng nào, loại tài sản nào nên đọc riêng và khi nào cần mở dashboard để kiểm tra tin cụ thể."
+                "Phú Tân là một trong những phường có nhiều dấu hiệu đáng chú ý nhất trong dữ liệu Radar BDS hiện tại. Nếu chỉ nhìn một mức giá chung, người mua rất dễ trộn đất nền, nhà đất, kho xưởng và tin có công trình vào cùng một nhóm.",
+                "Bài viết này dùng dữ liệu tin Facebook đang theo dõi đã lọc của Radar BDS để trả lời nhanh: giá đất Phú Tân đang ở vùng nào, loại tài sản nào nên đọc riêng và khi nào cần mở dashboard để kiểm tra tin cụ thể."
             ],
             "sections": [
                 {
                     "id": "gia-dat-nen-phu-tan",
-                    "heading": "Giá đất nền Phú Tân: trung vị 23,8 tr/m²",
+                    "heading": "Giá đất nền Phú Tân: mức giá ở giữa 23,8 tr/m²",
                     "paragraphs": [
-                        "Trong 708 tin Facebook active tại Phú Tân, nhóm đất nền có 511 tin; trong đó 383 tin có giá/m² đủ điều kiện tính trung vị. Mức trung vị hiện là 23,8 tr/m², với tổng giá trung vị khoảng 2,9 tỷ.",
+                        "Trong 708 tin tin Facebook đang theo dõi ở Phú Tân, nhóm đất nền có 511 tin; trong đó 383 tin có giá/m² đủ điều kiện tính mức giá ở giữa. Mức giá ở giữa hiện là 23,8 tr/m², với tổng giá ở giữa khoảng 2,9 tỷ.",
                         "Khoảng giữa của đất nền Phú Tân nằm quanh 20,8-26,2 tr/m². Vì vậy, một tin dưới vùng này cần kiểm tra lại vị trí, thổ cư, đường tiếp cận và dữ liệu diện tích; một tin cao hơn vùng này cần xem có lợi thế công năng hoặc vị trí rõ ràng hay không."
                     ],
                     "bullets": [
-                        "Đất nền active: 511 tin",
+                        "Đất nền đang theo dõi: 511 tin",
                         "Đất nền có giá/m²: 383 tin",
-                        "Trung vị: 23,8 tr/m²",
-                        "Tổng giá trung vị: 2,9 tỷ"
+                        "Mức giá ở giữa: 23,8 tr/m²",
+                        "Tổng giá mức giá ở giữa: 2,9 tỷ"
                     ]
                 },
                 {
                     "id": "nha-dat-phu-tan",
-                    "heading": "Nhà đất Phú Tân: trung vị 34,8 tr/m², không nên so chung với đất nền",
+                    "heading": "Nhà đất Phú Tân: mức giá ở giữa 34,8 tr/m², không nên so chung với đất nền",
                     "paragraphs": [
-                        "Nhà đất Phú Tân có 98 tin active, trong đó 67 tin có giá/m² đủ điều kiện thống kê. Trung vị nhà đất là 34,8 tr/m² và tổng giá trung vị khoảng 4,0 tỷ.",
+                        "Nhà đất Phú Tân có 98 tin đang theo dõi, trong đó 67 tin có giá/m² đủ điều kiện thống kê. Mức giá ở giữa nhà đất là 34,8 tr/m² và tổng giá ở giữa khoảng 4,0 tỷ.",
                         "Mức này cao hơn đất nền vì đã bao gồm công trình, công năng sử dụng và vị trí cụ thể. Khi lọc nhà để ở, nên so nhà đất với nhà đất; không dùng giá đất nền làm chuẩn trực tiếp."
                     ],
                     "bullets": [
-                        "Nhà đất active: 98 tin",
+                        "Nhà đất đang theo dõi: 98 tin",
                         "Nhà đất có giá/m²: 67 tin",
-                        "Trung vị: 34,8 tr/m²",
-                        "Tổng giá trung vị: 4,0 tỷ"
+                        "Mức giá ở giữa: 34,8 tr/m²",
+                        "Tổng giá mức giá ở giữa: 4,0 tỷ"
                     ]
                 },
                 {
                     "id": "tin-hieu-phu-tan",
-                    "heading": "321 tín hiệu cho thấy Phú Tân nên được theo dõi riêng",
+                    "heading": "321 dấu hiệu đáng chú ý cho thấy Phú Tân nên được theo dõi riêng",
                     "paragraphs": [
-                        "Radar BDS ghi nhận 321 tín hiệu hot hoặc giảm giá tại Phú Tân, gồm 314 tin hot và 10 tin giảm giá. Số tín hiệu này không phải khuyến nghị mua, mà là danh sách ưu tiên để người mua kiểm tra tiếp.",
+                        "Radar BDS ghi nhận 321 dấu hiệu được quan tâm hoặc có giảm giá tại Phú Tân, gồm 314 tin hot và 10 tin giảm giá. Số dấu hiệu đáng chú ý này không phải khuyến nghị mua, mà là danh sách ưu tiên để người mua kiểm tra tiếp.",
                         "Cách dùng an toàn là mở dashboard, lọc Phú Tân theo loại hình, ngân sách và ngưỡng giá/m². Sau đó mới xem mô tả, nguồn tin, pháp lý, quy hoạch và hiện trạng trước khi quyết định đi xem."
                     ],
                     "bullets": [
-                        "Tín hiệu tổng: 321",
+                        "Dấu hiệu đáng chú ý tổng: 321",
                         "Tin hot: 314",
                         "Tin giảm giá: 10",
-                        "Dữ liệu mới nhất trong mẫu active: 19/07/2026"
+                        "Dữ liệu mới nhất trong nhóm tin đang theo dõi: 19/07/2026"
                     ]
                 },
                 {
@@ -2017,7 +2017,7 @@ SEO_ARTICLES = {
                     "heading": "So Phú Tân với Phú Mỹ, Định Hòa, Hiệp An và Phú Lợi",
                     "paragraphs": [
                         "Đất nền Phú Tân 23,8 tr/m² đang gần Phú Mỹ 22,3 tr/m², cao hơn Định Hòa 15,2 tr/m² và Hiệp An 15,9 tr/m², nhưng thấp hơn Phú Lợi 30,9 tr/m². Với nhà đất, Phú Tân 34,8 tr/m² thấp hơn Phú Mỹ 39,5 tr/m² và Phú Lợi 40,2 tr/m², nhưng cao hơn Hiệp An 21,1 tr/m².",
-                        "Điểm quan trọng là Phú Tân có tỷ lệ tín hiệu rất cao so với tổng tin active. Người mua nên xem đây là phường cần theo dõi riêng, không chỉ là một dòng trong bảng giá Thủ Dầu Một."
+                        "Điểm quan trọng là Phú Tân có tỷ lệ dấu hiệu đáng chú ý rất cao so với tổng tin đang theo dõi. Người mua nên xem đây là phường cần theo dõi riêng, không chỉ là một dòng trong bảng giá Thủ Dầu Một."
                     ],
                     "bullets": [
                         "Phú Tân đất nền: 23,8 tr/m²",
@@ -2030,7 +2030,7 @@ SEO_ARTICLES = {
                     "id": "cach-loc",
                     "heading": "Cách lọc tin Phú Tân trước khi gọi môi giới hoặc chủ đất",
                     "paragraphs": [
-                        "Bước đầu tiên là chọn đúng loại tài sản: đất nền, nhà đất hay nhóm khác. Bước thứ hai là kiểm tra giá/m² so với vùng trung vị của cùng loại tài sản, không so toàn phường bằng một con số duy nhất.",
+                        "Bước đầu tiên là chọn đúng loại tài sản: đất nền, nhà đất hay nhóm khác. Bước thứ hai là kiểm tra giá/m² so với vùng mức giá ở giữa của cùng loại tài sản, không so toàn phường bằng một con số duy nhất.",
                         "Sau khi có danh sách ngắn, cần kiểm tra nguồn đăng, lịch sử giá, mô tả pháp lý, quy hoạch và vị trí thực tế. Radar BDS giúp rút ngắn danh sách cần xem, không thay thế thẩm định độc lập."
                     ],
                     "bullets": [
@@ -2046,7 +2046,7 @@ SEO_ARTICLES = {
                 "Đã tách đất nền khỏi nhà đất khi so giá",
                 "Đã kiểm tra giá/m² và giá tổng cùng lúc",
                 "Đã so với Phú Mỹ, Định Hòa, Hiệp An hoặc Phú Lợi cùng loại tài sản",
-                "Đã lọc tín hiệu hot/giảm giá trên dashboard",
+                "Đã lọc dấu hiệu được quan tâm hoặc có giảm giá trên dashboard",
                 "Đã kiểm tra pháp lý, quy hoạch và hiện trạng trước khi đặt cọc"
             ]
         }
@@ -2092,7 +2092,7 @@ _ARTICLE_EDITORIAL = {
             [
                 ("chon-pham-vi", "Chọn đúng phạm vi trước khi nhìn vào giá rao", "Bình Dương gồm nhiều thị trường nhỏ với hạ tầng, nhu cầu và nguồn cung khác nhau. So hai lô chỉ vì cùng tỉnh thường tạo ra kết luận sai.", "Hãy chốt thành phố, phường hoặc cụm khu thực tế trước. Khi địa danh còn mơ hồ, cần hỏi lại vị trí có thể kiểm chứng thay vì tự suy đoán.", ["Thành phố và phường", "Tên đường hoặc mốc có thể kiểm chứng", "Khoảng cách tới nhu cầu sử dụng chính"]),
                 ("chuan-hoa-tai-san", "Đưa tin rao về cùng một nhóm tài sản", "Đất nền, đất có nhà, đất vườn và lô diện tích lớn không nên nằm chung một nhóm so sánh. Công năng và điều kiện pháp lý khác nhau làm giá khác nhau.", "Ghi lại diện tích, ngang dài, thổ cư, đường tiếp cận và tình trạng công trình. Trường quan trọng chưa rõ phải được đánh dấu là chưa xác minh.", ["Loại tài sản", "Diện tích và kích thước", "Thổ cư", "Đường tiếp cận"]),
-                ("doc-gia", "Đọc cả giá tổng và giá trên mét vuông", "Giá tổng cho biết lô đất có phù hợp ngân sách; giá trên mét vuông giúp so với các lô tương đồng. Cả hai chỉ có ý nghĩa khi dữ liệu đã được chuẩn hóa.", "Một mức thấp bất thường là tín hiệu để kiểm tra thêm, không phải bằng chứng chắc chắn của một giao dịch tốt. Sai diện tích hoặc vị trí có thể tạo chênh lệch giả."),
+                ("doc-gia", "Đọc cả giá tổng và giá trên mét vuông", "Giá tổng cho biết lô đất có phù hợp ngân sách; giá trên mét vuông giúp so với các lô tương đồng. Cả hai chỉ có ý nghĩa khi dữ liệu đã được chuẩn hóa.", "Một mức thấp bất thường là dấu hiệu đáng chú ý để kiểm tra thêm, không phải bằng chứng chắc chắn của một giao dịch tốt. Sai diện tích hoặc vị trí có thể tạo chênh lệch giả."),
                 ("kiem-tra-nguon", "Kiểm tra nguồn tin và lịch sử đăng", "Đối chiếu mô tả, hình ảnh, số liên hệ và thời điểm đăng để nhận ra tin lặp hoặc thông tin thay đổi. Cùng một lô có thể xuất hiện với nhiều mức giá.", "Khi gọi, xác nhận lại giá, vị trí, người có quyền giao dịch và giấy tờ có thể xem. Không chuyển tiền chỉ dựa trên nội dung tin rao."),
                 ("truoc-khi-di-xem", "Chuẩn bị danh sách câu hỏi trước khi đi xem", "Một cuộc gọi có cấu trúc giúp loại bớt chuyến đi không cần thiết. Ưu tiên tin trả lời rõ và khớp nhu cầu đã đặt ra.", "Nếu tin đáng xem, lưu vào bộ lọc cùng ghi chú còn thiếu. Tại thực địa, kiểm tra ranh, lối vào, môi trường và đối chiếu hồ sơ với nguồn phù hợp."),
             ],
@@ -2133,8 +2133,8 @@ _ARTICLE_EDITORIAL = {
             ],
             [
                 ("ba-phuong", "Ba phường, ba bối cảnh so sánh khác nhau", "Phú Mỹ, Hiệp An và Chánh Nghĩa khác nhau về vị trí, nhịp phát triển, loại nguồn hàng và nhu cầu sử dụng. Chỉ nên so các tài sản cùng bối cảnh.", "Tên phường là lớp lọc đầu tiên, không phải kết luận cuối. Trong cùng phường vẫn cần tách tuyến đường, khả năng tiếp cận, quy mô lô và pháp lý.", ["Phường", "Cụm đường", "Loại tài sản", "Mục đích sử dụng"]),
-                ("gia-moi-met-vuong", "Dùng giá trên mét vuông sau khi chuẩn hóa dữ liệu", "Giá trên mét vuông giúp đối chiếu các lô khác tổng giá, nhưng chỉ đáng tin khi diện tích và loại tài sản đúng. Một trường sai có thể làm tín hiệu lệch.", "Nên giữ song song giá tổng để kiểm tra sức mua thực tế. Tin có đơn giá thấp nhưng vượt ngân sách hoặc khó sử dụng chưa chắc phù hợp."),
-                ("bien-an-toan", "Xem biên an toàn như tín hiệu ưu tiên, không phải kết luận", "MOS giúp xếp thứ tự tin nên kiểm tra trước so với mức tham chiếu của nhóm. Nó không xác nhận pháp lý, quy hoạch hay khả năng thương lượng.", "Khi MOS cao bất thường, cần kiểm tra lại vị trí, diện tích, loại tài sản và lịch sử tin. Giá rẻ có thể đến từ dữ liệu thiếu."),
+                ("gia-moi-met-vuong", "Dùng giá trên mét vuông sau khi chuẩn hóa dữ liệu", "Giá trên mét vuông giúp đối chiếu các lô khác tổng giá, nhưng chỉ đáng tin khi diện tích và loại tài sản đúng. Một trường sai có thể làm dấu hiệu đáng chú ý lệch.", "Nên giữ song song giá tổng để kiểm tra sức mua thực tế. Tin có đơn giá thấp nhưng vượt ngân sách hoặc khó sử dụng chưa chắc phù hợp."),
+                ("bien-an-toan", "Xem biên an toàn như dấu hiệu đáng chú ý ưu tiên, không phải kết luận", "MOS giúp xếp thứ tự tin nên kiểm tra trước so với mức tham chiếu của nhóm. Nó không xác nhận pháp lý, quy hoạch hay khả năng thương lượng.", "Khi MOS cao bất thường, cần kiểm tra lại vị trí, diện tích, loại tài sản và lịch sử tin. Giá rẻ có thể đến từ dữ liệu thiếu."),
                 ("doc-bao-cao", "Kết hợp báo cáo tháng với tin rao cụ thể", "Báo cáo tháng cho biết phạm vi, kỳ dữ liệu, chỉ số và phương pháp. Tin cụ thể cần đặt vào đúng phường và đúng kỳ để tránh dùng bối cảnh cũ.", "Khi nguồn tin biến động, ưu tiên dữ kiện có ngày cập nhật rõ. Không biến một chỉ số tổng hợp thành giá chắc chắn cho từng lô."),
                 ("kiem-tra-thuc-dia", "Hoàn tất bằng kiểm tra hồ sơ và thực địa", "Sau sàng lọc, cần xem ranh, lối vào, hiện trạng và môi trường xung quanh. Những yếu tố này giải thích chênh lệch trong cùng phường.", "Kiểm tra giấy tờ, quy hoạch và điều kiện giao dịch với nguồn phù hợp trước khi đặt cọc. Radar BDS không thay thế thẩm định pháp lý."),
             ],
@@ -2143,8 +2143,8 @@ _ARTICLE_EDITORIAL = {
         ),
     },
     "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin": {
-        "hero_title": "Vì sao không nên dùng một mặt bằng giá cho toàn Bình Dương",
-        "title": "Vì sao không nên dùng một mặt bằng giá cho toàn Bình Dương | Radar BDS",
+        "hero_title": "Vì sao không nên dùng một mức giá phổ biến cho toàn Bình Dương",
+        "title": "Vì sao không nên dùng một mức giá phổ biến cho toàn Bình Dương | Radar BDS",
         "description": "Vì sao cần thu hẹp từ tỉnh xuống thành phố, phường và nhóm tài sản trước khi so giá đất Bình Dương.",
         "scope_label": "Bình Dương · Hướng dẫn nền tảng",
         "article": _editorial_article(
@@ -2195,7 +2195,7 @@ _ARTICLE_EDITORIAL = {
                 "Đây là nội dung hướng dẫn phương pháp. Báo cáo dữ liệu công khai hiện ưu tiên Thủ Dầu Một, nên bài viết không ngụ ý Bến Cát có độ phủ tương đương.",
             ],
             [
-                ("pham-vi-rong", "Bến Cát là phạm vi rộng, không phải một mặt bằng giá duy nhất", "Các khu trong Bến Cát khác nhau về hạ tầng, công năng và nhóm người mua. Nhãn thành phố chung chỉ phù hợp để bắt đầu tìm kiếm.", "Trước khi ghi nhận giá, cần xác định tin thuộc Mỹ Phước, Tân Định hay Thới Hòa và vị trí cụ thể hơn."),
+                ("pham-vi-rong", "Bến Cát là phạm vi rộng, không phải một mức giá phổ biến duy nhất", "Các khu trong Bến Cát khác nhau về hạ tầng, công năng và nhóm người mua. Nhãn thành phố chung chỉ phù hợp để bắt đầu tìm kiếm.", "Trước khi ghi nhận giá, cần xác định tin thuộc Mỹ Phước, Tân Định hay Thới Hòa và vị trí cụ thể hơn."),
                 ("tach-ba-khu", "Tách Mỹ Phước, Tân Định và Thới Hòa", "Mỗi khu cần một nhóm tin riêng với địa danh có thể kiểm chứng. Tránh suy ra vị trí từ tiêu đề quảng cáo hoặc mốc khoảng cách mơ hồ.", "Nếu tin dùng nhiều địa danh, hãy hỏi địa chỉ hành chính và vị trí thực tế. Chỉ đưa vào nhóm sau khi hai thông tin nhất quán.", ["Địa chỉ hành chính", "Tên đường", "Mốc tiếp cận", "Vị trí trên giấy tờ"]),
                 ("muc-dich-su-dung", "So theo mục đích sử dụng và loại tài sản", "Tài sản phục vụ ở, cho thuê, kinh doanh hoặc diện tích lớn có nhóm nhu cầu khác nhau. Giá thấp hơn không đồng nghĩa phù hợp hơn.", "Tạo nhóm theo loại tài sản, diện tích, thổ cư và đường tiếp cận. Khi dữ kiện thiếu, giữ tin ngoài nhóm tham chiếu chính."),
                 ("kiem-tra-tin", "Kiểm tra tin lặp và thông tin thay đổi", "Cùng một tài sản có thể được đăng lại với tiêu đề hoặc giá khác. Đối chiếu mô tả, hình ảnh, số liên hệ và thời điểm đăng.", "Khi giá thay đổi, cần hỏi nguyên nhân và xác nhận mức hiện tại. Không dùng phiên bản cũ làm căn cứ nếu chưa kiểm tra."),
@@ -2234,43 +2234,43 @@ _rb_prepend_unique_article_link(
 )
 _rb_prepend_unique_article_link(
     "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia",
-    {"label": "Giá đất Phú Tân", "href": "/kien-thuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Một phường nhiều tín hiệu để so cùng nhóm Thủ Dầu Một."},
+    {"label": "Giá đất Phú Tân", "href": "/kien-thuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Một phường nhiều dấu hiệu đáng chú ý để so cùng nhóm Thủ Dầu Một."},
 )
 
 # --- Hermes Phu Tan visual enrichment 2026-07-22 ---
 SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].update({
     "summary_cards": [
         {
-            "label": "Tin active",
+            "label": "Tin đang theo dõi",
             "value": "708",
-            "note": "Facebook active tại Phú Tân"
+            "note": "tin Facebook đang theo dõi ở Phú Tân"
         },
         {
-            "label": "Tín hiệu",
+            "label": "Dấu hiệu đáng chú ý",
             "value": "321",
-            "note": "hot hoặc giảm giá cần lọc tiếp"
+            "note": "được quan tâm hoặc có giảm giá cần lọc tiếp"
         },
         {
             "label": "Đất nền",
             "value": "23,8 tr/m²",
-            "note": "trung vị từ 383 tin có giá/m²"
+            "note": "mức giá ở giữa của 383 tin có giá/m²"
         },
         {
             "label": "Nhà đất",
             "value": "34,8 tr/m²",
-            "note": "trung vị từ 67 tin có giá/m²"
+            "note": "mức giá ở giữa của 67 tin có giá/m²"
         }
     ],
     "illustration": {
         "src": "/static/images/seo/phu-tan-data-visual.svg",
-        "alt": "Sơ đồ minh họa cách đọc giá đất Phú Tân từ dữ liệu active, tách loại hình rồi lọc tín hiệu trên dashboard",
-        "caption": "Minh họa luồng đọc dữ liệu: bắt đầu từ 708 tin active, tách đất nền/nhà đất, sau đó mở dashboard để lọc các tín hiệu đáng kiểm tra."
+        "alt": "Sơ đồ minh họa cách đọc giá đất Phú Tân từ dữ liệu tin đang theo dõi, tách loại hình rồi lọc dấu hiệu đáng chú ý trên dashboard",
+        "caption": "Minh họa luồng đọc dữ liệu: bắt đầu từ 708 tin đang theo dõi, tách đất nền/nhà đất, sau đó mở dashboard để lọc các dấu hiệu đáng chú ý đáng kiểm tra."
     },
     "data_tables": [
         {
             "eyebrow": "Bảng dữ liệu thật",
             "title": "Giá Phú Tân theo loại hình bất động sản",
-            "note": "Giá/m² và tổng giá đều là trung vị từ dữ liệu Facebook active đã lọc; không dùng một giá chung cho toàn phường.",
+            "note": "Giá/m² và tổng giá đều là mức giá ở giữa của dữ liệu tin Facebook đang theo dõi đã lọc; không dùng một giá chung cho toàn phường.",
             "columns": [
                 {
                     "key": "type",
@@ -2278,7 +2278,7 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                 },
                 {
                     "key": "active",
-                    "label": "Tin active"
+                    "label": "Tin đang theo dõi"
                 },
                 {
                     "key": "priced",
@@ -2286,7 +2286,7 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                 },
                 {
                     "key": "median_ppm2",
-                    "label": "Trung vị giá/m²"
+                    "label": "Mức giá ở giữa giá/m²"
                 },
                 {
                     "key": "range_ppm2",
@@ -2294,11 +2294,11 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                 },
                 {
                     "key": "median_total",
-                    "label": "Tổng giá trung vị"
+                    "label": "Tổng giá mức giá ở giữa"
                 },
                 {
-                    "key": "signals",
-                    "label": "Tín hiệu"
+                    "key": "tin đáng kiểm tras",
+                    "label": "Dấu hiệu đáng chú ý"
                 }
             ],
             "rows": [
@@ -2309,7 +2309,7 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                     "median_ppm2": "23,8 tr/m²",
                     "range_ppm2": "20,8-26,2 tr/m²",
                     "median_total": "2,9 tỷ",
-                    "signals": "248"
+                    "tin đáng kiểm tras": "248"
                 },
                 {
                     "type": "Nhà đất",
@@ -2318,7 +2318,7 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                     "median_ppm2": "34,8 tr/m²",
                     "range_ppm2": "25,7-40,7 tr/m²",
                     "median_total": "4,0 tỷ",
-                    "signals": "41"
+                    "tin đáng kiểm tras": "41"
                 },
                 {
                     "type": "Kho xưởng",
@@ -2327,7 +2327,7 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                     "median_ppm2": "38,7 tr/m²",
                     "range_ppm2": "38,7-42,0 tr/m²",
                     "median_total": "2,9 tỷ",
-                    "signals": "10"
+                    "tin đáng kiểm tras": "10"
                 },
                 {
                     "type": "Nhà trọ",
@@ -2336,14 +2336,14 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                     "median_ppm2": "20,0 tr/m²",
                     "range_ppm2": "20,0-20,0 tr/m²",
                     "median_total": "3,0 tỷ",
-                    "signals": "2"
+                    "tin đáng kiểm tras": "2"
                 }
             ]
         },
         {
             "eyebrow": "Bảng so sánh",
             "title": "Phú Tân so với các phường nên mở cùng lúc",
-            "note": "So cùng loại hình: đất nền với đất nền, nhà đất với nhà đất. Đây là giá rao trung vị từ nhóm active hiện hành.",
+            "note": "So cùng loại hình: đất nền với đất nền, nhà đất với nhà đất. Đây là giá rao mức giá ở giữa của nhóm tin đang theo dõi hiện hành.",
             "columns": [
                 {
                     "key": "ward",
@@ -2351,11 +2351,11 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                 },
                 {
                     "key": "active",
-                    "label": "Tin active"
+                    "label": "Tin đang theo dõi"
                 },
                 {
-                    "key": "signals",
-                    "label": "Tín hiệu"
+                    "key": "tin đáng kiểm tras",
+                    "label": "Dấu hiệu đáng chú ý"
                 },
                 {
                     "key": "dat_nen",
@@ -2374,15 +2374,15 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                 {
                     "ward": "Phú Tân",
                     "active": "708",
-                    "signals": "321",
+                    "tin đáng kiểm tras": "321",
                     "dat_nen": "23,8 tr/m² · 2,9 tỷ",
                     "nha_dat": "34,8 tr/m² · 4,0 tỷ",
-                    "note": "Nhiều tín hiệu nhất, nên theo dõi riêng"
+                    "note": "Nhiều dấu hiệu đáng chú ý nhất, nên theo dõi riêng"
                 },
                 {
                     "ward": "Phú Mỹ",
                     "active": "866",
-                    "signals": "126",
+                    "tin đáng kiểm tras": "126",
                     "dat_nen": "22,3 tr/m² · 2,85 tỷ",
                     "nha_dat": "39,5 tr/m² · 3,55 tỷ",
                     "note": "Đất nền gần Phú Tân, nhà đất cao hơn"
@@ -2390,7 +2390,7 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                 {
                     "ward": "Định Hòa",
                     "active": "896",
-                    "signals": "122",
+                    "tin đáng kiểm tras": "122",
                     "dat_nen": "15,2 tr/m² · 2,38 tỷ",
                     "nha_dat": "32,7 tr/m² · 2,65 tỷ",
                     "note": "Nguồn cung lớn, giá đất nền mềm hơn"
@@ -2398,7 +2398,7 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                 {
                     "ward": "Hiệp An",
                     "active": "1.359",
-                    "signals": "101",
+                    "tin đáng kiểm tras": "101",
                     "dat_nen": "15,9 tr/m² · 2,19 tỷ",
                     "nha_dat": "21,1 tr/m² · 2,39 tỷ",
                     "note": "Nguồn cung lớn nhất, giá nhà đất thấp hơn"
@@ -2406,7 +2406,7 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
                 {
                     "ward": "Phú Lợi",
                     "active": "468",
-                    "signals": "69",
+                    "tin đáng kiểm tras": "69",
                     "dat_nen": "30,9 tr/m² · 3,45 tỷ",
                     "nha_dat": "40,2 tr/m² · 3,8 tỷ",
                     "note": "Mặt bằng đất nền cao hơn Phú Tân"
@@ -2417,9 +2417,9 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
     "charts": [
         {
             "eyebrow": "Biểu đồ giá/m²",
-            "title": "Trung vị giá/m² theo loại hình tại Phú Tân",
+            "title": "Mức giá ở giữa giá/m² theo loại hình tại Phú Tân",
             "note": "Kho xưởng và nhà đất có đơn giá cao hơn đất nền; vì vậy không nên gom một mức giá chung.",
-            "alt": "Biểu đồ thanh so sánh giá/m² trung vị: đất nền 23,8, nhà đất 34,8, kho xưởng 38,7, nhà trọ 20,0 triệu mỗi mét vuông.",
+            "alt": "Biểu đồ thanh so sánh giá/m² mức giá ở giữa: đất nền 23,8, nhà đất 34,8, kho xưởng 38,7, nhà trọ 20,0 triệu mỗi mét vuông.",
             "rows": [
                 {
                     "label": "Kho xưởng",
@@ -2449,9 +2449,9 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
         },
         {
             "eyebrow": "Biểu đồ nguồn cung",
-            "title": "Tin active Phú Tân theo loại hình",
-            "note": "Đất nền là phân khúc chính, chiếm phần lớn nguồn cung active.",
-            "alt": "Biểu đồ thanh nguồn cung active: đất nền 511 tin, nhà đất 98 tin, kho xưởng 76 tin, nhà trọ 2 tin.",
+            "title": "Tin đang theo dõi Phú Tân theo loại hình",
+            "note": "Đất nền là phân khúc chính, chiếm phần lớn số tin đang theo dõi.",
+            "alt": "Biểu đồ thanh số tin đang theo dõi: đất nền 511 tin, nhà đất 98 tin, kho xưởng 76 tin, nhà trọ 2 tin.",
             "rows": [
                 {
                     "label": "Đất nền",
@@ -2480,10 +2480,10 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].upd
             ]
         },
         {
-            "eyebrow": "Biểu đồ tín hiệu",
-            "title": "Tín hiệu theo phường nên so cùng Phú Tân",
-            "note": "Phú Tân nổi bật vì số tín hiệu cao hơn rõ so với nhóm phường so sánh.",
-            "alt": "Biểu đồ tín hiệu: Phú Tân 321, Phú Mỹ 126, Định Hòa 122, Hiệp An 101, Phú Lợi 69.",
+            "eyebrow": "Biểu đồ dấu hiệu đáng chú ý",
+            "title": "Dấu hiệu đáng chú ý theo phường nên so cùng Phú Tân",
+            "note": "Phú Tân nổi bật vì số dấu hiệu đáng chú ý cao hơn rõ so với nhóm phường so sánh.",
+            "alt": "Biểu đồ dấu hiệu đáng chú ý: Phú Tân 321, Phú Mỹ 126, Định Hòa 122, Hiệp An 101, Phú Lợi 69.",
             "rows": [
                 {
                     "label": "Phú Tân",
@@ -2526,36 +2526,36 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
     "variant": "knowledge",
     "path": "/kien-thuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
     "title": "Giá đất Định Hòa Thủ Dầu Một cập nhật tháng 7/2026 | Radar BDS",
-    "description": "Giá đất Định Hòa tháng 7/2026: đất nền trung vị 15,2 tr/m², nhà đất 32,7 tr/m², 901 tin active và 120 tín hiệu từ Radar BDS.",
+    "description": "Giá đất Định Hòa tháng 7/2026: đất nền có mức giá ở giữa 15,2 tr/m², nhà đất có mức giá ở giữa 32,7 tr/m², 901 tin đang theo dõi và 120 dấu hiệu đáng chú ý do Radar BDS ghi nhận.",
     "keywords": "giá đất Định Hòa, nhà đất Định Hòa Thủ Dầu Một, đất nền Định Hòa, Radar BDS",
     "scope_label": "Thủ Dầu Một · Định Hòa",
     "breadcrumb_label": "Giá đất Định Hòa tháng 7/2026",
-    "hero_badge": "Dữ liệu Facebook active",
+    "hero_badge": "Dữ liệu tin Facebook đang theo dõi",
     "hero_title": "Giá đất Định Hòa Thủ Dầu Một cập nhật tháng 7/2026",
-    "hero_text": "Định Hòa có nguồn cung active lớn, nhưng giá cần tách rõ đất nền và nhà đất để tránh so sai.",
+    "hero_text": "Định Hòa có số tin đang theo dõi lớn, nhưng giá cần tách rõ đất nền và nhà đất để tránh so sai.",
     "hero_checks": [
-        "901 tin active",
-        "120 tín hiệu hot/giảm giá",
+        "901 tin đang theo dõi",
+        "120 dấu hiệu được quan tâm hoặc có giảm giá",
         "Tách đất nền và nhà đất"
     ],
     "primary_cta": "Mở dashboard lọc Định Hòa",
-    "primary_href": "/?ward=Định%20Hòa&tab=signals",
+    "primary_href": "/?ward=Định%20Hòa&tab=tin đáng kiểm tras",
     "secondary_cta": "Xem báo cáo Định Hòa",
     "secondary_href": "/bao-cao/dinh-hoa-thang-07-2026",
     "map_label": "Định Hòa / Thủ Dầu Một",
     "hero_metric": {
-        "label": "Đất nền trung vị",
+        "label": "Đất nền mức giá ở giữa",
         "value": "15,2 tr/m²",
-        "delta": "Facebook active",
+        "delta": "tin Facebook đang theo dõi",
         "note": "Cập nhật đến 20/07/2026"
     },
     "property_card": {
         "status": "Định Hòa — nguồn cung lớn",
-        "title": "Đất nền trung vị khoảng 2,38 tỷ",
+        "title": "Đất nền mức giá ở giữa khoảng 2,38 tỷ",
         "price": "15,2 tr/m² · đất nền",
-        "metric_a": "Tin active",
+        "metric_a": "Tin đang theo dõi",
         "metric_a_value": "901",
-        "metric_b": "Tín hiệu",
+        "metric_b": "Dấu hiệu đáng chú ý",
         "metric_b_value": "120"
     },
     "value_cards": [],
@@ -2571,12 +2571,12 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
         {
             "label": "Landing nhà đất Định Hòa",
             "href": "/binh-duong/phuong-dinh-hoa",
-            "description": "Mở trang phường để lọc tin và tín hiệu."
+            "description": "Mở trang phường để lọc tin và dấu hiệu đáng chú ý."
         },
         {
             "label": "Giá đất Phú Tân",
             "href": "/kien-thuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
-            "description": "So với phường có tín hiệu cao hơn."
+            "description": "So với phường có dấu hiệu đáng chú ý cao hơn."
         },
         {
             "label": "Giá đất Hiệp An",
@@ -2589,11 +2589,11 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
     "faq": [
         {
             "q": "Giá đất nền Định Hòa hiện khoảng bao nhiêu?",
-            "a": "Trong dữ liệu Facebook active của Radar BDS cập nhật đến 20/07/2026, đất nền Định Hòa có trung vị 15,2 tr/m² và tổng giá trung vị khoảng 2,38 tỷ."
+            "a": "Trong dữ liệu tin Facebook đang theo dõi của Radar BDS cập nhật đến 20/07/2026, đất nền Định Hòa có mức giá ở giữa 15,2 tr/m² và tổng giá ở giữa khoảng 2,38 tỷ."
         },
         {
             "q": "Có nên lấy một mức giá chung cho toàn Định Hòa không?",
-            "a": "Không nên. Đất nền, nhà đất, nhà trọ và kho xưởng có mặt bằng giá khác nhau; bài này tách riêng loại hình để tránh so sai."
+            "a": "Không nên. Đất nền, nhà đất, nhà trọ và kho xưởng có mức giá phổ biến khác nhau; bài này tách riêng loại hình để tránh so sai."
         },
         {
             "q": "Định Hòa nên so với phường nào?",
@@ -2601,48 +2601,48 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
         },
         {
             "q": "Dữ liệu này có phải giá giao dịch chính thức không?",
-            "a": "Không. Đây là giá rao đã lọc ban đầu từ Facebook active, dùng để sàng lọc thị trường trước khi kiểm tra pháp lý, quy hoạch và hiện trạng."
+            "a": "Không. Đây là giá người bán đang đăng, đã được Radar lọc bớt tin rác/trùng từ tin Facebook đang theo dõi, dùng để sàng lọc thị trường trước khi kiểm tra pháp lý, quy hoạch và hiện trạng."
         }
     ],
     "article": {
         "published_at": "2026-07-22",
         "modified_at": "2026-07-22",
         "intro": [
-            "Trong dữ liệu Facebook active của Radar BDS cập nhật đến 20/07/2026, đất nền Định Hòa có trung vị 15,2 tr/m², còn nhà đất có trung vị 32,7 tr/m². Đây là giá rao đã lọc ban đầu, không phải giá giao dịch chính thức; người mua cần kiểm tra pháp lý, quy hoạch và hiện trạng trước khi quyết định.",
-            "Định Hòa là phường có nguồn cung active lớn ở Thủ Dầu Một. Điểm quan trọng là không nên dùng một mặt bằng giá chung cho toàn phường, vì đất nền và nhà đất chênh nhau khá rõ."
+            "Trong dữ liệu tin Facebook đang theo dõi của Radar BDS cập nhật đến 20/07/2026, đất nền Định Hòa có mức giá ở giữa 15,2 tr/m², còn nhà đất có mức giá ở giữa 32,7 tr/m². Đây là giá người bán đang đăng, đã được Radar lọc bớt tin rác/trùng, chưa chắc là giá chốt mua bán; người mua cần kiểm tra pháp lý, quy hoạch và hiện trạng trước khi quyết định.",
+            "Định Hòa là phường có số tin đang theo dõi lớn ở Thủ Dầu Một. Điểm quan trọng là không nên dùng một mức giá phổ biến chung cho toàn phường, vì đất nền và nhà đất chênh nhau khá rõ."
         ],
         "summary_cards": [
             {
-                "label": "Tin active",
+                "label": "Tin đang theo dõi",
                 "value": "901",
-                "note": "Facebook active tại Định Hòa"
+                "note": "tin Facebook đang theo dõi ở Định Hòa"
             },
             {
-                "label": "Tín hiệu",
+                "label": "Dấu hiệu đáng chú ý",
                 "value": "120",
-                "note": "hot hoặc giảm giá"
+                "note": "được quan tâm hoặc có giảm giá"
             },
             {
                 "label": "Đất nền",
                 "value": "15,2 tr/m²",
-                "note": "trung vị từ 536 tin có giá/m²"
+                "note": "mức giá ở giữa của 536 tin có giá/m²"
             },
             {
                 "label": "Nhà đất",
                 "value": "32,7 tr/m²",
-                "note": "trung vị từ 239 tin có giá/m²"
+                "note": "mức giá ở giữa của 239 tin có giá/m²"
             }
         ],
         "illustration": {
             "src": "/static/images/seo/dinh-hoa-data-visual.svg",
-            "alt": "Sơ đồ minh họa cách đọc giá đất Định Hòa từ dữ liệu active, tách loại hình rồi so sánh với Phú Tân và Hiệp An",
-            "caption": "Minh họa luồng đọc dữ liệu Định Hòa: bắt đầu từ nguồn cung active, tách đất nền/nhà đất, sau đó so với Phú Tân và Hiệp An."
+            "alt": "Sơ đồ minh họa cách đọc giá đất Định Hòa từ dữ liệu tin đang theo dõi, tách loại hình rồi so sánh với Phú Tân và Hiệp An",
+            "caption": "Minh họa luồng đọc dữ liệu Định Hòa: bắt đầu từ số tin đang theo dõi, tách đất nền/nhà đất, sau đó so với Phú Tân và Hiệp An."
         },
         "data_tables": [
             {
                 "eyebrow": "Bảng dữ liệu thật",
                 "title": "Giá Định Hòa theo loại hình bất động sản",
-                "note": "Giá/m² và tổng giá là trung vị từ dữ liệu Facebook active đã lọc; mỗi loại hình cần đọc riêng.",
+                "note": "Giá/m² và tổng giá là mức giá ở giữa của dữ liệu tin Facebook đang theo dõi đã lọc; mỗi loại hình cần đọc riêng.",
                 "columns": [
                     {
                         "key": "type",
@@ -2650,7 +2650,7 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                     },
                     {
                         "key": "active",
-                        "label": "Tin active"
+                        "label": "Tin đang theo dõi"
                     },
                     {
                         "key": "priced",
@@ -2658,7 +2658,7 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                     },
                     {
                         "key": "median_ppm2",
-                        "label": "Trung vị giá/m²"
+                        "label": "Mức giá ở giữa giá/m²"
                     },
                     {
                         "key": "range_ppm2",
@@ -2666,11 +2666,11 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                     },
                     {
                         "key": "median_total",
-                        "label": "Tổng giá trung vị"
+                        "label": "Tổng giá mức giá ở giữa"
                     },
                     {
-                        "key": "signals",
-                        "label": "Tín hiệu"
+                        "key": "tin đáng kiểm tras",
+                        "label": "Dấu hiệu đáng chú ý"
                     }
                 ],
                 "rows": [
@@ -2681,7 +2681,7 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                         "median_ppm2": "15,2 tr/m²",
                         "range_ppm2": "12,6-22,9 tr/m²",
                         "median_total": "2,38 tỷ",
-                        "signals": "80"
+                        "tin đáng kiểm tras": "80"
                     },
                     {
                         "type": "Nhà đất",
@@ -2690,7 +2690,7 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                         "median_ppm2": "32,7 tr/m²",
                         "range_ppm2": "20,6-36,2 tr/m²",
                         "median_total": "2,65 tỷ",
-                        "signals": "31"
+                        "tin đáng kiểm tras": "31"
                     },
                     {
                         "type": "Nhà trọ",
@@ -2699,7 +2699,7 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                         "median_ppm2": "13,2 tr/m²",
                         "range_ppm2": "11,9-13,9 tr/m²",
                         "median_total": "1,58 tỷ",
-                        "signals": "5"
+                        "tin đáng kiểm tras": "5"
                     },
                     {
                         "type": "Kho xưởng",
@@ -2708,14 +2708,14 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                         "median_ppm2": "38,9 tr/m²",
                         "range_ppm2": "38,9-38,9 tr/m²",
                         "median_total": "2,8 tỷ",
-                        "signals": "0"
+                        "tin đáng kiểm tras": "0"
                     }
                 ]
             },
             {
                 "eyebrow": "Bảng so sánh",
                 "title": "Định Hòa so với Phú Tân, Phú Mỹ, Hiệp An và Phú Lợi",
-                "note": "So cùng loại hình: đất nền với đất nền, nhà đất với nhà đất. Đây là giá rao trung vị từ nhóm active hiện hành.",
+                "note": "So cùng loại hình: đất nền với đất nền, nhà đất với nhà đất. Đây là giá rao mức giá ở giữa của nhóm tin đang theo dõi hiện hành.",
                 "columns": [
                     {
                         "key": "ward",
@@ -2723,11 +2723,11 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                     },
                     {
                         "key": "active",
-                        "label": "Tin active"
+                        "label": "Tin đang theo dõi"
                     },
                     {
-                        "key": "signals",
-                        "label": "Tín hiệu"
+                        "key": "tin đáng kiểm tras",
+                        "label": "Dấu hiệu đáng chú ý"
                     },
                     {
                         "key": "dat_nen",
@@ -2746,7 +2746,7 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                     {
                         "ward": "Định Hòa",
                         "active": "901",
-                        "signals": "120",
+                        "tin đáng kiểm tras": "120",
                         "dat_nen": "15,2 tr/m² · 2,38 tỷ",
                         "nha_dat": "32,7 tr/m² · 2,65 tỷ",
                         "note": "Nguồn cung lớn, đất nền mềm hơn Phú Tân/Phú Mỹ"
@@ -2754,15 +2754,15 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                     {
                         "ward": "Phú Tân",
                         "active": "718",
-                        "signals": "328",
+                        "tin đáng kiểm tras": "328",
                         "dat_nen": "23,8 tr/m² · 2,9 tỷ",
                         "nha_dat": "34,8 tr/m² · 4,0 tỷ",
-                        "note": "Tín hiệu cao hơn rõ, nên theo dõi song song"
+                        "note": "Dấu hiệu đáng chú ý cao hơn rõ, nên theo dõi song song"
                     },
                     {
                         "ward": "Phú Mỹ",
                         "active": "877",
-                        "signals": "126",
+                        "tin đáng kiểm tras": "126",
                         "dat_nen": "22,3 tr/m² · 2,88 tỷ",
                         "nha_dat": "39,5 tr/m² · 3,55 tỷ",
                         "note": "Mặt bằng nhà đất cao hơn Định Hòa"
@@ -2770,7 +2770,7 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                     {
                         "ward": "Hiệp An",
                         "active": "1.373",
-                        "signals": "100",
+                        "tin đáng kiểm tras": "100",
                         "dat_nen": "15,9 tr/m² · 2,19 tỷ",
                         "nha_dat": "21,1 tr/m² · 2,39 tỷ",
                         "note": "Nguồn cung lớn nhất trong nhóm so sánh"
@@ -2778,10 +2778,10 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                     {
                         "ward": "Phú Lợi",
                         "active": "481",
-                        "signals": "70",
+                        "tin đáng kiểm tras": "70",
                         "dat_nen": "29,5 tr/m² · 3,39 tỷ",
                         "nha_dat": "39,5 tr/m² · 3,8 tỷ",
-                        "note": "Mặt bằng giá cao hơn, nguồn cung thấp hơn"
+                        "note": "Mức giá phổ biến cao hơn, nguồn cung thấp hơn"
                     }
                 ]
             }
@@ -2789,9 +2789,9 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
         "charts": [
             {
                 "eyebrow": "Biểu đồ giá/m²",
-                "title": "Trung vị giá/m² theo loại hình tại Định Hòa",
+                "title": "Mức giá ở giữa giá/m² theo loại hình tại Định Hòa",
                 "note": "Nhà đất và kho xưởng có đơn giá cao hơn đất nền; không nên gom thành một mức giá chung.",
-                "alt": "Biểu đồ thanh giá/m² trung vị Định Hòa: kho xưởng 38,9, nhà đất 32,7, đất nền 15,2, nhà trọ 13,2.",
+                "alt": "Biểu đồ thanh giá/m² mức giá ở giữa Định Hòa: kho xưởng 38,9, nhà đất 32,7, đất nền 15,2, nhà trọ 13,2.",
                 "rows": [
                     {
                         "label": "Kho xưởng",
@@ -2821,9 +2821,9 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
             },
             {
                 "eyebrow": "Biểu đồ nguồn cung",
-                "title": "Tin active Định Hòa theo loại hình",
-                "note": "Đất nền là phân khúc chủ đạo trong nguồn cung active của Định Hòa.",
-                "alt": "Biểu đồ thanh nguồn cung active Định Hòa: đất nền 604 tin, nhà đất 281 tin, nhà trọ 7 tin, kho xưởng 3 tin.",
+                "title": "Tin đang theo dõi Định Hòa theo loại hình",
+                "note": "Đất nền là phân khúc chủ đạo trong số tin đang theo dõi của Định Hòa.",
+                "alt": "Biểu đồ thanh số tin đang theo dõi Định Hòa: đất nền 604 tin, nhà đất 281 tin, nhà trọ 7 tin, kho xưởng 3 tin.",
                 "rows": [
                     {
                         "label": "Đất nền",
@@ -2852,10 +2852,10 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                 ]
             },
             {
-                "eyebrow": "Biểu đồ tín hiệu",
-                "title": "Tín hiệu theo phường nên so cùng Định Hòa",
-                "note": "Định Hòa có tín hiệu tương đương Phú Mỹ, thấp hơn Phú Tân nhưng nguồn cung lớn hơn Phú Tân.",
-                "alt": "Biểu đồ tín hiệu: Phú Tân 328, Phú Mỹ 126, Định Hòa 120, Hiệp An 100, Phú Lợi 70.",
+                "eyebrow": "Biểu đồ dấu hiệu đáng chú ý",
+                "title": "Dấu hiệu đáng chú ý theo phường nên so cùng Định Hòa",
+                "note": "Định Hòa có dấu hiệu đáng chú ý tương đương Phú Mỹ, thấp hơn Phú Tân nhưng nguồn cung lớn hơn Phú Tân.",
+                "alt": "Biểu đồ dấu hiệu đáng chú ý: Phú Tân 328, Phú Mỹ 126, Định Hòa 120, Hiệp An 100, Phú Lợi 70.",
                 "rows": [
                     {
                         "label": "Phú Tân",
@@ -2893,26 +2893,26 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
         "sections": [
             {
                 "id": "gia-dat-nen-dinh-hoa",
-                "heading": "Giá đất nền Định Hòa: trung vị 15,2 tr/m²",
+                "heading": "Giá đất nền Định Hòa: mức giá ở giữa 15,2 tr/m²",
                 "paragraphs": [
-                    "Trong 604 tin đất nền active, 536 tin có giá/m² đủ điều kiện tính trung vị. Mức trung vị hiện là 15,2 tr/m², vùng giữa 25-75% nằm trong khoảng 12,6-22,9 tr/m².",
-                    "Tổng giá trung vị của nhóm đất nền khoảng 2,38 tỷ. Khi lọc dashboard, người mua nên đặt thêm điều kiện diện tích, pháp lý và khoảng cách tới trục đường chính."
+                    "Trong 604 tin đất nền đang theo dõi, 536 tin có giá/m² đủ điều kiện tính mức giá ở giữa. Mức giá ở giữa hiện là 15,2 tr/m², khoảng giá thường gặp nằm trong khoảng 12,6-22,9 tr/m².",
+                    "Tổng giá mức giá ở giữa của nhóm đất nền khoảng 2,38 tỷ. Khi lọc dashboard, người mua nên đặt thêm điều kiện diện tích, pháp lý và khoảng cách tới trục đường chính."
                 ],
                 "bullets": [
                     "Đất nền là nhóm nguồn cung lớn nhất tại Định Hòa.",
                     "Khoảng giá rộng, nên không lấy một con số duy nhất để quyết định.",
-                    "Tin có tín hiệu hot/giảm giá cần kiểm tra lại pháp lý và vị trí."
+                    "Tin có dấu hiệu được quan tâm hoặc có giảm giá cần kiểm tra lại pháp lý và vị trí."
                 ]
             },
             {
                 "id": "nha-dat-dinh-hoa",
-                "heading": "Nhà đất Định Hòa: trung vị 32,7 tr/m², khác rõ đất nền",
+                "heading": "Nhà đất Định Hòa: mức giá ở giữa 32,7 tr/m², khác rõ đất nền",
                 "paragraphs": [
-                    "Nhóm nhà đất có 281 tin active, trong đó 239 tin có giá/m². Trung vị giá/m² là 32,7 tr/m², cao hơn nhiều so với đất nền vì đã bao gồm công trình, vị trí và hiện trạng nhà.",
+                    "Nhóm nhà đất có 281 tin đang theo dõi, trong đó 239 tin có giá/m². Mức giá ở giữa giá/m² là 32,7 tr/m², cao hơn nhiều so với đất nền vì đã bao gồm công trình, vị trí và hiện trạng nhà.",
                     "Nếu ngân sách tương đương nhau, nhà đất Định Hòa và đất nền Định Hòa không nên đặt vào cùng một bảng so sánh trừ khi đã chuẩn hóa diện tích và hiện trạng."
                 ],
                 "bullets": [
-                    "Nhà đất có tổng giá trung vị khoảng 2,65 tỷ.",
+                    "Nhà đất có tổng giá ở giữa khoảng 2,65 tỷ.",
                     "Giá/m² cao hơn đất nền nhưng có thể phù hợp người cần ở hoặc khai thác ngay.",
                     "Cần kiểm tra chất lượng công trình trước khi so giá."
                 ]
@@ -2921,11 +2921,11 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                 "id": "so-sanh-dinh-hoa",
                 "heading": "Định Hòa nên so cùng Phú Tân, Phú Mỹ và Hiệp An",
                 "paragraphs": [
-                    "Định Hòa có 901 tin active, nhiều hơn Phú Tân và Phú Mỹ trong cùng nhóm so sánh. Tuy nhiên, số tín hiệu là 120, thấp hơn Phú Tân nhưng gần Phú Mỹ.",
+                    "Định Hòa có 901 tin đang theo dõi, nhiều hơn Phú Tân và Phú Mỹ trong cùng nhóm so sánh. Tuy nhiên, số dấu hiệu đáng chú ý là 120, thấp hơn Phú Tân nhưng gần Phú Mỹ.",
                     "Về đất nền, Định Hòa mềm hơn Phú Tân và Phú Mỹ, khá gần Hiệp An. Về nhà đất, Định Hòa cao hơn Hiệp An nhưng thấp hơn Phú Mỹ và Phú Lợi."
                 ],
                 "bullets": [
-                    "So với Phú Tân: Định Hòa mềm hơn về đất nền nhưng ít tín hiệu hơn.",
+                    "So với Phú Tân: Định Hòa mềm hơn về đất nền nhưng ít dấu hiệu đáng chú ý hơn.",
                     "So với Phú Mỹ: Định Hòa có đất nền mềm hơn và nhà đất thấp hơn.",
                     "So với Hiệp An: Định Hòa có nhà đất cao hơn nhưng đất nền gần nhau."
                 ]
@@ -2934,19 +2934,19 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
                 "id": "cach-loc-dashboard",
                 "heading": "Cách lọc tin Định Hòa trên Radar BDS",
                 "paragraphs": [
-                    "Bước đầu nên chọn phường Định Hòa, sau đó tách loại hình đất nền hoặc nhà đất trước khi nhìn giá/m². Tiếp theo mới lọc theo tổng ngân sách, diện tích và tín hiệu hot/giảm giá.",
-                    "Nếu gặp tin rẻ hơn rõ so với vùng giữa 25-75%, cần kiểm tra kỹ pháp lý, quy hoạch, hẻm/đường, hiện trạng tài sản và lịch sử repost."
+                    "Bước đầu nên chọn phường Định Hòa, sau đó tách loại hình đất nền hoặc nhà đất trước khi nhìn giá/m². Tiếp theo mới lọc theo tổng ngân sách, diện tích và dấu hiệu được quan tâm hoặc có giảm giá.",
+                    "Nếu gặp tin rẻ hơn rõ so với khoảng giá thường gặp, cần kiểm tra kỹ pháp lý, quy hoạch, hẻm/đường, hiện trạng tài sản và lịch sử repost."
                 ],
                 "bullets": [
                     "Lọc phường: Định Hòa.",
                     "Tách loại hình: đất nền hoặc nhà đất.",
-                    "Ưu tiên tin có đủ giá/m², tổng giá, diện tích và tín hiệu rõ."
+                    "Ưu tiên tin có đủ giá/m², tổng giá, diện tích và dấu hiệu đáng chú ý rõ."
                 ]
             }
         ],
         "checklist": [
             "Đã tách đất nền và nhà đất trước khi so giá.",
-            "Đã kiểm tra vùng giữa 25-75%, không chỉ nhìn tin rẻ nhất.",
+            "Đã kiểm tra khoảng giá thường gặp, không chỉ nhìn tin rẻ nhất.",
             "Đã mở báo cáo Định Hòa tháng 07/2026 để xem bối cảnh tháng.",
             "Đã so với Phú Tân, Phú Mỹ hoặc Hiệp An nếu đang phân vân khu vực.",
             "Đã kiểm tra pháp lý, quy hoạch và hiện trạng trước khi đi xem."
@@ -2954,7 +2954,7 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
     },
     "final_cta": {
         "title": "Mở dashboard lọc Định Hòa",
-        "body": "Lọc theo phường, loại hình, giá/m² và tín hiệu để tìm tin đáng kiểm tra.",
+        "body": "Lọc theo phường, loại hình, giá/m² và dấu hiệu đáng chú ý để tìm tin đáng kiểm tra.",
         "button": "Mở dashboard"
     },
     "breadcrumbs": [
