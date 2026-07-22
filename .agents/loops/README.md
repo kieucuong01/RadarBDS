@@ -11,8 +11,11 @@ Rules:
 - A blocked run still gets logged with `acted=0` and a short blocker.
 - If a loop starts producing repeated low-value work, fix or disable the loop.
 
-Current loops:
+Current repo loop state:
 
 | Loop | State/log |
 |---|---|
 | Daily SEO publisher | `.agents/seo-publish-history.md` and `.agents/loops/daily-seo-publisher.log` |
+
+Codex marketing automations are retired. Future daily SEO/marketing execution is
+owned by Hermes on the VPS; see `docs/hermes_marketing_workflow.md`.

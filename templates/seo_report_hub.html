@@ -5,19 +5,37 @@
 </head>
 <body class="seo-page report-hub">
   {% include "partials/seo_header.html" %}
-  <main id="main-content" class="seo-shell">
+  <main id="main-content" class="seo-shell hub-shell">
     {% include "partials/seo_breadcrumbs.html" %}
-    <section class="hub-hero">
+    <section class="hub-hero hub-hero-grid">
+      <div class="hub-hero-copy">
       <p class="seo-eyebrow">Kho dữ liệu thị trường</p>
       <h1>{{ page.hero_title }}</h1>
       <p>{{ page.hero_text }}</p>
-      <span class="scope-chip">{{ page.scope_label }}</span>
+      <div class="hub-hero-actions">
+        {% if reports %}
+        <a class="seo-primary-cta" href="{{ reports[0].path }}" data-track-cta="hero_latest_report">Xem báo cáo mới nhất</a>
+        {% endif %}
+        <span class="scope-chip">{{ page.scope_label }}</span>
+      </div>
+      </div>
+      <aside class="hub-insight-panel" aria-label="Tóm tắt kho báo cáo">
+        <p class="hub-panel-kicker">Radar BDS</p>
+        <dl class="hub-panel-list">
+          {% if reports %}
+          <div><dt>Báo cáo mới nhất</dt><dd>{{ reports[0].report.period }}</dd></div>
+          <div><dt>Phạm vi</dt><dd>{{ reports[0].scope_label }}</dd></div>
+          {% endif %}
+          <div><dt>Cách đọc</dt><dd>Phạm vi trước, chỉ số sau</dd></div>
+        </dl>
+      </aside>
     </section>
 
     {% if reports %}
     {% set latest = reports[0] %}
     <section class="hub-featured" aria-labelledby="latest-report">
-      <div>
+      <div class="hub-featured-index" aria-hidden="true">01</div>
+      <div class="hub-featured-body">
         <p class="seo-eyebrow">Báo cáo mới nhất</p>
         <h2 id="latest-report">{{ latest.hero_title }}</h2>
         <p>{{ latest.description }}</p>
@@ -40,7 +58,10 @@
       <div class="hub-card-grid">
         {% for report in reports %}
         <article class="hub-card">
-          <span class="scope-chip">{{ report.scope_label }}</span>
+          <div class="hub-card-top">
+            <span class="hub-card-number">{{ "%02d"|format(loop.index) }}</span>
+            <span class="scope-chip">{{ report.scope_label }}</span>
+          </div>
           <h3><a href="{{ report.path }}">{{ report.hero_title }}</a></h3>
           <p>{{ report.description }}</p>
           <div class="card-meta">

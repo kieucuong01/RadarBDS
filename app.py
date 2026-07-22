@@ -50,6 +50,7 @@ from services.signal_quality import (
 from services.advisory_memo import build_admin_valuation_workflow_markdown
 from services.radar_assistant import build_assistant_response
 from services import admin_growth, admin_leads, admin_quality, admin_users
+from services.valuation_tool import ValuationToolError, estimate_property_value
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -115,6 +116,7 @@ ADMIN_CONTROL_ROOM_SLUG_TO_PANEL = {
 HIDE_REVIEW_VERDICTS = HARD_HIDE_REVIEW_VERDICTS | SOFT_HIDE_REVIEW_VERDICTS
 VALUATION_VERDICTS = {"cheap_real", "fair", "overpriced", "fake_price", "cannot_price"}
 EXTRACTION_RECHECK_VERDICTS = {"wrong_ward", "wrong_road", "wrong_property_type", "wrong_price", "wrong_area"}
+VALUATION_TOOL_MIN_TIER = "free"
 TRAINING_VERDICTS = POSITIVE_REVIEW_VERDICTS | HIDE_REVIEW_VERDICTS | {"maybe"}
 INFRA_KINDS = {"timeline", "policy"}
 INFRA_STATUS = {"done", "in_progress", "planned"}
@@ -1271,6 +1273,7 @@ def _site_meta(path="/", *, title=None, description=None, keywords=None):
         "canonical_url": canonical_url,
         "og_url": canonical_url,
         "og_image": SITE_OG_IMAGE,
+        "base_url": PUBLIC_BASE_URL.rstrip("/"),
     }
 
 
@@ -1347,6 +1350,20 @@ def saved_listings_page():
             title="BĐS đã lưu | Radar BDS",
             description="Danh sách các lô đất đã lưu trong tài khoản Radar BDS.",
             keywords="BĐS đã lưu, lô đất đã lưu, Radar BDS",
+        ),
+    )
+
+
+def valuation_tool_page():
+    return render_template(
+        "valuation_tool.html",
+        wards_by_city=CITY_MAP,
+        required_tier=VALUATION_TOOL_MIN_TIER,
+        site_meta=_site_meta(
+            "/dinh-gia-bds",
+            title="Định giá đất Bình Dương online | Radar BDS",
+            description="Công cụ định giá lô đất Bình Dương cho Thủ Dầu Một và Bến Cát, dựa trên dữ liệu tin rao đã chuẩn hóa và mô hình định giá Radar BDS.",
+            keywords="định giá đất Bình Dương, định giá bất động sản, giá đất Thủ Dầu Một, giá đất Bến Cát",
         ),
     )
 
@@ -1673,6 +1690,7 @@ def llms_txt():
 
 ## Trang chính
 - Thị trường Bình Dương: {_public_url('/binh-duong')}
+- Công cụ định giá đất Bình Dương: {_public_url('/dinh-gia-bds')}
 - Báo cáo dữ liệu: {_public_url('/bao-cao')}
 - Phương pháp lọc deal: {_public_url('/san-deal-bds')}
 """
@@ -1710,6 +1728,11 @@ def sitemap_xml():
     <loc>{_public_url('/')}</loc>
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>{_public_url('/dinh-gia-bds')}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
 {seo_urls}
 {article_urls}
@@ -2490,6 +2513,17 @@ def api_market_indicators():
         prop_types=prop_types,
         **range_kwargs,
     ))
+
+
+@rate_limit("valuation_tool", limits={"guest": 60, "free": 120, "vip": None, "admin": None})
+@require_tier(VALUATION_TOOL_MIN_TIER)
+def api_valuation_tool_estimate():
+    payload = request.get_json(silent=True) or {}
+    try:
+        return jsonify(estimate_property_value(payload))
+    except ValuationToolError as exc:
+        return jsonify({"ok": False, "error": "validation_error", "field": str(exc)}), 422
+
 
 @rate_limit("listings")
 def api_listings():

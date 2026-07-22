@@ -154,7 +154,7 @@
 </head>
 
 <body class="seo-page seo-page-{{ page.get('variant', 'market') }}">
-  {% set watchlist_href = page.dashboard_href or "/?tab=signals&intent=watchlist" %}
+  {% set dashboard_signal_href = page.dashboard_href or "/?tab=signals" %}
   {% include "partials/seo_header.html" %}
 
   <main id="main-content">
@@ -282,7 +282,7 @@
             {% endfor %}
           </div>
           <div class="seo-actions" aria-label="Hành động chính">
-            <a class="seo-button seo-button-primary" href="{{ watchlist_href }}">{{ page.primary_cta }}
+            <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}">{{ page.primary_cta }}
               <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
             </a>
             <a class="seo-button seo-button-secondary" href="{{ page.secondary_href }}">{{ page.secondary_cta }}</a>
@@ -447,11 +447,11 @@
             </div>
             {% endfor %}
           </div>
-          <a class="seo-button seo-button-primary" href="{{ watchlist_href }}">{{ page.dashboard_preview.cta }}
+          <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}">{{ page.dashboard_preview.cta }}
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
           </a>
         </div>
-        <a class="dashboard-preview-frame" href="{{ watchlist_href }}" aria-label="{{ page.dashboard_preview.cta }}">
+        <a class="dashboard-preview-frame" href="{{ dashboard_signal_href }}" aria-label="{{ page.dashboard_preview.cta }}">
           <img src="{{ page.dashboard_preview.image }}" alt="{{ page.dashboard_preview.alt }}" loading="lazy" decoding="async" width="1365" height="900">
         </a>
       </div>
@@ -649,7 +649,7 @@
         <h2>{{ page.final_cta.title }}</h2>
         <p>{{ page.final_cta.body }}</p>
       </div>
-      <a class="seo-button seo-button-light" href="{{ watchlist_href }}">{{ page.final_cta.button }}
+      <a class="seo-button seo-button-light" href="{{ dashboard_signal_href }}">{{ page.final_cta.button }}
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
       </a>
     </section>

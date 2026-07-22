@@ -7,11 +7,11 @@ SEO_ARTICLES = {
         "title": "Bán đất Bình Dương: cách lọc tin đáng kiểm tra trước khi đi xem",
         "description": (
             "Hướng dẫn lọc bán đất Bình Dương bằng giá/m2, ward, MOS, cảnh báo nguồn "
-            "và watchlist Radar BDS trước khi gọi môi giới hay đi xem đất."
+            "và bộ lọc Radar BDS trước khi gọi môi giới hay đi xem đất."
         ),
         "keywords": (
             "bán đất Bình Dương, đất Bình Dương, mua bán nhà đất Bình Dương, bds Bình Dương, "
-            "giá/m2 đất Bình Dương, watchlist Radar BDS"
+            "giá/m2 đất Bình Dương, bộ lọc Radar BDS"
         ),
         "breadcrumb_label": "Bán đất Bình Dương: cách lọc tin đáng kiểm tra",
         "hero_badge": "Kiến thức BĐS Bình Dương",
@@ -24,9 +24,9 @@ SEO_ARTICLES = {
         "hero_checks": [
             "Giá/m2 theo từng phường",
             "MOS để ưu tiên tin nên gọi trước",
-            "Watchlist -> Telegram -> VIP lead",
+            "Dashboard filter -> signal -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lưu watchlist",
+        "primary_cta": "Mở dashboard để lọc signal",
         "secondary_cta": "Xem feed bán đất Bình Dương",
         "secondary_href": "/ban-dat-binh-duong",
         "map_label": "Knowledge / Binh Duong Land",
@@ -34,7 +34,7 @@ SEO_ARTICLES = {
             "label": "Bước lọc chính",
             "value": "4",
             "delta": "bước",
-            "note": "từ bài viết sang watchlist",
+            "note": "từ bài viết sang bộ lọc",
         },
         "property_card": {
             "status": "Tin cần soi",
@@ -43,7 +43,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lưu watchlist",
+            "metric_b_value": "lọc signal",
         },
         "value_cards": [
             {
@@ -63,10 +63,10 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "Dùng watchlist để không lọc lại từ đầu mỗi ngày",
+                "title": "Dùng bộ lọc để không lọc lại từ đầu mỗi ngày",
                 "body": (
-                    "Sau khi chọn khu và ngưỡng giá hợp lý, hãy lưu watchlist trên "
-                    "dashboard. Đó là cây cầu từ bài SEO sang Telegram và nhu cầu VIP "
+                    "Sau khi chọn khu và ngưỡng giá hợp lý, hãy lọc signal trên "
+                    "dashboard. Đó là cây cầu từ bài SEO sang dashboard và bước liên hệ "
                     "khi bạn muốn theo dõi deal mới nhanh hơn."
                 ),
             },
@@ -76,16 +76,16 @@ SEO_ARTICLES = {
             "title": "Từ bài viết sang dashboard để lọc tin thực sự đáng mở",
             "body": (
                 "Bài viết này chỉ giúp bạn đặt bộ lọc đúng. Dashboard mới là nơi bạn "
-                "xem giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lưu watchlist "
-                "và nhận deal mới qua Telegram."
+                "xem giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lọc signal "
+                "và xem signal mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
-            "alt": "Dashboard Radar BDS để lọc tin bán đất Bình Dương theo watchlist",
-            "cta": "Lưu watchlist Bình Dương",
+            "alt": "Dashboard Radar BDS để lọc tin bán đất Bình Dương theo bộ lọc",
+            "cta": "Lọc signal Bình Dương",
             "metrics": [
                 {"value": "Dashboard", "label": "mở các tin MOS cao cần soi"},
-                {"value": "Watchlist", "label": "giữ đúng khu và ngưỡng giá bạn theo"},
-                {"value": "Telegram", "label": "nhận deal mới thay vì tự rà lại mỗi ngày"},
+                {"value": "Bộ lọc", "label": "giữ đúng khu và ngưỡng giá bạn theo"},
+                {"value": "dashboard", "label": "xem signal phù hợp thay vì tự rà lại mỗi ngày"},
             ],
         },
         "market_snapshot": {
@@ -125,14 +125,14 @@ SEO_ARTICLES = {
                 {
                     "area": "Khu bạn theo xuất hiện đều",
                     "price": "Dễ tạo nhịp theo dõi liên tục",
-                    "tracked": "Lưu watchlist theo ward và ngân sách",
-                    "signal": "Watchlist tốt hơn việc tìm lại thủ công mỗi ngày",
+                    "tracked": "Lọc signal theo ward và ngân sách",
+                    "signal": "Bộ lọc tốt hơn việc tìm lại thủ công mỗi ngày",
                 },
                 {
                     "area": "Muốn phản ứng nhanh khi có deal mới",
                     "price": "Độ trễ làm mất cơ hội",
-                    "tracked": "Nối watchlist với Telegram/VIP",
-                    "signal": "VIP phù hợp khi bạn cần nhận tin sớm và sâu hơn",
+                    "tracked": "Nối bộ lọc với dashboard/contact",
+                    "signal": "liên hệ phù hợp khi bạn cần nhận tin sớm và sâu hơn",
                 },
             ],
             "cards": [
@@ -148,7 +148,7 @@ SEO_ARTICLES = {
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lưu watchlist",
+                    "value": "Lọc signal",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để biến hiểu biết thành bộ lọc có thể lặp lại.",
                 },
             ],
@@ -212,10 +212,10 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "5. Chuyển sang watchlist để nhận nhịp theo dõi lặp lại",
+                "title": "5. Chuyển sang bộ lọc để nhận nhịp theo dõi lặp lại",
                 "body": (
-                    "Sau khi lọc được khu, ngân sách và tiêu chí MOS, lưu watchlist trên dashboard. "
-                    "Đó là bước nối bài viết này sang Telegram và nhu cầu VIP lead khi bạn cần deal mới nhanh hơn."
+                    "Sau khi lọc được khu, ngân sách và tiêu chí MOS, lọc signal trên dashboard. "
+                    "Đó là bước nối bài viết này sang dashboard và bước liên hệ khi bạn cần deal mới nhanh hơn."
                 ),
             },
         ],
@@ -256,10 +256,10 @@ SEO_ARTICLES = {
         "final_cta": {
             "title": "Đọc xong rồi, bước kế tiếp nên là dashboard chứ không phải lướt thêm tin rải rác",
             "body": (
-                "Mở dashboard để lọc theo khu bạn quan tâm, lưu watchlist và chuẩn bị nhận deal mới qua Telegram. "
-                "Nếu cần tốc độ và chiều sâu hơn, đó cũng là lúc đường dẫn sang VIP lead trở nên hợp lý."
+                "Mở dashboard để lọc theo khu bạn quan tâm, lọc signal và chuẩn bị xem signal mới trên dashboard. "
+                "Nếu cần tốc độ và chiều sâu hơn, đó cũng là lúc đường dẫn sang liên hệ trở nên hợp lý."
             ),
-            "button": "Mở dashboard và lưu watchlist",
+            "button": "Mở dashboard lọc signal",
         },
     },
     "dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia": {
@@ -268,11 +268,11 @@ SEO_ARTICLES = {
         "title": "Đất Mỹ Phước Bình Dương: cách tách Mỹ Phước 1, 2, 3 để không so sai giá",
         "description": (
             "Hướng dẫn lọc đất Mỹ Phước Bình Dương bằng cách tách Mỹ Phước 1, 2, 3, "
-            "so đúng cụm Bến Cát, đọc giá/m2, MOS và lưu watchlist Radar BDS trước khi đi xem."
+            "so đúng cụm Bến Cát, đọc giá/m2, MOS và lọc signal Radar BDS trước khi đi xem."
         ),
         "keywords": (
             "đất Mỹ Phước Bình Dương, đất Mỹ Phước, đất Bến Cát Bình Dương, đất Mỹ Phước 1, "
-            "đất Mỹ Phước 2, đất Mỹ Phước 3, giá/m2 Mỹ Phước, watchlist Radar BDS"
+            "đất Mỹ Phước 2, đất Mỹ Phước 3, giá/m2 Mỹ Phước, bộ lọc Radar BDS"
         ),
         "breadcrumb_label": "Đất Mỹ Phước Bình Dương: tách Mỹ Phước 1, 2, 3",
         "hero_badge": "Kiến thức đất Mỹ Phước Bình Dương",
@@ -280,14 +280,14 @@ SEO_ARTICLES = {
         "hero_text": (
             "Khi tìm đất Mỹ Phước Bình Dương, sai lầm phổ biến nhất là gom Mỹ Phước 1, 2, 3 "
             "thành một mặt bằng giá duy nhất. Radar BDS giúp bạn tách đúng cụm, so đúng nguồn "
-            "Bến Cát liên quan, rồi mới dùng giá/m2, MOS và watchlist để biết tin nào đáng kiểm tra."
+            "Bến Cát liên quan, rồi mới dùng giá/m2, MOS và bộ lọc để biết tin nào đáng kiểm tra."
         ),
         "hero_checks": [
             "Tách Mỹ Phước 1, 2, 3 trước khi so giá",
             "So cùng cụm Bến Cát thay vì quét cả tỉnh",
-            "Watchlist -> Telegram -> VIP lead",
+            "Dashboard filter -> signal -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lưu watchlist Mỹ Phước",
+        "primary_cta": "Mở dashboard để lọc signal Mỹ Phước",
         "secondary_cta": "Xem landing đất Mỹ Phước",
         "secondary_href": "/binh-duong/my-phuoc",
         "map_label": "Knowledge / My Phuoc",
@@ -304,7 +304,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2 theo cụm",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lưu watchlist",
+            "metric_b_value": "lọc signal",
         },
         "value_cards": [
             {
@@ -322,27 +322,27 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "Biến hiểu biết khu vực thành watchlist có thể lặp lại",
+                "title": "Biến hiểu biết khu vực thành bộ lọc có thể lặp lại",
                 "body": (
-                    "Sau khi chốt cụm phù hợp, hãy lưu watchlist theo khu, ngân sách và tiêu chí MOS trên dashboard. "
-                    "Đó là cầu nối từ bài SEO sang Telegram và nhu cầu VIP khi bạn muốn phản ứng nhanh hơn."
+                    "Sau khi chốt cụm phù hợp, hãy lọc signal theo khu, ngân sách và tiêu chí MOS trên dashboard. "
+                    "Đó là cầu nối từ bài SEO sang dashboard và bước liên hệ khi bạn muốn phản ứng nhanh hơn."
                 ),
             },
         ],
         "dashboard_preview": {
             "eyebrow": "Funnel sản phẩm",
-            "title": "Hiểu khác biệt Mỹ Phước 1, 2, 3 rồi thì phải chuyển sang watchlist",
+            "title": "Hiểu khác biệt Mỹ Phước 1, 2, 3 rồi thì phải chuyển sang bộ lọc",
             "body": (
                 "Bài viết này giúp bạn đặt bộ lọc đúng cho đất Mỹ Phước Bình Dương. Dashboard mới là nơi xem "
-                "nguồn tin đang có, đối chiếu giá/m2, MOS, cảnh báo nguồn và lưu watchlist để nhận deal mới qua Telegram."
+                "nguồn tin đang có, đối chiếu giá/m2, MOS, cảnh báo nguồn và lọc signal để xem signal mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
-            "alt": "Dashboard Radar BDS để lọc đất Mỹ Phước Bình Dương theo watchlist",
-            "cta": "Lưu watchlist Mỹ Phước",
+            "alt": "Dashboard Radar BDS để lọc đất Mỹ Phước Bình Dương theo bộ lọc",
+            "cta": "Lọc signal Mỹ Phước",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Mỹ Phước đang có"},
-                {"value": "Watchlist", "label": "giữ đúng cụm 1, 2, 3 bạn theo"},
-                {"value": "Telegram", "label": "nhận deal mới thay vì lọc lại từ đầu"},
+                {"value": "Bộ lọc", "label": "giữ đúng cụm 1, 2, 3 bạn theo"},
+                {"value": "dashboard", "label": "xem signal phù hợp thay vì lọc lại từ đầu"},
             ],
         },
         "market_snapshot": {
@@ -387,8 +387,8 @@ SEO_ARTICLES = {
                 {
                     "area": "Khu bạn theo xuất hiện đều mỗi ngày",
                     "price": "Đã đủ nhịp để theo dõi liên tục",
-                    "tracked": "Lưu watchlist theo cụm và ngân sách",
-                    "signal": "Watchlist + Telegram tốt hơn việc tự quét lại nguồn hàng mỗi ngày",
+                    "tracked": "Lọc signal theo cụm và ngân sách",
+                    "signal": "Bộ lọc + dashboard tốt hơn việc tự quét lại nguồn hàng mỗi ngày",
                 },
             ],
             "cards": [
@@ -404,7 +404,7 @@ SEO_ARTICLES = {
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lưu watchlist",
+                    "value": "Lọc signal",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng cụm bạn đang theo và nhận nhịp deal mới.",
                 },
             ],
@@ -473,10 +473,10 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "5. Lưu watchlist để biến bài đọc thành nhịp theo dõi",
+                "title": "5. Lọc signal để biến bài đọc thành nhịp theo dõi",
                 "body": (
-                    "Sau khi xác định cụm, ngân sách và tiêu chí MOS phù hợp, lưu watchlist trên dashboard để nhận deal mới qua Telegram "
-                    "và mở đường cho nhu cầu VIP lead khi bạn cần phản ứng nhanh hơn."
+                    "Sau khi xác định cụm, ngân sách và tiêu chí MOS phù hợp, lọc signal trên dashboard để xem signal mới trên dashboard "
+                    "và mở đường cho nhu cầu liên hệ khi bạn cần phản ứng nhanh hơn."
                 ),
             },
         ],
@@ -517,10 +517,10 @@ SEO_ARTICLES = {
         "final_cta": {
             "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng cụm Mỹ Phước trên dashboard",
             "body": (
-                "Bài viết giúp bạn tránh so sai cụm. Dashboard giúp bạn biến hiểu biết đó thành watchlist, theo dõi deal mới qua Telegram "
-                "và tiến dần sang nhu cầu VIP khi cần tốc độ cùng chiều sâu hơn."
+                "Bài viết giúp bạn tránh so sai cụm. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, xem signal mới trên dashboard "
+                "và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
             ),
-            "button": "Mở dashboard và lưu watchlist Mỹ Phước",
+            "button": "Mở dashboard lọc signal Mỹ Phước",
         },
     },
     "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia": {
@@ -529,25 +529,25 @@ SEO_ARTICLES = {
         "title": "Giá đất Thủ Dầu Một theo phường: vì sao phải tách Phú Mỹ, Hiệp An, Chánh Nghĩa trước khi so giá",
         "description": (
             "Hướng dẫn đọc giá đất Thủ Dầu Một theo phường bằng cách tách Phú Mỹ, Hiệp An, Chánh Nghĩa, "
-            "so đúng giá/m2, MOS và lưu watchlist Radar BDS trước khi đi xem."
+            "so đúng giá/m2, MOS và lọc signal Radar BDS trước khi đi xem."
         ),
         "keywords": (
             "giá đất Thủ Dầu Một theo phường, nhà đất Thủ Dầu Một, giá đất Phú Mỹ Thủ Dầu Một, "
-            "giá đất Hiệp An Thủ Dầu Một, giá đất Chánh Nghĩa Thủ Dầu Một, watchlist Radar BDS"
+            "giá đất Hiệp An Thủ Dầu Một, giá đất Chánh Nghĩa Thủ Dầu Một, bộ lọc Radar BDS"
         ),
         "breadcrumb_label": "Giá đất Thủ Dầu Một theo phường: tách Phú Mỹ, Hiệp An, Chánh Nghĩa",
         "hero_badge": "Kiến thức nhà đất Thủ Dầu Một",
         "hero_title": "Giá đất Thủ Dầu Một theo phường: vì sao phải tách Phú Mỹ, Hiệp An, Chánh Nghĩa trước khi so giá",
         "hero_text": (
             "Sai lầm phổ biến khi đọc giá đất Thủ Dầu Một là gom các phường thành một mặt bằng chung rồi kết luận rẻ hay đắt. "
-            "Radar BDS giúp bạn tách đúng Phú Mỹ, Hiệp An, Chánh Nghĩa, rồi mới dùng giá/m2, MOS và watchlist để biết tin nào đáng kiểm tra."
+            "Radar BDS giúp bạn tách đúng Phú Mỹ, Hiệp An, Chánh Nghĩa, rồi mới dùng giá/m2, MOS và bộ lọc để biết tin nào đáng kiểm tra."
         ),
         "hero_checks": [
             "Tách Phú Mỹ, Hiệp An, Chánh Nghĩa trước khi so giá",
             "Giá/m2 + MOS + cảnh báo nguồn",
-            "Dashboard -> Watchlist -> Telegram/VIP lead",
+            "Dashboard filter -> signal -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lưu watchlist Thủ Dầu Một",
+        "primary_cta": "Mở dashboard để lọc signal Thủ Dầu Một",
         "secondary_cta": "Xem landing Thủ Dầu Một",
         "secondary_href": "/binh-duong/thu-dau-mot",
         "map_label": "Knowledge / Thu Dau Mot",
@@ -564,7 +564,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2 theo phường",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lưu watchlist",
+            "metric_b_value": "lọc signal",
         },
         "value_cards": [
             {
@@ -582,27 +582,27 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "Biến hiểu biết phường thành watchlist có thể lặp lại",
+                "title": "Biến hiểu biết phường thành bộ lọc có thể lặp lại",
                 "body": (
-                    "Sau khi chốt phường và ngưỡng giá hợp lý, hãy lưu watchlist trên dashboard. "
-                    "Đó là cầu nối từ bài SEO sang Telegram và nhu cầu VIP khi bạn muốn theo dõi deal mới nhanh hơn."
+                    "Sau khi chốt phường và ngưỡng giá hợp lý, hãy lọc signal trên dashboard. "
+                    "Đó là cầu nối từ bài SEO sang dashboard và bước liên hệ khi bạn muốn theo dõi deal mới nhanh hơn."
                 ),
             },
         ],
         "dashboard_preview": {
             "eyebrow": "Funnel sản phẩm",
-            "title": "Hiểu đúng giá đất Thủ Dầu Một theo phường rồi thì phải chuyển sang watchlist",
+            "title": "Hiểu đúng giá đất Thủ Dầu Một theo phường rồi thì phải chuyển sang bộ lọc",
             "body": (
                 "Bài viết này giúp bạn tránh so sai phường. Dashboard mới là nơi bạn mở các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá "
-                "và cảnh báo nguồn trước khi lưu watchlist để nhận deal mới qua Telegram."
+                "và cảnh báo nguồn trước khi lọc signal để xem signal mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
-            "alt": "Dashboard Radar BDS để lọc nhà đất Thủ Dầu Một theo watchlist",
-            "cta": "Lưu watchlist Thủ Dầu Một",
+            "alt": "Dashboard Radar BDS để lọc nhà đất Thủ Dầu Một theo bộ lọc",
+            "cta": "Lọc signal Thủ Dầu Một",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Thủ Dầu Một đang có"},
-                {"value": "Watchlist", "label": "giữ đúng phường và ngưỡng giá bạn theo"},
-                {"value": "Telegram", "label": "nhận deal mới thay vì quét lại từ đầu"},
+                {"value": "Bộ lọc", "label": "giữ đúng phường và ngưỡng giá bạn theo"},
+                {"value": "dashboard", "label": "xem signal phù hợp thay vì quét lại từ đầu"},
             ],
         },
         "market_snapshot": {
@@ -647,8 +647,8 @@ SEO_ARTICLES = {
                 {
                     "area": "Bạn muốn theo dõi đều một phường cụ thể",
                     "price": "Tự quét lại mỗi ngày rất tốn thời gian",
-                    "tracked": "Lưu watchlist theo phường và ngân sách",
-                    "signal": "Watchlist + Telegram hợp lý hơn cho nhịp theo dõi lặp lại",
+                    "tracked": "Lọc signal theo phường và ngân sách",
+                    "signal": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
                 },
             ],
             "cards": [
@@ -664,7 +664,7 @@ SEO_ARTICLES = {
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lưu watchlist",
+                    "value": "Lọc signal",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng phường bạn đang theo và nhận deal mới nhanh hơn.",
                 },
             ],
@@ -731,10 +731,10 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "5. Lưu watchlist để biến bài đọc thành nhịp theo dõi",
+                "title": "5. Lọc signal để biến bài đọc thành nhịp theo dõi",
                 "body": (
-                    "Sau khi xác định phường, ngân sách và tiêu chí MOS phù hợp, lưu watchlist trên dashboard để nhận deal mới qua Telegram "
-                    "và mở đường cho nhu cầu VIP lead khi bạn cần phản ứng nhanh hơn."
+                    "Sau khi xác định phường, ngân sách và tiêu chí MOS phù hợp, lọc signal trên dashboard để xem signal mới trên dashboard "
+                    "và mở đường cho nhu cầu liên hệ khi bạn cần phản ứng nhanh hơn."
                 ),
             },
         ],
@@ -775,10 +775,10 @@ SEO_ARTICLES = {
         "final_cta": {
             "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng phường Thủ Dầu Một trên dashboard",
             "body": (
-                "Bài viết giúp bạn tránh gom sai mặt bằng. Dashboard giúp bạn biến hiểu biết đó thành watchlist, theo dõi deal mới qua Telegram "
-                "và tiến dần sang nhu cầu VIP khi cần tốc độ cùng chiều sâu hơn."
+                "Bài viết giúp bạn tránh gom sai mặt bằng. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, xem signal mới trên dashboard "
+                "và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
             ),
-            "button": "Mở dashboard và lưu watchlist Thủ Dầu Một",
+            "button": "Mở dashboard lọc signal Thủ Dầu Một",
         },
     },
     "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin": {
@@ -787,24 +787,24 @@ SEO_ARTICLES = {
         "title": "Đất Bình Dương: vì sao không nên so giá toàn tỉnh trước khi lọc tin",
         "description": (
             "Hướng dẫn đọc đất Bình Dương theo đúng cụm Thủ Dầu Một, Bến Cát, Mỹ Phước thay vì gom cả tỉnh, "
-            "rồi dùng giá/m2, MOS và watchlist Radar BDS để lọc tin đáng kiểm tra."
+            "rồi dùng giá/m2, MOS và bộ lọc Radar BDS để lọc tin đáng kiểm tra."
         ),
         "keywords": (
-            "đất Bình Dương, dat binh duong, giá đất Bình Dương, mua đất Bình Dương, bán đất Bình Dương, watchlist Radar BDS"
+            "đất Bình Dương, dat binh duong, giá đất Bình Dương, mua đất Bình Dương, bán đất Bình Dương, bộ lọc Radar BDS"
         ),
         "breadcrumb_label": "Đất Bình Dương: đừng so giá toàn tỉnh",
         "hero_badge": "Kiến thức đất Bình Dương",
         "hero_title": "Đất Bình Dương: vì sao không nên so giá toàn tỉnh trước khi lọc tin",
         "hero_text": (
             "Sai lầm phổ biến khi đọc đất Bình Dương là gom Thủ Dầu Một, Bến Cát, Mỹ Phước vào cùng một mặt bằng rồi kết luận rẻ hay đắt. "
-            "Radar BDS giúp bạn tách đúng cụm trước, rồi mới dùng giá/m2, MOS và watchlist để biết tin nào đáng kiểm tra."
+            "Radar BDS giúp bạn tách đúng cụm trước, rồi mới dùng giá/m2, MOS và bộ lọc để biết tin nào đáng kiểm tra."
         ),
         "hero_checks": [
             "Tách Thủ Dầu Một, Bến Cát, Mỹ Phước trước khi so giá",
             "Giá/m2 + MOS + cảnh báo nguồn",
-            "Dashboard -> Watchlist -> Telegram/VIP lead",
+            "Dashboard filter -> signal -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lưu watchlist đất Bình Dương",
+        "primary_cta": "Mở dashboard để lọc signal đất Bình Dương",
         "secondary_cta": "Xem hub đất Bình Dương",
         "secondary_href": "/ban-dat-binh-duong",
         "map_label": "Knowledge / Binh Duong Land",
@@ -821,7 +821,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2 theo khu",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lưu watchlist",
+            "metric_b_value": "lọc signal",
         },
         "value_cards": [
             {
@@ -839,27 +839,27 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "Tách cụm xong rồi biến nó thành watchlist lặp lại",
+                "title": "Tách cụm xong rồi biến nó thành bộ lọc lặp lại",
                 "body": (
-                    "Sau khi chốt cụm và ngưỡng giá hợp lý, hãy lưu watchlist trên dashboard. "
-                    "Đó là cầu nối từ bài SEO sang Telegram và nhu cầu VIP khi bạn muốn theo dõi deal mới nhanh hơn."
+                    "Sau khi chốt cụm và ngưỡng giá hợp lý, hãy lọc signal trên dashboard. "
+                    "Đó là cầu nối từ bài SEO sang dashboard và bước liên hệ khi bạn muốn theo dõi deal mới nhanh hơn."
                 ),
             },
         ],
         "dashboard_preview": {
             "eyebrow": "Funnel sản phẩm",
-            "title": "Hiểu đúng đất Bình Dương rồi thì phải chuyển sang watchlist theo khu",
+            "title": "Hiểu đúng đất Bình Dương rồi thì phải chuyển sang bộ lọc theo khu",
             "body": (
                 "Bài viết này giúp bạn tránh gom sai mặt bằng toàn tỉnh. Dashboard mới là nơi bạn mở các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá "
-                "và cảnh báo nguồn trước khi lưu watchlist để nhận deal mới qua Telegram."
+                "và cảnh báo nguồn trước khi lọc signal để xem signal mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
-            "alt": "Dashboard Radar BDS để lọc đất Bình Dương theo khu và watchlist",
-            "cta": "Lưu watchlist đất Bình Dương",
+            "alt": "Dashboard Radar BDS để lọc đất Bình Dương theo khu và bộ lọc",
+            "cta": "Lọc signal đất Bình Dương",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed đất Bình Dương đang có"},
-                {"value": "Watchlist", "label": "giữ đúng khu và ngưỡng giá bạn theo"},
-                {"value": "Telegram", "label": "nhận deal mới thay vì so lại từ đầu"},
+                {"value": "Bộ lọc", "label": "giữ đúng khu và ngưỡng giá bạn theo"},
+                {"value": "dashboard", "label": "xem signal phù hợp thay vì so lại từ đầu"},
             ],
         },
         "market_snapshot": {
@@ -904,8 +904,8 @@ SEO_ARTICLES = {
                 {
                     "area": "Bạn muốn theo dõi đều một khu cụ thể",
                     "price": "Tự quét lại mỗi ngày rất tốn thời gian",
-                    "tracked": "Lưu watchlist theo khu và ngân sách",
-                    "signal": "Watchlist + Telegram hợp lý hơn cho nhịp theo dõi lặp lại",
+                    "tracked": "Lọc signal theo khu và ngân sách",
+                    "signal": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
                 },
             ],
             "cards": [
@@ -921,7 +921,7 @@ SEO_ARTICLES = {
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lưu watchlist",
+                    "value": "Lọc signal",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng khu bạn đang theo và nhận deal mới nhanh hơn.",
                 },
             ],
@@ -988,10 +988,10 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "5. Lưu watchlist để biến bài đọc thành nhịp theo dõi",
+                "title": "5. Lọc signal để biến bài đọc thành nhịp theo dõi",
                 "body": (
-                    "Sau khi xác định khu, ngân sách và tiêu chí MOS phù hợp, lưu watchlist trên dashboard để nhận deal mới qua Telegram "
-                    "và mở đường cho nhu cầu VIP lead khi bạn cần phản ứng nhanh hơn."
+                    "Sau khi xác định khu, ngân sách và tiêu chí MOS phù hợp, lọc signal trên dashboard để xem signal mới trên dashboard "
+                    "và mở đường cho nhu cầu liên hệ khi bạn cần phản ứng nhanh hơn."
                 ),
             },
         ],
@@ -1032,10 +1032,10 @@ SEO_ARTICLES = {
         "final_cta": {
             "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng khu đất Bình Dương trên dashboard",
             "body": (
-                "Bài viết giúp bạn tránh gom sai mặt bằng toàn tỉnh. Dashboard giúp bạn biến hiểu biết đó thành watchlist, theo dõi deal mới qua Telegram "
-                "và tiến dần sang nhu cầu VIP khi cần tốc độ cùng chiều sâu hơn."
+                "Bài viết giúp bạn tránh gom sai mặt bằng toàn tỉnh. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, xem signal mới trên dashboard "
+                "và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
             ),
-            "button": "Mở dashboard và lưu watchlist đất Bình Dương",
+            "button": "Mở dashboard lọc signal đất Bình Dương",
         },
     },
     "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia": {
@@ -1044,11 +1044,11 @@ SEO_ARTICLES = {
         "title": "Nhà đất Phú Mỹ Thủ Dầu Một: cách so đúng với Hiệp An, Chánh Nghĩa trước khi xuống tiền",
         "description": (
             "Hướng dẫn đọc nhà đất Phú Mỹ Thủ Dầu Một bằng cách so đúng với Hiệp An, Chánh Nghĩa, "
-            "rồi dùng giá/m2, MOS và watchlist Radar BDS để lọc tin đáng kiểm tra."
+            "rồi dùng giá/m2, MOS và bộ lọc Radar BDS để lọc tin đáng kiểm tra."
         ),
         "keywords": (
             "nhà đất Phú Mỹ Thủ Dầu Một, giá đất Phú Mỹ Thủ Dầu Một, nhà đất Phú Mỹ, nhà đất Hiệp An, "
-            "nhà đất Chánh Nghĩa, giá/m2 Phú Mỹ, watchlist Radar BDS"
+            "nhà đất Chánh Nghĩa, giá/m2 Phú Mỹ, bộ lọc Radar BDS"
         ),
         "breadcrumb_label": "Nhà đất Phú Mỹ Thủ Dầu Một: so đúng với Hiệp An, Chánh Nghĩa",
         "hero_badge": "Kiến thức nhà đất Phú Mỹ Thủ Dầu Một",
@@ -1056,14 +1056,14 @@ SEO_ARTICLES = {
         "hero_text": (
             "Người mua nhà đất Phú Mỹ Thủ Dầu Một hay gặp một lỗi quen thuộc: thấy tin ở Phú Mỹ rồi kéo mặt bằng "
             "Hiệp An hoặc Chánh Nghĩa vào để kết luận rẻ hay đắt quá sớm. Radar BDS giúp bạn chốt đúng ward, "
-            "đúng loại tài sản, rồi mới dùng giá/m2, MOS và watchlist để biết tin nào đáng mở tiếp."
+            "đúng loại tài sản, rồi mới dùng giá/m2, MOS và bộ lọc để biết tin nào đáng mở tiếp."
         ),
         "hero_checks": [
             "Chốt đúng Phú Mỹ trước khi so giá",
             "Không kéo mặt bằng Hiệp An, Chánh Nghĩa vào sai chỗ",
-            "Dashboard -> Watchlist -> Telegram/VIP lead",
+            "Dashboard filter -> signal -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lưu watchlist Phú Mỹ",
+        "primary_cta": "Mở dashboard để lọc signal Phú Mỹ",
         "secondary_cta": "Xem landing Phú Mỹ",
         "secondary_href": "/binh-duong/phuong-phu-my",
         "map_label": "Knowledge / Phu My Thu Dau Mot",
@@ -1080,7 +1080,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2 đúng ward",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lưu watchlist",
+            "metric_b_value": "lọc signal",
         },
         "value_cards": [
             {
@@ -1099,28 +1099,28 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "Biến hiểu biết địa phương thành watchlist lặp lại",
+                "title": "Biến hiểu biết địa phương thành bộ lọc lặp lại",
                 "body": (
-                    "Sau khi chốt được nhóm Phú Mỹ phù hợp ngân sách, hãy lưu watchlist trên dashboard. "
-                    "Đó là cầu nối từ bài SEO sang Telegram và nhu cầu VIP khi bạn muốn theo deal mới nhanh hơn."
+                    "Sau khi chốt được nhóm Phú Mỹ phù hợp ngân sách, hãy lọc signal trên dashboard. "
+                    "Đó là cầu nối từ bài SEO sang dashboard và bước liên hệ khi bạn muốn theo deal mới nhanh hơn."
                 ),
             },
         ],
         "dashboard_preview": {
             "eyebrow": "Funnel sản phẩm",
-            "title": "Đọc đúng Phú Mỹ rồi thì bước tiếp theo phải là watchlist theo ward",
+            "title": "Đọc đúng Phú Mỹ rồi thì bước tiếp theo phải là bộ lọc theo ward",
             "body": (
                 "Bài viết này giúp bạn tránh so sai mặt bằng trong cùng Thủ Dầu Một. Dashboard mới là nơi bạn mở "
-                "các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lưu watchlist "
-                "để nhận deal mới qua Telegram."
+                "các tin đang có, đối chiếu giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lọc signal "
+                "để xem signal mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
-            "alt": "Dashboard Radar BDS để lọc nhà đất Phú Mỹ Thủ Dầu Một theo watchlist",
-            "cta": "Lưu watchlist Phú Mỹ",
+            "alt": "Dashboard Radar BDS để lọc nhà đất Phú Mỹ Thủ Dầu Một theo bộ lọc",
+            "cta": "Lọc signal Phú Mỹ",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Thủ Dầu Một đang có"},
-                {"value": "Watchlist", "label": "giữ đúng ward và ngưỡng giá bạn theo"},
-                {"value": "Telegram", "label": "nhận deal mới thay vì tự rà lại mỗi ngày"},
+                {"value": "Bộ lọc", "label": "giữ đúng ward và ngưỡng giá bạn theo"},
+                {"value": "dashboard", "label": "xem signal phù hợp thay vì tự rà lại mỗi ngày"},
             ],
         },
         "market_snapshot": {
@@ -1166,8 +1166,8 @@ SEO_ARTICLES = {
                 {
                     "area": "Bạn muốn theo đều một nhóm Phú Mỹ cụ thể",
                     "price": "Tự quét lại mỗi ngày rất tốn thời gian",
-                    "tracked": "Lưu watchlist theo ward và ngân sách",
-                    "signal": "Watchlist + Telegram hợp lý hơn cho nhịp theo dõi lặp lại",
+                    "tracked": "Lọc signal theo ward và ngân sách",
+                    "signal": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
                 },
             ],
             "cards": [
@@ -1183,7 +1183,7 @@ SEO_ARTICLES = {
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lưu watchlist",
+                    "value": "Lọc signal",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng nhóm Phú Mỹ bạn đang theo.",
                 },
             ],
@@ -1193,7 +1193,7 @@ SEO_ARTICLES = {
             {
                 "label": "Phú Mỹ",
                 "href": "/binh-duong/phuong-phu-my",
-                "description": "Landing chính cho nhà đất Phú Mỹ Thủ Dầu Một và CTA vào dashboard/watchlist.",
+                "description": "Landing chính cho nhà đất Phú Mỹ Thủ Dầu Một và CTA vào dashboard/signal.",
             },
             {
                 "label": "Hiệp An",
@@ -1252,10 +1252,10 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "5. Lưu watchlist để biến bài đọc thành nhịp theo dõi",
+                "title": "5. Lọc signal để biến bài đọc thành nhịp theo dõi",
                 "body": (
-                    "Sau khi xác định được nhóm Phú Mỹ phù hợp, lưu watchlist trên dashboard để nhận deal mới qua Telegram "
-                    "và mở đường cho nhu cầu VIP khi bạn cần phản ứng nhanh hơn."
+                    "Sau khi xác định được nhóm Phú Mỹ phù hợp, lọc signal trên dashboard để xem signal mới trên dashboard "
+                    "và mở đường cho nhu cầu liên hệ khi bạn cần phản ứng nhanh hơn."
                 ),
             },
         ],
@@ -1296,10 +1296,10 @@ SEO_ARTICLES = {
         "final_cta": {
             "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng nhóm Phú Mỹ trên dashboard",
             "body": (
-                "Bài viết giúp bạn tránh kéo nhầm mặt bằng ward khác vào Phú Mỹ. Dashboard giúp bạn biến hiểu biết đó thành watchlist, "
-                "theo dõi deal mới qua Telegram và tiến dần sang nhu cầu VIP khi cần tốc độ cùng chiều sâu hơn."
+                "Bài viết giúp bạn tránh kéo nhầm mặt bằng ward khác vào Phú Mỹ. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, "
+                "xem signal mới trên dashboard và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
             ),
-            "button": "Mở dashboard và lưu watchlist Phú Mỹ",
+            "button": "Mở dashboard lọc signal Phú Mỹ",
         },
     },
     "nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia": {
@@ -1308,25 +1308,25 @@ SEO_ARTICLES = {
         "title": "Nhà đất Bến Cát Bình Dương: cách tách Mỹ Phước, Tân Định, Thới Hòa trước khi so giá",
         "description": (
             "Hướng dẫn đọc nhà đất Bến Cát Bình Dương bằng cách tách Mỹ Phước, Tân Định, Thới Hòa, "
-            "rồi dùng giá/m2, MOS và watchlist Radar BDS để lọc tin đáng kiểm tra."
+            "rồi dùng giá/m2, MOS và bộ lọc Radar BDS để lọc tin đáng kiểm tra."
         ),
         "keywords": (
             "nhà đất Bến Cát Bình Dương, nhà đất Bến Cát, giá đất Bến Cát, nhà đất Mỹ Phước, "
-            "nhà đất Tân Định Bến Cát, nhà đất Thới Hòa Bến Cát, watchlist Radar BDS"
+            "nhà đất Tân Định Bến Cát, nhà đất Thới Hòa Bến Cát, bộ lọc Radar BDS"
         ),
         "breadcrumb_label": "Nhà đất Bến Cát Bình Dương: tách Mỹ Phước, Tân Định, Thới Hòa",
         "hero_badge": "Kiến thức nhà đất Bến Cát Bình Dương",
         "hero_title": "Nhà đất Bến Cát Bình Dương: cách tách Mỹ Phước, Tân Định, Thới Hòa trước khi so giá",
         "hero_text": (
             "Người mua nhà đất Bến Cát Bình Dương hay bị nhiễu vì gom Mỹ Phước, Tân Định và Thới Hòa vào cùng một mặt bằng. "
-            "Radar BDS giúp bạn chốt đúng cụm, đúng loại tài sản, rồi mới dùng giá/m2, MOS và watchlist để biết tin nào đáng mở tiếp."
+            "Radar BDS giúp bạn chốt đúng cụm, đúng loại tài sản, rồi mới dùng giá/m2, MOS và bộ lọc để biết tin nào đáng mở tiếp."
         ),
         "hero_checks": [
             "Tách Mỹ Phước, Tân Định, Thới Hòa trước khi so giá",
             "Không gom cả Bến Cát vào một mặt bằng chung",
-            "Dashboard -> Watchlist -> Telegram/VIP lead",
+            "Dashboard filter -> signal -> liên hệ",
         ],
-        "primary_cta": "Mở dashboard để lưu watchlist Bến Cát",
+        "primary_cta": "Mở dashboard để lọc signal Bến Cát",
         "secondary_cta": "Xem landing Bến Cát",
         "secondary_href": "/binh-duong/ben-cat",
         "map_label": "Knowledge / Ben Cat Binh Duong",
@@ -1343,7 +1343,7 @@ SEO_ARTICLES = {
             "metric_a": "Ưu tiên",
             "metric_a_value": "giá/m2 đúng cụm",
             "metric_b": "Bước kế tiếp",
-            "metric_b_value": "lưu watchlist",
+            "metric_b_value": "lọc signal",
         },
         "value_cards": [
             {
@@ -1361,27 +1361,27 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "Biến hiểu biết Bến Cát thành watchlist lặp lại",
+                "title": "Biến hiểu biết Bến Cát thành bộ lọc lặp lại",
                 "body": (
-                    "Sau khi chốt được cụm Bến Cát phù hợp ngân sách, hãy lưu watchlist trên dashboard. "
-                    "Đó là cầu nối từ bài SEO sang Telegram và nhu cầu VIP khi bạn muốn theo deal mới nhanh hơn."
+                    "Sau khi chốt được cụm Bến Cát phù hợp ngân sách, hãy lọc signal trên dashboard. "
+                    "Đó là cầu nối từ bài SEO sang dashboard và bước liên hệ khi bạn muốn theo deal mới nhanh hơn."
                 ),
             },
         ],
         "dashboard_preview": {
             "eyebrow": "Funnel sản phẩm",
-            "title": "Đọc đúng Bến Cát rồi thì bước tiếp theo phải là watchlist theo cụm",
+            "title": "Đọc đúng Bến Cát rồi thì bước tiếp theo phải là bộ lọc theo cụm",
             "body": (
                 "Bài viết này giúp bạn tránh gom sai mặt bằng trong cùng Bến Cát. Dashboard mới là nơi bạn mở các tin đang có, "
-                "đối chiếu giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lưu watchlist để nhận deal mới qua Telegram."
+                "đối chiếu giá/m2, MOS, lịch sử giá và cảnh báo nguồn trước khi lọc signal để xem signal mới trên dashboard."
             ),
             "image": "/static/images/seo/dashboard-preview.png",
-            "alt": "Dashboard Radar BDS để lọc nhà đất Bến Cát Bình Dương theo watchlist",
-            "cta": "Lưu watchlist Bến Cát",
+            "alt": "Dashboard Radar BDS để lọc nhà đất Bến Cát Bình Dương theo bộ lọc",
+            "cta": "Lọc signal Bến Cát",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Bến Cát đang có"},
-                {"value": "Watchlist", "label": "giữ đúng cụm và ngưỡng giá bạn theo"},
-                {"value": "Telegram", "label": "nhận deal mới thay vì tự rà lại mỗi ngày"},
+                {"value": "Bộ lọc", "label": "giữ đúng cụm và ngưỡng giá bạn theo"},
+                {"value": "dashboard", "label": "xem signal phù hợp thay vì tự rà lại mỗi ngày"},
             ],
         },
         "market_snapshot": {
@@ -1426,8 +1426,8 @@ SEO_ARTICLES = {
                 {
                     "area": "Bạn muốn theo đều một nhóm Bến Cát cụ thể",
                     "price": "Tự quét lại mỗi ngày rất tốn thời gian",
-                    "tracked": "Lưu watchlist theo cụm và ngân sách",
-                    "signal": "Watchlist + Telegram hợp lý hơn cho nhịp theo dõi lặp lại",
+                    "tracked": "Lọc signal theo cụm và ngân sách",
+                    "signal": "Bộ lọc + dashboard hợp lý hơn cho nhịp theo dõi lặp lại",
                 },
             ],
             "cards": [
@@ -1443,7 +1443,7 @@ SEO_ARTICLES = {
                 },
                 {
                     "title": "Bước kích hoạt",
-                    "value": "Lưu watchlist",
+                    "value": "Lọc signal",
                     "body": "Từ bài viết, chuyển ngay sang dashboard để lưu đúng nhóm Bến Cát bạn đang theo.",
                 },
             ],
@@ -1453,7 +1453,7 @@ SEO_ARTICLES = {
             {
                 "label": "Bến Cát",
                 "href": "/binh-duong/ben-cat",
-                "description": "Landing chính cho nhà đất Bến Cát Bình Dương và CTA vào dashboard/watchlist.",
+                "description": "Landing chính cho nhà đất Bến Cát Bình Dương và CTA vào dashboard/signal.",
             },
             {
                 "label": "Mỹ Phước",
@@ -1512,10 +1512,10 @@ SEO_ARTICLES = {
                 ),
             },
             {
-                "title": "5. Lưu watchlist để biến bài đọc thành nhịp theo dõi",
+                "title": "5. Lọc signal để biến bài đọc thành nhịp theo dõi",
                 "body": (
-                    "Sau khi xác định được nhóm Bến Cát phù hợp, lưu watchlist trên dashboard để nhận deal mới qua Telegram "
-                    "và mở đường cho nhu cầu VIP khi bạn cần phản ứng nhanh hơn."
+                    "Sau khi xác định được nhóm Bến Cát phù hợp, lọc signal trên dashboard để xem signal mới trên dashboard "
+                    "và mở đường cho nhu cầu liên hệ khi bạn cần phản ứng nhanh hơn."
                 ),
             },
         ],
@@ -1556,10 +1556,10 @@ SEO_ARTICLES = {
         "final_cta": {
             "title": "Đọc xong rồi, bước hợp lý tiếp theo là mở đúng nhóm Bến Cát trên dashboard",
             "body": (
-                "Bài viết giúp bạn tránh gom sai mặt bằng giữa Mỹ Phước, Tân Định và Thới Hòa. Dashboard giúp bạn biến hiểu biết đó thành watchlist, "
-                "theo dõi deal mới qua Telegram và tiến dần sang nhu cầu VIP khi cần tốc độ cùng chiều sâu hơn."
+                "Bài viết giúp bạn tránh gom sai mặt bằng giữa Mỹ Phước, Tân Định và Thới Hòa. Dashboard giúp bạn biến hiểu biết đó thành bộ lọc, "
+                "xem signal mới trên dashboard và tiến dần sang nhu cầu liên hệ khi cần tốc độ cùng chiều sâu hơn."
             ),
-            "button": "Mở dashboard và lưu watchlist Bến Cát",
+            "button": "Mở dashboard lọc signal Bến Cát",
         },
     },
 
@@ -1581,7 +1581,7 @@ SEO_ARTICLES = {
             "Nhà đất Hiệp An: ~24 tr/m² — chủ yếu nhà cấp 4 và nhà lầu",
             "94 tín hiệu đáng chú ý — gồm tin giảm giá và tin hot"
         ],
-        "primary_cta": "Mở dashboard để lọc watchlist Hiệp An",
+        "primary_cta": "Mở dashboard để lọc bộ lọc Hiệp An",
         "secondary_cta": "Xem dashboard",
         "secondary_href": "/dashboard",
         "map_label": "Knowledge / Hiệp An",
@@ -1615,15 +1615,15 @@ SEO_ARTICLES = {
             }
         ],
         "dashboard_preview": {
-            "eyebrow": "Từ bài viết sang watchlist",
-            "title": "Watchlist giúp bạn theo kịp tin mới Hiệp An",
-            "body": "Mỗi tuần có thêm 40-60 tin mới ở Hiệp An. Watchlist trên Radar BDS sẽ gom tin mới, tin giảm giá về đúng phường và ngân sách bạn chọn.",
+            "eyebrow": "Từ bài viết sang bộ lọc",
+            "title": "Bộ lọc giúp bạn theo kịp tin mới Hiệp An",
+            "body": "Mỗi tuần có thêm 40-60 tin mới ở Hiệp An. Bộ lọc trên Radar BDS sẽ gom tin mới, tin giảm giá về đúng phường và ngân sách bạn chọn.",
             "image": "/static/images/seo/dashboard-preview.png",
-            "alt": "Dashboard Radar BDS với watchlist Hiệp An",
-            "cta": "Lưu watchlist",
+            "alt": "Dashboard Radar BDS với bộ lọc Hiệp An",
+            "cta": "Lọc signal",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Hiệp An"},
-                {"value": "Watchlist", "label": "giữ đúng phường, loại hình, ngân sách"}
+                {"value": "Bộ lọc", "label": "giữ đúng phường, loại hình, ngân sách"}
             ]
         },
         "market_snapshot": {
@@ -1654,14 +1654,14 @@ SEO_ARTICLES = {
             {"title": "1. Xác định loại hình bạn cần", "body": "Đất nền ~18.5 tr/m², nhà đất ~24 tr/m². Lọc đúng loại hình trên dashboard trước khi so giá."},
             {"title": "2. Đọc giá theo phường", "body": "Dùng bảng so sánh bên trên để đối chiếu Hiệp An với Tân An, Phú Mỹ, Định Hòa."},
             {"title": "3. Kiểm tra MOS", "body": "Không phải tin rẻ nào cũng đáng gọi. MOS giúp bạn ưu tiên tin nên kiểm tra trước."},
-            {"title": "4. Lưu watchlist", "body": "Tạo watchlist Hiệp An trên dashboard để gom tin mới về một chỗ."}
+            {"title": "4. Lọc signal", "body": "Tạo bộ lọc Hiệp An trên dashboard để gom tin mới về một chỗ."}
         ],
         "faq": [
             {"q": "Giá đất Hiệp An hiện tại bao nhiêu một mét vuông?", "a": "Đất nền trung bình ~18.5 tr/m², nhà đất ~24 tr/m². Số liệu từ tin rao Facebook thực tế tháng 7/2026."},
             {"q": "Hiệp An có bao nhiêu tin rao nhà đất?", "a": "Hơn 1.080 tin từ Facebook, nhiều nhất trong 13 phường của Thủ Dầu Một."},
             {"q": "Đất Hiệp An rẻ hơn Phú Mỹ bao nhiêu?", "a": "Chênh khoảng 10 tr/m². Hiệp An ~18.5 tr/m², Phú Mỹ ~28.3 tr/m²."},
             {"q": "Có nên mua đất Hiệp An năm 2026 không?", "a": "Nguồn cung lớn, giá ở mức trung bình — phù hợp mua để ở hoặc đầu tư tầm trung. Luôn kiểm tra sổ và đi xem đất trước khi giao dịch."},
-            {"q": "Làm sao để nhận tin mới Hiệp An tự động?", "a": "Đăng nhập Radar BDS, tạo watchlist với phường Hiệp An. Dashboard sẽ gom tin mới cho bạn."}
+            {"q": "Làm sao để nhận tin mới Hiệp An tự động?", "a": "Đăng nhập Radar BDS, tạo bộ lọc với phường Hiệp An. Dashboard sẽ gom tin mới cho bạn."}
         ],
         "article": {"published_at": "2026-07-06 12:00", "modified_at": "2026-07-06 12:00"},
         "final_cta": {
@@ -1687,7 +1687,7 @@ SEO_ARTICLES = {
             "Nhà đất Tân An: ~22.9 tr/m² — chủ yếu nhà cấp 4 diện tích lớn",
             "Diện tích trung bình: 172 m² — đất rộng hơn các phường khác"
         ],
-        "primary_cta": "Mở dashboard để lọc watchlist Tân An",
+        "primary_cta": "Mở dashboard để lọc bộ lọc Tân An",
         "secondary_cta": "Xem dashboard",
         "secondary_href": "/dashboard",
         "map_label": "Knowledge / Tân An",
@@ -1721,16 +1721,16 @@ SEO_ARTICLES = {
             }
         ],
         "dashboard_preview": {
-            "eyebrow": "Từ bài viết sang watchlist",
-            "title": "Watchlist Tân An giúp bạn bắt tin giá rẻ trước người khác",
-            "body": "Với gần 900 tin đang bán và khoảng 40-60 tin mới mỗi tuần, watchlist Tân An trên Radar BDS sẽ gom đúng tin phù hợp ngân sách của bạn — không cần tự lọc lại mỗi ngày.",
+            "eyebrow": "Từ bài viết sang bộ lọc",
+            "title": "Bộ lọc Tân An giúp bạn bắt tin giá rẻ trước người khác",
+            "body": "Với gần 900 tin đang bán và khoảng 40-60 tin mới mỗi tuần, bộ lọc Tân An trên Radar BDS sẽ gom đúng tin phù hợp ngân sách của bạn — không cần tự lọc lại mỗi ngày.",
             "image": "/static/images/seo/dashboard-preview.png",
-            "alt": "Dashboard Radar BDS với watchlist Tân An",
-            "cta": "Lưu watchlist Tân An",
+            "alt": "Dashboard Radar BDS với bộ lọc Tân An",
+            "cta": "Lọc signal Tân An",
             "metrics": [
                 {"value": "Dashboard", "label": "mở feed Tân An đang có"},
-                {"value": "Watchlist", "label": "giữ đúng ngân sách và loại hình"},
-                {"value": "Telegram", "label": "nhận tin mới Tân An tự động"}
+                {"value": "Bộ lọc", "label": "giữ đúng ngân sách và loại hình"},
+                {"value": "dashboard", "label": "nhận tin mới Tân An tự động"}
             ]
         },
         "market_snapshot": {
@@ -1761,7 +1761,7 @@ SEO_ARTICLES = {
             {"title": "1. Xác định ngân sách và loại hình", "body": "Đất nền Tân An phổ biến 1.5-3 tỷ. Nhà đất 2-3 tỷ. Lọc đúng loại hình trên dashboard."},
             {"title": "2. So sánh với phường lân cận", "body": "Tân An rẻ hơn Hiệp An ~2 tr/m² và rẻ hơn Phú Mỹ ~12 tr/m². Nếu ngân sách dưới 2 tỷ, Tân An là lựa chọn tốt nhất."},
             {"title": "3. Kiểm tra pháp lý đất giá rẻ", "body": "Đất giá dưới 11 tr/m² ở Tân An thường là đất vườn hoặc thiếu thổ cư. Luôn kiểm tra sổ đỏ trước khi giao dịch."},
-            {"title": "4. Lưu watchlist", "body": "Tạo watchlist Tân An trên dashboard. Khoảng 40-60 tin mới mỗi tuần — watchlist gom sẵn cho bạn."}
+            {"title": "4. Lọc signal", "body": "Tạo bộ lọc Tân An trên dashboard. Khoảng 40-60 tin mới mỗi tuần — bộ lọc gom sẵn cho bạn."}
         ],
         "faq": [
             {"q": "Giá đất Tân An bao nhiêu một mét vuông?", "a": "Đất nền Tân An trung bình ~16.2 tr/m², nhà đất ~22.9 tr/m². Đây là mức rẻ nhất Thủ Dầu Một theo dữ liệu từ Radar BDS tháng 7/2026."},
@@ -1794,7 +1794,7 @@ SEO_ARTICLES = {
         "119 tín hiệu giảm giá và tin nóng trong tháng",
         "Phường ven sông Sài Gòn — tiềm năng phát triển dài hạn"
     ],
-    "primary_cta": "Mở dashboard để lọc watchlist Phú Mỹ",
+    "primary_cta": "Mở dashboard để lọc bộ lọc Phú Mỹ",
     "secondary_cta": "Xem dashboard",
     "secondary_href": "/dashboard",
     "map_label": "Knowledge / Phú Mỹ",
@@ -1828,16 +1828,16 @@ SEO_ARTICLES = {
         }
     ],
     "dashboard_preview": {
-        "eyebrow": "Từ bài viết sang watchlist",
-        "title": "Watchlist Phú Mỹ giúp bạn bắt tin giá tốt trước người khác",
-        "body": "Với hơn 700 tin đang bán và khoảng 30-50 tin mới mỗi tuần, watchlist Phú Mỹ trên Radar BDS sẽ gom đúng tin phù hợp ngân sách của bạn — không cần tự lọc lại mỗi ngày.",
+        "eyebrow": "Từ bài viết sang bộ lọc",
+        "title": "Bộ lọc Phú Mỹ giúp bạn bắt tin giá tốt trước người khác",
+        "body": "Với hơn 700 tin đang bán và khoảng 30-50 tin mới mỗi tuần, bộ lọc Phú Mỹ trên Radar BDS sẽ gom đúng tin phù hợp ngân sách của bạn — không cần tự lọc lại mỗi ngày.",
         "image": "/static/images/seo/dashboard-preview.png",
-        "alt": "Dashboard Radar BDS với watchlist Phú Mỹ",
-        "cta": "Lưu watchlist Phú Mỹ",
+        "alt": "Dashboard Radar BDS với bộ lọc Phú Mỹ",
+        "cta": "Lọc signal Phú Mỹ",
         "metrics": [
             {"value": "Dashboard", "label": "mở feed Phú Mỹ đang có"},
-            {"value": "Watchlist", "label": "giữ đúng ngân sách và loại hình"},
-            {"value": "Telegram", "label": "nhận tin mới Phú Mỹ tự động"}
+            {"value": "Bộ lọc", "label": "giữ đúng ngân sách và loại hình"},
+            {"value": "dashboard", "label": "nhận tin mới Phú Mỹ tự động"}
         ]
     },
     "market_snapshot": {
@@ -1869,7 +1869,7 @@ SEO_ARTICLES = {
         {"title": "1. Xác định ngân sách và loại hình", "body": "Đất nền Phú Mỹ phổ biến 2-4 tỷ. Nhà đất 2.5-5 tỷ. Lọc đúng loại hình trên dashboard."},
         {"title": "2. So sánh với phường lân cận", "body": "Phú Mỹ đắt hơn Hiệp An ~4 tr/m² nhưng rẻ hơn Phú Lợi ~13 tr/m². Nếu ngân sách dưới 2 tỷ, nên xem Tân An hoặc Hiệp An trước."},
         {"title": "3. Tận dụng tín hiệu giảm giá", "body": "119 tín hiệu giảm giá và tin nóng — dùng bộ lọc MOS và giá giảm trên dashboard để săn deal."},
-        {"title": "4. Lưu watchlist", "body": "Tạo watchlist Phú Mỹ trên dashboard. Khoảng 30-50 tin mới mỗi tuần — watchlist gom sẵn cho bạn."}
+        {"title": "4. Lọc signal", "body": "Tạo bộ lọc Phú Mỹ trên dashboard. Khoảng 30-50 tin mới mỗi tuần — bộ lọc gom sẵn cho bạn."}
     ],
     "faq": [
         {"q": "Giá đất Phú Mỹ Thủ Dầu Một bao nhiêu một mét vuông?", "a": "Đất nền Phú Mỹ có giá median 22.9 tr/m², dao động 7-65 tr/m². Nhà đất giá median 39.3 tr/m², khoảng 15-65 tr/m² theo dữ liệu từ 716 tin rao Facebook tháng 7/2026."},
@@ -1928,7 +1928,7 @@ _ARTICLE_EDITORIAL = {
                 ("chuan-hoa-tai-san", "Đưa tin rao về cùng một nhóm tài sản", "Đất nền, đất có nhà, đất vườn và lô diện tích lớn không nên nằm chung một nhóm so sánh. Công năng và điều kiện pháp lý khác nhau làm giá khác nhau.", "Ghi lại diện tích, ngang dài, thổ cư, đường tiếp cận và tình trạng công trình. Trường quan trọng chưa rõ phải được đánh dấu là chưa xác minh.", ["Loại tài sản", "Diện tích và kích thước", "Thổ cư", "Đường tiếp cận"]),
                 ("doc-gia", "Đọc cả giá tổng và giá trên mét vuông", "Giá tổng cho biết lô đất có phù hợp ngân sách; giá trên mét vuông giúp so với các lô tương đồng. Cả hai chỉ có ý nghĩa khi dữ liệu đã được chuẩn hóa.", "Một mức thấp bất thường là tín hiệu để kiểm tra thêm, không phải bằng chứng chắc chắn của một giao dịch tốt. Sai diện tích hoặc vị trí có thể tạo chênh lệch giả."),
                 ("kiem-tra-nguon", "Kiểm tra nguồn tin và lịch sử đăng", "Đối chiếu mô tả, hình ảnh, số liên hệ và thời điểm đăng để nhận ra tin lặp hoặc thông tin thay đổi. Cùng một lô có thể xuất hiện với nhiều mức giá.", "Khi gọi, xác nhận lại giá, vị trí, người có quyền giao dịch và giấy tờ có thể xem. Không chuyển tiền chỉ dựa trên nội dung tin rao."),
-                ("truoc-khi-di-xem", "Chuẩn bị danh sách câu hỏi trước khi đi xem", "Một cuộc gọi có cấu trúc giúp loại bớt chuyến đi không cần thiết. Ưu tiên tin trả lời rõ và khớp nhu cầu đã đặt ra.", "Nếu tin đáng xem, lưu vào watchlist cùng ghi chú còn thiếu. Tại thực địa, kiểm tra ranh, lối vào, môi trường và đối chiếu hồ sơ với nguồn phù hợp."),
+                ("truoc-khi-di-xem", "Chuẩn bị danh sách câu hỏi trước khi đi xem", "Một cuộc gọi có cấu trúc giúp loại bớt chuyến đi không cần thiết. Ưu tiên tin trả lời rõ và khớp nhu cầu đã đặt ra.", "Nếu tin đáng xem, lưu vào bộ lọc cùng ghi chú còn thiếu. Tại thực địa, kiểm tra ranh, lối vào, môi trường và đối chiếu hồ sơ với nguồn phù hợp."),
             ],
             ["Đã chốt đúng phường hoặc cụm khu", "Đã xác nhận loại tài sản và diện tích", "Đã tính lại giá trên mét vuông", "Đã hỏi pháp lý và quy hoạch", "Đã lưu điểm cần kiểm tra tại thực địa"],
             "2026-06-26",

@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 import pytest
 
@@ -33,6 +33,9 @@ def test_two_content_hubs_exist_and_news_hub_does_not():
     assert 'class="seo-page report-hub"' in report_html
     assert 'class="seo-page knowledge-hub"' in knowledge_html
     for html in (report_html, knowledge_html):
+        assert 'class="hub-hero hub-hero-grid"' in html
+        assert 'class="hub-insight-panel"' in html
+        assert 'class="hub-card-number"' in html
         assert '"@type": "CollectionPage"' in html
         assert '"@type": "ItemList"' in html
         assert '"@type": "BreadcrumbList"' in html
@@ -99,7 +102,7 @@ def test_all_articles_have_distinct_editorial_structure_and_user_language():
             assert section["heading"] in html
             assert len(section["paragraphs"]) >= 2
 
-        for internal_term in ("Internal links", "SEO địa phương", "VIP lead", "funnel"):
+        for internal_term in ("Internal links", "SEO địa phương", "VIP lead", "Telegram", "watchlist funnel"):
             assert internal_term not in html
 
 

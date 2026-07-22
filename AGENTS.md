@@ -10,7 +10,7 @@ Read this first in every new AI/dev session. It is the token-light map, not the 
 
 | Task | Read |
 |---|---|
-| Growth marketing, SEO strategy, CRO, marketing loops | `docs/growth_marketing_workflow.md` + relevant `.agents/skills/<skill>/SKILL.md` |
+| Growth marketing, SEO strategy, CRO, Hermes marketing loops | `docs/growth_marketing_workflow.md` + `docs/hermes_marketing_workflow.md` + relevant `.agents/skills/<skill>/SKILL.md` |
 | Code workflow, traps, verification | `docs/agent_playbook.md` |
 | Module boundaries, API shape, refactor target | `docs/architecture.md` |
 | Crawl jobs, signal creation, daily automation | `docs/daily_crawl_flow.md` |
@@ -49,7 +49,7 @@ Marketing skills:
 - Project-local marketing skills from `coreyhaines31/marketingskills` live in `.agents/skills/`.
 - For Radar BDS marketing work, prefer these project-local skills over global skill copies.
 - Start with `.agents/product-marketing.md`, then use the smallest relevant skill (`marketing-loops`, `content-strategy`, `seo-audit`, `site-architecture`, `cro`, `analytics`, `schema`, `free-tools`, etc.).
-- Do not treat the daily SEO publisher as the entire marketing strategy; it is one acquisition loop inside the broader dashboard -> watchlist -> Telegram/VIP funnel.
+- Do not treat the daily SEO publisher as the entire marketing strategy; it is one acquisition loop inside the broader SEO/social/AI -> filtered dashboard -> signal contact funnel.
 
 ## Runtime Facts
 

@@ -5,17 +5,31 @@
 </head>
 <body class="seo-page knowledge-hub">
   {% include "partials/seo_header.html" %}
-  <main id="main-content" class="seo-shell">
+  <main id="main-content" class="seo-shell hub-shell">
     {% include "partials/seo_breadcrumbs.html" %}
-    <section class="hub-hero">
+    <section class="hub-hero hub-hero-grid">
+      <div class="hub-hero-copy">
       <p class="seo-eyebrow">Hướng dẫn thực hành</p>
       <h1>{{ page.hero_title }}</h1>
       <p>{{ page.hero_text }}</p>
-      <span class="scope-chip">{{ page.scope_label }}</span>
+      <div class="hub-hero-actions">
+        <a class="seo-primary-cta" href="{{ featured.path }}" data-track-cta="hero_featured_knowledge">Bắt đầu từ Thủ Dầu Một</a>
+        <span class="scope-chip">{{ page.scope_label }}</span>
+      </div>
+      </div>
+      <aside class="hub-insight-panel" aria-label="Tóm tắt kho kiến thức">
+        <p class="hub-panel-kicker">Cách dùng kho này</p>
+        <dl class="hub-panel-list">
+          <div><dt>Bắt đầu ở</dt><dd>{{ featured.scope_label }}</dd></div>
+          <div><dt>Số hướng dẫn</dt><dd>{{ articles|length + 1 }} bài</dd></div>
+          <div><dt>Nguyên tắc</dt><dd>So đúng khu, kiểm tra độc lập</dd></div>
+        </dl>
+      </aside>
     </section>
 
     <section class="hub-featured" aria-labelledby="featured-article">
-      <div>
+      <div class="hub-featured-index" aria-hidden="true">01</div>
+      <div class="hub-featured-body">
         <p class="seo-eyebrow">Ưu tiên Thủ Dầu Một</p>
         <h2 id="featured-article"><a href="{{ featured.path }}">{{ featured.hero_title }}</a></h2>
         <p>{{ featured.description }}</p>
@@ -35,7 +49,10 @@
       <div class="hub-card-grid">
         {% for article in articles %}
         <article class="hub-card">
-          <span class="scope-chip">{{ article.scope_label }}</span>
+          <div class="hub-card-top">
+            <span class="hub-card-number">{{ "%02d"|format(loop.index + 1) }}</span>
+            <span class="scope-chip">{{ article.scope_label }}</span>
+          </div>
           <h3><a href="{{ article.path }}">{{ article.hero_title }}</a></h3>
           <p>{{ article.description }}</p>
           <div class="card-meta">

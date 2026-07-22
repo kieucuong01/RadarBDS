@@ -47,6 +47,11 @@ def api_market_indicators(**kwargs):
     return _impl("api_market_indicators", **kwargs)
 
 
+@bp.route("/api/valuation-tool/estimate", methods=["POST"])
+def api_valuation_tool_estimate(**kwargs):
+    return _impl("api_valuation_tool_estimate", **kwargs)
+
+
 @bp.route('/api/listings')
 def api_listings(**kwargs):
     return _impl("api_listings", **kwargs)

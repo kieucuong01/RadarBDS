@@ -5,13 +5,13 @@
 ## Product Overview
 **One-liner:** Radar BDS helps investors and serious buyers find Bình Dương real-estate deals worth checking by filtering real listings through normalized local data, fair value, MOS, price history, and source-quality warnings.
 
-**What it does:** Radar BDS crawls and normalizes public real-estate listings, prioritizes Facebook as the primary source, estimates fair value by local segment, and surfaces actionable signal cards for users. The product reduces manual reading across noisy broker posts by showing price, area, ward/sub-zone, MOS, price drops, comparable context, and VIP watchlist alerts.
+**What it does:** Radar BDS crawls and normalizes public real-estate listings, prioritizes Facebook as the primary source, estimates fair value by local segment, and surfaces actionable signal cards for users. The product reduces manual reading across noisy broker posts by showing price, area, ward/sub-zone, MOS, price drops, comparable context, and a direct contact path for suitable deals.
 
 **Product category:** Data-backed real-estate deal radar / Bình Dương property intelligence dashboard.
 
 **Product type:** Web app with public SEO pages, authenticated dashboard, admin workflow, and VIP Telegram alert layer.
 
-**Business model:** Free dashboard access for discovery plus VIP upgrade for faster watchlist alerts, deeper market indicators, and advisory support.
+**Business model:** Free dashboard access for discovery plus contact/lead capture when users find a signal worth checking. VIP/watchlist features may exist in product, but they are not the current marketing funnel.
 
 ## Target Audience
 **Target companies:** Not company-led. The first market is individual investors, serious owner-buyers, and small local deal teams focused on Bình Dương.
@@ -28,7 +28,7 @@
 **Use cases:**
 - An investor follows Bến Cát or Mỹ Phước and wants new MOS-positive listings before they are stale.
 - A buyer sees a cheap post on Facebook and wants to know if the price is meaningfully below nearby listings.
-- A VIP user saves a watchlist by ward, property type, area, price range, and MOS threshold, then receives Telegram alerts.
+- A buyer opens a ward-filtered URL from SEO or Facebook, reviews the signal cards, then clicks contact on one suitable listing.
 
 ## Personas
 | Persona | Cares about | Challenge | Value we promise |
@@ -61,7 +61,7 @@
 **Key differentiators:**
 - Bình Dương-first focus with Thủ Dầu Một, Bến Cát, Mỹ Phước, and priority ward/sub-zone context.
 - Deterministic crawl, normalization, dedup/history, fair value, MOS, and quality gates.
-- Watchlist and Telegram flow for VIP users.
+- Filtered dashboard URLs that open the exact ward/cluster users care about.
 - Public SEO/report pages that explain the same method used by the product.
 
 **How we do it differently:** Radar BDS treats a listing as a data point that must pass normalization, comparison, and quality checks before it becomes a user-facing signal.
@@ -76,14 +76,14 @@
 | "MOS cao có chắc là deal tốt không?" | No. MOS is a signal to prioritize due diligence, not a profit guarantee or legal appraisal. |
 | "Dữ liệu tin rao có đáng tin không?" | Radar BDS shows source-quality warnings and suppresses fatal extraction/source problems from user-facing signals. |
 | "Tôi đã có môi giới rồi." | Radar BDS complements broker relationships by helping you know which listings and areas deserve attention first. |
-| "Tôi chưa muốn trả VIP." | Free users can browse and save context; VIP is for faster Telegram alerts, deeper indicators, and advisory support. |
+| "Tôi chưa muốn đăng ký hay trả phí." | Users can open the dashboard, filter by ward, review signal cards, and contact only when a deal looks worth checking. |
 
 **Anti-persona:** People looking for guaranteed returns, legal certification, fully automated buying decisions, or broad nationwide property browsing.
 
 ## Switching Dynamics
 **Push:** Manual reading is slow; Facebook/Guland listings are noisy; cheap posts often hide source or extraction risk.
 
-**Pull:** A focused Bình Dương dashboard with MOS, fair value, price history, and Telegram watchlists.
+**Pull:** A focused Bình Dương dashboard with MOS, fair value, price history, ward filters, and contact CTAs on signal deals.
 
 **Habit:** Users are used to scrolling groups, messaging brokers, and keeping informal notes.
 
@@ -99,9 +99,9 @@
 **How they describe us:**
 - "Radar lọc trước các tin đáng soi."
 - "Xem nhanh khu nào có MOS tốt."
-- "Lưu khu quan tâm rồi nhận tin mới qua Telegram."
+- "Mở đúng phường rồi xem tin nào đáng liên hệ."
 
-**Words to use:** deal đáng soi, tin đáng kiểm tra, MOS, fair value, giá/m2, lịch sử giá, watchlist, cảnh báo nguồn, Bình Dương, Bến Cát, Mỹ Phước, Thủ Dầu Một.
+**Words to use:** deal đáng soi, tin đáng kiểm tra, MOS, fair value, giá/m2, lịch sử giá, lọc theo phường, signal, liên hệ tin này, cảnh báo nguồn, Bình Dương, Bến Cát, Mỹ Phước, Thủ Dầu Một.
 
 **Words to avoid:** chắc thắng, cam kết lợi nhuận, thay thẩm định pháp lý, tự động mua, bí mật nội bộ, giá chắc chắn.
 
@@ -121,7 +121,7 @@
 **Personality:** Sharp, grounded, transparent, investor-minded, anti-hype.
 
 ## Proof Points
-**Metrics:** Use only verified live or internal-run numbers. Acceptable examples include current listings normalized, signal counts, watchlist events, and report pages verified live.
+**Metrics:** Use only verified live or internal-run numbers. Acceptable examples include current listings normalized, signal counts, SEO/report visits, filtered dashboard visits, CTA clicks, and lead/contact events.
 
 **Customers:** Early investors, serious buyers, and local Bình Dương watchers. Do not invent logos or testimonials.
 
@@ -133,12 +133,12 @@
 |-------|-------|
 | Faster screening | Signal feed compresses raw listings into prioritized cards |
 | Better local context | Ward/sub-zone normalization, price per m2, fair value, MOS |
-| Better timing | Saved watchlists and Telegram alerts for VIP/admin users |
+| Better next step | Filtered dashboard URLs and contact CTAs on signal cards |
 | Safer interpretation | Source-quality warnings and explicit due-diligence caveats |
 
 ## Goals
-**Business goal:** Grow qualified Bình Dương investor traffic and convert high-intent users into watchlist/Telegram/VIP leads.
+**Business goal:** Grow qualified Bình Dương investor traffic and move high-intent users into filtered dashboard sessions where they can contact on suitable signal deals.
 
-**Conversion action:** SEO/social visitor opens dashboard, saves a watchlist, connects Telegram, and clicks or asks about VIP/advisory support.
+**Conversion action:** SEO/social/AI visitor opens the dashboard with the right ward or cluster filter, reviews signal cards, and clicks contact/lead CTA on a suitable deal.
 
-**Current metrics:** Track from internal audit logs and analytics: landing/report visits, CTA clicks, signup_completed, watchlist_create, telegram_linked, vip_cta_click, lead_vip_click, and social UTM visits.
+**Current metrics:** Track from internal audit logs and analytics: landing/report visits, social UTM visits, AI referral visits, CTA clicks, filtered dashboard targets, lead_vip_click, vip_cta_click, and lead rows.

@@ -1,8 +1,22 @@
 # Daily SEO Publisher
 
-Use this doc for the Radar BDS automation that must publish exactly one new SEO
-URL per successful run and move it toward the dashboard -> watchlist ->
-Telegram/VIP funnel.
+This workflow is now a Hermes-compatible SEO runbook. Codex cron automations for
+Radar BDS marketing are retired.
+
+## Goal
+
+Bring qualified real-estate searchers into Radar BDS pages and then into the
+dashboard signal feed.
+
+```text
+SEO query
+  -> public page/report/article
+  -> dashboard filtered by ward/cluster when possible
+  -> signal card review
+  -> contact / lead CTA
+```
+
+Do not make watchlist, Telegram, or VIP upgrade the default SEO funnel.
 
 ## Read Order
 
@@ -10,129 +24,98 @@ Telegram/VIP funnel.
 2. `../.agents/product-marketing.md`
 3. `README.md`
 4. `growth_marketing_workflow.md`
-5. `.agents/skills/marketing-loops/SKILL.md`
+5. `hermes_marketing_workflow.md`
 6. `.agents/skills/content-strategy/SKILL.md`
 7. `.agents/skills/seo-audit/SKILL.md`
-8. `.agents/skills/site-architecture/SKILL.md`
-9. `.agents/skills/cro/SKILL.md`
+8. `.agents/skills/ai-seo/SKILL.md`
+9. `.agents/skills/analytics/SKILL.md`
 10. `config/seo_pages.py`
 11. `config/seo_locations.py`
 12. `config/seo_articles.py`
 13. `../.agents/seo-publish-history.md`
+14. `../.agents/loops/daily-seo-publisher.log`
 
-Read `operations.md` only when the run reaches push/deploy/live verification.
+Read `operations.md` only when the run will commit, deploy, or verify
+production.
 
-## Loop Contract
+## Decision Order
 
-This workflow is the first Radar BDS acquisition loop. It must obey the
-`marketing-loops` anatomy:
+Each run checks daily but does not have to publish daily.
 
-| Part | Radar BDS setting |
-|---|---|
-| Check cadence | Daily at the configured Codex automation time |
-| Acts when | There is an unpublished topic with real search intent and a safe implementation path |
-| Purpose | Bring qualified Bình Dương buyers/investors into dashboard -> watchlist -> Telegram/VIP |
-| Skills used | `product-marketing`, `content-strategy`, `seo-audit`, `site-architecture`, `cro`, `schema`, `ai-seo`, `copywriting` |
-| Self-check | No duplicate primary keyword + intent, no doorway page, canonical/sitemap/render verified |
-| State / idempotency | `.agents/seo-publish-history.md` plus `.agents/loops/daily-seo-publisher.log` |
-| Stop / bail-out | Real blocker prevents publishing/deploy/live verification; report production unchanged |
-| Output | One live SEO URL, verification evidence, next topic candidate |
+1. Fix state drift if `config/seo_articles.py`, publish history, sitemap, or
+   live production disagree.
+2. Refresh an existing high-intent location/report page when it can rank better.
+3. Add internal links from reports/articles to the right filtered dashboard URL.
+4. Publish one new SEO URL only when there is a non-duplicate intent with clear
+   search demand.
+5. Draft one Facebook post from the same data atom with UTM.
+6. Skip and report why.
 
-Do not let this become a generic "write one article" habit. Each published URL
-must strengthen at least one of: topical authority, internal linking, CTA path,
-watchlist activation, or a future free-tool/checklist path.
+The best run is often `checked=1 acted=0` when there is no useful change.
 
-## Topic Selection Rules
+## Page Standard
 
-- Publish exactly one new URL per successful run.
-- Read `.agents/seo-publish-history.md` before choosing the topic.
-- Do not repeat the same primary keyword + search intent combination.
-- Prefer the highest 80/20 topic that can ship safely today.
-- For the first money-keyword cluster, use broad keywords only once, then move
-  to the next location or buyer-education angle instead of rewriting the same
-  intent.
-- Run a light `seo-audit` / `site-architecture` check before choosing the topic:
-  avoid cannibalizing an existing URL, avoid orphan pages, and prefer topics that
-  can link to an existing hub/location/method page.
-- If the best 80/20 opportunity is a free tool or checklist, still ship one
-  supporting `/kien-thuc/<slug>` URL for that run and log the tool as the next
-  build candidate. Do not silently change the daily publisher into a tool build.
+Every SEO page or article must include:
 
-## URL And Content Contract
+- one clear primary intent;
+- a title/H1 that matches that intent;
+- answer-first sections useful for Google and AI assistants;
+- visible date/source/methodology/caveat;
+- FAQ and structured data when relevant;
+- internal links to hub/location/report pages;
+- a CTA to `/?tab=signals` or a filtered URL such as
+  `/?tab=signals&ward=Hi%E1%BB%87p+Th%C3%A0nh`;
+- no invented market numbers, testimonials, legal certainty, or guaranteed
+  profit claims.
 
-- Default article system: `/kien-thuc/<slug>`.
-- Page must be indexable, canonicalized, and included in `sitemap.xml`.
-- Include at least 3 FAQ items.
-- Include internal links to hub, location, and method pages.
-- Keep CTA path explicit: article -> dashboard -> watchlist -> Telegram/VIP.
-- Keep the due-diligence caveat explicit: Radar BDS is a data filter, not a
-  legal appraisal or profit guarantee.
+## State And Idempotency
 
-## Repo State To Update
+Successful SEO runs update:
 
-- Add or update `config/seo_articles.py`.
-- Append one shipped entry to `../.agents/seo-publish-history.md`.
-- Append one run entry to `../.agents/loops/daily-seo-publisher.log`.
-- Add or update focused tests in `tests/test_public_seo.py`.
-- If the article changes shared public SEO behavior, document that in the same
-  commit instead of leaving workflow knowledge only in chat.
+- `../.agents/seo-publish-history.md`
+- `../.agents/loops/daily-seo-publisher.log`
 
 Run log format:
 
 ```text
-2026-07-02T09:00+07:00 checked=1 acted=1 url="/kien-thuc/..." note="published article -> watchlist"
+2026-07-18T09:00+07:00 checked=1 acted=1 url="/kien-thuc/..." note="published -> filtered dashboard/contact"
 ```
 
-For blocked runs, log `acted=0` with the blocker. Do not log secrets, phone
-numbers, original listing URLs, or other PII.
+Blocked or skipped runs also get logged with `acted=0`. Do not log secrets,
+phone numbers, original listing URLs, or other PII.
 
-## Verification Contract
+## Verification
 
 Local checks before commit:
 
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 -m py_compile app.py config\seo_articles.py routes\public.py
-& $py -X utf8 -m pytest tests\test_public_seo.py -q
+& $py -X utf8 -m py_compile app.py config\seo_articles.py config\seo_pages.py routes\public.py
+& $py -X utf8 -m pytest tests\test_public_seo.py tests\test_traffic_seo_aio.py -q
 ```
 
-Push + deploy:
-
-```powershell
-git push origin main
-.\scripts\deploy_production.ps1
-```
-
-Live verification:
+Live verification after deploy:
 
 ```powershell
 .\scripts\verify_live_seo_article.ps1 `
   -Url "https://radarbds.vn/kien-thuc/<slug>" `
-  -HeadingContains "heading marker" `
-  -RequireWatchlistIntent
+  -HeadingContains "heading marker"
 ```
 
-## Deploy Guardrail
-
-`deploy_production.ps1` now auto-archives a small allowlist of known temporary
-audit/report files from the VPS checkout to `/tmp/radar-bds-deploy-known-temp-*.tgz`
-before deploy continues.
-
-Important:
-
-- This cleanup is only for the exact known temp-file allowlist embedded in the
-  script.
-- The deploy must still fail if any other unexpected dirty file remains.
-- Report the archive path if the cleanup path was used.
+For Hermes on Linux, use the equivalent checks documented in
+`docs/hermes_marketing_workflow.md`.
 
 ## Reporting Shape
 
-- `Che do: shipped / blocked`
-- `Bai SEO moi da publish`
-- `Ly do 80/20`
-- `Funnel path touched`
-- `Files touched`
-- `Verification run`
-- `Production status`
-- `Next article candidate`
-- `Giai thich de hieu: toi da lam marketing bang cach nao`
+```text
+Mode: shipped / refreshed / drafted / skipped / blocked
+SEO URL:
+Primary intent:
+Why 80/20:
+Dashboard/filter URL:
+Contact path:
+AI SEO checks:
+Verification:
+State updated:
+Next candidate:
+```

@@ -2,6 +2,11 @@
 
 Use this file to prevent repeat distribution packs from the same source asset.
 
+Current marketing funnel from 2026-07-18 onward:
+`SEO/social/AI -> filtered dashboard -> signal card -> contact/lead CTA`.
+Older entries below may mention the retired watchlist/Telegram marketing funnel;
+do not use that as the current CTA path.
+
 Rules:
 
 - Read the latest 3 entries before drafting a new pack.

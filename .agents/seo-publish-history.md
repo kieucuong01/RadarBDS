@@ -2,6 +2,11 @@
 
 Use this file to prevent repeated Radar BDS SEO articles with the same primary keyword and search intent.
 
+Current marketing funnel from 2026-07-18 onward:
+`SEO/social/AI -> filtered dashboard -> signal card -> contact/lead CTA`.
+Older entries below may mention the retired watchlist/Telegram marketing funnel;
+do not use that as the current CTA path.
+
 Rules:
 
 - Read the latest entries before choosing the next topic.

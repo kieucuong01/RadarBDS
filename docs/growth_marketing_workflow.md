@@ -1,289 +1,117 @@
-# Radar BDS Growth Marketing Workflow
+# Radar BDS Traffic Marketing Workflow
 
-Use this doc for marketing, SEO, social, lead magnet, CRO, analytics, and Codex automation work. It is intentionally narrower than a full marketing plan: it tells future agents what to do first and what to avoid.
+Use this doc for SEO, AI SEO, social distribution, analytics, and Hermes daily
+marketing work. The goal is deliberately narrow: bring qualified users into
+`radarbds.vn`, let them filter the dashboard by area, then contact on matching
+signal deals.
 
-## Framework
+## Current Funnel
 
-Radar BDS uses the `coreyhaines31/marketingskills` framework:
+The marketing funnel is:
 
-- `product-marketing` is the source of truth for positioning, ICP, customer language, and proof points.
-- AARRR is the operating structure: Acquisition, Activation, Retention, Referral, Revenue.
-- Channel skills execute stage-specific work: `content-strategy`, `ai-seo`, `schema`, `social`, `community-marketing`, `cro`, `lead-magnets`, `free-tools`, and `analytics`.
-- Project-local marketing skills live in `.agents/skills/`. Prefer those project skills over global copies so Radar BDS keeps its own marketing operating rules.
+```text
+Google / Facebook / AI answer
+  -> SEO page, report, or filtered URL
+  -> dashboard with ward/filter context
+  -> user reviews signal cards
+  -> user clicks contact / lead CTA on a suitable deal
+```
 
-Read order for growth work:
+Do not optimize marketing toward watchlist, Telegram, VIP upgrade, community,
+video, paid ads, or lead magnets in the first 90 days unless the user explicitly
+changes this scope.
 
-1. `AGENTS.md`
-2. `.agents/product-marketing.md`
-3. `docs/README.md`
-4. This file
-5. The smallest task-specific product/operations doc needed for data truth
+Product features such as watchlists and Telegram may still exist in the app.
+They are not the primary traffic funnel for marketing work.
 
-## Installed Marketing Skill Stack
+## 80/20 Strategy
 
-Use the smallest skill set that matches the task. Do not run every skill just
-because it is installed.
+Spend effort where Radar BDS has an unfair advantage: local Bình Dương data and
+filtered signal pages.
 
-| Job | Primary skills |
-|---|---|
-| Decide positioning, ICP, objections, customer language | `product-marketing`, `customer-research` |
-| Choose what to publish | `content-strategy`, `seo-audit`, `site-architecture` |
-| Write or improve pages | `copywriting`, `copy-editing`, `cro`, `ai-seo` |
-| Publish SEO pages safely | `seo-audit`, `schema`, `programmatic-seo` |
-| Build acquisition loops | `marketing-loops`, `analytics`, `content-strategy` |
-| Build lead capture / utility | `free-tools`, `lead-magnets`, `cro` |
-| Draft manual social/community distribution | `social`, `community-marketing`, `copywriting` |
-
-Do not prioritize `ads`, cold outreach, PR, referrals, pricing, or paywall work
-until Radar BDS has trustworthy activation metrics for SEO visitors.
-
-## 80/20 Priorities
-
-| Rank | AARRR stage | Priority | Why |
-|---|---|---|---|
-| 1 | Acquisition | Data-backed Bình Dương SEO/report assets | Uses Radar's unique data and compounds through search |
-| 2 | Activation | Clear path from public page to dashboard/watchlist | Turns visitors into first-value users |
-| 3 | Retention | Watchlist and Telegram loop | Gives users a reason to return when new listings appear |
-| 4 | Referral | Shareable market notes | Useful local insights travel better than generic promotion |
-| 5 | Revenue | VIP lead and advisory CTA | Monetizes high-intent users without forcing paid ads |
-
-Operational interpretation:
-
-- The daily SEO publisher is the first Acquisition loop, not the whole marketing
-  strategy.
-- Before adding more scheduled loops, keep the measurement layer trustworthy:
-  `seo_landing_viewed`, `cta_clicked`, `watchlist_create`, `telegram_linked`,
-  and VIP lead events must be reviewable.
-- The next high-value loop after daily publishing is not more social volume; it
-  is either `tracking-QA` / weekly marketing review or a focused free-tool /
-  lead-capture build if SEO traffic starts but watchlist activation is weak.
-- If a past campaign conflicts with these rules, fix the workflow instead of
-  preserving it for consistency.
-
-## Radar BDS Marketing Operating System
-
-Adopt loops one at a time. Each loop must define cadence, action condition,
-self-check, state/idempotency, stop condition, and output.
-
-| Stage | Loop | Cadence | Autonomous action | Human/gated action |
-|---|---|---:|---|---|
-| Foundation | Tracking QA | Weekly and after deploy | Verify events, sitemap, canonical, CTA target | Any analytics schema change that risks losing production data |
-| Foundation | Weekly marketing review | Weekly | Summarize AARRR movement and choose one next action | Revenue/pricing decisions |
-| Acquisition | Daily SEO publisher | Daily | Publish exactly one new SEO URL when local + deploy + live checks pass | External posting, paid ads, broad DB sync |
-| Activation | Landing/watchlist CRO | Weekly when traffic exists | Propose one CTA/form/watchlist improvement | Major UX or tier-gating changes |
-| Lead capture | Free tool / checklist loop | Monthly or when SEO traffic exists | Stage a tool/checklist improvement | Collecting personal data or outbound follow-up |
-
-Loop state should live in `.agents/loops/`. Never keep loop memory only in chat.
-
-## Content Pillars
-
-Every public asset should fit at least one pillar:
-
-1. **BDS Bình Dương theo khu**: Thủ Dầu Một, Bến Cát, Mỹ Phước, ward/sub-zone pages, and monthly/weekly market reports.
-2. **Lọc deal và MOS**: fair value, price per m2, MOS, price drops, comparable context, and how to read signal cards.
-3. **Cảnh báo tin nhiễu/tin mồi**: fake cheap prices, wrong area, wrong ward, reposts, source-quality warnings, and due-diligence caveats.
-
-Preferred formats:
-
-- Searchable: hub/report/area pages with FAQ, visible methodology, canonical URL, and internal links.
-- Shareable: 1-chart or 1-insight social posts, short video scripts, and weekly market notes.
-- Lead capture: checklist, saved watchlist, Telegram connect, and VIP advisory CTA.
-
-Do not create doorway pages by street or thin area variants. Add or refresh pages only when there is enough local data or product value to justify them.
-
-## CTA Rules
-
-Use outcome CTAs. Avoid vague CTAs when a higher-intent action is available.
-
-Preferred CTAs:
-
-- `Lưu watchlist Bình Dương`
-- `Nhận deal mới qua Telegram`
-- `Xem các tin MOS cao hôm nay`
-- `Soi khu này trên dashboard`
-- `Hỏi VIP/advisory về tin này`
-
-CTA hierarchy:
-
-1. Public SEO/report pages: dashboard/watchlist first, method/report links second.
-2. Dashboard signal cards: listing detail or lead/VIP contact.
-3. Free users: save watchlist and connect Telegram as the bridge to VIP.
-4. VIP/admin: advisory and fast contact flow.
-
-Keep due-diligence language visible: Radar BDS is a data filter, not a legal appraisal or profit guarantee.
-
-## Lead Magnet And Free Tool Ideas
-
-Implement only after the foundation and tracking work are in place.
-
-High-priority lead magnet:
-
-- **Checklist 10 điểm kiểm tra một tin đất Bình Dương trước khi đi xem**
-- Format: ungated preview plus optional email/Zalo/Telegram capture for full version.
-- Buyer stage: consideration.
-- Natural next step: open dashboard, save watchlist, connect Telegram.
-
-High-priority free tool candidate:
-
-- **MOS quick check / giá m2 khu vực**
-- MVP: user enters price, area, ward/sub-zone; tool explains price per m2 and points to relevant dashboard filters.
-- Capture: optional, after preview. Do not block the result entirely.
-
-Skip for now:
-
-- Broad ebooks.
-- Paid lead ads.
-- Mass outreach.
-- Fake community seeding.
-
-## Social And Community
-
-Community goal for the first 30 days is not to create a large public community. It is to nurture 20-50 manually selected early investors/buyers and learn which notes make them return.
-
-Recurring share formats:
-
-- `3 khu nên soi tuần này`
-- `1 tin rẻ nhưng cần cẩn thận`
-- `Giá/m2 theo khu`
-- `Tin giảm giá: cơ hội hay mồi giá?`
-- `Cách đọc MOS trước khi gọi môi giới`
-
-Short video structure:
-
-1. Hook in first 3 seconds: "Tin rẻ chưa chắc là deal."
-2. One Radar insight from real data.
-3. One practical interpretation.
-4. CTA to dashboard/watchlist/Telegram.
-
-Do not auto-post to external platforms from Codex automations. Produce packs for manual publishing.
-
-## Distribution Pack Anti-Duplication
-
-Distribution packs must optimize for novelty of angle, not volume.
-
-Before producing a pack:
-
-1. Read the latest automation memory if available: `$CODEX_HOME/automations/radar-bds-distribution-pack/memory.md`.
-2. Read `.agents/distribution-pack-history.md`.
-3. Compare the candidate pack against at least the last 3 shipped entries.
-
-Treat a pack as a duplicate if it reuses the same combination of:
-
-- source asset/page
-- primary content atom or insight
-- opening hook
-- audience pain being addressed
-
-Allowed reuse:
-
-- Same source asset is allowed only when the new pack changes the angle materially.
-- Material change means at least 2 of these change: pillar, core insight, hook, CTA path, target audience pain.
-
-Required behavior:
-
-- If the latest verified asset has already been used recently, first look for a different verified content atom inside that same asset.
-- If no fresh atom exists, reuse a different verified public page/report.
-- If no fresh verified angle exists at all, output `Mode: skipped` with the duplicate reason instead of forcing a near-copy.
-
-When a pack ships, append one short log entry to `.agents/distribution-pack-history.md` with:
-
-- date
-- source asset
-- pillar
-- primary atom
-- opening hook
-- audience pain
-- CTA path
-- UTM content slug
-
-Do not treat minor copy edits, synonym swaps, or different caption lengths as a new angle.
-
-## Analytics Events
-
-Use lowercase snake_case. Put context in properties, not event names.
-
-| Event | Trigger | Required context |
+| Priority | Work | Why |
 |---|---|---|
-| `seo_landing_viewed` | Public SEO/area page view | `path`, `page_slug`, `variant` |
-| `report_viewed` | Public report page view | `path`, `page_slug`, `variant` |
-| `social_utm_visit` | Pageview with a recognized social source or social medium | `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `path` |
-| `ai_referral_visit` | Recognized ChatGPT, Gemini, Perplexity, or Copilot UTM/referrer host | `ai_source`, `referrer_host`, `path`, `page_slug` |
-| `cta_clicked` | Public-page CTA click | `location`, `target`, `page_slug`, `button_text` |
-| `signup_completed` | Account created | `type` |
-| `watchlist_create` | Watchlist saved | `ward_count`, `prop_count`, `notify_telegram` |
-| `telegram_linked` | Telegram account linked | no PII |
-| `vip_cta_click` | Guest clicks VIP/contact CTA | `ctx`, `tier` |
-| `cta_vip` | Free user clicks VIP/contact CTA | `ctx`, `tier` |
-| `lead_vip_click` | VIP/admin opens lead/advisory CTA | `ctx`, `tier` |
+| 1 | Improve existing SEO location/report pages | They already exist, are indexable, and map directly to filtered dashboard demand. |
+| 2 | Publish or refresh one high-intent SEO page only when there is a clear gap | Prevents thin articles and duplicate intent. |
+| 3 | Turn the same data atom into one Facebook/Page post with a UTM link | Creates short-term traffic while Google ranking builds. |
+| 4 | Measure traffic to filtered dashboard and contact clicks | This is the actual conversion path. |
+| 5 | Monthly AI visibility check | AI SEO is a layer over good SEO, not a separate daily content treadmill. |
 
-Measurement questions:
+Skip broad campaigns: nationwide SEO, daily news, TikTok/YouTube, influencer
+work, paid ads, fake community seeding, link spam, and generic product posts.
 
-- Which public pages produce `watchlist_create` and `telegram_linked`?
-- Which social UTM sources produce qualified activation, not just visits?
-- Which public pages receive attributable visits from AI assistants? Some AI apps strip referrers, so treat this as a lower bound.
-- Which CTA locations produce VIP inquiries?
-- Which content themes lead to repeated dashboard use?
+## Page And CTA Rules
 
-Do not store phone numbers, original listing URLs, or other PII inside analytics context.
+Every public page should answer one search intent and send the user to the most
+specific dashboard view possible.
 
-## Codex Automation Guardrails
+- Ward pages link to `/?tab=signals&ward=<ward name>`.
+- Broad Bình Dương pages link to `/?tab=signals`.
+- Reports link to the relevant filtered dashboard if the report has a ward or
+  cluster, otherwise to the signal feed.
+- Facebook posts link to the exact page or filtered dashboard URL with UTM.
+- CTA language should say "lọc signal", "xem tin phù hợp", or "liên hệ tin này".
+  Do not use "lưu watchlist", "nhận Telegram", or "nâng VIP" as the marketing
+  promise.
 
-All growth automations must:
+## AI SEO Layer
 
-- Use real repo/product data or report a skip/blocker.
-- Keep output narrow: one strategy queue, one growth task, or one distribution pack per run.
-- Avoid mass publishing, paid ads, fake reviews, fake community posts, link spam, and doorway pages.
-- Not modify crawl/reprocess/valuation logic.
-- Not reintroduce external LLM verification into crawl or reprocess.
-- Never write marketing/advisory/AI verdicts into `ai_training_feedback`.
-- Keep production URLs, CTAs, schema, and sitemap visibility verifiable before claiming success.
+Keep AI SEO practical:
 
-## Daily SEO Publisher Guardrail
+- Maintain `/llms.txt` with the priority market and ward pages.
+- Keep answer-first H2/FAQ blocks on SEO pages.
+- Keep JSON-LD for Article/Breadcrumb/FAQ where relevant.
+- Show update date, data source, methodology, and due-diligence caveat.
+- Run a monthly manual check for 10-20 key queries in ChatGPT, Gemini,
+  Perplexity, and Google AI results. Daily AI-visibility checking is noise.
 
-Use `daily_seo_publisher.md` for the exact one-URL-per-run workflow.
+## Analytics Questions
 
-Extra rules for daily SEO publishing:
+Track only what drives decisions:
 
-- Read `.agents/seo-publish-history.md` before choosing the topic.
-- Treat repeated primary keyword + search intent as a duplicate, even if the slug changes.
-- A local render is not enough; the run is only `shipped` after live URL + canonical + sitemap verification pass.
-- Prefer the reusable verifier command over ad-hoc manual checks:
-  `.\scripts\verify_live_seo_article.ps1 -Url "https://radarbds.vn/kien-thuc/<slug>" -HeadingContains "..." -RequireWatchlistIntent`
-- If deploy is blocked by known temporary audit/report files on the VPS checkout, let `scripts/deploy_production.ps1` auto-archive only its built-in allowlist; if any other dirty file remains, stop and report the blocker.
+| Question | Events / source |
+|---|---|
+| Which SEO pages bring qualified traffic? | GA4 + `seo_landing_viewed`, `report_viewed` |
+| Which social posts create visits? | UTM + `social_utm_visit` |
+| Which AI tools send visits? | `ai_referral_visit` |
+| Which public pages push users to dashboard? | `cta_clicked` with target path |
+| Which filtered dashboard sessions contact a deal? | `lead_vip_click`, `vip_cta_click`, lead rows |
 
-## Automation Output Shapes
+Do not treat `watchlist_create` or `telegram_linked` as primary marketing
+success metrics for this phase.
 
-Weekly strategy output:
+## Existing Admin Tracking Screen
 
-- 7-day growth queue
-- One priority SEO/report/landing task
-- Three social atoms
-- One CRO task
-- One metric to inspect
-- One topic to avoid
+There is an admin growth panel at `/admin/tang-truong` backed by
+`/admin/api/growth`. It currently tracks crawl volume, signal count, unique lots,
+price drops, users, and leads. It is useful for product growth, but it is not yet
+a dedicated SEO/social marketing dashboard.
 
-Daily growth output:
+The next tracking improvement should be small: add a marketing-source view for
+SEO/social/AI visits, CTA targets, and contact/lead outcomes by landing page.
 
-- Mode: shipped / blocked / skipped
-- One asset or task completed
-- Data evidence used
-- CTA/funnel path touched
-- Verification run
-- Next 24-hour priority
+## Hermes Ownership
 
-Distribution pack output:
+Codex marketing automations are retired. Hermes on the VPS is the intended
+operator for daily SEO and marketing tasks.
 
-- Facebook/Zalo post
-- TikTok/Reels/Shorts 20-35s script
-- Telegram teaser
-- UTM links
-- Manual publishing notes
-- Source asset/page used
-- One-line novelty note versus the most recent pack, or `Mode: skipped` if novelty failed
+Hermes must use `docs/hermes_marketing_workflow.md` as the operating contract.
+Keep durable state in repo files or the Hermes state directory described there;
+never keep the only copy of marketing state in a chat session.
 
-Measurement review output:
+## Output Shape For Any Marketing Run
 
-- Top pages by qualified activation
-- Signup/watchlist/Telegram/VIP funnel counts
-- Keep / kill / change decisions
-- Next week's highest-leverage experiment
+Use this short report shape:
+
+```text
+Mode: shipped / drafted / skipped / blocked
+Task: SEO refresh / new SEO URL / Facebook draft / tracking QA
+Source evidence:
+URL affected:
+Dashboard/filter URL:
+CTA path:
+UTM if any:
+Verification:
+State updated:
+Next priority:
+```

@@ -1,4 +1,4 @@
-import json
+﻿import json
 import importlib
 from pathlib import Path
 
@@ -141,7 +141,7 @@ def test_binh_duong_landing_has_dashboard_preview_metrics_and_dashboard_cta():
     assert response.status_code == 200
     assert 'class="seo-dashboard-preview"' in html
     assert "/static/images/seo/dashboard-preview.png" in html
-    assert 'href="/?tab=signals&amp;intent=watchlist"' in html
+    assert 'href="/?tab=signals"' in html
     assert 'href="/dashboard"' not in html
     assert "Xem dashboard thật" in html
     assert "Tin rao được chuẩn hóa" in html
@@ -327,11 +327,11 @@ def test_knowledge_articles_render_editorial_content_without_internal_marketing_
         assert "Checklist trước khi đi tiếp" in html
         assert "Câu hỏi thường gặp" in html
         assert "Bài và trang liên quan" in html
-        assert 'href="/?tab=signals&amp;intent=watchlist"' in html
+        assert 'href="/?tab=signals"' in html
         assert '"@type": "BlogPosting"' in html
         assert '"@type": "Organization"' in html
         assert "datePublished" in html
-        for internal_term in ("Internal links", "SEO địa phương", "VIP lead", "funnel"):
+        for internal_term in ("Internal links", "SEO địa phương", "VIP lead", "Telegram", "watchlist funnel"):
             assert internal_term not in html
 
 def test_unknown_knowledge_article_404s():

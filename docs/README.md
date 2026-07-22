@@ -16,7 +16,7 @@ Do not load every doc by default. The project has long crawl and product notes; 
 
 | If the task is about | Read first | Usually touch |
 |---|---|---|
-| Growth marketing, marketing skills, SEO strategy, CRO, lead magnets, free tools, analytics loops | `growth_marketing_workflow.md`, relevant `.agents/skills/<skill>/SKILL.md` | `.agents/product-marketing.md`, `.agents/skills/*`, `.agents/loops/*`, `docs/daily_seo_publisher.md`, public SEO files |
+| Growth marketing, marketing skills, SEO strategy, CRO, Hermes daily marketing, analytics loops | `growth_marketing_workflow.md`, `hermes_marketing_workflow.md`, relevant `.agents/skills/<skill>/SKILL.md` | `.agents/product-marketing.md`, `.agents/skills/*`, `.agents/loops/*`, `docs/daily_seo_publisher.md`, public SEO files |
 | General coding workflow | `agent_playbook.md` | any touched module |
 | Architecture or moving code out of `app.py` | `architecture.md` | `services/*`, `routes/*`, `app.py` |
 | Crawl failed, daily automation, Apify/Facebook/Guland | `daily_crawl_flow.md`, `operations.md` | `cli/crawlers.py`, `crawler/*`, systemd/logs |

@@ -307,7 +307,7 @@ def _process(name: str) -> list[dict]:
         },
         {
             "title": "5. Đưa vào dashboard",
-            "body": "Tin đủ điều kiện được đưa vào Săn Deal, Toàn bộ tin rao hoặc watchlist để theo dõi tiếp.",
+            "body": "Tin đủ điều kiện được đưa vào Săn Deal, Toàn bộ tin rao hoặc dashboard filter để kiểm tra tiếp.",
         },
     ]
 
@@ -330,7 +330,7 @@ def _faq(item: dict) -> list[dict]:
         },
         {
             "q": "Tôi có thể nhận cảnh báo khu này không?",
-            "a": "Có. Bạn có thể mở dashboard, lọc theo khu vực phù hợp và lưu watchlist để theo dõi tin mới hoặc tin giảm giá.",
+            "a": "Có. Bạn có thể mở dashboard, lọc theo khu vực phù hợp, xem signal mới hoặc tin giảm giá rồi bấm liên hệ khi có tin đáng kiểm tra.",
         },
     ]
 

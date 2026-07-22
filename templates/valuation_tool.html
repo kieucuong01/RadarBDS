@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4f6f1">
+  <title>{{ site_meta.title }}</title>
+  <meta name="description" content="{{ site_meta.description }}">
+  <meta name="keywords" content="{{ site_meta.keywords }}">
+  <link rel="canonical" href="{{ site_meta.canonical_url }}">
+  <meta property="og:title" content="{{ site_meta.title }}">
+  <meta property="og:description" content="{{ site_meta.description }}">
+  <meta property="og:url" content="{{ site_meta.og_url }}">
+  <meta property="og:image" content="{{ site_meta.og_image }}">
+  <meta property="og:type" content="website">
+  {% include "partials/google_site_tags.html" %}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=valuation-tool-auth-20260722">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=valuation-tool-seo-20260722">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "{{ site_meta.canonical_url }}#app",
+        "name": "Công cụ định giá lô đất Bình Dương",
+        "url": "{{ site_meta.canonical_url }}",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web",
+        "description": "{{ site_meta.description }}",
+        "isAccessibleForFree": true,
+        "publisher": {
+          "@type": "Organization",
+          "name": "Radar BDS",
+          "url": "{{ site_meta.base_url }}"
+        },
+        "areaServed": [
+          {"@type": "AdministrativeArea", "name": "Thủ Dầu Một, Bình Dương"},
+          {"@type": "AdministrativeArea", "name": "Bến Cát, Bình Dương"}
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "{{ site_meta.canonical_url }}#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Công cụ định giá đất Bình Dương này dùng dữ liệu nào?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Công cụ dùng dữ liệu tin rao đã được Radar BDS chuẩn hóa, lọc trùng và đưa vào mô hình định giá nội bộ cho các phường đang hỗ trợ ở Thủ Dầu Một và Bến Cát."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Guest có xem được trang định giá không?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Guest xem được trang và nội dung hướng dẫn. Khi bấm định giá, hệ thống yêu cầu đăng ký hoặc đăng nhập trước khi chạy mô hình."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Kết quả định giá có thay thế thẩm định thực tế không?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Không. Kết quả là giá tham khảo từ dữ liệu tin rao và mô hình Radar BDS, cần kiểm tra thêm pháp lý, quy hoạch, vị trí thực địa và giao dịch so sánh trước khi ra quyết định."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "{{ site_meta.canonical_url }}#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Radar BDS",
+            "item": "{{ site_meta.base_url }}/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Định giá lô đất Bình Dương",
+            "item": "{{ site_meta.canonical_url }}"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <script>
+    window.USER_TIER = {{ USER_TIER | tojson }};
+    window.CURRENT_USER = {{ USER | tojson }};
+    window.INITIAL_WARDS_BY_CITY = {{ wards_by_city | tojson }};
+    window.VALUATION_TOOL_REQUIRED_TIER = {{ required_tier | tojson }};
+  </script>
+</head>
+
+<body>
+  {% set tier_display = 'Gói Free' if USER_TIER == 'free' else ('VIP' if USER_TIER == 'vip' else ('Admin' if USER_TIER == 'admin' else 'Khách')) %}
+  <a class="skip-link" href="#valuationForm">Bỏ qua đến công cụ định giá</a>
+  <header class="tool-header">
+    <a class="brand" href="/" aria-label="Radar BDS">
+      <img src="{{ url_for('static', filename='images/logo-80.webp') }}" alt="">
+      <span>
+        <strong>Radar BDS</strong>
+        <small>Dữ liệu bất động sản Bình Dương</small>
+      </span>
+    </a>
+    <nav class="tool-nav" aria-label="Điều hướng chính">
+      <a href="/binh-duong">Thị trường</a>
+      <a href="/san-deal-bds">Phương pháp</a>
+      <a href="/">Dashboard</a>
+      {% if USER %}
+      <button type="button" class="account-pill" onclick="RadarAuth.logout()">{{ tier_display }} · Đăng xuất</button>
+      {% else %}
+      <button type="button" class="account-pill" onclick="RadarAuth.openAuthModal('Đăng nhập để chạy định giá lô đất.')">Đăng nhập</button>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero-band">
+      <div class="tool-shell hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Công cụ dữ liệu Radar BDS</p>
+          <h1>Định giá lô đất Bình Dương</h1>
+          <p class="hero-lede">Nhập thông tin lô đất ở Thủ Dầu Một hoặc Bến Cát để so với dữ liệu tin rao đã chuẩn hóa của Radar BDS. Kết quả trả về giá hợp lý theo m², tổng giá trị ước tính và các mẫu so sánh gần phân khúc.</p>
+          <div class="coverage-strip" aria-label="Phạm vi dữ liệu đang hỗ trợ">
+            <span>Thủ Dầu Một</span>
+            <span>Bến Cát</span>
+            <span>Mỹ Phước</span>
+          </div>
+        </div>
+        <aside class="method-rail" aria-label="Cách mô hình xử lý dữ liệu">
+          <div>
+            <span>01</span>
+            <strong>Chuẩn hóa tin rao</strong>
+            <p>Lọc trùng, chuẩn phường, diện tích, loại đường và pháp lý.</p>
+          </div>
+          <div>
+            <span>02</span>
+            <strong>So phân khúc</strong>
+            <p>Ưu tiên mẫu cùng phường, loại tài sản và đặc điểm lô đất.</p>
+          </div>
+          <div>
+            <span>03</span>
+            <strong>Trả giá tham khảo</strong>
+            <p>Ước tính fair value nội bộ để người dùng có mốc kiểm tra trước khi đi xem đất.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="tool-shell workspace" aria-label="Công cụ định giá bất động sản Bình Dương">
+      <form id="valuationForm" class="tool-panel form-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-kicker">Thông tin đầu vào</p>
+            <h2>Lô đất cần định giá</h2>
+          </div>
+          <span class="tier-chip" data-tier="{{ USER_TIER }}">{{ tier_display }}</span>
+        </div>
+
+        <div class="field-grid">
+          <label>
+            <span>Khu vực</span>
+            <select id="cityInput" name="city" aria-label="Chọn khu vực"></select>
+          </label>
+          <label>
+            <span>Phường</span>
+            <select id="wardInput" name="ward" required aria-label="Chọn phường"></select>
+          </label>
+          <label>
+            <span>Loại hình</span>
+            <select name="property_type">
+              <option value="dat_nen">Đất nền</option>
+              <option value="nha_dat">Nhà đất</option>
+              <option value="nha_tro">Nhà trọ</option>
+            </select>
+          </label>
+          <label>
+            <span>Loại đường</span>
+            <select name="road_tier">
+              <option value="2">Đường nhựa nội bộ</option>
+              <option value="1">Mặt tiền / trục chính</option>
+              <option value="3">Hẻm xe hơi</option>
+              <option value="4">Hẻm nhỏ</option>
+              <option value="0">Chưa rõ</option>
+            </select>
+          </label>
+          <label>
+            <span>Diện tích, m²</span>
+            <input name="area_m2" type="number" min="1" step="0.1" required placeholder="100" inputmode="decimal">
+          </label>
+          <label>
+            <span>Ngang, m</span>
+            <input name="frontage_m" type="number" min="0.1" step="0.1" placeholder="5" inputmode="decimal">
+          </label>
+          <label>
+            <span>Dài, m</span>
+            <input name="depth_m" type="number" min="0.1" step="0.1" placeholder="20" inputmode="decimal">
+          </label>
+          <label>
+            <span>Thổ cư, m²</span>
+            <input name="tho_cu_m2" type="number" min="0" step="1" placeholder="100" inputmode="decimal">
+          </label>
+        </div>
+
+        <label class="check-row">
+          <input name="has_so" type="checkbox" checked>
+          <span>Đã có sổ</span>
+        </label>
+
+        <button class="submit-btn" type="submit">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 19V5m0 14h16M8 15l3-4 3 2 5-7" />
+          </svg>
+          Định giá lô đất
+        </button>
+        <p id="formMessage" class="form-message" role="status"></p>
+      </form>
+
+      <section class="tool-panel result-panel" aria-live="polite">
+        <div class="result-empty" id="resultEmpty">
+          <p class="panel-kicker">Kết quả</p>
+          <h2>Giá hợp lý sẽ hiện tại đây</h2>
+          <div class="empty-guide" aria-label="Các chỉ số kết quả">
+            <div>
+              <strong>Fair value</strong>
+              <span>Ước tính tổng giá trị và giá/m² hợp lý.</span>
+            </div>
+            <div>
+              <strong>Giá/m²</strong>
+              <span>Giá tham khảo theo m² từ dữ liệu cùng phân khúc.</span>
+            </div>
+            <div>
+              <strong>Mẫu so sánh</strong>
+              <span>Các tin gần nhất cùng phân khúc trong dữ liệu Radar BDS.</span>
+            </div>
+          </div>
+          <p class="guest-note">Guest vẫn xem được trang. Khi chạy định giá, hệ thống sẽ yêu cầu đăng ký hoặc đăng nhập.</p>
+        </div>
+        <div class="result-content" id="resultContent" hidden>
+          <div class="result-topline">
+            <span id="resultWard">-</span>
+            <strong id="resultMos">-</strong>
+          </div>
+          <div class="hero-number">
+            <span>Giá hợp lý</span>
+            <strong id="fairPrice">-</strong>
+          </div>
+          <div class="metric-row">
+            <div>
+              <span>Giá/m² hợp lý</span>
+              <strong id="fairPpm2">-</strong>
+            </div>
+            <div>
+              <span>Diện tích lô</span>
+              <strong id="areaMetric">-</strong>
+            </div>
+            <div>
+              <span>Mẫu so sánh</span>
+              <strong id="segmentN">-</strong>
+            </div>
+          </div>
+          <p class="model-note" id="modelNote"></p>
+          <div class="comparables">
+            <h3>Tin gần nhất cùng phân khúc</h3>
+            <div id="comparableList"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="tool-shell seo-section" aria-labelledby="valuation-method-heading">
+      <div class="seo-copy">
+        <p class="eyebrow">Phạm vi và phương pháp</p>
+        <h2 id="valuation-method-heading">Định giá đất Bình Dương theo dữ liệu tin rao đã xử lý</h2>
+        <p>Công cụ này tập trung vào các phường Radar BDS đang có dữ liệu định giá tốt hơn ở Thủ Dầu Một và Bến Cát. Mô hình dùng cùng pipeline nội bộ của dự án: chuẩn hóa tin, gom phân khúc, loại bớt dữ liệu nhiễu và ước tính giá hợp lý theo m².</p>
+      </div>
+      <div class="seo-points">
+        <article>
+          <h3>Phù hợp để kiểm tra nhanh</h3>
+          <p>Dùng trước khi gọi môi giới, đi xem đất hoặc đưa lô đất vào danh sách theo dõi.</p>
+        </article>
+        <article>
+          <h3>Đọc cùng mẫu so sánh</h3>
+          <p>Fair value nên được xem cùng các tin gần phân khúc, loại đường, diện tích và pháp lý của lô đất.</p>
+        </article>
+        <article>
+          <h3>Không thay thế thẩm định</h3>
+          <p>Kết quả cần được đối chiếu với pháp lý, quy hoạch, vị trí thực tế và giao dịch đã chốt.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="tool-shell faq-section" id="faq" aria-labelledby="faq-heading">
+      <div class="faq-heading">
+        <p class="eyebrow">FAQ</p>
+        <h2 id="faq-heading">Câu hỏi thường gặp về định giá lô đất Bình Dương</h2>
+      </div>
+      <div class="faq-list">
+        <details open>
+          <summary>Công cụ định giá đất Bình Dương này dùng dữ liệu nào?</summary>
+          <p>Công cụ dùng dữ liệu tin rao đã được Radar BDS chuẩn hóa, lọc trùng và đưa vào mô hình định giá nội bộ cho các phường đang hỗ trợ ở Thủ Dầu Một và Bến Cát.</p>
+        </details>
+        <details>
+          <summary>Guest có xem được trang định giá không?</summary>
+          <p>Guest xem được trang và nội dung hướng dẫn. Khi bấm định giá, hệ thống yêu cầu đăng ký hoặc đăng nhập trước khi chạy mô hình.</p>
+        </details>
+        <details>
+          <summary>Kết quả định giá có thay thế thẩm định thực tế không?</summary>
+          <p>Không. Kết quả là giá tham khảo từ dữ liệu tin rao và mô hình Radar BDS, cần kiểm tra thêm pháp lý, quy hoạch, vị trí thực địa và giao dịch so sánh trước khi ra quyết định.</p>
+        </details>
+      </div>
+      <div class="related-links" aria-label="Liên kết liên quan">
+        <a href="/binh-duong">Xem thị trường Bình Dương</a>
+        <a href="/san-deal-bds">Đọc phương pháp lọc deal</a>
+        <a href="/bao-cao">Xem báo cáo dữ liệu</a>
+      </div>
+    </section>
+  </main>
+
+  <div id="authModal" class="modal" onclick="if(event.target===this)RadarAuth.closeAuthModal()">
+    <div class="modal-content auth-modal-content">
+      <button class="close-modal" onclick="RadarAuth.closeAuthModal()" aria-label="Đóng đăng nhập">&times;</button>
+      <h3 id="authTitle">Đăng nhập / Đăng ký</h3>
+      <p class="auth-sub" id="authSub">Nhập số điện thoại để tiếp tục.</p>
+      <div id="authReasonBanner" class="auth-trial-banner"
+        style="display:none; background: rgba(15,118,110,.1); border-color: rgba(15,118,110,.3); color: #0f766e;"></div>
+      <div id="authError" class="auth-error"></div>
+      <div class="auth-field">
+        <label for="authIdentifier">Số điện thoại</label>
+        <input type="tel" id="authIdentifier" autocomplete="tel" placeholder="0901234567">
+      </div>
+      <div class="auth-field" id="authPasswordField" style="display:none;">
+        <label for="authPassword">Mật khẩu</label>
+        <input type="password" id="authPassword" autocomplete="current-password" placeholder="Ít nhất 6 ký tự">
+      </div>
+      <div id="authTrialBanner" class="auth-trial-banner" style="display:none;"></div>
+      <div class="auth-actions">
+        <button class="auth-btn auth-btn-primary" id="authSubmitBtn" onclick="RadarAuth.submitAuth()">Tiếp tục</button>
+      </div>
+      <p class="auth-hint">Bằng việc đăng ký, bạn đồng ý nhận tin nhắn từ Radar BDS qua kênh đã đăng ký.</p>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/auth.js') }}?v=valuation-tool-auth-20260722"></script>
+  <script src="{{ url_for('static', filename='js/valuation_tool.js') }}?v=valuation-tool-20260722"></script>
+</body>
+
+</html>
