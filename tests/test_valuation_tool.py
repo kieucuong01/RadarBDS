@@ -111,9 +111,13 @@ class ValuationToolTest(unittest.TestCase):
     def test_guest_can_view_page_but_cannot_run_valuation(self):
         page = self.client.get("/dinh-gia-bds")
         self.assertEqual(page.status_code, 200)
-        self.assertIn("Định giá lô đất Bình Dương", page.get_data(as_text=True))
-        self.assertIn("application/ld+json", page.get_data(as_text=True))
-        self.assertIn("FAQPage", page.get_data(as_text=True))
+        html = page.get_data(as_text=True)
+        self.assertIn("Định giá lô đất Bình Dương", html)
+        self.assertIn("application/ld+json", html)
+        self.assertIn("FAQPage", html)
+        self.assertIn("valuation-tool-premium-first-form-20260722", html)
+        self.assertIn("valuation-workspace", html)
+        self.assertIn("Không cần nhập giá", html)
 
         response = self.client.post(
             "/api/valuation-tool/estimate",

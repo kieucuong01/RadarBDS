@@ -35,8 +35,15 @@ body {
 
 .valuation-page {
   background:
-    linear-gradient(180deg, #f4fbf8 0, #ffffff 420px),
+    radial-gradient(circle at 8% 0%, rgba(15, 118, 110, .13), transparent 32%),
+    radial-gradient(circle at 90% 12%, rgba(18, 99, 241, .10), transparent 30%),
+    linear-gradient(180deg, #f4fbf8 0, #ffffff 560px),
     #ffffff;
+}
+
+.valuation-page #main-content {
+  display: flex;
+  flex-direction: column;
 }
 
 button,
@@ -187,6 +194,7 @@ summary:focus-visible {
   background:
     linear-gradient(135deg, rgba(15, 118, 110, .08), rgba(3, 105, 161, .05) 46%, transparent),
     transparent;
+  order: 1;
 }
 
 .hero-grid {
@@ -194,7 +202,7 @@ summary:focus-visible {
   grid-template-columns: minmax(0, 1fr) 360px;
   gap: 32px;
   align-items: end;
-  padding: 52px 0 34px;
+  padding: 18px 0 34px;
 }
 
 .eyebrow,
@@ -210,7 +218,7 @@ summary:focus-visible {
 .hero-copy h1 {
   max-width: 760px;
   margin: 10px 0 14px;
-  font-size: 3.35rem;
+  font-size: 2.65rem;
   line-height: 1.02;
   letter-spacing: 0;
 }
@@ -291,6 +299,11 @@ summary:focus-visible {
   padding: 28px 0 48px;
 }
 
+.valuation-workspace {
+  order: -1;
+  padding: 34px 0 18px;
+}
+
 .tool-panel {
   border: 1px solid var(--vt-line);
   border-radius: 14px;
@@ -308,15 +321,18 @@ summary:focus-visible {
   position: relative;
   overflow: hidden;
   border-color: #99d8ca;
-  box-shadow: 0 22px 58px rgba(11, 93, 70, .16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(255, 255, 255, .94)),
+    radial-gradient(circle at 94% 0%, rgba(18, 99, 241, .14), transparent 34%);
+  box-shadow: 0 26px 68px rgba(7, 23, 49, .14), 0 14px 44px rgba(11, 93, 70, .13);
 }
 
 .form-panel::before {
   content: "";
   position: absolute;
   inset: 0 0 auto;
-  height: 5px;
-  background: linear-gradient(90deg, #0b5d46, #0f766e, #1263f1);
+  height: 6px;
+  background: linear-gradient(90deg, #0b5d46, #0f766e 52%, #1263f1);
 }
 
 .form-panel:focus-within {
@@ -361,6 +377,28 @@ summary:focus-visible {
   color: var(--vt-green);
   border-color: #bee3d6;
   background: #eaf6f1;
+}
+
+.form-assurance-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: -4px 0 16px;
+}
+
+.form-assurance-row span {
+  min-height: 38px;
+  border: 1px solid #cfe7dc;
+  border-radius: 10px;
+  background: #f2fbf7;
+  color: #0b5d46;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  text-align: center;
+  font-size: .78rem;
+  font-weight: 900;
 }
 
 .field-grid {
@@ -460,18 +498,21 @@ summary:focus-visible {
 }
 
 .result-panel {
-  min-height: 540px;
+  min-height: 520px;
   overflow: hidden;
+  border-color: rgba(18, 99, 241, .18);
+  box-shadow: 0 22px 60px rgba(7, 23, 49, .10);
 }
 
 .result-empty {
-  min-height: 540px;
+  min-height: 520px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 15px;
   background:
-    linear-gradient(135deg, rgba(15, 118, 110, .06), transparent 38%),
+    linear-gradient(135deg, rgba(15, 118, 110, .07), transparent 36%),
+    radial-gradient(circle at 96% 0%, rgba(18, 99, 241, .12), transparent 34%),
     #fff;
 }
 
@@ -757,10 +798,10 @@ summary:focus-visible {
 @keyframes valuationFormGlow {
   0%,
   100% {
-    box-shadow: 0 22px 58px rgba(11, 93, 70, .16);
+    box-shadow: 0 26px 68px rgba(7, 23, 49, .14), 0 14px 44px rgba(11, 93, 70, .13);
   }
   50% {
-    box-shadow: 0 26px 68px rgba(11, 93, 70, .24), 0 0 0 5px rgba(15, 118, 110, .08);
+    box-shadow: 0 30px 78px rgba(7, 23, 49, .18), 0 18px 54px rgba(11, 93, 70, .20), 0 0 0 5px rgba(15, 118, 110, .08);
   }
 }
 
@@ -833,6 +874,10 @@ summary:focus-visible {
     padding: 34px 0 26px;
   }
 
+  .valuation-workspace {
+    padding-top: 22px;
+  }
+
   .hero-copy h1 {
     font-size: 2.28rem;
   }
@@ -870,6 +915,10 @@ summary:focus-visible {
   }
 
   .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-assurance-row {
     grid-template-columns: 1fr;
   }
 

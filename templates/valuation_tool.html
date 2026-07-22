@@ -18,7 +18,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=valuation-tool-shared-header-20260722">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=valuation-tool-auth-20260722">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=valuation-tool-shared-ui-20260722">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=valuation-tool-premium-first-form-20260722">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -138,7 +138,7 @@
       </div>
     </section>
 
-    <section class="tool-shell workspace" aria-label="Công cụ định giá bất động sản Bình Dương">
+    <section class="tool-shell workspace valuation-workspace" aria-label="Công cụ định giá bất động sản Bình Dương">
       <form id="valuationForm" class="tool-panel form-panel">
         <div class="panel-heading">
           <div>
@@ -146,6 +146,11 @@
             <h2>Lô đất cần định giá</h2>
           </div>
           <span class="tier-chip" data-tier="{{ USER_TIER }}">{{ tier_display }}</span>
+        </div>
+
+        <div class="form-assurance-row" aria-label="Điểm nổi bật của công cụ định giá">
+          <span>Dữ liệu TDM + Bến Cát</span>
+          <span>Không cần nhập giá</span>
         </div>
 
         <div class="field-grid">
