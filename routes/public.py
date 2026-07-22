@@ -70,7 +70,7 @@ def seo_bao_cao_index(**kwargs):
 
 @bp.route("/bao-cao/<path:report_slug>")
 def seo_market_report(report_slug, **kwargs):
-    return _impl("seo_landing_page", slug=f"bao-cao/{report_slug}", **kwargs)
+    return _impl("seo_report_or_article_page", report_slug=report_slug, **kwargs)
 
 
 @bp.route("/san-deal-bds")
@@ -78,9 +78,19 @@ def seo_san_deal_bds(**kwargs):
     return _impl("seo_landing_page", slug="san-deal-bds", **kwargs)
 
 
+@bp.route("/tin-tuc")
+def seo_news_index(**kwargs):
+    return _impl("seo_knowledge_hub_page", **kwargs)
+
+
+@bp.route("/tin-tuc/<path:article_slug>")
+def seo_news_article(article_slug, **kwargs):
+    return _impl("seo_article_page", slug=article_slug, **kwargs)
+
+
 @bp.route("/kien-thuc")
 def seo_knowledge_index(**kwargs):
-    return _impl("seo_knowledge_hub_page", **kwargs)
+    return _impl("seo_knowledge_legacy_redirect", **kwargs)
 
 
 @bp.route("/kien-thuc/<path:article_slug>")

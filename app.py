@@ -1306,8 +1306,10 @@ def _page_breadcrumb_label(page: dict) -> str:
         return "Bán đất Bình Dương"
     if path == "/san-deal-bds":
         return "Săn deal BĐS"
+    if path.startswith("/tin-tuc/"):
+        return "Tin tức BĐS Bình Dương"
     if path.startswith("/kien-thuc/"):
-        return "Kiến thức BĐS Bình Dương"
+        return "Tin tức BĐS Bình Dương"
     if path.startswith("/bao-cao/"):
         period = ((page.get("report") or {}).get("period") or "").strip()
         return f"Báo cáo {period}" if period else "Báo cáo thị trường"
@@ -1329,8 +1331,10 @@ def _page_breadcrumbs(page: dict) -> list[dict]:
 
     if path.startswith("/binh-duong/"):
         breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
+    elif path.startswith("/tin-tuc/"):
+        breadcrumbs.append({"name": "Tin tức", "href": "/tin-tuc"})
     elif path.startswith("/kien-thuc/"):
-        breadcrumbs.append({"name": "Kiến thức", "href": "/kien-thuc"})
+        breadcrumbs.append({"name": "Tin tức", "href": "/tin-tuc"})
     elif path.startswith("/bao-cao/"):
         breadcrumbs.append({"name": "Báo cáo", "href": "/bao-cao"})
 
@@ -1449,8 +1453,8 @@ def _active_public_nav(path: str) -> str:
         return "dinh-gia"
     if path.startswith("/bao-cao"):
         return "bao-cao"
-    if path.startswith("/kien-thuc"):
-        return "kien-thuc"
+    if path.startswith("/tin-tuc") or path.startswith("/kien-thuc"):
+        return "tin-tuc"
     if path == "/san-deal-bds":
         return "san-deal"
     return "binh-duong"
@@ -1692,7 +1696,11 @@ def seo_knowledge_hub_page():
     page["breadcrumbs"] = _page_breadcrumbs(page)
     featured = dict(SEO_ARTICLES[page["featured_slug"]])
     articles = sorted(
-        (dict(item) for slug, item in SEO_ARTICLES.items() if slug != page["featured_slug"]),
+        (
+            dict(item)
+            for slug, item in SEO_ARTICLES.items()
+            if slug != page["featured_slug"] and str(item.get("path") or "").startswith("/tin-tuc/")
+        ),
         key=lambda item: ((item.get("article") or {}).get("modified_at", ""), (item.get("article") or {}).get("published_at", "")),
         reverse=True,
     )
@@ -1703,8 +1711,28 @@ def seo_knowledge_hub_page():
         featured=featured,
         articles=articles,
         site_meta=site_meta,
-        active_nav="kien-thuc",
+        active_nav="tin-tuc",
     )
+
+
+def seo_knowledge_legacy_redirect():
+    query = request.query_string.decode("ascii", errors="ignore")
+    target = "/tin-tuc"
+    if query:
+        target = f"{target}?{query}"
+    return redirect(target, code=301)
+
+
+def seo_report_or_article_page(report_slug: str):
+    report_key = f"bao-cao/{report_slug}"
+    if report_key in SEO_PAGES:
+        return seo_landing_page(report_key)
+    if report_slug in SEO_ARTICLES:
+        page_path = str(SEO_ARTICLES[report_slug].get("path") or "")
+        if page_path.startswith("/bao-cao/"):
+            return seo_article_page(report_slug)
+    abort(404)
+
 
 def seo_landing_page(slug):
     page = SEO_PAGES.get(slug)
@@ -1727,6 +1755,13 @@ def seo_article_page(slug):
     page = SEO_ARTICLES.get(slug)
     if not page:
         abort(404)
+    canonical_path = str(page.get("path") or "")
+    if canonical_path and request.path.rstrip("/") != canonical_path.rstrip("/"):
+        query = request.query_string.decode("ascii", errors="ignore")
+        target = canonical_path
+        if query:
+            target = f"{target}?{query}"
+        return redirect(target, code=301)
     page = dict(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(
@@ -1735,7 +1770,7 @@ def seo_article_page(slug):
         description=page["description"],
         keywords=page["keywords"],
     )
-    return render_template("seo_article.html", page=page, site_meta=site_meta, active_nav="kien-thuc")
+    return render_template("seo_article.html", page=page, site_meta=site_meta, active_nav=_active_public_nav(page["path"]))
 
 
 def robots_txt():

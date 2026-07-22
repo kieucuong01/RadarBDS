@@ -3,7 +3,7 @@
 SEO_ARTICLES = {
     "ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra": {
         "variant": "knowledge",
-        "path": "/kien-thuc/ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra",
+        "path": "/tin-tuc/ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra",
         "title": "Bán đất Bình Dương: cách lọc tin đáng kiểm tra trước khi đi xem",
         "description": (
             "Hướng dẫn lọc bán đất Bình Dương bằng giá/m2, ward, MOS, cảnh báo nguồn "
@@ -264,7 +264,7 @@ SEO_ARTICLES = {
     },
     "dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia": {
         "variant": "knowledge",
-        "path": "/kien-thuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
+        "path": "/tin-tuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
         "title": "Đất Mỹ Phước Bình Dương: cách tách Mỹ Phước 1, 2, 3 để không so sai giá",
         "description": (
             "Hướng dẫn lọc đất Mỹ Phước Bình Dương bằng cách tách Mỹ Phước 1, 2, 3, "
@@ -525,7 +525,7 @@ SEO_ARTICLES = {
     },
     "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia": {
         "variant": "knowledge",
-        "path": "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia",
+        "path": "/tin-tuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia",
         "title": "Giá đất Thủ Dầu Một theo phường: vì sao phải tách Phú Mỹ, Hiệp An, Chánh Nghĩa trước khi so giá",
         "description": (
             "Hướng dẫn đọc giá đất Thủ Dầu Một theo phường bằng cách tách Phú Mỹ, Hiệp An, Chánh Nghĩa, "
@@ -783,7 +783,7 @@ SEO_ARTICLES = {
     },
     "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin": {
         "variant": "knowledge",
-        "path": "/kien-thuc/dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin",
+        "path": "/tin-tuc/dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin",
         "title": "Đất Bình Dương: vì sao không nên so giá toàn tỉnh trước khi lọc tin",
         "description": (
             "Hướng dẫn đọc đất Bình Dương theo đúng cụm Thủ Dầu Một, Bến Cát, Mỹ Phước thay vì gom cả tỉnh, "
@@ -950,7 +950,7 @@ SEO_ARTICLES = {
             },
             {
                 "label": "Đất Mỹ Phước Bình Dương",
-                "href": "/kien-thuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
+                "href": "/tin-tuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
                 "description": "Bài hỗ trợ khi bạn đã biết nên so theo khu và muốn đi sâu vào cụm Mỹ Phước.",
             },
             {
@@ -1040,7 +1040,7 @@ SEO_ARTICLES = {
     },
     "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia": {
         "variant": "knowledge",
-        "path": "/kien-thuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia",
+        "path": "/tin-tuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia",
         "title": "Nhà đất Phú Mỹ Thủ Dầu Một: cách so đúng với Hiệp An, Chánh Nghĩa trước khi xuống tiền",
         "description": (
             "Hướng dẫn đọc nhà đất Phú Mỹ Thủ Dầu Một bằng cách so đúng với Hiệp An, Chánh Nghĩa, "
@@ -1212,7 +1212,7 @@ SEO_ARTICLES = {
             },
             {
                 "label": "Giá đất Thủ Dầu Một theo phường",
-                "href": "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia",
+                "href": "/tin-tuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia",
                 "description": "Bài hub-supporting đi từ góc nhìn so ward toàn thành phố trước khi zoom sâu vào Phú Mỹ.",
             },
             {
@@ -1304,7 +1304,7 @@ SEO_ARTICLES = {
     },
     "nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia": {
         "variant": "knowledge",
-        "path": "/kien-thuc/nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia",
+        "path": "/tin-tuc/nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia",
         "title": "Nhà đất Bến Cát Bình Dương: cách tách Mỹ Phước, Tân Định, Thới Hòa trước khi so giá",
         "description": (
             "Hướng dẫn đọc nhà đất Bến Cát Bình Dương bằng cách tách Mỹ Phước, Tân Định, Thới Hòa, "
@@ -1472,7 +1472,7 @@ SEO_ARTICLES = {
             },
             {
                 "label": "Đất Mỹ Phước Bình Dương",
-                "href": "/kien-thuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
+                "href": "/tin-tuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
                 "description": "Bài hỗ trợ khi bạn đã chốt cụm Bến Cát và muốn đi sâu vào Mỹ Phước 1, 2, 3.",
             },
             {
@@ -1568,7 +1568,7 @@ SEO_ARTICLES = {
 
     "gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026": {
         "variant": "knowledge",
-        "path": "/kien-thuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026",
+        "path": "/tin-tuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026",
         "title": "Giá đất Hiệp An Thủ Dầu Một cập nhật tháng 7/2026 — hơn 1.000 tin rao từ Facebook",
         "description": "Hiệp An có hơn 1.000 tin rao từ Facebook — nhiều nhất Thủ Dầu Một. Giá đất nền ~18.5 tr/m², nhà đất ~24 tr/m². Cập nhật tháng 7/2026 từ Radar BDS.",
         "keywords": "giá đất Hiệp An Thủ Dầu Một, nhà đất Hiệp An, đất nền Hiệp An, giá đất Hiệp An, radar bds",
@@ -1647,7 +1647,7 @@ SEO_ARTICLES = {
         "local_links_title": "Xem thêm",
         "local_links": [
             {"label": "Dashboard", "href": "/dashboard", "description": "Dashboard Radar BDS để lọc nhà đất Hiệp An"},
-            {"label": "Giá đất TDM tổng quan", "href": "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia", "description": "Bài hub hướng dẫn cách tách phường trước khi so giá TDM"}
+            {"label": "Giá đất TDM tổng quan", "href": "/tin-tuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia", "description": "Bài hub hướng dẫn cách tách phường trước khi so giá TDM"}
         ],
         "process_title": "Cách đọc giá đất Hiệp An trước khi gọi môi giới",
         "process": [
@@ -1674,7 +1674,7 @@ SEO_ARTICLES = {
 
     "gia-dat-tan-an-thu-dau-mot-cap-nhat-thang-7-2026": {
         "variant": "knowledge",
-        "path": "/kien-thuc/gia-dat-tan-an-thu-dau-mot-cap-nhat-thang-7-2026",
+        "path": "/tin-tuc/gia-dat-tan-an-thu-dau-mot-cap-nhat-thang-7-2026",
         "title": "Giá đất Tân An Thủ Dầu Một — phường giá rẻ nhất với gần 900 tin rao Facebook",
         "description": "Tân An có gần 900 tin rao từ Facebook. Đất nền chỉ ~16.2 tr/m², nhà đất ~22.9 tr/m² — rẻ nhất TDM. Cập nhật tháng 7/2026 từ Radar BDS.",
         "keywords": "giá đất Tân An Thủ Dầu Một, giá đất Tân An, nhà đất Tân An, đất nền Tân An, radar bds",
@@ -1753,8 +1753,8 @@ SEO_ARTICLES = {
         "local_links_title": "Xem thêm",
         "local_links": [
             {"label": "Dashboard Tân An", "href": "/dashboard", "description": "Mở dashboard để lọc đất nền Tân An với ngân sách của bạn"},
-            {"label": "Giá đất Hiệp An", "href": "/kien-thuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Phường lân cận — nguồn cung số 1 TDM với giá ~18.5 tr/m²"},
-            {"label": "Giá đất TDM tổng quan", "href": "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia", "description": "Bài hub hướng dẫn cách tách phường trước khi so giá"}
+            {"label": "Giá đất Hiệp An", "href": "/tin-tuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Phường lân cận — nguồn cung số 1 TDM với giá ~18.5 tr/m²"},
+            {"label": "Giá đất TDM tổng quan", "href": "/tin-tuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia", "description": "Bài hub hướng dẫn cách tách phường trước khi so giá"}
         ],
         "process_title": "Cách tìm đất giá rẻ Tân An",
         "process": [
@@ -1780,7 +1780,7 @@ SEO_ARTICLES = {
 
     "gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026": {
     "variant": "knowledge",
-    "path": "/kien-thuc/gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026",
+    "path": "/tin-tuc/gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026",
     "title": "Giá đất Phú Mỹ Thủ Dầu Một cập nhật tháng 7/2026 — phường ven sông với 700+ tin rao",
     "description": "Giá đất Phú Mỹ Thủ Dầu Một cập nhật tháng 7/2026: đất nền 22-28 tr/m², nhà đất 30-40 tr/m², 716 tin rao Facebook. Phân tích giá, dấu hiệu đáng chú ý thị trường và so sánh với các phường lân cận.",
     "keywords": "giá đất Phú Mỹ Thủ Dầu Một, giá đất Phú Mỹ TDM, bán đất Phú Mỹ, nhà đất Phú Mỹ, Phú Mỹ Thủ Dầu Một, đất nền Phú Mỹ, radar bds",
@@ -1860,9 +1860,9 @@ SEO_ARTICLES = {
     "local_links_title": "Xem thêm",
     "local_links": [
         {"label": "Dashboard Phú Mỹ", "href": "/dashboard", "description": "Mở dashboard để lọc đất nền Phú Mỹ với ngân sách của bạn"},
-        {"label": "Giá đất TDM tổng quan", "href": "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia", "description": "Bài hub hướng dẫn cách tách phường trước khi so giá"},
-        {"label": "Giá đất Hiệp An", "href": "/kien-thuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Phường lân cận — nguồn cung số 1 TDM với giá ~18.5 tr/m²"},
-        {"label": "Giá đất Tân An", "href": "/kien-thuc/gia-dat-tan-an-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Phường giá rẻ nhất TDM — đất nền chỉ ~16.2 tr/m²"}
+        {"label": "Giá đất TDM tổng quan", "href": "/tin-tuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia", "description": "Bài hub hướng dẫn cách tách phường trước khi so giá"},
+        {"label": "Giá đất Hiệp An", "href": "/tin-tuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Phường lân cận — nguồn cung số 1 TDM với giá ~18.5 tr/m²"},
+        {"label": "Giá đất Tân An", "href": "/tin-tuc/gia-dat-tan-an-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Phường giá rẻ nhất TDM — đất nền chỉ ~16.2 tr/m²"}
     ],
     "process_title": "Cách tìm đất Phú Mỹ giá hợp lý",
     "process": [
@@ -1887,7 +1887,7 @@ SEO_ARTICLES = {
 },
     "gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026": {
         "variant": "knowledge",
-        "path": "/kien-thuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
+        "path": "/bao-cao/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
         "title": "Giá đất Phú Tân Thủ Dầu Một cập nhật tháng 7/2026 | Radar BDS",
         "description": "Giá đất Phú Tân Thủ Dầu Một tháng 7/2026: đất nền có mức giá ở giữa 23,8 tr/m², nhà đất có mức giá ở giữa 34,8 tr/m², 708 tin đang theo dõi và 321 dấu hiệu đáng chú ý do Radar BDS ghi nhận.",
         "keywords": "giá đất Phú Tân Thủ Dầu Một, nhà đất Phú Tân, đất nền Phú Tân, báo cáo Phú Tân, Radar BDS",
@@ -1940,7 +1940,7 @@ SEO_ARTICLES = {
             },
             {
                 "label": "So Phú Mỹ với Hiệp An và Chánh Nghĩa",
-                "href": "/kien-thuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia",
+                "href": "/tin-tuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia",
                 "description": "Cách chọn mẫu so sánh khi đọc các phường Thủ Dầu Một."
             }
         ],
@@ -2054,8 +2054,8 @@ SEO_ARTICLES = {
 }
 
 KNOWLEDGE_HUB = {
-    "path": "/kien-thuc",
-    "title": "Kiến thức BĐS Bình Dương | Radar BDS",
+    "path": "/tin-tuc",
+    "title": "Tin tức BĐS Bình Dương | Radar BDS",
     "description": "Hướng dẫn đọc tin, so giá và thẩm định bất động sản Bình Dương; nội dung hiện ưu tiên Thủ Dầu Một.",
     "keywords": "kiến thức BĐS Bình Dương, giá đất Thủ Dầu Một, cách lọc tin nhà đất",
     "hero_title": "Kiến thức BĐS Bình Dương",
@@ -2234,7 +2234,7 @@ _rb_prepend_unique_article_link(
 )
 _rb_prepend_unique_article_link(
     "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia",
-    {"label": "Giá đất Phú Tân", "href": "/kien-thuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Một phường nhiều dấu hiệu đáng chú ý để so cùng nhóm Thủ Dầu Một."},
+    {"label": "Giá đất Phú Tân", "href": "/bao-cao/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Một phường nhiều dấu hiệu đáng chú ý để so cùng nhóm Thủ Dầu Một."},
 )
 
 # --- Hermes Phu Tan visual enrichment 2026-07-22 ---
@@ -2524,7 +2524,7 @@ SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"]["mo
 # --- Hermes daily SEO demo publish 2026-07-22: Dinh Hoa ---
 SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
     "variant": "knowledge",
-    "path": "/kien-thuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
+    "path": "/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
     "title": "Giá đất Định Hòa Thủ Dầu Một cập nhật tháng 7/2026 | Radar BDS",
     "description": "Giá đất Định Hòa tháng 7/2026: đất nền có mức giá ở giữa 15,2 tr/m², nhà đất có mức giá ở giữa 32,7 tr/m², 901 tin đang theo dõi và 120 dấu hiệu đáng chú ý do Radar BDS ghi nhận.",
     "keywords": "giá đất Định Hòa, nhà đất Định Hòa Thủ Dầu Một, đất nền Định Hòa, Radar BDS",
@@ -2575,12 +2575,12 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
         },
         {
             "label": "Giá đất Phú Tân",
-            "href": "/kien-thuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
+            "href": "/bao-cao/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
             "description": "So với phường có dấu hiệu đáng chú ý cao hơn."
         },
         {
             "label": "Giá đất Hiệp An",
-            "href": "/kien-thuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026",
+            "href": "/tin-tuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026",
             "description": "So với phường có nguồn cung lớn."
         }
     ],
@@ -2964,14 +2964,14 @@ SEO_ARTICLES['gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'] = {
             "url": "https://radarbds.vn/"
         },
         {
-            "name": "Kiến thức",
-            "href": "/kien-thuc",
-            "url": "https://radarbds.vn/kien-thuc"
+            "name": "Tin tức",
+            "href": "/tin-tuc",
+            "url": "https://radarbds.vn/tin-tuc"
         },
         {
             "name": "Giá đất Định Hòa",
-            "href": "/kien-thuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
-            "url": "https://radarbds.vn/kien-thuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026"
+            "href": "/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
+            "url": "https://radarbds.vn/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026"
         }
     ]
 }
