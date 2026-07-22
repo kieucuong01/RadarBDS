@@ -61,7 +61,7 @@ SEO_ARTICLES = {'gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026': {'variant':
                                                                         'description': 'So Phú Tân với 12 phường còn '
                                                                                        'lại trong cùng kỳ dữ liệu.'},
                                                                        {'label': 'So Phú Mỹ với Hiệp An và Chánh Nghĩa',
-                                                                        'href': '/tin-tuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia',
+                                                                        'href': '/kien-thuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia',
                                                                         'description': 'Cách chọn mẫu so sánh khi đọc '
                                                                                        'các phường Thủ Dầu Một.'}],
                                                        'faq': [{'q': 'Giá đất nền Phú Tân Thủ Dầu Một hiện khoảng bao '
@@ -585,7 +585,7 @@ SEO_ARTICLES = {'gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026': {'variant':
                                                                          'description': 'So với phường có dấu hiệu '
                                                                                         'đáng chú ý cao hơn.'},
                                                                         {'label': 'Giá đất Hiệp An',
-                                                                         'href': '/tin-tuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026',
+                                                                         'href': '/kien-thuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026',
                                                                          'description': 'So với phường có nguồn cung '
                                                                                         'lớn.'}],
                                                         'process_title': 'Cách đọc giá Định Hòa',
@@ -1035,13 +1035,13 @@ SEO_ARTICLES = {'gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026': {'variant':
                                                                          'href': '/',
                                                                          'url': 'https://radarbds.vn/'},
                                                                         {'name': 'Tin tức',
-                                                                         'href': '/tin-tuc',
-                                                                         'url': 'https://radarbds.vn/tin-tuc'},
+                                                                         'href': '/kien-thuc',
+                                                                         'url': 'https://radarbds.vn/kien-thuc'},
                                                                         {'name': 'Giá đất Định Hòa',
                                                                          'href': '/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
                                                                          'url': 'https://radarbds.vn/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'}]},
  'cach-xem-gia-dat-binh-duong-khong-bi-so-sai': {'variant': 'knowledge',
-                                                 'path': '/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai',
+                                                 'path': '/kien-thuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai',
                                                  'title': 'Cách xem giá đất Bình Dương không bị so sai | Radar BDS',
                                                  'description': 'Hướng dẫn bình dân cách xem giá đất Bình Dương: tách '
                                                                 'phường, tách đất nền/nhà đất, rồi mới so giá. Dữ liệu '
@@ -1394,7 +1394,7 @@ SEO_ARTICLES = {'gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026': {'variant':
                                                                        'nhóm tin đáng kiểm tra trước.',
                                                                'button': 'Mở dashboard'}}}
 
-KNOWLEDGE_HUB = {'path': '/tin-tuc',
+KNOWLEDGE_HUB = {'path': '/kien-thuc',
  'title': 'Tin tức BĐS Bình Dương | Radar BDS',
  'description': 'Tin tức, hướng dẫn và bài SEO dữ liệu về nhà đất Bình Dương từ Radar BDS.',
  'keywords': 'tin tức BĐS Bình Dương, giá đất Bình Dương, Radar BDS, nhà đất Thủ Dầu Một',
@@ -1406,4 +1406,4 @@ KNOWLEDGE_HUB = {'path': '/tin-tuc',
  'scope_label': 'SEO / AIO / AI-SEO',
  'featured_slug': 'cach-xem-gia-dat-binh-duong-khong-bi-so-sai',
  'breadcrumbs': [{'name': 'Trang chủ', 'href': '/', 'url': 'https://radarbds.vn/'},
-                 {'name': 'Tin tức', 'href': '/tin-tuc', 'url': 'https://radarbds.vn/tin-tuc'}]}
+                 {'name': 'Tin tức', 'href': '/kien-thuc', 'url': 'https://radarbds.vn/kien-thuc'}]}

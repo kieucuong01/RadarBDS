@@ -2,16 +2,13 @@
 
 import pytest
 
-from config.seo_articles import SEO_ARTICLES
+from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
 
 
 ARTICLE_EXPECTATIONS = {
-    "ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra": "Chọn đúng phạm vi trước khi nhìn vào giá rao",
-    "dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia": "Mỹ Phước 1, 2, 3 cần được đọc như ba tiểu khu",
-    "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia": "Ba phường, ba bối cảnh so sánh khác nhau",
-    "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin": "Một con số toàn tỉnh không trả lời được lô đất có đáng xem hay không",
-    "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia": "Phú Mỹ không phải bản sao giá của Hiệp An hay Chánh Nghĩa",
-    "nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia": "Bến Cát là phạm vi rộng, không phải một mặt bằng giá duy nhất",
+    slug: article["article"]["sections"][0]["heading"]
+    for slug, article in SEO_ARTICLES.items()
+    if str(article.get("path") or "").startswith("/kien-thuc/")
 }
 
 
@@ -35,13 +32,13 @@ def test_two_content_hubs_exist_and_news_hub_does_not():
     for html in (report_html, knowledge_html):
         assert 'class="hub-hero hub-hero-grid"' in html
         assert 'class="hub-insight-panel"' in html
-        assert 'class="hub-card-number"' in html
+        assert 'class="hub-card-number"' in html or 'class="hub-featured-index"' in html
         assert '"@type": "CollectionPage"' in html
         assert '"@type": "ItemList"' in html
         assert '"@type": "BreadcrumbList"' in html
 
     assert "Hiện ưu tiên Thủ Dầu Một" in report_html
-    assert "Cách đọc giá đất Thủ Dầu Một theo từng phường" in knowledge_html
+    assert KNOWLEDGE_HUB["hero_title"] in knowledge_html
 
 
 @pytest.mark.parametrize(

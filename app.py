@@ -1306,10 +1306,8 @@ def _page_breadcrumb_label(page: dict) -> str:
         return "Bán đất Bình Dương"
     if path == "/san-deal-bds":
         return "Săn deal BĐS"
-    if path.startswith("/tin-tuc/"):
-        return "Tin tức BĐS Bình Dương"
     if path.startswith("/kien-thuc/"):
-        return "Tin tức BĐS Bình Dương"
+        return "Kiến thức BĐS Bình Dương"
     if path.startswith("/bao-cao/"):
         period = ((page.get("report") or {}).get("period") or "").strip()
         return f"Báo cáo {period}" if period else "Báo cáo thị trường"
@@ -1331,10 +1329,8 @@ def _page_breadcrumbs(page: dict) -> list[dict]:
 
     if path.startswith("/binh-duong/"):
         breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
-    elif path.startswith("/tin-tuc/"):
-        breadcrumbs.append({"name": "Tin tức", "href": "/tin-tuc"})
     elif path.startswith("/kien-thuc/"):
-        breadcrumbs.append({"name": "Tin tức", "href": "/tin-tuc"})
+        breadcrumbs.append({"name": "Kiến thức", "href": "/kien-thuc"})
     elif path.startswith("/bao-cao/"):
         breadcrumbs.append({"name": "Báo cáo", "href": "/bao-cao"})
 
@@ -1413,12 +1409,17 @@ def api_tphcm_land_prices():
     q = _search_key(request.args.get("q", ""))
     area = request.args.get("area", "").strip()
     area_key = _search_key(area)
+    area_words = area_key.split()
     words = q.split()
-    limit = max(1, min(int(request.args.get("limit", 50) or 50), 100))
+    try:
+        limit = max(1, min(int(request.args.get("limit", 50) or 50), 100))
+    except ValueError:
+        limit = 50
 
     matches = []
     for row in rows:
-        if area_key and _search_key(row.get("area", "")) != area_key:
+        row_area_key = _search_key(row.get("area", ""))
+        if area_words and not all(word in row_area_key for word in area_words):
             continue
         haystack = row.get("search") or _search_key(" ".join(str(row.get(k) or "") for k in ("area", "street", "from", "to")))
         if words and not all(word in haystack for word in words):
@@ -1453,8 +1454,8 @@ def _active_public_nav(path: str) -> str:
         return "dinh-gia"
     if path.startswith("/bao-cao"):
         return "bao-cao"
-    if path.startswith("/tin-tuc") or path.startswith("/kien-thuc"):
-        return "tin-tuc"
+    if path.startswith("/kien-thuc"):
+        return "kien-thuc"
     if path == "/san-deal-bds":
         return "san-deal"
     return "binh-duong"
@@ -1699,7 +1700,7 @@ def seo_knowledge_hub_page():
         (
             dict(item)
             for slug, item in SEO_ARTICLES.items()
-            if slug != page["featured_slug"] and str(item.get("path") or "").startswith("/tin-tuc/")
+            if slug != page["featured_slug"] and str(item.get("path") or "").startswith("/kien-thuc/")
         ),
         key=lambda item: ((item.get("article") or {}).get("modified_at", ""), (item.get("article") or {}).get("published_at", "")),
         reverse=True,
@@ -1711,16 +1712,12 @@ def seo_knowledge_hub_page():
         featured=featured,
         articles=articles,
         site_meta=site_meta,
-        active_nav="tin-tuc",
+        active_nav="kien-thuc",
     )
 
 
 def seo_knowledge_legacy_redirect():
-    query = request.query_string.decode("ascii", errors="ignore")
-    target = "/tin-tuc"
-    if query:
-        target = f"{target}?{query}"
-    return redirect(target, code=301)
+    abort(404)
 
 
 def seo_report_or_article_page(report_slug: str):

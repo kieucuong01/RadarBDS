@@ -2,9 +2,12 @@
   const form = document.getElementById('landPriceSearch');
   const query = document.getElementById('landPriceQuery');
   const area = document.getElementById('landPriceArea');
+  const suggestionsEl = document.getElementById('keywordSuggestions');
   const rowsEl = document.getElementById('landPriceRows');
   const statusEl = document.getElementById('landPriceStatus');
   if (!form || !query || !area || !rowsEl || !statusEl) return;
+  let suggestTimer = 0;
+  let suggestRequest = 0;
 
   function esc(value) {
     return String(value || '').replace(/[&<>"']/g, (ch) => ({
@@ -35,12 +38,68 @@
     `).join('');
   }
 
+  function hideSuggestions() {
+    if (!suggestionsEl) return;
+    suggestionsEl.hidden = true;
+    suggestionsEl.innerHTML = '';
+    query.setAttribute('aria-expanded', 'false');
+  }
+
+  function renderSuggestions(items, requestId) {
+    if (!suggestionsEl || requestId !== suggestRequest) return;
+    const seen = new Set();
+    const suggestions = [];
+    items.forEach((item) => {
+      const key = `${item.street || ''}|${item.area || ''}`;
+      if (!item.street || seen.has(key)) return;
+      seen.add(key);
+      suggestions.push(item);
+    });
+
+    if (!suggestions.length) {
+      hideSuggestions();
+      return;
+    }
+
+    suggestionsEl.innerHTML = suggestions.map((item) => `
+      <button type="button" class="keyword-suggestion" data-street="${esc(item.street)}" data-area="${esc(item.area)}">
+        <strong>${esc(item.street)}</strong>
+        <small>${esc(item.area)}${item.from ? ` · từ ${esc(item.from)}` : ''}</small>
+      </button>
+    `).join('');
+    suggestionsEl.hidden = false;
+    query.setAttribute('aria-expanded', 'true');
+  }
+
+  async function suggest() {
+    const value = query.value.trim();
+    if (value.length < 2) {
+      hideSuggestions();
+      return;
+    }
+    const requestId = ++suggestRequest;
+    const params = new URLSearchParams({
+      q: value,
+      area: area.value.trim(),
+      limit: '8',
+    });
+    try {
+      const res = await fetch(`/api/tphcm-land-prices?${params.toString()}`, { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      renderSuggestions(data.items || [], requestId);
+    } catch (_) {
+      hideSuggestions();
+    }
+  }
+
   async function search() {
     const params = new URLSearchParams({
       q: query.value.trim(),
-      area: area.value,
+      area: area.value.trim(),
       limit: '80',
     });
+    hideSuggestions();
     statusEl.textContent = 'Đang tra cứu...';
     const res = await fetch(`/api/tphcm-land-prices?${params.toString()}`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`search ${res.status}`);
@@ -56,10 +115,37 @@
     });
   });
 
+  query.addEventListener('input', () => {
+    clearTimeout(suggestTimer);
+    suggestTimer = window.setTimeout(suggest, 180);
+  });
+
+  area.addEventListener('input', () => {
+    clearTimeout(suggestTimer);
+    suggestTimer = window.setTimeout(suggest, 180);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (form.contains(event.target)) return;
+    hideSuggestions();
+  });
+
+  if (suggestionsEl) {
+    suggestionsEl.addEventListener('click', (event) => {
+      const btn = event.target.closest('.keyword-suggestion');
+      if (!btn) return;
+      query.value = btn.dataset.street || '';
+      area.value = btn.dataset.area || '';
+      hideSuggestions();
+      form.requestSubmit();
+    });
+  }
+
   document.querySelectorAll('.quick-searches button').forEach((btn) => {
     btn.addEventListener('click', () => {
       query.value = btn.dataset.query || '';
       area.value = btn.dataset.area || '';
+      hideSuggestions();
       form.requestSubmit();
     });
   });

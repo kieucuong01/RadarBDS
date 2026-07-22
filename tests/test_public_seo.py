@@ -303,12 +303,9 @@ def test_knowledge_articles_render_editorial_content_without_internal_marketing_
         sitemap = radar_app.sitemap_xml().get_data(as_text=True)
 
     editorial_slugs = [
-        "ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra",
-        "dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
-        "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia",
-        "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin",
-        "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia",
-        "nha-dat-ben-cat-binh-duong-cach-tach-my-phuoc-tan-dinh-thoi-hoa-truoc-khi-so-gia",
+        slug
+        for slug, article in SEO_ARTICLES.items()
+        if str(article.get("path") or "").startswith("/kien-thuc/")
     ]
 
     for slug in editorial_slugs:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from flask import Blueprint
+from flask import Blueprint, abort
 
 bp = Blueprint("public", __name__)
 
@@ -80,17 +80,17 @@ def seo_san_deal_bds(**kwargs):
 
 @bp.route("/tin-tuc")
 def seo_news_index(**kwargs):
-    return _impl("seo_knowledge_hub_page", **kwargs)
+    abort(404)
 
 
 @bp.route("/tin-tuc/<path:article_slug>")
 def seo_news_article(article_slug, **kwargs):
-    return _impl("seo_article_page", slug=article_slug, **kwargs)
+    abort(404)
 
 
 @bp.route("/kien-thuc")
 def seo_knowledge_index(**kwargs):
-    return _impl("seo_knowledge_legacy_redirect", **kwargs)
+    return _impl("seo_knowledge_hub_page", **kwargs)
 
 
 @bp.route("/kien-thuc/<path:article_slug>")
