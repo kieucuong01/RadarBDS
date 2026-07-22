@@ -1133,3 +1133,16 @@ _rb_prepend_unique_page_link("bao-cao/phu-tan-thang-07-2026", _MASTER_REPORT_LIN
 _rb_prepend_unique_page_link("san-deal-bds", _PHU_TAN_ARTICLE_LINK)
 _rb_prepend_unique_page_link("san-deal-bds", _PHU_TAN_REPORT_LINK)
 _rb_prepend_unique_page_link("binh-duong/thu-dau-mot", _PHU_TAN_ARTICLE_LINK)
+
+# --- Hermes Dinh Hoa article internal links 2026-07-22 ---
+def _rb_prepend_unique_link_dinh_hoa_demo(page_key, link):
+    page = SEO_PAGES.get(page_key)
+    if not page:
+        return
+    links = page.setdefault("local_links", [])
+    if not any(item.get("href") == link.get("href") for item in links):
+        links.insert(0, link)
+
+_dinh_hoa_article_link = {"label": "Giá đất Định Hòa tháng 7/2026", "href": "/kien-thuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Bài mới có bảng giá, biểu đồ và cách đọc theo loại hình."}
+for _key in ["bao-cao/dinh-hoa-thang-07-2026", "binh-duong/phuong-dinh-hoa", "binh-duong/thu-dau-mot", "bao-cao/bds-binh-duong-thang-07-2026"]:
+    _rb_prepend_unique_link_dinh_hoa_demo(_key, _dinh_hoa_article_link)

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" role="img" aria-labelledby="title desc">
+  <title id="title">Minh họa cách đọc giá đất Định Hòa Thủ Dầu Một từ dữ liệu Radar BDS</title>
+  <desc id="desc">Sơ đồ dữ liệu Định Hòa: 901 tin active, tách đất nền và nhà đất, so với Phú Tân và Hiệp An.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ecfeff"/><stop offset="1" stop-color="#f0fdf4"/></linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#f8fafc"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#0f172a" flood-opacity="0.12"/></filter>
+  </defs>
+  <rect width="1200" height="640" rx="36" fill="url(#bg)"/>
+  <circle cx="1040" cy="92" r="160" fill="#0ea5e9" opacity="0.10"/>
+  <circle cx="130" cy="560" r="190" fill="#10b981" opacity="0.12"/>
+  <text x="72" y="82" font-family="Arial, sans-serif" font-size="34" font-weight="800" fill="#0f241c">Định Hòa: đọc giá theo loại hình, không gom một mặt bằng chung</text>
+  <text x="72" y="122" font-family="Arial, sans-serif" font-size="18" fill="#475569">Nguồn: Radar BDS · Facebook active · cập nhật đến 20/07/2026</text>
+  <g filter="url(#shadow)"><rect x="70" y="172" width="248" height="300" rx="24" fill="url(#card)"/>
+    <text x="100" y="220" font-family="Arial" font-size="18" font-weight="700" fill="#0f766e">1 · Nguồn cung</text>
+    <text x="100" y="288" font-family="Arial" font-size="56" font-weight="900" fill="#10211b">901</text>
+    <text x="100" y="322" font-family="Arial" font-size="20" fill="#334155">tin active Định Hòa</text>
+    <text x="100" y="378" font-family="Arial" font-size="44" font-weight="900" fill="#0f766e">120</text>
+    <text x="100" y="410" font-family="Arial" font-size="18" fill="#334155">tín hiệu hot/giảm giá</text>
+  </g>
+  <path d="M335 322 C382 322, 400 322, 445 322" stroke="#0f766e" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M430 302 L460 322 L430 342" fill="none" stroke="#0f766e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <g filter="url(#shadow)"><rect x="475" y="172" width="312" height="300" rx="24" fill="url(#card)"/>
+    <text x="505" y="220" font-family="Arial" font-size="18" font-weight="700" fill="#0f766e">2 · Tách loại hình</text>
+    <text x="505" y="278" font-family="Arial" font-size="28" font-weight="900" fill="#10211b">Đất nền</text>
+    <text x="660" y="278" font-family="Arial" font-size="28" font-weight="900" fill="#0f766e">15,2 tr/m²</text>
+    <rect x="505" y="300" width="166" height="16" rx="8" fill="#10b981" opacity="0.9"/>
+    <text x="505" y="350" font-family="Arial" font-size="28" font-weight="900" fill="#10211b">Nhà đất</text>
+    <text x="660" y="350" font-family="Arial" font-size="28" font-weight="900" fill="#0284c7">32,7 tr/m²</text>
+    <rect x="505" y="372" width="260" height="16" rx="8" fill="#0284c7" opacity="0.9"/>
+    <text x="505" y="424" font-family="Arial" font-size="17" fill="#475569">Đất nền mềm hơn Phú Tân, nhà đất vẫn cần tách riêng.</text>
+  </g>
+  <path d="M805 322 C850 322, 868 322, 910 322" stroke="#0f766e" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M895 302 L925 322 L895 342" fill="none" stroke="#0f766e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <g filter="url(#shadow)"><rect x="938" y="172" width="198" height="300" rx="24" fill="url(#card)"/>
+    <text x="966" y="220" font-family="Arial" font-size="18" font-weight="700" fill="#0f766e">3 · So sánh</text>
+    <text x="966" y="286" font-family="Arial" font-size="22" font-weight="900" fill="#10211b">Phú Tân</text>
+    <text x="966" y="316" font-family="Arial" font-size="18" fill="#475569">nhiều tín hiệu hơn</text>
+    <text x="966" y="372" font-family="Arial" font-size="22" font-weight="900" fill="#10211b">Hiệp An</text>
+    <text x="966" y="402" font-family="Arial" font-size="18" fill="#475569">nguồn cung lớn hơn</text>
+  </g>
+  <text x="72" y="560" font-family="Arial" font-size="17" fill="#475569">Radar BDS là bộ lọc dữ liệu ban đầu, không thay thế thẩm định pháp lý, quy hoạch hoặc kiểm tra thực địa.</text>
+</svg>
