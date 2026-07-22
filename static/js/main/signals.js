@@ -199,7 +199,9 @@ function savedListingToSignalCard(data) {
     legal_status: data.legal_status,
     legal_flags: data.legal_flags,
     days_ago: data.days_ago,
+    primary_img: images[0] || '',
     primary_image: images[0] || '',
+    imgs: images,
     images,
   };
 }

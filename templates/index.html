@@ -44,7 +44,7 @@
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-input-zoom-20260612' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=mobile-perf-lazy-20260611' %}
   {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=pagespeed-a11y-20260611' %}
-  {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=saved-listings-page-20260716' %}
+  {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=saved-listings-header-images-20260722' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=favorite-listings-20260715' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
   {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=mobile-command-bar-20260624' %}
@@ -300,6 +300,12 @@
           <path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z" />
         </svg>
       </button>
+      {% if saved_page %}
+      <a class="saved-header-brand" href="/" aria-label="Về Radar BDS">
+        <img src="{{ url_for('static', filename='images/app-icon-192.png') }}" alt="" width="34" height="34">
+        <span>Radar<strong>BDS</strong></span>
+      </a>
+      {% endif %}
       <div class="mobile-app-title" aria-live="polite">
         <span>Radar BDS</span>
         <strong id="mobileActiveTabTitle">{% if saved_page %}BDS đã lưu{% else %}Săn Deal{% endif %}</strong>
@@ -1228,7 +1234,7 @@
 
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-perf-82-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=loader-font-fix-20260611"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-listings-page-20260716"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-listings-header-images-20260722"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=saved-listings-page-20260716"></script>
 </body>
 

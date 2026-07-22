@@ -147,6 +147,12 @@ class FavoriteListingsTest(unittest.TestCase):
         self.assertIn('id="savedListingsGrid"', html)
         self.assertIn('id="signalModal"', html)
         self.assertIn("loadSavedListingsPage(true)", html)
+        self.assertIn("saved-header-brand", html)
+        self.assertIn("saved-listings-header-images-20260722", html)
+
+        signals_js = (Path(__file__).resolve().parent.parent / "static" / "js" / "main" / "signals.js").read_text(encoding="utf-8")
+        self.assertIn("primary_img: images[0] || ''", signals_js)
+        self.assertIn("imgs: images", signals_js)
 
     def test_account_menu_links_to_saved_listings_after_watchlist(self):
         self._login_as_free()
