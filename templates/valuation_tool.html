@@ -16,8 +16,9 @@
   <meta property="og:type" content="website">
   {% include "partials/google_site_tags.html" %}
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=valuation-tool-shared-header-20260722">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=valuation-tool-auth-20260722">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=valuation-tool-seo-20260722">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=valuation-tool-shared-ui-20260722">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -100,30 +101,11 @@
   </script>
 </head>
 
-<body>
+<body class="seo-page valuation-page">
   {% set tier_display = 'Gói Free' if USER_TIER == 'free' else ('VIP' if USER_TIER == 'vip' else ('Admin' if USER_TIER == 'admin' else 'Khách')) %}
-  <a class="skip-link" href="#valuationForm">Bỏ qua đến công cụ định giá</a>
-  <header class="tool-header">
-    <a class="brand" href="/" aria-label="Radar BDS">
-      <img src="{{ url_for('static', filename='images/logo-80.webp') }}" alt="">
-      <span>
-        <strong>Radar BDS</strong>
-        <small>Dữ liệu bất động sản Bình Dương</small>
-      </span>
-    </a>
-    <nav class="tool-nav" aria-label="Điều hướng chính">
-      <a href="/binh-duong">Thị trường</a>
-      <a href="/san-deal-bds">Phương pháp</a>
-      <a href="/">Dashboard</a>
-      {% if USER %}
-      <button type="button" class="account-pill" onclick="RadarAuth.logout()">{{ tier_display }} · Đăng xuất</button>
-      {% else %}
-      <button type="button" class="account-pill" onclick="RadarAuth.openAuthModal('Đăng nhập để chạy định giá lô đất.')">Đăng nhập</button>
-      {% endif %}
-    </nav>
-  </header>
+  {% include "partials/seo_header.html" %}
 
-  <main>
+  <main id="main-content">
     <section class="hero-band">
       <div class="tool-shell hero-grid">
         <div class="hero-copy">

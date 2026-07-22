@@ -1359,6 +1359,7 @@ def valuation_tool_page():
         "valuation_tool.html",
         wards_by_city=CITY_MAP,
         required_tier=VALUATION_TOOL_MIN_TIER,
+        active_nav="dinh-gia",
         site_meta=_site_meta(
             "/dinh-gia-bds",
             title="Định giá đất Bình Dương online | Radar BDS",
@@ -1378,6 +1379,8 @@ def seo_binh_duong_landing():
 
 
 def _active_public_nav(path: str) -> str:
+    if path == "/dinh-gia-bds":
+        return "dinh-gia"
     if path.startswith("/bao-cao"):
         return "bao-cao"
     if path.startswith("/kien-thuc"):
