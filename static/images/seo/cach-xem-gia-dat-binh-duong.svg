@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Cách xem giá đất Bình Dương không bị so sai</title>
+  <desc id="desc">Minh họa 3 bước: tách khu vực, tách loại hình, rồi mới so giá trên Radar BDS.</desc>
+  <rect width="1200" height="630" rx="40" fill="#f8fafc"/>
+  <rect x="52" y="52" width="1096" height="526" rx="32" fill="#ffffff" stroke="#dbeafe" stroke-width="3"/>
+  <text x="90" y="125" font-family="Arial, sans-serif" font-size="42" font-weight="800" fill="#0f172a">Đừng lấy một giá chung để so nhà đất</text>
+  <text x="90" y="168" font-family="Arial, sans-serif" font-size="24" fill="#475569">Dữ liệu Thủ Dầu Một · 8.235 tin đang theo dõi · cập nhật 2026-07-20</text>
+  <g transform="translate(90 235)">
+    <rect width="280" height="230" rx="24" fill="#ecfeff" stroke="#06b6d4"/>
+    <text x="30" y="56" font-family="Arial" font-size="24" font-weight="700" fill="#155e75">1. Tách phường</text>
+    <text x="30" y="105" font-family="Arial" font-size="22" fill="#0f172a">Hiệp An, Định Hòa,</text>
+    <text x="30" y="138" font-family="Arial" font-size="22" fill="#0f172a">Phú Mỹ, Phú Tân...</text>
+    <text x="30" y="188" font-family="Arial" font-size="19" fill="#475569">Mỗi nơi một mặt bằng giá</text>
+  </g>
+  <g transform="translate(460 235)">
+    <rect width="280" height="230" rx="24" fill="#f0fdf4" stroke="#22c55e"/>
+    <text x="30" y="56" font-family="Arial" font-size="24" font-weight="700" fill="#166534">2. Tách loại hình</text>
+    <text x="30" y="105" font-family="Arial" font-size="22" fill="#0f172a">Đất nền: 19,6 tr/m²</text>
+    <text x="30" y="138" font-family="Arial" font-size="22" fill="#0f172a">Nhà đất: 30,7 tr/m²</text>
+    <text x="30" y="188" font-family="Arial" font-size="19" fill="#475569">Không gộp chung rồi kết luận</text>
+  </g>
+  <g transform="translate(830 235)">
+    <rect width="280" height="230" rx="24" fill="#fff7ed" stroke="#f97316"/>
+    <text x="30" y="56" font-family="Arial" font-size="24" font-weight="700" fill="#9a3412">3. So dấu hiệu</text>
+    <text x="30" y="105" font-family="Arial" font-size="22" fill="#0f172a">1.060 dấu hiệu</text>
+    <text x="30" y="138" font-family="Arial" font-size="22" fill="#0f172a">đáng chú ý</text>
+    <text x="30" y="188" font-family="Arial" font-size="19" fill="#475569">Rồi mới chọn tin để kiểm tra</text>
+  </g>
+  <text x="90" y="540" font-family="Arial" font-size="22" fill="#334155">Radar BDS giúp đọc giá theo dữ liệu tin rao, không thay kiểm tra pháp lý và thực tế miếng đất.</text>
+</svg>

@@ -72,8 +72,8 @@
     "@graph": [
       {"@type": "CollectionPage", "name": {{ page.hero_title|tojson }}, "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.description|tojson }}},
       {"@type": "ItemList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": {{ featured.hero_title|tojson }}, "url": {{ (site_meta.canonical_url.rsplit('/kien-thuc', 1)[0] ~ featured.path)|tojson }}}
-        {% for article in articles %},{"@type": "ListItem", "position": {{ loop.index + 1 }}, "name": {{ article.hero_title|tojson }}, "url": {{ (site_meta.canonical_url.rsplit('/kien-thuc', 1)[0] ~ article.path)|tojson }}}{% endfor %}
+        {"@type": "ListItem", "position": 1, "name": {{ featured.hero_title|tojson }}, "url": {{ (site_meta.canonical_url.rsplit('/tin-tuc', 1)[0] ~ featured.path)|tojson }}}
+        {% for article in articles %},{"@type": "ListItem", "position": {{ loop.index + 1 }}, "name": {{ article.hero_title|tojson }}, "url": {{ (site_meta.canonical_url.rsplit('/tin-tuc', 1)[0] ~ article.path)|tojson }}}{% endfor %}
       ]},
       {"@type": "BreadcrumbList", "itemListElement": [
         {% for crumb in page.breadcrumbs %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ crumb.name|tojson }}, "item": {{ crumb.url|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
