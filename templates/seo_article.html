@@ -24,6 +24,79 @@
           {% for paragraph in page.article.intro %}<p>{{ paragraph }}</p>{% endfor %}
         </section>
 
+        {% if page.article.summary_cards %}
+        <section class="article-data-overview" aria-label="Tóm tắt số liệu chính">
+          {% for card in page.article.summary_cards %}
+          <article>
+            <span>{{ card.label }}</span>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.note }}</p>
+          </article>
+          {% endfor %}
+        </section>
+        {% endif %}
+
+        {% if page.article.illustration %}
+        <figure class="article-visual-figure">
+          <img src="{{ page.article.illustration.src }}" alt="{{ page.article.illustration.alt }}" loading="lazy" decoding="async">
+          <figcaption>{{ page.article.illustration.caption }}</figcaption>
+        </figure>
+        {% endif %}
+
+        {% if page.article.data_tables %}
+        <section class="article-data-tables" aria-label="Bảng dữ liệu trong bài">
+          {% for table in page.article.data_tables %}
+          <article class="article-data-table-card">
+            <div class="article-data-table-head">
+              <p class="seo-eyebrow">{{ table.eyebrow }}</p>
+              <h2>{{ table.title }}</h2>
+              <p>{{ table.note }}</p>
+            </div>
+            <div class="article-data-table-wrap">
+              <table class="article-data-table">
+                <thead>
+                  <tr>
+                    {% for column in table.columns %}<th scope="col">{{ column.label }}</th>{% endfor %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in table.rows %}
+                  <tr>
+                    {% for column in table.columns %}
+                    {% if loop.first %}<th scope="row">{{ row[column.key] }}</th>{% else %}<td>{{ row[column.key] }}</td>{% endif %}
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </article>
+          {% endfor %}
+        </section>
+        {% endif %}
+
+        {% if page.article.charts %}
+        <section class="article-chart-section" aria-label="Biểu đồ dữ liệu trong bài">
+          {% for chart in page.article.charts %}
+          <article class="article-chart-card">
+            <div class="article-chart-head">
+              <p class="seo-eyebrow">{{ chart.eyebrow }}</p>
+              <h2>{{ chart.title }}</h2>
+              <p>{{ chart.note }}</p>
+            </div>
+            <div class="article-bar-chart" role="img" aria-label="{{ chart.alt }}">
+              {% for row in chart.rows %}
+              <div class="article-bar-row" style="--bar-width: {{ row.width }}%; --bar-color: {{ row.color }};">
+                <div class="article-bar-label"><span>{{ row.label }}</span><strong>{{ row.value_label }}</strong></div>
+                <div class="article-bar-track"><span></span></div>
+              </div>
+              {% endfor %}
+            </div>
+          </article>
+          {% endfor %}
+        </section>
+        {% endif %}
+
         <nav class="article-toc" aria-labelledby="toc-title">
           <h2 id="toc-title">Trong bài này</h2>
           <ol>

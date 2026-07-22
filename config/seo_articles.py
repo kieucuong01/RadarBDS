@@ -2236,3 +2236,287 @@ _rb_prepend_unique_article_link(
     "nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia",
     {"label": "Giá đất Phú Tân", "href": "/kien-thuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Một phường nhiều tín hiệu để so cùng nhóm Thủ Dầu Một."},
 )
+
+# --- Hermes Phu Tan visual enrichment 2026-07-22 ---
+SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"].update({
+    "summary_cards": [
+        {
+            "label": "Tin active",
+            "value": "708",
+            "note": "Facebook active tại Phú Tân"
+        },
+        {
+            "label": "Tín hiệu",
+            "value": "321",
+            "note": "hot hoặc giảm giá cần lọc tiếp"
+        },
+        {
+            "label": "Đất nền",
+            "value": "23,8 tr/m²",
+            "note": "trung vị từ 383 tin có giá/m²"
+        },
+        {
+            "label": "Nhà đất",
+            "value": "34,8 tr/m²",
+            "note": "trung vị từ 67 tin có giá/m²"
+        }
+    ],
+    "illustration": {
+        "src": "/static/images/seo/phu-tan-data-visual.svg",
+        "alt": "Sơ đồ minh họa cách đọc giá đất Phú Tân từ dữ liệu active, tách loại hình rồi lọc tín hiệu trên dashboard",
+        "caption": "Minh họa luồng đọc dữ liệu: bắt đầu từ 708 tin active, tách đất nền/nhà đất, sau đó mở dashboard để lọc các tín hiệu đáng kiểm tra."
+    },
+    "data_tables": [
+        {
+            "eyebrow": "Bảng dữ liệu thật",
+            "title": "Giá Phú Tân theo loại hình bất động sản",
+            "note": "Giá/m² và tổng giá đều là trung vị từ dữ liệu Facebook active đã lọc; không dùng một giá chung cho toàn phường.",
+            "columns": [
+                {
+                    "key": "type",
+                    "label": "Loại hình"
+                },
+                {
+                    "key": "active",
+                    "label": "Tin active"
+                },
+                {
+                    "key": "priced",
+                    "label": "Tin có giá/m²"
+                },
+                {
+                    "key": "median_ppm2",
+                    "label": "Trung vị giá/m²"
+                },
+                {
+                    "key": "range_ppm2",
+                    "label": "Vùng giữa 25-75%"
+                },
+                {
+                    "key": "median_total",
+                    "label": "Tổng giá trung vị"
+                },
+                {
+                    "key": "signals",
+                    "label": "Tín hiệu"
+                }
+            ],
+            "rows": [
+                {
+                    "type": "Đất nền",
+                    "active": "511",
+                    "priced": "383",
+                    "median_ppm2": "23,8 tr/m²",
+                    "range_ppm2": "20,8-26,2 tr/m²",
+                    "median_total": "2,9 tỷ",
+                    "signals": "248"
+                },
+                {
+                    "type": "Nhà đất",
+                    "active": "98",
+                    "priced": "67",
+                    "median_ppm2": "34,8 tr/m²",
+                    "range_ppm2": "25,7-40,7 tr/m²",
+                    "median_total": "4,0 tỷ",
+                    "signals": "41"
+                },
+                {
+                    "type": "Kho xưởng",
+                    "active": "76",
+                    "priced": "49",
+                    "median_ppm2": "38,7 tr/m²",
+                    "range_ppm2": "38,7-42,0 tr/m²",
+                    "median_total": "2,9 tỷ",
+                    "signals": "10"
+                },
+                {
+                    "type": "Nhà trọ",
+                    "active": "2",
+                    "priced": "2",
+                    "median_ppm2": "20,0 tr/m²",
+                    "range_ppm2": "20,0-20,0 tr/m²",
+                    "median_total": "3,0 tỷ",
+                    "signals": "2"
+                }
+            ]
+        },
+        {
+            "eyebrow": "Bảng so sánh",
+            "title": "Phú Tân so với các phường nên mở cùng lúc",
+            "note": "So cùng loại hình: đất nền với đất nền, nhà đất với nhà đất. Đây là giá rao trung vị từ nhóm active hiện hành.",
+            "columns": [
+                {
+                    "key": "ward",
+                    "label": "Phường"
+                },
+                {
+                    "key": "active",
+                    "label": "Tin active"
+                },
+                {
+                    "key": "signals",
+                    "label": "Tín hiệu"
+                },
+                {
+                    "key": "dat_nen",
+                    "label": "Đất nền"
+                },
+                {
+                    "key": "nha_dat",
+                    "label": "Nhà đất"
+                },
+                {
+                    "key": "note",
+                    "label": "Cách đọc nhanh"
+                }
+            ],
+            "rows": [
+                {
+                    "ward": "Phú Tân",
+                    "active": "708",
+                    "signals": "321",
+                    "dat_nen": "23,8 tr/m² · 2,9 tỷ",
+                    "nha_dat": "34,8 tr/m² · 4,0 tỷ",
+                    "note": "Nhiều tín hiệu nhất, nên theo dõi riêng"
+                },
+                {
+                    "ward": "Phú Mỹ",
+                    "active": "866",
+                    "signals": "126",
+                    "dat_nen": "22,3 tr/m² · 2,85 tỷ",
+                    "nha_dat": "39,5 tr/m² · 3,55 tỷ",
+                    "note": "Đất nền gần Phú Tân, nhà đất cao hơn"
+                },
+                {
+                    "ward": "Định Hòa",
+                    "active": "896",
+                    "signals": "122",
+                    "dat_nen": "15,2 tr/m² · 2,38 tỷ",
+                    "nha_dat": "32,7 tr/m² · 2,65 tỷ",
+                    "note": "Nguồn cung lớn, giá đất nền mềm hơn"
+                },
+                {
+                    "ward": "Hiệp An",
+                    "active": "1.359",
+                    "signals": "101",
+                    "dat_nen": "15,9 tr/m² · 2,19 tỷ",
+                    "nha_dat": "21,1 tr/m² · 2,39 tỷ",
+                    "note": "Nguồn cung lớn nhất, giá nhà đất thấp hơn"
+                },
+                {
+                    "ward": "Phú Lợi",
+                    "active": "468",
+                    "signals": "69",
+                    "dat_nen": "30,9 tr/m² · 3,45 tỷ",
+                    "nha_dat": "40,2 tr/m² · 3,8 tỷ",
+                    "note": "Mặt bằng đất nền cao hơn Phú Tân"
+                }
+            ]
+        }
+    ],
+    "charts": [
+        {
+            "eyebrow": "Biểu đồ giá/m²",
+            "title": "Trung vị giá/m² theo loại hình tại Phú Tân",
+            "note": "Kho xưởng và nhà đất có đơn giá cao hơn đất nền; vì vậy không nên gom một mức giá chung.",
+            "alt": "Biểu đồ thanh so sánh giá/m² trung vị: đất nền 23,8, nhà đất 34,8, kho xưởng 38,7, nhà trọ 20,0 triệu mỗi mét vuông.",
+            "rows": [
+                {
+                    "label": "Kho xưởng",
+                    "value_label": "38,7 tr/m²",
+                    "width": 100,
+                    "color": "#0284c7"
+                },
+                {
+                    "label": "Nhà đất",
+                    "value_label": "34,8 tr/m²",
+                    "width": 90,
+                    "color": "#0f766e"
+                },
+                {
+                    "label": "Đất nền",
+                    "value_label": "23,8 tr/m²",
+                    "width": 62,
+                    "color": "#14b8a6"
+                },
+                {
+                    "label": "Nhà trọ",
+                    "value_label": "20,0 tr/m²",
+                    "width": 52,
+                    "color": "#f59e0b"
+                }
+            ]
+        },
+        {
+            "eyebrow": "Biểu đồ nguồn cung",
+            "title": "Tin active Phú Tân theo loại hình",
+            "note": "Đất nền là phân khúc chính, chiếm phần lớn nguồn cung active.",
+            "alt": "Biểu đồ thanh nguồn cung active: đất nền 511 tin, nhà đất 98 tin, kho xưởng 76 tin, nhà trọ 2 tin.",
+            "rows": [
+                {
+                    "label": "Đất nền",
+                    "value_label": "511 tin",
+                    "width": 100,
+                    "color": "#14b8a6"
+                },
+                {
+                    "label": "Nhà đất",
+                    "value_label": "98 tin",
+                    "width": 19,
+                    "color": "#0f766e"
+                },
+                {
+                    "label": "Kho xưởng",
+                    "value_label": "76 tin",
+                    "width": 15,
+                    "color": "#0284c7"
+                },
+                {
+                    "label": "Nhà trọ",
+                    "value_label": "2 tin",
+                    "width": 2,
+                    "color": "#f59e0b"
+                }
+            ]
+        },
+        {
+            "eyebrow": "Biểu đồ tín hiệu",
+            "title": "Tín hiệu theo phường nên so cùng Phú Tân",
+            "note": "Phú Tân nổi bật vì số tín hiệu cao hơn rõ so với nhóm phường so sánh.",
+            "alt": "Biểu đồ tín hiệu: Phú Tân 321, Phú Mỹ 126, Định Hòa 122, Hiệp An 101, Phú Lợi 69.",
+            "rows": [
+                {
+                    "label": "Phú Tân",
+                    "value_label": "321",
+                    "width": 100,
+                    "color": "#0f766e"
+                },
+                {
+                    "label": "Phú Mỹ",
+                    "value_label": "126",
+                    "width": 39,
+                    "color": "#14b8a6"
+                },
+                {
+                    "label": "Định Hòa",
+                    "value_label": "122",
+                    "width": 38,
+                    "color": "#0284c7"
+                },
+                {
+                    "label": "Hiệp An",
+                    "value_label": "101",
+                    "width": 31,
+                    "color": "#64748b"
+                },
+                {
+                    "label": "Phú Lợi",
+                    "value_label": "69",
+                    "width": 21,
+                    "color": "#f59e0b"
+                }
+            ]
+        }
+    ]
+})
+SEO_ARTICLES["gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"]["article"]["modified_at"] = "2026-07-22"
