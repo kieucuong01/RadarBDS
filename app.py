@@ -12,6 +12,7 @@ import time
 import urllib.request
 import urllib.parse
 import threading
+import unicodedata
 from copy import deepcopy
 from functools import wraps
 from datetime import datetime, timedelta, timezone
@@ -1257,6 +1258,8 @@ def api_delete_watchlist(wid):
 
 # Serve local downloaded images (data/images/<filename>)
 _DATA_IMAGES_DIR = Path(__file__).parent / "data" / "images"
+_TPHCM_LAND_PRICE_DATA = Path(__file__).parent / "static" / "data" / "tphcm_land_prices_2026.json"
+_TPHCM_LAND_PRICE_CACHE = {"mtime": None, "payload": None}
 
 def _public_url(path="/"):
     path = "/" + str(path or "/").lstrip("/")
@@ -1275,6 +1278,20 @@ def _site_meta(path="/", *, title=None, description=None, keywords=None):
         "og_image": SITE_OG_IMAGE,
         "base_url": PUBLIC_BASE_URL.rstrip("/"),
     }
+
+
+def _search_key(value: str) -> str:
+    text = unicodedata.normalize("NFD", str(value or "").lower())
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn").replace("đ", "d")
+    return re.sub(r"[^a-z0-9]+", " ", text).strip()
+
+
+def _load_tphcm_land_price_data() -> dict:
+    mtime = _TPHCM_LAND_PRICE_DATA.stat().st_mtime
+    if _TPHCM_LAND_PRICE_CACHE["mtime"] != mtime:
+        _TPHCM_LAND_PRICE_CACHE["payload"] = json.loads(_TPHCM_LAND_PRICE_DATA.read_text(encoding="utf-8"))
+        _TPHCM_LAND_PRICE_CACHE["mtime"] = mtime
+    return _TPHCM_LAND_PRICE_CACHE["payload"]
 
 
 def _page_breadcrumb_label(page: dict) -> str:
@@ -1369,6 +1386,53 @@ def valuation_tool_page():
     )
 
 
+def tphcm_land_price_tool_page():
+    data = _load_tphcm_land_price_data()
+    areas = sorted({r.get("area", "") for r in data.get("rows", []) if r.get("area")})
+    return render_template(
+        "tphcm_land_price_tool.html",
+        active_nav="bang-gia-dat",
+        areas=areas,
+        row_count=len(data.get("rows", [])),
+        site_meta=_site_meta(
+            "/bang-gia-dat-tphcm",
+            title="Tra cứu bảng giá đất TP.HCM mới 2026 | Radar BDS",
+            description="Công cụ tra cứu bảng giá đất TP.HCM mới theo Nghị quyết 87/2025/NQ-HĐND, áp dụng từ ngày 01/01/2026.",
+            keywords="bảng giá đất TP.HCM 2026, bảng giá đất TPHCM mới, tra cứu giá đất TP.HCM, Nghị quyết 87/2025/NQ-HĐND",
+        ),
+    )
+
+
+def api_tphcm_land_prices():
+    data = _load_tphcm_land_price_data()
+    rows = data.get("rows", [])
+    q = _search_key(request.args.get("q", ""))
+    area = request.args.get("area", "").strip()
+    area_key = _search_key(area)
+    words = q.split()
+    limit = max(1, min(int(request.args.get("limit", 50) or 50), 100))
+
+    matches = []
+    for row in rows:
+        if area_key and _search_key(row.get("area", "")) != area_key:
+            continue
+        haystack = row.get("search") or _search_key(" ".join(str(row.get(k) or "") for k in ("area", "street", "from", "to")))
+        if words and not all(word in haystack for word in words):
+            continue
+        matches.append(row)
+        if len(matches) >= limit:
+            break
+
+    return jsonify({
+        "ok": True,
+        "items": matches,
+        "total": len(matches),
+        "source": data.get("source"),
+        "source_url": data.get("source_url"),
+        "unit": data.get("unit"),
+    })
+
+
 def dashboard():
     return redirect("/", code=301)
 
@@ -1379,6 +1443,8 @@ def seo_binh_duong_landing():
 
 
 def _active_public_nav(path: str) -> str:
+    if path == "/bang-gia-dat-tphcm":
+        return "bang-gia-dat"
     if path == "/dinh-gia-bds":
         return "dinh-gia"
     if path.startswith("/bao-cao"):
@@ -1703,6 +1769,7 @@ def llms_txt():
 ## Trang chính
 - Thị trường Bình Dương: {_public_url('/binh-duong')}
 - Công cụ định giá đất Bình Dương: {_public_url('/dinh-gia-bds')}
+- Tra cứu bảng giá đất TP.HCM 2026: {_public_url('/bang-gia-dat-tphcm')}
 - Báo cáo dữ liệu: {_public_url('/bao-cao')}
 - Phương pháp lọc deal: {_public_url('/san-deal-bds')}
 """
@@ -1744,6 +1811,11 @@ def sitemap_xml():
   <url>
     <loc>{_public_url('/dinh-gia-bds')}</loc>
     <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>{_public_url('/bang-gia-dat-tphcm')}</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 {seo_urls}

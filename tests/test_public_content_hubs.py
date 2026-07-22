@@ -49,6 +49,7 @@ def test_two_content_hubs_exist_and_news_hub_does_not():
     [
         ("/binh-duong", "binh-duong"),
         ("/dinh-gia-bds", "dinh-gia"),
+        ("/bang-gia-dat-tphcm", "bang-gia-dat"),
         ("/bao-cao", "bao-cao"),
         ("/kien-thuc", "kien-thuc"),
         ("/san-deal-bds", "san-deal"),
@@ -58,7 +59,7 @@ def test_shared_navigation_and_active_state(path, active):
     import app as radar_app
 
     html = radar_app.app.test_client().get(path).get_data(as_text=True)
-    for item in ("binh-duong", "dinh-gia", "bao-cao", "kien-thuc", "san-deal"):
+    for item in ("binh-duong", "dinh-gia", "bang-gia-dat", "bao-cao", "kien-thuc", "san-deal"):
         assert f'data-nav="{item}"' in html
     assert f'data-nav="{active}" aria-current="page"' in html
     assert ">Bán đất</a>" not in html

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ site_meta.title }}</title>
+  <meta name="description" content="{{ site_meta.description }}">
+  <meta name="keywords" content="{{ site_meta.keywords }}">
+  <link rel="canonical" href="{{ site_meta.canonical_url }}">
+  <meta property="og:title" content="{{ site_meta.title }}">
+  <meta property="og:description" content="{{ site_meta.description }}">
+  <meta property="og:url" content="{{ site_meta.og_url }}">
+  <meta property="og:image" content="{{ site_meta.og_image }}">
+  {% include "partials/google_site_tags.html" %}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tphcm-land-price-20260722">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tphcm_land_price_tool.css') }}?v=tphcm-land-price-20260722">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Tra cứu bảng giá đất TP.HCM mới 2026",
+    "url": {{ site_meta.canonical_url|tojson }},
+    "applicationCategory": "FinanceApplication",
+    "description": {{ site_meta.description|tojson }},
+    "provider": {"@type": "Organization", "name": "Radar BDS", "url": {{ site_meta.base_url|tojson }}}
+  }
+  </script>
+  <script>
+    window.TPHCM_LAND_PRICE_AREAS = {{ areas|tojson }};
+  </script>
+</head>
+<body class="seo-page tphcm-land-price-page">
+  {% include "partials/seo_header.html" %}
+  <main id="main-content">
+    <section class="land-price-hero">
+      <div class="land-price-shell land-price-grid">
+        <div>
+          <h1>Tra cứu bảng giá đất TP.HCM mới 2026</h1>
+          <p>Nhập tên đường, đoạn đường hoặc chọn phường/xã để tra nhanh giá đất theo Nghị quyết 87/2025/NQ-HĐND, áp dụng từ ngày 01/01/2026.</p>
+          <p class="source-note">Dữ liệu đã trích từ PDF nguồn, đơn vị: 1.000 đồng/m². Tổng {{ "{:,}".format(row_count).replace(",", ".") }} dòng.</p>
+        </div>
+        <form class="land-price-search" id="landPriceSearch">
+          <label>
+            <span>Từ khóa</span>
+            <input id="landPriceQuery" name="q" type="search" placeholder="Ví dụ: Nguyễn Huệ, ĐT.742, D16..." autocomplete="off">
+          </label>
+          <label>
+            <span>Phường/xã</span>
+            <select id="landPriceArea" name="area">
+              <option value="">Tất cả TP.HCM mới</option>
+              {% for area in areas %}
+              <option value="{{ area }}">{{ area }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <button type="submit">Tra cứu</button>
+          <div class="quick-searches" aria-label="Tìm kiếm nhanh">
+            <button type="button" data-query="Nguyễn Huệ" data-area="PHƯỜNG SÀI GÒN">Nguyễn Huệ</button>
+            <button type="button" data-query="ĐT.742" data-area="">ĐT.742</button>
+            <button type="button" data-query="Nguyễn Bá Ngọc" data-area="XÃ PHƯỚC HẢI">Nguyễn Bá Ngọc</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="land-price-shell result-zone" aria-labelledby="landPriceResultTitle">
+      <div class="result-head">
+        <div>
+          <p class="section-label">Kết quả tra cứu</p>
+          <h2 id="landPriceResultTitle">Bảng giá theo tuyến đường</h2>
+        </div>
+        <p id="landPriceStatus" role="status">Nhập từ khóa hoặc chọn phường/xã để tra cứu.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Khu vực</th>
+              <th>Tên đường</th>
+              <th>Từ</th>
+              <th>Đến</th>
+              <th>Đất ở</th>
+              <th>TM dịch vụ</th>
+              <th>SXKD phi NN</th>
+            </tr>
+          </thead>
+          <tbody id="landPriceRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="land-price-shell explainer">
+      <div>
+        <h2>Cách đọc bảng giá đất TP.HCM mới</h2>
+        <p>Giá trong bảng là giá Nhà nước theo từng tuyến/đoạn đường và từng loại đất. Khi một tuyến có nhiều đoạn, cần đối chiếu đúng điểm “từ” và “đến” trong kết quả.</p>
+      </div>
+      <div>
+        <h2>Lưu ý sử dụng</h2>
+        <p>Bảng giá đất không phải giá giao dịch thị trường. Với một lô cụ thể, cần kiểm tra vị trí, hẻm, pháp lý, quy hoạch và giao dịch thực tế trước khi ra quyết định.</p>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=tphcm-land-price-20260722"></script>
+</body>
+</html>

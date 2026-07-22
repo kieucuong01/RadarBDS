@@ -38,6 +38,11 @@ def valuation_tool_page(**kwargs):
     return _impl("valuation_tool_page", **kwargs)
 
 
+@bp.route("/bang-gia-dat-tphcm")
+def tphcm_land_price_tool_page(**kwargs):
+    return _impl("tphcm_land_price_tool_page", **kwargs)
+
+
 @bp.route("/binh-duong")
 def seo_binh_duong(**kwargs):
     return _impl("seo_binh_duong_landing", **kwargs)

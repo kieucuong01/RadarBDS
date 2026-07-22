@@ -27,6 +27,11 @@ def api_signals(**kwargs):
     return _impl("api_signals", **kwargs)
 
 
+@bp.route("/api/tphcm-land-prices")
+def api_tphcm_land_prices(**kwargs):
+    return _impl("api_tphcm_land_prices", **kwargs)
+
+
 @bp.route("/api/trends")
 def api_trends(**kwargs):
     return _impl("api_trends", **kwargs)
