@@ -4,7 +4,7 @@ This is the canonical repo runbook for the daily `@rb Daily SEO Publish + Social
 
 ## TL;DR for Codex / AI agents
 
-1. Read `../AGENTS.md`, `docs/README.md`, then this file.
+1. Read `../AGENTS.md`, `docs/README.md`, this file, then `docs/radar_bds_90_day_seo_roadmap.md`.
 2. Run the context helper first; do not load raw DB dumps into the prompt:
    ```bash
    sudo -u radar /opt/radar-bds/.venv/bin/python \
@@ -76,18 +76,24 @@ Rules:
 
 ## Daily decision order
 
+Use `docs/radar_bds_90_day_seo_roadmap.md` as the strategy source of truth. Daily topic selection is not just “which ward has signals today”; it must build topical authority over time.
+
 Each daily run should do the smallest high-impact action:
 
 1. Check production health and state drift: sitemap, latest articles, repo status.
 2. Run `scripts/radar_daily_seo_context.py` for compact current data.
-3. Pick one non-duplicate intent from:
-   - high-signal ward pulse,
-   - comparison between nearby wards,
-   - buyer explainer using Radar data,
-   - follow-up/internal-link gap from reports.
-4. Publish one `/tin-tuc/<slug>` article.
-5. Draft one social post from the same data atom.
-6. Verify live and commit/push.
+3. Score candidate actions with the 100-point rule from the roadmap:
+   - 30 long-lived search intent,
+   - 25 Radar proprietary data advantage,
+   - 20 funnel linkage to dashboard/report/location/tool,
+   - 15 no cannibalization,
+   - 10 social reuse.
+4. If score ≥ 70: publish one new `/tin-tuc/<slug>` article.
+5. If score is 50–69 or the intent already exists: refresh/update an existing article or add internal links.
+6. Draft one social post from the same data atom.
+7. Verify live and commit/push.
+
+Current early-stage default mix: 5 new articles/week, 1 refresh/internal-link day/week, 1 optional strategy/social-only day only if there is a real blocker. After roughly 60–90 useful URLs, shift to 3 new + 2 refresh + 1 internal-link + 1 strategy/social per week.
 
 If there is a production blocker, fix/report the blocker first. Otherwise default expectation is `acted=1` daily.
 
