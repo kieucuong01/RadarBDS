@@ -7,34 +7,41 @@
   {% include "partials/seo_header.html" %}
   <main id="main-content" class="seo-shell hub-shell">
     {% include "partials/seo_breadcrumbs.html" %}
-    <section class="hub-hero hub-hero-grid">
+    <section class="hub-hero hub-hero-grid report-hub-hero">
       <div class="hub-hero-copy">
-      <p class="seo-eyebrow">Kho dữ liệu thị trường</p>
-      <h1>{{ page.hero_title }}</h1>
-      <p>{{ page.hero_text }}</p>
-      <div class="hub-hero-actions">
-        {% if reports %}
-        <a class="seo-primary-cta" href="{{ reports[0].path }}" data-track-cta="hero_latest_report">Xem báo cáo mới nhất</a>
-        {% endif %}
-        <span class="scope-chip">{{ page.scope_label }}</span>
+        <p class="seo-eyebrow">Kho dữ liệu thị trường</p>
+        <h1>{{ page.hero_title }}</h1>
+        <p>{{ page.hero_text }}</p>
+        <div class="hub-hero-actions">
+          {% if reports %}
+          <a class="seo-primary-cta" href="{{ reports[0].path }}" data-track-cta="hero_latest_report">Xem báo cáo mới nhất</a>
+          {% endif %}
+          <span class="scope-chip">{{ page.scope_label }}</span>
+        </div>
       </div>
-      </div>
-      <aside class="hub-insight-panel" aria-label="Tóm tắt kho báo cáo">
+      <aside class="hub-insight-panel report-hub-panel" aria-label="Tóm tắt kho báo cáo">
         <p class="hub-panel-kicker">Radar BDS</p>
         <dl class="hub-panel-list">
+          <div><dt>Tổng báo cáo</dt><dd>{{ hub_filters.total if hub_filters else reports|length }}</dd></div>
           {% if reports %}
           <div><dt>Báo cáo mới nhất</dt><dd>{{ reports[0].report.period }}</dd></div>
-          <div><dt>Phạm vi</dt><dd>{{ reports[0].scope_label }}</dd></div>
           {% endif %}
-          <div><dt>Cách đọc</dt><dd>Phạm vi trước, chỉ số sau</dd></div>
+          <div><dt>TDM</dt><dd>{{ hub_filters.city_counts.get('tdm', 0) if hub_filters else 0 }} báo cáo</dd></div>
+          <div><dt>Bến Cát</dt><dd>{{ hub_filters.city_counts.get('ben-cat', 0) if hub_filters else 0 }} báo cáo</dd></div>
         </dl>
       </aside>
     </section>
 
     {% if reports %}
     {% set latest = reports[0] %}
-    <section class="hub-featured" aria-labelledby="latest-report">
-      <div class="hub-featured-index" aria-hidden="true">01</div>
+    <section class="hub-featured report-hub-featured" aria-labelledby="latest-report">
+      <a class="report-featured-thumb" href="{{ latest.path }}" aria-label="Đọc {{ latest.hero_title }}">
+        {% if latest.hub_meta.thumbnail %}<img src="{{ latest.hub_meta.thumbnail }}" alt="Thumbnail {{ latest.scope_label }}" loading="eager">{% endif %}
+        <span class="report-thumb-overlay"></span>
+        <span class="report-thumb-kicker">{{ latest.hub_meta.city_label }}</span>
+        <strong>{{ latest.scope_label }}</strong>
+        <small>{{ latest.report.period }}</small>
+      </a>
       <div class="hub-featured-body">
         <p class="seo-eyebrow">Báo cáo mới nhất</p>
         <h2 id="latest-report">{{ latest.hero_title }}</h2>
@@ -43,6 +50,7 @@
           <span>{{ latest.scope_label }}</span>
           <span>Kỳ {{ latest.report.period }}</span>
           <span>Cập nhật {{ latest.report.published_at }}</span>
+          <span>{{ latest.hub_meta.primary_metric['label'] }}: {{ latest.hub_meta.primary_metric['value'] }}</span>
         </div>
       </div>
       <a class="seo-primary-cta" href="{{ latest.path }}" data-track-cta="latest_report">Đọc báo cáo</a>
@@ -50,20 +58,60 @@
     {% endif %}
 
     <section class="hub-archive" aria-labelledby="report-archive">
-      <div class="section-heading">
+      <div class="section-heading report-hub-heading">
         <p class="seo-eyebrow">Theo thời gian</p>
         <h2 id="report-archive">Kho báo cáo</h2>
-        <p>Chỉ hiển thị báo cáo tháng đã chốt dữ liệu, sắp theo kỳ mới nhất.</p>
+        <p>Chỉ hiển thị báo cáo tháng đã chốt dữ liệu. Tìm nhanh theo phường, tháng, TP hoặc lọc trực tiếp TDM/Bến Cát.</p>
       </div>
-      <div class="hub-card-grid">
+
+      <div class="report-hub-controls" aria-label="Bộ lọc báo cáo">
+        <label class="report-search-box">
+          <span>Tìm báo cáo</span>
+          <input id="reportSearchInput" type="search" placeholder="Tìm phường, tháng, giá đất..." autocomplete="off">
+        </label>
+        <div class="report-filter-group" aria-label="Lọc theo thành phố">
+          <button type="button" class="report-filter-pill active" data-filter-city="all">Tất cả <span>{{ reports|length }}</span></button>
+          <button type="button" class="report-filter-pill" data-filter-city="tdm">TDM <span>{{ hub_filters.city_counts.get('tdm', 0) if hub_filters else 0 }}</span></button>
+          <button type="button" class="report-filter-pill" data-filter-city="ben-cat">Bến Cát <span>{{ hub_filters.city_counts.get('ben-cat', 0) if hub_filters else 0 }}</span></button>
+        </div>
+        <label class="report-ward-select-wrap">
+          <span>Phường</span>
+          <select id="reportWardSelect">
+            <option value="all" data-city="all">Tất cả phường</option>
+            {% for ward in hub_filters.wards %}
+            <option value="{{ ward.label }}" data-city="{{ ward.city_key }}">{{ ward.label }} · {{ ward.city_label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+
+      <p class="report-filter-status" id="reportFilterStatus" aria-live="polite">Đang hiển thị {{ reports|length }} báo cáo.</p>
+
+      <div class="hub-card-grid report-card-grid" id="reportCardGrid">
         {% for report in reports %}
-        <article class="hub-card">
-          <div class="hub-card-top">
+        <article class="hub-card report-archive-card"
+          data-report-card
+          data-city="{{ report.hub_meta.city_key }}"
+          data-ward="{{ report.scope_label }}"
+          data-period="{{ report.hub_meta.period_key }}"
+          data-search="{{ report.hub_meta.search_text }}">
+          <a class="report-card-thumb" href="{{ report.path }}" aria-label="Đọc {{ report.hero_title }}">
+            {% if report.hub_meta.thumbnail %}<img src="{{ report.hub_meta.thumbnail }}" alt="Thumbnail {{ report.scope_label }}" loading="lazy">{% endif %}
+            <span class="report-thumb-overlay"></span>
+            <span class="report-thumb-kicker">{{ report.hub_meta.city_label }}</span>
+            <strong>{{ report.scope_label }}</strong>
+            <small>{{ report.report.period }}</small>
+          </a>
+          <div class="hub-card-top report-card-top">
             <span class="hub-card-number">{{ "%02d"|format(loop.index) }}</span>
-            <span class="scope-chip">{{ report.scope_label }}</span>
+            <span class="scope-chip">{{ report.hub_meta.city_label }}</span>
           </div>
           <h3><a href="{{ report.path }}">{{ report.hero_title }}</a></h3>
           <p>{{ report.description }}</p>
+          <div class="report-card-stats">
+            <span><strong>{{ report.hub_meta.primary_metric['value'] }}</strong>{{ report.hub_meta.primary_metric['label'] }}</span>
+            <span><strong>{{ report.scope_label }}</strong>Phạm vi</span>
+          </div>
           <div class="card-meta">
             <span>Kỳ {{ report.report.period }}</span>
             <time datetime="{{ report.report.published_at }}">{{ report.report.published_at }}</time>
@@ -71,6 +119,10 @@
           <a class="text-link" href="{{ report.path }}">Xem phạm vi và chỉ số <span aria-hidden="true">→</span></a>
         </article>
         {% endfor %}
+      </div>
+      <div class="report-empty-state" id="reportEmptyState" hidden>
+        <strong>Không tìm thấy báo cáo phù hợp</strong>
+        <p>Thử bỏ lọc TP/phường hoặc nhập lại tên phường, tháng, chỉ số cần tìm.</p>
       </div>
     </section>
   </main>
@@ -89,6 +141,60 @@
       ]}
     ]
   }
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var searchInput = document.getElementById('reportSearchInput');
+      var wardSelect = document.getElementById('reportWardSelect');
+      var status = document.getElementById('reportFilterStatus');
+      var empty = document.getElementById('reportEmptyState');
+      var cards = Array.prototype.slice.call(document.querySelectorAll('[data-report-card]'));
+      var cityButtons = Array.prototype.slice.call(document.querySelectorAll('[data-filter-city]'));
+      var activeCity = 'all';
+
+      function normalize(value) {
+        return (value || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      }
+
+      function syncWardOptions() {
+        if (!wardSelect) return;
+        Array.prototype.slice.call(wardSelect.options).forEach(function(option) {
+          var optCity = option.dataset.city || 'all';
+          option.hidden = activeCity !== 'all' && optCity !== 'all' && optCity !== activeCity;
+        });
+        var selected = wardSelect.options[wardSelect.selectedIndex];
+        if (selected && selected.hidden) wardSelect.value = 'all';
+      }
+
+      function applyReportFilters() {
+        var query = normalize(searchInput ? searchInput.value : '');
+        var ward = wardSelect ? wardSelect.value : 'all';
+        var visible = 0;
+        cards.forEach(function(card) {
+          var matchesCity = activeCity === 'all' || card.dataset.city === activeCity;
+          var matchesWard = ward === 'all' || card.dataset.ward === ward;
+          var matchesQuery = !query || normalize(card.dataset.search || card.innerText).indexOf(query) !== -1;
+          var show = matchesCity && matchesWard && matchesQuery;
+          card.hidden = !show;
+          if (show) visible += 1;
+        });
+        if (status) status.textContent = 'Đang hiển thị ' + visible + '/' + cards.length + ' báo cáo.';
+        if (empty) empty.hidden = visible !== 0;
+      }
+
+      cityButtons.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          activeCity = btn.dataset.filterCity || 'all';
+          cityButtons.forEach(function(other) { other.classList.toggle('active', other === btn); });
+          syncWardOptions();
+          applyReportFilters();
+        });
+      });
+      if (searchInput) searchInput.addEventListener('input', applyReportFilters);
+      if (wardSelect) wardSelect.addEventListener('change', applyReportFilters);
+      syncWardOptions();
+      applyReportFilters();
+    });
   </script>
   {% set view_event = "report_viewed" %}
   {% include "partials/seo_tracking.html" %}

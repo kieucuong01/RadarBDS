@@ -1473,6 +1473,85 @@ _PRIORITY_TDM_WARDS = {
     "chanh-nghia": "Chánh Nghĩa",
 }
 
+_REPORT_TDM_WARDS = {
+    "Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ", "Phú Mỹ", "Phú Cường",
+    "Phú Hòa", "Phú Lợi", "Hiệp Thành", "Chánh Nghĩa", "Phú Tân", "Hòa Phú",
+}
+_REPORT_BEN_CAT_WARDS = {
+    "Bến Cát", "Mỹ Phước", "Mỹ Phước 1", "Mỹ Phước 2", "Mỹ Phước 3", "Mỹ Phước 4",
+    "Thới Hòa", "Tân Định", "Chánh Phú Hòa", "Phú An", "An Tây", "An Điền", "Hòa Lợi",
+}
+
+
+def _report_hub_city(scope_label: str, path: str = "") -> tuple[str, str]:
+    scope = str(scope_label or "").strip()
+    lower = f"{scope} {path}".lower()
+    if scope in _REPORT_BEN_CAT_WARDS or "ben-cat" in lower or "bến cát" in lower or "my-phuoc" in lower or "mỹ phước" in lower:
+        return ("ben-cat", "Bến Cát")
+    return ("tdm", "Thủ Dầu Một")
+
+
+def _report_hub_thumbnail(page: dict) -> str:
+    report = page.get("report") or {}
+    for item in report.get("featured_listings") or []:
+        image = str(item.get("image") or "").strip()
+        if image:
+            return image
+    return ""
+
+
+def _report_primary_metric(page: dict) -> dict:
+    metrics = (page.get("report") or {}).get("metrics") or []
+    if not metrics:
+        return {"label": "Báo cáo", "value": "Dữ liệu"}
+    preferred = next((m for m in metrics if "tin" in str(m.get("label", "")).lower()), metrics[0])
+    return {"label": preferred.get("label") or "Chỉ số", "value": preferred.get("value") or "—"}
+
+
+def _decorate_report_hub_pages(reports: list[dict]) -> tuple[list[dict], dict]:
+    decorated = []
+    city_counts = {"tdm": 0, "ben-cat": 0}
+    ward_options: dict[str, dict] = {}
+    latest_by_city: dict[str, str] = {}
+    for index, report in enumerate(reports, start=1):
+        item = dict(report)
+        report_body = dict(item.get("report") or {})
+        scope = str(item.get("scope_label") or "Thủ Dầu Một")
+        city_key, city_label = _report_hub_city(scope, item.get("path", ""))
+        city_counts[city_key] = city_counts.get(city_key, 0) + 1
+        if city_key not in latest_by_city:
+            latest_by_city[city_key] = item.get("path", "")
+        year, month = _report_period_key(item)
+        item["hub_meta"] = {
+            "index": index,
+            "city_key": city_key,
+            "city_label": city_label,
+            "ward_key": scope.lower().replace(" ", "-"),
+            "scope": scope,
+            "period_key": f"{year:04d}-{month:02d}" if year and month else str(report_body.get("period") or ""),
+            "thumbnail": _report_hub_thumbnail(item),
+            "primary_metric": _report_primary_metric(item),
+            "search_text": " ".join([
+                str(item.get("hero_title") or ""),
+                str(item.get("title") or ""),
+                str(item.get("description") or ""),
+                scope,
+                city_label,
+                str(report_body.get("period") or ""),
+            ]).lower(),
+        }
+        if scope != "Thủ Dầu Một":
+            key = f"{city_key}|{scope}"
+            ward_options[key] = {"city_key": city_key, "city_label": city_label, "label": scope}
+        decorated.append(item)
+    hub_filters = {
+        "city_counts": city_counts,
+        "latest_by_city": latest_by_city,
+        "wards": sorted(ward_options.values(), key=lambda w: (w["city_label"], w["label"])),
+        "total": len(decorated),
+    }
+    return decorated, hub_filters
+
 
 def _vi_decimal(value, digits: int = 1) -> str:
     try:
@@ -1731,8 +1810,9 @@ def seo_report_hub_page():
     page = dict(REPORT_HUB)
     page["breadcrumbs"] = _page_breadcrumbs(page)
     reports = sorted(_published_report_pages(), key=_report_sort_key, reverse=True)
+    reports, hub_filters = _decorate_report_hub_pages(reports)
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
-    return render_template("seo_report_hub.html", page=page, reports=reports, site_meta=site_meta, active_nav="bao-cao")
+    return render_template("seo_report_hub.html", page=page, reports=reports, hub_filters=hub_filters, site_meta=site_meta, active_nav="bao-cao")
 
 
 def seo_knowledge_hub_page():
