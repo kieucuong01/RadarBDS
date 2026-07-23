@@ -1024,6 +1024,20 @@ svg {
   }
 }
 
+.report-detail .seo-final-cta {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.report-detail .seo-final-cta > div {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .report-detail .seo-final-cta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Fix chart-card in aside to not overflow */
 .chart-card {
   z-index: 3;
