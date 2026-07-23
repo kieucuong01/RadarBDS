@@ -14,7 +14,8 @@ This is the canonical repo runbook for the daily `@rb Daily SEO Publish + Social
 4. Draft **1 social post** from the same data atom for Facebook/Zalo/group handoff.
 5. Use real production DB numbers only; no invented counts, prices, legal certainty, testimonials, or guaranteed profit.
 6. Verify production URL, rendered content, sitemap, and logs before reporting done.
-7. Commit + push repo changes; do not commit runtime data such as `data/facebook_profiles.json`.
+7. Create a social queue item with `scripts/radar_social_queue.py`; use browser-use Page posting only when explicitly approved.
+8. Commit + push repo changes; do not commit runtime data such as `data/facebook_profiles.json`.
 
 ## Current automation
 
@@ -73,6 +74,7 @@ Rules:
 | SEO styles | `static/css/seo.css` |
 | Verification script | `scripts/verify_live_seo_article.ps1` |
 | Tests | `tests/test_public_seo.py`, `tests/test_public_content_hubs.py` |
+| Social queue | `scripts/radar_social_queue.py`, `scripts/browser_use_page_post.py`, `docs/social-care-workflow.md` |
 
 ## Daily decision order
 
@@ -90,8 +92,9 @@ Each daily run should do the smallest high-impact action:
    - 10 social reuse.
 4. If score ≥ 70: publish one new `/tin-tuc/<slug>` article.
 5. If score is 50–69 or the intent already exists: refresh/update an existing article or add internal links.
-6. Draft one social post from the same data atom.
-7. Verify live and commit/push.
+6. Draft one social post from the same data atom and create a queue file with `scripts/radar_social_queue.py`.
+7. If explicitly approved, use `scripts/browser_use_page_post.py`; otherwise hand off queue path + draft.
+8. Verify live and commit/push.
 
 Current early-stage default mix: 5 new articles/week, 1 refresh/internal-link day/week, 1 optional strategy/social-only day only if there is a real blocker. After roughly 60–90 useful URLs, shift to 3 new + 2 refresh + 1 internal-link + 1 strategy/social per week.
 
@@ -217,7 +220,7 @@ After publish or patch:
 
 ## Social post output
 
-Every daily run should include one handoff-ready social draft:
+Use `docs/social-care-workflow.md` for the optimized queue-first social workflow. Every daily run should include one handoff-ready social draft and, when possible, a queue JSON file:
 
 ```text
 Hook:
@@ -228,7 +231,7 @@ URL:
 Hashtags:
 ```
 
-Do not post directly to Facebook unless a separate approved posting integration exists. Hand off the draft in Telegram.
+Do not post directly to Facebook unless a separate approved posting integration exists. For @rb, browser-use Page posting is available after manual login, but default mode is review/queue unless anh explicitly asks to publish.
 
 ## Reporting shape back to anh Cường
 

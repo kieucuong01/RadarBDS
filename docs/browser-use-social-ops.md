@@ -47,6 +47,30 @@ url: https://example.com/
 title: Example Domain
 ```
 
+
+## Optimized social-care workflow
+
+For the queue-first daily operating model, use `docs/social-care-workflow.md`.
+
+Core scripts:
+
+| Purpose | Script |
+|---|---|
+| Create deterministic social queue JSON from `/tin-tuc` | `scripts/radar_social_queue.py` |
+| Dry-run/prepare/publish Page post with browser-use | `scripts/browser_use_page_post.py` |
+
+Recommended flow:
+
+```bash
+cd /opt/radar-bds/current
+python3 scripts/radar_social_queue.py --slug latest --mode review
+python3 scripts/browser_use_page_post.py --queue /opt/radar-bds/var/social_queue/<file>.json --mode dry-run
+# After explicit approval only:
+python3 scripts/browser_use_page_post.py --queue /opt/radar-bds/var/social_queue/<file>.json --mode publish --yes
+```
+
+Do not use repeated manual accessibility-tree inspection for normal Page posting; it wastes tokens. Use the queue + script path instead.
+
 ## What browser-use should and should not do
 
 | Area | Allowed | Not allowed by default |
