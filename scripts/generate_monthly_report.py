@@ -434,14 +434,14 @@ def generate_master_report(month, year):
         weighted_count = sum(float(r["new_listings"]) for r in area_rows if r["median_price"] != "—")
         tdm_median = round(weighted_sum / weighted_count, 1) if weighted_count else 0
 
-    # Build internal links to each ward report
+    # Build internal links to each ward child report. The master TDM page is the hub;
+    # every ward page is a spoke for SEO crawl depth and user navigation.
     local_links = []
     for r_data in area_rows:
-        dn_key = r_data["area"]
         local_links.append({
-            "label": r_data["area"],
+            "label": f"Báo cáo {r_data['area']} tháng {m_str}/{year}",
             "href": f'/bao-cao/{r_data["slug"]}-thang-{m_str}-{year}',
-            "description": f'{r_data["new_listings"]} tin rao, giá đất nền {r_data["median_price"]} tr/m²'
+            "description": f'{r_data["new_listings"]} tin rao, giá đất nền {r_data["median_price"]} tr/m², {r_data["radar_signal"]} tín hiệu đáng chú ý.'
         })
 
     entry = {

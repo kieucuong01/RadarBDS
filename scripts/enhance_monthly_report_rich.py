@@ -373,6 +373,16 @@ def update_master_page(page: dict, ward_pages: dict[str, dict], month: int, year
         {"label": "Bán đất Bình Dương", "href": "/ban-dat-binh-duong", "description": "Trang lọc riêng đất nền, đất thổ cư và giá/m²."},
         {"label": "Công cụ định giá BĐS", "href": "/dinh-gia-bds", "description": "Tự kiểm tra một lô cụ thể bằng dữ liệu Radar BDS."},
     ]
+    child_report_links = [
+        {
+            "label": f"Báo cáo {r['area']} tháng {mm}/{year}",
+            "href": f"/bao-cao/{r['slug']}-thang-{mm}-{year}",
+            "description": f"{r['new_listings']} tin rao, giá đất nền {r['median_price']} tr/m², {r['radar_signal']} tín hiệu đáng chú ý.",
+        }
+        for r in rows
+    ]
+    page["local_links_title"] = f"Tổng hợp 13 báo cáo phường Thủ Dầu Một tháng {mm}/{year}"
+    page["local_links"] = child_report_links
     page["report"] = report; page["description"] = f"Báo cáo thị trường BĐS Thủ Dầu Một tháng {mm}/{year}: {fmt_num(total)} tin rao, giá đất nền tham chiếu {tdm_ref} tr/m², {total_signals} tín hiệu từ 13 phường."; page["hero_text"] = f"Báo cáo tháng {mm}/{year} tập trung 13 phường Thủ Dầu Một với {fmt_num(total)} tin rao Facebook sau lọc. Dùng báo cáo như bản đồ chọn phường, sau đó mở dashboard để lọc từng tin theo loại hình, giá/m² và tín hiệu dưới giá cơ sở."; page["final_cta"] = {"title": "So sánh tất cả phường TDM bằng dashboard Radar BDS", "body": "Dùng báo cáo tổng quan làm bản đồ chọn phường, sau đó mở dashboard để lọc tin theo từng phường, loại hình, giá/m² và tín hiệu dưới giá cơ sở.", "button": "Mở dashboard", "button_href": dashboard_href(None)}; page["charts"] = [{"id": "ward-supply-chart", "type": "bar", "title": "Số tin rao theo phường", "labels": [r["area"] for r in rows], "datasets": [{"label": "Số tin rao", "data": [int(r["new_listings"]) for r in rows], "backgroundColor": "#3b82f6", "borderRadius": 3}], "legend": False}, {"id": "ward-price-chart", "type": "bar", "title": "Giá/m² trung vị theo phường (tr/m²)", "labels": [r["area"] for r in rows], "datasets": [{"label": "Giá/m² (tr/m²)", "data": [float(r["median_price"]) if r["median_price"] != "—" else 0 for r in rows], "backgroundColor": "#10b981", "borderRadius": 3}], "legend": False}]
     return page
 
