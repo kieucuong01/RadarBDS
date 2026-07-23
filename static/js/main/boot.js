@@ -63,10 +63,28 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof syncKeywordSearchInputs === 'function') {
     syncKeywordSearchInputs(searchParams.get('q') || searchParams.get('keyword') || '');
   }
+  const initialCity = searchParams.get('city');
+  if (initialCity) {
+    const cityInput = document.getElementById('cityInput');
+    if (cityInput) cityInput.value = initialCity;
+    document.querySelectorAll('.city-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.city === initialCity);
+    });
+  }
+  const initialDateRange = searchParams.get('date_range');
+  if (initialDateRange) {
+    const dateRadio = document.querySelector(`input[name="date_range"][value="${CSS.escape(initialDateRange)}"]`);
+    if (dateRadio) dateRadio.checked = true;
+  }
+  const initialMosMin = searchParams.get('mos_min');
+  if (initialMosMin !== null) {
+    const mosSlider = document.getElementById('mosSlider');
+    if (mosSlider) mosSlider.value = initialMosMin;
+  }
   if (typeof syncCoreFilterVisuals === 'function') syncCoreFilterVisuals();
   if (window.INITIAL_WARDS_BY_CITY) {
     globalWardsByCity = window.INITIAL_WARDS_BY_CITY;
-    updateWardFilters(globalWardsByCity, [], { preserveScroll: false, preserveSearch: false });
+    updateWardFilters(globalWardsByCity, searchParams.getAll('ward'), { preserveScroll: false, preserveSearch: false });
   }
   if (searchParams.toString()) {
     currentFilters = searchParams.toString();

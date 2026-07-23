@@ -249,7 +249,10 @@
           </a>
           {% endfor %}
         </div>
-        <p class="featured-listing-note">MOS là chỉ báo sàng lọc dưới giá cơ sở, không thay thẩm định pháp lý, quy hoạch hoặc kiểm tra thực địa.</p>
+        <div class="report-featured-footer">
+          <p class="featured-listing-note">MOS là chỉ báo sàng lọc dưới giá cơ sở, không thay thẩm định pháp lý, quy hoạch hoặc kiểm tra thực địa.</p>
+          <a class="report-featured-more" href="{{ page.report.featured_more_href or '/?tab=signals' }}" data-track-cta="report_more_ward_signals">Xem thêm trên Radar BDS →</a>
+        </div>
       </section>
       {% endif %}
 
