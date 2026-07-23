@@ -210,13 +210,15 @@
         </div>
         <div class="featured-listing-grid report-signal-grid">
           {% for item in page.report.featured_listings %}
-          <a class="featured-listing-card report-signal-card {% if item.price_dropped %}is-new-signal{% endif %}" href="{{ item.href }}">
+          <a class="featured-listing-card report-signal-card is-new-signal" href="{{ item.href }}">
             <div class="report-signal-media">
               {% if item.image %}<img src="{{ item.image }}" alt="{{ item.title }}" loading="eager">{% endif %}
-              <span class="mos-badge">Rẻ hơn {{ item.mos|replace('+','') }}</span>
+              <span class="mos-badge">🤖 Rẻ hơn {{ item.mos|replace('+','') }}</span>
+              <span class="new-badge">★ Mới</span>
               <div class="sc-img-tags">
-                <span class="sc-source-tag">{{ item.type }}</span>
-                {% if item.price_dropped %}<span class="sc-drop-tag">Giảm giá</span>{% endif %}
+                <span class="sc-source-tag">Facebook</span>
+                <span class="sc-time-tag">◷ {{ item.time_label or page.report.period }}</span>
+                {% if item.drop_label %}<span class="sc-drop-tag">↓ {{ item.drop_label }}</span>{% endif %}
               </div>
             </div>
             <div class="report-signal-body">
@@ -228,19 +230,21 @@
                   <div class="price-m2">{{ item.price_per_m2 }}</div>
                 </div>
                 <div class="price-fair">
-                  <span class="price-label price-label-fair">GIÁ CƠ SỞ</span>
-                  <div class="price-val-fair">{{ item.fair_price_per_m2 }}</div>
-                  <div class="price-m2">ước tính theo Radar</div>
+                  <span class="price-label price-label-fair">ĐỊNH GIÁ</span>
+                  <div class="price-val-fair">{{ item.fair_price_range or item.fair_price_per_m2 }}</div>
+                  <div class="price-m2">{{ item.fair_ppm2_range or item.fair_price_per_m2 }}</div>
                 </div>
               </div>
               <div class="sc-meta-chips report-meta-chips">
-                <span class="meta-chip">{{ item.area }}</span>
-                <span class="meta-chip">MOS {{ item.mos }}</span>
-                <span class="meta-chip">Score {{ item.score }}</span>
-                <span class="meta-chip">{{ item.legal }}</span>
+                <span class="meta-chip meta-chip-location">◎ Tương Bình Hiệp</span>
+                <span class="meta-chip meta-chip-area">▭ {{ item.area }}</span>
+                <span class="meta-chip meta-chip-legal">⚑ {{ item.legal }}</span>
+                <span class="meta-chip meta-chip-type">{{ item.type }}</span>
               </div>
-              <p>{{ item.note }}</p>
-              <strong>Xem chi tiết tin rao →</strong>
+              <div class="report-card-actions" aria-hidden="true">
+                <span>♡ Lưu</span>
+                <span>▱ ⚡ Ráp mối VIP</span>
+              </div>
             </div>
           </a>
           {% endfor %}

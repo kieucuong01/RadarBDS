@@ -3866,3 +3866,231 @@ summary:focus-visible,
     min-width: 640px;
   }
 }
+
+
+/* report-card-screenshot-ui */
+.report-featured-listings .featured-listing-grid.report-signal-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.report-featured-listings .report-signal-card {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid rgba(251, 146, 60, 0.42);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.16), 0 14px 36px rgba(234, 88, 12, 0.18);
+}
+
+.report-featured-listings .report-signal-card:hover {
+  border-color: rgba(249, 115, 22, 0.72);
+  box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.14), 0 18px 44px rgba(234, 88, 12, 0.24);
+  transform: translateY(-4px);
+}
+
+.report-featured-listings .report-signal-media {
+  height: 205px;
+  border-radius: 14px 14px 0 0;
+}
+
+.report-featured-listings .report-signal-media::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 54%;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 0.38) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.report-featured-listings .report-signal-body {
+  gap: 14px;
+  padding: 16px 20px 20px;
+}
+
+.report-featured-listings .report-signal-body h3 {
+  min-height: 48px;
+  color: #111827;
+  font-size: 1.02rem;
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.report-featured-listings .report-signal-card .mos-badge {
+  top: 12px;
+  left: 12px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.42);
+  font-size: 0.86rem;
+  line-height: 1;
+  z-index: 3;
+}
+
+.report-featured-listings .report-signal-card .new-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.34);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.report-featured-listings .report-signal-card .sc-img-tags {
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 3;
+}
+
+.report-featured-listings .report-signal-card .sc-source-tag,
+.report-featured-listings .report-signal-card .sc-time-tag,
+.report-featured-listings .report-signal-card .sc-drop-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.68);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.report-featured-listings .report-signal-card .sc-time-tag {
+  background: rgba(15, 23, 42, 0.64);
+}
+
+.report-featured-listings .report-signal-card .sc-drop-tag {
+  margin-left: auto;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+}
+
+.report-featured-listings .report-price-container {
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  border: 1px solid #e5e7eb;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06);
+}
+
+.report-featured-listings .report-price-container .price-actual,
+.report-featured-listings .report-price-container .price-fair {
+  min-height: 74px;
+  padding: 11px 10px;
+}
+
+.report-featured-listings .report-price-container .price-actual {
+  border-right: 1px solid #e5e7eb;
+}
+
+.report-featured-listings .report-price-container .price-label {
+  color: #059669;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.report-featured-listings .report-price-container .price-label-fair {
+  color: #64748b;
+}
+
+.report-featured-listings .report-price-container .price-val,
+.report-featured-listings .report-price-container .price-val-fair {
+  color: #111827;
+  font-size: 1.22rem;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+}
+
+.report-featured-listings .report-price-container .price-val.price-deal {
+  color: #059669;
+}
+
+.report-featured-listings .report-price-container .price-m2 {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.report-featured-listings .report-meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  max-height: none;
+}
+
+.report-featured-listings .report-meta-chips .meta-chip {
+  min-height: 26px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  box-shadow: inset 2px 0 0 var(--chip-accent, #64748b), 0 1px 2px rgba(15, 23, 42, 0.04);
+  color: var(--chip-fg, #334155);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.report-featured-listings .report-meta-chips .meta-chip-location { --chip-accent: #14b8a6; --chip-fg: #0f766e; }
+.report-featured-listings .report-meta-chips .meta-chip-area { --chip-accent: #f59e0b; --chip-fg: #92400e; }
+.report-featured-listings .report-meta-chips .meta-chip-legal { --chip-accent: #64748b; --chip-fg: #334155; }
+.report-featured-listings .report-meta-chips .meta-chip-type { --chip-accent: #2563eb; --chip-fg: #1d4ed8; }
+
+.report-featured-listings .report-card-actions {
+  display: grid;
+  grid-template-columns: 0.78fr 1.72fr;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid #edf2f7;
+}
+
+.report-featured-listings .report-card-actions span {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  color: #64748b;
+  background: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.report-featured-listings .report-card-actions span:last-child {
+  color: #475569;
+}
+
+@media (max-width: 1180px) {
+  .report-featured-listings .featured-listing-grid.report-signal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .report-featured-listings .featured-listing-grid.report-signal-grid,
+  .report-featured-listings .report-price-container,
+  .report-featured-listings .report-card-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .report-featured-listings .report-price-container .price-actual {
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+}
