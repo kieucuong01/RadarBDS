@@ -58,6 +58,7 @@ Core scripts:
 |---|---|
 | Create deterministic social queue JSON from `/tin-tuc` | `scripts/radar_social_queue.py` |
 | Dry-run/prepare/publish Page post with browser-use | `scripts/browser_use_page_post.py` |
+| Cron-safe latest article auto-post wrapper | `scripts/radar_social_auto_post.py` |
 
 Recommended flow:
 
@@ -65,8 +66,11 @@ Recommended flow:
 cd /opt/radar-bds/current
 python3 scripts/radar_social_queue.py --slug latest --mode review
 python3 scripts/browser_use_page_post.py --queue /opt/radar-bds/var/social_queue/<file>.json --mode dry-run
-# After explicit approval only:
+# Manual publish if needed:
 python3 scripts/browser_use_page_post.py --queue /opt/radar-bds/var/social_queue/<file>.json --mode publish --yes
+
+# Current approved auto-post wrapper:
+python3 scripts/radar_social_auto_post.py
 ```
 
 Do not use repeated manual accessibility-tree inspection for normal Page posting; it wastes tokens. Use the queue + script path instead.

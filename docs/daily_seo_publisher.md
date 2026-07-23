@@ -14,7 +14,7 @@ This is the canonical repo runbook for the daily `@rb Daily SEO Publish + Social
 4. Draft **1 social post** from the same data atom for Facebook/Zalo/group handoff.
 5. Use real production DB numbers only; no invented counts, prices, legal certainty, testimonials, or guaranteed profit.
 6. Verify production URL, rendered content, sitemap, and logs before reporting done.
-7. Create a social queue item with `scripts/radar_social_queue.py`; use browser-use Page posting only when explicitly approved.
+7. Create a social queue item with `scripts/radar_social_queue.py`; Page auto-post is currently enabled through `@rb Daily Social Auto Post` / `scripts/radar_social_auto_post.py`.
 8. Commit + push repo changes; do not commit runtime data such as `data/facebook_profiles.json`.
 
 ## Current automation
@@ -74,7 +74,7 @@ Rules:
 | SEO styles | `static/css/seo.css` |
 | Verification script | `scripts/verify_live_seo_article.ps1` |
 | Tests | `tests/test_public_seo.py`, `tests/test_public_content_hubs.py` |
-| Social queue | `scripts/radar_social_queue.py`, `scripts/browser_use_page_post.py`, `docs/social-care-workflow.md` |
+| Social queue/auto-post | `scripts/radar_social_queue.py`, `scripts/browser_use_page_post.py`, `scripts/radar_social_auto_post.py`, `docs/social-care-workflow.md` |
 
 ## Daily decision order
 
@@ -231,7 +231,7 @@ URL:
 Hashtags:
 ```
 
-Do not post directly to Facebook unless a separate approved posting integration exists. For @rb, browser-use Page posting is available after manual login, but default mode is review/queue unless anh explicitly asks to publish.
+For @rb, anh has approved auto-post while the user base is small. The daily SEO run should create the queue/social draft; the separate no-agent cron posts the latest queue/article through browser-use and dedupes by `slug:article_date`. Switch back to review/queue mode if anh asks to pause.
 
 ## Reporting shape back to anh Cường
 

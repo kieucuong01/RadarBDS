@@ -102,6 +102,32 @@ Runtime outputs:
 | Screenshot | `/home/hermesops/radar-browser-use/artifacts/` |
 | Run log | `/opt/radar-bds/var/browser_use_runs/` |
 
+## Auto-post mode
+
+Anh Cường approved temporary auto-posting while the user base is still small. The cron-safe wrapper is:
+
+```bash
+/opt/radar-bds/current/scripts/radar_social_auto_post.py
+```
+
+It does all of the following without LLM/UI exploration:
+
+1. Ensure the dedicated Radar Social Chrome/CDP worker is reachable.
+2. Create a publish-mode queue item from the latest `/tin-tuc` article.
+3. Publish it to the Radar BDS Facebook Page via `scripts/browser_use_page_post.py --mode publish --yes`.
+4. Record `slug:article_date` in `/opt/radar-bds/var/social_queue/posted_slugs.json` to avoid duplicate reposts.
+
+Hermes cron:
+
+```text
+@rb Daily Social Auto Post
+schedule: 40 18 * * *
+mode: no_agent=true
+script: /opt/radar-bds/current/scripts/radar_social_auto_post.py
+```
+
+If Facebook shows checkpoint/captcha/login wall, the script fails loudly and the cron delivers the error; do not bypass it automatically.
+
 ## Daily cron behavior
 
 The `@rb Daily SEO Publish + Social Post` cron should:
