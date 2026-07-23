@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Chi tiết lô đất - {{ l['title'] }}</title>
 {% include "partials/google_site_tags.html" %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=mobile-input-zoom-20260612">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=listing-detail-modal-ui-20260720">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.css">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"></noscript>
 <style>
 body.listing-detail-page {
   display: block;
@@ -50,28 +54,46 @@ body.listing-detail-page {
   min-width: 0;
   color: var(--text);
   text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0;
 }
-.listing-detail-logo img {
-  width: 34px;
-  height: 34px;
+.listing-detail-logo .logo-img {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   border-radius: 12px;
+  filter: drop-shadow(0 5px 14px var(--primary-glow));
+  overflow: hidden;
+  flex: 0 0 auto;
 }
-.listing-detail-logo strong,
-.listing-detail-logo span {
+.listing-detail-logo .logo-img img {
+  width: 100%;
+  height: 100%;
   display: block;
+  object-fit: cover;
 }
-.listing-detail-logo strong {
-  color: var(--text);
-  font-size: 1rem;
-  font-weight: 950;
-  line-height: 1.1;
+.listing-detail-logo .logo-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
-.listing-detail-logo span {
-  margin-top: 2px;
+.listing-detail-logo .logo-text {
+  background: linear-gradient(to right, var(--text), var(--text-muted));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.1rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+.listing-detail-logo .logo-subtitle {
+  margin-top: 1px;
   color: var(--text-muted);
-  font-size: 0.58rem;
-  font-weight: 850;
-  letter-spacing: 0.1em;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 .listing-detail-header-right {
@@ -213,7 +235,7 @@ body.listing-detail-page {
   margin-top: 14px;
 }
 .listing-detail-page .sm-mobile-tabs {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .listing-detail-source {
   color: var(--text-muted);
@@ -233,11 +255,11 @@ body.listing-detail-page {
   gap: 16px;
 }
 .listing-detail-page .sm-detail-title {
-  font-size: 1.08rem;
+  font-size: 1rem;
 }
 .listing-detail-page .sm-title-main {
   color: var(--text);
-  font-size: 1.15rem;
+  font-size: 1.05rem;
 }
 .listing-detail-page .sm-title-main,
 .listing-detail-page .sm-title-sub {
@@ -247,8 +269,8 @@ body.listing-detail-page {
   overflow: visible;
 }
 .listing-detail-page .sm-summary-grid {
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.55fr) minmax(0, 0.95fr);
-  gap: 10px;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.45fr) minmax(0, 0.9fr);
+  gap: 8px;
 }
 .listing-detail-advisor {
   border-radius: 14px;
@@ -337,12 +359,38 @@ body.listing-detail-page {
   border: 1px solid var(--border);
   border-radius: 16px;
   background: rgba(248, 250, 252, 0.72);
-  padding: 10px 12px;
+  padding: 14px;
 }
-.listing-chart-svg {
-  display: block;
+.listing-chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.listing-chart-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+.listing-chart-note {
+  margin: 3px 0 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+.listing-chart-canvas-wrap {
+  position: relative;
   width: 100%;
-  height: 200px;
+  height: 230px;
+  min-height: 220px;
+}
+#detail-history-chart {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 .listing-history-stats {
   display: grid;
@@ -513,7 +561,7 @@ body.listing-detail-page {
     margin: 0;
     padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
   }
-  .listing-detail-logo span,
+  .listing-detail-logo .logo-info,
   .listing-detail-stats,
   .listing-detail-account span:not(.listing-detail-account-icon),
   .listing-detail-tier {
@@ -595,8 +643,9 @@ body.listing-detail-page {
   .listing-history-stat strong {
     font-size: 0.92rem;
   }
-  .listing-chart-svg {
-    height: 180px;
+  .listing-chart-canvas-wrap {
+    height: 210px;
+    min-height: 200px;
   }
   .listing-detail-page .sm-thumbs .listing-detail-thumb {
     width: 64px;
@@ -633,10 +682,12 @@ body.listing-detail-page {
 <div class="listing-detail-shell">
   <div class="listing-detail-topbar">
     <a class="listing-detail-logo" href="/?signal={{ l['id'] }}" aria-label="Về Radar BDS">
-      <img src="{{ url_for('static', filename='images/app-icon-192.png') }}" alt="">
-      <span>
-        <strong>Radar<span style="color:var(--primary)">BDS</span></strong>
-        <span>Chuyên sâu Bình Dương</span>
+      <span class="logo-img logo-mark logo-mark-image" aria-hidden="true">
+        <img src="{{ url_for('static', filename='images/app-icon-192.png') }}" alt="">
+      </span>
+      <span class="logo-info">
+        <span class="logo-text">Radar<span style="color:var(--primary); -webkit-text-fill-color:var(--primary);">BDS</span></span>
+        <span class="logo-subtitle">CHUYÊN SÂU BÌNH DƯƠNG</span>
       </span>
     </a>
     <div class="listing-detail-header-right">
@@ -747,7 +798,6 @@ body.listing-detail-page {
           <button type="button" class="sm-tab active" role="tab" aria-selected="true" data-sm-tab="desc" onclick="switchListingPanel('desc', this)">Mô tả</button>
           <button type="button" class="sm-tab" role="tab" aria-selected="false" data-sm-tab="history" onclick="switchListingPanel('history', this)">Lịch sử</button>
           <button type="button" class="sm-tab" role="tab" aria-selected="false" data-sm-tab="memo" onclick="switchListingPanel('memo', this)">Cố vấn</button>
-          <button type="button" class="sm-tab" role="tab" aria-selected="false" data-sm-tab="info" onclick="switchListingPanel('info', this)">Thông tin</button>
         </div>
 
         <section class="sm-section sm-panel active" data-sm-panel="desc" role="tabpanel">
@@ -772,7 +822,16 @@ body.listing-detail-page {
         </section>
 
         <section class="listing-chart-card sm-panel" data-sm-panel="history" role="tabpanel">
-          <div id="detail-history-chart"></div>
+          <div class="listing-chart-head">
+            <div>
+              <h2 class="listing-chart-title">Lịch sử giá</h2>
+              <p class="listing-chart-note">Rê chuột vào từng mốc để xem giá và biến động</p>
+            </div>
+          </div>
+          <div class="listing-chart-canvas-wrap">
+            <canvas id="detail-history-chart" role="img" aria-label="Biểu đồ lịch sử giá"></canvas>
+          </div>
+          <div id="detail-history-empty" class="sm-empty-state" hidden>Chưa có dữ liệu biểu đồ.</div>
         </section>
 
         <section class="sm-section sm-panel" data-sm-panel="history" role="tabpanel">
@@ -780,18 +839,6 @@ body.listing-detail-page {
           <div id="detail-history-stats" class="listing-history-stats"></div>
           <div id="detail-history-rows" class="sm-price-history">
             <div class="sm-empty-state">Đang tải lịch sử...</div>
-          </div>
-        </section>
-
-        <section class="sm-ai-section sm-panel" data-sm-panel="info" role="tabpanel">
-          <div class="sm-ai-label">Thông tin lô đất</div>
-          <div class="sm-memo-metrics">
-            <div class="sm-memo-metric"><span>Khu vực</span><b>{{ l.get('ward') or '-' }}</b></div>
-            <div class="sm-memo-metric"><span>Loại hình</span><b>{{ l.get('property_type_label') or l.get('property_type') or '-' }}</b></div>
-            <div class="sm-memo-metric"><span>Đường</span><b>{{ l.get('road_label') or l.get('road_type') or '-' }}</b></div>
-            <div class="sm-memo-metric"><span>Ngang / Dài</span><b>{{ l.get('frontage_m') or '-' }} m / {{ l.get('depth_m') or '-' }} m</b></div>
-            <div class="sm-memo-metric"><span>Sổ hồng</span><b>{% if l.get('has_so') is sameas true %}Có{% elif l.get('has_so') is sameas false %}Không rõ{% else %}-{% endif %}</b></div>
-            <div class="sm-memo-metric"><span>Người bán</span><b>{{ l.get('seller_name') or '-' }}</b></div>
           </div>
         </section>
 
@@ -842,10 +889,28 @@ const currentListing = {
 };
 let currentImageIndex = 0;
 let galleryTouchStartX = 0;
+let detailHistoryChart = null;
+let detailChartJsPromise = null;
+let latestHistoryRows = [];
 
 function toggleTheme() {
   const root = document.documentElement;
   root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+  if (latestHistoryRows.length) renderHistoryChart(latestHistoryRows);
+}
+
+function ensureDetailChartJs() {
+  if (window.Chart) return Promise.resolve(window.Chart);
+  if (detailChartJsPromise) return detailChartJsPromise;
+  detailChartJsPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
+    script.async = true;
+    script.onload = () => resolve(window.Chart);
+    script.onerror = () => reject(new Error('Chart.js failed to load'));
+    document.head.appendChild(script);
+  });
+  return detailChartJsPromise;
 }
 
 async function renderTopStats() {
@@ -1222,38 +1287,111 @@ function renderHistoryStats(rows) {
   `;
 }
 
-function renderHistoryChart(rows) {
-  const target = document.getElementById('detail-history-chart');
-  if (!target) return;
+async function renderHistoryChart(rows) {
+  const canvas = document.getElementById('detail-history-chart');
+  const empty = document.getElementById('detail-history-empty');
+  if (!canvas) return;
+  latestHistoryRows = Array.isArray(rows) ? rows : [];
   if (!rows.length) {
-    target.innerHTML = '<div class="sm-empty-state">Chưa có dữ liệu biểu đồ.</div>';
+    if (detailHistoryChart) {
+      detailHistoryChart.destroy();
+      detailHistoryChart = null;
+    }
+    canvas.hidden = true;
+    if (empty) empty.hidden = false;
     return;
   }
-  const w = 520, h = 172, padL = 46, padR = 14, padT = 14, padB = 30;
-  const values = rows.map((r) => Number(r.price_ty)).filter(Number.isFinite);
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
-  const priceSpread = maxValue - minValue;
-  const yMin = Math.max(0, minValue - Math.max(0.02, priceSpread * 0.14));
-  const yMax = maxValue + Math.max(0.02, priceSpread * 0.14);
-  const span = Math.max(0.01, yMax - yMin);
-  const x = (i) => rows.length === 1
-    ? (padL + w - padR) / 2
-    : padL + i * (w - padL - padR) / (rows.length - 1);
-  const y = (v) => padT + (yMax - Number(v)) * (h - padT - padB) / span;
-  const points = rows.map((r, i) => `${x(i).toFixed(1)},${y(r.price_ty).toFixed(1)}`).join(' ');
-  const area = `${padL},${h - padB} ${points} ${w - padR},${h - padB}`;
-  const ticks = [yMin, yMin + span / 2, yMax];
-  target.innerHTML = `
-    <svg class="listing-chart-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="Biểu đồ lịch sử giá">
-      ${ticks.map((t) => `<line x1="${padL}" y1="${y(t).toFixed(1)}" x2="${w - padR}" y2="${y(t).toFixed(1)}" stroke="rgba(148,163,184,.22)"/><text x="4" y="${(y(t) + 4).toFixed(1)}" fill="#64748b" font-size="11" font-weight="700">${priceLabel(t)}</text>`).join('')}
-      <polygon points="${area}" fill="rgba(37,99,235,.13)"></polygon>
-      <polyline points="${points}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></polyline>
-      ${rows.map((r, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(r.price_ty).toFixed(1)}" r="3.5" fill="${i === rows.length - 1 ? '#10b981' : '#2563eb'}" stroke="#fff" stroke-width="2"></circle>`).join('')}
-      <text x="${padL}" y="${h - 8}" fill="#64748b" font-size="11" font-weight="800">${escHtml(shortDate(rows[0].date))}</text>
-      <text x="${w - padR}" y="${h - 8}" fill="#64748b" font-size="11" font-weight="800" text-anchor="end">${escHtml(shortDate(rows[rows.length - 1].date))}</text>
-    </svg>
-  `;
+  canvas.hidden = false;
+  if (empty) empty.hidden = true;
+  await ensureDetailChartJs();
+
+  const ctx = canvas.getContext('2d');
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const gridColor = isDark ? 'rgba(148, 163, 184, 0.20)' : 'rgba(148, 163, 184, 0.24)';
+  const tickColor = isDark ? '#94a3b8' : '#64748b';
+  const fill = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 230);
+  fill.addColorStop(0, 'rgba(37, 99, 235, 0.24)');
+  fill.addColorStop(1, 'rgba(37, 99, 235, 0.02)');
+
+  if (detailHistoryChart) detailHistoryChart.destroy();
+  window.Chart.defaults.font.family = "'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif";
+  detailHistoryChart = new window.Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: rows.map((row) => shortDate(row.date)),
+      datasets: [{
+        label: 'Giá rao',
+        data: rows.map((row) => Number(row.price_ty)),
+        borderColor: '#2563eb',
+        backgroundColor: fill,
+        borderWidth: 3,
+        tension: 0.28,
+        fill: true,
+        pointRadius: rows.map((row) => row._is_latest ? 6 : 4.5),
+        pointHoverRadius: 8,
+        pointBorderWidth: 2,
+        pointBorderColor: isDark ? '#0f172a' : '#ffffff',
+        pointBackgroundColor: rows.map((row) => row._is_latest ? '#10b981' : '#2563eb'),
+        pointHoverBackgroundColor: '#0f172a',
+        pointHoverBorderColor: '#10b981',
+        pointHitRadius: 12
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: true },
+      animation: { duration: 280 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: true,
+          displayColors: false,
+          backgroundColor: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)',
+          titleColor: isDark ? '#f8fafc' : '#0f172a',
+          bodyColor: isDark ? '#e2e8f0' : '#334155',
+          borderColor: isDark ? 'rgba(148, 163, 184, 0.26)' : 'rgba(15, 23, 42, 0.12)',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 10,
+          callbacks: {
+            title(items) {
+              const row = rows[items[0]?.dataIndex || 0];
+              return row ? shortDate(row.date) : '';
+            },
+            label(item) {
+              return `Giá rao: ${priceLabel(item.parsed.y)}`;
+            },
+            afterLabel(item) {
+              const row = rows[item.dataIndex];
+              const change = Number(row && row._change_pct);
+              if (!Number.isFinite(change)) return 'Mốc đầu';
+              if (Math.abs(change) < 0.05) return 'Không đổi so với mốc trước';
+              return `${change > 0 ? 'Tăng' : 'Giảm'} ${Math.abs(change).toFixed(1)}% so với mốc trước`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: tickColor, maxRotation: 0, autoSkip: true, maxTicksLimit: 5, font: { weight: 800, size: 11 } },
+          border: { display: false }
+        },
+        y: {
+          beginAtZero: false,
+          grid: { color: gridColor, drawTicks: false },
+          border: { display: false },
+          ticks: {
+            color: tickColor,
+            padding: 8,
+            font: { weight: 800, size: 11 },
+            callback: (value) => priceLabel(value)
+          }
+        }
+      }
+    }
+  });
 }
 
 function renderHistoryRows(rows) {
@@ -1395,10 +1533,10 @@ async function renderHistoryAndComps() {
     if (!rows.length) {
       target.innerHTML = '<div class="sm-empty-state">Chưa có lịch sử giá cho lô này.</div>';
       renderHistoryStats([]);
-      renderHistoryChart([]);
+      await renderHistoryChart([]);
     } else {
       renderHistoryStats(rows);
-      renderHistoryChart(rows);
+      await renderHistoryChart(rows);
       target.innerHTML = `<div class="sm-history-timeline">${renderHistoryRows(rows)}</div>`;
     }
     renderComps(Array.isArray(data.comps) ? data.comps : []);
@@ -1406,10 +1544,10 @@ async function renderHistoryAndComps() {
     const rows = decorateHistoryTimeline(combinedHistory(null));
     if (!rows.length) {
       target.innerHTML = '<div class="sm-empty-state">Không tải được lịch sử giá.</div>';
-      renderHistoryChart([]);
+      await renderHistoryChart([]);
     } else {
       renderHistoryStats(rows);
-      renderHistoryChart(rows);
+      await renderHistoryChart(rows);
       target.innerHTML = `<div class="sm-history-timeline">${renderHistoryRows(rows)}</div>`;
     }
     renderComps([]);
