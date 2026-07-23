@@ -1039,12 +1039,15 @@ svg {
 }
 
 
-/* Report detail: charts should live inside the section they explain, not grouped later. */
+/* Report detail: charts/header text should span the full report width, not the narrow hub/article column. */
+.report-detail .report-header h1,
+.report-detail .report-header > p:not(.seo-eyebrow),
 .report-detail .section-heading {
   max-width: none;
   width: 100%;
 }
 
+.report-detail .report-header > p:not(.seo-eyebrow),
 .report-detail .section-heading > p:not(.seo-eyebrow) {
   max-width: none;
 }
