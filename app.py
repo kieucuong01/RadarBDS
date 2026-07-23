@@ -1481,28 +1481,75 @@ def _vi_decimal(value, digits: int = 1) -> str:
         return ""
 
 
+def _report_period_key(page: dict) -> tuple[int, int]:
+    """Return (year, month) for monthly report pages; (0, 0) if unknown."""
+    report = page.get("report") or {}
+    candidates = [str(report.get("period") or ""), str(page.get("path") or "")]
+    for value in candidates:
+        match = re.search(r"(?:Tháng|thang)[ -]?(\d{1,2})[/-](\d{4})", value, re.I)
+        if match:
+            return (int(match.group(2)), int(match.group(1)))
+    return (0, 0)
+
+
+def _report_month_end(page: dict):
+    year, month = _report_period_key(page)
+    if not year or not month:
+        return None
+    if month == 12:
+        next_month = datetime(year + 1, 1, 1).date()
+    else:
+        next_month = datetime(year, month + 1, 1).date()
+    return next_month - timedelta(days=1)
+
+
+def _report_publish_date(page: dict):
+    raw = str((page.get("report") or {}).get("published_at") or "")[:10]
+    if not raw:
+        return None
+    try:
+        return datetime.strptime(raw, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _is_publishable_monthly_report(page: dict) -> bool:
+    """Monthly reports are public only after the month is closed and generated at/after month-end."""
+    if page.get("variant") != "report":
+        return True
+    month_end = _report_month_end(page)
+    published_at = _report_publish_date(page)
+    if not month_end or not published_at:
+        return False
+    today = datetime.now(_BANGKOK_TZ).date()
+    return today > month_end and published_at >= month_end
+
+
+def _published_report_pages() -> list[dict]:
+    return [
+        dict(item)
+        for item in SEO_PAGES.values()
+        if item.get("variant") == "report" and _is_publishable_monthly_report(item)
+    ]
+
+
+def _report_sort_key(page: dict) -> tuple[int, int, str, str]:
+    year, month = _report_period_key(page)
+    return (year, month, (page.get("report") or {}).get("published_at", ""), page.get("path", ""))
+
+
 def _latest_ward_report(ward_slug: str) -> dict | None:
     prefix = f"/bao-cao/{ward_slug}-thang-"
-    today = datetime.now(_BANGKOK_TZ).date().isoformat()
     candidates = [
         page
         for page in SEO_PAGES.values()
         if page.get("path", "").startswith(prefix)
         and page.get("report")
-        and (
-            not (page.get("report") or {}).get("published_at")
-            or (page.get("report") or {}).get("published_at") <= today
-        )
+        and _is_publishable_monthly_report(page)
     ]
     if not candidates:
         return None
-    return max(
-        candidates,
-        key=lambda page: (
-            (page.get("report") or {}).get("published_at", ""),
-            page.get("path", ""),
-        ),
-    )
+    return max(candidates, key=_report_sort_key)
 
 
 def _build_live_location_snapshot(page: dict) -> dict:
@@ -1683,11 +1730,7 @@ def _render_public_page(page: dict):
 def seo_report_hub_page():
     page = dict(REPORT_HUB)
     page["breadcrumbs"] = _page_breadcrumbs(page)
-    reports = sorted(
-        (dict(item) for item in SEO_PAGES.values() if item.get("variant") == "report"),
-        key=lambda item: (item.get("report") or {}).get("published_at", ""),
-        reverse=True,
-    )
+    reports = sorted(_published_report_pages(), key=_report_sort_key, reverse=True)
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
     return render_template("seo_report_hub.html", page=page, reports=reports, site_meta=site_meta, active_nav="bao-cao")
 
@@ -1734,6 +1777,8 @@ def seo_report_or_article_page(report_slug: str):
 def seo_landing_page(slug):
     page = SEO_PAGES.get(slug)
     if not page:
+        abort(404)
+    if page.get("variant") == "report" and not _is_publishable_monthly_report(page):
         abort(404)
     return _render_public_page(page)
 
@@ -1814,6 +1859,8 @@ def sitemap_xml():
     for page in [REPORT_HUB, KNOWLEDGE_HUB, *SEO_PAGES.values()]:
         path = page.get("path")
         if not path or path in seen_paths:
+            continue
+        if page.get("variant") == "report" and not _is_publishable_monthly_report(page):
             continue
         seen_paths.add(path)
         unique_pages.append(page)

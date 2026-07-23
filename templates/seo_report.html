@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
   {% include "partials/seo_head.html" %}
+  {% if page.charts %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>{% endif %}
 </head>
 <body class="seo-page report-detail">
   {% include "partials/seo_header.html" %}
@@ -54,6 +55,21 @@
 
       <section class="report-insights" aria-labelledby="report-insights">
         <div class="section-heading"><p class="seo-eyebrow">Phân tích</p><h2 id="report-insights">Nhận định từ dữ liệu Radar</h2></div>
+        {% if page.charts %}
+        <div class="report-chart-grid">
+          {% for chart in page.charts %}
+          <div class="report-chart-card">
+            <span>{{ chart.title }}</span>
+            <div class="chart-wrap">
+              <canvas id="{{ chart.id }}"></canvas>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <script>
+          window.CHART_DATA = {{ page.charts | tojson | safe }};
+        </script>
+        {% endif %}
         <div class="insight-grid">
           {% for insight in page.report.insights %}
           <article><h3>{{ insight.title }}</h3><p>{{ insight.body }}</p></article>
@@ -66,6 +82,7 @@
         <ol>{% for item in page.report.methodology %}<li>{{ item }}</li>{% endfor %}</ol>
       </section>
 
+      {% if page.local_links %}
       <section class="report-related" aria-labelledby="report-related">
         <div class="section-heading"><p class="seo-eyebrow">Đọc sâu hơn</p><h2 id="report-related">{{ page.local_links_title }}</h2></div>
         <div class="related-link-grid">
@@ -74,6 +91,7 @@
           {% endfor %}
         </div>
       </section>
+      {% endif %}
 
       <section class="proof-block">
         <strong>Dữ liệu tổng hợp từ tin rao công khai</strong>
@@ -87,6 +105,31 @@
     </article>
   </main>
   {% include "partials/seo_footer.html" %}
+
+  {% if page.charts %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof Chart === 'undefined' || !window.CHART_DATA) return;
+      window.CHART_DATA.forEach(function(cfg) {
+        var ctx = document.getElementById(cfg.id);
+        if (!ctx) return;
+        new Chart(ctx, {
+          type: cfg.type,
+          data: { labels: cfg.labels, datasets: cfg.datasets },
+          options: Object.assign({
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: cfg.legend || false, position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } },
+              tooltip: { backgroundColor: '#1e293b', titleFont: { size: 12 }, bodyFont: { size: 11 } }
+            },
+            scales: cfg.type === 'bar' ? { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } : {}
+          }, cfg.options || {})
+        });
+      });
+    });
+  </script>
+  {% endif %}
 
   <script type="application/ld+json">
   {

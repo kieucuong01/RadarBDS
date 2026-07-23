@@ -15,7 +15,7 @@ Usage:
 """
 
 import sys, os, re, argparse
-from datetime import date
+from datetime import date, timedelta
 
 sys.path.insert(0, "/opt/radar-bds/current")
 os.chdir("/opt/radar-bds/current")
@@ -131,6 +131,14 @@ def query_ward_stats(ward, month_start, month_end):
 def month_label(month, year):
     months = ["", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
     return f"Tháng {months[int(month)]}/{year}"
+
+
+def month_end_date(month, year):
+    month = int(month)
+    year = int(year)
+    if month == 12:
+        return date(year + 1, 1, 1) - timedelta(days=1)
+    return date(year, month + 1, 1) - timedelta(days=1)
 
 
 def generate_insights(ward, stats, prev_stats, m_label_str):
@@ -596,8 +604,18 @@ def main():
     parser.add_argument("--all", action="store_true", help="All TDM wards")
     parser.add_argument("--master", action="store_true", help="Master TDM report only")
     parser.add_argument("--dry-run", action="store_true", help="Print without injecting")
+    parser.add_argument("--allow-in-progress", action="store_true", help="Override safety guard and publish a month that has not fully closed yet")
     parser.add_argument("--config", default="/opt/radar-bds/current/config/seo_pages.py")
     args = parser.parse_args()
+
+    if not args.dry_run and not args.allow_in_progress:
+        closed_after = month_end_date(args.month, args.year)
+        if date.today() <= closed_after:
+            print(
+                f"❌ Refusing to publish in-progress monthly reports for {args.month}/{args.year}. "
+                f"Run after {closed_after.isoformat()} so the month is fully closed, or pass --allow-in-progress explicitly."
+            )
+            sys.exit(2)
 
     targets = []
     if args.ward:
