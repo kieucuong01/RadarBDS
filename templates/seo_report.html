@@ -172,6 +172,33 @@
       </section>
       {% endif %}
 
+      {% if page.report.featured_listings %}
+      <section class="report-featured-listings" aria-labelledby="report-featured-listings">
+        <div class="section-heading">
+          <p class="seo-eyebrow">Tin rao nổi bật</p>
+          <h2 id="report-featured-listings">Một số tin rao đại diện cho Tương Bình Hiệp</h2>
+          <p>Các tin dưới đây có đủ dữ liệu giá/diện tích, MOS dương hoặc ổn trong bộ lọc Radar BDS, và có thể mở trực tiếp vào màn hình chi tiết tin rao.</p>
+        </div>
+        <div class="featured-listing-grid">
+          {% for item in page.report.featured_listings %}
+          <a class="featured-listing-card" href="{{ item.href }}">
+            <span class="listing-type-chip">{{ item.type }}</span>
+            <h3>{{ item.title }}</h3>
+            <dl>
+              <div><dt>Giá</dt><dd>{{ item.price }}</dd></div>
+              <div><dt>Giá/m²</dt><dd>{{ item.price_per_m2 }}</dd></div>
+              <div><dt>Diện tích</dt><dd>{{ item.area }}</dd></div>
+              <div><dt>MOS</dt><dd>{{ item.mos }}</dd></div>
+            </dl>
+            <p>{{ item.note }}</p>
+            <strong>Xem tin rao →</strong>
+          </a>
+          {% endfor %}
+        </div>
+        <p class="featured-listing-note">MOS là chỉ báo sàng lọc của Radar BDS, không thay thẩm định pháp lý, quy hoạch hoặc kiểm tra thực địa.</p>
+      </section>
+      {% endif %}
+
       <section class="proof-block">
         <strong>Dữ liệu tổng hợp từ tin rao công khai</strong>
         <span>Có phạm vi, ngày cập nhật và phương pháp để kiểm tra trước khi thẩm định thực tế.</span>
