@@ -543,7 +543,13 @@ SEO_PAGES = {
             'trend_intro': ['Dữ liệu đủ để đọc xu hướng tại Tương Bình Hiệp bắt đầu rõ từ tháng 04/2026; ba tháng 01-03 chưa có tin rao đủ '
                             'điều kiện sau lọc nên không nội suy giá.',
                             'Từ tháng 04 đến tháng 06, giá trung vị đất nền đi ngang ở 17.5 tr/m² trong tháng 04-05, sau đó lên 18.6 tr/m² '
-                            'trong tháng 06. Nhà đất biến động mạnh hơn: 29.4 → 27.4 → 30.8 tr/m².'],
+                            'trong tháng 06. Nhà đất biến động mạnh hơn: 29.4 → 27.4 → 30.8 tr/m².',
+                            'Điểm đáng chú ý không chỉ là mức tăng 6.3% của đất nền, mà là nguồn cung tháng 06 tăng rất mạnh (+179.6%) '
+                            'trong khi giá đất nền vẫn nhích lên. Điều này cho thấy lượng tin mới chưa tạo áp lực giảm giá rõ rệt; người '
+                            'mua có nhiều lựa chọn hơn, nhưng dữ liệu chưa ủng hộ kịch bản bán tháo diện rộng.',
+                            'Nhà đất có biên dao động giá lớn hơn đất nền vì giá/m² chịu ảnh hưởng thêm bởi chất lượng căn nhà, hẻm/đường, '
+                            'pháp lý và mức hoàn thiện. Vì vậy khi so tin nhà đất, nên lọc sâu từng căn thay vì lấy một mức giá/m² chung '
+                            'để kết luận đắt/rẻ.'],
             'trend_rows': [{'month': '01/2026',
                             'total': '0',
                             'dat_nen_count': '0',
@@ -756,12 +762,28 @@ SEO_PAGES = {
                                          'note': 'tin Tương Bình Hiệp tháng 06 có đủ giá, diện tích và MOS để so sánh'},
                                         {'label': 'MOS ≥ 10%', 'value': '12.8%', 'note': '6/47 tin thấp hơn giá cơ sở từ 10% trở lên'},
                                         {'label': 'MOS ≥ 15%', 'value': '8.5%', 'note': '4/47 tin thuộc nhóm đáng kiểm tra sâu hơn'}],
-                            'body': ['Trong nhóm tin đủ định giá, Radar BDS ghi nhận một tỷ lệ nhỏ tin rao có MOS dương mạnh. Đây là nhóm '
-                                     'nên kiểm tra trước vì giá chào đang thấp hơn giá cơ sở của mô hình, nhưng vẫn cần xác minh pháp lý, '
-                                     'quy hoạch, vị trí và tình trạng thực tế.',
-                                     'Biểu đồ phân tán bên dưới đặt diện tích ở trục ngang và giá/m² ở trục dọc. Các điểm màu nổi bật là '
-                                     'nhóm có MOS cao hơn, tức giá chào thấp hơn giá cơ sở theo dữ liệu Radar.']},
-            'featured_more_href': '/?tab=signals&city=TH%E1%BB%A6+D%E1%BA%A6U+M%E1%BB%98T&ward=T%C6%B0%C6%A1ng+B%C3%ACnh+Hi%E1%BB%87p&date_range=all&mos_min=0'},
+                            'body': ['Trong 47 tin đủ định giá, chỉ 6 tin có MOS từ 10% trở lên và 4 tin đạt MOS từ 15% trở lên. Nghĩa là '
+                                     'cơ hội dưới giá cơ sở ở Tương Bình Hiệp không trải đều toàn thị trường, mà nằm trong một nhóm nhỏ '
+                                     'cần lọc kỹ từng tin.',
+                                     'Nhóm đất nền có MOS cao đang xuất hiện quanh vùng giá 9-13 tr/m², thấp hơn đáng kể so với giá trung '
+                                     'vị đất nền 18.6 tr/m² của phường. Đây là nhóm đáng mở chi tiết trước, nhưng cần kiểm tra lại vị trí '
+                                     'hẻm, quy hoạch, thổ cư và lý do giá chào thấp.',
+                                     'Nhóm nhà đất đáng chú ý nằm quanh 18-20 tr/m², thấp hơn nhiều so với giá trung vị nhà đất 30.8 '
+                                     'tr/m². Tuy nhiên với nhà đất, chênh lệch giá có thể đến từ tình trạng căn nhà, đường vào, diện tích '
+                                     'công nhận hoặc nhu cầu bán nhanh; vì vậy MOS chỉ là tín hiệu sàng lọc ban đầu.',
+                                     'Biểu đồ phân tán đặt diện tích ở trục ngang và giá/m² ở trục dọc. Các điểm nổi bật không nên được '
+                                     'hiểu là “nên mua ngay”, mà là danh sách ưu tiên để kiểm tra pháp lý, hình ảnh, vị trí thực địa và '
+                                     'lịch sử giá trước khi liên hệ.']},
+            'featured_more_href': '/?tab=signals&city=TH%E1%BB%A6+D%E1%BA%A6U+M%E1%BB%98T&ward=T%C6%B0%C6%A1ng+B%C3%ACnh+Hi%E1%BB%87p&date_range=all&mos_min=0',
+            'type_analysis': ['Tương Bình Hiệp tháng 06 có 205 tin nhà đất và 155 tin đất nền. Nhà đất chiếm nguồn cung lớn hơn và cũng '
+                              'tạo nhiều tín hiệu hơn (19/22 dấu hiệu), cho thấy phần “đáng soi” trong tháng này nghiêng về nhà đất hơn là '
+                              'đất nền thuần.',
+                              'Giá trung vị nhà đất 30.8 tr/m² cao hơn đất nền 18.6 tr/m² là hợp lý vì giá đã bao gồm tài sản trên đất. '
+                              'Nhưng mức chênh này cũng làm việc so sánh khó hơn: một căn nhà xuống cấp hoặc hẻm nhỏ có thể nhìn rẻ theo '
+                              'm² nhưng chưa chắc là cơ hội tốt.',
+                              'Đất nền có 155 tin và chỉ 1 tin giảm giá, nghĩa là nhóm này tương đối ổn định hơn. Người mua ngân sách vừa '
+                              'phải nên dùng đất nền làm mốc so sánh nền giá, còn nhóm nhà đất nên lọc theo từng căn, ảnh, đường vào và '
+                              'pháp lý trước khi đánh giá.']},
  'charts': [{'id': 'price-trend-6m-chart',
              'type': 'line',
              'title': 'Biểu đồ Xu hướng Giá (6 tháng gần nhất)',
@@ -962,7 +984,8 @@ SEO_PAGES = {
  'final_cta': {'title': 'Lọc tin Tương Bình Hiệp bằng dashboard Radar BDS',
                'body': 'Dùng báo cáo này làm bước sàng lọc ban đầu, sau đó mở dashboard để xem từng tin theo loại hình, giá/m², dấu hiệu '
                        'nóng và tin giảm giá.',
-               'button': 'Mở dashboard'},
+               'button': 'Mở dashboard',
+               'button_href': '/?tab=signals&city=TH%E1%BB%A6+D%E1%BA%A6U+M%E1%BB%98T&ward=T%C6%B0%C6%A1ng+B%C3%ACnh+Hi%E1%BB%87p&date_range=all&mos_min=0'},
  'scope_label': 'Tương Bình Hiệp'},
     "bao-cao/dinh-hoa-thang-06-2026": {
         "variant": 'report',
