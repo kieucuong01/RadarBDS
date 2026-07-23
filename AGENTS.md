@@ -15,6 +15,7 @@ Read this first in every new AI/dev session. It is the token-light map, not the 
 | Module boundaries, API shape, refactor target | `docs/architecture.md` |
 | Crawl jobs, signal creation, daily automation | `docs/daily_crawl_flow.md` |
 | Daily SEO article publishing | `docs/daily_seo_publisher.md` |
+| Monthly market reports, `/bao-cao` hub, report cron automation | `docs/seo-monthly-reports.md` |
 | Deploy, VPS ops, local/prod DB sync, logs | `docs/operations.md` |
 | Product/data rules, dedup/history, quality gates | `docs/product_rules.md` |
 | Exact local commands and test matrix | `docs/dev_commands.md` |
