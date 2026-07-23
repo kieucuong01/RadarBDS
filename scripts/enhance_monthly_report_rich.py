@@ -126,11 +126,25 @@ def last_six_months(month: int, year: int) -> list[tuple[int, int]]:
     return list(reversed(months))
 
 
-def dashboard_href(ward: str | None = None) -> str:
-    params = {"tab": "signals", "city": "THỦ DẦU MỘT", "date_range": "all", "mos_min": "0"}
+def dashboard_href(ward: str | None = None, *, mos_min: int | str = 0, prop_type: str | None = None) -> str:
+    params = {"tab": "signals", "city": "THỦ DẦU MỘT", "date_range": "all", "mos_min": str(mos_min)}
     if ward:
         params["ward"] = ward
+    if prop_type:
+        params["prop_type"] = prop_type
     return "/?" + urlencode(params)
+
+
+def report_internal_links(ward: str, month: int, year: int) -> list[dict]:
+    mm = f"{month:02d}"
+    return [
+        {"label": f"Dashboard {ward} — MOS ≥ 10%", "href": dashboard_href(ward, mos_min=10), "description": "Mở nhóm tin thấp hơn giá cơ sở từ 10% để kiểm tra chi tiết."},
+        {"label": f"Dashboard {ward} — MOS ≥ 15%", "href": dashboard_href(ward, mos_min=15), "description": "Nhóm tín hiệu mạnh hơn, cần thẩm định pháp lý/vị trí trước."},
+        {"label": f"Lọc đất nền {ward}", "href": dashboard_href(ward, prop_type="dat_nen"), "description": "So riêng đất nền theo giá/m² và MOS, tránh trộn với nhà đất."},
+        {"label": f"Lọc nhà đất {ward}", "href": dashboard_href(ward, prop_type="nha_dat"), "description": "Xem riêng nhà đất vì giá/m² chịu ảnh hưởng chất lượng căn nhà."},
+        {"label": "Báo cáo tổng Thủ Dầu Một", "href": f"/bao-cao/bds-binh-duong-thang-{mm}-{year}", "description": "So sánh phường này với toàn bộ 13 phường cùng kỳ."},
+        {"label": "Công cụ định giá BĐS", "href": "/dinh-gia-bds", "description": "Tự kiểm tra một lô cụ thể bằng dữ liệu định giá Radar BDS."},
+    ]
 
 
 def ward_filter_sql(alias: str, ward: str) -> str:
@@ -317,6 +331,23 @@ def update_ward_page(page: dict, ward: str, month: int, year: int) -> dict:
     for item in ["MOS = mức chênh lệch giữa giá cơ sở Radar và giá chào; MOS dương nghĩa là giá chào thấp hơn giá cơ sở ước tính.", "Tin đáng kiểm tra được chọn từ nhóm đủ giá, diện tích, không blacklist/hidden/outlier, có valuation và link chi tiết /listing/id; ưu tiên tin không trùng, riêng phường ít dữ liệu có thể dùng tin đại diện cùng tài sản để đủ bối cảnh."]:
         if item not in methodology: methodology.append(item)
     report["methodology"] = methodology
+    if report.get("under_value"):
+        report["under_value"]["links"] = [
+            {"label": f"Lọc tin {ward} MOS ≥ 10%", "href": dashboard_href(ward, mos_min=10), "description": "Mở dashboard đã lọc phường và ngưỡng MOS mà báo cáo đang nhắc tới."},
+            {"label": f"Lọc tin {ward} MOS ≥ 15%", "href": dashboard_href(ward, mos_min=15), "description": "Nhóm tín hiệu mạnh hơn, dùng để ưu tiên thẩm định sâu."},
+        ]
+        for metric in report["under_value"].get("metrics", []):
+            if metric.get("label") == "MOS ≥ 10%":
+                metric["href"] = dashboard_href(ward, mos_min=10)
+                metric["cta"] = "Xem tin MOS ≥ 10%"
+            if metric.get("label") == "MOS ≥ 15%":
+                metric["href"] = dashboard_href(ward, mos_min=15)
+                metric["cta"] = "Xem tin MOS ≥ 15%"
+    report["type_filter_links"] = [
+        {"label": f"Lọc đất nền {ward}", "href": dashboard_href(ward, prop_type="dat_nen"), "description": "So riêng đất nền theo giá/m², diện tích và MOS."},
+        {"label": f"Lọc nhà đất {ward}", "href": dashboard_href(ward, prop_type="nha_dat"), "description": "Xem riêng nhà đất vì giá/m² phụ thuộc chất lượng căn nhà."},
+    ]
+    report["internal_links"] = report_internal_links(ward, month, year)
     page["report"] = report
     page["charts"] = [trend_chart(trends), scatter_chart(records)] + type_charts(cur)
     return page
@@ -335,6 +366,13 @@ def update_master_page(page: dict, ward_pages: dict[str, dict], month: int, year
     priced = [r for r in rows if r["median_price"] != "—"]; cheapest = min(priced, key=lambda r: float(r["median_price"])); expensive = max(priced, key=lambda r: float(r["median_price"])); most_signals = max(rows, key=lambda r: int(r["radar_signal"])); most_dropped = max(rows, key=lambda r: int(r["drop_signal"])); weighted = sum(float(r["median_price"]) * int(r["new_listings"]) for r in priced) / sum(int(r["new_listings"]) for r in priced); tdm_ref = round(weighted, 1); mm = f"{month:02d}"
     report = dict(page.get("report") or {})
     report.update({"metrics": [{"label": "Tin đang theo dõi", "value": fmt_num(total), "note": "facebook listings tại TDM"}, {"label": "Giá/m² tham chiếu", "value": f"{tdm_ref} tr/m²", "note": "đất nền — tổng hợp từ 13 phường"}, {"label": "Phường rẻ nhất", "value": cheapest["area"], "note": f"{cheapest['median_price']} tr/m²"}, {"label": "Tổng tín hiệu", "value": str(total_signals), "note": "hot + giảm giá toàn TDM"}], "area_rows": rows, "type_section_eyebrow": "So sánh theo phường", "type_section_title": "Nguồn cung và giá trung vị theo 13 phường Thủ Dầu Một", "type_analysis": [f"Biểu đồ nguồn cung cho thấy {rows[0]['area']} và {rows[1]['area']} là hai phường nhiều tin nhất trong tháng {mm}. Nguồn cung dày giúp dễ so sánh và thương lượng hơn, nhưng không tự động đồng nghĩa giá rẻ.", f"Biểu đồ giá cho thấy biên giữa phường rẻ nhất ({cheapest['area']} {cheapest['median_price']} tr/m²) và phường cao nhất ({expensive['area']} {expensive['median_price']} tr/m²) khá rộng. Vì vậy người mua nên chọn phường theo ngân sách trước, rồi mới lọc MOS từng tin.", f"Tổng {total_signals} tín hiệu toàn TDM là bản đồ ưu tiên để mở dashboard. Phường nhiều tín hiệu giúp có nhiều thứ để soi, còn quyết định từng tài sản vẫn cần kiểm tra pháp lý, quy hoạch, hình ảnh và vị trí thực địa."], "insights": [{"title": f"Phường rẻ nhất: {cheapest['area']} ({cheapest['median_price']} tr/m²)", "body": f"Trong 13 phường Thủ Dầu Một, {cheapest['area']} có giá đất nền thấp nhất theo dữ liệu tháng {mm} ({cheapest['median_price']} tr/m²), còn {expensive['area']} nằm ở vùng cao nhất ({expensive['median_price']} tr/m²). Đây là bước chọn vùng ngân sách, chưa phải kết luận từng tài sản đắt/rẻ."}, {"title": f"Nhiều tín hiệu nhất: {most_signals['area']}", "body": f"{most_signals['area']} dẫn đầu với {most_signals['radar_signal']} tín hiệu đáng chú ý. Phường nhiều tín hiệu nên được mở dashboard để lọc MOS và loại hình, vì không phải tín hiệu nào cũng đủ điều kiện pháp lý/vị trí để xuống tiền."}, {"title": f"Nhiều tin giảm giá: {most_dropped['area']}", "body": f"{most_dropped['area']} có {most_dropped['drop_signal']} tin giảm giá công khai trong tháng. Chỉ số này dùng để ưu tiên kiểm tra, không đồng nghĩa toàn phường đang bán tháo."}]})
+    report["internal_links"] = [
+        {"label": "Dashboard toàn Thủ Dầu Một", "href": dashboard_href(None), "description": "Mở feed tín hiệu toàn khu để lọc theo từng phường."},
+        {"label": "Hub báo cáo BĐS Bình Dương", "href": "/bao-cao", "description": "Xem các báo cáo tháng khác và báo cáo từng phường."},
+        {"label": "Nhà đất Bình Dương", "href": "/binh-duong", "description": "Hub SEO chính cho nhu cầu nhà đất Bình Dương."},
+        {"label": "Bán đất Bình Dương", "href": "/ban-dat-binh-duong", "description": "Trang lọc riêng đất nền, đất thổ cư và giá/m²."},
+        {"label": "Công cụ định giá BĐS", "href": "/dinh-gia-bds", "description": "Tự kiểm tra một lô cụ thể bằng dữ liệu Radar BDS."},
+    ]
     page["report"] = report; page["description"] = f"Báo cáo thị trường BĐS Thủ Dầu Một tháng {mm}/{year}: {fmt_num(total)} tin rao, giá đất nền tham chiếu {tdm_ref} tr/m², {total_signals} tín hiệu từ 13 phường."; page["hero_text"] = f"Báo cáo tháng {mm}/{year} tập trung 13 phường Thủ Dầu Một với {fmt_num(total)} tin rao Facebook sau lọc. Dùng báo cáo như bản đồ chọn phường, sau đó mở dashboard để lọc từng tin theo loại hình, giá/m² và tín hiệu dưới giá cơ sở."; page["final_cta"] = {"title": "So sánh tất cả phường TDM bằng dashboard Radar BDS", "body": "Dùng báo cáo tổng quan làm bản đồ chọn phường, sau đó mở dashboard để lọc tin theo từng phường, loại hình, giá/m² và tín hiệu dưới giá cơ sở.", "button": "Mở dashboard", "button_href": dashboard_href(None)}; page["charts"] = [{"id": "ward-supply-chart", "type": "bar", "title": "Số tin rao theo phường", "labels": [r["area"] for r in rows], "datasets": [{"label": "Số tin rao", "data": [int(r["new_listings"]) for r in rows], "backgroundColor": "#3b82f6", "borderRadius": 3}], "legend": False}, {"id": "ward-price-chart", "type": "bar", "title": "Giá/m² trung vị theo phường (tr/m²)", "labels": [r["area"] for r in rows], "datasets": [{"label": "Giá/m² (tr/m²)", "data": [float(r["median_price"]) if r["median_price"] != "—" else 0 for r in rows], "backgroundColor": "#10b981", "borderRadius": 3}], "legend": False}]
     return page
 

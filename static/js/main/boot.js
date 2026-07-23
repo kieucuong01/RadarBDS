@@ -81,6 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const mosSlider = document.getElementById('mosSlider');
     if (mosSlider) mosSlider.value = initialMosMin;
   }
+  const initialPropTypes = searchParams.getAll('prop_type').filter(Boolean);
+  if (initialPropTypes.length) {
+    document.querySelectorAll('input[name="prop_type"]').forEach(box => {
+      box.checked = initialPropTypes.includes(box.value);
+    });
+  }
   if (typeof syncCoreFilterVisuals === 'function') syncCoreFilterVisuals();
   if (window.INITIAL_WARDS_BY_CITY) {
     globalWardsByCity = window.INITIAL_WARDS_BY_CITY;

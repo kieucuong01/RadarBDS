@@ -101,9 +101,17 @@
               <span>{{ metric.label }}</span>
               <strong>{{ metric.value }}</strong>
               <p>{{ metric.note }}</p>
+              {% if metric.href %}<a class="report-data-link" href="{{ metric.href }}">{{ metric.cta or 'Mở dữ liệu liên quan' }} →</a>{% endif %}
             </article>
             {% endfor %}
           </div>
+          {% if page.report.under_value.links %}
+          <div class="report-inline-links" aria-label="Liên kết dữ liệu dưới giá trị">
+            {% for link in page.report.under_value.links %}
+            <a href="{{ link.href }}"><strong>{{ link.label }}</strong><span>{{ link.description }}</span></a>
+            {% endfor %}
+          </div>
+          {% endif %}
           {% for chart in page.charts %}
           {% if chart.id == 'under-value-scatter-chart' %}
           <div class="report-section-chart">
@@ -136,6 +144,13 @@
             {% endfor %}
           </div>
           {% for paragraph in page.report.type_analysis or [] %}<p>{{ paragraph }}</p>{% endfor %}
+          {% if page.report.type_filter_links %}
+          <div class="report-inline-links" aria-label="Liên kết lọc theo loại hình">
+            {% for link in page.report.type_filter_links %}
+            <a href="{{ link.href }}"><strong>{{ link.label }}</strong><span>{{ link.description }}</span></a>
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
         <p class="table-scroll-hint">Trên màn hình nhỏ, vuốt ngang để xem đủ các cột.</p>
         <div class="report-table-wrap" role="region" aria-label="Bảng chỉ số theo phường" tabindex="0">
@@ -198,6 +213,17 @@
               {% endfor %}
             </tbody>
           </table>
+        </div>
+      </section>
+      {% endif %}
+
+      {% if page.report.internal_links %}
+      <section class="report-related report-seo-links" aria-labelledby="report-seo-links">
+        <div class="section-heading"><p class="seo-eyebrow">Liên kết dữ liệu liên quan</p><h2 id="report-seo-links">Mở thêm dữ liệu để kiểm chứng báo cáo</h2><p>Các liên kết nội bộ giúp đọc tiếp đúng ngữ cảnh: dashboard đã lọc, báo cáo tổng quan, hub dữ liệu và công cụ định giá.</p></div>
+        <div class="related-link-grid">
+          {% for link in page.report.internal_links %}
+          <a href="{{ link.href }}"><strong>{{ link.label }}</strong><span>{{ link.description }}</span></a>
+          {% endfor %}
         </div>
       </section>
       {% endif %}
