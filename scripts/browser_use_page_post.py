@@ -129,7 +129,7 @@ for _ in range(12):
 # Verify a distinctive text prefix appears on the page.
 js('window.scrollTo(0, 0)')
 time.sleep(2)
-needle = message.split('\n', 1)[0][:60]
+needle = message.split('\\n', 1)[0][:60]
 found = False
 for n in ax_nodes():
     name = (n.get('name') or {{}}).get('value', '')
