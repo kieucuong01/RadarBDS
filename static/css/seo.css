@@ -1038,6 +1038,41 @@ svg {
   }
 }
 
+
+/* Report detail: charts should live inside the section they explain, not grouped later. */
+.report-detail .section-heading {
+  max-width: none;
+  width: 100%;
+}
+
+.report-detail .section-heading > p:not(.seo-eyebrow) {
+  max-width: none;
+}
+
+.report-section-chart {
+  width: 100%;
+  margin: 18px 0 18px;
+}
+
+.report-section-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.chart-wrap-large {
+  height: 260px;
+}
+
+@media (max-width: 768px) {
+  .report-section-chart-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .chart-wrap-large {
+    height: 220px;
+  }
+}
+
 /* Fix chart-card in aside to not overflow */
 .chart-card {
   z-index: 3;
