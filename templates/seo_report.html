@@ -34,9 +34,49 @@
           {% endfor %}
         </div>
 
+        {% if page.report.indicators %}
         <div class="section-heading report-table-heading">
-          <p class="seo-eyebrow">So sánh theo phường</p>
-          <h2>Chỉ số theo khu vực</h2>
+          <p class="seo-eyebrow">Chỉ báo đọc nhanh</p>
+          <h2>Xu hướng giá, cắt máu và nguồn cung</h2>
+        </div>
+        <div class="report-indicator-grid">
+          {% for indicator in page.report.indicators %}
+          <article>
+            <span>{{ indicator.label }}</span>
+            <strong>{{ indicator.value }}</strong>
+            <em>{{ indicator.status }}</em>
+            <p>{{ indicator.note }}</p>
+          </article>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if page.report.trend_intro or page.report.trend_rows %}
+        <div class="section-heading report-table-heading">
+          <p class="seo-eyebrow">Xu hướng giá</p>
+          <h2>Xu hướng giá Tương Bình Hiệp 6 tháng gần nhất</h2>
+          {% for paragraph in page.report.trend_intro %}<p>{{ paragraph }}</p>{% endfor %}
+        </div>
+        {% if page.report.trend_rows %}
+        <p class="table-scroll-hint">Trên màn hình nhỏ, vuốt ngang để xem đủ các cột xu hướng.</p>
+        <div class="report-table-wrap" role="region" aria-label="Bảng xu hướng giá 6 tháng" tabindex="0">
+          <table>
+            <thead>
+              <tr><th>Tháng</th><th>Tổng tin</th><th>Đất nền</th><th>Giá trung vị đất nền</th><th>Nhà đất</th><th>Giá trung vị nhà đất</th><th>Tin nóng</th><th>Cắt máu</th><th>Dấu hiệu</th></tr>
+            </thead>
+            <tbody>
+              {% for row in page.report.trend_rows %}
+              <tr><th scope="row">{{ row.month }}</th><td>{{ row.total }}</td><td>{{ row.dat_nen_count }}</td><td>{{ row.dat_nen_price }}</td><td>{{ row.nha_dat_count }}</td><td>{{ row.nha_dat_price }}</td><td>{{ row.hot }}</td><td>{{ row.dropped }}</td><td>{{ row.signals }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <div class="section-heading report-table-heading">
+          <p class="seo-eyebrow">So sánh theo loại hình</p>
+          <h2>Chỉ số theo loại hình BĐS</h2>
         </div>
         <p class="table-scroll-hint">Trên màn hình nhỏ, vuốt ngang để xem đủ các cột.</p>
         <div class="report-table-wrap" role="region" aria-label="Bảng chỉ số theo phường" tabindex="0">
@@ -58,7 +98,7 @@
         {% if page.charts %}
         <div class="report-chart-grid">
           {% for chart in page.charts %}
-          <div class="report-chart-card">
+          <div class="report-chart-card {% if chart.wide %}report-chart-card-wide{% endif %}">
             <span>{{ chart.title }}</span>
             <div class="chart-wrap">
               <canvas id="{{ chart.id }}"></canvas>
@@ -89,6 +129,26 @@
           {% for link in page.local_links %}
           <a href="{{ link.href }}"><strong>{{ link.label }}</strong><span>{{ link.description }}</span></a>
           {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if page.report.comparison_rows %}
+      <section class="seo-report-block" aria-labelledby="report-comparison">
+        <div class="section-heading">
+          <p class="seo-eyebrow">So sánh nhanh</p>
+          <h2 id="report-comparison">Tương Bình Hiệp trong nhóm phường liên quan</h2>
+          <p>So sánh cùng kỳ tháng 06/2026 để người mua thấy Tương Bình Hiệp đang nằm ở đâu về nguồn cung, giá trung vị đất nền và dấu hiệu đáng chú ý.</p>
+        </div>
+        <div class="report-table-wrap" role="region" aria-label="Bảng so sánh phường liên quan" tabindex="0">
+          <table>
+            <thead><tr><th>Khu vực</th><th>Tin rao</th><th>Giá trung vị đất nền</th><th>Dấu hiệu đáng chú ý</th></tr></thead>
+            <tbody>
+              {% for row in page.report.comparison_rows %}
+              <tr><th scope="row">{{ row.area }}</th><td>{{ row.new_listings }}</td><td>{{ row.median_price }}</td><td>{{ row.radar_signal }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </section>
       {% endif %}
