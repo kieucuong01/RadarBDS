@@ -1392,7 +1392,344 @@ SEO_ARTICLES = {'gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026': {'variant':
                                                  'final_cta': {'title': 'Mở Radar BDS để lọc theo khu vực',
                                                                'body': 'Chọn phường, loại hình và khoảng giá để xem '
                                                                        'nhóm tin đáng kiểm tra trước.',
-                                                               'button': 'Mở dashboard'}}}
+                                                               'button': 'Mở dashboard'}},
+"gia-dat-tan-an-thu-dau-mot-hien-nay": {
+    "variant": "knowledge",
+    "path": "/tin-tuc/gia-dat-tan-an-thu-dau-mot-hien-nay",
+    "title": "Giá đất Tân An Thủ Dầu Một hiện nay: đất nền và nhà đất | Radar BDS",
+    "description": "Giá đất Tân An Thủ Dầu Một cập nhật 20/07/2026: 107 tin Facebook 14 ngày, đất nền 19,1 tr/m², nhà đất 19,8 tr/m² và 18 dấu hiệu cần kiểm tra trên Radar.",
+    "keywords": "giá đất Tân An Thủ Dầu Một, đất nền Tân An, nhà đất Tân An, Radar BDS, nhà đất Bình Dương",
+    "breadcrumb_label": "Giá đất Tân An Thủ Dầu Một hiện nay",
+    "hero_badge": "Tin tức BĐS Bình Dương",
+    "hero_title": "Giá đất Tân An Thủ Dầu Một hiện nay: đọc riêng đất nền và nhà đất",
+    "hero_text": "Trong 14 ngày dữ liệu Facebook đang theo dõi, Tân An có 107 tin còn sống và 18 dấu hiệu đáng chú ý. Đất nền có giá trung vị 19,1 tr/m², nhà đất có giá trung vị 19,8 tr/m²; hai nhóm này cần đọc riêng trước khi so giá.",
+    "scope_label": "Thủ Dầu Một · Tân An",
+    "hero_checks": [
+        "107 tin Facebook đang theo dõi tại Tân An trong 14 ngày gần nhất",
+        "Đất nền: 62 tin, 59 tin có giá/m²; giá trung vị 19,1 tr/m²",
+        "Nhà đất: 45 tin, 44 tin có giá/m²; giá trung vị 19,8 tr/m²",
+        "18 dấu hiệu đáng chú ý gồm tin được quan tâm hoặc có giảm giá"
+    ],
+    "primary_cta": "Mở dashboard lọc Tân An",
+    "primary_href": "/?tab=signals&ward=T%C3%A2n%20An&utm_source=seo&utm_medium=article&utm_campaign=tan_an_daily",
+    "secondary_cta": "Xem báo cáo Tân An tháng 06/2026",
+    "secondary_href": "/bao-cao/tan-an-thang-06-2026",
+    "map_label": "Tin tức / Tân An",
+    "hero_metric": {
+        "label": "Giá trung vị đất nền",
+        "value": "19,1",
+        "delta": "tr/m²",
+        "note": "59 tin đất nền Tân An có giá/m²"
+    },
+    "property_card": {
+        "status": "Tân An — dữ liệu tin đang theo dõi",
+        "title": "Đất nền quanh 1,75 tỷ giá trung vị",
+        "price": "19,1 tr/m² · 1,75 tỷ giá trung vị đất nền",
+        "metric_a": "Tin đang theo dõi",
+        "metric_a_value": "107",
+        "metric_b": "Dấu hiệu đáng chú ý",
+        "metric_b_value": "18"
+    },
+    "local_links_title": "Đọc tiếp về Tân An và khu lân cận",
+    "local_links": [
+        {
+            "label": "Báo cáo Tân An tháng 06/2026",
+            "href": "/bao-cao/tan-an-thang-06-2026",
+            "description": "Báo cáo tháng đã chốt dữ liệu, phù hợp để so bối cảnh dài hơn."
+        },
+        {
+            "label": "Báo cáo Thủ Dầu Một tháng 06/2026",
+            "href": "/bao-cao/bds-binh-duong-thang-06-2026",
+            "description": "So Tân An với 12 phường còn lại trong cùng kỳ báo cáo tháng."
+        },
+        {
+            "label": "Giá đất Định Hòa cập nhật tháng 7/2026",
+            "href": "/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
+            "description": "Định Hòa có 123 tin 14 ngày, đất nền 19,9 tr/m² trong cùng nhịp dữ liệu."
+        },
+        {
+            "label": "Cách xem giá đất Bình Dương không bị so sai",
+            "href": "/kien-thuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai",
+            "description": "Nguyên tắc tách phường, loại hình và giá/m² trước khi đánh giá một tin."
+        }
+    ],
+    "faq": [
+        {
+            "q": "Giá đất nền Tân An Thủ Dầu Một hiện khoảng bao nhiêu?",
+            "a": "Theo dữ liệu tin Facebook đang theo dõi của Radar BDS trong 14 ngày gần nhất, đất nền Tân An có giá trung vị 19,1 tr/m² từ 59 tin có giá/m². Giá trung vị nghĩa là một nửa số tin thấp hơn mức này, một nửa cao hơn."
+        },
+        {
+            "q": "Nhà đất Tân An có nên so chung với đất nền không?",
+            "a": "Không nên. Nhà đất Tân An có giá trung vị 19,8 tr/m² và tổng giá trung vị khoảng 2,19 tỷ, trong khi đất nền là 19,1 tr/m² và khoảng 1,75 tỷ. Nhà đất có công trình nên cần so với nhà đất cùng khu vực."
+        },
+        {
+            "q": "18 dấu hiệu đáng chú ý ở Tân An có nghĩa là nên mua không?",
+            "a": "Không. Đây là nhóm tin được Radar BDS đánh dấu để ưu tiên kiểm tra tiếp, gồm tin được quan tâm hoặc có giảm giá. Người mua vẫn cần kiểm tra pháp lý, quy hoạch, vị trí và tình trạng thực tế."
+        },
+        {
+            "q": "Nên so Tân An với phường nào?",
+            "a": "Có thể so Tân An với Định Hòa, Phú Mỹ, Hiệp An và Phú Lợi, nhưng phải tách đất nền và nhà đất. Ví dụ đất nền Tân An 19,1 tr/m² gần Định Hòa 19,9 tr/m², thấp hơn Phú Lợi 26,2 tr/m² và cao hơn Hiệp An 15,6 tr/m²."
+        }
+    ],
+    "article": {
+        "published_at": "2026-07-23",
+        "modified_at": "2026-07-23",
+        "intro": [
+            "Nếu bạn hỏi giá đất Tân An Thủ Dầu Một hiện khoảng bao nhiêu, câu trả lời ngắn là: trong 14 ngày dữ liệu Facebook đang theo dõi, đất nền có giá trung vị 19,1 tr/m², nhà đất 19,8 tr/m². Tân An có 107 tin đang theo dõi và 18 dấu hiệu đáng chú ý cần kiểm tra tiếp.",
+            "Bài viết này dùng dữ liệu production của Radar BDS, chỉ lấy nguồn Facebook, cập nhật đến 20/07/2026. Các mức giá dưới đây là giá rao tham khảo theo loại hình BĐS, không phải giá chốt hay khuyến nghị mua."
+        ],
+        "summary_cards": [
+            {
+                "label": "Tin Tân An 14 ngày",
+                "value": "107",
+                "note": "Tin Facebook đang theo dõi, còn sống trên Radar"
+            },
+            {
+                "label": "Đất nền Tân An",
+                "value": "19,1 tr/m²",
+                "note": "Giá trung vị từ 59 tin đất nền có giá/m²"
+            },
+            {
+                "label": "Nhà đất Tân An",
+                "value": "19,8 tr/m²",
+                "note": "Giá trung vị từ 44 tin nhà đất có giá/m²"
+            },
+            {
+                "label": "Dấu hiệu đáng chú ý",
+                "value": "18",
+                "note": "Tin hot hoặc có giảm giá, cần lọc tiếp"
+            }
+        ],
+        "data_tables": [
+            {
+                "eyebrow": "Dữ liệu Radar BDS · Facebook · 14 ngày",
+                "title": "Giá Tân An theo loại hình BĐS",
+                "note": "Cập nhật đến 20/07/2026. Giá/m² là giá trung vị, cần đọc riêng đất nền và nhà đất.",
+                "columns": [
+                    {
+                        "key": "type",
+                        "label": "Loại hình"
+                    },
+                    {
+                        "key": "tracked",
+                        "label": "Tin đang theo dõi"
+                    },
+                    {
+                        "key": "priced",
+                        "label": "Tin có giá/m²"
+                    },
+                    {
+                        "key": "median_m2",
+                        "label": "Giá trung vị/m²"
+                    },
+                    {
+                        "key": "median_total",
+                        "label": "Tổng giá trung vị"
+                    },
+                    {
+                        "key": "range",
+                        "label": "Vùng 25-75%"
+                    },
+                    {
+                        "key": "signals",
+                        "label": "Dấu hiệu"
+                    }
+                ],
+                "rows": [
+                    {
+                        "type": "Đất nền",
+                        "tracked": "62",
+                        "priced": "59",
+                        "median_m2": "19,1 tr/m²",
+                        "median_total": "1,75 tỷ",
+                        "range": "14,5-19,9 tr/m²",
+                        "signals": "7"
+                    },
+                    {
+                        "type": "Nhà đất",
+                        "tracked": "45",
+                        "priced": "44",
+                        "median_m2": "19,8 tr/m²",
+                        "median_total": "2,19 tỷ",
+                        "range": "18,8-23,1 tr/m²",
+                        "signals": "11"
+                    }
+                ]
+            },
+            {
+                "eyebrow": "So sánh phường lân cận",
+                "title": "Tân An nên so với phường nào?",
+                "note": "Bảng dùng cùng cửa sổ 14 ngày và chỉ đọc hai nhóm chính: đất nền, nhà đất.",
+                "columns": [
+                    {
+                        "key": "ward",
+                        "label": "Phường"
+                    },
+                    {
+                        "key": "tracked",
+                        "label": "Tin"
+                    },
+                    {
+                        "key": "signals",
+                        "label": "Dấu hiệu"
+                    },
+                    {
+                        "key": "dat_nen",
+                        "label": "Đất nền"
+                    },
+                    {
+                        "key": "nha_dat",
+                        "label": "Nhà đất"
+                    }
+                ],
+                "rows": [
+                    {
+                        "ward": "Tân An",
+                        "tracked": "107",
+                        "signals": "18",
+                        "dat_nen": "19,1 tr/m²",
+                        "nha_dat": "19,8 tr/m²"
+                    },
+                    {
+                        "ward": "Định Hòa",
+                        "tracked": "123",
+                        "signals": "20",
+                        "dat_nen": "19,9 tr/m²",
+                        "nha_dat": "18,0 tr/m²"
+                    },
+                    {
+                        "ward": "Phú Mỹ",
+                        "tracked": "158",
+                        "signals": "9",
+                        "dat_nen": "20,0 tr/m²",
+                        "nha_dat": "40,6 tr/m²"
+                    },
+                    {
+                        "ward": "Hiệp An",
+                        "tracked": "155",
+                        "signals": "3",
+                        "dat_nen": "15,6 tr/m²",
+                        "nha_dat": "23,9 tr/m²"
+                    },
+                    {
+                        "ward": "Phú Lợi",
+                        "tracked": "109",
+                        "signals": "17",
+                        "dat_nen": "26,2 tr/m²",
+                        "nha_dat": "37,6 tr/m²"
+                    }
+                ]
+            }
+        ],
+        "charts": [
+            {
+                "eyebrow": "Visual nhanh",
+                "title": "Đất nền và nhà đất Tân An đang khá sát nhau theo giá/m²",
+                "note": "Bar chart dùng giá trung vị/m², không gộp hai loại hình thành một giá chung.",
+                "alt": "Biểu đồ so giá trung vị đất nền và nhà đất Tân An",
+                "rows": [
+                    {
+                        "label": "Đất nền",
+                        "value_label": "19,1 tr/m²",
+                        "width": 96,
+                        "color": "#2563eb"
+                    },
+                    {
+                        "label": "Nhà đất",
+                        "value_label": "19,8 tr/m²",
+                        "width": 100,
+                        "color": "#16a34a"
+                    }
+                ]
+            }
+        ],
+        "sections": [
+            {
+                "id": "gia-dat-nen-tan-an",
+                "heading": "Đất nền Tân An: giá trung vị 19,1 tr/m² từ 59 tin có giá/m²",
+                "paragraphs": [
+                    "Trong 14 ngày gần nhất, Radar BDS ghi nhận 62 tin đất nền Tân An đang theo dõi. Trong đó 59 tin có giá/m² đủ điều kiện để tính giá trung vị. Mức giá trung vị của đất nền là 19,1 tr/m², với tổng giá trung vị khoảng 1,75 tỷ.",
+                    "Vùng 25-75% của đất nền Tân An nằm quanh 14,5-19,9 tr/m². Một tin đất nền thấp hơn vùng này cần kiểm tra lại vị trí, đường vào, thổ cư và quy hoạch. Một tin cao hơn vùng này cần có lý do rõ như mặt tiền, vị trí đẹp hoặc pháp lý tốt."
+                ],
+                "bullets": [
+                    "Đất nền đang theo dõi: 62 tin",
+                    "Đất nền có giá/m²: 59 tin",
+                    "Giá trung vị đất nền: 19,1 tr/m²",
+                    "Tổng giá trung vị đất nền: 1,75 tỷ"
+                ]
+            },
+            {
+                "id": "nha-dat-tan-an",
+                "heading": "Nhà đất Tân An: giá trung vị 19,8 tr/m², tổng giá trung vị 2,19 tỷ",
+                "paragraphs": [
+                    "Nhóm nhà đất Tân An có 45 tin đang theo dõi, trong đó 44 tin có giá/m². Giá trung vị nhà đất là 19,8 tr/m² và tổng giá trung vị khoảng 2,19 tỷ. Mức này đang khá sát đất nền theo giá/m², nhưng không nên kết luận nhà đất rẻ hơn hay tốt hơn nếu chưa xem công trình.",
+                    "Nhà đất phải đọc theo hiện trạng nhà, diện tích xây dựng, hẻm, đường, giấy tờ và khả năng sử dụng ngay. Vì vậy khi so, người mua nên so nhà đất Tân An với các tin nhà đất cùng khu, không dùng bảng đất nền làm chuẩn trực tiếp."
+                ],
+                "bullets": [
+                    "Nhà đất đang theo dõi: 45 tin",
+                    "Nhà đất có giá/m²: 44 tin",
+                    "Giá trung vị nhà đất: 19,8 tr/m²",
+                    "Tổng giá trung vị nhà đất: 2,19 tỷ"
+                ]
+            },
+            {
+                "id": "tin-hieu-tan-an",
+                "heading": "18 dấu hiệu đáng chú ý: nên dùng để lọc, không dùng để quyết định mua",
+                "paragraphs": [
+                    "Trong 107 tin Tân An đang theo dõi, Radar BDS ghi nhận 18 dấu hiệu đáng chú ý. Nhóm này gồm 9 tin được quan tâm và 9 tin có giảm giá. Đây là danh sách ưu tiên để mở dashboard kiểm tra, không phải danh sách khuyến nghị mua.",
+                    "Ví dụ trong dữ liệu gần nhất có một số tin nhà đất Tân An có giảm giá quanh 18,8-23,1 tr/m² và một số tin đất nền quanh 16,6-19,1 tr/m². Những tin này cần xem lại mô tả, vị trí, pháp lý và lịch sử giá trước khi liên hệ."
+                ],
+                "bullets": [
+                    "Tin Tân An tổng: 107",
+                    "Tin hot: 9",
+                    "Tin giảm giá: 9",
+                    "Dữ liệu mới nhất trong mẫu: 20/07/2026"
+                ]
+            },
+            {
+                "id": "so-sanh-tan-an",
+                "heading": "So Tân An với Định Hòa, Phú Mỹ, Hiệp An và Phú Lợi",
+                "paragraphs": [
+                    "Theo cùng cửa sổ 14 ngày, đất nền Tân An 19,1 tr/m² gần Định Hòa 19,9 tr/m² và Phú Mỹ 20,0 tr/m², cao hơn Hiệp An 15,6 tr/m² nhưng thấp hơn Phú Lợi 26,2 tr/m². Đây là cách so hợp lý hơn việc lấy một giá chung cho toàn Thủ Dầu Một.",
+                    "Với nhà đất, Tân An 19,8 tr/m² gần Định Hòa 18,0 tr/m², thấp hơn Hiệp An 23,9 tr/m², Phú Lợi 37,6 tr/m² và Phú Mỹ 40,6 tr/m². Nếu mục tiêu là nhà ở sẵn, nên mở riêng bộ lọc nhà đất thay vì nhìn bảng đất nền."
+                ],
+                "bullets": [
+                    "Đất nền Tân An: 19,1 tr/m²",
+                    "Đất nền Định Hòa: 19,9 tr/m²",
+                    "Nhà đất Tân An: 19,8 tr/m²",
+                    "Nhà đất Phú Mỹ: 40,6 tr/m²"
+                ]
+            },
+            {
+                "id": "cach-loc-dashboard",
+                "heading": "Cách dùng dashboard Radar cho Tân An",
+                "paragraphs": [
+                    "Cách đọc an toàn là mở dashboard, chọn phường Tân An, sau đó chọn loại hình trước: đất nền hoặc nhà đất. Tiếp theo, so giá/m² của từng tin với giá trung vị cùng loại hình và kiểm tra tổng giá có phù hợp ngân sách không.",
+                    "Sau bước lọc dữ liệu, người mua vẫn cần xác minh độc lập: sổ, quy hoạch, hẻm/đường, hiện trạng, tranh chấp và chi phí phát sinh. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận."
+                ],
+                "bullets": [
+                    "Chọn phường Tân An trước",
+                    "Tách đất nền và nhà đất",
+                    "So giá/m² cùng loại hình",
+                    "Kiểm tra pháp lý và thực địa trước khi quyết định"
+                ]
+            }
+        ],
+        "checklist": [
+            "Đã xác định tin thuộc đất nền hay nhà đất.",
+            "Đã so giá/m² với đúng loại hình BĐS tại Tân An.",
+            "Đã nhìn cả tổng giá, không chỉ giá/m².",
+            "Đã mở dashboard để kiểm tra tin có giảm giá hoặc được quan tâm.",
+            "Đã kiểm tra pháp lý, quy hoạch và thực địa trước khi đặt cọc."
+        ]
+    },
+    "final_cta": {
+        "title": "Mở Radar BDS để lọc tin Tân An",
+        "body": "Chọn phường Tân An, tách đất nền và nhà đất, rồi xem nhóm tin đáng kiểm tra trước khi liên hệ.",
+        "button": "Mở dashboard"
+    }
+}
+}
 
 KNOWLEDGE_HUB = {'path': '/kien-thuc',
  'title': 'Tin tức BĐS Bình Dương | Radar BDS',
