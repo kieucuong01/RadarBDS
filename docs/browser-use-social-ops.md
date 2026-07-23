@@ -166,6 +166,8 @@ Group target shape:
 
 ## Broker discovery workflow
 
+Detailed, config-driven broker discovery is packaged in `docs/broker-discovery.md` and `scripts/radar_broker_discovery.py`. Current target areas live in `config/broker_discovery_targets.json`; do not hardcode Hòa Phú/Phú Cường/Bến Cát into browser-use scripts because future campaigns may add Dĩ An, Thuận An, Tân Uyên, or more wards.
+
 Browser-use can collect public broker candidates and score them for review.
 
 Score candidate brokers by:

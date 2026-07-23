@@ -1,0 +1,104 @@
+{
+  "schema": "radar_broker_discovery_targets.v1",
+  "campaign_name": "current_priority",
+  "notes": "Current areas are campaign config, not hardcoded logic. Add Dĩ An/Thuận An/Tân Uyên here when needed.",
+  "target_areas": [
+    {
+      "city": "Thủ Dầu Một",
+      "aliases": [
+        "TDM",
+        "Thu Dau Mot",
+        "Thủ Dầu Một"
+      ],
+      "priority_wards": [
+        {
+          "name": "Hòa Phú",
+          "aliases": [
+            "Hoa Phu",
+            "Hoà Phú",
+            "TP mới Bình Dương",
+            "Thành phố mới"
+          ]
+        },
+        {
+          "name": "Phú Cường",
+          "aliases": [
+            "Phu Cuong",
+            "Phú Cường",
+            "trung tâm Thủ Dầu Một"
+          ]
+        }
+      ]
+    },
+    {
+      "city": "Bến Cát",
+      "aliases": [
+        "Ben Cat",
+        "Bến Cát"
+      ],
+      "priority_wards": [
+        {
+          "name": "Mỹ Phước",
+          "aliases": [
+            "My Phuoc",
+            "Mỹ Phước",
+            "MP1",
+            "MP2",
+            "MP3",
+            "MP4"
+          ]
+        },
+        {
+          "name": "Tân Định",
+          "aliases": [
+            "Tan Dinh",
+            "Tân Định"
+          ]
+        },
+        {
+          "name": "An Điền",
+          "aliases": [
+            "An Dien",
+            "An Điền"
+          ]
+        },
+        {
+          "name": "An Tây",
+          "aliases": [
+            "An Tay",
+            "An Tây"
+          ]
+        },
+        {
+          "name": "Thới Hòa",
+          "aliases": [
+            "Thoi Hoa",
+            "Thới Hòa"
+          ]
+        },
+        {
+          "name": "Hòa Lợi",
+          "aliases": [
+            "Hoa Loi",
+            "Hoà Lợi",
+            "Hòa Lợi"
+          ]
+        },
+        {
+          "name": "Phú An",
+          "aliases": [
+            "Phu An",
+            "Phú An"
+          ]
+        },
+        {
+          "name": "Chánh Phú Hòa",
+          "aliases": [
+            "Chanh Phu Hoa",
+            "Chánh Phú Hòa"
+          ]
+        }
+      ]
+    }
+  ]
+}
