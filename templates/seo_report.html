@@ -59,7 +59,7 @@
         {% if page.report.trend_intro or page.report.trend_rows %}
         <div class="section-heading report-table-heading">
           <p class="seo-eyebrow">Xu hướng giá</p>
-          <h2>Xu hướng giá Tương Bình Hiệp 6 tháng gần nhất</h2>
+          <h2>Xu hướng giá {{ page.scope_label }} 6 tháng gần nhất</h2>
           {% for chart in page.charts %}
           {% if chart.id == 'price-trend-6m-chart' %}
           <div class="report-section-chart">
@@ -121,11 +121,11 @@
         {% endif %}
 
         <div class="section-heading report-table-heading">
-          <p class="seo-eyebrow">So sánh theo loại hình</p>
-          <h2>Chỉ số theo loại hình BĐS</h2>
+          <p class="seo-eyebrow">{{ page.report.type_section_eyebrow or "So sánh theo loại hình" }}</p>
+          <h2>{{ page.report.type_section_title or "Chỉ số theo loại hình BĐS" }}</h2>
           <div class="report-section-chart report-section-chart-grid">
             {% for chart in page.charts %}
-            {% if chart.id in ['type-dist-chart', 'type-price-chart'] %}
+            {% if chart.id in ['type-dist-chart', 'type-price-chart', 'ward-supply-chart', 'ward-price-chart'] %}
             <div class="report-chart-card">
               <span>{{ chart.title }}</span>
               <div class="chart-wrap">
@@ -186,8 +186,8 @@
       <section class="seo-report-block" aria-labelledby="report-comparison">
         <div class="section-heading">
           <p class="seo-eyebrow">So sánh nhanh</p>
-          <h2 id="report-comparison">Tương Bình Hiệp trong nhóm phường liên quan</h2>
-          <p>So sánh cùng kỳ tháng 06/2026 để người mua thấy Tương Bình Hiệp đang nằm ở đâu về nguồn cung, giá trung vị đất nền và dấu hiệu đáng chú ý.</p>
+          <h2 id="report-comparison">{{ page.scope_label }} trong nhóm phường liên quan</h2>
+          <p>So sánh cùng kỳ tháng 06/2026 để người mua thấy {{ page.scope_label }} đang nằm ở đâu về nguồn cung, giá trung vị đất nền và dấu hiệu đáng chú ý.</p>
         </div>
         <div class="report-table-wrap" role="region" aria-label="Bảng so sánh phường liên quan" tabindex="0">
           <table>
@@ -237,7 +237,7 @@
                 </div>
               </div>
               <div class="sc-meta-chips report-meta-chips">
-                <span class="meta-chip meta-chip-location">◎ Tương Bình Hiệp</span>
+                <span class="meta-chip meta-chip-location">◎ {{ page.scope_label }}</span>
                 <span class="meta-chip meta-chip-area">▭ {{ item.area }}</span>
                 <span class="meta-chip meta-chip-legal">⚑ {{ item.legal }}</span>
                 <span class="meta-chip meta-chip-type">{{ item.type }}</span>
