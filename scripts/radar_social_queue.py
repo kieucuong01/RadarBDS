@@ -10,10 +10,13 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import re
 import sys
 import textwrap
+import unicodedata
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -72,50 +75,172 @@ def _short_title(page: dict[str, Any]) -> str:
     return title
 
 
-def _extract_data_point(page: dict[str, Any]) -> str:
+def _article_cards(page: dict[str, Any]) -> list[dict[str, Any]]:
     cards: list[dict[str, Any]] = []
     article = page.get("article") or {}
     for key in ("summary_cards", "data_cards", "metrics"):
         value = article.get(key) or page.get(key)
         if isinstance(value, list):
             cards.extend([x for x in value if isinstance(x, dict)])
-    parts: list[str] = []
-    for card in cards[:3]:
+    return cards
+
+
+def _find_card(cards: list[dict[str, Any]], *needles: str) -> dict[str, str]:
+    for card in cards:
         label = _plain(card.get("label") or card.get("title") or "")
-        value = _plain(card.get("value") or card.get("body") or card.get("note") or "")
-        if label and value:
-            parts.append(f"{label}: {value}")
-        elif label:
-            parts.append(label)
-    if parts:
-        return "; ".join(parts)
-    desc = _plain(page.get("description") or page.get("hero_text") or "")
-    return desc[:260].rstrip(" ,.;")
+        haystack = label.casefold()
+        if all(n.casefold() in haystack for n in needles):
+            return {
+                "label": label,
+                "value": _plain(card.get("value") or card.get("body") or card.get("note") or ""),
+                "note": _plain(card.get("note") or ""),
+            }
+    return {"label": "", "value": "", "note": ""}
 
 
-def _build_message(page: dict[str, Any], url: str, style: str = "data_post") -> str:
+def _extract_ward(page: dict[str, Any], cards: list[dict[str, Any]]) -> str:
+    for card in cards:
+        label = _plain(card.get("label") or card.get("title") or "")
+        m = re.search(r"(?:Tin|Đất nền|Nhà đất)\s+(.+?)\s+(?:14 ngày|$)", label)
+        if m:
+            return m.group(1).strip()
     title = _short_title(page)
-    data = _extract_data_point(page)
+    m = re.search(r"Giá đất\s+(.+?)\s+Thủ Dầu Một", title, flags=re.I)
+    if m:
+        return m.group(1).strip()
+    return _plain(page.get("scope_label") or page.get("map_label") or "khu vực này")
+
+
+def _value(card: dict[str, str], fallback: str = "chưa đủ dữ liệu") -> str:
+    return card.get("value") or fallback
+
+
+def _signal_phrase(signal_card: dict[str, str]) -> str:
+    value = _value(signal_card, "0")
+    digits = re.search(r"\d+", value)
+    if digits and int(digits.group(0)) <= 0:
+        return "chưa có tin nổi bật cần kiểm tra gấp"
+    return f"{value} tin có dấu hiệu đáng kiểm tra"
+
+
+def _slug_hashtag(ward: str) -> str:
+    text = unicodedata.normalize("NFD", ward)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    text = re.sub(r"Đ", "D", text).replace("đ", "d")
+    text = re.sub(r"[^A-Za-z0-9]+", "", text.title())
+    return text or "ThuDauMot"
+
+
+
+
+def _hashtags_for_page(page: dict[str, Any]) -> list[str]:
+    ward = _extract_ward(page, _article_cards(page))
+    ward_tag = _slug_hashtag(ward)
+    if ward_tag and ward_tag != "ThuDauMot":
+        return ["RadarBDS", "BinhDuong", ward_tag]
+    return ["RadarBDS", "BinhDuong", "ThuDauMot"]
+
+
+def _utm_url(url: str, slug: str) -> str:
+    parsed = urllib.parse.urlsplit(url)
+    query = dict(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
+    query.update({
+        "utm_source": "facebook",
+        "utm_medium": "organic",
+        "utm_campaign": "daily_article",
+        "utm_content": slug,
+    })
+    return urllib.parse.urlunsplit(parsed._replace(query=urllib.parse.urlencode(query)))
+
+
+def _variant_for_slug(slug: str, signal_card: dict[str, str]) -> str:
+    signal_value = signal_card.get("value") or "0"
+    has_signal = bool(re.search(r"[1-9]", signal_value))
+    bucket = int(hashlib.sha1(slug.encode("utf-8")).hexdigest(), 16) % 3
+    if has_signal and bucket == 0:
+        return "signal_first"
+    if bucket == 1:
+        return "problem_first"
+    return "data_first"
+
+
+def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slug: str = "") -> str:
+    cards = _article_cards(page)
+    ward = _extract_ward(page, cards)
+    listing = _find_card(cards, "tin")
+    land = _find_card(cards, "đất nền")
+    house = _find_card(cards, "nhà đất")
+    signal = _find_card(cards, "dấu hiệu")
+    window = "14 ngày"
+    listing_count = _value(listing, "nhiều")
+    land_price = _value(land)
+    house_price = _value(house)
+    signal_text = _signal_phrase(signal)
+    tracked_line = f"Giá rao {ward} {window} qua có {listing_count} tin Radar đang theo dõi."
+    final_url = _utm_url(url, slug or _plain(page.get("path") or "daily_article"))
+    ward_hashtag = _slug_hashtag(ward)
+    hashtags = f"#RadarBDS #BinhDuong #{ward_hashtag if ward_hashtag != 'ThuDauMot' else 'ThuDauMot'}"
+    variant = _variant_for_slug(slug or _short_title(page), signal)
     if style == "market_pulse":
-        hook = f"Một góc nhìn nhanh từ dữ liệu Radar BDS: {title}."
+        variant = "data_first"
+
+    if variant == "signal_first":
+        body = f"""
+        {signal_text.capitalize()} tại {ward} trên Radar BDS.
+
+        Bối cảnh: {listing_count} tin trong {window}; đất nền giá rao trung vị {land_price}, nhà đất giá rao trung vị {house_price}.
+
+        Mở dashboard để xem từng tin, rồi đọc bài phân tích nếu cần bối cảnh khu vực:
+        {final_url}
+
+        {hashtags}
+        """
+    elif variant == "problem_first":
+        body = f"""
+        Đang so giá {ward}? Một con số chung dễ làm bạn so sai.
+
+        {window.capitalize()} gần nhất: {listing_count} tin rao.
+        Đất nền: giá rao trung vị {land_price}.
+        Nhà đất: giá rao trung vị {house_price}.
+
+        Radar BDS tách dữ liệu theo loại hình để bạn kiểm tra từng tin trước khi gọi môi giới:
+        {final_url}
+
+        {hashtags}
+        """
     else:
-        hook = f"Bài mới trên Radar BDS: {title}."
-    interpretation = (
-        "Khi xem giá rao, nên tách đất nền và nhà đất, đồng thời mở dashboard để kiểm tra từng tin trước khi gọi môi giới."
-    )
-    body = f"""
-    {hook}
+        body = f"""
+        {tracked_line}
 
-    {data}
+        • Đất nền: giá rao trung vị {land_price}
+        • Nhà đất: giá rao trung vị {house_price}
+        • {signal_text}
 
-    {interpretation}
+        Đừng gộp 2 loại hình khi so giá. Xem bài + mở dashboard để lọc từng tin trước khi gọi môi giới:
+        {final_url}
 
-    Xem bài phân tích + mở dashboard Radar BDS:
-    {url}
+        {hashtags}
+        """
+    return _scrub_marketing_copy(textwrap.dedent(body).strip())
 
-    #RadarBDS #BinhDuong #ThuDauMot #NhaDatBinhDuong
-    """
-    return textwrap.dedent(body).strip()
+
+def _scrub_marketing_copy(text: str) -> str:
+    forbidden = [
+        "deal ngon",
+        "lời chắc",
+        "cam kết lợi nhuận",
+        "sinh lời",
+        "cơ hội vàng",
+        "rẻ nhất",
+        "dưới giá thị trường",
+        "hot nhất",
+        "sốt đất",
+    ]
+    lowered = text.casefold()
+    hits = [word for word in forbidden if word.casefold() in lowered]
+    if hits:
+        raise ValueError(f"Forbidden marketing claim(s) in social copy: {', '.join(hits)}")
+    return text
 
 
 def _check_url(url: str, timeout: int = 12) -> int | None:
@@ -158,9 +283,9 @@ def create(args: argparse.Namespace) -> dict[str, Any]:
         },
         "content": {
             "style": args.style,
-            "message": _build_message(page, url, args.style),
-            "link": url,
-            "hashtags": ["RadarBDS", "BinhDuong", "ThuDauMot", "NhaDatBinhDuong"],
+            "message": _build_message(page, url, args.style, slug),
+            "link": _utm_url(url, slug),
+            "hashtags": _hashtags_for_page(page),
         },
         "status": "queued",
         "guards": {

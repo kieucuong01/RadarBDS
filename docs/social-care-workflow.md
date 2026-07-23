@@ -69,6 +69,37 @@ Queue schema summary:
 }
 ```
 
+
+## Facebook Page copy standard
+
+Agency `social-media-strategist` audited the first auto-post template and scored it **6.5/10**: safe and data-driven, but too much like an RSS announcement. The queue script now uses Facebook-native deterministic variants instead of the old `Bài mới trên Radar BDS...` hook.
+
+Current encoded rules in `scripts/radar_social_queue.py`:
+
+- Use 3 rotating variants by `sha1(slug) % 3`: `data_first`, `problem_first`, `signal_first`.
+- Start with local data or buyer problem, not with “Bài mới”.
+- Render prices as **“giá rao trung vị”**.
+- Prioritize these facts: listing count, đất nền median, nhà đất median, `tin có dấu hiệu đáng kiểm tra`.
+- CTA: “Xem bài + mở dashboard để lọc từng tin trước khi gọi môi giới”.
+- Append UTM: `utm_source=facebook&utm_medium=organic&utm_campaign=daily_article&utm_content=<slug>`.
+- Use max 3 hashtags, normally `#RadarBDS #BinhDuong #<WardNoAccent>`.
+- Hard-block hype/compliance-risk phrases: `deal ngon`, `lời chắc`, `cam kết lợi nhuận`, `sinh lời`, `cơ hội vàng`, `rẻ nhất`, `dưới giá thị trường`, `hot nhất`, `sốt đất`.
+
+Default data-first shape:
+
+```text
+Giá rao {phường} 14 ngày qua có {số_tin} tin Radar đang theo dõi.
+
+• Đất nền: giá rao trung vị {giá_đất_nền}
+• Nhà đất: giá rao trung vị {giá_nhà_đất}
+• {số_tin} tin có dấu hiệu đáng kiểm tra
+
+Đừng gộp 2 loại hình khi so giá. Xem bài + mở dashboard để lọc từng tin trước khi gọi môi giới:
+{url_utm}
+
+#RadarBDS #BinhDuong #{PhuongKhongDau}
+```
+
 ## Facebook Page posting
 
 Dry-run a queue item:
