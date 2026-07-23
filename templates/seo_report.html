@@ -3,6 +3,11 @@
 <head>
   {% include "partials/seo_head.html" %}
   {% if page.charts %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>{% endif %}
+  <style>
+    .report-detail .seo-final-cta { grid-template-columns: minmax(0, 1fr) auto; }
+    .report-detail .seo-final-cta > div { min-width: 0; }
+    @media (max-width: 768px) { .report-detail .seo-final-cta { grid-template-columns: minmax(0, 1fr); } }
+  </style>
 </head>
 <body class="seo-page report-detail">
   {% include "partials/seo_header.html" %}
@@ -158,7 +163,7 @@
         <span>Có phạm vi, ngày cập nhật và phương pháp để kiểm tra trước khi thẩm định thực tế.</span>
       </section>
 
-      <section class="seo-final-cta">
+      <section class="seo-final-cta" style="grid-template-columns:minmax(0,1fr) auto;">
         <div><p class="seo-eyebrow">Mở dữ liệu phía sau báo cáo</p><h2>{{ page.final_cta.title }}</h2><p>{{ page.final_cta.body }}</p></div>
         <a class="seo-primary-cta" href="/?tab=signals" data-track-cta="report_signals">{{ page.final_cta.button }}</a>
       </section>
