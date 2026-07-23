@@ -91,6 +91,35 @@
         {% endif %}
         {% endif %}
 
+        {% if page.report.under_value %}
+        <div class="section-heading report-table-heading under-value-section">
+          <p class="seo-eyebrow">Phân tích dưới giá trị</p>
+          <h2>{{ page.report.under_value.title }}</h2>
+          <div class="under-value-grid">
+            {% for metric in page.report.under_value.metrics %}
+            <article>
+              <span>{{ metric.label }}</span>
+              <strong>{{ metric.value }}</strong>
+              <p>{{ metric.note }}</p>
+            </article>
+            {% endfor %}
+          </div>
+          {% for chart in page.charts %}
+          {% if chart.id == 'under-value-scatter-chart' %}
+          <div class="report-section-chart">
+            <div class="report-chart-card report-chart-card-wide">
+              <span>{{ chart.title }}</span>
+              <div class="chart-wrap chart-wrap-large">
+                <canvas id="{{ chart.id }}"></canvas>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+          {% for paragraph in page.report.under_value.body %}<p>{{ paragraph }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
         <div class="section-heading report-table-heading">
           <p class="seo-eyebrow">So sánh theo loại hình</p>
           <h2>Chỉ số theo loại hình BĐS</h2>
@@ -175,27 +204,48 @@
       {% if page.report.featured_listings %}
       <section class="report-featured-listings" aria-labelledby="report-featured-listings">
         <div class="section-heading">
-          <p class="seo-eyebrow">Tin rao nổi bật</p>
-          <h2 id="report-featured-listings">Một số tin rao đại diện cho Tương Bình Hiệp</h2>
-          <p>Các tin dưới đây có đủ dữ liệu giá/diện tích, MOS dương hoặc ổn trong bộ lọc Radar BDS, và có thể mở trực tiếp vào màn hình chi tiết tin rao.</p>
+          <p class="seo-eyebrow">Tin đáng kiểm tra</p>
+          <h2 id="report-featured-listings">Một số tin rao dưới giá cơ sở trong tháng</h2>
+          <p>Các card này dùng UI tương tự signal Radar BDS: có MOS, giá thực tế, giá cơ sở, diện tích và link trực tiếp sang màn hình chi tiết `/listing/id`.</p>
         </div>
-        <div class="featured-listing-grid">
+        <div class="featured-listing-grid report-signal-grid">
           {% for item in page.report.featured_listings %}
-          <a class="featured-listing-card" href="{{ item.href }}">
-            <span class="listing-type-chip">{{ item.type }}</span>
-            <h3>{{ item.title }}</h3>
-            <dl>
-              <div><dt>Giá</dt><dd>{{ item.price }}</dd></div>
-              <div><dt>Giá/m²</dt><dd>{{ item.price_per_m2 }}</dd></div>
-              <div><dt>Diện tích</dt><dd>{{ item.area }}</dd></div>
-              <div><dt>MOS</dt><dd>{{ item.mos }}</dd></div>
-            </dl>
-            <p>{{ item.note }}</p>
-            <strong>Xem tin rao →</strong>
+          <a class="featured-listing-card report-signal-card {% if item.price_dropped %}is-new-signal{% endif %}" href="{{ item.href }}">
+            <div class="report-signal-media">
+              {% if item.image %}<img src="{{ item.image }}" alt="{{ item.title }}" loading="eager">{% endif %}
+              <span class="mos-badge">Rẻ hơn {{ item.mos|replace('+','') }}</span>
+              <div class="sc-img-tags">
+                <span class="sc-source-tag">{{ item.type }}</span>
+                {% if item.price_dropped %}<span class="sc-drop-tag">Giảm giá</span>{% endif %}
+              </div>
+            </div>
+            <div class="report-signal-body">
+              <h3>{{ item.title }}</h3>
+              <div class="price-container report-price-container">
+                <div class="price-actual">
+                  <span class="price-label price-label-actual price-deal">THỰC TẾ</span>
+                  <div class="price-val price-deal">{{ item.price }}</div>
+                  <div class="price-m2">{{ item.price_per_m2 }}</div>
+                </div>
+                <div class="price-fair">
+                  <span class="price-label price-label-fair">GIÁ CƠ SỞ</span>
+                  <div class="price-val-fair">{{ item.fair_price_per_m2 }}</div>
+                  <div class="price-m2">ước tính theo Radar</div>
+                </div>
+              </div>
+              <div class="sc-meta-chips report-meta-chips">
+                <span class="meta-chip">{{ item.area }}</span>
+                <span class="meta-chip">MOS {{ item.mos }}</span>
+                <span class="meta-chip">Score {{ item.score }}</span>
+                <span class="meta-chip">{{ item.legal }}</span>
+              </div>
+              <p>{{ item.note }}</p>
+              <strong>Xem chi tiết tin rao →</strong>
+            </div>
           </a>
           {% endfor %}
         </div>
-        <p class="featured-listing-note">MOS là chỉ báo sàng lọc của Radar BDS, không thay thẩm định pháp lý, quy hoạch hoặc kiểm tra thực địa.</p>
+        <p class="featured-listing-note">MOS là chỉ báo sàng lọc dưới giá cơ sở, không thay thẩm định pháp lý, quy hoạch hoặc kiểm tra thực địa.</p>
       </section>
       {% endif %}
 
