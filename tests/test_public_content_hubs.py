@@ -12,24 +12,27 @@ ARTICLE_EXPECTATIONS = {
 }
 
 
-def test_two_content_hubs_exist_and_news_hub_does_not():
+def test_content_hubs_include_reports_news_and_legacy_knowledge():
     import app as radar_app
 
     client = radar_app.app.test_client()
     report = client.get("/bao-cao")
     knowledge = client.get("/kien-thuc")
+    news = client.get("/tin-tuc")
 
     assert report.status_code == 200
     assert knowledge.status_code == 200
-    assert client.get("/tin-tuc").status_code == 404
+    assert news.status_code == 200
 
     report_html = report.get_data(as_text=True)
     knowledge_html = knowledge.get_data(as_text=True)
+    news_html = news.get_data(as_text=True)
     assert '<link rel="canonical" href="https://radarbds.vn/bao-cao">' in report_html
     assert '<link rel="canonical" href="https://radarbds.vn/kien-thuc">' in knowledge_html
+    assert '<link rel="canonical" href="https://radarbds.vn/tin-tuc">' in news_html
     assert 'class="seo-page report-hub"' in report_html
     assert 'class="seo-page knowledge-hub"' in knowledge_html
-    for html in (report_html, knowledge_html):
+    for html in (report_html, knowledge_html, news_html):
         assert 'class="hub-hero hub-hero-grid"' in html
         assert 'class="hub-insight-panel"' in html
         assert 'class="hub-card-number"' in html or 'class="hub-featured-index"' in html
@@ -49,6 +52,7 @@ def test_two_content_hubs_exist_and_news_hub_does_not():
         ("/bang-gia-dat-tphcm", "bang-gia-dat"),
         ("/bao-cao", "bao-cao"),
         ("/kien-thuc", "kien-thuc"),
+        ("/tin-tuc", "tin-tuc"),
         ("/san-deal-bds", "san-deal"),
     ],
 )
@@ -56,7 +60,7 @@ def test_shared_navigation_and_active_state(path, active):
     import app as radar_app
 
     html = radar_app.app.test_client().get(path).get_data(as_text=True)
-    for item in ("binh-duong", "dinh-gia", "bang-gia-dat", "bao-cao", "kien-thuc", "san-deal"):
+    for item in ("binh-duong", "dinh-gia", "bang-gia-dat", "bao-cao", "tin-tuc", "san-deal"):
         assert f'data-nav="{item}"' in html
     assert f'data-nav="{active}" aria-current="page"' in html
     assert ">Bán đất</a>" not in html
@@ -113,6 +117,7 @@ def test_hubs_are_in_sitemap_and_detail_canonicals_stay_unchanged():
 
     assert "<loc>https://radarbds.vn/bao-cao</loc>" in sitemap
     assert "<loc>https://radarbds.vn/kien-thuc</loc>" in sitemap
+    assert "<loc>https://radarbds.vn/tin-tuc</loc>" in sitemap
     client = radar_app.app.test_client()
     for article in SEO_ARTICLES.values():
         html = client.get(article["path"]).get_data(as_text=True)

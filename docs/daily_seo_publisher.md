@@ -1,121 +1,241 @@
-# Daily SEO Publisher
+# Daily SEO Publisher — Radar BDS (`/tin-tuc`)
 
-This workflow is now a Hermes-compatible SEO runbook. Codex cron automations for
-Radar BDS marketing are retired.
+This is the canonical repo runbook for the daily `@rb Daily SEO Publish + Social Post` Hermes cron and for Codex/AI agents asked to publish Radar BDS SEO content.
 
-## Goal
+## TL;DR for Codex / AI agents
 
-Bring qualified real-estate searchers into Radar BDS pages and then into the
-dashboard signal feed.
+1. Read `../AGENTS.md`, `docs/README.md`, then this file.
+2. Run the context helper first; do not load raw DB dumps into the prompt:
+   ```bash
+   sudo -u radar /opt/radar-bds/.venv/bin/python \
+     /opt/radar-bds/current/scripts/radar_daily_seo_context.py --days 14 --limit 8
+   ```
+3. Publish **1 SEO/AIO/AI-SEO article per day** on `/tin-tuc/<slug>` when there is no production blocker.
+4. Draft **1 social post** from the same data atom for Facebook/Zalo/group handoff.
+5. Use real production DB numbers only; no invented counts, prices, legal certainty, testimonials, or guaranteed profit.
+6. Verify production URL, rendered content, sitemap, and logs before reporting done.
+7. Commit + push repo changes; do not commit runtime data such as `data/facebook_profiles.json`.
+
+## Current automation
+
+| Item | Value |
+|---|---|
+| Hermes job | `@rb Daily SEO Publish + Social Post` |
+| Job ID | `d4d23485acd7` |
+| Schedule | `10 18 * * *` |
+| Delivery | Origin Telegram chat |
+| Mode | LLM-driven cron, not `no_agent` |
+| Skills | `radar-bds-seo`, `portfolio-project-ops` |
+| Toolsets | `terminal`, `file`, `web`, `browser` |
+| Repo helper | `scripts/radar_daily_seo_context.py` |
+| Main content config | `config/seo_articles.py` |
+| Article route | `/tin-tuc/<slug>` |
+| Legacy route | `/kien-thuc/*` — do not publish new content here |
+
+Daily SEO content needs judgment/writing, so it is **not** script-only like monthly reports. The token-light part is the repo helper script: it emits compact article inventory + ward data pulse so the cron/agent does not need raw table dumps.
+
+## Funnel goal
 
 ```text
-SEO query
-  -> public page/report/article
-  -> dashboard filtered by ward/cluster when possible
-  -> signal card review
+SEO/AIO query
+  -> /tin-tuc/<slug> article
+  -> filtered dashboard or related /bao-cao report
+  -> user reviews signal cards
   -> contact / lead CTA
 ```
 
-Do not make watchlist, Telegram, or VIP upgrade the default SEO funnel.
+Do not make Telegram/VIP/watchlist the default SEO funnel. The primary CTA is to the dashboard signal feed, preferably filtered by ward/property type/MOS.
 
-## Read Order
+## URL taxonomy
 
-1. `../AGENTS.md`
-2. `../.agents/product-marketing.md`
-3. `README.md`
-4. `growth_marketing_workflow.md`
-5. `hermes_marketing_workflow.md`
-6. `.agents/skills/content-strategy/SKILL.md`
-7. `.agents/skills/seo-audit/SKILL.md`
-8. `.agents/skills/ai-seo/SKILL.md`
-9. `.agents/skills/analytics/SKILL.md`
-10. `config/seo_pages.py`
-11. `config/seo_locations.py`
-12. `config/seo_articles.py`
-13. `../.agents/seo-publish-history.md`
-14. `../.agents/loops/daily-seo-publisher.log`
+| Content type | Path |
+|---|---|
+| Daily SEO/AIO/AI-SEO article, news, evergreen guide, comparison, buying guide | `/tin-tuc/<slug>` |
+| Monthly/ward market reports | `/bao-cao/<slug>` |
+| Legacy knowledge articles | `/kien-thuc/<slug>` |
 
-Read `operations.md` only when the run will commit, deploy, or verify
-production.
+Rules:
 
-## Decision Order
+- New daily content goes to `/tin-tuc/<slug>`.
+- Do not publish new content to `/kien-thuc`.
+- Do not put formal monthly report pages under `/tin-tuc`; use `/bao-cao` after the month closes.
 
-Each run checks daily but does not have to publish daily.
+## Repo files
 
-1. Fix state drift if `config/seo_articles.py`, publish history, sitemap, or
-   live production disagree.
-2. Refresh an existing high-intent location/report page when it can rank better.
-3. Add internal links from reports/articles to the right filtered dashboard URL.
-4. Publish one new SEO URL only when there is a non-duplicate intent with clear
-   search demand.
-5. Draft one Facebook post from the same data atom with UTM.
-6. Skip and report why.
+| Purpose | File |
+|---|---|
+| Token-light daily context | `scripts/radar_daily_seo_context.py` |
+| Article definitions | `config/seo_articles.py` |
+| Public routes | `routes/public.py` |
+| Route implementation / sitemap | `app.py` |
+| Article template | `templates/seo_article.html` |
+| Header/nav | `templates/partials/seo_header.html` |
+| SEO styles | `static/css/seo.css` |
+| Verification script | `scripts/verify_live_seo_article.ps1` |
+| Tests | `tests/test_public_seo.py`, `tests/test_public_content_hubs.py` |
 
-The best run is often `checked=1 acted=0` when there is no useful change.
+## Daily decision order
 
-## Page Standard
+Each daily run should do the smallest high-impact action:
 
-Every SEO page or article must include:
+1. Check production health and state drift: sitemap, latest articles, repo status.
+2. Run `scripts/radar_daily_seo_context.py` for compact current data.
+3. Pick one non-duplicate intent from:
+   - high-signal ward pulse,
+   - comparison between nearby wards,
+   - buyer explainer using Radar data,
+   - follow-up/internal-link gap from reports.
+4. Publish one `/tin-tuc/<slug>` article.
+5. Draft one social post from the same data atom.
+6. Verify live and commit/push.
 
-- one clear primary intent;
-- a title/H1 that matches that intent;
-- answer-first sections useful for Google and AI assistants;
-- visible date/source/methodology/caveat;
-- FAQ and structured data when relevant;
-- internal links to hub/location/report pages;
-- a CTA to `/?tab=signals` or a filtered URL such as
-  `/?tab=signals&ward=Hi%E1%BB%87p+Th%C3%A0nh`;
-- no invented market numbers, testimonials, legal certainty, or guaranteed
-  profit claims.
+If there is a production blocker, fix/report the blocker first. Otherwise default expectation is `acted=1` daily.
 
-## State And Idempotency
+## Article quality bar
 
-Successful SEO runs update:
+Every daily article should include:
 
-- `../.agents/seo-publish-history.md`
-- `../.agents/loops/daily-seo-publisher.log`
+- Answer-first intro, ideally 40–60 words.
+- Real production DB data with source/freshness note.
+- Price paired with property type: `đất nền` vs `nhà đất`.
+- Summary cards.
+- At least one useful data table.
+- A simple chart/visual if enough data exists.
+- FAQ schema.
+- Internal links to dashboard/report/location pages.
+- Safety caveat: Radar is initial data filtering, not legal/valuation/profit guarantee.
 
-Run log format:
+Tone:
+
+- Plain Vietnamese for ordinary buyers/sellers.
+- Use “giá trung vị” where report/data standards require it; explain simply when needed.
+- Avoid jargon-heavy wording; explain “dấu hiệu đáng chú ý”, “giá rao”, “nguồn và ngày cập nhật”.
+- Avoid aggressive sales claims like “deal ngon”. Use “tin đáng kiểm tra”, “cần thẩm định”.
+
+## Article config requirements
+
+`config/seo_articles.py` contains `SEO_ARTICLES` dict entries. New daily article entries must have:
+
+```python
+"slug-here": {
+    "variant": "knowledge",
+    "path": "/tin-tuc/slug-here",
+    "title": "... | Radar BDS",
+    "description": "...",
+    "keywords": "...",
+    "breadcrumb_label": "...",
+    "hero_badge": "Tin tức BĐS Bình Dương",
+    "hero_title": "...",
+    "hero_text": "...",
+    "scope_label": "Thủ Dầu Một · <phường/chủ đề>",
+    "hero_checks": [...],
+    "primary_cta": "Mở dashboard ...",
+    "primary_href": "/?tab=signals&ward=...",
+    "secondary_cta": "Xem báo cáo liên quan",
+    "secondary_href": "/bao-cao/....",
+    "map_label": "Tin tức / ...",
+    "hero_metric": {...},
+    "property_card": {...},
+    "local_links_title": "Đọc tiếp",
+    "local_links": [...],
+    "faq": [{"q": "...", "a": "..."}],
+    "article": {
+        "published_at": "YYYY-MM-DD",
+        "modified_at": "YYYY-MM-DD",
+        "intro": ["...", "..."],
+        "summary_cards": [...],
+        "data_tables": [...],
+        "charts": [...],
+        "sections": [...],
+        "checklist": [...],
+    },
+    "final_cta": {...},
+}
+```
+
+Important pitfalls:
+
+- Hyphenated slug keys must be quoted.
+- Do not use raw `repr()` output blindly if it creates field names/templates that do not match.
+- `seo_article.html` silently skips missing optional fields; HTTP 200 alone is not enough.
+- Article URLs in sitemap come from `SEO_ARTICLES[*]["path"]`.
+
+## Safe publish procedure
+
+Use the setgid-safe pattern; files under `/opt/radar-bds/current` are owned by `radar`.
+
+```bash
+cd /opt/radar-bds/current
+
+# 1) Context
+sudo -u radar /opt/radar-bds/.venv/bin/python \
+  scripts/radar_daily_seo_context.py --days 14 --limit 8
+
+# 2) Edit config/seo_articles.py with the new /tin-tuc entry.
+# Prefer a small Python update script copied/chowned into the repo when inserting dict blocks.
+
+# 3) Syntax + tests
+sudo -u radar python3 -m py_compile app.py routes/public.py config/seo_articles.py
+sudo -u radar /opt/radar-bds/.venv/bin/python -m pytest \
+  tests/test_public_content_hubs.py tests/test_public_seo.py -q
+
+# 4) Restart
+sudo systemctl restart radar-bds
+
+# 5) Live verify
+curl -fsS https://radarbds.vn/tin-tuc/<slug> >/dev/null
+curl -fsS https://radarbds.vn/sitemap.xml | grep '/tin-tuc/<slug>'
+sudo journalctl -u radar-bds --since '2 min ago' --no-pager | grep -E 'Traceback|jinja2|NameError|500' || true
+
+# 6) Commit/push
+git add app.py routes/public.py config/seo_articles.py templates/ static/ docs/ scripts/
+git commit -m "publish daily SEO article <short-topic>"
+git push
+```
+
+Use `git add <specific files>` instead of broad `git add .` when `data/facebook_profiles.json` or runtime files are dirty.
+
+## Production verification checklist
+
+After publish or patch:
+
+- `/tin-tuc` returns 200.
+- New `/tin-tuc/<slug>` returns 200.
+- Canonical link matches the live URL.
+- Rendered page contains the H1, answer-first intro, table/chart, FAQ, internal links, CTA.
+- Dashboard CTA has relevant filters (`tab=signals`, ward/property type/MOS when applicable).
+- `sitemap.xml` includes the new URL and has no obvious non-200 report/article URLs.
+- Browser console has 0 JS errors on the new article.
+- `journalctl -u radar-bds` has no new Traceback/Jinja2/NameError errors.
+- Commit and push completed.
+
+## Social post output
+
+Every daily run should include one handoff-ready social draft:
 
 ```text
-2026-07-18T09:00+07:00 checked=1 acted=1 url="/kien-thuc/..." note="published -> filtered dashboard/contact"
+Hook:
+Data point:
+Short interpretation:
+CTA:
+URL:
+Hashtags:
 ```
 
-Blocked or skipped runs also get logged with `acted=0`. Do not log secrets,
-phone numbers, original listing URLs, or other PII.
+Do not post directly to Facebook unless a separate approved posting integration exists. Hand off the draft in Telegram.
 
-## Verification
-
-Local checks before commit:
-
-```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 -m py_compile app.py config\seo_articles.py config\seo_pages.py routes\public.py
-& $py -X utf8 -m pytest tests\test_public_seo.py tests\test_traffic_seo_aio.py -q
-```
-
-Live verification after deploy:
-
-```powershell
-.\scripts\verify_live_seo_article.ps1 `
-  -Url "https://radarbds.vn/kien-thuc/<slug>" `
-  -HeadingContains "heading marker"
-```
-
-For Hermes on Linux, use the equivalent checks documented in
-`docs/hermes_marketing_workflow.md`.
-
-## Reporting Shape
+## Reporting shape back to anh Cường
 
 ```text
-Mode: shipped / refreshed / drafted / skipped / blocked
+Mode: shipped / refreshed / blocked
 SEO URL:
 Primary intent:
-Why 80/20:
+Data used:
 Dashboard/filter URL:
-Contact path:
-AI SEO checks:
+Social draft:
 Verification:
-State updated:
+Commit:
 Next candidate:
 ```
+
+Keep it concise. Always include the production URL when shipped.

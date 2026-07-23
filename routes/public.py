@@ -80,12 +80,12 @@ def seo_san_deal_bds(**kwargs):
 
 @bp.route("/tin-tuc")
 def seo_news_index(**kwargs):
-    abort(404)
+    return _impl("seo_news_hub_page", **kwargs)
 
 
 @bp.route("/tin-tuc/<path:article_slug>")
 def seo_news_article(article_slug, **kwargs):
-    abort(404)
+    return _impl("seo_news_article_page", slug=article_slug, **kwargs)
 
 
 @bp.route("/kien-thuc")

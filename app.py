@@ -1815,19 +1815,55 @@ def seo_report_hub_page():
     return render_template("seo_report_hub.html", page=page, reports=reports, hub_filters=hub_filters, site_meta=site_meta, active_nav="bao-cao")
 
 
-def seo_knowledge_hub_page():
+def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, title: str | None = None):
     page = dict(KNOWLEDGE_HUB)
-    page["breadcrumbs"] = _page_breadcrumbs(page)
-    featured = dict(SEO_ARTICLES[page["featured_slug"]])
-    articles = sorted(
-        (
-            dict(item)
-            for slug, item in SEO_ARTICLES.items()
-            if slug != page["featured_slug"] and str(item.get("path") or "").startswith("/kien-thuc/")
-        ),
-        key=lambda item: ((item.get("article") or {}).get("modified_at", ""), (item.get("article") or {}).get("published_at", "")),
+    page["path"] = hub_path
+    if title:
+        page["title"] = title
+    if hub_path == "/tin-tuc":
+        page["hero_badge"] = "Tin tức BĐS Bình Dương"
+        page["hero_title"] = "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS"
+        page["hero_text"] = "Bài SEO/AIO hằng ngày: giá đất, so sánh phường, cách đọc dữ liệu và các tín hiệu đáng kiểm tra từ dashboard Radar BDS."
+        page["breadcrumbs"] = [
+            {"name": "Trang chủ", "href": "/", "url": _public_url("/")},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": _public_url("/tin-tuc")},
+        ]
+    else:
+        page["breadcrumbs"] = _page_breadcrumbs(page)
+
+    matching = [
+        (slug, dict(item))
+        for slug, item in SEO_ARTICLES.items()
+        if str(item.get("path") or "").startswith(article_prefix)
+    ]
+    matching.sort(
+        key=lambda pair: ((pair[1].get("article") or {}).get("modified_at", ""), (pair[1].get("article") or {}).get("published_at", "")),
         reverse=True,
     )
+    featured_slug = page.get("featured_slug")
+    featured = None
+    articles = []
+    for slug, item in matching:
+        if featured is None and (slug == featured_slug or featured_slug not in SEO_ARTICLES):
+            featured = item
+        else:
+            articles.append(item)
+    if featured is None and matching:
+        featured = matching[0][1]
+        articles = [item for _, item in matching[1:]]
+    if featured is None:
+        # Empty /tin-tuc state before the first daily article: show legacy knowledge
+        # content instead of 404, but keep canonical/news hub path for future growth.
+        featured = dict(SEO_ARTICLES[KNOWLEDGE_HUB["featured_slug"]])
+        articles = sorted(
+            (
+                dict(item)
+                for slug, item in SEO_ARTICLES.items()
+                if slug != KNOWLEDGE_HUB["featured_slug"] and str(item.get("path") or "").startswith("/kien-thuc/")
+            ),
+            key=lambda item: ((item.get("article") or {}).get("modified_at", ""), (item.get("article") or {}).get("published_at", "")),
+            reverse=True,
+        )
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
     return render_template(
         "seo_knowledge_hub.html",
@@ -1835,7 +1871,20 @@ def seo_knowledge_hub_page():
         featured=featured,
         articles=articles,
         site_meta=site_meta,
-        active_nav="kien-thuc",
+        active_nav=active_nav,
+    )
+
+
+def seo_knowledge_hub_page():
+    return _article_hub_page(hub_path="/kien-thuc", article_prefix="/kien-thuc/", active_nav="kien-thuc")
+
+
+def seo_news_hub_page():
+    return _article_hub_page(
+        hub_path="/tin-tuc",
+        article_prefix="/tin-tuc/",
+        active_nav="tin-tuc",
+        title="Tin tức BĐS Bình Dương | Radar BDS",
     )
 
 
@@ -1851,6 +1900,12 @@ def seo_report_or_article_page(report_slug: str):
         page_path = str(SEO_ARTICLES[report_slug].get("path") or "")
         if page_path.startswith("/bao-cao/"):
             return seo_article_page(report_slug)
+    abort(404)
+
+
+def seo_news_article_page(slug: str):
+    if slug in SEO_ARTICLES and str(SEO_ARTICLES[slug].get("path") or "").startswith("/tin-tuc/"):
+        return seo_article_page(slug)
     abort(404)
 
 
@@ -1936,7 +1991,8 @@ def llms_txt():
 def sitemap_xml():
     unique_pages = []
     seen_paths = set()
-    for page in [REPORT_HUB, KNOWLEDGE_HUB, *SEO_PAGES.values()]:
+    news_hub = dict(KNOWLEDGE_HUB, path="/tin-tuc", title="Tin tức BĐS Bình Dương | Radar BDS")
+    for page in [REPORT_HUB, KNOWLEDGE_HUB, news_hub, *SEO_PAGES.values()]:
         path = page.get("path")
         if not path or path in seen_paths:
             continue
