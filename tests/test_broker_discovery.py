@@ -116,6 +116,38 @@ class BrokerDiscoveryTest(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertIs(mod._has_price(text), False)
 
+
+    def test_unique_original_listing_posts_excludes_reposts_and_duplicate_dom_blocks(self):
+        mod = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = mod.load_target_config(_config(Path(tmp)))
+
+        original = {
+            "post_url": "https://facebook.com/broker/posts/1",
+            "author_url": "https://facebook.com/broker-a",
+            "author_name": "Broker A",
+            "text": "Broker A · Follow\nBán đất Hòa Phú Thủ Dầu Một diện tích 100m2 giá 2.8 tỷ, sổ riêng, đường 8m.",
+            "posted_at": "2026-07-21T10:00:00+07:00",
+            "image_labels": [],
+        }
+        duplicated_dom_block = dict(original)
+        duplicated_dom_block["post_url"] = "deep:broker-a:dom-preview"
+        repost = {
+            "post_url": "https://facebook.com/broker/posts/2",
+            "author_url": "https://facebook.com/broker-a",
+            "author_name": "Broker A",
+            "text": "Broker A shared a post.\nNgười khác · Follow\nBán đất Hòa Phú Thủ Dầu Một 100m2 giá 2.8 tỷ.",
+            "posted_at": "2026-07-22T10:00:00+07:00",
+            "image_labels": [],
+        }
+
+        scored = [mod.score_post(post, cfg) for post in [original, duplicated_dom_block, repost]]
+        unique = mod.unique_original_listing_posts(scored)
+
+        self.assertEqual(len(unique), 1)
+        self.assertEqual(unique[0]["post_url"], original["post_url"])
+        self.assertTrue(scored[2]["extract"]["share_or_repost_present"])
+
     def test_score_brokers_uses_target_focus_cadence_and_data_quality(self):
         mod = _load_module()
         with tempfile.TemporaryDirectory() as tmp:

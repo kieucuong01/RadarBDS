@@ -189,6 +189,40 @@ def _has_location_detail(text: str) -> bool:
     return bool(re.search(r"\b(duong|mat tien|hem|kdc|khu dan cu|lo gioi|ngang|dai|huong|gan)\b", norm))
 
 
+def _is_share_or_repost(text: str) -> bool:
+    norm = normalize_text(text)
+    return bool(
+        re.search(r"\b(shared a post|shared .* post|reposted|shared)\b", str(text or ""), re.I)
+        or re.search(r"\b(da chia se|chia se bai viet|da share|share bai|shared)\b", norm)
+    )
+
+
+def _listing_fingerprint(post: dict[str, Any]) -> str:
+    text = normalize_text(post.get("text"))
+    # Drop common Facebook UI words and volatile counts. Keep listing content.
+    text = re.sub(r"\b(follow|join|see more|xem them|see translation|xem ban dich|like|comment|share)\b", " ", text)
+    text = re.sub(r"\b\d+\s*(?:comments?|binh luan|shares?|luot chia se|likes?)\b", " ", text)
+    text = re.sub(r"\b\d{1,2}\s*(?:hours?|gio|days?|ngay|minutes?|phut)\s*ago\b", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text[:320]
+
+
+def unique_original_listing_posts(posts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return unique, non-share listing posts from noisy Facebook DOM blocks."""
+    unique: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for post in posts:
+        extract = post.get("extract", {})
+        if extract.get("share_or_repost_present") or _is_share_or_repost(_plain(post.get("text"))):
+            continue
+        fingerprint = _listing_fingerprint(post)
+        if not fingerprint or fingerprint in seen:
+            continue
+        seen.add(fingerprint)
+        unique.append(post)
+    return unique
+
+
 def extract_post_features(post: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
     text = _plain(post.get("text"))
     labels = {normalize_text(label).replace(" ", "_") for label in (post.get("image_labels") or [])}
@@ -204,6 +238,7 @@ def extract_post_features(post: dict[str, Any], config: dict[str, Any]) -> dict[
         "real_image_present": bool(labels & REAL_IMAGE_LABELS),
         "document_image_present": bool(labels & DOCUMENT_LABELS),
         "hype_hits": [word for word in HYPE_WORDS if normalize_text(word) in normalize_text(text)],
+        "share_or_repost_present": _is_share_or_repost(text),
         "area_match": match_target_area(text, config),
     }
 
