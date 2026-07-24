@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import hmac
 import json
 import logging
 import mimetypes
@@ -65,13 +66,16 @@ from auth.core import (
     current_user,
     delete_session,
     identifier_exists,
+    client_ip_from_request,
     log_audit,
     normalize_identifier,
     rate_limit,
+    reject_cross_site_session_request,
     require_tier,
 )
 
 app = Flask(__name__)
+app.before_request(reject_cross_site_session_request)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -155,7 +159,13 @@ def _admin_credentials():
 def _basic_admin_authorized():
     auth = request.authorization
     user, pwd = _admin_credentials()
-    return bool(auth and user and pwd and auth.username == user and auth.password == pwd)
+    return bool(
+        auth
+        and user
+        and pwd
+        and hmac.compare_digest(auth.username or "", user)
+        and hmac.compare_digest(auth.password or "", pwd)
+    )
 
 
 def _admin_request_authorized():
@@ -661,11 +671,11 @@ def _run_admin_source_retry_job(job_id: str) -> None:
 
 
 def _cookie_kwargs():
-    """HttpOnly + SameSite=Lax; Secure only when request is HTTPS (prod)."""
+    """HttpOnly + SameSite=Lax; production cookies fail closed to Secure."""
     return dict(
         httponly=True,
         samesite="Lax",
-        secure=request.is_secure,
+        secure=request.is_secure or PUBLIC_BASE_URL.lower().startswith("https://"),
         max_age=SESSION_TTL_DAYS * 86400,
         path="/",
     )
@@ -679,10 +689,6 @@ def _set_session_cookie(resp, token: str):
 def _clear_session_cookie(resp):
     resp.delete_cookie(SESSION_COOKIE_NAME, path="/")
     return resp
-
-
-def _client_ip() -> str:
-    return request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
 
 
 def _effective_tier_from_user(user: dict) -> str:
@@ -771,7 +777,7 @@ def api_auth_register():
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 409
 
-    token = create_session(user["id"], user_agent=request.headers.get("User-Agent", ""), ip=_client_ip())
+    token = create_session(user["id"], user_agent=request.headers.get("User-Agent", ""), ip=client_ip_from_request())
     log_audit(user["id"], user["tier"], "signup_completed", context={"type": ident_type})
     resp = make_response(jsonify({"ok": True, "user": _user_public(user)}))
     return _set_session_cookie(resp, token)
@@ -793,7 +799,7 @@ def api_auth_login():
         log_audit(None, "guest", "login_failed", context={"identifier_masked": ident[:4] + "***"})
         return jsonify({"ok": False, "error": "invalid_credentials"}), 401
 
-    token = create_session(user["id"], user_agent=request.headers.get("User-Agent", ""), ip=_client_ip())
+    token = create_session(user["id"], user_agent=request.headers.get("User-Agent", ""), ip=client_ip_from_request())
     log_audit(user["id"], user["tier"], "login")
     resp = make_response(jsonify({"ok": True, "user": _user_public(user)}))
     return _set_session_cookie(resp, token)

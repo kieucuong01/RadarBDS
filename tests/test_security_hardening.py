@@ -1,0 +1,87 @@
+from pathlib import Path
+
+from flask import Flask
+
+from auth.core import (
+    SESSION_COOKIE_NAME,
+    client_ip_from_request,
+    reject_cross_site_session_request,
+)
+
+
+def _request(app, *, base_url="https://radarbds.vn", origin=None, referer=None):
+    headers = {"Cookie": f"{SESSION_COOKIE_NAME}=test-session"}
+    if origin is not None:
+        headers["Origin"] = origin
+    if referer is not None:
+        headers["Referer"] = referer
+    return app.test_request_context(
+        "/api/watchlists",
+        method="POST",
+        base_url=base_url,
+        headers=headers,
+    )
+
+
+def test_client_ip_uses_proxy_controlled_real_ip():
+    app = Flask(__name__)
+    with app.test_request_context(
+        "/",
+        headers={
+            "X-Real-IP": "203.0.113.9",
+            "X-Forwarded-For": "198.51.100.7, 203.0.113.9",
+        },
+        environ_base={"REMOTE_ADDR": "127.0.0.1"},
+    ):
+        assert client_ip_from_request() == "203.0.113.9"
+
+
+def test_session_mutation_accepts_same_origin():
+    app = Flask(__name__)
+    with _request(app, origin="https://radarbds.vn"):
+        assert reject_cross_site_session_request() is None
+
+
+def test_session_mutation_accepts_same_origin_referer():
+    app = Flask(__name__)
+    with _request(app, referer="https://radarbds.vn/dashboard"):
+        assert reject_cross_site_session_request() is None
+
+
+def test_session_mutation_rejects_cross_origin():
+    app = Flask(__name__)
+    with _request(app, origin="https://attacker.example"):
+        response, status = reject_cross_site_session_request()
+        assert status == 403
+        assert response.get_json()["error"] == "cross_site_request"
+
+
+def test_session_mutation_rejects_missing_origin_on_public_host():
+    app = Flask(__name__)
+    with _request(app):
+        assert reject_cross_site_session_request()[1] == 403
+
+
+def test_local_test_client_can_omit_origin():
+    app = Flask(__name__)
+    with _request(app, base_url="http://localhost"):
+        assert reject_cross_site_session_request() is None
+
+
+def test_request_without_session_cookie_is_unchanged():
+    app = Flask(__name__)
+    with app.test_request_context(
+        "/api/auth/login",
+        method="POST",
+        base_url="https://radarbds.vn",
+        headers={"Origin": "https://attacker.example"},
+    ):
+        assert reject_cross_site_session_request() is None
+
+
+def test_production_public_url_forces_secure_cookie(monkeypatch):
+    import app as radar_app
+
+    monkeypatch.setattr(radar_app, "PUBLIC_BASE_URL", "https://radarbds.vn")
+    with radar_app.app.test_request_context("http://localhost/api/auth/login"):
+        assert radar_app._cookie_kwargs()["secure"] is True

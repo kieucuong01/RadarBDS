@@ -14,10 +14,12 @@ import threading
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any
+from urllib.parse import urlsplit
 
 import bcrypt
 from flask import g, jsonify, request
 
+from config.settings import PUBLIC_BASE_URL
 from db.connection import get_conn
 
 logger = logging.getLogger(__name__)
@@ -366,12 +368,44 @@ def _memory_rate_limit_retry_after(scope: str, key: str, cap: int, now: datetime
     return None
 
 
-def _client_ip_from_request() -> str:
+def client_ip_from_request() -> str:
     try:
-        return (request.headers.get("X-Forwarded-For", request.remote_addr or "")
-                .split(",")[0].strip() or "0.0.0.0")
+        return (
+            request.headers.get("X-Real-IP")
+            or request.remote_addr
+            or "0.0.0.0"
+        ).strip()
     except Exception:
         return "0.0.0.0"
+
+
+_UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+_LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+
+
+def _origin(value: str | None) -> str:
+    parsed = urlsplit(value or "")
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        return ""
+    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
+
+
+def reject_cross_site_session_request():
+    if (
+        request.method not in _UNSAFE_METHODS
+        or not request.cookies.get(SESSION_COOKIE_NAME)
+    ):
+        return None
+
+    supplied = request.headers.get("Origin") or request.headers.get("Referer")
+    host = request.host.split(":", 1)[0].strip("[]").lower()
+    if not supplied and host in _LOCAL_HOSTS:
+        return None
+
+    allowed = {_origin(request.host_url), _origin(PUBLIC_BASE_URL)}
+    if not supplied or _origin(supplied) not in allowed:
+        return jsonify({"error": "cross_site_request"}), 403
+    return None
 
 
 def rate_limit(scope: str, limits: dict | None = None):
@@ -390,7 +424,7 @@ def rate_limit(scope: str, limits: dict | None = None):
             if cap is None:
                 return fn(*args, **kwargs)
             u = current_user()
-            key = (f"{scope}:user:{u['id']}" if u else f"{scope}:ip:{_client_ip_from_request()}")
+            key = (f"{scope}:user:{u['id']}" if u else f"{scope}:ip:{client_ip_from_request()}")
             now = datetime.utcnow()
             if tier == "guest" and scope in MEMORY_RATE_LIMIT_SCOPES:
                 retry_after = _memory_rate_limit_retry_after(scope, key, cap, now)
