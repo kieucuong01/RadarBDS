@@ -13,9 +13,32 @@ from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
 
 LATEST_SHADOW_VALUATION_CTE = """
 latest_shadow_valuation AS MATERIALIZED (
-    SELECT DISTINCT ON (vsr.listing_id) vsr.*
+    SELECT DISTINCT ON (vsr.listing_id)
+           vsr.listing_id, vsr.is_signal, vsr.actual_ppm2,
+           vsr.fair_ppm2, vsr.mos_pct, vsr.signal_score,
+           vsr.trust_tier, vsr.trust_score,
+           vsr.legal_status, vsr.legal_flags,
+           vsr.source_quality_flags, vsr.source_quality_recheck
     FROM valuation_shadow_results vsr
     ORDER BY vsr.listing_id, vsr.computed_at DESC, vsr.id DESC
+)
+"""
+
+RELATED_PRICE_DROP_CTE = """
+related_price_drops AS MATERIALIZED (
+    SELECT drop_child.duplicate_of_id AS listing_id,
+           MAX(drop_child.price_ty) AS first_price
+    FROM listings drop_child
+    JOIN listings drop_parent ON drop_parent.id = drop_child.duplicate_of_id
+    WHERE drop_child.duplicate_of_id IS NOT NULL
+      AND COALESCE(drop_child.probably_sold,0)=0
+      AND COALESCE(drop_child.is_blacklisted,0)=0
+      AND COALESCE(drop_child.review_hidden,0)=0
+      AND drop_child.price_ty IS NOT NULL
+      AND drop_parent.price_ty IS NOT NULL
+      AND drop_child.price_ty > drop_parent.price_ty * 1.01
+      AND drop_parent.price_ty >= drop_child.price_ty * 0.60
+    GROUP BY drop_child.duplicate_of_id
 )
 """
 
@@ -421,23 +444,10 @@ def _valid_price_drop_sql(prefix=""):
 
 
 def related_price_drop_join_sql(alias="l", join_alias="related_drop"):
-    return f"""
-        LEFT JOIN (
-            SELECT drop_child.duplicate_of_id AS listing_id,
-                   MAX(drop_child.price_ty) AS first_price
-            FROM listings drop_child
-            JOIN listings drop_parent ON drop_parent.id = drop_child.duplicate_of_id
-            WHERE drop_child.duplicate_of_id IS NOT NULL
-              AND COALESCE(drop_child.probably_sold,0)=0
-              AND COALESCE(drop_child.is_blacklisted,0)=0
-              AND COALESCE(drop_child.review_hidden,0)=0
-              AND drop_child.price_ty IS NOT NULL
-              AND drop_parent.price_ty IS NOT NULL
-              AND drop_child.price_ty > drop_parent.price_ty * 1.01
-              AND drop_parent.price_ty >= drop_child.price_ty * 0.60
-            GROUP BY drop_child.duplicate_of_id
-        ) {join_alias} ON {join_alias}.listing_id = {alias}.id
-    """
+    return (
+        f"LEFT JOIN related_price_drops {join_alias} "
+        f"ON {join_alias}.listing_id = {alias}.id"
+    )
 
 
 def effective_price_drop_select_sql(alias="l", lateral_alias="related_drop"):
@@ -1119,7 +1129,8 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
 
     rows = conn.execute(f"""
         WITH {LATEST_VALUATION_CTE},
-             {LATEST_SHADOW_VALUATION_CTE}
+             {LATEST_SHADOW_VALUATION_CTE},
+             {RELATED_PRICE_DROP_CTE}
         SELECT {total_select}
                ({display_mos_expr}) AS mos_pct,
                {actual_expr} AS actual_ppm2,

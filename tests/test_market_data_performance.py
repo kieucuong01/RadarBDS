@@ -153,21 +153,43 @@ def test_load_signals_fast_page_skips_total_count_and_uses_limit_plus_one(monkey
     assert conn.closed is False
 
 
-def test_signal_feed_materializes_latest_valuation_ctes():
+def test_signal_feed_materializes_compact_valuation_ctes():
     import services.market_data as market_data
 
     assert "latest_valuation AS MATERIALIZED (" in market_data.LATEST_VALUATION_CTE
-    assert "latest_shadow_valuation AS MATERIALIZED (" in market_data.LATEST_SHADOW_VALUATION_CTE
+    assert (
+        "latest_shadow_valuation AS MATERIALIZED ("
+        in market_data.LATEST_SHADOW_VALUATION_CTE
+    )
+    assert "vsr.*" not in market_data.LATEST_SHADOW_VALUATION_CTE
+    for column in (
+        "vsr.listing_id",
+        "vsr.is_signal",
+        "vsr.actual_ppm2",
+        "vsr.fair_ppm2",
+        "vsr.mos_pct",
+        "vsr.signal_score",
+        "vsr.trust_tier",
+        "vsr.trust_score",
+        "vsr.legal_status",
+        "vsr.legal_flags",
+        "vsr.source_quality_flags",
+        "vsr.source_quality_recheck",
+    ):
+        assert column in market_data.LATEST_SHADOW_VALUATION_CTE
 
 
-def test_related_price_drop_join_aggregates_duplicate_rows_once():
-    from services.market_data import related_price_drop_join_sql
+def test_related_price_drop_rows_are_materialized_once():
+    from services.market_data import (
+        RELATED_PRICE_DROP_CTE,
+        related_price_drop_join_sql,
+    )
 
-    sql = related_price_drop_join_sql("l", "related_drop")
-
-    assert "LEFT JOIN LATERAL" not in sql
-    assert "GROUP BY drop_child.duplicate_of_id" in sql
-    assert "related_drop.listing_id = l.id" in sql
+    assert "related_price_drops AS MATERIALIZED (" in RELATED_PRICE_DROP_CTE
+    assert "GROUP BY drop_child.duplicate_of_id" in RELATED_PRICE_DROP_CTE
+    join_sql = related_price_drop_join_sql("l", "related_drop")
+    assert "LEFT JOIN related_price_drops related_drop" in join_sql
+    assert "GROUP BY" not in join_sql
 
 
 def test_score_sort_does_not_emit_invalid_order_by_zero():
