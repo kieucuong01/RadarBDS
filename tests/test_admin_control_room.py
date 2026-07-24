@@ -1598,7 +1598,8 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("admin-favicon-32.png", template)
         self.assertIn("admin-apple-touch-icon.png", template)
         self.assertIn("admin.webmanifest", template)
-        self.assertIn("images/logo.png", template)
+        self.assertIn("images/logo-80.webp", template)
+        self.assertIn("images/logo-160.webp", template)
         self.assertIn(".brand-mark img", css)
         self.assertIn('content: "AD"', css)
 

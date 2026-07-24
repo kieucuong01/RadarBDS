@@ -72,7 +72,7 @@ class DownloadImagesRetryTest(unittest.TestCase):
             conn.execute(
                 """
                 INSERT INTO listing_images (listing_id, img_url, img_order, local_path, crawled_at)
-                VALUES (?, 'https://scontent.test/image.jpg', 0, 'NOT_FOUND', '2026-05-26T00:00:00')
+                VALUES (?, 'https://scontent.test/image.jpg', 0, 'NOT_FOUND', datetime('now'))
                 """,
                 (listing_id,),
             )
