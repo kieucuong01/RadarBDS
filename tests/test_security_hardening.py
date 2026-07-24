@@ -85,3 +85,24 @@ def test_production_public_url_forces_secure_cookie(monkeypatch):
     monkeypatch.setattr(radar_app, "PUBLIC_BASE_URL", "https://radarbds.vn")
     with radar_app.app.test_request_context("http://localhost/api/auth/login"):
         assert radar_app._cookie_kwargs()["secure"] is True
+
+
+def test_nginx_config_hides_version_and_covers_dynamic_and_static_responses():
+    config_path = (
+        Path(__file__).resolve().parents[1]
+        / "deployment"
+        / "ubuntu24"
+        / "nginx-radar-bds.conf"
+    )
+    text = config_path.read_text(encoding="utf-8")
+
+    assert text.count("server_tokens off;") == 2
+    for header in (
+        "Strict-Transport-Security",
+        "X-Content-Type-Options",
+        "X-Frame-Options",
+        "Referrer-Policy",
+        "Permissions-Policy",
+        "Content-Security-Policy",
+    ):
+        assert text.count(f"add_header {header} ") == 4
