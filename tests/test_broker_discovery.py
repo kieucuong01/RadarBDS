@@ -95,6 +95,21 @@ class BrokerDiscoveryTest(unittest.TestCase):
         self.assertGreater(weak["penalty_score"], 0)
 
 
+
+    def test_tdc_dinh_hoa_alias_maps_to_hoa_phu(self):
+        mod = _load_module()
+        cfg = mod.load_target_config(Path(__file__).resolve().parents[1] / "config" / "broker_discovery_targets.json")
+
+        examples = [
+            "Bán đất TDC Định Hòa Thủ Dầu Một 100m2 giá 2.5 tỷ",
+            "Nhà tái định cư Định Hòa diện tích 80m2 giá 3 tỷ",
+        ]
+        for text in examples:
+            with self.subTest(text=text):
+                match = mod.match_target_area(text, cfg)
+                self.assertEqual(match["city"], "Thủ Dầu Một")
+                self.assertEqual(match["ward"], "Hòa Phú")
+
     def test_price_detection_allows_tens_missing_but_rejects_hundreds_missing(self):
         mod = _load_module()
 
@@ -147,6 +162,36 @@ class BrokerDiscoveryTest(unittest.TestCase):
         self.assertEqual(len(unique), 1)
         self.assertEqual(unique[0]["post_url"], original["post_url"])
         self.assertTrue(scored[2]["extract"]["share_or_repost_present"])
+
+
+    def test_unique_original_listing_posts_dedupes_repeated_same_listing_with_different_dates(self):
+        mod = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = mod.load_target_config(_config(Path(tmp)))
+
+        posts = [
+            {
+                "post_url": "https://facebook.com/nhi/posts/1",
+                "author_url": "https://facebook.com/nhi",
+                "author_name": "Nhi Nguyen",
+                "text": "Nhi Nguyen July 15 at 4:50 PM · BÁN ĐẤT TÁI ĐỊNH CƯ ĐỊNH HÒA – TP. THỦ DẦU MỘT. Vị trí: Khu tái định cư Định Hòa, phường Hòa Phú. Diện tích: 300m² (15m × 20m). Giá 12 tỷ.",
+                "posted_at": "2026-07-15T16:50:00+07:00",
+                "image_labels": [],
+            },
+            {
+                "post_url": "https://facebook.com/nhi/posts/2",
+                "author_url": "https://facebook.com/nhi",
+                "author_name": "Nhi Nguyen",
+                "text": "Nhi Nguyen July 14 at 8:36 AM · Bán đất khu TĐC Định Hoà. Author Nhi Nguyen BÁN ĐẤT TÁI ĐỊNH CƯ ĐỊNH HÒA – TP. THỦ DẦU MỘT. Vị trí: Khu tái định cư Định Hòa, phường Hòa Phú. Diện tích: 300m² (15m × 20m). Giá 12 tỷ.",
+                "posted_at": "2026-07-14T08:36:00+07:00",
+                "image_labels": [],
+            },
+        ]
+        scored = [mod.score_post(post, cfg) for post in posts]
+
+        unique = mod.unique_original_listing_posts(scored)
+
+        self.assertEqual(len(unique), 1)
 
     def test_score_brokers_uses_target_focus_cadence_and_data_quality(self):
         mod = _load_module()

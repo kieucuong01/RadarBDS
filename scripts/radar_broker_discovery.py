@@ -200,11 +200,25 @@ def _is_share_or_repost(text: str) -> bool:
 def _listing_fingerprint(post: dict[str, Any]) -> str:
     text = normalize_text(post.get("text"))
     # Drop common Facebook UI words and volatile counts. Keep listing content.
-    text = re.sub(r"\b(follow|join|see more|xem them|see translation|xem ban dich|like|comment|share)\b", " ", text)
+    text = re.sub(r"\b(follow|join|see more|xem them|see translation|xem ban dich|like|comment|share|author|view more comments)\b", " ", text)
+    text = re.sub(r"\b(january|february|march|april|may|june|july|august|september|october|november|december)\b", " ", text)
     text = re.sub(r"\b\d+\s*(?:comments?|binh luan|shares?|luot chia se|likes?)\b", " ", text)
-    text = re.sub(r"\b\d{1,2}\s*(?:hours?|gio|days?|ngay|minutes?|phut)\s*ago\b", " ", text)
+    text = re.sub(r"\b\d{1,2}\s*(?:am|pm|hours?|gio|days?|ngay|minutes?|phut)\b", " ", text)
+    text = re.sub(r"\b\d{1,2}", " ", text)
+    positions = [m.start() for m in re.finditer(r"\b(?:ban dat|ban nha|can ban|lo dat|nha pho|nha dat|dat tai dinh cu)\b", text)]
+    if positions:
+        # Use the final listing block; Facebook often prefixes repost/comment context
+        # before repeating the original listing body.
+        text = text[positions[-1]:]
     text = re.sub(r"\s+", " ", text).strip()
-    return text[:320]
+    # Prefer stable facts over volatile date/intro text when available.
+    area = re.search(r"\b\d+(?:[\.,]\d+)?\s*(?:m2|m)\b", text)
+    dims = re.search(r"\b\d+(?:[\.,]\d+)?\s*x\s*\d+(?:[\.,]\d+)?\b", text)
+    price = re.search(r"\b\d+(?:[\.,]\d+)?\s*(?:ty|ti|trieu|tr)\b|\b\d+(?:t|ty|ti)\d+(?:x{1,2})?\b", text)
+    locality = " ".join(token for token in ["tdc dinh hoa" if "tdc dinh hoa" in text else "", "tai dinh cu dinh hoa" if "tai dinh cu dinh hoa" in text else "", "hoa phu" if "hoa phu" in text else "", "phu cuong" if "phu cuong" in text else ""] if token)
+    if locality and (area or dims):
+        return "|".join([locality, area.group(0) if area else "", dims.group(0) if dims else "", price.group(0) if price else ""])
+    return text[:260]
 
 
 def unique_original_listing_posts(posts: list[dict[str, Any]]) -> list[dict[str, Any]]:
