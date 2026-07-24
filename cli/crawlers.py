@@ -102,6 +102,7 @@ def _facebook_crawl_to_raw(
     from crawler.facebook_apify import FacebookApifyCrawler, load_profiles, profiles_due_on
     from crawler.facebook_chrome import build_record, is_relevant
     from config.area_profiles import post_mentions_other_city
+    from db.crawl_runs import finish_crawl_run, start_crawl_run
 
     if profiles is None:
         profiles = load_profiles(area_filter=area_filter)
@@ -119,18 +120,26 @@ def _facebook_crawl_to_raw(
                 "refreshed_raw_ids": [],
             }
 
+    run_id = start_crawl_run("facebook", area_filter or "all")
 
     try:
         crawler = FacebookApifyCrawler()
     except RuntimeError as e:
         print(f"[facebook] LOI: {e}")
+        finish_crawl_run(run_id, {}, status="error", error_msg=str(e))
         return None
 
-    raw_posts = crawler.crawl_all(profiles, mode=mode, limit_override=limit_override or None)
+    try:
+        raw_posts = crawler.crawl_all(profiles, mode=mode, limit_override=limit_override or None)
+    except Exception as e:
+        finish_crawl_run(run_id, {}, status="error", error_msg=str(e))
+        raise
     if not raw_posts:
         print("[facebook] Khong co bai nao tu Apify (kiem tra profile URL va APIFY_TOKEN).")
-        return {"fetched": 0, "inserted": 0, "skipped": 0,
-                "irrelevant": 0, "out_of_area": 0, "range_filtered": 0}
+        stats = {"fetched": 0, "inserted": 0, "skipped": 0,
+                 "irrelevant": 0, "out_of_area": 0, "range_filtered": 0}
+        finish_crawl_run(run_id, {"fetched": 0, "new": 0})
+        return stats
 
     range_filtered = 0
     if max_age_days:
@@ -217,13 +226,19 @@ def _facebook_crawl_to_raw(
             inserted_raw_ids.append(rid)
         _emit_progress(idx)
 
-    return {"fetched": len(raw_posts), "inserted": inserted,
-            "skipped": skipped, "irrelevant": irrelevant,
-            "inserted_raw_ids": inserted_raw_ids,
-            "refreshed_images": refreshed_images,
-            "refreshed_raw_ids": refreshed_raw_ids,
-            "out_of_area": out_of_area,
-            "range_filtered": range_filtered}
+    stats = {"fetched": len(raw_posts), "inserted": inserted,
+             "skipped": skipped, "irrelevant": irrelevant,
+             "inserted_raw_ids": inserted_raw_ids,
+             "refreshed_images": refreshed_images,
+             "refreshed_raw_ids": refreshed_raw_ids,
+             "out_of_area": out_of_area,
+             "range_filtered": range_filtered}
+    finish_crawl_run(run_id, {
+        "fetched": stats["fetched"],
+        "new": inserted + refreshed_images,
+        "skipped": skipped + irrelevant + out_of_area + range_filtered,
+    })
+    return stats
 
 def cmd_crawl_facebook(args):
     with advisory_lock("crawl-facebook"):
@@ -293,11 +308,22 @@ def _postprocess_crawl_batch(args, total_new: int, source_filter=None, image_lim
 
     print(f"\nĐang tải ảnh về local...")
     from cleansing.download_images import download_images
-    if image_limit is None:
-        download_images()
-    else:
-        download_images(limit=image_limit)
-    _clean_broker_images_after_download(source=source_filter, limit=image_limit)
+    processed_ids = result.get("listings", {}).get("processed_ids") or []
+    try:
+        if image_limit is None:
+            download_images()
+        elif processed_ids:
+            download_images(
+                limit=max(image_limit, min(3000, len(processed_ids) * 12)),
+                listing_ids=processed_ids,
+            )
+        else:
+            download_images(limit=image_limit)
+        _clean_broker_images_after_download(source=source_filter, limit=image_limit)
+    except RuntimeError as e:
+        if "download-images" not in str(e):
+            raise
+        print(f"[download-images] skipped: {e}")
     return True
 
 
