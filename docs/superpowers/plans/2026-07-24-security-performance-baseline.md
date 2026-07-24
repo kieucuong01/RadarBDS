@@ -577,7 +577,7 @@ git commit -m "Decouple image fixture from Postgres CTE syntax"
 ### Task 5: Dependency and credential release gates
 
 **Files:**
-- Modify only if required by a confirmed advisory: `requirements.txt`
+- Modify: `requirements.txt`
 
 **Interfaces:**
 - Consumes package names and pinned versions from `requirements.txt`.
@@ -595,11 +595,44 @@ until the user explicitly permits that metadata transfer.
 & $py -X utf8 -m pip_audit -r requirements.txt --progress-spinner off
 ```
 
-Expected: `No known vulnerabilities found`. If the command returns findings,
-stop the release and add exact compatible pin changes plus package-specific
-tests to this plan before editing `requirements.txt`.
+Observed before implementation:
 
-- [ ] **Step 3: Scan tracked files without printing secret values**
+- Pillow 10.4.0 has known advisories fixed by 12.3.0.
+- python-dotenv 1.2.1 has a known advisory, but the project uses its own
+  standard-library `.env` loader and does not import this package.
+- requests 2.32.5 has a known advisory. `alerts/telegram.py` imports it for
+  Telegram delivery, so it must be upgraded rather than removed.
+
+- [ ] **Step 3: Remove the unused dependency and upgrade vulnerable packages**
+
+Change `requirements.txt`:
+
+```text
+Pillow==12.3.0
+requests==2.33.0
+```
+
+Delete only the unused `python-dotenv` line.
+
+Install and verify the changed image stack:
+
+```powershell
+& $py -X utf8 -m pip install -r requirements.txt
+& $py -X utf8 -m pytest tests\test_image_assets.py tests\test_image_cleanup.py tests\test_legal_image_classifier.py tests\test_download_images.py -q
+& $py -X utf8 -m pip_audit -r requirements.txt --progress-spinner off
+```
+
+Expected: all image tests pass and pip-audit reports
+`No known vulnerabilities found`.
+
+- [ ] **Step 4: Commit the dependency cleanup**
+
+```powershell
+git add -- requirements.txt docs/superpowers/plans/2026-07-24-security-performance-baseline.md
+git commit -m "Remove vulnerable unused dependencies"
+```
+
+- [ ] **Step 5: Scan tracked files without printing secret values**
 
 ```powershell
 git grep -Il -E "(BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|sk-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16})" --
