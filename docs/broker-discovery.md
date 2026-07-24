@@ -178,13 +178,15 @@ needs_manual_review
 ```text
 1. Map Facebook groups from generated keywords.
 2. Use browser-use/manual review to collect public post metadata into candidate_posts.json.
-3. Run score + report.
-4. Review Tier A/B brokers manually.
-5. Only after approval, add broker to data/facebook_profiles.json or future approved-source config.
+3. Normalize author links before deep scan: /groups/<group_id>/user/<id> is only a group-member context link; open https://www.facebook.com/<username-or-id> for the broker profile/page.
+4. Run score + report.
+5. Deep-scan Tier A/B brokers on the plain profile/page URL, sampling 10-20 recent public posts.
+6. Only after approval, add broker to data/facebook_profiles.json or future approved-source config.
 ```
 
 ## Browser-use guardrails
 
+- Deep-scan profile/page via the plain Facebook profile URL (`https://www.facebook.com/<username-or-id>`). Do not use `https://www.facebook.com/groups/.../user/...` as the profile scan URL; that stays inside the group context and can distort the results.
 - Read-only discovery first.
 - Low rate: 3–5 groups/day, 10–20 broker profiles/day.
 - Do not auto-message, comment, add friend, or join groups without approval.

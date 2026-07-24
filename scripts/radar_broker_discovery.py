@@ -18,6 +18,7 @@ import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = REPO_ROOT / "config" / "broker_discovery_targets.json"
@@ -51,6 +52,35 @@ def normalize_text(value: Any) -> str:
     text = re.sub(r"[^a-z0-9]+", " ", text)
     return re.sub(r"\s+", " ", text).strip()
 
+
+
+
+def normalize_broker_profile_url(url: str | None) -> str:
+    """Return the plain Facebook profile/page URL to open for deep scans.
+
+    Facebook group member links look like /groups/<group_id>/user/<user_id>;
+    opening those can keep the browser inside the group context. For profile
+    checks, always go directly to https://www.facebook.com/<username-or-id>.
+    """
+    raw = _plain(url)
+    if not raw:
+        return ""
+    if raw.startswith("//"):
+        raw = "https:" + raw
+    if not raw.startswith(("http://", "https://")):
+        raw = "https://www.facebook.com/" + raw.lstrip("/")
+    parsed = urlparse(raw)
+    host = parsed.netloc or "www.facebook.com"
+    parts = [part for part in parsed.path.split("/") if part]
+    if len(parts) >= 3 and parts[0] == "groups" and parts[2] == "user":
+        return f"https://www.facebook.com/{parts[3] if len(parts) > 3 else parts[-1]}"
+    if parts and parts[0] == "profile.php":
+        # profile.php?id=<id> cannot be recovered without query parsing here; keep
+        # base URL so callers can mark it insufficient if no id is available.
+        return "https://www.facebook.com/profile.php"
+    if parts:
+        return f"https://{host}/{parts[0]}"
+    return f"https://{host}"
 
 def load_target_config(path: str | Path = DEFAULT_CONFIG) -> dict[str, Any]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -239,8 +269,13 @@ def score_brokers(scored_posts: list[dict[str, Any]], config: dict[str, Any] | N
     del config  # config is intentionally accepted for CLI/API symmetry.
     by_author: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for post in scored_posts:
-        author_url = _plain(post.get("author_url") or post.get("profile_url") or post.get("author_name") or "unknown")
-        by_author[author_url].append(post)
+        raw_author_url = _plain(post.get("author_url") or post.get("profile_url") or post.get("author_name") or "unknown")
+        author_url = normalize_broker_profile_url(raw_author_url) or raw_author_url
+        normalized_post = dict(post)
+        normalized_post["author_url"] = author_url
+        if raw_author_url != author_url:
+            normalized_post["source_author_url"] = raw_author_url
+        by_author[author_url].append(normalized_post)
 
     brokers: list[dict[str, Any]] = []
     for author_url, posts in by_author.items():

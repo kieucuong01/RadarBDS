@@ -132,6 +132,21 @@ class BrokerDiscoveryTest(unittest.TestCase):
         self.assertIn("target_area_specialist", by_url["https://facebook.com/broker-a"]["labels"])
         self.assertLess(by_url["https://facebook.com/broker-b"]["final_score"], by_url["https://facebook.com/broker-a"]["final_score"])
 
+
+    def test_normalize_broker_profile_url_prefers_plain_profile_over_group_member_url(self):
+        mod = _load_module()
+
+        self.assertEqual(
+            mod.normalize_broker_profile_url(
+                "https://www.facebook.com/groups/726341611051693/user/100015671537024/?comment_id=1"
+            ),
+            "https://www.facebook.com/100015671537024",
+        )
+        self.assertEqual(
+            mod.normalize_broker_profile_url("https://www.facebook.com/phan.tuan.320085?mibextid=abc"),
+            "https://www.facebook.com/phan.tuan.320085",
+        )
+
     def test_brokers_from_score_payload_accepts_schema_dict(self):
         mod = _load_module()
         brokers = [{"broker_name": "Broker A", "broker_url": "https://facebook.com/a", "final_score": 82}]
