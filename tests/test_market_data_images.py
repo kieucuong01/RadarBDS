@@ -110,8 +110,36 @@ class MarketDataImageOrderingTest(unittest.TestCase):
         def fake_read_conn(_db_path=None):
             conn = sqlite3.connect(self.db_path)
             conn.row_factory = sqlite3.Row
+
+            class StaticCursor:
+                def fetchone(self):
+                    row = dict(conn.execute(
+                        "SELECT * FROM listings WHERE id=1"
+                    ).fetchone())
+                    row.update({
+                        "is_signal": 1,
+                        "mos_pct": 0,
+                        "fair_ppm2": 0,
+                        "signal_score": 0,
+                        "trust_tier": "candidate_signal",
+                        "trust_score": 0,
+                        "legal_status": "unverified",
+                        "legal_flags": "",
+                        "is_fresh_locked": 0,
+                    })
+                    return row
+
+            class DetailConnection:
+                def execute(self, sql, params=None):
+                    if "FROM listings l" in sql:
+                        return StaticCursor()
+                    return conn.execute(sql, params or ())
+
+                def close(self):
+                    conn.close()
+
             try:
-                yield conn
+                yield DetailConnection()
             finally:
                 conn.close()
 
