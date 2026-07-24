@@ -43,6 +43,16 @@ def tphcm_land_price_tool_page(**kwargs):
     return _impl("tphcm_land_price_tool_page", **kwargs)
 
 
+@bp.route("/quy-hoach-binh-duong")
+def planning_hub_page(**kwargs):
+    return _impl("planning_hub_page", **kwargs)
+
+
+@bp.route("/quy-hoach-binh-duong/<path:planning_slug>")
+def planning_detail_page(planning_slug, **kwargs):
+    return _impl("planning_detail_page", slug=planning_slug, **kwargs)
+
+
 @bp.route("/binh-duong")
 def seo_binh_duong(**kwargs):
     return _impl("seo_binh_duong_landing", **kwargs)

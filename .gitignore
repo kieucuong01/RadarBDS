@@ -45,6 +45,8 @@ reports/
 scratch/
 browser_recordings/
 artifacts/
+output/
+.npm-cache/
 tools/
 .local/
 

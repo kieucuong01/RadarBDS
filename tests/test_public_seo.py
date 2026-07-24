@@ -224,7 +224,7 @@ def test_binh_duong_market_report_page_is_indexed_and_citable():
     assert "Nhận định từ dữ liệu Radar" in html
     assert '"@type": "Report"' in html
     assert "datePublished" in html
-    assert "Phường nên mở tiếp từ báo cáo" in html
+    assert "Đọc sâu hơn" in html
     assert 'href="/binh-duong/phuong-phu-my"' in html
     assert 'href="/binh-duong/phuong-hiep-an"' in html
     assert 'class="hero-map-stage"' not in html

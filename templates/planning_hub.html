@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f8fafc">
+  <title>{{ site_meta.title }}</title>
+  <meta name="description" content="{{ site_meta.description }}">
+  <meta name="keywords" content="{{ site_meta.keywords }}">
+  <meta name="author" content="Radar BDS">
+  <link rel="canonical" href="{{ site_meta.canonical_url }}">
+  <meta property="og:locale" content="vi_VN">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ site_meta.name }}">
+  <meta property="og:title" content="{{ site_meta.title }}">
+  <meta property="og:description" content="{{ site_meta.description }}">
+  <meta property="og:url" content="{{ site_meta.og_url }}">
+  <meta property="og:image" content="{{ site_meta.og_image }}">
+  <meta name="twitter:card" content="summary_large_image">
+  {% include "partials/google_site_tags.html" %}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16.png') }}?v=app-icon-20260608">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=planning-20260723">
+  <script type="application/ld+json">{{ schema_graph | tojson }}</script>
+  <script src="{{ url_for('static', filename='js/planning_maps.js') }}?v=planning-20260723" defer></script>
+</head>
+
+<body class="seo-page planning-page planning-hub">
+  {% include "partials/seo_header.html" %}
+
+  <main id="main-content" class="planning-main">
+    <section class="planning-hero">
+      <div class="seo-shell planning-hero-grid">
+        <div>
+          <p class="planning-kicker">{{ page.hero_badge }}</p>
+          <h1>{{ page.hero_title }}</h1>
+          <p class="planning-hero-text">{{ page.hero_text }}</p>
+          <div class="planning-hero-actions">
+            <a class="seo-button seo-button-primary" href="#planning-list">Xem danh sách bản đồ</a>
+            <a class="seo-button seo-button-secondary" href="{{ dashboard_signal_href }}" data-map-area-cta data-cta-context="hub_hero">Mở signal Bình Dương</a>
+          </div>
+        </div>
+        <aside class="planning-hub-panel" aria-label="Tóm tắt dữ liệu">
+          <span>Cập nhật {{ page.updated_label }}</span>
+          <strong>5 bản đồ đầu tiên</strong>
+          <p>Tuyến giao thông, địa giới, khu vực ảnh hưởng, nguồn văn bản và link sang dữ liệu tin rao Radar BDS.</p>
+          <div class="planning-mini-map" aria-hidden="true">
+            <span class="mini-route mini-route-a"></span>
+            <span class="mini-route mini-route-b"></span>
+            <span class="mini-node mini-node-a"></span>
+            <span class="mini-node mini-node-b"></span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="seo-shell planning-source-strip" aria-label="Lưu ý nguồn dữ liệu">
+      <strong>Thông tin tham khảo.</strong>
+      <span>Không thay thế tra cứu pháp lý thửa đất, hồ sơ quy hoạch chi tiết hoặc văn bản thu hồi đất.</span>
+    </section>
+
+    <section id="planning-list" class="seo-shell planning-list-layout">
+      <div class="planning-list-main">
+        <div class="planning-section-heading">
+          <div>
+            <p class="planning-kicker">Chuyên mục</p>
+            <h2>Bản đồ và bài phân tích</h2>
+          </div>
+          <p>Mỗi card dẫn tới một trang detail có bản đồ tương tác, mục lục, bảng khu vực bị ảnh hưởng và CTA về dashboard.</p>
+        </div>
+
+        <div class="planning-tabs" role="tablist" aria-label="Lọc nội dung quy hoạch">
+          {% for tab in page.tabs %}
+          <button type="button" class="planning-tab{% if loop.first %} is-active{% endif %}" data-planning-filter="{{ tab.id }}" role="tab" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ tab.label }}</button>
+          {% endfor %}
+        </div>
+
+        <div class="planning-card-grid">
+          {% for item in pages %}
+          <article class="planning-card" data-planning-card data-category="{{ item.category }}">
+            <a class="planning-card-media" href="{{ item.path }}" aria-label="Xem bản đồ {{ item.breadcrumb_label }}">
+              <span>{{ item.thumbnail_label }}</span>
+              <i></i>
+              <b></b>
+            </a>
+            <div class="planning-card-body">
+              <div class="planning-card-meta">
+                <span class="planning-badge">{{ item.category_label }}</span>
+                <time datetime="{{ item.updated_at }}">{{ item.updated_label }}</time>
+              </div>
+              <h3><a href="{{ item.path }}">{{ item.hero_title }}</a></h3>
+              <p>{{ item.summary }}</p>
+              <div class="planning-chip-row" aria-label="Khu vực liên quan">
+                {% for area in item.areas[:4] %}
+                <span>{{ area }}</span>
+                {% endfor %}
+              </div>
+              <div class="planning-card-actions">
+                <a class="seo-button seo-button-primary" href="{{ item.path }}">Xem bản đồ</a>
+                <a class="planning-text-link" href="{{ item.dashboard_href }}" data-map-area-cta data-cta-context="{{ item.slug }}">Signal khu này</a>
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+        <p class="planning-empty-state" data-planning-empty hidden>Chưa có bài trong nhóm này. Radar BDS đang ưu tiên các tuyến giao thông và địa giới có tác động trực tiếp tới Bình Dương cũ.</p>
+      </div>
+
+      <aside class="planning-sidebar" aria-label="Đang được xem nhiều">
+        <div class="planning-sidebar-card">
+          <p class="planning-kicker">Đang được xem nhiều</p>
+          <ol>
+            {% for item in trending_pages %}
+            <li>
+              <a href="{{ item.path }}">{{ item.breadcrumb_label }}</a>
+              <span>{{ item.category_label }}</span>
+            </li>
+            {% endfor %}
+          </ol>
+        </div>
+        <div class="planning-sidebar-card">
+          <p class="planning-kicker">Nguồn nên đối chiếu</p>
+          {% for source in page.source_links %}
+          <a class="planning-source-link" href="{{ source.href }}" rel="noopener" target="_blank">{{ source.label }}</a>
+          {% endfor %}
+        </div>
+      </aside>
+    </section>
+
+    <section class="seo-shell planning-cta-band">
+      <div>
+        <p class="planning-kicker">Radar BDS</p>
+        <h2>Từ bản đồ sang dữ liệu tin rao</h2>
+        <p>Mở dashboard để lọc theo phường, giá/m², diện tích và tín hiệu rẻ hơn fair value quanh khu đang đọc.</p>
+      </div>
+      <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-map-area-cta data-cta-context="hub_bottom">Mở dashboard signal</a>
+    </section>
+  </main>
+
+  {% include "partials/seo_footer.html" %}
+</body>
+
+</html>

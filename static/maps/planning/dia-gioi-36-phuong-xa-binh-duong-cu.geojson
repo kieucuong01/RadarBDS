@@ -1,0 +1,114 @@
+{
+  "type": "FeatureCollection",
+  "name": "dia-gioi-36-phuong-xa-binh-duong-cu",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cụm Bình Dương",
+        "focusKey": "Cụm Bình Dương",
+        "layer": "boundary",
+        "color": "#0f766e",
+        "description": "Cụm địa giới tham khảo cho vùng lõi Bình Dương cũ."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [106.56, 10.86],
+          [106.88, 10.86],
+          [106.88, 11.26],
+          [106.56, 11.26],
+          [106.56, 10.86]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Thủ Dầu Một",
+        "focusKey": "Thủ Dầu Một",
+        "layer": "boundary",
+        "color": "#14b8a6",
+        "description": "Cụm địa giới tham khảo vùng Thủ Dầu Một."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [106.60, 10.99],
+          [106.70, 10.99],
+          [106.70, 11.09],
+          [106.60, 11.09],
+          [106.60, 10.99]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bến Cát",
+        "focusKey": "Bến Cát",
+        "layer": "boundary",
+        "color": "#0369a1",
+        "description": "Cụm địa giới tham khảo vùng Bến Cát - Mỹ Phước."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [106.56, 11.08],
+          [106.68, 11.08],
+          [106.68, 11.22],
+          [106.56, 11.22],
+          [106.56, 11.08]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Thuận An - Dĩ An",
+        "focusKey": "Thuận An - Dĩ An",
+        "layer": "boundary",
+        "color": "#7c3aed",
+        "description": "Cụm địa giới tham khảo vùng phía nam Bình Dương cũ."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [106.64, 10.87],
+          [106.84, 10.87],
+          [106.84, 10.99],
+          [106.64, 10.99],
+          [106.64, 10.87]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Trung tâm Thủ Dầu Một",
+        "focusKey": "Trung tâm Thủ Dầu Một",
+        "layer": "nodes",
+        "color": "#dc2626",
+        "description": "Mốc khu vực để đối chiếu tên phường cũ - mới."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.66, 11.03]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Signal quanh Phú Mỹ",
+        "focusKey": "Signal quanh Phú Mỹ",
+        "layer": "signals",
+        "color": "#0369a1",
+        "description": "Lớp minh họa tin đang bán quanh khu này. Mở dashboard để xem dữ liệu thật."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.69, 11.02]
+      }
+    }
+  ]
+}

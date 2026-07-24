@@ -1,0 +1,90 @@
+{
+  "type": "FeatureCollection",
+  "name": "duong-my-phuoc-tan-van",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Mỹ Phước - Tân Vạn",
+        "focusKey": "Mỹ Phước - Tân Vạn",
+        "layer": "route",
+        "color": "#0f766e",
+        "description": "Trục minh họa Bàu Bàng - Mỹ Phước - Tân Vạn."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [106.61, 11.25],
+          [106.61, 11.18],
+          [106.62, 11.12],
+          [106.65, 11.05],
+          [106.69, 10.98],
+          [106.74, 10.93],
+          [106.815, 10.895]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "KCN Mỹ Phước",
+        "focusKey": "KCN Mỹ Phước",
+        "layer": "industrial",
+        "color": "#7c3aed",
+        "description": "Cụm công nghiệp - đô thị Mỹ Phước, Bến Cát."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [106.585, 11.095],
+          [106.66, 11.095],
+          [106.665, 11.17],
+          [106.59, 11.175],
+          [106.585, 11.095]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bến Cát",
+        "focusKey": "Bến Cát",
+        "layer": "nodes",
+        "color": "#dc2626",
+        "description": "Khu đô thị - công nghiệp cần đọc cùng dữ liệu giá/m2."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.615, 11.145]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Tân Vạn",
+        "focusKey": "Tân Vạn",
+        "layer": "nodes",
+        "color": "#dc2626",
+        "description": "Cửa ngõ phía nam của trục Mỹ Phước - Tân Vạn."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.815, 10.895]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Signal quanh Mỹ Phước",
+        "focusKey": "Signal quanh Mỹ Phước",
+        "layer": "signals",
+        "color": "#0369a1",
+        "description": "Lớp minh họa tin đang bán quanh khu này. Mở dashboard để xem dữ liệu thật."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.635, 11.13]
+      }
+    }
+  ]
+}

@@ -36,6 +36,7 @@ from config.settings import (
 )
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
 from config.seo_pages import REPORT_HUB, SEO_PAGES
+from config.planning_pages import PLANNING_HUB, PLANNING_PAGES, PLANNING_PAGE_LIST
 
 mimetypes.add_type("image/webp", ".webp")
 
@@ -1213,6 +1214,9 @@ ALLOWED_TRACK_ACTIONS = {
     "watchlist_create",
     "telegram_linked",
     "modal_open",
+    "map_layer_toggled",
+    "map_fullscreen_clicked",
+    "map_area_cta_clicked",
 }
 
 
@@ -1329,6 +1333,8 @@ def _page_breadcrumbs(page: dict) -> list[dict]:
 
     if path.startswith("/binh-duong/"):
         breadcrumbs.append({"name": "Nhà đất Bình Dương", "href": "/binh-duong"})
+    elif path.startswith("/quy-hoach-binh-duong/"):
+        breadcrumbs.append({"name": "Bản đồ quy hoạch Bình Dương", "href": "/quy-hoach-binh-duong"})
     elif path.startswith("/kien-thuc/"):
         breadcrumbs.append({"name": "Kiến thức", "href": "/kien-thuc"})
     elif path.startswith("/bao-cao/"):
@@ -1447,11 +1453,181 @@ def seo_binh_duong_landing():
     return _render_public_page(page)
 
 
+def _breadcrumb_schema(breadcrumbs: list[dict]) -> dict:
+    return {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": index,
+                "name": crumb["name"],
+                "item": crumb["url"],
+            }
+            for index, crumb in enumerate(breadcrumbs, start=1)
+        ],
+    }
+
+
+def _planning_hub_schema(page: dict, pages: list[dict]) -> dict:
+    return {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "CollectionPage",
+                "name": page["hero_title"],
+                "description": page["description"],
+                "url": _public_url(page["path"]),
+                "isPartOf": {
+                    "@type": "WebSite",
+                    "name": "Radar BDS",
+                    "url": _public_url("/"),
+                },
+            },
+            {
+                "@type": "ItemList",
+                "name": "Danh sách bản đồ quy hoạch Bình Dương cũ",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": index,
+                        "name": item["hero_title"],
+                        "url": _public_url(item["path"]),
+                    }
+                    for index, item in enumerate(pages, start=1)
+                ],
+            },
+            _breadcrumb_schema(page["breadcrumbs"]),
+        ],
+    }
+
+
+def _planning_detail_schema(page: dict) -> dict:
+    source_urls = [source["href"] for source in page.get("source_links", []) if source.get("href")]
+    return {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Article",
+                "headline": page["hero_title"],
+                "description": page["description"],
+                "url": _public_url(page["path"]),
+                "datePublished": page["updated_at"],
+                "dateModified": page["updated_at"],
+                "author": {
+                    "@type": "Organization",
+                    "name": "Radar BDS",
+                    "url": _public_url("/"),
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Radar BDS",
+                    "url": _public_url("/"),
+                },
+                "mainEntityOfPage": _public_url(page["path"]),
+            },
+            _breadcrumb_schema(page["breadcrumbs"]),
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": item["question"],
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": item["answer"],
+                        },
+                    }
+                    for item in page.get("faq", [])
+                ],
+            },
+            {
+                "@type": "Dataset",
+                "name": page["map_label"],
+                "description": page["description"],
+                "url": _public_url(page["path"]),
+                "dateModified": page["updated_at"],
+                "creator": {
+                    "@type": "Organization",
+                    "name": "Radar BDS",
+                    "url": _public_url("/"),
+                },
+                "spatialCoverage": {
+                    "@type": "Place",
+                    "name": "Bình Dương cũ",
+                },
+                "isBasedOn": source_urls,
+                "distribution": [
+                    {
+                        "@type": "DataDownload",
+                        "encodingFormat": "application/geo+json",
+                        "contentUrl": _public_url(page["geojson_path"]),
+                    }
+                ],
+            },
+        ],
+    }
+
+
+def planning_hub_page():
+    page = dict(PLANNING_HUB)
+    pages = [dict(item) for item in PLANNING_PAGE_LIST]
+    trending_pages = [
+        dict(PLANNING_PAGES[slug])
+        for slug in page.get("trending_slugs", [])
+        if slug in PLANNING_PAGES
+    ]
+    page["breadcrumbs"] = _page_breadcrumbs(page)
+    page["local_links"] = page.get("local_links", [])[:3]
+    site_meta = _site_meta(
+        page["path"],
+        title=page["title"],
+        description=page["description"],
+        keywords=page["keywords"],
+    )
+    return render_template(
+        "planning_hub.html",
+        page=page,
+        pages=pages,
+        trending_pages=trending_pages,
+        site_meta=site_meta,
+        schema_graph=_planning_hub_schema(page, pages),
+        active_nav="quy-hoach",
+        dashboard_signal_href="/?tab=signals",
+    )
+
+
+def planning_detail_page(slug: str):
+    page = PLANNING_PAGES.get((slug or "").strip("/"))
+    if not page:
+        abort(404)
+    page = deepcopy(page)
+    page["breadcrumbs"] = _page_breadcrumbs(page)
+    page["local_links"] = page.get("related_links", [])[:3]
+    site_meta = _site_meta(
+        page["path"],
+        title=page["title"],
+        description=page["description"],
+        keywords=page["keywords"],
+    )
+    return render_template(
+        "planning_detail.html",
+        page=page,
+        site_meta=site_meta,
+        schema_graph=_planning_detail_schema(page),
+        active_nav="quy-hoach",
+        dashboard_signal_href=page.get("dashboard_href") or "/?tab=signals",
+    )
+
+
 def _active_public_nav(path: str) -> str:
     if path == "/bang-gia-dat-tphcm":
         return "bang-gia-dat"
     if path == "/dinh-gia-bds":
         return "dinh-gia"
+    if path.startswith("/quy-hoach-binh-duong"):
+        return "quy-hoach"
+    if path == "/ban-dat-binh-duong":
+        return "ban-dat"
     if path.startswith("/bao-cao"):
         return "bao-cao"
     if path.startswith("/kien-thuc"):
@@ -1983,6 +2159,9 @@ def llms_txt():
 - Công cụ định giá đất Bình Dương: {_public_url('/dinh-gia-bds')}
 - Tra cứu bảng giá đất TP.HCM 2026: {_public_url('/bang-gia-dat-tphcm')}
 - Báo cáo dữ liệu: {_public_url('/bao-cao')}
+- Bản đồ quy hoạch Bình Dương cũ: {_public_url('/quy-hoach-binh-duong')}
+- Bản đồ Vành đai 3 Bình Dương: {_public_url('/quy-hoach-binh-duong/vanh-dai-3')}
+- Địa giới 36 phường xã Bình Dương cũ: {_public_url('/quy-hoach-binh-duong/dia-gioi-36-phuong-xa-binh-duong-cu')}
 - Phương pháp lọc deal: {_public_url('/san-deal-bds')}
 """
     return Response(body, mimetype="text/plain")
@@ -1992,7 +2171,7 @@ def sitemap_xml():
     unique_pages = []
     seen_paths = set()
     news_hub = dict(KNOWLEDGE_HUB, path="/tin-tuc", title="Tin tức BĐS Bình Dương | Radar BDS")
-    for page in [REPORT_HUB, KNOWLEDGE_HUB, news_hub, *SEO_PAGES.values()]:
+    for page in [REPORT_HUB, KNOWLEDGE_HUB, news_hub, PLANNING_HUB, *SEO_PAGES.values(), *PLANNING_PAGE_LIST]:
         path = page.get("path")
         if not path or path in seen_paths:
             continue

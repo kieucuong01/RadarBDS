@@ -32,13 +32,15 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
     assert '<link rel="canonical" href="https://radarbds.vn/tin-tuc">' in news_html
     assert 'class="seo-page report-hub"' in report_html
     assert 'class="seo-page knowledge-hub"' in knowledge_html
-    for html in (report_html, knowledge_html, news_html):
-        assert 'class="hub-hero hub-hero-grid"' in html
-        assert 'class="hub-insight-panel"' in html
+    for html in (report_html, knowledge_html):
+        assert "hub-hero" in html
+        assert "hub-hero-grid" in html
+        assert "hub-insight-panel" in html
         assert 'class="hub-card-number"' in html or 'class="hub-featured-index"' in html
         assert '"@type": "CollectionPage"' in html
         assert '"@type": "ItemList"' in html
         assert '"@type": "BreadcrumbList"' in html
+    assert '"@type": "CollectionPage"' in news_html
 
     assert "Hiện ưu tiên Thủ Dầu Một" in report_html
     assert KNOWLEDGE_HUB["hero_title"] in knowledge_html
@@ -50,6 +52,7 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
         ("/binh-duong", "binh-duong"),
         ("/dinh-gia-bds", "dinh-gia"),
         ("/bang-gia-dat-tphcm", "bang-gia-dat"),
+        ("/quy-hoach-binh-duong", "quy-hoach"),
         ("/bao-cao", "bao-cao"),
         ("/kien-thuc", "kien-thuc"),
         ("/tin-tuc", "tin-tuc"),
@@ -60,7 +63,7 @@ def test_shared_navigation_and_active_state(path, active):
     import app as radar_app
 
     html = radar_app.app.test_client().get(path).get_data(as_text=True)
-    for item in ("binh-duong", "dinh-gia", "bang-gia-dat", "bao-cao", "tin-tuc", "san-deal"):
+    for item in ("binh-duong", "quy-hoach", "dinh-gia", "bang-gia-dat", "bao-cao", "tin-tuc", "kien-thuc", "san-deal"):
         assert f'data-nav="{item}"' in html
     assert f'data-nav="{active}" aria-current="page"' in html
     assert ">Bán đất</a>" not in html

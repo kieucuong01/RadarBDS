@@ -1,0 +1,106 @@
+{
+  "type": "FeatureCollection",
+  "name": "vanh-dai-3-binh-duong",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Tuyến Vành đai 3 Bình Dương",
+        "focusKey": "Tuyến Vành đai 3 Bình Dương",
+        "layer": "route",
+        "color": "#0f766e",
+        "description": "Tuyến minh họa đoạn Vành đai 3 qua khu nam Bình Dương cũ."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [106.815, 10.895],
+          [106.77, 10.91],
+          [106.72, 10.935],
+          [106.69, 10.965],
+          [106.66, 10.995],
+          [106.635, 11.025]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Vùng tác động Tân Vạn - Bình Chuẩn",
+        "focusKey": "Tân Vạn",
+        "layer": "impact",
+        "color": "#f59e0b",
+        "description": "Vùng đọc nhanh cho các tin rao tự nhận gần Vành đai 3."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [106.83, 10.885],
+          [106.82, 10.925],
+          [106.72, 10.965],
+          [106.67, 10.995],
+          [106.645, 10.975],
+          [106.71, 10.92],
+          [106.79, 10.885],
+          [106.83, 10.885]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Tân Vạn",
+        "focusKey": "Tân Vạn",
+        "layer": "nodes",
+        "color": "#dc2626",
+        "description": "Cửa ngõ kết nối về Thủ Đức, Đồng Nai và trục Tân Vạn."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.815, 10.895]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Nút giao Bình Chuẩn",
+        "focusKey": "Nút giao Bình Chuẩn",
+        "layer": "nodes",
+        "color": "#dc2626",
+        "description": "Điểm cần kiểm tra lộ giới và bán kính ảnh hưởng quanh nút giao."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.69, 10.965]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Signal quanh Bình Chuẩn",
+        "focusKey": "Signal quanh Bình Chuẩn",
+        "layer": "signals",
+        "color": "#0369a1",
+        "description": "Lớp minh họa tin đang bán quanh khu này. Mở dashboard để xem dữ liệu thật."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.685, 10.958]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Signal quanh Thuận An",
+        "focusKey": "Signal quanh Thuận An",
+        "layer": "signals",
+        "color": "#0369a1",
+        "description": "Lớp minh họa tin đang bán quanh khu này. Mở dashboard để xem dữ liệu thật."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.71, 10.94]
+      }
+    }
+  ]
+}

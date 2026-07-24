@@ -1,0 +1,91 @@
+{
+  "type": "FeatureCollection",
+  "name": "vanh-dai-4-binh-duong",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Vành đai 4 Bình Dương",
+        "focusKey": "Vành đai 4 Bình Dương",
+        "layer": "route",
+        "color": "#0f766e",
+        "description": "Tuyến minh họa đoạn Vành đai 4 qua vùng Bến Cát - Tân Uyên."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [106.50, 11.08],
+          [106.56, 11.12],
+          [106.63, 11.15],
+          [106.71, 11.13],
+          [106.80, 11.09],
+          [106.89, 11.02]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Vùng Bến Cát - Tân Uyên",
+        "focusKey": "Bến Cát",
+        "layer": "impact",
+        "color": "#f59e0b",
+        "description": "Vùng đọc nhanh các khu có thể chịu tác động từ Vành đai 4."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [106.515, 11.055],
+          [106.62, 11.19],
+          [106.82, 11.17],
+          [106.905, 11.02],
+          [106.82, 10.985],
+          [106.63, 11.06],
+          [106.515, 11.055]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Tân Uyên",
+        "focusKey": "Tân Uyên",
+        "layer": "nodes",
+        "color": "#dc2626",
+        "description": "Hướng kết nối sang Đồng Nai và các khu công nghiệp phía đông."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.80, 11.09]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Thủ Biên",
+        "focusKey": "Thủ Biên",
+        "layer": "nodes",
+        "color": "#dc2626",
+        "description": "Điểm tham khảo quanh hướng cầu/kết nối qua sông."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.89, 11.02]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Signal quanh Bến Cát",
+        "focusKey": "Signal quanh Bến Cát",
+        "layer": "signals",
+        "color": "#0369a1",
+        "description": "Lớp minh họa tin đang bán quanh khu này. Mở dashboard để xem dữ liệu thật."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.61, 11.145]
+      }
+    }
+  ]
+}

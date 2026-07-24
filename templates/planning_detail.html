@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f8fafc">
+  <title>{{ site_meta.title }}</title>
+  <meta name="description" content="{{ site_meta.description }}">
+  <meta name="keywords" content="{{ site_meta.keywords }}">
+  <meta name="author" content="Radar BDS">
+  <link rel="canonical" href="{{ site_meta.canonical_url }}">
+  <meta property="og:locale" content="vi_VN">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="{{ site_meta.name }}">
+  <meta property="og:title" content="{{ site_meta.title }}">
+  <meta property="og:description" content="{{ site_meta.description }}">
+  <meta property="og:url" content="{{ site_meta.og_url }}">
+  <meta property="og:image" content="{{ site_meta.og_image }}">
+  <meta name="twitter:card" content="summary_large_image">
+  {% include "partials/google_site_tags.html" %}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16.png') }}?v=app-icon-20260608">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=planning-20260723">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQW8w+3ffu6zvI7G5PJMZrU3P7UjVVI=" crossorigin="">
+  <script type="application/ld+json">{{ schema_graph | tojson }}</script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+  <script src="{{ url_for('static', filename='js/planning_maps.js') }}?v=planning-20260723" defer></script>
+</head>
+
+<body class="seo-page planning-page planning-detail">
+  {% include "partials/seo_header.html" %}
+
+  <main id="main-content" class="planning-main">
+    <article>
+      <header class="planning-detail-hero">
+        <div class="seo-shell">
+          <nav class="planning-breadcrumbs" aria-label="Breadcrumb">
+            {% for crumb in page.breadcrumbs %}
+            <a href="{{ crumb.href }}">{{ crumb.name }}</a>{% if not loop.last %}<span>/</span>{% endif %}
+            {% endfor %}
+          </nav>
+          <p class="planning-kicker">{{ page.hero_badge }}</p>
+          <h1>{{ page.hero_title }}</h1>
+          <div class="planning-detail-meta">
+            <time datetime="{{ page.updated_at }}">Cập nhật {{ page.updated_label }}</time>
+            <span>{{ page.source_badge }}</span>
+            <span>{{ page.read_time }}</span>
+          </div>
+          <p class="planning-quick-answer">{{ page.hero_text }}</p>
+        </div>
+      </header>
+
+      <section class="seo-shell planning-map-section" aria-label="Bản đồ tương tác">
+        <div class="planning-source-strip">
+          <strong>Thông tin tham khảo.</strong>
+          <span>Không thay thế tra cứu pháp lý thửa đất, bản đồ quy hoạch chi tiết hoặc văn bản thu hồi đất.</span>
+        </div>
+        <div class="planning-map-panel" data-planning-map-panel>
+          <div class="planning-map-topbar">
+            <div>
+              <strong>{{ page.map_label }}</strong>
+              <span>GeoJSON minh họa, nền OpenStreetMap</span>
+            </div>
+            <button type="button" class="planning-icon-button" data-map-fullscreen aria-label="Mở bản đồ toàn màn hình">Toàn màn hình</button>
+          </div>
+          <div class="planning-map-canvas-wrap">
+            <div class="planning-map" data-planning-map data-geojson="{{ page.geojson_path }}" data-page-path="{{ page.path }}" data-map-title="{{ page.map_label }}"></div>
+            <div class="planning-map-status" data-planning-map-status>Đang tải bản đồ...</div>
+          </div>
+          <div class="planning-map-controls">
+            <fieldset class="planning-layer-list">
+              <legend>Lớp bản đồ</legend>
+              {% for layer in page.map_layers %}
+              <label>
+                <input type="checkbox" data-map-layer="{{ layer.id }}" {% if layer.checked %}checked{% endif %}>
+                <span>{{ layer.label }}</span>
+              </label>
+              {% endfor %}
+            </fieldset>
+            <div class="planning-legend" aria-label="Chú giải">
+              {% for item in page.legend %}
+              <span><i style="--legend-color: {{ item.color }}"></i>{{ item.label }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="seo-shell planning-impact-grid" aria-label="Tóm tắt tác động">
+        {% for card in page.impact_cards %}
+        <div class="planning-impact-card" data-tone="{{ card.tone }}">
+          <span>{{ card.label }}</span>
+          <strong>{{ card.value }}</strong>
+        </div>
+        {% endfor %}
+      </section>
+
+      <section class="seo-shell planning-detail-layout">
+        <aside class="planning-toc" aria-label="Mục lục">
+          <strong>Mục lục</strong>
+          {% if page.segment_rows %}
+          <a href="#phan-doan-vanh-dai-3">Tổng quan phân đoạn</a>
+          {% endif %}
+          {% for section in page.sections %}
+          <a href="#{{ section.id }}">{{ loop.index }}. {{ section.heading }}</a>
+          {% endfor %}
+          <a href="#khu-vuc-anh-huong">Khu vực bị ảnh hưởng</a>
+          <a href="#nguon-du-lieu">Nguồn dữ liệu</a>
+        </aside>
+
+        <div class="planning-article-body">
+          <details class="planning-mobile-toc">
+            <summary>Mục lục</summary>
+            {% if page.segment_rows %}
+            <a href="#phan-doan-vanh-dai-3">Tổng quan phân đoạn</a>
+            {% endif %}
+            {% for section in page.sections %}
+            <a href="#{{ section.id }}">{{ loop.index }}. {{ section.heading }}</a>
+            {% endfor %}
+            <a href="#khu-vuc-anh-huong">Khu vực bị ảnh hưởng</a>
+            <a href="#nguon-du-lieu">Nguồn dữ liệu</a>
+          </details>
+
+          {% if page.segment_rows %}
+          <section id="phan-doan-vanh-dai-3" class="planning-content-section planning-table-section">
+            <div class="planning-section-heading">
+              <div>
+                <p class="planning-kicker">Đọc nhanh toàn tuyến</p>
+                <h2>Tổng quan các phân đoạn Vành đai 3</h2>
+              </div>
+              <p>Phần này giúp người đọc hiểu đoạn Bình Dương nằm ở đâu trong toàn tuyến trước khi zoom vào bản đồ chi tiết.</p>
+            </div>
+            <div class="planning-table-wrap">
+              <table class="planning-segment-table">
+                <thead>
+                  <tr>
+                    <th>Phân đoạn</th>
+                    <th>Hướng tuyến</th>
+                    <th>Chiều dài tham khảo</th>
+                    <th>Ý nghĩa khi đọc tin rao</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in page.segment_rows %}
+                  <tr>
+                    <td>{{ row.segment }}</td>
+                    <td>{{ row.route }}</td>
+                    <td>{{ row.length }}</td>
+                    <td>{{ row.note }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          {% endif %}
+
+          {% for section in page.sections %}
+          <section id="{{ section.id }}" class="planning-content-section">
+            <div class="planning-section-copy">
+              <h2>{{ section.heading }}</h2>
+              {% for paragraph in section.paragraphs %}
+              <p>{{ paragraph }}</p>
+              {% endfor %}
+              {% if section.bullets %}
+              <ul>
+                {% for item in section.bullets %}
+                <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </div>
+            {% if section.focus_feature %}
+            <button type="button" class="planning-focus-button" data-map-focus="{{ section.focus_feature }}">Focus trên bản đồ</button>
+            {% endif %}
+          </section>
+          {% endfor %}
+
+          <section id="khu-vuc-anh-huong" class="planning-content-section planning-table-section">
+            <div class="planning-section-heading">
+              <div>
+                <p class="planning-kicker">Bảng kiểm tra nhanh</p>
+                <h2>Khu vực Bình Dương bị ảnh hưởng</h2>
+              </div>
+              <p>Dùng bảng này để đi từ bản đồ sang trang khu vực hoặc dashboard tín hiệu.</p>
+            </div>
+            <div class="planning-table-wrap">
+              <table class="planning-impact-table">
+                <thead>
+                  <tr>
+                    <th>Khu vực</th>
+                    <th>Tác động đọc nhanh</th>
+                    <th>Điểm cần kiểm tra</th>
+                    <th>Trạng thái</th>
+                    <th>Đi tiếp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in page.impact_rows %}
+                  <tr>
+                    <td><a href="{{ row.landing_href }}">{{ row.area }}</a></td>
+                    <td>{{ row.impact }}</td>
+                    <td>{{ row.risk }}</td>
+                    <td><span class="planning-status">{{ row.status }}</span></td>
+                    <td><a href="{{ row.dashboard_href }}" data-map-area-cta data-cta-context="{{ row.area }}">Mở signal</a></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="nguon-du-lieu" class="planning-content-section">
+            <h2>Nguồn dữ liệu và cách dùng</h2>
+            <p>Radar BDS chỉ dùng lớp bản đồ này để giúp người đọc báo và tin rao hình dung vị trí tuyến/khu vực. Khi cần quyết định mua bán, hãy kiểm tra hồ sơ quy hoạch, pháp lý thửa đất và văn bản chính thức.</p>
+            <div class="planning-source-list">
+              {% for source in page.source_links %}
+              <a href="{{ source.href }}" rel="noopener" target="_blank">{{ source.label }}</a>
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="planning-content-section">
+            <h2>Câu hỏi thường gặp</h2>
+            <div class="planning-faq-list">
+              {% for item in page.faq %}
+              <details>
+                <summary>{{ item.question }}</summary>
+                <p>{{ item.answer }}</p>
+              </details>
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="planning-content-section">
+            <h2>Bài và khu vực liên quan</h2>
+            <div class="planning-related-grid">
+              {% for link in page.related_links %}
+              <a href="{{ link.href }}">{{ link.label }}</a>
+              {% endfor %}
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="seo-shell planning-cta-band">
+        <div>
+          <p class="planning-kicker">Radar BDS</p>
+          <h2>Mở dữ liệu tin đang bán quanh khu này</h2>
+          <p>Lọc theo phường, giá/m², diện tích, MOS và cảnh báo nguồn tin để kiểm tra khu vực trên bản đồ.</p>
+        </div>
+        <a class="seo-button seo-button-primary" href="{{ page.dashboard_href }}" data-map-area-cta data-cta-context="detail_bottom">Mở signal khu này</a>
+      </section>
+    </article>
+  </main>
+
+  <div class="planning-mobile-cta">
+    <a href="{{ page.dashboard_href }}" data-map-area-cta data-cta-context="mobile_sticky">Mở signal khu này</a>
+  </div>
+
+  {% include "partials/seo_footer.html" %}
+</body>
+
+</html>

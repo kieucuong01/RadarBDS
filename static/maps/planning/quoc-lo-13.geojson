@@ -1,0 +1,89 @@
+{
+  "type": "FeatureCollection",
+  "name": "quoc-lo-13-binh-duong",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Quốc lộ 13",
+        "focusKey": "Quốc lộ 13",
+        "layer": "route",
+        "color": "#0f766e",
+        "description": "Trục minh họa QL13 qua Bình Dương cũ."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [106.705, 10.90],
+          [106.69, 10.97],
+          [106.66, 11.03],
+          [106.63, 11.10],
+          [106.61, 11.17],
+          [106.60, 11.25]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Vùng thương mại Thủ Dầu Một",
+        "focusKey": "Thủ Dầu Một",
+        "layer": "impact",
+        "color": "#f59e0b",
+        "description": "Vùng đọc nhanh trục thương mại - dân cư quanh QL13."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [106.625, 10.995],
+          [106.69, 10.995],
+          [106.69, 11.075],
+          [106.62, 11.075],
+          [106.625, 10.995]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Thủ Dầu Một",
+        "focusKey": "Thủ Dầu Một",
+        "layer": "nodes",
+        "color": "#dc2626",
+        "description": "Đoạn lõi đô thị cần đọc cùng dữ liệu giá/m2 theo phường."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.66, 11.03]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bến Cát",
+        "focusKey": "Bến Cát",
+        "layer": "nodes",
+        "color": "#dc2626",
+        "description": "Hướng QL13 nối Mỹ Phước, Bến Cát và Bàu Bàng."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.62, 11.14]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Signal quanh QL13 Thủ Dầu Một",
+        "focusKey": "Signal quanh QL13 Thủ Dầu Một",
+        "layer": "signals",
+        "color": "#0369a1",
+        "description": "Lớp minh họa tin đang bán quanh khu này. Mở dashboard để xem dữ liệu thật."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.655, 11.045]
+      }
+    }
+  ]
+}
