@@ -1728,7 +1728,363 @@ SEO_ARTICLES = {'gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026': {'variant':
         "body": "Chọn phường Tân An, tách đất nền và nhà đất, rồi xem nhóm tin đáng kiểm tra trước khi liên hệ.",
         "button": "Mở dashboard"
     }
-}
+},
+    "gia-dat-phu-my-hien-bao-nhieu": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
+        "title": "Giá đất Phú Mỹ hiện bao nhiêu? So đất nền và nhà đất | Radar BDS",
+        "description": "Giá đất Phú Mỹ Thủ Dầu Một cập nhật 21/07/2026: 167 tin Facebook 14 ngày, đất nền 20,0 tr/m², nhà đất 40,6 tr/m² và 9 dấu hiệu cần kiểm tra.",
+        "keywords": "giá đất Phú Mỹ, giá đất Phú Mỹ Thủ Dầu Một, đất nền Phú Mỹ, nhà đất Phú Mỹ, Radar BDS",
+        "breadcrumb_label": "Giá đất Phú Mỹ hiện bao nhiêu",
+        "hero_badge": "Tin tức BĐS Bình Dương",
+        "hero_title": "Giá đất Phú Mỹ hiện bao nhiêu? So đất nền và nhà đất",
+        "hero_text": "Trong 14 ngày dữ liệu Facebook đang theo dõi, Phú Mỹ có 167 tin còn sống và 9 dấu hiệu đáng chú ý. Đất nền có giá trung vị 20,0 tr/m², nhà đất có giá trung vị 40,6 tr/m²; nếu gộp hai loại hình sẽ rất dễ so sai.",
+        "scope_label": "Thủ Dầu Một · Phú Mỹ",
+        "hero_checks": [
+            "167 tin Facebook đang theo dõi tại Phú Mỹ trong 14 ngày gần nhất",
+            "Đất nền: 61 tin, 43 tin có giá/m²; giá trung vị 20,0 tr/m²",
+            "Nhà đất: 102 tin, 75 tin có giá/m²; giá trung vị 40,6 tr/m²",
+            "9 dấu hiệu đáng chú ý gồm 6 tin được quan tâm và 3 tin có giảm giá"
+        ],
+        "primary_cta": "Mở dashboard lọc Phú Mỹ",
+        "primary_href": "/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&utm_source=seo&utm_medium=article&utm_campaign=phu_my_daily",
+        "secondary_cta": "Xem báo cáo Phú Mỹ tháng 06/2026",
+        "secondary_href": "/bao-cao/phu-my-thang-06-2026",
+        "map_label": "Tin tức / Phú Mỹ",
+        "hero_metric": {
+            "label": "Giá trung vị đất nền",
+            "value": "20,0",
+            "delta": "tr/m²",
+            "note": "43 tin đất nền Phú Mỹ có giá/m²"
+        },
+        "property_card": {
+            "status": "Phú Mỹ — dữ liệu tin đang theo dõi",
+            "title": "Đất nền quanh 2,80 tỷ giá trung vị",
+            "price": "20,0 tr/m² · 2,80 tỷ giá trung vị đất nền",
+            "metric_a": "Tin đang theo dõi",
+            "metric_a_value": "167",
+            "metric_b": "Dấu hiệu đáng chú ý",
+            "metric_b_value": "9"
+        },
+        "local_links_title": "Đọc tiếp về Phú Mỹ và khu lân cận",
+        "local_links": [
+            {
+                "label": "Báo cáo Phú Mỹ tháng 06/2026",
+                "href": "/bao-cao/phu-my-thang-06-2026",
+                "description": "Báo cáo tháng đã chốt dữ liệu, phù hợp để so bối cảnh dài hơn."
+            },
+            {
+                "label": "Trang khu vực Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Trang địa phương để xem giá, vị trí và tin theo phường Phú Mỹ."
+            },
+            {
+                "label": "Giá đất Tân An hiện nay",
+                "href": "/tin-tuc/gia-dat-tan-an-thu-dau-mot-hien-nay",
+                "description": "So Phú Mỹ với Tân An nhưng luôn tách đất nền và nhà đất."
+            },
+            {
+                "label": "Báo cáo Thủ Dầu Một tháng 06/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-06-2026",
+                "description": "So Phú Mỹ với 12 phường còn lại trong cùng kỳ báo cáo tháng."
+            },
+            {
+                "label": "Săn deal BĐS bằng dữ liệu",
+                "href": "/san-deal-bds",
+                "description": "Cách Radar lọc tin đáng kiểm tra bằng giá, lịch sử và dấu hiệu dữ liệu."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Giá đất nền Phú Mỹ hiện khoảng bao nhiêu?",
+                "a": "Theo dữ liệu tin Facebook đang theo dõi của Radar BDS trong 14 ngày gần nhất, đất nền Phú Mỹ có giá trung vị 20,0 tr/m² từ 43 tin có giá/m². Giá trung vị nghĩa là một nửa số tin thấp hơn mức này, một nửa cao hơn."
+            },
+            {
+                "q": "Nhà đất Phú Mỹ vì sao cao hơn đất nền theo giá/m²?",
+                "a": "Trong mẫu 14 ngày, nhà đất Phú Mỹ có giá trung vị 40,6 tr/m² từ 75 tin có giá/m², cao hơn đất nền 20,0 tr/m². Nhóm nhà đất có công trình, vị trí và hiện trạng sử dụng khác đất nền nên không nên so chung một mức giá."
+            },
+            {
+                "q": "9 dấu hiệu đáng chú ý ở Phú Mỹ có phải là tin nên mua không?",
+                "a": "Không. Đây là nhóm tin Radar BDS đánh dấu để ưu tiên kiểm tra tiếp, gồm 6 tin được quan tâm và 3 tin có giảm giá. Người mua vẫn cần kiểm tra pháp lý, quy hoạch, vị trí, hiện trạng và lịch sử giá."
+            },
+            {
+                "q": "Nên so Phú Mỹ với phường nào trước?",
+                "a": "Có thể so Phú Mỹ với Tân An, Định Hòa, Hiệp An, Phú Hòa, Phú Lợi và Phú Tân. Với đất nền, Phú Mỹ 20,0 tr/m² gần Tân An 19,3 tr/m² và cao hơn Định Hòa 17,9 tr/m². Với nhà đất, Phú Mỹ 40,6 tr/m² gần Phú Hòa 43,3 tr/m² và Phú Lợi 37,6 tr/m²."
+            }
+        ],
+        "article": {
+            "published_at": "2026-07-24",
+            "modified_at": "2026-07-24",
+            "intro": [
+                "Nếu bạn hỏi giá đất Phú Mỹ hiện bao nhiêu, câu trả lời ngắn là: trong 14 ngày dữ liệu Facebook đang theo dõi, đất nền có giá trung vị 20,0 tr/m², còn nhà đất có giá trung vị 40,6 tr/m². Phú Mỹ có 167 tin đang theo dõi và 9 dấu hiệu đáng chú ý cần kiểm tra tiếp.",
+                "Bài viết này dùng dữ liệu production của Radar BDS, chỉ lấy nguồn Facebook, cửa sổ từ 10/07/2026 đến dữ liệu mới nhất 21/07/2026. Các mức giá là giá rao tham khảo theo loại hình BĐS, không phải giá chốt hay khuyến nghị mua."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tin Phú Mỹ 14 ngày",
+                    "value": "167",
+                    "note": "Tin Facebook đang theo dõi, còn sống trên Radar"
+                },
+                {
+                    "label": "Đất nền Phú Mỹ",
+                    "value": "20,0 tr/m²",
+                    "note": "Giá trung vị từ 43 tin đất nền có giá/m²"
+                },
+                {
+                    "label": "Nhà đất Phú Mỹ",
+                    "value": "40,6 tr/m²",
+                    "note": "Giá trung vị từ 75 tin nhà đất có giá/m²"
+                },
+                {
+                    "label": "Dấu hiệu đáng chú ý",
+                    "value": "9",
+                    "note": "6 tin được quan tâm và 3 tin có giảm giá"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Dữ liệu Radar BDS · Facebook · 14 ngày",
+                    "title": "Giá Phú Mỹ theo loại hình BĐS",
+                    "note": "Cập nhật đến 21/07/2026. Giá/m² là giá trung vị, cần đọc riêng đất nền và nhà đất.",
+                    "columns": [
+                        {
+                            "key": "type",
+                            "label": "Loại hình"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin đang theo dõi"
+                        },
+                        {
+                            "key": "priced",
+                            "label": "Tin có giá/m²"
+                        },
+                        {
+                            "key": "median_m2",
+                            "label": "Giá trung vị/m²"
+                        },
+                        {
+                            "key": "median_total",
+                            "label": "Tổng giá trung vị"
+                        },
+                        {
+                            "key": "range",
+                            "label": "Vùng 25-75%"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "type": "Đất nền",
+                            "tracked": "61",
+                            "priced": "43",
+                            "median_m2": "20,0 tr/m²",
+                            "median_total": "2,80 tỷ",
+                            "range": "19,7-25,3 tr/m²",
+                            "signals": "5"
+                        },
+                        {
+                            "type": "Nhà đất",
+                            "tracked": "102",
+                            "priced": "75",
+                            "median_m2": "40,6 tr/m²",
+                            "median_total": "3,55 tỷ",
+                            "range": "33,4-46,7 tr/m²",
+                            "signals": "3"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "So sánh phường lân cận",
+                    "title": "Phú Mỹ nên so với phường nào?",
+                    "note": "Bảng dùng cùng cửa sổ 14 ngày và chỉ đọc hai nhóm chính: đất nền, nhà đất.",
+                    "columns": [
+                        {
+                            "key": "ward",
+                            "label": "Phường"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu"
+                        },
+                        {
+                            "key": "dat_nen",
+                            "label": "Đất nền"
+                        },
+                        {
+                            "key": "nha_dat",
+                            "label": "Nhà đất"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward": "Phú Mỹ",
+                            "tracked": "167",
+                            "signals": "9",
+                            "dat_nen": "20,0 tr/m²",
+                            "nha_dat": "40,6 tr/m²"
+                        },
+                        {
+                            "ward": "Phú Hòa",
+                            "tracked": "154",
+                            "signals": "9",
+                            "dat_nen": "29,5 tr/m²",
+                            "nha_dat": "43,3 tr/m²"
+                        },
+                        {
+                            "ward": "Tân An",
+                            "tracked": "111",
+                            "signals": "15",
+                            "dat_nen": "19,3 tr/m²",
+                            "nha_dat": "19,8 tr/m²"
+                        },
+                        {
+                            "ward": "Định Hòa",
+                            "tracked": "121",
+                            "signals": "20",
+                            "dat_nen": "17,9 tr/m²",
+                            "nha_dat": "18,0 tr/m²"
+                        },
+                        {
+                            "ward": "Hiệp An",
+                            "tracked": "168",
+                            "signals": "5",
+                            "dat_nen": "15,7 tr/m²",
+                            "nha_dat": "23,9 tr/m²"
+                        },
+                        {
+                            "ward": "Phú Lợi",
+                            "tracked": "116",
+                            "signals": "18",
+                            "dat_nen": "26,8 tr/m²",
+                            "nha_dat": "37,6 tr/m²"
+                        },
+                        {
+                            "ward": "Phú Tân",
+                            "tracked": "110",
+                            "signals": "56",
+                            "dat_nen": "23,9 tr/m²",
+                            "nha_dat": "27,0 tr/m²"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất Phú Mỹ đang cao hơn đất nền theo giá/m²",
+                    "note": "Bar chart dùng giá trung vị/m², không gộp hai loại hình thành một giá chung.",
+                    "alt": "Biểu đồ so giá trung vị đất nền và nhà đất Phú Mỹ",
+                    "rows": [
+                        {
+                            "label": "Đất nền",
+                            "value_label": "20,0 tr/m²",
+                            "width": 49,
+                            "color": "#2563eb"
+                        },
+                        {
+                            "label": "Nhà đất",
+                            "value_label": "40,6 tr/m²",
+                            "width": 100,
+                            "color": "#16a34a"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "gia-dat-nen-phu-my",
+                    "heading": "Đất nền Phú Mỹ: giá trung vị 20,0 tr/m² từ 43 tin có giá/m²",
+                    "paragraphs": [
+                        "Trong 14 ngày gần nhất, Radar BDS ghi nhận 61 tin đất nền Phú Mỹ đang theo dõi. Trong đó 43 tin có giá/m² đủ điều kiện để tính giá trung vị. Mức giá trung vị của đất nền là 20,0 tr/m², với tổng giá trung vị khoảng 2,80 tỷ.",
+                        "Vùng 25-75% của đất nền Phú Mỹ nằm quanh 19,7-25,3 tr/m². Một tin đất nền thấp hơn vùng này cần kiểm tra lại vị trí, đường vào, diện tích, thổ cư và quy hoạch. Một tin cao hơn vùng này cần có lý do rõ như mặt tiền, vị trí đẹp hoặc pháp lý tốt."
+                    ],
+                    "bullets": [
+                        "Đất nền đang theo dõi: 61 tin",
+                        "Đất nền có giá/m²: 43 tin",
+                        "Giá trung vị đất nền: 20,0 tr/m²",
+                        "Tổng giá trung vị đất nền: 2,80 tỷ"
+                    ]
+                },
+                {
+                    "id": "nha-dat-phu-my",
+                    "heading": "Nhà đất Phú Mỹ: giá trung vị 40,6 tr/m², tổng giá trung vị 3,55 tỷ",
+                    "paragraphs": [
+                        "Nhóm nhà đất Phú Mỹ có 102 tin đang theo dõi, trong đó 75 tin có giá/m². Giá trung vị nhà đất là 40,6 tr/m² và tổng giá trung vị khoảng 3,55 tỷ. Đây là lý do không nên lấy một mức giá chung cho toàn Phú Mỹ.",
+                        "Nhà đất phải đọc theo hiện trạng nhà, diện tích xây dựng, hẻm, đường, giấy tờ và khả năng sử dụng ngay. Khi so giá, người mua nên so nhà đất Phú Mỹ với nhà đất cùng khu hoặc các phường có mặt bằng tương tự như Phú Hòa, Phú Lợi."
+                    ],
+                    "bullets": [
+                        "Nhà đất đang theo dõi: 102 tin",
+                        "Nhà đất có giá/m²: 75 tin",
+                        "Giá trung vị nhà đất: 40,6 tr/m²",
+                        "Tổng giá trung vị nhà đất: 3,55 tỷ"
+                    ]
+                },
+                {
+                    "id": "tin-hieu-phu-my",
+                    "heading": "9 dấu hiệu đáng chú ý: dùng để ưu tiên kiểm tra, không dùng để quyết định mua",
+                    "paragraphs": [
+                        "Trong 167 tin Phú Mỹ đang theo dõi, Radar BDS ghi nhận 9 dấu hiệu đáng chú ý. Nhóm này gồm 6 tin được quan tâm và 3 tin có giảm giá. Đây là danh sách ưu tiên để mở dashboard kiểm tra, không phải danh sách khuyến nghị mua.",
+                        "Trong mẫu gần nhất, nhóm đất nền có 5 dấu hiệu đáng chú ý, nhà đất có 3 dấu hiệu. Khi thấy tin giảm giá hoặc được quan tâm, người mua nên kiểm tra lại lịch sử rao, vị trí, pháp lý, lộ giới và khả năng thương lượng trước khi gọi môi giới."
+                    ],
+                    "bullets": [
+                        "Tin Phú Mỹ tổng: 167",
+                        "Tin được quan tâm: 6",
+                        "Tin giảm giá: 3",
+                        "Dữ liệu mới nhất trong mẫu: 21/07/2026"
+                    ]
+                },
+                {
+                    "id": "so-sanh-phu-my",
+                    "heading": "So Phú Mỹ với Phú Hòa, Tân An, Định Hòa và Phú Lợi",
+                    "paragraphs": [
+                        "Theo cùng cửa sổ 14 ngày, đất nền Phú Mỹ 20,0 tr/m² gần Tân An 19,3 tr/m², cao hơn Định Hòa 17,9 tr/m² và Hiệp An 15,7 tr/m², nhưng thấp hơn Phú Tân 23,9 tr/m², Phú Lợi 26,8 tr/m² và Phú Hòa 29,5 tr/m².",
+                        "Với nhà đất, Phú Mỹ 40,6 tr/m² gần Phú Hòa 43,3 tr/m² và Phú Lợi 37,6 tr/m², cao hơn Tân An 19,8 tr/m², Định Hòa 18,0 tr/m² và Hiệp An 23,9 tr/m². Nếu mục tiêu là nhà ở sẵn, hãy mở riêng bộ lọc nhà đất thay vì nhìn bảng đất nền."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Mỹ: 20,0 tr/m²",
+                        "Đất nền Tân An: 19,3 tr/m²",
+                        "Nhà đất Phú Mỹ: 40,6 tr/m²",
+                        "Nhà đất Phú Hòa: 43,3 tr/m²"
+                    ]
+                },
+                {
+                    "id": "cach-loc-dashboard-phu-my",
+                    "heading": "Cách dùng dashboard Radar cho Phú Mỹ",
+                    "paragraphs": [
+                        "Cách đọc an toàn là mở dashboard, chọn phường Phú Mỹ, sau đó chọn loại hình trước: đất nền hoặc nhà đất. Tiếp theo, so giá/m² của từng tin với giá trung vị cùng loại hình và kiểm tra tổng giá có phù hợp ngân sách không.",
+                        "Sau bước lọc dữ liệu, người mua vẫn cần xác minh độc lập: sổ, quy hoạch, hẻm/đường, hiện trạng, tranh chấp và chi phí phát sinh. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận."
+                    ],
+                    "bullets": [
+                        "Chọn phường Phú Mỹ trước",
+                        "Tách đất nền và nhà đất",
+                        "So giá/m² cùng loại hình",
+                        "Ưu tiên kiểm tra tin có giảm giá hoặc được quan tâm",
+                        "Kiểm tra pháp lý và thực địa trước khi quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã xác định tin thuộc đất nền hay nhà đất.",
+                "Đã so giá/m² với đúng loại hình BĐS tại Phú Mỹ.",
+                "Đã nhìn cả tổng giá, không chỉ giá/m².",
+                "Đã mở dashboard để kiểm tra tin có giảm giá hoặc được quan tâm.",
+                "Đã kiểm tra pháp lý, quy hoạch và thực địa trước khi đặt cọc."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar BDS để lọc tin Phú Mỹ",
+            "body": "Chọn phường Phú Mỹ, tách đất nền và nhà đất, rồi xem nhóm tin đáng kiểm tra trước khi liên hệ.",
+            "button": "Mở dashboard"
+        }
+    }
 }
 
 KNOWLEDGE_HUB = {'path': '/kien-thuc',
