@@ -140,6 +140,11 @@ Penalties:
 - hype/compliance-risk words: `siêu phẩm`, `cơ hội vàng`, `bao lời`, `cam kết lời`, `lời chắc`, `sốt đất`, `hot nhất`, `rẻ nhất`.
 - missing both price and area.
 
+Price completeness rule from anh Cường:
+
+- Accept prices missing only tens of millions, e.g. `1t5xx`, `1 tỷ 5xx`, `2ty150`.
+- Treat prices as incomplete when hundreds of millions are missing or vague, e.g. `1 tỷ x`, `1tx`, `hơn 1 tỷ`.
+
 ### Broker score
 
 Broker score aggregates sampled public posts by author:
@@ -180,7 +185,7 @@ needs_manual_review
 2. Use browser-use/manual review to collect public post metadata into candidate_posts.json.
 3. Normalize author links before deep scan: /groups/<group_id>/user/<id> is only a group-member context link; open https://www.facebook.com/<username-or-id> for the broker profile/page.
 4. Run score + report.
-5. Deep-scan Tier A/B brokers on the plain profile/page URL, sampling 10-20 recent public posts.
+5. Deep-scan Tier A/B brokers on the plain profile/page URL, sampling about 20 recent public posts when visible; if fewer are visible, mark insufficient evidence unless quality is very clear.
 6. Only after approval, add broker to data/facebook_profiles.json or future approved-source config.
 ```
 
@@ -198,7 +203,7 @@ needs_manual_review
 
 For any broker Tier A/B or `document_signal_poster`:
 
-1. Open 10–20 latest public posts.
+1. Open about 20 latest public posts when visible; if Facebook exposes fewer, mark the sample size and be stricter before recommending.
 2. Verify most posts include price + area + ward + property type.
 3. Check if posts concentrate in one city/market.
 4. Check cadence across multiple weeks, not a one-day burst.

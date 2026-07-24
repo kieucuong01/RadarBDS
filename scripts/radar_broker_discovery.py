@@ -141,6 +141,24 @@ def match_target_area(text: str, config: dict[str, Any]) -> dict[str, Any]:
 
 def _has_price(text: str) -> bool:
     norm = normalize_text(text)
+    # User rule for broker scoring:
+    # - Missing tens of millions is acceptable: "1t5xx", "1 tỷ 5xx".
+    # - Missing hundreds of millions is incomplete: "1 tỷ x", "1tx", "hơn 1 tỷ".
+    vague_hundreds_patterns = [
+        r"\bhon\s+\d+(?:[\.,]\d+)?\s*(?:ty|ti)\b",
+        r"\b\d+(?:[\.,]\d+)?\s*(?:ty|ti)\s*x+\b",
+        r"\b\d+t(?:y)?x+\b",
+    ]
+    if any(re.search(pattern, norm) for pattern in vague_hundreds_patterns):
+        return False
+
+    acceptable_tens_missing_patterns = [
+        r"\b\d+(?:t|ty|ti)\d+(?:x{1,2})?\b",
+        r"\b\d+\s*(?:ty|ti)\s+\d+(?:x{1,2})?\b",
+    ]
+    if any(re.search(pattern, norm) for pattern in acceptable_tens_missing_patterns):
+        return True
+
     return bool(PRICE_RE.search(text) or re.search(r"\b\d+(?:[\.,]\d+)?\s*(?:ty|ti|trieu|tr)\b", norm))
 
 

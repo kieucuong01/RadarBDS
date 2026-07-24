@@ -94,6 +94,28 @@ class BrokerDiscoveryTest(unittest.TestCase):
         self.assertLess(weak["score"], 35)
         self.assertGreater(weak["penalty_score"], 0)
 
+
+    def test_price_detection_allows_tens_missing_but_rejects_hundreds_missing(self):
+        mod = _load_module()
+
+        ok_examples = [
+            "Bán nhà Mỹ Phước giá 1t5xx diện tích 100m2",
+            "Bán đất Hòa Phú giá 1 tỷ 5xx diện tích 90m2",
+            "Bán nhà Bến Cát 2ty150 diện tích 80m2",
+        ]
+        missing_examples = [
+            "Bán đất Mỹ Phước giá 1 tỷ x diện tích 100m2",
+            "Bán nhà Hòa Phú giá 1tx diện tích 90m2",
+            "Bán đất Bến Cát hơn 1 tỷ diện tích 120m2",
+        ]
+
+        for text in ok_examples:
+            with self.subTest(text=text):
+                self.assertIs(mod._has_price(text), True)
+        for text in missing_examples:
+            with self.subTest(text=text):
+                self.assertIs(mod._has_price(text), False)
+
     def test_score_brokers_uses_target_focus_cadence_and_data_quality(self):
         mod = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
