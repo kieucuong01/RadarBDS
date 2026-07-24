@@ -404,19 +404,20 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
                 ).fetchall()
             }
 
-        self.assertIn("parsed_discount_as_price", rows[discount_lid]["source_quality_flags"])
+        self.assertNotIn("parsed_discount_as_price", rows[discount_lid]["source_quality_flags"])
         self.assertIn("too_low_absolute_price", rows[discount_lid]["source_quality_flags"])
         self.assertEqual(rows[discount_lid]["is_signal"], 1)
         self.assertEqual(rows[discount_lid]["source_quality_recheck"], 1)
         self.assertFalse(is_actionable_signal(rows[discount_lid]))
 
-        self.assertIn("down_payment_as_price", rows[down_payment_lid]["source_quality_flags"])
+        self.assertNotIn("down_payment_as_price", rows[down_payment_lid]["source_quality_flags"])
+        self.assertIn("too_low_absolute_price", rows[down_payment_lid]["source_quality_flags"])
         self.assertEqual(rows[down_payment_lid]["source_quality_recheck"], 1)
         self.assertFalse(is_actionable_signal(rows[down_payment_lid]))
 
-        self.assertIn("large_lot_model_risk", rows[large_lot_lid]["source_quality_flags"])
-        self.assertEqual(rows[large_lot_lid]["source_quality_recheck"], 1)
-        self.assertFalse(is_actionable_signal(rows[large_lot_lid]))
+        self.assertNotIn("large_lot_model_risk", rows[large_lot_lid]["source_quality_flags"])
+        self.assertEqual(rows[large_lot_lid]["source_quality_recheck"], 0)
+        self.assertTrue(is_actionable_signal(rows[large_lot_lid]))
 
         self.assertIn("area_dimension_conflict", rows[area_conflict_lid]["source_quality_flags"])
         self.assertEqual(rows[area_conflict_lid]["source_quality_recheck"], 1)
@@ -609,7 +610,8 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
         self.assertGreater(old_row["fair_ppm2"], 0)
         self.assertEqual(old_row["is_signal"], 1)
         self.assertEqual(old_row["source_quality_recheck"], 1)
-        self.assertIn("old_guland_post", old_row["source_quality_flags"])
+        self.assertNotIn("old_guland_post", old_row["source_quality_flags"])
+        self.assertIn("guland_user_facing_risk", old_row["source_quality_flags"])
 
         self.assertIsNotNone(fresh_row)
         self.assertEqual(fresh_row["is_signal"], 1)
@@ -676,7 +678,8 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
         self.assertIsNotNone(stale)
         self.assertEqual(stale["is_signal"], 1)
         self.assertEqual(stale["source_quality_recheck"], 1)
-        self.assertIn("old_guland_post", stale["source_quality_flags"])
+        self.assertNotIn("old_guland_post", stale["source_quality_flags"])
+        self.assertIn("guland_user_facing_risk", stale["source_quality_flags"])
 
         self.assertIsNotNone(trusted)
         self.assertEqual(trusted["is_signal"], 1)

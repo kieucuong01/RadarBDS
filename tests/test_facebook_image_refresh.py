@@ -3,6 +3,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 from unittest import mock
 
@@ -16,6 +17,7 @@ class FacebookImageRefreshTest(unittest.TestCase):
 
         self.tmpdir = Path(tempfile.mkdtemp())
         self.db_path = self.tmpdir / "radar_fb_refresh.db"
+        self.url = f"https://facebook.test/posts/{uuid.uuid4().hex}"
         connection.close_all()
         self.db_patch = mock.patch.object(connection, "DB_PATH", self.db_path)
         self.db_patch.start()
@@ -23,16 +25,24 @@ class FacebookImageRefreshTest(unittest.TestCase):
 
     def tearDown(self):
         from db import connection
+        from db.connection import get_conn
 
-        connection.close_all()
-        self.db_patch.stop()
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        try:
+            with get_conn() as conn:
+                conn.execute(
+                    "DELETE FROM raw_listings WHERE source='facebook' AND url=?",
+                    (self.url,),
+                )
+        finally:
+            connection.close_all()
+            self.db_patch.stop()
+            shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def test_refresh_existing_facebook_images_updates_raw_json(self):
         from db.connection import get_conn
         from cli.crawlers import _refresh_existing_facebook_images
 
-        url = "https://facebook.test/posts/1"
+        url = self.url
         with get_conn() as conn:
             conn.execute(
                 """

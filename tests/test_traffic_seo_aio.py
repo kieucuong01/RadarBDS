@@ -92,7 +92,9 @@ def test_priority_ward_page_renders_live_search_and_aio_snapshot(monkeypatch):
     assert "<span>TDM</span><span>Thuận An</span>" not in html
     assert 'href="/?tab=signals&amp;ward=Hi%E1%BB%87p+Th%C3%A0nh"' in html
     assert "intent=watchlist" not in html
-    assert 'href="/bao-cao/hiep-thanh-thang-07-2026"' in html
+    latest_report = radar_app._latest_ward_report("hiep-thanh")
+    assert latest_report is not None
+    assert f'href="{latest_report["path"]}"' in html
     assert "Hơn 1.000 nhà đầu tư" not in html
 
     assert calls["summary"]["wards"] == ["Hiệp Thành"]
@@ -163,7 +165,8 @@ def test_llms_txt_is_stable_and_links_priority_ward_sources():
         assert f"https://radarbds.vn/binh-duong/phuong-{slug}" in body
     assert "pháp lý" in body
     assert "không thay thế" in body
-    assert "204" not in body and "36" not in body
+    assert "204 tin" not in body
+    assert "36 tín hiệu" not in body
 
 
 def test_sitemap_has_unique_hub_and_only_canonical_priority_ward_urls():

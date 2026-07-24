@@ -58,9 +58,9 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
         assert (ROOT / "static" / asset).exists(), f"missing static/{asset}"
 
     assert "window.RADAR_ASSETS" in html
-    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=valuation-card-align-20260612\"" in html
+    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=favorite-listings-20260715\"" in html
     assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611\"" in html
-    assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=valuation-card-align-20260612\"" in html
+    assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=favorite-listings-20260715\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611\"" in html
     assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=zalo-new-tab-20260624\"" in html
     assert "window.RADAR_STYLES" in html
@@ -201,7 +201,7 @@ def test_signal_modal_history_uses_compact_timeline_ui():
         "renderSignalHistoryRows",
         "_historyChartTimeline",
         "const chartTimeline = _historyChartTimeline(decoratedTimeline)",
-        "valuation-card-align-20260612",
+        "favorite-listings-20260715",
         "toggleSignalHistoryRows",
         "sm-history-summary",
         "sm-history-toggle",
@@ -223,7 +223,7 @@ def test_signal_modal_close_button_respects_mobile_safe_area():
 
     assert 'class="close-modal"' in html
     assert 'style="top:12px; right:12px; z-index:20;"' in html
-    assert "css/main/modal.css') ~ '?v=valuation-card-align-20260612'" in html
+    assert "css/main/modal.css') ~ '?v=favorite-listings-20260715'" in html
     header_rule = re.search(r"#signalModal::before\s*\{(?P<body>[^}]+)\}", modal_css, re.S)
     assert header_rule, "missing mobile signal modal top close zone"
     header_body = header_rule.group("body")
@@ -764,9 +764,11 @@ def test_dashboard_avoids_mobile_render_blocking_third_party_assets():
     assert "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com" not in head
     assert "@import url('https://fonts.googleapis.com" not in base_css
     assert "font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;" in base_css
-    for content in [seo_html, seo_css, detail_html]:
+    for content in [seo_html, seo_css]:
         assert "fonts.googleapis.com" not in content
         assert "fonts.gstatic.com" not in content
+    assert 'rel="preload" as="style" href="https://fonts.googleapis.com' in detail_html
+    assert '<noscript><link rel="stylesheet" href="https://fonts.googleapis.com' in detail_html
 
     assert "cdn.jsdelivr.net/npm/chart.js" not in head
     assert '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>' not in html

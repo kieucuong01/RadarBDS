@@ -11,7 +11,7 @@ def _listing(**overrides):
         "area_m2": 100.0,
         "ward": "Tan An",
         "property_type": "dat_nen",
-        "road_tier": 2,
+        "road_tier": 3,
         "road_type": "nhua",
         "road_name": None,
         "tho_cu_m2": 100.0,
