@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""Discover and safely seed value-first comments in allowlisted Facebook groups."""
+"""Seed value-first Tiny Sudo comments on engaged Facebook real-estate posts.
+
+The legacy filename is retained so the existing scheduler path remains stable. Public posts and
+verified visible group posts are eligible; broker-watchlist profiles remain excluded.
+"""
 from __future__ import annotations
 
 import argparse
 import datetime as dt
+import html
 import json
 import re
 import subprocess
-import sys
 import time
+import unicodedata
 import urllib.parse
 import urllib.request
 from collections import Counter
@@ -17,21 +22,31 @@ from typing import Any
 
 REPO = Path('/opt/radar-bds/current')
 CONFIG = REPO / 'config/social_group_comment_targets.json'
+BROKER_PROFILES = REPO / 'data/facebook_profiles.json'
 EXECUTOR = REPO / 'scripts/browser_use_group_comment.py'
 START_BROWSER = Path('/home/hermesops/radar-browser-use/start-radar-social-browser.sh')
 BROWSER_USE = Path('/home/hermesops/radar-browser-use/.venv/bin/browser-use')
 CDP = 'http://127.0.0.1:9224'
 POST_STATE = Path('/opt/radar-bds/var/social_queue/group-autopost/state.json')
-STATE = Path('/opt/radar-bds/var/social_queue/group-comment/state.json')
-QUEUE_DIR = Path('/opt/radar-bds/var/social_queue/group-comment/queue')
+STATE = Path('/opt/radar-bds/var/social_queue/public-post-comment/state.json')
+QUEUE_DIR = Path('/opt/radar-bds/var/social_queue/public-post-comment/queue')
 
-LOCATIONS = [
-    'Phú Mỹ', 'Phú Lợi', 'Phú Hòa', 'Phú Tân', 'Phú Cường', 'Tân An', 'Hiệp An',
-    'Hiệp Thành', 'Định Hòa', 'Chánh Mỹ', 'Chánh Nghĩa', 'Hòa Phú', 'Tương Bình Hiệp',
-    'Dĩ An', 'Đông Hòa', 'Tân Đông Hiệp', 'Bình An', 'An Bình', 'Thuận An', 'Lái Thiêu',
-    'Bình Chuẩn', 'Thuận Giao', 'An Phú', 'Phú An', 'An Tây', 'An Điền', 'Mỹ Phước',
-    'Tân Định', 'Thới Hòa', 'Hòa Lợi', 'Chánh Phú Hòa', 'Bến Cát', 'Bình Dương',
+TARGET_CITY = 'Thủ Dầu Một'
+TARGET_WARDS = [
+    'Tân An', 'Hiệp An', 'Tương Bình Hiệp', 'Định Hòa', 'Chánh Mỹ', 'Phú Mỹ',
+    'Phú Cường', 'Phú Hòa', 'Phú Lợi', 'Hiệp Thành', 'Chánh Nghĩa', 'Phú Tân',
+    'Phú Thọ', 'Hòa Phú',
 ]
+OUTSIDE_CITY_CONTEXT = (
+    'di an', 'thuan an', 'ben cat', 'tan uyen', 'bau bang', 'bac tan uyen',
+    'phu giao', 'dau tieng', 'quan 7', 'q7', 'tp hcm', 'tphcm', 'ho chi minh',
+    'sai gon', 'phu my hung',
+)
+REAL_ESTATE_TERMS = (
+    'bất động sản', 'nhà đất', 'đất nền', 'giá đất', 'giá nhà', 'mua nhà', 'mua đất',
+    'căn hộ', 'chung cư', 'nhà phố', 'biệt thự', 'quy hoạch', 'sổ hồng', 'sổ đỏ',
+    'thổ cư', 'giá/m²', 'giá/m2', 'thị trường nhà ở', 'thị trường địa ốc',
+)
 
 
 def load_json(path: Path, default: Any = None, *, missing_ok: bool = False) -> Any:
@@ -55,13 +70,110 @@ def parse_time(value: str, default_tz: dt.tzinfo | None = None) -> dt.datetime |
     return parsed
 
 
-def facebook_group_id_from_url(value: str) -> str:
-    match = re.search(r'https://www\.facebook\.com/groups/([^/?#]+)/', norm_url(value), flags=re.I)
-    return match.group(1) if match else ''
+def normalize_text(value: str) -> str:
+    return re.sub(r'\s+', ' ', str(value or '').replace('\ufeff', ' ')).strip()
 
 
-def norm_url(value: str) -> str:
-    return str(value or '').split('?', 1)[0].rstrip('/') + '/'
+def normalize_name(value: str) -> str:
+    return normalize_text(unicodedata.normalize('NFKC', str(value or ''))).casefold()
+
+
+def normalize_profile_url(value: str) -> str:
+    raw = html.unescape(str(value or '').strip())
+    if not raw:
+        return ''
+    try:
+        parsed = urllib.parse.urlparse(raw)
+    except Exception:
+        return ''
+    host = parsed.netloc.casefold().split(':', 1)[0]
+    if host not in {'facebook.com', 'www.facebook.com', 'm.facebook.com', 'mbasic.facebook.com'}:
+        return ''
+    path = re.sub(r'/+', '/', parsed.path or '/').rstrip('/')
+    if path.casefold() == '/profile.php':
+        ident = urllib.parse.parse_qs(parsed.query).get('id', [''])[0]
+        return f'https://www.facebook.com/profile.php?id={ident}' if ident.isdigit() else ''
+    if not path or path == '/':
+        return ''
+    return 'https://www.facebook.com' + path.casefold()
+
+
+def load_broker_exclusions(data: dict) -> dict[str, set[str]]:
+    urls: set[str] = set()
+    names: set[str] = set()
+    for rows in (data or {}).values():
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            url = normalize_profile_url(row.get('url') or '')
+            name = normalize_name(row.get('broker_name') or '')
+            if url:
+                urls.add(url)
+            if name:
+                names.add(name)
+    return {'urls': urls, 'names': names}
+
+
+def is_excluded_broker(author: str, author_url: str, exclusions: dict[str, set[str]]) -> bool:
+    url = normalize_profile_url(author_url)
+    name = normalize_name(author)
+    return bool((url and url in exclusions.get('urls', set())) or (name and name in exclusions.get('names', set())))
+
+
+def is_public_post_url(value: str) -> bool:
+    raw = html.unescape(str(value or '').strip())
+    try:
+        parsed = urllib.parse.urlparse(raw)
+    except Exception:
+        return False
+    host = parsed.netloc.casefold().split(':', 1)[0]
+    if host not in {'facebook.com', 'www.facebook.com', 'm.facebook.com', 'mbasic.facebook.com'}:
+        return False
+    path = re.sub(r'/+', '/', parsed.path or '/').casefold()
+    if path.startswith('/search/'):
+        return False
+    if re.match(r'^/groups/[^/]+/(?:posts|permalink)/[^/]+/?$', path):
+        return True
+    if re.match(r'^/[^/]+/posts/[^/]+/?$', path):
+        return True
+    if re.match(r'^/reel/[^/]+/?$', path):
+        return True
+    if re.match(r'^/[^/]+/videos/[^/]+/?$', path):
+        return True
+    return False
+
+
+def canonical_post_url(value: str) -> str:
+    raw = html.unescape(str(value or '').strip())
+    if not is_public_post_url(raw):
+        return ''
+    parsed = urllib.parse.urlparse(raw)
+    host = 'www.facebook.com'
+    path = re.sub(r'/+', '/', parsed.path)
+    return urllib.parse.urlunparse(('https', host, path.rstrip('/') + '/', '', '', ''))
+
+
+def extract_facebook_post_url(embed_code: str) -> str:
+    value = html.unescape(str(embed_code or ''))
+    for _ in range(3):
+        decoded = urllib.parse.unquote(value)
+        if decoded == value:
+            break
+        value = decoded
+    candidates = re.findall(r'https://(?:www\.|m\.)?facebook\.com/[^\s"<>]+', value, flags=re.I)
+    for candidate in candidates:
+        candidate = candidate.rstrip('&)\'')
+        # Plugin src can contain the public permalink in its href query value.
+        if '/plugins/' in candidate:
+            query = urllib.parse.parse_qs(urllib.parse.urlparse(candidate).query)
+            nested = query.get('href', [''])[0]
+            if nested and is_public_post_url(nested):
+                return canonical_post_url(nested)
+        if is_public_post_url(candidate):
+            return canonical_post_url(candidate)
+    return ''
 
 
 def contains_link(text: str) -> bool:
@@ -71,12 +183,13 @@ def contains_link(text: str) -> bool:
     return bool(re.search(rf'https?://\S+|\bwww\.\S+|\b{domain}\b(?:/\S*)?', str(text or ''), flags=re.I))
 
 
-def normalize_text(value: str) -> str:
-    return re.sub(r'\s+', ' ', str(value or '').replace('\ufeff', ' ')).strip()
-
-
-def is_recent(text: str, now: dt.datetime, max_age_hours: int = 72) -> bool:
-    low = text.casefold()
+def is_recent(text: str, now: dt.datetime, max_age_hours: int = 72, posted_at: str = '') -> bool:
+    explicit = parse_time(posted_at, now.tzinfo) if posted_at else None
+    if explicit:
+        explicit = explicit.astimezone(now.tzinfo) if now.tzinfo else explicit.replace(tzinfo=None)
+        age = (now - explicit).total_seconds() / 3600
+        return 0 <= age <= max_age_hours
+    low = str(text or '').casefold()
     numeric_units = [
         (r'\b(\d+)\s*(?:minutes?|mins?)\s+ago\b', 1 / 60),
         (r'\b(\d+)\s*(?:hours?|hrs?)\s+ago\b', 1),
@@ -89,14 +202,12 @@ def is_recent(text: str, now: dt.datetime, max_age_hours: int = 72) -> bool:
         match = re.search(pattern, low)
         if match:
             return int(match.group(1)) * multiplier <= max_age_hours
-    if re.search(r'\b(?:a|an|about an?)\s+minute\s+ago\b', low):
-        return max_age_hours >= 1 / 60
+    if re.search(r'\b(?:a|an|about an?)\s+minute\s+ago\b|\bjust now\b|\bvừa xong\b', low):
+        return True
     if re.search(r'\b(?:a|an|about an?)\s+hour\s+ago\b', low):
         return max_age_hours >= 1
     if re.search(r'\ba day\s+ago\b|\b(?:yesterday|hôm qua)\b', low):
         return max_age_hours >= 24
-    if re.search(r'\b(?:just now|vừa xong)\b', low):
-        return True
     months = {
         'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
         'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12,
@@ -107,105 +218,132 @@ def is_recent(text: str, now: dt.datetime, max_age_hours: int = 72) -> bool:
             year = int(match.group(2) or now.year)
             try:
                 age_days = (now.date() - dt.date(year, month, int(match.group(1)))).days
-                return 0 <= age_days and age_days * 24 < max_age_hours
+                return 0 <= age_days and age_days * 24 <= max_age_hours
             except ValueError:
                 return False
     return False
 
 
-def extract_author(text: str) -> str:
-    skip = {'search results', 'filters', 'recent posts', 'posts you\'ve seen'}
-    for line in str(text or '').splitlines():
-        value = normalize_text(line)
-        if value and value.casefold() not in skip:
-            return value[:120]
-    return ''
+def location_search_text(value: str) -> str:
+    normalized = unicodedata.normalize('NFKD', normalize_text(value))
+    ascii_text = ''.join(ch for ch in normalized if not unicodedata.combining(ch))
+    return re.sub(r'[^a-z0-9]+', ' ', ascii_text.casefold()).strip()
+
+
+def has_target_city_context(search_text: str) -> bool:
+    return bool(re.search(r'\b(?:thu dau mot|tdm|tp tdm|tp thu dau mot)\b', search_text))
+
+
+def has_outside_city_context(search_text: str) -> bool:
+    return any(re.search(rf'\b{re.escape(term)}\b', search_text) for term in OUTSIDE_CITY_CONTEXT)
+
+
+def contains_location_phrase(search_text: str, location: str) -> bool:
+    phrase = location_search_text(location)
+    return bool(phrase and re.search(rf'\b{re.escape(phrase)}\b', search_text))
 
 
 def detect_location(text: str) -> str:
-    low = text.casefold()
-    for location in LOCATIONS:
-        if location.casefold() in low:
+    search_text = location_search_text(text)
+    if not has_target_city_context(search_text) or has_outside_city_context(search_text):
+        return ''
+    for location in TARGET_WARDS:
+        if contains_location_phrase(search_text, location):
             return location
     return ''
 
 
 def detect_topic(text: str) -> str:
-    low = text.casefold()
-    if any(x in low for x in ('giá', 'bao nhiêu', 'giá/m²', 'giá/m2', 'so giá', 'tỷ', 'triệu/m')):
-        return 'price_compare'
-    if any(x in low for x in ('pháp lý', 'quy hoạch', 'sổ hồng', 'sổ đỏ', 'thổ cư', 'đặt cọc')):
+    low = str(text or '').casefold()
+    if any(x in low for x in ('quy hoạch', 'lộ giới', 'hạ tầng', 'vành đai', 'cao tốc')):
+        return 'planning'
+    if any(x in low for x in ('pháp lý', 'sổ hồng', 'sổ đỏ', 'thổ cư', 'đặt cọc')):
         return 'legal'
-    if any(x in low for x in ('có nên mua', 'mua được không', 'nên kiểm tra gì', 'kinh nghiệm mua')):
-        return 'buying_check'
-    return 'other'
+    if any(x in low for x in ('giá', 'bao nhiêu', 'giá/m²', 'giá/m2', 'so giá', 'triệu/m')):
+        return 'price_compare'
+    return 'market_discussion'
 
 
-def post_needle(text: str) -> str:
-    ignored = ('comment as radar bds', 'see more', 'see translation', 'like', 'reply', 'share')
+def post_needle(text: str, author: str = '') -> str:
+    ignored = {'see more', 'see translation', 'like', 'reply', 'share', 'send message', normalize_name(author)}
     lines = []
-    for raw in str(text or '').splitlines()[1:]:
+    for raw in str(text or '').splitlines():
         line = normalize_text(raw)
-        low = line.casefold()
-        if not line or any(low == x or low.startswith(x) for x in ignored):
+        low = normalize_name(line)
+        if not line or low in ignored or re.fullmatch(r'[\d.,kKmM\s]+', line):
             continue
-        if re.fullmatch(r'[·\s]+|\d+|\d+\s+(?:hours?|days?|minutes?)\s+ago', low):
-            continue
-        lines.append(line)
+        if len(line) >= 18:
+            lines.append(line)
     return max(lines, key=len, default='')[:120]
 
 
-def score_candidate(text: str, now: dt.datetime | None = None, max_age_hours: int = 72) -> dict:
+def score_candidate(item: dict, now: dt.datetime | None = None, global_config: dict | None = None) -> dict:
     now = now or dt.datetime.now().astimezone()
-    text = str(text or '')
+    cfg = global_config or {}
+    text = str(item.get('text') or '')
     low = text.casefold()
     reasons: list[str] = []
-    author = extract_author(text)
-    topic = detect_topic(text)
+    engagement = item.get('engagement') or {}
+    reactions = max(0, int(engagement.get('reactions') or 0))
+    comments = max(0, int(engagement.get('comments') or 0))
+    shares = max(0, int(engagement.get('shares') or 0))
+    total_engagement = reactions + comments + shares
     location = detect_location(text)
-    recent = is_recent(text, now, max_age_hours=max_age_hours)
-    comments_off = 'commenting has been turned off' in low or 'đã tắt tính năng bình luận' in low
-    self_ask_patterns = [
-        r'cho\s+(?:em|mình|tôi|anh|chị)\s+hỏi',
-        r'xin(?:\s+mọi\s+người)?\s+tư\s+vấn',
-        r'nhờ(?:\s+mọi\s+người)?\s+tư\s+vấn',
-        r'(?:em|mình|tôi)\s+đang\s+(?:xem|tìm|mua|phân vân)',
-    ]
-    self_ask = any(re.search(p, low) for p in self_ask_patterns)
-    sales_patterns = [r'\b0\d{8,10}\b', r'\bliên hệ\b', r'\bsđt\b', r'\bbán gấp\b', r'\bgiá chỉ\b', r'\bchốt ngay\b', r'\binbox\b', r'\bký gửi\b']
-    sales_heavy = any(re.search(p, low) for p in sales_patterns)
-    score = 0
-    if self_ask:
-        score += 4
-    else:
-        reasons.append('no_explicit_self_question')
-    if '?' in text:
-        score += 1
-    if topic != 'other':
-        score += 2
-    else:
-        reasons.append('unsupported_topic')
-    if location:
-        score += 2
-    if recent:
-        score += 1
-    else:
+    topic = detect_topic(text)
+    relevant = any(term in low for term in REAL_ESTATE_TERMS)
+    recent = is_recent(text, now, int(cfg.get('max_comment_age_hours', 72)), str(item.get('posted_at') or ''))
+    sponsored = any(x in low for x in (
+        'sponsored', 'được tài trợ', 'why am i seeing this ad', 'report ad', 'hide ad',
+        'send message', 'nhận bảng giá', 'mua là lời', 'giá tuyệt chủng', 'booking ngay',
+    ))
+    surface = str(item.get('surface') or '')
+    post_url = str(item.get('post_url') or '')
+    comments_off = any(x in low for x in ('commenting has been turned off', 'đã tắt tính năng bình luận'))
+
+    if surface not in {'public_post', 'group_post'}:
+        reasons.append('unsupported_surface')
+    if not is_public_post_url(post_url):
+        reasons.append('invalid_public_permalink')
+    if not relevant:
+        reasons.append('not_relevant_real_estate')
+    if not location:
+        reasons.append('outside_target_market')
+    if sponsored:
+        reasons.append('sponsored_or_ad')
+    if not recent:
         reasons.append('not_recent')
     if comments_off:
         reasons.append('comments_off')
-    if sales_heavy:
-        reasons.append('sales_heavy')
-        score -= 4
-    eligible = score >= 7 and not any(x in reasons for x in ('comments_off', 'sales_heavy', 'not_recent', 'no_explicit_self_question', 'unsupported_topic'))
+    if reactions < int(cfg.get('min_reactions', 10)):
+        reasons.append('low_reactions')
+    if comments < int(cfg.get('min_comments', 3)):
+        reasons.append('low_comments')
+    if total_engagement < int(cfg.get('min_total_engagement', 15)):
+        reasons.append('low_total_engagement')
+
+    score = 0
+    score += 2 if relevant else 0
+    score += 2 if location else 0
+    score += 1 if recent else 0
+    score += 1 if reactions >= int(cfg.get('min_reactions', 10)) else 0
+    score += 1 if comments >= int(cfg.get('min_comments', 3)) else 0
+    score += 1 if total_engagement >= int(cfg.get('min_total_engagement', 15)) else 0
+    disqualifying = {
+        'unsupported_surface', 'invalid_public_permalink', 'not_relevant_real_estate', 'outside_target_market',
+        'sponsored_or_ad', 'not_recent', 'comments_off', 'low_reactions', 'low_comments',
+        'low_total_engagement',
+    }
+    eligible = score >= int(cfg.get('min_relevance_score', 6)) and not disqualifying.intersection(reasons)
     return {
+        **item,
         'eligible': eligible,
         'score': score,
         'reasons': reasons,
-        'author': author,
         'topic': topic,
         'location': location,
-        'post_needle': post_needle(text),
+        'post_needle': post_needle(text, str(item.get('author') or '')),
         'post_text': text[:5000],
+        'engagement': {'reactions': reactions, 'comments': comments, 'shares': shares, 'total': total_engagement},
     }
 
 
@@ -214,38 +352,31 @@ def daily_action_taken(now: dt.datetime, post_state: dict, comment_state: dict) 
     for state in (post_state, comment_state):
         for action in state.get('actions', []):
             at = parse_time(action.get('at', ''), tz)
-            if not at:
-                continue
-            if at.astimezone(tz).date() == now.date() and action.get('status') not in ('failed', 'skipped'):
+            if at and at.astimezone(tz).date() == now.date() and action.get('status') not in ('failed', 'skipped'):
                 return True
     return False
 
 
 def candidate_already_used(candidate: dict, state: dict, now: dt.datetime) -> bool:
+    author_url = normalize_profile_url(candidate.get('author_url') or '')
+    author_name = normalize_name(candidate.get('author') or '')
     for action in state.get('actions', []):
         at = parse_time(action.get('at', ''), now.tzinfo)
-        if action.get('post_url') == candidate.get('post_url'):
+        if canonical_post_url(action.get('post_url') or '') == canonical_post_url(candidate.get('post_url') or ''):
             return True
         if not at:
             continue
         at = at.astimezone(now.tzinfo) if now.tzinfo else at.replace(tzinfo=None)
         age_days = (now - at).total_seconds() / 86400
-        if action.get('author') and action.get('author') == candidate.get('author') and age_days < 30:
+        same_author = bool(
+            (author_url and normalize_profile_url(action.get('author_url') or '') == author_url)
+            or (author_name and normalize_name(action.get('author') or '') == author_name)
+        )
+        if same_author and age_days < 30:
             return True
-        if action.get('target_id') == candidate.get('target_id') and action.get('topic') == candidate.get('topic') and age_days < 14:
+        if action.get('location') == candidate.get('location') and action.get('topic') == candidate.get('topic') and age_days < 14:
             return True
     return False
-
-
-def target_weekly_full(target: dict, state: dict, now: dt.datetime) -> bool:
-    count = 0
-    for action in state.get('actions', []):
-        at = parse_time(action.get('at', ''), now.tzinfo)
-        if at:
-            at = at.astimezone(now.tzinfo) if now.tzinfo else at.replace(tzinfo=None)
-        if at and action.get('target_id') == target.get('id') and action.get('status') == 'published' and (now - at).total_seconds() < 7 * 86400:
-            count += 1
-    return count >= int(target.get('max_comments_per_week', 1))
 
 
 def global_weekly_full(config: dict, state: dict, now: dt.datetime) -> bool:
@@ -260,33 +391,139 @@ def global_weekly_full(config: dict, state: dict, now: dt.datetime) -> bool:
     return count >= cap
 
 
-def build_comment(candidate: dict, target: dict) -> str:
-    location = candidate.get('location') or 'khu vực này'
+def choose_candidate(config: dict, state: dict, discovered: list[dict], now: dt.datetime, exclusions: dict[str, set[str]]) -> tuple[dict | None, dict]:
+    rejected = Counter()
+    accepted = []
+    global_config = config.get('global') or {}
+    for item in discovered:
+        if is_excluded_broker(str(item.get('author') or ''), str(item.get('author_url') or ''), exclusions):
+            rejected['selected_broker'] += 1
+            continue
+        scored = score_candidate(item, now=now, global_config=global_config)
+        if not scored['eligible']:
+            rejected.update(scored['reasons'] or ['below_score'])
+            continue
+        if candidate_already_used(scored, state, now):
+            rejected['dedupe_or_cooldown'] += 1
+            continue
+        try:
+            build_deal_link(scored, config)
+        except ValueError:
+            rejected['outside_enabled_seed_wards'] += 1
+            continue
+        accepted.append(scored)
+    accepted.sort(key=lambda x: (x['score'], x['engagement']['comments'], x['engagement']['total']), reverse=True)
+    return (accepted[0] if accepted else None), {'inspected': len(discovered), 'eligible': len(accepted), 'rejected': dict(rejected)}
+
+
+def slugify(value: str) -> str:
+    normalized = unicodedata.normalize('NFKD', normalize_text(value))
+    ascii_text = ''.join(ch for ch in normalized if not unicodedata.combining(ch))
+    return re.sub(r'[^a-z0-9]+', '-', ascii_text.casefold()).strip('-') or 'binh-duong'
+
+
+def deal_location(candidate: dict, config: dict) -> tuple[str, str]:
+    location = normalize_text(candidate.get('location') or '')
+    coverage = config.get('deal_coverage') or {}
+    for city, wards in coverage.items():
+        city_name = normalize_text(city)
+        if normalize_name(location) == normalize_name(city_name):
+            return city_name, ''
+        for ward in wards if isinstance(wards, list) else []:
+            ward_name = normalize_text(ward)
+            if normalize_name(location) == normalize_name(ward_name):
+                return city_name, ward_name
+    return '', ''
+
+
+def build_deal_link(candidate: dict, config: dict) -> str:
+    location = normalize_text(candidate.get('location') or '')
+    topic = normalize_text(candidate.get('topic') or 'market_discussion')
+    city, ward = deal_location(candidate, config)
+    if not city or not ward:
+        raise ValueError('Comment seeding is limited to explicitly enabled wards')
+    params: list[tuple[str, str]] = [
+        ('tab', 'signals'),
+        ('city', city),
+        ('ward', ward),
+        ('date_range', '3m'),
+        ('mos_min', '10'),
+        ('utm_source', 'facebook'),
+        ('utm_medium', 'comment'),
+        ('utm_campaign', 'public_post_seeding'),
+        ('utm_content', f'{slugify(location)}-{slugify(topic)}'),
+    ]
+    return 'https://radarbds.vn/?' + urllib.parse.urlencode(params)
+
+
+def fetch_public_json(url: str) -> dict:
+    request = urllib.request.Request(url, headers={'User-Agent': 'RadarBDS-Social-Guard/1.0'})
+    with urllib.request.urlopen(request, timeout=20) as response:
+        if response.status != 200:
+            raise RuntimeError(f'Radar counts endpoint returned HTTP {response.status}')
+        data = json.load(response)
+    if not isinstance(data, dict):
+        raise RuntimeError('Radar counts endpoint returned invalid JSON')
+    return data
+
+
+def landing_has_deals(link: str, fetcher=None) -> bool:
+    try:
+        parsed = urllib.parse.urlparse(link)
+        query = urllib.parse.parse_qs(parsed.query)
+        city = (query.get('city') or [''])[0]
+        ward = (query.get('ward') or [''])[0]
+        if not city or not ward:
+            return False
+        api_params: list[tuple[str, str]] = [
+            ('date_range', (query.get('date_range') or ['3m'])[0]),
+            ('city', city),
+            ('ward', ward),
+            ('prop_type', 'dat_nen'),
+            ('prop_type', 'nha_dat'),
+            ('prop_type', 'chung_cu'),
+            ('prop_type', 'nha_tro'),
+            ('mos_min', (query.get('mos_min') or ['10'])[0]),
+        ]
+        endpoint = 'https://radarbds.vn/api/counts?' + urllib.parse.urlencode(api_params)
+        data = (fetcher or fetch_public_json)(endpoint)
+        stats = data.get('stats') or {}
+        return int(stats.get('hot') or 0) >= 1
+    except Exception:
+        return False
+
+
+def build_comment(candidate: dict, config: dict) -> str:
+    location = candidate.get('location') or 'Bình Dương'
     topic = candidate.get('topic')
+    link = build_deal_link(candidate, config)
     if topic == 'price_compare':
         text = (
-            f'Radar BDS góp một cách kiểm tra ở {location}: trước hết tách đúng loại hình BĐS, '
-            'lấy giá rao chia cho diện tích trên sổ để ra giá/m², rồi so với 5–10 tin cùng phường '
-            'có cùng loại hình. Đừng kết luận chỉ từ giá tổng vì đất nền và nhà đất không nên gộp chung. '
-            'Bên mình là trang tổng hợp dữ liệu giá rao, nên đây chỉ là bước lọc ban đầu; vẫn cần kiểm tra '
-            'thực tế, quy hoạch và giấy tờ.'
+            f'Có thể xem các tin đang rao và tín hiệu giá ở {location} tại {link}. '
+            'Nên lọc cùng loại hình/diện tích và so giá/m²; đồng thời kiểm tra ngày đăng, vị trí, '
+            'quy hoạch, pháp lý và giá thực tế trước khi đi xem.'
+        )
+    elif topic == 'planning':
+        text = (
+            f'Có thể đối chiếu tin và tín hiệu thị trường ở {location} tại {link}. '
+            'Thông tin quy hoạch cần tách phần đã có quyết định khỏi đề xuất; với lô cụ thể vẫn phải kiểm tra '
+            'thửa đất, lộ giới, văn bản và hiện trạng thực tế.'
         )
     elif topic == 'legal':
         text = (
-            f'Radar BDS góp một checklist cho trường hợp ở {location}: đối chiếu người đứng tên trên sổ, '
-            'mục đích sử dụng đất, phần diện tích thổ cư, thông tin quy hoạch/lộ giới và tình trạng thế chấp '
-            'trước khi đặt cọc. Bên mình chỉ tổng hợp dữ liệu giá rao để lọc ban đầu, không thay việc xác minh '
-            'hồ sơ tại cơ quan có thẩm quyền.'
+            f'Có thể lọc các tin đang rao ở {location} tại {link}. '
+            'Trước khi đặt cọc nên kiểm tra người đứng tên, mục đích sử dụng, phần thổ cư, quy hoạch/lộ giới, '
+            'thế chấp, ngày đăng và giá thực tế.'
         )
     else:
         text = (
-            f'Radar BDS góp một góc kiểm tra ở {location}: hãy so ít nhất 5–10 tin cùng loại hình, cùng phường; '
-            'quy đổi về giá/m²; sau đó kiểm tra đường vào, hiện trạng, quy hoạch và giấy tờ trước khi đi xem. '
-            'Bên mình là trang tổng hợp dữ liệu giá rao, nên không xem một tin rẻ hơn là đủ để kết luận nên mua.'
+            f'Có thể tham khảo các tin và tín hiệu giá ở {location} tại {link}. '
+            'Nên tách đúng loại hình, diện tích và so giá/m²; sau đó kiểm tra ngày đăng, vị trí, '
+            'pháp lý và giá thực tế trước khi quyết định.'
         )
-    if contains_link(text):
-        raise ValueError('Automated comment must not contain a link')
-    return text[:700]
+    if text.count('https://') != 1 or len(text) > 500:
+        raise ValueError('Tiny Sudo comment must contain one contextual Radar link and stay within 500 characters')
+    return text
 
 
 def cdp_ready() -> bool:
@@ -308,94 +545,159 @@ def ensure_browser() -> None:
     raise RuntimeError('Radar Social Chrome CDP unavailable')
 
 
-def discover_posts(config: dict) -> list[dict]:
-    requests = []
-    for target in config.get('targets', []):
-        if not target.get('comment_enabled'):
-            continue
-        for query in target.get('queries', []):
-            group_id = str(target.get('group_id') or '').strip()
-            if not group_id:
-                raise RuntimeError(f'Comment target missing explicit group_id: {target.get("id")}')
-            url = str(target['url']).rstrip('/') + '/search/?q=' + urllib.parse.quote(str(query))
-            requests.append({'target_id': target['id'], 'group': target['name'], 'group_id': group_id, 'url': url, 'query': query})
-    if not requests:
+def selected_queries(config: dict, now: dt.datetime) -> list[str]:
+    queries = [normalize_text(x) for x in config.get('queries', []) if normalize_text(x)]
+    limit = max(1, int((config.get('global') or {}).get('max_queries_per_run', 2)))
+    if len(queries) <= limit:
+        return queries
+    start = now.toordinal() % len(queries)
+    return [queries[(start + i) % len(queries)] for i in range(limit)]
+
+
+def discover_posts(config: dict, now: dt.datetime | None = None) -> list[dict]:
+    now = now or dt.datetime.now().astimezone()
+    queries = selected_queries(config, now)
+    if not queries:
         return []
-    article_expr = """(() => [...document.querySelectorAll('[role=article]')].slice(0,12).map(a => ({text:(a.innerText||'').slice(0,5000),links:[...a.querySelectorAll('a[href]')].map(x=>x.href).filter(h=>h.includes('/groups/')&&h.includes('/posts/')).slice(0,3)})))()"""
+    cfg = config.get('global') or {}
+    identity = str(cfg.get('identity') or '')
+    restore_identity = str(cfg.get('restore_identity') or '')
+    max_results = max(1, int(cfg.get('max_results_per_query', 5)))
+    if identity != 'Tiny Sudo' or restore_identity != 'Radar BDS':
+        raise RuntimeError('Refusing discovery: Tiny Sudo/Radar BDS identity configuration mismatch')
     program = f"""
-import json,time
-requests={requests!r}
-out=[]
+import json,time,urllib.parse
+queries={queries!r}
+identity={identity!r}
+restore_identity={restore_identity!r}
+max_results={max_results!r}
+results=[]
+restored=False
+
+def visible(e): return bool(e.offsetWidth or e.offsetHeight or e.getClientRects().length)
 def body_text(): return js("document.body.innerText || ''") or ''
-for req in requests:
-    goto_url(req['url']); time.sleep(5)
-    body=body_text(); low=body.casefold()
-    bad=['checkpoint','captcha','temporarily blocked','tạm thời bị chặn','account restricted','tài khoản bị hạn chế','we limit how often','chúng tôi giới hạn tần suất']
+def stop_guard(stage):
+    low=body_text().casefold()
+    bad=['checkpoint','captcha','temporarily blocked','tạm thời bị chặn','account restricted','tài khoản bị hạn chế','we limit how often','chúng tôi giới hạn tần suất','identity confirmation','xác nhận danh tính']
     hits=[x for x in bad if x in low]
-    if hits: raise RuntimeError('STOP_GUARD discovery: '+','.join(hits))
-    if req['group'] not in body: raise RuntimeError('Expected group name missing in search results')
-    identity_ok='Comment as Radar BDS' in body or 'Bình luận dưới tên Radar BDS' in body
-    articles=js({article_expr!r})
-    out.append({{'request':req,'identity_ok':identity_ok,'articles':articles}})
-print(json.dumps(out,ensure_ascii=False))
+    if hits: raise RuntimeError('STOP_GUARD '+stage+': '+','.join(hits))
+def switch_identity(target, other):
+    goto_url('https://www.facebook.com/'); wait_for_load(); time.sleep(3); stop_guard('identity_home')
+    opened=js("(() => {{const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'')==='Your profile');if(!e)return false;e.click();return true}})()")
+    if not opened: raise RuntimeError('Your profile button not found')
+    time.sleep(2)
+    clicked=js("(() => {{const label=%s;const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'')===label);if(!e)return false;e.click();return true}})()" % json.dumps('Switch to '+target))
+    if clicked: time.sleep(6)
+    else: press_key('ESC'); time.sleep(1)
+    opened=js("(() => {{const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'')==='Your profile');if(!e)return false;e.click();return true}})()")
+    time.sleep(2)
+    verified=js("(() => {{const label=%s;return [...document.querySelectorAll('[role=button]')].some(x=>(x.getAttribute('aria-label')||'')===label)}})()" % json.dumps('Switch to '+other))
+    press_key('ESC'); time.sleep(1)
+    if not opened or not verified: raise RuntimeError('Could not verify active identity '+target)
+    return True
+
+def parse_count(v):
+    s=str(v or '').strip().replace(',','').casefold()
+    if not s: return 0
+    m=__import__('re').search(r'(\\d+(?:\\.\\d+)?)\\s*([km]?)',s)
+    if not m: return 0
+    n=float(m.group(1)); unit=m.group(2)
+    return int(n*(1000 if unit=='k' else 1000000 if unit=='m' else 1))
+def snapshot(index):
+    return js('''(() => {{
+      const arts=[...document.querySelectorAll('[role=article]')].filter(e=>!!(e.offsetWidth||e.offsetHeight||e.getClientRects().length));
+      const a=arts[%d]; if(!a)return null;
+      const links=[...a.querySelectorAll('a[href]')];
+      const profile=links.find(x=>{{const h=x.href||'';return h.includes('facebook.com/')&&!h.includes('/search/')&&!h.includes('/groups/')&&!h.includes('/posts/')&&!h.includes('/reel/')&&!h.includes('/videos/')&&!h.includes('story_fbid=')}});
+      const direct=links.find(x=>{{const p=new URL(x.href,location.href).pathname.toLowerCase().replace(new RegExp('/+','g'),'/');return new RegExp('^/groups/[^/]+/(posts|permalink)/[^/]+/?$').test(p)||new RegExp('^/[^/]+/posts/[^/]+/?$').test(p)||new RegExp('^/reel/[^/]+/?$').test(p)||new RegExp('^/[^/]+/videos/[^/]+/?$').test(p);}});
+      const buttons=[...a.querySelectorAll('[role=button]')];
+      const num=(labels)=>{{const e=buttons.find(x=>labels.includes((x.getAttribute('aria-label')||'').trim())&&/\\\\d/.test((x.innerText||'')));return e?(e.innerText||'').trim():''}};
+      const stamp=links.find(x=>(x.href||'').includes('__cft__')&&(x.href||'').includes('#?'));
+      const stampAttrs=stamp?[stamp.getAttribute('title'),stamp.getAttribute('aria-label'),...[...stamp.querySelectorAll('[title],[aria-label],[data-utime]')].flatMap(x=>[x.getAttribute('title'),x.getAttribute('aria-label'),x.getAttribute('data-utime')])].filter(Boolean):[];
+      return {{
+        text:(a.innerText||'').slice(0,5000),
+        author:(profile?((profile.innerText||'').trim()||profile.getAttribute('aria-label')||''):'').slice(0,160),
+        author_url:profile?(profile.href||''):'',
+        group_surface:links.some(x=>(x.href||'').includes('/groups/')),
+        direct_post_url:direct?(direct.href||''):'',
+        reactions:num(['Like','Thích']),
+        comments:num(['Leave a comment','Bình luận']),
+        shares:num(['Send this to friends or post it on your profile.','Chia sẻ']),
+        stamp_attrs:stampAttrs,
+      }};
+    }})()''' % index)
+def embed_code(index):
+    ok=js('''(() => {{const arts=[...document.querySelectorAll('[role=article]')].filter(e=>!!(e.offsetWidth||e.offsetHeight||e.getClientRects().length));const a=arts[%d];if(!a)return false;const b=[...a.querySelectorAll('[role=button]')].find(x=>['Actions for this post','Hành động cho bài viết này'].includes((x.getAttribute('aria-label')||'').trim()));if(!b)return false;b.click();return true}})()''' % index)
+    if not ok: return ''
+    time.sleep(1)
+    embedded=js("(() => {{const e=[...document.querySelectorAll('[role=menuitem]')].find(x=>['Embed','Nhúng'].includes((x.innerText||'').trim()));if(!e)return false;e.click();return true}})()")
+    if not embedded: press_key('ESC'); return ''
+    time.sleep(3)
+    code=js('''(() => {{const dialogs=[...document.querySelectorAll('[role=dialog]')].filter(e=>!!(e.offsetWidth||e.offsetHeight||e.getClientRects().length));const d=dialogs.find(x=>/Embed|Nhúng/i.test(x.innerText||'')&&x.querySelector('input[value*="facebook.com/plugins/"]'));if(!d)return '';const i=d.querySelector('input[value*="facebook.com/plugins/"]');return i?i.value:''}})()''') or ''
+    js('''(() => {{const dialogs=[...document.querySelectorAll('[role=dialog]')];const d=dialogs.find(x=>/Embed|Nhúng/i.test(x.innerText||'')&&x.querySelector('input[value*="facebook.com/plugins/"]'));if(!d)return false;const b=[...d.querySelectorAll('[role=button]')].find(x=>['Close','Đóng'].includes((x.getAttribute('aria-label')||'').trim()));if(!b)return false;b.click();return true}})()''')
+    time.sleep(1)
+    return code
+
+try:
+    switch_identity(identity,restore_identity)
+    for query in queries:
+        goto_url('https://www.facebook.com/search/posts/?q='+urllib.parse.quote(query)); wait_for_load(); time.sleep(5); stop_guard('search')
+        for _ in range(3): js("window.scrollBy(0,900)"); time.sleep(2)
+        count=js("[...document.querySelectorAll('[role=article]')].filter(e=>!!(e.offsetWidth||e.offsetHeight||e.getClientRects().length)).length") or 0
+        for index in range(min(int(count),max_results)):
+            snap=snapshot(index)
+            if not snap: continue
+            low=(snap.get('text') or '').casefold()
+            if any(x in low for x in ['sponsored','được tài trợ','send message','why am i seeing this ad','report ad']): continue
+            code=embed_code(index)
+            direct=snap.get('direct_post_url') or ''
+            if not code and not direct: continue
+            snap.update({{'query':query,'surface':'group_post' if snap.get('group_surface') else 'public_post','embed_code':code}})
+            snap['engagement']={{'reactions':parse_count(snap.pop('reactions','')),'comments':parse_count(snap.pop('comments','')),'shares':parse_count(snap.pop('shares',''))}}
+            results.append(snap)
+finally:
+    restored=switch_identity(restore_identity,identity)
+print(json.dumps({{'ok':True,'restored':restored,'results':results}},ensure_ascii=False))
 """
     ensure_browser()
     env = dict(**__import__('os').environ)
     env['BU_CDP_URL'] = CDP
-    proc = subprocess.run([str(BROWSER_USE)], input=program, text=True, capture_output=True, env=env, timeout=360, check=False)
+    proc = subprocess.run([str(BROWSER_USE)], input=program, text=True, capture_output=True, env=env, timeout=600, check=False)
     if proc.returncode != 0:
-        raise RuntimeError('Facebook discovery failed\n' + proc.stdout[-3000:] + '\n' + proc.stderr[-3000:])
+        raise RuntimeError('Facebook public-post discovery failed\n' + proc.stdout[-4000:] + '\n' + proc.stderr[-4000:])
     lines = [line for line in proc.stdout.splitlines() if line.strip()]
     raw = json.loads(lines[-1])
-    discovered: list[dict] = []
-    for batch in raw:
-        if not batch.get('identity_ok'):
+    if not raw.get('restored'):
+        raise RuntimeError('Facebook discovery did not restore Radar BDS identity')
+    discovered = []
+    for item in raw.get('results') or []:
+        direct_url = str(item.pop('direct_post_url', '') or '')
+        post_url = canonical_post_url(direct_url) if is_public_post_url(direct_url) else ''
+        if not post_url:
+            post_url = extract_facebook_post_url(str(item.pop('embed_code', '') or ''))
+        else:
+            item.pop('embed_code', None)
+        if not post_url:
             continue
-        req = batch['request']
-        for article in batch.get('articles') or []:
-            links = article.get('links') or []
-            if not links:
-                continue
-            post_url = str(links[0]).split('?', 1)[0].rstrip('/') + '/'
-            if facebook_group_id_from_url(post_url) != req['group_id']:
-                continue
-            discovered.append({
-                'target_id': req['target_id'],
-                'group': req['group'],
-                'query': req['query'],
-                'post_url': post_url,
-                'text': article.get('text') or '',
-            })
+        item['post_url'] = post_url
+        attrs = [normalize_text(x) for x in item.pop('stamp_attrs', []) if normalize_text(x)]
+        item['timestamp_evidence'] = attrs
+        # ISO/epoch evidence is preferred. Human labels remain in text for is_recent().
+        for value in attrs:
+            if value.isdigit() and len(value) >= 9:
+                item['posted_at'] = dt.datetime.fromtimestamp(int(value), tz=now.tzinfo).isoformat()
+                break
+            parsed = parse_time(value, now.tzinfo)
+            if parsed:
+                item['posted_at'] = parsed.isoformat()
+                break
+        if attrs:
+            item['text'] = str(item.get('text') or '') + '\n' + '\n'.join(attrs)
+        discovered.append(item)
     unique = {}
     for item in discovered:
-        unique[(item['target_id'], item['post_url'])] = item
+        unique[canonical_post_url(item['post_url'])] = item
     return list(unique.values())
-
-
-def choose_candidate(config: dict, state: dict, discovered: list[dict], now: dt.datetime) -> tuple[dict | None, dict]:
-    targets = {x['id']: x for x in config.get('targets', []) if x.get('comment_enabled')}
-    max_age_hours = int((config.get('global') or {}).get('max_comment_age_hours', 72))
-    rejected = Counter()
-    accepted = []
-    for item in discovered:
-        target = targets.get(item.get('target_id'))
-        if not target:
-            rejected['target_disabled'] += 1
-            continue
-        if target_weekly_full(target, state, now):
-            rejected['weekly_target_cap'] += 1
-            continue
-        scored = score_candidate(item.get('text') or '', now=now, max_age_hours=max_age_hours)
-        candidate = dict(item, **scored)
-        if not scored['eligible']:
-            rejected.update(scored['reasons'] or ['below_score'])
-            continue
-        if candidate_already_used(candidate, state, now):
-            rejected['dedupe_or_cooldown'] += 1
-            continue
-        accepted.append(candidate)
-    accepted.sort(key=lambda x: (x['score'], len(x.get('post_text') or '')), reverse=True)
-    return (accepted[0] if accepted else None), {'inspected': len(discovered), 'eligible': len(accepted), 'rejected': dict(rejected)}
 
 
 def write_state(state: dict) -> None:
@@ -423,56 +725,68 @@ def main() -> int:
     args = parser.parse_args()
     now = dt.datetime.now().astimezone()
     config = load_json(CONFIG)
+    broker_data = load_json(BROKER_PROFILES)
+    exclusions = load_broker_exclusions(broker_data)
     post_state = load_json(POST_STATE, {'actions': []}, missing_ok=True)
-    state = load_json(STATE, {'schema': 'radar_group_comment_state.v1', 'actions': []}, missing_ok=True)
+    state = load_json(STATE, {'schema': 'radar_public_post_comment_state.v1', 'actions': []}, missing_ok=True)
     if daily_action_taken(now, post_state, state):
         if args.dry_run:
-            print(json.dumps({'ok': True, 'skip': 'shared_daily_group_action_cap'}, ensure_ascii=False))
+            print(json.dumps({'ok': True, 'skip': 'shared_daily_social_action_cap'}, ensure_ascii=False))
         return 0
     if global_weekly_full(config, state, now):
         if args.dry_run:
             print(json.dumps({'ok': True, 'skip': 'global_weekly_comment_cap'}, ensure_ascii=False))
         return 0
-    discovered = discover_posts(config)
-    candidate, report = choose_candidate(config, state, discovered, now)
+    discovered = discover_posts(config, now=now)
+    candidate, report = choose_candidate(config, state, discovered, now, exclusions)
     if not candidate:
         if args.dry_run:
-            print(json.dumps({'ok': True, 'skip': 'no_eligible_post', 'discovery': report}, ensure_ascii=False, indent=2))
+            print(json.dumps({'ok': True, 'skip': 'no_eligible_public_post', 'discovery': report}, ensure_ascii=False, indent=2))
         return 0
-    target = next(x for x in config['targets'] if x['id'] == candidate['target_id'])
-    comment = build_comment(candidate, target)
+    link = build_deal_link(candidate, config)
+    if not landing_has_deals(link):
+        if args.dry_run:
+            print(json.dumps({'ok': True, 'skip': 'no_active_deal_signal_for_enabled_ward', 'candidate': candidate, 'link': link, 'discovery': report}, ensure_ascii=False, indent=2))
+        return 0
+    comment = build_comment(candidate, config)
     queue = {
-        'schema': 'radar_group_comment_queue.v1',
+        'schema': 'radar_public_post_comment_queue.v1',
         'created_at': now.isoformat(timespec='seconds'),
-        'target': {'platform': 'facebook', 'surface': 'group_comment', 'page_url': target['url'], 'name': target['name'], 'group_id': target.get('group_id')},
+        'target': {'platform': 'facebook', 'surface': 'facebook_comment', 'identity': 'Tiny Sudo'},
         'source': {
             'post_url': candidate['post_url'],
-            'target_group_id': target.get('group_id'),
             'post_needle': candidate['post_needle'],
             'author': candidate['author'],
+            'author_url': candidate.get('author_url') or '',
             'topic': candidate['topic'],
             'location': candidate['location'],
             'query': candidate['query'],
+            'engagement': candidate['engagement'],
         },
-        'content': {'comment': comment, 'link_policy': 'no_link'},
+        'content': {
+            'comment': comment,
+            'link': link,
+            'link_policy': 'single_contextual_radar_link',
+        },
         'guards': {
             'relevance_gate_passed': True,
+            'broker_exclusion_passed': True,
             'relevance_score': candidate['score'],
-            'transparent_identity': True,
-            'shared_daily_cap': 1,
+            'min_reactions': int((config.get('global') or {}).get('min_reactions', 10)),
+            'min_comments': int((config.get('global') or {}).get('min_comments', 3)),
             'same_author_cooldown_days': 30,
             'same_topic_cooldown_days': 14,
         },
         'evidence': {'post_text': candidate['post_text'][:3000], 'reasons': candidate['reasons']},
     }
     QUEUE_DIR.mkdir(parents=True, exist_ok=True)
-    post_id = candidate['post_url'].rstrip('/').rsplit('/', 1)[-1]
-    qpath = QUEUE_DIR / f'{now.date()}-{target["id"]}-{post_id}.json'
+    post_id = re.sub(r'[^a-zA-Z0-9_-]+', '-', urllib.parse.urlparse(candidate['post_url']).path.strip('/'))[-100:]
+    qpath = QUEUE_DIR / f'{now.date()}-{post_id}.json'
     qpath.write_text(json.dumps(queue, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     if args.dry_run or not args.publish:
         print(json.dumps({'ok': True, 'status': 'selected_for_review', 'queue': str(qpath), 'candidate': candidate, 'comment': comment, 'discovery': report}, ensure_ascii=False, indent=2))
         return 0
-    proc = subprocess.run([str(EXECUTOR), '--queue', str(qpath), '--mode', 'publish', '--yes'], text=True, capture_output=True, timeout=360, check=False)
+    proc = subprocess.run([str(EXECUTOR), '--queue', str(qpath), '--mode', 'publish', '--yes'], text=True, capture_output=True, timeout=480, check=False)
     if proc.returncode != 0:
         raise SystemExit('Comment publish failed\n' + proc.stdout[-5000:] + '\n' + proc.stderr[-5000:])
     record, result = parse_executor_result(proc.stdout)
@@ -481,29 +795,16 @@ def main() -> int:
     result_permalink = result.get('comment_permalink') or ''
     if not valid_comment_permalink(result_permalink):
         raise SystemExit('Publish verification failed: missing comment_id/reply_comment_id permalink')
-    action = {
-        'at': now.isoformat(timespec='seconds'),
-        'target_id': target['id'],
-        'group': target['name'],
-        'post_url': candidate['post_url'],
-        'author': candidate['author'],
-        'topic': candidate['topic'],
-        'location': candidate['location'],
-        'status': 'published',
-        'comment': comment,
-        'comment_permalink': result_permalink,
-        'queue': str(qpath),
-        'screenshot': result.get('screenshot') or record.get('screenshot') or '',
-        'relevance_score': candidate['score'],
-    }
-    state.setdefault('actions', []).append(action)
-    state['actions'] = state['actions'][-300:]
-    write_state(state)
-    print('@rb GROUP COMMENT SEEDING OK')
-    print(f'Group: {target["name"]}')
+    state_action = record.get('state_action') or {}
+    if state_action.get('status') != 'published' or state_action.get('comment_permalink') != result_permalink:
+        raise SystemExit('Executor state verification failed: published action was not recorded exactly once')
+    if canonical_post_url(state_action.get('post_url') or '') != canonical_post_url(candidate['post_url']):
+        raise SystemExit('Executor state verification failed: recorded post mismatch')
+    print('@rb PUBLIC POST COMMENT SEEDING OK')
+    print('Identity: Tiny Sudo')
     print(f'Bài đích: {candidate["post_url"]}')
     print(f'Comment: {comment}')
-    print(f'Permalink: {action["comment_permalink"]}')
+    print(f'Permalink: {result_permalink}')
     return 0
 
 
