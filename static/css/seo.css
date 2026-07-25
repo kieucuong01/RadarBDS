@@ -4228,6 +4228,19 @@ summary:focus-visible,
   .related-link-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+  .seo-article-page .seo-final-cta {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 16px;
+    padding: 22px;
+  }
+  .seo-article-page .seo-final-cta .seo-primary-cta {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+  }
   .article-data-table {
     min-width: 640px;
   }
