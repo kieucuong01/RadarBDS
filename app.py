@@ -2024,6 +2024,85 @@ def seo_report_hub_page():
     return render_template("seo_report_hub.html", page=page, reports=reports, hub_filters=hub_filters, site_meta=site_meta, active_nav="bao-cao")
 
 
+NEWS_CATEGORY_DEFS = [
+    {
+        "key": "du-lieu-gia-dat",
+        "label": "Giá đất theo phường",
+        "description": "Bài dữ liệu giá rao theo từng phường, tách đất nền và nhà đất.",
+    },
+    {
+        "key": "so-sanh-khu-vuc",
+        "label": "So sánh khu vực",
+        "description": "Bài so sánh phường/khu trong cùng phạm vi dữ liệu để chọn khu cần kiểm tra tiếp.",
+    },
+    {
+        "key": "huong-dan-doc-du-lieu",
+        "label": "Hướng dẫn đọc dữ liệu",
+        "description": "Evergreen AIO: giải thích giá trung vị, giá/m², loại hình và cách dùng dữ liệu Radar.",
+    },
+    {
+        "key": "kiem-tra-tin-rao",
+        "label": "Kiểm tra tin rao",
+        "description": "Checklist đọc tin, giá rao, dấu hiệu đáng kiểm tra và các bước xác minh trước khi liên hệ.",
+    },
+]
+NEWS_CATEGORY_MAP = {item["key"]: item for item in NEWS_CATEGORY_DEFS}
+
+
+def _news_category_for_article(slug: str, item: dict) -> dict:
+    category = item.get("category") or {}
+    key = item.get("category_key") or category.get("key")
+    title = str(item.get("hero_title") or item.get("title") or "").lower()
+    if not key:
+        if slug.startswith("gia-dat-"):
+            key = "du-lieu-gia-dat"
+        elif "giá rao" in title or "kiểm tra" in title or "giao dịch" in title:
+            key = "kiem-tra-tin-rao"
+        elif (
+            "giá trung vị" in title
+            or "cách xem" in title
+            or "cách đọc" in title
+            or "giá/m²" in title
+            or "giá m2" in title
+            or "vì sao" in title
+        ):
+            key = "huong-dan-doc-du-lieu"
+        elif "so " in title or "phường nào" in title or "so sánh" in title:
+            key = "so-sanh-khu-vuc"
+        elif "giá đất" in title:
+            key = "du-lieu-gia-dat"
+        else:
+            key = "huong-dan-doc-du-lieu"
+    base = NEWS_CATEGORY_MAP.get(key, NEWS_CATEGORY_MAP["huong-dan-doc-du-lieu"])
+    return {
+        "key": base["key"],
+        "label": category.get("label") or base["label"],
+        "description": category.get("description") or base["description"],
+    }
+
+
+def _decorate_news_article(slug: str, item: dict) -> dict:
+    decorated = dict(item)
+    category = _news_category_for_article(slug, decorated)
+    decorated["category"] = category
+    decorated["category_key"] = category["key"]
+    decorated["category_label"] = category["label"]
+    return decorated
+
+
+def _article_category_groups(items: list[dict]) -> tuple[list[dict], list[dict]]:
+    categories = []
+    groups = []
+    for base in NEWS_CATEGORY_DEFS:
+        group_items = [item for item in items if item.get("category_key") == base["key"]]
+        category = dict(base)
+        category["count"] = len(group_items)
+        if group_items:
+            categories.append(category)
+            groups.append({**category, "articles": group_items})
+    return categories, groups
+
+
 def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, title: str | None = None):
     page = dict(KNOWLEDGE_HUB)
     page["path"] = hub_path
@@ -2040,11 +2119,12 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
     else:
         page["breadcrumbs"] = _page_breadcrumbs(page)
 
-    matching = [
-        (slug, dict(item))
-        for slug, item in SEO_ARTICLES.items()
-        if str(item.get("path") or "").startswith(article_prefix)
-    ]
+    matching = []
+    for slug, item in SEO_ARTICLES.items():
+        if not str(item.get("path") or "").startswith(article_prefix):
+            continue
+        decorated = _decorate_news_article(slug, item) if hub_path == "/tin-tuc" else dict(item)
+        matching.append((slug, decorated))
     matching.sort(
         key=lambda pair: ((pair[1].get("article") or {}).get("modified_at", ""), (pair[1].get("article") or {}).get("published_at", "")),
         reverse=True,
@@ -2073,12 +2153,16 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
             key=lambda item: ((item.get("article") or {}).get("modified_at", ""), (item.get("article") or {}).get("published_at", "")),
             reverse=True,
         )
+    all_articles = ([featured] if featured else []) + articles
+    article_categories, category_groups = _article_category_groups(all_articles) if hub_path == "/tin-tuc" else ([], [])
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
     return render_template(
         "seo_knowledge_hub.html",
         page=page,
         featured=featured,
         articles=articles,
+        article_categories=article_categories,
+        category_groups=category_groups,
         site_meta=site_meta,
         active_nav=active_nav,
     )
