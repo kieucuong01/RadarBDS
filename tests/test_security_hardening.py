@@ -106,3 +106,35 @@ def test_nginx_config_hides_version_and_covers_dynamic_and_static_responses():
         "Content-Security-Policy",
     ):
         assert text.count(f"add_header {header} ") == 4
+
+
+def test_flask_adds_security_headers_to_success_api_and_error_responses():
+    import app as radar_app
+
+    test_app = Flask(__name__)
+    test_app.after_request(radar_app.add_response_headers)
+    test_app.add_url_rule("/", endpoint="home", view_func=lambda: "ok")
+    test_app.add_url_rule("/api/ping", endpoint="ping", view_func=lambda: {"ok": True})
+    expected = {
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "Content-Security-Policy": (
+            "default-src 'self'; script-src 'self' 'unsafe-inline' "
+            "https://cdn.jsdelivr.net https://unpkg.com https://www.googletagmanager.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
+            "https://cdn.jsdelivr.net https://unpkg.com; "
+            "font-src 'self' https://fonts.gstatic.com data:; "
+            "img-src 'self' data: blob: https:; "
+            "connect-src 'self' https://www.google-analytics.com "
+            "https://region1.google-analytics.com https://www.googletagmanager.com; "
+            "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+        ),
+    }
+
+    client = test_app.test_client()
+    for path in ("/", "/api/ping", "/missing"):
+        response = client.get(path)
+        assert {name: response.headers.get(name) for name in expected} == expected

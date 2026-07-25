@@ -95,11 +95,25 @@ def inject_google_site_tags():
 
 
 @app.after_request
-def add_api_cache_headers(response):
+def add_response_headers(response):
     if request.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net "
+        "https://unpkg.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' "
+        "https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com; font-src 'self' "
+        "https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' "
+        "https://www.google-analytics.com https://region1.google-analytics.com "
+        "https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; "
+        "frame-ancestors 'none'; form-action 'self'"
+    )
     return response
 
 
