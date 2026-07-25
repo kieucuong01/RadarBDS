@@ -252,11 +252,15 @@ def validate_queue(queue: dict, config: dict) -> dict:
     reactions = int(engagement.get('reactions') or 0)
     comments = int(engagement.get('comments') or 0)
     shares = int(engagement.get('shares') or 0)
-    if reactions < int(cfg.get('min_reactions', 10)):
+    is_group_post = '/groups/' in post_url.casefold()
+    min_reactions = int(cfg.get('group_post_min_reactions', 0) if is_group_post else cfg.get('min_reactions', 10))
+    min_comments = int(cfg.get('group_post_min_comments', 0) if is_group_post else cfg.get('min_comments', 3))
+    min_total = int(cfg.get('group_post_min_total_engagement', 0) if is_group_post else cfg.get('min_total_engagement', 15))
+    if reactions < min_reactions:
         raise SystemExit('Refusing: source engagement is below min_reactions')
-    if comments < int(cfg.get('min_comments', 3)):
+    if comments < min_comments:
         raise SystemExit('Refusing: source engagement is below min_comments')
-    if reactions + comments + shares < int(cfg.get('min_total_engagement', 15)):
+    if reactions + comments + shares < min_total:
         raise SystemExit('Refusing: source engagement is below min_total_engagement')
     content = queue.get('content') or {}
     comment = validate_comment(content.get('comment') or '', config)
@@ -506,7 +510,9 @@ try:
         if editor_after_clear: raise RuntimeError('Prepare cleanup failed: editor is not empty')
         result={{'ok':True,'status':'prepared_and_cleared','identity':'Tiny Sudo','post_url':post_url,'comment':comment,'screenshot':screenshot}}
     elif mode=='publish':
-        press_key('ENTER'); time.sleep(7); stop_guard('after_comment')
+        sent=js("(() => {{const labels=[%s,%s];const es=[...document.querySelectorAll('[contenteditable=true][role=textbox]')].filter(e=>!!(e.offsetWidth||e.offsetHeight||e.getClientRects().length)&&labels.some(x=>(e.getAttribute('aria-label')||'').startsWith(x)));if(es.length!==1)return false;let p=es[0];for(let depth=0;depth<8&&p;depth++,p=p.parentElement){{const btns=[...p.querySelectorAll('[role=button],[aria-label]')].filter(b=>!!(b.offsetWidth||b.offsetHeight||b.getClientRects().length));const send=btns.find(b=>/^(Comment|Bình luận|Post|Đăng|Send|Gửi)$/i.test((b.getAttribute('aria-label')||'').trim())&&!b.getAttribute('aria-disabled'));if(send){{send.click();return true;}}}}return false;}})()" % (json.dumps({editor_label!r}),json.dumps({'Bình luận dưới tên ' + editor_identity!r})))
+        if not sent: press_key('ENTER')
+        time.sleep(7); stop_guard('after_comment')
         editor_text=js("(() => {{const labels=[%s,%s];const es=[...document.querySelectorAll('[contenteditable=true][role=textbox]')].filter(e=>!!(e.offsetWidth||e.offsetHeight||e.getClientRects().length)&&labels.some(x=>(e.getAttribute('aria-label')||'').startsWith(x)));return es.length===1?(es[0].innerText||'').trim():''}})()" % (json.dumps({editor_label!r}),json.dumps({'Bình luận dưới tên ' + editor_identity!r})))
         text=body_text(); after_comment_count=rendered_comment_count()
         if comment_needle not in text or comment_needle in (editor_text or '') or after_comment_count <= before_comment_count:

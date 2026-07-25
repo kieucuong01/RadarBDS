@@ -8,6 +8,9 @@
     "min_reactions": 10,
     "min_comments": 3,
     "min_total_engagement": 15,
+    "group_post_min_reactions": 0,
+    "group_post_min_comments": 0,
+    "group_post_min_total_engagement": 0,
     "min_hot_deals_for_comment": 1,
     "same_author_cooldown_days": 30,
     "same_topic_cooldown_days": 14,
@@ -58,7 +61,7 @@
   "notes": [
     "Phạm vi hiện tại chỉ gồm các phường thuộc Thủ Dầu Một; không seed bài city-level hoặc thành phố khác.",
     "Chỉ mở rộng deal_coverage và queries sang thành phố khác khi anh Cường ra lệnh.",
-    "Cho phép discovery bài public post và bài trong group nếu thấy được bài, comment mở và URL post/permalink xác minh được.",
+    "Cho phép discovery bài public post và bài trong group nếu thấy được bài, comment mở và URL post/permalink xác minh được; group post đúng phường/TDM được nới tương tác về 0 để seed nhẹ vào tin rao phù hợp.",
     "Loại tuyệt đối tác giả khớp URL hoặc tên chuẩn hóa trong data/facebook_profiles.json.",
     "Chỉ comment bằng Tiny Sudo; luôn khôi phục Radar BDS trong finally.",
     "Comment có đúng một link HTTPS radarbds.vn, landing khớp city+ward và UTM public_post_seeding.",

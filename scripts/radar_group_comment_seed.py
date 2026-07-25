@@ -44,6 +44,7 @@ OUTSIDE_CITY_CONTEXT = (
 )
 REAL_ESTATE_TERMS = (
     'bất động sản', 'nhà đất', 'đất nền', 'giá đất', 'giá nhà', 'mua nhà', 'mua đất',
+    'bán nhà', 'bán đất', 'cho thuê', 'nhà cấp 4', 'lô đất', 'đất mặt tiền',
     'căn hộ', 'chung cư', 'nhà phố', 'biệt thự', 'quy hoạch', 'sổ hồng', 'sổ đỏ',
     'thổ cư', 'giá/m²', 'giá/m2', 'thị trường nhà ở', 'thị trường địa ốc',
 )
@@ -292,6 +293,10 @@ def score_candidate(item: dict, now: dt.datetime | None = None, global_config: d
     topic = detect_topic(text)
     relevant = any(term in low for term in REAL_ESTATE_TERMS)
     recent = is_recent(text, now, int(cfg.get('max_comment_age_hours', 72)), str(item.get('posted_at') or ''))
+    is_group_post = str(item.get('surface') or '') == 'group_post' or '/groups/' in str(item.get('post_url') or '').casefold()
+    min_reactions = int(cfg.get('group_post_min_reactions', 0) if is_group_post else cfg.get('min_reactions', 10))
+    min_comments = int(cfg.get('group_post_min_comments', 0) if is_group_post else cfg.get('min_comments', 3))
+    min_total = int(cfg.get('group_post_min_total_engagement', 0) if is_group_post else cfg.get('min_total_engagement', 15))
     sponsored = any(x in low for x in (
         'sponsored', 'được tài trợ', 'why am i seeing this ad', 'report ad', 'hide ad',
         'send message', 'nhận bảng giá', 'mua là lời', 'giá tuyệt chủng', 'booking ngay',
@@ -314,20 +319,20 @@ def score_candidate(item: dict, now: dt.datetime | None = None, global_config: d
         reasons.append('not_recent')
     if comments_off:
         reasons.append('comments_off')
-    if reactions < int(cfg.get('min_reactions', 10)):
+    if reactions < min_reactions:
         reasons.append('low_reactions')
-    if comments < int(cfg.get('min_comments', 3)):
+    if comments < min_comments:
         reasons.append('low_comments')
-    if total_engagement < int(cfg.get('min_total_engagement', 15)):
+    if total_engagement < min_total:
         reasons.append('low_total_engagement')
 
     score = 0
     score += 2 if relevant else 0
     score += 2 if location else 0
     score += 1 if recent else 0
-    score += 1 if reactions >= int(cfg.get('min_reactions', 10)) else 0
-    score += 1 if comments >= int(cfg.get('min_comments', 3)) else 0
-    score += 1 if total_engagement >= int(cfg.get('min_total_engagement', 15)) else 0
+    score += 1 if reactions >= min_reactions else 0
+    score += 1 if comments >= min_comments else 0
+    score += 1 if total_engagement >= min_total else 0
     disqualifying = {
         'unsupported_surface', 'invalid_public_permalink', 'not_relevant_real_estate', 'outside_target_market',
         'sponsored_or_ad', 'not_recent', 'comments_off', 'low_reactions', 'low_comments',
