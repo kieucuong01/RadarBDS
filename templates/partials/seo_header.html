@@ -59,7 +59,7 @@
         </div>
       </div>
 
-      <div class="seo-nav-group{% if active_nav in ['bao-cao', 'tin-tuc', 'kien-thuc'] %} is-active{% endif %}">
+      <div class="seo-nav-group{% if active_nav in ['bao-cao', 'tin-tuc'] %} is-active{% endif %}">
         <button type="button" class="seo-nav-tab" aria-haspopup="true">Nội dung</button>
         <div class="seo-nav-menu">
           <a href="/bao-cao" data-nav="bao-cao"{% if active_nav == 'bao-cao' %} aria-current="page"{% endif %}>
@@ -69,10 +69,6 @@
           <a href="/tin-tuc" data-nav="tin-tuc"{% if active_nav == 'tin-tuc' %} aria-current="page"{% endif %}>
             <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/></svg></span>
             <span><strong>Tin tức</strong><small>Bài mới và cập nhật thị trường</small></span>
-          </a>
-          <a href="/kien-thuc" data-nav="kien-thuc"{% if active_nav == 'kien-thuc' %} aria-current="page"{% endif %}>
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h10a4 4 0 0 1 4 4v10H9a4 4 0 0 1-4-4z"/><path d="M9 9h6"/><path d="M9 13h6"/></svg></span>
-            <span><strong>Kiến thức</strong><small>Hướng dẫn đọc dữ liệu BĐS</small></span>
           </a>
         </div>
       </div>

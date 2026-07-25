@@ -3569,7 +3569,7 @@ SEO_ARTICLES = {
                                                                          'href': '/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
                                                                          'url': 'https://radarbds.vn/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'}]},
  'cach-xem-gia-dat-binh-duong-khong-bi-so-sai': {'variant': 'knowledge',
-                                                 'path': '/kien-thuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai',
+                                                 'path': '/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai',
                                                  'title': 'Cách xem giá đất Bình Dương không bị so sai | Radar BDS',
                                                  'description': 'Hướng dẫn bình dân cách xem giá đất Bình Dương: tách '
                                                                 'phường, tách đất nền/nhà đất, rồi mới so giá. Dữ liệu '
@@ -3977,7 +3977,7 @@ SEO_ARTICLES = {
         },
         {
             "label": "Cách xem giá đất Bình Dương không bị so sai",
-            "href": "/kien-thuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai",
+            "href": "/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai",
             "description": "Nguyên tắc tách phường, loại hình và giá/m² trước khi đánh giá một tin."
         }
     ],
@@ -4615,7 +4615,7 @@ SEO_ARTICLES = {
     }
 }
 
-KNOWLEDGE_HUB = {'path': '/kien-thuc',
+KNOWLEDGE_HUB = {'path': '/tin-tuc',
  'title': 'Tin tức BĐS Bình Dương | Radar BDS',
  'description': 'Tin tức, hướng dẫn và bài SEO dữ liệu về nhà đất Bình Dương từ Radar BDS.',
  'keywords': 'tin tức BĐS Bình Dương, giá đất Bình Dương, Radar BDS, nhà đất Thủ Dầu Một',
@@ -4627,4 +4627,4 @@ KNOWLEDGE_HUB = {'path': '/kien-thuc',
  'scope_label': 'SEO / AIO / AI-SEO',
  'featured_slug': 'cach-xem-gia-dat-binh-duong-khong-bi-so-sai',
  'breadcrumbs': [{'name': 'Trang chủ', 'href': '/', 'url': 'https://radarbds.vn/'},
-                 {'name': 'Tin tức', 'href': '/kien-thuc', 'url': 'https://radarbds.vn/kien-thuc'}]}
+                 {'name': 'Tin tức', 'href': '/tin-tuc', 'url': 'https://radarbds.vn/tin-tuc'}]}

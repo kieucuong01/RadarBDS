@@ -2084,8 +2084,17 @@ def seo_news_hub_page():
     )
 
 
-def seo_knowledge_legacy_redirect():
-    abort(404)
+def seo_knowledge_legacy_redirect(article_slug: str | None = None):
+    target = "/tin-tuc"
+    if article_slug:
+        if article_slug in SEO_ARTICLES and str(SEO_ARTICLES[article_slug].get("path") or "").startswith("/tin-tuc/"):
+            target = str(SEO_ARTICLES[article_slug]["path"])
+        else:
+            target = f"/tin-tuc/{article_slug}"
+    query = request.query_string.decode("ascii", errors="ignore")
+    if query:
+        target = f"{target}?{query}"
+    return redirect(target, code=301)
 
 
 def seo_report_or_article_page(report_slug: str):
@@ -2191,7 +2200,7 @@ def sitemap_xml():
     unique_pages = []
     seen_paths = set()
     news_hub = dict(KNOWLEDGE_HUB, path="/tin-tuc", title="Tin tức BĐS Bình Dương | Radar BDS")
-    for page in [REPORT_HUB, KNOWLEDGE_HUB, news_hub, PLANNING_HUB, *SEO_PAGES.values(), *PLANNING_PAGE_LIST]:
+    for page in [REPORT_HUB, news_hub, PLANNING_HUB, *SEO_PAGES.values(), *PLANNING_PAGE_LIST]:
         path = page.get("path")
         if not path or path in seen_paths:
             continue

@@ -100,12 +100,12 @@ def seo_news_article(article_slug, **kwargs):
 
 @bp.route("/kien-thuc")
 def seo_knowledge_index(**kwargs):
-    return _impl("seo_knowledge_hub_page", **kwargs)
+    return _impl("seo_knowledge_legacy_redirect", **kwargs)
 
 
 @bp.route("/kien-thuc/<path:article_slug>")
 def seo_article(article_slug, **kwargs):
-    return _impl("seo_article_page", slug=article_slug, **kwargs)
+    return _impl("seo_knowledge_legacy_redirect", article_slug=article_slug, **kwargs)
 
 
 @bp.route("/robots.txt")

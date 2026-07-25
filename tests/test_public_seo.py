@@ -56,7 +56,7 @@ def test_robots_and_sitemap_use_public_domain():
     assert "<loc>https://radarbds.vn/san-deal-bds</loc>" in sitemap
     assert "<loc>https://radarbds.vn/bang-gia-dat-tphcm</loc>" in sitemap
     assert "<loc>https://radarbds.vn/bao-cao</loc>" in sitemap
-    assert "<loc>https://radarbds.vn/kien-thuc</loc>" in sitemap
+    assert "<loc>https://radarbds.vn/kien-thuc</loc>" not in sitemap
     for article in SEO_ARTICLES.values():
         assert f"<loc>https://radarbds.vn{article['path']}</loc>" in sitemap
     assert "localhost" not in robots + sitemap
