@@ -1,0 +1,73 @@
+<script>
+  (function () {
+    function isLikelyPhone(value) {
+      return (value || '').replace(/\D/g, '').length >= 9;
+    }
+
+    function setStatus(form, message, tone) {
+      const wrap = form.closest('.seo-lead-capture');
+      const status = wrap && wrap.querySelector('.seo-lead-capture-status');
+      if (!status) return;
+      status.textContent = message;
+      status.dataset.tone = tone || 'info';
+    }
+
+    document.addEventListener('submit', async function (event) {
+      const form = event.target.closest && event.target.closest('.seo-lead-capture-form');
+      if (!form) return;
+      event.preventDefault();
+
+      const input = form.querySelector('input[name="zalo_phone"]');
+      const phone = (input && input.value || '').trim();
+      if (!isLikelyPhone(phone)) {
+        setStatus(form, 'Số Zalo chưa hợp lệ, anh/chị kiểm tra lại giúp Radar BDS.', 'error');
+        if (input) input.focus();
+        return;
+      }
+
+      const button = form.querySelector('button[type="submit"]');
+      if (button) {
+        button.disabled = true;
+        button.dataset.originalText = button.textContent;
+        button.textContent = 'Đang gửi...';
+      }
+
+      try {
+        const res = await fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            listing_id: null,
+            listing_url: window.location.href,
+            zalo_phone: phone,
+            source_context: form.dataset.sourceContext || 'seo_lead_cta',
+            note: form.dataset.note || ('Quan tâm từ ' + window.location.pathname),
+            urgency: 'standard'
+          })
+        });
+        const data = await res.json().catch(function () { return {}; });
+        if (!res.ok || data.ok === false) {
+          throw new Error(data.error || 'lead_failed');
+        }
+        form.reset();
+        setStatus(form, 'Đã nhận thông tin. Radar BDS sẽ ưu tiên gửi tin phù hợp qua Zalo.', 'success');
+        try {
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'lead_capture_submit', {
+              source_context: form.dataset.sourceContext || 'seo_lead_cta',
+              page_path: window.location.pathname
+            });
+          }
+        } catch (err) {}
+      } catch (err) {
+        setStatus(form, 'Chưa gửi được thông tin. Anh/chị thử lại sau hoặc mở dashboard để xem tin trực tiếp.', 'error');
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = button.dataset.originalText || 'Nhận tin qua Zalo';
+        }
+      }
+    });
+  })();
+</script>

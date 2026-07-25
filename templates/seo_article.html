@@ -143,6 +143,9 @@
           <p>Radar BDS hỗ trợ sàng lọc dữ liệu ban đầu, không thay thế thẩm định pháp lý, quy hoạch, định giá chính thức hoặc kiểm tra thực địa. Hãy xác minh độc lập trước khi giao dịch.</p>
         </aside>
 
+        {% set lead_cta_context = "seo_article_lead" %}
+        {% include "partials/seo_lead_capture.html" %}
+
         <section id="faq" class="article-faq">
           <p class="seo-eyebrow">Giải đáp nhanh</p>
           <h2>Câu hỏi thường gặp</h2>
@@ -210,5 +213,6 @@
   </script>
   {% set view_event = "seo_landing_viewed" %}
   {% include "partials/seo_tracking.html" %}
+  {% include "partials/seo_lead_capture_script.html" %}
 </body>
 </html>

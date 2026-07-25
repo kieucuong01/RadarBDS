@@ -33,7 +33,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16.png') }}?v=app-icon-20260608">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=pagespeed-a11y-20260611">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=lead-capture-20260725">
 
   <script type="application/ld+json">
   {
@@ -410,6 +410,9 @@
     </section>
     {% endif %}
 
+    {% set lead_cta_context = "seo_landing_lead" %}
+    {% include "partials/seo_lead_capture.html" %}
+
     <section class="seo-value-strip" aria-label="Giá trị chính của Radar BDS">
       <div class="seo-shell value-grid">
         {% for section in page.value_cards %}
@@ -656,6 +659,7 @@
   </main>
 
   {% include "partials/seo_footer.html" %}
+  {% include "partials/seo_lead_capture_script.html" %}
   <script>
     (function () {
       const pageMeta = {
