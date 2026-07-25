@@ -6091,7 +6091,476 @@ SEO_ARTICLES = {
             "body": "Chọn phường Phú Mỹ, tách đất nền và nhà đất, rồi xem nhóm tin đáng kiểm tra trước khi liên hệ.",
             "button": "Mở dashboard"
         }
-    }
+    },
+    'phu-tan-phu-loi-khu-nao-dang-kiem-tra-hon': {'variant': 'knowledge',
+                                               'path': '/tin-tuc/phu-tan-phu-loi-khu-nao-dang-kiem-tra-hon',
+                                               'category': {'key': 'so-sanh-khu-vuc',
+                                                            'label': 'So sánh khu vực'},
+                                               'title': 'Phú Tân hay Phú Lợi đáng kiểm tra hơn? So dữ liệu '
+                                                        '14 ngày | Radar BDS',
+                                               'description': 'So Phú Tân và Phú Lợi 14 ngày: tin rao, dấu '
+                                                              'hiệu, giá trung vị đất nền và nhà đất để '
+                                                              'người mua lọc đúng loại hình.',
+                                               'keywords': 'Phú Tân hay Phú Lợi, so sánh Phú Tân Phú Lợi, '
+                                                           'giá đất Phú Tân, giá đất Phú Lợi, nhà đất Thủ '
+                                                           'Dầu Một',
+                                               'breadcrumb_label': 'Phú Tân hay Phú Lợi đáng kiểm tra hơn',
+                                               'hero_badge': 'So sánh dữ liệu 14 ngày',
+                                               'hero_title': 'Phú Tân hay Phú Lợi đáng kiểm tra hơn? So dữ '
+                                                             'liệu 14 ngày',
+                                               'hero_text': 'Trong 14 ngày từ 11/07 đến 25/07/2026, Phú Tân '
+                                                            'có ít tin hơn Phú Lợi nhưng nhiều dấu hiệu đáng '
+                                                            'kiểm tra hơn rõ rệt. Nếu cần ưu tiên mở '
+                                                            'dashboard, Phú Tân nên được soi trước; nếu cần '
+                                                            'nguồn cung nhà đất nhiều hơn, Phú Lợi đáng lọc '
+                                                            'thêm. Tất cả giá dưới đây là giá rao trung vị, '
+                                                            'không phải giá giao dịch.',
+                                               'scope_label': 'Thủ Dầu Một · Phú Tân / Phú Lợi',
+                                               'hero_checks': ['Phú Tân: 122 tin, 61 dấu hiệu đáng kiểm tra',
+                                                               'Phú Lợi: 128 tin, 21 dấu hiệu đáng kiểm tra',
+                                                               'Đất nền Phú Tân: giá trung vị 23,9 tr/m²; '
+                                                               'Phú Lợi: 26,4 tr/m²',
+                                                               'Nhà đất Phú Tân: giá trung vị 32,8 tr/m²; '
+                                                               'Phú Lợi: 37,6 tr/m²'],
+                                               'primary_cta': 'Mở dashboard lọc hai phường',
+                                               'primary_href': '/?tab=signals&ward=Ph%C3%BA+T%C3%A2n',
+                                               'secondary_cta': 'Đọc giá Phú Tân',
+                                               'secondary_href': '/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu',
+                                               'map_label': 'Tin tức / So sánh Phú Tân - Phú Lợi',
+                                               'hero_metric': {'label': 'Chênh lệch dấu hiệu',
+                                                               'value': '61 vs 21',
+                                                               'delta': 'Phú Tân cao hơn trong mẫu 14 ngày',
+                                                               'note': 'Nguồn: tin rao Facebook sau lọc, cập '
+                                                                       'nhật 25/07/2026'},
+                                               'property_card': {'status': 'So sánh dữ liệu',
+                                                                 'title': 'Phú Tân nổi bật ở dấu hiệu, Phú '
+                                                                          'Lợi nổi bật ở nguồn cung nhà đất',
+                                                                 'price': 'Đất nền: 23,9 vs 26,4 tr/m² · Nhà '
+                                                                          'đất: 32,8 vs 37,6 tr/m²',
+                                                                 'metric_a': 'Dấu hiệu Phú Tân',
+                                                                 'metric_a_value': '61/122',
+                                                                 'metric_b': 'Dấu hiệu Phú Lợi',
+                                                                 'metric_b_value': '21/128'},
+                                               'local_links_title': 'Đọc thêm trước khi lọc tin',
+                                               'local_links': [{'label': 'Giá đất Phú Tân hiện bao nhiêu?',
+                                                                'href': '/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu',
+                                                                'description': 'Đọc riêng đất nền và nhà đất '
+                                                                               'Phú Tân.'},
+                                                               {'label': 'Giá đất Phú Lợi hiện bao nhiêu?',
+                                                                'href': '/tin-tuc/gia-dat-phu-loi-hien-bao-nhieu',
+                                                                'description': 'Đọc riêng đất nền và nhà đất '
+                                                                               'Phú Lợi.'},
+                                                               {'label': 'Phường nào Thủ Dầu Một giá đất còn '
+                                                                         'dễ mua?',
+                                                                'href': '/tin-tuc/phuong-nao-thu-dau-mot-gia-dat-con-de-mua',
+                                                                'description': 'So 13 phường theo dữ liệu 14 '
+                                                                               'ngày.'},
+                                                               {'label': 'Vì sao không nên so nhà đất chung '
+                                                                         'với đất nền?',
+                                                                'href': '/tin-tuc/vi-sao-khong-nen-so-nha-dat-chung-voi-dat-nen',
+                                                                'description': 'Hướng dẫn tránh so sai loại '
+                                                                               'hình BĐS.'}],
+                                               'faq': [{'q': 'Phú Tân hay Phú Lợi đáng kiểm tra hơn trong 14 '
+                                                             'ngày này?',
+                                                        'a': 'Nếu ưu tiên số dấu hiệu đáng kiểm tra, Phú Tân '
+                                                             'nổi bật hơn với 61 dấu hiệu trên 122 tin. Phú '
+                                                             'Lợi có 21 dấu hiệu trên 128 tin. Đây là tín '
+                                                             'hiệu để lọc tiếp, không phải khuyến nghị mua.'},
+                                                       {'q': 'Đất nền Phú Tân và Phú Lợi đang chênh nhau thế '
+                                                             'nào?',
+                                                        'a': 'Trong mẫu tin rao Facebook 14 ngày, đất nền '
+                                                             'Phú Tân có giá trung vị 23,9 tr/m² từ 69 tin '
+                                                             'có giá/m²; đất nền Phú Lợi là 26,4 tr/m² từ 51 '
+                                                             'tin có giá/m².'},
+                                                       {'q': 'Nhà đất hai phường có nên so chung với đất nền '
+                                                             'không?',
+                                                        'a': 'Không nên. Nhà đất đã gồm công trình và hiện '
+                                                             'trạng sử dụng. Nhà đất Phú Tân có giá trung vị '
+                                                             '32,8 tr/m² từ 16 tin có giá/m²; Phú Lợi là '
+                                                             '37,6 tr/m² từ 48 tin có giá/m².'},
+                                                       {'q': 'Dữ liệu trong bài là giá giao dịch hay giá '
+                                                             'rao?',
+                                                        'a': 'Đây là giá rao từ tin Facebook mà Radar BDS '
+                                                             'theo dõi và lọc chất lượng cơ bản, không phải '
+                                                             'giá giao dịch đã chốt hay kết quả thẩm định.'}],
+                                               'article': {'published_at': '2026-07-25',
+                                                           'modified_at': '2026-07-25',
+                                                           'intro': ['Câu trả lời ngắn: nếu mục tiêu là tìm '
+                                                                     'khu có nhiều tin cần soi kỹ, Phú Tân '
+                                                                     'đáng mở trước vì có 61 dấu hiệu đáng '
+                                                                     'kiểm tra trong 122 tin. Phú Lợi có '
+                                                                     'nguồn cung tương đương, 128 tin, nhưng '
+                                                                     'chỉ 21 dấu hiệu trong cùng cửa sổ dữ '
+                                                                     'liệu.',
+                                                                     'Bài này dùng dữ liệu production của '
+                                                                     'Radar BDS từ 11/07 đến 25/07/2026, chỉ '
+                                                                     'lấy tin rao Facebook đã lọc blacklist, '
+                                                                     'tin bị ẩn và tin không còn trong diện '
+                                                                     'theo dõi. Giá là giá rao trung vị, cần '
+                                                                     'tách đất nền và nhà đất trước khi so.'],
+                                                           'summary_cards': [{'label': 'Tin Phú Tân + Phú '
+                                                                                       'Lợi 14 ngày',
+                                                                              'value': '250',
+                                                                              'note': 'Tin rao Facebook sau '
+                                                                                      'lọc chất lượng cơ '
+                                                                                      'bản'},
+                                                                             {'label': 'Đất nền Phú Tân / '
+                                                                                       'Phú Lợi',
+                                                                              'value': '23,9 vs 26,4 tr/m²',
+                                                                              'note': 'Giá rao trung vị từ '
+                                                                                      '69 và 51 tin có '
+                                                                                      'giá/m²'},
+                                                                             {'label': 'Nhà đất Phú Tân / '
+                                                                                       'Phú Lợi',
+                                                                              'value': '32,8 vs 37,6 tr/m²',
+                                                                              'note': 'Giá rao trung vị từ '
+                                                                                      '16 và 48 tin có '
+                                                                                      'giá/m²'},
+                                                                             {'label': 'Dấu hiệu đáng kiểm '
+                                                                                       'tra',
+                                                                              'value': '61 vs 21',
+                                                                              'note': 'Phú Tân so với Phú '
+                                                                                      'Lợi trong mẫu 14 '
+                                                                                      'ngày'},
+                                                                             {'label': 'Nguồn và ngày cập '
+                                                                                       'nhật',
+                                                                              'value': '25/07/2026',
+                                                                              'note': 'Giá rao, không phải '
+                                                                                      'giá giao dịch'}],
+                                                           'data_tables': [{'eyebrow': 'So tổng quan',
+                                                                            'title': 'Phú Tân và Phú Lợi '
+                                                                                     'khác nhau ở điểm nào?',
+                                                                            'note': 'Dữ liệu 14 ngày từ '
+                                                                                    '11/07 đến 25/07/2026. '
+                                                                                    'Dấu hiệu gồm tin hot '
+                                                                                    'hoặc tin có giảm giá.',
+                                                                            'columns': [{'key': 'phuong',
+                                                                                         'label': 'Phường'},
+                                                                                        {'key': 'tin',
+                                                                                         'label': 'Tin'},
+                                                                                        {'key': 'dau_hieu',
+                                                                                         'label': 'Dấu hiệu'},
+                                                                                        {'key': 'ty_le',
+                                                                                         'label': 'Tỷ lệ'},
+                                                                                        {'key': 'giam_gia',
+                                                                                         'label': 'Giảm giá'},
+                                                                                        {'key': 'nhom_chinh',
+                                                                                         'label': 'Nguồn '
+                                                                                                  'cung '
+                                                                                                  'chính'}],
+                                                                            'rows': [{'phuong': 'Phú Tân',
+                                                                                      'tin': '122 tin',
+                                                                                      'dau_hieu': '61 tin',
+                                                                                      'ty_le': '50,0%',
+                                                                                      'giam_gia': '4 tin',
+                                                                                      'nhom_chinh': 'Đất '
+                                                                                                    'nền: 96 '
+                                                                                                    'tin'},
+                                                                                     {'phuong': 'Phú Lợi',
+                                                                                      'tin': '128 tin',
+                                                                                      'dau_hieu': '21 tin',
+                                                                                      'ty_le': '16,4%',
+                                                                                      'giam_gia': '2 tin',
+                                                                                      'nhom_chinh': 'Nhà '
+                                                                                                    'đất: 68 '
+                                                                                                    'tin'}]},
+                                                                           {'eyebrow': 'Tách theo loại hình',
+                                                                            'title': 'Giá trung vị đất nền '
+                                                                                     'và nhà đất',
+                                                                            'note': 'Không gộp đất nền và '
+                                                                                    'nhà đất thành một giá '
+                                                                                    'chung vì cấu trúc tài '
+                                                                                    'sản khác nhau.',
+                                                                            'columns': [{'key': 'loai',
+                                                                                         'label': 'Loại '
+                                                                                                  'hình'},
+                                                                                        {'key': 'phu_tan',
+                                                                                         'label': 'Phú Tân'},
+                                                                                        {'key': 'phu_loi',
+                                                                                         'label': 'Phú Lợi'},
+                                                                                        {'key': 'doc_sao',
+                                                                                         'label': 'Cách '
+                                                                                                  'đọc'}],
+                                                                            'rows': [{'loai': 'Đất nền',
+                                                                                      'phu_tan': '23,9 tr/m² '
+                                                                                                 '· 2,70 tỷ '
+                                                                                                 '· 69 tin '
+                                                                                                 'có giá/m²',
+                                                                                      'phu_loi': '26,4 tr/m² '
+                                                                                                 '· 2,95 tỷ '
+                                                                                                 '· 51 tin '
+                                                                                                 'có giá/m²',
+                                                                                      'doc_sao': 'So giá/m² '
+                                                                                                 'cùng loại '
+                                                                                                 'hình rồi '
+                                                                                                 'kiểm tra '
+                                                                                                 'vị trí, '
+                                                                                                 'đường và '
+                                                                                                 'thổ cư.'},
+                                                                                     {'loai': 'Nhà đất',
+                                                                                      'phu_tan': '32,8 tr/m² '
+                                                                                                 '· 2,85 tỷ '
+                                                                                                 '· 16 tin '
+                                                                                                 'có giá/m²',
+                                                                                      'phu_loi': '37,6 tr/m² '
+                                                                                                 '· 3,95 tỷ '
+                                                                                                 '· 48 tin '
+                                                                                                 'có giá/m²',
+                                                                                      'doc_sao': 'Mẫu nhà '
+                                                                                                 'đất Phú '
+                                                                                                 'Tân nhỏ '
+                                                                                                 'hơn, nên '
+                                                                                                 'chỉ dùng '
+                                                                                                 'để lọc ban '
+                                                                                                 'đầu.'}]},
+                                                                           {'eyebrow': 'Gợi ý lọc dashboard',
+                                                                            'title': 'Nên mở phường nào '
+                                                                                     'trước theo từng mục '
+                                                                                     'tiêu?',
+                                                                            'note': 'Đây là gợi ý thứ tự '
+                                                                                    'kiểm tra, không phải '
+                                                                                    'kết luận đầu tư hay '
+                                                                                    'khuyến nghị mua.',
+                                                                            'columns': [{'key': 'muc_tieu',
+                                                                                         'label': 'Mục tiêu'},
+                                                                                        {'key': 'nen_mo',
+                                                                                         'label': 'Nên mở '
+                                                                                                  'trước'},
+                                                                                        {'key': 'ly_do',
+                                                                                         'label': 'Lý do'}],
+                                                                            'rows': [{'muc_tieu': 'Tìm tin '
+                                                                                                  'có dấu '
+                                                                                                  'hiệu cần '
+                                                                                                  'soi kỹ',
+                                                                                      'nen_mo': 'Phú Tân',
+                                                                                      'ly_do': '61 dấu hiệu '
+                                                                                               'trên 122 '
+                                                                                               'tin, cao hơn '
+                                                                                               'Phú Lợi '
+                                                                                               'trong cùng '
+                                                                                               'cửa sổ 14 '
+                                                                                               'ngày.'},
+                                                                                     {'muc_tieu': 'Tìm đất '
+                                                                                                  'nền để so '
+                                                                                                  'giá/m²',
+                                                                                      'nen_mo': 'Phú Tân rồi '
+                                                                                                'Phú Lợi',
+                                                                                      'ly_do': 'Phú Tân có '
+                                                                                               '96 tin đất '
+                                                                                               'nền, Phú Lợi '
+                                                                                               'có 60 tin; '
+                                                                                               'cả hai cần '
+                                                                                               'so cùng loại '
+                                                                                               'hình.'},
+                                                                                     {'muc_tieu': 'Tìm nhà '
+                                                                                                  'đất có '
+                                                                                                  'nhiều mẫu '
+                                                                                                  'để đọc',
+                                                                                      'nen_mo': 'Phú Lợi',
+                                                                                      'ly_do': 'Phú Lợi có '
+                                                                                               '68 tin nhà '
+                                                                                               'đất, nhiều '
+                                                                                               'hơn Phú Tân '
+                                                                                               '18 tin trong '
+                                                                                               'mẫu này.'}]}],
+                                                           'charts': [{'eyebrow': 'Dấu hiệu đáng kiểm tra',
+                                                                       'title': 'Phú Tân có tỷ lệ dấu hiệu '
+                                                                                'cao hơn Phú Lợi',
+                                                                       'note': 'Tỷ lệ tính trên số tin trong '
+                                                                               'mẫu 14 ngày, dùng để ưu tiên '
+                                                                               'kiểm tra chứ không thay thẩm '
+                                                                               'định.',
+                                                                       'alt': 'Biểu đồ tỷ lệ dấu hiệu Phú '
+                                                                              'Tân và Phú Lợi',
+                                                                       'rows': [{'label': 'Phú Tân',
+                                                                                 'value_label': '50,0%',
+                                                                                 'width': 100,
+                                                                                 'color': '#2563eb'},
+                                                                                {'label': 'Phú Lợi',
+                                                                                 'value_label': '16,4%',
+                                                                                 'width': 33,
+                                                                                 'color': '#16a34a'}]},
+                                                                      {'eyebrow': 'Giá trung vị/m²',
+                                                                       'title': 'Phú Tân thấp hơn Phú Lợi ở '
+                                                                                'cả hai loại hình trong mẫu '
+                                                                                'này',
+                                                                       'note': 'Chỉ so trong cùng loại hình: '
+                                                                               'đất nền với đất nền, nhà đất '
+                                                                               'với nhà đất.',
+                                                                       'alt': 'Biểu đồ giá trung vị đất nền '
+                                                                              'nhà đất Phú Tân Phú Lợi',
+                                                                       'rows': [{'label': 'Đất nền Phú Tân',
+                                                                                 'value_label': '23,9 tr/m²',
+                                                                                 'width': 64,
+                                                                                 'color': '#2563eb'},
+                                                                                {'label': 'Đất nền Phú Lợi',
+                                                                                 'value_label': '26,4 tr/m²',
+                                                                                 'width': 70,
+                                                                                 'color': '#3b82f6'},
+                                                                                {'label': 'Nhà đất Phú Tân',
+                                                                                 'value_label': '32,8 tr/m²',
+                                                                                 'width': 87,
+                                                                                 'color': '#16a34a'},
+                                                                                {'label': 'Nhà đất Phú Lợi',
+                                                                                 'value_label': '37,6 tr/m²',
+                                                                                 'width': 100,
+                                                                                 'color': '#22c55e'}]}],
+                                                           'sections': [{'id': 'ket-luan-nhanh',
+                                                                         'heading': 'Kết luận nhanh: ưu tiên '
+                                                                                    'khác nhau theo mục tiêu',
+                                                                         'paragraphs': ['Nếu anh/chị muốn '
+                                                                                        'tìm tin có dấu hiệu '
+                                                                                        'cần kiểm tra trước, '
+                                                                                        'Phú Tân nổi bật '
+                                                                                        'hơn. Tỷ lệ dấu hiệu '
+                                                                                        'ở Phú Tân là 50,0%, '
+                                                                                        'trong khi Phú Lợi '
+                                                                                        'là 16,4% trong cùng '
+                                                                                        'mẫu 14 ngày.',
+                                                                                        'Nếu mục tiêu là đọc '
+                                                                                        'nhiều mẫu nhà đất '
+                                                                                        'để ở, Phú Lợi có '
+                                                                                        'nguồn cung nhà đất '
+                                                                                        'lớn hơn: 68 tin so '
+                                                                                        'với 18 tin ở Phú '
+                                                                                        'Tân. Vì vậy thứ tự '
+                                                                                        'lọc nên phụ thuộc '
+                                                                                        'mục tiêu, không chỉ '
+                                                                                        'nhìn một phường '
+                                                                                        'thắng thua.'],
+                                                                         'bullets': ['Ưu tiên dấu hiệu: mở '
+                                                                                     'Phú Tân trước',
+                                                                                     'Ưu tiên nhà đất nhiều '
+                                                                                     'mẫu: mở Phú Lợi trước',
+                                                                                     'Ưu tiên đất nền: so cả '
+                                                                                     'hai, nhưng tách đúng '
+                                                                                     'loại hình']},
+                                                                        {'id': 'gia-dat-nen',
+                                                                         'heading': 'Đất nền: Phú Tân 23,9 '
+                                                                                    'tr/m², Phú Lợi 26,4 '
+                                                                                    'tr/m²',
+                                                                         'paragraphs': ['Trong nhóm đất nền, '
+                                                                                        'Phú Tân có 96 tin, '
+                                                                                        'trong đó 69 tin đủ '
+                                                                                        'giá/m² để tính giá '
+                                                                                        'trung vị. Mức giá '
+                                                                                        'rao trung vị là '
+                                                                                        '23,9 tr/m², tổng '
+                                                                                        'giá trung vị khoảng '
+                                                                                        '2,70 tỷ.',
+                                                                                        'Phú Lợi có 60 tin '
+                                                                                        'đất nền, 51 tin đủ '
+                                                                                        'giá/m². Giá rao '
+                                                                                        'trung vị là 26,4 '
+                                                                                        'tr/m², tổng giá '
+                                                                                        'trung vị khoảng '
+                                                                                        '2,95 tỷ. Khi gặp '
+                                                                                        'tin thấp hơn các '
+                                                                                        'mức này, người mua '
+                                                                                        'vẫn cần kiểm tra vị '
+                                                                                        'trí, thổ cư, '
+                                                                                        'đường/hẻm và quy '
+                                                                                        'hoạch.'],
+                                                                         'bullets': ['Đất nền Phú Tân: 23,9 '
+                                                                                     'tr/m² · 2,70 tỷ',
+                                                                                     'Đất nền Phú Lợi: 26,4 '
+                                                                                     'tr/m² · 2,95 tỷ',
+                                                                                     'So giá/m² sau khi đã '
+                                                                                     'cùng loại hình đất '
+                                                                                     'nền']},
+                                                                        {'id': 'nha-dat',
+                                                                         'heading': 'Nhà đất: Phú Lợi có '
+                                                                                    'nhiều mẫu hơn, Phú Tân '
+                                                                                    'có mẫu nhỏ hơn',
+                                                                         'paragraphs': ['Nhà đất Phú Lợi có '
+                                                                                        '68 tin, trong đó 48 '
+                                                                                        'tin đủ giá/m². Giá '
+                                                                                        'trung vị là 37,6 '
+                                                                                        'tr/m², tổng giá '
+                                                                                        'trung vị khoảng '
+                                                                                        '3,95 tỷ. Đây là '
+                                                                                        'nhóm có nhiều mẫu '
+                                                                                        'hơn để người mua '
+                                                                                        'đọc hiện trạng nhà, '
+                                                                                        'hẻm và công năng sử '
+                                                                                        'dụng.',
+                                                                                        'Nhà đất Phú Tân có '
+                                                                                        '18 tin, 16 tin đủ '
+                                                                                        'giá/m². Giá trung '
+                                                                                        'vị là 32,8 tr/m², '
+                                                                                        'tổng giá trung vị '
+                                                                                        'khoảng 2,85 tỷ. Vì '
+                                                                                        'mẫu nhà đất Phú Tân '
+                                                                                        'nhỏ hơn, nên dùng '
+                                                                                        'mức này như bộ lọc '
+                                                                                        'ban đầu, không kết '
+                                                                                        'luận rộng cho cả '
+                                                                                        'phường.'],
+                                                                         'bullets': ['Nhà đất Phú Tân: 32,8 '
+                                                                                     'tr/m² · 2,85 tỷ · 16 '
+                                                                                     'tin có giá/m²',
+                                                                                     'Nhà đất Phú Lợi: 37,6 '
+                                                                                     'tr/m² · 3,95 tỷ · 48 '
+                                                                                     'tin có giá/m²',
+                                                                                     'Không so nhà đất trực '
+                                                                                     'tiếp với đất nền']},
+                                                                        {'id': 'cach-loc-dashboard',
+                                                                         'heading': 'Cách lọc an toàn trên '
+                                                                                    'Radar BDS',
+                                                                         'paragraphs': ['Bước đầu tiên là '
+                                                                                        'chọn phường và loại '
+                                                                                        'hình. Nếu mở Phú '
+                                                                                        'Tân, nên xem nhóm '
+                                                                                        'tin có dấu hiệu, '
+                                                                                        'sau đó lọc đất nền '
+                                                                                        'hoặc nhà đất theo '
+                                                                                        'ngân sách. Nếu mở '
+                                                                                        'Phú Lợi, nên tách '
+                                                                                        'nhà đất và đất nền '
+                                                                                        'để không bị một giá '
+                                                                                        'chung làm sai lệch '
+                                                                                        'nhận định.',
+                                                                                        'Sau khi chọn được '
+                                                                                        'tin phù hợp, người '
+                                                                                        'mua cần đối chiếu '
+                                                                                        'lại nguồn tin, ảnh, '
+                                                                                        'diện tích, pháp lý, '
+                                                                                        'quy hoạch và hiện '
+                                                                                        'trạng thực tế. '
+                                                                                        'Radar BDS là bộ lọc '
+                                                                                        'dữ liệu ban đầu, '
+                                                                                        'không thay thẩm '
+                                                                                        'định pháp lý, quy '
+                                                                                        'hoạch hay cam kết '
+                                                                                        'lợi nhuận.'],
+                                                                         'bullets': ['Chọn phường trước: Phú '
+                                                                                     'Tân hoặc Phú Lợi',
+                                                                                     'Chọn loại hình: đất '
+                                                                                     'nền hoặc nhà đất',
+                                                                                     'So giá/m² và tổng giá '
+                                                                                     'trong cùng loại hình',
+                                                                                     'Ưu tiên kiểm tra tin '
+                                                                                     'có dấu hiệu, nhưng '
+                                                                                     'không coi đó là khuyến '
+                                                                                     'nghị mua']}],
+                                                           'checklist': ['Đã xác định mục tiêu là đất nền '
+                                                                         'hay nhà đất.',
+                                                                         'Đã so Phú Tân và Phú Lợi trong '
+                                                                         'cùng loại hình BĐS.',
+                                                                         'Đã hiểu giá trong bài là giá rao '
+                                                                         'trung vị, không phải giá giao '
+                                                                         'dịch.',
+                                                                         'Đã nhìn cả giá/m², tổng giá và số '
+                                                                         'mẫu tin có giá.',
+                                                                         'Đã chuẩn bị kiểm tra pháp lý, quy '
+                                                                         'hoạch và thực địa trước khi liên '
+                                                                         'hệ sâu.']},
+                                               'final_cta': {'title': 'Mở Radar để so Phú Tân và Phú Lợi',
+                                                             'body': 'Lọc từng phường, tách đất nền/nhà đất, '
+                                                                     'rồi mở nhóm tin có dấu hiệu để kiểm '
+                                                                     'tra kỹ hơn trước khi liên hệ.',
+                                                             'button': 'Mở dashboard Radar',
+                                                             'button_href': '/?tab=signals&ward=Ph%C3%BA+T%C3%A2n'}}
 }
 
 KNOWLEDGE_HUB = {'path': '/tin-tuc',
