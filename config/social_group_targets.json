@@ -1,0 +1,35 @@
+{
+  "schema": "radar_social_group_targets.v1",
+  "global": {
+    "max_actions_per_day": 1,
+    "stop_on_checkpoint": true,
+    "require_joined": true,
+    "require_visual": true
+  },
+  "targets": [
+    {
+      "id": "vuabatdongsanbinhduong",
+      "name": "Bất Động Sản Bình Dương",
+      "url": "https://www.facebook.com/groups/vuabatdongsanbinhduong/",
+      "enabled": true,
+      "max_posts_per_week": 1,
+      "min_gap_hours": 120,
+      "allow_link": true,
+      "requires_review": false,
+      "rules_checked_at": "2026-07-25",
+      "notes": "Public group, joined. About explicitly allows market and legal news; use data/education posts only."
+    },
+    {
+      "id": "nhadat-binhduong-tphcm",
+      "name": "NHÀ ĐẤT BẤT ĐỘNG SẢN BÌNH DƯƠNG TP.HCM",
+      "url": "https://www.facebook.com/groups/2014993785481173/",
+      "enabled": false,
+      "max_posts_per_week": 1,
+      "min_gap_hours": 168,
+      "allow_link": true,
+      "requires_review": true,
+      "rules_checked_at": "2026-07-25",
+      "notes": "Joined, but About is generic buying/selling. Keep disabled until one manual quality review."
+    }
+  ]
+}
