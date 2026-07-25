@@ -1,0 +1,84 @@
+{
+  "schema": "radar_social_group_comment_targets.v1",
+  "global": {
+    "max_group_actions_per_day": 1,
+    "max_comments_per_day": 1,
+    "max_comments_per_week": 3,
+    "min_relevance_score": 7,
+    "max_comment_age_hours": 72,
+    "same_author_cooldown_days": 30,
+    "same_topic_cooldown_days": 14,
+    "automated_link_policy": "no_link",
+    "link_requires_manual_review": true,
+    "identity": "Radar BDS"
+  },
+  "targets": [
+    {
+      "id": "nhadat-binhduong-tphcm",
+      "name": "NHÀ ĐẤT BẤT ĐỘNG SẢN BÌNH DƯƠNG TP.HCM",
+      "url": "https://www.facebook.com/groups/2014993785481173/",
+      "comment_enabled": true,
+      "comment_allow_link": false,
+      "max_comments_per_week": 1,
+      "rules_checked_at": "2026-07-25",
+      "queries": [
+        "cho em hỏi",
+        "cho mình hỏi",
+        "xin tư vấn",
+        "nhờ mọi người tư vấn",
+        "giá đất bao nhiêu",
+        "có nên mua không"
+      ],
+      "notes": "Joined, comments are open. Discovery only until an explicit first-person buyer question passes the strict relevance gate. No automated links.",
+      "group_id": "2014993785481173"
+    },
+    {
+      "id": "vuabatdongsanbinhduong",
+      "name": "Bất Động Sản Bình Dương",
+      "url": "https://www.facebook.com/groups/vuabatdongsanbinhduong/",
+      "comment_enabled": false,
+      "comment_allow_link": false,
+      "max_comments_per_week": 0,
+      "rules_checked_at": "2026-07-25",
+      "queries": [],
+      "notes": "Disabled after the 2026-07-25 pilot was automatically declined: criteria met for declining = Link in post. Do not post or seed comments here until a fresh manual rules review.",
+      "group_id": "vuabatdongsanbinhduong"
+    },
+    {
+      "id": "bds-binhduong-179583765855345",
+      "name": "Bất Động Sản Bình Dương",
+      "url": "https://www.facebook.com/groups/179583765855345/",
+      "comment_enabled": false,
+      "comment_allow_link": false,
+      "max_comments_per_week": 0,
+      "rules_checked_at": "2026-07-25",
+      "queries": [],
+      "notes": "Disabled: live search results explicitly show commenting turned off.",
+      "group_id": "179583765855345"
+    },
+    {
+      "id": "hoi-mua-ban-nha-dat-binh-duong",
+      "name": "HỘI MUA BÁN NHÀ ĐẤT BÌNH DƯƠNG",
+      "url": "https://www.facebook.com/groups/1381459935312895/",
+      "comment_enabled": false,
+      "comment_allow_link": false,
+      "max_comments_per_week": 0,
+      "rules_checked_at": "2026-07-25",
+      "queries": [],
+      "notes": "Joined and scanned; search results were sales listings, not genuine buyer questions. Keep disabled pending discussion-quality evidence.",
+      "group_id": "1381459935312895"
+    },
+    {
+      "id": "taichinhbinhduong",
+      "name": "BẤT ĐỘNG SẢN BÌNH DƯƠNG",
+      "url": "https://www.facebook.com/groups/taichinhbinhduong/",
+      "comment_enabled": false,
+      "comment_allow_link": false,
+      "max_comments_per_week": 0,
+      "rules_checked_at": "2026-07-25",
+      "queries": [],
+      "notes": "Joined and scanned; no recent first-person buyer question found. Keep disabled pending discussion-quality evidence.",
+      "group_id": "taichinhbinhduong"
+    }
+  ]
+}

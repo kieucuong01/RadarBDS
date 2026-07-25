@@ -11,13 +11,13 @@
       "id": "vuabatdongsanbinhduong",
       "name": "Bất Động Sản Bình Dương",
       "url": "https://www.facebook.com/groups/vuabatdongsanbinhduong/",
-      "enabled": true,
-      "max_posts_per_week": 1,
-      "min_gap_hours": 120,
-      "allow_link": true,
-      "requires_review": false,
+      "enabled": false,
+      "max_posts_per_week": 0,
+      "min_gap_hours": 168,
+      "allow_link": false,
+      "requires_review": true,
       "rules_checked_at": "2026-07-25",
-      "notes": "Public group, joined. About explicitly allows market and legal news; use data/education posts only."
+      "notes": "Disabled after the 2026-07-25 pilot was automatically declined because the post contained a link. Do not retry until a fresh manual rules review."
     },
     {
       "id": "nhadat-binhduong-tphcm",
