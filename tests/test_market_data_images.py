@@ -145,7 +145,7 @@ class MarketDataImageOrderingTest(unittest.TestCase):
 
         with mock.patch.object(market_data, "_read_conn", fake_read_conn), \
              mock.patch.object(market_data, "resolve_image_url", side_effect=lambda local, remote, prefer_thumb=False: local or remote):
-            detail = market_data.load_listing_detail(str(self.db_path), 1, tier="admin", delay_hours=0)
+            detail = market_data.load_listing_detail(str(self.db_path), 1, tier="admin")
 
         self.assertEqual(detail["images"], ["data/images/land.jpg", "data/images/sohong.jpg"])
 

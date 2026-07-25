@@ -123,11 +123,6 @@ def listing_date_range_filter(date_range: str | None, prefix: str = ""):
     ], [interval]
 
 
-def fresh_lock_hours_for(tier: str) -> int:
-    """Fresh listings are visible to every tier; kept for older callers."""
-    return 0
-
-
 def _redact_embedded_phones(text):
     if not isinstance(text, str) or not text:
         return text
@@ -186,15 +181,6 @@ def redact_for_tier(record, tier: str):
 
     return out
 
-
-def apply_guest_truncation(records, tier: str, limit: int = 12):
-    """Deprecated no-op: Guest can browse the full deal feed."""
-    return records
-
-
-def _fresh_lock_sql(alias: str = "l", delay_hours: int = 24) -> str:
-    """Compatibility SQL fragment; fresh lock is disabled."""
-    return "0 AS is_fresh_locked"
 
 CITY_MAP = {
     "THỦ DẦU MỘT": ["Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ", "Phú Mỹ", "Phú Cường", "Phú Hòa", "Phú Lợi", "Hiệp Thành", "Chánh Nghĩa", "Phú Tân", "Phú Thọ", "Hòa Phú"],
@@ -1086,7 +1072,7 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
     return redact_for_tier(record, tier)
 
 
-def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', delay_hours=None, area_ranges=None, price_ranges=None, keyword="", include_total=True, date_range=None):
+def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', area_ranges=None, price_ranges=None, keyword="", include_total=True, date_range=None):
     # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
     # Guest still sees the full deal feed; original URLs/phones stay redacted.
     if tier == "guest":
@@ -1123,8 +1109,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     elif sort == "score_desc":
         score_expr = _max_sql("COALESCE(v.signal_score,0)", "COALESCE(sv.signal_score,0)")
         order_sql = f"{score_expr} DESC, ({display_mos_expr}) DESC, l.id DESC"
-    lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
-    fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
+    fresh_flag = "0 AS is_fresh_locked"
     total_select = "COUNT(*) OVER() AS total_count," if include_total else ""
 
     rows = conn.execute(f"""
@@ -1200,8 +1185,6 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         )
         for r in rows
     ]
-    signals = apply_guest_truncation(signals, tier, limit=12)
-
     payload = {
         "signals": signals,
         "page": page,
@@ -1772,10 +1755,9 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
         }
     }
 
-def load_listing_detail(db_path, listing_id, tier: str = "guest", delay_hours=None):
+def load_listing_detail(db_path, listing_id, tier: str = "guest"):
     conn = _open_read_conn(db_path)
-    lock_hours = delay_hours if delay_hours is not None else fresh_lock_hours_for(tier)
-    fresh_flag = _fresh_lock_sql("l", lock_hours) if lock_hours > 0 else "0 AS is_fresh_locked"
+    fresh_flag = "0 AS is_fresh_locked"
     actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
     display_fair_expr = _display_fair_sql("v", "sv")
     display_mos_expr = _display_mos_sql("v", "sv", actual_expr)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, abort
+from flask import Blueprint
 
 bp = Blueprint("public", __name__)
 
