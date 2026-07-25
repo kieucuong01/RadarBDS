@@ -1688,7 +1688,20 @@ def _report_hub_city(scope_label: str, path: str = "") -> tuple[str, str]:
 
 
 def _report_hub_thumbnail(page: dict) -> str:
+    """Return a report-specific hub thumbnail instead of a random listing photo."""
+    path = str(page.get("path") or "")
+    slug = path.rstrip("/").split("/")[-1]
+    if slug:
+        static_rel = f"/static/images/seo/reports/{slug}.webp"
+        static_path = Path(__file__).parent / static_rel.lstrip("/")
+        if static_path.exists():
+            return static_rel
+
     report = page.get("report") or {}
+    explicit = str(report.get("hub_thumbnail") or page.get("hub_thumbnail") or "").strip()
+    if explicit:
+        return explicit
+
     for item in report.get("featured_listings") or []:
         image = str(item.get("image") or "").strip()
         if image:
