@@ -2184,10 +2184,14 @@ def seo_news_hub_page():
 def seo_knowledge_legacy_redirect(article_slug: str | None = None):
     target = "/tin-tuc"
     if article_slug:
-        if article_slug in SEO_ARTICLES and str(SEO_ARTICLES[article_slug].get("path") or "").startswith("/tin-tuc/"):
-            target = str(SEO_ARTICLES[article_slug]["path"])
+        article = SEO_ARTICLES.get(article_slug)
+        if not article:
+            abort(404)
+        article_path = str(article.get("path") or "")
+        if article_path.startswith(("/tin-tuc/", "/bao-cao/")):
+            target = article_path
         else:
-            target = f"/tin-tuc/{article_slug}"
+            abort(404)
     query = request.query_string.decode("ascii", errors="ignore")
     if query:
         target = f"{target}?{query}"
@@ -2210,7 +2214,18 @@ def seo_report_or_article_page(report_slug: str):
     abort(404)
 
 
+_LEGACY_NEWS_REDIRECTS = {
+    "gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
+}
+
+
 def seo_news_article_page(slug: str):
+    target = _LEGACY_NEWS_REDIRECTS.get(str(slug or ""))
+    if target:
+        query = request.query_string.decode("ascii", errors="ignore")
+        if query:
+            target = f"{target}?{query}"
+        return redirect(target, code=301)
     if slug in SEO_ARTICLES and str(SEO_ARTICLES[slug].get("path") or "").startswith("/tin-tuc/"):
         return seo_article_page(slug)
     abort(404)

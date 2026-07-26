@@ -282,6 +282,11 @@ class UrlAndEmbedTests(unittest.TestCase):
             seed.subprocess.run = original_run
             seed.ensure_browser = original_ensure
 
+    def test_production_discovery_timeout_keeps_margin_below_cron_deadline(self):
+        config = json.loads((ROOT / 'config/social_group_comment_targets.json').read_text(encoding='utf-8'))
+
+        self.assertLessEqual(config['global']['browser_timeout_seconds'], 90)
+
     def test_extracts_permalink_from_embed_code(self):
         code = '<iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1699041781220369%2F&show_text=false"></iframe>'
         self.assertEqual(seed.extract_facebook_post_url(code), 'https://www.facebook.com/reel/1699041781220369/')

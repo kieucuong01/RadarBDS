@@ -24,7 +24,7 @@
     "restore_identity": "Radar BDS",
     "broker_exclusion_source": "data/facebook_profiles.json",
     "max_queries_per_target": 1,
-    "browser_timeout_seconds": 150
+    "browser_timeout_seconds": 90
   },
   "deal_coverage": {
     "THỦ DẦU MỘT": [

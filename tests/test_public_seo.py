@@ -230,6 +230,24 @@ def test_binh_duong_market_report_page_is_indexed_and_citable():
     assert 'class="hero-map-stage"' not in html
     assert "Hơn 1.000 nhà đầu tư tin dùng Radar BDS" not in html
     assert "Dữ liệu tổng hợp từ tin rao công khai" in html
+    assert 'class="seo-lead-capture"' in html
+    assert 'data-source-context="seo_report_lead"' in html
+    assert 'class="seo-lead-capture-form"' in html
+    assert "'/api/leads'" in html
+
+
+def test_legacy_phu_my_news_url_redirects_to_current_article_and_preserves_query():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get(
+        "/tin-tuc/gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026?utm_source=facebook"
+    )
+
+    assert response.status_code == 301
+    assert response.headers["Location"] == (
+        "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu?utm_source=facebook"
+    )
+
 
 def test_binh_duong_location_landing_pages_render_and_are_indexed():
     import app as radar_app

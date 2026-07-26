@@ -167,6 +167,9 @@
         </div>
       </section>
 
+      {% set lead_cta_context = "seo_report_lead" %}
+      {% include "partials/seo_lead_capture.html" %}
+
       <section class="report-insights" aria-labelledby="report-insights">
         <div class="section-heading"><p class="seo-eyebrow">Phân tích</p><h2 id="report-insights">Nhận định từ dữ liệu Radar</h2></div>
         {% if page.charts %}
@@ -346,5 +349,6 @@
   </script>
   {% set view_event = "report_viewed" %}
   {% include "partials/seo_tracking.html" %}
+  {% include "partials/seo_lead_capture_script.html" %}
 </body>
 </html>
