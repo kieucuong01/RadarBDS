@@ -1,8 +1,8 @@
 {
   "schema": "radar_social_public_post_comment.v1",
   "global": {
-    "max_comments_per_day": 1,
-    "max_comments_per_week": 3,
+    "max_comments_per_day": 3,
+    "max_comments_per_week": 21,
     "min_relevance_score": 6,
     "max_comment_age_hours": 72,
     "min_reactions": 10,
@@ -67,7 +67,7 @@
     "Comment có đúng một link HTTPS radarbds.vn, landing khớp city+ward và UTM public_post_seeding.",
     "Ward phải có ít nhất một tín hiệu hot từ /api/counts ngay trước khi comment; lỗi API thì fail closed.",
     "Tín hiệu deal chỉ để lọc ban đầu; comment luôn nhắc kiểm tra ngày đăng, vị trí, pháp lý và giá thực tế.",
-    "Daily comment seeding scans enabled target_groups first; keep global cap at 1 comment/day and only count rendered comments without Posting/Declined as success."
+    "Daily comment seeding scans enabled target_groups and target_pages first; cap is 3 comments/day and 21/week, with same-post/author/topic cooldown so comments land on different posts/authors/topics when possible."
   ],
   "target_groups": [
     {

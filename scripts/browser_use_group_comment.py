@@ -305,14 +305,19 @@ def canonical_post_url(value: str) -> str:
     return urllib.parse.urlunparse(('https', 'www.facebook.com', path.rstrip('/') + '/', '', '', ''))
 
 
-def daily_action_taken(now: dt.datetime, post_state: dict, comment_state: dict) -> bool:
+def daily_comment_count(now: dt.datetime, comment_state: dict) -> int:
     tz = now.tzinfo or dt.datetime.now().astimezone().tzinfo
-    for state in (post_state or {}, comment_state or {}):
-        for action in state.get('actions', []):
-            at = parse_time(action.get('at', ''), tz)
-            if at and at.astimezone(tz).date() == now.date() and action.get('status') not in ('failed', 'skipped'):
-                return True
-    return False
+    count = 0
+    for action in (comment_state or {}).get('actions', []):
+        at = parse_time(action.get('at', ''), tz)
+        if at and at.astimezone(tz).date() == now.date() and action.get('status') not in ('failed', 'skipped'):
+            count += 1
+    return count
+
+
+def daily_comment_cap_full(config: dict, comment_state: dict, now: dt.datetime) -> bool:
+    cap = int((config.get('global') or {}).get('max_comments_per_day', 1))
+    return daily_comment_count(now, comment_state) >= cap
 
 
 def global_weekly_full(config: dict, state: dict, now: dt.datetime) -> bool:
@@ -359,8 +364,8 @@ def source_cooldown_reason(source: dict, state: dict, now: dt.datetime, cfg: dic
 def validate_executor_state_caps(queue: dict, config: dict, post_state: dict, comment_state: dict, now: dt.datetime | None = None) -> None:
     now = now or dt.datetime.now().astimezone()
     cfg = config.get('global') or {}
-    if daily_action_taken(now, post_state, comment_state):
-        raise SystemExit('Refusing: shared daily social action cap is already used')
+    if daily_comment_cap_full(config, comment_state, now):
+        raise SystemExit('Refusing: daily public-post comment cap is already full')
     if global_weekly_full(config, comment_state, now):
         raise SystemExit('Refusing: global weekly public-post comment cap is already full')
     reason = source_cooldown_reason(queue.get('source') or {}, comment_state, now, cfg)

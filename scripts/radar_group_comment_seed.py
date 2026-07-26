@@ -352,14 +352,19 @@ def score_candidate(item: dict, now: dt.datetime | None = None, global_config: d
     }
 
 
-def daily_action_taken(now: dt.datetime, post_state: dict, comment_state: dict) -> bool:
+def daily_comment_count(now: dt.datetime, comment_state: dict) -> int:
     tz = now.tzinfo or dt.datetime.now().astimezone().tzinfo
-    for state in (post_state, comment_state):
-        for action in state.get('actions', []):
-            at = parse_time(action.get('at', ''), tz)
-            if at and at.astimezone(tz).date() == now.date() and action.get('status') not in ('failed', 'skipped'):
-                return True
-    return False
+    count = 0
+    for action in (comment_state or {}).get('actions', []):
+        at = parse_time(action.get('at', ''), tz)
+        if at and at.astimezone(tz).date() == now.date() and action.get('status') not in ('failed', 'skipped'):
+            count += 1
+    return count
+
+
+def daily_comment_cap_full(config: dict, comment_state: dict, now: dt.datetime) -> bool:
+    cap = int((config.get('global') or {}).get('max_comments_per_day', 1))
+    return daily_comment_count(now, comment_state) >= cap
 
 
 def candidate_already_used(candidate: dict, state: dict, now: dt.datetime) -> bool:
@@ -777,9 +782,9 @@ def main() -> int:
     exclusions = load_broker_exclusions(broker_data)
     post_state = load_json(POST_STATE, {'actions': []}, missing_ok=True)
     state = load_json(STATE, {'schema': 'radar_public_post_comment_state.v1', 'actions': []}, missing_ok=True)
-    if daily_action_taken(now, post_state, state):
+    if daily_comment_cap_full(config, state, now):
         if args.dry_run:
-            print(json.dumps({'ok': True, 'skip': 'shared_daily_social_action_cap'}, ensure_ascii=False))
+            print(json.dumps({'ok': True, 'skip': 'daily_comment_cap', 'count': daily_comment_count(now, state)}, ensure_ascii=False))
         return 0
     if global_weekly_full(config, state, now):
         if args.dry_run:

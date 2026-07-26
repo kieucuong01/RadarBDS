@@ -28,7 +28,8 @@ GLOBAL = {
     'identity': 'Tiny Sudo',
     'editor_identity': 'Tiny',
     'restore_identity': 'Radar BDS',
-    'max_comments_per_week': 3,
+    'max_comments_per_day': 3,
+    'max_comments_per_week': 21,
     'max_comment_age_hours': 72,
     'min_reactions': 10,
     'min_comments': 3,
@@ -296,9 +297,15 @@ class UrlAndEmbedTests(unittest.TestCase):
 
 
 class FrequencyAndDedupeTests(unittest.TestCase):
-    def test_daily_cap_counts_existing_page_or_group_action(self):
+    def test_daily_comment_cap_allows_group_post_but_blocks_after_three_comments(self):
         post_state = {'actions': [{'at': '2026-07-26T10:00:00+07:00', 'status': 'published'}]}
-        self.assertTrue(seed.daily_action_taken(NOW, post_state, {'actions': []}))
+        self.assertFalse(seed.daily_comment_cap_full(CONFIG, {'actions': []}, NOW))
+        state = {'actions': [
+            {'at': '2026-07-26T08:00:00+07:00', 'status': 'published'},
+            {'at': '2026-07-26T12:00:00+07:00', 'status': 'published'},
+            {'at': '2026-07-26T16:00:00+07:00', 'status': 'published'},
+        ]}
+        self.assertTrue(seed.daily_comment_cap_full(CONFIG, state, NOW))
 
     def test_same_post_is_not_used_twice(self):
         candidate = item()
@@ -310,13 +317,15 @@ class FrequencyAndDedupeTests(unittest.TestCase):
         state = {'actions': [{'at': '2026-07-20T20:00:00+07:00', 'post_url': 'other', 'author': candidate['author'], 'topic': 'other', 'status': 'published'}]}
         self.assertTrue(seed.candidate_already_used(candidate, state, NOW))
 
-    def test_global_weekly_cap_blocks_after_three_comments(self):
+    def test_global_weekly_cap_blocks_at_configured_cap(self):
+        cfg = json.loads(json.dumps(CONFIG))
+        cfg['global']['max_comments_per_week'] = 3
         state = {'actions': [
             {'at': '2026-07-21T20:00:00+07:00', 'status': 'published'},
             {'at': '2026-07-22T20:00:00+07:00', 'status': 'published'},
             {'at': '2026-07-23T20:00:00+07:00', 'status': 'published'},
         ]}
-        self.assertTrue(seed.global_weekly_full(CONFIG, state, NOW))
+        self.assertTrue(seed.global_weekly_full(cfg, state, NOW))
 
     def test_executor_state_caps_allow_first_run_empty_state(self):
         commenter.validate_executor_state_caps(valid_queue(), CONFIG, {'actions': []}, {'actions': []}, NOW)
@@ -327,14 +336,36 @@ class FrequencyAndDedupeTests(unittest.TestCase):
         cases = {
             'daily': (
                 {'actions': [{'at': '2026-07-26T08:00:00+07:00', 'status': 'published'}]},
-                {'actions': []},
+                {'actions': [
+                    {'at': '2026-07-26T08:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-26T12:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-26T16:00:00+07:00', 'status': 'published'},
+                ]},
             ),
             'weekly': (
                 {'actions': []},
                 {'actions': [
+                    {'at': '2026-07-20T08:00:00+07:00', 'status': 'published'},
                     {'at': '2026-07-21T08:00:00+07:00', 'status': 'published'},
                     {'at': '2026-07-22T08:00:00+07:00', 'status': 'published'},
                     {'at': '2026-07-23T08:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-24T08:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-25T08:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-26T08:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-20T09:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-21T09:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-22T09:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-23T09:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-24T09:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-25T09:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-26T09:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-20T10:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-21T10:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-22T10:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-23T10:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-24T10:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-25T10:00:00+07:00', 'status': 'published'},
+                    {'at': '2026-07-26T10:00:00+07:00', 'status': 'published'},
                 ]},
             ),
             'same_post': (

@@ -4,7 +4,8 @@
     "max_actions_per_day": 1,
     "stop_on_checkpoint": true,
     "require_joined": true,
-    "require_visual": true
+    "require_visual": true,
+    "max_actions_per_week": 2
   },
   "targets": [
     {
@@ -36,12 +37,12 @@
       "name": "REVIEW BẤT ĐỘNG SẢN",
       "url": "https://www.facebook.com/groups/reviewbatdongsanaz/",
       "enabled": true,
-      "max_posts_per_week": 1,
-      "min_gap_hours": 168,
+      "max_posts_per_week": 2,
+      "min_gap_hours": 72,
       "allow_link": true,
       "requires_review": false,
       "rules_checked_at": "2026-07-26",
-      "notes": "Pilot post published from Radar BDS on 2026-07-26 after onboarding/join; group may initially show pending but permalink became visible. Keep max 1 post/week, one contextual Radar link, data/education tone, no listing/sales/phone spam."
+      "notes": "Pilot post published from Radar BDS on 2026-07-26 after onboarding/join; group may initially show pending but permalink became visible. Post only Radar-value/data-led content, max 2 posts/week with at least 72h gap, one contextual Radar link, no listing/sales/phone spam."
     }
   ]
 }
