@@ -571,7 +571,16 @@ def discover_posts(config: dict, now: dt.datetime | None = None) -> list[dict]:
             'url': normalize_text(group.get('url') or '').rstrip('/') + '/',
             'queries': group_queries,
         })
-    if not queries and not group_scans:
+    target_pages = [p for p in config.get('target_pages', []) if p.get('enabled') and p.get('url')]
+    page_scans = []
+    for page in target_pages:
+        page_queries = [normalize_text(x) for x in page.get('queries', []) if normalize_text(x)] or queries
+        page_scans.append({
+            'name': normalize_text(page.get('name') or ''),
+            'url': normalize_text(page.get('url') or '').rstrip('/') + '/',
+            'queries': page_queries,
+        })
+    if not queries and not group_scans and not page_scans:
         return []
     cfg = config.get('global') or {}
     identity = str(cfg.get('identity') or '')
@@ -583,6 +592,7 @@ def discover_posts(config: dict, now: dt.datetime | None = None) -> list[dict]:
 import json,time,urllib.parse
 queries={queries!r}
 group_scans={group_scans!r}
+page_scans={page_scans!r}
 identity={identity!r}
 restore_identity={restore_identity!r}
 max_results={max_results!r}
@@ -660,14 +670,23 @@ try:
     switch_identity(identity,restore_identity)
     scan_urls=[]
     for query in queries:
-        scan_urls.append({{'query': query, 'url': 'https://www.facebook.com/search/posts/?q='+urllib.parse.quote(query), 'forced_group': ''}})
+        scan_urls.append({{'query': query, 'url': 'https://www.facebook.com/search/posts/?q='+urllib.parse.quote(query), 'forced_group': '', 'kind': 'global'}})
     for group in group_scans:
         for query in group.get('queries') or []:
-            scan_urls.append({{'query': query, 'url': group['url'].rstrip('/') + '/search/?q=' + urllib.parse.quote(query), 'forced_group': group.get('name') or group['url']}})
+            scan_urls.append({{'query': query, 'url': group['url'].rstrip('/') + '/search/?q=' + urllib.parse.quote(query), 'forced_group': group.get('name') or group['url'], 'kind': 'group'}})
+    for page in page_scans:
+        for query in page.get('queries') or []:
+            scan_urls.append({{'query': query, 'url': page['url'], 'forced_group': '', 'forced_page': page.get('name') or page['url'], 'kind': 'page'}})
     seen=set()
     for scan in scan_urls:
         query=scan['query']
-        goto_url(scan['url']); wait_for_load(); time.sleep(5); stop_guard('search')
+        if scan.get('kind') == 'page':
+            goto_url(scan['url']); wait_for_load(); time.sleep(5); stop_guard('page')
+            clicked=js("(() => {{const btn=[...document.querySelectorAll('[role=button],button,a[role=button]')].find(e=>((e.getAttribute('aria-label')||'').startsWith('Search ') || /Search this Page|Tìm kiếm/.test(e.innerText||'')) && !!(e.offsetWidth||e.offsetHeight||e.getClientRects().length)); if(!btn)return false; btn.click(); return true;}})()")
+            if not clicked: continue
+            time.sleep(1); type_text(query); press_key('ENTER'); time.sleep(5); stop_guard('page_search')
+        else:
+            goto_url(scan['url']); wait_for_load(); time.sleep(5); stop_guard('search')
         for _ in range(3): js("window.scrollBy(0,900)"); time.sleep(2)
         count=js("[...document.querySelectorAll('[role=article]')].filter(e=>!!(e.offsetWidth||e.offsetHeight||e.getClientRects().length)).length") or 0
         for index in range(min(int(count),max_results)):
@@ -681,7 +700,7 @@ try:
             key=direct or code
             if key in seen: continue
             seen.add(key)
-            snap.update({{'query':query,'surface':'group_post' if (scan.get('forced_group') or snap.get('group_surface')) else 'public_post','embed_code':code,'target_group':scan.get('forced_group') or ''}})
+            snap.update({{'query':query,'surface':'group_post' if (scan.get('forced_group') or snap.get('group_surface')) else 'public_post','embed_code':code,'target_group':scan.get('forced_group') or '','target_page':scan.get('forced_page') or ''}})
             snap['engagement']={{'reactions':parse_count(snap.pop('reactions','')),'comments':parse_count(snap.pop('comments','')),'shares':parse_count(snap.pop('shares',''))}}
             results.append(snap)
 finally:

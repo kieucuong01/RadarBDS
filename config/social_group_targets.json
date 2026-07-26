@@ -30,6 +30,18 @@
       "requires_review": true,
       "rules_checked_at": "2026-07-25",
       "notes": "Joined, but About is generic buying/selling. Keep disabled until one manual quality review."
+    },
+    {
+      "id": "reviewbatdongsanaz",
+      "name": "REVIEW BẤT ĐỘNG SẢN",
+      "url": "https://www.facebook.com/groups/reviewbatdongsanaz/",
+      "enabled": true,
+      "max_posts_per_week": 1,
+      "min_gap_hours": 168,
+      "allow_link": true,
+      "requires_review": true,
+      "rules_checked_at": "2026-07-26",
+      "notes": "Added from anh Cường share link. Public BĐS review group; Radar BDS join attempted but visible Joined not confirmed, so scheduler keeps requires_review=true. Can be used for manual prepare/publish after membership and composer are verified."
     }
   ]
 }

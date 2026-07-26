@@ -102,6 +102,43 @@
         "giá đất Thủ Dầu Một"
       ],
       "notes": "Accepted a rendered Radar link comment from Tiny Sudo on 2026-07-26; still verify no Posting/Declined on each publish."
+    },
+    {
+      "id": "reviewbatdongsanaz",
+      "name": "REVIEW BẤT ĐỘNG SẢN",
+      "url": "https://www.facebook.com/groups/reviewbatdongsanaz/",
+      "enabled": true,
+      "joined_identity": "Radar BDS join attempted 2026-07-26; visible Joined not confirmed, public composer/comment surfaces visible",
+      "allow_link": true,
+      "queries": [
+        "QL13 Bình Dương",
+        "dự án QL13",
+        "bất động sản Bình Dương",
+        "đất đai Bình Dương",
+        "nhà đất Bình Dương",
+        "Thủ Dầu Một",
+        "Phú Mỹ Thủ Dầu Một",
+        "Phú Tân Thủ Dầu Một"
+      ],
+      "notes": "Added from anh Cường share link 2026-07-26. Public BĐS review group; use for contextual comment seeding only when post matches enabled Radar ward/TDM gates and verify no Posting/Declined."
+    }
+  ],
+  "target_pages": [
+    {
+      "id": "24hbinhduong.vn",
+      "name": "Bình Dương 24H",
+      "url": "https://www.facebook.com/24hbinhduong.vn/",
+      "enabled": true,
+      "allow_link": true,
+      "queries": [
+        "bất động sản Bình Dương",
+        "đất đai Bình Dương",
+        "nhà đất Bình Dương",
+        "Thủ Dầu Một",
+        "giá đất Bình Dương",
+        "QL13 Bình Dương"
+      ],
+      "notes": "Added from anh Cường share link 2026-07-26. This is a public Page, not a group; use for comment seeding on relevant public Page posts only, not group auto-post."
     }
   ]
 }
