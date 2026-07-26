@@ -30,6 +30,38 @@
   <meta name="twitter:title" content="{{ site_meta.title }}">
   <meta name="twitter:description" content="{{ site_meta.description }}">
   <meta name="twitter:image" content="{{ site_meta.og_image }}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": {{ (site_meta.canonical_url ~ '#organization') | tojson }},
+        "name": {{ site_meta.name | tojson }},
+        "url": {{ site_meta.canonical_url | tojson }},
+        "logo": {{ site_meta.og_image | tojson }}
+      },
+      {
+        "@type": "WebSite",
+        "@id": {{ (site_meta.canonical_url ~ '#website') | tojson }},
+        "name": {{ site_meta.name | tojson }},
+        "url": {{ site_meta.canonical_url | tojson }},
+        "description": {{ site_meta.description | tojson }},
+        "publisher": {"@id": {{ (site_meta.canonical_url ~ '#organization') | tojson }}}
+      },
+      {
+        "@type": "WebApplication",
+        "@id": {{ (site_meta.canonical_url ~ '#app') | tojson }},
+        "name": {{ site_meta.name | tojson }},
+        "url": {{ site_meta.canonical_url | tojson }},
+        "applicationCategory": "RealEstateApplication",
+        "operatingSystem": "Web",
+        "description": {{ site_meta.description | tojson }},
+        "publisher": {"@id": {{ (site_meta.canonical_url ~ '#organization') | tojson }}}
+      }
+    ]
+  }
+  </script>
   {% include "partials/google_site_tags.html" %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
