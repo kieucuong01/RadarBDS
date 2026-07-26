@@ -6586,7 +6586,446 @@ SEO_ARTICLES = {
                                                                      'rồi mở nhóm tin có dấu hiệu để kiểm '
                                                                      'tra kỹ hơn trước khi liên hệ.',
                                                              'button': 'Mở dashboard Radar',
-                                                             'button_href': '/?tab=signals&ward=Ph%C3%BA+T%C3%A2n'}}
+                                                             'button_href': '/?tab=signals&ward=Ph%C3%BA+T%C3%A2n'}},
+    'phu-my-hay-dinh-hoa-ngan-sach-2-4-ty': {'variant': 'knowledge',
+                                          'path': '/tin-tuc/phu-my-hay-dinh-hoa-ngan-sach-2-4-ty',
+                                          'title': 'Phú Mỹ hay Định Hòa hợp ngân sách 2-4 tỷ hơn? | Radar BDS',
+                                          'description': 'Ngân sách 2-4 tỷ nên xem Phú Mỹ hay Định Hòa? Dữ liệu '
+                                                         'Facebook 14 ngày: Phú Mỹ nhiều nhà đất 2-4 tỷ hơn; Định Hòa '
+                                                         'rẻ hơn ở đất nền.',
+                                          'keywords': 'Phú Mỹ hay Định Hòa, ngân sách 2-4 tỷ mua nhà đất Thủ Dầu Một, '
+                                                      'giá đất Phú Mỹ Định Hòa, Radar BDS',
+                                          'breadcrumb_label': 'Phú Mỹ hay Định Hòa ngân sách 2-4 tỷ',
+                                          'hero_badge': 'So sánh ngân sách',
+                                          'hero_title': 'Phú Mỹ hay Định Hòa hợp ngân sách 2-4 tỷ hơn?',
+                                          'hero_text': 'Với ngân sách 2-4 tỷ, Phú Mỹ có nhiều mẫu tin để lọc hơn, nhất '
+                                                       'là nhà đất; Định Hòa có giá trung vị đất nền thấp hơn và nhiều '
+                                                       'dấu hiệu cần kiểm tra hơn. Không nên kết luận bằng một giá '
+                                                       'chung: hãy tách đất nền và nhà đất trước khi so.',
+                                          'scope_label': 'Thủ Dầu Một · Phú Mỹ / Định Hòa',
+                                          'hero_checks': ['Dữ liệu Facebook 14 ngày từ 10/07 đến 23/07/2026',
+                                                          'Phú Mỹ có 113 tin đất nền/nhà đất trong tầm 2-4 tỷ',
+                                                          'Định Hòa có 29 tin đất nền/nhà đất trong tầm 2-4 tỷ',
+                                                          'Định Hòa có 22 dấu hiệu đáng kiểm tra, cao hơn Phú Mỹ 11 '
+                                                          'dấu hiệu'],
+                                          'primary_cta': 'Mở dashboard lọc tin 2-4 tỷ',
+                                          'primary_href': '/?tab=signals',
+                                          'secondary_cta': 'Đọc giá Định Hòa',
+                                          'secondary_href': '/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu',
+                                          'map_label': 'Tin tức / So Phú Mỹ và Định Hòa',
+                                          'hero_metric': {'label': 'Tin trong tầm 2-4 tỷ',
+                                                          'value': '113 vs 29',
+                                                          'delta': 'Phú Mỹ nhiều mẫu hơn',
+                                                          'note': 'Chỉ tính đất nền và nhà đất trong cửa sổ Facebook '
+                                                                  '14 ngày'},
+                                          'property_card': {'status': 'Kết luận nhanh',
+                                                            'title': 'Phú Mỹ nhiều lựa chọn hơn; Định Hòa cần soi tín '
+                                                                     'hiệu kỹ hơn',
+                                                            'price': 'Đất nền: Phú Mỹ 20,0 tr/m² · Định Hòa 18,8 tr/m²',
+                                                            'metric_a': 'Phú Mỹ 2-4 tỷ',
+                                                            'metric_a_value': '113 tin',
+                                                            'metric_b': 'Định Hòa dấu hiệu',
+                                                            'metric_b_value': '22 tin'},
+                                          'value_cards': [{'title': 'Phú Mỹ phù hợp nếu cần nhiều mẫu để lọc',
+                                                           'body': 'Trong nhóm đất nền và nhà đất, Phú Mỹ có 113 tin '
+                                                                   'rao nằm trong tầm 2-4 tỷ. Riêng nhà đất Phú Mỹ có '
+                                                                   '79 tin trong tầm này, cao hơn nhiều so với Định '
+                                                                   'Hòa.'},
+                                                          {'title': 'Định Hòa có đất nền thấp hơn theo giá trung vị',
+                                                           'body': 'Đất nền Định Hòa có giá trung vị 18,8 tr/m², thấp '
+                                                                   'hơn Phú Mỹ 20,0 tr/m² trong cùng cửa sổ dữ liệu. '
+                                                                   'Đây là giá rao tham khảo, không phải giá giao dịch '
+                                                                   'chắc chắn.'},
+                                                          {'title': 'Dấu hiệu nhiều không đồng nghĩa nên mua ngay',
+                                                           'body': 'Định Hòa có 22 dấu hiệu đáng kiểm tra, trong đó '
+                                                                   'đất nền chiếm 18 dấu hiệu. Con số này giúp ưu tiên '
+                                                                   'kiểm tra, nhưng vẫn phải xác minh pháp lý, quy '
+                                                                   'hoạch và thực địa.'}],
+                                          'dashboard_preview': {'eyebrow': 'Từ so sánh sang lọc tin',
+                                                                'title': 'Mở Radar để lọc Phú Mỹ và Định Hòa theo ngân '
+                                                                         'sách',
+                                                                'body': 'Sau khi đọc bảng so sánh, người mua nên mở '
+                                                                        'dashboard, chọn phường, loại hình và khoảng '
+                                                                        'tổng giá 2-4 tỷ để xem từng tin cụ thể.',
+                                                                'image': '/static/images/seo/dashboard-preview.png',
+                                                                'alt': 'Dashboard Radar BDS lọc tin nhà đất theo '
+                                                                       'phường và ngân sách',
+                                                                'cta': 'Lọc tin 2-4 tỷ',
+                                                                'metrics': [{'value': '2 phường',
+                                                                             'label': 'Phú Mỹ và Định Hòa'},
+                                                                            {'value': '2-4 tỷ',
+                                                                             'label': 'khoảng ngân sách cần lọc'},
+                                                                            {'value': '2 loại hình',
+                                                                             'label': 'đất nền và nhà đất'}]},
+                                          'market_snapshot': {'eyebrow': 'Dữ liệu Radar BDS · Facebook · 14 ngày',
+                                                              'title': 'So Phú Mỹ và Định Hòa theo ngân sách 2-4 tỷ',
+                                                              'body': 'Bảng dưới đây tách đất nền và nhà đất để tránh '
+                                                                      'lấy một mặt bằng giá chung cho hai loại hình '
+                                                                      'khác nhau.',
+                                                              'columns': ['Phường',
+                                                                          'Tin',
+                                                                          'Dấu hiệu',
+                                                                          'Đất nền',
+                                                                          'Nhà đất'],
+                                                              'rows': [{'area': 'Phú Mỹ',
+                                                                        'price': '184 tin',
+                                                                        'tracked': '11',
+                                                                        'signal': '20,0 tr/m²',
+                                                                        'area_m2': '40,5 tr/m²',
+                                                                        'note': '113 tin 2-4 tỷ'},
+                                                                       {'area': 'Định Hòa',
+                                                                        'price': '141 tin',
+                                                                        'tracked': '22',
+                                                                        'signal': '18,8 tr/m²',
+                                                                        'area_m2': '18,0 tr/m²',
+                                                                        'note': '29 tin 2-4 tỷ'}],
+                                                              'cards': [{'title': 'Phú Mỹ nhiều mẫu hơn',
+                                                                         'value': '113 tin 2-4 tỷ',
+                                                                         'body': 'Tổng đất nền và nhà đất trong tầm '
+                                                                                 'ngân sách.'},
+                                                                        {'title': 'Định Hòa giá đất nền thấp hơn',
+                                                                         'value': '18,8 tr/m²',
+                                                                         'body': 'Giá trung vị đất nền, thấp hơn Phú '
+                                                                                 'Mỹ 20,0 tr/m².'},
+                                                                        {'title': 'Định Hòa nhiều dấu hiệu hơn',
+                                                                         'value': '22 dấu hiệu',
+                                                                         'body': 'Dùng để ưu tiên kiểm tra, không phải '
+                                                                                 'khuyến nghị mua.'}]},
+                                          'local_links_title': 'Đọc tiếp trước khi lọc tin',
+                                          'local_links': [{'label': 'Giá Phú Mỹ đọc riêng theo loại hình',
+                                                           'href': '/tin-tuc/gia-dat-phu-my-hien-bao-nhieu',
+                                                           'description': 'Bài riêng về Phú Mỹ, tách đất nền và nhà '
+                                                                          'đất.'},
+                                                          {'label': 'Giá Định Hòa đọc riêng theo loại hình',
+                                                           'href': '/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu',
+                                                           'description': 'Bài riêng về Định Hòa trong cùng logic giá '
+                                                                          'trung vị.'},
+                                                          {'label': 'So nhóm ngân sách thấp Định Hòa, Hiệp An, Tân An',
+                                                           'href': '/tin-tuc/dinh-hoa-hiep-an-tan-an-khu-nao-hop-ngan-sach-thap',
+                                                           'description': 'Mở rộng lựa chọn nếu ưu tiên ngân sách thấp '
+                                                                          'hơn.'},
+                                                          {'label': 'Vì sao không so nhà đất chung với đất nền',
+                                                           'href': '/tin-tuc/vi-sao-khong-nen-so-nha-dat-chung-voi-dat-nen',
+                                                           'description': 'Quy tắc quan trọng trước khi đọc bất kỳ '
+                                                                          'bảng giá nào.'}],
+                                          'process_title': 'Cách tự quyết định nên xem Phú Mỹ hay Định Hòa trước',
+                                          'process': [{'title': '1. Chốt loại hình trước',
+                                                       'body': 'Nếu mua đất nền, so đất nền Phú Mỹ với đất nền Định '
+                                                               'Hòa. Nếu mua nhà ở, chỉ so nhà đất với nhà đất cùng '
+                                                               'điều kiện hẻm/đường và hiện trạng.'},
+                                                      {'title': '2. Lọc theo tổng ngân sách',
+                                                       'body': 'Khoảng 2-4 tỷ cần đọc cả tổng giá và giá/m². Một tin '
+                                                               'giá/m² thấp vẫn có thể vượt ngân sách nếu diện tích '
+                                                               'lớn.'},
+                                                      {'title': '3. Kiểm tra dấu hiệu nhưng không vội kết luận',
+                                                       'body': 'Tin hot hoặc giảm giá chỉ là tín hiệu để kiểm tra sâu '
+                                                               'hơn. Người mua vẫn cần xem pháp lý, quy hoạch, hình '
+                                                               'ảnh, vị trí và thực địa.'}],
+                                          'faq': [{'q': 'Ngân sách 2-4 tỷ nên xem Phú Mỹ hay Định Hòa trước?',
+                                                   'a': 'Nếu cần nhiều mẫu tin để lọc, nên bắt đầu với Phú Mỹ vì có '
+                                                        '113 tin đất nền/nhà đất trong tầm 2-4 tỷ. Nếu ưu tiên giá '
+                                                        'trung vị đất nền thấp hơn và muốn soi dấu hiệu, nên xem thêm '
+                                                        'Định Hòa.'},
+                                                  {'q': 'Định Hòa có rẻ hơn Phú Mỹ không?',
+                                                   'a': 'Chỉ có thể nói Định Hòa thấp hơn ở đất nền trong cửa sổ dữ '
+                                                        'liệu này: đất nền Định Hòa 18,8 tr/m², Phú Mỹ 20,0 tr/m². '
+                                                        'Không nên nói Định Hòa rẻ hơn toàn bộ vì nhà đất và điều kiện '
+                                                        'từng tin rất khác nhau.'},
+                                                  {'q': 'Vì sao Phú Mỹ nhiều tin 2-4 tỷ hơn?',
+                                                   'a': 'Trong dữ liệu Facebook 14 ngày, Phú Mỹ có 34 tin đất nền và '
+                                                        '79 tin nhà đất trong tầm 2-4 tỷ. Định Hòa có 16 tin đất nền '
+                                                        'và 13 tin nhà đất trong cùng tầm, nên số mẫu để lọc ít hơn.'},
+                                                  {'q': '22 dấu hiệu ở Định Hòa có nghĩa là nên mua không?',
+                                                   'a': 'Không. Dấu hiệu chỉ có nghĩa là tin cần kiểm tra thêm, ví dụ '
+                                                        'được quan tâm hoặc có giảm giá. Đây không phải khuyến nghị '
+                                                        'mua và không thay thế thẩm định pháp lý, quy hoạch hay thực '
+                                                        'địa.'},
+                                                  {'q': 'Radar BDS dùng dữ liệu gì cho bài so sánh này?',
+                                                   'a': 'Bài viết dùng tin Facebook đang theo dõi trên Radar BDS trong '
+                                                        '14 ngày từ 10/07 đến 23/07/2026, đã lọc source=facebook, '
+                                                        'is_active=0, is_blacklisted=0 và review_hidden=0. Giá là giá '
+                                                        'rao trung vị theo loại hình BĐS.'}],
+                                          'article': {'published_at': '2026-07-26',
+                                                      'modified_at': '2026-07-26',
+                                                      'intro': ['Nếu ngân sách 2-4 tỷ và cần nhiều mẫu để lọc, Phú Mỹ '
+                                                                'đáng mở trước. Nếu muốn tìm mặt bằng đất nền thấp hơn '
+                                                                'và chấp nhận kiểm tra kỹ dấu hiệu, Định Hòa đáng đọc '
+                                                                'song song. Hai phường này phải so riêng đất nền và '
+                                                                'nhà đất, không lấy một giá chung.',
+                                                                'Dữ liệu trong bài lấy từ tin Facebook đang theo dõi '
+                                                                'trên Radar BDS trong 14 ngày từ 10/07 đến 23/07/2026. '
+                                                                'Giá là giá rao trung vị: một nửa số tin thấp hơn mức '
+                                                                'này, một nửa cao hơn. Đây không phải giá giao dịch '
+                                                                'chắc chắn.'],
+                                                      'summary_cards': [{'label': 'Phú Mỹ + Định Hòa 14 ngày',
+                                                                         'value': '325 tin',
+                                                                         'note': 'Tin Facebook đang theo dõi sau lọc '
+                                                                                 'chất lượng cơ bản'},
+                                                                        {'label': 'Phú Mỹ trong tầm 2-4 tỷ',
+                                                                         'value': '113 tin',
+                                                                         'note': '34 tin đất nền và 79 tin nhà đất'},
+                                                                        {'label': 'Định Hòa trong tầm 2-4 tỷ',
+                                                                         'value': '29 tin',
+                                                                         'note': '16 tin đất nền và 13 tin nhà đất'},
+                                                                        {'label': 'Dấu hiệu đáng kiểm tra',
+                                                                         'value': '33 tin',
+                                                                         'note': 'Phú Mỹ 11 dấu hiệu, Định Hòa 22 dấu '
+                                                                                 'hiệu'}],
+                                                      'data_tables': [{'eyebrow': 'Dữ liệu Radar BDS · Facebook · '
+                                                                                  '10-23/07/2026',
+                                                                       'title': 'So nhanh Phú Mỹ và Định Hòa cho ngân '
+                                                                                'sách 2-4 tỷ',
+                                                                       'note': 'Chỉ tính đất nền và nhà đất. Giá/m² là '
+                                                                               'giá trung vị theo từng loại hình BĐS.',
+                                                                       'columns': [{'key': 'ward', 'label': 'Phường'},
+                                                                                   {'key': 'tracked',
+                                                                                    'label': 'Tin đang theo dõi'},
+                                                                                   {'key': 'signals',
+                                                                                    'label': 'Dấu hiệu'},
+                                                                                   {'key': 'land_m2',
+                                                                                    'label': 'Đất nền'},
+                                                                                   {'key': 'house_m2',
+                                                                                    'label': 'Nhà đất'},
+                                                                                   {'key': 'budget',
+                                                                                    'label': 'Tin 2-4 tỷ'}],
+                                                                       'rows': [{'ward': 'Phú Mỹ',
+                                                                                 'tracked': '184',
+                                                                                 'signals': '11',
+                                                                                 'land_m2': '20,0 tr/m²',
+                                                                                 'house_m2': '40,5 tr/m²',
+                                                                                 'budget': '113'},
+                                                                                {'ward': 'Định Hòa',
+                                                                                 'tracked': '141',
+                                                                                 'signals': '22',
+                                                                                 'land_m2': '18,8 tr/m²',
+                                                                                 'house_m2': '18,0 tr/m²',
+                                                                                 'budget': '29'}]},
+                                                                      {'eyebrow': 'Tách theo loại hình',
+                                                                       'title': 'Trong tầm 2-4 tỷ, loại hình nào có '
+                                                                                'nhiều mẫu hơn?',
+                                                                       'note': 'Số mẫu giúp biết nơi nào dễ lọc, không '
+                                                                               'tự động nói nơi đó rẻ hoặc đáng mua '
+                                                                               'hơn.',
+                                                                       'columns': [{'key': 'type',
+                                                                                    'label': 'Loại hình'},
+                                                                                   {'key': 'phu_my_count',
+                                                                                    'label': 'Phú Mỹ 2-4 tỷ'},
+                                                                                   {'key': 'phu_my_median',
+                                                                                    'label': 'Phú Mỹ giá trung vị'},
+                                                                                   {'key': 'dinh_hoa_count',
+                                                                                    'label': 'Định Hòa 2-4 tỷ'},
+                                                                                   {'key': 'dinh_hoa_median',
+                                                                                    'label': 'Định Hòa giá trung vị'}],
+                                                                       'rows': [{'type': 'Đất nền',
+                                                                                 'phu_my_count': '34 tin',
+                                                                                 'phu_my_median': '20,0 tr/m² · 2,85 '
+                                                                                                  'tỷ',
+                                                                                 'dinh_hoa_count': '16 tin',
+                                                                                 'dinh_hoa_median': '18,8 tr/m² · 2,55 '
+                                                                                                    'tỷ'},
+                                                                                {'type': 'Nhà đất',
+                                                                                 'phu_my_count': '79 tin',
+                                                                                 'phu_my_median': '40,5 tr/m² · 3,55 '
+                                                                                                  'tỷ',
+                                                                                 'dinh_hoa_count': '13 tin',
+                                                                                 'dinh_hoa_median': '18,0 tr/m² · 1,80 '
+                                                                                                    'tỷ'}]}],
+                                                      'charts': [{'eyebrow': 'Visual nhanh',
+                                                                  'title': 'Số tin trong tầm 2-4 tỷ: Phú Mỹ nhiều mẫu '
+                                                                           'hơn',
+                                                                  'note': 'Bar chart thể hiện số tin đất nền và nhà '
+                                                                          'đất trong khoảng tổng giá 2-4 tỷ.',
+                                                                  'alt': 'Biểu đồ số tin 2-4 tỷ tại Phú Mỹ và Định Hòa '
+                                                                         'theo loại hình',
+                                                                  'rows': [{'label': 'Phú Mỹ · nhà đất',
+                                                                            'value_label': '79 tin',
+                                                                            'width': 100,
+                                                                            'color': '#16a34a'},
+                                                                           {'label': 'Phú Mỹ · đất nền',
+                                                                            'value_label': '34 tin',
+                                                                            'width': 43,
+                                                                            'color': '#2563eb'},
+                                                                           {'label': 'Định Hòa · đất nền',
+                                                                            'value_label': '16 tin',
+                                                                            'width': 20,
+                                                                            'color': '#f59e0b'},
+                                                                           {'label': 'Định Hòa · nhà đất',
+                                                                            'value_label': '13 tin',
+                                                                            'width': 16,
+                                                                            'color': '#9333ea'}]},
+                                                                 {'eyebrow': 'Giá/m² trung vị',
+                                                                  'title': 'Không gộp nhà đất và đất nền thành một giá '
+                                                                           'chung',
+                                                                  'note': 'Nhà đất Phú Mỹ có giá/m² cao hơn vì đã gồm '
+                                                                          'công trình và điều kiện nhà ở.',
+                                                                  'alt': 'Biểu đồ giá trung vị mỗi mét vuông theo loại '
+                                                                         'hình tại Phú Mỹ và Định Hòa',
+                                                                  'rows': [{'label': 'Phú Mỹ · nhà đất',
+                                                                            'value_label': '40,5 tr/m²',
+                                                                            'width': 100,
+                                                                            'color': '#16a34a'},
+                                                                           {'label': 'Phú Mỹ · đất nền',
+                                                                            'value_label': '20,0 tr/m²',
+                                                                            'width': 49,
+                                                                            'color': '#2563eb'},
+                                                                           {'label': 'Định Hòa · đất nền',
+                                                                            'value_label': '18,8 tr/m²',
+                                                                            'width': 46,
+                                                                            'color': '#f59e0b'},
+                                                                           {'label': 'Định Hòa · nhà đất',
+                                                                            'value_label': '18,0 tr/m²',
+                                                                            'width': 44,
+                                                                            'color': '#9333ea'}]}],
+                                                      'sections': [{'id': 'ket-luan-ngan-sach-2-4-ty',
+                                                                    'heading': 'Kết luận nhanh: cần nhiều mẫu thì mở '
+                                                                               'Phú Mỹ trước, cần soi giá đất nền thì '
+                                                                               'xem Định Hòa',
+                                                                    'paragraphs': ['Trong cửa sổ dữ liệu 14 ngày, Phú '
+                                                                                   'Mỹ có 184 tin đang theo dõi và 113 '
+                                                                                   'tin đất nền/nhà đất nằm trong tầm '
+                                                                                   '2-4 tỷ. Định Hòa có 141 tin đang '
+                                                                                   'theo dõi và 29 tin đất nền/nhà đất '
+                                                                                   'trong cùng tầm ngân sách.',
+                                                                                   'Vì vậy, nếu mục tiêu là có nhiều '
+                                                                                   'mẫu để lọc nhanh, Phú Mỹ có lợi '
+                                                                                   'thế. Nếu mục tiêu là tìm mặt bằng '
+                                                                                   'đất nền thấp hơn theo giá trung '
+                                                                                   'vị, Định Hòa đáng kiểm tra, nhưng '
+                                                                                   'số mẫu trong tầm 2-4 tỷ ít hơn và '
+                                                                                   'có nhiều dấu hiệu cần đọc kỹ.'],
+                                                                    'bullets': ['Phú Mỹ: 113 tin đất nền/nhà đất trong '
+                                                                                'tầm 2-4 tỷ',
+                                                                                'Định Hòa: 29 tin đất nền/nhà đất '
+                                                                                'trong tầm 2-4 tỷ',
+                                                                                'Định Hòa có nhiều dấu hiệu hơn: 22 so '
+                                                                                'với 11',
+                                                                                'Không dùng một giá chung cho cả đất '
+                                                                                'nền và nhà đất']},
+                                                                   {'id': 'so-dat-nen-phu-my-dinh-hoa',
+                                                                    'heading': 'Đất nền: Định Hòa thấp hơn theo giá '
+                                                                               'trung vị, Phú Mỹ có nhiều mẫu 2-4 tỷ '
+                                                                               'hơn',
+                                                                    'paragraphs': ['Đất nền Phú Mỹ có 65 tin đang theo '
+                                                                                   'dõi, 46 tin có giá/m² đủ điều kiện '
+                                                                                   'thống kê. Giá trung vị đất nền Phú '
+                                                                                   'Mỹ là 20,0 tr/m², tổng giá trung '
+                                                                                   'vị 2,85 tỷ và có 34 tin nằm trong '
+                                                                                   'tầm 2-4 tỷ.',
+                                                                                   'Đất nền Định Hòa có 106 tin đang '
+                                                                                   'theo dõi, 99 tin có giá/m². Giá '
+                                                                                   'trung vị đất nền Định Hòa là 18,8 '
+                                                                                   'tr/m², tổng giá trung vị 2,55 tỷ '
+                                                                                   'và có 16 tin trong tầm 2-4 tỷ. Nói '
+                                                                                   'ngắn gọn: Định Hòa thấp hơn theo '
+                                                                                   'giá/m² trung vị, còn Phú Mỹ nhiều '
+                                                                                   'mẫu đúng ngân sách hơn.'],
+                                                                    'bullets': ['Đất nền Phú Mỹ: 20,0 tr/m² · 2,85 tỷ '
+                                                                                'giá trung vị',
+                                                                                'Đất nền Định Hòa: 18,8 tr/m² · 2,55 '
+                                                                                'tỷ giá trung vị',
+                                                                                'Tin đất nền 2-4 tỷ: Phú Mỹ 34, Định '
+                                                                                'Hòa 16',
+                                                                                'Định Hòa có 18 dấu hiệu ở nhóm đất '
+                                                                                'nền, cần kiểm tra kỹ từng tin']},
+                                                                   {'id': 'so-nha-dat-phu-my-dinh-hoa',
+                                                                    'heading': 'Nhà đất: Phú Mỹ có nhiều mẫu 2-4 tỷ '
+                                                                               'hơn, Định Hòa có ít mẫu hơn trong cửa '
+                                                                               'sổ này',
+                                                                    'paragraphs': ['Nhà đất Phú Mỹ có 112 tin đang '
+                                                                                   'theo dõi, 84 tin có giá/m². Giá '
+                                                                                   'trung vị nhà đất Phú Mỹ là 40,5 '
+                                                                                   'tr/m², tổng giá trung vị 3,55 tỷ '
+                                                                                   'và có 79 tin trong tầm 2-4 tỷ.',
+                                                                                   'Nhà đất Định Hòa có 35 tin đang '
+                                                                                   'theo dõi, 32 tin có giá/m². Giá '
+                                                                                   'trung vị nhà đất Định Hòa là 18,0 '
+                                                                                   'tr/m², tổng giá trung vị 1,80 tỷ '
+                                                                                   'và có 13 tin trong tầm 2-4 tỷ. Vì '
+                                                                                   'số mẫu ít hơn, người mua nên đọc '
+                                                                                   'từng tin kỹ hơn thay vì kết luận '
+                                                                                   'chỉ bằng một con số.'],
+                                                                    'bullets': ['Nhà đất Phú Mỹ: 40,5 tr/m² · 3,55 tỷ '
+                                                                                'giá trung vị',
+                                                                                'Nhà đất Định Hòa: 18,0 tr/m² · 1,80 '
+                                                                                'tỷ giá trung vị',
+                                                                                'Tin nhà đất 2-4 tỷ: Phú Mỹ 79, Định '
+                                                                                'Hòa 13',
+                                                                                'Nhà đất không nên so trực tiếp với '
+                                                                                'đất nền vì đã gồm công trình và hiện '
+                                                                                'trạng sử dụng']},
+                                                                   {'id': 'doc-dau-hieu-phu-my-dinh-hoa',
+                                                                    'heading': 'Dấu hiệu: Định Hòa nhiều tin cần kiểm '
+                                                                               'tra hơn, nhưng không có nghĩa là tốt '
+                                                                               'hơn',
+                                                                    'paragraphs': ['Radar BDS ghi nhận 11 dấu hiệu tại '
+                                                                                   'Phú Mỹ và 22 dấu hiệu tại Định Hòa '
+                                                                                   'trong cùng cửa sổ dữ liệu. Với '
+                                                                                   'Định Hòa, phần lớn dấu hiệu nằm ở '
+                                                                                   'đất nền: 18 dấu hiệu trong nhóm '
+                                                                                   'đất nền.',
+                                                                                   'Dấu hiệu nên được hiểu là việc cần '
+                                                                                   'kiểm tra thêm: tin được quan tâm, '
+                                                                                   'có giảm giá hoặc có điểm bất '
+                                                                                   'thường cần đọc lại. Đây không phải '
+                                                                                   'danh sách tin nên mua, càng không '
+                                                                                   'phải cam kết lợi nhuận.'],
+                                                                    'bullets': ['Phú Mỹ: 11 dấu hiệu, gồm 8 tin hot và '
+                                                                                '3 tin giảm giá',
+                                                                                'Định Hòa: 22 dấu hiệu, gồm 13 tin hot '
+                                                                                'và 9 tin giảm giá',
+                                                                                'Dấu hiệu giúp ưu tiên kiểm tra, không '
+                                                                                'thay thẩm định',
+                                                                                'Nếu một tin thấp hơn giá trung vị, '
+                                                                                'cần kiểm tra vị trí, pháp lý, diện '
+                                                                                'tích và quy hoạch']},
+                                                                   {'id': 'cach-dung-dashboard-so-sanh',
+                                                                    'heading': 'Cách dùng dashboard Radar để lọc sau '
+                                                                               'khi đọc bài này',
+                                                                    'paragraphs': ['Bước thực tế là mở dashboard, chọn '
+                                                                                   'phường Phú Mỹ hoặc Định Hòa, rồi '
+                                                                                   'chọn loại hình trước: đất nền hoặc '
+                                                                                   'nhà đất. Sau đó đặt khoảng tổng '
+                                                                                   'giá 2-4 tỷ và so giá/m² của từng '
+                                                                                   'tin với giá trung vị cùng loại '
+                                                                                   'hình.',
+                                                                                   'Nếu tin thuộc nhóm có dấu hiệu, '
+                                                                                   'hãy xem lại mô tả, ảnh, diện tích, '
+                                                                                   'nguồn đăng và lịch sử giá trước '
+                                                                                   'khi liên hệ. Sau bước dữ liệu, '
+                                                                                   'người mua vẫn cần kiểm tra sổ, quy '
+                                                                                   'hoạch, đường/hẻm, hiện trạng và '
+                                                                                   'chi phí phát sinh.'],
+                                                                    'bullets': ['Chọn phường: Phú Mỹ hoặc Định Hòa',
+                                                                                'Chọn loại hình: đất nền hoặc nhà đất',
+                                                                                'Lọc tổng giá 2-4 tỷ trước, rồi mới so '
+                                                                                'giá/m²',
+                                                                                'Ưu tiên kiểm tra tin có dấu hiệu '
+                                                                                'nhưng không vội đặt cọc',
+                                                                                'Radar BDS là bộ lọc dữ liệu ban đầu, '
+                                                                                'không thay thẩm định pháp lý, quy '
+                                                                                'hoạch hay cam kết lợi nhuận']}],
+                                                      'checklist': ['Đã xác định mục tiêu là đất nền hay nhà đất.',
+                                                                    'Đã lọc tổng giá 2-4 tỷ, không chỉ nhìn giá/m².',
+                                                                    'Đã so Phú Mỹ và Định Hòa trong cùng loại hình '
+                                                                    'BĐS.',
+                                                                    'Đã hiểu giá trong bài là giá rao trung vị, không '
+                                                                    'phải giá giao dịch chắc chắn.',
+                                                                    'Đã kiểm tra pháp lý, quy hoạch, vị trí và thực '
+                                                                    'địa trước khi đặt cọc.']},
+                                          'final_cta': {'title': 'Mở Radar để lọc Phú Mỹ và Định Hòa theo ngân sách',
+                                                        'body': 'Lọc từng phường, tách đất nền/nhà đất và đặt khoảng '
+                                                                'tổng giá 2-4 tỷ trước khi liên hệ tin cụ thể.',
+                                                        'button': 'Mở dashboard lọc tin 2-4 tỷ',
+                                                        'button_href': '/?tab=signals'},
+                                          'breadcrumbs': [{'name': 'Trang chủ',
+                                                           'href': '/',
+                                                           'url': 'https://radarbds.vn/'},
+                                                          {'name': 'Tin tức',
+                                                           'href': '/tin-tuc',
+                                                           'url': 'https://radarbds.vn/tin-tuc'},
+                                                          {'name': 'Phú Mỹ hay Định Hòa ngân sách 2-4 tỷ',
+                                                           'href': '/tin-tuc/phu-my-hay-dinh-hoa-ngan-sach-2-4-ty',
+                                                           'url': 'https://radarbds.vn/tin-tuc/phu-my-hay-dinh-hoa-ngan-sach-2-4-ty'}]}
 }
 
 KNOWLEDGE_HUB = {'path': '/tin-tuc',
