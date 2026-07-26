@@ -4587,7 +4587,7 @@ SEO_ARTICLES = {
                                                         'primary_cta': 'Mở dashboard lọc Định Hòa',
                                                         'primary_href': '/?ward=Định%20Hòa&tab=tin đáng kiểm tras',
                                                         'secondary_cta': 'Xem báo cáo Định Hòa',
-                                                        'secondary_href': '/bao-cao/dinh-hoa-thang-07-2026',
+                                                        'secondary_href': '/bao-cao/dinh-hoa-thang-06-2026',
                                                         'map_label': 'Định Hòa / Thủ Dầu Một',
                                                         'hero_metric': {'label': 'Đất nền mức giá ở giữa',
                                                                         'value': '15,2 tr/m²',
@@ -4605,9 +4605,9 @@ SEO_ARTICLES = {
                                                         'dashboard_preview': {},
                                                         'market_snapshot': {},
                                                         'local_links_title': 'Đọc tiếp về Định Hòa và nhóm so sánh',
-                                                        'local_links': [{'label': 'Báo cáo Định Hòa tháng 07/2026',
-                                                                         'href': '/bao-cao/dinh-hoa-thang-07-2026',
-                                                                         'description': 'Xem dữ liệu tháng mới nhất '
+                                                        'local_links': [{'label': 'Báo cáo Định Hòa tháng 06/2026',
+                                                                         'href': '/bao-cao/dinh-hoa-thang-06-2026',
+                                                                         'description': 'Xem dữ liệu tháng đã chốt '
                                                                                         'cho Định Hòa.'},
                                                                         {'label': 'Landing nhà đất Định Hòa',
                                                                          'href': '/binh-duong/phuong-dinh-hoa',

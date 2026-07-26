@@ -2202,6 +2202,11 @@ def seo_report_or_article_page(report_slug: str):
         page_path = str(SEO_ARTICLES[report_slug].get("path") or "")
         if page_path.startswith("/bao-cao/"):
             return seo_article_page(report_slug)
+    match = re.fullmatch(r"([a-z0-9-]+)-thang-\d{2}-\d{4}", report_slug or "")
+    if match:
+        latest = _latest_ward_report(match.group(1))
+        if latest and latest.get("path"):
+            return redirect(str(latest["path"]), code=302)
     abort(404)
 
 
@@ -2211,7 +2216,18 @@ def seo_news_article_page(slug: str):
     abort(404)
 
 
+_LEGACY_SEO_REDIRECTS = {
+    "binh-duong/di-an": "/binh-duong",
+}
+
+
 def seo_landing_page(slug):
+    target = _LEGACY_SEO_REDIRECTS.get(str(slug or ""))
+    if target:
+        query = request.query_string.decode("ascii", errors="ignore")
+        if query:
+            target = f"{target}?{query}"
+        return redirect(target, code=301)
     page = SEO_PAGES.get(slug)
     if not page:
         abort(404)
