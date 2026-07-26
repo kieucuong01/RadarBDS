@@ -10,6 +10,7 @@ import argparse
 import datetime as dt
 import html
 import json
+import os
 import re
 import subprocess
 import time
@@ -555,22 +556,32 @@ def ensure_browser() -> None:
     raise RuntimeError('Radar Social Chrome CDP unavailable')
 
 
+def _rotating_slice(items: list[str], limit: int, now: dt.datetime, *, salt: int = 0) -> list[str]:
+    if not items:
+        return []
+    limit = max(1, min(limit, len(items)))
+    if len(items) <= limit:
+        return items
+    start = (now.toordinal() + salt) % len(items)
+    return [items[(start + i) % len(items)] for i in range(limit)]
+
+
 def selected_queries(config: dict, now: dt.datetime) -> list[str]:
     queries = [normalize_text(x) for x in config.get('queries', []) if normalize_text(x)]
     limit = max(1, int((config.get('global') or {}).get('max_queries_per_run', 2)))
-    if len(queries) <= limit:
-        return queries
-    start = now.toordinal() % len(queries)
-    return [queries[(start + i) % len(queries)] for i in range(limit)]
+    return _rotating_slice(queries, limit, now)
 
 
 def discover_posts(config: dict, now: dt.datetime | None = None) -> list[dict]:
     now = now or dt.datetime.now().astimezone()
     queries = selected_queries(config, now)
+    cfg = config.get('global') or {}
+    per_target_limit = max(1, int(cfg.get('max_queries_per_target', 1)))
     target_groups = [g for g in config.get('target_groups', []) if g.get('enabled') and g.get('url')]
     group_scans = []
-    for group in target_groups:
-        group_queries = [normalize_text(x) for x in group.get('queries', []) if normalize_text(x)] or queries
+    for idx, group in enumerate(target_groups):
+        group_query_pool = [normalize_text(x) for x in group.get('queries', []) if normalize_text(x)] or queries
+        group_queries = _rotating_slice(group_query_pool, per_target_limit, now, salt=idx)
         group_scans.append({
             'name': normalize_text(group.get('name') or ''),
             'url': normalize_text(group.get('url') or '').rstrip('/') + '/',
@@ -578,8 +589,9 @@ def discover_posts(config: dict, now: dt.datetime | None = None) -> list[dict]:
         })
     target_pages = [p for p in config.get('target_pages', []) if p.get('enabled') and p.get('url')]
     page_scans = []
-    for page in target_pages:
-        page_queries = [normalize_text(x) for x in page.get('queries', []) if normalize_text(x)] or queries
+    for idx, page in enumerate(target_pages):
+        page_query_pool = [normalize_text(x) for x in page.get('queries', []) if normalize_text(x)] or queries
+        page_queries = _rotating_slice(page_query_pool, per_target_limit, now, salt=idx + len(group_scans))
         page_scans.append({
             'name': normalize_text(page.get('name') or ''),
             'url': normalize_text(page.get('url') or '').rstrip('/') + '/',
@@ -587,7 +599,6 @@ def discover_posts(config: dict, now: dt.datetime | None = None) -> list[dict]:
         })
     if not queries and not group_scans and not page_scans:
         return []
-    cfg = config.get('global') or {}
     identity = str(cfg.get('identity') or '')
     restore_identity = str(cfg.get('restore_identity') or '')
     max_results = max(1, int(cfg.get('max_results_per_query', 5)))
@@ -713,9 +724,23 @@ finally:
 print(json.dumps({{'ok':True,'restored':restored,'results':results}},ensure_ascii=False))
 """
     ensure_browser()
-    env = dict(**__import__('os').environ)
+    env = dict(**os.environ)
     env['BU_CDP_URL'] = CDP
-    proc = subprocess.run([str(BROWSER_USE)], input=program, text=True, capture_output=True, env=env, timeout=600, check=False)
+    discovery_timeout = int(os.environ.get('RB_COMMENT_DISCOVERY_TIMEOUT') or cfg.get('browser_timeout_seconds') or 150)
+    try:
+        proc = subprocess.run(
+            [str(BROWSER_USE)],
+            input=program,
+            text=True,
+            capture_output=True,
+            env=env,
+            timeout=max(45, min(discovery_timeout, 540)),
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        # Cron-safe fail-closed: Facebook discovery can stall on dynamic feeds.
+        # Returning no candidate keeps the script status OK and avoids noisy cron errors.
+        return []
     if proc.returncode != 0:
         raise RuntimeError('Facebook public-post discovery failed\n' + proc.stdout[-4000:] + '\n' + proc.stderr[-4000:])
     lines = [line for line in proc.stdout.splitlines() if line.strip()]

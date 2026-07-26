@@ -65,4 +65,4 @@ PYTHONPYCACHEPREFIX=/home/hermesops/.cache/hermes-pyc \
   python3 -m unittest tests.test_radar_group_comment_seed -v
 ```
 
-Hermes cron `@rb TDM public-post comment seeding` chạy 20:30 hằng ngày qua `radar_public_post_comment_scheduler.sh`. Code giữ cap dùng chung tối đa 1 social action/ngày và tối đa 3 comment/7 ngày. Không có bài phù hợp thì stdout rỗng và không gửi thông báo.
+Hermes cron `@rb Facebook comment seeding 3/day` chạy 10:30 / 15:30 / 20:30 hằng ngày qua `radar_public_post_comment_scheduler.sh`. Code giữ cap tối đa 3 comment/ngày và 21 comment/7 ngày; mỗi run chỉ xoay một số query theo target để tránh timeout. Không có bài phù hợp hoặc Facebook discovery timeout thì stdout rỗng và không gửi thông báo.
