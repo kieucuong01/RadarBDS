@@ -92,7 +92,7 @@ Each daily run should do the smallest high-impact action:
    - 10 social reuse.
 4. If score ≥ 70: publish one new `/tin-tuc/<slug>` article.
 5. If score is 50–69 or the intent already exists: refresh/update an existing article or add internal links.
-6. Draft one social post from the same data atom and create a queue file with `scripts/radar_social_queue.py`.
+6. Draft one social post from the same data atom and create a queue file with `scripts/radar_social_queue.py`. For data/status posts, the status must explicitly say `Vào radarbds.vn → lọc phường <ward>` and include a ward-filtered `radarbds.vn` link before/near the article URL.
 7. If explicitly approved, use `scripts/browser_use_page_post.py`; otherwise hand off queue path + draft.
 8. Verify live and commit/push.
 

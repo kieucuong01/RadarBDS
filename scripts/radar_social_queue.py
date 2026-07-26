@@ -141,16 +141,37 @@ def _hashtags_for_page(page: dict[str, Any]) -> list[str]:
     return ["RadarBDS", "BinhDuong", "ThuDauMot"]
 
 
-def _utm_url(url: str, slug: str) -> str:
+def _utm_url(url: str, slug: str, *, campaign: str = "daily_article") -> str:
     parsed = urllib.parse.urlsplit(url)
     query = dict(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
     query.update({
         "utm_source": "facebook",
         "utm_medium": "organic",
-        "utm_campaign": "daily_article",
+        "utm_campaign": campaign,
         "utm_content": slug,
     })
     return urllib.parse.urlunsplit(parsed._replace(query=urllib.parse.urlencode(query)))
+
+
+def _ward_filter_url(page: dict[str, Any], ward: str, slug: str) -> str:
+    """Return a radarbds.vn URL that lands readers on a ward-filtered view.
+
+    Prefer the article's configured dashboard CTA because daily articles often
+    carry a hand-tuned filter path. Fall back to the public signals tab with the
+    ward query parameter.
+    """
+    href = _plain(page.get("primary_href") or "")
+    if not href:
+        href = "/?tab=signals&ward=" + urllib.parse.quote(ward)
+    return _utm_url(_absolute_url(href), f"{slug}-ward-filter", campaign="ward_filter")
+
+
+def _ward_filter_cta(ward: str, filter_url: str, article_url: str) -> str:
+    return (
+        f"Vào radarbds.vn → lọc phường {ward} để xem từng tin đang rao:\n"
+        f"{filter_url}\n\n"
+        f"Bài phân tích dữ liệu:\n{article_url}"
+    )
 
 
 def _variant_for_slug(slug: str, signal_card: dict[str, str]) -> str:
@@ -177,7 +198,12 @@ def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slu
     house_price = _value(house)
     signal_text = _signal_phrase(signal)
     tracked_line = f"Giá rao {ward} {window} qua có {listing_count} tin Radar đang theo dõi."
-    final_url = _utm_url(url, slug or _plain(page.get("path") or "daily_article"))
+    slug_key = slug or _plain(page.get("path") or "daily_article")
+    final_url = _utm_url(url, slug_key)
+    filter_url = _ward_filter_url(page, ward, slug_key)
+    ward_cta = _ward_filter_cta(ward, filter_url, final_url)
+    # Keep f-string body indentation consistent so textwrap.dedent can remove it.
+    ward_cta_block = ward_cta.replace("\n", "\n        ")
     ward_hashtag = _slug_hashtag(ward)
     hashtags = f"#RadarBDS #BinhDuong #{ward_hashtag if ward_hashtag != 'ThuDauMot' else 'ThuDauMot'}"
     variant = _variant_for_slug(slug or _short_title(page), signal)
@@ -190,8 +216,7 @@ def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slu
 
         Bối cảnh: {listing_count} tin trong {window}; đất nền giá rao trung vị {land_price}, nhà đất giá rao trung vị {house_price}.
 
-        Mở dashboard để xem từng tin, rồi đọc bài phân tích nếu cần bối cảnh khu vực:
-        {final_url}
+        {ward_cta_block}
 
         {hashtags}
         """
@@ -203,8 +228,9 @@ def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slu
         Đất nền: giá rao trung vị {land_price}.
         Nhà đất: giá rao trung vị {house_price}.
 
-        Radar BDS tách dữ liệu theo loại hình để bạn kiểm tra từng tin trước khi gọi môi giới:
-        {final_url}
+        Radar BDS tách dữ liệu theo loại hình để bạn kiểm tra từng tin trước khi gọi môi giới.
+
+        {ward_cta_block}
 
         {hashtags}
         """
@@ -216,8 +242,9 @@ def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slu
         • Nhà đất: giá rao trung vị {house_price}
         • {signal_text}
 
-        Đừng gộp 2 loại hình khi so giá. Xem bài + mở dashboard để lọc từng tin trước khi gọi môi giới:
-        {final_url}
+        Đừng gộp 2 loại hình khi so giá.
+
+        {ward_cta_block}
 
         {hashtags}
         """
@@ -285,6 +312,7 @@ def create(args: argparse.Namespace) -> dict[str, Any]:
             "style": args.style,
             "message": _build_message(page, url, args.style, slug),
             "link": _utm_url(url, slug),
+            "ward_filter_link": _ward_filter_url(page, _extract_ward(page, _article_cards(page)), slug),
             "hashtags": _hashtags_for_page(page),
         },
         "status": "queued",

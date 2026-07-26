@@ -80,8 +80,8 @@ Current encoded rules in `scripts/radar_social_queue.py`:
 - Start with local data or buyer problem, not with “Bài mới”.
 - Render prices as **“giá rao trung vị”**.
 - Prioritize these facts: listing count, đất nền median, nhà đất median, `tin có dấu hiệu đáng kiểm tra`.
-- CTA: “Xem bài + mở dashboard để lọc từng tin trước khi gọi môi giới”.
-- Append UTM: `utm_source=facebook&utm_medium=organic&utm_campaign=daily_article&utm_content=<slug>`.
+- CTA in the status itself for data-like posts: “Vào radarbds.vn → lọc phường <ward> để xem từng tin đang rao”. Use a ward-filtered `radarbds.vn` URL first, then the article/report URL if useful.
+- Append UTM: article links use `utm_source=facebook&utm_medium=organic&utm_campaign=daily_article&utm_content=<slug>`; ward-filter links use `utm_campaign=ward_filter&utm_content=<slug>-ward-filter`.
 - Use max 3 hashtags, normally `#RadarBDS #BinhDuong #<WardNoAccent>`.
 - Hard-block hype/compliance-risk phrases: `deal ngon`, `lời chắc`, `cam kết lợi nhuận`, `sinh lời`, `cơ hội vàng`, `rẻ nhất`, `dưới giá thị trường`, `hot nhất`, `sốt đất`.
 
@@ -94,8 +94,13 @@ Giá rao {phường} 14 ngày qua có {số_tin} tin Radar đang theo dõi.
 • Nhà đất: giá rao trung vị {giá_nhà_đất}
 • {số_tin} tin có dấu hiệu đáng kiểm tra
 
-Đừng gộp 2 loại hình khi so giá. Xem bài + mở dashboard để lọc từng tin trước khi gọi môi giới:
-{url_utm}
+Đừng gộp 2 loại hình khi so giá.
+
+Vào radarbds.vn → lọc phường {phường} để xem từng tin đang rao:
+{ward_filter_url_utm}
+
+Bài phân tích dữ liệu:
+{article_url_utm}
 
 #RadarBDS #BinhDuong #{PhuongKhongDau}
 ```

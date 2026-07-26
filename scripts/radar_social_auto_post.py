@@ -29,7 +29,10 @@ POST_SCRIPT = REPO / "scripts/browser_use_page_post.py"
 START_BROWSER = Path("/home/hermesops/radar-browser-use/start-radar-social-browser.sh")
 CDP_URL = "http://127.0.0.1:9224"
 STATE_PATH = Path("/opt/radar-bds/var/social_queue/posted_slugs.json")
-QUEUE_DIR = Path("/opt/radar-bds/var/social_queue")
+# Use a dedicated Hermes-owned queue dir for auto-posting. The SEO publisher can
+# create same-day queue files in /opt/radar-bds/var/social_queue as the `radar`
+# user; overwriting those from Hermes cron causes PermissionError.
+QUEUE_DIR = Path("/opt/radar-bds/var/social_queue/autopost")
 RUN_DIR = Path("/opt/radar-bds/var/browser_use_runs")
 
 

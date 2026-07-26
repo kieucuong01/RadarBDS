@@ -92,7 +92,15 @@ click_backend(textbox)
 type_text(message)
 time.sleep(5)
 
-# Screenshot after content/link preview loads.
+# Screenshot after content/link preview loads. Only dismiss hashtag suggestions
+# when hashtags are present; pressing Escape on plain native posts can close the
+# composer and leave an unpublished inline draft.
+if '#' in message:
+    try:
+        press_key('Escape')
+        time.sleep(1)
+    except Exception:
+        pass
 capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
 
 if mode == 'prepare':
@@ -102,16 +110,41 @@ if mode == 'prepare':
 if mode != 'publish':
     raise RuntimeError(f'Unsupported mode: {{mode}}')
 
-# Some Page composer flows require Next before the final Post button.
+def verified_on_page():
+    js('window.scrollTo(0, 0)')
+    time.sleep(2)
+    needle = message.split('\\n', 1)[0][:60]
+    has_dialog = any(
+        (n.get('role') or {{}}).get('value', '') == 'dialog'
+        and 'Create post' in (((n.get('name') or {{}}).get('value', '')) or '')
+        for n in ax_nodes()
+    )
+    found_article = False
+    for n in ax_nodes():
+        role = (n.get('role') or {{}}).get('value', '')
+        name = (n.get('name') or {{}}).get('value', '')
+        if role == 'article' and needle and needle in name:
+            found_article = True
+            break
+    return found_article and not has_dialog, needle
+
+# Current Page UI is normally: composer -> Next -> Post settings -> Post.
+# Some variants publish/close after Next; verify before looking for final Post.
 for n in ax_nodes():
     role = (n.get('role') or {{}}).get('value', '')
     name = (n.get('name') or {{}}).get('value', '')
     p = props(n)
-    if role == 'button' and name == 'Next' and not p.get('disabled'):
+    if role == 'button' and name in ('Next', 'Tiếp') and not p.get('disabled'):
         click_backend(n.get('backendDOMNodeId'))
         break
 
-time.sleep(2)
+time.sleep(5)
+found, needle = verified_on_page()
+if found:
+    capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
+    print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'needle': needle, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_published'}}, ensure_ascii=False))
+    raise SystemExit(0)
+
 post_button = None
 for n in ax_nodes():
     role = (n.get('role') or {{}}).get('value', '')
@@ -121,23 +154,28 @@ for n in ax_nodes():
         post_button = n.get('backendDOMNodeId')
         break
 if not post_button:
-    raise RuntimeError('Final Post button not found or disabled.')
+    raise RuntimeError('Final Post button not found or disabled, and Next did not verify as published.')
 click_backend(post_button)
-for _ in range(12):
-    time.sleep(1)
-
-# Verify a distinctive text prefix appears on the page.
-js('window.scrollTo(0, 0)')
-time.sleep(2)
-needle = message.split('\\n', 1)[0][:60]
-found = False
+time.sleep(3)
+# Facebook Page may ask whether to add a CTA button (e.g. Call Now) after Post.
+# For organic care posts, choose Not now; this completes publishing in current UI.
 for n in ax_nodes():
+    role = (n.get('role') or {{}}).get('value', '')
     name = (n.get('name') or {{}}).get('value', '')
-    if needle and needle in name:
-        found = True
+    p = props(n)
+    if role == 'button' and name in ('Not now', 'Không phải bây giờ') and not p.get('disabled'):
+        click_backend(n.get('backendDOMNodeId'))
         break
+found, needle = False, message.split('\\n', 1)[0][:60]
+# Native Page posts can take a little longer to appear in the feed after the
+# CTA modal is dismissed. Poll before failing so cron does not report false negatives.
+for _ in range(25):
+    found, needle = verified_on_page()
+    if found:
+        break
+    time.sleep(2)
 capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
-print(json.dumps({{'ok': found, 'mode': mode, 'verified_text': found, 'needle': needle, 'screenshot': screenshot_path, 'page_info': page_info()}}, ensure_ascii=False))
+print(json.dumps({{'ok': found, 'mode': mode, 'verified_text': found, 'needle': needle, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'post_button'}}, ensure_ascii=False))
 if not found:
     raise RuntimeError('Post action attempted but verification text was not found.')
 """
