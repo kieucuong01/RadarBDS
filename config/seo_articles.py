@@ -7025,7 +7025,529 @@ SEO_ARTICLES = {
                                                            'url': 'https://radarbds.vn/tin-tuc'},
                                                           {'name': 'Phú Mỹ hay Định Hòa ngân sách 2-4 tỷ',
                                                            'href': '/tin-tuc/phu-my-hay-dinh-hoa-ngan-sach-2-4-ty',
-                                                           'url': 'https://radarbds.vn/tin-tuc/phu-my-hay-dinh-hoa-ngan-sach-2-4-ty'}]}
+                                                           'url': 'https://radarbds.vn/tin-tuc/phu-my-hay-dinh-hoa-ngan-sach-2-4-ty'}]},
+    "phu-hoa-hay-phu-my-khu-nao-de-so-gia-hon": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/phu-hoa-hay-phu-my-khu-nao-de-so-gia-hon",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "title": "So sánh Phú Hòa và Phú Mỹ: khu nào dễ so giá hơn? | Radar BDS",
+        "description": "So sánh Phú Hòa và Phú Mỹ bằng dữ liệu Facebook 14 ngày: giá rao trung vị đất nền, nhà đất, nguồn tin và số tin 2-4 tỷ để người mua lọc đúng loại hình.",
+        "keywords": "Phú Hòa hay Phú Mỹ, so sánh giá đất Phú Hòa Phú Mỹ, giá đất Thủ Dầu Một, mua nhà đất Bình Dương",
+        "breadcrumb_label": "Phú Hòa hay Phú Mỹ dễ so giá hơn",
+        "hero_badge": "So sánh khu vực",
+        "hero_title": "So sánh Phú Hòa và Phú Mỹ: khu nào dễ so giá hơn?",
+        "hero_text": "Nếu ưu tiên đất nền dễ so giá và ngân sách 2-4 tỷ, Phú Mỹ đáng mở trước: giá rao trung vị 19,9 triệu/m² và 25 tin trong tầm này. Phú Hòa có nhiều tin hơn, nhưng đất nền phân tán rộng; với nhà đất, hai phường gần nhau hơn về giá trung vị.",
+        "scope_label": "Thủ Dầu Một · Phú Hòa và Phú Mỹ",
+        "hero_checks": [
+            "Dữ liệu tin Facebook trong cửa sổ 14 ngày, truy vấn ngày 26/07/2026",
+            "Phú Hòa có 168 tin đang theo dõi; Phú Mỹ có 133 tin",
+            "Đất nền: giá rao trung vị Phú Hòa 29,5 tr/m²; Phú Mỹ 19,9 tr/m²",
+            "Nhà đất: giá rao trung vị Phú Hòa 43,3 tr/m²; Phú Mỹ 40,5 tr/m²"
+        ],
+        "primary_cta": "Mở dashboard so từng tin",
+        "primary_href": "/?tab=signals",
+        "secondary_cta": "Xem 13 phường Thủ Dầu Một",
+        "secondary_href": "/tin-tuc/phuong-nao-thu-dau-mot-gia-dat-con-de-mua",
+        "map_label": "Tin tức / So Phú Hòa và Phú Mỹ",
+        "hero_metric": {
+            "label": "Tin đang theo dõi",
+            "value": "168 vs 133",
+            "delta": "Phú Hòa nhiều tin hơn",
+            "note": "Tin Facebook đủ điều kiện trong cửa sổ 14 ngày"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Phú Mỹ dễ tạo mốc tham chiếu cho đất nền hơn",
+            "price": "Đất nền: Phú Mỹ 19,9 tr/m² · Phú Hòa 29,5 tr/m²",
+            "metric_a": "Tin 2-4 tỷ",
+            "metric_a_value": "Phú Mỹ 85 · Phú Hòa 62",
+            "metric_b": "Nhà đất",
+            "metric_b_value": "40,5 vs 43,3 tr/m²"
+        },
+        "value_cards": [
+            {
+                "title": "Phú Hòa có nhiều nguồn tin hơn",
+                "body": "Phú Hòa có 168 tin đang theo dõi, cao hơn Phú Mỹ 133 tin. Nhiều nguồn tin giúp mở rộng lựa chọn nhưng không tự động có nghĩa là dễ định giá hơn."
+            },
+            {
+                "title": "Đất nền Phú Mỹ tập trung hơn",
+                "body": "Giá rao trung vị đất nền Phú Mỹ là 19,9 tr/m²; nửa giữa mẫu giá nằm khoảng 19,1-23,0 tr/m². Phú Hòa có khoảng phân tán rộng hơn, 19,9-75,0 tr/m²."
+            },
+            {
+                "title": "Nhà đất hai phường gần nhau hơn",
+                "body": "Giá rao trung vị nhà đất Phú Hòa là 43,3 tr/m² và Phú Mỹ là 40,5 tr/m². Cần so thêm đường, hẻm, hiện trạng nhà và diện tích đất trước khi kết luận."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ bảng so sánh sang từng tin",
+            "title": "Mở Radar để lọc riêng Phú Hòa và Phú Mỹ",
+            "body": "Chọn phường, chọn đất nền hoặc nhà đất, rồi đặt khoảng tổng giá trước khi so giá/m² của từng tin.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin Phú Hòa và Phú Mỹ theo loại hình",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {
+                    "value": "2 phường",
+                    "label": "Phú Hòa và Phú Mỹ"
+                },
+                {
+                    "value": "2 loại hình",
+                    "label": "đất nền và nhà đất"
+                },
+                {
+                    "value": "2-4 tỷ",
+                    "label": "khoảng ngân sách tham chiếu"
+                }
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Dữ liệu Radar BDS · Facebook · 14 ngày",
+            "title": "So Phú Hòa và Phú Mỹ theo đúng loại hình BĐS",
+            "body": "Giá trong bảng là giá rao trung vị, không phải giá giao dịch. Mỗi mức giá luôn đi cùng loại hình đất nền hoặc nhà đất.",
+            "columns": [
+                "Phường",
+                "Tin",
+                "Dấu hiệu",
+                "Đất nền",
+                "Nhà đất",
+                "Tin 2-4 tỷ"
+            ],
+            "rows": [
+                {
+                    "area": "Phú Hòa",
+                    "price": "168 tin",
+                    "tracked": "11",
+                    "signal": "29,5 tr/m²",
+                    "area_m2": "43,3 tr/m²",
+                    "note": "62"
+                },
+                {
+                    "area": "Phú Mỹ",
+                    "price": "133 tin",
+                    "tracked": "9",
+                    "signal": "19,9 tr/m²",
+                    "area_m2": "40,5 tr/m²",
+                    "note": "85"
+                }
+            ],
+            "cards": [
+                {
+                    "title": "Nguồn tin",
+                    "value": "301 tin",
+                    "body": "Tổng hai phường trong cửa sổ dữ liệu."
+                },
+                {
+                    "title": "Đất nền Phú Mỹ",
+                    "value": "19,9 tr/m²",
+                    "body": "Giá rao trung vị từ 33 mẫu có giá/m² hợp lệ."
+                },
+                {
+                    "title": "Dấu hiệu cần kiểm tra",
+                    "value": "20 tin",
+                    "body": "Phú Hòa 11; Phú Mỹ 9. Không phải khuyến nghị mua."
+                }
+            ]
+        },
+        "local_links_title": "Đọc tiếp trước khi lọc tin",
+        "local_links": [
+            {
+                "label": "Tin nhà đất phường Phú Hòa",
+                "href": "/binh-duong/phuong-phu-hoa",
+                "description": "Mở trang phường để lọc nguồn tin Phú Hòa."
+            },
+            {
+                "label": "Tin nhà đất phường Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Mở trang phường để lọc nguồn tin Phú Mỹ."
+            },
+            {
+                "label": "Giá Phú Hòa theo từng loại hình",
+                "href": "/tin-tuc/gia-dat-phu-hoa-hien-bao-nhieu",
+                "description": "Xem riêng đất nền và nhà đất Phú Hòa."
+            },
+            {
+                "label": "Giá Phú Mỹ theo từng loại hình",
+                "href": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
+                "description": "Xem riêng đất nền và nhà đất Phú Mỹ."
+            }
+        ],
+        "process_title": "Cách chọn phường để mở trước",
+        "process": [
+            {
+                "title": "1. Chọn loại hình",
+                "body": "Chỉ so đất nền với đất nền hoặc nhà đất với nhà đất."
+            },
+            {
+                "title": "2. Chốt tổng ngân sách",
+                "body": "Lọc tổng giá 2-4 tỷ trước, sau đó mới so giá/m²."
+            },
+            {
+                "title": "3. Kiểm tra từng tin",
+                "body": "Đọc vị trí, đường/hẻm, hiện trạng, pháp lý và quy hoạch trước khi liên hệ."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Phú Hòa hay Phú Mỹ có giá đất nền thấp hơn?",
+                "a": "Trong cửa sổ dữ liệu này, đất nền Phú Mỹ có giá rao trung vị thấp hơn: 19,9 tr/m² so với 29,5 tr/m² tại Phú Hòa. Đây là giá rao tham khảo, không phải giá giao dịch chắc chắn."
+            },
+            {
+                "q": "Vì sao nói đất nền Phú Mỹ dễ so giá hơn?",
+                "a": "Nửa giữa mẫu giá đất nền Phú Mỹ nằm trong khoảng 19,1-23,0 tr/m², hẹp hơn Phú Hòa 19,9-75,0 tr/m². Khoảng hẹp giúp tạo mốc tham chiếu ban đầu rõ hơn, nhưng vẫn phải so vị trí và pháp lý từng tin."
+            },
+            {
+                "q": "Nhà đất Phú Hòa và Phú Mỹ chênh nhau nhiều không?",
+                "a": "Giá rao trung vị nhà đất Phú Hòa là 43,3 tr/m² và Phú Mỹ là 40,5 tr/m². Chênh lệch giá trung vị không lớn bằng nhóm đất nền, nhưng hiện trạng nhà, đường/hẻm và diện tích có thể làm từng tin khác xa nhau."
+            },
+            {
+                "q": "Ngân sách 2-4 tỷ nên xem phường nào trước?",
+                "a": "Phú Mỹ có 85 tin đất nền và nhà đất trong tầm 2-4 tỷ, gồm 25 tin đất nền và 60 tin nhà đất. Phú Hòa có 62 tin, gồm 14 tin đất nền và 48 tin nhà đất. Nếu ưu tiên nhiều mẫu đúng ngân sách, có thể mở Phú Mỹ trước."
+            },
+            {
+                "q": "Dữ liệu trong bài được lấy khi nào và từ đâu?",
+                "a": "Radar BDS truy vấn ngày 26/07/2026, chỉ dùng tin Facebook đang theo dõi, không bị chặn hoặc ẩn khi kiểm duyệt. Cửa sổ là 14 ngày; các tin đủ điều kiện trong mẫu có ngày thu thập từ 12/07 đến 23/07/2026."
+            }
+        ],
+        "article": {
+            "published_at": "2026-07-26",
+            "modified_at": "2026-07-26",
+            "intro": [
+                "Nếu ưu tiên đất nền dễ so giá và ngân sách 2-4 tỷ, Phú Mỹ đáng mở trước: giá rao trung vị 19,9 triệu/m² và 25 tin trong tầm này. Phú Hòa có nhiều tin hơn, nhưng đất nền phân tán rộng; với nhà đất, hai phường gần nhau hơn về giá trung vị.",
+                "Bài viết dùng tin Facebook đang theo dõi trong cửa sổ 14 ngày tại thời điểm truy vấn 26/07/2026. Giá trung vị nghĩa là một nửa số tin thấp hơn mức này, một nửa cao hơn. Đây là giá rao, không phải giá giao dịch chắc chắn."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tin đang theo dõi",
+                    "value": "301 tin",
+                    "note": "Phú Hòa 168 · Phú Mỹ 133"
+                },
+                {
+                    "label": "Đất nền giá rao trung vị",
+                    "value": "29,5 vs 19,9 tr/m²",
+                    "note": "Phú Hòa vs Phú Mỹ"
+                },
+                {
+                    "label": "Nhà đất giá rao trung vị",
+                    "value": "43,3 vs 40,5 tr/m²",
+                    "note": "Phú Hòa vs Phú Mỹ"
+                },
+                {
+                    "label": "Tin trong tầm 2-4 tỷ",
+                    "value": "62 vs 85",
+                    "note": "Chỉ tính đất nền và nhà đất có tổng giá hợp lệ"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Dữ liệu Radar BDS · Facebook · truy vấn 26/07/2026",
+                    "title": "So nhanh Phú Hòa và Phú Mỹ",
+                    "note": "Cửa sổ 14 ngày. Giá/m² là giá rao trung vị theo từng loại hình BĐS.",
+                    "columns": [
+                        {
+                            "key": "ward",
+                            "label": "Phường"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin đang theo dõi"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu đáng kiểm tra"
+                        },
+                        {
+                            "key": "land",
+                            "label": "Đất nền"
+                        },
+                        {
+                            "key": "house",
+                            "label": "Nhà đất"
+                        },
+                        {
+                            "key": "budget",
+                            "label": "Tin 2-4 tỷ"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward": "Phú Hòa",
+                            "tracked": "168",
+                            "signals": "11",
+                            "land": "29,5 tr/m²",
+                            "house": "43,3 tr/m²",
+                            "budget": "62"
+                        },
+                        {
+                            "ward": "Phú Mỹ",
+                            "tracked": "133",
+                            "signals": "9",
+                            "land": "19,9 tr/m²",
+                            "house": "40,5 tr/m²",
+                            "budget": "85"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Độ phân tán của giá rao",
+                    "title": "Nửa giữa mẫu giá nằm trong khoảng nào?",
+                    "note": "Khoảng 25%-75% giúp thấy dữ liệu tập trung hay phân tán; không phải khung giá cố định cho mọi vị trí.",
+                    "columns": [
+                        {
+                            "key": "type",
+                            "label": "Loại hình"
+                        },
+                        {
+                            "key": "phu_hoa_sample",
+                            "label": "Mẫu Phú Hòa"
+                        },
+                        {
+                            "key": "phu_hoa_range",
+                            "label": "Phú Hòa 25%-75%"
+                        },
+                        {
+                            "key": "phu_my_sample",
+                            "label": "Mẫu Phú Mỹ"
+                        },
+                        {
+                            "key": "phu_my_range",
+                            "label": "Phú Mỹ 25%-75%"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "type": "Đất nền",
+                            "phu_hoa_sample": "32 tin",
+                            "phu_hoa_range": "19,9-75,0 tr/m²",
+                            "phu_my_sample": "33 tin",
+                            "phu_my_range": "19,1-23,0 tr/m²"
+                        },
+                        {
+                            "type": "Nhà đất",
+                            "phu_hoa_sample": "83 tin",
+                            "phu_hoa_range": "32,1-64,5 tr/m²",
+                            "phu_my_sample": "60 tin",
+                            "phu_my_range": "33,1-46,7 tr/m²"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Tổng giá rao",
+                    "title": "Số lựa chọn trong tầm 2-4 tỷ",
+                    "note": "Đếm trên các tin có tổng giá hợp lệ; không yêu cầu đồng thời phải có giá/m² hợp lệ.",
+                    "columns": [
+                        {
+                            "key": "type",
+                            "label": "Loại hình"
+                        },
+                        {
+                            "key": "phu_hoa_count",
+                            "label": "Phú Hòa 2-4 tỷ"
+                        },
+                        {
+                            "key": "phu_hoa_median",
+                            "label": "Phú Hòa tổng giá trung vị"
+                        },
+                        {
+                            "key": "phu_my_count",
+                            "label": "Phú Mỹ 2-4 tỷ"
+                        },
+                        {
+                            "key": "phu_my_median",
+                            "label": "Phú Mỹ tổng giá trung vị"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "type": "Đất nền",
+                            "phu_hoa_count": "14 tin",
+                            "phu_hoa_median": "4,15 tỷ",
+                            "phu_my_count": "25 tin",
+                            "phu_my_median": "2,29 tỷ"
+                        },
+                        {
+                            "type": "Nhà đất",
+                            "phu_hoa_count": "48 tin",
+                            "phu_hoa_median": "4,45 tỷ",
+                            "phu_my_count": "60 tin",
+                            "phu_my_median": "3,50 tỷ"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Giá/m² trung vị",
+                    "title": "Đất nền chênh rõ hơn nhà đất",
+                    "note": "Mỗi thanh là giá rao trung vị của đúng một loại hình.",
+                    "alt": "Biểu đồ giá rao trung vị đất nền và nhà đất tại Phú Hòa và Phú Mỹ",
+                    "rows": [
+                        {
+                            "label": "Phú Hòa · nhà đất",
+                            "value_label": "43,3 tr/m²",
+                            "width": 100,
+                            "color": "#16a34a"
+                        },
+                        {
+                            "label": "Phú Mỹ · nhà đất",
+                            "value_label": "40,5 tr/m²",
+                            "width": 94,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Phú Hòa · đất nền",
+                            "value_label": "29,5 tr/m²",
+                            "width": 68,
+                            "color": "#f59e0b"
+                        },
+                        {
+                            "label": "Phú Mỹ · đất nền",
+                            "value_label": "19,9 tr/m²",
+                            "width": 46,
+                            "color": "#2563eb"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Ngân sách 2-4 tỷ",
+                    "title": "Phú Mỹ có nhiều mẫu đúng tầm hơn",
+                    "note": "Tổng số tin đất nền và nhà đất có giá rao từ 2 đến 4 tỷ.",
+                    "alt": "Biểu đồ số tin 2-4 tỷ tại Phú Hòa và Phú Mỹ",
+                    "rows": [
+                        {
+                            "label": "Phú Mỹ · nhà đất",
+                            "value_label": "60 tin",
+                            "width": 100,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Phú Hòa · nhà đất",
+                            "value_label": "48 tin",
+                            "width": 80,
+                            "color": "#16a34a"
+                        },
+                        {
+                            "label": "Phú Mỹ · đất nền",
+                            "value_label": "25 tin",
+                            "width": 42,
+                            "color": "#2563eb"
+                        },
+                        {
+                            "label": "Phú Hòa · đất nền",
+                            "value_label": "14 tin",
+                            "width": 23,
+                            "color": "#f59e0b"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "ket-luan-phu-hoa-phu-my",
+                    "heading": "Kết luận nhanh: Phú Mỹ dễ tạo mốc đất nền, Phú Hòa có nhiều nguồn tin hơn",
+                    "paragraphs": [
+                        "Phú Hòa có 168 tin đang theo dõi, nhiều hơn Phú Mỹ 133 tin. Tuy nhiên, số lượng tin không đồng nghĩa dữ liệu dễ so hơn. Nhóm đất nền Phú Hòa có mức giá phân tán rộng, trong khi mẫu Phú Mỹ tập trung hơn quanh vùng 19,1-23,0 tr/m².",
+                        "Nếu người mua ưu tiên nhiều lựa chọn trong tổng ngân sách 2-4 tỷ, Phú Mỹ cũng có lợi thế với 85 tin đất nền và nhà đất, so với 62 tin tại Phú Hòa."
+                    ],
+                    "bullets": [
+                        "Phú Hòa: 168 tin đang theo dõi; 11 dấu hiệu đáng kiểm tra",
+                        "Phú Mỹ: 133 tin đang theo dõi; 9 dấu hiệu đáng kiểm tra",
+                        "Đất nền Phú Mỹ có giá rao trung vị thấp hơn và khoảng giữa hẹp hơn",
+                        "Nhà đất hai phường có giá rao trung vị gần nhau hơn"
+                    ]
+                },
+                {
+                    "id": "so-dat-nen-phu-hoa-phu-my",
+                    "heading": "Đất nền: Phú Mỹ thấp hơn theo giá trung vị và tập trung hơn",
+                    "paragraphs": [
+                        "Phú Hòa có 47 tin đất nền đang theo dõi; 32 tin có giá/m² hợp lệ để thống kê. Giá rao trung vị là 29,5 tr/m². Nửa giữa mẫu nằm từ 19,9 đến 75,0 tr/m², cho thấy độ phân tán lớn giữa các tin.",
+                        "Phú Mỹ có 43 tin đất nền đang theo dõi; 33 tin có giá/m² hợp lệ. Giá rao trung vị là 19,9 tr/m² và nửa giữa mẫu nằm từ 19,1 đến 23,0 tr/m². Khoảng hẹp hơn giúp tạo mốc tham chiếu ban đầu rõ hơn."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Hòa: 29,5 tr/m² giá rao trung vị · mẫu 32 tin",
+                        "Đất nền Phú Mỹ: 19,9 tr/m² giá rao trung vị · mẫu 33 tin",
+                        "Tổng giá trung vị: Phú Hòa 4,15 tỷ · Phú Mỹ 2,29 tỷ",
+                        "Tin đất nền 2-4 tỷ: Phú Hòa 14 · Phú Mỹ 25"
+                    ]
+                },
+                {
+                    "id": "so-nha-dat-phu-hoa-phu-my",
+                    "heading": "Nhà đất: giá trung vị gần nhau hơn, cần đọc hiện trạng từng căn",
+                    "paragraphs": [
+                        "Nhà đất Phú Hòa có 120 tin đang theo dõi; 83 tin có giá/m² hợp lệ. Giá rao trung vị là 43,3 tr/m² và tổng giá trung vị là 4,45 tỷ.",
+                        "Nhà đất Phú Mỹ có 83 tin đang theo dõi; 60 tin có giá/m² hợp lệ. Giá rao trung vị là 40,5 tr/m² và tổng giá trung vị là 3,50 tỷ. Hai mức giá/m² gần nhau hơn nhóm đất nền, nhưng không nên kết luận hai phường tương đương nếu chưa so tuổi nhà, diện tích đất, đường/hẻm và pháp lý."
+                    ],
+                    "bullets": [
+                        "Nhà đất Phú Hòa: 43,3 tr/m² giá rao trung vị · mẫu 83 tin",
+                        "Nhà đất Phú Mỹ: 40,5 tr/m² giá rao trung vị · mẫu 60 tin",
+                        "Tin nhà đất 2-4 tỷ: Phú Hòa 48 · Phú Mỹ 60",
+                        "Nhà đất đã gồm công trình nên không so trực tiếp với đất nền"
+                    ]
+                },
+                {
+                    "id": "nguon-tin-va-dau-hieu",
+                    "heading": "Nguồn tin và dấu hiệu: Phú Hòa nhiều hơn, nhưng chênh lệch không lớn",
+                    "paragraphs": [
+                        "Radar BDS ghi nhận 11 tin có dấu hiệu đáng kiểm tra tại Phú Hòa, gồm 9 tin được đánh dấu hot và 2 tin giảm giá. Phú Mỹ có 9 dấu hiệu, gồm 6 tin hot và 3 tin giảm giá.",
+                        "Dấu hiệu chỉ giúp sắp thứ tự kiểm tra. Nó không chứng minh tin rẻ, pháp lý tốt hoặc nên mua. Một tin thấp hơn giá trung vị vẫn phải được kiểm tra vị trí, quy hoạch, giấy tờ và hiện trạng thực tế."
+                    ],
+                    "bullets": [
+                        "Phú Hòa: 11 dấu hiệu trên 168 tin đang theo dõi",
+                        "Phú Mỹ: 9 dấu hiệu trên 133 tin đang theo dõi",
+                        "Tin giảm giá: Phú Hòa 2 · Phú Mỹ 3",
+                        "Không dùng dấu hiệu như cam kết giá tốt hoặc lợi nhuận"
+                    ]
+                },
+                {
+                    "id": "cach-loc-tren-radar",
+                    "heading": "Cách dùng bảng này để lọc tin trên Radar BDS",
+                    "paragraphs": [
+                        "Trước tiên, chọn đất nền hoặc nhà đất. Tiếp theo, đặt khoảng tổng giá phù hợp, ví dụ 2-4 tỷ. Sau đó mới so giá/m² của từng tin với giá trung vị cùng phường và cùng loại hình.",
+                        "Nếu ưu tiên đất nền và cần mốc tham chiếu gọn, mở Phú Mỹ trước. Nếu muốn xem nguồn cung nhà đất rộng hơn, mở thêm Phú Hòa. Cuối cùng, kiểm tra mô tả, hình ảnh, đường/hẻm, giấy tờ, quy hoạch và đi thực địa trước khi đặt cọc."
+                    ],
+                    "bullets": [
+                        "Chọn đúng phường và loại hình BĐS",
+                        "Lọc tổng ngân sách trước khi nhìn giá/m²",
+                        "So mỗi tin với giá trung vị cùng loại hình",
+                        "Đọc kỹ tin có dấu hiệu, không vội liên hệ hoặc đặt cọc",
+                        "Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn đất nền hoặc nhà đất trước khi so giá.",
+                "Đã lọc tổng ngân sách, không chỉ nhìn giá/m².",
+                "Đã so Phú Hòa và Phú Mỹ trong cùng loại hình.",
+                "Đã hiểu giá trong bài là giá rao trung vị, không phải giá giao dịch.",
+                "Đã kiểm tra pháp lý, quy hoạch, vị trí và thực địa trước khi đặt cọc."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để so từng tin Phú Hòa và Phú Mỹ",
+            "body": "Chọn phường, tách đất nền/nhà đất và lọc tổng giá trước khi liên hệ từng tin cụ thể.",
+            "button": "Mở dashboard so tin",
+            "button_href": "/?tab=signals"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Phú Hòa hay Phú Mỹ dễ so giá hơn",
+                "href": "/tin-tuc/phu-hoa-hay-phu-my-khu-nao-de-so-gia-hon",
+                "url": "https://radarbds.vn/tin-tuc/phu-hoa-hay-phu-my-khu-nao-de-so-gia-hon"
+            }
+        ]
+    }
 }
 
 KNOWLEDGE_HUB = {'path': '/tin-tuc',
