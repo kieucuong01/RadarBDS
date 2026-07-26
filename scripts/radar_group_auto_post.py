@@ -53,19 +53,44 @@ def utm(url: str, slug: str) -> str:
 def clean(s: Any) -> str: return re.sub(r'\s+',' ',str(s or '')).strip()
 
 
+GENERIC_KNOWLEDGE_SLUG_PATTERNS = (
+    'vi-sao-',
+    'gia-trung-vi-la-gi',
+    'gia-rao-khac-gia-giao-dich',
+    'cach-doc-',
+)
+
+
+def is_radar_value_article(slug: str, page: dict) -> bool:
+    # Group posts must advertise Radar BDS's unique value: live data, ward filters,
+    # signals, price/m² comparisons. Generic education can still be used for comments,
+    # but should not be posted as standalone group marketing.
+    if any(slug.startswith(x) for x in GENERIC_KNOWLEDGE_SLUG_PATTERNS):
+        return False
+    text = ' '.join([
+        slug,
+        clean(page.get('hero_title') or page.get('title')),
+        clean(page.get('hero_text') or page.get('description')),
+    ]).casefold()
+    value_terms = ['radar bds', 'tin rao', 'tin facebook', 'tín hiệu', 'giá/m²', 'tr/m²', '14 ngày', 'phường', 'so dữ liệu', 'đang theo dõi']
+    return sum(1 for term in value_terms if term in text) >= 2
+
+
 def build_message(slug: str, page: dict) -> str:
+    if not is_radar_value_article(slug, page):
+        raise ValueError('Group post must be Radar-value/data-led, not generic knowledge')
     title=clean(page.get('hero_title') or page.get('title')).replace(' | Radar BDS','')
     insight=clean(page.get('hero_text') or page.get('description'))
-    if len(insight)>330: insight=insight[:327].rsplit(' ',1)[0]+'…'
+    if len(insight)>360: insight=insight[:357].rsplit(' ',1)[0]+'…'
     url=utm(SITE+str(page.get('path')),slug)
-    question='Anh/chị khi xem BĐS Bình Dương thường lọc loại hình trước, hay nhìn tổng giá trước?'
+    question='Anh/chị muốn Radar BDS lọc thêm khu/phường nào ở Bình Dương?'
     body=f"""{title}
 
 {insight}
 
-Radar BDS tổng hợp dữ liệu giá rao để giúp người mua lọc ban đầu. Nội dung không thay thẩm định pháp lý, quy hoạch hoặc kiểm tra thực tế.
+Điểm hữu ích của Radar BDS là gom tin rao, tách loại hình, đọc giá/m² và đánh dấu nhóm tin đáng kiểm tra để người mua không phải lướt từng bài thủ công. Đây chỉ là bộ lọc ban đầu, không thay thẩm định pháp lý, quy hoạch hoặc kiểm tra thực tế.
 
-Xem phần giải thích và bảng đối chiếu:
+Mở Radar BDS để xem dữ liệu/lọc tín hiệu:
 {url}
 
 {question}"""
@@ -163,7 +188,10 @@ def choose_article(state: dict, target: dict, force_slug: str|None=None) -> tupl
         if (target['id'],slug) in posted: continue
         try: age=(now-dt.date.fromisoformat(article_date(page))).days
         except Exception: age=999
-        if force_slug or 0<=age<=4: return slug,page
+        if force_slug:
+            if is_radar_value_article(slug,page): return slug,page
+            return None
+        if 0<=age<=4 and is_radar_value_article(slug,page): return slug,page
     return None
 
 

@@ -16,7 +16,7 @@ PAGE={
     'path':'/tin-tuc/demo',
     'title':'Bài dữ liệu demo | Radar BDS',
     'hero_title':'Bài dữ liệu demo',
-    'hero_text':'Một insight có ích cho người mua bất động sản Bình Dương.',
+    'hero_text':'Radar BDS ghi nhận 120 tin rao trong 14 ngày, có 18 tín hiệu đáng kiểm tra và giá/m² cần so theo phường.',
     'article':{'published_at':dt.date.today().isoformat(),'modified_at':dt.date.today().isoformat()},
 }
 TARGET={'id':'g1','name':'Group 1','url':'https://www.facebook.com/groups/g1/','enabled':True,'requires_review':False,'max_posts_per_week':1,'min_gap_hours':120}
@@ -28,6 +28,22 @@ class GroupAutoPostTests(unittest.TestCase):
         self.assertNotIn('#',text)
         self.assertIn('không thay thẩm định pháp lý',text)
         self.assertIn('utm_medium=group_post',text)
+
+
+    def test_group_auto_post_rejects_generic_knowledge_article(self):
+        generic=dict(PAGE, hero_title='Vì sao không nên so nhà đất chung với đất nền', hero_text='Bài giải thích kiến thức chung cho người mua.')
+        self.assertFalse(auto.is_radar_value_article('vi-sao-khong-nen-so-nha-dat-chung-voi-dat-nen', generic))
+        with self.assertRaises(ValueError): auto.build_message('vi-sao-khong-nen-so-nha-dat-chung-voi-dat-nen', generic)
+
+    def test_choose_article_prefers_radar_value_not_generic_recent(self):
+        original=auto.candidates
+        generic=dict(PAGE, hero_title='Vì sao không nên so nhà đất chung với đất nền', hero_text='Bài giải thích kiến thức chung.')
+        value=dict(PAGE, hero_title='Phú Mỹ có bao nhiêu tin đáng kiểm tra', hero_text='Radar BDS ghi nhận 220 tin rao trong 14 ngày, 31 tín hiệu và giá/m² theo phường.')
+        auto.candidates=lambda:[('vi-sao-khong-nen-so-nha-dat-chung-voi-dat-nen',generic),('phu-my-tin-dang-kiem-tra',value)]
+        try:
+            picked=auto.choose_article({'actions':[]},TARGET)
+            self.assertEqual(picked[0],'phu-my-tin-dang-kiem-tra')
+        finally: auto.candidates=original
 
     def test_allowlist_rejects_disabled_target(self):
         queue={'target':{'surface':'group','page_url':TARGET['url']},'content':{'message':'x'}}
