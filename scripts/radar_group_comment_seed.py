@@ -562,7 +562,16 @@ def selected_queries(config: dict, now: dt.datetime) -> list[str]:
 def discover_posts(config: dict, now: dt.datetime | None = None) -> list[dict]:
     now = now or dt.datetime.now().astimezone()
     queries = selected_queries(config, now)
-    if not queries:
+    target_groups = [g for g in config.get('target_groups', []) if g.get('enabled') and g.get('url')]
+    group_scans = []
+    for group in target_groups:
+        group_queries = [normalize_text(x) for x in group.get('queries', []) if normalize_text(x)] or queries
+        group_scans.append({
+            'name': normalize_text(group.get('name') or ''),
+            'url': normalize_text(group.get('url') or '').rstrip('/') + '/',
+            'queries': group_queries,
+        })
+    if not queries and not group_scans:
         return []
     cfg = config.get('global') or {}
     identity = str(cfg.get('identity') or '')
@@ -573,6 +582,7 @@ def discover_posts(config: dict, now: dt.datetime | None = None) -> list[dict]:
     program = f"""
 import json,time,urllib.parse
 queries={queries!r}
+group_scans={group_scans!r}
 identity={identity!r}
 restore_identity={restore_identity!r}
 max_results={max_results!r}
@@ -591,12 +601,15 @@ def switch_identity(target, other):
     opened=js("(() => {{const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'')==='Your profile');if(!e)return false;e.click();return true}})()")
     if not opened: raise RuntimeError('Your profile button not found')
     time.sleep(2)
-    clicked=js("(() => {{const label=%s;const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'')===label);if(!e)return false;e.click();return true}})()" % json.dumps('Switch to '+target))
-    if clicked: time.sleep(6)
+    already=js("(() => {{const label=%s;return [...document.querySelectorAll('[role=button]')].some(x=>(x.getAttribute('aria-label')||'').includes(label))}})()" % json.dumps('Switch to '+other))
+    if already:
+        press_key('ESC'); time.sleep(1); return True
+    clicked=js("(() => {{const label=%s;const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'').includes(label));if(!e)return false;e.click();return true}})()" % json.dumps('Switch to '+target))
+    if clicked: time.sleep(7)
     else: press_key('ESC'); time.sleep(1)
     opened=js("(() => {{const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'')==='Your profile');if(!e)return false;e.click();return true}})()")
     time.sleep(2)
-    verified=js("(() => {{const label=%s;return [...document.querySelectorAll('[role=button]')].some(x=>(x.getAttribute('aria-label')||'')===label)}})()" % json.dumps('Switch to '+other))
+    verified=js("(() => {{const label=%s;return [...document.querySelectorAll('[role=button]')].some(x=>(x.getAttribute('aria-label')||'').includes(label))}})()" % json.dumps('Switch to '+other))
     press_key('ESC'); time.sleep(1)
     if not opened or not verified: raise RuntimeError('Could not verify active identity '+target)
     return True
@@ -645,8 +658,16 @@ def embed_code(index):
 
 try:
     switch_identity(identity,restore_identity)
+    scan_urls=[]
     for query in queries:
-        goto_url('https://www.facebook.com/search/posts/?q='+urllib.parse.quote(query)); wait_for_load(); time.sleep(5); stop_guard('search')
+        scan_urls.append({{'query': query, 'url': 'https://www.facebook.com/search/posts/?q='+urllib.parse.quote(query), 'forced_group': ''}})
+    for group in group_scans:
+        for query in group.get('queries') or []:
+            scan_urls.append({{'query': query, 'url': group['url'].rstrip('/') + '/search/?q=' + urllib.parse.quote(query), 'forced_group': group.get('name') or group['url']}})
+    seen=set()
+    for scan in scan_urls:
+        query=scan['query']
+        goto_url(scan['url']); wait_for_load(); time.sleep(5); stop_guard('search')
         for _ in range(3): js("window.scrollBy(0,900)"); time.sleep(2)
         count=js("[...document.querySelectorAll('[role=article]')].filter(e=>!!(e.offsetWidth||e.offsetHeight||e.getClientRects().length)).length") or 0
         for index in range(min(int(count),max_results)):
@@ -657,7 +678,10 @@ try:
             code=embed_code(index)
             direct=snap.get('direct_post_url') or ''
             if not code and not direct: continue
-            snap.update({{'query':query,'surface':'group_post' if snap.get('group_surface') else 'public_post','embed_code':code}})
+            key=direct or code
+            if key in seen: continue
+            seen.add(key)
+            snap.update({{'query':query,'surface':'group_post' if (scan.get('forced_group') or snap.get('group_surface')) else 'public_post','embed_code':code,'target_group':scan.get('forced_group') or ''}})
             snap['engagement']={{'reactions':parse_count(snap.pop('reactions','')),'comments':parse_count(snap.pop('comments','')),'shares':parse_count(snap.pop('shares',''))}}
             results.append(snap)
 finally:

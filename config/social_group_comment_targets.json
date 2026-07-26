@@ -66,6 +66,42 @@
     "Chỉ comment bằng Tiny Sudo; luôn khôi phục Radar BDS trong finally.",
     "Comment có đúng một link HTTPS radarbds.vn, landing khớp city+ward và UTM public_post_seeding.",
     "Ward phải có ít nhất một tín hiệu hot từ /api/counts ngay trước khi comment; lỗi API thì fail closed.",
-    "Tín hiệu deal chỉ để lọc ban đầu; comment luôn nhắc kiểm tra ngày đăng, vị trí, pháp lý và giá thực tế."
+    "Tín hiệu deal chỉ để lọc ban đầu; comment luôn nhắc kiểm tra ngày đăng, vị trí, pháp lý và giá thực tế.",
+    "Daily comment seeding scans enabled target_groups first; keep global cap at 1 comment/day and only count rendered comments without Posting/Declined as success."
+  ],
+  "target_groups": [
+    {
+      "id": "CoVanTaichinhVietnam",
+      "name": "Cộng đồng Cố vấn tài chính Việt Nam - Vietnam Wealth Advisors (VWA)",
+      "url": "https://www.facebook.com/groups/CoVanTaichinhVietnam/",
+      "enabled": true,
+      "joined_identity": "Tiny Sudo",
+      "allow_link": true,
+      "queries": [
+        "bất động sản",
+        "đất đai",
+        "nhà đất",
+        "Bình Dương",
+        "Thủ Dầu Một",
+        "giá đất"
+      ],
+      "notes": "Joined as Tiny Sudo 2026-07-26. Financial/investing group: only comment when a visible post is truly land/BĐS-related and passes Radar ward/TDM relevance gates."
+    },
+    {
+      "id": "bdsbd247",
+      "name": "BẤT ĐỘNG SẢN BÌNH DƯƠNG - TP.HCM",
+      "url": "https://www.facebook.com/groups/bdsbd247/",
+      "enabled": true,
+      "joined_identity": "Tiny Sudo",
+      "allow_link": true,
+      "queries": [
+        "Phú Mỹ Thủ Dầu Một",
+        "Phú Tân Thủ Dầu Một",
+        "Định Hòa Thủ Dầu Một",
+        "Hiệp An Thủ Dầu Một",
+        "giá đất Thủ Dầu Một"
+      ],
+      "notes": "Accepted a rendered Radar link comment from Tiny Sudo on 2026-07-26; still verify no Posting/Declined on each publish."
+    }
   ]
 }
