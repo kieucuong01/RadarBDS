@@ -39,9 +39,9 @@
       "max_posts_per_week": 1,
       "min_gap_hours": 168,
       "allow_link": true,
-      "requires_review": true,
+      "requires_review": false,
       "rules_checked_at": "2026-07-26",
-      "notes": "Added from anh Cường share link. Public BĐS review group; Radar BDS join attempted but visible Joined not confirmed, so scheduler keeps requires_review=true. Can be used for manual prepare/publish after membership and composer are verified."
+      "notes": "Pilot post published from Radar BDS on 2026-07-26 after onboarding/join; group may initially show pending but permalink became visible. Keep max 1 post/week, one contextual Radar link, data/education tone, no listing/sales/phone spam."
     }
   ]
 }
