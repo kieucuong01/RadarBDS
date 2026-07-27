@@ -8229,6 +8229,274 @@ SEO_ARTICLES = {
                                'Đã hỏi lý do giảm giá hoặc giá thấp.',
                                'Chưa đặt cọc khi chưa xác minh độc lập.']}},
 
+    'phu-tan-nhieu-dau-hieu-dang-kiem-tra-nen-loc-the-nao': {'variant': 'knowledge',
+ 'path': '/tin-tuc/phu-tan-nhieu-dau-hieu-dang-kiem-tra-nen-loc-the-nao',
+ 'category': {'key': 'tin-hieu-thi-truong', 'label': 'Tín hiệu thị trường'},
+ 'title': 'Phú Tân nhiều tin đáng kiểm tra: lọc gì trước khi gọi môi giới? | Radar BDS',
+ 'description': 'Phú Tân có 250 tin Facebook trong 14 ngày, 95 dấu hiệu; đất nền 22,8 tr/m², nhà '
+                'đất 35,0 tr/m². Cách lọc trước khi gọi môi giới.',
+ 'keywords': 'Phú Tân nhiều tin đáng kiểm tra, lọc tin Phú Tân, giá đất Phú Tân, đất nền Phú Tân, '
+             'nhà đất Phú Tân, Radar BDS',
+ 'breadcrumb_label': 'Phú Tân nhiều tin đáng kiểm tra',
+ 'hero_badge': 'Tín hiệu Phú Tân',
+ 'hero_title': 'Phú Tân nhiều tin đáng kiểm tra: lọc gì trước khi gọi môi giới?',
+ 'hero_text': 'Trong 14 ngày từ 14/07 đến 27/07/2026, Radar BDS ghi nhận 250 tin rao Facebook ở '
+              'Phú Tân, trong đó 95 tin có dấu hiệu đáng kiểm tra. Đây là lý do nên lọc kỹ theo '
+              'loại hình, giá/m² và tổng ngân sách trước khi gọi môi giới.',
+ 'scope_label': 'Thủ Dầu Một · Phú Tân',
+ 'hero_checks': ['250 tin rao Facebook Phú Tân trong 14 ngày',
+                 '95 tin có dấu hiệu đáng kiểm tra, chủ yếu ở nhóm đất nền',
+                 'Đất nền Phú Tân có giá trung vị 22,8 tr/m²',
+                 'Nhà đất Phú Tân có giá trung vị 35,0 tr/m²'],
+ 'primary_cta': 'Mở Radar lọc dấu hiệu Phú Tân',
+ 'primary_href': '/?tab=signals',
+ 'secondary_cta': 'Đọc giá đất Phú Tân',
+ 'secondary_href': '/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu',
+ 'map_label': 'Tin tức / Phú Tân',
+ 'hero_metric': {'label': 'Dấu hiệu đáng kiểm tra',
+                 'value': '95 tin',
+                 'delta': '/250 tin rao',
+                 'note': 'Facebook 14 ngày, cập nhật 27/07/2026'},
+ 'property_card': {'status': 'Kết luận nhanh',
+                   'title': 'Phú Tân đáng lọc, không nên gọi môi giới theo cảm giác',
+                   'price': 'Đất nền 22,8 tr/m² · nhà đất 35,0 tr/m² · đều là giá rao trung vị',
+                   'metric_a': 'Đất nền có dấu hiệu',
+                   'metric_a_value': '77 tin',
+                   'metric_b': 'Nhà đất có dấu hiệu',
+                   'metric_b_value': '16 tin'},
+ 'value_cards': [{'title': 'Nhiều mẫu để lọc nhưng phải tách loại hình',
+                  'body': 'Phú Tân có 184 tin đất nền và 51 tin nhà đất trong mẫu 14 ngày. Giá đất '
+                          'nền và nhà đất không nên so chung vì nhà đất đã gồm công trình và hiện '
+                          'trạng sử dụng.'},
+                 {'title': 'Dấu hiệu tập trung ở đất nền',
+                  'body': 'Trong 95 tin có dấu hiệu đáng kiểm tra, đất nền chiếm 77 tin. Người mua '
+                          'đất nền nên ưu tiên kiểm tra giá/m², diện tích, thổ cư và vị trí '
+                          'đường/hẻm.'},
+                 {'title': 'Ngân sách 2-3 tỷ vẫn có mẫu đất nền',
+                  'body': 'Nhóm đất nền Phú Tân có 69 tin trong khoảng 2-3 tỷ và 35 tin trong '
+                          'khoảng 3-5 tỷ. Đây là giá rao, cần xác minh thực địa trước khi quyết '
+                          'định.'}],
+ 'dashboard_preview': {'eyebrow': 'Từ bài viết sang dashboard',
+                       'title': 'Lọc Phú Tân theo dấu hiệu, loại hình và ngân sách',
+                       'body': 'Sau khi đọc bài, hãy mở dashboard để lọc riêng Phú Tân, chọn đất '
+                               'nền hoặc nhà đất, rồi ưu tiên tin có giá/m² và tổng giá rõ ràng.',
+                       'image': '/static/images/seo/dashboard-preview.png',
+                       'alt': 'Dashboard Radar BDS lọc tin Phú Tân theo dấu hiệu đáng kiểm tra',
+                       'cta': 'Mở dashboard Phú Tân',
+                       'metrics': [{'value': '250', 'label': 'tin Facebook 14 ngày'},
+                                   {'value': '95', 'label': 'dấu hiệu đáng kiểm tra'},
+                                   {'value': '2 loại', 'label': 'đất nền và nhà đất'}]},
+ 'market_snapshot': {'eyebrow': 'Dữ liệu Facebook Phú Tân',
+                     'title': 'Đọc Phú Tân theo loại hình trước khi gọi môi giới',
+                     'body': 'Bảng dưới đây dùng giá rao trung vị. Giá trung vị nghĩa là một nửa '
+                             'số tin thấp hơn mức này, một nửa cao hơn.',
+                     'columns': ['Loại hình', 'Số tin', 'Dấu hiệu', 'Giá/m²', 'Tổng giá'],
+                     'rows': [{'area': 'Đất nền',
+                               'price': '184 tin',
+                               'tracked': '77 tin',
+                               'signal': '22,8 tr/m²',
+                               'area_m2': '2,70 tỷ',
+                               'note': '119 tin có giá/m²'},
+                              {'area': 'Nhà đất',
+                               'price': '51 tin',
+                               'tracked': '16 tin',
+                               'signal': '35,0 tr/m²',
+                               'area_m2': '3,50 tỷ',
+                               'note': '43 tin có giá/m²'}],
+                     'cards': [{'title': 'Tổng mẫu',
+                                'value': '250 tin',
+                                'body': 'Tin rao Facebook Phú Tân trong 14 ngày.'},
+                               {'title': 'Dấu hiệu',
+                                'value': '95 tin',
+                                'body': 'Nhóm tin nên mở ra kiểm tra kỹ hơn, không phải khuyến '
+                                        'nghị mua.'},
+                               {'title': 'Loại hình chính',
+                                'value': 'Đất nền',
+                                'body': '184 tin đất nền, nhiều hơn nhà đất trong mẫu hiện tại.'}]},
+ 'local_links_title': 'Đọc tiếp để kiểm tra kỹ hơn',
+ 'local_links': [{'label': 'Giá đất Phú Tân hiện bao nhiêu?',
+                  'href': '/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu',
+                  'description': 'Xem mặt bằng giá Phú Tân nhưng vẫn tách đất nền và nhà đất.'},
+                 {'label': 'Phú Tân hay Phú Lợi đáng kiểm tra hơn?',
+                  'href': '/tin-tuc/phu-tan-phu-loi-khu-nao-dang-kiem-tra-hon',
+                  'description': 'So tín hiệu Phú Tân với phường lân cận.'},
+                 {'label': 'Tin rẻ bất thường ở Bình Dương cần kiểm tra gì?',
+                  'href': '/tin-tuc/tin-re-bat-thuong-binh-duong-can-kiem-tra-gi',
+                  'description': 'Checklist khi gặp tin có giá thấp hoặc giảm giá.'},
+                 {'label': 'Giá trung vị là gì khi xem giá đất?',
+                  'href': '/tin-tuc/gia-trung-vi-la-gi-khi-xem-gia-dat',
+                  'description': 'Hiểu cách Radar đọc giá rao trung vị.'},
+                 {'label': 'Mở dashboard tín hiệu Radar',
+                  'href': '/?tab=signals',
+                  'description': 'Lọc tin theo phường, loại hình và dấu hiệu đáng kiểm tra.'}],
+ 'process_title': 'Cách lọc tin Phú Tân trước khi gọi môi giới',
+ 'process': [{'title': '1. Chọn đúng loại hình',
+              'body': 'Tách đất nền và nhà đất trước khi so giá. Không lấy giá nhà đất để kết luận '
+                      'đất nền đắt hay rẻ.'},
+             {'title': '2. So giá/m² và tổng giá',
+              'body': 'Giá/m² giúp hiểu mặt bằng, tổng giá giúp biết có vừa ngân sách không. Cần '
+                      'đọc cả hai.'},
+             {'title': '3. Mở nhóm có dấu hiệu',
+              'body': 'Dấu hiệu đáng kiểm tra chỉ là bộ lọc ban đầu. Hãy hỏi lại diện tích, vị '
+                      'trí, pháp lý và lý do giá thấp/giảm.'}],
+ 'faq': [{'q': 'Vì sao Phú Tân có nhiều tin đáng kiểm tra?',
+          'a': 'Trong dữ liệu Facebook 14 ngày từ 14/07 đến 27/07/2026, Phú Tân có 250 tin rao và '
+               '95 tin có dấu hiệu đáng kiểm tra. Phần lớn dấu hiệu nằm ở đất nền, nên người mua '
+               'cần lọc kỹ theo giá/m², tổng giá và vị trí.'},
+         {'q': 'Giá đất nền Phú Tân hiện khoảng bao nhiêu?',
+          'a': 'Với nhóm đất nền Phú Tân trong mẫu Facebook 14 ngày, giá rao trung vị là 22,8 '
+               'tr/m² và tổng giá rao trung vị khoảng 2,70 tỷ. Đây là giá rao, không phải giá giao '
+               'dịch đã chốt.'},
+         {'q': 'Nhà đất Phú Tân đang khác đất nền thế nào?',
+          'a': 'Nhà đất Phú Tân có giá rao trung vị 35,0 tr/m² và tổng giá rao trung vị khoảng '
+               '3,50 tỷ trong mẫu 14 ngày. Không nên so trực tiếp với đất nền vì nhà đất đã gồm '
+               'công trình và hiện trạng sử dụng.'},
+         {'q': 'Tin có dấu hiệu đáng kiểm tra có phải là tin tốt không?',
+          'a': 'Không. Dấu hiệu đáng kiểm tra chỉ giúp bạn ưu tiên mở tin để hỏi thêm. Tin vẫn cần '
+               'kiểm tra pháp lý, quy hoạch, đường/hẻm, diện tích công nhận và tình trạng chủ/môi '
+               'giới trước khi giao dịch.'},
+         {'q': 'Dữ liệu trong bài lấy từ đâu?',
+          'a': 'Bài dùng tin rao Facebook công khai Radar BDS ghi nhận trong 14 ngày, từ 14/07 đến '
+               '27/07/2026, đã loại tin blacklist và tin bị ẩn review theo hệ thống Radar.'}],
+ 'article': {'published_at': '2026-07-27',
+             'modified_at': '2026-07-27',
+             'intro': ['Nếu hỏi Phú Tân có đáng mở ra lọc ngay không, câu trả lời ngắn là có: '
+                       'trong 14 ngày từ 14/07 đến 27/07/2026, Radar BDS ghi nhận 250 tin rao '
+                       'Facebook ở Phú Tân và 95 tin có dấu hiệu đáng kiểm tra.',
+                       'Nhưng nhiều dấu hiệu không có nghĩa là tin nào cũng tốt. Bạn nên dùng dữ '
+                       'liệu này để rút ngắn danh sách, tách đất nền và nhà đất, rồi kiểm tra từng '
+                       'tin trước khi gọi môi giới hoặc đi xem.'],
+             'summary_cards': [{'label': 'Tin Phú Tân 14 ngày',
+                                'value': '250 tin',
+                                'note': 'Facebook, cập nhật 27/07/2026'},
+                               {'label': 'Dấu hiệu đáng kiểm tra',
+                                'value': '95 tin',
+                                'note': '92 tin nổi bật, 8 tin giảm giá; có tin trùng hai nhóm'},
+                               {'label': 'Đất nền Phú Tân',
+                                'value': '22,8 tr/m²',
+                                'note': 'Giá rao trung vị, 119 tin có giá/m²'},
+                               {'label': 'Nhà đất Phú Tân',
+                                'value': '35,0 tr/m²',
+                                'note': 'Giá rao trung vị, 43 tin có giá/m²'}],
+             'data_tables': [{'eyebrow': 'Bảng chính',
+                              'title': 'Phú Tân: tách đất nền và nhà đất để đọc đúng',
+                              'note': 'Nguồn: tin rao Facebook công khai Radar BDS ghi nhận '
+                                      '14/07–27/07/2026. Giá là giá rao trung vị.',
+                              'columns': [{'key': 'loai_hinh', 'label': 'Loại hình'},
+                                          {'key': 'so_tin', 'label': 'Số tin'},
+                                          {'key': 'dau_hieu', 'label': 'Dấu hiệu'},
+                                          {'key': 'gia_m2', 'label': 'Giá/m² trung vị'},
+                                          {'key': 'tong_gia', 'label': 'Tổng giá trung vị'}],
+                              'rows': [{'loai_hinh': 'Đất nền',
+                                        'so_tin': '184 tin',
+                                        'dau_hieu': '77 tin',
+                                        'gia_m2': '22,8 tr/m²',
+                                        'tong_gia': '2,70 tỷ'},
+                                       {'loai_hinh': 'Nhà đất',
+                                        'so_tin': '51 tin',
+                                        'dau_hieu': '16 tin',
+                                        'gia_m2': '35,0 tr/m²',
+                                        'tong_gia': '3,50 tỷ'}]},
+                             {'eyebrow': 'Ngân sách',
+                              'title': 'Mẫu Phú Tân phân bố theo tổng giá rao như thế nào?',
+                              'note': 'Chỉ tính các tin có tổng giá rao hợp lệ. Bảng giúp chọn '
+                                      'khoảng ngân sách để mở dashboard lọc tiếp.',
+                              'columns': [{'key': 'loai_hinh', 'label': 'Loại hình'},
+                                          {'key': 'duoi_2', 'label': '<2 tỷ'},
+                                          {'key': 'hai_ba', 'label': '2-3 tỷ'},
+                                          {'key': 'ba_nam', 'label': '3-5 tỷ'},
+                                          {'key': 'tren_5', 'label': '≥5 tỷ'}],
+                              'rows': [{'loai_hinh': 'Đất nền',
+                                        'duoi_2': '4 tin',
+                                        'hai_ba': '69 tin',
+                                        'ba_nam': '35 tin',
+                                        'tren_5': '21 tin'},
+                                       {'loai_hinh': 'Nhà đất',
+                                        'duoi_2': '0 tin',
+                                        'hai_ba': '13 tin',
+                                        'ba_nam': '29 tin',
+                                        'tren_5': '4 tin'}]}],
+             'charts': [{'eyebrow': 'Dấu hiệu theo loại hình',
+                         'title': 'Đất nền chiếm phần lớn tin đáng kiểm tra ở Phú Tân',
+                         'note': 'Minh họa số tin có dấu hiệu đáng kiểm tra trong mẫu Facebook 14 '
+                                 'ngày.',
+                         'alt': 'So số tin có dấu hiệu đáng kiểm tra ở Phú Tân theo đất nền và nhà '
+                                'đất',
+                         'rows': [{'label': 'Đất nền',
+                                   'value_label': '77 tin',
+                                   'width': 100,
+                                   'color': '#2563eb'},
+                                  {'label': 'Nhà đất',
+                                   'value_label': '16 tin',
+                                   'width': 21,
+                                   'color': '#16a34a'},
+                                  {'label': 'Loại khác',
+                                   'value_label': '2 tin',
+                                   'width': 3,
+                                   'color': '#f59e0b'}]}],
+             'sections': [{'id': 'ket-luan-nhanh',
+                           'heading': 'Kết luận nhanh: Phú Tân đáng lọc, nhưng không nên gọi theo '
+                                      'cảm giác',
+                           'paragraphs': ['Phú Tân đang có nhiều mẫu để lọc: 250 tin rao trong 14 '
+                                          'ngày và 95 tin có dấu hiệu đáng kiểm tra. Với người '
+                                          'mua, điều này có ích vì bạn không phải đọc từng bài '
+                                          'Facebook thủ công để tìm nhóm cần hỏi sâu.',
+                                          'Tuy vậy, dấu hiệu chỉ là bước sàng lọc ban đầu. Một tin '
+                                          'có thể được đánh dấu vì giá/m² đáng chú ý, thông tin '
+                                          'giảm giá, hoặc dữ liệu cần mở ra kiểm tra thêm. Không '
+                                          'nên hiểu đó là cơ hội chắc chắn.'],
+                           'bullets': ['Bắt đầu từ nhóm đất nền nếu bạn muốn nhiều mẫu nhất.',
+                                       'Đọc riêng nhà đất nếu bạn cần nhà ở sẵn hoặc tài sản có '
+                                       'công trình.',
+                                       'Luôn so giá/m² cùng loại hình, sau đó mới nhìn tổng giá.']},
+                          {'id': 'doc-dau-hieu',
+                           'heading': 'Cách đọc dấu hiệu ở Phú Tân để không bị lệch quyết định',
+                           'paragraphs': ['Trong nhóm đất nền Phú Tân, giá rao trung vị là 22,8 '
+                                          'tr/m² và tổng giá rao trung vị khoảng 2,70 tỷ. Đây là '
+                                          'nhóm có 77 tin có dấu hiệu đáng kiểm tra, nên người mua '
+                                          'đất nền nên ưu tiên lọc thêm theo diện tích, mặt tiền, '
+                                          'đường/hẻm và thổ cư.',
+                                          'Trong nhóm nhà đất Phú Tân, giá rao trung vị là 35,0 '
+                                          'tr/m² và tổng giá rao trung vị khoảng 3,50 tỷ. Nhà đất '
+                                          'cần đọc thêm hiện trạng công trình, chi phí sửa chữa, '
+                                          'pháp lý và khả năng sử dụng ngay, nên không thể so '
+                                          'thẳng với đất nền.'],
+                           'bullets': ['Đất nền: hỏi diện tích công nhận, thổ cư, ngang dài và '
+                                       'đường vào.',
+                                       'Nhà đất: hỏi hiện trạng nhà, năm xây, chi phí sửa và giấy '
+                                       'tờ.',
+                                       'Tin giảm giá: hỏi giá trước đó, lý do giảm và chủ/môi giới '
+                                       'đăng.']},
+                          {'id': 'loc-truoc-khi-goi',
+                           'heading': 'Nên lọc gì trước khi gọi môi giới?',
+                           'paragraphs': ['Nếu ngân sách 2-3 tỷ, nhóm đất nền Phú Tân có 69 tin có '
+                                          'tổng giá rao trong khoảng này, còn nhà đất có 13 tin. '
+                                          'Nếu ngân sách 3-5 tỷ, đất nền có 35 tin và nhà đất có '
+                                          '29 tin. Hãy chọn khoảng ngân sách trước để tránh gọi '
+                                          'quá nhiều tin không phù hợp.',
+                                          'Sau khi chọn ngân sách, hãy mở tin có giá/m² rõ ràng và '
+                                          'mô tả đầy đủ trước. Những tin thiếu diện tích, thiếu vị '
+                                          'trí, hoặc mô tả pháp lý mơ hồ nên được xếp vào nhóm hỏi '
+                                          'thêm, không xếp vào nhóm đi xem ngay.'],
+                           'bullets': ['Bước 1: chọn đất nền hay nhà đất.',
+                                       'Bước 2: chọn khoảng tổng giá phù hợp.',
+                                       'Bước 3: so giá/m² với mặt bằng cùng loại hình.',
+                                       'Bước 4: hỏi pháp lý, quy hoạch và đường/hẻm trước khi đi '
+                                       'xem.']}],
+             'checklist': ['Đã tách đất nền và nhà đất trước khi so giá.',
+                           'Đã hiểu giá trong bài là giá rao trung vị, không phải giá chốt.',
+                           'Đã chọn khoảng ngân sách trước khi gọi môi giới.',
+                           'Đã kiểm tra tin có đủ giá/m², tổng giá, diện tích và vị trí.',
+                           'Chưa đặt cọc khi chưa xác minh pháp lý, quy hoạch và thực địa.']},
+ 'final_cta': {'title': 'Mở Radar để lọc Phú Tân theo dấu hiệu',
+               'body': 'Dùng dashboard để lọc riêng Phú Tân, chọn đất nền hoặc nhà đất, sau đó mở '
+                       'nhóm tin có dấu hiệu đáng kiểm tra trước khi gọi môi giới.',
+               'button': 'Mở dashboard Radar'},
+ 'breadcrumbs': [{'name': 'Trang chủ', 'href': '/', 'url': 'https://radarbds.vn/'},
+                 {'name': 'Tin tức', 'href': '/tin-tuc', 'url': 'https://radarbds.vn/tin-tuc'},
+                 {'name': 'Phú Tân nhiều tin đáng kiểm tra',
+                  'href': '/tin-tuc/phu-tan-nhieu-dau-hieu-dang-kiem-tra-nen-loc-the-nao',
+                  'url': 'https://radarbds.vn/tin-tuc/phu-tan-nhieu-dau-hieu-dang-kiem-tra-nen-loc-the-nao'}]},
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
