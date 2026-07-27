@@ -135,7 +135,7 @@ def query_ward_pulse(days: int, limit: int) -> list[dict]:
         cur = conn.cursor()
         for ward in TDM_WARDS:
             base = (
-                f"{ward_filter(ward)} AND source = 'facebook' AND is_active = 0 "
+                f"{ward_filter(ward)} AND source = 'facebook' AND is_active = 1 "
                 "AND is_blacklisted = 0 AND review_hidden = 0 AND crawled_at IS NOT NULL "
                 f"AND crawled_at::timestamp >= '{start.isoformat()}'::timestamp"
             )
