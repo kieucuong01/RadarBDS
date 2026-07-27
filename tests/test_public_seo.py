@@ -292,6 +292,29 @@ def test_legacy_phu_my_news_url_redirects_to_current_article_and_preserves_query
     )
 
 
+def test_removed_knowledge_url_redirects_to_closest_current_article_and_preserves_query():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get(
+        "/kien-thuc/dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin"
+        "?utm_source=bing"
+    )
+
+    assert response.status_code == 301
+    assert response.headers["Location"] == (
+        "/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai?utm_source=bing"
+    )
+
+
+def test_truncated_gia_rao_news_url_redirects_to_canonical_article():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get("/tin-tuc/gia-rao-k")
+
+    assert response.status_code == 301
+    assert response.headers["Location"] == "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao"
+
+
 def test_binh_duong_location_landing_pages_render_and_are_indexed():
     import app as radar_app
 

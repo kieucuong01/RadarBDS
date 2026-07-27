@@ -2188,17 +2188,26 @@ def seo_news_hub_page():
     )
 
 
+_LEGACY_KNOWLEDGE_REDIRECTS = {
+    "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin": (
+        "/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai"
+    ),
+}
+
+
 def seo_knowledge_legacy_redirect(article_slug: str | None = None):
     target = "/tin-tuc"
     if article_slug:
-        article = SEO_ARTICLES.get(article_slug)
-        if not article:
-            abort(404)
-        article_path = str(article.get("path") or "")
-        if article_path.startswith(("/tin-tuc/", "/bao-cao/")):
-            target = article_path
-        else:
-            abort(404)
+        target = _LEGACY_KNOWLEDGE_REDIRECTS.get(str(article_slug or ""))
+        if not target:
+            article = SEO_ARTICLES.get(article_slug)
+            if not article:
+                abort(404)
+            article_path = str(article.get("path") or "")
+            if article_path.startswith(("/tin-tuc/", "/bao-cao/")):
+                target = article_path
+            else:
+                abort(404)
     query = request.query_string.decode("ascii", errors="ignore")
     if query:
         target = f"{target}?{query}"
@@ -2223,6 +2232,7 @@ def seo_report_or_article_page(report_slug: str):
 
 _LEGACY_NEWS_REDIRECTS = {
     "gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
+    "gia-rao-k": "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao",
 }
 
 
