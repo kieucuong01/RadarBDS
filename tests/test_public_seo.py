@@ -336,6 +336,30 @@ def test_truncated_gia_rao_news_url_redirects_to_canonical_article():
     assert response.headers["Location"] == "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao"
 
 
+def test_legacy_knowledge_phu_my_url_redirects_to_current_news_article():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get(
+        "/kien-thuc/gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026?utm_source=ga4"
+    )
+
+    assert response.status_code == 301
+    assert response.headers["Location"] == (
+        "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu?utm_source=ga4"
+    )
+
+
+def test_legacy_knowledge_tdm_ward_separation_url_redirects_to_comparison_article():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get(
+        "/kien-thuc/gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia"
+    )
+
+    assert response.status_code == 301
+    assert response.headers["Location"] == "/tin-tuc/phuong-nao-thu-dau-mot-gia-dat-con-de-mua"
+
+
 def test_legacy_report_article_urls_redirect_to_news_and_sitemap_uses_canonical_news_paths():
     import app as radar_app
 

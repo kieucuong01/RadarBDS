@@ -2192,6 +2192,12 @@ _LEGACY_KNOWLEDGE_REDIRECTS = {
     "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin": (
         "/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai"
     ),
+    "gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026": (
+        "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu"
+    ),
+    "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia": (
+        "/tin-tuc/phuong-nao-thu-dau-mot-gia-dat-con-de-mua"
+    ),
 }
 
 
