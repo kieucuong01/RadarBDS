@@ -315,6 +315,24 @@ def test_truncated_gia_rao_news_url_redirects_to_canonical_article():
     assert response.headers["Location"] == "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao"
 
 
+def test_legacy_report_article_urls_redirect_to_news_and_sitemap_uses_canonical_news_paths():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    legacy = "/bao-cao/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"
+    canonical = "/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"
+    response = client.get(legacy + "?utm_source=facebook")
+
+    with radar_app.app.test_request_context("/sitemap.xml"):
+        sitemap = radar_app.sitemap_xml().get_data(as_text=True)
+
+    assert response.status_code == 301
+    assert response.headers["Location"] == canonical + "?utm_source=facebook"
+    assert f"<loc>https://radarbds.vn{legacy}</loc>" not in sitemap
+    assert f"<loc>https://radarbds.vn{canonical}</loc>" in sitemap
+    assert client.get(canonical).status_code == 200
+
+
 def test_binh_duong_location_landing_pages_render_and_are_indexed():
     import app as radar_app
 

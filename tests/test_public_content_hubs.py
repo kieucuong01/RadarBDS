@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 import pytest
 
@@ -21,18 +21,17 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
     news = client.get("/tin-tuc")
 
     assert report.status_code == 200
-    assert knowledge.status_code == 200
+    assert knowledge.status_code == 301
+    assert knowledge.headers["Location"] == "/tin-tuc"
     assert news.status_code == 200
 
     report_html = report.get_data(as_text=True)
-    knowledge_html = knowledge.get_data(as_text=True)
     news_html = news.get_data(as_text=True)
     assert '<link rel="canonical" href="https://radarbds.vn/bao-cao">' in report_html
-    assert '<link rel="canonical" href="https://radarbds.vn/kien-thuc">' in knowledge_html
     assert '<link rel="canonical" href="https://radarbds.vn/tin-tuc">' in news_html
     assert 'class="seo-page report-hub"' in report_html
-    assert 'class="seo-page knowledge-hub"' in knowledge_html
-    for html in (report_html, knowledge_html):
+    assert 'class="seo-page knowledge-hub"' in news_html
+    for html in (report_html, news_html):
         assert "hub-hero" in html
         assert "hub-hero-grid" in html
         assert "hub-insight-panel" in html
@@ -40,10 +39,15 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
         assert '"@type": "CollectionPage"' in html
         assert '"@type": "ItemList"' in html
         assert '"@type": "BreadcrumbList"' in html
-    assert '"@type": "CollectionPage"' in news_html
+    assert 'class="seo-lead-capture"' in report_html
+    assert 'class="seo-lead-capture"' in news_html
+    assert 'data-source-context="seo_report_hub_lead"' in report_html
+    assert 'data-source-context="seo_news_hub_lead"' in news_html
+    assert "'/api/leads'" in report_html
+    assert "'/api/leads'" in news_html
 
     assert "Hiện ưu tiên Thủ Dầu Một" in report_html
-    assert KNOWLEDGE_HUB["hero_title"] in knowledge_html
+    assert "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS" in news_html
 
 
 @pytest.mark.parametrize(
@@ -54,7 +58,6 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
         ("/bang-gia-dat-tphcm", "bang-gia-dat"),
         ("/quy-hoach-binh-duong", "quy-hoach"),
         ("/bao-cao", "bao-cao"),
-        ("/kien-thuc", "kien-thuc"),
         ("/tin-tuc", "tin-tuc"),
         ("/san-deal-bds", "san-deal"),
     ],
@@ -63,7 +66,7 @@ def test_shared_navigation_and_active_state(path, active):
     import app as radar_app
 
     html = radar_app.app.test_client().get(path).get_data(as_text=True)
-    for item in ("binh-duong", "quy-hoach", "dinh-gia", "bang-gia-dat", "bao-cao", "tin-tuc", "kien-thuc", "san-deal"):
+    for item in ("binh-duong", "quy-hoach", "dinh-gia", "bang-gia-dat", "bao-cao", "tin-tuc", "san-deal"):
         assert f'data-nav="{item}"' in html
     assert f'data-nav="{active}" aria-current="page"' in html
     assert ">Bán đất</a>" not in html
@@ -119,7 +122,7 @@ def test_hubs_are_in_sitemap_and_detail_canonicals_stay_unchanged():
         sitemap = radar_app.sitemap_xml().get_data(as_text=True)
 
     assert "<loc>https://radarbds.vn/bao-cao</loc>" in sitemap
-    assert "<loc>https://radarbds.vn/kien-thuc</loc>" in sitemap
+    assert "<loc>https://radarbds.vn/kien-thuc</loc>" not in sitemap
     assert "<loc>https://radarbds.vn/tin-tuc</loc>" in sitemap
     client = radar_app.app.test_client()
     for article in SEO_ARTICLES.values():
@@ -141,7 +144,7 @@ def test_all_public_content_json_ld_is_valid():
     import re
     import app as radar_app
 
-    paths = ["/bao-cao", "/kien-thuc", "/bao-cao/bds-binh-duong-thang-06-2026"]
+    paths = ["/bao-cao", "/tin-tuc", "/bao-cao/bds-binh-duong-thang-06-2026"]
     paths.extend(article["path"] for article in SEO_ARTICLES.values())
     client = radar_app.app.test_client()
 

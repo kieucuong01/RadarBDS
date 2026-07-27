@@ -2222,6 +2222,12 @@ def seo_report_or_article_page(report_slug: str):
         page_path = str(SEO_ARTICLES[report_slug].get("path") or "")
         if page_path.startswith("/bao-cao/"):
             return seo_article_page(report_slug)
+        if page_path.startswith("/tin-tuc/"):
+            query = request.query_string.decode("ascii", errors="ignore")
+            target = page_path
+            if query:
+                target = f"{target}?{query}"
+            return redirect(target, code=301)
     match = re.fullmatch(r"([a-z0-9-]+)-thang-\d{2}-\d{4}", report_slug or "")
     if match:
         latest = _latest_ward_report(match.group(1))

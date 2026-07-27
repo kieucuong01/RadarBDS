@@ -3818,7 +3818,7 @@ SEO_ARTICLES = {
                   'href': '/binh-duong/phuong-phu-tan',
                   'description': 'Trang địa phương để xem giá, vị trí và tin theo phường Phú Tân.'},
                  {'label': 'Báo cáo Phú Tân tháng 07/2026',
-                  'href': '/bao-cao/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026',
+                  'href': '/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026',
                   'description': 'Bài dữ liệu sâu hơn về Phú Tân, dùng để đối chiếu thêm.'},
                  {'label': 'Giá đất Phú Lợi hiện bao nhiêu',
                   'href': '/tin-tuc/gia-dat-phu-loi-hien-bao-nhieu',
@@ -4034,7 +4034,7 @@ SEO_ARTICLES = {
                        'có dấu hiệu cần kiểm tra trước khi liên hệ.',
                'button': 'Mở dashboard lọc Phú Tân'}},
 'gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026': {'variant': 'knowledge',
-                                                       'path': '/bao-cao/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026',
+                                                       'path': '/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026',
                                                        'title': 'Giá đất Phú Tân Thủ Dầu Một cập nhật tháng 7/2026 | '
                                                                 'Radar BDS',
                                                        'description': 'Giá đất Phú Tân Thủ Dầu Một tháng 7/2026: đất '
@@ -4565,7 +4565,7 @@ SEO_ARTICLES = {
                                                                                          'width': 21,
                                                                                          'color': '#f59e0b'}]}]}},
  'gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026': {'variant': 'knowledge',
-                                                        'path': '/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
+                                                        'path': '/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
                                                         'title': 'Giá đất Định Hòa Thủ Dầu Một cập nhật tháng 7/2026 | '
                                                                  'Radar BDS',
                                                         'description': 'Giá đất Định Hòa tháng 7/2026: đất nền có mức '
@@ -4614,7 +4614,7 @@ SEO_ARTICLES = {
                                                                          'description': 'Mở trang phường để lọc tin và '
                                                                                         'dấu hiệu đáng chú ý.'},
                                                                         {'label': 'Giá đất Phú Tân',
-                                                                         'href': '/bao-cao/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026',
+                                                                         'href': '/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026',
                                                                          'description': 'So với phường có dấu hiệu '
                                                                                         'đáng chú ý cao hơn.'},
                                                                         {'label': 'Giá đất Hiệp An',
@@ -5071,8 +5071,8 @@ SEO_ARTICLES = {
                                                                          'href': '/kien-thuc',
                                                                          'url': 'https://radarbds.vn/kien-thuc'},
                                                                         {'name': 'Giá đất Định Hòa',
-                                                                         'href': '/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
-                                                                         'url': 'https://radarbds.vn/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'}]},
+                                                                         'href': '/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
+                                                                         'url': 'https://radarbds.vn/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'}]},
  'cach-xem-gia-dat-binh-duong-khong-bi-so-sai': {'variant': 'knowledge',
                                                  'path': '/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai',
                                                  'title': 'Cách xem giá đất Bình Dương không bị so sai | Radar BDS',
@@ -5477,7 +5477,7 @@ SEO_ARTICLES = {
         },
         {
             "label": "Giá đất Định Hòa cập nhật tháng 7/2026",
-            "href": "/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
+            "href": "/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
             "description": "Định Hòa có 123 tin 14 ngày, đất nền 19,9 tr/m² trong cùng nhịp dữ liệu."
         },
         {
@@ -7552,7 +7552,7 @@ SEO_ARTICLES = {
 
 KNOWLEDGE_HUB = {'path': '/tin-tuc',
  'title': 'Tin tức BĐS Bình Dương | Radar BDS',
- 'description': 'Tin tức, hướng dẫn và bài SEO dữ liệu về nhà đất Bình Dương từ Radar BDS.',
+ 'description': 'Tin tức BĐS Bình Dương từ dữ liệu Radar: giá đất theo phường, so sánh khu vực, hướng dẫn đọc giá rao và dấu hiệu đáng kiểm tra.',
  'keywords': 'tin tức BĐS Bình Dương, giá đất Bình Dương, Radar BDS, nhà đất Thủ Dầu Một',
  'breadcrumb_label': 'Tin tức',
  'hero_badge': 'Tin tức BĐS',

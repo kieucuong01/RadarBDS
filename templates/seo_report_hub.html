@@ -125,6 +125,9 @@
         <p>Thử bỏ lọc TP/phường hoặc nhập lại tên phường, tháng, chỉ số cần tìm.</p>
       </div>
     </section>
+
+    {% set lead_cta_context = "seo_report_hub_lead" %}
+    {% include "partials/seo_lead_capture.html" %}
   </main>
   {% include "partials/seo_footer.html" %}
 
@@ -196,6 +199,7 @@
       applyReportFilters();
     });
   </script>
+  {% include "partials/seo_lead_capture_script.html" %}
   {% set view_event = "report_viewed" %}
   {% include "partials/seo_tracking.html" %}
 </body>

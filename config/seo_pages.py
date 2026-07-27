@@ -15785,7 +15785,7 @@ for _report_page in SEO_PAGES.values():
 REPORT_HUB = {
     "path": "/bao-cao",
     "title": "Báo cáo thị trường BĐS Bình Dương | Radar BDS",
-    "description": "Kho báo cáo thị trường bất động sản Bình Dương; hiện ưu tiên dữ liệu Thủ Dầu Một.",
+    "description": "Kho báo cáo thị trường BĐS Bình Dương theo tháng: giá trung vị, số tin rao, tín hiệu đáng chú ý và dữ liệu theo phường Thủ Dầu Một.",
     "keywords": "báo cáo BĐS Bình Dương, báo cáo Thủ Dầu Một, thị trường bất động sản",
     "hero_title": "Báo cáo thị trường BĐS Bình Dương",
     "hero_text": "Theo dõi các báo cáo tháng đã chốt dữ liệu. Báo cáo tháng mới chỉ publish sau khi hết tháng để số liệu đầy đủ hơn.",
@@ -15832,7 +15832,7 @@ def _rb_prepend_unique_page_link(page_slug, link):
 
 _PHU_TAN_ARTICLE_LINK = {
     "label": "Giá đất Phú Tân tháng 7/2026",
-    "href": "/bao-cao/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
+    "href": "/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
     "description": "Bài phân tích data-driven: 708 tin active, 321 tín hiệu, đất nền trung vị 23,8 tr/m².",
 }
 _PHU_TAN_REPORT_LINK = {
@@ -15868,6 +15868,6 @@ def _rb_prepend_unique_link_dinh_hoa_demo(page_key, link):
     if not any(item.get("href") == link.get("href") for item in links):
         links.insert(0, link)
 
-_dinh_hoa_article_link = {"label": "Giá đất Định Hòa tháng 7/2026", "href": "/bao-cao/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Bài mới có bảng giá, biểu đồ và cách đọc theo loại hình."}
+_dinh_hoa_article_link = {"label": "Giá đất Định Hòa tháng 7/2026", "href": "/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Bài mới có bảng giá, biểu đồ và cách đọc theo loại hình."}
 for _key in ["bao-cao/dinh-hoa-thang-07-2026", "binh-duong/phuong-dinh-hoa", "binh-duong/thu-dau-mot", "bao-cao/bds-binh-duong-thang-07-2026"]:
     _rb_prepend_unique_link_dinh_hoa_demo(_key, _dinh_hoa_article_link)

@@ -113,6 +113,9 @@
       </div>
       {% endif %}
     </section>
+
+    {% set lead_cta_context = "seo_news_hub_lead" %}
+    {% include "partials/seo_lead_capture.html" %}
   </main>
   {% include "partials/seo_footer.html" %}
 
@@ -132,6 +135,7 @@
     ]
   }
   </script>
+  {% include "partials/seo_lead_capture_script.html" %}
   {% set view_event = "seo_landing_viewed" %}
   {% include "partials/seo_tracking.html" %}
 </body>
