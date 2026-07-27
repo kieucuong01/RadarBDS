@@ -36,12 +36,19 @@ def _load_queue(path: Path) -> dict:
 
 def _program(queue: dict, mode: str, screenshot_path: str) -> str:
     page_url = queue.get("target", {}).get("page_url") or "https://www.facebook.com/radarbdsvn/"
-    message = queue["content"]["message"]
+    content = queue.get("content", {})
+    message = content["message"]
+    image = str(content.get("visual_path") or content.get("image") or "").strip()
+    if image and not Path(image).exists():
+        raise SystemExit(f"Queue visual/image file missing: {image}")
+    needle = message.split("\n", 1)[0][:70]
     # The code below runs inside browser-use CLI, where helper functions are pre-imported.
     return f"""
 import json, time
 page_url = {page_url!r}
 message = {message!r}
+image = {image!r}
+needle = {needle!r}
 mode = {mode!r}
 screenshot_path = {screenshot_path!r}
 
@@ -76,6 +83,7 @@ for n in ax_nodes():
 if not composer:
     raise RuntimeError('Composer button not found. Stop before taking any account action.')
 click_backend(composer)
+time.sleep(3)
 
 # Find composer textbox and type message.
 textbox = None
@@ -91,6 +99,21 @@ if not textbox:
 click_backend(textbox)
 type_text(message)
 time.sleep(5)
+
+if image:
+    # Upload only through the file input inside the one composer that already contains our caption.
+    caption_dialogs = js("[...document.querySelectorAll('[role=dialog]')].filter(d => (d.innerText||'').includes(" + json.dumps(needle) + ")).length")
+    if caption_dialogs != 1:
+        raise RuntimeError('Expected exactly one caption composer, found ' + str(caption_dialogs))
+    doc = cdp('DOM.getDocument', depth=1)['root']['nodeId']
+    ids = cdp('DOM.querySelectorAll', nodeId=doc, selector='[role="dialog"] input[type="file"]')['nodeIds']
+    if len(ids) != 1:
+        raise RuntimeError('Expected one composer file input, found ' + str(len(ids)))
+    cdp('DOM.setFileInputFiles', nodeId=ids[0], files=[image])
+    time.sleep(8)
+    caption_dialogs = js("[...document.querySelectorAll('[role=dialog]')].filter(d => (d.innerText||'').includes(" + json.dumps(needle) + ") && d.querySelector('img')).length")
+    if caption_dialogs != 1:
+        raise RuntimeError('Caption and visual are not in the same composer')
 
 # Screenshot after content/link preview loads. Only dismiss hashtag suggestions
 # when hashtags are present; pressing Escape on plain native posts can close the
@@ -111,22 +134,29 @@ if mode != 'publish':
     raise RuntimeError(f'Unsupported mode: {{mode}}')
 
 def verified_on_page():
-    js('window.scrollTo(0, 0)')
-    time.sleep(2)
     needle = message.split('\\n', 1)[0][:60]
-    has_dialog = any(
-        (n.get('role') or {{}}).get('value', '') == 'dialog'
-        and 'Create post' in (((n.get('name') or {{}}).get('value', '')) or '')
-        for n in ax_nodes()
-    )
-    found_article = False
-    for n in ax_nodes():
-        role = (n.get('role') or {{}}).get('value', '')
-        name = (n.get('name') or {{}}).get('value', '')
-        if role == 'article' and needle and needle in name:
-            found_article = True
-            break
-    return found_article and not has_dialog, needle
+    # New Page posts can appear lower than the hero/profile cards after publish,
+    # especially when a visual is attached. Scan the rendered timeline before
+    # declaring a false negative.
+    for y in (0, 900, 1800, 3200, 5200, 7600):
+        js('window.scrollTo(0, ' + str(y) + ')')
+        time.sleep(1.5)
+        nodes = ax_nodes()
+        has_dialog = any(
+            (n.get('role') or {{}}).get('value', '') == 'dialog'
+            and 'Create post' in (((n.get('name') or {{}}).get('value', '')) or '')
+            for n in nodes
+        )
+        found_article = False
+        for n in nodes:
+            role = (n.get('role') or {{}}).get('value', '')
+            name = (n.get('name') or {{}}).get('value', '')
+            if role == 'article' and needle and needle in name:
+                found_article = True
+                break
+        if found_article and not has_dialog:
+            return True, needle
+    return False, needle
 
 # Current Page UI is normally: composer -> Next -> Post settings -> Post.
 # Some variants publish/close after Next; verify before looking for final Post.
