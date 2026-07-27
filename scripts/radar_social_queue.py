@@ -141,12 +141,12 @@ def _hashtags_for_page(page: dict[str, Any]) -> list[str]:
     return ["RadarBDS", "BinhDuong", "ThuDauMot"]
 
 
-def _utm_url(url: str, slug: str, *, campaign: str = "daily_article") -> str:
+def _utm_url(url: str, slug: str, *, campaign: str = "page_article") -> str:
     parsed = urllib.parse.urlsplit(url)
     query = dict(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
     query.update({
         "utm_source": "facebook",
-        "utm_medium": "organic",
+        "utm_medium": "organic_social",
         "utm_campaign": campaign,
         "utm_content": slug,
     })

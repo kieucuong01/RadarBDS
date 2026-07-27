@@ -15743,8 +15743,19 @@ SEO_PAGES = {
 from config.seo_locations import SEO_LOCATION_INDEX_LINKS, SEO_LOCATION_PAGES
 
 SEO_PAGES.update(SEO_LOCATION_PAGES)
-SEO_PAGES["binh-duong"]["local_links_title"] = "Khu vực liên quan"
-SEO_PAGES["binh-duong"]["local_links"] = SEO_LOCATION_INDEX_LINKS
+SEO_PAGES["binh-duong"]["local_links_title"] = "Dữ liệu theo khu vực và báo cáo mới nhất"
+SEO_PAGES["binh-duong"]["local_links"] = [
+    {
+        "label": "Báo cáo Thủ Dầu Một tháng 06/2026",
+        "href": "/bao-cao/bds-binh-duong-thang-06-2026",
+        "description": "Báo cáo tháng đã chốt với bảng so sánh và liên kết đến đủ 13 phường.",
+    },
+    {
+        "label": "Tin tức dữ liệu Bình Dương",
+        "href": "/tin-tuc",
+        "description": "Bài giá đất theo phường, so sánh khu vực và hướng dẫn kiểm tra tin rao.",
+    },
+] + SEO_LOCATION_INDEX_LINKS
 SEO_PAGES["ban-dat-binh-duong"]["local_links"] = [
     SEO_LOCATION_PAGES[slug]
     for slug in (
@@ -15825,13 +15836,13 @@ _PHU_TAN_ARTICLE_LINK = {
     "description": "Bài phân tích data-driven: 708 tin active, 321 tín hiệu, đất nền trung vị 23,8 tr/m².",
 }
 _PHU_TAN_REPORT_LINK = {
-    "label": "Báo cáo Phú Tân tháng 07/2026",
-    "href": "/bao-cao/phu-tan-thang-07-2026",
+    "label": "Báo cáo Phú Tân tháng 06/2026",
+    "href": "/bao-cao/phu-tan-thang-06-2026",
     "description": "Báo cáo tháng có bảng loại hình, biểu đồ và phương pháp tính giá/m².",
 }
 _MASTER_REPORT_LINK = {
-    "label": "Báo cáo Thủ Dầu Một tháng 07/2026",
-    "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+    "label": "Báo cáo Thủ Dầu Một tháng 06/2026",
+    "href": "/bao-cao/bds-binh-duong-thang-06-2026",
     "description": "So Phú Tân với 12 phường còn lại trong cùng kỳ dữ liệu.",
 }
 _WARD_LINK = {
@@ -15841,9 +15852,9 @@ _WARD_LINK = {
 }
 _rb_prepend_unique_page_link("binh-duong/phuong-phu-tan", _PHU_TAN_ARTICLE_LINK)
 _rb_prepend_unique_page_link("binh-duong/phuong-phu-tan", _PHU_TAN_REPORT_LINK)
-_rb_prepend_unique_page_link("bao-cao/phu-tan-thang-07-2026", _PHU_TAN_ARTICLE_LINK)
-_rb_prepend_unique_page_link("bao-cao/phu-tan-thang-07-2026", _WARD_LINK)
-_rb_prepend_unique_page_link("bao-cao/phu-tan-thang-07-2026", _MASTER_REPORT_LINK)
+_rb_prepend_unique_page_link("bao-cao/phu-tan-thang-06-2026", _PHU_TAN_ARTICLE_LINK)
+_rb_prepend_unique_page_link("bao-cao/phu-tan-thang-06-2026", _WARD_LINK)
+_rb_prepend_unique_page_link("bao-cao/phu-tan-thang-06-2026", _MASTER_REPORT_LINK)
 _rb_prepend_unique_page_link("san-deal-bds", _PHU_TAN_ARTICLE_LINK)
 _rb_prepend_unique_page_link("san-deal-bds", _PHU_TAN_REPORT_LINK)
 _rb_prepend_unique_page_link("binh-duong/thu-dau-mot", _PHU_TAN_ARTICLE_LINK)

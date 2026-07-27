@@ -109,6 +109,49 @@ def test_google_site_tags_are_env_driven(monkeypatch):
         assert 'window.gtag("config", analyticsId);' in html
 
 
+def test_google_site_tags_reach_report_article_and_hubs(monkeypatch):
+    import app as radar_app
+
+    monkeypatch.setattr(radar_app, "GOOGLE_ANALYTICS_ID", "G-TEST1234")
+    monkeypatch.setattr(radar_app, "GOOGLE_SEARCH_CONSOLE_VERIFICATION", "search-console-token")
+
+    client = radar_app.app.test_client()
+    paths = [
+        "/bao-cao",
+        "/bao-cao/bds-binh-duong-thang-06-2026",
+        "/tin-tuc",
+        "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao",
+    ]
+
+    for path in paths:
+        response = client.get(path, base_url="https://radarbds.vn")
+        html = response.get_data(as_text=True)
+        assert response.status_code == 200
+        assert '<meta name="google-site-verification" content="search-console-token">' in html
+        assert 'const analyticsId = "G-TEST1234";' in html
+        assert 'const analyticsId = "";' not in html
+        assert 'script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(analyticsId);' in html
+        assert "fetch('/api/track'" in html
+        assert "social_utm_visit" in html
+        assert "cta_clicked" in html
+
+
+def test_report_hub_prefers_master_report_and_news_hub_is_reader_facing():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    report_html = client.get("/bao-cao").get_data(as_text=True)
+    news_html = client.get("/tin-tuc").get_data(as_text=True)
+    landing_html = client.get("/binh-duong").get_data(as_text=True)
+
+    assert '<a class="seo-primary-cta" href="/bao-cao/bds-binh-duong-thang-06-2026"' in report_html
+    assert "SEO / AIO / AI-SEO" not in news_html
+    assert "Bình Dương · Tin tức dữ liệu" in news_html
+    assert "Đọc tin tức theo nhóm nhu cầu" in news_html
+    assert 'href="/bao-cao/bds-binh-duong-thang-06-2026"' in landing_html
+    assert 'href="/tin-tuc"' in landing_html
+
+
 def test_google_site_tags_are_omitted_without_env(monkeypatch):
     import app as radar_app
 

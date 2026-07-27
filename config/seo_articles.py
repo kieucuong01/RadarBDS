@@ -1248,7 +1248,7 @@ SEO_ARTICLES = {
                       'href': '/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu',
                       'description': 'Xem riêng đất nền và nhà đất tại Định Hòa.'},
                      {'label': 'Giá đất Tân An hiện bao nhiêu',
-                      'href': '/tin-tuc/gia-dat-tan-an-hien-bao-nhieu',
+                      'href': '/tin-tuc/gia-dat-tan-an-thu-dau-mot-hien-nay',
                       'description': 'Xem riêng đất nền và nhà đất tại Tân An.'},
                      {'label': 'Giá đất Tương Bình Hiệp hiện bao nhiêu',
                       'href': '/tin-tuc/gia-dat-tuong-binh-hiep-hien-bao-nhieu',
@@ -4063,8 +4063,8 @@ SEO_ARTICLES = {
                                                                        '321 dấu hiệu được quan tâm hoặc có giảm giá '
                                                                        'cần lọc tiếp trên dashboard'],
                                                        'primary_cta': 'Mở dashboard lọc Phú Tân',
-                                                       'secondary_cta': 'Xem báo cáo Phú Tân tháng 07/2026',
-                                                       'secondary_href': '/bao-cao/phu-tan-thang-07-2026',
+                                                       'secondary_cta': 'Xem báo cáo Phú Tân tháng 06/2026',
+                                                       'secondary_href': '/bao-cao/phu-tan-thang-06-2026',
                                                        'map_label': 'Knowledge / Phú Tân',
                                                        'hero_metric': {'label': 'Đất nền mức giá ở giữa',
                                                                        'value': '23,8',
@@ -4080,8 +4080,8 @@ SEO_ARTICLES = {
                                                                          'metric_b': 'Dấu hiệu đáng chú ý',
                                                                          'metric_b_value': '321'},
                                                        'local_links_title': 'Đọc tiếp về Phú Tân',
-                                                       'local_links': [{'label': 'Báo cáo Phú Tân tháng 07/2026',
-                                                                        'href': '/bao-cao/phu-tan-thang-07-2026',
+                                                       'local_links': [{'label': 'Báo cáo Phú Tân tháng 06/2026',
+                                                                        'href': '/bao-cao/phu-tan-thang-06-2026',
                                                                         'description': 'Báo cáo tháng với biểu đồ, '
                                                                                        'phân bố loại hình và phương '
                                                                                        'pháp tính giá/m².'},
@@ -4089,12 +4089,12 @@ SEO_ARTICLES = {
                                                                         'href': '/binh-duong/phuong-phu-tan',
                                                                         'description': 'Landing theo dõi nhà đất Phú '
                                                                                        'Tân và các khu vực liên quan.'},
-                                                                       {'label': 'Báo cáo Thủ Dầu Một tháng 07/2026',
-                                                                        'href': '/bao-cao/bds-binh-duong-thang-07-2026',
+                                                                       {'label': 'Báo cáo Thủ Dầu Một tháng 06/2026',
+                                                                        'href': '/bao-cao/bds-binh-duong-thang-06-2026',
                                                                         'description': 'So Phú Tân với 12 phường còn '
                                                                                        'lại trong cùng kỳ dữ liệu.'},
                                                                        {'label': 'So Phú Mỹ với Hiệp An và Chánh Nghĩa',
-                                                                        'href': '/kien-thuc/nha-dat-phu-my-thu-dau-mot-cach-so-dung-voi-hiep-an-chanh-nghia',
+                                                                        'href': '/tin-tuc/phu-hoa-hay-phu-my-khu-nao-de-so-gia-hon',
                                                                         'description': 'Cách chọn mẫu so sánh khi đọc '
                                                                                        'các phường Thủ Dầu Một.'}],
                                                        'faq': [{'q': 'Giá đất nền Phú Tân Thủ Dầu Một hiện khoảng bao '
@@ -4618,7 +4618,7 @@ SEO_ARTICLES = {
                                                                          'description': 'So với phường có dấu hiệu '
                                                                                         'đáng chú ý cao hơn.'},
                                                                         {'label': 'Giá đất Hiệp An',
-                                                                         'href': '/kien-thuc/gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026',
+                                                                         'href': '/tin-tuc/gia-dat-hiep-an-hien-bao-nhieu',
                                                                          'description': 'So với phường có nguồn cung '
                                                                                         'lớn.'}],
                                                         'process_title': 'Cách đọc giá Định Hòa',
@@ -5139,8 +5139,8 @@ SEO_ARTICLES = {
                                                                      'rows': [],
                                                                      'cards': []},
                                                  'local_links_title': 'Đọc tiếp sau bài này',
-                                                 'local_links': [{'label': 'Báo cáo thị trường tháng 07/2026',
-                                                                  'href': '/bao-cao/bds-binh-duong-thang-07-2026',
+                                                 'local_links': [{'label': 'Báo cáo thị trường tháng 06/2026',
+                                                                  'href': '/bao-cao/bds-binh-duong-thang-06-2026',
                                                                   'description': 'Xem bức tranh tháng của Thủ Dầu Một '
                                                                                  'và các phường.'},
                                                                  {'label': 'Bảng báo cáo theo phường',
@@ -7559,7 +7559,7 @@ KNOWLEDGE_HUB = {'path': '/tin-tuc',
  'hero_title': 'Tin tức BĐS Bình Dương từ dữ liệu Radar',
  'hero_text': 'Các bài viết ngắn, dễ hiểu, có bảng số liệu thật để người mua nhà đất Bình Dương tham khảo trước khi mở '
               'dashboard hoặc đọc báo cáo tháng.',
- 'scope_label': 'SEO / AIO / AI-SEO',
+ 'scope_label': 'Bình Dương · Tin tức dữ liệu',
  'featured_slug': 'dat-nen-hay-nha-dat-thu-dau-mot-dang-de-so-gia-hon',
  'breadcrumbs': [{'name': 'Trang chủ', 'href': '/', 'url': 'https://radarbds.vn/'},
                  {'name': 'Tin tức', 'href': '/tin-tuc', 'url': 'https://radarbds.vn/tin-tuc'}]}

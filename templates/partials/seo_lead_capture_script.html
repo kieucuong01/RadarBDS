@@ -52,12 +52,27 @@
         }
         form.reset();
         setStatus(form, 'Đã nhận thông tin. Radar BDS sẽ ưu tiên gửi tin phù hợp qua Zalo.', 'success');
+        const params = new URLSearchParams(window.location.search);
+        const leadContext = {
+          source_context: form.dataset.sourceContext || 'seo_lead_cta',
+          page_path: window.location.pathname,
+          utm_source: params.get('utm_source') || '',
+          utm_medium: params.get('utm_medium') || '',
+          utm_campaign: params.get('utm_campaign') || '',
+          utm_content: params.get('utm_content') || ''
+        };
+        try {
+          fetch('/api/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: 'lead_capture_submit', context: leadContext }),
+            keepalive: true
+          }).catch(function () {});
+        } catch (err) {}
         try {
           if (typeof window.gtag === 'function') {
-            window.gtag('event', 'lead_capture_submit', {
-              source_context: form.dataset.sourceContext || 'seo_lead_cta',
-              page_path: window.location.pathname
-            });
+            window.gtag('event', 'lead_capture_submit', leadContext);
           }
         } catch (err) {}
       } catch (err) {

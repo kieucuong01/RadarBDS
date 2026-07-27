@@ -91,6 +91,10 @@ def inject_google_site_tags():
     return {
         "GOOGLE_ANALYTICS_ID": analytics_id,
         "GOOGLE_SEARCH_CONSOLE_VERIFICATION": GOOGLE_SEARCH_CONSOLE_VERIFICATION,
+        # Shared SEO article/report partials use lowercase names. Keep both
+        # aliases so every public template family receives the same values.
+        "google_analytics_id": analytics_id,
+        "google_search_console_verification": GOOGLE_SEARCH_CONSOLE_VERIFICATION,
     }
 
 
@@ -1222,6 +1226,7 @@ ALLOWED_TRACK_ACTIONS = {
     "social_utm_visit",
     "ai_referral_visit",
     "cta_clicked",
+    "lead_capture_submit",
     "teaser_hit_12",
     "locked_tab_click",
     "locked_fresh_click",
@@ -1821,9 +1826,11 @@ def _published_report_pages() -> list[dict]:
     ]
 
 
-def _report_sort_key(page: dict) -> tuple[int, int, str, str]:
+def _report_sort_key(page: dict) -> tuple[int, int, int, str, str]:
     year, month = _report_period_key(page)
-    return (year, month, (page.get("report") or {}).get("published_at", ""), page.get("path", ""))
+    path = page.get("path", "")
+    master_rank = int(path.startswith("/bao-cao/bds-binh-duong-thang-"))
+    return (year, month, master_rank, (page.get("report") or {}).get("published_at", ""), path)
 
 
 def _latest_ward_report(ward_slug: str) -> dict | None:

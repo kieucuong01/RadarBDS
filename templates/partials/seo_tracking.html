@@ -1,8 +1,32 @@
 <script>
 (() => {
   const analyticsId = {{ google_analytics_id|default('', true)|tojson }};
+  const viewEvent = {{ view_event|default('seo_landing_viewed')|tojson }};
+  const pageMeta = {
+    path: window.location.pathname,
+    page_slug: window.location.pathname.replace(/^\/+|\/+$/g, ""),
+    page_title: document.title
+  };
+
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+
+  function sendRadarEvent(action, context) {
+    const payload = Object.assign({}, pageMeta, context || {});
+    try {
+      fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: action, context: payload }),
+        keepalive: true
+      }).catch(function () {});
+    } catch (err) {}
+    try {
+      window.gtag("event", action, payload);
+    } catch (err) {}
+  }
+
   if (analyticsId) {
     window.gtag("js", new Date());
     window.gtag("config", analyticsId);
@@ -16,14 +40,30 @@
     };
     window.addEventListener("load", () => window.setTimeout(loadAnalytics, 1200), { once: true });
   }
-  window.gtag("event", {{ view_event|default('seo_landing_viewed')|tojson }}, {
-    page_path: window.location.pathname,
-    page_title: document.title
-  });
+
+  const params = new URLSearchParams(window.location.search);
+  const utmSource = (params.get('utm_source') || '').trim().toLowerCase();
+  const utmMedium = (params.get('utm_medium') || '').trim().toLowerCase();
+  const socialSources = ['facebook', 'fb', 'instagram', 'linkedin', 'tiktok', 'twitter', 'x'];
+  const socialMediums = [
+    'social', 'organic', 'organic_social', 'social_organic', 'paid_social',
+    'pinned_comment', 'group_post', 'comment'
+  ];
+  if (socialSources.indexOf(utmSource) !== -1 || socialMediums.indexOf(utmMedium) !== -1) {
+    sendRadarEvent('social_utm_visit', {
+      utm_source: utmSource,
+      utm_medium: utmMedium,
+      utm_campaign: params.get('utm_campaign') || '',
+      utm_content: params.get('utm_content') || ''
+    });
+  }
+
+  sendRadarEvent(viewEvent);
+
   document.addEventListener("click", (event) => {
     const link = event.target.closest("[data-track-cta]");
     if (!link) return;
-    window.gtag("event", "cta_clicked", {
+    sendRadarEvent("cta_clicked", {
       cta_name: link.dataset.trackCta || "unknown",
       destination: link.getAttribute("href") || ""
     });

@@ -31,6 +31,8 @@ def test_data_status_includes_radar_domain_and_ward_filter_link():
     assert "Vào radarbds.vn → lọc phường Tân An" in message
     assert "https://radarbds.vn/?tab=signals&ward=T%C3%A2n+An" in message
     assert "utm_campaign=ward_filter" in message
+    assert "utm_medium=organic_social" in message
+    assert "utm_campaign=page_article" in item["content"]["link"]
     assert "Bài phân tích dữ liệu:" in message
     assert item["content"]["link"] in message
     assert ward_filter_link in message
