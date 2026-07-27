@@ -4038,8 +4038,8 @@ SEO_ARTICLES = {
                                                        'title': 'Giá đất Phú Tân Thủ Dầu Một cập nhật tháng 7/2026 | '
                                                                 'Radar BDS',
                                                        'description': 'Giá đất Phú Tân Thủ Dầu Một tháng 7/2026: đất '
-                                                                      'nền có mức giá ở giữa 23,8 tr/m², nhà đất có '
-                                                                      'mức giá ở giữa 34,8 tr/m², 708 tin đang theo '
+                                                                      'nền có giá trung vị 23,8 tr/m², nhà đất có '
+                                                                      'giá trung vị 34,8 tr/m², 708 tin đang theo '
                                                                       'dõi và 321 dấu hiệu đáng chú ý do Radar BDS ghi '
                                                                       'nhận.',
                                                        'keywords': 'giá đất Phú Tân Thủ Dầu Một, nhà đất Phú Tân, đất '
@@ -4051,14 +4051,14 @@ SEO_ARTICLES = {
                                                        'hero_text': 'Trong dữ liệu tin Facebook đang theo dõi của '
                                                                     'Radar BDS cập nhật đến 19/07/2026, Phú Tân có 708 '
                                                                     'tin đang theo dõi và 321 dấu hiệu đáng chú ý đáng '
-                                                                    'chú ý. Đất nền có mức giá ở giữa 23,8 tr/m², nhà '
-                                                                    'đất có mức giá ở giữa 34,8 tr/m²; hai mức giá này '
+                                                                    'chú ý. Đất nền có giá trung vị 23,8 tr/m², nhà '
+                                                                    'đất có giá trung vị 34,8 tr/m²; hai mức giá này '
                                                                     'cần đọc riêng để tránh so sai loại tài sản.',
                                                        'scope_label': 'Thủ Dầu Một · Phú Tân',
                                                        'hero_checks': ['708 tin tin Facebook đang theo dõi ở Phú Tân',
-                                                                       'Đất nền: 383 tin có giá/m², mức giá ở giữa '
+                                                                       'Đất nền: 383 tin có giá/m², giá trung vị '
                                                                        '23,8 tr/m²',
-                                                                       'Nhà đất: 67 tin có giá/m², mức giá ở giữa 34,8 '
+                                                                       'Nhà đất: 67 tin có giá/m², giá trung vị 34,8 '
                                                                        'tr/m²',
                                                                        '321 dấu hiệu được quan tâm hoặc có giảm giá '
                                                                        'cần lọc tiếp trên dashboard'],
@@ -4066,14 +4066,14 @@ SEO_ARTICLES = {
                                                        'secondary_cta': 'Xem báo cáo Phú Tân tháng 06/2026',
                                                        'secondary_href': '/bao-cao/phu-tan-thang-06-2026',
                                                        'map_label': 'Knowledge / Phú Tân',
-                                                       'hero_metric': {'label': 'Đất nền mức giá ở giữa',
+                                                       'hero_metric': {'label': 'Đất nền giá trung vị',
                                                                        'value': '23,8',
                                                                        'delta': 'tr/m²',
                                                                        'note': '383 tin đất nền có giá/m²'},
                                                        'property_card': {'status': 'Phú Tân — dữ liệu tin đang theo '
                                                                                    'dõi',
                                                                          'title': 'Đất nền phổ biến quanh 2,9 tỷ',
-                                                                         'price': '23,8 tr/m² · 2,9 tỷ mức giá ở giữa '
+                                                                         'price': '23,8 tr/m² · 2,9 tỷ giá trung vị '
                                                                                   'đất nền',
                                                                          'metric_a': 'Tin đang theo dõi',
                                                                          'metric_a_value': '708',
@@ -4101,7 +4101,7 @@ SEO_ARTICLES = {
                                                                      'nhiêu?',
                                                                 'a': 'Theo dữ liệu tin Facebook đang theo dõi của '
                                                                      'Radar BDS cập nhật đến 19/07/2026, đất nền Phú '
-                                                                     'Tân có mức giá ở giữa 23,8 tr/m² từ 383 tin có '
+                                                                     'Tân có giá trung vị 23,8 tr/m² từ 383 tin có '
                                                                      'giá/m². Đây là giá rao tham khảo, chưa chắc là '
                                                                      'giá chốt mua bán.'},
                                                                {'q': 'Nhà đất Phú Tân có cùng mặt bằng với đất nền '
@@ -4144,7 +4144,7 @@ SEO_ARTICLES = {
                                                                                                 'đất nền có 511 tin; '
                                                                                                 'trong đó 383 tin có '
                                                                                                 'giá/m² đủ điều kiện '
-                                                                                                'tính mức giá ở giữa. '
+                                                                                                'tính giá trung vị. '
                                                                                                 'Mức giá ở giữa hiện '
                                                                                                 'là 23,8 tr/m², với '
                                                                                                 'tổng giá ở giữa '
@@ -4167,7 +4167,7 @@ SEO_ARTICLES = {
                                                                                              'tin',
                                                                                              'Mức giá ở giữa: 23,8 '
                                                                                              'tr/m²',
-                                                                                             'Tổng giá mức giá ở giữa: '
+                                                                                             'Tổng giá giá trung vị: '
                                                                                              '2,9 tỷ']},
                                                                                 {'id': 'nha-dat-phu-tan',
                                                                                  'heading': 'Nhà đất Phú Tân: mức giá '
@@ -4196,7 +4196,7 @@ SEO_ARTICLES = {
                                                                                              'tin',
                                                                                              'Mức giá ở giữa: 34,8 '
                                                                                              'tr/m²',
-                                                                                             'Tổng giá mức giá ở giữa: '
+                                                                                             'Tổng giá giá trung vị: '
                                                                                              '4,0 tỷ']},
                                                                                 {'id': 'tin-hieu-phu-tan',
                                                                                  'heading': '321 dấu hiệu đáng chú ý '
@@ -4274,7 +4274,7 @@ SEO_ARTICLES = {
                                                                                                 'nhóm khác. Bước thứ '
                                                                                                 'hai là kiểm tra '
                                                                                                 'giá/m² so với vùng '
-                                                                                                'mức giá ở giữa của '
+                                                                                                'giá trung vị của '
                                                                                                 'cùng loại tài sản, '
                                                                                                 'không so toàn phường '
                                                                                                 'bằng một con số duy '
@@ -4316,11 +4316,11 @@ SEO_ARTICLES = {
                                                                                               'giảm giá cần lọc tiếp'},
                                                                                      {'label': 'Đất nền',
                                                                                       'value': '23,8 tr/m²',
-                                                                                      'note': 'mức giá ở giữa của 383 '
+                                                                                      'note': 'giá trung vị của 383 '
                                                                                               'tin có giá/m²'},
                                                                                      {'label': 'Nhà đất',
                                                                                       'value': '34,8 tr/m²',
-                                                                                      'note': 'mức giá ở giữa của 67 '
+                                                                                      'note': 'giá trung vị của 67 '
                                                                                               'tin có giá/m²'}],
                                                                    'illustration': {'src': '/static/images/seo/phu-tan-data-visual.svg',
                                                                                     'alt': 'Sơ đồ minh họa cách đọc '
@@ -4339,7 +4339,7 @@ SEO_ARTICLES = {
                                                                                     'title': 'Giá Phú Tân theo loại '
                                                                                              'hình bất động sản',
                                                                                     'note': 'Giá/m² và tổng giá đều là '
-                                                                                            'mức giá ở giữa của dữ '
+                                                                                            'giá trung vị của dữ '
                                                                                             'liệu tin Facebook đang '
                                                                                             'theo dõi đã lọc; không '
                                                                                             'dùng một giá chung cho '
@@ -4410,7 +4410,7 @@ SEO_ARTICLES = {
                                                                                     'note': 'So cùng loại hình: đất '
                                                                                             'nền với đất nền, nhà đất '
                                                                                             'với nhà đất. Đây là giá '
-                                                                                            'rao mức giá ở giữa của '
+                                                                                            'rao giá trung vị của '
                                                                                             'nhóm tin đang theo dõi '
                                                                                             'hiện hành.',
                                                                                     'columns': [{'key': 'ward',
@@ -4488,7 +4488,7 @@ SEO_ARTICLES = {
                                                                                        'không nên gom một mức giá '
                                                                                        'chung.',
                                                                                'alt': 'Biểu đồ thanh so sánh giá/m² '
-                                                                                      'mức giá ở giữa: đất nền 23,8, '
+                                                                                      'giá trung vị: đất nền 23,8, '
                                                                                       'nhà đất 34,8, kho xưởng 38,7, '
                                                                                       'nhà trọ 20,0 triệu mỗi mét '
                                                                                       'vuông.',
@@ -4589,12 +4589,12 @@ SEO_ARTICLES = {
                                                         'secondary_cta': 'Xem báo cáo Định Hòa',
                                                         'secondary_href': '/bao-cao/dinh-hoa-thang-06-2026',
                                                         'map_label': 'Định Hòa / Thủ Dầu Một',
-                                                        'hero_metric': {'label': 'Đất nền mức giá ở giữa',
+                                                        'hero_metric': {'label': 'Đất nền giá trung vị',
                                                                         'value': '15,2 tr/m²',
                                                                         'delta': 'tin Facebook đang theo dõi',
                                                                         'note': 'Cập nhật đến 20/07/2026'},
                                                         'property_card': {'status': 'Định Hòa — nguồn cung lớn',
-                                                                          'title': 'Đất nền mức giá ở giữa khoảng 2,38 '
+                                                                          'title': 'Đất nền giá trung vị khoảng 2,38 '
                                                                                    'tỷ',
                                                                           'price': '15,2 tr/m² · đất nền',
                                                                           'metric_a': 'Tin đang theo dõi',
@@ -4626,7 +4626,7 @@ SEO_ARTICLES = {
                                                         'faq': [{'q': 'Giá đất nền Định Hòa hiện khoảng bao nhiêu?',
                                                                  'a': 'Trong dữ liệu tin Facebook đang theo dõi của '
                                                                       'Radar BDS cập nhật đến 20/07/2026, đất nền Định '
-                                                                      'Hòa có mức giá ở giữa 15,2 tr/m² và tổng giá ở '
+                                                                      'Hòa có giá trung vị 15,2 tr/m² và tổng giá ở '
                                                                       'giữa khoảng 2,38 tỷ.'},
                                                                 {'q': 'Có nên lấy một mức giá chung cho toàn Định Hòa '
                                                                       'không?',
@@ -4671,11 +4671,11 @@ SEO_ARTICLES = {
                                                                                                'giảm giá'},
                                                                                       {'label': 'Đất nền',
                                                                                        'value': '15,2 tr/m²',
-                                                                                       'note': 'mức giá ở giữa của 536 '
+                                                                                       'note': 'giá trung vị của 536 '
                                                                                                'tin có giá/m²'},
                                                                                       {'label': 'Nhà đất',
                                                                                        'value': '32,7 tr/m²',
-                                                                                       'note': 'mức giá ở giữa của 239 '
+                                                                                       'note': 'giá trung vị của 239 '
                                                                                                'tin có giá/m²'}],
                                                                     'illustration': {'src': '/static/images/seo/dinh-hoa-data-visual.svg',
                                                                                      'alt': 'Sơ đồ minh họa cách đọc '
@@ -4695,7 +4695,7 @@ SEO_ARTICLES = {
                                                                                      'title': 'Giá Định Hòa theo loại '
                                                                                               'hình bất động sản',
                                                                                      'note': 'Giá/m² và tổng giá là '
-                                                                                             'mức giá ở giữa của dữ '
+                                                                                             'giá trung vị của dữ '
                                                                                              'liệu tin Facebook đang '
                                                                                              'theo dõi đã lọc; mỗi '
                                                                                              'loại hình cần đọc riêng.',
@@ -4769,7 +4769,7 @@ SEO_ARTICLES = {
                                                                                      'note': 'So cùng loại hình: đất '
                                                                                              'nền với đất nền, nhà đất '
                                                                                              'với nhà đất. Đây là giá '
-                                                                                             'rao mức giá ở giữa của '
+                                                                                             'rao giá trung vị của '
                                                                                              'nhóm tin đang theo dõi '
                                                                                              'hiện hành.',
                                                                                      'columns': [{'key': 'ward',
@@ -4929,7 +4929,7 @@ SEO_ARTICLES = {
                                                                                           'color': '#f59e0b'}]}],
                                                                     'sections': [{'id': 'gia-dat-nen-dinh-hoa',
                                                                                   'heading': 'Giá đất nền Định Hòa: '
-                                                                                             'mức giá ở giữa 15,2 '
+                                                                                             'giá trung vị 15,2 '
                                                                                              'tr/m²',
                                                                                   'paragraphs': ['Trong 604 tin đất '
                                                                                                  'nền đang theo dõi, '
