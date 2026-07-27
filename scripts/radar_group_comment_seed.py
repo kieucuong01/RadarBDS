@@ -836,8 +836,17 @@ print(json.dumps({{'ok':True,'restored':restored,'results':results}},ensure_asci
         restore_radar_identity()
         return []
     if proc.returncode != 0:
+        combined = (proc.stdout or '') + '\n' + (proc.stderr or '')
         restore_radar_identity()
-        raise RuntimeError('Facebook public-post discovery failed\n' + proc.stdout[-4000:] + '\n' + proc.stderr[-4000:])
+        hard_stop = re.search(
+            r'STOP_GUARD|checkpoint|captcha|temporarily blocked|tạm thời bị chặn|account restricted|'
+            r'tài khoản bị hạn chế|identity confirmation|xác nhận danh tính',
+            combined,
+            flags=re.I,
+        )
+        if hard_stop:
+            raise RuntimeError('Facebook public-post discovery hit a hard stop\n' + combined[-4000:])
+        return []
     lines = [line for line in proc.stdout.splitlines() if line.strip()]
     raw = json.loads(lines[-1])
     if not raw.get('restored'):

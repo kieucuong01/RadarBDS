@@ -311,6 +311,49 @@ class UrlAndEmbedTests(unittest.TestCase):
             seed.ensure_browser = original_ensure
             seed.restore_radar_identity = original_restore
 
+    def test_discovery_transient_browser_failure_restores_and_skips_silently(self):
+        class Completed:
+            returncode = 1
+            stdout = 'transient Facebook DOM mismatch\n'
+            stderr = 'RuntimeError: Embed button not found\n'
+
+        original_run = seed.subprocess.run
+        original_ensure = seed.ensure_browser
+        original_restore = seed.restore_radar_identity
+        restored = []
+        try:
+            seed.ensure_browser = lambda: None
+            seed.subprocess.run = lambda *a, **k: Completed()
+            seed.restore_radar_identity = lambda: restored.append(True)
+            self.assertEqual(seed.discover_posts(CONFIG, now=NOW), [])
+            self.assertEqual(restored, [True])
+        finally:
+            seed.subprocess.run = original_run
+            seed.ensure_browser = original_ensure
+            seed.restore_radar_identity = original_restore
+
+    def test_discovery_hard_stop_still_alerts_after_restore(self):
+        class Completed:
+            returncode = 1
+            stdout = 'STOP_GUARD search: checkpoint\n'
+            stderr = ''
+
+        original_run = seed.subprocess.run
+        original_ensure = seed.ensure_browser
+        original_restore = seed.restore_radar_identity
+        restored = []
+        try:
+            seed.ensure_browser = lambda: None
+            seed.subprocess.run = lambda *a, **k: Completed()
+            seed.restore_radar_identity = lambda: restored.append(True)
+            with self.assertRaises(RuntimeError):
+                seed.discover_posts(CONFIG, now=NOW)
+            self.assertEqual(restored, [True])
+        finally:
+            seed.subprocess.run = original_run
+            seed.ensure_browser = original_ensure
+            seed.restore_radar_identity = original_restore
+
     def test_extracts_permalink_from_embed_code(self):
         code = '<iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1699041781220369%2F&show_text=false"></iframe>'
         self.assertEqual(seed.extract_facebook_post_url(code), 'https://www.facebook.com/reel/1699041781220369/')
