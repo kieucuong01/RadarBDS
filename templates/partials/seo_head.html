@@ -4,7 +4,16 @@
 <meta name="description" content="{{ site_meta.description }}">
 <meta name="keywords" content="{{ site_meta.keywords }}">
 <link rel="canonical" href="{{ site_meta.canonical_url }}">
-<meta property="og:type" content="website">
+{% set is_article_page = page is defined and page.get('article') %}
+{% set is_report_page = page is defined and page.get('variant') == 'report' and page.get('report') %}
+<meta property="og:type" content="{{ 'article' if is_article_page or is_report_page else 'website' }}">
+{% if is_article_page %}
+<meta property="article:published_time" content="{{ page.article.published_at }}">
+<meta property="article:modified_time" content="{{ page.article.modified_at }}">
+{% elif is_report_page %}
+<meta property="article:published_time" content="{{ page.report.published_at }}">
+<meta property="article:modified_time" content="{{ page.report.published_at }}">
+{% endif %}
 <meta property="og:title" content="{{ site_meta.title }}">
 <meta property="og:description" content="{{ site_meta.description }}">
 <meta property="og:url" content="{{ site_meta.og_url }}">

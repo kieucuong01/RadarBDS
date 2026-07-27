@@ -152,6 +152,27 @@ def test_report_hub_prefers_master_report_and_news_hub_is_reader_facing():
     assert 'href="/tin-tuc"' in landing_html
 
 
+def test_article_and_report_detail_pages_render_article_open_graph_metadata():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    article_html = client.get("/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao").get_data(as_text=True)
+    report_html = client.get("/bao-cao/bds-binh-duong-thang-06-2026").get_data(as_text=True)
+    news_hub_html = client.get("/tin-tuc").get_data(as_text=True)
+    report_hub_html = client.get("/bao-cao").get_data(as_text=True)
+
+    assert '<meta property="og:type" content="article">' in article_html
+    assert '<meta property="article:published_time" content="2026-07-25">' in article_html
+    assert '<meta property="article:modified_time" content="2026-07-25">' in article_html
+    assert '<meta property="og:type" content="article">' in report_html
+    assert '<meta property="article:published_time" content="2026-07-09">' in report_html
+    assert '<meta property="article:modified_time" content="2026-07-09">' in report_html
+    assert '<meta property="og:type" content="website">' in news_hub_html
+    assert '<meta property="article:published_time"' not in news_hub_html
+    assert '<meta property="og:type" content="website">' in report_hub_html
+    assert '<meta property="article:published_time"' not in report_hub_html
+
+
 def test_google_site_tags_are_omitted_without_env(monkeypatch):
     import app as radar_app
 
