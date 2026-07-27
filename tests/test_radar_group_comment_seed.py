@@ -41,13 +41,21 @@ GLOBAL = {
 DEAL_COVERAGE = {
     'THỦ DẦU MỘT': ['Hòa Phú', 'Phú Cường'],
 }
+ARTICLE_SLUG = 'hoa-phu-market-data'
 CONFIG = {
     'schema': 'radar_social_public_post_comment.v1',
     'global': GLOBAL,
     'deal_coverage': DEAL_COVERAGE,
+    'article_redistribution': [{
+        'slug': ARTICLE_SLUG,
+        'title': 'Dữ liệu Hòa Phú',
+        'locations': ['Hòa Phú'],
+        'queries': ['Hòa Phú Thủ Dầu Một'],
+    }],
     'queries': ['giá đất Bình Dương'],
 }
 RADAR_LINK = 'https://radarbds.vn/?tab=signals&city=TH%E1%BB%A6+D%E1%BA%A6U+M%E1%BB%98T&ward=H%C3%B2a+Ph%C3%BA&date_range=3m&mos_min=10&utm_source=facebook&utm_medium=comment&utm_campaign=public_post_seeding&utm_content=hoa-phu-price-compare'
+ARTICLE_LINK = f'https://radarbds.vn/tin-tuc/{ARTICLE_SLUG}?utm_source=facebook&utm_medium=comment&utm_campaign=article_redistribution&utm_content={ARTICLE_SLUG}-hoa-phu'
 VALID_COMMENT = f'Có thể xem các tin và tín hiệu giá tại Hòa Phú ở đây: {RADAR_LINK}. Nên kiểm tra ngày đăng, vị trí, pháp lý và giá thực tế trước khi đi xem.'
 PUBLIC_POST = '''Báo Bình Dương
 2 hours ago
@@ -287,6 +295,22 @@ class UrlAndEmbedTests(unittest.TestCase):
 
         self.assertLessEqual(config['global']['browser_timeout_seconds'], 90)
 
+    def test_discovery_timeout_explicitly_restores_radar_identity(self):
+        original_run = seed.subprocess.run
+        original_ensure = seed.ensure_browser
+        original_restore = seed.restore_radar_identity
+        restored = []
+        try:
+            seed.ensure_browser = lambda: None
+            seed.subprocess.run = lambda *a, **k: (_ for _ in ()).throw(subprocess.TimeoutExpired('browser-use', 75))
+            seed.restore_radar_identity = lambda: restored.append(True)
+            self.assertEqual(seed.discover_posts(CONFIG, now=NOW), [])
+            self.assertEqual(restored, [True])
+        finally:
+            seed.subprocess.run = original_run
+            seed.ensure_browser = original_ensure
+            seed.restore_radar_identity = original_restore
+
     def test_extracts_permalink_from_embed_code(self):
         code = '<iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1699041781220369%2F&show_text=false"></iframe>'
         self.assertEqual(seed.extract_facebook_post_url(code), 'https://www.facebook.com/reel/1699041781220369/')
@@ -334,6 +358,20 @@ class FrequencyAndDedupeTests(unittest.TestCase):
 
     def test_executor_state_caps_allow_first_run_empty_state(self):
         commenter.validate_executor_state_caps(valid_queue(), CONFIG, {'actions': []}, {'actions': []}, NOW)
+
+    def test_executor_blocks_same_article_redistribution_twice(self):
+        queue = valid_queue(source={'article_slug': ARTICLE_SLUG})
+        state = {'actions': [{
+            'at': '2026-07-25T08:00:00+07:00',
+            'status': 'published',
+            'article_slug': ARTICLE_SLUG,
+            'post_url': 'https://www.facebook.com/other/posts/123/',
+            'author': 'Other',
+            'location': 'Phú Cường',
+            'topic': 'legal',
+        }]}
+        with self.assertRaises(SystemExit):
+            commenter.validate_executor_state_caps(queue, CONFIG, {'actions': []}, state, NOW)
 
     def test_executor_state_caps_reject_direct_rerun_bypasses(self):
         queue = valid_queue()
@@ -473,6 +511,16 @@ class CopyAndExecutorGuardTests(unittest.TestCase):
         self.assertIn('kiểm tra', text.casefold())
         self.assertLessEqual(len(text), 500)
 
+    def test_builds_allowlisted_article_comment_for_matching_location(self):
+        scored = seed.score_candidate(item(), now=NOW, global_config=GLOBAL)
+        campaign = seed.article_campaign(CONFIG, ARTICLE_SLUG)
+        link = seed.build_article_link(scored, campaign)
+        text = seed.build_article_comment(scored, campaign)
+        self.assertEqual(link, ARTICLE_LINK)
+        self.assertIn(ARTICLE_LINK, text)
+        self.assertEqual(text.count('https://'), 1)
+        self.assertLessEqual(len(text), 500)
+
     def test_city_level_or_disabled_city_is_not_seedable(self):
         examples = (
             PUBLIC_POST.replace('Hòa Phú Thủ Dầu Một', 'Thủ Dầu Một'),
@@ -529,6 +577,33 @@ class CopyAndExecutorGuardTests(unittest.TestCase):
 
     def test_executor_allows_exactly_one_contextual_radar_link(self):
         self.assertEqual(commenter.validate_comment(VALID_COMMENT, CONFIG), VALID_COMMENT)
+
+    def test_executor_accepts_allowlisted_article_link_with_matching_deal_guard(self):
+        article_comment = f'Bảng dữ liệu Hòa Phú để đối chiếu: {ARTICLE_LINK}. Vẫn cần kiểm tra ngày đăng, pháp lý và giá thực tế.'
+        queue = valid_queue(
+            source={'article_slug': ARTICLE_SLUG},
+            content={
+                'comment': article_comment,
+                'link': ARTICLE_LINK,
+                'deal_signal_link': RADAR_LINK,
+                'link_policy': 'single_contextual_radar_link',
+            },
+        )
+        commenter.validate_queue(queue, CONFIG)
+
+    def test_executor_rejects_article_queue_with_mismatched_location(self):
+        article_comment = f'Bảng dữ liệu để đối chiếu: {ARTICLE_LINK}. Vẫn cần kiểm tra pháp lý và giá thực tế.'
+        queue = valid_queue(
+            source={'article_slug': ARTICLE_SLUG, 'location': 'Phú Cường'},
+            content={
+                'comment': article_comment,
+                'link': ARTICLE_LINK,
+                'deal_signal_link': RADAR_LINK,
+                'link_policy': 'single_contextual_radar_link',
+            },
+        )
+        with self.assertRaises(SystemExit):
+            commenter.validate_queue(queue, CONFIG)
 
     def test_executor_rejects_radar_link_missing_required_deal_filters(self):
         missing_date_range = RADAR_LINK.replace('&date_range=3m', '')

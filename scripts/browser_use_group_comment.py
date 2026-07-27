@@ -129,14 +129,21 @@ def validate_radar_link(value: str, config: dict) -> str:
     if parsed.scheme != 'https' or parsed.hostname != allowed_host or parsed.username or parsed.password or parsed.port:
         raise SystemExit('Refusing: comment link must use HTTPS on the exact allowlisted Radar host')
     query = urllib.parse.parse_qs(parsed.query)
-    required = {
-        'date_range': '3m',
-        'mos_min': '10',
-        'utm_source': 'facebook',
-        'utm_medium': 'comment',
-        'utm_campaign': 'public_post_seeding',
-    }
-    for key, expected in required.items():
+    for key, expected in {'utm_source': 'facebook', 'utm_medium': 'comment'}.items():
+        if query.get(key) != [expected]:
+            raise SystemExit(f'Refusing: comment link requires {key}={expected}')
+    if parsed.path.startswith('/tin-tuc/'):
+        slug = parsed.path.removeprefix('/tin-tuc/').strip('/')
+        campaign = next((row for row in config.get('article_redistribution') or [] if row.get('slug') == slug), None)
+        if not campaign or parsed.path != f'/tin-tuc/{slug}':
+            raise SystemExit('Refusing: article is not allowlisted for redistribution')
+        if query.get('utm_campaign') != ['article_redistribution']:
+            raise SystemExit('Refusing: article comment requires utm_campaign=article_redistribution')
+        content = (query.get('utm_content') or [''])[0]
+        if not content.startswith(slug + '-'):
+            raise SystemExit('Refusing: article comment UTM content must identify the allowlisted slug')
+        return str(value)
+    for key, expected in {'date_range': '3m', 'mos_min': '10', 'utm_campaign': 'public_post_seeding'}.items():
         if query.get(key) != [expected]:
             raise SystemExit(f'Refusing: comment link requires {key}={expected}')
     if parsed.path != '/' or query.get('tab') != ['signals']:
@@ -270,10 +277,23 @@ def validate_queue(queue: dict, config: dict) -> dict:
     if content.get('link') != urls[0]:
         raise SystemExit('Refusing: queue link must exactly match the comment URL')
     link = validate_radar_link(str(content.get('link') or ''), config)
-    link_query = urllib.parse.parse_qs(urllib.parse.urlparse(link).query)
-    link_ward = (link_query.get('ward') or [''])[0]
-    if normalize_name(source_location) != normalize_name(link_ward):
-        raise SystemExit('Refusing: source.location must match the Radar link ward')
+    parsed_link = urllib.parse.urlparse(link)
+    link_query = urllib.parse.parse_qs(parsed_link.query)
+    if parsed_link.path.startswith('/tin-tuc/'):
+        article_slug = parsed_link.path.removeprefix('/tin-tuc/').strip('/')
+        campaign = next((row for row in config.get('article_redistribution') or [] if row.get('slug') == article_slug), None)
+        if source.get('article_slug') != article_slug or not campaign:
+            raise SystemExit('Refusing: queue article slug does not match the allowlisted article link')
+        if normalize_name(source_location) not in {normalize_name(x) for x in campaign.get('locations') or []}:
+            raise SystemExit('Refusing: source location does not match the article campaign')
+        signal_link = validate_radar_link(str(content.get('deal_signal_link') or ''), config)
+        signal_query = urllib.parse.parse_qs(urllib.parse.urlparse(signal_link).query)
+        if normalize_name(source_location) != normalize_name((signal_query.get('ward') or [''])[0]):
+            raise SystemExit('Refusing: source.location must match the deal-signal guard ward')
+    else:
+        link_ward = (link_query.get('ward') or [''])[0]
+        if normalize_name(source_location) != normalize_name(link_ward):
+            raise SystemExit('Refusing: source.location must match the Radar link ward')
     return cfg
 
 
@@ -338,11 +358,14 @@ def source_cooldown_reason(source: dict, state: dict, now: dt.datetime, cfg: dic
     author_name = normalize_name(source.get('author') or '')
     location = normalize_name(source.get('location') or '')
     topic = normalize_name(source.get('topic') or '')
+    article_slug = normalize_text(source.get('article_slug') or '')
     author_days = int(cfg.get('same_author_cooldown_days', 30))
     topic_days = int(cfg.get('same_topic_cooldown_days', 14))
     for action in (state or {}).get('actions', []):
         if action.get('status') in ('failed', 'skipped'):
             continue
+        if article_slug and action.get('article_slug') == article_slug:
+            return 'same_article'
         if post_url and canonical_post_url(action.get('post_url') or '') == post_url:
             return 'same_post'
         at = parse_time(action.get('at', ''), now.tzinfo)
@@ -398,6 +421,7 @@ def reserve_publish_action(state: dict, queue: dict, qpath: Path, now: dt.dateti
         'author_url': source.get('author_url') or '',
         'topic': source.get('topic') or '',
         'location': source.get('location') or '',
+        'article_slug': source.get('article_slug') or '',
         'status': 'pending',
         'comment': content.get('comment') or '',
         'link': content.get('link') or '',
@@ -546,7 +570,8 @@ def run(args: argparse.Namespace) -> dict:
     post_state = load_json(Path(args.post_state), {'actions': []}, missing_ok=True)
     comment_state = load_json(Path(args.state), {'schema': 'radar_public_post_comment_state.v1', 'actions': []}, missing_ok=True)
     validate_executor_state_caps(queue, config, post_state, comment_state)
-    if not landing_has_deals(str((queue.get('content') or {}).get('link') or '')):
+    content = queue.get('content') or {}
+    if not landing_has_deals(str(content.get('deal_signal_link') or content.get('link') or '')):
         raise SystemExit('Refusing: linked ward currently has no active Radar deal signal')
     if args.mode == 'publish' and not args.yes:
         raise SystemExit('Refusing publish without --yes')

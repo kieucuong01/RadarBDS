@@ -467,6 +467,69 @@ def build_deal_link(candidate: dict, config: dict) -> str:
     return 'https://radarbds.vn/?' + urllib.parse.urlencode(params)
 
 
+def article_campaign(config: dict, slug: str) -> dict:
+    for row in config.get('article_redistribution') or []:
+        if normalize_text(row.get('slug') or '') == normalize_text(slug):
+            locations = [normalize_text(x) for x in row.get('locations') or [] if normalize_text(x)]
+            queries = [normalize_text(x) for x in row.get('queries') or [] if normalize_text(x)]
+            if not locations or not queries:
+                raise ValueError('Article redistribution requires locations and queries')
+            return {**row, 'locations': locations, 'queries': queries}
+    raise ValueError('Article slug is not allowlisted for comment redistribution')
+
+
+def article_already_distributed(slug: str, state: dict) -> bool:
+    return any(
+        action.get('article_slug') == slug and action.get('status') not in ('failed', 'skipped')
+        for action in state.get('actions', [])
+    )
+
+
+def campaign_discovery_config(config: dict, campaign: dict) -> dict:
+    scoped = json.loads(json.dumps(config))
+    scoped['queries'] = list(campaign['queries'])
+    for key in ('target_groups', 'target_pages'):
+        for target in scoped.get(key) or []:
+            if target.get('enabled'):
+                target['queries'] = list(campaign['queries'])
+    return scoped
+
+
+def build_article_link(candidate: dict, campaign: dict) -> str:
+    location = normalize_text(candidate.get('location') or '')
+    if location not in campaign['locations']:
+        raise ValueError('Candidate location does not match the article campaign')
+    slug = normalize_text(campaign.get('slug') or '')
+    params = [
+        ('utm_source', 'facebook'),
+        ('utm_medium', 'comment'),
+        ('utm_campaign', 'article_redistribution'),
+        ('utm_content', f'{slug}-{slugify(location)}'),
+    ]
+    return f'https://radarbds.vn/tin-tuc/{slug}?' + urllib.parse.urlencode(params)
+
+
+def build_article_comment(candidate: dict, campaign: dict) -> str:
+    location = normalize_text(candidate.get('location') or '')
+    link = build_article_link(candidate, campaign)
+    text = (
+        f'Nếu đang so khu {location}, bài này có bảng dữ liệu theo phường/loại hình để đối chiếu thêm: {link}. '
+        'Số liệu là giá rao dùng để lọc ban đầu; vẫn nên kiểm tra ngày đăng, vị trí, quy hoạch, pháp lý và giá thực tế.'
+    )
+    if text.count('https://') != 1 or len(text) > 500:
+        raise ValueError('Article comment must contain one contextual link and stay within 500 characters')
+    return text
+
+
+def article_url_healthy(url: str) -> bool:
+    try:
+        request = urllib.request.Request(url, method='HEAD', headers={'User-Agent': 'RadarBDS-Social-Guard/1.0'})
+        with urllib.request.urlopen(request, timeout=20) as response:
+            return response.status == 200
+    except Exception:
+        return False
+
+
 def fetch_public_json(url: str) -> dict:
     request = urllib.request.Request(url, headers={'User-Agent': 'RadarBDS-Social-Guard/1.0'})
     with urllib.request.urlopen(request, timeout=20) as response:
@@ -554,6 +617,37 @@ def ensure_browser() -> None:
         if cdp_ready():
             return
     raise RuntimeError('Radar Social Chrome CDP unavailable')
+
+
+def restore_radar_identity() -> None:
+    program = r"""
+import json,time
+goto_url('https://www.facebook.com/'); wait_for_load(); time.sleep(3)
+opened=js("(() => {const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'')==='Your profile');if(!e)return false;e.click();return true})()")
+if not opened: raise RuntimeError('Your profile button not found')
+time.sleep(2)
+already=js("(() => [...document.querySelectorAll('[role=button]')].some(x=>(x.getAttribute('aria-label')||'').includes('Switch to Tiny Sudo')))()")
+if not already:
+    clicked=js("(() => {const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'').includes('Switch to Radar BDS'));if(!e)return false;e.click();return true})()")
+    if not clicked: raise RuntimeError('Switch to Radar BDS not found')
+    time.sleep(7)
+else:
+    press_key('ESC'); time.sleep(1)
+opened=js("(() => {const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'')==='Your profile');if(!e)return false;e.click();return true})()")
+time.sleep(2)
+verified=js("(() => [...document.querySelectorAll('[role=button]')].some(x=>(x.getAttribute('aria-label')||'').includes('Switch to Tiny Sudo')))()")
+press_key('ESC')
+print(json.dumps({'ok':bool(opened and verified)}))
+if not (opened and verified): raise RuntimeError('Radar BDS restore verification failed')
+"""
+    env = dict(**os.environ)
+    env['BU_CDP_URL'] = CDP
+    proc = subprocess.run([str(BROWSER_USE)], input=program, text=True, capture_output=True, env=env, timeout=75, check=False)
+    if proc.returncode != 0:
+        raise RuntimeError(
+            'Could not restore Radar BDS identity after discovery failure\n'
+            + proc.stdout[-2000:] + '\n' + proc.stderr[-2000:]
+        )
 
 
 def _rotating_slice(items: list[str], limit: int, now: dt.datetime, *, salt: int = 0) -> list[str]:
@@ -738,10 +832,11 @@ print(json.dumps({{'ok':True,'restored':restored,'results':results}},ensure_asci
             check=False,
         )
     except subprocess.TimeoutExpired:
-        # Cron-safe fail-closed: Facebook discovery can stall on dynamic feeds.
-        # Returning no candidate keeps the script status OK and avoids noisy cron errors.
+        # A killed browser harness cannot run its generated finally block, so restore explicitly.
+        restore_radar_identity()
         return []
     if proc.returncode != 0:
+        restore_radar_identity()
         raise RuntimeError('Facebook public-post discovery failed\n' + proc.stdout[-4000:] + '\n' + proc.stderr[-4000:])
     lines = [line for line in proc.stdout.splitlines() if line.strip()]
     raw = json.loads(lines[-1])
@@ -800,6 +895,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--publish', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--article-slug')
     args = parser.parse_args()
     now = dt.datetime.now().astimezone()
     config = load_json(CONFIG)
@@ -807,6 +903,11 @@ def main() -> int:
     exclusions = load_broker_exclusions(broker_data)
     post_state = load_json(POST_STATE, {'actions': []}, missing_ok=True)
     state = load_json(STATE, {'schema': 'radar_public_post_comment_state.v1', 'actions': []}, missing_ok=True)
+    campaign = article_campaign(config, args.article_slug) if args.article_slug else None
+    if campaign and article_already_distributed(args.article_slug, state):
+        if args.dry_run:
+            print(json.dumps({'ok': True, 'skip': 'article_already_distributed', 'article_slug': args.article_slug}, ensure_ascii=False))
+        return 0
     if daily_comment_cap_full(config, state, now):
         if args.dry_run:
             print(json.dumps({'ok': True, 'skip': 'daily_comment_cap', 'count': daily_comment_count(now, state)}, ensure_ascii=False))
@@ -815,7 +916,11 @@ def main() -> int:
         if args.dry_run:
             print(json.dumps({'ok': True, 'skip': 'global_weekly_comment_cap'}, ensure_ascii=False))
         return 0
-    discovered = discover_posts(config, now=now)
+    discovery_config = campaign_discovery_config(config, campaign) if campaign else config
+    discovered = discover_posts(discovery_config, now=now)
+    if campaign:
+        allowed = set(campaign['locations'])
+        discovered = [item for item in discovered if detect_location(str(item.get('text') or '')) in allowed]
     candidate, report = choose_candidate(config, state, discovered, now, exclusions)
     if not candidate:
         if args.dry_run:
@@ -826,7 +931,12 @@ def main() -> int:
         if args.dry_run:
             print(json.dumps({'ok': True, 'skip': 'no_active_deal_signal_for_enabled_ward', 'candidate': candidate, 'link': link, 'discovery': report}, ensure_ascii=False, indent=2))
         return 0
-    comment = build_comment(candidate, config)
+    content_link = build_article_link(candidate, campaign) if campaign else link
+    if campaign and not article_url_healthy(content_link):
+        if args.dry_run:
+            print(json.dumps({'ok': True, 'skip': 'article_url_unhealthy', 'article_slug': args.article_slug}, ensure_ascii=False))
+        return 0
+    comment = build_article_comment(candidate, campaign) if campaign else build_comment(candidate, config)
     queue = {
         'schema': 'radar_public_post_comment_queue.v1',
         'created_at': now.isoformat(timespec='seconds'),
@@ -840,10 +950,12 @@ def main() -> int:
             'location': candidate['location'],
             'query': candidate['query'],
             'engagement': candidate['engagement'],
+            'article_slug': args.article_slug or '',
         },
         'content': {
             'comment': comment,
-            'link': link,
+            'link': content_link,
+            'deal_signal_link': link,
             'link_policy': 'single_contextual_radar_link',
         },
         'guards': {

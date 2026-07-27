@@ -44,6 +44,26 @@
       "Hòa Phú"
     ]
   },
+  "article_redistribution": [
+    {
+      "slug": "phu-hoa-hay-phu-my-khu-nao-de-so-gia-hon",
+      "title": "So sánh Phú Hòa và Phú Mỹ: khu nào dễ so giá hơn?",
+      "locations": ["Phú Hòa", "Phú Mỹ"],
+      "queries": ["Phú Hòa Thủ Dầu Một", "Phú Mỹ Thủ Dầu Một"]
+    },
+    {
+      "slug": "phu-my-hay-dinh-hoa-ngan-sach-2-4-ty",
+      "title": "Phú Mỹ hay Định Hòa hợp ngân sách 2-4 tỷ hơn?",
+      "locations": ["Phú Mỹ", "Định Hòa"],
+      "queries": ["Phú Mỹ Thủ Dầu Một", "Định Hòa Thủ Dầu Một"]
+    },
+    {
+      "slug": "dinh-hoa-hiep-an-tan-an-khu-nao-hop-ngan-sach-thap",
+      "title": "Định Hòa, Hiệp An, Tân An: khu nào hợp ngân sách thấp?",
+      "locations": ["Định Hòa", "Hiệp An", "Tân An"],
+      "queries": ["Định Hòa Thủ Dầu Một", "Hiệp An Thủ Dầu Một", "Tân An Thủ Dầu Một"]
+    }
+  ],
   "queries": [
     "giá đất Tân An Thủ Dầu Một",
     "giá đất Hiệp An Thủ Dầu Một",
