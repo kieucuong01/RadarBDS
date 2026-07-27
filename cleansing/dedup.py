@@ -21,7 +21,7 @@ _ROAD_TOKEN_PAT = re.compile(
     re.IGNORECASE,
 )
 _NUMBERED_ROAD_PAT = re.compile(
-    r"\b(?:duong|mat\s*tien|mt|goc|hem|duong\s+so)\s*0*(\d{2,4}\s*[a-d])\b",
+    r"\b(?:duong|mat\s*tien|mt|goc|hem|duong\s+so)\s*0*(\d{2,4}\s*[a-d]?)\b",
     re.IGNORECASE,
 )
 _STANDALONE_NUMBERED_ROAD_PAT = re.compile(
@@ -85,6 +85,8 @@ def _normalize_road_token(raw: str, number: str | None = None) -> str | None:
         if not prefix_match:
             return None
         return f"{prefix_match.group(0)}{int(number)}"
+    if re.fullmatch(r"\d{2,4}", raw):
+        return f"d{int(raw)}"
     if re.fullmatch(r"\d{2,4}[a-d]", raw):
         return raw
     return None

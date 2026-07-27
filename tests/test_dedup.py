@@ -93,6 +93,11 @@ def test_road_tokens_detect_numbered_tdc_roads():
     assert extract_road_name("Ban nhanh lo dat duong 110B TDC Phu Chanh") == "110B"
 
 
+def test_road_tokens_detect_contextual_bare_numbered_tdc_roads():
+    text = "Duong so 91 TDC Phu My. Dat TDC Phu Chanh duong 104. MT 71."
+    assert _road_tokens(text) == {"d91", "d104", "d71"}
+
+
 def test_same_broker_same_dimensions_different_tdc_roads_not_duplicate():
     d12 = _listing(
         source="facebook",
@@ -131,6 +136,65 @@ def test_same_broker_same_dimensions_different_tdc_roads_not_duplicate():
 
     assert not _is_duplicate(d12, road_110b)
     assert not _is_reliable_price_drop(d12, road_110b)
+
+
+def test_same_broker_same_dimensions_different_bare_tdc_roads_not_duplicate():
+    road_104 = _listing(
+        source="facebook",
+        source_id="fb-tdc-104",
+        posted_at="2026-07-27",
+        ward="Phu Tan",
+        property_type="dat_nen",
+        area_m2=150.0,
+        frontage_m=5.0,
+        depth_m=30.0,
+        price_ty=2.6,
+        contact_phone="0935792868",
+        description=(
+            "Dat TDC Phu Chanh D Kp2 Phuong Phu Tan. "
+            "Duong 104 vi tri dep, dt 5mx30m full tc, gia 2ty6."
+        ),
+    )
+    road_71 = _listing(
+        source="facebook",
+        source_id="fb-tdc-71",
+        posted_at="2026-06-12",
+        ward="Phu Tan",
+        property_type="dat_nen",
+        area_m2=150.0,
+        frontage_m=5.0,
+        depth_m=30.0,
+        price_ty=2.8,
+        contact_phone="0935792868",
+        description=(
+            "Dat TDC Phu Chanh D Phuong Binh Duong TPHCM. "
+            "Duong 71, dt 5mx30m full tc, gia 2ty8."
+        ),
+    )
+    road_n10 = _listing(
+        source="facebook",
+        source_id="fb-tdc-n10",
+        posted_at="2026-07-24",
+        ward="Phu Tan",
+        property_type="dat_nen",
+        area_m2=150.0,
+        frontage_m=5.0,
+        depth_m=30.0,
+        price_ty=3.7,
+        contact_phone="0935792868",
+        description=(
+            "Chu can ban gap dat duong N10 khu TDC phuong Phu Tan. "
+            "Dien tich 5x30m full tho cu, gia 3ty7."
+        ),
+    )
+
+    assert _road_tokens(road_104["description"]) == {"d104"}
+    assert _road_tokens(road_71["description"]) == {"d71"}
+    assert _road_tokens(road_n10["description"]) == {"n10"}
+    assert not _is_duplicate(road_104, road_71)
+    assert not _is_reliable_price_drop(road_71, road_104)
+    assert not _is_duplicate(road_104, road_n10)
+    assert not _is_reliable_price_drop(road_n10, road_104)
 
 
 def test_same_standard_house_dimensions_near_ql13_need_stronger_price_change_identity():
@@ -1262,6 +1326,12 @@ if __name__ == "__main__":
         test_hard_gate_different_property_type,
         test_hard_gate_different_ward,
         test_hard_gate_unknown_ward_passes,
+        test_road_tokens_detect_vietnamese_dx_prefix,
+        test_road_tokens_detect_numbered_tdc_roads,
+        test_road_tokens_detect_contextual_bare_numbered_tdc_roads,
+        test_same_broker_same_dimensions_different_tdc_roads_not_duplicate,
+        test_same_broker_same_dimensions_different_bare_tdc_roads_not_duplicate,
+        test_same_standard_house_dimensions_near_ql13_need_stronger_price_change_identity,
         test_case1_passes_with_text_30,
         test_case1_fails_without_text,
         test_case1_fails_with_different_dims,
