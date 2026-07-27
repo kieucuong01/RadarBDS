@@ -7550,6 +7550,24 @@ SEO_ARTICLES = {
     }
 }
 
+# Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
+def _rb_normalize_median_wording(value):
+    if isinstance(value, str):
+        return value.replace("mức giá ở giữa", "giá trung vị").replace("giá ở giữa", "giá trung vị")
+    if isinstance(value, list):
+        return [_rb_normalize_median_wording(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _rb_normalize_median_wording(item) for key, item in value.items()}
+    return value
+
+for _rb_slug in (
+    "gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
+    "gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
+):
+    if _rb_slug in SEO_ARTICLES:
+        SEO_ARTICLES[_rb_slug] = _rb_normalize_median_wording(SEO_ARTICLES[_rb_slug])
+
+
 KNOWLEDGE_HUB = {'path': '/tin-tuc',
  'title': 'Tin tức BĐS Bình Dương | Radar BDS',
  'description': 'Tin tức BĐS Bình Dương từ dữ liệu Radar: giá đất theo phường, so sánh khu vực, hướng dẫn đọc giá rao và dấu hiệu đáng kiểm tra.',

@@ -1,4 +1,4 @@
-﻿import json
+import json
 import importlib
 from pathlib import Path
 
@@ -330,7 +330,9 @@ def test_legacy_report_article_urls_redirect_to_news_and_sitemap_uses_canonical_
     assert response.headers["Location"] == canonical + "?utm_source=facebook"
     assert f"<loc>https://radarbds.vn{legacy}</loc>" not in sitemap
     assert f"<loc>https://radarbds.vn{canonical}</loc>" in sitemap
-    assert client.get(canonical).status_code == 200
+    canonical_html = client.get(canonical).get_data(as_text=True)
+    assert "giá trung vị" in canonical_html
+    assert "mức giá ở giữa" not in canonical_html
 
 
 def test_binh_duong_location_landing_pages_render_and_are_indexed():
