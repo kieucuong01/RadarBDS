@@ -136,11 +136,13 @@ def verify_live(month: int, year: int) -> int:
             if not ok:
                 bad.append((path, status, canvases, cards, filtered, seo_links, len(child_links)))
         else:
+            card_count_ok = 0 <= cards <= 6
+            card_footer_ok = cards == 0 or "Xem thêm trên Radar BDS" in html
             ok = (
                 status == "200"
                 and canvases == 4
-                and cards == 6
-                and "Xem thêm trên Radar BDS" in html
+                and card_count_ok
+                and card_footer_ok
                 and filtered
                 and inline_links >= 2
                 and seo_links >= 1
@@ -148,7 +150,7 @@ def verify_live(month: int, year: int) -> int:
                 and has_type_links
             )
             print(
-                f"- {path}: {status} canvas={canvases} cards={cards} inline={inline_links} "
+                f"- {path}: {status} canvas={canvases} cards={cards}/6 inline={inline_links} "
                 f"seo={seo_links} filtered_cta={filtered} ok={ok}"
             )
             if not ok:

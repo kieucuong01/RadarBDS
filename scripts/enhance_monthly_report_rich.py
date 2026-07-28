@@ -447,7 +447,7 @@ def main() -> int:
     print("- master: 2 charts, filtered dashboard CTA")
     for ward in TDM_WARDS:
         report = ward_pages[ward]["report"]
-        print(f"- {ward}: {len(report.get('featured_listings') or [])} cards, {len(ward_pages[ward].get('charts') or [])} charts, {report['under_value']['metrics'][0]['value']} valued listings")
+        print(f"- {ward}: {len(report.get('featured_listings') or [])}/6 cards, {len(ward_pages[ward].get('charts') or [])} charts, {report['under_value']['metrics'][0]['value']} actionable listings")
     if args.dry_run:
         print("DRY RUN — no files modified")
         return 0

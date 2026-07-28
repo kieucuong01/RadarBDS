@@ -92,6 +92,15 @@ def test_report_snapshots_expose_raw_basis_actionable_contract_in_user_copy():
         assert "hot + giảm giá" not in source
 
 
+def test_monthly_verifier_accepts_only_available_actionable_cards_up_to_six():
+    publisher = Path("scripts/radar_monthly_report_publish.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "0 <= cards <= 6" in publisher
+    assert "cards == 6" not in publisher
+
+
 def test_featured_record_shaping_only_exposes_internal_detail_href():
     from services.monthly_report_data import shape_featured_record
 

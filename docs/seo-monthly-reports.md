@@ -56,7 +56,7 @@ scripts/radar_monthly_report_publish.py
 | Report type | Count | URL pattern | Expected structure |
 |---|---:|---|---|
 | Master TDM report | 1 | `/bao-cao/bds-binh-duong-thang-MM-YYYY` | 2 charts, 0 signal cards, 13 child ward report links, SEO/internal link block |
-| Ward reports | 13 | `/bao-cao/{ward_slug}-thang-MM-YYYY` | 4 charts, 6 signal-style listing cards, MOS links, property-type links, filtered dashboard CTA |
+| Ward reports | 13 | `/bao-cao/{ward_slug}-thang-MM-YYYY` | 4 charts, tối đa 6 signal-style cards hợp lệ, MOS links, property-type links, filtered dashboard CTA |
 
 ## Manual commands
 
@@ -201,7 +201,7 @@ Expected live structure:
 |---|---|
 | `/bao-cao` | HTTP 200, thumbnails/search/filter still work |
 | master report | HTTP 200, 2 `<canvas>`, 13 child ward report links, sitemap includes master and 13 wards |
-| each ward report | HTTP 200, 4 `<canvas>`, 6 `.report-signal-card`, MOS/type links, filtered dashboard CTA |
+| each ward report | HTTP 200, 4 `<canvas>`, 0–6 `.report-signal-card` theo số actionable thực tế, MOS/type links, filtered dashboard CTA |
 | browser sample | 0 JS console errors |
 | mobile hub | header/nav visually OK around 390px width |
 
