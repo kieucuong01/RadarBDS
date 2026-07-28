@@ -21,8 +21,11 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+from PIL import Image, ImageDraw, ImageFont
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT_DIR = Path("/opt/radar-bds/var/social_queue")
+ASSET_DIR = Path("/opt/radar-bds/var/social_assets")
 SITE = "https://radarbds.vn"
 
 if str(REPO_ROOT) not in sys.path:
@@ -130,6 +133,98 @@ def _slug_hashtag(ward: str) -> str:
     text = re.sub(r"[^A-Za-z0-9]+", "", text.title())
     return text or "ThuDauMot"
 
+
+
+def _font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont:
+    regular = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+    bold_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+    return ImageFont.truetype(bold_path if bold else regular, size)
+
+
+def _wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, max_width: int) -> list[str]:
+    words = str(text or "").split()
+    lines: list[str] = []
+    cur = ""
+    for word in words:
+        test = (cur + " " + word).strip()
+        if draw.textbbox((0, 0), test, font=font)[2] <= max_width:
+            cur = test
+        else:
+            if cur:
+                lines.append(cur)
+            cur = word
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def _make_visual(slug: str, page: dict[str, Any], now: dt.datetime) -> str:
+    """Create a simple 1080x1080 data visual for Page posts.
+
+    The Facebook publisher only attaches media when the queue contains
+    content.visual_path/image. Keep generation deterministic and local so the
+    daily auto-post path never silently falls back to text-only.
+    """
+    ASSET_DIR.mkdir(parents=True, exist_ok=True)
+    out = ASSET_DIR / f"{now.date().isoformat()}-{slug}.png"
+    if out.exists():
+        return str(out)
+
+    title = _short_title(page)
+    description = _plain(page.get("hero_text") or page.get("description") or "Dữ liệu Radar BDS giúp lọc tin rao trước khi gọi môi giới.")
+    cards = _article_cards(page)
+    land = _find_card(cards, "đất nền")
+    house = _find_card(cards, "nhà đất")
+    listing = _find_card(cards, "tin")
+
+    width = height = 1080
+    im = Image.new("RGB", (width, height), (7, 30, 50))
+    draw = ImageDraw.Draw(im)
+    for y in range(height):
+        color = (7 + int(12 * y / height), 30 + int(35 * y / height), 50 + int(48 * y / height))
+        draw.line((0, y, width, y), fill=color)
+
+    draw.rounded_rectangle((70, 62, 360, 132), 24, fill=(8, 45, 72), outline=(84, 190, 231), width=2)
+    draw.ellipse((94, 82, 125, 113), fill=(29, 214, 157))
+    draw.text((142, 80), "RADAR BĐS", font=_font(30, bold=True), fill="white")
+    draw.text((72, 176), "DỮ LIỆU GIÁ RAO", font=_font(30, bold=True), fill=(104, 218, 255))
+
+    y = 238
+    title_font = _font(54, bold=True)
+    for line in _wrap(draw, title, title_font, 920)[:5]:
+        draw.text((72, y), line, font=title_font, fill="white")
+        y += 68
+
+    metrics_top = min(650, y + 28)
+    draw.rounded_rectangle((70, metrics_top, 1010, metrics_top + 235), 30, fill=(245, 249, 252))
+    metric_font = _font(30, bold=True)
+    note_font = _font(25)
+    yy = metrics_top + 34
+    metric_lines = []
+    if listing.get("value"):
+        metric_lines.append(("Tin đang theo dõi", listing["value"]))
+    if land.get("value"):
+        metric_lines.append(("Đất nền", land["value"]))
+    if house.get("value"):
+        metric_lines.append(("Nhà đất", house["value"]))
+    if not metric_lines:
+        metric_lines = [("Góc nhìn dữ liệu", description[:90])]
+    for label, value in metric_lines[:3]:
+        draw.text((112, yy), label, font=note_font, fill=(71, 85, 105))
+        draw.text((430, yy - 3), value, font=metric_font, fill=(15, 23, 42))
+        yy += 58
+
+    summary_top = metrics_top + 270
+    if summary_top < 890:
+        summary_font = _font(25)
+        for line in _wrap(draw, description, summary_font, 880)[:4]:
+            draw.text((82, summary_top), line, font=summary_font, fill=(218, 235, 245))
+            summary_top += 38
+
+    draw.rounded_rectangle((70, 934, 1010, 1010), 24, fill=(7, 45, 71), outline=(80, 190, 231), width=2)
+    draw.text((102, 958), "Giá rao để lọc ban đầu • Cần kiểm tra thực tế và pháp lý", font=_font(23, bold=True), fill=(210, 232, 244))
+    im.save(out, quality=94, optimize=True)
+    return str(out)
 
 
 
@@ -314,6 +409,7 @@ def create(args: argparse.Namespace) -> dict[str, Any]:
             "link": _utm_url(url, slug),
             "ward_filter_link": _ward_filter_url(page, _extract_ward(page, _article_cards(page)), slug),
             "hashtags": _hashtags_for_page(page),
+            "visual_path": _make_visual(slug, page, now),
         },
         "status": "queued",
         "guards": {
