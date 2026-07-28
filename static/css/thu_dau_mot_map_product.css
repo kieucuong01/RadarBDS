@@ -91,7 +91,8 @@
   letter-spacing: -0.035em;
 }
 
-.tdm-product-offer button {
+.tdm-product-offer button,
+.tdm-product-repeat-offer button {
   min-height: 52px;
   border: 1px solid #cbd5e1;
   border-radius: 12px;
@@ -100,6 +101,13 @@
   font: inherit;
   font-weight: 800;
   cursor: not-allowed;
+}
+
+.tdm-product-page [data-product-breadcrumb-link],
+.tdm-product-source-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
 }
 
 .tdm-product-offer p {
@@ -317,6 +325,30 @@
   background: linear-gradient(135deg, #edf9f7 0%, #f8fafc 100%);
 }
 
+.tdm-product-repeat-offer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.35fr);
+  gap: 28px;
+  align-items: center;
+  margin-top: clamp(64px, 8vw, 104px);
+  padding: 30px;
+  border: 1px solid #dce5ec;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.tdm-product-repeat-offer h2 {
+  margin: 0;
+  color: #172033;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+}
+
+.tdm-product-repeat-offer p {
+  margin: 10px 0 0;
+  color: #526173;
+  line-height: 1.65;
+}
+
 .tdm-product-dashboard-cta p {
   max-width: 720px;
   margin: 10px 0 0;
@@ -359,6 +391,7 @@
   .tdm-product-benefit-grid,
   .tdm-product-data-grid,
   .tdm-product-license-grid,
+  .tdm-product-repeat-offer,
   .tdm-product-dashboard-cta {
     grid-template-columns: 1fr;
   }

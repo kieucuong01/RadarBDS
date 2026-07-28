@@ -1367,6 +1367,38 @@ ALLOWED_TRACK_ACTIONS = {
     "thu_dau_mot_map_purchase_clicked",
     "thu_dau_mot_map_dashboard_clicked",
 }
+_PRODUCT_TRACK_ACTIONS = {
+    "thu_dau_mot_map_product_viewed",
+    "thu_dau_mot_map_preview_selected",
+    "thu_dau_mot_map_purchase_clicked",
+    "thu_dau_mot_map_dashboard_clicked",
+}
+_PRODUCT_TRACK_SOURCE_SURFACES = {
+    "preview",
+    "preview_switch",
+    "product_offer",
+    "bottom_dashboard",
+}
+
+
+def _safe_product_tracking_context(context) -> dict:
+    if not isinstance(context, dict):
+        return {}
+    safe = {}
+    edition = context.get("edition")
+    if edition in {"legacy", "current"}:
+        safe["edition"] = edition
+    source_surface = context.get("source_surface")
+    if source_surface in _PRODUCT_TRACK_SOURCE_SURFACES:
+        safe["source_surface"] = source_surface
+    if context.get("path") == "/ban-do-thu-dau-mot":
+        safe["path"] = "/ban-do-thu-dau-mot"
+    if context.get("page_slug") == "ban-do-thu-dau-mot":
+        safe["page_slug"] = "ban-do-thu-dau-mot"
+    page_title = context.get("page_title")
+    if isinstance(page_title, str) and page_title.strip():
+        safe["page_title"] = page_title.strip()[:160]
+    return safe
 
 
 @rate_limit("track", limits={"guest": 120, "free": 600, "vip": None, "admin": None})
@@ -1375,13 +1407,16 @@ def api_track():
     action = (payload.get("action") or "").strip()[:60]
     if action not in ALLOWED_TRACK_ACTIONS:
         return jsonify({"ok": False, "error": "invalid_action"}), 400
-    listing_id = payload.get("listing_id")
+    is_product_action = action in _PRODUCT_TRACK_ACTIONS
+    listing_id = None if is_product_action else payload.get("listing_id")
     try:
         listing_id = int(listing_id) if listing_id not in (None, "") else None
     except (TypeError, ValueError):
         listing_id = None
     ctx = payload.get("context") or {}
-    if not isinstance(ctx, dict):
+    if is_product_action:
+        ctx = _safe_product_tracking_context(ctx)
+    elif not isinstance(ctx, dict):
         ctx = {"raw": str(ctx)[:200]}
     u = current_user()
     try:

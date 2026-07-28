@@ -40,7 +40,7 @@
           {% if loop.last %}
           <span aria-current="page">{{ crumb.name }}</span>
           {% else %}
-          <a href="{{ crumb.href }}">{{ crumb.name }}</a><span aria-hidden="true">/</span>
+          <a href="{{ crumb.href }}" data-product-breadcrumb-link>{{ crumb.name }}</a><span aria-hidden="true">/</span>
           {% endif %}
           {% endfor %}
         </nav>
@@ -77,7 +77,7 @@
     <section class="seo-shell tdm-product-editions" aria-labelledby="chon-phien-ban">
       <div>
         <h2 id="chon-phien-ban">Chọn bản xem trước</h2>
-        <p>Hai ảnh raster có watermark chỉ dùng để xem bố cục, không thay thế các file trong bundle.</p>
+        <p>Hai ảnh mẫu có watermark chỉ dùng để xem bố cục, không thay thế các tệp trong bộ sản phẩm.</p>
       </div>
       <div class="tdm-product-edition-buttons" role="group" aria-label="Chọn phiên bản bản đồ">
         <button type="button" data-product-edition="legacy" aria-pressed="true">
@@ -94,7 +94,7 @@
     <section class="seo-shell tdm-product-section" aria-labelledby="ban-nhan-duoc-gi">
       <div class="tdm-product-section-heading">
         <h2 id="ban-nhan-duoc-gi">Bạn nhận được gì</h2>
-        <p>Một bundle phiên bản {{ product.version }} được tổ chức cho ba nhu cầu: in ấn, chỉnh sửa và mở lớp địa lý.</p>
+        <p>Một bộ sản phẩm phiên bản {{ product.version }} được tổ chức cho ba nhu cầu: in ấn, chỉnh sửa và mở lớp địa lý.</p>
       </div>
       <div class="tdm-product-benefit-grid">
         <article>
@@ -110,12 +110,16 @@
           <p>Dùng trong Google Earth, Google My Maps và phần mềm GIS có hỗ trợ định dạng này.</p>
         </article>
         <article>
-          <h3>Bộ font được phép phân phối</h3>
+          <h3>Tệp font được phép phân phối và giấy phép font</h3>
           <p>Giúp phần mềm đồ họa dùng đúng kiểu chữ thay vì tự thay font khi mở bản chỉnh sửa.</p>
         </article>
         <article>
-          <h3>Hướng dẫn sử dụng và giấy phép</h3>
-          <p>Giải thích cấu trúc bundle, nguồn dữ liệu, cách mở file và phạm vi sử dụng.</p>
+          <h3>Tệp hướng dẫn sử dụng và giấy phép sản phẩm</h3>
+          <p>Giải thích cấu trúc bộ sản phẩm, nguồn dữ liệu, cách mở tệp và phạm vi sử dụng.</p>
+        </article>
+        <article>
+          <h3>Tệp MANIFEST và mã checksum để kiểm tra tính toàn vẹn</h3>
+          <p>Giúp đối chiếu danh mục, dung lượng và mã kiểm tra của từng thành phần trong bản phát hành.</p>
         </article>
       </div>
     </section>
@@ -128,18 +132,18 @@
       <div class="tdm-product-data-grid">
         <article>
           <h3>Bản trước năm 2025</h3>
-          <p>Đúng 14 tâm điểm tham chiếu có nguồn, thể hiện bằng điểm và không có polygon legacy.</p>
+          <p>Đúng 14 tâm điểm tham chiếu có nguồn, thể hiện bằng ký hiệu điểm và không vẽ ranh phường cũ.</p>
           <p>Các điểm chỉ giúp định hướng theo địa danh quen thuộc, không thể hiện ranh giới hành chính cũ.</p>
         </article>
         <article>
           <h3>Bản hiện tại</h3>
-          <p>Đúng 5 ranh Polygon hoặc MultiPolygon đã xác minh của Thủ Dầu Một, Phú Lợi, Chánh Hiệp, Bình Dương và Phú An.</p>
+          <p>Đúng 5 ranh phường đã xác minh của Thủ Dầu Một, Phú Lợi, Chánh Hiệp, Bình Dương và Phú An.</p>
           <p>Cả hai bản có đường giao thông phù hợp, thủy hệ, địa danh, tên/vị trí khu phố và các điểm tiện ích có dữ liệu.</p>
         </article>
       </div>
       <div class="tdm-product-note">
         <strong>Giới hạn cần biết.</strong>
-        <span>Không bao gồm ranh phường cũ, ranh khu phố, bản đồ địa chính, hồ sơ thửa đất hoặc bản đồ quy hoạch pháp lý. Vị trí khu phố và 14 tâm điểm legacy chỉ mang tính tham khảo.</span>
+        <span>Không bao gồm ranh phường cũ, ranh khu phố, bản đồ địa chính, hồ sơ thửa đất hoặc bản đồ quy hoạch pháp lý. Vị trí khu phố và 14 tâm điểm trước năm 2025 chỉ mang tính tham khảo.</span>
       </div>
     </section>
 
@@ -152,8 +156,8 @@
         </article>
         <article>
           <h2>Nguồn và mốc dữ liệu</h2>
-          <p>Ranh hiện tại dùng geometry đã kiểm tra của Radar BDS; 14 tâm điểm legacy được biên tập từ Wikidata CC0; đường, thủy hệ và tiện ích dùng dữ liệu mở phù hợp.</p>
-          <p><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>. Bản phát hành {{ product.version }} được biên tập theo dữ liệu chốt đến <time datetime="{{ page.updated_at }}">{{ page.updated_label }}</time>.</p>
+          <p>Ranh hiện tại dùng dữ liệu hình học đã kiểm tra của Radar BDS; 14 tâm điểm trước năm 2025 được biên tập từ Wikidata CC0; đường, thủy hệ và tiện ích dùng dữ liệu mở phù hợp.</p>
+          <p><a class="tdm-product-source-link" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" data-product-source-link>© OpenStreetMap contributors</a>. Bản phát hành {{ product.version }} được biên tập theo dữ liệu chốt đến <time datetime="{{ page.updated_at }}">{{ page.updated_label }}</time>.</p>
         </article>
       </div>
     </section>
@@ -172,10 +176,18 @@
       </div>
     </section>
 
+    <section class="seo-shell tdm-product-repeat-offer" aria-label="Trạng thái mở bán">
+      <div>
+        <h2>Bộ bản đồ TP Thủ Dầu Một · {{ display_price }}đ</h2>
+        <p>Thanh toán chưa được mở. Nút mua sẽ chỉ được bật sau khi bản phát hành và quy trình giao tệp vượt qua đầy đủ bước kiểm tra.</p>
+      </div>
+      <button type="button" disabled aria-disabled="true" data-product-purchase>Sắp mở bán</button>
+    </section>
+
     <section class="seo-shell tdm-product-dashboard-cta">
       <div>
         <h2>Xem dữ liệu tin đang bán tại Thủ Dầu Một</h2>
-        <p>Trong khi bundle chưa mở bán, bạn có thể mở dashboard để lọc tin theo khu vực, diện tích, giá và tín hiệu đáng kiểm tra.</p>
+        <p>Trong khi bộ bản đồ chưa mở bán, bạn có thể mở dashboard để lọc tin theo khu vực, diện tích, giá và tín hiệu đáng kiểm tra.</p>
       </div>
       <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-product-dashboard data-track-cta="thu_dau_mot_map_dashboard">Mở dashboard lọc tin Thủ Dầu Một</a>
     </section>

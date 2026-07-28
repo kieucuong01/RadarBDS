@@ -14,8 +14,8 @@ THU_DAU_MOT_MAP_PRODUCT_PAGE = {
     "breadcrumb_label": "Bộ bản đồ TP Thủ Dầu Một",
     "hero_title": "Bộ bản đồ TP Thủ Dầu Một",
     "hero_text": (
-        "Một bundle biên tập cho nhu cầu in A0, chỉnh sửa thiết kế và mở lớp địa lý. "
-        "Trang đang cho xem hai bản preview có watermark; thanh toán chưa được mở."
+        "Một bộ sản phẩm biên tập cho nhu cầu in A0, chỉnh sửa thiết kế và mở lớp "
+        "địa lý. Trang đang cho xem hai bản mẫu có watermark; thanh toán chưa được mở."
     ),
     "updated_at": "2026-07-29",
     "updated_label": "29/07/2026",
@@ -32,8 +32,8 @@ THU_DAU_MOT_MAP_PRODUCT_PAGE = {
         {
             "question": "Bản trước năm 2025 có phải ranh giới hành chính cũ không?",
             "answer": (
-                "Không. Bản legacy chỉ thể hiện đúng 14 tâm điểm tham chiếu có nguồn; "
-                "các điểm này không phải ranh giới hành chính cũ."
+                "Không. Bản trước năm 2025 chỉ thể hiện đúng 14 tâm điểm tham chiếu "
+                "có nguồn; các điểm này không phải ranh giới hành chính cũ."
             ),
         },
         {
@@ -46,8 +46,8 @@ THU_DAU_MOT_MAP_PRODUCT_PAGE = {
         {
             "question": "Tôi có thể chỉnh sửa và in bản đồ không?",
             "answer": (
-                "Có. Bundle có hai bản PDF hoàn thiện để in A0, hai bản SVG giữ đối "
-                "tượng chữ và nhóm lớp có tên, cùng bộ font được phép phân phối."
+                "Có. Bộ sản phẩm có hai bản PDF hoàn thiện để in A0, hai bản SVG giữ "
+                "đối tượng chữ và nhóm lớp có tên, cùng các tệp font được phép phân phối."
             ),
         },
         {
@@ -59,7 +59,7 @@ THU_DAU_MOT_MAP_PRODUCT_PAGE = {
             ),
         },
         {
-            "question": "Khi nào có thể mua bundle?",
+            "question": "Khi nào có thể mua bộ bản đồ?",
             "answer": (
                 "Radar BDS chỉ mở bán sau khi gói phát hành, kho lưu trữ bảo vệ và "
                 "luồng thanh toán đã qua đủ bước kiểm tra vận hành."

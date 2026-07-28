@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+import html as html_lib
 import json
 import re
 import subprocess
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -20,6 +21,22 @@ TRACK_ACTIONS = (
     "thu_dau_mot_map_purchase_clicked",
     "thu_dau_mot_map_dashboard_clicked",
 )
+APPROVED_PACKAGE_SHA256 = (
+    "a6516a441afd26463f035ec26aa115ec249284e7f60f22fd2840586207f48fd5"
+)
+EXPECTED_RELEASE_FILES = (
+    "thu-dau-mot-truoc-2025-a0.pdf",
+    "thu-dau-mot-sau-2025-a0.pdf",
+    "thu-dau-mot-truoc-2025.svg",
+    "thu-dau-mot-sau-2025.svg",
+    "thu-dau-mot-truoc-2025.kml",
+    "thu-dau-mot-sau-2025.kml",
+    "fonts/BeVietnamPro-Regular.ttf",
+    "fonts/BeVietnamPro-SemiBold.ttf",
+    "fonts/OFL.txt",
+    "HUONG-DAN.pdf",
+    "GIAY-PHEP.txt",
+)
 
 
 def _schema_graph(response) -> list[dict]:
@@ -33,29 +50,51 @@ def _schema_graph(response) -> list[dict]:
     return payload["@graph"]
 
 
-def _write_protected_release(root: Path, *, tamper: bool = False) -> Path:
+def _visible_body_text(page_html: str) -> str:
+    body_match = re.search(r"<body\b[^>]*>(.*?)</body>", page_html, re.I | re.S)
+    assert body_match
+    body = re.sub(
+        r"<(?:script|style)\b[^>]*>.*?</(?:script|style)>",
+        " ",
+        body_match.group(1),
+        flags=re.I | re.S,
+    )
+    return " ".join(html_lib.unescape(re.sub(r"<[^>]+>", " ", body)).split())
+
+
+def _write_protected_release(
+    root: Path,
+    *,
+    manifest_product: str = "radarbds-thu-dau-mot-map",
+    manifest_version: str = "1.0",
+    manifest_files: tuple[str, ...] = EXPECTED_RELEASE_FILES,
+    package_payload: bytes = b"trusted-test-package",
+) -> Path:
     release_dir = root / "thu-dau-mot-map-bundle" / "1.0"
     release_dir.mkdir(parents=True)
     manifest = {
-        "product": "radarbds-thu-dau-mot-map",
-        "version": "1.0",
+        "product": manifest_product,
+        "version": manifest_version,
         "files": {
-            "HUONG-DAN.pdf": {
-                "byte_length": 5,
-                "sha256": hashlib.sha256(b"guide").hexdigest(),
+            name: {
+                "byte_length": len(name.encode("utf-8")),
+                "sha256": hashlib.sha256(name.encode("utf-8")).hexdigest(),
             }
+            for name in manifest_files
         },
     }
     manifest_payload = json.dumps(
-        manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        manifest,
+        ensure_ascii=False,
+        sort_keys=True,
     ).encode("utf-8")
     (release_dir / "MANIFEST.json").write_bytes(manifest_payload)
     package = release_dir / "radarbds-thu-dau-mot-map-v1.0.zip"
     with ZipFile(package, "w", compression=ZIP_DEFLATED) as archive:
-        archive.writestr("HUONG-DAN.pdf", b"guide")
+        for name in manifest_files:
+            archive.writestr(name, name.encode("utf-8"))
         archive.writestr("MANIFEST.json", manifest_payload)
-    if tamper:
-        (release_dir / "MANIFEST.json").write_text("{}", encoding="utf-8")
+        archive.comment = package_payload
     return package
 
 
@@ -68,6 +107,9 @@ def test_runtime_product_registry_is_immutable_and_versioned():
     assert product.version == "1.0"
     assert product.price_vnd == 99_000
     assert product.package_filename == "radarbds-thu-dau-mot-map-v1.0.zip"
+    assert product.release_product == "radarbds-thu-dau-mot-map"
+    assert product.release_files == EXPECTED_RELEASE_FILES
+    assert product.package_sha256 == APPROVED_PACKAGE_SHA256
     with pytest.raises(FrozenInstanceError):
         product.price_vnd = 1
     with pytest.raises(KeyError):
@@ -81,26 +123,200 @@ def test_release_availability_validates_only_the_protected_version_directory(tmp
     )
 
     product = get_digital_product("thu-dau-mot-map-bundle")
-    _write_protected_release(tmp_path)
-    availability = get_release_availability(product, tmp_path, sales_enabled=False)
+    package = _write_protected_release(tmp_path)
+    trusted_test_product = replace(
+        product,
+        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
+    )
+    availability = get_release_availability(
+        trusted_test_product,
+        tmp_path,
+        sales_enabled=False,
+    )
 
     assert availability.package_valid is True
     assert availability.sales_enabled is False
     assert availability.can_sell is False
     assert availability.reason == "sales_disabled"
 
-    tampered_root = tmp_path / "tampered"
-    _write_protected_release(tampered_root, tamper=True)
-    tampered = get_release_availability(product, tampered_root, sales_enabled=True)
-    assert tampered.package_valid is False
-    assert tampered.can_sell is False
-    assert tampered.reason == "package_invalid"
-
     artifacts_only = tmp_path / "artifacts"
     _write_protected_release(artifacts_only)
     missing = get_release_availability(product, tmp_path / "empty", sales_enabled=True)
     assert missing.package_valid is False
     assert missing.can_sell is False
+
+
+@pytest.mark.parametrize(
+    ("manifest_product", "manifest_version"),
+    (
+        ("wrong-product", "1.0"),
+        ("radarbds-thu-dau-mot-map", "2.0"),
+    ),
+)
+def test_release_gate_rejects_wrong_manifest_identity(
+    tmp_path,
+    manifest_product,
+    manifest_version,
+):
+    from services.digital_products import (
+        get_digital_product,
+        get_release_availability,
+    )
+
+    product = get_digital_product("thu-dau-mot-map-bundle")
+    package = _write_protected_release(
+        tmp_path,
+        manifest_product=manifest_product,
+        manifest_version=manifest_version,
+    )
+    test_product = replace(
+        product,
+        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
+    )
+
+    availability = get_release_availability(test_product, tmp_path, True)
+
+    assert availability.package_valid is False
+    assert availability.can_sell is False
+
+
+@pytest.mark.parametrize(
+    "manifest_files",
+    (
+        EXPECTED_RELEASE_FILES[:-1],
+        (*EXPECTED_RELEASE_FILES, "EXTRA.txt"),
+    ),
+)
+def test_release_gate_rejects_incomplete_or_extra_manifest_files(
+    tmp_path,
+    manifest_files,
+):
+    from services.digital_products import (
+        get_digital_product,
+        get_release_availability,
+    )
+
+    product = get_digital_product("thu-dau-mot-map-bundle")
+    package = _write_protected_release(tmp_path, manifest_files=manifest_files)
+    test_product = replace(
+        product,
+        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
+    )
+
+    availability = get_release_availability(test_product, tmp_path, True)
+
+    assert availability.package_valid is False
+    assert availability.can_sell is False
+
+
+def test_release_gate_rejects_self_consistent_but_untrusted_package(tmp_path):
+    from services.digital_products import (
+        get_digital_product,
+        get_release_availability,
+    )
+
+    product = get_digital_product("thu-dau-mot-map-bundle")
+    _write_protected_release(tmp_path)
+
+    availability = get_release_availability(product, tmp_path, True)
+
+    assert availability.package_valid is False
+    assert availability.can_sell is False
+
+
+@pytest.mark.parametrize("trusted_checksum", ("", "not-a-sha256", "f" * 64))
+def test_release_gate_requires_the_configured_approved_checksum(
+    tmp_path,
+    trusted_checksum,
+):
+    from services.digital_products import (
+        get_digital_product,
+        get_release_availability,
+    )
+
+    product = replace(
+        get_digital_product("thu-dau-mot-map-bundle"),
+        package_sha256=trusted_checksum,
+    )
+    _write_protected_release(tmp_path)
+
+    availability = get_release_availability(product, tmp_path, True)
+
+    assert availability.package_valid is False
+    assert availability.can_sell is False
+
+
+def test_release_validation_cache_reuses_stable_fingerprint_and_invalidates_on_change(
+    tmp_path,
+    monkeypatch,
+):
+    from services import digital_products
+
+    product = digital_products.get_digital_product("thu-dau-mot-map-bundle")
+    package = _write_protected_release(tmp_path)
+    test_product = replace(
+        product,
+        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
+    )
+    real_sha256_file = digital_products._sha256_file
+    real_read_manifest = digital_products._read_manifest
+    hash_calls = []
+    manifest_reads = []
+
+    def counted_sha256_file(path):
+        hash_calls.append(Path(path))
+        return real_sha256_file(path)
+
+    def counted_read_manifest(path):
+        manifest_reads.append(Path(path))
+        return real_read_manifest(path)
+
+    monkeypatch.setattr(digital_products, "_sha256_file", counted_sha256_file)
+    monkeypatch.setattr(digital_products, "_read_manifest", counted_read_manifest)
+
+    first = digital_products.get_release_availability(test_product, tmp_path, True)
+    second = digital_products.get_release_availability(test_product, tmp_path, True)
+    package.write_bytes(package.read_bytes() + b"-changed")
+    third = digital_products.get_release_availability(test_product, tmp_path, True)
+
+    assert first.package_valid is True
+    assert second.package_valid is True
+    assert len(manifest_reads) == 2
+    assert len(hash_calls) == 2
+    assert third.package_valid is False
+
+
+def test_release_validation_cache_invalidates_when_manifest_stat_changes(
+    tmp_path,
+    monkeypatch,
+):
+    from services import digital_products
+
+    product = digital_products.get_digital_product("thu-dau-mot-map-bundle")
+    package = _write_protected_release(tmp_path)
+    test_product = replace(
+        product,
+        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
+    )
+    real_read_manifest = digital_products._read_manifest
+    manifest_reads = []
+
+    def counted_read_manifest(path):
+        manifest_reads.append(Path(path))
+        return real_read_manifest(path)
+
+    monkeypatch.setattr(digital_products, "_read_manifest", counted_read_manifest)
+
+    first = digital_products.get_release_availability(test_product, tmp_path, True)
+    second = digital_products.get_release_availability(test_product, tmp_path, True)
+    manifest = package.parent / "MANIFEST.json"
+    manifest.write_text("{}", encoding="utf-8")
+    third = digital_products.get_release_availability(test_product, tmp_path, True)
+
+    assert first.package_valid is True
+    assert second.package_valid is True
+    assert third.package_valid is False
+    assert len(manifest_reads) == 2
 
 
 def test_product_page_is_indexable_but_checkout_is_disabled_without_sales_flag(monkeypatch):
@@ -114,9 +330,17 @@ def test_product_page_is_indexable_but_checkout_is_disabled_without_sales_flag(m
     assert f'<link rel="canonical" href="{PRODUCT_URL}">' in html
     assert "99.000" in html
     assert "Sắp mở bán" in html
+    assert html.count("Sắp mở bán") == 2
     assert 'action="/ban-do-thu-dau-mot/checkout"' not in html
     assert "<form" not in html
-    assert 'disabled aria-disabled="true"' in html
+    disabled_purchase_buttons = re.findall(
+        r"<button\b[^>]*data-product-purchase[^>]*>.*?</button>",
+        html,
+        re.I | re.S,
+    )
+    assert len(disabled_purchase_buttons) == 2
+    assert all("disabled" in button and 'aria-disabled="true"' in button for button in disabled_purchase_buttons)
+    assert html.rfind("data-product-purchase") > html.index('id="cau-hoi-thuong-gap"')
     assert "/static/images/seo/thu-dau-mot-map-before.webp" in html
     assert "/static/images/seo/thu-dau-mot-map-after.webp" in html
     lowered = html.lower()
@@ -146,12 +370,46 @@ def test_product_page_states_the_exact_legacy_and_current_edition_contract():
         "Hai bản PDF hoàn thiện để in A0",
         "Hai bản SVG giữ đối tượng chữ và nhóm lớp có tên để chỉnh sửa",
         "Hai bản KML để mở các lớp địa lý trong phần mềm tương thích",
-        "Bộ font được phép phân phối",
-        "Hướng dẫn sử dụng và giấy phép",
+        "Tệp font được phép phân phối và giấy phép font",
+        "Tệp hướng dẫn sử dụng và giấy phép sản phẩm",
+        "Tệp MANIFEST và mã checksum để kiểm tra tính toàn vẹn",
     ):
         assert benefit in html
     assert "Không bao gồm ranh phường cũ, ranh khu phố, bản đồ địa chính" in html
     assert "© OpenStreetMap contributors" in html
+
+
+def test_product_page_replaces_internal_map_jargon_with_clear_vietnamese():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(PRODUCT_PATH).get_data(as_text=True)
+    visible_text = _visible_body_text(html)
+
+    for internal_term in (
+        "bundle",
+        "preview",
+        "raster",
+        "legacy",
+        "geometry",
+        "Polygon",
+        "MultiPolygon",
+    ):
+        assert re.search(rf"\b{internal_term}\b", visible_text, re.I) is None
+    for public_format in ("PDF", "SVG", "KML"):
+        assert public_format in visible_text
+
+
+def test_product_source_and_breadcrumb_links_have_touch_target_hooks():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(PRODUCT_PATH).get_data(as_text=True)
+    css = Path("static/css/thu_dau_mot_map_product.css").read_text(encoding="utf-8")
+
+    assert 'data-product-source-link' in html
+    assert 'data-product-breadcrumb-link' in html
+    assert ".tdm-product-source-link" in css
+    assert "[data-product-breadcrumb-link]" in css
+    assert "min-height: 44px" in css
 
 
 def test_product_schema_matches_visible_offer_and_stays_out_of_stock():
@@ -234,6 +492,48 @@ def test_product_tracking_events_are_allowlisted_and_use_safe_context(monkeypatc
         "token",
     ):
         assert sensitive_name not in javascript
+
+
+def test_product_tracking_server_drops_sensitive_and_unexpected_context(monkeypatch):
+    import app as radar_app
+    from auth import core as auth_core
+
+    recorded = []
+    monkeypatch.setattr(auth_core, "current_tier", lambda: "admin")
+    monkeypatch.setattr(radar_app, "log_audit", lambda **payload: recorded.append(payload))
+    monkeypatch.setattr(radar_app, "current_user", lambda: None)
+    monkeypatch.setattr(radar_app, "current_tier", lambda: "guest")
+    client = radar_app.app.test_client()
+    safe_context = {
+        "edition": "current",
+        "source_surface": "preview_switch",
+        "path": PRODUCT_PATH,
+        "page_slug": "ban-do-thu-dau-mot",
+        "page_title": "Bộ bản đồ TP Thủ Dầu Một",
+    }
+    forbidden_context = {
+        "token": "secret",
+        "package_path": "protected/location",
+        "filename": "paid-file",
+        "order_code": "ORDER-123",
+        "public_id": "public-secret",
+        "unexpected": {"raw": "value"},
+    }
+
+    for action in TRACK_ACTIONS:
+        response = client.post(
+            "/api/track",
+            json={
+                "action": action,
+                "listing_id": 123,
+                "context": {**safe_context, **forbidden_context},
+            },
+        )
+        assert response.status_code == 200
+
+    assert len(recorded) == len(TRACK_ACTIONS)
+    assert all(item["context"] == safe_context for item in recorded)
+    assert all(item["listing_id"] is None for item in recorded)
 
 
 def test_edition_switch_updates_pressed_and_hidden_states_without_a_mouse():
