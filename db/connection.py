@@ -42,6 +42,8 @@ ID_TABLES = {
     "crawl_run_progress",
     "crawl_runs",
     "dedup_overrides",
+    "digital_product_order_events",
+    "digital_product_orders",
     "infra_entries",
     "lead_captures",
     "listing_images",

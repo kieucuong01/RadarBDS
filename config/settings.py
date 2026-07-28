@@ -28,6 +28,41 @@ def _load_dotenv(env_path: Path) -> None:
 _load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 
+@dataclass(frozen=True)
+class DigitalProductCommerceSettings:
+    sales_enabled: bool
+    storage_dir: Path | None
+    payos_client_id: str = field(repr=False)
+    payos_api_key: str = field(repr=False)
+    payos_checksum_key: str = field(repr=False)
+    cookie_secret: str = field(repr=False)
+
+    @property
+    def ready_for_checkout(self) -> bool:
+        return bool(
+            self.sales_enabled
+            and self.storage_dir
+            and self.storage_dir.is_absolute()
+            and self.payos_client_id
+            and self.payos_api_key
+            and self.payos_checksum_key
+            and len(self.cookie_secret) >= 64
+        )
+
+
+def get_digital_product_commerce_settings() -> DigitalProductCommerceSettings:
+    storage_value = os.getenv("DIGITAL_PRODUCT_STORAGE_DIR", "").strip()
+    sales_value = os.getenv("DIGITAL_PRODUCT_SALES_ENABLED", "0").strip().lower()
+    return DigitalProductCommerceSettings(
+        sales_enabled=sales_value in {"1", "true", "yes", "on"},
+        storage_dir=Path(storage_value) if storage_value else None,
+        payos_client_id=os.getenv("PAYOS_CLIENT_ID", "").strip(),
+        payos_api_key=os.getenv("PAYOS_API_KEY", "").strip(),
+        payos_checksum_key=os.getenv("PAYOS_CHECKSUM_KEY", "").strip(),
+        cookie_secret=os.getenv("DIGITAL_PRODUCT_COOKIE_SECRET", "").strip(),
+    )
+
+
 # ─── DATABASE ───────────────────────────────────────────────────────────────
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = int(os.getenv("DB_PORT", 5432))
