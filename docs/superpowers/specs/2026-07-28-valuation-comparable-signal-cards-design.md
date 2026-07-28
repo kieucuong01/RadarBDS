@@ -9,7 +9,7 @@ hierarchy as the Săn Deal signal cards. A user can open any card directly at
 
 ## Access and Safety
 
-- Guest, Free, and VIP all receive and see up to five comparable cards.
+- Guest, Free, and VIP all receive and see up to six comparable cards.
 - The unlock gate is removed. `comparables_locked` remains `false` for API
   compatibility during this release.
 - Non-admin responses never contain contact phone numbers, seller details, or
@@ -42,9 +42,11 @@ fallback. The valuation page does not add Save or Ráp mối actions.
   the same tab.
 - The card has a visible keyboard focus state and a minimum 44px effective
   target.
-- Comparable cards use a two-column grid on sufficiently wide result panels
-  and one column on mobile. There is no horizontal carousel or horizontal
-  scrolling.
+- The comparable section spans the full tool workspace below the form/result
+  row, so signal cards retain their normal readable width.
+- Comparable cards use a three-column grid on desktop, two columns on tablet,
+  and one column on mobile. Six cards form two complete desktop rows. There is
+  no horizontal carousel or horizontal scrolling.
 - Clicking a card records `valuation_comparable_click` with only the card
   position, property type, and page context. Listing text, price, phone, and
   source URL are not sent in analytics.
@@ -56,7 +58,7 @@ fallback. The valuation page does not add Save or Ráp mối actions.
   modal/action dependencies are not refactored in this release.
 - Expand the comparable query/serializer with the existing market-data
   formatting helpers where practical. Comparable selection remains canonical,
-  quality-filtered, same-ward/type prioritized, and limited to five.
+  quality-filtered, same-ward/type prioritized, and limited to six.
 - Do not change the shared valuation formula, database schema, dashboard signal
   card behavior, favorites, or contact workflow.
 
@@ -71,7 +73,7 @@ fallback. The valuation page does not add Save or Ráp mối actions.
 
 - API tests prove guest, Free, and VIP receive the same unlocked comparable
   shape and no non-admin response leaks a phone or source URL.
-- Logic tests prove canonical/quality filtering and the five-card limit remain
+- Logic tests prove canonical/quality filtering and the six-card limit remain
   intact.
 - UI contract tests prove the signal-card classes, detail links, full card
   fields, absence of Save/Ráp mối actions, and analytics event.
