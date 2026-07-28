@@ -7,6 +7,21 @@ from pathlib import Path
 from typing import List
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _project_storage_roots() -> tuple[Path, ...]:
+    roots = [PROJECT_ROOT]
+    for candidate in PROJECT_ROOT.parents:
+        if (candidate / ".git").is_dir():
+            roots.append(candidate.resolve())
+            break
+    return tuple(roots)
+
+
+PROJECT_STORAGE_ROOTS = _project_storage_roots()
+
+
 # ─── .env LOADER (no external dep) ──────────────────────────────────────────
 # Tự load .env ở project root nếu chưa có python-dotenv.
 # Non-fatal — thiếu file không throw, env var đã set từ shell có ưu tiên.
@@ -25,7 +40,20 @@ def _load_dotenv(env_path: Path) -> None:
     except Exception:
         pass
 
-_load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+_load_dotenv(PROJECT_ROOT / ".env")
+
+
+def _storage_path_is_outside_project(storage_dir: Path) -> bool:
+    try:
+        return (
+            storage_dir.is_absolute()
+            and not any(
+                storage_dir.is_relative_to(root)
+                for root in PROJECT_STORAGE_ROOTS
+            )
+        )
+    except (OSError, RuntimeError, ValueError):
+        return False
 
 
 @dataclass(frozen=True)
@@ -42,7 +70,7 @@ class DigitalProductCommerceSettings:
         return bool(
             self.sales_enabled
             and self.storage_dir
-            and self.storage_dir.is_absolute()
+            and _storage_path_is_outside_project(self.storage_dir)
             and self.payos_client_id
             and self.payos_api_key
             and self.payos_checksum_key
@@ -53,9 +81,15 @@ class DigitalProductCommerceSettings:
 def get_digital_product_commerce_settings() -> DigitalProductCommerceSettings:
     storage_value = os.getenv("DIGITAL_PRODUCT_STORAGE_DIR", "").strip()
     sales_value = os.getenv("DIGITAL_PRODUCT_SALES_ENABLED", "0").strip().lower()
+    storage_dir = Path(storage_value) if storage_value else None
+    if storage_dir and storage_dir.is_absolute():
+        try:
+            storage_dir = storage_dir.resolve(strict=False)
+        except (OSError, RuntimeError):
+            storage_dir = None
     return DigitalProductCommerceSettings(
         sales_enabled=sales_value in {"1", "true", "yes", "on"},
-        storage_dir=Path(storage_value) if storage_value else None,
+        storage_dir=storage_dir,
         payos_client_id=os.getenv("PAYOS_CLIENT_ID", "").strip(),
         payos_api_key=os.getenv("PAYOS_API_KEY", "").strip(),
         payos_checksum_key=os.getenv("PAYOS_CHECKSUM_KEY", "").strip(),
