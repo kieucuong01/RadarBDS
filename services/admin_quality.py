@@ -6,6 +6,7 @@ the Flask layer to inject patchable callbacks for tests.
 from __future__ import annotations
 
 import json
+import os
 import platform
 import re
 import subprocess
@@ -22,6 +23,8 @@ from services.signal_quality import (
     actionable_signal_sql,
     split_quality_flags,
 )
+
+FACEBOOK_PROFILE_STATS_LIMIT = max(500, int(os.getenv("RADAR_FACEBOOK_PROFILE_STATS_LIMIT", "3000")))
 
 
 def clamp_int(value, default: int, min_value: int, max_value: int) -> int:
@@ -384,7 +387,7 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
                     FROM raw_listings
                     WHERE source = 'facebook'
                     ORDER BY crawled_at DESC
-                    LIMIT 8000
+                    LIMIT ?
                 ),
                 recent_listing AS MATERIALIZED (
                     SELECT r.raw_json,
@@ -430,7 +433,7 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
                 LEFT JOIN image_counts img ON img.listing_id = rl.listing_id
                 LEFT JOIN latest_quality q ON q.listing_id = rl.listing_id
                 ORDER BY rl.crawled_at DESC
-            """, profile_params).fetchall()
+            """, [FACEBOOK_PROFILE_STATS_LIMIT] + profile_params).fetchall()
     except Exception:
         return stats
     grouped = {url: [] for url in profile_urls}
