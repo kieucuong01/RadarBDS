@@ -11,6 +11,10 @@
 ## Global Constraints
 
 - Server-side product price is fixed at exactly `99000` VND; browser input never sets price, slug, or version.
+- Product/checkout/order copy must describe the bundle consistently: the legacy
+  edition has 14 sourced reference center Points and does not represent old
+  ward boundaries; the current edition has exactly five verified ward
+  Polygon/MultiPolygon boundaries.
 - PayOS payment links expire 15 minutes after creation.
 - Download access expires exactly 24 hours after confirmed payment.
 - The checkout collects no account, email, or phone number.

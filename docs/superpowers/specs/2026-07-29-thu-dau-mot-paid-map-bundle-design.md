@@ -17,7 +17,8 @@ Sản phẩm phục vụ:
   SVG/PDF;
 - mở các lớp địa lý trong Google Earth, Google My Maps và phần mềm GIS hỗ trợ
   KML;
-- tra cứu ranh phường, đường giao thông, thủy hệ, địa danh, khu phố và tiện ích.
+- tra cứu ranh của 5 phường hiện tại, 14 tâm điểm legacy, đường giao thông,
+  thủy hệ, địa danh, khu phố và tiện ích.
 
 Trang miễn phí `/ban-do-binh-duong` tiếp tục phục vụ SEO, tra cứu và dẫn người
 dùng sang dashboard Radar BDS. Sản phẩm trả phí dùng URL riêng
@@ -27,8 +28,11 @@ biến trang bản đồ Bình Dương miễn phí thành paywall.
 ## 2. Các quyết định đã chốt
 
 - Giá niêm yết: 99.000đ cho toàn bộ bundle.
-- Bundle gồm cả bản đồ 14 phường trước sắp xếp và 5 phường thuộc khu vực
-  Thủ Dầu Một sau sắp xếp năm 2025.
+- Bundle gồm 14 tâm điểm tham chiếu có nguồn cho các phường trước sắp xếp và
+  ranh Polygon/MultiPolygon của đúng 5 phường thuộc khu vực Thủ Dầu Một sau
+  sắp xếp năm 2025.
+- 14 điểm legacy chỉ là vị trí trung tâm tham khảo, có `boundary_claim: false`;
+  không fetch, suy diễn, vẽ hoặc tuyên bố ranh phường cũ.
 - Mức chi tiết gồm đường nhỏ có dữ liệu, sông/kênh, tên khu phố và các điểm tiện
   ích.
 - Khu phố chỉ hiển thị tên và vị trí trung tâm tham khảo; không vẽ hoặc khẳng
@@ -71,9 +75,9 @@ nguồn mở có thể mở bằng Illustrator và CorelDRAW.
 
 ### 3.1. Nội dung bản đồ
 
-- ranh TP Thủ Dầu Một và các phường;
-- ranh 14 phường trước sắp xếp;
-- ranh 5 phường sau sắp xếp thuộc nhóm Thủ Dầu Một;
+- ranh của đúng 5 phường sau sắp xếp thuộc nhóm Thủ Dầu Một;
+- đúng 14 tâm điểm tham chiếu có tên của các phường trước sắp xếp, hiển thị
+  bằng ký hiệu Point, không phải polygon;
 - quốc lộ, đường chính, đường nhánh và đường nhỏ có dữ liệu hợp lệ;
 - cầu, sông, kênh và hồ quan trọng;
 - tên và vị trí trung tâm khu phố;
@@ -84,6 +88,8 @@ nguồn mở có thể mở bằng Illustrator và CorelDRAW.
   hoạch hoặc xác nhận của cơ quan có thẩm quyền;
 - ghi chú rằng vị trí khu phố mang tính tham khảo và không thể hiện ranh giới
   khu phố.
+- ghi chú rằng 14 vị trí phường legacy là tâm điểm tham chiếu và không thể hiện
+  ranh giới hành chính cũ.
 
 ## 4. Dữ liệu và dây chuyền bản đồ
 
@@ -93,9 +99,9 @@ Mỗi lớp dữ liệu phải có nguồn, giấy phép, ngày snapshot và che
 
 - ranh sau năm 2025: tái sử dụng phần geometry đã kiểm tra trong snapshot 36
   phường/xã hiện có của Radar BDS;
-- ranh 14 phường cũ: phải lấy từ nguồn chính thức hoặc nguồn mở có giấy phép phù
-  hợp và xác minh đủ 14 đơn vị; codebase hiện chưa có lớp này nên thiếu nguồn là
-  điều kiện chặn phát hành;
+- tâm điểm 14 phường cũ: danh sách Point biên tập riêng từ dữ liệu Wikidata
+  CC0 có URL/revision nguồn, confidence và `boundary_claim: false`; không dùng
+  nguồn polygon historical ở runtime;
 - đường, thủy hệ và điểm tiện ích: trích xuất từ OpenStreetMap hoặc nguồn mở phù
   hợp trong phạm vi TP Thủ Dầu Một;
 - tên/vị trí khu phố: danh sách biên tập riêng, mỗi điểm có tên, tọa độ, nguồn và
@@ -114,21 +120,24 @@ phép tái phân phối.
    Khai báo nguồn, license, snapshot, checksum và phạm vi sử dụng.
 
 2. **Boundary builder**
-   Chuẩn hóa tên/mã, kiểm tra geometry, cắt phạm vi và tạo hai bộ ranh cũ/mới.
+   Chuẩn hóa tên/mã và kiểm tra đúng 5 Polygon/MultiPolygon hiện tại. Không có
+   bộ ranh legacy.
 
 3. **Street and hydro builder**
    Lọc, phân cấp và cắt đường/thủy hệ theo ranh thành phố.
 
-4. **POI and neighborhood curator**
-   Chuẩn hóa điểm, loại trùng, loại điểm thiếu tên hoặc ngoài phạm vi, giữ nguồn
-   và mức tin cậy.
+4. **Legacy-center, POI and neighborhood curator**
+   Xác minh đúng 14 tâm điểm legacy và các điểm khu phố/POI, loại trùng, loại
+   điểm thiếu tên hoặc ngoài phạm vi, giữ nguồn, mức tin cậy và tuyên bố
+   `boundary_claim: false` cho các điểm legacy.
 
 5. **Draft renderer**
    Sinh bản nháp vector có lớp, màu, label rule, chú giải và bố cục A0.
 
 6. **Release validator**
-   Kiểm tra đủ file, đủ 14/5 phường, geometry hợp lệ, font/license, PDF vector,
-   SVG có text editable, KML parse được và checksum khớp.
+   Kiểm tra đủ file, đúng 14 Point legacy và 5 polygon hiện tại, geometry hợp
+   lệ, font/license, PDF vector, SVG có text editable, KML parse được và
+   checksum khớp.
 
 7. **Release packager**
    Chỉ đóng ZIP sau khi bản phát hành đã được đánh dấu duyệt thủ công.
@@ -309,14 +318,16 @@ liệu chuyển khoản.
 
 ### 8.1. Dữ liệu và file
 
-- đúng 14 phường cũ và 5 phường mới;
+- đúng 14 tâm điểm legacy dạng Point, không có polygon legacy, và đúng 5 ranh
+  phường hiện tại dạng Polygon/MultiPolygon;
 - tất cả geometry hợp lệ và nằm trong phạm vi hợp lý;
 - không trùng slug/mã/tên sau chuẩn hóa;
 - đường/POI ngoài phạm vi bị loại;
 - khu phố có source/confidence và không có polygon;
 - PDF giữ vector, khổ A0 và font nhúng;
 - SVG parse được, có layer/group và text editable;
-- KML parse được, có placemark/geometry đúng phiên bản;
+- KML parse được; bản legacy có 14 Point placemark và cảnh báo không phải ranh
+  cũ, bản hiện tại có đúng 5 Polygon/MultiPolygon;
 - manifest/checksum khớp ZIP;
 - license/source bắt buộc có mặt;
 - validator từ chối package thiếu hoặc chưa duyệt.

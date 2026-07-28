@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build, validate, and present a versioned paid-map bundle containing print-ready PDF, editable SVG, and KML maps for old and post-2025 Thu Dau Mot boundaries, without enabling checkout yet.
+**Goal:** Build, validate, and present a versioned paid-map bundle containing print-ready PDF, editable SVG, and KML maps with 14 sourced legacy reference centers plus the five post-2025 Thu Dau Mot boundaries, without enabling checkout yet.
 
 **Architecture:** A build-only `map_products` package fetches licensed snapshots, normalizes WGS84 data, constructs one projected scene graph, and renders SVG/PDF/KML plus watermarked web previews. A release validator is the only component allowed to package a ZIP. The Flask product page reads a small immutable product registry and never exposes paid source files.
 
@@ -13,15 +13,17 @@
 - Preserve `/ban-do-binh-duong` as a free public lookup page.
 - The new canonical product URL is `/ban-do-thu-dau-mot`.
 - The bundle price metadata is exactly `99000` VND.
-- The old edition must contain exactly 14 old wards: Chánh Mỹ, Chánh Nghĩa, Định Hòa, Hiệp An, Hiệp Thành, Hòa Phú, Phú Cường, Phú Hòa, Phú Lợi, Phú Mỹ, Phú Tân, Phú Thọ, Tân An, Tương Bình Hiệp.
-- The post-2025 edition must contain exactly 5 wards in the Thu Dau Mot group: Thủ Dầu Một, Phú Lợi, Chánh Hiệp, Bình Dương, Phú An.
+- The old edition must contain exactly 14 sourced Point reference centers, with `boundary_claim: false`: Chánh Mỹ, Chánh Nghĩa, Định Hòa, Hiệp An, Hiệp Thành, Hòa Phú, Phú Cường, Phú Hòa, Phú Lợi, Phú Mỹ, Phú Tân, Phú Thọ, Tân An, Tương Bình Hiệp.
+- The post-2025 edition must contain exactly 5 Polygon/MultiPolygon wards in the Thu Dau Mot group: Thủ Dầu Một, Phú Lợi, Chánh Hiệp, Bình Dương, Phú An.
 - Neighborhoods are Point features with source/confidence metadata; never create neighborhood polygons.
 - Paid PDF/SVG/KML/ZIP files must never live under `static/`.
 - Paid PDF and SVG contain no raster `<image>` layer or satellite imagery.
 - PDF is the print master; SVG is the editable master; KML is geographic data, not print layout.
 - All OSM-derived output includes `© OpenStreetMap contributors` and `https://www.openstreetmap.org/copyright`.
 - Build outputs go under ignored `artifacts/map-products/`; only source registry, curated point data, tests, code, and watermarked WebP previews are committed.
-- If the 14 old ward polygons cannot be sourced under a commercial-compatible license, stop this plan before packaging. Do not infer or draw administrative boundaries.
+- Never fetch, infer, draw, validate, or claim legacy ward polygons. Product
+  copy, legends, metadata, guide, and tests must say the 14 legacy locations
+  are reference center points and do not represent old ward boundaries.
 - The checkout CTA remains disabled until the PayOS plan is complete and `DIGITAL_PRODUCT_SALES_ENABLED=1`.
 
 ---
@@ -34,6 +36,7 @@ config/
   map_products/
     thu_dau_mot_product.json
     thu_dau_mot_sources.json
+    thu_dau_mot_legacy_ward_centers.geojson
     thu_dau_mot_neighborhoods.geojson
   thu_dau_mot_map_product.py
 map_products/
@@ -75,6 +78,7 @@ The `map_products` package is build-time only. Flask runtime imports only
 - Create: `requirements-map.txt`
 - Create: `config/map_products/thu_dau_mot_product.json`
 - Create: `config/map_products/thu_dau_mot_sources.json`
+- Create: `config/map_products/thu_dau_mot_legacy_ward_centers.geojson`
 - Create: `config/map_products/thu_dau_mot_neighborhoods.geojson`
 - Create: `map_products/__init__.py`
 - Create: `map_products/models.py`
@@ -132,9 +136,10 @@ def test_every_source_has_license_and_snapshot_contract():
     sources = load_source_registry(
         ROOT / "config/map_products/thu_dau_mot_sources.json"
     )
-    assert {"legacy_boundaries", "current_boundaries", "osm_detail", "font"} <= {
+    assert {"legacy_ward_centers", "current_boundaries", "osm_detail", "font"} <= {
         source.key for source in sources
     }
+    assert "legacy_boundaries" not in {source.key for source in sources}
     assert all(source.license_name and source.license_url for source in sources)
     assert all(source.snapshot_strategy in {"fixed_url", "dated_query", "repo_snapshot"} for source in sources)
 
@@ -146,6 +151,15 @@ def test_neighborhoods_are_named_points_not_claimed_boundaries():
     assert points
     assert all(point.geometry_type == "Point" for point in points)
     assert all(point.name and point.source and point.confidence in {"high", "medium"} for point in points)
+
+
+def test_legacy_centers_are_exact_sourced_points_not_boundaries(product_spec):
+    points = load_neighborhood_points(
+        ROOT / "config/map_products/thu_dau_mot_legacy_ward_centers.geojson"
+    )
+    assert len(points) == 14
+    assert {point.name for point in points} == set(product_spec.legacy_wards)
+    assert all(point.geometry_type == "Point" for point in points)
 ```
 
 - [ ] **Step 3: Run tests and confirm RED**
@@ -192,6 +206,8 @@ class MapPoint:
     source: str
     confidence: str
     geometry_type: str = "Point"
+    source_url: str = ""
+    boundary_claim: bool = False
 ```
 
 Load JSON with UTF-8, reject unknown/missing required keys, duplicate unit names,
@@ -206,18 +222,21 @@ fetcher will record downloaded SHA-256 values in the build manifest.
 The source registry must include:
 
 - the existing Radar BDS 36-unit repo snapshot for current boundaries;
-- an approved old-ward source with commercial redistribution terms;
+- the committed CC0 curated snapshot containing exactly 14 legacy ward
+  reference-center Points and no legacy boundary geometry;
 - an OSM dated query contract for streets/hydro/POI;
 - Google Fonts Poppins Regular/SemiBold plus OFL license.
 
-The neighborhood GeoJSON must include only verified named locations. Every
-feature properties object has exactly five keys: `name`, `source`,
-`source_url`, `confidence`, and `boundary_claim`. The first three values are
-non-empty strings copied from the reviewed source record; `confidence` is one
-of `high` or `medium`; `boundary_claim` is always the JSON boolean `false`.
+The legacy-center and neighborhood GeoJSON files must include only verified
+named locations. Every feature properties object has exactly five keys:
+`name`, `source`, `source_url`, `confidence`, and `boundary_claim`. The first
+three values are non-empty strings copied from the reviewed source record;
+`confidence` is one of `high` or `medium`; `boundary_claim` is always the JSON
+boolean `false`.
 
-If the old-ward source or neighborhood source cannot be verified, stop and
-report the exact missing layer; do not weaken the tests.
+If the exact 14 legacy center points or neighborhood source cannot be verified,
+stop and report the exact missing point; do not weaken the tests or substitute
+legacy polygons.
 
 - [ ] **Step 6: Run tests and commit**
 
@@ -233,6 +252,9 @@ git commit -m "feat: define Thu Dau Mot map product sources"
 ### Task 2: Fetch and Normalize Licensed GIS Snapshots
 
 **Files:**
+- Modify: `config/map_products/thu_dau_mot_sources.json`
+- Create: `config/map_products/thu_dau_mot_legacy_ward_centers.geojson`
+- Modify: `map_products/models.py`
 - Create: `map_products/sources.py`
 - Create: `map_products/geometry.py`
 - Create: `scripts/build_thu_dau_mot_map_product.py`
@@ -242,19 +264,22 @@ git commit -m "feat: define Thu Dau Mot map product sources"
 - Consumes: `MapProductSpec`, `MapSource`, `MapPoint`
 - Produces: `fetch_source_snapshots(registry, cache_dir, refresh=False) -> dict[str, Path]`
 - Produces: `build_normalized_layers(spec, snapshots, neighborhoods) -> NormalizedMapLayers`
-- `NormalizedMapLayers` contains WGS84 GeoJSON-like tuples for boundaries, streets, hydro, POI, and neighborhood points.
+- `NormalizedMapLayers` contains WGS84 GeoJSON-like tuples for five current
+  boundaries, 14 legacy reference-center Points, streets, hydro, POI, and
+  neighborhood points.
 
 - [ ] **Step 1: Add failing normalization tests with in-memory fixtures**
 
 ```python
-def test_normalizer_requires_exact_boundary_sets(product_spec, source_payloads):
+def test_normalizer_requires_exact_legacy_points_and_current_boundaries(product_spec, source_payloads):
     layers = build_normalized_layers(
         product_spec,
         source_payloads,
         neighborhood_points=sample_neighborhoods(),
     )
-    assert {f.name for f in layers.legacy_boundaries} == set(product_spec.legacy_wards)
+    assert {point.name for point in layers.legacy_ward_centers} == set(product_spec.legacy_wards)
     assert {f.name for f in layers.current_boundaries} == set(product_spec.current_wards)
+    assert not hasattr(layers, "legacy_boundaries")
 
 
 def test_osm_details_are_clipped_and_classified(product_spec, source_payloads):
@@ -319,7 +344,9 @@ Requirements:
 - issue the OSM detailed query at a recorded timestamp;
 - current five wards come from
   `static/maps/binh-duong/current-36-wards.geojson`;
-- old boundaries must resolve to exactly 14 named Polygon/MultiPolygon features;
+- the curated legacy snapshot must resolve to exactly 14 named Point features
+  with source URL/label, confidence, and `boundary_claim: false`;
+- there is no historical legacy-boundary runtime source or fetch;
 - Overpass/Nominatim failure aborts the build without touching a release.
 
 - [ ] **Step 4: Implement WGS84 normalization and clipping**
@@ -327,8 +354,8 @@ Requirements:
 ```python
 @dataclass(frozen=True)
 class NormalizedMapLayers:
-    legacy_boundaries: tuple[NamedGeometry, ...]
     current_boundaries: tuple[NamedGeometry, ...]
+    legacy_ward_centers: tuple[MapPoint, ...]
     streets: tuple[StreetGeometry, ...]
     hydro: tuple[NamedGeometry, ...]
     poi: tuple[MapPoint, ...]
@@ -336,9 +363,10 @@ class NormalizedMapLayers:
     source_manifest: dict[str, dict]
 ```
 
-Use Shapely to repair only safe ring issues with `make_valid`, reject empty
-geometry, clip details to the old-city union, deduplicate POI by normalized
-name plus 25-meter proximity, and preserve original WGS84 coordinates for KML.
+Use Shapely to repair only safe current-boundary ring issues with `make_valid`,
+reject empty geometry, clip details to the union of the five current
+boundaries, deduplicate POI by normalized name plus 25-meter proximity, and
+preserve original WGS84 coordinates for KML.
 
 - [ ] **Step 5: Add the build CLI**
 
@@ -361,7 +389,7 @@ Run the focused tests twice and compare normalized file SHA-256 values when
 `--refresh-sources` is absent.
 
 ```powershell
-git add map_products/sources.py map_products/geometry.py scripts/build_thu_dau_mot_map_product.py tests/test_thu_dau_mot_map_sources.py
+git add config/map_products/thu_dau_mot_sources.json config/map_products/thu_dau_mot_legacy_ward_centers.geojson map_products/models.py map_products/sources.py map_products/geometry.py scripts/build_thu_dau_mot_map_product.py tests/test_thu_dau_mot_map_sources.py
 git commit -m "feat: normalize Thu Dau Mot map data"
 ```
 
@@ -391,7 +419,7 @@ def test_svg_is_vector_layered_and_text_editable(tmp_path, sample_scene):
     assert not root.findall(".//{http://www.w3.org/2000/svg}image")
     assert root.findall(".//{http://www.w3.org/2000/svg}text")
     layer_ids = {node.attrib["id"] for node in root.findall(".//{http://www.w3.org/2000/svg}g") if "id" in node.attrib}
-    assert {"boundaries", "streets", "hydro", "poi", "neighborhoods", "labels"} <= layer_ids
+    assert {"boundaries", "legacy-reference-centers", "streets", "hydro", "poi", "neighborhoods", "labels"} <= layer_ids
 
 
 def test_pdf_is_landscape_a0_vector_with_embedded_font(tmp_path, sample_scene):
@@ -408,6 +436,8 @@ def test_kml_contains_geographic_layers_not_print_artifacts(tmp_path, sample_lay
     output = render_kml(sample_layers, "legacy", tmp_path / "map.kml")
     root = ElementTree.parse(output).getroot()
     assert root.findall(".//{http://www.opengis.net/kml/2.2}Placemark")
+    assert len(root.findall(".//{http://www.opengis.net/kml/2.2}Point")) == 14
+    assert not root.findall(".//{http://www.opengis.net/kml/2.2}Polygon")
     assert b"watermark" not in output.read_bytes().lower()
 ```
 
@@ -435,14 +465,16 @@ class MapScene:
 
 Project WGS84 to EPSG:32648 with `always_xy=True`. Use one scene for both SVG
 and PDF so geometry, colors, label anchors, scale bar, and legend cannot drift.
-The legacy and current scenes share roads/hydro/POI but have independent ward
-fills and labels.
+The legacy and current scenes share roads/hydro/POI clipped to the current-five
+union. The current scene has five ward fills/labels. The legacy scene has no
+ward fills: it renders 14 Point symbols/labels plus a prominent note that they
+are reference centers, not old administrative boundaries.
 
 - [ ] **Step 4: Implement deterministic label and style rules**
 
 Priority order:
 
-1. ward labels;
+1. current ward labels or legacy reference-center labels;
 2. major roads;
 3. rivers/canals;
 4. neighborhood labels;
@@ -458,8 +490,9 @@ constants in `scene.py`; do not hard-code colors separately in renderers.
   embedded raster.
 - PDF: ReportLab canvas, registered Poppins TTF, landscape A0, vector paths,
   text, legend, scale bar, attribution.
-- KML: WGS84 placemarks/folders for administrative boundaries, roads, hydro,
-  POI, and neighborhoods; include source/edition in ExtendedData.
+- KML: WGS84 placemarks/folders for five current administrative boundaries or
+  14 legacy reference Points, plus roads, hydro, POI, and neighborhoods;
+  include source/edition and `boundary_claim=false` in legacy ExtendedData.
 
 - [ ] **Step 6: Verify and commit**
 
@@ -537,7 +570,8 @@ Validate:
 
 - exact six map files, two font files, `OFL.txt`, `HUONG-DAN.pdf`,
   `GIAY-PHEP.txt`;
-- 14/5 boundary counts in distributed KML;
+- exactly 14 legacy Point placemarks with no legacy Polygon and exactly 5
+  current Polygon/MultiPolygon boundaries in distributed KML;
 - no SVG `<image>`;
 - no PDF images;
 - `/FontFile2` exists in each PDF;
@@ -563,7 +597,7 @@ inspect at full page plus two detail crops. Then write
 {
   "reviewer": "Radar BDS release review",
   "reviewed_at": "ISO-8601 timestamp",
-  "legacy_labels_checked": true,
+  "legacy_reference_points_checked": true,
   "current_labels_checked": true,
   "a0_layout_checked": true,
   "vietnamese_text_checked": true,
@@ -694,6 +728,9 @@ The template includes:
 - price and disabled `Sắp mở bán` CTA;
 - two watermarked previews with an accessible before/after switch;
 - exact bundle contents;
+- explicit copy that the legacy edition contains 14 sourced reference center
+  points, not old ward boundaries, while the current edition contains five
+  verified ward polygons;
 - vector/font/print claims phrased according to the design spec;
 - license, sources, date, FAQ;
 - secondary `/?tab=signals&city=Th%E1%BB%A7%20D%E1%BA%A7u%20M%E1%BB%99t` CTA;

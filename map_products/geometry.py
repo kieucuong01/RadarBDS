@@ -23,7 +23,7 @@ from shapely.geometry import (
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import polygonize, unary_union
 
-from .models import MapPoint, MapProductSpec
+from .models import MapPoint, MapProductSpec, load_neighborhood_points
 
 
 @dataclass(frozen=True)
@@ -43,8 +43,8 @@ class StreetGeometry:
 
 @dataclass(frozen=True)
 class NormalizedMapLayers:
-    legacy_boundaries: tuple[NamedGeometry, ...]
     current_boundaries: tuple[NamedGeometry, ...]
+    legacy_ward_centers: tuple[MapPoint, ...]
     streets: tuple[StreetGeometry, ...]
     hydro: tuple[NamedGeometry, ...]
     poi: tuple[MapPoint, ...]
@@ -413,14 +413,39 @@ def _source_manifest(snapshots: dict[str, Any]) -> dict[str, dict]:
     return {}
 
 
+def _load_exact_legacy_centers(
+    snapshot: Path | str | bytes | dict,
+    expected_names: tuple[str, ...],
+) -> tuple[MapPoint, ...]:
+    if not isinstance(snapshot, (Path, str)):
+        raise ValueError(
+            "legacy_ward_centers must be a frozen GeoJSON snapshot path"
+        )
+    try:
+        points = load_neighborhood_points(Path(snapshot))
+    except ValueError as exc:
+        raise ValueError(f"Invalid legacy ward center Points: {exc}") from exc
+    by_name = {point.name: point for point in points}
+    expected = set(expected_names)
+    actual = set(by_name)
+    if len(points) != 14 or actual != expected:
+        missing = sorted(expected - actual)
+        unexpected = sorted(actual - expected)
+        raise ValueError(
+            "legacy_ward_centers must resolve to exactly 14 legacy ward "
+            f"center Points (missing={missing}; unexpected={unexpected})"
+        )
+    return tuple(by_name[name] for name in expected_names)
+
+
 def build_normalized_layers(
     spec: MapProductSpec,
     snapshots: dict[str, Path | str | bytes | dict],
     neighborhood_points: tuple[MapPoint, ...],
 ) -> NormalizedMapLayers:
-    """Validate exact administrative sets and clip WGS84 detail layers."""
+    """Validate current polygons and legacy reference points in WGS84."""
 
-    required = {"legacy_boundaries", "current_boundaries", "osm_detail"}
+    required = {"legacy_ward_centers", "current_boundaries", "osm_detail"}
     missing_sources = sorted(required - set(snapshots))
     if missing_sources:
         raise ValueError(f"Missing required source snapshots: {missing_sources}")
@@ -439,26 +464,25 @@ def build_normalized_layers(
                 f"Neighborhood {point.name!r} has invalid WGS84 coordinates"
             )
 
-    legacy = _select_exact_boundaries(
-        _read_payload(snapshots["legacy_boundaries"]),
+    legacy_centers = _load_exact_legacy_centers(
+        snapshots["legacy_ward_centers"],
         spec.legacy_wards,
-        "legacy_boundaries",
     )
     current = _select_exact_boundaries(
         _read_payload(snapshots["current_boundaries"]),
         spec.current_wards,
         "current_boundaries",
     )
-    old_city = unary_union([feature.geometry for feature in legacy])
-    if old_city.is_empty:
-        raise ValueError("Legacy city union is empty")
+    current_extent = unary_union([feature.geometry for feature in current])
+    if current_extent.is_empty:
+        raise ValueError("Current five-ward union is empty")
     streets, hydro, poi = _detail_layers(
         _read_payload(snapshots["osm_detail"]),
-        old_city,
+        current_extent,
     )
     return NormalizedMapLayers(
-        legacy_boundaries=legacy,
         current_boundaries=current,
+        legacy_ward_centers=legacy_centers,
         streets=streets,
         hydro=hydro,
         poi=poi,

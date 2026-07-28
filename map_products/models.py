@@ -67,6 +67,8 @@ class MapPoint:
     source: str
     confidence: str
     geometry_type: str = "Point"
+    source_url: str = ""
+    boundary_claim: bool = False
 
 
 def _load_json(path: Path) -> Any:
@@ -228,9 +230,13 @@ def load_neighborhood_points(path: Path) -> tuple[MapPoint, ...]:
                     properties["source"], f"features[{index}].properties.source"
                 ),
                 confidence=properties["confidence"],
+                source_url=_non_empty_string(
+                    properties["source_url"],
+                    f"features[{index}].properties.source_url",
+                ),
+                boundary_claim=properties["boundary_claim"],
             )
         )
-        _non_empty_string(properties["source_url"], f"features[{index}].properties.source_url")
     if len({point.name for point in points}) != len(points):
         raise ValueError("neighborhood points cannot contain duplicate names")
     return tuple(points)
