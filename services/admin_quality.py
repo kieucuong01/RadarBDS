@@ -531,6 +531,14 @@ def build_facebook_duplicate_analysis(
 
 
 def facebook_profile_duplicate_analysis(profiles: list[dict], stats: dict, conn_factory=get_conn) -> dict:
+    profiles_by_city: Counter[str] = Counter()
+    for profile in profiles:
+        city = str(profile.get("city") or "").strip().casefold()
+        if city and profile.get("url"):
+            profiles_by_city[city] += 1
+    if not any(count >= 2 for count in profiles_by_city.values()):
+        return {"comparisons": [], "by_profile": {}}
+
     try:
         with conn_factory() as conn:
             fetched = conn.execute("""

@@ -115,6 +115,7 @@ def test_flask_adds_security_headers_to_success_api_and_error_responses():
     test_app.after_request(radar_app.add_response_headers)
     test_app.add_url_rule("/", endpoint="home", view_func=lambda: "ok")
     test_app.add_url_rule("/api/ping", endpoint="ping", view_func=lambda: {"ok": True})
+    test_app.add_url_rule("/static/js/admin.js", endpoint="admin_js", view_func=lambda: "js")
     expected = {
         "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
         "X-Content-Type-Options": "nosniff",
@@ -138,3 +139,9 @@ def test_flask_adds_security_headers_to_success_api_and_error_responses():
     for path in ("/", "/api/ping", "/missing"):
         response = client.get(path)
         assert {name: response.headers.get(name) for name in expected} == expected
+
+    api_response = client.get("/api/ping")
+    assert api_response.headers["Cache-Control"] == "no-store, no-cache, must-revalidate, max-age=0"
+
+    static_response = client.get("/static/js/admin.js?v=admin-v48-admin-client-cache")
+    assert static_response.headers["Cache-Control"] == "public, max-age=31536000, immutable"

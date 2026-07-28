@@ -23,6 +23,8 @@ const ADMIN_SLUG_TO_PANEL = Object.entries(ADMIN_PANEL_SLUGS).reduce((acc, [pane
   acc[slug] = panel;
   return acc;
 }, {});
+const ADMIN_CLIENT_CACHE_TTL_MS = 10000;
+const adminClientCache = new Map();
 
 let leadTimer = null;
 let activeQualityTab = 'dups';
@@ -59,23 +61,47 @@ function esc(v) {
   return String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 
+function cloneAdminPayload(value) {
+  return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function clearAdminClientCache() {
+  adminClientCache.clear();
+}
+
 async function fetchJSON(url, options = {}) {
   const clean = new URL(url, window.location.href);
   clean.username = '';
   clean.password = '';
   const method = String(options.method || 'GET').toUpperCase();
   const isPoll = clean.pathname.includes('/admin/api/facebook-crawl/jobs/');
+  const isCachedAdminGet = method === 'GET' && clean.pathname.startsWith('/admin/api/') && !isPoll;
+  const cacheKey = isCachedAdminGet ? clean.toString() : '';
+  if (isCachedAdminGet) {
+    const cached = adminClientCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts <= ADMIN_CLIENT_CACHE_TTL_MS) {
+      if (cached.promise) return cloneAdminPayload(await cached.promise);
+      return cloneAdminPayload(cached.data);
+    }
+  } else if (method !== 'GET') {
+    clearAdminClientCache();
+  }
   const shouldToast = !options.silent && !isPoll && adminToastDepth === 0;
   const toast = shouldToast
     ? showAdminToast(method === 'GET' ? 'Đang tải dữ liệu' : 'Đang xử lý tác vụ', 'loading', { sticky: true })
     : null;
   try {
-    const res = await fetch(clean.toString(), options);
-    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-    const data = await res.json();
+    const pending = fetch(clean.toString(), options).then(async res => {
+      if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+      return res.json();
+    });
+    if (isCachedAdminGet) adminClientCache.set(cacheKey, { ts: Date.now(), promise: pending });
+    const data = await pending;
+    if (isCachedAdminGet) adminClientCache.set(cacheKey, { ts: Date.now(), data: cloneAdminPayload(data) });
     if (toast) updateAdminToast(toast, method === 'GET' ? 'Đã tải dữ liệu' : 'Đã xử lý xong', 'success');
     return data;
   } catch (error) {
+    if (isCachedAdminGet) adminClientCache.delete(cacheKey);
     if (toast) updateAdminToast(toast, `Tác vụ lỗi: ${formatAdminError(error)}`, 'error', { delay: 5200 });
     throw error;
   }
@@ -2309,8 +2335,27 @@ async function saveTraining(id) {
 }
 
 let growthPeriod = 'day', growthCharts = {};
+let growthChartLibraryPromise = null;
+const GROWTH_CHART_SRC = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
 const growthFmt = value => Number(value || 0).toLocaleString('vi-VN');
 const growthDelta = value => value == null ? '?' : (value > 0 ? '+' : '') + Number(value).toLocaleString('vi-VN') + '%';
+
+function ensureGrowthChartLibrary() {
+  if (window.Chart) return Promise.resolve(window.Chart);
+  if (growthChartLibraryPromise) return growthChartLibraryPromise;
+  growthChartLibraryPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = GROWTH_CHART_SRC;
+    script.async = true;
+    script.onload = () => resolve(window.Chart);
+    script.onerror = () => {
+      growthChartLibraryPromise = null;
+      reject(new Error('chart_library_failed'));
+    };
+    document.head.appendChild(script);
+  });
+  return growthChartLibraryPromise;
+}
 
 function growthOptions() {
   const text = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#334155';
@@ -2352,7 +2397,12 @@ function renderGrowth(data) {
   growthRatios.innerHTML = ratios.map(([label,value,suffix,note]) => '<article class="surface growth-ratio"><span>' + esc(label) + '</span><strong>' + (value == null ? '?' : growthFmt(value) + suffix) + '</strong><small>' + esc(note) + '</small></article>').join('');
   growthTableBody.innerHTML = data.series.map(row => '<tr><td>' + esc(row.label) + '</td><td>' + growthFmt(row.crawled) + '</td><td>' + growthFmt(row.signals) + '</td><td>' + growthFmt(row.unique_lots) + '</td><td>' + growthFmt(row.price_drops) + '</td><td>' + growthFmt(row.signups) + '</td><td>' + growthFmt(row.leads) + '</td></tr>').join('');
   growthEmpty.hidden = !data.series.every(row => !row.crawled && !row.signals && !row.unique_lots && !row.price_drops && !row.leads);
-  renderGrowthCharts(data);
+  ensureGrowthChartLibrary()
+    .then(() => renderGrowthCharts(data))
+    .catch(error => {
+      console.error(error);
+      growthError.hidden = false;
+    });
 }
 
 async function loadGrowth() {

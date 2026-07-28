@@ -136,6 +136,8 @@ def add_response_headers(response):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
+    elif request.path.startswith("/static/") and request.args.get("v"):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
@@ -182,6 +184,42 @@ FACEBOOK_MANUAL_CRAWL_MAX_LIMIT = 950
 FACEBOOK_CRAWL_JOBS: dict[str, dict] = {}
 FACEBOOK_CRAWL_JOB_ORDER: list[str] = []
 FACEBOOK_CRAWL_LOCK = threading.Lock()
+ADMIN_READ_CACHE_TTL_SECONDS = float(os.getenv("RADAR_ADMIN_READ_CACHE_TTL_SECONDS", "20"))
+ADMIN_READ_CACHE_MAX_ITEMS = 64
+_ADMIN_READ_CACHE: dict[tuple, dict] = {}
+_ADMIN_READ_CACHE_LOCK = threading.Lock()
+
+
+def clear_admin_read_cache(scope: str | None = None) -> None:
+    with _ADMIN_READ_CACHE_LOCK:
+        if scope is None:
+            _ADMIN_READ_CACHE.clear()
+            return
+        stale_keys = [key for key in _ADMIN_READ_CACHE if key and key[0] == scope]
+        for key in stale_keys:
+            _ADMIN_READ_CACHE.pop(key, None)
+
+
+def _cached_admin_read_payload(scope: str, key, loader, *, ttl_seconds: float | None = None):
+    ttl = ADMIN_READ_CACHE_TTL_SECONDS if ttl_seconds is None else ttl_seconds
+    cache_key = (scope, key)
+    now = time.time()
+    with _ADMIN_READ_CACHE_LOCK:
+        entry = _ADMIN_READ_CACHE.get(cache_key)
+        if entry and now - entry["ts"] <= ttl:
+            return deepcopy(entry["payload"])
+    payload = loader()
+    with _ADMIN_READ_CACHE_LOCK:
+        _ADMIN_READ_CACHE[cache_key] = {"ts": now, "payload": deepcopy(payload)}
+        if len(_ADMIN_READ_CACHE) > ADMIN_READ_CACHE_MAX_ITEMS:
+            oldest_key = min(_ADMIN_READ_CACHE, key=lambda k: _ADMIN_READ_CACHE[k]["ts"])
+            _ADMIN_READ_CACHE.pop(oldest_key, None)
+    return payload
+
+
+def _clear_admin_crawl_data_caches() -> None:
+    for scope in ("facebook_crawl_config", "data_quality_summary", "growth", "duplicates", "qc_signals"):
+        clear_admin_read_cache(scope)
 
 
 def _env_flag(name: str, default: bool = False) -> bool:
@@ -383,7 +421,14 @@ def _enqueue_facebook_crawl_job(job: dict, target) -> None:
         FACEBOOK_CRAWL_JOBS[job["id"]] = job
         FACEBOOK_CRAWL_JOB_ORDER.insert(0, job["id"])
         del FACEBOOK_CRAWL_JOB_ORDER[20:]
-    thread = threading.Thread(target=target, args=(job["id"],), daemon=True)
+
+    def _run_and_refresh_admin_cache() -> None:
+        try:
+            target(job["id"])
+        finally:
+            _clear_admin_crawl_data_caches()
+
+    thread = threading.Thread(target=_run_and_refresh_admin_cache, daemon=True)
     thread.start()
 
 
@@ -2743,6 +2788,7 @@ def _write_admin_audit(conn, action: str, entity_type: str, entity_id,
             reason,
         ),
     )
+    clear_admin_read_cache("audit")
 
 
 def _save_ai_training_feedback(conn, listing_id: int, payload: dict) -> dict:
@@ -3950,6 +3996,9 @@ def api_create_lead():
         user=current_user(),
         audit_log_fn=log_audit,
     )
+    if status < 400:
+        clear_admin_read_cache("leads")
+        clear_admin_read_cache("growth")
     return jsonify(payload), status
 
 
@@ -3961,6 +4010,9 @@ def api_create_guest_lead():
         user=current_user(),
         audit_log_fn=log_audit,
     )
+    if status < 400:
+        clear_admin_read_cache("leads")
+        clear_admin_read_cache("growth")
     return jsonify(payload), status
 
 
@@ -3983,21 +4035,25 @@ def admin_control_room(panel_slug=None):
 @require_admin_auth
 def admin_api_facebook_crawl_config():
     if request.method == "GET":
-        profiles = _read_facebook_profile_config()
-        stats = _facebook_profile_stats([p["url"] for p in profiles])
-        duplicate_analysis = _facebook_profile_duplicate_analysis(profiles, stats)
-        for profile in profiles:
-            profile.update(stats.get(profile["url"], {}))
-            profile["duplicate_overlap"] = duplicate_analysis["by_profile"].get(profile["url"])
-        return jsonify({
-            "profiles": profiles,
-            "duplicate_comparisons": duplicate_analysis["comparisons"],
-            "summary": _facebook_crawl_summary(),
-            "apify_tokens": _apify_tokens_public(),
-        })
+        def _load_payload():
+            profiles = _read_facebook_profile_config()
+            stats = _facebook_profile_stats([p["url"] for p in profiles])
+            duplicate_analysis = _facebook_profile_duplicate_analysis(profiles, stats)
+            for profile in profiles:
+                profile.update(stats.get(profile["url"], {}))
+                profile["duplicate_overlap"] = duplicate_analysis["by_profile"].get(profile["url"])
+            return {
+                "profiles": profiles,
+                "duplicate_comparisons": duplicate_analysis["comparisons"],
+                "summary": _facebook_crawl_summary(),
+                "apify_tokens": _apify_tokens_public(),
+            }
+
+        return jsonify(_cached_admin_read_payload("facebook_crawl_config", "default", _load_payload, ttl_seconds=10))
 
     payload = request.get_json(silent=True) or {}
     profiles = payload.get("profiles") or []
+    clear_admin_read_cache("facebook_crawl_config")
     saved = _write_facebook_profile_config(profiles)
     stats = _facebook_profile_stats([p["url"] for p in saved])
     duplicate_analysis = _facebook_profile_duplicate_analysis(saved, stats)
@@ -4025,17 +4081,25 @@ def admin_api_facebook_crawl_tokens(token_id=None):
             tokens = upsert_token(payload)
         except ValueError as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
+        clear_admin_read_cache("facebook_crawl_config")
+        clear_admin_read_cache("data_quality_summary")
         return jsonify({"ok": True, "tokens": tokens})
     if request.method == "DELETE":
         if not token_id:
             return jsonify({"ok": False, "error": "token_id_required"}), 400
-        return jsonify({"ok": delete_token(token_id), "tokens": _apify_tokens_public()})
+        ok = delete_token(token_id)
+        clear_admin_read_cache("facebook_crawl_config")
+        clear_admin_read_cache("data_quality_summary")
+        return jsonify({"ok": ok, "tokens": _apify_tokens_public()})
     if request.method == "PATCH":
         if not token_id:
             return jsonify({"ok": False, "error": "token_id_required"}), 400
         action = (request.get_json(silent=True) or {}).get("action")
         if action == "reset_usage":
-            return jsonify({"ok": reset_token_usage(token_id), "tokens": _apify_tokens_public()})
+            ok = reset_token_usage(token_id)
+            clear_admin_read_cache("facebook_crawl_config")
+            clear_admin_read_cache("data_quality_summary")
+            return jsonify({"ok": ok, "tokens": _apify_tokens_public()})
         return jsonify({"ok": False, "error": "invalid_action"}), 400
     return jsonify({"ok": False, "error": "method_not_allowed"}), 405
 
@@ -4078,6 +4142,9 @@ def admin_api_facebook_crawl_run():
         "logs": [],
     }
     _enqueue_facebook_crawl_job(job, _run_admin_facebook_crawl_job)
+    clear_admin_read_cache("facebook_crawl_config")
+    clear_admin_read_cache("data_quality_summary")
+    clear_admin_read_cache("growth")
     return jsonify({"ok": True, "job": _public_crawl_job(job)})
 
 
@@ -4113,6 +4180,9 @@ def admin_api_facebook_crawl_maintenance():
         "logs": [],
     }
     _enqueue_facebook_crawl_job(job, _run_admin_crawl_maintenance_job)
+    clear_admin_read_cache("facebook_crawl_config")
+    clear_admin_read_cache("data_quality_summary")
+    clear_admin_read_cache("growth")
     return jsonify({"ok": True, "job": _public_crawl_job(job)})
 
 
@@ -4140,18 +4210,28 @@ def admin_api_growth():
     include_value = (request.args.get("include_guland") or "0").strip()
     if include_value not in {"0", "1"}:
         return jsonify({"error": "invalid_include_guland"}), 400
-    return jsonify(admin_growth.get_growth_dashboard(
-        period=period,
-        anchor=anchor,
-        include_guland=include_value == "1",
+    cache_key = (period, anchor.isoformat(), include_value)
+    return jsonify(_cached_admin_read_payload(
+        "growth",
+        cache_key,
+        lambda: admin_growth.get_growth_dashboard(
+            period=period,
+            anchor=anchor,
+            include_guland=include_value == "1",
+        ),
+        ttl_seconds=30,
     ))
 
 
 @require_admin_auth
 def admin_api_leads():
-    return jsonify(admin_leads.list_leads(
-        status=(request.args.get("status") or "").strip(),
-        q=(request.args.get("q") or "").strip(),
+    status = (request.args.get("status") or "").strip()
+    q = (request.args.get("q") or "").strip()
+    return jsonify(_cached_admin_read_payload(
+        "leads",
+        (status, q),
+        lambda: admin_leads.list_leads(status=status, q=q),
+        ttl_seconds=10,
     ))
 
 
@@ -4176,12 +4256,18 @@ def admin_api_update_lead_status(lead_id):
         (payload.get("status") or "").strip(),
         audit_writer=_write_admin_audit,
     )
+    if status < 400:
+        clear_admin_read_cache("leads")
+        clear_admin_read_cache("growth")
     return jsonify(result), status
 
 
 @require_admin_auth
 def admin_api_delete_lead(lead_id):
     result, status = admin_leads.delete_lead(lead_id, audit_writer=_write_admin_audit)
+    if status < 400:
+        clear_admin_read_cache("leads")
+        clear_admin_read_cache("growth")
     return jsonify(result), status
 
 
@@ -4190,32 +4276,36 @@ def admin_api_infra():
     if request.method == "GET":
         kind = (request.args.get("kind") or "").strip()
         only_active = request.args.get("active", "1") != "0"
-        where = []
-        params = []
-        if kind:
-            if kind not in INFRA_KINDS:
-                return jsonify({"ok": False, "error": "invalid_kind"}), 400
-            where.append("kind = ?")
-            params.append(kind)
-        if only_active:
-            where.append("active = 1")
-        where_sql = f"WHERE {' AND '.join(where)}" if where else ""
-        with db_mod.get_conn() as conn:
-            rows = conn.execute(f"""
-                SELECT id, created_at, updated_at, kind, title, subtitle, summary,
-                       ward, road_ref, project_code, milestone_label, progress_pct,
-                       status_tag, severity, event_date, source_url, sort_order, active
-                FROM infra_entries
-                {where_sql}
-                ORDER BY kind ASC, sort_order ASC, COALESCE(event_date, updated_at) DESC, id DESC
-                LIMIT 500
-            """, params).fetchall()
-        items = []
-        for r in rows:
-            x = dict(r)
-            x["relative_time"] = _relative_time_label(x.get("event_date") or x.get("updated_at"))
-            items.append(x)
-        return jsonify({"items": items})
+        if kind and kind not in INFRA_KINDS:
+            return jsonify({"ok": False, "error": "invalid_kind"}), 400
+
+        def _load_infra_payload():
+            where = []
+            params = []
+            if kind:
+                where.append("kind = ?")
+                params.append(kind)
+            if only_active:
+                where.append("active = 1")
+            where_sql = f"WHERE {' AND '.join(where)}" if where else ""
+            with db_mod.get_conn() as conn:
+                rows = conn.execute(f"""
+                    SELECT id, created_at, updated_at, kind, title, subtitle, summary,
+                           ward, road_ref, project_code, milestone_label, progress_pct,
+                           status_tag, severity, event_date, source_url, sort_order, active
+                    FROM infra_entries
+                    {where_sql}
+                    ORDER BY kind ASC, sort_order ASC, COALESCE(event_date, updated_at) DESC, id DESC
+                    LIMIT 500
+                """, params).fetchall()
+            items = []
+            for r in rows:
+                x = dict(r)
+                x["relative_time"] = _relative_time_label(x.get("event_date") or x.get("updated_at"))
+                items.append(x)
+            return {"items": items}
+
+        return jsonify(_cached_admin_read_payload("infra", (kind, only_active), _load_infra_payload, ttl_seconds=10))
 
     payload = request.get_json(silent=True) or {}
     try:
@@ -4260,6 +4350,7 @@ def admin_api_infra():
                 after={"id": entry_id, **clean, "active": 1},
                 reason=clean["kind"],
             )
+            clear_admin_read_cache("infra")
             return jsonify({"ok": True, "id": entry_id, "mode": "update"})
 
         cur = conn.execute("""
@@ -4284,6 +4375,7 @@ def admin_api_infra():
             after={"id": new_id, **clean, "active": 1},
             reason=clean["kind"],
         )
+    clear_admin_read_cache("infra")
     return jsonify({"ok": True, "id": new_id, "mode": "create"})
 
 
@@ -4310,6 +4402,7 @@ def admin_api_infra_item(entry_id):
                 after={"id": entry_id, "active": 0},
                 reason="deactivate",
             )
+        clear_admin_read_cache("infra")
         return jsonify({"ok": True})
 
     payload = request.get_json(silent=True) or {}
@@ -4337,6 +4430,7 @@ def admin_api_infra_item(entry_id):
             after={"id": entry_id, "active": active_val},
             reason="toggle",
         )
+    clear_admin_read_cache("infra")
     return jsonify({"ok": True, "active": active_val})
 
 
@@ -4349,40 +4443,54 @@ def admin_api_qc_signals():
         mos_min, mos_max = 0, 1000
     ward = (request.args.get("ward") or "").strip()
     source = (request.args.get("source") or "").strip()
-    with db_mod.get_conn() as conn:
-        signal_condition = actionable_signal_sql("v")
-        where = ["COALESCE(l.probably_sold,0)=0", "COALESCE(l.is_blacklisted,0)=0", signal_condition, "COALESCE(v.mos_pct,0) BETWEEN ? AND ?"]
-        params = [mos_min, mos_max]
-        if ward:
-            where.append("l.ward = ?")
-            params.append(ward)
-        if source:
-            where.append("l.source = ?")
-            params.append(source)
-        rows = conn.execute(f"""
-            WITH {LATEST_VALUATION_CTE}
-            SELECT l.id, l.title, l.url, l.ward, l.source, l.price_ty, l.area_m2,
-                   l.property_type, l.price_dropped, l.possibly_duplicate,
-                   COALESCE(v.mos_pct,0) AS mos_pct, COALESCE(v.signal_score,0) AS signal_score,
-                   f.verdict, f.created_at AS feedback_at
-            FROM listings l
-            JOIN latest_valuation v ON v.listing_id = l.id
-            LEFT JOIN ai_training_feedback f ON f.id = (
-                SELECT id FROM ai_training_feedback af
-                WHERE af.listing_id = l.id
-                ORDER BY af.created_at DESC
-                LIMIT 1
-            )
-            WHERE {" AND ".join(where)}
-            ORDER BY COALESCE(v.signal_score,0) DESC, COALESCE(v.mos_pct,0) DESC
-            LIMIT 500
-        """, params).fetchall()
-    return jsonify({"items": [dict(r) for r in rows]})
+
+    def _load_payload():
+        with db_mod.get_conn() as conn:
+            signal_condition = actionable_signal_sql("v")
+            where = [
+                "COALESCE(l.probably_sold,0)=0",
+                "COALESCE(l.is_blacklisted,0)=0",
+                signal_condition,
+                "COALESCE(v.mos_pct,0) BETWEEN ? AND ?",
+            ]
+            params = [mos_min, mos_max]
+            if ward:
+                where.append("l.ward = ?")
+                params.append(ward)
+            if source:
+                where.append("l.source = ?")
+                params.append(source)
+            rows = conn.execute(f"""
+                WITH {LATEST_VALUATION_CTE},
+                latest_feedback AS (
+                    SELECT DISTINCT ON (af.listing_id) af.*
+                    FROM ai_training_feedback af
+                    ORDER BY af.listing_id, af.created_at DESC, af.id DESC
+                )
+                SELECT l.id, l.title, l.url, l.ward, l.source, l.price_ty, l.area_m2,
+                       l.property_type, l.price_dropped, l.possibly_duplicate,
+                       COALESCE(v.mos_pct,0) AS mos_pct, COALESCE(v.signal_score,0) AS signal_score,
+                       f.verdict, f.created_at AS feedback_at
+                FROM listings l
+                JOIN latest_valuation v ON v.listing_id = l.id
+                LEFT JOIN latest_feedback f ON f.listing_id = l.id
+                WHERE {" AND ".join(where)}
+                ORDER BY COALESCE(v.signal_score,0) DESC, COALESCE(v.mos_pct,0) DESC
+                LIMIT 500
+            """, params).fetchall()
+        return {"items": [dict(r) for r in rows]}
+
+    return jsonify(_cached_admin_read_payload("qc_signals", (mos_min, mos_max, ward, source), _load_payload, ttl_seconds=15))
 
 
 @require_admin_auth
 def admin_api_data_quality_summary():
-    return jsonify(_data_quality_summary())
+    return jsonify(_cached_admin_read_payload(
+        "data_quality_summary",
+        "default",
+        _data_quality_summary,
+        ttl_seconds=15,
+    ))
 
 
 @require_admin_auth
@@ -4414,6 +4522,8 @@ def admin_api_data_quality_download_missing_images():
         "logs": [],
     }
     _enqueue_facebook_crawl_job(job, _run_admin_data_quality_image_job)
+    clear_admin_read_cache("facebook_crawl_config")
+    clear_admin_read_cache("data_quality_summary")
     return jsonify({"ok": True, "job": _public_crawl_job(job)})
 
 
@@ -4449,6 +4559,9 @@ def admin_api_data_quality_retry_source_crawl():
         "logs": [],
     }
     _enqueue_facebook_crawl_job(job, _run_admin_source_retry_job)
+    clear_admin_read_cache("facebook_crawl_config")
+    clear_admin_read_cache("data_quality_summary")
+    clear_admin_read_cache("growth")
     return jsonify({"ok": True, "job": _public_crawl_job(job)})
 
 
@@ -4470,6 +4583,10 @@ def admin_api_ai_training_feedback():
             result = _save_ai_training_feedback(conn, listing_id, payload)
         except ValueError:
             return jsonify({"ok": False, "error": "invalid_verdict"}), 400
+    clear_admin_read_cache("data_quality_summary")
+    clear_admin_read_cache("duplicates")
+    clear_admin_read_cache("qc_signals")
+    clear_admin_read_cache("training_disagreements")
     return jsonify({"ok": True, **result})
 
 
@@ -4579,18 +4696,34 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
         """
     )
     feedback_join = """
-            LEFT JOIN ai_training_feedback f ON f.id = (
-                SELECT id FROM ai_training_feedback
-                WHERE listing_id = l.id
-                ORDER BY created_at DESC
-                LIMIT 1
-            )
+            LEFT JOIN latest_feedback f ON f.listing_id = l.id
             LEFT JOIN legal_verifications lv ON lv.listing_id = l.id
+    """
+    review_count_cte = f"""
+            {LATEST_VALUATION_CTE},
+            latest_feedback AS MATERIALIZED (
+                SELECT DISTINCT ON (af.listing_id) af.*
+                FROM ai_training_feedback af
+                ORDER BY af.listing_id, af.created_at DESC, af.id DESC
+            )
+    """
+    review_read_cte = f"""
+            {LATEST_VALUATION_CTE},
+            latest_feedback AS MATERIALIZED (
+                SELECT DISTINCT ON (af.listing_id) af.*
+                FROM ai_training_feedback af
+                ORDER BY af.listing_id, af.created_at DESC, af.id DESC
+            ),
+            latest_review AS MATERIALIZED (
+                SELECT DISTINCT ON (ar.listing_id) ar.*
+                FROM ai_deal_review ar
+                ORDER BY ar.listing_id, ar.created_at DESC, ar.id DESC
+            )
     """
 
     with db_mod.get_conn() as conn:
         rows = conn.execute(f"""
-            WITH {LATEST_VALUATION_CTE}
+            WITH {review_read_cte}
             SELECT l.id, l.title, l.url, l.source, l.ward, l.property_type,
                    l.price_ty, l.price_per_m2, l.area_m2, l.frontage_m, l.depth_m, l.road_tier,
                    l.road_type, l.has_so, l.description,
@@ -4616,19 +4749,14 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
             FROM listings l
             JOIN latest_valuation v ON v.listing_id = l.id
             {feedback_join}
-            LEFT JOIN ai_deal_review r ON r.id = (
-                SELECT id FROM ai_deal_review
-                WHERE listing_id = l.id
-                ORDER BY created_at DESC
-                LIMIT 1
-            )
+            LEFT JOIN latest_review r ON r.listing_id = l.id
             WHERE {where_sql}
             ORDER BY {order_sql}
             LIMIT ? OFFSET ?
         """, params + [limit, offset]).fetchall()
 
         pending = conn.execute(f"""
-            WITH {LATEST_VALUATION_CTE}
+            WITH {review_count_cte}
             SELECT COUNT(*) c
             FROM listings l
             JOIN latest_valuation v ON v.listing_id = l.id
@@ -4637,7 +4765,7 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
         """, params).fetchone()["c"]
 
         total = conn.execute(f"""
-            WITH {LATEST_VALUATION_CTE}
+            WITH {review_count_cte}
             SELECT COUNT(*) c
             FROM listings l
             JOIN latest_valuation v ON v.listing_id = l.id
@@ -4682,7 +4810,7 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
             ward_where.append(listing_condition)
 
         ward_rows = conn.execute(f"""
-            WITH {LATEST_VALUATION_CTE}
+            WITH {review_count_cte}
             SELECT DISTINCT l.ward
             FROM listings l
             JOIN latest_valuation v ON v.listing_id = l.id
@@ -4693,6 +4821,21 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
         wards = [w["ward"] for w in ward_rows]
         ward_cities = {c: [ww for ww in ws if ww in wards] for c, ws in CITY_MAP.items()}
         ward_cities = {c: ws for c, ws in ward_cities.items() if ws}
+
+        image_urls_by_listing: dict[int, list[str]] = {}
+        listing_ids = [r["id"] for r in rows]
+        if listing_ids:
+            placeholders = ",".join("?" * len(listing_ids))
+            image_rows = conn.execute(f"""
+                SELECT listing_id, local_path, img_url
+                FROM listing_images
+                WHERE listing_id IN ({placeholders})
+                ORDER BY listing_id, {_image_order_sql()}
+            """, listing_ids).fetchall()
+            for im in image_rows:
+                u = resolve_image_url(im["local_path"], im["img_url"])
+                if u:
+                    image_urls_by_listing.setdefault(im["listing_id"], []).append(u)
 
         items = []
         for r in rows:
@@ -4710,16 +4853,7 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
                 d["price_per_m2"] = round(float(d["price_per_m2"]), 1)
             if d.get("fair_ppm2"):
                 d["fair_ppm2"] = round(float(d["fair_ppm2"]), 1)
-            imgs = conn.execute(
-                "SELECT local_path, img_url FROM listing_images "
-                f"WHERE listing_id=? ORDER BY {_image_order_sql()}",
-                (d["id"],),
-            ).fetchall()
-            gallery = []
-            for im in imgs:
-                u = resolve_image_url(im["local_path"], im["img_url"])
-                if u:
-                    gallery.append(u)
+            gallery = image_urls_by_listing.get(d["id"], [])
             d["images"] = gallery
             d["image"] = gallery[0] if gallery else resolve_image_url("", "")
             d["detail_url"] = f"/listing/{d['id']}"
@@ -4873,6 +5007,8 @@ def admin_api_legal_verification():
                 listing_id,
             ),
         )
+    clear_admin_read_cache("data_quality_summary")
+    clear_admin_read_cache("qc_signals")
     return jsonify({"ok": True, "legal_summary": {**result, "conflict_flags": flags_text}})
 
 
@@ -4883,46 +5019,57 @@ def admin_api_ai_training_disagreements():
     Lọc CHẶT — chỉ hiện khi cả hai phía đã có nhãn latest VÀ bucket ngược nhau;
     `maybe` / `insufficient_info` (NEUTRAL) tự loại. Chỉ surfacing, KHÔNG ghi.
     """
-    with db_mod.get_conn() as conn:
-        rows = conn.execute("""
-            WITH latest_valuation AS (
-                SELECT DISTINCT ON (vr.listing_id) vr.*
-                FROM valuation_results vr
-                ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
-            )
-            SELECT l.id, l.title, l.url, l.ward, l.price_ty, l.area_m2,
-                   v.mos_pct, v.signal_score,
-                   f.verdict AS human_verdict, f.created_at AS human_at,
-                   r.verdict AS ai_verdict, r.confidence AS ai_confidence,
-                   r.reasoning AS ai_reasoning, r.red_flags AS ai_red_flags,
-                   r.needs_map_check AS ai_needs_map_check
-            FROM listings l
-            JOIN latest_valuation v ON v.listing_id = l.id
-            JOIN ai_training_feedback f ON f.id = (
-                SELECT id FROM ai_training_feedback
-                WHERE listing_id = l.id ORDER BY created_at DESC LIMIT 1
-            )
-            JOIN ai_deal_review r ON r.id = (
-                SELECT id FROM ai_deal_review
-                WHERE listing_id = l.id ORDER BY created_at DESC LIMIT 1
-            )
-            WHERE (
-                   (f.verdict IN ('good','correct','cheap_real')
-                        AND r.verdict IN ('suspect','not_cheap'))
-                OR (f.verdict IN ('bad','spam','sold','fake_price','bad_data','fair','overpriced','cannot_price')
-                        AND r.verdict = 'cheap_real')
-            )
-            ORDER BY COALESCE(r.confidence,0) DESC, v.signal_score DESC
-        """).fetchall()
-    return jsonify({"items": [dict(r) for r in rows]})
+    def _load_payload():
+        with db_mod.get_conn() as conn:
+            rows = conn.execute("""
+                WITH latest_valuation AS (
+                    SELECT DISTINCT ON (vr.listing_id) vr.*
+                    FROM valuation_results vr
+                    ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
+                ),
+                latest_feedback AS (
+                    SELECT DISTINCT ON (f.listing_id) f.*
+                    FROM ai_training_feedback f
+                    ORDER BY f.listing_id, f.created_at DESC, f.id DESC
+                ),
+                latest_review AS (
+                    SELECT DISTINCT ON (r.listing_id) r.*
+                    FROM ai_deal_review r
+                    ORDER BY r.listing_id, r.created_at DESC, r.id DESC
+                )
+                SELECT l.id, l.title, l.url, l.ward, l.price_ty, l.area_m2,
+                       v.mos_pct, v.signal_score,
+                       f.verdict AS human_verdict, f.created_at AS human_at,
+                       r.verdict AS ai_verdict, r.confidence AS ai_confidence,
+                       r.reasoning AS ai_reasoning, r.red_flags AS ai_red_flags,
+                       r.needs_map_check AS ai_needs_map_check
+                FROM listings l
+                JOIN latest_valuation v ON v.listing_id = l.id
+                JOIN latest_feedback f ON f.listing_id = l.id
+                JOIN latest_review r ON r.listing_id = l.id
+                WHERE (
+                       (f.verdict IN ('good','correct','cheap_real')
+                            AND r.verdict IN ('suspect','not_cheap'))
+                    OR (f.verdict IN ('bad','spam','sold','fake_price','bad_data','fair','overpriced','cannot_price')
+                            AND r.verdict = 'cheap_real')
+                )
+                ORDER BY COALESCE(r.confidence,0) DESC, v.signal_score DESC
+                LIMIT 200
+            """).fetchall()
+        return {"items": [dict(r) for r in rows]}
+
+    return jsonify(_cached_admin_read_payload("training_disagreements", "default", _load_payload, ttl_seconds=15))
 
 
 @require_admin_auth
 def admin_api_qc_duplicates():
-    with db_mod.get_conn() as conn:
-        items = _admin_duplicate_review_items(conn)
-        groups = _admin_duplicate_review_groups(items)
-    return jsonify({"items": items, "groups": groups})
+    def _load_payload():
+        with db_mod.get_conn() as conn:
+            items = _admin_duplicate_review_items(conn)
+            groups = _admin_duplicate_review_groups(items)
+        return {"items": items, "groups": groups}
+
+    return jsonify(_cached_admin_read_payload("duplicates", "review", _load_payload, ttl_seconds=15))
 
 
 def _admin_duplicate_review_items(conn) -> list[dict]:
@@ -5845,6 +5992,9 @@ def admin_api_qc_duplicates_merge():
             after={"id": listing_id, "possibly_duplicate": 1, "duplicate_of_id": target_id},
             reason=note or "merge",
         )
+    clear_admin_read_cache("duplicates")
+    clear_admin_read_cache("data_quality_summary")
+    clear_admin_read_cache("qc_signals")
     return jsonify({"ok": True})
 
 
@@ -5899,6 +6049,9 @@ def admin_api_qc_duplicates_merge_bulk():
             )
             merged += 1
         _hydrate_duplicate_canonical(conn, target_id, listing_ids)
+    clear_admin_read_cache("duplicates")
+    clear_admin_read_cache("data_quality_summary")
+    clear_admin_read_cache("qc_signals")
     return jsonify({"ok": True, "merged": merged, "target_listing_id": target_id, "listing_ids": listing_ids})
 
 
@@ -5929,19 +6082,25 @@ def admin_api_qc_duplicates_split():
             after={"id": listing_id, "possibly_duplicate": 0, "duplicate_of_id": None},
             reason=note or "split",
         )
+    clear_admin_read_cache("duplicates")
+    clear_admin_read_cache("data_quality_summary")
+    clear_admin_read_cache("qc_signals")
     return jsonify({"ok": True})
 
 
 @require_admin_auth
 def admin_api_blacklist():
     if request.method == "GET":
-        with db_mod.get_conn() as conn:
-            rows = conn.execute("""
-                SELECT id, phone_norm, reason, active, created_at, updated_at
-                FROM broker_blacklist
-                ORDER BY updated_at DESC
-            """).fetchall()
-        return jsonify({"items": [dict(r) for r in rows]})
+        def _load_payload():
+            with db_mod.get_conn() as conn:
+                rows = conn.execute("""
+                    SELECT id, phone_norm, reason, active, created_at, updated_at
+                    FROM broker_blacklist
+                    ORDER BY updated_at DESC
+                """).fetchall()
+            return {"items": [dict(r) for r in rows]}
+
+        return jsonify(_cached_admin_read_payload("blacklist", "default", _load_payload, ttl_seconds=10))
 
     payload = request.get_json(silent=True) or {}
     if request.method == "POST":
@@ -5978,6 +6137,10 @@ def admin_api_blacklist():
                 after={"phone_norm": phone_norm, "active": 1, "reason": reason or None},
                 reason=reason or "blacklist",
             )
+        clear_admin_read_cache("blacklist")
+        clear_admin_read_cache("data_quality_summary")
+        clear_admin_read_cache("duplicates")
+        clear_admin_read_cache("qc_signals")
         return jsonify({"ok": True})
 
     # DELETE (deactivate)
@@ -5999,6 +6162,10 @@ def admin_api_blacklist():
             after={"phone_norm": phone_norm, "active": 0},
             reason="deactivate",
         )
+    clear_admin_read_cache("blacklist")
+    clear_admin_read_cache("data_quality_summary")
+    clear_admin_read_cache("duplicates")
+    clear_admin_read_cache("qc_signals")
     return jsonify({"ok": True})
 
 
@@ -6018,16 +6185,20 @@ def admin_api_audit():
         except ValueError:
             return jsonify({"ok": False, "error": "invalid_entity_id"}), 400
     where_sql = f"WHERE {' AND '.join(where)}" if where else ""
-    with db_mod.get_conn() as conn:
-        rows = conn.execute(f"""
-            SELECT id, created_at, actor, action, entity_type, entity_id,
-                   before_json, after_json, reason
-            FROM admin_audit_log
-            {where_sql}
-            ORDER BY created_at DESC, id DESC
-            LIMIT 200
-        """, params).fetchall()
-    return jsonify({"items": [dict(r) for r in rows]})
+
+    def _load_payload():
+        with db_mod.get_conn() as conn:
+            rows = conn.execute(f"""
+                SELECT id, created_at, actor, action, entity_type, entity_id,
+                       before_json, after_json, reason
+                FROM admin_audit_log
+                {where_sql}
+                ORDER BY created_at DESC, id DESC
+                LIMIT 200
+            """, params).fetchall()
+        return {"items": [dict(r) for r in rows]}
+
+    return jsonify(_cached_admin_read_payload("audit", (entity_type, entity_id or ""), _load_payload, ttl_seconds=10))
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -6035,10 +6206,17 @@ def admin_api_audit():
 # ═══════════════════════════════════════════════════════════════════════════
 @require_admin_auth
 def admin_api_users():
-    return jsonify(admin_users.list_users(
-        tier_filter=(request.args.get("tier") or "").strip(),
-        q=(request.args.get("q") or "").strip(),
-        effective_tier_fn=_effective_tier_from_user,
+    tier_filter = (request.args.get("tier") or "").strip()
+    q = (request.args.get("q") or "").strip()
+    return jsonify(_cached_admin_read_payload(
+        "users",
+        (tier_filter, q),
+        lambda: admin_users.list_users(
+            tier_filter=tier_filter,
+            q=q,
+            effective_tier_fn=_effective_tier_from_user,
+        ),
+        ttl_seconds=10,
     ))
 
 
@@ -6050,6 +6228,9 @@ def admin_api_delete_user(user_id):
         actor_id=actor.get("id"),
         audit_writer=_write_admin_audit,
     )
+    if status < 400:
+        clear_admin_read_cache("users")
+        clear_admin_read_cache("growth")
     return jsonify(result), status
 
 
@@ -6062,6 +6243,8 @@ def admin_api_grant_vip(user_id):
         audit_writer=_write_admin_audit,
         log_audit_fn=log_audit,
     )
+    if status < 400:
+        clear_admin_read_cache("users")
     return jsonify(result), status
 
 
@@ -6072,6 +6255,8 @@ def admin_api_revoke_vip(user_id):
         audit_writer=_write_admin_audit,
         log_audit_fn=log_audit,
     )
+    if status < 400:
+        clear_admin_read_cache("users")
     return jsonify(result), status
 
 
@@ -6083,6 +6268,9 @@ def admin_api_ban_user(user_id):
         bool(payload.get("banned", True)),
         audit_writer=_write_admin_audit,
     )
+    if status < 400:
+        clear_admin_read_cache("users")
+        clear_admin_read_cache("growth")
     return jsonify(result), status
 
 

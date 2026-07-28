@@ -1,7 +1,6 @@
 """Read-only growth metrics for the admin dashboard."""
 from __future__ import annotations
 
-from calendar import monthrange
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -63,7 +62,24 @@ def _in(events, start, end):
     return [event for event in events if event["at"] and start <= event["at"] < end]
 
 
-def _summary(events, start, end, previous, sources=(), source_breakdown=False):
+def _storage_iso(value: datetime) -> str:
+    return value.astimezone(timezone.utc).replace(tzinfo=None).isoformat(timespec="seconds")
+
+
+def _counts_by_source(rows, sources) -> dict:
+    counts = {source: 0 for source in sources}
+    for row in rows:
+        source = row["source"]
+        if source in counts:
+            counts[source] = int(row["n"] or 0)
+    return counts
+
+
+def _count_value(row) -> int:
+    return int(row["n"] or 0) if row else 0
+
+
+def _summary(events, start, end, previous, sources=(), source_breakdown=False, overall=None, source_overall=None):
     current_events = _in(events, start, end)
     previous_events = _in(events, previous, start)
     current = len(current_events)
@@ -72,14 +88,15 @@ def _summary(events, start, end, previous, sources=(), source_breakdown=False):
         "current": current,
         "previous": previous_count,
         "delta_pct": None if previous_count == 0 else round((current - previous_count) * 100 / previous_count, 1),
-        "overall": len(events),
+        "overall": len(events) if overall is None else int(overall or 0),
     }
     if source_breakdown:
+        source_overall = source_overall or {}
         result["by_source"] = {
             source: {
                 "current": sum(event["source"] == source for event in current_events),
                 "previous": sum(event["source"] == source for event in previous_events),
-                "overall": sum(event["source"] == source for event in events),
+                "overall": int(source_overall.get(source, 0)),
             }
             for source in sources
         }
@@ -120,52 +137,151 @@ def get_growth_dashboard(period: str, anchor: date, include_guland: bool = False
     sources = ("facebook", "guland") if include_guland else ("facebook",)
     marks = ",".join("?" for _ in sources)
     start, end, previous, bucket = _period_bounds(period, anchor)
+    start_iso = _storage_iso(start)
+    previous_iso = _storage_iso(previous)
+    end_iso = _storage_iso(end)
 
-    # ponytail: aggregate these small admin datasets in Python while the corpus is
-    # ~17k rows; move bucketing into SQL only after measured endpoint latency warrants it.
     with db_mod.get_conn() as conn:
         raw = conn.execute(
-            f"SELECT crawled_at AS event_at, source FROM raw_listings WHERE source IN ({marks})",
-            sources,
+            f"""SELECT crawled_at AS event_at, source
+                FROM raw_listings
+                WHERE source IN ({marks})
+                  AND crawled_at >= ?
+                  AND crawled_at < ?""",
+            sources + (previous_iso, end_iso),
         ).fetchall()
+        raw_overall = _counts_by_source(conn.execute(
+            f"""SELECT source, COUNT(*) AS n
+                FROM raw_listings
+                WHERE source IN ({marks})
+                GROUP BY source""",
+            sources,
+        ).fetchall(), sources)
+        raw_total = sum(raw_overall.values())
+
+        listing_event_expr = "COALESCE(first_seen_at, crawled_at)"
         listings = conn.execute(
-            f"""SELECT COALESCE(first_seen_at, crawled_at) AS event_at, source, duplicate_of_id
-                FROM listings WHERE source IN ({marks})""",
-            sources,
+            f"""SELECT {listing_event_expr} AS event_at, source, duplicate_of_id
+                FROM listings
+                WHERE source IN ({marks})
+                  AND {listing_event_expr} >= ?
+                  AND {listing_event_expr} < ?""",
+            sources + (previous_iso, end_iso),
         ).fetchall()
+        unique_overall = _counts_by_source(conn.execute(
+            f"""SELECT source, COUNT(*) AS n
+                FROM listings
+                WHERE source IN ({marks})
+                  AND duplicate_of_id IS NULL
+                GROUP BY source""",
+            sources,
+        ).fetchall(), sources)
+
+        signal_event_expr = "COALESCE(l.first_seen_at, l.crawled_at)"
         signals = conn.execute(
             f"""WITH {LATEST_VALUATION_CTE}
-                SELECT COALESCE(l.first_seen_at, l.crawled_at) AS event_at, l.source
+                SELECT {signal_event_expr} AS event_at, l.source
                 FROM listings l JOIN latest_valuation v ON v.listing_id=l.id
                 WHERE l.source IN ({marks})
                   AND {actionable_signal_sql("v")}
-                  AND {actionable_listing_sql("l")}""",
-            sources,
+                  AND {actionable_listing_sql("l")}
+                  AND {signal_event_expr} >= ?
+                  AND {signal_event_expr} < ?""",
+            sources + (previous_iso, end_iso),
         ).fetchall()
-        drops = conn.execute(
-            f"""WITH first_prices AS (
+        signals_overall = _counts_by_source(conn.execute(
+            f"""WITH {LATEST_VALUATION_CTE}
+                SELECT l.source, COUNT(*) AS n
+                FROM listings l JOIN latest_valuation v ON v.listing_id=l.id
+                WHERE l.source IN ({marks})
+                  AND {actionable_signal_sql("v")}
+                  AND {actionable_listing_sql("l")}
+                GROUP BY l.source""",
+            sources,
+        ).fetchall(), sources)
+
+        drop_events_cte = f"""WITH first_prices AS (
                     SELECT l.id, l.source, COALESCE(l.price_first_ty,
                         (SELECT ph0.price_ty FROM price_history ph0
                          WHERE ph0.listing_id=l.id AND ph0.price_ty>0
                          ORDER BY ph0.recorded_at, ph0.id LIMIT 1)) AS first_price
                     FROM listings l WHERE l.source IN ({marks})
-                )
-                SELECT fp.source, MIN(ph.recorded_at) AS event_at
-                FROM first_prices fp JOIN price_history ph ON ph.listing_id=fp.id
-                WHERE fp.first_price>0 AND ph.price_ty>0
-                  AND (fp.first_price-ph.price_ty)/fp.first_price BETWEEN 0.01 AND 0.40
-                GROUP BY fp.id, fp.source""",
-            sources,
+                ),
+                drop_events AS (
+                    SELECT fp.id, fp.source, MIN(ph.recorded_at) AS event_at
+                    FROM first_prices fp JOIN price_history ph ON ph.listing_id=fp.id
+                    WHERE fp.first_price>0 AND ph.price_ty>0
+                      AND (fp.first_price-ph.price_ty)/fp.first_price BETWEEN 0.01 AND 0.40
+                    GROUP BY fp.id, fp.source
+                )"""
+        drops = conn.execute(
+            f"""{drop_events_cte}
+                SELECT source, event_at
+                FROM drop_events
+                WHERE event_at >= ?
+                  AND event_at < ?""",
+            sources + (previous_iso, end_iso),
         ).fetchall()
-        signups = conn.execute("SELECT created_at AS event_at FROM users").fetchall()
+        drops_overall = _counts_by_source(conn.execute(
+            f"""{drop_events_cte}
+                SELECT source, COUNT(*) AS n
+                FROM drop_events
+                GROUP BY source""",
+            sources,
+        ).fetchall(), sources)
+
+        signups = conn.execute(
+            """SELECT created_at AS event_at
+               FROM users
+               WHERE created_at >= ?
+                 AND created_at < ?""",
+            (previous_iso, end_iso),
+        ).fetchall()
+        signups_total = _count_value(conn.execute("SELECT COUNT(*) AS n FROM users").fetchone())
+
         leads = conn.execute(
             """SELECT lc.created_at AS event_at, l.source, lc.status
-               FROM lead_captures lc LEFT JOIN listings l ON l.id=lc.listing_id"""
+               FROM lead_captures lc LEFT JOIN listings l ON l.id=lc.listing_id
+               WHERE lc.created_at >= ?
+                 AND lc.created_at < ?
+                 AND (l.source IN ({marks}) OR l.source IS NULL)""".format(marks=marks),
+            (previous_iso, end_iso) + sources,
         ).fetchall()
-        active_rows = conn.execute(
-            """SELECT ual.user_id, ual.created_at AS event_at FROM user_audit_log ual
-               JOIN users u ON u.id=ual.user_id WHERE COALESCE(u.tier,'')!='admin'"""
-        ).fetchall()
+        leads_overall = _counts_by_source(conn.execute(
+            f"""SELECT l.source, COUNT(*) AS n
+                FROM lead_captures lc JOIN listings l ON l.id=lc.listing_id
+                WHERE l.source IN ({marks})
+                GROUP BY l.source""",
+            sources,
+        ).fetchall(), sources)
+
+        active = _count_value(conn.execute(
+            """SELECT COUNT(DISTINCT ual.user_id) AS n
+               FROM user_audit_log ual
+               JOIN users u ON u.id=ual.user_id
+               WHERE COALESCE(u.tier,'')!='admin'
+                 AND ual.created_at >= ?
+                 AND ual.created_at < ?""",
+            (start_iso, end_iso),
+        ).fetchone())
+
+        processed = _count_value(conn.execute(
+            f"""SELECT COUNT(*) AS n
+                FROM listings
+                WHERE source IN ({marks})
+                  AND {listing_event_expr} >= ?
+                  AND {listing_event_expr} < ?""",
+            sources + (start_iso, end_iso),
+        ).fetchone())
+        selected_lead_counts = conn.execute(
+            """SELECT COUNT(*) AS n,
+                      SUM(CASE WHEN LOWER(COALESCE(lc.status,'')) IN ('deposit','deposited') THEN 1 ELSE 0 END) AS deposits
+               FROM lead_captures lc JOIN listings l ON l.id=lc.listing_id
+               WHERE l.source IN ({marks})
+                 AND lc.created_at >= ?
+                 AND lc.created_at < ?""".format(marks=marks),
+            sources + (start_iso, end_iso),
+        ).fetchone()
 
     raw_events = [_event(row) for row in raw]
     listing_events = [_event(row) for row in listings]
@@ -175,28 +291,26 @@ def get_growth_dashboard(period: str, anchor: date, include_guland: bool = False
     signup_events = [_event(row) for row in signups]
     lead_events = [_event(row) for row in leads if row["source"] in sources]
     unattributed = [_event(row) for row in leads if row["source"] is None]
-    active = len({row["user_id"] for row in active_rows if start <= _local(row["event_at"]) < end})
 
     summary = {
-        "crawled": _summary(raw_events, start, end, previous, sources, True),
-        "signals": _summary(signal_events, start, end, previous, sources, True),
-        "price_drops": _summary(drop_events, start, end, previous, sources, True),
-        "unique_lots": _summary(unique_events, start, end, previous, sources, True),
-        "signups": _summary(signup_events, start, end, previous),
-        "leads": _summary(lead_events, start, end, previous, sources, True),
+        "crawled": _summary(raw_events, start, end, previous, sources, True, raw_total, raw_overall),
+        "signals": _summary(signal_events, start, end, previous, sources, True, sum(signals_overall.values()), signals_overall),
+        "price_drops": _summary(drop_events, start, end, previous, sources, True, sum(drops_overall.values()), drops_overall),
+        "unique_lots": _summary(unique_events, start, end, previous, sources, True, sum(unique_overall.values()), unique_overall),
+        "signups": _summary(signup_events, start, end, previous, overall=signups_total),
+        "leads": _summary(lead_events, start, end, previous, sources, True, sum(leads_overall.values()), leads_overall),
     }
     summary["leads"]["unattributed_current"] = len(_in(unattributed, start, end))
     summary["leads"]["unattributed_previous"] = len(_in(unattributed, previous, start))
 
-    processed = len(_in(listing_events, start, end))
-    selected_leads = _in(lead_events, start, end)
-    deposits = sum((event["status"] or "").lower() in {"deposit", "deposited"} for event in selected_leads)
+    selected_lead_count = _count_value(selected_lead_counts)
+    deposits = int(selected_lead_counts["deposits"] or 0) if selected_lead_counts else 0
     pct = lambda numerator, denominator: round(numerator * 100 / denominator, 1) if denominator else None
     ratios = {
         "signal_yield_pct": pct(summary["signals"]["current"], processed),
         "unique_lot_yield_pct": pct(summary["unique_lots"]["current"], processed),
         "active_users": active,
-        "lead_to_deposit_pct": pct(deposits, len(selected_leads)),
+        "lead_to_deposit_pct": pct(deposits, selected_lead_count),
     }
 
     series = []

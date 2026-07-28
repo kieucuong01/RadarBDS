@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS raw_listings (
 CREATE INDEX IF NOT EXISTS idx_raw_source    ON raw_listings(source, source_id);
 CREATE INDEX IF NOT EXISTS idx_raw_url       ON raw_listings(url);
 CREATE INDEX IF NOT EXISTS idx_raw_crawled   ON raw_listings(crawled_at DESC);
+CREATE INDEX IF NOT EXISTS idx_raw_source_crawled
+    ON raw_listings(source, crawled_at DESC);
 
 
 -- ================================================================
@@ -103,6 +105,8 @@ CREATE INDEX IF NOT EXISTS idx_listings_crawled_at    ON listings(crawled_at DES
 CREATE INDEX IF NOT EXISTS idx_listings_probably_sold ON listings(probably_sold);
 CREATE INDEX IF NOT EXISTS idx_listings_raw_id        ON listings(raw_id);
 CREATE INDEX IF NOT EXISTS idx_listings_duplicate_of_id ON listings(duplicate_of_id);
+CREATE INDEX IF NOT EXISTS idx_listings_source_first_seen
+    ON listings(source, (COALESCE(first_seen_at, crawled_at)));
 
 
 -- ================================================================
@@ -378,6 +382,8 @@ CREATE TABLE IF NOT EXISTS ai_training_feedback (
     note                TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_ai_training_listing ON ai_training_feedback(listing_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_training_listing_latest
+    ON ai_training_feedback(listing_id, created_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_training_verdict ON ai_training_feedback(verdict, created_at DESC);
 
 -- Claude pre-review verdicts (CỐ VẤN). Bảng RIÊNG, KHÔNG bao giờ trộn với
@@ -398,6 +404,8 @@ CREATE TABLE IF NOT EXISTS ai_deal_review (
     model           TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_ai_deal_review_listing ON ai_deal_review(listing_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_deal_review_listing_latest
+    ON ai_deal_review(listing_id, created_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_deal_review_verdict ON ai_deal_review(verdict, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS infra_entries (
@@ -511,6 +519,8 @@ CREATE TABLE IF NOT EXISTS user_audit_log (
 CREATE INDEX IF NOT EXISTS idx_audit_user_action ON user_audit_log(user_id, action, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_action_time ON user_audit_log(action, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_listing     ON user_audit_log(listing_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_created_user
+    ON user_audit_log(created_at DESC, user_id);
 
 
 CREATE TABLE IF NOT EXISTS assistant_sessions (
@@ -682,6 +692,11 @@ def _run_migrations(conn: Any) -> None:
     try:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_content_hash ON listings(content_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_road_name ON listings(road_name)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_raw_source_crawled ON raw_listings(source, crawled_at DESC)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_listings_source_first_seen "
+            "ON listings(source, (COALESCE(first_seen_at, crawled_at)))"
+        )
     except Exception as e:
         logger.warning(f"Index skip listings auxiliary indexes: {e}")
 
@@ -739,8 +754,20 @@ def _run_migrations(conn: Any) -> None:
     try:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_leads_user ON lead_captures(user_id, created_at DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_leads_urgency ON lead_captures(urgency, status, created_at DESC)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_training_listing_latest "
+            "ON ai_training_feedback(listing_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_deal_review_listing_latest "
+            "ON ai_deal_review(listing_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_audit_created_user "
+            "ON user_audit_log(created_at DESC, user_id)"
+        )
     except Exception as e:
-        logger.warning(f"Index skip lead_captures: {e}")
+        logger.warning(f"Index skip admin performance indexes: {e}")
 
     _drop_legacy_feedback(conn)
     _normalize_ai_training_feedback_labels(conn)
