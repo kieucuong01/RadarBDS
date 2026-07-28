@@ -5131,7 +5131,7 @@ summary:focus-visible,
   top: 76px;
   z-index: 5;
   display: grid;
-  grid-template-columns: minmax(240px, 1.1fr) minmax(240px, auto) minmax(210px, .65fr);
+  grid-template-columns: minmax(220px, 1fr) minmax(230px, auto) minmax(180px, .7fr) minmax(160px, .58fr);
   gap: 12px;
   align-items: end;
   margin: 22px 0 14px;
@@ -5144,7 +5144,8 @@ summary:focus-visible,
 }
 
 .report-search-box,
-.report-ward-select-wrap {
+.report-ward-select-wrap,
+.report-period-select-wrap {
   display: grid;
   gap: 6px;
   color: #475569;
@@ -5155,7 +5156,8 @@ summary:focus-visible,
 }
 
 .report-search-box input,
-.report-ward-select-wrap select {
+.report-ward-select-wrap select,
+.report-period-select-wrap select {
   width: 100%;
   min-height: 46px;
   border: 1px solid #cbded6;
@@ -5163,13 +5165,14 @@ summary:focus-visible,
   padding: 0 14px;
   color: #0f172a;
   background: #fff;
-  font-size: .95rem;
+  font-size: 16px;
   font-weight: 700;
   outline: none;
 }
 
 .report-search-box input:focus,
-.report-ward-select-wrap select:focus {
+.report-ward-select-wrap select:focus,
+.report-period-select-wrap select:focus {
   border-color: #0f766e;
   box-shadow: 0 0 0 4px rgba(15, 118, 110, .12);
 }
@@ -5748,6 +5751,10 @@ summary:focus-visible,
 }
 
 .report-filter-pill.active span { background: rgba(255,255,255,.18); color: #fff; }
+.report-filter-pill:disabled {
+  cursor: not-allowed;
+  opacity: .62;
+}
 .report-filter-status { margin: 0 0 18px; color: #64748b; font-weight: 800; }
 .report-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
@@ -5755,6 +5762,8 @@ summary:focus-visible,
   display: flex;
   flex-direction: column;
   padding: 18px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .report-archive-card[hidden] { display: none; }
@@ -5806,6 +5815,52 @@ summary:focus-visible,
 
 .report-empty-state strong { display: block; color: #0f172a; font-size: 1.1rem; }
 
+.report-live-cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  margin: 18px 0 28px;
+  padding: 18px 20px;
+  border: 1px solid rgba(15, 118, 110, .2);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ecfdf5, #eff6ff);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .08);
+}
+
+.report-live-cta span {
+  color: #0f766e;
+  font-size: .76rem;
+  font-weight: 950;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.report-live-cta strong {
+  display: block;
+  margin-top: 4px;
+  color: #0f172a;
+  font-size: 1.06rem;
+}
+
+.report-live-cta p {
+  margin: 5px 0 0;
+  color: #475569;
+}
+
+.report-live-cta > a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: 12px;
+  color: #fff;
+  background: #0f766e;
+  font-weight: 900;
+  text-decoration: none;
+}
+
 @media (max-width: 980px) {
   .report-hub-featured,
   .report-hub-controls,
@@ -5817,6 +5872,39 @@ summary:focus-visible,
   .report-filter-group { display: grid; grid-template-columns: 1fr; }
   .report-featured-thumb,
   .report-card-thumb { min-height: 136px; }
+  .report-live-cta { grid-template-columns: minmax(0, 1fr); }
+  .report-live-cta > a { width: 100%; }
+
+  .report-detail .report-signal-card .report-signal-media {
+    height: 168px;
+  }
+
+  .report-detail .report-signal-card .report-signal-body {
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .report-detail .report-signal-card .report-signal-body h3 {
+    min-height: 0;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .report-detail .report-signal-card .report-price-container,
+  .report-detail .report-signal-card .report-card-actions {
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  }
+
+  .report-detail .report-signal-card .report-price-container .price-actual {
+    border-right: 1px solid #e5e7eb;
+    border-bottom: 0;
+  }
+
+  .report-detail .report-signal-card .report-card-actions {
+    padding-top: 8px;
+  }
 }
 
 /* Mobile header fix: keep nav as scrollable pills instead of squeezing 6 items into a 5-column grid. */

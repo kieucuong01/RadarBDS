@@ -2471,6 +2471,11 @@ def _render_public_page(page: dict):
         if scope not in {"Thủ Dầu Một", "Bến Cát"}:
             dashboard_params["ward"] = scope
         report_body = page.get("report") or {}
+        page["report_data_as_of"] = str(
+            report_body.get("data_as_of")
+            or report_body.get("published_at")
+            or ""
+        )
         year, month = _report_period_key(page)
         page["report_dashboard_href"] = "/?" + urllib.parse.urlencode(dashboard_params)
         page["report_dashboard_label"] = (

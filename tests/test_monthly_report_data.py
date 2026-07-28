@@ -78,13 +78,27 @@ def test_report_scripts_delegate_to_shared_data_service_without_legacy_signal_ga
     assert "mos_pct >= 5" not in enhancer
 
 
+def test_report_snapshots_expose_raw_basis_actionable_contract_in_user_copy():
+    generator = Path("scripts/generate_monthly_report.py").read_text(encoding="utf-8")
+    enhancer = Path("scripts/enhance_monthly_report_rich.py").read_text(encoding="utf-8")
+
+    for source in (generator, enhancer):
+        assert '"raw_listing_count"' in source
+        assert '"basis_count"' in source
+        assert '"actionable_signal_count"' in source
+        assert '"data_contract_version"' in source
+        assert "Mẫu hợp lệ" in source
+        assert "Tín hiệu = is_hot=1 hoặc price_dropped=1." not in source
+        assert "hot + giảm giá" not in source
+
+
 def test_featured_record_shaping_only_exposes_internal_detail_href():
     from services.monthly_report_data import shape_featured_record
 
     item = shape_featured_record(
         {
             "id": 42,
-            "title": "Lô đất cần bán",
+            "title": "Lô đất cần bán, Zalo 0901 222 333",
             "property_type": "dat_nen",
             "price_ty": 2.1,
             "price_per_m2": 21,
@@ -102,4 +116,5 @@ def test_featured_record_shaping_only_exposes_internal_detail_href():
     assert item["href"] == "/listing/42"
     assert "url" not in item
     assert "phone" not in item
+    assert "0901" not in item["title"]
     assert item["mos_pct"] == pytest.approx(18)

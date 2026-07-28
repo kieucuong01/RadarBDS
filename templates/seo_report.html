@@ -1,3 +1,13 @@
+{% macro chart_data_summary(chart) -%}
+<span id="{{ chart.id }}-summary" class="chart-data-summary sr-only">
+  {{ chart.title }}.
+  {% if chart.labels %}Nhãn: {{ chart.labels|join(', ') }}.{% endif %}
+  {% for dataset in chart.datasets or [] %}
+    {{ dataset.label or ('Chuỗi dữ liệu ' ~ loop.index) }}:
+    {% for value in dataset.data or [] %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}.
+  {% endfor %}
+</span>
+{%- endmacro %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -24,6 +34,9 @@
           <div><span>Phạm vi dữ liệu</span><strong>{{ page.scope_label }}</strong></div>
           <div><span>Kỳ dữ liệu</span><strong>{{ page.report.period }}</strong></div>
           <div><span>Nguồn và trạng thái</span><strong>Dữ liệu Radar BDS đã sàng lọc</strong></div>
+          {% if page.report_data_as_of %}
+          <div class="report-data-as-of"><span>Snapshot cập nhật</span><strong><time datetime="{{ page.report_data_as_of }}">{{ page.report_data_as_of }}</time></strong></div>
+          {% endif %}
         </div>
       </header>
 
@@ -80,7 +93,8 @@
             <div class="report-chart-card report-chart-card-wide">
               <span>{{ chart.title }}</span>
               <div class="chart-wrap chart-wrap-large">
-                <canvas id="{{ chart.id }}"></canvas>
+                <canvas id="{{ chart.id }}" role="img" aria-label="{{ chart.title }}" aria-describedby="{{ chart.id }}-summary"></canvas>
+                {{ chart_data_summary(chart) }}
               </div>
             </div>
           </div>
@@ -132,7 +146,8 @@
             <div class="report-chart-card report-chart-card-wide">
               <span>{{ chart.title }}</span>
               <div class="chart-wrap chart-wrap-large">
-                <canvas id="{{ chart.id }}"></canvas>
+                <canvas id="{{ chart.id }}" role="img" aria-label="{{ chart.title }}" aria-describedby="{{ chart.id }}-summary"></canvas>
+                {{ chart_data_summary(chart) }}
               </div>
             </div>
           </div>
@@ -151,7 +166,8 @@
             <div class="report-chart-card">
               <span>{{ chart.title }}</span>
               <div class="chart-wrap">
-                <canvas id="{{ chart.id }}"></canvas>
+                <canvas id="{{ chart.id }}" role="img" aria-label="{{ chart.title }}" aria-describedby="{{ chart.id }}-summary"></canvas>
+                {{ chart_data_summary(chart) }}
               </div>
             </div>
             {% endif %}
@@ -254,9 +270,15 @@
         </div>
         <div class="featured-listing-grid report-signal-grid">
           {% for item in page.report.featured_listings %}
-          <a class="featured-listing-card report-signal-card is-new-signal" href="{{ item.href }}">
+          <a class="featured-listing-card report-signal-card is-new-signal" href="{{ item.href }}"
+            data-report-action="listing"
+            data-report-city="{{ page.report_analytics.city }}"
+            data-report-ward="{{ page.report_analytics.ward_slug }}"
+            data-report-period="{{ page.report_analytics.period }}"
+            data-report-surface="report_featured"
+            data-listing-id="{{ item.id }}">
             <div class="report-signal-media">
-              {% if item.image %}<img src="{{ item.image }}" alt="{{ item.title }}" loading="eager">{% endif %}
+              {% if item.image %}<img src="{{ item.image }}" alt="{{ item.title }}" loading="lazy" decoding="async" width="640" height="360">{% endif %}
               <span class="mos-badge">🤖 Rẻ hơn {{ item.mos|replace('+','') }}</span>
               <span class="new-badge">★ Mới</span>
               <div class="sc-img-tags">

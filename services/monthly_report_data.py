@@ -189,6 +189,11 @@ def shape_featured_record(
         "img_url",
     )
     record = _row_dict(row, columns)
+    # Public report snapshots are served to every tier, so they must use the
+    # strict non-admin redaction boundary before the title is persisted.
+    from services.market_data import redact_for_tier
+
+    record = redact_for_tier(record, "guest")
     listing_id = int(record["id"])
     return {
         "id": listing_id,

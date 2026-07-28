@@ -134,9 +134,8 @@ def generate_insights(ward, stats, prev_stats, m_label_str):
         insights.append({
             "title": f"{sig} tín hiệu đáng chú ý — cơ hội cho người mua",
             "body": (
-                f"Có {sig} tín hiệu (hot + giảm giá) tại {ward} tháng này. "
-                f"{stats.get('hot', 0)} tin nóng, {stats.get('dropped', 0)} tin giảm giá. "
-                f"Dùng dashboard để lọc theo MOS và watchlist."
+                f"Có {sig} mẫu tại {ward} vượt quality gate và signal gate hiện hành. "
+                "Dùng dashboard để kiểm tra MOS, pháp lý, vị trí và trạng thái còn hoạt động."
             ),
         })
     else:
@@ -202,23 +201,23 @@ def generate_ward_report(ward, month, year):
     dn = stats["by_type"].get("dat_nen", {})
 
     metrics = [
-        {"label": "Tin đang theo dõi", "value": f"{stats['total']:,}".replace(",", "."),
-         "note": f"tin rao Facebook tại {ward}"},
+        {"label": "Tin thu thập", "value": f"{stats['raw_total']:,}".replace(",", "."),
+         "note": f"tin Facebook tại {ward}, gồm cả repost"},
+        {"label": "Mẫu hợp lệ", "value": f"{stats['basis_count']:,}".replace(",", "."),
+         "note": "canonical lot sau quality gate"},
         {"label": "Giá/m² trung vị", "value": f"{dn.get('median_m2', '—')} tr/m²" if dn.get('median_m2') else "—",
          "note": "đất nền (phân khúc chính)"},
-        {"label": "Giá tỷ trung vị", "value": f"{dn.get('median_ty', '—')} tỷ" if dn.get('median_ty') else "—",
-         "note": "đất nền"},
         {"label": "Tín hiệu đáng chú ý", "value": str(stats['signals']),
-         "note": "hot + giảm giá trong tháng"},
+         "note": "mẫu vượt quality gate và signal gate"},
     ]
 
     insights = generate_insights(ward, stats, prev_stats, m_label)
 
     methodology = [
         f"Dữ liệu từ tin rao Facebook tại {ward} trong {m_label}.",
-        "Giá/m² trung vị = PERCENTILE_CONT(0.5).",
-        "Đã loại sold, blacklist, hidden, outlier.",
-        "Tín hiệu = is_hot=1 hoặc price_dropped=1.",
+        "Tin thu thập có thể gồm repost; mẫu hợp lệ chỉ giữ canonical lot và loại hidden, blacklist, duplicate, outlier, sold.",
+        "Giá/m² trung vị dùng PERCENTILE_CONT(0.5) trên mẫu hợp lệ.",
+        "Tín hiệu đáng chú ý dùng latest valuation cùng quality flags và actionable gate hiện hành.",
         "Radar BDS là bộ lọc dữ liệu, không thay thẩm định pháp lý.",
     ]
 
@@ -235,11 +234,11 @@ def generate_ward_report(ward, month, year):
         "scope_label": f"Thủ Dầu Một · {ward}",
         "path": f"/bao-cao/{slug}-thang-{m_str}-{year}",
         "title": f"Báo cáo thị trường {ward} Thủ Dầu Một tháng {m_str}/{year} — Radar BDS",
-        "description": f"Báo cáo thị trường BĐS phường {ward}, Thủ Dầu Một tháng {m_str}/{year}: {dn.get('median_m2', '—')} tr/m² đất nền, {stats['total']} tin rao, {stats['signals']} tín hiệu.",
+        "description": f"Báo cáo thị trường BĐS phường {ward}, Thủ Dầu Một tháng {m_str}/{year}: {dn.get('median_m2', '—')} tr/m² đất nền từ {stats['basis_count']} mẫu hợp lệ, {stats['signals']} tín hiệu.",
         "keywords": f"báo cáo thị trường {ward}, giá đất {ward}, nhà đất {ward}, Thủ Dầu Một, radar bds",
         "hero_badge": f"Báo cáo thị trường — {m_label}",
         "hero_title": f"Báo cáo thị trường phường {ward}, Thủ Dầu Một {m_label}",
-        "hero_text": f"Báo cáo chi tiết thị trường BĐS phường {ward}, {tagline}. Số liệu thực từ {stats['total']} tin rao Facebook trong tháng.",
+        "hero_text": f"Báo cáo chi tiết thị trường BĐS phường {ward}, {tagline}. Radar thu thập {stats['raw_total']} tin và dùng {stats['basis_count']} mẫu canonical hợp lệ.",
         "hero_checks": ch,
         "primary_cta": "Mở dashboard để lọc watchlist",
         "secondary_cta": "Xem báo cáo tổng quan",
@@ -254,7 +253,7 @@ def generate_ward_report(ward, month, year):
         "property_card": {
             "status": "Market report",
             "title": f"{ward} — snapshot {m_label}",
-            "price": f"Nguồn: {stats['total']} tin rao + định giá + tín hiệu",
+            "price": f"Nguồn: {stats['raw_total']} tin thu thập, {stats['basis_count']} mẫu hợp lệ",
             "metric_a": "Giá/m² đất nền",
             "metric_a_value": f"{dn.get('median_m2', '—')} tr/m²" if dn.get('median_m2') else "—",
             "metric_b": "Tín hiệu",
@@ -271,8 +270,13 @@ def generate_ward_report(ward, month, year):
         "report": {
             "period": m_label,
             "published_at": date.today().isoformat(),
+            "data_as_of": month_end_date(month, year).isoformat(),
+            "raw_listing_count": stats["raw_total"],
+            "basis_count": stats["basis_count"],
+            "actionable_signal_count": stats["actionable_signal_count"],
+            "data_contract_version": stats["data_contract_version"],
             "updated_label": f"Cập nhật {m_label}",
-            "source_note": f"Nguồn: tin rao Facebook tại {ward} ({stats['total']} tin). Đã lọc blacklist, hidden, outlier.",
+            "source_note": f"Nguồn: {stats['raw_total']} tin Facebook tại {ward}; thống kê giá dùng {stats['basis_count']} mẫu canonical hợp lệ.",
             "metrics": metrics,
             "area_rows": area_rows,
             "insights": insights,
@@ -336,6 +340,7 @@ def generate_master_report(month, year):
 
     all_data = {}
     total_listings = 0
+    total_raw_listings = 0
     total_signals = 0
     area_rows = []
 
@@ -343,6 +348,7 @@ def generate_master_report(month, year):
         stats = query_ward_stats(ward, month_start, month_end)
         all_data[ward] = stats
         total_listings += stats["total"]
+        total_raw_listings += stats["raw_total"]
         total_signals += stats["signals"]
         dn = stats["by_type"].get("dat_nen", {})
         slug = WARDS_SLUG[ward]
@@ -385,12 +391,12 @@ def generate_master_report(month, year):
         "scope_label": "Thủ Dầu Một",
         "path": f"/bao-cao/bds-binh-duong-thang-{m_str}-{year}",
         "title": f"Báo cáo thị trường BĐS Thủ Dầu Một tháng {m_str}/{year} — Radar BDS",
-        "description": f"Báo cáo thị trường BĐS Bình Dương {m_label}: {total_listings} tin rao, giá đất nền {tdm_median} tr/m². Phân tích 13 phường TDM.",
+        "description": f"Báo cáo thị trường BĐS Thủ Dầu Một {m_label}: {total_raw_listings} tin thu thập, {total_listings} mẫu hợp lệ, giá đất nền {tdm_median} tr/m².",
         "keywords": f"báo cáo thị trường BĐS Bình Dương, báo cáo Thủ Dầu Một, tháng {m_str} {year}, radar bds",
         "hero_badge": f"Báo cáo thị trường — {m_label}",
         "hero_title": f"Báo cáo thị trường BĐS Thủ Dầu Một {m_label}",
-        "hero_text": f"Báo cáo {m_label} tập trung 13 phường Thủ Dầu Một. {total_listings} tin rao, giá đất nền {tdm_median} tr/m², {total_signals} tín hiệu.",
-        "hero_checks": [f"13 phường Thủ Dầu Một", f"{total_listings:,}".replace(",", ".") + " tin rao",
+        "hero_text": f"Báo cáo {m_label} tập trung 13 phường Thủ Dầu Một. Radar thu thập {total_raw_listings} tin và dùng {total_listings} mẫu canonical hợp lệ.",
+        "hero_checks": [f"13 phường Thủ Dầu Một", f"{total_listings:,}".replace(",", ".") + " mẫu hợp lệ",
                         f"Giá/m² trung vị {tdm_median} tr/m²"],
         "primary_cta": "Mở dashboard Radar BDS",
         "secondary_cta": "Xem hub Bình Dương",
@@ -413,15 +419,21 @@ def generate_master_report(month, year):
         "report": {
             "period": m_label,
             "published_at": date.today().isoformat(),
+            "data_as_of": month_end_date(month, year).isoformat(),
+            "raw_listing_count": total_raw_listings,
+            "basis_count": total_listings,
+            "actionable_signal_count": total_signals,
+            "data_contract_version": next(iter(all_data.values()))["data_contract_version"],
             "updated_label": f"Cập nhật {m_label}",
-            "source_note": f"Nguồn: Facebook listings tại 13 phường TDM, đã lọc blacklist, hidden, outlier.",
+            "source_note": f"Nguồn: {total_raw_listings} tin Facebook tại 13 phường TDM; thống kê dùng {total_listings} mẫu canonical hợp lệ.",
             "metrics": [
-                {"label": "Tin đang theo dõi", "value": f"{total_listings:,}".replace(",", "."),
-                 "note": "facebook listings tại TDM"},
+                {"label": "Tin thu thập", "value": f"{total_raw_listings:,}".replace(",", "."),
+                 "note": "gồm cả repost trong kỳ"},
+                {"label": "Mẫu hợp lệ", "value": f"{total_listings:,}".replace(",", "."),
+                 "note": "canonical lot sau quality gate"},
                 {"label": "Giá/m² trung vị", "value": f"{tdm_median} tr/m²",
                  "note": "đất nền (phân khúc chính)"},
-                {"label": "Phường rẻ nhất", "value": cheapest[0], "note": f"{cheapest[1]} tr/m²"},
-                {"label": "Tổng tín hiệu", "value": str(total_signals), "note": "hot + giảm giá toàn TDM"},
+                {"label": "Tổng tín hiệu", "value": str(total_signals), "note": "mẫu actionable tại 13 phường"},
             ],
             "area_rows": area_rows,
             "insights": [
@@ -434,9 +446,9 @@ def generate_master_report(month, year):
             ],
             "methodology": [
                 f"Dữ liệu từ Facebook tại 13 phường TDM trong {m_label}.",
-                "Giá/m² trung vị = PERCENTILE_CONT(0.5).",
-                "Đã loại sold, blacklist, hidden, outlier.",
-                "Tín hiệu = is_hot=1 hoặc price_dropped=1.",
+                "Tin thu thập có thể gồm repost; mẫu hợp lệ chỉ giữ canonical lot và loại hidden, blacklist, duplicate, outlier, sold.",
+                "Giá/m² trung vị dùng PERCENTILE_CONT(0.5) trên mẫu hợp lệ.",
+                "Tín hiệu đáng chú ý dùng latest valuation cùng quality flags và actionable gate hiện hành.",
                 "Radar BDS là bộ lọc dữ liệu, không thay thẩm định pháp lý.",
             ],
         },

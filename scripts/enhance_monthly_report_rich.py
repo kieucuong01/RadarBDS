@@ -13,7 +13,7 @@ import os
 import pprint
 import re
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -296,10 +296,23 @@ def update_ward_page(page: dict, ward: str, month: int, year: int) -> dict:
     report = dict(page.get("report") or {})
     page.update({"scope_label": ward, "title": f"Giá đất {ward} tháng {mm}/{year}: {cur['total']} tin rao, đất nền {fmt_ppm2(dn.get('median_m2'))} — Radar BDS", "description": f"Báo cáo thị trường BĐS {ward} tháng {mm}/{year}: {cur['total']} tin rao, đất nền {fmt_ppm2(dn.get('median_m2'))}, nhà đất {fmt_ppm2(nd.get('median_m2'))}, {cur['signals']} tín hiệu đáng chú ý.", "hero_title": f"Giá đất {ward} tháng {mm}/{year}: đất nền {fmt_ppm2(dn.get('median_m2'))} từ {cur['total']} tin rao", "hero_text": f"Trong tháng {mm}/{year}, Radar BDS ghi nhận {cur['total']} tin rao Facebook tại {ward}. Giá trung vị đất nền đạt {fmt_ppm2(dn.get('median_m2'))}; nhà đất đạt {fmt_ppm2(nd.get('median_m2'))}. Nguồn cung và tín hiệu được tách theo loại hình để người mua lọc tin cụ thể hơn.", "final_cta": {"title": f"Lọc tin {ward} bằng dashboard Radar BDS", "body": f"Dùng báo cáo này làm bước sàng lọc ban đầu, sau đó mở dashboard để xem từng tin {ward} theo loại hình, giá/m², dấu hiệu nóng và tin giảm giá.", "button": "Mở dashboard", "button_href": dashboard_href(ward)}})
     value_pct = fmt_pct(dn_pct)
-    report.update({"period": period_label, "source_note": f"Nguồn: tin rao Facebook tại {ward} trong tháng {mm}/{year}, đã lọc blacklist, hidden, outlier theo dữ liệu Radar BDS.", "metrics": [{"label": "Tin rao trong tháng", "value": fmt_num(cur["total"]), "note": f"tin Facebook tại {ward} sau lọc"}, {"label": "Giá trung vị đất nền", "value": fmt_ppm2(dn.get("median_m2")), "note": f"{dn.get('count', 0)} tin đất nền đủ dữ liệu giá/m²"}, {"label": "Giá trung vị nhà đất", "value": fmt_ppm2(nd.get("median_m2")), "note": f"{nd.get('count', 0)} tin nhà đất đủ dữ liệu giá/m²"}, {"label": "Dấu hiệu đáng chú ý", "value": str(cur["signals"]), "note": f"{cur['hot']} tin nóng + {cur['dropped']} tin giảm giá"}], "indicators": [{"label": "Xu hướng giá đất nền", "value": value_pct, "status": "Tăng" if dn_pct and dn_pct > 3 else "Giảm" if dn_pct and dn_pct < -3 else "Ổn định", "note": price_trend_indicator_note(value_pct, ward)}, {"label": "Tỷ lệ cắt máu", "value": f"{cut:.1f}%", "status": "Rất thấp" if cut < 1 else "Cần chú ý" if cut < 5 else "Cao", "note": f"{cur['dropped']}/{cur['total']} tin có dấu hiệu giảm giá; đọc như tín hiệu sàng lọc, không phải xác nhận bán tháo."}, {"label": "Bất thường nguồn cung", "value": fmt_pct(supply_pct), "status": "Rất cao" if supply_pct and supply_pct > 80 else "Tăng" if supply_pct and supply_pct > 20 else "Giảm" if supply_pct and supply_pct < -20 else "Ổn định", "note": f"Nguồn cung tháng trước → tháng này: {prev.get('total', 0)} → {cur['total']} tin."}], "trend_intro": trend_intro, "trend_rows": [t["row"] for t in trends], "area_rows": [{"area": TYPE_LABELS.get(pt, pt), "new_listings": f"{data['count']} tin", "median_price": fmt_ppm2(data.get("median_m2")), "drop_signal": f"{data.get('dropped', 0)} tin giảm giá", "radar_signal": f"{data.get('signals', 0)} dấu hiệu"} for pt, data in cur["by_type"].items()], "under_value": {"title": "Có bao nhiêu tin rao thấp hơn giá cơ sở?", "metrics": [{"label": "Tin đủ định giá", "value": str(len(records)), "note": f"tin {ward} tháng {mm} có đủ giá, diện tích và MOS để so sánh"}, {"label": "MOS ≥ 10%", "value": f"{sum(1 for r in records if r['mos_pct'] >= 10) * 100 / len(records):.1f}%" if records else "0%", "note": f"{sum(1 for r in records if r['mos_pct'] >= 10)}/{len(records)} tin thấp hơn giá cơ sở từ 10% trở lên"}, {"label": "MOS ≥ 15%", "value": f"{sum(1 for r in records if r['mos_pct'] >= 15) * 100 / len(records):.1f}%" if records else "0%", "note": f"{sum(1 for r in records if r['mos_pct'] >= 15)}/{len(records)} tin thuộc nhóm đáng kiểm tra sâu hơn"}], "body": under_body}, "type_analysis": type_analysis, "featured_listings": featured_listings(ward, records, period_label), "featured_more_href": dashboard_href(ward), "insights": [{"title": f"{ward}: nguồn cung tháng {mm} là {cur['total']} tin", "body": trend_intro[2]}, {"title": f"Nhóm đáng soi nghiêng về {'nhà đất' if nd.get('signals', 0) >= dn.get('signals', 0) else 'đất nền'}", "body": type_analysis[0]}, {"title": "MOS chỉ là bước sàng lọc ban đầu", "body": under_body[0]}]})
-    methodology = list(report.get("methodology") or [])
-    for item in ["MOS = mức chênh lệch giữa giá cơ sở Radar và giá chào; MOS dương nghĩa là giá chào thấp hơn giá cơ sở ước tính.", "Tin đáng kiểm tra được chọn từ nhóm đủ giá, diện tích, không blacklist/hidden/outlier, có valuation và link chi tiết /listing/id; ưu tiên tin không trùng, riêng phường ít dữ liệu có thể dùng tin đại diện cùng tài sản để đủ bối cảnh."]:
-        if item not in methodology: methodology.append(item)
+    report.update({"period": period_label, "source_note": f"Nguồn: tin rao Facebook tại {ward} trong tháng {mm}/{year}; thống kê dùng mẫu canonical đạt quality gate.", "metrics": [{"label": "Tin thu thập", "value": fmt_num(cur["raw_total"]), "note": "gồm cả repost trong kỳ"}, {"label": "Mẫu hợp lệ", "value": fmt_num(cur["basis_count"]), "note": "canonical lot sau quality gate"}, {"label": "Giá trung vị đất nền", "value": fmt_ppm2(dn.get("median_m2")), "note": f"{dn.get('count', 0)} mẫu đất nền đủ giá/m²"}, {"label": "Giá trung vị nhà đất", "value": fmt_ppm2(nd.get("median_m2")), "note": f"{nd.get('count', 0)} mẫu nhà đất đủ giá/m²"}, {"label": "Tín hiệu actionable", "value": str(cur["actionable_signal_count"]), "note": "latest valuation và quality flags hợp lệ"}], "indicators": [{"label": "Xu hướng giá đất nền", "value": value_pct, "status": "Tăng" if dn_pct and dn_pct > 3 else "Giảm" if dn_pct and dn_pct < -3 else "Ổn định", "note": price_trend_indicator_note(value_pct, ward)}, {"label": "Tỷ lệ tin giảm giá", "value": f"{cut:.1f}%", "status": "Rất thấp" if cut < 1 else "Cần chú ý" if cut < 5 else "Cao", "note": f"{cur['dropped']}/{cur['basis_count']} mẫu hợp lệ có dấu hiệu giảm giá; đây không phải xác nhận bán tháo."}, {"label": "Bất thường nguồn cung", "value": fmt_pct(supply_pct), "status": "Rất cao" if supply_pct and supply_pct > 80 else "Tăng" if supply_pct and supply_pct > 20 else "Giảm" if supply_pct and supply_pct < -20 else "Ổn định", "note": f"Mẫu hợp lệ tháng trước → tháng này: {prev.get('basis_count', prev.get('total', 0))} → {cur['basis_count']}."}], "trend_intro": trend_intro, "trend_rows": [t["row"] for t in trends], "area_rows": [{"area": TYPE_LABELS.get(pt, pt), "new_listings": f"{data['count']} mẫu", "median_price": fmt_ppm2(data.get("median_m2")), "drop_signal": f"{data.get('dropped', 0)} tin giảm giá", "radar_signal": f"{data.get('signals', 0)} actionable"} for pt, data in cur["by_type"].items()], "under_value": {"title": "Có bao nhiêu tín hiệu thấp hơn giá cơ sở?", "metrics": [{"label": "Tín hiệu đủ định giá", "value": str(len(records)), "note": f"mẫu actionable tại {ward} có đủ giá, diện tích và MOS"}, {"label": "MOS ≥ 10%", "value": f"{sum(1 for r in records if r['mos_pct'] >= 10) * 100 / len(records):.1f}%" if records else "0%", "note": f"{sum(1 for r in records if r['mos_pct'] >= 10)}/{len(records)} tín hiệu thấp hơn giá cơ sở từ 10% trở lên"}, {"label": "MOS ≥ 15%", "value": f"{sum(1 for r in records if r['mos_pct'] >= 15) * 100 / len(records):.1f}%" if records else "0%", "note": f"{sum(1 for r in records if r['mos_pct'] >= 15)}/{len(records)} tín hiệu cần kiểm tra sâu hơn"}], "body": under_body}, "type_analysis": type_analysis, "featured_listings": featured_listings(ward, records, period_label), "featured_more_href": dashboard_href(ward), "insights": [{"title": f"{ward}: {cur['basis_count']} mẫu hợp lệ trong tháng {mm}", "body": trend_intro[2]}, {"title": f"Nhóm đáng soi nghiêng về {'nhà đất' if nd.get('signals', 0) >= dn.get('signals', 0) else 'đất nền'}", "body": type_analysis[0]}, {"title": "MOS chỉ là bước sàng lọc ban đầu", "body": under_body[0]}]})
+    data_end = date.fromisoformat(month_bounds(month, year)[1]) - timedelta(days=1)
+    report.update({
+        "data_as_of": data_end.isoformat(),
+        "raw_listing_count": cur["raw_total"],
+        "basis_count": cur["basis_count"],
+        "actionable_signal_count": cur["actionable_signal_count"],
+        "price_drop_count": cur["dropped"],
+        "data_contract_version": cur["data_contract_version"],
+    })
+    methodology = [
+        f"Tin thu thập là volume Facebook tại {ward} trong {period_label} và có thể gồm repost.",
+        "Mẫu hợp lệ chỉ giữ canonical lot; loại hidden, blacklist, duplicate, outlier và tin có dấu hiệu đã bán.",
+        "Giá/m² trung vị dùng PERCENTILE_CONT(0.5) trên mẫu hợp lệ, không nội suy tháng thiếu dữ liệu.",
+        "Tín hiệu actionable dùng latest valuation, quality flags và signal gate hiện hành.",
+        "MOS chỉ là chênh lệch với giá cơ sở ước tính; cần kiểm tra pháp lý, quy hoạch, vị trí và thực địa.",
+    ]
     report["methodology"] = methodology
     if report.get("under_value"):
         report["under_value"]["links"] = [
@@ -326,16 +339,66 @@ def update_ward_page(page: dict, ward: str, month: int, year: int) -> dict:
 def update_master_page(page: dict, ward_pages: dict[str, dict], month: int, year: int) -> dict:
     rows = []
     for ward, wpage in ward_pages.items():
-        report = wpage["report"]; metrics = report.get("metrics") or []
-        total = parse_metric_number(metrics[0]["value"]) if metrics else 0; dn_price = parse_metric_float(metrics[1]["value"]) if len(metrics) > 1 else None; signals = parse_metric_number(metrics[3]["value"]) if len(metrics) > 3 else 0
-        dropped = 0; note = metrics[3].get("note", "") if len(metrics) > 3 else ""; m = re.search(r"\+\s*(\d+)\s*tin giảm giá", note)
-        if m: dropped = int(m.group(1))
-        rows.append({"area": ward, "slug": WARDS_SLUG[ward], "new_listings": str(total), "median_price": f"{dn_price:.1f}" if dn_price is not None else "—", "drop_signal": str(dropped), "radar_signal": str(signals)})
+        report = wpage["report"]
+        metrics = report.get("metrics") or []
+        raw_total = int(report.get("raw_listing_count") or 0)
+        basis_total = int(report.get("basis_count") or 0)
+        signals = int(report.get("actionable_signal_count") or 0)
+        dropped = int(report.get("price_drop_count") or 0)
+        land_metric = next(
+            (metric for metric in metrics if metric.get("label") == "Giá trung vị đất nền"),
+            {},
+        )
+        dn_price = parse_metric_float(land_metric.get("value"))
+        rows.append({
+            "area": ward,
+            "slug": WARDS_SLUG[ward],
+            "raw_listings": str(raw_total),
+            "new_listings": str(basis_total),
+            "median_price": f"{dn_price:.1f}" if dn_price is not None else "—",
+            "drop_signal": str(dropped),
+            "radar_signal": str(signals),
+        })
     rows.sort(key=lambda r: int(r["new_listings"]), reverse=True)
-    total = sum(int(r["new_listings"]) for r in rows); total_signals = sum(int(r["radar_signal"]) for r in rows)
+    total_raw = sum(int(r["raw_listings"]) for r in rows)
+    total = sum(int(r["new_listings"]) for r in rows)
+    total_signals = sum(int(r["radar_signal"]) for r in rows)
     priced = [r for r in rows if r["median_price"] != "—"]; cheapest = min(priced, key=lambda r: float(r["median_price"])); expensive = max(priced, key=lambda r: float(r["median_price"])); most_signals = max(rows, key=lambda r: int(r["radar_signal"])); most_dropped = max(rows, key=lambda r: int(r["drop_signal"])); weighted = sum(float(r["median_price"]) * int(r["new_listings"]) for r in priced) / sum(int(r["new_listings"]) for r in priced); tdm_ref = round(weighted, 1); mm = f"{month:02d}"
     report = dict(page.get("report") or {})
-    report.update({"metrics": [{"label": "Tin đang theo dõi", "value": fmt_num(total), "note": "facebook listings tại TDM"}, {"label": "Giá/m² tham chiếu", "value": f"{tdm_ref} tr/m²", "note": "đất nền — tổng hợp từ 13 phường"}, {"label": "Phường rẻ nhất", "value": cheapest["area"], "note": f"{cheapest['median_price']} tr/m²"}, {"label": "Tổng tín hiệu", "value": str(total_signals), "note": "hot + giảm giá toàn TDM"}], "area_rows": rows, "type_section_eyebrow": "So sánh theo phường", "type_section_title": "Nguồn cung và giá trung vị theo 13 phường Thủ Dầu Một", "type_analysis": [f"Biểu đồ nguồn cung cho thấy {rows[0]['area']} và {rows[1]['area']} là hai phường nhiều tin nhất trong tháng {mm}. Nguồn cung dày giúp dễ so sánh và thương lượng hơn, nhưng không tự động đồng nghĩa giá rẻ.", f"Biểu đồ giá cho thấy biên giữa phường rẻ nhất ({cheapest['area']} {cheapest['median_price']} tr/m²) và phường cao nhất ({expensive['area']} {expensive['median_price']} tr/m²) khá rộng. Vì vậy người mua nên chọn phường theo ngân sách trước, rồi mới lọc MOS từng tin.", f"Tổng {total_signals} tín hiệu toàn TDM là bản đồ ưu tiên để mở dashboard. Phường nhiều tín hiệu giúp có nhiều thứ để soi, còn quyết định từng tài sản vẫn cần kiểm tra pháp lý, quy hoạch, hình ảnh và vị trí thực địa."], "insights": [{"title": f"Phường rẻ nhất: {cheapest['area']} ({cheapest['median_price']} tr/m²)", "body": f"Trong 13 phường Thủ Dầu Một, {cheapest['area']} có giá đất nền thấp nhất theo dữ liệu tháng {mm} ({cheapest['median_price']} tr/m²), còn {expensive['area']} nằm ở vùng cao nhất ({expensive['median_price']} tr/m²). Đây là bước chọn vùng ngân sách, chưa phải kết luận từng tài sản đắt/rẻ."}, {"title": f"Nhiều tín hiệu nhất: {most_signals['area']}", "body": f"{most_signals['area']} dẫn đầu với {most_signals['radar_signal']} tín hiệu đáng chú ý. Phường nhiều tín hiệu nên được mở dashboard để lọc MOS và loại hình, vì không phải tín hiệu nào cũng đủ điều kiện pháp lý/vị trí để xuống tiền."}, {"title": f"Nhiều tin giảm giá: {most_dropped['area']}", "body": f"{most_dropped['area']} có {most_dropped['drop_signal']} tin giảm giá công khai trong tháng. Chỉ số này dùng để ưu tiên kiểm tra, không đồng nghĩa toàn phường đang bán tháo."}]})
+    report.update({
+        "data_as_of": (date.fromisoformat(month_bounds(month, year)[1]) - timedelta(days=1)).isoformat(),
+        "raw_listing_count": total_raw,
+        "basis_count": total,
+        "actionable_signal_count": total_signals,
+        "data_contract_version": next(iter(ward_pages.values()))["report"]["data_contract_version"],
+        "source_note": f"Nguồn: {total_raw} tin Facebook tại 13 phường; thống kê dùng {total} mẫu canonical hợp lệ.",
+        "metrics": [
+            {"label": "Tin thu thập", "value": fmt_num(total_raw), "note": "gồm cả repost trong kỳ"},
+            {"label": "Mẫu hợp lệ", "value": fmt_num(total), "note": "canonical lot sau quality gate"},
+            {"label": "Giá/m² tham chiếu", "value": f"{tdm_ref} tr/m²", "note": "đất nền từ 13 phường"},
+            {"label": "Tổng tín hiệu", "value": str(total_signals), "note": "mẫu actionable tại 13 phường"},
+        ],
+        "area_rows": rows,
+        "type_section_eyebrow": "So sánh theo phường",
+        "type_section_title": "Mẫu hợp lệ và giá trung vị theo 13 phường Thủ Dầu Một",
+        "type_analysis": [
+            f"{rows[0]['area']} và {rows[1]['area']} có nhiều mẫu hợp lệ nhất trong tháng {mm}. Mẫu dày giúp dễ so sánh hơn nhưng không tự động đồng nghĩa giá rẻ.",
+            f"Biên giá giữa {cheapest['area']} ({cheapest['median_price']} tr/m²) và {expensive['area']} ({expensive['median_price']} tr/m²) cho thấy cần chọn phường theo ngân sách trước khi lọc MOS.",
+            f"{total_signals} tín hiệu actionable là danh sách ưu tiên kiểm tra; mỗi tài sản vẫn cần thẩm định pháp lý, quy hoạch, hình ảnh và vị trí thực địa.",
+        ],
+        "insights": [
+            {"title": f"Phường rẻ nhất: {cheapest['area']} ({cheapest['median_price']} tr/m²)", "body": f"Mức này được tính trên mẫu canonical hợp lệ tháng {mm}, không phải giá giao dịch hay kết luận cho mọi tài sản."},
+            {"title": f"Nhiều tín hiệu nhất: {most_signals['area']}", "body": f"{most_signals['area']} có {most_signals['radar_signal']} tín hiệu actionable để ưu tiên kiểm tra trên dashboard."},
+            {"title": f"Nhiều tin giảm giá: {most_dropped['area']}", "body": f"{most_dropped['area']} có {most_dropped['drop_signal']} mẫu giảm giá công khai; đây không phải xác nhận bán tháo."},
+        ],
+        "methodology": [
+            f"Tin thu thập là volume Facebook tại 13 phường trong tháng {mm}/{year} và có thể gồm repost.",
+            "Mẫu hợp lệ chỉ giữ canonical lot; loại hidden, blacklist, duplicate, outlier và tin có dấu hiệu đã bán.",
+            "Giá/m² trung vị dùng PERCENTILE_CONT(0.5) trên mẫu hợp lệ.",
+            "Tín hiệu actionable dùng latest valuation, quality flags và signal gate hiện hành.",
+            "Radar BDS là bộ lọc dữ liệu, không thay thẩm định pháp lý.",
+        ],
+    })
     report["internal_links"] = [
         {"label": "Dashboard toàn Thủ Dầu Một", "href": dashboard_href(None), "description": "Mở feed tín hiệu toàn khu để lọc theo từng phường."},
         {"label": "Hub báo cáo BĐS Bình Dương", "href": "/bao-cao", "description": "Xem các báo cáo tháng khác và báo cáo từng phường."},

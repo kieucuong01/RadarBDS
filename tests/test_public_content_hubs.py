@@ -360,6 +360,56 @@ def test_report_specific_analytics_actions_are_allowlisted():
     } <= radar_app.ALLOWED_TRACK_ACTIONS
 
 
+def test_report_charts_have_accessible_text_fallbacks():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(
+        "/bao-cao/phu-tan-thang-06-2026"
+    ).get_data(as_text=True)
+    canvases = re.findall(r"<canvas[^>]+>", html)
+
+    assert canvases
+    assert all('role="img"' in canvas for canvas in canvases)
+    assert all('aria-label="' in canvas for canvas in canvases)
+    assert html.count('class="chart-data-summary sr-only"') == len(canvases)
+
+
+def test_report_featured_images_are_lazy_sized_and_listing_tracked():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(
+        "/bao-cao/phu-tan-thang-06-2026"
+    ).get_data(as_text=True)
+    cards = re.findall(
+        r'<a class="featured-listing-card report-signal-card[^"]*"[\s\S]*?</a>',
+        html,
+    )
+
+    assert cards
+    for card in cards:
+        assert 'loading="lazy"' in card
+        assert 'width="640"' in card
+        assert 'height="360"' in card
+        assert 'data-report-action="listing"' in card
+        assert 'data-listing-id="' in card
+
+
+def test_report_dates_and_mobile_controls_are_explicit():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(
+        "/bao-cao/phu-tan-thang-06-2026"
+    ).get_data(as_text=True)
+    css = Path("static/css/seo.css").read_text(encoding="utf-8")
+
+    assert 'class="report-data-as-of"' in html
+    assert re.search(r'<time datetime="\d{4}-\d{2}-\d{2}">', html)
+    assert ".report-period-select-wrap" in css
+    assert "font-size: 16px" in css
+    assert ".report-live-cta" in css
+    assert ".report-detail .report-signal-card" in css
+
+
 def test_all_articles_have_distinct_editorial_structure_and_user_language():
     import app as radar_app
 
