@@ -21,10 +21,28 @@ MAP_MARGIN_RIGHT_PT = 150.0
 MAP_MARGIN_BOTTOM_PT = 180.0
 MAP_MARGIN_TOP_PT = 285.0
 
+FONT_FAMILY = "Be Vietnam Pro"
+OSM_ATTRIBUTION = "© OpenStreetMap contributors"
+OSM_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright"
+FONT_SOURCE_URL = (
+    "https://raw.githubusercontent.com/google/fonts/main/ofl/"
+    "bevietnampro/BeVietnamPro-Regular.ttf"
+)
+FONT_LICENSE_URL = (
+    "https://github.com/google/fonts/tree/main/ofl/bevietnampro"
+)
+
 PAPER_COLOR = "#F7F1E7"
 INK_COLOR = "#1D2B2A"
 MUTED_INK_COLOR = "#566563"
-BOUNDARY_FILL_COLOR = "#DCE8D5"
+CURRENT_WARD_FILL_COLORS = {
+    "Thủ Dầu Một": "#DDE8D6",
+    "Phú Lợi": "#F1DCCB",
+    "Chánh Hiệp": "#D6E5EE",
+    "Bình Dương": "#E6D9EC",
+    "Phú An": "#F2E7B9",
+}
+BOUNDARY_FILL_COLOR = CURRENT_WARD_FILL_COLORS["Thủ Dầu Một"]
 BOUNDARY_STROKE_COLOR = "#365E4B"
 LEGACY_POINT_COLOR = "#B55336"
 PRIMARY_ROAD_COLOR = "#C97842"
@@ -108,6 +126,14 @@ class LegendItem:
 
 
 @dataclass(frozen=True)
+class NorthArrow:
+    label: str
+    x_pt: float
+    y_pt: float
+    size_pt: float
+
+
+@dataclass(frozen=True)
 class MapScene:
     edition: str
     page_width_pt: float
@@ -121,6 +147,7 @@ class MapScene:
     disclaimer: str
     legend: tuple[LegendItem, ...]
     scale_bar_m: int
+    north_arrow: NorthArrow
 
 
 BOUNDARY_STYLE = LayerStyle(
@@ -235,7 +262,7 @@ def _padded_current_bounds(layers: NormalizedMapLayers) -> tuple[float, float, f
 
 
 def _measure_text_width_pt(text: str, size_pt: float, font_role: str) -> float:
-    """Measure a stable Poppins-like text box without renderer-specific state."""
+    """Measure a stable sans-serif text box without renderer-specific state."""
 
     units = 0.0
     for character in unicodedata.normalize("NFC", text):
@@ -383,15 +410,36 @@ def _accepted_labels(
     return tuple(accepted)
 
 
-def _attribution(layers: NormalizedMapLayers) -> str:
-    licenses = []
-    for record in layers.source_manifest.values():
-        license_name = str(record.get("license", "")).strip()
-        if license_name and license_name not in licenses:
-            licenses.append(license_name)
-    if not licenses:
-        return "Nguồn: OpenStreetMap (ODbL); Wikidata (CC0)."
-    return "Nguồn dữ liệu: " + "; ".join(licenses) + "."
+def source_attribution(layers: NormalizedMapLayers) -> str:
+    """Return complete, human-readable data and font attribution."""
+
+    font_record = layers.source_manifest.get("font", {})
+    font_source = str(font_record.get("url") or FONT_SOURCE_URL)
+    font_license = str(
+        font_record.get("license")
+        or "SIL Open Font License, Version 1.1"
+    )
+    font_license_url = str(
+        font_record.get("license_url") or FONT_LICENSE_URL
+    )
+    parts = [
+        f"{OSM_ATTRIBUTION} — {OSM_COPYRIGHT_URL}",
+        (
+            f"Font: {FONT_FAMILY} — source: {font_source} — "
+            f"license: {font_license} — {font_license_url}"
+        ),
+    ]
+    legacy_record = layers.source_manifest.get("legacy_ward_centers", {})
+    legacy_license = str(legacy_record.get("license", "")).strip()
+    legacy_license_url = str(
+        legacy_record.get("license_url", "")
+    ).strip()
+    if legacy_license:
+        legacy_text = f"Legacy reference centers: {legacy_license}"
+        if legacy_license_url:
+            legacy_text += f" — {legacy_license_url}"
+        parts.append(legacy_text)
+    return " | ".join(parts)
 
 
 def _scale_bar_m(bounds: tuple[float, float, float, float]) -> int:
@@ -444,6 +492,7 @@ def build_scene(
                 item.geometry,
                 source_id=item.source_id,
                 boundary_claim="true",
+                fill=CURRENT_WARD_FILL_COLORS[item.name],
             )
             for item in layers.current_boundaries
         )
@@ -507,7 +556,7 @@ def build_scene(
         bounds_m=bounds,
         layers=scene_layers,
         labels=_accepted_labels(bounds, edition, layer_index),
-        attribution=_attribution(layers),
+        attribution=source_attribution(layers),
         title="BẢN ĐỒ THỦ DẦU MỘT",
         subtitle=(
             "14 phường cũ — điểm tham chiếu tên gọi"
@@ -517,4 +566,10 @@ def build_scene(
         disclaimer=disclaimer,
         legend=_legend(edition),
         scale_bar_m=_scale_bar_m(bounds),
+        north_arrow=NorthArrow(
+            label="BẮC",
+            x_pt=A0_LANDSCAPE_WIDTH_PT - 185,
+            y_pt=A0_LANDSCAPE_HEIGHT_PT - 155,
+            size_pt=34,
+        ),
     )

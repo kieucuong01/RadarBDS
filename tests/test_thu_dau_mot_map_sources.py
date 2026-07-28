@@ -28,6 +28,7 @@ def test_thu_dau_mot_product_has_exact_units_and_price():
     assert spec.version == "1.0"
     assert spec.price_vnd == 99_000
     assert spec.formats == ("pdf", "svg", "kml")
+    assert spec.font_family == "Be Vietnam Pro"
     assert set(spec.legacy_wards) == {
         "Chánh Mỹ", "Chánh Nghĩa", "Định Hòa", "Hiệp An", "Hiệp Thành",
         "Hòa Phú", "Phú Cường", "Phú Hòa", "Phú Lợi", "Phú Mỹ",
@@ -60,6 +61,19 @@ def test_every_source_has_license_and_snapshot_contract():
         in {"fixed_url", "dated_query", "repo_snapshot"}
         for source in sources
     )
+    font = next(source for source in sources if source.key == "font")
+    semibold = next(source for source in sources if source.key == "font_semibold")
+    assert font.source_url.endswith(
+        "/ofl/bevietnampro/BeVietnamPro-Regular.ttf"
+    )
+    assert semibold.source_url.endswith(
+        "/ofl/bevietnampro/BeVietnamPro-SemiBold.ttf"
+    )
+    assert font.license_name == "SIL Open Font License, Version 1.1"
+    assert font.license_url == (
+        "https://github.com/google/fonts/tree/main/ofl/bevietnampro"
+    )
+    assert semibold.license_url == font.license_url
 
 
 def test_legacy_ward_centers_are_exactly_14_sourced_points_without_boundaries():

@@ -22,7 +22,12 @@ from map_products.models import (
     load_source_registry,
 )
 from map_products.sources import fetch_source_snapshots
-from map_products.renderers import render_kml, render_pdf, render_svg
+from map_products.renderers import (
+    render_kml,
+    render_pdf,
+    render_svg,
+    validate_font_coverage,
+)
 from map_products.scene import build_scene
 
 
@@ -161,6 +166,7 @@ def render_product_outputs(
 ) -> tuple[Path, ...]:
     """Render both editions in every commercial vector/geographic format."""
 
+    validate_font_coverage(fonts)
     render_dir = work_dir / "rendered"
     outputs = []
     for edition in ("legacy", "current"):

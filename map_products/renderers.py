@@ -7,8 +7,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 from xml.etree import ElementTree
-import unicodedata
 
+from fontTools.ttLib import TTFont as FontToolsTTFont
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -24,6 +24,7 @@ from shapely.geometry.base import BaseGeometry
 
 from .geometry import NormalizedMapLayers
 from .scene import (
+    FONT_FAMILY,
     INK_COLOR,
     MAP_MARGIN_LEFT_PT,
     MUTED_INK_COLOR,
@@ -32,6 +33,7 @@ from .scene import (
     SceneFeature,
     SceneLayer,
     scene_point_to_page,
+    source_attribution,
 )
 
 
@@ -39,8 +41,14 @@ SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 KML_NAMESPACE = "http://www.opengis.net/kml/2.2"
 ElementTree.register_namespace("", SVG_NAMESPACE)
 
-_PDF_FONT_REGULAR = "PoppinsMapRegular"
-_PDF_FONT_SEMIBOLD = "PoppinsMapSemiBold"
+_PDF_FONT_REGULAR = "BeVietnamProMapRegular"
+_PDF_FONT_SEMIBOLD = "BeVietnamProMapSemiBold"
+VIETNAMESE_PRODUCT_GLYPHS = (
+    "ÀÁÃÈÉÌÍÒÓÕÙÚÝàáãèéìíòóõùúý"
+    "ĂăÂâĐđÊêĨĩÔôƠơŨũƯư"
+    + "".join(chr(codepoint) for codepoint in range(0x1EA0, 0x1EFA))
+    + "\u0300\u0301\u0303\u0309\u0323"
+)
 
 
 def _svg(tag: str) -> str:
@@ -61,6 +69,24 @@ def _font_paths(fonts: Mapping[str, str | Path]) -> tuple[Path, Path]:
         if not path.is_file():
             raise ValueError(f"{role} font does not exist: {path}")
     return regular, semibold
+
+
+def validate_font_coverage(fonts: Mapping[str, str | Path]) -> None:
+    """Reject product fonts that cannot preserve Vietnamese text."""
+
+    required = {ord(character) for character in VIETNAMESE_PRODUCT_GLYPHS}
+    for role, path in zip(("regular", "semibold"), _font_paths(fonts)):
+        font = FontToolsTTFont(path, lazy=True)
+        try:
+            cmap = font.getBestCmap() or {}
+        finally:
+            font.close()
+        missing = sorted(required - set(cmap))
+        if missing:
+            preview = ", ".join(f"U+{value:04X}" for value in missing[:8])
+            raise ValueError(
+                f"{role} font lacks Vietnamese glyph coverage: {preview}"
+            )
 
 
 def _output_path(path: str | Path) -> Path:
@@ -157,7 +183,7 @@ def _svg_feature(
     )
     attributes = {
         "d": path_data,
-        "fill": layer.style.fill,
+        "fill": feature.property("fill", layer.style.fill),
         "fill-opacity": f"{layer.style.fill_opacity:.3f}",
         "stroke": stroke,
         "stroke-width": stroke_width,
@@ -336,6 +362,54 @@ def _svg_furniture(root: ElementTree.Element, scene: MapScene) -> None:
         },
     ).text = scene.attribution
 
+    north = scene.north_arrow
+    north_y = scene.page_height_pt - north.y_pt
+    north_group = ElementTree.SubElement(
+        root,
+        _svg("g"),
+        {
+            "id": "north-arrow",
+            "transform": f"translate({north.x_pt:.2f} {north_y:.2f})",
+        },
+    )
+    ElementTree.SubElement(
+        north_group,
+        _svg("text"),
+        {
+            "x": "0",
+            "y": f"{-north.size_pt - 18:.2f}",
+            "font-size": "13",
+            "font-weight": "600",
+            "text-anchor": "middle",
+            "fill": INK_COLOR,
+        },
+    ).text = north.label
+    ElementTree.SubElement(
+        north_group,
+        _svg("line"),
+        {
+            "x1": "0",
+            "y1": f"{north.size_pt:.2f}",
+            "x2": "0",
+            "y2": f"{-north.size_pt:.2f}",
+            "stroke": INK_COLOR,
+            "stroke-width": "3",
+        },
+    )
+    ElementTree.SubElement(
+        north_group,
+        _svg("path"),
+        {
+            "d": (
+                f"M 0 {-north.size_pt - 8:.2f} "
+                f"L -10 {-north.size_pt + 12:.2f} "
+                f"L 0 {-north.size_pt + 7:.2f} "
+                f"L 10 {-north.size_pt + 12:.2f} Z"
+            ),
+            "fill": INK_COLOR,
+        },
+    )
+
 
 def render_svg(
     scene: MapScene,
@@ -344,6 +418,7 @@ def render_svg(
 ) -> Path:
     """Render one self-contained, layered SVG with editable text."""
 
+    validate_font_coverage(fonts)
     regular, semibold = _font_paths(fonts)
     output = _output_path(path)
     root = ElementTree.Element(
@@ -364,11 +439,13 @@ def render_svg(
     regular_data = base64.b64encode(regular.read_bytes()).decode("ascii")
     semibold_data = base64.b64encode(semibold.read_bytes()).decode("ascii")
     ElementTree.SubElement(definitions, _svg("style")).text = (
-        "@font-face{font-family:Poppins;src:url(data:font/ttf;base64,"
+        f"@font-face{{font-family:'{FONT_FAMILY}';"
+        "src:url(data:font/ttf;base64,"
         f"{regular_data}) format('truetype');font-weight:400;}}"
-        "@font-face{font-family:Poppins;src:url(data:font/ttf;base64,"
+        f"@font-face{{font-family:'{FONT_FAMILY}';"
+        "src:url(data:font/ttf;base64,"
         f"{semibold_data}) format('truetype');font-weight:600;}}"
-        "text{font-family:Poppins,sans-serif;}"
+        f"text{{font-family:'{FONT_FAMILY}',sans-serif;}}"
     )
     ElementTree.SubElement(
         root,
@@ -442,128 +519,8 @@ def _pdf_font_name(font_role: str) -> str:
     )
 
 
-def _pdf_text_clusters(text: str) -> tuple[tuple[str, tuple[str, ...]], ...]:
-    clusters: list[tuple[str, list[str]]] = []
-    for character in unicodedata.normalize("NFD", text):
-        if unicodedata.combining(character) and clusters:
-            clusters[-1][1].append(character)
-        else:
-            clusters.append((character, []))
-    return tuple((base, tuple(marks)) for base, marks in clusters)
-
-
 def _pdf_text_width(text: str, font_name: str, size_pt: float) -> float:
-    return sum(
-        pdfmetrics.stringWidth(base, font_name, size_pt)
-        for base, _marks in _pdf_text_clusters(text)
-    )
-
-
-def _pdf_draw_accent(
-    pdf: canvas.Canvas,
-    mark: str,
-    *,
-    x: float,
-    baseline_y: float,
-    glyph_width: float,
-    size_pt: float,
-    has_shape_mark: bool,
-    color: str,
-    semibold: bool,
-) -> None:
-    center_x = x + glyph_width / 2
-    top_y = baseline_y + size_pt * (1.02 if has_shape_mark else 0.78)
-    half = max(size_pt * 0.10, glyph_width * 0.18)
-    pdf.setStrokeColor(HexColor(color))
-    pdf.setFillColor(HexColor(color))
-    pdf.setLineWidth(size_pt * (0.07 if semibold else 0.055))
-    pdf.setLineCap(1)
-    pdf.setLineJoin(1)
-    if mark == "\N{COMBINING ACUTE ACCENT}":
-        pdf.line(
-            center_x - half * 0.25,
-            top_y,
-            center_x + half,
-            top_y + size_pt * 0.16,
-        )
-    elif mark == "\N{COMBINING GRAVE ACCENT}":
-        pdf.line(
-            center_x - half,
-            top_y + size_pt * 0.16,
-            center_x + half * 0.25,
-            top_y,
-        )
-    elif mark == "\N{COMBINING TILDE}":
-        path = pdf.beginPath()
-        path.moveTo(center_x - half, top_y + size_pt * 0.04)
-        path.curveTo(
-            center_x - half * 0.50,
-            top_y + size_pt * 0.13,
-            center_x - half * 0.05,
-            top_y - size_pt * 0.05,
-            center_x + half * 0.35,
-            top_y + size_pt * 0.04,
-        )
-        path.curveTo(
-            center_x + half * 0.58,
-            top_y + size_pt * 0.09,
-            center_x + half * 0.78,
-            top_y + size_pt * 0.02,
-            center_x + half,
-            top_y,
-        )
-        pdf.drawPath(path, stroke=1, fill=0)
-    elif mark == "\N{COMBINING HOOK ABOVE}":
-        path = pdf.beginPath()
-        path.moveTo(center_x - half * 0.25, top_y + size_pt * 0.13)
-        path.curveTo(
-            center_x + half * 0.65,
-            top_y + size_pt * 0.18,
-            center_x + half * 0.75,
-            top_y - size_pt * 0.01,
-            center_x + half * 0.05,
-            top_y - size_pt * 0.07,
-        )
-        pdf.drawPath(path, stroke=1, fill=0)
-    elif mark == "\N{COMBINING DOT BELOW}":
-        pdf.circle(
-            center_x,
-            baseline_y - size_pt * 0.15,
-            size_pt * (0.05 if semibold else 0.042),
-            stroke=0,
-            fill=1,
-        )
-    elif mark == "\N{COMBINING CIRCUMFLEX ACCENT}":
-        shape_y = baseline_y + size_pt * 0.72
-        pdf.line(center_x - half, shape_y, center_x, shape_y + size_pt * 0.13)
-        pdf.line(center_x, shape_y + size_pt * 0.13, center_x + half, shape_y)
-    elif mark == "\N{COMBINING BREVE}":
-        shape_y = baseline_y + size_pt * 0.79
-        path = pdf.beginPath()
-        path.moveTo(center_x - half, shape_y + size_pt * 0.06)
-        path.curveTo(
-            center_x - half * 0.45,
-            shape_y - size_pt * 0.06,
-            center_x + half * 0.45,
-            shape_y - size_pt * 0.06,
-            center_x + half,
-            shape_y + size_pt * 0.06,
-        )
-        pdf.drawPath(path, stroke=1, fill=0)
-    elif mark == "\N{COMBINING HORN}":
-        shape_y = baseline_y + size_pt * 0.62
-        horn_x = x + glyph_width * 0.82
-        path = pdf.beginPath()
-        path.moveTo(horn_x, shape_y)
-        path.curveTo(
-            horn_x + size_pt * 0.18,
-            shape_y + size_pt * 0.02,
-            horn_x + size_pt * 0.20,
-            shape_y + size_pt * 0.18,
-            horn_x + size_pt * 0.11,
-            shape_y + size_pt * 0.23,
-        )
-        pdf.drawPath(path, stroke=1, fill=0)
+    return pdfmetrics.stringWidth(text, font_name, size_pt)
 
 
 def _pdf_draw_text(
@@ -577,44 +534,16 @@ def _pdf_draw_text(
     color: str,
     align: Literal["left", "center"] = "left",
 ) -> float:
-    """Draw Poppins bases and vector Vietnamese marks absent from the font."""
+    """Draw complete Unicode text with the validated product font."""
 
     font_name = _pdf_font_name(font_role)
     width = _pdf_text_width(text, font_name, size_pt)
-    cursor_x = x - width / 2 if align == "center" else x
     pdf.setFont(font_name, size_pt)
     pdf.setFillColor(HexColor(color))
-    for base, marks in _pdf_text_clusters(text):
-        glyph_width = pdfmetrics.stringWidth(base, font_name, size_pt)
-        pdf.drawString(cursor_x, baseline_y, base)
-        has_shape_mark = any(
-            mark
-            in {
-                "\N{COMBINING CIRCUMFLEX ACCENT}",
-                "\N{COMBINING BREVE}",
-                "\N{COMBINING HORN}",
-            }
-            for mark in marks
-        )
-        for mark in marks:
-            _pdf_draw_accent(
-                pdf,
-                mark,
-                x=cursor_x,
-                baseline_y=baseline_y,
-                glyph_width=glyph_width,
-                size_pt=size_pt,
-                has_shape_mark=has_shape_mark
-                and mark
-                not in {
-                    "\N{COMBINING CIRCUMFLEX ACCENT}",
-                    "\N{COMBINING BREVE}",
-                    "\N{COMBINING HORN}",
-                },
-                color=color,
-                semibold=font_role == "semibold",
-            )
-        cursor_x += glyph_width
+    if align == "center":
+        pdf.drawCentredString(x, baseline_y, text)
+    else:
+        pdf.drawString(x, baseline_y, text)
     return width
 
 
@@ -693,14 +622,15 @@ def _pdf_layer(pdf: canvas.Canvas, scene: MapScene, layer: SceneLayer) -> None:
             pdf.setDash(*layer.style.dash)
         else:
             pdf.setDash()
-        fill = layer.style.fill != "none"
+        fill_color = feature.property("fill", layer.style.fill)
+        fill = fill_color != "none"
         if fill:
-            pdf.setFillColor(HexColor(layer.style.fill))
+            pdf.setFillColor(HexColor(fill_color))
             pdf.setFillAlpha(layer.style.fill_opacity)
         geometry_path = _pdf_geometry_path(pdf, scene, geometry)
         pdf.drawPath(
             geometry_path,
-            stroke=layer.style.stroke != "none",
+            stroke=stroke != "none",
             fill=fill,
             fillMode=0,
         )
@@ -819,6 +749,34 @@ def _pdf_furniture(pdf: canvas.Canvas, scene: MapScene) -> None:
         color=MUTED_INK_COLOR,
     )
 
+    north = scene.north_arrow
+    pdf.setStrokeColor(HexColor(INK_COLOR))
+    pdf.setFillColor(HexColor(INK_COLOR))
+    pdf.setLineWidth(3)
+    pdf.line(
+        north.x_pt,
+        north.y_pt - north.size_pt,
+        north.x_pt,
+        north.y_pt + north.size_pt,
+    )
+    arrow = pdf.beginPath()
+    arrow.moveTo(north.x_pt, north.y_pt + north.size_pt + 8)
+    arrow.lineTo(north.x_pt - 10, north.y_pt + north.size_pt - 12)
+    arrow.lineTo(north.x_pt, north.y_pt + north.size_pt - 7)
+    arrow.lineTo(north.x_pt + 10, north.y_pt + north.size_pt - 12)
+    arrow.close()
+    pdf.drawPath(arrow, stroke=0, fill=1)
+    _pdf_draw_text(
+        pdf,
+        north.label,
+        north.x_pt,
+        north.y_pt + north.size_pt + 18,
+        font_role="semibold",
+        size_pt=13,
+        color=INK_COLOR,
+        align="center",
+    )
+
 
 def render_pdf(
     scene: MapScene,
@@ -827,6 +785,7 @@ def render_pdf(
 ) -> Path:
     """Render one single-page, all-vector landscape A0 PDF."""
 
+    validate_font_coverage(fonts)
     _register_pdf_fonts(fonts)
     output = _output_path(path)
     pdf = canvas.Canvas(
@@ -976,6 +935,11 @@ def render_kml(
         document_data,
         "source",
         "OpenStreetMap ODbL; Wikidata CC0",
+    )
+    _kml_data(
+        document_data,
+        "attribution",
+        source_attribution(layers),
     )
     if edition == "current":
         folder = _kml_folder(document, "boundaries")

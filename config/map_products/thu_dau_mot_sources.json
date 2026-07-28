@@ -26,17 +26,17 @@
     },
     {
       "key": "font",
-      "source_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-Regular.ttf",
+      "source_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/bevietnampro/BeVietnamPro-Regular.ttf",
       "license_name": "SIL Open Font License, Version 1.1",
-      "license_url": "https://github.com/google/fonts/tree/main/ofl/poppins",
+      "license_url": "https://github.com/google/fonts/tree/main/ofl/bevietnampro",
       "snapshot_strategy": "fixed_url",
       "snapshot_at": "2026-07-29"
     },
     {
       "key": "font_semibold",
-      "source_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-SemiBold.ttf",
+      "source_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/bevietnampro/BeVietnamPro-SemiBold.ttf",
       "license_name": "SIL Open Font License, Version 1.1",
-      "license_url": "https://github.com/google/fonts/tree/main/ofl/poppins",
+      "license_url": "https://github.com/google/fonts/tree/main/ofl/bevietnampro",
       "snapshot_strategy": "fixed_url",
       "snapshot_at": "2026-07-29"
     }

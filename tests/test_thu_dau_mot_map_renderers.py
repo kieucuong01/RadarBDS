@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from xml.etree import ElementTree
 
+from fontTools.fontBuilder import FontBuilder
+from fontTools.pens.ttGlyphPen import TTGlyphPen
 import pdfplumber
 import pytest
 from shapely.geometry import LineString, box
@@ -23,6 +25,65 @@ from map_products.scene import (
 ROOT = Path(__file__).resolve().parents[1]
 SVG_NS = {"svg": "http://www.w3.org/2000/svg"}
 KML_NS = {"kml": "http://www.opengis.net/kml/2.2"}
+VIETNAMESE_PRODUCT_GLYPHS = (
+    "ÀÁÃÈÉÌÍÒÓÕÙÚÝàáãèéìíòóõùúý"
+    "ĂăÂâĐđÊêĨĩÔôƠơŨũƯư"
+    + "".join(chr(codepoint) for codepoint in range(0x1EA0, 0x1EFA))
+    + "\u0300\u0301\u0303\u0309\u0323"
+)
+TEST_FONT_CHARACTERS = (
+    "".join(chr(codepoint) for codepoint in range(32, 127))
+    + VIETNAMESE_PRODUCT_GLYPHS
+    + "©–—"
+)
+
+
+def _build_test_font(
+    path: Path,
+    *,
+    family: str,
+    characters: str = TEST_FONT_CHARACTERS,
+) -> Path:
+    codepoints = sorted({ord(character) for character in characters})
+    names = {codepoint: f"uni{codepoint:04X}" for codepoint in codepoints}
+    glyph_order = [".notdef", *(names[codepoint] for codepoint in codepoints)]
+    builder = FontBuilder(1000, isTTF=True)
+    builder.setupGlyphOrder(glyph_order)
+    builder.setupCharacterMap(names)
+    glyphs = {}
+    metrics = {}
+    for name in glyph_order:
+        pen = TTGlyphPen(None)
+        if name != "uni0020":
+            pen.moveTo((80, 0))
+            pen.lineTo((520, 0))
+            pen.lineTo((520, 700))
+            pen.lineTo((80, 700))
+            pen.closePath()
+        glyphs[name] = pen.glyph()
+        metrics[name] = (600, 0)
+    builder.setupGlyf(glyphs)
+    builder.setupHorizontalMetrics(metrics)
+    builder.setupHorizontalHeader(ascent=800, descent=-200)
+    builder.setupOS2(
+        sTypoAscender=800,
+        sTypoDescender=-200,
+        usWinAscent=800,
+        usWinDescent=200,
+    )
+    builder.setupNameTable(
+        {
+            "familyName": family,
+            "styleName": "Regular",
+            "uniqueFontIdentifier": f"{family}-Regular",
+            "fullName": f"{family} Regular",
+            "psName": f"{family.replace(' ', '')}-Regular",
+        }
+    )
+    builder.setupPost()
+    builder.setupMaxp()
+    builder.save(path)
+    return path
 
 
 @pytest.fixture
@@ -132,24 +193,39 @@ def sample_layers() -> NormalizedMapLayers:
             "current_boundaries": {
                 "license": "Open Database License",
                 "license_url": "https://www.openstreetmap.org/copyright",
+                "url": "https://www.openstreetmap.org/",
             },
             "legacy_ward_centers": {
                 "license": "CC0",
                 "license_url": "https://www.wikidata.org/wiki/Wikidata:Licensing",
+                "url": "https://www.wikidata.org/",
+            },
+            "font": {
+                "license": "SIL Open Font License, Version 1.1",
+                "license_url": (
+                    "https://github.com/google/fonts/tree/main/ofl/bevietnampro"
+                ),
+                "url": (
+                    "https://raw.githubusercontent.com/google/fonts/main/ofl/"
+                    "bevietnampro/BeVietnamPro-Regular.ttf"
+                ),
             },
         },
     )
 
 
 @pytest.fixture
-def test_fonts() -> dict[str, Path]:
-    cache = ROOT / "artifacts/map-products/thu-dau-mot/source-cache"
-    fonts = {
-        "regular": cache / "font.ttf",
-        "semibold": cache / "font_semibold.ttf",
+def test_fonts(tmp_path) -> dict[str, Path]:
+    return {
+        "regular": _build_test_font(
+            tmp_path / "regular.ttf",
+            family="Be Vietnam Pro Test",
+        ),
+        "semibold": _build_test_font(
+            tmp_path / "semibold.ttf",
+            family="Be Vietnam Pro Test SemiBold",
+        ),
     }
-    assert all(path.is_file() for path in fonts.values())
-    return fonts
 
 
 @pytest.fixture
@@ -183,6 +259,21 @@ def test_scene_projects_wgs84_once_and_enforces_edition_geometry(sample_layers):
     assert "Địa giới phường hiện hành" in {
         item.label for item in current.legend
     }
+    assert len(
+        {
+            feature.property("fill")
+            for feature in _layer(current, "boundaries").features
+        }
+    ) == 5
+    assert current.north_arrow.label == "BẮC"
+    assert "© OpenStreetMap contributors" in current.attribution
+    assert "https://www.openstreetmap.org/copyright" in current.attribution
+    assert "Font: Be Vietnam Pro" in current.attribution
+    assert "BeVietnamPro-Regular.ttf" in current.attribution
+    assert (
+        "https://github.com/google/fonts/tree/main/ofl/bevietnampro"
+        in current.attribution
+    )
 
 
 def test_scene_label_policy_keeps_primary_labels_and_blocks_lower_priority_overlap(
@@ -222,11 +313,16 @@ def test_svg_is_vector_layered_and_text_editable(
         if "id" in node.attrib
     }
     assert set(MAP_LAYER_IDS) <= layer_ids
-    assert b"font-family:Poppins" in output.read_bytes()
+    assert b"font-family:'Be Vietnam Pro'" in output.read_bytes()
     assert "14 điểm tham chiếu" in "".join(root.itertext())
+    assert root.find(".//svg:g[@id='north-arrow']", SVG_NS) is not None
+    rendered_text = "".join(root.itertext())
+    assert "BẮC" in rendered_text
+    assert "© OpenStreetMap contributors" in rendered_text
+    assert "https://www.openstreetmap.org/copyright" in rendered_text
 
 
-def test_pdf_is_landscape_a0_vector_with_embedded_poppins(
+def test_pdf_is_landscape_a0_vector_with_embedded_vietnamese_font(
     tmp_path, legacy_scene, test_fonts
 ):
     output = render_pdf(legacy_scene, tmp_path / "map.pdf", test_fonts)
@@ -240,11 +336,30 @@ def test_pdf_is_landscape_a0_vector_with_embedded_poppins(
         ]
         assert pdf.pages[0].chars
         extracted = pdf.pages[0].extract_text() or ""
-        assert "14" in extracted
+        assert "BẢN ĐỒ THỦ DẦU MỘT" in extracted
+        assert "14 điểm tham chiếu" in extracted
+        assert "BẮC" in extracted
+        assert "© OpenStreetMap contributors" in extracted
+        assert "https://www.openstreetmap.org/copyright" in extracted
         assert "\x00" not in extracted
     raw = output.read_bytes()
     assert b"/FontFile2" in raw
     assert b"/Subtype /Image" not in raw
+
+
+def test_font_coverage_gate_rejects_missing_vietnamese_glyphs(tmp_path):
+    from map_products.renderers import validate_font_coverage
+
+    ascii_font = _build_test_font(
+        tmp_path / "ascii-only.ttf",
+        family="ASCII Only",
+        characters="".join(chr(codepoint) for codepoint in range(32, 127)),
+    )
+
+    with pytest.raises(ValueError, match="Vietnamese glyph coverage"):
+        validate_font_coverage(
+            {"regular": ascii_font, "semibold": ascii_font}
+        )
 
 
 def test_kml_legacy_contains_14_geographic_points_without_boundary_polygons(
@@ -266,6 +381,18 @@ def test_kml_legacy_contains_14_geographic_points_without_boundary_polygons(
     )
     legacy_points = legacy_folder.findall(".//kml:Point", KML_NS)
     assert len(legacy_points) == 14
+    poi_folder = next(
+        folder
+        for folder in root.findall(".//kml:Folder", KML_NS)
+        if folder.findtext("kml:name", namespaces=KML_NS) == "poi"
+    )
+    neighborhood_folder = next(
+        folder
+        for folder in root.findall(".//kml:Folder", KML_NS)
+        if folder.findtext("kml:name", namespaces=KML_NS) == "neighborhoods"
+    )
+    assert len(poi_folder.findall(".//kml:Point", KML_NS)) == 1
+    assert len(neighborhood_folder.findall(".//kml:Point", KML_NS)) == 1
     values = [
         node.text
         for node in legacy_folder.findall(
@@ -274,6 +401,24 @@ def test_kml_legacy_contains_14_geographic_points_without_boundary_polygons(
         )
     ]
     assert values == ["false"] * 14
+    kml_text = "".join(root.itertext())
+    assert "© OpenStreetMap contributors" in kml_text
+    assert "https://www.openstreetmap.org/copyright" in kml_text
+    assert "Font: Be Vietnam Pro" in kml_text
+
+
+def test_current_svg_uses_five_distinct_ward_fills(
+    tmp_path, sample_layers, test_fonts
+):
+    scene = build_scene(sample_layers, "current")
+    output = render_svg(scene, tmp_path / "current.svg", test_fonts)
+    root = ElementTree.parse(output).getroot()
+    boundaries = root.find(".//svg:g[@id='boundaries']", SVG_NS)
+
+    assert boundaries is not None
+    assert len(
+        {path.attrib["fill"] for path in boundaries.findall("svg:path", SVG_NS)}
+    ) == 5
 
 
 def test_kml_current_contains_exactly_five_administrative_boundaries(
