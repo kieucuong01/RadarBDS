@@ -362,11 +362,25 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
     stats = {url: empty_facebook_profile_stat() for url in profile_urls}
     if not profile_urls:
         return stats
+    profile_predicates = []
+    profile_params = []
+    for url in profile_urls:
+        clean_url = normalize_facebook_profile_url(url)
+        if not clean_url:
+            continue
+        profile_predicates.append("(r.profile_url = ? OR r.profile_url LIKE ?)")
+        profile_params.extend([clean_url, f"{clean_url}/%"])
+    if not profile_predicates:
+        return stats
     try:
         with conn_factory() as conn:
             rows = conn.execute("""
                 WITH recent_raw AS (
-                    SELECT id, raw_json, crawled_at
+                    SELECT id,
+                           raw_json,
+                           crawled_at,
+                           COALESCE(NULLIF(raw_json::jsonb ->> 'profile_url', ''),
+                                    NULLIF(raw_json::jsonb -> '_apify_raw' ->> 'inputUrl', '')) AS profile_url
                     FROM raw_listings
                     WHERE source = 'facebook'
                     ORDER BY crawled_at DESC
@@ -374,6 +388,7 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
                 )
                 SELECT
                     r.raw_json,
+                    r.profile_url,
                     r.crawled_at,
                     l.title,
                     l.description,
@@ -395,8 +410,10 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
                     ) AS source_quality_flags
                 FROM recent_raw r
                 LEFT JOIN listings l ON l.raw_id = r.id
+                WHERE r.profile_url IS NOT NULL
+                  AND (""" + " OR ".join(profile_predicates) + """)
                 ORDER BY r.crawled_at DESC
-            """).fetchall()
+            """, profile_params).fetchall()
     except Exception:
         return stats
     grouped = {url: [] for url in profile_urls}
@@ -405,12 +422,10 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
             raw = json.loads(row["raw_json"] or "{}")
         except Exception:
             continue
-        candidates = [
-            (raw.get("profile_url") or "").strip(),
-            (((raw.get("_apify_raw") or {}).get("inputUrl") or "") if isinstance(raw.get("_apify_raw"), dict) else "").strip(),
-        ]
+        profile_url = normalize_facebook_profile_url(row["profile_url"])
         for url in profile_urls:
-            if any(c and (c == url or c.startswith(url)) for c in candidates):
+            clean_url = normalize_facebook_profile_url(url)
+            if profile_url == clean_url or profile_url.startswith(f"{clean_url}/"):
                 stats[url]["raw_count"] += 1
                 if not stats[url]["latest_crawled_at"]:
                     stats[url]["latest_crawled_at"] = row["crawled_at"]

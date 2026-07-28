@@ -147,6 +147,9 @@ def test_facebook_profile_stats_filters_recent_raw_before_expensive_joins():
     stats_fn = quality_source[quality_source.index("def facebook_profile_stats"):quality_source.index("def normalize_facebook_profile_url")]
 
     assert "WITH recent_raw AS" in stats_fn
+    assert "profile_url" in stats_fn
+    assert "profile_predicates" in stats_fn
+    assert "r.profile_url IS NOT NULL" in stats_fn
     assert "FROM recent_raw r" in stats_fn
     assert "FROM listing_images img" in stats_fn
     assert "WHERE img.listing_id = l.id" in stats_fn
