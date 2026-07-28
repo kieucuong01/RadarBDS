@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Mapping
 import json
 import os
 from pathlib import Path
@@ -21,6 +22,8 @@ from map_products.models import (
     load_source_registry,
 )
 from map_products.sources import fetch_source_snapshots
+from map_products.renderers import render_kml, render_pdf, render_svg
+from map_products.scene import build_scene
 
 
 def _feature(name: str, layer: str, geometry, **properties) -> dict:
@@ -151,6 +154,28 @@ def _write_source_outputs(
     return normalized_path, manifest_path
 
 
+def render_product_outputs(
+    layers: NormalizedMapLayers,
+    work_dir: Path,
+    fonts: Mapping[str, str | Path],
+) -> tuple[Path, ...]:
+    """Render both editions in every commercial vector/geographic format."""
+
+    render_dir = work_dir / "rendered"
+    outputs = []
+    for edition in ("legacy", "current"):
+        scene = build_scene(layers, edition)
+        stem = f"thu-dau-mot-{edition}"
+        outputs.extend(
+            (
+                render_svg(scene, render_dir / f"{stem}.svg", fonts),
+                render_pdf(scene, render_dir / f"{stem}.pdf", fonts),
+                render_kml(layers, edition, render_dir / f"{stem}.kml"),
+            )
+        )
+    return tuple(outputs)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--refresh-sources", action="store_true")
@@ -198,7 +223,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"normalized_geojson={normalized_path}")
     print(f"source_manifest={manifest_path}")
-    if args.stage not in {"sources", "all"}:
+    if args.stage in {"render", "all"}:
+        outputs = render_product_outputs(
+            layers,
+            work_dir,
+            {
+                "regular": snapshots["font"],
+                "semibold": snapshots["font_semibold"],
+            },
+        )
+        for output in outputs:
+            print(f"rendered={output}")
+    elif args.stage != "sources":
         print(
             f"stage={args.stage} source gate complete; downstream stage is "
             "implemented separately"
