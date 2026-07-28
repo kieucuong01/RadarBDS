@@ -184,30 +184,36 @@ def _load_training_listings(limit: int = 30000) -> list[Listing]:
     with get_conn() as conn:
         rows = conn.execute(
             """
-            WITH latest_quality AS (
-                SELECT listing_id, source_quality_flags, source_quality_recheck,
+            WITH candidate_listings AS MATERIALIZED (
+                SELECT l.id, l.title, l.description, l.area, l.ward, l.property_type, l.tx_type,
+                       l.price_per_m2, l.price_ty, l.area_m2, l.frontage_m, l.depth_m,
+                       l.road_type, l.road_tier, l.tho_cu_m2, l.tho_cu_ratio, l.has_so,
+                       l.is_hot, l.price_dropped, l.crawled_at, l.posted_at, l.url, l.source,
+                       l.duplicate_of_id
+                  FROM listings l
+                 WHERE l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
+                   AND l.price_ty IS NOT NULL AND l.price_ty > 0
+                   AND l.area_m2 IS NOT NULL AND l.area_m2 > 0
+                   AND COALESCE(l.probably_sold,0) = 0
+                   AND COALESCE(l.is_blacklisted,0) = 0
+                   AND COALESCE(l.review_hidden,0) = 0
+                 ORDER BY l.id DESC
+                 LIMIT ?
+            ),
+            latest_quality AS (
+                SELECT v.listing_id, v.source_quality_flags, v.source_quality_recheck,
                        ROW_NUMBER() OVER (
-                           PARTITION BY listing_id
-                           ORDER BY computed_at DESC, id DESC
+                           PARTITION BY v.listing_id
+                           ORDER BY v.computed_at DESC, v.id DESC
                        ) AS quality_rank
-                  FROM valuation_results
+                  FROM valuation_results v
+                  JOIN candidate_listings c ON c.id = v.listing_id
             )
-            SELECT l.id, l.title, l.description, l.area, l.ward, l.property_type, l.tx_type,
-                   l.price_per_m2, l.price_ty, l.area_m2, l.frontage_m, l.depth_m,
-                   l.road_type, l.road_tier, l.tho_cu_m2, l.tho_cu_ratio, l.has_so,
-                   l.is_hot, l.price_dropped, l.crawled_at, l.posted_at, l.url, l.source,
-                   l.duplicate_of_id, q.source_quality_flags, q.source_quality_recheck
-              FROM listings l
+            SELECT c.*, q.source_quality_flags, q.source_quality_recheck
+              FROM candidate_listings c
               LEFT JOIN latest_quality q
-                ON q.listing_id = l.id AND q.quality_rank = 1
-             WHERE l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
-               AND l.price_ty IS NOT NULL AND l.price_ty > 0
-               AND l.area_m2 IS NOT NULL AND l.area_m2 > 0
-               AND COALESCE(l.probably_sold,0) = 0
-               AND COALESCE(l.is_blacklisted,0) = 0
-               AND COALESCE(l.review_hidden,0) = 0
-             ORDER BY l.id DESC
-             LIMIT ?
+                ON q.listing_id = c.id AND q.quality_rank = 1
+             ORDER BY c.id DESC
             """,
             (limit,),
         ).fetchall()
@@ -294,36 +300,53 @@ def _load_comparables(target: Listing, limit: int = 5) -> list[dict[str, Any]]:
     with get_conn() as conn:
         rows = conn.execute(
             """
-            WITH latest_quality AS (
-                SELECT listing_id, source_quality_flags, source_quality_recheck,
+            WITH candidate_listings AS MATERIALIZED (
+                SELECT l.id, l.title, l.description, l.url, l.contact_phone, l.seller_name,
+                       l.price_ty, l.price_per_m2, l.area_m2, l.frontage_m, l.depth_m,
+                       l.road_tier, l.posted_at, l.crawled_at
+                  FROM listings l
+                 WHERE l.ward = ?
+                   AND l.property_type = ?
+                   AND l.duplicate_of_id IS NULL
+                   AND l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
+                   AND l.area_m2 IS NOT NULL AND l.area_m2 > 0
+                   AND COALESCE(l.probably_sold,0) = 0
+                   AND COALESCE(l.is_blacklisted,0) = 0
+                   AND COALESCE(l.review_hidden,0) = 0
+                 ORDER BY CASE WHEN COALESCE(l.road_tier,0) = ? THEN 0 ELSE 1 END ASC,
+                          ABS(COALESCE(l.area_m2, 0) - ?) ASC,
+                          COALESCE(l.posted_at, l.crawled_at) DESC,
+                          l.id DESC
+                 LIMIT ?
+            ),
+            latest_quality AS (
+                SELECT v.listing_id, v.source_quality_flags,
                        ROW_NUMBER() OVER (
-                           PARTITION BY listing_id
-                           ORDER BY computed_at DESC, id DESC
+                           PARTITION BY v.listing_id
+                           ORDER BY v.computed_at DESC, v.id DESC
                        ) AS quality_rank
-                  FROM valuation_results
+                  FROM valuation_results v
+                  JOIN candidate_listings c ON c.id = v.listing_id
             )
-            SELECT l.id, l.title, l.description, l.url, l.contact_phone, l.seller_name,
-                   l.price_ty, l.price_per_m2, l.area_m2, l.frontage_m, l.depth_m,
-                   l.road_tier, l.posted_at, l.crawled_at,
+            SELECT c.*,
                    q.source_quality_flags
-              FROM listings l
+              FROM candidate_listings c
               LEFT JOIN latest_quality q
-                ON q.listing_id = l.id AND q.quality_rank = 1
-             WHERE l.ward = ?
-               AND l.property_type = ?
-               AND l.duplicate_of_id IS NULL
-               AND l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
-               AND l.area_m2 IS NOT NULL AND l.area_m2 > 0
-               AND COALESCE(l.probably_sold,0) = 0
-               AND COALESCE(l.is_blacklisted,0) = 0
-               AND COALESCE(l.review_hidden,0) = 0
-             ORDER BY CASE WHEN COALESCE(l.road_tier,0) = ? THEN 0 ELSE 1 END ASC,
-                      ABS(COALESCE(l.area_m2, 0) - ?) ASC,
-                      COALESCE(l.posted_at, l.crawled_at) DESC,
-                      l.id DESC
-             LIMIT ?
+                ON q.listing_id = c.id AND q.quality_rank = 1
+             ORDER BY CASE WHEN COALESCE(c.road_tier,0) = ? THEN 0 ELSE 1 END ASC,
+                      ABS(COALESCE(c.area_m2, 0) - ?) ASC,
+                      COALESCE(c.posted_at, c.crawled_at) DESC,
+                      c.id DESC
             """,
-            (target.ward, target.property_type, target.road_tier, target.area_m2, max(limit * 5, limit)),
+            (
+                target.ward,
+                target.property_type,
+                target.road_tier,
+                target.area_m2,
+                max(limit * 5, limit),
+                target.road_tier,
+                target.area_m2,
+            ),
         ).fetchall()
     candidates = [
         {
