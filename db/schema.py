@@ -1099,6 +1099,9 @@ def _repair_digital_product_identity(conn: Any, table_name: str) -> None:
               FROM numbered
              WHERE target.ctid = numbered.ctid;
 
+            ALTER TABLE {table_name}
+                ALTER COLUMN id SET NOT NULL;
+
             IF identity_state <> 'YES' THEN
                 IF default_expr IS NOT NULL THEN
                     RAISE EXCEPTION
