@@ -185,6 +185,16 @@ for n in ax_nodes():
         post_button = n.get('backendDOMNodeId')
         break
 if not post_button:
+    # Some Page variants publish after Next and close the composer before the
+    # timeline renders the new article. Poll the feed before reporting a false
+    # negative; this avoids repost attempts from a successfully-created post.
+    for _ in range(25):
+        found, needle = verified_on_page()
+        if found:
+            capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
+            print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'needle': needle, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_async_published'}}, ensure_ascii=False))
+            raise SystemExit(0)
+        time.sleep(2)
     raise RuntimeError('Final Post button not found or disabled, and Next did not verify as published.')
 click_backend(post_button)
 time.sleep(3)
