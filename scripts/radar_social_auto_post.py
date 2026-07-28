@@ -112,8 +112,11 @@ def queue_key(queue_path: Path) -> tuple[str, str, str]:
 
 def publish(queue_path: Path) -> dict:
     RUN_DIR.mkdir(parents=True, exist_ok=True)
-    cmd = [str(POST_SCRIPT), "--queue", str(queue_path), "--mode", "publish", "--yes", "--timeout", "240"]
-    proc = subprocess.run(cmd, cwd=str(REPO), text=True, capture_output=True, timeout=300, check=False)
+    # Visual uploads + Facebook async publish can exceed 4 minutes. Keep the
+    # wrapper timeout above the browser worker timeout so the worker can return
+    # verification output instead of being killed after a successful post.
+    cmd = [str(POST_SCRIPT), "--queue", str(queue_path), "--mode", "publish", "--yes", "--timeout", "420"]
+    proc = subprocess.run(cmd, cwd=str(REPO), text=True, capture_output=True, timeout=500, check=False)
     record = {
         "returncode": proc.returncode,
         "stdout_tail": proc.stdout[-3000:],
