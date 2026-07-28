@@ -191,11 +191,14 @@ Khi khách bấm mua:
 
 Trang khôi phục đơn dùng URL dạng:
 
-`/ban-do-thu-dau-mot/don-hang/<public_id>?token=<recovery_token>`
+`/ban-do-thu-dau-mot/don-hang/<public_id>#token=<recovery_token>`
 
-`public_id` không phải khóa chính tuần tự. Token có entropy cao và chỉ lưu dạng
-hash trong PostgreSQL. Mã đơn hiển thị để hỗ trợ khách hàng nhưng bản thân mã đơn
-không cấp quyền tải.
+`public_id` không phải khóa chính tuần tự. Recovery token có entropy cao, chỉ
+lưu dạng hash trong PostgreSQL và nằm trong URL fragment nên không được gửi lên
+server, referrer hoặc access log. JavaScript gửi token một lần bằng request body
+để đổi lấy cookie HttpOnly, Secure, SameSite=Lax giới hạn đúng order; sau đó xóa
+fragment khỏi thanh địa chỉ. Mã đơn hiển thị để hỗ trợ khách hàng nhưng bản thân
+mã đơn không cấp quyền tải.
 
 ### 5.3. Trạng thái và lỗi
 
@@ -258,9 +261,12 @@ Không lưu email hoặc số điện thoại vì checkout không thu các trư�
 - Webhook phải xác minh chữ ký, order code, sản phẩm và số tiền. Chỉ chấp nhận
   khi số tiền nhận được không thấp hơn expected amount.
 - Webhook idempotent; gửi lại hoặc đến sai thứ tự không cấp quyền tải lần hai.
-- Token khôi phục/tải không xuất hiện trong analytics hoặc application log.
-- ZIP không nằm ở URL public. Server kiểm tra đơn, token và hạn rồi mới stream
-  file với `Content-Disposition: attachment`.
+- Token khôi phục/tải không xuất hiện trong analytics, query string, access log
+  hoặc application log.
+- Endpoint authorize xác minh recovery token từ request body rồi cấp cookie
+  HttpOnly có chữ ký, giới hạn order và thời hạn.
+- ZIP không nằm ở URL public. Server kiểm tra đơn, cookie ủy quyền và hạn rồi mới
+  stream file với `Content-Disposition: attachment`.
 - Không khóa theo IP vì người dùng có thể đổi mạng; bảo vệ dựa trên token khó
   đoán, hạn 24 giờ và rate limit.
 - Tạo đơn, poll, webhook và download đều có rate limit phù hợp.
