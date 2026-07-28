@@ -141,3 +141,49 @@ def test_facebook_duplicate_analysis_short_circuits_single_profile_city():
     assert "count >= 2" in duplicate_fn
     assert duplicate_fn.index("count >= 2") < duplicate_fn.index("with conn_factory() as conn")
 
+
+def test_facebook_profile_stats_filters_recent_raw_before_expensive_joins():
+    quality_source = (ROOT / "services" / "admin_quality.py").read_text(encoding="utf-8")
+    stats_fn = quality_source[quality_source.index("def facebook_profile_stats"):quality_source.index("def normalize_facebook_profile_url")]
+
+    assert "WITH recent_raw AS" in stats_fn
+    assert "FROM recent_raw r" in stats_fn
+    assert "FROM listing_images img" in stats_fn
+    assert "WHERE img.listing_id = l.id" in stats_fn
+    assert "FROM valuation_results v" in stats_fn
+    assert "WHERE v.listing_id = l.id" in stats_fn
+    assert "FROM listing_images\n                    GROUP BY listing_id" not in stats_fn
+    assert "FROM valuation_results\n                    GROUP BY listing_id" not in stats_fn
+
+
+def test_facebook_duplicate_analysis_uses_indexable_recent_window():
+    quality_source = (ROOT / "services" / "admin_quality.py").read_text(encoding="utf-8")
+    duplicate_fn = quality_source[quality_source.index("def facebook_profile_duplicate_analysis"):quality_source.index("def missing_image_summary")]
+
+    assert "cutoff_iso" in duplicate_fn
+    assert "l.crawled_at >= ?" in duplicate_fn
+    assert "r.crawled_at >= ?" in duplicate_fn
+    assert "::timestamp" not in duplicate_fn
+    assert "CURRENT_TIMESTAMP - INTERVAL '90 days'" not in duplicate_fn
+
+
+def test_data_quality_items_cache_payload_and_ward_metadata():
+    app_source = (ROOT / "app.py").read_text(encoding="utf-8")
+    items_route = app_source[app_source.index("def admin_api_data_quality_items"):app_source.index("def _admin_review_items_response")]
+    review_fn = app_source[app_source.index("def _admin_review_items_response"):app_source.index("def admin_api_legal_verification")]
+
+    assert '_cached_admin_read_payload("data_quality_items"' in items_route
+    assert '_cached_admin_read_payload("data_quality_item_wards"' in review_fn
+    assert 'scope == "data_quality_summary"' in app_source
+    assert '"data_quality_items"' in app_source
+    assert '"data_quality_item_wards"' in app_source
+
+
+def test_data_quality_qc_queues_skip_redundant_pending_count():
+    app_source = (ROOT / "app.py").read_text(encoding="utf-8")
+    review_fn = app_source[app_source.index("def _admin_review_items_response"):app_source.index("def admin_api_legal_verification")]
+
+    qc_fast_path = 'if queue in ("source_qc", "needs_valuation", "legal_qc"):'
+    assert qc_fast_path in review_fn
+    assert review_fn.index(qc_fast_path) < review_fn.index("AND f.id IS NULL")
+

@@ -365,6 +365,13 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
     try:
         with conn_factory() as conn:
             rows = conn.execute("""
+                WITH recent_raw AS (
+                    SELECT id, raw_json, crawled_at
+                    FROM raw_listings
+                    WHERE source = 'facebook'
+                    ORDER BY crawled_at DESC
+                    LIMIT 8000
+                )
                 SELECT
                     r.raw_json,
                     r.crawled_at,
@@ -374,24 +381,21 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
                     l.area_m2,
                     l.ward,
                     l.property_type,
-                    COALESCE(img.image_count, 0) AS image_count,
-                    v.source_quality_flags
-                FROM raw_listings r
+                    COALESCE((
+                        SELECT COUNT(*)
+                        FROM listing_images img
+                        WHERE img.listing_id = l.id
+                    ), 0) AS image_count,
+                    (
+                        SELECT v.source_quality_flags
+                        FROM valuation_results v
+                        WHERE v.listing_id = l.id
+                        ORDER BY v.id DESC
+                        LIMIT 1
+                    ) AS source_quality_flags
+                FROM recent_raw r
                 LEFT JOIN listings l ON l.raw_id = r.id
-                LEFT JOIN (
-                    SELECT listing_id, COUNT(*) AS image_count
-                    FROM listing_images
-                    GROUP BY listing_id
-                ) img ON img.listing_id = l.id
-                LEFT JOIN (
-                    SELECT listing_id, MAX(id) AS latest_id
-                    FROM valuation_results
-                    GROUP BY listing_id
-                ) latest_v ON latest_v.listing_id = l.id
-                LEFT JOIN valuation_results v ON v.id = latest_v.latest_id
-                WHERE r.source = 'facebook'
                 ORDER BY r.crawled_at DESC
-                LIMIT 8000
             """).fetchall()
     except Exception:
         return stats
@@ -539,6 +543,7 @@ def facebook_profile_duplicate_analysis(profiles: list[dict], stats: dict, conn_
     if not any(count >= 2 for count in profiles_by_city.values()):
         return {"comparisons": [], "by_profile": {}}
 
+    cutoff_iso = (datetime.now(timezone.utc) - timedelta(days=90)).replace(tzinfo=None).isoformat(timespec="seconds")
     try:
         with conn_factory() as conn:
             fetched = conn.execute("""
@@ -548,9 +553,11 @@ def facebook_profile_duplicate_analysis(profiles: list[dict], stats: dict, conn_
                 FROM listings l
                 JOIN raw_listings r ON r.id = l.raw_id
                 WHERE l.source = 'facebook'
-                  AND COALESCE(NULLIF(l.crawled_at, ''), NULLIF(r.crawled_at, ''))::timestamp
-                      >= CURRENT_TIMESTAMP - INTERVAL '90 days'
-            """).fetchall()
+                  AND (
+                      l.crawled_at >= ?
+                      OR ((l.crawled_at IS NULL OR l.crawled_at = '') AND r.crawled_at >= ?)
+                  )
+            """, (cutoff_iso, cutoff_iso)).fetchall()
         rows = [
             {"cluster_id": row["cluster_id"], "profile_url": row["profile_url"]}
             for row in fetched

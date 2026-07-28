@@ -195,7 +195,10 @@ def clear_admin_read_cache(scope: str | None = None) -> None:
         if scope is None:
             _ADMIN_READ_CACHE.clear()
             return
-        stale_keys = [key for key in _ADMIN_READ_CACHE if key and key[0] == scope]
+        stale_scopes = {scope}
+        if scope == "data_quality_summary":
+            stale_scopes.update({"data_quality_items", "data_quality_item_wards"})
+        stale_keys = [key for key in _ADMIN_READ_CACHE if key and key[0] in stale_scopes]
         for key in stale_keys:
             _ADMIN_READ_CACHE.pop(key, None)
 
@@ -4597,10 +4600,15 @@ def admin_api_ai_training_items():
 
 @require_admin_auth
 def admin_api_data_quality_items():
-    return _admin_review_items_response(
-        allowed_queues=("source_qc", "legal_qc"),
-        default_queue="source_qc",
-    )
+    def _load_payload():
+        response = _admin_review_items_response(
+            allowed_queues=("source_qc", "legal_qc"),
+            default_queue="source_qc",
+        )
+        return response.get_json()
+
+    cache_key = request.query_string.decode("utf-8", "replace") or "default"
+    return jsonify(_cached_admin_read_payload("data_quality_items", cache_key, _load_payload, ttl_seconds=8))
 
 
 def _admin_review_items_response(*, allowed_queues, default_queue):
@@ -4755,14 +4763,17 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
             LIMIT ? OFFSET ?
         """, params + [limit, offset]).fetchall()
 
-        pending = conn.execute(f"""
-            WITH {review_count_cte}
-            SELECT COUNT(*) c
-            FROM listings l
-            JOIN latest_valuation v ON v.listing_id = l.id
-            {feedback_join}
-            WHERE {where_sql} AND f.id IS NULL
-        """, params).fetchone()["c"]
+        if queue in ("source_qc", "needs_valuation", "legal_qc"):
+            pending = None
+        else:
+            pending = conn.execute(f"""
+                WITH {review_count_cte}
+                SELECT COUNT(*) c
+                FROM listings l
+                JOIN latest_valuation v ON v.listing_id = l.id
+                {feedback_join}
+                WHERE {where_sql} AND f.id IS NULL
+            """, params).fetchone()["c"]
 
         total = conn.execute(f"""
             WITH {review_count_cte}
@@ -4809,18 +4820,24 @@ def _admin_review_items_response(*, allowed_queues, default_queue):
             ward_where.append(signal_condition)
             ward_where.append(listing_condition)
 
-        ward_rows = conn.execute(f"""
-            WITH {review_count_cte}
-            SELECT DISTINCT l.ward
-            FROM listings l
-            JOIN latest_valuation v ON v.listing_id = l.id
-            {feedback_join}
-            WHERE {" AND ".join(ward_where)}
-            ORDER BY l.ward
-        """, ward_params).fetchall()
-        wards = [w["ward"] for w in ward_rows]
-        ward_cities = {c: [ww for ww in ws if ww in wards] for c, ws in CITY_MAP.items()}
-        ward_cities = {c: ws for c, ws in ward_cities.items() if ws}
+        def _load_ward_payload():
+            ward_rows = conn.execute(f"""
+                WITH {review_count_cte}
+                SELECT DISTINCT l.ward
+                FROM listings l
+                JOIN latest_valuation v ON v.listing_id = l.id
+                {feedback_join}
+                WHERE {" AND ".join(ward_where)}
+                ORDER BY l.ward
+            """, ward_params).fetchall()
+            available_wards = [w["ward"] for w in ward_rows]
+            available_cities = {c: [ww for ww in ws if ww in available_wards] for c, ws in CITY_MAP.items()}
+            available_cities = {c: ws for c, ws in available_cities.items() if ws}
+            return {"wards": available_wards, "ward_cities": available_cities}
+
+        ward_payload = _cached_admin_read_payload("data_quality_item_wards", queue, _load_ward_payload, ttl_seconds=60)
+        wards = ward_payload["wards"]
+        ward_cities = ward_payload["ward_cities"]
 
         image_urls_by_listing: dict[int, list[str]] = {}
         listing_ids = [r["id"] for r in rows]
