@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Mapping
+from hashlib import sha256
 import json
 import os
 from pathlib import Path
 import sys
 import tempfile
+
+import requests
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,7 +31,20 @@ from map_products.renderers import (
     render_svg,
     validate_font_coverage,
 )
+from map_products.release import (
+    ReleaseBlocked,
+    generate_watermarked_previews,
+    package_release,
+    stage_release_candidate,
+    validate_candidate,
+)
 from map_products.scene import build_scene
+
+
+OFL_URL = (
+    "https://raw.githubusercontent.com/google/fonts/main/"
+    "ofl/bevietnampro/OFL.txt"
+)
 
 
 def _feature(name: str, layer: str, geometry, **properties) -> dict:
@@ -182,6 +198,73 @@ def render_product_outputs(
     return tuple(outputs)
 
 
+def _load_ofl_text(
+    source_cache_dir: Path,
+    *,
+    refresh: bool,
+) -> str:
+    cache_path = source_cache_dir / "OFL.txt"
+    if cache_path.is_file() and not refresh:
+        text = cache_path.read_text(encoding="utf-8")
+    else:
+        response = requests.get(
+            OFL_URL,
+            timeout=30,
+            headers={"User-Agent": "Radar-BDS-map-product/1.0"},
+        )
+        response.raise_for_status()
+        text = response.text
+        staged_path = _stage_file(cache_path, text.encode("utf-8"))
+        try:
+            staged_path.replace(cache_path)
+        finally:
+            if staged_path.exists():
+                staged_path.unlink()
+    if (
+        "SIL OPEN FONT LICENSE Version 1.1" not in text
+        or "Permission is hereby granted" not in text
+    ):
+        raise ReleaseBlocked("downloaded OFL.txt is missing required terms")
+    return text
+
+
+def run_release_stage(
+    work_dir: Path,
+    *,
+    stage: str,
+    approval_path: Path,
+    output_zip: Path,
+    preview_paths: tuple[Path, Path],
+    ofl_text: str,
+) -> Path:
+    """Stage, validate, preview, and optionally package existing render output."""
+
+    work_dir = Path(work_dir)
+    candidate_dir = stage_release_candidate(
+        work_dir / "rendered",
+        work_dir / "source-cache",
+        work_dir / "candidate",
+        ofl_text,
+    )
+    validation = validate_candidate(candidate_dir)
+    if not validation.ok:
+        raise ReleaseBlocked(
+            "release validation failed: " + "; ".join(validation.errors)
+        )
+    generate_watermarked_previews(
+        candidate_dir,
+        Path(preview_paths[0]),
+        Path(preview_paths[1]),
+    )
+    if stage in {"package", "all"}:
+        return package_release(
+            candidate_dir,
+            Path(approval_path),
+            Path(output_zip),
+        )
+    return candidate_dir
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--refresh-sources", action="store_true")
@@ -240,11 +323,32 @@ def main(argv: list[str] | None = None) -> int:
         )
         for output in outputs:
             print(f"rendered={output}")
-    elif args.stage != "sources":
-        print(
-            f"stage={args.stage} source gate complete; downstream stage is "
-            "implemented separately"
+    if args.stage in {"validate", "package", "all"}:
+        ofl_text = _load_ofl_text(
+            work_dir / "source-cache",
+            refresh=args.refresh_sources,
         )
+        release_output = run_release_stage(
+            work_dir,
+            stage=args.stage,
+            approval_path=work_dir / "release-approval.json",
+            output_zip=(
+                work_dir
+                / "releases"
+                / "radarbds-thu-dau-mot-map-v1.0.zip"
+            ),
+            preview_paths=(
+                ROOT / "static/images/seo/thu-dau-mot-map-before.webp",
+                ROOT / "static/images/seo/thu-dau-mot-map-after.webp",
+            ),
+            ofl_text=ofl_text,
+        )
+        print(f"release_output={release_output}")
+        if release_output.suffix == ".zip":
+            print(
+                "release_sha256="
+                f"{sha256(release_output.read_bytes()).hexdigest()}"
+            )
     return 0
 
 
