@@ -704,6 +704,124 @@ def test_sensitive_domain_records_remain_immutable(
         secret.order.status = "paid"
 
 
+def test_sensitive_concrete_wrappers_have_no_dict_or_shadow_fields(
+    pending_order: DigitalProductOrder,
+    payment_link: FakePaymentLink,
+    frozen_now: datetime,
+    order_repo: InMemoryOrderRepository,
+):
+    secret = attach_payment_link(
+        pending_order.public_id,
+        payment_link,
+        repo=order_repo,
+    )
+    settlement = settle_verified_payment(
+        pending_order.payos_order_code,
+        99_000,
+        "BANK-REF-SLOTS",
+        frozen_now,
+        _payload_hash("slots"),
+        repo=order_repo,
+    )
+
+    for record, field_name, replacement in (
+        (settlement.order, "status", "pending"),
+        (secret, "raw_recovery_token", "replacement"),
+        (settlement, "changed", False),
+    ):
+        assert type(record).__slots__ == ()
+        assert not hasattr(record, "__dict__")
+        with pytest.raises(AttributeError):
+            getattr(record, "__dict__")
+        with pytest.raises(AttributeError):
+            setattr(record, field_name, replacement)
+        with pytest.raises(AttributeError):
+            object.__setattr__(record, field_name, replacement)
+    assert DigitalProductOrder.__mro__[1].__slots__ == ("__values",)
+
+
+def test_shadow_state_cannot_change_download_eligibility(
+    pending_order: DigitalProductOrder,
+    frozen_now: datetime,
+):
+    with pytest.raises(AttributeError):
+        pending_order.__dict__["status"] = "paid"
+    with pytest.raises(AttributeError):
+        object.__setattr__(pending_order, "status", "paid")
+    with pytest.raises(AttributeError):
+        object.__setattr__(
+            pending_order,
+            "download_expires_at",
+            frozen_now + timedelta(days=1),
+        )
+
+    assert can_download(pending_order, frozen_now) is False
+
+
+def test_order_constructor_keeps_legacy_optional_last_download_timestamp(
+    frozen_now: datetime,
+):
+    kwargs = {
+        "id": 41,
+        "public_id": "a" * 32,
+        "product_slug": "thu-dau-mot-map-bundle",
+        "product_version": "1.0",
+        "expected_amount": 99_000,
+        "currency": "VND",
+        "payos_order_code": 720_000_041,
+        "payment_link_id": None,
+        "checkout_url": None,
+        "qr_code": None,
+        "status": "pending",
+        "recovery_token_hash": None,
+        "paid_amount": None,
+        "payment_reference": None,
+        "created_at": frozen_now,
+        "payment_expires_at": frozen_now + timedelta(minutes=15),
+        "paid_at": None,
+        "download_expires_at": None,
+        "download_count": 0,
+    }
+
+    keyword_order = DigitalProductOrder(**kwargs)
+    positional_order = DigitalProductOrder(*kwargs.values())
+
+    assert keyword_order.last_download_at is None
+    assert positional_order == keyword_order
+    assert positional_order.download_count == 0
+
+
+def test_order_constructor_does_not_shift_missing_nontrailing_fields(
+    frozen_now: datetime,
+):
+    values_through_download_expiry = (
+        41,
+        "a" * 32,
+        "thu-dau-mot-map-bundle",
+        "1.0",
+        99_000,
+        "VND",
+        720_000_041,
+        None,
+        None,
+        None,
+        "pending",
+        None,
+        None,
+        None,
+        frozen_now,
+        frozen_now + timedelta(minutes=15),
+        None,
+        None,
+    )
+
+    with pytest.raises(TypeError):
+        DigitalProductOrder(
+            *values_through_download_expiry,
+            last_download_at=frozen_now,
+        )
+
+
 def test_logging_domain_records_never_renders_sensitive_values(
     caplog: pytest.LogCaptureFixture,
     pending_order: DigitalProductOrder,

@@ -70,6 +70,7 @@ class _ImmutableDomainRecord:
     __slots__ = ("__values",)
     _field_names: tuple[str, ...] = ()
     _repr_field_names: tuple[str, ...] = ()
+    _field_defaults: dict[str, object] = {}
 
     def __init__(self, *args: object, **kwargs: object):
         if len(args) > len(self._field_names):
@@ -79,8 +80,12 @@ class _ImmutableDomainRecord:
         if duplicates:
             raise TypeError("duplicate domain-record values")
         values.update(kwargs)
-        missing = set(self._field_names).difference(values)
         extras = set(values).difference(self._field_names)
+        if extras:
+            raise TypeError("domain-record fields do not match the contract")
+        for field_name, default in self._field_defaults.items():
+            values.setdefault(field_name, default)
+        missing = set(self._field_names).difference(values)
         if missing or extras:
             raise TypeError("domain-record fields do not match the contract")
         object.__setattr__(
@@ -147,6 +152,7 @@ class _ImmutableDomainRecord:
 class DigitalProductOrder(_ImmutableDomainRecord):
     """Sensitive order domain record; routes must map explicit safe fields."""
 
+    __slots__ = ()
     _field_names = (
         "id",
         "public_id",
@@ -169,6 +175,7 @@ class DigitalProductOrder(_ImmutableDomainRecord):
         "download_count",
         "last_download_at",
     )
+    _field_defaults = {"last_download_at": None}
     _repr_field_names = (
         "public_id",
         "product_slug",
@@ -208,6 +215,7 @@ class DigitalProductOrder(_ImmutableDomainRecord):
 
 
 class PendingOrderSecret(_ImmutableDomainRecord):
+    __slots__ = ()
     _field_names = ("order", "raw_recovery_token")
     _repr_field_names = ("order",)
 
@@ -216,6 +224,7 @@ class PendingOrderSecret(_ImmutableDomainRecord):
 
 
 class SettlementResult(_ImmutableDomainRecord):
+    __slots__ = ()
     _field_names = ("order", "changed", "reason")
     _repr_field_names = ("order", "changed", "reason")
 
