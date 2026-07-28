@@ -440,6 +440,14 @@
   padding: 0 12px;
 }
 
+.calculate-cell {
+  min-width: 136px;
+}
+
+.calculate-cell .land-price-calculate-button {
+  margin-top: 0;
+}
+
 .land-price-calculator {
   margin-top: 24px;
   border: 1px solid #b8d6ca;
@@ -497,6 +505,10 @@
   margin: 0;
   border: 0;
   padding: 0;
+}
+
+#landPriceStandardLocation.is-disabled {
+  opacity: .62;
 }
 
 #landPriceCalculatorForm legend {
@@ -653,10 +665,103 @@
   padding-top: 24px;
 }
 
+.calculation-result-head h4,
+.calculation-result-head p,
+.calculation-summary-card p,
+.calculation-summary-card small,
+.calculation-band-section h5,
+.calculation-disclaimer {
+  margin: 0;
+}
+
+.calculation-result-head h4 {
+  margin: 4px 0 7px;
+  color: var(--lp-ink);
+  font-size: 1.35rem;
+}
+
+.calculation-result-head > div > p:last-child {
+  color: var(--lp-muted);
+}
+
+.calculation-factor-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.calculation-factor-list span {
+  border: 1px solid #b8d6ca;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #f1f8f5;
+  color: #24584a;
+  font-size: .86rem;
+}
+
+.calculation-summary-card {
+  min-width: 0;
+  border: 1px solid var(--lp-line);
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.calculation-summary-card p {
+  color: var(--lp-muted);
+  font-size: .83rem;
+  font-weight: 800;
+}
+
+.calculation-summary-card > strong,
+.calculation-summary-card > span,
+.calculation-summary-card > small {
+  display: block;
+}
+
+.calculation-summary-card > strong {
+  margin-top: 6px;
+  color: var(--lp-green);
+  font-size: 1.35rem;
+}
+
+.calculation-summary-card > span {
+  margin-top: 5px;
+  color: var(--lp-ink);
+  font-weight: 800;
+}
+
+.calculation-summary-card > small {
+  margin-top: 6px;
+  color: var(--lp-muted);
+}
+
+.calculation-band-section {
+  margin-top: 22px;
+}
+
+.calculation-band-section h5 {
+  color: var(--lp-ink);
+  font-size: .94rem;
+}
+
+.calculation-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 .calculation-band-table {
   width: 100%;
   margin-top: 14px;
   border-collapse: collapse;
+}
+
+.calculation-disclaimer {
+  margin-top: 18px;
+  color: var(--lp-muted);
+  font-size: .88rem;
+  line-height: 1.55;
 }
 
 .calculation-band-table th,

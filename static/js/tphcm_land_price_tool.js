@@ -98,6 +98,22 @@
     valuationCta.hidden = !items.some((item) => item.appendix === 'Phụ lục III');
   }
 
+  function calculateButton(row, source) {
+    return `
+      <button
+        type="button"
+        class="land-price-calculate-button"
+        data-calculate-row
+        data-calculate-source="${esc(source)}"
+        data-row-key="${esc(row.row_key)}"
+        data-area="${esc(row.area)}"
+        data-street="${esc(row.street)}"
+        data-from="${esc(row.from)}"
+        data-to="${esc(row.to)}"
+      >Tính theo vị trí</button>
+    `;
+  }
+
   function render(items) {
     rowsEl.innerHTML = items.map((r) => `
       <tr>
@@ -112,6 +128,7 @@
         <td class="price-cell" title="${rawPrice(r.residential)} nghìn đồng/m²">${price(r.residential)}</td>
         <td class="price-cell" title="${rawPrice(r.commerce_service)} nghìn đồng/m²">${price(r.commerce_service)}</td>
         <td class="price-cell" title="${rawPrice(r.production_business)} nghìn đồng/m²">${price(r.production_business)}</td>
+        <td class="calculate-cell">${calculateButton(r, 'desktop')}</td>
       </tr>
     `).join('');
 
@@ -134,6 +151,7 @@
           <div><dt>SXKD phi nông nghiệp</dt><dd>${price(r.production_business)}</dd></div>
         </dl>
         <p class="source-row">${esc(r.appendix)} · trang ${esc(r.page)} · đơn vị gốc ${rawPrice(r.residential)} nghìn đồng/m²</p>
+        ${calculateButton(r, 'mobile')}
       </article>
     `).join('');
   }

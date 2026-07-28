@@ -102,6 +102,7 @@
               <th>Đất ở</th>
               <th>Thương mại, dịch vụ</th>
               <th>SXKD phi nông nghiệp</th>
+              <th><span class="sr-only">Tính giá thửa đất</span></th>
             </tr>
           </thead>
           <tbody id="landPriceRows"></tbody>
@@ -149,7 +150,7 @@
             </div>
           </fieldset>
 
-          <fieldset>
+          <fieldset id="landPriceStandardLocation">
             <legend>Vị trí phổ biến</legend>
             <div class="calculator-choice-grid" role="radiogroup" aria-label="Lối tiếp giáp">
               <label class="calculator-choice">
@@ -255,6 +256,7 @@
       </details>
     </section>
   </main>
+  <script src="{{ url_for('static', filename='js/tphcm_land_price_calculator.js') }}?v=tphcm-land-position-20260728"></script>
   <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=tphcm-land-position-20260728"></script>
 </body>
 </html>

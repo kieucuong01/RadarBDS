@@ -256,3 +256,41 @@ def test_land_price_page_renders_accessible_position_calculator_shell():
     assert '<details class="land-price-advanced">' in html
     assert 'id="landPriceCalculatorResult"' in html
     assert 'aria-live="polite"' in html
+    assert "js/tphcm_land_price_calculator.js" in html
+
+
+def test_land_price_browser_calculator_has_row_actions_and_safe_analytics():
+    import re
+    from pathlib import Path
+
+    lookup_javascript = Path(
+        "static/js/tphcm_land_price_tool.js"
+    ).read_text(encoding="utf-8")
+    calculator_javascript = Path(
+        "static/js/tphcm_land_price_calculator.js"
+    ).read_text(encoding="utf-8")
+
+    assert "data-calculate-row" in lookup_javascript
+    assert 'data-row-key="${esc(row.row_key)}"' in lookup_javascript
+    for event_name in (
+        "land_price_calculator_open",
+        "land_price_calculator_start",
+        "land_price_calculator_success",
+        "land_price_calculator_error",
+        "land_price_calculator_advanced_open",
+    ):
+        assert f"track('{event_name}'" in calculator_javascript
+    event_payloads = re.findall(
+        r"track\('land_price_calculator_[^']+'(?:,\s*\{(.*?)\})?\);",
+        calculator_javascript,
+        flags=re.DOTALL,
+    )
+    for sensitive_name in (
+        "landArea",
+        "frontage",
+        "depth",
+        "street",
+        "area",
+        "rowKey",
+    ):
+        assert all(sensitive_name not in payload for payload in event_payloads)
