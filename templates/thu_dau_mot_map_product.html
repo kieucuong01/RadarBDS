@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f8fafc">
+  <title>{{ site_meta.title }}</title>
+  <meta name="description" content="{{ site_meta.description }}">
+  <meta name="keywords" content="{{ site_meta.keywords }}">
+  <meta name="author" content="Radar BDS">
+  <link rel="canonical" href="{{ site_meta.canonical_url }}">
+  <meta property="og:locale" content="vi_VN">
+  <meta property="og:type" content="product">
+  <meta property="og:site_name" content="{{ site_meta.name }}">
+  <meta property="og:title" content="{{ site_meta.title }}">
+  <meta property="og:description" content="{{ site_meta.description }}">
+  <meta property="og:url" content="{{ site_meta.og_url }}">
+  <meta property="og:image" content="{{ site_meta.og_image }}">
+  <meta name="twitter:card" content="summary_large_image">
+  {% include "partials/google_site_tags.html" %}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16.png') }}?v=app-icon-20260608">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tdm-product-20260729-1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=tdm-product-20260729-1">
+  <script type="application/ld+json">{{ schema_graph | tojson }}</script>
+  <script src="{{ url_for('static', filename='js/thu_dau_mot_map_product.js') }}?v=tdm-product-20260729-1" defer></script>
+</head>
+
+<body class="seo-page tdm-product-page">
+  {% include "partials/seo_header.html" %}
+
+  <main id="main-content" class="tdm-product-main" data-thu-dau-mot-map-product>
+    <header class="tdm-product-hero">
+      <div class="seo-shell">
+        <nav class="planning-breadcrumbs" aria-label="Breadcrumb">
+          {% for crumb in page.breadcrumbs %}
+          {% if loop.last %}
+          <span aria-current="page">{{ crumb.name }}</span>
+          {% else %}
+          <a href="{{ crumb.href }}">{{ crumb.name }}</a><span aria-hidden="true">/</span>
+          {% endif %}
+          {% endfor %}
+        </nav>
+
+        <div class="tdm-product-hero-grid">
+          <div class="tdm-product-hero-copy">
+            <h1>{{ page.hero_title }}</h1>
+            <p class="tdm-product-lead">{{ page.hero_text }}</p>
+            <ul class="tdm-product-proof-list">
+              <li>Đúng 14 tâm điểm tham chiếu có nguồn, không phải ranh giới hành chính cũ.</li>
+              <li>Bản hiện tại có đúng 5 ranh phường đã xác minh: Thủ Dầu Một, Phú Lợi, Chánh Hiệp, Bình Dương và Phú An.</li>
+            </ul>
+            <div class="tdm-product-offer" aria-label="Giá và trạng thái mở bán">
+              <strong>{{ display_price }}đ</strong>
+              <button type="button" disabled aria-disabled="true" data-product-purchase>Sắp mở bán</button>
+              <p>Thanh toán chưa được mở. Radar BDS sẽ chỉ bật nút mua sau khi gói phát hành và luồng giao file qua kiểm tra vận hành.</p>
+            </div>
+          </div>
+
+          <div class="tdm-product-preview-card" aria-label="Bản xem trước có watermark">
+            <figure data-product-preview="legacy">
+              <img src="{{ page.preview_before }}" alt="Bản xem trước có watermark với 14 tâm điểm tham chiếu trước năm 2025" width="1600" height="1132" decoding="async" fetchpriority="high">
+              <figcaption>Trước năm 2025 · 14 tâm điểm tham chiếu</figcaption>
+            </figure>
+            <figure data-product-preview="current" hidden>
+              <img src="{{ page.preview_after }}" alt="Bản xem trước có watermark với 5 ranh phường hiện tại" width="1600" height="1132" decoding="async">
+              <figcaption>Hiện tại · 5 ranh phường đã xác minh</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="seo-shell tdm-product-editions" aria-labelledby="chon-phien-ban">
+      <div>
+        <h2 id="chon-phien-ban">Chọn bản xem trước</h2>
+        <p>Hai ảnh raster có watermark chỉ dùng để xem bố cục, không thay thế các file trong bundle.</p>
+      </div>
+      <div class="tdm-product-edition-buttons" role="group" aria-label="Chọn phiên bản bản đồ">
+        <button type="button" data-product-edition="legacy" aria-pressed="true">
+          <strong>Trước năm 2025</strong>
+          <span>14 tâm điểm tham chiếu</span>
+        </button>
+        <button type="button" data-product-edition="current" aria-pressed="false">
+          <strong>Hiện tại</strong>
+          <span>5 ranh phường đã xác minh</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="seo-shell tdm-product-section" aria-labelledby="ban-nhan-duoc-gi">
+      <div class="tdm-product-section-heading">
+        <h2 id="ban-nhan-duoc-gi">Bạn nhận được gì</h2>
+        <p>Một bundle phiên bản {{ product.version }} được tổ chức cho ba nhu cầu: in ấn, chỉnh sửa và mở lớp địa lý.</p>
+      </div>
+      <div class="tdm-product-benefit-grid">
+        <article>
+          <h3>Hai bản PDF hoàn thiện để in A0</h3>
+          <p>Bố cục ngang khổ A0, hình học vector và font nhúng hợp lệ, ưu tiên độ ổn định khi in.</p>
+        </article>
+        <article>
+          <h3>Hai bản SVG giữ đối tượng chữ và nhóm lớp có tên để chỉnh sửa</h3>
+          <p>Dùng làm bản chỉnh sửa chính trong Adobe Illustrator, CorelDRAW, Inkscape và phần mềm tương thích.</p>
+        </article>
+        <article>
+          <h3>Hai bản KML để mở các lớp địa lý trong phần mềm tương thích</h3>
+          <p>Dùng trong Google Earth, Google My Maps và phần mềm GIS có hỗ trợ định dạng này.</p>
+        </article>
+        <article>
+          <h3>Bộ font được phép phân phối</h3>
+          <p>Giúp phần mềm đồ họa dùng đúng kiểu chữ thay vì tự thay font khi mở bản chỉnh sửa.</p>
+        </article>
+        <article>
+          <h3>Hướng dẫn sử dụng và giấy phép</h3>
+          <p>Giải thích cấu trúc bundle, nguồn dữ liệu, cách mở file và phạm vi sử dụng.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="seo-shell tdm-product-section tdm-product-data" aria-labelledby="du-lieu-ban-do">
+      <div class="tdm-product-section-heading">
+        <h2 id="du-lieu-ban-do">Dữ liệu được biên tập trong hai phiên bản</h2>
+        <p>Radar BDS dùng một dây chuyền lai: xử lý dữ liệu GIS, sau đó biên tập và kiểm tra bản in thủ công trước khi phát hành.</p>
+      </div>
+      <div class="tdm-product-data-grid">
+        <article>
+          <h3>Bản trước năm 2025</h3>
+          <p>Đúng 14 tâm điểm tham chiếu có nguồn, thể hiện bằng điểm và không có polygon legacy.</p>
+          <p>Các điểm chỉ giúp định hướng theo địa danh quen thuộc, không thể hiện ranh giới hành chính cũ.</p>
+        </article>
+        <article>
+          <h3>Bản hiện tại</h3>
+          <p>Đúng 5 ranh Polygon hoặc MultiPolygon đã xác minh của Thủ Dầu Một, Phú Lợi, Chánh Hiệp, Bình Dương và Phú An.</p>
+          <p>Cả hai bản có đường giao thông phù hợp, thủy hệ, địa danh, tên/vị trí khu phố và các điểm tiện ích có dữ liệu.</p>
+        </article>
+      </div>
+      <div class="tdm-product-note">
+        <strong>Giới hạn cần biết.</strong>
+        <span>Không bao gồm ranh phường cũ, ranh khu phố, bản đồ địa chính, hồ sơ thửa đất hoặc bản đồ quy hoạch pháp lý. Vị trí khu phố và 14 tâm điểm legacy chỉ mang tính tham khảo.</span>
+      </div>
+    </section>
+
+    <section class="seo-shell tdm-product-section" aria-labelledby="giay-phep-nguon">
+      <div class="tdm-product-license-grid">
+        <article>
+          <h2 id="giay-phep-nguon">Giấy phép sử dụng</h2>
+          <p>Người mua được in, chỉnh sửa và dùng trong dự án cá nhân hoặc doanh nghiệp. Không được bán lại, chia sẻ công khai hoặc phân phối lại file gốc.</p>
+          <p>Bản đồ không thay thế bản đồ địa chính, hồ sơ thửa đất, hồ sơ quy hoạch hoặc xác nhận của cơ quan có thẩm quyền.</p>
+        </article>
+        <article>
+          <h2>Nguồn và mốc dữ liệu</h2>
+          <p>Ranh hiện tại dùng geometry đã kiểm tra của Radar BDS; 14 tâm điểm legacy được biên tập từ Wikidata CC0; đường, thủy hệ và tiện ích dùng dữ liệu mở phù hợp.</p>
+          <p><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>. Bản phát hành {{ product.version }} được biên tập theo dữ liệu chốt đến <time datetime="{{ page.updated_at }}">{{ page.updated_label }}</time>.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="seo-shell tdm-product-section tdm-product-faq" aria-labelledby="cau-hoi-thuong-gap">
+      <div class="tdm-product-section-heading">
+        <h2 id="cau-hoi-thuong-gap">Câu hỏi thường gặp</h2>
+      </div>
+      <div class="tdm-product-faq-list">
+        {% for item in page.faq %}
+        <details>
+          <summary>{{ item.question }}</summary>
+          <p>{{ item.answer }}</p>
+        </details>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="seo-shell tdm-product-dashboard-cta">
+      <div>
+        <h2>Xem dữ liệu tin đang bán tại Thủ Dầu Một</h2>
+        <p>Trong khi bundle chưa mở bán, bạn có thể mở dashboard để lọc tin theo khu vực, diện tích, giá và tín hiệu đáng kiểm tra.</p>
+      </div>
+      <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-product-dashboard data-track-cta="thu_dau_mot_map_dashboard">Mở dashboard lọc tin Thủ Dầu Một</a>
+    </section>
+  </main>
+
+  {% include "partials/seo_footer.html" %}
+  {% set view_event = "thu_dau_mot_map_product_viewed" %}
+  {% include "partials/seo_tracking.html" %}
+</body>
+
+</html>

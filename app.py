@@ -81,6 +81,7 @@ from config.binh_duong_map import (
     BINH_DUONG_LEGACY_AREAS,
     BINH_DUONG_MAP_PAGE,
 )
+from config.thu_dau_mot_map_product import THU_DAU_MOT_MAP_PRODUCT_PAGE
 
 mimetypes.add_type("image/webp", ".webp")
 
@@ -110,6 +111,10 @@ from services.tphcm_land_price_calculator import (
     CalculationValidationError,
     calculate_land_price,
     calculate_mixed_land_price,
+)
+from services.digital_products import (
+    get_digital_product,
+    get_release_availability,
 )
 
 # RBAC (4-tier auth)
@@ -1357,6 +1362,10 @@ ALLOWED_TRACK_ACTIONS = {
     "binh_duong_map_layer_selected",
     "binh_duong_map_base_layer_selected",
     "binh_duong_map_area_selected",
+    "thu_dau_mot_map_product_viewed",
+    "thu_dau_mot_map_preview_selected",
+    "thu_dau_mot_map_purchase_clicked",
+    "thu_dau_mot_map_dashboard_clicked",
 }
 
 
@@ -1748,6 +1757,56 @@ def _breadcrumb_schema(breadcrumbs: list[dict]) -> dict:
     }
 
 
+def _thu_dau_mot_map_product_schema(
+    page: dict,
+    product,
+    availability,
+) -> dict:
+    canonical_url = _public_url(page["path"])
+    preview_url = _public_url(page["preview_after"])
+    return {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Product",
+                "@id": f"{canonical_url}#product",
+                "name": "Bộ bản đồ TP Thủ Dầu Một",
+                "description": page["description"],
+                "image": [preview_url],
+                "sku": f"{product.slug}-v{product.version}",
+                "brand": {"@type": "Brand", "name": "Radar BDS"},
+                "url": canonical_url,
+                "offers": {
+                    "@type": "Offer",
+                    "url": canonical_url,
+                    "price": str(product.price_vnd),
+                    "priceCurrency": "VND",
+                    "availability": (
+                        "https://schema.org/InStock"
+                        if availability.can_sell
+                        else "https://schema.org/OutOfStock"
+                    ),
+                },
+            },
+            _breadcrumb_schema(page["breadcrumbs"]),
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": item["question"],
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": item["answer"],
+                        },
+                    }
+                    for item in page["faq"]
+                ],
+            },
+        ],
+    }
+
+
 def _planning_hub_schema(page: dict, pages: list[dict]) -> dict:
     return {
         "@context": "https://schema.org",
@@ -2051,6 +2110,48 @@ def binh_duong_map_page():
         ),
         active_nav="ban-do-binh-duong",
         dashboard_signal_href="/?tab=signals",
+    )
+
+
+def thu_dau_mot_map_product_page():
+    page = deepcopy(THU_DAU_MOT_MAP_PRODUCT_PAGE)
+    page["breadcrumbs"] = _page_breadcrumbs(page)
+    page["local_links"] = [dict(link) for link in page["local_links"]]
+    product = get_digital_product("thu-dau-mot-map-bundle")
+    storage_root = os.getenv(
+        "DIGITAL_PRODUCT_STORAGE_DIR",
+        str(Path(__file__).resolve().parent / ".local" / "digital-products"),
+    )
+    sales_enabled = os.getenv("DIGITAL_PRODUCT_SALES_ENABLED", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    availability = get_release_availability(product, storage_root, sales_enabled)
+    site_meta = _site_meta(
+        page["path"],
+        title=page["title"],
+        description=page["description"],
+        keywords=page["keywords"],
+    )
+    site_meta["og_image"] = _public_url(page["preview_after"])
+    return render_template(
+        "thu_dau_mot_map_product.html",
+        page=page,
+        product=product,
+        availability=availability,
+        display_price=f"{product.price_vnd:,}".replace(",", "."),
+        site_meta=site_meta,
+        schema_graph=_thu_dau_mot_map_product_schema(
+            page,
+            product,
+            availability,
+        ),
+        active_nav="ban-do-binh-duong",
+        dashboard_signal_href=(
+            "/?tab=signals&city=Th%E1%BB%A7%20D%E1%BA%A7u%20M%E1%BB%99t"
+        ),
     )
 
 
@@ -2881,6 +2982,7 @@ def llms_txt():
 - Báo cáo dữ liệu: {_public_url('/bao-cao')}
 - Tin tức dữ liệu: {_public_url('/tin-tuc')}
 - Bản đồ Bình Dương: {_public_url('/ban-do-binh-duong')}
+- Bộ bản đồ TP Thủ Dầu Một: {_public_url('/ban-do-thu-dau-mot')}
 - Bản đồ quy hoạch Bình Dương cũ: {_public_url('/quy-hoach-binh-duong')}
 {planning_lines}
 - Phương pháp lọc deal: {_public_url('/san-deal-bds')}
@@ -2919,6 +3021,7 @@ def sitemap_xml():
     for page in [
         REPORT_HUB,
         news_hub,
+        THU_DAU_MOT_MAP_PRODUCT_PAGE,
         BINH_DUONG_MAP_PAGE,
         PLANNING_HUB,
         *SEO_PAGES.values(),
