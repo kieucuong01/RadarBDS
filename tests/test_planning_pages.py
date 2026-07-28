@@ -130,6 +130,7 @@ def test_planning_detail_map_first_contract_and_schema():
     assert 'class="planning-map"' in html
     assert 'data-geojson="/static/maps/planning/vanh-dai-3.geojson"' in html
     assert "leaflet@1.9.4/dist/leaflet.css" in html
+    assert 'integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="' in html
     assert "leaflet@1.9.4/dist/leaflet.js" in html
     assert "Thông tin tham khảo" in html
     assert "Không thay thế tra cứu pháp lý thửa đất" in html
