@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import logging
 import sys
 from pathlib import Path
@@ -65,17 +66,36 @@ def dry_run(root: Path, limit: int | None) -> int:
     return 0
 
 
-def upload(root: Path, limit: int | None) -> int:
+def _upload_one(path: Path, root: Path) -> tuple[str, int]:
+    key = object_key_for_path(path, root)
+    upload_file(path, key)
+    return key, path.stat().st_size
+
+
+def upload(root: Path, limit: int | None, workers: int = 1, skip_existing: bool = False) -> int:
     files = collect_files(root, limit)
+    if skip_existing:
+        remote_keys = list_object_keys("data/images/")
+        before = len(files)
+        files = [path for path in files if object_key_for_path(path, root) not in remote_keys]
+        logger.info("skip_existing remote=%s skipped=%s pending=%s", len(remote_keys), before - len(files), len(files))
+
     uploaded = 0
     uploaded_bytes = 0
-    for path in files:
-        key = object_key_for_path(path, root)
-        upload_file(path, key)
-        uploaded += 1
-        uploaded_bytes += path.stat().st_size
-        if uploaded % 500 == 0:
-            logger.info("uploaded files=%s bytes=%s last_key=%s", uploaded, uploaded_bytes, key)
+    if workers <= 1:
+        iterator = (_upload_one(path, root) for path in files)
+        for key, size in iterator:
+            uploaded += 1
+            uploaded_bytes += size
+            if uploaded % 500 == 0:
+                logger.info("uploaded files=%s bytes=%s last_key=%s", uploaded, uploaded_bytes, key)
+    else:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+            for key, size in pool.map(lambda path: _upload_one(path, root), files):
+                uploaded += 1
+                uploaded_bytes += size
+                if uploaded % 500 == 0:
+                    logger.info("uploaded files=%s bytes=%s last_key=%s", uploaded, uploaded_bytes, key)
     logger.info("upload_complete files=%s bytes=%s", uploaded, uploaded_bytes)
     return 0
 
@@ -108,6 +128,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Local data/images directory. Default: project data/images.",
     )
     parser.add_argument("--limit", type=int, default=None, help="Optional max files for canary runs.")
+    parser.add_argument("--workers", type=int, default=1, help="Parallel upload workers. Only applies to --upload.")
+    parser.add_argument("--skip-existing", action="store_true", help="Skip object keys already present in S3.")
     parser.add_argument("--log-level", default="INFO", choices=("DEBUG", "INFO", "WARNING", "ERROR"))
     return parser.parse_args(argv)
 
@@ -122,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         return dry_run(root, args.limit)
     if args.upload:
-        return upload(root, args.limit)
+        return upload(root, args.limit, max(1, args.workers), args.skip_existing)
     return verify(root, args.limit)
 
 
