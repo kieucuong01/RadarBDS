@@ -66,6 +66,10 @@ class DatabaseConfigurationError(RuntimeError):
     """Raised when PostgreSQL runtime configuration is missing or unusable."""
 
 
+class AdvisoryLockBusy(RuntimeError):
+    """Raised when a non-blocking PostgreSQL advisory lock is already held."""
+
+
 class PgRow:
     """Small sqlite3.Row-compatible wrapper around a PostgreSQL tuple row."""
 
@@ -259,9 +263,10 @@ def advisory_lock(name: str, wait: bool = False):
         lock_id = _lock_id(name)
         fn = "pg_advisory_lock" if wait else "pg_try_advisory_lock"
         row = conn.execute(f"SELECT {fn}(?) AS locked", (lock_id,)).fetchone()
-        locked = bool(row["locked"]) if row else False
-        if not locked:
-            raise RuntimeError(f"Another Radar BDS job is already running: {name}")
+        if not wait and not (bool(row["locked"]) if row else False):
+            raise AdvisoryLockBusy(
+                f"Another Radar BDS job is already running: {name}"
+            )
         try:
             yield
         finally:

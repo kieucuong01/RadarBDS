@@ -16,6 +16,7 @@ import pytest
 from werkzeug.test import EnvironBuilder
 
 from config.settings import DigitalProductCommerceSettings
+from db.connection import AdvisoryLockBusy, DatabaseConfigurationError
 from services.digital_product_orders import (
     DigitalProductOrder,
     MAX_ORDER_ID,
@@ -263,10 +264,11 @@ def route_env(monkeypatch, tmp_path):
             stack.enter_context(checkout_locks.acquire(public_id))
         except RuntimeError:
             stack.close()
-            raise routes_module._CheckoutBusy() from None
+            raise AdvisoryLockBusy() from None
         with stack:
             yield
 
+    checkout_lock.production_factory = routes_module._checkout_lock_factory
     monkeypatch.setattr(
         routes_module,
         "_checkout_lock_factory",
@@ -563,7 +565,7 @@ def test_busy_advisory_lock_returns_retry_without_order_or_payos(
 
     @contextmanager
     def busy_lock(_public_id):
-        raise routes_module._CheckoutBusy()
+        raise AdvisoryLockBusy()
         yield
 
     monkeypatch.setattr(routes_module, "_checkout_lock_factory", busy_lock)
@@ -579,6 +581,57 @@ def test_busy_advisory_lock_returns_retry_without_order_or_payos(
         max_age=300,
     )
     assert retry_payload == seed_payload
+
+
+@pytest.mark.parametrize(
+    "acquisition_error",
+    [
+        DatabaseConfigurationError("DATABASE_URL is unavailable"),
+        RuntimeError("unexpected advisory lock acquisition failure"),
+    ],
+)
+def test_advisory_lock_acquisition_errors_return_generic_503_not_busy(
+    route_env,
+    monkeypatch,
+    acquisition_error,
+):
+    radar_app, routes_module, repo, payos, _settings = route_env
+    client = radar_app.app.test_client()
+    seed = client.get("/ban-do-thu-dau-mot")
+    seed_value = _cookie_value(seed, "radar_product_checkout_retry")
+    production_factory = (
+        routes_module._checkout_lock_factory.production_factory
+    )
+
+    @contextmanager
+    def broken_advisory_lock(_name, *, wait):
+        assert wait is False
+        raise acquisition_error
+        yield
+
+    monkeypatch.setattr(
+        routes_module,
+        "_checkout_lock_factory",
+        production_factory,
+    )
+    monkeypatch.setattr(
+        routes_module,
+        "advisory_lock",
+        broken_advisory_lock,
+    )
+
+    response = _checkout(client)
+
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "code": "checkout_temporarily_unavailable"
+    }
+    assert repo.orders == {}
+    assert payos.create_calls == []
+    assert (
+        _cookie_value(response, "radar_product_checkout_retry")
+        == seed_value
+    )
 
 
 def test_runtime_error_inside_checkout_body_is_not_misreported_as_lock_busy(
@@ -784,6 +837,48 @@ def test_authorize_rejects_oversized_body_before_token_verification(route_env):
 
     assert response.status_code == 404
     assert response.get_json() == {"code": "order_not_found"}
+    assert repo.orders[1].status == "pending"
+    assert "radar_product_order=" not in response.headers.get("Set-Cookie", "")
+
+
+def test_authorize_without_content_length_reads_only_bounded_stream(route_env):
+    radar_app, routes_module, repo, _payos, _settings = route_env
+    client = radar_app.app.test_client()
+    checkout = _checkout(client)
+    public_id = _public_id_from_redirect(checkout)
+    raw = b"x" * (2 * 1_024 + 512)
+
+    class GuardedStream(BytesIO):
+        def __init__(self, data):
+            super().__init__(data)
+            self.read_sizes = []
+
+        def read(self, size=-1):
+            self.read_sizes.append(size)
+            if size < 0 or size > 2 * 1_024 + 1:
+                raise AssertionError("authorize performed an unbounded stream read")
+            return super().read(size)
+
+    builder = EnvironBuilder(
+        path=f"/api/digital-products/orders/{public_id}/authorize",
+        method="POST",
+        input_stream=BytesIO(b""),
+        content_type="application/json",
+    )
+    environ = builder.get_environ()
+    guarded_stream = GuardedStream(raw)
+    environ["wsgi.input"] = guarded_stream
+    environ.pop("CONTENT_LENGTH", None)
+    environ["wsgi.input_terminated"] = True
+
+    with radar_app.app.request_context(environ):
+        response = radar_app.app.make_response(
+            routes_module.authorize_digital_product_order(public_id)
+        )
+
+    assert response.status_code == 404
+    assert response.get_json() == {"code": "order_not_found"}
+    assert guarded_stream.read_sizes == [2 * 1_024 + 1]
     assert repo.orders[1].status == "pending"
     assert "radar_product_order=" not in response.headers.get("Set-Cookie", "")
 

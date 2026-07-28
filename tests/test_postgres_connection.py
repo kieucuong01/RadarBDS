@@ -1,4 +1,70 @@
+from contextlib import contextmanager
+
+import pytest
+
+from db import connection
 from db.connection import PgRow, adapt_sql
+
+
+class _AdvisoryLockConnection:
+    def __init__(self, locked):
+        self.locked = locked
+        self.calls = []
+
+    def execute(self, sql, params=()):
+        self.calls.append((sql, params))
+        if "pg_try_advisory_lock" in sql:
+            return _AdvisoryLockResult({"locked": self.locked})
+        if "pg_advisory_lock" in sql:
+            return _AdvisoryLockResult({"locked": None})
+        return _AdvisoryLockResult(None)
+
+
+class _AdvisoryLockResult:
+    def __init__(self, row):
+        self.row = row
+
+    def fetchone(self):
+        return self.row
+
+
+def _install_advisory_connection(monkeypatch, conn):
+    @contextmanager
+    def fake_get_conn():
+        yield conn
+
+    monkeypatch.setattr(connection, "get_conn", fake_get_conn)
+
+
+def test_nonblocking_advisory_lock_raises_specific_runtime_subclass_when_busy(
+    monkeypatch,
+):
+    conn = _AdvisoryLockConnection(locked=False)
+    _install_advisory_connection(monkeypatch, conn)
+
+    with pytest.raises(RuntimeError) as exc_info:
+        with connection.advisory_lock("checkout", wait=False):
+            raise AssertionError("busy lock must not enter critical section")
+
+    assert type(exc_info.value) is connection.AdvisoryLockBusy
+    assert [sql for sql, _params in conn.calls] == [
+        "SELECT pg_try_advisory_lock(?) AS locked"
+    ]
+
+
+def test_blocking_advisory_lock_treats_return_from_void_function_as_acquired(
+    monkeypatch,
+):
+    conn = _AdvisoryLockConnection(locked=None)
+    _install_advisory_connection(monkeypatch, conn)
+
+    with connection.advisory_lock("checkout", wait=True):
+        pass
+
+    assert [sql for sql, _params in conn.calls] == [
+        "SELECT pg_advisory_lock(?) AS locked",
+        "SELECT pg_advisory_unlock(?)",
+    ]
 
 
 def test_adapt_sql_translates_insert_or_ignore_and_placeholders():

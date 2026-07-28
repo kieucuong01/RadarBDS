@@ -6,7 +6,7 @@ import base64
 import json
 import re
 import uuid
-from contextlib import ExitStack, contextmanager
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from io import BytesIO
 from types import SimpleNamespace
@@ -29,7 +29,7 @@ from config.settings import (
     PUBLIC_BASE_URL,
     get_digital_product_commerce_settings,
 )
-from db.connection import advisory_lock
+from db.connection import AdvisoryLockBusy, advisory_lock
 from services.digital_product_orders import (
     InvalidSettlement,
     OrderLifecycleError,
@@ -68,10 +68,6 @@ _MAX_AUTHORIZE_BODY_BYTES = 2 * 1_024
 _MAX_WEBHOOK_BODY_BYTES = 64 * 1_024
 
 
-class _CheckoutBusy(RuntimeError):
-    """The non-blocking cross-process checkout lock is already held."""
-
-
 def _repository_factory():
     return PostgresOrderRepository()
 
@@ -86,18 +82,10 @@ def _utcnow() -> datetime:
 
 @contextmanager
 def _checkout_lock_factory(public_id: str):
-    stack = ExitStack()
-    try:
-        stack.enter_context(
-            advisory_lock(
-                f"digital-product-checkout:{public_id}",
-                wait=False,
-            )
-        )
-    except RuntimeError:
-        stack.close()
-        raise _CheckoutBusy() from None
-    with stack:
+    with advisory_lock(
+        f"digital-product-checkout:{public_id}",
+        wait=False,
+    ):
         yield
 
 
@@ -216,7 +204,7 @@ def checkout_thu_dau_mot_map():
         response.status_code = 502
         _set_retry_cookie(response, retry_seed)
         return response
-    except _CheckoutBusy:
+    except AdvisoryLockBusy:
         return _checkout_in_progress_response(
             settings.cookie_secret,
             public_id,
@@ -285,7 +273,7 @@ def authorize_digital_product_order(public_id: str):
         )
     ):
         return not_found
-    raw_body = request.get_data(cache=False, as_text=False)
+    raw_body = request.stream.read(_MAX_AUTHORIZE_BODY_BYTES + 1)
     if not raw_body or len(raw_body) > _MAX_AUTHORIZE_BODY_BYTES:
         return not_found
     try:
