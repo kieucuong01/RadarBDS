@@ -18,6 +18,7 @@ from fontTools.ttLib import TTFont as OpenTypeFont
 from PIL import Image
 import pdfplumber
 from playwright.sync_api import sync_playwright
+from pypdf import PdfReader
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
@@ -190,7 +191,12 @@ def _write_guide_pdf(
     )
     page_width, page_height = A4
     margin = 48
-    canvas = Canvas(str(output_path), pagesize=A4, pageCompression=1)
+    canvas = Canvas(
+        str(output_path),
+        pagesize=A4,
+        pageCompression=1,
+        invariant=1,
+    )
     canvas.setTitle("Hướng dẫn bộ bản đồ Thủ Dầu Một - Radar BDS")
     canvas.setAuthor("Radar BDS")
     canvas.setFillColor(HexColor("#12372a"))
@@ -493,6 +499,12 @@ def _validate_svg(path: Path, *, legacy: bool, errors: list[str]) -> None:
             errors.append(
                 f"SVG {path.name} lacks the legacy reference disclaimer"
             )
+        metadata = root.find("./{*}metadata[@id='edition-metadata']")
+        metadata_text = metadata.text if metadata is not None else ""
+        if not _has_legacy_override(metadata_text):
+            errors.append(
+                f"SVG {path.name} edition metadata lacks the legacy override"
+            )
 
 
 def _folder(root: ElementTree.Element, name: str):
@@ -510,6 +522,15 @@ def _placemark_names(folder) -> set[str]:
         if name_node is not None and name_node.text:
             names.add(name_node.text.strip())
     return names
+
+
+def _has_legacy_override(value: str | None) -> bool:
+    folded = (value or "").casefold()
+    return (
+        "14 điểm" in folded
+        and "tham chiếu" in folded
+        and "không phải ranh giới hành chính cũ" in folded
+    )
 
 
 def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
@@ -560,20 +581,38 @@ def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
                 break
         if "Wikidata" not in rendered_text or "CC0" not in rendered_text:
             errors.append(f"KML {path.name} lacks Wikidata CC0 attribution")
+        metadata = root.find(
+            "./{*}Document/{*}ExtendedData/"
+            "{*}Data[@name='edition_description']/{*}value"
+        )
+        if not _has_legacy_override(
+            metadata.text if metadata is not None else ""
+        ):
+            errors.append(
+                f"KML {path.name} edition metadata lacks the legacy override"
+            )
     else:
         boundaries = _folder(root, "boundaries")
         if boundaries is None:
             errors.append(f"KML {path.name} lacks current boundary folder")
             return
         placemarks = boundaries.findall("./{*}Placemark")
-        boundaries_with_polygon = [
-            placemark
+        boundary_polygons = [
+            polygon
             for placemark in placemarks
-            if placemark.findall(".//{*}Polygon")
+            for polygon in placemark.findall(".//{*}Polygon")
         ]
-        if len(placemarks) != 5 or len(boundaries_with_polygon) != 5:
+        all_polygons = root.findall(".//{*}Polygon")
+        if (
+            len(placemarks) != 5
+            or len(boundary_polygons) != 5
+            or len(all_polygons) != 5
+            or {id(polygon) for polygon in boundary_polygons}
+            != {id(polygon) for polygon in all_polygons}
+        ):
             errors.append(
-                f"KML {path.name} must contain exactly 5 current boundaries"
+                f"KML {path.name} must contain exactly 5 Polygon elements "
+                "inside the five current boundary placemarks"
             )
         if _placemark_names(boundaries) != CURRENT_NAMES:
             errors.append(f"KML {path.name} has incorrect current ward names")
@@ -584,9 +623,45 @@ def _validate_pdfs(candidate_dir: Path, errors: list[str]) -> None:
         path = candidate_dir / relative_name
         if not path.is_file():
             continue
-        payload = path.read_bytes()
-        if b"/FontFile2" not in payload:
+        try:
+            reader = PdfReader(path)
+            pdf_subject = (
+                reader.metadata.subject if reader.metadata is not None else ""
+            )
+            font_streams = []
+            for page in reader.pages:
+                fonts = page["/Resources"].get("/Font", {})
+                for font_reference in fonts.values():
+                    font = font_reference.get_object()
+                    descendants = font.get("/DescendantFonts", ())
+                    for font_object in (
+                        font,
+                        *(item.get_object() for item in descendants),
+                    ):
+                        descriptor = font_object.get("/FontDescriptor")
+                        if descriptor is None:
+                            continue
+                        font_file = descriptor.get_object().get("/FontFile2")
+                        if font_file is None:
+                            continue
+                        stream = font_file.get_object()
+                        if hasattr(stream, "get_data") and stream.get_data():
+                            font_streams.append(stream)
+        except Exception as exc:
+            errors.append(
+                f"PDF {relative_name} object tree cannot be inspected: {exc}"
+            )
+            font_streams = []
+            pdf_subject = ""
+        if not font_streams:
             errors.append(f"PDF {relative_name} lacks embedded TrueType font")
+        if (
+            relative_name.startswith("thu-dau-mot-truoc")
+            and not _has_legacy_override(pdf_subject)
+        ):
+            errors.append(
+                f"PDF {relative_name} edition metadata lacks the legacy override"
+            )
         try:
             with pdfplumber.open(path) as pdf:
                 if not pdf.pages:
@@ -605,12 +680,12 @@ def _validate_pdfs(candidate_dir: Path, errors: list[str]) -> None:
                             f"PDF {relative_name} must be a one-page A0 map"
                         )
                     page = pdf.pages[0]
-                    dimensions = sorted(
-                        (round(float(page.width)), round(float(page.height)))
-                    )
-                    if any(
-                        abs(actual - expected) > 3
-                        for actual, expected in zip(dimensions, (2384, 3370))
+                    width = float(page.width)
+                    height = float(page.height)
+                    if (
+                        width <= height
+                        or abs(width - 3370) > 3
+                        or abs(height - 2384) > 3
                     ):
                         errors.append(
                             f"PDF {relative_name} is not landscape A0"

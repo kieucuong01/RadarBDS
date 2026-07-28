@@ -3,12 +3,15 @@ from __future__ import annotations
 from hashlib import sha256
 import json
 from pathlib import Path
+from xml.etree import ElementTree
 from zipfile import ZipFile
 
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from PIL import Image
 import pytest
+from pypdf import PdfReader, PdfWriter
+from pypdf.generic import NameObject
 from reportlab.lib.pagesizes import A0, A4, landscape
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -57,6 +60,10 @@ CURRENT_NAMES = (
     "Chánh Hiệp",
     "Bình Dương",
     "Phú An",
+)
+LEGACY_EDITION_METADATA = (
+    "Bản 14 điểm tham chiếu tên phường cũ; đây là điểm tham chiếu, "
+    "không phải ranh giới hành chính cũ."
 )
 APPROVAL = {
     "reviewer": "Radar BDS release review",
@@ -122,20 +129,45 @@ def _write_pdf(
     font_name = f"ReleaseTest-{path.stem}"
     pdfmetrics.registerFont(TTFont(font_name, str(font_path)))
     canvas = Canvas(str(path), pagesize=page_size, pageCompression=0)
+    canvas.setSubject(text)
     canvas.setFont(font_name, 28)
     canvas.drawString(72, page_size[1] - 96, text)
     canvas.save()
 
 
+def _remove_embedded_fonts_and_add_fontfile2_decoy(path: Path) -> None:
+    reader = PdfReader(path)
+    writer = PdfWriter()
+    writer.clone_document_from_reader(reader)
+    for page in writer.pages:
+        fonts = page["/Resources"].get("/Font", {})
+        for font_reference in fonts.values():
+            font = font_reference.get_object()
+            descendants = font.get("/DescendantFonts", ())
+            font_objects = [font, *(item.get_object() for item in descendants)]
+            for font_object in font_objects:
+                descriptor = font_object.get("/FontDescriptor")
+                if descriptor is not None:
+                    descriptor.get_object().pop(NameObject("/FontFile2"), None)
+    writer.add_metadata({"/Subject": "/FontFile2 decoy only"})
+    temporary = path.with_suffix(".without-font.pdf")
+    with temporary.open("wb") as stream:
+        writer.write(stream)
+    temporary.replace(path)
+    path.write_bytes(path.read_bytes() + b"\n% /FontFile2 decoy\n")
+    assert b"/FontFile2" in path.read_bytes()
+
+
 def _svg(*, legacy: bool) -> str:
     edition = (
-        "14 điểm tham chiếu phường cũ - không phải ranh giới hành chính cũ"
+        LEGACY_EDITION_METADATA
         if legacy
         else "5 địa giới phường hiện hành"
     )
     return f"""\
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000"
  viewBox="0 0 1600 1000">
+  <metadata id="edition-metadata">{edition}</metadata>
   <rect width="1600" height="1000" fill="#eef5ef"/>
   <text x="60" y="100">BẢN ĐỒ THỦ DẦU MỘT</text>
   <text x="60" y="160">{edition}</text>
@@ -177,10 +209,17 @@ def _kml(*, legacy: bool) -> str:
             _placemark(name, polygon, index)
             for index, name in enumerate(CURRENT_NAMES, start=10)
         )
+    edition_metadata = (
+        LEGACY_EDITION_METADATA
+        if legacy
+        else "5 địa giới phường hiện hành"
+    )
     return f"""\
 <kml xmlns="http://www.opengis.net/kml/2.2"><Document>
   <description>© OpenStreetMap contributors -
   https://www.openstreetmap.org/copyright - Wikidata CC0</description>
+  <ExtendedData><Data name="edition_description">
+  <value>{edition_metadata}</value></Data></ExtendedData>
   <Folder><name>{primary_name}</name>{primary}</Folder>
   <Folder><name>poi</name>{_placemark("Chợ Thủ Dầu Một", point, 42)}</Folder>
 </Document></kml>
@@ -380,6 +419,111 @@ def test_candidate_with_raster_svg_or_unlicensed_font_is_rejected(
     assert any("font" in error.casefold() for error in validation.errors)
 
 
+def test_legacy_svg_visible_disclaimer_cannot_replace_required_metadata(
+    candidate_dir: Path,
+):
+    path = candidate_dir / "thu-dau-mot-truoc-2025.svg"
+    root = ElementTree.parse(path).getroot()
+    metadata = root.find("./{*}metadata[@id='edition-metadata']")
+    assert metadata is not None
+    root.remove(metadata)
+    ElementTree.ElementTree(root).write(
+        path,
+        encoding="utf-8",
+        xml_declaration=True,
+    )
+
+    validation = validate_candidate(candidate_dir)
+
+    assert not validation.ok
+    assert any(
+        "SVG" in error and "edition metadata" in error
+        for error in validation.errors
+    )
+
+
+def test_legacy_pdf_visible_disclaimer_cannot_replace_required_metadata(
+    candidate_dir: Path,
+):
+    path = candidate_dir / "thu-dau-mot-truoc-2025-a0.pdf"
+    reader = PdfReader(path)
+    writer = PdfWriter()
+    writer.clone_document_from_reader(reader)
+    writer.add_metadata({"/Subject": "Vector map product"})
+    temporary = path.with_suffix(".without-edition-metadata.pdf")
+    with temporary.open("wb") as stream:
+        writer.write(stream)
+    temporary.replace(path)
+
+    validation = validate_candidate(candidate_dir)
+
+    assert not validation.ok
+    assert any(
+        "PDF" in error and "edition metadata" in error
+        for error in validation.errors
+    )
+
+
+def test_legacy_kml_visible_disclaimer_cannot_replace_required_metadata(
+    candidate_dir: Path,
+):
+    path = candidate_dir / "thu-dau-mot-truoc-2025.kml"
+    root = ElementTree.parse(path).getroot()
+    document_data = root.find("./{*}Document/{*}ExtendedData")
+    assert document_data is not None
+    edition_data = document_data.find(
+        "./{*}Data[@name='edition_description']"
+    )
+    assert edition_data is not None
+    document_data.remove(edition_data)
+    ElementTree.ElementTree(root).write(
+        path,
+        encoding="utf-8",
+        xml_declaration=True,
+    )
+
+    validation = validate_candidate(candidate_dir)
+
+    assert not validation.ok
+    assert any(
+        "KML" in error and "edition metadata" in error
+        for error in validation.errors
+    )
+
+
+def test_pdf_fontfile2_text_decoy_does_not_count_as_embedded_font(
+    candidate_dir: Path,
+):
+    _remove_embedded_fonts_and_add_fontfile2_decoy(
+        candidate_dir / "thu-dau-mot-sau-2025-a0.pdf"
+    )
+
+    validation = validate_candidate(candidate_dir)
+
+    assert not validation.ok
+    assert any(
+        "embedded TrueType" in error for error in validation.errors
+    )
+
+
+def test_portrait_a0_pdf_is_rejected_even_when_dimensions_match(
+    candidate_dir: Path,
+):
+    _write_pdf(
+        candidate_dir / "thu-dau-mot-sau-2025-a0.pdf",
+        candidate_dir / "fonts/BeVietnamPro-SemiBold.ttf",
+        page_size=A0,
+        text="BẢN ĐỒ THỦ DẦU MỘT - 5 địa giới phường hiện hành",
+    )
+
+    validation = validate_candidate(candidate_dir)
+
+    assert not validation.ok
+    assert any(
+        "landscape A0" in error for error in validation.errors
+    )
+
+
 def test_kml_contract_rejects_missing_poi_and_extra_legacy_boundary(
     candidate_dir: Path,
 ):
@@ -400,6 +544,32 @@ def test_kml_contract_rejects_missing_poi_and_extra_legacy_boundary(
     assert any("legacy" in error.casefold() and "polygon" in error.casefold()
                for error in validation.errors)
     assert any("POI" in error for error in validation.errors)
+
+
+def test_current_kml_rejects_sixth_polygon_outside_boundary_folder(
+    candidate_dir: Path,
+):
+    current_path = candidate_dir / "thu-dau-mot-sau-2025.kml"
+    payload = current_path.read_text(encoding="utf-8")
+    payload = payload.replace(
+        "</Document>",
+        (
+            "<Folder><name>unrelated</name><Placemark><name>Extra</name>"
+            "<Polygon><outerBoundaryIs><LinearRing><coordinates>"
+            "106.1,10.1,0 106.2,10.1,0 106.2,10.2,0 106.1,10.1,0"
+            "</coordinates></LinearRing></outerBoundaryIs></Polygon>"
+            "</Placemark></Folder></Document>"
+        ),
+    )
+    current_path.write_text(payload, encoding="utf-8")
+
+    validation = validate_candidate(candidate_dir)
+
+    assert not validation.ok
+    assert any(
+        "exactly 5" in error and "Polygon" in error
+        for error in validation.errors
+    )
 
 
 def test_approval_requires_every_check_and_iso_timestamp(
@@ -517,6 +687,43 @@ def test_build_release_stage_writes_previews_and_v1_bundle(
     assert before.is_file()
     assert after.is_file()
     assert validate_candidate(tmp_path / "candidate").ok
+
+
+def test_build_release_stage_is_byte_deterministic_for_same_inputs(
+    candidate_dir: Path,
+    approval_file: Path,
+    tmp_path: Path,
+):
+    _prepare_raw_release_inputs(candidate_dir, tmp_path)
+    preview_paths = (
+        tmp_path / "public" / "before.webp",
+        tmp_path / "public" / "after.webp",
+    )
+    ofl_text = (
+        candidate_dir / "fonts/OFL.txt"
+    ).read_text(encoding="utf-8")
+
+    first = run_release_stage(
+        tmp_path,
+        stage="all",
+        approval_path=approval_file,
+        output_zip=tmp_path / "releases" / "first.zip",
+        preview_paths=preview_paths,
+        ofl_text=ofl_text,
+    )
+    second = run_release_stage(
+        tmp_path,
+        stage="all",
+        approval_path=approval_file,
+        output_zip=tmp_path / "releases" / "second.zip",
+        preview_paths=preview_paths,
+        ofl_text=ofl_text,
+    )
+
+    assert first.read_bytes() == second.read_bytes()
+    assert sha256(first.read_bytes()).hexdigest() == sha256(
+        second.read_bytes()
+    ).hexdigest()
 
 
 def _prepare_raw_release_inputs(candidate_dir: Path, work_dir: Path) -> None:

@@ -43,6 +43,13 @@ ElementTree.register_namespace("", SVG_NAMESPACE)
 
 _PDF_FONT_REGULAR = "BeVietnamProMapRegular"
 _PDF_FONT_SEMIBOLD = "BeVietnamProMapSemiBold"
+LEGACY_EDITION_DESCRIPTION = (
+    "Bản 14 điểm tham chiếu tên phường cũ; đây là điểm tham chiếu, "
+    "không phải ranh giới hành chính cũ."
+)
+CURRENT_EDITION_DESCRIPTION = (
+    "Bản 5 địa giới phường hiện hành sau sắp xếp 2025."
+)
 VIETNAMESE_PRODUCT_GLYPHS = (
     "ÀÁÃÈÉÌÍÒÓÕÙÚÝàáãèéìíòóõùúý"
     "ĂăÂâĐđÊêĨĩÔôƠơŨũƯư"
@@ -57,6 +64,14 @@ def _svg(tag: str) -> str:
 
 def _kml(tag: str) -> str:
     return f"{{{KML_NAMESPACE}}}{tag}"
+
+
+def _edition_description(edition: Literal["legacy", "current"]) -> str:
+    return (
+        LEGACY_EDITION_DESCRIPTION
+        if edition == "legacy"
+        else CURRENT_EDITION_DESCRIPTION
+    )
 
 
 def _font_paths(fonts: Mapping[str, str | Path]) -> tuple[Path, Path]:
@@ -435,6 +450,11 @@ def render_svg(
     ElementTree.SubElement(root, _svg("title")).text = (
         f"{scene.title} — {scene.subtitle}"
     )
+    ElementTree.SubElement(
+        root,
+        _svg("metadata"),
+        {"id": "edition-metadata"},
+    ).text = _edition_description(scene.edition)
     definitions = ElementTree.SubElement(root, _svg("defs"))
     regular_data = base64.b64encode(regular.read_bytes()).decode("ascii")
     semibold_data = base64.b64encode(semibold.read_bytes()).decode("ascii")
@@ -792,10 +812,11 @@ def render_pdf(
         str(output),
         pagesize=(scene.page_width_pt, scene.page_height_pt),
         pageCompression=1,
+        invariant=1,
     )
     pdf.setTitle(f"{scene.title} — {scene.subtitle}")
     pdf.setAuthor("Radar BDS")
-    pdf.setSubject("Vector map product")
+    pdf.setSubject(_edition_description(scene.edition))
     pdf.setFillColor(HexColor(PAPER_COLOR))
     pdf.rect(
         0,
@@ -940,6 +961,11 @@ def render_kml(
         document_data,
         "attribution",
         source_attribution(layers),
+    )
+    _kml_data(
+        document_data,
+        "edition_description",
+        _edition_description(edition),
     )
     if edition == "current":
         folder = _kml_folder(document, "boundaries")

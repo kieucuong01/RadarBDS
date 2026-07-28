@@ -7,6 +7,8 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 import pdfplumber
 import pytest
+from pypdf import PdfReader
+from reportlab.lib import utils as reportlab_utils
 from shapely.geometry import LineString, box
 
 from map_products.geometry import (
@@ -322,6 +324,22 @@ def test_svg_is_vector_layered_and_text_editable(
     assert "https://www.openstreetmap.org/copyright" in rendered_text
 
 
+def test_legacy_svg_carries_override_in_edition_metadata(
+    tmp_path,
+    legacy_scene,
+    test_fonts,
+):
+    output = render_svg(legacy_scene, tmp_path / "map.svg", test_fonts)
+    root = ElementTree.parse(output).getroot()
+    metadata = root.find("./svg:metadata[@id='edition-metadata']", SVG_NS)
+
+    assert metadata is not None
+    value = (metadata.text or "").casefold()
+    assert "14 điểm" in value
+    assert "tham chiếu" in value
+    assert "không phải ranh giới hành chính cũ" in value
+
+
 def test_pdf_is_landscape_a0_vector_with_embedded_vietnamese_font(
     tmp_path, legacy_scene, test_fonts
 ):
@@ -345,6 +363,33 @@ def test_pdf_is_landscape_a0_vector_with_embedded_vietnamese_font(
     raw = output.read_bytes()
     assert b"/FontFile2" in raw
     assert b"/Subtype /Image" not in raw
+
+
+def test_legacy_pdf_carries_override_in_document_metadata(
+    tmp_path,
+    legacy_scene,
+    test_fonts,
+):
+    output = render_pdf(legacy_scene, tmp_path / "map.pdf", test_fonts)
+    subject = (PdfReader(output).metadata.subject or "").casefold()
+
+    assert "14 điểm" in subject
+    assert "tham chiếu" in subject
+    assert "không phải ranh giới hành chính cũ" in subject
+
+
+def test_pdf_render_is_byte_deterministic_when_clock_changes(
+    tmp_path,
+    legacy_scene,
+    test_fonts,
+    monkeypatch,
+):
+    monkeypatch.setattr(reportlab_utils.time, "time", lambda: 1_700_000_000)
+    first = render_pdf(legacy_scene, tmp_path / "first.pdf", test_fonts)
+    monkeypatch.setattr(reportlab_utils.time, "time", lambda: 1_800_000_000)
+    second = render_pdf(legacy_scene, tmp_path / "second.pdf", test_fonts)
+
+    assert first.read_bytes() == second.read_bytes()
 
 
 def test_font_coverage_gate_rejects_missing_vietnamese_glyphs(tmp_path):
@@ -405,6 +450,25 @@ def test_kml_legacy_contains_14_geographic_points_without_boundary_polygons(
     assert "© OpenStreetMap contributors" in kml_text
     assert "https://www.openstreetmap.org/copyright" in kml_text
     assert "Font: Be Vietnam Pro" in kml_text
+
+
+def test_legacy_kml_carries_override_in_document_metadata(
+    tmp_path,
+    sample_layers,
+):
+    output = render_kml(sample_layers, "legacy", tmp_path / "map.kml")
+    root = ElementTree.parse(output).getroot()
+    value = root.findtext(
+        "./kml:Document/kml:ExtendedData/"
+        "kml:Data[@name='edition_description']/kml:value",
+        namespaces=KML_NS,
+    )
+
+    assert value is not None
+    folded = value.casefold()
+    assert "14 điểm" in folded
+    assert "tham chiếu" in folded
+    assert "không phải ranh giới hành chính cũ" in folded
 
 
 def test_current_svg_uses_five_distinct_ward_fills(
