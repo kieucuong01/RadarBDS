@@ -104,26 +104,39 @@
       <div class="hub-card-grid news-card-grid" data-news-grid>
         {% for article in articles %}
         <article
-          class="hub-card"
+          class="hub-card news-article-card"
           data-news-card
           data-news-card-path="{{ article.path }}"
           data-news-category-key="{{ article.category_key }}"
           data-news-search-text="{{ article.search_text }}"
           data-modified-at="{{ article.modified_at }}"
         >
-          <div class="hub-card-top">
-            <span class="hub-card-number">{{ "%02d"|format(loop.index) }}</span>
-            <span class="scope-chip">{{ article.scope_label }}</span>
-          </div>
-          <span class="hub-card-category">{{ article.category_label }}</span>
-          <h3><a href="{{ article.path }}" data-track-cta="news_hub_article_title">{{ article.hero_title }}</a></h3>
-          <p>{{ article.description }}</p>
-          <div class="card-meta">
-            <time datetime="{{ article.modified_at }}">Cập nhật {{ article.modified_label }}</time>
-          </div>
-          <a class="text-link" href="{{ article.path }}" data-track-cta="news_hub_article_card">
-            Đọc bài <span aria-hidden="true">→</span>
+          <a
+            class="news-card-thumb"
+            href="{{ article.path }}"
+            aria-label="Đọc {{ article.hero_title }}"
+            data-track-cta="news_hub_article_thumb"
+            data-news-thumb-category="{{ article.category_key }}"
+          >
+            <span class="news-thumb-label">{{ article.category_label }}</span>
+            <span class="news-thumb-index">{{ "%02d"|format(loop.index) }}</span>
+            <span class="news-thumb-scope">{{ article.scope_label }}</span>
           </a>
+          <div class="news-card-body">
+            <div class="hub-card-top">
+              <span class="hub-card-number">{{ "%02d"|format(loop.index) }}</span>
+              <span class="scope-chip">{{ article.scope_label }}</span>
+            </div>
+            <span class="hub-card-category">{{ article.category_label }}</span>
+            <h3><a href="{{ article.path }}" data-track-cta="news_hub_article_title">{{ article.hero_title }}</a></h3>
+            <p>{{ article.description }}</p>
+            <div class="card-meta">
+              <time datetime="{{ article.modified_at }}">Cập nhật {{ article.modified_label }}</time>
+            </div>
+            <a class="text-link" href="{{ article.path }}" data-track-cta="news_hub_article_card">
+              Đọc bài <span aria-hidden="true">→</span>
+            </a>
+          </div>
         </article>
         {% endfor %}
       </div>

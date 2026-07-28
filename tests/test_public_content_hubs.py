@@ -80,6 +80,25 @@ def test_news_hub_is_dashboard_first_and_has_progressive_discovery():
     assert "Shared SEO dropdowns are click-controlled" in css
 
 
+def test_news_hub_archive_cards_render_left_thumbnails():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/tin-tuc").get_data(as_text=True)
+    archive_cards = re.findall(
+        r'<article\s+class="hub-card news-article-card"[\s\S]*?</article>',
+        html,
+    )
+
+    assert archive_cards
+    for card in archive_cards:
+        assert 'class="news-card-thumb"' in card
+        assert 'class="news-card-body"' in card
+        assert card.index('class="news-card-thumb"') < card.index('class="news-card-body"')
+        assert 'data-news-thumb-category="' in card
+        assert 'aria-label="Đọc ' in card
+        assert 'data-track-cta="news_hub_article_thumb"' in card
+
+
 def test_news_hub_featured_is_not_repeated_in_archive():
     import app as radar_app
 
