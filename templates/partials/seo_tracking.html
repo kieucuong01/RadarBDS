@@ -60,6 +60,12 @@
 
   sendRadarEvent(viewEvent);
 
+  window.addEventListener("radar:track", (event) => {
+    const detail = event.detail || {};
+    if (!detail.action) return;
+    sendRadarEvent(detail.action, detail.context || {});
+  });
+
   document.addEventListener("click", (event) => {
     const link = event.target.closest("[data-track-cta]");
     if (!link) return;

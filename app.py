@@ -2129,7 +2129,7 @@ NEWS_CATEGORY_DEFS = [
     {
         "key": "huong-dan-doc-du-lieu",
         "label": "Hướng dẫn đọc dữ liệu",
-        "description": "Evergreen AIO: giải thích giá trung vị, giá/m², loại hình và cách dùng dữ liệu Radar.",
+        "description": "Giải thích giá trung vị, giá/m², loại hình và cách dùng dữ liệu Radar.",
     },
     {
         "key": "kiem-tra-tin-rao",
@@ -2144,6 +2144,8 @@ def _news_category_for_article(slug: str, item: dict) -> dict:
     category = item.get("category") or {}
     key = item.get("category_key") or category.get("key")
     title = str(item.get("hero_title") or item.get("title") or "").lower()
+    if key and key not in NEWS_CATEGORY_MAP:
+        raise ValueError(f"Unknown news category: {key}")
     if not key:
         if slug.startswith("gia-dat-"):
             key = "du-lieu-gia-dat"
@@ -2164,20 +2166,41 @@ def _news_category_for_article(slug: str, item: dict) -> dict:
             key = "du-lieu-gia-dat"
         else:
             key = "huong-dan-doc-du-lieu"
-    base = NEWS_CATEGORY_MAP.get(key, NEWS_CATEGORY_MAP["huong-dan-doc-du-lieu"])
+    base = NEWS_CATEGORY_MAP[key]
     return {
         "key": base["key"],
-        "label": category.get("label") or base["label"],
-        "description": category.get("description") or base["description"],
+        "label": base["label"],
+        "description": base["description"],
     }
+
+
+def _format_news_date(value: str | None) -> str:
+    raw = str(value or "").strip()
+    try:
+        return datetime.strptime(raw, "%Y-%m-%d").strftime("%d/%m/%Y")
+    except ValueError:
+        return raw
 
 
 def _decorate_news_article(slug: str, item: dict) -> dict:
     decorated = dict(item)
     category = _news_category_for_article(slug, decorated)
+    article = decorated.get("article") or {}
+    modified_at = str(article.get("modified_at") or article.get("published_at") or "")
     decorated["category"] = category
     decorated["category_key"] = category["key"]
     decorated["category_label"] = category["label"]
+    decorated["modified_at"] = modified_at
+    decorated["modified_label"] = _format_news_date(modified_at)
+    decorated["search_text"] = " ".join(
+        str(value or "")
+        for value in (
+            decorated.get("hero_title"),
+            decorated.get("description"),
+            decorated.get("scope_label"),
+            category["label"],
+        )
+    )
     return decorated
 
 
@@ -2202,7 +2225,8 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
     if hub_path == "/tin-tuc":
         page["hero_badge"] = "Tin tức BĐS Bình Dương"
         page["hero_title"] = "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS"
-        page["hero_text"] = "Bài SEO/AIO hằng ngày: giá đất, so sánh phường, cách đọc dữ liệu và các tín hiệu đáng kiểm tra từ dashboard Radar BDS."
+        page["hero_text"] = "Phân tích giá rao, so sánh phường và cách kiểm tra tin từ dữ liệu Radar BDS để người mua biết nên mở khu vực nào tiếp theo."
+        page["lead_scope_label"] = "Bình Dương"
         page["breadcrumbs"] = [
             {"name": "Trang chủ", "href": "/", "url": _public_url("/")},
             {"name": "Tin tức", "href": "/tin-tuc", "url": _public_url("/tin-tuc")},
@@ -2217,7 +2241,11 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
         decorated = _decorate_news_article(slug, item) if hub_path == "/tin-tuc" else dict(item)
         matching.append((slug, decorated))
     matching.sort(
-        key=lambda pair: ((pair[1].get("article") or {}).get("modified_at", ""), (pair[1].get("article") or {}).get("published_at", "")),
+        key=lambda pair: (
+            (pair[1].get("article") or {}).get("modified_at", ""),
+            (pair[1].get("article") or {}).get("published_at", ""),
+            pair[0],
+        ),
         reverse=True,
     )
     featured_slug = page.get("featured_slug")
@@ -2245,7 +2273,15 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
             reverse=True,
         )
     all_articles = ([featured] if featured else []) + articles
-    article_categories, category_groups = _article_category_groups(all_articles) if hub_path == "/tin-tuc" else ([], [])
+    article_categories, category_groups = _article_category_groups(articles) if hub_path == "/tin-tuc" else ([], [])
+    page["article_count"] = len(all_articles)
+    page["category_count"] = len(article_categories)
+    latest_modified_at = max(
+        (str((item.get("article") or {}).get("modified_at") or "") for item in all_articles),
+        default="",
+    )
+    page["latest_modified_at"] = latest_modified_at
+    page["latest_modified_label"] = _format_news_date(latest_modified_at)
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
     return render_template(
         "seo_knowledge_hub.html",
@@ -2430,6 +2466,7 @@ def llms_txt():
 - Công cụ định giá đất Bình Dương: {_public_url('/dinh-gia-bds')}
 - Tra cứu bảng giá đất TP.HCM 2026: {_public_url('/bang-gia-dat-tphcm')}
 - Báo cáo dữ liệu: {_public_url('/bao-cao')}
+- Tin tức dữ liệu: {_public_url('/tin-tuc')}
 - Bản đồ quy hoạch Bình Dương cũ: {_public_url('/quy-hoach-binh-duong')}
 - Bản đồ Vành đai 3 Bình Dương: {_public_url('/quy-hoach-binh-duong/vanh-dai-3')}
 - Địa giới 36 phường xã Bình Dương cũ: {_public_url('/quy-hoach-binh-duong/dia-gioi-36-phuong-xa-binh-duong-cu')}
@@ -2439,9 +2476,33 @@ def llms_txt():
 
 
 def sitemap_xml():
+    def render_sitemap_entry(page, *, changefreq, priority, lastmod=""):
+        lastmod_markup = f"    <lastmod>{lastmod}</lastmod>\n" if lastmod else ""
+        return (
+            "  <url>\n"
+            f"    <loc>{_public_url(page['path'])}</loc>\n"
+            f"{lastmod_markup}"
+            f"    <changefreq>{changefreq}</changefreq>\n"
+            f"    <priority>{priority}</priority>\n"
+            "  </url>"
+        )
+
     unique_pages = []
     seen_paths = set()
-    news_hub = dict(KNOWLEDGE_HUB, path="/tin-tuc", title="Tin tức BĐS Bình Dương | Radar BDS")
+    news_lastmod = max(
+        (
+            str((page.get("article") or {}).get("modified_at") or "")
+            for page in SEO_ARTICLES.values()
+            if str(page.get("path") or "").startswith("/tin-tuc/")
+        ),
+        default="",
+    )
+    news_hub = dict(
+        KNOWLEDGE_HUB,
+        path="/tin-tuc",
+        title="Tin tức BĐS Bình Dương | Radar BDS",
+        sitemap_lastmod=news_lastmod,
+    )
     for page in [REPORT_HUB, news_hub, PLANNING_HUB, *SEO_PAGES.values(), *PLANNING_PAGE_LIST]:
         path = page.get("path")
         if not path or path in seen_paths:
@@ -2451,19 +2512,21 @@ def sitemap_xml():
         seen_paths.add(path)
         unique_pages.append(page)
     seo_urls = "\n".join(
-        f"""  <url>
-    <loc>{_public_url(page["path"])}</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>"""
+        render_sitemap_entry(
+            page,
+            changefreq="daily",
+            priority="0.8",
+            lastmod=page.get("sitemap_lastmod") or "",
+        )
         for page in unique_pages
     )
     article_urls = "\n".join(
-        f"""  <url>
-    <loc>{_public_url(page["path"])}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>"""
+        render_sitemap_entry(
+            page,
+            changefreq="weekly",
+            priority="0.7",
+            lastmod=(page.get("article") or {}).get("modified_at") or "",
+        )
         for slug, page in SEO_ARTICLES.items()
     )
     body = f"""<?xml version="1.0" encoding="UTF-8"?>

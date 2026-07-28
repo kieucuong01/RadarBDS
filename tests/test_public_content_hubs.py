@@ -1,8 +1,18 @@
+import json
+import re
 from pathlib import Path
 
 import pytest
 
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
+
+
+NEWS_CATEGORY_LABELS = {
+    "du-lieu-gia-dat": "Giá đất theo phường",
+    "so-sanh-khu-vuc": "So sánh khu vực",
+    "huong-dan-doc-du-lieu": "Hướng dẫn đọc dữ liệu",
+    "kiem-tra-tin-rao": "Kiểm tra tin rao",
+}
 
 
 ARTICLE_EXPECTATIONS = {
@@ -48,6 +58,85 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
 
     assert "Hiện ưu tiên Thủ Dầu Một" in report_html
     assert "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS" in news_html
+
+
+def test_news_hub_is_dashboard_first_and_has_progressive_discovery():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/tin-tuc").get_data(as_text=True)
+
+    assert 'data-track-cta="news_hub_dashboard"' in html
+    assert 'href="/?tab=signals"' in html
+    assert 'id="newsHubSearch"' in html
+    assert 'data-news-category="all"' in html
+    assert 'data-news-results-status' in html
+    assert 'data-news-load-more' in html
+    assert 'data-news-load-more-row hidden' in html
+    assert 'data-news-empty-state' in html
+    assert 'js/seo_news_hub.js' in html
+    assert "SEO/AIO" not in html
+    assert "Số bài phân tích" in html
+    css = Path("static/css/seo.css").read_text(encoding="utf-8")
+    assert "Shared SEO dropdowns are click-controlled" in css
+
+
+def test_news_hub_featured_is_not_repeated_in_archive():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/tin-tuc").get_data(as_text=True)
+    featured_path = SEO_ARTICLES[KNOWLEDGE_HUB["featured_slug"]]["path"]
+
+    assert html.count(f'data-news-featured="{featured_path}"') == 1
+    assert f'data-news-card-path="{featured_path}"' not in html
+
+
+def test_news_hub_archive_is_recent_first_and_dates_are_localized():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/tin-tuc").get_data(as_text=True)
+    modified_dates = re.findall(r'data-modified-at="(\d{4}-\d{2}-\d{2})"', html)
+
+    assert modified_dates
+    assert modified_dates == sorted(modified_dates, reverse=True)
+    assert re.search(r'<time datetime="\d{4}-\d{2}-\d{2}">Cập nhật \d{2}/\d{2}/\d{4}</time>', html)
+
+
+def test_news_taxonomy_resolves_only_to_canonical_keys_and_labels():
+    import app as radar_app
+
+    news_items = [
+        (slug, item)
+        for slug, item in SEO_ARTICLES.items()
+        if str(item.get("path") or "").startswith("/tin-tuc/")
+    ]
+
+    for slug, item in news_items:
+        category = radar_app._news_category_for_article(slug, item)
+        assert category["key"] in NEWS_CATEGORY_LABELS
+        assert category["label"] == NEWS_CATEGORY_LABELS[category["key"]]
+
+    with pytest.raises(ValueError, match="Unknown news category"):
+        radar_app._news_category_for_article(
+            "invalid-category",
+            {"category": {"key": "not-a-real-category", "label": "Sai nhóm"}},
+        )
+
+
+def test_news_hub_item_list_contains_each_article_once():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/tin-tuc").get_data(as_text=True)
+    blocks = re.findall(r'<script type="application/ld\+json">\s*(.*?)\s*</script>', html, re.S)
+    payload = json.loads(blocks[-1])
+    item_list = next(item for item in payload["@graph"] if item["@type"] == "ItemList")
+    urls = [item["url"] for item in item_list["itemListElement"]]
+    expected_count = sum(
+        str(item.get("path") or "").startswith("/tin-tuc/")
+        for item in SEO_ARTICLES.values()
+    )
+
+    assert len(urls) == expected_count
+    assert len(urls) == len(set(urls))
 
 
 @pytest.mark.parametrize(
@@ -124,11 +213,31 @@ def test_hubs_are_in_sitemap_and_detail_canonicals_stay_unchanged():
     assert "<loc>https://radarbds.vn/bao-cao</loc>" in sitemap
     assert "<loc>https://radarbds.vn/kien-thuc</loc>" not in sitemap
     assert "<loc>https://radarbds.vn/tin-tuc</loc>" in sitemap
+    assert re.search(
+        r"<loc>https://radarbds\.vn/tin-tuc</loc>\s*<lastmod>\d{4}-\d{2}-\d{2}</lastmod>",
+        sitemap,
+    )
     client = radar_app.app.test_client()
     for article in SEO_ARTICLES.values():
         html = client.get(article["path"]).get_data(as_text=True)
         assert f'<link rel="canonical" href="https://radarbds.vn{article["path"]}">' in html
         assert f"<loc>https://radarbds.vn{article['path']}</loc>" in sitemap
+        modified_at = (article.get("article") or {}).get("modified_at")
+        if modified_at:
+            assert (
+                f"<loc>https://radarbds.vn{article['path']}</loc>\n"
+                f"    <lastmod>{modified_at}</lastmod>"
+            ) in sitemap
+
+
+def test_llms_txt_includes_news_hub():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get("/llms.txt")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Tin tức dữ liệu: https://radarbds.vn/tin-tuc" in body
 
 
 def test_accessibility_and_mobile_table_guards_are_present():

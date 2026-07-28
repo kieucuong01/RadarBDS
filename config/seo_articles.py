@@ -3780,7 +3780,7 @@ SEO_ARTICLES = {
                    'button': 'Mở dashboard lọc Hiệp Thành'}},
     'gia-dat-phu-tan-hien-bao-nhieu': {'variant': 'knowledge',
  'path': '/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu',
- 'category': {'key': 'gia-phuong', 'label': 'Giá phường'},
+ 'category': {'key': 'du-lieu-gia-dat', 'label': 'Giá đất theo phường'},
  'title': 'Giá đất Phú Tân hiện bao nhiêu? Đọc riêng đất nền và nhà đất | Radar BDS',
  'description': 'Giá đất Phú Tân cập nhật 26/07/2026: 116 tin Facebook 14 ngày, đất nền 23,9 '
                 'tr/m², nhà đất 38,7 tr/m² và 58 dấu hiệu đáng kiểm tra.',
@@ -8231,7 +8231,7 @@ SEO_ARTICLES = {
 
     'phu-tan-nhieu-dau-hieu-dang-kiem-tra-nen-loc-the-nao': {'variant': 'knowledge',
  'path': '/tin-tuc/phu-tan-nhieu-dau-hieu-dang-kiem-tra-nen-loc-the-nao',
- 'category': {'key': 'tin-hieu-thi-truong', 'label': 'Tín hiệu thị trường'},
+ 'category': {'key': 'kiem-tra-tin-rao', 'label': 'Kiểm tra tin rao'},
  'title': 'Phú Tân nhiều tin đáng kiểm tra: lọc gì trước khi gọi môi giới? | Radar BDS',
  'description': 'Phú Tân có 250 tin Facebook trong 14 ngày, 95 dấu hiệu; đất nền 22,8 tr/m², nhà '
                 'đất 35,0 tr/m². Cách lọc trước khi gọi môi giới.',

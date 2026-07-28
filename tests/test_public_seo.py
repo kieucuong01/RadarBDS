@@ -156,8 +156,8 @@ def test_report_hub_prefers_master_report_and_news_hub_is_reader_facing():
 
     assert '<a class="seo-primary-cta" href="/bao-cao/bds-binh-duong-thang-06-2026"' in report_html
     assert "SEO / AIO / AI-SEO" not in news_html
-    assert "Bình Dương · Tin tức dữ liệu" in news_html
-    assert "Đọc tin tức theo nhóm nhu cầu" in news_html
+    assert "Dữ liệu thị trường" in news_html
+    assert "Tìm nhanh bài phân tích phù hợp" in news_html
     assert 'href="/bao-cao/bds-binh-duong-thang-06-2026"' in landing_html
     assert 'href="/tin-tuc"' in landing_html
 
