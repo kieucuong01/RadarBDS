@@ -113,11 +113,12 @@ Reports are based on `listings` in PostgreSQL.
 |---|---|
 | Source | `source = 'facebook'` |
 | Month window | `crawled_at::timestamp >= month_start AND crawled_at::timestamp < month_end` |
-| Exclusions | `is_blacklisted = 0`, `review_hidden = 0` |
+| Raw volume | `source = 'facebook'`, loại blacklist/hidden nhưng vẫn gồm repost |
+| Statistical basis | Chỉ canonical lot; loại `duplicate_of_id`, `possibly_duplicate`, `is_outlier`, `probably_sold`, blacklist và hidden |
 | Do not use active filter for monthly stats | Monthly reports should include the month crawl window, not only currently active listings |
 | Median | PostgreSQL has no `MEDIAN()`; use `PERCENTILE_CONT(0.5)` |
 | Numeric columns | `price_per_m2`, `price_ty`, `area` are text-ish; cast with `::numeric` and guard invalid area strings |
-| Signals | `is_hot = 1 OR price_dropped = 1` for base signal counts |
+| Signals | Latest valuation + `services.signal_quality.actionable_signal_sql()` và `actionable_listing_sql()` |
 | Placeholders | Project DB wrapper expects `?`, not `%s` |
 
 Known TDM wards:
@@ -127,7 +128,7 @@ Tân An, Hiệp An, Tương Bình Hiệp, Định Hòa, Chánh Mỹ, Phú Mỹ,
 Phú Cường, Phú Hòa, Phú Lợi, Hiệp Thành, Chánh Nghĩa, Phú Tân, Hòa Phú
 ```
 
-Always handle both Vietnamese diacritics and non-diacritics variants when querying wards.
+Always handle both Vietnamese diacritics and non-diacritics variants when querying wards. Snapshot phải lưu riêng `raw_listing_count`, `basis_count`, `actionable_signal_count`, `data_as_of` và `data_contract_version`.
 
 ## Required SEO/internal linking rules
 
