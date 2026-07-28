@@ -572,6 +572,44 @@ def test_current_kml_rejects_sixth_polygon_outside_boundary_folder(
     )
 
 
+def test_current_kml_accepts_multiple_polygons_owned_by_named_boundary(
+    candidate_dir: Path,
+):
+    current_path = candidate_dir / "thu-dau-mot-sau-2025.kml"
+    tree = ElementTree.parse(current_path)
+    root = tree.getroot()
+    boundaries = next(
+        folder
+        for folder in root.findall(".//{*}Folder")
+        if folder.findtext("./{*}name") == "boundaries"
+    )
+    first_boundary = boundaries.find("./{*}Placemark")
+    assert first_boundary is not None
+    first_polygon = first_boundary.find("./{*}Polygon")
+    assert first_polygon is not None
+    second_polygon = ElementTree.fromstring(
+        ElementTree.tostring(first_polygon)
+    )
+    coordinates = second_polygon.find(".//{*}coordinates")
+    assert coordinates is not None
+    coordinates.text = (
+        "106.3,10.3,0 106.4,10.3,0 "
+        "106.4,10.4,0 106.3,10.3,0"
+    )
+    multi_geometry = ElementTree.Element(
+        "{http://www.opengis.net/kml/2.2}MultiGeometry"
+    )
+    first_boundary.remove(first_polygon)
+    multi_geometry.extend((first_polygon, second_polygon))
+    first_boundary.append(multi_geometry)
+    tree.write(current_path, encoding="utf-8", xml_declaration=True)
+    assert len(root.findall(".//{*}Polygon")) == 6
+
+    validation = validate_candidate(candidate_dir)
+
+    assert validation.ok, validation.errors
+
+
 def test_approval_requires_every_check_and_iso_timestamp(
     candidate_dir: Path,
     approval_file: Path,

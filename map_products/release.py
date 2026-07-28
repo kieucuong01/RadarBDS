@@ -605,14 +605,17 @@ def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
         all_polygons = root.findall(".//{*}Polygon")
         if (
             len(placemarks) != 5
-            or len(boundary_polygons) != 5
-            or len(all_polygons) != 5
+            or any(
+                not placemark.findall(".//{*}Polygon")
+                for placemark in placemarks
+            )
             or {id(polygon) for polygon in boundary_polygons}
             != {id(polygon) for polygon in all_polygons}
         ):
             errors.append(
-                f"KML {path.name} must contain exactly 5 Polygon elements "
-                "inside the five current boundary placemarks"
+                f"KML {path.name} must contain exactly 5 current boundary "
+                "placemarks, each with Polygon geometry, and every Polygon "
+                "must belong to them"
             )
         if _placemark_names(boundaries) != CURRENT_NAMES:
             errors.append(f"KML {path.name} has incorrect current ward names")
