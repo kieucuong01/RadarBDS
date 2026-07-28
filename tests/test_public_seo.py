@@ -291,10 +291,10 @@ def test_binh_duong_market_report_page_is_indexed_and_citable():
     assert f'<link rel="canonical" href="https://radarbds.vn{path}">' in html
     assert f"<loc>https://radarbds.vn{path}</loc>" in sitemap
     assert "Báo cáo thị trường BĐS Thủ Dầu Một tháng 06/2026" in html
-    assert "Số tin mới" in html
+    assert "Mẫu hợp lệ" in html
     assert "Giá/m² trung vị" in html
-    assert "Khu giảm giá" in html
-    assert "Khu nhiều tín hiệu" in html
+    assert "Giảm giá" in html
+    assert "Actionable" in html
     assert "Nhận định từ dữ liệu Radar" in html
     assert '"@type": "Report"' in html
     assert "datePublished" in html
