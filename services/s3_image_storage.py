@@ -93,6 +93,10 @@ def s3_bucket() -> str:
     return bucket
 
 
+def s3_object_acl() -> str:
+    return os.getenv("RADAR_S3_OBJECT_ACL", "public-read").strip()
+
+
 def upload_file(path: Path, object_key: str) -> str:
     local_path = Path(path)
     if not local_path.is_file():
@@ -101,14 +105,19 @@ def upload_file(path: Path, object_key: str) -> str:
     if not key:
         raise ValueError("object key is empty")
 
+    extra_args = {
+        "CacheControl": CACHE_CONTROL_IMMUTABLE,
+        "ContentType": content_type_for_path(local_path),
+    }
+    acl = s3_object_acl()
+    if acl:
+        extra_args["ACL"] = acl
+
     s3_client().upload_file(
         str(local_path),
         s3_bucket(),
         key,
-        ExtraArgs={
-            "CacheControl": CACHE_CONTROL_IMMUTABLE,
-            "ContentType": content_type_for_path(local_path),
-        },
+        ExtraArgs=extra_args,
     )
     return key
 
