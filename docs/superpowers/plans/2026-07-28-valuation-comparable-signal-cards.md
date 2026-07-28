@@ -403,4 +403,3 @@
   - desktop is three columns, mobile is one column with no overflow;
   - card click opens `/listing/<id>`;
   - `valuation_comparable_click` sends no sensitive fields.
-
