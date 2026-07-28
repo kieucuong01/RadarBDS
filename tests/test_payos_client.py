@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import inspect
+from collections.abc import Mapping
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -343,6 +344,83 @@ def test_create_link_requires_return_and_cancel_to_be_same_order_url():
 
 
 @pytest.mark.parametrize(
+    "attacker_url",
+    [
+        ORDER_URL.replace("radarbds.vn", "attacker.example"),
+        ORDER_URL.replace("https://", "https://user@"),
+        ORDER_URL + "?recovery=secret",
+        ORDER_URL + "#recovery-secret",
+        ORDER_URL.replace("radarbds.vn", "radarbds.vn:444"),
+        ORDER_URL.replace("/don-hang/", "/don-hang%2F"),
+        ORDER_URL.replace("/don-hang/", "/don-hang/%2e%2e/"),
+    ],
+)
+def test_create_link_rejects_urls_outside_configured_trusted_origin(
+    attacker_url: str,
+):
+    sdk = _FakeSDK()
+    client = PayOSClient(sdk, trusted_origin="https://radarbds.vn")
+
+    with pytest.raises(PayOSPaymentLinkCreationError):
+        client.create_payment_link(
+            _pending_order(),
+            attacker_url,
+            attacker_url,
+        )
+
+    assert sdk.payment_requests.created == []
+
+
+@pytest.mark.parametrize(
+    "trusted_origin",
+    [
+        "",
+        "radarbds.vn",
+        "http://radarbds.vn",
+        "https://user@radarbds.vn",
+        "https://radarbds.vn/path",
+        "https://radarbds.vn?query=1",
+        "https://radarbds.vn#fragment",
+    ],
+)
+def test_client_rejects_missing_or_malformed_trusted_origin(
+    trusted_origin: str,
+):
+    with pytest.raises(
+        PayOSConfigurationError,
+        match=r"^PayOS client configuration failed$",
+    ):
+        PayOSClient(_FakeSDK(), trusted_origin=trusted_origin)
+
+
+def test_create_link_allows_canonical_https_effective_default_port():
+    sdk = _FakeSDK()
+    client = PayOSClient(sdk, trusted_origin="https://RADARBDS.VN:443")
+    default_port_url = ORDER_URL.replace(
+        "https://radarbds.vn",
+        "https://RADARBDS.VN:443",
+    )
+
+    link = client.create_payment_link(
+        _pending_order(),
+        default_port_url,
+        default_port_url,
+    )
+
+    assert link.payment_link_id == "link_0123456789abcdef"
+    assert sdk.payment_requests.created[0].return_url == default_port_url
+
+
+def test_default_client_fails_closed_when_public_base_url_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setattr(payos_client_module, "PUBLIC_BASE_URL", "")
+
+    with pytest.raises(PayOSConfigurationError):
+        PayOSClient(_FakeSDK())
+
+
+@pytest.mark.parametrize(
     "payment_expires_at",
     [
         datetime(2026, 7, 29, 9, 45),
@@ -519,6 +597,98 @@ def test_verify_webhook_maps_hostile_verified_object_errors_to_rejection():
 
     assert "credential-marker" not in repr(caught.value)
     assert "secret-signature" not in str(caught.value)
+    assert caught.value.__cause__ is None
+
+
+@pytest.mark.parametrize(
+    ("field", "hostile_value"),
+    [
+        ("order_code", "hostile_int"),
+        ("amount", "hostile_int"),
+        ("reference", "hostile_string"),
+        ("transaction_date_time", "hostile_string"),
+        ("code", "hostile_string"),
+    ],
+)
+def test_verify_webhook_rejects_hostile_verified_primitive_subclasses(
+    field: str,
+    hostile_value: str,
+):
+    sdk = _FakeSDK()
+
+    class _HostileInt(int):
+        def __eq__(self, other: object) -> bool:
+            del other
+            raise RuntimeError("primitive-marker secret-signature")
+
+        def __ne__(self, other: object) -> bool:
+            del other
+            raise RuntimeError("primitive-marker secret-signature")
+
+    class _HostileString(str):
+        def __eq__(self, other: object) -> bool:
+            del other
+            raise RuntimeError("primitive-marker secret-signature")
+
+        def __ne__(self, other: object) -> bool:
+            del other
+            raise RuntimeError("primitive-marker secret-signature")
+
+        def strip(self, chars: str | None = None) -> str:
+            del chars
+            raise RuntimeError("primitive-marker secret-signature")
+
+    values: dict[str, object] = {
+        "order_code": 720_000_123,
+        "amount": 99_000,
+        "reference": "BANK-REF-1",
+        "transaction_date_time": "2026-07-29 16:30:00",
+        "code": "00",
+    }
+    original = values[field]
+    values[field] = (
+        _HostileInt(original)
+        if hostile_value == "hostile_int"
+        else _HostileString(original)
+    )
+    sdk.webhooks.result = values
+
+    with pytest.raises(
+        PayOSWebhookRejected,
+        match=r"^PayOS webhook rejected$",
+    ) as caught:
+        PayOSClient(sdk).verify_webhook(RAW_WEBHOOK)
+
+    assert caught.value.__cause__ is None
+    assert "primitive-marker" not in repr(caught.value)
+    assert "secret-signature" not in str(caught.value)
+
+
+def test_verify_webhook_rejects_verified_mapping_with_throwing_iteration():
+    sdk = _FakeSDK()
+
+    class _HostileMapping(Mapping[str, object]):
+        def __getitem__(self, key: str) -> object:
+            del key
+            raise RuntimeError("iteration-marker secret-signature")
+
+        def __iter__(self):
+            raise RuntimeError("iteration-marker secret-signature")
+
+        def __len__(self) -> int:
+            raise RuntimeError("iteration-marker secret-signature")
+
+    sdk.webhooks.result = _HostileMapping()
+
+    with pytest.raises(
+        PayOSWebhookRejected,
+        match=r"^PayOS webhook rejected$",
+    ) as caught:
+        PayOSClient(sdk).verify_webhook(RAW_WEBHOOK)
+
+    assert caught.value.__cause__ is None
+    assert "iteration-marker" not in repr(caught.value)
+    assert "secret-signature" not in str(caught.value)
 
 
 def test_verify_webhook_rejects_missing_signature_even_if_fake_sdk_accepts():
@@ -691,6 +861,238 @@ def test_get_payment_maps_camel_case_dict_and_aware_transaction_time():
     assert status.paid_at == datetime(2026, 7, 29, 9, 30, tzinfo=timezone.utc)
 
 
+def test_get_payment_uses_first_transaction_that_crosses_expected_amount():
+    sdk = _FakeSDK()
+    current = sdk.payment_requests.get_result
+    assert isinstance(current, PaymentLink)
+    sdk.payment_requests.get_result = current.model_copy(
+        update={
+            "amount": 99_000,
+            "amount_paid": 99_001,
+            "transactions": [
+                _transaction(
+                    reference="THRESHOLD",
+                    amount=99_000,
+                    paid_at="2026-07-29 16:29:00",
+                ),
+                _transaction(
+                    reference="LATER-ONE-DONG",
+                    amount=1,
+                    paid_at="2026-07-29 16:30:00",
+                ),
+            ],
+        }
+    )
+
+    status = PayOSClient(sdk).get_payment(720_000_123)
+
+    assert status.amount_paid == 99_001
+    assert status.reference == "THRESHOLD"
+    assert status.paid_at == datetime(2026, 7, 29, 9, 29, tzinfo=timezone.utc)
+
+
+def test_get_payment_sorts_split_transactions_before_finding_threshold():
+    sdk = _FakeSDK()
+    current = sdk.payment_requests.get_result
+    assert isinstance(current, PaymentLink)
+    sdk.payment_requests.get_result = current.model_copy(
+        update={
+            "transactions": [
+                _transaction(
+                    reference="SECOND",
+                    amount=50_000,
+                    paid_at="2026-07-29 16:30:00",
+                ),
+                _transaction(
+                    reference="FIRST",
+                    amount=49_000,
+                    paid_at="2026-07-29 16:29:00",
+                ),
+            ]
+        }
+    )
+
+    status = PayOSClient(sdk).get_payment(720_000_123)
+
+    assert status.reference == "SECOND"
+    assert status.paid_at == datetime(2026, 7, 29, 9, 30, tzinfo=timezone.utc)
+
+
+@pytest.mark.parametrize("reverse_input", [False, True])
+def test_get_payment_equal_timestamps_have_deterministic_reference_tiebreak(
+    reverse_input: bool,
+):
+    sdk = _FakeSDK()
+    current = sdk.payment_requests.get_result
+    assert isinstance(current, PaymentLink)
+    transactions = [
+        _transaction(
+            reference="A-FIRST",
+            amount=49_000,
+            paid_at="2026-07-29 16:30:00",
+        ),
+        _transaction(
+            reference="B-THRESHOLD",
+            amount=50_000,
+            paid_at="2026-07-29 16:30:00",
+        ),
+    ]
+    sdk.payment_requests.get_result = current.model_copy(
+        update={
+            "transactions": (
+                list(reversed(transactions))
+                if reverse_input
+                else transactions
+            )
+        }
+    )
+
+    status = PayOSClient(sdk).get_payment(720_000_123)
+
+    assert status.reference == "B-THRESHOLD"
+    assert status.paid_at == datetime(2026, 7, 29, 9, 30, tzinfo=timezone.utc)
+
+
+def test_get_payment_preserves_underpaid_paid_evidence_for_payment_review():
+    sdk = _FakeSDK()
+    current = sdk.payment_requests.get_result
+    assert isinstance(current, PaymentLink)
+    sdk.payment_requests.get_result = current.model_copy(
+        update={
+            "amount_paid": 50_000,
+            "amount_remaining": 49_000,
+            "transactions": [
+                _transaction(
+                    reference="UNDERPAID",
+                    amount=50_000,
+                    paid_at="2026-07-29 16:29:00",
+                )
+            ],
+        }
+    )
+
+    status = PayOSClient(sdk).get_payment(720_000_123)
+
+    assert status.status == "PAID"
+    assert status.amount_paid == 50_000
+    assert status.reference == "UNDERPAID"
+    assert status.paid_at == datetime(2026, 7, 29, 9, 29, tzinfo=timezone.utc)
+
+
+@pytest.mark.parametrize(
+    ("amount_paid", "transaction_amount"),
+    [
+        (99_000, 98_999),
+        (99_000, 99_001),
+        (1, 2),
+    ],
+)
+def test_get_payment_rejects_transaction_sum_mismatch(
+    amount_paid: int,
+    transaction_amount: int,
+):
+    sdk = _FakeSDK()
+    current = sdk.payment_requests.get_result
+    assert isinstance(current, PaymentLink)
+    sdk.payment_requests.get_result = current.model_copy(
+        update={
+            "amount_paid": amount_paid,
+            "transactions": [
+                _transaction(
+                    reference="MISMATCH",
+                    amount=transaction_amount,
+                    paid_at="2026-07-29 16:30:00",
+                )
+            ],
+        }
+    )
+
+    with pytest.raises(PayOSPaymentLookupError):
+        PayOSClient(sdk).get_payment(720_000_123)
+
+
+@pytest.mark.parametrize("bad_amount", [True, False, 0, -1, "99000"])
+def test_get_payment_rejects_malformed_expected_amount(bad_amount: object):
+    sdk = _FakeSDK()
+    current = sdk.payment_requests.get_result
+    assert isinstance(current, PaymentLink)
+    sdk.payment_requests.get_result = current.model_copy(
+        update={"amount": bad_amount}
+    )
+
+    with pytest.raises(PayOSPaymentLookupError):
+        PayOSClient(sdk).get_payment(720_000_123)
+
+
+@pytest.mark.parametrize("bad_amount", [True, False, 0, -1, "99000"])
+def test_get_payment_rejects_malformed_transaction_amount(bad_amount: object):
+    sdk = _FakeSDK()
+    current = sdk.payment_requests.get_result
+    assert isinstance(current, PaymentLink)
+    sdk.payment_requests.get_result = current.model_copy(
+        update={
+            "transactions": [
+                _transaction(
+                    reference="BAD-AMOUNT",
+                    amount=bad_amount,
+                    paid_at="2026-07-29 16:30:00",
+                )
+            ]
+        }
+    )
+
+    with pytest.raises(PayOSPaymentLookupError):
+        PayOSClient(sdk).get_payment(720_000_123)
+
+
+@pytest.mark.parametrize(
+    ("response_field", "transaction_field"),
+    [
+        ("amount", None),
+        (None, "amount"),
+        (None, "reference"),
+        (None, "transaction_date_time"),
+    ],
+)
+def test_get_payment_rejects_non_builtin_official_model_primitives(
+    response_field: str | None,
+    transaction_field: str | None,
+):
+    sdk = _FakeSDK()
+    current = sdk.payment_requests.get_result
+    assert isinstance(current, PaymentLink)
+
+    class _IntSubclass(int):
+        pass
+
+    class _StringSubclass(str):
+        pass
+
+    transaction_updates: dict[str, object] = {}
+    if transaction_field == "amount":
+        transaction_updates[transaction_field] = _IntSubclass(99_000)
+    elif transaction_field == "reference":
+        transaction_updates[transaction_field] = _StringSubclass("REFERENCE")
+    elif transaction_field == "transaction_date_time":
+        transaction_updates[transaction_field] = _StringSubclass(
+            "2026-07-29 16:30:00"
+        )
+    transaction = _transaction(
+        reference="REFERENCE",
+        amount=99_000,
+        paid_at="2026-07-29 16:30:00",
+    ).model_copy(update=transaction_updates)
+    response_updates: dict[str, object] = {"transactions": [transaction]}
+    if response_field == "amount":
+        response_updates[response_field] = _IntSubclass(99_000)
+    sdk.payment_requests.get_result = current.model_copy(
+        update=response_updates
+    )
+
+    with pytest.raises(PayOSPaymentLookupError):
+        PayOSClient(sdk).get_payment(720_000_123)
+
+
 @pytest.mark.parametrize(
     ("sdk_status", "expected"),
     [
@@ -779,11 +1181,13 @@ def test_get_payment_rejects_malformed_response_fields(
     sdk = _FakeSDK()
     response = {
         "orderCode": 720_000_123,
+        "amount": 99_000,
         "amountPaid": 99_000,
         "status": "PAID",
         "transactions": [
             {
                 "reference": "BANK-REF-1",
+                "amount": 99_000,
                 "transactionDateTime": "2026-07-29 16:30:00",
             }
         ],
@@ -810,6 +1214,7 @@ def test_get_payment_rejects_paid_status_without_safe_transaction(
     sdk = _FakeSDK()
     sdk.payment_requests.get_result = {
         "orderCode": 720_000_123,
+        "amount": 99_000,
         "amountPaid": 99_000,
         "status": "PAID",
         "transactions": transactions,
@@ -1050,6 +1455,34 @@ def _webhook_payload() -> dict[str, object]:
         },
         "signature": "secret-signature",
     }
+
+
+def _transaction(
+    *,
+    reference: object,
+    amount: object,
+    paid_at: object,
+) -> Transaction:
+    transaction = Transaction(
+        reference="SAFE-REFERENCE",
+        amount=1,
+        account_number="secret-account",
+        description="BDBWO3NF",
+        transaction_date_time="2026-07-29 16:30:00",
+        virtual_account_name=None,
+        virtual_account_number=None,
+        counter_account_bank_id=None,
+        counter_account_bank_name=None,
+        counter_account_name=None,
+        counter_account_number=None,
+    )
+    return transaction.model_copy(
+        update={
+            "reference": reference,
+            "amount": amount,
+            "transaction_date_time": paid_at,
+        }
+    )
 
 
 def _encode_webhook(payload: dict[str, object]) -> bytes:

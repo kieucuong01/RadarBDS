@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 from payos import PayOS as _PayOSSDK
 from payos.types import CreatePaymentLinkRequest
 
-from config.settings import get_digital_product_commerce_settings
+from config.settings import PUBLIC_BASE_URL, get_digital_product_commerce_settings
 from services.digital_product_orders import (
     DigitalProductOrder,
     MAX_PAYOS_ORDER_CODE,
@@ -26,6 +26,7 @@ _BASE36_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 _PAYOS_TIMEZONE = timezone(timedelta(hours=7))
 _MISSING = object()
 _PUBLIC_ID_PATTERN = re.compile(r"^[0-9a-f]{32}$")
+_HOST_LABEL_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
 _PAYMENT_DATETIME_PATTERN = re.compile(
     r"^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}"
     r"(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})?$"
@@ -153,7 +154,15 @@ class PayOSPaymentLookupError(PayOSClientError):
 
 
 class PayOSClient:
-    def __init__(self, sdk: object | None = None):
+    def __init__(
+        self,
+        sdk: object | None = None,
+        *,
+        trusted_origin: str | None = None,
+    ):
+        self._trusted_origin = _trusted_https_origin(
+            PUBLIC_BASE_URL if trusted_origin is None else trusted_origin
+        )
         self._sdk = sdk if sdk is not None else _create_sdk()
 
     def create_payment_link(
@@ -164,8 +173,16 @@ class PayOSClient:
     ) -> PayOSPaymentLink:
         try:
             _validate_pending_order(order)
-            _validate_order_url(return_url, order.public_id)
-            _validate_order_url(cancel_url, order.public_id)
+            _validate_order_url(
+                return_url,
+                order.public_id,
+                self._trusted_origin,
+            )
+            _validate_order_url(
+                cancel_url,
+                order.public_id,
+                self._trusted_origin,
+            )
             if return_url != cancel_url:
                 raise PayOSPaymentLinkCreationError()
 
@@ -233,71 +250,93 @@ class PayOSClient:
         payload_hash = hashlib.sha256(raw_body).hexdigest()
         try:
             verified = self._sdk.webhooks.verify(raw_body)
-        except Exception:
-            raise PayOSWebhookRejected() from None
-
-        try:
             payload = json.loads(raw_body)
-        except Exception:
-            raise PayOSWebhookRejected() from None
-        if (
-            not isinstance(payload, dict)
-            or payload.get("success") is not True
-            or payload.get("code") != "00"
-            or not _valid_safe_string(
-                payload.get("signature"),
-                maximum=512,
+            if (
+                type(payload) is not dict
+                or type(payload.get("success")) is not bool
+                or payload.get("success") is not True
+                or type(payload.get("code")) is not str
+                or payload.get("code") != "00"
+                or not _valid_safe_string(
+                    payload.get("signature"),
+                    maximum=512,
+                )
+            ):
+                raise PayOSWebhookRejected()
+            data = payload.get("data")
+            if (
+                type(data) is not dict
+                or type(data.get("code")) is not str
+                or data.get("code") != "00"
+            ):
+                raise PayOSWebhookRejected()
+
+            order_code = data.get("orderCode", _MISSING)
+            amount = data.get("amount", _MISSING)
+            reference = data.get("reference", _MISSING)
+            paid_at_value = data.get("transactionDateTime", _MISSING)
+            if (
+                not _valid_order_code(order_code)
+                or not _valid_positive_int(amount)
+                or not _valid_reference(reference)
+                or type(paid_at_value) is not str
+            ):
+                raise PayOSWebhookRejected()
+            paid_at = _parse_payment_datetime(paid_at_value)
+            if paid_at is None:
+                raise PayOSWebhookRejected()
+
+            verified_order_code = _field(
+                verified,
+                "order_code",
+                "orderCode",
             )
-        ):
-            raise PayOSWebhookRejected()
-        data = payload.get("data")
-        if not isinstance(data, dict) or data.get("code") != "00":
-            raise PayOSWebhookRejected()
-
-        order_code = data.get("orderCode", _MISSING)
-        amount = data.get("amount", _MISSING)
-        reference = data.get("reference", _MISSING)
-        paid_at_value = data.get("transactionDateTime", _MISSING)
-        if (
-            not _valid_order_code(order_code)
-            or not _valid_positive_int(amount)
-            or not _valid_reference(reference)
-        ):
-            raise PayOSWebhookRejected()
-        paid_at = _parse_payment_datetime(paid_at_value)
-        if paid_at is None:
-            raise PayOSWebhookRejected()
-
-        verified_order_code = _field(verified, "order_code", "orderCode")
-        verified_amount = _field(verified, "amount")
-        verified_reference = _field(verified, "reference")
-        verified_paid_at = _parse_payment_datetime(
-            _field(
+            verified_amount = _field(verified, "amount")
+            verified_reference = _field(verified, "reference")
+            verified_paid_at_value = _field(
                 verified,
                 "transaction_date_time",
                 "transactionDateTime",
             )
-        )
-        verified_code = _field(verified, "code")
-        if (
-            verified_order_code != order_code
-            or verified_amount != amount
-            or verified_reference != reference
-            or verified_paid_at != paid_at
-            or verified_code != "00"
-        ):
-            raise PayOSWebhookRejected()
+            verified_code = _field(verified, "code")
+            if (
+                not _valid_order_code(verified_order_code)
+                or not _valid_positive_int(verified_amount)
+                or not _valid_reference(verified_reference)
+                or type(verified_paid_at_value) is not str
+                or type(verified_code) is not str
+            ):
+                raise PayOSWebhookRejected()
+            verified_paid_at = _parse_payment_datetime(
+                verified_paid_at_value
+            )
+            if (
+                verified_order_code != order_code
+                or verified_amount != amount
+                or verified_reference != reference
+                or verified_paid_at != paid_at
+                or verified_code != "00"
+            ):
+                raise PayOSWebhookRejected()
 
-        return VerifiedPayOSPayment(
-            order_code=order_code,
-            amount=amount,
-            reference=reference.strip(),
-            paid_at=paid_at,
-            success=True,
-            payload_hash=payload_hash,
-        )
+            return VerifiedPayOSPayment(
+                order_code=order_code,
+                amount=amount,
+                reference=reference.strip(),
+                paid_at=paid_at,
+                success=True,
+                payload_hash=payload_hash,
+            )
+        except Exception:
+            raise PayOSWebhookRejected() from None
 
     def get_payment(self, order_code: int) -> PayOSPaymentStatus:
+        """Return a fail-closed, transaction-accounted PayOS status.
+
+        Unknown but well-formed provider status strings map to ``UNKNOWN``.
+        Malformed fields or transaction totals that disagree with
+        ``amount_paid`` raise ``PayOSPaymentLookupError``.
+        """
         if not _valid_order_code(order_code):
             raise PayOSPaymentLookupError()
         try:
@@ -311,13 +350,15 @@ class PayOSClient:
                 "order_code",
                 "orderCode",
             )
+            expected_amount = _field(response, "amount")
             amount_paid = _field(response, "amount_paid", "amountPaid")
             raw_status = _field(response, "status")
             if (
                 not _valid_order_code(response_order_code)
                 or response_order_code != order_code
+                or not _valid_positive_int(expected_amount)
                 or not _valid_nonnegative_int(amount_paid)
-                or not isinstance(raw_status, str)
+                or type(raw_status) is not str
             ):
                 raise PayOSPaymentLookupError()
 
@@ -326,36 +367,54 @@ class PayOSClient:
                 if raw_status in {"PENDING", "PAID", "CANCELLED", "EXPIRED"}
                 else "UNKNOWN"
             )
+            transactions = _field(response, "transactions")
+            if type(transactions) not in (list, tuple):
+                raise PayOSPaymentLookupError()
+            safe_transactions: list[tuple[datetime, str, int]] = []
+            for transaction in transactions:
+                transaction_reference = _field(transaction, "reference")
+                transaction_amount = _field(transaction, "amount")
+                transaction_paid_at_value = _field(
+                    transaction,
+                    "transaction_date_time",
+                    "transactionDateTime",
+                )
+                transaction_paid_at = _parse_payment_datetime(
+                    transaction_paid_at_value
+                )
+                if (
+                    not _valid_reference(transaction_reference)
+                    or not _valid_positive_int(transaction_amount)
+                    or type(transaction_paid_at_value) is not str
+                    or transaction_paid_at is None
+                ):
+                    raise PayOSPaymentLookupError()
+                safe_transactions.append(
+                    (
+                        transaction_paid_at,
+                        transaction_reference.strip(),
+                        transaction_amount,
+                    )
+                )
+            safe_transactions.sort(
+                key=lambda item: (item[0], item[1], item[2])
+            )
+            if sum(item[2] for item in safe_transactions) != amount_paid:
+                raise PayOSPaymentLookupError()
+
             reference = ""
             paid_at = None
             if status == "PAID":
-                if amount_paid <= 0:
+                if amount_paid <= 0 or not safe_transactions:
                     raise PayOSPaymentLookupError()
-                transactions = _field(response, "transactions")
-                if not isinstance(transactions, (list, tuple)) or not transactions:
-                    raise PayOSPaymentLookupError()
-                safe_transactions: list[tuple[datetime, str]] = []
-                for transaction in transactions:
-                    transaction_reference = _field(transaction, "reference")
-                    transaction_paid_at = _parse_payment_datetime(
-                        _field(
-                            transaction,
-                            "transaction_date_time",
-                            "transactionDateTime",
-                        )
-                    )
-                    if (
-                        not _valid_reference(transaction_reference)
-                        or transaction_paid_at is None
-                    ):
-                        raise PayOSPaymentLookupError()
-                    safe_transactions.append(
-                        (
-                            transaction_paid_at,
-                            transaction_reference.strip(),
-                        )
-                    )
-                paid_at, reference = max(safe_transactions, key=lambda item: item[0])
+                selected = safe_transactions[-1]
+                running_total = 0
+                for transaction in safe_transactions:
+                    running_total += transaction[2]
+                    if running_total >= expected_amount:
+                        selected = transaction
+                        break
+                paid_at, reference, _ = selected
 
             return PayOSPaymentStatus(
                 order_code=order_code,
@@ -419,7 +478,38 @@ def _validate_pending_order(order: object) -> None:
         raise PayOSPaymentLinkCreationError()
 
 
-def _validate_order_url(value: object, public_id: str) -> None:
+def _trusted_https_origin(value: object) -> tuple[str, str, int]:
+    if (
+        type(value) is not str
+        or not value
+        or value != value.strip()
+        or len(value) > _MAX_URL_LENGTH
+    ):
+        raise PayOSConfigurationError()
+    try:
+        parsed = urlsplit(value)
+        port = parsed.port
+        host = _normalized_hostname(parsed.hostname)
+    except (UnicodeError, ValueError):
+        raise PayOSConfigurationError() from None
+    if (
+        parsed.scheme != "https"
+        or host is None
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.query
+        or parsed.fragment
+        or parsed.path not in ("", "/")
+    ):
+        raise PayOSConfigurationError()
+    return ("https", host, port if port is not None else 443)
+
+
+def _validate_order_url(
+    value: object,
+    public_id: str,
+    trusted_origin: tuple[str, str, int],
+) -> None:
     if (
         not isinstance(value, str)
         or not value
@@ -430,20 +520,43 @@ def _validate_order_url(value: object, public_id: str) -> None:
     try:
         parsed = urlsplit(value)
         port = parsed.port
-    except ValueError:
+        host = _normalized_hostname(parsed.hostname)
+    except (UnicodeError, ValueError):
         raise PayOSPaymentLinkCreationError() from None
     expected_path = f"/ban-do-thu-dau-mot/don-hang/{public_id}"
+    request_origin = (
+        parsed.scheme,
+        host,
+        port if port is not None else 443,
+    )
     if (
         parsed.scheme != "https"
-        or not parsed.hostname
+        or host is None
         or parsed.username is not None
         or parsed.password is not None
         or parsed.query
         or parsed.fragment
         or parsed.path != expected_path
         or (port is not None and not 1 <= port <= 65_535)
+        or request_origin != trusted_origin
     ):
         raise PayOSPaymentLinkCreationError()
+
+
+def _normalized_hostname(value: object) -> str | None:
+    if type(value) is not str or not value or value.endswith("."):
+        return None
+    normalized = value.encode("idna").decode("ascii").lower()
+    if (
+        not normalized
+        or len(normalized) > 253
+        or any(
+            _HOST_LABEL_PATTERN.fullmatch(label) is None
+            for label in normalized.split(".")
+        )
+    ):
+        return None
+    return normalized
 
 
 def _valid_checkout_url(value: object) -> bool:
@@ -488,24 +601,21 @@ def _field(value: object, *names: str) -> object:
 
 def _valid_order_code(value: object) -> bool:
     return bool(
-        not isinstance(value, bool)
-        and isinstance(value, int)
+        type(value) is int
         and ORDER_CODE_BASE < value <= MAX_PAYOS_ORDER_CODE
     )
 
 
 def _valid_positive_int(value: object) -> bool:
     return bool(
-        not isinstance(value, bool)
-        and isinstance(value, int)
+        type(value) is int
         and 0 < value <= _MAX_VND_AMOUNT
     )
 
 
 def _valid_nonnegative_int(value: object) -> bool:
     return bool(
-        not isinstance(value, bool)
-        and isinstance(value, int)
+        type(value) is int
         and 0 <= value <= _MAX_VND_AMOUNT
     )
 
@@ -516,7 +626,7 @@ def _valid_reference(value: object) -> bool:
 
 def _valid_safe_string(value: object, *, maximum: int) -> bool:
     return bool(
-        isinstance(value, str)
+        type(value) is str
         and value.strip()
         and len(value) <= maximum
         and value.isprintable()
@@ -535,10 +645,10 @@ def _normalize_server_datetime(value: object) -> datetime | None:
 
 
 def _parse_payment_datetime(value: object) -> datetime | None:
-    if isinstance(value, datetime):
+    if type(value) is datetime:
         parsed = value
     elif (
-        isinstance(value, str)
+        type(value) is str
         and value.strip()
         and _PAYMENT_DATETIME_PATTERN.fullmatch(value.strip()) is not None
     ):
