@@ -88,6 +88,16 @@ def test_binh_duong_map_registry_uses_safe_dashboard_and_geometry_identifiers():
     assert all(isinstance(relation_id, int) and relation_id > 0 for relation_id in relation_ids)
 
 
+def test_phu_an_is_grouped_with_thu_dau_mot_after_reorganization():
+    phu_an = next(
+        area for area in BINH_DUONG_CURRENT_AREAS if area["slug"] == "phu-an"
+    )
+
+    assert phu_an["group"] == "Thủ Dầu Một"
+    assert "city=Th%E1%BB%A7%20D%E1%BA%A7u%20M%E1%BB%99t" in phu_an["dashboard_href"]
+    assert phu_an["dashboard_label"] == "Lọc tin Thủ Dầu Một"
+
+
 def test_binh_duong_map_page_metadata_targets_the_new_canonical_route():
     assert BINH_DUONG_MAP_PAGE["path"] == "/ban-do-binh-duong"
     assert BINH_DUONG_MAP_PAGE["hero_title"] == "Bản đồ Bình Dương"
@@ -120,6 +130,12 @@ def test_binh_duong_map_geojson_snapshots_match_registry_exactly():
         ]
         assert [feature["properties"]["name"] for feature in features] == [
             area["name"] for area in areas
+        ]
+        assert [feature["properties"]["group"] for feature in features] == [
+            area["group"] for area in areas
+        ]
+        assert [feature["properties"]["dashboard_href"] for feature in features] == [
+            area["dashboard_href"] for area in areas
         ]
         assert {feature["properties"]["layer"] for feature in features} == {layer}
         assert all(
@@ -156,8 +172,10 @@ def test_binh_duong_map_route_renders_progressive_content_and_accessible_control
     assert 'data-binh-duong-map-retry' in html
     assert 'data-binh-duong-map-selection' in html
     assert 'data-binh-duong-map-canvas' in html
+    assert 'data-binh-duong-map-fullscreen' in html
+    assert 'aria-pressed="false"' in html
     assert 'data-map-mobile-cta' in html
-    assert "bd-map-20260728-4" in html
+    assert "bd-map-20260728-7" in html
     assert "geoBoundaries" in html
     assert "ranh cấp huyện Việt Nam (năm 2020)" in html
     assert "OpenStreetMap" in html
@@ -170,6 +188,25 @@ def test_binh_duong_map_route_renders_progressive_content_and_accessible_control
     assert html.count('data-track-cta="binh_duong_map_current_dashboard"') == 36
     for internal_term in ("SEO/AIO", "map-first", "Mỗi card", "CTA", "trang detail"):
         assert internal_term not in html
+
+
+def test_binh_duong_map_places_selection_above_full_width_map_and_removes_overview():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/ban-do-binh-duong").get_data(as_text=True)
+
+    assert 'id="tong-quan-binh-duong"' not in html
+    assert ">Tổng quan<" not in html
+    assert html.index("data-binh-duong-map-selection") < html.index(
+        "data-binh-duong-map-canvas"
+    )
+    workspace = re.search(
+        r'<div class="bd-map-workspace">(.*?)</div>\s*</div>\s*</section>',
+        html,
+        re.S,
+    )
+    assert workspace
+    assert "data-binh-duong-map-selection" not in workspace.group(1)
 
 
 def test_binh_duong_map_schema_has_two_datasets_and_unique_legacy_item_list():
@@ -239,11 +276,18 @@ def test_binh_duong_map_css_reserves_map_space_and_accessible_controls():
     assert "min-height: 44px" in css
     assert "scroll-margin-top:" in css
     assert ":focus-visible" in css
-    assert "height: 620px" in css
+    assert "height: 680px" in css
     assert "height: 430px" in css
     assert "scroll-margin-top: 136px" in css
     assert "@media (prefers-reduced-motion: reduce)" in css
     assert "overflow-x: clip" in css
     assert ".bd-map-mobile-cta.is-visible" in css
+    assert ".bd-map-canvas-wrap:fullscreen" in css
+    assert ".bd-map-fullscreen-button" in css
+    assert re.search(
+        r"\.bd-map-selection \[hidden\]\s*\{\s*display:\s*none;",
+        css,
+    )
+    assert "grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr)" not in css
     assert ".bd-map-current-row .bd-map-area-actions a {\n  display: none;" not in css
     assert ".bd-map-area-card .bd-map-area-actions a {\n    display: none;" not in css

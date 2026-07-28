@@ -119,6 +119,40 @@
     }
   }
 
+  function mapOptions() {
+    return {
+      scrollWheelZoom: true,
+      zoomControl: true
+    };
+  }
+
+  function fullscreenElement(doc) {
+    if (!doc) return null;
+    return doc.fullscreenElement || doc.webkitFullscreenElement || null;
+  }
+
+  function toggleMapFullscreen(element, doc) {
+    if (!element || !doc) return "unavailable";
+
+    if (fullscreenElement(doc) === element) {
+      var exit = doc.exitFullscreen || doc.webkitExitFullscreen;
+      if (typeof exit !== "function") return "unavailable";
+      var exitResult = exit.call(doc);
+      if (exitResult && typeof exitResult.catch === "function") {
+        exitResult.catch(function () {});
+      }
+      return "exit";
+    }
+
+    var enter = element.requestFullscreen || element.webkitRequestFullscreen;
+    if (typeof enter !== "function") return "unavailable";
+    var enterResult = enter.call(element);
+    if (enterResult && typeof enterResult.catch === "function") {
+      enterResult.catch(function () {});
+    }
+    return "enter";
+  }
+
   function init(doc, win) {
     var root = doc.querySelector("[data-binh-duong-map]");
     if (!root) return;
@@ -127,6 +161,13 @@
     var status = root.querySelector("[data-binh-duong-map-status]");
     var fallback = root.querySelector("[data-binh-duong-map-fallback]");
     var retryButton = root.querySelector("[data-binh-duong-map-retry]");
+    var fullscreenTarget = root.querySelector(
+      "[data-binh-duong-map-fullscreen-target]"
+    );
+    var fullscreenButton = root.querySelector(
+      "[data-binh-duong-map-fullscreen]"
+    );
+    var fullscreenLabel = root.querySelector("[data-map-fullscreen-label]");
     var layerButtons = Array.prototype.slice.call(
       root.querySelectorAll("[data-map-layer]")
     );
@@ -183,6 +224,26 @@
     function setFallback(visible) {
       if (fallback) fallback.hidden = !visible;
       if (canvas) canvas.setAttribute("aria-hidden", visible ? "true" : "false");
+    }
+
+    function syncFullscreenState() {
+      var active = fullscreenElement(doc) === fullscreenTarget;
+      if (fullscreenButton) {
+        fullscreenButton.setAttribute("aria-pressed", active ? "true" : "false");
+        fullscreenButton.setAttribute(
+          "aria-label",
+          active ? "Thoát chế độ toàn màn hình" : "Mở bản đồ toàn màn hình"
+        );
+      }
+      if (fullscreenLabel) {
+        fullscreenLabel.textContent = active ? "Thoát toàn màn hình" : "Toàn màn hình";
+      }
+      root.classList.toggle("is-map-fullscreen", active);
+      if (map) {
+        win.setTimeout(function () {
+          map.invalidateSize();
+        }, 80);
+      }
     }
 
     function fetchJson(url) {
@@ -396,10 +457,7 @@
         throw new Error("leaflet_unavailable");
       }
       if (!map) {
-        map = win.L.map(canvas, {
-          scrollWheelZoom: false,
-          zoomControl: true
-        });
+        map = win.L.map(canvas, mapOptions());
         win.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 19,
           attribution: (
@@ -461,6 +519,21 @@
     });
 
     if (retryButton) retryButton.addEventListener("click", loadMap);
+    if (fullscreenButton && fullscreenTarget) {
+      var supportsFullscreen = (
+        typeof fullscreenTarget.requestFullscreen === "function"
+        || typeof fullscreenTarget.webkitRequestFullscreen === "function"
+      );
+      fullscreenButton.hidden = !supportsFullscreen;
+      if (supportsFullscreen) {
+        fullscreenButton.addEventListener("click", function () {
+          toggleMapFullscreen(fullscreenTarget, doc);
+        });
+        doc.addEventListener("fullscreenchange", syncFullscreenState);
+        doc.addEventListener("webkitfullscreenchange", syncFullscreenState);
+        syncFullscreenState();
+      }
+    }
     win.addEventListener("hashchange", function () {
       renderState(parseMapHash(win.location.hash, validSlugs));
     });
@@ -476,6 +549,8 @@
     buildTrackingContext: buildTrackingContext,
     filterFeatureCollection: filterFeatureCollection,
     matchesExpectedSlugs: matchesExpectedSlugs,
+    mapOptions: mapOptions,
+    toggleMapFullscreen: toggleMapFullscreen,
     init: init
   };
 });

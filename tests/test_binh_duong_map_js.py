@@ -110,3 +110,32 @@ def test_snapshot_slug_match_rejects_stale_same_count_data():
     assert _run_node(
         f"mapPage.matchesExpectedSlugs({stale}, ['a','b'])"
     ) is False
+
+
+def test_map_options_enable_scroll_wheel_zoom():
+    assert _run_node("mapPage.mapOptions()") == {
+        "scrollWheelZoom": True,
+        "zoomControl": True,
+    }
+
+
+def test_fullscreen_toggle_enters_and_exits_the_map_container():
+    enter = _run_node(
+        "(() => {"
+        "const calls=[];"
+        "const element={requestFullscreen:()=>calls.push('enter')};"
+        "const doc={fullscreenElement:null};"
+        "return {result:mapPage.toggleMapFullscreen(element,doc),calls};"
+        "})()"
+    )
+    exit_fullscreen = _run_node(
+        "(() => {"
+        "const calls=[];"
+        "const element={requestFullscreen:()=>calls.push('enter')};"
+        "const doc={fullscreenElement:element,exitFullscreen:()=>calls.push('exit')};"
+        "return {result:mapPage.toggleMapFullscreen(element,doc),calls};"
+        "})()"
+    )
+
+    assert enter == {"result": "enter", "calls": ["enter"]}
+    assert exit_fullscreen == {"result": "exit", "calls": ["exit"]}

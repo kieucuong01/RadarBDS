@@ -23,12 +23,12 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16.png') }}?v=app-icon-20260608">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=bd-map-20260728-4">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/binh_duong_map.css') }}?v=bd-map-20260728-4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=bd-map-20260728-7">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/binh_duong_map.css') }}?v=bd-map-20260728-7">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-  <script src="{{ url_for('static', filename='js/binh_duong_map.js') }}?v=bd-map-20260728-4" defer></script>
+  <script src="{{ url_for('static', filename='js/binh_duong_map.js') }}?v=bd-map-20260728-7" defer></script>
 </head>
 
 <body class="seo-page planning-page binh-duong-map-page">
@@ -76,19 +76,6 @@
       </div>
     </header>
 
-    <section class="seo-shell bd-map-intro" aria-labelledby="tong-quan-binh-duong">
-      <div class="bd-map-reading-column">
-        <p class="planning-kicker">Tổng quan</p>
-        <h2 id="tong-quan-binh-duong">Bình Dương cũ trên bản đồ hành chính</h2>
-        <p><strong>“Bình Dương cũ”</strong> trên trang này là địa bàn tỉnh Bình Dương trước đợt sắp xếp hành chính năm 2025. Cách gọi này giúp người đang xem nhà đất đối chiếu những địa danh quen thuộc như Thủ Dầu Một, Bến Cát, Dĩ An hoặc Thuận An với tên phường, xã mới.</p>
-        <p>Lớp mặc định gồm 9 đơn vị cấp huyện trước sắp xếp. Bạn có thể chuyển sang lớp 36 phường, xã để xem ranh tham khảo hiện hành trong cùng một khung bản đồ.</p>
-      </div>
-      <div class="planning-source-strip">
-        <strong>Lưu ý tra cứu.</strong>
-        <span>Ranh hiển thị dùng để định hướng và đối chiếu khu vực, không thay thế bản đồ địa chính, hồ sơ thửa đất, văn bản quy hoạch hoặc xác nhận của cơ quan có thẩm quyền.</span>
-      </div>
-    </section>
-
     <section id="ban-do-tuong-tac" class="seo-shell bd-map-section" aria-labelledby="ban-do-tuong-tac-title">
       <div class="planning-section-heading">
         <div>
@@ -118,9 +105,43 @@
 
         <p class="bd-map-status" data-binh-duong-map-status aria-live="polite">Đang tải lớp Bình Dương cũ…</p>
 
+        <aside class="bd-map-selection" data-binh-duong-map-selection aria-live="polite">
+          <div class="bd-map-selection-heading">
+            <p class="planning-kicker">Khu vực đang chọn</p>
+            <h3 data-map-selection-name>Toàn tỉnh Bình Dương cũ</h3>
+            <p class="bd-map-selection-type" data-map-selection-type>9 đơn vị cấp huyện trước sắp xếp</p>
+          </div>
+          <p class="bd-map-selection-summary" data-map-selection-summary>Chọn một ranh trên bản đồ hoặc tên khu vực trong danh sách để xem thông tin chi tiết.</p>
+          <dl>
+            <div>
+              <dt>Nhóm địa bàn</dt>
+              <dd data-map-selection-group>Toàn khu vực</dd>
+            </div>
+            <div data-map-selection-former-row hidden>
+              <dt>Được hình thành từ</dt>
+              <dd data-map-selection-former></dd>
+            </div>
+          </dl>
+          <div class="bd-map-selection-actions">
+            <a class="seo-button seo-button-primary" href="/?tab=signals" data-map-selection-cta data-track-cta="binh_duong_map_area_dashboard">Xem tin đang bán</a>
+            <p class="bd-map-attribution">Nền bản đồ © OpenStreetMap. Ranh tham khảo từ geoBoundaries và OpenStreetMap.</p>
+          </div>
+        </aside>
+
         <div class="bd-map-workspace">
-          <div class="bd-map-canvas-wrap">
+          <div class="bd-map-canvas-wrap" data-binh-duong-map-fullscreen-target>
+            <button
+              class="bd-map-fullscreen-button"
+              type="button"
+              data-binh-duong-map-fullscreen
+              aria-controls="binh-duong-map-canvas"
+              aria-pressed="false"
+            >
+              <span aria-hidden="true">⛶</span>
+              <span data-map-fullscreen-label>Toàn màn hình</span>
+            </button>
             <div
+              id="binh-duong-map-canvas"
               class="bd-map-canvas"
               data-binh-duong-map-canvas
               role="region"
@@ -132,25 +153,11 @@
               <button type="button" data-binh-duong-map-retry>Thử tải lại bản đồ</button>
             </div>
           </div>
+        </div>
 
-          <aside class="bd-map-selection" data-binh-duong-map-selection aria-live="polite">
-            <p class="planning-kicker">Khu vực đang chọn</p>
-            <h3 data-map-selection-name>Toàn tỉnh Bình Dương cũ</h3>
-            <p class="bd-map-selection-type" data-map-selection-type>9 đơn vị cấp huyện trước sắp xếp</p>
-            <p data-map-selection-summary>Chọn một ranh trên bản đồ hoặc tên khu vực trong danh sách để xem thông tin chi tiết.</p>
-            <dl>
-              <div>
-                <dt>Nhóm địa bàn</dt>
-                <dd data-map-selection-group>Toàn khu vực</dd>
-              </div>
-              <div data-map-selection-former-row hidden>
-                <dt>Được hình thành từ</dt>
-                <dd data-map-selection-former></dd>
-              </div>
-            </dl>
-            <a class="seo-button seo-button-primary" href="/?tab=signals" data-map-selection-cta data-track-cta="binh_duong_map_area_dashboard">Xem tin đang bán</a>
-            <p class="bd-map-attribution">Nền bản đồ © OpenStreetMap. Ranh tham khảo từ geoBoundaries và OpenStreetMap.</p>
-          </aside>
+        <div class="planning-source-strip bd-map-map-note">
+          <strong>Lưu ý tra cứu.</strong>
+          <span>Ranh hiển thị dùng để định hướng và đối chiếu khu vực, không thay thế bản đồ địa chính, hồ sơ thửa đất, văn bản quy hoạch hoặc xác nhận của cơ quan có thẩm quyền.</span>
         </div>
       </div>
     </section>

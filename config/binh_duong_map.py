@@ -7,7 +7,7 @@ from urllib.parse import quote
 
 BINH_DUONG_MAP_UPDATED_AT = "2026-07-28"
 BINH_DUONG_MAP_UPDATED_LABEL = "28/07/2026"
-BINH_DUONG_MAP_DATA_VERSION = "bd-map-data-20260728-1"
+BINH_DUONG_MAP_DATA_VERSION = "bd-map-data-20260728-2"
 
 GEObOUNDARIES_ADM2_API = "https://www.geoboundaries.org/api/current/gbOpen/VNM/ADM2/"
 OPENSTREETMAP_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright"
@@ -157,7 +157,7 @@ BINH_DUONG_CURRENT_AREAS = [
     _current_area("chanh-hiep", "Chánh Hiệp", "Phường", "Thủ Dầu Một", "Định Hòa, Tương Bình Hiệp, một phần Hiệp An và phần còn lại của Chánh Mỹ", 10590955),
     _current_area("binh-duong", "Bình Dương", "Phường", "Thủ Dầu Một", "Phú Mỹ, Hòa Phú, Phú Tân và Phú Chánh", 13455518),
     _current_area("hoa-loi", "Hòa Lợi", "Phường", "Bến Cát", "Tân Định và Hòa Lợi", 13477612),
-    _current_area("phu-an", "Phú An", "Phường", "Bến Cát", "Tân An, Phú An và phần còn lại của Hiệp An", 13477595),
+    _current_area("phu-an", "Phú An", "Phường", "Thủ Dầu Một", "Tân An, Phú An và phần còn lại của Hiệp An", 13477595),
     _current_area("tay-nam", "Tây Nam", "Phường", "Bến Cát", "An Tây và một phần Thanh Tuyền, An Lập", 13477596),
     _current_area("long-nguyen", "Long Nguyên", "Phường", "Bến Cát", "An Điền, Long Nguyên và một phần Mỹ Phước", 15044270),
     _current_area("ben-cat", "Bến Cát", "Phường", "Bến Cát", "Tân Hưng, Lai Hưng và phần còn lại của Mỹ Phước", 13477633),
