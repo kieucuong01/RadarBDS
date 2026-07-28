@@ -135,17 +135,19 @@
 
   function renderComparables(rows) {
     const list = $('comparableList');
-    if (!list) return;
-    if (!rows || !rows.length) {
-      list.innerHTML = '<p class="model-note">Chưa có mẫu so sánh đủ gần để hiển thị.</p>';
+    const section = $('comparablesSection');
+    if (!list || !section) return;
+    if (
+      !Array.isArray(rows)
+      || !rows.length
+      || !window.RadarValuationComparableCard
+    ) {
+      list.innerHTML = '';
+      section.hidden = true;
       return;
     }
-    list.innerHTML = rows.map((row) => `
-      <div class="comparable-row">
-        <div class="comparable-title">${esc(row.title || `Tin #${row.id}`)}</div>
-        <div class="comparable-meta">${money.format(row.price_ty)} tỷ · ${ppm.format(row.price_per_m2)} tr/m² · ${ppm.format(row.area_m2)} m²</div>
-      </div>
-    `).join('');
+    list.innerHTML = window.RadarValuationComparableCard.renderGrid(rows);
+    section.hidden = !list.querySelector('.valuation-comparable-card');
   }
 
   function formatDataDate(value) {
@@ -169,10 +171,7 @@
     $('basisCount').textContent = `${estimate.basis_count} mẫu hợp lệ`;
     $('modelNote').textContent = `${estimate.confidence_label} · Dữ liệu cập nhật đến ${formatDataDate(estimate.data_as_of)}. Đây là giá tham khảo, không thay thế thẩm định thực tế.`;
 
-    const locked = Boolean(payload.comparables_locked);
-    $('comparablesLock').hidden = !locked;
-    $('comparableList').hidden = locked;
-    renderComparables(locked ? [] : (payload.comparables || []));
+    renderComparables(payload.comparables || []);
 
     const dashboard = $('dashboardCta');
     if (dashboard) dashboard.href = payload.dashboard_url || '/';
@@ -226,7 +225,6 @@
         property_type: payload.property_type,
         confidence: data.estimate.confidence,
         has_asking_price: Boolean(payload.price_ty),
-        comparables_locked: Boolean(data.comparables_locked),
       });
     } catch (err) {
       setMessage('Mất kết nối, vui lòng thử lại sau.');
@@ -236,19 +234,23 @@
     }
   }
 
-  function unlockComparables() {
-    track('valuation_unlock_click', { source: 'result' });
-    if (window.RadarAuth) {
-      window.RadarAuth.openAuthModal('Đăng ký Free để mở các mẫu so sánh đã ẩn thông tin liên hệ.');
-    }
-  }
-
   function init() {
     initWardPickers();
     const form = $('valuationForm');
     if (form) form.addEventListener('submit', submitValuation);
-    const unlock = $('unlockComparablesBtn');
-    if (unlock) unlock.addEventListener('click', unlockComparables);
+    const comparables = $('comparableList');
+    if (comparables) {
+      comparables.addEventListener('click', (event) => {
+        const card = event.target.closest('.valuation-comparable-card');
+        if (!card) return;
+        const position = Number(card.dataset.comparablePosition);
+        track('valuation_comparable_click', {
+          position: Number.isInteger(position) ? position : 0,
+          property_type: card.dataset.propertyType || 'unknown',
+          source: 'valuation_result',
+        });
+      });
+    }
     const dashboard = $('dashboardCta');
     if (dashboard) {
       dashboard.addEventListener('click', () => track('valuation_dashboard_click', { source: 'result' }));

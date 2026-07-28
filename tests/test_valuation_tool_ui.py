@@ -2,25 +2,38 @@ import unittest
 import re
 from pathlib import Path
 
+import app as app_module
+
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 class ValuationToolUiContractTest(unittest.TestCase):
-    def test_page_order_and_trust_first_controls(self):
-        template = (ROOT / "templates" / "valuation_tool.html").read_text(encoding="utf-8")
+    @classmethod
+    def setUpClass(cls):
+        cls.client = app_module.app.test_client()
 
-        hero = template.index('class="hero-band"')
-        workspace = template.index("valuation-workspace")
-        method = template.index("valuation-method-heading")
-        faq = template.index('id="faq"')
+    def test_rendered_page_has_public_full_width_comparable_grid(self):
+        response = self.client.get("/dinh-gia-bds")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+
+        hero = html.index('class="hero-band"')
+        workspace = html.index("valuation-workspace")
+        method = html.index("valuation-method-heading")
+        faq = html.index('id="faq"')
         self.assertLess(hero, workspace)
         self.assertLess(workspace, method)
         self.assertLess(method, faq)
-        self.assertNotIn('name="tho_cu_m2"', template)
-        self.assertIn('name="price_ty"', template)
-        self.assertIn('id="comparablesLock"', template)
-        self.assertIn('id="dashboardCta"', template)
+        self.assertNotIn('name="tho_cu_m2"', html)
+        self.assertIn('name="price_ty"', html)
+        self.assertIn('id="comparablesSection"', html)
+        self.assertIn('id="comparableList"', html)
+        self.assertNotIn('id="comparablesLock"', html)
+        self.assertNotIn('id="unlockComparablesBtn"', html)
+        self.assertIn("css/main/cards.css", html)
+        self.assertIn("js/valuation_comparable_card.js", html)
+        self.assertIn('id="dashboardCta"', html)
 
     def test_javascript_contains_all_funnel_events_and_localized_result_fields(self):
         javascript = (ROOT / "static" / "js" / "valuation_tool.js").read_text(encoding="utf-8")
@@ -29,10 +42,11 @@ class ValuationToolUiContractTest(unittest.TestCase):
             "valuation_start",
             "valuation_success",
             "valuation_error",
-            "valuation_unlock_click",
             "valuation_dashboard_click",
+            "valuation_comparable_click",
         ):
             self.assertIn(event_name, javascript)
+        self.assertNotIn("valuation_unlock_click", javascript)
         self.assertIn("confidence_label", javascript)
         self.assertIn("basis_count", javascript)
         self.assertIn("data_as_of", javascript)

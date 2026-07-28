@@ -76,4 +76,86 @@ const gridHtml = renderer.renderGrid(
 assert.equal((gridHtml.match(/<a\b/g) || []).length, 6);
 assert.doesNotMatch(gridHtml, /\/listing\/7"/);
 
+let readyHandler = null;
+let comparableClickHandler = null;
+const comparableList = {
+  addEventListener(eventName, handler) {
+    if (eventName === 'click') comparableClickHandler = handler;
+  },
+};
+const cityInput = {
+  innerHTML: '',
+  value: '',
+  addEventListener() {},
+};
+const wardInput = {
+  innerHTML: '',
+};
+const document = {
+  readyState: 'loading',
+  addEventListener(eventName, handler) {
+    if (eventName === 'DOMContentLoaded') readyHandler = handler;
+  },
+  getElementById(id) {
+    return {
+      cityInput,
+      wardInput,
+      comparableList,
+    }[id] || null;
+  },
+};
+const valuationWindow = {
+  INITIAL_WARDS_BY_CITY: {
+    'THỦ DẦU MỘT': ['Phú Mỹ'],
+  },
+  dataLayer: [],
+};
+const valuationSource = fs.readFileSync(
+  path.join(root, 'static', 'js', 'valuation_tool.js'),
+  'utf8'
+);
+vm.runInNewContext(valuationSource, {
+  window: valuationWindow,
+  document,
+  Intl,
+  Number,
+  String,
+  Math,
+  Date,
+  Object,
+  Boolean,
+  Array,
+  FormData: function FormData() {},
+});
+assert.equal(typeof readyHandler, 'function');
+readyHandler();
+assert.equal(typeof comparableClickHandler, 'function');
+
+const analyticsCard = {
+  dataset: {
+    comparablePosition: '1',
+    propertyType: 'dat_nen',
+    listingId: '42',
+    title: 'Không được gửi',
+    price: '1.8',
+  },
+};
+comparableClickHandler({
+  target: {
+    closest(selector) {
+      return selector === '.valuation-comparable-card' ? analyticsCard : null;
+    },
+  },
+});
+assert.deepEqual(
+  JSON.parse(JSON.stringify(valuationWindow.dataLayer[0])),
+  {
+    event: 'valuation_comparable_click',
+    event_category: 'valuation_tool',
+    position: 1,
+    property_type: 'dat_nen',
+    source: 'valuation_result',
+  }
+);
+
 console.log('valuation comparable card renderer: ok');

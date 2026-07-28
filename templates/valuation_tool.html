@@ -18,7 +18,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=valuation-tool-shared-header-20260722">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=valuation-tool-auth-20260722">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=valuation-tool-trust-first-20260728">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=valuation-comparable-cards-20260728">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=valuation-comparable-cards-20260728">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -59,7 +60,7 @@
             "name": "Guest có xem được trang định giá không?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Guest được xem giá tham khảo cơ bản. Tài khoản Free mở thêm tối đa 5 mẫu so sánh đã ẩn số điện thoại và liên kết nguồn."
+              "text": "Có. Mọi người dùng đều xem được giá tham khảo và tối đa 6 mẫu so sánh đã ẩn số điện thoại cùng liên kết nguồn."
             }
           },
           {
@@ -111,7 +112,7 @@
         <div class="hero-copy">
           <p class="eyebrow">Công cụ dữ liệu Radar BDS</p>
           <h1>Định giá lô đất Bình Dương</h1>
-          <p class="hero-lede">Nhận giá tham khảo từ dữ liệu đã lọc trùng tại Thủ Dầu Một, Bến Cát và các khu Mỹ Phước. Guest xem kết quả cơ bản; tài khoản Free mở mẫu so sánh chi tiết.</p>
+          <p class="hero-lede">Nhận giá tham khảo và tối đa 6 mẫu so sánh đã lọc trùng tại Thủ Dầu Một, Bến Cát và các khu Mỹ Phước. Không cần đăng nhập.</p>
           <div class="coverage-strip" aria-label="Phạm vi dữ liệu đang hỗ trợ">
             <span>Thủ Dầu Một</span>
             <span>Bến Cát</span>
@@ -230,7 +231,7 @@
               <span>Các tin gần nhất cùng phân khúc trong dữ liệu Radar BDS.</span>
             </div>
           </div>
-          <p class="guest-note">Không cần đăng nhập để xem giá tham khảo. Đăng ký Free chỉ khi bạn muốn xem các mẫu so sánh chi tiết.</p>
+          <p class="guest-note">Không cần đăng nhập để xem giá tham khảo và các mẫu so sánh đã ẩn thông tin liên hệ.</p>
         </div>
         <div class="result-content" id="resultContent" hidden tabindex="-1">
           <div class="result-topline">
@@ -256,20 +257,22 @@
             </div>
           </div>
           <p class="model-note" id="modelNote"></p>
-          <div class="comparables">
-            <h3>Mẫu so sánh cùng phân khúc</h3>
-            <div class="comparables-lock" id="comparablesLock" hidden>
-              <strong>Mở tối đa 5 mẫu so sánh đã ẩn thông tin liên hệ</strong>
-              <p>Tài khoản Free giúp bạn kiểm tra mức giá mà không làm lộ số điện thoại hay liên kết nguồn.</p>
-              <button type="button" id="unlockComparablesBtn">Đăng ký Free để mở mẫu</button>
-            </div>
-            <div id="comparableList"></div>
-          </div>
           <a class="dashboard-cta" id="dashboardCta" href="/">
             Xem deal tại <span id="dashboardWard">khu vực này</span>
             <span aria-hidden="true">→</span>
           </a>
         </div>
+      </section>
+
+      <section class="tool-panel valuation-comparables-section" id="comparablesSection" hidden aria-live="polite">
+        <div class="comparables-heading">
+          <div>
+            <p class="panel-kicker">Dữ liệu đối chiếu</p>
+            <h2>Mẫu so sánh cùng phân khúc</h2>
+          </div>
+          <p>Tối đa 6 lô đã lọc trùng và ẩn thông tin liên hệ. Chọn một card để xem chi tiết.</p>
+        </div>
+        <div class="valuation-comparable-grid" id="comparableList"></div>
       </section>
     </section>
 
@@ -306,8 +309,8 @@
           <p>Công cụ dùng dữ liệu tin rao đã được Radar BDS chuẩn hóa, lọc trùng và đưa vào mô hình định giá nội bộ cho các phường đang hỗ trợ ở Thủ Dầu Một và Bến Cát.</p>
         </details>
         <details>
-          <summary>Guest có xem được trang định giá không?</summary>
-          <p>Guest xem được giá tham khảo cơ bản. Tài khoản Free mở thêm tối đa 5 mẫu so sánh đã lọc trùng và ẩn thông tin liên hệ.</p>
+          <summary>Có cần đăng nhập để xem kết quả định giá không?</summary>
+          <p>Không. Mọi người dùng đều xem được giá tham khảo và tối đa 6 mẫu so sánh đã lọc trùng, ẩn số điện thoại và liên kết nguồn.</p>
         </details>
         <details>
           <summary>Kết quả định giá có thay thế thẩm định thực tế không?</summary>
@@ -347,7 +350,8 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=valuation-tool-auth-20260722"></script>
-  <script src="{{ url_for('static', filename='js/valuation_tool.js') }}?v=valuation-tool-trust-first-20260728"></script>
+  <script src="{{ url_for('static', filename='js/valuation_comparable_card.js') }}?v=valuation-comparable-cards-20260728"></script>
+  <script src="{{ url_for('static', filename='js/valuation_tool.js') }}?v=valuation-comparable-cards-20260728"></script>
 </body>
 
 </html>
