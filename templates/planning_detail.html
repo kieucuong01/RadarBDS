@@ -23,11 +23,11 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16.png') }}?v=app-icon-20260608">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=planning-20260723">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQW8w+3ffu6zvI7G5PJMZrU3P7UjVVI=" crossorigin="">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=planning-map-20260728-1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-  <script src="{{ url_for('static', filename='js/planning_maps.js') }}?v=planning-20260723" defer></script>
+  <script src="{{ url_for('static', filename='js/planning_maps.js') }}?v=planning-map-20260728-1" defer></script>
 </head>
 
 <body class="seo-page planning-page planning-detail">
@@ -252,16 +252,18 @@
           <h2>Mở dữ liệu tin đang bán quanh khu này</h2>
           <p>Lọc theo phường, giá/m², diện tích, MOS và cảnh báo nguồn tin để kiểm tra khu vực trên bản đồ.</p>
         </div>
-        <a class="seo-button seo-button-primary" href="{{ page.dashboard_href }}" data-map-area-cta data-cta-context="detail_bottom">Mở signal khu này</a>
+        <a class="seo-button seo-button-primary" href="{{ page.dashboard_href }}" data-map-area-cta data-cta-context="detail_bottom" data-track-cta="planning_detail_dashboard">{{ page.dashboard_label }}</a>
       </section>
     </article>
   </main>
 
   <div class="planning-mobile-cta">
-    <a href="{{ page.dashboard_href }}" data-map-area-cta data-cta-context="mobile_sticky">Mở signal khu này</a>
+    <a href="{{ page.dashboard_href }}" data-map-area-cta data-cta-context="mobile_sticky" data-track-cta="planning_detail_mobile_dashboard">{{ page.dashboard_label }}</a>
   </div>
 
   {% include "partials/seo_footer.html" %}
+  {% set view_event = "seo_landing_viewed" %}
+  {% include "partials/seo_tracking.html" %}
 </body>
 
 </html>

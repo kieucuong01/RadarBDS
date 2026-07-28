@@ -8,6 +8,13 @@ boundary or legal planning extracts.
 PLANNING_UPDATED_AT = "2026-07-23"
 PLANNING_UPDATED_LABEL = "23/07/2026"
 
+PLANNING_CATEGORY_LABELS = {
+    "transport": "Tuyến giao thông",
+    "boundary": "Địa giới",
+    "landuse": "Quy hoạch sử dụng đất",
+    "industrial": "KCN/Khu đô thị",
+}
+
 SOURCE_QD_790 = "https://congbao.chinhphu.vn/van-ban/quyet-dinh-so-790-qd-ttg-42530/51366.htm"
 SOURCE_NQ_57 = "https://congbao.chinhphu.vn/thuoc-tinh-van-ban-so-57-2022-qh15-37457?cbid=41073"
 SOURCE_VD4 = "https://tphcm.baochinhphu.vn/trinh-hdnd-thanh-pho-ban-hanh-nghi-quyet-trien-khai-du-an-vanh-dai-4-101250409095914783.htm"
@@ -95,14 +102,16 @@ PLANNING_PAGES = {
             "Bình Chuẩn, Thuận An và hướng về Thủ Đức - Đồng Nai. Người mua đất nên "
             "xem vị trí tuyến, nút giao và vùng ảnh hưởng trước khi đọc tin rao."
         ),
-        "summary": "Map-first bài Vành đai 3: tuyến chính, nút giao, vùng hưởng lợi và khu cần kiểm tra lộ giới.",
+        "summary": "Xem tuyến chính, nút giao, vùng hưởng lợi và khu vực cần kiểm tra lộ giới quanh Vành đai 3.",
         "thumbnail_label": "VĐ3",
+        "thumbnail_path": "/static/maps/planning/previews/vanh-dai-3.svg",
         "map_label": "Vành đai 3 TP.HCM - đoạn Bình Dương cũ",
         "read_time": "7 phút đọc",
         "updated_at": PLANNING_UPDATED_AT,
         "updated_label": PLANNING_UPDATED_LABEL,
         "geojson_path": "/static/maps/planning/vanh-dai-3.geojson",
         "dashboard_href": "/?tab=signals&city=Thủ%20Dầu%20Một",
+        "dashboard_label": "Xem tin Thủ Dầu Một",
         "areas": ["Tân Vạn", "Bình Chuẩn", "Thuận An", "Thủ Dầu Một"],
         "source_badge": "Nguồn: NQ 57/2022/QH15 + Quy hoạch tỉnh",
         "source_links": [
@@ -237,12 +246,14 @@ PLANNING_PAGES = {
         ),
         "summary": "Trục công nghiệp - logistics từ Bàu Bàng/Mỹ Phước về Tân Vạn, kèm lớp KCN và vùng đọc tin rao.",
         "thumbnail_label": "MPTV",
+        "thumbnail_path": "/static/maps/planning/previews/duong-my-phuoc-tan-van.svg",
         "map_label": "Bàu Bàng - Mỹ Phước - Tân Vạn",
         "read_time": "6 phút đọc",
         "updated_at": PLANNING_UPDATED_AT,
         "updated_label": PLANNING_UPDATED_LABEL,
         "geojson_path": "/static/maps/planning/duong-my-phuoc-tan-van.geojson",
         "dashboard_href": "/?tab=signals&city=Bến%20Cát",
+        "dashboard_label": "Xem tin Bến Cát",
         "areas": ["Bàu Bàng", "Mỹ Phước", "Bến Cát", "Tân Vạn"],
         "source_badge": "Nguồn: Quyết định 790/QĐ-TTg",
         "source_links": [
@@ -350,12 +361,14 @@ PLANNING_PAGES = {
         ),
         "summary": "Đọc nhanh đoạn Vành đai 4 qua Bình Dương cũ, vùng Bến Cát - Tân Uyên và các nút cần kiểm tra.",
         "thumbnail_label": "VĐ4",
+        "thumbnail_path": "/static/maps/planning/previews/vanh-dai-4.svg",
         "map_label": "Vành đai 4 TP.HCM - đoạn Bình Dương cũ",
         "read_time": "7 phút đọc",
         "updated_at": PLANNING_UPDATED_AT,
         "updated_label": PLANNING_UPDATED_LABEL,
         "geojson_path": "/static/maps/planning/vanh-dai-4.geojson",
         "dashboard_href": "/?tab=signals&city=Bến%20Cát",
+        "dashboard_label": "Xem tin Bến Cát",
         "areas": ["Bến Cát", "Tân Uyên", "Thủ Biên", "Phú An"],
         "source_badge": "Nguồn: Báo Chính phủ + Quy hoạch tỉnh",
         "source_links": [
@@ -464,12 +477,14 @@ PLANNING_PAGES = {
         ),
         "summary": "Theo dõi QL13 qua các đô thị chính, vùng thương mại và điểm giao với Vành đai 4, Mỹ Phước - Tân Vạn.",
         "thumbnail_label": "QL13",
+        "thumbnail_path": "/static/maps/planning/previews/quoc-lo-13.svg",
         "map_label": "Quốc lộ 13 - trục Bình Dương cũ",
         "read_time": "6 phút đọc",
         "updated_at": PLANNING_UPDATED_AT,
         "updated_label": PLANNING_UPDATED_LABEL,
         "geojson_path": "/static/maps/planning/quoc-lo-13.geojson",
         "dashboard_href": "/?tab=signals&city=Thủ%20Dầu%20Một",
+        "dashboard_label": "Xem tin Thủ Dầu Một",
         "areas": ["Thuận An", "Thủ Dầu Một", "Bến Cát", "Bàu Bàng"],
         "source_badge": "Nguồn: Quy hoạch tỉnh Bình Dương",
         "source_links": [
@@ -577,12 +592,14 @@ PLANNING_PAGES = {
         ),
         "summary": "Đối chiếu tên phường xã mới - cũ để đọc tin rao, dashboard và các bài quy hoạch theo khu vực.",
         "thumbnail_label": "36 PX",
+        "thumbnail_path": "/static/maps/planning/previews/dia-gioi-36-phuong-xa-binh-duong-cu.svg",
         "map_label": "36 phường xã Bình Dương cũ",
         "read_time": "8 phút đọc",
         "updated_at": PLANNING_UPDATED_AT,
         "updated_label": PLANNING_UPDATED_LABEL,
         "geojson_path": "/static/maps/planning/dia-gioi-36-phuong-xa-binh-duong-cu.geojson",
         "dashboard_href": "/?tab=signals",
+        "dashboard_label": "Xem toàn bộ tin",
         "areas": ["Thủ Dầu Một", "Thuận An", "Dĩ An", "Bến Cát", "Tân Uyên"],
         "source_badge": "Nguồn: thông tin sắp xếp ĐVHC 2025",
         "source_links": [

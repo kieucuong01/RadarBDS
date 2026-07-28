@@ -69,7 +69,12 @@ from config.settings import (
 )
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
 from config.seo_pages import REPORT_HUB, SEO_PAGES
-from config.planning_pages import PLANNING_HUB, PLANNING_PAGES, PLANNING_PAGE_LIST
+from config.planning_pages import (
+    PLANNING_CATEGORY_LABELS,
+    PLANNING_HUB,
+    PLANNING_PAGES,
+    PLANNING_PAGE_LIST,
+)
 
 mimetypes.add_type("image/webp", ".webp")
 
@@ -162,6 +167,7 @@ def add_response_headers(response):
         "https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com; font-src 'self' "
         "https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' "
         "https://www.google-analytics.com https://region1.google-analytics.com "
+        "https://analytics.google.com https://stats.g.doubleclick.net https://www.google.com "
         "https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; "
         "frame-ancestors 'none'; form-action 'self'"
     )
@@ -1335,6 +1341,8 @@ ALLOWED_TRACK_ACTIONS = {
     "map_layer_toggled",
     "map_fullscreen_clicked",
     "map_area_cta_clicked",
+    "planning_hub_filter_selected",
+    "planning_hub_card_clicked",
 }
 
 
@@ -1693,6 +1701,15 @@ def _planning_hub_schema(page: dict, pages: list[dict]) -> dict:
     }
 
 
+def _planning_category_for_page(page: dict) -> dict:
+    category_key = str(page.get("category") or "").strip()
+    category_label = PLANNING_CATEGORY_LABELS.get(category_key)
+    if not category_label:
+        slug = str(page.get("slug") or page.get("path") or "unknown")
+        raise ValueError(f"Unknown planning category '{category_key}' for {slug}")
+    return {"key": category_key, "label": category_label}
+
+
 def _planning_detail_schema(page: dict) -> dict:
     source_urls = [source["href"] for source in page.get("source_links", []) if source.get("href")]
     return {
@@ -1762,7 +1779,30 @@ def _planning_detail_schema(page: dict) -> dict:
 
 def planning_hub_page():
     page = dict(PLANNING_HUB)
-    pages = [dict(item) for item in PLANNING_PAGE_LIST]
+    pages = []
+    category_counts = {}
+    for raw_item in PLANNING_PAGE_LIST:
+        item = dict(raw_item)
+        category = _planning_category_for_page(item)
+        item["category"] = category["key"]
+        item["category_label"] = category["label"]
+        category_counts[category["key"]] = category_counts.get(category["key"], 0) + 1
+        pages.append(item)
+    available_tabs = []
+    for raw_tab in page.get("tabs", []):
+        tab = dict(raw_tab)
+        tab_id = tab.get("id")
+        count = len(pages) if tab_id == "all" else category_counts.get(tab_id, 0)
+        if count:
+            tab["count"] = count
+            available_tabs.append(tab)
+    page["tabs"] = available_tabs
+    page["total_pages"] = len(pages)
+    page["active_category_count"] = len(category_counts)
+    page["latest_updated_label"] = max(
+        pages,
+        key=lambda item: (item.get("updated_at") or "", item.get("slug") or ""),
+    ).get("updated_label") if pages else page.get("updated_label")
     trending_pages = [
         dict(PLANNING_PAGES[slug])
         for slug in page.get("trending_slugs", [])
@@ -1776,6 +1816,7 @@ def planning_hub_page():
         description=page["description"],
         keywords=page["keywords"],
     )
+    site_meta["og_image"] = _public_url("/static/images/seo/radarbds-og.png")
     return render_template(
         "planning_hub.html",
         page=page,
@@ -1801,6 +1842,7 @@ def planning_detail_page(slug: str):
         description=page["description"],
         keywords=page["keywords"],
     )
+    site_meta["og_image"] = _public_url("/static/images/seo/radarbds-og.png")
     return render_template(
         "planning_detail.html",
         page=page,
@@ -2530,6 +2572,10 @@ def llms_txt():
         f"- {name}: {_public_url(f'/binh-duong/phuong-{slug}')}"
         for slug, name in _PRIORITY_TDM_WARDS.items()
     )
+    planning_lines = "\n".join(
+        f"- {page['breadcrumb_label']}: {_public_url(page['path'])}"
+        for page in PLANNING_PAGE_LIST
+    )
     body = f"""# Radar BDS
 
 > Radar BDS tổng hợp và chuẩn hóa dữ liệu tin rao bất động sản Bình Dương để người dùng tham khảo trước khi kiểm tra từng tài sản.
@@ -2551,8 +2597,7 @@ def llms_txt():
 - Báo cáo dữ liệu: {_public_url('/bao-cao')}
 - Tin tức dữ liệu: {_public_url('/tin-tuc')}
 - Bản đồ quy hoạch Bình Dương cũ: {_public_url('/quy-hoach-binh-duong')}
-- Bản đồ Vành đai 3 Bình Dương: {_public_url('/quy-hoach-binh-duong/vanh-dai-3')}
-- Địa giới 36 phường xã Bình Dương cũ: {_public_url('/quy-hoach-binh-duong/dia-gioi-36-phuong-xa-binh-duong-cu')}
+{planning_lines}
 - Phương pháp lọc deal: {_public_url('/san-deal-bds')}
 """
     return Response(body, mimetype="text/plain")
@@ -2599,7 +2644,7 @@ def sitemap_xml():
             page,
             changefreq="daily",
             priority="0.8",
-            lastmod=page.get("sitemap_lastmod") or "",
+            lastmod=page.get("sitemap_lastmod") or page.get("updated_at") or "",
         )
         for page in unique_pages
     )

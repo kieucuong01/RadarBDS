@@ -2480,7 +2480,7 @@ svg {
 @media (max-width: 560px) {
   html,
   body {
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .seo-shell {
@@ -5265,28 +5265,46 @@ summary:focus-visible,
 
 .planning-hub-panel {
   position: relative;
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   min-height: 280px;
   padding: 22px;
   overflow: hidden;
 }
 
-.planning-hub-panel span {
-  color: #476677;
-  font-size: 0.92rem;
-  font-weight: 700;
-}
-
-.planning-hub-panel strong {
-  color: #0f2430;
-  font-size: 1.55rem;
-  line-height: 1.15;
-}
-
-.planning-hub-panel p {
+.planning-hub-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
   margin: 0;
-  color: #476677;
-  line-height: 1.65;
+}
+
+.planning-hub-stats div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #d9e9ee;
+  border-radius: 8px;
+  background: #f7fbfc;
+}
+
+.planning-hub-stats dt {
+  color: #5c7280;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.planning-hub-stats dd {
+  margin: 6px 0 0;
+  color: #0f2430;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.planning-hub-stats time {
+  white-space: nowrap;
 }
 
 .planning-mini-map {
@@ -5373,6 +5391,10 @@ summary:focus-visible,
   padding-bottom: 48px;
 }
 
+#planning-list {
+  scroll-margin-top: 88px;
+}
+
 .planning-section-heading {
   display: flex;
   justify-content: space-between;
@@ -5400,6 +5422,13 @@ summary:focus-visible,
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 18px;
+}
+
+.planning-filter-status {
+  margin: -6px 0 16px;
+  color: #5c7280;
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
 .planning-tab {
@@ -5442,21 +5471,36 @@ summary:focus-visible,
 }
 
 .planning-card {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+}
+
+.planning-card[hidden] {
+  display: none;
 }
 
 .planning-card-media {
   position: relative;
   display: block;
-  height: 160px;
+  aspect-ratio: 8 / 5;
   overflow: hidden;
   color: #ffffff;
   text-decoration: none;
-  background:
-    linear-gradient(90deg, rgba(255,255,255,0.16) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(255,255,255,0.16) 1px, transparent 1px),
-    linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
-  background-size: 28px 28px, 28px 28px, auto;
+  background: #eaf3f4;
+}
+
+.planning-card-media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 180ms ease;
+}
+
+.planning-card-media:hover img,
+.planning-card-media:focus-visible img {
+  transform: scale(1.025);
 }
 
 .planning-card-media span {
@@ -5464,35 +5508,20 @@ summary:focus-visible,
   left: 18px;
   bottom: 16px;
   z-index: 2;
-  font-size: 1.55rem;
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 7px;
+  color: #ffffff;
+  background: rgba(15, 36, 48, 0.82);
+  font-size: 1rem;
   font-weight: 900;
-}
-
-.planning-card-media i,
-.planning-card-media b {
-  position: absolute;
-  display: block;
-  height: 6px;
-  border-radius: 999px;
-  background: #fbbf24;
-}
-
-.planning-card-media i {
-  left: 12%;
-  top: 48%;
-  width: 76%;
-  transform: rotate(-16deg);
-}
-
-.planning-card-media b {
-  left: 40%;
-  top: 26%;
-  width: 45%;
-  background: #ffffff;
-  transform: rotate(38deg);
+  box-shadow: 0 6px 18px rgba(15, 36, 48, 0.18);
 }
 
 .planning-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: 18px;
 }
 
@@ -5560,6 +5589,10 @@ summary:focus-visible,
   line-height: 1.6;
 }
 
+.planning-card-actions {
+  margin-top: auto;
+}
+
 .planning-chip-row span {
   color: #355161;
   background: #eef5f7;
@@ -5570,6 +5603,16 @@ summary:focus-visible,
   display: inline-flex;
   align-items: center;
   font-weight: 900;
+}
+
+@media (max-width: 1179px) {
+  .planning-list-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .planning-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .planning-sidebar {
@@ -6245,14 +6288,12 @@ summary:focus-visible,
 
 @media (max-width: 980px) {
   .planning-hero-grid,
-  .planning-list-layout,
   .planning-detail-layout,
   .planning-map-controls,
   .planning-impact-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .planning-card-grid,
   .planning-source-list,
   .planning-related-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -6269,6 +6310,41 @@ summary:focus-visible,
   .planning-map {
     min-height: 420px;
     height: 58vh;
+  }
+}
+
+@media (max-width: 819px) {
+  #planning-list {
+    scroll-margin-top: 132px;
+  }
+
+  .planning-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .planning-card {
+    display: grid;
+    grid-template-columns: minmax(150px, 30%) minmax(0, 1fr);
+  }
+
+  .planning-card-media {
+    min-height: 250px;
+    aspect-ratio: auto;
+  }
+
+  .planning-card h3 a,
+  .planning-card p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+  }
+
+  .planning-card h3 a {
+    -webkit-line-clamp: 3;
+  }
+
+  .planning-card p {
+    -webkit-line-clamp: 3;
   }
 }
 
@@ -6300,6 +6376,10 @@ summary:focus-visible,
     flex-wrap: nowrap;
     overflow-x: auto;
     padding-bottom: 4px;
+  }
+
+  .planning-sidebar {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .planning-tab {
@@ -6348,6 +6428,79 @@ summary:focus-visible,
     background: #0f766e;
     font-weight: 900;
     text-decoration: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .planning-card {
+    grid-template-columns: 104px minmax(0, 1fr);
+  }
+
+  .planning-card-media {
+    min-height: 0;
+    height: 152px;
+    align-self: start;
+  }
+
+  .planning-card-media span {
+    left: 8px;
+    bottom: 8px;
+    padding: 4px 7px;
+    font-size: 0.78rem;
+  }
+
+  .planning-card-body {
+    padding: 14px;
+  }
+
+  .planning-card-meta {
+    gap: 5px;
+  }
+
+  .planning-card-meta time {
+    font-size: 0.78rem;
+  }
+
+  .planning-card h3 {
+    margin-top: 9px;
+    font-size: 1rem;
+  }
+
+  .planning-card p {
+    margin-bottom: 10px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  .planning-chip-row {
+    gap: 5px;
+  }
+
+  .planning-chip-row span {
+    min-height: 24px;
+    padding: 2px 7px;
+    font-size: 0.74rem;
+  }
+
+  .planning-chip-row .planning-area-chip:nth-child(3) {
+    display: none;
+  }
+
+  .planning-card-actions {
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .planning-card-actions .seo-button,
+  .planning-card-actions .planning-text-link {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .planning-hub-stats {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
