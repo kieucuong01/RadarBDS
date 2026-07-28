@@ -32,6 +32,7 @@ if os.path.exists(env_file):
                 os.environ[k.strip()] = v
 
 from db.connection import get_conn
+from services.monthly_report_data import query_ward_stats as query_monthly_ward_stats
 
 TDM_WARDS = [
     "Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ",
@@ -58,74 +59,9 @@ def esc(s):
 
 
 def query_ward_stats(ward, month_start, month_end):
-    """Query all stats for a ward in a date range. Opens/close connection internally."""
+    """Query trust-first report stats and close the connection internally."""
     with get_conn() as conn:
-        cur = conn.cursor()
-
-        # Build ward filter - handle both diacritics and non-diacritics variants
-        ward_filter = f"ward = '{esc(ward)}'"
-        # For TDM wards, also include non-diacritics variant
-        no_diacritics = {
-            "Tân An": "Tan An", "Hiệp An": "Hiep An", "Định Hòa": "Dinh Hoa",
-            "Chánh Mỹ": "Chanh My", "Phú Mỹ": "Phu My", "Phú Cường": "Phu Cuong",
-            "Phú Hòa": "Phu Hoa", "Phú Lợi": "Phu Loi", "Hiệp Thành": "Hiep Thanh",
-            "Chánh Nghĩa": "Chanh Nghia", "Phú Tân": "Phu Tan", "Hòa Phú": "Hoa Phu",
-        }
-        if ward in no_diacritics:
-            ward_filter = f"(ward = '{esc(ward)}' OR ward = '{no_diacritics[ward]}')"
-
-        base = (
-            ward_filter
-            + " AND source = 'facebook'"
-            + " AND is_blacklisted = 0"
-            + " AND review_hidden = 0"
-        )
-
-        month_base = base + f" AND crawled_at::timestamp >= '{month_start}' AND crawled_at::timestamp < '{month_end}'"
-
-        # Filter by month range — main stats use this month's data only
-        stats = {}
-        cur.execute(f"SELECT COUNT(*) FROM listings WHERE {month_base}")
-        stats["total"] = cur.fetchone()[0]
-
-        cur.execute(f"SELECT COUNT(*) FROM listings WHERE {month_base} AND (is_hot = 1 OR price_dropped = 1)")
-        stats["signals"] = cur.fetchone()[0]
-
-        cur.execute(f"SELECT COUNT(*) FROM listings WHERE {month_base} AND is_hot = 1")
-        stats["hot"] = cur.fetchone()[0]
-
-        cur.execute(f"SELECT COUNT(*) FROM listings WHERE {month_base} AND price_dropped = 1")
-        stats["dropped"] = cur.fetchone()[0]
-
-        stats["by_type"] = {}
-        for pt in ["dat_nen", "nha_dat", "nha_tro", "kho_xuong", "chung_cu"]:
-            pt_filter = month_base + f" AND property_type = '{pt}'"
-            cur.execute(f"SELECT COUNT(*) FROM listings WHERE {pt_filter} AND price_per_m2::numeric > 0 AND price_per_m2::numeric < 500")
-            count = cur.fetchone()[0]
-            if count == 0:
-                continue
-
-            cur.execute(f"SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price_per_m2::numeric) FROM listings WHERE {pt_filter} AND price_per_m2::numeric > 0 AND price_per_m2::numeric < 500")
-            r = cur.fetchone()
-            median_m2 = round(float(r[0]), 1) if r and r[0] is not None else None
-
-            cur.execute(f"SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price_ty::numeric) FROM listings WHERE {pt_filter} AND price_ty::numeric > 0 AND price_ty::numeric < 50")
-            r = cur.fetchone()
-            median_ty = round(float(r[0]), 2) if r and r[0] is not None else None
-
-            cur.execute(f"SELECT COUNT(*) FROM listings WHERE {pt_filter} AND (is_hot = 1 OR price_dropped = 1)")
-            pt_signals = cur.fetchone()[0]
-
-            stats["by_type"][pt] = {
-                "count": count, "median_m2": median_m2,
-                "median_ty": median_ty, "signals": pt_signals,
-            }
-
-        # Also track month_new and month_signals (same as filtered stats above)
-        stats["month_new"] = stats["total"]
-        stats["month_signals"] = stats["signals"]
-
-    return stats
+        return query_monthly_ward_stats(conn, ward, month_start, month_end)
 
 
 def month_label(month, year):

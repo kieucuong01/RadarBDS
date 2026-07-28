@@ -31,6 +31,7 @@ from scripts.generate_monthly_report import (  # noqa: E402
 )
 from db.connection import get_conn  # noqa: E402
 from services.image_assets import resolve_image_url  # noqa: E402
+from services.monthly_report_data import query_featured_records  # noqa: E402
 
 NO_DIACRITICS = {
     "Tân An": "Tan An",
@@ -188,53 +189,22 @@ def query_trends(ward: str, month: int, year: int) -> list[dict]:
 
 def query_valuation_records(ward: str, month: int, year: int) -> list[dict]:
     start, end = month_bounds(month, year)
-    wf = ward_filter_sql("l", ward)
-    query = f"""
-WITH latest_v AS (
-  SELECT DISTINCT ON (listing_id)
-    listing_id, mos_pct, fair_ppm2, actual_ppm2, signal_score, trust_score, trust_tier, legal_status, computed_at
-  FROM valuation_results
-  ORDER BY listing_id, computed_at DESC NULLS LAST, id DESC
-), img AS (
-  SELECT DISTINCT ON (listing_id) listing_id, local_path, img_url
-  FROM listing_images
-  ORDER BY listing_id, img_order NULLS LAST, id
-)
-SELECT l.id, l.title, l.property_type, l.price_ty, l.price_per_m2, l.area_m2,
-       l.has_so, l.is_hot, l.price_dropped, l.crawled_at, l.duplicate_of_id,
-       v.mos_pct, v.fair_ppm2, v.signal_score, img.local_path, img.img_url
-FROM listings l
-JOIN latest_v v ON v.listing_id = l.id
-LEFT JOIN img ON img.listing_id = l.id
-WHERE {wf}
-  AND l.source = 'facebook'
-  AND l.review_hidden = 0
-  AND l.is_blacklisted = 0
-  AND COALESCE(l.is_outlier, 0) = 0
-  AND l.crawled_at IS NOT NULL
-  AND l.crawled_at::timestamp >= '{start}'
-  AND l.crawled_at::timestamp < '{end}'
-  AND l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0 AND l.price_per_m2 < 500
-  AND l.price_ty IS NOT NULL AND l.price_ty > 0 AND l.price_ty < 50
-  AND l.area_m2 IS NOT NULL AND l.area_m2 >= 40 AND l.area_m2 <= 1000
-  AND v.mos_pct IS NOT NULL
-ORDER BY CASE WHEN l.duplicate_of_id IS NULL THEN 0 ELSE 1 END, l.property_type, v.mos_pct DESC, v.signal_score DESC NULLS LAST
-"""
     with get_conn() as conn:
-        cur = conn.cursor()
-        cur.execute(query)
-        rows = cur.fetchall()
-    records = []
-    for row in rows:
-        records.append({"id": int(row[0]), "title": row[1], "property_type": row[2], "price_ty": row[3], "price_per_m2": row[4], "area_m2": row[5], "has_so": row[6], "is_hot": bool(row[7]), "price_dropped": bool(row[8]), "duplicate_of_id": row[10], "mos_pct": float(row[11]), "fair_ppm2": row[12], "signal_score": row[13], "image": resolve_image_url(row[14], row[15], prefer_thumb=True)})
-    return records
+        return query_featured_records(
+            conn,
+            ward,
+            start,
+            end,
+            image_resolver=resolve_image_url,
+            limit=50,
+        )
 
 
 def featured_listings(ward: str, records: list[dict], period_label: str) -> list[dict]:
-    candidates = [r for r in records if r["mos_pct"] >= 5 and r["property_type"] in {"dat_nen", "nha_dat"}]
+    candidates = [r for r in records if r["property_type"] in {"dat_nen", "nha_dat"}]
     selected, seen = [], set()
     for pt in ["dat_nen", "nha_dat"]:
-        for rec in [x for x in candidates if x["property_type"] == pt and x.get("duplicate_of_id") is None][:3]:
+        for rec in [x for x in candidates if x["property_type"] == pt][:3]:
             selected.append(rec); seen.add(rec["id"])
     for rec in candidates:
         if len(selected) >= 6:
