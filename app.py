@@ -2324,6 +2324,7 @@ def seo_report_or_article_page(report_slug: str):
 
 _LEGACY_NEWS_REDIRECTS = {
     "gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
+    "gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026": "/tin-tuc/gia-dat-hiep-an-hien-bao-nhieu",
     "gia-rao-k": "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao",
 }
 
