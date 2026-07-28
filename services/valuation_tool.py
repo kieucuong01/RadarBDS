@@ -10,7 +10,8 @@ from urllib.parse import quote, urlencode
 from analytics.valuation import Listing, ValuationEngine
 from config.property_types import PROPERTY_TYPE_LABELS, normalize_property_type
 from db.connection import get_conn
-from services.market_data import CITY_MAP, redact_for_tier
+from services.image_assets import resolve_image_url
+from services.market_data import CITY_MAP, format_signal_card_record
 from services.signal_quality import split_quality_flags
 
 
@@ -296,14 +297,24 @@ def _target_listing(payload: dict[str, Any]) -> Listing:
     return target
 
 
-def _load_comparables(target: Listing, limit: int = 5) -> list[dict[str, Any]]:
+def _load_comparables(
+    target: Listing,
+    limit: int = 6,
+    *,
+    tier: str = "guest",
+) -> list[dict[str, Any]]:
     with get_conn() as conn:
         rows = conn.execute(
             """
             WITH candidate_listings AS MATERIALIZED (
                 SELECT l.id, l.title, l.description, l.url, l.contact_phone, l.seller_name,
+                       l.source, l.ward, l.property_type,
                        l.price_ty, l.price_per_m2, l.area_m2, l.frontage_m, l.depth_m,
-                       l.road_tier, l.posted_at, l.crawled_at
+                       l.road_name, l.road_type, l.road_width_m, l.road_tier,
+                       l.tho_cu_m2, l.tho_cu_ratio, l.has_so,
+                       l.is_hot, l.price_dropped, l.price_drop_pct, l.price_first_ty,
+                       l.suspicious_bait, l.duplicate_of_id,
+                       l.posted_at, l.crawled_at
                   FROM listings l
                  WHERE l.ward = ?
                    AND l.property_type = ?
@@ -319,20 +330,45 @@ def _load_comparables(target: Listing, limit: int = 5) -> list[dict[str, Any]]:
                           l.id DESC
                  LIMIT ?
             ),
-            latest_quality AS (
-                SELECT v.listing_id, v.source_quality_flags,
+            latest_valuation AS (
+                SELECT v.*,
                        ROW_NUMBER() OVER (
                            PARTITION BY v.listing_id
                            ORDER BY v.computed_at DESC, v.id DESC
-                       ) AS quality_rank
+                       ) AS valuation_rank
                   FROM valuation_results v
                   JOIN candidate_listings c ON c.id = v.listing_id
             )
             SELECT c.*,
-                   q.source_quality_flags
+                   COALESCE(v.actual_ppm2, c.price_per_m2) AS actual_ppm2,
+                   v.fair_ppm2,
+                   v.mos_pct,
+                   v.signal_score,
+                   v.trust_tier,
+                   v.trust_score,
+                   v.legal_status,
+                   v.legal_flags,
+                   v.source_quality_flags,
+                   v.source_quality_recheck,
+                   0 AS has_legal_doc_image,
+                   primary_img.local_path AS primary_local_path,
+                   primary_img.img_url AS primary_img_url,
+                   COALESCE(img_count.image_count, 0) AS image_count
               FROM candidate_listings c
-              LEFT JOIN latest_quality q
-                ON q.listing_id = c.id AND q.quality_rank = 1
+              LEFT JOIN latest_valuation v
+                ON v.listing_id = c.id AND v.valuation_rank = 1
+              LEFT JOIN LATERAL (
+                  SELECT li.local_path, li.img_url
+                    FROM listing_images li
+                   WHERE li.listing_id = c.id
+                   ORDER BY li.img_order, li.id
+                   LIMIT 1
+              ) primary_img ON TRUE
+              LEFT JOIN LATERAL (
+                  SELECT CAST(COUNT(*) AS INTEGER) AS image_count
+                    FROM listing_images li
+                   WHERE li.listing_id = c.id
+              ) img_count ON TRUE
              ORDER BY CASE WHEN COALESCE(c.road_tier,0) = ? THEN 0 ELSE 1 END ASC,
                       ABS(COALESCE(c.area_m2, 0) - ?) ASC,
                       COALESCE(c.posted_at, c.crawled_at) DESC,
@@ -348,25 +384,21 @@ def _load_comparables(target: Listing, limit: int = 5) -> list[dict[str, Any]]:
                 target.area_m2,
             ),
         ).fetchall()
-    candidates = [
-        {
-            "id": row["id"],
-            "title": row["title"],
-            "description": row["description"],
-            "url": row["url"],
-            "contact_phone": row["contact_phone"],
-            "seller_name": row["seller_name"],
-            "price_ty": round(float(row["price_ty"] or 0), 2),
-            "price_per_m2": round(float(row["price_per_m2"] or 0), 1),
-            "area_m2": round(float(row["area_m2"] or 0), 1),
-            "frontage_m": round(float(row["frontage_m"]), 1) if row["frontage_m"] else None,
-            "depth_m": round(float(row["depth_m"]), 1) if row["depth_m"] else None,
-            "road_tier": int(row["road_tier"] or 0),
-            "date": _date_string(row["posted_at"] or row["crawled_at"]),
-        }
-        for row in rows
-        if not _baseline_quality_flags(_row_value(row, "source_quality_flags", ""))
-    ]
+    candidates = []
+    for row in rows:
+        if _baseline_quality_flags(_row_value(row, "source_quality_flags", "")):
+            continue
+        candidates.append(
+            format_signal_card_record(
+                row,
+                resolve_image_url(
+                    _row_value(row, "primary_local_path"),
+                    _row_value(row, "primary_img_url"),
+                    prefer_thumb=True,
+                ),
+                tier=tier,
+            )
+        )
     return candidates[:limit]
 
 
@@ -436,18 +468,12 @@ def estimate_property_value(payload: dict[str, Any], *, tier: str = "guest") -> 
         "data_as_of": data_as_of,
     }
 
-    comparables_locked = tier not in {"free", "vip", "admin"}
-    comparables = []
-    if not comparables_locked:
-        comparables = [
-            redact_for_tier(item, tier)
-            for item in _load_comparables(target, limit=5)
-        ]
+    comparables = _load_comparables(target, limit=6, tier=tier)
 
     return {
         "ok": True,
         "estimate": estimate,
         "comparables": comparables,
-        "comparables_locked": comparables_locked,
+        "comparables_locked": False,
         "dashboard_url": dashboard_url,
     }

@@ -1015,11 +1015,12 @@ def signal_badge_metadata(r):
     }
 
 
-def _format_signal_row(r, primary_img=None, tier: str = "guest"):
+def format_signal_card_record(r, primary_img=None, tier: str = "guest"):
     fair_ppm2 = round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None
     badge_meta = signal_badge_metadata(r)
     record = {
         "id": r['id'],
+        "detail_href": f"/listing/{int(r['id'])}",
         "title": r['title'],
         "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
         "actual_ppm2": round(r['actual_ppm2'], 1) if r['actual_ppm2'] else 0,
@@ -1070,6 +1071,9 @@ def _format_signal_row(r, primary_img=None, tier: str = "guest"):
         "is_fresh_locked": bool(_row_get(r, 'is_fresh_locked', 0)),
     }
     return redact_for_tier(record, tier)
+
+
+_format_signal_row = format_signal_card_record
 
 
 def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', area_ranges=None, price_ranges=None, keyword="", include_total=True, date_range=None):

@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from time import sleep
 from unittest.mock import patch
 
-from services import valuation_tool
+from services import market_data, valuation_tool
 
 
 class _FakeModel:
@@ -149,21 +149,79 @@ class ValuationToolServiceTest(unittest.TestCase):
         self.assertTrue(all(engine is results[0] for engine in results))
         self.assertEqual(engines[0].fit_calls, 1)
 
-    def test_guest_gets_basic_result_and_free_gets_redacted_comparables(self):
+    def test_signal_card_formatter_keeps_internal_detail_link_and_redacts_non_admin(self):
+        row = {
+            "id": 10,
+            "title": "Bán đất 0909 123 456",
+            "description": "Gọi 0909 123 456 để xem đất",
+            "url": "https://facebook.example/listing",
+            "contact_phone": "0909123456",
+            "seller_name": "Môi giới A",
+            "fair_ppm2": 20.0,
+            "mos_pct": 10.0,
+            "actual_ppm2": 18.0,
+            "area_m2": 100.0,
+            "frontage_m": 5.0,
+            "depth_m": 20.0,
+            "price_ty": 1.8,
+            "property_type": "dat_nen",
+            "is_hot": 0,
+            "price_dropped": 0,
+            "suspicious_bait": 0,
+            "price_drop_pct": 0,
+            "price_first_ty": None,
+            "duplicate_of_id": None,
+            "posted_at": "2026-07-28T08:00:00",
+            "crawled_at": "2026-07-28T09:00:00",
+            "ward": "Phú Mỹ",
+            "signal_score": 72,
+            "source": "facebook",
+            "road_tier": 2,
+            "road_type": "mặt tiền",
+            "road_name": "DX 01",
+            "road_width_m": 6,
+            "tho_cu_m2": 100,
+            "tho_cu_ratio": 1,
+            "has_so": 1,
+        }
+
+        guest = market_data.format_signal_card_record(
+            row,
+            primary_img="/static/data/images/thumbs/10.webp",
+            tier="guest",
+        )
+        admin = market_data.format_signal_card_record(row, tier="admin")
+
+        self.assertEqual(guest["detail_href"], "/listing/10")
+        self.assertEqual(admin["detail_href"], "/listing/10")
+        self.assertEqual(guest["url"], None)
+        self.assertNotIn("0909", str(guest))
+        self.assertIn("0909", str(admin))
+        self.assertIn("facebook.example", str(admin))
+
+    def test_all_tiers_get_six_internal_comparable_cards_with_non_admin_redaction(self):
         comparable = {
             "id": 10,
             "title": "Bán đất 0909 123 456",
             "url": "https://facebook.example/listing",
             "contact_phone": "0909123456",
+            "detail_href": "/listing/10",
             "price_ty": 1.8,
-            "price_per_m2": 18,
+            "actual_ppm2": 18,
+            "fair_ppm2": 20,
+            "mos_pct": 10,
             "area_m2": 100,
             "road_tier": 2,
-            "date": "2026-07-28",
+            "primary_img": "/static/data/images/thumbs/10.webp",
         }
+
+        def comparable_for_tier(target, *, limit, tier):
+            self.assertEqual(limit, 6)
+            return [market_data.redact_for_tier(comparable, tier)]
+
         with (
             patch.object(valuation_tool, "_get_cached_engine", return_value=(_FakeEngine(), "2026-07-28")),
-            patch.object(valuation_tool, "_load_comparables", return_value=[comparable]),
+            patch.object(valuation_tool, "_load_comparables", side_effect=comparable_for_tier) as load_comparables,
         ):
             guest = valuation_tool.estimate_property_value(
                 {
@@ -205,8 +263,8 @@ class ValuationToolServiceTest(unittest.TestCase):
             )
 
         self.assertTrue(guest["ok"])
-        self.assertTrue(guest["comparables_locked"])
-        self.assertEqual(guest["comparables"], [])
+        self.assertFalse(guest["comparables_locked"])
+        self.assertEqual(len(guest["comparables"]), 1)
         self.assertEqual(guest["estimate"]["basis_count"], 18)
         self.assertEqual(guest["estimate"]["confidence_label"], "Tin cậy cao")
         self.assertEqual(guest["estimate"]["data_as_of"], "2026-07-28")
@@ -215,16 +273,16 @@ class ValuationToolServiceTest(unittest.TestCase):
         self.assertNotIn("segment_n", guest["estimate"])
         self.assertIn("city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T", guest["dashboard_url"])
 
-        self.assertFalse(free["comparables_locked"])
-        self.assertEqual(len(free["comparables"]), 1)
-        rendered = str(free["comparables"][0])
-        self.assertNotIn("0909", rendered)
-        self.assertNotIn("facebook.example", rendered)
-        self.assertFalse(vip["comparables_locked"])
-        self.assertNotIn("0909", str(vip["comparables"][0]))
-        self.assertFalse(admin["comparables_locked"])
+        for result in (guest, free, vip, admin):
+            self.assertFalse(result["comparables_locked"])
+            self.assertEqual(result["comparables"][0]["detail_href"], "/listing/10")
+        for result in (guest, free, vip):
+            rendered = str(result["comparables"][0])
+            self.assertNotIn("0909", rendered)
+            self.assertNotIn("facebook.example", rendered)
         self.assertIn("0909", str(admin["comparables"][0]))
         self.assertIn("facebook.example", str(admin["comparables"][0]))
+        self.assertEqual(load_comparables.call_count, 4)
 
 
 if __name__ == "__main__":
