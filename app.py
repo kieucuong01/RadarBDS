@@ -75,6 +75,11 @@ from config.planning_pages import (
     PLANNING_PAGES,
     PLANNING_PAGE_LIST,
 )
+from config.binh_duong_map import (
+    BINH_DUONG_CURRENT_AREAS,
+    BINH_DUONG_LEGACY_AREAS,
+    BINH_DUONG_MAP_PAGE,
+)
 
 mimetypes.add_type("image/webp", ".webp")
 
@@ -1344,6 +1349,8 @@ ALLOWED_TRACK_ACTIONS = {
     "map_area_cta_clicked",
     "planning_hub_filter_selected",
     "planning_hub_card_clicked",
+    "binh_duong_map_layer_selected",
+    "binh_duong_map_area_selected",
 }
 
 
@@ -1844,6 +1851,112 @@ def _planning_detail_schema(page: dict) -> dict:
     }
 
 
+def _binh_duong_map_schema(
+    page: dict,
+    legacy_areas: list[dict],
+    current_areas: list[dict],
+) -> dict:
+    source_urls = [
+        source["href"]
+        for source in page.get("source_links", [])
+        if source.get("href")
+    ]
+    canonical_url = _public_url(page["path"])
+    legacy_dataset_id = f"{canonical_url}#dataset-legacy"
+    current_dataset_id = f"{canonical_url}#dataset-current"
+    return {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "WebPage",
+                "@id": canonical_url,
+                "name": page["hero_title"],
+                "description": page["description"],
+                "url": canonical_url,
+                "dateModified": page["updated_at"],
+                "mainEntity": [
+                    {"@id": legacy_dataset_id},
+                    {"@id": current_dataset_id},
+                ],
+                "isPartOf": {
+                    "@type": "WebSite",
+                    "name": "Radar BDS",
+                    "url": _public_url("/"),
+                },
+            },
+            {
+                "@type": "Dataset",
+                "@id": legacy_dataset_id,
+                "name": "Bản đồ 9 đơn vị cấp huyện Bình Dương cũ",
+                "description": (
+                    "Ranh tham khảo của 9 thành phố, huyện thuộc tỉnh Bình Dương "
+                    "trước sắp xếp hành chính."
+                ),
+                "spatialCoverage": {"@type": "Place", "name": "Bình Dương cũ"},
+                "dateModified": page["updated_at"],
+                "isBasedOn": source_urls,
+                "distribution": [
+                    {
+                        "@type": "DataDownload",
+                        "encodingFormat": "application/geo+json",
+                        "contentUrl": _public_url(page["legacy_geojson_url"]),
+                    }
+                ],
+            },
+            {
+                "@type": "Dataset",
+                "@id": current_dataset_id,
+                "name": "Bản đồ 36 phường xã khu vực Bình Dương cũ",
+                "description": (
+                    "Ranh tham khảo của 36 phường, xã thuộc khu vực Bình Dương cũ "
+                    "sau sắp xếp năm 2025."
+                ),
+                "spatialCoverage": {"@type": "Place", "name": "Bình Dương cũ"},
+                "dateModified": page["updated_at"],
+                "isBasedOn": source_urls,
+                "distribution": [
+                    {
+                        "@type": "DataDownload",
+                        "encodingFormat": "application/geo+json",
+                        "contentUrl": _public_url(page["current_geojson_url"]),
+                    }
+                ],
+            },
+            {
+                "@type": "ItemList",
+                "name": "9 đơn vị cấp huyện của Bình Dương cũ",
+                "numberOfItems": len(legacy_areas),
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": index,
+                        "name": area["name"],
+                        "url": (
+                            f"{canonical_url}#layer-legacy/area-{area['slug']}"
+                        ),
+                    }
+                    for index, area in enumerate(legacy_areas, start=1)
+                ],
+            },
+            _breadcrumb_schema(page["breadcrumbs"]),
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": item["question"],
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": item["answer"],
+                        },
+                    }
+                    for item in page.get("faq", [])
+                ],
+            },
+        ],
+    }
+
+
 def planning_hub_page():
     page = dict(PLANNING_HUB)
     pages = []
@@ -1896,6 +2009,45 @@ def planning_hub_page():
     )
 
 
+def binh_duong_map_page():
+    page = deepcopy(BINH_DUONG_MAP_PAGE)
+    page["breadcrumbs"] = _page_breadcrumbs(page)
+    page["local_links"] = page.get("related_links", [])[:3]
+
+    current_groups = []
+    groups_by_name = {}
+    for area in BINH_DUONG_CURRENT_AREAS:
+        group_name = area["group"]
+        if group_name not in groups_by_name:
+            group = {"name": group_name, "areas": []}
+            groups_by_name[group_name] = group
+            current_groups.append(group)
+        groups_by_name[group_name]["areas"].append(dict(area))
+
+    site_meta = _site_meta(
+        page["path"],
+        title=page["title"],
+        description=page["description"],
+        keywords=page["keywords"],
+    )
+    site_meta["og_image"] = _public_url("/static/images/seo/radarbds-og.png")
+    return render_template(
+        "binh_duong_map.html",
+        page=page,
+        legacy_areas=[dict(area) for area in BINH_DUONG_LEGACY_AREAS],
+        current_areas=[dict(area) for area in BINH_DUONG_CURRENT_AREAS],
+        current_groups=current_groups,
+        site_meta=site_meta,
+        schema_graph=_binh_duong_map_schema(
+            page,
+            BINH_DUONG_LEGACY_AREAS,
+            BINH_DUONG_CURRENT_AREAS,
+        ),
+        active_nav="ban-do-binh-duong",
+        dashboard_signal_href="/?tab=signals",
+    )
+
+
 def planning_detail_page(slug: str):
     page = PLANNING_PAGES.get((slug or "").strip("/"))
     if not page:
@@ -1925,6 +2077,8 @@ def _active_public_nav(path: str) -> str:
         return "bang-gia-dat"
     if path == "/dinh-gia-bds":
         return "dinh-gia"
+    if path == "/ban-do-binh-duong":
+        return "ban-do-binh-duong"
     if path.startswith("/quy-hoach-binh-duong"):
         return "quy-hoach"
     if path == "/ban-dat-binh-duong":
@@ -2663,6 +2817,7 @@ def llms_txt():
 - Tra cứu bảng giá đất TP.HCM 2026: {_public_url('/bang-gia-dat-tphcm')}
 - Báo cáo dữ liệu: {_public_url('/bao-cao')}
 - Tin tức dữ liệu: {_public_url('/tin-tuc')}
+- Bản đồ Bình Dương: {_public_url('/ban-do-binh-duong')}
 - Bản đồ quy hoạch Bình Dương cũ: {_public_url('/quy-hoach-binh-duong')}
 {planning_lines}
 - Phương pháp lọc deal: {_public_url('/san-deal-bds')}
@@ -2698,7 +2853,14 @@ def sitemap_xml():
         title="Tin tức BĐS Bình Dương | Radar BDS",
         sitemap_lastmod=news_lastmod,
     )
-    for page in [REPORT_HUB, news_hub, PLANNING_HUB, *SEO_PAGES.values(), *PLANNING_PAGE_LIST]:
+    for page in [
+        REPORT_HUB,
+        news_hub,
+        BINH_DUONG_MAP_PAGE,
+        PLANNING_HUB,
+        *SEO_PAGES.values(),
+        *PLANNING_PAGE_LIST,
+    ]:
         path = page.get("path")
         if not path or path in seen_paths:
             continue

@@ -27,9 +27,13 @@
         </div>
       </div>
 
-      <div class="seo-nav-group{% if active_nav == 'quy-hoach' %} is-active{% endif %}">
+      <div class="seo-nav-group{% if active_nav in ['ban-do-binh-duong', 'quy-hoach'] %} is-active{% endif %}">
         <button type="button" class="seo-nav-tab" id="seoNavPlanning" aria-haspopup="true" aria-expanded="false" aria-controls="seoNavPlanningMenu">Quy hoạch</button>
         <div class="seo-nav-menu" id="seoNavPlanningMenu" aria-labelledby="seoNavPlanning">
+          <a href="/ban-do-binh-duong" data-nav="ban-do-binh-duong"{% if active_nav == 'ban-do-binh-duong' %} aria-current="page"{% endif %}>
+            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14"/><path d="M15 6v14"/></svg></span>
+            <span><strong>Bản đồ Bình Dương</strong><small>Địa giới cũ và 36 phường xã</small></span>
+          </a>
           <a href="/quy-hoach-binh-duong" data-nav="quy-hoach"{% if active_nav == 'quy-hoach' %} aria-current="page"{% endif %}>
             <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14"/><path d="M15 6v14"/></svg></span>
             <span><strong>Bản đồ quy hoạch</strong><small>Hub bản đồ Bình Dương cũ</small></span>

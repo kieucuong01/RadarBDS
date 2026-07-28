@@ -48,6 +48,11 @@ def planning_hub_page(**kwargs):
     return _impl("planning_hub_page", **kwargs)
 
 
+@bp.route("/ban-do-binh-duong")
+def binh_duong_map_page(**kwargs):
+    return _impl("binh_duong_map_page", **kwargs)
+
+
 @bp.route("/quy-hoach-binh-duong/<path:planning_slug>")
 def planning_detail_page(planning_slug, **kwargs):
     return _impl("planning_detail_page", slug=planning_slug, **kwargs)

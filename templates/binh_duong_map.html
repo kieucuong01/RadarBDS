@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f8fafc">
+  <title>{{ site_meta.title }}</title>
+  <meta name="description" content="{{ site_meta.description }}">
+  <meta name="keywords" content="{{ site_meta.keywords }}">
+  <meta name="author" content="Radar BDS">
+  <link rel="canonical" href="{{ site_meta.canonical_url }}">
+  <meta property="og:locale" content="vi_VN">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ site_meta.name }}">
+  <meta property="og:title" content="{{ site_meta.title }}">
+  <meta property="og:description" content="{{ site_meta.description }}">
+  <meta property="og:url" content="{{ site_meta.og_url }}">
+  <meta property="og:image" content="{{ site_meta.og_image }}">
+  <meta name="twitter:card" content="summary_large_image">
+  {% include "partials/google_site_tags.html" %}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16.png') }}?v=app-icon-20260608">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=bd-map-20260728-4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/binh_duong_map.css') }}?v=bd-map-20260728-4">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script type="application/ld+json">{{ schema_graph | tojson }}</script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+  <script src="{{ url_for('static', filename='js/binh_duong_map.js') }}?v=bd-map-20260728-4" defer></script>
+</head>
+
+<body class="seo-page planning-page binh-duong-map-page">
+  {% include "partials/seo_header.html" %}
+
+  <main id="main-content" class="bd-map-main">
+    <header class="bd-map-hero">
+      <div class="seo-shell">
+        <nav class="planning-breadcrumbs" aria-label="Breadcrumb">
+          {% for crumb in page.breadcrumbs %}
+          {% if loop.last %}
+          <span aria-current="page">{{ crumb.name }}</span>
+          {% else %}
+          <a href="{{ crumb.href }}">{{ crumb.name }}</a><span aria-hidden="true">/</span>
+          {% endif %}
+          {% endfor %}
+        </nav>
+
+        <div class="bd-map-hero-grid">
+          <div class="bd-map-hero-copy">
+            <p class="planning-kicker">{{ page.hero_badge }}</p>
+            <h1>{{ page.hero_title }}</h1>
+            <p>{{ page.hero_text }}</p>
+            <div class="bd-map-hero-actions">
+              <a class="seo-button seo-button-primary" href="#ban-do-tuong-tac" data-track-cta="binh_duong_map_hero_map">Mở bản đồ tương tác</a>
+              <a class="seo-button seo-button-secondary" href="/?tab=signals" data-track-cta="binh_duong_map_hero_dashboard">Lọc tin đang bán</a>
+            </div>
+            <p class="bd-map-updated">
+              Cập nhật <time datetime="{{ page.updated_at }}">{{ page.updated_label }}</time>
+            </p>
+          </div>
+
+          <aside class="bd-map-fact-panel" aria-label="Thông tin nhanh về Bình Dương cũ">
+            <p class="planning-kicker">Tra cứu nhanh</p>
+            <dl>
+              {% for row in page.overview_rows %}
+              <div>
+                <dt>{{ row.label }}</dt>
+                <dd>{{ row.value }}</dd>
+              </div>
+              {% endfor %}
+            </dl>
+          </aside>
+        </div>
+      </div>
+    </header>
+
+    <section class="seo-shell bd-map-intro" aria-labelledby="tong-quan-binh-duong">
+      <div class="bd-map-reading-column">
+        <p class="planning-kicker">Tổng quan</p>
+        <h2 id="tong-quan-binh-duong">Bình Dương cũ trên bản đồ hành chính</h2>
+        <p><strong>“Bình Dương cũ”</strong> trên trang này là địa bàn tỉnh Bình Dương trước đợt sắp xếp hành chính năm 2025. Cách gọi này giúp người đang xem nhà đất đối chiếu những địa danh quen thuộc như Thủ Dầu Một, Bến Cát, Dĩ An hoặc Thuận An với tên phường, xã mới.</p>
+        <p>Lớp mặc định gồm 9 đơn vị cấp huyện trước sắp xếp. Bạn có thể chuyển sang lớp 36 phường, xã để xem ranh tham khảo hiện hành trong cùng một khung bản đồ.</p>
+      </div>
+      <div class="planning-source-strip">
+        <strong>Lưu ý tra cứu.</strong>
+        <span>Ranh hiển thị dùng để định hướng và đối chiếu khu vực, không thay thế bản đồ địa chính, hồ sơ thửa đất, văn bản quy hoạch hoặc xác nhận của cơ quan có thẩm quyền.</span>
+      </div>
+    </section>
+
+    <section id="ban-do-tuong-tac" class="seo-shell bd-map-section" aria-labelledby="ban-do-tuong-tac-title">
+      <div class="planning-section-heading">
+        <div>
+          <p class="planning-kicker">Hai lớp địa giới</p>
+          <h2 id="ban-do-tuong-tac-title">Bản đồ Bình Dương tương tác</h2>
+        </div>
+        <p>Chọn lớp địa giới, sau đó bấm vào một khu vực trên bản đồ hoặc trong danh sách để xem thông tin và mở bộ lọc tin đang bán.</p>
+      </div>
+
+      <div
+        class="bd-map-explorer"
+        data-binh-duong-map
+        data-default-layer="{{ page.default_layer }}"
+        data-legacy-geojson="{{ page.legacy_geojson_url }}"
+        data-current-geojson="{{ page.current_geojson_url }}"
+      >
+        <div class="bd-map-toolbar" role="group" aria-label="Chọn lớp địa giới">
+          <button type="button" data-map-layer="legacy" aria-pressed="true">
+            <strong>Bình Dương cũ</strong>
+            <span>9 huyện, thành phố</span>
+          </button>
+          <button type="button" data-map-layer="current" aria-pressed="false">
+            <strong>Địa giới sau 2025</strong>
+            <span>36 phường, xã</span>
+          </button>
+        </div>
+
+        <p class="bd-map-status" data-binh-duong-map-status aria-live="polite">Đang tải lớp Bình Dương cũ…</p>
+
+        <div class="bd-map-workspace">
+          <div class="bd-map-canvas-wrap">
+            <div
+              class="bd-map-canvas"
+              data-binh-duong-map-canvas
+              role="region"
+              aria-label="Bản đồ hành chính Bình Dương tương tác"
+            ></div>
+            <div class="bd-map-fallback" data-binh-duong-map-fallback hidden>
+              <strong>Chưa tải được bản đồ tương tác.</strong>
+              <p>Bạn vẫn có thể tra cứu toàn bộ khu vực và mở bộ lọc tin trong các danh sách bên dưới.</p>
+              <button type="button" data-binh-duong-map-retry>Thử tải lại bản đồ</button>
+            </div>
+          </div>
+
+          <aside class="bd-map-selection" data-binh-duong-map-selection aria-live="polite">
+            <p class="planning-kicker">Khu vực đang chọn</p>
+            <h3 data-map-selection-name>Toàn tỉnh Bình Dương cũ</h3>
+            <p class="bd-map-selection-type" data-map-selection-type>9 đơn vị cấp huyện trước sắp xếp</p>
+            <p data-map-selection-summary>Chọn một ranh trên bản đồ hoặc tên khu vực trong danh sách để xem thông tin chi tiết.</p>
+            <dl>
+              <div>
+                <dt>Nhóm địa bàn</dt>
+                <dd data-map-selection-group>Toàn khu vực</dd>
+              </div>
+              <div data-map-selection-former-row hidden>
+                <dt>Được hình thành từ</dt>
+                <dd data-map-selection-former></dd>
+              </div>
+            </dl>
+            <a class="seo-button seo-button-primary" href="/?tab=signals" data-map-selection-cta data-track-cta="binh_duong_map_area_dashboard">Xem tin đang bán</a>
+            <p class="bd-map-attribution">Nền bản đồ © OpenStreetMap. Ranh tham khảo từ geoBoundaries và OpenStreetMap.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="seo-shell bd-map-directory-section" aria-labelledby="danh-sach-binh-duong-cu">
+      <div class="planning-section-heading">
+        <div>
+          <p class="planning-kicker">Trước sắp xếp</p>
+          <h2 id="danh-sach-binh-duong-cu">9 huyện, thành phố của Bình Dương cũ</h2>
+        </div>
+        <p>Chọn “Hiện trên bản đồ” để định vị nhanh. Tên khu vực không dẫn sang một trang địa phương chưa tồn tại.</p>
+      </div>
+
+      <div class="bd-map-legacy-grid">
+        {% for area in legacy_areas %}
+        <article class="bd-map-area-card" data-map-directory-item="legacy" data-area-slug="{{ area.slug }}">
+          <div>
+            <span>{{ area.unit_type }}</span>
+            <h3>{{ area.name }}</h3>
+            <p>{{ area.summary }}</p>
+          </div>
+          <div class="bd-map-area-actions">
+            <button type="button" data-map-area-button data-layer="legacy" data-area-slug="{{ area.slug }}">Hiện trên bản đồ</button>
+            <a href="{{ area.dashboard_href }}" aria-label="{{ area.dashboard_label }}" data-track-cta="binh_duong_map_legacy_dashboard">Lọc tin</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="seo-shell bd-map-directory-section" aria-labelledby="danh-sach-phuong-xa-moi">
+      <div class="planning-section-heading">
+        <div>
+          <p class="planning-kicker">Sau sắp xếp 2025</p>
+          <h2 id="danh-sach-phuong-xa-moi">36 phường, xã thuộc khu vực Bình Dương cũ</h2>
+        </div>
+        <p>Danh sách được nhóm theo địa bàn quen thuộc để bạn đối chiếu tên mới với khu vực cũ dễ hơn.</p>
+      </div>
+
+      <div class="bd-map-current-groups">
+        {% for group in current_groups %}
+        <section class="bd-map-current-group" aria-labelledby="group-{{ loop.index }}">
+          <h3 id="group-{{ loop.index }}">Khu vực {{ group.name }}</h3>
+          <div class="bd-map-current-list">
+            {% for area in group.areas %}
+            <article class="bd-map-current-row" data-map-directory-item="current" data-area-slug="{{ area.slug }}">
+              <div>
+                <span>{{ area.unit_type }}</span>
+                <strong>{{ area.name }}</strong>
+                <small>Từ {{ area.former_units }}</small>
+              </div>
+              <div class="bd-map-area-actions">
+                <button type="button" data-map-area-button data-layer="current" data-area-slug="{{ area.slug }}">Hiện trên bản đồ</button>
+                <a href="{{ area.dashboard_href }}" aria-label="{{ area.dashboard_label }}" data-track-cta="binh_duong_map_current_dashboard">Lọc tin</a>
+              </div>
+            </article>
+            {% endfor %}
+          </div>
+        </section>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="seo-shell bd-map-guide" aria-labelledby="cach-doc-ban-do">
+      <div class="bd-map-reading-column">
+        <p class="planning-kicker">Cách sử dụng</p>
+        <h2 id="cach-doc-ban-do">Cách đọc bản đồ khi tìm nhà đất Bình Dương</h2>
+
+        <h3>1. Bắt đầu bằng địa danh quen thuộc</h3>
+        <p>Nếu tin rao dùng tên thành phố hoặc huyện cũ, hãy xem lớp “Bình Dương cũ” trước. Lớp này giúp xác định nhanh vị trí tương đối và các khu vực giáp ranh.</p>
+
+        <h3>2. Chuyển sang tên phường, xã sau sắp xếp</h3>
+        <p>Khi cần đối chiếu địa chỉ mới, chuyển sang lớp 36 phường, xã. Phần thông tin của từng đơn vị ghi lại các phường, xã cũ được ghép để người đọc tránh nhầm địa danh trùng tên.</p>
+
+        <h3>3. Đối chiếu thêm quy hoạch và dữ liệu tin rao</h3>
+        <p>Ranh hành chính chỉ là một lớp thông tin. Trước khi ra quyết định, cần kiểm tra đường đi thực tế, quy hoạch chi tiết, giấy tờ thửa đất và mức giá của các tin tương đồng quanh khu vực.</p>
+      </div>
+
+      <div class="bd-map-related-grid" aria-label="Nội dung liên quan">
+        {% for link in page.related_links %}
+        <a href="{{ link.href }}" data-track-cta="binh_duong_map_related">
+          <span>Đọc tiếp</span>
+          <strong>{{ link.label }}</strong>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="seo-shell bd-map-faq" aria-labelledby="cau-hoi-ban-do">
+      <div class="planning-section-heading">
+        <div>
+          <p class="planning-kicker">Hỏi đáp</p>
+          <h2 id="cau-hoi-ban-do">Câu hỏi thường gặp</h2>
+        </div>
+      </div>
+      <div class="bd-map-faq-list">
+        {% for item in page.faq %}
+        <details>
+          <summary>{{ item.question }}</summary>
+          <p>{{ item.answer }}</p>
+        </details>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="seo-shell bd-map-sources" aria-labelledby="nguon-ban-do">
+      <div class="bd-map-reading-column">
+        <p class="planning-kicker">Nguồn và phương pháp</p>
+        <h2 id="nguon-ban-do">Nguồn dữ liệu bản đồ</h2>
+        <p>Radar BDS giữ snapshot dữ liệu đã kiểm tra để trang tải ổn định. Tên 36 đơn vị được đối chiếu với danh sách hành chính công bố; ranh được dùng ở mức tham khảo và có thể được nguồn cộng đồng cập nhật sau thời điểm snapshot.</p>
+        <ul>
+          {% for source in page.source_links %}
+          <li><a href="{{ source.href }}" target="_blank" rel="noopener">{{ source.label }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+
+    <section class="seo-shell planning-cta-band bd-map-final-cta">
+      <div>
+        <p class="planning-kicker">Radar BDS</p>
+        <h2>Từ địa giới đến tin đang bán</h2>
+        <p>Mở dashboard để lọc tin theo khu vực, diện tích, giá/m² và mức chênh so với fair value trong phạm vi Radar BDS đang theo dõi.</p>
+      </div>
+      <a class="seo-button seo-button-primary" href="/?tab=signals" data-track-cta="binh_duong_map_bottom_dashboard">Lọc tin đang bán theo khu vực</a>
+    </section>
+  </main>
+
+  <a class="bd-map-mobile-cta" href="/?tab=signals" data-map-mobile-cta data-track-cta="binh_duong_map_mobile_dashboard">Lọc tin đang bán</a>
+
+  {% include "partials/seo_footer.html" %}
+  {% set view_event = "seo_landing_viewed" %}
+  {% include "partials/seo_tracking.html" %}
+</body>
+
+</html>
