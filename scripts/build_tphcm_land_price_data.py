@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import unicodedata
@@ -11,6 +12,10 @@ import pdfplumber
 
 PRICE_RE = re.compile(r"^\d{1,3}(?:\.\d{3})*(?:,\d+)?$|^\d+$")
 HEADING_RE = re.compile(r"^BẢNG GIÁ ĐẤT\s+(.+)$")
+OFFICIAL_SOURCE_URL = (
+    "https://congbao.hochiminhcity.gov.vn/cong-bao/van-ban/nghi-quyet/"
+    "so/87-2025-nq-hdnd/ngay/26-12-2025/48983?cbid=48997"
+)
 
 
 def clean(value) -> str:
@@ -67,6 +72,41 @@ def current_context(text: str, context: dict) -> dict:
     return context
 
 
+def clean_rows(rows: list[dict]) -> list[dict]:
+    cleaned: list[dict] = []
+    seen: set[tuple] = set()
+    identity_fields = (
+        "area",
+        "street",
+        "from",
+        "to",
+        "residential",
+        "commerce_service",
+        "production_business",
+    )
+
+    for source_row in rows:
+        row = dict(source_row)
+        from_value = clean(row.get("from"))
+        to_value = clean(row.get("to"))
+        if to_value == "ĐẾN" and from_value.endswith(" TỪ"):
+            from_value = from_value[:-3].rstrip()
+            to_value = ""
+        row["from"] = from_value
+        row["to"] = to_value
+        row["search"] = slug_text(
+            " ".join(str(row.get(key) or "") for key in ("area", "street", "from", "to"))
+        )
+
+        identity = tuple(row.get(field) for field in identity_fields)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        cleaned.append(row)
+
+    return cleaned
+
+
 def extract_rows(pdf_path: Path) -> list[dict]:
     rows: list[dict] = []
     context = {"appendix": "", "area": ""}
@@ -113,7 +153,20 @@ def extract_rows(pdf_path: Path) -> list[dict]:
                     }
                     row["search"] = slug_text(" ".join(str(row[k] or "") for k in ("area", "street", "from", "to")))
                     rows.append(row)
-    return rows
+    return clean_rows(rows)
+
+
+def build_payload(rows: list[dict], pdf_path: Path | None = None) -> dict:
+    payload = {
+        "source": "Nghị quyết 87/2025/NQ-HĐND TP.HCM, áp dụng từ 01/01/2026",
+        "source_url": OFFICIAL_SOURCE_URL,
+        "data_as_of": "2026-01-01",
+        "unit": "1.000 đồng/m²",
+        "rows": clean_rows(rows),
+    }
+    if pdf_path is not None:
+        payload["document_sha256"] = hashlib.sha256(pdf_path.read_bytes()).hexdigest()
+    return payload
 
 
 def main() -> None:
@@ -124,12 +177,7 @@ def main() -> None:
 
     rows = extract_rows(args.pdf)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "source": "Nghị quyết 87/2025/NQ-HĐND TP.HCM, áp dụng từ 01/01/2026",
-        "source_url": "https://static1.cafeland.vn/cafelandnew/hinh-anh/2026/05/14/191/87-2025-nq-bang-gia-dat-nam-2026-tphcm.pdf",
-        "unit": "1.000 đồng/m²",
-        "rows": rows,
-    }
+    payload = build_payload(rows, args.pdf)
     args.out.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"wrote {len(rows)} rows to {args.out}")
 

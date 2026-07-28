@@ -13,8 +13,8 @@
   <meta property="og:image" content="{{ site_meta.og_image }}">
   {% include "partials/google_site_tags.html" %}
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tphcm-land-price-ux-20260722">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tphcm_land_price_tool.css') }}?v=tphcm-land-price-ux-20260722">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tphcm-land-price-trust-20260728b">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tphcm_land_price_tool.css') }}?v=tphcm-land-price-trust-20260728b">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -23,6 +23,8 @@
     "url": {{ site_meta.canonical_url|tojson }},
     "applicationCategory": "FinanceApplication",
     "description": {{ site_meta.description|tojson }},
+    "dateModified": {{ land_price_data_as_of|tojson }},
+    "isBasedOn": {{ land_price_source_url|tojson }},
     "provider": {"@type": "Organization", "name": "Radar BDS", "url": {{ site_meta.base_url|tojson }}}
   }
   </script>
@@ -38,26 +40,35 @@
         <div>
           <h1>Tra cứu bảng giá đất TP.HCM mới 2026</h1>
           <p>Nhập tên đường, đoạn đường hoặc chọn phường/xã để tra nhanh giá đất theo Nghị quyết 87/2025/NQ-HĐND, áp dụng từ ngày 01/01/2026.</p>
-          <p class="source-note">Dữ liệu đã trích từ PDF nguồn, đơn vị: 1.000 đồng/m². Tổng {{ "{:,}".format(row_count).replace(",", ".") }} dòng.</p>
+          <div class="land-price-provenance">
+            <strong>Dữ liệu áp dụng từ 01/01/2026</strong>
+            <span>{{ "{:,}".format(row_count).replace(",", ".") }} dòng đã kiểm tra · đơn vị gốc: 1.000 đồng/m²</span>
+            <a href="{{ land_price_source_url }}" target="_blank" rel="noopener noreferrer">Xem Nghị quyết 87/2025/NQ-HĐND trên Công báo TP.HCM</a>
+          </div>
         </div>
-        <form class="land-price-search" id="landPriceSearch">
-          <label>
-            <span>Từ khóa</span>
+        <form class="land-price-search" id="landPriceSearch" novalidate>
+          <div class="land-price-field">
+            <label for="landPriceQuery">Từ khóa</label>
             <div class="keyword-suggest-wrap">
-              <input id="landPriceQuery" name="q" type="search" placeholder="Ví dụ: Nguyễn Huệ, ĐT.742, D16..." autocomplete="off" aria-controls="keywordSuggestions" aria-expanded="false">
-              <div class="keyword-suggestions" id="keywordSuggestions" hidden></div>
+              <input id="landPriceQuery" name="q" type="search" placeholder="Ví dụ: Nguyễn Huệ, ĐT.742, D16..." autocomplete="off" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-controls="keywordSuggestions" aria-expanded="false" aria-describedby="landPriceSearchHelp landPriceSearchError">
+              <div class="keyword-suggestions" id="keywordSuggestions" role="listbox" aria-label="Gợi ý tuyến đường" hidden></div>
             </div>
-          </label>
-          <label>
-            <span>Phường/xã</span>
-            <input id="landPriceArea" name="area" list="landPriceAreaOptions" placeholder="Gõ để lọc phường/xã..." autocomplete="off">
+          </div>
+          <div class="land-price-field">
+            <label for="landPriceArea">Phường/xã</label>
+            <input id="landPriceArea" name="area" list="landPriceAreaOptions" placeholder="Gõ để lọc phường/xã..." autocomplete="off" aria-describedby="landPriceSearchHelp landPriceSearchError">
             <datalist id="landPriceAreaOptions">
               {% for area in areas %}
               <option value="{{ area }}"></option>
               {% endfor %}
             </datalist>
-          </label>
-          <button type="submit">Tra cứu</button>
+          </div>
+          <p class="field-help" id="landPriceSearchHelp">Nhập ít nhất tên đường hoặc phường/xã. Có thể gõ không dấu.</p>
+          <p class="field-error" id="landPriceSearchError" role="alert" hidden>Vui lòng nhập tên đường hoặc chọn phường/xã.</p>
+          <button class="land-price-submit" type="submit">
+            <span class="button-label">Tra cứu</span>
+            <span class="button-spinner" aria-hidden="true"></span>
+          </button>
           <div class="quick-searches" aria-label="Tìm kiếm nhanh">
             <button type="button" data-query="Nguyễn Huệ" data-area="PHƯỜNG SÀI GÒN">Nguyễn Huệ</button>
             <button type="button" data-query="ĐT.742" data-area="">ĐT.742</button>
@@ -71,11 +82,16 @@
       <div class="result-head">
         <div>
           <p class="section-label">Kết quả tra cứu</p>
-          <h2 id="landPriceResultTitle">Bảng giá theo tuyến đường</h2>
+          <h2 id="landPriceResultTitle" tabindex="-1">Bảng giá theo tuyến đường</h2>
         </div>
-        <p id="landPriceStatus" role="status">Nhập từ khóa hoặc chọn phường/xã để tra cứu.</p>
+        <p id="landPriceStatus" role="status" aria-live="polite">Nhập từ khóa hoặc chọn phường/xã để tra cứu.</p>
       </div>
-      <div class="table-wrap">
+      <div class="result-state" id="landPriceEmpty">
+        <strong>Sẵn sàng tra cứu</strong>
+        <p>Nhập tuyến đường hoặc phường/xã để xem đúng đoạn đường và ba nhóm giá đất.</p>
+      </div>
+      <div class="result-state result-error" id="landPriceError" role="alert" hidden></div>
+      <div class="table-wrap" id="landPriceTable" hidden>
         <table>
           <thead>
             <tr>
@@ -84,12 +100,22 @@
               <th>Từ</th>
               <th>Đến</th>
               <th>Đất ở</th>
-              <th>TM dịch vụ</th>
-              <th>SXKD phi NN</th>
+              <th>Thương mại, dịch vụ</th>
+              <th>SXKD phi nông nghiệp</th>
             </tr>
           </thead>
           <tbody id="landPriceRows"></tbody>
         </table>
+      </div>
+      <div class="land-price-cards" id="landPriceCards" hidden></div>
+      <nav class="result-pagination" id="landPricePagination" aria-label="Phân trang kết quả" hidden>
+        <button type="button" data-page-action="prev">Trang trước</button>
+        <span id="landPricePageStatus"></span>
+        <button type="button" data-page-action="next">Trang sau</button>
+      </nav>
+      <div class="result-actions" id="landPriceActions" hidden>
+        <a class="result-action-secondary" id="landPriceSourceCta" href="{{ land_price_source_url }}" target="_blank" rel="noopener noreferrer">Đối chiếu văn bản chính thức</a>
+        <a class="result-action-primary" id="landPriceValuationCta" href="/dinh-gia-bds" hidden>Định giá lô đất khu vực Bình Dương</a>
       </div>
     </section>
 
@@ -103,7 +129,23 @@
         <p>Bảng giá đất không phải giá giao dịch thị trường. Với một lô cụ thể, cần kiểm tra vị trí, hẻm, pháp lý, quy hoạch và giao dịch thực tế trước khi ra quyết định.</p>
       </div>
     </section>
+    <section class="land-price-shell land-price-faq" aria-labelledby="landPriceFaqTitle">
+      <p class="section-label">Câu hỏi thường gặp</p>
+      <h2 id="landPriceFaqTitle">Trước khi dùng kết quả</h2>
+      <details>
+        <summary>Con số này có phải giá mua bán ngoài thị trường không?</summary>
+        <p>Không. Đây là giá trong bảng giá đất Nhà nước. Giá giao dịch thực tế còn phụ thuộc vị trí, hẻm, quy hoạch, pháp lý và cung cầu tại thời điểm mua bán.</p>
+      </details>
+      <details>
+        <summary>Vì sao phải kiểm tra đúng đoạn “từ” và “đến”?</summary>
+        <p>Cùng một tuyến đường có thể có nhiều mức giá theo từng đoạn. Hãy đối chiếu hai mốc giao cắt và trang phụ lục trước khi sử dụng kết quả.</p>
+      </details>
+      <details>
+        <summary>Nếu lô đất nằm trong hẻm thì dùng giá nào?</summary>
+        <p>Kết quả tra cứu tuyến đường chưa tự động tính vị trí hẻm. Cần tiếp tục đối chiếu quy định vị trí đất trong Nghị quyết và hồ sơ cụ thể của thửa đất.</p>
+      </details>
+    </section>
   </main>
-  <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=tphcm-land-price-ux-20260722"></script>
+  <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=tphcm-land-price-trust-20260728b"></script>
 </body>
 </html>

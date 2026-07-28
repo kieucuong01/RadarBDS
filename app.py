@@ -13,7 +13,6 @@ import time
 import urllib.request
 import urllib.parse
 import threading
-import unicodedata
 from copy import deepcopy
 from functools import wraps
 from datetime import datetime, timedelta, timezone
@@ -90,6 +89,7 @@ from services.valuation_tool import (
     ValuationToolError,
     estimate_property_value,
 )
+from services.tphcm_land_prices import search_land_prices
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -1393,12 +1393,6 @@ def _site_meta(path="/", *, title=None, description=None, keywords=None):
     }
 
 
-def _search_key(value: str) -> str:
-    text = unicodedata.normalize("NFD", str(value or "").lower())
-    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn").replace("đ", "d")
-    return re.sub(r"[^a-z0-9]+", " ", text).strip()
-
-
 def _load_tphcm_land_price_data() -> dict:
     mtime = _TPHCM_LAND_PRICE_DATA.stat().st_mtime
     if _TPHCM_LAND_PRICE_CACHE["mtime"] != mtime:
@@ -1509,6 +1503,10 @@ def tphcm_land_price_tool_page():
         active_nav="bang-gia-dat",
         areas=areas,
         row_count=len(data.get("rows", [])),
+        land_price_source=data.get("source"),
+        land_price_source_url=data.get("source_url"),
+        land_price_data_as_of=data.get("data_as_of"),
+        land_price_document_sha256=data.get("document_sha256"),
         site_meta=_site_meta(
             "/bang-gia-dat-tphcm",
             title="Tra cứu bảng giá đất TP.HCM mới 2026 | Radar BDS",
@@ -1521,34 +1519,35 @@ def tphcm_land_price_tool_page():
 def api_tphcm_land_prices():
     data = _load_tphcm_land_price_data()
     rows = data.get("rows", [])
-    q = _search_key(request.args.get("q", ""))
+    q = request.args.get("q", "").strip()
     area = request.args.get("area", "").strip()
-    area_key = _search_key(area)
-    area_words = area_key.split()
-    words = q.split()
+    if not q and not area:
+        return jsonify({"ok": False, "error": "search_required"}), 400
+
     try:
         limit = max(1, min(int(request.args.get("limit", 50) or 50), 100))
     except ValueError:
         limit = 50
+    try:
+        page = max(1, min(int(request.args.get("page", 1) or 1), 500))
+    except ValueError:
+        page = 1
 
-    matches = []
-    for row in rows:
-        row_area_key = _search_key(row.get("area", ""))
-        if area_words and not all(word in row_area_key for word in area_words):
-            continue
-        haystack = row.get("search") or _search_key(" ".join(str(row.get(k) or "") for k in ("area", "street", "from", "to")))
-        if words and not all(word in haystack for word in words):
-            continue
-        matches.append(row)
-        if len(matches) >= limit:
-            break
+    result = search_land_prices(
+        rows,
+        query=q,
+        area=area,
+        page=page,
+        limit=limit,
+    )
 
     return jsonify({
         "ok": True,
-        "items": matches,
-        "total": len(matches),
+        **result,
         "source": data.get("source"),
         "source_url": data.get("source_url"),
+        "data_as_of": data.get("data_as_of"),
+        "document_sha256": data.get("document_sha256"),
         "unit": data.get("unit"),
     })
 

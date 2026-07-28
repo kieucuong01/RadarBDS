@@ -50,6 +50,27 @@
   font-weight: 800;
 }
 
+.land-price-provenance {
+  display: grid;
+  max-width: 740px;
+  gap: 5px;
+  margin-top: 18px;
+  border-left: 3px solid var(--lp-green);
+  padding: 10px 0 10px 14px;
+  color: var(--lp-muted);
+}
+
+.land-price-provenance strong {
+  color: var(--lp-ink);
+}
+
+.land-price-provenance a {
+  width: fit-content;
+  color: var(--lp-green);
+  font-weight: 800;
+  text-underline-offset: 3px;
+}
+
 .land-price-search,
 .result-zone,
 .explainer > div {
@@ -65,12 +86,12 @@
   padding: 22px;
 }
 
-.land-price-search label {
+.land-price-field {
   display: grid;
   gap: 7px;
 }
 
-.land-price-search span,
+.land-price-field > label,
 .section-label {
   color: var(--lp-green);
   font-size: .78rem;
@@ -94,6 +115,27 @@
   border-color: var(--lp-green);
 }
 
+.land-price-search input[aria-invalid="true"] {
+  border-color: #b42318;
+  outline-color: rgba(180, 35, 24, .16);
+}
+
+.field-help,
+.field-error {
+  margin: -5px 0 0;
+  font-size: .82rem;
+  line-height: 1.45;
+}
+
+.field-help {
+  color: var(--lp-muted);
+}
+
+.field-error {
+  color: #b42318;
+  font-weight: 800;
+}
+
 .land-price-search button {
   min-height: 48px;
   border: 0;
@@ -102,6 +144,36 @@
   color: #fff;
   cursor: pointer;
   font-weight: 900;
+}
+
+.land-price-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.land-price-submit:disabled {
+  cursor: wait;
+  opacity: .72;
+}
+
+.button-spinner {
+  display: none;
+  width: 17px;
+  height: 17px;
+  border: 2px solid rgba(255, 255, 255, .4);
+  border-top-color: #fff;
+  border-radius: 999px;
+  animation: lp-spin .7s linear infinite;
+}
+
+.land-price-search[aria-busy="true"] .button-spinner {
+  display: inline-block;
+}
+
+@keyframes lp-spin {
+  to { transform: rotate(360deg); }
 }
 
 .keyword-suggest-wrap {
@@ -138,9 +210,11 @@
 }
 
 .keyword-suggestion:hover,
-.keyword-suggestion:focus {
+.keyword-suggestion:focus,
+.keyword-suggestion[aria-selected="true"] {
   background: #f1f8f5;
-  outline: none;
+  outline: 2px solid var(--lp-green);
+  outline-offset: -2px;
 }
 
 .keyword-suggestion small {
@@ -155,8 +229,8 @@
 }
 
 .quick-searches button {
-  min-height: 34px;
-  padding: 0 11px;
+  min-height: 44px;
+  padding: 0 13px;
   background: #eef7f3;
   color: var(--lp-green);
   font-size: .82rem;
@@ -185,6 +259,47 @@
   text-align: right;
 }
 
+.result-state {
+  display: grid;
+  min-height: 152px;
+  place-content: center;
+  gap: 6px;
+  border: 1px dashed #b8c9d8;
+  border-radius: 12px;
+  padding: 24px;
+  background: var(--lp-soft);
+  color: var(--lp-muted);
+  text-align: center;
+}
+
+.result-state strong {
+  color: var(--lp-ink);
+  font-size: 1.05rem;
+}
+
+.result-state p {
+  max-width: 540px;
+  margin: 0;
+}
+
+.result-error {
+  border-color: #f3b5af;
+  background: #fff6f5;
+  color: #b42318;
+  font-weight: 800;
+}
+
+.result-state[hidden],
+.table-wrap[hidden],
+.land-price-cards[hidden],
+.result-pagination[hidden],
+.result-actions[hidden],
+.result-actions a[hidden],
+.keyword-suggestions[hidden],
+.field-error[hidden] {
+  display: none !important;
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -203,6 +318,16 @@
   vertical-align: top;
 }
 
+.table-wrap td:nth-child(2) {
+  min-width: 210px;
+}
+
+.table-wrap td:nth-child(2) small {
+  display: block;
+  margin-top: 5px;
+  color: var(--lp-muted);
+}
+
 .table-wrap th {
   color: var(--lp-muted);
   font-size: .78rem;
@@ -215,10 +340,86 @@
   white-space: nowrap;
 }
 
-.empty-row td {
+.match-badge {
+  display: block;
+  width: fit-content;
+  margin-top: 6px;
+  border-radius: 999px;
+  padding: 4px 7px;
+  background: #e8f4ef;
+  color: var(--lp-green);
+  font-size: .69rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+.land-price-cards {
+  display: none;
+}
+
+.result-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.result-pagination button {
+  min-height: 44px;
+  border: 1px solid var(--lp-line);
+  border-radius: 10px;
+  padding: 0 15px;
+  background: #fff;
+  color: var(--lp-green);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
+.result-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+#landPricePageStatus {
+  min-width: 92px;
   color: var(--lp-muted);
+  font-weight: 800;
   text-align: center;
-  padding: 30px 10px;
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  border-top: 1px solid var(--lp-line);
+  padding-top: 16px;
+}
+
+.result-actions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0 16px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.result-action-primary {
+  background: var(--lp-green);
+  color: #fff;
+}
+
+.result-action-secondary {
+  border: 1px solid var(--lp-line);
+  background: #fff;
+  color: var(--lp-green);
 }
 
 .explainer {
@@ -233,6 +434,35 @@
 }
 
 .explainer p {
+  color: var(--lp-muted);
+}
+
+.land-price-faq {
+  padding: 0 0 64px;
+}
+
+.land-price-faq > h2 {
+  margin: 0 0 18px;
+}
+
+.land-price-faq details {
+  border-top: 1px solid var(--lp-line);
+  padding: 16px 0;
+}
+
+.land-price-faq details:last-child {
+  border-bottom: 1px solid var(--lp-line);
+}
+
+.land-price-faq summary {
+  cursor: pointer;
+  color: var(--lp-ink);
+  font-weight: 900;
+}
+
+.land-price-faq details p {
+  max-width: 780px;
+  margin: 10px 0 0;
   color: var(--lp-muted);
 }
 
@@ -256,5 +486,135 @@
 
   #landPriceStatus {
     text-align: left;
+  }
+}
+
+@media (max-width: 700px) {
+  .land-price-hero {
+    padding-top: 26px;
+  }
+
+  .land-price-hero h1 {
+    font-size: 2.08rem;
+    line-height: 1.08;
+  }
+
+  .land-price-search,
+  .result-zone,
+  .explainer > div {
+    border-radius: 12px;
+  }
+
+  .result-zone {
+    padding: 18px;
+  }
+
+  .table-wrap {
+    display: none !important;
+  }
+
+  .land-price-cards:not([hidden]) {
+    display: grid;
+    gap: 14px;
+  }
+
+  .land-price-card {
+    display: grid;
+    gap: 14px;
+    border: 1px solid var(--lp-line);
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+  }
+
+  .land-price-card-head {
+    display: grid;
+    gap: 9px;
+  }
+
+  .land-price-card-head p,
+  .land-price-card-head h3 {
+    margin: 0;
+  }
+
+  .land-price-card-head p {
+    color: var(--lp-green);
+    font-size: .75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .land-price-card-head h3 {
+    margin-top: 3px;
+    font-size: 1.08rem;
+    line-height: 1.3;
+  }
+
+  .segment-grid,
+  .price-grid {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .segment-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .segment-grid > div,
+  .price-grid > div {
+    border-radius: 9px;
+    padding: 10px;
+    background: var(--lp-soft);
+  }
+
+  .segment-grid dt,
+  .price-grid dt {
+    color: var(--lp-muted);
+    font-size: .72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .segment-grid dd,
+  .price-grid dd {
+    margin: 4px 0 0;
+    color: var(--lp-ink);
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  .price-grid dd {
+    color: var(--lp-green);
+    font-size: 1rem;
+  }
+
+  .source-row {
+    margin: 0;
+    color: var(--lp-muted);
+    font-size: .76rem;
+    line-height: 1.45;
+  }
+
+  .result-pagination {
+    justify-content: space-between;
+  }
+
+  .result-actions {
+    display: grid;
+  }
+
+  .result-actions a {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button-spinner {
+    animation-duration: 1.4s;
+  }
+
+  html {
+    scroll-behavior: auto;
   }
 }
