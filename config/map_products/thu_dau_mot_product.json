@@ -1,0 +1,30 @@
+{
+  "slug": "thu-dau-mot-map-commerce",
+  "version": "1.0.0",
+  "price_vnd": 99000,
+  "legacy_wards": [
+    "Chánh Mỹ",
+    "Chánh Nghĩa",
+    "Định Hòa",
+    "Hiệp An",
+    "Hiệp Thành",
+    "Hòa Phú",
+    "Phú Cường",
+    "Phú Hòa",
+    "Phú Lợi",
+    "Phú Mỹ",
+    "Phú Tân",
+    "Phú Thọ",
+    "Tân An",
+    "Tương Bình Hiệp"
+  ],
+  "current_wards": [
+    "Thủ Dầu Một",
+    "Phú Lợi",
+    "Chánh Hiệp",
+    "Bình Dương",
+    "Phú An"
+  ],
+  "formats": ["pdf", "svg", "kml"],
+  "font_family": "Poppins"
+}

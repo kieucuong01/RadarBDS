@@ -1,0 +1,44 @@
+{
+  "sources": [
+    {
+      "key": "current_boundaries",
+      "source_url": "static/maps/binh-duong/current-36-wards.geojson",
+      "license_name": "Open Data Commons Open Database License (ODbL) v1.0",
+      "license_url": "https://www.openstreetmap.org/copyright",
+      "snapshot_strategy": "repo_snapshot",
+      "snapshot_at": "2026-07-28"
+    },
+    {
+      "key": "legacy_boundaries",
+      "source_url": "https://overpass-api.de/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A180%5D%5Bdate%3A%222025-06-30T00%3A00%3A00Z%22%5D%3Brelation%5B%22boundary%22%3D%22administrative%22%5D%5B%22admin_level%22%3D%228%22%5D%2810.90%2C106.55%2C11.15%2C106.85%29%3Bout%20geom%3B",
+      "license_name": "Open Data Commons Open Database License (ODbL) v1.0",
+      "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+      "snapshot_strategy": "dated_query",
+      "snapshot_at": "2025-06-30T00:00:00Z"
+    },
+    {
+      "key": "osm_detail",
+      "source_url": "https://overpass-api.de/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A180%5D%5Bdate%3A%222026-07-29T00%3A00%3A00Z%22%5D%3B%28way%5B%22highway%22%5D%2810.90%2C106.55%2C11.15%2C106.85%29%3Bway%5B%22waterway%22%5D%2810.90%2C106.55%2C11.15%2C106.85%29%3Bnwr%5B%22amenity%22%5D%2810.90%2C106.55%2C11.15%2C106.85%29%3Bnwr%5B%22tourism%22%5D%2810.90%2C106.55%2C11.15%2C106.85%29%3B%29%3Bout%20geom%3B",
+      "license_name": "Open Data Commons Open Database License (ODbL) v1.0",
+      "license_url": "https://www.openstreetmap.org/copyright",
+      "snapshot_strategy": "dated_query",
+      "snapshot_at": "2026-07-29T00:00:00Z"
+    },
+    {
+      "key": "font",
+      "source_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-Regular.ttf",
+      "license_name": "SIL Open Font License, Version 1.1",
+      "license_url": "https://github.com/google/fonts/tree/main/ofl/poppins",
+      "snapshot_strategy": "fixed_url",
+      "snapshot_at": "2026-07-29"
+    },
+    {
+      "key": "font_semibold",
+      "source_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-SemiBold.ttf",
+      "license_name": "SIL Open Font License, Version 1.1",
+      "license_url": "https://github.com/google/fonts/tree/main/ofl/poppins",
+      "snapshot_strategy": "fixed_url",
+      "snapshot_at": "2026-07-29"
+    }
+  ]
+}

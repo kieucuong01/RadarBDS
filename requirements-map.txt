@@ -1,0 +1,4 @@
+shapely==2.1.2
+pyproj==3.7.2
+reportlab==5.0.0
+fonttools==4.63.0

@@ -1,0 +1,61 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Chợ Thủ Dầu Một",
+        "source": "OpenStreetMap way 264294898",
+        "source_url": "https://www.openstreetmap.org/way/264294898",
+        "confidence": "high",
+        "boundary_claim": false
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.6513115, 10.9773409]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Nhà thờ Chánh tòa Phú Cường",
+        "source": "OpenStreetMap way 264294891",
+        "source_url": "https://www.openstreetmap.org/way/264294891",
+        "confidence": "high",
+        "boundary_claim": false
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.6540867, 10.9816213]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Becamex Tower",
+        "source": "OpenStreetMap way 263795576",
+        "source_url": "https://www.openstreetmap.org/way/263795576",
+        "confidence": "high",
+        "boundary_claim": false
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.6704182, 10.9761125]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Công viên Thành phố mới Bình Dương",
+        "source": "OpenStreetMap way 306214079",
+        "source_url": "https://www.openstreetmap.org/way/306214079",
+        "confidence": "high",
+        "boundary_claim": false
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.6786935, 11.0524088]
+      }
+    }
+  ]
+}
