@@ -14,7 +14,8 @@ class ValuationToolTest(unittest.TestCase):
 
         self.token = uuid.uuid4().hex
         self.url_prefix = f"https://valuation-tool-{self.token}.test"
-        self.ward = f"ToolWard{self.token[:8]}"
+        self.city = "THỦ DẦU MỘT"
+        self.ward = "Phú Mỹ"
         self.session_token = f"valuation-tool-free-{self.token}"
         self.user_identifier = f"valuation-tool-{self.token}@test.local"
         self.listing_ids = []
@@ -68,7 +69,7 @@ class ValuationToolTest(unittest.TestCase):
                         frontage_m, depth_m, road_type, road_tier, has_so,
                         probably_sold, is_blacklisted, review_hidden, crawled_at, posted_at
                     ) VALUES (
-                        'facebook', ?, ?, 'Training tool listing', 'Training row',
+                        'facebook', ?, ?, 'Training tool listing 0909 123 456', 'Training row',
                         'Bình Dương', ?, 'dat_nen', 'ban', ?, ?, 100,
                         5, 20, 'duong_nhua', 2, 1,
                         0, 0, 0, datetime('now'), datetime('now')
@@ -84,7 +85,7 @@ class ValuationToolTest(unittest.TestCase):
                 )
                 self.listing_ids.append(cur.lastrowid)
 
-    def _login_as_free(self):
+    def _login_as_tier(self, tier="free"):
         from auth.core import SESSION_COOKIE_NAME
         from db.connection import get_conn
 
@@ -92,9 +93,9 @@ class ValuationToolTest(unittest.TestCase):
             cur = conn.execute(
                 """
                 INSERT INTO users (identifier, identifier_type, password_hash, tier)
-                VALUES (?, 'email', 'hash', 'free')
+                VALUES (?, 'email', 'hash', ?)
                 """,
-                (self.user_identifier,),
+                (self.user_identifier, tier),
             )
             conn.execute(
                 """
@@ -108,20 +109,21 @@ class ValuationToolTest(unittest.TestCase):
         except TypeError:
             self.client.set_cookie("localhost", SESSION_COOKIE_NAME, self.session_token)
 
-    def test_guest_can_view_page_but_cannot_run_valuation(self):
+    def test_guest_can_view_page_and_gets_basic_result(self):
         page = self.client.get("/dinh-gia-bds")
         self.assertEqual(page.status_code, 200)
         html = page.get_data(as_text=True)
         self.assertIn("Định giá lô đất Bình Dương", html)
         self.assertIn("application/ld+json", html)
         self.assertIn("FAQPage", html)
-        self.assertIn("valuation-tool-premium-first-form-20260722", html)
+        self.assertIn("valuation-tool-trust-first-20260728", html)
         self.assertIn("valuation-workspace", html)
-        self.assertIn("Không cần nhập giá", html)
+        self.assertIn("Giá đang chào", html)
 
         response = self.client.post(
             "/api/valuation-tool/estimate",
             json={
+                "city": self.city,
                 "ward": self.ward,
                 "property_type": "dat_nen",
                 "area_m2": 100,
@@ -131,16 +133,24 @@ class ValuationToolTest(unittest.TestCase):
                 "has_so": True,
             },
         )
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.get_json()["error"], "tier_required")
-        self.assertEqual(response.get_json()["required"], "free")
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertTrue(payload["ok"])
+        self.assertTrue(payload["comparables_locked"])
+        self.assertEqual(payload["comparables"], [])
+        self.assertIn("basis_count", payload["estimate"])
+        self.assertIn("confidence_label", payload["estimate"])
+        self.assertIn("data_as_of", payload["estimate"])
+        self.assertNotIn("segment_n", payload["estimate"])
+        self.assertNotIn("note", payload["estimate"])
 
-    def test_free_user_gets_estimate_from_project_valuation_engine(self):
-        self._login_as_free()
+    def test_free_user_gets_estimate_and_redacted_comparables(self):
+        self._login_as_tier("free")
 
         response = self.client.post(
             "/api/valuation-tool/estimate",
             json={
+                "city": self.city,
                 "ward": self.ward,
                 "property_type": "dat_nen",
                 "area_m2": 100,
@@ -148,6 +158,7 @@ class ValuationToolTest(unittest.TestCase):
                 "frontage_m": 5,
                 "depth_m": 20,
                 "has_so": True,
+                "price_ty": 1.8,
             },
         )
 
@@ -158,21 +169,48 @@ class ValuationToolTest(unittest.TestCase):
         self.assertEqual(payload["estimate"]["property_type"], "dat_nen")
         self.assertGreater(payload["estimate"]["fair_ppm2"], 0)
         self.assertGreater(payload["estimate"]["fair_price_ty"], 0)
-        self.assertIsNone(payload["estimate"]["input_ppm2"])
-        self.assertIsNone(payload["estimate"]["mos_pct"])
-        self.assertGreater(payload["estimate"]["segment_n"], 0)
-        self.assertIn("basis=", payload["estimate"]["note"])
+        self.assertIsNotNone(payload["estimate"]["input_ppm2"])
+        self.assertIsNotNone(payload["estimate"]["mos_pct"])
+        self.assertGreater(payload["estimate"]["basis_count"], 0)
+        self.assertFalse(payload["comparables_locked"])
+        self.assertLessEqual(len(payload["comparables"]), 5)
+        rendered = str(payload["comparables"])
+        self.assertNotIn("0909", rendered)
+        self.assertNotIn(self.url_prefix, rendered)
 
-    def test_invalid_input_returns_validation_error(self):
-        self._login_as_free()
+    def test_admin_can_receive_comparable_source_fields(self):
+        self._login_as_tier("admin")
 
         response = self.client.post(
             "/api/valuation-tool/estimate",
-            json={"ward": self.ward, "property_type": "dat_nen", "area_m2": 0},
+            json={
+                "city": self.city,
+                "ward": self.ward,
+                "property_type": "dat_nen",
+                "area_m2": 100,
+                "road_tier": 2,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertFalse(payload["comparables_locked"])
+        self.assertTrue(any(item.get("url", "").startswith(self.url_prefix) for item in payload["comparables"]))
+
+    def test_invalid_input_returns_validation_error(self):
+        response = self.client.post(
+            "/api/valuation-tool/estimate",
+            json={
+                "city": "DĨ AN",
+                "ward": "Dĩ An",
+                "property_type": "dat_nen",
+                "area_m2": 100,
+            },
         )
 
         self.assertEqual(response.status_code, 422)
         self.assertEqual(response.get_json()["error"], "validation_error")
+        self.assertEqual(response.get_json()["field"], "city_invalid")
 
     def test_valuation_tool_is_in_sitemap(self):
         response = self.client.get("/sitemap.xml")

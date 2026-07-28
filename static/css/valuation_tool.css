@@ -19,6 +19,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -42,8 +46,7 @@ body {
 }
 
 .valuation-page #main-content {
-  display: flex;
-  flex-direction: column;
+  display: block;
 }
 
 button,
@@ -194,15 +197,10 @@ summary:focus-visible {
   background:
     linear-gradient(135deg, rgba(15, 118, 110, .08), rgba(3, 105, 161, .05) 46%, transparent),
     transparent;
-  order: 1;
 }
 
 .hero-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 32px;
-  align-items: end;
-  padding: 18px 0 34px;
+  padding: 34px 0 28px;
 }
 
 .eyebrow,
@@ -224,7 +222,7 @@ summary:focus-visible {
 }
 
 .hero-lede {
-  max-width: 790px;
+  max-width: 860px;
   margin: 0;
   color: var(--vt-muted);
   font-size: 1.06rem;
@@ -300,8 +298,7 @@ summary:focus-visible {
 }
 
 .valuation-workspace {
-  order: -1;
-  padding: 34px 0 18px;
+  padding: 20px 0 48px;
 }
 
 .tool-panel {
@@ -413,6 +410,18 @@ summary:focus-visible {
   gap: 6px;
 }
 
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.field-grid em {
+  margin-left: 4px;
+  color: var(--vt-muted);
+  font-size: .72rem;
+  font-style: normal;
+  font-weight: 650;
+}
+
 .field-grid span,
 .check-row span {
   color: #52665e;
@@ -430,12 +439,59 @@ summary:focus-visible {
   color: var(--vt-ink);
   padding: 0 11px;
   outline: none;
+  font-size: 16px;
 }
 
 .field-grid input:focus,
 .field-grid select:focus {
   border-color: var(--vt-green-2);
   box-shadow: 0 0 0 3px rgba(15, 118, 110, .12);
+}
+
+.field-error {
+  min-height: 0;
+  color: var(--vt-red);
+  font-size: .76rem;
+  font-weight: 750;
+}
+
+.field-error:not(:empty) {
+  min-height: 18px;
+}
+
+[aria-invalid="true"] {
+  border-color: var(--vt-red) !important;
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, .1) !important;
+}
+
+.advanced-fields {
+  margin: 15px 0;
+  border: 1px solid var(--vt-line);
+  border-radius: 12px;
+  background: var(--vt-soft);
+}
+
+.advanced-fields summary {
+  min-height: 44px;
+  padding: 10px 13px;
+  display: flex;
+  align-items: center;
+  color: var(--vt-green);
+  cursor: pointer;
+  font-size: .86rem;
+  font-weight: 900;
+}
+
+.advanced-fields[open] summary {
+  border-bottom: 1px solid var(--vt-line);
+}
+
+.advanced-fields .field-grid {
+  padding: 13px 13px 0;
+}
+
+.advanced-fields .check-row {
+  padding: 0 13px 13px;
 }
 
 .check-row {
@@ -484,6 +540,24 @@ summary:focus-visible {
   stroke-linejoin: round;
 }
 
+.submit-loading {
+  align-items: center;
+  gap: 9px;
+}
+
+.submit-loading:not([hidden]) {
+  display: inline-flex;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, .42);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: valuationSpinner .7s linear infinite;
+}
+
 .submit-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 18px 34px rgba(11, 93, 70, .28);
@@ -514,6 +588,10 @@ summary:focus-visible {
     linear-gradient(135deg, rgba(15, 118, 110, .07), transparent 36%),
     radial-gradient(circle at 96% 0%, rgba(18, 99, 241, .12), transparent 34%),
     #fff;
+}
+
+.result-content:focus {
+  outline: none;
 }
 
 .result-empty h2 {
@@ -634,6 +712,41 @@ summary:focus-visible {
   font-size: 1rem;
 }
 
+.comparables-lock {
+  margin: 10px 0 18px;
+  padding: 16px;
+  border: 1px solid #bee3d6;
+  border-radius: 12px;
+  background: #f2fbf7;
+}
+
+.comparables-lock strong {
+  display: block;
+  color: var(--vt-ink);
+}
+
+.comparables-lock p {
+  margin: 5px 0 12px;
+  color: var(--vt-muted);
+  font-size: .86rem;
+}
+
+.comparables-lock button {
+  min-height: 44px;
+  border: 1px solid var(--vt-green);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--vt-green);
+  padding: 0 14px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.comparables-lock button:hover {
+  background: var(--vt-green);
+  color: #fff;
+}
+
 .comparable-row {
   justify-content: space-between;
   gap: 14px;
@@ -654,6 +767,24 @@ summary:focus-visible {
   color: var(--vt-muted);
   font-size: .8rem;
   white-space: nowrap;
+}
+
+.dashboard-cta {
+  min-height: 50px;
+  margin-top: 18px;
+  border-radius: 11px;
+  background: var(--vt-ink);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  font-weight: 900;
+}
+
+.dashboard-cta:hover {
+  background: var(--vt-green);
 }
 
 .seo-section,
@@ -805,6 +936,12 @@ summary:focus-visible {
   }
 }
 
+@keyframes valuationSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -848,7 +985,8 @@ summary:focus-visible {
 
 @media (max-width: 700px) {
   body {
-    font-size: 15px;
+    overflow-x: hidden;
+    font-size: 16px;
   }
 
   .tool-header {
@@ -871,7 +1009,7 @@ summary:focus-visible {
   }
 
   .hero-grid {
-    padding: 34px 0 26px;
+    padding: 26px 0 18px;
   }
 
   .valuation-workspace {
@@ -918,6 +1056,10 @@ summary:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .field-wide {
+    grid-column: auto;
+  }
+
   .form-assurance-row {
     grid-template-columns: 1fr;
   }
@@ -944,6 +1086,12 @@ summary:focus-visible {
 
   .comparable-meta {
     white-space: normal;
+  }
+
+  .result-content,
+  .result-empty,
+  .form-panel {
+    padding: 18px;
   }
 }
 

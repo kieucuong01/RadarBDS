@@ -18,7 +18,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=valuation-tool-shared-header-20260722">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=valuation-tool-auth-20260722">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=valuation-tool-premium-first-form-20260722">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=valuation-tool-trust-first-20260728">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -59,7 +59,7 @@
             "name": "Guest có xem được trang định giá không?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Guest xem được trang và nội dung hướng dẫn. Khi bấm định giá, hệ thống yêu cầu đăng ký hoặc đăng nhập trước khi chạy mô hình."
+              "text": "Guest được xem giá tham khảo cơ bản. Tài khoản Free mở thêm tối đa 5 mẫu so sánh đã ẩn số điện thoại và liên kết nguồn."
             }
           },
           {
@@ -111,30 +111,13 @@
         <div class="hero-copy">
           <p class="eyebrow">Công cụ dữ liệu Radar BDS</p>
           <h1>Định giá lô đất Bình Dương</h1>
-          <p class="hero-lede">Nhập thông tin lô đất ở Thủ Dầu Một hoặc Bến Cát để so với dữ liệu tin rao đã chuẩn hóa của Radar BDS. Kết quả trả về giá hợp lý theo m², tổng giá trị ước tính và các mẫu so sánh gần phân khúc.</p>
+          <p class="hero-lede">Nhận giá tham khảo từ dữ liệu đã lọc trùng tại Thủ Dầu Một, Bến Cát và các khu Mỹ Phước. Guest xem kết quả cơ bản; tài khoản Free mở mẫu so sánh chi tiết.</p>
           <div class="coverage-strip" aria-label="Phạm vi dữ liệu đang hỗ trợ">
             <span>Thủ Dầu Một</span>
             <span>Bến Cát</span>
             <span>Mỹ Phước</span>
           </div>
         </div>
-        <aside class="method-rail" aria-label="Cách mô hình xử lý dữ liệu">
-          <div>
-            <span>01</span>
-            <strong>Chuẩn hóa tin rao</strong>
-            <p>Lọc trùng, chuẩn phường, diện tích, loại đường và pháp lý.</p>
-          </div>
-          <div>
-            <span>02</span>
-            <strong>So phân khúc</strong>
-            <p>Ưu tiên mẫu cùng phường, loại tài sản và đặc điểm lô đất.</p>
-          </div>
-          <div>
-            <span>03</span>
-            <strong>Trả giá tham khảo</strong>
-            <p>Ước tính fair value nội bộ để người dùng có mốc kiểm tra trước khi đi xem đất.</p>
-          </div>
-        </aside>
       </div>
     </section>
 
@@ -150,69 +133,86 @@
 
         <div class="form-assurance-row" aria-label="Điểm nổi bật của công cụ định giá">
           <span>Dữ liệu TDM + Bến Cát</span>
-          <span>Không cần nhập giá</span>
+          <span>Giá đang chào là tùy chọn</span>
         </div>
 
-        <div class="field-grid">
-          <label>
+        <div class="field-grid core-fields">
+          <label class="field">
             <span>Khu vực</span>
-            <select id="cityInput" name="city" aria-label="Chọn khu vực"></select>
+            <select id="cityInput" name="city" required aria-label="Chọn khu vực" aria-describedby="cityError"></select>
+            <small class="field-error" id="cityError" data-error-for="city"></small>
           </label>
-          <label>
+          <label class="field">
             <span>Phường</span>
-            <select id="wardInput" name="ward" required aria-label="Chọn phường"></select>
+            <select id="wardInput" name="ward" required aria-label="Chọn phường" aria-describedby="wardError"></select>
+            <small class="field-error" id="wardError" data-error-for="ward"></small>
           </label>
-          <label>
+          <label class="field">
             <span>Loại hình</span>
-            <select name="property_type">
+            <select name="property_type" aria-describedby="propertyTypeError">
               <option value="dat_nen">Đất nền</option>
               <option value="nha_dat">Nhà đất</option>
               <option value="nha_tro">Nhà trọ</option>
             </select>
+            <small class="field-error" id="propertyTypeError" data-error-for="property_type"></small>
           </label>
-          <label>
-            <span>Loại đường</span>
-            <select name="road_tier">
-              <option value="2">Đường nhựa nội bộ</option>
-              <option value="1">Mặt tiền / trục chính</option>
-              <option value="3">Hẻm xe hơi</option>
-              <option value="4">Hẻm nhỏ</option>
-              <option value="0">Chưa rõ</option>
-            </select>
-          </label>
-          <label>
+          <label class="field">
             <span>Diện tích, m²</span>
-            <input name="area_m2" type="number" min="1" step="0.1" required placeholder="100" inputmode="decimal">
+            <input name="area_m2" type="number" min="1" step="0.1" required placeholder="Ví dụ: 100" inputmode="decimal" aria-describedby="areaError">
+            <small class="field-error" id="areaError" data-error-for="area_m2"></small>
           </label>
-          <label>
-            <span>Ngang, m</span>
-            <input name="frontage_m" type="number" min="0.1" step="0.1" placeholder="5" inputmode="decimal">
-          </label>
-          <label>
-            <span>Dài, m</span>
-            <input name="depth_m" type="number" min="0.1" step="0.1" placeholder="20" inputmode="decimal">
-          </label>
-          <label>
-            <span>Thổ cư, m²</span>
-            <input name="tho_cu_m2" type="number" min="0" step="1" placeholder="100" inputmode="decimal">
+          <label class="field field-wide">
+            <span>Giá đang chào, tỷ đồng <em>Không bắt buộc</em></span>
+            <input name="price_ty" type="number" min="0.01" step="0.01" placeholder="Nhập để xem mức chênh so với giá tham khảo" inputmode="decimal" aria-describedby="priceError">
+            <small class="field-error" id="priceError" data-error-for="price_ty"></small>
           </label>
         </div>
 
-        <label class="check-row">
-          <input name="has_so" type="checkbox" checked>
-          <span>Đã có sổ</span>
-        </label>
+        <details class="advanced-fields">
+          <summary>Chi tiết giúp chính xác hơn</summary>
+          <div class="field-grid">
+            <label class="field field-wide">
+              <span>Loại đường</span>
+              <select name="road_tier" aria-describedby="roadTierError">
+                <option value="2">Đường nhựa nội bộ</option>
+                <option value="1">Mặt tiền / trục chính</option>
+                <option value="3">Hẻm xe hơi</option>
+                <option value="4">Hẻm nhỏ</option>
+                <option value="0">Chưa rõ</option>
+              </select>
+              <small class="field-error" id="roadTierError" data-error-for="road_tier"></small>
+            </label>
+            <label class="field">
+              <span>Ngang, m</span>
+              <input name="frontage_m" type="number" min="0.1" step="0.1" placeholder="Ví dụ: 5" inputmode="decimal" aria-describedby="frontageError">
+              <small class="field-error" id="frontageError" data-error-for="frontage_m"></small>
+            </label>
+            <label class="field">
+              <span>Dài, m</span>
+              <input name="depth_m" type="number" min="0.1" step="0.1" placeholder="Ví dụ: 20" inputmode="decimal" aria-describedby="depthError">
+              <small class="field-error" id="depthError" data-error-for="depth_m"></small>
+            </label>
+          </div>
+          <label class="check-row">
+            <input name="has_so" type="checkbox" checked>
+            <span>Đã có sổ</span>
+          </label>
+        </details>
 
         <button class="submit-btn" type="submit">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 19V5m0 14h16M8 15l3-4 3 2 5-7" />
           </svg>
-          Định giá lô đất
+          <span class="submit-label">Định giá lô đất</span>
+          <span class="submit-loading" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            Đang đối chiếu dữ liệu…
+          </span>
         </button>
-        <p id="formMessage" class="form-message" role="status"></p>
+        <p id="formMessage" class="form-message" role="alert"></p>
       </form>
 
-      <section class="tool-panel result-panel" aria-live="polite">
+      <section class="tool-panel result-panel" aria-live="polite" aria-atomic="true">
         <div class="result-empty" id="resultEmpty">
           <p class="panel-kicker">Kết quả</p>
           <h2>Giá hợp lý sẽ hiện tại đây</h2>
@@ -230,9 +230,9 @@
               <span>Các tin gần nhất cùng phân khúc trong dữ liệu Radar BDS.</span>
             </div>
           </div>
-          <p class="guest-note">Guest vẫn xem được trang. Khi chạy định giá, hệ thống sẽ yêu cầu đăng ký hoặc đăng nhập.</p>
+          <p class="guest-note">Không cần đăng nhập để xem giá tham khảo. Đăng ký Free chỉ khi bạn muốn xem các mẫu so sánh chi tiết.</p>
         </div>
-        <div class="result-content" id="resultContent" hidden>
+        <div class="result-content" id="resultContent" hidden tabindex="-1">
           <div class="result-topline">
             <span id="resultWard">-</span>
             <strong id="resultMos">-</strong>
@@ -252,14 +252,23 @@
             </div>
             <div>
               <span>Mẫu so sánh</span>
-              <strong id="segmentN">-</strong>
+              <strong id="basisCount">-</strong>
             </div>
           </div>
           <p class="model-note" id="modelNote"></p>
           <div class="comparables">
-            <h3>Tin gần nhất cùng phân khúc</h3>
+            <h3>Mẫu so sánh cùng phân khúc</h3>
+            <div class="comparables-lock" id="comparablesLock" hidden>
+              <strong>Mở tối đa 5 mẫu so sánh đã ẩn thông tin liên hệ</strong>
+              <p>Tài khoản Free giúp bạn kiểm tra mức giá mà không làm lộ số điện thoại hay liên kết nguồn.</p>
+              <button type="button" id="unlockComparablesBtn">Đăng ký Free để mở mẫu</button>
+            </div>
             <div id="comparableList"></div>
           </div>
+          <a class="dashboard-cta" id="dashboardCta" href="/">
+            Xem deal tại <span id="dashboardWard">khu vực này</span>
+            <span aria-hidden="true">→</span>
+          </a>
         </div>
       </section>
     </section>
@@ -298,7 +307,7 @@
         </details>
         <details>
           <summary>Guest có xem được trang định giá không?</summary>
-          <p>Guest xem được trang và nội dung hướng dẫn. Khi bấm định giá, hệ thống yêu cầu đăng ký hoặc đăng nhập trước khi chạy mô hình.</p>
+          <p>Guest xem được giá tham khảo cơ bản. Tài khoản Free mở thêm tối đa 5 mẫu so sánh đã lọc trùng và ẩn thông tin liên hệ.</p>
         </details>
         <details>
           <summary>Kết quả định giá có thay thế thẩm định thực tế không?</summary>
@@ -338,7 +347,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=valuation-tool-auth-20260722"></script>
-  <script src="{{ url_for('static', filename='js/valuation_tool.js') }}?v=valuation-tool-20260722"></script>
+  <script src="{{ url_for('static', filename='js/valuation_tool.js') }}?v=valuation-tool-trust-first-20260728"></script>
 </body>
 
 </html>

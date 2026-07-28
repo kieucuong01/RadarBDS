@@ -1,6 +1,7 @@
 (function () {
   'use strict';
 
+  const DEFAULT_CITY = 'THỦ DẦU MỘT';
   const state = {
     wardsByCity: window.INITIAL_WARDS_BY_CITY || {},
   };
@@ -22,9 +23,76 @@
     }[ch]));
   }
 
+  function track(eventName, params) {
+    const safeParams = Object.assign({ event_category: 'valuation_tool' }, params || {});
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, safeParams);
+      return;
+    }
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(Object.assign({ event: eventName }, safeParams));
+  }
+
   function setMessage(text) {
     const el = $('formMessage');
     if (el) el.textContent = text || '';
+  }
+
+  function clearFieldErrors() {
+    document.querySelectorAll('[data-error-for]').forEach((el) => {
+      el.textContent = '';
+    });
+    document.querySelectorAll('[aria-invalid="true"]').forEach((el) => {
+      el.removeAttribute('aria-invalid');
+    });
+  }
+
+  function errorFieldName(code) {
+    const exact = {
+      city_invalid: 'city',
+      ward_required: 'ward',
+      ward_invalid: 'ward',
+      property_type_invalid: 'property_type',
+      area_m2_invalid: 'area_m2',
+      price_ty_invalid: 'price_ty',
+      frontage_m_invalid: 'frontage_m',
+      depth_m_invalid: 'depth_m',
+      road_tier_invalid: 'road_tier',
+    };
+    return exact[code] || '';
+  }
+
+  function errorCopy(code) {
+    const messages = {
+      city_invalid: 'Công cụ hiện chỉ hỗ trợ Thủ Dầu Một và Bến Cát.',
+      ward_required: 'Vui lòng chọn phường.',
+      ward_invalid: 'Phường không thuộc khu vực đã chọn.',
+      property_type_invalid: 'Loại hình chưa hợp lệ.',
+      area_m2_invalid: 'Diện tích phải lớn hơn 0 m².',
+      price_ty_invalid: 'Giá đang chào phải lớn hơn 0.',
+      frontage_m_invalid: 'Chiều ngang phải lớn hơn 0.',
+      depth_m_invalid: 'Chiều dài phải lớn hơn 0.',
+      road_tier_invalid: 'Loại đường chưa hợp lệ.',
+    };
+    return messages[code] || 'Thông tin nhập chưa hợp lệ.';
+  }
+
+  function showFieldError(code) {
+    const fieldName = errorFieldName(code);
+    const copy = errorCopy(code);
+    if (!fieldName) {
+      setMessage(copy);
+      return;
+    }
+    const input = document.querySelector(`[name="${fieldName}"]`);
+    const error = document.querySelector(`[data-error-for="${fieldName}"]`);
+    if (input) {
+      input.setAttribute('aria-invalid', 'true');
+      input.focus({ preventScroll: true });
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (error) error.textContent = copy;
+    setMessage(copy);
   }
 
   function initWardPickers() {
@@ -40,7 +108,7 @@
     }
 
     city.addEventListener('change', renderWards);
-    if (cityNames.includes('Thủ Dầu Một')) city.value = 'Thủ Dầu Một';
+    if (cityNames.includes(DEFAULT_CITY)) city.value = DEFAULT_CITY;
     renderWards();
   }
 
@@ -48,17 +116,28 @@
     const data = new FormData(form);
     const payload = Object.fromEntries(data.entries());
     payload.has_so = Boolean(data.get('has_so'));
-    for (const key of ['area_m2', 'frontage_m', 'depth_m', 'tho_cu_m2', 'road_tier']) {
+    for (const key of ['area_m2', 'frontage_m', 'depth_m', 'price_ty', 'road_tier']) {
       if (payload[key] !== undefined && payload[key] !== '') payload[key] = Number(payload[key]);
     }
     return payload;
+  }
+
+  function setLoading(isLoading) {
+    const button = document.querySelector('#valuationForm button[type="submit"]');
+    if (!button) return;
+    button.disabled = isLoading;
+    button.setAttribute('aria-busy', String(isLoading));
+    const label = button.querySelector('.submit-label');
+    const loading = button.querySelector('.submit-loading');
+    if (label) label.hidden = isLoading;
+    if (loading) loading.hidden = !isLoading;
   }
 
   function renderComparables(rows) {
     const list = $('comparableList');
     if (!list) return;
     if (!rows || !rows.length) {
-      list.innerHTML = '<p class="model-note">Chưa có tin so sánh đủ gần để hiển thị.</p>';
+      list.innerHTML = '<p class="model-note">Chưa có mẫu so sánh đủ gần để hiển thị.</p>';
       return;
     }
     list.innerHTML = rows.map((row) => `
@@ -69,56 +148,98 @@
     `).join('');
   }
 
+  function formatDataDate(value) {
+    if (!value) return 'chưa xác định';
+    const parsed = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return new Intl.DateTimeFormat('vi-VN').format(parsed);
+  }
+
   function renderResult(payload) {
     const estimate = payload.estimate;
     $('resultEmpty').hidden = true;
     $('resultContent').hidden = false;
     $('resultWard').textContent = `${estimate.ward} · ${estimate.property_type_label}`;
     $('resultMos').textContent = typeof estimate.mos_pct === 'number'
-      ? `MOS ${ppm.format(estimate.mos_pct)}%`
+      ? `${estimate.price_position_label} · ${ppm.format(Math.abs(estimate.mos_pct))}%`
       : 'Giá tham khảo';
     $('fairPrice').textContent = `${money.format(estimate.fair_price_ty)} tỷ`;
     $('fairPpm2').textContent = `${ppm.format(estimate.fair_ppm2)} tr/m²`;
     $('areaMetric').textContent = `${ppm.format(estimate.area_m2)} m²`;
-    $('segmentN').textContent = `${estimate.segment_n} tin`;
-    $('modelNote').textContent = `${estimate.confidence} · ${estimate.note}`;
-    renderComparables(payload.comparables || []);
+    $('basisCount').textContent = `${estimate.basis_count} mẫu hợp lệ`;
+    $('modelNote').textContent = `${estimate.confidence_label} · Dữ liệu cập nhật đến ${formatDataDate(estimate.data_as_of)}. Đây là giá tham khảo, không thay thế thẩm định thực tế.`;
+
+    const locked = Boolean(payload.comparables_locked);
+    $('comparablesLock').hidden = !locked;
+    $('comparableList').hidden = locked;
+    renderComparables(locked ? [] : (payload.comparables || []));
+
+    const dashboard = $('dashboardCta');
+    if (dashboard) dashboard.href = payload.dashboard_url || '/';
+    if ($('dashboardWard')) $('dashboardWard').textContent = estimate.ward;
+
+    const result = $('resultContent');
+    if (result) {
+      result.focus({ preventScroll: true });
+      if (window.matchMedia('(max-width: 700px)').matches) {
+        result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   }
 
   async function submitValuation(ev) {
     ev.preventDefault();
     setMessage('');
+    clearFieldErrors();
     const form = ev.currentTarget;
-    const button = form.querySelector('button[type="submit"]');
-    if (button) button.disabled = true;
+    const payload = formPayload(form);
+    setLoading(true);
+    track('valuation_start', {
+      city: payload.city,
+      property_type: payload.property_type,
+      has_asking_price: Boolean(payload.price_ty),
+    });
 
     try {
       const res = await fetch('/api/valuation-tool/estimate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formPayload(form)),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (res.status === 403 && data.error === 'tier_required') {
-        if (window.RadarAuth) {
-          window.RadarAuth.openAuthModal('Đăng nhập để chạy định giá lô đất.');
-        }
-        setMessage('Bạn cần đăng nhập để chạy định giá.');
-        return;
-      }
       if (res.status === 422) {
-        setMessage('Thông tin nhập chưa hợp lệ. Kiểm tra diện tích và khu vực.');
+        showFieldError(data.field);
+        track('valuation_error', {
+          error_type: 'validation_error',
+          field: errorFieldName(data.field) || 'unknown',
+        });
         return;
       }
       if (!res.ok || !data.ok) {
         setMessage(data.message || 'Chưa đủ dữ liệu để định giá lô này.');
+        track('valuation_error', { error_type: data.error || `http_${res.status}` });
         return;
       }
       renderResult(data);
+      track('valuation_success', {
+        city: payload.city,
+        property_type: payload.property_type,
+        confidence: data.estimate.confidence,
+        has_asking_price: Boolean(payload.price_ty),
+        comparables_locked: Boolean(data.comparables_locked),
+      });
     } catch (err) {
-      setMessage('Mất kết nối, thử lại sau.');
+      setMessage('Mất kết nối, vui lòng thử lại sau.');
+      track('valuation_error', { error_type: 'network_error' });
     } finally {
-      if (button) button.disabled = false;
+      setLoading(false);
+    }
+  }
+
+  function unlockComparables() {
+    track('valuation_unlock_click', { source: 'result' });
+    if (window.RadarAuth) {
+      window.RadarAuth.openAuthModal('Đăng ký Free để mở các mẫu so sánh đã ẩn thông tin liên hệ.');
     }
   }
 
@@ -126,6 +247,12 @@
     initWardPickers();
     const form = $('valuationForm');
     if (form) form.addEventListener('submit', submitValuation);
+    const unlock = $('unlockComparablesBtn');
+    if (unlock) unlock.addEventListener('click', unlockComparables);
+    const dashboard = $('dashboardCta');
+    if (dashboard) {
+      dashboard.addEventListener('click', () => track('valuation_dashboard_click', { source: 'result' }));
+    }
   }
 
   if (document.readyState === 'loading') {

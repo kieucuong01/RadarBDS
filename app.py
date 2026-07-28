@@ -85,7 +85,11 @@ from services.signal_quality import (
 from services.advisory_memo import build_admin_valuation_workflow_markdown
 from services.radar_assistant import build_assistant_response
 from services import admin_growth, admin_leads, admin_quality, admin_users
-from services.valuation_tool import ValuationToolError, estimate_property_value
+from services.valuation_tool import (
+    VALUATION_TOOL_CITY_MAP,
+    ValuationToolError,
+    estimate_property_value,
+)
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -174,7 +178,7 @@ ADMIN_CONTROL_ROOM_SLUG_TO_PANEL = {
 HIDE_REVIEW_VERDICTS = HARD_HIDE_REVIEW_VERDICTS | SOFT_HIDE_REVIEW_VERDICTS
 VALUATION_VERDICTS = {"cheap_real", "fair", "overpriced", "fake_price", "cannot_price"}
 EXTRACTION_RECHECK_VERDICTS = {"wrong_ward", "wrong_road", "wrong_property_type", "wrong_price", "wrong_area"}
-VALUATION_TOOL_MIN_TIER = "free"
+VALUATION_TOOL_MIN_TIER = "guest"
 TRAINING_VERDICTS = POSITIVE_REVIEW_VERDICTS | HIDE_REVIEW_VERDICTS | {"maybe"}
 INFRA_KINDS = {"timeline", "policy"}
 INFRA_STATUS = {"done", "in_progress", "planned"}
@@ -1485,7 +1489,7 @@ def saved_listings_page():
 def valuation_tool_page():
     return render_template(
         "valuation_tool.html",
-        wards_by_city=CITY_MAP,
+        wards_by_city=VALUATION_TOOL_CITY_MAP,
         required_tier=VALUATION_TOOL_MIN_TIER,
         active_nav="dinh-gia",
         site_meta=_site_meta(
@@ -3262,11 +3266,10 @@ def api_market_indicators():
 
 
 @rate_limit("valuation_tool", limits={"guest": 60, "free": 120, "vip": None, "admin": None})
-@require_tier(VALUATION_TOOL_MIN_TIER)
 def api_valuation_tool_estimate():
     payload = request.get_json(silent=True) or {}
     try:
-        return jsonify(estimate_property_value(payload))
+        return jsonify(estimate_property_value(payload, tier=current_tier()))
     except ValuationToolError as exc:
         return jsonify({"ok": False, "error": "validation_error", "field": str(exc)}), 422
 
