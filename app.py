@@ -4417,8 +4417,15 @@ def _same_price_value(a, b):
 
 @rate_limit("lead_capture", limits={"guest": 10, "free": 30, "vip": 120, "admin": None})
 def api_create_lead():
+    is_json_request = request.is_json
+    if is_json_request:
+        request_payload = request.get_json(silent=True) or {}
+        return_path = ""
+    else:
+        request_payload = request.form.to_dict(flat=True)
+        return_path = request_payload.pop("return_path", "")
     payload, status = admin_leads.create_lead(
-        request.get_json(silent=True) or {},
+        request_payload,
         tier=current_tier(),
         user=current_user(),
         audit_log_fn=log_audit,
@@ -4426,6 +4433,18 @@ def api_create_lead():
     if status < 400:
         clear_admin_read_cache("leads")
         clear_admin_read_cache("growth")
+    if not is_json_request:
+        parsed = urllib.parse.urlsplit(return_path)
+        safe_path = parsed.path if (
+            not parsed.scheme
+            and not parsed.netloc
+            and parsed.path.startswith("/")
+            and not parsed.path.startswith("//")
+            and "\\" not in parsed.path
+            and not any(ord(char) < 32 for char in parsed.path)
+        ) else "/bao-cao"
+        lead_status = "success" if status < 400 and payload.get("ok") else "error"
+        return redirect(f"{safe_path}?lead={lead_status}", code=303)
     return jsonify(payload), status
 
 

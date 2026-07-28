@@ -60,6 +60,89 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
     assert "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS" in news_html
 
 
+def test_seo_lead_form_fails_closed_to_post_when_javascript_is_unavailable():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/bao-cao").get_data(as_text=True)
+
+    assert re.search(
+        r'<form[^>]+class="seo-lead-capture-form"[^>]+method="post"[^>]+action="/api/leads"',
+        html,
+    )
+    assert 'name="return_path" value="/bao-cao"' in html
+    assert 'name="source_context" value="seo_report_hub_lead"' in html
+
+
+def test_form_encoded_lead_redirect_never_places_phone_in_location(monkeypatch):
+    import app as radar_app
+
+    captured = {}
+
+    def fake_create(payload, **_kwargs):
+        captured.update(payload)
+        return {"ok": True, "lead_id": 123}, 200
+
+    monkeypatch.setattr(radar_app.admin_leads, "create_lead", fake_create)
+    response = radar_app.app.test_client().post(
+        "/api/leads",
+        data={
+            "zalo_phone": "0901 222 333",
+            "source_context": "seo_report_hub_lead",
+            "return_path": "/bao-cao",
+        },
+        environ_base={"REMOTE_ADDR": "10.91.1.1"},
+    )
+
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/bao-cao?lead=success"
+    assert "0901" not in response.headers["Location"]
+    assert "return_path" not in captured
+    assert captured["zalo_phone"] == "0901 222 333"
+
+
+@pytest.mark.parametrize(
+    "return_path",
+    ("https://evil.example/steal", "/\\evil.example/steal"),
+)
+def test_form_encoded_lead_rejects_open_redirect_target(monkeypatch, return_path):
+    import app as radar_app
+
+    monkeypatch.setattr(
+        radar_app.admin_leads,
+        "create_lead",
+        lambda payload, **_kwargs: ({"ok": True, "lead_id": 456}, 200),
+    )
+    response = radar_app.app.test_client().post(
+        "/api/leads",
+        data={
+            "zalo_phone": "0901 222 334",
+            "return_path": return_path,
+        },
+        environ_base={"REMOTE_ADDR": "10.91.1.2"},
+    )
+
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/bao-cao?lead=success"
+
+
+def test_json_lead_client_keeps_json_response_contract(monkeypatch):
+    import app as radar_app
+
+    monkeypatch.setattr(
+        radar_app.admin_leads,
+        "create_lead",
+        lambda payload, **_kwargs: ({"ok": True, "lead_id": 789}, 200),
+    )
+    response = radar_app.app.test_client().post(
+        "/api/leads",
+        json={"zalo_phone": "0901 222 335"},
+        environ_base={"REMOTE_ADDR": "10.91.1.3"},
+    )
+
+    assert response.status_code == 200
+    assert response.get_json() == {"ok": True, "lead_id": 789}
+
+
 def test_news_hub_is_dashboard_first_and_has_progressive_discovery():
     import app as radar_app
 

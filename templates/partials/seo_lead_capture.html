@@ -6,7 +6,11 @@
     <h2>Muốn nhận 5 tin đáng kiểm tra mới nhất{% if lead_scope %} ở {{ lead_scope }}{% endif %}?</h2>
     <p>Để lại số Zalo/điện thoại, Radar BDS sẽ ghi nhận nhu cầu và ưu tiên gửi khi có tin phù hợp. Dữ liệu chỉ là bộ lọc ban đầu, không thay thế thẩm định pháp lý.</p>
   </div>
-  <form class="seo-lead-capture-form" data-source-context="{{ lead_cta_context|default('seo_lead_cta') }}" data-note="{{ lead_note }}">
+  <form class="seo-lead-capture-form" method="post" action="/api/leads" data-source-context="{{ lead_cta_context|default('seo_lead_cta') }}" data-note="{{ lead_note }}">
+    <input type="hidden" name="return_path" value="{{ page.path }}">
+    <input type="hidden" name="source_context" value="{{ lead_cta_context|default('seo_lead_cta') }}">
+    <input type="hidden" name="note" value="{{ lead_note }}">
+    <input type="hidden" name="listing_url" value="{{ page.path }}">
     <label class="sr-only" for="seoLeadPhone-{{ lead_cta_context|default('seo') }}">Số Zalo hoặc điện thoại</label>
     <input id="seoLeadPhone-{{ lead_cta_context|default('seo') }}" name="zalo_phone" inputmode="tel" autocomplete="tel" placeholder="Số Zalo của anh/chị" required>
     <button type="submit">Nhận tin qua Zalo</button>
