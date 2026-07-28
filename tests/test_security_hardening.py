@@ -130,7 +130,9 @@ def test_flask_adds_security_headers_to_success_api_and_error_responses():
             "font-src 'self' https://fonts.gstatic.com data:; "
             "img-src 'self' data: blob: https:; "
             "connect-src 'self' https://www.google-analytics.com "
-            "https://region1.google-analytics.com https://www.googletagmanager.com; "
+            "https://region1.google-analytics.com https://analytics.google.com "
+            "https://stats.g.doubleclick.net https://www.google.com "
+            "https://www.googletagmanager.com; "
             "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
         ),
     }
