@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from flask import Flask, jsonify
 
 from services.digital_product_orders import (
     MAX_ORDER_ID,
@@ -130,8 +131,7 @@ class InMemoryOrderRepository:
         qr_code: str,
         recovery_token_hash: str,
     ) -> DigitalProductOrder:
-        order = replace(
-            self.orders[order_id],
+        order = self.orders[order_id].with_updates(
             payment_link_id=payment_link_id,
             checkout_url=checkout_url,
             qr_code=qr_code,
@@ -164,8 +164,7 @@ class InMemoryOrderRepository:
         amount: int,
         reference: str,
     ) -> DigitalProductOrder:
-        order = replace(
-            self.orders[order_id],
+        order = self.orders[order_id].with_updates(
             status="payment_review",
             paid_amount=amount,
             payment_reference=reference,
@@ -184,8 +183,7 @@ class InMemoryOrderRepository:
         paid_at: datetime,
         download_expires_at: datetime,
     ) -> DigitalProductOrder:
-        order = replace(
-            self.orders[order_id],
+        order = self.orders[order_id].with_updates(
             status="paid",
             paid_amount=amount,
             payment_reference=reference,
@@ -196,7 +194,7 @@ class InMemoryOrderRepository:
         return order
 
     def mark_expired(self, order_id: int) -> DigitalProductOrder:
-        order = replace(self.orders[order_id], status="expired")
+        order = self.orders[order_id].with_updates(status="expired")
         self.orders[order_id] = order
         return order
 
@@ -204,16 +202,44 @@ class InMemoryOrderRepository:
         order = self.orders.get(order_id)
         if order is None:
             return False
-        self.orders[order_id] = replace(
-            order,
+        last_download_at = (
+            downloaded_at
+            if order.last_download_at is None
+            else max(order.last_download_at, downloaded_at)
+        )
+        self.orders[order_id] = order.with_updates(
             download_count=order.download_count + 1,
-            last_download_at=downloaded_at,
+            last_download_at=last_download_at,
         )
         return True
 
     def serialized_rows(self) -> str:
         return json.dumps(
-            [asdict(order) for order in self.orders.values()],
+            [
+                {
+                    "id": order.id,
+                    "public_id": order.public_id,
+                    "product_slug": order.product_slug,
+                    "product_version": order.product_version,
+                    "expected_amount": order.expected_amount,
+                    "currency": order.currency,
+                    "payos_order_code": order.payos_order_code,
+                    "payment_link_id": order.payment_link_id,
+                    "checkout_url": order.checkout_url,
+                    "qr_code": order.qr_code,
+                    "status": order.status,
+                    "recovery_token_hash": order.recovery_token_hash,
+                    "paid_amount": order.paid_amount,
+                    "payment_reference": order.payment_reference,
+                    "created_at": order.created_at,
+                    "payment_expires_at": order.payment_expires_at,
+                    "paid_at": order.paid_at,
+                    "download_expires_at": order.download_expires_at,
+                    "download_count": order.download_count,
+                    "last_download_at": order.last_download_at,
+                }
+                for order in self.orders.values()
+            ],
             default=str,
             sort_keys=True,
         )
@@ -337,16 +363,96 @@ def test_retry_rotates_token_while_reusing_existing_payment_link(
     assert verify_recovery_token(
         pending_order.public_id,
         first.raw_recovery_token,
+        now=pending_order.created_at,
         repo=order_repo,
     ) is None
     assert verify_recovery_token(
         pending_order.public_id,
         second.raw_recovery_token,
+        now=pending_order.created_at,
         repo=order_repo,
     ) == second.order
     assert second.order.payment_link_id == payment_link.payment_link_id
     assert second.order.checkout_url == payment_link.checkout_url
     assert second.order.qr_code == payment_link.qr_payload
+
+
+def test_recovery_token_can_be_verified_repeatedly_until_rotation(
+    pending_order: DigitalProductOrder,
+    payment_link: FakePaymentLink,
+    frozen_now: datetime,
+    order_repo: InMemoryOrderRepository,
+):
+    first = attach_payment_link(
+        pending_order.public_id,
+        payment_link,
+        repo=order_repo,
+    )
+
+    assert verify_recovery_token(
+        pending_order.public_id,
+        first.raw_recovery_token,
+        now=frozen_now,
+        repo=order_repo,
+    ) == first.order
+    assert verify_recovery_token(
+        pending_order.public_id,
+        first.raw_recovery_token,
+        now=frozen_now + timedelta(minutes=1),
+        repo=order_repo,
+    ) == first.order
+
+    second = attach_payment_link(
+        pending_order.public_id,
+        payment_link,
+        repo=order_repo,
+    )
+    assert verify_recovery_token(
+        pending_order.public_id,
+        first.raw_recovery_token,
+        now=frozen_now + timedelta(minutes=1),
+        repo=order_repo,
+    ) is None
+    assert verify_recovery_token(
+        pending_order.public_id,
+        second.raw_recovery_token,
+        now=frozen_now + timedelta(minutes=1),
+        repo=order_repo,
+    ) == second.order
+
+
+def test_recovery_token_expires_with_paid_download_window(
+    pending_order: DigitalProductOrder,
+    payment_link: FakePaymentLink,
+    frozen_now: datetime,
+    order_repo: InMemoryOrderRepository,
+):
+    secret = attach_payment_link(
+        pending_order.public_id,
+        payment_link,
+        repo=order_repo,
+    )
+    paid = settle_verified_payment(
+        pending_order.payos_order_code,
+        99_000,
+        "BANK-REF-RECOVERY",
+        frozen_now,
+        _payload_hash("recovery-expiry"),
+        repo=order_repo,
+    ).order
+
+    assert verify_recovery_token(
+        paid.public_id,
+        secret.raw_recovery_token,
+        now=paid.download_expires_at - timedelta(microseconds=1),
+        repo=order_repo,
+    ) == paid
+    assert verify_recovery_token(
+        paid.public_id,
+        secret.raw_recovery_token,
+        now=paid.download_expires_at,
+        repo=order_repo,
+    ) is None
 
 
 def test_concurrent_token_rotation_leaves_exactly_one_secret_valid(
@@ -372,6 +478,7 @@ def test_concurrent_token_rotation_leaves_exactly_one_secret_valid(
         verify_recovery_token(
             pending_order.public_id,
             secret.raw_recovery_token,
+            now=pending_order.created_at,
             repo=order_repo,
         )
         is not None
@@ -405,6 +512,7 @@ def test_token_verification_uses_constant_time_digest_comparison(
     assert verify_recovery_token(
         pending_order.public_id,
         secret.raw_recovery_token,
+        now=pending_order.created_at,
         repo=order_repo,
     ) == secret.order
     assert comparisons == [
@@ -548,6 +656,98 @@ def test_order_repr_excludes_qr_token_hash_and_bank_reference(
     assert "BANK-REF-SENSITIVE" not in rendered
 
 
+def test_sensitive_domain_records_fail_closed_for_flask_and_asdict(
+    pending_order: DigitalProductOrder,
+    payment_link: FakePaymentLink,
+    frozen_now: datetime,
+    order_repo: InMemoryOrderRepository,
+):
+    secret = attach_payment_link(
+        pending_order.public_id,
+        payment_link,
+        repo=order_repo,
+    )
+    settlement = settle_verified_payment(
+        pending_order.payos_order_code,
+        99_000,
+        "BANK-REF-JSON",
+        frozen_now,
+        _payload_hash("json"),
+        repo=order_repo,
+    )
+    app = Flask(__name__)
+
+    with app.app_context():
+        for domain_record in (secret, settlement.order, settlement):
+            with pytest.raises(TypeError):
+                app.json.dumps(domain_record)
+            with pytest.raises(TypeError):
+                jsonify(domain_record)
+            with pytest.raises(TypeError):
+                asdict(domain_record)
+
+
+def test_sensitive_domain_records_remain_immutable(
+    pending_order: DigitalProductOrder,
+    payment_link: FakePaymentLink,
+    order_repo: InMemoryOrderRepository,
+):
+    secret = attach_payment_link(
+        pending_order.public_id,
+        payment_link,
+        repo=order_repo,
+    )
+
+    with pytest.raises(AttributeError):
+        secret.raw_recovery_token = "replacement"
+    with pytest.raises(AttributeError):
+        secret.order.status = "paid"
+
+
+def test_logging_domain_records_never_renders_sensitive_values(
+    caplog: pytest.LogCaptureFixture,
+    pending_order: DigitalProductOrder,
+    payment_link: FakePaymentLink,
+    frozen_now: datetime,
+    order_repo: InMemoryOrderRepository,
+):
+    secret = attach_payment_link(
+        pending_order.public_id,
+        payment_link,
+        repo=order_repo,
+    )
+    settlement = settle_verified_payment(
+        pending_order.payos_order_code,
+        99_000,
+        "BANK-REF-LOG",
+        frozen_now,
+        _payload_hash("log"),
+        repo=order_repo,
+    )
+
+    caplog.set_level("INFO")
+    caplog.get_records("call")
+    import logging
+
+    logging.getLogger("test.digital-product").info(
+        "secret=%r order=%r settlement=%r",
+        secret,
+        settlement.order,
+        settlement,
+    )
+
+    for sensitive_value in (
+        secret.raw_recovery_token,
+        secret.order.recovery_token_hash,
+        payment_link.qr_payload,
+        payment_link.payment_link_id,
+        payment_link.checkout_url,
+        "BANK-REF-LOG",
+        str(pending_order.payos_order_code),
+    ):
+        assert sensitive_value not in caplog.text
+
+
 def test_duplicate_settlement_calls_are_serialized_to_one_state_change(
     pending_order: DigitalProductOrder,
     frozen_now: datetime,
@@ -636,8 +836,7 @@ def test_can_download_requires_paid_and_strictly_unexpired(
 ):
     order = create_pending_order(product, frozen_now, repo=order_repo)
     expiry = frozen_now + timedelta(hours=24)
-    order_repo.orders[order.id] = replace(
-        order,
+    order_repo.orders[order.id] = order.with_updates(
         status=status,
         paid_at=frozen_now if status == "paid" else None,
         download_expires_at=expiry,
@@ -666,8 +865,7 @@ def test_expiry_changes_only_pending_orders_at_or_after_deadline(
         pending.payment_expires_at,
         repo=order_repo,
     )
-    paid = replace(
-        expired,
+    paid = expired.with_updates(
         status="paid",
         paid_at=frozen_now,
         download_expires_at=frozen_now + timedelta(hours=24),
@@ -707,6 +905,37 @@ def test_record_download_atomically_counts_and_timestamps(
     assert order is not None
     assert order.download_count == 20
     assert order.last_download_at in times
+
+
+def test_out_of_order_download_commits_never_move_timestamp_backward(
+    pending_order: DigitalProductOrder,
+    frozen_now: datetime,
+    order_repo: InMemoryOrderRepository,
+):
+    newer = frozen_now + timedelta(minutes=5)
+    older = frozen_now + timedelta(minutes=1)
+    newer_committed = threading.Event()
+
+    def commit_newer():
+        record_download(pending_order.id, newer, repo=order_repo)
+        newer_committed.set()
+
+    def commit_older_after_newer():
+        assert newer_committed.wait(timeout=2)
+        record_download(pending_order.id, older, repo=order_repo)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [
+            pool.submit(commit_newer),
+            pool.submit(commit_older_after_newer),
+        ]
+        for future in futures:
+            future.result()
+
+    order = get_order(pending_order.public_id, repo=order_repo)
+    assert order is not None
+    assert order.download_count == 2
+    assert order.last_download_at == newer
 
 
 def test_record_download_missing_order_raises_typed_error(
@@ -796,6 +1025,20 @@ class _ContractConnection:
                 download_expires_at=download_expires_at,
             )
             return _ContractCursor()
+        if normalized.startswith(
+            "UPDATE digital_product_orders SET download_count = download_count + 1"
+        ):
+            assert self.order_row is not None
+            first_timestamp, second_timestamp, _order_id = bound
+            assert first_timestamp == second_timestamp
+            current_timestamp = self.order_row["last_download_at"]
+            self.order_row["download_count"] += 1
+            self.order_row["last_download_at"] = (
+                first_timestamp
+                if current_timestamp is None
+                else max(current_timestamp, first_timestamp)
+            )
+            return _ContractCursor()
         if normalized.startswith("SELECT"):
             return _ContractCursor(row=self.order_row)
         raise AssertionError(f"unexpected SQL: {normalized}")
@@ -866,3 +1109,39 @@ def test_postgres_settlement_locks_order_and_uses_unique_event_seam(
     assert event_params[3] == _payload_hash("contract")
     assert "contract" not in event_sql
     assert result.order.status == "paid"
+
+
+def test_postgres_download_update_keeps_count_atomic_and_timestamp_monotonic(
+    product: DigitalProduct,
+    frozen_now: datetime,
+):
+    conn = _ContractConnection()
+
+    @contextmanager
+    def connection_scope():
+        yield conn
+
+    repo = PostgresOrderRepository(connection_scope)
+    pending = create_pending_order(product, frozen_now, repo=repo)
+    newer = frozen_now + timedelta(minutes=5)
+    older = frozen_now + timedelta(minutes=1)
+
+    record_download(pending.id, newer, repo=repo)
+    record_download(pending.id, older, repo=repo)
+
+    order = get_order(pending.public_id, repo=repo)
+    assert order is not None
+    assert order.download_count == 2
+    assert order.last_download_at == newer
+    download_updates = [
+        (sql, params)
+        for sql, params in conn.statements
+        if "SET download_count = download_count + 1" in sql
+    ]
+    assert len(download_updates) == 2
+    assert all(
+        "last_download_at = CASE" in sql
+        and "last_download_at < ?" in sql
+        and params[0] == params[1]
+        for sql, params in download_updates
+    )

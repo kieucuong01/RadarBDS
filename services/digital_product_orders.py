@@ -8,8 +8,8 @@ import re
 import secrets
 import uuid
 from contextlib import contextmanager
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from types import MappingProxyType
 from typing import Callable, ContextManager, Iterator, Protocol
 
 from db.connection import get_conn
@@ -64,8 +64,127 @@ class InvalidSettlement(OrderLifecycleError):
     """Raised before persistence when verified payment data is malformed."""
 
 
-@dataclass(frozen=True)
-class DigitalProductOrder:
+class _ImmutableDomainRecord:
+    """Immutable attribute record that generic JSON/dataclass encoders reject."""
+
+    __slots__ = ("__values",)
+    _field_names: tuple[str, ...] = ()
+    _repr_field_names: tuple[str, ...] = ()
+
+    def __init__(self, *args: object, **kwargs: object):
+        if len(args) > len(self._field_names):
+            raise TypeError("too many positional values")
+        values = dict(zip(self._field_names, args))
+        duplicates = set(values).intersection(kwargs)
+        if duplicates:
+            raise TypeError("duplicate domain-record values")
+        values.update(kwargs)
+        missing = set(self._field_names).difference(values)
+        extras = set(values).difference(self._field_names)
+        if missing or extras:
+            raise TypeError("domain-record fields do not match the contract")
+        object.__setattr__(
+            self,
+            "_ImmutableDomainRecord__values",
+            MappingProxyType(values),
+        )
+
+    def __getattr__(self, name: str) -> object:
+        values = object.__getattribute__(
+            self,
+            "_ImmutableDomainRecord__values",
+        )
+        try:
+            return values[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+    def __setattr__(self, name: str, value: object) -> None:
+        del name, value
+        raise AttributeError("immutable domain record")
+
+    def __delattr__(self, name: str) -> None:
+        del name
+        raise AttributeError("immutable domain record")
+
+    def __repr__(self) -> str:
+        values = object.__getattribute__(
+            self,
+            "_ImmutableDomainRecord__values",
+        )
+        fields = ", ".join(
+            f"{name}={values[name]!r}" for name in self._repr_field_names
+        )
+        return f"{type(self).__name__}({fields})"
+
+    def __eq__(self, other: object) -> bool:
+        if type(other) is not type(self):
+            return False
+        own_values = object.__getattribute__(
+            self,
+            "_ImmutableDomainRecord__values",
+        )
+        other_values = object.__getattribute__(
+            other,
+            "_ImmutableDomainRecord__values",
+        )
+        return dict(own_values) == dict(other_values)
+
+    def with_updates(self, **changes: object):
+        values = dict(
+            object.__getattribute__(
+                self,
+                "_ImmutableDomainRecord__values",
+            )
+        )
+        extras = set(changes).difference(self._field_names)
+        if extras:
+            raise TypeError("unknown domain-record fields")
+        values.update(changes)
+        return type(self)(**values)
+
+
+class DigitalProductOrder(_ImmutableDomainRecord):
+    """Sensitive order domain record; routes must map explicit safe fields."""
+
+    _field_names = (
+        "id",
+        "public_id",
+        "product_slug",
+        "product_version",
+        "expected_amount",
+        "currency",
+        "payos_order_code",
+        "payment_link_id",
+        "checkout_url",
+        "qr_code",
+        "status",
+        "recovery_token_hash",
+        "paid_amount",
+        "payment_reference",
+        "created_at",
+        "payment_expires_at",
+        "paid_at",
+        "download_expires_at",
+        "download_count",
+        "last_download_at",
+    )
+    _repr_field_names = (
+        "public_id",
+        "product_slug",
+        "product_version",
+        "expected_amount",
+        "currency",
+        "status",
+        "paid_amount",
+        "created_at",
+        "payment_expires_at",
+        "paid_at",
+        "download_expires_at",
+        "download_count",
+        "last_download_at",
+    )
+
     id: int
     public_id: str
     product_slug: str
@@ -75,27 +194,31 @@ class DigitalProductOrder:
     payos_order_code: int
     payment_link_id: str | None
     checkout_url: str | None
-    qr_code: str | None = field(repr=False)
+    qr_code: str | None
     status: str
-    recovery_token_hash: str | None = field(repr=False)
+    recovery_token_hash: str | None
     paid_amount: int | None
-    payment_reference: str | None = field(repr=False)
+    payment_reference: str | None
     created_at: datetime
     payment_expires_at: datetime
     paid_at: datetime | None
     download_expires_at: datetime | None
     download_count: int
-    last_download_at: datetime | None = None
+    last_download_at: datetime | None
 
 
-@dataclass(frozen=True)
-class PendingOrderSecret:
+class PendingOrderSecret(_ImmutableDomainRecord):
+    _field_names = ("order", "raw_recovery_token")
+    _repr_field_names = ("order",)
+
     order: DigitalProductOrder
-    raw_recovery_token: str = field(repr=False)
+    raw_recovery_token: str
 
 
-@dataclass(frozen=True)
-class SettlementResult:
+class SettlementResult(_ImmutableDomainRecord):
+    _field_names = ("order", "changed", "reason")
+    _repr_field_names = ("order", "changed", "reason")
+
     order: DigitalProductOrder
     changed: bool
     reason: str
@@ -409,11 +532,15 @@ class _PostgresOrderTransaction:
             """
             UPDATE digital_product_orders
                SET download_count = download_count + 1,
-                   last_download_at = ?,
+                   last_download_at = CASE
+                       WHEN last_download_at IS NULL OR last_download_at < ?
+                       THEN ?
+                       ELSE last_download_at
+                   END,
                    updated_at = CURRENT_TIMESTAMP
              WHERE id = ?
             """,
-            (downloaded_at, order_id),
+            (downloaded_at, downloaded_at, order_id),
         )
         return cursor.rowcount == 1
 
@@ -487,6 +614,7 @@ def verify_recovery_token(
     public_id: str,
     raw_token: str,
     *,
+    now: datetime | None = None,
     repo: OrderRepository | None = None,
 ) -> DigitalProductOrder | None:
     repository = _repository(repo)
@@ -499,6 +627,9 @@ def verify_recovery_token(
     expected_hash = order.recovery_token_hash or ("0" * 64)
     matches = hmac.compare_digest(expected_hash, candidate_hash)
     if order.recovery_token_hash is None or not matches:
+        return None
+    verification_time = now or datetime.now(timezone.utc)
+    if not _recovery_authorization_active(order, verification_time):
         return None
     return order
 
@@ -640,6 +771,19 @@ def _validate_settlement(
 
 def _repository(repo: OrderRepository | None) -> OrderRepository:
     return repo if repo is not None else PostgresOrderRepository()
+
+
+def _recovery_authorization_active(
+    order: DigitalProductOrder,
+    now: datetime,
+) -> bool:
+    if order.status == "paid":
+        expires_at = order.download_expires_at
+    elif order.status in {"pending", "payment_review"}:
+        expires_at = order.payment_expires_at
+    else:
+        return False
+    return expires_at is not None and now < expires_at
 
 
 def _order_from_row(row: object | None) -> DigitalProductOrder | None:
