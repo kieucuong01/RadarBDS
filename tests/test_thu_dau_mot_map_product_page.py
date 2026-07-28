@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import html as html_lib
 import json
+import os
 import re
 import subprocess
 from dataclasses import FrozenInstanceError, replace
@@ -23,6 +24,9 @@ TRACK_ACTIONS = (
 )
 APPROVED_PACKAGE_SHA256 = (
     "a6516a441afd26463f035ec26aa115ec249284e7f60f22fd2840586207f48fd5"
+)
+APPROVED_MANIFEST_SHA256 = (
+    "fa2bf2a45d9bdafd1a40514839e91b5fdbf61106a652ce7127d62dd3b5a01d8a"
 )
 EXPECTED_RELEASE_FILES = (
     "thu-dau-mot-truoc-2025-a0.pdf",
@@ -98,6 +102,16 @@ def _write_protected_release(
     return package
 
 
+def _trust_test_release(product, package: Path):
+    return replace(
+        product,
+        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
+        manifest_sha256=hashlib.sha256(
+            (package.parent / "MANIFEST.json").read_bytes()
+        ).hexdigest(),
+    )
+
+
 def test_runtime_product_registry_is_immutable_and_versioned():
     from services.digital_products import get_digital_product
 
@@ -110,6 +124,7 @@ def test_runtime_product_registry_is_immutable_and_versioned():
     assert product.release_product == "radarbds-thu-dau-mot-map"
     assert product.release_files == EXPECTED_RELEASE_FILES
     assert product.package_sha256 == APPROVED_PACKAGE_SHA256
+    assert product.manifest_sha256 == APPROVED_MANIFEST_SHA256
     with pytest.raises(FrozenInstanceError):
         product.price_vnd = 1
     with pytest.raises(KeyError):
@@ -124,10 +139,7 @@ def test_release_availability_validates_only_the_protected_version_directory(tmp
 
     product = get_digital_product("thu-dau-mot-map-bundle")
     package = _write_protected_release(tmp_path)
-    trusted_test_product = replace(
-        product,
-        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
-    )
+    trusted_test_product = _trust_test_release(product, package)
     availability = get_release_availability(
         trusted_test_product,
         tmp_path,
@@ -169,10 +181,7 @@ def test_release_gate_rejects_wrong_manifest_identity(
         manifest_product=manifest_product,
         manifest_version=manifest_version,
     )
-    test_product = replace(
-        product,
-        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
-    )
+    test_product = _trust_test_release(product, package)
 
     availability = get_release_availability(test_product, tmp_path, True)
 
@@ -198,10 +207,7 @@ def test_release_gate_rejects_incomplete_or_extra_manifest_files(
 
     product = get_digital_product("thu-dau-mot-map-bundle")
     package = _write_protected_release(tmp_path, manifest_files=manifest_files)
-    test_product = replace(
-        product,
-        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
-    )
+    test_product = _trust_test_release(product, package)
 
     availability = get_release_availability(test_product, tmp_path, True)
 
@@ -238,7 +244,13 @@ def test_release_gate_requires_the_configured_approved_checksum(
         get_digital_product("thu-dau-mot-map-bundle"),
         package_sha256=trusted_checksum,
     )
-    _write_protected_release(tmp_path)
+    package = _write_protected_release(tmp_path)
+    product = replace(
+        product,
+        manifest_sha256=hashlib.sha256(
+            (package.parent / "MANIFEST.json").read_bytes()
+        ).hexdigest(),
+    )
 
     availability = get_release_availability(product, tmp_path, True)
 
@@ -246,7 +258,7 @@ def test_release_gate_requires_the_configured_approved_checksum(
     assert availability.can_sell is False
 
 
-def test_release_validation_cache_reuses_stable_fingerprint_and_invalidates_on_change(
+def test_release_validation_cache_reuses_stable_zip_fingerprint_and_reads_small_manifest(
     tmp_path,
     monkeypatch,
 ):
@@ -254,12 +266,9 @@ def test_release_validation_cache_reuses_stable_fingerprint_and_invalidates_on_c
 
     product = digital_products.get_digital_product("thu-dau-mot-map-bundle")
     package = _write_protected_release(tmp_path)
-    test_product = replace(
-        product,
-        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
-    )
+    test_product = _trust_test_release(product, package)
     real_sha256_file = digital_products._sha256_file
-    real_read_manifest = digital_products._read_manifest
+    real_read_manifest_bytes = digital_products._read_manifest_bytes
     hash_calls = []
     manifest_reads = []
 
@@ -267,26 +276,41 @@ def test_release_validation_cache_reuses_stable_fingerprint_and_invalidates_on_c
         hash_calls.append(Path(path))
         return real_sha256_file(path)
 
-    def counted_read_manifest(path):
+    def counted_read_manifest_bytes(path):
         manifest_reads.append(Path(path))
-        return real_read_manifest(path)
+        return real_read_manifest_bytes(path)
 
     monkeypatch.setattr(digital_products, "_sha256_file", counted_sha256_file)
-    monkeypatch.setattr(digital_products, "_read_manifest", counted_read_manifest)
+    monkeypatch.setattr(
+        digital_products,
+        "_read_manifest_bytes",
+        counted_read_manifest_bytes,
+    )
 
     first = digital_products.get_release_availability(test_product, tmp_path, True)
     second = digital_products.get_release_availability(test_product, tmp_path, True)
-    package.write_bytes(package.read_bytes() + b"-changed")
+    original_stat = package.stat()
+    with package.open("r+b") as package_file:
+        package_file.seek(-1, os.SEEK_END)
+        original_byte = package_file.read(1)
+        package_file.seek(-1, os.SEEK_END)
+        package_file.write(bytes((original_byte[0] ^ 0x01,)))
+    os.utime(
+        package,
+        ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns),
+    )
     third = digital_products.get_release_availability(test_product, tmp_path, True)
 
     assert first.package_valid is True
     assert second.package_valid is True
-    assert len(manifest_reads) == 2
+    assert package.stat().st_size == original_stat.st_size
+    assert package.stat().st_mtime_ns == original_stat.st_mtime_ns
+    assert len(manifest_reads) == 3
     assert len(hash_calls) == 2
     assert third.package_valid is False
 
 
-def test_release_validation_cache_invalidates_when_manifest_stat_changes(
+def test_release_gate_rejects_same_size_same_mtime_manifest_member_mutation(
     tmp_path,
     monkeypatch,
 ):
@@ -294,29 +318,98 @@ def test_release_validation_cache_invalidates_when_manifest_stat_changes(
 
     product = digital_products.get_digital_product("thu-dau-mot-map-bundle")
     package = _write_protected_release(tmp_path)
-    test_product = replace(
-        product,
-        package_sha256=hashlib.sha256(package.read_bytes()).hexdigest(),
-    )
-    real_read_manifest = digital_products._read_manifest
-    manifest_reads = []
+    test_product = _trust_test_release(product, package)
+    real_sha256_file = digital_products._sha256_file
+    hash_calls = []
 
-    def counted_read_manifest(path):
-        manifest_reads.append(Path(path))
-        return real_read_manifest(path)
+    def counted_sha256_file(path):
+        hash_calls.append(Path(path))
+        return real_sha256_file(path)
 
-    monkeypatch.setattr(digital_products, "_read_manifest", counted_read_manifest)
+    monkeypatch.setattr(digital_products, "_sha256_file", counted_sha256_file)
 
     first = digital_products.get_release_availability(test_product, tmp_path, True)
     second = digital_products.get_release_availability(test_product, tmp_path, True)
     manifest = package.parent / "MANIFEST.json"
-    manifest.write_text("{}", encoding="utf-8")
+    original_stat = manifest.stat()
+    original_payload = manifest.read_text(encoding="utf-8")
+    mutated_payload = original_payload.replace(
+        hashlib.sha256(EXPECTED_RELEASE_FILES[0].encode("utf-8")).hexdigest(),
+        "f" * 64,
+        1,
+    )
+    assert mutated_payload != original_payload
+    assert len(mutated_payload.encode("utf-8")) == original_stat.st_size
+    manifest.write_text(mutated_payload, encoding="utf-8")
+    os.utime(
+        manifest,
+        ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns),
+    )
     third = digital_products.get_release_availability(test_product, tmp_path, True)
 
     assert first.package_valid is True
     assert second.package_valid is True
+    assert manifest.stat().st_size == original_stat.st_size
+    assert manifest.stat().st_mtime_ns == original_stat.st_mtime_ns
     assert third.package_valid is False
-    assert len(manifest_reads) == 2
+    assert len(hash_calls) == 1
+
+
+def test_release_gate_rejects_untrusted_manifest_digest_before_json_parse(
+    tmp_path,
+    monkeypatch,
+):
+    from services import digital_products
+
+    product = digital_products.get_digital_product("thu-dau-mot-map-bundle")
+    package = _write_protected_release(tmp_path)
+    manifest = package.parent / "MANIFEST.json"
+    manifest.write_bytes(b"untrusted manifest bytes")
+
+    def fail_if_untrusted_payload_is_parsed(payload):
+        raise AssertionError("untrusted manifest reached JSON parser")
+
+    monkeypatch.setattr(
+        digital_products.json,
+        "loads",
+        fail_if_untrusted_payload_is_parsed,
+    )
+
+    availability = digital_products.get_release_availability(
+        product,
+        tmp_path,
+        True,
+    )
+
+    assert availability.package_valid is False
+    assert availability.can_sell is False
+
+
+def test_release_validation_rehashes_when_native_change_time_is_unavailable(
+    tmp_path,
+    monkeypatch,
+):
+    from services import digital_products
+
+    product = digital_products.get_digital_product("thu-dau-mot-map-bundle")
+    package = _write_protected_release(tmp_path)
+    test_product = _trust_test_release(product, package)
+    real_sha256_file = digital_products._sha256_file
+    hash_calls = []
+
+    def counted_sha256_file(path):
+        hash_calls.append(Path(path))
+        return real_sha256_file(path)
+
+    monkeypatch.setattr(digital_products, "_sha256_file", counted_sha256_file)
+    monkeypatch.setattr(digital_products, "_file_fingerprint", lambda path: None)
+
+    first = digital_products.get_release_availability(test_product, tmp_path, True)
+    second = digital_products.get_release_availability(test_product, tmp_path, True)
+
+    assert first.package_valid is True
+    assert second.package_valid is True
+    assert len(hash_calls) == 2
 
 
 def test_product_page_is_indexable_but_checkout_is_disabled_without_sales_flag(monkeypatch):
