@@ -236,3 +236,23 @@ def test_calculation_returns_field_errors_and_missing_row():
     assert missing.get_json()["error"] == "row_not_found"
     assert invalid.status_code == 400
     assert "land_area_m2" in invalid.get_json()["field_errors"]
+
+
+def test_land_price_page_renders_accessible_position_calculator_shell():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(
+        "/bang-gia-dat-tphcm"
+    ).get_data(as_text=True)
+
+    assert 'id="landPriceCalculator"' in html
+    assert 'id="landPriceCalculatorForm"' in html
+    assert 'id="landPriceCalculatorRowKey"' in html
+    assert '<label for="landPriceLandArea">' in html
+    assert '<label for="landPriceFrontage">' in html
+    assert '<label for="landPriceDepth">' in html
+    assert 'name="access"' in html
+    assert 'id="landPriceAlleyFields"' in html
+    assert '<details class="land-price-advanced">' in html
+    assert 'id="landPriceCalculatorResult"' in html
+    assert 'aria-live="polite"' in html

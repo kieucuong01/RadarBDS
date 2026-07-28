@@ -13,8 +13,8 @@
   <meta property="og:image" content="{{ site_meta.og_image }}">
   {% include "partials/google_site_tags.html" %}
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tphcm-land-price-trust-20260728b">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tphcm_land_price_tool.css') }}?v=tphcm-land-price-trust-20260728b">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tphcm-land-position-20260728">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tphcm_land_price_tool.css') }}?v=tphcm-land-position-20260728">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -113,6 +113,115 @@
         <span id="landPricePageStatus"></span>
         <button type="button" data-page-action="next">Trang sau</button>
       </nav>
+      <section class="land-price-calculator" id="landPriceCalculator" aria-labelledby="landPriceCalculatorTitle" hidden>
+        <div class="calculator-head">
+          <div>
+            <p class="section-label">Áp dụng vị trí và hình thể thửa</p>
+            <h3 id="landPriceCalculatorTitle" tabindex="-1">Tính giá thửa đất</h3>
+            <p id="landPriceCalculatorRoad">Chọn một dòng trong kết quả tra cứu để bắt đầu.</p>
+          </div>
+          <button type="button" class="calculator-close" id="landPriceCalculatorClose" aria-label="Đóng bộ tính">×</button>
+        </div>
+        <form id="landPriceCalculatorForm" novalidate aria-busy="false">
+          <input id="landPriceCalculatorRowKey" name="row_key" type="hidden">
+
+          <fieldset>
+            <legend>Thông tin thửa đất</legend>
+            <div class="land-price-calculator-grid">
+              <div class="land-price-field">
+                <label for="landPriceLandArea">Diện tích trên giấy tờ (m²)</label>
+                <input id="landPriceLandArea" name="land_area_m2" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ví dụ: 100" aria-describedby="landPriceLandAreaHelp landPriceLandAreaError">
+                <p class="field-help" id="landPriceLandAreaHelp">Diện tích pháp lý dùng để tính tổng giá trị.</p>
+                <p class="field-error" id="landPriceLandAreaError" data-calculator-error="land_area_m2" hidden></p>
+              </div>
+              <div class="land-price-field">
+                <label for="landPriceFrontage">Ngang tiếp giáp đường/hẻm (m)</label>
+                <input id="landPriceFrontage" name="frontage_m" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ví dụ: 5" aria-describedby="landPriceFrontageHelp landPriceFrontageError">
+                <p class="field-help" id="landPriceFrontageHelp">Dùng làm mốc chia dải chiều sâu.</p>
+                <p class="field-error" id="landPriceFrontageError" data-calculator-error="frontage_m" hidden></p>
+              </div>
+              <div class="land-price-field">
+                <label for="landPriceDepth">Chiều dài thửa (m)</label>
+                <input id="landPriceDepth" name="depth_m" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ví dụ: 20" aria-describedby="landPriceDepthHelp landPriceDepthError">
+                <p class="field-help" id="landPriceDepthHelp">Đo từ mặt tiếp giáp vào cuối thửa.</p>
+                <p class="field-error" id="landPriceDepthError" data-calculator-error="depth_m" hidden></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Vị trí phổ biến</legend>
+            <div class="calculator-choice-grid" role="radiogroup" aria-label="Lối tiếp giáp">
+              <label class="calculator-choice">
+                <input type="radio" name="access" value="frontage" checked>
+                <span><strong>Mặt tiền đường</strong><small>Vị trí 1 theo tuyến đã chọn</small></span>
+              </label>
+              <label class="calculator-choice">
+                <input type="radio" name="access" value="alley">
+                <span><strong>Trong hẻm</strong><small>Xác định theo đoạn hẻm hẹp nhất phải đi qua</small></span>
+              </label>
+            </div>
+            <p class="field-error" data-calculator-error="location.access" hidden></p>
+
+            <div class="land-price-alley-fields" id="landPriceAlleyFields" hidden>
+              <div class="land-price-field">
+                <label for="landPriceAlleyWidth">Chiều rộng hẻm nhỏ nhất (m)</label>
+                <input id="landPriceAlleyWidth" name="alley_min_width_m" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ví dụ: 4">
+                <p class="field-error" data-calculator-error="location.alley_min_width_m" hidden></p>
+              </div>
+              <div class="land-price-field">
+                <label for="landPriceAlleySurface">Mặt hẻm</label>
+                <select id="landPriceAlleySurface" name="alley_surface">
+                  <option value="paved">Nhựa, bê tông, đá hoặc xi măng</option>
+                  <option value="dirt">Hẻm đất</option>
+                </select>
+                <p class="field-error" data-calculator-error="location.alley_surface" hidden></p>
+              </div>
+              <div class="land-price-field">
+                <label for="landPriceRoadDistance">Khoảng cách đi bộ từ đường có tên (m)</label>
+                <input id="landPriceRoadDistance" name="distance_to_named_road_m" type="number" min="0" step="0.01" inputmode="decimal" value="0">
+                <p class="field-error" data-calculator-error="location.distance_to_named_road_m" hidden></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <details class="land-price-advanced">
+            <summary>Chi tiết nâng cao</summary>
+            <fieldset>
+              <legend>Trường hợp đặc biệt</legend>
+              <div class="advanced-options">
+                <label class="calculator-choice">
+                  <input type="radio" name="mode" value="standard" checked>
+                  <span><strong>Trường hợp thông dụng</strong><small>Dùng vị trí mặt tiền hoặc hẻm ở trên</small></span>
+                </label>
+                <label class="calculator-choice">
+                  <input type="radio" name="mode" value="multiple_frontages">
+                  <span><strong>Từ hai mặt tiền trở lên</strong><small>Hệ số 110%; hãy chọn tuyến có đơn giá cao nhất</small></span>
+                </label>
+                <label class="calculator-choice">
+                  <input type="radio" name="mode" value="special_seventy_percent">
+                  <span><strong>Nhóm trường hợp 70%</strong><small>Dạ cầu, cầu vượt, hành lang điện, đường dẫn cầu hoặc bị ngăn bởi kênh/rạch</small></span>
+                </label>
+              </div>
+              <p class="field-error" data-calculator-error="location.mode" hidden></p>
+              <div class="calculator-manual-note">
+                <strong>Cần đối chiếu thủ công</strong>
+                <p>Thửa chữ L/T, đa giác, có phần khuất sau từ 15m², không có đường vào hoặc phải dùng giá sàn đất nông nghiệp chưa được công cụ tự tính.</p>
+              </div>
+            </fieldset>
+          </details>
+
+          <div class="calculator-submit-row">
+            <p>Đây là giá theo bảng Nhà nước, không phải giá giao dịch thị trường.</p>
+            <button class="land-price-submit calculator-submit" type="submit">
+              <span class="button-label">Tính giá thửa đất</span>
+              <span class="button-spinner" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="result-state result-error" id="landPriceCalculatorError" role="alert" hidden></div>
+        </form>
+        <div class="calculator-result" id="landPriceCalculatorResult" aria-live="polite" hidden></div>
+      </section>
       <div class="result-actions" id="landPriceActions" hidden>
         <a class="result-action-secondary" id="landPriceSourceCta" href="{{ land_price_source_url }}" target="_blank" rel="noopener noreferrer">Đối chiếu văn bản chính thức</a>
         <a class="result-action-primary" id="landPriceValuationCta" href="/dinh-gia-bds" hidden>Định giá lô đất khu vực Bình Dương</a>
@@ -142,10 +251,10 @@
       </details>
       <details>
         <summary>Nếu lô đất nằm trong hẻm thì dùng giá nào?</summary>
-        <p>Kết quả tra cứu tuyến đường chưa tự động tính vị trí hẻm. Cần tiếp tục đối chiếu quy định vị trí đất trong Nghị quyết và hồ sơ cụ thể của thửa đất.</p>
+        <p>Chọn đúng đoạn đường rồi bấm “Tính theo vị trí”. Công cụ dùng chiều rộng nhỏ nhất của tuyến hẻm, mặt hẻm và khoảng cách đi bộ từ đường có tên để xác định hệ số.</p>
       </details>
     </section>
   </main>
-  <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=tphcm-land-price-trust-20260728b"></script>
+  <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=tphcm-land-position-20260728"></script>
 </body>
 </html>
