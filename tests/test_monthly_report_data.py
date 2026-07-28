@@ -90,6 +90,8 @@ def test_report_snapshots_expose_raw_basis_actionable_contract_in_user_copy():
         assert "Mẫu hợp lệ" in source
         assert "Tín hiệu = is_hot=1 hoặc price_dropped=1." not in source
         assert "hot + giảm giá" not in source
+    assert "f\"{cur['total']} tin rao" not in enhancer
+    assert "f\"{fmt_num(total)} tin rao" not in enhancer
 
 
 def test_monthly_verifier_accepts_only_available_actionable_cards_up_to_six():

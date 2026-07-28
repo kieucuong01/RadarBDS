@@ -35,13 +35,13 @@
     {% if reports %}
     {% set latest = reports[0] %}
     <section class="hub-featured report-hub-featured" aria-labelledby="latest-report" data-featured-report="{{ latest.path }}">
-      <a class="report-featured-thumb" href="{{ latest.path }}" aria-label="Đọc {{ latest.hero_title }}" tabindex="-1" aria-hidden="true">
+      <div class="report-featured-thumb" aria-hidden="true">
         {% if latest.hub_meta.thumbnail %}<img src="{{ latest.hub_meta.thumbnail }}" alt="Thumbnail {{ latest.scope_label }}" loading="eager">{% endif %}
         <span class="report-thumb-overlay"></span>
         <span class="report-thumb-kicker">{{ latest.hub_meta.city_label }}</span>
         <strong>{{ latest.scope_label }}</strong>
         <small>{{ latest.report.period }}</small>
-      </a>
+      </div>
       <div class="hub-featured-body">
         <p class="seo-eyebrow">Báo cáo mới nhất</p>
         <h2 id="latest-report">{{ latest.hero_title }}</h2>

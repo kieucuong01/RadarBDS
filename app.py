@@ -2517,7 +2517,9 @@ def seo_report_hub_page():
             "hero_title": "Báo cáo thị trường BĐS Thủ Dầu Một",
             "hero_text": "Theo dõi các báo cáo tháng đã chốt dữ liệu tại Thủ Dầu Một. Bến Cát sẽ được mở khi có đủ snapshot đạt chuẩn.",
             "scope_label": "Đang phủ 13 phường Thủ Dầu Một",
+            "lead_scope_label": "Thủ Dầu Một",
         })
+    page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
     return render_template("seo_report_hub.html", page=page, reports=reports, hub_filters=hub_filters, site_meta=site_meta, active_nav="bao-cao")
 

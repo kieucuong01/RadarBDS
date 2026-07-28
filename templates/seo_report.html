@@ -107,7 +107,7 @@
         <div class="report-table-wrap" role="region" aria-label="Bảng xu hướng giá 6 tháng" tabindex="0">
           <table>
             <thead>
-              <tr><th>Tháng</th><th>Tổng tin</th><th>Đất nền</th><th>Giá trung vị đất nền</th><th>Nhà đất</th><th>Giá trung vị nhà đất</th><th>Tin nóng</th><th>Cắt máu</th><th>Dấu hiệu</th></tr>
+              <tr><th>Tháng</th><th>Mẫu hợp lệ</th><th>Đất nền</th><th>Giá trung vị đất nền</th><th>Nhà đất</th><th>Giá trung vị nhà đất</th><th>Tin nóng</th><th>Giảm giá</th><th>Actionable</th></tr>
             </thead>
             <tbody>
               {% for row in page.report.trend_rows %}
@@ -186,7 +186,7 @@
         <div class="report-table-wrap" role="region" aria-label="Bảng chỉ số theo phường" tabindex="0">
           <table>
             <thead>
-              <tr><th>Phường</th><th>Số tin mới</th><th>Giá/m² trung vị</th><th>Khu giảm giá</th><th>Khu nhiều tín hiệu</th></tr>
+              <tr><th>Phường/loại hình</th><th>Mẫu hợp lệ</th><th>Giá/m² trung vị</th><th>Giảm giá</th><th>Actionable</th></tr>
             </thead>
             <tbody>
               {% for row in page.report.area_rows %}
@@ -239,7 +239,7 @@
         </div>
         <div class="report-table-wrap" role="region" aria-label="Bảng so sánh phường liên quan" tabindex="0">
           <table>
-            <thead><tr><th>Khu vực</th><th>Tin rao</th><th>Giá trung vị đất nền</th><th>Dấu hiệu đáng chú ý</th></tr></thead>
+            <thead><tr><th>Khu vực</th><th>Mẫu hợp lệ</th><th>Giá trung vị đất nền</th><th>Tín hiệu actionable</th></tr></thead>
             <tbody>
               {% for row in page.report.comparison_rows %}
               <tr><th scope="row">{{ row.area }}</th><td>{{ row.new_listings }}</td><td>{{ row.median_price }}</td><td>{{ row.radar_signal }}</td></tr>
@@ -265,8 +265,8 @@
       <section class="report-featured-listings" aria-labelledby="report-featured-listings">
         <div class="section-heading">
           <p class="seo-eyebrow">Tin đáng kiểm tra</p>
-          <h2 id="report-featured-listings">Một số tin rao dưới giá cơ sở trong tháng</h2>
-          <p>Các card này dùng UI tương tự signal Radar BDS: có MOS, giá thực tế, giá cơ sở, diện tích và link trực tiếp sang màn hình chi tiết `/listing/id`.</p>
+          <h2 id="report-featured-listings">Một số tín hiệu dưới giá cơ sở trong tháng</h2>
+          <p>Các card đã qua canonical, quality và actionable gate: có MOS, giá chào, giá cơ sở, diện tích và link nội bộ sang màn hình chi tiết.</p>
         </div>
         <div class="featured-listing-grid report-signal-grid">
           {% for item in page.report.featured_listings %}
