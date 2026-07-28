@@ -12,32 +12,6 @@
     }
   }
 
-  function initPlanningFilters() {
-    var tabs = Array.prototype.slice.call(document.querySelectorAll("[data-planning-filter]"));
-    var cards = Array.prototype.slice.call(document.querySelectorAll("[data-planning-card]"));
-    var emptyState = document.querySelector("[data-planning-empty]");
-    if (!tabs.length || !cards.length) return;
-
-    tabs.forEach(function (tab) {
-      tab.addEventListener("click", function () {
-        var filter = tab.getAttribute("data-planning-filter") || "all";
-        tabs.forEach(function (item) {
-          var active = item === tab;
-          item.classList.toggle("is-active", active);
-          item.setAttribute("aria-selected", active ? "true" : "false");
-        });
-        var visibleCount = 0;
-        cards.forEach(function (card) {
-          var category = card.getAttribute("data-category") || "";
-          var hidden = filter !== "all" && category !== filter;
-          card.hidden = hidden;
-          if (!hidden) visibleCount += 1;
-        });
-        if (emptyState) emptyState.hidden = visibleCount !== 0;
-      });
-    });
-  }
-
   function layerColor(feature, fallback) {
     return (feature && feature.properties && feature.properties.color) || fallback || "#0f766e";
   }
@@ -228,7 +202,6 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    initPlanningFilters();
     initAreaCtas();
     document.querySelectorAll("[data-planning-map]").forEach(initPlanningMap);
   });
