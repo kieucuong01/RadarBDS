@@ -79,6 +79,16 @@ def test_homepage_is_dashboard_and_binh_duong_is_seo_landing():
     assert '<link rel="canonical" href="https://radarbds.vn/">' in home_html
     assert "window.INITIAL_WARDS_BY_CITY" in home_html
     assert 'class="seo-page seo-page-market"' not in home_html
+    assert "Phân tích" in home_html
+    assert "Thị trường & Deal" not in home_html
+    assert "Công cụ" in home_html
+    assert 'href="/dinh-gia-bds"' in home_html
+    assert 'href="/bang-gia-dat-tphcm"' in home_html
+    assert 'href="/tin-tuc"' in home_html
+    assert 'href="/bao-cao"' in home_html
+    tools_block = home_html.split('aria-label="Công cụ Radar"', 1)[1].split("</details>", 1)[0]
+    assert 'href="/binh-duong"' not in tools_block
+    assert 'href="/san-deal-bds"' not in tools_block
 
     assert dashboard.status_code == 301
     assert dashboard.headers["Location"] == "/"

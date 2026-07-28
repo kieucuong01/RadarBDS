@@ -477,6 +477,11 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+
+  .mobile-bottom-nav:has(.bottom-nav-item:nth-child(5)) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   .bottom-nav-item {
     position: relative;
     min-width: 0;

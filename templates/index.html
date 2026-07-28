@@ -74,12 +74,12 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
 
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-input-zoom-20260612' %}
-  {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=mobile-perf-lazy-20260611' %}
+  {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=tools-nav-20260728' %}
   {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=pagespeed-a11y-20260611' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=saved-listings-header-images-20260722' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=favorite-listings-20260715' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
-  {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=mobile-command-bar-20260624' %}
+  {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=tools-nav-20260728' %}
   {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=account-menu-compact-20260606' %}
   <link rel="stylesheet" href="{{ css_base }}">
   <link rel="stylesheet" href="{{ css_layout }}">
@@ -356,15 +356,43 @@
             <path
               d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
-          Toàn bộ tin rao
+          Tin rao
           <span id="badgeTotal" class="nav-count-badge">0</span>
         </button>
         <button class="nav-link" data-tab-target="market" onclick="switchTab('market', this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          Thị trường & Deal
+          Phân tích
         </button>
+        <details class="tools-menu" id="toolsMenu">
+          <summary class="nav-link tools-menu-trigger" aria-label="Mở công cụ Radar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 6V3m0 18v-3M6 12H3m18 0h-3" />
+              <path d="m18.4 5.6-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            Công cụ
+          </summary>
+          <div class="tools-menu-panel" role="menu" aria-label="Công cụ Radar">
+            <a class="tools-menu-item" role="menuitem" href="/dinh-gia-bds">
+              <strong>Định giá BĐS</strong>
+              <span>Ước tính giá lô đất theo dữ liệu Radar</span>
+            </a>
+            <a class="tools-menu-item" role="menuitem" href="/bang-gia-dat-tphcm">
+              <strong>Tra cứu bảng giá đất</strong>
+              <span>Xem giá đất nhà nước theo tuyến đường/khu vực</span>
+            </a>
+            <a class="tools-menu-item" role="menuitem" href="/tin-tuc">
+              <strong>Tin tức dữ liệu</strong>
+              <span>Đọc phân tích giá, khu vực và tín hiệu thị trường</span>
+            </a>
+            <a class="tools-menu-item" role="menuitem" href="/bao-cao">
+              <strong>Báo cáo thị trường</strong>
+              <span>Xem giá trung vị, nguồn cung và báo cáo tháng</span>
+            </a>
+          </div>
+        </details>
         {% if SHOW_INSIGHTS %}
         <button class="nav-link" data-tab-target="insights" onclick="switchTab('insights', this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1226,7 +1254,15 @@
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
-      <span>Thị trường</span>
+      <span>Phân tích</span>
+    </button>
+    <button class="bottom-nav-item" type="button" onclick="openToolsSheet(event)" aria-haspopup="dialog" aria-controls="toolsSheet">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M12 6V3m0 18v-3M6 12H3m18 0h-3" />
+        <path d="m18.4 5.6-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+      <span>Công cụ</span>
     </button>
     {% if SHOW_INSIGHTS %}
     <button class="bottom-nav-item" type="button" data-tab-target="insights" onclick="switchTab('insights', this)">
@@ -1237,6 +1273,36 @@
     </button>
     {% endif %}
   </nav>
+
+  <div class="tools-sheet-backdrop" id="toolsSheet" hidden onclick="closeToolsSheet(event)">
+    <div class="tools-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="toolsSheetTitle" onclick="event.stopPropagation()">
+      <div class="tools-sheet-head">
+        <div>
+          <span>Công cụ Radar</span>
+          <strong id="toolsSheetTitle">Kiểm tra giá và đọc dữ liệu trước khi xuống tiền</strong>
+        </div>
+        <button type="button" class="tools-sheet-close" onclick="closeToolsSheet()" aria-label="Đóng công cụ">×</button>
+      </div>
+      <div class="tools-sheet-list">
+        <a class="tools-menu-item" href="/dinh-gia-bds">
+          <strong>Định giá BĐS</strong>
+          <span>Ước tính giá lô đất theo dữ liệu Radar</span>
+        </a>
+        <a class="tools-menu-item" href="/bang-gia-dat-tphcm">
+          <strong>Tra cứu bảng giá đất</strong>
+          <span>Xem giá đất nhà nước theo tuyến đường/khu vực</span>
+        </a>
+        <a class="tools-menu-item" href="/tin-tuc">
+          <strong>Tin tức dữ liệu</strong>
+          <span>Đọc phân tích giá, khu vực và tín hiệu thị trường</span>
+        </a>
+        <a class="tools-menu-item" href="/bao-cao">
+          <strong>Báo cáo thị trường</strong>
+          <span>Xem giá trung vị, nguồn cung và báo cáo tháng</span>
+        </a>
+      </div>
+    </div>
+  </div>
 
   <div class="chat-window" id="chatWindow">
     <div class="chat-header">
@@ -1264,7 +1330,7 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=mobile-perf-82-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=tools-nav-20260728"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=loader-font-fix-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-listings-header-images-20260722"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=report-internal-link-filters-20260723"></script>

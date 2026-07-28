@@ -386,7 +386,7 @@ function activeTabId() {
 const TAB_TITLES = {
   signals: 'Săn Deal',
   all: 'Tin rao',
-  market: 'Thị trường',
+  market: 'Phân tích',
   insights: 'Insights'
 };
 
@@ -401,7 +401,49 @@ function syncMobileBadges() {
   syncMobileBadge('badgeTotal', 'mobileBadgeTotal');
 }
 
+function openToolsSheet(event) {
+  if (event) event.preventDefault();
+  const sheet = document.getElementById('toolsSheet');
+  if (!sheet) return;
+  sheet.dataset.returnTab = activeTabId();
+  document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(b => b.classList.remove('active'));
+  const trigger = event && event.currentTarget;
+  if (trigger) trigger.classList.add('active');
+  sheet.hidden = false;
+  document.body.classList.add('tools-sheet-open');
+}
+
+function closeToolsSheet(event) {
+  if (event && event.target && event.currentTarget && event.target !== event.currentTarget) return;
+  const sheet = document.getElementById('toolsSheet');
+  const returnTab = sheet && sheet.dataset.returnTab;
+  if (sheet) sheet.hidden = true;
+  document.body.classList.remove('tools-sheet-open');
+  document.querySelectorAll('.bottom-nav-item:not([data-tab-target])').forEach(b => b.classList.remove('active'));
+  if (returnTab) {
+    document.querySelectorAll(`[data-tab-target="${returnTab}"]`).forEach(b => b.classList.add('active'));
+  }
+}
+
+document.addEventListener('click', function (event) {
+  const menu = document.getElementById('toolsMenu');
+  if (menu && menu.open && !menu.contains(event.target)) {
+    menu.open = false;
+  }
+});
+
+document.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape') {
+    closeToolsSheet();
+    const menu = document.getElementById('toolsMenu');
+    if (menu) menu.open = false;
+  }
+});
+
 async function switchTab(tabId, btn) {
+  const sheet = document.getElementById('toolsSheet');
+  if (sheet) sheet.hidden = true;
+  document.body.classList.remove('tools-sheet-open');
   document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll(`[data-tab-target="${tabId}"]`).forEach(b => b.classList.add('active'));
