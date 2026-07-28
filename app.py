@@ -67,6 +67,7 @@ from config.settings import (
     SITE_NAME,
     SITE_OG_IMAGE,
     SITE_TITLE,
+    get_digital_product_commerce_settings,
 )
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
 from config.seo_pages import REPORT_HUB, SEO_PAGES
@@ -113,6 +114,7 @@ from services.tphcm_land_price_calculator import (
     calculate_mixed_land_price,
 )
 from services.digital_products import (
+    ProductAvailability,
     get_digital_product,
     get_release_availability,
 )
@@ -166,6 +168,11 @@ def add_response_headers(response):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
+        if request.path.startswith("/api/digital-products/orders/"):
+            response.headers["Cache-Control"] = "private, no-store"
+    elif request.path.startswith("/ban-do-thu-dau-mot/don-hang/"):
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers["Pragma"] = "no-cache"
     elif request.path.startswith("/static/") and request.args.get("v"):
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
@@ -2153,17 +2160,23 @@ def thu_dau_mot_map_product_page():
     page["breadcrumbs"] = _page_breadcrumbs(page)
     page["local_links"] = [dict(link) for link in page["local_links"]]
     product = get_digital_product("thu-dau-mot-map-bundle")
-    storage_root = os.getenv(
-        "DIGITAL_PRODUCT_STORAGE_DIR",
-        str(Path(__file__).resolve().parent / ".local" / "digital-products"),
-    )
-    sales_enabled = os.getenv("DIGITAL_PRODUCT_SALES_ENABLED", "").strip().lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
-    availability = get_release_availability(product, storage_root, sales_enabled)
+    commerce_settings = get_digital_product_commerce_settings()
+    if (
+        commerce_settings.ready_for_checkout
+        and commerce_settings.storage_dir is not None
+    ):
+        availability = get_release_availability(
+            product,
+            commerce_settings.storage_dir,
+            commerce_settings.sales_enabled,
+        )
+    else:
+        availability = ProductAvailability(
+            package_valid=False,
+            sales_enabled=commerce_settings.sales_enabled,
+            can_sell=False,
+            reason="configuration_not_ready",
+        )
     site_meta = _site_meta(
         page["path"],
         title=page["title"],

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#f8fafc">
+  <title>Thanh toán bộ bản đồ TP Thủ Dầu Một · Radar BDS</title>
+  <meta name="description" content="Trang thanh toán và nhận file bộ bản đồ TP Thủ Dầu Một của Radar BDS.">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tdm-product-20260729-1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=tdm-product-20260729-1">
+</head>
+
+<body class="seo-page tdm-product-page">
+  {% include "partials/seo_header.html" %}
+  <main id="main-content" class="tdm-product-main">
+    <section class="seo-shell tdm-product-section" data-digital-product-order="{{ public_id }}">
+      <div class="tdm-product-section-heading">
+        <p>Thanh toán VietQR</p>
+        <h1>Bộ bản đồ TP Thủ Dầu Một</h1>
+        <p>Trang này chỉ hiển thị thông tin thanh toán sau khi link khôi phục trong trình duyệt được xác thực.</p>
+      </div>
+      <noscript>
+        <p>Bạn cần bật JavaScript để xác thực link khôi phục và xem trạng thái đơn hàng.</p>
+      </noscript>
+      <div aria-live="polite" data-order-state>
+        <p>Đang xác thực đơn hàng…</p>
+      </div>
+      <p><a href="/ban-do-thu-dau-mot">Quay lại trang bộ bản đồ</a></p>
+    </section>
+  </main>
+  {% include "partials/seo_footer.html" %}
+</body>
+
+</html>
