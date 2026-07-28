@@ -385,34 +385,51 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
                     WHERE source = 'facebook'
                     ORDER BY crawled_at DESC
                     LIMIT 8000
+                ),
+                recent_listing AS MATERIALIZED (
+                    SELECT r.raw_json,
+                           r.profile_url,
+                           r.crawled_at,
+                           l.id AS listing_id,
+                           l.title,
+                           l.description,
+                           l.price_ty,
+                           l.area_m2,
+                           l.ward,
+                           l.property_type
+                    FROM recent_raw r
+                    LEFT JOIN listings l ON l.raw_id = r.id
+                    WHERE r.profile_url IS NOT NULL
+                      AND (""" + " OR ".join(profile_predicates) + """)
+                ),
+                image_counts AS MATERIALIZED (
+                    SELECT img.listing_id, COUNT(*) AS image_count
+                    FROM listing_images img
+                    JOIN recent_listing rl ON rl.listing_id = img.listing_id
+                    GROUP BY img.listing_id
+                ),
+                latest_quality AS MATERIALIZED (
+                    SELECT DISTINCT ON (v.listing_id) v.listing_id, v.source_quality_flags
+                    FROM valuation_results v
+                    JOIN recent_listing rl ON rl.listing_id = v.listing_id
+                    ORDER BY v.listing_id, v.id DESC
                 )
                 SELECT
-                    r.raw_json,
-                    r.profile_url,
-                    r.crawled_at,
-                    l.title,
-                    l.description,
-                    l.price_ty,
-                    l.area_m2,
-                    l.ward,
-                    l.property_type,
-                    COALESCE((
-                        SELECT COUNT(*)
-                        FROM listing_images img
-                        WHERE img.listing_id = l.id
-                    ), 0) AS image_count,
-                    (
-                        SELECT v.source_quality_flags
-                        FROM valuation_results v
-                        WHERE v.listing_id = l.id
-                        ORDER BY v.id DESC
-                        LIMIT 1
-                    ) AS source_quality_flags
-                FROM recent_raw r
-                LEFT JOIN listings l ON l.raw_id = r.id
-                WHERE r.profile_url IS NOT NULL
-                  AND (""" + " OR ".join(profile_predicates) + """)
-                ORDER BY r.crawled_at DESC
+                    rl.raw_json,
+                    rl.profile_url,
+                    rl.crawled_at,
+                    rl.title,
+                    rl.description,
+                    rl.price_ty,
+                    rl.area_m2,
+                    rl.ward,
+                    rl.property_type,
+                    COALESCE(img.image_count, 0) AS image_count,
+                    q.source_quality_flags
+                FROM recent_listing rl
+                LEFT JOIN image_counts img ON img.listing_id = rl.listing_id
+                LEFT JOIN latest_quality q ON q.listing_id = rl.listing_id
+                ORDER BY rl.crawled_at DESC
             """, profile_params).fetchall()
     except Exception:
         return stats

@@ -150,11 +150,13 @@ def test_facebook_profile_stats_filters_recent_raw_before_expensive_joins():
     assert "profile_url" in stats_fn
     assert "profile_predicates" in stats_fn
     assert "r.profile_url IS NOT NULL" in stats_fn
+    assert "recent_listing AS" in stats_fn
+    assert "JOIN recent_listing rl" in stats_fn
     assert "FROM recent_raw r" in stats_fn
     assert "FROM listing_images img" in stats_fn
-    assert "WHERE img.listing_id = l.id" in stats_fn
+    assert "WHERE img.listing_id = l.id" not in stats_fn
     assert "FROM valuation_results v" in stats_fn
-    assert "WHERE v.listing_id = l.id" in stats_fn
+    assert "WHERE v.listing_id = l.id" not in stats_fn
     assert "FROM listing_images\n                    GROUP BY listing_id" not in stats_fn
     assert "FROM valuation_results\n                    GROUP BY listing_id" not in stats_fn
 
