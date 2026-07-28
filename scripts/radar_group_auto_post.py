@@ -180,18 +180,27 @@ def choose_target(config: dict, state: dict, now: dt.datetime) -> dict | None:
     return None
 
 
-def choose_article(state: dict, target: dict, force_slug: str|None=None) -> tuple[str,dict]|None:
+def choose_article(state: dict, target: dict, force_slug: str|None=None, priority_slugs: list[str]|None=None) -> tuple[str,dict]|None:
     posted={(x.get('target_id'),x.get('slug')) for x in state.get('actions',[]) if x.get('status') in ('published','pending_review')}
+    rows=candidates()
+    by_slug={slug:page for slug,page in rows}
     now=dt.date.today()
-    for slug,page in candidates():
-        if force_slug and slug!=force_slug: continue
-        if (target['id'],slug) in posted: continue
+    def usable(slug: str, page: dict) -> bool:
+        return (target['id'],slug) not in posted and is_radar_value_article(slug,page)
+    if force_slug:
+        page=by_slug.get(force_slug)
+        return (force_slug,page) if page and usable(force_slug,page) else None
+    # Integrated version of the old bounded redistribution group campaign: try
+    # allowlisted evergreen/data-led articles first, then fall back to fresh posts.
+    for slug in priority_slugs or []:
+        page=by_slug.get(str(slug or '').strip())
+        if page and usable(str(slug).strip(),page):
+            return str(slug).strip(),page
+    for slug,page in rows:
+        if not usable(slug,page): continue
         try: age=(now-dt.date.fromisoformat(article_date(page))).days
         except Exception: age=999
-        if force_slug:
-            if is_radar_value_article(slug,page): return slug,page
-            return None
-        if 0<=age<=4 and is_radar_value_article(slug,page): return slug,page
+        if 0<=age<=4: return slug,page
     return None
 
 
@@ -203,7 +212,7 @@ def main() -> int:
     if not target:
         if args.dry_run: print(json.dumps({'ok':True,'skip':'frequency_cap'},ensure_ascii=False))
         return 0
-    picked=choose_article(state,target,args.force_slug)
+    picked=choose_article(state,target,args.force_slug,config.get('article_redistribution_priority_slugs') or [])
     if not picked:
         if args.dry_run: print(json.dumps({'ok':True,'skip':'no_recent_unposted_article'},ensure_ascii=False))
         return 0
