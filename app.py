@@ -14,6 +14,7 @@ import urllib.request
 import urllib.parse
 import threading
 from copy import deepcopy
+from decimal import Decimal
 from functools import wraps
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -89,7 +90,15 @@ from services.valuation_tool import (
     ValuationToolError,
     estimate_property_value,
 )
-from services.tphcm_land_prices import search_land_prices
+from services.tphcm_land_prices import (
+    find_land_price_row,
+    land_price_row_key,
+    search_land_prices,
+)
+from services.tphcm_land_price_calculator import (
+    CalculationValidationError,
+    calculate_land_price,
+)
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -1550,6 +1559,64 @@ def api_tphcm_land_prices():
         "document_sha256": data.get("document_sha256"),
         "unit": data.get("unit"),
     })
+
+
+def _land_price_json_ready(value):
+    if isinstance(value, Decimal):
+        return int(value) if value == value.to_integral_value() else float(value)
+    if isinstance(value, dict):
+        return {
+            key: _land_price_json_ready(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_land_price_json_ready(item) for item in value]
+    return value
+
+
+def api_tphcm_land_price_calculate():
+    payload = request.get_json(silent=True) or {}
+    data = _load_tphcm_land_price_data()
+    row = find_land_price_row(
+        data.get("rows", []),
+        str(payload.get("row_key") or ""),
+    )
+    if row is None:
+        return jsonify({"ok": False, "error": "row_not_found"}), 404
+
+    try:
+        result = calculate_land_price(
+            {
+                "residential": row.get("residential"),
+                "commerce_service": row.get("commerce_service"),
+                "production_business": row.get("production_business"),
+            },
+            land_area_m2=payload.get("land_area_m2"),
+            frontage_m=payload.get("frontage_m"),
+            depth_m=payload.get("depth_m"),
+            location=payload.get("location") or {},
+        )
+    except CalculationValidationError as exc:
+        return jsonify({
+            "ok": False,
+            "error": "validation_error",
+            "field_errors": exc.field_errors,
+        }), 400
+
+    response = {
+        "ok": True,
+        "row": {
+            "row_key": land_price_row_key(row),
+            "area": row.get("area"),
+            "street": row.get("street"),
+            "from": row.get("from"),
+            "to": row.get("to"),
+        },
+        **result,
+        "source_url": data.get("source_url"),
+        "data_as_of": data.get("data_as_of"),
+    }
+    return jsonify(_land_price_json_ready(response))
 
 
 def dashboard():

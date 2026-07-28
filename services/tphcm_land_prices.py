@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import re
 import unicodedata
+from collections.abc import Iterable, Mapping
 
 
 IDENTITY_FIELDS = (
@@ -13,6 +15,22 @@ IDENTITY_FIELDS = (
     "commerce_service",
     "production_business",
 )
+
+
+def land_price_row_key(row: Mapping[str, object]) -> str:
+    identity = "\x1f".join(
+        str(row.get(field) or "") for field in IDENTITY_FIELDS
+    )
+    return hashlib.sha256(identity.encode("utf-8")).hexdigest()[:24]
+
+
+def find_land_price_row(rows: Iterable[dict], row_key: str) -> dict | None:
+    if not row_key:
+        return None
+    return next(
+        (row for row in rows if land_price_row_key(row) == row_key),
+        None,
+    )
 
 
 def search_key(value: str) -> str:
@@ -79,6 +97,7 @@ def search_land_prices(
 
         item = dict(row)
         item["match_type"] = match_type
+        item["row_key"] = land_price_row_key(row)
         ranked.append(
             (
                 rank,

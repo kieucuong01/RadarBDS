@@ -158,3 +158,81 @@ def test_tphcm_land_price_tool_tracks_non_sensitive_funnel_events():
     ):
         assert f"track('{event_name}'" in javascript
     assert "query_length_bucket" in javascript
+
+
+def test_search_returns_unique_stable_row_keys():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    path = (
+        "/api/tphcm-land-prices?q=nguyen%20hue"
+        "&area=PH%C6%AF%E1%BB%9CNG%20S%C3%80I%20G%C3%92N"
+    )
+    first = client.get(path).get_json()
+    second = client.get(path).get_json()
+
+    first_keys = [item["row_key"] for item in first["items"]]
+    assert first_keys == [item["row_key"] for item in second["items"]]
+    assert len(first_keys) == len(set(first_keys))
+
+
+def test_guest_calculation_uses_server_side_base_prices():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    row = client.get(
+        "/api/tphcm-land-prices?q=nguyen%20hue"
+        "&area=PH%C6%AF%E1%BB%9CNG%20S%C3%80I%20G%C3%92N&limit=1"
+    ).get_json()["items"][0]
+
+    response = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json={
+            "row_key": row["row_key"],
+            "base_prices": {"residential": 1},
+            "land_area_m2": 100,
+            "frontage_m": 5,
+            "depth_m": 20,
+            "location": {"mode": "standard", "access": "frontage"},
+        },
+    )
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data["ok"] is True
+    assert data["values"]["residential"]["base_unit_price"] == 687_200_000
+    assert data["row"]["street"] == "NGUYỄN HUỆ"
+
+
+def test_calculation_returns_field_errors_and_missing_row():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    missing = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json={
+            "row_key": "missing",
+            "land_area_m2": 100,
+            "frontage_m": 5,
+            "depth_m": 20,
+            "location": {"mode": "standard", "access": "frontage"},
+        },
+    )
+    row_key = client.get(
+        "/api/tphcm-land-prices?q=nguyen%20hue&limit=1"
+    ).get_json()["items"][0]["row_key"]
+    invalid = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json={
+            "row_key": row_key,
+            "land_area_m2": 0,
+            "frontage_m": 5,
+            "depth_m": 20,
+            "location": {"mode": "standard", "access": "frontage"},
+        },
+    )
+
+    assert missing.status_code == 404
+    assert missing.get_json()["error"] == "row_not_found"
+    assert invalid.status_code == 400
+    assert "land_area_m2" in invalid.get_json()["field_errors"]

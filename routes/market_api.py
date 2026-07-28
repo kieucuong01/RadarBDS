@@ -32,6 +32,11 @@ def api_tphcm_land_prices(**kwargs):
     return _impl("api_tphcm_land_prices", **kwargs)
 
 
+@bp.route("/api/tphcm-land-prices/calculate", methods=["POST"])
+def api_tphcm_land_price_calculate(**kwargs):
+    return _impl("api_tphcm_land_price_calculate", **kwargs)
+
+
 @bp.route("/api/trends")
 def api_trends(**kwargs):
     return _impl("api_trends", **kwargs)
