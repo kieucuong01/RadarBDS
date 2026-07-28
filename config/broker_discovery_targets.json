@@ -1,7 +1,7 @@
 {
   "schema": "radar_broker_discovery_targets.v1",
   "campaign_name": "current_priority",
-  "notes": "Current areas are campaign config, not hardcoded logic. Add Dĩ An/Thuận An/Tân Uyên here when needed.",
+  "notes": "Current areas are campaign config, not hardcoded logic. Night broker discovery now focuses on Bến Cát + Tân Uyên old/pre-merger area names; Dĩ An/Thuận An are temporarily ok.",
   "target_areas": [
     {
       "city": "Thủ Dầu Một",
@@ -105,6 +105,102 @@
           "aliases": [
             "Chanh Phu Hoa",
             "Chánh Phú Hòa"
+          ]
+        }
+      ]
+    },
+    {
+      "city": "Tân Uyên",
+      "aliases": [
+        "Tan Uyen",
+        "Tân Uyên"
+      ],
+      "priority_wards": [
+        {
+          "name": "Uyên Hưng",
+          "aliases": [
+            "Uyen Hung",
+            "Uyên Hưng",
+            "Uyên Hưng Tân Uyên"
+          ]
+        },
+        {
+          "name": "Tân Phước Khánh",
+          "aliases": [
+            "Tan Phuoc Khanh",
+            "Tân Phước Khánh",
+            "TPK"
+          ]
+        },
+        {
+          "name": "Thạnh Phước",
+          "aliases": [
+            "Thanh Phuoc",
+            "Thạnh Phước"
+          ]
+        },
+        {
+          "name": "Tân Hiệp",
+          "aliases": [
+            "Tan Hiep",
+            "Tân Hiệp"
+          ]
+        },
+        {
+          "name": "Khánh Bình",
+          "aliases": [
+            "Khanh Binh",
+            "Khánh Bình"
+          ]
+        },
+        {
+          "name": "Thái Hòa",
+          "aliases": [
+            "Thai Hoa",
+            "Thái Hòa",
+            "Thái Hoà"
+          ]
+        },
+        {
+          "name": "Hội Nghĩa",
+          "aliases": [
+            "Hoi Nghia",
+            "Hội Nghĩa"
+          ]
+        },
+        {
+          "name": "Tân Vĩnh Hiệp",
+          "aliases": [
+            "Tan Vinh Hiep",
+            "Tân Vĩnh Hiệp"
+          ]
+        },
+        {
+          "name": "Phú Chánh",
+          "aliases": [
+            "Phu Chanh",
+            "Phú Chánh"
+          ]
+        },
+        {
+          "name": "Vĩnh Tân",
+          "aliases": [
+            "Vinh Tan",
+            "Vĩnh Tân"
+          ]
+        },
+        {
+          "name": "Bạch Đằng",
+          "aliases": [
+            "Bach Dang",
+            "Bạch Đằng"
+          ]
+        },
+        {
+          "name": "Thạnh Hội",
+          "aliases": [
+            "Thanh Hoi",
+            "Thạnh Hội"
           ]
         }
       ]
