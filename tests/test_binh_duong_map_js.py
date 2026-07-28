@@ -119,6 +119,19 @@ def test_map_options_enable_scroll_wheel_zoom():
     }
 
 
+def test_map_base_layers_include_street_and_satellite_tiles():
+    assert _run_node("mapPage.normalizeBaseLayer('satellite')") == "satellite"
+    assert _run_node("mapPage.normalizeBaseLayer('broken')") == "street"
+
+    layers = _run_node("mapPage.mapBaseLayers()")
+
+    assert set(layers) == {"street", "satellite"}
+    assert "openstreetmap.org" in layers["street"]["url"]
+    assert "World_Imagery" in layers["satellite"]["url"]
+    assert layers["street"]["maxZoom"] >= 19
+    assert layers["satellite"]["maxZoom"] >= 18
+
+
 def test_fullscreen_toggle_enters_and_exits_the_map_container():
     enter = _run_node(
         "(() => {"

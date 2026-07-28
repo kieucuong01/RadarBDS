@@ -23,12 +23,12 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16.png') }}?v=app-icon-20260608">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=bd-map-20260728-7">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/binh_duong_map.css') }}?v=bd-map-20260728-7">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=bd-map-20260728-8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/binh_duong_map.css') }}?v=bd-map-20260728-8">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-  <script src="{{ url_for('static', filename='js/binh_duong_map.js') }}?v=bd-map-20260728-7" defer></script>
+  <script src="{{ url_for('static', filename='js/binh_duong_map.js') }}?v=bd-map-20260728-8" defer></script>
 </head>
 
 <body class="seo-page planning-page binh-duong-map-page">
@@ -92,15 +92,34 @@
         data-legacy-geojson="{{ page.legacy_geojson_url }}"
         data-current-geojson="{{ page.current_geojson_url }}"
       >
-        <div class="bd-map-toolbar" role="group" aria-label="Chọn lớp địa giới">
-          <button type="button" data-map-layer="legacy" aria-pressed="true">
-            <strong>Bình Dương cũ</strong>
-            <span>9 huyện, thành phố</span>
-          </button>
-          <button type="button" data-map-layer="current" aria-pressed="false">
-            <strong>Địa giới sau 2025</strong>
-            <span>36 phường, xã</span>
-          </button>
+        <div class="bd-map-toolbar">
+          <div class="bd-map-control-group" role="group" aria-label="Chọn lớp địa giới">
+            <p class="bd-map-control-label">Lớp địa giới</p>
+            <div class="bd-map-control-buttons">
+              <button type="button" data-map-layer="legacy" aria-pressed="true">
+                <strong>Bình Dương cũ</strong>
+                <span>9 huyện, thành phố</span>
+              </button>
+              <button type="button" data-map-layer="current" aria-pressed="false">
+                <strong>Địa giới sau 2025</strong>
+                <span>36 phường, xã</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="bd-map-control-group" role="group" aria-label="Chọn nền bản đồ">
+            <p class="bd-map-control-label">Nền bản đồ</p>
+            <div class="bd-map-control-buttons">
+              <button type="button" data-map-base-layer="street" aria-pressed="true">
+                <strong>Phố</strong>
+                <span>Đường, khu dân cư</span>
+              </button>
+              <button type="button" data-map-base-layer="satellite" aria-pressed="false">
+                <strong>Vệ tinh</strong>
+                <span>Ảnh nền thực địa</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <p class="bd-map-status" data-binh-duong-map-status aria-live="polite">Đang tải lớp Bình Dương cũ…</p>

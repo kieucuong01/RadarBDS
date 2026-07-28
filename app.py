@@ -1355,6 +1355,7 @@ ALLOWED_TRACK_ACTIONS = {
     "planning_hub_filter_selected",
     "planning_hub_card_clicked",
     "binh_duong_map_layer_selected",
+    "binh_duong_map_base_layer_selected",
     "binh_duong_map_area_selected",
 }
 

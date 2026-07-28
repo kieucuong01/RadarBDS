@@ -18,12 +18,40 @@
   "use strict";
 
   var VALID_LAYERS = ["legacy", "current"];
+  var VALID_BASE_LAYERS = ["street", "satellite"];
   var SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
   function normalizeLayer(value) {
     return VALID_LAYERS.indexOf(String(value || "")) !== -1
       ? String(value)
       : "legacy";
+  }
+
+  function normalizeBaseLayer(value) {
+    return VALID_BASE_LAYERS.indexOf(String(value || "")) !== -1
+      ? String(value)
+      : "street";
+  }
+
+  function mapBaseLayers() {
+    return {
+      street: {
+        url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        maxZoom: 19,
+        attribution: (
+          '&copy; <a href="https://www.openstreetmap.org/copyright">'
+          + "OpenStreetMap</a> contributors"
+        )
+      },
+      satellite: {
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        maxZoom: 19,
+        attribution: (
+          "Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, "
+          + "and the GIS User Community"
+        )
+      }
+    };
   }
 
   function parseMapHash(hash, validSlugs) {
@@ -171,6 +199,9 @@
     var layerButtons = Array.prototype.slice.call(
       root.querySelectorAll("[data-map-layer]")
     );
+    var baseLayerButtons = Array.prototype.slice.call(
+      root.querySelectorAll("[data-map-base-layer]")
+    );
     var areaButtons = Array.prototype.slice.call(
       doc.querySelectorAll("[data-map-area-button]")
     );
@@ -195,6 +226,8 @@
     };
     var datasets = { legacy: null, current: null };
     var map = null;
+    var baseTileLayer = null;
+    var activeBaseLayer = "street";
     var boundaryLayer = null;
     var featureLayers = {};
     var activeState = { layer: "legacy", areaSlug: null };
@@ -271,6 +304,15 @@
         button.classList.toggle("is-active", selected);
       });
       root.setAttribute("data-active-layer", layer);
+    }
+
+    function updateBaseLayerButtons(baseLayer) {
+      baseLayerButtons.forEach(function (button) {
+        var selected = button.getAttribute("data-map-base-layer") === baseLayer;
+        button.setAttribute("aria-pressed", selected ? "true" : "false");
+        button.classList.toggle("is-active", selected);
+      });
+      root.setAttribute("data-active-base-layer", baseLayer);
     }
 
     function updateDirectorySelection(layer, areaSlug) {
@@ -458,13 +500,7 @@
       }
       if (!map) {
         map = win.L.map(canvas, mapOptions());
-        win.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 19,
-          attribution: (
-            '&copy; <a href="https://www.openstreetmap.org/copyright">'
-            + "OpenStreetMap</a> contributors"
-          )
-        }).addTo(map);
+        setBaseLayer(activeBaseLayer, { track: false });
       }
       setFallback(false);
       renderState(parseMapHash(win.location.hash, validSlugs));
@@ -496,6 +532,29 @@
       });
     }
 
+    function setBaseLayer(baseLayer, options) {
+      if (!map || !win.L) return;
+      var normalized = normalizeBaseLayer(baseLayer);
+      var layers = mapBaseLayers();
+      var config = layers[normalized] || layers.street;
+      if (baseTileLayer) {
+        map.removeLayer(baseTileLayer);
+      }
+      baseTileLayer = win.L.tileLayer(config.url, {
+        maxZoom: config.maxZoom,
+        attribution: config.attribution
+      }).addTo(map);
+      activeBaseLayer = normalized;
+      updateBaseLayerButtons(normalized);
+      if (options && options.track) {
+        emitTrack(
+          win,
+          "binh_duong_map_base_layer_selected",
+          { base_layer: normalized }
+        );
+      }
+    }
+
     layerButtons.forEach(function (button) {
       button.addEventListener("click", function () {
         var layer = normalizeLayer(button.getAttribute("data-map-layer"));
@@ -505,6 +564,12 @@
           "binh_duong_map_layer_selected",
           { layer: layer, area_slug: "", target: "" }
         );
+      });
+    });
+
+    baseLayerButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        setBaseLayer(button.getAttribute("data-map-base-layer"), { track: true });
       });
     });
 
@@ -544,6 +609,8 @@
 
   return {
     normalizeLayer: normalizeLayer,
+    normalizeBaseLayer: normalizeBaseLayer,
+    mapBaseLayers: mapBaseLayers,
     parseMapHash: parseMapHash,
     formatMapHash: formatMapHash,
     buildTrackingContext: buildTrackingContext,

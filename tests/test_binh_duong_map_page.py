@@ -162,6 +162,8 @@ def test_binh_duong_map_route_renders_progressive_content_and_accessible_control
     assert 'data-map-layer="current"' in html
     assert 'data-map-layer="legacy" aria-pressed="true"' in html
     assert 'data-map-layer="current" aria-pressed="false"' in html
+    assert 'data-map-base-layer="street" aria-pressed="true"' in html
+    assert 'data-map-base-layer="satellite" aria-pressed="false"' in html
     assert 'data-legacy-geojson="/static/maps/binh-duong/legacy-districts.geojson?v=' in html
     assert 'data-current-geojson="/static/maps/binh-duong/current-36-wards.geojson?v=' in html
     assert html.count('data-map-directory-item="legacy"') == 9
@@ -175,7 +177,7 @@ def test_binh_duong_map_route_renders_progressive_content_and_accessible_control
     assert 'data-binh-duong-map-fullscreen' in html
     assert 'aria-pressed="false"' in html
     assert 'data-map-mobile-cta' in html
-    assert "bd-map-20260728-7" in html
+    assert "bd-map-20260728-8" in html
     assert "geoBoundaries" in html
     assert "ranh cấp huyện Việt Nam (năm 2020)" in html
     assert "OpenStreetMap" in html
@@ -259,6 +261,7 @@ def test_binh_duong_map_discovery_surfaces_and_tracking_are_wired():
     assert 'href="/ban-do-binh-duong"' in map_html
     assert "binh_duong_map_layer_selected" in radar_app.ALLOWED_TRACK_ACTIONS
     assert "binh_duong_map_area_selected" in radar_app.ALLOWED_TRACK_ACTIONS
+    assert "binh_duong_map_base_layer_selected" in radar_app.ALLOWED_TRACK_ACTIONS
 
 
 def test_binh_duong_map_page_does_not_emit_future_area_routes():
@@ -281,6 +284,8 @@ def test_binh_duong_map_css_reserves_map_space_and_accessible_controls():
     assert "scroll-margin-top: 136px" in css
     assert "@media (prefers-reduced-motion: reduce)" in css
     assert "overflow-x: clip" in css
+    assert ".bd-map-section.seo-shell" not in css
+    assert "width: min(1440px" not in css
     assert ".bd-map-mobile-cta.is-visible" in css
     assert ".bd-map-canvas-wrap:fullscreen" in css
     assert ".bd-map-fullscreen-button" in css
