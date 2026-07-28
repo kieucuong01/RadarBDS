@@ -9,6 +9,7 @@ from pathlib import Path
 
 from db.connection import advisory_lock, get_conn
 from services.image_assets import ensure_thumbnail
+from services.s3_image_storage import s3_image_storage_enabled, upload_file
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,12 @@ HEADERS = {
         "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     )
 }
+
+
+def _upload_downloaded_image(local_file_path: Path, relative_path: str, thumb_path: Path | None) -> None:
+    upload_file(local_file_path, relative_path)
+    if thumb_path and thumb_path.exists():
+        upload_file(thumb_path, f"data/images/thumbs/{thumb_path.name}")
 
 
 def download_images(
@@ -126,10 +133,18 @@ def _download_images(
                     img_data = response.read()
                     with open(local_file_path, "wb") as f:
                         f.write(img_data)
+                thumb_path = None
                 try:
-                    ensure_thumbnail(local_file_path)
+                    thumb_path = ensure_thumbnail(local_file_path)
                 except Exception as e:
                     logger.warning("Could not create thumbnail %s: %s", local_file_path, e)
+
+                if s3_image_storage_enabled():
+                    try:
+                        _upload_downloaded_image(local_file_path, relative_path, thumb_path)
+                    except Exception as e:
+                        logger.warning("S3 image upload failed for %s: %s", relative_path, e)
+                        continue
 
                 with get_conn() as conn:
                     conn.execute(

@@ -4,6 +4,8 @@ from typing import Optional
 
 from PIL import Image, ImageOps
 
+from services.s3_image_storage import public_url_for_key, s3_image_storage_enabled
+
 
 DATA_IMAGES_DIR = Path(__file__).resolve().parent.parent / "data" / "images"
 THUMB_DIR = DATA_IMAGES_DIR / "thumbs"
@@ -50,6 +52,8 @@ def thumb_url_for_image_url(url: str) -> str:
     image_path = local_path_for_url(url)
     if not image_path:
         return ""
+    if s3_image_storage_enabled():
+        return public_url_for_key(f"data/images/thumbs/{image_path.stem}.webp")
     thumb_path = thumb_path_for_image(image_path)
     if not thumb_path.exists():
         return ""
@@ -79,6 +83,14 @@ def ensure_thumbnail(image_path: Path, force: bool = False) -> Optional[Path]:
 
 def resolve_image_url(local_src: str, remote_src: str = "", prefer_thumb: bool = False) -> str:
     local_url = normalize_image_url(local_src)
+    if local_url and s3_image_storage_enabled():
+        if prefer_thumb:
+            thumb_url = thumb_url_for_image_url(local_url)
+            if thumb_url:
+                return thumb_url
+        s3_url = public_url_for_key(local_url)
+        if s3_url:
+            return s3_url
     if local_url and prefer_thumb:
         thumb_url = thumb_url_for_image_url(local_url)
         if thumb_url:
