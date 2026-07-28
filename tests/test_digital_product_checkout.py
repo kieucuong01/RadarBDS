@@ -3,13 +3,17 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
-from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor, wait
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from http.cookies import SimpleCookie
+from io import BytesIO
 from pathlib import Path
 from urllib.parse import unquote
 
 import pytest
+from werkzeug.test import EnvironBuilder
 
 from config.settings import DigitalProductCommerceSettings
 from services.digital_product_orders import (
@@ -59,16 +63,13 @@ class InMemoryOrderRepository:
         created_at,
         payment_expires_at,
     ):
-        import uuid
-
-        del public_id
         order_id = self.next_id
         self.next_id += 1
         if order_id > MAX_ORDER_ID:
             raise OrderCodeRangeError(order_id)
         order = DigitalProductOrder(
             id=order_id,
-            public_id=uuid.UUID(int=order_id).hex,
+            public_id=public_id,
             product_slug=product_slug,
             product_version=product_version,
             expected_amount=expected_amount,
@@ -204,6 +205,25 @@ class FakePayOS:
         return self.verified_payment
 
 
+class FakeCheckoutLocks:
+    def __init__(self):
+        self._locks: dict[str, threading.RLock] = {}
+        self._guard = threading.Lock()
+        self.acquisitions: list[str] = []
+
+    @contextmanager
+    def acquire(self, public_id: str):
+        with self._guard:
+            lock = self._locks.setdefault(public_id, threading.RLock())
+        if not lock.acquire(blocking=False):
+            raise RuntimeError("checkout lock busy")
+        try:
+            self.acquisitions.append(public_id)
+            yield
+        finally:
+            lock.release()
+
+
 @pytest.fixture
 def route_env(monkeypatch, tmp_path):
     import app as radar_app
@@ -212,6 +232,7 @@ def route_env(monkeypatch, tmp_path):
 
     repo = InMemoryOrderRepository()
     payos = FakePayOS()
+    checkout_locks = FakeCheckoutLocks()
     settings = DigitalProductCommerceSettings(
         sales_enabled=True,
         storage_dir=tmp_path.resolve(),
@@ -234,6 +255,24 @@ def route_env(monkeypatch, tmp_path):
         raising=False,
     )
     monkeypatch.setattr(routes_module, "_utcnow", lambda: NOW, raising=False)
+
+    @contextmanager
+    def checkout_lock(public_id):
+        stack = ExitStack()
+        try:
+            stack.enter_context(checkout_locks.acquire(public_id))
+        except RuntimeError:
+            stack.close()
+            raise routes_module._CheckoutBusy() from None
+        with stack:
+            yield
+
+    monkeypatch.setattr(
+        routes_module,
+        "_checkout_lock_factory",
+        checkout_lock,
+        raising=False,
+    )
     monkeypatch.setattr(
         routes_module,
         "get_digital_product_commerce_settings",
@@ -267,6 +306,15 @@ def _token_from_redirect(response) -> str:
     return unquote(response.headers["Location"].split("#token=", 1)[1])
 
 
+def _cookie_value(response, name: str) -> str:
+    for header in response.headers.getlist("Set-Cookie"):
+        parsed = SimpleCookie()
+        parsed.load(header)
+        if name in parsed:
+            return parsed[name].value
+    raise AssertionError(f"missing cookie {name}")
+
+
 def _authorize(client, public_id: str, token: str):
     return client.post(
         f"/api/digital-products/orders/{public_id}/authorize",
@@ -283,6 +331,17 @@ def _authorized_order(route_env):
     authorized = _authorize(client, public_id, token)
     assert authorized.status_code == 204
     return client, repo.orders[1], token
+
+
+def _sales_disabled_settings(settings):
+    return DigitalProductCommerceSettings(
+        sales_enabled=False,
+        storage_dir=settings.storage_dir,
+        payos_client_id="",
+        payos_api_key="",
+        payos_checksum_key="",
+        cookie_secret=settings.cookie_secret,
+    )
 
 
 def test_checkout_is_unavailable_until_settings_and_release_gate_pass(
@@ -355,7 +414,189 @@ def test_failed_payment_link_records_event_and_retry_reuses_pending_order(
     assert retried.status_code == 303
     assert len(repo.orders) == 1
     assert len(payos.create_calls) == 2
-    assert "Max-Age=0" in retried.headers["Set-Cookie"]
+    assert "Max-Age=300" in retried.headers["Set-Cookie"]
+
+
+def test_product_page_seed_makes_successive_checkout_idempotent(route_env):
+    radar_app, routes_module, repo, payos, _settings = route_env
+    client = radar_app.app.test_client()
+
+    product_page = client.get("/ban-do-thu-dau-mot")
+    seed_cookie = _cookie_value(
+        product_page,
+        "radar_product_checkout_retry",
+    )
+    seed_payload = routes_module._retry_serializer("c" * 64).loads(
+        seed_cookie,
+        max_age=300,
+    )
+    first = _checkout(client)
+    second = _checkout(client)
+
+    assert seed_payload == {
+        "public_id": _public_id_from_redirect(first),
+        "phase": "seed",
+    }
+    assert first.status_code == second.status_code == 303
+    assert _public_id_from_redirect(first) == _public_id_from_redirect(second)
+    assert _token_from_redirect(first) != _token_from_redirect(second)
+    assert len(repo.orders) == 1
+    assert len(payos.create_calls) == 1
+
+
+def test_stale_concurrent_seed_does_not_duplicate_or_rotate_winner_token(
+    route_env,
+):
+    radar_app, routes_module, repo, payos, _settings = route_env
+    seed_client = radar_app.app.test_client()
+    seed_response = seed_client.get("/ban-do-thu-dau-mot")
+    seed_value = _cookie_value(
+        seed_response,
+        "radar_product_checkout_retry",
+    )
+    seed_payload = routes_module._retry_serializer("c" * 64).loads(
+        seed_value,
+        max_age=300,
+    )
+    winner_client = radar_app.app.test_client()
+    stale_client = radar_app.app.test_client()
+    for client in (winner_client, stale_client):
+        client.set_cookie(
+            "radar_product_checkout_retry",
+            seed_value,
+            path="/ban-do-thu-dau-mot",
+        )
+
+    winner = _checkout(winner_client)
+    winner_token = _token_from_redirect(winner)
+    stale = _checkout(stale_client)
+    public_id = seed_payload["public_id"]
+
+    assert winner.status_code == 303
+    assert stale.status_code == 409
+    assert stale.get_json() == {"code": "checkout_in_progress"}
+    assert len(repo.orders) == 1
+    assert len(payos.create_calls) == 1
+    assert (
+        routes_module.verify_recovery_token(
+            public_id,
+            winner_token,
+            now=NOW,
+            repo=repo,
+        )
+        is not None
+    )
+    stale_linked = routes_module._retry_serializer("c" * 64).loads(
+        _cookie_value(stale, "radar_product_checkout_retry"),
+        max_age=300,
+    )
+    assert stale_linked == {"public_id": public_id, "phase": "linked"}
+
+
+def test_advisory_lock_serializes_requests_while_payos_is_in_flight(route_env):
+    radar_app, routes_module, repo, payos, _settings = route_env
+    seed_client = radar_app.app.test_client()
+    seed_value = _cookie_value(
+        seed_client.get("/ban-do-thu-dau-mot"),
+        "radar_product_checkout_retry",
+    )
+    public_id = routes_module._retry_serializer("c" * 64).loads(
+        seed_value,
+        max_age=300,
+    )["public_id"]
+    winner_client = radar_app.app.test_client()
+    stale_client = radar_app.app.test_client()
+    for client in (winner_client, stale_client):
+        client.set_cookie(
+            "radar_product_checkout_retry",
+            seed_value,
+            path="/ban-do-thu-dau-mot",
+        )
+
+    payos_entered = threading.Event()
+    release_payos = threading.Event()
+
+    def blocked_create(order, return_url, cancel_url):
+        payos.create_calls.append((order, return_url, cancel_url))
+        payos_entered.set()
+        assert release_payos.wait(timeout=5)
+        return FakePaymentLink()
+
+    payos.create_payment_link = blocked_create
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        winner_future = pool.submit(_checkout, winner_client)
+        assert payos_entered.wait(timeout=5)
+        stale_future = pool.submit(_checkout, stale_client)
+        done, _not_done = wait([stale_future], timeout=5)
+        assert stale_future in done
+        stale = stale_future.result(timeout=5)
+        release_payos.set()
+        winner = winner_future.result(timeout=5)
+
+    assert winner.status_code == 303
+    assert stale.status_code == 409
+    assert len(repo.orders) == 1
+    assert len(payos.create_calls) == 1
+    assert (
+        routes_module.verify_recovery_token(
+            public_id,
+            _token_from_redirect(winner),
+            now=NOW,
+            repo=repo,
+        )
+        is not None
+    )
+
+
+def test_busy_advisory_lock_returns_retry_without_order_or_payos(
+    route_env,
+    monkeypatch,
+):
+    radar_app, routes_module, repo, payos, _settings = route_env
+    client = radar_app.app.test_client()
+    seed = client.get("/ban-do-thu-dau-mot")
+    seed_value = _cookie_value(seed, "radar_product_checkout_retry")
+    seed_payload = routes_module._retry_serializer("c" * 64).loads(
+        seed_value,
+        max_age=300,
+    )
+
+    @contextmanager
+    def busy_lock(_public_id):
+        raise routes_module._CheckoutBusy()
+        yield
+
+    monkeypatch.setattr(routes_module, "_checkout_lock_factory", busy_lock)
+
+    response = _checkout(client)
+
+    assert response.status_code == 409
+    assert response.get_json() == {"code": "checkout_in_progress"}
+    assert repo.orders == {}
+    assert payos.create_calls == []
+    retry_payload = routes_module._retry_serializer("c" * 64).loads(
+        _cookie_value(response, "radar_product_checkout_retry"),
+        max_age=300,
+    )
+    assert retry_payload == seed_payload
+
+
+def test_runtime_error_inside_checkout_body_is_not_misreported_as_lock_busy(
+    route_env,
+):
+    radar_app, _routes, repo, payos, _settings = route_env
+    client = radar_app.app.test_client()
+    client.get("/ban-do-thu-dau-mot")
+    payos.create_error = RuntimeError("internal body failure")
+
+    response = _checkout(client)
+
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "code": "checkout_temporarily_unavailable"
+    }
+    assert len(repo.orders) == 1
+    assert len(payos.create_calls) == 1
 
 
 def test_order_page_without_cookie_never_exposes_payment_data(route_env):
@@ -427,6 +668,40 @@ def test_recovery_token_is_reusable_until_server_side_expiry(route_env):
 
     assert first.status_code == 204
     assert second.status_code == 204
+
+
+@pytest.mark.parametrize("order_status", ["pending", "paid"])
+def test_existing_order_authorize_and_status_survive_sales_being_disabled(
+    route_env,
+    monkeypatch,
+    order_status,
+):
+    radar_app, routes_module, repo, _payos, settings = route_env
+    client = radar_app.app.test_client()
+    checkout = _checkout(client)
+    public_id = _public_id_from_redirect(checkout)
+    token = _token_from_redirect(checkout)
+    if order_status == "paid":
+        repo.orders[1] = repo.orders[1].with_updates(
+            status="paid",
+            paid_amount=99_000,
+            paid_at=NOW,
+            download_expires_at=NOW + timedelta(hours=24),
+        )
+    monkeypatch.setattr(
+        routes_module,
+        "get_digital_product_commerce_settings",
+        lambda: _sales_disabled_settings(settings),
+    )
+
+    authorized = _authorize(client, public_id, token)
+    status = client.get(
+        f"/api/digital-products/orders/{public_id}/status"
+    )
+
+    assert authorized.status_code == 204
+    assert status.status_code == 200
+    assert status.get_json()["status"] == order_status
 
 
 @pytest.mark.parametrize(
@@ -585,10 +860,45 @@ def test_status_expires_stale_pending_order_without_polling_payos(
         f"/api/digital-products/orders/{public_id}/status"
     )
 
-    assert response.status_code == 404
+    assert response.status_code == 200
+    assert response.get_json()["status"] == "expired"
+    assert response.get_json()["qr_svg_data_uri"] is None
+    assert response.get_json()["download_url"] is None
     assert repo.orders[1].status == "expired"
     assert len(payos.create_calls) == 1
     assert payos.webhook_calls == []
+
+
+@pytest.mark.parametrize(
+    "terminal_status",
+    ["expired", "cancelled", "payment_review"],
+)
+def test_cookie_authorized_terminal_order_returns_safe_status_without_qr(
+    route_env,
+    terminal_status,
+):
+    client, order, _token = _authorized_order(route_env)
+    _radar_app, _routes, repo, _payos, _settings = route_env
+    repo.orders[1] = order.with_updates(
+        status=terminal_status,
+        paid_amount=98_000 if terminal_status == "payment_review" else None,
+        payment_reference=(
+            "UNDERPAYMENT" if terminal_status == "payment_review" else None
+        ),
+    )
+
+    response = client.get(
+        f"/api/digital-products/orders/{order.public_id}/status"
+    )
+    payload = response.get_json()
+
+    assert response.status_code == 200
+    assert payload["status"] == terminal_status
+    assert payload["qr_svg_data_uri"] is None
+    assert payload["download_url"] is None
+    rendered = json.dumps(payload, sort_keys=True)
+    assert order.qr_code not in rendered
+    assert "UNDERPAYMENT" not in rendered
 
 
 def test_return_and_cancel_query_never_set_paid(route_env):
@@ -682,6 +992,44 @@ def test_webhook_rejects_oversized_body_before_payos_verification(route_env):
 
     assert response.status_code == 400
     assert response.get_json() == {"success": False}
+    assert payos.webhook_calls == []
+
+
+def test_webhook_without_content_length_reads_only_bounded_stream(route_env):
+    radar_app, routes_module, _repo, payos, _settings = route_env
+    raw = b"x" * (64 * 1_024 + 2_048)
+
+    class GuardedStream(BytesIO):
+        def __init__(self, data):
+            super().__init__(data)
+            self.read_sizes = []
+
+        def read(self, size=-1):
+            self.read_sizes.append(size)
+            if size < 0 or size > 64 * 1_024 + 1:
+                raise AssertionError("webhook performed an unbounded stream read")
+            return super().read(size)
+
+    builder = EnvironBuilder(
+        path="/api/webhooks/payos/digital-products",
+        method="POST",
+        input_stream=BytesIO(b""),
+        content_type="application/json",
+    )
+    environ = builder.get_environ()
+    guarded_stream = GuardedStream(raw)
+    environ["wsgi.input"] = guarded_stream
+    environ.pop("CONTENT_LENGTH", None)
+    environ["wsgi.input_terminated"] = True
+
+    with radar_app.app.request_context(environ):
+        response = radar_app.app.make_response(
+            routes_module.payos_digital_products_webhook()
+        )
+
+    assert response.status_code == 400
+    assert response.get_json() == {"success": False}
+    assert guarded_stream.read_sizes == [64 * 1_024 + 1]
     assert payos.webhook_calls == []
 
 

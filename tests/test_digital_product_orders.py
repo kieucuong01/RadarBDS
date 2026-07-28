@@ -17,6 +17,7 @@ from services.digital_product_orders import (
     DigitalProductOrder,
     InvalidSettlement,
     OrderCodeRangeError,
+    OrderLifecycleError,
     OrderNotFound,
     PostgresOrderRepository,
     SettlementNotFound,
@@ -302,6 +303,53 @@ def test_pending_order_uses_only_canonical_server_product_terms(
     assert order.payos_order_code == 720_000_000 + order.id
 
 
+def test_pending_order_accepts_valid_controller_public_id(
+    product: DigitalProduct,
+    frozen_now: datetime,
+    order_repo: InMemoryOrderRepository,
+):
+    controller_public_id = "0123456789abcdef0123456789abcdef"
+
+    order = create_pending_order(
+        product,
+        frozen_now,
+        public_id=controller_public_id,
+        repo=order_repo,
+    )
+
+    assert order.public_id == controller_public_id
+
+
+@pytest.mark.parametrize(
+    "invalid_public_id",
+    [
+        "",
+        "short",
+        "0123456789ABCDEF0123456789ABCDEF",
+        "g" * 32,
+        "0" * 31,
+        "0" * 33,
+        123,
+        True,
+    ],
+)
+def test_pending_order_rejects_invalid_controller_public_id_before_insert(
+    product: DigitalProduct,
+    frozen_now: datetime,
+    order_repo: InMemoryOrderRepository,
+    invalid_public_id,
+):
+    with pytest.raises(OrderLifecycleError):
+        create_pending_order(
+            product,
+            frozen_now,
+            public_id=invalid_public_id,
+            repo=order_repo,
+        )
+
+    assert order_repo.orders == {}
+
+
 def test_order_code_rejects_ids_outside_signed_32_bit_range(
     product: DigitalProduct,
     frozen_now: datetime,
@@ -521,6 +569,43 @@ def test_token_verification_uses_constant_time_digest_comparison(
             hashlib.sha256(secret.raw_recovery_token.encode("utf-8")).hexdigest(),
         )
     ]
+
+
+def test_unknown_public_id_performs_dummy_hash_and_constant_time_compare(
+    frozen_now: datetime,
+    order_repo: InMemoryOrderRepository,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from services import digital_product_orders as order_module
+
+    real_sha256 = hashlib.sha256
+    real_compare_digest = order_module.hmac.compare_digest
+    hashed_inputs: list[bytes] = []
+    compared: list[tuple[str, str]] = []
+
+    def tracked_sha256(value: bytes):
+        hashed_inputs.append(value)
+        return real_sha256(value)
+
+    def tracked_compare_digest(left: str, right: str):
+        compared.append((left, right))
+        return real_compare_digest(left, right)
+
+    monkeypatch.setattr(order_module.hashlib, "sha256", tracked_sha256)
+    monkeypatch.setattr(order_module.hmac, "compare_digest", tracked_compare_digest)
+
+    result = verify_recovery_token(
+        "f" * 32,
+        "unknown-order-token",
+        now=frozen_now,
+        repo=order_repo,
+    )
+
+    assert result is None
+    assert hashed_inputs == [b"unknown-order-token"]
+    assert len(compared) == 1
+    assert compared[0][0] == "0" * 64
+    assert compared[0][1] == real_sha256(b"unknown-order-token").hexdigest()
 
 
 def test_exact_payment_settles_once_and_opens_exactly_24_hours(

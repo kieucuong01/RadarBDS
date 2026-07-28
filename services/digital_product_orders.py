@@ -22,6 +22,7 @@ MAX_ORDER_ID = MAX_PAYOS_ORDER_CODE - ORDER_CODE_BASE
 PAYMENT_WINDOW = timedelta(minutes=15)
 DOWNLOAD_WINDOW = timedelta(hours=24)
 _SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
+_PUBLIC_ID_PATTERN = re.compile(r"^[0-9a-f]{32}$")
 
 _ORDER_COLUMNS = """
 id, public_id, product_slug, product_version, expected_amount, currency,
@@ -575,14 +576,24 @@ def create_pending_order(
     product: DigitalProduct,
     now: datetime,
     *,
+    public_id: str | None = None,
     repo: OrderRepository | None = None,
 ) -> DigitalProductOrder:
     """Create one pending order from the trusted server-side registry."""
     trusted_product = get_digital_product(product.slug)
+    if public_id is None:
+        normalized_public_id = uuid.uuid4().hex
+    elif (
+        type(public_id) is str
+        and _PUBLIC_ID_PATTERN.fullmatch(public_id) is not None
+    ):
+        normalized_public_id = public_id
+    else:
+        raise OrderLifecycleError("invalid controller public id")
     repository = _repository(repo)
     with repository.transaction() as tx:
         return tx.insert_pending(
-            public_id=uuid.uuid4().hex,
+            public_id=normalized_public_id,
             product_slug=trusted_product.slug,
             product_version=trusted_product.version,
             expected_amount=trusted_product.price_vnd,
@@ -629,13 +640,19 @@ def verify_recovery_token(
     repository = _repository(repo)
     with repository.transaction() as tx:
         order = tx.get_by_public_id(public_id)
-    if order is None:
-        return None
 
     candidate_hash = hashlib.sha256(str(raw_token).encode("utf-8")).hexdigest()
-    expected_hash = order.recovery_token_hash or ("0" * 64)
+    expected_hash = (
+        order.recovery_token_hash
+        if order is not None and order.recovery_token_hash is not None
+        else ("0" * 64)
+    )
     matches = hmac.compare_digest(expected_hash, candidate_hash)
-    if order.recovery_token_hash is None or not matches:
+    if (
+        order is None
+        or order.recovery_token_hash is None
+        or not matches
+    ):
         return None
     verification_time = now or datetime.now(timezone.utc)
     if not _recovery_authorization_active(order, verification_time):

@@ -5,6 +5,8 @@ from __future__ import annotations
 import base64
 import json
 import re
+import uuid
+from contextlib import ExitStack, contextmanager
 from datetime import datetime, timezone
 from io import BytesIO
 from types import SimpleNamespace
@@ -27,6 +29,7 @@ from config.settings import (
     PUBLIC_BASE_URL,
     get_digital_product_commerce_settings,
 )
+from db.connection import advisory_lock
 from services.digital_product_orders import (
     InvalidSettlement,
     OrderLifecycleError,
@@ -65,6 +68,10 @@ _MAX_AUTHORIZE_BODY_BYTES = 2 * 1_024
 _MAX_WEBHOOK_BODY_BYTES = 64 * 1_024
 
 
+class _CheckoutBusy(RuntimeError):
+    """The non-blocking cross-process checkout lock is already held."""
+
+
 def _repository_factory():
     return PostgresOrderRepository()
 
@@ -77,6 +84,23 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+@contextmanager
+def _checkout_lock_factory(public_id: str):
+    stack = ExitStack()
+    try:
+        stack.enter_context(
+            advisory_lock(
+                f"digital-product-checkout:{public_id}",
+                wait=False,
+            )
+        )
+    except RuntimeError:
+        stack.close()
+        raise _CheckoutBusy() from None
+    with stack:
+        yield
+
+
 def _impl(name: str, **kwargs):
     import app as app_module
 
@@ -85,7 +109,23 @@ def _impl(name: str, **kwargs):
 
 @bp.get("/ban-do-thu-dau-mot")
 def thu_dau_mot_map_product_page(**kwargs):
-    return _impl("thu_dau_mot_map_product_page", **kwargs)
+    response = make_response(
+        _impl("thu_dau_mot_map_product_page", **kwargs)
+    )
+    settings = get_digital_product_commerce_settings()
+    if (
+        _valid_cookie_secret(settings.cookie_secret)
+        and _retry_state(settings.cookie_secret) is None
+    ):
+        _set_retry_cookie(
+            response,
+            _signed_retry_state(
+                settings.cookie_secret,
+                uuid.uuid4().hex,
+                "seed",
+            ),
+        )
+    return response
 
 
 @bp.post("/ban-do-thu-dau-mot/checkout")
@@ -106,44 +146,86 @@ def checkout_thu_dau_mot_map():
     if not availability.can_sell:
         return jsonify({"code": "product_unavailable"}), 503
 
-    repo = _repository_factory()
     now = _utcnow()
-    order = _retry_order(settings.cookie_secret, repo, now)
-    if order is None:
-        try:
-            order = create_pending_order(product, now, repo=repo)
-        except OrderLifecycleError:
-            return jsonify({"code": "checkout_temporarily_unavailable"}), 503
-
-    order_url = (
-        f"{PUBLIC_BASE_URL}/ban-do-thu-dau-mot/don-hang/{order.public_id}"
+    retry_state = _retry_state(settings.cookie_secret)
+    if retry_state is None:
+        retry_state = {
+            "public_id": uuid.uuid4().hex,
+            "phase": "seed",
+        }
+    public_id = retry_state["public_id"]
+    retry_seed = _signed_retry_state(
+        settings.cookie_secret,
+        public_id,
+        "seed",
     )
-    retry_value = _retry_serializer(settings.cookie_secret).dumps(
-        {"public_id": order.public_id}
-    )
+    repo = _repository_factory()
     try:
-        if order.payment_link_id and order.checkout_url and order.qr_code:
-            payment_link = SimpleNamespace(
-                payment_link_id=order.payment_link_id,
-                checkout_url=order.checkout_url,
-                qr_payload=order.qr_code,
+        with _checkout_lock_factory(public_id):
+            order = get_order(public_id, repo=repo)
+            if order is None:
+                order = create_pending_order(
+                    product,
+                    now,
+                    public_id=public_id,
+                    repo=repo,
+                )
+            elif (
+                order.status != "pending"
+                or now >= order.payment_expires_at
+            ):
+                return _checkout_in_progress_response(
+                    settings.cookie_secret,
+                    public_id,
+                )
+
+            complete_link = _has_complete_payment_link(order)
+            if _has_any_payment_link(order) and not complete_link:
+                raise OrderLifecycleError("incomplete payment link metadata")
+            if retry_state["phase"] == "seed" and complete_link:
+                return _checkout_in_progress_response(
+                    settings.cookie_secret,
+                    public_id,
+                )
+
+            order_url = (
+                f"{PUBLIC_BASE_URL}/ban-do-thu-dau-mot/don-hang/"
+                f"{order.public_id}"
             )
-        else:
-            payment_link = _payos_client_factory().create_payment_link(
-                order,
-                order_url,
-                order_url,
+            if complete_link:
+                payment_link = SimpleNamespace(
+                    payment_link_id=order.payment_link_id,
+                    checkout_url=order.checkout_url,
+                    qr_payload=order.qr_code,
+                )
+            else:
+                payment_link = _payos_client_factory().create_payment_link(
+                    order,
+                    order_url,
+                    order_url,
+                )
+            pending_secret = attach_payment_link(
+                order.public_id,
+                payment_link,
+                repo=repo,
             )
-        pending_secret = attach_payment_link(
-            order.public_id,
-            payment_link,
-            repo=repo,
-        )
     except (OrderLifecycleError, PayOSClientError):
-        _record_payment_link_failure(repo, order, now)
+        if "order" in locals():
+            _record_payment_link_failure(repo, order, now)
         response = jsonify({"code": "checkout_temporarily_unavailable"})
         response.status_code = 502
-        _set_retry_cookie(response, retry_value)
+        _set_retry_cookie(response, retry_seed)
+        return response
+    except _CheckoutBusy:
+        return _checkout_in_progress_response(
+            settings.cookie_secret,
+            public_id,
+            phase=retry_state["phase"],
+        )
+    except Exception:
+        response = jsonify({"code": "checkout_temporarily_unavailable"})
+        response.status_code = 503
+        _set_retry_cookie(response, retry_seed)
         return response
 
     fragment_token = quote(
@@ -157,12 +239,13 @@ def checkout_thu_dau_mot_map():
         ),
         code=303,
     )
-    response.delete_cookie(
-        _RETRY_COOKIE,
-        path="/ban-do-thu-dau-mot/checkout",
-        secure=PUBLIC_BASE_URL.startswith("https://"),
-        httponly=True,
-        samesite="Lax",
+    _set_retry_cookie(
+        response,
+        _signed_retry_state(
+            settings.cookie_secret,
+            pending_secret.order.public_id,
+            "linked",
+        ),
     )
     return response
 
@@ -216,7 +299,7 @@ def authorize_digital_product_order(public_id: str):
         return not_found
 
     settings = get_digital_product_commerce_settings()
-    if not settings.ready_for_checkout:
+    if not _valid_cookie_secret(settings.cookie_secret):
         return not_found
     repo = _repository_factory()
     order = verify_recovery_token(
@@ -259,11 +342,8 @@ def digital_product_order_status(public_id: str):
             order = expire_pending_order(public_id, now, repo=repo)
         except OrderLifecycleError:
             return _order_not_found_response()
-    if not _order_access_active(order, now):
-        return _order_not_found_response()
-
     qr_data_uri = None
-    if order.status in {"pending", "payment_review"} and order.qr_code:
+    if order.status == "pending" and order.qr_code:
         qr_data_uri = _qr_svg_data_uri(order.qr_code)
     download_url = None
     if (
@@ -296,7 +376,9 @@ def payos_digital_products_webhook():
         and request.content_length > _MAX_WEBHOOK_BODY_BYTES
     ):
         return jsonify({"success": False}), 400
-    raw_body = request.get_data(cache=False, as_text=False)
+    raw_body = request.stream.read(_MAX_WEBHOOK_BODY_BYTES + 1)
+    if len(raw_body) > _MAX_WEBHOOK_BODY_BYTES:
+        return jsonify({"success": False}), 400
     try:
         verified = _payos_client_factory().verify_webhook(raw_body)
         settle_verified_payment(
@@ -330,7 +412,7 @@ def _order_serializer(secret: str) -> URLSafeTimedSerializer:
     )
 
 
-def _retry_order(secret: str, repo, now: datetime):
+def _retry_state(secret: str) -> dict[str, str] | None:
     signed = request.cookies.get(_RETRY_COOKIE)
     if not signed:
         return None
@@ -343,19 +425,26 @@ def _retry_order(secret: str, repo, now: datetime):
         return None
     if (
         type(payload) is not dict
-        or set(payload) != {"public_id"}
+        or set(payload) != {"public_id", "phase"}
         or type(payload.get("public_id")) is not str
         or _PUBLIC_ID_PATTERN.fullmatch(payload["public_id"]) is None
+        or payload.get("phase") not in {"seed", "linked"}
     ):
         return None
-    order = get_order(payload["public_id"], repo=repo)
-    if (
-        order is None
-        or order.status != "pending"
-        or now >= order.payment_expires_at
-    ):
-        return None
-    return order
+    return {
+        "public_id": payload["public_id"],
+        "phase": payload["phase"],
+    }
+
+
+def _signed_retry_state(
+    secret: str,
+    public_id: str,
+    phase: str,
+) -> str:
+    return _retry_serializer(secret).dumps(
+        {"public_id": public_id, "phase": phase}
+    )
 
 
 def _record_payment_link_failure(repo, order, now: datetime) -> None:
@@ -380,7 +469,38 @@ def _set_retry_cookie(response, signed_value: str) -> None:
         httponly=True,
         secure=PUBLIC_BASE_URL.startswith("https://"),
         samesite="Lax",
-        path="/ban-do-thu-dau-mot/checkout",
+        path="/ban-do-thu-dau-mot",
+    )
+
+
+def _checkout_in_progress_response(
+    secret: str,
+    public_id: str,
+    *,
+    phase: str = "linked",
+):
+    response = jsonify({"code": "checkout_in_progress"})
+    response.status_code = 409
+    _set_retry_cookie(
+        response,
+        _signed_retry_state(secret, public_id, phase),
+    )
+    return response
+
+
+def _has_complete_payment_link(order) -> bool:
+    return bool(
+        order.payment_link_id
+        and order.checkout_url
+        and order.qr_code
+    )
+
+
+def _has_any_payment_link(order) -> bool:
+    return bool(
+        order.payment_link_id
+        or order.checkout_url
+        or order.qr_code
     )
 
 
@@ -388,7 +508,7 @@ def _cookie_authorized_order(public_id: str):
     if _PUBLIC_ID_PATTERN.fullmatch(public_id or "") is None:
         return None
     settings = get_digital_product_commerce_settings()
-    if not settings.ready_for_checkout:
+    if not _valid_cookie_secret(settings.cookie_secret):
         return None
     signed = request.cookies.get(_ORDER_COOKIE)
     if not signed:
@@ -416,14 +536,8 @@ def _order_not_found_response():
     return response
 
 
-def _order_access_active(order, now: datetime) -> bool:
-    if order.status == "paid":
-        expires_at = order.download_expires_at
-    elif order.status in {"pending", "payment_review"}:
-        expires_at = order.payment_expires_at
-    else:
-        return False
-    return expires_at is not None and now < expires_at
+def _valid_cookie_secret(secret: object) -> bool:
+    return type(secret) is str and len(secret) >= 64
 
 
 def _qr_svg_data_uri(payload: str) -> str | None:
