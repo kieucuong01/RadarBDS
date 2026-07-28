@@ -17,6 +17,37 @@ CACHE_CONTROL_IMMUTABLE = "public, max-age=2592000, immutable"
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 
+def _load_project_env_file() -> None:
+    env_path = Path(__file__).resolve().parents[1] / ".env"
+    if not env_path.exists():
+        return
+    allowed_keys = {
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+    }
+    try:
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            if not key:
+                continue
+            if not (
+                key.startswith("RADAR_IMAGE_")
+                or key.startswith("RADAR_S3_")
+                or key in allowed_keys
+            ):
+                continue
+            os.environ.setdefault(key, value.strip().strip('"').strip("'"))
+    except OSError:
+        return
+
+
+_load_project_env_file()
+
+
 def s3_image_storage_enabled() -> bool:
     return os.getenv("RADAR_IMAGE_STORAGE", "local").strip().lower() == "s3"
 

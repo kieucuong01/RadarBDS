@@ -25,6 +25,10 @@ def _load_local_env_file() -> None:
     env_path = Path(__file__).resolve().parent / ".env"
     if not env_path.exists():
         return
+    allowed_keys = {
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+    }
     try:
         for raw_line in env_path.read_text(encoding="utf-8").splitlines():
             line = raw_line.strip()
@@ -33,6 +37,12 @@ def _load_local_env_file() -> None:
             key, value = line.split("=", 1)
             key = key.strip()
             if not key:
+                continue
+            if not (
+                key.startswith("RADAR_IMAGE_")
+                or key.startswith("RADAR_S3_")
+                or key in allowed_keys
+            ):
                 continue
             os.environ.setdefault(key, value.strip().strip('"').strip("'"))
     except OSError:
