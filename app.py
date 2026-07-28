@@ -19,6 +19,28 @@ from functools import wraps
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
+
+
+def _load_local_env_file() -> None:
+    env_path = Path(__file__).resolve().parent / ".env"
+    if not env_path.exists():
+        return
+    try:
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            if not key:
+                continue
+            os.environ.setdefault(key, value.strip().strip('"').strip("'"))
+    except OSError:
+        logging.getLogger(__name__).warning("Unable to load local .env file", exc_info=True)
+
+
+_load_local_env_file()
+
 from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response, abort, redirect
 from config import database_sqlite as db_mod
 from config.property_types import normalize_property_types
