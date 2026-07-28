@@ -1575,7 +1575,24 @@ def _land_price_json_ready(value):
 
 
 def api_tphcm_land_price_calculate():
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({
+            "ok": False,
+            "error": "validation_error",
+            "field_errors": {
+                "request": "Dữ liệu gửi lên phải là một JSON object.",
+            },
+        }), 400
+    location = payload.get("location")
+    if not isinstance(location, dict):
+        return jsonify({
+            "ok": False,
+            "error": "validation_error",
+            "field_errors": {
+                "location": "Thông tin vị trí phải là một JSON object.",
+            },
+        }), 400
     data = _load_tphcm_land_price_data()
     row = find_land_price_row(
         data.get("rows", []),
@@ -1594,7 +1611,7 @@ def api_tphcm_land_price_calculate():
             land_area_m2=payload.get("land_area_m2"),
             frontage_m=payload.get("frontage_m"),
             depth_m=payload.get("depth_m"),
-            location=payload.get("location") or {},
+            location=location,
         )
     except CalculationValidationError as exc:
         return jsonify({

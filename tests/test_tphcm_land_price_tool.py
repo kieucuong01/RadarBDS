@@ -238,6 +238,35 @@ def test_calculation_returns_field_errors_and_missing_row():
     assert "land_area_m2" in invalid.get_json()["field_errors"]
 
 
+def test_calculation_rejects_non_object_json_and_location():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    row_key = client.get(
+        "/api/tphcm-land-prices?q=nguyen%20hue&limit=1"
+    ).get_json()["items"][0]["row_key"]
+
+    non_object = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json=["not", "an", "object"],
+    )
+    invalid_location = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json={
+            "row_key": row_key,
+            "land_area_m2": 100,
+            "frontage_m": 5,
+            "depth_m": 20,
+            "location": ["frontage"],
+        },
+    )
+
+    assert non_object.status_code == 400
+    assert "request" in non_object.get_json()["field_errors"]
+    assert invalid_location.status_code == 400
+    assert "location" in invalid_location.get_json()["field_errors"]
+
+
 def test_land_price_page_renders_accessible_position_calculator_shell():
     import app as radar_app
 
