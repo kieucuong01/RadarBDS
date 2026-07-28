@@ -103,6 +103,7 @@ from services.tphcm_land_prices import (
 from services.tphcm_land_price_calculator import (
     CalculationValidationError,
     calculate_land_price,
+    calculate_mixed_land_price,
 )
 
 # RBAC (4-tier auth)
@@ -1601,6 +1602,57 @@ def api_tphcm_land_price_calculate():
                 "location": "Thông tin vị trí phải là một JSON object.",
             },
         }), 400
+    parcel_mode = str(payload.get("parcel_mode") or "single")
+    if parcel_mode not in {"single", "mixed"}:
+        return jsonify({
+            "ok": False,
+            "error": "validation_error",
+            "field_errors": {
+                "parcel_mode": "Loại thửa đất không hợp lệ.",
+            },
+        }), 400
+
+    residential_geometry = payload.get("residential_geometry")
+    agricultural = payload.get("agricultural")
+    if parcel_mode == "mixed":
+        nested_errors = {}
+        if not isinstance(residential_geometry, dict):
+            nested_errors["residential_geometry"] = (
+                "Hình thể phần đất ở phải là một JSON object."
+            )
+        if not isinstance(agricultural, dict):
+            nested_errors["agricultural"] = (
+                "Thông tin đất nông nghiệp phải là một JSON object."
+            )
+        if nested_errors:
+            return jsonify({
+                "ok": False,
+                "error": "validation_error",
+                "field_errors": nested_errors,
+            }), 400
+
+        boolean_fields = (
+            (residential_geometry, "use_custom", "residential_geometry.use_custom"),
+            (agricultural, "in_residential_area", "agricultural.in_residential_area"),
+            (
+                agricultural,
+                "same_parcel_has_house",
+                "agricultural.same_parcel_has_house",
+            ),
+        )
+        invalid_booleans = {
+            error_field: "Giá trị xác nhận phải là true hoặc false."
+            for source, source_field, error_field in boolean_fields
+            if source_field in source
+            and not isinstance(source.get(source_field), bool)
+        }
+        if invalid_booleans:
+            return jsonify({
+                "ok": False,
+                "error": "validation_error",
+                "field_errors": invalid_booleans,
+            }), 400
+
     data = _load_tphcm_land_price_data()
     row = find_land_price_row(
         data.get("rows", []),
@@ -1610,17 +1662,32 @@ def api_tphcm_land_price_calculate():
         return jsonify({"ok": False, "error": "row_not_found"}), 404
 
     try:
-        result = calculate_land_price(
-            {
-                "residential": row.get("residential"),
-                "commerce_service": row.get("commerce_service"),
-                "production_business": row.get("production_business"),
-            },
-            land_area_m2=payload.get("land_area_m2"),
-            frontage_m=payload.get("frontage_m"),
-            depth_m=payload.get("depth_m"),
-            location=location,
-        )
+        base_prices = {
+            "residential": row.get("residential"),
+            "commerce_service": row.get("commerce_service"),
+            "production_business": row.get("production_business"),
+        }
+        if parcel_mode == "mixed":
+            result = calculate_mixed_land_price(
+                base_prices,
+                area_name=row.get("area"),
+                land_area_m2=payload.get("land_area_m2"),
+                frontage_m=payload.get("frontage_m"),
+                depth_m=payload.get("depth_m"),
+                residential_area_m2=payload.get("residential_area_m2"),
+                agricultural_area_m2=payload.get("agricultural_area_m2"),
+                residential_geometry=residential_geometry,
+                location=location,
+                agricultural=agricultural,
+            )
+        else:
+            result = calculate_land_price(
+                base_prices,
+                land_area_m2=payload.get("land_area_m2"),
+                frontage_m=payload.get("frontage_m"),
+                depth_m=payload.get("depth_m"),
+                location=location,
+            )
     except CalculationValidationError as exc:
         return jsonify({
             "ok": False,

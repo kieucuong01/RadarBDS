@@ -3,6 +3,11 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Mapping
 
+from services.tphcm_agricultural_land_prices import (
+    AgriculturalValidationError,
+    calculate_agricultural_land_price,
+)
+
 
 LAND_TYPES = ("residential", "commerce_service", "production_business")
 
@@ -297,5 +302,207 @@ def calculate_land_price(
             "mismatch_warning": mismatch_warning,
         },
         "values": values,
+        "warnings": warnings,
+    }
+
+
+def calculate_mixed_land_price(
+    base_prices_thousand: Mapping[str, object],
+    *,
+    area_name: object,
+    land_area_m2: object,
+    frontage_m: object,
+    depth_m: object,
+    residential_area_m2: object,
+    agricultural_area_m2: object,
+    residential_geometry: Mapping[str, object],
+    location: Mapping[str, object],
+    agricultural: Mapping[str, object],
+) -> dict[str, object]:
+    total_area = _positive_decimal(
+        land_area_m2,
+        "land_area_m2",
+        maximum="1000000",
+    )
+    parcel_frontage = _positive_decimal(
+        frontage_m,
+        "frontage_m",
+        maximum="10000",
+    )
+    parcel_depth = _positive_decimal(
+        depth_m,
+        "depth_m",
+        maximum="10000",
+    )
+    residential_area = _positive_decimal(
+        residential_area_m2,
+        "residential_area_m2",
+        maximum="1000000",
+    )
+    agricultural_area = _positive_decimal(
+        agricultural_area_m2,
+        "agricultural_area_m2",
+        maximum="1000000",
+    )
+    split_difference = abs(
+        total_area - residential_area - agricultural_area
+    )
+    if split_difference > Decimal("0.01"):
+        raise CalculationValidationError(
+            {
+                "agricultural_area_m2": (
+                    "Tổng diện tích đất ở và đất nông nghiệp phải khớp "
+                    "diện tích toàn thửa (sai số tối đa 0,01 m²)."
+                )
+            }
+        )
+
+    use_custom = residential_geometry.get("use_custom", False)
+    if not isinstance(use_custom, bool):
+        raise CalculationValidationError(
+            {
+                "residential_geometry.use_custom": (
+                    "Lựa chọn hình thể phần đất ở không hợp lệ."
+                )
+            }
+        )
+    if use_custom:
+        residential_frontage = residential_geometry.get("frontage_m")
+        residential_depth = residential_geometry.get("depth_m")
+        assumption = "custom_geometry"
+    else:
+        residential_frontage = parcel_frontage
+        residential_depth = residential_area / parcel_frontage
+        assumption = "front_strip"
+
+    try:
+        residential_result = calculate_land_price(
+            base_prices_thousand,
+            land_area_m2=residential_area,
+            frontage_m=residential_frontage,
+            depth_m=residential_depth,
+            location=location,
+        )
+    except CalculationValidationError as exc:
+        renamed_errors = {
+            (
+                f"residential_geometry.{field}"
+                if use_custom and field in {"frontage_m", "depth_m"}
+                else field
+            ): message
+            for field, message in exc.field_errors.items()
+        }
+        raise CalculationValidationError(renamed_errors) from None
+
+    raw_residential_base = base_prices_thousand.get("residential")
+    try:
+        residential_base_vnd = Decimal(str(raw_residential_base)) * Decimal(
+            "1000"
+        )
+    except (InvalidOperation, ValueError):
+        residential_base_vnd = Decimal("0")
+    if (
+        not residential_base_vnd.is_finite()
+        or residential_base_vnd <= 0
+    ):
+        raise CalculationValidationError(
+            {
+                "row_key": (
+                    "Dòng bảng giá đã chọn không có đơn giá đất ở để tính "
+                    "thửa hỗn hợp."
+                )
+            }
+        )
+
+    try:
+        agricultural_result = calculate_agricultural_land_price(
+            area_name=area_name,
+            land_type=agricultural.get("land_type"),
+            position=agricultural.get("position"),
+            area_m2=agricultural_area,
+            residential_position_1_price_vnd=residential_base_vnd,
+            in_residential_area=(
+                agricultural.get("in_residential_area") is True
+            ),
+            same_parcel_has_house=(
+                agricultural.get("same_parcel_has_house") is True
+            ),
+        )
+    except AgriculturalValidationError as exc:
+        raise CalculationValidationError(exc.field_errors) from None
+
+    residential_value = residential_result["values"]["residential"]
+    warnings = []
+    for warning in residential_result["warnings"]:
+        if warning.get("code") == "geometry_mismatch":
+            warnings.append(
+                {
+                    **warning,
+                    "code": "residential_geometry_mismatch",
+                    "message": (
+                        "Hình thể riêng của phần đất ở lệch hơn 10% so với "
+                        "diện tích đất ở. Kết quả phân dải là ước tính."
+                    ),
+                }
+            )
+        else:
+            warnings.append(warning)
+
+    parcel_rectangular_area = parcel_frontage * parcel_depth
+    parcel_mismatch = (
+        abs(total_area - parcel_rectangular_area) / parcel_rectangular_area
+        > Decimal("0.10")
+    )
+    if parcel_mismatch:
+        warnings.append(
+            {
+                "code": "parcel_geometry_mismatch",
+                "message": (
+                    "Diện tích toàn thửa lệch hơn 10% so với ngang × dài. "
+                    "Hãy đối chiếu hình thể trên hồ sơ địa chính."
+                ),
+            }
+        )
+    if assumption == "front_strip":
+        warnings.append(
+            {
+                "code": "residential_front_strip_assumption",
+                "message": (
+                    "Công cụ đang giả định phần đất ở nằm gần lối tiếp giáp "
+                    "nhất. Có thể nhập hình thể riêng nếu sơ đồ địa chính khác."
+                ),
+            }
+        )
+
+    agricultural_total = agricultural_result["total_value"]
+    residential_total = residential_value["total_value"]
+    combined_total = (
+        residential_total + agricultural_total
+        if residential_total is not None and agricultural_total is not None
+        else None
+    )
+
+    return {
+        "parcel_mode": "mixed",
+        "position": residential_result["position"],
+        "geometry": {
+            "legal_area_m2": total_area,
+            "frontage_m": parcel_frontage,
+            "depth_m": parcel_depth,
+            "rectangular_area_m2": parcel_rectangular_area,
+            "mismatch_warning": parcel_mismatch,
+        },
+        "mixed_use": {
+            "total_area_m2": total_area,
+            "split_difference_m2": split_difference,
+            "residential": {
+                "area_m2": residential_area,
+                "assumption": assumption,
+                "geometry": residential_result["geometry"],
+                **residential_value,
+            },
+            "agricultural": agricultural_result,
+            "total_value": combined_total,
+        },
         "warnings": warnings,
     }

@@ -459,6 +459,9 @@
 .land-price-calculator[hidden],
 .calculator-result[hidden],
 .land-price-alley-fields[hidden],
+.land-price-mixed-fields[hidden],
+#landPriceResidentialGeometryFields[hidden],
+.calculator-choice-grid[hidden],
 #landPriceCalculatorError[hidden] {
   display: none !important;
 }
@@ -524,6 +527,97 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.mixed-mode-toggle {
+  display: flex;
+  min-height: 64px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #b8d6ca;
+  border-radius: 12px;
+  padding: 14px;
+  background: #f1f8f5;
+}
+
+.mixed-mode-toggle.compact {
+  margin-bottom: 12px;
+  background: #fff;
+}
+
+.mixed-mode-toggle input {
+  width: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+  margin-top: 2px;
+}
+
+.mixed-mode-toggle label {
+  display: grid;
+  gap: 4px;
+  cursor: pointer;
+  color: var(--lp-ink);
+  line-height: 1.45;
+}
+
+.mixed-mode-toggle label span {
+  color: var(--lp-muted);
+  font-size: .86rem;
+}
+
+.land-price-mixed-fields {
+  display: grid;
+  gap: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--lp-line);
+  padding-top: 20px;
+}
+
+.mixed-fields-head > strong,
+.mixed-fields-head > p {
+  display: block;
+  margin: 0;
+}
+
+.mixed-fields-head > p {
+  margin-top: 4px;
+  color: var(--lp-muted);
+  font-size: .88rem;
+}
+
+.agricultural-position-fieldset,
+.agricultural-special-context {
+  border-top: 1px solid var(--lp-line) !important;
+  padding-top: 16px !important;
+}
+
+.agricultural-position-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.agricultural-position-fieldset > .field-help,
+.agricultural-special-context > .field-help {
+  margin-top: 10px;
+}
+
+.land-price-residential-geometry {
+  border: 1px solid var(--lp-line);
+  border-radius: 12px;
+  padding: 0 16px;
+  background: #fff;
+}
+
+.land-price-residential-geometry summary {
+  min-height: 48px;
+  cursor: pointer;
+  align-content: center;
+  color: var(--lp-green);
+  font-weight: 900;
+}
+
+.residential-geometry-body {
+  padding: 4px 0 16px;
 }
 
 .land-price-calculator input,
@@ -656,7 +750,16 @@
 }
 
 .calculator-submit {
+  min-height: 48px;
   min-width: 220px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 18px;
+  background: var(--lp-green);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
 }
 
 .calculator-result {
@@ -734,6 +837,48 @@
 
 .calculation-summary-card > small {
   margin-top: 6px;
+  color: var(--lp-muted);
+}
+
+.calculation-summary-card.is-total {
+  border-color: #7bb8a6;
+  background: #eaf7f2;
+}
+
+.mixed-result-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mixed-result-context span {
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: var(--lp-soft);
+  color: var(--lp-muted);
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.agricultural-formula {
+  margin-top: 18px;
+  border: 1px solid var(--lp-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #fff;
+}
+
+.agricultural-formula h5,
+.agricultural-formula ul {
+  margin: 0;
+}
+
+.agricultural-formula ul {
+  display: grid;
+  gap: 6px;
+  margin-top: 9px;
+  padding-left: 20px;
   color: var(--lp-muted);
 }
 
@@ -972,7 +1117,8 @@
   .land-price-calculator-grid,
   .land-price-alley-fields,
   .calculation-summary-grid,
-  .calculator-choice-grid {
+  .calculator-choice-grid,
+  .agricultural-position-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1019,11 +1165,15 @@
     font-weight: 800;
     text-transform: uppercase;
   }
+
+  .mixed-mode-toggle {
+    min-height: 72px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .button-spinner {
-    animation-duration: 1.4s;
+    animation: none;
   }
 
   html {

@@ -267,6 +267,167 @@ def test_calculation_rejects_non_object_json_and_location():
     assert "location" in invalid_location.get_json()["field_errors"]
 
 
+def test_guest_mixed_calculation_uses_server_area_zone_and_base_price():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    row = client.get(
+        "/api/tphcm-land-prices",
+        query_string={
+            "q": "nguyen hue",
+            "area": "PHƯỜNG SÀI GÒN",
+            "limit": 1,
+        },
+    ).get_json()["items"][0]
+    response = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json={
+            "row_key": row["row_key"],
+            "parcel_mode": "mixed",
+            "land_area_m2": 500,
+            "frontage_m": 10,
+            "depth_m": 50,
+            "residential_area_m2": 100,
+            "agricultural_area_m2": 400,
+            "residential_geometry": {"use_custom": False},
+            "location": {"mode": "standard", "access": "frontage"},
+            "agricultural": {
+                "land_type": "perennial",
+                "position": 1,
+                "zone": 4,
+                "base_price": 1,
+            },
+            "base_prices": {"residential": 1},
+        },
+    )
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data["parcel_mode"] == "mixed"
+    assert data["mixed_use"]["agricultural"]["zone"] == 1
+    assert data["mixed_use"]["agricultural"]["unit_price"] == 68_720_000
+    assert data["mixed_use"]["residential"]["base_unit_price"] == 687_200_000
+    assert data["mixed_use"]["total_value"] == 96_208_000_000
+
+
+def test_commune_mixed_calculation_only_uses_article_5_8_when_confirmed():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    row = client.get(
+        "/api/tphcm-land-prices",
+        query_string={"area": "XÃ CỦ CHI", "limit": 1},
+    ).get_json()["items"][0]
+    base_payload = {
+        "row_key": row["row_key"],
+        "parcel_mode": "mixed",
+        "land_area_m2": 100,
+        "frontage_m": 5,
+        "depth_m": 20,
+        "residential_area_m2": 50,
+        "agricultural_area_m2": 50,
+        "residential_geometry": {"use_custom": False},
+        "location": {"mode": "standard", "access": "frontage"},
+        "agricultural": {
+            "land_type": "perennial",
+            "position": 1,
+            "in_residential_area": False,
+            "same_parcel_has_house": False,
+        },
+    }
+    normal = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json=base_payload,
+    ).get_json()
+    base_payload["agricultural"]["in_residential_area"] = True
+    special = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json=base_payload,
+    ).get_json()
+
+    assert normal["mixed_use"]["agricultural"]["pricing_mode"] == "normal_table"
+    assert special["mixed_use"]["agricultural"]["pricing_mode"] == "article_5_8"
+    assert normal["mixed_use"]["agricultural"]["special_unit_price"] is None
+    assert special["mixed_use"]["agricultural"]["special_unit_price"] is not None
+    assert (
+        special["mixed_use"]["agricultural"]["unit_price"]
+        >= normal["mixed_use"]["agricultural"]["unit_price"]
+    )
+
+
+def test_mixed_calculation_rejects_malformed_nested_objects_and_enum_values():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    row_key = client.get(
+        "/api/tphcm-land-prices?q=nguyen%20hue&limit=1"
+    ).get_json()["items"][0]["row_key"]
+    common = {
+        "row_key": row_key,
+        "parcel_mode": "mixed",
+        "land_area_m2": 100,
+        "frontage_m": 5,
+        "depth_m": 20,
+        "residential_area_m2": 50,
+        "agricultural_area_m2": 50,
+        "location": {"mode": "standard", "access": "frontage"},
+    }
+
+    malformed_geometry = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json={
+            **common,
+            "residential_geometry": ["not", "an", "object"],
+            "agricultural": {"land_type": "annual", "position": 1},
+        },
+    )
+    malformed_agricultural = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json={
+            **common,
+            "residential_geometry": {"use_custom": False},
+            "agricultural": ["not", "an", "object"],
+        },
+    )
+    invalid_type = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json={
+            **common,
+            "residential_geometry": {"use_custom": False},
+            "agricultural": {"land_type": "forged", "position": 9},
+        },
+    )
+
+    assert malformed_geometry.status_code == 400
+    assert "residential_geometry" in malformed_geometry.get_json()["field_errors"]
+    assert malformed_agricultural.status_code == 400
+    assert "agricultural" in malformed_agricultural.get_json()["field_errors"]
+    assert invalid_type.status_code == 400
+    assert "agricultural.land_type" in invalid_type.get_json()["field_errors"]
+
+
+def test_omitted_parcel_mode_keeps_the_single_parcel_contract():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    row_key = client.get(
+        "/api/tphcm-land-prices?q=nguyen%20hue&limit=1"
+    ).get_json()["items"][0]["row_key"]
+    data = client.post(
+        "/api/tphcm-land-prices/calculate",
+        json={
+            "row_key": row_key,
+            "land_area_m2": 100,
+            "frontage_m": 5,
+            "depth_m": 20,
+            "location": {"mode": "standard", "access": "frontage"},
+        },
+    ).get_json()
+
+    assert "mixed_use" not in data
+    assert data["values"]["residential"]["total_value"] > 0
+
+
 def test_land_price_page_renders_accessible_position_calculator_shell():
     import app as radar_app
 
@@ -288,6 +449,30 @@ def test_land_price_page_renders_accessible_position_calculator_shell():
     assert "js/tphcm_land_price_calculator.js" in html
 
 
+def test_land_price_page_renders_accessible_mixed_use_fields():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(
+        "/bang-gia-dat-tphcm"
+    ).get_data(as_text=True)
+
+    assert 'id="landPriceMixedMode"' in html
+    assert '<label for="landPriceMixedMode">' in html
+    assert 'id="landPriceMixedFields"' in html
+    assert '<label for="landPriceResidentialArea">' in html
+    assert '<label for="landPriceAgriculturalArea">' in html
+    assert '<label for="landPriceAgriculturalType">' in html
+    assert 'name="agricultural_position"' in html
+    assert 'id="landPriceAgriculturalSpecialContext"' in html
+    assert 'for="landPriceInResidentialArea"' in html
+    assert 'for="landPriceSameParcelHasHouse"' in html
+    assert '<details class="land-price-residential-geometry"' in html
+    assert 'id="landPriceResidentialCustomGeometry"' in html
+    assert 'data-calculator-error="residential_area_m2"' in html
+    assert 'data-calculator-error="agricultural_area_m2"' in html
+    assert "tphcm-land-mixed-20260728" in html
+
+
 def test_land_price_browser_calculator_has_row_actions_and_safe_analytics():
     import re
     from pathlib import Path
@@ -307,6 +492,7 @@ def test_land_price_browser_calculator_has_row_actions_and_safe_analytics():
         "land_price_calculator_success",
         "land_price_calculator_error",
         "land_price_calculator_advanced_open",
+        "land_price_mixed_mode_toggle",
     ):
         assert f"track('{event_name}'" in calculator_javascript
     event_payloads = re.findall(

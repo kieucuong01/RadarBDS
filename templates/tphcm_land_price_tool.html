@@ -13,8 +13,8 @@
   <meta property="og:image" content="{{ site_meta.og_image }}">
   {% include "partials/google_site_tags.html" %}
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tphcm-land-position-20260728">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tphcm_land_price_tool.css') }}?v=tphcm-land-position-20260728">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tphcm-land-mixed-20260728-2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tphcm_land_price_tool.css') }}?v=tphcm-land-mixed-20260728-2">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -128,9 +128,17 @@
 
           <fieldset>
             <legend>Thông tin thửa đất</legend>
+            <div class="mixed-mode-toggle">
+              <input id="landPriceMixedMode" name="parcel_mode" type="checkbox" value="mixed" aria-controls="landPriceMixedFields" aria-expanded="false">
+              <label for="landPriceMixedMode">
+                <strong>Thửa có nhiều loại đất</strong>
+                <span>Bật khi giấy chứng nhận có cả đất ở và đất nông nghiệp.</span>
+              </label>
+            </div>
+            <p class="field-error" data-calculator-error="parcel_mode" hidden></p>
             <div class="land-price-calculator-grid">
               <div class="land-price-field">
-                <label for="landPriceLandArea">Diện tích trên giấy tờ (m²)</label>
+                <label for="landPriceLandArea">Diện tích toàn thửa trên giấy tờ (m²)</label>
                 <input id="landPriceLandArea" name="land_area_m2" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ví dụ: 100" aria-describedby="landPriceLandAreaHelp landPriceLandAreaError">
                 <p class="field-help" id="landPriceLandAreaHelp">Diện tích pháp lý dùng để tính tổng giá trị.</p>
                 <p class="field-error" id="landPriceLandAreaError" data-calculator-error="land_area_m2" hidden></p>
@@ -147,6 +155,105 @@
                 <p class="field-help" id="landPriceDepthHelp">Đo từ mặt tiếp giáp vào cuối thửa.</p>
                 <p class="field-error" id="landPriceDepthError" data-calculator-error="depth_m" hidden></p>
               </div>
+            </div>
+
+            <div class="land-price-mixed-fields" id="landPriceMixedFields" hidden>
+              <div class="mixed-fields-head">
+                <strong>Phân chia diện tích theo mục đích sử dụng</strong>
+                <p>Tổng hai phần phải khớp diện tích toàn thửa, sai số tối đa 0,01m².</p>
+              </div>
+              <div class="land-price-calculator-grid">
+                <div class="land-price-field">
+                  <label for="landPriceResidentialArea">Diện tích đất ở (m²)</label>
+                  <input id="landPriceResidentialArea" name="residential_area_m2" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ví dụ: 100" aria-describedby="landPriceResidentialAreaHelp landPriceResidentialAreaError">
+                  <p class="field-help" id="landPriceResidentialAreaHelp">Mặc định giả định phần đất ở nằm gần lối tiếp giáp nhất.</p>
+                  <p class="field-error" id="landPriceResidentialAreaError" data-calculator-error="residential_area_m2" hidden></p>
+                </div>
+                <div class="land-price-field">
+                  <label for="landPriceAgriculturalArea">Diện tích đất nông nghiệp (m²)</label>
+                  <input id="landPriceAgriculturalArea" name="agricultural_area_m2" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ví dụ: 400" aria-describedby="landPriceAgriculturalAreaHelp landPriceAgriculturalAreaError">
+                  <p class="field-help" id="landPriceAgriculturalAreaHelp">Đối chiếu đúng diện tích ghi cho từng mục đích sử dụng.</p>
+                  <p class="field-error" id="landPriceAgriculturalAreaError" data-calculator-error="agricultural_area_m2" hidden></p>
+                </div>
+                <div class="land-price-field">
+                  <label for="landPriceAgriculturalType">Loại đất nông nghiệp</label>
+                  <select id="landPriceAgriculturalType" name="agricultural_land_type" aria-describedby="landPriceAgriculturalTypeHelp landPriceAgriculturalTypeError">
+                    <option value="perennial">Đất trồng cây lâu năm</option>
+                    <option value="annual">Đất trồng lúa/cây hàng năm</option>
+                    <option value="aquaculture">Đất nuôi trồng thủy sản</option>
+                    <option value="production_forest">Đất rừng sản xuất</option>
+                    <option value="protected_special_forest">Đất rừng phòng hộ/đặc dụng</option>
+                    <option value="concentrated_livestock">Đất chăn nuôi tập trung</option>
+                    <option value="salt">Đất làm muối</option>
+                    <option value="other_agricultural">Đất nông nghiệp khác — cần đối chiếu</option>
+                  </select>
+                  <p class="field-help" id="landPriceAgriculturalTypeHelp">Chọn theo mục đích sử dụng trên giấy chứng nhận.</p>
+                  <p class="field-error" id="landPriceAgriculturalTypeError" data-calculator-error="agricultural.land_type" hidden></p>
+                </div>
+              </div>
+
+              <fieldset class="agricultural-position-fieldset">
+                <legend>Vị trí đất nông nghiệp</legend>
+                <div class="calculator-choice-grid agricultural-position-grid" role="radiogroup" aria-describedby="landPriceAgriculturalPositionHelp">
+                  <label class="calculator-choice">
+                    <input type="radio" name="agricultural_position" value="1" checked>
+                    <span><strong>Vị trí 1</strong><small>0-200m đầu tiếp giáp đường có tên hoặc cùng người sử dụng với thửa tiếp giáp.</small></span>
+                  </label>
+                  <label class="calculator-choice">
+                    <input type="radio" name="agricultural_position" value="2">
+                    <span><strong>Vị trí 2</strong><small>Không tiếp giáp trong 400m hoặc phần trên 200m đến 400m.</small></span>
+                  </label>
+                  <label class="calculator-choice">
+                    <input type="radio" name="agricultural_position" value="3">
+                    <span><strong>Vị trí 3</strong><small>Các vị trí còn lại.</small></span>
+                  </label>
+                </div>
+                <p class="field-help" id="landPriceAgriculturalPositionHelp">Vị trí này độc lập với vị trí mặt tiền/hẻm của phần đất ở. Đất làm muối cần đối chiếu thêm đường thủy, đường bộ hoặc kho muối.</p>
+                <p class="field-error" data-calculator-error="agricultural.position" hidden></p>
+              </fieldset>
+
+              <fieldset class="agricultural-special-context" id="landPriceAgriculturalSpecialContext">
+                <legend>Điều kiện áp dụng khoản 8 Điều 5</legend>
+                <p class="field-help" id="landPriceWardContextNote">Nếu dòng giá thuộc phường, backend tự áp dụng điều kiện trong địa giới hành chính phường.</p>
+                <div class="calculator-choice-grid">
+                  <label for="landPriceInResidentialArea" class="calculator-choice">
+                    <input id="landPriceInResidentialArea" name="in_residential_area" type="checkbox">
+                    <span><strong>Trong khu dân cư</strong><small>Dùng cho xã/đặc khu khi hồ sơ xác nhận điều kiện này.</small></span>
+                  </label>
+                  <label for="landPriceSameParcelHasHouse" class="calculator-choice">
+                    <input id="landPriceSameParcelHasHouse" name="same_parcel_has_house" type="checkbox">
+                    <span><strong>Cùng thửa có nhà ở</strong><small>Chỉ bật khi trên cùng thửa thực tế có nhà ở.</small></span>
+                  </label>
+                </div>
+                <p class="field-error" data-calculator-error="agricultural.in_residential_area" hidden></p>
+                <p class="field-error" data-calculator-error="agricultural.same_parcel_has_house" hidden></p>
+              </fieldset>
+
+              <details class="land-price-residential-geometry">
+                <summary>Chi tiết phần đất ở</summary>
+                <div class="residential-geometry-body">
+                  <div class="mixed-mode-toggle compact">
+                    <input id="landPriceResidentialCustomGeometry" name="residential_use_custom" type="checkbox" aria-controls="landPriceResidentialGeometryFields" aria-expanded="false">
+                    <label for="landPriceResidentialCustomGeometry">
+                      <strong>Dùng ngang và chiều sâu riêng của phần đất ở</strong>
+                      <span>Bật khi sơ đồ địa chính không thể hiện phần đất ở là dải nằm phía trước.</span>
+                    </label>
+                  </div>
+                  <p class="field-error" data-calculator-error="residential_geometry.use_custom" hidden></p>
+                  <div class="land-price-calculator-grid" id="landPriceResidentialGeometryFields" hidden>
+                    <div class="land-price-field">
+                      <label for="landPriceResidentialFrontage">Ngang phần đất ở (m)</label>
+                      <input id="landPriceResidentialFrontage" name="residential_frontage_m" type="number" min="0.01" step="0.01" inputmode="decimal">
+                      <p class="field-error" data-calculator-error="residential_geometry.frontage_m" hidden></p>
+                    </div>
+                    <div class="land-price-field">
+                      <label for="landPriceResidentialDepth">Chiều sâu phần đất ở (m)</label>
+                      <input id="landPriceResidentialDepth" name="residential_depth_m" type="number" min="0.01" step="0.01" inputmode="decimal">
+                      <p class="field-error" data-calculator-error="residential_geometry.depth_m" hidden></p>
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
           </fieldset>
 
@@ -207,7 +314,7 @@
               <p class="field-error" data-calculator-error="location.mode" hidden></p>
               <div class="calculator-manual-note">
                 <strong>Cần đối chiếu thủ công</strong>
-                <p>Thửa chữ L/T, đa giác, có phần khuất sau từ 15m², không có đường vào hoặc phải dùng giá sàn đất nông nghiệp chưa được công cụ tự tính.</p>
+                <p>Thửa chữ L/T, đa giác, có phần khuất sau từ 15m² hoặc không có đường vào vẫn cần đối chiếu hồ sơ và cơ quan chuyên môn.</p>
               </div>
             </fieldset>
           </details>
@@ -256,7 +363,7 @@
       </details>
     </section>
   </main>
-  <script src="{{ url_for('static', filename='js/tphcm_land_price_calculator.js') }}?v=tphcm-land-position-20260728"></script>
-  <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=tphcm-land-position-20260728"></script>
+  <script src="{{ url_for('static', filename='js/tphcm_land_price_calculator.js') }}?v=tphcm-land-mixed-20260728-2"></script>
+  <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=tphcm-land-mixed-20260728-2"></script>
 </body>
 </html>

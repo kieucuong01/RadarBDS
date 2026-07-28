@@ -5,6 +5,7 @@ import pytest
 from services.tphcm_land_price_calculator import (
     build_depth_bands,
     calculate_land_price,
+    calculate_mixed_land_price,
     resolve_location,
 )
 
@@ -156,3 +157,123 @@ def test_geometry_mismatch_over_ten_percent_adds_warning():
     assert sum(
         band["area_m2"] for band in result["values"]["residential"]["bands"]
     ) == Decimal("130")
+
+
+def test_mixed_calculation_adds_residential_and_agricultural_values():
+    result = calculate_mixed_land_price(
+        {
+            "residential": 10_000,
+            "commerce_service": 6_000,
+            "production_business": 4_000,
+        },
+        area_name="XÃ CỦ CHI",
+        land_area_m2="500",
+        frontage_m="10",
+        depth_m="50",
+        residential_area_m2="100",
+        agricultural_area_m2="400",
+        residential_geometry={"use_custom": False},
+        location={"mode": "standard", "access": "frontage"},
+        agricultural={
+            "land_type": "perennial",
+            "position": 1,
+            "in_residential_area": False,
+            "same_parcel_has_house": False,
+        },
+    )
+
+    assert result["parcel_mode"] == "mixed"
+    assert result["mixed_use"]["residential"]["assumption"] == "front_strip"
+    assert result["mixed_use"]["residential"]["geometry"]["frontage_m"] == Decimal(
+        "10"
+    )
+    assert result["mixed_use"]["residential"]["geometry"]["depth_m"] == Decimal(
+        "10"
+    )
+    assert result["mixed_use"]["residential"]["total_value"] == 1_000_000_000
+    assert result["mixed_use"]["agricultural"]["unit_price"] == 840_000
+    assert result["mixed_use"]["agricultural"]["total_value"] == 336_000_000
+    assert result["mixed_use"]["total_value"] == 1_336_000_000
+
+
+def test_mixed_calculation_accepts_split_within_one_hundredth_square_meter():
+    result = calculate_mixed_land_price(
+        {"residential": 10_000},
+        area_name="XÃ CỦ CHI",
+        land_area_m2="100",
+        frontage_m="5",
+        depth_m="20",
+        residential_area_m2="40",
+        agricultural_area_m2="59.99",
+        residential_geometry={"use_custom": False},
+        location={"mode": "standard", "access": "frontage"},
+        agricultural={"land_type": "annual", "position": 1},
+    )
+
+    assert result["mixed_use"]["split_difference_m2"] == Decimal("0.01")
+
+
+def test_mixed_calculation_rejects_area_split_outside_tolerance():
+    from services.tphcm_land_price_calculator import CalculationValidationError
+
+    with pytest.raises(CalculationValidationError) as exc_info:
+        calculate_mixed_land_price(
+            {"residential": 10_000},
+            area_name="XÃ CỦ CHI",
+            land_area_m2="100",
+            frontage_m="5",
+            depth_m="20",
+            residential_area_m2="40",
+            agricultural_area_m2="59.98",
+            residential_geometry={"use_custom": False},
+            location={"mode": "standard", "access": "frontage"},
+            agricultural={"land_type": "annual", "position": 1},
+        )
+
+    assert "agricultural_area_m2" in exc_info.value.field_errors
+
+
+def test_custom_residential_geometry_keeps_legal_area_and_warns_on_mismatch():
+    result = calculate_mixed_land_price(
+        {"residential": 10_000},
+        area_name="XÃ CỦ CHI",
+        land_area_m2="500",
+        frontage_m="10",
+        depth_m="50",
+        residential_area_m2="100",
+        agricultural_area_m2="400",
+        residential_geometry={
+            "use_custom": True,
+            "frontage_m": "5",
+            "depth_m": "30",
+        },
+        location={"mode": "standard", "access": "frontage"},
+        agricultural={"land_type": "annual", "position": 1},
+    )
+
+    residential = result["mixed_use"]["residential"]
+    assert residential["assumption"] == "custom_geometry"
+    assert residential["geometry"]["legal_area_m2"] == Decimal("100")
+    assert residential["geometry"]["mismatch_warning"] is True
+    assert any(
+        warning["code"] == "residential_geometry_mismatch"
+        for warning in result["warnings"]
+    )
+
+
+def test_other_agricultural_prevents_a_misleading_combined_total():
+    result = calculate_mixed_land_price(
+        {"residential": 10_000},
+        area_name="XÃ CỦ CHI",
+        land_area_m2="500",
+        frontage_m="10",
+        depth_m="50",
+        residential_area_m2="100",
+        agricultural_area_m2="400",
+        residential_geometry={"use_custom": False},
+        location={"mode": "standard", "access": "frontage"},
+        agricultural={"land_type": "other_agricultural", "position": 1},
+    )
+
+    assert result["mixed_use"]["agricultural"]["manual_review_required"] is True
+    assert result["mixed_use"]["total_value"] is None
