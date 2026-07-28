@@ -19,6 +19,7 @@ from pathlib import Path
 from textwrap import dedent
 
 BROWSER_USE = Path("/home/hermesops/radar-browser-use/.venv/bin/browser-use")
+BROWSER_USE_CWD = Path("/home/hermesops/radar-browser-use")
 DEFAULT_CDP_URL = "http://127.0.0.1:9224"
 DEFAULT_ARTIFACT_DIR = Path("/home/hermesops/radar-browser-use/artifacts")
 DEFAULT_RUN_DIR = Path("/opt/radar-bds/var/browser_use_runs")
@@ -243,6 +244,7 @@ def run(args: argparse.Namespace) -> dict:
         text=True,
         capture_output=True,
         env=env,
+        cwd=str(BROWSER_USE_CWD),
         timeout=args.timeout,
         check=False,
     )

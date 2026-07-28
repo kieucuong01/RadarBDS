@@ -27,6 +27,7 @@ BROKER_PROFILES = REPO / 'data/facebook_profiles.json'
 EXECUTOR = REPO / 'scripts/browser_use_group_comment.py'
 START_BROWSER = Path('/home/hermesops/radar-browser-use/start-radar-social-browser.sh')
 BROWSER_USE = Path('/home/hermesops/radar-browser-use/.venv/bin/browser-use')
+BROWSER_USE_CWD = Path('/home/hermesops/radar-browser-use')
 CDP = 'http://127.0.0.1:9224'
 POST_STATE = Path('/opt/radar-bds/var/social_queue/group-autopost/state.json')
 STATE = Path('/opt/radar-bds/var/social_queue/public-post-comment/state.json')
@@ -642,7 +643,17 @@ if not (opened and verified): raise RuntimeError('Radar BDS restore verification
 """
     env = dict(**os.environ)
     env['BU_CDP_URL'] = CDP
-    proc = subprocess.run([str(BROWSER_USE)], input=program, text=True, capture_output=True, env=env, timeout=75, check=False)
+    restore_timeout = int(os.environ.get('RB_COMMENT_RESTORE_TIMEOUT') or 75)
+    proc = subprocess.run(
+        [str(BROWSER_USE)],
+        input=program,
+        text=True,
+        capture_output=True,
+        env=env,
+        cwd=str(BROWSER_USE_CWD),
+        timeout=max(15, min(restore_timeout, 75)),
+        check=False,
+    )
     if proc.returncode != 0:
         raise RuntimeError(
             'Could not restore Radar BDS identity after discovery failure\n'
@@ -828,6 +839,7 @@ print(json.dumps({{'ok':True,'restored':restored,'results':results}},ensure_asci
             text=True,
             capture_output=True,
             env=env,
+            cwd=str(BROWSER_USE_CWD),
             timeout=max(45, min(discovery_timeout, 540)),
             check=False,
         )
