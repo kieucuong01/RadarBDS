@@ -143,6 +143,29 @@ def _metadata(
     }
 
 
+def _cache_record_matches_source(
+    source: MapSource,
+    payload: bytes,
+    record: object,
+) -> bool:
+    if not isinstance(record, dict):
+        return False
+    expected_query_timestamp = (
+        source.snapshot_at
+        if source.snapshot_strategy == "dated_query"
+        else None
+    )
+    return (
+        record.get("url") == source.source_url
+        and record.get("query_timestamp") == expected_query_timestamp
+        and record.get("license") == source.license_name
+        and record.get("license_url") == source.license_url
+        and record.get("byte_length") == len(payload)
+        and record.get("sha256") == hashlib.sha256(payload).hexdigest()
+        and isinstance(record.get("fetched_timestamp"), str)
+    )
+
+
 def fetch_source_snapshots(
     registry: tuple[MapSource, ...],
     cache_dir: Path,
@@ -174,24 +197,20 @@ def fetch_source_snapshots(
             try:
                 candidate = snapshot_path.read_bytes()
                 _validate_payload(source, candidate)
-                cached_payload = candidate
+                if _cache_record_matches_source(
+                    source,
+                    candidate,
+                    existing_manifest.get(source.key),
+                ):
+                    cached_payload = candidate
             except (OSError, ValueError):
                 cached_payload = None
 
         if cached_payload is not None and not refresh:
             staged_payloads[source.key] = cached_payload
-            existing_record = existing_manifest.get(source.key, {})
-            existing_hash = hashlib.sha256(cached_payload).hexdigest()
-            fetched_timestamps[source.key] = (
-                existing_record.get("fetched_timestamp")
-                if existing_record.get("sha256") == existing_hash
-                and isinstance(existing_record.get("fetched_timestamp"), str)
-                else datetime.fromtimestamp(
-                    snapshot_path.stat().st_mtime, timezone.utc
-                )
-                .isoformat()
-                .replace("+00:00", "Z")
-            )
+            fetched_timestamps[source.key] = existing_manifest[source.key][
+                "fetched_timestamp"
+            ]
             continue
 
         try:

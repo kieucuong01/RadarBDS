@@ -473,6 +473,64 @@ def test_snapshot_fetch_is_cache_first_and_records_manifest(tmp_path: Path):
     assert manifest["osm_detail"]["license"] == "ODbL"
 
 
+def test_dated_query_provenance_change_fetches_instead_of_relabeling_cache(
+    tmp_path: Path,
+):
+    first_timestamp = "2026-07-29T00:00:00Z"
+    second_timestamp = "2026-07-30T00:00:00Z"
+    first_url = (
+        "https://example.test/overpass?data="
+        "%5Bout%3Ajson%5D%5Bdate%3A%222026-07-29T00%3A00%3A00Z%22%5D%3B"
+    )
+    second_url = (
+        "https://example.test/overpass?data="
+        "%5Bout%3Ajson%5D%5Bdate%3A%222026-07-30T00%3A00%3A00Z%22%5D%3B"
+    )
+    first_payload = b'{"elements":[{"id":1,"type":"node"}],"version":0.6}'
+    second_payload = b'{"elements":[{"id":2,"type":"node"}],"version":0.6}'
+    calls = []
+
+    def source(url: str, timestamp: str) -> MapSource:
+        return MapSource(
+            key="osm_detail",
+            source_url=url,
+            license_name="ODbL",
+            license_url="https://example.test/license",
+            snapshot_strategy="dated_query",
+            snapshot_at=timestamp,
+        )
+
+    payloads = {first_url: first_payload, second_url: second_payload}
+
+    def fake_get(url: str) -> bytes:
+        calls.append(url)
+        return payloads[url]
+
+    cache_dir = tmp_path / "cache"
+    fetch_source_snapshots(
+        (source(first_url, first_timestamp),),
+        cache_dir,
+        http_get=fake_get,
+    )
+    snapshots = fetch_source_snapshots(
+        (source(second_url, second_timestamp),),
+        cache_dir,
+        http_get=fake_get,
+    )
+    manifest = json.loads(
+        (cache_dir / "source-snapshots.json").read_text(encoding="utf-8")
+    )
+
+    assert calls == [first_url, second_url]
+    assert snapshots["osm_detail"].read_bytes() == second_payload
+    assert manifest["osm_detail"]["url"] == second_url
+    assert manifest["osm_detail"]["query_timestamp"] == second_timestamp
+    assert manifest["osm_detail"]["byte_length"] == len(second_payload)
+    assert manifest["osm_detail"]["sha256"] == hashlib.sha256(
+        second_payload
+    ).hexdigest()
+
+
 def test_failed_refresh_preserves_valid_snapshot_and_manifest(tmp_path: Path):
     source = MapSource(
         key="osm_detail",
