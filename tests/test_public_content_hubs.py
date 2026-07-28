@@ -56,7 +56,7 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
     assert "'/api/leads'" in report_html
     assert "'/api/leads'" in news_html
 
-    assert "Hiện ưu tiên Thủ Dầu Một" in report_html
+    assert "Đang phủ 13 phường Thủ Dầu Một" in report_html
     assert "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS" in news_html
 
 
@@ -280,6 +280,84 @@ def test_report_detail_is_data_first_tdm_report():
     assert 'data-nav="bao-cao" aria-current="page"' in html
     assert "Trang chủ" in html
     assert "Báo cáo tháng 06/2026" in html
+
+
+def test_report_hub_scope_and_empty_city_state_match_published_coverage():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/bao-cao").get_data(as_text=True)
+
+    assert "<h1>Báo cáo thị trường BĐS Thủ Dầu Một</h1>" in html
+    assert 'data-filter-city="tdm" aria-pressed="false"' in html
+    assert re.search(
+        r'data-filter-city="ben-cat"[^>]+aria-disabled="true"[^>]+disabled',
+        html,
+    )
+    assert "Bến Cát · Sắp có" in html
+
+
+def test_report_hub_filter_state_is_shareable_and_restorable():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/bao-cao").get_data(as_text=True)
+    js = Path("static/js/seo_report_hub.js").read_text(encoding="utf-8")
+
+    assert 'id="reportPeriodSelect"' in html
+    assert 'src="/static/js/seo_report_hub.js"' in html
+    assert "new URLSearchParams(window.location.search)" in js
+    assert "window.history.replaceState" in js
+    assert "popstate" in js
+    assert "report_filter_used" in js
+    assert "search_query" not in js
+    assert "query: query" not in js
+
+
+def test_report_hub_latest_is_not_repeated_and_archive_cards_have_one_link():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/bao-cao").get_data(as_text=True)
+    featured = re.search(r'data-featured-report="([^"]+)"', html)
+    archive_paths = re.findall(r'data-report-path="([^"]+)"', html)
+    archive_cards = re.findall(
+        r'<a class="hub-card report-archive-card"[\s\S]*?</a>',
+        html,
+    )
+
+    assert featured
+    assert featured.group(1) not in archive_paths
+    assert archive_cards
+    assert len(archive_cards) == len(archive_paths)
+    assert all(card.count("href=") == 1 for card in archive_cards)
+
+
+def test_report_detail_has_early_live_dashboard_cta_with_safe_tracking():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(
+        "/bao-cao/phu-tan-thang-06-2026"
+    ).get_data(as_text=True)
+
+    assert 'class="report-live-cta"' in html
+    assert html.index('class="report-live-cta"') < html.index(
+        'class="seo-report-block"'
+    )
+    assert "Xem deal đang hoạt động tại Phú Tân" in html
+    assert "tab=signals" in html
+    assert "ward=Ph%C3%BA+T%C3%A2n" in html
+    assert "date_range=all" in html
+    assert "mos_min=10" in html
+    assert 'data-report-action="dashboard"' in html
+
+
+def test_report_specific_analytics_actions_are_allowlisted():
+    import app as radar_app
+
+    assert {
+        "report_filter_used",
+        "report_open",
+        "report_dashboard_click",
+        "report_listing_click",
+    } <= radar_app.ALLOWED_TRACK_ACTIONS
 
 
 def test_all_articles_have_distinct_editorial_structure_and_user_language():

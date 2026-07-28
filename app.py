@@ -13,6 +13,7 @@ import time
 import urllib.request
 import urllib.parse
 import threading
+import unicodedata
 from copy import deepcopy
 from decimal import Decimal
 from functools import wraps
@@ -1328,6 +1329,10 @@ def api_telegram_webhook():
 ALLOWED_TRACK_ACTIONS = {
     "seo_landing_viewed",
     "report_viewed",
+    "report_filter_used",
+    "report_open",
+    "report_dashboard_click",
+    "report_listing_click",
     "social_utm_visit",
     "ai_referral_visit",
     "cta_clicked",
@@ -2144,6 +2149,12 @@ def _report_hub_thumbnail(page: dict) -> str:
     return ""
 
 
+def _report_safe_slug(value: str) -> str:
+    normalized = unicodedata.normalize("NFD", str(value or ""))
+    ascii_value = "".join(char for char in normalized if unicodedata.category(char) != "Mn")
+    return re.sub(r"[^a-z0-9]+", "-", ascii_value.lower()).strip("-")
+
+
 def _report_primary_metric(page: dict) -> dict:
     metrics = (page.get("report") or {}).get("metrics") or []
     if not metrics:
@@ -2157,6 +2168,7 @@ def _decorate_report_hub_pages(reports: list[dict]) -> tuple[list[dict], dict]:
     city_counts = {"tdm": 0, "ben-cat": 0}
     ward_options: dict[str, dict] = {}
     latest_by_city: dict[str, str] = {}
+    periods: dict[str, str] = {}
     for index, report in enumerate(reports, start=1):
         item = dict(report)
         report_body = dict(item.get("report") or {})
@@ -2166,13 +2178,15 @@ def _decorate_report_hub_pages(reports: list[dict]) -> tuple[list[dict], dict]:
         if city_key not in latest_by_city:
             latest_by_city[city_key] = item.get("path", "")
         year, month = _report_period_key(item)
+        period_key = f"{year:04d}-{month:02d}" if year and month else str(report_body.get("period") or "")
+        periods.setdefault(period_key, str(report_body.get("period") or period_key))
         item["hub_meta"] = {
             "index": index,
             "city_key": city_key,
             "city_label": city_label,
-            "ward_key": scope.lower().replace(" ", "-"),
+            "ward_key": _report_safe_slug(scope),
             "scope": scope,
-            "period_key": f"{year:04d}-{month:02d}" if year and month else str(report_body.get("period") or ""),
+            "period_key": period_key,
             "thumbnail": _report_hub_thumbnail(item),
             "primary_metric": _report_primary_metric(item),
             "search_text": " ".join([
@@ -2186,12 +2200,21 @@ def _decorate_report_hub_pages(reports: list[dict]) -> tuple[list[dict], dict]:
         }
         if scope != "Thủ Dầu Một":
             key = f"{city_key}|{scope}"
-            ward_options[key] = {"city_key": city_key, "city_label": city_label, "label": scope}
+            ward_options[key] = {
+                "city_key": city_key,
+                "city_label": city_label,
+                "key": _report_safe_slug(scope),
+                "label": scope,
+            }
         decorated.append(item)
     hub_filters = {
         "city_counts": city_counts,
         "latest_by_city": latest_by_city,
         "wards": sorted(ward_options.values(), key=lambda w: (w["city_label"], w["label"])),
+        "periods": [
+            {"key": key, "label": label}
+            for key, label in sorted(periods.items(), reverse=True)
+        ],
         "total": len(decorated),
     }
     return decorated, hub_filters
@@ -2436,6 +2459,30 @@ def _render_public_page(page: dict):
             page["scope_label"] = map_label.split(" / ", 1)[1]
         else:
             page["scope_label"] = "Thủ Dầu Một"
+    if page.get("variant") == "report":
+        scope = str(page.get("scope_label") or "Thủ Dầu Một")
+        city_key, _city_label = _report_hub_city(scope, page.get("path", ""))
+        dashboard_params = {
+            "tab": "signals",
+            "city": "THỦ DẦU MỘT" if city_key == "tdm" else "BẾN CÁT",
+            "date_range": "all",
+            "mos_min": "10",
+        }
+        if scope not in {"Thủ Dầu Một", "Bến Cát"}:
+            dashboard_params["ward"] = scope
+        report_body = page.get("report") or {}
+        year, month = _report_period_key(page)
+        page["report_dashboard_href"] = "/?" + urllib.parse.urlencode(dashboard_params)
+        page["report_dashboard_label"] = (
+            f"Xem deal đang hoạt động tại {scope}"
+            if scope not in {"Thủ Dầu Một", "Bến Cát"}
+            else f"Xem deal đang hoạt động tại {_city_label}"
+        )
+        page["report_analytics"] = {
+            "city": city_key,
+            "ward_slug": _report_safe_slug(scope),
+            "period": f"{year:04d}-{month:02d}" if year and month else str(report_body.get("period") or ""),
+        }
     page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(
         page["path"],
@@ -2457,6 +2504,14 @@ def seo_report_hub_page():
     page["breadcrumbs"] = _page_breadcrumbs(page)
     reports = sorted(_published_report_pages(), key=_report_sort_key, reverse=True)
     reports, hub_filters = _decorate_report_hub_pages(reports)
+    if hub_filters["city_counts"].get("ben-cat", 0) == 0:
+        page.update({
+            "title": "Báo cáo thị trường BĐS Thủ Dầu Một | Radar BDS",
+            "description": "Kho báo cáo thị trường BĐS Thủ Dầu Một theo tháng: mẫu tin hợp lệ, giá trung vị và tín hiệu đáng kiểm tra theo phường.",
+            "hero_title": "Báo cáo thị trường BĐS Thủ Dầu Một",
+            "hero_text": "Theo dõi các báo cáo tháng đã chốt dữ liệu tại Thủ Dầu Một. Bến Cát sẽ được mở khi có đủ snapshot đạt chuẩn.",
+            "scope_label": "Đang phủ 13 phường Thủ Dầu Một",
+        })
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
     return render_template("seo_report_hub.html", page=page, reports=reports, hub_filters=hub_filters, site_meta=site_meta, active_nav="bao-cao")
 

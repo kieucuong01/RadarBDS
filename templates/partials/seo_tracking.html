@@ -67,6 +67,24 @@
   });
 
   document.addEventListener("click", (event) => {
+    const reportTarget = event.target.closest("[data-report-action]");
+    if (reportTarget) {
+      const actionMap = {
+        open: "report_open",
+        dashboard: "report_dashboard_click",
+        listing: "report_listing_click"
+      };
+      const reportAction = actionMap[reportTarget.dataset.reportAction];
+      if (reportAction) {
+        sendRadarEvent(reportAction, {
+          city: reportTarget.dataset.reportCity || "unknown",
+          ward_slug: reportTarget.dataset.reportWard || "all",
+          period: reportTarget.dataset.reportPeriod || "unknown",
+          source_surface: reportTarget.dataset.reportSurface || "unknown",
+          listing_id: reportTarget.dataset.listingId || ""
+        });
+      }
+    }
     const link = event.target.closest("[data-track-cta]");
     if (!link) return;
     sendRadarEvent("cta_clicked", {

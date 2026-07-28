@@ -27,6 +27,20 @@
         </div>
       </header>
 
+      <aside class="report-live-cta">
+        <div>
+          <span>Dữ liệu hiện tại</span>
+          <strong>{{ page.report_dashboard_label }}</strong>
+          <p>Báo cáo này là snapshot của {{ page.report.period }}; dashboard mở các deal vẫn đang hoạt động để kiểm tra tiếp.</p>
+        </div>
+        <a href="{{ page.report_dashboard_href }}"
+          data-report-action="dashboard"
+          data-report-city="{{ page.report_analytics.city }}"
+          data-report-ward="{{ page.report_analytics.ward_slug }}"
+          data-report-period="{{ page.report_analytics.period }}"
+          data-report-surface="report_hero">{{ page.report_dashboard_label }} →</a>
+      </aside>
+
       <section class="seo-report-block" aria-labelledby="report-metrics">
         <div class="section-heading">
           <p class="seo-eyebrow">Chỉ số chính</p>
