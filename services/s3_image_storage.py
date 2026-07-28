@@ -113,12 +113,13 @@ def upload_file(path: Path, object_key: str) -> str:
     if acl:
         extra_args["ACL"] = acl
 
-    s3_client().upload_file(
-        str(local_path),
-        s3_bucket(),
-        key,
-        ExtraArgs=extra_args,
-    )
+    with local_path.open("rb") as body:
+        s3_client().put_object(
+            Bucket=s3_bucket(),
+            Key=key,
+            Body=body,
+            **extra_args,
+        )
     return key
 
 

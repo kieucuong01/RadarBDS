@@ -19,8 +19,8 @@ class S3ImageStorageTest(unittest.TestCase):
             calls = []
 
             class FakeClient:
-                def upload_file(self, *args, **kwargs):
-                    calls.append((args, kwargs))
+                def put_object(self, **kwargs):
+                    calls.append(kwargs)
 
             with mock.patch.dict(
                 os.environ,
@@ -33,10 +33,12 @@ class S3ImageStorageTest(unittest.TestCase):
                 result = s3_image_storage.upload_file(path, "/data/images/thumbs/sample.webp")
 
         self.assertEqual(result, "data/images/thumbs/sample.webp")
-        args, kwargs = calls[0]
-        self.assertEqual(args[:3], (str(path), "radarbds", "data/images/thumbs/sample.webp"))
+        kwargs = calls[0]
+        self.assertEqual(kwargs["Bucket"], "radarbds")
+        self.assertEqual(kwargs["Key"], "data/images/thumbs/sample.webp")
+        self.assertIs(kwargs["Body"].closed, True)
         self.assertEqual(
-            kwargs["ExtraArgs"],
+            {key: kwargs[key] for key in ("ACL", "CacheControl", "ContentType")},
             {
                 "ACL": "public-read",
                 "CacheControl": "public, max-age=2592000, immutable",
