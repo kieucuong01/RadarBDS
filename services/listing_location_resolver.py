@@ -52,6 +52,18 @@ def _slug(value: str) -> str:
     return normalize_location_token(value).replace(" ", "-")
 
 
+def _road_location_key(
+    city: str,
+    ward: str,
+    road: str,
+    landmark: str = "",
+) -> str:
+    key = f"road:{_slug(city)}:{_slug(ward)}:{_slug(road)}"
+    if landmark:
+        key += f":{_slug(landmark)}"
+    return key
+
+
 def _value(listing: Mapping, key: str, default=None):
     try:
         return listing.get(key, default)
@@ -447,7 +459,6 @@ def resolve_listing_location(
     nearby_road = normalize_road_token(getattr(context, "nearby_road", ""))
     landmark_key = normalize_location_token(getattr(context, "landmark", ""))
     relation = str(getattr(context, "relation", "") or "")
-    distance_m = _float(getattr(context, "distance_m", None))
     candidate_road = direct_road or nearby_road
     if not city or not ward:
         return _fallback_with_issue(
@@ -504,15 +515,15 @@ def resolve_listing_location(
                     registry=registry,
                     signature=signature,
                 )
-            location_key = (
-                f"road:{_slug(city)}:{_slug(ward)}:{_slug(direct_road)}"
-            )
-            if landmark_key:
-                location_key += f":{_slug(landmark_key)}"
             resolved = _resolved_from_entry(
                 listing_id=listing_id,
                 precision="road",
-                location_key=location_key,
+                location_key=_road_location_key(
+                    city,
+                    ward,
+                    direct_road,
+                    landmark_key if landmark_entry else "",
+                ),
                 entry=road_entry,
                 resolver_version=registry.resolver_version,
                 signature=signature,
@@ -580,25 +591,18 @@ def resolve_listing_location(
             registry,
         )
         if isinstance(road_entry, Mapping):
-            registry_radius = _float(road_entry.get("accuracy_radius_m")) or 75.0
-            location_key = (
-                f"nearby:{_slug(city)}:{_slug(ward)}:"
-                f"{_slug(nearby_road)}:{_slug(relation or 'near')}"
-            )
-            if landmark_entry:
-                location_key += f":{_slug(landmark_key)}"
             resolved = _resolved_from_entry(
                 listing_id=listing_id,
-                precision="nearby",
-                location_key=location_key,
+                precision="road",
+                location_key=_road_location_key(
+                    city,
+                    ward,
+                    nearby_road,
+                    landmark_key if landmark_entry else "",
+                ),
                 entry=road_entry,
                 resolver_version=registry.resolver_version,
                 signature=signature,
-                accuracy_radius_m=max(
-                    registry_radius,
-                    distance_m or 0.0,
-                    100.0,
-                ),
                 relation=relation or "near",
                 reference_road=nearby_road,
                 landmark_key=landmark_key if landmark_entry else "",
@@ -636,25 +640,16 @@ def resolve_listing_location(
         if landmark_ambiguous:
             status, reason = "ambiguous", "ambiguous_landmark"
         if landmark_entry:
-            landmark_radius = (
-                _float(landmark_entry.get("accuracy_radius_m")) or 100.0
-            )
             resolved = _resolved_from_entry(
                 listing_id=listing_id,
-                precision="nearby",
+                precision="landmark",
                 location_key=(
-                    f"nearby:{_slug(city)}:{_slug(ward)}:"
-                    f"{_slug(nearby_road)}:{_slug(relation or 'near')}:"
+                    f"landmark:{_slug(city)}:{_slug(ward)}:"
                     f"{_slug(landmark_key)}"
                 ),
                 entry=landmark_entry,
                 resolver_version=registry.resolver_version,
                 signature=signature,
-                accuracy_radius_m=max(
-                    landmark_radius,
-                    distance_m or 0.0,
-                    100.0,
-                ),
                 relation=relation or "near",
                 reference_road=nearby_road,
                 landmark_key=landmark_key,

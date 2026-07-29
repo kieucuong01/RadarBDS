@@ -126,9 +126,9 @@ def test_backfill_reports_all_precisions_and_persists_aggregated_issues():
     assert stats == {
         "scanned": 6,
         "exact": 1,
-        "road": 1,
+        "road": 2,
         "landmark": 1,
-        "nearby": 1,
+        "nearby": 0,
         "ward": 1,
         "unmapped": 1,
         "ambiguous": 1,
@@ -145,6 +145,39 @@ def test_backfill_reports_all_precisions_and_persists_aggregated_issues():
         ("ambiguous", 1),
         ("not_found", 1),
     }
+
+
+def test_backfill_rewrites_legacy_nearby_row_as_road():
+    patches = _patch_backfill()
+    with (
+        patches[0],
+        patches[1],
+        patches[2],
+        patches[3] as upsert_rows,
+        patches[4],
+        patches[5],
+        patches[6] as iter_candidates,
+    ):
+        from services.listing_location_backfill import backfill_listing_locations
+
+        iter_candidates.return_value = [
+            _candidate(
+                7,
+                description="Cách đường ĐX43 khoảng 100m",
+                existing_resolver_version="old-v1",
+                existing_signature="legacy-nearby-signature",
+            )
+        ]
+
+        stats = backfill_listing_locations()
+
+    assert stats["road"] == 1
+    assert stats["nearby"] == 0
+    assert stats["updated"] == 1
+    written = upsert_rows.call_args.args[0]
+    assert written[0].precision == "road"
+    assert written[0].location_key == "road:thu-dau-mot:phu-loi:dx-43"
+    assert written[0].relation == "near"
 
 
 def test_backfill_skips_unchanged_updates_changed_and_deletes_unmapped():

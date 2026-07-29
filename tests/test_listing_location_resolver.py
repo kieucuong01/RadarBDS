@@ -88,7 +88,7 @@ def _resolve(text="", **extra):
     return resolve_listing_location(listing, _registry(), context)
 
 
-def test_resolution_precedence_exact_road_landmark_nearby_ward():
+def test_resolution_precedence_exact_road_landmark_ward():
     exact = _resolve(source_lat=10.991, source_lng=106.701)
     road = _resolve(text="Mặt tiền DX43")
     landmark = _resolve(text="TĐC Phú Chánh D")
@@ -97,20 +97,38 @@ def test_resolution_precedence_exact_road_landmark_nearby_ward():
 
     assert [
         item.location.precision for item in (exact, road, landmark, nearby, ward)
-    ] == ["exact", "road", "landmark", "nearby", "ward"]
-    assert nearby.location.accuracy_radius_m >= 100
+    ] == ["exact", "road", "landmark", "road", "ward"]
     assert nearby.location.relation == "near"
 
 
-def test_nearby_relation_stays_approximate_when_landmark_also_matches():
+def test_nearby_and_direct_references_share_one_road_location_key():
+    direct = _resolve(text="Mặt tiền DX43")
+    nearby = _resolve(text="Cách DX43 100m")
+    alley = _resolve(text="1 sẹc đường DX43")
+
+    assert direct.location.precision == "road"
+    assert nearby.location.precision == "road"
+    assert alley.location.precision == "road"
+    assert {
+        direct.location.location_key,
+        nearby.location.location_key,
+        alley.location.location_key,
+    } == {"road:thu-dau-mot:phu-loi:dx-43"}
+    assert nearby.location.relation == "near"
+    assert alley.location.relation == "alley"
+
+
+def test_nearby_road_keeps_landmark_scope_without_creating_nearby_key():
     result = _resolve(
         text="Cách Đường số 35 100m, TĐC Phú Chánh B"
     )
 
-    assert result.location.precision == "nearby"
+    assert result.location.precision == "road"
+    assert result.location.location_key == (
+        "road:thu-dau-mot:phu-loi:duong-so-35:tdc-phu-chanh-b"
+    )
     assert result.location.relation == "near"
     assert result.location.landmark_key == "tdc phu chanh b"
-    assert result.location.accuracy_radius_m >= 100
 
 
 def test_ambiguous_road_uses_honest_ward_until_landmark_disambiguates():
