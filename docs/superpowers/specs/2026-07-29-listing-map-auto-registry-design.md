@@ -1,7 +1,7 @@
 # Listing Maps Automatic Registry Design
 
-**Date:** 2026-07-29  
-**Status:** Approved direction; written spec awaiting final review  
+**Date:** 2026-07-29
+**Status:** Approved direction; written spec awaiting final review
 **Scope:** Radar BDS listing Maps for the Săn Deal and Tin Rao tabs
 
 ## Context
