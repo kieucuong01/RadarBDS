@@ -85,6 +85,7 @@ from config.binh_duong_map import (
 from config.thu_dau_mot_map_product import THU_DAU_MOT_MAP_PRODUCT_PAGE
 
 mimetypes.add_type("image/webp", ".webp")
+mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
 # Import the extracted services
 from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter
@@ -1841,12 +1842,57 @@ def _thu_dau_mot_map_product_schema(
     page: dict,
     product,
     availability,
+    legacy_areas: list[dict],
+    current_areas: list[dict],
 ) -> dict:
     canonical_url = _public_url(page["path"])
     preview_url = _public_url(page["preview_after"])
+    legacy_geojson_url = _public_url(page["legacy_geojson_url"])
+    current_geojson_url = _public_url(page["current_geojson_url"])
+
+    def area_item_list(name: str, layer: str, areas: list[dict]) -> dict:
+        return {
+            "@type": "ItemList",
+            "@id": f"{canonical_url}#itemlist-{layer}",
+            "name": name,
+            "itemListOrder": "https://schema.org/ItemListOrderAscending",
+            "numberOfItems": len(areas),
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": index,
+                    "name": area["name"],
+                    "url": f"{canonical_url}#layer-{layer}/area-{area['slug']}",
+                    "item": {
+                        "@type": "Place",
+                        "name": area["name"],
+                        "additionalType": area.get("unit_type", "Phường"),
+                        "description": area.get("summary", ""),
+                    },
+                }
+                for index, area in enumerate(areas, start=1)
+            ],
+        }
+
     return {
         "@context": "https://schema.org",
         "@graph": [
+            {
+                "@type": "WebPage",
+                "@id": f"{canonical_url}#webpage",
+                "url": canonical_url,
+                "name": page["hero_title"],
+                "description": page["description"],
+                "inLanguage": "vi-VN",
+                "dateModified": page["updated_at"],
+                "isPartOf": {"@type": "WebSite", "name": SITE_NAME, "url": PUBLIC_BASE_URL},
+                "mainEntity": {
+                    "@type": "Map",
+                    "@id": f"{canonical_url}#interactive-map",
+                    "name": "Bản đồ TP Thủ Dầu Một tương tác",
+                    "description": page["answer_block"],
+                },
+            },
             {
                 "@type": "Product",
                 "@id": f"{canonical_url}#product",
@@ -1868,6 +1914,62 @@ def _thu_dau_mot_map_product_schema(
                     ),
                 },
             },
+            {
+                "@type": "Dataset",
+                "@id": f"{canonical_url}#dataset-legacy-14-wards",
+                "name": "GeoJSON 14 phường cũ của TP Thủ Dầu Một",
+                "description": (
+                    "Lớp ranh 14 phường cũ của TP Thủ Dầu Một trước năm 2025, "
+                    "dùng để tra cứu tham khảo trên Radar BDS."
+                ),
+                "dateModified": page["updated_at"],
+                "spatialCoverage": {"@type": "Place", "name": "TP Thủ Dầu Một"},
+                "license": f"{canonical_url}#license",
+                "isBasedOn": [
+                    "Stanford Geospatial Center / GADM v2.8 snapshot",
+                    "Radar BDS derived boundary review",
+                ],
+                "distribution": [
+                    {
+                        "@type": "DataDownload",
+                        "encodingFormat": "application/geo+json",
+                        "contentUrl": legacy_geojson_url,
+                    }
+                ],
+            },
+            {
+                "@type": "Dataset",
+                "@id": f"{canonical_url}#dataset-current-5-wards",
+                "name": "GeoJSON 5 phường hiện tại của TP Thủ Dầu Một",
+                "description": (
+                    "Lớp ranh 5 phường hiện tại của TP Thủ Dầu Một sau sắp xếp "
+                    "năm 2025, dùng để tra cứu tham khảo trên Radar BDS."
+                ),
+                "dateModified": page["updated_at"],
+                "spatialCoverage": {"@type": "Place", "name": "TP Thủ Dầu Một"},
+                "license": f"{canonical_url}#license",
+                "isBasedOn": [
+                    "OpenStreetMap contributors",
+                    "Radar BDS geometry review",
+                ],
+                "distribution": [
+                    {
+                        "@type": "DataDownload",
+                        "encodingFormat": "application/geo+json",
+                        "contentUrl": current_geojson_url,
+                    }
+                ],
+            },
+            area_item_list(
+                "14 phường cũ của TP Thủ Dầu Một",
+                "legacy",
+                legacy_areas,
+            ),
+            area_item_list(
+                "5 phường hiện tại của TP Thủ Dầu Một",
+                "current",
+                current_areas,
+            ),
             _breadcrumb_schema(page["breadcrumbs"]),
             {
                 "@type": "FAQPage",
@@ -2209,6 +2311,15 @@ def _map_areas_from_static_geojson(static_url: str) -> list[dict]:
                 "summary": properties.get("summary", ""),
                 "group": properties.get("group", ""),
                 "former_units": properties.get("former_units", ""),
+                "is_derived_boundary": bool(
+                    properties.get("is_derived_boundary")
+                    or properties.get("boundary_source") == "derived_boundary"
+                ),
+                "boundary_confidence": properties.get("boundary_confidence", ""),
+                "current_ward_after_2025": properties.get(
+                    "current_ward_after_2025",
+                    "",
+                ),
                 "dashboard_href": properties.get(
                     "dashboard_href",
                     "/?tab=signals&city=Th%E1%BB%A7%20D%E1%BA%A7u%20M%E1%BB%99t",
@@ -2266,6 +2377,8 @@ def thu_dau_mot_map_product_page():
             page,
             product,
             availability,
+            legacy_areas,
+            current_areas,
         ),
         active_nav="ban-do-binh-duong",
         dashboard_signal_href=(

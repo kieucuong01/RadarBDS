@@ -2,21 +2,26 @@
 
 THU_DAU_MOT_MAP_PRODUCT_PAGE = {
     "path": "/ban-do-thu-dau-mot",
-    "title": "Bộ bản đồ TP Thủ Dầu Một PDF, SVG, KML | Radar BDS",
+    "title": "Bản đồ TP Thủ Dầu Một Bình Dương trước và sau sáp nhập | Radar BDS",
     "description": (
-        "Bộ bản đồ số TP Thủ Dầu Một gồm bản in A0, bản chỉnh sửa và lớp địa lý, "
-        "với 14 ranh phường cũ tham khảo và 5 ranh phường hiện tại đã xác minh."
+        "Tra cứu miễn phí bản đồ TP Thủ Dầu Một Bình Dương trước và sau sáp nhập: "
+        "14 phường cũ tham khảo, 5 phường hiện tại và lối lọc tin nhà đất theo khu vực."
     ),
     "keywords": (
         "bản đồ Thủ Dầu Một, bản đồ TP Thủ Dầu Một, bản đồ vector Thủ Dầu Một, "
-        "bản đồ in A0 Thủ Dầu Một"
+        "bản đồ Thủ Dầu Một trước sáp nhập, bản đồ Thủ Dầu Một sau sáp nhập"
     ),
-    "breadcrumb_label": "Bộ bản đồ TP Thủ Dầu Một",
-    "hero_title": "Bộ bản đồ TP Thủ Dầu Một",
+    "breadcrumb_label": "Bản đồ TP Thủ Dầu Một",
+    "hero_title": "Bản đồ TP Thủ Dầu Một trước và sau sáp nhập",
     "hero_text": (
-        "Một bộ sản phẩm biên tập cho nhu cầu in A0, chỉnh sửa thiết kế và mở lớp "
-        "địa lý. Bạn có thể tra cứu miễn phí trên bản đồ tương tác trước khi mở dashboard "
-        "lọc tin theo khu vực."
+        "Tra cứu miễn phí 14 phường cũ của Thủ Dầu Một và 5 phường hiện tại sau "
+        "sắp xếp. Chọn khu vực trên bản đồ để đối chiếu tên địa bàn, sau đó mở "
+        "dashboard Radar BDS lọc tin nhà đất đang bán theo Thủ Dầu Một."
+    ),
+    "answer_block": (
+        "TP Thủ Dầu Một hiện có 2 lớp tra cứu trên Radar BDS: bản trước năm 2025 "
+        "gồm 14 phường cũ ở mức tham khảo; bản sau sắp xếp gồm 5 phường hiện tại "
+        "là Thủ Dầu Một, Phú Lợi, Chánh Hiệp, Bình Dương và Phú An."
     ),
     "updated_at": "2026-07-29",
     "updated_label": "29/07/2026",
@@ -64,10 +69,11 @@ THU_DAU_MOT_MAP_PRODUCT_PAGE = {
             ),
         },
         {
-            "question": "Khi nào có thể mua bộ bản đồ?",
+            "question": "Mua bộ bản đồ xong nhận file như thế nào?",
             "answer": (
-                "Radar BDS chỉ mở bán sau khi gói phát hành, kho lưu trữ bảo vệ và "
-                "luồng thanh toán đã qua đủ bước kiểm tra vận hành."
+                "Khi thanh toán VietQR qua PayOS được xác nhận, trang đơn hàng hiển thị "
+                "link tải có hiệu lực 24 giờ. Link gắn với mã đơn hàng, không cần email "
+                "hoặc tài khoản."
             ),
         },
     ),

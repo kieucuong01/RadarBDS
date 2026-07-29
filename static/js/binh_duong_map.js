@@ -208,6 +208,11 @@
     var directoryItems = Array.prototype.slice.call(
       doc.querySelectorAll("[data-map-directory-item]")
     );
+    var searchInput = doc.querySelector("[data-map-area-search]");
+    var searchStatus = doc.querySelector("[data-map-search-status]");
+    var searchReset = doc.querySelector("[data-map-search-reset]");
+    var searchEmpty = doc.querySelector("[data-map-search-empty]");
+    var copyButton = root.querySelector("[data-map-copy-link]");
     var mobileCta = doc.querySelector("[data-map-mobile-cta]");
     var hero = doc.querySelector(".bd-map-hero");
 
@@ -231,6 +236,73 @@
     var boundaryLayer = null;
     var featureLayers = {};
     var activeState = { layer: "legacy", areaSlug: null };
+    var searchTimer = null;
+    var copyResetTimer = null;
+
+    function normalizeSearchValue(value) {
+      var text = String(value || "").toLowerCase();
+      if (typeof text.normalize === "function") {
+        text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+      return text.replace(/\s+/g, " ").trim();
+    }
+
+    function filterDirectoryItems() {
+      var query = normalizeSearchValue(searchInput && searchInput.value);
+      var visibleCount = 0;
+      directoryItems.forEach(function (item) {
+        var haystack = normalizeSearchValue(item.textContent || "");
+        var matched = !query || haystack.indexOf(query) !== -1;
+        item.hidden = !matched;
+        if (matched) visibleCount += 1;
+      });
+      if (searchStatus) {
+        searchStatus.textContent = query
+          ? "Tìm thấy " + visibleCount + " khu vực phù hợp."
+          : "Đang hiển thị " + directoryItems.length + " khu vực.";
+      }
+      if (searchEmpty) searchEmpty.hidden = visibleCount !== 0;
+    }
+
+    function copySelectionLink() {
+      if (!copyButton) return;
+      var hash = win.location.hash || formatMapHash(activeState.layer, activeState.areaSlug);
+      var url = win.location.origin + win.location.pathname + hash;
+      var done = function () {
+        copyButton.textContent = "Đã sao chép";
+        copyButton.setAttribute("aria-label", "Đã sao chép liên kết khu vực");
+        if (copyResetTimer) win.clearTimeout(copyResetTimer);
+        copyResetTimer = win.setTimeout(function () {
+          copyButton.textContent = "Sao chép liên kết khu vực";
+          copyButton.setAttribute("aria-label", "Sao chép liên kết khu vực");
+        }, 1800);
+      };
+      var failed = function () {
+        copyButton.textContent = "Không sao chép được";
+        if (copyResetTimer) win.clearTimeout(copyResetTimer);
+        copyResetTimer = win.setTimeout(function () {
+          copyButton.textContent = "Sao chép liên kết khu vực";
+        }, 1800);
+      };
+      if (win.navigator && win.navigator.clipboard && win.navigator.clipboard.writeText) {
+        win.navigator.clipboard.writeText(url).then(done).catch(failed);
+        return;
+      }
+      try {
+        var textarea = doc.createElement("textarea");
+        textarea.value = url;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        doc.body.appendChild(textarea);
+        textarea.select();
+        if (!doc.execCommand("copy")) throw new Error("copy_failed");
+        doc.body.removeChild(textarea);
+        done();
+      } catch (error) {
+        failed();
+      }
+    }
 
     function updateMobileCta(visible) {
       if (!mobileCta) return;
@@ -576,6 +648,27 @@
         setBaseLayer(button.getAttribute("data-map-base-layer"), { track: true });
       });
     });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        if (searchTimer) win.clearTimeout(searchTimer);
+        searchTimer = win.setTimeout(filterDirectoryItems, 120);
+      });
+      filterDirectoryItems();
+    }
+
+    if (searchReset) {
+      searchReset.addEventListener("click", function () {
+        if (searchInput) searchInput.value = "";
+        filterDirectoryItems();
+        if (searchInput) searchInput.focus();
+      });
+    }
+
+    if (copyButton) {
+      copyButton.setAttribute("aria-label", "Sao chép liên kết khu vực");
+      copyButton.addEventListener("click", copySelectionLink);
+    }
 
     areaButtons.forEach(function (button) {
       button.addEventListener("click", function () {

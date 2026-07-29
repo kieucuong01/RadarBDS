@@ -444,6 +444,28 @@ def test_product_page_is_indexable_but_checkout_is_disabled_without_sales_flag(m
         assert leaked_path not in lowered
 
 
+def test_product_page_targets_free_lookup_intent_before_paid_bundle():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get(PRODUCT_PATH)
+    html = response.get_data(as_text=True)
+    visible_text = _visible_body_text(html)
+
+    assert (
+        "<title>Bản đồ TP Thủ Dầu Một Bình Dương trước và sau sáp nhập | Radar BDS</title>"
+        in html
+    )
+    assert "<h1>Bản đồ TP Thủ Dầu Một trước và sau sáp nhập</h1>" in html
+    assert visible_text.index("Bản đồ TP Thủ Dầu Một tương tác") < visible_text.index(
+        "Bộ bản đồ TP Thủ Dầu Một"
+    )
+    assert "TP Thủ Dầu Một hiện có 2 lớp tra cứu" in visible_text
+    assert "14 phường cũ" in visible_text
+    assert "5 phường hiện tại" in visible_text
+    assert "Radar BDS chỉ mở bán" not in visible_text
+    assert "Trong khi bộ bản đồ chưa mở bán" not in visible_text
+
+
 def test_product_page_states_the_exact_legacy_and_current_edition_contract():
     import app as radar_app
 
@@ -489,6 +511,68 @@ def test_product_page_states_the_exact_legacy_and_current_edition_contract():
     assert "© OpenStreetMap contributors" in html
 
 
+def test_product_public_geojson_uses_utf8_and_agent_metadata():
+    legacy_geojson = json.loads(
+        Path("static/maps/thu-dau-mot/legacy-14-wards.geojson").read_text(
+            encoding="utf-8"
+        )
+    )
+    current_geojson = json.loads(
+        Path("static/maps/thu-dau-mot/current-5-wards.geojson").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    payloads = (legacy_geojson, current_geojson)
+    for payload in payloads:
+        assert "?" not in payload["name"]
+        assert payload["updated_at"] == "2026-07-29"
+        for feature in payload["features"]:
+            properties = feature["properties"]
+            for key in ("name", "unit_type", "group", "summary", "dashboard_label"):
+                assert "?" not in str(properties.get(key, ""))
+            assert properties["dashboard_href"].startswith(
+                "/?tab=signals&city=Th%E1%BB%A7%20D%E1%BA%A7u%20M%E1%BB%99t"
+            )
+            assert properties["dashboard_label"] == "Lọc tin Thủ Dầu Một"
+            assert properties["last_updated"] == "2026-07-29"
+            assert properties["boundary_confidence"] in {
+                "source_snapshot",
+                "derived_reference",
+                "verified",
+            }
+            assert isinstance(properties["is_derived_boundary"], bool)
+
+    derived = {
+        feature["properties"]["name"]: feature["properties"]
+        for feature in legacy_geojson["features"]
+        if feature["properties"]["is_derived_boundary"]
+    }
+    assert set(derived) == {"Hòa Phú", "Phú Tân"}
+    assert all(
+        item["boundary_confidence"] == "derived_reference"
+        for item in derived.values()
+    )
+    assert all(
+        item["current_ward_after_2025"] == "Bình Dương"
+        for item in derived.values()
+    )
+
+
+def test_product_public_geojson_serves_agent_readable_mimetype():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    for path in (
+        "/static/maps/thu-dau-mot/legacy-14-wards.geojson",
+        "/static/maps/thu-dau-mot/current-5-wards.geojson",
+    ):
+        response = client.get(path)
+
+        assert response.status_code == 200
+        assert response.headers["Content-Type"] == "application/geo+json; charset=utf-8"
+
+
 def test_product_page_replaces_internal_map_jargon_with_clear_vietnamese():
     import app as radar_app
 
@@ -522,6 +606,36 @@ def test_product_source_and_breadcrumb_links_have_touch_target_hooks():
     assert "min-height: 44px" in css
 
 
+def test_product_map_has_search_copy_link_and_agent_readable_data_links():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(PRODUCT_PATH).get_data(as_text=True)
+    css = Path("static/css/thu_dau_mot_map_product.css").read_text(encoding="utf-8")
+    map_css = Path("static/css/binh_duong_map.css").read_text(encoding="utf-8")
+    map_js = Path("static/js/binh_duong_map.js").read_text(encoding="utf-8")
+
+    assert 'data-map-area-search' in html
+    assert 'aria-label="Tìm phường Thủ Dầu Một"' in html
+    assert 'data-map-search-status' in html
+    assert 'data-map-copy-link' in html
+    assert "Sao chép liên kết khu vực" in html
+    assert 'id="du-lieu-may-doc-duoc"' in html
+    assert (
+        'href="/static/maps/thu-dau-mot/legacy-14-wards.geojson"'
+        in html
+    )
+    assert (
+        'href="/static/maps/thu-dau-mot/current-5-wards.geojson"'
+        in html
+    )
+    assert ".tdm-product-agent-data" in css
+    assert "[data-map-copy-link]" in map_css
+    assert "filterDirectoryItems" in map_js
+    assert "copySelectionLink" in map_js
+    assert ".leaflet-control-zoom a" in map_css
+    assert "min-width: 44px" in map_css
+
+
 def test_product_schema_matches_visible_offer_and_stays_out_of_stock():
     import app as radar_app
 
@@ -544,6 +658,48 @@ def test_product_schema_matches_visible_offer_and_stays_out_of_stock():
     for item in faq["mainEntity"]:
         assert item["name"] in html
         assert item["acceptedAnswer"]["text"] in html
+
+
+def test_product_schema_includes_webpage_datasets_and_ward_item_lists():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get(PRODUCT_PATH)
+    graph = _schema_graph(response)
+
+    webpage = next(node for node in graph if node["@type"] == "WebPage")
+    assert webpage["name"] == "Bản đồ TP Thủ Dầu Một trước và sau sáp nhập"
+    assert webpage["dateModified"] == "2026-07-29"
+    assert webpage["mainEntity"]["@id"] == f"{PRODUCT_URL}#interactive-map"
+
+    datasets = [node for node in graph if node["@type"] == "Dataset"]
+    assert {dataset["@id"] for dataset in datasets} == {
+        f"{PRODUCT_URL}#dataset-legacy-14-wards",
+        f"{PRODUCT_URL}#dataset-current-5-wards",
+    }
+    assert all(dataset["dateModified"] == "2026-07-29" for dataset in datasets)
+    assert {
+        distribution["contentUrl"]
+        for dataset in datasets
+        for distribution in dataset["distribution"]
+    } == {
+        f"{PRODUCT_URL.rsplit('/', 1)[0]}/static/maps/thu-dau-mot/legacy-14-wards.geojson",
+        f"{PRODUCT_URL.rsplit('/', 1)[0]}/static/maps/thu-dau-mot/current-5-wards.geojson",
+    }
+
+    item_lists = [node for node in graph if node["@type"] == "ItemList"]
+    assert {item_list["name"] for item_list in item_lists} == {
+        "14 phường cũ của TP Thủ Dầu Một",
+        "5 phường hiện tại của TP Thủ Dầu Một",
+    }
+    counts = {item_list["name"]: len(item_list["itemListElement"]) for item_list in item_lists}
+    assert counts["14 phường cũ của TP Thủ Dầu Một"] == 14
+    assert counts["5 phường hiện tại của TP Thủ Dầu Một"] == 5
+    all_urls = [
+        item["url"]
+        for item_list in item_lists
+        for item in item_list["itemListElement"]
+    ]
+    assert len(all_urls) == len(set(all_urls)) == 19
 
 
 def test_product_discovery_surfaces_include_one_canonical_url_and_contextual_links():
