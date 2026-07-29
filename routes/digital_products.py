@@ -16,6 +16,7 @@ import qrcode
 import qrcode.image.svg
 from flask import (
     Blueprint,
+    abort,
     jsonify,
     make_response,
     redirect,
@@ -23,6 +24,7 @@ from flask import (
     request,
     send_file,
 )
+from config.city_map_products import get_city_map_page
 from itsdangerous import BadData, URLSafeTimedSerializer
 
 from auth.core import rate_limit
@@ -60,7 +62,6 @@ from services.payos_client import (
 
 bp = Blueprint("digital_products", __name__)
 
-_PRODUCT_SLUG = "thu-dau-mot-map-bundle"
 _ORDER_COOKIE = "radar_product_order"
 _RETRY_COOKIE = "radar_product_checkout_retry"
 _ORDER_COOKIE_MAX_AGE = 90_000
@@ -106,9 +107,14 @@ def thu_dau_mot_map_product_page(**kwargs):
         _impl("thu_dau_mot_map_product_page", **kwargs)
     )
     settings = get_digital_product_commerce_settings()
+    page = get_city_map_page("thu-dau-mot")
     if (
         _valid_cookie_secret(settings.cookie_secret)
-        and _retry_state(settings.cookie_secret) is None
+        and _retry_state(
+            settings.cookie_secret,
+            page["product_slug"],
+        )
+        is None
     ):
         _set_retry_cookie(
             response,
@@ -116,7 +122,9 @@ def thu_dau_mot_map_product_page(**kwargs):
                 settings.cookie_secret,
                 uuid.uuid4().hex,
                 "seed",
+                page["product_slug"],
             ),
+            page["path"],
         )
     return response
 
@@ -126,14 +134,18 @@ def thu_dau_mot_map_geojson(edition: str):
     return _impl("thu_dau_mot_map_geojson", edition=edition)
 
 
-@bp.post("/ban-do-thu-dau-mot/checkout")
+@bp.post("/ban-do-<city_slug>/checkout")
 @rate_limit(
     "digital_product_checkout",
     limits={"guest": 10, "free": 10, "vip": 10, "admin": 30},
 )
-def checkout_thu_dau_mot_map():
+def checkout_city_map(city_slug: str):
+    try:
+        page = get_city_map_page(city_slug)
+    except KeyError:
+        abort(404)
     settings = get_digital_product_commerce_settings()
-    product = get_digital_product(_PRODUCT_SLUG)
+    product = get_digital_product(page["product_slug"])
     if not settings.ready_for_checkout or settings.storage_dir is None:
         return jsonify({"code": "product_unavailable"}), 503
     availability = get_release_availability(
@@ -145,7 +157,10 @@ def checkout_thu_dau_mot_map():
         return jsonify({"code": "product_unavailable"}), 503
 
     now = _utcnow()
-    retry_state = _retry_state(settings.cookie_secret)
+    retry_state = _retry_state(
+        settings.cookie_secret,
+        product.slug,
+    )
     if retry_state is None:
         retry_state = {
             "public_id": uuid.uuid4().hex,
@@ -156,6 +171,7 @@ def checkout_thu_dau_mot_map():
         settings.cookie_secret,
         public_id,
         "seed",
+        product.slug,
     )
     repo = _repository_factory()
     try:
@@ -169,12 +185,21 @@ def checkout_thu_dau_mot_map():
                     repo=repo,
                 )
             elif (
+                order.product_slug != product.slug
+                or order.product_version != product.version
+                or order.expected_amount != product.price_vnd
+                or order.currency != "VND"
+            ):
+                raise OrderLifecycleError("retry order product mismatch")
+            elif (
                 order.status != "pending"
                 or now >= order.payment_expires_at
             ):
                 return _checkout_in_progress_response(
                     settings.cookie_secret,
                     public_id,
+                    product.slug,
+                    page["path"],
                 )
 
             complete_link = _has_complete_payment_link(order)
@@ -184,10 +209,12 @@ def checkout_thu_dau_mot_map():
                 return _checkout_in_progress_response(
                     settings.cookie_secret,
                     public_id,
+                    product.slug,
+                    page["path"],
                 )
 
             order_url = (
-                f"{PUBLIC_BASE_URL}/ban-do-thu-dau-mot/don-hang/"
+                f"{PUBLIC_BASE_URL}{page['order_base_path']}/"
                 f"{order.public_id}"
             )
             if complete_link:
@@ -212,18 +239,20 @@ def checkout_thu_dau_mot_map():
             _record_payment_link_failure(repo, order, now)
         response = jsonify({"code": "checkout_temporarily_unavailable"})
         response.status_code = 502
-        _set_retry_cookie(response, retry_seed)
+        _set_retry_cookie(response, retry_seed, page["path"])
         return response
     except AdvisoryLockBusy:
         return _checkout_in_progress_response(
             settings.cookie_secret,
             public_id,
             phase=retry_state["phase"],
+            product_slug=product.slug,
+            cookie_path=page["path"],
         )
     except Exception:
         response = jsonify({"code": "checkout_temporarily_unavailable"})
         response.status_code = 503
-        _set_retry_cookie(response, retry_seed)
+        _set_retry_cookie(response, retry_seed, page["path"])
         return response
 
     fragment_token = quote(
@@ -232,7 +261,7 @@ def checkout_thu_dau_mot_map():
     )
     response = redirect(
         (
-            f"/ban-do-thu-dau-mot/don-hang/"
+            f"{page['order_base_path']}/"
             f"{pending_secret.order.public_id}#token={fragment_token}"
         ),
         code=303,
@@ -243,14 +272,19 @@ def checkout_thu_dau_mot_map():
             settings.cookie_secret,
             pending_secret.order.public_id,
             "linked",
+            product.slug,
         ),
+        page["path"],
     )
     return response
 
 
-@bp.get("/ban-do-thu-dau-mot/don-hang/<public_id>")
-def thu_dau_mot_map_order_page(public_id: str):
-    page = {"local_links": []}
+@bp.get("/ban-do-<city_slug>/don-hang/<public_id>")
+def city_map_order_page(city_slug: str, public_id: str):
+    try:
+        page = get_city_map_page(city_slug)
+    except KeyError:
+        abort(404)
     if _PUBLIC_ID_PATTERN.fullmatch(public_id or "") is None:
         return render_template(
             "thu_dau_mot_map_order.html",
@@ -391,14 +425,16 @@ def download_digital_product_order(public_id: str):
     if settings.storage_dir is None:
         return _download_unavailable_response()
     try:
-        product = get_digital_product(_PRODUCT_SLUG)
-        if (
-            order.product_slug != product.slug
-            or order.product_version != product.version
-            or order.expected_amount != product.price_vnd
-            or order.currency != "VND"
-        ):
-            return _download_denied_response()
+        product = get_digital_product(order.product_slug)
+    except KeyError:
+        return _download_denied_response()
+    if (
+        order.product_version != product.version
+        or order.expected_amount != product.price_vnd
+        or order.currency != "VND"
+    ):
+        return _download_denied_response()
+    try:
         package_snapshot = snapshot_protected_package(
             product,
             settings.storage_dir,
@@ -471,7 +507,10 @@ def _order_serializer(secret: str) -> URLSafeTimedSerializer:
     )
 
 
-def _retry_state(secret: str) -> dict[str, str] | None:
+def _retry_state(
+    secret: str,
+    product_slug: str,
+) -> dict[str, str] | None:
     signed = request.cookies.get(_RETRY_COOKIE)
     if not signed:
         return None
@@ -484,15 +523,17 @@ def _retry_state(secret: str) -> dict[str, str] | None:
         return None
     if (
         type(payload) is not dict
-        or set(payload) != {"public_id", "phase"}
+        or set(payload) != {"public_id", "phase", "product_slug"}
         or type(payload.get("public_id")) is not str
         or _PUBLIC_ID_PATTERN.fullmatch(payload["public_id"]) is None
         or payload.get("phase") not in {"seed", "linked"}
+        or payload.get("product_slug") != product_slug
     ):
         return None
     return {
         "public_id": payload["public_id"],
         "phase": payload["phase"],
+        "product_slug": payload["product_slug"],
     }
 
 
@@ -500,9 +541,14 @@ def _signed_retry_state(
     secret: str,
     public_id: str,
     phase: str,
+    product_slug: str,
 ) -> str:
     return _retry_serializer(secret).dumps(
-        {"public_id": public_id, "phase": phase}
+        {
+            "public_id": public_id,
+            "phase": phase,
+            "product_slug": product_slug,
+        }
     )
 
 
@@ -520,7 +566,11 @@ def _record_payment_link_failure(repo, order, now: datetime) -> None:
         return
 
 
-def _set_retry_cookie(response, signed_value: str) -> None:
+def _set_retry_cookie(
+    response,
+    signed_value: str,
+    cookie_path: str,
+) -> None:
     response.set_cookie(
         _RETRY_COOKIE,
         signed_value,
@@ -528,13 +578,15 @@ def _set_retry_cookie(response, signed_value: str) -> None:
         httponly=True,
         secure=PUBLIC_BASE_URL.startswith("https://"),
         samesite="Lax",
-        path="/ban-do-thu-dau-mot",
+        path=cookie_path,
     )
 
 
 def _checkout_in_progress_response(
     secret: str,
     public_id: str,
+    product_slug: str,
+    cookie_path: str,
     *,
     phase: str = "linked",
 ):
@@ -542,7 +594,13 @@ def _checkout_in_progress_response(
     response.status_code = 409
     _set_retry_cookie(
         response,
-        _signed_retry_state(secret, public_id, phase),
+        _signed_retry_state(
+            secret,
+            public_id,
+            phase,
+            product_slug,
+        ),
+        cookie_path,
     )
     return response
 

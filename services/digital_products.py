@@ -16,19 +16,20 @@ from pathlib import Path
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _MAX_MANIFEST_BYTES = 64 * 1024
 _MAX_PROTECTED_PACKAGE_BYTES = 64 * 1024 * 1024
-_THU_DAU_MOT_RELEASE_FILES = (
-    "thu-dau-mot-truoc-2025-a0.pdf",
-    "thu-dau-mot-sau-2025-a0.pdf",
-    "thu-dau-mot-truoc-2025.svg",
-    "thu-dau-mot-sau-2025.svg",
-    "thu-dau-mot-truoc-2025.kml",
-    "thu-dau-mot-sau-2025.kml",
-    "fonts/BeVietnamPro-Regular.ttf",
-    "fonts/BeVietnamPro-SemiBold.ttf",
-    "fonts/OFL.txt",
-    "HUONG-DAN.pdf",
-    "GIAY-PHEP.txt",
-)
+def _city_map_release_files(city_slug: str) -> tuple[str, ...]:
+    return (
+        f"{city_slug}-truoc-2025-a0.pdf",
+        f"{city_slug}-sau-2025-a0.pdf",
+        f"{city_slug}-truoc-2025.svg",
+        f"{city_slug}-sau-2025.svg",
+        f"{city_slug}-truoc-2025.kml",
+        f"{city_slug}-sau-2025.kml",
+        "fonts/BeVietnamPro-Regular.ttf",
+        "fonts/BeVietnamPro-SemiBold.ttf",
+        "fonts/OFL.txt",
+        "HUONG-DAN.pdf",
+        "GIAY-PHEP.txt",
+    )
 
 
 @dataclass(frozen=True)
@@ -94,7 +95,7 @@ _THU_DAU_MOT_MAP = DigitalProduct(
     package_filename="radarbds-thu-dau-mot-map-v1.0.zip",
     download_filename="radarbds-thu-dau-mot-map-v1.0.zip",
     release_product="radarbds-thu-dau-mot-map",
-    release_files=_THU_DAU_MOT_RELEASE_FILES,
+    release_files=_city_map_release_files("thu-dau-mot"),
     package_sha256=(
         "afb2f735f7b153290f37a7f832bf6e31349c9310c6e4c7c47600470bd9e399da"
     ),
@@ -103,7 +104,63 @@ _THU_DAU_MOT_MAP = DigitalProduct(
     ),
 )
 
-_PRODUCTS = {_THU_DAU_MOT_MAP.slug: _THU_DAU_MOT_MAP}
+_THUAN_AN_MAP = DigitalProduct(
+    slug="thuan-an-map-bundle",
+    version="1.0",
+    price_vnd=99_000,
+    package_filename="radarbds-thuan-an-map-v1.0.zip",
+    download_filename="radarbds-thuan-an-map-v1.0.zip",
+    release_product="radarbds-thuan-an-map",
+    release_files=_city_map_release_files("thuan-an"),
+    package_sha256=(
+        "1b54528c2309a20d7c9467f0296b2f49b85b5edcba03516733dbc57a036e479e"
+    ),
+    manifest_sha256=(
+        "336979e7ec801204da0769e96d976a1ef0c98d9a9df5289dee92b8d225b2f044"
+    ),
+)
+
+_DI_AN_MAP = DigitalProduct(
+    slug="di-an-map-bundle",
+    version="1.0",
+    price_vnd=99_000,
+    package_filename="radarbds-di-an-map-v1.0.zip",
+    download_filename="radarbds-di-an-map-v1.0.zip",
+    release_product="radarbds-di-an-map",
+    release_files=_city_map_release_files("di-an"),
+    package_sha256=(
+        "6bdf6d59e60206cf6cb1df6dc36911e7e185a4b930ba3c12a4aad00740bc38a1"
+    ),
+    manifest_sha256=(
+        "061f546f81d3a6f6a90f796c576e52a4ac20822c7ce6e2916974ad14dddc02f0"
+    ),
+)
+
+_BEN_CAT_MAP = DigitalProduct(
+    slug="ben-cat-map-bundle",
+    version="1.0",
+    price_vnd=99_000,
+    package_filename="radarbds-ben-cat-map-v1.0.zip",
+    download_filename="radarbds-ben-cat-map-v1.0.zip",
+    release_product="radarbds-ben-cat-map",
+    release_files=_city_map_release_files("ben-cat"),
+    package_sha256=(
+        "0ba475aa8a7e3ec65bce0ea8289d8637572f1ca49ae5d1467687529d03db819a"
+    ),
+    manifest_sha256=(
+        "55b463346d4d192ae1b6a1827a63974aeb9926796e9fbc3ea64bd660a6081c34"
+    ),
+)
+
+_PRODUCTS = {
+    product.slug: product
+    for product in (
+        _THU_DAU_MOT_MAP,
+        _THUAN_AN_MAP,
+        _DI_AN_MAP,
+        _BEN_CAT_MAP,
+    )
+}
 
 
 def get_digital_product(slug: str) -> DigitalProduct:

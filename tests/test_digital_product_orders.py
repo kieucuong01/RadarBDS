@@ -33,6 +33,32 @@ from services.digital_product_orders import (
 from services.digital_products import DigitalProduct, get_digital_product
 
 
+@pytest.mark.parametrize(
+    "slug,filename",
+    (
+        (
+            "thu-dau-mot-map-bundle",
+            "radarbds-thu-dau-mot-map-v1.0.zip",
+        ),
+        ("thuan-an-map-bundle", "radarbds-thuan-an-map-v1.0.zip"),
+        ("di-an-map-bundle", "radarbds-di-an-map-v1.0.zip"),
+        ("ben-cat-map-bundle", "radarbds-ben-cat-map-v1.0.zip"),
+    ),
+)
+def test_city_map_products_are_registered_at_server_terms(
+    slug: str,
+    filename: str,
+) -> None:
+    product = get_digital_product(slug)
+
+    assert product.price_vnd == 99_000
+    assert product.version == "1.0"
+    assert product.package_filename == filename
+    assert product.download_filename == filename
+    assert len(product.package_sha256) == 64
+    assert len(product.manifest_sha256) == 64
+
+
 @dataclass(frozen=True)
 class FakePaymentLink:
     payment_link_id: str

@@ -442,6 +442,47 @@ def test_paid_order_downloads_exact_validated_zip(route_env, monkeypatch):
     assert repo.orders[paid.id].last_download_at == NOW
 
 
+def test_download_resolves_the_immutable_order_product(route_env, monkeypatch):
+    radar_app, routes_module, repo, _payos, _settings = route_env
+    client = radar_app.app.test_client()
+    checkout = client.post("/ban-do-di-an/checkout")
+    public_id = _public_id_from_redirect(checkout)
+    token = _token_from_redirect(checkout)
+    assert _authorize(client, public_id, token).status_code == 204
+    paid = _make_order_paid(repo, repo.orders[1])
+    delivered = b"trusted-di-an-package"
+    captured = []
+
+    class Snapshot:
+        sha256 = hashlib.sha256(delivered).hexdigest()
+
+        @staticmethod
+        def open_bytes_io():
+            return BytesIO(delivered)
+
+    def snapshot(product, storage_root):
+        del storage_root
+        captured.append(product.slug)
+        return Snapshot()
+
+    monkeypatch.setattr(
+        routes_module,
+        "snapshot_protected_package",
+        snapshot,
+    )
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert response.status_code == 200
+    assert captured == ["di-an-map-bundle"]
+    assert response.data == delivered
+    assert response.headers["Content-Disposition"].endswith(
+        "filename=radarbds-di-an-map-v1.0.zip"
+    )
+
+
 def test_verified_snapshot_supports_trusted_range_and_conditional_responses(
     route_env,
     monkeypatch,
@@ -918,6 +959,70 @@ def test_checkout_redirect_uses_fragment_token_and_server_product_terms(route_en
     )
 
 
+@pytest.mark.parametrize(
+    "city_slug,product_slug,city_name",
+    (
+        ("thuan-an", "thuan-an-map-bundle", "Thuận An"),
+        ("di-an", "di-an-map-bundle", "Dĩ An"),
+        ("ben-cat", "ben-cat-map-bundle", "Bến Cát"),
+    ),
+)
+def test_city_checkout_route_uses_server_side_product_terms(
+    route_env,
+    city_slug,
+    product_slug,
+    city_name,
+):
+    radar_app, _routes, repo, _payos, _settings = route_env
+
+    response = radar_app.app.test_client().post(
+        f"/ban-do-{city_slug}/checkout"
+    )
+
+    assert response.status_code == 303
+    order = repo.orders[1]
+    assert order.product_slug == product_slug
+    assert order.product_version == "1.0"
+    assert order.expected_amount == 99_000
+    assert response.headers["Location"].startswith(
+        f"/ban-do-{city_slug}/don-hang/{order.public_id}#token="
+    )
+    assert f"Path=/ban-do-{city_slug}" in response.headers["Set-Cookie"]
+    order_page = radar_app.app.test_client().get(
+        f"/ban-do-{city_slug}/don-hang/{order.public_id}"
+    )
+    assert order_page.status_code == 200
+    assert f"TP {city_name}" in order_page.get_data(as_text=True)
+
+
+def test_retry_cookie_cannot_cross_city_products(route_env):
+    radar_app, _routes, repo, _payos, _settings = route_env
+    client = radar_app.app.test_client()
+
+    first = client.post("/ban-do-thu-dau-mot/checkout")
+    crossed = client.post("/ban-do-ben-cat/checkout")
+
+    assert first.status_code == crossed.status_code == 303
+    assert len(repo.orders) == 2
+    assert _public_id_from_redirect(first) != _public_id_from_redirect(crossed)
+    assert {order.product_slug for order in repo.orders.values()} == {
+        "thu-dau-mot-map-bundle",
+        "ben-cat-map-bundle",
+    }
+
+
+def test_unknown_city_checkout_is_rejected_before_external_work(route_env):
+    radar_app, _routes, repo, payos, _settings = route_env
+
+    response = radar_app.app.test_client().post(
+        "/ban-do-khong-ton-tai/checkout"
+    )
+
+    assert response.status_code == 404
+    assert repo.orders == {}
+    assert payos.create_calls == []
+
+
 def test_failed_payment_link_records_event_and_retry_reuses_pending_order(
     route_env,
 ):
@@ -962,6 +1067,7 @@ def test_product_page_seed_makes_successive_checkout_idempotent(route_env):
     assert seed_payload == {
         "public_id": _public_id_from_redirect(first),
         "phase": "seed",
+        "product_slug": "thu-dau-mot-map-bundle",
     }
     assert first.status_code == second.status_code == 303
     assert _public_id_from_redirect(first) == _public_id_from_redirect(second)
@@ -1016,7 +1122,11 @@ def test_stale_concurrent_seed_does_not_duplicate_or_rotate_winner_token(
         _cookie_value(stale, "radar_product_checkout_retry"),
         max_age=300,
     )
-    assert stale_linked == {"public_id": public_id, "phase": "linked"}
+    assert stale_linked == {
+        "public_id": public_id,
+        "phase": "linked",
+        "product_slug": "thu-dau-mot-map-bundle",
+    }
 
 
 def test_advisory_lock_serializes_requests_while_payos_is_in_flight(route_env):
@@ -1684,8 +1794,8 @@ def test_sellable_product_page_uses_post_forms_without_client_price(
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert html.count('action="/ban-do-thu-dau-mot/checkout"') == 2
-    assert html.count('method="post"') >= 2
+    assert html.count('action="/ban-do-thu-dau-mot/checkout"') == 1
+    assert html.count('method="post"') == 1
     assert 'name="price"' not in html
     assert 'name="slug"' not in html
     assert 'name="version"' not in html

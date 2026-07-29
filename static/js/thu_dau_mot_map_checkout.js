@@ -9,10 +9,17 @@
 })(function () {
   "use strict";
 
-  var RECOVERY_LINK_PREFIX = "radar:thu-dau-mot-map:recovery-link:";
+  var RECOVERY_LINK_PREFIX = "radar:city-map:recovery-link:";
   var PRODUCT_SLUG = "thu-dau-mot-map-bundle";
   var PRODUCT_VERSION = "1.0";
   var AMOUNT_VND = 99000;
+  var DEFAULT_ORDER_BASE_PATH = "/ban-do-thu-dau-mot/don-hang";
+  var DEFAULT_TRACKING_ACTIONS = {
+    checkout_created: "thu_dau_mot_map_checkout_created",
+    qr_displayed: "thu_dau_mot_map_qr_displayed",
+    payment_confirmed: "thu_dau_mot_map_payment_confirmed",
+    download_clicked: "thu_dau_mot_map_download_clicked"
+  };
   var TERMINAL_STATES = {
     paid: true,
     expired: true,
@@ -20,22 +27,48 @@
     payment_review: true
   };
 
-  function expectedOrderPath(publicId) {
+  function safeProductSlug(value) {
+    return /^[a-z0-9-]+-map-bundle$/.test(value || "")
+      ? value
+      : PRODUCT_SLUG;
+  }
+
+  function safeOrderBasePath(value) {
+    return /^\/ban-do-[a-z0-9-]+\/don-hang$/.test(value || "")
+      ? value
+      : DEFAULT_ORDER_BASE_PATH;
+  }
+
+  function safeTrackingPrefix(value) {
+    return /^[a-z0-9_]+_map$/.test(value || "")
+      ? value
+      : "thu_dau_mot_map";
+  }
+
+  function trackingAction(prefix, suffix) {
+    return prefix === "thu_dau_mot_map"
+      ? DEFAULT_TRACKING_ACTIONS[suffix]
+      : prefix + "_" + suffix;
+  }
+
+  function expectedOrderPath(publicId, orderBasePath) {
     return /^[0-9a-f]{32}$/.test(publicId || "")
-      ? "/ban-do-thu-dau-mot/don-hang/" + publicId
+      ? safeOrderBasePath(orderBasePath) + "/" + publicId
       : "";
   }
 
-  function recoveryLinkKey(publicId) {
-    return RECOVERY_LINK_PREFIX + publicId;
+  function recoveryLinkKey(publicId, productSlug) {
+    return RECOVERY_LINK_PREFIX + safeProductSlug(productSlug) + ":" + publicId;
   }
 
-  function getRecoveryLink(win, publicId) {
-    var expectedPath = expectedOrderPath(publicId);
+  function getRecoveryLink(win, publicId, orderBasePath, productSlug) {
+    var expectedPath = expectedOrderPath(publicId, orderBasePath);
     if (!expectedPath || win.location.pathname !== expectedPath) return "";
     var stored = "";
     try {
-      stored = win.sessionStorage.getItem(recoveryLinkKey(publicId)) || "";
+      stored = win.sessionStorage.getItem(
+        recoveryLinkKey(publicId, productSlug)
+      ) || "";
     } catch (error) {
       return "";
     }
@@ -60,12 +93,12 @@
     }
   }
 
-  function readRecoveryToken(win, publicId) {
+  function readRecoveryToken(win, publicId, orderBasePath, productSlug) {
     var target = win || window;
     var fragment = win ? win.location.hash : window.location.hash;
     var params = new URLSearchParams(fragment.replace(/^#/, ""));
     var token = params.get("token");
-    var expectedPath = expectedOrderPath(publicId);
+    var expectedPath = expectedOrderPath(publicId, orderBasePath);
     if (
       token
       && expectedPath
@@ -75,7 +108,7 @@
         + "#token=" + encodeURIComponent(token);
       try {
         target.sessionStorage.setItem(
-          recoveryLinkKey(publicId),
+          recoveryLinkKey(publicId, productSlug),
           recoveryUrl
         );
       } catch (error) {
@@ -110,8 +143,13 @@
     });
   }
 
-  function copyRecoveryLink(win, publicId) {
-    var recoveryLink = getRecoveryLink(win, publicId);
+  function copyRecoveryLink(win, publicId, orderBasePath, productSlug) {
+    var recoveryLink = getRecoveryLink(
+      win,
+      publicId,
+      orderBasePath,
+      productSlug
+    );
     if (!recoveryLink || !win.navigator || !win.navigator.clipboard) {
       return Promise.reject(new Error("recovery_link_unavailable"));
     }
@@ -441,7 +479,7 @@
     };
   }
 
-  function safeTrackingContext(status) {
+  function safeTrackingContext(status, productSlug, productVersion, amountVnd) {
     var coarse = {
       pending: true,
       paid: true,
@@ -450,14 +488,18 @@
       payment_review: true
     };
     return {
-      product_slug: PRODUCT_SLUG,
-      product_version: PRODUCT_VERSION,
-      amount_vnd: AMOUNT_VND,
+      product_slug: safeProductSlug(productSlug),
+      product_version: productVersion === PRODUCT_VERSION
+        ? productVersion
+        : PRODUCT_VERSION,
+      amount_vnd: Number(amountVnd) === AMOUNT_VND
+        ? AMOUNT_VND
+        : AMOUNT_VND,
       order_status: coarse[status] ? status : "pending"
     };
   }
 
-  function sendTrack(win, action, status) {
+  function sendTrack(win, action, status, context) {
     return win.fetch("/api/track", {
       method: "POST",
       credentials: "same-origin",
@@ -468,7 +510,12 @@
       },
       body: JSON.stringify({
         action: action,
-        context: safeTrackingContext(status)
+        context: safeTrackingContext(
+          status,
+          context && context.productSlug,
+          context && context.productVersion,
+          context && context.amountVnd
+        )
       })
     }).catch(function () {
       return null;
@@ -494,27 +541,59 @@
     var root = doc.querySelector("[data-digital-product-order]");
     if (!root) return;
     var publicId = root.dataset.digitalProductOrder || "";
-    var token = readRecoveryToken(win, publicId);
+    var orderBasePath = safeOrderBasePath(root.dataset.orderBasePath);
+    var productSlug = safeProductSlug(root.dataset.productSlug);
+    var productVersion = root.dataset.productVersion || PRODUCT_VERSION;
+    var amountVnd = root.dataset.amountVnd || String(AMOUNT_VND);
+    var trackingPrefix = safeTrackingPrefix(root.dataset.trackingPrefix);
+    var trackingContext = {
+      productSlug: productSlug,
+      productVersion: productVersion,
+      amountVnd: amountVnd
+    };
+    var token = readRecoveryToken(
+      win,
+      publicId,
+      orderBasePath,
+      productSlug
+    );
     var createdTracked = false;
     var qrTracked = false;
     var paidTracked = false;
 
     function renderAndTrack(state) {
       var rendered = renderOrderState(root, state, {
-        hasRecoveryLink: Boolean(getRecoveryLink(win, publicId))
+        hasRecoveryLink: Boolean(
+          getRecoveryLink(win, publicId, orderBasePath, productSlug)
+        )
       });
       var status = rendered.status;
       if (!createdTracked) {
         createdTracked = true;
-        sendTrack(win, "thu_dau_mot_map_checkout_created", status);
+        sendTrack(
+          win,
+          trackingAction(trackingPrefix, "checkout_created"),
+          status,
+          trackingContext
+        );
       }
       if (status === "pending" && rendered.qrDisplayed && !qrTracked) {
         qrTracked = true;
-        sendTrack(win, "thu_dau_mot_map_qr_displayed", status);
+        sendTrack(
+          win,
+          trackingAction(trackingPrefix, "qr_displayed"),
+          status,
+          trackingContext
+        );
       }
       if (status === "paid" && !paidTracked) {
         paidTracked = true;
-        sendTrack(win, "thu_dau_mot_map_payment_confirmed", status);
+        sendTrack(
+          win,
+          trackingAction(trackingPrefix, "payment_confirmed"),
+          status,
+          trackingContext
+        );
       }
     }
 
@@ -543,7 +622,12 @@
     var copy = root.querySelector("[data-order-copy]");
     if (copy) {
       copy.addEventListener("click", function () {
-        copyRecoveryLink(win, publicId).then(function () {
+        copyRecoveryLink(
+          win,
+          publicId,
+          orderBasePath,
+          productSlug
+        ).then(function () {
           copy.textContent = "Đã sao chép link khôi phục";
         }).catch(function () {
           copy.textContent = "Không thể sao chép link";
@@ -554,7 +638,12 @@
     var download = root.querySelector("[data-order-download]");
     if (download) {
       download.addEventListener("click", function () {
-        sendTrack(win, "thu_dau_mot_map_download_clicked", "paid");
+        sendTrack(
+          win,
+          trackingAction(trackingPrefix, "download_clicked"),
+          "paid",
+          trackingContext
+        );
       });
     }
   }

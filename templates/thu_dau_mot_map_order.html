@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#f8fafc">
-  <title>Thanh toán bộ bản đồ TP Thủ Dầu Một · Radar BDS</title>
-  <meta name="description" content="Trang thanh toán và nhận file bộ bản đồ TP Thủ Dầu Một của Radar BDS.">
+  <title>Thanh toán bộ bản đồ TP {{ page.city_name }} · Radar BDS</title>
+  <meta name="description" content="Trang thanh toán và nhận file bộ bản đồ TP {{ page.city_name }} của Radar BDS.">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tdm-product-20260729-2">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=tdm-product-20260729-2">
@@ -21,19 +21,21 @@
     <section
       class="seo-shell tdm-order-shell"
       data-digital-product-order="{{ public_id }}"
-      data-product-slug="thu-dau-mot-map-bundle"
+      data-product-slug="{{ page.product_slug }}"
       data-product-version="1.0"
-      data-amount-vnd="99000"
+      data-amount-vnd="{{ page.price_vnd }}"
+      data-order-base-path="{{ page.order_base_path }}"
+      data-tracking-prefix="{{ page.tracking_prefix }}"
     >
       <header class="tdm-order-heading">
-        <a href="/ban-do-thu-dau-mot" class="tdm-order-back">← Quay lại bộ bản đồ</a>
-        <h1>Thanh toán bộ bản đồ TP Thủ Dầu Một</h1>
+        <a href="{{ page.path }}" class="tdm-order-back">← Quay lại bộ bản đồ</a>
+        <h1>Thanh toán bộ bản đồ TP {{ page.city_name }}</h1>
         <p>Quét VietQR để thanh toán 99.000đ. Link tải được mở trong đúng 24 giờ kể từ khi PayOS xác nhận thanh toán.</p>
       </header>
 
       <div class="tdm-order-card">
         <div class="tdm-order-summary" aria-label="Thông tin sản phẩm">
-          <span>Bộ bản đồ TP Thủ Dầu Một · phiên bản 1.0</span>
+          <span>Bộ bản đồ TP {{ page.city_name }} · phiên bản 1.0</span>
           <strong>99.000đ</strong>
         </div>
 
@@ -55,7 +57,7 @@
           <div class="tdm-order-actions">
             <button type="button" class="tdm-order-secondary" data-order-copy hidden>Sao chép link khôi phục</button>
             <a class="tdm-order-primary" data-order-download href="#" hidden>Tải bộ bản đồ ZIP</a>
-            <a class="tdm-order-primary" data-order-new href="/ban-do-thu-dau-mot" hidden>Tạo đơn hàng mới</a>
+            <a class="tdm-order-primary" data-order-new href="{{ page.path }}" hidden>Tạo đơn hàng mới</a>
           </div>
         </div>
 

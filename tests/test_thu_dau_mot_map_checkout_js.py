@@ -80,6 +80,52 @@ if (values.length !== 1 || values[0] !== "https://radarbds.vn/ban-do-thu-dau-mot
     assert result.returncode == 0, result.stderr
 
 
+def test_recovery_token_supports_city_scoped_order_path_and_storage_key():
+    result = _run_node(
+        r"""
+const checkout = require("./static/js/thu_dau_mot_map_checkout.js");
+const stored = {};
+const publicId = "b".repeat(32);
+const basePath = "/ban-do-thuan-an/don-hang";
+const productSlug = "thuan-an-map-bundle";
+const win = {
+  location: {
+    hash: "#token=city-secret",
+    origin: "https://radarbds.vn",
+    pathname: basePath + "/" + publicId
+  },
+  history: {replaceState() {}},
+  sessionStorage: {
+    setItem(key, value) { stored[key] = value; },
+    getItem(key) { return stored[key] || null; }
+  },
+  navigator: {
+    clipboard: {
+      writeText(value) {
+        if (!value.includes(basePath + "/" + publicId)) process.exit(3);
+        return Promise.resolve();
+      }
+    }
+  }
+};
+if (
+  checkout.readRecoveryToken(
+    win, publicId, basePath, productSlug
+  ) !== "city-secret"
+) process.exit(1);
+if (
+  Object.keys(stored).length !== 1
+  || !Object.keys(stored)[0].includes(productSlug)
+) process.exit(2);
+checkout.copyRecoveryLink(
+  win, publicId, basePath, productSlug
+).catch(() => process.exit(4));
+"""
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
 def test_read_recovery_token_clears_unknown_fragment_before_other_work():
     result = _run_node(
         r"""
