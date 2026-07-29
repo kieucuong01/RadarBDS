@@ -548,7 +548,7 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert (
         registry.roads[
             ("THỦ DẦU MỘT", "dinh hoa", "dx 63")
-        ]["source"]
+        ][0]["source"]
         == "OpenStreetMap"
     )
     assert (

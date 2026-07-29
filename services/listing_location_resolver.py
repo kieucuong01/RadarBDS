@@ -6,13 +6,17 @@ import json
 from pathlib import Path
 import re
 import unicodedata
-from typing import Mapping
+from typing import Mapping, TYPE_CHECKING
 
 from config.listing_map import (
     LISTING_MAP_BOUNDS,
+    LISTING_MAP_LANDMARK_REGISTRY_PATH,
     LISTING_MAP_ROAD_REGISTRY_PATH,
     LISTING_MAP_WARD_REGISTRY_PATH,
 )
+
+if TYPE_CHECKING:
+    from services.listing_map_context import MapLocationContext
 
 
 _NON_ALNUM = re.compile(r"[^a-z0-9]+")
@@ -98,16 +102,30 @@ def _source_point(listing: Mapping) -> tuple[float, float] | None:
     return lat, lng
 
 
-def listing_location_signature(listing: Mapping) -> str:
+def listing_location_signature(
+    listing: Mapping,
+    context: "MapLocationContext | None" = None,
+    resolver_version: str = "",
+) -> str:
     source_point = _source_point(listing)
     if source_point is not None:
-        raw = f"exact|{source_point[0]:.7f}|{source_point[1]:.7f}"
+        raw = (
+            f"{resolver_version}|exact|"
+            f"{source_point[0]:.7f}|{source_point[1]:.7f}"
+        )
     else:
+        distance = _float(getattr(context, "distance_m", None))
         raw = "|".join(
             (
+                resolver_version,
                 normalize_location_token(_canonical_city(listing)),
                 normalize_location_token(_value(listing, "ward", "")),
                 normalize_road_token(_value(listing, "road_name", "")),
+                normalize_road_token(getattr(context, "direct_road", "")),
+                normalize_road_token(getattr(context, "nearby_road", "")),
+                normalize_location_token(getattr(context, "landmark", "")),
+                normalize_location_token(getattr(context, "relation", "")),
+                "" if distance is None else f"{distance:.1f}",
             )
         )
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -116,7 +134,14 @@ def listing_location_signature(listing: Mapping) -> str:
 @dataclass(frozen=True)
 class LocationRegistry:
     resolver_version: str
-    roads: Mapping[tuple[str, str, str], Mapping[str, object]]
+    roads: Mapping[
+        tuple[str, str, str],
+        tuple[Mapping[str, object], ...],
+    ]
+    landmarks: Mapping[
+        tuple[str, str, str],
+        Mapping[str, object],
+    ]
     wards: Mapping[tuple[str, str], Mapping[str, object]]
 
 
@@ -131,6 +156,31 @@ class ResolvedLocation:
     source: str
     resolver_version: str
     signature: str
+    accuracy_radius_m: float | None = None
+    relation: str = ""
+    reference_road: str = ""
+    landmark_key: str = ""
+    resolution_status: str = "resolved"
+    resolution_reason: str = ""
+
+
+@dataclass(frozen=True)
+class ResolutionIssue:
+    listing_id: int
+    candidate_key: str
+    city: str
+    ward: str
+    road_candidate: str
+    landmark_candidate: str
+    relation: str
+    status: str
+    resolution_note: str
+
+
+@dataclass(frozen=True)
+class LocationResolution:
+    location: ResolvedLocation | None
+    issue: ResolutionIssue | None
 
 
 def _resolved_from_entry(
@@ -141,6 +191,12 @@ def _resolved_from_entry(
     entry: Mapping[str, object],
     resolver_version: str,
     signature: str,
+    accuracy_radius_m: float | None = None,
+    relation: str = "",
+    reference_road: str = "",
+    landmark_key: str = "",
+    resolution_status: str = "resolved",
+    resolution_reason: str = "",
 ) -> ResolvedLocation | None:
     lat = _float(entry.get("lat"))
     lng = _float(entry.get("lng"))
@@ -156,54 +212,94 @@ def _resolved_from_entry(
         source=str(entry.get("source") or "OpenStreetMap"),
         resolver_version=resolver_version,
         signature=signature,
+        accuracy_radius_m=(
+            _float(accuracy_radius_m)
+            if accuracy_radius_m is not None
+            else _float(entry.get("accuracy_radius_m"))
+        ),
+        relation=relation,
+        reference_road=reference_road,
+        landmark_key=landmark_key,
+        resolution_status=resolution_status,
+        resolution_reason=resolution_reason,
     )
 
 
-def resolve_listing_location(
-    listing: Mapping,
+def _road_scopes(
+    city: str,
+    ward: str,
     registry: LocationRegistry,
-) -> ResolvedLocation | None:
-    try:
-        listing_id = int(_value(listing, "id"))
-    except (TypeError, ValueError):
+) -> tuple[str, ...]:
+    normalized_ward = normalize_location_token(ward)
+    scopes = [normalized_ward]
+    ward_entry = registry.wards.get((city, normalized_ward)) or {}
+    parent = normalize_location_token(ward_entry.get("fallback_parent") or "")
+    if parent and parent not in scopes:
+        scopes.append(parent)
+    return tuple(scopes)
+
+
+def _match_landmark(
+    city: str,
+    ward: str,
+    normalized_landmark: str,
+    registry: LocationRegistry,
+) -> Mapping[str, object] | None:
+    if not normalized_landmark:
         return None
-
-    signature = listing_location_signature(listing)
-    source_point = _source_point(listing)
-    if source_point is not None:
-        return ResolvedLocation(
-            listing_id=listing_id,
-            lat=source_point[0],
-            lng=source_point[1],
-            precision="exact",
-            location_key=f"exact:{listing_id}",
-            location_label="Vị trí chính xác từ tin rao",
-            source=str(_value(listing, "source", "") or "Tin rao"),
-            resolver_version=registry.resolver_version,
-            signature=signature,
-        )
-
-    city = _canonical_city(listing)
-    ward = normalize_location_token(_value(listing, "ward", ""))
-    road = normalize_road_token(_value(listing, "road_name", ""))
-    if not city or not ward:
-        return None
-
-    if road:
-        entry = registry.roads.get((city, ward, road))
+    for scope in _road_scopes(city, ward, registry):
+        entry = registry.landmarks.get((city, scope, normalized_landmark))
         if entry:
-            resolved = _resolved_from_entry(
-                listing_id=listing_id,
-                precision="road",
-                location_key=f"road:{_slug(city)}:{_slug(ward)}:{_slug(road)}",
-                entry=entry,
-                resolver_version=registry.resolver_version,
-                signature=signature,
-            )
-            if resolved:
-                return resolved
+            return entry
+    return None
 
-    entry = registry.wards.get((city, ward))
+
+def _match_road(
+    city: str,
+    ward: str,
+    normalized_road: str,
+    landmark_key: str,
+    registry: LocationRegistry,
+) -> Mapping[str, object] | str | None:
+    entries = []
+    seen = set()
+    for scope in _road_scopes(city, ward, registry):
+        for item in registry.roads.get((city, scope, normalized_road), ()):
+            identity = id(item)
+            if identity not in seen:
+                seen.add(identity)
+                entries.append(item)
+    if landmark_key:
+        scoped = [
+            item
+            for item in entries
+            if landmark_key
+            in tuple(
+                normalize_location_token(value)
+                for value in (item.get("landmark_keys") or ())
+            )
+        ]
+        if len(scoped) == 1:
+            return scoped[0]
+        if len(scoped) > 1:
+            return "ambiguous"
+    if len(entries) == 1:
+        return entries[0]
+    return "ambiguous" if entries else None
+
+
+def _ward_fallback(
+    *,
+    listing_id: int,
+    city: str,
+    ward: str,
+    registry: LocationRegistry,
+    signature: str,
+    status: str = "resolved",
+    reason: str = "",
+) -> ResolvedLocation | None:
+    normalized_ward = normalize_location_token(ward)
+    entry = registry.wards.get((city, normalized_ward))
     if not entry:
         return None
     return _resolved_from_entry(
@@ -213,6 +309,347 @@ def resolve_listing_location(
         entry=entry,
         resolver_version=registry.resolver_version,
         signature=signature,
+        resolution_status=status,
+        resolution_reason=reason,
+    )
+
+
+def _issue(
+    *,
+    listing_id: int,
+    city: str,
+    ward: str,
+    road: str,
+    landmark: str,
+    relation: str,
+    status: str,
+    reason: str,
+) -> ResolutionIssue:
+    candidate = road or landmark or normalize_location_token(ward) or "unknown"
+    kind = "road" if road else ("landmark" if landmark else "ward")
+    return ResolutionIssue(
+        listing_id=listing_id,
+        candidate_key=f"{kind}:{_slug(city)}:{_slug(ward)}:{_slug(candidate)}",
+        city=city,
+        ward=ward,
+        road_candidate=road,
+        landmark_candidate=landmark,
+        relation=relation,
+        status=status,
+        resolution_note=reason,
+    )
+
+
+def _fallback_with_issue(
+    *,
+    listing_id: int,
+    city: str,
+    ward: str,
+    road: str,
+    landmark: str,
+    relation: str,
+    status: str,
+    reason: str,
+    registry: LocationRegistry,
+    signature: str,
+) -> LocationResolution:
+    issue = _issue(
+        listing_id=listing_id,
+        city=city,
+        ward=ward,
+        road=road,
+        landmark=landmark,
+        relation=relation,
+        status=status,
+        reason=reason,
+    )
+    return LocationResolution(
+        location=_ward_fallback(
+            listing_id=listing_id,
+            city=city,
+            ward=ward,
+            registry=registry,
+            signature=signature,
+            status=status,
+            reason=reason,
+        ),
+        issue=issue,
+    )
+
+
+def resolve_listing_location(
+    listing: Mapping,
+    registry: LocationRegistry,
+    context: "MapLocationContext | None" = None,
+) -> LocationResolution:
+    try:
+        listing_id = int(_value(listing, "id"))
+    except (TypeError, ValueError):
+        return LocationResolution(
+            location=None,
+            issue=_issue(
+                listing_id=0,
+                city=_canonical_city(listing),
+                ward=str(_value(listing, "ward", "") or ""),
+                road="",
+                landmark="",
+                relation="",
+                status="invalid",
+                reason="invalid_listing_id",
+            ),
+        )
+
+    signature = listing_location_signature(
+        listing,
+        context,
+        registry.resolver_version,
+    )
+    source_point = _source_point(listing)
+    if source_point is not None:
+        return LocationResolution(
+            location=ResolvedLocation(
+                listing_id=listing_id,
+                lat=source_point[0],
+                lng=source_point[1],
+                precision="exact",
+                location_key=f"exact:{listing_id}",
+                location_label="Vị trí chính xác từ tin rao",
+                source=str(_value(listing, "source", "") or "Tin rao"),
+                resolver_version=registry.resolver_version,
+                signature=signature,
+                accuracy_radius_m=0.0,
+                relation="on",
+            ),
+            issue=None,
+        )
+
+    city = _canonical_city(listing)
+    ward_label = str(_value(listing, "ward", "") or "").strip()
+    ward = normalize_location_token(ward_label)
+    direct_road = normalize_road_token(
+        getattr(context, "direct_road", "")
+        or _value(listing, "road_name", "")
+    )
+    nearby_road = normalize_road_token(getattr(context, "nearby_road", ""))
+    landmark_key = normalize_location_token(getattr(context, "landmark", ""))
+    relation = str(getattr(context, "relation", "") or "")
+    distance_m = _float(getattr(context, "distance_m", None))
+    candidate_road = direct_road or nearby_road
+    if not city or not ward:
+        return _fallback_with_issue(
+            listing_id=listing_id,
+            city=city,
+            ward=ward_label,
+            road=candidate_road,
+            landmark=landmark_key,
+            relation=relation,
+            status="invalid",
+            reason="missing_city_or_ward",
+            registry=registry,
+            signature=signature,
+        )
+
+    landmark_entry = _match_landmark(city, ward_label, landmark_key, registry)
+
+    if direct_road:
+        road_entry = _match_road(
+            city,
+            ward_label,
+            direct_road,
+            landmark_key if landmark_entry else "",
+            registry,
+        )
+        if isinstance(road_entry, Mapping):
+            allowed_landmarks = tuple(
+                normalize_location_token(item)
+                for item in (road_entry.get("landmark_keys") or ())
+            )
+            if (
+                landmark_entry
+                and allowed_landmarks
+                and landmark_key not in allowed_landmarks
+            ):
+                return _fallback_with_issue(
+                    listing_id=listing_id,
+                    city=city,
+                    ward=ward_label,
+                    road=direct_road,
+                    landmark=landmark_key,
+                    relation=relation,
+                    status="ambiguous",
+                    reason="road_landmark_conflict",
+                    registry=registry,
+                    signature=signature,
+                )
+            location_key = (
+                f"road:{_slug(city)}:{_slug(ward)}:{_slug(direct_road)}"
+            )
+            if landmark_key:
+                location_key += f":{_slug(landmark_key)}"
+            resolved = _resolved_from_entry(
+                listing_id=listing_id,
+                precision="road",
+                location_key=location_key,
+                entry=road_entry,
+                resolver_version=registry.resolver_version,
+                signature=signature,
+                relation="on",
+                reference_road=direct_road,
+                landmark_key=landmark_key if landmark_entry else "",
+            )
+            if resolved:
+                return LocationResolution(location=resolved, issue=None)
+            return _fallback_with_issue(
+                listing_id=listing_id,
+                city=city,
+                ward=ward_label,
+                road=direct_road,
+                landmark=landmark_key,
+                relation=relation,
+                status="invalid",
+                reason="invalid_road_point",
+                registry=registry,
+                signature=signature,
+            )
+        if road_entry == "ambiguous":
+            return _fallback_with_issue(
+                listing_id=listing_id,
+                city=city,
+                ward=ward_label,
+                road=direct_road,
+                landmark=landmark_key,
+                relation=relation,
+                status="ambiguous",
+                reason="ambiguous_road",
+                registry=registry,
+                signature=signature,
+            )
+
+    if landmark_entry:
+        resolved = _resolved_from_entry(
+            listing_id=listing_id,
+            precision="landmark",
+            location_key=(
+                f"landmark:{_slug(city)}:{_slug(ward)}:{_slug(landmark_key)}"
+            ),
+            entry=landmark_entry,
+            resolver_version=registry.resolver_version,
+            signature=signature,
+            relation="at",
+            landmark_key=landmark_key,
+        )
+        if resolved:
+            issue = None
+            if direct_road:
+                issue = _issue(
+                    listing_id=listing_id,
+                    city=city,
+                    ward=ward_label,
+                    road=direct_road,
+                    landmark=landmark_key,
+                    relation=relation,
+                    status="not_found",
+                    reason="road_not_found",
+                )
+            return LocationResolution(location=resolved, issue=issue)
+
+    if nearby_road:
+        road_entry = _match_road(
+            city,
+            ward_label,
+            nearby_road,
+            landmark_key if landmark_entry else "",
+            registry,
+        )
+        if isinstance(road_entry, Mapping):
+            registry_radius = _float(road_entry.get("accuracy_radius_m")) or 75.0
+            resolved = _resolved_from_entry(
+                listing_id=listing_id,
+                precision="nearby",
+                location_key=(
+                    f"nearby:{_slug(city)}:{_slug(ward)}:"
+                    f"{_slug(nearby_road)}:{_slug(relation or 'near')}"
+                ),
+                entry=road_entry,
+                resolver_version=registry.resolver_version,
+                signature=signature,
+                accuracy_radius_m=max(
+                    registry_radius,
+                    distance_m or 0.0,
+                    100.0,
+                ),
+                relation=relation or "near",
+                reference_road=nearby_road,
+                landmark_key=landmark_key if landmark_entry else "",
+            )
+            if resolved:
+                return LocationResolution(location=resolved, issue=None)
+        status, reason = (
+            ("ambiguous", "ambiguous_nearby_road")
+            if road_entry == "ambiguous"
+            else ("not_found", "nearby_road_not_found")
+        )
+        return _fallback_with_issue(
+            listing_id=listing_id,
+            city=city,
+            ward=ward_label,
+            road=nearby_road,
+            landmark=landmark_key,
+            relation=relation,
+            status=status,
+            reason=reason,
+            registry=registry,
+            signature=signature,
+        )
+
+    if direct_road:
+        return _fallback_with_issue(
+            listing_id=listing_id,
+            city=city,
+            ward=ward_label,
+            road=direct_road,
+            landmark=landmark_key,
+            relation=relation,
+            status="not_found",
+            reason="road_not_found",
+            registry=registry,
+            signature=signature,
+        )
+
+    if landmark_key:
+        return _fallback_with_issue(
+            listing_id=listing_id,
+            city=city,
+            ward=ward_label,
+            road="",
+            landmark=landmark_key,
+            relation=relation,
+            status="not_found",
+            reason="landmark_not_found",
+            registry=registry,
+            signature=signature,
+        )
+
+    location = _ward_fallback(
+        listing_id=listing_id,
+        city=city,
+        ward=ward_label,
+        registry=registry,
+        signature=signature,
+    )
+    if location:
+        return LocationResolution(location=location, issue=None)
+    return _fallback_with_issue(
+        listing_id=listing_id,
+        city=city,
+        ward=ward_label,
+        road="",
+        landmark="",
+        relation="",
+        status="not_found",
+        reason="ward_not_found",
+        registry=registry,
+        signature=signature,
     )
 
 
@@ -220,27 +657,56 @@ def load_location_registry(
     *,
     ward_path: Path = LISTING_MAP_WARD_REGISTRY_PATH,
     road_path: Path = LISTING_MAP_ROAD_REGISTRY_PATH,
+    landmark_path: Path = LISTING_MAP_LANDMARK_REGISTRY_PATH,
 ) -> LocationRegistry:
     ward_payload = json.loads(ward_path.read_text(encoding="utf-8"))
     road_payload = json.loads(road_path.read_text(encoding="utf-8"))
-    ward_version = str(ward_payload.get("resolver_version") or "")
-    road_version = str(road_payload.get("resolver_version") or "")
-    if not ward_version or ward_version != road_version:
+    landmark_payload = json.loads(landmark_path.read_text(encoding="utf-8"))
+    versions = {
+        str(payload.get("resolver_version") or "")
+        for payload in (ward_payload, road_payload, landmark_payload)
+    }
+    if "" in versions or len(versions) != 1:
         raise ValueError("listing location registry versions do not match")
+    resolver_version = versions.pop()
 
     wards = {
-        (
-            str(item["city"]),
-            str(item["normalized_ward"]),
-        ): item
+        (str(item["city"]), str(item["normalized_ward"])): item
         for item in ward_payload.get("wards") or []
     }
-    roads = {
-        (
-            str(item["city"]),
-            str(item["normalized_ward"]),
-            str(item["normalized_road"]),
-        ): item
-        for item in road_payload.get("roads") or []
-    }
-    return LocationRegistry(ward_version, roads, wards)
+    road_lists: dict[
+        tuple[str, str, str],
+        list[Mapping[str, object]],
+    ] = {}
+    for item in road_payload.get("roads") or []:
+        aliases = set(item.get("aliases") or ())
+        aliases.add(str(item["normalized_road"]))
+        for alias in aliases:
+            key = (
+                str(item["city"]),
+                str(item["normalized_ward"]),
+                normalize_road_token(alias),
+            )
+            road_lists.setdefault(key, []).append(item)
+    roads = {key: tuple(items) for key, items in road_lists.items()}
+
+    landmarks = {}
+    for item in landmark_payload.get("landmarks") or []:
+        aliases = set(item.get("aliases") or ())
+        aliases.add(str(item["normalized_landmark"]))
+        for alias in aliases:
+            key = (
+                str(item["city"]),
+                str(item["normalized_ward"]),
+                normalize_location_token(alias),
+            )
+            existing = landmarks.get(key)
+            if existing is not None and existing is not item:
+                raise ValueError(f"duplicate landmark alias: {key}")
+            landmarks[key] = item
+    return LocationRegistry(
+        resolver_version=resolver_version,
+        roads=roads,
+        landmarks=landmarks,
+        wards=wards,
+    )
