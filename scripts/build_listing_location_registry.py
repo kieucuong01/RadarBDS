@@ -800,7 +800,7 @@ def _merge_curated_landmarks(
             boundaries=boundaries,
             label=f"curated landmark {name}",
         )
-        curated[(city, normalized_ward, normalized)] = {
+        row = {
             "city": city,
             "ward": ward,
             "normalized_ward": normalized_ward,
@@ -817,6 +817,11 @@ def _merge_curated_landmarks(
             "source_url": str(source["source_url"]).strip(),
             "verified_at": str(source["verified_at"]).strip(),
         }
+        if source.get("allow_boundary_mismatch"):
+            row["boundary_mismatch_reason"] = str(
+                source.get("boundary_mismatch_reason") or ""
+            ).strip()
+        curated[(city, normalized_ward, normalized)] = row
     preserved = [
         row
         for row in rows

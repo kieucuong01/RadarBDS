@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import tempfile
 from urllib.parse import urlencode
 
@@ -117,6 +118,57 @@ def _candidate_aliases(candidate_type: str, canonical: str) -> list[str]:
     return []
 
 
+_ROAD_COPY_TOKENS = frozenset({
+    "ban",
+    "can",
+    "dat",
+    "dien",
+    "gia",
+    "lau",
+    "lien",
+    "ngang",
+    "ngu",
+    "nha",
+    "phong",
+    "tho",
+    "tich",
+    "tret",
+    "trieu",
+    "ty",
+    "toilet",
+    "wc",
+})
+_NUMBERED_ROAD_RE = re.compile(
+    r"^(?:duong so|dx|d|db|dh|dt|ql|n|ng|ni|na|nb)\s+\d+[a-z]?$"
+)
+
+
+def _candidate_is_researchable(
+    candidate_type: str,
+    canonical: str,
+) -> bool:
+    normalized = (
+        normalize_road_token(canonical)
+        if candidate_type == "road"
+        else normalize_location_token(canonical)
+    )
+    tokens = normalized.split()
+    if not normalized or len(normalized) > 100 or len(tokens) > 8:
+        return False
+    if candidate_type == "landmark":
+        return normalized.startswith((
+            "kdc ",
+            "khu dan cu ",
+            "khu tai dinh cu ",
+            "tdc ",
+        ))
+    if _ROAD_COPY_TOKENS.intersection(tokens):
+        return False
+    if any(character.isdigit() for character in normalized):
+        return bool(_NUMBERED_ROAD_RE.fullmatch(normalized))
+    return len(tokens) >= 2 and all(token.isalpha() for token in tokens)
+
+
 def _research_items_for_row(row: dict, selected_type: str) -> list[dict]:
     city = str(row.get("city") or "").strip()
     ward = str(row.get("ward") or "").strip()
@@ -128,9 +180,17 @@ def _research_items_for_row(row: dict, selected_type: str) -> list[dict]:
         return []
 
     types = []
-    if road and selected_type in {"all", "road"}:
+    if (
+        road
+        and selected_type in {"all", "road"}
+        and _candidate_is_researchable("road", road)
+    ):
         types.append(("road", road))
-    if landmark and selected_type in {"all", "landmark"}:
+    if (
+        landmark
+        and selected_type in {"all", "landmark"}
+        and _candidate_is_researchable("landmark", landmark)
+    ):
         types.append(("landmark", landmark))
 
     items = []
@@ -179,8 +239,38 @@ def cmd_map_location_research_queue(args):
         raise ValueError("invalid candidate type")
 
     merged = {}
+    filtered = set()
     for status in _COVERAGE_STATUSES:
         for row in load_listing_location_coverage(status, 1000):
+            city = str(row.get("city") or "").strip()
+            ward = str(row.get("ward") or "").strip()
+            road = normalize_road_token(row.get("road_candidate") or "")
+            landmark = normalize_location_token(
+                row.get("landmark_candidate") or ""
+            )
+            for candidate_type, canonical in (
+                ("road", road),
+                ("landmark", landmark),
+            ):
+                if (
+                    canonical
+                    and selected_type in {"all", candidate_type}
+                    and not _candidate_is_researchable(
+                        candidate_type,
+                        canonical,
+                    )
+                ):
+                    filtered.add(
+                        _candidate_location_key(
+                            candidate_type,
+                            city,
+                            ward,
+                            canonical,
+                            landmark=(
+                                landmark if candidate_type == "road" else ""
+                            ),
+                        )
+                    )
             for item in _research_items_for_row(row, selected_type):
                 key = item["candidate_key"]
                 previous = merged.get(key)
@@ -200,6 +290,7 @@ def cmd_map_location_research_queue(args):
     )[:limit]
     payload = {
         "candidate_type": selected_type,
+        "filtered_candidates": len(filtered),
         "total_candidates": len(items),
         "items": items,
     }

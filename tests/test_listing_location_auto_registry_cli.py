@@ -110,6 +110,36 @@ def test_research_queue_emits_separate_scoped_road_and_landmark_items(
     assert landmarks["items"][0]["candidate_type"] == "landmark"
 
 
+def test_research_queue_quarantines_obvious_listing_copy_from_road_candidates(
+    monkeypatch,
+):
+    row = {
+        "candidate_key": "coverage-hash",
+        "city": "THỦ DẦU MỘT",
+        "ward": "Phú Tân",
+        "road_candidate": "trệt 1 lầu 3 phòng ngủ",
+        "landmark_candidate": "tdc phu chanh b",
+        "relation": "at",
+        "status": "not_found",
+        "affected_listing_count": 14,
+        "resolution_note": "road_not_found",
+    }
+    monkeypatch.setattr(
+        map_locations,
+        "load_listing_location_coverage",
+        lambda status, limit: [row] if status == "not_found" else [],
+    )
+
+    payload = map_locations.cmd_map_location_research_queue(
+        SimpleNamespace(limit=50, candidate_type="all")
+    )
+
+    assert [item["candidate_type"] for item in payload["items"]] == [
+        "landmark"
+    ]
+    assert payload["filtered_candidates"] == 1
+
+
 def test_ingest_evidence_dry_run_does_not_write(tmp_path, monkeypatch):
     evidence_path = tmp_path / "evidence.json"
     evidence_path.write_text(

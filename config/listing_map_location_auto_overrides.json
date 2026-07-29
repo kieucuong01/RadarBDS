@@ -1,4 +1,32 @@
 {
-  "resolver_version": "osm-binh-duong-20260729-v2",
-  "entries": []
+  "entries": [
+    {
+      "accuracy_radius_m": 140.0,
+      "aliases": [
+        "Khu tái định cư Phú Chánh B",
+        "TDC Phu Chanh B"
+      ],
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TĐC Phú Chánh is mapped to the canonical Phú Tân valuation ward while the retained legacy ward polygon does not cover the resettlement zone.",
+      "candidate_key": "landmark:thu-dau-mot:phu-tan:tdc-phu-chanh-b",
+      "candidate_type": "landmark",
+      "canonical": "TĐC Phú Chánh B",
+      "checked_at": "2026-07-29T17:56:13Z",
+      "city": "THỦ DẦU MỘT",
+      "confidence": 1.0,
+      "evidence_hash": "82c8db8b3709c863ac437083082d153c97c03fc4107862f5ec300b2b2d87a5a2",
+      "lat": 11.058782,
+      "lng": 106.7015151,
+      "query": "TĐC Phú Chánh B, Phú Tân, Thủ Dầu Một",
+      "result_address": "Nhà 90, Đ. Số 55, Khu TĐC Phú Chánh, B, P, Bình Dương, Hồ Chí Minh, Vietnam",
+      "result_title": "Khu tái định cư Phú Chánh B",
+      "result_type": "Housing development",
+      "source": "Google Maps browser suggestion",
+      "source_url": "https://www.google.com/maps/place/Khu+t%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+Ph%C3%BA+Ch%C3%A1nh+B/@11.058782,106.7015151,17z/data=!3m1!4b1!4m6!3m5!1s0x3174cfc3c87ff1b1:0x62a06002cd918551!8m2!3d11.058782!4d106.7015151!16s%2Fg%2F11ggg3n5ns",
+      "status": "accepted",
+      "unique_result": true,
+      "ward": "Phú Tân"
+    }
+  ],
+  "resolver_version": "osm-binh-duong-20260729-v3"
 }

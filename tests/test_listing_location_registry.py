@@ -22,7 +22,11 @@ from services.listing_location_auto_registry import (
     BrowserLocationEvidence,
     canonical_evidence_hash,
 )
-from services.listing_location_resolver import load_location_registry
+from services.listing_location_resolver import (
+    load_location_registry,
+    resolve_listing_location,
+)
+from services.listing_map_context import extract_map_location_context
 from services.market_data import CITY_MAP
 
 
@@ -670,6 +674,50 @@ def test_boundary_mismatch_requires_explicit_reason(tmp_path):
     assert any(row["normalized_road"] == "duong so 37" for row in roads)
 
 
+def test_curated_landmark_preserves_boundary_mismatch_provenance(tmp_path):
+    osm, sources, overrides, boundaries = _generated_payloads()
+    overrides["landmarks"] = [
+        {
+            "city": "THỦ DẦU MỘT",
+            "ward": "Phú Tân",
+            "landmark_name": "TĐC Phú Chánh B",
+            "lat": 11.020,
+            "lng": 106.680,
+            "source": "Google Maps browser suggestion",
+            "source_url": (
+                "https://www.google.com/maps/place/"
+                "Khu+tai+dinh+cu+Phu+Chanh+B/"
+                "@11.020,106.680,17z"
+            ),
+            "verified_at": "2026-07-29",
+            "allow_boundary_mismatch": True,
+            "boundary_mismatch_reason": (
+                "Ranh lịch sử chưa bao phủ khu TĐC."
+            ),
+        }
+    ]
+
+    paths = build_location_registries(
+        osm,
+        sources,
+        tmp_path,
+        overrides=overrides,
+        boundary_paths=(boundaries,),
+    )
+    landmarks = json.loads(paths[2].read_text(encoding="utf-8"))[
+        "landmarks"
+    ]
+
+    row = next(
+        item
+        for item in landmarks
+        if item["normalized_landmark"] == "tdc phu chanh b"
+    )
+    assert row["boundary_mismatch_reason"] == (
+        "Ranh lịch sử chưa bao phủ khu TĐC."
+    )
+
+
 def test_builder_rejects_duplicate_alias_assigned_to_two_candidates(tmp_path):
     osm, sources, overrides, boundaries = _generated_payloads()
     overrides["road_aliases"] = [
@@ -795,6 +843,26 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         registry.wards[("BẾN CÁT", "my phuoc 1")]["label"]
         == "Theo trung tâm Mỹ Phước (xấp xỉ cho Mỹ Phước 1)"
     )
+
+    context = extract_map_location_context(
+        "Bán đất tại TĐC Phú Chánh B",
+        "",
+    )
+    resolution = resolve_listing_location(
+        {
+            "id": 63565,
+            "city": "THỦ DẦU MỘT",
+            "ward": "Phú Tân",
+            "title": "Bán đất tại TĐC Phú Chánh B",
+        },
+        registry,
+        context,
+    )
+    assert resolution.issue is None
+    assert resolution.location.precision == "landmark"
+    assert resolution.location.location_key.endswith(":tdc-phu-chanh-b")
+    assert resolution.location.lat == pytest.approx(11.058782)
+    assert resolution.location.lng == pytest.approx(106.7015151)
 
 
 def test_production_registry_json_is_pinned_to_lf_for_stable_hashes():
