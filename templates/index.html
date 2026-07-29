@@ -981,6 +981,13 @@
             <div id="sm-desc" class="sm-desc-text"></div>
           </div>
 
+          <section id="sm-detail-location" class="sm-section sm-location-section" data-detail-location>
+            <div class="sm-section-label">Vị trí BĐS</div>
+            <div class="sm-location-copy" data-location-copy></div>
+            <div class="sm-location-map" data-location-map aria-label="Bản đồ vị trí bất động sản"></div>
+            <button type="button" class="sm-location-retry" data-location-retry hidden>Thử tải lại bản đồ</button>
+          </section>
+
           <!-- COMPS list -->
           <div class="sm-section sm-panel" data-sm-panel="comps" id="sm-panel-comps" role="tabpanel" aria-hidden="true">
             <div class="sm-section-label">📊 SO SÁNH LÔ TƯƠNG TỰ</div>
@@ -1356,6 +1363,7 @@
 
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=content-hubs-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=loader-font-fix-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-location-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-listings-header-images-20260722"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=report-internal-link-filters-20260723"></script>
 </body>

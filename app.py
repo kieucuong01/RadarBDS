@@ -5051,7 +5051,15 @@ def listing_detail(listing_id):
     # Advisory note is temporarily hidden from listing detail pages.
     memo = None
 
-    return render_template('listing_detail.html', l=l, imgs=imgs, history_json=history_json, desc_html=desc_html, memo=memo)
+    return render_template(
+        'listing_detail.html',
+        l=l,
+        imgs=imgs,
+        history_json=history_json,
+        desc_html=desc_html,
+        memo=memo,
+        map_location=data.get("map_location"),
+    )
 
 def api_listing_detail(listing_id):
     db_path = _db_handle()

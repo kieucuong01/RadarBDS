@@ -379,6 +379,16 @@ function toggleModalComps(btn) {
   btn.textContent = expanded ? 'Thu gọn' : `Xem thêm ${count} lô`;
 }
 
+function renderSignalDetailLocation(location) {
+  const root = document.getElementById('sm-detail-location');
+  if (!root || !window.RadarDetailLocationMap) return;
+  window.RadarDetailLocationMap.mount({
+    root,
+    location,
+    initialLayer: 'street'
+  });
+}
+
 function renderCompInfoTag(icon, label, extraClass = '') {
   const text = _signalTagText(label);
   if (!text) return '';
@@ -530,6 +540,7 @@ async function _hydrateSignalDetailLegacy(listingId) {
       data.id || listingId,
       'redacted_description_modal'
     );
+    renderSignalDetailLocation(data.map_location);
     document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
     document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
     { const _d = document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };
@@ -1063,6 +1074,7 @@ async function hydrateSignalDetail(listingId) {
       data.id || listingId,
       'redacted_description_modal'
     );
+    renderSignalDetailLocation(data.map_location);
     document.getElementById('sm-zalo').dataset.listingId = data.id || listingId;
     document.getElementById('sm-zalo').dataset.listingUrl = data.url || `/listing/${listingId}`;
     { const _d = document.getElementById('sm-detail'); if (_d) _d.href = data.url || `/listing/${listingId}`; };

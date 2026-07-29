@@ -12,6 +12,18 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=listing-detail-modal-ui-20260720">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.css">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"></noscript>
+<script>
+window.RADAR_MAP_VENDOR = {
+  leafletScript: {
+    url: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+    integrity: "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  },
+  leafletStyle: {
+    url: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+    integrity: "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  }
+};
+</script>
 <style>
 body.listing-detail-page {
   display: block;
@@ -805,6 +817,13 @@ body.listing-detail-page {
           <div class="sm-desc-text">{{ l.get('description') or 'Không có mô tả.' }}</div>
         </section>
 
+        <section id="detail-location" class="sm-section sm-location-section" data-detail-location>
+          <div class="sm-section-label">Vị trí BĐS</div>
+          <div class="sm-location-copy" data-location-copy></div>
+          <div class="sm-location-map" data-location-map aria-label="Bản đồ vị trí bất động sản"></div>
+          <button type="button" class="sm-location-retry" data-location-retry hidden>Thử tải lại bản đồ</button>
+        </section>
+
         <section class="sm-section sm-panel" data-sm-panel="comps" role="tabpanel">
           <div class="sm-section-label">Lô tương tự</div>
           <div id="detail-comps-body" class="sm-comps-list">
@@ -864,8 +883,10 @@ body.listing-detail-page {
   <div id="listingGalleryCount" class="listing-gallery-count"></div>
 </div>
 
+<script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-location-20260729"></script>
 <script>
 const listingImages = {{ imgs|tojson }};
+const listingMapLocation = {{ map_location|tojson }};
 const listingPhotoSwipeItems = listingImages.map((src, index) => ({
   src,
   msrc: src,
@@ -1558,6 +1579,11 @@ renderTopStats();
 renderMemo();
 renderHistoryAndComps();
 hydratePhotoSwipeImageSizes();
+RadarDetailLocationMap.mount({
+  root: document.getElementById('detail-location'),
+  location: listingMapLocation,
+  initialLayer: 'street'
+});
 
 document.addEventListener('keydown', (event) => {
   const gallery = document.getElementById('listingGallery');
