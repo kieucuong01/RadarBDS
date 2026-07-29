@@ -108,6 +108,36 @@ def test_official_gis_tracking_context_strips_outbound_and_location_data():
     assert result == {"mode": "all"}
 
 
+def test_listing_map_item_navigation_targets_internal_detail_page():
+    result = _run_node(
+        "(function(){"
+        "let assigned=null;"
+        "const fakeRoot={location:{assign:function(url){assigned=url;}}};"
+        "return {"
+        "valid:mapApi.navigateToListingDetail(fakeRoot,{id:42}),"
+        "assigned:assigned"
+        "};"
+        "})()"
+    )
+
+    assert result == {"valid": True, "assigned": "/listing/42"}
+
+
+def test_listing_map_item_navigation_ignores_missing_ids():
+    result = _run_node(
+        "(function(){"
+        "let assigned=null;"
+        "const fakeRoot={location:{assign:function(url){assigned=url;}}};"
+        "return {"
+        "valid:mapApi.navigateToListingDetail(fakeRoot,{title:'Tin rao'}),"
+        "assigned:assigned"
+        "};"
+        "})()"
+    )
+
+    assert result == {"valid": False, "assigned": None}
+
+
 def test_client_tracking_allowlist_includes_every_listing_map_event():
     source = MAP_SCRIPT.read_text(encoding="utf-8")
     actions = {

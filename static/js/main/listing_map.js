@@ -547,31 +547,28 @@
     }
   }
 
-  function itemModalProxy(item) {
-    var proxy = root.document.createElement("button");
-    proxy.dataset.id = String(item.id || "");
-    proxy.dataset.title = String(item.title || "");
-    proxy.dataset.primary = String(item.thumbnail || "");
-    proxy.dataset.price = String(item.price_ty || "");
-    proxy.dataset.area = String(item.area_m2 || "");
-    proxy.dataset.ward = String(item.ward || "");
-    proxy.dataset.road = String(item.road_name || "");
-    proxy.dataset.ptype = String(item.prop_type || "");
-    proxy.dataset.propLabel = String(item.prop_type_label || "");
-    proxy.dataset.mos = String(item.mos_pct || 0);
-    proxy.dataset.mosPctDisplay = String(item.mos_pct || 0);
-    proxy.dataset.source = String(item.source || "");
-    proxy.dataset.time = String(item.days_ago || "");
-    return proxy;
+  function listingDetailUrl(item) {
+    var id = Number(item && item.id);
+    if (!Number.isInteger(id) || id <= 0) return null;
+    return "/listing/" + encodeURIComponent(String(id));
+  }
+
+  function navigateToListingDetail(targetRoot, item) {
+    var url = listingDetailUrl(item);
+    var win = targetRoot || root;
+    if (!url || !win || !win.location) return false;
+    if (typeof win.location.assign === "function") {
+      win.location.assign(url);
+    } else {
+      win.location.href = url;
+    }
+    return true;
   }
 
   function openItem(item) {
-    var proxy = itemModalProxy(item);
     close({ reason: "listing_selected" });
     root.setTimeout(function () {
-      if (typeof root.openListingModal === "function") {
-        root.openListingModal(proxy);
-      }
+      navigateToListingDetail(root, item);
     }, 40);
   }
 
@@ -958,6 +955,8 @@
     mapBaseLayers: mapBaseLayers,
     safeTrackingContext: safeTrackingContext,
     precisionCopy: precisionCopy,
+    listingDetailUrl: listingDetailUrl,
+    navigateToListingDetail: navigateToListingDetail,
     loadLeaflet: loadLeaflet,
     open: open,
     close: close,
