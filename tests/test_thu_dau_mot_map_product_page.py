@@ -433,10 +433,13 @@ def test_product_page_is_indexable_but_checkout_is_disabled_without_sales_flag(m
     )
     assert len(disabled_purchase_buttons) == 1
     assert all("disabled" in button and 'aria-disabled="true"' in button for button in disabled_purchase_buttons)
-    assert html.index("data-product-purchase") > html.index('id="danh-sach-phuong-moi"')
-    assert html.index("data-product-purchase") < html.index('id="chon-phien-ban"')
-    assert "/static/images/seo/thu-dau-mot-map-before.webp" in html
-    assert "/static/images/seo/thu-dau-mot-map-after.webp" in html
+    assert html.index("data-product-purchase") > html.index('id="ban-do-pdf-hoan-thien"')
+    assert html.index("data-product-purchase") < html.index('id="ban-nhan-duoc-gi"')
+    body = html.split("<body", 1)[1]
+    assert "/static/images/seo/thu-dau-mot-map-before.webp" not in body
+    assert "/static/images/seo/thu-dau-mot-map-after.webp" not in body
+    assert "tdm-product-preview-card" not in html
+    assert "Chọn bản xem trước" not in html
     lowered = html.lower()
     for leaked_suffix in (".svg", ".kml", ".zip"):
         assert leaked_suffix not in lowered
@@ -464,6 +467,26 @@ def test_product_page_targets_free_lookup_intent_before_paid_bundle():
     assert "5 phường hiện tại" in visible_text
     assert "Radar BDS chỉ mở bán" not in visible_text
     assert "Trong khi bộ bản đồ chưa mở bán" not in visible_text
+
+
+def test_product_hero_uses_single_column_and_no_preview_card():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(PRODUCT_PATH).get_data(as_text=True)
+    css = Path("static/css/thu_dau_mot_map_product.css").read_text(encoding="utf-8")
+
+    assert "Bản đồ hành chính + dữ liệu nhà đất" in html
+    assert "tdm-product-hero-highlights" in html
+    assert "2 lớp bản đồ" in html
+    assert "19 khu vực" in html
+    assert "Lọc tin ngay" in html
+    assert "tdm-product-preview-card" not in html
+    assert "data-product-preview" not in html
+    assert "tdm-product-editions" not in html
+    assert "data-product-edition" not in html
+    assert "grid-template-columns: 1fr" in css
+    assert "tdm-product-preview-card" not in css
+    assert "tdm-product-editions" not in css
 
 
 def test_product_page_states_the_exact_legacy_and_current_edition_contract():
@@ -522,14 +545,21 @@ def test_product_page_includes_administrative_image_source_and_pdf_offer_detail(
         "Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương"
         in visible_text
     )
-    assert "bản đồ hành chính tham khảo công khai" in visible_text
-    assert "Địa Ốc Thông Thái" not in visible_text
-    assert "diaocthongthai.com" not in html
+    assert "Nhằm cung cấp file bản đồ chất lượng cao cho bạn đọc" in visible_text
+    assert "Địa Ốc Thông Thái đã tổng hợp lại các file bản đồ" in visible_text
+    assert "vector, Illustrator, PNG, JPG, GIF" in visible_text
+    assert "Bản đồ thành phố Thủ Dầu Một." in visible_text
+    assert "Tải về bản đồ (khổ lớn)" in visible_text
+    assert "File ảnh bản đồ TP Thủ Dầu Một – Bình Dương. Nhấn vào để phóng lớn." in visible_text
+    assert "/static/images/seo/thu-dau-mot-source/vnm__binh_duong__thu_dau_mot_v3.jpg" in html
+    assert "/static/images/seo/thu-dau-mot-source/vnm__binh_duong__thu_dau_mot.jpg" in html
+    assert 'download="ban-do-tp-thu-dau-mot-binh-duong-big-size.jpg"' in html
     assert visible_text.index(
         "Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương"
     ) < visible_text.index("Bản đồ PDF hoàn thiện")
+    assert visible_text.index("Bản đồ PDF hoàn thiện") < visible_text.index("Bạn nhận được gì")
     assert visible_text.index("Bản đồ PDF hoàn thiện") < visible_text.index(
-        "Chọn bản xem trước"
+        "Bộ bản đồ TP Thủ Dầu Một"
     )
     for benefit in (
         "File PDF chuẩn in ấn",
@@ -542,7 +572,12 @@ def test_product_page_includes_administrative_image_source_and_pdf_offer_detail(
     ):
         assert benefit in visible_text
     assert "tdm-product-source-summary" in css
+    assert "tdm-product-diaoc-copy" in css
+    assert "tdm-product-map-download" in css
     assert "tdm-product-pdf-offer" in css
+    assert "tdm-product-paid-card" in css
+    assert "tdm-product-hero-highlights" in css
+    assert "tdm-product-card-icon" in css
 
 
 def test_product_public_geojson_uses_utf8_and_agent_metadata():
@@ -682,7 +717,13 @@ def test_product_schema_matches_visible_offer_and_stays_out_of_stock():
     assert product["offers"]["url"] == PRODUCT_URL
     assert product["offers"]["price"] == "99000"
     assert product["offers"]["priceCurrency"] == "VND"
-    assert product["offers"]["availability"] == "https://schema.org/OutOfStock"
+    html = response.get_data(as_text=True)
+    expected_availability = (
+        "https://schema.org/InStock"
+        if 'action="/ban-do-thu-dau-mot/checkout"' in html
+        else "https://schema.org/OutOfStock"
+    )
+    assert product["offers"]["availability"] == expected_availability
     assert "aggregateRating" not in product
     assert "review" not in product
 
