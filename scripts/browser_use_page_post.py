@@ -155,7 +155,16 @@ def verified_on_page():
             if role == 'article' and needle and needle in name:
                 found_article = True
                 break
-        if found_article and not has_dialog:
+        # AX article names sometimes omit collapsed/new Page post text even when
+        # the post is already visible in the rendered DOM. Use body text as a
+        # secondary check to avoid false-negative publish results and duplicate
+        # reruns.
+        body_has_text = False
+        try:
+            body_has_text = bool(needle and needle in js('document.body.innerText || ""'))
+        except Exception:
+            body_has_text = False
+        if (found_article or body_has_text) and not has_dialog:
             return True, needle
     return False, needle
 
