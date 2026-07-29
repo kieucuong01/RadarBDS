@@ -281,3 +281,9 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         registry.wards[("BẾN CÁT", "my phuoc 1")]["label"]
         == "Theo trung tâm Mỹ Phước (xấp xỉ cho Mỹ Phước 1)"
     )
+
+
+def test_production_registry_json_is_pinned_to_lf_for_stable_hashes():
+    attributes = Path(".gitattributes").read_text(encoding="utf-8")
+
+    assert "static/maps/listing-locations/*.json text eol=lf" in attributes
