@@ -1,0 +1,37 @@
+<button id="listingMapLauncher" type="button" class="listing-map-launcher"
+  aria-controls="listingMapWorkspace" aria-haspopup="dialog" aria-expanded="false"
+  onclick="openListingMap()">
+  <svg class="listing-map-launcher-icon" width="20" height="20" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+    stroke-linejoin="round" aria-hidden="true">
+    <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"></path>
+    <circle cx="12" cy="10" r="2.5"></circle>
+  </svg>
+  <span>Xem trên Maps</span>
+</button>
+
+<section id="listingMapWorkspace" class="listing-map-workspace" hidden
+  role="dialog" aria-modal="true" aria-labelledby="listingMapTitle"
+  aria-describedby="listingMapDescription">
+  <header class="listing-map-workspace-head">
+    <div>
+      <p class="listing-map-eyebrow">Radar BDS Maps</p>
+      <h2 id="listingMapTitle">Xem lô đất trên bản đồ</h2>
+      <p id="listingMapDescription">
+        Vị trí theo tin rao, tên đường hoặc trung tâm phường; luôn hiển thị độ chính xác.
+      </p>
+    </div>
+    <button id="listingMapClose" type="button" class="listing-map-close"
+      aria-label="Đóng bản đồ" onclick="RadarListingMap.close()">×</button>
+  </header>
+  <div id="listingMapStatus" class="listing-map-status" role="status"
+    aria-live="polite" aria-busy="false"></div>
+  <div class="listing-map-workspace-body">
+    <div id="listingMapCanvas" class="listing-map-canvas"
+      aria-label="Bản đồ các lô đất"></div>
+    <aside id="listingMapPanel" class="listing-map-panel"
+      aria-label="Danh sách lô đất tại vị trí đã chọn"></aside>
+  </div>
+  <div id="listingMapMobileSheet" class="listing-map-mobile-sheet"
+    aria-label="Danh sách lô đất trên thiết bị di động"></div>
+</section>

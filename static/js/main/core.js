@@ -70,6 +70,7 @@ function ensureDashboardScript(key) {
   if (key === 'listings' && typeof window.loadListings === 'function') return Promise.resolve();
   if (key === 'auth' && window.RadarAuth && window.RadarAuth.__radarAuthLoaded) return Promise.resolve();
   if (key === 'authCta' && window.__radarEngagementLoaded) return Promise.resolve();
+  if (key === 'listingMap' && window.RadarListingMap && typeof window.RadarListingMap.open === 'function') return Promise.resolve();
   if (lazyScriptPromises[key]) return lazyScriptPromises[key];
   const src = window.RADAR_ASSETS && window.RADAR_ASSETS[key];
   if (!src) return Promise.reject(new Error(`Missing dashboard script: ${key}`));
@@ -126,9 +127,36 @@ async function lazyOpenHistory(id, title) {
   return window.openHistory(id, title);
 }
 
+function getListingMapFilterSnapshot() {
+  const mode = activeTabId();
+  if (mode !== 'signals' && mode !== 'all') return null;
+  const params = new URLSearchParams(currentFilters || '');
+  ['page', 'limit', 'include_total', 'sort_by', 'sort_dir', 'tab'].forEach((key) => params.delete(key));
+  if (
+    mode === 'all'
+    && window.RadarListingsState
+    && typeof window.RadarListingsState.isCompleteOnly === 'function'
+    && window.RadarListingsState.isCompleteOnly()
+  ) {
+    params.set('complete', '1');
+  } else {
+    params.delete('complete');
+  }
+  return { mode, query: params.toString() };
+}
+
+async function lazyOpenListingMap() {
+  const snapshot = getListingMapFilterSnapshot();
+  if (!snapshot) return;
+  await ensureDashboardStyle('listingMap');
+  await ensureDashboardScript('listingMap');
+  return window.RadarListingMap.open(snapshot);
+}
+
 window.openSignal = lazyOpenSignal;
 window.openListingModal = lazyOpenListingModal;
 window.openHistory = lazyOpenHistory;
+window.openListingMap = lazyOpenListingMap;
 
 function _sendTrackEvent(action, opts) {
   opts = opts || {};
@@ -383,6 +411,14 @@ function activeTabId() {
   return active ? active.id.replace('tab-', '') : 'signals';
 }
 
+function syncListingMapLauncher(tabId = activeTabId()) {
+  const launcher = document.getElementById('listingMapLauncher');
+  if (!launcher) return;
+  const supported = tabId === 'signals' || tabId === 'all';
+  launcher.hidden = !supported;
+  document.body.classList.toggle('listing-map-launcher-visible', supported);
+}
+
 const TAB_TITLES = {
   signals: 'Săn Deal',
   all: 'Tin rao',
@@ -474,6 +510,7 @@ async function switchTab(tabId, btn) {
   if (mobileTitle) mobileTitle.textContent = TAB_TITLES[tabId] || 'Radar BDS';
   hideSidebarMobile();
   syncMobileBadges();
+  syncListingMapLauncher(tabId);
 
   if (tabId === 'market') {
     await ensureDashboardStyle('market');
@@ -494,3 +531,7 @@ async function switchTab(tabId, btn) {
     requestAnimationFrame(() => ensureSignalScrollRoot({ refreshObserver: true }));
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  syncListingMapLauncher();
+});

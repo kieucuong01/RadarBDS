@@ -101,13 +101,25 @@
       market: "{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611",
       listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=favorite-listings-20260715",
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611",
-      authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=zalo-new-tab-20260624"
+      authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=zalo-new-tab-20260624",
+      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=listing-map-core-20260729"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
       market: "{{ css_market }}",
       leads: "{{ css_leads }}",
-      auth: "{{ css_auth }}"
+      auth: "{{ css_auth }}",
+      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=listing-map-core-20260729"
+    };
+    window.RADAR_MAP_VENDOR = {
+      leafletScript: {
+        url: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+        integrity: "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      },
+      leafletStyle: {
+        url: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+        integrity: "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      }
     };
   </script>
 </head>
@@ -882,6 +894,10 @@
       </div>
     </div>
   </main>
+
+  {% if not saved_page %}
+    {% include "partials/listing_map_workspace.html" %}
+  {% endif %}
 
   <!-- Modal Signal Detail -->
   <div id="signalModal" class="modal">

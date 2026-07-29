@@ -2,6 +2,8 @@
 let tableSort = { col: 'date', dir: 'desc' };
 let completeListingsOnly = false;
 let listingsToggleHandlersBound = false;
+window.RadarListingsState = window.RadarListingsState || {};
+window.RadarListingsState.isCompleteOnly = () => completeListingsOnly;
 
 function sortTable(th) {
   const col = th.dataset.col;

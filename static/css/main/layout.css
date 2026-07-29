@@ -877,3 +877,67 @@ tr:hover td {
     transform: rotate(360deg);
   }
 }
+
+.listing-map-launcher {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 70;
+  transform: translateX(-50%);
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  color: #fff;
+  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.34);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.listing-map-launcher:hover {
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 18px 42px rgba(37, 99, 235, 0.42);
+}
+
+.listing-map-launcher:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.58);
+  outline-offset: 3px;
+}
+
+.listing-map-launcher[hidden],
+body.sidebar-open .listing-map-launcher,
+body.tools-sheet-open .listing-map-launcher,
+body.signal-modal-open .listing-map-launcher,
+body.chat-open .listing-map-launcher,
+body.listing-map-open .listing-map-launcher {
+  display: none !important;
+}
+
+body.listing-map-launcher-visible #tab-signals,
+body.listing-map-launcher-visible .listings-grid-shell,
+body.listing-map-launcher-visible .table-scroll {
+  padding-bottom: 104px;
+}
+
+.listing-map-workspace[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
+  .listing-map-launcher {
+    bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+
+  body.listing-map-launcher-visible #tab-signals,
+  body.listing-map-launcher-visible .listings-grid-shell,
+  body.listing-map-launcher-visible .table-scroll {
+    padding-bottom: calc(156px + env(safe-area-inset-bottom));
+  }
+}
