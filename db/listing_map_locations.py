@@ -30,6 +30,8 @@ def iter_location_candidates(
         rows = conn.execute(
             f"""
             SELECT l.id,
+                   l.title,
+                   l.description,
                    l.ward,
                    l.road_name,
                    NULL::DOUBLE PRECISION AS source_lat,
@@ -65,6 +67,12 @@ def upsert_listing_map_locations(
             row.source,
             row.resolver_version,
             row.signature,
+            getattr(row, "accuracy_radius_m", None),
+            getattr(row, "relation", ""),
+            getattr(row, "reference_road", ""),
+            getattr(row, "landmark_key", ""),
+            getattr(row, "resolution_status", "resolved"),
+            getattr(row, "resolution_reason", ""),
         )
         for row in rows
     ]
@@ -81,9 +89,15 @@ def upsert_listing_map_locations(
                 source,
                 resolver_version,
                 listing_location_signature,
+                accuracy_radius_m,
+                relation,
+                reference_road,
+                landmark_key,
+                resolution_status,
+                resolution_reason,
                 updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
             ON CONFLICT (listing_id) DO UPDATE SET
                 lat=EXCLUDED.lat,
                 lng=EXCLUDED.lng,
@@ -93,6 +107,12 @@ def upsert_listing_map_locations(
                 source=EXCLUDED.source,
                 resolver_version=EXCLUDED.resolver_version,
                 listing_location_signature=EXCLUDED.listing_location_signature,
+                accuracy_radius_m=EXCLUDED.accuracy_radius_m,
+                relation=EXCLUDED.relation,
+                reference_road=EXCLUDED.reference_road,
+                landmark_key=EXCLUDED.landmark_key,
+                resolution_status=EXCLUDED.resolution_status,
+                resolution_reason=EXCLUDED.resolution_reason,
                 updated_at=NOW()
             """,
             values,

@@ -1,0 +1,113 @@
+from contextlib import contextmanager
+from unittest import mock
+
+import pytest
+
+
+class _Cursor:
+    def __init__(self, rows=None):
+        self._rows = list(rows or [])
+
+    def fetchall(self):
+        return self._rows
+
+
+class _Connection:
+    def __init__(self, rows=None):
+        self.rows = rows or []
+        self.executed = []
+        self.executemany_calls = []
+
+    def execute(self, sql, params=None):
+        self.executed.append((sql, params))
+        return _Cursor(self.rows)
+
+    def executemany(self, sql, params):
+        self.executemany_calls.append((sql, list(params)))
+        return _Cursor()
+
+
+@contextmanager
+def _connection_context(connection):
+    yield connection
+
+
+def test_location_candidates_include_map_text_but_exclude_sensitive_fields():
+    from db import listing_map_locations
+
+    connection = _Connection()
+    with mock.patch.object(
+        listing_map_locations,
+        "get_conn",
+        return_value=_connection_context(connection),
+    ):
+        listing_map_locations.iter_location_candidates([9])
+
+    sql = connection.executed[0][0].lower()
+    assert "l.title" in sql
+    assert "l.description" in sql
+    for forbidden in ("phone", "url", "seller", "image"):
+        assert forbidden not in sql
+
+
+def test_coverage_upsert_bounds_samples_and_preserves_first_seen():
+    from db import listing_location_coverage
+
+    row = listing_location_coverage.CoverageRow(
+        candidate_key="road:thu-dau-mot:phu-tan:duong-so-88",
+        city="THỦ DẦU MỘT",
+        ward="Phú Tân",
+        road_candidate="duong so 88",
+        landmark_candidate="tdc phu chanh d",
+        relation="on",
+        status="not_found",
+        affected_listing_count=12,
+        sample_listing_ids=tuple(range(20, 5, -1)),
+        resolution_note="Chưa có đường trong nguồn được xác minh",
+    )
+    connection = _Connection()
+    with mock.patch.object(
+        listing_location_coverage,
+        "get_conn",
+        return_value=_connection_context(connection),
+    ):
+        assert listing_location_coverage.upsert_listing_location_coverage([row]) == 1
+
+    sql, values = connection.executemany_calls[0]
+    assert "first_seen_at=listing_map_location_coverage.first_seen_at" in sql
+    assert "last_seen_at=NOW()" in sql
+    assert values[0][8] == "[6, 7, 8, 9, 10, 11, 12, 13, 14, 15]"
+
+
+def test_coverage_repository_rejects_unknown_status_and_bounds_load_limit():
+    from db import listing_location_coverage
+
+    invalid = listing_location_coverage.CoverageRow(
+        candidate_key="bad",
+        city="THỦ DẦU MỘT",
+        status="pending",
+    )
+    with pytest.raises(ValueError, match="status"):
+        listing_location_coverage.upsert_listing_location_coverage([invalid])
+
+    connection = _Connection(
+        [
+            {
+                "candidate_key": "road:test",
+                "status": "not_found",
+                "sample_listing_ids": [3, 1],
+            }
+        ]
+    )
+    with mock.patch.object(
+        listing_location_coverage,
+        "get_conn",
+        return_value=_connection_context(connection),
+    ):
+        rows = listing_location_coverage.load_listing_location_coverage(
+            status="not_found",
+            limit=50_000,
+        )
+
+    assert rows[0]["candidate_key"] == "road:test"
+    assert connection.executed[0][1] == ["not_found", 1000]

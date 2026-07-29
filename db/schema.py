@@ -114,12 +114,20 @@ CREATE TABLE IF NOT EXISTS listing_map_locations (
     lat DOUBLE PRECISION NOT NULL CHECK (lat BETWEEN -90 AND 90),
     lng DOUBLE PRECISION NOT NULL CHECK (lng BETWEEN -180 AND 180),
     location_precision TEXT NOT NULL
-        CHECK (location_precision IN ('exact', 'road', 'ward')),
+        CHECK (location_precision IN ('exact', 'road', 'landmark', 'nearby', 'ward')),
     location_key TEXT NOT NULL,
     location_label TEXT NOT NULL,
     source TEXT NOT NULL,
     resolver_version TEXT NOT NULL,
     listing_location_signature TEXT NOT NULL,
+    accuracy_radius_m DOUBLE PRECISION
+        CHECK (accuracy_radius_m IS NULL OR accuracy_radius_m >= 0),
+    relation TEXT,
+    reference_road TEXT,
+    landmark_key TEXT,
+    resolution_status TEXT NOT NULL DEFAULT 'resolved'
+        CHECK (resolution_status IN ('resolved', 'ambiguous', 'not_found', 'invalid')),
+    resolution_reason TEXT,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_listing_map_locations_precision
@@ -128,6 +136,24 @@ CREATE INDEX IF NOT EXISTS idx_listing_map_locations_point
     ON listing_map_locations(lat, lng);
 CREATE INDEX IF NOT EXISTS idx_listing_map_locations_key
     ON listing_map_locations(location_key);
+
+CREATE TABLE IF NOT EXISTS listing_map_location_coverage (
+    candidate_key TEXT PRIMARY KEY,
+    city TEXT NOT NULL,
+    ward TEXT NOT NULL DEFAULT '',
+    road_candidate TEXT NOT NULL DEFAULT '',
+    landmark_candidate TEXT NOT NULL DEFAULT '',
+    relation TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL
+        CHECK (status IN ('resolved', 'ambiguous', 'not_found', 'invalid')),
+    affected_listing_count INTEGER NOT NULL DEFAULT 0,
+    sample_listing_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+    first_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    resolution_note TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_listing_map_coverage_status_count
+    ON listing_map_location_coverage(status, affected_listing_count DESC);
 
 
 -- ================================================================
@@ -691,14 +717,81 @@ def _migrate_listing_map_locations(conn: Any) -> None:
             lat DOUBLE PRECISION NOT NULL CHECK (lat BETWEEN -90 AND 90),
             lng DOUBLE PRECISION NOT NULL CHECK (lng BETWEEN -180 AND 180),
             location_precision TEXT NOT NULL
-                CHECK (location_precision IN ('exact', 'road', 'ward')),
+                CHECK (location_precision IN ('exact', 'road', 'landmark', 'nearby', 'ward')),
             location_key TEXT NOT NULL,
             location_label TEXT NOT NULL,
             source TEXT NOT NULL,
             resolver_version TEXT NOT NULL,
             listing_location_signature TEXT NOT NULL,
+            accuracy_radius_m DOUBLE PRECISION
+                CHECK (accuracy_radius_m IS NULL OR accuracy_radius_m >= 0),
+            relation TEXT,
+            reference_road TEXT,
+            landmark_key TEXT,
+            resolution_status TEXT NOT NULL DEFAULT 'resolved'
+                CHECK (resolution_status IN ('resolved', 'ambiguous', 'not_found', 'invalid')),
+            resolution_reason TEXT,
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
+        """
+    )
+    for column_sql in (
+        "accuracy_radius_m DOUBLE PRECISION",
+        "relation TEXT",
+        "reference_road TEXT",
+        "landmark_key TEXT",
+        "resolution_status TEXT NOT NULL DEFAULT 'resolved'",
+        "resolution_reason TEXT",
+    ):
+        conn.execute(
+            f"""
+            ALTER TABLE listing_map_locations
+            ADD COLUMN IF NOT EXISTS {column_sql}
+            """
+        )
+    conn.execute(
+        """
+        ALTER TABLE listing_map_locations
+        DROP CONSTRAINT IF EXISTS listing_map_locations_location_precision_check
+        """
+    )
+    conn.execute(
+        """
+        ALTER TABLE listing_map_locations
+        ADD CONSTRAINT listing_map_locations_location_precision_check
+        CHECK (location_precision IN ('exact', 'road', 'landmark', 'nearby', 'ward'))
+        NOT VALID
+        """
+    )
+    conn.execute(
+        """
+        ALTER TABLE listing_map_locations
+        VALIDATE CONSTRAINT listing_map_locations_location_precision_check
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS listing_map_location_coverage (
+            candidate_key TEXT PRIMARY KEY,
+            city TEXT NOT NULL,
+            ward TEXT NOT NULL DEFAULT '',
+            road_candidate TEXT NOT NULL DEFAULT '',
+            landmark_candidate TEXT NOT NULL DEFAULT '',
+            relation TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL
+                CHECK (status IN ('resolved', 'ambiguous', 'not_found', 'invalid')),
+            affected_listing_count INTEGER NOT NULL DEFAULT 0,
+            sample_listing_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+            first_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            resolution_note TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_listing_map_coverage_status_count
+        ON listing_map_location_coverage(status, affected_listing_count DESC)
         """
     )
     conn.execute(

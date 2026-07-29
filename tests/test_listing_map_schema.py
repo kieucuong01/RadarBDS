@@ -32,14 +32,42 @@ def test_listing_map_location_migration_is_idempotent_and_non_destructive():
         assert fragment in ddl
 
     upper = ddl.upper()
-    assert "DROP " not in upper
+    assert "DROP TABLE" not in upper
     assert "TRUNCATE " not in upper
     assert "UPDATE LISTINGS" not in upper
     assert ddl.count("CREATE TABLE IF NOT EXISTS listing_map_locations") == 2
+
+
+def test_listing_map_location_migration_supports_all_honest_precisions():
+    from db.schema import _migrate_listing_map_locations
+
+    conn = _RecordingConnection()
+    _migrate_listing_map_locations(conn)
+    ddl = "\n".join(sql for sql, _params in conn.executed)
+
+    for column in (
+        "accuracy_radius_m DOUBLE PRECISION",
+        "relation TEXT",
+        "reference_road TEXT",
+        "landmark_key TEXT",
+        "resolution_status TEXT",
+        "resolution_reason TEXT",
+    ):
+        assert column in ddl
+    assert "'landmark'" in ddl
+    assert "'nearby'" in ddl
+    assert "CREATE TABLE IF NOT EXISTS listing_map_location_coverage" in ddl
+    assert "DROP TABLE" not in ddl.upper()
+    assert "TRUNCATE" not in ddl.upper()
+    assert "UPDATE LISTINGS" not in ddl.upper()
 
 
 def test_full_schema_contains_derived_location_table():
     from db.schema import SCHEMA_SQL
 
     assert "CREATE TABLE IF NOT EXISTS listing_map_locations" in SCHEMA_SQL
-    assert "CHECK (location_precision IN ('exact', 'road', 'ward'))" in SCHEMA_SQL
+    assert (
+        "CHECK (location_precision IN "
+        "('exact', 'road', 'landmark', 'nearby', 'ward'))"
+    ) in SCHEMA_SQL
+    assert "CREATE TABLE IF NOT EXISTS listing_map_location_coverage" in SCHEMA_SQL
