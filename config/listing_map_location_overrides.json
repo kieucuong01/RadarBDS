@@ -1,7 +1,81 @@
 {
   "resolver_version": "osm-binh-duong-20260729-v2",
-  "road_aliases": [],
-  "roads": [],
+  "road_aliases": [
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "canonical": "ĐX 092",
+      "aliases": [
+        "DX92",
+        "DX092",
+        "ĐX92",
+        "ĐX-092"
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "canonical": "ĐX 096",
+      "aliases": [
+        "DX96",
+        "DX096",
+        "ĐX96",
+        "ĐX-096"
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "canonical": "Đường số 35",
+      "aliases": [
+        "Đường 35",
+        "Duong so 35"
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "canonical": "Đường số 37",
+      "aliases": [
+        "Đường 37",
+        "Duong so 37"
+      ]
+    }
+  ],
+  "roads": [
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Đường số 35",
+      "lat": 11.0636566,
+      "lng": 106.6941886,
+      "accuracy_radius_m": 180,
+      "landmark_keys": [
+        "TĐC Phú Chánh B"
+      ],
+      "source": "OpenStreetMap",
+      "source_url": "https://www.openstreetmap.org/way/225107254",
+      "verified_at": "2026-07-29",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "broker landmark is stronger than available historical ward boundary"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Đường số 37",
+      "lat": 11.0637542,
+      "lng": 106.6947075,
+      "accuracy_radius_m": 180,
+      "landmark_keys": [
+        "TĐC Phú Chánh B"
+      ],
+      "source": "OpenStreetMap",
+      "source_url": "https://www.openstreetmap.org/way/1369653803",
+      "verified_at": "2026-07-29",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "broker landmark is stronger than available historical ward boundary"
+    }
+  ],
   "landmark_aliases": [
     {
       "canonical": "TĐC Phú Chánh B",

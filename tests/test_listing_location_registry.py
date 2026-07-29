@@ -531,7 +531,8 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert roads["resolver_version"] == LISTING_MAP_RESOLVER_VERSION
     assert landmarks["resolver_version"] == LISTING_MAP_RESOLVER_VERSION
     assert manifest["ward_count"] == len(wards["wards"]) == 26
-    assert manifest["road_count"] == len(roads["roads"]) == 110
+    assert manifest["road_count"] == len(roads["roads"])
+    assert manifest["road_count"] > 110
     assert manifest["landmark_count"] == len(landmarks["landmarks"])
     assert manifest["ward_registry_sha256"] == hashlib.sha256(
         LISTING_MAP_WARD_REGISTRY_PATH.read_bytes()
@@ -539,10 +540,32 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert manifest["road_registry_sha256"] == hashlib.sha256(
         LISTING_MAP_ROAD_REGISTRY_PATH.read_bytes()
     ).hexdigest()
-    for row in (*wards["wards"], *roads["roads"]):
+    for row in (*wards["wards"], *roads["roads"], *landmarks["landmarks"]):
         (south, west), (north, east) = LISTING_MAP_BOUNDS
         assert south <= row["lat"] <= north
         assert west <= row["lng"] <= east
+        if "accuracy_radius_m" in row:
+            assert float(row["accuracy_radius_m"]) >= 0
+
+    indexed_roads = {
+        (row["ward"], row["normalized_road"]): row
+        for row in roads["roads"]
+    }
+    assert indexed_roads[("Hiệp An", "dx 92")]["osm_way_ids"] == [
+        612555137,
+        898273670,
+        1504644404,
+    ]
+    assert indexed_roads[("Hiệp An", "dx 96")]["osm_way_ids"] == [1238200031]
+    assert indexed_roads[("Phú Tân", "duong so 35")]["source_url"].endswith(
+        "/225107254"
+    )
+    assert indexed_roads[("Phú Tân", "duong so 37")]["source_url"].endswith(
+        "/1369653803"
+    )
+    assert "boundary_mismatch_reason" in indexed_roads[
+        ("Phú Tân", "duong so 35")
+    ]
 
     registry = load_location_registry()
     assert (

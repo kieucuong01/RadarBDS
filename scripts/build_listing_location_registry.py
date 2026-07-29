@@ -13,6 +13,7 @@ from typing import Mapping, Sequence
 
 from shapely.geometry import LineString, Point, shape
 from shapely.ops import unary_union
+from shapely.validation import make_valid
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -201,7 +202,22 @@ def _load_ward_boundaries(
             if not ward or not geometry_payload:
                 raise ValueError(f"invalid ward boundary in {path}")
             geometry = shape(geometry_payload)
-            if geometry.is_empty or not geometry.is_valid:
+            if not geometry.is_valid:
+                repaired = make_valid(geometry)
+                if repaired.geom_type == "GeometryCollection":
+                    repaired = unary_union(
+                        [
+                            item
+                            for item in repaired.geoms
+                            if item.geom_type in {"Polygon", "MultiPolygon"}
+                        ]
+                    )
+                geometry = repaired
+            if (
+                geometry.is_empty
+                or not geometry.is_valid
+                or geometry.geom_type not in {"Polygon", "MultiPolygon"}
+            ):
                 raise ValueError(f"invalid ward boundary geometry for {ward}")
             key = city, normalize_location_token(ward)
             if key in boundaries:
@@ -455,9 +471,17 @@ def _generated_road_rows(
     return rows
 
 
-def _legacy_road_rows(sources: Mapping, index: Mapping) -> list[dict]:
+def _legacy_road_rows(
+    sources: Mapping,
+    index: Mapping,
+    *,
+    strict: bool = True,
+    skip_keys: set[tuple[str, str, str]] | None = None,
+) -> tuple[list[dict], list[dict]]:
     rows = []
+    rejected = []
     seen = set()
+    skip_keys = skip_keys or set()
     for source in sources.get("roads") or []:
         city = str(source.get("city") or "").strip()
         ward = str(source.get("ward") or "").strip()
@@ -470,15 +494,49 @@ def _legacy_road_rows(sources: Mapping, index: Mapping) -> list[dict]:
                 f"duplicate normalized road: {city}/{key[1]}/{key[2]}"
             )
         seen.add(key)
+        if key in skip_keys:
+            continue
         way_ids = sorted({int(item) for item in source.get("osm_way_ids") or []})
         if not way_ids:
-            raise ValueError(f"road {road_name} has no OSM way IDs")
+            if strict:
+                raise ValueError(f"road {road_name} has no OSM way IDs")
+            rejected.append(
+                {"key": "/".join(key), "reason": "legacy_source_has_no_way_ids"}
+            )
+            continue
         elements = []
+        missing_ids = []
         for way_id in way_ids:
             element = index.get(("way", way_id))
             if not element:
-                raise ValueError(f"missing OSM way {way_id} for road {road_name}")
+                missing_ids.append(way_id)
+                continue
             elements.append(element)
+        if missing_ids:
+            if strict:
+                raise ValueError(
+                    f"missing OSM way {missing_ids[0]} for road {road_name}"
+                )
+            rejected.append(
+                {
+                    "key": "/".join(key),
+                    "reason": "legacy_osm_way_missing",
+                    "osm_way_ids": missing_ids,
+                }
+            )
+            continue
+        if any(not (element.get("tags") or {}).get("highway") for element in elements):
+            if strict:
+                bad = next(
+                    element
+                    for element in elements
+                    if not (element.get("tags") or {}).get("highway")
+                )
+                raise ValueError(f"OSM way {bad.get('id')} is not a highway")
+            rejected.append(
+                {"key": "/".join(key), "reason": "legacy_way_not_highway"}
+            )
+            continue
         lat, lng = _road_center(elements)
         rows.append(
             {
@@ -496,7 +554,7 @@ def _legacy_road_rows(sources: Mapping, index: Mapping) -> list[dict]:
                 "osm_way_ids": way_ids,
             }
         )
-    return rows
+    return rows, rejected
 
 
 def _generated_landmark_rows(
@@ -595,6 +653,15 @@ def _merge_curated_roads(
             row["boundary_mismatch_reason"] = str(
                 source.get("boundary_mismatch_reason") or ""
             ).strip()
+        landmark_keys = sorted(
+            {
+                _normalize_landmark_token(value)
+                for value in (source.get("landmark_keys") or [])
+                if _normalize_landmark_token(value)
+            }
+        )
+        if landmark_keys:
+            row["landmark_keys"] = landmark_keys
         keyed[(city, normalized_ward, normalized_road)] = row
     return list(keyed.values())
 
@@ -681,7 +748,16 @@ def build_location_registries(
     generated_roads = (
         _generated_road_rows(osm_payload, boundaries) if boundaries else []
     )
-    legacy_roads = _legacy_road_rows(sources, index)
+    generated_keys = {
+        (row["city"], row["normalized_ward"], row["normalized_road"])
+        for row in generated_roads
+    }
+    legacy_roads, legacy_rejections = _legacy_road_rows(
+        sources,
+        index,
+        strict=not bool(boundaries),
+        skip_keys=generated_keys,
+    )
     road_by_key = {
         (row["city"], row["normalized_ward"], row["normalized_road"]): row
         for row in legacy_roads
@@ -778,6 +854,11 @@ def build_location_registries(
                 )
             ),
             0,
+        )
+        + len(legacy_rejections),
+        "legacy_rejections": sorted(
+            legacy_rejections,
+            key=lambda row: (row["key"], row["reason"]),
         ),
     }
     manifest_bytes = _json_bytes(manifest_payload)

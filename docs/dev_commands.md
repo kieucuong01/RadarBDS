@@ -242,6 +242,62 @@ Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/signals?page=1&lim
 Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5000/api/dashboard?mos_min=25&only_drops=1"
 ```
 
+## Listing Map Registry And Coverage
+
+Install the pinned map dependencies once:
+
+```powershell
+& $py -X utf8 -m pip install -r requirements-map.txt
+```
+
+Fetch the OSM input only into ignored local storage. If the combined Overpass
+query times out, fetch the named/ref highway part separately and keep the
+result at the same ignored path after JSON validation:
+
+```powershell
+$query = Get-Content -Raw -LiteralPath config\listing_map_overpass.ql
+$osmPath = ".local\listing-map\osm-binh-duong-20260729-v2.json"
+New-Item -ItemType Directory -Force -Path (Split-Path $osmPath) | Out-Null
+Invoke-WebRequest -Method Post `
+  -Uri "https://overpass-api.de/api/interpreter" `
+  -Headers @{"User-Agent"="RadarBDS-registry-build/2.0"} `
+  -Body @{data=$query} `
+  -TimeoutSec 300 `
+  -OutFile $osmPath
+& $py -X utf8 -m json.tool $osmPath > $null
+```
+
+Build the four versioned artifacts atomically:
+
+```powershell
+& $py -X utf8 scripts\build_listing_location_registry.py `
+  --osm-json .local\listing-map\osm-binh-duong-20260729-v2.json `
+  --sources config\listing_map_location_sources.json `
+  --overrides config\listing_map_location_overrides.json `
+  --boundary config\map_products\thu_dau_mot_legacy_boundaries.geojson `
+  --boundary config\map_products\ben_cat_legacy_boundaries.geojson `
+  --output-dir static\maps\listing-locations
+```
+
+Validate, preview the full derivation, then apply and audit unresolved
+candidates:
+
+```powershell
+& $py -X utf8 -m pytest `
+  tests\test_listing_location_registry.py `
+  tests\test_listing_map_context.py `
+  tests\test_listing_location_resolver.py `
+  tests\test_listing_location_backfill.py `
+  tests\test_listing_location_coverage.py -q
+& $py -X utf8 radar.py map-locations --full --dry-run
+& $py -X utf8 radar.py map-locations --full
+& $py -X utf8 radar.py map-location-coverage --status unresolved --limit 100
+```
+
+These commands write only derived map-location and coverage tables. They do
+not change canonical listing, valuation, human feedback, or AI review fields,
+and public requests never call a live geocoder.
+
 ## Cleanup Policy
 
 `radar.py db-cleanup` is dry-run by default. It removes rows that cannot support
