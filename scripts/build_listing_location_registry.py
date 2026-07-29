@@ -28,6 +28,7 @@ from config.listing_map import (
 from services.listing_location_auto_registry import (
     BrowserLocationEvidence,
     canonical_evidence_hash,
+    legacy_compatibility_reason,
     parse_google_maps_coordinates,
 )
 from services.listing_location_resolver import (
@@ -965,6 +966,14 @@ def combine_location_overrides(
             "verified_at": evidence.checked_at,
             "ward": evidence.ward,
         }
+        mismatch_reason = legacy_compatibility_reason(
+            evidence,
+            coordinates[0],
+            coordinates[1],
+        )
+        if mismatch_reason:
+            curated_row["allow_boundary_mismatch"] = True
+            curated_row["boundary_mismatch_reason"] = mismatch_reason
         if evidence.candidate_type == "road":
             curated_row["road_name"] = evidence.canonical
             combined["road_aliases"].append(alias_row)

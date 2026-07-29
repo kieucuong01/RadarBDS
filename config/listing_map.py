@@ -26,6 +26,19 @@ LISTING_MAP_AUTO_OVERRIDE_PATH = (
     PROJECT_ROOT / "config" / "listing_map_location_auto_overrides.json"
 )
 LISTING_MAP_AUTO_ACCEPT_THRESHOLD = 0.90
+LISTING_MAP_LEGACY_COMPATIBILITY_ZONES = (
+    {
+        "city": "THỦ DẦU MỘT",
+        "ward": "Phú Tân",
+        "landmark_token": "tdc phu chanh",
+        "bounds": ((11.04, 106.68), (11.08, 106.72)),
+        "reason": (
+            "TĐC Phú Chánh is mapped to the canonical Phú Tân valuation "
+            "ward while the retained legacy ward polygon does not cover "
+            "the resettlement zone."
+        ),
+    },
+)
 LISTING_MAP_WARD_BOUNDARY_PATHS = (
     PROJECT_ROOT
     / "config"

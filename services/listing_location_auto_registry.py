@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 import hashlib
 import json
 import math
@@ -13,7 +14,11 @@ from urllib.parse import urlparse
 from config.listing_map import (
     LISTING_MAP_AUTO_ACCEPT_THRESHOLD,
     LISTING_MAP_BOUNDS,
+    LISTING_MAP_LEGACY_COMPATIBILITY_ZONES,
+    LISTING_MAP_WARD_BOUNDARY_PATHS,
 )
+from shapely.geometry import Point, shape
+from shapely.validation import make_valid
 from services.listing_location_resolver import normalize_location_token
 
 
@@ -173,6 +178,86 @@ class AutoRegistryDecision:
 def _inside_service_bounds(lat: float, lng: float) -> bool:
     (south, west), (north, east) = LISTING_MAP_BOUNDS
     return south <= lat <= north and west <= lng <= east
+
+
+@lru_cache(maxsize=1)
+def _ward_boundaries() -> Mapping[tuple[str, str], object]:
+    boundaries = {}
+    for path in LISTING_MAP_WARD_BOUNDARY_PATHS:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        city = str(payload.get("city") or "").strip()
+        if not city:
+            path_token = normalize_location_token(path.stem)
+            if "thu dau mot" in path_token:
+                city = "THỦ DẦU MỘT"
+            elif "ben cat" in path_token:
+                city = "BẾN CÁT"
+        if not city:
+            raise ValueError(f"ward boundary city is missing for {path}")
+        for feature in payload.get("features") or ():
+            properties = feature.get("properties") or {}
+            ward = str(properties.get("name") or "").strip()
+            geometry_payload = feature.get("geometry")
+            if not ward or not geometry_payload:
+                raise ValueError(f"invalid ward boundary in {path}")
+            geometry = shape(geometry_payload)
+            if not geometry.is_valid:
+                geometry = make_valid(geometry)
+            if geometry.is_empty:
+                raise ValueError(f"empty ward boundary for {ward}")
+            key = (
+                normalize_location_token(city),
+                normalize_location_token(ward),
+            )
+            if key in boundaries:
+                raise ValueError(f"duplicate ward boundary for {city}/{ward}")
+            boundaries[key] = geometry
+    return boundaries
+
+
+def point_is_in_scoped_ward(
+    city: str,
+    ward: str,
+    lat: float,
+    lng: float,
+) -> bool:
+    if not _inside_service_bounds(float(lat), float(lng)):
+        return False
+    boundary = _ward_boundaries().get((
+        normalize_location_token(city),
+        normalize_location_token(ward),
+    ))
+    return bool(boundary and boundary.covers(Point(float(lng), float(lat))))
+
+
+def legacy_compatibility_reason(
+    evidence: BrowserLocationEvidence,
+    lat: float,
+    lng: float,
+) -> str:
+    normalized_city = normalize_location_token(evidence.city)
+    normalized_ward = normalize_location_token(evidence.ward)
+    normalized_context = normalize_location_token(
+        " ".join((
+            evidence.canonical,
+            evidence.query,
+            evidence.result_address,
+        ))
+    )
+    normalized_address = normalize_location_token(evidence.result_address)
+    for zone in LISTING_MAP_LEGACY_COMPATIBILITY_ZONES:
+        token = normalize_location_token(zone["landmark_token"])
+        if (
+            normalized_city != normalize_location_token(zone["city"])
+            or normalized_ward != normalize_location_token(zone["ward"])
+            or token not in normalized_context
+            or token not in normalized_address
+        ):
+            continue
+        (south, west), (north, east) = zone["bounds"]
+        if south <= lat <= north and west <= lng <= east:
+            return str(zone["reason"])
+    return ""
 
 
 def parse_google_maps_coordinates(url: str) -> tuple[float, float] | None:
@@ -336,10 +421,23 @@ def evaluate_browser_evidence(
         evidence.result_address,
         evidence.ward,
     )
-    if not ward_inside and not address_has_ward:
+    compatibility_reason = (
+        legacy_compatibility_reason(
+            evidence,
+            coordinates[0],
+            coordinates[1],
+        )
+        if coordinates is not None
+        else ""
+    )
+    if not ward_inside and not address_has_ward and not compatibility_reason:
         reasons.append("ward_mismatch")
 
-    if evidence.candidate_key in manual_keys:
+    base_candidate_key = ":".join(evidence.candidate_key.split(":")[:4])
+    if (
+        evidence.candidate_key in manual_keys
+        or base_candidate_key in manual_keys
+    ):
         reasons.append("manual_override_conflict")
 
     if evidence.candidate_type == "road":
@@ -396,6 +494,9 @@ def evaluate_browser_evidence(
         "unique_result": evidence.unique_result,
         "ward": evidence.ward,
     }
+    if compatibility_reason:
+        override["allow_boundary_mismatch"] = True
+        override["boundary_mismatch_reason"] = compatibility_reason
     assert _HEX_64_RE.fullmatch(str(override["evidence_hash"]))
     return AutoRegistryDecision(
         status="accepted",

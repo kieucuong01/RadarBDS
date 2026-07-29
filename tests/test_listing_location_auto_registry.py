@@ -132,6 +132,20 @@ def test_point_outside_scoped_ward_without_address_match_is_quarantined():
     assert "ward_mismatch" in decision.reasons
 
 
+def test_phu_chanh_legacy_zone_is_an_explicit_boundary_compatibility():
+    decision = evaluate_browser_evidence(
+        _phu_chanh_b_evidence(),
+        manual_keys=frozenset(),
+        ward_contains=lambda city, ward, lat, lng: False,
+    )
+
+    assert decision.status == "accepted"
+    assert decision.override["allow_boundary_mismatch"] is True
+    assert "canonical Phú Tân" in (
+        decision.override["boundary_mismatch_reason"]
+    )
+
+
 def test_numbered_road_requires_full_token_and_ward_scope():
     evidence = _phu_chanh_b_evidence(
         candidate_key="road:thu-dau-mot:phu-tan:duong-so-35",

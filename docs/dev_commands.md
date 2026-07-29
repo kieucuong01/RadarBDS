@@ -300,6 +300,28 @@ These commands write only derived map-location and coverage tables. They do
 not change canonical listing, valuation, human feedback, or AI review fields,
 and public requests never call a live geocoder.
 
+Browser-assisted registry maintenance stays outside crawl and public request
+paths. Export a bounded queue, validate evidence with a dry run, then apply
+only automatically accepted entries:
+
+```powershell
+& $py -X utf8 radar.py map-location-research-queue `
+  --limit 50 `
+  --candidate-type all
+
+& $py -X utf8 radar.py map-location-ingest-evidence `
+  --input .local\listing-map-evidence\batch.json
+
+& $py -X utf8 radar.py map-location-ingest-evidence `
+  --input .local\listing-map-evidence\batch.json `
+  --apply
+```
+
+Evidence files belong under ignored `.local/`. They may contain only the
+bounded candidate identity and selected public Google Maps result fields;
+never put listing descriptions, phone numbers, cookies, browser history, or
+account state in these files.
+
 ## Cleanup Policy
 
 `radar.py db-cleanup` is dry-run by default. It removes rows that cannot support

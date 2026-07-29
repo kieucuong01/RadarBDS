@@ -95,7 +95,12 @@ from cli.queries import (
 )
 from cli.review import cmd_review_queue, cmd_review_save
 from cli.public_content import cmd_public_content_sync
-from cli.map_locations import cmd_map_location_coverage, cmd_map_locations
+from cli.map_locations import (
+    cmd_map_location_coverage,
+    cmd_map_location_ingest_evidence,
+    cmd_map_location_research_queue,
+    cmd_map_locations,
+)
 from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
@@ -131,6 +136,24 @@ def build_parser():
         default="unresolved",
     )
     p_map_coverage.add_argument("--limit", type=int, default=100)
+
+    p_map_queue = sub.add_parser(
+        "map-location-research-queue",
+        help="Export unresolved map candidates for browser research",
+    )
+    p_map_queue.add_argument("--limit", type=int, default=50)
+    p_map_queue.add_argument(
+        "--candidate-type",
+        choices=("all", "road", "landmark"),
+        default="all",
+    )
+
+    p_map_ingest = sub.add_parser(
+        "map-location-ingest-evidence",
+        help="Validate and ingest browser map evidence",
+    )
+    p_map_ingest.add_argument("--input", type=Path, required=True)
+    p_map_ingest.add_argument("--apply", action="store_true")
 
     # dashboard
     p_db = sub.add_parser("dashboard", help="Generate dashboard HTML")
@@ -313,6 +336,10 @@ def main():
         cmd_map_locations(args)
     elif args.cmd == "map-location-coverage":
         cmd_map_location_coverage(args)
+    elif args.cmd == "map-location-research-queue":
+        cmd_map_location_research_queue(args)
+    elif args.cmd == "map-location-ingest-evidence":
+        cmd_map_location_ingest_evidence(args)
     elif args.cmd == "dashboard":
         cmd_dashboard(args)
     elif args.cmd == "import-guland":
