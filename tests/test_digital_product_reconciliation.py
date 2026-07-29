@@ -225,7 +225,7 @@ def test_reconcile_newly_expired_order_still_checks_provider_and_can_settle():
     assert result.order.last_checked_at == FROZEN_NOW
 
 
-@pytest.mark.parametrize("terminal_status", ["paid", "cancelled", "expired"])
+@pytest.mark.parametrize("terminal_status", ["paid", "cancelled"])
 def test_reconcile_does_not_query_terminal_order(terminal_status: str):
     order = make_order(status=terminal_status)
     repo = InMemoryReconciliationRepository(order)
@@ -242,6 +242,28 @@ def test_reconcile_does_not_query_terminal_order(terminal_status: str):
     assert result.order is order
     assert result.changed is False
     assert result.reason == f"not_reconcilable_{terminal_status}"
+
+
+def test_reconcile_status_poll_expired_order_can_still_settle_remote_payment():
+    order = make_order(
+        status="expired",
+        payment_expires_at=FROZEN_NOW - timedelta(seconds=1),
+    )
+    repo = InMemoryReconciliationRepository(order)
+    fake_payos = FakePayOS(paid_status(order))
+
+    result = order_service.reconcile_order(
+        order.public_id,
+        fake_payos,
+        FROZEN_NOW,
+        repo=repo,
+    )
+
+    assert fake_payos.requested_order_codes == [order.payos_order_code]
+    assert result.order.status == "paid"
+    assert result.order.download_expires_at == FROZEN_NOW + timedelta(hours=24)
+    assert result.order.last_checked_at == FROZEN_NOW
+    assert repo.events == {(order.id, "payment_verified", "API-REF-1")}
 
 
 def test_reconcile_missing_order_fails_before_provider_lookup():

@@ -718,7 +718,15 @@ def reconcile_order(
         order = tx.get_by_public_id(public_id, for_update=True)
         if order is None:
             raise OrderNotFound(public_id)
-        if order.status not in {"pending", "payment_review"}:
+        unpaid_expired = (
+            order.status == "expired"
+            and order.paid_at is None
+            and order.download_expires_at is None
+        )
+        if (
+            order.status not in {"pending", "payment_review"}
+            and not unpaid_expired
+        ):
             return SettlementResult(
                 order=order,
                 changed=False,

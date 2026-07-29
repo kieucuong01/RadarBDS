@@ -162,7 +162,9 @@ sudo -u radar bash -lc 'set -a; source /etc/radar-bds/radar.env; set +a; /opt/ra
 The command prints only the public ID, local status, remote status, changed
 flag, and the applicable expiry. It may reconcile an existing `pending` or
 `payment_review` order, including a `pending` order that expires during that
-check. It does not query PayOS again for an already terminal local order.
+check or an unpaid order already marked `expired` by status polling. It does
+not query PayOS again for `paid`, `cancelled`, or an expired order that already
+contains a paid grant.
 
 ## Production Smoke Checklist
 
