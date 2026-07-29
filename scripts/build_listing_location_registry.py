@@ -6,14 +6,22 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import sys
 import tempfile
-from typing import Mapping
+from typing import Mapping, Sequence
+
+from shapely.geometry import LineString, Point, shape
+from shapely.ops import unary_union
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config.listing_map import LISTING_MAP_BOUNDS
+from config.listing_map import (
+    LISTING_MAP_BOUNDS,
+    LISTING_MAP_OVERRIDE_PATH,
+    LISTING_MAP_WARD_BOUNDARY_PATHS,
+)
 from services.listing_location_resolver import (
     normalize_location_token,
     normalize_road_token,
@@ -23,7 +31,12 @@ from services.listing_location_resolver import (
 OUTPUT_NAMES = (
     "ward-centers.json",
     "road-centers.json",
+    "landmark-centers.json",
     "manifest.json",
+)
+_LANDMARK_NAME_RE = re.compile(
+    r"\b(?:tdc|tai dinh cu|kdc|khu dan cu|khu do thi|du an)\b",
+    re.IGNORECASE,
 )
 
 
@@ -39,7 +52,7 @@ def _json_bytes(payload: Mapping) -> bytes:
     ).encode("utf-8")
 
 
-def _payload_sha256(payload: Mapping) -> str:
+def _payload_sha256(payload: object) -> str:
     return hashlib.sha256(_json_bytes(payload)).hexdigest()
 
 
@@ -67,19 +80,29 @@ def _element_point(element: Mapping) -> tuple[float, float]:
         ) from None
     if not _inside_bounds(*point):
         raise ValueError(
-            f"OSM {element.get('type')} {element.get('id')} is outside listing map bounds"
+            f"OSM {element.get('type')} {element.get('id')} "
+            "is outside listing map bounds"
         )
     return point
 
 
 def _segment_length_m(first: Mapping, second: Mapping) -> float:
-    lat1 = math.radians(float(first["lat"]))
-    lat2 = math.radians(float(second["lat"]))
-    d_lat = lat2 - lat1
-    d_lng = math.radians(float(second["lon"]) - float(first["lon"]))
+    return _distance_m(
+        float(first["lat"]),
+        float(first["lon"]),
+        float(second["lat"]),
+        float(second["lon"]),
+    )
+
+
+def _distance_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    d_lat = lat2_rad - lat1_rad
+    d_lng = math.radians(lng2 - lng1)
     value = (
         math.sin(d_lat / 2) ** 2
-        + math.cos(lat1) * math.cos(lat2) * math.sin(d_lng / 2) ** 2
+        + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(d_lng / 2) ** 2
     )
     return 6371008.8 * 2 * math.atan2(math.sqrt(value), math.sqrt(1 - value))
 
@@ -91,9 +114,7 @@ def _road_center(elements: list[Mapping]) -> tuple[float, float]:
     fallback_points = []
     for element in elements:
         if not (element.get("tags") or {}).get("highway"):
-            raise ValueError(
-                f"OSM way {element.get('id')} is not a highway"
-            )
+            raise ValueError(f"OSM way {element.get('id')} is not a highway")
         geometry = element.get("geometry") or []
         if len(geometry) < 2:
             fallback_points.append(_element_point(element))
@@ -131,7 +152,10 @@ def _element_index(osm_payload: Mapping) -> dict[tuple[str, int], Mapping]:
     return index
 
 
-def _validate_canonical_wards(sources: Mapping, mapped_keys: set[tuple[str, str]]):
+def _validate_canonical_wards(
+    sources: Mapping,
+    mapped_keys: set[tuple[str, str]],
+) -> None:
     required = {
         (
             str(item.get("city") or "").strip(),
@@ -145,16 +169,161 @@ def _validate_canonical_wards(sources: Mapping, mapped_keys: set[tuple[str, str]
         raise ValueError(f"missing canonical ward: {labels}")
 
 
-def build_location_registries(
-    osm_payload: Mapping,
-    sources: Mapping,
-    output_dir: Path,
-) -> tuple[Path, Path, Path]:
-    resolver_version = str(sources.get("resolver_version") or "").strip()
-    if not resolver_version:
-        raise ValueError("resolver_version is required")
-    index = _element_index(osm_payload)
+def _boundary_city(payload: Mapping, path: Path) -> str:
+    explicit = str(payload.get("city") or "").strip()
+    if explicit:
+        return explicit
+    token = normalize_location_token(f"{path.stem} {payload.get('name') or ''}")
+    if "thu dau mot" in token:
+        return "THỦ DẦU MỘT"
+    if "ben cat" in token:
+        return "BẾN CÁT"
+    raise ValueError(f"boundary city is missing for {path}")
 
+
+def _load_ward_boundaries(
+    paths: Sequence[Path],
+) -> tuple[
+    dict[tuple[str, str], tuple[str, object, Mapping]],
+    list[Mapping],
+]:
+    boundaries = {}
+    payloads = []
+    for raw_path in paths:
+        path = Path(raw_path)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payloads.append(payload)
+        city = _boundary_city(payload, path)
+        for feature in payload.get("features") or []:
+            properties = feature.get("properties") or {}
+            ward = str(properties.get("name") or "").strip()
+            geometry_payload = feature.get("geometry")
+            if not ward or not geometry_payload:
+                raise ValueError(f"invalid ward boundary in {path}")
+            geometry = shape(geometry_payload)
+            if geometry.is_empty or not geometry.is_valid:
+                raise ValueError(f"invalid ward boundary geometry for {ward}")
+            key = city, normalize_location_token(ward)
+            if key in boundaries:
+                raise ValueError(f"duplicate ward boundary: {city}/{key[1]}")
+            boundaries[key] = (ward, geometry, properties)
+    return boundaries, payloads
+
+
+def _way_line(element: Mapping) -> LineString | None:
+    geometry = element.get("geometry") or []
+    if len(geometry) < 2:
+        return None
+    try:
+        line = LineString(
+            (float(point["lon"]), float(point["lat"])) for point in geometry
+        )
+    except (KeyError, TypeError, ValueError):
+        return None
+    return line if line.is_valid and not line.is_empty else None
+
+
+def _representative_line_point(geometry) -> tuple[float, float]:
+    if geometry.geom_type in {"MultiLineString", "GeometryCollection"}:
+        lines = [
+            item
+            for item in geometry.geoms
+            if item.geom_type in {"LineString", "LinearRing"} and item.length > 0
+        ]
+        if lines:
+            geometry = max(lines, key=lambda item: item.length)
+    point = geometry.interpolate(0.5, normalized=True)
+    return float(point.y), float(point.x)
+
+
+def _accuracy_radius_m(geometry, lat: float, lng: float) -> float:
+    min_lng, min_lat, max_lng, max_lat = geometry.bounds
+    radius = max(
+        _distance_m(lat, lng, corner_lat, corner_lng)
+        for corner_lat, corner_lng in (
+            (min_lat, min_lng),
+            (min_lat, max_lng),
+            (max_lat, min_lng),
+            (max_lat, max_lng),
+        )
+    )
+    return round(max(radius, 75.0), 1)
+
+
+def _normalize_landmark_token(value: str) -> str:
+    token = normalize_location_token(value)
+    token = re.sub(r"^tai dinh cu\b", "tdc", token)
+    token = re.sub(r"^khu dan cu\b", "kdc", token)
+    return " ".join(token.split())
+
+
+def _validate_aliases(
+    rows: Sequence[Mapping],
+    *,
+    landmark: bool,
+) -> dict[str, list[str]]:
+    aliases_by_canonical: dict[str, list[str]] = {}
+    seen: dict[tuple[str, str, str], str] = {}
+    normalizer = _normalize_landmark_token if landmark else normalize_road_token
+    for row in rows:
+        canonical = normalizer(str(row.get("canonical") or ""))
+        if not canonical:
+            raise ValueError("alias canonical value is required")
+        city = normalize_location_token(row.get("city") or "")
+        ward = normalize_location_token(row.get("ward") or "")
+        for raw_alias in (row.get("aliases") or []):
+            alias = normalizer(str(raw_alias or ""))
+            if not alias:
+                raise ValueError("empty alias is invalid")
+            scope_key = city, ward, alias
+            previous = seen.get(scope_key)
+            if previous is not None and previous != canonical:
+                raise ValueError(f"duplicate alias in one scope: {alias}")
+            seen[scope_key] = canonical
+            aliases_by_canonical.setdefault(canonical, []).append(alias)
+    return {
+        key: sorted(set(values + [key]))
+        for key, values in aliases_by_canonical.items()
+    }
+
+
+def _validate_override_point(
+    row: Mapping,
+    *,
+    boundaries: Mapping,
+    label: str,
+) -> tuple[float, float]:
+    required = ("source", "source_url", "verified_at")
+    if any(not str(row.get(field) or "").strip() for field in required):
+        raise ValueError(f"{label} coordinate override requires provenance")
+    source_url = str(row.get("source_url") or "").strip()
+    if not source_url.startswith("https://"):
+        raise ValueError(f"{label} source URL must use HTTPS")
+    try:
+        lat = float(row["lat"])
+        lng = float(row["lng"])
+    except (KeyError, TypeError, ValueError):
+        raise ValueError(f"{label} coordinate override is invalid") from None
+    if not _inside_bounds(lat, lng):
+        raise ValueError(f"{label} coordinate override is outside map bounds")
+
+    scope = (
+        str(row.get("city") or "").strip(),
+        normalize_location_token(row.get("ward") or ""),
+    )
+    boundary = boundaries.get(scope)
+    if boundary and not boundary[1].covers(Point(lng, lat)):
+        allowed = bool(row.get("allow_boundary_mismatch"))
+        reason = str(row.get("boundary_mismatch_reason") or "").strip()
+        if not allowed or not reason:
+            raise ValueError(f"{label} boundary mismatch requires explicit reason")
+    return lat, lng
+
+
+def _build_ward_rows(
+    sources: Mapping,
+    index: Mapping,
+) -> tuple[list[dict], set[tuple[str, str]]]:
     ward_rows = []
     ward_keys: set[tuple[str, str]] = set()
     for source in sources.get("wards") or []:
@@ -174,9 +343,7 @@ def build_location_registries(
                 lat = float(point_source["lat"])
                 lng = float(point_source["lng"])
             except (KeyError, TypeError, ValueError):
-                raise ValueError(
-                    f"verified ward point is invalid for {ward}"
-                ) from None
+                raise ValueError(f"verified ward point is invalid for {ward}") from None
             if (
                 not _inside_bounds(lat, lng)
                 or not provenance
@@ -223,24 +390,86 @@ def build_location_registries(
             row["osm_id"] = element_key[1]
         ward_rows.append(row)
     _validate_canonical_wards(sources, ward_keys)
+    return ward_rows, ward_keys
 
-    road_rows = []
-    road_keys: set[tuple[str, str, str]] = set()
+
+def _generated_road_rows(
+    osm_payload: Mapping,
+    boundaries: Mapping,
+) -> list[dict]:
+    grouped: dict[str, list[tuple[Mapping, LineString]]] = {}
+    display_names: dict[str, str] = {}
+    for element in osm_payload.get("elements") or []:
+        tags = element.get("tags") or {}
+        if element.get("type") != "way" or not tags.get("highway"):
+            continue
+        raw_name = str(tags.get("name") or tags.get("ref") or "").strip()
+        if not raw_name:
+            continue
+        line = _way_line(element)
+        if line is None:
+            continue
+        normalized = normalize_road_token(raw_name)
+        if not normalized:
+            continue
+        grouped.setdefault(normalized, []).append((element, line))
+        display_names.setdefault(normalized, raw_name)
+
+    rows = []
+    for (city, normalized_ward), (ward, polygon, _properties) in boundaries.items():
+        for normalized_road, parts in grouped.items():
+            clipped_parts = []
+            way_ids = []
+            for element, line in parts:
+                clipped = line.intersection(polygon)
+                if clipped.is_empty or getattr(clipped, "length", 0) <= 0:
+                    continue
+                clipped_parts.append(clipped)
+                way_ids.append(int(element["id"]))
+            if not clipped_parts:
+                continue
+            clipped_geometry = unary_union(clipped_parts)
+            lat, lng = _representative_line_point(clipped_geometry)
+            road_name = display_names[normalized_road]
+            sorted_ids = sorted(set(way_ids))
+            rows.append(
+                {
+                    "city": city,
+                    "ward": ward,
+                    "normalized_ward": normalized_ward,
+                    "road_name": road_name,
+                    "normalized_road": normalized_road,
+                    "lat": round(lat, 7),
+                    "lng": round(lng, 7),
+                    "accuracy_radius_m": _accuracy_radius_m(
+                        clipped_geometry, lat, lng
+                    ),
+                    "label": f"Theo tên đường {road_name}, {ward}",
+                    "source": "OpenStreetMap",
+                    "source_url": (
+                        f"https://www.openstreetmap.org/way/{sorted_ids[0]}"
+                    ),
+                    "osm_way_ids": sorted_ids,
+                }
+            )
+    return rows
+
+
+def _legacy_road_rows(sources: Mapping, index: Mapping) -> list[dict]:
+    rows = []
+    seen = set()
     for source in sources.get("roads") or []:
         city = str(source.get("city") or "").strip()
         ward = str(source.get("ward") or "").strip()
         road_name = str(source.get("road_name") or "").strip()
-        key = (
-            city,
-            normalize_location_token(ward),
-            normalize_road_token(road_name),
-        )
+        key = city, normalize_location_token(ward), normalize_road_token(road_name)
         if not all(key):
             raise ValueError("road city, ward, and name are required")
-        if key in road_keys:
+        if key in seen:
             raise ValueError(
                 f"duplicate normalized road: {city}/{key[1]}/{key[2]}"
             )
+        seen.add(key)
         way_ids = sorted({int(item) for item in source.get("osm_way_ids") or []})
         if not way_ids:
             raise ValueError(f"road {road_name} has no OSM way IDs")
@@ -251,8 +480,7 @@ def build_location_registries(
                 raise ValueError(f"missing OSM way {way_id} for road {road_name}")
             elements.append(element)
         lat, lng = _road_center(elements)
-        road_keys.add(key)
-        road_rows.append(
+        rows.append(
             {
                 "city": city,
                 "ward": ward,
@@ -261,11 +489,230 @@ def build_location_registries(
                 "normalized_road": key[2],
                 "lat": round(lat, 7),
                 "lng": round(lng, 7),
+                "accuracy_radius_m": 75.0,
                 "label": f"Theo tên đường {road_name}, {ward}",
                 "source": "OpenStreetMap",
+                "source_url": f"https://www.openstreetmap.org/way/{way_ids[0]}",
                 "osm_way_ids": way_ids,
             }
         )
+    return rows
+
+
+def _generated_landmark_rows(
+    osm_payload: Mapping,
+    boundaries: Mapping,
+    aliases_by_canonical: Mapping[str, list[str]],
+) -> list[dict]:
+    rows = []
+    seen = set()
+    for element in osm_payload.get("elements") or []:
+        tags = element.get("tags") or {}
+        name = str(tags.get("name") or "").strip()
+        normalized = _normalize_landmark_token(name)
+        if not normalized or not _LANDMARK_NAME_RE.search(normalized):
+            continue
+        try:
+            lat, lng = _element_point(element)
+        except ValueError:
+            continue
+        point = Point(lng, lat)
+        for (city, normalized_ward), (ward, polygon, _properties) in boundaries.items():
+            if not polygon.covers(point):
+                continue
+            key = city, normalized_ward, normalized
+            if key in seen:
+                continue
+            seen.add(key)
+            element_type = str(element.get("type") or "")
+            element_id = int(element["id"])
+            rows.append(
+                {
+                    "city": city,
+                    "ward": ward,
+                    "normalized_ward": normalized_ward,
+                    "landmark_name": name,
+                    "normalized_landmark": normalized,
+                    "aliases": aliases_by_canonical.get(normalized, [normalized]),
+                    "lat": round(lat, 7),
+                    "lng": round(lng, 7),
+                    "accuracy_radius_m": 150.0,
+                    "label": f"Theo địa danh {name}, {ward}",
+                    "source": "OpenStreetMap",
+                    "source_url": (
+                        f"https://www.openstreetmap.org/{element_type}/{element_id}"
+                    ),
+                    "osm_type": element_type,
+                    "osm_id": element_id,
+                }
+            )
+    return rows
+
+
+def _merge_curated_roads(
+    rows: list[dict],
+    override_rows: Sequence[Mapping],
+    boundaries: Mapping,
+    aliases_by_canonical: Mapping[str, list[str]],
+) -> list[dict]:
+    keyed = {
+        (row["city"], row["normalized_ward"], row["normalized_road"]): row
+        for row in rows
+    }
+    for source in override_rows:
+        city = str(source.get("city") or "").strip()
+        ward = str(source.get("ward") or "").strip()
+        road_name = str(source.get("road_name") or "").strip()
+        normalized_ward = normalize_location_token(ward)
+        normalized_road = normalize_road_token(road_name)
+        if not city or not normalized_ward or not normalized_road:
+            raise ValueError("curated road city, ward, and road_name are required")
+        lat, lng = _validate_override_point(
+            source,
+            boundaries=boundaries,
+            label=f"curated road {road_name}",
+        )
+        row = {
+            "city": city,
+            "ward": ward,
+            "normalized_ward": normalized_ward,
+            "road_name": road_name,
+            "normalized_road": normalized_road,
+            "aliases": aliases_by_canonical.get(normalized_road, [normalized_road]),
+            "lat": round(lat, 7),
+            "lng": round(lng, 7),
+            "accuracy_radius_m": max(
+                float(source.get("accuracy_radius_m") or 75), 0
+            ),
+            "label": str(
+                source.get("label") or f"Theo tên đường {road_name}, {ward}"
+            ),
+            "source": str(source["source"]).strip(),
+            "source_url": str(source["source_url"]).strip(),
+            "verified_at": str(source["verified_at"]).strip(),
+        }
+        if source.get("allow_boundary_mismatch"):
+            row["boundary_mismatch_reason"] = str(
+                source.get("boundary_mismatch_reason") or ""
+            ).strip()
+        keyed[(city, normalized_ward, normalized_road)] = row
+    return list(keyed.values())
+
+
+def _merge_curated_landmarks(
+    rows: list[dict],
+    override_rows: Sequence[Mapping],
+    boundaries: Mapping,
+    aliases_by_canonical: Mapping[str, list[str]],
+) -> list[dict]:
+    keyed = {
+        (row["city"], row["normalized_ward"], row["normalized_landmark"]): row
+        for row in rows
+    }
+    for source in override_rows:
+        city = str(source.get("city") or "").strip()
+        ward = str(source.get("ward") or "").strip()
+        name = str(source.get("landmark_name") or "").strip()
+        normalized_ward = normalize_location_token(ward)
+        normalized = _normalize_landmark_token(name)
+        if not city or not normalized_ward or not normalized:
+            raise ValueError(
+                "curated landmark city, ward, and landmark_name are required"
+            )
+        lat, lng = _validate_override_point(
+            source,
+            boundaries=boundaries,
+            label=f"curated landmark {name}",
+        )
+        keyed[(city, normalized_ward, normalized)] = {
+            "city": city,
+            "ward": ward,
+            "normalized_ward": normalized_ward,
+            "landmark_name": name,
+            "normalized_landmark": normalized,
+            "aliases": aliases_by_canonical.get(normalized, [normalized]),
+            "lat": round(lat, 7),
+            "lng": round(lng, 7),
+            "accuracy_radius_m": max(
+                float(source.get("accuracy_radius_m") or 150), 0
+            ),
+            "label": str(source.get("label") or f"Theo địa danh {name}, {ward}"),
+            "source": str(source["source"]).strip(),
+            "source_url": str(source["source_url"]).strip(),
+            "verified_at": str(source["verified_at"]).strip(),
+        }
+    return list(keyed.values())
+
+
+def build_location_registries(
+    osm_payload: Mapping,
+    sources: Mapping,
+    output_dir: Path,
+    *,
+    overrides: Mapping | None = None,
+    boundary_paths: Sequence[Path] = (),
+) -> tuple[Path, Path, Path, Path]:
+    resolver_version = str(sources.get("resolver_version") or "").strip()
+    if not resolver_version:
+        raise ValueError("resolver_version is required")
+    overrides = overrides or {
+        "resolver_version": resolver_version,
+        "road_aliases": [],
+        "roads": [],
+        "landmark_aliases": [],
+        "landmarks": [],
+    }
+    override_version = str(overrides.get("resolver_version") or "").strip()
+    if override_version and override_version != resolver_version:
+        raise ValueError("override resolver_version does not match sources")
+
+    index = _element_index(osm_payload)
+    ward_rows, _ward_keys = _build_ward_rows(sources, index)
+    boundaries, boundary_payloads = _load_ward_boundaries(boundary_paths)
+    road_aliases = _validate_aliases(
+        overrides.get("road_aliases") or [],
+        landmark=False,
+    )
+    landmark_aliases = _validate_aliases(
+        overrides.get("landmark_aliases") or [],
+        landmark=True,
+    )
+
+    generated_roads = (
+        _generated_road_rows(osm_payload, boundaries) if boundaries else []
+    )
+    legacy_roads = _legacy_road_rows(sources, index)
+    road_by_key = {
+        (row["city"], row["normalized_ward"], row["normalized_road"]): row
+        for row in legacy_roads
+    }
+    for row in generated_roads:
+        road_by_key[
+            (row["city"], row["normalized_ward"], row["normalized_road"])
+        ] = row
+    road_rows = _merge_curated_roads(
+        list(road_by_key.values()),
+        overrides.get("roads") or [],
+        boundaries,
+        road_aliases,
+    )
+    for row in road_rows:
+        row.setdefault(
+            "aliases",
+            road_aliases.get(row["normalized_road"], [row["normalized_road"]]),
+        )
+
+    landmark_rows = _generated_landmark_rows(
+        osm_payload,
+        boundaries,
+        landmark_aliases,
+    )
+    landmark_rows = _merge_curated_landmarks(
+        landmark_rows,
+        overrides.get("landmarks") or [],
+        boundaries,
+        landmark_aliases,
+    )
 
     ward_payload = {
         "resolver_version": resolver_version,
@@ -288,16 +735,32 @@ def build_location_registries(
             ),
         ),
     }
+    landmark_payload = {
+        "resolver_version": resolver_version,
+        "landmarks": sorted(
+            landmark_rows,
+            key=lambda row: (
+                normalize_location_token(row["city"]),
+                row["normalized_ward"],
+                row["normalized_landmark"],
+            ),
+        ),
+    }
     ward_bytes = _json_bytes(ward_payload)
     road_bytes = _json_bytes(road_payload)
+    landmark_bytes = _json_bytes(landmark_payload)
     manifest_payload = {
         "resolver_version": resolver_version,
         "osm_sha256": _payload_sha256(osm_payload),
         "sources_sha256": _payload_sha256(sources),
+        "overrides_sha256": _payload_sha256(overrides),
+        "boundaries_sha256": _payload_sha256(boundary_payloads),
         "ward_registry_sha256": hashlib.sha256(ward_bytes).hexdigest(),
         "road_registry_sha256": hashlib.sha256(road_bytes).hexdigest(),
+        "landmark_registry_sha256": hashlib.sha256(landmark_bytes).hexdigest(),
         "ward_count": len(ward_rows),
         "road_count": len(road_rows),
+        "landmark_count": len(landmark_rows),
         "ambiguous_road_count": max(
             int(
                 sources.get(
@@ -321,7 +784,7 @@ def build_location_registries(
 
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    payloads = (ward_bytes, road_bytes, manifest_bytes)
+    payloads = (ward_bytes, road_bytes, landmark_bytes, manifest_bytes)
     with tempfile.TemporaryDirectory(
         prefix=".listing-locations-",
         dir=output_dir.parent,
@@ -331,7 +794,6 @@ def build_location_registries(
             (temporary_dir / name).write_bytes(content)
         for name in OUTPUT_NAMES:
             os.replace(temporary_dir / name, output_dir / name)
-
     return tuple(output_dir / name for name in OUTPUT_NAMES)
 
 
@@ -342,11 +804,25 @@ def main() -> int:
     parser.add_argument("--osm-json", type=Path, required=True)
     parser.add_argument("--sources", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--overrides", type=Path, default=LISTING_MAP_OVERRIDE_PATH)
+    parser.add_argument(
+        "--boundary",
+        type=Path,
+        action="append",
+        dest="boundaries",
+    )
     args = parser.parse_args()
 
     osm_payload = json.loads(args.osm_json.read_text(encoding="utf-8"))
     sources = json.loads(args.sources.read_text(encoding="utf-8"))
-    paths = build_location_registries(osm_payload, sources, args.output_dir)
+    overrides = json.loads(args.overrides.read_text(encoding="utf-8"))
+    paths = build_location_registries(
+        osm_payload,
+        sources,
+        args.output_dir,
+        overrides=overrides,
+        boundary_paths=tuple(args.boundaries or LISTING_MAP_WARD_BOUNDARY_PATHS),
+    )
     for path in paths:
         print(path.as_posix())
     return 0

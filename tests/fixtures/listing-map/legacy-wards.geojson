@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "city": "THỦ DẦU MỘT",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hiệp An",
+        "source": "Test legacy boundary",
+        "source_url": "https://example.test/hiep-an"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[106.67, 11.00], [106.71, 11.00], [106.71, 11.03], [106.67, 11.03], [106.67, 11.00]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Phú Tân",
+        "source": "Test legacy boundary",
+        "source_url": "https://example.test/phu-tan"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[106.68, 11.05], [106.71, 11.05], [106.71, 11.08], [106.68, 11.08], [106.68, 11.05]]]
+      }
+    }
+  ]
+}

@@ -34,6 +34,12 @@ def normalize_road_token(value: str) -> str:
     normalized = " ".join(normalized.split())
     if re.match(r"^duong (?:dx|d|db|dh|dt|ql|n|ng|ni|na|nb) \d", normalized):
         normalized = normalized.removeprefix("duong ")
+    normalized = re.sub(
+        r"^(?P<prefix>(?:dx|d|db|dh|dt|ql|n|ng|ni|na|nb)\s+)0+(?=\d)",
+        r"\g<prefix>",
+        normalized,
+    )
+    normalized = re.sub(r"^(duong so\s+)0+(?=\d)", r"\1", normalized)
     return normalized
 
 

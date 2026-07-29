@@ -1,0 +1,15 @@
+{
+  "resolver_version": "osm-binh-duong-20260729-v2",
+  "road_aliases": [],
+  "roads": [],
+  "landmark_aliases": [
+    {
+      "canonical": "TĐC Phú Chánh B",
+      "aliases": [
+        "TDC Phu Chanh B",
+        "tái định cư Phú Chánh B"
+      ]
+    }
+  ],
+  "landmarks": []
+}
