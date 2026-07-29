@@ -1445,6 +1445,7 @@ ALLOWED_TRACK_ACTIONS = {
     "watchlist_create",
     "telegram_linked",
     "modal_open",
+    "listing_share",
     "map_layer_toggled",
     "map_fullscreen_clicked",
     "map_area_cta_clicked",
@@ -1600,6 +1601,17 @@ def _safe_listing_map_tracking_context(context) -> dict:
     return safe
 
 
+def _safe_listing_share_tracking_context(context) -> dict:
+    if not isinstance(context, dict):
+        return {}
+    safe = {}
+    if context.get("surface") in {"modal", "detail"}:
+        safe["surface"] = context["surface"]
+    if context.get("method") in {"copy", "facebook"}:
+        safe["method"] = context["method"]
+    return safe
+
+
 @rate_limit("track", limits={"guest": 120, "free": 600, "vip": None, "admin": None})
 def api_track():
     payload = request.get_json(silent=True) or {}
@@ -1625,6 +1637,8 @@ def api_track():
         ctx = _safe_product_tracking_context(ctx)
     elif is_listing_map_action:
         ctx = _safe_listing_map_tracking_context(ctx)
+    elif action == "listing_share":
+        ctx = _safe_listing_share_tracking_context(ctx)
     elif action.startswith("public_"):
         ctx = _safe_public_content_tracking_context(action, ctx)
     elif not isinstance(ctx, dict):

@@ -61,3 +61,16 @@ def test_comparables_are_full_width_after_both_detail_columns():
     assert "grid-column: 1 / -1" in css
     assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in css
     assert 'data-sm-tab="comps"' not in modal
+
+
+def test_share_controls_are_available_on_both_detail_surfaces():
+    modal = _read("templates/index.html")
+    detail = _read("templates/listing_detail.html")
+
+    for html in (modal, detail):
+        assert "listing_detail_actions.js" in html
+        assert "data-listing-actions" in html
+        assert "data-listing-share-trigger" in html
+        assert "data-listing-share-menu" in html
+        assert "data-share-copy" in html
+        assert "data-share-facebook" in html

@@ -862,6 +862,18 @@ body.listing-detail-page {
           <a class="sm-btn-detail" href="{{ l.get('url') }}" target="_blank" rel="noopener noreferrer">Xem tin gốc</a>
           {% endif %}
         </div>
+        <div class="sm-detail-utility-bar" data-listing-actions data-listing-id="{{ l['id'] }}" data-surface="detail">
+          <div class="sm-share-wrap">
+            <button type="button" class="sm-btn-utility" data-listing-share-trigger aria-expanded="false">
+              ↗ Chia sẻ
+            </button>
+            <div class="sm-share-menu" data-listing-share-menu hidden>
+              <button type="button" data-share-copy>Sao chép liên kết</button>
+              <button type="button" data-share-facebook>Chia sẻ Facebook</button>
+              <p data-share-status role="status" aria-live="polite"></p>
+            </div>
+          </div>
+        </div>
       </aside>
 
       <section class="sm-section sm-comparable-section" data-comparable-carousel tabindex="0">
@@ -899,6 +911,7 @@ body.listing-detail-page {
 <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-location-20260729"></script>
 <script src="{{ url_for('static', filename='js/main/signal_card.js') }}?v=shared-signal-card-20260729"></script>
 <script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=comparable-carousel-20260729"></script>
+<script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=listing-share-20260729"></script>
 <script>
 const listingImages = {{ imgs|tojson }};
 const listingMapLocation = {{ map_location|tojson }};

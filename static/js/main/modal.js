@@ -508,6 +508,10 @@ function _openSignalLegacy(card) {
   document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
   { const _d = document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
   syncModalFavoriteButton(d.id);
+  {
+    const actions = modal.querySelector('[data-listing-actions]');
+    if (actions) actions.dataset.listingId = d.id;
+  }
 
   // Load price history + comps
   loadSignalHistory(d.id, price, area, d.ward, {
