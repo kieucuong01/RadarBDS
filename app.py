@@ -1373,12 +1373,22 @@ ALLOWED_TRACK_ACTIONS = {
     "thu_dau_mot_map_preview_selected",
     "thu_dau_mot_map_purchase_clicked",
     "thu_dau_mot_map_dashboard_clicked",
+    "thu_dau_mot_map_checkout_created",
+    "thu_dau_mot_map_qr_displayed",
+    "thu_dau_mot_map_payment_confirmed",
+    "thu_dau_mot_map_download_clicked",
 }
 _PRODUCT_TRACK_ACTIONS = {
     "thu_dau_mot_map_product_viewed",
     "thu_dau_mot_map_preview_selected",
     "thu_dau_mot_map_purchase_clicked",
     "thu_dau_mot_map_dashboard_clicked",
+}
+_CHECKOUT_TRACK_ACTIONS = {
+    "thu_dau_mot_map_checkout_created",
+    "thu_dau_mot_map_qr_displayed",
+    "thu_dau_mot_map_payment_confirmed",
+    "thu_dau_mot_map_download_clicked",
 }
 _PRODUCT_TRACK_SOURCE_SURFACES = {
     "preview",
@@ -1408,6 +1418,27 @@ def _safe_product_tracking_context(context) -> dict:
     return safe
 
 
+def _safe_checkout_tracking_context(context) -> dict:
+    if not isinstance(context, dict):
+        return {}
+    safe = {}
+    if context.get("product_slug") == "thu-dau-mot-map-bundle":
+        safe["product_slug"] = "thu-dau-mot-map-bundle"
+    if context.get("product_version") == "1.0":
+        safe["product_version"] = "1.0"
+    if type(context.get("amount_vnd")) is int and context["amount_vnd"] == 99_000:
+        safe["amount_vnd"] = 99_000
+    if context.get("order_status") in {
+        "pending",
+        "paid",
+        "expired",
+        "cancelled",
+        "payment_review",
+    }:
+        safe["order_status"] = context["order_status"]
+    return safe
+
+
 @rate_limit("track", limits={"guest": 120, "free": 600, "vip": None, "admin": None})
 def api_track():
     payload = request.get_json(silent=True) or {}
@@ -1415,13 +1446,20 @@ def api_track():
     if action not in ALLOWED_TRACK_ACTIONS:
         return jsonify({"ok": False, "error": "invalid_action"}), 400
     is_product_action = action in _PRODUCT_TRACK_ACTIONS
-    listing_id = None if is_product_action else payload.get("listing_id")
+    is_checkout_action = action in _CHECKOUT_TRACK_ACTIONS
+    listing_id = (
+        None
+        if is_product_action or is_checkout_action
+        else payload.get("listing_id")
+    )
     try:
         listing_id = int(listing_id) if listing_id not in (None, "") else None
     except (TypeError, ValueError):
         listing_id = None
     ctx = payload.get("context") or {}
-    if is_product_action:
+    if is_checkout_action:
+        ctx = _safe_checkout_tracking_context(ctx)
+    elif is_product_action:
         ctx = _safe_product_tracking_context(ctx)
     elif not isinstance(ctx, dict):
         ctx = {"raw": str(ctx)[:200]}

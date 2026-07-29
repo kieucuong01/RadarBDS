@@ -661,3 +661,35 @@ if (previews[0].hidden !== true || previews[1].hidden !== false) process.exit(3)
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_order_template_has_accessible_vietqr_and_download_contract():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get(
+        "/ban-do-thu-dau-mot/don-hang/" + ("a" * 32)
+    )
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert html.count('aria-live="polite"') == 1
+    assert "data-order-qr" in html
+    assert "data-order-download" in html
+    assert "data-order-copy" in html
+    assert "data-order-new" in html
+    assert "data-order-public-id" in html
+    assert "thu_dau_mot_map_checkout.js" in html
+    assert "seo_tracking.html" not in html
+    assert "googletagmanager.com" not in html
+    assert "99.000đ" in html
+
+
+def test_order_styles_enforce_mobile_qr_touch_focus_and_reduced_motion():
+    css = Path("static/css/thu_dau_mot_map_product.css").read_text(
+        encoding="utf-8"
+    )
+
+    assert "min(78vw, 296px)" in css
+    assert "min-height: 44px" in css
+    assert ":focus-visible" in css
+    assert "prefers-reduced-motion: reduce" in css
