@@ -25,7 +25,7 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tdm-product-20260729-4">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/binh_duong_map.css') }}?v=tdm-product-map-20260729-2">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=tdm-product-20260729-6">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=tdm-product-20260729-7">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
@@ -51,6 +51,7 @@
 
         <div class="tdm-product-hero-grid">
           <div class="tdm-product-hero-copy">
+            <p class="tdm-product-hero-kicker">Bản đồ hành chính + dữ liệu nhà đất</p>
             <h1>{{ page.hero_title }}</h1>
             <p class="tdm-product-lead">{{ page.hero_text }}</p>
             <ul class="tdm-product-proof-list">
@@ -58,21 +59,27 @@
               <li>Bản hiện tại có đúng 5 ranh phường đã xác minh: Thủ Dầu Một, Phú Lợi, Chánh Hiệp, Bình Dương và Phú An.</li>
             </ul>
             <p class="tdm-product-answer-block">{{ page.answer_block }}</p>
+            <div class="tdm-product-hero-highlights" aria-label="Điểm nổi bật">
+              <article>
+                <span aria-hidden="true">🗺️</span>
+                <strong>2 lớp bản đồ</strong>
+                <small>Trước và sau sáp nhập</small>
+              </article>
+              <article>
+                <span aria-hidden="true">📍</span>
+                <strong>19 khu vực</strong>
+                <small>14 phường cũ + 5 phường hiện tại</small>
+              </article>
+              <article>
+                <span aria-hidden="true">🏠</span>
+                <strong>Lọc tin ngay</strong>
+                <small>Mở dashboard theo Thủ Dầu Một</small>
+              </article>
+            </div>
             <div class="bd-map-hero-actions tdm-product-hero-actions">
               <a class="seo-button seo-button-primary" href="#ban-do-tuong-tac" data-track-cta="thu_dau_mot_map_hero_map">Mở bản đồ miễn phí</a>
               <a class="seo-button seo-button-secondary" href="{{ dashboard_signal_href }}" data-track-cta="thu_dau_mot_map_hero_dashboard">Lọc tin Thủ Dầu Một</a>
             </div>
-          </div>
-
-          <div class="tdm-product-preview-card" aria-label="Bản xem trước có watermark">
-            <figure data-product-preview="legacy">
-              <img src="{{ page.preview_before }}" alt="Bản xem trước có watermark với 14 ranh phường cũ tham khảo trước năm 2025" width="1600" height="1132" decoding="async" fetchpriority="high">
-              <figcaption>Trước năm 2025 · 14 ranh phường cũ tham khảo</figcaption>
-            </figure>
-            <figure data-product-preview="current" hidden>
-              <img src="{{ page.preview_after }}" alt="Bản xem trước có watermark với 5 ranh phường hiện tại" width="1600" height="1132" decoding="async" loading="lazy">
-              <figcaption>Hiện tại · 5 ranh phường đã xác minh</figcaption>
-            </figure>
           </div>
         </div>
       </div>
@@ -244,24 +251,6 @@
       </div>
     </section>
 
-    <section class="seo-shell tdm-product-repeat-offer" aria-label="Mua bộ bản đồ">
-      <div>
-        <h2>Bộ bản đồ TP Thủ Dầu Một · {{ display_price }}đ</h2>
-        {% if availability.can_sell %}
-        <p>Quét VietQR để thanh toán; link tải có hiệu lực 24 giờ sau khi PayOS xác nhận.</p>
-        {% else %}
-        <p>Thanh toán chưa được mở. Nút mua sẽ chỉ được bật sau khi bản phát hành và quy trình giao tệp vượt qua đầy đủ bước kiểm tra.</p>
-        {% endif %}
-      </div>
-      {% if availability.can_sell %}
-      <form method="post" action="/ban-do-thu-dau-mot/checkout">
-        <button type="submit" data-product-purchase>Mua và thanh toán {{ display_price }}đ</button>
-      </form>
-      {% else %}
-      <button type="button" disabled aria-disabled="true" data-product-purchase>Sắp mở bán</button>
-      {% endif %}
-    </section>
-
     <section class="seo-shell tdm-product-section tdm-product-source-summary" aria-labelledby="anh-ban-do-hanh-chinh">
       <div class="tdm-product-diaoc-copy">
         <h2 id="anh-ban-do-hanh-chinh">Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương</h2>
@@ -290,35 +279,37 @@
 
     <section class="seo-shell tdm-product-section tdm-product-pdf-offer" aria-labelledby="ban-do-pdf-hoan-thien">
       <div class="tdm-product-section-heading">
+        <p class="tdm-product-section-kicker">Bản trả phí</p>
         <h2 id="ban-do-pdf-hoan-thien">Bản đồ PDF hoàn thiện</h2>
         <p>Bản đồ TP Thủ Dầu Một được xây dựng bởi Radar BDS, nhằm phục vụ nhu cầu bản đồ chất lượng cao, hoàn thiện. Bạn chỉ việc tải về và in ra, không cần làm gì thêm.</p>
       </div>
+      <div class="tdm-product-paid-card" aria-label="Bộ bản đồ trả phí">
+        <div>
+          <span class="tdm-product-paid-badge">PDF · SVG · KML</span>
+          <h3>Bộ bản đồ TP Thủ Dầu Một · {{ display_price }}đ</h3>
+          {% if availability.can_sell %}
+          <p>Quét VietQR để thanh toán; link tải có hiệu lực 24 giờ sau khi PayOS xác nhận.</p>
+          {% else %}
+          <p>Thanh toán chưa được mở. Nút mua sẽ chỉ được bật sau khi bản phát hành và quy trình giao tệp vượt qua đầy đủ bước kiểm tra.</p>
+          {% endif %}
+        </div>
+        {% if availability.can_sell %}
+        <form method="post" action="/ban-do-thu-dau-mot/checkout">
+          <button type="submit" data-product-purchase>Mua và thanh toán {{ display_price }}đ</button>
+        </form>
+        {% else %}
+        <button type="button" disabled aria-disabled="true" data-product-purchase>Sắp mở bán</button>
+        {% endif %}
+      </div>
       <ul class="tdm-product-checklist">
-        <li>File PDF chuẩn in ấn – mở được trên mọi thiết bị, không vỡ nét.</li>
-        <li>Thuần vector 100%.</li>
-        <li>Màu sắc hài hòa.</li>
-        <li>Phù hợp in khổ lớn từ A0 trở lên.</li>
-        <li>Tương thích tốt với Adobe Illustrator (AI), Acrobat, Foxit, CorelDRAW – dễ dàng cập nhật chỉnh sửa.</li>
-        <li>Text/Label editable – giữ nguyên định dạng text, dễ dàng thay đổi, cập nhật.</li>
-        <li>Embed font – không lo lỗi font.</li>
+        <li><span aria-hidden="true">📄</span> File PDF chuẩn in ấn – mở được trên mọi thiết bị, không vỡ nét.</li>
+        <li><span aria-hidden="true">✒️</span> Thuần vector 100%.</li>
+        <li><span aria-hidden="true">🎨</span> Màu sắc hài hòa.</li>
+        <li><span aria-hidden="true">🖨️</span> Phù hợp in khổ lớn từ A0 trở lên.</li>
+        <li><span aria-hidden="true">🧩</span> Tương thích tốt với Adobe Illustrator (AI), Acrobat, Foxit, CorelDRAW – dễ dàng cập nhật chỉnh sửa.</li>
+        <li><span aria-hidden="true">🔤</span> Text/Label editable – giữ nguyên định dạng text, dễ dàng thay đổi, cập nhật.</li>
+        <li><span aria-hidden="true">✅</span> Embed font – không lo lỗi font.</li>
       </ul>
-    </section>
-
-    <section class="seo-shell tdm-product-editions" aria-labelledby="chon-phien-ban">
-      <div>
-        <h2 id="chon-phien-ban">Chọn bản xem trước</h2>
-        <p>Hai ảnh mẫu có watermark chỉ dùng để xem bố cục, không thay thế các tệp trong bộ sản phẩm.</p>
-      </div>
-      <div class="tdm-product-edition-buttons" role="group" aria-label="Chọn phiên bản bản đồ">
-        <button type="button" data-product-edition="legacy" aria-pressed="true">
-          <strong>Trước năm 2025</strong>
-          <span>14 ranh phường cũ tham khảo</span>
-        </button>
-        <button type="button" data-product-edition="current" aria-pressed="false">
-          <strong>Hiện tại</strong>
-          <span>5 ranh phường đã xác minh</span>
-        </button>
-      </div>
     </section>
 
     <section class="seo-shell tdm-product-section" aria-labelledby="ban-nhan-duoc-gi">
@@ -328,26 +319,32 @@
       </div>
       <div class="tdm-product-benefit-grid">
         <article>
+          <span class="tdm-product-card-icon" aria-hidden="true">📄</span>
           <h3>Hai bản PDF hoàn thiện để in A0</h3>
           <p>Bố cục ngang khổ A0, hình học vector và font nhúng hợp lệ, ưu tiên độ ổn định khi in.</p>
         </article>
         <article>
+          <span class="tdm-product-card-icon" aria-hidden="true">✒️</span>
           <h3>Hai bản SVG giữ đối tượng chữ và nhóm lớp có tên để chỉnh sửa</h3>
           <p>Dùng làm bản chỉnh sửa chính trong Adobe Illustrator, CorelDRAW, Inkscape và phần mềm tương thích.</p>
         </article>
         <article>
+          <span class="tdm-product-card-icon" aria-hidden="true">🌐</span>
           <h3>Hai bản KML để mở các lớp địa lý trong phần mềm tương thích</h3>
           <p>Dùng trong Google Earth, Google My Maps và phần mềm GIS có hỗ trợ định dạng này.</p>
         </article>
         <article>
+          <span class="tdm-product-card-icon" aria-hidden="true">🔤</span>
           <h3>Tệp font được phép phân phối và giấy phép font</h3>
           <p>Giúp phần mềm đồ họa dùng đúng kiểu chữ thay vì tự thay font khi mở bản chỉnh sửa.</p>
         </article>
         <article>
+          <span class="tdm-product-card-icon" aria-hidden="true">📘</span>
           <h3>Tệp hướng dẫn sử dụng và giấy phép sản phẩm</h3>
           <p>Giải thích cấu trúc bộ sản phẩm, nguồn dữ liệu, cách mở tệp và phạm vi sử dụng.</p>
         </article>
         <article>
+          <span class="tdm-product-card-icon" aria-hidden="true">🔐</span>
           <h3>Tệp MANIFEST và mã checksum để kiểm tra tính toàn vẹn</h3>
           <p>Giúp đối chiếu danh mục, dung lượng và mã kiểm tra của từng thành phần trong bản phát hành.</p>
         </article>
