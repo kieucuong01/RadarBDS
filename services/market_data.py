@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from collections import defaultdict
 from contextlib import contextmanager
+from dataclasses import dataclass
 import re
 import unicodedata
 
@@ -456,7 +457,22 @@ def effective_price_drop_select_sql(alias="l", lateral_alias="related_drop"):
                END AS price_first_ty"""
 
 
-def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, prefix="", area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", date_range=None):
+def build_listing_filters(
+    sources=None,
+    wards=None,
+    prop_types=None,
+    only_drops=False,
+    prefix="",
+    area_min=0,
+    area_max=0,
+    price_min=0,
+    price_max=0,
+    area_ranges=None,
+    price_ranges=None,
+    keyword="",
+    date_range=None,
+    require_complete=False,
+):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
     prop_types = normalize_property_types(prop_types)
@@ -504,6 +520,12 @@ def _build_filters(sources=None, wards=None, prop_types=None, only_drops=False, 
     date_clauses, date_params = listing_date_range_filter(date_range, prefix)
     where_parts.extend(date_clauses)
     params.extend(date_params)
+    if require_complete:
+        where_parts.extend([
+            f"NULLIF(TRIM(COALESCE({col('ward')},'')), '') IS NOT NULL",
+            f"{col('price_ty')} IS NOT NULL AND {col('price_ty')} > 0",
+            f"{col('area_m2')} IS NOT NULL AND {col('area_m2')} > 0",
+        ])
 
     return " AND ".join(where_parts), params
 
@@ -612,6 +634,26 @@ def _deal_mos_signal_sql(display_mos_expr: str, mos_min: float) -> str:
     not hide rows that match the user's displayed MOS threshold.
     """
     return f"COALESCE(({display_mos_expr}), 0) >= {float(mos_min)}"
+
+
+@dataclass(frozen=True)
+class DealSql:
+    actual_expr: str
+    fair_expr: str
+    mos_expr: str
+    condition: str
+
+
+def build_deal_sql(mos_min: float) -> DealSql:
+    actual = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
+    fair = _display_fair_sql("v", "sv")
+    mos = _display_mos_sql("v", "sv", actual)
+    minimum = float(mos_min if mos_min is not None else 10)
+    condition = (
+        f"({actionable_signal_sql('v')}) AND "
+        f"({_deal_mos_signal_sql(mos, minimum)})"
+    )
+    return DealSql(actual, fair, mos, condition)
 
 
 def _signal_listing_data_sql(alias: str = "l") -> str:
@@ -1083,7 +1125,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         mos_min = 10
         only_drops = False
     conn = _open_read_conn(db_path)
-    where_sql, params = _build_filters(
+    where_sql, params = build_listing_filters(
         sources,
         wards,
         prop_types,
@@ -1098,11 +1140,11 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         keyword=keyword,
         date_range=date_range,
     )
-    actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
-    display_fair_expr = _display_fair_sql("v", "sv")
-    display_mos_expr = _display_mos_sql("v", "sv", actual_expr)
-    effective_mos_min = float(mos_min if mos_min is not None else 10)
-    signal_condition = _deal_mos_signal_sql(display_mos_expr, effective_mos_min)
+    deal = build_deal_sql(mos_min)
+    actual_expr = deal.actual_expr
+    display_fair_expr = deal.fair_expr
+    display_mos_expr = deal.mos_expr
+    signal_condition = deal.condition
     page = max(int(page or 1), 1)
     limit = min(max(int(limit or 30), 1), 100)
     offset = (page - 1) * limit
@@ -1209,7 +1251,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         only_drops = False
 
     conn = _open_read_conn(db_path)
-    where_sql, params = _build_filters(
+    where_sql, params = build_listing_filters(
         sources,
         wards,
         prop_types,
@@ -1248,7 +1290,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         "price_drops": 0,
     }
 
-    signal_where_sql, signal_params = _build_filters(
+    signal_where_sql, signal_params = build_listing_filters(
         sources,
         wards,
         prop_types,
@@ -1333,7 +1375,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
 
 def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", date_range=None):
     conn = _open_read_conn(db_path)
-    where_sql, params = _build_filters(
+    where_sql, params = build_listing_filters(
         sources,
         wards,
         prop_types,

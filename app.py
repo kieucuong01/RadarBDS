@@ -91,7 +91,7 @@ mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
 # Import the extracted services
-from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter
+from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters
 from services.market_data import LATEST_SHADOW_VALUATION_CTE, _display_fair_sql, _display_mos_sql
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
@@ -4720,38 +4720,17 @@ def api_listings():
     db_path = _db_handle()
     conn = connect(db_path)
     
-    where_parts = ["l.probably_sold = 0", "COALESCE(l.is_blacklisted,0)=0", "COALESCE(l.review_hidden,0)=0"]
-    if only_drops:
-        where_parts.append(group_price_drop_filter_sql("l."))
-    else:
-        where_parts.append("l.possibly_duplicate = 0")
-    params = []
-    
-    if wards:
-        where_parts.append(f"l.ward IN ({','.join(['?']*len(wards))})")
-        params.extend(wards)
-    if sources:
-        where_parts.append(f"l.source IN ({','.join(['?']*len(sources))})")
-        params.extend(sources)
-    if prop_types:
-        where_parts.append(f"l.property_type IN ({','.join(['?']*len(prop_types))})")
-        params.extend(prop_types)
-    if complete_only:
-        where_parts.extend([
-            "NULLIF(TRIM(COALESCE(l.ward,'')), '') IS NOT NULL",
-            "l.price_ty IS NOT NULL AND l.price_ty > 0",
-            "l.area_m2 IS NOT NULL AND l.area_m2 > 0",
-        ])
-    range_clauses, range_params = _range_filters(prefix="l.", **range_kwargs)
-    where_parts.extend(range_clauses)
-    params.extend(range_params)
-    search_clauses, search_params = keyword_search_filter(keyword, prefix="l.")
-    where_parts.extend(search_clauses)
-    params.extend(search_params)
-    date_clauses, date_params = listing_date_range_filter(date_range, prefix="l.")
-    where_parts.extend(date_clauses)
-    params.extend(date_params)
-    where_sql = " AND ".join(where_parts)
+    where_sql, params = build_listing_filters(
+        sources=sources,
+        wards=wards,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        prefix="l.",
+        keyword=keyword,
+        date_range=date_range,
+        require_complete=complete_only,
+        **range_kwargs,
+    )
 
     actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
     display_fair_expr = _display_fair_sql("v", "sv")
