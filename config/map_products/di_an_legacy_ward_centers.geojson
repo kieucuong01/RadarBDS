@@ -1,0 +1,124 @@
+{
+  "features": [
+    {
+      "geometry": {
+        "coordinates": [
+          106.755974,
+          10.878579
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "medium",
+        "name": "An Bình",
+        "source": "Radar BDS derived boundary",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.812694,
+          10.892935
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Bình An",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.802871,
+          10.906338
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Bình Thắng",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.754054,
+          10.896978
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Dĩ An",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.791004,
+          10.886923
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Đông Hòa",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.757826,
+          10.948835
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Tân Bình",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.770382,
+          10.921211
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Tân Đông Hiệp",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    }
+  ],
+  "type": "FeatureCollection"
+}

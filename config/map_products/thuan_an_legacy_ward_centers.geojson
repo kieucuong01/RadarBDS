@@ -1,0 +1,175 @@
+{
+  "features": [
+    {
+      "geometry": {
+        "coordinates": [
+          106.736425,
+          10.948252
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "An Phú",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.661819,
+          10.933694
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "An Sơn",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.681852,
+          10.947544
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "An Thạnh",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.720178,
+          10.981776
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Bình Chuẩn",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.726796,
+          10.911615
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Bình Hòa",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.691514,
+          10.92569
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Bình Nhâm",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.695296,
+          10.940541
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Hưng Định",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.701556,
+          10.909762
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Lái Thiêu",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.716334,
+          10.950043
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Thuận Giao",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.703401,
+          10.88183
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "medium",
+        "name": "Vĩnh Phú",
+        "source": "Radar BDS derived boundary",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    }
+  ],
+  "type": "FeatureCollection"
+}

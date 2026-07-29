@@ -1,0 +1,141 @@
+{
+  "features": [
+    {
+      "geometry": {
+        "coordinates": [
+          106.571352,
+          11.122277
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "An Điền",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.541911,
+          11.098824
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "An Tây",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.655864,
+          11.173512
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Chánh Phú Hòa",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.678579,
+          11.094779
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Hòa Lợi",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.611713,
+          11.147617
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Mỹ Phước",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.586376,
+          11.060658
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Phú An",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.63282,
+          11.061952
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Tân Định",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          106.626994,
+          11.103841
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "boundary_claim": false,
+        "confidence": "high",
+        "name": "Thới Hòa",
+        "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+        "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      },
+      "type": "Feature"
+    }
+  ],
+  "type": "FeatureCollection"
+}
