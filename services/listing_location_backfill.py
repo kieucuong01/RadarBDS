@@ -82,4 +82,8 @@ def backfill_listing_locations(
         stats["deleted"] += delete_stale_listing_map_locations(
             [int(candidate["id"]) for candidate in candidates]
         )
+    if changed or stats["deleted"]:
+        from services.listing_map import clear_listing_map_cache
+
+        clear_listing_map_cache()
     return stats

@@ -93,6 +93,11 @@ mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 # Import the extracted services
 from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters
 from services.market_data import LATEST_SHADOW_VALUATION_CTE, _display_fair_sql, _display_mos_sql
+from services.listing_map import (
+    MapFilters,
+    load_listing_map_items,
+    load_listing_map_summary,
+)
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
@@ -4064,6 +4069,66 @@ def _request_date_range(req) -> str:
     return normalize_date_range(req.args.get("date_range") or req.args.get("time_range"), default="3m") or "3m"
 
 
+_LISTING_MAP_LOCATION_KEY_RE = re.compile(
+    r"^(exact|road|ward):[a-z0-9:-]+$"
+)
+_LISTING_MAP_SENSITIVE_KEYS = frozenset({
+    "url",
+    "phone",
+    "contact_phone",
+    "description",
+    "seller_name",
+})
+
+
+def _listing_map_filters(req, mode: str) -> MapFilters:
+    (
+        active_city,
+        wards,
+        sources,
+        prop_types,
+        only_drops,
+        _trend_period,
+        mos_min,
+    ) = get_base_filters(req)
+    if not wards and active_city in CITY_MAP:
+        wards = CITY_MAP[active_city]
+    ranges = _request_range_filter_kwargs(req)
+    return MapFilters(
+        city=active_city,
+        wards=tuple(wards or ()),
+        sources=tuple(sources or ()),
+        prop_types=tuple(prop_types or ()),
+        only_drops=bool(only_drops),
+        mos_min=int(mos_min or 0),
+        area_min=ranges["area_min"],
+        area_max=ranges["area_max"],
+        price_min=ranges["price_min"],
+        price_max=ranges["price_max"],
+        area_ranges=tuple(ranges["area_ranges"]),
+        price_ranges=tuple(ranges["price_ranges"]),
+        keyword=_request_keyword(req),
+        date_range=_request_date_range(req),
+        complete_only=(
+            mode == "all"
+            and (req.args.get("complete") or "").strip().lower()
+            in {"1", "true", "yes", "on"}
+        ),
+    )
+
+
+def _safe_listing_map_payload(value):
+    if isinstance(value, dict):
+        return {
+            key: _safe_listing_map_payload(item)
+            for key, item in value.items()
+            if key not in _LISTING_MAP_SENSITIVE_KEYS
+        }
+    if isinstance(value, list):
+        return [_safe_listing_map_payload(item) for item in value]
+    return value
+
+
 def _safe_date(value):
     if not value:
         return None
@@ -4864,6 +4929,55 @@ def api_listings():
         "has_more": page * limit < total,
         "tier": tier,
     })
+
+
+@rate_limit(
+    "listing_map",
+    limits={"guest": 300, "free": 600, "vip": None, "admin": None},
+)
+def api_map_listings():
+    mode = (request.args.get("mode") or "").strip().lower()
+    if mode not in {"signals", "all"}:
+        return jsonify({"error": "invalid_mode"}), 400
+    payload = load_listing_map_summary(
+        mode=mode,
+        tier=current_tier(),
+        filters=_listing_map_filters(request, mode),
+    )
+    return jsonify(_safe_listing_map_payload(payload))
+
+
+@rate_limit(
+    "listing_map",
+    limits={"guest": 300, "free": 600, "vip": None, "admin": None},
+)
+def api_map_listing_items():
+    mode = (request.args.get("mode") or "").strip().lower()
+    if mode not in {"signals", "all"}:
+        return jsonify({"error": "invalid_mode"}), 400
+    location_key = (request.args.get("location_key") or "").strip()
+    if (
+        not location_key
+        or len(location_key) > 240
+        or not _LISTING_MAP_LOCATION_KEY_RE.fullmatch(location_key)
+    ):
+        return jsonify({"error": "invalid_location_key"}), 400
+    try:
+        page = int(request.args.get("page", 1))
+        limit = int(request.args.get("limit", 20))
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid_pagination"}), 400
+    if page < 1 or limit < 1:
+        return jsonify({"error": "invalid_pagination"}), 400
+    payload = load_listing_map_items(
+        mode=mode,
+        tier=current_tier(),
+        filters=_listing_map_filters(request, mode),
+        location_key=location_key,
+        page=page,
+        limit=min(limit, 50),
+    )
+    return jsonify(_safe_listing_map_payload(payload))
 
 def listing_detail(listing_id):
     db_path = _db_handle()

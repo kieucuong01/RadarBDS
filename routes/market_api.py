@@ -67,6 +67,16 @@ def api_listings(**kwargs):
     return _impl("api_listings", **kwargs)
 
 
+@bp.route('/api/map-listings')
+def api_map_listings(**kwargs):
+    return _impl("api_map_listings", **kwargs)
+
+
+@bp.route('/api/map-listing-items')
+def api_map_listing_items(**kwargs):
+    return _impl("api_map_listing_items", **kwargs)
+
+
 @bp.route('/api/listing/<int:listing_id>')
 def api_listing_detail(**kwargs):
     return _impl("api_listing_detail", **kwargs)

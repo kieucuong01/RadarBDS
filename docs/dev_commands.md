@@ -44,6 +44,14 @@ Kết quả gồm `scanned`, `exact`, `road`, `ward`, `unmapped`, `inserted`,
 `updated`, `unchanged`, và `deleted`. Lệnh chỉ cập nhật bảng dẫn xuất
 `listing_map_locations`; không cập nhật bất kỳ cột nào trong `listings`.
 
+API smoke cho bản đồ:
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:5000/api/map-listings?mode=signals"
+Invoke-RestMethod "http://127.0.0.1:5000/api/map-listings?mode=all&complete=1"
+Invoke-RestMethod "http://127.0.0.1:5000/api/map-listing-items?mode=signals&location_key=ward:thu-dau-mot:phu-loi&page=1&limit=20"
+```
+
 Direct `psql` access to the same local DB:
 
 ```powershell
