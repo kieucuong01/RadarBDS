@@ -80,3 +80,38 @@ def test_launcher_contract_supports_only_deal_and_listing_tabs():
     assert "position: fixed" in layout
     assert "left: 50%" in layout
     assert "bottom: 28px" in layout
+
+
+def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    script = (root / "static/js/main/listing_map.js").read_text(
+        encoding="utf-8"
+    )
+    styles = (root / "static/css/main/listing_map.css").read_text(
+        encoding="utf-8"
+    )
+
+    for contract in (
+        "new AbortController()",
+        "summarySequence += 1",
+        "itemSequence += 1",
+        "root.history.pushState",
+        'win.addEventListener("popstate"',
+        'event.key === "Escape"',
+        'event.key !== "Tab"',
+        "state.map.remove()",
+        "state.previousFocus.focus()",
+        "root.L.circleMarker",
+        "precisionCopy(group.precision)",
+        "safeCount(summary.unmapped_count)",
+        'script.crossOrigin = "anonymous"',
+        'link.crossOrigin = "anonymous"',
+    ):
+        assert contract in script
+    assert "item.description" not in script
+    assert "@media (max-width: 760px)" in styles
+    assert "max-height: min(47vh, 410px)" in styles
+    assert "min-height: 44px" in styles
+    assert "@media (prefers-reduced-motion: reduce)" in styles
