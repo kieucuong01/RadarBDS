@@ -14,7 +14,14 @@ from config.listing_map import (
     LISTING_MAP_SUPPORTED_CITIES,
     LISTING_MAP_WARD_REGISTRY_PATH,
 )
-from scripts.build_listing_location_registry import build_location_registries
+from scripts.build_listing_location_registry import (
+    build_location_registries,
+    combine_location_overrides,
+)
+from services.listing_location_auto_registry import (
+    BrowserLocationEvidence,
+    canonical_evidence_hash,
+)
 from services.listing_location_resolver import load_location_registry
 from services.market_data import CITY_MAP
 
@@ -105,6 +112,125 @@ def _generated_payloads():
     }
     boundaries = FIXTURE_DIR / "legacy-wards.geojson"
     return osm, sources, overrides, boundaries
+
+
+def _accepted_auto_entry(**changes):
+    data = {
+        "candidate_key": "landmark:thu-dau-mot:phu-tan:tdc-phu-chanh-c",
+        "candidate_type": "landmark",
+        "city": "THỦ DẦU MỘT",
+        "ward": "Phú Tân",
+        "canonical": "TĐC Phú Chánh C",
+        "aliases": [
+            "TDC Phu Chanh C",
+            "Khu tái định cư Phú Chánh C",
+        ],
+        "query": "TĐC Phú Chánh C, Phú Tân, Thủ Dầu Một",
+        "result_title": "Khu tái định cư Phú Chánh C",
+        "result_address": "Khu TĐC Phú Chánh C, Phú Tân",
+        "result_type": "Housing complex",
+        "source_url": (
+            "https://www.google.com/maps/"
+            "@11.058782,106.7015151,17z"
+        ),
+        "unique_result": True,
+        "checked_at": "2026-07-29T16:00:00Z",
+    }
+    data.update(changes)
+    evidence = BrowserLocationEvidence.from_mapping(data)
+    return {
+        **data,
+        "accuracy_radius_m": 140.0,
+        "confidence": 1.0,
+        "evidence_hash": canonical_evidence_hash(evidence),
+        "lat": 11.058782,
+        "lng": 106.7015151,
+        "source": "Google Maps browser suggestion",
+        "status": "accepted",
+    }
+
+
+def test_manual_overrides_win_over_auto_overrides():
+    manual = {
+        "resolver_version": "test-v3",
+        "road_aliases": [],
+        "roads": [
+            {
+                "city": "THỦ DẦU MỘT",
+                "ward": "Phú Tân",
+                "road_name": "Đường số 35",
+                "lat": 11.0636566,
+                "lng": 106.6941886,
+                "source": "OpenStreetMap",
+                "source_url": "https://www.openstreetmap.org/way/225107254",
+                "verified_at": "2026-07-29",
+            }
+        ],
+        "landmark_aliases": [],
+        "landmarks": [],
+    }
+    auto = {
+        "resolver_version": "test-v3",
+        "entries": [
+            _accepted_auto_entry(
+                candidate_key=(
+                    "road:thu-dau-mot:phu-tan:duong-so-35"
+                ),
+                candidate_type="road",
+                canonical="Đường số 35",
+                aliases=["Đường 35"],
+                result_title="Đường số 35",
+                result_address="Phú Tân, Thủ Dầu Một",
+                result_type="Road",
+            )
+        ],
+    }
+
+    combined = combine_location_overrides(manual, auto)
+
+    assert combined["roads"] == manual["roads"]
+    assert combined["auto_override_count"] == 0
+
+
+def test_valid_auto_override_is_converted_to_curated_shape():
+    manual = {
+        "resolver_version": "test-v3",
+        "road_aliases": [],
+        "roads": [],
+        "landmark_aliases": [],
+        "landmarks": [],
+    }
+    entry = _accepted_auto_entry()
+
+    combined = combine_location_overrides(
+        manual,
+        {"resolver_version": "test-v3", "entries": [entry]},
+    )
+
+    assert combined["auto_override_count"] == 1
+    assert combined["landmarks"][0]["landmark_name"] == "TĐC Phú Chánh C"
+    assert combined["landmarks"][0]["verified_at"] == entry["checked_at"]
+    assert combined["landmark_aliases"][0]["city"] == "THỦ DẦU MỘT"
+
+
+def test_registry_manifest_hashes_accepted_auto_overrides(tmp_path):
+    osm, sources, manual, boundaries = _generated_payloads()
+    auto = {
+        "resolver_version": manual["resolver_version"],
+        "entries": [],
+    }
+    paths = build_location_registries(
+        osm,
+        sources,
+        tmp_path,
+        overrides=manual,
+        auto_overrides=auto,
+        boundary_paths=(boundaries,),
+    )
+
+    manifest = json.loads(paths[3].read_text(encoding="utf-8"))
+    assert len(manifest["auto_overrides_sha256"]) == 64
+    assert manifest["auto_override_count"] == 0
 
 
 def test_registry_builder_is_byte_stable_and_records_input_hashes(tmp_path):

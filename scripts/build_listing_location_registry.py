@@ -19,9 +19,16 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config.listing_map import (
+    LISTING_MAP_AUTO_ACCEPT_THRESHOLD,
+    LISTING_MAP_AUTO_OVERRIDE_PATH,
     LISTING_MAP_BOUNDS,
     LISTING_MAP_OVERRIDE_PATH,
     LISTING_MAP_WARD_BOUNDARY_PATHS,
+)
+from services.listing_location_auto_registry import (
+    BrowserLocationEvidence,
+    canonical_evidence_hash,
+    parse_google_maps_coordinates,
 )
 from services.listing_location_resolver import (
     normalize_location_token,
@@ -822,12 +829,162 @@ def _merge_curated_landmarks(
     return preserved + list(curated.values())
 
 
+def _manual_override_identities(
+    manual: Mapping,
+) -> set[tuple[str, str, str, str]]:
+    identities = set()
+    for kind, collection, name_field, normalizer in (
+        ("road", "roads", "road_name", normalize_road_token),
+        (
+            "landmark",
+            "landmarks",
+            "landmark_name",
+            _normalize_landmark_token,
+        ),
+    ):
+        for row in manual.get(collection) or ():
+            identities.add((
+                kind,
+                str(row.get("city") or "").strip(),
+                normalize_location_token(row.get("ward") or ""),
+                normalizer(str(row.get(name_field) or "")),
+            ))
+    return identities
+
+
+def _auto_override_identity(
+    evidence: BrowserLocationEvidence,
+) -> tuple[str, str, str, str]:
+    normalizer = (
+        normalize_road_token
+        if evidence.candidate_type == "road"
+        else _normalize_landmark_token
+    )
+    return (
+        evidence.candidate_type,
+        evidence.city,
+        normalize_location_token(evidence.ward),
+        normalizer(evidence.canonical),
+    )
+
+
+def combine_location_overrides(
+    manual: Mapping,
+    auto: Mapping,
+) -> dict:
+    """Merge validated automatic suggestions below manual override priority."""
+    manual_version = str(manual.get("resolver_version") or "").strip()
+    auto_version = str(auto.get("resolver_version") or "").strip()
+    if not manual_version or manual_version != auto_version:
+        raise ValueError("manual and auto override versions must match")
+
+    combined = {
+        "resolver_version": manual_version,
+        "road_aliases": [
+            dict(row) for row in manual.get("road_aliases") or ()
+        ],
+        "roads": [dict(row) for row in manual.get("roads") or ()],
+        "landmark_aliases": [
+            dict(row) for row in manual.get("landmark_aliases") or ()
+        ],
+        "landmarks": [dict(row) for row in manual.get("landmarks") or ()],
+        "auto_override_count": 0,
+    }
+    manual_identities = _manual_override_identities(manual)
+    auto_identities = set()
+
+    entries = auto.get("entries", [])
+    if entries is None:
+        entries = []
+    if not isinstance(entries, list):
+        raise ValueError("auto override entries must be a list")
+    for raw_entry in sorted(
+        entries,
+        key=lambda row: str(
+            row.get("candidate_key") if isinstance(row, Mapping) else ""
+        ),
+    ):
+        if not isinstance(raw_entry, Mapping):
+            raise ValueError("auto override entry must be an object")
+        if str(raw_entry.get("status") or "") != "accepted":
+            continue
+        try:
+            confidence = float(raw_entry.get("confidence"))
+        except (TypeError, ValueError):
+            continue
+        if confidence < LISTING_MAP_AUTO_ACCEPT_THRESHOLD:
+            continue
+
+        evidence = BrowserLocationEvidence.from_mapping(raw_entry)
+        identity = _auto_override_identity(evidence)
+        if identity in manual_identities:
+            continue
+        if identity in auto_identities:
+            raise ValueError("duplicate automatic override identity")
+
+        evidence_hash = str(raw_entry.get("evidence_hash") or "").strip()
+        if evidence_hash != canonical_evidence_hash(evidence):
+            raise ValueError("automatic override evidence hash mismatch")
+        coordinates = parse_google_maps_coordinates(evidence.source_url)
+        if coordinates is None:
+            raise ValueError("automatic override source coordinates are invalid")
+        try:
+            stored_coordinates = (
+                float(raw_entry["lat"]),
+                float(raw_entry["lng"]),
+            )
+        except (KeyError, TypeError, ValueError):
+            raise ValueError(
+                "automatic override coordinates are invalid"
+            ) from None
+        if any(
+            abs(stored - derived) > 0.0000001
+            for stored, derived in zip(
+                stored_coordinates,
+                coordinates,
+                strict=True,
+            )
+        ):
+            raise ValueError("automatic override coordinates do not match URL")
+
+        alias_row = {
+            "city": evidence.city,
+            "ward": evidence.ward,
+            "canonical": evidence.canonical,
+            "aliases": sorted(set(evidence.aliases)),
+        }
+        curated_row = {
+            "accuracy_radius_m": (
+                90.0 if evidence.candidate_type == "road" else 140.0
+            ),
+            "city": evidence.city,
+            "lat": coordinates[0],
+            "lng": coordinates[1],
+            "source": "Google Maps browser suggestion",
+            "source_url": evidence.source_url,
+            "verified_at": evidence.checked_at,
+            "ward": evidence.ward,
+        }
+        if evidence.candidate_type == "road":
+            curated_row["road_name"] = evidence.canonical
+            combined["road_aliases"].append(alias_row)
+            combined["roads"].append(curated_row)
+        else:
+            curated_row["landmark_name"] = evidence.canonical
+            combined["landmark_aliases"].append(alias_row)
+            combined["landmarks"].append(curated_row)
+        auto_identities.add(identity)
+        combined["auto_override_count"] += 1
+    return combined
+
+
 def build_location_registries(
     osm_payload: Mapping,
     sources: Mapping,
     output_dir: Path,
     *,
     overrides: Mapping | None = None,
+    auto_overrides: Mapping | None = None,
     boundary_paths: Sequence[Path] = (),
 ) -> tuple[Path, Path, Path, Path]:
     resolver_version = str(sources.get("resolver_version") or "").strip()
@@ -840,9 +997,15 @@ def build_location_registries(
         "landmark_aliases": [],
         "landmarks": [],
     }
+    manual_overrides = overrides
     override_version = str(overrides.get("resolver_version") or "").strip()
     if override_version and override_version != resolver_version:
         raise ValueError("override resolver_version does not match sources")
+    auto_overrides = auto_overrides or {
+        "resolver_version": resolver_version,
+        "entries": [],
+    }
+    overrides = combine_location_overrides(manual_overrides, auto_overrides)
 
     index = _element_index(osm_payload)
     ward_rows, _ward_keys = _build_ward_rows(sources, index)
@@ -958,7 +1121,9 @@ def build_location_registries(
         "resolver_version": resolver_version,
         "osm_sha256": _payload_sha256(osm_payload),
         "sources_sha256": _payload_sha256(sources),
-        "overrides_sha256": _payload_sha256(overrides),
+        "overrides_sha256": _payload_sha256(manual_overrides),
+        "auto_overrides_sha256": _payload_sha256(auto_overrides),
+        "auto_override_count": int(overrides["auto_override_count"]),
         "boundaries_sha256": _payload_sha256(boundary_payloads),
         "ward_registry_sha256": hashlib.sha256(ward_bytes).hexdigest(),
         "road_registry_sha256": hashlib.sha256(road_bytes).hexdigest(),
@@ -1018,6 +1183,11 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--overrides", type=Path, default=LISTING_MAP_OVERRIDE_PATH)
     parser.add_argument(
+        "--auto-overrides",
+        type=Path,
+        default=LISTING_MAP_AUTO_OVERRIDE_PATH,
+    )
+    parser.add_argument(
         "--boundary",
         type=Path,
         action="append",
@@ -1028,11 +1198,15 @@ def main() -> int:
     osm_payload = json.loads(args.osm_json.read_text(encoding="utf-8"))
     sources = json.loads(args.sources.read_text(encoding="utf-8"))
     overrides = json.loads(args.overrides.read_text(encoding="utf-8"))
+    auto_overrides = json.loads(
+        args.auto_overrides.read_text(encoding="utf-8")
+    )
     paths = build_location_registries(
         osm_payload,
         sources,
         args.output_dir,
         overrides=overrides,
+        auto_overrides=auto_overrides,
         boundary_paths=tuple(args.boundaries or LISTING_MAP_WARD_BOUNDARY_PATHS),
     )
     for path in paths:

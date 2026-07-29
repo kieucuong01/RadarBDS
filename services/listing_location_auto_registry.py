@@ -389,9 +389,11 @@ def evaluate_browser_evidence(
         "query": evidence.query,
         "result_address": evidence.result_address,
         "result_title": evidence.result_title,
+        "result_type": evidence.result_type,
         "source": "Google Maps browser suggestion",
         "source_url": evidence.source_url,
         "status": "accepted",
+        "unique_result": evidence.unique_result,
         "ward": evidence.ward,
     }
     assert _HEX_64_RE.fullmatch(str(override["evidence_hash"]))
