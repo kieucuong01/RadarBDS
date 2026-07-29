@@ -444,7 +444,7 @@ def payos_digital_products_webhook():
             repo=_repository_factory(),
         )
     except SettlementNotFound:
-        return jsonify({"success": False}), 404
+        return jsonify({"success": True}), 200
     except (InvalidSettlement, PayOSWebhookRejected, PayOSClientError):
         return jsonify({"success": False}), 400
     except OrderLifecycleError:

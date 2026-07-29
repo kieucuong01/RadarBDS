@@ -1573,7 +1573,9 @@ def test_verified_underpayment_is_review_and_duplicate_is_idempotent(route_env):
     assert payos.webhook_calls == [raw, raw]
 
 
-def test_webhook_rejection_and_unknown_order_have_closed_responses(route_env):
+def test_webhook_rejection_is_closed_but_verified_unknown_order_acknowledges(
+    route_env,
+):
     radar_app, _routes, repo, payos, _settings = route_env
     raw = b'{"code":"00"}'
     client = radar_app.app.test_client()
@@ -1600,8 +1602,8 @@ def test_webhook_rejection_and_unknown_order_have_closed_responses(route_env):
         content_type="application/json",
     )
 
-    assert unknown.status_code == 404
-    assert unknown.get_json() == {"success": False}
+    assert unknown.status_code == 200
+    assert unknown.get_json() == {"success": True}
     assert repo.orders == {}
 
 
