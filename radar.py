@@ -95,7 +95,7 @@ from cli.queries import (
 )
 from cli.review import cmd_review_queue, cmd_review_save
 from cli.public_content import cmd_public_content_sync
-from cli.map_locations import cmd_map_locations
+from cli.map_locations import cmd_map_location_coverage, cmd_map_locations
 from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
@@ -120,6 +120,17 @@ def build_parser():
     )
     p_map.add_argument("--full", action="store_true")
     p_map.add_argument("--dry-run", action="store_true")
+
+    p_map_coverage = sub.add_parser(
+        "map-location-coverage",
+        help="Audit unresolved map-location candidates as safe JSON",
+    )
+    p_map_coverage.add_argument(
+        "--status",
+        choices=["unresolved", "resolved", "ambiguous", "not_found", "invalid"],
+        default="unresolved",
+    )
+    p_map_coverage.add_argument("--limit", type=int, default=100)
 
     # dashboard
     p_db = sub.add_parser("dashboard", help="Generate dashboard HTML")
@@ -300,6 +311,8 @@ def main():
         cmd_reprocess(args)
     elif args.cmd == "map-locations":
         cmd_map_locations(args)
+    elif args.cmd == "map-location-coverage":
+        cmd_map_location_coverage(args)
     elif args.cmd == "dashboard":
         cmd_dashboard(args)
     elif args.cmd == "import-guland":

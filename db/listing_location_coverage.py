@@ -2,29 +2,15 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
 import json
 
 from db.connection import get_conn
+from services.listing_location_coverage import CoverageRow
 
 
 _VALID_STATUSES = frozenset({"resolved", "ambiguous", "not_found", "invalid"})
 _MAX_SAMPLE_IDS = 10
 _MAX_LOAD_LIMIT = 1000
-
-
-@dataclass(frozen=True)
-class CoverageRow:
-    candidate_key: str
-    city: str
-    ward: str = ""
-    road_candidate: str = ""
-    landmark_candidate: str = ""
-    relation: str = ""
-    status: str = "not_found"
-    affected_listing_count: int = 0
-    sample_listing_ids: tuple[int, ...] = ()
-    resolution_note: str = ""
 
 
 def _bounded_text(value: object, limit: int) -> str:
@@ -143,3 +129,29 @@ def load_listing_location_coverage(
             params,
         ).fetchall()
     return [dict(row.items()) if hasattr(row, "items") else dict(row) for row in rows]
+
+
+def delete_stale_listing_location_coverage(
+    active_candidate_keys: Sequence[str],
+) -> int:
+    """Prune candidates absent from a completed full coverage scan."""
+    keys = sorted(
+        {
+            _bounded_text(value, 240)
+            for value in active_candidate_keys
+            if _bounded_text(value, 240)
+        }
+    )
+    with get_conn() as conn:
+        if keys:
+            placeholders = ",".join("?" for _ in keys)
+            cursor = conn.execute(
+                f"""
+                DELETE FROM listing_map_location_coverage
+                WHERE candidate_key NOT IN ({placeholders})
+                """,
+                keys,
+            )
+        else:
+            cursor = conn.execute("DELETE FROM listing_map_location_coverage")
+    return max(int(cursor.rowcount), 0)

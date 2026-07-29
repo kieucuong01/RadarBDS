@@ -1,7 +1,11 @@
 from contextlib import contextmanager
 from unittest import mock
+from argparse import Namespace
+import json
 
 import pytest
+
+from services.listing_location_resolver import ResolutionIssue
 
 
 class _Cursor:
@@ -111,3 +115,85 @@ def test_coverage_repository_rejects_unknown_status_and_bounds_load_limit():
 
     assert rows[0]["candidate_key"] == "road:test"
     assert connection.executed[0][1] == ["not_found", 1000]
+
+
+def _issue(listing_id, *, road="", landmark="", status="not_found"):
+    return ResolutionIssue(
+        listing_id=listing_id,
+        candidate_key=f"road:test:{road or landmark}",
+        city="THỦ DẦU MỘT",
+        ward="Tân An",
+        road_candidate=road,
+        landmark_candidate=landmark,
+        relation="on",
+        status=status,
+        resolution_note=f"{status}_candidate",
+    )
+
+
+def test_coverage_issues_group_by_normalized_candidate():
+    from services.listing_location_coverage import aggregate_coverage_issues
+
+    rows = aggregate_coverage_issues(
+        [
+            _issue(11, road="DX 120"),
+            _issue(10, road="dx 120"),
+            _issue(10, road="đx-120"),
+        ]
+    )
+
+    assert len(rows) == 1
+    assert rows[0].affected_listing_count == 2
+    assert rows[0].sample_listing_ids == (10, 11)
+    assert len(rows[0].candidate_key) == 64
+
+
+def test_map_location_coverage_cli_expands_unresolved_and_redacts_text(capsys):
+    from cli import map_locations
+
+    items = [
+        {
+            "candidate_key": "abc",
+            "city": "THỦ DẦU MỘT",
+            "ward": "Tân An",
+            "road_candidate": "dx 120",
+            "landmark_candidate": "",
+            "relation": "on",
+            "status": "not_found",
+            "affected_listing_count": 2,
+            "sample_listing_ids": [10, 11],
+            "resolution_note": "road_not_found",
+        }
+    ]
+    with mock.patch.object(
+        map_locations,
+        "load_listing_location_coverage",
+        side_effect=[[], items, []],
+    ) as load_rows:
+        payload = map_locations.cmd_map_location_coverage(
+            Namespace(status="unresolved", limit=50)
+        )
+
+    printed = json.loads(capsys.readouterr().out)
+    assert payload == printed
+    assert payload["status"] == ["ambiguous", "not_found", "invalid"]
+    assert payload["total_candidates"] == 1
+    assert payload["affected_listings"] == 2
+    assert [call.args for call in load_rows.call_args_list] == [
+        ("ambiguous", 50),
+        ("not_found", 50),
+        ("invalid", 50),
+    ]
+    assert "description" not in printed["items"][0]
+
+
+def test_radar_parser_accepts_coverage_audit_options():
+    import radar
+
+    args = radar.build_parser().parse_args(
+        ["map-location-coverage", "--status", "unresolved", "--limit", "50"]
+    )
+
+    assert args.cmd == "map-location-coverage"
+    assert args.status == "unresolved"
+    assert args.limit == 50

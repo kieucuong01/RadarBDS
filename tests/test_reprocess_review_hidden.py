@@ -34,6 +34,18 @@ class ReprocessMapLocationIsolationTest(unittest.TestCase):
         self.assertEqual(result["status"], "error")
         self.assertEqual(result["error"], "map registry unavailable")
 
+    @mock.patch(
+        "services.listing_location_backfill.backfill_listing_locations",
+        return_value={"scanned": 20, "updated": 5},
+    )
+    def test_full_map_location_backfill_is_explicitly_full(self, backfill):
+        from cleansing.reprocess import _run_listing_map_backfill
+
+        result = _run_listing_map_backfill([7, 9], full=True)
+
+        self.assertEqual(result["scanned"], 20)
+        backfill.assert_called_once_with(listing_ids=None, full=True)
+
 
 class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
     def setUp(self):
