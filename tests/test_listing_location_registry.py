@@ -350,6 +350,92 @@ def test_scoped_auto_road_keeps_landmark_keys():
     ]
 
 
+def test_auto_global_and_scoped_same_road_are_rejected():
+    manual = {
+        "resolver_version": "test-v3",
+        "road_aliases": [],
+        "roads": [],
+        "landmark_aliases": [],
+        "landmarks": [],
+    }
+    global_entry = _accepted_auto_entry(
+        candidate_key="road:thu-dau-mot:phu-tan:duong-so-35",
+        candidate_type="road",
+        canonical="Đường số 35",
+        aliases=["Đường 35"],
+        result_title="Đường số 35, Phú Tân",
+        result_address="Phú Tân, Thủ Dầu Một",
+        result_type="Road",
+    )
+    scoped_entry = _accepted_auto_entry(
+        candidate_key=(
+            "road:thu-dau-mot:phu-tan:"
+            "duong-so-35:tdc-phu-chanh-d"
+        ),
+        candidate_type="road",
+        canonical="Đường số 35",
+        aliases=["Đường 35"],
+        landmark_scope="TĐC Phú Chánh D",
+        result_title="Đường số 35, TĐC Phú Chánh D",
+        result_address="TĐC Phú Chánh D, Phú Tân, Thủ Dầu Một",
+        result_type="Road",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="overlapping automatic road scopes",
+    ):
+        combine_location_overrides(
+            manual,
+            {
+                "resolver_version": "test-v3",
+                "entries": [global_entry, scoped_entry],
+            },
+        )
+
+
+def test_auto_same_road_keeps_two_distinct_landmark_scopes():
+    manual = {
+        "resolver_version": "test-v3",
+        "road_aliases": [],
+        "roads": [],
+        "landmark_aliases": [],
+        "landmarks": [],
+    }
+    entries = [
+        _accepted_auto_entry(
+            candidate_key=(
+                "road:thu-dau-mot:phu-tan:"
+                f"duong-so-35:tdc-phu-chanh-{zone.lower()}"
+            ),
+            candidate_type="road",
+            canonical="Đường số 35",
+            aliases=["Đường 35"],
+            landmark_scope=f"TĐC Phú Chánh {zone}",
+            result_title=f"Đường số 35, TĐC Phú Chánh {zone}",
+            result_address=(
+                f"TĐC Phú Chánh {zone}, Phú Tân, Thủ Dầu Một"
+            ),
+            result_type="Road",
+        )
+        for zone in ("B", "D")
+    ]
+
+    combined = combine_location_overrides(
+        manual,
+        {"resolver_version": "test-v3", "entries": entries},
+    )
+
+    assert combined["auto_override_count"] == 2
+    assert {
+        tuple(row["landmark_keys"])
+        for row in combined["roads"]
+    } == {
+        ("TĐC Phú Chánh B",),
+        ("TĐC Phú Chánh D",),
+    }
+
+
 def test_builder_keeps_same_road_scoped_to_two_landmarks(tmp_path):
     osm, sources, overrides, boundaries = _generated_payloads()
     overrides["roads"] = [

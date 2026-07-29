@@ -936,6 +936,10 @@ def combine_location_overrides(
         identity[:4] for identity in manual_identities
     }
     auto_identities = set()
+    auto_road_scopes: dict[
+        tuple[str, str, str, str],
+        set[str],
+    ] = {}
 
     entries = auto.get("entries", [])
     if entries is None:
@@ -973,6 +977,15 @@ def combine_location_overrides(
             continue
         if identity in auto_identities:
             raise ValueError("duplicate automatic override identity")
+        if evidence.candidate_type == "road":
+            base_identity = identity[:4]
+            existing_scopes = auto_road_scopes.get(base_identity, set())
+            landmark_scope = identity[4]
+            if (
+                (not landmark_scope and existing_scopes)
+                or (landmark_scope and "" in existing_scopes)
+            ):
+                raise ValueError("overlapping automatic road scopes")
 
         evidence_hash = str(raw_entry.get("evidence_hash") or "").strip()
         if evidence_hash != canonical_evidence_hash(evidence):
@@ -1038,6 +1051,8 @@ def combine_location_overrides(
             combined["landmark_aliases"].append(alias_row)
             combined["landmarks"].append(curated_row)
         auto_identities.add(identity)
+        if evidence.candidate_type == "road":
+            auto_road_scopes.setdefault(identity[:4], set()).add(identity[4])
         combined["auto_override_count"] += 1
     return combined
 

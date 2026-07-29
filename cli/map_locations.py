@@ -452,6 +452,38 @@ def _atomic_write_json(path: Path, payload: dict) -> None:
             temporary_path.unlink()
 
 
+def _automatic_road_scope(
+    evidence: BrowserLocationEvidence,
+) -> tuple[tuple[str, str, str], str] | None:
+    if evidence.candidate_type != "road":
+        return None
+    return (
+        (
+            normalize_location_token(evidence.city),
+            normalize_location_token(evidence.ward),
+            normalize_road_token(evidence.canonical),
+        ),
+        normalize_location_token(evidence.landmark_scope),
+    )
+
+
+def _overlapping_road_bases(
+    evidences: list[BrowserLocationEvidence],
+) -> set[tuple[str, str, str]]:
+    scopes_by_base: dict[tuple[str, str, str], set[str]] = {}
+    for evidence in evidences:
+        road_scope = _automatic_road_scope(evidence)
+        if road_scope is None:
+            continue
+        base, scope = road_scope
+        scopes_by_base.setdefault(base, set()).add(scope)
+    return {
+        base
+        for base, scopes in scopes_by_base.items()
+        if "" in scopes and len(scopes) > 1
+    }
+
+
 def cmd_map_location_ingest_evidence(args):
     payload = _bounded_evidence_payload(Path(args.input))
     manual_keys = load_manual_override_keys()
@@ -462,6 +494,7 @@ def cmd_map_location_ingest_evidence(args):
     key_counts = Counter(
         evidence.candidate_key for evidence in evidences
     )
+    overlapping_input_bases = _overlapping_road_bases(evidences)
     auto_payload = json.loads(
         LISTING_MAP_AUTO_OVERRIDE_PATH.read_text(encoding="utf-8")
     )
@@ -469,6 +502,10 @@ def cmd_map_location_ingest_evidence(args):
     if not isinstance(existing, list):
         raise ValueError("auto override entries must be a list")
     by_key = {}
+    stored_road_scopes: dict[
+        tuple[str, str, str],
+        set[str],
+    ] = {}
     for entry in existing:
         if not isinstance(entry, dict):
             raise ValueError("auto override entry must be an object")
@@ -478,11 +515,30 @@ def cmd_map_location_ingest_evidence(args):
         if key in by_key:
             raise ValueError("duplicate stored auto override candidate_key")
         by_key[key] = entry
+        if str(entry.get("status") or "") != "accepted":
+            continue
+        stored_evidence = BrowserLocationEvidence.from_mapping(entry)
+        road_scope = _automatic_road_scope(stored_evidence)
+        if road_scope is not None:
+            base, scope = road_scope
+            stored_road_scopes.setdefault(base, set()).add(scope)
+    if any(
+        "" in scopes and len(scopes) > 1
+        for scopes in stored_road_scopes.values()
+    ):
+        raise ValueError("overlapping stored automatic road scopes")
 
     accepted = []
     quarantined = 0
     for evidence in evidences:
+        road_scope = _automatic_road_scope(evidence)
         if key_counts[evidence.candidate_key] > 1:
+            quarantined += 1
+            continue
+        if (
+            road_scope is not None
+            and road_scope[0] in overlapping_input_bases
+        ):
             quarantined += 1
             continue
         decision = evaluate_browser_evidence(
@@ -493,6 +549,15 @@ def cmd_map_location_ingest_evidence(args):
         if decision.status != "accepted" or decision.override is None:
             quarantined += 1
             continue
+        if road_scope is not None:
+            base, scope = road_scope
+            existing_scopes = stored_road_scopes.get(base, set())
+            if (
+                (not scope and any(existing_scopes))
+                or (scope and "" in existing_scopes)
+            ):
+                quarantined += 1
+                continue
         current = by_key.get(evidence.candidate_key)
         if current is not None:
             try:

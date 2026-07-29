@@ -438,6 +438,201 @@ def test_ingest_quarantines_duplicate_candidate_keys(tmp_path, monkeypatch):
     ] == []
 
 
+def test_ingest_quarantines_global_and_scoped_auto_road_overlap(
+    tmp_path,
+    monkeypatch,
+):
+    common = {
+        "candidate_type": "road",
+        "canonical": "Đường số 35",
+        "aliases": ["Đường 35"],
+        "result_type": "Road",
+        "result_address": "Phú Tân, Thủ Dầu Một",
+    }
+    global_road = _evidence_payload(
+        **common,
+        candidate_key="road:thu-dau-mot:phu-tan:duong-so-35",
+        result_title="Đường số 35, Phú Tân",
+    )
+    scoped_road = _evidence_payload(
+        **common,
+        candidate_key=(
+            "road:thu-dau-mot:phu-tan:"
+            "duong-so-35:tdc-phu-chanh-d"
+        ),
+        landmark_scope="TĐC Phú Chánh D",
+        result_title="Đường số 35, TĐC Phú Chánh D",
+    )
+    evidence_path = tmp_path / "overlap.json"
+    evidence_path.write_text(
+        json.dumps(
+            {"items": [global_road, scoped_road]},
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    auto_path = tmp_path / "auto.json"
+    auto_path.write_text(
+        json.dumps({"resolver_version": "test-v3", "entries": []}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "LISTING_MAP_AUTO_OVERRIDE_PATH",
+        auto_path,
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "load_manual_override_keys",
+        lambda: frozenset(),
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "point_is_in_scoped_ward",
+        lambda *args: True,
+    )
+
+    payload = map_locations.cmd_map_location_ingest_evidence(
+        SimpleNamespace(input=evidence_path, apply=True)
+    )
+
+    assert payload == {
+        "attempted": 2,
+        "accepted": 0,
+        "quarantined": 2,
+        "applied": 0,
+    }
+
+
+def test_ingest_accepts_same_auto_road_in_two_landmark_scopes(
+    tmp_path,
+    monkeypatch,
+):
+    items = [
+        _evidence_payload(
+            candidate_key=(
+                "road:thu-dau-mot:phu-tan:"
+                f"duong-so-35:tdc-phu-chanh-{zone.lower()}"
+            ),
+            candidate_type="road",
+            canonical="Đường số 35",
+            aliases=["Đường 35"],
+            landmark_scope=f"TĐC Phú Chánh {zone}",
+            result_title=f"Đường số 35, TĐC Phú Chánh {zone}",
+            result_address=(
+                f"TĐC Phú Chánh {zone}, Phú Tân, Thủ Dầu Một"
+            ),
+            result_type="Road",
+        )
+        for zone in ("B", "D")
+    ]
+    evidence_path = tmp_path / "scoped.json"
+    evidence_path.write_text(
+        json.dumps({"items": items}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    auto_path = tmp_path / "auto.json"
+    auto_path.write_text(
+        json.dumps({"resolver_version": "test-v3", "entries": []}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "LISTING_MAP_AUTO_OVERRIDE_PATH",
+        auto_path,
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "load_manual_override_keys",
+        lambda: frozenset(),
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "point_is_in_scoped_ward",
+        lambda *args: True,
+    )
+
+    payload = map_locations.cmd_map_location_ingest_evidence(
+        SimpleNamespace(input=evidence_path, apply=True)
+    )
+
+    assert payload == {
+        "attempted": 2,
+        "accepted": 2,
+        "quarantined": 0,
+        "applied": 2,
+    }
+
+
+def test_ingest_quarantines_global_road_when_scoped_auto_exists(
+    tmp_path,
+    monkeypatch,
+):
+    scoped = _evidence_payload(
+        candidate_key=(
+            "road:thu-dau-mot:phu-tan:"
+            "duong-so-35:tdc-phu-chanh-d"
+        ),
+        candidate_type="road",
+        canonical="Đường số 35",
+        aliases=["Đường 35"],
+        landmark_scope="TĐC Phú Chánh D",
+        result_title="Đường số 35, TĐC Phú Chánh D",
+        result_address="TĐC Phú Chánh D, Phú Tân, Thủ Dầu Một",
+        result_type="Road",
+        status="accepted",
+    )
+    incoming = _evidence_payload(
+        candidate_key="road:thu-dau-mot:phu-tan:duong-so-35",
+        candidate_type="road",
+        canonical="Đường số 35",
+        aliases=["Đường 35"],
+        landmark_scope="",
+        result_title="Đường số 35, Phú Tân",
+        result_address="Phú Tân, Thủ Dầu Một",
+        result_type="Road",
+    )
+    evidence_path = tmp_path / "global.json"
+    evidence_path.write_text(
+        json.dumps({"items": [incoming]}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    auto_path = tmp_path / "auto.json"
+    auto_path.write_text(
+        json.dumps(
+            {"resolver_version": "test-v3", "entries": [scoped]},
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "LISTING_MAP_AUTO_OVERRIDE_PATH",
+        auto_path,
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "load_manual_override_keys",
+        lambda: frozenset(),
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "point_is_in_scoped_ward",
+        lambda *args: True,
+    )
+
+    payload = map_locations.cmd_map_location_ingest_evidence(
+        SimpleNamespace(input=evidence_path, apply=True)
+    )
+
+    assert payload == {
+        "attempted": 1,
+        "accepted": 0,
+        "quarantined": 1,
+        "applied": 0,
+    }
+
+
 def test_ingest_does_not_move_existing_candidate_automatically(
     tmp_path,
     monkeypatch,
