@@ -1842,11 +1842,17 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest"):
                lv.legal_road_code,
                lv.road_match_status,
                lv.conflict_flags AS legal_conflict_flags,
+               ml.lat AS map_lat,
+               ml.lng AS map_lng,
+               ml.location_precision AS map_precision,
+               ml.location_label AS map_label,
+               ml.resolver_version AS map_resolver_version,
                {fresh_flag}
         FROM listings l
         LEFT JOIN latest_valuation v ON l.id = v.listing_id
         LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
         LEFT JOIN legal_verifications lv ON lv.listing_id = l.id
+        LEFT JOIN listing_map_locations ml ON ml.listing_id = l.id
         WHERE l.id = ?
           AND COALESCE(l.is_blacklisted,0)=0
           AND COALESCE(l.review_hidden,0)=0
@@ -1870,6 +1876,24 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest"):
     conn.close()
 
     listing_dict = dict(listing)
+    map_lat = listing_dict.pop("map_lat", None)
+    map_lng = listing_dict.pop("map_lng", None)
+    map_precision = listing_dict.pop("map_precision", None)
+    map_label = listing_dict.pop("map_label", None)
+    map_resolver_version = listing_dict.pop("map_resolver_version", None)
+    map_location = None
+    if (
+        map_precision in {"exact", "road", "ward"}
+        and map_lat is not None
+        and map_lng is not None
+    ):
+        map_location = {
+            "lat": float(map_lat),
+            "lng": float(map_lng),
+            "precision": map_precision,
+            "label": str(map_label or ""),
+            "resolver_version": str(map_resolver_version or ""),
+        }
     listing_dict["is_fresh_locked"] = bool(listing_dict.get("is_fresh_locked"))
     listing_dict["has_so"] = _format_has_so(listing_dict)
     listing_dict.update(signal_badge_metadata(listing_dict))
@@ -1896,6 +1920,7 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest"):
         "legal_verification": legal_verification,
         "images": images,
         "history": history,
+        "map_location": map_location,
         "tier": tier,
     }
 

@@ -5104,6 +5104,7 @@ def api_listing_detail(listing_id):
         "legal_verification": data.get("legal_verification") or {},
         "days_ago": _days_ago(l["posted_at"] or l["crawled_at"]),
         "imgs": data["images"],
+        "map_location": data.get("map_location"),
         "tier": data.get("tier"),
     })
 
