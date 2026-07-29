@@ -44,7 +44,7 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
         assert f'id="{hook}"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-location-coverage-20260729") == 2
+    assert html.count("listing-map-canvas-height-20260730") == 2
     assert "window.RADAR_MAP_VENDOR" in html
     assert not re.search(
         r"<(?:script|link)[^>]+(?:leaflet\.js|leaflet\.css)",
@@ -140,3 +140,15 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     assert "listingMapOfficialGisLink" not in script
     assert ".listing-map-precision-nearby" not in styles
     assert ".listing-map-official-gis" not in styles
+
+
+def test_listing_map_workspace_body_gets_stable_remaining_height():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    styles = (root / "static/css/main/listing_map.css").read_text(
+        encoding="utf-8"
+    )
+
+    assert "grid-template-rows: auto auto minmax(0, 1fr);" in styles
+    assert "grid-template-rows: auto auto auto minmax(0, 1fr);" not in styles

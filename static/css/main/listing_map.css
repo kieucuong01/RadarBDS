@@ -3,7 +3,7 @@
   inset: 0;
   z-index: 180;
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   overflow: hidden;
   background: var(--bg, #f8fafc);
   color: var(--text, #0f172a);
