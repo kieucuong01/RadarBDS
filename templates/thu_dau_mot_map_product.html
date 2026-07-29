@@ -25,7 +25,7 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tdm-product-20260729-4">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/binh_duong_map.css') }}?v=tdm-product-map-20260729-2">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=tdm-product-20260729-4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=tdm-product-20260729-5">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
@@ -264,10 +264,26 @@
 
     <section class="seo-shell tdm-product-section tdm-product-source-summary" aria-labelledby="anh-ban-do-hanh-chinh">
       <div class="tdm-product-section-heading">
+        <p class="tdm-product-source-kicker">Nguồn tham khảo công khai</p>
         <h2 id="anh-ban-do-hanh-chinh">Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương</h2>
-        <p>Radar BDS dùng bộ ảnh bản đồ hành chính tham khảo công khai để đối chiếu bố cục hiển thị, tên địa bàn và nhu cầu tải bản đồ của người dùng.</p>
-        <p>Các ảnh tham khảo giúp người đọc tra cứu nhanh trên web; bộ file Radar BDS bên dưới được biên tập lại cho nhu cầu tải về, in ấn và chỉnh sửa.</p>
+        <p>Radar BDS đối chiếu nhu cầu tra cứu với trang <a class="tdm-product-source-link" href="{{ page.source_reference.href }}" target="_blank" rel="noopener noreferrer" data-product-source-link>{{ page.source_reference.title }} của {{ page.source_reference.name }}</a>, gồm các nhóm ảnh bản đồ hành chính, SVG cấp xã/phường, PDF, vị trí, giao thông và vệ tinh.</p>
+        <p>Radar BDS không sao chép hoặc bán lại ảnh từ nguồn tham khảo. Bộ file bên dưới được biên tập lại cho nhu cầu tải về, in ấn, chỉnh sửa và mở lớp địa lý; người đọc cần xem ảnh gốc nên mở liên kết nguồn.</p>
       </div>
+      <div class="tdm-product-source-card-grid" aria-label="Các nhóm ảnh bản đồ được đối chiếu">
+        <article>
+          <h3>Ảnh bản đồ hành chính</h3>
+          <p>Dùng để kiểm nhanh bố cục ranh thành phố, nhãn phường/xã và cách người dùng tìm “bản đồ Thủ Dầu Một”.</p>
+        </article>
+        <article>
+          <h3>SVG và PDF cấp xã/phường</h3>
+          <p>Đối chiếu nhu cầu tải bản có nhãn sau sáp nhập/trước sáp nhập, nhưng file Radar BDS được dựng lại trong bộ sản phẩm riêng.</p>
+        </article>
+        <article>
+          <h3>Vị trí, giao thông, vệ tinh</h3>
+          <p>Dùng như lớp tham khảo ngữ cảnh; không thay thế bản đồ địa chính, quy hoạch hoặc xác nhận của cơ quan có thẩm quyền.</p>
+        </article>
+      </div>
+      <p class="tdm-product-source-disclaimer">Nguồn được kiểm tra ngày {{ page.source_reference.checked_at }}. Nếu nguồn gốc cập nhật hoặc thay đổi quyền sử dụng, Radar BDS sẽ chỉ giữ liên kết tham khảo và không lưu bản sao ảnh nguồn.</p>
     </section>
 
     <section class="seo-shell tdm-product-section tdm-product-pdf-offer" aria-labelledby="ban-do-pdf-hoan-thien">

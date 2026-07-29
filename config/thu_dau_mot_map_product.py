@@ -11,6 +11,12 @@ THU_DAU_MOT_MAP_PRODUCT_PAGE = {
         "bản đồ Thủ Dầu Một, bản đồ TP Thủ Dầu Một, bản đồ vector Thủ Dầu Một, "
         "bản đồ Thủ Dầu Một trước sáp nhập, bản đồ Thủ Dầu Một sau sáp nhập"
     ),
+    "source_reference": {
+        "name": "Địa Ốc Thông Thái",
+        "title": "Bản đồ TP Thủ Dầu Một - Bình Dương",
+        "href": "https://diaocthongthai.com/ban-do-tp-thu-dau-mot-binh-duong/",
+        "checked_at": "29/07/2026",
+    },
     "breadcrumb_label": "Bản đồ TP Thủ Dầu Một",
     "hero_title": "Bản đồ TP Thủ Dầu Một trước và sau sáp nhập",
     "hero_text": (

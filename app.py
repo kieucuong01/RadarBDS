@@ -1889,6 +1889,7 @@ def _thu_dau_mot_map_product_schema(
                 "description": page["description"],
                 "inLanguage": "vi-VN",
                 "dateModified": page["updated_at"],
+                "citation": page.get("source_reference", {}).get("href"),
                 "isPartOf": {"@type": "WebSite", "name": SITE_NAME, "url": PUBLIC_BASE_URL},
                 "mainEntity": {
                     "@type": "Map",

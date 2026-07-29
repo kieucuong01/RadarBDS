@@ -261,6 +261,47 @@
     linear-gradient(135deg, rgba(240, 253, 250, 0.92), rgba(255, 255, 255, 0.98));
 }
 
+.tdm-product-source-kicker {
+  margin: 0 0 8px;
+  color: #0f766e;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tdm-product-source-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.tdm-product-source-card-grid article {
+  padding: 18px;
+  border: 1px solid #dce5ec;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.tdm-product-source-card-grid h3 {
+  margin: 0 0 8px;
+  color: #172033;
+  font-size: 1rem;
+}
+
+.tdm-product-source-card-grid p,
+.tdm-product-source-disclaimer {
+  margin: 0;
+  color: #526173;
+  line-height: 1.6;
+}
+
+.tdm-product-source-disclaimer {
+  margin-top: 14px;
+  font-size: 0.94rem;
+}
+
 .tdm-product-checklist {
   display: grid;
   gap: 10px;
@@ -810,6 +851,7 @@
   .tdm-product-data-grid,
   .tdm-product-license-grid,
   .tdm-product-repeat-offer,
+  .tdm-product-source-card-grid,
   .tdm-product-dashboard-cta {
     grid-template-columns: 1fr;
   }

@@ -522,9 +522,13 @@ def test_product_page_includes_administrative_image_source_and_pdf_offer_detail(
         "Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương"
         in visible_text
     )
-    assert "bản đồ hành chính tham khảo công khai" in visible_text
-    assert "Địa Ốc Thông Thái" not in visible_text
-    assert "diaocthongthai.com" not in html
+    assert "Nguồn tham khảo công khai" in visible_text
+    assert "Địa Ốc Thông Thái" in visible_text
+    assert "https://diaocthongthai.com/ban-do-tp-thu-dau-mot-binh-duong/" in html
+    assert "Radar BDS không sao chép hoặc bán lại ảnh từ nguồn tham khảo" in visible_text
+    assert "Ảnh bản đồ hành chính" in visible_text
+    assert "SVG và PDF cấp xã/phường" in visible_text
+    assert "Vị trí, giao thông, vệ tinh" in visible_text
     assert visible_text.index(
         "Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương"
     ) < visible_text.index("Bản đồ PDF hoàn thiện")
@@ -542,6 +546,7 @@ def test_product_page_includes_administrative_image_source_and_pdf_offer_detail(
     ):
         assert benefit in visible_text
     assert "tdm-product-source-summary" in css
+    assert "tdm-product-source-card-grid" in css
     assert "tdm-product-pdf-offer" in css
 
 
@@ -682,7 +687,13 @@ def test_product_schema_matches_visible_offer_and_stays_out_of_stock():
     assert product["offers"]["url"] == PRODUCT_URL
     assert product["offers"]["price"] == "99000"
     assert product["offers"]["priceCurrency"] == "VND"
-    assert product["offers"]["availability"] == "https://schema.org/OutOfStock"
+    html = response.get_data(as_text=True)
+    expected_availability = (
+        "https://schema.org/InStock"
+        if 'action="/ban-do-thu-dau-mot/checkout"' in html
+        else "https://schema.org/OutOfStock"
+    )
+    assert product["offers"]["availability"] == expected_availability
     assert "aggregateRating" not in product
     assert "review" not in product
 
