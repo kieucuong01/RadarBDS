@@ -89,6 +89,19 @@ def test_shared_signal_cards_have_resilient_media_and_no_link_underline():
     assert ".scard:focus-visible" in cards
 
 
+def test_comparable_controls_and_history_source_links_stay_legible():
+    carousel = _read("static/js/main/comparable_carousel.js")
+    modal_css = _read("static/css/main/modal.css")
+
+    assert "Trang ${clampPage(page, count) + 1} / ${count}" in carousel
+    controls_rule = modal_css[modal_css.index(".sm-comparable-controls button {"):]
+    assert "min-width: 44px" in controls_rule
+    assert "min-height: 44px" in controls_rule
+    lot_link_rule = modal_css[modal_css.index(".sm-price-history .ph-lot-link {"):]
+    assert "min-width: max-content" in lot_link_rule
+    assert "white-space: nowrap" in lot_link_rule
+
+
 def test_comparables_are_full_width_after_both_detail_columns():
     modal = _read("templates/index.html")
     detail = _read("templates/listing_detail.html")

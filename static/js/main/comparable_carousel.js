@@ -25,6 +25,11 @@
     return Math.min(max, Math.max(0, Number(page) || 0));
   }
 
+  function statusLabel(page, total) {
+    const count = Math.max(0, Number(total) || 0);
+    return count ? `Trang ${clampPage(page, count) + 1} / ${count}` : '';
+  }
+
   function swipeDirection(startX, endX) {
     const delta = Number(startX) - Number(endX);
     if (Math.abs(delta) < 45) return 0;
@@ -71,7 +76,7 @@
       });
       if (previous) previous.disabled = currentPage <= 0;
       if (next) next.disabled = currentPage >= pages.length - 1;
-      if (status) status.textContent = pages.length ? `${currentPage + 1} / ${pages.length}` : '';
+      if (status) status.textContent = statusLabel(currentPage, pages.length);
       if (dots) {
         dots.querySelectorAll('button').forEach((dot, index) => {
           dot.classList.toggle('active', index === currentPage);
@@ -158,5 +163,5 @@
     };
   }
 
-  return { paginate, pageSize, clampPage, swipeDirection, mount };
+  return { paginate, pageSize, clampPage, statusLabel, swipeDirection, mount };
 }));

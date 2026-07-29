@@ -125,25 +125,44 @@
 }
 
 .sm-comparable-controls button {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(99, 102, 241, 0.34);
   border-radius: 50%;
-  background: var(--surface-solid);
-  color: var(--text);
+  background: linear-gradient(180deg, #ffffff, #eef2ff);
+  color: #3730a3;
+  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.14);
   cursor: pointer;
   font-size: 1.25rem;
+  font-weight: 900;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.sm-comparable-controls button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(79, 70, 229, 0.72);
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.2);
+}
+
+.sm-comparable-controls button:focus-visible {
+  outline: 3px solid rgba(99, 102, 241, 0.4);
+  outline-offset: 2px;
 }
 
 .sm-comparable-controls button:disabled {
   cursor: default;
-  opacity: 0.35;
+  opacity: 0.42;
+  box-shadow: none;
 }
 
 .sm-comparable-controls span {
-  min-width: 38px;
-  color: var(--text-muted);
-  font-size: 0.75rem;
+  min-width: 74px;
+  color: var(--text);
+  font-size: 0.78rem;
   font-weight: 800;
   text-align: center;
 }
@@ -156,19 +175,22 @@
 }
 
 .sm-comparable-dots button {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   padding: 0;
-  border: 0;
+  border: 1px solid rgba(71, 85, 105, 0.28);
   border-radius: 50%;
-  background: rgba(148, 163, 184, 0.45);
+  background: rgba(100, 116, 139, 0.6);
   cursor: pointer;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+  transition: width 0.16s ease, background 0.16s ease;
 }
 
 .sm-comparable-dots button.active {
-  width: 22px;
+  width: 30px;
   border-radius: 8px;
-  background: var(--primary);
+  border-color: #4338ca;
+  background: #4f46e5;
 }
 
 @media (max-width: 1099px) and (min-width: 769px) {
@@ -859,7 +881,7 @@
 .sm-price-history .ph-row {
   position: relative;
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) auto auto auto;
+  grid-template-columns: 18px minmax(0, 1fr) max-content max-content max-content;
   align-items: center;
   gap: 8px;
   padding: 10px 10px;
@@ -956,9 +978,11 @@
 }
 
 .sm-price-history .ph-lot-link {
+  min-width: max-content;
   font-size: 0.76rem;
   color: #64748b;
   text-decoration: none;
+  white-space: nowrap;
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 2px 8px;
@@ -2129,7 +2153,11 @@
     min-width: 58px;
   }
 
-  .sm-price-history .ph-change,
+  .sm-price-history .ph-change {
+    grid-column: 2;
+    justify-self: start;
+  }
+
   .sm-price-history .ph-lot-link {
     grid-column: 3;
     justify-self: end;
