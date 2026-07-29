@@ -673,6 +673,11 @@ def test_order_template_has_accessible_vietqr_and_download_contract():
 
     assert response.status_code == 200
     assert html.count('aria-live="polite"') == 1
+    assert 'data-order-announcement' in html
+    live_tag = re.search(r"<[^>]+aria-live=\"polite\"[^>]*>", html)
+    assert live_tag
+    assert "data-order-qr" not in live_tag.group(0)
+    assert "data-order-live" not in live_tag.group(0)
     assert "data-order-qr" in html
     assert "data-order-download" in html
     assert "data-order-copy" in html

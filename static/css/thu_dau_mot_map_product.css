@@ -445,6 +445,19 @@
   text-align: center;
 }
 
+.tdm-order-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .tdm-order-live h2 {
   margin: 14px 0 0;
   color: #172033;

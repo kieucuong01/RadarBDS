@@ -56,7 +56,7 @@ const win = {
   location: {
     hash: "#token=secret%2Bvalue",
     origin: "https://radarbds.vn",
-    pathname: "/ban-do-thu-dau-mot/don-hang/abc"
+    pathname: "/ban-do-thu-dau-mot/don-hang/" + "a".repeat(32)
   },
   history: {
     replaceState(state, title, url) {
@@ -69,11 +69,11 @@ const win = {
     getItem(key) { return stored[key] || null; }
   }
 };
-const token = checkout.readRecoveryToken(win);
+const token = checkout.readRecoveryToken(win, "a".repeat(32));
 if (token !== "secret+value") process.exit(1);
 if (calls.length !== 1 || calls[0][1] !== win.location.pathname) process.exit(2);
 const values = Object.values(stored);
-if (values.length !== 1 || values[0] !== "https://radarbds.vn/ban-do-thu-dau-mot/don-hang/abc#token=secret%2Bvalue") process.exit(3);
+if (values.length !== 1 || values[0] !== "https://radarbds.vn/ban-do-thu-dau-mot/don-hang/" + "a".repeat(32) + "#token=secret%2Bvalue") process.exit(3);
 """
     )
 
@@ -96,7 +96,7 @@ const win = {
   },
   sessionStorage: { setItem() { process.exit(1); } }
 };
-if (checkout.readRecoveryToken(win) !== "") process.exit(2);
+    if (checkout.readRecoveryToken(win, "a".repeat(32)) !== "") process.exit(2);
 if (calls.length !== 1 || calls[0] !== win.location.pathname) process.exit(3);
 """
     )
@@ -220,6 +220,213 @@ const controller = checkout.pollOrder({
     assert result.returncode == 0, result.stderr
 
 
+def test_polling_recovers_from_transient_failure_without_false_terminal_state():
+    result = _run_node(
+        r"""
+const checkout = require("./static/js/thu_dau_mot_map_checkout.js");
+let now = 0;
+let timer = null;
+let calls = 0;
+const states = [
+  new Error("temporary network failure"),
+  {status: "pending", payment_expires_at: "2030-01-01T00:00:00Z"},
+  {status: "paid", download_expires_at: "2030-01-02T00:00:00Z"}
+];
+const rendered = [];
+const connection = [];
+const controller = checkout.pollOrder({
+  document: {hidden: false, addEventListener() {}, removeEventListener() {}},
+  now: () => now,
+  fetchStatus: () => {
+    calls += 1;
+    const value = states.shift();
+    return value instanceof Error ? Promise.reject(value) : Promise.resolve(value);
+  },
+  render: (state) => rendered.push(state.status),
+  renderConnection: () => connection.push("retry"),
+  setTimer: (fn, delay) => { timer = {fn, delay}; return 1; },
+  clearTimer() {}
+});
+(async () => {
+  await controller.tick();
+  if (connection.length !== 1 || rendered.length !== 0 || timer.delay !== 2000) process.exit(1);
+  now = 2000;
+  await timer.fn();
+  if (rendered.join(",") !== "pending" || timer.delay !== 2000) process.exit(2);
+  now = 4000;
+  timer = null;
+  await controller.tick();
+  if (rendered.join(",") !== "pending,paid" || timer !== null || calls !== 3) process.exit(3);
+})().catch((error) => {
+  console.error(error);
+  process.exit(4);
+});
+"""
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_polling_stops_at_bounded_fallback_deadline_before_first_valid_status():
+    result = _run_node(
+        r"""
+const checkout = require("./static/js/thu_dau_mot_map_checkout.js");
+let now = 0;
+let timer = null;
+let calls = 0;
+let deadlineSignals = 0;
+const controller = checkout.pollOrder({
+  document: {hidden: false, addEventListener() {}, removeEventListener() {}},
+  now: () => now,
+  fetchStatus: () => {
+    calls += 1;
+    return Promise.reject(new Error("offline"));
+  },
+  render() { process.exit(1); },
+  renderConnection: (deadlineReached) => {
+    if (deadlineReached) deadlineSignals += 1;
+  },
+  setTimer: (fn, delay) => { timer = {fn, delay}; return 1; },
+  clearTimer() {}
+});
+(async () => {
+  now = 899000;
+  await controller.tick();
+  if (timer.delay !== 1000 || calls !== 1) process.exit(2);
+  now = 900000;
+  timer = null;
+  await controller.tick();
+  if (timer !== null || calls !== 1 || deadlineSignals !== 1) process.exit(3);
+})().catch((error) => {
+  console.error(error);
+  process.exit(4);
+});
+"""
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_polling_uses_last_authoritative_pending_deadline_during_failures():
+    result = _run_node(
+        r"""
+const checkout = require("./static/js/thu_dau_mot_map_checkout.js");
+let now = 0;
+let timer = null;
+let calls = 0;
+let deadlineSignals = 0;
+const controller = checkout.pollOrder({
+  document: {hidden: false, addEventListener() {}, removeEventListener() {}},
+  now: () => now,
+  fetchStatus: () => {
+    calls += 1;
+    if (calls === 1) {
+      return Promise.resolve({status: "pending", payment_expires_at: "1970-01-01T00:00:05.000Z"});
+    }
+    return Promise.reject(new Error("offline"));
+  },
+  render() {},
+  renderConnection: (deadlineReached) => {
+    if (deadlineReached) deadlineSignals += 1;
+  },
+  setTimer: (fn, delay) => { timer = {fn, delay}; return 1; },
+  clearTimer() {}
+});
+(async () => {
+  await controller.tick();
+  if (timer.delay !== 2000) process.exit(1);
+  now = 2000;
+  await controller.tick();
+  if (timer.delay !== 2000) process.exit(2);
+  now = 4000;
+  await controller.tick();
+  if (timer.delay !== 1000) process.exit(3);
+  now = 5000;
+  timer = null;
+  await controller.tick();
+  if (timer !== null || calls !== 3 || deadlineSignals !== 1) process.exit(4);
+})().catch((error) => {
+  console.error(error);
+  process.exit(5);
+});
+"""
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_recovery_links_are_scoped_to_exact_order_in_the_same_tab():
+    result = _run_node(
+        r"""
+const checkout = require("./static/js/thu_dau_mot_map_checkout.js");
+const stored = {};
+const copied = [];
+const win = {
+  location: {
+    hash: "",
+    origin: "https://radarbds.vn",
+    pathname: ""
+  },
+  history: {replaceState() {}},
+  sessionStorage: {
+    setItem(key, value) { stored[key] = value; },
+    getItem(key) { return stored[key] || null; }
+  },
+  navigator: {clipboard: {writeText(value) { copied.push(value); return Promise.resolve(); }}}
+};
+const first = "a".repeat(32);
+const second = "b".repeat(32);
+win.location.pathname = "/ban-do-thu-dau-mot/don-hang/" + first;
+win.location.hash = "#token=first-secret";
+checkout.readRecoveryToken(win, first);
+win.location.pathname = "/ban-do-thu-dau-mot/don-hang/" + second;
+win.location.hash = "#token=second-secret";
+checkout.readRecoveryToken(win, second);
+Promise.all([
+  checkout.copyRecoveryLink(win, second),
+  (async () => {
+    win.location.pathname = "/ban-do-thu-dau-mot/don-hang/" + first;
+    await checkout.copyRecoveryLink(win, first);
+  })()
+]).then(() => {
+  if (!copied.some((value) => value.endsWith(first + "#token=first-secret"))) process.exit(1);
+  if (!copied.some((value) => value.endsWith(second + "#token=second-secret"))) process.exit(2);
+  if (Object.keys(stored).length !== 2) process.exit(3);
+}).catch((error) => {
+  console.error(error);
+  process.exit(4);
+});
+"""
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_copy_rejects_cross_order_or_cross_origin_stored_recovery_url():
+    result = _run_node(
+        r"""
+const checkout = require("./static/js/thu_dau_mot_map_checkout.js");
+const current = "c".repeat(32);
+const other = "d".repeat(32);
+let storedValue = "https://radarbds.vn/ban-do-thu-dau-mot/don-hang/" + other + "#token=other";
+const win = {
+  location: {
+    origin: "https://radarbds.vn",
+    pathname: "/ban-do-thu-dau-mot/don-hang/" + current
+  },
+  sessionStorage: {getItem() { return storedValue; }},
+  navigator: {clipboard: {writeText() { process.exit(1); }}}
+};
+checkout.copyRecoveryLink(win, current).then(() => process.exit(2)).catch(() => {
+  storedValue = "https://evil.example/ban-do-thu-dau-mot/don-hang/" + current + "#token=secret";
+  checkout.copyRecoveryLink(win, current).then(() => process.exit(3)).catch(() => {});
+});
+"""
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
 def test_renderer_supports_all_public_states_without_identifier_tracking():
     result = _run_node(
         r"""
@@ -234,7 +441,7 @@ function node() {
   };
 }
 const selectors = [
-  "[data-order-live]", "[data-order-title]", "[data-order-message]",
+    "[data-order-live]", "[data-order-announcement]", "[data-order-title]", "[data-order-message]",
   "[data-order-qr]", "[data-order-qr-image]", "[data-order-label]",
   "[data-order-amount]", "[data-order-countdown]", "[data-order-copy]",
   "[data-order-download]", "[data-order-new]", "[data-order-expiry]",
@@ -259,6 +466,136 @@ for (const status of statuses) {
   if (nodes["[data-order-live]"].attrs["data-state"] !== status) process.exit(1);
 }
 if (!nodes["[data-order-public-id]"].textContent.includes("public-safe-id")) process.exit(2);
+"""
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_repeated_pending_render_does_not_reannounce_countdown():
+    result = _run_node(
+        r"""
+const checkout = require("./static/js/thu_dau_mot_map_checkout.js");
+function node() {
+  let text = "";
+  return {
+    hidden: false,
+    attrs: {},
+    writes: 0,
+    get textContent() { return text; },
+    set textContent(value) { text = value; this.writes += 1; },
+    setAttribute(name, value) { this.attrs[name] = value; },
+    getAttribute(name) { return this.attrs[name] || null; },
+    removeAttribute(name) { delete this.attrs[name]; }
+  };
+}
+const selectors = [
+  "[data-order-live]", "[data-order-announcement]", "[data-order-title]",
+  "[data-order-message]", "[data-order-qr]", "[data-order-qr-image]",
+  "[data-order-label]", "[data-order-amount]", "[data-order-countdown]",
+  "[data-order-copy]", "[data-order-download]", "[data-order-new]",
+  "[data-order-expiry]", "[data-order-public-id]"
+];
+const nodes = Object.fromEntries(selectors.map((selector) => [selector, node()]));
+const root = {
+  dataset: {digitalProductOrder: "a".repeat(32)},
+  querySelector(selector) { return nodes[selector] || null; }
+};
+const state = {
+  status: "pending",
+  amount_vnd: 99000,
+  order_label: "BDTEST",
+  qr_svg_data_uri: "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=",
+  payment_expires_at: "2030-01-01T00:00:00Z"
+};
+checkout.renderOrderState(root, state, {now: () => 0, hasRecoveryLink: true});
+const firstWrites = nodes["[data-order-announcement]"].writes;
+checkout.renderOrderState(root, state, {now: () => 2000, hasRecoveryLink: true});
+if (firstWrites !== 1 || nodes["[data-order-announcement]"].writes !== 1) process.exit(1);
+if (!nodes["[data-order-countdown]"].textContent.includes("VietQR còn hiệu lực")) process.exit(2);
+"""
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_renderer_reports_qr_display_only_after_accepting_and_revealing_svg():
+    result = _run_node(
+        r"""
+const checkout = require("./static/js/thu_dau_mot_map_checkout.js");
+function node() {
+  return {
+    hidden: false,
+    textContent: "",
+    attrs: {},
+    setAttribute(name, value) { this.attrs[name] = value; },
+    getAttribute(name) { return this.attrs[name] || null; },
+    removeAttribute(name) { delete this.attrs[name]; }
+  };
+}
+const selectors = [
+  "[data-order-live]", "[data-order-announcement]", "[data-order-title]",
+  "[data-order-message]", "[data-order-qr]", "[data-order-qr-image]",
+  "[data-order-label]", "[data-order-amount]", "[data-order-countdown]",
+  "[data-order-copy]", "[data-order-download]", "[data-order-new]",
+  "[data-order-expiry]", "[data-order-public-id]"
+];
+const nodes = Object.fromEntries(selectors.map((selector) => [selector, node()]));
+const root = {
+  dataset: {digitalProductOrder: "a".repeat(32)},
+  querySelector(selector) { return nodes[selector] || null; }
+};
+const base = {
+  status: "pending",
+  amount_vnd: 99000,
+  payment_expires_at: "2030-01-01T00:00:00Z"
+};
+let rendered = checkout.renderOrderState(root, {...base, qr_svg_data_uri: "javascript:alert(1)"});
+if (rendered.qrDisplayed !== false || nodes["[data-order-qr]"].hidden !== true) process.exit(1);
+rendered = checkout.renderOrderState(root, {...base, qr_svg_data_uri: "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4="});
+if (rendered.qrDisplayed !== true || nodes["[data-order-qr]"].hidden !== false) process.exit(2);
+"""
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_deadline_connection_state_clears_stale_qr_and_recovery_controls():
+    result = _run_node(
+        r"""
+const checkout = require("./static/js/thu_dau_mot_map_checkout.js");
+function node() {
+  return {
+    hidden: false,
+    textContent: "",
+    attrs: {},
+    setAttribute(name, value) { this.attrs[name] = value; },
+    removeAttribute(name) { delete this.attrs[name]; }
+  };
+}
+const selectors = [
+  "[data-order-live]", "[data-order-announcement]", "[data-order-title]",
+  "[data-order-message]", "[data-order-qr]", "[data-order-qr-image]",
+  "[data-order-label]", "[data-order-amount]", "[data-order-countdown]",
+  "[data-order-copy]", "[data-order-download]", "[data-order-new]",
+  "[data-order-expiry]", "[data-order-public-id]"
+];
+const nodes = Object.fromEntries(selectors.map((selector) => [selector, node()]));
+const root = {
+  dataset: {digitalProductOrder: "a".repeat(32)},
+  querySelector(selector) { return nodes[selector] || null; }
+};
+checkout.renderOrderState(root, {
+  status: "pending",
+  amount_vnd: 99000,
+  qr_svg_data_uri: "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=",
+  payment_expires_at: "2030-01-01T00:00:00Z"
+}, {hasRecoveryLink: true});
+if (nodes["[data-order-qr]"].hidden || nodes["[data-order-copy]"].hidden) process.exit(1);
+checkout.renderConnectionState(root, true);
+if (!nodes["[data-order-qr]"].hidden || !nodes["[data-order-copy]"].hidden) process.exit(2);
+if (!nodes["[data-order-download]"].hidden || nodes["[data-order-new]"].hidden) process.exit(3);
+if (nodes["[data-order-live]"].attrs["data-state"] !== "expired") process.exit(4);
 """
     )
 
@@ -386,6 +723,7 @@ checkout.init(doc, win);
 setImmediate(() => {
   if (calls[0] !== "replace") process.exit(1);
   if (calls.some((value) => value === "/api/track")) process.exit(2);
+  process.exit(0);
 });
 """
     )
