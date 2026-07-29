@@ -1,11 +1,25 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
 import pytest
 
 from cli import map_locations
 from radar import build_parser
+
+
+@pytest.fixture(autouse=True)
+def _empty_auto_registry(tmp_path, monkeypatch):
+    auto_path = tmp_path / "default-auto.json"
+    auto_path.write_text(
+        json.dumps({"resolver_version": "test-v3", "entries": []}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "LISTING_MAP_AUTO_OVERRIDE_PATH",
+        auto_path,
+    )
 
 
 def _evidence_payload(**changes):
@@ -212,6 +226,50 @@ def test_research_queue_sums_impact_and_reports_pre_limit_total(monkeypatch):
     assert payload["total_candidates"] == 2
     assert payload["returned_candidates"] == 1
     assert payload["items"][0]["affected_listing_count"] == 5
+
+
+def test_research_queue_prioritizes_accepted_entries_due_for_recheck(
+    tmp_path,
+    monkeypatch,
+):
+    stale = _evidence_payload(
+        checked_at=(
+            datetime.now(timezone.utc) - timedelta(days=181)
+        ).isoformat()
+    )
+    stale.update({
+        "confidence": 1.0,
+        "status": "accepted",
+        "lat": 11.058782,
+        "lng": 106.7015151,
+    })
+    auto_path = tmp_path / "stale-auto.json"
+    auto_path.write_text(
+        json.dumps(
+            {"resolver_version": "test-v3", "entries": [stale]},
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "LISTING_MAP_AUTO_OVERRIDE_PATH",
+        auto_path,
+    )
+    monkeypatch.setattr(
+        map_locations,
+        "load_listing_location_coverage",
+        lambda status, limit: [],
+    )
+
+    payload = map_locations.cmd_map_location_research_queue(
+        SimpleNamespace(limit=50, candidate_type="all")
+    )
+
+    assert payload["total_candidates"] == 1
+    assert payload["items"][0]["recheck_due"] is True
+    assert payload["items"][0]["status"] == "recheck_due"
+    assert payload["items"][0]["candidate_key"] == stale["candidate_key"]
 
 
 def test_ingest_evidence_dry_run_does_not_write(tmp_path, monkeypatch):

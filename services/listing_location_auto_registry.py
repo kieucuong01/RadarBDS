@@ -364,6 +364,11 @@ def _checked_at_reason(value: str) -> str:
     return ""
 
 
+def browser_evidence_recheck_due(value: str) -> bool:
+    """Return whether an accepted browser observation needs a new lookup."""
+    return _checked_at_reason(value) == "stale_evidence"
+
+
 def _complete_evidence(evidence: BrowserLocationEvidence) -> bool:
     required = (
         evidence.candidate_key,

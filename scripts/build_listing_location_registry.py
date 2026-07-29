@@ -764,7 +764,22 @@ def _merge_curated_roads(
         )
         if landmark_keys:
             row["landmark_keys"] = landmark_keys
-        curated[(city, normalized_ward, normalized_road)] = row
+        scope_key = tuple(landmark_keys)
+        curated_key = (
+            city,
+            normalized_ward,
+            normalized_road,
+            scope_key,
+        )
+        if curated_key in curated:
+            raise ValueError(
+                "duplicate curated road in the same landmark scope"
+            )
+        curated[curated_key] = row
+    curated_bases = {
+        (city, ward, road)
+        for city, ward, road, _scope in curated
+    }
     preserved = [
         row
         for row in rows
@@ -773,7 +788,7 @@ def _merge_curated_roads(
             row["normalized_ward"],
             row["normalized_road"],
         )
-        not in curated
+        not in curated_bases
     ]
     return preserved + list(curated.values())
 

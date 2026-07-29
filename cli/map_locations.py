@@ -16,6 +16,7 @@ from config.listing_map import (
 from db.listing_location_coverage import load_listing_location_coverage
 from services.listing_location_auto_registry import (
     BrowserLocationEvidence,
+    browser_evidence_recheck_due,
     evaluate_browser_evidence,
     point_is_in_scoped_ward,
 )
@@ -242,6 +243,50 @@ def _research_items_for_row(row: dict, selected_type: str) -> list[dict]:
     return items
 
 
+def _accepted_recheck_items(selected_type: str) -> list[dict]:
+    payload = json.loads(
+        LISTING_MAP_AUTO_OVERRIDE_PATH.read_text(encoding="utf-8")
+    )
+    entries = payload.get("entries")
+    if not isinstance(entries, list):
+        raise ValueError("auto override entries must be a list")
+    items = []
+    for raw_entry in entries:
+        if not isinstance(raw_entry, dict):
+            raise ValueError("auto override entry must be an object")
+        if str(raw_entry.get("status") or "") != "accepted":
+            continue
+        evidence = BrowserLocationEvidence.from_mapping(raw_entry)
+        if (
+            selected_type not in {"all", evidence.candidate_type}
+            or not browser_evidence_recheck_due(evidence.checked_at)
+        ):
+            continue
+        item = {
+            "affected_listing_count": 0,
+            "aliases": list(evidence.aliases),
+            "candidate_key": evidence.candidate_key,
+            "candidate_type": evidence.candidate_type,
+            "canonical": evidence.canonical,
+            "city": evidence.city,
+            "query": evidence.query,
+            "recheck_due": True,
+            "resolution_note": (
+                "accepted_evidence_older_than_180_days"
+            ),
+            "search_url": (
+                "https://www.google.com/maps/search/?"
+                + urlencode({"api": "1", "query": evidence.query})
+            ),
+            "status": "recheck_due",
+            "ward": evidence.ward,
+        }
+        if evidence.landmark_scope:
+            item["landmark_scope"] = evidence.landmark_scope
+        items.append(item)
+    return items
+
+
 def cmd_map_location_research_queue(args):
     limit = min(max(int(getattr(args, "limit", 50)), 1), 50)
     selected_type = str(
@@ -250,7 +295,10 @@ def cmd_map_location_research_queue(args):
     if selected_type not in {"all", "road", "landmark"}:
         raise ValueError("invalid candidate type")
 
-    merged = {}
+    merged = {
+        item["candidate_key"]: item
+        for item in _accepted_recheck_items(selected_type)
+    }
     filtered = set()
     for status in _COVERAGE_STATUSES:
         for row in load_listing_location_coverage(status, 1000):
@@ -295,6 +343,7 @@ def cmd_map_location_research_queue(args):
     ranked_items = sorted(
         merged.values(),
         key=lambda item: (
+            -int(bool(item.get("recheck_due"))),
             -item["affected_listing_count"],
             item["candidate_key"],
         ),

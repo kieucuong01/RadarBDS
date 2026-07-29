@@ -250,6 +250,61 @@ def test_scoped_auto_road_keeps_landmark_keys():
     ]
 
 
+def test_builder_keeps_same_road_scoped_to_two_landmarks(tmp_path):
+    osm, sources, overrides, boundaries = _generated_payloads()
+    overrides["roads"] = [
+        {
+            "city": "THỦ DẦU MỘT",
+            "ward": "Phú Tân",
+            "road_name": "Đường số 35",
+            "lat": 11.0636566,
+            "lng": 106.6941886,
+            "landmark_keys": ["TĐC Phú Chánh B"],
+            "source": "OpenStreetMap",
+            "source_url": "https://www.openstreetmap.org/way/225107254",
+            "verified_at": "2026-07-29",
+            "allow_boundary_mismatch": True,
+            "boundary_mismatch_reason": "Legacy fixture boundary.",
+        },
+        {
+            "city": "THỦ DẦU MỘT",
+            "ward": "Phú Tân",
+            "road_name": "Đường số 35",
+            "lat": 11.065,
+            "lng": 106.695,
+            "landmark_keys": ["TĐC Phú Chánh D"],
+            "source": "OpenStreetMap",
+            "source_url": "https://www.openstreetmap.org/way/225107255",
+            "verified_at": "2026-07-29",
+            "allow_boundary_mismatch": True,
+            "boundary_mismatch_reason": "Legacy fixture boundary.",
+        },
+    ]
+
+    paths = build_location_registries(
+        osm,
+        sources,
+        tmp_path,
+        overrides=overrides,
+        boundary_paths=(boundaries,),
+    )
+    roads = json.loads(paths[1].read_text(encoding="utf-8"))["roads"]
+    matches = [
+        row
+        for row in roads
+        if row["ward"] == "Phú Tân"
+        and row["normalized_road"] == "duong so 35"
+    ]
+
+    assert len(matches) == 2
+    assert {
+        tuple(row["landmark_keys"]) for row in matches
+    } == {
+        ("tdc phu chanh b",),
+        ("tdc phu chanh d",),
+    }
+
+
 def test_registry_manifest_hashes_accepted_auto_overrides(tmp_path):
     osm, sources, manual, boundaries = _generated_payloads()
     auto = {

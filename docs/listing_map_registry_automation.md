@@ -26,6 +26,9 @@ tin, số điện thoại hoặc URL gốc của tin vào bằng chứng.
 
 Queue tự loại các chuỗi giống nội dung rao bán như giá, diện tích, số tầng và
 phòng ngủ. Trường `filtered_candidates` cho biết số ứng viên nhiễu đã bị loại.
+Auto-entry quá 180 ngày được đưa lại vào đầu queue với
+`status=recheck_due`; nếu lookup tạm thời thất bại thì entry đang hoạt động
+không bị tự xóa hoặc tự di chuyển.
 
 ## 2. Thu bằng chứng bằng browser
 
