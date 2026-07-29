@@ -195,7 +195,9 @@ done
 
 after=`$(git rev-parse --short HEAD)
 echo "deployed `$before -> `$after"
-[ -n "`$known_temp_archive" ] && echo "known temp archive: `$known_temp_archive"
+if [ -n "`$known_temp_archive" ]; then
+  echo "known temp archive: `$known_temp_archive"
+fi
 "@
 
 try {
