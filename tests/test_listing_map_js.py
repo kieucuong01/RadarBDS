@@ -108,34 +108,66 @@ def test_official_gis_tracking_context_strips_outbound_and_location_data():
     assert result == {"mode": "all"}
 
 
-def test_listing_map_item_navigation_targets_internal_detail_page():
+def test_listing_map_item_click_opens_existing_modal_without_navigation():
     result = _run_node(
         "(function(){"
         "let assigned=null;"
-        "const fakeRoot={location:{assign:function(url){assigned=url;}}};"
+        "let modalDataset=null;"
+        "const fakeRoot={"
+        "document:{createElement:function(){return {dataset:{}};}},"
+        "location:{assign:function(url){assigned=url;}},"
+        "openListingModal:function(proxy){modalDataset=proxy.dataset;}"
+        "};"
         "return {"
-        "valid:mapApi.navigateToListingDetail(fakeRoot,{id:42}),"
+        "valid:mapApi.openListingFromMap(fakeRoot,{"
+        "id:42,title:'Lô góc Mỹ Phước',thumbnail:'thumb.jpg',"
+        "price_ty:1.8,area_m2:90,ward:'Mỹ Phước',road_name:'NE8',"
+        "prop_type:'land',prop_type_label:'Đất nền',mos_pct:18.5,"
+        "source:'facebook',days_ago:0"
+        "}),"
+        "modalId:modalDataset && modalDataset.id,"
+        "modalTitle:modalDataset && modalDataset.title,"
+        "modalRoad:modalDataset && modalDataset.road,"
         "assigned:assigned"
         "};"
         "})()"
     )
 
-    assert result == {"valid": True, "assigned": "/listing/42"}
+    assert result == {
+        "valid": True,
+        "modalId": "42",
+        "modalTitle": "Lô góc Mỹ Phước",
+        "modalRoad": "NE8",
+        "assigned": None,
+    }
 
 
-def test_listing_map_item_navigation_ignores_missing_ids():
+def test_listing_map_item_click_ignores_missing_ids_without_navigation():
     result = _run_node(
         "(function(){"
         "let assigned=null;"
-        "const fakeRoot={location:{assign:function(url){assigned=url;}}};"
+        "let modalOpened=false;"
+        "const fakeRoot={"
+        "document:{createElement:function(){return {dataset:{}};}},"
+        "location:{assign:function(url){assigned=url;}},"
+        "openListingModal:function(){modalOpened=true;}"
+        "};"
         "return {"
-        "valid:mapApi.navigateToListingDetail(fakeRoot,{title:'Tin rao'}),"
-        "assigned:assigned"
+        "valid:mapApi.openListingFromMap(fakeRoot,{title:'Tin rao'}),"
+        "assigned:assigned,"
+        "modalOpened:modalOpened"
         "};"
         "})()"
     )
 
-    assert result == {"valid": False, "assigned": None}
+    assert result == {"valid": False, "assigned": None, "modalOpened": False}
+
+
+def test_listing_map_focus_trap_yields_when_signal_modal_is_open():
+    source = MAP_SCRIPT.read_text(encoding="utf-8")
+
+    assert "function isSignalModalOpen()" in source
+    assert "if (!state.open || isSignalModalOpen()) return;" in source
 
 
 def test_client_tracking_allowlist_includes_every_listing_map_event():

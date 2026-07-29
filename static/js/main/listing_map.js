@@ -547,29 +547,45 @@
     }
   }
 
-  function listingDetailUrl(item) {
+  function validListingId(item) {
     var id = Number(item && item.id);
-    if (!Number.isInteger(id) || id <= 0) return null;
-    return "/listing/" + encodeURIComponent(String(id));
+    return Number.isInteger(id) && id > 0 ? id : null;
   }
 
-  function navigateToListingDetail(targetRoot, item) {
-    var url = listingDetailUrl(item);
+  function itemModalProxy(targetRoot, item) {
     var win = targetRoot || root;
-    if (!url || !win || !win.location) return false;
-    if (typeof win.location.assign === "function") {
-      win.location.assign(url);
-    } else {
-      win.location.href = url;
+    var doc = win && win.document;
+    if (!doc || typeof doc.createElement !== "function") return null;
+    var proxy = doc.createElement("button");
+    proxy.dataset.id = String(item.id || "");
+    proxy.dataset.title = String(item.title || "");
+    proxy.dataset.primary = String(item.thumbnail || "");
+    proxy.dataset.price = String(item.price_ty || "");
+    proxy.dataset.area = String(item.area_m2 || "");
+    proxy.dataset.ward = String(item.ward || "");
+    proxy.dataset.road = String(item.road_name || "");
+    proxy.dataset.ptype = String(item.prop_type || "");
+    proxy.dataset.propLabel = String(item.prop_type_label || "");
+    proxy.dataset.mos = String(item.mos_pct || 0);
+    proxy.dataset.mosPctDisplay = String(item.mos_pct || 0);
+    proxy.dataset.source = String(item.source || "");
+    proxy.dataset.time = String(item.days_ago || "");
+    return proxy;
+  }
+
+  function openListingFromMap(targetRoot, item) {
+    var win = targetRoot || root;
+    if (!validListingId(item) || !win || typeof win.openListingModal !== "function") {
+      return false;
     }
+    var proxy = itemModalProxy(win, item);
+    if (!proxy) return false;
+    win.openListingModal(proxy);
     return true;
   }
 
   function openItem(item) {
-    close({ reason: "listing_selected" });
-    root.setTimeout(function () {
-      navigateToListingDetail(root, item);
-    }, 40);
+    openListingFromMap(root, item);
   }
 
   function renderItems(group, payload) {
@@ -903,8 +919,18 @@
     });
   }
 
+  function isSignalModalOpen() {
+    var doc = root && root.document;
+    if (!doc) return false;
+    var modal = doc.getElementById("signalModal");
+    if (!modal) return false;
+    return modal.classList.contains("show")
+      || modal.style.display === "flex"
+      || modal.style.display === "block";
+  }
+
   function onKeydown(event) {
-    if (!state.open) return;
+    if (!state.open || isSignalModalOpen()) return;
     if (event.key === "Escape") {
       event.preventDefault();
       close({ reason: "escape" });
@@ -955,8 +981,7 @@
     mapBaseLayers: mapBaseLayers,
     safeTrackingContext: safeTrackingContext,
     precisionCopy: precisionCopy,
-    listingDetailUrl: listingDetailUrl,
-    navigateToListingDetail: navigateToListingDetail,
+    openListingFromMap: openListingFromMap,
     loadLeaflet: loadLeaflet,
     open: open,
     close: close,
