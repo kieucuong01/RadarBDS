@@ -74,3 +74,29 @@ def test_share_controls_are_available_on_both_detail_surfaces():
         assert "data-listing-share-menu" in html
         assert "data-share-copy" in html
         assert "data-share-facebook" in html
+
+
+def test_bad_listing_report_dialog_is_available_on_both_surfaces():
+    modal = _read("templates/index.html")
+    detail = _read("templates/listing_detail.html")
+    expected_reasons = {
+        "sold_or_unavailable",
+        "wrong_price_or_area",
+        "duplicate",
+        "wrong_location",
+        "spam_or_scam",
+        "other",
+    }
+
+    for html in (modal, detail):
+        assert "Báo xấu tin đăng" in html
+        assert "data-listing-report-trigger" in html
+        assert "data-listing-report-dialog" in html
+        assert "data-listing-report-form" in html
+        assert 'maxlength="500"' in html
+        found = {
+            reason
+            for reason in expected_reasons
+            if f'value="{reason}"' in html
+        }
+        assert found == expected_reasons

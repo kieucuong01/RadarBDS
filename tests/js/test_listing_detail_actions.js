@@ -31,4 +31,28 @@ assert.deepEqual(api.normalizeReportPayload(' wrong_location ', '  Sai phường
 assert.equal(api.normalizeReportPayload('unknown', ''), null);
 assert.equal(api.normalizeReportPayload('other', 'x'.repeat(501)), null);
 
-console.log('listing detail actions contract: ok');
+(async () => {
+  const calls = [];
+  const result = await api.submitReport(async (url, options) => {
+    calls.push({ url, options });
+    return {
+      ok: true,
+      status: 201,
+      json: async () => ({ ok: true, duplicate: false }),
+    };
+  }, 42, 'wrong_location', '  Sai phường  ');
+  assert.equal(result.ok, true);
+  assert.equal(calls[0].url, '/api/listings/42/report');
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    reason: 'wrong_location',
+    note: 'Sai phường',
+  });
+  assert.equal(await api.submitReport(async () => {
+    throw new Error('must not fetch');
+  }, 42, 'unknown', ''), null);
+
+  console.log('listing detail actions contract: ok');
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

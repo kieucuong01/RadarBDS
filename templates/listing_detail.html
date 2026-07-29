@@ -873,6 +873,40 @@ body.listing-detail-page {
               <p data-share-status role="status" aria-live="polite"></p>
             </div>
           </div>
+          <button type="button" class="sm-btn-utility sm-btn-report" data-listing-report-trigger aria-expanded="false">
+            ⚑ Báo xấu tin đăng
+          </button>
+          <div class="sm-report-overlay" data-listing-report-dialog hidden>
+            <section class="sm-report-dialog" role="dialog" aria-modal="true" aria-labelledby="detail-report-title">
+              <div class="sm-report-head">
+                <div>
+                  <strong id="detail-report-title">Báo xấu tin đăng</strong>
+                  <span>Phản hồi của bạn giúp Radar làm sạch dữ liệu.</span>
+                </div>
+                <button type="button" data-listing-report-close aria-label="Đóng">×</button>
+              </div>
+              <form data-listing-report-form>
+                <fieldset>
+                  <legend>Lý do báo xấu</legend>
+                  <label><input type="radio" name="reason" value="sold_or_unavailable"> Tin đã bán hoặc không còn</label>
+                  <label><input type="radio" name="reason" value="wrong_price_or_area"> Sai giá hoặc diện tích</label>
+                  <label><input type="radio" name="reason" value="duplicate"> Tin trùng lặp</label>
+                  <label><input type="radio" name="reason" value="wrong_location"> Sai vị trí</label>
+                  <label><input type="radio" name="reason" value="spam_or_scam"> Spam hoặc có dấu hiệu lừa đảo</label>
+                  <label><input type="radio" name="reason" value="other"> Lý do khác</label>
+                </fieldset>
+                <label class="sm-report-note">
+                  Ghi chú thêm (không bắt buộc)
+                  <textarea data-listing-report-note maxlength="500" rows="3"></textarea>
+                </label>
+                <p class="sm-report-status" data-listing-report-status role="status" aria-live="polite"></p>
+                <div class="sm-report-actions">
+                  <button type="button" data-listing-report-close>Hủy</button>
+                  <button type="submit">Gửi báo cáo</button>
+                </div>
+              </form>
+            </section>
+          </div>
         </div>
       </aside>
 

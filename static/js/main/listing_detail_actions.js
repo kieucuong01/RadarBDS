@@ -42,6 +42,33 @@
     return { reason: normalizedReason, note: normalizedNote };
   }
 
+  async function submitReport(fetchFn, listingId, reason, note) {
+    const id = positiveInteger(listingId);
+    const payload = normalizeReportPayload(reason, note);
+    if (!id || !payload || typeof fetchFn !== 'function') return null;
+    try {
+      const response = await fetchFn(`/api/listings/${id}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (_error) {
+        data = {};
+      }
+      return {
+        ok: Boolean(response.ok && data.ok),
+        status: response.status,
+        duplicate: Boolean(data.duplicate),
+        error: typeof data.error === 'string' ? data.error : '',
+      };
+    } catch (_error) {
+      return { ok: false, status: 0, duplicate: false, error: 'network_error' };
+    }
+  }
+
   async function copyText(value, view) {
     const currentView = view || (typeof window !== 'undefined' ? window : null);
     if (!currentView || !value) return false;
@@ -175,10 +202,159 @@
     };
   }
 
+  function bindReport(rootElement, options) {
+    const root = rootElement;
+    if (!root || root.dataset.reportBound === 'true') return { destroy() {} };
+    const trigger = root.querySelector('[data-listing-report-trigger]');
+    const overlay = root.querySelector('[data-listing-report-dialog]');
+    const form = root.querySelector('[data-listing-report-form]');
+    const note = root.querySelector('[data-listing-report-note]');
+    const status = root.querySelector('[data-listing-report-status]');
+    const submitButton = form && form.querySelector('[type="submit"]');
+    const cancelButtons = root.querySelectorAll('[data-listing-report-close]');
+    const view = root.ownerDocument.defaultView;
+    const config = options || {};
+    if (!trigger || !overlay || !form || !submitButton) return { destroy() {} };
+    root.dataset.reportBound = 'true';
+    let resetOnOpen = false;
+    let closeTimer = null;
+
+    function listingId() {
+      return typeof config.getListingId === 'function'
+        ? config.getListingId()
+        : root.dataset.listingId;
+    }
+    function setStatus(message, state) {
+      if (!status) return;
+      status.textContent = message;
+      status.dataset.state = state || '';
+    }
+    function close(restoreFocus) {
+      overlay.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      if (closeTimer) {
+        view.clearTimeout(closeTimer);
+        closeTimer = null;
+      }
+      if (restoreFocus) trigger.focus();
+    }
+    function open() {
+      if (resetOnOpen) {
+        form.reset();
+        setStatus('');
+        resetOnOpen = false;
+      }
+      overlay.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      const firstReason = form.querySelector('input[name="reason"]');
+      if (firstReason) firstReason.focus();
+    }
+    function errorMessage(result) {
+      if (!result || result.error === 'invalid_reason') return 'Vui lòng chọn một lý do.';
+      if (result.error === 'invalid_note') return 'Ghi chú tối đa 500 ký tự.';
+      if (result.error === 'rate_limited' || result.status === 429) {
+        return 'Bạn đã gửi nhiều báo cáo. Vui lòng thử lại sau.';
+      }
+      if (result.error === 'listing_not_found' || result.status === 404) {
+        return 'Tin này không còn khả dụng.';
+      }
+      if (result.error === 'network_error' || result.status === 0) {
+        return 'Mất kết nối. Nội dung vẫn được giữ để bạn thử lại.';
+      }
+      return 'Chưa gửi được báo cáo. Vui lòng thử lại.';
+    }
+    async function onSubmit(event) {
+      event.preventDefault();
+      const selected = form.querySelector('input[name="reason"]:checked');
+      const payload = normalizeReportPayload(selected && selected.value, note ? note.value : '');
+      if (!payload) {
+        setStatus(
+          note && note.value.trim().length > 500
+            ? 'Ghi chú tối đa 500 ký tự.'
+            : 'Vui lòng chọn một lý do.',
+          'error',
+        );
+        return;
+      }
+      submitButton.disabled = true;
+      setStatus('Đang gửi báo cáo...');
+      const result = await submitReport(
+        config.fetch || view.fetch.bind(view),
+        listingId(),
+        payload.reason,
+        payload.note,
+      );
+      submitButton.disabled = false;
+      if (result && result.ok) {
+        setStatus(
+          result.duplicate
+            ? 'Báo cáo này đã được ghi nhận trước đó.'
+            : 'Cảm ơn bạn. Radar đã ghi nhận báo cáo.',
+          'success',
+        );
+        resetOnOpen = true;
+        if (typeof config.onTrack === 'function') config.onTrack('submitted');
+        closeTimer = view.setTimeout(() => close(true), 1100);
+        return;
+      }
+      setStatus(errorMessage(result), 'error');
+    }
+    function onCancel() { close(true); }
+    function onOverlayClick(event) {
+      if (event.target === overlay) close(true);
+    }
+    function onKeydown(event) {
+      if (overlay.hidden) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        close(true);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = Array.from(
+        overlay.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled])'),
+      ).filter((element) => !element.hidden);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && root.ownerDocument.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && root.ownerDocument.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    trigger.addEventListener('click', open);
+    form.addEventListener('submit', onSubmit);
+    cancelButtons.forEach((button) => button.addEventListener('click', onCancel));
+    overlay.addEventListener('click', onOverlayClick);
+    overlay.addEventListener('keydown', onKeydown);
+
+    return {
+      open,
+      close,
+      destroy() {
+        trigger.removeEventListener('click', open);
+        form.removeEventListener('submit', onSubmit);
+        cancelButtons.forEach((button) => button.removeEventListener('click', onCancel));
+        overlay.removeEventListener('click', onOverlayClick);
+        overlay.removeEventListener('keydown', onKeydown);
+        if (closeTimer) view.clearTimeout(closeTimer);
+        delete root.dataset.reportBound;
+      },
+    };
+  }
+
   function init(rootDocument) {
     const doc = rootDocument || (typeof document !== 'undefined' ? document : null);
     if (!doc) return [];
-    return Array.from(doc.querySelectorAll('[data-listing-actions]')).map((element) => bindShare(element));
+    return Array.from(doc.querySelectorAll('[data-listing-actions]')).map((element) => ({
+      share: bindShare(element),
+      report: bindReport(element),
+    }));
   }
 
   if (typeof document !== 'undefined') {
@@ -191,8 +367,10 @@
     canonicalListingUrl,
     facebookShareUrl,
     normalizeReportPayload,
+    submitReport,
     copyText,
     bindShare,
+    bindReport,
     init,
   };
 }));
