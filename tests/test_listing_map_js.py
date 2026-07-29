@@ -44,7 +44,7 @@ def test_mode_base_layer_and_precision_contracts():
     )
     assert (
         _run_node("mapApi.precisionCopy('nearby').badge")
-        == "Vị trí gần đúng"
+        == "Theo tên đường"
     )
     assert _run_node("mapApi.normalizeAccuracyRadius(150)") == 150
     assert _run_node("mapApi.normalizeAccuracyRadius(-1)") == 0
@@ -74,7 +74,7 @@ def test_summary_and_item_urls_preserve_frozen_filter_snapshot():
     assert _run_node(
         f"mapApi.buildItemsUrl({snapshot},"
         "'nearby:thu-dau-mot:phu-tan:dx-96:near',1,20)"
-    ).startswith("/api/map-listing-items?")
+    ) is None
     assert _run_node(
         f"mapApi.buildItemsUrl({snapshot},'bad key',1,20)"
     ) is None
@@ -113,18 +113,6 @@ def test_tracking_context_is_strictly_allowlisted():
         "base_layer_id": "satellite",
         "close_reason": "button",
     }
-
-
-def test_official_gis_tracking_context_strips_outbound_and_location_data():
-    result = _run_node(
-        "mapApi.safeTrackingContext({"
-        "mode:'all',"
-        "official_gis_url:'https://gisxaydung.tphcm.gov.vn/tracuuttqh',"
-        "lat:10.99,lng:106.67,location_key:'road:secret',keyword:'secret'"
-        "})"
-    )
-
-    assert result == {"mode": "all"}
 
 
 def test_listing_map_item_click_opens_existing_modal_without_navigation():
@@ -212,7 +200,6 @@ def test_client_tracking_allowlist_includes_every_listing_map_event():
         "listing_map_base_layer_changed",
         "listing_map_group_selected",
         "listing_map_retry",
-        "listing_map_official_gis_opened",
     }
 
     for action in actions:

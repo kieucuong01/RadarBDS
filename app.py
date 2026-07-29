@@ -1415,7 +1415,6 @@ _LISTING_MAP_TRACK_ACTIONS = {
     "listing_map_base_layer_changed",
     "listing_map_group_selected",
     "listing_map_retry",
-    "listing_map_official_gis_opened",
 }
 _CITY_MAP_TRACK_IDENTITIES = tuple(
     {
@@ -4190,7 +4189,7 @@ def _request_date_range(req) -> str:
 
 
 _LISTING_MAP_LOCATION_KEY_RE = re.compile(
-    r"^(exact|road|landmark|nearby|ward):[a-z0-9:-]+$"
+    r"^(exact|road|landmark|ward):[a-z0-9:-]+$"
 )
 _LISTING_MAP_SENSITIVE_KEYS = frozenset({
     "url",

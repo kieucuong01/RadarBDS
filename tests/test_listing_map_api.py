@@ -8,7 +8,6 @@ LISTING_MAP_TRACK_ACTIONS = {
     "listing_map_base_layer_changed",
     "listing_map_group_selected",
     "listing_map_retry",
-    "listing_map_official_gis_opened",
 }
 
 
@@ -138,7 +137,7 @@ def test_map_items_validate_location_paging_and_strip_sensitive_fields():
         assert client.get(
             "/api/map-listing-items?mode=signals"
             "&location_key=nearby:thu-dau-mot:phu-loi:dx-43:near&page=1"
-        ).status_code == 200
+        ).status_code == 400
         assert client.get(
             "/api/map-listing-items?mode=signals"
             "&location_key=unknown:thu-dau-mot&page=1"
@@ -200,9 +199,6 @@ def test_listing_map_tracking_actions_are_allowlisted_and_privacy_bounded(
                     "lng": 106.67,
                     "location_key": "road:secret",
                     "keyword": "secret",
-                    "official_gis_url": (
-                        "https://gisxaydung.tphcm.gov.vn/tracuuttqh"
-                    ),
                 },
             },
         )

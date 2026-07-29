@@ -32,12 +32,9 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'role="status"' in html
     assert 'aria-live="polite"' in html
     assert 'aria-busy="false"' in html
-    assert (
-        "tọa độ, tuyến đường, khu dân cư, vùng gần đúng hoặc "
-        "trung tâm phường"
-    ) in html
+    assert "tọa độ, tuyến đường, khu dân cư hoặc trung tâm phường" in html
     assert 'class="listing-map-precision-legend"' in html
-    for precision in ("exact", "road", "landmark", "nearby", "ward"):
+    for precision in ("exact", "road", "landmark", "ward"):
         assert f"listing-map-precision-{precision}" in html
     for hook in (
         "listingMapCanvas",
@@ -56,27 +53,16 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     )
 
 
-def test_workspace_links_to_official_gis_without_hosted_planning_layers():
+def test_workspace_omits_official_gis_and_nearby_visuals():
     response = _client().get("/")
 
     assert response.status_code == 200
     html = response.get_data(as_text=True)
-    assert 'id="listingMapOfficialGisLink"' in html
-    assert (
-        'href="https://gisxaydung.tphcm.gov.vn/tracuuttqh"'
-        in html
-    )
-    assert 'target="_blank"' in html
-    assert 'rel="noopener noreferrer"' in html
-    assert "Quy hoạch sử dụng đất &amp; xây dựng" in html
-    assert "Mở GIS quy hoạch chính thức" in html
-    assert "không thay thế xác nhận pháp lý cho từng thửa đất" in html
-    for forbidden_hook in (
-        "listingMapPlanningControls",
-        "listingMapPlanningLegend",
-        "RADAR_LISTING_PLANNING_MANIFEST",
-    ):
-        assert forbidden_hook not in html
+    assert "listing-map-official-gis" not in html
+    assert "listingMapOfficialGisLink" not in html
+    assert "Quy hoạch sử dụng đất &amp; xây dựng" not in html
+    assert "listing-map-precision-nearby" not in html
+    assert "Gần đúng" not in html
 
 
 def test_saved_listings_route_omits_map_launcher_and_workspace():
@@ -134,12 +120,10 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
         'event.key !== "Tab"',
         "state.map.remove()",
         "state.previousFocus.focus()",
-        "root.L.circle(",
         "root.L.circleMarker",
         "precisionCopy(group.precision)",
         "safeCount(summary.unmapped_count)",
         "safeCount(summary.landmark_count)",
-        "safeCount(summary.nearby_count)",
         'script.crossOrigin = "anonymous"',
         'link.crossOrigin = "anonymous"',
     ):
@@ -150,24 +134,9 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     assert "min-height: 44px" in styles
     assert "@media (prefers-reduced-motion: reduce)" in styles
     assert ".listing-map-precision-landmark" in styles
-    assert ".listing-map-precision-nearby" in styles
-
-
-def test_official_gis_tracking_is_mode_only_and_does_not_deep_link():
-    from pathlib import Path
-
-    root = Path(__file__).resolve().parent.parent
-    script = (root / "static/js/main/listing_map.js").read_text(
-        encoding="utf-8"
-    )
-
-    assert '"listing_map_official_gis_opened"' in script
-    tracking_call = re.search(
-        r'emitTrack\("listing_map_official_gis_opened",\s*\{([^}]*)\}\)',
-        script,
-        re.S,
-    )
-    assert tracking_call
-    assert re.findall(r"([a-z_]+)\s*:", tracking_call.group(1)) == ["mode"]
-    assert "listingMapOfficialGisLink" in script
-    assert "gisxaydung.tphcm.gov.vn" not in script
+    assert "root.L.circle(" not in script
+    assert "safeCount(summary.nearby_count)" not in script
+    assert "listing_map_official_gis_opened" not in script
+    assert "listingMapOfficialGisLink" not in script
+    assert ".listing-map-precision-nearby" not in styles
+    assert ".listing-map-official-gis" not in styles

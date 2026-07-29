@@ -84,16 +84,6 @@
   color: #0f766e;
 }
 
-.listing-map-precision-nearby {
-  color: #7c3aed;
-}
-
-.listing-map-precision-nearby::before {
-  background: transparent !important;
-  outline: 1px dashed currentColor;
-  outline-offset: 2px;
-}
-
 .listing-map-precision-ward {
   color: #b45309;
 }
@@ -140,59 +130,6 @@
   border-right-color: transparent;
   border-radius: 50%;
   animation: listing-map-spin 0.8s linear infinite;
-}
-
-.listing-map-official-gis {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 10px 18px;
-  border-bottom: 1px solid #bfdbfe;
-  background: #eff6ff;
-  color: #1e3a8a;
-}
-
-.listing-map-official-gis-copy {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.listing-map-official-gis-copy strong {
-  font-size: 0.82rem;
-}
-
-.listing-map-official-gis-copy span,
-.listing-map-official-gis-copy small {
-  color: #475569;
-  font-size: 0.7rem;
-  line-height: 1.35;
-}
-
-.listing-map-official-gis-link {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 40px;
-  padding: 8px 13px;
-  border: 1px solid #2563eb;
-  border-radius: 12px;
-  background: #2563eb;
-  color: #fff;
-  font-size: 0.76rem;
-  font-weight: 850;
-  line-height: 1.2;
-  text-decoration: none;
-}
-
-.listing-map-official-gis-link:hover {
-  background: #1d4ed8;
-  color: #fff;
 }
 
 .listing-map-workspace-body {
@@ -470,32 +407,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .listing-map-official-gis {
-    align-items: stretch;
-    gap: 8px;
-    padding: 8px 10px;
-  }
-
-  .listing-map-official-gis-copy span {
-    display: none;
-  }
-
-  .listing-map-official-gis-copy strong {
-    font-size: 0.72rem;
-  }
-
-  .listing-map-official-gis-copy small {
-    font-size: 0.6rem;
-  }
-
-  .listing-map-official-gis-link {
-    max-width: 136px;
-    min-height: 44px;
-    padding: 7px 10px;
-    font-size: 0.68rem;
-    text-align: center;
   }
 
   .listing-map-workspace-body {

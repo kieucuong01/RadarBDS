@@ -258,12 +258,7 @@ def load_listing_map_summary(
                        ) OVER(),
                        0
                    )::INTEGER AS landmark_count,
-                   COALESCE(
-                       SUM(COUNT(*)) FILTER (
-                           WHERE ml.location_precision = 'nearby'
-                       ) OVER(),
-                       0
-                   )::INTEGER AS nearby_count,
+                   0::INTEGER AS nearby_count,
                    COALESCE(
                        SUM(COUNT(*)) FILTER (
                            WHERE ml.location_precision = 'ward'
@@ -271,7 +266,14 @@ def load_listing_map_summary(
                        0
                    )::INTEGER AS ward_count
             FROM filtered f
-            LEFT JOIN listing_map_locations ml ON ml.listing_id = f.id
+            LEFT JOIN listing_map_locations ml
+              ON ml.listing_id = f.id
+             AND ml.location_precision IN (
+                   'exact',
+                   'road',
+                   'landmark',
+                   'ward'
+             )
             GROUP BY ml.location_key,
                      ml.lat,
                      ml.lng,
@@ -283,9 +285,8 @@ def load_listing_map_summary(
                          WHEN 'exact' THEN 0
                          WHEN 'road' THEN 1
                          WHEN 'landmark' THEN 2
-                         WHEN 'nearby' THEN 3
-                         WHEN 'ward' THEN 4
-                         ELSE 5
+                         WHEN 'ward' THEN 3
+                         ELSE 4
                      END,
                      COUNT(*) DESC,
                      ml.location_key
@@ -340,9 +341,7 @@ def load_listing_map_summary(
             "landmark_count": int(
                 _row_value(first, "landmark_count", 0) or 0
             ),
-            "nearby_count": int(
-                _row_value(first, "nearby_count", 0) or 0
-            ),
+            "nearby_count": 0,
             "ward_count": int(_row_value(first, "ward_count", 0) or 0),
         },
         "locations": locations,

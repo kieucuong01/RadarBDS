@@ -29,12 +29,12 @@ class _MapConnection:
         if "GROUP BY ml.location_key" in sql:
             self.summary_calls += 1
             common = {
-                "total_count": 7,
-                "mapped_count": 5,
+                "total_count": 6,
+                "mapped_count": 4,
                 "exact_count": 1,
                 "road_count": 1,
                 "landmark_count": 1,
-                "nearby_count": 1,
+                "nearby_count": 0,
                 "ward_count": 1,
             }
             return _Cursor(rows=[
@@ -85,18 +85,6 @@ class _MapConnection:
                     "relation": "at",
                     "listing_count": 1,
                     "best_mos": 20.0,
-                },
-                {
-                    **common,
-                    "location_key": "nearby:thu-dau-mot:phu-loi:dx-43:near",
-                    "lat": 10.981,
-                    "lng": 106.689,
-                    "location_precision": "nearby",
-                    "location_label": "Gần ĐX 43",
-                    "accuracy_radius_m": 150,
-                    "relation": "near",
-                    "listing_count": 1,
-                    "best_mos": 19.0,
                 },
                 {
                     **common,
@@ -179,18 +167,18 @@ def test_summary_invariants_and_compact_query(monkeypatch):
         summary["exact_count"]
         + summary["road_count"]
         + summary["landmark_count"]
-        + summary["nearby_count"]
         + summary["ward_count"]
         == summary["mapped"]
     )
-    assert sum(group["listing_count"] for group in payload["locations"]) == 5
+    assert summary["nearby_count"] == 0
+    assert sum(group["listing_count"] for group in payload["locations"]) == 4
     assert payload["locations"][0]["listing_count"] == 1
-    nearby = next(
-        group for group in payload["locations"]
-        if group["precision"] == "nearby"
-    )
-    assert nearby["accuracy_radius_m"] == 150.0
-    assert nearby["relation"] == "near"
+    assert {group["precision"] for group in payload["locations"]} <= {
+        "exact",
+        "road",
+        "landmark",
+        "ward",
+    }
     summary_sql = next(
         sql for sql, _params in connection.queries
         if "GROUP BY ml.location_key" in sql
