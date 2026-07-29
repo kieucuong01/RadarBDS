@@ -637,9 +637,11 @@ class PostgresPublicContentRepository:
     def _ensure_schema(self) -> None:
         if not self._should_ensure_schema or self._schema_ready:
             return
-        from db.schema import init_schema
+        from db.schema import _migrate_public_content_items
 
-        init_schema()
+        with self._connection_factory() as conn:
+            _migrate_public_content_items(conn)
+            conn.commit()
         self._schema_ready = True
 
     def list_published(
