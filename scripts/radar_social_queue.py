@@ -167,6 +167,8 @@ def _visual_kind(slug: str, page: dict[str, Any]) -> str:
         return "ward_compare"
     if any(key in text for key in ("dưới", "duoi", "ngân sách", "ngan sach", "2-4 tỷ", "3 tỷ", "4 tỷ")):
         return "budget_filter"
+    if "giá đất" in text and any(key in text for key in ("phường", "thủ dầu một", "đọc riêng", "hien bao nhieu", "hiện bao nhiêu")):
+        return "ward_price"
     cards = _article_cards(page)
     if _find_card(cards, "dấu hiệu").get("value") or any(key in text for key in ("tín hiệu", "tin đáng", "signal")):
         return "signal_filter"
@@ -236,6 +238,14 @@ VISUAL_STYLES: dict[str, dict[str, Any]] = {
 def _visual_design_prompt(kind: str, page: dict[str, Any]) -> str:
     preset = VISUAL_STYLES.get(kind, VISUAL_STYLES["ward_price"])
     headline = _visual_headline(kind, page)
+    if kind == "ward_price":
+        ward = _extract_ward(page, _article_cards(page))
+        return (
+            f"Facebook square 1080x1080 for Radar BDS, style=classic ward price card; "
+            f"teal background with large red/green/orange circles; left headline: ĐANG SO GIÁ {ward.upper()}? Đừng dùng một con số chung; "
+            "right white rounded data card with Đất nền and Nhà đất price boxes plus total tracked listings; "
+            "bottom white explanation box: So đúng hơn, tách đất nền và nhà đất, giá rao chỉ để lọc ban đầu."
+        )
     return (
         f"Facebook square 1080x1080 for Radar BDS, style={kind}/{preset['label']}; "
         f"dark premium real-estate data card, big Vietnamese headline: {headline}; "
@@ -321,6 +331,112 @@ def _draw_metric_card(
         yy += 54
 
 
+def _count_from_note(note: str) -> str:
+    match = re.search(r"(\d+)\s+tin", _plain(note), flags=re.I)
+    return match.group(1) if match else ""
+
+
+def _draw_classic_price_box(
+    draw: ImageDraw.ImageDraw,
+    box: tuple[int, int, int, int],
+    label: str,
+    value: str,
+    count: str,
+    *,
+    fill: tuple[int, int, int],
+    outline: tuple[int, int, int],
+    text_color: tuple[int, int, int],
+) -> None:
+    x1, y1, x2, y2 = box
+    draw.rounded_rectangle(box, 24, fill=fill, outline=outline, width=3)
+    draw.text((x1 + 30, y1 + 24), label.upper(), font=_font(30, bold=True), fill=text_color)
+    draw.text((x1 + 30, y1 + 74), value, font=_font(54, bold=True), fill=text_color)
+    if count:
+        cb = draw.textbbox((0, 0), f"{count} tin", font=_font(23))
+        draw.text((x2 - (cb[2] - cb[0]) - 30, y2 - 40), f"{count} tin", font=_font(23), fill=(91, 103, 117))
+
+
+def _make_classic_ward_price_visual(slug: str, page: dict[str, Any], now: dt.datetime) -> str:
+    ASSET_DIR.mkdir(parents=True, exist_ok=True)
+    out = ASSET_DIR / f"{now.date().isoformat()}-{slug}.png"
+    if out.exists():
+        return str(out)
+
+    cards = _article_cards(page)
+    ward = _extract_ward(page, cards)
+    listing = _find_card(cards, "tin")
+    land = _find_card(cards, "đất nền")
+    house = _find_card(cards, "nhà đất")
+    total = listing.get("value") or ""
+    land_count = _count_from_note(land.get("note", ""))
+    house_count = _count_from_note(house.get("note", ""))
+
+    width = height = 1080
+    bg = (28, 84, 93)
+    im = Image.new("RGB", (width, height), bg)
+    draw = ImageDraw.Draw(im)
+
+    # Large flat color circles like the earlier approved ward-price style.
+    draw.ellipse((760, -210, 1250, 320), fill=(225, 45, 50))
+    draw.ellipse((-150, 640, 360, 1240), fill=(34, 143, 126))
+    draw.ellipse((760, 720, 1240, 1240), fill=(249, 127, 24))
+
+    # Brand pill.
+    draw.rounded_rectangle((74, 70, 336, 136), 28, fill=(255, 255, 255))
+    draw.text((108, 91), "Radar BDS", font=_font(29, bold=True), fill=(21, 60, 68))
+
+    # Left headline block.
+    draw.text((74, 204), "ĐANG SO GIÁ", font=_font(32, bold=True), fill=(172, 242, 221))
+    ward_line = (ward or "PHƯỜNG").upper()
+    title_font = _font(58, bold=True)
+    for idx, line in enumerate(_wrap(draw, f"{ward_line}?", title_font, 430)[:2]):
+        draw.text((74, 256 + idx * 68), line, font=title_font, fill=(255, 255, 255))
+    draw.text((74, 382), "Đừng dùng một", font=_font(44, bold=True), fill=(255, 255, 255))
+    draw.text((74, 446), "con số chung.", font=_font(44, bold=True), fill=(255, 255, 255))
+
+    # Right data card.
+    card = (530, 122, 976, 740)
+    draw.rounded_rectangle((card[0] + 14, card[1] + 18, card[2] + 14, card[3] + 18), 44, fill=(16, 49, 58))
+    draw.rounded_rectangle(card, 44, fill=(248, 250, 252), outline=(226, 232, 240), width=2)
+    draw.text((570, 166), f"{ward} / 14 ngày", font=_font(31, bold=True), fill=(13, 20, 34))
+
+    _draw_classic_price_box(
+        draw,
+        (570, 222, 936, 372),
+        "Đất nền",
+        land.get("value") or "chưa đủ dữ liệu",
+        land_count,
+        fill=(235, 253, 248),
+        outline=(174, 235, 224),
+        text_color=(14, 126, 112),
+    )
+    _draw_classic_price_box(
+        draw,
+        (570, 414, 936, 564),
+        "Nhà đất",
+        house.get("value") or "chưa đủ dữ liệu",
+        house_count,
+        fill=(255, 248, 238),
+        outline=(239, 218, 184),
+        text_color=(184, 67, 24),
+    )
+
+    draw.rounded_rectangle((570, 606, 936, 692), 22, fill=(11, 18, 34))
+    total_text = f"{total} tin đang theo dõi" if total else "Tin đang theo dõi"
+    draw.text((592, 625), total_text, font=_font(25, bold=True), fill=(255, 255, 255))
+    draw.text((592, 661), "Nguồn: Facebook / Radar", font=_font(22), fill=(202, 213, 225))
+
+    # Bottom explanation card.
+    bottom = (74, 798, 1010, 976)
+    draw.rounded_rectangle(bottom, 30, fill=(255, 255, 255))
+    draw.text((110, 832), "So đúng hơn:", font=_font(34, bold=True), fill=(15, 23, 42))
+    draw.text((110, 884), "tách đất nền và nhà đất, rồi mới nhìn giá trung vị.", font=_font(27, bold=True), fill=(31, 41, 55))
+    draw.text((110, 928), "Giá rao chỉ để lọc ban đầu — vẫn cần kiểm tra thực tế.", font=_font(25, bold=True), fill=(15, 128, 112))
+
+    im.save(out, quality=94, optimize=True)
+    return str(out)
+
+
 def _make_visual(slug: str, page: dict[str, Any], now: dt.datetime) -> str:
     """Create a compact 1080x1080 visual with per-post-type styles.
 
@@ -334,6 +450,8 @@ def _make_visual(slug: str, page: dict[str, Any], now: dt.datetime) -> str:
         return str(out)
 
     kind = _visual_kind(slug, page)
+    if kind == "ward_price":
+        return _make_classic_ward_price_visual(slug, page, now)
     preset = VISUAL_STYLES[kind]
     headline = _visual_headline(kind, page)
     ward = _extract_ward(page, _article_cards(page))

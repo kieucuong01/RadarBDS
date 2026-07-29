@@ -77,3 +77,16 @@ def test_visual_style_variants_for_budget_and_risk_articles():
         {"title": "Tin rẻ bất thường Bình Dương cần kiểm tra gì?"},
     ) == "risk_checklist"
 
+
+def test_ward_price_uses_classic_visual_style_prompt_and_asset(tmp_path):
+    social_queue = _load_queue_module()
+    social_queue.ASSET_DIR = tmp_path
+
+    item = social_queue.create(_queue_args("gia-dat-phu-tan-hien-bao-nhieu"))
+    content = item["content"]
+
+    assert content["visual_style"] == "ward_price"
+    assert "classic ward price card" in content["visual_prompt"]
+    assert "ĐANG SO GIÁ PHÚ TÂN?" in content["visual_prompt"]
+    assert Path(content["visual_path"]).exists()
+
