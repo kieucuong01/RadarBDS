@@ -929,6 +929,13 @@
       || modal.style.display === "block";
   }
 
+  function shouldCloseMapOnPopstate(event, isOpen) {
+    if (!isOpen) return false;
+    var nextState = event && event.state ? event.state : {};
+    if (nextState.radarListingMap || nextState.signalModal) return false;
+    return true;
+  }
+
   function onKeydown(event) {
     if (!state.open || isSignalModalOpen()) return;
     if (event.key === "Escape") {
@@ -962,8 +969,8 @@
         });
       });
     }
-    win.addEventListener("popstate", function () {
-      if (state.open) {
+    win.addEventListener("popstate", function (event) {
+      if (shouldCloseMapOnPopstate(event, state.open)) {
         close({
           reason: "browser_back",
           fromPopstate: true,
@@ -982,6 +989,7 @@
     safeTrackingContext: safeTrackingContext,
     precisionCopy: precisionCopy,
     openListingFromMap: openListingFromMap,
+    shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,
     open: open,
     close: close,

@@ -170,6 +170,21 @@ def test_listing_map_focus_trap_yields_when_signal_modal_is_open():
     assert "if (!state.open || isSignalModalOpen()) return;" in source
 
 
+def test_listing_map_popstate_keeps_map_open_when_returning_from_signal_modal():
+    assert _run_node(
+        "mapApi.shouldCloseMapOnPopstate({state:{radarListingMap:true}}, true)"
+    ) is False
+    assert _run_node(
+        "mapApi.shouldCloseMapOnPopstate({state:{signalModal:true}}, true)"
+    ) is False
+    assert _run_node(
+        "mapApi.shouldCloseMapOnPopstate({state:null}, true)"
+    ) is True
+    assert _run_node(
+        "mapApi.shouldCloseMapOnPopstate({state:null}, false)"
+    ) is False
+
+
 def test_client_tracking_allowlist_includes_every_listing_map_event():
     source = MAP_SCRIPT.read_text(encoding="utf-8")
     actions = {
