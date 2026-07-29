@@ -548,6 +548,21 @@ def test_verify_webhook_passes_exact_raw_bytes_once_and_maps_official_model():
     )
 
 
+def test_verify_webhook_accepts_payos_confirmation_sample_order_code():
+    sdk = _FakeSDK()
+    payload = _webhook_payload()
+    payload["data"]["orderCode"] = 123
+    sdk.webhooks.result = sdk.webhooks.result.model_copy(
+        update={"order_code": 123}
+    )
+    raw_body = _encode_webhook(payload)
+
+    payment = PayOSClient(sdk).verify_webhook(raw_body)
+
+    assert payment.order_code == 123
+    assert sdk.webhooks.raw_inputs == [raw_body]
+
+
 def test_verify_webhook_maps_camel_case_dict_and_aware_timestamp():
     sdk = _FakeSDK()
     payload = _webhook_payload()

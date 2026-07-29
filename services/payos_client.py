@@ -276,7 +276,7 @@ class PayOSClient:
             reference = data.get("reference", _MISSING)
             paid_at_value = data.get("transactionDateTime", _MISSING)
             if (
-                not _valid_order_code(order_code)
+                not _valid_webhook_order_code(order_code)
                 or not _valid_positive_int(amount)
                 or not _valid_reference(reference)
                 or type(paid_at_value) is not str
@@ -300,7 +300,7 @@ class PayOSClient:
             )
             verified_code = _field(verified, "code")
             if (
-                not _valid_order_code(verified_order_code)
+                not _valid_webhook_order_code(verified_order_code)
                 or not _valid_positive_int(verified_amount)
                 or not _valid_reference(verified_reference)
                 or type(verified_paid_at_value) is not str
@@ -604,6 +604,10 @@ def _valid_order_code(value: object) -> bool:
         type(value) is int
         and ORDER_CODE_BASE < value <= MAX_PAYOS_ORDER_CODE
     )
+
+
+def _valid_webhook_order_code(value: object) -> bool:
+    return bool(type(value) is int and 0 < value <= MAX_PAYOS_ORDER_CODE)
 
 
 def _valid_positive_int(value: object) -> bool:
