@@ -259,6 +259,10 @@
       if (canvas) canvas.setAttribute("aria-hidden", visible ? "true" : "false");
     }
 
+    function layerDefault(layer, key, fallbackValue) {
+      return root.getAttribute("data-" + layer + "-" + key) || fallbackValue;
+    }
+
     function syncFullscreenState() {
       var active = fullscreenElement(doc) === fullscreenTarget;
       if (fullscreenButton) {
@@ -344,11 +348,11 @@
 
       if (!feature) {
         if (name) name.textContent = layer === "current"
-          ? "36 phường, xã sau sắp xếp"
-          : "Toàn tỉnh Bình Dương cũ";
+          ? layerDefault("current", "selection-name", "36 phường, xã sau sắp xếp")
+          : layerDefault("legacy", "selection-name", "Toàn tỉnh Bình Dương cũ");
         if (type) type.textContent = layer === "current"
-          ? "Địa giới tham khảo sau năm 2025"
-          : "9 đơn vị cấp huyện trước sắp xếp";
+          ? layerDefault("current", "selection-type", "Địa giới tham khảo sau năm 2025")
+          : layerDefault("legacy", "selection-type", "9 đơn vị cấp huyện trước sắp xếp");
         if (summary) summary.textContent = (
           "Chọn một ranh trên bản đồ hoặc tên khu vực trong danh sách để xem thông tin chi tiết."
         );
@@ -356,8 +360,8 @@
         if (formerRow) formerRow.hidden = true;
         if (former) former.textContent = "";
         if (cta) {
-          cta.href = "/?tab=signals";
-          cta.textContent = "Xem tin đang bán";
+          cta.href = layerDefault(layer, "cta-href", "/?tab=signals");
+          cta.textContent = layerDefault(layer, "cta-label", "Xem tin đang bán");
         }
         return;
       }
@@ -449,8 +453,8 @@
         feature
           ? "Đang xem " + (feature.properties.unit_type || "khu vực") + " " + feature.properties.name + "."
           : layer === "current"
-            ? "Đang hiển thị 36 phường, xã sau sắp xếp năm 2025."
-            : "Đang hiển thị 9 huyện, thành phố của Bình Dương cũ."
+            ? layerDefault("current", "status", "Đang hiển thị 36 phường, xã sau sắp xếp năm 2025.")
+            : layerDefault("legacy", "status", "Đang hiển thị 9 huyện, thành phố của Bình Dương cũ.")
       );
     }
 
