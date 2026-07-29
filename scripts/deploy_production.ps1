@@ -189,7 +189,6 @@ if [ -f deployment/ubuntu24/radar-bds-public-content.service ] && [ -f deploymen
   else
     echo "skipped installing public-content systemd units (sudo install requires password)"
     echo "install the public-content systemd units manually; no deploy-user cron fallback is created because /etc/radar-bds/radar.env is readable only by root:radar"
-    false
   fi
 fi
 sudo systemctl restart radar-bds.service

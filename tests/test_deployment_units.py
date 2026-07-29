@@ -47,7 +47,8 @@ def test_deploy_script_initializes_public_content_schema_and_installs_daily_sync
         "if [ -f deployment/ubuntu24/radar-bds-public-content.service",
         1,
     )[1].split("sudo systemctl restart radar-bds.service", 1)[0]
-    assert re.search(r"^\s*false\s*$", public_content_block, re.M)
+    assert "crontab" not in public_content_block
+    assert not re.search(r"^\s*false\s*$", public_content_block, re.M)
 
 
 def test_deploy_script_can_archive_known_temp_blockers_before_failing():
