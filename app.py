@@ -4,6 +4,7 @@ import os
 import hmac
 import json
 import logging
+import math
 import mimetypes
 import platform
 import subprocess
@@ -1402,6 +1403,14 @@ _CHECKOUT_TRACK_ACTIONS = {
     for page in CITY_MAP_PRODUCTS.values()
     for suffix in _CITY_MAP_CHECKOUT_TRACK_SUFFIXES
 }
+_LISTING_MAP_TRACK_ACTIONS = {
+    "listing_map_opened",
+    "listing_map_closed",
+    "listing_map_base_layer_changed",
+    "listing_map_group_selected",
+    "listing_map_retry",
+    "listing_map_official_gis_opened",
+}
 _CITY_MAP_TRACK_IDENTITIES = tuple(
     {
         "path": page["path"],
@@ -1448,7 +1457,7 @@ ALLOWED_TRACK_ACTIONS = {
     "public_document_download_clicked",
     "public_header_menu_opened",
     "public_header_item_clicked",
-} | _PRODUCT_TRACK_ACTIONS | _CHECKOUT_TRACK_ACTIONS
+} | _PRODUCT_TRACK_ACTIONS | _CHECKOUT_TRACK_ACTIONS | _LISTING_MAP_TRACK_ACTIONS
 _PRODUCT_TRACK_SOURCE_SURFACES = {
     "preview",
     "preview_switch",
@@ -1547,6 +1556,49 @@ def _safe_public_content_tracking_context(action: str, context) -> dict:
     return safe
 
 
+def _safe_listing_map_tracking_context(context) -> dict:
+    if not isinstance(context, dict):
+        return {}
+    safe = {}
+    if context.get("mode") in {"signals", "all"}:
+        safe["mode"] = context["mode"]
+    if context.get("precision") in {"exact", "road", "ward"}:
+        safe["precision"] = context["precision"]
+    for key in (
+        "listing_count",
+        "mapped_count",
+        "unmapped_count",
+        "group_count",
+    ):
+        if key not in context:
+            continue
+        value = context.get(key)
+        if (
+            type(value) in {int, float}
+            and math.isfinite(value)
+            and value >= 0
+        ):
+            safe[key] = min(int(value + 0.5), 1_000_000)
+        else:
+            safe[key] = 0
+    layer_ids = context.get("layer_ids")
+    if isinstance(layer_ids, list):
+        safe["layer_ids"] = [
+            value
+            for value in (str(item) for item in layer_ids)
+            if re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,63}", value)
+        ][:12]
+    if context.get("base_layer_id") in {"street", "satellite"}:
+        safe["base_layer_id"] = context["base_layer_id"]
+    close_reason = context.get("close_reason")
+    if (
+        isinstance(close_reason, str)
+        and re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,63}", close_reason)
+    ):
+        safe["close_reason"] = close_reason
+    return safe
+
+
 @rate_limit("track", limits={"guest": 120, "free": 600, "vip": None, "admin": None})
 def api_track():
     payload = request.get_json(silent=True) or {}
@@ -1555,9 +1607,10 @@ def api_track():
         return jsonify({"ok": False, "error": "invalid_action"}), 400
     is_product_action = action in _PRODUCT_TRACK_ACTIONS
     is_checkout_action = action in _CHECKOUT_TRACK_ACTIONS
+    is_listing_map_action = action in _LISTING_MAP_TRACK_ACTIONS
     listing_id = (
         None
-        if is_product_action or is_checkout_action
+        if is_product_action or is_checkout_action or is_listing_map_action
         else payload.get("listing_id")
     )
     try:
@@ -1569,6 +1622,8 @@ def api_track():
         ctx = _safe_checkout_tracking_context(ctx)
     elif is_product_action:
         ctx = _safe_product_tracking_context(ctx)
+    elif is_listing_map_action:
+        ctx = _safe_listing_map_tracking_context(ctx)
     elif action.startswith("public_"):
         ctx = _safe_public_content_tracking_context(action, ctx)
     elif not isinstance(ctx, dict):

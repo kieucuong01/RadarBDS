@@ -176,7 +176,8 @@
       "listing_map_closed",
       "listing_map_base_layer_changed",
       "listing_map_group_selected",
-      "listing_map_retry"
+      "listing_map_retry",
+      "listing_map_official_gis_opened"
     ];
     if (allowed.indexOf(action) < 0) return;
     try {

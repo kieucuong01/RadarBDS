@@ -106,3 +106,18 @@ def test_official_gis_tracking_context_strips_outbound_and_location_data():
     )
 
     assert result == {"mode": "all"}
+
+
+def test_client_tracking_allowlist_includes_every_listing_map_event():
+    source = MAP_SCRIPT.read_text(encoding="utf-8")
+    actions = {
+        "listing_map_opened",
+        "listing_map_closed",
+        "listing_map_base_layer_changed",
+        "listing_map_group_selected",
+        "listing_map_retry",
+        "listing_map_official_gis_opened",
+    }
+
+    for action in actions:
+        assert source.count(f'"{action}"') >= 2

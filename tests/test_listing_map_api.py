@@ -2,6 +2,16 @@ import json
 from unittest import mock
 
 
+LISTING_MAP_TRACK_ACTIONS = {
+    "listing_map_opened",
+    "listing_map_closed",
+    "listing_map_base_layer_changed",
+    "listing_map_group_selected",
+    "listing_map_retry",
+    "listing_map_official_gis_opened",
+}
+
+
 def _client():
     import app as app_module
 
@@ -129,3 +139,65 @@ def test_map_items_validate_location_paging_and_strip_sensitive_fields():
         '"seller_name"',
     ):
         assert forbidden not in text
+
+
+def test_listing_map_tracking_actions_are_allowlisted_and_privacy_bounded(
+    monkeypatch,
+):
+    app_module, client = _client()
+    recorded = []
+    monkeypatch.setattr(
+        app_module,
+        "log_audit",
+        lambda **payload: recorded.append(payload),
+    )
+    monkeypatch.setattr(app_module, "current_user", lambda: None)
+    monkeypatch.setattr(app_module, "current_tier", lambda: "guest")
+
+    for action in LISTING_MAP_TRACK_ACTIONS:
+        assert action in app_module.ALLOWED_TRACK_ACTIONS
+        response = client.post(
+            "/api/track",
+            json={
+                "action": action,
+                "listing_id": 42,
+                "context": {
+                    "mode": "signals",
+                    "precision": "road",
+                    "listing_count": 3.4,
+                    "mapped_count": 8,
+                    "unmapped_count": -2,
+                    "group_count": 4,
+                    "layer_ids": [
+                        "street",
+                        "planning-land-use",
+                        "BAD VALUE",
+                    ],
+                    "base_layer_id": "satellite",
+                    "close_reason": "browser_back",
+                    "lat": 10.99,
+                    "lng": 106.67,
+                    "location_key": "road:secret",
+                    "keyword": "secret",
+                    "official_gis_url": (
+                        "https://gisxaydung.tphcm.gov.vn/tracuuttqh"
+                    ),
+                },
+            },
+        )
+        assert response.status_code == 200
+
+    expected_context = {
+        "mode": "signals",
+        "precision": "road",
+        "listing_count": 3,
+        "mapped_count": 8,
+        "unmapped_count": 0,
+        "group_count": 4,
+        "layer_ids": ["street", "planning-land-use"],
+        "base_layer_id": "satellite",
+        "close_reason": "browser_back",
+    }
+    assert len(recorded) == len(LISTING_MAP_TRACK_ACTIONS)
+    assert all(item["context"] == expected_context for item in recorded)
+    assert all(item["listing_id"] is None for item in recorded)
