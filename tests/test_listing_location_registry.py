@@ -196,6 +196,106 @@ def test_manual_overrides_win_over_auto_overrides():
     assert combined["auto_override_count"] == 0
 
 
+def test_manual_scoped_road_allows_auto_different_landmark_scope():
+    manual = {
+        "resolver_version": "test-v3",
+        "road_aliases": [],
+        "roads": [
+            {
+                "city": "THỦ DẦU MỘT",
+                "ward": "Phú Tân",
+                "road_name": "Đường số 35",
+                "landmark_keys": ["TĐC Phú Chánh B"],
+                "lat": 11.0636566,
+                "lng": 106.6941886,
+                "source": "OpenStreetMap",
+                "source_url": (
+                    "https://www.openstreetmap.org/way/225107254"
+                ),
+                "verified_at": "2026-07-29",
+            }
+        ],
+        "landmark_aliases": [],
+        "landmarks": [],
+    }
+    auto = {
+        "resolver_version": "test-v3",
+        "entries": [
+            _accepted_auto_entry(
+                candidate_key=(
+                    "road:thu-dau-mot:phu-tan:"
+                    "duong-so-35:tdc-phu-chanh-d"
+                ),
+                candidate_type="road",
+                canonical="Đường số 35",
+                aliases=["Đường 35"],
+                landmark_scope="TĐC Phú Chánh D",
+                result_title="Đường số 35, TĐC Phú Chánh D",
+                result_address=(
+                    "TĐC Phú Chánh D, Phú Tân, Thủ Dầu Một"
+                ),
+                result_type="Road",
+            )
+        ],
+    }
+
+    combined = combine_location_overrides(manual, auto)
+
+    assert combined["auto_override_count"] == 1
+    assert {
+        tuple(row.get("landmark_keys") or ())
+        for row in combined["roads"]
+    } == {
+        ("TĐC Phú Chánh B",),
+        ("TĐC Phú Chánh D",),
+    }
+
+
+def test_manual_scoped_road_blocks_unscoped_auto_same_road():
+    manual = {
+        "resolver_version": "test-v3",
+        "road_aliases": [],
+        "roads": [
+            {
+                "city": "THỦ DẦU MỘT",
+                "ward": "Phú Tân",
+                "road_name": "Đường số 35",
+                "landmark_keys": ["TĐC Phú Chánh B"],
+                "lat": 11.0636566,
+                "lng": 106.6941886,
+                "source": "OpenStreetMap",
+                "source_url": (
+                    "https://www.openstreetmap.org/way/225107254"
+                ),
+                "verified_at": "2026-07-29",
+            }
+        ],
+        "landmark_aliases": [],
+        "landmarks": [],
+    }
+    auto = {
+        "resolver_version": "test-v3",
+        "entries": [
+            _accepted_auto_entry(
+                candidate_key=(
+                    "road:thu-dau-mot:phu-tan:duong-so-35"
+                ),
+                candidate_type="road",
+                canonical="Đường số 35",
+                aliases=["Đường 35"],
+                result_title="Đường số 35, Phú Tân",
+                result_address="Phú Tân, Thủ Dầu Một",
+                result_type="Road",
+            )
+        ],
+    }
+
+    combined = combine_location_overrides(manual, auto)
+
+    assert combined["auto_override_count"] == 0
+    assert combined["roads"] == manual["roads"]
+
+
 def test_valid_auto_override_is_converted_to_curated_shape():
     manual = {
         "resolver_version": "test-v3",

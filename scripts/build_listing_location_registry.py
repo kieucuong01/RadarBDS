@@ -870,13 +870,21 @@ def _manual_override_identities(
                 normalize_location_token(row.get("ward") or ""),
                 normalizer(str(row.get(name_field) or "")),
             )
-            identities.add((*base, ""))
             if kind == "road":
-                for landmark in row.get("landmark_keys") or ():
+                landmark_scopes = {
+                    _normalize_landmark_token(landmark)
+                    for landmark in row.get("landmark_keys") or ()
+                    if _normalize_landmark_token(landmark)
+                }
+                if not landmark_scopes:
+                    identities.add((*base, ""))
+                for landmark_scope in landmark_scopes:
                     identities.add((
                         *base,
-                        _normalize_landmark_token(landmark),
+                        landmark_scope,
                     ))
+            else:
+                identities.add((*base, ""))
     return identities
 
 
@@ -924,6 +932,9 @@ def combine_location_overrides(
         "auto_override_count": 0,
     }
     manual_identities = _manual_override_identities(manual)
+    manual_bases = {
+        identity[:4] for identity in manual_identities
+    }
     auto_identities = set()
 
     entries = auto.get("entries", [])
@@ -954,6 +965,10 @@ def combine_location_overrides(
         if (
             identity in manual_identities
             or base_identity in manual_identities
+            or (
+                not identity[4]
+                and identity[:4] in manual_bases
+            )
         ):
             continue
         if identity in auto_identities:
