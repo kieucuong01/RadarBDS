@@ -434,9 +434,47 @@ def test_paid_order_downloads_exact_validated_zip(route_env, monkeypatch):
         "Content-Disposition"
     ]
     assert response.headers["ETag"] == f'"{trusted_product.package_sha256}"'
+    assert response.headers["Content-Length"] == str(len(expected_bytes))
     assert response.headers["Cache-Control"] == "private, no-store"
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.data == expected_bytes
+    assert repo.orders[paid.id].download_count == 1
+    assert repo.orders[paid.id].last_download_at == NOW
+
+
+def test_verified_snapshot_supports_trusted_range_and_conditional_responses(
+    route_env,
+    monkeypatch,
+):
+    _radar_app, _routes, repo, _payos, _settings = route_env
+    product, package_path, _manifest_path = _install_protected_release(
+        route_env,
+        monkeypatch,
+    )
+    expected_bytes = package_path.read_bytes()
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order)
+    quoted_etag = f'"{product.package_sha256}"'
+
+    partial = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download",
+        headers={"Range": "bytes=0-15"},
+    )
+    unchanged = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download",
+        headers={"If-None-Match": quoted_etag},
+    )
+
+    assert partial.status_code == 206
+    assert partial.data == expected_bytes[:16]
+    assert partial.headers["Content-Length"] == "16"
+    assert partial.headers["Content-Range"] == (
+        f"bytes 0-15/{len(expected_bytes)}"
+    )
+    assert partial.headers["ETag"] == quoted_etag
+    assert unchanged.status_code == 304
+    assert unchanged.data == b""
+    assert unchanged.headers["ETag"] == quoted_etag
     assert repo.orders[paid.id].download_count == 1
     assert repo.orders[paid.id].last_download_at == NOW
 
@@ -655,7 +693,42 @@ def test_resolver_rejects_relative_storage_root_even_when_release_is_valid(
         resolve_protected_package(product, Path("."))
 
 
-def test_resolver_rejects_package_changed_while_hashing(
+def test_package_replaced_after_snapshot_never_changes_download_bytes(
+    route_env,
+    monkeypatch,
+):
+    _radar_app, routes_module, repo, _payos, _settings = route_env
+    _product, package_path, _manifest_path = _install_protected_release(
+        route_env,
+        monkeypatch,
+    )
+    verified_bytes = package_path.read_bytes()
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order)
+    real_send_file = routes_module.send_file
+
+    def replace_then_send_file(file_or_path, *args, **kwargs):
+        package_path.write_bytes(b"untrusted-replacement")
+        return real_send_file(file_or_path, *args, **kwargs)
+
+    monkeypatch.setattr(
+        routes_module,
+        "send_file",
+        replace_then_send_file,
+    )
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert package_path.read_bytes() == b"untrusted-replacement"
+    assert response.status_code == 200
+    assert response.data == verified_bytes
+    assert response.data != package_path.read_bytes()
+    assert repo.orders[paid.id].download_count == 1
+
+
+def test_oversized_package_is_rejected_before_full_hash_or_download(
     route_env,
     monkeypatch,
 ):
@@ -668,29 +741,58 @@ def test_resolver_rejects_package_changed_while_hashing(
     )
     client, order, _token = _authorized_order(route_env)
     paid = _make_order_paid(repo, order)
-    real_sha256_file = digital_products._sha256_file
-
-    def hash_then_replace(path):
-        digest = real_sha256_file(path)
-        Path(path).write_bytes(Path(path).read_bytes() + b"changed-after-hash")
-        return digest
-
     monkeypatch.setattr(
         digital_products,
-        "_sha256_file",
-        hash_then_replace,
+        "_MAX_PROTECTED_PACKAGE_BYTES",
+        1_024,
+        raising=False,
     )
+    package_path.write_bytes(b"x" * 1_025)
+    hash_calls = []
+    real_sha256_file = digital_products._sha256_file
+
+    def counted_hash(path):
+        hash_calls.append(Path(path))
+        return real_sha256_file(path)
+
+    monkeypatch.setattr(digital_products, "_sha256_file", counted_hash)
 
     response = client.get(
         f"/api/digital-products/orders/{paid.public_id}/download"
     )
 
-    assert package_path.read_bytes().endswith(b"changed-after-hash")
     assert response.status_code == 503
     assert response.get_json() == {
         "code": "download_temporarily_unavailable"
     }
+    assert hash_calls == []
     assert repo.orders[paid.id].download_count == 0
+
+
+def test_protected_snapshot_is_immutable_and_non_serializable(
+    route_env,
+    monkeypatch,
+):
+    from services.digital_products import snapshot_protected_package
+
+    _radar_app, _routes, _repo, _payos, settings = route_env
+    product, package_path, _manifest_path = _install_protected_release(
+        route_env,
+        monkeypatch,
+    )
+
+    snapshot = snapshot_protected_package(product, settings.storage_dir)
+
+    assert snapshot.open_bytes_io().read() == package_path.read_bytes()
+    assert product.package_sha256 in repr(snapshot)
+    assert package_path.read_bytes()[:8].hex() not in repr(snapshot)
+    assert not hasattr(snapshot, "__dict__")
+    with pytest.raises(AttributeError):
+        snapshot.size = 1
+    with pytest.raises(AttributeError):
+        del snapshot._payload
+    with pytest.raises(TypeError):
+        json.dumps(snapshot)
 
 
 def test_paid_order_must_match_immutable_registry_version(

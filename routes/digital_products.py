@@ -49,7 +49,7 @@ from services.digital_products import (
     ProtectedPackageUnavailable,
     get_digital_product,
     get_release_availability,
-    resolve_protected_package,
+    snapshot_protected_package,
 )
 from services.payos_client import (
     PayOSClient,
@@ -394,17 +394,17 @@ def download_digital_product_order(public_id: str):
             or order.currency != "VND"
         ):
             return _download_denied_response()
-        package_path = resolve_protected_package(
+        package_snapshot = snapshot_protected_package(
             product,
             settings.storage_dir,
         )
         response = send_file(
-            package_path,
+            package_snapshot.open_bytes_io(),
             mimetype="application/zip",
             as_attachment=True,
             download_name=product.download_filename,
             conditional=True,
-            etag=product.package_sha256,
+            etag=package_snapshot.sha256,
             max_age=0,
         )
         response.headers["Cache-Control"] = "private, no-store"

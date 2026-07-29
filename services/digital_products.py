@@ -9,11 +9,13 @@ import os
 import re
 from dataclasses import dataclass
 from functools import lru_cache
+from io import BytesIO
 from pathlib import Path
 
 
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _MAX_MANIFEST_BYTES = 64 * 1024
+_MAX_PROTECTED_PACKAGE_BYTES = 64 * 1024 * 1024
 _THU_DAU_MOT_RELEASE_FILES = (
     "thu-dau-mot-truoc-2025-a0.pdf",
     "thu-dau-mot-sau-2025-a0.pdf",
@@ -52,6 +54,37 @@ class ProductAvailability:
 
 class ProtectedPackageUnavailable(RuntimeError):
     """The immutable protected release cannot be trusted for delivery."""
+
+
+class ProtectedPackageSnapshot:
+    """Immutable, non-serializable delivery bytes with a safe representation."""
+
+    __slots__ = ("_payload", "sha256", "size")
+
+    def __init__(self, payload: bytes):
+        if type(payload) is not bytes or not payload:
+            raise ProtectedPackageUnavailable()
+        sha256 = hashlib.sha256(payload).hexdigest()
+        object.__setattr__(self, "_payload", payload)
+        object.__setattr__(self, "sha256", sha256)
+        object.__setattr__(self, "size", len(payload))
+
+    def __setattr__(self, name: str, value: object) -> None:
+        del name, value
+        raise AttributeError("ProtectedPackageSnapshot is immutable")
+
+    def __delattr__(self, name: str) -> None:
+        del name
+        raise AttributeError("ProtectedPackageSnapshot is immutable")
+
+    def __repr__(self) -> str:
+        return (
+            "ProtectedPackageSnapshot("
+            f"size={self.size}, sha256='{self.sha256}')"
+        )
+
+    def open_bytes_io(self) -> BytesIO:
+        return BytesIO(self._payload)
 
 
 _THU_DAU_MOT_MAP = DigitalProduct(
@@ -266,16 +299,6 @@ def _is_single_path_component(value: object) -> bool:
     )
 
 
-def _stable_file_identity(stat_result: os.stat_result) -> tuple[int, ...]:
-    return (
-        stat_result.st_dev,
-        stat_result.st_ino,
-        stat_result.st_size,
-        stat_result.st_mtime_ns,
-        stat_result.st_ctime_ns,
-    )
-
-
 def _protected_storage_root_allowed(root: Path) -> bool:
     project_root = Path(__file__).resolve().parent.parent
     unsafe_roots = [project_root]
@@ -293,12 +316,7 @@ def resolve_protected_package(
     product: DigitalProduct,
     storage_root: Path,
 ) -> Path:
-    """Resolve and fully revalidate one immutable server-registered package.
-
-    The trusted SHA-256 binds the package's exact bytes and length. A stable
-    pre/post-hash stat additionally rejects files replaced while validation is
-    in progress.
-    """
+    """Resolve one immutable server-registered release path and manifest."""
     try:
         root_candidate = Path(storage_root).expanduser()
         if (
@@ -368,26 +386,8 @@ def resolve_protected_package(
         if not _manifest_matches_product(manifest, product):
             raise ValueError("invalid release manifest")
 
-        before = package_path.stat()
-        if before.st_size <= 0:
+        if package_path.stat().st_size <= 0:
             raise OSError("empty package")
-        package_digest = _sha256_file(package_path)
-        after = package_path.stat()
-        if (
-            _stable_file_identity(before) != _stable_file_identity(after)
-            or package_candidate.is_symlink()
-            or package_candidate.resolve(strict=True) != package_path
-        ):
-            raise OSError("package changed during validation")
-        trusted_package_digest = product.package_sha256.lower()
-        if (
-            _SHA256_PATTERN.fullmatch(trusted_package_digest) is None
-            or not hmac.compare_digest(
-                package_digest,
-                trusted_package_digest,
-            )
-        ):
-            raise ValueError("untrusted package")
         return package_path
     except (
         OSError,
@@ -395,6 +395,50 @@ def resolve_protected_package(
         TypeError,
         UnicodeDecodeError,
         json.JSONDecodeError,
+        ValueError,
+    ) as exc:
+        raise ProtectedPackageUnavailable() from exc
+
+
+def snapshot_protected_package(
+    product: DigitalProduct,
+    storage_root: Path,
+) -> ProtectedPackageSnapshot:
+    """Read and hash the exact bounded bytes that will be delivered."""
+    try:
+        package_path = resolve_protected_package(product, storage_root)
+        with package_path.open("rb") as package_file:
+            file_size = os.fstat(package_file.fileno()).st_size
+            if (
+                file_size <= 0
+                or file_size > _MAX_PROTECTED_PACKAGE_BYTES
+            ):
+                raise OSError("protected package exceeds delivery cap")
+            payload = package_file.read(_MAX_PROTECTED_PACKAGE_BYTES + 1)
+        if (
+            not payload
+            or len(payload) > _MAX_PROTECTED_PACKAGE_BYTES
+            or len(payload) != file_size
+        ):
+            raise OSError("protected package changed during snapshot")
+
+        snapshot = ProtectedPackageSnapshot(payload)
+        trusted_package_digest = product.package_sha256.lower()
+        if (
+            _SHA256_PATTERN.fullmatch(trusted_package_digest) is None
+            or not hmac.compare_digest(
+                snapshot.sha256,
+                trusted_package_digest,
+            )
+        ):
+            raise ValueError("untrusted protected package")
+        return snapshot
+    except ProtectedPackageUnavailable:
+        raise
+    except (
+        OSError,
+        RuntimeError,
+        TypeError,
         ValueError,
     ) as exc:
         raise ProtectedPackageUnavailable() from exc
