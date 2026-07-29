@@ -51,6 +51,12 @@ outside the built-in allowlist, deploy must still stop and report the exact file
 
 Deploy does not automatically run a full production reprocess for every code change. For parser, dedup, valuation, schema, or quality-gate changes, run an explicit reprocess after deploy.
 
+Map registry/browser-evidence releases use the dedicated sequence in
+`docs/listing_map_registry_automation.md`, including deterministic double-build,
+production `map-locations --full --dry-run`, apply, and browser smoke. Browser
+research is an offline maintenance step and must never be added to crawl or a
+public request path.
+
 When removing or changing extraction/valuation logic, use this sequence:
 
 ```powershell

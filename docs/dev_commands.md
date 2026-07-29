@@ -276,6 +276,7 @@ Build the four versioned artifacts atomically:
   --osm-json .local\listing-map\osm-binh-duong-20260729-v2.json `
   --sources config\listing_map_location_sources.json `
   --overrides config\listing_map_location_overrides.json `
+  --auto-overrides config\listing_map_location_auto_overrides.json `
   --boundary config\map_products\thu_dau_mot_legacy_boundaries.geojson `
   --boundary config\map_products\ben_cat_legacy_boundaries.geojson `
   --output-dir static\maps\listing-locations
@@ -303,6 +304,9 @@ and public requests never call a live geocoder.
 Browser-assisted registry maintenance stays outside crawl and public request
 paths. Export a bounded queue, validate evidence with a dry run, then apply
 only automatically accepted entries:
+
+Quy trình production đầy đủ, browser evidence contract và stop gates nằm tại
+`docs/listing_map_registry_automation.md`.
 
 ```powershell
 & $py -X utf8 radar.py map-location-research-queue `
