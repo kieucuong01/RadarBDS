@@ -62,6 +62,20 @@ def _normalized_geojson(layers: NormalizedMapLayers) -> dict:
     features.extend(
         _feature(
             item.name,
+            "legacy_boundaries",
+            item.geometry,
+            source_id=item.source_id,
+            **{
+                key: value
+                for key, value in item.properties.items()
+                if key not in {"name", "layer", "source_id"}
+            },
+        )
+        for item in layers.legacy_boundaries
+    )
+    features.extend(
+        _feature(
+            item.name,
             "current_boundaries",
             item.geometry,
             source_id=item.source_id,
@@ -303,6 +317,7 @@ def main(argv: list[str] | None = None) -> int:
     normalized_path, manifest_path = _write_source_outputs(work_dir, layers)
     print(
         "sources normalized:",
+        f"legacy_boundaries={len(layers.legacy_boundaries)}",
         f"legacy_points={len(layers.legacy_ward_centers)}",
         f"current={len(layers.current_boundaries)}",
         f"streets={len(layers.streets)}",

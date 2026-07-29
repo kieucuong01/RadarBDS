@@ -96,10 +96,10 @@ _THU_DAU_MOT_MAP = DigitalProduct(
     release_product="radarbds-thu-dau-mot-map",
     release_files=_THU_DAU_MOT_RELEASE_FILES,
     package_sha256=(
-        "a6516a441afd26463f035ec26aa115ec249284e7f60f22fd2840586207f48fd5"
+        "afb2f735f7b153290f37a7f832bf6e31349c9310c6e4c7c47600470bd9e399da"
     ),
     manifest_sha256=(
-        "fa2bf2a45d9bdafd1a40514839e91b5fdbf61106a652ce7127d62dd3b5a01d8a"
+        "cfa4451eb3473dd3bbc6d83e56ae6a3c253fdaf44e831f86a7e651995ab0b63a"
     ),
 )
 

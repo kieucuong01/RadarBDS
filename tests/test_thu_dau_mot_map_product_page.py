@@ -23,10 +23,10 @@ TRACK_ACTIONS = (
     "thu_dau_mot_map_dashboard_clicked",
 )
 APPROVED_PACKAGE_SHA256 = (
-    "a6516a441afd26463f035ec26aa115ec249284e7f60f22fd2840586207f48fd5"
+    "afb2f735f7b153290f37a7f832bf6e31349c9310c6e4c7c47600470bd9e399da"
 )
 APPROVED_MANIFEST_SHA256 = (
-    "fa2bf2a45d9bdafd1a40514839e91b5fdbf61106a652ce7127d62dd3b5a01d8a"
+    "cfa4451eb3473dd3bbc6d83e56ae6a3c253fdaf44e831f86a7e651995ab0b63a"
 )
 EXPECTED_RELEASE_FILES = (
     "thu-dau-mot-truoc-2025-a0.pdf",
@@ -423,7 +423,7 @@ def test_product_page_is_indexable_but_checkout_is_disabled_without_sales_flag(m
     assert f'<link rel="canonical" href="{PRODUCT_URL}">' in html
     assert "99.000" in html
     assert "Sắp mở bán" in html
-    assert html.count("Sắp mở bán") == 2
+    assert html.count("Sắp mở bán") == 1
     assert 'action="/ban-do-thu-dau-mot/checkout"' not in html
     assert "<form" not in html
     disabled_purchase_buttons = re.findall(
@@ -431,9 +431,10 @@ def test_product_page_is_indexable_but_checkout_is_disabled_without_sales_flag(m
         html,
         re.I | re.S,
     )
-    assert len(disabled_purchase_buttons) == 2
+    assert len(disabled_purchase_buttons) == 1
     assert all("disabled" in button and 'aria-disabled="true"' in button for button in disabled_purchase_buttons)
-    assert html.rfind("data-product-purchase") > html.index('id="cau-hoi-thuong-gap"')
+    assert html.index("data-product-purchase") > html.index('id="danh-sach-phuong-moi"')
+    assert html.index("data-product-purchase") < html.index('id="chon-phien-ban"')
     assert "/static/images/seo/thu-dau-mot-map-before.webp" in html
     assert "/static/images/seo/thu-dau-mot-map-after.webp" in html
     lowered = html.lower()
@@ -449,7 +450,7 @@ def test_product_page_states_the_exact_legacy_and_current_edition_contract():
     html = radar_app.app.test_client().get(PRODUCT_PATH).get_data(as_text=True)
 
     assert (
-        "Đúng 14 tâm điểm tham chiếu có nguồn, không phải ranh giới hành chính cũ."
+        "Bản trước sáp nhập có 14 ranh phường cũ ở mức tham khảo."
         in html
     )
     assert (
@@ -468,7 +469,23 @@ def test_product_page_states_the_exact_legacy_and_current_edition_contract():
         "Tệp MANIFEST và mã checksum để kiểm tra tính toàn vẹn",
     ):
         assert benefit in html
-    assert "Không bao gồm ranh phường cũ, ranh khu phố, bản đồ địa chính" in html
+    assert "Không bao gồm ranh khu phố, bản đồ địa chính" in html
+    assert "Hòa Phú và Phú Tân" in html
+    assert "data-binh-duong-map" in html
+    assert "/static/maps/thu-dau-mot/legacy-14-wards.geojson" in html
+    assert "/static/maps/thu-dau-mot/current-5-wards.geojson" in html
+    legacy_geojson = json.loads(
+        Path("static/maps/thu-dau-mot/legacy-14-wards.geojson").read_text(
+            encoding="utf-8"
+        )
+    )
+    current_geojson = json.loads(
+        Path("static/maps/thu-dau-mot/current-5-wards.geojson").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert len(legacy_geojson["features"]) == 14
+    assert len(current_geojson["features"]) == 5
     assert "© OpenStreetMap contributors" in html
 
 

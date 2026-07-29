@@ -45,6 +45,15 @@ CURRENT_WARD_FILL_COLORS = {
 BOUNDARY_FILL_COLOR = CURRENT_WARD_FILL_COLORS["Thủ Dầu Một"]
 BOUNDARY_STROKE_COLOR = "#365E4B"
 LEGACY_POINT_COLOR = "#B55336"
+LEGACY_BOUNDARY_FILL_COLORS = (
+    "#E7D8C4",
+    "#DDE8D6",
+    "#D6E5EE",
+    "#F1DCCB",
+    "#E6D9EC",
+    "#F2E7B9",
+    "#D7ECE6",
+)
 PRIMARY_ROAD_COLOR = "#C97842"
 SECONDARY_ROAD_COLOR = "#DDAA73"
 LOCAL_ROAD_COLOR = "#CABFAE"
@@ -54,7 +63,7 @@ NEIGHBORHOOD_COLOR = "#8A743A"
 
 MAP_LAYER_IDS = (
     "boundaries",
-    "legacy-reference-centers",
+    "legacy-boundaries",
     "streets",
     "hydro",
     "poi",
@@ -156,11 +165,12 @@ BOUNDARY_STYLE = LayerStyle(
     stroke_width_pt=2.2,
     fill_opacity=0.72,
 )
-LEGACY_REFERENCE_STYLE = LayerStyle(
-    fill=LEGACY_POINT_COLOR,
-    stroke=PAPER_COLOR,
-    stroke_width_pt=1.4,
-    point_radius_pt=5.0,
+LEGACY_BOUNDARY_STYLE = LayerStyle(
+    fill=LEGACY_BOUNDARY_FILL_COLORS[0],
+    stroke=LEGACY_POINT_COLOR,
+    stroke_width_pt=1.45,
+    fill_opacity=0.58,
+    dash=(4.0, 3.0),
 )
 STREET_STYLE = LayerStyle(stroke=LOCAL_ROAD_COLOR, stroke_width_pt=1.0)
 HYDRO_STYLE = LayerStyle(stroke=HYDRO_COLOR, stroke_width_pt=2.0)
@@ -328,7 +338,7 @@ def _accepted_labels(
     primary_layer = (
         layers_by_id["boundaries"]
         if edition == "current"
-        else layers_by_id["legacy-reference-centers"]
+        else layers_by_id["legacy-boundaries"]
     )
     for feature in primary_layer.features:
         candidates.append(
@@ -429,13 +439,13 @@ def source_attribution(layers: NormalizedMapLayers) -> str:
             f"license: {font_license} — {font_license_url}"
         ),
     ]
-    legacy_record = layers.source_manifest.get("legacy_ward_centers", {})
+    legacy_record = layers.source_manifest.get("legacy_boundaries", {})
     legacy_license = str(legacy_record.get("license", "")).strip()
     legacy_license_url = str(
         legacy_record.get("license_url", "")
     ).strip()
     if legacy_license:
-        legacy_text = f"Legacy reference centers: {legacy_license}"
+        legacy_text = f"Legacy ward boundaries: {legacy_license}"
         if legacy_license_url:
             legacy_text += f" — {legacy_license_url}"
         parts.append(legacy_text)
@@ -457,9 +467,9 @@ def _legend(edition: str) -> tuple[LegendItem, ...]:
         )
         if edition == "current"
         else LegendItem(
-            "Điểm tham chiếu phường cũ",
+            "Ranh phường cũ tham khảo",
             LEGACY_POINT_COLOR,
-            "point",
+            "fill",
         )
     )
     return (
@@ -480,6 +490,8 @@ def build_scene(
         raise ValueError("edition must be 'legacy' or 'current'")
     if len(layers.current_boundaries) != 5:
         raise ValueError("Current edition requires exactly five boundary polygons")
+    if len(layers.legacy_boundaries) != 14:
+        raise ValueError("Legacy edition requires exactly 14 boundary polygons")
     if len(layers.legacy_ward_centers) != 14:
         raise ValueError("Legacy edition requires exactly 14 reference-center Points")
     if any(point.geometry_type != "Point" for point in layers.legacy_ward_centers):
@@ -499,14 +511,19 @@ def build_scene(
         if edition == "current"
         else ()
     )
-    legacy_centers = (
+    legacy_boundaries = (
         tuple(
-            _point_feature(
-                point,
-                source_url=point.source_url,
-                boundary_claim="false",
+            _feature(
+                item.name,
+                item.geometry,
+                source_id=item.source_id,
+                boundary_claim="true",
+                boundary_source=item.properties.get("boundary_source", ""),
+                derived_from=item.properties.get("derived_from", ""),
+                source_url=item.properties.get("source_url", ""),
+                fill=LEGACY_BOUNDARY_FILL_COLORS[index % len(LEGACY_BOUNDARY_FILL_COLORS)],
             )
-            for point in layers.legacy_ward_centers
+            for index, item in enumerate(layers.legacy_boundaries)
         )
         if edition == "legacy"
         else ()
@@ -531,9 +548,9 @@ def build_scene(
     scene_layers = (
         SceneLayer("boundaries", boundaries, BOUNDARY_STYLE),
         SceneLayer(
-            "legacy-reference-centers",
-            legacy_centers,
-            LEGACY_REFERENCE_STYLE,
+            "legacy-boundaries",
+            legacy_boundaries,
+            LEGACY_BOUNDARY_STYLE,
         ),
         SceneLayer("streets", streets, STREET_STYLE),
         SceneLayer("hydro", hydro, HYDRO_STYLE),
@@ -544,8 +561,8 @@ def build_scene(
     bounds = _padded_current_bounds(layers)
     layer_index = {layer.layer_id: layer for layer in scene_layers}
     disclaimer = (
-        "Bản 14 điểm tham chiếu tên phường cũ; đây là điểm tham chiếu, "
-        "không phải ranh giới hành chính cũ."
+        "Bản 14 ranh phường cũ tham khảo; Hòa Phú và Phú Tân là ranh suy luận "
+        "biên tập từ dữ liệu liền kề, không thay thế hồ sơ địa chính."
         if edition == "legacy"
         else ""
     )
@@ -559,7 +576,7 @@ def build_scene(
         attribution=source_attribution(layers),
         title="BẢN ĐỒ THỦ DẦU MỘT",
         subtitle=(
-            "14 phường cũ — điểm tham chiếu tên gọi"
+            "14 phường cũ — ranh tham khảo"
             if edition == "legacy"
             else "5 phường hiện hành — địa giới hành chính"
         ),

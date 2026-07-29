@@ -2193,10 +2193,41 @@ def binh_duong_map_page():
     )
 
 
+def _map_areas_from_static_geojson(static_url: str) -> list[dict]:
+    static_path = Path(__file__).parent / static_url.lstrip("/")
+    payload = json.loads(static_path.read_text(encoding="utf-8"))
+    areas = []
+    for feature in payload.get("features", []):
+        properties = feature.get("properties") or {}
+        if not properties.get("slug") or not properties.get("name"):
+            continue
+        areas.append(
+            {
+                "slug": properties["slug"],
+                "name": properties["name"],
+                "unit_type": properties.get("unit_type", "Phường"),
+                "summary": properties.get("summary", ""),
+                "group": properties.get("group", ""),
+                "former_units": properties.get("former_units", ""),
+                "dashboard_href": properties.get(
+                    "dashboard_href",
+                    "/?tab=signals&city=Th%E1%BB%A7%20D%E1%BA%A7u%20M%E1%BB%99t",
+                ),
+                "dashboard_label": properties.get(
+                    "dashboard_label",
+                    "Lọc tin Thủ Dầu Một",
+                ),
+            }
+        )
+    return areas
+
+
 def thu_dau_mot_map_product_page():
     page = deepcopy(THU_DAU_MOT_MAP_PRODUCT_PAGE)
     page["breadcrumbs"] = _page_breadcrumbs(page)
     page["local_links"] = [dict(link) for link in page["local_links"]]
+    legacy_areas = _map_areas_from_static_geojson(page["legacy_geojson_url"])
+    current_areas = _map_areas_from_static_geojson(page["current_geojson_url"])
     product = get_digital_product("thu-dau-mot-map-bundle")
     commerce_settings = get_digital_product_commerce_settings()
     if (
@@ -2227,6 +2258,8 @@ def thu_dau_mot_map_product_page():
         page=page,
         product=product,
         availability=availability,
+        legacy_areas=legacy_areas,
+        current_areas=current_areas,
         display_price=f"{product.price_vnd:,}".replace(",", "."),
         site_meta=site_meta,
         schema_graph=_thu_dau_mot_map_product_schema(

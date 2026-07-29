@@ -9,6 +9,14 @@
       "snapshot_at": "2026-07-28"
     },
     {
+      "key": "legacy_boundaries",
+      "source_url": "config/map_products/thu_dau_mot_legacy_boundaries.geojson",
+      "license_name": "Creative Commons Attribution 3.0 Unported with derived geometry notes",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "snapshot_strategy": "repo_snapshot",
+      "snapshot_at": "2026-07-29"
+    },
+    {
       "key": "legacy_ward_centers",
       "source_url": "config/map_products/thu_dau_mot_legacy_ward_centers.geojson",
       "license_name": "Creative Commons CC0 1.0 (Wikidata point data)",

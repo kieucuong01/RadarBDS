@@ -133,6 +133,41 @@ def sample_layers() -> NormalizedMapLayers:
         )
         for index, name in enumerate(legacy_names)
     )
+    legacy_boundaries = tuple(
+        NamedGeometry(
+            name,
+            box(
+                106.62 + (index % 5) * 0.014,
+                10.96 + (index // 5) * 0.014,
+                106.631 + (index % 5) * 0.014,
+                10.971 + (index // 5) * 0.014,
+            ),
+            source_id=f"legacy-{index}",
+            properties={
+                "source": (
+                    "Radar BDS derived boundary"
+                    if name in {"Hòa Phú", "Phú Tân"}
+                    else "Stanford Geospatial Center / GADM v2.8 snapshot"
+                ),
+                "source_url": (
+                    "https://geodiscovery.uwm.edu/catalog/"
+                    "stanford-dk039bc2779/metadata"
+                ),
+                "boundary_claim": "true",
+                "boundary_source": (
+                    "derived_boundary"
+                    if name in {"Hòa Phú", "Phú Tân"}
+                    else "source_snapshot"
+                ),
+                "derived_from": (
+                    "current Bình Dương residual"
+                    if name in {"Hòa Phú", "Phú Tân"}
+                    else ""
+                ),
+            },
+        )
+        for index, name in enumerate(legacy_names)
+    )
     streets = (
         StreetGeometry(
             "Đại lộ Bình Dương",
@@ -185,6 +220,7 @@ def sample_layers() -> NormalizedMapLayers:
         ),
     )
     return NormalizedMapLayers(
+        legacy_boundaries=legacy_boundaries,
         current_boundaries=boundaries,
         legacy_ward_centers=legacy_centers,
         streets=streets,
@@ -201,6 +237,14 @@ def sample_layers() -> NormalizedMapLayers:
                 "license": "CC0",
                 "license_url": "https://www.wikidata.org/wiki/Wikidata:Licensing",
                 "url": "https://www.wikidata.org/",
+            },
+            "legacy_boundaries": {
+                "license": "Creative Commons Attribution 3.0 Unported",
+                "license_url": "https://creativecommons.org/licenses/by/3.0/",
+                "url": (
+                    "https://geodiscovery.uwm.edu/catalog/"
+                    "stanford-dk039bc2779/metadata"
+                ),
             },
             "font": {
                 "license": "SIL Open Font License, Version 1.1",
@@ -248,14 +292,14 @@ def test_scene_projects_wgs84_once_and_enforces_edition_geometry(sample_layers):
     assert legacy.bounds_m == current.bounds_m
     assert {layer.layer_id for layer in legacy.layers} == set(MAP_LAYER_IDS)
     assert len(_layer(legacy, "boundaries").features) == 0
-    assert len(_layer(legacy, "legacy-reference-centers").features) == 14
+    assert len(_layer(legacy, "legacy-boundaries").features) == 14
     assert len(_layer(current, "boundaries").features) == 5
-    assert len(_layer(current, "legacy-reference-centers").features) == 0
-    assert "điểm tham chiếu" in legacy.disclaimer.casefold()
-    assert "không phải ranh giới" in legacy.disclaimer.casefold()
+    assert len(_layer(current, "legacy-boundaries").features) == 0
+    assert "14 ranh phường cũ" in legacy.disclaimer.casefold()
+    assert "không thay thế hồ sơ địa chính" in legacy.disclaimer.casefold()
     assert current.disclaimer == ""
     assert legacy.scale_bar_m > 0
-    assert "Điểm tham chiếu phường cũ" in {
+    assert "Ranh phường cũ tham khảo" in {
         item.label for item in legacy.legend
     }
     assert "Địa giới phường hiện hành" in {
@@ -316,7 +360,7 @@ def test_svg_is_vector_layered_and_text_editable(
     }
     assert set(MAP_LAYER_IDS) <= layer_ids
     assert b"font-family:'Be Vietnam Pro'" in output.read_bytes()
-    assert "14 điểm tham chiếu" in "".join(root.itertext())
+    assert "14 phường cũ" in "".join(root.itertext())
     assert root.find(".//svg:g[@id='north-arrow']", SVG_NS) is not None
     rendered_text = "".join(root.itertext())
     assert "BẮC" in rendered_text
@@ -335,9 +379,9 @@ def test_legacy_svg_carries_override_in_edition_metadata(
 
     assert metadata is not None
     value = (metadata.text or "").casefold()
-    assert "14 điểm" in value
-    assert "tham chiếu" in value
-    assert "không phải ranh giới hành chính cũ" in value
+    assert "14 ranh phường cũ" in value
+    assert "tham khảo" in value
+    assert "không thay thế hồ sơ địa chính" in value
 
 
 def test_pdf_is_landscape_a0_vector_with_embedded_vietnamese_font(
@@ -355,7 +399,7 @@ def test_pdf_is_landscape_a0_vector_with_embedded_vietnamese_font(
         assert pdf.pages[0].chars
         extracted = pdf.pages[0].extract_text() or ""
         assert "BẢN ĐỒ THỦ DẦU MỘT" in extracted
-        assert "14 điểm tham chiếu" in extracted
+        assert "14 phường cũ" in extracted
         assert "BẮC" in extracted
         assert "© OpenStreetMap contributors" in extracted
         assert "https://www.openstreetmap.org/copyright" in extracted
@@ -373,9 +417,9 @@ def test_legacy_pdf_carries_override_in_document_metadata(
     output = render_pdf(legacy_scene, tmp_path / "map.pdf", test_fonts)
     subject = (PdfReader(output).metadata.subject or "").casefold()
 
-    assert "14 điểm" in subject
-    assert "tham chiếu" in subject
-    assert "không phải ranh giới hành chính cũ" in subject
+    assert "14 ranh phường cũ" in subject
+    assert "tham khảo" in subject
+    assert "không thay thế hồ sơ địa chính" in subject
 
 
 def test_pdf_render_is_byte_deterministic_when_clock_changes(
@@ -407,25 +451,25 @@ def test_font_coverage_gate_rejects_missing_vietnamese_glyphs(tmp_path):
         )
 
 
-def test_kml_legacy_contains_14_geographic_points_without_boundary_polygons(
+def test_kml_legacy_contains_14_geographic_boundary_polygons(
     tmp_path, sample_layers
 ):
     output = render_kml(sample_layers, "legacy", tmp_path / "map.kml")
     root = ElementTree.parse(output).getroot()
 
     assert root.findall(".//kml:Placemark", KML_NS)
-    assert len(root.findall(".//kml:Point", KML_NS)) == 16
-    assert not root.findall(".//kml:Polygon", KML_NS)
+    assert len(root.findall(".//kml:Point", KML_NS)) == 2
+    assert len(root.findall(".//kml:Polygon", KML_NS)) == 14
     assert not root.findall(".//kml:ScreenOverlay", KML_NS)
     assert b"watermark" not in output.read_bytes().lower()
     legacy_folder = next(
         folder
         for folder in root.findall(".//kml:Folder", KML_NS)
         if folder.findtext("kml:name", namespaces=KML_NS)
-        == "legacy-reference-centers"
+        == "legacy-boundaries"
     )
-    legacy_points = legacy_folder.findall(".//kml:Point", KML_NS)
-    assert len(legacy_points) == 14
+    legacy_polygons = legacy_folder.findall(".//kml:Polygon", KML_NS)
+    assert len(legacy_polygons) == 14
     poi_folder = next(
         folder
         for folder in root.findall(".//kml:Folder", KML_NS)
@@ -445,7 +489,17 @@ def test_kml_legacy_contains_14_geographic_points_without_boundary_polygons(
             KML_NS,
         )
     ]
-    assert values == ["false"] * 14
+    assert values == ["true"] * 14
+    derived = [
+        placemark.findtext("kml:name", namespaces=KML_NS)
+        for placemark in legacy_folder.findall("kml:Placemark", KML_NS)
+        if placemark.findtext(
+            ".//kml:Data[@name='boundary_source']/kml:value",
+            namespaces=KML_NS,
+        )
+        == "derived_boundary"
+    ]
+    assert set(derived) == {"Hòa Phú", "Phú Tân"}
     kml_text = "".join(root.itertext())
     assert "© OpenStreetMap contributors" in kml_text
     assert "https://www.openstreetmap.org/copyright" in kml_text
@@ -466,9 +520,9 @@ def test_legacy_kml_carries_override_in_document_metadata(
 
     assert value is not None
     folded = value.casefold()
-    assert "14 điểm" in folded
-    assert "tham chiếu" in folded
-    assert "không phải ranh giới hành chính cũ" in folded
+    assert "14 ranh phường cũ" in folded
+    assert "tham khảo" in folded
+    assert "không thay thế hồ sơ địa chính" in folded
 
 
 def test_current_svg_uses_five_distinct_ward_fills(

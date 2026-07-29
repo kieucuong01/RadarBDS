@@ -44,8 +44,8 @@ ElementTree.register_namespace("", SVG_NAMESPACE)
 _PDF_FONT_REGULAR = "BeVietnamProMapRegular"
 _PDF_FONT_SEMIBOLD = "BeVietnamProMapSemiBold"
 LEGACY_EDITION_DESCRIPTION = (
-    "Bản 14 điểm tham chiếu tên phường cũ; đây là điểm tham chiếu, "
-    "không phải ranh giới hành chính cũ."
+    "Bản 14 ranh phường cũ tham khảo; Hòa Phú và Phú Tân là ranh suy luận "
+    "biên tập, không thay thế hồ sơ địa chính."
 )
 CURRENT_EDITION_DESCRIPTION = (
     "Bản 5 địa giới phường hiện hành sau sắp xếp 2025."
@@ -941,6 +941,8 @@ def render_kml(
         raise ValueError("edition must be 'legacy' or 'current'")
     if len(layers.current_boundaries) != 5:
         raise ValueError("Current edition requires exactly five boundary polygons")
+    if len(layers.legacy_boundaries) != 14:
+        raise ValueError("Legacy edition requires exactly 14 boundary polygons")
     if len(layers.legacy_ward_centers) != 14:
         raise ValueError("Legacy edition requires exactly 14 reference-center Points")
 
@@ -955,7 +957,7 @@ def render_kml(
     _kml_data(
         document_data,
         "source",
-        "OpenStreetMap ODbL; Wikidata CC0",
+        "OpenStreetMap ODbL; Stanford/GADM snapshot; Radar BDS derived geometry",
     )
     _kml_data(
         document_data,
@@ -979,18 +981,20 @@ def render_kml(
                 boundary_claim=True,
             )
     else:
-        folder = _kml_folder(document, "legacy-reference-centers")
-        for point in layers.legacy_ward_centers:
+        folder = _kml_folder(document, "legacy-boundaries")
+        for item in layers.legacy_boundaries:
             _kml_placemark(
                 folder,
-                point.name,
-                Point(point.lon, point.lat),
+                item.name,
+                item.geometry,
                 edition=edition,
-                source=point.source,
-                boundary_claim=False,
+                source=item.properties.get("source", item.source_id),
+                boundary_claim=True,
                 extra_data={
-                    "confidence": point.confidence,
-                    "source_url": point.source_url,
+                    "boundary_source": item.properties.get("boundary_source", ""),
+                    "derived_from": item.properties.get("derived_from", ""),
+                    "source_id": item.source_id,
+                    "source_url": item.properties.get("source_url", ""),
                 },
             )
 

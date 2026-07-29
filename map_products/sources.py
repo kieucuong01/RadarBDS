@@ -19,6 +19,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 _USER_AGENT = "Radar BDS Map Product Builder/1.0 (+https://radarbds.vn)"
 _JSON_SOURCE_KEYS = {
     "current_boundaries",
+    "legacy_boundaries",
     "legacy_ward_centers",
     "osm_detail",
 }
@@ -39,7 +40,11 @@ def _cache_suffix(source: MapSource) -> str:
     if source.key in _JSON_SOURCE_KEYS:
         return (
             ".geojson"
-            if source.key in {"current_boundaries", "legacy_ward_centers"}
+            if source.key in {
+                "current_boundaries",
+                "legacy_boundaries",
+                "legacy_ward_centers",
+            }
             else ".json"
         )
     return suffix if suffix and len(suffix) <= 8 else ".bin"
@@ -79,7 +84,11 @@ def _validate_payload(source: MapSource, payload: bytes) -> None:
         raise ValueError(f"{source.key} JSON root must be an object")
     if "remark" in document:
         raise ValueError(f"{source.key} Overpass failure: {document['remark']}")
-    if source.key in {"current_boundaries", "legacy_ward_centers"}:
+    if source.key in {
+        "current_boundaries",
+        "legacy_boundaries",
+        "legacy_ward_centers",
+    }:
         if document.get("type") != "FeatureCollection" or not isinstance(
             document.get("features"), list
         ):

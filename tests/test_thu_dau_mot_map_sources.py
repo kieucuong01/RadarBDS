@@ -44,10 +44,22 @@ def test_every_source_has_license_and_snapshot_contract():
         ROOT / "config/map_products/thu_dau_mot_sources.json"
     )
     source_keys = {source.key for source in sources}
-    assert {"legacy_ward_centers", "current_boundaries", "osm_detail", "font"} <= {
+    assert {
+        "legacy_boundaries",
+        "legacy_ward_centers",
+        "current_boundaries",
+        "osm_detail",
+        "font",
+    } <= {
         source.key for source in sources
     }
-    assert "legacy_boundaries" not in source_keys
+    legacy_boundaries = next(
+        source for source in sources if source.key == "legacy_boundaries"
+    )
+    assert legacy_boundaries.snapshot_strategy == "repo_snapshot"
+    assert legacy_boundaries.source_url.endswith(
+        "thu_dau_mot_legacy_boundaries.geojson"
+    )
     legacy_points = next(
         source for source in sources if source.key == "legacy_ward_centers"
     )
@@ -97,6 +109,38 @@ def test_legacy_ward_centers_are_exactly_14_sourced_points_without_boundaries():
         and feature["properties"]["confidence"] in {"high", "medium"}
         for feature in document["features"]
     )
+
+
+def test_legacy_boundaries_are_exactly_14_reference_polygons_with_provenance():
+    spec = load_product_spec(
+        ROOT / "config/map_products/thu_dau_mot_product.json"
+    )
+    path = ROOT / "config/map_products/thu_dau_mot_legacy_boundaries.geojson"
+    document = json.loads(path.read_text(encoding="utf-8"))
+    features = document["features"]
+
+    assert len(features) == 14
+    assert {
+        feature["properties"]["name"] for feature in features
+    } == set(spec.legacy_wards)
+    assert all(
+        feature["geometry"]["type"] in {"Polygon", "MultiPolygon"}
+        and feature["properties"]["boundary_claim"] is True
+        and feature["properties"]["source"]
+        and feature["properties"]["source_url"]
+        and feature["properties"]["boundary_source"] in {
+            "source_snapshot",
+            "derived_boundary",
+        }
+        for feature in features
+    )
+    derived = {
+        feature["properties"]["name"]: feature["properties"]
+        for feature in features
+        if feature["properties"]["boundary_source"] == "derived_boundary"
+    }
+    assert set(derived) == {"Hòa Phú", "Phú Tân"}
+    assert all(properties["derived_from"] for properties in derived.values())
 
 
 def test_neighborhoods_are_named_points_not_claimed_boundaries():
@@ -211,6 +255,41 @@ def _point_feature(name: str, lon: float, lat: float) -> dict:
     }
 
 
+def _boundary_feature(
+    name: str,
+    lon: float,
+    lat: float,
+    size: float = 0.004,
+    *,
+    boundary_source: str = "source_snapshot",
+) -> dict:
+    return {
+        "type": "Feature",
+        "properties": {
+            "name": name,
+            "source": f"Test boundary source for {name}",
+            "source_url": "https://example.test/legacy-boundary",
+            "boundary_claim": True,
+            "boundary_source": boundary_source,
+            "derived_from": (
+                "current boundary minus adjacent source polygons"
+                if boundary_source == "derived_boundary"
+                else ""
+            ),
+        },
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [[
+                [lon, lat],
+                [lon + size, lat],
+                [lon + size, lat + size],
+                [lon, lat + size],
+                [lon, lat],
+            ]],
+        },
+    }
+
+
 def _write_json(path: Path, payload: dict) -> Path:
     path.write_text(
         json.dumps(payload, ensure_ascii=False, sort_keys=True),
@@ -226,6 +305,19 @@ def source_payloads(tmp_path: Path, product_spec):
             name,
             106.63 + (index % 5) * 0.006,
             10.96 + (index // 5) * 0.006,
+        )
+        for index, name in enumerate(product_spec.legacy_wards)
+    ]
+    legacy_boundary_features = [
+        _boundary_feature(
+            name,
+            106.63 + (index % 5) * 0.006,
+            10.96 + (index // 5) * 0.006,
+            boundary_source=(
+                "derived_boundary"
+                if name in {"Hòa Phú", "Phú Tân"}
+                else "source_snapshot"
+            ),
         )
         for index, name in enumerate(product_spec.legacy_wards)
     ]
@@ -300,6 +392,10 @@ def source_payloads(tmp_path: Path, product_spec):
             tmp_path / "legacy-centers.geojson",
             {"type": "FeatureCollection", "features": legacy_features},
         ),
+        "legacy_boundaries": _write_json(
+            tmp_path / "legacy-boundaries.geojson",
+            {"type": "FeatureCollection", "features": legacy_boundary_features},
+        ),
         "current_boundaries": _write_json(
             tmp_path / "current.json",
             {"type": "FeatureCollection", "features": current_features},
@@ -320,7 +416,7 @@ def _sample_neighborhoods() -> tuple[MapPoint, ...]:
     )
 
 
-def test_normalizer_requires_exact_legacy_points_and_current_boundaries(
+def test_normalizer_requires_exact_legacy_boundaries_points_and_current_boundaries(
     product_spec, source_payloads
 ):
     layers = build_normalized_layers(
@@ -329,10 +425,13 @@ def test_normalizer_requires_exact_legacy_points_and_current_boundaries(
         neighborhood_points=_sample_neighborhoods(),
     )
 
-    assert not hasattr(layers, "legacy_boundaries")
+    assert len(layers.legacy_boundaries) == 14
     assert len(layers.legacy_ward_centers) == 14
     assert len(layers.current_boundaries) == 5
     assert {point.name for point in layers.legacy_ward_centers} == set(
+        product_spec.legacy_wards
+    )
+    assert {feature.name for feature in layers.legacy_boundaries} == set(
         product_spec.legacy_wards
     )
     assert {feature.name for feature in layers.current_boundaries} == set(
@@ -343,11 +442,56 @@ def test_normalizer_requires_exact_legacy_points_and_current_boundaries(
         for feature in layers.current_boundaries
     )
     assert all(
+        feature.geometry.geom_type in {"Polygon", "MultiPolygon"}
+        for feature in layers.legacy_boundaries
+    )
+    derived = {
+        feature.name
+        for feature in layers.legacy_boundaries
+        if feature.properties.get("boundary_source") == "derived_boundary"
+    }
+    assert derived == {"Hòa Phú", "Phú Tân"}
+    assert all(
         point.geometry_type == "Point"
         and point.source_url
         and point.boundary_claim is False
         for point in layers.legacy_ward_centers
     )
+
+
+def test_normalizer_rejects_incomplete_legacy_boundary_snapshot(
+    product_spec, source_payloads
+):
+    legacy_path = source_payloads["legacy_boundaries"]
+    payload = json.loads(legacy_path.read_text(encoding="utf-8"))
+    payload["features"].pop()
+    _write_json(legacy_path, payload)
+
+    with pytest.raises(ValueError, match="exactly 14 legacy boundary"):
+        build_normalized_layers(
+            product_spec,
+            source_payloads,
+            neighborhood_points=_sample_neighborhoods(),
+        )
+
+
+def test_normalizer_rejects_point_legacy_boundary(
+    product_spec, source_payloads
+):
+    legacy_path = source_payloads["legacy_boundaries"]
+    payload = json.loads(legacy_path.read_text(encoding="utf-8"))
+    payload["features"][0]["geometry"] = {
+        "type": "Point",
+        "coordinates": [106.63, 10.96],
+    }
+    _write_json(legacy_path, payload)
+
+    with pytest.raises(ValueError, match="Polygon"):
+        build_normalized_layers(
+            product_spec,
+            source_payloads,
+            neighborhood_points=_sample_neighborhoods(),
+        )
 
 
 def test_normalizer_rejects_incomplete_legacy_point_snapshot(

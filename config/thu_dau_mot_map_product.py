@@ -5,7 +5,7 @@ THU_DAU_MOT_MAP_PRODUCT_PAGE = {
     "title": "Bộ bản đồ TP Thủ Dầu Một PDF, SVG, KML | Radar BDS",
     "description": (
         "Bộ bản đồ số TP Thủ Dầu Một gồm bản in A0, bản chỉnh sửa và lớp địa lý, "
-        "với 14 tâm điểm tham chiếu cũ và 5 ranh phường hiện tại đã xác minh."
+        "với 14 ranh phường cũ tham khảo và 5 ranh phường hiện tại đã xác minh."
     ),
     "keywords": (
         "bản đồ Thủ Dầu Một, bản đồ TP Thủ Dầu Một, bản đồ vector Thủ Dầu Một, "
@@ -15,12 +15,16 @@ THU_DAU_MOT_MAP_PRODUCT_PAGE = {
     "hero_title": "Bộ bản đồ TP Thủ Dầu Một",
     "hero_text": (
         "Một bộ sản phẩm biên tập cho nhu cầu in A0, chỉnh sửa thiết kế và mở lớp "
-        "địa lý. Trang đang cho xem hai bản mẫu có watermark; thanh toán chưa được mở."
+        "địa lý. Bạn có thể tra cứu miễn phí trên bản đồ tương tác trước khi mở dashboard "
+        "lọc tin theo khu vực."
     ),
     "updated_at": "2026-07-29",
     "updated_label": "29/07/2026",
     "preview_before": "/static/images/seo/thu-dau-mot-map-before.webp",
     "preview_after": "/static/images/seo/thu-dau-mot-map-after.webp",
+    "default_layer": "legacy",
+    "legacy_geojson_url": "/static/maps/thu-dau-mot/legacy-14-wards.geojson",
+    "current_geojson_url": "/static/maps/thu-dau-mot/current-5-wards.geojson",
     "current_wards": (
         "Thủ Dầu Một",
         "Phú Lợi",
@@ -32,8 +36,9 @@ THU_DAU_MOT_MAP_PRODUCT_PAGE = {
         {
             "question": "Bản trước năm 2025 có phải ranh giới hành chính cũ không?",
             "answer": (
-                "Không. Bản trước năm 2025 chỉ thể hiện đúng 14 tâm điểm tham chiếu "
-                "có nguồn; các điểm này không phải ranh giới hành chính cũ."
+                "Có 14 ranh phường cũ ở mức tham khảo. Trong đó Hòa Phú và Phú Tân "
+                "là ranh suy luận biên tập từ phần dư hình học, không thay thế hồ sơ "
+                "địa chính hoặc xác nhận của cơ quan có thẩm quyền."
             ),
         },
         {

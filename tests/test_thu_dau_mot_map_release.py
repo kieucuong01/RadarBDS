@@ -62,13 +62,13 @@ CURRENT_NAMES = (
     "Phú An",
 )
 LEGACY_EDITION_METADATA = (
-    "Bản 14 điểm tham chiếu tên phường cũ; đây là điểm tham chiếu, "
-    "không phải ranh giới hành chính cũ."
+    "Bản 14 ranh phường cũ tham khảo; Hòa Phú và Phú Tân là ranh suy luận "
+    "biên tập, không thay thế hồ sơ địa chính."
 )
 APPROVAL = {
     "reviewer": "Radar BDS release review",
     "reviewed_at": "2026-07-29T03:00:00+07:00",
-    "legacy_reference_points_checked": True,
+    "legacy_boundaries_checked": True,
     "current_labels_checked": True,
     "a0_layout_checked": True,
     "vietnamese_text_checked": True,
@@ -193,13 +193,19 @@ def _kml(*, legacy: bool) -> str:
         "</coordinates></LinearRing></outerBoundaryIs></Polygon>"
     )
     if legacy:
-        primary_name = "legacy-reference-centers"
+        primary_name = "legacy-boundaries"
         primary = "".join(
             (
                 f"<Placemark><name>{name}</name>"
                 "<ExtendedData><Data name=\"boundary_claim\">"
-                "<value>false</value></Data></ExtendedData>"
-                f"{point.format(index=index)}</Placemark>"
+                "<value>true</value></Data>"
+                "<Data name=\"boundary_source\"><value>"
+                f"{'derived_boundary' if name in {'Hòa Phú', 'Phú Tân'} else 'source_snapshot'}"
+                "</value></Data>"
+                "<Data name=\"derived_from\"><value>"
+                f"{'current Bình Dương residual' if name in {'Hòa Phú', 'Phú Tân'} else ''}"
+                "</value></Data></ExtendedData>"
+                f"{polygon.format(index=index)}</Placemark>"
             )
             for index, name in enumerate(LEGACY_NAMES, start=10)
         )
@@ -217,7 +223,7 @@ def _kml(*, legacy: bool) -> str:
     return f"""\
 <kml xmlns="http://www.opengis.net/kml/2.2"><Document>
   <description>© OpenStreetMap contributors -
-  https://www.openstreetmap.org/copyright - Wikidata CC0</description>
+  https://www.openstreetmap.org/copyright - Stanford GADM - Wikidata CC0</description>
   <ExtendedData><Data name="edition_description">
   <value>{edition_metadata}</value></Data></ExtendedData>
   <Folder><name>{primary_name}</name>{primary}</Folder>
@@ -266,8 +272,8 @@ def candidate_dir(tmp_path: Path) -> Path:
         regular,
         page_size=landscape(A0),
         text=(
-            "BẢN ĐỒ THỦ DẦU MỘT - 14 điểm tham chiếu - "
-            "không phải ranh giới hành chính cũ"
+            "BẢN ĐỒ THỦ DẦU MỘT - 14 ranh phường cũ tham khảo - "
+            "không thay thế hồ sơ địa chính"
         ),
     )
     _write_pdf(
@@ -291,6 +297,7 @@ def candidate_dir(tmp_path: Path) -> Path:
         "Không bán lại, chia sẻ công khai hoặc phân phối lại file gốc.\n"
         "Nguồn: © OpenStreetMap contributors\n"
         "https://www.openstreetmap.org/copyright\n"
+        "Stanford Geospatial Center / GADM v2.8 snapshot\n"
         "Wikidata CC0: https://www.wikidata.org/wiki/Wikidata:Licensing\n"
         "Font: Be Vietnam Pro - SIL Open Font License, Version 1.1\n",
         encoding="utf-8",
@@ -308,6 +315,16 @@ def candidate_dir(tmp_path: Path) -> Path:
             "license_url": "https://www.wikidata.org/wiki/Wikidata:Licensing",
             "url": "legacy.geojson",
             "sha256": "b" * 64,
+            "byte_length": 100,
+        },
+        "legacy_boundaries": {
+            "license": "Creative Commons Attribution 3.0 Unported",
+            "license_url": "https://creativecommons.org/licenses/by/3.0/",
+            "url": (
+                "https://geodiscovery.uwm.edu/catalog/"
+                "stanford-dk039bc2779/metadata"
+            ),
+            "sha256": "f" * 64,
             "byte_length": 100,
         },
         "osm_detail": {

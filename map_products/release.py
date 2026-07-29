@@ -64,13 +64,14 @@ FONT_FILES = {
 }
 REQUIRED_SOURCE_KEYS = (
     "current_boundaries",
+    "legacy_boundaries",
     "legacy_ward_centers",
     "osm_detail",
     "font",
     "font_semibold",
 )
 APPROVAL_CHECKS = (
-    "legacy_reference_points_checked",
+    "legacy_boundaries_checked",
     "current_labels_checked",
     "a0_layout_checked",
     "vietnamese_text_checked",
@@ -223,8 +224,8 @@ def _write_guide_pdf(
         (
             "2. LƯU Ý VỀ HAI PHIÊN BẢN",
             (
-                "Bản trước 2025 hiển thị đúng 14 tâm điểm tham chiếu có tên. "
-                "Các điểm này không phải ranh giới hành chính cũ. Bản sau "
+                "Bản trước 2025 hiển thị đúng 14 ranh phường cũ tham khảo. "
+                "Hòa Phú và Phú Tân là ranh suy luận biên tập. Bản sau "
                 "2025 hiển thị đúng 5 ranh phường hiện hành: Thủ Dầu Một, "
                 "Phú Lợi, Chánh Hiệp, Bình Dương và Phú An."
             ),
@@ -241,7 +242,7 @@ def _write_guide_pdf(
         (
             "4. DỮ LIỆU KML",
             (
-                "KML giữ các lớp ranh hoặc điểm tham chiếu, đường, thủy hệ, "
+                "KML giữ các lớp ranh phường, đường, thủy hệ, "
                 "POI và khu phố. KML là dữ liệu địa lý, không mô phỏng bố cục "
                 "trang in. Tọa độ khu phố và POI mang tính tham khảo."
             ),
@@ -309,7 +310,9 @@ NGUỒN VÀ GIẤY PHÉP DỮ LIỆU
 https://www.openstreetmap.org/copyright
 Dữ liệu OpenStreetMap được cung cấp theo Open Data Commons Open Database License (ODbL) v1.0.
 
-Tâm điểm tham chiếu phường cũ: Wikidata CC0
+Ranh phường cũ: Stanford Geospatial Center / GADM v2.8 snapshot, kết hợp phần ranh suy luận do Radar BDS biên tập cho Hòa Phú và Phú Tân.
+https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata
+Tâm điểm phường cũ dùng để kiểm tra nhãn: Wikidata CC0
 https://www.wikidata.org/wiki/Wikidata:Licensing
 
 FONT
@@ -319,7 +322,7 @@ Xem toàn văn giấy phép font tại fonts/OFL.txt.
 
 CẢNH BÁO
 Bản đồ không thay thế bản đồ địa chính, hồ sơ thửa đất, hồ sơ quy hoạch hoặc xác nhận của cơ quan có thẩm quyền.
-14 vị trí phường legacy là tâm điểm tham chiếu, không phải ranh giới hành chính cũ.
+14 ranh phường cũ là lớp tham khảo; Hòa Phú và Phú Tân là ranh suy luận biên tập, không thay thế hồ sơ địa chính.
 Vị trí khu phố mang tính tham khảo và không thể hiện ranh giới khu phố.
 """
 
@@ -495,9 +498,12 @@ def _validate_svg(path: Path, *, legacy: bool, errors: list[str]) -> None:
             errors.append(f"SVG {path.name} lacks attribution: {required}")
     if legacy:
         folded = rendered_text.casefold()
-        if "điểm tham chiếu" not in folded or "không phải ranh giới" not in folded:
+        if (
+            "14 ranh phường cũ" not in folded
+            or "không thay thế hồ sơ địa chính" not in folded
+        ):
             errors.append(
-                f"SVG {path.name} lacks the legacy reference disclaimer"
+                f"SVG {path.name} lacks the legacy boundary disclaimer"
             )
         metadata = root.find("./{*}metadata[@id='edition-metadata']")
         metadata_text = metadata.text if metadata is not None else ""
@@ -515,6 +521,14 @@ def _folder(root: ElementTree.Element, name: str):
     return None
 
 
+def _folders(root: ElementTree.Element, name: str) -> list[ElementTree.Element]:
+    return [
+        node
+        for node in root.findall(".//{*}Folder")
+        if (node.findtext("./{*}name") or "").strip() == name
+    ]
+
+
 def _placemark_names(folder) -> set[str]:
     names = set()
     for placemark in folder.findall("./{*}Placemark"):
@@ -527,9 +541,9 @@ def _placemark_names(folder) -> set[str]:
 def _has_legacy_override(value: str | None) -> bool:
     folded = (value or "").casefold()
     return (
-        "14 điểm" in folded
-        and "tham chiếu" in folded
-        and "không phải ranh giới hành chính cũ" in folded
+        "14 ranh phường cũ" in folded
+        and "tham khảo" in folded
+        and "không thay thế hồ sơ địa chính" in folded
     )
 
 
@@ -552,21 +566,31 @@ def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
     if poi is None or not poi.findall("./{*}Placemark/{*}Point"):
         errors.append(f"KML {path.name} does not retain POI points")
     if legacy:
-        references = _folder(root, "legacy-reference-centers")
+        reference_folders = _folders(root, "legacy-boundaries")
+        if len(reference_folders) > 1:
+            errors.append(
+                f"KML {path.name} contains duplicate legacy boundary Polygon folders"
+            )
+        references = reference_folders[0] if reference_folders else None
         if references is None:
-            errors.append(f"KML {path.name} lacks legacy reference folder")
+            errors.append(f"KML {path.name} lacks legacy boundary folder")
             return
         placemarks = references.findall("./{*}Placemark")
-        points = references.findall("./{*}Placemark/{*}Point")
-        polygons = root.findall(".//{*}Polygon")
-        if len(placemarks) != 14 or len(points) != 14:
+        boundary_polygons = [
+            polygon
+            for placemark in placemarks
+            for polygon in placemark.findall(".//{*}Polygon")
+        ]
+        if len(placemarks) != 14 or any(
+            not placemark.findall(".//{*}Polygon")
+            for placemark in placemarks
+        ):
             errors.append(
-                f"KML {path.name} must contain exactly 14 legacy Points"
+                f"KML {path.name} must contain exactly 14 legacy boundary Polygon placemarks"
             )
-        if polygons:
-            errors.append(f"KML {path.name} legacy edition contains Polygon")
         if _placemark_names(references) != LEGACY_NAMES:
             errors.append(f"KML {path.name} has incorrect legacy ward names")
+        derived_names = set()
         for placemark in placemarks:
             claims = [
                 (node.findtext("./{*}value") or "").strip().casefold()
@@ -574,13 +598,37 @@ def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
                     ".//{*}Data[@name='boundary_claim']"
                 )
             ]
-            if claims != ["false"]:
+            if claims != ["true"]:
                 errors.append(
-                    f"KML {path.name} legacy Point lacks boundary_claim=false"
+                    f"KML {path.name} legacy boundary lacks boundary_claim=true"
                 )
                 break
-        if "Wikidata" not in rendered_text or "CC0" not in rendered_text:
-            errors.append(f"KML {path.name} lacks Wikidata CC0 attribution")
+            sources = [
+                (node.findtext("./{*}value") or "").strip()
+                for node in placemark.findall(
+                    ".//{*}Data[@name='boundary_source']"
+                )
+            ]
+            name_node = placemark.find("./{*}name")
+            if sources == ["derived_boundary"] and name_node is not None and name_node.text:
+                derived_names.add(name_node.text.strip())
+                derived_from = [
+                    (node.findtext("./{*}value") or "").strip()
+                    for node in placemark.findall(
+                        ".//{*}Data[@name='derived_from']"
+                    )
+                ]
+                if not derived_from or not derived_from[0]:
+                    errors.append(
+                        f"KML {path.name} derived legacy boundary lacks derived_from"
+                    )
+                    break
+        if derived_names != {"Hòa Phú", "Phú Tân"}:
+            errors.append(
+                f"KML {path.name} must mark exactly Hòa Phú and Phú Tân as derived boundaries"
+            )
+        if "Stanford" not in rendered_text and "GADM" not in rendered_text:
+            errors.append(f"KML {path.name} lacks legacy boundary attribution")
         metadata = root.find(
             "./{*}Document/{*}ExtendedData/"
             "{*}Data[@name='edition_description']/{*}value"
@@ -700,8 +748,8 @@ def _validate_pdfs(candidate_dir: Path, errors: list[str]) -> None:
                         )
                     if relative_name.startswith("thu-dau-mot-truoc"):
                         if (
-                            "điểm tham chiếu" not in folded
-                            or "không phải ranh giới" not in folded
+                            "14 ranh phường cũ" not in folded
+                            or "không thay thế hồ sơ địa chính" not in folded
                         ):
                             errors.append(
                                 f"PDF {relative_name} lacks legacy disclaimer"
@@ -721,6 +769,8 @@ def _validate_license(candidate_dir: Path, errors: list[str]) -> None:
         "chia sẻ công khai",
         "OpenStreetMap contributors",
         "https://www.openstreetmap.org/copyright",
+        "Stanford",
+        "GADM",
         "Wikidata",
         "CC0",
         "Be Vietnam Pro",

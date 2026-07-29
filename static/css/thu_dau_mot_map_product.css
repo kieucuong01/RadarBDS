@@ -162,7 +162,7 @@
   grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
   gap: 32px;
   align-items: center;
-  margin-top: -22px;
+  margin-top: clamp(42px, 6vw, 72px);
   padding: 28px;
   border: 1px solid #dce5ec;
   border-radius: 18px;
@@ -225,6 +225,18 @@
 
 .tdm-product-section {
   padding-top: clamp(64px, 8vw, 104px);
+}
+
+.tdm-product-map-section {
+  margin-top: clamp(48px, 7vw, 82px);
+}
+
+.tdm-product-map-explorer .bd-map-canvas {
+  min-height: clamp(520px, 62vw, 760px);
+}
+
+.tdm-product-directory {
+  margin-top: clamp(42px, 6vw, 72px);
 }
 
 .tdm-product-section-heading {

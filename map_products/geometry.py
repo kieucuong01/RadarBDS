@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 import math
 from pathlib import Path
@@ -31,6 +31,7 @@ class NamedGeometry:
     name: str
     geometry: BaseGeometry
     source_id: str = ""
+    properties: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,7 @@ class StreetGeometry:
 
 @dataclass(frozen=True)
 class NormalizedMapLayers:
+    legacy_boundaries: tuple[NamedGeometry, ...]
     current_boundaries: tuple[NamedGeometry, ...]
     legacy_ward_centers: tuple[MapPoint, ...]
     streets: tuple[StreetGeometry, ...]
@@ -184,6 +186,11 @@ def _boundary_candidates(
                         geometry, f"{source_key} feature {name}"
                     ),
                     source_id=str(feature.get("id", index)),
+                    properties={
+                        str(key): str(value)
+                        for key, value in properties.items()
+                        if value is not None
+                    },
                 )
             )
         return candidates
@@ -207,6 +214,11 @@ def _boundary_candidates(
                     element, f"{source_key} relation {element.get('id')}"
                 ),
                 source_id=f"relation/{element.get('id')}",
+                properties={
+                    str(key): str(value)
+                    for key, value in tags.items()
+                    if value is not None
+                },
             )
         )
     return candidates
@@ -252,9 +264,54 @@ def _select_exact_boundaries(
             name=name,
             geometry=matched[_normalized_name(name)][0].geometry,
             source_id=matched[_normalized_name(name)][0].source_id,
+            properties=matched[_normalized_name(name)][0].properties or {},
         )
         for name in expected_names
     )
+
+
+def _select_exact_legacy_boundaries(
+    payload: dict,
+    expected_names: tuple[str, ...],
+) -> tuple[NamedGeometry, ...]:
+    try:
+        boundaries = _select_exact_boundaries(
+            payload,
+            expected_names,
+            "legacy_boundaries",
+        )
+    except ValueError as exc:
+        raise ValueError(
+            "legacy_boundaries must resolve to exactly 14 legacy boundary "
+            f"Polygon/MultiPolygon features: {exc}"
+        ) from exc
+    if len(boundaries) != 14:
+        raise ValueError("legacy_boundaries must resolve to exactly 14 legacy boundary features")
+    allowed_sources = {"source_snapshot", "derived_boundary"}
+    derived_names = set()
+    for boundary in boundaries:
+        properties = boundary.properties or {}
+        if properties.get("boundary_claim", "").casefold() != "true":
+            raise ValueError(
+                f"legacy boundary {boundary.name} must set boundary_claim=true"
+            )
+        boundary_source = properties.get("boundary_source", "")
+        if boundary_source not in allowed_sources:
+            raise ValueError(
+                f"legacy boundary {boundary.name} has invalid boundary_source"
+            )
+        if boundary_source == "derived_boundary":
+            derived_names.add(boundary.name)
+            if not properties.get("derived_from", "").strip():
+                raise ValueError(
+                    f"legacy boundary {boundary.name} must record derived_from"
+                )
+    if derived_names != {"Hòa Phú", "Phú Tân"}:
+        raise ValueError(
+            "legacy_boundaries must mark exactly Hòa Phú and Phú Tân as "
+            f"derived_boundary (actual={sorted(derived_names)})"
+        )
+    return boundaries
 
 
 def _line_geometry(element: dict) -> LineString | None:
@@ -445,7 +502,12 @@ def build_normalized_layers(
 ) -> NormalizedMapLayers:
     """Validate current polygons and legacy reference points in WGS84."""
 
-    required = {"legacy_ward_centers", "current_boundaries", "osm_detail"}
+    required = {
+        "legacy_boundaries",
+        "legacy_ward_centers",
+        "current_boundaries",
+        "osm_detail",
+    }
     missing_sources = sorted(required - set(snapshots))
     if missing_sources:
         raise ValueError(f"Missing required source snapshots: {missing_sources}")
@@ -468,6 +530,10 @@ def build_normalized_layers(
         snapshots["legacy_ward_centers"],
         spec.legacy_wards,
     )
+    legacy_boundaries = _select_exact_legacy_boundaries(
+        _read_payload(snapshots["legacy_boundaries"]),
+        spec.legacy_wards,
+    )
     current = _select_exact_boundaries(
         _read_payload(snapshots["current_boundaries"]),
         spec.current_wards,
@@ -481,6 +547,7 @@ def build_normalized_layers(
         current_extent,
     )
     return NormalizedMapLayers(
+        legacy_boundaries=legacy_boundaries,
         current_boundaries=current,
         legacy_ward_centers=legacy_centers,
         streets=streets,
