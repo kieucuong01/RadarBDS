@@ -522,17 +522,15 @@ def test_product_page_includes_administrative_image_source_and_pdf_offer_detail(
         "Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương"
         in visible_text
     )
-    assert "Nguồn tham khảo công khai" in visible_text
-    assert "Địa Ốc Thông Thái" in visible_text
-    assert "https://diaocthongthai.com/ban-do-tp-thu-dau-mot-binh-duong/" in html
-    assert "Radar BDS không sao chép hoặc bán lại ảnh từ nguồn" in visible_text
-    assert "File ảnh bản đồ TP Thủ Dầu Một" in visible_text
-    assert "Bản đồ hành chính sau sáp nhập 2025" in visible_text
-    assert "Bản đồ hành chính trước sáp nhập" in visible_text
-    assert "Bản đồ vector SVG cấp xã/phường" in visible_text
-    assert "Bản đồ PDF hoàn thiện" in visible_text
-    assert "Vị trí, giao thông, vệ tinh" in visible_text
-    assert "không lưu bản sao ảnh nguồn" in visible_text
+    assert "Nhằm cung cấp file bản đồ chất lượng cao cho bạn đọc" in visible_text
+    assert "Địa Ốc Thông Thái đã tổng hợp lại các file bản đồ" in visible_text
+    assert "vector, Illustrator, PNG, JPG, GIF" in visible_text
+    assert "Bản đồ thành phố Thủ Dầu Một." in visible_text
+    assert "Tải về bản đồ (khổ lớn)" in visible_text
+    assert "File ảnh bản đồ TP Thủ Dầu Một – Bình Dương. Nhấn vào để phóng lớn." in visible_text
+    assert "/static/images/seo/thu-dau-mot-source/vnm__binh_duong__thu_dau_mot_v3.jpg" in html
+    assert "/static/images/seo/thu-dau-mot-source/vnm__binh_duong__thu_dau_mot.jpg" in html
+    assert 'download="ban-do-tp-thu-dau-mot-binh-duong-big-size.jpg"' in html
     assert visible_text.index(
         "Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương"
     ) < visible_text.index("Bản đồ PDF hoàn thiện")
@@ -550,7 +548,8 @@ def test_product_page_includes_administrative_image_source_and_pdf_offer_detail(
     ):
         assert benefit in visible_text
     assert "tdm-product-source-summary" in css
-    assert "tdm-product-source-card-grid" in css
+    assert "tdm-product-diaoc-copy" in css
+    assert "tdm-product-map-download" in css
     assert "tdm-product-pdf-offer" in css
 
 

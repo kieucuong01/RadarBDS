@@ -25,7 +25,7 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=tdm-product-20260729-4">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/binh_duong_map.css') }}?v=tdm-product-map-20260729-2">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=tdm-product-20260729-5">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=tdm-product-20260729-6">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
@@ -263,45 +263,29 @@
     </section>
 
     <section class="seo-shell tdm-product-section tdm-product-source-summary" aria-labelledby="anh-ban-do-hanh-chinh">
-      <div class="tdm-product-section-heading">
-        <p class="tdm-product-source-kicker">Nguồn tham khảo công khai</p>
+      <div class="tdm-product-diaoc-copy">
         <h2 id="anh-ban-do-hanh-chinh">Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương</h2>
-        <p>Để người đọc dễ đối chiếu như cách {{ page.source_reference.name }} trình bày, Radar BDS gom lại các nhóm file/ảnh liên quan đến bản đồ hành chính TP Thủ Dầu Một: ảnh xem nhanh, bản hành chính trước/sau sáp nhập, SVG, PDF, vị trí, giao thông và vệ tinh.</p>
-        <p>Phần này là mục lục tham khảo. Radar BDS không sao chép hoặc bán lại ảnh từ nguồn; người đọc muốn xem ảnh gốc thì mở liên kết nguồn <a class="tdm-product-source-link" href="{{ page.source_reference.href }}#Tong_hop_file_anh_ban_do_hanh_chinh_TP_Thu_Dau_Mot_-_Binh_Duong" target="_blank" rel="noopener noreferrer" data-product-source-link>{{ page.source_reference.title }} của {{ page.source_reference.name }}</a>.</p>
+        <p>Nhằm cung cấp file bản đồ chất lượng cao cho bạn đọc hỗ trợ các nhu cầu lưu trữ, tra cứu in ấn. Địa Ốc Thông Thái đã tổng hợp lại các file bản đồ định dạng vector, Illustrator, PNG, JPG, GIF phân giải cao phục vụ nhu cầu in ấn HD, khổ lớn A1, A0.</p>
+
+        <figure class="tdm-product-diaoc-figure">
+          <a href="{{ url_for('static', filename='images/seo/thu-dau-mot-source/vnm__binh_duong__thu_dau_mot_v3.jpg') }}" target="_blank" rel="noopener" data-product-source-link>
+            <img src="{{ url_for('static', filename='images/seo/thu-dau-mot-source/vnm__binh_duong__thu_dau_mot_v3.jpg') }}" width="943" height="1313" alt="Bản đồ thành phố Thủ Dầu Một." loading="lazy">
+          </a>
+          <figcaption>Bản đồ thành phố Thủ Dầu Một.</figcaption>
+        </figure>
+
+        <a class="downloadButton tdm-product-map-download" aria-label="Tải về bản đồ khổ lớn" title="Tải về bản đồ khổ lớn" href="{{ url_for('static', filename='images/seo/thu-dau-mot-source/vnm__binh_duong__thu_dau_mot_v3.jpg') }}" download="ban-do-tp-thu-dau-mot-binh-duong-big-size.jpg">
+          <span aria-hidden="true">↓</span>
+          Tải về bản đồ (khổ lớn)
+        </a>
+
+        <figure class="tdm-product-diaoc-figure">
+          <a href="{{ url_for('static', filename='images/seo/thu-dau-mot-source/vnm__binh_duong__thu_dau_mot.jpg') }}" target="_blank" rel="noopener" data-product-source-link>
+            <img src="{{ url_for('static', filename='images/seo/thu-dau-mot-source/vnm__binh_duong__thu_dau_mot.jpg') }}" width="754" height="1050" alt="Bản đồ hành chính Thành phố Thủ Dầu Một" loading="lazy">
+          </a>
+          <figcaption>File ảnh bản đồ TP Thủ Dầu Một – Bình Dương. Nhấn vào để phóng lớn.</figcaption>
+        </figure>
       </div>
-      <div class="tdm-product-source-card-grid" aria-label="Các nhóm ảnh bản đồ được đối chiếu">
-        <article>
-          <h3>File ảnh bản đồ TP Thủ Dầu Một</h3>
-          <p>Nhóm ảnh JPG/PNG dùng để xem nhanh ranh thành phố, tên địa bàn và bố cục tổng thể.</p>
-          <a href="{{ page.source_reference.href }}#Tong_hop_file_anh_ban_do_hanh_chinh_TP_Thu_Dau_Mot_-_Binh_Duong" target="_blank" rel="noopener noreferrer">Xem ảnh gốc tại nguồn</a>
-        </article>
-        <article>
-          <h3>Bản đồ hành chính sau sáp nhập 2025</h3>
-          <p>Đối chiếu nhãn địa bàn hiện tại sau sắp xếp, phù hợp cho người đang tra cứu tên phường mới.</p>
-          <a href="{{ page.source_reference.href }}" target="_blank" rel="noopener noreferrer">Xem tại nguồn</a>
-        </article>
-        <article>
-          <h3>Bản đồ hành chính trước sáp nhập</h3>
-          <p>Đối chiếu các tên phường cũ để người mua nhà đất không nhầm khi đọc tin rao cũ.</p>
-          <a href="{{ page.source_reference.href }}" target="_blank" rel="noopener noreferrer">Xem tại nguồn</a>
-        </article>
-        <article>
-          <h3>Bản đồ vector SVG cấp xã/phường</h3>
-          <p>Nhóm file phục vụ nhu cầu chỉnh sửa vector; bộ Radar BDS bên dưới được dựng lại riêng cho PDF/SVG/KML.</p>
-          <a href="{{ page.source_reference.href }}" target="_blank" rel="noopener noreferrer">Xem tại nguồn</a>
-        </article>
-        <article>
-          <h3>Bản đồ PDF hoàn thiện</h3>
-          <p>Nhóm bản đồ tiện in ấn; Radar BDS tách riêng phần sản phẩm tải về ở bên dưới để tránh nhầm với ảnh nguồn.</p>
-          <a href="{{ page.source_reference.href }}" target="_blank" rel="noopener noreferrer">Xem tại nguồn</a>
-        </article>
-        <article>
-          <h3>Vị trí, giao thông, vệ tinh</h3>
-          <p>Các ảnh ngữ cảnh giúp người đọc hiểu vị trí Thủ Dầu Một trong Bình Dương và mạng đường chính.</p>
-          <a href="{{ page.source_reference.href }}" target="_blank" rel="noopener noreferrer">Xem tại nguồn</a>
-        </article>
-      </div>
-      <p class="tdm-product-source-disclaimer">Nguồn được kiểm tra ngày {{ page.source_reference.checked_at }}. Một số mục tải file trên nguồn có thể có điều kiện sử dụng hoặc thanh toán riêng; Radar BDS chỉ dẫn nguồn tham khảo, không lưu bản sao ảnh nguồn.</p>
     </section>
 
     <section class="seo-shell tdm-product-section tdm-product-pdf-offer" aria-labelledby="ban-do-pdf-hoan-thien">
