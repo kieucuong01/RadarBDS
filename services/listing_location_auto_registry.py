@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 import hashlib
 import json
@@ -45,6 +45,8 @@ _LANDMARK_RESULT_TYPES = frozenset({
     "place",
     "residential area",
 })
+_MAX_EVIDENCE_AGE = timedelta(days=180)
+_MAX_FUTURE_SKEW = timedelta(minutes=5)
 
 
 def _bounded_text(
@@ -72,6 +74,7 @@ class BrowserLocationEvidence:
     ward: str
     canonical: str
     aliases: tuple[str, ...]
+    landmark_scope: str
     query: str
     result_title: str
     result_address: str
@@ -125,7 +128,12 @@ class BrowserLocationEvidence:
             city=_bounded_text(data, "city", maximum=80),
             ward=_bounded_text(data, "ward", maximum=80),
             canonical=_bounded_text(data, "canonical", maximum=160),
-            aliases=tuple(aliases),
+            aliases=tuple(sorted(set(aliases))),
+            landmark_scope=_bounded_text(
+                data,
+                "landmark_scope",
+                maximum=160,
+            ),
             query=_bounded_text(data, "query", maximum=400),
             result_title=_bounded_text(
                 data,
@@ -164,6 +172,10 @@ class BrowserLocationEvidence:
             )
         ):
             raise ValueError("candidate_key is invalid")
+        if evidence.candidate_type == "landmark" and evidence.landmark_scope:
+            raise ValueError(
+                "landmark_scope is only valid for road candidates"
+            )
         return evidence
 
 
@@ -266,11 +278,16 @@ def parse_google_maps_coordinates(url: str) -> tuple[float, float] | None:
         parsed = urlparse(str(url or "").strip())
     except ValueError:
         return None
-    if parsed.scheme != "https" or parsed.hostname not in _GOOGLE_MAPS_HOSTS:
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname not in _GOOGLE_MAPS_HOSTS
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.query
+        or parsed.fragment
+    ):
         return None
     target = parsed.path
-    if parsed.query:
-        target += f"?{parsed.query}"
     for pattern in (_DATA_COORDINATES_RE, _AT_COORDINATES_RE):
         match = pattern.search(target)
         if not match:
@@ -291,7 +308,7 @@ def parse_google_maps_coordinates(url: str) -> tuple[float, float] | None:
 
 def canonical_evidence_hash(evidence: BrowserLocationEvidence) -> str:
     payload = {
-        "aliases": sorted(evidence.aliases),
+        "aliases": sorted(set(evidence.aliases)),
         "candidate_key": evidence.candidate_key,
         "candidate_type": evidence.candidate_type,
         "canonical": evidence.canonical,
@@ -305,6 +322,8 @@ def canonical_evidence_hash(evidence: BrowserLocationEvidence) -> str:
         "unique_result": evidence.unique_result,
         "ward": evidence.ward,
     }
+    if evidence.landmark_scope:
+        payload["landmark_scope"] = evidence.landmark_scope
     encoded = json.dumps(
         payload,
         ensure_ascii=False,
@@ -322,14 +341,27 @@ def _contains_normalized(haystack: str, needle: str) -> bool:
     return f" {normalized_needle} " in f" {normalized_haystack} "
 
 
-def _valid_checked_at(value: str) -> bool:
+def _parse_checked_at(value: str) -> datetime | None:
     if not value:
-        return False
+        return None
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
-        return False
-    return parsed.tzinfo is not None
+        return None
+    return parsed if parsed.tzinfo is not None else None
+
+
+def _checked_at_reason(value: str) -> str:
+    parsed = _parse_checked_at(value)
+    if parsed is None:
+        return ""
+    checked_at = parsed.astimezone(timezone.utc)
+    now = datetime.now(timezone.utc)
+    if checked_at > now + _MAX_FUTURE_SKEW:
+        return "future_evidence"
+    if checked_at < now - _MAX_EVIDENCE_AGE:
+        return "stale_evidence"
+    return ""
 
 
 def _complete_evidence(evidence: BrowserLocationEvidence) -> bool:
@@ -344,7 +376,7 @@ def _complete_evidence(evidence: BrowserLocationEvidence) -> bool:
         evidence.result_type,
         evidence.source_url,
     )
-    return all(required) and _valid_checked_at(evidence.checked_at)
+    return all(required) and _parse_checked_at(evidence.checked_at) is not None
 
 
 def _title_matches(evidence: BrowserLocationEvidence) -> bool:
@@ -354,7 +386,13 @@ def _title_matches(evidence: BrowserLocationEvidence) -> bool:
         for value in (evidence.canonical, *evidence.aliases)
         if normalize_location_token(value)
     }
-    return bool(title and title in accepted)
+    return bool(
+        title
+        and any(
+            f" {candidate} " in f" {title} "
+            for candidate in accepted
+        )
+    )
 
 
 def _result_type_matches(evidence: BrowserLocationEvidence) -> bool:
@@ -375,10 +413,9 @@ def _candidate_identity_matches(evidence: BrowserLocationEvidence) -> bool:
         f"{slug(evidence.ward)}:"
         f"{slug(evidence.canonical)}"
     )
-    return (
-        evidence.candidate_key == expected
-        or evidence.candidate_key.startswith(f"{expected}:")
-    )
+    if evidence.candidate_type == "road" and evidence.landmark_scope:
+        expected += f":{slug(evidence.landmark_scope)}"
+    return evidence.candidate_key == expected
 
 
 def evaluate_browser_evidence(
@@ -393,6 +430,9 @@ def evaluate_browser_evidence(
         reasons.append("multiple_or_unselected_result")
     if not _complete_evidence(evidence):
         reasons.append("missing_evidence")
+    checked_at_reason = _checked_at_reason(evidence.checked_at)
+    if checked_at_reason:
+        reasons.append(checked_at_reason)
 
     coordinates = parse_google_maps_coordinates(evidence.source_url)
     if coordinates is None:
@@ -421,6 +461,10 @@ def evaluate_browser_evidence(
         evidence.result_address,
         evidence.ward,
     )
+    address_has_city = _contains_normalized(
+        evidence.result_address,
+        evidence.city,
+    )
     compatibility_reason = (
         legacy_compatibility_reason(
             evidence,
@@ -430,8 +474,11 @@ def evaluate_browser_evidence(
         if coordinates is not None
         else ""
     )
-    if not ward_inside and not address_has_ward and not compatibility_reason:
-        reasons.append("ward_mismatch")
+    if not compatibility_reason:
+        if not ward_inside:
+            reasons.append("ward_mismatch")
+        if not address_has_ward or not address_has_city:
+            reasons.append("location_context_mismatch")
 
     base_candidate_key = ":".join(evidence.candidate_key.split(":")[:4])
     if (
@@ -443,11 +490,11 @@ def evaluate_browser_evidence(
     if evidence.candidate_type == "road":
         canonical = normalize_location_token(evidence.canonical)
         is_numbered = bool(re.search(r"\b\d+\b", canonical))
-        has_scoped_key = evidence.candidate_key.count(":") >= 4
+        has_scoped_key = bool(evidence.landmark_scope)
         if (
             is_numbered
             and not ward_inside
-            and not address_has_ward
+            and not (address_has_ward and address_has_city)
             and not has_scoped_key
         ):
             reasons.append("numbered_road_missing_scope")
@@ -494,6 +541,8 @@ def evaluate_browser_evidence(
         "unique_result": evidence.unique_result,
         "ward": evidence.ward,
     }
+    if evidence.landmark_scope:
+        override["landmark_scope"] = evidence.landmark_scope
     if compatibility_reason:
         override["allow_boundary_mismatch"] = True
         override["boundary_mismatch_reason"] = compatibility_reason

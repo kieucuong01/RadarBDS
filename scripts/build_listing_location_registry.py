@@ -837,7 +837,7 @@ def _merge_curated_landmarks(
 
 def _manual_override_identities(
     manual: Mapping,
-) -> set[tuple[str, str, str, str]]:
+) -> set[tuple[str, str, str, str, str]]:
     identities = set()
     for kind, collection, name_field, normalizer in (
         ("road", "roads", "road_name", normalize_road_token),
@@ -849,18 +849,25 @@ def _manual_override_identities(
         ),
     ):
         for row in manual.get(collection) or ():
-            identities.add((
+            base = (
                 kind,
                 str(row.get("city") or "").strip(),
                 normalize_location_token(row.get("ward") or ""),
                 normalizer(str(row.get(name_field) or "")),
-            ))
+            )
+            identities.add((*base, ""))
+            if kind == "road":
+                for landmark in row.get("landmark_keys") or ():
+                    identities.add((
+                        *base,
+                        _normalize_landmark_token(landmark),
+                    ))
     return identities
 
 
 def _auto_override_identity(
     evidence: BrowserLocationEvidence,
-) -> tuple[str, str, str, str]:
+) -> tuple[str, str, str, str, str]:
     normalizer = (
         normalize_road_token
         if evidence.candidate_type == "road"
@@ -871,6 +878,11 @@ def _auto_override_identity(
         evidence.city,
         normalize_location_token(evidence.ward),
         normalizer(evidence.canonical),
+        (
+            _normalize_landmark_token(evidence.landmark_scope)
+            if evidence.candidate_type == "road"
+            else ""
+        ),
     )
 
 
@@ -923,7 +935,11 @@ def combine_location_overrides(
 
         evidence = BrowserLocationEvidence.from_mapping(raw_entry)
         identity = _auto_override_identity(evidence)
-        if identity in manual_identities:
+        base_identity = (*identity[:4], "")
+        if (
+            identity in manual_identities
+            or base_identity in manual_identities
+        ):
             continue
         if identity in auto_identities:
             raise ValueError("duplicate automatic override identity")
@@ -981,6 +997,10 @@ def combine_location_overrides(
             curated_row["boundary_mismatch_reason"] = mismatch_reason
         if evidence.candidate_type == "road":
             curated_row["road_name"] = evidence.canonical
+            if evidence.landmark_scope:
+                curated_row["landmark_keys"] = [
+                    evidence.landmark_scope
+                ]
             combined["road_aliases"].append(alias_row)
             combined["roads"].append(curated_row)
         else:

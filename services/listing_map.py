@@ -232,7 +232,7 @@ def load_listing_map_summary(
                    ml.location_precision,
                    ml.location_label,
                    ml.accuracy_radius_m,
-                   ml.relation,
+                   ''::TEXT AS relation,
                    COUNT(*)::INTEGER AS listing_count,
                    MAX(f.mos_pct) AS best_mos,
                    SUM(COUNT(*)) OVER()::INTEGER AS total_count,
@@ -279,8 +279,7 @@ def load_listing_map_summary(
                      ml.lng,
                      ml.location_precision,
                      ml.location_label,
-                     ml.accuracy_radius_m,
-                     ml.relation
+                     ml.accuracy_radius_m
             ORDER BY CASE ml.location_precision
                          WHEN 'exact' THEN 0
                          WHEN 'road' THEN 1

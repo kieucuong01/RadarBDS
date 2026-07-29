@@ -10,36 +10,34 @@ Quy trình không cần người dùng duyệt từng ứng viên. Ứng viên c
 vượt toàn bộ hard gate và `confidence >= 0.90`; mọi trường hợp còn lại tự động
 được cách ly và tiếp tục dùng fallback landmark/phường hiện có.
 
-## 1. Chụp coverage production
+## 1. Xuất queue trực tiếp từ production
 
 ```powershell
 $ssh = "$env:USERPROFILE\.ssh\radar_bds_deploy_rsa"
-ssh -i $ssh deploy@103.90.226.230 "set -a; . /etc/radar-bds/radar.env; set +a; cd /opt/radar-bds/current && /opt/radar-bds/.venv/bin/python -X utf8 radar.py map-location-coverage --status unresolved --limit 100"
+New-Item -ItemType Directory -Path .local\listing-map-evidence -Force
+ssh -i $ssh deploy@103.90.226.230 "set -a; . /etc/radar-bds/radar.env; set +a; cd /opt/radar-bds/current && /opt/radar-bds/.venv/bin/python -X utf8 radar.py map-location-research-queue --limit 50 --candidate-type all" |
+  Set-Content -Encoding utf8 .local\listing-map-evidence\production-queue.json
 ```
 
-Ghi lại tổng số listing bị ảnh hưởng và số candidate theo trạng thái. Không
-đưa mô tả tin, số điện thoại hoặc URL gốc của tin vào file bằng chứng.
-
-## 2. Xuất queue tối đa 50 ứng viên
-
-```powershell
-$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 radar.py map-location-research-queue `
-  --limit 50 `
-  --candidate-type all
-```
+Không tạo queue từ DB local khi mục tiêu là production. File
+`production-queue.json` là snapshot duy nhất browser runner được dùng cho
+batch đó. Ghi lại tổng listing bị ảnh hưởng và số candidate; không đưa mô tả
+tin, số điện thoại hoặc URL gốc của tin vào bằng chứng.
 
 Queue tự loại các chuỗi giống nội dung rao bán như giá, diện tích, số tầng và
 phòng ngủ. Trường `filtered_candidates` cho biết số ứng viên nhiễu đã bị loại.
 
-## 3. Thu bằng chứng bằng browser
+## 2. Thu bằng chứng bằng browser
 
 Mở từng `search_url` trong queue bằng browser. Chỉ ghi các trường công khai:
 
 - candidate key/type, city, ward, canonical và aliases từ queue;
+- `landmark_scope` nguyên vẹn từ queue khi road candidate được scope theo
+  TĐC/KDC;
 - query;
 - tiêu đề, địa chỉ và loại của kết quả được chọn;
-- URL Google Maps công khai có tọa độ;
+- URL Google Maps công khai có tọa độ, đã bỏ query string, fragment và thông
+  tin tài khoản;
 - `unique_result`;
 - thời điểm kiểm tra ISO-8601.
 
@@ -54,9 +52,10 @@ hoặc compatibility zone đã khai báo rõ. Danh sách kết quả doanh nghi�
 tự chọn nhầm, tên gần giống hoặc chỉ có tâm vùng đều phải để
 `unique_result=false`.
 
-## 4. Dry-run và tự áp dụng kết quả đạt chuẩn
+## 3. Dry-run và tự áp dụng kết quả đạt chuẩn
 
 ```powershell
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 & $py -X utf8 radar.py map-location-ingest-evidence `
   --input .local\listing-map-evidence\batch.json
 
@@ -70,7 +69,7 @@ chỉ ghi các item accepted vào
 `config/listing_map_location_auto_overrides.json` bằng replace nguyên tử.
 Manual override luôn thắng và không thể bị auto override ghi đè.
 
-## 5. Build registry hai lần
+## 4. Build registry hai lần
 
 ```powershell
 & $py -X utf8 scripts\build_listing_location_registry.py `
@@ -87,7 +86,7 @@ Chạy lệnh hai lần và so SHA-256 của bốn file JSON trong output. Tất
 phải giống nhau. Kiểm tra manifest có đúng resolver version,
 `auto_override_count`, hash manual/auto override, ward/road/landmark count.
 
-## 6. Kiểm thử tập trung
+## 5. Kiểm thử tập trung
 
 ```powershell
 & $py -X utf8 -m pytest `
@@ -107,7 +106,7 @@ node --check static\js\main\listing_map.js
 git diff --check
 ```
 
-## 7. Dry-run backfill
+## 6. Dry-run backfill
 
 Local khi DB sẵn sàng:
 
@@ -119,7 +118,7 @@ Nếu local DB không khả dụng, không dùng credential đoán hoặc bỏ q
 ghi DB khác. Chỉ tiếp tục release khi code/artifact tests xanh; sau deploy phải
 chạy dry-run bằng production DB trước khi apply.
 
-## 8. Commit, push và deploy
+## 7. Commit, push và deploy
 
 Stage đúng các file Maps đã kiểm chứng; tuyệt đối không stage `.local/`.
 
@@ -130,7 +129,7 @@ git push origin main
 .\scripts\deploy_production.ps1
 ```
 
-## 9. Backfill production
+## 8. Backfill production
 
 ```powershell
 ssh -i $ssh deploy@103.90.226.230 "set -a; . /etc/radar-bds/radar.env; set +a; cd /opt/radar-bds/current && /opt/radar-bds/.venv/bin/python -X utf8 radar.py map-locations --full --dry-run"
@@ -141,7 +140,7 @@ So sánh dry-run và apply: số scanned phải hợp lý; tổng precision khô
 scanned; không có ward/mapped count giảm bất thường; resolver version phải là
 version vừa deploy.
 
-## 10. API và browser smoke
+## 9. API và browser smoke
 
 ```powershell
 Invoke-RestMethod "https://radarbds.vn/api/map-listings?mode=signals"

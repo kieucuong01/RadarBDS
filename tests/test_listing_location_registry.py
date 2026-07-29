@@ -217,6 +217,39 @@ def test_valid_auto_override_is_converted_to_curated_shape():
     assert combined["landmark_aliases"][0]["city"] == "THỦ DẦU MỘT"
 
 
+def test_scoped_auto_road_keeps_landmark_keys():
+    manual = {
+        "resolver_version": "test-v3",
+        "road_aliases": [],
+        "roads": [],
+        "landmark_aliases": [],
+        "landmarks": [],
+    }
+    entry = _accepted_auto_entry(
+        candidate_key=(
+            "road:thu-dau-mot:phu-tan:"
+            "duong-so-35:tdc-phu-chanh-b"
+        ),
+        candidate_type="road",
+        canonical="Đường số 35",
+        aliases=["Đường 35"],
+        landmark_scope="TĐC Phú Chánh B",
+        result_title="Đường số 35, TĐC Phú Chánh B",
+        result_address="TĐC Phú Chánh B, Phú Tân, Thủ Dầu Một",
+        result_type="Road",
+    )
+
+    combined = combine_location_overrides(
+        manual,
+        {"resolver_version": "test-v3", "entries": [entry]},
+    )
+
+    assert combined["auto_override_count"] == 1
+    assert combined["roads"][0]["landmark_keys"] == [
+        "TĐC Phú Chánh B"
+    ]
+
+
 def test_registry_manifest_hashes_accepted_auto_overrides(tmp_path):
     osm, sources, manual, boundaries = _generated_payloads()
     auto = {

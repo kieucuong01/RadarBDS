@@ -183,6 +183,11 @@ def test_summary_invariants_and_compact_query(monkeypatch):
         sql for sql, _params in connection.queries
         if "GROUP BY ml.location_key" in sql
     ).lower()
+    group_by_sql = summary_sql.split("group by", 1)[1].split(
+        "order by",
+        1,
+    )[0]
+    assert "ml.relation" not in group_by_sql
     for forbidden in (
         "description",
         "contact_phone",

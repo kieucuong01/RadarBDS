@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+from collections import Counter
 from urllib.parse import urlencode
 
 from config.listing_map import (
@@ -138,6 +139,12 @@ _ROAD_COPY_TOKENS = frozenset({
     "toilet",
     "wc",
 })
+_GENERIC_ROAD_COPY = frozenset({
+    "duong nhua",
+    "gan cho",
+    "hem rong",
+    "mat tien",
+})
 _NUMBERED_ROAD_RE = re.compile(
     r"^(?:duong so|dx|d|db|dh|dt|ql|n|ng|ni|na|nb)\s+\d+[a-z]?$"
 )
@@ -162,7 +169,10 @@ def _candidate_is_researchable(
             "khu tai dinh cu ",
             "tdc ",
         ))
-    if _ROAD_COPY_TOKENS.intersection(tokens):
+    if (
+        normalized in _GENERIC_ROAD_COPY
+        or _ROAD_COPY_TOKENS.intersection(tokens)
+    ):
         return False
     if any(character.isdigit() for character in normalized):
         return bool(_NUMBERED_ROAD_RE.fullmatch(normalized))
@@ -227,6 +237,8 @@ def _research_items_for_row(row: dict, selected_type: str) -> list[dict]:
             "status": str(row.get("status") or ""),
             "ward": ward,
         })
+        if candidate_type == "road" and landmark:
+            items[-1]["landmark_scope"] = landmark
     return items
 
 
@@ -277,21 +289,22 @@ def cmd_map_location_research_queue(args):
                 if previous is None:
                     merged[key] = item
                     continue
-                previous["affected_listing_count"] = max(
-                    previous["affected_listing_count"],
-                    item["affected_listing_count"],
-                )
-    items = sorted(
+                previous["affected_listing_count"] += item[
+                    "affected_listing_count"
+                ]
+    ranked_items = sorted(
         merged.values(),
         key=lambda item: (
             -item["affected_listing_count"],
             item["candidate_key"],
         ),
-    )[:limit]
+    )
+    items = ranked_items[:limit]
     payload = {
         "candidate_type": selected_type,
         "filtered_candidates": len(filtered),
-        "total_candidates": len(items),
+        "total_candidates": len(ranked_items),
+        "returned_candidates": len(items),
         "items": items,
     }
     print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
@@ -393,54 +406,92 @@ def _atomic_write_json(path: Path, payload: dict) -> None:
 def cmd_map_location_ingest_evidence(args):
     payload = _bounded_evidence_payload(Path(args.input))
     manual_keys = load_manual_override_keys()
-    decisions = []
-    for raw_item in payload["items"]:
-        evidence = BrowserLocationEvidence.from_mapping(raw_item)
-        decisions.append(
-            evaluate_browser_evidence(
-                evidence,
-                manual_keys=manual_keys,
-                ward_contains=point_is_in_scoped_ward,
-            )
-        )
-
-    accepted = [
-        decision.override
-        for decision in decisions
-        if decision.status == "accepted" and decision.override is not None
+    evidences = [
+        BrowserLocationEvidence.from_mapping(raw_item)
+        for raw_item in payload["items"]
     ]
+    key_counts = Counter(
+        evidence.candidate_key for evidence in evidences
+    )
+    auto_payload = json.loads(
+        LISTING_MAP_AUTO_OVERRIDE_PATH.read_text(encoding="utf-8")
+    )
+    existing = auto_payload.get("entries")
+    if not isinstance(existing, list):
+        raise ValueError("auto override entries must be a list")
+    by_key = {}
+    for entry in existing:
+        if not isinstance(entry, dict):
+            raise ValueError("auto override entry must be an object")
+        key = str(entry.get("candidate_key") or "")
+        if not key:
+            raise ValueError("auto override candidate_key is required")
+        if key in by_key:
+            raise ValueError("duplicate stored auto override candidate_key")
+        by_key[key] = entry
+
+    accepted = []
+    quarantined = 0
+    for evidence in evidences:
+        if key_counts[evidence.candidate_key] > 1:
+            quarantined += 1
+            continue
+        decision = evaluate_browser_evidence(
+            evidence,
+            manual_keys=manual_keys,
+            ward_contains=point_is_in_scoped_ward,
+        )
+        if decision.status != "accepted" or decision.override is None:
+            quarantined += 1
+            continue
+        current = by_key.get(evidence.candidate_key)
+        if current is not None:
+            try:
+                current_coordinates = (
+                    float(current["lat"]),
+                    float(current["lng"]),
+                )
+                suggested_coordinates = (
+                    float(decision.override["lat"]),
+                    float(decision.override["lng"]),
+                )
+            except (KeyError, TypeError, ValueError):
+                raise ValueError(
+                    "stored auto override coordinates are invalid"
+                ) from None
+            if any(
+                abs(stored - suggested) > 0.0000001
+                for stored, suggested in zip(
+                    current_coordinates,
+                    suggested_coordinates,
+                    strict=True,
+                )
+            ):
+                quarantined += 1
+                continue
+        accepted.append(dict(decision.override))
+
     result = {
-        "attempted": len(decisions),
+        "attempted": len(evidences),
         "accepted": len(accepted),
-        "quarantined": sum(
-            decision.status == "quarantined" for decision in decisions
-        ),
+        "quarantined": quarantined,
         "applied": 0,
     }
     if bool(getattr(args, "apply", False)) and accepted:
-        auto_payload = json.loads(
-            LISTING_MAP_AUTO_OVERRIDE_PATH.read_text(encoding="utf-8")
-        )
-        existing = auto_payload.get("entries")
-        if not isinstance(existing, list):
-            raise ValueError("auto override entries must be a list")
-        by_key = {}
-        for entry in existing:
-            if not isinstance(entry, dict):
-                raise ValueError("auto override entry must be an object")
-            key = str(entry.get("candidate_key") or "")
-            if not key:
-                raise ValueError("auto override candidate_key is required")
-            by_key[key] = entry
+        changed = 0
         for entry in accepted:
-            by_key[str(entry["candidate_key"])] = dict(entry)
+            key = str(entry["candidate_key"])
+            if by_key.get(key) != entry:
+                by_key[key] = entry
+                changed += 1
         auto_payload["entries"] = [
             by_key[key] for key in sorted(by_key)
         ]
-        _atomic_write_json(
-            LISTING_MAP_AUTO_OVERRIDE_PATH,
-            auto_payload,
-        )
-        result["applied"] = len(accepted)
+        if changed:
+            _atomic_write_json(
+                LISTING_MAP_AUTO_OVERRIDE_PATH,
+                auto_payload,
+            )
+        result["applied"] = changed
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return result

@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
 from services.listing_location_auto_registry import (
@@ -53,6 +55,14 @@ def test_google_maps_url_parser_rejects_non_google_and_out_of_bounds_urls():
     ) is None
     assert parse_google_maps_coordinates(
         "https://www.google.com/maps/@50.0,5.0,17z"
+    ) is None
+    assert parse_google_maps_coordinates(
+        "https://user:secret@www.google.com/maps/"
+        "@11.058782,106.7015151,17z"
+    ) is None
+    assert parse_google_maps_coordinates(
+        "https://www.google.com/maps/"
+        "@11.058782,106.7015151,17z?authuser=1"
     ) is None
 
 
@@ -132,6 +142,56 @@ def test_point_outside_scoped_ward_without_address_match_is_quarantined():
     assert "ward_mismatch" in decision.reasons
 
 
+def test_conflicting_address_context_is_quarantined_even_inside_ward():
+    decision = evaluate_browser_evidence(
+        _phu_chanh_b_evidence(
+            canonical="TĐC Thử Nghiệm",
+            candidate_key=(
+                "landmark:thu-dau-mot:phu-tan:tdc-thu-nghiem"
+            ),
+            aliases=["Khu tái định cư Thử Nghiệm"],
+            result_title="Khu tái định cư Thử Nghiệm",
+            result_address="Quận 1, Thành phố Hồ Chí Minh",
+        ),
+        manual_keys=frozenset(),
+        ward_contains=lambda city, ward, lat, lng: True,
+    )
+
+    assert decision.status == "quarantined"
+    assert "location_context_mismatch" in decision.reasons
+
+
+@pytest.mark.parametrize(
+    ("checked_at", "reason"),
+    [
+        (
+            lambda: (
+                datetime.now(timezone.utc) - timedelta(days=181)
+            ).isoformat(),
+            "stale_evidence",
+        ),
+        (
+            lambda: (
+                datetime.now(timezone.utc) + timedelta(days=1)
+            ).isoformat(),
+            "future_evidence",
+        ),
+    ],
+)
+def test_stale_or_future_browser_evidence_is_quarantined(
+    checked_at,
+    reason,
+):
+    decision = evaluate_browser_evidence(
+        _phu_chanh_b_evidence(checked_at=checked_at()),
+        manual_keys=frozenset(),
+        ward_contains=lambda city, ward, lat, lng: True,
+    )
+
+    assert decision.status == "quarantined"
+    assert reason in decision.reasons
+
+
 def test_phu_chanh_legacy_zone_is_an_explicit_boundary_compatibility():
     decision = evaluate_browser_evidence(
         _phu_chanh_b_evidence(),
@@ -165,11 +225,76 @@ def test_numbered_road_requires_full_token_and_ward_scope():
     assert decision.status == "accepted"
 
 
+def test_scoped_road_preserves_landmark_identity():
+    evidence = _phu_chanh_b_evidence(
+        candidate_key=(
+            "road:thu-dau-mot:phu-tan:"
+            "duong-so-35:tdc-phu-chanh-b"
+        ),
+        candidate_type="road",
+        canonical="Đường số 35",
+        aliases=["Đường 35"],
+        landmark_scope="TĐC Phú Chánh B",
+        result_title="Đường số 35, TĐC Phú Chánh B",
+        result_address="Đường số 35, TĐC Phú Chánh B, Thủ Dầu Một",
+        result_type="Road",
+    )
+    decision = evaluate_browser_evidence(
+        evidence,
+        manual_keys=frozenset(),
+        ward_contains=lambda city, ward, lat, lng: True,
+    )
+
+    assert decision.status == "accepted"
+    assert decision.override["landmark_scope"] == "TĐC Phú Chánh B"
+
+
+def test_full_title_match_allows_location_suffix():
+    evidence = _phu_chanh_b_evidence(
+        candidate_key="road:thu-dau-mot:phu-tan:duong-so-35",
+        candidate_type="road",
+        canonical="Đường số 35",
+        aliases=["Đường 35"],
+        result_title="Đường số 35, Phú Tân",
+        result_address="Đường số 35, Phú Tân, Thủ Dầu Một",
+        result_type="Road",
+    )
+
+    decision = evaluate_browser_evidence(
+        evidence,
+        manual_keys=frozenset(),
+        ward_contains=lambda city, ward, lat, lng: True,
+    )
+
+    assert decision.status == "accepted"
+
+
 def test_evidence_hash_is_stable_when_alias_input_order_changes():
     first = _phu_chanh_b_evidence()
     second = _phu_chanh_b_evidence(aliases=list(reversed(first.aliases)))
 
     assert canonical_evidence_hash(first) == canonical_evidence_hash(second)
+
+
+def test_duplicate_aliases_are_canonicalized_before_hash_and_storage():
+    evidence = _phu_chanh_b_evidence(
+        aliases=[
+            "TDC Phu Chanh B",
+            "Khu tái định cư Phú Chánh B",
+            "TDC Phu Chanh B",
+        ]
+    )
+    decision = evaluate_browser_evidence(
+        evidence,
+        manual_keys=frozenset(),
+        ward_contains=lambda city, ward, lat, lng: True,
+    )
+
+    assert decision.status == "accepted"
+    stored = BrowserLocationEvidence.from_mapping(decision.override)
+    assert canonical_evidence_hash(stored) == decision.override[
+        "evidence_hash"
+    ]
 
 
 def test_evidence_mapping_rejects_invalid_candidate_type_and_alias_shape():

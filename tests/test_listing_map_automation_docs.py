@@ -20,6 +20,8 @@ def test_map_automation_runbook_has_required_commands_and_stop_gates():
         "confidence >= 0.90",
         "CAPTCHA",
         "không cần người dùng duyệt",
+        "production-queue.json",
+        "map-location-research-queue --limit 50",
     )
     for value in required:
         assert value in text
