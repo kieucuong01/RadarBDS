@@ -631,6 +631,16 @@ class PostgresPublicContentRepository:
 
     def __init__(self, connection_factory=get_conn):
         self._connection_factory = connection_factory
+        self._should_ensure_schema = connection_factory is get_conn
+        self._schema_ready = False
+
+    def _ensure_schema(self) -> None:
+        if not self._should_ensure_schema or self._schema_ready:
+            return
+        from db.schema import init_schema
+
+        init_schema()
+        self._schema_ready = True
 
     def list_published(
         self,
@@ -660,6 +670,7 @@ class PostgresPublicContentRepository:
             params.append(safe_offset)
             sql += " OFFSET ?"
         try:
+            self._ensure_schema()
             with self._connection_factory() as conn:
                 rows = conn.execute(sql, tuple(params)).fetchall()
         except Exception:
@@ -757,6 +768,7 @@ class PostgresPublicContentRepository:
             ON CONFLICT DO NOTHING
             RETURNING id
         """
+        self._ensure_schema()
         with self._connection_factory() as conn:
             cursor = conn.execute(update_sql, update_values)
             if getattr(cursor, "rowcount", -1) > 1:
@@ -785,6 +797,7 @@ class PostgresPublicContentRepository:
         asset: PdfAsset,
         object_key: str,
     ) -> None:
+        self._ensure_schema()
         with self._connection_factory() as conn:
             cursor = conn.execute(
                 """
@@ -825,6 +838,7 @@ class PostgresPublicContentRepository:
         if not normalized:
             return None
         try:
+            self._ensure_schema()
             with self._connection_factory() as conn:
                 row = conn.execute(
                     "SELECT * FROM public_content_items "

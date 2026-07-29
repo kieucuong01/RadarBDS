@@ -33,6 +33,8 @@ def test_deploy_script_initializes_public_content_schema_and_installs_daily_sync
     ).read_text(encoding="utf-8")
 
     assert 'from db.schema import init_schema; init_schema()' in script
+    assert "sudo -n -u radar true" in script
+    assert "public content schema is lazily initialized by the app" in script
     assert "radar-bds-public-content.service" in script
     assert "radar-bds-public-content.timer" in script
     assert "sudo systemctl enable --now radar-bds-public-content.timer" in script

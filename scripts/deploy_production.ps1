@@ -164,7 +164,11 @@ fi
 
 /opt/radar-bds/.venv/bin/python -X utf8 -m pip install -r requirements.txt
 /opt/radar-bds/.venv/bin/python -X utf8 -m py_compile app.py services/market_data.py services/image_assets.py services/public_content.py cli/public_content.py
-sudo -u radar bash -lc 'set -a; source /etc/radar-bds/radar.env; set +a; /opt/radar-bds/.venv/bin/python -X utf8 -c "from db.schema import init_schema; init_schema()"'
+if sudo -n -u radar true 2>/dev/null; then
+  sudo -n -u radar bash -lc 'set -a; source /etc/radar-bds/radar.env; set +a; /opt/radar-bds/.venv/bin/python -X utf8 -c "from db.schema import init_schema; init_schema()"'
+else
+  echo "skipped manual schema init (sudo -u radar requires password); public content schema is lazily initialized by the app"
+fi
 if [ -f deployment/ubuntu24/radar-bds-guland-crawl.service ] && [ -f deployment/ubuntu24/radar-bds-guland-crawl.timer ]; then
   if sudo -n install -m 0644 deployment/ubuntu24/radar-bds-guland-crawl.service /etc/systemd/system/radar-bds-guland-crawl.service \
     && sudo -n install -m 0644 deployment/ubuntu24/radar-bds-guland-crawl.timer /etc/systemd/system/radar-bds-guland-crawl.timer; then
