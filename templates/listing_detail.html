@@ -825,12 +825,6 @@ body.listing-detail-page {
           <button type="button" class="sm-location-retry" data-location-retry hidden>Thử tải lại bản đồ</button>
         </section>
 
-        <section class="sm-section sm-panel" data-sm-panel="comps" role="tabpanel">
-          <div class="sm-section-label">Lô tương tự</div>
-          <div id="detail-comps-body" class="sm-comps-list">
-            <div class="sm-empty-state">Đang tải lô tương tự...</div>
-          </div>
-        </section>
       </section>
 
       <aside class="sm-right">
@@ -869,6 +863,24 @@ body.listing-detail-page {
           {% endif %}
         </div>
       </aside>
+
+      <section class="sm-section sm-comparable-section" data-comparable-carousel tabindex="0">
+        <div class="sm-comparable-head">
+          <div>
+            <div class="sm-section-label">SO SÁNH LÔ TƯƠNG TỰ</div>
+            <p>Các signal có đặc điểm gần với lô đang xem</p>
+          </div>
+          <div class="sm-comparable-controls" data-comparable-controls hidden>
+            <button type="button" data-comparable-prev aria-label="Nhóm lô tương tự trước">‹</button>
+            <span data-comparable-status aria-live="polite"></span>
+            <button type="button" data-comparable-next aria-label="Nhóm lô tương tự tiếp theo">›</button>
+          </div>
+        </div>
+        <div id="detail-comps-body" class="sm-comparable-track" data-comparable-track>
+          <div class="sm-empty-state">Đang tải lô tương tự...</div>
+        </div>
+        <div class="sm-comparable-dots" data-comparable-dots aria-label="Các nhóm lô tương tự"></div>
+      </section>
     </div>
   </main>
 </div>
@@ -886,6 +898,7 @@ body.listing-detail-page {
 
 <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-location-20260729"></script>
 <script src="{{ url_for('static', filename='js/main/signal_card.js') }}?v=shared-signal-card-20260729"></script>
+<script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=comparable-carousel-20260729"></script>
 <script>
 const listingImages = {{ imgs|tojson }};
 const listingMapLocation = {{ map_location|tojson }};
@@ -1531,18 +1544,9 @@ function toggleModalComps(button) {
 }
 
 function renderComps(comps = []) {
-  const target = document.getElementById('detail-comps-body');
-  if (!target) return;
-  const baseline = renderCompRow(currentListing, { isCurrent: true });
-  const compRows = comps.length
-    ? comps.map((comp, index) => renderCompRow(comp, { hidden: index >= 3 })).join('')
-    : '<div class="sm-empty-state">Chưa có lô tương tự phù hợp.</div>';
-  const extraCount = Math.max(0, comps.length - 3);
-  const toggle = extraCount > 0
-    ? `<button type="button" class="sm-comps-toggle" data-count="${extraCount}" onclick="toggleModalComps(this)">Xem thêm ${extraCount} lô</button>`
-    : '';
-  target.classList.remove('is-expanded');
-  target.innerHTML = baseline + compRows + toggle;
+  const root = document.querySelector('[data-comparable-carousel]');
+  if (!root || !window.RadarComparableCarousel) return;
+  window.RadarComparableCarousel.mount(root, comps, { openMode: 'link' });
 }
 
 async function renderHistoryAndComps() {

@@ -902,7 +902,7 @@
   <!-- Modal Signal Detail -->
   <div id="signalModal" class="modal">
     <div class="modal-content signal-modal-content"
-      style="max-width:960px; padding:0; overflow-y:auto; overflow-x:hidden; border-radius:20px;">
+      style="max-width:min(1240px,calc(100vw - 32px)); padding:0; overflow-y:auto; overflow-x:hidden; border-radius:20px;">
       <button class="close-modal" onclick="closeModal('signalModal')" aria-label="Đóng chi tiết signal"
         style="top:12px; right:12px; z-index:20;">&times;</button>
       <!-- Content — 2-column layout on desktop -->
@@ -971,7 +971,6 @@
           <div class="sm-mobile-tabs" role="tablist" aria-label="Nội dung chi tiết signal">
             <button type="button" class="sm-tab active" role="tab" aria-selected="true" aria-controls="sm-panel-desc" data-sm-tab="desc" onclick="switchSignalPanel('desc', this)">Mô tả</button>
             <button type="button" class="sm-tab" role="tab" aria-selected="false" aria-controls="sm-history-section" data-sm-tab="history" onclick="switchSignalPanel('history', this)">Lịch sử</button>
-            <button type="button" class="sm-tab" role="tab" aria-selected="false" aria-controls="sm-panel-comps" data-sm-tab="comps" onclick="switchSignalPanel('comps', this)">So sánh</button>
             <button type="button" class="sm-tab" role="tab" aria-selected="false" aria-controls="sm-memo-section" data-sm-tab="memo" onclick="switchSignalPanel('memo', this)">Cố vấn</button>
           </div>
 
@@ -988,11 +987,6 @@
             <button type="button" class="sm-location-retry" data-location-retry hidden>Thử tải lại bản đồ</button>
           </section>
 
-          <!-- COMPS list -->
-          <div class="sm-section sm-panel" data-sm-panel="comps" id="sm-panel-comps" role="tabpanel" aria-hidden="true">
-            <div class="sm-section-label">📊 SO SÁNH LÔ TƯƠNG TỰ</div>
-            <div class="sm-comps-list" id="sm-comps-body"></div>
-          </div>
         </div>
 
         <!-- RIGHT COLUMN -->
@@ -1035,6 +1029,24 @@
             {% endif %}
           </div>
         </div>
+
+        <section class="sm-section sm-comparable-section" id="sm-panel-comps" data-comparable-carousel tabindex="0">
+          <div class="sm-comparable-head">
+            <div>
+              <div class="sm-section-label">SO SÁNH LÔ TƯƠNG TỰ</div>
+              <p>Các signal có đặc điểm gần với lô đang xem</p>
+            </div>
+            <div class="sm-comparable-controls" data-comparable-controls hidden>
+              <button type="button" data-comparable-prev aria-label="Nhóm lô tương tự trước">‹</button>
+              <span data-comparable-status aria-live="polite"></span>
+              <button type="button" data-comparable-next aria-label="Nhóm lô tương tự tiếp theo">›</button>
+            </div>
+          </div>
+          <div class="sm-comparable-track" id="sm-comps-body" data-comparable-track>
+            <div class="sm-empty-state">Đang tải lô tương tự...</div>
+          </div>
+          <div class="sm-comparable-dots" data-comparable-dots aria-label="Các nhóm lô tương tự"></div>
+        </section>
       </div>
     </div>
   </div>
@@ -1365,6 +1377,7 @@
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=loader-font-fix-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-location-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signal_card.js') }}?v=shared-signal-card-20260729"></script>
+  <script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=comparable-carousel-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-listings-header-images-20260722"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=report-internal-link-filters-20260723"></script>
 </body>

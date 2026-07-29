@@ -64,7 +64,7 @@
 /* Signal Modal Detail — 2-column layout */
 .sm-content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   gap: 0;
 }
 
@@ -77,6 +77,104 @@
 .sm-right {
   padding: 20px 24px;
   overflow-y: auto;
+}
+
+.sm-comparable-section {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 22px 24px 26px;
+  border-top: 1px solid var(--border);
+}
+
+.sm-comparable-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.sm-comparable-head p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.sm-comparable-track {
+  min-width: 0;
+}
+
+.sm-comparable-slide[hidden] {
+  display: none;
+}
+
+.sm-comparable-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.sm-comparable-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sm-comparable-controls[hidden] {
+  display: none;
+}
+
+.sm-comparable-controls button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-solid);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+
+.sm-comparable-controls button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.sm-comparable-controls span {
+  min-width: 38px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sm-comparable-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.sm-comparable-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.45);
+  cursor: pointer;
+}
+
+.sm-comparable-dots button.active {
+  width: 22px;
+  border-radius: 8px;
+  background: var(--primary);
+}
+
+@media (max-width: 1099px) and (min-width: 769px) {
+  .sm-comparable-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .sm-slider {
@@ -135,6 +233,14 @@
 }
 
 @media (max-width: 768px) {
+  .sm-comparable-section {
+    padding: 18px 16px 22px;
+  }
+
+  .sm-comparable-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .sm-location-map {
     min-height: 220px;
   }

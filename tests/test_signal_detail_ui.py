@@ -42,3 +42,22 @@ def test_dashboard_feed_delegates_to_shared_signal_card_renderer():
     assert "RadarSignalCard.render" in signals
     assert "signal_card.js" in index
     assert "signal_card.js" in detail
+
+
+def test_comparables_are_full_width_after_both_detail_columns():
+    modal = _read("templates/index.html")
+    detail = _read("templates/listing_detail.html")
+    css = _read("static/css/main/modal.css")
+
+    for html in (modal, detail):
+        left_at = html.index('class="sm-left"')
+        right_at = html.index('class="sm-right"')
+        comparable_at = html.index('class="sm-section sm-comparable-section"')
+        assert left_at < right_at < comparable_at
+        assert 'data-comparable-carousel' in html
+        assert "comparable_carousel.js" in html
+    assert "grid-template-columns: minmax(0, 3fr) minmax(0, 2fr)" in css
+    assert ".sm-comparable-section" in css
+    assert "grid-column: 1 / -1" in css
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in css
+    assert 'data-sm-tab="comps"' not in modal

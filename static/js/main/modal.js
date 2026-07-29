@@ -1312,56 +1312,12 @@ async function loadSignalHistory(listingId, currentPrice, area, ward, currentMet
       });
     }
 
-    if (compsBody) {
-      const isAdmin = window.USER_TIER === 'admin';
-      const currentTitle = document.getElementById('sm-title')?.innerText || 'Deal hiện tại';
-      const renderCompRow = (c, opts = {}) => {
-        const isCurrent = Boolean(opts.isCurrent);
-        const hidden = Boolean(opts.hidden);
-        const title = escHtml(c.title || (isCurrent ? currentTitle : 'Tin tương tự'));
-        const priceText = _modalFormatTy(c.price_ty || c.price);
-        const ppm2Text = _modalFormatPpm2(c.price_per_m2 || c.actual_ppm2 || c.ppm2);
-        const score = Number(c.match_score);
-        const scoreText = Number.isFinite(score) ? `${Math.round(score)}% khớp` : (isCurrent ? 'Lô đang xem' : 'Lô gần giống');
-        const rowHref = isCurrent ? '' : (isAdmin && c.url ? c.url : (c.detail_url || ''));
-        const clickAttrs = rowHref
-          ? ` role="link" tabindex="0" data-href="${escHtml(rowHref)}" onclick="window.open(this.dataset.href,'_blank','noopener,noreferrer')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"`
-          : '';
-        const sourceBadge = isAdmin && c.url ? '<span class="sm-comp-source-badge">TIN GỐC</span>' : '';
-        return `<article class="sm-comp-card sm-comp-row ${isCurrent ? 'is-current' : ''} ${hidden ? 'sm-comp-extra' : ''} ${rowHref ? 'is-clickable' : ''}"${clickAttrs}>
-          <div class="sm-comp-main">
-            <div class="sm-comp-title-line">
-              <div class="sm-comp-title" title="${title}">${title}</div>
-              <div class="sm-comp-badges">
-                ${isCurrent ? '<span class="sm-current-badge">Đang xem</span>' : sourceBadge}
-                <span class="sm-comp-score">${escHtml(scoreText)}</span>
-              </div>
-            </div>
-            <div class="sm-comp-price-strip">
-              <span><small>Giá</small><b>${escHtml(priceText)}</b></span>
-              <span><small>Đơn giá</small><b>${escHtml(ppm2Text)}</b></span>
-            </div>
-            <div class="sm-comp-tags">${renderCompTags(c)}</div>
-          </div>
-        </article>`;
-      };
-      const comps = Array.isArray(data.comps) ? data.comps : [];
-      const baseline = renderCompRow({
-        title: currentTitle,
-        ward,
-        area_m2: area || '-',
-        price_ty: currentPrice || '-',
-        ...currentMeta,
-      }, { isCurrent: true });
-      const compRows = comps.length
-        ? comps.map((c, index) => renderCompRow(c, { hidden: index >= 3 })).join('')
-        : '<div class="sm-empty-state">Chưa có lô tương tự phù hợp.</div>';
-      const extraCount = Math.max(0, comps.length - 3);
-      const toggle = extraCount > 0
-        ? `<button type="button" class="sm-comps-toggle" data-count="${extraCount}" onclick="toggleModalComps(this)">Xem thêm ${extraCount} lô</button>`
-        : '';
-      compsBody.classList.remove('is-expanded');
-      compsBody.innerHTML = baseline + compRows + toggle;
+    if (compsBody && window.RadarComparableCarousel) {
+      window.RadarComparableCarousel.mount(
+        document.getElementById('sm-panel-comps'),
+        Array.isArray(data.comps) ? data.comps : [],
+        { openMode: 'modal', openHandler: 'openSignal' },
+      );
     }
   } catch (err) {
     console.error('History load error:', err);
