@@ -1,0 +1,25 @@
+{
+  "resolver_version": "osm-test-v1",
+  "canonical_wards": [
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi"
+    }
+  ],
+  "wards": [
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "osm_type": "node",
+      "osm_id": 1001
+    }
+  ],
+  "roads": [
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "ĐX 43",
+      "osm_way_ids": [2001, 2002]
+    }
+  ]
+}

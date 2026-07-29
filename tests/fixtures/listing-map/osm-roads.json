@@ -1,0 +1,72 @@
+{
+  "version": 0.6,
+  "generator": "listing-map-test",
+  "elements": [
+    {
+      "type": "node",
+      "id": 1001,
+      "lat": 10.984,
+      "lon": 106.684,
+      "tags": {
+        "name": "Phú Lợi",
+        "place": "ward"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1002,
+      "lat": 10.970,
+      "lon": 106.650,
+      "tags": {
+        "name": "Chánh Nghĩa",
+        "place": "ward"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9001,
+      "lat": 20.0,
+      "lon": 105.0,
+      "tags": {
+        "name": "Outside",
+        "place": "ward"
+      }
+    },
+    {
+      "type": "way",
+      "id": 2001,
+      "tags": {
+        "highway": "residential",
+        "name": "ĐX 43"
+      },
+      "geometry": [
+        {"lat": 10.980, "lon": 106.685},
+        {"lat": 10.982, "lon": 106.688},
+        {"lat": 10.984, "lon": 106.691}
+      ]
+    },
+    {
+      "type": "way",
+      "id": 2002,
+      "tags": {
+        "highway": "residential",
+        "name": "ĐX-43"
+      },
+      "geometry": [
+        {"lat": 10.984, "lon": 106.691},
+        {"lat": 10.986, "lon": 106.694}
+      ]
+    },
+    {
+      "type": "way",
+      "id": 2999,
+      "tags": {
+        "name": "Not a highway"
+      },
+      "geometry": [
+        {"lat": 10.980, "lon": 106.680},
+        {"lat": 10.981, "lon": 106.681}
+      ]
+    }
+  ]
+}

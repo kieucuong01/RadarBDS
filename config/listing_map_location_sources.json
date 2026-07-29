@@ -1,0 +1,1415 @@
+{
+  "resolver_version": "osm-binh-duong-20260729-v1",
+  "coverage_cities": [
+    "THỦ DẦU MỘT",
+    "BẾN CÁT"
+  ],
+  "canonical_wards": [
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Thọ"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Phú An"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Tây"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Điền"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 1"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 2"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 4"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi"
+    }
+  ],
+  "osm_snapshot": {
+    "captured_at": "2026-07-29",
+    "license": "ODbL 1.0",
+    "attribution": "OpenStreetMap contributors",
+    "query_file": "config/listing_map_overpass.ql",
+    "source_files": [
+      "osm-thu-dau-mot.json",
+      "osm-ben-cat-west.json",
+      "osm-ben-cat-east.json"
+    ]
+  },
+  "wards": [
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Tây",
+      "point": {
+        "lat": 11.098824,
+        "lng": 106.541911
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Điền",
+      "point": {
+        "lat": 11.122277,
+        "lng": 106.571352
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa",
+      "point": {
+        "lat": 11.173512,
+        "lng": 106.655864
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "point": {
+        "lat": 11.094779,
+        "lng": 106.678579
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "point": {
+        "lat": 11.147617,
+        "lng": 106.611713
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 1",
+      "point": {
+        "lat": 11.147617,
+        "lng": 106.611713
+      },
+      "fallback_parent": "Mỹ Phước",
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot; parent-zone fallback for market sub-zone",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 2",
+      "point": {
+        "lat": 11.147617,
+        "lng": 106.611713
+      },
+      "fallback_parent": "Mỹ Phước",
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot; parent-zone fallback for market sub-zone",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "point": {
+        "lat": 11.147617,
+        "lng": 106.611713
+      },
+      "fallback_parent": "Mỹ Phước",
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot; parent-zone fallback for market sub-zone",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 4",
+      "point": {
+        "lat": 11.147617,
+        "lng": 106.611713
+      },
+      "fallback_parent": "Mỹ Phước",
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot; parent-zone fallback for market sub-zone",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Phú An",
+      "point": {
+        "lat": 11.060658,
+        "lng": 106.586376
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "point": {
+        "lat": 11.103841,
+        "lng": 106.626994
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "point": {
+        "lat": 11.061952,
+        "lng": 106.63282
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "point": {
+        "lat": 10.9919444,
+        "lng": 106.6316667
+      },
+      "source": "Wikidata Q2396887 revision 2343412947 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q2396887&oldid=2343412947"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "point": {
+        "lat": 10.9669444,
+        "lng": 106.6597222
+      },
+      "source": "Wikidata Q2791462 revision 2343413007 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q2791462&oldid=2343413007"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "point": {
+        "lat": 11.0313889,
+        "lng": 106.6333333
+      },
+      "source": "Wikidata Q2304628 revision 1493038282 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q2304628&oldid=1493038282"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "point": {
+        "lat": 10.9980556,
+        "lng": 106.6591667
+      },
+      "source": "Wikidata Q2672609 revision 1493038915 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q2672609&oldid=1493038915"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "point": {
+        "lat": 11.071286,
+        "lng": 106.676032
+      },
+      "source": "Wikidata Q4825307 revision 1674988450 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q4825307&oldid=1674988450"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "point": {
+        "lat": 10.98155,
+        "lng": 106.65407
+      },
+      "source": "Wikidata Q86010735 (Nhà thờ chính tòa Phú Cường reference landmark)",
+      "source_url": "https://www.wikidata.org/wiki/Q86010735"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "point": {
+        "lat": 10.9775,
+        "lng": 106.6861111
+      },
+      "source": "Wikidata Q10805927 revision 1493047954 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q10805927&oldid=1493047954"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "point": {
+        "lat": 10.990696,
+        "lng": 106.67406
+      },
+      "source": "Wikidata Q1901452 revision 2362556003 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q1901452&oldid=2362556003"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "point": {
+        "lat": 11.0133333,
+        "lng": 106.6708333
+      },
+      "source": "Wikidata Q10806024 revision 1493049868 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q10806024&oldid=1493049868"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Thọ",
+      "point": {
+        "lat": 10.9575,
+        "lng": 106.6655556
+      },
+      "source": "Wikidata Q10806124 revision 2362662091 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q10806124&oldid=2362662091"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "point": {
+        "lat": 11.0275,
+        "lng": 106.6811111
+      },
+      "source": "Wikidata Q2392572 revision 1493049566 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q2392572&oldid=1493049566"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "point": {
+        "lat": 11.0336111,
+        "lng": 106.6158333
+      },
+      "source": "Wikidata Q2646896 revision 2083099363 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q2646896&oldid=2083099363"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "point": {
+        "lat": 11.0161111,
+        "lng": 106.6305556
+      },
+      "source": "Wikidata Q2262454 revision 2343413257 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q2262454&oldid=2343413257"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "point": {
+        "lat": 11.0258333,
+        "lng": 106.6522222
+      },
+      "source": "Wikidata Q10841802 revision 1493037585 (pre-merger ward coordinate)",
+      "source_url": "https://www.wikidata.org/w/index.php?title=Q10841802&oldid=1493037585"
+    }
+  ],
+  "roads": [
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "road_name": "D17",
+      "osm_way_ids": [
+        225107217
+      ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "road_name": "D22",
+      "osm_way_ids": [
+        225107261
+      ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "road_name": "DH8",
+      "osm_way_ids": [
+        534081387
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "road_name": "Nguyen Van Cu",
+      "osm_way_ids": [
+        149876282,
+        234901547,
+        234901559,
+        264587826,
+        709621938,
+        709621940,
+        709621941,
+        900682574,
+        1067886695
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "road_name": "Nguyen Van Long",
+      "osm_way_ids": [
+        146075770,
+        149876274,
+        224944367,
+        1409385772
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "road_name": "Bui Quoc Khanh",
+      "osm_way_ids": [
+        145623506,
+        224851506,
+        234901550,
+        234901569,
+        263643124
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "road_name": "D1",
+      "osm_way_ids": [
+        224851461
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "road_name": "D3",
+      "osm_way_ids": [
+        224839337,
+        224851512
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "road_name": "Tran Phu",
+      "osm_way_ids": [
+        224839350
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "Duong So 13",
+      "osm_way_ids": [
+        1173904112
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "Duong So 26",
+      "osm_way_ids": [
+        1202034654
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX63",
+      "osm_way_ids": [
+        827070536,
+        1234256719
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX64",
+      "osm_way_ids": [
+        226103370,
+        898038437,
+        1471630579
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX68",
+      "osm_way_ids": [
+        612801318,
+        612801339
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX69",
+      "osm_way_ids": [
+        612555143,
+        612555144
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX70",
+      "osm_way_ids": [
+        612811471
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX71",
+      "osm_way_ids": [
+        368387329
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX73",
+      "osm_way_ids": [
+        148685047,
+        937957025
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "Nguyen Van Thanh",
+      "osm_way_ids": [
+        898463163,
+        898463164
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "Tran Ngoc Len",
+      "osm_way_ids": [
+        1012927577
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "Vo Van Kiet",
+      "osm_way_ids": [
+        291267453,
+        291267456,
+        291267457,
+        291267458,
+        291267459,
+        303164339,
+        1285091034,
+        1285091035
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX88",
+      "osm_way_ids": [
+        612529147,
+        612529148
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX94",
+      "osm_way_ids": [
+        612884914
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX95",
+      "osm_way_ids": [
+        612884868,
+        613174066,
+        1103264991,
+        1512252879,
+        1512252880
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "Le Chi Dan",
+      "osm_way_ids": [
+        612555147,
+        898358285,
+        898390947,
+        1017053710
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "Nguyen Chi Thanh",
+      "osm_way_ids": [
+        356694404,
+        356694405,
+        1017053707,
+        1017053708,
+        1017053709,
+        1017053711,
+        1017053713
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "Phan Dang Luu",
+      "osm_way_ids": [
+        1238200067
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "D2",
+      "osm_way_ids": [
+        225119720
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Duong So 10",
+      "osm_way_ids": [
+        146071007
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Duong So 12",
+      "osm_way_ids": [
+        146070999
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Duong So 13",
+      "osm_way_ids": [
+        146071001
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Duong So 15",
+      "osm_way_ids": [
+        146071037
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Duong So 5",
+      "osm_way_ids": [
+        146070996
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Duong So 7",
+      "osm_way_ids": [
+        653733536
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Hoang Hoa Tham",
+      "osm_way_ids": [
+        225119756,
+        563877251,
+        1422211959
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Nguyen Duc Thuan",
+      "osm_way_ids": [
+        146071011,
+        974366917
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Nguyen Van Tiet",
+      "osm_way_ids": [
+        786257572,
+        786257577
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Pham Ngoc Thach",
+      "osm_way_ids": [
+        146071043,
+        397372896,
+        974366915,
+        974366916,
+        974366918,
+        1334392478,
+        1370241469,
+        1370241471,
+        1463874869,
+        1463874870
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Pham Ngu Lao",
+      "osm_way_ids": [
+        224851431,
+        234901540
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "D17",
+      "osm_way_ids": [
+        225107217
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "D8",
+      "osm_way_ids": [
+        225107257,
+        602741480
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "D9",
+      "osm_way_ids": [
+        602741481
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "Duong So 13",
+      "osm_way_ids": [
+        1173904112
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "N8",
+      "osm_way_ids": [
+        225107214
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "road_name": "Huynh Van Cu",
+      "osm_way_ids": [
+        264587848,
+        1145207306,
+        1145207307,
+        1174720645,
+        1174720647,
+        1198194224,
+        1198194225,
+        1372898709,
+        1471850425,
+        1471850426,
+        1531380558
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "road_name": "Lac Long Quan",
+      "osm_way_ids": [
+        224851411,
+        620562392
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "road_name": "Ngo Quyen",
+      "osm_way_ids": [
+        224851447,
+        692241397
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "road_name": "Nguyen Van Long",
+      "osm_way_ids": [
+        264587846
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "road_name": "Thich Quang Duc",
+      "osm_way_ids": [
+        321485226
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "road_name": "Vo Thanh Long",
+      "osm_way_ids": [
+        263643110
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "D1",
+      "osm_way_ids": [
+        224851503,
+        224851568,
+        1333473014,
+        1333473022
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "Hem 269 Nguyen Thi Minh Khai",
+      "osm_way_ids": [
+        224944312
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "Le Hong Phong",
+      "osm_way_ids": [
+        127456959,
+        224839336,
+        1333473013,
+        1333473021
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "N6",
+      "osm_way_ids": [
+        224851449
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "Nguyen Thai Binh",
+      "osm_way_ids": [
+        146070991,
+        795483048
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "Nguyen Thi Minh Khai",
+      "osm_way_ids": [
+        146071032,
+        613620453
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "D2",
+      "osm_way_ids": [
+        833243612
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "D5",
+      "osm_way_ids": [
+        709619397
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "D8",
+      "osm_way_ids": [
+        709619404
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Doan Thi Lien",
+      "osm_way_ids": [
+        145620905,
+        264456057,
+        692241394
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Hem 178 Huynh Van Luy",
+      "osm_way_ids": [
+        224865413
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Hem 220 Huynh Van Luy",
+      "osm_way_ids": [
+        692241390
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Hem 23 Le Thi Trung",
+      "osm_way_ids": [
+        224851523
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Hem 322 Huynh Van Luy",
+      "osm_way_ids": [
+        613336270
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Huynh Van Luy",
+      "osm_way_ids": [
+        1162050139,
+        1285091042,
+        1396180390
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Le Hong Phong",
+      "osm_way_ids": [
+        225060909,
+        563869947,
+        563869960
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Nguyen Binh",
+      "osm_way_ids": [
+        224865415
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Pham Thi Tan",
+      "osm_way_ids": [
+        1103378543
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Trinh Hoai Duc",
+      "osm_way_ids": [
+        145620893
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "D5",
+      "osm_way_ids": [
+        148728141
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "DX13",
+      "osm_way_ids": [
+        224946011
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "DX20",
+      "osm_way_ids": [
+        709610751
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "DX57",
+      "osm_way_ids": [
+        709606497,
+        836151687,
+        836151688
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "Huynh Van Luy",
+      "osm_way_ids": [
+        127456957,
+        127456962,
+        1177171404,
+        1177171405,
+        1333473009,
+        1333473027
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "D10",
+      "osm_way_ids": [
+        148728149
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "D12",
+      "osm_way_ids": [
+        148726433
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "D3",
+      "osm_way_ids": [
+        148726231,
+        1512252861
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "D6",
+      "osm_way_ids": [
+        148728156
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "D8",
+      "osm_way_ids": [
+        148726400
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Duong So 3",
+      "osm_way_ids": [
+        224945993,
+        224945996
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Duong So 51",
+      "osm_way_ids": [
+        148726415
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Duong So 71",
+      "osm_way_ids": [
+        148726315
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Duong So 73",
+      "osm_way_ids": [
+        148726402
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Duong So 84",
+      "osm_way_ids": [
+        148726388
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Duong So 91",
+      "osm_way_ids": [
+        148726345
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "N10",
+      "osm_way_ids": [
+        235029400
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "N19",
+      "osm_way_ids": [
+        148726394
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "N3",
+      "osm_way_ids": [
+        148726418,
+        615465008,
+        615465012,
+        615465014,
+        615465016,
+        1168570382,
+        1168570383,
+        1250666460,
+        1250666461,
+        1512252859
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "N4",
+      "osm_way_ids": [
+        606192697,
+        606192699,
+        606192702,
+        606192704,
+        1250666587,
+        1250666588
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "N5",
+      "osm_way_ids": [
+        175468563,
+        567034686
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "N6",
+      "osm_way_ids": [
+        148726285,
+        235010559,
+        606192689,
+        606192691
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "N8",
+      "osm_way_ids": [
+        148728165
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Nguyen Van Linh",
+      "osm_way_ids": [
+        148718452,
+        148718485
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Thọ",
+      "road_name": "Hem 1369 Le Hong Phong",
+      "osm_way_ids": [
+        368395493
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Thọ",
+      "road_name": "Le Hong Phong",
+      "osm_way_ids": [
+        145623500,
+        1285091047,
+        1333473015
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Thọ",
+      "road_name": "Nguyen Huu Canh",
+      "osm_way_ids": [
+        224851565
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Thọ",
+      "road_name": "Tran Binh Trong",
+      "osm_way_ids": [
+        224851507
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX124",
+      "osm_way_ids": [
+        612498443,
+        612498445
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX127",
+      "osm_way_ids": [
+        263956395,
+        826261485,
+        826263589
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX130",
+      "osm_way_ids": [
+        612894826,
+        612894827
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX132",
+      "osm_way_ids": [
+        224818479,
+        263956397
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX133",
+      "osm_way_ids": [
+        612894830
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Huynh Thi Hieu",
+      "osm_way_ids": [
+        224818475,
+        612182938,
+        612182939,
+        1504680005
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Le Chi Dan",
+      "osm_way_ids": [
+        1017551346,
+        1017551347,
+        1017551348,
+        1017551349
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Nguyen Chi Thanh",
+      "osm_way_ids": [
+        234901582
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Phan Dang Luu",
+      "osm_way_ids": [
+        137265995,
+        612182946,
+        1238200042
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "Bui Ngoc Thu",
+      "osm_way_ids": [
+        137265987,
+        1238200028
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "DX148",
+      "osm_way_ids": [
+        225811033
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "Ho Van Cong",
+      "osm_way_ids": [
+        146075768
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "Le Chi Dan",
+      "osm_way_ids": [
+        137266001
+      ]
+    }
+  ],
+  "ambiguous_road_count": 0,
+  "rejected_road_count": 289,
+  "rejected_road_examples": [
+    "THỦ DẦU MỘT|Tương Bình Hiệp|DX142|10",
+    "THỦ DẦU MỘT|Tương Bình Hiệp|DX143|10",
+    "THỦ DẦU MỘT|Phú Mỹ|DX1|9",
+    "THỦ DẦU MỘT|Phú Mỹ|DX2|9",
+    "THỦ DẦU MỘT|Định Hòa|DX78|8",
+    "THỦ DẦU MỘT|Phú Mỹ|DX43|6",
+    "THỦ DẦU MỘT|Định Hòa|DX72|6",
+    "THỦ DẦU MỘT|Định Hòa|DX82|6",
+    "THỦ DẦU MỘT|Hiệp An|DX106|5",
+    "THỦ DẦU MỘT|Hiệp An|DX85|5"
+  ]
+}
