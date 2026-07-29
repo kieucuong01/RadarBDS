@@ -158,8 +158,171 @@ def _wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, ma
     return lines
 
 
+def _visual_kind(slug: str, page: dict[str, Any]) -> str:
+    """Classify article into a compact visual style for Facebook scanability."""
+    text = " ".join([slug, _short_title(page), _plain(page.get("description"))]).casefold()
+    if any(key in text for key in ("bất thường", "checklist", "kiểm tra gì", "tin re bat thuong")):
+        return "risk_checklist"
+    if any(key in text for key in (" hay ", " vs ", "so sánh", "so sanh", "lọc giá theo phường")):
+        return "ward_compare"
+    if any(key in text for key in ("dưới", "duoi", "ngân sách", "ngan sach", "2-4 tỷ", "3 tỷ", "4 tỷ")):
+        return "budget_filter"
+    cards = _article_cards(page)
+    if _find_card(cards, "dấu hiệu").get("value") or any(key in text for key in ("tín hiệu", "tin đáng", "signal")):
+        return "signal_filter"
+    if any(key in text for key in ("báo cáo", "tháng", "market")):
+        return "market_report"
+    return "ward_price"
+
+
+VISUAL_STYLES: dict[str, dict[str, Any]] = {
+    "ward_compare": {
+        "label": "SO GIÁ 2 KHU",
+        "accent": (34, 211, 238),
+        "accent2": (45, 212, 191),
+        "bg1": (6, 32, 52),
+        "bg2": (13, 71, 95),
+        "icon": "↔",
+        "note": "Đừng gộp đất nền với nhà đất khi so giá.",
+    },
+    "budget_filter": {
+        "label": "LỌC THEO NGÂN SÁCH",
+        "accent": (167, 139, 250),
+        "accent2": (244, 114, 182),
+        "bg1": (33, 24, 72),
+        "bg2": (88, 28, 135),
+        "icon": "₫",
+        "note": "Xem giá/m² trước, rồi mới gọi hỏi vị trí và giấy tờ.",
+    },
+    "risk_checklist": {
+        "label": "TIN RẺ CẦN CHECK",
+        "accent": (251, 191, 36),
+        "accent2": (248, 113, 113),
+        "bg1": (54, 32, 12),
+        "bg2": (127, 29, 29),
+        "icon": "!",
+        "note": "Giá thấp chỉ là tín hiệu lọc ban đầu, chưa phải kết luận nên mua.",
+    },
+    "signal_filter": {
+        "label": "DẤU HIỆU ĐÁNG XEM",
+        "accent": (52, 211, 153),
+        "accent2": (96, 165, 250),
+        "bg1": (6, 44, 41),
+        "bg2": (14, 116, 144),
+        "icon": "✓",
+        "note": "Mở nhóm đáng kiểm tra trước để tiết kiệm thời gian lọc tin.",
+    },
+    "market_report": {
+        "label": "BÁO CÁO THỊ TRƯỜNG",
+        "accent": (96, 165, 250),
+        "accent2": (129, 140, 248),
+        "bg1": (15, 23, 42),
+        "bg2": (30, 64, 175),
+        "icon": "▦",
+        "note": "Số liệu là giá rao tham khảo, nên đối chiếu theo loại hình.",
+    },
+    "ward_price": {
+        "label": "GIÁ RAO THEO PHƯỜNG",
+        "accent": (56, 189, 248),
+        "accent2": (45, 212, 191),
+        "bg1": (7, 30, 50),
+        "bg2": (14, 82, 111),
+        "icon": "⌂",
+        "note": "Dùng dữ liệu để lọc nhanh trước khi đi xem thực tế.",
+    },
+}
+
+
+def _visual_design_prompt(kind: str, page: dict[str, Any]) -> str:
+    preset = VISUAL_STYLES.get(kind, VISUAL_STYLES["ward_price"])
+    headline = _visual_headline(kind, page)
+    return (
+        f"Facebook square 1080x1080 for Radar BDS, style={kind}/{preset['label']}; "
+        f"dark premium real-estate data card, big Vietnamese headline: {headline}; "
+        "maximum 2 key metrics, no long paragraph, high contrast, clean brand badge, "
+        "bottom note: giá rao tham khảo / cần kiểm tra thực tế; modern SaaS dashboard feel."
+    )
+
+
+def _lerp(c1: tuple[int, int, int], c2: tuple[int, int, int], t: float) -> tuple[int, int, int]:
+    return tuple(int(a + (b - a) * t) for a, b in zip(c1, c2))
+
+
+def _draw_gradient(draw: ImageDraw.ImageDraw, width: int, height: int, top: tuple[int, int, int], bottom: tuple[int, int, int]) -> None:
+    for y in range(height):
+        draw.line((0, y, width, y), fill=_lerp(top, bottom, y / height))
+
+
+def _visual_headline(kind: str, page: dict[str, Any]) -> str:
+    title = _short_title(page)
+    if kind == "ward_compare":
+        return title.split(":", 1)[0].replace("nên lọc", "lọc").strip()
+    if kind == "budget_filter":
+        match = re.search(r"(dưới\s+[^:]+?)(?:[:?]|$)", title, flags=re.I)
+        if match:
+            return match.group(1).strip().capitalize() + "?"
+    if kind == "risk_checklist":
+        return "Tin rẻ bất thường: kiểm tra gì?"
+    return title.replace(" | Radar BDS", "")
+
+
+def _visual_metrics(kind: str, page: dict[str, Any]) -> list[tuple[str, str]]:
+    cards = _article_cards(page)
+    listing = _find_card(cards, "tin")
+    land = _find_card(cards, "đất nền")
+    house = _find_card(cards, "nhà đất")
+    signal = _find_card(cards, "dấu hiệu")
+    metrics: list[tuple[str, str]] = []
+    if kind in {"ward_compare", "ward_price", "market_report"}:
+        if land.get("value"):
+            metrics.append(("Đất nền", land["value"]))
+        if house.get("value"):
+            metrics.append(("Nhà đất", house["value"]))
+        if listing.get("value") and len(metrics) < 2:
+            metrics.append(("Tin theo dõi", listing["value"]))
+    elif kind == "budget_filter":
+        if listing.get("value"):
+            metrics.append(("Tin phù hợp", listing["value"]))
+        if land.get("value"):
+            metrics.append(("Giá/m²", land["value"]))
+        elif house.get("value"):
+            metrics.append(("Giá/m²", house["value"]))
+    elif kind == "risk_checklist":
+        if signal.get("value"):
+            metrics.append(("Cần kiểm tra", signal["value"]))
+        if listing.get("value"):
+            metrics.append(("Tin theo dõi", listing["value"]))
+    elif kind == "signal_filter":
+        if signal.get("value"):
+            metrics.append(("Dấu hiệu", signal["value"]))
+        if listing.get("value"):
+            metrics.append(("Tin theo dõi", listing["value"]))
+    if not metrics:
+        metrics.append(("Radar BDS", "lọc tin bằng dữ liệu"))
+    return metrics[:2]
+
+
+def _draw_metric_card(
+    draw: ImageDraw.ImageDraw,
+    box: tuple[int, int, int, int],
+    label: str,
+    value: str,
+    accent: tuple[int, int, int],
+) -> None:
+    x1, y1, x2, y2 = box
+    draw.rounded_rectangle(box, 28, fill=(248, 250, 252))
+    draw.rounded_rectangle((x1 + 24, y1 + 24, x1 + 34, y2 - 24), 5, fill=accent)
+    draw.text((x1 + 54, y1 + 28), label.upper(), font=_font(25, bold=True), fill=(71, 85, 105))
+    value_font = _font(46, bold=True)
+    value_lines = _wrap(draw, value, value_font, x2 - x1 - 84)
+    yy = y1 + 72
+    for line in value_lines[:2]:
+        draw.text((x1 + 54, yy), line, font=value_font, fill=(15, 23, 42))
+        yy += 54
+
+
 def _make_visual(slug: str, page: dict[str, Any], now: dt.datetime) -> str:
-    """Create a simple 1080x1080 data visual for Page posts.
+    """Create a compact 1080x1080 visual with per-post-type styles.
 
     The Facebook publisher only attaches media when the queue contains
     content.visual_path/image. Keep generation deterministic and local so the
@@ -170,63 +333,64 @@ def _make_visual(slug: str, page: dict[str, Any], now: dt.datetime) -> str:
     if out.exists():
         return str(out)
 
-    title = _short_title(page)
-    description = _plain(page.get("hero_text") or page.get("description") or "Dữ liệu Radar BDS giúp lọc tin rao trước khi gọi môi giới.")
-    cards = _article_cards(page)
-    land = _find_card(cards, "đất nền")
-    house = _find_card(cards, "nhà đất")
-    listing = _find_card(cards, "tin")
+    kind = _visual_kind(slug, page)
+    preset = VISUAL_STYLES[kind]
+    headline = _visual_headline(kind, page)
+    ward = _extract_ward(page, _article_cards(page))
+    metrics = _visual_metrics(kind, page)
 
     width = height = 1080
-    im = Image.new("RGB", (width, height), (7, 30, 50))
+    im = Image.new("RGB", (width, height), preset["bg1"])
     draw = ImageDraw.Draw(im)
-    for y in range(height):
-        color = (7 + int(12 * y / height), 30 + int(35 * y / height), 50 + int(48 * y / height))
-        draw.line((0, y, width, y), fill=color)
+    _draw_gradient(draw, width, height, preset["bg1"], preset["bg2"])
 
-    draw.rounded_rectangle((70, 62, 360, 132), 24, fill=(8, 45, 72), outline=(84, 190, 231), width=2)
-    draw.ellipse((94, 82, 125, 113), fill=(29, 214, 157))
-    draw.text((142, 80), "RADAR BĐS", font=_font(30, bold=True), fill="white")
-    draw.text((72, 176), "DỮ LIỆU GIÁ RAO", font=_font(30, bold=True), fill=(104, 218, 255))
+    accent = preset["accent"]
+    accent2 = preset["accent2"]
+    draw.ellipse((710, -160, 1160, 300), fill=_lerp(preset["bg2"], accent, 0.22))
+    draw.ellipse((-180, 760, 280, 1220), fill=_lerp(preset["bg1"], accent2, 0.20))
+    draw.rounded_rectangle((66, 60, 330, 124), 24, fill=(255, 255, 255), outline=accent, width=0)
+    draw.ellipse((91, 80, 123, 112), fill=accent2)
+    draw.text((140, 78), "RADAR BĐS", font=_font(29, bold=True), fill=(15, 23, 42))
 
-    y = 238
-    title_font = _font(54, bold=True)
-    for line in _wrap(draw, title, title_font, 920)[:5]:
+    label = str(preset["label"])
+    label_w = draw.textbbox((0, 0), label, font=_font(26, bold=True))[2]
+    draw.rounded_rectangle((70, 168, 112 + label_w, 220), 18, fill=_lerp(preset["bg2"], accent, 0.34), outline=accent, width=2)
+    draw.text((92, 181), label, font=_font(26, bold=True), fill=(236, 253, 245))
+
+    draw.ellipse((846, 140, 988, 282), fill=accent)
+    icon_font = _font(74, bold=True)
+    icon = str(preset["icon"])
+    ib = draw.textbbox((0, 0), icon, font=icon_font)
+    draw.text((917 - (ib[2] - ib[0]) / 2, 207 - (ib[3] - ib[1]) / 2), icon, font=icon_font, fill=(15, 23, 42))
+
+    y = 258
+    title_font = _font(68, bold=True)
+    for line in _wrap(draw, headline, title_font, 820)[:3]:
         draw.text((72, y), line, font=title_font, fill="white")
-        y += 68
+        y += 82
 
-    metrics_top = min(650, y + 28)
-    draw.rounded_rectangle((70, metrics_top, 1010, metrics_top + 235), 30, fill=(245, 249, 252))
-    metric_font = _font(30, bold=True)
-    note_font = _font(25)
-    yy = metrics_top + 34
-    metric_lines = []
-    if listing.get("value"):
-        metric_lines.append(("Tin đang theo dõi", listing["value"]))
-    if land.get("value"):
-        metric_lines.append(("Đất nền", land["value"]))
-    if house.get("value"):
-        metric_lines.append(("Nhà đất", house["value"]))
-    if not metric_lines:
-        metric_lines = [("Góc nhìn dữ liệu", description[:90])]
-    for label, value in metric_lines[:3]:
-        draw.text((112, yy), label, font=note_font, fill=(71, 85, 105))
-        draw.text((430, yy - 3), value, font=metric_font, fill=(15, 23, 42))
-        yy += 58
+    subline = f"{ward} · giá rao tham khảo" if ward and ward != "khu vực này" else "Dữ liệu giá rao Radar BDS"
+    draw.text((76, min(y + 8, 520)), subline, font=_font(28, bold=True), fill=(213, 234, 245))
 
-    summary_top = metrics_top + 270
-    if summary_top < 890:
-        summary_font = _font(25)
-        for line in _wrap(draw, description, summary_font, 880)[:4]:
-            draw.text((82, summary_top), line, font=summary_font, fill=(218, 235, 245))
-            summary_top += 38
+    card_top = 570
+    if len(metrics) == 1:
+        _draw_metric_card(draw, (70, card_top, 1010, card_top + 168), metrics[0][0], metrics[0][1], accent)
+    else:
+        _draw_metric_card(draw, (70, card_top, 525, card_top + 190), metrics[0][0], metrics[0][1], accent)
+        _draw_metric_card(draw, (555, card_top, 1010, card_top + 190), metrics[1][0], metrics[1][1], accent2)
 
-    draw.rounded_rectangle((70, 934, 1010, 1010), 24, fill=(7, 45, 71), outline=(80, 190, 231), width=2)
-    draw.text((102, 958), "Giá rao để lọc ban đầu • Cần kiểm tra thực tế và pháp lý", font=_font(23, bold=True), fill=(210, 232, 244))
+    note = str(preset["note"])
+    note_top = 815
+    draw.rounded_rectangle((70, note_top, 1010, note_top + 82), 24, fill=(255, 255, 255))
+    yy = note_top + 22
+    for line in _wrap(draw, note, _font(27, bold=True), 850)[:2]:
+        draw.text((104, yy), line, font=_font(27, bold=True), fill=(30, 41, 59))
+        yy += 34
+
+    draw.rounded_rectangle((70, 958, 1010, 1014), 18, fill=_lerp(preset["bg1"], accent, 0.24), outline=accent, width=2)
+    draw.text((104, 973), "radarbds.vn • Lọc tin trước, kiểm tra thực tế sau", font=_font(24, bold=True), fill=(226, 245, 255))
     im.save(out, quality=94, optimize=True)
     return str(out)
-
-
 
 def _hashtags_for_page(page: dict[str, Any]) -> list[str]:
     ward = _extract_ward(page, _article_cards(page))
@@ -409,6 +573,8 @@ def create(args: argparse.Namespace) -> dict[str, Any]:
             "link": _utm_url(url, slug),
             "ward_filter_link": _ward_filter_url(page, _extract_ward(page, _article_cards(page)), slug),
             "hashtags": _hashtags_for_page(page),
+            "visual_style": _visual_kind(slug, page),
+            "visual_prompt": _visual_design_prompt(_visual_kind(slug, page), page),
             "visual_path": _make_visual(slug, page, now),
         },
         "status": "queued",
