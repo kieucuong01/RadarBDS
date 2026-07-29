@@ -136,6 +136,34 @@ curl -fsS "http://127.0.0.1:5000/api/dashboard?cache_refresh=1" >/dev/null
 curl -fsS "http://127.0.0.1:5000/api/signals?page=1&limit=3" >/dev/null
 ```
 
+## Thu Dau Mot Digital Map Commerce
+
+The paid package is runtime data, not a deploy artifact. Keep it outside the
+repository and public static folders at:
+
+```text
+/var/lib/radar-bds/products/thu-dau-mot-map-bundle/1.0/
+```
+
+The exact production setup and rollback commands are in
+`deployment/ubuntu24/README.md`. Keep
+`DIGITAL_PRODUCT_SALES_ENABLED=0` while installing or validating the package.
+Do not enable sales until the ZIP, sibling `MANIFEST.json`, PayOS credentials,
+cookie secret, schema, webhook registration, and service smoke all pass.
+
+Reconcile one existing order without printing its recovery token, QR content,
+signature, credentials, or bank-transfer payload:
+
+```bash
+cd /opt/radar-bds/current
+sudo -u radar bash -lc 'set -a; source /etc/radar-bds/radar.env; set +a; /opt/radar-bds/.venv/bin/python -X utf8 scripts/reconcile_digital_product_order.py --public-id <32-lowercase-hex-public-id>'
+```
+
+The command prints only the public ID, local status, remote status, changed
+flag, and the applicable expiry. It may reconcile an existing `pending` or
+`payment_review` order, including a `pending` order that expires during that
+check. It does not query PayOS again for an already terminal local order.
+
 ## Production Smoke Checklist
 
 ```bash

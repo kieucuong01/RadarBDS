@@ -10,10 +10,13 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from types import MappingProxyType
-from typing import Callable, ContextManager, Iterator, Protocol
+from typing import TYPE_CHECKING, Callable, ContextManager, Iterator, Protocol
 
 from db.connection import get_conn
 from services.digital_products import DigitalProduct, get_digital_product
+
+if TYPE_CHECKING:
+    from services.payos_client import PayOSClient, PayOSPaymentStatus
 
 
 ORDER_CODE_BASE = 720_000_000
@@ -29,7 +32,7 @@ id, public_id, product_slug, product_version, expected_amount, currency,
 payos_order_code, payment_link_id, checkout_url, qr_code, status,
 recovery_token_hash, paid_amount, payment_reference, created_at,
 payment_expires_at, paid_at, download_expires_at, download_count,
-last_download_at
+last_download_at, last_checked_at
 """.strip()
 
 
@@ -175,8 +178,9 @@ class DigitalProductOrder(_ImmutableDomainRecord):
         "download_expires_at",
         "download_count",
         "last_download_at",
+        "last_checked_at",
     )
-    _field_defaults = {"last_download_at": None}
+    _field_defaults = {"last_download_at": None, "last_checked_at": None}
     _repr_field_names = (
         "public_id",
         "product_slug",
@@ -191,6 +195,7 @@ class DigitalProductOrder(_ImmutableDomainRecord):
         "download_expires_at",
         "download_count",
         "last_download_at",
+        "last_checked_at",
     )
 
     id: int
@@ -213,6 +218,7 @@ class DigitalProductOrder(_ImmutableDomainRecord):
     download_expires_at: datetime | None
     download_count: int
     last_download_at: datetime | None
+    last_checked_at: datetime | None
 
 
 class PendingOrderSecret(_ImmutableDomainRecord):
@@ -306,6 +312,13 @@ class OrderTransaction(Protocol):
     ) -> DigitalProductOrder: ...
 
     def mark_expired(self, order_id: int) -> DigitalProductOrder: ...
+
+    def mark_last_checked(
+        self,
+        order_id: int,
+        *,
+        checked_at: datetime,
+    ) -> DigitalProductOrder: ...
 
     def increment_download(self, order_id: int, *, downloaded_at: datetime) -> bool: ...
 
@@ -537,6 +550,27 @@ class _PostgresOrderTransaction:
         )
         return self._required_by_id(order_id)
 
+    def mark_last_checked(
+        self,
+        order_id: int,
+        *,
+        checked_at: datetime,
+    ) -> DigitalProductOrder:
+        self._conn.execute(
+            """
+            UPDATE digital_product_orders
+               SET last_checked_at = CASE
+                       WHEN last_checked_at IS NULL OR last_checked_at < ?
+                       THEN ?
+                       ELSE last_checked_at
+                   END,
+                   updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?
+            """,
+            (checked_at, checked_at, order_id),
+        )
+        return self._required_by_id(order_id)
+
     def increment_download(self, order_id: int, *, downloaded_at: datetime) -> bool:
         cursor = self._conn.execute(
             """
@@ -670,6 +704,51 @@ def get_order(
         return tx.get_by_public_id(public_id)
 
 
+def reconcile_order(
+    public_id: str,
+    payos_client: "PayOSClient",
+    now: datetime,
+    *,
+    repo: OrderRepository | None = None,
+) -> SettlementResult:
+    """Reconcile an eligible local order with PayOS through the shared seam."""
+    repository = _repository(repo)
+    newly_expired = False
+    with repository.transaction() as tx:
+        order = tx.get_by_public_id(public_id, for_update=True)
+        if order is None:
+            raise OrderNotFound(public_id)
+        if order.status not in {"pending", "payment_review"}:
+            return SettlementResult(
+                order=order,
+                changed=False,
+                reason=f"not_reconcilable_{order.status}",
+            )
+        if order.status == "pending" and now >= order.payment_expires_at:
+            order = tx.mark_expired(order.id)
+            newly_expired = True
+
+    remote = payos_client.get_payment(order.payos_order_code)
+    with repository.transaction() as tx:
+        checked_order = tx.mark_last_checked(order.id, checked_at=now)
+
+    if remote.status != "PAID":
+        return SettlementResult(
+            order=checked_order,
+            changed=newly_expired,
+            reason=f"remote_{remote.status.lower()}",
+        )
+
+    return settle_verified_payment(
+        remote.order_code,
+        remote.amount_paid,
+        remote.reference,
+        remote.paid_at,
+        _reconciliation_payload_hash(remote),
+        repo=repository,
+    )
+
+
 def settle_verified_payment(
     order_code: int,
     amount: int,
@@ -799,6 +878,21 @@ def _repository(repo: OrderRepository | None) -> OrderRepository:
     return repo if repo is not None else PostgresOrderRepository()
 
 
+def _reconciliation_payload_hash(payment: "PayOSPaymentStatus") -> str:
+    paid_at = payment.paid_at.isoformat() if payment.paid_at is not None else ""
+    payload = "\n".join(
+        (
+            "payos-reconciliation-v1",
+            str(payment.order_code),
+            payment.status,
+            str(payment.amount_paid),
+            payment.reference,
+            paid_at,
+        )
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def _recovery_authorization_active(
     order: DigitalProductOrder,
     now: datetime,
@@ -838,4 +932,7 @@ def _order_from_row(row: object | None) -> DigitalProductOrder | None:
         download_expires_at=row["download_expires_at"],
         download_count=int(row["download_count"]),
         last_download_at=row["last_download_at"],
+        last_checked_at=(
+            row["last_checked_at"] if "last_checked_at" in row else None
+        ),
     )

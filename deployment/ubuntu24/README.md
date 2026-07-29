@@ -110,6 +110,97 @@ migration. Missing thumbnails can be backfilled later:
 sudo -u radar /opt/radar-bds/.venv/bin/python -X utf8 scripts/generate_thumbnails.py --limit 1000
 ```
 
+### Thu Dau Mot digital map package and PayOS
+
+Keep the validated ZIP and its exact sibling manifest outside the checkout:
+
+```text
+/var/lib/radar-bds/products/thu-dau-mot-map-bundle/1.0/
+```
+
+Install with sales disabled. The source files below are the separately
+transferred, already validated release files; never copy them into `static/`:
+
+```bash
+sudo install -d -o radar -g radar -m 0750 \
+  /var/lib/radar-bds/products/thu-dau-mot-map-bundle/1.0
+sudo -u radar cp \
+  /tmp/radarbds-thu-dau-mot-map-v1.0.zip \
+  /var/lib/radar-bds/products/thu-dau-mot-map-bundle/1.0/
+sudo -u radar cp \
+  /tmp/MANIFEST.json \
+  /var/lib/radar-bds/products/thu-dau-mot-map-bundle/1.0/
+sudo chown radar:radar \
+  /var/lib/radar-bds/products/thu-dau-mot-map-bundle/1.0/radarbds-thu-dau-mot-map-v1.0.zip \
+  /var/lib/radar-bds/products/thu-dau-mot-map-bundle/1.0/MANIFEST.json
+sudo chmod 0750 \
+  /var/lib/radar-bds/products \
+  /var/lib/radar-bds/products/thu-dau-mot-map-bundle \
+  /var/lib/radar-bds/products/thu-dau-mot-map-bundle/1.0
+sudo chmod 0640 \
+  /var/lib/radar-bds/products/thu-dau-mot-map-bundle/1.0/radarbds-thu-dau-mot-map-v1.0.zip \
+  /var/lib/radar-bds/products/thu-dau-mot-map-bundle/1.0/MANIFEST.json
+```
+
+Add the following keys to `/etc/radar-bds/radar.env`. Store real secrets only
+in that protected file; `DIGITAL_PRODUCT_COOKIE_SECRET` must contain at least
+64 characters:
+
+```env
+PAYOS_CLIENT_ID=
+PAYOS_API_KEY=
+PAYOS_CHECKSUM_KEY=
+DIGITAL_PRODUCT_COOKIE_SECRET=
+DIGITAL_PRODUCT_STORAGE_DIR=/var/lib/radar-bds/products
+DIGITAL_PRODUCT_SALES_ENABLED=0
+```
+
+Apply the schema and restart while sales remain disabled:
+
+```bash
+cd /opt/radar-bds/current
+sudo -u radar bash -lc 'set -a; source /etc/radar-bds/radar.env; set +a; /opt/radar-bds/.venv/bin/python -X utf8 -c "from db.schema import init_schema; init_schema()"'
+sudo systemctl restart radar-bds.service
+curl -fsS https://radarbds.vn/ban-do-thu-dau-mot | grep -F 'Sắp mở bán'
+```
+
+In the PayOS merchant configuration, register and confirm this exact webhook:
+
+```text
+https://radarbds.vn/api/webhooks/payos/digital-products
+```
+
+Validate the protected copy through the same registry and integrity gate used
+by checkout. This command deliberately keeps sales disabled:
+
+```bash
+cd /opt/radar-bds/current
+sudo -u radar bash -lc 'set -a; source /etc/radar-bds/radar.env; set +a; /opt/radar-bds/.venv/bin/python -X utf8 -c "from config.settings import get_digital_product_commerce_settings; from services.digital_products import get_digital_product, snapshot_protected_package; s=get_digital_product_commerce_settings(); assert not s.sales_enabled and s.storage_dir is not None; p=get_digital_product(\"thu-dau-mot-map-bundle\"); x=snapshot_protected_package(p, s.storage_dir); print(f\"protected_package_ok size={x.size} sha256={x.sha256}\")"'
+```
+
+Only after all checks pass, set `DIGITAL_PRODUCT_SALES_ENABLED=1`, restart, and
+perform one deliberate 99,000 VND production payment:
+
+```bash
+sudo systemctl restart radar-bds.service
+sudo systemctl status radar-bds.service --no-pager
+```
+
+Confirm that PayOS settles the order, the order page becomes `paid`, one
+protected download succeeds, and `download_expires_at` is exactly 24 hours
+after `paid_at`. Use the reconciliation command when webhook delivery needs an
+explicit safe check:
+
+```bash
+cd /opt/radar-bds/current
+sudo -u radar bash -lc 'set -a; source /etc/radar-bds/radar.env; set +a; /opt/radar-bds/.venv/bin/python -X utf8 scripts/reconcile_digital_product_order.py --public-id <32-lowercase-hex-public-id>'
+```
+
+If any proof fails, immediately restore
+`DIGITAL_PRODUCT_SALES_ENABLED=0` and restart the service. Do not delete the
+paid order, its append-only event, or the protected package; existing valid
+paid access must remain recoverable while new checkout is disabled.
+
 ## 5. systemd
 
 Install the service and crawl timer templates:
