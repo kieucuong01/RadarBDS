@@ -234,9 +234,7 @@ def load_listing_map_summary(
                    MAX(f.mos_pct) AS best_mos,
                    SUM(COUNT(*)) OVER()::INTEGER AS total_count,
                    COALESCE(
-                       SUM(COUNT(*)) FILTER (
-                           WHERE ml.listing_id IS NOT NULL
-                       ) OVER(),
+                       SUM(COUNT(ml.listing_id)) OVER(),
                        0
                    )::INTEGER AS mapped_count,
                    COALESCE(

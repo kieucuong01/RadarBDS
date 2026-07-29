@@ -149,8 +149,10 @@ def test_summary_invariants_and_compact_query(monkeypatch):
         "seller_name",
         "l.url",
         "image_urls",
+        "where ml.listing_id is not null",
     ):
         assert forbidden not in summary_sql
+    assert "sum(count(ml.listing_id)) over()" in summary_sql
 
 
 def test_summary_cache_uses_data_version_tier_mode_and_filters(monkeypatch):
