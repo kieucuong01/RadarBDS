@@ -1847,8 +1847,12 @@ def _thu_dau_mot_map_product_schema(
 ) -> dict:
     canonical_url = _public_url(page["path"])
     preview_url = _public_url(page["preview_after"])
-    legacy_geojson_url = _public_url(page["legacy_geojson_url"])
-    current_geojson_url = _public_url(page["current_geojson_url"])
+    legacy_geojson_url = _public_url(
+        page.get("legacy_data_url", page["legacy_geojson_url"])
+    )
+    current_geojson_url = _public_url(
+        page.get("current_data_url", page["current_geojson_url"])
+    )
 
     def area_item_list(name: str, layer: str, areas: list[dict]) -> dict:
         return {
@@ -2331,6 +2335,30 @@ def _map_areas_from_static_geojson(static_url: str) -> list[dict]:
             }
         )
     return areas
+
+
+_THU_DAU_MOT_GEOJSON_FILES = {
+    "truoc-sap-nhap": "legacy-14-wards.geojson",
+    "sau-sap-nhap": "current-5-wards.geojson",
+}
+
+
+def thu_dau_mot_map_geojson(edition: str):
+    filename = _THU_DAU_MOT_GEOJSON_FILES.get(edition)
+    if filename is None:
+        abort(404)
+    static_dir = Path(__file__).parent / "static" / "maps" / "thu-dau-mot"
+    response = make_response(
+        send_from_directory(
+            static_dir,
+            filename,
+            mimetype="application/geo+json",
+            max_age=86400,
+        )
+    )
+    response.headers["Content-Type"] = "application/geo+json; charset=utf-8"
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
 
 
 def thu_dau_mot_map_product_page():

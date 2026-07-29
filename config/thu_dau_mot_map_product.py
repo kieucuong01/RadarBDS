@@ -30,6 +30,8 @@ THU_DAU_MOT_MAP_PRODUCT_PAGE = {
     "default_layer": "legacy",
     "legacy_geojson_url": "/static/maps/thu-dau-mot/legacy-14-wards.geojson",
     "current_geojson_url": "/static/maps/thu-dau-mot/current-5-wards.geojson",
+    "legacy_data_url": "/du-lieu/ban-do-thu-dau-mot/truoc-sap-nhap.geojson",
+    "current_data_url": "/du-lieu/ban-do-thu-dau-mot/sau-sap-nhap.geojson",
     "current_wards": (
         "Thủ Dầu Một",
         "Phú Lợi",

@@ -121,6 +121,11 @@ def thu_dau_mot_map_product_page(**kwargs):
     return response
 
 
+@bp.get("/du-lieu/ban-do-thu-dau-mot/<edition>.geojson")
+def thu_dau_mot_map_geojson(edition: str):
+    return _impl("thu_dau_mot_map_geojson", edition=edition)
+
+
 @bp.post("/ban-do-thu-dau-mot/checkout")
 @rate_limit(
     "digital_product_checkout",

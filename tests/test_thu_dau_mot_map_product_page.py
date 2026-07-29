@@ -564,8 +564,8 @@ def test_product_public_geojson_serves_agent_readable_mimetype():
 
     client = radar_app.app.test_client()
     for path in (
-        "/static/maps/thu-dau-mot/legacy-14-wards.geojson",
-        "/static/maps/thu-dau-mot/current-5-wards.geojson",
+        "/du-lieu/ban-do-thu-dau-mot/truoc-sap-nhap.geojson",
+        "/du-lieu/ban-do-thu-dau-mot/sau-sap-nhap.geojson",
     ):
         response = client.get(path)
 
@@ -621,11 +621,11 @@ def test_product_map_has_search_copy_link_and_agent_readable_data_links():
     assert "Sao chép liên kết khu vực" in html
     assert 'id="du-lieu-may-doc-duoc"' in html
     assert (
-        'href="/static/maps/thu-dau-mot/legacy-14-wards.geojson"'
+        'href="/du-lieu/ban-do-thu-dau-mot/truoc-sap-nhap.geojson"'
         in html
     )
     assert (
-        'href="/static/maps/thu-dau-mot/current-5-wards.geojson"'
+        'href="/du-lieu/ban-do-thu-dau-mot/sau-sap-nhap.geojson"'
         in html
     )
     assert ".tdm-product-agent-data" in css
@@ -682,8 +682,8 @@ def test_product_schema_includes_webpage_datasets_and_ward_item_lists():
         for dataset in datasets
         for distribution in dataset["distribution"]
     } == {
-        f"{PRODUCT_URL.rsplit('/', 1)[0]}/static/maps/thu-dau-mot/legacy-14-wards.geojson",
-        f"{PRODUCT_URL.rsplit('/', 1)[0]}/static/maps/thu-dau-mot/current-5-wards.geojson",
+        f"{PRODUCT_URL.rsplit('/', 1)[0]}/du-lieu/ban-do-thu-dau-mot/truoc-sap-nhap.geojson",
+        f"{PRODUCT_URL.rsplit('/', 1)[0]}/du-lieu/ban-do-thu-dau-mot/sau-sap-nhap.geojson",
     }
 
     item_lists = [node for node in graph if node["@type"] == "ItemList"]
