@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import re
+import shutil
+import subprocess
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
@@ -15,6 +20,8 @@ from services.payos_client import PayOSPaymentStatus
 
 
 FROZEN_NOW = datetime(2026, 7, 29, 9, 30, tzinfo=timezone.utc)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PRODUCTION_README = PROJECT_ROOT / "deployment" / "ubuntu24" / "README.md"
 
 
 class InMemoryReconciliationRepository:
@@ -328,3 +335,117 @@ def test_reconciliation_cli_prints_only_safe_operational_fields(
     assert "SECRET" not in output
     assert "BANK-SECRET-REFERENCE" not in output
     assert order.recovery_token_hash not in output
+
+
+def _documented_bash_block(needle: str) -> str:
+    readme = PRODUCTION_README.read_text(encoding="utf-8")
+    blocks = re.findall(r"```bash\r?\n(.*?)```", readme, flags=re.DOTALL)
+    matches = [block for block in blocks if needle in block]
+    assert len(matches) == 1
+    return matches[0]
+
+
+def _bash_executable() -> str:
+    git_bash = (
+        Path(os.environ.get("PROGRAMFILES", ""))
+        / "Git"
+        / "bin"
+        / "bash.exe"
+    )
+    if git_bash.is_file():
+        return str(git_bash)
+    bash = shutil.which("bash")
+    assert bash is not None
+    return bash
+
+
+@pytest.mark.parametrize(
+    ("needle", "failure_stage"),
+    [
+        ("DIGITAL_PRODUCT_SALES_ENABLED=1/'", "line_count"),
+        ("DIGITAL_PRODUCT_SALES_ENABLED=1/'", "written_value"),
+        ("DIGITAL_PRODUCT_SALES_ENABLED=0/'", "line_count"),
+        ("DIGITAL_PRODUCT_SALES_ENABLED=0/'", "written_value"),
+    ],
+)
+def test_documented_sales_toggle_stops_before_mutation_when_guard_fails(
+    needle: str,
+    failure_stage: str,
+    tmp_path: Path,
+):
+    command_log = tmp_path / "commands.log"
+    harness = """
+sudo() {
+  printf 'sudo %s\\n' "$*" >> "$COMMAND_LOG"
+  if [ "$1" = "grep" ] && [ "$2" = "-c" ]; then
+    if [ "$FAILURE_STAGE" = "line_count" ]; then
+      printf '0\\n'
+      return 1
+    fi
+    printf '1\\n'
+    return 0
+  fi
+  if [ "$1" = "grep" ] && [ "$2" = "-qx" ]; then
+    if [ "$FAILURE_STAGE" = "written_value" ]; then
+      return 1
+    fi
+    return 0
+  fi
+  return 0
+}
+systemctl() {
+  printf 'systemctl %s\\n' "$*" >> "$COMMAND_LOG"
+  return 0
+}
+curl() {
+  printf 'curl %s\\n' "$*" >> "$COMMAND_LOG"
+  return 0
+}
+"""
+    result = subprocess.run(
+        [_bash_executable(), "-c", harness + _documented_bash_block(needle)],
+        cwd=PROJECT_ROOT,
+        env={
+            **os.environ,
+            "COMMAND_LOG": str(command_log),
+            "FAILURE_STAGE": failure_stage,
+        },
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    logged = command_log.read_text(encoding="utf-8")
+    assert result.returncode != 0
+    if failure_stage == "line_count":
+        assert "sudo sed " not in logged
+    else:
+        assert "sudo sed " in logged
+    assert "systemctl restart" not in logged
+    assert "curl " not in logged
+
+
+def test_documented_paid_order_proof_never_prints_success_after_failed_assertion():
+    harness = """
+sudo() {
+  case "$*" in
+    *psql*) printf 'paid|0|invalid\\n' ;;
+  esac
+  return 0
+}
+"""
+    block = _documented_bash_block("paid_order_proof_ok").replace(
+        "<32-lowercase-hex-public-id>",
+        "0123456789abcdef0123456789abcdef",
+    )
+
+    result = subprocess.run(
+        [_bash_executable(), "-c", harness + block],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "paid_order_proof_ok" not in result.stdout

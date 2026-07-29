@@ -192,6 +192,7 @@ verify the effective application setting, restart, and perform one deliberate
 99,000 VND production payment:
 
 ```bash
+set -euo pipefail
 test "$(sudo grep -c '^DIGITAL_PRODUCT_SALES_ENABLED=' /etc/radar-bds/radar.env)" -eq 1
 sudo sed -i 's/^DIGITAL_PRODUCT_SALES_ENABLED=.*/DIGITAL_PRODUCT_SALES_ENABLED=1/' /etc/radar-bds/radar.env
 sudo grep -qx 'DIGITAL_PRODUCT_SALES_ENABLED=1' /etc/radar-bds/radar.env
@@ -216,6 +217,7 @@ fixed success marker; they do not select a token, QR payload, payment
 reference, signature, credential, or bank-transfer field:
 
 ```bash
+set -euo pipefail
 ORDER_PUBLIC_ID=<32-lowercase-hex-public-id>
 test "${#ORDER_PUBLIC_ID}" -eq 32
 case "$ORDER_PUBLIC_ID" in *[!0-9a-f]*) exit 2 ;; esac
@@ -250,6 +252,7 @@ If any proof fails, immediately disable new sales with the exact checked
 rollback below:
 
 ```bash
+set -euo pipefail
 test "$(sudo grep -c '^DIGITAL_PRODUCT_SALES_ENABLED=' /etc/radar-bds/radar.env)" -eq 1
 sudo sed -i 's/^DIGITAL_PRODUCT_SALES_ENABLED=.*/DIGITAL_PRODUCT_SALES_ENABLED=0/' /etc/radar-bds/radar.env
 sudo grep -qx 'DIGITAL_PRODUCT_SALES_ENABLED=0' /etc/radar-bds/radar.env
