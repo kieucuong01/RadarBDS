@@ -266,6 +266,64 @@ def _accuracy_radius_m(geometry, lat: float, lng: float) -> float:
     return round(max(radius, 75.0), 1)
 
 
+def _line_parts(geometry) -> list[LineString]:
+    if geometry.is_empty:
+        return []
+    if geometry.geom_type == "LineString":
+        return [geometry]
+    parts = []
+    for child in getattr(geometry, "geoms", ()):
+        parts.extend(_line_parts(child))
+    return parts
+
+
+def _connected_road_components(
+    parts: Sequence[tuple[int, object]],
+) -> list[tuple[object, list[int]]]:
+    """Group touching OSM segments without merging disconnected namesakes."""
+    pending = [
+        (way_id, line)
+        for way_id, geometry in parts
+        for line in _line_parts(geometry)
+        if not line.is_empty and line.length > 0
+    ]
+    pending.sort(key=lambda item: (item[0], tuple(item[1].bounds)))
+    components = []
+    while pending:
+        way_id, line = pending.pop(0)
+        component = [(way_id, line)]
+        changed = True
+        while changed:
+            changed = False
+            remaining = []
+            component_geometry = unary_union(
+                [candidate for _candidate_id, candidate in component]
+            )
+            for candidate_id, candidate in pending:
+                if component_geometry.intersects(candidate):
+                    component.append((candidate_id, candidate))
+                    changed = True
+                else:
+                    remaining.append((candidate_id, candidate))
+            pending = remaining
+        geometry = unary_union(
+            [candidate for _candidate_id, candidate in component]
+        )
+        components.append(
+            (
+                geometry,
+                sorted({candidate_id for candidate_id, _line in component}),
+            )
+        )
+    return sorted(
+        components,
+        key=lambda item: (
+            item[1],
+            tuple(round(value, 9) for value in item[0].bounds),
+        ),
+    )
+
+
 def _normalize_landmark_token(value: str) -> str:
     token = normalize_location_token(value)
     token = re.sub(r"^tai dinh cu\b", "tdc", token)
@@ -435,39 +493,38 @@ def _generated_road_rows(
     for (city, normalized_ward), (ward, polygon, _properties) in boundaries.items():
         for normalized_road, parts in grouped.items():
             clipped_parts = []
-            way_ids = []
             for element, line in parts:
                 clipped = line.intersection(polygon)
                 if clipped.is_empty or getattr(clipped, "length", 0) <= 0:
                     continue
-                clipped_parts.append(clipped)
-                way_ids.append(int(element["id"]))
+                clipped_parts.append((int(element["id"]), clipped))
             if not clipped_parts:
                 continue
-            clipped_geometry = unary_union(clipped_parts)
-            lat, lng = _representative_line_point(clipped_geometry)
-            road_name = display_names[normalized_road]
-            sorted_ids = sorted(set(way_ids))
-            rows.append(
-                {
-                    "city": city,
-                    "ward": ward,
-                    "normalized_ward": normalized_ward,
-                    "road_name": road_name,
-                    "normalized_road": normalized_road,
-                    "lat": round(lat, 7),
-                    "lng": round(lng, 7),
-                    "accuracy_radius_m": _accuracy_radius_m(
-                        clipped_geometry, lat, lng
-                    ),
-                    "label": f"Theo tên đường {road_name}, {ward}",
-                    "source": "OpenStreetMap",
-                    "source_url": (
-                        f"https://www.openstreetmap.org/way/{sorted_ids[0]}"
-                    ),
-                    "osm_way_ids": sorted_ids,
-                }
-            )
+            for clipped_geometry, sorted_ids in _connected_road_components(
+                clipped_parts
+            ):
+                lat, lng = _representative_line_point(clipped_geometry)
+                road_name = display_names[normalized_road]
+                rows.append(
+                    {
+                        "city": city,
+                        "ward": ward,
+                        "normalized_ward": normalized_ward,
+                        "road_name": road_name,
+                        "normalized_road": normalized_road,
+                        "lat": round(lat, 7),
+                        "lng": round(lng, 7),
+                        "accuracy_radius_m": _accuracy_radius_m(
+                            clipped_geometry, lat, lng
+                        ),
+                        "label": f"Theo tên đường {road_name}, {ward}",
+                        "source": "OpenStreetMap",
+                        "source_url": (
+                            f"https://www.openstreetmap.org/way/{sorted_ids[0]}"
+                        ),
+                        "osm_way_ids": sorted_ids,
+                    }
+                )
     return rows
 
 
@@ -562,8 +619,7 @@ def _generated_landmark_rows(
     boundaries: Mapping,
     aliases_by_canonical: Mapping[str, list[str]],
 ) -> list[dict]:
-    rows = []
-    seen = set()
+    grouped = {}
     for element in osm_payload.get("elements") or []:
         tags = element.get("tags") or {}
         name = str(tags.get("name") or "").strip()
@@ -579,11 +635,46 @@ def _generated_landmark_rows(
             if not polygon.covers(point):
                 continue
             key = city, normalized_ward, normalized
-            if key in seen:
-                continue
-            seen.add(key)
-            element_type = str(element.get("type") or "")
-            element_id = int(element["id"])
+            grouped.setdefault(key, []).append(
+                (
+                    str(element.get("type") or ""),
+                    int(element["id"]),
+                    name,
+                    ward,
+                    lat,
+                    lng,
+                )
+            )
+
+    rows = []
+    for (city, normalized_ward, normalized), candidates in grouped.items():
+        clusters = []
+        for candidate in sorted(candidates, key=lambda item: (item[0], item[1])):
+            candidate_lat, candidate_lng = candidate[4], candidate[5]
+            for cluster in clusters:
+                if any(
+                    _distance_m(
+                        candidate_lat,
+                        candidate_lng,
+                        member[4],
+                        member[5],
+                    )
+                    <= 250.0
+                    for member in cluster
+                ):
+                    cluster.append(candidate)
+                    break
+            else:
+                clusters.append([candidate])
+        for cluster in clusters:
+            element_type, element_id, name, ward, lat, lng = cluster[0]
+            cluster_radius = max(
+                (
+                    _distance_m(lat, lng, member[4], member[5])
+                    for member in cluster
+                ),
+                default=0.0,
+            )
             rows.append(
                 {
                     "city": city,
@@ -591,14 +682,20 @@ def _generated_landmark_rows(
                     "normalized_ward": normalized_ward,
                     "landmark_name": name,
                     "normalized_landmark": normalized,
-                    "aliases": aliases_by_canonical.get(normalized, [normalized]),
+                    "aliases": aliases_by_canonical.get(
+                        normalized, [normalized]
+                    ),
                     "lat": round(lat, 7),
                     "lng": round(lng, 7),
-                    "accuracy_radius_m": 150.0,
+                    "accuracy_radius_m": round(
+                        max(cluster_radius, 150.0),
+                        1,
+                    ),
                     "label": f"Theo địa danh {name}, {ward}",
                     "source": "OpenStreetMap",
                     "source_url": (
-                        f"https://www.openstreetmap.org/{element_type}/{element_id}"
+                        f"https://www.openstreetmap.org/"
+                        f"{element_type}/{element_id}"
                     ),
                     "osm_type": element_type,
                     "osm_id": element_id,
@@ -613,10 +710,7 @@ def _merge_curated_roads(
     boundaries: Mapping,
     aliases_by_canonical: Mapping[str, list[str]],
 ) -> list[dict]:
-    keyed = {
-        (row["city"], row["normalized_ward"], row["normalized_road"]): row
-        for row in rows
-    }
+    curated = {}
     for source in override_rows:
         city = str(source.get("city") or "").strip()
         ward = str(source.get("ward") or "").strip()
@@ -662,8 +756,18 @@ def _merge_curated_roads(
         )
         if landmark_keys:
             row["landmark_keys"] = landmark_keys
-        keyed[(city, normalized_ward, normalized_road)] = row
-    return list(keyed.values())
+        curated[(city, normalized_ward, normalized_road)] = row
+    preserved = [
+        row
+        for row in rows
+        if (
+            row["city"],
+            row["normalized_ward"],
+            row["normalized_road"],
+        )
+        not in curated
+    ]
+    return preserved + list(curated.values())
 
 
 def _merge_curated_landmarks(
@@ -672,10 +776,7 @@ def _merge_curated_landmarks(
     boundaries: Mapping,
     aliases_by_canonical: Mapping[str, list[str]],
 ) -> list[dict]:
-    keyed = {
-        (row["city"], row["normalized_ward"], row["normalized_landmark"]): row
-        for row in rows
-    }
+    curated = {}
     for source in override_rows:
         city = str(source.get("city") or "").strip()
         ward = str(source.get("ward") or "").strip()
@@ -691,7 +792,7 @@ def _merge_curated_landmarks(
             boundaries=boundaries,
             label=f"curated landmark {name}",
         )
-        keyed[(city, normalized_ward, normalized)] = {
+        curated[(city, normalized_ward, normalized)] = {
             "city": city,
             "ward": ward,
             "normalized_ward": normalized_ward,
@@ -708,7 +809,17 @@ def _merge_curated_landmarks(
             "source_url": str(source["source_url"]).strip(),
             "verified_at": str(source["verified_at"]).strip(),
         }
-    return list(keyed.values())
+    preserved = [
+        row
+        for row in rows
+        if (
+            row["city"],
+            row["normalized_ward"],
+            row["normalized_landmark"],
+        )
+        not in curated
+    ]
+    return preserved + list(curated.values())
 
 
 def build_location_registries(
@@ -758,16 +869,8 @@ def build_location_registries(
         strict=not bool(boundaries),
         skip_keys=generated_keys,
     )
-    road_by_key = {
-        (row["city"], row["normalized_ward"], row["normalized_road"]): row
-        for row in legacy_roads
-    }
-    for row in generated_roads:
-        road_by_key[
-            (row["city"], row["normalized_ward"], row["normalized_road"])
-        ] = row
     road_rows = _merge_curated_roads(
-        list(road_by_key.values()),
+        legacy_roads + generated_roads,
         overrides.get("roads") or [],
         boundaries,
         road_aliases,
@@ -789,6 +892,28 @@ def build_location_registries(
         boundaries,
         landmark_aliases,
     )
+    road_key_counts = {}
+    for row in road_rows:
+        key = (
+            row["city"],
+            row["normalized_ward"],
+            row["normalized_road"],
+        )
+        road_key_counts[key] = road_key_counts.get(key, 0) + 1
+    detected_ambiguous_road_count = sum(
+        count > 1 for count in road_key_counts.values()
+    )
+    landmark_key_counts = {}
+    for row in landmark_rows:
+        key = (
+            row["city"],
+            row["normalized_ward"],
+            row["normalized_landmark"],
+        )
+        landmark_key_counts[key] = landmark_key_counts.get(key, 0) + 1
+    detected_ambiguous_landmark_count = sum(
+        count > 1 for count in landmark_key_counts.values()
+    )
 
     ward_payload = {
         "resolver_version": resolver_version,
@@ -808,6 +933,8 @@ def build_location_registries(
                 normalize_location_token(row["city"]),
                 row["normalized_ward"],
                 row["normalized_road"],
+                row["lat"],
+                row["lng"],
             ),
         ),
     }
@@ -819,6 +946,8 @@ def build_location_registries(
                 normalize_location_token(row["city"]),
                 row["normalized_ward"],
                 row["normalized_landmark"],
+                row["lat"],
+                row["lng"],
             ),
         ),
     }
@@ -837,6 +966,7 @@ def build_location_registries(
         "ward_count": len(ward_rows),
         "road_count": len(road_rows),
         "landmark_count": len(landmark_rows),
+        "ambiguous_landmark_count": detected_ambiguous_landmark_count,
         "ambiguous_road_count": max(
             int(
                 sources.get(
@@ -844,6 +974,7 @@ def build_location_registries(
                     len(sources.get("ambiguous_roads") or []),
                 )
             ),
+            detected_ambiguous_road_count,
             0,
         ),
         "rejected_road_count": max(

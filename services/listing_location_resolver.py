@@ -38,6 +38,7 @@ def normalize_road_token(value: str) -> str:
     normalized = " ".join(normalized.split())
     if re.match(r"^duong (?:dx|d|db|dh|dt|ql|n|ng|ni|na|nb) \d", normalized):
         normalized = normalized.removeprefix("duong ")
+    normalized = re.sub(r"^duong (?=\d)", "duong so ", normalized)
     normalized = re.sub(
         r"^(?P<prefix>(?:dx|d|db|dh|dt|ql|n|ng|ni|na|nb)\s+)0+(?=\d)",
         r"\g<prefix>",
@@ -140,7 +141,7 @@ class LocationRegistry:
     ]
     landmarks: Mapping[
         tuple[str, str, str],
-        Mapping[str, object],
+        Mapping[str, object] | tuple[Mapping[str, object], ...],
     ]
     wards: Mapping[tuple[str, str], Mapping[str, object]]
 
@@ -244,13 +245,26 @@ def _match_landmark(
     ward: str,
     normalized_landmark: str,
     registry: LocationRegistry,
-) -> Mapping[str, object] | None:
+) -> Mapping[str, object] | str | None:
     if not normalized_landmark:
         return None
+    entries = []
+    seen = set()
     for scope in _road_scopes(city, ward, registry):
-        entry = registry.landmarks.get((city, scope, normalized_landmark))
-        if entry:
-            return entry
+        matched = registry.landmarks.get((city, scope, normalized_landmark))
+        if isinstance(matched, Mapping):
+            candidates = (matched,)
+        else:
+            candidates = tuple(matched or ())
+        for entry in candidates:
+            identity = id(entry)
+            if identity not in seen:
+                seen.add(identity)
+                entries.append(entry)
+    if len(entries) == 1:
+        return entries[0]
+    if len(entries) > 1:
+        return "ambiguous"
     return None
 
 
@@ -449,7 +463,16 @@ def resolve_listing_location(
             signature=signature,
         )
 
-    landmark_entry = _match_landmark(city, ward_label, landmark_key, registry)
+    landmark_match = _match_landmark(
+        city,
+        ward_label,
+        landmark_key,
+        registry,
+    )
+    landmark_entry = (
+        landmark_match if isinstance(landmark_match, Mapping) else None
+    )
+    landmark_ambiguous = landmark_match == "ambiguous"
 
     if direct_road:
         road_entry = _match_road(
@@ -498,7 +521,30 @@ def resolve_listing_location(
                 landmark_key=landmark_key if landmark_entry else "",
             )
             if resolved:
-                return LocationResolution(location=resolved, issue=None)
+                issue = None
+                if landmark_ambiguous:
+                    issue = _issue(
+                        listing_id=listing_id,
+                        city=city,
+                        ward=ward_label,
+                        road=direct_road,
+                        landmark=landmark_key,
+                        relation=relation,
+                        status="ambiguous",
+                        reason="ambiguous_landmark",
+                    )
+                elif landmark_key and not landmark_entry:
+                    issue = _issue(
+                        listing_id=listing_id,
+                        city=city,
+                        ward=ward_label,
+                        road=direct_road,
+                        landmark=landmark_key,
+                        relation=relation,
+                        status="not_found",
+                        reason="landmark_not_found",
+                    )
+                return LocationResolution(location=resolved, issue=issue)
             return _fallback_with_issue(
                 listing_id=listing_id,
                 city=city,
@@ -524,6 +570,123 @@ def resolve_listing_location(
                 registry=registry,
                 signature=signature,
             )
+
+    if nearby_road:
+        road_entry = _match_road(
+            city,
+            ward_label,
+            nearby_road,
+            landmark_key if landmark_entry else "",
+            registry,
+        )
+        if isinstance(road_entry, Mapping):
+            registry_radius = _float(road_entry.get("accuracy_radius_m")) or 75.0
+            location_key = (
+                f"nearby:{_slug(city)}:{_slug(ward)}:"
+                f"{_slug(nearby_road)}:{_slug(relation or 'near')}"
+            )
+            if landmark_entry:
+                location_key += f":{_slug(landmark_key)}"
+            resolved = _resolved_from_entry(
+                listing_id=listing_id,
+                precision="nearby",
+                location_key=location_key,
+                entry=road_entry,
+                resolver_version=registry.resolver_version,
+                signature=signature,
+                accuracy_radius_m=max(
+                    registry_radius,
+                    distance_m or 0.0,
+                    100.0,
+                ),
+                relation=relation or "near",
+                reference_road=nearby_road,
+                landmark_key=landmark_key if landmark_entry else "",
+            )
+            if resolved:
+                issue = None
+                if landmark_ambiguous:
+                    issue = _issue(
+                        listing_id=listing_id,
+                        city=city,
+                        ward=ward_label,
+                        road=nearby_road,
+                        landmark=landmark_key,
+                        relation=relation,
+                        status="ambiguous",
+                        reason="ambiguous_landmark",
+                    )
+                elif landmark_key and not landmark_entry:
+                    issue = _issue(
+                        listing_id=listing_id,
+                        city=city,
+                        ward=ward_label,
+                        road=nearby_road,
+                        landmark=landmark_key,
+                        relation=relation,
+                        status="not_found",
+                        reason="landmark_not_found",
+                    )
+                return LocationResolution(location=resolved, issue=issue)
+        status, reason = (
+            ("ambiguous", "ambiguous_nearby_road")
+            if road_entry == "ambiguous"
+            else ("not_found", "nearby_road_not_found")
+        )
+        if landmark_ambiguous:
+            status, reason = "ambiguous", "ambiguous_landmark"
+        if landmark_entry:
+            landmark_radius = (
+                _float(landmark_entry.get("accuracy_radius_m")) or 100.0
+            )
+            resolved = _resolved_from_entry(
+                listing_id=listing_id,
+                precision="nearby",
+                location_key=(
+                    f"nearby:{_slug(city)}:{_slug(ward)}:"
+                    f"{_slug(nearby_road)}:{_slug(relation or 'near')}:"
+                    f"{_slug(landmark_key)}"
+                ),
+                entry=landmark_entry,
+                resolver_version=registry.resolver_version,
+                signature=signature,
+                accuracy_radius_m=max(
+                    landmark_radius,
+                    distance_m or 0.0,
+                    100.0,
+                ),
+                relation=relation or "near",
+                reference_road=nearby_road,
+                landmark_key=landmark_key,
+                resolution_status=status,
+                resolution_reason=reason,
+            )
+            if resolved:
+                return LocationResolution(
+                    location=resolved,
+                    issue=_issue(
+                        listing_id=listing_id,
+                        city=city,
+                        ward=ward_label,
+                        road=nearby_road,
+                        landmark=landmark_key,
+                        relation=relation,
+                        status=status,
+                        reason=reason,
+                    ),
+                )
+        return _fallback_with_issue(
+            listing_id=listing_id,
+            city=city,
+            ward=ward_label,
+            road=nearby_road,
+            landmark=landmark_key,
+            relation=relation,
+            status=status,
+            reason=reason,
+            registry=registry,
+            signature=signature,
+        )
 
     if landmark_entry:
         resolved = _resolved_from_entry(
@@ -553,51 +716,16 @@ def resolve_listing_location(
                 )
             return LocationResolution(location=resolved, issue=issue)
 
-    if nearby_road:
-        road_entry = _match_road(
-            city,
-            ward_label,
-            nearby_road,
-            landmark_key if landmark_entry else "",
-            registry,
-        )
-        if isinstance(road_entry, Mapping):
-            registry_radius = _float(road_entry.get("accuracy_radius_m")) or 75.0
-            resolved = _resolved_from_entry(
-                listing_id=listing_id,
-                precision="nearby",
-                location_key=(
-                    f"nearby:{_slug(city)}:{_slug(ward)}:"
-                    f"{_slug(nearby_road)}:{_slug(relation or 'near')}"
-                ),
-                entry=road_entry,
-                resolver_version=registry.resolver_version,
-                signature=signature,
-                accuracy_radius_m=max(
-                    registry_radius,
-                    distance_m or 0.0,
-                    100.0,
-                ),
-                relation=relation or "near",
-                reference_road=nearby_road,
-                landmark_key=landmark_key if landmark_entry else "",
-            )
-            if resolved:
-                return LocationResolution(location=resolved, issue=None)
-        status, reason = (
-            ("ambiguous", "ambiguous_nearby_road")
-            if road_entry == "ambiguous"
-            else ("not_found", "nearby_road_not_found")
-        )
+    if landmark_ambiguous:
         return _fallback_with_issue(
             listing_id=listing_id,
             city=city,
             ward=ward_label,
-            road=nearby_road,
+            road=direct_road or nearby_road,
             landmark=landmark_key,
             relation=relation,
-            status=status,
-            reason=reason,
+            status="ambiguous",
+            reason="ambiguous_landmark",
             registry=registry,
             signature=signature,
         )
@@ -681,29 +809,36 @@ def load_location_registry(
     for item in road_payload.get("roads") or []:
         aliases = set(item.get("aliases") or ())
         aliases.add(str(item["normalized_road"]))
-        for alias in aliases:
+        normalized_aliases = {
+            normalize_road_token(alias) for alias in aliases
+        }
+        for alias in normalized_aliases:
             key = (
                 str(item["city"]),
                 str(item["normalized_ward"]),
-                normalize_road_token(alias),
+                alias,
             )
             road_lists.setdefault(key, []).append(item)
     roads = {key: tuple(items) for key, items in road_lists.items()}
 
-    landmarks = {}
+    landmark_lists = {}
     for item in landmark_payload.get("landmarks") or []:
         aliases = set(item.get("aliases") or ())
         aliases.add(str(item["normalized_landmark"]))
-        for alias in aliases:
+        normalized_aliases = {
+            normalize_location_token(alias) for alias in aliases
+        }
+        for alias in normalized_aliases:
             key = (
                 str(item["city"]),
                 str(item["normalized_ward"]),
-                normalize_location_token(alias),
+                alias,
             )
-            existing = landmarks.get(key)
-            if existing is not None and existing is not item:
-                raise ValueError(f"duplicate landmark alias: {key}")
-            landmarks[key] = item
+            landmark_lists.setdefault(key, []).append(item)
+    landmarks = {
+        key: items[0] if len(items) == 1 else tuple(items)
+        for key, items in landmark_lists.items()
+    }
     return LocationRegistry(
         resolver_version=resolver_version,
         roads=roads,

@@ -102,6 +102,17 @@ def test_resolution_precedence_exact_road_landmark_nearby_ward():
     assert nearby.location.relation == "near"
 
 
+def test_nearby_relation_stays_approximate_when_landmark_also_matches():
+    result = _resolve(
+        text="Cách Đường số 35 100m, TĐC Phú Chánh B"
+    )
+
+    assert result.location.precision == "nearby"
+    assert result.location.relation == "near"
+    assert result.location.landmark_key == "tdc phu chanh b"
+    assert result.location.accuracy_radius_m >= 100
+
+
 def test_ambiguous_road_uses_honest_ward_until_landmark_disambiguates():
     ambiguous = _resolve(text="Mặt tiền Đường số 35")
     scoped = _resolve(text="Đường số 35, TĐC Phú Chánh D")
@@ -142,6 +153,50 @@ def test_road_landmark_conflict_does_not_silently_choose_road():
     assert result.location.precision == "ward"
     assert result.location.resolution_reason == "road_landmark_conflict"
     assert result.issue.resolution_note == "road_landmark_conflict"
+
+
+def test_unique_road_keeps_unmatched_landmark_in_coverage_queue():
+    result = _resolve(text="Mặt tiền DX43, TĐC Khu Mới")
+
+    assert result.location.precision == "road"
+    assert result.issue.status == "not_found"
+    assert result.issue.landmark_candidate == "tdc khu moi"
+    assert result.issue.resolution_note == "landmark_not_found"
+
+
+def test_ambiguous_landmark_uses_honest_ward_and_enters_coverage():
+    registry = _registry()
+    first = registry.landmarks[
+        ("THỦ DẦU MỘT", "phu loi", "tdc phu chanh b")
+    ]
+    registry = LocationRegistry(
+        resolver_version=registry.resolver_version,
+        roads=registry.roads,
+        landmarks={
+            **registry.landmarks,
+            ("THỦ DẦU MỘT", "phu loi", "tdc khu moi"): (
+                first,
+                {**first, "lat": 10.991, "lng": 106.699},
+            ),
+        },
+        wards=registry.wards,
+    )
+    listing = {
+        "id": 16,
+        "city": "THỦ DẦU MỘT",
+        "ward": "Phú Lợi",
+        "title": "TĐC Khu Mới",
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(listing["title"], "")
+
+    result = resolve_listing_location(listing, registry, context)
+
+    assert result.location.precision == "ward"
+    assert result.location.resolution_status == "ambiguous"
+    assert result.issue.status == "ambiguous"
+    assert result.issue.resolution_note == "ambiguous_landmark"
 
 
 def test_valid_source_coordinate_wins_over_road_and_ward():
@@ -220,6 +275,7 @@ def test_signature_and_coordinates_are_stable_without_randomness():
     assert normalize_location_token(" ĐX.  43 ") == "dx 43"
     assert normalize_road_token("DX0143") == "dx 143"
     assert normalize_road_token("Đường ĐX 143") == "dx 143"
+    assert normalize_road_token("Đường 88") == "duong so 88"
 
 
 def test_registry_loader_preserves_road_ambiguity_and_landmark_aliases(tmp_path):
@@ -294,7 +350,7 @@ def test_registry_loader_preserves_road_ambiguity_and_landmark_aliases(tmp_path)
     )
 
     assert len(
-        registry.roads[("THỦ DẦU MỘT", "phu loi", "duong 35")]
+        registry.roads[("THỦ DẦU MỘT", "phu loi", "duong so 35")]
     ) == 2
     assert (
         "THỦ DẦU MỘT",

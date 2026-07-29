@@ -50,6 +50,10 @@ def test_location_candidates_include_map_text_but_exclude_sensitive_fields():
     sql = connection.executed[0][0].lower()
     assert "l.title" in sql
     assert "l.description" in sql
+    assert "coalesce(l.probably_sold, 0) = 0" in sql
+    assert "coalesce(l.is_blacklisted, 0) = 0" in sql
+    assert "coalesce(l.review_hidden, 0) = 0" in sql
+    assert "possibly_duplicate" not in sql
     for forbidden in ("phone", "url", "seller", "image"):
         assert forbidden not in sql
 

@@ -241,3 +241,35 @@ def test_full_backfill_prunes_stale_location_and_coverage_rows():
     assert stats["deleted"] == 2
     delete_stale.assert_called_once_with([30])
     delete_stale_coverage.assert_called_once_with([])
+
+
+def test_incremental_backfill_rebuilds_global_coverage_counts():
+    patches = _patch_backfill()
+    with (
+        patches[0],
+        patches[1],
+        patches[2],
+        patches[3],
+        patches[4] as upsert_coverage,
+        patches[5] as delete_stale_coverage,
+        patches[6] as iter_candidates,
+    ):
+        from services.listing_location_backfill import backfill_listing_locations
+
+        batch = [_candidate(40, title="Mặt tiền DX120")]
+        complete = [
+            _candidate(40, title="Mặt tiền DX120"),
+            _candidate(41, title="Mặt tiền ĐX-120"),
+        ]
+        iter_candidates.side_effect = [batch, complete]
+
+        stats = backfill_listing_locations(listing_ids=[40])
+
+    assert stats["scanned"] == 1
+    coverage_rows = upsert_coverage.call_args.args[0]
+    assert len(coverage_rows) == 1
+    assert coverage_rows[0].affected_listing_count == 2
+    assert coverage_rows[0].sample_listing_ids == (40, 41)
+    delete_stale_coverage.assert_called_once_with(
+        [coverage_rows[0].candidate_key]
+    )

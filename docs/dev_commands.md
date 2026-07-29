@@ -40,9 +40,11 @@ Get-Service postgresql-x64-18
 & $py -X utf8 radar.py map-locations --full
 ```
 
-Kết quả gồm `scanned`, `exact`, `road`, `ward`, `unmapped`, `inserted`,
-`updated`, `unchanged`, và `deleted`. Lệnh chỉ cập nhật bảng dẫn xuất
-`listing_map_locations`; không cập nhật bất kỳ cột nào trong `listings`.
+Kết quả gồm `scanned`, `exact`, `road`, `landmark`, `nearby`, `ward`,
+`unmapped`, `ambiguous`, `not_found`, `invalid`, `inserted`, `updated`,
+`unchanged`, và `deleted`. Lệnh chỉ cập nhật các bảng dẫn xuất
+`listing_map_locations` và `listing_map_location_coverage`; không cập nhật bất
+kỳ cột nào trong `listings`.
 
 API smoke cho bản đồ:
 

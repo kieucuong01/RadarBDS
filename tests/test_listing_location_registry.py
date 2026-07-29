@@ -343,6 +343,96 @@ def test_builder_emits_all_named_roads_clipped_to_supported_wards(tmp_path):
     assert "tdc phu chanh b" in landmarks[0]["aliases"]
 
 
+def test_builder_keeps_disconnected_same_name_roads_ambiguous(tmp_path):
+    osm, sources, overrides, boundaries = _generated_payloads()
+    osm["elements"].extend(
+        [
+            {
+                "type": "way",
+                "id": 5001,
+                "tags": {"highway": "residential", "name": "Đường số 500"},
+                "geometry": [
+                    {"lat": 11.005, "lon": 106.675},
+                    {"lat": 11.007, "lon": 106.677},
+                ],
+            },
+            {
+                "type": "way",
+                "id": 5002,
+                "tags": {"highway": "residential", "name": "Đường 500"},
+                "geometry": [
+                    {"lat": 11.022, "lon": 106.703},
+                    {"lat": 11.024, "lon": 106.705},
+                ],
+            },
+        ]
+    )
+
+    paths = build_location_registries(
+        osm,
+        sources,
+        tmp_path,
+        overrides=overrides,
+        boundary_paths=(boundaries,),
+    )
+    roads = json.loads(paths[1].read_text(encoding="utf-8"))["roads"]
+    manifest = json.loads(paths[3].read_text(encoding="utf-8"))
+    matches = [
+        row
+        for row in roads
+        if row["ward"] == "Hiệp An"
+        and row["normalized_road"] == "duong so 500"
+    ]
+
+    assert len(matches) == 2
+    assert {tuple(row["osm_way_ids"]) for row in matches} == {
+        (5001,),
+        (5002,),
+    }
+    assert manifest["ambiguous_road_count"] >= 1
+
+
+def test_builder_keeps_distant_same_name_landmarks_ambiguous(tmp_path):
+    osm, sources, overrides, boundaries = _generated_payloads()
+    osm["elements"].extend(
+        [
+            {
+                "type": "node",
+                "id": 6001,
+                "lat": 11.006,
+                "lon": 106.676,
+                "tags": {"name": "KDC Thử Nghiệm", "place": "neighbourhood"},
+            },
+            {
+                "type": "node",
+                "id": 6002,
+                "lat": 11.024,
+                "lon": 106.704,
+                "tags": {"name": "Khu dân cư Thử Nghiệm", "place": "neighbourhood"},
+            },
+        ]
+    )
+
+    paths = build_location_registries(
+        osm,
+        sources,
+        tmp_path,
+        overrides=overrides,
+        boundary_paths=(boundaries,),
+    )
+    landmarks = json.loads(paths[2].read_text(encoding="utf-8"))["landmarks"]
+    manifest = json.loads(paths[3].read_text(encoding="utf-8"))
+    matches = [
+        row
+        for row in landmarks
+        if row["ward"] == "Hiệp An"
+        and row["normalized_landmark"] == "kdc thu nghiem"
+    ]
+
+    assert len(matches) == 2
+    assert manifest["ambiguous_landmark_count"] >= 1
+
+
 def test_complete_builder_is_byte_stable_and_hashes_all_outputs(tmp_path):
     osm, sources, overrides, boundaries = _generated_payloads()
     first = build_location_registries(
@@ -534,6 +624,7 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert manifest["road_count"] == len(roads["roads"])
     assert manifest["road_count"] > 110
     assert manifest["landmark_count"] == len(landmarks["landmarks"])
+    assert manifest["landmark_count"] > 0
     assert manifest["ward_registry_sha256"] == hashlib.sha256(
         LISTING_MAP_WARD_REGISTRY_PATH.read_bytes()
     ).hexdigest()

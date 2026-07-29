@@ -95,18 +95,35 @@ def backfill_listing_locations(
     if dry_run:
         return stats
 
+    if listing_ids is not None:
+        all_issues = []
+        for candidate in iter_location_candidates(None):
+            listing = dict(candidate)
+            listing["city"] = get_city_for_ward(
+                str(listing.get("ward") or "").strip()
+            )
+            context = extract_map_location_context(
+                str(listing.get("title") or ""),
+                str(listing.get("description") or ""),
+                str(listing.get("road_name") or ""),
+            )
+            result = resolve_listing_location(listing, registry, context)
+            if result.issue is not None:
+                all_issues.append(result.issue)
+        coverage_rows = aggregate_coverage_issues(all_issues)
+
     if changed:
         upsert_listing_map_locations(changed)
     if newly_unmapped:
         stats["deleted"] += delete_listing_map_locations(newly_unmapped)
     if coverage_rows:
         upsert_listing_location_coverage(coverage_rows)
+    delete_stale_listing_location_coverage(
+        [row.candidate_key for row in coverage_rows]
+    )
     if full:
         stats["deleted"] += delete_stale_listing_map_locations(
             [int(candidate["id"]) for candidate in candidates]
-        )
-        delete_stale_listing_location_coverage(
-            [row.candidate_key for row in coverage_rows]
         )
     if changed or stats["deleted"]:
         from services.listing_map import clear_listing_map_cache

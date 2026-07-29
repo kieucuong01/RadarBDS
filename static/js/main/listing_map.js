@@ -12,7 +12,7 @@
 
   var VALID_MODES = ["signals", "all"];
   var VALID_BASE_LAYERS = ["street", "satellite"];
-  var LOCATION_KEY_PATTERN = /^(exact|road|ward):[a-z0-9:-]+$/;
+  var LOCATION_KEY_PATTERN = /^(exact|road|landmark|nearby|ward):[a-z0-9:-]+$/;
   var SAFE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
   var leafletPromise = null;
   var bound = false;

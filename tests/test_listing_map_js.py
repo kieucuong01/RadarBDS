@@ -68,6 +68,14 @@ def test_summary_and_item_urls_preserve_frozen_filter_snapshot():
     assert "page=2" in items
     assert "limit=50" in items
     assert _run_node(
+        f"mapApi.buildItemsUrl({snapshot},"
+        "'landmark:thu-dau-mot:phu-tan:tdc-phu-chanh-b',1,20)"
+    ).startswith("/api/map-listing-items?")
+    assert _run_node(
+        f"mapApi.buildItemsUrl({snapshot},"
+        "'nearby:thu-dau-mot:phu-tan:dx-96:near',1,20)"
+    ).startswith("/api/map-listing-items?")
+    assert _run_node(
         f"mapApi.buildItemsUrl({snapshot},'bad key',1,20)"
     ) is None
 

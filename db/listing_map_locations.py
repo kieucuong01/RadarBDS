@@ -18,13 +18,18 @@ def iter_location_candidates(
 ) -> list[dict]:
     """Load only inputs and existing fingerprints needed by the resolver."""
     params: list[int] = []
-    where_sql = ""
+    where_parts = [
+        "COALESCE(l.probably_sold, 0) = 0",
+        "COALESCE(l.is_blacklisted, 0) = 0",
+        "COALESCE(l.review_hidden, 0) = 0",
+    ]
     if listing_ids is not None:
         params = sorted({int(item) for item in listing_ids})
         if not params:
             return []
         placeholders = ",".join("?" for _ in params)
-        where_sql = f"WHERE l.id IN ({placeholders})"
+        where_parts.append(f"l.id IN ({placeholders})")
+    where_sql = "WHERE " + " AND ".join(where_parts)
 
     with get_conn() as conn:
         rows = conn.execute(
