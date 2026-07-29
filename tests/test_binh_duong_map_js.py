@@ -152,3 +152,19 @@ def test_fullscreen_toggle_enters_and_exits_the_map_container():
 
     assert enter == {"result": "enter", "calls": ["enter"]}
     assert exit_fullscreen == {"result": "exit", "calls": ["exit"]}
+
+
+def test_escape_explicitly_exits_the_map_fullscreen_for_keyboard_users():
+    result = _run_node(
+        "(() => {"
+        "const calls=[];"
+        "const element={};"
+        "const doc={fullscreenElement:element,exitFullscreen:()=>calls.push('exit')};"
+        "return {"
+        "handled:mapPage.handleFullscreenEscape({key:'Escape'},element,doc),"
+        "calls"
+        "};"
+        "})()"
+    )
+
+    assert result == {"handled": True, "calls": ["exit"]}

@@ -181,6 +181,18 @@
     return "enter";
   }
 
+  function handleFullscreenEscape(event, element, doc) {
+    if (
+      !event
+      || event.key !== "Escape"
+      || fullscreenElement(doc) !== element
+    ) {
+      return false;
+    }
+    toggleMapFullscreen(element, doc);
+    return true;
+  }
+
   function init(doc, win) {
     var root = doc.querySelector("[data-binh-duong-map]");
     if (!root) return;
@@ -691,6 +703,9 @@
         fullscreenButton.addEventListener("click", function () {
           toggleMapFullscreen(fullscreenTarget, doc);
         });
+        doc.addEventListener("keydown", function (event) {
+          handleFullscreenEscape(event, fullscreenTarget, doc);
+        });
         doc.addEventListener("fullscreenchange", syncFullscreenState);
         doc.addEventListener("webkitfullscreenchange", syncFullscreenState);
         syncFullscreenState();
@@ -715,6 +730,7 @@
     matchesExpectedSlugs: matchesExpectedSlugs,
     mapOptions: mapOptions,
     toggleMapFullscreen: toggleMapFullscreen,
+    handleFullscreenEscape: handleFullscreenEscape,
     init: init
   };
 });

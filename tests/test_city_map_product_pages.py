@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 
 import pytest
 
@@ -146,4 +147,95 @@ def test_unknown_city_or_edition_geojson_is_404():
             "/du-lieu/ban-do-thuan-an/khong-hop-le.geojson"
         ).status_code
         == 404
+    )
+
+
+def test_all_city_maps_are_discoverable_from_public_surfaces():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+    llms = client.get("/llms.txt").get_data(as_text=True)
+    map_hub = client.get("/ban-do-binh-duong").get_data(as_text=True)
+    planning_hub = client.get("/quy-hoach-binh-duong").get_data(as_text=True)
+
+    for path, city_name, *_ in (
+        (case[0], case[1], *case[2:])
+        for case in (
+            (
+                "/ban-do-thu-dau-mot",
+                "Thủ Dầu Một",
+                "thu-dau-mot",
+                "thu-dau-mot-map-bundle",
+                14,
+                5,
+                "Hòa Phú",
+            ),
+            *CITY_CASES,
+        )
+    ):
+        public_url = f"https://radarbds.vn{path}"
+        assert sitemap.count(f"<loc>{public_url}</loc>") == 1
+        assert llms.count(public_url) == 1
+        assert f'href="{path}"' in map_hub
+        assert f'href="{path}"' in planning_hub
+        assert city_name in map_hub
+
+
+def test_tracking_accepts_only_registered_city_map_identity_and_actions():
+    import app as radar_app
+
+    context = {
+        "path": "/ban-do-di-an",
+        "page_slug": "ban-do-di-an",
+        "product_slug": "di-an-map-bundle",
+        "token": "must-be-dropped",
+        "query": "must-be-dropped",
+    }
+    assert radar_app._safe_product_tracking_context(context) == {
+        "path": "/ban-do-di-an",
+        "page_slug": "ban-do-di-an",
+        "product_slug": "di-an-map-bundle",
+    }
+    assert (
+        radar_app._safe_product_tracking_context(
+            {
+                "path": "/ban-do-di-an",
+                "page_slug": "ban-do-thuan-an",
+                "product_slug": "ben-cat-map-bundle",
+            }
+        )
+        == {}
+    )
+
+    for city_slug in ("thu_dau_mot", "thuan_an", "di_an", "ben_cat"):
+        prefix = f"{city_slug}_map"
+        for suffix in (
+            "product_viewed",
+            "preview_selected",
+            "purchase_clicked",
+            "dashboard_clicked",
+            "checkout_created",
+            "qr_displayed",
+            "payment_confirmed",
+            "download_clicked",
+        ):
+            assert f"{prefix}_{suffix}" in radar_app.ALLOWED_TRACK_ACTIONS
+
+
+def test_directory_search_hidden_state_cannot_be_overridden_by_card_layout():
+    css = Path("static/css/thu_dau_mot_map_product.css").read_text(
+        encoding="utf-8"
+    )
+
+    hidden_rule = re.search(
+        r"\[data-map-directory-item\]\[hidden\]\s*\{([^}]*)\}",
+        css,
+        re.S,
+    )
+    assert hidden_rule
+    assert re.search(
+        r"display\s*:\s*none\s*!important",
+        hidden_rule.group(1),
+        re.I,
     )

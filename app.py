@@ -86,8 +86,6 @@ from config.city_map_products import (
     CITY_MAP_PRODUCTS,
     get_city_map_page,
 )
-from config.thu_dau_mot_map_product import THU_DAU_MOT_MAP_PRODUCT_PAGE
-
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
@@ -167,6 +165,17 @@ def inject_google_site_tags():
     }
 
 
+@app.context_processor
+def inject_city_map_products():
+    """Expose the canonical city-map registry to shared public templates."""
+
+    return {
+        "city_map_products": tuple(
+            dict(page) for page in CITY_MAP_PRODUCTS.values()
+        )
+    }
+
+
 @app.after_request
 def add_response_headers(response):
     if request.path.startswith("/api/"):
@@ -175,7 +184,10 @@ def add_response_headers(response):
         response.headers["Expires"] = "0"
         if request.path.startswith("/api/digital-products/orders/"):
             response.headers["Cache-Control"] = "private, no-store"
-    elif request.path.startswith("/ban-do-thu-dau-mot/don-hang/"):
+    elif any(
+        request.path.startswith(f"{page['order_base_path']}/")
+        for page in CITY_MAP_PRODUCTS.values()
+    ):
         response.headers["Cache-Control"] = "private, no-store"
         response.headers["Pragma"] = "no-cache"
     elif request.path.startswith("/static/") and request.args.get("v"):
@@ -1343,6 +1355,38 @@ def api_telegram_webhook():
 # ─────────────────────────────────────────────────────────────────────────────
 # Conversion tracking (/api/track) — open to guests, used to measure funnel
 # ─────────────────────────────────────────────────────────────────────────────
+_CITY_MAP_PRODUCT_TRACK_SUFFIXES = {
+    "product_viewed",
+    "preview_selected",
+    "purchase_clicked",
+    "dashboard_clicked",
+}
+_CITY_MAP_CHECKOUT_TRACK_SUFFIXES = {
+    "checkout_created",
+    "qr_displayed",
+    "payment_confirmed",
+    "download_clicked",
+}
+_PRODUCT_TRACK_ACTIONS = {
+    f"{page['tracking_prefix']}_{suffix}"
+    for page in CITY_MAP_PRODUCTS.values()
+    for suffix in _CITY_MAP_PRODUCT_TRACK_SUFFIXES
+}
+_CHECKOUT_TRACK_ACTIONS = {
+    f"{page['tracking_prefix']}_{suffix}"
+    for page in CITY_MAP_PRODUCTS.values()
+    for suffix in _CITY_MAP_CHECKOUT_TRACK_SUFFIXES
+}
+_CITY_MAP_TRACK_IDENTITIES = tuple(
+    {
+        "path": page["path"],
+        "page_slug": page["page_slug"],
+        "product_slug": page["product_slug"],
+    }
+    for page in CITY_MAP_PRODUCTS.values()
+)
+
+
 ALLOWED_TRACK_ACTIONS = {
     "seo_landing_viewed",
     "report_viewed",
@@ -1374,27 +1418,7 @@ ALLOWED_TRACK_ACTIONS = {
     "binh_duong_map_layer_selected",
     "binh_duong_map_base_layer_selected",
     "binh_duong_map_area_selected",
-    "thu_dau_mot_map_product_viewed",
-    "thu_dau_mot_map_preview_selected",
-    "thu_dau_mot_map_purchase_clicked",
-    "thu_dau_mot_map_dashboard_clicked",
-    "thu_dau_mot_map_checkout_created",
-    "thu_dau_mot_map_qr_displayed",
-    "thu_dau_mot_map_payment_confirmed",
-    "thu_dau_mot_map_download_clicked",
-}
-_PRODUCT_TRACK_ACTIONS = {
-    "thu_dau_mot_map_product_viewed",
-    "thu_dau_mot_map_preview_selected",
-    "thu_dau_mot_map_purchase_clicked",
-    "thu_dau_mot_map_dashboard_clicked",
-}
-_CHECKOUT_TRACK_ACTIONS = {
-    "thu_dau_mot_map_checkout_created",
-    "thu_dau_mot_map_qr_displayed",
-    "thu_dau_mot_map_payment_confirmed",
-    "thu_dau_mot_map_download_clicked",
-}
+} | _PRODUCT_TRACK_ACTIONS | _CHECKOUT_TRACK_ACTIONS
 _PRODUCT_TRACK_SOURCE_SURFACES = {
     "preview",
     "preview_switch",
@@ -1413,10 +1437,26 @@ def _safe_product_tracking_context(context) -> dict:
     source_surface = context.get("source_surface")
     if source_surface in _PRODUCT_TRACK_SOURCE_SURFACES:
         safe["source_surface"] = source_surface
-    if context.get("path") == "/ban-do-thu-dau-mot":
-        safe["path"] = "/ban-do-thu-dau-mot"
-    if context.get("page_slug") == "ban-do-thu-dau-mot":
-        safe["page_slug"] = "ban-do-thu-dau-mot"
+    identity_fields = ("path", "page_slug", "product_slug")
+    supplied_identity = {
+        key: context.get(key)
+        for key in identity_fields
+        if key in context
+    }
+    if supplied_identity:
+        matching_identity = next(
+            (
+                identity
+                for identity in _CITY_MAP_TRACK_IDENTITIES
+                if all(
+                    supplied_identity[key] == identity[key]
+                    for key in supplied_identity
+                )
+            ),
+            None,
+        )
+        if matching_identity is not None:
+            safe.update(supplied_identity)
     page_title = context.get("page_title")
     if isinstance(page_title, str) and page_title.strip():
         safe["page_title"] = page_title.strip()[:160]
@@ -1427,8 +1467,11 @@ def _safe_checkout_tracking_context(context) -> dict:
     if not isinstance(context, dict):
         return {}
     safe = {}
-    if context.get("product_slug") == "thu-dau-mot-map-bundle":
-        safe["product_slug"] = "thu-dau-mot-map-bundle"
+    product_slugs = {
+        page["product_slug"] for page in CITY_MAP_PRODUCTS.values()
+    }
+    if context.get("product_slug") in product_slugs:
+        safe["product_slug"] = context["product_slug"]
     if context.get("product_version") == "1.0":
         safe["product_version"] = "1.0"
     if type(context.get("amount_vnd")) is int and context["amount_vnd"] == 99_000:
@@ -3269,6 +3312,10 @@ def llms_txt():
         f"- {page['breadcrumb_label']}: {_public_url(page['path'])}"
         for page in PLANNING_PAGE_LIST
     )
+    city_map_lines = "\n".join(
+        f"- Bộ bản đồ TP {page['city_name']}: {_public_url(page['path'])}"
+        for page in CITY_MAP_PRODUCTS.values()
+    )
     body = f"""# Radar BDS
 
 > Radar BDS tổng hợp và chuẩn hóa dữ liệu tin rao bất động sản Bình Dương để người dùng tham khảo trước khi kiểm tra từng tài sản.
@@ -3290,7 +3337,7 @@ def llms_txt():
 - Báo cáo dữ liệu: {_public_url('/bao-cao')}
 - Tin tức dữ liệu: {_public_url('/tin-tuc')}
 - Bản đồ Bình Dương: {_public_url('/ban-do-binh-duong')}
-- Bộ bản đồ TP Thủ Dầu Một: {_public_url('/ban-do-thu-dau-mot')}
+{city_map_lines}
 - Bản đồ quy hoạch Bình Dương cũ: {_public_url('/quy-hoach-binh-duong')}
 {planning_lines}
 - Phương pháp lọc deal: {_public_url('/san-deal-bds')}
@@ -3329,7 +3376,7 @@ def sitemap_xml():
     for page in [
         REPORT_HUB,
         news_hub,
-        THU_DAU_MOT_MAP_PRODUCT_PAGE,
+        *CITY_MAP_PRODUCTS.values(),
         BINH_DUONG_MAP_PAGE,
         PLANNING_HUB,
         *SEO_PAGES.values(),

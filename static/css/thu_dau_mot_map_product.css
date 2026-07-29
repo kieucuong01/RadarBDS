@@ -356,6 +356,10 @@
   line-height: 1.55;
 }
 
+[data-map-directory-item][hidden] {
+  display: none !important;
+}
+
 .tdm-product-derived-badge {
   display: inline-flex;
   min-height: 28px;

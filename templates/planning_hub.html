@@ -72,7 +72,12 @@
       <strong>Thông tin tham khảo.</strong>
       <span>Bình Dương cũ là địa bàn tỉnh Bình Dương trước khi sắp xếp hành chính. Nội dung không thay thế tra cứu pháp lý thửa đất, hồ sơ quy hoạch chi tiết hoặc văn bản thu hồi đất.</span>
       <a href="/ban-do-binh-duong" data-track-cta="planning_hub_admin_map">Xem bản đồ địa giới Bình Dương</a>
-      <a href="/ban-do-thu-dau-mot" data-track-cta="planning_hub_tdm_product">Xem bộ bản đồ Thủ Dầu Một</a>
+      <span class="planning-city-map-links">
+        Bộ bản đồ:
+        {% for map_page in city_map_products %}
+        <a href="{{ map_page.path }}" data-track-cta="planning_hub_city_product">{{ map_page.city_name }}</a>{% if not loop.last %}<span aria-hidden="true"> · </span>{% endif %}
+        {% endfor %}
+      </span>
     </section>
 
     <section id="planning-list" class="seo-shell planning-list-layout">

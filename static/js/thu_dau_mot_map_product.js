@@ -72,7 +72,8 @@
         setEdition(root, edition);
         emitTrack(win, trackingAction(root, "preview"), {
           edition: edition,
-          source_surface: "preview_switch"
+          source_surface: "preview_switch",
+          product_slug: root.dataset.productSlug || ""
         });
       });
     });
@@ -84,7 +85,8 @@
           return;
         }
         emitTrack(win, trackingAction(root, "purchase"), {
-          source_surface: "product_offer"
+          source_surface: "product_offer",
+          product_slug: root.dataset.productSlug || ""
         });
       });
     }
@@ -93,7 +95,8 @@
     if (dashboard) {
       dashboard.addEventListener("click", function () {
         emitTrack(win, trackingAction(root, "dashboard"), {
-          source_surface: "bottom_dashboard"
+          source_surface: "bottom_dashboard",
+          product_slug: root.dataset.productSlug || ""
         });
       });
     }

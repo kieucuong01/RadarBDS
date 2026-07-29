@@ -69,6 +69,18 @@
   min-height: 44px;
 }
 
+.bd-map-product-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 10px;
+  min-width: min(100%, 390px);
+}
+
+.bd-map-product-actions .seo-button {
+  min-height: 44px;
+  text-align: center;
+}
+
 .bd-map-copy-link,
 [data-map-copy-link] {
   display: inline-flex;
@@ -871,6 +883,11 @@
 @media (max-width: 559px) {
   .bd-map-hero-actions {
     display: grid;
+  }
+
+  .bd-map-product-actions {
+    grid-template-columns: 1fr;
+    width: 100%;
   }
 
   .bd-map-fact-panel {
