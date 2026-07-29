@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "Chiêu Liêu", "source": "OpenStreetMap node 12602246910", "source_url": "https://www.openstreetmap.org/node/12602246910", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7536407, 10.924361]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Đông Chiêu A", "source": "OpenStreetMap node 12602246911", "source_url": "https://www.openstreetmap.org/node/12602246911", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7599711, 10.9172803]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Tân An", "source": "OpenStreetMap node 12602246913", "source_url": "https://www.openstreetmap.org/node/12602246913", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7876376, 10.9111614]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Đông Thành 1", "source": "OpenStreetMap node 12602246914", "source_url": "https://www.openstreetmap.org/node/12602246914", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7737377, 10.9250922]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Tân Phước 2", "source": "OpenStreetMap node 12602246920", "source_url": "https://www.openstreetmap.org/node/12602246920", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7575416, 10.9457201]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Thống Nhất 1", "source": "OpenStreetMap node 12602246932", "source_url": "https://www.openstreetmap.org/node/12602246932", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7546435, 10.9051097]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Nhị Đồng 1", "source": "OpenStreetMap node 12602246936", "source_url": "https://www.openstreetmap.org/node/12602246936", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7590397, 10.900946]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Châu Thới", "source": "OpenStreetMap node 12602246946", "source_url": "https://www.openstreetmap.org/node/12602246946", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7996903, 10.9101314]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Bình Thung 1", "source": "OpenStreetMap node 12602246948", "source_url": "https://www.openstreetmap.org/node/12602246948", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.8033637, 10.9024626]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Bình Đường 1", "source": "OpenStreetMap node 12602246949", "source_url": "https://www.openstreetmap.org/node/12602246949", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7579633, 10.8877483]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Đông Hòa", "source": "OpenStreetMap node 13093758878", "source_url": "https://www.openstreetmap.org/node/13093758878", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.79832, 10.8928487]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Tân Đông Hiệp", "source": "OpenStreetMap node 13113468765", "source_url": "https://www.openstreetmap.org/node/13113468765", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7644293, 10.9369572]}
+    }
+  ]
+}

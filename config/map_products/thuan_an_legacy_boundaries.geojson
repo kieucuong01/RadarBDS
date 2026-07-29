@@ -441,6 +441,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "An Phú",
@@ -859,6 +860,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Thuận An",
@@ -1213,6 +1215,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Thuận An",
@@ -1687,6 +1690,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "An Phú, Thuận Giao",
@@ -2305,6 +2309,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Bình Hòa",
@@ -2643,6 +2648,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Lái Thiêu",
@@ -3025,6 +3031,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Thuận An",
@@ -3355,6 +3362,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Lái Thiêu",
@@ -3925,6 +3933,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Thuận Giao",
@@ -4287,6 +4296,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "derived_reference",
         "boundary_source": "derived_boundary",
         "current_ward_after_2025": "Bình Hòa, Lái Thiêu",

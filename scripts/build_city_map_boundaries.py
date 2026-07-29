@@ -254,6 +254,7 @@ def _legacy_feature(
             "source_id": source_id,
             "former_units": "",
             "boundary_source": boundary_source,
+            "boundary_claim": True,
             "derived_from": derived_from,
             "last_updated": page["updated_at"],
             "is_derived_boundary": derived,

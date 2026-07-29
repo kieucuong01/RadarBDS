@@ -54,6 +54,10 @@ def test_checked_city_boundary_snapshots_have_exact_valid_taxonomy(city_slug):
         {feature["properties"]["slug"] for feature in current["features"]}
     ) == expected["current_count"]
     assert all(
+        feature["properties"].get("boundary_claim") is True
+        for feature in legacy["features"]
+    )
+    assert all(
         shape(feature["geometry"]).is_valid
         and shape(feature["geometry"]).geom_type in {"Polygon", "MultiPolygon"}
         for feature in (*legacy["features"], *current["features"])

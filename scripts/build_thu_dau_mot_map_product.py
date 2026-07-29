@@ -18,7 +18,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from map_products.geometry import NormalizedMapLayers, build_normalized_layers
+from map_products.geometry import (
+    NormalizedMapLayers,
+    build_normalized_layers,
+    resolve_product_spec,
+)
 from map_products.models import (
     load_neighborhood_points,
     load_product_spec,
@@ -32,6 +36,8 @@ from map_products.renderers import (
     validate_font_coverage,
 )
 from map_products.release import (
+    DEFAULT_RELEASE_PROFILE,
+    MapReleaseProfile,
     ReleaseBlocked,
     generate_watermarked_previews,
     package_release,
@@ -198,10 +204,11 @@ def render_product_outputs(
 
     validate_font_coverage(fonts)
     render_dir = work_dir / "rendered"
+    spec = resolve_product_spec(layers)
     outputs = []
     for edition in ("legacy", "current"):
         scene = build_scene(layers, edition)
-        stem = f"thu-dau-mot-{edition}"
+        stem = f"{spec.city_slug}-{edition}"
         outputs.extend(
             (
                 render_svg(scene, render_dir / f"{stem}.svg", fonts),
@@ -250,6 +257,7 @@ def run_release_stage(
     output_zip: Path,
     preview_paths: tuple[Path, Path],
     ofl_text: str,
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
 ) -> Path:
     """Stage, validate, preview, and optionally package existing render output."""
 
@@ -259,8 +267,9 @@ def run_release_stage(
         work_dir / "source-cache",
         work_dir / "candidate",
         ofl_text,
+        profile,
     )
-    validation = validate_candidate(candidate_dir)
+    validation = validate_candidate(candidate_dir, profile)
     if not validation.ok:
         raise ReleaseBlocked(
             "release validation failed: " + "; ".join(validation.errors)
@@ -269,12 +278,14 @@ def run_release_stage(
         candidate_dir,
         Path(preview_paths[0]),
         Path(preview_paths[1]),
+        profile,
     )
     if stage in {"package", "all"}:
         return package_release(
             candidate_dir,
             Path(approval_path),
             Path(output_zip),
+            profile,
         )
     return candidate_dir
 

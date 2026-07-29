@@ -1145,6 +1145,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Long Nguyên",
@@ -2055,6 +2056,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Tây Nam",
@@ -3809,6 +3811,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Chánh Phú Hòa",
@@ -5247,6 +5250,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Hòa Lợi",
@@ -6385,6 +6389,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Long Nguyên, Bến Cát",
@@ -7155,6 +7160,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "",
@@ -8097,6 +8103,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Hòa Lợi",
@@ -9267,6 +9274,7 @@
         "type": "Polygon"
       },
       "properties": {
+        "boundary_claim": true,
         "boundary_confidence": "source_snapshot",
         "boundary_source": "source_snapshot",
         "current_ward_after_2025": "Thới Hòa",

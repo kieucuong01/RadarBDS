@@ -25,6 +25,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont as ReportLabTTFont
 from reportlab.pdfgen.canvas import Canvas
 
+from .models import MapProductSpec
+
 
 class ReleaseBlocked(RuntimeError):
     """Raised when a map release cannot pass a mandatory gate."""
@@ -39,25 +41,155 @@ class ReleaseValidation:
     files: dict[str, dict[str, int | str]] = field(default_factory=dict)
 
 
-PRODUCT_NAME = "radarbds-thu-dau-mot-map"
-PRODUCT_VERSION = "1.0"
-EXPECTED_FILES = (
-    "GIAY-PHEP.txt",
-    "HUONG-DAN.pdf",
-    "fonts/BeVietnamPro-Regular.ttf",
-    "fonts/BeVietnamPro-SemiBold.ttf",
-    "fonts/OFL.txt",
-    "thu-dau-mot-sau-2025-a0.pdf",
-    "thu-dau-mot-sau-2025.kml",
-    "thu-dau-mot-sau-2025.svg",
-    "thu-dau-mot-truoc-2025-a0.pdf",
-    "thu-dau-mot-truoc-2025.kml",
-    "thu-dau-mot-truoc-2025.svg",
+@dataclass(frozen=True)
+class MapReleaseProfile:
+    """Immutable city-specific names and release validation expectations."""
+
+    city_slug: str
+    city_name: str
+    product_name: str
+    version: str
+    legacy_names: frozenset[str]
+    current_names: frozenset[str]
+    derived_legacy_names: frozenset[str]
+
+    @classmethod
+    def from_spec(cls, spec: MapProductSpec) -> "MapReleaseProfile":
+        return cls(
+            city_slug=spec.city_slug,
+            city_name=spec.city_name,
+            product_name=f"radarbds-{spec.city_slug}-map",
+            version=spec.version,
+            legacy_names=frozenset(spec.legacy_wards),
+            current_names=frozenset(spec.current_wards),
+            derived_legacy_names=frozenset(spec.derived_legacy_wards),
+        )
+
+    @property
+    def legacy_count(self) -> int:
+        return len(self.legacy_names)
+
+    @property
+    def current_count(self) -> int:
+        return len(self.current_names)
+
+    @property
+    def legacy_pdf(self) -> str:
+        return f"{self.city_slug}-truoc-2025-a0.pdf"
+
+    @property
+    def current_pdf(self) -> str:
+        return f"{self.city_slug}-sau-2025-a0.pdf"
+
+    @property
+    def legacy_svg(self) -> str:
+        return f"{self.city_slug}-truoc-2025.svg"
+
+    @property
+    def current_svg(self) -> str:
+        return f"{self.city_slug}-sau-2025.svg"
+
+    @property
+    def legacy_kml(self) -> str:
+        return f"{self.city_slug}-truoc-2025.kml"
+
+    @property
+    def current_kml(self) -> str:
+        return f"{self.city_slug}-sau-2025.kml"
+
+    @property
+    def map_pdfs(self) -> tuple[str, str]:
+        return self.legacy_pdf, self.current_pdf
+
+    @property
+    def rendered_to_commercial(self) -> dict[str, str]:
+        return {
+            f"{self.city_slug}-legacy.pdf": self.legacy_pdf,
+            f"{self.city_slug}-current.pdf": self.current_pdf,
+            f"{self.city_slug}-legacy.svg": self.legacy_svg,
+            f"{self.city_slug}-current.svg": self.current_svg,
+            f"{self.city_slug}-legacy.kml": self.legacy_kml,
+            f"{self.city_slug}-current.kml": self.current_kml,
+        }
+
+    @property
+    def expected_files(self) -> tuple[str, ...]:
+        return (
+            "GIAY-PHEP.txt",
+            "HUONG-DAN.pdf",
+            "fonts/BeVietnamPro-Regular.ttf",
+            "fonts/BeVietnamPro-SemiBold.ttf",
+            "fonts/OFL.txt",
+            self.current_pdf,
+            self.current_kml,
+            self.current_svg,
+            self.legacy_pdf,
+            self.legacy_kml,
+            self.legacy_svg,
+        )
+
+    @property
+    def output_zip_name(self) -> str:
+        return f"{self.product_name}-v{self.version}.zip"
+
+    @property
+    def legacy_unit_label(self) -> str:
+        return "đơn vị cũ" if self.city_slug == "ben-cat" else "phường cũ"
+
+    @property
+    def legacy_override_text(self) -> str:
+        prefix = (
+            f"Bản {self.legacy_count} ranh {self.legacy_unit_label} tham khảo"
+        )
+        if self.derived_legacy_names:
+            return (
+                f"{prefix}; {', '.join(sorted(self.derived_legacy_names))} "
+                "là ranh suy luận biên tập, không thay thế hồ sơ địa chính."
+            )
+        return (
+            f"{prefix} từ snapshot hành chính lịch sử có nguồn, không thay "
+            "thế hồ sơ địa chính."
+        )
+
+
+_DEFAULT_SPEC = MapProductSpec(
+    slug="thu-dau-mot-map-bundle",
+    city_slug="thu-dau-mot",
+    city_name="Thủ Dầu Một",
+    version="1.0",
+    price_vnd=99_000,
+    legacy_wards=(
+        "Chánh Mỹ",
+        "Chánh Nghĩa",
+        "Định Hòa",
+        "Hiệp An",
+        "Hiệp Thành",
+        "Hòa Phú",
+        "Phú Cường",
+        "Phú Hòa",
+        "Phú Lợi",
+        "Phú Mỹ",
+        "Phú Tân",
+        "Phú Thọ",
+        "Tân An",
+        "Tương Bình Hiệp",
+    ),
+    current_wards=(
+        "Thủ Dầu Một",
+        "Phú Lợi",
+        "Chánh Hiệp",
+        "Bình Dương",
+        "Phú An",
+    ),
+    derived_legacy_wards=("Hòa Phú", "Phú Tân"),
+    formats=("pdf", "svg", "kml"),
+    font_family="Be Vietnam Pro",
 )
-MAP_PDFS = (
-    "thu-dau-mot-truoc-2025-a0.pdf",
-    "thu-dau-mot-sau-2025-a0.pdf",
-)
+DEFAULT_RELEASE_PROFILE = MapReleaseProfile.from_spec(_DEFAULT_SPEC)
+PRODUCT_NAME = DEFAULT_RELEASE_PROFILE.product_name
+PRODUCT_VERSION = DEFAULT_RELEASE_PROFILE.version
+EXPECTED_FILES = DEFAULT_RELEASE_PROFILE.expected_files
+MAP_PDFS = DEFAULT_RELEASE_PROFILE.map_pdfs
 FONT_FILES = {
     "font": "fonts/BeVietnamPro-Regular.ttf",
     "font_semibold": "fonts/BeVietnamPro-SemiBold.ttf",
@@ -77,29 +209,8 @@ APPROVAL_CHECKS = (
     "vietnamese_text_checked",
     "sources_and_license_checked",
 )
-LEGACY_NAMES = {
-    "Chánh Mỹ",
-    "Chánh Nghĩa",
-    "Định Hòa",
-    "Hiệp An",
-    "Hiệp Thành",
-    "Hòa Phú",
-    "Phú Cường",
-    "Phú Hòa",
-    "Phú Lợi",
-    "Phú Mỹ",
-    "Phú Tân",
-    "Phú Thọ",
-    "Tân An",
-    "Tương Bình Hiệp",
-}
-CURRENT_NAMES = {
-    "Thủ Dầu Một",
-    "Phú Lợi",
-    "Chánh Hiệp",
-    "Bình Dương",
-    "Phú An",
-}
+LEGACY_NAMES = set(DEFAULT_RELEASE_PROFILE.legacy_names)
+CURRENT_NAMES = set(DEFAULT_RELEASE_PROFILE.current_names)
 VIETNAMESE_PRODUCT_GLYPHS = (
     "ÀÁÃÈÉÌÍÒÓÕÙÚÝàáãèéìíòóõùúý"
     "ĂăÂâĐđÊêĨĩÔôƠơŨũƯư"
@@ -107,14 +218,7 @@ VIETNAMESE_PRODUCT_GLYPHS = (
     + "\u0300\u0301\u0303\u0309\u0323"
 )
 SVG_NAMESPACE = "http://www.w3.org/2000/svg"
-RENDERED_TO_COMMERCIAL = {
-    "thu-dau-mot-legacy.pdf": "thu-dau-mot-truoc-2025-a0.pdf",
-    "thu-dau-mot-current.pdf": "thu-dau-mot-sau-2025-a0.pdf",
-    "thu-dau-mot-legacy.svg": "thu-dau-mot-truoc-2025.svg",
-    "thu-dau-mot-current.svg": "thu-dau-mot-sau-2025.svg",
-    "thu-dau-mot-legacy.kml": "thu-dau-mot-truoc-2025.kml",
-    "thu-dau-mot-current.kml": "thu-dau-mot-sau-2025.kml",
-}
+RENDERED_TO_COMMERCIAL = DEFAULT_RELEASE_PROFILE.rendered_to_commercial
 
 
 def _relative_files(candidate_dir: Path) -> set[str]:
@@ -180,6 +284,7 @@ def _write_guide_pdf(
     output_path: Path,
     regular_font: Path,
     semibold_font: Path,
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
 ) -> None:
     suffix = sha256(regular_font.read_bytes()).hexdigest()[:10]
     regular_name = f"BeVietnamProGuideRegular-{suffix}"
@@ -198,7 +303,9 @@ def _write_guide_pdf(
         pageCompression=1,
         invariant=1,
     )
-    canvas.setTitle("Hướng dẫn bộ bản đồ Thủ Dầu Một - Radar BDS")
+    canvas.setTitle(
+        f"Hướng dẫn bộ bản đồ {profile.city_name} - Radar BDS"
+    )
     canvas.setAuthor("Radar BDS")
     canvas.setFillColor(HexColor("#12372a"))
     canvas.rect(0, page_height - 112, page_width, 112, fill=1, stroke=0)
@@ -209,7 +316,10 @@ def _write_guide_pdf(
     canvas.drawString(
         margin,
         page_height - 84,
-        "Bộ bản đồ Thủ Dầu Một trước và sau sắp xếp 2025 - v1.0",
+        (
+            f"Bộ bản đồ {profile.city_name} trước và sau sắp xếp 2025 "
+            f"- v{profile.version}"
+        ),
     )
     y = page_height - 146
     sections = (
@@ -224,10 +334,9 @@ def _write_guide_pdf(
         (
             "2. LƯU Ý VỀ HAI PHIÊN BẢN",
             (
-                "Bản trước 2025 hiển thị đúng 14 ranh phường cũ tham khảo. "
-                "Hòa Phú và Phú Tân là ranh suy luận biên tập. Bản sau "
-                "2025 hiển thị đúng 5 ranh phường hiện hành: Thủ Dầu Một, "
-                "Phú Lợi, Chánh Hiệp, Bình Dương và Phú An."
+                f"{profile.legacy_override_text} Bản sau 2025 hiển thị đúng "
+                f"{profile.current_count} ranh phường hiện hành: "
+                f"{', '.join(sorted(profile.current_names))}."
             ),
         ),
         (
@@ -252,8 +361,8 @@ def _write_guide_pdf(
             (
                 "Dữ liệu đường, thủy hệ và POI: © OpenStreetMap contributors "
                 "- https://www.openstreetmap.org/copyright - ODbL 1.0. "
-                "Tâm điểm phường cũ: Wikidata CC0 - "
-                "https://www.wikidata.org/wiki/Wikidata:Licensing. Font: "
+                "Ranh và tâm điểm đơn vị cũ: Stanford Geospatial Center / "
+                "GADM v2.8 - Creative Commons Attribution 3.0. Font: "
                 "Be Vietnam Pro - SIL Open Font License, Version 1.1 - "
                 "https://github.com/google/fonts/tree/main/ofl/bevietnampro."
             ),
@@ -289,14 +398,35 @@ def _write_guide_pdf(
     canvas.line(margin, 38, page_width - margin, 38)
     canvas.setFillColor(HexColor("#52635c"))
     canvas.setFont(regular_name, 8)
-    canvas.drawString(margin, 24, "Radar BDS - radarbds.vn - Phiên bản 1.0")
+    canvas.drawString(
+        margin,
+        24,
+        f"Radar BDS - radarbds.vn - Phiên bản {profile.version}",
+    )
     canvas.save()
 
 
-def _license_text() -> str:
-    return """\
+def _license_text(
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
+) -> str:
+    derived_note = (
+        ", kết hợp phần ranh suy luận do Radar BDS biên tập cho "
+        + ", ".join(sorted(profile.derived_legacy_names))
+        if profile.derived_legacy_names
+        else ""
+    )
+    center_note = (
+        "Tâm điểm phường cũ dùng để kiểm tra nhãn: Wikidata CC0\n"
+        "https://www.wikidata.org/wiki/Wikidata:Licensing"
+        if profile.city_slug == "thu-dau-mot"
+        else (
+            "Tâm điểm đơn vị cũ được tạo từ các ranh nói trên để kiểm "
+            "tra nhãn."
+        )
+    )
+    return f"""\
 RADAR BDS - GIẤY PHÉP SỬ DỤNG SẢN PHẨM SỐ
-Phiên bản sản phẩm: radarbds-thu-dau-mot-map-v1.0
+Phiên bản sản phẩm: {profile.product_name}-v{profile.version}
 
 QUYỀN SỬ DỤNG
 Người mua được in, chỉnh sửa và sử dụng các tệp trong dự án cá nhân hoặc doanh nghiệp.
@@ -310,10 +440,9 @@ NGUỒN VÀ GIẤY PHÉP DỮ LIỆU
 https://www.openstreetmap.org/copyright
 Dữ liệu OpenStreetMap được cung cấp theo Open Data Commons Open Database License (ODbL) v1.0.
 
-Ranh phường cũ: Stanford Geospatial Center / GADM v2.8 snapshot, kết hợp phần ranh suy luận do Radar BDS biên tập cho Hòa Phú và Phú Tân.
+Ranh {profile.legacy_unit_label}: Stanford Geospatial Center / GADM v2.8 snapshot{derived_note}.
 https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata
-Tâm điểm phường cũ dùng để kiểm tra nhãn: Wikidata CC0
-https://www.wikidata.org/wiki/Wikidata:Licensing
+{center_note}
 
 FONT
 Be Vietnam Pro - SIL Open Font License, Version 1.1
@@ -322,7 +451,7 @@ Xem toàn văn giấy phép font tại fonts/OFL.txt.
 
 CẢNH BÁO
 Bản đồ không thay thế bản đồ địa chính, hồ sơ thửa đất, hồ sơ quy hoạch hoặc xác nhận của cơ quan có thẩm quyền.
-14 ranh phường cũ là lớp tham khảo; Hòa Phú và Phú Tân là ranh suy luận biên tập, không thay thế hồ sơ địa chính.
+{profile.legacy_override_text}
 Vị trí khu phố mang tính tham khảo và không thể hiện ranh giới khu phố.
 """
 
@@ -332,6 +461,7 @@ def stage_release_candidate(
     source_cache_dir: Path,
     candidate_dir: Path,
     ofl_text: str,
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
 ) -> Path:
     """Stage exact paid files under commercial names for strict validation."""
 
@@ -341,7 +471,7 @@ def stage_release_candidate(
     required_inputs = {
         **{
             source_name: rendered_dir / source_name
-            for source_name in RENDERED_TO_COMMERCIAL
+            for source_name in profile.rendered_to_commercial
         },
         "font.ttf": source_cache_dir / "font.ttf",
         "font_semibold.ttf": source_cache_dir / "font_semibold.ttf",
@@ -361,7 +491,7 @@ def stage_release_candidate(
     candidate_dir.mkdir(parents=True, exist_ok=True)
     fonts_dir = candidate_dir / "fonts"
     fonts_dir.mkdir(parents=True, exist_ok=True)
-    for source_name, commercial_name in RENDERED_TO_COMMERCIAL.items():
+    for source_name, commercial_name in profile.rendered_to_commercial.items():
         shutil.copyfile(
             rendered_dir / source_name,
             candidate_dir / commercial_name,
@@ -372,13 +502,14 @@ def stage_release_candidate(
     shutil.copyfile(source_cache_dir / "font_semibold.ttf", semibold_font)
     (fonts_dir / "OFL.txt").write_text(ofl_text, encoding="utf-8")
     (candidate_dir / "GIAY-PHEP.txt").write_text(
-        _license_text(),
+        _license_text(profile),
         encoding="utf-8",
     )
     _write_guide_pdf(
         candidate_dir / "HUONG-DAN.pdf",
         regular_font,
         semibold_font,
+        profile,
     )
     return candidate_dir
 
@@ -472,7 +603,13 @@ def _validate_fonts(
             errors.append("fonts/OFL.txt is incomplete")
 
 
-def _validate_svg(path: Path, *, legacy: bool, errors: list[str]) -> None:
+def _validate_svg(
+    path: Path,
+    *,
+    legacy: bool,
+    errors: list[str],
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
+) -> None:
     if not path.is_file():
         return
     try:
@@ -499,7 +636,11 @@ def _validate_svg(path: Path, *, legacy: bool, errors: list[str]) -> None:
     if legacy:
         folded = rendered_text.casefold()
         if (
-            "14 ranh phường cũ" not in folded
+            (
+                f"{profile.legacy_count} ranh "
+                f"{profile.legacy_unit_label}"
+            ).casefold()
+            not in folded
             or "không thay thế hồ sơ địa chính" not in folded
         ):
             errors.append(
@@ -507,7 +648,7 @@ def _validate_svg(path: Path, *, legacy: bool, errors: list[str]) -> None:
             )
         metadata = root.find("./{*}metadata[@id='edition-metadata']")
         metadata_text = metadata.text if metadata is not None else ""
-        if not _has_legacy_override(metadata_text):
+        if not _has_legacy_override(metadata_text, profile):
             errors.append(
                 f"SVG {path.name} edition metadata lacks the legacy override"
             )
@@ -538,16 +679,31 @@ def _placemark_names(folder) -> set[str]:
     return names
 
 
-def _has_legacy_override(value: str | None) -> bool:
+def _has_legacy_override(
+    value: str | None,
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
+) -> bool:
     folded = (value or "").casefold()
-    return (
-        "14 ranh phường cũ" in folded
+    valid = (
+        (
+            f"{profile.legacy_count} ranh {profile.legacy_unit_label}"
+        ).casefold()
+        in folded
         and "tham khảo" in folded
         and "không thay thế hồ sơ địa chính" in folded
     )
+    if not valid:
+        return False
+    return True
 
 
-def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
+def _validate_kml(
+    path: Path,
+    *,
+    legacy: bool,
+    errors: list[str],
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
+) -> None:
     if not path.is_file():
         return
     try:
@@ -581,14 +737,15 @@ def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
             for placemark in placemarks
             for polygon in placemark.findall(".//{*}Polygon")
         ]
-        if len(placemarks) != 14 or any(
+        if len(placemarks) != profile.legacy_count or any(
             not placemark.findall(".//{*}Polygon")
             for placemark in placemarks
         ):
             errors.append(
-                f"KML {path.name} must contain exactly 14 legacy boundary Polygon placemarks"
+                f"KML {path.name} must contain exactly "
+                f"{profile.legacy_count} legacy boundary Polygon placemarks"
             )
-        if _placemark_names(references) != LEGACY_NAMES:
+        if _placemark_names(references) != set(profile.legacy_names):
             errors.append(f"KML {path.name} has incorrect legacy ward names")
         derived_names = set()
         for placemark in placemarks:
@@ -623,9 +780,10 @@ def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
                         f"KML {path.name} derived legacy boundary lacks derived_from"
                     )
                     break
-        if derived_names != {"Hòa Phú", "Phú Tân"}:
+        if derived_names != set(profile.derived_legacy_names):
             errors.append(
-                f"KML {path.name} must mark exactly Hòa Phú and Phú Tân as derived boundaries"
+                f"KML {path.name} must mark exactly "
+                f"{sorted(profile.derived_legacy_names)} as derived boundaries"
             )
         if "Stanford" not in rendered_text and "GADM" not in rendered_text:
             errors.append(f"KML {path.name} lacks legacy boundary attribution")
@@ -634,7 +792,8 @@ def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
             "{*}Data[@name='edition_description']/{*}value"
         )
         if not _has_legacy_override(
-            metadata.text if metadata is not None else ""
+            metadata.text if metadata is not None else "",
+            profile,
         ):
             errors.append(
                 f"KML {path.name} edition metadata lacks the legacy override"
@@ -652,7 +811,7 @@ def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
         ]
         all_polygons = root.findall(".//{*}Polygon")
         if (
-            len(placemarks) != 5
+            len(placemarks) != profile.current_count
             or any(
                 not placemark.findall(".//{*}Polygon")
                 for placemark in placemarks
@@ -661,16 +820,21 @@ def _validate_kml(path: Path, *, legacy: bool, errors: list[str]) -> None:
             != {id(polygon) for polygon in all_polygons}
         ):
             errors.append(
-                f"KML {path.name} must contain exactly 5 current boundary "
+                f"KML {path.name} must contain exactly "
+                f"{profile.current_count} current boundary "
                 "placemarks, each with Polygon geometry, and every Polygon "
                 "must belong to them"
             )
-        if _placemark_names(boundaries) != CURRENT_NAMES:
+        if _placemark_names(boundaries) != set(profile.current_names):
             errors.append(f"KML {path.name} has incorrect current ward names")
 
 
-def _validate_pdfs(candidate_dir: Path, errors: list[str]) -> None:
-    for relative_name in (*MAP_PDFS, "HUONG-DAN.pdf"):
+def _validate_pdfs(
+    candidate_dir: Path,
+    errors: list[str],
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
+) -> None:
+    for relative_name in (*profile.map_pdfs, "HUONG-DAN.pdf"):
         path = candidate_dir / relative_name
         if not path.is_file():
             continue
@@ -707,8 +871,8 @@ def _validate_pdfs(candidate_dir: Path, errors: list[str]) -> None:
         if not font_streams:
             errors.append(f"PDF {relative_name} lacks embedded TrueType font")
         if (
-            relative_name.startswith("thu-dau-mot-truoc")
-            and not _has_legacy_override(pdf_subject)
+            relative_name == profile.legacy_pdf
+            and not _has_legacy_override(pdf_subject, profile)
         ):
             errors.append(
                 f"PDF {relative_name} edition metadata lacks the legacy override"
@@ -725,7 +889,7 @@ def _validate_pdfs(candidate_dir: Path, errors: list[str]) -> None:
                 )
                 if not extracted.strip():
                     errors.append(f"PDF {relative_name} has no extractable text")
-                if relative_name in MAP_PDFS:
+                if relative_name in profile.map_pdfs:
                     if len(pdf.pages) != 1:
                         errors.append(
                             f"PDF {relative_name} must be a one-page A0 map"
@@ -742,13 +906,17 @@ def _validate_pdfs(candidate_dir: Path, errors: list[str]) -> None:
                             f"PDF {relative_name} is not landscape A0"
                         )
                     folded = extracted.casefold()
-                    if "thủ dầu một" not in folded:
+                    if profile.city_name.casefold() not in folded:
                         errors.append(
                             f"PDF {relative_name} lacks Vietnamese map title"
                         )
-                    if relative_name.startswith("thu-dau-mot-truoc"):
+                    if relative_name == profile.legacy_pdf:
                         if (
-                            "14 ranh phường cũ" not in folded
+                            (
+                                f"{profile.legacy_count} ranh "
+                                f"{profile.legacy_unit_label}"
+                            ).casefold()
+                            not in folded
                             or "không thay thế hồ sơ địa chính" not in folded
                         ):
                             errors.append(
@@ -758,7 +926,11 @@ def _validate_pdfs(candidate_dir: Path, errors: list[str]) -> None:
             errors.append(f"PDF {relative_name} cannot be inspected: {exc}")
 
 
-def _validate_license(candidate_dir: Path, errors: list[str]) -> None:
+def _validate_license(
+    candidate_dir: Path,
+    errors: list[str],
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
+) -> None:
     path = candidate_dir / "GIAY-PHEP.txt"
     if not path.is_file():
         return
@@ -771,22 +943,29 @@ def _validate_license(candidate_dir: Path, errors: list[str]) -> None:
         "https://www.openstreetmap.org/copyright",
         "Stanford",
         "GADM",
-        "Wikidata",
-        "CC0",
         "Be Vietnam Pro",
         "SIL Open Font License, Version 1.1",
     ):
         if required not in text:
             errors.append(f"GIAY-PHEP.txt lacks required text: {required}")
+    if profile.city_slug == "thu-dau-mot":
+        for required in ("Wikidata", "CC0"):
+            if required not in text:
+                errors.append(
+                    f"GIAY-PHEP.txt lacks required text: {required}"
+                )
 
 
-def validate_candidate(candidate_dir: Path) -> ReleaseValidation:
+def validate_candidate(
+    candidate_dir: Path,
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
+) -> ReleaseValidation:
     """Validate the exact distributable candidate without modifying it."""
 
     candidate_dir = Path(candidate_dir)
     errors: list[str] = []
     actual_files = _relative_files(candidate_dir) if candidate_dir.is_dir() else set()
-    expected_files = set(EXPECTED_FILES)
+    expected_files = set(profile.expected_files)
     for missing in sorted(expected_files - actual_files):
         errors.append(f"candidate is missing required file: {missing}")
     for extra in sorted(actual_files - expected_files):
@@ -795,31 +974,35 @@ def validate_candidate(candidate_dir: Path) -> ReleaseValidation:
     source_manifest = _load_source_manifest(candidate_dir, errors)
     _validate_fonts(candidate_dir, source_manifest, errors)
     _validate_svg(
-        candidate_dir / "thu-dau-mot-truoc-2025.svg",
+        candidate_dir / profile.legacy_svg,
         legacy=True,
         errors=errors,
+        profile=profile,
     )
     _validate_svg(
-        candidate_dir / "thu-dau-mot-sau-2025.svg",
+        candidate_dir / profile.current_svg,
         legacy=False,
         errors=errors,
+        profile=profile,
     )
     _validate_kml(
-        candidate_dir / "thu-dau-mot-truoc-2025.kml",
+        candidate_dir / profile.legacy_kml,
         legacy=True,
         errors=errors,
+        profile=profile,
     )
     _validate_kml(
-        candidate_dir / "thu-dau-mot-sau-2025.kml",
+        candidate_dir / profile.current_kml,
         legacy=False,
         errors=errors,
+        profile=profile,
     )
-    _validate_pdfs(candidate_dir, errors)
-    _validate_license(candidate_dir, errors)
+    _validate_pdfs(candidate_dir, errors, profile)
+    _validate_license(candidate_dir, errors, profile)
 
     file_metadata = {
         relative_name: _metadata(candidate_dir / relative_name)
-        for relative_name in EXPECTED_FILES
+        for relative_name in profile.expected_files
         if (candidate_dir / relative_name).is_file()
     }
     return ReleaseValidation(
@@ -871,20 +1054,21 @@ def package_release(
     candidate_dir: Path,
     approval_path: Path,
     output_zip: Path,
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
 ) -> Path:
     """Create a deterministic ZIP only after candidate and approval gates."""
 
     candidate_dir = Path(candidate_dir)
     approval = _load_approval(Path(approval_path))
-    validation = validate_candidate(candidate_dir)
+    validation = validate_candidate(candidate_dir, profile)
     if not validation.ok:
         raise ReleaseBlocked(
             "candidate validation failed: " + "; ".join(validation.errors)
         )
     source_manifest_path = candidate_dir.parent / "source-manifest.json"
     manifest = {
-        "product": PRODUCT_NAME,
-        "version": PRODUCT_VERSION,
+        "product": profile.product_name,
+        "version": profile.version,
         "reviewer": approval["reviewer"].strip(),
         "reviewed_at": approval["reviewed_at"],
         "source_manifest_sha256": sha256(
@@ -917,7 +1101,7 @@ def package_release(
             compression=ZIP_DEFLATED,
             compresslevel=9,
         ) as archive:
-            for relative_name in EXPECTED_FILES:
+            for relative_name in profile.expected_files:
                 archive.writestr(
                     _zip_info(relative_name),
                     (candidate_dir / relative_name).read_bytes(),
@@ -1032,6 +1216,7 @@ def generate_watermarked_previews(
     candidate_dir: Path,
     before_path: Path,
     after_path: Path,
+    profile: MapReleaseProfile = DEFAULT_RELEASE_PROFILE,
 ) -> tuple[Path, Path]:
     """Rasterize temporary watermarked SVG copies to public WebP previews."""
 
@@ -1092,13 +1277,13 @@ def generate_watermarked_previews(
             page = browser.new_page()
             _write_preview_webp(
                 page,
-                candidate_dir / "thu-dau-mot-truoc-2025.svg",
+                candidate_dir / profile.legacy_svg,
                 font_path,
                 before_path,
             )
             _write_preview_webp(
                 page,
-                candidate_dir / "thu-dau-mot-sau-2025.svg",
+                candidate_dir / profile.current_svg,
                 font_path,
                 after_path,
             )

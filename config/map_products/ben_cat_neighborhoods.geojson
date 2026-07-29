@@ -1,0 +1,75 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "Rạch Bắp", "source": "OpenStreetMap node 12695580128", "source_url": "https://www.openstreetmap.org/node/12695580128", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.5235062, 11.1293157]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Dòng Sỏi", "source": "OpenStreetMap node 12695580130", "source_url": "https://www.openstreetmap.org/node/12695580130", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.5362147, 11.1054523]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "An Thành", "source": "OpenStreetMap node 12695580131", "source_url": "https://www.openstreetmap.org/node/12695580131", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.5601649, 11.0806284]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Tân Lập", "source": "OpenStreetMap node 12695580132", "source_url": "https://www.openstreetmap.org/node/12695580132", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.5573099, 11.1430901]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Kiến Điền", "source": "OpenStreetMap node 12695580133", "source_url": "https://www.openstreetmap.org/node/12695580133", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.5824544, 11.1469857]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "An Mỹ", "source": "OpenStreetMap node 12695580136", "source_url": "https://www.openstreetmap.org/node/12695580136", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.5788105, 11.1185435]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Khu phố 3A", "source": "OpenStreetMap node 12695580141", "source_url": "https://www.openstreetmap.org/node/12695580141", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.6347943, 11.0978937]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Mỹ Thạnh", "source": "OpenStreetMap node 12695580149", "source_url": "https://www.openstreetmap.org/node/12695580149", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.609138, 11.1342113]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Mỹ Phước", "source": "OpenStreetMap node 12695580151", "source_url": "https://www.openstreetmap.org/node/12695580151", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.593825, 11.1517333]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Cầu Quan", "source": "OpenStreetMap node 12695580152", "source_url": "https://www.openstreetmap.org/node/12695580152", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.5834213, 11.1569749]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Phú Hòa", "source": "OpenStreetMap node 12695580154", "source_url": "https://www.openstreetmap.org/node/12695580154", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.6570415, 11.0664748]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Bến Đồn", "source": "OpenStreetMap node 12695580155", "source_url": "https://www.openstreetmap.org/node/12695580155", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.6798307, 11.1152653]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Tân Hưng", "source": "OpenStreetMap node 12697901755", "source_url": "https://www.openstreetmap.org/node/12697901755", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.6564412, 11.2570012]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Phú Thạnh", "source": "OpenStreetMap node 12697901756", "source_url": "https://www.openstreetmap.org/node/12697901756", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.6748965, 11.2411096]}
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "Khu phố Tây", "source": "OpenStreetMap node 12658400295", "source_url": "https://www.openstreetmap.org/node/12658400295", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.6978913, 10.8802812]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Phú Hội", "source": "OpenStreetMap node 12658400296", "source_url": "https://www.openstreetmap.org/node/12658400296", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7109843, 10.8787055]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Hòa Lân 1", "source": "OpenStreetMap node 12658400300", "source_url": "https://www.openstreetmap.org/node/12658400300", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7029394, 10.9586607]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Bình Giao", "source": "OpenStreetMap node 12658425303", "source_url": "https://www.openstreetmap.org/node/12658425303", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7072098, 10.9384178]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Nguyễn Trãi", "source": "OpenStreetMap node 12658425304", "source_url": "https://www.openstreetmap.org/node/12658425304", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7044964, 10.9026909]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Long Thới", "source": "OpenStreetMap node 12658425305", "source_url": "https://www.openstreetmap.org/node/12658425305", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.6975349, 10.8996397]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Vĩnh Phú", "source": "OpenStreetMap node 12658425306", "source_url": "https://www.openstreetmap.org/node/12658425306", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.6945314, 10.8853006]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Đông Nhì", "source": "OpenStreetMap node 12658425308", "source_url": "https://www.openstreetmap.org/node/12658425308", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7073211, 10.9081978]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Bình Hòa", "source": "OpenStreetMap node 12658425310", "source_url": "https://www.openstreetmap.org/node/12658425310", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7081717, 10.919431]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Bình Nhâm", "source": "OpenStreetMap node 12658425318", "source_url": "https://www.openstreetmap.org/node/12658425318", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.6964434, 10.9328146]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Đồng An 1", "source": "OpenStreetMap node 12658425322", "source_url": "https://www.openstreetmap.org/node/12658425322", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7213108, 10.8957883]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Bình Chuẩn 1", "source": "OpenStreetMap node 12658425331", "source_url": "https://www.openstreetmap.org/node/12658425331", "confidence": "high", "boundary_claim": false},
+      "geometry": {"type": "Point", "coordinates": [106.7238938, 10.9771071]}
+    }
+  ]
+}

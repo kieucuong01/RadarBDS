@@ -1,0 +1,52 @@
+{
+  "sources": [
+    {
+      "key": "current_boundaries",
+      "source_url": "static/maps/thuan-an/current-5-wards.geojson",
+      "license_name": "Open Data Commons Open Database License (ODbL) v1.0",
+      "license_url": "https://www.openstreetmap.org/copyright",
+      "snapshot_strategy": "repo_snapshot",
+      "snapshot_at": "2026-07-29"
+    },
+    {
+      "key": "legacy_boundaries",
+      "source_url": "config/map_products/thuan_an_legacy_boundaries.geojson",
+      "license_name": "Creative Commons Attribution 3.0 Unported with derived geometry notes",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "snapshot_strategy": "repo_snapshot",
+      "snapshot_at": "2026-07-29"
+    },
+    {
+      "key": "legacy_ward_centers",
+      "source_url": "config/map_products/thuan_an_legacy_ward_centers.geojson",
+      "license_name": "Creative Commons Attribution 3.0 Unported",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "snapshot_strategy": "repo_snapshot",
+      "snapshot_at": "2026-07-29"
+    },
+    {
+      "key": "osm_detail",
+      "source_url": "https://overpass-api.de/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A180%5D%5Bdate%3A%222026-07-29T00%3A00%3A00Z%22%5D%3B%28way%5B%22highway%22%5D%2810.84%2C106.60%2C11.02%2C106.80%29%3Bway%5B%22waterway%22%5D%2810.84%2C106.60%2C11.02%2C106.80%29%3Bnwr%5B%22amenity%22%5D%2810.84%2C106.60%2C11.02%2C106.80%29%3Bnwr%5B%22tourism%22%5D%2810.84%2C106.60%2C11.02%2C106.80%29%3Bnwr%5B%22place%22%5D%2810.84%2C106.60%2C11.02%2C106.80%29%3B%29%3Bout%20geom%3B",
+      "license_name": "Open Data Commons Open Database License (ODbL) v1.0",
+      "license_url": "https://www.openstreetmap.org/copyright",
+      "snapshot_strategy": "dated_query",
+      "snapshot_at": "2026-07-29T00:00:00Z"
+    },
+    {
+      "key": "font",
+      "source_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/bevietnampro/BeVietnamPro-Regular.ttf",
+      "license_name": "SIL Open Font License, Version 1.1",
+      "license_url": "https://github.com/google/fonts/tree/main/ofl/bevietnampro",
+      "snapshot_strategy": "fixed_url",
+      "snapshot_at": "2026-07-29"
+    },
+    {
+      "key": "font_semibold",
+      "source_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/bevietnampro/BeVietnamPro-SemiBold.ttf",
+      "license_name": "SIL Open Font License, Version 1.1",
+      "license_url": "https://github.com/google/fonts/tree/main/ofl/bevietnampro",
+      "snapshot_strategy": "fixed_url",
+      "snapshot_at": "2026-07-29"
+    }
+  ]
+}
