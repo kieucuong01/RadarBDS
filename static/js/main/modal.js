@@ -964,7 +964,16 @@ function openSignal(card) {
 
 function _openSignalFromData(d, opts = {}) {
   const modal = document.getElementById('signalModal');
-  modal.dataset.listingId = d.id;
+  const listingIdNumber = Number(d.id);
+  if (!Number.isSafeInteger(listingIdNumber) || listingIdNumber <= 0) return;
+  const listingId = String(listingIdNumber);
+  modal.dataset.listingId = listingId;
+  const actions = modal.querySelector('[data-listing-actions]');
+  if (actions) actions.dataset.listingId = listingId;
+  const locationSection = modal.querySelector('[data-detail-location]');
+  if (locationSection && window.RadarDetailLocationMap) {
+    window.RadarDetailLocationMap.unmount(locationSection);
+  }
   switchSignalPanel('desc');
 
   const imgs = d.primary ? [d.primary] : [];
@@ -1001,12 +1010,12 @@ function _openSignalFromData(d, opts = {}) {
   });
   updateSignalSummary(d);
 
-  document.getElementById('sm-zalo').dataset.listingId = d.id;
-  document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${d.id}`;
-  { const _d = document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${d.id}`; };
-  syncModalFavoriteButton(d.id);
+  document.getElementById('sm-zalo').dataset.listingId = listingId;
+  document.getElementById('sm-zalo').dataset.listingUrl = d.url || `/listing/${listingId}`;
+  { const _d = document.getElementById('sm-detail'); if (_d) _d.href = d.url || `/listing/${listingId}`; };
+  syncModalFavoriteButton(listingId);
 
-  loadSignalHistory(d.id, price, area, d.ward, {
+  loadSignalHistory(listingId, price, area, d.ward, {
     frontage_m: d.frontage,
     depth_m: d.depth,
     price_per_m2: d.ppm2,
@@ -1017,14 +1026,14 @@ function _openSignalFromData(d, opts = {}) {
     tho_cu_m2: d.thoCu,
     tho_cu_label: d.thoCuLabel,
   });
-  loadInvestmentMemo(d.id);
-  hydrateSignalDetail(d.id);
+  loadInvestmentMemo(listingId);
+  hydrateSignalDetail(listingId);
   const content = modal.querySelector('.signal-modal-content');
   if (content) content.scrollTop = 0;
   setSignalModalOpen(true);
   modal.style.display = 'flex';
   if (opts.pushHistory !== false) {
-    _pushSignalModalHistory(d.id);
+    _pushSignalModalHistory(listingId);
   }
 }
 
@@ -1216,6 +1225,7 @@ function toggleSignalHistoryRows(button) {
 
 async function loadSignalHistory(listingId, currentPrice, area, ward, currentMeta = {}) {
   // Chart/history elements only exist for admin tier. Comps table is always present.
+  const modal = document.getElementById('signalModal');
   const historyEl = document.getElementById('sm-price-history');
   const chartEl = document.getElementById('sm-history-chart');
   const compsBody = document.getElementById('sm-comps-body');
@@ -1228,6 +1238,7 @@ async function loadSignalHistory(listingId, currentPrice, area, ward, currentMet
     const res = await fetch(`/api/history/${listingId}`);
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     const data = await res.json();
+    if (modal && modal.dataset.listingId !== String(listingId)) return;
     const sameListingHistory = Array.isArray(data.history) ? data.history : [];
     const lotHistory = Array.isArray(data.lot_history) ? data.lot_history : [];
 

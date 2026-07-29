@@ -34,6 +34,40 @@ def test_detail_location_map_has_rendered_empty_and_retry_states():
     assert ".sm-location-copy" in css
 
 
+def test_signal_detail_assets_share_current_release_identity():
+    modal = _read("templates/index.html")
+    detail = _read("templates/listing_detail.html")
+    release = "signal-detail-regression-20260729"
+
+    for asset in (
+        "detail_location_map.js",
+        "signal_card.js",
+        "comparable_carousel.js",
+        "listing_detail_actions.js",
+    ):
+        needle = asset + "') }}?v=" + release
+        assert needle in modal
+        assert needle in detail
+
+    assert "modal.js') }}?v=" + release in modal
+    assert "modal.js') }}?v=favorite-listings-20260715" not in modal
+
+    for html in (modal, detail):
+        for asset in ("modal.css", "cards.css"):
+            matching_lines = [line for line in html.splitlines() if asset in line]
+            assert matching_lines
+            assert any(release in line for line in matching_lines)
+
+
+def test_modal_open_synchronizes_listing_state_and_uses_shared_adapters():
+    module = _read("static/js/main/modal.js")
+
+    assert "actions.dataset.listingId = listingId" in module
+    assert "RadarDetailLocationMap.unmount" in module
+    assert module.count("modal.dataset.listingId !== String(listingId)") >= 2
+    assert "RadarComparableCarousel.mount" in module
+
+
 def test_dashboard_feed_delegates_to_shared_signal_card_renderer():
     signals = _read("static/js/main/signals.js")
     index = _read("templates/index.html")
