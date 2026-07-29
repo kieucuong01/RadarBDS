@@ -1,7 +1,8 @@
 # Kiểm duyệt nguồn lớp quy hoạch trên bản đồ tin rao
 
 **Ngày kiểm duyệt:** 2026-07-29
-**Trạng thái phát hành:** `release_blocked`
+**Trạng thái overlay tự lưu trữ:** `release_blocked`
+**Chế độ phát hành đã được duyệt:** `official_gis_link_only`
 
 ## Phạm vi và điều kiện chấp nhận
 
@@ -13,6 +14,12 @@ quyền sao chép hoặc tái phân phối.
 
 Không dùng dữ liệu hình học từ website thương mại, tài liệu lấy ý kiến/dự thảo,
 API cần token bảo vệ hoặc endpoint xác thực không được công bố.
+
+Ngày 2026-07-29, người dùng duyệt phương án phát hành Maps chỉ liên kết sang
+[cổng GIS quy hoạch chính thức của TP.HCM](https://gisxaydung.tphcm.gov.vn/tracuuttqh).
+Radar BDS không truyền tọa độ, bộ lọc, từ khóa, listing ID hoặc địa chỉ qua URL;
+không fetch, proxy, iframe hay lưu nội dung GIS. Phạm vi này cho phép phát hành
+core Maps nhưng không thay đổi trạng thái của bốn hiện vật overlay bên dưới.
 
 ## Kết quả bốn hiện vật bắt buộc
 
@@ -54,6 +61,8 @@ phép Radar BDS tạo và phục vụ raster dẫn xuất có ghi nguồn. Sau �
 gốc vào vùng `.local`, tính SHA-256, tạo điểm khống chế và chạy cổng sai số/căn
 chỉnh trước khi thêm công tắc quy hoạch vào giao diện.
 
-Theo cổng phát hành hiện tại, kế hoạch triển khai lớp quy hoạch dừng tại tài
-liệu kiểm duyệt và validator. Không tạo manifest công khai, WebP, control point
-hay điều khiển UI cho đến khi đủ cả bốn hiện vật.
+Kế hoạch triển khai lớp overlay tự lưu trữ dừng tại tài liệu kiểm duyệt và
+validator. Không tạo manifest công khai, WebP, control point hay điều khiển lớp
+quy hoạch cho đến khi đủ cả bốn hiện vật. Core Maps được phép phát hành với CTA
+link-only đã duyệt; CTA phải ghi rõ đây là cổng ngoài và thông tin không thay
+thế xác nhận pháp lý cho từng thửa đất.

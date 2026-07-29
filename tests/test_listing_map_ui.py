@@ -48,6 +48,29 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     )
 
 
+def test_workspace_links_to_official_gis_without_hosted_planning_layers():
+    response = _client().get("/")
+
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'id="listingMapOfficialGisLink"' in html
+    assert (
+        'href="https://gisxaydung.tphcm.gov.vn/tracuuttqh"'
+        in html
+    )
+    assert 'target="_blank"' in html
+    assert 'rel="noopener noreferrer"' in html
+    assert "Quy hoạch sử dụng đất &amp; xây dựng" in html
+    assert "Mở GIS quy hoạch chính thức" in html
+    assert "không thay thế xác nhận pháp lý cho từng thửa đất" in html
+    for forbidden_hook in (
+        "listingMapPlanningControls",
+        "listingMapPlanningLegend",
+        "RADAR_LISTING_PLANNING_MANIFEST",
+    ):
+        assert forbidden_hook not in html
+
+
 def test_saved_listings_route_omits_map_launcher_and_workspace():
     response = _client().get("/bds-da-luu")
 
@@ -115,3 +138,23 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     assert "max-height: min(47vh, 410px)" in styles
     assert "min-height: 44px" in styles
     assert "@media (prefers-reduced-motion: reduce)" in styles
+
+
+def test_official_gis_tracking_is_mode_only_and_does_not_deep_link():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    script = (root / "static/js/main/listing_map.js").read_text(
+        encoding="utf-8"
+    )
+
+    assert '"listing_map_official_gis_opened"' in script
+    tracking_call = re.search(
+        r'emitTrack\("listing_map_official_gis_opened",\s*\{([^}]*)\}\)',
+        script,
+        re.S,
+    )
+    assert tracking_call
+    assert re.findall(r"([a-z_]+)\s*:", tracking_call.group(1)) == ["mode"]
+    assert "listingMapOfficialGisLink" in script
+    assert "gisxaydung.tphcm.gov.vn" not in script

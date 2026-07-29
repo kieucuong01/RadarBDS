@@ -1,5 +1,11 @@
 # Listing Planning Overlays Implementation Plan
 
+> **Scope override approved 2026-07-29:** The user approved releasing the
+> listing-map core with a link to the official HCMC GIS only. This overlay plan
+> remains blocked and unexecuted after Task 1. Its four-artifact no-release
+> gate applies to hosted overlays, not to the separately specified
+> `official_gis_link_only` release.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add independently toggleable, source-verified land-use and construction-planning overlays for Thủ Dầu Một and Bến Cát to the listing-map workspace, then complete the production release.

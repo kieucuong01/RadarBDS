@@ -94,3 +94,15 @@ def test_tracking_context_is_strictly_allowlisted():
         "base_layer_id": "satellite",
         "close_reason": "button",
     }
+
+
+def test_official_gis_tracking_context_strips_outbound_and_location_data():
+    result = _run_node(
+        "mapApi.safeTrackingContext({"
+        "mode:'all',"
+        "official_gis_url:'https://gisxaydung.tphcm.gov.vn/tracuuttqh',"
+        "lat:10.99,lng:106.67,location_key:'road:secret',keyword:'secret'"
+        "})"
+    )
+
+    assert result == {"mode": "all"}

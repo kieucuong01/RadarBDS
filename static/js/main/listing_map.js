@@ -930,6 +930,14 @@
     if (bound || !doc || !win) return;
     bound = true;
     doc.addEventListener("keydown", onKeydown);
+    var officialGisLink = doc.getElementById("listingMapOfficialGisLink");
+    if (officialGisLink) {
+      officialGisLink.addEventListener("click", function () {
+        emitTrack("listing_map_official_gis_opened", {
+          mode: state.snapshot && state.snapshot.mode
+        });
+      });
+    }
     win.addEventListener("popstate", function () {
       if (state.open) {
         close({
