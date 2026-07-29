@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-29
 
-**Status:** Approved in conversation; written-spec review pending
+**Status:** Approved
 
 **Surfaces:**
 
