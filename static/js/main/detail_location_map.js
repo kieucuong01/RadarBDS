@@ -47,6 +47,25 @@
     };
   }
 
+  function fullscreenAvailable(canvas, doc) {
+    return Boolean(
+      canvas
+      && typeof canvas.requestFullscreen === 'function'
+      && doc
+      && typeof doc.exitFullscreen === 'function'
+    );
+  }
+
+  async function toggleFullscreen(canvas, doc) {
+    if (!fullscreenAvailable(canvas, doc)) return null;
+    if (doc.fullscreenElement === canvas) {
+      await doc.exitFullscreen();
+      return false;
+    }
+    await canvas.requestFullscreen();
+    return true;
+  }
+
   function vendorConfig() {
     return (root && root.RADAR_MAP_VENDOR) || {};
   }
@@ -132,10 +151,66 @@
 
   function unmount(section) {
     if (!section) return;
+    if (section._radarDetailFullscreenCleanup) {
+      section._radarDetailFullscreenCleanup();
+      section._radarDetailFullscreenCleanup = null;
+    }
     if (section._radarDetailMap) {
       section._radarDetailMap.remove();
       section._radarDetailMap = null;
     }
+  }
+
+  function addFullscreenControl(L, map, canvas, section) {
+    var doc = canvas && canvas.ownerDocument;
+    if (!fullscreenAvailable(canvas, doc)) return null;
+
+    var control = L.control({ position: 'topleft' });
+    var button = null;
+
+    function updateState() {
+      if (!button) return;
+      var active = doc.fullscreenElement === canvas;
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      button.setAttribute(
+        'aria-label',
+        active ? 'Thoát toàn màn hình bản đồ' : 'Toàn màn hình bản đồ'
+      );
+      button.title = active ? 'Thoát toàn màn hình bản đồ' : 'Toàn màn hình bản đồ';
+      setTimeout(function () {
+        if (section._radarDetailMap === map) map.invalidateSize();
+      }, 0);
+    }
+
+    control.onAdd = function () {
+      var container = L.DomUtil.create('div', 'leaflet-bar radar-map-fullscreen-control');
+      button = L.DomUtil.create('button', 'radar-map-fullscreen-button', container);
+      button.type = 'button';
+      button.setAttribute('data-map-fullscreen', '');
+      button.setAttribute('aria-label', 'Toàn màn hình bản đồ');
+      button.setAttribute('aria-pressed', 'false');
+      button.title = 'Toàn màn hình bản đồ';
+      button.innerHTML = '<span aria-hidden="true">⛶</span>';
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.disableScrollPropagation(container);
+      L.DomEvent.on(button, 'click', function (event) {
+        L.DomEvent.stop(event);
+        toggleFullscreen(canvas, doc).catch(function () {
+          updateState();
+        });
+      });
+      return container;
+    };
+
+    control.addTo(map);
+    doc.addEventListener('fullscreenchange', updateState);
+    section._radarDetailFullscreenCleanup = function () {
+      doc.removeEventListener('fullscreenchange', updateState);
+      if (doc.fullscreenElement === canvas) {
+        doc.exitFullscreen().catch(function () {});
+      }
+    };
+    return control;
   }
 
   function mount(options) {
@@ -193,6 +268,7 @@
         position: 'topright',
         collapsed: true
       }).addTo(map);
+      addFullscreenControl(L, map, canvas, section);
       L.marker([location.lat, location.lng], {
         title: copy.title,
         alt: copy.title
@@ -220,6 +296,8 @@
   return {
     precisionCopy: precisionCopy,
     normalizeLocation: normalizeLocation,
+    fullscreenAvailable: fullscreenAvailable,
+    toggleFullscreen: toggleFullscreen,
     loadLeaflet: loadLeaflet,
     mount: mount,
     unmount: unmount

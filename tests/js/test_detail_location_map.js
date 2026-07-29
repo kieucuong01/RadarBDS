@@ -36,4 +36,28 @@ assert.equal(api.normalizeLocation({ lat: 200, lng: 106, precision: 'road' }), n
 assert.equal(api.normalizeLocation({ lat: 10, lng: 106, precision: 'guess' }), null);
 assert.equal(api.normalizeLocation(null), null);
 
-console.log('detail location map contract: ok');
+(async () => {
+  let entered = 0;
+  let exited = 0;
+  const canvas = {
+    requestFullscreen: async () => { entered += 1; },
+  };
+  const doc = {
+    fullscreenElement: null,
+    exitFullscreen: async () => { exited += 1; },
+  };
+
+  assert.equal(api.fullscreenAvailable(canvas, doc), true);
+  assert.equal(await api.toggleFullscreen(canvas, doc), true);
+  assert.equal(entered, 1);
+
+  doc.fullscreenElement = canvas;
+  assert.equal(await api.toggleFullscreen(canvas, doc), false);
+  assert.equal(exited, 1);
+  assert.equal(api.fullscreenAvailable({}, doc), false);
+
+  console.log('detail location map contract: ok');
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

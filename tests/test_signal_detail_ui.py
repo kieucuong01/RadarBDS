@@ -30,7 +30,11 @@ def test_detail_location_map_has_rendered_empty_and_retry_states():
 
     assert "Chưa xác định được vị trí đủ tin cậy" in module
     assert "Không tải được bản đồ vị trí" in module
+    assert "data-map-fullscreen" in module
+    assert "Toàn màn hình bản đồ" in module
+    assert "fullscreenchange" in module
     assert ".sm-location-map" in css
+    assert ".sm-location-map:fullscreen" in css
     assert ".sm-location-copy" in css
 
 
