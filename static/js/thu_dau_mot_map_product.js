@@ -9,6 +9,33 @@
 })(function () {
   "use strict";
 
+  var DEFAULT_TRACKING_PREFIX = "thu_dau_mot_map";
+  var DEFAULT_ACTIONS = {
+    preview: "thu_dau_mot_map_preview_selected",
+    purchase: "thu_dau_mot_map_purchase_clicked",
+    dashboard: "thu_dau_mot_map_dashboard_clicked"
+  };
+
+  function trackingPrefix(root) {
+    var candidate = String(root.dataset.trackingPrefix || "").trim();
+    if (/^[a-z0-9_]+_map$/.test(candidate)) return candidate;
+    return DEFAULT_TRACKING_PREFIX;
+  }
+
+  function trackingAction(root, suffix) {
+    var prefix = trackingPrefix(root);
+    if (prefix === DEFAULT_TRACKING_PREFIX && DEFAULT_ACTIONS[suffix]) {
+      return DEFAULT_ACTIONS[suffix];
+    }
+    return prefix + "_" + (
+      suffix === "preview"
+        ? "preview_selected"
+        : suffix === "purchase"
+          ? "purchase_clicked"
+          : "dashboard_clicked"
+    );
+  }
+
   function setEdition(root, edition) {
     var normalized = edition === "current" ? "current" : "legacy";
     root.querySelectorAll("[data-product-edition]").forEach(function (button) {
@@ -43,7 +70,7 @@
           ? "current"
           : "legacy";
         setEdition(root, edition);
-        emitTrack(win, "thu_dau_mot_map_preview_selected", {
+        emitTrack(win, trackingAction(root, "preview"), {
           edition: edition,
           source_surface: "preview_switch"
         });
@@ -56,7 +83,7 @@
         if (purchase.disabled || purchase.getAttribute("aria-disabled") === "true") {
           return;
         }
-        emitTrack(win, "thu_dau_mot_map_purchase_clicked", {
+        emitTrack(win, trackingAction(root, "purchase"), {
           source_surface: "product_offer"
         });
       });
@@ -65,7 +92,7 @@
     var dashboard = root.querySelector("[data-product-dashboard]");
     if (dashboard) {
       dashboard.addEventListener("click", function () {
-        emitTrack(win, "thu_dau_mot_map_dashboard_clicked", {
+        emitTrack(win, trackingAction(root, "dashboard"), {
           source_surface: "bottom_dashboard"
         });
       });
@@ -86,6 +113,7 @@
 
   return {
     setEdition: setEdition,
+    trackingAction: trackingAction,
     init: init
   };
 });

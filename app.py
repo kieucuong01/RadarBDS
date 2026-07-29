@@ -82,6 +82,10 @@ from config.binh_duong_map import (
     BINH_DUONG_LEGACY_AREAS,
     BINH_DUONG_MAP_PAGE,
 )
+from config.city_map_products import (
+    CITY_MAP_PRODUCTS,
+    get_city_map_page,
+)
 from config.thu_dau_mot_map_product import THU_DAU_MOT_MAP_PRODUCT_PAGE
 
 mimetypes.add_type("image/webp", ".webp")
@@ -1838,7 +1842,7 @@ def _breadcrumb_schema(breadcrumbs: list[dict]) -> dict:
     }
 
 
-def _thu_dau_mot_map_product_schema(
+def city_map_product_schema(
     page: dict,
     product,
     availability,
@@ -1893,14 +1897,14 @@ def _thu_dau_mot_map_product_schema(
                 "mainEntity": {
                     "@type": "Map",
                     "@id": f"{canonical_url}#interactive-map",
-                    "name": "Bản đồ TP Thủ Dầu Một tương tác",
+                    "name": f"Bản đồ TP {page['city_name']} tương tác",
                     "description": page["answer_block"],
                 },
             },
             {
                 "@type": "Product",
                 "@id": f"{canonical_url}#product",
-                "name": "Bộ bản đồ TP Thủ Dầu Một",
+                "name": f"Bộ bản đồ TP {page['city_name']}",
                 "description": page["description"],
                 "image": [preview_url],
                 "sku": f"{product.slug}-v{product.version}",
@@ -1920,18 +1924,32 @@ def _thu_dau_mot_map_product_schema(
             },
             {
                 "@type": "Dataset",
-                "@id": f"{canonical_url}#dataset-legacy-14-wards",
-                "name": "GeoJSON 14 phường cũ của TP Thủ Dầu Một",
+                "@id": (
+                    f"{canonical_url}#dataset-legacy-"
+                    f"{len(legacy_areas)}-{page['dataset_id_suffix']}"
+                ),
+                "name": (
+                    f"GeoJSON {len(legacy_areas)} {page['legacy_unit_label']} của "
+                    f"TP {page['city_name']}"
+                ),
                 "description": (
-                    "Lớp ranh 14 phường cũ của TP Thủ Dầu Một trước năm 2025, "
-                    "dùng để tra cứu tham khảo trên Radar BDS."
+                    f"Lớp ranh {len(legacy_areas)} {page['legacy_unit_label']} của "
+                    f"TP {page['city_name']} trước năm 2025, dùng để tra cứu "
+                    "tham khảo trên Radar BDS."
                 ),
                 "dateModified": page["updated_at"],
-                "spatialCoverage": {"@type": "Place", "name": "TP Thủ Dầu Một"},
+                "spatialCoverage": {
+                    "@type": "Place",
+                    "name": f"TP {page['city_name']}",
+                },
                 "license": f"{canonical_url}#license",
                 "isBasedOn": [
                     "Stanford Geospatial Center / GADM v2.8 snapshot",
-                    "Radar BDS derived boundary review",
+                    *(
+                        ["Radar BDS derived boundary review"]
+                        if page["derived_legacy_units"]
+                        else []
+                    ),
                 ],
                 "distribution": [
                     {
@@ -1943,14 +1961,24 @@ def _thu_dau_mot_map_product_schema(
             },
             {
                 "@type": "Dataset",
-                "@id": f"{canonical_url}#dataset-current-5-wards",
-                "name": "GeoJSON 5 phường hiện tại của TP Thủ Dầu Một",
+                "@id": (
+                    f"{canonical_url}#dataset-current-"
+                    f"{len(current_areas)}-{page['dataset_id_suffix']}"
+                ),
+                "name": (
+                    f"GeoJSON {len(current_areas)} phường hiện tại của "
+                    f"TP {page['city_name']}"
+                ),
                 "description": (
-                    "Lớp ranh 5 phường hiện tại của TP Thủ Dầu Một sau sắp xếp "
-                    "năm 2025, dùng để tra cứu tham khảo trên Radar BDS."
+                    f"Lớp ranh {len(current_areas)} phường hiện tại của "
+                    f"TP {page['city_name']} sau sắp xếp năm 2025, dùng để "
+                    "tra cứu tham khảo trên Radar BDS."
                 ),
                 "dateModified": page["updated_at"],
-                "spatialCoverage": {"@type": "Place", "name": "TP Thủ Dầu Một"},
+                "spatialCoverage": {
+                    "@type": "Place",
+                    "name": f"TP {page['city_name']}",
+                },
                 "license": f"{canonical_url}#license",
                 "isBasedOn": [
                     "OpenStreetMap contributors",
@@ -1965,12 +1993,18 @@ def _thu_dau_mot_map_product_schema(
                 ],
             },
             area_item_list(
-                "14 phường cũ của TP Thủ Dầu Một",
+                (
+                    f"{len(legacy_areas)} {page['legacy_unit_label']} của "
+                    f"TP {page['city_name']}"
+                ),
                 "legacy",
                 legacy_areas,
             ),
             area_item_list(
-                "5 phường hiện tại của TP Thủ Dầu Một",
+                (
+                    f"{len(current_areas)} phường hiện tại của "
+                    f"TP {page['city_name']}"
+                ),
                 "current",
                 current_areas,
             ),
@@ -2337,21 +2371,26 @@ def _map_areas_from_static_geojson(static_url: str) -> list[dict]:
     return areas
 
 
-_THU_DAU_MOT_GEOJSON_FILES = {
-    "truoc-sap-nhap": "legacy-14-wards.geojson",
-    "sau-sap-nhap": "current-5-wards.geojson",
-}
-
-
-def thu_dau_mot_map_geojson(edition: str):
-    filename = _THU_DAU_MOT_GEOJSON_FILES.get(edition)
-    if filename is None:
+def city_map_geojson(city_slug: str, edition: str):
+    try:
+        page = get_city_map_page(city_slug)
+    except KeyError:
         abort(404)
-    static_dir = Path(__file__).parent / "static" / "maps" / "thu-dau-mot"
+    source_url = {
+        "truoc-sap-nhap": page["legacy_geojson_url"],
+        "sau-sap-nhap": page["current_geojson_url"],
+    }.get(edition)
+    if source_url is None:
+        abort(404)
+    relative_path = Path(source_url.lstrip("/"))
+    expected_parent = Path("static") / "maps" / page["city_slug"]
+    if relative_path.parent != expected_parent:
+        abort(404)
+    static_dir = Path(__file__).parent / expected_parent
     response = make_response(
         send_from_directory(
             static_dir,
-            filename,
+            relative_path.name,
             mimetype="application/geo+json",
             max_age=86400,
         )
@@ -2361,13 +2400,20 @@ def thu_dau_mot_map_geojson(edition: str):
     return response
 
 
-def thu_dau_mot_map_product_page():
-    page = deepcopy(THU_DAU_MOT_MAP_PRODUCT_PAGE)
+def thu_dau_mot_map_geojson(edition: str):
+    return city_map_geojson("thu-dau-mot", edition)
+
+
+def city_map_product_page(city_slug: str):
+    try:
+        page = get_city_map_page(city_slug)
+    except KeyError:
+        abort(404)
     page["breadcrumbs"] = _page_breadcrumbs(page)
     page["local_links"] = [dict(link) for link in page["local_links"]]
     legacy_areas = _map_areas_from_static_geojson(page["legacy_geojson_url"])
     current_areas = _map_areas_from_static_geojson(page["current_geojson_url"])
-    product = get_digital_product("thu-dau-mot-map-bundle")
+    product = get_digital_product(page["product_slug"])
     commerce_settings = get_digital_product_commerce_settings()
     if (
         commerce_settings.ready_for_checkout
@@ -2401,7 +2447,7 @@ def thu_dau_mot_map_product_page():
         current_areas=current_areas,
         display_price=f"{product.price_vnd:,}".replace(",", "."),
         site_meta=site_meta,
-        schema_graph=_thu_dau_mot_map_product_schema(
+        schema_graph=city_map_product_schema(
             page,
             product,
             availability,
@@ -2409,10 +2455,12 @@ def thu_dau_mot_map_product_page():
             current_areas,
         ),
         active_nav="ban-do-binh-duong",
-        dashboard_signal_href=(
-            "/?tab=signals&city=Th%E1%BB%A7%20D%E1%BA%A7u%20M%E1%BB%99t"
-        ),
+        dashboard_signal_href=page["dashboard_signal_href"],
     )
+
+
+def thu_dau_mot_map_product_page():
+    return city_map_product_page("thu-dau-mot")
 
 
 def planning_detail_page(slug: str):

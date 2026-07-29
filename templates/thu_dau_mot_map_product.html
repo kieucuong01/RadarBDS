@@ -36,7 +36,17 @@
 <body class="seo-page planning-page binh-duong-map-page tdm-product-page">
   {% include "partials/seo_header.html" %}
 
-  <main id="main-content" class="tdm-product-main" data-thu-dau-mot-map-product>
+  <main
+    id="main-content"
+    class="tdm-product-main"
+    data-thu-dau-mot-map-product
+    data-product-slug="{{ page.product_slug }}"
+    data-page-slug="{{ page.page_slug }}"
+    data-page-path="{{ page.path }}"
+    data-checkout-path="{{ page.checkout_path }}"
+    data-tracking-prefix="{{ page.tracking_prefix }}"
+  >
+    {% set legacy_unit_label = page.legacy_unit_label %}
     <header class="tdm-product-hero">
       <div class="seo-shell">
         <nav class="planning-breadcrumbs" aria-label="Breadcrumb">
@@ -54,24 +64,24 @@
             <h1>{{ page.hero_title }}</h1>
             <p class="tdm-product-lead">{{ page.hero_text }}</p>
             <ul class="tdm-product-proof-list">
-              <li>Bản trước sáp nhập có 14 ranh phường cũ ở mức tham khảo.</li>
-              <li>Bản hiện tại có đúng 5 ranh phường đã xác minh: Thủ Dầu Một, Phú Lợi, Chánh Hiệp, Bình Dương và Phú An.</li>
+              <li>Bản trước sáp nhập có {{ page.legacy_count }} ranh {{ legacy_unit_label }} ở mức tham khảo.</li>
+              <li>Bản hiện tại có đúng {{ page.current_count }} ranh phường đã xác minh: {{ page.current_names_label }}.</li>
             </ul>
             <p class="tdm-product-answer-block">{{ page.answer_block }}</p>
             <div class="bd-map-hero-actions tdm-product-hero-actions">
-              <a class="seo-button seo-button-primary" href="#ban-do-tuong-tac" data-track-cta="thu_dau_mot_map_hero_map">Mở bản đồ miễn phí</a>
-              <a class="seo-button seo-button-secondary" href="{{ dashboard_signal_href }}" data-track-cta="thu_dau_mot_map_hero_dashboard">Lọc tin Thủ Dầu Một</a>
+              <a class="seo-button seo-button-primary" href="#ban-do-tuong-tac" data-track-cta="{{ page.tracking_prefix }}_hero_map">Mở bản đồ miễn phí</a>
+              <a class="seo-button seo-button-secondary" href="{{ dashboard_signal_href }}" data-track-cta="{{ page.tracking_prefix }}_hero_dashboard">{{ page.dashboard_label }}</a>
             </div>
           </div>
 
           <div class="tdm-product-preview-card" aria-label="Bản xem trước có watermark">
             <figure data-product-preview="legacy">
-              <img src="{{ page.preview_before }}" alt="Bản xem trước có watermark với 14 ranh phường cũ tham khảo trước năm 2025" width="1600" height="1132" decoding="async" fetchpriority="high">
-              <figcaption>Trước năm 2025 · 14 ranh phường cũ tham khảo</figcaption>
+              <img src="{{ page.preview_before }}" alt="Bản xem trước có watermark với {{ page.legacy_count }} ranh {{ legacy_unit_label }} của {{ page.city_name }} trước năm 2025" width="1600" height="1132" decoding="async" fetchpriority="high">
+              <figcaption>Trước năm 2025 · {{ page.legacy_count }} ranh {{ legacy_unit_label }} tham khảo</figcaption>
             </figure>
             <figure data-product-preview="current" hidden>
-              <img src="{{ page.preview_after }}" alt="Bản xem trước có watermark với 5 ranh phường hiện tại" width="1600" height="1132" decoding="async" loading="lazy">
-              <figcaption>Hiện tại · 5 ranh phường đã xác minh</figcaption>
+              <img src="{{ page.preview_after }}" alt="Bản xem trước có watermark với {{ page.current_count }} ranh phường hiện tại của {{ page.city_name }}" width="1600" height="1132" decoding="async" loading="lazy">
+              <figcaption>Hiện tại · {{ page.current_count }} ranh phường đã xác minh</figcaption>
             </figure>
           </div>
         </div>
@@ -82,7 +92,7 @@
       <div class="planning-section-heading">
         <div>
           <p class="planning-kicker">Tra cứu miễn phí</p>
-          <h2 id="ban-do-tuong-tac-title">Bản đồ TP Thủ Dầu Một tương tác</h2>
+          <h2 id="ban-do-tuong-tac-title">Bản đồ TP {{ page.city_name }} tương tác</h2>
         </div>
         <p>Chọn bản trước sáp nhập hoặc sau sáp nhập, đổi nền phố/vệ tinh, bấm vào từng phường để xem thông tin và mở dashboard lọc tin đang bán.</p>
       </div>
@@ -93,16 +103,16 @@
         data-default-layer="{{ page.default_layer }}"
         data-legacy-geojson="{{ page.legacy_geojson_url }}"
         data-current-geojson="{{ page.current_geojson_url }}"
-        data-legacy-selection-name="TP Thủ Dầu Một trước sáp nhập"
-        data-legacy-selection-type="14 phường cũ trước năm 2025"
-        data-legacy-status="Đang hiển thị 14 phường cũ của TP Thủ Dầu Một."
+        data-legacy-selection-name="TP {{ page.city_name }} trước sáp nhập"
+        data-legacy-selection-type="{{ page.legacy_count }} {{ legacy_unit_label }} trước năm 2025"
+        data-legacy-status="Đang hiển thị {{ page.legacy_count }} {{ legacy_unit_label }} của TP {{ page.city_name }}."
         data-legacy-cta-href="{{ dashboard_signal_href }}"
-        data-legacy-cta-label="Lọc tin Thủ Dầu Một"
-        data-current-selection-name="TP Thủ Dầu Một sau sáp nhập"
-        data-current-selection-type="5 phường hiện tại"
-        data-current-status="Đang hiển thị 5 phường hiện tại của TP Thủ Dầu Một."
+        data-legacy-cta-label="{{ page.dashboard_label }}"
+        data-current-selection-name="TP {{ page.city_name }} sau sáp nhập"
+        data-current-selection-type="{{ page.current_count }} phường hiện tại"
+        data-current-status="Đang hiển thị {{ page.current_count }} phường hiện tại của TP {{ page.city_name }}."
         data-current-cta-href="{{ dashboard_signal_href }}"
-        data-current-cta-label="Lọc tin Thủ Dầu Một"
+        data-current-cta-label="{{ page.dashboard_label }}"
       >
         <div class="bd-map-toolbar">
           <div class="bd-map-control-group" role="group" aria-label="Chọn phiên bản bản đồ">
@@ -110,11 +120,11 @@
             <div class="bd-map-control-buttons">
               <button type="button" data-map-layer="legacy" aria-pressed="true">
                 <strong>Trước sáp nhập</strong>
-                <span>14 phường cũ</span>
+                <span>{{ page.legacy_count }} {{ legacy_unit_label }}</span>
               </button>
               <button type="button" data-map-layer="current" aria-pressed="false">
                 <strong>Sau sáp nhập</strong>
-                <span>5 phường hiện tại</span>
+                <span>{{ page.current_count }} phường hiện tại</span>
               </button>
             </div>
           </div>
@@ -139,14 +149,14 @@
         <aside class="bd-map-selection" data-binh-duong-map-selection aria-live="polite">
           <div class="bd-map-selection-heading">
             <p class="planning-kicker">Khu vực đang chọn</p>
-            <h3 data-map-selection-name>TP Thủ Dầu Một</h3>
-            <p class="bd-map-selection-type" data-map-selection-type>14 phường cũ trước sáp nhập</p>
+            <h3 data-map-selection-name>TP {{ page.city_name }}</h3>
+            <p class="bd-map-selection-type" data-map-selection-type>{{ page.legacy_count }} {{ legacy_unit_label }} trước sáp nhập</p>
           </div>
           <p class="bd-map-selection-summary" data-map-selection-summary>Chọn một ranh trên bản đồ hoặc trong danh sách để xem nhanh khu vực.</p>
           <dl>
             <div>
               <dt>Nhóm địa bàn</dt>
-              <dd data-map-selection-group>Thủ Dầu Một</dd>
+              <dd data-map-selection-group>{{ page.city_name }}</dd>
             </div>
             <div data-map-selection-former-row hidden>
               <dt>Được hình thành từ</dt>
@@ -154,7 +164,7 @@
             </div>
           </dl>
           <div class="bd-map-selection-actions">
-            <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-map-selection-cta data-track-cta="thu_dau_mot_map_dashboard">Lọc tin đang bán</a>
+            <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-map-selection-cta data-track-cta="{{ page.tracking_prefix }}_dashboard">{{ page.dashboard_label }}</a>
             <button type="button" class="bd-map-copy-link" data-map-copy-link>Sao chép liên kết khu vực</button>
             <p class="bd-map-attribution">Nền bản đồ © OpenStreetMap/Esri. Ranh cũ là dữ liệu tham khảo, không thay thế hồ sơ địa chính.</p>
           </div>
@@ -162,11 +172,11 @@
 
         <div class="bd-map-workspace">
           <div class="bd-map-canvas-wrap" data-binh-duong-map-fullscreen-target>
-            <button class="bd-map-fullscreen-button" type="button" data-binh-duong-map-fullscreen aria-controls="thu-dau-mot-map-canvas" aria-pressed="false">
+            <button class="bd-map-fullscreen-button" type="button" data-binh-duong-map-fullscreen aria-controls="{{ page.city_slug }}-map-canvas" aria-pressed="false">
               <span aria-hidden="true">⛶</span>
               <span data-map-fullscreen-label>Toàn màn hình</span>
             </button>
-            <div id="thu-dau-mot-map-canvas" class="bd-map-canvas" data-binh-duong-map-canvas role="region" aria-label="Bản đồ TP Thủ Dầu Một tương tác"></div>
+            <div id="{{ page.city_slug }}-map-canvas" class="bd-map-canvas" data-binh-duong-map-canvas role="region" aria-label="Bản đồ TP {{ page.city_name }} tương tác"></div>
             <div class="bd-map-fallback" data-binh-duong-map-fallback hidden>
               <strong>Chưa tải được bản đồ tương tác.</strong>
               <p>Bạn vẫn có thể tra cứu danh sách phường bên dưới và mở dashboard lọc tin.</p>
@@ -177,7 +187,7 @@
 
         <div class="planning-source-strip bd-map-map-note">
           <strong>Lưu ý.</strong>
-          <span>Hòa Phú và Phú Tân trong bản trước sáp nhập là ranh suy luận biên tập từ phần dư hình học. Dùng để tra cứu định hướng, không dùng như hồ sơ pháp lý.</span>
+          <span>{{ page.derived_note }}</span>
         </div>
       </div>
     </section>
@@ -186,17 +196,17 @@
       <div class="planning-section-heading">
         <div>
           <p class="planning-kicker">Trước sáp nhập</p>
-          <h2 id="danh-sach-phuong-cu">14 phường cũ của TP Thủ Dầu Một</h2>
+          <h2 id="danh-sach-phuong-cu">{{ page.legacy_count }} {{ legacy_unit_label }} của TP {{ page.city_name }}</h2>
         </div>
         <p>Bấm “Hiện trên bản đồ” để định vị nhanh ranh phường cũ.</p>
       </div>
       <div class="tdm-product-directory-tools" role="search">
-        <label for="tdm-map-area-search">Tìm phường hoặc khu vực</label>
+        <label for="{{ page.city_slug }}-map-area-search">Tìm phường hoặc khu vực</label>
         <div>
-          <input id="tdm-map-area-search" type="search" inputmode="search" autocomplete="off" placeholder="Ví dụ: Phú Tân, Phú An, Chánh Hiệp..." aria-label="Tìm phường Thủ Dầu Một" data-map-area-search>
+          <input id="{{ page.city_slug }}-map-area-search" type="search" inputmode="search" autocomplete="off" placeholder="Ví dụ: {{ page.search_examples }}..." aria-label="{{ page.search_aria_label }}" data-map-area-search>
           <button type="button" data-map-search-reset>Đặt lại</button>
         </div>
-        <p data-map-search-status aria-live="polite">Đang hiển thị 19 khu vực.</p>
+        <p data-map-search-status aria-live="polite">Đang hiển thị {{ page.legacy_count + page.current_count }} khu vực.</p>
       </div>
       <div class="bd-map-legacy-grid">
         {% for area in legacy_areas %}
@@ -211,7 +221,7 @@
           </div>
           <div class="bd-map-area-actions">
             <button type="button" data-map-area-button data-layer="legacy" data-area-slug="{{ area.slug }}">Hiện trên bản đồ</button>
-            <a href="{{ area.dashboard_href }}" aria-label="{{ area.dashboard_label }}" data-track-cta="thu_dau_mot_map_dashboard">Lọc tin</a>
+            <a href="{{ area.dashboard_href }}" aria-label="{{ area.dashboard_label }}" data-track-cta="{{ page.tracking_prefix }}_dashboard">Lọc tin</a>
           </div>
         </article>
         {% endfor %}
@@ -223,7 +233,7 @@
       <div class="planning-section-heading">
         <div>
           <p class="planning-kicker">Sau sáp nhập</p>
-          <h2 id="danh-sach-phuong-moi">5 phường hiện tại của TP Thủ Dầu Một</h2>
+          <h2 id="danh-sach-phuong-moi">{{ page.current_count }} phường hiện tại của TP {{ page.city_name }}</h2>
         </div>
         <p>Lớp này dùng ranh đã xác minh trong bản đồ Bình Dương hiện tại.</p>
       </div>
@@ -237,7 +247,7 @@
           </div>
           <div class="bd-map-area-actions">
             <button type="button" data-map-area-button data-layer="current" data-area-slug="{{ area.slug }}">Hiện trên bản đồ</button>
-            <a href="{{ area.dashboard_href }}" aria-label="{{ area.dashboard_label }}" data-track-cta="thu_dau_mot_map_dashboard">Lọc tin</a>
+            <a href="{{ area.dashboard_href }}" aria-label="{{ area.dashboard_label }}" data-track-cta="{{ page.tracking_prefix }}_dashboard">Lọc tin</a>
           </div>
         </article>
         {% endfor %}
@@ -246,7 +256,7 @@
 
     <section class="seo-shell tdm-product-repeat-offer" aria-label="Mua bộ bản đồ">
       <div>
-        <h2>Bộ bản đồ TP Thủ Dầu Một · {{ display_price }}đ</h2>
+        <h2>Bộ bản đồ TP {{ page.city_name }} · {{ display_price }}đ</h2>
         {% if availability.can_sell %}
         <p>Quét VietQR để thanh toán; link tải có hiệu lực 24 giờ sau khi PayOS xác nhận.</p>
         {% else %}
@@ -254,7 +264,7 @@
         {% endif %}
       </div>
       {% if availability.can_sell %}
-      <form method="post" action="/ban-do-thu-dau-mot/checkout">
+      <form method="post" action="{{ page.checkout_path }}">
         <button type="submit" data-product-purchase>Mua và thanh toán {{ display_price }}đ</button>
       </form>
       {% else %}
@@ -264,7 +274,7 @@
 
     <section class="seo-shell tdm-product-section tdm-product-source-summary" aria-labelledby="anh-ban-do-hanh-chinh">
       <div class="tdm-product-section-heading">
-        <h2 id="anh-ban-do-hanh-chinh">Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương</h2>
+        <h2 id="anh-ban-do-hanh-chinh">Tổng hợp file ảnh bản đồ hành chính TP {{ page.city_name }} – Bình Dương</h2>
         <p>Radar BDS dùng bộ ảnh bản đồ hành chính tham khảo công khai để đối chiếu bố cục hiển thị, tên địa bàn và nhu cầu tải bản đồ của người dùng.</p>
         <p>Các ảnh tham khảo giúp người đọc tra cứu nhanh trên web; bộ file Radar BDS bên dưới được biên tập lại cho nhu cầu tải về, in ấn và chỉnh sửa.</p>
       </div>
@@ -273,7 +283,7 @@
     <section class="seo-shell tdm-product-section tdm-product-pdf-offer" aria-labelledby="ban-do-pdf-hoan-thien">
       <div class="tdm-product-section-heading">
         <h2 id="ban-do-pdf-hoan-thien">Bản đồ PDF hoàn thiện</h2>
-        <p>Bản đồ TP Thủ Dầu Một được xây dựng bởi Radar BDS, nhằm phục vụ nhu cầu bản đồ chất lượng cao, hoàn thiện. Bạn chỉ việc tải về và in ra, không cần làm gì thêm.</p>
+        <p>Bản đồ TP {{ page.city_name }} được xây dựng bởi Radar BDS, nhằm phục vụ nhu cầu bản đồ chất lượng cao, hoàn thiện. Bạn chỉ việc tải về và in ra, không cần làm gì thêm.</p>
       </div>
       <ul class="tdm-product-checklist">
         <li>File PDF chuẩn in ấn – mở được trên mọi thiết bị, không vỡ nét.</li>
@@ -294,11 +304,11 @@
       <div class="tdm-product-edition-buttons" role="group" aria-label="Chọn phiên bản bản đồ">
         <button type="button" data-product-edition="legacy" aria-pressed="true">
           <strong>Trước năm 2025</strong>
-          <span>14 ranh phường cũ tham khảo</span>
+          <span>{{ page.legacy_count }} ranh {{ legacy_unit_label }} tham khảo</span>
         </button>
         <button type="button" data-product-edition="current" aria-pressed="false">
           <strong>Hiện tại</strong>
-          <span>5 ranh phường đã xác minh</span>
+          <span>{{ page.current_count }} ranh phường đã xác minh</span>
         </button>
       </div>
     </section>
@@ -344,12 +354,12 @@
       <div class="tdm-product-data-grid">
         <article>
           <h3>Bản trước năm 2025</h3>
-          <p>Đúng 14 ranh phường cũ ở mức tham khảo, gồm 12 ranh từ snapshot hành chính lịch sử và 2 ranh suy luận biên tập.</p>
-          <p>Hòa Phú và Phú Tân được ghi rõ là ranh derived để người dùng không nhầm với hồ sơ địa chính.</p>
+          <p>Đúng {{ page.legacy_count }} ranh {{ legacy_unit_label }} ở mức tham khảo, gồm {{ page.sourced_legacy_count }} ranh từ snapshot hành chính lịch sử{% if page.derived_legacy_units %} và {{ page.derived_legacy_units | length }} ranh suy luận biên tập{% endif %}.</p>
+          <p>{{ page.derived_note }}</p>
         </article>
         <article>
           <h3>Bản hiện tại</h3>
-          <p>Đúng 5 ranh phường đã xác minh của Thủ Dầu Một, Phú Lợi, Chánh Hiệp, Bình Dương và Phú An.</p>
+          <p>Đúng {{ page.current_count }} ranh phường hiện tại của {{ page.current_names_label }}.</p>
           <p>Cả hai bản có đường giao thông phù hợp, thủy hệ, địa danh, tên/vị trí khu phố và các điểm tiện ích có dữ liệu.</p>
         </article>
       </div>
@@ -368,7 +378,7 @@
         </article>
         <article>
           <h2>Nguồn và mốc dữ liệu</h2>
-          <p>Ranh hiện tại dùng dữ liệu hình học đã kiểm tra của Radar BDS; ranh cũ dùng snapshot hành chính lịch sử, kết hợp hai ranh suy luận biên tập; đường, thủy hệ và tiện ích dùng dữ liệu mở phù hợp.</p>
+          <p>Ranh hiện tại dùng dữ liệu hình học đã kiểm tra của Radar BDS; ranh cũ dùng snapshot hành chính lịch sử{% if page.derived_legacy_units %}, kết hợp {{ page.derived_legacy_units | length }} ranh suy luận biên tập{% endif %}; đường, thủy hệ và tiện ích dùng dữ liệu mở phù hợp.</p>
           <p><a class="tdm-product-source-link" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" data-product-source-link>© OpenStreetMap contributors</a>. Bản phát hành {{ product.version }} được biên tập theo dữ liệu chốt đến <time datetime="{{ page.updated_at }}">{{ page.updated_label }}</time>.</p>
         </article>
       </div>
@@ -390,10 +400,10 @@
 
     <section class="seo-shell tdm-product-dashboard-cta">
       <div>
-        <h2>Xem dữ liệu tin đang bán tại Thủ Dầu Một</h2>
-        <p>Dùng bản đồ để xác định khu vực quan tâm, sau đó mở dashboard để lọc tin theo diện tích, giá và tín hiệu đáng kiểm tra.</p>
+        <h2>{{ page.dashboard_heading }}</h2>
+        <p>{{ page.dashboard_text }}</p>
       </div>
-      <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-product-dashboard data-track-cta="thu_dau_mot_map_dashboard">Mở dashboard lọc tin Thủ Dầu Một</a>
+      <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-product-dashboard data-track-cta="{{ page.tracking_prefix }}_dashboard">{{ page.dashboard_label }}</a>
     </section>
 
     <section class="seo-shell tdm-product-section tdm-product-agent-data" aria-labelledby="du-lieu-may-doc-duoc">
@@ -402,15 +412,15 @@
         <p>Hai lớp GeoJSON bên dưới là dữ liệu công khai dùng để render bản đồ tra cứu miễn phí. Không dùng các lớp này thay thế hồ sơ địa chính hoặc bản đồ quy hoạch pháp lý.</p>
       </div>
       <ul>
-        <li><a href="{{ page.legacy_data_url }}" data-product-source-link>GeoJSON 14 phường cũ Thủ Dầu Một</a></li>
-        <li><a href="{{ page.current_data_url }}" data-product-source-link>GeoJSON 5 phường hiện tại Thủ Dầu Một</a></li>
+        <li><a href="{{ page.legacy_data_url }}" data-product-source-link>GeoJSON {{ page.legacy_count }} {{ legacy_unit_label }} {{ page.city_name }}</a></li>
+        <li><a href="{{ page.current_data_url }}" data-product-source-link>GeoJSON {{ page.current_count }} phường hiện tại {{ page.city_name }}</a></li>
       </ul>
-      <p>Đường dẫn khu vực trên bản đồ có thể chia sẻ trực tiếp; mỗi lớp bản đồ và mỗi phường dùng một mã ổn định trong URL. Dashboard lọc tin: <code>/?tab=signals&amp;city=Thủ Dầu Một</code>.</p>
+      <p>Đường dẫn khu vực trên bản đồ có thể chia sẻ trực tiếp; mỗi lớp bản đồ và mỗi phường dùng một mã ổn định trong URL. Dashboard lọc tin: <code>{{ dashboard_signal_href }}</code>.</p>
     </section>
   </main>
 
   {% include "partials/seo_footer.html" %}
-  {% set view_event = "thu_dau_mot_map_product_viewed" %}
+  {% set view_event = page.tracking_prefix ~ "_product_viewed" %}
   {% include "partials/seo_tracking.html" %}
 </body>
 

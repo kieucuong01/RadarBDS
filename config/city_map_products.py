@@ -19,6 +19,12 @@ def _current(name: str, former_units: str) -> dict:
     }
 
 
+def _natural_join(values: tuple[str, ...]) -> str:
+    if len(values) <= 1:
+        return "".join(values)
+    return ", ".join(values[:-1]) + " và " + values[-1]
+
+
 def _dashboard(city_name: str, *, filtered: bool) -> tuple[str, str]:
     if filtered:
         return (
@@ -36,7 +42,7 @@ def _faq(
 ) -> tuple[dict, ...]:
     derived_answer = (
         "Có. "
-        + ", ".join(derived_names)
+        + _natural_join(derived_names)
         + " là ranh suy luận biên tập từ phần dư hình học giữa lớp hiện tại "
         "và các ranh lịch sử có nguồn. Các ranh này chỉ dùng để tham khảo."
         if derived_names
@@ -108,8 +114,13 @@ def _page(
     )
     legacy_names = tuple(item["name"] for item in legacy_units)
     current_names = tuple(item["name"] for item in current_units)
+    legacy_unit_label = (
+        "đơn vị cũ"
+        if any(item["unit_type"] == "Xã cũ" for item in legacy_units)
+        else "phường cũ"
+    )
     derived_note = (
-        f"{', '.join(derived_legacy_units)} là ranh suy luận biên tập từ phần "
+        f"{_natural_join(derived_legacy_units)} là ranh suy luận biên tập từ phần "
         "dư hình học. Dùng để tra cứu định hướng, không dùng như hồ sơ pháp lý."
         if derived_legacy_units
         else "Toàn bộ ranh trước sắp xếp dùng snapshot hành chính lịch sử có "
@@ -144,10 +155,10 @@ def _page(
             "chiếu tên địa bàn, sau đó mở dashboard Radar BDS xem tin nhà đất."
         ),
         "answer_block": (
-            f"TP {city_name} có hai lớp tra cứu trên Radar BDS: bản trước năm "
+            f"TP {city_name} hiện có 2 lớp tra cứu trên Radar BDS: bản trước năm "
             f"2025 gồm {legacy_count} đơn vị cũ ở mức tham khảo; bản sau sắp "
             f"xếp gồm {current_count} phường hiện tại là "
-            f"{', '.join(current_names)}."
+            f"{_natural_join(current_names)}."
         ),
         "city_context": city_context,
         "updated_at": "2026-07-29",
@@ -175,11 +186,21 @@ def _page(
         "current_count": current_count,
         "legacy_names": legacy_names,
         "current_names": current_names,
+        "current_names_label": _natural_join(current_names),
         "current_wards": current_names,
+        "legacy_unit_label": legacy_unit_label,
+        "dataset_id_suffix": (
+            "wards" if city_slug == "thu-dau-mot" else city_slug
+        ),
         "derived_legacy_units": derived_legacy_units,
         "sourced_legacy_count": legacy_count - len(derived_legacy_units),
         "derived_note": derived_note,
         "search_examples": search_examples,
+        "search_aria_label": (
+            "Tìm phường Thủ Dầu Một"
+            if city_slug == "thu-dau-mot"
+            else f"Tìm khu vực {city_name}"
+        ),
         "dashboard_signal_href": dashboard_href,
         "dashboard_label": dashboard_label,
         "dashboard_heading": f"Xem dữ liệu tin đang bán liên quan {city_name}",

@@ -129,9 +129,55 @@ def thu_dau_mot_map_product_page(**kwargs):
     return response
 
 
+@bp.get("/ban-do-<city_slug>")
+def city_map_product_page(city_slug: str, **kwargs):
+    try:
+        page = get_city_map_page(city_slug)
+    except KeyError:
+        abort(404)
+    if city_slug == "thu-dau-mot":
+        return thu_dau_mot_map_product_page(**kwargs)
+    response = make_response(
+        _impl("city_map_product_page", city_slug=city_slug, **kwargs)
+    )
+    settings = get_digital_product_commerce_settings()
+    if (
+        _valid_cookie_secret(settings.cookie_secret)
+        and _retry_state(
+            settings.cookie_secret,
+            page["product_slug"],
+        )
+        is None
+    ):
+        _set_retry_cookie(
+            response,
+            _signed_retry_state(
+                settings.cookie_secret,
+                uuid.uuid4().hex,
+                "seed",
+                page["product_slug"],
+            ),
+            page["path"],
+        )
+    return response
+
+
 @bp.get("/du-lieu/ban-do-thu-dau-mot/<edition>.geojson")
 def thu_dau_mot_map_geojson(edition: str):
     return _impl("thu_dau_mot_map_geojson", edition=edition)
+
+
+@bp.get("/du-lieu/ban-do-<city_slug>/<edition>.geojson")
+def city_map_geojson(city_slug: str, edition: str):
+    try:
+        get_city_map_page(city_slug)
+    except KeyError:
+        abort(404)
+    return _impl(
+        "city_map_geojson",
+        city_slug=city_slug,
+        edition=edition,
+    )
 
 
 @bp.post("/ban-do-<city_slug>/checkout")
