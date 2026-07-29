@@ -22,6 +22,10 @@ LISTING_MAP_LANDMARK_REGISTRY_PATH = (
 LISTING_MAP_OVERRIDE_PATH = (
     PROJECT_ROOT / "config" / "listing_map_location_overrides.json"
 )
+LISTING_MAP_AUTO_OVERRIDE_PATH = (
+    PROJECT_ROOT / "config" / "listing_map_location_auto_overrides.json"
+)
+LISTING_MAP_AUTO_ACCEPT_THRESHOLD = 0.90
 LISTING_MAP_WARD_BOUNDARY_PATHS = (
     PROJECT_ROOT
     / "config"
@@ -34,5 +38,5 @@ LISTING_MAP_WARD_BOUNDARY_PATHS = (
 )
 
 LISTING_MAP_ALLOWED_PRECISIONS = frozenset(
-    {"exact", "road", "landmark", "nearby", "ward"}
+    {"exact", "road", "landmark", "ward"}
 )
