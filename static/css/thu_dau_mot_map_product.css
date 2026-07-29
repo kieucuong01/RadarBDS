@@ -242,6 +242,56 @@
   padding-top: clamp(64px, 8vw, 104px);
 }
 
+.tdm-product-source-summary {
+  padding-top: clamp(44px, 6vw, 72px);
+}
+
+.tdm-product-source-summary .tdm-product-section-heading,
+.tdm-product-pdf-offer {
+  padding: 28px;
+  border: 1px solid #dce5ec;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+}
+
+.tdm-product-pdf-offer {
+  margin-top: 22px;
+  background:
+    linear-gradient(135deg, rgba(240, 253, 250, 0.92), rgba(255, 255, 255, 0.98));
+}
+
+.tdm-product-checklist {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tdm-product-checklist li {
+  position: relative;
+  padding-left: 30px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.tdm-product-checklist li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0.08em;
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 999px;
+  background: #0f766e;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
 .tdm-product-map-section {
   margin-top: clamp(48px, 7vw, 82px);
 }

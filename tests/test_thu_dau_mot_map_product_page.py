@@ -511,6 +511,40 @@ def test_product_page_states_the_exact_legacy_and_current_edition_contract():
     assert "© OpenStreetMap contributors" in html
 
 
+def test_product_page_includes_administrative_image_source_and_pdf_offer_detail():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(PRODUCT_PATH).get_data(as_text=True)
+    visible_text = _visible_body_text(html)
+    css = Path("static/css/thu_dau_mot_map_product.css").read_text(encoding="utf-8")
+
+    assert (
+        "Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương"
+        in visible_text
+    )
+    assert "bản đồ hành chính tham khảo công khai" in visible_text
+    assert "Địa Ốc Thông Thái" not in visible_text
+    assert "diaocthongthai.com" not in html
+    assert visible_text.index(
+        "Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương"
+    ) < visible_text.index("Bản đồ PDF hoàn thiện")
+    assert visible_text.index("Bản đồ PDF hoàn thiện") < visible_text.index(
+        "Chọn bản xem trước"
+    )
+    for benefit in (
+        "File PDF chuẩn in ấn",
+        "Thuần vector 100%",
+        "Màu sắc hài hòa",
+        "Phù hợp in khổ lớn từ A0 trở lên",
+        "Tương thích tốt với Adobe Illustrator",
+        "Text/Label editable",
+        "Embed font",
+    ):
+        assert benefit in visible_text
+    assert "tdm-product-source-summary" in css
+    assert "tdm-product-pdf-offer" in css
+
+
 def test_product_public_geojson_uses_utf8_and_agent_metadata():
     legacy_geojson = json.loads(
         Path("static/maps/thu-dau-mot/legacy-14-wards.geojson").read_text(
