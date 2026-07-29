@@ -18,6 +18,13 @@
     return Number.isSafeInteger(number) && number > 0 ? number : null;
   }
 
+  function resolveListingId(primary, container, configured) {
+    return positiveInteger(primary)
+      || positiveInteger(container)
+      || positiveInteger(configured)
+      || null;
+  }
+
   function canonicalListingUrl(origin, listingId) {
     const id = positiveInteger(listingId);
     if (!id) return null;
@@ -120,9 +127,17 @@
     root.dataset.shareBound = 'true';
 
     function listingId() {
-      return typeof config.getListingId === 'function'
+      const container = root.parentElement
+        ? root.parentElement.closest('[data-listing-id]')
+        : null;
+      const configured = typeof config.getListingId === 'function'
         ? config.getListingId()
-        : root.dataset.listingId;
+        : null;
+      return resolveListingId(
+        root.dataset.listingId,
+        container && container.dataset.listingId,
+        configured,
+      );
     }
     function surface() {
       return root.dataset.surface === 'modal' ? 'modal' : 'detail';
@@ -367,6 +382,7 @@
 
   return {
     REPORT_REASONS,
+    resolveListingId,
     canonicalListingUrl,
     facebookShareUrl,
     normalizeReportPayload,

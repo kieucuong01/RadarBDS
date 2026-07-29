@@ -20,8 +20,17 @@ for (const invalid of [0, -1, 1.2, '1.2', 'abc', null, undefined]) {
   assert.equal(api.canonicalListingUrl('https://radarbds.vn', invalid), null);
 }
 assert.equal(api.canonicalListingUrl('javascript:alert(1)', 42), null);
+assert.equal(api.resolveListingId('42', '99', '100'), 42);
+assert.equal(api.resolveListingId('', '99', '100'), 99);
+assert.equal(api.resolveListingId('', '', '100'), 100);
+assert.equal(api.resolveListingId('bad', '', 0), null);
+const canonicalFromModal = api.canonicalListingUrl(
+  'https://radarbds.vn/?signal=42',
+  api.resolveListingId('', '42', null),
+);
+assert.equal(canonicalFromModal, 'https://radarbds.vn/listing/42');
 assert.equal(
-  api.facebookShareUrl('https://radarbds.vn/listing/42'),
+  api.facebookShareUrl(canonicalFromModal),
   'https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fradarbds.vn%2Flisting%2F42',
 );
 assert.deepEqual(api.normalizeReportPayload(' wrong_location ', '  Sai phường  '), {
