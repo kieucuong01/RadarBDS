@@ -25,6 +25,7 @@ from services.signal_quality import LATEST_VALUATION_CTE
 
 MAP_CACHE_TTL_SECONDS = 60
 MAP_CACHE_MAX_ENTRIES = 128
+_ALLOWED_LOCATION_RELATIONS = frozenset({"", "on", "at", "near", "alley"})
 _cache: OrderedDict[tuple, tuple[float, dict]] = OrderedDict()
 _cache_lock = threading.Lock()
 
@@ -230,6 +231,8 @@ def load_listing_map_summary(
                    ml.lng,
                    ml.location_precision,
                    ml.location_label,
+                   ml.accuracy_radius_m,
+                   ml.relation,
                    COUNT(*)::INTEGER AS listing_count,
                    MAX(f.mos_pct) AS best_mos,
                    SUM(COUNT(*)) OVER()::INTEGER AS total_count,
@@ -251,6 +254,18 @@ def load_listing_map_summary(
                    )::INTEGER AS road_count,
                    COALESCE(
                        SUM(COUNT(*)) FILTER (
+                           WHERE ml.location_precision = 'landmark'
+                       ) OVER(),
+                       0
+                   )::INTEGER AS landmark_count,
+                   COALESCE(
+                       SUM(COUNT(*)) FILTER (
+                           WHERE ml.location_precision = 'nearby'
+                       ) OVER(),
+                       0
+                   )::INTEGER AS nearby_count,
+                   COALESCE(
+                       SUM(COUNT(*)) FILTER (
                            WHERE ml.location_precision = 'ward'
                        ) OVER(),
                        0
@@ -261,12 +276,16 @@ def load_listing_map_summary(
                      ml.lat,
                      ml.lng,
                      ml.location_precision,
-                     ml.location_label
+                     ml.location_label,
+                     ml.accuracy_radius_m,
+                     ml.relation
             ORDER BY CASE ml.location_precision
                          WHEN 'exact' THEN 0
                          WHEN 'road' THEN 1
-                         WHEN 'ward' THEN 2
-                         ELSE 3
+                         WHEN 'landmark' THEN 2
+                         WHEN 'nearby' THEN 3
+                         WHEN 'ward' THEN 4
+                         ELSE 5
                      END,
                      COUNT(*) DESC,
                      ml.location_key
@@ -282,12 +301,26 @@ def load_listing_map_summary(
         location_key = _row_value(row, "location_key")
         if not location_key:
             continue
+        raw_radius = _row_value(row, "accuracy_radius_m")
+        try:
+            accuracy_radius_m = (
+                max(float(raw_radius), 0.0)
+                if raw_radius is not None
+                else None
+            )
+        except (TypeError, ValueError):
+            accuracy_radius_m = None
+        relation = str(_row_value(row, "relation", "") or "").strip().lower()
+        if relation not in _ALLOWED_LOCATION_RELATIONS:
+            relation = ""
         locations.append({
             "location_key": str(location_key),
             "lat": float(_row_value(row, "lat", 0)),
             "lng": float(_row_value(row, "lng", 0)),
             "precision": str(_row_value(row, "location_precision", "")),
             "label": str(_row_value(row, "location_label", "")),
+            "accuracy_radius_m": accuracy_radius_m,
+            "relation": relation,
             "listing_count": int(_row_value(row, "listing_count", 0) or 0),
             "best_mos": round(
                 float(_row_value(row, "best_mos", 0) or 0),
@@ -304,6 +337,12 @@ def load_listing_map_summary(
             "unmapped_count": total - mapped,
             "exact_count": int(_row_value(first, "exact_count", 0) or 0),
             "road_count": int(_row_value(first, "road_count", 0) or 0),
+            "landmark_count": int(
+                _row_value(first, "landmark_count", 0) or 0
+            ),
+            "nearby_count": int(
+                _row_value(first, "nearby_count", 0) or 0
+            ),
             "ward_count": int(_row_value(first, "ward_count", 0) or 0),
         },
         "locations": locations,

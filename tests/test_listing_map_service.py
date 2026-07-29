@@ -29,11 +29,13 @@ class _MapConnection:
         if "GROUP BY ml.location_key" in sql:
             self.summary_calls += 1
             common = {
-                "total_count": 5,
-                "mapped_count": 3,
+                "total_count": 7,
+                "mapped_count": 5,
                 "exact_count": 1,
-                "road_count": 2,
-                "ward_count": 0,
+                "road_count": 1,
+                "landmark_count": 1,
+                "nearby_count": 1,
+                "ward_count": 1,
             }
             return _Cursor(rows=[
                 {
@@ -43,6 +45,8 @@ class _MapConnection:
                     "lng": None,
                     "location_precision": None,
                     "location_label": None,
+                    "accuracy_radius_m": None,
+                    "relation": None,
                     "listing_count": 2,
                     "best_mos": None,
                 },
@@ -52,6 +56,8 @@ class _MapConnection:
                     "lat": 10.99,
                     "lng": 106.67,
                     "location_precision": "exact",
+                    "accuracy_radius_m": 0,
+                    "relation": "on",
                     "location_label": "Vị trí chính xác từ tin rao",
                     "listing_count": 1,
                     "best_mos": 31.0,
@@ -62,9 +68,47 @@ class _MapConnection:
                     "lat": 10.981,
                     "lng": 106.689,
                     "location_precision": "road",
+                    "accuracy_radius_m": 90,
+                    "relation": "on",
                     "location_label": "Theo tên đường ĐX 43, Phú Lợi",
-                    "listing_count": 2,
+                    "listing_count": 1,
                     "best_mos": 24.0,
+                },
+                {
+                    **common,
+                    "location_key": "landmark:thu-dau-mot:phu-loi:tdc-a",
+                    "lat": 10.982,
+                    "lng": 106.690,
+                    "location_precision": "landmark",
+                    "location_label": "Theo địa danh TĐC A",
+                    "accuracy_radius_m": 140,
+                    "relation": "at",
+                    "listing_count": 1,
+                    "best_mos": 20.0,
+                },
+                {
+                    **common,
+                    "location_key": "nearby:thu-dau-mot:phu-loi:dx-43:near",
+                    "lat": 10.981,
+                    "lng": 106.689,
+                    "location_precision": "nearby",
+                    "location_label": "Gần ĐX 43",
+                    "accuracy_radius_m": 150,
+                    "relation": "near",
+                    "listing_count": 1,
+                    "best_mos": 19.0,
+                },
+                {
+                    **common,
+                    "location_key": "ward:thu-dau-mot:phu-loi",
+                    "lat": 10.984,
+                    "lng": 106.684,
+                    "location_precision": "ward",
+                    "location_label": "Theo trung tâm Phú Lợi",
+                    "accuracy_radius_m": None,
+                    "relation": "",
+                    "listing_count": 1,
+                    "best_mos": 18.0,
                 },
             ])
         if "ml.location_key = ?" in sql:
@@ -134,11 +178,19 @@ def test_summary_invariants_and_compact_query(monkeypatch):
     assert (
         summary["exact_count"]
         + summary["road_count"]
+        + summary["landmark_count"]
+        + summary["nearby_count"]
         + summary["ward_count"]
         == summary["mapped"]
     )
-    assert sum(group["listing_count"] for group in payload["locations"]) == 3
+    assert sum(group["listing_count"] for group in payload["locations"]) == 5
     assert payload["locations"][0]["listing_count"] == 1
+    nearby = next(
+        group for group in payload["locations"]
+        if group["precision"] == "nearby"
+    )
+    assert nearby["accuracy_radius_m"] == 150.0
+    assert nearby["relation"] == "near"
     summary_sql = next(
         sql for sql, _params in connection.queries
         if "GROUP BY ml.location_key" in sql
@@ -149,6 +201,8 @@ def test_summary_invariants_and_compact_query(monkeypatch):
         "seller_name",
         "l.url",
         "image_urls",
+        "evidence_text",
+        "source_url",
         "where ml.listing_id is not null",
     ):
         assert forbidden not in summary_sql

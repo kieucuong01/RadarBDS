@@ -4125,7 +4125,7 @@ def _request_date_range(req) -> str:
 
 
 _LISTING_MAP_LOCATION_KEY_RE = re.compile(
-    r"^(exact|road|ward):[a-z0-9:-]+$"
+    r"^(exact|road|landmark|nearby|ward):[a-z0-9:-]+$"
 )
 _LISTING_MAP_SENSITIVE_KEYS = frozenset({
     "url",
@@ -4133,6 +4133,8 @@ _LISTING_MAP_SENSITIVE_KEYS = frozenset({
     "contact_phone",
     "description",
     "seller_name",
+    "evidence_text",
+    "source_url",
 })
 
 

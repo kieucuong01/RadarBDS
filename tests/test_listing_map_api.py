@@ -28,6 +28,8 @@ def _safe_summary(**_kwargs):
             "unmapped_count": 0,
             "exact_count": 0,
             "road_count": 0,
+            "landmark_count": 0,
+            "nearby_count": 0,
             "ward_count": 0,
         },
         "locations": [],
@@ -103,6 +105,8 @@ def test_map_items_validate_location_paging_and_strip_sensitive_fields():
             "contact_phone": "0909",
             "description": "private",
             "seller_name": "Broker",
+            "evidence_text": "private evidence",
+            "source_url": "https://secret.test/source",
         }],
         "total": 1,
         "page": 1,
@@ -127,9 +131,24 @@ def test_map_items_validate_location_paging_and_strip_sensitive_fields():
             "/api/map-listing-items?mode=signals"
             "&location_key=ward:thu-dau-mot:phu-loi&page=1&limit=500"
         )
+        assert client.get(
+            "/api/map-listing-items?mode=signals"
+            "&location_key=landmark:thu-dau-mot:phu-loi:tdc-a&page=1"
+        ).status_code == 200
+        assert client.get(
+            "/api/map-listing-items?mode=signals"
+            "&location_key=nearby:thu-dau-mot:phu-loi:dx-43:near&page=1"
+        ).status_code == 200
+        assert client.get(
+            "/api/map-listing-items?mode=signals"
+            "&location_key=unknown:thu-dau-mot&page=1"
+        ).status_code == 400
 
     assert response.status_code == 200
-    assert loader.call_args.kwargs["limit"] == 50
+    assert any(
+        call.kwargs["limit"] == 50
+        for call in loader.call_args_list
+    )
     text = json.dumps(response.get_json())
     for forbidden in (
         '"url"',
@@ -137,6 +156,8 @@ def test_map_items_validate_location_paging_and_strip_sensitive_fields():
         '"contact_phone"',
         '"description"',
         '"seller_name"',
+        '"evidence_text"',
+        '"source_url"',
     ):
         assert forbidden not in text
 
