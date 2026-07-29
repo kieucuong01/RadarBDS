@@ -50,6 +50,10 @@ class ProductAvailability:
     reason: str
 
 
+class ProtectedPackageUnavailable(RuntimeError):
+    """The immutable protected release cannot be trusted for delivery."""
+
+
 _THU_DAU_MOT_MAP = DigitalProduct(
     slug="thu-dau-mot-map-bundle",
     version="1.0",
@@ -250,6 +254,150 @@ def _package_matches_product(
     except OSError:
         return False
     return hmac.compare_digest(actual_checksum, trusted_checksum)
+
+
+def _is_single_path_component(value: object) -> bool:
+    return bool(
+        type(value) is str
+        and value not in {"", ".", ".."}
+        and Path(value).name == value
+        and "/" not in value
+        and "\\" not in value
+    )
+
+
+def _stable_file_identity(stat_result: os.stat_result) -> tuple[int, ...]:
+    return (
+        stat_result.st_dev,
+        stat_result.st_ino,
+        stat_result.st_size,
+        stat_result.st_mtime_ns,
+        stat_result.st_ctime_ns,
+    )
+
+
+def _protected_storage_root_allowed(root: Path) -> bool:
+    project_root = Path(__file__).resolve().parent.parent
+    unsafe_roots = [project_root]
+    for candidate in project_root.parents:
+        if (candidate / ".git").is_dir():
+            unsafe_roots.append(candidate.resolve())
+            break
+    return not any(
+        _is_relative_to(root, unsafe_root)
+        for unsafe_root in unsafe_roots
+    )
+
+
+def resolve_protected_package(
+    product: DigitalProduct,
+    storage_root: Path,
+) -> Path:
+    """Resolve and fully revalidate one immutable server-registered package.
+
+    The trusted SHA-256 binds the package's exact bytes and length. A stable
+    pre/post-hash stat additionally rejects files replaced while validation is
+    in progress.
+    """
+    try:
+        root_candidate = Path(storage_root).expanduser()
+        if (
+            not root_candidate.is_absolute()
+            or root_candidate.is_symlink()
+        ):
+            raise OSError("symlinked storage root")
+        root = root_candidate.resolve(strict=True)
+        if (
+            not root.is_dir()
+            or not _protected_storage_root_allowed(root)
+        ):
+            raise OSError("invalid storage root")
+        if not all(
+            _is_single_path_component(value)
+            for value in (
+                product.slug,
+                product.version,
+                product.package_filename,
+            )
+        ):
+            raise ValueError("invalid release identity")
+
+        product_candidate = root / product.slug
+        release_candidate = product_candidate / product.version
+        package_candidate = release_candidate / product.package_filename
+        manifest_candidate = release_candidate / "MANIFEST.json"
+        if any(
+            candidate.is_symlink()
+            for candidate in (
+                product_candidate,
+                release_candidate,
+                package_candidate,
+                manifest_candidate,
+            )
+        ):
+            raise OSError("symlinked release path")
+
+        product_dir = product_candidate.resolve(strict=True)
+        release_dir = release_candidate.resolve(strict=True)
+        package_path = package_candidate.resolve(strict=True)
+        manifest_path = manifest_candidate.resolve(strict=True)
+        if (
+            not _is_relative_to(product_dir, root)
+            or not _is_relative_to(release_dir, product_dir)
+            or not _is_relative_to(package_path, release_dir)
+            or not _is_relative_to(manifest_path, release_dir)
+            or package_path.name != product.package_filename
+            or manifest_path.name != "MANIFEST.json"
+            or not package_path.is_file()
+            or not manifest_path.is_file()
+        ):
+            raise OSError("invalid release path")
+
+        manifest_payload = _read_manifest_bytes(manifest_path)
+        manifest_digest = hashlib.sha256(manifest_payload).hexdigest()
+        trusted_manifest_digest = product.manifest_sha256.lower()
+        if (
+            _SHA256_PATTERN.fullmatch(trusted_manifest_digest) is None
+            or not hmac.compare_digest(
+                manifest_digest,
+                trusted_manifest_digest,
+            )
+        ):
+            raise ValueError("untrusted release manifest")
+        manifest = json.loads(manifest_payload.decode("utf-8"))
+        if not _manifest_matches_product(manifest, product):
+            raise ValueError("invalid release manifest")
+
+        before = package_path.stat()
+        if before.st_size <= 0:
+            raise OSError("empty package")
+        package_digest = _sha256_file(package_path)
+        after = package_path.stat()
+        if (
+            _stable_file_identity(before) != _stable_file_identity(after)
+            or package_candidate.is_symlink()
+            or package_candidate.resolve(strict=True) != package_path
+        ):
+            raise OSError("package changed during validation")
+        trusted_package_digest = product.package_sha256.lower()
+        if (
+            _SHA256_PATTERN.fullmatch(trusted_package_digest) is None
+            or not hmac.compare_digest(
+                package_digest,
+                trusted_package_digest,
+            )
+        ):
+            raise ValueError("untrusted package")
+        return package_path
+    except (
+        OSError,
+        RuntimeError,
+        TypeError,
+        UnicodeDecodeError,
+        json.JSONDecodeError,
+        ValueError,
+    ) as exc:
+        raise ProtectedPackageUnavailable() from exc
 
 
 def get_release_availability(

@@ -21,6 +21,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
 )
 from itsdangerous import BadData, URLSafeTimedSerializer
 
@@ -36,15 +37,19 @@ from services.digital_product_orders import (
     PostgresOrderRepository,
     SettlementNotFound,
     attach_payment_link,
+    can_download,
     create_pending_order,
     expire_pending_order,
     get_order,
+    record_download,
     settle_verified_payment,
     verify_recovery_token,
 )
 from services.digital_products import (
+    ProtectedPackageUnavailable,
     get_digital_product,
     get_release_availability,
+    resolve_protected_package,
 )
 from services.payos_client import (
     PayOSClient,
@@ -357,6 +362,67 @@ def digital_product_order_status(public_id: str):
     return response
 
 
+@bp.get("/api/digital-products/orders/<public_id>/download")
+@rate_limit(
+    "digital_product_order_download",
+    limits={"guest": 30, "free": 30, "vip": 30, "admin": 30},
+)
+def download_digital_product_order(public_id: str):
+    order = _cookie_authorized_order(public_id)
+    if order is None:
+        return _download_denied_response()
+
+    now = _utcnow()
+    if (
+        order.status == "paid"
+        and order.download_expires_at is not None
+        and now >= order.download_expires_at
+    ):
+        return _download_expired_response()
+    if not can_download(order, now):
+        return _download_denied_response()
+
+    settings = get_digital_product_commerce_settings()
+    if settings.storage_dir is None:
+        return _download_unavailable_response()
+    try:
+        product = get_digital_product(_PRODUCT_SLUG)
+        if (
+            order.product_slug != product.slug
+            or order.product_version != product.version
+            or order.expected_amount != product.price_vnd
+            or order.currency != "VND"
+        ):
+            return _download_denied_response()
+        package_path = resolve_protected_package(
+            product,
+            settings.storage_dir,
+        )
+        response = send_file(
+            package_path,
+            mimetype="application/zip",
+            as_attachment=True,
+            download_name=product.download_filename,
+            conditional=True,
+            etag=product.package_sha256,
+            max_age=0,
+        )
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        if response.status_code in {200, 206}:
+            record_download(
+                order.id,
+                now,
+                repo=_repository_factory(),
+            )
+        return response
+    except ProtectedPackageUnavailable:
+        return _download_unavailable_response()
+    except Exception:
+        return _download_unavailable_response()
+
+
 @bp.post("/api/webhooks/payos/digital-products")
 def payos_digital_products_webhook():
     if (
@@ -520,6 +586,27 @@ def _cookie_authorized_order(public_id: str):
 def _order_not_found_response():
     response = jsonify({"code": "order_not_found"})
     response.status_code = 404
+    response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
+def _download_denied_response():
+    response = jsonify({"code": "download_not_authorized"})
+    response.status_code = 403
+    response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
+def _download_expired_response():
+    response = jsonify({"code": "download_expired"})
+    response.status_code = 410
+    response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
+def _download_unavailable_response():
+    response = jsonify({"code": "download_temporarily_unavailable"})
+    response.status_code = 503
     response.headers["Cache-Control"] = "private, no-store"
     return response
 

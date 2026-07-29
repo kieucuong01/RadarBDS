@@ -5,12 +5,13 @@ import json
 import threading
 from concurrent.futures import ThreadPoolExecutor, wait
 from contextlib import ExitStack, contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from http.cookies import SimpleCookie
 from io import BytesIO
 from pathlib import Path
 from urllib.parse import unquote
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import pytest
 from werkzeug.test import EnvironBuilder
@@ -22,7 +23,7 @@ from services.digital_product_orders import (
     MAX_ORDER_ID,
     OrderCodeRangeError,
 )
-from services.digital_products import ProductAvailability
+from services.digital_products import ProductAvailability, get_digital_product
 from services.payos_client import (
     PayOSPaymentLinkCreationError,
     PayOSWebhookRejected,
@@ -182,8 +183,19 @@ class InMemoryOrderRepository:
         return order
 
     def increment_download(self, order_id, *, downloaded_at):
-        del order_id, downloaded_at
-        raise AssertionError("Task 4 must not implement downloads")
+        order = self.orders.get(order_id)
+        if order is None:
+            return False
+        last_download_at = (
+            downloaded_at
+            if order.last_download_at is None
+            else max(order.last_download_at, downloaded_at)
+        )
+        self.orders[order_id] = order.with_updates(
+            download_count=order.download_count + 1,
+            last_download_at=last_download_at,
+        )
+        return True
 
 
 class FakePayOS:
@@ -344,6 +356,416 @@ def _sales_disabled_settings(settings):
         payos_checksum_key="",
         cookie_secret=settings.cookie_secret,
     )
+
+
+def _install_protected_release(route_env, monkeypatch):
+    _radar_app, routes_module, _repo, _payos, settings = route_env
+    product = get_digital_product("thu-dau-mot-map-bundle")
+    release_dir = settings.storage_dir / product.slug / product.version
+    release_dir.mkdir(parents=True)
+    manifest = {
+        "product": product.release_product,
+        "version": product.version,
+        "files": {
+            name: {
+                "byte_length": len(name.encode("utf-8")),
+                "sha256": hashlib.sha256(name.encode("utf-8")).hexdigest(),
+            }
+            for name in product.release_files
+        },
+    }
+    manifest_payload = json.dumps(
+        manifest,
+        ensure_ascii=False,
+        sort_keys=True,
+    ).encode("utf-8")
+    manifest_path = release_dir / "MANIFEST.json"
+    manifest_path.write_bytes(manifest_payload)
+    package_path = release_dir / product.package_filename
+    with ZipFile(package_path, "w", compression=ZIP_DEFLATED) as archive:
+        for name in product.release_files:
+            archive.writestr(name, name.encode("utf-8"))
+        archive.writestr("MANIFEST.json", manifest_payload)
+    trusted_product = replace(
+        product,
+        package_sha256=hashlib.sha256(package_path.read_bytes()).hexdigest(),
+        manifest_sha256=hashlib.sha256(manifest_payload).hexdigest(),
+    )
+    monkeypatch.setattr(
+        routes_module,
+        "get_digital_product",
+        lambda slug: trusted_product
+        if slug == trusted_product.slug
+        else (_ for _ in ()).throw(KeyError(slug)),
+    )
+    return trusted_product, package_path, manifest_path
+
+
+def _make_order_paid(repo, order, *, expires_at=NOW + timedelta(hours=24)):
+    paid = order.with_updates(
+        status="paid",
+        paid_amount=99_000,
+        payment_reference="BANK-REF-DOWNLOAD",
+        paid_at=NOW,
+        download_expires_at=expires_at,
+    )
+    repo.orders[order.id] = paid
+    return paid
+
+
+def test_paid_order_downloads_exact_validated_zip(route_env, monkeypatch):
+    radar_app, _routes, repo, _payos, _settings = route_env
+    trusted_product, package_path, _manifest_path = _install_protected_release(
+        route_env,
+        monkeypatch,
+    )
+    expected_bytes = package_path.read_bytes()
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order)
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert response.status_code == 200
+    assert response.headers["Content-Type"] == "application/zip"
+    assert "attachment;" in response.headers["Content-Disposition"]
+    assert trusted_product.download_filename in response.headers[
+        "Content-Disposition"
+    ]
+    assert response.headers["ETag"] == f'"{trusted_product.package_sha256}"'
+    assert response.headers["Cache-Control"] == "private, no-store"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.data == expected_bytes
+    assert repo.orders[paid.id].download_count == 1
+    assert repo.orders[paid.id].last_download_at == NOW
+
+
+def test_download_remains_available_after_sales_are_disabled(
+    route_env,
+    monkeypatch,
+):
+    radar_app, routes_module, repo, _payos, settings = route_env
+    _product, package_path, _manifest_path = _install_protected_release(
+        route_env,
+        monkeypatch,
+    )
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order)
+    monkeypatch.setattr(
+        routes_module,
+        "get_digital_product_commerce_settings",
+        lambda: _sales_disabled_settings(settings),
+    )
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert response.status_code == 200
+    assert response.data == package_path.read_bytes()
+    assert repo.orders[paid.id].download_count == 1
+
+
+def test_download_without_order_cookie_is_denied(route_env, monkeypatch):
+    radar_app, _routes, repo, _payos, _settings = route_env
+    _install_protected_release(route_env, monkeypatch)
+    checkout = _checkout(radar_app.app.test_client())
+    public_id = _public_id_from_redirect(checkout)
+    _make_order_paid(repo, repo.orders[1])
+
+    response = radar_app.app.test_client().get(
+        f"/api/digital-products/orders/{public_id}/download"
+    )
+
+    assert response.status_code == 403
+    assert response.get_json() == {"code": "download_not_authorized"}
+    assert response.headers["Cache-Control"] == "private, no-store"
+    assert repo.orders[1].download_count == 0
+
+
+def test_pending_order_download_is_denied(route_env, monkeypatch):
+    _radar_app, _routes, repo, _payos, _settings = route_env
+    _install_protected_release(route_env, monkeypatch)
+    client, order, _token = _authorized_order(route_env)
+
+    response = client.get(
+        f"/api/digital-products/orders/{order.public_id}/download"
+    )
+
+    assert response.status_code == 403
+    assert response.get_json() == {"code": "download_not_authorized"}
+    assert repo.orders[order.id].download_count == 0
+
+
+def test_expired_paid_download_is_denied_at_authoritative_boundary(
+    route_env,
+    monkeypatch,
+):
+    _radar_app, _routes, repo, _payos, _settings = route_env
+    _install_protected_release(route_env, monkeypatch)
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order, expires_at=NOW)
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert response.status_code == 410
+    assert response.get_json() == {"code": "download_expired"}
+    assert response.headers["Cache-Control"] == "private, no-store"
+    assert repo.orders[paid.id].download_count == 0
+
+
+def test_order_cookie_cannot_download_a_different_order(
+    route_env,
+    monkeypatch,
+):
+    radar_app, _routes, repo, _payos, _settings = route_env
+    _install_protected_release(route_env, monkeypatch)
+    first_client, first_order, _token = _authorized_order(route_env)
+    second_checkout = _checkout(radar_app.app.test_client())
+    second_id = _public_id_from_redirect(second_checkout)
+    _make_order_paid(repo, repo.orders[2])
+
+    response = first_client.get(
+        f"/api/digital-products/orders/{second_id}/download"
+    )
+
+    assert response.status_code == 403
+    assert response.get_json() == {"code": "download_not_authorized"}
+    assert repo.orders[first_order.id].download_count == 0
+    assert repo.orders[2].download_count == 0
+
+
+@pytest.mark.parametrize("tampered_component", ("missing_zip", "zip", "manifest"))
+def test_missing_or_tampered_package_never_streams_partial_file(
+    route_env,
+    monkeypatch,
+    tampered_component,
+):
+    _radar_app, _routes, repo, _payos, _settings = route_env
+    _product, package_path, manifest_path = _install_protected_release(
+        route_env,
+        monkeypatch,
+    )
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order)
+    if tampered_component == "missing_zip":
+        package_path.unlink()
+    elif tampered_component == "zip":
+        package_path.write_bytes(package_path.read_bytes() + b"tampered")
+    else:
+        manifest_path.write_bytes(manifest_path.read_bytes() + b"tampered")
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "code": "download_temporarily_unavailable"
+    }
+    assert response.headers["Cache-Control"] == "private, no-store"
+    if package_path.exists():
+        assert response.data != package_path.read_bytes()
+    assert repo.orders[paid.id].download_count == 0
+
+
+def test_symlinked_package_is_rejected_even_when_target_bytes_are_trusted(
+    route_env,
+    monkeypatch,
+    tmp_path,
+):
+    _radar_app, _routes, repo, _payos, _settings = route_env
+    _product, package_path, _manifest_path = _install_protected_release(
+        route_env,
+        monkeypatch,
+    )
+    trusted_bytes = package_path.read_bytes()
+    outside_package = tmp_path / "outside-trusted.zip"
+    outside_package.write_bytes(trusted_bytes)
+    package_path.unlink()
+    try:
+        package_path.symlink_to(outside_package)
+    except (NotImplementedError, OSError):
+        pytest.skip("symlink creation is unavailable on this platform")
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order)
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "code": "download_temporarily_unavailable"
+    }
+    assert repo.orders[paid.id].download_count == 0
+
+
+def test_resolver_rejects_symlink_candidate_on_every_platform(
+    route_env,
+    monkeypatch,
+):
+    _radar_app, _routes, repo, _payos, _settings = route_env
+    _product, package_path, _manifest_path = _install_protected_release(
+        route_env,
+        monkeypatch,
+    )
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order)
+    real_is_symlink = Path.is_symlink
+
+    def report_package_as_symlink(path):
+        if Path(path) == package_path:
+            return True
+        return real_is_symlink(path)
+
+    monkeypatch.setattr(Path, "is_symlink", report_package_as_symlink)
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "code": "download_temporarily_unavailable"
+    }
+    assert repo.orders[paid.id].download_count == 0
+
+
+def test_resolver_rejects_relative_storage_root_even_when_release_is_valid(
+    route_env,
+    monkeypatch,
+):
+    from services.digital_products import (
+        ProtectedPackageUnavailable,
+        resolve_protected_package,
+    )
+
+    _radar_app, _routes, _repo, _payos, settings = route_env
+    product, _package_path, _manifest_path = _install_protected_release(
+        route_env,
+        monkeypatch,
+    )
+    monkeypatch.chdir(settings.storage_dir)
+
+    with pytest.raises(ProtectedPackageUnavailable):
+        resolve_protected_package(product, Path("."))
+
+
+def test_resolver_rejects_package_changed_while_hashing(
+    route_env,
+    monkeypatch,
+):
+    from services import digital_products
+
+    _radar_app, _routes, repo, _payos, _settings = route_env
+    _product, package_path, _manifest_path = _install_protected_release(
+        route_env,
+        monkeypatch,
+    )
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order)
+    real_sha256_file = digital_products._sha256_file
+
+    def hash_then_replace(path):
+        digest = real_sha256_file(path)
+        Path(path).write_bytes(Path(path).read_bytes() + b"changed-after-hash")
+        return digest
+
+    monkeypatch.setattr(
+        digital_products,
+        "_sha256_file",
+        hash_then_replace,
+    )
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert package_path.read_bytes().endswith(b"changed-after-hash")
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "code": "download_temporarily_unavailable"
+    }
+    assert repo.orders[paid.id].download_count == 0
+
+
+def test_paid_order_must_match_immutable_registry_version(
+    route_env,
+    monkeypatch,
+):
+    _radar_app, _routes, repo, _payos, _settings = route_env
+    _install_protected_release(route_env, monkeypatch)
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order).with_updates(product_version="2.0")
+    repo.orders[paid.id] = paid
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert response.status_code == 403
+    assert response.get_json() == {"code": "download_not_authorized"}
+    assert repo.orders[paid.id].download_count == 0
+
+
+def test_failed_response_construction_does_not_record_download(
+    route_env,
+    monkeypatch,
+):
+    _radar_app, routes_module, repo, _payos, _settings = route_env
+    _install_protected_release(route_env, monkeypatch)
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order)
+
+    def fail_send_file(*args, **kwargs):
+        del args, kwargs
+        raise OSError("simulated file open failure")
+
+    monkeypatch.setattr(routes_module, "send_file", fail_send_file, raising=False)
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "code": "download_temporarily_unavailable"
+    }
+    assert repo.orders[paid.id].download_count == 0
+
+
+def test_download_record_failure_never_returns_untracked_package(
+    route_env,
+    monkeypatch,
+):
+    _radar_app, routes_module, repo, _payos, _settings = route_env
+    _install_protected_release(route_env, monkeypatch)
+    client, order, _token = _authorized_order(route_env)
+    paid = _make_order_paid(repo, order)
+
+    def fail_record_download(*args, **kwargs):
+        del args, kwargs
+        raise RuntimeError("simulated repository failure")
+
+    monkeypatch.setattr(
+        routes_module,
+        "record_download",
+        fail_record_download,
+    )
+
+    response = client.get(
+        f"/api/digital-products/orders/{paid.public_id}/download"
+    )
+
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "code": "download_temporarily_unavailable"
+    }
+    assert response.headers["Content-Type"].startswith("application/json")
+    assert repo.orders[paid.id].download_count == 0
 
 
 def test_checkout_is_unavailable_until_settings_and_release_gate_pass(
@@ -628,10 +1050,15 @@ def test_advisory_lock_acquisition_errors_return_generic_503_not_busy(
     }
     assert repo.orders == {}
     assert payos.create_calls == []
-    assert (
-        _cookie_value(response, "radar_product_checkout_retry")
-        == seed_value
+    retry_payload = routes_module._retry_serializer("c" * 64).loads(
+        _cookie_value(response, "radar_product_checkout_retry"),
+        max_age=300,
     )
+    seed_payload = routes_module._retry_serializer("c" * 64).loads(
+        seed_value,
+        max_age=300,
+    )
+    assert retry_payload == seed_payload
 
 
 def test_runtime_error_inside_checkout_body_is_not_misreported_as_lock_busy(
