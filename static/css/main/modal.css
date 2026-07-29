@@ -1527,7 +1527,7 @@
 .sm-share-menu {
   position: absolute;
   z-index: 30;
-  right: 0;
+  left: 0;
   bottom: calc(100% + 8px);
   width: min(230px, calc(100vw - 40px));
   padding: 8px;

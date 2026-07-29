@@ -149,7 +149,8 @@
       if (menu.hidden) open();
       else close(true);
     }
-    async function onCopy() {
+    async function onCopy(event) {
+      event.stopPropagation();
       const url = canonical();
       if (!url) {
         setStatus('Không tạo được liên kết.');
@@ -159,7 +160,8 @@
       setStatus(copied ? 'Đã sao chép liên kết.' : 'Không sao chép được. Hãy thử lại.');
       if (copied) track(view, listingId(), surface(), 'copy');
     }
-    function onFacebook() {
+    function onFacebook(event) {
+      event.stopPropagation();
       const url = facebookShareUrl(canonical());
       if (!url) {
         setStatus('Không tạo được liên kết.');
@@ -174,7 +176,8 @@
       }
     }
     function onDocumentClick(event) {
-      if (!root.contains(event.target)) close(false);
+      const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+      if (!path.includes(root) && !root.contains(event.target)) close(false);
     }
     function onKeydown(event) {
       if (event.key === 'Escape' && !menu.hidden) {
@@ -186,7 +189,7 @@
     trigger.addEventListener('click', onTrigger);
     if (copyButton) copyButton.addEventListener('click', onCopy);
     if (facebookButton) facebookButton.addEventListener('click', onFacebook);
-    root.ownerDocument.addEventListener('click', onDocumentClick);
+    root.ownerDocument.addEventListener('pointerdown', onDocumentClick);
     root.addEventListener('keydown', onKeydown);
 
     return {
@@ -195,7 +198,7 @@
         trigger.removeEventListener('click', onTrigger);
         if (copyButton) copyButton.removeEventListener('click', onCopy);
         if (facebookButton) facebookButton.removeEventListener('click', onFacebook);
-        root.ownerDocument.removeEventListener('click', onDocumentClick);
+        root.ownerDocument.removeEventListener('pointerdown', onDocumentClick);
         root.removeEventListener('keydown', onKeydown);
         delete root.dataset.shareBound;
       },

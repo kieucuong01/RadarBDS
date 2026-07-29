@@ -5354,104 +5354,6 @@ def get_price_history(listing_id):
                     item["url"] = curr["url"]
                 history.append(item)
 
-        comps = []
-        if curr and curr["ward"]:
-            ward = curr["ward"]
-            area = curr["area_m2"] or 0
-            prop_type = curr["property_type"]
-            road_tier = curr["road_tier"]
-            curr_ppm2 = curr["price_per_m2"] or 0
-            curr_title_tokens = _title_tokens(curr["title"])
-            area_min = max(1, area * 0.75) if area else 1
-            area_max = area * 1.30 if area else 20000
-            ppm2_min = curr_ppm2 * 0.55 if curr_ppm2 else 0
-            ppm2_max = curr_ppm2 * 1.45 if curr_ppm2 else 999999
-            comp_where = [
-                "ward = ?",
-                "id != ?",
-                "price_ty > 0",
-                "probably_sold = 0",
-                "COALESCE(is_blacklisted,0)=0",
-                "COALESCE(review_hidden,0)=0",
-                "possibly_duplicate = 0",
-            ]
-            comp_params = [ward, listing_id]
-            if prop_type:
-                comp_where.append("property_type = ?")
-                comp_params.append(prop_type)
-            comp_where.append("area_m2 BETWEEN ? AND ?")
-            comp_params.extend([area_min, area_max])
-            if curr_ppm2 > 0:
-                comp_where.append("COALESCE(price_per_m2, 0) BETWEEN ? AND ?")
-                comp_params.extend([ppm2_min, ppm2_max])
-            if road_tier is not None:
-                comp_where.append("(road_tier IS NULL OR ABS(road_tier - ?) <= 1)")
-                comp_params.append(road_tier)
-            comp_params.extend([area, curr_ppm2])
-
-            comp_rows = conn.execute(f"""
-                SELECT id, title, description, url, ward, price_ty, area_m2, frontage_m, depth_m,
-                       price_per_m2, property_type, road_tier, road_name, road_type, road_width_m,
-                       tho_cu_m2, tho_cu_ratio,
-                       COALESCE(posted_at, crawled_at) as dt
-                FROM listings
-                WHERE {" AND ".join(comp_where)}
-                ORDER BY ABS(area_m2 - ?) ASC,
-                         ABS(COALESCE(price_per_m2, 0) - ?) ASC,
-                         COALESCE(posted_at, crawled_at) DESC
-                LIMIT 20
-            """, comp_params).fetchall()
-            ranked = []
-            for c in comp_rows:
-                area_gap_pct = 0.0
-                if area and c["area_m2"]:
-                    area_gap_pct = abs(c["area_m2"] - area) / area
-                ppm2_gap_pct = 0.0
-                if curr_ppm2 and c["price_per_m2"]:
-                    ppm2_gap_pct = abs(c["price_per_m2"] - curr_ppm2) / curr_ppm2
-                road_gap = 0
-                if road_tier is not None and c["road_tier"] is not None:
-                    road_gap = abs(c["road_tier"] - road_tier)
-                text_sim = _jaccard(curr_title_tokens, _title_tokens(c["title"]))
-
-                # Weighted score: area+ppm2 are strongest, then road tier and title similarity.
-                score = 100.0
-                score -= min(45.0, area_gap_pct * 100 * 0.55)
-                score -= min(30.0, ppm2_gap_pct * 100 * 0.30)
-                score -= min(12.0, road_gap * 6.0)
-                score += min(12.0, text_sim * 12.0)
-                score = round(max(0.0, min(99.0, score)), 1)
-
-                badge_meta = signal_badge_metadata(c)
-                ranked.append({
-                    'id': c["id"],
-                    'title': (c["title"] or '')[:80],
-                    'url': (c["url"] or "") if tier == "admin" else "",
-                    'detail_url': f"/listing/{c['id']}",
-                    'price_ty': c["price_ty"],
-                    'area_m2': c["area_m2"],
-                    'frontage_m': c["frontage_m"],
-                    'depth_m': c["depth_m"],
-                    'price_per_m2': c["price_per_m2"],
-                    'ward': c["ward"],
-                    'property_type': c["property_type"],
-                    'property_type_label': badge_meta["property_type_label"],
-                    'road_tier': c["road_tier"],
-                    'road_type': c["road_type"],
-                    'road_width_m': badge_meta["road_width_m"],
-                    'road_label': badge_meta["road_label"],
-                    'street_label': badge_meta["street_label"],
-                    'tho_cu_m2': badge_meta["tho_cu_m2"],
-                    'tho_cu_ratio': badge_meta["tho_cu_ratio"],
-                    'tho_cu_label': badge_meta["tho_cu_label"],
-                    'date': (c["dt"] or '')[:7],
-                    'area_gap_pct': round(area_gap_pct * 100, 1),
-                    'match_score': score,
-                })
-
-            ranked.sort(key=lambda x: (-x["match_score"], x["area_gap_pct"], -(x["price_per_m2"] or 0)))
-            comps = ranked[:6]
-
         # Shared compact card payload used by both detail surfaces.
         comps = load_listing_comparables(conn, listing_id, tier=tier, limit=18)
 
@@ -7967,23 +7869,6 @@ def admin_api_ban_user(user_id):
         clear_admin_read_cache("growth")
     return jsonify(result), status
 
-
-def _title_tokens(text):
-    if not text:
-        return set()
-    norm = re.sub(r"[^a-z0-9\s]", " ", str(text).lower())
-    toks = [t for t in norm.split() if len(t) > 2]
-    return set(toks)
-
-
-def _jaccard(a, b):
-    if not a or not b:
-        return 0.0
-    inter = len(a & b)
-    union = len(a | b)
-    if union == 0:
-        return 0.0
-    return inter / union
 
 @rate_limit("assistant_chat", limits={"guest": 40, "free": 160, "vip": 500, "admin": None})
 def api_chat():

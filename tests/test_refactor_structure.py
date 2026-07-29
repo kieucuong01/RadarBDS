@@ -223,7 +223,7 @@ def test_signal_modal_close_button_respects_mobile_safe_area():
 
     assert 'class="close-modal"' in html
     assert 'style="top:12px; right:12px; z-index:20;"' in html
-    assert "css/main/modal.css') ~ '?v=favorite-listings-20260715'" in html
+    assert "css/main/modal.css') ~ '?v=signal-detail-actions-20260729'" in html
     header_rule = re.search(r"#signalModal::before\s*\{(?P<body>[^}]+)\}", modal_css, re.S)
     assert header_rule, "missing mobile signal modal top close zone"
     header_body = header_rule.group("body")
@@ -245,7 +245,7 @@ def test_signal_modal_close_button_respects_mobile_safe_area():
 
 def test_signal_modal_tabs_meta_and_comps_are_investor_friendly():
     html = _read("templates/index.html")
-    app_source = _read("app.py")
+    comparable_source = _read("services/listing_comparables.py")
     modal_js = _read("static/js/main/modal.js")
     modal_css = _read("static/css/main/modal.css")
 
@@ -253,8 +253,13 @@ def test_signal_modal_tabs_meta_and_comps_are_investor_friendly():
     history_idx = html.find('data-sm-tab="history"')
     comps_idx = html.find('data-sm-tab="comps"')
     memo_idx = html.find('data-sm-tab="memo"')
-    assert -1 not in (desc_idx, history_idx, comps_idx, memo_idx)
-    assert desc_idx < history_idx < comps_idx < memo_idx
+    assert -1 not in (desc_idx, history_idx, memo_idx)
+    assert comps_idx == -1
+    assert desc_idx < history_idx < memo_idx
+    assert html.find('class="sm-right"') < html.find("data-comparable-carousel")
+    assert "comparable_carousel.js" in html
+    assert "RadarComparableCarousel.mount" in modal_js
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in modal_css
     assert ">Cố vấn<" in html
     assert ">Ghi chú<" not in html
     assert "sm-source-badge" not in html
@@ -266,26 +271,14 @@ def test_signal_modal_tabs_meta_and_comps_are_investor_friendly():
     assert "d.source || '-'" not in modal_js
 
     for expected in [
-        "renderCompInfoTag",
-        "sm-comp-tags",
-        "sm-comp-score",
-        "sm-comp-price-strip",
-        "sm-comp-area",
-        "sm-comp-road",
-        "sm-comp-property",
-        "sm-comp-land",
+        "format_signal_card_record",
+        "l.frontage_m",
+        "l.depth_m",
+        "l.road_name",
+        "l.road_type",
+        "l.tho_cu_m2",
     ]:
-        assert expected in modal_js or expected in modal_css
-
-    for expected in [
-        "badge_meta = signal_badge_metadata(c)",
-        "'frontage_m': c[\"frontage_m\"]",
-        "'depth_m': c[\"depth_m\"]",
-        "'road_label': badge_meta[\"road_label\"]",
-        "'street_label': badge_meta[\"street_label\"]",
-        "'tho_cu_label': badge_meta[\"tho_cu_label\"]",
-    ]:
-        assert expected in app_source
+        assert expected in comparable_source
 
 
 def test_signal_cards_use_professional_empty_image_state():
