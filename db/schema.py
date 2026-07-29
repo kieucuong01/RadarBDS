@@ -109,6 +109,27 @@ CREATE INDEX IF NOT EXISTS idx_listings_source_first_seen
     ON listings(source, (COALESCE(first_seen_at, crawled_at)));
 
 
+CREATE TABLE IF NOT EXISTS listing_map_locations (
+    listing_id BIGINT PRIMARY KEY REFERENCES listings(id) ON DELETE CASCADE,
+    lat DOUBLE PRECISION NOT NULL CHECK (lat BETWEEN -90 AND 90),
+    lng DOUBLE PRECISION NOT NULL CHECK (lng BETWEEN -180 AND 180),
+    location_precision TEXT NOT NULL
+        CHECK (location_precision IN ('exact', 'road', 'ward')),
+    location_key TEXT NOT NULL,
+    location_label TEXT NOT NULL,
+    source TEXT NOT NULL,
+    resolver_version TEXT NOT NULL,
+    listing_location_signature TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_listing_map_locations_precision
+    ON listing_map_locations(location_precision);
+CREATE INDEX IF NOT EXISTS idx_listing_map_locations_point
+    ON listing_map_locations(lat, lng);
+CREATE INDEX IF NOT EXISTS idx_listing_map_locations_key
+    ON listing_map_locations(location_key);
+
+
 -- ================================================================
 -- TẦNG 3: ENRICHMENT
 -- ================================================================
@@ -624,6 +645,16 @@ def init_schema() -> None:
                     pass
                 if _core_schema_exists(conn):
                     try:
+                        _migrate_listing_map_locations(conn)
+                        if not _table_exists(conn, "listing_map_locations"):
+                            raise RuntimeError(
+                                "required table listing_map_locations is missing"
+                            )
+                    except Exception as migration_exc:
+                        raise RuntimeError(
+                            "required table listing_map_locations is unavailable"
+                        ) from migration_exc
+                    try:
                         _migrate_user_favorite_listings(conn)
                         _migrate_property_type_aliases(conn)
                     except Exception as migration_exc:
@@ -651,8 +682,48 @@ def _core_schema_exists(conn: Any) -> bool:
     return all(_table_exists(conn, name) for name in ("raw_listings", "listings", "valuation_results", "crawl_runs"))
 
 
+def _migrate_listing_map_locations(conn: Any) -> None:
+    """Create the derived listing-location store and its read indexes."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS listing_map_locations (
+            listing_id BIGINT PRIMARY KEY REFERENCES listings(id) ON DELETE CASCADE,
+            lat DOUBLE PRECISION NOT NULL CHECK (lat BETWEEN -90 AND 90),
+            lng DOUBLE PRECISION NOT NULL CHECK (lng BETWEEN -180 AND 180),
+            location_precision TEXT NOT NULL
+                CHECK (location_precision IN ('exact', 'road', 'ward')),
+            location_key TEXT NOT NULL,
+            location_label TEXT NOT NULL,
+            source TEXT NOT NULL,
+            resolver_version TEXT NOT NULL,
+            listing_location_signature TEXT NOT NULL,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_listing_map_locations_precision
+        ON listing_map_locations(location_precision)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_listing_map_locations_point
+        ON listing_map_locations(lat, lng)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_listing_map_locations_key
+        ON listing_map_locations(location_key)
+        """
+    )
+
+
 def _run_migrations(conn: Any) -> None:
     """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
+    _migrate_listing_map_locations(conn)
     existing = _table_columns(conn, "listings")
     migrations = [
         ("possibly_duplicate", "ALTER TABLE listings ADD COLUMN possibly_duplicate INTEGER DEFAULT 0"),

@@ -21,6 +21,9 @@ class _FakeConn:
         self.executed.append(sql)
         if "CREATE TABLE IF NOT EXISTS schema_migrations" in sql:
             return _FakeCursor()
+        if "CREATE TABLE IF NOT EXISTS listing_map_locations" in sql:
+            self.existing_tables.add("listing_map_locations")
+            return _FakeCursor()
         if "information_schema.tables" in sql:
             return _FakeCursor([{"exists": 1}] if params and params[0] in self.existing_tables else [])
         return _FakeCursor()
@@ -47,6 +50,7 @@ def test_init_schema_skips_ddl_when_existing_schema_lacks_owner(monkeypatch):
 
     assert conn.rolled_back
     assert any("CREATE TABLE IF NOT EXISTS user_favorite_listings" in sql for sql in conn.executed)
+    assert any("CREATE TABLE IF NOT EXISTS listing_map_locations" in sql for sql in conn.executed)
 
 
 def test_init_schema_still_raises_when_core_schema_missing(monkeypatch):
@@ -56,4 +60,22 @@ def test_init_schema_still_raises_when_core_schema_missing(monkeypatch):
     monkeypatch.setattr(schema, "get_conn", lambda: _fake_get_conn(conn))
 
     with pytest.raises(RuntimeError, match="must be owner"):
+        schema.init_schema()
+
+
+def test_init_schema_does_not_accept_missing_derived_location_table(monkeypatch):
+    import db.schema as schema
+
+    class _NoDerivedTableConnection(_FakeConn):
+        def execute(self, sql, params=None):
+            if "CREATE TABLE IF NOT EXISTS listing_map_locations" in sql:
+                raise RuntimeError("permission denied for schema public")
+            return super().execute(sql, params)
+
+    conn = _NoDerivedTableConnection(
+        {"raw_listings", "listings", "valuation_results", "crawl_runs"}
+    )
+    monkeypatch.setattr(schema, "get_conn", lambda: _fake_get_conn(conn))
+
+    with pytest.raises(RuntimeError, match="listing_map_locations"):
         schema.init_schema()
