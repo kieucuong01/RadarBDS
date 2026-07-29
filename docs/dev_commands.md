@@ -33,6 +33,17 @@ Get-Service postgresql-x64-18
 & $py -X utf8 radar.py reprocess --full
 ```
 
+### Backfill vị trí bản đồ
+
+```powershell
+& $py -X utf8 radar.py map-locations --dry-run
+& $py -X utf8 radar.py map-locations --full
+```
+
+Kết quả gồm `scanned`, `exact`, `road`, `ward`, `unmapped`, `inserted`,
+`updated`, `unchanged`, và `deleted`. Lệnh chỉ cập nhật bảng dẫn xuất
+`listing_map_locations`; không cập nhật bất kỳ cột nào trong `listings`.
+
 Direct `psql` access to the same local DB:
 
 ```powershell

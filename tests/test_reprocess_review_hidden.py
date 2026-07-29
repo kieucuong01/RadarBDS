@@ -9,6 +9,32 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
+class ReprocessMapLocationIsolationTest(unittest.TestCase):
+    @mock.patch(
+        "services.listing_location_backfill.backfill_listing_locations",
+        return_value={"scanned": 2, "updated": 2},
+    )
+    def test_map_location_backfill_receives_incremental_ids(self, backfill):
+        from cleansing.reprocess import _run_listing_map_backfill
+
+        result = _run_listing_map_backfill([7, 9], full=False)
+
+        self.assertEqual(result, {"scanned": 2, "updated": 2})
+        backfill.assert_called_once_with(listing_ids=[7, 9], full=False)
+
+    @mock.patch(
+        "services.listing_location_backfill.backfill_listing_locations",
+        side_effect=RuntimeError("map registry unavailable"),
+    )
+    def test_map_location_failure_is_isolated(self, _backfill):
+        from cleansing.reprocess import _run_listing_map_backfill
+
+        result = _run_listing_map_backfill([7], full=True)
+
+        self.assertEqual(result["status"], "error")
+        self.assertEqual(result["error"], "map registry unavailable")
+
+
 class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
     def setUp(self):
         from db import connection

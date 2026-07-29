@@ -95,6 +95,7 @@ from cli.queries import (
 )
 from cli.review import cmd_review_queue, cmd_review_save
 from cli.public_content import cmd_public_content_sync
+from cli.map_locations import cmd_map_locations
 from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
@@ -112,6 +113,13 @@ def build_parser():
     p_re.add_argument("--full",   action="store_true", help="Chạy toàn bộ dữ liệu (mặc định là incremental)")
     p_re.add_argument("--valuation-only", action="store_true")
     p_re.add_argument("--listings-only",  action="store_true")
+
+    p_map = sub.add_parser(
+        "map-locations",
+        help="Backfill deterministic listing map locations",
+    )
+    p_map.add_argument("--full", action="store_true")
+    p_map.add_argument("--dry-run", action="store_true")
 
     # dashboard
     p_db = sub.add_parser("dashboard", help="Generate dashboard HTML")
@@ -290,6 +298,8 @@ def main():
 
     if args.cmd == "reprocess":
         cmd_reprocess(args)
+    elif args.cmd == "map-locations":
+        cmd_map_locations(args)
     elif args.cmd == "dashboard":
         cmd_dashboard(args)
     elif args.cmd == "import-guland":

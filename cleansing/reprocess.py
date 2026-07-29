@@ -618,6 +618,22 @@ def run_full_reprocess(source: str = None, since: str = None, full: bool = False
         return _run_full_reprocess(source=source, since=since, full=full, raw_ids=raw_ids)
 
 
+def _run_listing_map_backfill(processed_ids: list[int], *, full: bool) -> dict:
+    """Keep map derivation failure isolated from listing and valuation work."""
+    try:
+        from services.listing_location_backfill import (
+            backfill_listing_locations,
+        )
+
+        return backfill_listing_locations(
+            listing_ids=None if full else processed_ids,
+            full=full,
+        )
+    except Exception as exc:
+        logger.exception("Listing map location backfill failed")
+        return {"status": "error", "error": str(exc)}
+
+
 def _run_full_reprocess(source: str = None, since: str = None, full: bool = False, raw_ids: list = None):
     """Chạy pipeline reprocess: raw → listings → valuation."""
     logger.info("=" * 55)
@@ -636,6 +652,10 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
     
     # Valuation: Nếu full=False, chỉ định giá các tin vừa mới xử lý
     val_stats = reprocess_valuation(incremental_ids=None if full else processed_ids)
+    map_location_stats = _run_listing_map_backfill(
+        processed_ids,
+        full=full,
+    )
 
 
     # Price drops — BUG FIX: chưa từng được gọi trong pipeline
@@ -670,6 +690,7 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
     logger.info(f"  Listings : {listing_stats}")
     logger.info(f"  Legal    : {legal_stats}")
     logger.info(f"  Valuation: {val_stats}")
+    logger.info(f"  MapLocations: {map_location_stats}")
     logger.info(f"  PriceDrop: {n_drops} new drops detected")
     logger.info(f"  Lifecycle: {n_delisted} delisted ({n_likely_sold} likely sold <72h)")
     logger.info(f"  Dedup    : {dedup_stats['dup_groups']} groups | {dedup_stats['flagged']} flagged | {dedup_stats['unique_lots']} unique lots")
@@ -677,6 +698,7 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
     logger.info("=" * 55)
 
     return {"listings": listing_stats, "legal": legal_stats, "valuation": val_stats,
+            "map_locations": map_location_stats,
             "dedup": dedup_stats, "price_drops": n_drops,
             "lifecycle": {"delisted": n_delisted, "likely_sold": n_likely_sold}}
 
