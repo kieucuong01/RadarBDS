@@ -207,6 +207,9 @@
       </div>
     </section>
 
+    {% set lead_cta_context = "seo_landing_lead" %}
+    {% include "partials/seo_lead_capture.html" %}
+
     <section class="seo-shell bd-map-directory-section" aria-labelledby="danh-sach-phuong-xa-moi">
       <div class="planning-section-heading">
         <div>
@@ -321,6 +324,7 @@
   <a class="bd-map-mobile-cta" href="/?tab=signals" data-map-mobile-cta data-track-cta="binh_duong_map_mobile_dashboard">Lọc tin đang bán</a>
 
   {% include "partials/seo_footer.html" %}
+  {% include "partials/seo_lead_capture_script.html" %}
   {% set view_event = "seo_landing_viewed" %}
   {% include "partials/seo_tracking.html" %}
 </body>
