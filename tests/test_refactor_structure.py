@@ -58,7 +58,7 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
         assert (ROOT / "static" / asset).exists(), f"missing static/{asset}"
 
     assert "window.RADAR_ASSETS" in html
-    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=favorite-listings-20260715\"" in html
+    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729\"" in html
     assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611\"" in html
     assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=favorite-listings-20260715\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611\"" in html
@@ -201,7 +201,7 @@ def test_signal_modal_history_uses_compact_timeline_ui():
         "renderSignalHistoryRows",
         "_historyChartTimeline",
         "const chartTimeline = _historyChartTimeline(decoratedTimeline)",
-        "favorite-listings-20260715",
+        "signal-detail-regression-20260729",
         "toggleSignalHistoryRows",
         "sm-history-summary",
         "sm-history-toggle",
@@ -223,7 +223,7 @@ def test_signal_modal_close_button_respects_mobile_safe_area():
 
     assert 'class="close-modal"' in html
     assert 'style="top:12px; right:12px; z-index:20;"' in html
-    assert "css/main/modal.css') ~ '?v=signal-detail-actions-20260729'" in html
+    assert "css/main/modal.css') ~ '?v=signal-detail-regression-20260729'" in html
     header_rule = re.search(r"#signalModal::before\s*\{(?P<body>[^}]+)\}", modal_css, re.S)
     assert header_rule, "missing mobile signal modal top close zone"
     header_body = header_rule.group("body")
