@@ -1,0 +1,29 @@
+{
+  "slug": "thuan-an-map-bundle",
+  "city_slug": "thuan-an",
+  "city_name": "Thuận An",
+  "version": "1.0",
+  "price_vnd": 99000,
+  "legacy_wards": [
+    "An Phú",
+    "An Sơn",
+    "An Thạnh",
+    "Bình Chuẩn",
+    "Bình Hòa",
+    "Bình Nhâm",
+    "Hưng Định",
+    "Lái Thiêu",
+    "Thuận Giao",
+    "Vĩnh Phú"
+  ],
+  "current_wards": [
+    "An Phú",
+    "Bình Hòa",
+    "Lái Thiêu",
+    "Thuận An",
+    "Thuận Giao"
+  ],
+  "derived_legacy_wards": ["Vĩnh Phú"],
+  "formats": ["pdf", "svg", "kml"],
+  "font_family": "Be Vietnam Pro"
+}

@@ -1,0 +1,28 @@
+{
+  "slug": "ben-cat-map-bundle",
+  "city_slug": "ben-cat",
+  "city_name": "Bến Cát",
+  "version": "1.0",
+  "price_vnd": 99000,
+  "legacy_wards": [
+    "An Điền",
+    "An Tây",
+    "Chánh Phú Hòa",
+    "Hòa Lợi",
+    "Mỹ Phước",
+    "Phú An",
+    "Tân Định",
+    "Thới Hòa"
+  ],
+  "current_wards": [
+    "Hòa Lợi",
+    "Tây Nam",
+    "Long Nguyên",
+    "Bến Cát",
+    "Chánh Phú Hòa",
+    "Thới Hòa"
+  ],
+  "derived_legacy_wards": [],
+  "formats": ["pdf", "svg", "kml"],
+  "font_family": "Be Vietnam Pro"
+}

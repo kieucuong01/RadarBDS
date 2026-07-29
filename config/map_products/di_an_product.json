@@ -1,0 +1,24 @@
+{
+  "slug": "di-an-map-bundle",
+  "city_slug": "di-an",
+  "city_name": "Dĩ An",
+  "version": "1.0",
+  "price_vnd": 99000,
+  "legacy_wards": [
+    "An Bình",
+    "Bình An",
+    "Bình Thắng",
+    "Dĩ An",
+    "Đông Hòa",
+    "Tân Bình",
+    "Tân Đông Hiệp"
+  ],
+  "current_wards": [
+    "Đông Hòa",
+    "Dĩ An",
+    "Tân Đông Hiệp"
+  ],
+  "derived_legacy_wards": ["An Bình"],
+  "formats": ["pdf", "svg", "kml"],
+  "font_family": "Be Vietnam Pro"
+}

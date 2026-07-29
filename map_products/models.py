@@ -12,10 +12,13 @@ from typing import Any
 
 _PRODUCT_FIELDS = {
     "slug",
+    "city_slug",
+    "city_name",
     "version",
     "price_vnd",
     "legacy_wards",
     "current_wards",
+    "derived_legacy_wards",
     "formats",
     "font_family",
 }
@@ -51,10 +54,13 @@ class MapSource:
 @dataclass(frozen=True)
 class MapProductSpec:
     slug: str
+    city_slug: str
+    city_name: str
     version: str
     price_vnd: int
     legacy_wards: tuple[str, ...]
     current_wards: tuple[str, ...]
+    derived_legacy_wards: tuple[str, ...]
     formats: tuple[str, ...]
     font_family: str
 
@@ -128,12 +134,29 @@ def load_product_spec(path: Path) -> MapProductSpec:
     price = data["price_vnd"]
     if isinstance(price, bool) or not isinstance(price, int) or price <= 0:
         raise ValueError("price_vnd must be a positive integer")
+    legacy_wards = _unique_strings(data["legacy_wards"], "legacy_wards")
+    current_wards = _unique_strings(data["current_wards"], "current_wards")
+    derived_legacy_wards = (
+        tuple()
+        if data["derived_legacy_wards"] == []
+        else _unique_strings(
+            data["derived_legacy_wards"],
+            "derived_legacy_wards",
+        )
+    )
+    if not set(derived_legacy_wards).issubset(set(legacy_wards)):
+        raise ValueError(
+            "derived_legacy_wards must be a subset of legacy_wards"
+        )
     return MapProductSpec(
         slug=_non_empty_string(data["slug"], "slug"),
+        city_slug=_non_empty_string(data["city_slug"], "city_slug"),
+        city_name=_non_empty_string(data["city_name"], "city_name"),
         version=_non_empty_string(data["version"], "version"),
         price_vnd=price,
-        legacy_wards=_unique_strings(data["legacy_wards"], "legacy_wards"),
-        current_wards=_unique_strings(data["current_wards"], "current_wards"),
+        legacy_wards=legacy_wards,
+        current_wards=current_wards,
+        derived_legacy_wards=derived_legacy_wards,
         formats=_unique_strings(data["formats"], "formats"),
         font_family=_non_empty_string(data["font_family"], "font_family"),
     )

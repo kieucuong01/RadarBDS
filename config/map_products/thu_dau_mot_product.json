@@ -1,5 +1,7 @@
 {
   "slug": "thu-dau-mot-map-bundle",
+  "city_slug": "thu-dau-mot",
+  "city_name": "Thủ Dầu Một",
   "version": "1.0",
   "price_vnd": 99000,
   "legacy_wards": [
@@ -24,6 +26,10 @@
     "Chánh Hiệp",
     "Bình Dương",
     "Phú An"
+  ],
+  "derived_legacy_wards": [
+    "Hòa Phú",
+    "Phú Tân"
   ],
   "formats": ["pdf", "svg", "kml"],
   "font_family": "Be Vietnam Pro"
