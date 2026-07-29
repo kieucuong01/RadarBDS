@@ -90,3 +90,18 @@ def test_ward_price_uses_classic_visual_style_prompt_and_asset(tmp_path):
     assert "ĐANG SO GIÁ PHÚ TÂN?" in content["visual_prompt"]
     assert Path(content["visual_path"]).exists()
 
+
+def test_budget_article_caption_is_specific_and_not_generic_ward_copy(tmp_path):
+    social_queue = _load_queue_module()
+    social_queue.ASSET_DIR = tmp_path
+
+    item = social_queue.create(_queue_args("nha-dat-thu-dau-mot-duoi-3-ty-phuong-nao-nhieu-lua-chon"))
+    message = item["content"]["message"]
+
+    assert item["content"]["visual_style"] == "budget_filter"
+    assert "Theo dữ liệu 14 ngày" in message
+    assert "Hiệp An: 197 tin" in message
+    assert "Mở Radar để lọc theo ngân sách/loại hình" in message
+    assert "lọc phường Thủ Dầu Một · dữ liệu 14 ngày" not in message
+    assert "chưa đủ dữ liệu" not in message
+

@@ -291,12 +291,22 @@ def _visual_metrics(kind: str, page: dict[str, Any]) -> list[tuple[str, str]]:
         if listing.get("value") and len(metrics) < 2:
             metrics.append(("Tin theo dõi", listing["value"]))
     elif kind == "budget_filter":
-        if listing.get("value"):
+        for card in cards:
+            label = _plain(card.get("label") or card.get("title") or "")
+            value = _plain(card.get("value") or "")
+            note = _plain(card.get("note") or "")
+            if not label or not value or "nguồn dữ liệu" in label.casefold():
+                continue
+            area = note if note and re.search(r"^[A-ZÀ-Ỹ][\wÀ-ỹ\s]+$", note) and "tin" in label.casefold() else ""
+            if not area:
+                area = re.sub(r"\s+dưới\s+\d+\s*tỷ.*$", "", label, flags=re.I)
+                area = re.sub(r"\s+dấu hiệu.*$", "", area, flags=re.I).strip()
+            metric_value = f"{value} tin" if value.isdigit() else value
+            metrics.append((area or label, metric_value))
+            if len(metrics) >= 2:
+                break
+        if not metrics and listing.get("value"):
             metrics.append(("Tin phù hợp", listing["value"]))
-        if land.get("value"):
-            metrics.append(("Giá/m²", land["value"]))
-        elif house.get("value"):
-            metrics.append(("Giá/m²", house["value"]))
     elif kind == "risk_checklist":
         if signal.get("value"):
             metrics.append(("Cần kiểm tra", signal["value"]))
@@ -359,8 +369,6 @@ def _draw_classic_price_box(
 def _make_classic_ward_price_visual(slug: str, page: dict[str, Any], now: dt.datetime) -> str:
     ASSET_DIR.mkdir(parents=True, exist_ok=True)
     out = ASSET_DIR / f"{now.date().isoformat()}-{slug}.png"
-    if out.exists():
-        return str(out)
 
     cards = _article_cards(page)
     ward = _extract_ward(page, cards)
@@ -446,8 +454,6 @@ def _make_visual(slug: str, page: dict[str, Any], now: dt.datetime) -> str:
     """
     ASSET_DIR.mkdir(parents=True, exist_ok=True)
     out = ASSET_DIR / f"{now.date().isoformat()}-{slug}.png"
-    if out.exists():
-        return str(out)
 
     kind = _visual_kind(slug, page)
     if kind == "ward_price":
@@ -551,6 +557,31 @@ def _ward_filter_cta(ward: str, filter_url: str, article_url: str) -> str:
     )
 
 
+def _budget_bullets(cards: list[dict[str, Any]], limit: int = 3) -> list[str]:
+    bullets: list[str] = []
+    for card in cards:
+        label = _plain(card.get("label") or card.get("title") or "")
+        value = _plain(card.get("value") or "")
+        note = _plain(card.get("note") or "")
+        if not label or not value or "nguồn dữ liệu" in label.casefold():
+            continue
+        area = note if note and re.search(r"^[A-ZÀ-Ỹ][\wÀ-ỹ\s]+$", note) and "tin" in label.casefold() else ""
+        if not area:
+            area = re.sub(r"\s+dưới\s+\d+\s*tỷ.*$", "", label, flags=re.I)
+            area = re.sub(r"\s+dấu hiệu.*$", "", area, flags=re.I).strip()
+        if value.isdigit() and "dấu hiệu" in label.casefold():
+            bullets.append(f"• {area}: {value} tin đáng kiểm tra")
+        elif value.isdigit():
+            bullets.append(f"• {area}: {value} tin")
+        elif note and "tin" in note.casefold():
+            bullets.append(f"• {label}: {value} ({note})")
+        else:
+            bullets.append(f"• {label}: {value}")
+        if len(bullets) >= limit:
+            break
+    return bullets
+
+
 def _variant_for_slug(slug: str, signal_card: dict[str, str]) -> str:
     signal_value = signal_card.get("value") or "0"
     has_signal = bool(re.search(r"[1-9]", signal_value))
@@ -583,6 +614,20 @@ def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slu
     ward_cta_block = ward_cta.replace("\n", "\n        ")
     ward_hashtag = _slug_hashtag(ward)
     hashtags = f"#RadarBDS #BinhDuong #{ward_hashtag if ward_hashtag != 'ThuDauMot' else 'ThuDauMot'}"
+    visual_kind = _visual_kind(slug_key, page)
+
+    if visual_kind == "budget_filter":
+        title = _short_title(page).rstrip("?")
+        bullets = "\n".join(_budget_bullets(cards)) or f"• {listing_count} tin đang theo dõi"
+        return "\n\n".join([
+            f"{title}?",
+            "Theo dữ liệu 14 ngày Radar đang theo dõi, nhóm đáng mở trước là:\n" + bullets,
+            "Đây là giá rao/nhóm tin để lọc ban đầu, không phải giá giao dịch. Vẫn cần kiểm tra sổ, đường/hẻm, quy hoạch và thực địa.",
+            "Mở Radar để lọc theo ngân sách/loại hình:\n" + filter_url,
+            "Bài phân tích dữ liệu:\n" + final_url,
+            "#RadarBDS #BinhDuong #ThuDauMot",
+        ])
+
     variant = _variant_for_slug(slug or _short_title(page), signal)
     if style == "market_pulse":
         variant = "data_first"

@@ -86,18 +86,49 @@ def save_state(state: dict) -> None:
     tmp.replace(STATE_PATH)
 
 
-def create_queue() -> Path:
+def article_candidates() -> list[tuple[str, str]]:
+    """Newest /tin-tuc article slugs with their publish/modified dates."""
+    if str(REPO) not in sys.path:
+        sys.path.insert(0, str(REPO))
+    from config.seo_articles import SEO_ARTICLES  # pylint: disable=import-error
+
+    candidates: list[tuple[str, str]] = []
+    for slug, page in SEO_ARTICLES.items():
+        if not isinstance(page, dict) or not str(page.get("path", "")).startswith("/tin-tuc/"):
+            continue
+        article = page.get("article") or {}
+        article_date = str(article.get("modified_at") or article.get("published_at") or "unknown-date")
+        candidates.append((article_date, str(slug)))
+    return sorted(candidates, reverse=True)
+
+
+def create_queue(slug: str = "latest") -> Path:
     QUEUE_DIR.mkdir(parents=True, exist_ok=True)
-    cmd = [str(QUEUE_SCRIPT), "--slug", "latest", "--mode", "publish", "--out-dir", str(QUEUE_DIR)]
+    cmd = [str(QUEUE_SCRIPT), "--slug", slug, "--mode", "publish", "--out-dir", str(QUEUE_DIR)]
     proc = subprocess.run(cmd, cwd=str(REPO), text=True, capture_output=True, timeout=60, check=False)
     if proc.returncode != 0:
-        raise SystemExit(f"Queue creation failed\nSTDOUT:\n{proc.stdout}\nSTDERR:\n{proc.stderr}")
+        raise SystemExit(f"Queue creation failed for slug={slug}\nSTDOUT:\n{proc.stdout}\nSTDERR:\n{proc.stderr}")
     first = (proc.stdout.strip().splitlines() or [""])[0]
     path = Path(first)
     if not path.exists():
         raise SystemExit(f"Queue script did not return an existing file. Output:\n{proc.stdout}")
     log(f"Queue created: {path}")
     return path
+
+
+def create_unposted_queue(posted: dict) -> Path:
+    """Create queue for newest article not already recorded as posted.
+
+    This avoids reposting the same latest article when Page Care is manually
+    rerun, while still regenerating caption/visual metadata from current code.
+    """
+    for article_date, slug in article_candidates():
+        key = f"{slug}:{article_date}"
+        if key in posted:
+            log(f"Skip already posted candidate: {key}")
+            continue
+        return create_queue(slug)
+    raise SystemExit("No unposted /tin-tuc article candidate found for Page Care")
 
 
 def queue_key(queue_path: Path) -> tuple[str, str, str]:
@@ -135,15 +166,13 @@ def main() -> int:
     QUEUE_DIR.mkdir(parents=True, exist_ok=True)
     RUN_DIR.mkdir(parents=True, exist_ok=True)
     ensure_browser()
-    queue_path = create_queue()
-    key, slug, url = queue_key(queue_path)
     state = load_state()
     posted = state.setdefault("posted", {})
+    queue_path = create_unposted_queue(posted)
+    key, slug, url = queue_key(queue_path)
     if key in posted:
-        log(f"SKIP: already auto-posted {key} at {posted[key].get('posted_at')}")
-        print(f"@rb social auto-post skipped: already posted `{slug}` ({url})")
-        return 0
-    log(f"Publishing latest social item: {key}")
+        raise SystemExit(f"Internal dedupe error: selected already-posted queue {key}")
+    log(f"Publishing social item: {key}")
     result = publish(queue_path)
     posted[key] = {
         "slug": slug,
