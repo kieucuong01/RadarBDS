@@ -78,6 +78,17 @@ def test_dashboard_feed_delegates_to_shared_signal_card_renderer():
     assert "signal_card.js" in detail
 
 
+def test_shared_signal_cards_have_resilient_media_and_no_link_underline():
+    renderer = _read("static/js/main/signal_card.js")
+    cards = _read("static/css/main/cards.css")
+
+    assert "RadarSignalCard.useFallbackImage(this)" in renderer
+    assert 'data-default-image="' in renderer
+    assert ".scard,\n.scard:visited,\n.scard:hover" in cards
+    assert "text-decoration: none" in cards
+    assert ".scard:focus-visible" in cards
+
+
 def test_comparables_are_full_width_after_both_detail_columns():
     modal = _read("templates/index.html")
     detail = _read("templates/listing_detail.html")

@@ -5,6 +5,33 @@
 })(typeof window !== 'undefined' ? window : null, function (root) {
   'use strict';
 
+  var DEFAULT_IMAGE = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 338" role="img" aria-label="Ảnh mặc định Radar BĐS">'
+    + '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#172554"/><stop offset="1" stop-color="#0f766e"/></linearGradient></defs>'
+    + '<rect width="520" height="338" fill="url(#g)"/>'
+    + '<path d="M74 247l102-95 67 59 64-68 139 104H74z" fill="#dbeafe" opacity=".3"/>'
+    + '<circle cx="388" cy="91" r="36" fill="#fbbf24" opacity=".78"/>'
+    + '<path d="M222 121h76v76h-76z" fill="none" stroke="#fff" stroke-width="11" transform="rotate(45 260 159)"/>'
+    + '<circle cx="260" cy="159" r="15" fill="#fff"/>'
+    + '<text x="260" y="292" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="25" font-weight="700">Radar BĐS</text>'
+    + '</svg>'
+  );
+
+  function defaultImage() {
+    return DEFAULT_IMAGE;
+  }
+
+  function useFallbackImage(image) {
+    if (!image) return;
+    image.onerror = null;
+    image.src = DEFAULT_IMAGE;
+    image.dataset.defaultImage = 'true';
+    if (image.classList) image.classList.add('is-default');
+    if (image.parentElement && image.parentElement.classList) {
+      image.parentElement.classList.add('is-image-missing');
+    }
+  }
+
   function esc(value) {
     return String(value == null ? '' : value)
       .replace(/&/g, '&amp;')
@@ -91,6 +118,8 @@
     var openMode = options.openMode || 'modal';
     var handler = String(options.openHandler || 'openSignal').replace(/[^A-Za-z0-9_$]/g, '');
     var image = item.primary_img || (Array.isArray(item.imgs) ? item.imgs[0] : '') || '';
+    var isDefaultImage = !image;
+    var imageSource = image || DEFAULT_IMAGE;
     var price = positive(item.price_ty || item.price);
     var actual = positive(item.actual_ppm2 || item.price_per_m2);
     var fair = positive(item.fair_ppm2_display || item.fair_ppm2);
@@ -112,8 +141,12 @@
       ? `<a href="#" class="btn-zalo" onclick="event.preventDefault();event.stopPropagation();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'card_signal')">Ráp mối</a>`
       : '';
     return wrapperOpen + ' ' + dataAttrs(item) + ' aria-label="Xem chi tiết ' + esc(item.title || ('tin #' + item.id)) + '">'
-      + '<div class="sc-img-wrap' + (image ? '' : ' sc-img-wrap-empty') + '">'
-      + (image ? '<img class="sc-img" src="' + esc(image) + '" loading="lazy" decoding="async" width="520" height="338" alt="Ảnh tin đăng">' : '')
+      + '<div class="sc-img-wrap' + (isDefaultImage ? ' sc-img-wrap-empty' : '') + '">'
+      + '<img class="sc-img' + (isDefaultImage ? ' is-default' : '') + '" src="' + esc(imageSource)
+      + '" loading="lazy" decoding="async" width="520" height="338" alt="'
+      + (isDefaultImage ? 'Ảnh mặc định Radar BĐS' : 'Ảnh tin đăng')
+      + '" data-default-image="' + (isDefaultImage ? 'true' : 'false')
+      + '" onerror="RadarSignalCard.useFallbackImage(this)">'
       + '<div class="sc-empty-media"><div class="sc-empty-media-copy"><strong>Chưa có ảnh</strong><span>Xem giá và vị trí</span></div></div>'
       + (mos ? '<div class="mos-badge">Rẻ hơn ' + Math.round(mos) + '%</div>' : '')
       + (newListing ? '<div class="new-badge">MỚI</div>' : '')
@@ -136,5 +169,10 @@
       + '</div>' + wrapperClose;
   }
 
-  return { render: render, detailHref: detailHref };
+  return {
+    render: render,
+    detailHref: detailHref,
+    defaultImage: defaultImage,
+    useFallbackImage: useFallbackImage
+  };
 });

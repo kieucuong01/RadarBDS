@@ -47,6 +47,30 @@ assert.match(comparable, /meta-chip-ward/);
 assert.match(comparable, /meta-chip-area/);
 assert.doesNotMatch(comparable, /favorite-btn/);
 assert.doesNotMatch(comparable, /Ráp mối/);
+assert.match(comparable, /onerror="RadarSignalCard\.useFallbackImage\(this\)"/);
+
+const withoutImage = api.render({ ...item, primary_img: '', imgs: [] }, {
+  context: 'comparable',
+  openMode: 'link',
+  showFavorite: false,
+  showContact: false,
+});
+assert.match(withoutImage, /<img[^>]+class="sc-img/);
+assert.match(withoutImage, /data-default-image="true"/);
+assert.match(withoutImage, /Chưa có ảnh/);
+assert.match(api.defaultImage(), /^data:image\/svg\+xml/);
+
+const fakeImage = {
+  onerror: () => {},
+  src: '/bad.jpg',
+  dataset: {},
+  classList: { add() {} },
+  parentElement: { classList: { add() {} } },
+};
+api.useFallbackImage(fakeImage);
+assert.equal(fakeImage.onerror, null);
+assert.equal(fakeImage.src, api.defaultImage());
+assert.equal(fakeImage.dataset.defaultImage, 'true');
 
 const feed = api.render(item, {
   context: 'signal',
