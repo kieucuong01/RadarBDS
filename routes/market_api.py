@@ -87,6 +87,11 @@ def api_listing_memo(**kwargs):
     return _impl("api_listing_memo", **kwargs)
 
 
+@bp.route('/api/listings/<int:listing_id>/report', methods=['POST'])
+def api_submit_listing_report(**kwargs):
+    return _impl("api_submit_listing_report", **kwargs)
+
+
 @bp.route('/api/history/<int:listing_id>')
 def get_price_history(**kwargs):
     return _impl("get_price_history", **kwargs)

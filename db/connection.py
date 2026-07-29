@@ -47,6 +47,7 @@ ID_TABLES = {
     "infra_entries",
     "lead_captures",
     "listing_images",
+    "listing_reports",
     "listings",
     "market_weekly",
     "notification_log",

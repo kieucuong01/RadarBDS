@@ -635,6 +635,31 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 );
 
 
+CREATE TABLE IF NOT EXISTS listing_reports (
+    id                BIGSERIAL PRIMARY KEY,
+    listing_id        BIGINT NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    reason            TEXT NOT NULL CHECK (reason IN (
+        'sold_or_unavailable', 'wrong_price_or_area', 'duplicate',
+        'wrong_location', 'spam_or_scam', 'other'
+    )),
+    note              TEXT CHECK (note IS NULL OR char_length(note) <= 500),
+    reporter_key_hash TEXT NOT NULL,
+    ip_hash           TEXT NOT NULL,
+    reporter_user_id  BIGINT REFERENCES users(id) ON DELETE SET NULL,
+    status            TEXT NOT NULL DEFAULT 'pending'
+                      CHECK (status IN ('pending', 'reviewed', 'dismissed')),
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    reviewed_at       TIMESTAMPTZ,
+    reviewed_by       BIGINT REFERENCES users(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS idx_listing_reports_pending
+    ON listing_reports(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_listing_reports_reporter_created
+    ON listing_reports(reporter_key_hash, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_listing_reports_ip_created
+    ON listing_reports(ip_hash, created_at DESC);
+
+
 -- Notification log: track mỗi push kèm snapshot giá để re-alert khi giảm tiếp.
 -- Không có UNIQUE: cho phép nhiều row per (user, listing, channel) khi giá rớt
 -- vượt ngưỡng. Dedup ở app-level qua _should_skip_notify() trong cli/notify.py.
@@ -681,6 +706,7 @@ def init_schema() -> None:
                             "required table listing_map_locations is unavailable"
                         ) from migration_exc
                     try:
+                        _migrate_listing_reports(conn)
                         _migrate_user_favorite_listings(conn)
                         _migrate_property_type_aliases(conn)
                     except Exception as migration_exc:
@@ -814,9 +840,47 @@ def _migrate_listing_map_locations(conn: Any) -> None:
     )
 
 
+def _migrate_listing_reports(conn: Any) -> None:
+    """Create the isolated user-report queue and abuse-control indexes."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS listing_reports (
+            id BIGSERIAL PRIMARY KEY,
+            listing_id BIGINT NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+            reason TEXT NOT NULL CHECK (reason IN (
+                'sold_or_unavailable', 'wrong_price_or_area', 'duplicate',
+                'wrong_location', 'spam_or_scam', 'other'
+            )),
+            note TEXT CHECK (note IS NULL OR char_length(note) <= 500),
+            reporter_key_hash TEXT NOT NULL,
+            ip_hash TEXT NOT NULL,
+            reporter_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+            status TEXT NOT NULL DEFAULT 'pending'
+                CHECK (status IN ('pending', 'reviewed', 'dismissed')),
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            reviewed_at TIMESTAMPTZ,
+            reviewed_by BIGINT REFERENCES users(id) ON DELETE SET NULL
+        )
+        """
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_listing_reports_pending "
+        "ON listing_reports(status, created_at DESC)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_listing_reports_reporter_created "
+        "ON listing_reports(reporter_key_hash, created_at DESC)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_listing_reports_ip_created "
+        "ON listing_reports(ip_hash, created_at DESC)"
+    )
+
+
 def _run_migrations(conn: Any) -> None:
     """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
     _migrate_listing_map_locations(conn)
+    _migrate_listing_reports(conn)
     existing = _table_columns(conn, "listings")
     migrations = [
         ("possibly_duplicate", "ALTER TABLE listings ADD COLUMN possibly_duplicate INTEGER DEFAULT 0"),

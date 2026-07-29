@@ -161,6 +161,11 @@ def admin_api_audit(**kwargs):
     return _impl("admin_api_audit", **kwargs)
 
 
+@bp.route("/admin/api/listing-reports")
+def admin_api_listing_reports(**kwargs):
+    return _impl("admin_api_listing_reports", **kwargs)
+
+
 @bp.route("/admin/api/users")
 def admin_api_users(**kwargs):
     return _impl("admin_api_users", **kwargs)

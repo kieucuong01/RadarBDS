@@ -100,6 +100,11 @@ from services.listing_map import (
     load_listing_map_summary,
 )
 from services.listing_comparables import load_listing_comparables
+from services.listing_reports import (
+    ListingReportError,
+    list_listing_reports,
+    submit_listing_report,
+)
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
@@ -4081,6 +4086,51 @@ def _get_signals_version(db_path: str) -> str:
 def _db_handle():
     """Placeholder argument for older service signatures; runtime uses DATABASE_URL."""
     return None
+
+
+def api_submit_listing_report(listing_id: int):
+    if request.content_length is not None and request.content_length > 4096:
+        return jsonify({"ok": False, "error": "payload_too_large"}), 413
+    if not request.is_json:
+        return jsonify({"ok": False, "error": "invalid_payload"}), 400
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"ok": False, "error": "invalid_payload"}), 400
+    secret = os.getenv("LISTING_REPORT_HASH_SECRET", "").strip()
+    try:
+        with get_conn() as conn:
+            result = submit_listing_report(
+                conn,
+                listing_id=listing_id,
+                payload=payload,
+                actor=current_user(),
+                request_meta={
+                    "ip": client_ip_from_request(),
+                    "user_agent": request.headers.get("User-Agent", ""),
+                },
+                secret=secret,
+            )
+    except ListingReportError as exc:
+        return jsonify({"ok": False, "error": exc.code}), exc.status
+    return jsonify({"ok": True, "duplicate": result.duplicate}), (200 if result.duplicate else 201)
+
+
+@require_admin_auth
+def admin_api_listing_reports():
+    status = (request.args.get("status") or "pending").strip()
+    page = _clamp_int(request.args.get("page"), 1, 1, 1_000_000)
+    limit = _clamp_int(request.args.get("limit"), 50, 1, 100)
+    try:
+        with get_conn() as conn:
+            result = list_listing_reports(
+                conn,
+                status=status,
+                page=page,
+                limit=limit,
+            )
+    except ListingReportError as exc:
+        return jsonify({"ok": False, "error": exc.code}), exc.status
+    return jsonify({"ok": True, **result})
 
 
 def _request_range_filters(req):
