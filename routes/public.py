@@ -98,6 +98,33 @@ def seo_news_index(**kwargs):
     return _impl("seo_news_hub_page", **kwargs)
 
 
+@bp.route("/tin-tuc/du-lieu-radarbds")
+def seo_news_radar_archive(**kwargs):
+    return _impl("seo_news_radar_archive_page", **kwargs)
+
+
+@bp.route("/tin-tuc/chu-de-nong")
+def seo_hot_topic_hub(**kwargs):
+    return _impl("public_content_hub_page", kind="chu-de-nong", **kwargs)
+
+
+@bp.route("/tin-tuc/quyet-dinh-van-ban")
+def seo_legal_document_hub(**kwargs):
+    return _impl(
+        "public_content_hub_page", kind="quyet-dinh-van-ban", **kwargs
+    )
+
+
+@bp.route("/tin-tuc/quyet-dinh-van-ban/<slug>")
+def seo_legal_document_detail(slug, **kwargs):
+    return _impl("legal_document_page", slug=slug, **kwargs)
+
+
+@bp.route("/tai-lieu/van-ban/<slug>.pdf")
+def seo_legal_document_pdf(slug, **kwargs):
+    return _impl("legal_document_pdf", slug=slug, **kwargs)
+
+
 @bp.route("/tin-tuc/<path:article_slug>")
 def seo_news_article(article_slug, **kwargs):
     return _impl("seo_news_article_page", slug=article_slug, **kwargs)

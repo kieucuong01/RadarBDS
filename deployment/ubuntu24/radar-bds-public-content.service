@@ -1,0 +1,18 @@
+[Unit]
+Description=Radar BDS public news and legal document sync
+Wants=network-online.target
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=radar
+Group=radar
+WorkingDirectory=/opt/radar-bds/current
+EnvironmentFile=/etc/radar-bds/radar.env
+Environment=PYTHONUNBUFFERED=1
+RuntimeDirectory=radar-bds
+ExecStart=/usr/bin/flock -n /run/radar-bds/public-content.lock /opt/radar-bds/.venv/bin/python -X utf8 radar.py public-content-sync --kind all
+TimeoutStartSec=30m
+
+[Install]
+WantedBy=multi-user.target

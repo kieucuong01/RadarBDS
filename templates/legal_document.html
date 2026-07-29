@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  {% include "partials/seo_head.html" %}
+  <script type="application/ld+json">{{ schema_graph | tojson }}</script>
+</head>
+<body class="seo-page public-content-page legal-document-page">
+  {% include "partials/seo_header.html" %}
+  <main id="main-content" class="seo-shell legal-document-shell">
+    {% include "partials/seo_breadcrumbs.html" %}
+    <article class="legal-document-card">
+      <header>
+        <p class="seo-eyebrow">{{ item.document_type or "Văn bản" }}</p>
+        <h1>{{ item.title }}</h1>
+        {% if item.summary %}<p>{{ item.summary }}</p>{% endif %}
+      </header>
+      <dl class="legal-document-facts">
+        <div><dt>Số/ký hiệu</dt><dd>{{ item.document_number }}</dd></div>
+        <div><dt>Cơ quan ban hành</dt><dd>{{ item.issuing_authority }}</dd></div>
+        <div><dt>Ngày ban hành</dt><dd><time datetime="{{ item.published_iso }}">{{ item.published_label }}</time></dd></div>
+        <div><dt>Phạm vi</dt><dd>{{ item.document_scope or "Bình Dương" }}</dd></div>
+      </dl>
+      <div class="legal-document-actions">
+        <a
+          class="seo-primary-cta"
+          href="{{ stable_pdf_path }}"
+          data-public-document-action="download"
+          data-document-slug="{{ item.slug }}"
+        >Xem hoặc tải PDF</a>
+        <a
+          href="{{ item.source_url }}"
+          target="_blank"
+          rel="external noopener"
+          data-public-content-action="source"
+          data-content-kind="legal_document"
+          data-content-slug="{{ item.slug }}"
+        >
+          Xem nguồn phát hành
+        </a>
+      </div>
+      <p class="public-content-note">PDF được lưu nguyên bản từ nguồn chính thống; Radar BDS không thay thế cơ quan ban hành.</p>
+    </article>
+  </main>
+  {% include "partials/seo_footer.html" %}
+  {% set view_event = "seo_landing_viewed" %}
+  {% include "partials/seo_tracking.html" %}
+</body>
+</html>

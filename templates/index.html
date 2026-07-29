@@ -74,7 +74,7 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
 
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-input-zoom-20260612' %}
-  {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=tools-nav-20260728' %}
+  {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=content-hubs-20260729' %}
   {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=pagespeed-a11y-20260611' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=saved-listings-header-images-20260722' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=favorite-listings-20260715' %}
@@ -374,24 +374,28 @@
             </svg>
             Công cụ
           </summary>
-          <div class="tools-menu-panel" role="menu" aria-label="Công cụ Radar">
-            <a class="tools-menu-item" role="menuitem" href="/dinh-gia-bds">
+          <nav class="tools-menu-panel" aria-label="Công cụ Radar">
+            <a class="tools-menu-item" href="/dinh-gia-bds" data-dashboard-tool="valuation" data-tool-surface="desktop_tools">
               <strong>Định giá BĐS</strong>
               <span>Ước tính giá lô đất theo dữ liệu Radar</span>
             </a>
-            <a class="tools-menu-item" role="menuitem" href="/bang-gia-dat-tphcm">
+            <a class="tools-menu-item" href="/bang-gia-dat-tphcm" data-dashboard-tool="land_price" data-tool-surface="desktop_tools">
               <strong>Tra cứu bảng giá đất</strong>
               <span>Xem giá đất nhà nước theo tuyến đường/khu vực</span>
             </a>
-            <a class="tools-menu-item" role="menuitem" href="/tin-tuc">
+            <a class="tools-menu-item" href="/quy-hoach-binh-duong" data-dashboard-tool="planning" data-tool-surface="desktop_tools">
+              <strong>Quy hoạch &amp; bản đồ</strong>
+              <span>Xem bản đồ địa giới và các chuyên đề quy hoạch</span>
+            </a>
+            <a class="tools-menu-item" href="/tin-tuc" data-dashboard-tool="news" data-tool-surface="desktop_tools">
               <strong>Tin tức dữ liệu</strong>
               <span>Đọc phân tích giá, khu vực và tín hiệu thị trường</span>
             </a>
-            <a class="tools-menu-item" role="menuitem" href="/bao-cao">
+            <a class="tools-menu-item" href="/bao-cao" data-dashboard-tool="reports" data-tool-surface="desktop_tools">
               <strong>Báo cáo thị trường</strong>
               <span>Xem giá trung vị, nguồn cung và báo cáo tháng</span>
             </a>
-          </div>
+          </nav>
         </details>
         {% if SHOW_INSIGHTS %}
         <button class="nav-link" data-tab-target="insights" onclick="switchTab('insights', this)">
@@ -1256,7 +1260,7 @@
       </svg>
       <span>Phân tích</span>
     </button>
-    <button class="bottom-nav-item" type="button" onclick="openToolsSheet(event)" aria-haspopup="dialog" aria-controls="toolsSheet">
+    <button class="bottom-nav-item" id="toolsSheetTrigger" type="button" onclick="openToolsSheet(event)" aria-haspopup="dialog" aria-controls="toolsSheet" aria-expanded="false">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path d="M12 6V3m0 18v-3M6 12H3m18 0h-3" />
         <path d="m18.4 5.6-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6" />
@@ -1284,19 +1288,23 @@
         <button type="button" class="tools-sheet-close" onclick="closeToolsSheet()" aria-label="Đóng công cụ">×</button>
       </div>
       <div class="tools-sheet-list">
-        <a class="tools-menu-item" href="/dinh-gia-bds">
+        <a class="tools-menu-item" href="/dinh-gia-bds" data-dashboard-tool="valuation" data-tool-surface="mobile_tools_sheet">
           <strong>Định giá BĐS</strong>
           <span>Ước tính giá lô đất theo dữ liệu Radar</span>
         </a>
-        <a class="tools-menu-item" href="/bang-gia-dat-tphcm">
+        <a class="tools-menu-item" href="/bang-gia-dat-tphcm" data-dashboard-tool="land_price" data-tool-surface="mobile_tools_sheet">
           <strong>Tra cứu bảng giá đất</strong>
           <span>Xem giá đất nhà nước theo tuyến đường/khu vực</span>
         </a>
-        <a class="tools-menu-item" href="/tin-tuc">
+        <a class="tools-menu-item" href="/quy-hoach-binh-duong" data-dashboard-tool="planning" data-tool-surface="mobile_tools_sheet">
+          <strong>Quy hoạch &amp; bản đồ</strong>
+          <span>Xem bản đồ địa giới và các chuyên đề quy hoạch</span>
+        </a>
+        <a class="tools-menu-item" href="/tin-tuc" data-dashboard-tool="news" data-tool-surface="mobile_tools_sheet">
           <strong>Tin tức dữ liệu</strong>
           <span>Đọc phân tích giá, khu vực và tín hiệu thị trường</span>
         </a>
-        <a class="tools-menu-item" href="/bao-cao">
+        <a class="tools-menu-item" href="/bao-cao" data-dashboard-tool="reports" data-tool-surface="mobile_tools_sheet">
           <strong>Báo cáo thị trường</strong>
           <span>Xem giá trung vị, nguồn cung và báo cáo tháng</span>
         </a>
@@ -1330,7 +1338,7 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=tools-nav-20260728"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=content-hubs-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=loader-font-fix-20260611"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-listings-header-images-20260722"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=report-internal-link-filters-20260723"></script>

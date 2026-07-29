@@ -29,19 +29,23 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
     report = client.get("/bao-cao")
     knowledge = client.get("/kien-thuc")
     news = client.get("/tin-tuc")
+    radar_news = client.get("/tin-tuc/du-lieu-radarbds")
 
     assert report.status_code == 200
     assert knowledge.status_code == 301
     assert knowledge.headers["Location"] == "/tin-tuc"
     assert news.status_code == 200
+    assert radar_news.status_code == 200
 
     report_html = report.get_data(as_text=True)
     news_html = news.get_data(as_text=True)
+    radar_news_html = radar_news.get_data(as_text=True)
     assert '<link rel="canonical" href="https://radarbds.vn/bao-cao">' in report_html
     assert '<link rel="canonical" href="https://radarbds.vn/tin-tuc">' in news_html
     assert 'class="seo-page report-hub"' in report_html
-    assert 'class="seo-page knowledge-hub"' in news_html
-    for html in (report_html, news_html):
+    assert 'class="seo-page public-content-page"' in news_html
+    assert 'class="seo-page knowledge-hub"' in radar_news_html
+    for html in (report_html, radar_news_html):
         assert "hub-hero" in html
         assert "hub-hero-grid" in html
         assert "hub-insight-panel" in html
@@ -50,14 +54,14 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
         assert '"@type": "ItemList"' in html
         assert '"@type": "BreadcrumbList"' in html
     assert 'class="seo-lead-capture"' in report_html
-    assert 'class="seo-lead-capture"' in news_html
+    assert 'class="seo-lead-capture"' in radar_news_html
     assert 'data-source-context="seo_report_hub_lead"' in report_html
-    assert 'data-source-context="seo_news_hub_lead"' in news_html
+    assert 'data-source-context="seo_news_hub_lead"' in radar_news_html
     assert "'/api/leads'" in report_html
-    assert "'/api/leads'" in news_html
+    assert "'/api/leads'" in radar_news_html
 
     assert "Đang phủ 13 phường Thủ Dầu Một" in report_html
-    assert "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS" in news_html
+    assert "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS" in radar_news_html
 
 
 def test_seo_lead_form_fails_closed_to_post_when_javascript_is_unavailable():
@@ -146,7 +150,7 @@ def test_json_lead_client_keeps_json_response_contract(monkeypatch):
 def test_news_hub_is_dashboard_first_and_has_progressive_discovery():
     import app as radar_app
 
-    html = radar_app.app.test_client().get("/tin-tuc").get_data(as_text=True)
+    html = radar_app.app.test_client().get("/tin-tuc/du-lieu-radarbds").get_data(as_text=True)
 
     assert 'data-track-cta="news_hub_dashboard"' in html
     assert 'href="/?tab=signals"' in html
@@ -166,7 +170,7 @@ def test_news_hub_is_dashboard_first_and_has_progressive_discovery():
 def test_news_hub_archive_cards_render_left_thumbnails():
     import app as radar_app
 
-    html = radar_app.app.test_client().get("/tin-tuc").get_data(as_text=True)
+    html = radar_app.app.test_client().get("/tin-tuc/du-lieu-radarbds").get_data(as_text=True)
     archive_cards = re.findall(
         r'<article\s+class="hub-card news-article-card"[\s\S]*?</article>',
         html,
@@ -185,7 +189,7 @@ def test_news_hub_archive_cards_render_left_thumbnails():
 def test_news_hub_featured_is_not_repeated_in_archive():
     import app as radar_app
 
-    html = radar_app.app.test_client().get("/tin-tuc").get_data(as_text=True)
+    html = radar_app.app.test_client().get("/tin-tuc/du-lieu-radarbds").get_data(as_text=True)
     featured_path = SEO_ARTICLES[KNOWLEDGE_HUB["featured_slug"]]["path"]
 
     assert html.count(f'data-news-featured="{featured_path}"') == 1
@@ -195,7 +199,7 @@ def test_news_hub_featured_is_not_repeated_in_archive():
 def test_news_hub_archive_is_recent_first_and_dates_are_localized():
     import app as radar_app
 
-    html = radar_app.app.test_client().get("/tin-tuc").get_data(as_text=True)
+    html = radar_app.app.test_client().get("/tin-tuc/du-lieu-radarbds").get_data(as_text=True)
     modified_dates = re.findall(r'data-modified-at="(\d{4}-\d{2}-\d{2})"', html)
 
     assert modified_dates
@@ -227,7 +231,7 @@ def test_news_taxonomy_resolves_only_to_canonical_keys_and_labels():
 def test_news_hub_item_list_contains_each_article_once():
     import app as radar_app
 
-    html = radar_app.app.test_client().get("/tin-tuc").get_data(as_text=True)
+    html = radar_app.app.test_client().get("/tin-tuc/du-lieu-radarbds").get_data(as_text=True)
     blocks = re.findall(r'<script type="application/ld\+json">\s*(.*?)\s*</script>', html, re.S)
     payload = json.loads(blocks[-1])
     item_list = next(item for item in payload["@graph"] if item["@type"] == "ItemList")

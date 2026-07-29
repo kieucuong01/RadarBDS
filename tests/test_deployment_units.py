@@ -1,3 +1,4 @@
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -23,6 +24,30 @@ def test_deploy_script_installs_guland_cron_fallback_when_systemd_install_is_res
     assert "15 23 * * *" in script
     assert "/run/lock/radar-bds-guland-crawl.lock" in script
     assert "crontab -" in script
+
+
+def test_deploy_script_initializes_public_content_schema_and_installs_daily_sync():
+    script = Path("scripts/deploy_production.ps1").read_text(encoding="utf-8")
+    service = Path(
+        "deployment/ubuntu24/radar-bds-public-content.service"
+    ).read_text(encoding="utf-8")
+
+    assert 'from db.schema import init_schema; init_schema()' in script
+    assert "radar-bds-public-content.service" in script
+    assert "radar-bds-public-content.timer" in script
+    assert "sudo systemctl enable --now radar-bds-public-content.timer" in script
+    assert "radar.py public-content-sync --kind all" in service
+    assert (
+        "set -a; source /etc/radar-bds/radar.env; set +a; "
+        "/opt/radar-bds/.venv/bin/python -X utf8 -c"
+    ) in script
+    assert "PUBLIC_CONTENT_CRON=" not in script
+    assert "install the public-content systemd units manually" in script
+    public_content_block = script.split(
+        "if [ -f deployment/ubuntu24/radar-bds-public-content.service",
+        1,
+    )[1].split("sudo systemctl restart radar-bds.service", 1)[0]
+    assert re.search(r"^\s*false\s*$", public_content_block, re.M)
 
 
 def test_deploy_script_can_archive_known_temp_blockers_before_failing():

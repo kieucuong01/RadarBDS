@@ -151,7 +151,7 @@ def test_report_hub_prefers_master_report_and_news_hub_is_reader_facing():
 
     client = radar_app.app.test_client()
     report_html = client.get("/bao-cao").get_data(as_text=True)
-    news_html = client.get("/tin-tuc").get_data(as_text=True)
+    news_html = client.get("/tin-tuc/du-lieu-radarbds").get_data(as_text=True)
     landing_html = client.get("/binh-duong").get_data(as_text=True)
 
     assert '<a class="seo-primary-cta" href="/bao-cao/bds-binh-duong-thang-06-2026"' in report_html

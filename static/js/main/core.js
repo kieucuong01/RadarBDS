@@ -408,24 +408,43 @@ function openToolsSheet(event) {
   sheet.dataset.returnTab = activeTabId();
   document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(b => b.classList.remove('active'));
   const trigger = event && event.currentTarget;
-  if (trigger) trigger.classList.add('active');
+  if (trigger) {
+    trigger.classList.add('active');
+    trigger.setAttribute('aria-expanded', 'true');
+  }
   sheet.hidden = false;
   document.body.classList.add('tools-sheet-open');
+  window.requestAnimationFrame(() => {
+    const closeButton = sheet.querySelector('.tools-sheet-close');
+    if (closeButton) closeButton.focus();
+  });
 }
 
 function closeToolsSheet(event) {
   if (event && event.target && event.currentTarget && event.target !== event.currentTarget) return;
   const sheet = document.getElementById('toolsSheet');
+  const wasOpen = Boolean(sheet && !sheet.hidden);
   const returnTab = sheet && sheet.dataset.returnTab;
   if (sheet) sheet.hidden = true;
   document.body.classList.remove('tools-sheet-open');
+  const trigger = document.getElementById('toolsSheetTrigger');
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
   document.querySelectorAll('.bottom-nav-item:not([data-tab-target])').forEach(b => b.classList.remove('active'));
   if (returnTab) {
     document.querySelectorAll(`[data-tab-target="${returnTab}"]`).forEach(b => b.classList.add('active'));
   }
+  if (wasOpen && trigger) trigger.focus();
 }
 
 document.addEventListener('click', function (event) {
+  const toolLink = event.target.closest('[data-dashboard-tool]');
+  if (toolLink) {
+    _sendTrackEvent('cta_clicked', {
+      cta_name: `dashboard_tool_${toolLink.dataset.dashboardTool || 'unknown'}`,
+      destination: toolLink.getAttribute('href') || '',
+      source_surface: toolLink.dataset.toolSurface || 'unknown'
+    });
+  }
   const menu = document.getElementById('toolsMenu');
   if (menu && menu.open && !menu.contains(event.target)) {
     menu.open = false;

@@ -163,7 +163,8 @@ if [ -n "`$stash_ref" ]; then
 fi
 
 /opt/radar-bds/.venv/bin/python -X utf8 -m pip install -r requirements.txt
-/opt/radar-bds/.venv/bin/python -X utf8 -m py_compile app.py services/market_data.py services/image_assets.py
+/opt/radar-bds/.venv/bin/python -X utf8 -m py_compile app.py services/market_data.py services/image_assets.py services/public_content.py cli/public_content.py
+sudo -u radar bash -lc 'set -a; source /etc/radar-bds/radar.env; set +a; /opt/radar-bds/.venv/bin/python -X utf8 -c "from db.schema import init_schema; init_schema()"'
 if [ -f deployment/ubuntu24/radar-bds-guland-crawl.service ] && [ -f deployment/ubuntu24/radar-bds-guland-crawl.timer ]; then
   if sudo -n install -m 0644 deployment/ubuntu24/radar-bds-guland-crawl.service /etc/systemd/system/radar-bds-guland-crawl.service \
     && sudo -n install -m 0644 deployment/ubuntu24/radar-bds-guland-crawl.timer /etc/systemd/system/radar-bds-guland-crawl.timer; then
@@ -178,6 +179,17 @@ if [ -f deployment/ubuntu24/radar-bds-guland-crawl.service ] && [ -f deployment/
     else
       echo "no crontab command available; keep/install radar-bds-guland-crawl.timer manually with root"
     fi
+  fi
+fi
+if [ -f deployment/ubuntu24/radar-bds-public-content.service ] && [ -f deployment/ubuntu24/radar-bds-public-content.timer ]; then
+  if sudo -n install -m 0644 deployment/ubuntu24/radar-bds-public-content.service /etc/systemd/system/radar-bds-public-content.service \
+    && sudo -n install -m 0644 deployment/ubuntu24/radar-bds-public-content.timer /etc/systemd/system/radar-bds-public-content.timer; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now radar-bds-public-content.timer
+  else
+    echo "skipped installing public-content systemd units (sudo install requires password)"
+    echo "install the public-content systemd units manually; no deploy-user cron fallback is created because /etc/radar-bds/radar.env is readable only by root:radar"
+    false
   fi
 fi
 sudo systemctl restart radar-bds.service

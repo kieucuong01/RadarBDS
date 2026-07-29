@@ -3,81 +3,70 @@
   <div class="seo-header-inner">
     <a class="seo-brand" href="/" aria-label="Radar BDS - Trang chủ">
       <img src="{{ url_for('static', filename='images/logo-80.webp') }}" srcset="{{ url_for('static', filename='images/logo-80.webp') }} 1x, {{ url_for('static', filename='images/logo-160.webp') }} 2x" alt="" width="40" height="40">
-      <span>
-        <strong>Radar BDS</strong>
-        <small>Dữ liệu nhà đất Bình Dương</small>
-      </span>
+      <span><strong>Radar BDS</strong><small>Dữ liệu nhà đất Bình Dương</small></span>
     </a>
-    <nav class="seo-nav" aria-label="Điều hướng chính">
+
+    <button type="button" class="seo-nav-toggle" id="seoNavToggle" aria-expanded="false" aria-controls="seoPrimaryNav">
+      <span>Danh mục</span><span aria-hidden="true">⌄</span>
+    </button>
+    <nav class="seo-nav" id="seoPrimaryNav" aria-label="Điều hướng chính">
       <div class="seo-nav-group{% if active_nav in ['binh-duong', 'ban-dat', 'san-deal'] %} is-active{% endif %}">
-        <button type="button" class="seo-nav-tab" id="seoNavMarket" aria-haspopup="true" aria-expanded="false" aria-controls="seoNavMarketMenu">Thị trường</button>
+        <button type="button" class="seo-nav-tab" id="seoNavMarket" aria-expanded="false" aria-controls="seoNavMarketMenu" data-nav-group="market">Thị trường</button>
         <div class="seo-nav-menu" id="seoNavMarketMenu" aria-labelledby="seoNavMarket">
           <a href="/binh-duong" data-nav="binh-duong"{% if active_nav == 'binh-duong' %} aria-current="page"{% endif %}>
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V8l8-4 8 4v12"/><path d="M9 20v-7h6v7"/><path d="M4 11h16"/></svg></span>
             <span><strong>Nhà đất Bình Dương</strong><small>Hub thị trường chính</small></span>
           </a>
           <a href="/ban-dat-binh-duong" data-nav="ban-dat"{% if active_nav == 'ban-dat' %} aria-current="page"{% endif %}>
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19l5-14 5 14 5-14 1 14"/><path d="M7 13h4"/><path d="M15 13h4"/></svg></span>
-            <span><strong>Bán đất Bình Dương</strong><small>Đất nền, thổ cư, lô đẹp</small></span>
+            <span><strong>Bán đất Bình Dương</strong><small>Đất nền, thổ cư và lô đang rao</small></span>
           </a>
           <a href="/san-deal-bds" data-nav="san-deal"{% if active_nav == 'san-deal' %} aria-current="page"{% endif %}>
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 12h14"/><path d="M7 7l10 10"/><path d="M17 7L7 17"/></svg></span>
-            <span><strong>Săn deal BĐS</strong><small>Cách lọc tin rẻ thật</small></span>
+            <span><strong>Săn deal BĐS</strong><small>Cách lọc tin cần kiểm tra trước</small></span>
           </a>
         </div>
       </div>
 
-      <div class="seo-nav-group{% if active_nav in ['ban-do-binh-duong', 'quy-hoach'] %} is-active{% endif %}">
-        <button type="button" class="seo-nav-tab" id="seoNavPlanning" aria-haspopup="true" aria-expanded="false" aria-controls="seoNavPlanningMenu">Quy hoạch</button>
-        <div class="seo-nav-menu" id="seoNavPlanningMenu" aria-labelledby="seoNavPlanning">
-          <a href="/ban-do-binh-duong" data-nav="ban-do-binh-duong"{% if active_nav == 'ban-do-binh-duong' %} aria-current="page"{% endif %}>
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14"/><path d="M15 6v14"/></svg></span>
-            <span><strong>Bản đồ Bình Dương</strong><small>Địa giới cũ và 36 phường xã</small></span>
-          </a>
-          <a href="/quy-hoach-binh-duong" data-nav="quy-hoach"{% if active_nav == 'quy-hoach' %} aria-current="page"{% endif %}>
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14"/><path d="M15 6v14"/></svg></span>
-            <span><strong>Bản đồ quy hoạch</strong><small>Hub bản đồ Bình Dương cũ</small></span>
-          </a>
-          <a href="/quy-hoach-binh-duong/vanh-dai-3" data-nav="quy-hoach-vanh-dai-3">
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16c4-8 12-8 16 0"/><path d="M7 16h10"/><path d="M12 9v7"/></svg></span>
-            <span><strong>Vành đai 3</strong><small>Tuyến, nút giao, vùng tác động</small></span>
-          </a>
-          <a href="/quy-hoach-binh-duong/dia-gioi-36-phuong-xa-binh-duong-cu" data-nav="quy-hoach-dia-gioi">
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6z"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h3"/></svg></span>
-            <span><strong>36 phường xã</strong><small>Đối chiếu địa giới mới - cũ</small></span>
-          </a>
+      <div class="seo-nav-group seo-nav-group-planning{% if active_nav in ['ban-do-binh-duong', 'quy-hoach'] %} is-active{% endif %}">
+        <button type="button" class="seo-nav-tab" id="seoNavPlanning" aria-expanded="false" aria-controls="seoNavPlanningMenu" data-nav-group="planning">Quy hoạch</button>
+        <div class="seo-nav-menu seo-nav-mega" id="seoNavPlanningMenu" aria-labelledby="seoNavPlanning">
+          <section aria-labelledby="seoNavBoundaryTitle">
+            <h2 id="seoNavBoundaryTitle">Bản đồ địa giới</h2>
+            <a href="/ban-do-binh-duong" data-nav="ban-do-binh-duong"{% if active_nav == 'ban-do-binh-duong' %} aria-current="page"{% endif %}><span><strong>Bản đồ Bình Dương</strong><small>Địa giới cũ và sau sắp xếp</small></span></a>
+            {% for map_page in city_map_products %}
+            <a href="{{ map_page.path }}"><span><strong>{{ map_page.city_name }}</strong><small>Bản đồ trước và sau sắp xếp</small></span></a>
+            {% endfor %}
+          </section>
+          <section aria-labelledby="seoNavPlanningTitle">
+            <h2 id="seoNavPlanningTitle">Bản đồ quy hoạch</h2>
+            {% for category_page in planning_category_pages %}
+            <a href="{{ category_page.path }}"><span><strong>{{ category_page.nav_label }}</strong><small>{{ category_page.nav_description }}</small></span></a>
+            {% endfor %}
+            <a class="seo-nav-overview" href="/quy-hoach-binh-duong" data-nav="quy-hoach"{% if active_nav == 'quy-hoach' %} aria-current="page"{% endif %}><span><strong>Xem thư viện quy hoạch</strong><small>Tất cả chuyên đề hiện có</small></span></a>
+          </section>
         </div>
       </div>
 
       <div class="seo-nav-group{% if active_nav in ['dinh-gia', 'bang-gia-dat'] %} is-active{% endif %}">
-        <button type="button" class="seo-nav-tab" id="seoNavTools" aria-haspopup="true" aria-expanded="false" aria-controls="seoNavToolsMenu">Công cụ</button>
+        <button type="button" class="seo-nav-tab" id="seoNavTools" aria-expanded="false" aria-controls="seoNavToolsMenu" data-nav-group="tools">Công cụ</button>
         <div class="seo-nav-menu" id="seoNavToolsMenu" aria-labelledby="seoNavTools">
-          <a href="/dinh-gia-bds" data-nav="dinh-gia"{% if active_nav == 'dinh-gia' %} aria-current="page"{% endif %}>
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 18h16"/><path d="M6 18V8"/><path d="M10 18V5"/><path d="M14 18v-7"/><path d="M18 18V9"/></svg></span>
-            <span><strong>Định giá đất</strong><small>Ước tính theo dữ liệu Radar</small></span>
-          </a>
-          <a href="/bang-gia-dat-tphcm" data-nav="bang-gia-dat"{% if active_nav == 'bang-gia-dat' %} aria-current="page"{% endif %}>
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg></span>
-            <span><strong>Bảng giá đất</strong><small>Tra cứu bảng giá TP.HCM</small></span>
-          </a>
+          <a href="/dinh-gia-bds" data-nav="dinh-gia"{% if active_nav == 'dinh-gia' %} aria-current="page"{% endif %}><span><strong>Định giá đất</strong><small>Ước tính theo dữ liệu Radar</small></span></a>
+          <a href="/bang-gia-dat-tphcm" data-nav="bang-gia-dat"{% if active_nav == 'bang-gia-dat' %} aria-current="page"{% endif %}><span><strong>Bảng giá đất</strong><small>Tra cứu bảng giá TP.HCM</small></span></a>
         </div>
       </div>
 
-      <div class="seo-nav-group{% if active_nav in ['bao-cao', 'tin-tuc'] %} is-active{% endif %}">
-        <button type="button" class="seo-nav-tab" id="seoNavContent" aria-haspopup="true" aria-expanded="false" aria-controls="seoNavContentMenu">Nội dung</button>
-        <div class="seo-nav-menu" id="seoNavContentMenu" aria-labelledby="seoNavContent">
-          <a href="/bao-cao" data-nav="bao-cao"{% if active_nav == 'bao-cao' %} aria-current="page"{% endif %}>
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19V5h14v14z"/><path d="M8 9h8"/><path d="M8 13h5"/><path d="M8 17h8"/></svg></span>
-            <span><strong>Báo cáo</strong><small>Snapshot thị trường định kỳ</small></span>
-          </a>
-          <a href="/tin-tuc" data-nav="tin-tuc"{% if active_nav == 'tin-tuc' %} aria-current="page"{% endif %}>
-            <span class="seo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/></svg></span>
-            <span><strong>Tin tức</strong><small>Bài mới và cập nhật thị trường</small></span>
-          </a>
+      <a class="seo-nav-link{% if active_nav == 'bao-cao' %} is-active{% endif %}" href="/bao-cao" data-nav="bao-cao"{% if active_nav == 'bao-cao' %} aria-current="page"{% endif %}>Báo cáo</a>
+
+      <div class="seo-nav-group{% if active_nav == 'tin-tuc' %} is-active{% endif %}">
+        <button type="button" class="seo-nav-tab" id="seoNavNews" aria-expanded="false" aria-controls="seoNavNewsMenu" data-nav-group="news">Tin tức</button>
+        <div class="seo-nav-menu" id="seoNavNewsMenu" aria-labelledby="seoNavNews">
+          {% for news_page in news_hub_pages %}
+          <a href="{{ news_page.path }}"><span><strong>{{ news_page.nav_label }}</strong><small>{{ news_page.nav_description }}</small></span></a>
+          {% endfor %}
+          <a class="seo-nav-overview" href="/tin-tuc" data-nav="tin-tuc"{% if active_nav == 'tin-tuc' %} aria-current="page"{% endif %}><span><strong>Trung tâm tin tức</strong><small>Xem tổng hợp ba nhóm nội dung</small></span></a>
         </div>
       </div>
     </nav>
+
     <a class="seo-header-cta" href="{{ dashboard_signal_href|default('/?tab=signals') }}" data-track-cta="header_signals">Mở dashboard</a>
   </div>
 </header>
-<script src="{{ url_for('static', filename='js/seo_header.js') }}?v=accessible-nav-20260728" defer></script>
+<script src="{{ url_for('static', filename='js/seo_header.js') }}?v=content-navigation-20260729-2" defer></script>

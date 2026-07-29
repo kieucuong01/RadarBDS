@@ -94,6 +94,7 @@ from cli.queries import (
     cmd_query, cmd_deal_brief, cmd_inspect, cmd_crawl_health
 )
 from cli.review import cmd_review_queue, cmd_review_save
+from cli.public_content import cmd_public_content_sync
 from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
@@ -252,6 +253,23 @@ def build_parser():
     p_ch = sub.add_parser("crawl-health", help="Health dashboard các crawl runs gần đây")
     p_ch.add_argument("--limit", type=int, default=10, help="Số runs hiển thị (default: 10)")
 
+    p_pc = sub.add_parser(
+        "public-content-sync",
+        help="Đồng bộ tin nóng và văn bản chính thống cho các hub công khai",
+    )
+    p_pc.add_argument(
+        "--kind",
+        default="all",
+        choices=[
+            "all",
+            "hot-topic",
+            "legal",
+            "legal-discovery",
+            "official-document",
+        ],
+        help="Nhóm nguồn cần đồng bộ",
+    )
+
     return parser
 
 
@@ -318,6 +336,8 @@ def main():
         cmd_inspect(args)
     elif args.cmd == "crawl-health":
         cmd_crawl_health(args)
+    elif args.cmd == "public-content-sync":
+        cmd_public_content_sync(args)
     else:
         parser.print_help()
 

@@ -86,6 +86,7 @@ from config.city_map_products import (
     CITY_MAP_PRODUCTS,
     get_city_map_page,
 )
+from config.content_hubs import NEWS_HUBS, PLANNING_CATEGORY_PAGES
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
@@ -121,6 +122,10 @@ from services.digital_products import (
     get_digital_product,
     get_release_availability,
 )
+from services.public_content import (
+    PostgresPublicContentRepository,
+    public_pdf_url,
+)
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -146,6 +151,7 @@ app.before_request(reject_cross_site_session_request)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+_public_content_repository = PostgresPublicContentRepository()
 
 
 @app.context_processor
@@ -169,10 +175,24 @@ def inject_google_site_tags():
 def inject_city_map_products():
     """Expose the canonical city-map registry to shared public templates."""
 
+    city_nav_order = {
+        "/ban-do-thu-dau-mot": 0,
+        "/ban-do-di-an": 1,
+        "/ban-do-thuan-an": 2,
+        "/ban-do-ben-cat": 3,
+    }
     return {
         "city_map_products": tuple(
-            dict(page) for page in CITY_MAP_PRODUCTS.values()
-        )
+            dict(page)
+            for page in sorted(
+                CITY_MAP_PRODUCTS.values(),
+                key=lambda item: city_nav_order.get(item["path"], 99),
+            )
+        ),
+        "planning_category_pages": tuple(
+            dict(page) for page in PLANNING_CATEGORY_PAGES.values()
+        ),
+        "news_hub_pages": tuple(dict(page) for page in NEWS_HUBS.values()),
     }
 
 
@@ -1418,6 +1438,11 @@ ALLOWED_TRACK_ACTIONS = {
     "binh_duong_map_layer_selected",
     "binh_duong_map_base_layer_selected",
     "binh_duong_map_area_selected",
+    "public_content_filter_used",
+    "public_content_card_clicked",
+    "public_document_download_clicked",
+    "public_header_menu_opened",
+    "public_header_item_clicked",
 } | _PRODUCT_TRACK_ACTIONS | _CHECKOUT_TRACK_ACTIONS
 _PRODUCT_TRACK_SOURCE_SURFACES = {
     "preview",
@@ -1487,6 +1512,36 @@ def _safe_checkout_tracking_context(context) -> dict:
     return safe
 
 
+def _safe_public_content_tracking_context(action: str, context) -> dict:
+    if not isinstance(context, dict):
+        return {}
+    safe = {}
+    integer_fields = {
+        "query_length": 500,
+        "result_count": 10000,
+    }
+    for key, maximum in integer_fields.items():
+        value = context.get(key)
+        if type(value) in {int, float}:
+            safe[key] = min(max(int(value), 0), maximum)
+    text_limits = {
+        "facet": 80,
+        "path": 180,
+        "page_slug": 180,
+        "page_title": 160,
+        "kind": 40,
+        "slug": 180,
+        "target": 500,
+        "source_surface": 40,
+        "group": 40,
+    }
+    for key, limit in text_limits.items():
+        value = context.get(key)
+        if isinstance(value, str) and value.strip():
+            safe[key] = value.strip()[:limit]
+    return safe
+
+
 @rate_limit("track", limits={"guest": 120, "free": 600, "vip": None, "admin": None})
 def api_track():
     payload = request.get_json(silent=True) or {}
@@ -1509,6 +1564,8 @@ def api_track():
         ctx = _safe_checkout_tracking_context(ctx)
     elif is_product_action:
         ctx = _safe_product_tracking_context(ctx)
+    elif action.startswith("public_"):
+        ctx = _safe_public_content_tracking_context(action, ctx)
     elif not isinstance(ctx, dict):
         ctx = {"raw": str(ctx)[:200]}
     u = current_user()
@@ -1610,6 +1667,19 @@ def _page_breadcrumbs(page: dict) -> list[dict]:
         breadcrumbs.append({"name": "Kiến thức", "href": "/kien-thuc"})
     elif path.startswith("/bao-cao/"):
         breadcrumbs.append({"name": "Báo cáo", "href": "/bao-cao"})
+
+    if path.startswith("/tin-tuc/"):
+        breadcrumbs = [
+            {"name": "Trang chủ", "href": "/"},
+            {"name": "Tin tức", "href": "/tin-tuc"},
+        ]
+        if path != "/tin-tuc/du-lieu-radarbds":
+            breadcrumbs.append(
+                {
+                    "name": "Tin từ dữ liệu Radar BDS",
+                    "href": "/tin-tuc/du-lieu-radarbds",
+                }
+            )
 
     current = {"name": _page_breadcrumb_label(page), "href": path}
     if breadcrumbs[-1]["href"] != current["href"]:
@@ -2507,6 +2577,51 @@ def thu_dau_mot_map_product_page():
 
 
 def planning_detail_page(slug: str):
+    category_page = PLANNING_CATEGORY_PAGES.get((slug or "").strip("/"))
+    if category_page:
+        page = dict(category_page)
+        page["breadcrumbs"] = _page_breadcrumbs(page)
+        items = [
+            deepcopy(item)
+            for item in PLANNING_PAGE_LIST
+            if item.get("category") in page["categories"]
+        ]
+        item_list = [
+            {
+                "@type": "ListItem",
+                "position": index,
+                "name": item["hero_title"],
+                "url": _public_url(item["path"]),
+            }
+            for index, item in enumerate(items, start=1)
+        ]
+        schema_graph = {
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "CollectionPage",
+                    "name": page["heading"],
+                    "url": _public_url(page["path"]),
+                    "description": page["description"],
+                },
+                {"@type": "ItemList", "itemListElement": item_list},
+                _breadcrumb_schema(page["breadcrumbs"]),
+            ],
+        }
+        return render_template(
+            "planning_category.html",
+            page=page,
+            items=items,
+            site_meta=_site_meta(
+                page["path"],
+                title=page["title"],
+                description=page["description"],
+                keywords=f"{page['heading']}, quy hoạch Bình Dương",
+            ),
+            schema_graph=schema_graph,
+            active_nav="quy-hoach",
+        )
+
     page = PLANNING_PAGES.get((slug or "").strip("/"))
     if not page:
         abort(404)
@@ -2543,6 +2658,8 @@ def _active_public_nav(path: str) -> str:
         return "ban-dat"
     if path.startswith("/bao-cao"):
         return "bao-cao"
+    if path.startswith("/tin-tuc"):
+        return "tin-tuc"
     if path.startswith("/kien-thuc"):
         return "kien-thuc"
     if path == "/san-deal-bds":
@@ -3080,10 +3197,11 @@ def _article_category_groups(items: list[dict]) -> tuple[list[dict], list[dict]]
 
 def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, title: str | None = None):
     page = dict(KNOWLEDGE_HUB)
+    is_news_archive = article_prefix == "/tin-tuc/"
     page["path"] = hub_path
     if title:
         page["title"] = title
-    if hub_path == "/tin-tuc":
+    if is_news_archive:
         page["hero_badge"] = "Tin tức BĐS Bình Dương"
         page["hero_title"] = "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS"
         page["hero_text"] = "Phân tích giá rao, so sánh phường và cách kiểm tra tin từ dữ liệu Radar BDS để người mua biết nên mở khu vực nào tiếp theo."
@@ -3091,6 +3209,11 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
         page["breadcrumbs"] = [
             {"name": "Trang chủ", "href": "/", "url": _public_url("/")},
             {"name": "Tin tức", "href": "/tin-tuc", "url": _public_url("/tin-tuc")},
+            {
+                "name": "Tin từ dữ liệu Radar BDS",
+                "href": hub_path,
+                "url": _public_url(hub_path),
+            },
         ]
     else:
         page["breadcrumbs"] = _page_breadcrumbs(page)
@@ -3099,7 +3222,7 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
     for slug, item in SEO_ARTICLES.items():
         if not str(item.get("path") or "").startswith(article_prefix):
             continue
-        decorated = _decorate_news_article(slug, item) if hub_path == "/tin-tuc" else dict(item)
+        decorated = _decorate_news_article(slug, item) if is_news_archive else dict(item)
         matching.append((slug, decorated))
     matching.sort(
         key=lambda pair: (
@@ -3134,7 +3257,7 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
             reverse=True,
         )
     all_articles = ([featured] if featured else []) + articles
-    article_categories, category_groups = _article_category_groups(articles) if hub_path == "/tin-tuc" else ([], [])
+    article_categories, category_groups = _article_category_groups(articles) if is_news_archive else ([], [])
     page["article_count"] = len(all_articles)
     page["category_count"] = len(article_categories)
     latest_modified_at = max(
@@ -3160,13 +3283,325 @@ def seo_knowledge_hub_page():
     return _article_hub_page(hub_path="/kien-thuc", article_prefix="/kien-thuc/", active_nav="kien-thuc")
 
 
-def seo_news_hub_page():
+def seo_news_radar_archive_page():
     return _article_hub_page(
-        hub_path="/tin-tuc",
+        hub_path="/tin-tuc/du-lieu-radarbds",
         article_prefix="/tin-tuc/",
         active_nav="tin-tuc",
         title="Tin tức BĐS Bình Dương | Radar BDS",
     )
+
+
+def _iso_public_datetime(value) -> str:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return str(value or "")
+
+
+def _public_date_label(value) -> str:
+    if isinstance(value, datetime):
+        return value.strftime("%d/%m/%Y")
+    raw = str(value or "")
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00")).strftime("%d/%m/%Y")
+    except ValueError:
+        return raw
+
+
+def _decorate_public_content_item(item: dict) -> dict:
+    decorated = dict(item)
+    decorated["published_iso"] = _iso_public_datetime(item.get("published_at"))
+    decorated["published_label"] = _public_date_label(item.get("published_at"))
+    decorated["collected_iso"] = _iso_public_datetime(
+        item.get("created_at") or item.get("updated_at")
+    )
+    decorated["collected_label"] = _public_date_label(
+        item.get("created_at") or item.get("updated_at")
+    )
+    decorated["year"] = decorated["published_iso"][:4]
+    decorated["detail_url"] = (
+        f"/tin-tuc/quyet-dinh-van-ban/{decorated.get('slug', '')}"
+        if decorated.get("item_type") == "legal_document"
+        else decorated.get("source_url")
+    )
+    decorated["search_text"] = " ".join(
+        str(decorated.get(key) or "")
+        for key in (
+            "title",
+            "summary",
+            "source_name",
+            "topic",
+            "document_number",
+            "issuing_authority",
+            "document_type",
+            "year",
+        )
+    )
+    return decorated
+
+
+def _public_topic_label(topic: str) -> str:
+    normalized = str(topic or "").strip()
+    labels = {
+        "bat-dong-san-binh-duong": "Bất động sản Bình Dương",
+        "ha-tang": "Hạ tầng",
+        "quy-hoach": "Quy hoạch",
+        "thi-truong": "Thị trường",
+    }
+    return labels.get(normalized, normalized.replace("-", " ").capitalize())
+
+
+def _collection_schema(page: dict, items: list[dict]) -> dict:
+    return {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "CollectionPage",
+                "name": page["heading"],
+                "url": _public_url(page["path"]),
+                "description": page["description"],
+            },
+            {
+                "@type": "ItemList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": index,
+                        "name": item.get("title") or item.get("name"),
+                        "url": (
+                            item.get("url")
+                            if str(item.get("url") or "").startswith("http")
+                            else _public_url(item.get("url") or "/")
+                        ),
+                    }
+                    for index, item in enumerate(items, start=1)
+                ],
+            },
+            _breadcrumb_schema(page["breadcrumbs"]),
+        ],
+    }
+
+
+def seo_news_hub_page():
+    page = {
+        "path": "/tin-tuc",
+        "title": "Tin tức BĐS Bình Dương | Radar BDS",
+        "heading": "Trung tâm tin tức BĐS Bình Dương",
+        "description": (
+            "Theo dõi chủ đề nóng từ nguồn báo chí, phân tích từ dữ liệu Radar BDS "
+            "và quyết định, văn bản chính thống."
+        ),
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": _public_url("/")},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": _public_url("/tin-tuc")},
+        ],
+    }
+    sections = []
+    for key in ("chu-de-nong", "du-lieu-radarbds", "quyet-dinh-van-ban"):
+        section = dict(NEWS_HUBS[key])
+        if section["item_type"] == "radar_article":
+            section["items"] = [
+                {
+                    "title": item.get("hero_title"),
+                    "summary": item.get("description"),
+                    "url": item.get("path"),
+                    "source_name": "Radar BDS",
+                    "is_external": False,
+                }
+                for item in sorted(
+                    (
+                        item
+                        for item in SEO_ARTICLES.values()
+                        if str(item.get("path") or "").startswith("/tin-tuc/")
+                    ),
+                    key=lambda item: (
+                        (item.get("article") or {}).get("modified_at", ""),
+                        item.get("path", ""),
+                    ),
+                    reverse=True,
+                )[:3]
+            ]
+        else:
+            section["items"] = [
+                _decorate_public_content_item(item)
+                for item in _public_content_repository.list_published(
+                    item_type=section["item_type"], limit=3
+                )
+            ]
+            for item in section["items"]:
+                item["url"] = (
+                    item.get("source_url")
+                    if section["item_type"] == "hot_topic"
+                    else item.get("detail_url")
+                )
+                item["is_external"] = section["item_type"] == "hot_topic"
+        sections.append(section)
+    return render_template(
+        "news_portal.html",
+        page=page,
+        sections=sections,
+        site_meta=_site_meta(
+            page["path"],
+            title=page["title"],
+            description=page["description"],
+            keywords="tin tức Bình Dương, bất động sản Bình Dương, văn bản quy hoạch",
+        ),
+        schema_graph=_collection_schema(
+            page,
+            [
+                {"title": section["heading"], "url": section["path"]}
+                for section in sections
+            ],
+        ),
+        active_nav="tin-tuc",
+    )
+
+
+def public_content_hub_page(kind: str):
+    page = dict(NEWS_HUBS.get(kind) or {})
+    if not page or page["item_type"] not in {"hot_topic", "legal_document"}:
+        abort(404)
+    page["breadcrumbs"] = [
+        {"name": "Trang chủ", "href": "/", "url": _public_url("/")},
+        {"name": "Tin tức", "href": "/tin-tuc", "url": _public_url("/tin-tuc")},
+        {
+            "name": page["heading"],
+            "href": page["path"],
+            "url": _public_url(page["path"]),
+        },
+    ]
+    items = [
+        _decorate_public_content_item(item)
+        for item in _public_content_repository.list_published(
+            item_type=page["item_type"], limit=None
+        )
+    ]
+    facets = sorted(
+        {
+            str(
+                item.get("source_name")
+                if page["item_type"] == "hot_topic"
+                else item.get("issuing_authority") or item.get("source_name") or ""
+            ).strip()
+            for item in items
+            if (
+                item.get("source_name")
+                if page["item_type"] == "hot_topic"
+                else item.get("issuing_authority") or item.get("source_name")
+            )
+        }
+    )
+    topics = sorted(
+        (
+            {"value": topic, "label": _public_topic_label(topic)}
+            for topic in {
+                str(item.get("topic") or "").strip()
+                for item in items
+                if item.get("topic")
+            }
+        ),
+        key=lambda topic: topic["label"],
+    )
+    return render_template(
+        "public_content_hub.html",
+        page=page,
+        items=items,
+        facets=facets,
+        topics=topics,
+        site_meta=_site_meta(
+            page["path"],
+            title=page["title"],
+            description=page["description"],
+            keywords=f"{page['heading']}, Radar BDS",
+        ),
+        schema_graph=_collection_schema(
+            page,
+            [
+                {
+                    "title": item.get("title"),
+                    "url": (
+                        item.get("source_url")
+                        if page["item_type"] == "hot_topic"
+                        else item.get("detail_url")
+                    ),
+                }
+                for item in items
+            ],
+        ),
+        active_nav="tin-tuc",
+    )
+
+
+def legal_document_page(slug: str):
+    item = _public_content_repository.get_published_by_slug(slug)
+    if not item or item.get("item_type") != "legal_document":
+        abort(404)
+    item = _decorate_public_content_item(item)
+    page = {
+        "path": f"/tin-tuc/quyet-dinh-van-ban/{slug}",
+        "title": f"{item['title']} | Radar BDS",
+        "heading": item["title"],
+        "description": item.get("summary") or item["title"],
+    }
+    page["breadcrumbs"] = [
+        {"name": "Trang chủ", "href": "/", "url": _public_url("/")},
+        {"name": "Tin tức", "href": "/tin-tuc", "url": _public_url("/tin-tuc")},
+        {
+            "name": "Quyết định & văn bản",
+            "href": "/tin-tuc/quyet-dinh-van-ban",
+            "url": _public_url("/tin-tuc/quyet-dinh-van-ban"),
+        },
+        {"name": item["title"], "href": page["path"], "url": _public_url(page["path"])},
+    ]
+    stable_pdf_path = f"/tai-lieu/van-ban/{slug}.pdf"
+    legislation = {
+        "@type": "Legislation",
+        "name": item["title"],
+        "url": _public_url(page["path"]),
+        "legislationIdentifier": item.get("document_number"),
+        "legislationDate": item.get("published_iso"),
+        "legislationJurisdiction": item.get("document_scope"),
+        "author": {
+            "@type": "GovernmentOrganization",
+            "name": item.get("issuing_authority"),
+        },
+        "encoding": {
+            "@type": "MediaObject",
+            "contentUrl": _public_url(stable_pdf_path),
+            "encodingFormat": "application/pdf",
+        },
+    }
+    return render_template(
+        "legal_document.html",
+        page=page,
+        item=item,
+        stable_pdf_path=stable_pdf_path,
+        site_meta=_site_meta(
+            page["path"],
+            title=page["title"],
+            description=page["description"],
+            keywords=f"{item.get('document_number', '')}, văn bản Bình Dương",
+        ),
+        schema_graph={
+            "@context": "https://schema.org",
+            "@graph": [legislation, _breadcrumb_schema(page["breadcrumbs"])],
+        },
+        active_nav="tin-tuc",
+    )
+
+
+def legal_document_pdf(slug: str):
+    item = _public_content_repository.get_published_by_slug(slug)
+    if (
+        not item
+        or item.get("item_type") != "legal_document"
+        or not item.get("pdf_object_key")
+    ):
+        abort(404)
+    target = public_pdf_url(item["pdf_object_key"])
+    if not target:
+        abort(404)
+    return redirect(target, code=302)
 
 
 _LEGACY_KNOWLEDGE_REDIRECTS = {
@@ -3316,6 +3751,14 @@ def llms_txt():
         f"- Bộ bản đồ TP {page['city_name']}: {_public_url(page['path'])}"
         for page in CITY_MAP_PRODUCTS.values()
     )
+    news_hub_lines = "\n".join(
+        f"- {page['heading']}: {_public_url(page['path'])}"
+        for page in NEWS_HUBS.values()
+    )
+    planning_category_lines = "\n".join(
+        f"- {page['heading']}: {_public_url(page['path'])}"
+        for page in PLANNING_CATEGORY_PAGES.values()
+    )
     body = f"""# Radar BDS
 
 > Radar BDS tổng hợp và chuẩn hóa dữ liệu tin rao bất động sản Bình Dương để người dùng tham khảo trước khi kiểm tra từng tài sản.
@@ -3336,10 +3779,12 @@ def llms_txt():
 - Tra cứu bảng giá đất TP.HCM 2026: {_public_url('/bang-gia-dat-tphcm')}
 - Báo cáo dữ liệu: {_public_url('/bao-cao')}
 - Tin tức dữ liệu: {_public_url('/tin-tuc')}
+{news_hub_lines}
 - Bản đồ Bình Dương: {_public_url('/ban-do-binh-duong')}
 {city_map_lines}
 - Bản đồ quy hoạch Bình Dương cũ: {_public_url('/quy-hoach-binh-duong')}
 {planning_lines}
+{planning_category_lines}
 - Phương pháp lọc deal: {_public_url('/san-deal-bds')}
 """
     return Response(body, mimetype="text/plain")
@@ -3367,20 +3812,61 @@ def sitemap_xml():
         ),
         default="",
     )
+    published_content_items = _public_content_repository.list_published(
+        limit=None
+    )
+    content_lastmod = {}
+    for item in published_content_items:
+        item_type = str(item.get("item_type") or "")
+        value = _iso_public_datetime(
+            item.get("updated_at") or item.get("published_at")
+        )[:10]
+        if value:
+            content_lastmod[item_type] = max(
+                content_lastmod.get(item_type, ""),
+                value,
+            )
+    sitemap_news_hubs = []
+    for hub in NEWS_HUBS.values():
+        sitemap_hub = dict(hub)
+        if hub["item_type"] == "radar_article":
+            sitemap_hub["updated_at"] = news_lastmod
+        else:
+            sitemap_hub["updated_at"] = content_lastmod.get(
+                hub["item_type"],
+                hub.get("updated_at", ""),
+            )
+        sitemap_news_hubs.append(sitemap_hub)
     news_hub = dict(
         KNOWLEDGE_HUB,
         path="/tin-tuc",
         title="Tin tức BĐS Bình Dương | Radar BDS",
-        sitemap_lastmod=news_lastmod,
+        sitemap_lastmod=max(
+            [
+                news_lastmod,
+                *content_lastmod.values(),
+            ]
+        ),
     )
+    public_document_pages = [
+        {
+            "path": f"/tin-tuc/quyet-dinh-van-ban/{item['slug']}",
+            "updated_at": _iso_public_datetime(item.get("updated_at"))[:10],
+        }
+        for item in published_content_items
+        if item.get("item_type") == "legal_document" and item.get("slug")
+    ]
     for page in [
         REPORT_HUB,
         news_hub,
+        *sitemap_news_hubs,
         *CITY_MAP_PRODUCTS.values(),
         BINH_DUONG_MAP_PAGE,
         PLANNING_HUB,
+        *PLANNING_CATEGORY_PAGES.values(),
         *SEO_PAGES.values(),
         *PLANNING_PAGE_LIST,
+        *public_document_pages,
     ]:
         path = page.get("path")
         if not path or path in seen_paths:

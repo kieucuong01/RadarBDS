@@ -67,6 +67,22 @@
   });
 
   document.addEventListener("click", (event) => {
+    const publicContentTarget = event.target.closest("[data-public-content-action]");
+    if (publicContentTarget) {
+      sendRadarEvent("public_content_card_clicked", {
+        kind: publicContentTarget.dataset.contentKind || "unknown",
+        slug: publicContentTarget.dataset.contentSlug || "",
+        target: publicContentTarget.getAttribute("href") || "",
+        source_surface: publicContentTarget.dataset.publicContentAction || "card"
+      });
+    }
+    const documentTarget = event.target.closest("[data-public-document-action]");
+    if (documentTarget) {
+      sendRadarEvent("public_document_download_clicked", {
+        slug: documentTarget.dataset.documentSlug || "",
+        target: documentTarget.getAttribute("href") || ""
+      });
+    }
     const reportTarget = event.target.closest("[data-report-action]");
     if (reportTarget) {
       const actionMap = {

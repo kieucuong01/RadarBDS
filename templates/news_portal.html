@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  {% include "partials/seo_head.html" %}
+  <script type="application/ld+json">{{ schema_graph | tojson }}</script>
+</head>
+<body class="seo-page public-content-page">
+  {% include "partials/seo_header.html" %}
+  <main id="main-content" class="seo-shell public-content-shell">
+    {% include "partials/seo_breadcrumbs.html" %}
+
+    <section class="public-content-hero">
+      <p class="seo-eyebrow">Dữ liệu thị trường và tin tức công khai</p>
+      <h1>{{ page.heading }}</h1>
+      <p>{{ page.description }}</p>
+      <a class="seo-primary-cta" href="/?tab=signals" data-track-cta="news_portal_dashboard">
+        Mở dashboard lọc tin theo khu vực
+      </a>
+    </section>
+
+    <div class="news-portal-grid">
+      {% for section in sections %}
+      <section class="news-portal-section" aria-labelledby="section-{{ loop.index }}">
+        <header>
+          <p class="seo-eyebrow">{{ "Nguồn bên ngoài" if section.item_type == "hot_topic" else "Radar BDS" }}</p>
+          <h2 id="section-{{ loop.index }}"><a href="{{ section.path }}">{{ section.heading }}</a></h2>
+          <p>{{ section.description }}</p>
+        </header>
+        {% if section["items"] %}
+        <ul class="news-portal-list">
+          {% for item in section["items"] %}
+          <li>
+            <a
+              href="{{ item.url }}"
+              {% if item.is_external %}target="_blank" rel="external noopener"{% endif %}
+              data-public-content-action="card"
+              data-content-kind="{{ section.item_type }}"
+              data-content-slug="{{ item.slug|default('radar-article') }}"
+            >{{ item.title }}</a>
+            {% if item.summary %}<p>{{ item.summary }}</p>{% endif %}
+            <span>{{ item.source_name }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="public-content-empty">Chưa có mục mới được xác minh. Radar BDS sẽ cập nhật ở lần đồng bộ tiếp theo.</p>
+        {% endif %}
+        <a class="text-link" href="{{ section.path }}" data-track-cta="news_portal_section_{{ loop.index }}">
+          Xem toàn bộ <span aria-hidden="true">→</span>
+        </a>
+      </section>
+      {% endfor %}
+    </div>
+  </main>
+  {% include "partials/seo_footer.html" %}
+  {% set view_event = "seo_landing_viewed" %}
+  {% include "partials/seo_tracking.html" %}
+</body>
+</html>

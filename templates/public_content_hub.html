@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  {% include "partials/seo_head.html" %}
+  <script type="application/ld+json">{{ schema_graph | tojson }}</script>
+</head>
+<body class="seo-page public-content-page">
+  {% include "partials/seo_header.html" %}
+  <main id="main-content" class="seo-shell public-content-shell" data-public-content-hub data-content-kind="{{ page.item_type }}">
+    {% include "partials/seo_breadcrumbs.html" %}
+
+    <section class="public-content-hero">
+      <p class="seo-eyebrow">{{ "Điểm tin có dẫn nguồn" if page.item_type == "hot_topic" else "Kho tài liệu chính thống" }}</p>
+      <h1>{{ page.heading }}</h1>
+      <p>{{ page.description }}</p>
+      {% if page.item_type == "hot_topic" %}
+      <p class="public-content-note">Radar BDS chỉ lưu metadata và dẫn người đọc tới bài gốc; không sao chép toàn bài hoặc ảnh báo chí.</p>
+      {% else %}
+      <p class="public-content-note">Chỉ văn bản có PDF từ nguồn chính thống và đủ thông tin ban hành mới được công khai.</p>
+      {% endif %}
+    </section>
+
+    <section class="public-content-discovery" aria-labelledby="content-results-title">
+      <div class="public-content-controls">
+        <label>
+          <span>{{ "Tìm theo tiêu đề" if page.item_type == "hot_topic" else "Tìm theo tiêu đề hoặc số văn bản" }}</span>
+          <input type="search" autocomplete="off" data-public-content-search placeholder="Nhập từ khóa cần tra cứu">
+        </label>
+        <label>
+          <span>{{ page.filter_label }}</span>
+          <select data-public-content-facet>
+            <option value="">Tất cả</option>
+            {% for facet in facets %}<option value="{{ facet }}">{{ facet }}</option>{% endfor %}
+          </select>
+        </label>
+        {% if page.item_type == "hot_topic" %}
+        <label>
+          <span>Lọc theo chủ đề</span>
+          <select data-public-content-topic>
+            <option value="">Tất cả</option>
+            {% for topic in topics %}<option value="{{ topic.value }}">{{ topic.label }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>Lọc theo thời gian</span>
+          <select data-public-content-time>
+            <option value="">Tất cả</option>
+            <option value="7">7 ngày gần đây</option>
+            <option value="30">30 ngày gần đây</option>
+            <option value="90">90 ngày gần đây</option>
+          </select>
+        </label>
+        {% else %}
+        <label>
+          <span>Lọc theo loại</span>
+          <select data-public-content-type>
+            <option value="">Tất cả</option>
+            {% for item in items|map(attribute='document_type')|unique if item %}<option value="{{ item }}">{{ item }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>Lọc theo năm</span>
+          <select data-public-content-year>
+            <option value="">Tất cả</option>
+            {% for year in items|map(attribute='year')|unique if year %}<option value="{{ year }}">{{ year }}</option>{% endfor %}
+          </select>
+        </label>
+        {% endif %}
+      </div>
+
+      <div class="public-content-results-head">
+        <h2 id="content-results-title">Mục mới nhất</h2>
+        <p data-public-content-results aria-live="polite">{{ items|length }} kết quả</p>
+      </div>
+
+      <div class="public-content-card-grid">
+        {% for item in items %}
+        {% set facet = item.source_name if page.item_type == "hot_topic" else (item.issuing_authority or item.source_name) %}
+        <article
+          class="public-content-card"
+          data-public-content-card
+          data-content-search="{{ item.search_text }}"
+          data-content-facet="{{ facet }}"
+          data-content-topic="{{ item.topic|default('') }}"
+          data-content-type="{{ item.document_type|default('') }}"
+          data-content-year="{{ item.year }}"
+          data-content-published="{{ item.published_iso }}"
+        >
+          <div class="card-meta">
+            <span>{{ item.source_name }}</span>
+            {% if item.published_iso %}<time datetime="{{ item.published_iso }}">{{ item.published_label }}</time>{% endif %}
+          </div>
+          <h3>
+            <a
+              href="{{ item.source_url if page.item_type == 'hot_topic' else item.detail_url }}"
+              {% if page.item_type == "hot_topic" %}target="_blank" rel="external noopener"{% endif %}
+              data-public-content-action="card"
+              data-content-kind="{{ page.item_type }}"
+              data-content-slug="{{ item.slug }}"
+            >{{ item.title }}</a>
+          </h3>
+          {% if item.summary %}<p>{{ item.summary }}</p>{% endif %}
+          {% if item.document_number %}<dl><dt>Số/ký hiệu</dt><dd>{{ item.document_number }}</dd></dl>{% endif %}
+          <p class="public-content-collected">
+            Thu thập{% if item.collected_iso %} <time datetime="{{ item.collected_iso }}">{{ item.collected_label }}</time>{% endif %}
+          </p>
+        </article>
+        {% endfor %}
+      </div>
+
+      <div class="public-content-empty" data-public-content-empty {% if items %}hidden{% endif %}>
+        <strong>Chưa có kết quả phù hợp</strong>
+        <p>Thử đặt lại bộ lọc hoặc quay lại sau lần đồng bộ tiếp theo.</p>
+        <button type="button" data-public-content-reset>Đặt lại bộ lọc</button>
+      </div>
+    </section>
+  </main>
+  {% include "partials/seo_footer.html" %}
+  <script src="{{ url_for('static', filename='js/public_content_hub.js') }}?v=public-content-20260729" defer></script>
+  {% set view_event = "seo_landing_viewed" %}
+  {% include "partials/seo_tracking.html" %}
+</body>
+</html>

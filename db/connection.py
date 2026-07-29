@@ -51,6 +51,7 @@ ID_TABLES = {
     "market_weekly",
     "notification_log",
     "price_history",
+    "public_content_items",
     "raw_listings",
     "user_audit_log",
     "user_favorite_listings",

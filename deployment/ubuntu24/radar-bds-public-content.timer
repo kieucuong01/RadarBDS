@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Radar BDS public content sync every morning
+
+[Timer]
+OnCalendar=*-*-* 06:15:00 Asia/Ho_Chi_Minh
+Persistent=true
+RandomizedDelaySec=10m
+Unit=radar-bds-public-content.service
+
+[Install]
+WantedBy=timers.target
