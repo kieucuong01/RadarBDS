@@ -277,6 +277,20 @@
   margin-top: 16px;
 }
 
+.tdm-product-source-card-grid a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  margin-top: 12px;
+  color: #0f766e;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.tdm-product-source-card-grid a:hover {
+  text-decoration: underline;
+}
+
 .tdm-product-source-card-grid article {
   padding: 18px;
   border: 1px solid #dce5ec;

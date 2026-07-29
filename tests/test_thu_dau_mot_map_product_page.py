@@ -525,10 +525,14 @@ def test_product_page_includes_administrative_image_source_and_pdf_offer_detail(
     assert "Nguồn tham khảo công khai" in visible_text
     assert "Địa Ốc Thông Thái" in visible_text
     assert "https://diaocthongthai.com/ban-do-tp-thu-dau-mot-binh-duong/" in html
-    assert "Radar BDS không sao chép hoặc bán lại ảnh từ nguồn tham khảo" in visible_text
-    assert "Ảnh bản đồ hành chính" in visible_text
-    assert "SVG và PDF cấp xã/phường" in visible_text
+    assert "Radar BDS không sao chép hoặc bán lại ảnh từ nguồn" in visible_text
+    assert "File ảnh bản đồ TP Thủ Dầu Một" in visible_text
+    assert "Bản đồ hành chính sau sáp nhập 2025" in visible_text
+    assert "Bản đồ hành chính trước sáp nhập" in visible_text
+    assert "Bản đồ vector SVG cấp xã/phường" in visible_text
+    assert "Bản đồ PDF hoàn thiện" in visible_text
     assert "Vị trí, giao thông, vệ tinh" in visible_text
+    assert "không lưu bản sao ảnh nguồn" in visible_text
     assert visible_text.index(
         "Tổng hợp file ảnh bản đồ hành chính TP Thủ Dầu Một – Bình Dương"
     ) < visible_text.index("Bản đồ PDF hoàn thiện")
