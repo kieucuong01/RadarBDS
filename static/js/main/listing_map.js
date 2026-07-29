@@ -78,6 +78,14 @@
         badge: "Theo tên đường",
         detail: "Các tin cùng tuyến đường được gom tại một điểm đại diện."
       },
+      landmark: {
+        badge: "Theo khu vực",
+        detail: "Tin được đặt tại khu TĐC, KDC hoặc dự án đã xác minh."
+      },
+      nearby: {
+        badge: "Vị trí gần đúng",
+        detail: "Tin chỉ cho biết gần, cách hoặc một nhánh từ tuyến đường tham chiếu."
+      },
       ward: {
         badge: "Theo trung tâm phường",
         detail: "Tin chưa đủ tên đường nên dùng điểm đại diện cấp phường."
@@ -134,12 +142,21 @@
     return Number.isFinite(number) && number >= 0 ? Math.round(number) : 0;
   }
 
+  function normalizeAccuracyRadius(value) {
+    var number = Number(value);
+    if (!Number.isFinite(number) || number <= 0) return 0;
+    return Math.min(Math.round(number), 20000);
+  }
+
   function safeTrackingContext(input) {
     input = input || {};
     var output = {};
     var mode = normalizeMode(input.mode);
     if (mode) output.mode = mode;
-    if (["exact", "road", "ward"].indexOf(input.precision) >= 0) {
+    if (
+      ["exact", "road", "landmark", "nearby", "ward"]
+        .indexOf(input.precision) >= 0
+    ) {
       output.precision = input.precision;
     }
     [
@@ -349,6 +366,24 @@
         fillOpacity: 0.84
       };
     }
+    if (precision === "landmark") {
+      return {
+        radius: 9,
+        color: "#0f766e",
+        weight: 3,
+        fillColor: "#14b8a6",
+        fillOpacity: 0.84
+      };
+    }
+    if (precision === "nearby") {
+      return {
+        radius: 9,
+        color: "#6d28d9",
+        weight: 3,
+        fillColor: "#8b5cf6",
+        fillOpacity: 0.86
+      };
+    }
     return {
       radius: 10,
       color: "#b45309",
@@ -455,6 +490,8 @@
         ["Đã định vị", safeCount(summary.mapped)],
         ["Chưa định vị", safeCount(summary.unmapped_count)],
         ["Theo đường", safeCount(summary.road_count)],
+        ["Theo khu vực", safeCount(summary.landmark_count)],
+        ["Gần đúng", safeCount(summary.nearby_count)],
         ["Theo phường", safeCount(summary.ward_count)]
       ].forEach(function (entry) {
         var card = create("div", "listing-map-summary-card");
@@ -509,6 +546,20 @@
       var lat = Number(group.lat);
       var lng = Number(group.lng);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      if (group.precision === "nearby") {
+        var radius = normalizeAccuracyRadius(group.accuracy_radius_m);
+        if (radius) {
+          root.L.circle([lat, lng], {
+            radius: radius,
+            color: "#7c3aed",
+            weight: 2,
+            dashArray: "7 6",
+            fillColor: "#8b5cf6",
+            fillOpacity: 0.12,
+            interactive: false
+          }).addTo(state.markerLayer);
+        }
+      }
       var marker = root.L.circleMarker(
         [lat, lng],
         markerStyle(group.precision)
@@ -988,6 +1039,7 @@
     mapBaseLayers: mapBaseLayers,
     safeTrackingContext: safeTrackingContext,
     precisionCopy: precisionCopy,
+    normalizeAccuracyRadius: normalizeAccuracyRadius,
     openListingFromMap: openListingFromMap,
     shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,

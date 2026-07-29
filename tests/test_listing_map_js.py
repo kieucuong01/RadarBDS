@@ -38,6 +38,17 @@ def test_mode_base_layer_and_precision_contracts():
         _run_node("mapApi.precisionCopy('ward').badge")
         == "Theo trung tâm phường"
     )
+    assert (
+        _run_node("mapApi.precisionCopy('landmark').badge")
+        == "Theo khu vực"
+    )
+    assert (
+        _run_node("mapApi.precisionCopy('nearby').badge")
+        == "Vị trí gần đúng"
+    )
+    assert _run_node("mapApi.normalizeAccuracyRadius(150)") == 150
+    assert _run_node("mapApi.normalizeAccuracyRadius(-1)") == 0
+    assert _run_node("mapApi.normalizeAccuracyRadius(100000)") == 20000
 
 
 def test_summary_and_item_urls_preserve_frozen_filter_snapshot():

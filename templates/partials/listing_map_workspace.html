@@ -18,8 +18,15 @@
       <p class="listing-map-eyebrow">Radar BDS Maps</p>
       <h2 id="listingMapTitle">Xem lô đất trên bản đồ</h2>
       <p id="listingMapDescription">
-        Vị trí theo tin rao, tên đường hoặc trung tâm phường; luôn hiển thị độ chính xác.
+        Vị trí theo tọa độ, tuyến đường, khu dân cư, vùng gần đúng hoặc trung tâm phường; luôn hiển thị độ chính xác.
       </p>
+      <div class="listing-map-precision-legend" aria-label="Chú giải độ chính xác vị trí">
+        <span class="listing-map-precision-exact">Chính xác</span>
+        <span class="listing-map-precision-road">Theo đường</span>
+        <span class="listing-map-precision-landmark">Theo khu vực</span>
+        <span class="listing-map-precision-nearby">Gần đúng</span>
+        <span class="listing-map-precision-ward">Theo phường</span>
+      </div>
     </div>
     <button id="listingMapClose" type="button" class="listing-map-close"
       aria-label="Đóng bản đồ" onclick="RadarListingMap.close()">×</button>

@@ -32,6 +32,13 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'role="status"' in html
     assert 'aria-live="polite"' in html
     assert 'aria-busy="false"' in html
+    assert (
+        "tọa độ, tuyến đường, khu dân cư, vùng gần đúng hoặc "
+        "trung tâm phường"
+    ) in html
+    assert 'class="listing-map-precision-legend"' in html
+    for precision in ("exact", "road", "landmark", "nearby", "ward"):
+        assert f"listing-map-precision-{precision}" in html
     for hook in (
         "listingMapCanvas",
         "listingMapPanel",
@@ -40,6 +47,7 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
         assert f'id="{hook}"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
+    assert html.count("listing-map-location-coverage-20260729") == 2
     assert "window.RADAR_MAP_VENDOR" in html
     assert not re.search(
         r"<(?:script|link)[^>]+(?:leaflet\.js|leaflet\.css)",
@@ -126,9 +134,12 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
         'event.key !== "Tab"',
         "state.map.remove()",
         "state.previousFocus.focus()",
+        "root.L.circle(",
         "root.L.circleMarker",
         "precisionCopy(group.precision)",
         "safeCount(summary.unmapped_count)",
+        "safeCount(summary.landmark_count)",
+        "safeCount(summary.nearby_count)",
         'script.crossOrigin = "anonymous"',
         'link.crossOrigin = "anonymous"',
     ):
@@ -138,6 +149,8 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     assert "max-height: min(47vh, 410px)" in styles
     assert "min-height: 44px" in styles
     assert "@media (prefers-reduced-motion: reduce)" in styles
+    assert ".listing-map-precision-landmark" in styles
+    assert ".listing-map-precision-nearby" in styles
 
 
 def test_official_gis_tracking_is_mode_only_and_does_not_deep_link():
