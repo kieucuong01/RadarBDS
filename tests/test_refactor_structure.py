@@ -500,7 +500,7 @@ def test_mobile_filter_sheet_scroll_is_isolated_from_signal_tab():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "mobile-command-bar-20260624",
+        'class="command-bar"',
         ".sidebar.filter-sheet.show",
         "-webkit-overflow-scrolling: touch",
         "overscroll-behavior: contain",
