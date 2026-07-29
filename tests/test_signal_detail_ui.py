@@ -32,3 +32,13 @@ def test_detail_location_map_has_rendered_empty_and_retry_states():
     assert "Không tải được bản đồ vị trí" in module
     assert ".sm-location-map" in css
     assert ".sm-location-copy" in css
+
+
+def test_dashboard_feed_delegates_to_shared_signal_card_renderer():
+    signals = _read("static/js/main/signals.js")
+    index = _read("templates/index.html")
+    detail = _read("templates/listing_detail.html")
+
+    assert "RadarSignalCard.render" in signals
+    assert "signal_card.js" in index
+    assert "signal_card.js" in detail

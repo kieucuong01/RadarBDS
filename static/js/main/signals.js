@@ -678,6 +678,16 @@ function signalDealDataAttrs(x, fairPrice, imgSrc, timeStr, roadStr, profit) {
 }
 
 function renderSignalDealCard(x, opts = {}) {
+  if (window.RadarSignalCard && typeof window.RadarSignalCard.render === 'function') {
+    return window.RadarSignalCard.render(x, {
+      context: opts.cardContext || 'signal',
+      openMode: 'modal',
+      openHandler: opts.openHandler || ((opts.cardContext || 'signal') === 'all' ? 'openListingModal' : 'openSignal'),
+      showFavorite: true,
+      showContact: true,
+      priorityImage: Boolean(opts.priorityImage)
+    });
+  }
   const cardContext = opts.cardContext || 'signal';
   const contactContext = opts.contactContext || (cardContext === 'all' ? 'card_all' : 'card_signal');
   const openHandler = opts.openHandler || (cardContext === 'all' ? 'openListingModal' : 'openSignal');

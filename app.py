@@ -99,6 +99,7 @@ from services.listing_map import (
     load_listing_map_items,
     load_listing_map_summary,
 )
+from services.listing_comparables import load_listing_comparables
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
@@ -5386,6 +5387,9 @@ def get_price_history(listing_id):
 
             ranked.sort(key=lambda x: (-x["match_score"], x["area_gap_pct"], -(x["price_per_m2"] or 0)))
             comps = ranked[:6]
+
+        # Shared compact card payload used by both detail surfaces.
+        comps = load_listing_comparables(conn, listing_id, tier=tier, limit=18)
 
         lot_history = _get_lot_history(conn, listing_id, tier=tier)
         # History is open for all tiers (decision 2026-05-15) — price/lot
