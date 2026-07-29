@@ -11,7 +11,8 @@ from shapely.geometry import Point
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform, unary_union
 
-from .geometry import NormalizedMapLayers
+from .geometry import NormalizedMapLayers, resolve_product_spec
+from .models import MapProductSpec
 
 
 A0_LANDSCAPE_WIDTH_PT = 3370.393700787402
@@ -260,7 +261,7 @@ def _padded_current_bounds(layers: NormalizedMapLayers) -> tuple[float, float, f
         ]
     )
     if current_union.is_empty:
-        raise ValueError("Current five-ward union cannot be empty")
+        raise ValueError("Current boundary union cannot be empty")
     min_x, min_y, max_x, max_y = current_union.bounds
     padding = max(max_x - min_x, max_y - min_y) * 0.025
     return (
@@ -483,17 +484,28 @@ def _legend(edition: str) -> tuple[LegendItem, ...]:
 def build_scene(
     layers: NormalizedMapLayers,
     edition: Literal["legacy", "current"],
+    product_spec: MapProductSpec | None = None,
 ) -> MapScene:
     """Build one immutable scene used by both print-vector renderers."""
 
     if edition not in {"legacy", "current"}:
         raise ValueError("edition must be 'legacy' or 'current'")
-    if len(layers.current_boundaries) != 5:
-        raise ValueError("Current edition requires exactly five boundary polygons")
-    if len(layers.legacy_boundaries) != 14:
-        raise ValueError("Legacy edition requires exactly 14 boundary polygons")
-    if len(layers.legacy_ward_centers) != 14:
-        raise ValueError("Legacy edition requires exactly 14 reference-center Points")
+    spec = resolve_product_spec(layers, product_spec)
+    current_count = len(spec.current_wards)
+    legacy_count = len(spec.legacy_wards)
+    if len(layers.current_boundaries) != current_count:
+        raise ValueError(
+            f"Current edition requires exactly {current_count} boundary polygons"
+        )
+    if len(layers.legacy_boundaries) != legacy_count:
+        raise ValueError(
+            f"Legacy edition requires exactly {legacy_count} boundary polygons"
+        )
+    if len(layers.legacy_ward_centers) != legacy_count:
+        raise ValueError(
+            "Legacy edition requires exactly "
+            f"{legacy_count} reference-center Points"
+        )
     if any(point.geometry_type != "Point" for point in layers.legacy_ward_centers):
         raise ValueError("Legacy references must use Point geometry")
 
@@ -504,9 +516,14 @@ def build_scene(
                 item.geometry,
                 source_id=item.source_id,
                 boundary_claim="true",
-                fill=CURRENT_WARD_FILL_COLORS[item.name],
+                fill=CURRENT_WARD_FILL_COLORS.get(
+                    item.name,
+                    LEGACY_BOUNDARY_FILL_COLORS[
+                        index % len(LEGACY_BOUNDARY_FILL_COLORS)
+                    ],
+                ),
             )
-            for item in layers.current_boundaries
+            for index, item in enumerate(layers.current_boundaries)
         )
         if edition == "current"
         else ()
@@ -560,12 +577,24 @@ def build_scene(
     )
     bounds = _padded_current_bounds(layers)
     layer_index = {layer.layer_id: layer for layer in scene_layers}
-    disclaimer = (
-        "Bản 14 ranh phường cũ tham khảo; Hòa Phú và Phú Tân là ranh suy luận "
-        "biên tập từ dữ liệu liền kề, không thay thế hồ sơ địa chính."
-        if edition == "legacy"
-        else ""
+    legacy_unit_label = (
+        "đơn vị cũ" if spec.city_slug == "ben-cat" else "phường cũ"
     )
+    if edition == "legacy" and spec.derived_legacy_wards:
+        disclaimer = (
+            f"Bản {legacy_count} ranh {legacy_unit_label} tham khảo; "
+            f"{', '.join(spec.derived_legacy_wards)} "
+            "là ranh suy luận biên tập từ dữ liệu liền kề, không thay thế "
+            "hồ sơ địa chính."
+        )
+    elif edition == "legacy":
+        disclaimer = (
+            f"Bản {legacy_count} ranh {legacy_unit_label} tham khảo từ "
+            "snapshot hành chính lịch sử có nguồn, không thay thế hồ sơ "
+            "địa chính."
+        )
+    else:
+        disclaimer = ""
     return MapScene(
         edition=edition,
         page_width_pt=A0_LANDSCAPE_WIDTH_PT,
@@ -574,11 +603,13 @@ def build_scene(
         layers=scene_layers,
         labels=_accepted_labels(bounds, edition, layer_index),
         attribution=source_attribution(layers),
-        title="BẢN ĐỒ THỦ DẦU MỘT",
+        title=f"BẢN ĐỒ {spec.city_name.upper()}",
         subtitle=(
-            "14 phường cũ — ranh tham khảo"
+            f"{legacy_count} {legacy_unit_label} — ranh tham khảo"
             if edition == "legacy"
-            else "5 phường hiện hành — địa giới hành chính"
+            else (
+                f"{current_count} phường hiện hành — địa giới hành chính"
+            )
         ),
         disclaimer=disclaimer,
         legend=_legend(edition),

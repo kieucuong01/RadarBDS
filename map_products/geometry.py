@@ -52,6 +52,40 @@ class NormalizedMapLayers:
     poi: tuple[MapPoint, ...]
     neighborhoods: tuple[MapPoint, ...]
     source_manifest: dict[str, dict]
+    product_spec: MapProductSpec | None = None
+
+
+def resolve_product_spec(
+    layers: NormalizedMapLayers,
+    product_spec: MapProductSpec | None = None,
+) -> MapProductSpec:
+    """Resolve renderer metadata while preserving legacy two-argument callers."""
+
+    if product_spec is not None:
+        return product_spec
+    if layers.product_spec is not None:
+        return layers.product_spec
+    derived_names = tuple(
+        boundary.name
+        for boundary in layers.legacy_boundaries
+        if boundary.properties.get("boundary_source") == "derived_boundary"
+    )
+    return MapProductSpec(
+        slug="thu-dau-mot-map-bundle",
+        city_slug="thu-dau-mot",
+        city_name="Thủ Dầu Một",
+        version="legacy-compatible",
+        price_vnd=99_000,
+        legacy_wards=tuple(
+            boundary.name for boundary in layers.legacy_boundaries
+        ),
+        current_wards=tuple(
+            boundary.name for boundary in layers.current_boundaries
+        ),
+        derived_legacy_wards=derived_names,
+        formats=("pdf", "svg", "kml"),
+        font_family="Be Vietnam Pro",
+    )
 
 
 def _read_payload(value: Path | str | bytes | dict) -> dict:
@@ -273,6 +307,7 @@ def _select_exact_boundaries(
 def _select_exact_legacy_boundaries(
     payload: dict,
     expected_names: tuple[str, ...],
+    derived_names: tuple[str, ...],
 ) -> tuple[NamedGeometry, ...]:
     try:
         boundaries = _select_exact_boundaries(
@@ -282,13 +317,17 @@ def _select_exact_legacy_boundaries(
         )
     except ValueError as exc:
         raise ValueError(
-            "legacy_boundaries must resolve to exactly 14 legacy boundary "
+            "legacy_boundaries must resolve to exactly "
+            f"{len(expected_names)} legacy boundary "
             f"Polygon/MultiPolygon features: {exc}"
         ) from exc
-    if len(boundaries) != 14:
-        raise ValueError("legacy_boundaries must resolve to exactly 14 legacy boundary features")
+    if len(boundaries) != len(expected_names):
+        raise ValueError(
+            "legacy_boundaries must resolve to exactly "
+            f"{len(expected_names)} legacy boundary features"
+        )
     allowed_sources = {"source_snapshot", "derived_boundary"}
-    derived_names = set()
+    actual_derived_names = set()
     for boundary in boundaries:
         properties = boundary.properties or {}
         if properties.get("boundary_claim", "").casefold() != "true":
@@ -301,15 +340,17 @@ def _select_exact_legacy_boundaries(
                 f"legacy boundary {boundary.name} has invalid boundary_source"
             )
         if boundary_source == "derived_boundary":
-            derived_names.add(boundary.name)
+            actual_derived_names.add(boundary.name)
             if not properties.get("derived_from", "").strip():
                 raise ValueError(
                     f"legacy boundary {boundary.name} must record derived_from"
                 )
-    if derived_names != {"Hòa Phú", "Phú Tân"}:
+    expected_derived_names = set(derived_names)
+    if actual_derived_names != expected_derived_names:
         raise ValueError(
-            "legacy_boundaries must mark exactly Hòa Phú and Phú Tân as "
-            f"derived_boundary (actual={sorted(derived_names)})"
+            "legacy_boundaries derived_boundary names must match the product "
+            f"spec (expected={sorted(expected_derived_names)}; "
+            f"actual={sorted(actual_derived_names)})"
         )
     return boundaries
 
@@ -485,11 +526,12 @@ def _load_exact_legacy_centers(
     by_name = {point.name: point for point in points}
     expected = set(expected_names)
     actual = set(by_name)
-    if len(points) != 14 or actual != expected:
+    if len(points) != len(expected_names) or actual != expected:
         missing = sorted(expected - actual)
         unexpected = sorted(actual - expected)
         raise ValueError(
-            "legacy_ward_centers must resolve to exactly 14 legacy ward "
+            "legacy_ward_centers must resolve to exactly "
+            f"{len(expected_names)} legacy ward "
             f"center Points (missing={missing}; unexpected={unexpected})"
         )
     return tuple(by_name[name] for name in expected_names)
@@ -533,6 +575,7 @@ def build_normalized_layers(
     legacy_boundaries = _select_exact_legacy_boundaries(
         _read_payload(snapshots["legacy_boundaries"]),
         spec.legacy_wards,
+        spec.derived_legacy_wards,
     )
     current = _select_exact_boundaries(
         _read_payload(snapshots["current_boundaries"]),
@@ -541,7 +584,7 @@ def build_normalized_layers(
     )
     current_extent = unary_union([feature.geometry for feature in current])
     if current_extent.is_empty:
-        raise ValueError("Current five-ward union is empty")
+        raise ValueError("Current boundary union is empty")
     streets, hydro, poi = _detail_layers(
         _read_payload(snapshots["osm_detail"]),
         current_extent,
@@ -555,4 +598,5 @@ def build_normalized_layers(
         poi=poi,
         neighborhoods=tuple(neighborhood_points),
         source_manifest=_source_manifest(snapshots),
+        product_spec=spec,
     )

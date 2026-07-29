@@ -22,7 +22,8 @@ from shapely.geometry import (
 )
 from shapely.geometry.base import BaseGeometry
 
-from .geometry import NormalizedMapLayers
+from .geometry import NormalizedMapLayers, resolve_product_spec
+from .models import MapProductSpec
 from .scene import (
     FONT_FAMILY,
     INK_COLOR,
@@ -66,12 +67,40 @@ def _kml(tag: str) -> str:
     return f"{{{KML_NAMESPACE}}}{tag}"
 
 
-def _edition_description(edition: Literal["legacy", "current"]) -> str:
-    return (
-        LEGACY_EDITION_DESCRIPTION
-        if edition == "legacy"
-        else CURRENT_EDITION_DESCRIPTION
+def _edition_description(
+    edition: Literal["legacy", "current"],
+    product_spec: MapProductSpec | None = None,
+) -> str:
+    if product_spec is None:
+        return (
+            LEGACY_EDITION_DESCRIPTION
+            if edition == "legacy"
+            else CURRENT_EDITION_DESCRIPTION
+        )
+    if edition == "current":
+        return (
+            f"Bản {len(product_spec.current_wards)} địa giới phường hiện hành "
+            "sau sắp xếp 2025."
+        )
+    unit_label = (
+        "đơn vị cũ"
+        if product_spec.city_slug == "ben-cat"
+        else "phường cũ"
     )
+    if product_spec.derived_legacy_wards:
+        return (
+            f"Bản {len(product_spec.legacy_wards)} ranh {unit_label} tham khảo; "
+            f"{', '.join(product_spec.derived_legacy_wards)} là ranh suy luận "
+            "biên tập, không thay thế hồ sơ địa chính."
+        )
+    return (
+        f"Bản {len(product_spec.legacy_wards)} ranh {unit_label} tham khảo từ "
+        "snapshot hành chính lịch sử có nguồn, không thay thế hồ sơ địa chính."
+    )
+
+
+def _scene_edition_description(scene: MapScene) -> str:
+    return scene.disclaimer or f"Bản {scene.subtitle}."
 
 
 def _font_paths(fonts: Mapping[str, str | Path]) -> tuple[Path, Path]:
@@ -454,7 +483,7 @@ def render_svg(
         root,
         _svg("metadata"),
         {"id": "edition-metadata"},
-    ).text = _edition_description(scene.edition)
+    ).text = _scene_edition_description(scene)
     definitions = ElementTree.SubElement(root, _svg("defs"))
     regular_data = base64.b64encode(regular.read_bytes()).decode("ascii")
     semibold_data = base64.b64encode(semibold.read_bytes()).decode("ascii")
@@ -816,7 +845,7 @@ def render_pdf(
     )
     pdf.setTitle(f"{scene.title} — {scene.subtitle}")
     pdf.setAuthor("Radar BDS")
-    pdf.setSubject(_edition_description(scene.edition))
+    pdf.setSubject(_scene_edition_description(scene))
     pdf.setFillColor(HexColor(PAPER_COLOR))
     pdf.rect(
         0,
@@ -934,23 +963,34 @@ def render_kml(
     layers: NormalizedMapLayers,
     edition: Literal["legacy", "current"],
     path: str | Path,
+    product_spec: MapProductSpec | None = None,
 ) -> Path:
     """Render geographic WGS84 layers without print-only furniture."""
 
     if edition not in {"legacy", "current"}:
         raise ValueError("edition must be 'legacy' or 'current'")
-    if len(layers.current_boundaries) != 5:
-        raise ValueError("Current edition requires exactly five boundary polygons")
-    if len(layers.legacy_boundaries) != 14:
-        raise ValueError("Legacy edition requires exactly 14 boundary polygons")
-    if len(layers.legacy_ward_centers) != 14:
-        raise ValueError("Legacy edition requires exactly 14 reference-center Points")
+    spec = resolve_product_spec(layers, product_spec)
+    current_count = len(spec.current_wards)
+    legacy_count = len(spec.legacy_wards)
+    if len(layers.current_boundaries) != current_count:
+        raise ValueError(
+            f"Current edition requires exactly {current_count} boundary polygons"
+        )
+    if len(layers.legacy_boundaries) != legacy_count:
+        raise ValueError(
+            f"Legacy edition requires exactly {legacy_count} boundary polygons"
+        )
+    if len(layers.legacy_ward_centers) != legacy_count:
+        raise ValueError(
+            "Legacy edition requires exactly "
+            f"{legacy_count} reference-center Points"
+        )
 
     ElementTree.register_namespace("", KML_NAMESPACE)
     root = ElementTree.Element(_kml("kml"))
     document = ElementTree.SubElement(root, _kml("Document"))
     ElementTree.SubElement(document, _kml("name")).text = (
-        f"Thủ Dầu Một — {edition}"
+        f"{spec.city_name} — {edition}"
     )
     document_data = ElementTree.SubElement(document, _kml("ExtendedData"))
     _kml_data(document_data, "edition", edition)
@@ -967,7 +1007,7 @@ def render_kml(
     _kml_data(
         document_data,
         "edition_description",
-        _edition_description(edition),
+        _edition_description(edition, spec),
     )
     if edition == "current":
         folder = _kml_folder(document, "boundaries")
