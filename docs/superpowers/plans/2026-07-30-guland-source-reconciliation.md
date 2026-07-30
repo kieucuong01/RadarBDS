@@ -135,7 +135,7 @@ git commit -m "feat: add source verified listing lifecycle"
 - Produces: `GulandReconciliationPlan(new_cards, unchanged_cards, changed_cards, invalid_price_cards)`
 - Produces: `plan_guland_cards(cards, existing_by_url) -> GulandReconciliationPlan`
 
-- [ ] **Step 1: Write failing canonical-price tests**
+- [x] **Step 1: Write failing canonical-price tests**
 
 ```python
 def test_canonical_price_rounds_to_one_million_vnd():
@@ -149,7 +149,7 @@ def test_invalid_prices_never_become_changes():
     assert canonical_price_vnd(float("nan")) is None
 ```
 
-- [ ] **Step 2: Write failing partition tests**
+- [x] **Step 2: Write failing partition tests**
 
 ```python
 def test_planner_separates_new_unchanged_changed_and_invalid():
@@ -175,19 +175,19 @@ def test_planner_separates_new_unchanged_changed_and_invalid():
     assert [c["url"] for c in plan.invalid_price_cards] == [masked_url]
 ```
 
-- [ ] **Step 3: Verify RED**
+- [x] **Step 3: Verify RED**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_guland_reconciliation.py -q
 ```
 
-- [ ] **Step 4: Implement immutable dataclasses and one-million-VND comparison**
+- [x] **Step 4: Implement immutable dataclasses and one-million-VND comparison**
 
 The planner is pure: no database, Playwright, logging, or global state. It uses
 the parsed `price_ty` supplied on each card and does not infer cross-URL
 identity.
 
-- [ ] **Step 5: Verify GREEN and commit**
+- [x] **Step 5: Verify GREEN and commit**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_guland_reconciliation.py -q
