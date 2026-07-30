@@ -151,18 +151,23 @@ class BaseCrawler(ABC):
         Trả về stats dict: {new, skipped, errors}
         """
         _normalize_playwright_browser_path_env()
-        try:
-            from playwright.sync_api import sync_playwright
-        except ImportError:
-            raise SystemExit(
-                "Playwright chưa cài:\n"
-                "  pip install playwright\n"
-                "  playwright install chromium"
-            )
+        from db.crawl_runs import (
+            derive_crawl_status,
+            finish_crawl_run,
+            get_incomplete_run,
+            mark_url_done,
+            mark_url_error,
+            start_crawl_run,
+        )
 
-        from db.crawl_runs import start_crawl_run, finish_crawl_run, get_incomplete_run, mark_url_done
-
-        self._stats = {"fetched": 0, "new": 0, "skipped": 0, "errors": 0, "error_details": []}
+        self._stats = {
+            "fetched": 0,
+            "new": 0,
+            "updated": 0,
+            "skipped": 0,
+            "errors": 0,
+            "error_details": [],
+        }
 
         # Check for incomplete run to resume
         incomplete = get_incomplete_run(self.SOURCE_NAME)
@@ -176,38 +181,104 @@ class BaseCrawler(ABC):
         else:
             run_id = start_crawl_run(self.SOURCE_NAME, "TDM")
             completed_urls = set()
+        self._crawl_run_id = run_id
+        fatal_error = None
+        try:
+            try:
+                from playwright.sync_api import sync_playwright
+            except ImportError as exc:
+                raise SystemExit(
+                    "Playwright chưa cài:\n"
+                    "  pip install playwright\n"
+                    "  playwright install chromium"
+                ) from exc
 
-        with sync_playwright() as pw:
-            browser, ctx = self._launch(pw, headless=headless)
-            self._ctx = ctx
-            page = ctx.new_page()
-            page.set_default_timeout(30_000)
+            with sync_playwright() as pw:
+                browser, ctx = self._launch(pw, headless=headless)
+                self._ctx = ctx
+                page = ctx.new_page()
+                page.set_default_timeout(30_000)
 
-            for url in self.TARGET_URLS:
-                if url in completed_urls:
-                    self.logger.info(f"[{self.SOURCE_NAME}] Skip (already done): {url}")
-                    continue
+                for url in self.TARGET_URLS:
+                    if url in completed_urls:
+                        self.logger.info(f"[{self.SOURCE_NAME}] Skip (already done): {url}")
+                        continue
 
-                self.logger.info(f"[{self.SOURCE_NAME}] {mode} crawl: {url}")
-                try:
-                    if mode == "full":
-                        n = self.crawl_full(page, url)
-                    else:
-                        n = self.crawl_incremental(page, url)
-                    self.logger.info(
-                        f"[{self.SOURCE_NAME}] {url} → {n} new records"
-                    )
-                    mark_url_done(run_id, url, n)
-                except Exception as e:
-                    self.logger.error(f"[{self.SOURCE_NAME}] Error on {url}: {e}", exc_info=True)
-                    self._track_error(url, e, error_type="crawl_exception")
+                    self.logger.info(f"[{self.SOURCE_NAME}] {mode} crawl: {url}")
+                    before = {
+                        key: int(self._stats.get(key, 0) or 0)
+                        for key in (
+                            "fetched",
+                            "existing",
+                            "new",
+                            "updated",
+                            "invalid_price",
+                            "errors",
+                        )
+                    }
+                    try:
+                        if mode == "full":
+                            n = self.crawl_full(page, url)
+                        else:
+                            n = self.crawl_incremental(page, url)
+                        mark_url_done(run_id, url, n)
+                    except Exception as exc:
+                        self.logger.error(
+                            f"[{self.SOURCE_NAME}] Error on {url}: {exc}",
+                            exc_info=True,
+                        )
+                        self._track_error(url, exc, error_type="crawl_exception")
+                        mark_url_error(run_id, url, str(exc))
+                    finally:
+                        counters = {
+                            "url": url[:500],
+                            "fetched": int(self._stats.get("fetched", 0) or 0)
+                            - before["fetched"],
+                            "existing": int(self._stats.get("existing", 0) or 0)
+                            - before["existing"],
+                            "new": int(self._stats.get("new", 0) or 0)
+                            - before["new"],
+                            "changed": int(self._stats.get("updated", 0) or 0)
+                            - before["updated"],
+                            "invalid": int(self._stats.get("invalid_price", 0) or 0)
+                            - before["invalid_price"],
+                            "errors": int(self._stats.get("errors", 0) or 0)
+                            - before["errors"],
+                        }
+                        self.logger.info(
+                            "[%s] target=%s",
+                            self.SOURCE_NAME,
+                            json.dumps(counters, ensure_ascii=False),
+                        )
 
-            browser.close()
-
-        error_msg = None
-        if self._stats["error_details"]:
-            error_msg = json.dumps(self._stats["error_details"][:20], ensure_ascii=False)
-        finish_crawl_run(run_id, self._stats, status="done", error_msg=error_msg)
+                browser.close()
+        except BaseException as exc:
+            fatal_error = exc
+            if not self._stats["error_details"] or (
+                self._stats["error_details"][-1].get("error_msg") != str(exc)[:200]
+            ):
+                self._track_error(
+                    f"{self.SOURCE_NAME}:run",
+                    exc,
+                    error_type="fatal",
+                )
+            raise
+        finally:
+            error_msg = None
+            if self._stats["error_details"]:
+                error_msg = json.dumps(
+                    self._stats["error_details"][:20],
+                    ensure_ascii=False,
+                )[:2000]
+            finish_crawl_run(
+                run_id,
+                self._stats,
+                status=derive_crawl_status(
+                    self._stats,
+                    fatal=fatal_error is not None,
+                ),
+                error_msg=error_msg,
+            )
 
         self.logger.info(
             f"[{self.SOURCE_NAME}] Done — "

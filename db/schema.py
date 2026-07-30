@@ -251,6 +251,7 @@ CREATE TABLE IF NOT EXISTS crawl_run_progress (
     target_url      TEXT NOT NULL,
     status          TEXT DEFAULT 'pending',
     n_new           INTEGER DEFAULT 0,
+    error_msg       TEXT NOT NULL DEFAULT '',
     completed_at    TEXT,
     UNIQUE(run_id, target_url)
 );
@@ -1035,6 +1036,12 @@ def _run_migrations(conn: Any) -> None:
     _migrate_listing_reports(conn)
     _migrate_admin_jobs(conn)
     _migrate_facebook_crawl_profiles(conn)
+    conn.execute(
+        """
+        ALTER TABLE crawl_run_progress
+        ADD COLUMN IF NOT EXISTS error_msg TEXT NOT NULL DEFAULT ''
+        """
+    )
     existing = _table_columns(conn, "listings")
     migrations = [
         ("possibly_duplicate", "ALTER TABLE listings ADD COLUMN possibly_duplicate INTEGER DEFAULT 0"),

@@ -265,7 +265,7 @@ git commit -m "fix: distinguish raw duplicates from write failures"
 - Produces: `mark_url_error(run_id: int, target_url: str, error_msg: str) -> None`
 - Base crawler stats retain `fetched`, `new`, `updated`, `skipped`, `errors`, and `error_details`.
 
-- [ ] **Step 1: Write failing status tests**
+- [x] **Step 1: Write failing status tests**
 
 ```python
 @pytest.mark.parametrize(
@@ -289,7 +289,7 @@ def test_ops_alert_marks_partial_unhealthy():
     assert "PARTIAL" in msg
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -299,7 +299,7 @@ Run:
 
 Expected: missing helper and partial-alert assertion failure.
 
-- [ ] **Step 3: Implement status derivation and failed-target checkpointing**
+- [x] **Step 3: Implement status derivation and failed-target checkpointing**
 
 Add:
 
@@ -318,7 +318,7 @@ completion time in `crawl_run_progress`. Add
 `crawl_run_progress.error_msg TEXT NOT NULL DEFAULT ''` idempotently in
 `db/schema.py`; never store HTML or connection strings.
 
-- [ ] **Step 4: Make BaseCrawler finish exactly once**
+- [x] **Step 4: Make BaseCrawler finish exactly once**
 
 Wrap Playwright import/launch/target loop/browser close in one `try/except/finally`:
 
@@ -331,7 +331,7 @@ Wrap Playwright import/launch/target loop/browser close in one `try/except/final
 Log one bounded JSON counter object per target with URL, fetched, existing,
 new, changed, invalid, and error counts.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run:
 
@@ -341,7 +341,7 @@ Run:
 
 Expected: all pass; partial target failure is visible to health/alerts.
 
-- [ ] **Step 6: Commit crawl status handling**
+- [x] **Step 6: Commit crawl status handling**
 
 ```powershell
 git add db/crawl_runs.py db/schema.py crawler/base_crawler.py alerts/ops.py tests/test_crawl_run_status.py tests/test_ops_alert.py tests/test_guland_crawler_stats.py

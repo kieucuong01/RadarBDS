@@ -1,9 +1,21 @@
 ﻿"""Crawl run repository helpers."""
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Mapping, Optional
 
 from db.connection import get_conn
 # ─── Crawl runs ───────────────────────────────────────────────────────────────
+
+VALID_CRAWL_STATUSES = {"running", "done", "partial", "error"}
+
+
+def derive_crawl_status(
+    stats: Mapping,
+    *,
+    fatal: bool = False,
+) -> Literal["done", "partial", "error"]:
+    if fatal:
+        return "error"
+    return "partial" if int(stats.get("errors", 0) or 0) > 0 else "done"
 
 def start_crawl_run(source: str, area: str) -> int:
     with get_conn() as conn:
@@ -15,6 +27,8 @@ def start_crawl_run(source: str, area: str) -> int:
 
 def finish_crawl_run(run_id: int, stats: dict,
                      status: str = "done", error_msg: str = None) -> None:
+    if status not in VALID_CRAWL_STATUSES:
+        raise ValueError(f"Invalid crawl status: {status}")
     with get_conn() as conn:
         conn.execute("""
             UPDATE crawl_runs SET
@@ -67,6 +81,24 @@ def mark_url_done(run_id: int, target_url: str, n_new: int) -> None:
                VALUES (?, ?, 'done', ?, datetime('now'))
                ON CONFLICT(run_id, target_url) DO UPDATE SET status='done', n_new=?, completed_at=datetime('now')""",
             (run_id, target_url, n_new, n_new),
+        )
+
+
+def mark_url_error(run_id: int, target_url: str, error_msg: str) -> None:
+    bounded_error = str(error_msg or "")[:500]
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO crawl_run_progress
+                (run_id, target_url, status, n_new, error_msg, completed_at)
+            VALUES (?, ?, 'error', 0, ?, datetime('now'))
+            ON CONFLICT(run_id, target_url) DO UPDATE SET
+                status='error',
+                n_new=0,
+                error_msg=?,
+                completed_at=datetime('now')
+            """,
+            (run_id, target_url, bounded_error, bounded_error),
         )
 
 
