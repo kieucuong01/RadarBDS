@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from crawler.base_crawler import _normalize_playwright_browser_path_env
 from crawler.guland_pw import GulandCrawler
 from db.guland_coordinates import (
     GulandCoordinateTarget,
@@ -44,6 +45,7 @@ _RUN_ID_RE = re.compile(r"\d{8}T\d{6}Z")
 def _collect_cards(
     targets: Sequence[GulandCoordinateTarget],
 ) -> list[dict]:
+    _normalize_playwright_browser_path_env()
     from playwright.sync_api import sync_playwright
 
     crawler = GulandCrawler()

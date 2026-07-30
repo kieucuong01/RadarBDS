@@ -1,10 +1,12 @@
 from datetime import datetime, timezone
+import os
 
 import pytest
 
 from db.guland_coordinates import GulandCoordinateTarget
 from services.guland_coordinate_backfill import (
     _atomic_write_manifest,
+    _collect_cards,
     run_guland_coordinate_backfill,
 )
 
@@ -174,3 +176,52 @@ def test_atomic_manifest_refuses_to_overwrite_an_existing_run(tmp_path):
         _atomic_write_manifest(path, [row])
 
     assert path.read_text(encoding="utf-8") == "original\n"
+
+
+def test_card_collection_normalizes_browser_path_before_driver_start(
+    monkeypatch,
+):
+    monkeypatch.setenv(
+        "PLAYWRIGHT_BROWSERS_PATH",
+        "/opt/radar-bds/ms-playwright\r",
+    )
+
+    class FakePage:
+        def set_default_timeout(self, timeout):
+            return None
+
+    class FakeContext:
+        def new_page(self):
+            return FakePage()
+
+    class FakeBrowser:
+        def close(self):
+            return None
+
+    class FakeCrawler:
+        TARGET_URLS = []
+
+        def _launch(self, playwright, headless=True):
+            return FakeBrowser(), FakeContext()
+
+    class FakePlaywrightContext:
+        def __enter__(self):
+            assert (
+                os.environ["PLAYWRIGHT_BROWSERS_PATH"]
+                == "/opt/radar-bds/ms-playwright"
+            )
+            return object()
+
+        def __exit__(self, exc_type, exc, traceback):
+            return False
+
+    monkeypatch.setattr(
+        "services.guland_coordinate_backfill.GulandCrawler",
+        FakeCrawler,
+    )
+    monkeypatch.setattr(
+        "playwright.sync_api.sync_playwright",
+        lambda: FakePlaywrightContext(),
+    )
+
+    assert _collect_cards([_target()]) == []
