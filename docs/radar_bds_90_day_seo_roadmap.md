@@ -46,19 +46,19 @@ Daily cron/Codex should score candidate actions before writing.
 
 | Score | Criterion | Notes |
 |---:|---|---|
-| 30 | Long-lived search intent | People search it beyond today; e.g. “giá đất Phú Tân”, “Phú Mỹ vs Hiệp An”. |
+| 25 | Long-tail/search intent rõ | People search it beyond today and the angle is specific enough for an early-stage site; e.g. “giá đất Phú Tân”, “Phú Mỹ vs Hiệp An”. |
 | 25 | Radar proprietary data advantage | DB has enough listings/signals/price split to make the page unique. |
 | 20 | Funnel linkage | Can link to dashboard/report/location/tool with useful filters. |
-| 15 | No cannibalization | No existing URL answers the same reader intent. If duplicate, refresh instead. |
-| 10 | Social reuse | Can become one useful Facebook/Zalo/group post. |
+| 15 | No cannibalization | No existing URL answers the same reader intent. If duplicate, pick another topic or refresh elsewhere; do not count refresh as daily publish success. |
+| 15 | Social reuse | Can become one useful Facebook/Zalo/group post with a clear visual/hook. |
 
 Action rule:
 
 | Score | Action |
 |---:|---|
-| ≥ 70 | Publish new `/tin-tuc` article |
-| 50–69 | Refresh existing article/report section or add internal links |
-| < 50 | Skip publishing; do internal-link, technical SEO, or topic research |
+| ≥ 75 and no duplicate | Publish new `/tin-tuc` article |
+| ≥ 75 but duplicate | Pick another topic or refresh elsewhere; refresh-only is not success for the daily publish cron |
+| < 75 | Upgrade the topic with stronger Radar data/funnel/angle or pick another candidate |
 
 ## Daily action mix
 
@@ -201,7 +201,7 @@ Avoid:
 The daily cron should choose from this priority order:
 
 1. If there is a production blocker: fix/report blocker.
-2. If a ≥70 score new topic exists: publish new `/tin-tuc` article.
-3. If no strong new topic but an existing page is stale: refresh it.
-4. If no article action is useful: add internal links or prepare a data/social asset.
+2. Publish 1 new `/tin-tuc` article daily when there is no real blocker, but only after the selected topic clears ≥75/100 and no same-intent duplicate exists.
+3. If the first topic is <75 or duplicate, upgrade/pick the next topic until one clears the gate.
+4. Refresh/internal links are useful but do not count as success for the daily publish cron unless there is a real production/data blocker.
 5. Always return a social draft and a concise verification summary.

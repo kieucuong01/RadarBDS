@@ -84,17 +84,18 @@ Each daily run should do the smallest high-impact action:
 
 1. Check production health and state drift: sitemap, latest articles, repo status.
 2. Run `scripts/radar_daily_seo_context.py` for compact current data.
-3. Score candidate actions with the 100-point rule from the roadmap:
-   - 30 long-lived search intent,
+3. Score candidate actions with the publish gate from the roadmap and precontext shortlist:
+   - 25 long-tail/search intent rõ,
    - 25 Radar proprietary data advantage,
    - 20 funnel linkage to dashboard/report/location/tool,
-   - 15 no cannibalization,
-   - 10 social reuse.
-4. If score ≥ 70: publish one new `/tin-tuc/<slug>` article.
-5. If score is 50–69 or the intent already exists: refresh/update an existing article or add internal links.
-6. Draft one social post from the same data atom and create a queue file with `scripts/radar_social_queue.py`. For data/status posts, the status must explicitly say `Vào radarbds.vn → lọc phường <ward>` and include a ward-filtered `radarbds.vn` link before/near the article URL.
-7. If explicitly approved, use `scripts/browser_use_page_post.py`; otherwise hand off queue path + draft.
-8. Verify live and commit/push.
+   - 15 no cannibalization/same-intent duplicate,
+   - 15 social reuse/Page/group potential.
+4. Anh Cường rule: publish **1 new `/tin-tuc/<slug>` article every day** when there is no real production/data blocker; refresh-only is not success for this cron.
+5. Publish only if final score is **≥75/100** and no same-intent duplicate exists. If the first topic is <75, improve the topic with stronger data/funnel/angle or pick the next candidate until it clears the gate.
+6. If no precontext candidate clears the gate, create another candidate from the 90-day roadmap and score it; only report BLOCKED when production/data verification truly prevents publishing.
+7. Draft one social post from the same data atom and create a queue file with `scripts/radar_social_queue.py`. For data/status posts, the status must explicitly say `Vào radarbds.vn → lọc phường <ward>` and include a ward-filtered `radarbds.vn` link before/near the article URL.
+8. If explicitly approved, use `scripts/browser_use_page_post.py`; otherwise hand off queue path + draft.
+9. Verify live and commit/push.
 
 Current early-stage default mix: 5 new articles/week, 1 refresh/internal-link day/week, 1 optional strategy/social-only day only if there is a real blocker. After roughly 60–90 useful URLs, shift to 3 new + 2 refresh + 1 internal-link + 1 strategy/social per week.
 
