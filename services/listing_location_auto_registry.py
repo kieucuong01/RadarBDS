@@ -242,13 +242,36 @@ def point_is_in_scoped_ward(
     return bool(boundary and boundary.covers(Point(float(lng), float(lat))))
 
 
+def point_is_in_legacy_compatibility_zone(
+    city: str,
+    ward: str,
+    lat: float,
+    lng: float,
+    context_text: str,
+) -> bool:
+    normalized_city = normalize_location_token(city)
+    normalized_ward = normalize_location_token(ward)
+    normalized_context = normalize_location_token(context_text)
+    normalized_context = normalized_context.replace("tai dinh cu", "tdc")
+    for zone in LISTING_MAP_LEGACY_COMPATIBILITY_ZONES:
+        token = normalize_location_token(zone["landmark_token"])
+        if (
+            normalized_city != normalize_location_token(zone["city"])
+            or normalized_ward != normalize_location_token(zone["ward"])
+            or token not in normalized_context
+        ):
+            continue
+        (south, west), (north, east) = zone["bounds"]
+        if south <= float(lat) <= north and west <= float(lng) <= east:
+            return True
+    return False
+
+
 def legacy_compatibility_reason(
     evidence: BrowserLocationEvidence,
     lat: float,
     lng: float,
 ) -> str:
-    normalized_city = normalize_location_token(evidence.city)
-    normalized_ward = normalize_location_token(evidence.ward)
     normalized_context = normalize_location_token(
         " ".join((
             evidence.canonical,
@@ -260,15 +283,17 @@ def legacy_compatibility_reason(
     for zone in LISTING_MAP_LEGACY_COMPATIBILITY_ZONES:
         token = normalize_location_token(zone["landmark_token"])
         if (
-            normalized_city != normalize_location_token(zone["city"])
-            or normalized_ward != normalize_location_token(zone["ward"])
-            or token not in normalized_context
-            or token not in normalized_address
+            token not in normalized_address
+            or not point_is_in_legacy_compatibility_zone(
+                evidence.city,
+                evidence.ward,
+                lat,
+                lng,
+                normalized_context,
+            )
         ):
             continue
-        (south, west), (north, east) = zone["bounds"]
-        if south <= lat <= north and west <= lng <= east:
-            return str(zone["reason"])
+        return str(zone["reason"])
     return ""
 
 

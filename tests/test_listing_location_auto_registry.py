@@ -7,6 +7,7 @@ from services.listing_location_auto_registry import (
     canonical_evidence_hash,
     evaluate_browser_evidence,
     parse_google_maps_coordinates,
+    point_is_in_legacy_compatibility_zone,
 )
 
 
@@ -53,6 +54,23 @@ def test_google_maps_url_parser_rejects_non_google_and_out_of_bounds_urls():
     assert parse_google_maps_coordinates(
         "https://example.com/@11.058782,106.7015151,17z"
     ) is None
+
+
+def test_phu_chanh_context_can_use_declared_legacy_compatibility_zone():
+    assert point_is_in_legacy_compatibility_zone(
+        "THỦ DẦU MỘT",
+        "Phú Tân",
+        11.058782,
+        106.7015151,
+        "Khu tái định cư Phú Chánh B",
+    )
+    assert not point_is_in_legacy_compatibility_zone(
+        "THỦ DẦU MỘT",
+        "Phú Tân",
+        11.058782,
+        106.7015151,
+        "Tin bán đất không nêu Phú Chánh",
+    )
     assert parse_google_maps_coordinates(
         "https://www.google.com/maps/@50.0,5.0,17z"
     ) is None
