@@ -361,7 +361,7 @@ git commit -m "fix: report partial crawler failures"
 - Produces: `summarize_recent_crawl_runs(conn, days: int = 7) -> list[dict]`
 - Consumes: text-backed `crawl_runs.started_at`, explicitly cast to `TIMESTAMPTZ`.
 
-- [ ] **Step 1: Write a failing PostgreSQL health test**
+- [x] **Step 1: Write a failing PostgreSQL health test**
 
 Seed one `done` and one `partial` run with text timestamps, then call both repository functions:
 
@@ -388,7 +388,7 @@ def test_weekly_health_casts_text_timestamps():
             conn.execute("DELETE FROM crawl_runs WHERE area=?", (area,))
 ```
 
-- [ ] **Step 2: Verify RED against the current query**
+- [x] **Step 2: Verify RED against the current query**
 
 Run:
 
@@ -398,7 +398,7 @@ Run:
 
 Expected: PostgreSQL type error or missing repository function.
 
-- [ ] **Step 3: Implement PostgreSQL timestamp queries**
+- [x] **Step 3: Implement PostgreSQL timestamp queries**
 
 Use:
 
@@ -410,7 +410,7 @@ WHERE NULLIF(started_at, '')::timestamptz
 Summary columns include total runs, total new, `partial_runs`, `error_runs`, and
 `runs_with_errors`. `cli/queries.py` only formats repository results.
 
-- [ ] **Step 4: Reuse the same timestamp semantics in daily ops lookup**
+- [x] **Step 4: Reuse the same timestamp semantics in daily ops lookup**
 
 Replace SQLite-style `datetime(started_at) >= datetime(?)` with:
 
@@ -418,7 +418,7 @@ Replace SQLite-style `datetime(started_at) >= datetime(?)` with:
 NULLIF(started_at, '')::timestamptz >= ?::timestamptz
 ```
 
-- [ ] **Step 5: Verify health command and alert tests**
+- [x] **Step 5: Verify health command and alert tests**
 
 Run:
 
@@ -429,7 +429,7 @@ Run:
 
 Expected: command exits 0 and weekly summary distinguishes partial/error runs.
 
-- [ ] **Step 6: Commit health repair**
+- [x] **Step 6: Commit health repair**
 
 ```powershell
 git add db/crawl_runs.py cli/queries.py cli/crawlers.py tests/test_crawl_health.py

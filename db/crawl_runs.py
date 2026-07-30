@@ -102,6 +102,46 @@ def mark_url_error(run_id: int, target_url: str, error_msg: str) -> None:
         )
 
 
+def load_recent_crawl_runs(conn, limit: int) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT id, source, area, started_at, finished_at, status,
+               n_new, n_skipped, n_fetched, error_msg
+        FROM crawl_runs
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (max(1, int(limit)),),
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def summarize_recent_crawl_runs(conn, days: int = 7) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT source,
+               COUNT(*) AS runs,
+               SUM(COALESCE(n_new, 0)) AS total_new,
+               SUM(CASE WHEN status='partial' THEN 1 ELSE 0 END) AS partial_runs,
+               SUM(CASE WHEN status='error' THEN 1 ELSE 0 END) AS error_runs,
+               SUM(
+                   CASE
+                       WHEN status IN ('partial', 'error')
+                            OR COALESCE(error_msg, '') <> ''
+                       THEN 1 ELSE 0
+                   END
+               ) AS runs_with_errors
+        FROM crawl_runs
+        WHERE NULLIF(started_at, '')::timestamptz
+              >= CURRENT_TIMESTAMP - (? * INTERVAL '1 day')
+        GROUP BY source
+        ORDER BY source
+        """,
+        (max(1, int(days)),),
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
 def mark_missing_listings(source: str, seen_urls: set) -> int:
     with get_conn() as conn:
         rows = conn.execute(

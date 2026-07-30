@@ -497,7 +497,7 @@ def _maybe_send_ops_alert(crawl_start_ts: str, crawler_exceptions: list) -> None
                        COALESCE(n_new,0) AS n_new, COALESCE(error_msg,'') AS error_msg
                 FROM crawl_runs
                 WHERE source NOT LIKE 'reprocess:%'
-                  AND datetime(started_at) >= datetime(?)
+                  AND NULLIF(started_at, '')::timestamptz >= ?::timestamptz
                 ORDER BY started_at
                 """,
                 (crawl_start_ts,),
