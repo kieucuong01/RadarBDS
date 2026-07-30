@@ -32,16 +32,6 @@ MIN_SAMPLES     = 15
 MIN_RELIABLE_N_FOR_SIGNAL = 15
 OUTLIER_SIGMA   = 2.0
 TIME_DECAY_DAYS = 90
-GULAND_SIGNAL_EXTRA_MOS = 0.08
-GULAND_STRONG_SIGNAL_SCORE = 55
-GULAND_USER_ACTIONABLE_EXTRA_MOS = 0.20
-GULAND_USER_ACTIONABLE_MIN_SCORE = 65
-SOURCE_SIGNAL_SUPPRESS_FLAGS = {
-    "old_guland_post",
-    "extreme_guland_ppm2",
-    "suspicious_bait",
-    "guland_cluster_flood",
-}
 DEFAULT_BASELINE_SOURCES = ("facebook",)
 PRIMARY_BASELINE_MIN_CANONICAL_N = 35
 SUPPLEMENTAL_BASELINE_SOURCE = "guland"
@@ -229,35 +219,6 @@ def _effective_has_so(listing: 'Listing') -> bool:
         return True
     return not _has_explicit_no_so(listing)
 
-
-def _is_guland(listing: 'Listing') -> bool:
-    return (getattr(listing, "source", "") or "").lower() == "guland"
-
-
-def _passes_source_signal_gate(listing: 'Listing', discount: float,
-                               base_threshold: float, score: int) -> bool:
-    if not _is_guland(listing):
-        return discount >= base_threshold
-    if _source_flags(listing) & SOURCE_SIGNAL_SUPPRESS_FLAGS:
-        return False
-    return (
-        discount >= base_threshold + GULAND_SIGNAL_EXTRA_MOS
-        or (discount >= base_threshold and score >= GULAND_STRONG_SIGNAL_SCORE)
-    )
-
-
-def _passes_guland_user_facing_gate(listing: 'Listing', discount: float,
-                                    base_threshold: float, score: int) -> bool:
-    if not _is_guland(listing):
-        return True
-    if getattr(listing, "positive_feedback", False):
-        return True
-    if (getattr(listing, "trust_tier", "") or "") == "has_legal_doc":
-        return True
-    return (
-        discount >= base_threshold + GULAND_USER_ACTIONABLE_EXTRA_MOS
-        and score >= GULAND_USER_ACTIONABLE_MIN_SCORE
-    )
 
 def remove_outliers(values: List[float], sigma: float = OUTLIER_SIGMA) -> Tuple[List[float], float, float]:
     if len(values) < 3:
@@ -895,21 +856,6 @@ class ValuationEngine:
         if (listing.road_tier or 0) <= 0:
             quality_flags.add("low_road_confidence")
         model_signal = discount >= base_threshold
-        source_gate_pass = _passes_source_signal_gate(
-            listing, discount, base_threshold, provisional_score
-        )
-        if model_signal and _is_guland(listing) and not source_gate_pass:
-            if not (quality_flags & SOURCE_SIGNAL_SUPPRESS_FLAGS):
-                quality_flags.add("guland_weak_signal")
-        if (
-            model_signal
-            and _is_guland(listing)
-            and source_gate_pass
-            and not _passes_guland_user_facing_gate(
-                listing, discount, base_threshold, provisional_score
-            )
-        ):
-            quality_flags.add("guland_user_facing_risk")
         if (
             m.n_samples < MIN_RELIABLE_N_FOR_SIGNAL
             and not listing.review_recheck_candidate
@@ -917,7 +863,7 @@ class ValuationEngine:
         ):
             quality_flags.add("low_segment_confidence")
         source_quality_recheck = bool(
-            model_signal and (quality_flags & (ACTIONABLE_SUPPRESS_FLAGS | SOURCE_SIGNAL_SUPPRESS_FLAGS))
+            model_signal and (quality_flags & ACTIONABLE_SUPPRESS_FLAGS)
         )
         is_sig = model_signal
         # Tin có ward=NULL/unknown → KHÔNG signal: hoặc nằm ngoài TDM (bị blacklist),

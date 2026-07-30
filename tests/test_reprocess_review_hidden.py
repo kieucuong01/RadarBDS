@@ -574,7 +574,7 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
         self.assertNotIn("ambiguous_price_text", _valuation_quality_flags(approximate_star))
         self.assertIn("ambiguous_price_text", _valuation_quality_flags(ambiguous))
 
-    def test_reprocess_marks_old_guland_signal_for_source_qc_without_pushing_signal(self):
+    def test_reprocess_keeps_old_and_fresh_guland_signal_strength_actionable(self):
         from cleansing.reprocess import reprocess_valuation
         from db.connection import get_conn
 
@@ -647,21 +647,23 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
         self.assertIsNotNone(old_row)
         self.assertGreater(old_row["fair_ppm2"], 0)
         self.assertEqual(old_row["is_signal"], 1)
-        self.assertEqual(old_row["source_quality_recheck"], 1)
+        self.assertEqual(old_row["source_quality_recheck"], 0)
         self.assertNotIn("old_guland_post", old_row["source_quality_flags"])
-        self.assertIn("guland_user_facing_risk", old_row["source_quality_flags"])
+        self.assertNotIn("guland_weak_signal", old_row["source_quality_flags"])
+        self.assertNotIn("guland_user_facing_risk", old_row["source_quality_flags"])
 
         self.assertIsNotNone(fresh_row)
         self.assertEqual(fresh_row["is_signal"], 1)
-        self.assertEqual(fresh_row["source_quality_recheck"], 1)
-        self.assertIn("guland_user_facing_risk", fresh_row["source_quality_flags"])
+        self.assertEqual(fresh_row["source_quality_recheck"], 0)
+        self.assertNotIn("guland_weak_signal", fresh_row["source_quality_flags"])
+        self.assertNotIn("guland_user_facing_risk", fresh_row["source_quality_flags"])
 
         self.assertIsNotNone(trusted_row)
         self.assertEqual(trusted_row["is_signal"], 1)
         self.assertEqual(trusted_row["source_quality_recheck"], 0)
         self.assertNotIn("old_guland_post", trusted_row["source_quality_flags"] or "")
 
-    def test_reprocess_marks_two_week_old_guland_signal_for_source_qc(self):
+    def test_reprocess_keeps_two_week_old_guland_signal_strength_actionable(self):
         from cleansing.reprocess import reprocess_valuation
         from db.connection import get_conn
 
@@ -715,9 +717,10 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
         self.assertIsNotNone(stale)
         self.assertEqual(stale["is_signal"], 1)
-        self.assertEqual(stale["source_quality_recheck"], 1)
+        self.assertEqual(stale["source_quality_recheck"], 0)
         self.assertNotIn("old_guland_post", stale["source_quality_flags"])
-        self.assertIn("guland_user_facing_risk", stale["source_quality_flags"])
+        self.assertNotIn("guland_weak_signal", stale["source_quality_flags"])
+        self.assertNotIn("guland_user_facing_risk", stale["source_quality_flags"])
 
         self.assertIsNotNone(trusted)
         self.assertEqual(trusted["is_signal"], 1)
@@ -785,8 +788,9 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
         self.assertIsNotNone(singleton)
         self.assertEqual(singleton["is_signal"], 1)
-        self.assertEqual(singleton["source_quality_recheck"], 1)
-        self.assertIn("guland_user_facing_risk", singleton["source_quality_flags"])
+        self.assertEqual(singleton["source_quality_recheck"], 0)
+        self.assertNotIn("guland_weak_signal", singleton["source_quality_flags"])
+        self.assertNotIn("guland_user_facing_risk", singleton["source_quality_flags"])
         self.assertNotIn("guland_cluster_flood", singleton["source_quality_flags"] or "")
 
 
