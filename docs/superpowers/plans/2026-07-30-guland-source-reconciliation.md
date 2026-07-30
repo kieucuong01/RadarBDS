@@ -660,7 +660,7 @@ git commit -m "feat: show guland price activity dates"
   removal, and spies for lifecycle/raw/reprocess writes. It returns a dictionary
   of those spies keyed by `raw_refresh`, `lifecycle`, and `reprocess`.
 
-- [ ] **Step 1: Write failing dry-run/apply tests**
+- [x] **Step 1: Write failing dry-run/apply tests**
 
 ```python
 def test_reconcile_default_is_dry_run(monkeypatch):
@@ -681,13 +681,13 @@ def test_reconcile_apply_updates_only_confirmed_changes(monkeypatch):
     assert spies["raw_refresh"].call_args.args[1] == CONFIRMED_CHANGED_URL
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_guland_historical_reconciliation.py -q
 ```
 
-- [ ] **Step 3: Implement bounded candidate reconciliation**
+- [x] **Step 3: Implement bounded candidate reconciliation**
 
 Candidate scope is Guland rows that are currently displayable by product
 filters, ordered by unknown/stale source checks. The service reuses the detail
@@ -711,7 +711,7 @@ Stats contain only counts and bounded listing IDs:
 }
 ```
 
-- [ ] **Step 4: Backfill deterministic historical timestamps**
+- [x] **Step 4: Backfill deterministic historical timestamps**
 
 On apply before live checks:
 
@@ -721,7 +721,7 @@ On apply before live checks:
 - initialize null/invalid source status to `unknown`;
 - never fabricate missing past prices.
 
-- [ ] **Step 5: Verify CLI dry run**
+- [x] **Step 5: Verify CLI dry run**
 
 ```powershell
 & $py -X utf8 radar.py guland-reconcile --limit 20
@@ -730,7 +730,7 @@ On apply before live checks:
 Expected: `apply=false`, bounded counts, no listing/raw/history timestamps
 changed.
 
-- [ ] **Step 6: Document production sequence**
+- [x] **Step 6: Document production sequence**
 
 Document:
 
@@ -742,7 +742,7 @@ Document:
 State that production apply requires explicit user approval after dry-run
 counts are reviewed.
 
-- [ ] **Step 7: Commit the reconciliation command**
+- [x] **Step 7: Commit the reconciliation command**
 
 ```powershell
 git add services/guland_historical_reconciliation.py cli/guland_reconciliation.py radar.py tests/test_guland_historical_reconciliation.py docs/daily_crawl_flow.md docs/operations.md

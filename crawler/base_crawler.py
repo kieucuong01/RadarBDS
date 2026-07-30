@@ -42,6 +42,31 @@ def _normalize_playwright_browser_path_env() -> None:
         logger.warning("Normalized PLAYWRIGHT_BROWSERS_PATH containing surrounding whitespace")
 
 
+def _configured_playwright_executable() -> str | None:
+    """Prefer an explicit/local system Chrome without changing production env."""
+    explicit = os.environ.get("PLAYWRIGHT_EXECUTABLE_PATH", "").strip()
+    if explicit:
+        if Path(explicit).is_file():
+            return explicit
+        logger.warning("PLAYWRIGHT_EXECUTABLE_PATH does not exist; ignoring it")
+
+    if sys.platform != "win32":
+        return None
+    candidates = []
+    for env_name, suffix in (
+        ("PROGRAMFILES(X86)", ("Google", "Chrome", "Application", "chrome.exe")),
+        ("PROGRAMFILES", ("Google", "Chrome", "Application", "chrome.exe")),
+        ("LOCALAPPDATA", ("Google", "Chrome", "Application", "chrome.exe")),
+    ):
+        root = os.environ.get(env_name, "").strip()
+        if root:
+            candidates.append(Path(root).joinpath(*suffix))
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
 class BaseCrawler(ABC):
     """
     Abstract crawler. Subclass phải định nghĩa:
@@ -76,16 +101,20 @@ class BaseCrawler(ABC):
     def _launch(self, playwright, headless: bool = True):
         """Khởi động browser stealth, trả về (browser, context)."""
         _normalize_playwright_browser_path_env()
-        browser = playwright.chromium.launch(
-            headless=headless,
-            args=[
+        launch_options = {
+            "headless": headless,
+            "args": [
                 "--no-sandbox",
                 "--disable-blink-features=AutomationControlled",
                 "--disable-dev-shm-usage",
                 "--disable-extensions",
                 "--disable-plugins-discovery",
             ],
-        )
+        }
+        executable_path = _configured_playwright_executable()
+        if executable_path:
+            launch_options["executable_path"] = executable_path
+        browser = playwright.chromium.launch(**launch_options)
         ua = random.choice(self._UA_POOL)
         self.logger.info(f"UA: {ua[:60]}...")
         ctx = browser.new_context(

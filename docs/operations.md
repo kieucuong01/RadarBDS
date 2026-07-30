@@ -135,6 +135,28 @@ backs up current local DB, then restores into the local `radar_bds` selected by
 `.env.local`. If the production app DB role lacks full dump privileges, the
 script retries on the VPS with the local `postgres` role.
 
+## Guland Historical Reconciliation
+
+The bounded reconciliation command checks only currently displayable Guland
+listings, with unknown or stale source checks first. Dry-run is the default and
+does not write lifecycle, raw listing, history, or reprocess data:
+
+```powershell
+& $py -X utf8 radar.py guland-reconcile --limit 100
+```
+
+Review the bounded counts before considering apply. Production apply always
+requires explicit user approval:
+
+```powershell
+& $py -X utf8 radar.py guland-reconcile --limit 100 --apply
+```
+
+Apply backfills deterministic metadata, uses two explicit removal
+confirmations before hiding a listing, refreshes only confirmed price changes,
+and runs targeted reprocess for those changed raw rows. It never fabricates
+missing historical prices. Keep the limit between 1 and 200.
+
 ## Cache Prewarm
 
 Use after deploy and after crawl/reprocess:

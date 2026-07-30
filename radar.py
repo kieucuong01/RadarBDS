@@ -92,6 +92,7 @@ from cli.crawlers import (
 )
 from cli.guland_coordinates import cmd_guland_coordinate_backfill
 from cli.guland_images import cmd_guland_image_backfill
+from cli.guland_reconciliation import cmd_guland_reconcile
 from cli.queries import (
     cmd_query, cmd_deal_brief, cmd_inspect, cmd_crawl_health
 )
@@ -176,6 +177,17 @@ def build_parser():
         recover_live_missing=True,
         download_recovered=True,
         include_inactive=False,
+    )
+
+    p_guland_reconcile = sub.add_parser(
+        "guland-reconcile",
+        help="Dry-run bounded source/price reconciliation for existing Guland listings",
+    )
+    p_guland_reconcile.add_argument("--limit", type=int, default=20)
+    p_guland_reconcile.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply confirmed lifecycle and price changes (default: dry-run)",
     )
 
     p_map_coverage = sub.add_parser(
@@ -390,6 +402,8 @@ def main():
         cmd_guland_coordinate_backfill(args)
     elif args.cmd == "guland-image-backfill":
         cmd_guland_image_backfill(args)
+    elif args.cmd == "guland-reconcile":
+        cmd_guland_reconcile(args)
     elif args.cmd == "map-location-coverage":
         cmd_map_location_coverage(args)
     elif args.cmd == "map-location-research-queue":

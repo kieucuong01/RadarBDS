@@ -640,6 +640,25 @@ Never map from broad new ward alone. Examples:
 
 This keeps the valuation baseline stable: old ward/sub-ward segments remain the training and MOS units. New ward names can be displayed or stored later if a schema field such as `location_evidence` or `new_ward` is added, but v1 keeps them transient inside the normalizer.
 
+### 5.5 Đối soát lịch sử Guland
+
+Đây là tác vụ bảo trì có giới hạn, không nằm trước Facebook trong daily crawl.
+Mặc định chỉ đọc và kiểm tra live:
+
+```powershell
+& $py -X utf8 radar.py guland-reconcile --limit 100
+```
+
+Chỉ chạy `--apply` trên production sau khi người dùng duyệt rõ số liệu dry-run:
+
+```powershell
+& $py -X utf8 radar.py guland-reconcile --limit 100 --apply
+```
+
+Apply chỉ cập nhật lifecycle có bằng chứng nguồn, giá thay đổi đã xác nhận và
+targeted reprocess cho các raw row tương ứng. Hai lần xác nhận nguồn báo gỡ mới
+ẩn tin; lỗi mạng/Cloudflare được giữ ở trạng thái `unreachable`.
+
 ---
 
 ## 6. Files chạm khi thay đổi flow này
