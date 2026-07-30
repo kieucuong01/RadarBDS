@@ -11,9 +11,11 @@ Incremental : python crawler/guland_pw.py --mode incremental
 """
 import json
 import logging
+import os
 import re
 import sys
 import time
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
@@ -21,6 +23,13 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from crawler.base_crawler import BaseCrawler
+from analytics.lifecycle import mark_source_seen, record_source_check
+from db.connection import get_conn
+from services.guland_reconciliation import (
+    ExistingGulandSnapshot,
+    canonical_price_vnd,
+    plan_guland_cards,
+)
 from services.guland_coordinates import (
     evaluate_guland_coordinate_url,
     raw_coordinate_fields,
@@ -43,6 +52,32 @@ _GULAND_PI_IMAGE_RE = re.compile(
     r"/(?:detail|listing)/(pi-\d+)-\d+\.(?:jpe?g|png|webp)",
     re.IGNORECASE,
 )
+
+
+@dataclass(frozen=True)
+class DetailClassification:
+    outcome: str
+    reason: str
+
+
+def classify_detail_result(detail: dict | None) -> DetailClassification:
+    detail = detail or {}
+    if detail.get("error"):
+        return DetailClassification("unreachable", str(detail["error"])[:200])
+
+    try:
+        http_status = int(detail.get("http_status") or 0)
+    except (TypeError, ValueError):
+        http_status = 0
+    page_status = str(detail.get("page_status") or "").lower()
+    if http_status in {404, 410} or page_status == "removed":
+        return DetailClassification("removed", page_status or f"http_{http_status}")
+    if page_status == "live" and 200 <= http_status < 400:
+        return DetailClassification("active", "live_detail")
+    return DetailClassification(
+        "unreachable",
+        page_status or (f"http_{http_status}" if http_status else "invalid_response"),
+    )
 
 
 def extract_guland_post_id(post_url: str) -> str:
@@ -293,9 +328,33 @@ async (urls) => {
             const html = await r.text();
             const doc  = new DOMParser().parseFromString(html, 'text/html');
             const postId = (url.match(/-(\\d+)(?:\\.html)?\\/?$/) || [])[1] || '';
+            const responsePath = (() => {
+                try { return new URL(r.url || url).pathname.toLowerCase(); }
+                catch (_e) { return ''; }
+            })();
 
             const getText = sel => doc.querySelector(sel)?.textContent.trim() || '';
             const infoRow = getText('.dtl-inf__row');
+            const bodyText = (doc.body?.textContent || '').replace(/\\s+/g, ' ').trim();
+            const removedText = /tin.*(?:đã|bị).*(?:gỡ|xóa)|tin.*không.*tồn tại/i.test(bodyText);
+            const explicitlyRemoved = [404, 410].includes(r.status)
+                || responsePath.includes('/khong-tim-thay')
+                || removedText;
+            const identityPresent = Boolean(
+                postId && (
+                    doc.querySelector('.dtl-inf__dsr, .dtl-inf__row, .dtl-stl__row, .dtl-adr')
+                    || doc.querySelector(`a[href*="/post/"][href*="${postId}"]`)
+                )
+            );
+            const detailPriceEl = doc.querySelector(
+                'meta[itemprop="price"], [itemprop="price"], .dtl-inf__prc, .dtl-inf__price, .dtl-prc'
+            );
+            const detailPriceRaw = detailPriceEl?.getAttribute?.('content')
+                || detailPriceEl?.textContent?.trim()
+                || '';
+            const pageStatus = explicitlyRemoved
+                ? 'removed'
+                : (r.ok && identityPresent ? 'live' : 'unreachable');
 
             const extract = (...keys) => {
                 for (const k of keys) {
@@ -310,6 +369,9 @@ async (urls) => {
 
             return {
                 url,
+                http_status:      r.status,
+                page_status:      pageStatus,
+                detail_price_raw: detailPriceRaw,
                 description:       getText('.dtl-inf__dsr'),
                 address:           getText('.dtl-stl__row, .dtl-adr'),
                 property_type_raw: extract('Loại BĐS', 'Loại bds'),
@@ -321,7 +383,13 @@ async (urls) => {
                 detail_imgs:       imgs,
             };
         } catch(e) {
-            return { url, error: e.message };
+            return {
+                url,
+                http_status: null,
+                page_status: 'unreachable',
+                detail_price_raw: '',
+                error: e.message
+            };
         }
     }));
     return results;
@@ -582,42 +650,361 @@ class GulandCrawler(BaseCrawler):
 
     # ── Core crawl ─────────────────────────────────────────────────────────
 
+    def _ensure_reconciliation_stats(self) -> None:
+        defaults = {
+            "fetched": 0,
+            "new": 0,
+            "existing": 0,
+            "unchanged": 0,
+            "updated": 0,
+            "invalid_price": 0,
+            "skipped": 0,
+            "errors": 0,
+            "error_details": [],
+            "inserted_raw_ids": [],
+            "refreshed_raw_ids": [],
+        }
+        for key, value in defaults.items():
+            if key not in self._stats:
+                self._stats[key] = list(value) if isinstance(value, list) else value
+
+    def _load_existing_snapshots(
+        self,
+        urls: list[str],
+    ) -> dict[str, ExistingGulandSnapshot]:
+        unique_urls = list(dict.fromkeys(url for url in urls if url))
+        if not unique_urls:
+            return {}
+        snapshots: dict[str, ExistingGulandSnapshot] = {}
+        with get_conn() as conn:
+            for offset in range(0, len(unique_urls), 500):
+                chunk = unique_urls[offset:offset + 500]
+                placeholders = ",".join("?" * len(chunk))
+                rows = conn.execute(
+                    f"""
+                    SELECT r.id AS raw_id, l.id AS listing_id, r.url,
+                           r.source_id, l.price_ty, l.first_seen_at,
+                           COALESCE(l.source_status, 'unknown') AS source_status
+                    FROM raw_listings r
+                    JOIN listings l ON l.raw_id=r.id
+                    WHERE r.source='guland' AND r.url IN ({placeholders})
+                    """,
+                    tuple(chunk),
+                ).fetchall()
+                for row in rows:
+                    snapshots[row["url"]] = ExistingGulandSnapshot(
+                        raw_id=int(row["raw_id"]),
+                        listing_id=int(row["listing_id"]),
+                        url=row["url"],
+                        source_id=row["source_id"],
+                        price_ty=row["price_ty"],
+                        first_seen_at=row["first_seen_at"],
+                        source_status=row["source_status"],
+                    )
+        return snapshots
+
+    def _mark_seen_urls(self, urls: list[str]) -> int:
+        with get_conn() as conn:
+            return mark_source_seen(conn, self.SOURCE_NAME, urls)
+
+    def _insert_new_record(self, card: dict, record: dict) -> int | None:
+        if not self.upsert_raw(card["url"], record):
+            return None
+        result = getattr(self, "_last_raw_insert_result", None)
+        return int(result.raw_id) if result and result.raw_id else None
+
+    def _refresh_changed_record(
+        self,
+        snapshot: ExistingGulandSnapshot,
+        record: dict,
+    ) -> int:
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                UPDATE raw_listings
+                SET raw_json=?, crawled_at=datetime('now'), crawl_run_id=?
+                WHERE id=? AND source='guland' AND url=?
+                """,
+                (
+                    json.dumps(record, ensure_ascii=False),
+                    getattr(self, "_crawl_run_id", None),
+                    snapshot.raw_id,
+                    snapshot.url,
+                ),
+            )
+            if cur.rowcount != 1:
+                raise LookupError(f"Guland raw listing not found: {snapshot.raw_id}")
+        return snapshot.raw_id
+
+    def _track_reconciliation_error(
+        self,
+        url: str,
+        message: str,
+        error_type: str,
+    ) -> None:
+        self._track_error(url, ValueError(message), error_type=error_type)
+
+    def _load_verification_candidates(
+        self,
+        limit: int,
+    ) -> list[ExistingGulandSnapshot]:
+        if limit <= 0:
+            return []
+        with get_conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT r.id AS raw_id, l.id AS listing_id, l.url, l.source_id,
+                       l.price_ty, l.first_seen_at,
+                       COALESCE(l.source_status, 'unknown') AS source_status
+                FROM listings l
+                JOIN raw_listings r ON r.id=l.raw_id
+                WHERE l.source='guland'
+                  AND COALESCE(l.source_status, 'unknown') <> 'inactive'
+                  AND COALESCE(l.probably_sold, 0)=0
+                  AND COALESCE(l.review_hidden, 0)=0
+                  AND COALESCE(l.possibly_duplicate, 0)=0
+                  AND l.price_ty > 0
+                  AND l.area_m2 > 0
+                ORDER BY
+                  CASE COALESCE(l.source_status,'unknown')
+                    WHEN 'unknown' THEN 0 ELSE 1
+                  END,
+                  l.last_source_check_at NULLS FIRST,
+                  l.id
+                LIMIT ?
+                """,
+                (int(limit),),
+            ).fetchall()
+        return [
+            ExistingGulandSnapshot(
+                raw_id=int(row["raw_id"]),
+                listing_id=int(row["listing_id"]),
+                url=row["url"],
+                source_id=row["source_id"],
+                price_ty=row["price_ty"],
+                first_seen_at=row["first_seen_at"],
+                source_status=row["source_status"],
+            )
+            for row in rows
+        ]
+
+    def _record_source_outcome(
+        self,
+        snapshot: ExistingGulandSnapshot,
+        outcome: str,
+        reason: str,
+    ):
+        with get_conn() as conn:
+            return record_source_check(
+                conn,
+                snapshot.listing_id,
+                outcome,
+                reason,
+            )
+
+    def _refresh_verified_price(
+        self,
+        snapshot: ExistingGulandSnapshot,
+        detail: dict,
+        price_ty: float,
+    ) -> int:
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT raw_json FROM raw_listings WHERE id=? AND source='guland'",
+                (snapshot.raw_id,),
+            ).fetchone()
+        if not row:
+            raise LookupError(f"Guland raw listing not found: {snapshot.raw_id}")
+        try:
+            record = json.loads(row["raw_json"] or "{}")
+        except (TypeError, ValueError):
+            record = {}
+        record["price_ty"] = price_ty
+        for key in (
+            "description",
+            "address",
+            "property_type_raw",
+            "road_type_raw",
+            "road_width_raw",
+            "location_type_raw",
+            "legal_raw",
+            "contact_phone",
+            "detail_imgs",
+        ):
+            if detail.get(key) not in (None, "", []):
+                target_key = "imgs" if key == "detail_imgs" else key
+                record[target_key] = detail[key]
+        return self._refresh_changed_record(snapshot, record)
+
+    def _verify_stale_listings(self, page, limit: int) -> dict:
+        candidates = self._load_verification_candidates(limit)
+        stats = {
+            "scanned": len(candidates),
+            "active": 0,
+            "removed": 0,
+            "unreachable": 0,
+            "updated": 0,
+            "invalid_prices": 0,
+            "refreshed_raw_ids": [],
+        }
+        if not candidates:
+            return stats
+
+        details = self._fetch_details_batch(
+            page,
+            [snapshot.url for snapshot in candidates],
+        )
+        for snapshot in candidates:
+            detail = details.get(snapshot.url, {})
+            classification = classify_detail_result(detail)
+            stats[classification.outcome] += 1
+            self._record_source_outcome(
+                snapshot,
+                classification.outcome,
+                classification.reason,
+            )
+            if classification.outcome != "active":
+                continue
+
+            detail_price_ty = self.parse_price_ty(
+                detail.get("detail_price_raw", "")
+            )
+            detail_price = canonical_price_vnd(detail_price_ty)
+            if detail_price is None:
+                stats["invalid_prices"] += 1
+                continue
+            if detail_price == canonical_price_vnd(snapshot.price_ty):
+                continue
+
+            raw_id = self._refresh_verified_price(
+                snapshot,
+                detail,
+                detail_price_ty,
+            )
+            stats["updated"] += 1
+            stats["refreshed_raw_ids"].append(raw_id)
+        return stats
+
+    def after_targets(self, page, run_id: int) -> None:
+        try:
+            configured = int(os.getenv("GULAND_STATUS_VERIFY_LIMIT", "50"))
+        except ValueError:
+            configured = 50
+        limit = max(0, min(200, configured))
+        if limit == 0:
+            return
+        stats = self._verify_stale_listings(page, limit)
+        self._ensure_reconciliation_stats()
+        if isinstance(stats, dict):
+            self._stats["updated"] += int(stats.get("updated", 0) or 0)
+            self._stats["refreshed_raw_ids"].extend(
+                stats.get("refreshed_raw_ids") or []
+            )
+        self.logger.info(
+            "[guland] source verification=%s",
+            json.dumps(stats, ensure_ascii=False),
+        )
+
     def _run_crawl(self, page, base_url: str, incremental: bool) -> int:
-        # Phase 1: Scroll/load tất cả cards
+        self._ensure_reconciliation_stats()
+        new_before = int(self._stats.get("new", 0) or 0)
         self.logger.info(f"Phase 1 — scroll cards ({'incremental' if incremental else 'full'})")
         all_cards = self._scroll_all_cards(page, base_url, incremental=incremental)
         for card in all_cards:
             card.setdefault("source_list_url", base_url)
+            card["price_ty"] = self.parse_price_ty(card.get("price_raw", ""))
         self._stats["fetched"] = self._stats.get("fetched", 0) + len(all_cards)
 
-        # Filter chỉ lấy URL mới chưa có trong DB
-        new_cards = [c for c in all_cards if not self.url_exists(c["url"])]
-        self.logger.info(
-            f"Phase 1 done: {len(all_cards)} total | "
-            f"{len(new_cards)} mới | {len(all_cards)-len(new_cards)} đã có trong DB"
+        snapshots = self._load_existing_snapshots(
+            [card["url"] for card in all_cards]
+        )
+        plan = plan_guland_cards(all_cards, snapshots)
+        discovered_existing_urls = [
+            card["url"] for card in all_cards if card["url"] in snapshots
+        ]
+        if discovered_existing_urls:
+            self._mark_seen_urls(discovered_existing_urls)
+        self._stats["existing"] += len(discovered_existing_urls)
+        self._stats["unchanged"] += len(plan.unchanged_cards)
+        self._stats["invalid_price"] += len(plan.invalid_price_cards)
+        self._stats["skipped"] += (
+            len(plan.unchanged_cards) + len(plan.invalid_price_cards)
         )
 
-        if not new_cards:
+        detail_cards = [*plan.new_cards, *plan.changed_cards]
+        self.logger.info(
+            f"Phase 1 done: {len(all_cards)} total | "
+            f"{len(plan.new_cards)} mới | "
+            f"{len(plan.changed_cards)} đổi giá | "
+            f"{len(plan.unchanged_cards)} không đổi | "
+            f"{len(plan.invalid_price_cards)} giá không hợp lệ"
+        )
+
+        if not detail_cards:
             return 0
 
-        # Phase 2: Batch fetch detail pages (chỉ cho URL mới)
-        self.logger.info(f"Phase 2 — batch fetch {len(new_cards)} detail pages (batch={BATCH_SIZE})")
-        new_urls = [c["url"] for c in new_cards]
-        url_to_detail = self._fetch_details_batch(page, new_urls)
+        self.logger.info(
+            f"Phase 2 — batch fetch {len(detail_cards)} detail pages "
+            f"(batch={BATCH_SIZE})"
+        )
+        url_to_detail = self._fetch_details_batch(
+            page,
+            [card["url"] for card in detail_cards],
+        )
 
-        # Upsert vào DB
-        count = 0
-        for card in new_cards:
+        for card in plan.new_cards:
             detail = url_to_detail.get(card["url"], {})
+            classification = classify_detail_result(detail)
+            if classification.outcome != "active":
+                self._track_reconciliation_error(
+                    card["url"],
+                    classification.reason,
+                    f"new_detail_{classification.outcome}",
+                )
+                continue
+            detail_price = self.parse_price_ty(detail.get("detail_price_raw", ""))
+            if canonical_price_vnd(card.get("price_ty")) is None and detail_price:
+                card["price_ty"] = detail_price
+                card["price_raw"] = detail.get("detail_price_raw", "")
             record = self._build_record(card, detail)
-            if self.upsert_raw(card["url"], record):
-                count += 1
+            raw_id = self._insert_new_record(card, record)
+            if raw_id:
+                self._stats["inserted_raw_ids"].append(raw_id)
                 self.logger.info(
                     f"  + {record['title'][:50]} | "
                     f"{record['price_ty']}ty {record['area_m2']}m²"
                 )
 
-        return count
+        for card in plan.changed_cards:
+            detail = url_to_detail.get(card["url"], {})
+            classification = classify_detail_result(detail)
+            if classification.outcome != "active":
+                self._track_reconciliation_error(
+                    card["url"],
+                    classification.reason,
+                    f"changed_detail_{classification.outcome}",
+                )
+                continue
+
+            card_price = canonical_price_vnd(card.get("price_ty"))
+            detail_price = canonical_price_vnd(
+                self.parse_price_ty(detail.get("detail_price_raw", ""))
+            )
+            if detail_price is None or detail_price != card_price:
+                self._track_reconciliation_error(
+                    card["url"],
+                    "card/detail price mismatch",
+                    "price_confirmation_failed",
+                )
+                continue
+
+            snapshot = snapshots[card["url"]]
+            record = self._build_record(card, detail)
+            raw_id = self._refresh_changed_record(snapshot, record)
+            self._stats["updated"] += 1
+            self._stats["refreshed_raw_ids"].append(raw_id)
+
+        return int(self._stats.get("new", 0) or 0) - new_before
 
     def crawl_full(self, page, base_url: str) -> int:
         return self._run_crawl(page, base_url, incremental=False)

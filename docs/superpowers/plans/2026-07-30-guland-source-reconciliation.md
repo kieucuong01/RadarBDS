@@ -214,7 +214,7 @@ git commit -m "feat: plan guland card reconciliation"
   fetching, raw writes, and lifecycle writes; it returns stats, fetched detail
   URLs, and seen URLs. The helper uses real `plan_guland_cards()`.
 
-- [ ] **Step 1: Write failing existing-card crawl tests**
+- [x] **Step 1: Write failing existing-card crawl tests**
 
 ```python
 def test_existing_same_price_marks_seen_without_detail(monkeypatch):
@@ -244,7 +244,7 @@ def test_existing_changed_price_enters_detail_batch(monkeypatch):
     assert stats["refreshed_raw_ids"] == [22]
 ```
 
-- [ ] **Step 2: Write failing verifier classification tests**
+- [x] **Step 2: Write failing verifier classification tests**
 
 ```python
 @pytest.mark.parametrize(
@@ -260,13 +260,13 @@ def test_detail_result_classification(detail, outcome):
     assert classify_detail_result(detail).outcome == outcome
 ```
 
-- [ ] **Step 3: Verify RED**
+- [x] **Step 3: Verify RED**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_guland_crawler_stats.py tests\test_guland_source_verifier.py -q
 ```
 
-- [ ] **Step 4: Extend the detail fetch contract**
+- [x] **Step 4: Extend the detail fetch contract**
 
 The page script must:
 
@@ -280,7 +280,7 @@ The page script must:
 
 Do not classify Cloudflare, timeout, blank HTML, or 5xx as removed.
 
-- [ ] **Step 5: Replace per-card `url_exists()` calls with one snapshot query**
+- [x] **Step 5: Replace per-card `url_exists()` calls with one snapshot query**
 
 `_run_crawl()` parses card prices, calls `plan_guland_cards()`, bulk-marks every
 valid discovered existing URL seen, fetches details for `new_cards +
@@ -304,7 +304,7 @@ A changed price is accepted only when the detail result is live and its
 canonical detail price agrees with the card price. Otherwise preserve the old
 raw/listing price and increment `errors`.
 
-- [ ] **Step 6: Add bounded verification after result targets**
+- [x] **Step 6: Add bounded verification after result targets**
 
 `after_targets()` invokes `_verify_stale_listings()` only for Guland. The limit
 comes from `GULAND_STATUS_VERIFY_LIMIT`, defaults to `50`, and is clamped to
@@ -324,13 +324,13 @@ Use product visibility filters and exclude already confirmed inactive rows.
 Each result calls `record_source_check()`; changed live prices join the same
 refresh pipeline.
 
-- [ ] **Step 7: Verify GREEN**
+- [x] **Step 7: Verify GREEN**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_guland_reconciliation.py tests\test_guland_crawler_stats.py tests\test_guland_source_verifier.py -q
 ```
 
-- [ ] **Step 8: Commit crawler reconciliation**
+- [x] **Step 8: Commit crawler reconciliation**
 
 ```powershell
 git add crawler/base_crawler.py crawler/guland_pw.py analytics/lifecycle.py tests/test_guland_crawler_stats.py tests/test_guland_source_verifier.py

@@ -138,3 +138,34 @@ def test_base_crawler_finishes_error_once_when_browser_setup_fails(monkeypatch):
 
     finish.assert_called_once()
     assert finish.call_args.kwargs["status"] == "error"
+
+
+def test_base_crawler_runs_after_targets_hook_once(monkeypatch):
+    crawler = _CrawlerForStatusTest()
+    crawler.TARGET_URLS = ["https://example.test/ok"]
+    after_targets = mock.Mock()
+    monkeypatch.setattr(crawler, "after_targets", after_targets, raising=False)
+    monkeypatch.setattr(
+        crawler,
+        "_launch",
+        lambda _pw, headless=True: (_FakeBrowser(), _FakeContext()),
+    )
+
+    with mock.patch(
+        "playwright.sync_api.sync_playwright",
+        return_value=nullcontext(object()),
+    ), mock.patch(
+        "db.crawl_runs.get_incomplete_run",
+        return_value=None,
+    ), mock.patch(
+        "db.crawl_runs.start_crawl_run",
+        return_value=323,
+    ), mock.patch(
+        "db.crawl_runs.mark_url_done",
+    ), mock.patch(
+        "db.crawl_runs.finish_crawl_run",
+    ):
+        crawler.run(mode="incremental")
+
+    after_targets.assert_called_once()
+    assert after_targets.call_args.args[1] == 323

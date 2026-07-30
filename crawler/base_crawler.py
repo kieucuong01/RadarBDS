@@ -251,6 +251,7 @@ class BaseCrawler(ABC):
                             json.dumps(counters, ensure_ascii=False),
                         )
 
+                self.after_targets(page, run_id)
                 browser.close()
         except BaseException as exc:
             fatal_error = exc
@@ -299,6 +300,10 @@ class BaseCrawler(ABC):
         """Chỉ crawl tin đăng hôm nay/hôm qua. Trả về số record mới."""
         pass
 
+    def after_targets(self, page, run_id: int) -> None:
+        """Optional post-target hook for bounded source verification."""
+        return None
+
     # ── DB helpers ─────────────────────────────────────────────────────────
 
     def upsert_raw(self, url: str, raw_data: dict) -> bool:
@@ -336,6 +341,7 @@ class BaseCrawler(ABC):
             raw_data,
             getattr(self, "_crawl_run_id", None),
         )
+        self._last_raw_insert_result = result
         if result.status == "inserted":
             self._stats["new"] += 1
             return True

@@ -1,31 +1,199 @@
 from unittest import mock
 
 from crawler.guland_pw import GulandCrawler
+from services.guland_reconciliation import ExistingGulandSnapshot
 
 
-def test_guland_counts_fetched_cards_before_filtering_existing_urls(monkeypatch):
+FIRST_SEEN = "2026-07-01T08:00:00+07:00"
+
+
+def _run_cards(monkeypatch, cards, snapshots, details):
     crawler = GulandCrawler()
-    crawler._stats = {"fetched": 0, "new": 0, "skipped": 0, "errors": 0, "error_details": []}
-    cards = [
-        {"url": "https://guland.vn/post/a-1", "title": "A"},
-        {"url": "https://guland.vn/post/b-2", "title": "B"},
-        {"url": "https://guland.vn/post/c-3", "title": "C"},
-    ]
+    crawler._stats = {
+        "fetched": 0,
+        "new": 0,
+        "updated": 0,
+        "skipped": 0,
+        "errors": 0,
+        "error_details": [],
+    }
+    fetched_urls = []
+    seen_urls = []
 
-    monkeypatch.setattr(crawler, "_scroll_all_cards", lambda page, base_url, incremental: cards)
-    monkeypatch.setattr(crawler, "url_exists", lambda url: url.endswith("b-2"))
-    monkeypatch.setattr(crawler, "_fetch_details_batch", lambda page, urls: {url: {} for url in urls})
+    monkeypatch.setattr(
+        crawler,
+        "_scroll_all_cards",
+        lambda page, base_url, incremental: cards,
+    )
+    monkeypatch.setattr(
+        crawler,
+        "_load_existing_snapshots",
+        lambda urls: snapshots,
+    )
+
+    def fetch(_page, urls):
+        fetched_urls.extend(urls)
+        return {url: details[url] for url in urls}
+
+    monkeypatch.setattr(crawler, "_fetch_details_batch", fetch)
+    monkeypatch.setattr(
+        crawler,
+        "_mark_seen_urls",
+        lambda urls: seen_urls.extend(urls) or len(urls),
+    )
     monkeypatch.setattr(
         crawler,
         "_build_record",
-        lambda card, detail: {"title": card["title"], "price_ty": 1.0, "area_m2": 100.0},
+        lambda card, detail: {
+            "url": card["url"],
+            "post_id": card.get("post_id", ""),
+            "title": "Guland test listing",
+            "price_ty": card.get("price_ty"),
+            "area_m2": 100.0,
+        },
     )
-    monkeypatch.setattr(crawler, "upsert_raw", lambda url, record: True)
+    def insert_new(card, _record):
+        crawler._stats["new"] += 1
+        return 9000 + int(card["post_id"])
 
-    new_count = crawler._run_crawl(page=object(), base_url="https://guland.vn/test", incremental=True)
+    monkeypatch.setattr(crawler, "_insert_new_record", insert_new)
+    monkeypatch.setattr(
+        crawler,
+        "_refresh_changed_record",
+        lambda snapshot, record: snapshot.raw_id,
+    )
 
-    assert new_count == 2
-    assert crawler._stats["fetched"] == 3
+    crawler._run_crawl(
+        page=object(),
+        base_url="https://guland.vn/test",
+        incremental=True,
+    )
+    return crawler._stats, fetched_urls, seen_urls
+
+
+def test_guland_counts_fetched_cards_before_filtering_existing_urls(monkeypatch):
+    cards = [
+        {
+            "url": "https://guland.vn/post/a-1",
+            "post_id": "1",
+            "title": "A",
+            "price_raw": "2 tỷ",
+        },
+        {
+            "url": "https://guland.vn/post/b-2",
+            "post_id": "2",
+            "title": "B",
+            "price_raw": "2 tỷ",
+        },
+        {
+            "url": "https://guland.vn/post/c-3",
+            "post_id": "3",
+            "title": "C",
+            "price_raw": "2 tỷ",
+        },
+    ]
+    existing_url = cards[1]["url"]
+    snapshots = {
+        existing_url: ExistingGulandSnapshot(
+            22,
+            32,
+            existing_url,
+            "2",
+            2.0,
+            FIRST_SEEN,
+            "active",
+        )
+    }
+    details = {
+        cards[0]["url"]: {
+            "url": cards[0]["url"],
+            "http_status": 200,
+            "page_status": "live",
+            "detail_price_raw": "2 tỷ",
+        },
+        cards[2]["url"]: {
+            "url": cards[2]["url"],
+            "http_status": 200,
+            "page_status": "live",
+            "detail_price_raw": "2 tỷ",
+        },
+    }
+
+    stats, _fetched_urls, _seen_urls = _run_cards(
+        monkeypatch,
+        cards,
+        snapshots,
+        details,
+    )
+
+    assert stats["new"] == 2
+    assert stats["fetched"] == 3
+
+
+def test_existing_same_price_marks_seen_without_detail(monkeypatch):
+    url = "https://guland.vn/post/same-2001"
+    card = {
+        "url": url,
+        "post_id": "2001",
+        "price_raw": "2,5 tỷ",
+    }
+    snapshot = ExistingGulandSnapshot(
+        21,
+        31,
+        url,
+        "2001",
+        2.5,
+        FIRST_SEEN,
+        "active",
+    )
+
+    stats, fetched_urls, seen_urls = _run_cards(
+        monkeypatch,
+        [card],
+        {url: snapshot},
+        {},
+    )
+
+    assert stats["existing"] == 1
+    assert stats["unchanged"] == 1
+    assert stats["updated"] == 0
+    assert fetched_urls == []
+    assert seen_urls == [url]
+
+
+def test_existing_changed_price_enters_detail_batch(monkeypatch):
+    url = "https://guland.vn/post/changed-2002"
+    card = {
+        "url": url,
+        "post_id": "2002",
+        "price_raw": "2,7 tỷ",
+    }
+    snapshot = ExistingGulandSnapshot(
+        22,
+        32,
+        url,
+        "2002",
+        2.5,
+        FIRST_SEEN,
+        "active",
+    )
+    detail = {
+        "url": url,
+        "http_status": 200,
+        "page_status": "live",
+        "detail_price_raw": "2,7 tỷ",
+    }
+
+    stats, fetched_urls, _seen_urls = _run_cards(
+        monkeypatch,
+        [card],
+        {url: snapshot},
+        {url: detail},
+    )
+
+    assert fetched_urls == [url]
+    assert stats["updated"] == 1
+    assert stats["refreshed_raw_ids"] == [22]
 
 
 def test_build_record_adds_valid_source_coordinate_fields():
