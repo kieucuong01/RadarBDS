@@ -543,7 +543,7 @@ git commit -m "feat: plot guland price history"
   listing_id: int) -> dict` logs in with the existing test admin helper and
   returns that listing from `/api/signals`.
 
-- [ ] **Step 1: Write failing source-specific API tests**
+- [x] **Step 1: Write failing source-specific API tests**
 
 ```python
 def test_guland_card_uses_first_seen_until_price_change(self):
@@ -580,7 +580,7 @@ def test_facebook_card_keeps_posted_at(self):
     assert card["days_ago"] == days_since(FACEBOOK_POSTED)
 ```
 
-- [ ] **Step 2: Write failing renderer tests**
+- [x] **Step 2: Write failing renderer tests**
 
 ```javascript
 assert.match(renderer, /Cập nhật giá/);
@@ -589,14 +589,14 @@ assert.match(renderer, /card_date_reason/);
 assert.match(renderer, /CẬP NHẬT GIÁ/);
 ```
 
-- [ ] **Step 3: Verify RED**
+- [x] **Step 3: Verify RED**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_source_policy.py tests\test_listing_map_js.py -q
 node tests\js\test_signal_card.js
 ```
 
-- [ ] **Step 4: Implement one SQL activity expression everywhere**
+- [x] **Step 4: Implement one SQL activity expression everywhere**
 
 ```python
 def listing_activity_at_sql(alias="l"):
@@ -611,7 +611,7 @@ Use it for signal sorting, date-range filtering, selected `activity_at`, and
 `days_ago`. Add `COALESCE(source_status,'unknown') <> 'inactive'` to shared
 public listing filters so confirmed inactive rows disappear from feed and Map.
 
-- [ ] **Step 5: Render the reason without breaking established card UI**
+- [x] **Step 5: Render the reason without breaking established card UI**
 
 - `price_updated`: time tag `Cập nhật giá hôm nay/N ngày trước`; new badge text
   `CẬP NHẬT GIÁ`.
@@ -622,7 +622,7 @@ public listing filters so confirmed inactive rows disappear from feed and Map.
 Apply the same semantics to shared cards, legacy signal cards, and Map popup
 time copy. Keep `Lưu`, `Ráp mối`, source tag rules, and redaction unchanged.
 
-- [ ] **Step 6: Verify GREEN and syntax**
+- [x] **Step 6: Verify GREEN and syntax**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_source_policy.py tests\test_listing_map_js.py tests\test_signal_detail_ui.py tests\test_refactor_structure.py -q
@@ -632,7 +632,7 @@ node --check static\js\main\listing_map.js
 node tests\js\test_signal_card.js
 ```
 
-- [ ] **Step 7: Commit card behavior**
+- [x] **Step 7: Commit card behavior**
 
 ```powershell
 git add services/market_data.py static/js/main/signal_card.js static/js/main/signals.js static/js/main/listing_map.js tests/test_source_policy.py tests/js/test_signal_card.js tests/test_listing_map_js.py

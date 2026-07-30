@@ -199,6 +199,7 @@ function savedListingToSignalCard(data) {
     legal_status: data.legal_status,
     legal_flags: data.legal_flags,
     days_ago: data.days_ago,
+    card_date_reason: data.card_date_reason,
     primary_img: images[0] || '',
     primary_image: images[0] || '',
     imgs: images,
@@ -495,6 +496,14 @@ function _timeAgoText(v) {
   return n === 0 ? 'hôm nay' : `${n} ngày trước`;
 }
 
+function _cardDateText(item) {
+  const relative = _timeAgoText(item && item.days_ago);
+  const reason = String((item && item.card_date_reason) || 'posted');
+  if (reason === 'price_updated') return `Cập nhật giá ${relative}`;
+  if (reason === 'first_seen') return `Theo dõi từ ${relative}`;
+  return relative;
+}
+
 function _isNewWithin(v, maxDays = 4) {
   const n = _daysAgoValue(v);
   return n !== null && n <= maxDays;
@@ -706,7 +715,7 @@ function renderSignalDealCard(x, opts = {}) {
   )).join('');
 
   const daysAgo = _daysAgoValue(x.days_ago);
-  const timeStr = _timeAgoText(daysAgo);
+  const timeStr = _cardDateText(x);
   const roadTiers = {
     1: 'Mặt tiền',
     2: 'Đường nhựa',
@@ -719,9 +728,12 @@ function renderSignalDealCard(x, opts = {}) {
   const safeTitle = escHtml(x.title || '');
   const imgSrc = signalDealImageSrc(x);
   const dataAttr = signalDealDataAttrs(x, fairPrice, imgSrc, timeStr, roadStr, profit);
-  const isNew = _isNewWithin(x.days_ago, 7);
+  const isPriceUpdated = x.card_date_reason === 'price_updated';
+  const isNew = !isPriceUpdated && _isNewWithin(x.days_ago, 7);
   const newCardClass = isNew ? 'is-new-signal' : '';
-  const newBadgeHtml = isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '';
+  const newBadgeHtml = isPriceUpdated
+    ? '<div class="new-badge price-update-badge">CẬP NHẬT GIÁ</div>'
+    : (isNew ? `<div class="new-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> MỚI</div>` : '');
   const srcName = sourceNames[x.source] || x.source;
   const sourceTagHtml = window.USER_TIER === 'admin' && srcName
     ? `<span class="sc-source-tag">${escHtml(srcName)}</span>`

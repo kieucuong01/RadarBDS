@@ -47,6 +47,17 @@
     return VALID_BASE_LAYERS.indexOf(layer) >= 0 ? layer : "street";
   }
 
+  function cardDateText(item) {
+    var days = Number(item && item.days_ago);
+    var relative = !Number.isFinite(days) || days < 0
+      ? "Chưa rõ ngày"
+      : (days <= 0 ? "hôm nay" : days + " ngày trước");
+    var reason = String((item && item.card_date_reason) || "posted");
+    if (reason === "price_updated") return "Cập nhật giá " + relative;
+    if (reason === "first_seen") return "Theo dõi từ " + relative;
+    return relative.charAt(0).toUpperCase() + relative.slice(1);
+  }
+
   function mapBaseLayers() {
     return {
       street: {
@@ -593,6 +604,7 @@
     proxy.dataset.mosPctDisplay = String(item.mos_pct || 0);
     proxy.dataset.source = String(item.source || "");
     proxy.dataset.time = String(item.days_ago || "");
+    proxy.dataset.cardDateReason = String(item.card_date_reason || "posted");
     return proxy;
   }
 
@@ -670,9 +682,7 @@
           content.appendChild(create(
             "small",
             "",
-            Number(item.days_ago) <= 0
-              ? "Hôm nay"
-              : Number(item.days_ago) + " ngày trước"
+            cardDateText(item)
           ));
         }
         card.appendChild(content);
@@ -1000,6 +1010,7 @@
     buildSummaryUrl: buildSummaryUrl,
     buildItemsUrl: buildItemsUrl,
     normalizeBaseLayer: normalizeBaseLayer,
+    cardDateText: cardDateText,
     mapBaseLayers: mapBaseLayers,
     safeTrackingContext: safeTrackingContext,
     precisionCopy: precisionCopy,

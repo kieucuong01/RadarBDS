@@ -94,7 +94,7 @@ mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
 # Import the extracted services
-from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters
+from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters, listing_activity_at_sql, listing_card_activity
 from services.market_data import LATEST_SHADOW_VALUATION_CTE, _display_fair_sql, _display_mos_sql
 from services.listing_map import (
     MapFilters,
@@ -4881,14 +4881,14 @@ def api_listings():
     signal_condition = f"({old_signal_condition}) AND ({new_signal_condition})"
     sort_col_map = {
         "area": "l.area_m2", "price": "l.price_ty", "price_m2": "l.price_per_m2",
-        "fair": f"({display_fair_expr})", "date": "COALESCE(l.posted_at, l.crawled_at)",
+        "fair": f"({display_fair_expr})", "date": listing_activity_at_sql("l"),
         "ward": "l.ward", "prop_type": "l.property_type",
     }
     # Default sort = newest first (date DESC). Client can override.
     sort_by = request.args.get("sort_by", "date")
     default_dir = "desc" if sort_by == "date" else "asc"
     sort_dir = "DESC" if request.args.get("sort_dir", default_dir).lower() == "desc" else "ASC"
-    order_expr = sort_col_map.get(sort_by, "COALESCE(l.posted_at, l.crawled_at)")
+    order_expr = sort_col_map.get(sort_by, listing_activity_at_sql("l"))
 
     tier = current_tier()
     fresh_flag = "0 AS is_fresh_locked"
@@ -4960,6 +4960,7 @@ def api_listings():
     listings = []
     for r in rows:
         badge_meta = signal_badge_metadata(r)
+        activity_at, card_date_reason = listing_card_activity(r)
         related_first = related_drop_map.get(r["id"])
         price_ty = r["price_ty"]
         price_first_ty = r["price_first_ty"]
@@ -4990,7 +4991,8 @@ def api_listings():
             "mos_pct_new": round(r["mos_pct_new"], 1) if r.get("mos_pct_new") else 0,
             "fair_ppm2_display": round(r["fair_ppm2_display"], 1) if r.get("fair_ppm2_display") else (round(r["fair_ppm2"], 1) if r["fair_ppm2"] else None),
             "mos_pct_display": round(r["mos_pct_display"], 1) if r.get("mos_pct_display") else (round(r["mos_pct"], 1) if r["mos_pct"] else 0),
-            "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": price_dropped,
+            "days_ago": _days_ago(activity_at), "card_date_reason": card_date_reason,
+            "is_hot": bool(r['is_hot']), "price_dropped": price_dropped,
             "suspicious_bait": bool(r['suspicious_bait']),
             "drop_pct": drop_pct, "price_first_ty": price_first_ty, "duplicate_of_id": r['duplicate_of_id'],
             "source": r['source'], "imgs": img_map.get(r['id'], []),
@@ -5087,6 +5089,7 @@ def api_listing_detail(listing_id):
         return jsonify({"error": "not found"}), 404
 
     l = data["listing"]
+    activity_at, card_date_reason = listing_card_activity(l)
     return jsonify({
         "id": l["id"],
         "title": l["title"],
@@ -5129,7 +5132,8 @@ def api_listing_detail(listing_id):
         "legal_status": l.get("legal_status") or "unverified",
         "legal_flags": l.get("legal_flags") or "",
         "legal_verification": data.get("legal_verification") or {},
-        "days_ago": _days_ago(l["posted_at"] or l["crawled_at"]),
+        "days_ago": _days_ago(activity_at),
+        "card_date_reason": card_date_reason,
         "imgs": data["images"],
         "map_location": data.get("map_location"),
         "tier": data.get("tier"),

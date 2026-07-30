@@ -17,6 +17,8 @@ from services.market_data import (
     _signal_listing_data_sql,
     build_deal_sql,
     build_listing_filters,
+    listing_activity_at_sql,
+    listing_card_activity,
     normalize_sources_for_tier,
     resolve_image_url,
 )
@@ -176,6 +178,8 @@ def _filtered_sql(mode: str, filters: MapFilters) -> tuple[str, list]:
                l.road_name,
                l.posted_at,
                l.crawled_at,
+               l.first_seen_at,
+               l.price_updated_at,
                l.source,
                ({deal.mos_expr}) AS mos_pct,
                CASE WHEN ({deal.condition}) THEN 1 ELSE 0 END AS is_signal
@@ -225,7 +229,7 @@ def load_listing_map_summary(
 
         rows = conn.execute(
             _base_cte(filtered_sql)
-            + """
+            + f"""
             SELECT ml.location_key,
                    ml.lat,
                    ml.lng,
@@ -394,6 +398,8 @@ def load_listing_map_items(
                    f.road_name,
                    f.posted_at,
                    f.crawled_at,
+                   f.first_seen_at,
+                   f.price_updated_at,
                    f.source,
                    f.mos_pct,
                    f.is_signal,
@@ -409,7 +415,7 @@ def load_listing_map_items(
                 LIMIT 1
             ) primary_img ON TRUE
             WHERE ml.location_key = ?
-            ORDER BY COALESCE(f.posted_at, f.crawled_at) DESC, f.id DESC
+            ORDER BY {listing_activity_at_sql('f')} DESC, f.id DESC
             LIMIT ? OFFSET ?
             """,
             params + [location_key, limit, offset],
@@ -419,6 +425,7 @@ def load_listing_map_items(
     items = []
     for row in rows:
         prop_type = str(_row_value(row, "property_type", "") or "")
+        activity_at, card_date_reason = listing_card_activity(row)
         items.append({
             "id": int(_row_value(row, "id", 0)),
             "title": str(_row_value(row, "title", "") or ""),
@@ -434,10 +441,8 @@ def load_listing_map_items(
                 1,
             ),
             "is_signal": bool(_row_value(row, "is_signal", 0)),
-            "days_ago": _days_ago(
-                _row_value(row, "posted_at")
-                or _row_value(row, "crawled_at")
-            ),
+            "days_ago": _days_ago(activity_at),
+            "card_date_reason": card_date_reason,
             "thumbnail": resolve_image_url(
                 _row_value(row, "primary_local_path"),
                 _row_value(row, "primary_img_url"),
