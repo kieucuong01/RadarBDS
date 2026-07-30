@@ -1,6 +1,7 @@
 param(
     [ValidateSet("start", "stop", "status")]
-    [string] $Action = "start"
+    [string] $Action = "start",
+    [int] $Port = 15432
 )
 
 $ErrorActionPreference = "Stop"
@@ -8,8 +9,6 @@ $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $PgBin = Join-Path $Root "tools\postgresql-17.10\pgsql\bin"
 $DataDir = Join-Path $Root ".local\postgres-data"
 $LogFile = Join-Path $Root ".local\postgres.log"
-$Port = 5432
-
 if (!(Test-Path (Join-Path $PgBin "pg_ctl.exe"))) {
     throw "Portable PostgreSQL is missing at $PgBin"
 }

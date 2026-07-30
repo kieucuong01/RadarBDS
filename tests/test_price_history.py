@@ -1,10 +1,7 @@
-import shutil
 import sys
-import tempfile
 import unittest
 import uuid
 from pathlib import Path
-from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -45,8 +42,6 @@ class PriceHistoryTest(unittest.TestCase):
         from db import connection
         from db.schema import init_schema
 
-        self.tmpdir = Path(tempfile.mkdtemp())
-        self.db_path = self.tmpdir / "radar_test.db"
         self.token = uuid.uuid4().hex
         self.url_prefix = f"https://price-history-{self.token}.test"
         self.source_id = f"price-history-{self.token}"
@@ -54,8 +49,6 @@ class PriceHistoryTest(unittest.TestCase):
         self.admin_token = f"price-history-admin-token-{self.token}"
         self.listing_ids = []
         connection.close_all()
-        self.db_path_patch = mock.patch.object(connection, "DB_PATH", self.db_path)
-        self.db_path_patch.start()
         init_schema()
         self._delete_test_rows()
 
@@ -64,8 +57,6 @@ class PriceHistoryTest(unittest.TestCase):
 
         self._delete_test_rows()
         connection.close_all()
-        self.db_path_patch.stop()
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def _delete_test_rows(self):
         from db.connection import get_conn

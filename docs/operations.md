@@ -6,7 +6,7 @@ Use this for VPS deploy, production smoke checks, DB sync, crawl logs, and one-o
 
 | Environment | Purpose | Notes |
 |---|---|---|
-| Local Windows | Development and safe reprocess/audit | Python 3.12, installed PostgreSQL 18 service `postgresql-x64-18`, pgAdmin4 |
+| Local Windows | Development and safe reprocess/audit | Python 3.12, `.env.local` override, local PostgreSQL on `127.0.0.1:15432` |
 | Production VPS | Public site and daily crawl | Ubuntu Server 24.04 LTS, Python 3.12, systemd, Nginx |
 | Supabase project `ozdjzfiqcjnlfuihqqjy` | Sync/backup | Password only in local `.env`; do not print/commit |
 
@@ -130,8 +130,10 @@ Pull DB plus missing images:
 .\scripts\sync_prod_to_local.ps1 -SyncImages
 ```
 
-This is production -> local only. It creates a dump on the VPS, downloads it, backs up current local DB, then restores into local `radar_bds`.
-Local restore target is the installed PostgreSQL 18 service on `127.0.0.1:5432`.
+This is production -> local only. It creates a dump on the VPS, downloads it,
+backs up current local DB, then restores into the local `radar_bds` selected by
+`.env.local`. If the production app DB role lacks full dump privileges, the
+script retries on the VPS with the local `postgres` role.
 
 ## Cache Prewarm
 

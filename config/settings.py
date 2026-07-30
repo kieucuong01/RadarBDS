@@ -25,7 +25,7 @@ PROJECT_STORAGE_ROOTS = _project_storage_roots()
 # ─── .env LOADER (no external dep) ──────────────────────────────────────────
 # Tự load .env ở project root nếu chưa có python-dotenv.
 # Non-fatal — thiếu file không throw, env var đã set từ shell có ưu tiên.
-def _load_dotenv(env_path: Path) -> None:
+def _load_dotenv(env_path: Path, *, override: bool = False) -> None:
     if not env_path.exists():
         return
     try:
@@ -35,12 +35,14 @@ def _load_dotenv(env_path: Path) -> None:
                 continue
             k, _, v = line.partition("=")
             k, v = k.strip().lstrip("\ufeff"), v.strip().strip('"').strip("'")
-            if k and k not in os.environ:
+            if k and (override or k not in os.environ):
                 os.environ[k] = v
     except Exception:
         pass
 
+# Base/prod-shaped env first; ignored local overrides second.
 _load_dotenv(PROJECT_ROOT / ".env")
+_load_dotenv(PROJECT_ROOT / ".env.local", override=True)
 
 
 def _storage_path_is_outside_project(storage_dir: Path) -> bool:

@@ -80,6 +80,11 @@ CREATE TABLE IF NOT EXISTS listings (
     sold_at             TEXT,
     probably_sold       INTEGER DEFAULT 0,
     consecutive_missing INTEGER DEFAULT 0,
+    first_seen_at       TEXT DEFAULT (datetime('now')),
+    last_seen_at        TEXT DEFAULT (datetime('now')),
+    delisted_at         TEXT,
+    is_active           INTEGER DEFAULT 1,
+    lifecycle_hours     INTEGER,
 
     -- Dedup flag
     possibly_duplicate  INTEGER DEFAULT 0,   -- 1 = có thể trùng với listing khác

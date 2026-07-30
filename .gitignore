@@ -31,6 +31,8 @@ wheels/
 
 # Local settings
 .env
+.env.local
+.env.*.local
 
 # Local binaries
 zrok.exe

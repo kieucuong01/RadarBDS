@@ -8,10 +8,12 @@ from __future__ import annotations
 import logging
 import os
 import re
+import sys
 import threading
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Mapping, Sequence
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -204,8 +206,29 @@ class PgConnection:
         return False
 
 
+def _is_test_process() -> bool:
+    return "pytest" in sys.modules or bool(os.getenv("PYTEST_CURRENT_TEST"))
+
+
+def _validate_test_database_url(url: str) -> str:
+    db_name = urlparse(url).path.rsplit("/", 1)[-1].lower()
+    if "test" not in db_name:
+        raise DatabaseConfigurationError(
+            "RADAR_TEST_DATABASE_URL database name must contain 'test'"
+        )
+    return url
+
+
 def _database_url() -> str:
-    url = (os.getenv("RADAR_TEST_DATABASE_URL") or os.getenv("DATABASE_URL") or "").strip()
+    test_url = (os.getenv("RADAR_TEST_DATABASE_URL") or "").strip()
+    if _is_test_process():
+        if not test_url:
+            raise DatabaseConfigurationError(
+                "RADAR_TEST_DATABASE_URL is required while running tests"
+            )
+        return _validate_test_database_url(test_url)
+
+    url = (os.getenv("DATABASE_URL") or "").strip()
     if not url:
         raise DatabaseConfigurationError(
             "DATABASE_URL is required. Put a Supabase Direct or Session Pooler "

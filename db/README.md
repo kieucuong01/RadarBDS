@@ -2,27 +2,28 @@
 
 Canonical runtime DB: PostgreSQL via `DATABASE_URL`.
 
-Local development uses the installed PostgreSQL 18 Windows service:
+Local development loads `.env` first, then ignored `.env.local` overrides.
+Current local DB override uses the repo portable PostgreSQL instance:
 
-- service: `postgresql-x64-18`
-- host/port: `127.0.0.1:5432`
+- start command: `scripts/local_postgres.ps1 start`
+- host/port: `127.0.0.1:15432`
 - database: `radar_bds`
-- admin UI: pgAdmin4
-- connection source: local `.env`
+- test database: `radar_bds_test`
+- connection source: local `.env.local`
 
-Normal local `.env` should point to the installed service:
+Normal local `.env.local` should contain:
 
 ```env
-DATABASE_URL=postgresql://postgres:<local-password>@127.0.0.1:5432/radar_bds
+DATABASE_URL=postgresql://postgres@127.0.0.1:15432/radar_bds
+RADAR_TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:15432/radar_bds_test
 ```
 
 Never print or commit the real local DB password.
 
 Legacy SQLite source: `data/radar_bds.db`, read only by `scripts/migrate_sqlite_to_postgres.py`.
 
-The portable PostgreSQL 17 bundle in `tools/postgresql-17.10/` with data in
-`.local/postgres-data` is legacy/fallback only. Use it only for isolated restore
-or recovery work, not as the normal local DB.
+The installed PostgreSQL 18 service on port 5432 may exist for pgAdmin, but
+do not assume it is active unless `.env.local` points there.
 
 Remote Supabase is for sync/backup. Do not use a remote DB for normal full
 reprocess work because the app still has many row-by-row DB operations.
