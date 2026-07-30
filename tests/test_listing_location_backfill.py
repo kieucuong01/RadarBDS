@@ -180,6 +180,37 @@ def test_backfill_rewrites_legacy_nearby_row_as_road():
     assert written[0].relation == "near"
 
 
+def test_raw_sourced_coordinate_upgrades_existing_ward_marker_to_exact():
+    patches = _patch_backfill()
+    with (
+        patches[0],
+        patches[1],
+        patches[2],
+        patches[3] as upsert_rows,
+        patches[4],
+        patches[5],
+        patches[6] as iter_candidates,
+    ):
+        from services.listing_location_backfill import backfill_listing_locations
+
+        iter_candidates.return_value = [
+            _candidate(
+                80,
+                source_lat=11.0280996,
+                source_lng=106.6206725,
+                existing_resolver_version="old-v1",
+                existing_signature="ward-signature",
+            )
+        ]
+        stats = backfill_listing_locations(listing_ids=[80])
+
+    assert stats["exact"] == 1
+    assert stats["updated"] == 1
+    written = upsert_rows.call_args.args[0]
+    assert written[0].listing_id == 80
+    assert written[0].precision == "exact"
+
+
 def test_backfill_skips_unchanged_updates_changed_and_deletes_unmapped():
     patches = _patch_backfill()
     with (

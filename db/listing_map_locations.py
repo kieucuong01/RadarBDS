@@ -1,6 +1,8 @@
 """Repository helpers for deterministic, derived listing map locations."""
 from __future__ import annotations
 
+import json
+import math
 from collections.abc import Sequence
 
 from db.connection import get_conn
@@ -11,6 +13,20 @@ def _row_dict(row) -> dict:
     if hasattr(row, "items"):
         return dict(row.items())
     return dict(row)
+
+
+def _source_coordinates(row: dict) -> tuple[float | None, float | None]:
+    if str(row.get("source") or "") != "guland":
+        return None, None
+    try:
+        raw = json.loads(row.get("raw_json") or "{}")
+        lat = float(raw["source_lat"])
+        lng = float(raw["source_lng"])
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return None, None
+    if not math.isfinite(lat) or not math.isfinite(lng):
+        return None, None
+    return lat, lng
 
 
 def iter_location_candidates(
@@ -39,11 +55,13 @@ def iter_location_candidates(
                    l.description,
                    l.ward,
                    l.road_name,
-                   NULL::DOUBLE PRECISION AS source_lat,
-                   NULL::DOUBLE PRECISION AS source_lng,
+                   l.source,
+                   r.raw_json,
                    ml.resolver_version AS existing_resolver_version,
                    ml.listing_location_signature AS existing_signature
             FROM listings l
+            LEFT JOIN raw_listings r
+              ON r.id = l.raw_id
             LEFT JOIN listing_map_locations ml
               ON ml.listing_id = l.id
             {where_sql}
@@ -51,7 +69,12 @@ def iter_location_candidates(
             """,
             params,
         ).fetchall()
-    return [_row_dict(row) for row in rows]
+    candidates = []
+    for source_row in rows:
+        row = _row_dict(source_row)
+        row["source_lat"], row["source_lng"] = _source_coordinates(row)
+        candidates.append(row)
+    return candidates
 
 
 def upsert_listing_map_locations(
