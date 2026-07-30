@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS listings (
     price_dropped       INTEGER DEFAULT 0,
     price_drop_pct      REAL,
     price_first_ty      REAL,
+    price_updated_at    TIMESTAMPTZ,
     suspicious_bait     INTEGER DEFAULT 0,
 
     -- OCR sổ hồng
@@ -85,6 +86,10 @@ CREATE TABLE IF NOT EXISTS listings (
     delisted_at         TEXT,
     is_active           INTEGER DEFAULT 1,
     lifecycle_hours     INTEGER,
+    source_status       TEXT NOT NULL DEFAULT 'unknown'
+                        CHECK (source_status IN ('unknown','active','inactive','unreachable')),
+    last_source_check_at TIMESTAMPTZ,
+    source_status_reason TEXT NOT NULL DEFAULT '',
 
     -- Dedup flag
     possibly_duplicate  INTEGER DEFAULT 0,   -- 1 = có thể trùng với listing khác
@@ -1055,6 +1060,21 @@ def _run_migrations(conn: Any) -> None:
         ("delisted_at",        "ALTER TABLE listings ADD COLUMN delisted_at TEXT"),
         ("is_active",          "ALTER TABLE listings ADD COLUMN is_active INTEGER DEFAULT 1"),
         ("lifecycle_hours",    "ALTER TABLE listings ADD COLUMN lifecycle_hours INTEGER"),
+        ("price_updated_at",   "ALTER TABLE listings ADD COLUMN price_updated_at TIMESTAMPTZ"),
+        (
+            "source_status",
+            "ALTER TABLE listings ADD COLUMN source_status TEXT NOT NULL "
+            "DEFAULT 'unknown' CHECK (source_status IN "
+            "('unknown','active','inactive','unreachable'))",
+        ),
+        (
+            "last_source_check_at",
+            "ALTER TABLE listings ADD COLUMN last_source_check_at TIMESTAMPTZ",
+        ),
+        (
+            "source_status_reason",
+            "ALTER TABLE listings ADD COLUMN source_status_reason TEXT NOT NULL DEFAULT ''",
+        ),
         ("posted_at",          "ALTER TABLE listings ADD COLUMN posted_at TEXT"),
         ("content_hash",       "ALTER TABLE listings ADD COLUMN content_hash TEXT"),
         ("suspicious_bait",    "ALTER TABLE listings ADD COLUMN suspicious_bait INTEGER DEFAULT 0"),
@@ -1085,6 +1105,10 @@ def _run_migrations(conn: Any) -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_listings_source_first_seen "
             "ON listings(source, (COALESCE(first_seen_at, crawled_at)))"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_listings_source_status_check "
+            "ON listings(source, source_status, last_source_check_at, id)"
         )
     except Exception as e:
         logger.warning(f"Index skip listings auxiliary indexes: {e}")

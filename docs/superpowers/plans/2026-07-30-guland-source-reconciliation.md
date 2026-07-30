@@ -41,7 +41,7 @@
   `first_seen_at`; `_load_listing(conn, listing_id: int) -> dict` selects the
   lifecycle columns. Both helpers delete by UUID URL in `finally`.
 
-- [ ] **Step 1: Write failing migration and lifecycle tests**
+- [x] **Step 1: Write failing migration and lifecycle tests**
 
 ```python
 def test_mark_source_seen_preserves_first_seen(postgres_conn, seeded_guland):
@@ -67,7 +67,7 @@ def test_unreachable_does_not_increment_missing(postgres_conn, seeded_guland):
     assert result.consecutive_missing == 0
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -77,7 +77,7 @@ Run:
 
 Expected: missing schema columns/functions.
 
-- [ ] **Step 3: Add idempotent columns and indexes**
+- [x] **Step 3: Add idempotent columns and indexes**
 
 Add the columns to the canonical schema and `_run_migrations()`:
 
@@ -96,7 +96,7 @@ CREATE INDEX IF NOT EXISTS idx_listings_source_status_check
 ON listings(source, source_status, last_source_check_at, id)
 ```
 
-- [ ] **Step 4: Replace elapsed-time delisting with evidence updates**
+- [x] **Step 4: Replace elapsed-time delisting with evidence updates**
 
 `mark_source_seen()` bulk-updates by `(source, url)`, clears
 `consecutive_missing`, sets active compatibility fields, and never changes a
@@ -110,13 +110,13 @@ Change `sweep_delisted()` so elapsed time alone cannot mark any source inactive.
 It may finalize lifecycle metrics only for rows already confirmed
 `source_status='inactive'`.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_source_lifecycle.py -q
 ```
 
-- [ ] **Step 6: Commit lifecycle schema**
+- [x] **Step 6: Commit lifecycle schema**
 
 ```powershell
 git add db/schema.py analytics/lifecycle.py tests/test_source_lifecycle.py
