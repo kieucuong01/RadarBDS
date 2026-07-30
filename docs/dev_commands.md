@@ -46,6 +46,33 @@ Kết quả gồm `scanned`, `exact`, `road`, `landmark`, `nearby`, `ward`,
 `listing_map_locations` và `listing_map_location_coverage`; không cập nhật bất
 kỳ cột nào trong `listings`.
 
+### Tọa độ nguồn Guland
+
+Lệnh này chỉ xét tin Guland còn hoạt động và đủ điều kiện hiển thị Maps. Chế độ
+mặc định là read-only:
+
+```powershell
+# Read-only by default
+& $py -X utf8 radar.py guland-coordinate-backfill --dry-run
+
+# Apply only after reviewing dry-run JSON
+& $py -X utf8 radar.py guland-coordinate-backfill --apply
+
+# Restore the five coordinate fields from one run manifest
+& $py -X utf8 radar.py guland-coordinate-backfill `
+  --rollback-run 20260730T120000Z
+```
+
+Apply chỉ merge năm field `source_lat`, `source_lng`,
+`source_coordinate_url`, `source_coordinate_provider` và
+`source_coordinate_captured_at` vào `raw_json`, sau đó cập nhật map location
+cho đúng listing IDs đã đổi. Nó không chạy valuation, dedup hay full reprocess.
+
+Rollback manifest có dạng
+`.local/guland-coordinate-backfill/20260730T120000Z-before.jsonl`. Đây là
+runtime data đã gitignore; manifest chỉ chứa raw/listing IDs và năm field tọa
+độ cũ, không chứa tiêu đề, mô tả, số điện thoại, ảnh hoặc URL tin rao gốc.
+
 API smoke cho bản đồ:
 
 ```powershell

@@ -31,6 +31,15 @@ radar.py crawl-daily --source guland --no-alert
 
 Timer Guland dùng cùng `/run/radar-bds/crawl.lock`, nên nếu job chính còn chạy thì job phụ không đè lên. Guland có reprocess riêng khi có record mới, nhưng không gửi VIP push.
 
+Card Guland còn thu liên kết công khai `Chỉ đường`. Python chỉ lưu tọa độ khi
+URL Google Maps, thứ tự lat/lng, bounds dịch vụ và canonical ward đều hợp lệ.
+Tọa độ hợp lệ được resolver ưu tiên thành marker `exact`; tọa độ thiếu hoặc sai
+không làm mất tin và vẫn giữ fallback road/landmark/ward hiện có. Luồng này
+không thêm external LLM hay paid geocoding.
+
+Backfill một lần cho các tin Guland cũ là lệnh vận hành riêng
+`guland-coordinate-backfill`, mặc định dry-run và không nằm trong daily crawl.
+
 Nếu deploy user chưa có quyền cài systemd unit mới, `scripts/deploy_production.ps1` sẽ cài fallback crontab cho Guland lúc 23:15:
 
 ```

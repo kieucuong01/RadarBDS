@@ -90,6 +90,7 @@ from cli.data_import import (
 from cli.crawlers import (
     cmd_crawl, cmd_crawl_facebook, cmd_repair_missing
 )
+from cli.guland_coordinates import cmd_guland_coordinate_backfill
 from cli.queries import (
     cmd_query, cmd_deal_brief, cmd_inspect, cmd_crawl_health
 )
@@ -125,6 +126,22 @@ def build_parser():
     )
     p_map.add_argument("--full", action="store_true")
     p_map.add_argument("--dry-run", action="store_true")
+
+    p_guland_coordinates = sub.add_parser(
+        "guland-coordinate-backfill",
+        help=(
+            "Backfill validated source coordinates for active "
+            "Guland map listings"
+        ),
+    )
+    mode = p_guland_coordinates.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Explicit dry-run; this is already the default",
+    )
+    mode.add_argument("--apply", action="store_true")
+    mode.add_argument("--rollback-run", default="")
 
     p_map_coverage = sub.add_parser(
         "map-location-coverage",
@@ -334,6 +351,8 @@ def main():
         cmd_reprocess(args)
     elif args.cmd == "map-locations":
         cmd_map_locations(args)
+    elif args.cmd == "guland-coordinate-backfill":
+        cmd_guland_coordinate_backfill(args)
     elif args.cmd == "map-location-coverage":
         cmd_map_location_coverage(args)
     elif args.cmd == "map-location-research-queue":
