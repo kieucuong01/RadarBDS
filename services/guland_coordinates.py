@@ -28,11 +28,13 @@ def normalize_guland_post_url(value: str) -> tuple[str, str] | None:
     try:
         parsed = urlsplit(str(value or "").strip())
         hostname = parsed.hostname
+        port = parsed.port
     except ValueError:
         return None
     if (
         parsed.scheme != "https"
         or hostname not in {"guland.vn", "www.guland.vn"}
+        or port is not None
         or not parsed.path.startswith("/post/")
     ):
         return None
@@ -53,9 +55,13 @@ def guland_identity_matches(
     target = normalize_guland_post_url(target_url)
     if card is None or target is None or card[0] != target[0]:
         return False
-    card_id = str(card_post_id or card[1])
-    target_id = str(target_source_id or target[1])
-    return not card_id or not target_id or card_id == target_id
+    explicit_card_id = str(card_post_id or "")
+    explicit_target_id = str(target_source_id or "")
+    if explicit_card_id and explicit_card_id != card[1]:
+        return False
+    if explicit_target_id and explicit_target_id != target[1]:
+        return False
+    return card[1] == target[1]
 
 
 def _inside_service_bounds(lat: float, lng: float) -> bool:
@@ -76,11 +82,13 @@ def evaluate_guland_coordinate_url(
     try:
         parsed = urlsplit(value)
         hostname = parsed.hostname
+        port = parsed.port
     except ValueError:
         return GulandCoordinateDecision("invalid", "invalid_coordinate_url")
     if (
         parsed.scheme != "https"
         or hostname != "www.google.com"
+        or port is not None
         or parsed.path.rstrip("/") != "/maps/search"
         or parsed.username is not None
         or parsed.password is not None

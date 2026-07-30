@@ -70,6 +70,18 @@ def test_wrong_ward_is_rejected(monkeypatch):
     assert decision.reason == "outside_canonical_ward"
 
 
+def test_noncanonical_google_map_port_is_rejected():
+    decision = evaluate_guland_coordinate_url(
+        "https://www.google.com:444/maps/search/"
+        "?api=1&query=11.0280996%2C106.6206725",
+        city="THỦ DẦU MỘT",
+        ward="Tân An",
+    )
+
+    assert decision.status == "invalid"
+    assert decision.reason == "invalid_coordinate_url"
+
+
 def test_guland_identity_requires_url_match_and_no_post_id_conflict():
     assert guland_identity_matches(
         "https://guland.vn/post/dat-tan-an-1231140?ref=home",
@@ -83,7 +95,16 @@ def test_guland_identity_requires_url_match_and_no_post_id_conflict():
         "1231140",
         "9999999",
     )
+    assert not guland_identity_matches(
+        "https://guland.vn/post/dat-tan-an-1231140",
+        "https://guland.vn/post/dat-tan-an-1231140",
+        "9999999",
+        "9999999",
+    )
     assert normalize_guland_post_url("https://example.com/post/a-1") is None
+    assert normalize_guland_post_url(
+        "https://guland.vn:444/post/dat-tan-an-1231140"
+    ) is None
 
 
 def test_raw_fields_require_valid_decision_and_keep_stable_names(monkeypatch):
