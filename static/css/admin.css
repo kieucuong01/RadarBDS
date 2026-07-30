@@ -3128,3 +3128,180 @@ p { margin: 6px 0 0; color: var(--muted); }
   .growth-chart { height: 300px; }
   .growth-chart canvas { height: 240px !important; }
 }
+
+/* Facebook Crawl task-first workspace */
+.facebook-crawl-shell { position: relative; display: grid; gap: 18px; }
+.facebook-crawl-head { margin-bottom: 0; }
+.crawl-view-tabs {
+  display: inline-flex; width: fit-content; max-width: 100%; padding: 4px; gap: 4px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--panel); overflow-x: auto;
+}
+.crawl-view-tab {
+  min-height: 44px; padding: 9px 16px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--muted); font: inherit; font-weight: 800;
+  white-space: nowrap; cursor: pointer;
+}
+.crawl-view-tab.active { color: var(--blue); background: var(--blue-soft); }
+.crawl-view-tab:focus-visible,
+.facebook-crawl-shell button:focus-visible,
+.facebook-crawl-shell input:focus-visible,
+.facebook-crawl-shell select:focus-visible,
+.facebook-crawl-shell summary:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .28); outline-offset: 2px;
+}
+.crawl-view-panel { display: grid; gap: 16px; }
+.crawl-view-panel[hidden], .crawl-broker-drawer[hidden] { display: none; }
+.crawl-view-heading, .crawl-section-head, .crawl-broker-meta,
+.crawl-drawer-head, .crawl-drawer-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+}
+.crawl-view-heading h2, .crawl-section-head h3, .crawl-drawer-head h3 { margin: 0; }
+.crawl-view-heading p, .crawl-section-head p, .crawl-token-details p,
+.crawl-maintenance-details p { margin: 5px 0 0; color: var(--muted); }
+.crawl-view-actions, .crawl-row-actions, .crawl-maintenance-actions {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+}
+.crawl-inline-status, .crawl-broker-meta { color: var(--muted); font-size: 13px; }
+.crawl-overview-grid {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
+}
+.crawl-overview-card { display: grid; align-content: center; min-height: 126px; gap: 9px; }
+.crawl-overview-card span { color: var(--muted); font-size: 13px; }
+.crawl-overview-card strong { color: var(--ink); font-size: clamp(18px, 2vw, 26px); line-height: 1.25; }
+.crawl-action-needed, .crawl-duplicate-workspace, .crawl-run-composer,
+.crawl-history-panel, .crawl-token-details, .crawl-maintenance-details { padding: 18px; }
+.crawl-healthy-state {
+  margin-top: 14px; padding: 12px 14px; border-radius: 10px;
+  color: #166534; background: #dcfce7; font-weight: 700;
+}
+.crawl-problem-list { display: grid; gap: 8px; margin-top: 14px; }
+.crawl-problem-item, .crawl-conflict-banner {
+  padding: 12px 14px; border: 1px solid #f59e0b; border-radius: 10px;
+  color: #92400e; background: #fffbeb; font-weight: 700;
+}
+.crawl-conflict-banner { align-items: center; justify-content: space-between; gap: 12px; }
+.crawl-conflict-banner:not([hidden]) { display: flex; }
+.crawl-token-details > summary, .crawl-maintenance-details > summary {
+  min-height: 44px; display: flex; align-items: center; font-weight: 800; cursor: pointer;
+}
+.crawl-token-form {
+  display: grid; grid-template-columns: 1fr minmax(240px, 2fr) 150px auto;
+  align-items: end; gap: 10px; margin-top: 14px;
+}
+.crawl-token-form label, .crawl-broker-toolbar label, .crawl-drawer-fields label,
+.crawl-run-composer label {
+  display: grid; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 800;
+}
+.crawl-token-form input, .crawl-broker-toolbar input, .crawl-broker-toolbar select,
+.crawl-drawer-fields input, .crawl-drawer-fields select, .crawl-run-composer input,
+.crawl-run-composer select {
+  width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 9px;
+  padding: 9px 11px; background: var(--panel); color: var(--ink); font: inherit;
+}
+.crawl-token-list { margin-top: 12px; color: var(--muted); }
+.crawl-token-row {
+  display: grid; grid-template-columns: minmax(140px, 1fr) auto auto auto;
+  align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line);
+}
+.crawl-token-row:last-child { border-bottom: 0; }
+.crawl-broker-toolbar {
+  display: grid; grid-template-columns: minmax(220px, 1.7fr) repeat(5, minmax(120px, 1fr));
+  gap: 10px; padding: 14px;
+}
+.crawl-unsaved-badge {
+  padding: 7px 10px; border-radius: 999px; color: #92400e;
+  background: #fef3c7; font-size: 12px; font-weight: 800;
+}
+.crawl-broker-table-wrap { padding: 0; overflow-x: auto; }
+.crawl-broker-table { min-width: 1040px; }
+.crawl-broker-table td { white-space: pre-line; vertical-align: middle; }
+.crawl-row-actions { flex-wrap: nowrap; }
+.crawl-row-actions .secondary-btn { min-height: 38px; padding: 7px 10px; }
+.crawl-duplicate-list {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px; margin-top: 14px;
+}
+.crawl-duplicate-card {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center;
+  gap: 6px 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px;
+}
+.crawl-duplicate-card span { color: var(--muted); font-size: 12px; }
+.crawl-duplicate-card button { grid-column: 2; grid-row: 1 / span 2; }
+.crawl-load-more { margin-top: 12px; }
+.crawl-broker-drawer {
+  position: fixed; z-index: 90; inset: 0 0 0 auto; width: min(440px, 100vw);
+  padding: 22px; border: 0; border-left: 1px solid var(--line); background: var(--panel);
+  box-shadow: -20px 0 48px rgba(15, 23, 42, .18); overflow-y: auto;
+}
+.crawl-drawer-fields { display: grid; gap: 13px; margin: 22px 0; }
+.crawl-field-error { min-height: 20px; margin: 0; color: #b91c1c; font-size: 13px; }
+.crawl-run-grid {
+  display: grid; grid-template-columns: minmax(320px, .8fr) minmax(0, 1.2fr); gap: 14px;
+}
+.crawl-run-composer { display: grid; gap: 14px; align-content: start; }
+.crawl-run-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.crawl-run-preview {
+  padding: 13px; border: 1px solid #bfdbfe; border-radius: 10px;
+  color: var(--ink); background: #eff6ff; line-height: 1.5;
+}
+.crawl-job-history { display: grid; gap: 9px; margin-top: 12px; }
+.crawl-job-card {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 12px; padding: 11px 0; border-bottom: 1px solid var(--line);
+}
+.crawl-job-card:last-child { border-bottom: 0; }
+.crawl-job-card small, .crawl-job-card p { grid-column: 1 / -1; margin: 0; color: var(--muted); }
+.crawl-job-status {
+  display: inline-flex; align-items: center; min-height: 28px; padding: 4px 9px;
+  border-radius: 999px; font-size: 12px; font-weight: 800;
+}
+.crawl-job-status.status-running, .crawl-job-status.status-queued { color: #1d4ed8; background: #dbeafe; }
+.crawl-job-status.status-succeeded { color: #166534; background: #dcfce7; }
+.crawl-job-status.status-failed { color: #991b1b; background: #fee2e2; }
+
+@media (max-width: 1100px) {
+  .crawl-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .crawl-broker-toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .crawl-search-field { grid-column: span 2; }
+}
+
+@media (max-width: 760px) {
+  .facebook-crawl-head, .crawl-view-heading, .crawl-section-head, .crawl-broker-meta {
+    align-items: stretch; flex-direction: column;
+  }
+  .crawl-view-actions > button, .facebook-crawl-head > button, .crawl-run-composer > button {
+    width: 100%; min-height: 44px;
+  }
+  .crawl-view-tabs { width: 100%; }
+  .crawl-view-tab { flex: 1 0 auto; }
+  .crawl-overview-grid, .crawl-broker-toolbar, .crawl-token-form,
+  .crawl-duplicate-list, .crawl-run-grid, .crawl-run-fields { grid-template-columns: 1fr; }
+  .crawl-token-row { grid-template-columns: 1fr; align-items: stretch; }
+  .crawl-search-field { grid-column: auto; }
+  .crawl-broker-table { min-width: 0; }
+  .crawl-broker-table thead { display: none; }
+  .crawl-broker-table, .crawl-broker-table tbody,
+  .crawl-broker-table tr, .crawl-broker-table td { display: block; width: 100%; }
+  .crawl-broker-table tr { padding: 14px; border-bottom: 1px solid var(--line); }
+  .crawl-broker-table td {
+    display: grid; grid-template-columns: 112px minmax(0, 1fr);
+    gap: 10px; padding: 7px 0; border: 0; white-space: pre-line;
+  }
+  .crawl-broker-table td::before {
+    color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase;
+  }
+  .crawl-broker-table td:nth-child(1)::before { content: "Môi giới"; }
+  .crawl-broker-table td:nth-child(2)::before { content: "Trạng thái"; }
+  .crawl-broker-table td:nth-child(3)::before { content: "Lịch kế tiếp"; }
+  .crawl-broker-table td:nth-child(4)::before { content: "Quota"; }
+  .crawl-broker-table td:nth-child(5)::before { content: "Chất lượng"; }
+  .crawl-broker-table td:nth-child(6)::before { content: "Crawl cuối"; }
+  .crawl-broker-table td:nth-child(7)::before { content: "Thao tác"; }
+  .crawl-row-actions { flex-wrap: wrap; }
+  .crawl-row-actions .secondary-btn { flex: 1; min-height: 44px; }
+  .crawl-broker-drawer { width: 100%; max-width: 440px; }
+  .crawl-drawer-actions button { min-height: 44px; }
+  .crawl-duplicate-card { grid-template-columns: 1fr; }
+  .crawl-duplicate-card button { grid-column: auto; grid-row: auto; width: 100%; min-height: 44px; }
+  .crawl-job-card { grid-template-columns: 1fr; }
+}

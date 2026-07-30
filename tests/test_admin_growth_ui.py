@@ -29,7 +29,7 @@ def test_growth_admin_ui_contract():
     assert "chart.js@4.4.4" in script
     user_select = template[template.index('id="userTierFilter"'):template.index('id="userTable"', template.index('id="userTierFilter"'))]
     assert "chart.js@4.4.4" not in user_select
-    assert "admin-v48-admin-client-cache" in template
+    assert "admin-v49-facebook-crawl-task-first" in template
     assert "/admin/api/growth?period=" in script
     assert "include_guland=" in script
     assert "prefers-reduced-motion" in script
@@ -172,6 +172,42 @@ def test_facebook_duplicate_analysis_uses_indexable_recent_window():
     assert "r.crawled_at >= ?" in duplicate_fn
     assert "::timestamp" not in duplicate_fn
     assert "CURRENT_TIMESTAMP - INTERVAL '90 days'" not in duplicate_fn
+
+
+def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
+    template = (ROOT / "templates" / "admin_control_room.html").read_text(encoding="utf-8")
+    script = (ROOT / "static" / "js" / "admin.js").read_text(encoding="utf-8")
+    css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
+
+    for view in ("overview", "brokers", "run"):
+        assert f'data-crawl-view="{view}"' in template
+        assert f'id="crawlView-{view}"' in template
+    assert 'id="crawlUnsavedBadge"' in template
+    assert 'id="crawlBrokerDrawer"' in template
+    assert 'id="crawlRunPreview"' in template
+    assert 'id="crawlJobHistory"' in template
+    assert "<details" in template
+    assert "Tác vụ nâng cao" in template
+    assert "js/admin/facebook-crawl.js" in template
+    assert "?v=admin-facebook-crawl-v1" in template
+    assert "css/admin.css') }}?v=admin-v49-facebook-crawl-task-first" in template
+    assert "RadarFacebookCrawlAdmin" in script
+    assert "RadarFacebookCrawlAdmin?.canLeave()" in script
+    assert "/admin/api/facebook-crawl/config" not in (
+        ROOT / "static" / "js" / "admin" / "facebook-crawl.js"
+    ).read_text(encoding="utf-8")
+    assert ".facebook-crawl-shell" in css
+    assert ".crawl-broker-drawer" in css
+    assert "@media (max-width: 760px)" in css
+    assert "min-height: 44px" in css
+
+
+def test_facebook_crawl_mobile_drawer_stays_in_viewport_with_touch_sized_actions():
+    css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
+    mobile_css = css[css.index("@media (max-width: 760px)", css.index(".facebook-crawl-shell")):]
+
+    assert ".crawl-broker-drawer { width: 100%; max-width: 440px; }" in mobile_css
+    assert ".crawl-drawer-actions button { min-height: 44px; }" in mobile_css
 
 
 def test_data_quality_items_cache_payload_and_ward_metadata():

@@ -636,7 +636,10 @@ def facebook_crawl_overview(
     active_job = active_job_fn()
     recent_jobs = recent_jobs_fn(1) or []
     tokens = apify_tokens_fn() or []
-    enabled_tokens = [token for token in tokens if token.get("enabled", True)]
+    enabled_tokens = [
+        token for token in tokens
+        if token.get("active", token.get("enabled", True))
+    ]
     problems = []
     if not schedule.get("installed"):
         problems.append({
