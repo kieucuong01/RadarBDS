@@ -19,7 +19,7 @@ function favoriteButtonHtml(listingId) {
       title="${active ? 'Bỏ lưu lô này' : 'Lưu lô này'}"
       onclick="toggleFavoriteListing(${escHtml(id)}, event)">
       ${favoriteIconSvg()}
-      <span>${active ? 'Đã lưu' : 'Lưu'}</span>
+      <span>Lưu</span>
     </button>
   `;
 }
@@ -30,7 +30,7 @@ function updateFavoriteButtonState(btn, favorite) {
   btn.setAttribute('aria-pressed', favorite ? 'true' : 'false');
   btn.title = favorite ? 'Bỏ lưu lô này' : 'Lưu lô này';
   const label = btn.querySelector('span');
-  if (label) label.textContent = favorite ? 'Đã lưu' : 'Lưu';
+  if (label) label.textContent = 'Lưu';
 }
 
 function refreshFavoriteButtons() {

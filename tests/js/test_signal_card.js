@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 
 const api = require(path.join(
@@ -81,5 +82,41 @@ const feed = api.render(item, {
 assert.match(feed, /role="button"/);
 assert.match(feed, /favorite-btn/);
 assert.match(feed, /Ráp mối/);
+
+const legacyFeed = api.render({
+  ...item,
+  price_dropped: true,
+  drop_pct: 3.7,
+  fair_ppm2: 24.3,
+  fair_ppm2_old: 24.3,
+  fair_ppm2_new: 30.8,
+  fair_ppm2_display: 24.3,
+  source_quality_recheck: true,
+  source_quality_flags: 'low_segment_confidence',
+}, {
+  context: 'signal',
+  openMode: 'modal',
+  showFavorite: true,
+  showContact: true,
+});
+assert.match(legacyFeed, /sc-time-tag/);
+assert.match(legacyFeed, /sc-drop-tag/);
+assert.match(legacyFeed, /valuation-sep/);
+assert.match(legacyFeed, /valuation-total-row/);
+assert.match(legacyFeed, /valuation-ppm2-row/);
+assert.match(legacyFeed, /data-fair-ppm2-old="24\.3"/);
+assert.match(legacyFeed, /data-fair-ppm2-new="30\.8"/);
+assert.match(legacyFeed, /sc-quality-tag/);
+
+const signalsSource = fs.readFileSync(path.join(
+  __dirname,
+  '..',
+  '..',
+  'static',
+  'js',
+  'main',
+  'signals.js',
+), 'utf8');
+assert.doesNotMatch(signalsSource, /Đã lưu/);
 
 console.log('shared signal card renderer: ok');
