@@ -54,6 +54,21 @@ def admin_api_facebook_crawl_config(**kwargs):
     return _impl("admin_api_facebook_crawl_config", **kwargs)
 
 
+@bp.route("/admin/api/facebook-crawl/overview")
+def admin_api_facebook_crawl_overview(**kwargs):
+    return _impl("admin_api_facebook_crawl_overview", **kwargs)
+
+
+@bp.route("/admin/api/facebook-crawl/profiles", methods=["GET", "POST"])
+def admin_api_facebook_crawl_profiles(**kwargs):
+    return _impl("admin_api_facebook_crawl_profiles", **kwargs)
+
+
+@bp.route("/admin/api/facebook-crawl/duplicates")
+def admin_api_facebook_crawl_duplicates(**kwargs):
+    return _impl("admin_api_facebook_crawl_duplicates", **kwargs)
+
+
 @bp.route("/admin/api/facebook-crawl/run", methods=["POST"])
 def admin_api_facebook_crawl_run(**kwargs):
     return _impl("admin_api_facebook_crawl_run", **kwargs)

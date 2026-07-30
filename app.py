@@ -307,7 +307,15 @@ def _cached_admin_read_payload(scope: str, key, loader, *, ttl_seconds: float | 
 
 
 def _clear_admin_crawl_data_caches() -> None:
-    for scope in ("facebook_crawl_config", "data_quality_summary", "growth", "duplicates", "qc_signals"):
+    for scope in (
+        "facebook_crawl_config",
+        "facebook_crawl_profiles",
+        "facebook_crawl_overview",
+        "data_quality_summary",
+        "growth",
+        "duplicates",
+        "qc_signals",
+    ):
         clear_admin_read_cache(scope)
 
 
@@ -5538,6 +5546,103 @@ def admin_control_room(panel_slug=None):
     )
 
 
+def _facebook_profiles_payload() -> dict:
+    profiles = _read_facebook_profile_config()
+    stats = _facebook_profile_stats([profile["url"] for profile in profiles])
+    shaped = []
+    for profile in profiles:
+        item = dict(profile)
+        profile_stat = stats.get(profile["url"]) or admin_quality.empty_facebook_profile_stat()
+        item.update(profile_stat)
+        item.update(admin_quality.facebook_profile_due_metadata(profile, profile_stat))
+        shaped.append(item)
+    return {
+        "profiles": shaped,
+        "revision": admin_quality.facebook_profile_revision(profiles),
+    }
+
+
+@require_admin_auth
+def admin_api_facebook_crawl_overview():
+    payload = admin_quality.facebook_crawl_overview(
+        schedule_status_fn=_daily_crawl_schedule_status,
+        crawl_ops_summary_fn=_crawl_ops_summary,
+        active_job_fn=_active_facebook_crawl_job,
+        recent_jobs_fn=lambda limit: [
+            _public_crawl_job(job)
+            for job in admin_job_service.POSTGRES_ADMIN_JOBS.list(limit=limit)
+        ],
+        apify_tokens_fn=_apify_tokens_public,
+    )
+    return jsonify(payload)
+
+
+@require_admin_auth
+def admin_api_facebook_crawl_profiles():
+    if request.method == "GET":
+        return jsonify(_cached_admin_read_payload(
+            "facebook_crawl_profiles",
+            "default",
+            _facebook_profiles_payload,
+            ttl_seconds=10,
+        ))
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"ok": False, "error": "invalid_payload"}), 400
+    profiles = payload.get("profiles")
+    expected_revision = str(payload.get("revision") or "").strip()
+    if not isinstance(profiles, list) or not re.fullmatch(r"[0-9a-f]{64}", expected_revision):
+        return jsonify({"ok": False, "error": "invalid_profile_payload"}), 400
+
+    with get_conn() as conn:
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtext(?))",
+            ("radar-facebook-profile-config",),
+        )
+        current_profiles = _read_facebook_profile_config()
+        current_revision = admin_quality.facebook_profile_revision(current_profiles)
+        if expected_revision != current_revision:
+            return jsonify({
+                "ok": False,
+                "error": "profile_revision_conflict",
+                "revision": current_revision,
+                "profiles": current_profiles,
+            }), 409
+        saved = _write_facebook_profile_config(profiles)
+
+    _clear_admin_crawl_data_caches()
+    clear_admin_read_cache("facebook_crawl_profiles")
+    response = _facebook_profiles_payload()
+    response["ok"] = True
+    return jsonify(response)
+
+
+@require_admin_auth
+def admin_api_facebook_crawl_duplicates():
+    actionable_raw = (request.args.get("actionable") or "1").strip()
+    if actionable_raw not in {"0", "1"}:
+        return jsonify({"error": "invalid_actionable"}), 400
+    try:
+        offset = int(request.args.get("offset") or 0)
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid_offset"}), 400
+    if offset < 0:
+        return jsonify({"error": "invalid_offset"}), 400
+    limit = _clamp_int(request.args.get("limit"), 20, 1, 50)
+    city = (request.args.get("city") or "").strip()[:100]
+    profiles = _read_facebook_profile_config()
+    stats = _facebook_profile_stats([profile["url"] for profile in profiles])
+    analysis = _facebook_profile_duplicate_analysis(profiles, stats)
+    return jsonify(admin_quality.paginate_facebook_duplicate_analysis(
+        analysis,
+        actionable=actionable_raw == "1",
+        city=city,
+        limit=limit,
+        offset=offset,
+    ))
+
+
 @require_admin_auth
 def admin_api_facebook_crawl_config():
     if request.method == "GET":
@@ -5613,8 +5718,10 @@ def admin_api_facebook_crawl_tokens(token_id=None):
 @require_admin_auth
 def admin_api_facebook_crawl_run():
     payload = request.get_json(silent=True) or {}
-    url = (payload.get("url") or payload.get("profile_url") or "").strip()
-    if not url.startswith("https://www.facebook.com/"):
+    url = admin_quality.normalize_facebook_profile_url(
+        payload.get("url") or payload.get("profile_url")
+    )
+    if not url:
         return jsonify({"ok": False, "error": "invalid_profile_url"}), 400
     mode = (payload.get("mode") or "daily").strip().lower()
     if mode not in {"first", "daily", "range"}:
