@@ -14,10 +14,17 @@ import logging
 import re
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from crawler.base_crawler import BaseCrawler
+from services.guland_coordinates import (
+    evaluate_guland_coordinate_url,
+    raw_coordinate_fields,
+)
+from services.market_data import get_city_for_ward
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +104,12 @@ _JS_EXTRACT_CARDS = """
     const dateEl  = card.querySelector('.profile-info__stl, .sdb-time, [class*="time"]');
     const imgs    = listingImages(card);
     const postId  = a.href.match(/(\\d+)(?:\\.html)?$/)?.[1] || '';
+    const coordinateLink = [...card.querySelectorAll(
+      'a[href^="https://www.google.com/maps/search/"]'
+    )].find(link => {
+      const text = (link.textContent || '').trim().toLowerCase();
+      return text.includes('chỉ đường') || link.href.includes('api=1');
+    });
     return {
         url:       a.href,
         post_id:   postId,
@@ -105,6 +118,7 @@ _JS_EXTRACT_CARDS = """
         area_raw:  infBs[0]?.textContent.trim() || '',
         pm2_raw:   infBs[1]?.textContent.trim() || '',
         date_raw:  dateEl?.textContent.trim() || '',
+        source_coordinate_url: coordinateLink?.href || '',
         imgs,
     };
   }).filter(Boolean);
@@ -385,11 +399,19 @@ class GulandCrawler(BaseCrawler):
 
     def _build_record(self, card: dict, detail: dict) -> dict:
         url = card["url"]
-        
-        # Suy luận phường từ URL Guland (thường có dạng .../phuong-ten-phuong-...)
-        m_ward = re.search(r'phuong-([a-z0-9-]+)-thanh-pho', url)
+
+        # The configured list URL carries the canonical ward context. The
+        # individual /post/ URL does not reliably contain it.
+        ward_source_url = str(card.get("source_list_url") or "")
+        m_ward = re.search(
+            r"phuong-([a-z0-9-]+)-thanh-pho",
+            ward_source_url,
+        )
         ward_slug = m_ward.group(1) if m_ward else ""
-        ward_display = self.WARD_MAP.get(ward_slug, ward_slug.replace('-', ' ').title())
+        ward_display = self.WARD_MAP.get(
+            ward_slug,
+            ward_slug.replace("-", " ").title(),
+        )
 
         price_ty = self.parse_price_ty(card.get("price_raw", ""))
         area_m2  = self.parse_area_m2(card.get("area_raw", ""))
@@ -397,7 +419,7 @@ class GulandCrawler(BaseCrawler):
         if not ppm2 and price_ty and area_m2 and area_m2 > 0:
             ppm2 = round(price_ty * 1e9 / area_m2 / 1e6, 2)
 
-        return {
+        record = {
             "url":               url,
             "post_id":           card.get("post_id", ""),
             "title":             card.get("title", ""),
@@ -421,6 +443,30 @@ class GulandCrawler(BaseCrawler):
             "district":          "Thủ Dầu Một",
             "source":            self.SOURCE_NAME,
         }
+        city = get_city_for_ward(ward_display)
+        context_text = " ".join(filter(None, (
+            record["title"],
+            record["description"],
+            record["address"],
+        )))
+        decision = evaluate_guland_coordinate_url(
+            card.get("source_coordinate_url", ""),
+            city=city,
+            ward=ward_display,
+            context_text=context_text,
+        )
+        if decision.status == "valid":
+            captured_at = datetime.now(
+                ZoneInfo("Asia/Ho_Chi_Minh")
+            ).isoformat()
+            record.update(raw_coordinate_fields(decision, captured_at))
+        elif decision.status == "invalid":
+            self.logger.warning(
+                "Rejected Guland coordinate post_id=%s reason=%s",
+                record["post_id"],
+                decision.reason,
+            )
+        return record
 
     # ── Core crawl ─────────────────────────────────────────────────────────
 
@@ -428,6 +474,8 @@ class GulandCrawler(BaseCrawler):
         # Phase 1: Scroll/load tất cả cards
         self.logger.info(f"Phase 1 — scroll cards ({'incremental' if incremental else 'full'})")
         all_cards = self._scroll_all_cards(page, base_url, incremental=incremental)
+        for card in all_cards:
+            card.setdefault("source_list_url", base_url)
         self._stats["fetched"] = self._stats.get("fetched", 0) + len(all_cards)
 
         # Filter chỉ lấy URL mới chưa có trong DB
