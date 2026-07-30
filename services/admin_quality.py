@@ -6,15 +6,18 @@ the Flask layer to inject patchable callbacks for tests.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import platform
 import re
 import subprocess
+import tempfile
 from collections import Counter, defaultdict
 from itertools import combinations
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Iterable
+from urllib.parse import parse_qs, urlsplit
 
 from db.connection import get_conn
 from services.signal_quality import (
@@ -76,46 +79,44 @@ def read_facebook_profile_config(path: Path) -> list[dict]:
                 "crawl_every_days": normalize_crawl_every_days(raw.get("crawl_every_days")),
                 "active": raw.get("active", True) is not False,
             })
-    return profiles
+    return normalize_facebook_profiles(profiles)
 
 
 def write_facebook_profile_config(path: Path, profiles: list[dict]) -> list[dict]:
-    cleaned: list[dict] = []
-    seen: set[str] = set()
-    for raw in profiles:
-        if not isinstance(raw, dict):
-            continue
-        url = (raw.get("url") or "").strip()
-        if not url or not url.startswith("https://www.facebook.com/") or url in seen:
-            continue
-        seen.add(url)
-        daily_limit = clamp_int(raw.get("daily_limit", raw.get("tier")), 20, 1, 500)
-        cleaned.append({
-            "city": (raw.get("city") or "Bình Dương").strip(),
-            "url": url,
-            "broker_name": (raw.get("broker_name") or "").strip(),
-            "tier": daily_limit,
-            "daily_limit": daily_limit,
-            "range_days": clamp_int(raw.get("range_days"), 7, 1, 60),
-            "crawl_every_days": normalize_crawl_every_days(raw.get("crawl_every_days")),
-            "active": raw.get("active", True) is not False,
-        })
+    cleaned = normalize_facebook_profiles(profiles)
     grouped: dict[str, list[dict]] = {}
     for item in cleaned:
-        city = item.pop("city") or "Bình Dương"
-        grouped.setdefault(city, []).append(item)
+        output = dict(item)
+        city = output.pop("city") or "Bình Dương"
+        grouped.setdefault(city, []).append(output)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(grouped, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    serialized = json.dumps(grouped, ensure_ascii=False, indent=2) + "\n"
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+            newline="\n",
+        ) as handle:
+            temp_path = Path(handle.name)
+            handle.write(serialized)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_path, path)
+    finally:
+        if temp_path and temp_path.exists():
+            temp_path.unlink()
     return read_facebook_profile_config(path)
 
 
 def facebook_profile_lookup(url: str, profiles: Iterable[dict]) -> dict | None:
-    normalized = (url or "").strip()
+    normalized = normalize_facebook_profile_url(url)
     for profile in profiles:
-        if profile["url"] == normalized:
+        if normalize_facebook_profile_url(profile.get("url")) == normalized:
             return profile
     return None
 
@@ -468,8 +469,212 @@ def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> di
     return stats
 
 
+_FACEBOOK_PROFILE_RESERVED_PATHS = frozenset({
+    "about",
+    "ads",
+    "business",
+    "events",
+    "groups",
+    "help",
+    "login",
+    "marketplace",
+    "pages",
+    "photo",
+    "photos",
+    "reel",
+    "reels",
+    "share",
+    "story.php",
+    "watch",
+})
+
+
 def normalize_facebook_profile_url(value) -> str:
-    return str(value or "").strip().rstrip("/")
+    """Return one canonical HTTPS Facebook profile root or an empty string."""
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    if raw.lower().startswith(("facebook.com/", "www.facebook.com/", "m.facebook.com/")):
+        raw = f"https://{raw}"
+    try:
+        parsed = urlsplit(raw)
+    except ValueError:
+        return ""
+    hostname = (parsed.hostname or "").lower()
+    if parsed.scheme.lower() != "https" or hostname not in {
+        "facebook.com",
+        "www.facebook.com",
+        "m.facebook.com",
+    }:
+        return ""
+    segments = [segment for segment in parsed.path.split("/") if segment]
+    if not segments:
+        return ""
+    first = segments[0].strip()
+    if not first:
+        return ""
+    if first.casefold() == "profile.php":
+        profile_id = (parse_qs(parsed.query).get("id") or [""])[0].strip()
+        if not profile_id.isdigit():
+            return ""
+        return f"https://www.facebook.com/profile.php?id={profile_id}"
+    if first.casefold() in _FACEBOOK_PROFILE_RESERVED_PATHS:
+        return ""
+    if not re.fullmatch(r"[A-Za-z0-9._-]{1,100}", first):
+        return ""
+    return f"https://www.facebook.com/{first}"
+
+
+def normalize_facebook_profiles(profiles) -> list[dict]:
+    """Normalize and deduplicate an untrusted profile collection."""
+    if not isinstance(profiles, list):
+        return []
+    normalized: list[dict] = []
+    seen: set[str] = set()
+    for raw in profiles:
+        if not isinstance(raw, dict):
+            continue
+        url = normalize_facebook_profile_url(raw.get("url"))
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        daily_limit = clamp_int(raw.get("daily_limit", raw.get("tier")), 20, 1, 500)
+        normalized.append({
+            "city": str(raw.get("city") or "Bình Dương").strip()[:100],
+            "url": url,
+            "broker_name": str(raw.get("broker_name") or "").strip()[:160],
+            "tier": daily_limit,
+            "daily_limit": daily_limit,
+            "range_days": clamp_int(raw.get("range_days"), 7, 1, 60),
+            "crawl_every_days": normalize_crawl_every_days(raw.get("crawl_every_days")),
+            "active": raw.get("active", True) is not False,
+        })
+    return normalized
+
+
+def facebook_profile_revision(profiles: list[dict]) -> str:
+    """Hash normalized semantic content, independent of ordering/key layout."""
+    normalized = normalize_facebook_profiles(profiles)
+    ordered = sorted(normalized, key=lambda item: item["url"])
+    payload = json.dumps(
+        ordered,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def facebook_profile_due_metadata(
+    profile: dict,
+    stat: dict,
+    *,
+    today: date | None = None,
+) -> dict:
+    """Expose the same stable cadence buckets used by the scheduled crawler."""
+    from crawler.facebook_apify import profile_due_on
+
+    current_day = today or datetime.now(timezone.utc).date()
+    cadence = normalize_crawl_every_days(profile.get("crawl_every_days"))
+    next_due = current_day
+    for offset in range(cadence):
+        candidate = current_day + timedelta(days=offset)
+        if profile_due_on(profile, candidate):
+            next_due = candidate
+            break
+    return {
+        "due_today": profile_due_on(profile, current_day),
+        "next_due_date": next_due.isoformat(),
+    }
+
+
+def paginate_facebook_duplicate_analysis(
+    analysis: dict,
+    *,
+    actionable: bool = True,
+    city: str = "",
+    limit: int = 20,
+    offset: int = 0,
+) -> dict:
+    comparisons = list((analysis or {}).get("comparisons") or [])
+    actionable_items = [
+        item for item in comparisons
+        if item.get("recommended_crawl_every_days") in {3, 7}
+    ]
+    filtered = actionable_items if actionable else comparisons
+    clean_city = str(city or "").strip().casefold()
+    if clean_city:
+        filtered = [
+            item for item in filtered
+            if str(item.get("city") or "").strip().casefold() == clean_city
+        ]
+    safe_limit = clamp_int(limit, 20, 1, 50)
+    safe_offset = max(0, int(offset or 0))
+    return {
+        "total": len(comparisons),
+        "actionable": len(actionable_items),
+        "filtered": len(filtered),
+        "limit": safe_limit,
+        "offset": safe_offset,
+        "items": filtered[safe_offset:safe_offset + safe_limit],
+    }
+
+
+def facebook_crawl_overview(
+    *,
+    schedule_status_fn: Callable[[], dict],
+    crawl_ops_summary_fn: Callable[[], dict],
+    active_job_fn: Callable[[], dict | None],
+    recent_jobs_fn: Callable[[int], list[dict]],
+    apify_tokens_fn: Callable[[], list[dict]],
+    profile_stats_fn=None,
+    duplicate_analysis_fn=None,
+) -> dict:
+    """Build the light initial payload without profile or duplicate queries."""
+    schedule = schedule_status_fn() or {}
+    ops = crawl_ops_summary_fn() or {}
+    active_job = active_job_fn()
+    recent_jobs = recent_jobs_fn(1) or []
+    tokens = apify_tokens_fn() or []
+    enabled_tokens = [
+        token for token in tokens
+        if token.get("active", token.get("enabled", True))
+    ]
+    problems = []
+    if not schedule.get("installed"):
+        problems.append({
+            "code": "schedule_missing",
+            "label": "Lịch crawl chưa hoạt động",
+        })
+    for source_error in ops.get("source_errors") or []:
+        problems.append({
+            "code": "source_error",
+            "label": f"Nguồn {source_error.get('source') or 'không rõ'} đang lỗi",
+        })
+    for blocker in ops.get("lock_blockers") or []:
+        problems.append({
+            "code": "lock_blocker",
+            "label": f"Tác vụ {blocker.get('name') or 'không rõ'} đang giữ khóa",
+        })
+    if not enabled_tokens:
+        problems.append({
+            "code": "apify_unavailable",
+            "label": "Không có Apify token khả dụng",
+        })
+    last_run = ops.get("last_run")
+    return {
+        "schedule": schedule,
+        "last_facebook_run": (
+            last_run if last_run and last_run.get("source") == "facebook" else None
+        ),
+        "latest_job": recent_jobs[0] if recent_jobs else None,
+        "active_job": active_job,
+        "apify": {
+            "enabled_tokens": len(enabled_tokens),
+            "total_tokens": len(tokens),
+        },
+        "problems": problems,
+    }
 
 
 def build_facebook_duplicate_analysis(

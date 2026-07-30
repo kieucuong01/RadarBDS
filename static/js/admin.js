@@ -269,6 +269,11 @@ function syncPanelUrl(name) {
 
 function switchPanel(name, options = {}) {
   name = normalizePanelName(name);
+  const currentPanel = document.querySelector('.workspace-panel.active')?.id?.replace('panel-', '');
+  if (currentPanel === 'crawl' && name !== 'crawl'
+      && window.RadarFacebookCrawlAdmin?.canLeave() === false) {
+    return;
+  }
   document.querySelectorAll('.nav-item').forEach(btn => btn.classList.toggle('active', btn.dataset.panel === name));
   document.querySelectorAll('.workspace-panel').forEach(panel => panel.classList.toggle('active', panel.id === `panel-${name}`));
   if (options.updateUrl !== false) syncPanelUrl(name);
@@ -287,7 +292,9 @@ function switchPanel(name, options = {}) {
   if (name === 'training') loader = () => loadTrainingItems(false);
   if (name === 'infra') loader = loadInfraItems;
   if (name === 'users') loader = loadUsers;
-  if (name === 'crawl') loader = loadCrawlConfig;
+  if (name === 'crawl') {
+    loader = () => window.RadarFacebookCrawlAdmin?.loadCurrentView();
+  }
   if (name === 'growth') loader = loadGrowth;
   if (loader) {
     withAdminToast(`Đang mở ${panelLabels[name] || 'tab'}`, loader, `Đã mở ${panelLabels[name] || 'tab'}`, 'Không tải được tab');

@@ -51,6 +51,7 @@ def test_init_schema_skips_ddl_when_existing_schema_lacks_owner(monkeypatch):
     assert conn.rolled_back
     assert any("CREATE TABLE IF NOT EXISTS user_favorite_listings" in sql for sql in conn.executed)
     assert any("CREATE TABLE IF NOT EXISTS listing_map_locations" in sql for sql in conn.executed)
+    assert any("CREATE TABLE IF NOT EXISTS admin_jobs" in sql for sql in conn.executed)
 
 
 def test_init_schema_still_raises_when_core_schema_missing(monkeypatch):

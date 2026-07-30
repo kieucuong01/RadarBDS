@@ -659,6 +659,46 @@ CREATE INDEX IF NOT EXISTS idx_listing_reports_reporter_created
 CREATE INDEX IF NOT EXISTS idx_listing_reports_ip_created
     ON listing_reports(ip_hash, created_at DESC);
 
+-- Shared state for admin-triggered asynchronous work.
+-- The partial unique index prevents two Gunicorn workers from accepting
+-- overlapping crawl/maintenance work.
+CREATE TABLE IF NOT EXISTS admin_jobs (
+    id                 TEXT PRIMARY KEY,
+    kind               TEXT NOT NULL CHECK (kind IN (
+                           'facebook_crawl', 'crawl_maintenance',
+                           'missing_image_backfill', 'source_retry'
+                       )),
+    status             TEXT NOT NULL CHECK (status IN (
+                           'queued', 'running', 'succeeded', 'failed'
+                       )),
+    stage              TEXT NOT NULL DEFAULT 'queued',
+    mode               TEXT NOT NULL DEFAULT '',
+    profile_url        TEXT NOT NULL DEFAULT '',
+    source             TEXT NOT NULL DEFAULT '',
+    broker_name        TEXT NOT NULL DEFAULT '',
+    item_limit         INTEGER,
+    days               INTEGER,
+    download_images    BOOLEAN NOT NULL DEFAULT FALSE,
+    maintenance_action TEXT NOT NULL DEFAULT '',
+    progress_pct       INTEGER NOT NULL DEFAULT 0
+                           CHECK (progress_pct BETWEEN 0 AND 100),
+    progress_label     TEXT NOT NULL DEFAULT '',
+    stats              JSONB NOT NULL DEFAULT '{}'::jsonb,
+    logs               JSONB NOT NULL DEFAULT '[]'::jsonb,
+    error              TEXT,
+    context            JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_by         TEXT NOT NULL DEFAULT '',
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    started_at         TIMESTAMPTZ,
+    heartbeat_at       TIMESTAMPTZ,
+    finished_at        TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_admin_jobs_one_active
+    ON admin_jobs ((1))
+    WHERE status IN ('queued', 'running');
+CREATE INDEX IF NOT EXISTS idx_admin_jobs_recent
+    ON admin_jobs(created_at DESC, id DESC);
+
 
 -- Notification log: track mỗi push kèm snapshot giá để re-alert khi giảm tiếp.
 -- Không có UNIQUE: cho phép nhiều row per (user, listing, channel) khi giá rớt
@@ -706,6 +746,7 @@ def init_schema() -> None:
                             "required table listing_map_locations is unavailable"
                         ) from migration_exc
                     try:
+                        _migrate_admin_jobs(conn)
                         _migrate_listing_reports(conn)
                         _migrate_user_favorite_listings(conn)
                         _migrate_property_type_aliases(conn)
@@ -877,10 +918,63 @@ def _migrate_listing_reports(conn: Any) -> None:
     )
 
 
+def _migrate_admin_jobs(conn: Any) -> None:
+    """Create worker-safe persisted state for admin asynchronous jobs."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS admin_jobs (
+            id TEXT PRIMARY KEY,
+            kind TEXT NOT NULL CHECK (kind IN (
+                'facebook_crawl', 'crawl_maintenance',
+                'missing_image_backfill', 'source_retry'
+            )),
+            status TEXT NOT NULL CHECK (status IN (
+                'queued', 'running', 'succeeded', 'failed'
+            )),
+            stage TEXT NOT NULL DEFAULT 'queued',
+            mode TEXT NOT NULL DEFAULT '',
+            profile_url TEXT NOT NULL DEFAULT '',
+            source TEXT NOT NULL DEFAULT '',
+            broker_name TEXT NOT NULL DEFAULT '',
+            item_limit INTEGER,
+            days INTEGER,
+            download_images BOOLEAN NOT NULL DEFAULT FALSE,
+            maintenance_action TEXT NOT NULL DEFAULT '',
+            progress_pct INTEGER NOT NULL DEFAULT 0
+                CHECK (progress_pct BETWEEN 0 AND 100),
+            progress_label TEXT NOT NULL DEFAULT '',
+            stats JSONB NOT NULL DEFAULT '{}'::jsonb,
+            logs JSONB NOT NULL DEFAULT '[]'::jsonb,
+            error TEXT,
+            context JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_by TEXT NOT NULL DEFAULT '',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            started_at TIMESTAMPTZ,
+            heartbeat_at TIMESTAMPTZ,
+            finished_at TIMESTAMPTZ
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_admin_jobs_one_active
+        ON admin_jobs ((1))
+        WHERE status IN ('queued', 'running')
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_admin_jobs_recent
+        ON admin_jobs(created_at DESC, id DESC)
+        """
+    )
+
+
 def _run_migrations(conn: Any) -> None:
     """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
     _migrate_listing_map_locations(conn)
     _migrate_listing_reports(conn)
+    _migrate_admin_jobs(conn)
     existing = _table_columns(conn, "listings")
     migrations = [
         ("possibly_duplicate", "ALTER TABLE listings ADD COLUMN possibly_duplicate INTEGER DEFAULT 0"),

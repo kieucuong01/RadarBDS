@@ -1674,11 +1674,20 @@ class AdminControlRoomGateTest(unittest.TestCase):
             def start(self):
                 return None
 
-        with app_module.FACEBOOK_CRAWL_LOCK:
-            app_module.FACEBOOK_CRAWL_JOBS.clear()
-            app_module.FACEBOOK_CRAWL_JOB_ORDER.clear()
+        repository = mock.Mock()
+        repository.reconcile_stale.return_value = 0
+        repository.active.return_value = None
+        repository.create.side_effect = lambda job: dict(job)
 
-        with mock.patch.object(app_module.threading, "Thread", FakeThread):
+        with mock.patch.object(
+            app_module.admin_job_service,
+            "POSTGRES_ADMIN_JOBS",
+            repository,
+        ), mock.patch.object(
+            app_module.admin_job_service.threading,
+            "Thread",
+            FakeThread,
+        ):
             response = self.client.post(
                 "/admin/api/facebook-crawl/run",
                 json={
@@ -2341,22 +2350,45 @@ class AdminControlRoomGateTest(unittest.TestCase):
             yield
 
         job_id = f"job-{uuid.uuid4().hex}"
-        with app_module.FACEBOOK_CRAWL_LOCK:
-            app_module.FACEBOOK_CRAWL_JOBS[job_id] = {
-                "id": job_id,
-                "status": "queued",
-                "stage": "queued",
-                "mode": "daily",
-                "profile_url": "https://www.facebook.com/nhadatkhanhmy",
-                "broker_name": "Duy Khánh bds",
-                "city": "Thủ Dầu Một",
-                "limit": 30,
-                "days": 7,
-                "download_images": False,
-                "stats": {},
-                "logs": [],
-            }
-            app_module.FACEBOOK_CRAWL_JOB_ORDER.append(job_id)
+        stored_job = {
+            "id": job_id,
+            "kind": "facebook_crawl",
+            "status": "queued",
+            "stage": "queued",
+            "mode": "daily",
+            "profile_url": "https://www.facebook.com/nhadatkhanhmy",
+            "broker_name": "Duy Khánh bds",
+            "limit": 30,
+            "days": 7,
+            "download_images": False,
+            "stats": {},
+            "logs": [],
+            "context": {"city": "Thủ Dầu Một"},
+        }
+        repository = mock.Mock()
+        repository.get.side_effect = lambda _job_id: dict(stored_job)
+
+        def fake_update(_job_id, changes):
+            stored_job.update(changes)
+            return dict(stored_job)
+
+        def fake_append_log(_job_id, message):
+            stored_job.setdefault("logs", []).append(message)
+            return dict(stored_job)
+
+        repository.update.side_effect = fake_update
+        repository.append_log.side_effect = fake_append_log
+
+        class FakeThread:
+            def __init__(self, target=None, daemon=None):
+                self.target = target
+                self.daemon = daemon
+
+            def is_alive(self):
+                return False
+
+            def start(self):
+                return None
 
         calls = {}
 
@@ -2376,7 +2408,15 @@ class AdminControlRoomGateTest(unittest.TestCase):
             calls.update(kwargs)
             return {"listings": {"processed_ids": [1, 2, 3]}, "valuation": {"total": 3}}
 
-        with mock.patch.object(connection, "advisory_lock", fake_lock), \
+        with mock.patch.object(
+            app_module.admin_job_service,
+            "POSTGRES_ADMIN_JOBS",
+            repository,
+        ), mock.patch.object(
+            app_module.admin_job_service.threading,
+            "Thread",
+            FakeThread,
+        ), mock.patch.object(connection, "advisory_lock", fake_lock), \
              mock.patch.object(crawlers, "_facebook_crawl_to_raw", side_effect=fake_crawl_to_raw), \
              mock.patch.object(reprocess, "run_full_reprocess", side_effect=fake_reprocess):
             app_module._run_admin_facebook_crawl_job(job_id)
@@ -2384,8 +2424,8 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertEqual(calls.get("source"), "facebook")
         self.assertEqual(calls.get("raw_ids"), [101, 102, 103])
         self.assertFalse(calls.get("full", False))
-        self.assertEqual(app_module.FACEBOOK_CRAWL_JOBS[job_id]["status"], "succeeded")
-        logs = "\n".join(app_module.FACEBOOK_CRAWL_JOBS[job_id]["logs"])
+        self.assertEqual(stored_job["status"], "succeeded")
+        logs = "\n".join(stored_job["logs"])
         self.assertIn("fetched=12", logs)
         self.assertIn("skipped=0", logs)
         self.assertIn("Reprocess xong: processed=3, new=0, updated=0, skipped=0", logs)
