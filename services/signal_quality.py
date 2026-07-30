@@ -7,19 +7,12 @@ ACTIONABLE_SUPPRESS_FLAGS = frozenset({
     "ambiguous_price_text",
     "source_category_conflict",
     "multi_lot_listing",
-    "guland_weak_signal",
-    "guland_user_facing_risk",
     "extreme_guland_ppm2",
     "suspicious_bait",
     "guland_cluster_flood",
     "review_bad_valuation",
     "review_bad_extraction",
 })
-
-NON_BLOCKING_RECHECK_FLAGS = frozenset({
-    "low_segment_confidence",
-})
-
 
 LATEST_VALUATION_CTE = """
 latest_valuation AS MATERIALIZED (
@@ -51,10 +44,6 @@ def is_actionable_signal(row) -> bool:
     if not bool(_row_value(row, "is_signal", False)):
         return False
     flags = split_quality_flags(_row_value(row, "source_quality_flags", ""))
-    if bool(_row_value(row, "source_quality_recheck", False)) and not (
-        flags and flags <= NON_BLOCKING_RECHECK_FLAGS
-    ):
-        return False
     return not (flags & ACTIONABLE_SUPPRESS_FLAGS)
 
 
@@ -62,10 +51,6 @@ def actionable_signal_sql(alias: str = "v") -> str:
     flags_expr = f"COALESCE({alias}.source_quality_flags,'')"
     parts = [
         f"COALESCE({alias}.is_signal,0)=1",
-        (
-            f"(COALESCE({alias}.source_quality_recheck,0)=0 OR "
-            f"({flags_expr} LIKE '%low_segment_confidence%'))"
-        ),
     ]
     for flag in sorted(ACTIONABLE_SUPPRESS_FLAGS):
         parts.append(f"{flags_expr} NOT LIKE '%{flag}%'")

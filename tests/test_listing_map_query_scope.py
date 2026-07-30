@@ -5,8 +5,9 @@ def test_deal_scope_requires_actionable_latest_valuation_and_display_mos():
     deal = build_deal_sql(15)
 
     assert "COALESCE(v.is_signal,0)=1" in deal.condition
-    assert "source_quality_recheck" in deal.condition
-    assert "low_segment_confidence" in deal.condition
+    assert "source_quality_recheck" not in deal.condition
+    assert "guland_weak_signal" not in deal.condition
+    assert "guland_user_facing_risk" not in deal.condition
     assert "ambiguous_price_text" in deal.condition
     assert ">= 15.0" in deal.condition
     assert "sv.is_signal" not in deal.condition
