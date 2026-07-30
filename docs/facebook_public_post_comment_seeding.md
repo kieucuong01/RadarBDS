@@ -16,7 +16,7 @@ Một bài chỉ được chọn khi đồng thời thỏa:
 2. Nội dung thật sự liên quan bất động sản, nhắc rõ một phường đang bật và có ngữ cảnh Thủ Dầu Một/TDM. Loại các ngữ cảnh thành phố khác và tên mơ hồ như “Phú Mỹ Hưng, Quận 7”.
 3. Mới trong 72 giờ, tối thiểu 10 reactions, 3 comments và 15 tổng tương tác.
 4. Không phải quảng cáo/tin bán hàng; comment đang mở.
-5. Tác giả không nằm trong `data/facebook_profiles.json`; kiểm tra lại ngay trước browser action.
+5. Tác giả không nằm trong broker watchlist DB `facebook_crawl_profiles`; kiểm tra lại ngay trước browser action.
 6. Chưa dùng cùng post; tác giả cooldown 30 ngày, topic+location cooldown 14 ngày.
 7. Landing URL có `city=THỦ DẦU MỘT`, đúng `ward`, `date_range=3m`, `mos_min=10` và UTM; `source.location` phải trùng ward trong link.
 8. `/api/counts` trả ít nhất 1 `stats.hot` ngay trước comment. Trang rỗng hoặc lỗi API phải fail closed.

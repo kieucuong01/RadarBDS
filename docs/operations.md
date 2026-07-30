@@ -38,7 +38,7 @@ The deploy script:
 
 - uses `$env:USERPROFILE\.ssh\radar_bds_deploy_rsa`,
 - fast-forwards the VPS checkout,
-- preserves production-only `data/facebook_profiles.json`,
+- removes legacy `data/facebook_profiles.json` after a DB migration/backup so Facebook broker configuration comes only from `facebook_crawl_profiles`,
 - allows runtime `data/raw_backup.json` to stay dirty on the VPS,
 - auto-archives a small allowlist of known temporary audit/report files from the VPS checkout to `/tmp/radar-bds-deploy-known-temp-*.tgz`,
 - restarts `radar-bds.service`,

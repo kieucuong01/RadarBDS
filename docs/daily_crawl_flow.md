@@ -73,7 +73,7 @@ Luồng daily mặc định không chạy mọi crawler theo vòng lặp cũ. V�
 Trong `_cmd_crawl_daily_facebook_first()`:
 
 1. Gọi `_facebook_crawl_to_raw(mode="incremental")`.
-2. Crawler đọc profile từ `data/facebook_profiles.json`.
+2. Crawler đọc profile từ bảng PostgreSQL `facebook_crawl_profiles`.
 3. Facebook/Apify crawl bài theo profile và daily limit.
 4. Tin hợp lệ được import vào bảng `raw_listings`.
 5. Các bài không phải BĐS, ngoài khu vực, thiếu dữ liệu cơ bản hoặc trùng raw
@@ -536,7 +536,7 @@ Loader: `crawler/guland_pw.py::__init__` → `_load_sources_config()`. Nếu fil
 
 BatDongSan is disabled for the current product. Existing code paths may remain for historical import/delete cleanup, but agents should not schedule BatDongSan, add it to daily crawl, or treat it as an active signal source unless the user explicitly changes the source policy.
 
-### 4.3 Facebook profiles — `data/facebook_profiles.json`
+### 4.3 Facebook profiles — PostgreSQL `facebook_crawl_profiles`
 
 ```json
 {
@@ -554,14 +554,14 @@ BatDongSan is disabled for the current product. Existing code paths may remain f
 ```
 
 - `tier` = số post fetch mỗi lần (int). Backward-compat: nếu vẫn còn string `"high"/"medium"/"low"` → convert qua `_TIER_STR_MAP` = `{high:40, medium:20, low:10}` + log warning.
-- Admin có thể chỉnh danh sách này tại `/admin/control-room` → tab **Facebook Crawl**. Tab này lưu lại `active`, `daily_limit`, `range_days` vào cùng file JSON.
+- Admin có thể chỉnh danh sách này tại `/admin/control-room` → tab **Facebook Crawl**. Tab này lưu lại `active`, `daily_limit`, `range_days`, `crawl_every_days`, `broker_name`, `city` và `url` vào bảng `facebook_crawl_profiles`.
 - Cũng trong tab **Facebook Crawl**, admin quản lý **Apify Tokens**. Token được lưu local tại `data/apify_tokens.json` (gitignored), UI chỉ hiển thị mask. Mỗi token có `monthly_quota`, `used_this_month`, `remaining`; crawler tự chọn token còn đủ quota cho request hiện tại và cộng usage theo số post Apify trả về. Khi qua tháng mới, usage tự reset theo month key.
 - `daily_limit` được ưu tiên hơn `tier` khi load profile. `active=false` sẽ bị bỏ qua trong daily crawl.
 - Crawl thủ công trong admin chạy dạng job nền: `first` = full crawl theo số bài, `daily` = incremental 72h, `range` = full fetch rồi lọc bài có `date_raw` trong N ngày gần nhất. Nếu bật tải ảnh, job reprocess Facebook và download ảnh cho các listing vừa xử lý.
 - `broker_name` được lưu vào `raw_json` của listing, không thành column riêng.
-- Key cấp 1 = `default_area` của profile → dùng cho city filter (mục 5).
+- `city` của profile → dùng làm `default_area` cho city filter (mục 5).
 
-Loader: `crawler/facebook_apify.py::load_profiles()`. CLI `crawl-facebook --mode full` ép `per_profile = max(tier, MAX_POSTS_FULL)`.
+Loader: `crawler/facebook_apify.py::load_profiles()`. Runtime mặc định không đọc `data/facebook_profiles.json`; path JSON chỉ còn dùng khi test/import fixture explicit. CLI `crawl-facebook --mode full` ép `per_profile = max(tier, MAX_POSTS_FULL)`.
 
 ---
 
@@ -646,7 +646,7 @@ This keeps the valuation baseline stable: old ward/sub-ward segments remain the 
 | Post-merger location aliases | `config/location_aliases.py`, `scripts/audit_post_merger_locations.py` | Phường mới là context; chỉ KP/phường cũ/landmark đủ mạnh mới gán `ward` |
 | Guland targets | `data/guland_sources.json`, `crawler/guland_pw.py` | Chỉ sửa JSON khi mở rộng ward |
 | Legacy BatDongSan cleanup | `cli/data_import.py` | Disabled for daily crawl; keep only import/delete helpers for historical cleanup unless policy changes |
-| FB profiles | `data/facebook_profiles.json`, `crawler/facebook_apify.py` | tier=int, broker_name |
+| FB profiles | `facebook_crawl_profiles`, `db/facebook_profiles.py`, `crawler/facebook_apify.py` | tier/daily_limit=int, broker_name, city, active, crawl cadence |
 | City filter | `config/area_profiles.py` | `OTHER_CITY_KEYWORDS`, `CITY_OWN_KEYWORDS`, `post_mentions_other_city` |
 
 ---

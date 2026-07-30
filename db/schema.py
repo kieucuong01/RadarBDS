@@ -699,6 +699,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_admin_jobs_one_active
 CREATE INDEX IF NOT EXISTS idx_admin_jobs_recent
     ON admin_jobs(created_at DESC, id DESC);
 
+-- DB-backed configuration for Facebook crawl broker profiles.
+CREATE TABLE IF NOT EXISTS facebook_crawl_profiles (
+    url              TEXT PRIMARY KEY,
+    city             TEXT NOT NULL DEFAULT '',
+    broker_name      TEXT NOT NULL DEFAULT '',
+    daily_limit      INTEGER NOT NULL DEFAULT 20 CHECK (daily_limit BETWEEN 1 AND 500),
+    range_days       INTEGER NOT NULL DEFAULT 7 CHECK (range_days BETWEEN 1 AND 60),
+    crawl_every_days INTEGER NOT NULL DEFAULT 1 CHECK (crawl_every_days IN (1, 3, 7)),
+    active           BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_by       TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_facebook_crawl_profiles_active
+    ON facebook_crawl_profiles(active, city, broker_name);
+CREATE INDEX IF NOT EXISTS idx_facebook_crawl_profiles_updated
+    ON facebook_crawl_profiles(updated_at DESC);
+
 
 -- Notification log: track mỗi push kèm snapshot giá để re-alert khi giảm tiếp.
 -- Không có UNIQUE: cho phép nhiều row per (user, listing, channel) khi giá rớt
@@ -747,6 +765,7 @@ def init_schema() -> None:
                         ) from migration_exc
                     try:
                         _migrate_admin_jobs(conn)
+                        _migrate_facebook_crawl_profiles(conn)
                         _migrate_listing_reports(conn)
                         _migrate_user_favorite_listings(conn)
                         _migrate_property_type_aliases(conn)
@@ -970,11 +989,47 @@ def _migrate_admin_jobs(conn: Any) -> None:
     )
 
 
+def _migrate_facebook_crawl_profiles(conn: Any) -> None:
+    """Create DB-backed configuration for Facebook crawl broker profiles."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS facebook_crawl_profiles (
+            url TEXT PRIMARY KEY,
+            city TEXT NOT NULL DEFAULT '',
+            broker_name TEXT NOT NULL DEFAULT '',
+            daily_limit INTEGER NOT NULL DEFAULT 20
+                CHECK (daily_limit BETWEEN 1 AND 500),
+            range_days INTEGER NOT NULL DEFAULT 7
+                CHECK (range_days BETWEEN 1 AND 60),
+            crawl_every_days INTEGER NOT NULL DEFAULT 1
+                CHECK (crawl_every_days IN (1, 3, 7)),
+            active BOOLEAN NOT NULL DEFAULT TRUE,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_by TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_facebook_crawl_profiles_active
+        ON facebook_crawl_profiles(active, city, broker_name)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_facebook_crawl_profiles_updated
+        ON facebook_crawl_profiles(updated_at DESC)
+        """
+    )
+
+
 def _run_migrations(conn: Any) -> None:
     """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
     _migrate_listing_map_locations(conn)
     _migrate_listing_reports(conn)
     _migrate_admin_jobs(conn)
+    _migrate_facebook_crawl_profiles(conn)
     existing = _table_columns(conn, "listings")
     migrations = [
         ("possibly_duplicate", "ALTER TABLE listings ADD COLUMN possibly_duplicate INTEGER DEFAULT 0"),

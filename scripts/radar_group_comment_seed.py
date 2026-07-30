@@ -13,6 +13,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import time
 import unicodedata
 import urllib.parse
@@ -21,9 +22,12 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 REPO = Path('/opt/radar-bds/current')
 CONFIG = REPO / 'config/social_group_comment_targets.json'
-BROKER_PROFILES = REPO / 'data/facebook_profiles.json'
 EXECUTOR = REPO / 'scripts/browser_use_group_comment.py'
 START_BROWSER = Path('/home/hermesops/radar-browser-use/start-radar-social-browser.sh')
 BROWSER_USE = Path('/home/hermesops/radar-browser-use/.venv/bin/browser-use')
@@ -117,6 +121,24 @@ def load_broker_exclusions(data: dict) -> dict[str, set[str]]:
             if name:
                 names.add(name)
     return {'urls': urls, 'names': names}
+
+
+def load_broker_exclusions_from_db() -> dict[str, set[str]]:
+    from db.facebook_profiles import read_profile_config
+
+    rows = read_profile_config()
+    return {
+        'urls': {
+            url
+            for url in (normalize_profile_url(row.get('url') or '') for row in rows)
+            if url
+        },
+        'names': {
+            name
+            for name in (normalize_name(row.get('broker_name') or '') for row in rows)
+            if name
+        },
+    }
 
 
 def is_excluded_broker(author: str, author_url: str, exclusions: dict[str, set[str]]) -> bool:
@@ -920,8 +942,7 @@ def main() -> int:
     args = parser.parse_args()
     now = dt.datetime.now().astimezone()
     config = load_json(CONFIG)
-    broker_data = load_json(BROKER_PROFILES)
-    exclusions = load_broker_exclusions(broker_data)
+    exclusions = load_broker_exclusions_from_db()
     post_state = load_json(POST_STATE, {'actions': []}, missing_ok=True)
     state = load_json(STATE, {'schema': 'radar_public_post_comment_state.v1', 'actions': []}, missing_ok=True)
     campaign = article_campaign(config, args.article_slug) if args.article_slug else None

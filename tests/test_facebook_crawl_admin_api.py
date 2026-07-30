@@ -261,6 +261,7 @@ def test_manual_run_canonicalizes_mobile_profile_url_before_enqueue():
             return None
 
     with mock.patch.object(app_module, "_admin_request_authorized", return_value=True), \
+         mock.patch.object(app_module, "_read_facebook_profile_config", return_value=sample_profiles()), \
          mock.patch.object(
              app_module.admin_job_service,
              "POSTGRES_ADMIN_JOBS",
@@ -291,18 +292,7 @@ def test_profiles_endpoint_rejects_stale_revision_without_overwriting(tmp_path):
     import app as app_module
     from services.admin_quality import facebook_profile_revision
 
-    profile_path = tmp_path / "facebook_profiles.json"
     current = sample_profiles()
-    grouped = {}
-    for item in current:
-        saved = dict(item)
-        city = saved.pop("city")
-        grouped.setdefault(city, []).append(saved)
-    profile_path.write_text(
-        json.dumps(grouped, ensure_ascii=False),
-        encoding="utf-8",
-    )
-    before = profile_path.read_text(encoding="utf-8")
 
     class FakeConnection:
         def execute(self, sql, params=None):
@@ -314,8 +304,13 @@ def test_profiles_endpoint_rejects_stale_revision_without_overwriting(tmp_path):
         yield FakeConnection()
 
     with mock.patch.object(app_module, "_admin_request_authorized", return_value=True), \
-         mock.patch.object(app_module, "FACEBOOK_PROFILE_PATH", profile_path), \
-         mock.patch.object(app_module, "get_conn", fake_get_conn):
+         mock.patch.object(app_module, "get_conn", fake_get_conn), \
+         mock.patch.object(app_module, "_read_facebook_profile_config", return_value=current), \
+         mock.patch.object(
+             app_module.db_facebook_profiles,
+             "write_profile_config",
+             side_effect=AssertionError("stale save must not write DB"),
+         ):
         response = app_module.app.test_client().post(
             "/admin/api/facebook-crawl/profiles",
             json={
@@ -328,6 +323,54 @@ def test_profiles_endpoint_rejects_stale_revision_without_overwriting(tmp_path):
     payload = response.get_json()
     assert payload["error"] == "profile_revision_conflict"
     assert payload["revision"] == facebook_profile_revision(current)
+
+
+def test_profiles_endpoint_saves_to_db_without_touching_json_file(tmp_path):
+    import app as app_module
+    from services.admin_quality import facebook_profile_revision, normalize_facebook_profiles
+
+    profile_path = tmp_path / "facebook_profiles.json"
+    profile_path.write_text('{"legacy": []}', encoding="utf-8")
+    before = profile_path.read_text(encoding="utf-8")
+    current = sample_profiles()
+    submitted = [{**current[0], "daily_limit": 88}, current[1]]
+    saved_calls = []
+
+    class FakeConnection:
+        def execute(self, sql, params=None):
+            assert "pg_advisory_xact_lock" in sql
+            return self
+
+    @contextmanager
+    def fake_get_conn():
+        yield FakeConnection()
+
+    def fake_write(profiles, *, conn_factory=None, updated_by=""):
+        saved_calls.append((profiles, conn_factory, updated_by))
+        return normalize_facebook_profiles(profiles)
+
+    with mock.patch.object(app_module, "_admin_request_authorized", return_value=True), \
+         mock.patch.object(app_module, "get_conn", fake_get_conn), \
+         mock.patch.object(app_module, "_read_facebook_profile_config", return_value=current), \
+         mock.patch.object(app_module.db_facebook_profiles, "write_profile_config", side_effect=fake_write), \
+         mock.patch.object(
+             app_module,
+             "_facebook_profiles_payload",
+             return_value={"profiles": normalize_facebook_profiles(submitted), "revision": "new"},
+         ):
+        response = app_module.app.test_client().post(
+            "/admin/api/facebook-crawl/profiles",
+            json={
+                "profiles": submitted,
+                "revision": facebook_profile_revision(current),
+            },
+        )
+
+    assert response.status_code == 200
+    assert saved_calls
+    assert saved_calls[0][0] == submitted
+    assert saved_calls[0][1] is not None
+    assert saved_calls[0][2]
     assert profile_path.read_text(encoding="utf-8") == before
 
 

@@ -1859,7 +1859,19 @@ class AdminControlRoomGateTest(unittest.TestCase):
             encoding="utf-8",
         )
         now = datetime.now(timezone.utc).replace(tzinfo=None)
-        with mock.patch.object(app_module, "FACEBOOK_PROFILE_PATH", profile_path):
+        with mock.patch.object(
+            app_module,
+            "_read_facebook_profile_config",
+            return_value=[{
+                "city": "Báº¿n CÃ¡t",
+                "url": profile_url,
+                "broker_name": "Broker repost tá»‘t",
+                "daily_limit": 8,
+                "range_days": 7,
+                "crawl_every_days": 1,
+                "active": True,
+            }],
+        ):
             with get_conn() as conn:
                 for idx in range(18):
                     crawled_at = (now - timedelta(days=idx // 6)).strftime("%Y-%m-%d %H:%M:%S")

@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-ROOT = Path('/opt/radar-bds/current')
+ROOT = Path(__file__).resolve().parent.parent
 
 
 def load_module(name: str, path: Path):
@@ -524,9 +524,11 @@ assert m.landing_has_deals({RADAR_LINK!r}) is True
             )
             original_run = commenter.subprocess.run
             original_deals = commenter.landing_has_deals
+            original_exclusions = commenter.load_broker_exclusions_from_db
             calls = []
             try:
                 commenter.landing_has_deals = lambda link: True
+                commenter.load_broker_exclusions_from_db = lambda: {'urls': set(), 'names': set()}
                 commenter.subprocess.run = lambda *a, **k: calls.append((a, k)) or Completed()
                 with contextlib.redirect_stdout(io.StringIO()):
                     commenter.run(args)
@@ -540,6 +542,7 @@ assert m.landing_has_deals({RADAR_LINK!r}) is True
             finally:
                 commenter.subprocess.run = original_run
                 commenter.landing_has_deals = original_deals
+                commenter.load_broker_exclusions_from_db = original_exclusions
 
 
 class CopyAndExecutorGuardTests(unittest.TestCase):

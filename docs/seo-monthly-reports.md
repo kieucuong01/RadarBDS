@@ -20,7 +20,7 @@ It is written for human maintainers and AI coding agents (Codex/Hermes/Claude). 
 | Report hub template | `templates/seo_report_hub.html` |
 | Report/hub styles | `static/css/seo.css` |
 
-5. Never commit runtime data: `data/facebook_profiles.json`, images, dumps, logs, reports, backups.
+5. Never commit runtime data: images, dumps, logs, reports, backups.
 6. Always verify live rendering, not just HTTP 200.
 
 ## Production locations
@@ -209,7 +209,7 @@ Expected live structure:
 
 - The cron wrapper commits only `config/seo_pages.py` when monthly report content changes.
 - Code/doc/script changes should be committed manually by the developer/agent.
-- Runtime file `data/facebook_profiles.json` is allowed to remain dirty on the VPS and must not be committed.
+- Facebook broker profile config lives in PostgreSQL `facebook_crawl_profiles`; `data/facebook_profiles.json` should not remain dirty on the VPS.
 - After editing scripts or templates, commit and push to `origin/main`.
 
 ## VPS cleanup safety
@@ -245,7 +245,7 @@ The monthly report workflow itself is now source-controlled in the repo. Hermes 
 | All months show same numbers | Query used unfiltered `base` instead of month-filtered `month_base` | Fix every stats query in `query_ward_stats()` to use month window |
 | Master report has only 2 generic location links | A hard-coded override replaced generated child links | Restore `local_links` to 13 `/bao-cao/{ward}-thang-MM-YYYY` links |
 | Cron produces no output | Script stdout empty or job script path wrong | Check Hermes job `5f5c7eac733d` and script path |
-| Commit fails due dirty runtime data | `data/facebook_profiles.json` dirty | Do not stage it; stage only intended config/code/docs |
+| Commit fails due dirty runtime data | Runtime files such as images, dumps, logs, reports, or backups are dirty | Do not stage them; stage only intended config/code/docs |
 
 ## Related docs
 

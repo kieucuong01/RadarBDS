@@ -16,6 +16,7 @@ import urllib.parse
 import threading
 import unicodedata
 from copy import deepcopy
+from contextlib import contextmanager
 from decimal import Decimal
 from functools import wraps
 from datetime import datetime, timedelta, timezone
@@ -56,6 +57,7 @@ _load_local_env_file()
 from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response, abort, redirect
 from config import database_sqlite as db_mod
 from config.property_types import normalize_property_types
+from db import facebook_profiles as db_facebook_profiles
 from db.connection import connect, get_conn
 from db.moderation import normalize_phone
 from config.settings import (
@@ -268,7 +270,6 @@ TRAINING_VERDICTS = POSITIVE_REVIEW_VERDICTS | HIDE_REVIEW_VERDICTS | {"maybe"}
 INFRA_KINDS = {"timeline", "policy"}
 INFRA_STATUS = {"done", "in_progress", "planned"}
 INFRA_SEVERITY = {"critical", "warning", "info"}
-FACEBOOK_PROFILE_PATH = Path(__file__).resolve().parent / "data" / "facebook_profiles.json"
 FACEBOOK_MANUAL_CRAWL_MAX_LIMIT = 950
 ADMIN_READ_CACHE_TTL_SECONDS = float(os.getenv("RADAR_ADMIN_READ_CACHE_TTL_SECONDS", "20"))
 ADMIN_READ_CACHE_MAX_ITEMS = 64
@@ -381,12 +382,33 @@ def _clamp_int(value, default: int, min_value: int, max_value: int) -> int:
     return max(min_value, min(max_value, n))
 
 
-def _read_facebook_profile_config() -> list[dict]:
-    return admin_quality.read_facebook_profile_config(FACEBOOK_PROFILE_PATH)
+def _single_connection_factory(conn):
+    @contextmanager
+    def _factory():
+        yield conn
+
+    return _factory
 
 
-def _write_facebook_profile_config(profiles: list[dict]) -> list[dict]:
-    return admin_quality.write_facebook_profile_config(FACEBOOK_PROFILE_PATH, profiles)
+def _admin_profile_config_actor() -> str:
+    user = current_user() or {}
+    for key in ("email", "phone", "display_name", "id"):
+        value = str(user.get(key) or "").strip()
+        if value:
+            return value[:200]
+    return "admin"
+
+
+def _read_facebook_profile_config(conn_factory=get_conn) -> list[dict]:
+    return db_facebook_profiles.read_profile_config(conn_factory=conn_factory)
+
+
+def _write_facebook_profile_config(profiles: list[dict], conn_factory=get_conn) -> list[dict]:
+    return db_facebook_profiles.write_profile_config(
+        profiles,
+        conn_factory=conn_factory,
+        updated_by=_admin_profile_config_actor(),
+    )
 
 
 def _facebook_profile_lookup(url: str) -> dict | None:
@@ -5600,7 +5622,8 @@ def admin_api_facebook_crawl_profiles():
             "SELECT pg_advisory_xact_lock(hashtext(?))",
             ("radar-facebook-profile-config",),
         )
-        current_profiles = _read_facebook_profile_config()
+        locked_conn_factory = _single_connection_factory(conn)
+        current_profiles = _read_facebook_profile_config(conn_factory=locked_conn_factory)
         current_revision = admin_quality.facebook_profile_revision(current_profiles)
         if expected_revision != current_revision:
             return jsonify({
@@ -5609,7 +5632,7 @@ def admin_api_facebook_crawl_profiles():
                 "revision": current_revision,
                 "profiles": current_profiles,
             }), 409
-        saved = _write_facebook_profile_config(profiles)
+        saved = _write_facebook_profile_config(profiles, conn_factory=locked_conn_factory)
 
     _clear_admin_crawl_data_caches()
     clear_admin_read_cache("facebook_crawl_profiles")

@@ -19,6 +19,8 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
+from db import facebook_profiles as db_facebook_profiles
+
 # Actor mặc định — có thể override qua env APIFY_ACTOR
 DEFAULT_ACTOR = "apify/facebook-posts-scraper"
 
@@ -28,9 +30,6 @@ INCR_FETCH     = 30    # incremental: fetch rồi lọc ra bài trong 72h (3 ng�
 INCR_HOURS     = 72    # phải khớp với --every N của schedule-setup
 
 # Danh sách profiles mặc định
-PROFILES_FILE = Path(__file__).parent.parent / "data" / "facebook_profiles.json"
-
-
 _TIER_STR_MAP = {"high": 40, "medium": 20, "low": 10}
 _DEFAULT_TIER = 20
 
@@ -97,13 +96,35 @@ def _is_apify_limit_error(message: str) -> bool:
     return any(marker in text for marker in limit_markers)
 
 
-def load_profiles(path: str | Path = PROFILES_FILE, area_filter: Optional[str] = None) -> list[dict]:
+def load_profiles(path: str | Path | None = None, area_filter: Optional[str] = None) -> list[dict]:
     """Đọc danh sách profiles từ JSON file. Trả về list of dicts.
 
     Schema mới:
       {"city": [{"url": "...", "broker_name": "...", "tier": <int>}]}
     Backward compat: tier string 'high'/'medium'/'low' → tự convert sang int.
     """
+    if path is None:
+        from services.admin_quality import normalize_facebook_profile_url
+
+        db_profiles = db_facebook_profiles.read_profile_config()
+        profiles = []
+        for item in db_profiles:
+            if item.get("active", True) is False:
+                continue
+            area = (item.get("city") or "").strip() or None
+            if area_filter and (area or "").lower() != area_filter.lower():
+                continue
+            profiles.append({
+                "url": normalize_facebook_profile_url(item.get("url")),
+                "tier": _coerce_tier(item.get("daily_limit", item.get("tier"))),
+                "broker_name": (item.get("broker_name") or "").strip() or None,
+                "default_area": area,
+                "crawl_every_days": _coerce_crawl_every_days(item.get("crawl_every_days")),
+            })
+        profiles = [profile for profile in profiles if profile["url"]]
+        return profiles
+        return profiles
+
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"Không tìm thấy file profiles: {p}")

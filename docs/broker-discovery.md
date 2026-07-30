@@ -186,7 +186,7 @@ needs_manual_review
 3. Normalize author links before deep scan: /groups/<group_id>/user/<id> is only a group-member context link; open https://www.facebook.com/<username-or-id> for the broker profile/page.
 4. Run score + report.
 5. Deep-scan Tier A/B brokers on the plain profile/page URL, sampling about 20 recent public posts when visible; count only unique original listing posts, not duplicate DOM blocks/reposts/shares; if fewer are visible, mark insufficient evidence unless quality is very clear.
-6. Only after approval, add broker to data/facebook_profiles.json or future approved-source config.
+6. Only after approval, add broker to the admin Facebook Crawl UI, which writes to PostgreSQL `facebook_crawl_profiles`.
 ```
 
 ## Browser-use guardrails

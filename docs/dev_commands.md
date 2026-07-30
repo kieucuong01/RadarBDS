@@ -155,8 +155,8 @@ Deploy latest `origin/main` to the VPS after pushing:
 ```
 
 The script uses the local deploy key at
-`$env:USERPROFILE\.ssh\radar_bds_deploy_rsa`, preserves production-only
-`data/facebook_profiles.json` edits, pulls with `--ff-only`, restarts
+`$env:USERPROFILE\.ssh\radar_bds_deploy_rsa`, removes legacy
+`data/facebook_profiles.json` after DB migration/backup, pulls with `--ff-only`, restarts
 `radar-bds.service`, and smokes `/api/dashboard` plus `/api/signals`.
 It also auto-archives a small allowlist of known temporary audit/report files
 from the VPS checkout before deploy continues, but still fails on any other

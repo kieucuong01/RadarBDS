@@ -130,7 +130,18 @@ rollback_to_before() {
 }
 trap 'rollback_to_before' ERR
 
-dirty_files=`$(git status --porcelain | awk '{print `$2}' | grep -Ev '^(data/facebook_profiles.json|data/raw_backup.json)`$' || true)
+if [ -e data/facebook_profiles.json ]; then
+  legacy_profile_backup="/tmp/radar-bds-facebook-profiles-before-db-only-$short-$stamp.json"
+  cp -f data/facebook_profiles.json "`$legacy_profile_backup" 2>/dev/null || true
+  if git ls-files --error-unmatch data/facebook_profiles.json >/dev/null 2>&1; then
+    git checkout -- data/facebook_profiles.json >/dev/null 2>&1 || true
+  else
+    rm -f -- data/facebook_profiles.json
+  fi
+  echo "legacy Facebook profile JSON removed before DB-only deploy; backup: `$legacy_profile_backup"
+fi
+
+dirty_files=`$(git status --porcelain | awk '{print `$2}' | grep -Ev '^(data/raw_backup.json)`$' || true)
 if [ -n "`$dirty_files" ]; then
   echo "Unexpected dirty production files:"
   echo "`$dirty_files"
@@ -139,11 +150,6 @@ fi
 
 cp -f data/raw_backup.json "`$raw_backup" 2>/dev/null || true
 deploy_started="1"
-if ! git diff --quiet -- data/facebook_profiles.json; then
-  git stash push -m "preserve production facebook profiles before bundle deploy" -- data/facebook_profiles.json >/dev/null
-  stash_ref="1"
-fi
-
 git fetch "$remoteBundle" "$Branch"
 git reset --hard FETCH_HEAD
 
@@ -151,11 +157,6 @@ if [ -f "`$raw_backup" ]; then
   mkdir -p data
   cp -f "`$raw_backup" data/raw_backup.json
 fi
-if [ -n "`$stash_ref" ]; then
-  git stash pop >/dev/null
-  stash_ref=""
-fi
-
 set -a
 . /etc/radar-bds/radar.env
 set +a

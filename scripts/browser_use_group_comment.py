@@ -13,16 +13,20 @@ import json
 import os
 import re
 import subprocess
+import sys
 import unicodedata
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 BROWSER_USE = Path('/home/hermesops/radar-browser-use/.venv/bin/browser-use')
 BROWSER_USE_CWD = Path('/home/hermesops/radar-browser-use')
 DEFAULT_CDP_URL = 'http://127.0.0.1:9224'
 DEFAULT_CONFIG = Path('/opt/radar-bds/current/config/social_group_comment_targets.json')
-DEFAULT_BROKERS = Path('/opt/radar-bds/current/data/facebook_profiles.json')
 DEFAULT_ARTIFACT_DIR = Path('/home/hermesops/radar-browser-use/artifacts/public-post-comment-seeding')
 DEFAULT_RUN_DIR = Path('/opt/radar-bds/var/browser_use_runs/public-post-comment-seeding')
 DEFAULT_POST_STATE = Path('/opt/radar-bds/var/social_queue/group-autopost/state.json')
@@ -82,6 +86,24 @@ def load_broker_exclusions(data: dict) -> dict[str, set[str]]:
             if name:
                 names.add(name)
     return {'urls': urls, 'names': names}
+
+
+def load_broker_exclusions_from_db() -> dict[str, set[str]]:
+    from db.facebook_profiles import read_profile_config
+
+    rows = read_profile_config()
+    return {
+        'urls': {
+            url
+            for url in (normalize_profile_url(row.get('url') or '') for row in rows)
+            if url
+        },
+        'names': {
+            name
+            for name in (normalize_name(row.get('broker_name') or '') for row in rows)
+            if name
+        },
+    }
 
 
 def is_public_post_url(value: str) -> bool:
@@ -298,13 +320,13 @@ def validate_queue(queue: dict, config: dict) -> dict:
     return cfg
 
 
-def validate_not_excluded(queue: dict, broker_data: dict) -> None:
+def validate_not_excluded(queue: dict, broker_data: dict | None = None) -> None:
     source = queue.get('source') or {}
-    exclusions = load_broker_exclusions(broker_data)
+    exclusions = load_broker_exclusions(broker_data) if broker_data is not None else load_broker_exclusions_from_db()
     url = normalize_profile_url(source.get('author_url') or '')
     name = normalize_name(source.get('author') or '')
     if (url and url in exclusions['urls']) or (name and name in exclusions['names']):
-        raise SystemExit('Refusing: target author is in data/facebook_profiles.json broker watchlist')
+        raise SystemExit('Refusing: target author is in Facebook broker watchlist')
 
 
 def parse_time(value: str, default_tz: dt.tzinfo | None = None) -> dt.datetime | None:
@@ -565,9 +587,8 @@ def run(args: argparse.Namespace) -> dict:
     qpath = Path(args.queue).resolve()
     queue = load_json(qpath)
     config = load_json(Path(args.targets))
-    broker_data = load_json(Path(args.brokers))
     validate_queue(queue, config)
-    validate_not_excluded(queue, broker_data)
+    validate_not_excluded(queue)
     post_state = load_json(Path(args.post_state), {'actions': []}, missing_ok=True)
     comment_state = load_json(Path(args.state), {'schema': 'radar_public_post_comment_state.v1', 'actions': []}, missing_ok=True)
     validate_executor_state_caps(queue, config, post_state, comment_state)
@@ -641,7 +662,6 @@ def main() -> int:
     p.add_argument('--mode', choices=['prepare', 'publish'], default='prepare')
     p.add_argument('--yes', action='store_true')
     p.add_argument('--targets', default=str(DEFAULT_CONFIG))
-    p.add_argument('--brokers', default=str(DEFAULT_BROKERS))
     p.add_argument('--post-state', default=str(DEFAULT_POST_STATE))
     p.add_argument('--state', default=str(DEFAULT_STATE))
     p.add_argument('--cdp-url', default=DEFAULT_CDP_URL)

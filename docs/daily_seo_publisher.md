@@ -15,7 +15,7 @@ This is the canonical repo runbook for the daily `@rb Daily SEO Publish + Social
 5. Use real production DB numbers only; no invented counts, prices, legal certainty, testimonials, or guaranteed profit.
 6. Verify production URL, rendered content, sitemap, and logs before reporting done.
 7. Create a social queue item with `scripts/radar_social_queue.py`; Page auto-post is currently enabled through `@rb Daily Social Auto Post` / `scripts/radar_social_auto_post.py`.
-8. Commit + push repo changes; do not commit runtime data such as `data/facebook_profiles.json`.
+8. Commit + push repo changes; do not commit runtime data such as DB dumps, images, logs, reports, or backups.
 
 ## Current automation
 
@@ -202,7 +202,7 @@ git commit -m "publish daily SEO article <short-topic>"
 git push
 ```
 
-Use `git add <specific files>` instead of broad `git add .` when `data/facebook_profiles.json` or runtime files are dirty.
+Use `git add <specific files>` instead of broad `git add .` when runtime files are dirty.
 
 ## Production verification checklist
 
