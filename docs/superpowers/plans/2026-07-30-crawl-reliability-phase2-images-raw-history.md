@@ -230,7 +230,7 @@ git commit -m "fix: reconcile repeated listing image slots"
 - Produces: `image_object_path(image_id: int, listing_id: int, img_url: str, format_name: str) -> tuple[Path, str]`
 - Keeps: `download_images(...) -> int`
 
-- [ ] **Step 1: Add failing downloader tests**
+- [x] **Step 1: Add failing downloader tests**
 
 Use real in-memory PNG bytes and controlled response doubles. Assert:
 
@@ -244,13 +244,13 @@ Use real in-memory PNG bytes and controlled response doubles. Assert:
 - success uploads original and thumbnail before updating the row;
 - no `.part` file remains after failure.
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_download_images.py -q
 ```
 
-- [ ] **Step 3: Implement bounded validated download**
+- [x] **Step 3: Implement bounded validated download**
 
 Use constants:
 
@@ -273,7 +273,7 @@ upload. In S3 mode require the thumbnail path to exist and both uploads to
 succeed before updating `local_path`. Retry only transient failures with
 bounded backoff; clean partial/final local artifacts when publishing fails.
 
-- [ ] **Step 4: Verify GREEN and compatibility**
+- [x] **Step 4: Verify GREEN and compatibility**
 
 ```powershell
 & $py -X utf8 -m pytest `
@@ -285,7 +285,7 @@ bounded backoff; clean partial/final local artifacts when publishing fails.
 & $py -X utf8 -m py_compile cleansing\download_images.py
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add cleansing/download_images.py tests/test_download_images.py

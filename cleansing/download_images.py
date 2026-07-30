@@ -1,13 +1,20 @@
 """Download listing images to local storage for dashboard rendering."""
 from __future__ import annotations
 
+import hashlib
+import io
 import logging
+import os
+import socket
 import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
+from PIL import Image, UnidentifiedImageError
+
 from db.connection import advisory_lock, get_conn
+from db.listings import canonical_image_asset_key
 from services.image_assets import ensure_thumbnail
 from services.s3_image_storage import s3_image_storage_enabled, upload_file
 
@@ -23,11 +30,120 @@ HEADERS = {
     )
 }
 
+MAX_IMAGE_BYTES = 20 * 1024 * 1024
+MAX_ATTEMPTS = 3
+TRANSIENT_HTTP_STATUS = {408, 429, 500, 502, 503, 504}
+TERMINAL_HTTP_STATUS = {403, 404, 410}
+FORMAT_EXTENSIONS = {
+    "JPEG": ".jpg",
+    "PNG": ".png",
+    "WEBP": ".webp",
+}
+
+
+class InvalidImageResponse(ValueError):
+    pass
+
+
+class TerminalImageResponse(RuntimeError):
+    def __init__(self, status: int):
+        self.status = int(status)
+        super().__init__(f"terminal image response: {status}")
+
+
+def image_object_path(
+    *,
+    image_id: int,
+    listing_id: int,
+    img_url: str,
+    format_name: str,
+    root: Path | None = None,
+) -> tuple[Path, str]:
+    """Return a collision-free local path and stable object key."""
+    extension = FORMAT_EXTENSIONS.get(str(format_name or "").upper())
+    if not extension:
+        raise InvalidImageResponse(f"unsupported image format: {format_name}")
+    asset_key = canonical_image_asset_key(img_url)
+    fingerprint = hashlib.sha256(asset_key.encode("utf-8")).hexdigest()[:12]
+    filename = f"{int(listing_id)}_{int(image_id)}_{fingerprint}{extension}"
+    local_path = (root or DATA_DIR) / filename
+    return local_path, f"data/images/{filename}"
+
+
+def _validated_image_format(data: bytes, content_type: str) -> str:
+    if not data:
+        raise InvalidImageResponse("empty image response")
+    if len(data) > MAX_IMAGE_BYTES:
+        raise InvalidImageResponse("image response exceeds size limit")
+    normalized_type = str(content_type or "").split(";", 1)[0].strip().lower()
+    if normalized_type in {"text/html", "application/xhtml+xml", "text/plain"}:
+        raise InvalidImageResponse(f"non-image content type: {normalized_type}")
+    try:
+        with Image.open(io.BytesIO(data)) as image:
+            format_name = str(image.format or "").upper()
+            image.verify()
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise InvalidImageResponse("response body is not a decodable image") from exc
+    if format_name not in FORMAT_EXTENSIONS:
+        raise InvalidImageResponse(f"unsupported image format: {format_name}")
+    return format_name
+
+
+def _fetch_validated_image(img_url: str) -> tuple[bytes, str]:
+    last_error: Exception | None = None
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            req = urllib.request.Request(img_url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=10) as response:
+                content_length = str(
+                    getattr(response, "headers", {}).get("Content-Length", "") or ""
+                ).strip()
+                if content_length:
+                    try:
+                        declared_size = int(content_length)
+                    except ValueError:
+                        declared_size = 0
+                    if declared_size > MAX_IMAGE_BYTES:
+                        raise InvalidImageResponse(
+                            "declared image size exceeds limit"
+                        )
+                data = response.read(MAX_IMAGE_BYTES + 1)
+                content_type = str(
+                    getattr(response, "headers", {}).get("Content-Type", "") or ""
+                )
+                return data, _validated_image_format(data, content_type)
+        except urllib.error.HTTPError as exc:
+            if exc.code in TERMINAL_HTTP_STATUS:
+                raise TerminalImageResponse(exc.code) from exc
+            last_error = exc
+            if exc.code not in TRANSIENT_HTTP_STATUS or attempt >= MAX_ATTEMPTS:
+                raise
+        except (urllib.error.URLError, socket.timeout, TimeoutError, ConnectionError) as exc:
+            last_error = exc
+            if attempt >= MAX_ATTEMPTS:
+                raise
+        if attempt < MAX_ATTEMPTS:
+            time.sleep(0.25 * attempt)
+    if last_error:
+        raise last_error
+    raise InvalidImageResponse("image download failed without response")
+
+
+def _remove_file(path: Path | None) -> None:
+    if not path:
+        return
+    try:
+        if path.exists():
+            path.unlink()
+    except OSError:
+        logger.warning("Could not clean image artifact: %s", path)
+
 
 def _upload_downloaded_image(local_file_path: Path, relative_path: str, thumb_path: Path | None) -> None:
+    if not thumb_path or not thumb_path.exists():
+        raise InvalidImageResponse(f"thumbnail missing for {relative_path}")
     upload_file(local_file_path, relative_path)
-    if thumb_path and thumb_path.exists():
-        upload_file(thumb_path, f"data/images/thumbs/{thumb_path.name}")
+    upload_file(thumb_path, f"data/images/thumbs/{thumb_path.name}")
 
 
 def download_images(
@@ -107,33 +223,32 @@ def _download_images(
     if progress_callback:
         progress_callback(0, len(rows), success_count)
     for idx, row in enumerate(rows, start=1):
+        local_file_path: Path | None = None
+        partial_path: Path | None = None
+        thumb_path: Path | None = None
         try:
             img_id = row["id"]
             listing_id = row["listing_id"]
             img_url = row["img_url"]
-            img_order = row["img_order"]
 
-            if not img_url or not img_url.startswith("http"):
+            if not img_url or not img_url.startswith(("http://", "https://")):
                 continue
 
-            ext = ".jpg"
-            lower_url = img_url.lower()
-            if ".png" in lower_url:
-                ext = ".png"
-            elif ".webp" in lower_url:
-                ext = ".webp"
-
-            filename = f"{listing_id}_{img_order}{ext}"
-            local_file_path = DATA_DIR / filename
-            relative_path = f"data/images/{filename}"
-
             try:
-                req = urllib.request.Request(img_url, headers=HEADERS)
-                with urllib.request.urlopen(req, timeout=10) as response:
-                    img_data = response.read()
-                    with open(local_file_path, "wb") as f:
-                        f.write(img_data)
-                thumb_path = None
+                img_data, format_name = _fetch_validated_image(img_url)
+                local_file_path, relative_path = image_object_path(
+                    image_id=int(img_id),
+                    listing_id=int(listing_id),
+                    img_url=img_url,
+                    format_name=format_name,
+                )
+                local_file_path.parent.mkdir(parents=True, exist_ok=True)
+                partial_path = local_file_path.with_suffix(
+                    f"{local_file_path.suffix}.part"
+                )
+                partial_path.write_bytes(img_data)
+                os.replace(partial_path, local_file_path)
+                partial_path = None
                 try:
                     thumb_path = ensure_thumbnail(local_file_path)
                 except Exception as e:
@@ -144,6 +259,8 @@ def _download_images(
                         _upload_downloaded_image(local_file_path, relative_path, thumb_path)
                     except Exception as e:
                         logger.warning("S3 image upload failed for %s: %s", relative_path, e)
+                        _remove_file(local_file_path)
+                        _remove_file(thumb_path)
                         continue
 
                 with get_conn() as conn:
@@ -153,19 +270,17 @@ def _download_images(
                     )
                 success_count += 1
                 logger.info("Downloaded image: %s", relative_path)
-
-                time.sleep(0.5)
-            except urllib.error.HTTPError as e:
-                logger.warning("Image download failed %s: %s", img_url, e.code)
-                if e.code in (404, 403, 410):
-                    with get_conn() as conn:
-                        conn.execute(
-                            "UPDATE listing_images SET local_path = ? WHERE id = ?",
-                            ("NOT_FOUND", img_id),
-                        )
+            except TerminalImageResponse as e:
+                logger.warning("Image download failed %s: %s", img_url, e.status)
+                with get_conn() as conn:
+                    conn.execute(
+                        "UPDATE listing_images SET local_path = ? WHERE id = ?",
+                        ("NOT_FOUND", img_id),
+                    )
             except Exception as e:
                 logger.warning("Image download failed %s: %s", img_url, e)
         finally:
+            _remove_file(partial_path)
             if progress_callback:
                 progress_callback(idx, len(rows), success_count)
 
