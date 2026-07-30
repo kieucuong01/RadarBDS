@@ -167,6 +167,13 @@ def _build_thumbnail_repairs(
     return repairs, missing_original
 
 
+def _primary_image_rows(rows: Sequence[GulandImageRow]) -> list[GulandImageRow]:
+    primary_by_listing_id: dict[int, GulandImageRow] = {}
+    for row in sorted(rows, key=lambda item: (item.listing_id, item.img_order, item.image_id)):
+        primary_by_listing_id.setdefault(row.listing_id, row)
+    return list(primary_by_listing_id.values())
+
+
 def _load_active_guland_images() -> tuple[list[GulandImageRow], list[GulandRawImageTarget]]:
     with get_conn() as conn:
         image_rows = conn.execute(
@@ -359,7 +366,8 @@ def run_guland_image_backfill(
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     image_rows, raw_targets = _load_active_guland_images()
     s3_keys = list_object_keys("data/images/") if s3_image_storage_enabled() else set()
-    repairs, missing_original = _build_thumbnail_repairs(image_rows, s3_keys)
+    primary_rows = _primary_image_rows(image_rows)
+    repairs, missing_original = _build_thumbnail_repairs(primary_rows, s3_keys)
 
     raw_missing_targets = [
         target
@@ -379,6 +387,7 @@ def run_guland_image_backfill(
         "apply": bool(apply),
         "eligible": len(raw_targets),
         "listing_image_rows": len(image_rows),
+        "primary_image_rows": len(primary_rows),
         "downloaded_rows": sum(1 for row in image_rows if _is_downloaded_image_key(row.local_path)),
         "not_found_rows": sum(1 for row in image_rows if str(row.local_path or "").upper().endswith("NOT_FOUND")),
         "missing_original_rows": len(missing_original),

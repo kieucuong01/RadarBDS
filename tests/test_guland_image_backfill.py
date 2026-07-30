@@ -2,6 +2,7 @@ from services.guland_image_backfill import (
     GulandImageRow,
     _build_thumbnail_repairs,
     _image_urls_from_raw,
+    _primary_image_rows,
     _thumb_key_for_image_key,
 )
 
@@ -47,6 +48,16 @@ def test_build_thumbnail_repairs_requires_original_and_missing_thumb():
 
     assert [r.image_id for r in repairs] == [1]
     assert missing_original == []
+
+
+def test_primary_image_rows_keeps_one_lowest_order_image_per_listing():
+    rows = [
+        GulandImageRow(2, 10, "https://cdn.guland.vn/b.jpg", 1, "data/images/10_1.jpg"),
+        GulandImageRow(1, 10, "https://cdn.guland.vn/a.jpg", 0, "data/images/10_0.jpg"),
+        GulandImageRow(3, 20, "https://cdn.guland.vn/c.jpg", 0, "data/images/20_0.jpg"),
+    ]
+
+    assert [row.image_id for row in _primary_image_rows(rows)] == [1, 3]
 
 
 def test_image_urls_from_raw_accepts_guland_image_fields_and_dedupes():
