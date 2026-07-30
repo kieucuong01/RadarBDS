@@ -444,19 +444,19 @@ git commit -m "fix: make crawl health postgres safe"
 **Interfaces:**
 - Produces: a stable foundation for `2026-07-30-guland-source-reconciliation.md`.
 
-- [ ] **Step 1: Compile touched Python**
+- [x] **Step 1: Compile touched Python**
 
 ```powershell
 & $py -X utf8 -m py_compile db\connection.py db\raw_listings.py db\crawl_runs.py crawler\base_crawler.py cli\crawlers.py cli\queries.py alerts\ops.py
 ```
 
-- [ ] **Step 2: Run the reliability suite**
+- [x] **Step 2: Run the reliability suite**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_postgres_connection.py tests\test_raw_insert_results.py tests\test_crawl_run_status.py tests\test_crawl_health.py tests\test_ops_alert.py tests\test_daily_crawl_limits.py tests\test_guland_crawler_stats.py -q
 ```
 
-- [ ] **Step 3: Confirm no secret or unrelated diff**
+- [x] **Step 3: Confirm no secret or unrelated diff**
 
 ```powershell
 git diff --check
@@ -466,7 +466,7 @@ git diff --cached -- . ':!*.log' ':!data/*'
 
 Expected: no `.env`, database dump, log, raw backup, image asset, or unrelated user file is staged.
 
-- [ ] **Step 4: Record the foundation commit**
+- [x] **Step 4: Record the foundation commit**
 
 ```powershell
 git add docs/superpowers/plans/2026-07-30-crawl-reliability-phase1.md
