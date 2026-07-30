@@ -8978,6 +8978,363 @@ SEO_ARTICLES = {
             }
         ]
     }
+,
+    "duoi-3-ty-nen-xem-hiep-thanh-hay-phu-tan-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/duoi-3-ty-nen-xem-hiep-thanh-hay-phu-tan-truoc",
+        "title": "Dưới 3 tỷ nên xem Hiệp Thành hay Phú Tân trước? | Radar BDS",
+        "description": "Dữ liệu Facebook 14 ngày đến 28/07/2026: dưới 3 tỷ, Phú Tân nổi bật về đất nền; Hiệp Thành đáng lọc thêm nếu anh tìm nhà đất xây sẵn.",
+        "keywords": "dưới 3 tỷ nên xem Hiệp Thành hay Phú Tân, đất nền Phú Tân dưới 3 tỷ, nhà đất Hiệp Thành dưới 3 tỷ, Radar BDS",
+        "breadcrumb_label": "Dưới 3 tỷ: Hiệp Thành hay Phú Tân",
+        "hero_badge": "So sánh ngân sách",
+        "hero_title": "Dưới 3 tỷ nên xem Hiệp Thành hay Phú Tân trước?",
+        "hero_text": "Câu trả lời ngắn là: nếu anh lọc đất nền dưới 3 tỷ, nên mở Phú Tân trước; nếu anh cần nhà đất xây sẵn dưới 3 tỷ, Hiệp Thành đáng xem song song vì số tin nhà đất dưới 3 tỷ nhỉnh hơn. Hai phường này chỉ so đúng khi tách riêng đất nền và nhà đất.",
+        "scope_label": "Thủ Dầu Một · Hiệp Thành / Phú Tân",
+        "hero_checks": [
+            "Đất nền dưới 3 tỷ: Phú Tân có 72 tin, Hiệp Thành có 17 tin",
+            "Nhà đất dưới 3 tỷ: Hiệp Thành có 21 tin, Phú Tân có 14 tin",
+            "Đất nền Phú Tân có giá trung vị 22,0 tr/m²; Hiệp Thành là 23,7 tr/m²",
+            "Tín hiệu đáng kiểm tra nghiêng mạnh về Phú Tân: 92 tin so với 21 tin"
+        ],
+        "primary_cta": "Mở dashboard lọc dưới 3 tỷ",
+        "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_phu_tan_duoi_3_ty",
+        "secondary_cta": "Xem báo cáo Bình Dương tháng 06/2026",
+        "secondary_href": "/bao-cao/bds-binh-duong-thang-06-2026",
+        "map_label": "Tin tức / Hiệp Thành · Phú Tân",
+        "hero_metric": {
+            "label": "Nhóm đất nền dưới 3 tỷ",
+            "value": "72 vs 17",
+            "delta": "Phú Tân vs Hiệp Thành",
+            "note": "Dữ liệu Facebook 14 ngày, cập nhật đến 28/07/2026"
+        },
+        "property_card": {
+            "status": "So sánh 2 phường",
+            "title": "Đất nền nghiêng về Phú Tân, nhà đất nghiêng về Hiệp Thành",
+            "price": "Đất nền 22,0 vs 23,7 tr/m² · nhà đất 35,0 vs 46,5 tr/m²",
+            "metric_a": "Tin dưới 3 tỷ",
+            "metric_a_value": "86 vs 38",
+            "metric_b": "Tín hiệu đáng kiểm tra",
+            "metric_b_value": "92 vs 21"
+        },
+        "local_links_title": "Đọc tiếp theo phường và ngân sách",
+        "local_links": [
+            {
+                "label": "Giá đất Phú Tân hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu",
+                "description": "Bài riêng để đọc sâu hơn mặt bằng đất nền và nhà đất tại Phú Tân."
+            },
+            {
+                "label": "Giá đất Hiệp Thành hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-hiep-thanh-hien-bao-nhieu",
+                "description": "Bài riêng để xem Hiệp Thành đang nghiêng về loại hình nào."
+            },
+            {
+                "label": "Nhà đất Thủ Dầu Một dưới 3 tỷ: phường nào còn nhiều lựa chọn?",
+                "href": "/tin-tuc/nha-dat-thu-dau-mot-duoi-3-ty-phuong-nao-nhieu-lua-chon",
+                "description": "Mở rộng từ so sánh hai phường sang mặt bằng chung toàn Thủ Dầu Một."
+            },
+            {
+                "label": "Phú Tân hay Phú Mỹ: nên lọc đất nền và nhà đất theo phường thế nào?",
+                "href": "/tin-tuc/phu-tan-hay-phu-my-loc-gia-theo-phuong",
+                "description": "Nếu anh còn phân vân Phú Tân với một phường khác, bài này giúp so tiếp."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Dưới 3 tỷ nên xem Phú Tân hay Hiệp Thành trước?",
+                "a": "Nếu anh tìm đất nền dưới 3 tỷ, nên mở Phú Tân trước vì có 72 tin trong cửa sổ 14 ngày, cao hơn 17 tin ở Hiệp Thành. Nếu anh tìm nhà đất xây sẵn dưới 3 tỷ, Hiệp Thành đáng xem song song vì có 21 tin, cao hơn 14 tin ở Phú Tân."
+            },
+            {
+                "q": "Vì sao đất nền dưới 3 tỷ ở Phú Tân đáng xem trước?",
+                "a": "Trong dữ liệu Radar BDS từ tin Facebook đang theo dõi 14 ngày, Phú Tân có 170 tin đất nền, 72 tin trong nhóm dưới 3 tỷ và 73 tín hiệu đáng kiểm tra. Giá trung vị đất nền là 22,0 tr/m², thấp hơn nhẹ so với 23,7 tr/m² ở Hiệp Thành."
+            },
+            {
+                "q": "Hiệp Thành có hợp ngân sách dưới 3 tỷ không?",
+                "a": "Có, nhưng cần tách đúng loại hình. Ở Hiệp Thành, đất nền có 17 tin dưới 3 tỷ và nhà đất có 21 tin dưới 3 tỷ trong mẫu 14 ngày. Tuy nhiên giá trung vị nhà đất Hiệp Thành là 46,5 tr/m² và tổng giá trung vị khoảng 4,95 tỷ, nên nhóm dưới 3 tỷ chỉ là một phần của nguồn hàng."
+            },
+            {
+                "q": "92 tín hiệu ở Phú Tân có nghĩa là nên mua ngay không?",
+                "a": "Không. Tín hiệu chỉ giúp anh ưu tiên thứ tự kiểm tra tiếp như xem lại mô tả, vị trí, lịch sử giá và mức độ bất thường của tin. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay thực địa."
+            }
+        ],
+        "article": {
+            "published_at": "2026-07-30",
+            "modified_at": "2026-07-30",
+            "intro": [
+                "Nếu anh đang giữ ngân sách dưới 3 tỷ, câu trả lời nhanh là: đất nền nên mở Phú Tân trước, còn nhà đất xây sẵn nên xem Hiệp Thành song song hoặc trước. Lý do là Phú Tân dày nguồn hàng đất nền dưới 3 tỷ hơn rõ rệt, còn Hiệp Thành lại nhỉnh hơn ở số tin nhà đất dưới 3 tỷ.",
+                "Bài này dùng dữ liệu production của Radar BDS, chỉ lấy nguồn Facebook, lọc các tin đang theo dõi trong 14 ngày gần nhất với is_active=0, is_blacklisted=0 và review_hidden=0. Dữ liệu cập nhật đến 28/07/2026; đây là giá rao theo từng loại hình BĐS để lọc ban đầu, không phải giá chốt hay khuyến nghị mua."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Hiệp Thành tổng tin",
+                    "value": "124",
+                    "note": "21 tín hiệu đáng kiểm tra trong 14 ngày"
+                },
+                {
+                    "label": "Phú Tân tổng tin",
+                    "value": "237",
+                    "note": "92 tín hiệu đáng kiểm tra trong 14 ngày"
+                },
+                {
+                    "label": "Đất nền dưới 3 tỷ",
+                    "value": "72 vs 17",
+                    "note": "Phú Tân vs Hiệp Thành"
+                },
+                {
+                    "label": "Nhà đất dưới 3 tỷ",
+                    "value": "21 vs 14",
+                    "note": "Hiệp Thành vs Phú Tân"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Dữ liệu Radar BDS · Facebook · 14 ngày",
+                    "title": "So Hiệp Thành và Phú Tân theo loại hình BĐS",
+                    "note": "Cập nhật đến 28/07/2026. Giá/m² là giá trung vị; luôn phải tách đất nền và nhà đất trước khi kết luận.",
+                    "columns": [
+                        {
+                            "key": "ward_type",
+                            "label": "Phường / loại hình"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin đang theo dõi"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Tín hiệu"
+                        },
+                        {
+                            "key": "under3",
+                            "label": "Dưới 3 tỷ"
+                        },
+                        {
+                            "key": "median_m2",
+                            "label": "Giá trung vị/m²"
+                        },
+                        {
+                            "key": "median_total",
+                            "label": "Tổng giá trung vị"
+                        },
+                        {
+                            "key": "range",
+                            "label": "Vùng 25-75%"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward_type": "Hiệp Thành · đất nền",
+                            "tracked": "38",
+                            "signals": "4",
+                            "under3": "17",
+                            "median_m2": "23,7 tr/m²",
+                            "median_total": "2,77 tỷ",
+                            "range": "18,6-24,4 tr/m²"
+                        },
+                        {
+                            "ward_type": "Hiệp Thành · nhà đất",
+                            "tracked": "81",
+                            "signals": "17",
+                            "under3": "21",
+                            "median_m2": "46,5 tr/m²",
+                            "median_total": "4,95 tỷ",
+                            "range": "26,9-65,0 tr/m²"
+                        },
+                        {
+                            "ward_type": "Phú Tân · đất nền",
+                            "tracked": "170",
+                            "signals": "73",
+                            "under3": "72",
+                            "median_m2": "22,0 tr/m²",
+                            "median_total": "2,70 tỷ",
+                            "range": "18,0-25,2 tr/m²"
+                        },
+                        {
+                            "ward_type": "Phú Tân · nhà đất",
+                            "tracked": "52",
+                            "signals": "17",
+                            "under3": "14",
+                            "median_m2": "35,0 tr/m²",
+                            "median_total": "3,50 tỷ",
+                            "range": "27,0-38,8 tr/m²"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước?",
+                    "note": "Bảng này giúp chọn bộ lọc mở trước trong dashboard, không thay việc đọc từng tin cụ thể.",
+                    "columns": [
+                        {
+                            "key": "need",
+                            "label": "Nhu cầu"
+                        },
+                        {
+                            "key": "open_first",
+                            "label": "Nên mở trước"
+                        },
+                        {
+                            "key": "why",
+                            "label": "Vì sao"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "need": "Đất nền dưới 3 tỷ",
+                            "open_first": "Phú Tân",
+                            "why": "72 tin dưới 3 tỷ và 73 tín hiệu, cao hơn rõ so với Hiệp Thành 17 tin và 4 tín hiệu"
+                        },
+                        {
+                            "need": "Nhà đất dưới 3 tỷ",
+                            "open_first": "Hiệp Thành",
+                            "why": "21 tin dưới 3 tỷ, nhiều hơn Phú Tân 14 tin"
+                        },
+                        {
+                            "need": "Ưu tiên săn nhóm cần kiểm tra",
+                            "open_first": "Phú Tân",
+                            "why": "92 tín hiệu so với 21 ở Hiệp Thành"
+                        },
+                        {
+                            "need": "Muốn lọc nhà đất có giá/m² thấp hơn",
+                            "open_first": "Phú Tân",
+                            "why": "Nhà đất Phú Tân có giá trung vị 35,0 tr/m², thấp hơn Hiệp Thành 46,5 tr/m²"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Đất nền dưới 3 tỷ nghiêng mạnh về Phú Tân",
+                    "note": "Bar chart dùng số tin dưới 3 tỷ để chọn nơi mở trước, không phải kết luận nơi nào đáng mua hơn.",
+                    "alt": "Biểu đồ số tin đất nền dưới 3 tỷ ở Phú Tân và Hiệp Thành",
+                    "rows": [
+                        {
+                            "label": "Phú Tân",
+                            "value_label": "72 tin",
+                            "width": 100,
+                            "color": "#2563eb"
+                        },
+                        {
+                            "label": "Hiệp Thành",
+                            "value_label": "17 tin",
+                            "width": 24,
+                            "color": "#16a34a"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất dưới 3 tỷ lại nghiêng về Hiệp Thành",
+                    "note": "Khi đổi từ đất nền sang nhà đất, thứ tự ưu tiên có thể đảo ngược.",
+                    "alt": "Biểu đồ số tin nhà đất dưới 3 tỷ ở Hiệp Thành và Phú Tân",
+                    "rows": [
+                        {
+                            "label": "Hiệp Thành",
+                            "value_label": "21 tin",
+                            "width": 100,
+                            "color": "#dc2626"
+                        },
+                        {
+                            "label": "Phú Tân",
+                            "value_label": "14 tin",
+                            "width": 67,
+                            "color": "#f59e0b"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "dat-nen-duoi-3-ty",
+                    "heading": "Đất nền dưới 3 tỷ: nên mở Phú Tân trước",
+                    "paragraphs": [
+                        "Nếu mục tiêu là đất nền dưới 3 tỷ, Phú Tân đang cho nhiều lựa chọn hơn rõ rệt. Trong cửa sổ 14 ngày, Phú Tân có 170 tin đất nền, 72 tin nằm trong nhóm dưới 3 tỷ và 73 tín hiệu đáng kiểm tra. Trong khi đó, Hiệp Thành chỉ có 38 tin đất nền, 17 tin dưới 3 tỷ và 4 tín hiệu.",
+                        "Không chỉ dày nguồn hàng hơn, Phú Tân còn có giá trung vị đất nền 22,0 tr/m², thấp hơn nhẹ so với 23,7 tr/m² ở Hiệp Thành. Tổng giá trung vị đất nền hai bên khá gần nhau, khoảng 2,70 tỷ và 2,77 tỷ, nên khi lọc thực tế anh nên nhìn thêm vị trí, diện tích và pháp lý thay vì chỉ chốt theo một con số giá/m²."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Tân: 170 tin · 72 tin dưới 3 tỷ · 73 tín hiệu",
+                        "Đất nền Hiệp Thành: 38 tin · 17 tin dưới 3 tỷ · 4 tín hiệu",
+                        "Giá trung vị đất nền: 22,0 vs 23,7 tr/m²",
+                        "Tổng giá trung vị đất nền: 2,70 vs 2,77 tỷ"
+                    ]
+                },
+                {
+                    "id": "nha-dat-duoi-3-ty",
+                    "heading": "Nhà đất dưới 3 tỷ: Hiệp Thành đáng xem song song hoặc trước",
+                    "paragraphs": [
+                        "Nếu anh tìm nhà ở sẵn trong tầm dưới 3 tỷ, Hiệp Thành lại là nơi nên mở song song hoặc trước. Dữ liệu 14 ngày cho thấy Hiệp Thành có 21 tin nhà đất dưới 3 tỷ, nhỉnh hơn 14 tin ở Phú Tân. Đây là khác biệt nhỏ hơn nhiều so với nhóm đất nền, nhưng đủ để đổi thứ tự ưu tiên khi nhu cầu chuyển sang nhà đất xây sẵn.",
+                        "Điểm cần lưu ý là mặt bằng nhà đất Hiệp Thành cao hơn hẳn. Giá trung vị nhà đất ở đây là 46,5 tr/m² và tổng giá trung vị khoảng 4,95 tỷ, trong khi Phú Tân là 35,0 tr/m² và 3,50 tỷ. Nói cách khác, Hiệp Thành vẫn có một nhóm dưới 3 tỷ để lọc, nhưng phần lớn nguồn hàng nằm trên mức ngân sách này nên anh cần lọc kỹ hơn."
+                    ],
+                    "bullets": [
+                        "Nhà đất Hiệp Thành: 81 tin · 21 tin dưới 3 tỷ · 17 tín hiệu",
+                        "Nhà đất Phú Tân: 52 tin · 14 tin dưới 3 tỷ · 17 tín hiệu",
+                        "Giá trung vị nhà đất: 46,5 vs 35,0 tr/m²",
+                        "Tổng giá trung vị: 4,95 vs 3,50 tỷ"
+                    ]
+                },
+                {
+                    "id": "tin-hieu-va-cach-doc",
+                    "heading": "92 tín hiệu ở Phú Tân không có nghĩa là nên mua ngay",
+                    "paragraphs": [
+                        "Phú Tân có 92 tín hiệu đáng kiểm tra, cao hơn nhiều so với 21 ở Hiệp Thành. Đây là lý do Phú Tân phù hợp nếu anh muốn bắt đầu từ nhóm tin cần soi trước. Tuy nhiên tín hiệu chỉ là bộ lọc để ưu tiên thứ tự xem tiếp, không phải nhãn xác nhận rằng tin đó tốt hoặc nên đặt cọc.",
+                        "Cách dùng an toàn là: mở đúng phường, tách đất nền và nhà đất, so từng tin với giá trung vị cùng loại hình, rồi kiểm tra tiếp pháp lý, quy hoạch, vị trí, đường vào, lịch sử giá rao và hiện trạng thực tế. Radar BDS giúp anh rút ngắn bước lọc ban đầu chứ không thay quá trình thẩm định."
+                    ],
+                    "bullets": [
+                        "Tín hiệu tổng Phú Tân: 92",
+                        "Tín hiệu tổng Hiệp Thành: 21",
+                        "Chênh lệch lớn nhất nằm ở đất nền: 73 vs 4",
+                        "Nhà đất hai phường cùng có 17 tín hiệu trong mẫu 14 ngày"
+                    ]
+                },
+                {
+                    "id": "mo-dashboard-the-nao",
+                    "heading": "Nên mở dashboard theo thứ tự nào?",
+                    "paragraphs": [
+                        "Nếu anh đang lọc đất nền dưới 3 tỷ, hãy mở Phú Tân trước. Nếu anh đang tìm nhà đất xây sẵn dưới 3 tỷ, hãy mở Hiệp Thành song song hoặc trước. Cùng một câu hỏi dưới 3 tỷ nhưng thứ tự nên xem thay đổi hoàn toàn theo loại hình BĐS.",
+                        "Sau khi chọn phường, anh nên giữ bộ lọc theo loại hình, rồi so từng tin với giá trung vị cùng loại hình thay vì lấy một mặt bằng giá chung. Nếu muốn mở rộng ngoài hai phường này, hãy đọc tiếp bài về nhà đất Thủ Dầu Một dưới 3 tỷ để đặt Hiệp Thành và Phú Tân vào mặt bằng chung rộng hơn."
+                    ],
+                    "bullets": [
+                        "Đất nền dưới 3 tỷ: mở Phú Tân trước",
+                        "Nhà đất dưới 3 tỷ: mở Hiệp Thành trước hoặc song song",
+                        "Muốn săn nhóm cần kiểm tra: ưu tiên Phú Tân",
+                        "Luôn kiểm tra pháp lý và thực địa trước khi quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã tách đất nền và nhà đất trước khi so hai phường.",
+                "Đã nhìn cả giá/m², tổng giá và số tin dưới 3 tỷ.",
+                "Đã hiểu tín hiệu chỉ là nhóm nên kiểm tra trước.",
+                "Đã chọn phường mở trước theo đúng loại hình cần mua.",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và hiện trạng sau khi lọc dữ liệu."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar BDS để lọc dưới 3 tỷ",
+            "body": "Chọn đúng phường, tách đất nền và nhà đất, rồi xem nhóm tín hiệu trước khi liên hệ từng tin cụ thể.",
+            "button": "Mở dashboard",
+            "button_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_phu_tan_duoi_3_ty"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Dưới 3 tỷ: Hiệp Thành hay Phú Tân",
+                "href": "/tin-tuc/duoi-3-ty-nen-xem-hiep-thanh-hay-phu-tan-truoc",
+                "url": "https://radarbds.vn/tin-tuc/duoi-3-ty-nen-xem-hiep-thanh-hay-phu-tan-truoc"
+            }
+        ]
+    }
+
 
 }
 
