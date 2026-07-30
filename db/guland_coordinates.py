@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
 from db.connection import get_conn
+from db.raw_listings import update_raw_listing_payload
 from services.market_data import get_city_for_ward
 
 
@@ -172,6 +173,7 @@ def merge_raw_coordinate_updates(
     updates: Sequence[GulandCoordinateUpdate],
     *,
     conn_factory: Callable = get_conn,
+    raw_updater: Callable = update_raw_listing_payload,
 ) -> list[int]:
     changed_listing_ids: set[int] = set()
     with conn_factory() as conn:
@@ -192,16 +194,11 @@ def merge_raw_coordinate_updates(
             merged, changed = _merge_fields(raw, update.fields)
             if not changed:
                 continue
-            conn.execute(
-                """
-                UPDATE raw_listings
-                SET raw_json = ?
-                WHERE id = ? AND source = 'guland'
-                """,
-                (
-                    json.dumps(merged, ensure_ascii=False),
-                    int(update.raw_id),
-                ),
+            raw_updater(
+                int(update.raw_id),
+                merged,
+                change_kind="coordinate_backfill",
+                conn=conn,
             )
             changed_listing_ids.add(int(update.listing_id))
     return sorted(changed_listing_ids)
@@ -246,6 +243,7 @@ def restore_raw_coordinate_snapshot(
     rows: Sequence[Mapping[str, object]],
     *,
     conn_factory: Callable = get_conn,
+    raw_updater: Callable = update_raw_listing_payload,
 ) -> list[int]:
     changed_listing_ids: set[int] = set()
     with conn_factory() as conn:
@@ -270,13 +268,11 @@ def restore_raw_coordinate_snapshot(
             restored, changed = _restore_fields(current, snapshot)
             if not changed:
                 continue
-            conn.execute(
-                """
-                UPDATE raw_listings
-                SET raw_json = ?
-                WHERE id = ? AND source = 'guland'
-                """,
-                (json.dumps(restored, ensure_ascii=False), raw_id),
+            raw_updater(
+                raw_id,
+                restored,
+                change_kind="coordinate_rollback",
+                conn=conn,
             )
             changed_listing_ids.add(listing_id)
     return sorted(changed_listing_ids)

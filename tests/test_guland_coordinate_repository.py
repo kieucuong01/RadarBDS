@@ -35,6 +35,14 @@ def connection_factory(connection):
     yield connection
 
 
+def _record_raw_update(raw_id, payload, *, change_kind, conn):
+    conn.execute(
+        "UPDATE raw_listings SET raw_json=? WHERE id=?",
+        (json.dumps(payload, ensure_ascii=False), raw_id),
+    )
+    return True
+
+
 def test_target_query_uses_exact_maps_visibility_gate():
     connection = Connection([[]])
 
@@ -81,10 +89,12 @@ def test_raw_merge_preserves_existing_keys_and_is_idempotent():
     first = merge_raw_coordinate_updates(
         [update],
         conn_factory=lambda: connection_factory(connection),
+        raw_updater=_record_raw_update,
     )
     second = merge_raw_coordinate_updates(
         [update],
         conn_factory=lambda: connection_factory(connection),
+        raw_updater=_record_raw_update,
     )
 
     assert first == [70]
@@ -192,6 +202,7 @@ def test_restore_removes_only_coordinate_fields_and_preserves_raw_content():
     restored = restore_raw_coordinate_snapshot(
         snapshot,
         conn_factory=lambda: connection_factory(connection),
+        raw_updater=_record_raw_update,
     )
 
     assert restored == [70]
@@ -230,6 +241,7 @@ def test_restore_recovers_the_manifest_capture_time_exactly():
     restored = restore_raw_coordinate_snapshot(
         snapshot,
         conn_factory=lambda: connection_factory(connection),
+        raw_updater=_record_raw_update,
     )
 
     assert restored == [70]

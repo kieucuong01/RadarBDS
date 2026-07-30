@@ -2,7 +2,8 @@
 import json
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Sequence
+from urllib.parse import urlsplit
 
 from config.property_types import normalize_property_type
 from db.connection import get_conn
@@ -534,17 +535,138 @@ def update_listing_outlier(listing_id: int, is_outlier: bool,
         """, (int(is_outlier), direction, sigma, listing_id))
 
 
-def insert_images(listing_id: int, img_urls: list) -> None:
+def canonical_image_asset_key(url: str) -> str:
+    """Normalize a source image identity while dropping volatile signatures."""
+    text = str(url or "").strip()
+    try:
+        parsed = urlsplit(text)
+    except ValueError:
+        return text
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        return text
+    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}{parsed.path}"
+
+
+def _ready_image_path(value: object) -> bool:
+    path = str(value or "").strip()
+    return bool(path and path.upper() != "NOT_FOUND")
+
+
+def sync_listing_images(
+    listing_id: int,
+    img_urls: Sequence[str],
+    *,
+    source: str,
+) -> dict[str, int]:
+    """Merge a source gallery while keeping Facebook slots collision-free."""
+    stats = {"inserted": 0, "updated": 0, "removed": 0, "reset": 0}
+    urls = []
+    seen = set()
+    for value in img_urls or []:
+        url = str(value or "").strip()
+        if not url.startswith(("http://", "https://")) or url in seen:
+            continue
+        seen.add(url)
+        urls.append(url)
+
     with get_conn() as conn:
-        for order, url in enumerate(img_urls):
-            img_type = _classify_image_type(url, order)
-            try:
-                conn.execute(
-                    "INSERT OR IGNORE INTO listing_images (listing_id, img_url, img_order, img_type) VALUES (?,?,?,?)",
-                    (listing_id, url, order, img_type)
+        if source != "facebook":
+            for order, url in enumerate(urls):
+                img_type = _classify_image_type(url, order)
+                cur = conn.execute(
+                    """
+                    INSERT OR IGNORE INTO listing_images
+                        (listing_id, img_url, img_order, img_type)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (listing_id, url, order, img_type),
                 )
-            except Exception as e:
-                logger.warning(f"Image insert skip: {e}")
+                if cur.lastrowid:
+                    stats["inserted"] += 1
+            return stats
+
+        for order, url in enumerate(urls):
+            img_type = _classify_image_type(url, order)
+            candidates = conn.execute(
+                """
+                SELECT id, img_url, img_order, img_type, local_path
+                FROM listing_images
+                WHERE listing_id=? AND img_order=?
+                ORDER BY id
+                """,
+                (listing_id, order),
+            ).fetchall()
+            if not candidates:
+                conn.execute(
+                    """
+                    INSERT INTO listing_images
+                        (listing_id, img_url, img_order, img_type)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (listing_id, url, order, img_type),
+                )
+                stats["inserted"] += 1
+                continue
+
+            new_key = canonical_image_asset_key(url)
+
+            def candidate_rank(row) -> tuple[int, int, int, int]:
+                same_asset = canonical_image_asset_key(row["img_url"]) == new_key
+                ready = _ready_image_path(row["local_path"])
+                return (
+                    int(same_asset and ready),
+                    int(same_asset),
+                    int(ready),
+                    int(row["id"]),
+                )
+
+            chosen = max(candidates, key=candidate_rank)
+            duplicate_ids = [
+                int(row["id"])
+                for row in candidates
+                if int(row["id"]) != int(chosen["id"])
+            ]
+            if duplicate_ids:
+                placeholders = ",".join("?" for _ in duplicate_ids)
+                conn.execute(
+                    f"DELETE FROM listing_images WHERE id IN ({placeholders})",
+                    duplicate_ids,
+                )
+                stats["removed"] += len(duplicate_ids)
+
+            same_asset = canonical_image_asset_key(chosen["img_url"]) == new_key
+            reset = bool(not same_asset and _ready_image_path(chosen["local_path"]))
+            conn.execute(
+                """
+                UPDATE listing_images
+                SET img_url=?,
+                    img_order=?,
+                    img_type=?,
+                    local_path=CASE WHEN ? <> 0 THEN local_path ELSE NULL END,
+                    ocr_text=CASE WHEN ? <> 0 THEN ocr_text ELSE NULL END,
+                    crawled_at=datetime('now')
+                WHERE id=?
+                """,
+                (
+                    url,
+                    order,
+                    img_type,
+                    int(same_asset),
+                    int(same_asset),
+                    int(chosen["id"]),
+                ),
+            )
+            stats["updated"] += 1
+            stats["reset"] += int(reset)
+    return stats
+
+
+def insert_images(
+    listing_id: int,
+    img_urls: list,
+    source: str = "",
+) -> dict[str, int]:
+    return sync_listing_images(listing_id, img_urls, source=source)
 
 
 def _classify_image_type(url: str, order: int) -> str:

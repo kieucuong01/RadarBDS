@@ -734,6 +734,7 @@ class GulandCrawler(BaseCrawler):
             snapshot.url,
             record,
             crawl_run_id=getattr(self, "_crawl_run_id", None),
+            change_kind="guland_detail_refresh",
         )
         if raw_id != snapshot.raw_id:
             raise RuntimeError(

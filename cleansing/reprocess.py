@@ -389,7 +389,11 @@ def reprocess_listings(source: str = None, since: str = None, full: bool = False
 
             img_urls = rec.get("img_urls") or []
             if img_urls:
-                insert_images(listing_id, img_urls)
+                insert_images(
+                    listing_id,
+                    img_urls,
+                    source=str(rec.get("source") or ""),
+                )
 
         except Exception as e:
             logger.error(f"Reprocess error raw_id={raw.get('id')}: {e}")

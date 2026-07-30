@@ -142,7 +142,7 @@ git commit -m "feat: preserve raw listing revisions"
 - Produces: `canonical_image_asset_key(url: str) -> str`
 - Produces: `sync_listing_images(listing_id: int, img_urls: Sequence[str], *, source: str) -> dict[str, int]`
 
-- [ ] **Step 1: Write failing Facebook gallery tests**
+- [x] **Step 1: Write failing Facebook gallery tests**
 
 Cover:
 
@@ -163,13 +163,13 @@ Seed duplicate slot rows and assert the observed slot is collapsed to one
 canonical row. Assert Guland and other sources keep URL-identity insert
 behavior.
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_facebook_image_reconciliation.py -q
 ```
 
-- [ ] **Step 3: Implement source-aware image synchronization**
+- [x] **Step 3: Implement source-aware image synchronization**
 
 Normalize an asset identity from lowercase scheme/host/path while dropping the
 query and fragment. For Facebook:
@@ -185,7 +185,7 @@ query and fragment. For Facebook:
 For non-Facebook sources, retain URL-deduplicated insert semantics. Make
 `reprocess_listings()` call `sync_listing_images()` with the listing source.
 
-- [ ] **Step 4: Route every runtime raw mutation through history**
+- [x] **Step 4: Route every runtime raw mutation through history**
 
 Replace direct `UPDATE raw_listings SET raw_json` calls in:
 
@@ -199,7 +199,7 @@ Use explicit `change_kind` values: `facebook_image_refresh`,
 `source_repair`, `broker_image_cleanup`, `coordinate_backfill`,
 `coordinate_rollback`, and `guland_image_recovery`.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 ```powershell
 & $py -X utf8 -m pytest `
@@ -210,7 +210,7 @@ Use explicit `change_kind` values: `facebook_image_refresh`,
   tests\test_guland_targeted_reprocess.py -q
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add db/listings.py cleansing/reprocess.py cli/crawlers.py cleansing/image_cleanup.py db/guland_coordinates.py services/guland_image_backfill.py tests/test_facebook_image_reconciliation.py tests/test_guland_coordinate_repository.py tests/test_guland_image_backfill.py

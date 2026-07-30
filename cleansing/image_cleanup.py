@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 from db.connection import DATA_DIR, advisory_lock, get_conn
+from db.raw_listings import update_raw_listing_payload
 
 logger = logging.getLogger(__name__)
 
@@ -144,9 +145,11 @@ def _remove_url_from_raw(conn, raw_id: Optional[int], img_url: str) -> bool:
             payload[key] = [v for v in values if v != img_url]
             changed = True
     if changed:
-        conn.execute(
-            "UPDATE raw_listings SET raw_json=? WHERE id=?",
-            (json.dumps(payload, ensure_ascii=False), raw_id),
+        update_raw_listing_payload(
+            int(raw_id),
+            payload,
+            change_kind="broker_image_cleanup",
+            conn=conn,
         )
     return changed
 

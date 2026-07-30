@@ -9,7 +9,7 @@ from pathlib import Path
 from cli.data_import import cmd_export_raw
 from db.connection import advisory_lock, get_conn
 from db.moderation import normalize_phone
-from db.raw_listings import insert_raw_result
+from db.raw_listings import insert_raw_result, update_raw_listing_payload
 from db.schema import init_schema
 
 def _get_crawlers(source_filter=None):
@@ -79,15 +79,13 @@ def _refresh_existing_facebook_images(url: str, raw_data: dict):
         existing["imgs"] = imgs
         if raw_data.get("_apify_raw"):
             existing["_apify_raw"] = raw_data["_apify_raw"]
-        conn.execute(
-            """
-            UPDATE raw_listings
-               SET raw_json = ?, crawled_at = datetime('now')
-             WHERE id = ?
-            """,
-            (json.dumps(existing, ensure_ascii=False), row["id"]),
+        changed = update_raw_listing_payload(
+            int(row["id"]),
+            existing,
+            change_kind="facebook_image_refresh",
+            conn=conn,
         )
-        return row["id"]
+        return int(row["id"]) if changed else None
 
 
 def _facebook_crawl_to_raw(
@@ -599,10 +597,15 @@ def _repair_guland(crawler, rows, headless):
                             changed = True
                     if changed:
                         with get_conn() as conn:
-                            conn.execute("UPDATE raw_listings SET raw_json=? WHERE id=?",
-                                         (json.dumps(raw_data, ensure_ascii=False), raw_id))
-                        repaired += 1
-                        print(f"  [repair] OK: {url[-50:]}")
+                            persisted = update_raw_listing_payload(
+                                int(raw_id),
+                                raw_data,
+                                change_kind="source_repair",
+                                conn=conn,
+                            )
+                        if persisted:
+                            repaired += 1
+                            print(f"  [repair] OK: {url[-50:]}")
             except Exception as e:
                 print(f"  [repair] Batch error: {e}")
             done = min(i + BATCH_SIZE, len(urls))

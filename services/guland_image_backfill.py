@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 from crawler.base_crawler import _normalize_playwright_browser_path_env
 from crawler.guland_pw import GulandCrawler
 from db.connection import get_conn
+from db.raw_listings import update_raw_listing_payload
 from services.image_assets import ensure_thumbnail
 from services.s3_image_storage import (
     list_object_keys,
@@ -320,9 +321,11 @@ def _apply_raw_image_recovery(
                 continue
             merged, changed = _merge_raw_image_urls(target.raw_json, urls)
             if changed:
-                conn.execute(
-                    "UPDATE raw_listings SET raw_json = ? WHERE id = ? AND source = 'guland'",
-                    (json.dumps(merged, ensure_ascii=False), target.raw_id),
+                update_raw_listing_payload(
+                    target.raw_id,
+                    merged,
+                    change_kind="guland_image_recovery",
+                    conn=conn,
                 )
                 raw_updated += 1
             if changed or target.existing_image_rows == 0:
