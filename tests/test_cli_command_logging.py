@@ -59,6 +59,16 @@ def test_guland_coordinate_backfill_apply_and_rollback_are_mutually_exclusive():
         ])
 
 
+def test_guland_image_backfill_defaults_to_dry_run():
+    import radar
+
+    args = radar.build_parser().parse_args(["guland-image-backfill"])
+
+    assert args.cmd == "guland-image-backfill"
+    assert args.apply is False
+    assert args.recover_live_missing is True
+
+
 def test_guland_coordinate_cli_prints_one_json_object(monkeypatch, capsys):
     from argparse import Namespace
     from cli import guland_coordinates

@@ -23,7 +23,8 @@ class ImageAssetResolutionTest(unittest.TestCase):
     def test_prefer_thumb_uses_existing_thumbnail_when_original_is_missing(self):
         (self.thumb_dir / "45567_0.webp").write_bytes(b"thumb")
 
-        with mock.patch.object(image_assets, "DATA_IMAGES_DIR", self.image_dir), \
+        with mock.patch.dict(os.environ, {"RADAR_IMAGE_STORAGE": "local"}, clear=False), \
+             mock.patch.object(image_assets, "DATA_IMAGES_DIR", self.image_dir), \
              mock.patch.object(image_assets, "THUMB_DIR", self.thumb_dir):
             resolved = image_assets.resolve_image_url(
                 "data/images/45567_0.jpg",
@@ -73,6 +74,15 @@ class ImageAssetResolutionTest(unittest.TestCase):
             resolved,
             "https://s3.vn-hcm-1.vietnix.cloud/radarbds/data/images/45567_0.jpg",
         )
+
+    def test_not_found_local_path_does_not_fallback_to_dead_remote(self):
+        resolved = image_assets.resolve_image_url(
+            "NOT_FOUND",
+            "https://cdn.guland.vn/dead-image.jpg",
+            prefer_thumb=True,
+        )
+
+        self.assertEqual(resolved, "")
 
 
 if __name__ == "__main__":

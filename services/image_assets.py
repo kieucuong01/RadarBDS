@@ -14,11 +14,17 @@ THUMB_QUALITY = 62
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 
 
+def _is_not_found_marker(src: str) -> bool:
+    if not src:
+        return False
+    return str(src).strip().replace("\\", "/").upper().endswith("NOT_FOUND")
+
+
 def normalize_image_url(src: str) -> str:
     if not src:
         return ""
     s = str(src).strip().replace("\\", "/")
-    if not s or s.upper().endswith("NOT_FOUND"):
+    if not s or _is_not_found_marker(s):
         return ""
     if s.startswith(("http://", "https://", "data:")):
         return s
@@ -82,6 +88,8 @@ def ensure_thumbnail(image_path: Path, force: bool = False) -> Optional[Path]:
 
 
 def resolve_image_url(local_src: str, remote_src: str = "", prefer_thumb: bool = False) -> str:
+    if _is_not_found_marker(local_src):
+        return ""
     local_url = normalize_image_url(local_src)
     if local_url and s3_image_storage_enabled():
         if prefer_thumb:

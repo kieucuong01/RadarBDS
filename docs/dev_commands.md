@@ -212,6 +212,11 @@ Verify a live SEO article after deploy:
 & $py -X utf8 radar.py download-images
 & $py -X utf8 scripts\generate_thumbnails.py --signals 300
 & $py -X utf8 scripts\generate_thumbnails.py --limit 1000
+
+# Active Guland only: dry-run by default; creates/uploads missing S3 thumbnails
+# and recovers currently live detail-page images when --apply is used.
+& $py -X utf8 radar.py guland-image-backfill
+& $py -X utf8 radar.py guland-image-backfill --apply
 ```
 
 ## Fast Verification

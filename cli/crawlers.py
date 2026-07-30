@@ -447,7 +447,14 @@ def _cmd_crawl(args, mode: str = "full"):
         print(f"\nĐang tải ảnh về local...")
         from cleansing.download_images import download_images
         image_limit = 500 if source_filter else 1000
-        download_images(limit=image_limit)
+        processed_ids = result.get("listings", {}).get("processed_ids") or []
+        if source_filter and processed_ids:
+            download_images(
+                limit=max(image_limit, min(3000, len(processed_ids) * 12)),
+                listing_ids=processed_ids,
+            )
+        else:
+            download_images(limit=image_limit)
         _clean_broker_images_after_download(source=source_filter, limit=image_limit)
 
     class _FakeArgs:

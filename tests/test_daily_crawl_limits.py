@@ -228,8 +228,8 @@ def test_secondary_crawl_limits_image_backfill():
     with mock.patch.object(crawlers, "init_schema"), \
          mock.patch.object(crawlers, "get_conn", return_value=_FakeDbContext()), \
          mock.patch.object(crawlers, "_get_crawlers", return_value=[_NewCrawler()]), \
-         mock.patch("cleansing.reprocess.run_full_reprocess", return_value={
-             "listings": {"new": 1, "updated": 0},
+        mock.patch("cleansing.reprocess.run_full_reprocess", return_value={
+             "listings": {"new": 1, "updated": 0, "processed_ids": [42]},
              "valuation": {"total": 1, "signals": 0, "outliers": 0},
          }), \
          mock.patch("cleansing.download_images.download_images", side_effect=lambda **kwargs: calls.setdefault("download", kwargs)), \
@@ -239,5 +239,5 @@ def test_secondary_crawl_limits_image_backfill():
          mock.patch.object(crawlers, "_prewarm_dashboard_cache"):
         crawlers._cmd_crawl(args, mode="incremental")
 
-    assert calls["download"] == {"limit": 500}
+    assert calls["download"] == {"limit": 500, "listing_ids": [42]}
     assert calls["clean"] == {"source": "guland", "limit": 500}

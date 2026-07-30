@@ -91,6 +91,7 @@ from cli.crawlers import (
     cmd_crawl, cmd_crawl_facebook, cmd_repair_missing
 )
 from cli.guland_coordinates import cmd_guland_coordinate_backfill
+from cli.guland_images import cmd_guland_image_backfill
 from cli.queries import (
     cmd_query, cmd_deal_brief, cmd_inspect, cmd_crawl_health
 )
@@ -142,6 +143,34 @@ def build_parser():
     )
     mode.add_argument("--apply", action="store_true")
     mode.add_argument("--rollback-run", default="")
+
+    p_guland_images = sub.add_parser(
+        "guland-image-backfill",
+        help="Repair active Guland S3 thumbnails and recover live missing images",
+    )
+    image_mode = p_guland_images.add_mutually_exclusive_group()
+    image_mode.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Explicit dry-run; this is already the default",
+    )
+    image_mode.add_argument("--apply", action="store_true")
+    p_guland_images.add_argument(
+        "--no-recover-live-missing",
+        action="store_false",
+        dest="recover_live_missing",
+        help="Skip refetching active Guland pages that currently have no images",
+    )
+    p_guland_images.add_argument(
+        "--no-download-recovered",
+        action="store_false",
+        dest="download_recovered",
+        help="Do not immediately download images recovered from live Guland pages",
+    )
+    p_guland_images.set_defaults(
+        recover_live_missing=True,
+        download_recovered=True,
+    )
 
     p_map_coverage = sub.add_parser(
         "map-location-coverage",
@@ -353,6 +382,8 @@ def main():
         cmd_map_locations(args)
     elif args.cmd == "guland-coordinate-backfill":
         cmd_guland_coordinate_backfill(args)
+    elif args.cmd == "guland-image-backfill":
+        cmd_guland_image_backfill(args)
     elif args.cmd == "map-location-coverage":
         cmd_map_location_coverage(args)
     elif args.cmd == "map-location-research-queue":
