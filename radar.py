@@ -167,9 +167,15 @@ def build_parser():
         dest="download_recovered",
         help="Do not immediately download images recovered from live Guland pages",
     )
+    p_guland_images.add_argument(
+        "--include-inactive",
+        action="store_true",
+        help="Include inactive/hidden/duplicate Guland listings in the missing-image scope",
+    )
     p_guland_images.set_defaults(
         recover_live_missing=True,
         download_recovered=True,
+        include_inactive=False,
     )
 
     p_map_coverage = sub.add_parser(

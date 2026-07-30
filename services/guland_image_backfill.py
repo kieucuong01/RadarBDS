@@ -1,4 +1,4 @@
-"""Dry-run-first repair for active Guland listing images."""
+"""Dry-run-first repair for Guland listing images."""
 from __future__ import annotations
 
 import json
@@ -174,10 +174,25 @@ def _primary_image_rows(rows: Sequence[GulandImageRow]) -> list[GulandImageRow]:
     return list(primary_by_listing_id.values())
 
 
-def _load_active_guland_images() -> tuple[list[GulandImageRow], list[GulandRawImageTarget]]:
+def _active_guland_scope_sql(include_inactive: bool) -> str:
+    if include_inactive:
+        return ""
+    return """
+              AND COALESCE(l.probably_sold, 0) = 0
+              AND COALESCE(l.is_blacklisted, 0) = 0
+              AND COALESCE(l.review_hidden, 0) = 0
+              AND COALESCE(l.possibly_duplicate, 0) = 0
+    """
+
+
+def _load_guland_images(
+    *,
+    include_inactive: bool = False,
+) -> tuple[list[GulandImageRow], list[GulandRawImageTarget]]:
+    scope_sql = _active_guland_scope_sql(include_inactive)
     with get_conn() as conn:
         image_rows = conn.execute(
-            """
+            f"""
             SELECT li.id AS image_id,
                    li.listing_id,
                    li.img_url,
@@ -186,15 +201,12 @@ def _load_active_guland_images() -> tuple[list[GulandImageRow], list[GulandRawIm
             FROM listing_images li
             JOIN listings l ON l.id = li.listing_id
             WHERE l.source = 'guland'
-              AND COALESCE(l.probably_sold, 0) = 0
-              AND COALESCE(l.is_blacklisted, 0) = 0
-              AND COALESCE(l.review_hidden, 0) = 0
-              AND COALESCE(l.possibly_duplicate, 0) = 0
+            {scope_sql}
             ORDER BY li.listing_id, li.img_order, li.id
             """
         ).fetchall()
         raw_rows = conn.execute(
-            """
+            f"""
             SELECT l.id AS listing_id,
                    l.raw_id,
                    l.url,
@@ -204,10 +216,7 @@ def _load_active_guland_images() -> tuple[list[GulandImageRow], list[GulandRawIm
             JOIN raw_listings r ON r.id = l.raw_id
             LEFT JOIN listing_images li ON li.listing_id = l.id
             WHERE l.source = 'guland'
-              AND COALESCE(l.probably_sold, 0) = 0
-              AND COALESCE(l.is_blacklisted, 0) = 0
-              AND COALESCE(l.review_hidden, 0) = 0
-              AND COALESCE(l.possibly_duplicate, 0) = 0
+            {scope_sql}
             GROUP BY l.id, l.raw_id, l.url, r.raw_json
             ORDER BY l.id
             """
@@ -362,9 +371,10 @@ def run_guland_image_backfill(
     apply: bool = False,
     recover_live_missing: bool = True,
     download_recovered: bool = True,
+    include_inactive: bool = False,
 ) -> dict[str, object]:
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    image_rows, raw_targets = _load_active_guland_images()
+    image_rows, raw_targets = _load_guland_images(include_inactive=include_inactive)
     s3_keys = list_object_keys("data/images/") if s3_image_storage_enabled() else set()
     primary_rows = _primary_image_rows(image_rows)
     repairs, missing_original = _build_thumbnail_repairs(primary_rows, s3_keys)
@@ -385,6 +395,7 @@ def run_guland_image_backfill(
     stats: dict[str, object] = {
         "run_id": run_id if apply else "",
         "apply": bool(apply),
+        "include_inactive": bool(include_inactive),
         "eligible": len(raw_targets),
         "listing_image_rows": len(image_rows),
         "primary_image_rows": len(primary_rows),

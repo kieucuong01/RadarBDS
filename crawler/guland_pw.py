@@ -16,6 +16,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -36,6 +37,79 @@ GULAND_SOURCES_FILE = Path(__file__).parent.parent / "data" / "guland_sources.js
 GULAND_URL_PREFIX   = "https://guland.vn/"
 DEFAULT_CRAWL_FOR_DAYS = 7
 
+_CSS_URL_RE = re.compile(r"""url\(["']?([^"')]+)["']?\)""", re.IGNORECASE)
+_GULAND_IMAGE_EXT_RE = re.compile(r"\.(?:jpe?g|png|webp)(?:$|\?)", re.IGNORECASE)
+_GULAND_PI_IMAGE_RE = re.compile(
+    r"/(?:detail|listing)/(pi-\d+)-\d+\.(?:jpe?g|png|webp)",
+    re.IGNORECASE,
+)
+
+
+def extract_guland_post_id(post_url: str) -> str:
+    """Extract the numeric post id from a Guland /post/...-<id> URL."""
+    parsed = urlparse(str(post_url or ""))
+    path = parsed.path.rstrip("/")
+    match = re.search(r"-(\d+)(?:\.html)?$", path)
+    if match:
+        return match.group(1)
+    match = re.search(r"/post/(\d+)(?:\.html)?$", path)
+    return match.group(1) if match else ""
+
+
+def _clean_guland_image_candidate(value: object) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    match = _CSS_URL_RE.fullmatch(text)
+    if match:
+        text = match.group(1).strip()
+    return text.strip("\"'")
+
+
+def _guland_image_dedupe_key(url: str) -> str:
+    parsed = urlparse(url)
+    match = _GULAND_PI_IMAGE_RE.search(parsed.path)
+    if match:
+        post_match = re.search(r"/posts/(\d+)/", parsed.path)
+        return f"post:{post_match.group(1) if post_match else ''}:{match.group(1).lower()}"
+    return url
+
+
+def extract_guland_image_urls_from_dom_candidates(post_url: str, candidates: list) -> list[str]:
+    """Filter mixed Guland DOM candidates to real images for one post.
+
+    Guland detail pages often put listing photos in CSS background-image on
+    divs while img src is only a 1x1 lazy placeholder. The post-id filter is
+    required because the same page also includes related listing photos.
+    """
+    post_id = extract_guland_post_id(post_url)
+    if not post_id:
+        return []
+
+    accepted: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates or []:
+        url = _clean_guland_image_candidate(candidate)
+        if not url or not url.startswith(("http://", "https://")):
+            continue
+        parsed = urlparse(url)
+        host = parsed.netloc.lower()
+        path = parsed.path
+        if host not in {"bizcdn.guland.vn", "datacdn.guland.vn"}:
+            continue
+        if not _GULAND_IMAGE_EXT_RE.search(path):
+            continue
+        if f"/posts/{post_id}/" not in path and f"/data/{post_id}/" not in path:
+            continue
+        if any(bad in path.lower() for bad in ("/users/", "avatar", "logo", "profile")):
+            continue
+        key = _guland_image_dedupe_key(url)
+        if key in seen:
+            continue
+        seen.add(key)
+        accepted.append(url)
+    return accepted
+
 
 def _default_guland_urls(slug: str) -> list:
     """4 URL types/ward: đất thổ cư, nhà mặt phố, chung cư, kho xưởng."""
@@ -49,20 +123,8 @@ def _default_guland_urls(slug: str) -> list:
 # JS extract toàn bộ cards từ DOM hiện tại
 _JS_EXTRACT_CARDS = """
 () => {
-  const listingImages = (root) => {
-    const mediaSelectors = [
-      '.c-sdb-card__img img',
-      '.c-sdb-card__thumb img',
-      '.sdb-card__img img',
-      '.sdb-img img',
-      '[class*="gallery"] img',
-      '[class*="slider"] img',
-      '[class*="swiper"] img',
-      '[class*="photo"] img',
-      '[class*="media"] img'
-    ].join(',');
-    const scoped = [...root.querySelectorAll(mediaSelectors)];
-    const candidates = scoped.length ? scoped : [...root.querySelectorAll('img')];
+  const listingImages = (root, postId) => {
+    if (!postId) return [];
     const badParent = [
       '.profile-info',
       '[class*="avatar"]',
@@ -75,23 +137,56 @@ _JS_EXTRACT_CARDS = """
       '[class*="user"]'
     ].join(',');
     const badAsset = /(avatar|author|broker|contact|logo|member|profile|seller|placeholder|no-image)/i;
+    const imageExt = /\\.(?:jpe?g|png|webp)(?:$|\\?)/i;
+    const cssUrls = (value) => [...String(value || '').matchAll(/url\\(["']?([^"')]+)["']?\\)/g)].map(m => m[1]);
+    const keyFor = (url) => {
+      const m = String(url || '').match(/\\/(?:detail|listing)\\/(pi-\\d+)-\\d+\\.(?:jpe?g|png|webp)/i);
+      return m ? `pi:${m[1].toLowerCase()}` : url;
+    };
     const seen = new Set();
-    return candidates
+    const out = [];
+    const push = (src, label) => {
+      let s = String(src || '').trim().replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '');
+      if (!s || !s.startsWith('http')) return;
+      if (badAsset.test(s) || badAsset.test(label || '')) return;
+      if (!/(?:bizcdn|datacdn)\\.guland\\.vn/i.test(s)) return;
+      if (!imageExt.test(s)) return;
+      if (!s.includes(`/posts/${postId}/`) && !s.includes(`/data/${postId}/`)) return;
+      const key = keyFor(s);
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(s);
+    };
+    [...root.querySelectorAll('img')]
       .filter(i => !i.closest(badParent))
-      .filter(i => {
+      .forEach(i => {
         const label = [i.getAttribute('alt'), i.getAttribute('title'), i.className, i.parentElement?.className].join(' ');
-        if (badAsset.test(label)) return false;
+        if (badAsset.test(label)) return;
         const w = parseInt(i.getAttribute('width') || i.naturalWidth || i.width || '0', 10);
         const h = parseInt(i.getAttribute('height') || i.naturalHeight || i.height || '0', 10);
-        return !(w && h && Math.max(w, h) < 120);
-      })
-      .map(i => i.getAttribute('data-src') || i.getAttribute('data-original') || i.getAttribute('src'))
-      .filter(s => s && s.startsWith('http') && !badAsset.test(s))
-      .filter(s => {
-        if (seen.has(s)) return false;
-        seen.add(s);
-        return true;
+        if (w && h && Math.max(w, h) < 120 && !i.getAttribute('data-original')) return;
+        [
+          i.getAttribute('data-original'),
+          i.getAttribute('data-src'),
+          i.getAttribute('data-lazy'),
+          i.currentSrc,
+          i.getAttribute('src'),
+          i.getAttribute('srcset')
+        ].forEach(value => String(value || '').split(/\\s*,\\s*|\\s+/).forEach(src => push(src, label)));
       });
+    [...root.querySelectorAll('*')].forEach(el => {
+      const label = [el.className, el.getAttribute('aria-label'), el.getAttribute('title')].join(' ');
+      [
+        el.getAttribute('style'),
+        el.getAttribute('data-bg'),
+        el.getAttribute('data-background'),
+        el.getAttribute('data-original')
+      ].forEach(value => cssUrls(value).forEach(src => push(src, label)));
+      try {
+        cssUrls(getComputedStyle(el).backgroundImage).forEach(src => push(src, label));
+      } catch (_e) {}
+    });
+    return out;
   };
 
   return [...document.querySelectorAll('.c-sdb-card')].map(card => {
@@ -102,8 +197,8 @@ _JS_EXTRACT_CARDS = """
     const priceEl = card.querySelector('.sdb-inf-data.data-color-1.data-size-xl b');
     const infBs   = card.querySelectorAll('.sdb-inf-data.data-size-lg b');
     const dateEl  = card.querySelector('.profile-info__stl, .sdb-time, [class*="time"]');
-    const imgs    = listingImages(card);
     const postId  = a.href.match(/(\\d+)(?:\\.html)?$/)?.[1] || '';
+    const imgs    = listingImages(card, postId);
     const coordinateLink = [...card.querySelectorAll(
       'a[href^="https://www.google.com/maps/search/"]'
     )].find(link => {
@@ -128,23 +223,8 @@ _JS_EXTRACT_CARDS = """
 # JS batch fetch detail pages (Promise.all — chạy trong Guland context)
 _JS_BATCH_DETAIL = """
 async (urls) => {
-    const listingImages = (root) => {
-        const mediaSelectors = [
-            '.dtl-img img',
-            '.dtl-gallery img',
-            '.dtl-media img',
-            '.dtl-slider img',
-            '.swiper-slide img',
-            '.owl-item img',
-            '.slick-slide img',
-            '[class*="gallery"] img',
-            '[class*="slider"] img',
-            '[class*="swiper"] img',
-            '[class*="photo"] img',
-            '[class*="media"] img'
-        ].join(',');
-        const scoped = [...root.querySelectorAll(mediaSelectors)];
-        const candidates = scoped.length ? scoped : [...root.querySelectorAll('img')];
+    const listingImages = (root, postId, html) => {
+        if (!postId) return [];
         const badParent = [
             '.profile-info',
             '[class*="avatar"]',
@@ -157,23 +237,54 @@ async (urls) => {
             '[class*="user"]'
         ].join(',');
         const badAsset = /(avatar|author|broker|contact|logo|member|profile|seller|placeholder|no-image)/i;
+        const imageExt = /\\.(?:jpe?g|png|webp)(?:$|\\?)/i;
+        const cssUrls = (value) => [...String(value || '').matchAll(/url\\(["']?([^"')]+)["']?\\)/g)].map(m => m[1]);
+        const keyFor = (url) => {
+            const m = String(url || '').match(/\\/(?:detail|listing)\\/(pi-\\d+)-\\d+\\.(?:jpe?g|png|webp)/i);
+            return m ? `pi:${m[1].toLowerCase()}` : url;
+        };
         const seen = new Set();
-        return candidates
+        const out = [];
+        const push = (src, label) => {
+            let s = String(src || '').trim().replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '');
+            if (!s || !s.startsWith('http')) return;
+            if (badAsset.test(s) || badAsset.test(label || '')) return;
+            if (!/(?:bizcdn|datacdn)\\.guland\\.vn/i.test(s)) return;
+            if (!imageExt.test(s)) return;
+            if (!s.includes(`/posts/${postId}/`) && !s.includes(`/data/${postId}/`)) return;
+            const key = keyFor(s);
+            if (seen.has(key)) return;
+            seen.add(key);
+            out.push(s);
+        };
+        [...root.querySelectorAll('img')]
             .filter(i => !i.closest(badParent))
-            .filter(i => {
+            .forEach(i => {
                 const label = [i.getAttribute('alt'), i.getAttribute('title'), i.className, i.parentElement?.className].join(' ');
-                if (badAsset.test(label)) return false;
+                if (badAsset.test(label)) return;
                 const w = parseInt(i.getAttribute('width') || i.naturalWidth || i.width || '0', 10);
                 const h = parseInt(i.getAttribute('height') || i.naturalHeight || i.height || '0', 10);
-                return !(w && h && Math.max(w, h) < 120);
-            })
-            .map(i => i.getAttribute('data-src') || i.getAttribute('data-original') || i.getAttribute('src'))
-            .filter(s => s && s.startsWith('http') && !badAsset.test(s))
-            .filter(s => {
-                if (seen.has(s)) return false;
-                seen.add(s);
-                return true;
+                if (w && h && Math.max(w, h) < 120 && !i.getAttribute('data-original')) return;
+                [
+                    i.getAttribute('data-original'),
+                    i.getAttribute('data-src'),
+                    i.getAttribute('data-lazy'),
+                    i.getAttribute('src'),
+                    i.getAttribute('srcset')
+                ].forEach(value => String(value || '').split(/\\s*,\\s*|\\s+/).forEach(src => push(src, label)));
             });
+        [...root.querySelectorAll('*')].forEach(el => {
+            const label = [el.className, el.getAttribute('aria-label'), el.getAttribute('title')].join(' ');
+            [
+                el.getAttribute('style'),
+                el.getAttribute('data-bg'),
+                el.getAttribute('data-background'),
+                el.getAttribute('data-original')
+            ].forEach(value => cssUrls(value).forEach(src => push(src, label)));
+        });
+        [...String(html || '').matchAll(/https?:\\/\\/(?:bizcdn|datacdn)\\.guland\\.vn[^"'\\)\\s\\\\]+/gi)]
+            .forEach(match => push(match[0], 'html'));
+        return out;
     };
 
     const results = await Promise.all(urls.map(async url => {
@@ -181,6 +292,7 @@ async (urls) => {
             const r   = await fetch(url);
             const html = await r.text();
             const doc  = new DOMParser().parseFromString(html, 'text/html');
+            const postId = (url.match(/-(\\d+)(?:\\.html)?\\/?$/) || [])[1] || '';
 
             const getText = sel => doc.querySelector(sel)?.textContent.trim() || '';
             const infoRow = getText('.dtl-inf__row');
@@ -194,7 +306,7 @@ async (urls) => {
             };
 
             const phoneEl = doc.querySelector('[href^="tel:"]');
-            const imgs    = listingImages(doc);
+            const imgs    = listingImages(doc, postId, html);
 
             return {
                 url,

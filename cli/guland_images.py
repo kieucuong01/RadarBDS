@@ -9,6 +9,7 @@ def cmd_guland_image_backfill(args):
         apply=bool(getattr(args, "apply", False)),
         recover_live_missing=bool(getattr(args, "recover_live_missing", True)),
         download_recovered=bool(getattr(args, "download_recovered", True)),
+        include_inactive=bool(getattr(args, "include_inactive", False)),
     )
     print(json.dumps(
         result,

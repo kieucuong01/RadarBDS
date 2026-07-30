@@ -69,6 +69,14 @@ def test_guland_image_backfill_defaults_to_dry_run():
     assert args.recover_live_missing is True
 
 
+def test_guland_image_backfill_can_include_inactive_scope():
+    import radar
+
+    args = radar.build_parser().parse_args(["guland-image-backfill", "--include-inactive"])
+
+    assert args.include_inactive is True
+
+
 def test_guland_coordinate_cli_prints_one_json_object(monkeypatch, capsys):
     from argparse import Namespace
     from cli import guland_coordinates

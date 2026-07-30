@@ -217,6 +217,11 @@ Verify a live SEO article after deploy:
 # and recovers currently live detail-page images when --apply is used.
 & $py -X utf8 radar.py guland-image-backfill
 & $py -X utf8 radar.py guland-image-backfill --apply
+
+# Broader audit/repair: include inactive/hidden/duplicate Guland listings.
+# Prefer dry-run first because this can refetch many historical pages.
+& $py -X utf8 radar.py guland-image-backfill --include-inactive
+& $py -X utf8 radar.py guland-image-backfill --include-inactive --apply
 ```
 
 ## Fast Verification
