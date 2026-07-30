@@ -1,13 +1,17 @@
 ﻿"""Raw listing repository helpers."""
+from dataclasses import dataclass
 import json
-import logging
-from typing import Optional
+from typing import Literal, Optional
 
 from db.connection import get_conn
-from db.moderation import normalize_phone
 
-logger = logging.getLogger(__name__)
 # ─── RAW layer ────────────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class RawInsertResult:
+    status: Literal["inserted", "duplicate"]
+    raw_id: int | None
 
 def get_raw_urls(source: str) -> set:
     """Lấy set URL đã có trong raw_listings — dùng để skip khi crawl lại."""
@@ -18,33 +22,48 @@ def get_raw_urls(source: str) -> set:
     return {r[0] for r in rows}
 
 
+def insert_raw_result(
+    source: str,
+    source_id: Optional[str],
+    url: str,
+    raw_data: dict,
+    crawl_run_id: Optional[int] = None,
+) -> RawInsertResult:
+    """Insert one raw record and distinguish conflicts from write failures."""
+    with get_conn() as conn:
+        cur = conn.execute(
+            """
+            INSERT INTO raw_listings
+                (source, source_id, url, raw_json, crawl_run_id)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(source, url) DO NOTHING
+            """,
+            (
+                source,
+                source_id,
+                url,
+                json.dumps(raw_data, ensure_ascii=False),
+                crawl_run_id,
+            ),
+        )
+        if cur.lastrowid:
+            return RawInsertResult("inserted", cur.lastrowid)
+        return RawInsertResult("duplicate", None)
+
+
 def insert_raw(source: str, source_id: Optional[str], url: str,
                raw_data: dict, crawl_run_id: Optional[int] = None) -> Optional[int]:
     """
     Lưu raw record. UNIQUE(source, url) → bỏ qua nếu đã có.
     Trả về raw_id hoặc None nếu đã tồn tại.
     """
-    with get_conn() as conn:
-        try:
-            phone_norm = normalize_phone(raw_data.get("contact_phone"))
-            if phone_norm:
-                blocked = conn.execute(
-                    "SELECT 1 FROM broker_blacklist WHERE active=1 AND phone_norm=?",
-                    (phone_norm,),
-                ).fetchone()
-                if blocked:
-                    return None
-            cur = conn.execute(
-                """INSERT OR IGNORE INTO raw_listings
-                   (source, source_id, url, raw_json, crawl_run_id)
-                   VALUES (?, ?, ?, ?, ?)""",
-                (source, source_id, url,
-                 json.dumps(raw_data, ensure_ascii=False), crawl_run_id)
-            )
-            return cur.lastrowid if cur.lastrowid else None
-        except Exception as e:
-            logger.error(f"insert_raw error [{url}]: {e}")
-            return None
+    return insert_raw_result(
+        source,
+        source_id,
+        url,
+        raw_data,
+        crawl_run_id,
+    ).raw_id
 
 
 def get_raw_for_reprocess(source: Optional[str] = None,

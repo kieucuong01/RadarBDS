@@ -9,7 +9,7 @@ from pathlib import Path
 from cli.data_import import cmd_export_raw
 from db.connection import advisory_lock, get_conn
 from db.moderation import normalize_phone
-from db.raw_listings import insert_raw
+from db.raw_listings import insert_raw_result
 from db.schema import init_schema
 
 def _get_crawlers(source_filter=None):
@@ -207,13 +207,19 @@ def _facebook_crawl_to_raw(
         raw_data = dict(record)
         if apify_raw:
             raw_data["_apify_raw"] = apify_raw
-        rid = insert_raw(
-            source="facebook",
-            source_id=record.get("post_id") or None,
-            url=record["url"],
-            raw_data=raw_data,
-        )
-        if rid:
+        try:
+            insert_result = insert_raw_result(
+                source="facebook",
+                source_id=record.get("post_id") or None,
+                url=record["url"],
+                raw_data=raw_data,
+                crawl_run_id=run_id,
+            )
+        except Exception as exc:
+            finish_crawl_run(run_id, {}, status="error", error_msg=str(exc)[:500])
+            raise
+        rid = insert_result.raw_id
+        if insert_result.status == "inserted":
             inserted += 1
         else:
             refreshed_raw_id = _refresh_existing_facebook_images(record["url"], raw_data)

@@ -2,6 +2,8 @@ from types import SimpleNamespace
 from unittest import mock
 
 import cli.crawlers as crawlers
+import pytest
+from db.raw_listings import RawInsertResult
 
 
 class _FakeDbContext:
@@ -142,13 +144,71 @@ def test_facebook_crawl_records_health_row():
          mock.patch("config.area_profiles.post_mentions_other_city", return_value=False), \
          mock.patch("db.crawl_runs.start_crawl_run", return_value=123) as start_run, \
          mock.patch("db.crawl_runs.finish_crawl_run") as finish_run, \
-         mock.patch.object(crawlers, "insert_raw", return_value=456):
+         mock.patch.object(
+             crawlers,
+             "insert_raw_result",
+             return_value=RawInsertResult("inserted", 456),
+         ):
         stats = crawlers._facebook_crawl_to_raw(mode="incremental")
 
     assert stats["fetched"] == 2
     assert stats["inserted"] == 1
     start_run.assert_called_once_with("facebook", "all")
     finish_run.assert_called_once_with(123, {"fetched": 2, "new": 1, "skipped": 1})
+
+
+def test_facebook_crawl_propagates_raw_insert_failure():
+    class _FakeFacebookCrawler:
+        def crawl_all(self, *_args, **_kwargs):
+            return [
+                {
+                    "url": "https://facebook.test/write-failure",
+                    "post_id": "write-failure",
+                    "text": "ban dat 100m2",
+                    "imgs": [],
+                }
+            ]
+
+    record = {
+        "url": "https://facebook.test/write-failure",
+        "post_id": "write-failure",
+        "contact_phone": "",
+        "imgs": [],
+    }
+    with mock.patch(
+        "crawler.facebook_apify.FacebookApifyCrawler",
+        return_value=_FakeFacebookCrawler(),
+    ), mock.patch(
+        "crawler.facebook_apify.load_profiles",
+        return_value=[{"url": "https://facebook.test/a"}],
+    ), mock.patch(
+        "crawler.facebook_chrome.is_relevant",
+        return_value=True,
+    ), mock.patch(
+        "crawler.facebook_chrome.build_record",
+        return_value=record,
+    ), mock.patch(
+        "config.area_profiles.post_mentions_other_city",
+        return_value=False,
+    ), mock.patch(
+        "db.crawl_runs.start_crawl_run",
+        return_value=123,
+    ), mock.patch(
+        "db.crawl_runs.finish_crawl_run",
+    ) as finish_run, mock.patch.object(
+        crawlers,
+        "insert_raw_result",
+        side_effect=RuntimeError("database unavailable"),
+    ), mock.patch.object(
+        crawlers,
+        "_refresh_existing_facebook_images",
+    ) as refresh_images:
+        with pytest.raises(RuntimeError, match="database unavailable"):
+            crawlers._facebook_crawl_to_raw(mode="incremental")
+
+    refresh_images.assert_not_called()
+    finish_run.assert_called_once()
+    assert finish_run.call_args.kwargs["status"] == "error"
 
 
 def test_postprocess_downloads_processed_listing_images_first():

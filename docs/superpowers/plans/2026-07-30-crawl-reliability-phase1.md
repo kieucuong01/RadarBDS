@@ -37,7 +37,7 @@
 - Produces: `db.connection._validate_test_database_url(url: str) -> str`
 - Consumes: `RADAR_TEST_DATABASE_URL` for tests and `DATABASE_URL` for normal runtime.
 
-- [ ] **Step 1: Write failing URL-selection tests**
+- [x] **Step 1: Write failing URL-selection tests**
 
 Add tests that prove pytest cannot fall back to the application database:
 
@@ -59,7 +59,7 @@ def test_test_database_name_must_contain_test(monkeypatch):
         connection._database_url()
 ```
 
-- [ ] **Step 2: Run the tests and confirm the old fallback fails**
+- [x] **Step 2: Run the tests and confirm the old fallback fails**
 
 Run:
 
@@ -69,7 +69,7 @@ Run:
 
 Expected: the new tests fail because `_is_test_process` and the database-name guard do not exist.
 
-- [ ] **Step 3: Implement the fail-closed selector**
+- [x] **Step 3: Implement the fail-closed selector**
 
 Use `urllib.parse.urlparse` and keep runtime behavior unchanged:
 
@@ -101,11 +101,11 @@ def _database_url() -> str:
     return url
 ```
 
-- [ ] **Step 4: Remove ineffective SQLite `DB_PATH` setup from focused integration tests**
+- [x] **Step 4: Remove ineffective SQLite `DB_PATH` setup from focused integration tests**
 
 Delete `TemporaryDirectory`, `DB_PATH` patching, and related teardown in the four focused files. Retain their UUID URL/user tokens and deterministic PostgreSQL cleanup. Do not change their assertions.
 
-- [ ] **Step 5: Document the exact test invocation**
+- [x] **Step 5: Document the exact test invocation**
 
 Add this invocation after setting `RADAR_TEST_DATABASE_URL` in the local shell
 or secret manager; do not put its value in the repository:
@@ -117,7 +117,7 @@ if (-not $env:RADAR_TEST_DATABASE_URL) { throw "Set RADAR_TEST_DATABASE_URL to t
 
 State explicitly that the password stays local and the database name must contain `test`.
 
-- [ ] **Step 6: Run focused PostgreSQL tests**
+- [x] **Step 6: Run focused PostgreSQL tests**
 
 Run:
 
@@ -127,7 +127,7 @@ Run:
 
 Expected: all selected tests pass against `radar_bds_test`; the normal `radar_bds` database receives no test rows.
 
-- [ ] **Step 7: Commit test isolation**
+- [x] **Step 7: Commit test isolation**
 
 ```powershell
 git add db/connection.py tests/test_postgres_connection.py tests/test_price_history.py tests/test_source_policy.py tests/test_drop_filter.py tests/test_lot_history.py docs/dev_commands.md
@@ -151,7 +151,7 @@ git commit -m "test: isolate postgres integration database"
   dict, crawl_run_id: int | None = None) -> int | None` as a compatibility
   wrapper that propagates operational errors.
 
-- [ ] **Step 1: Write failing repository tests**
+- [x] **Step 1: Write failing repository tests**
 
 Use a UUID URL and delete it in `finally`:
 
@@ -183,7 +183,7 @@ def test_insert_raw_result_propagates_database_failure(monkeypatch):
         insert_raw_result("guland", "902", "https://guland.vn/post/x-902", {"url": "x"})
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -193,7 +193,7 @@ Run:
 
 Expected: import failure for `RawInsertResult`/`insert_raw_result`.
 
-- [ ] **Step 3: Implement one-query insert classification**
+- [x] **Step 3: Implement one-query insert classification**
 
 Use a parameterized PostgreSQL conflict clause:
 
@@ -228,11 +228,11 @@ def insert_raw_result(
 
 Do not catch `Exception` in this repository. Keep phone blacklist checks at caller boundaries where they can be reported as classified skips.
 
-- [ ] **Step 4: Route Facebook and BaseCrawler through the typed API**
+- [x] **Step 4: Route Facebook and BaseCrawler through the typed API**
 
 Facebook branches on `result.status`; it refreshes images only for `duplicate`. `BaseCrawler.upsert_raw()` increments `new` only for `inserted`, increments `skipped` only for `duplicate`/validation/blacklist, and lets operational errors reach its target-level exception handling.
 
-- [ ] **Step 5: Verify GREEN and Facebook compatibility**
+- [x] **Step 5: Verify GREEN and Facebook compatibility**
 
 Run:
 
@@ -242,7 +242,7 @@ Run:
 
 Expected: all pass; a simulated insert error is not counted as a duplicate.
 
-- [ ] **Step 6: Commit raw insert contracts**
+- [x] **Step 6: Commit raw insert contracts**
 
 ```powershell
 git add db/raw_listings.py db/sqlite.py crawler/base_crawler.py cli/crawlers.py tests/test_raw_insert_results.py tests/test_daily_crawl_limits.py

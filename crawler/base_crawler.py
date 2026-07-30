@@ -243,39 +243,34 @@ class BaseCrawler(ABC):
 
         from db.connection import get_conn
         from db.moderation import normalize_phone
+        from db.raw_listings import insert_raw_result
 
         source_id = str(raw_data.get("post_id") or raw_data.get("source_id") or "")
-        raw_json = json.dumps(raw_data, ensure_ascii=False)
         phone_norm = normalize_phone(raw_data.get("contact_phone"))
 
-        try:
+        if phone_norm:
             with get_conn() as conn:
-                if phone_norm:
-                    blocked = conn.execute(
-                        "SELECT 1 FROM broker_blacklist WHERE active=1 AND phone_norm=?",
-                        (phone_norm,),
-                    ).fetchone()
-                    if blocked:
-                        self._stats["skipped"] += 1
-                        return False
-                existing = conn.execute(
-                    "SELECT id FROM raw_listings WHERE source=? AND url=?",
-                    (self.SOURCE_NAME, url),
+                blocked = conn.execute(
+                    "SELECT 1 FROM broker_blacklist WHERE active=1 AND phone_norm=?",
+                    (phone_norm,),
                 ).fetchone()
-                if existing:
+                if blocked:
                     self._stats["skipped"] += 1
                     return False
-                conn.execute(
-                    """INSERT INTO raw_listings (source, source_id, url, raw_json, crawled_at)
-                       VALUES (?, ?, ?, ?, datetime('now'))""",
-                    (self.SOURCE_NAME, source_id, url, raw_json),
-                )
+
+        result = insert_raw_result(
+            self.SOURCE_NAME,
+            source_id,
+            url,
+            raw_data,
+            getattr(self, "_crawl_run_id", None),
+        )
+        if result.status == "inserted":
             self._stats["new"] += 1
             return True
-        except Exception as e:
-            self.logger.error(f"upsert_raw error url={url}: {e}")
-            self._stats["errors"] += 1
-            return False
+
+        self._stats["skipped"] += 1
+        return False
 
     def url_exists(self, url: str) -> bool:
         """Kiểm tra URL đã có trong DB chưa."""
