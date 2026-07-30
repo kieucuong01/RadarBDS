@@ -1,6 +1,10 @@
 import pytest
 
-from crawler.guland_pw import GulandCrawler, classify_detail_result
+from crawler.guland_pw import (
+    GulandCrawler,
+    _JS_BATCH_DETAIL,
+    classify_detail_result,
+)
 from services.guland_reconciliation import ExistingGulandSnapshot
 
 
@@ -24,6 +28,24 @@ def test_cloudflare_and_blank_html_are_never_removed():
     assert classify_detail_result(
         {"http_status": 200, "page_status": "unreachable"}
     ).outcome == "unreachable"
+
+
+def test_removed_classification_preserves_explicit_page_reason():
+    result = classify_detail_result(
+        {
+            "http_status": 200,
+            "page_status": "removed",
+            "page_reason": "not_found_path",
+        }
+    )
+
+    assert result.outcome == "removed"
+    assert result.reason == "not_found_path"
+
+
+def test_detail_fetch_does_not_match_removed_words_across_entire_live_page():
+    assert "tin.*(?:đã|bị).*(?:gỡ|xóa)" not in _JS_BATCH_DETAIL
+    assert "tin.*không.*tồn tại" not in _JS_BATCH_DETAIL
 
 
 def test_stale_verifier_records_each_explicit_outcome(monkeypatch):

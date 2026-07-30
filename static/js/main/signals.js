@@ -486,6 +486,7 @@ function ensureSignalScrollRoot(opts = {}) {
 }
 
 function _daysAgoValue(v) {
+  if (v === null || v === undefined || v === '') return null;
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? n : null;
 }

@@ -48,8 +48,10 @@
   }
 
   function cardDateText(item) {
-    var days = Number(item && item.days_ago);
-    var relative = !Number.isFinite(days) || days < 0
+    var rawDays = item && item.days_ago;
+    var days = Number(rawDays);
+    var relative = rawDays === null || rawDays === undefined || rawDays === ""
+      || !Number.isFinite(days) || days < 0
       ? "Chưa rõ ngày"
       : (days <= 0 ? "hôm nay" : days + " ngày trước");
     var reason = String((item && item.card_date_reason) || "posted");

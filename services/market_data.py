@@ -137,16 +137,21 @@ def listing_activity_at_sql(alias: str = "l") -> str:
 
 def listing_card_activity(row):
     source = str(_row_get(row, "source", "") or "").lower()
+    selected_activity = _row_get(row, "activity_at")
     if source == "guland":
         price_updated_at = _row_get(row, "price_updated_at")
         if price_updated_at:
-            return price_updated_at, "price_updated"
+            return selected_activity or price_updated_at, "price_updated"
         return (
-            _row_get(row, "first_seen_at") or _row_get(row, "crawled_at"),
+            selected_activity
+            or _row_get(row, "first_seen_at")
+            or _row_get(row, "crawled_at"),
             "first_seen",
         )
     return (
-        _row_get(row, "posted_at") or _row_get(row, "crawled_at"),
+        selected_activity
+        or _row_get(row, "posted_at")
+        or _row_get(row, "crawled_at"),
         "posted",
     )
 
@@ -1214,6 +1219,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
                {effective_price_drop_select_sql("l", "related_drop")},
                l.suspicious_bait,
                l.duplicate_of_id,
+               {listing_activity_at_sql('l')} AS activity_at,
                l.url, l.crawled_at, l.posted_at, l.first_seen_at,
                l.price_updated_at, l.ward, l.road_tier, l.has_so,
                 {_max_sql("COALESCE(v.signal_score, 0)", "COALESCE(sv.signal_score, 0)")} as signal_score,
@@ -1847,6 +1853,7 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest"):
         WITH {LATEST_VALUATION_CTE},
              {LATEST_SHADOW_VALUATION_CTE}
         SELECT l.*,
+               {listing_activity_at_sql('l')} AS activity_at,
                CASE WHEN COALESCE(v.is_signal,0)=1 OR COALESCE(sv.is_signal,0)=1 THEN 1 ELSE 0 END AS is_signal,
                ({display_mos_expr}) AS mos_pct,
                ({display_fair_expr}) AS fair_ppm2,

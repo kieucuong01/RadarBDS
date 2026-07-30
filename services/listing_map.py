@@ -180,6 +180,7 @@ def _filtered_sql(mode: str, filters: MapFilters) -> tuple[str, list]:
                l.crawled_at,
                l.first_seen_at,
                l.price_updated_at,
+               {listing_activity_at_sql('l')} AS activity_at,
                l.source,
                ({deal.mos_expr}) AS mos_pct,
                CASE WHEN ({deal.condition}) THEN 1 ELSE 0 END AS is_signal
@@ -400,6 +401,7 @@ def load_listing_map_items(
                    f.crawled_at,
                    f.first_seen_at,
                    f.price_updated_at,
+                   f.activity_at,
                    f.source,
                    f.mos_pct,
                    f.is_signal,
@@ -415,7 +417,7 @@ def load_listing_map_items(
                 LIMIT 1
             ) primary_img ON TRUE
             WHERE ml.location_key = ?
-            ORDER BY {listing_activity_at_sql('f')} DESC, f.id DESC
+            ORDER BY f.activity_at DESC, f.id DESC
             LIMIT ? OFFSET ?
             """,
             params + [location_key, limit, offset],

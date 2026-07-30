@@ -71,7 +71,10 @@ def classify_detail_result(detail: dict | None) -> DetailClassification:
         http_status = 0
     page_status = str(detail.get("page_status") or "").lower()
     if http_status in {404, 410} or page_status == "removed":
-        return DetailClassification("removed", page_status or f"http_{http_status}")
+        return DetailClassification(
+            "removed",
+            str(detail.get("page_reason") or page_status or f"http_{http_status}")[:200],
+        )
     if page_status == "live" and 200 <= http_status < 400:
         return DetailClassification("active", "live_detail")
     return DetailClassification(
@@ -336,10 +339,15 @@ async (urls) => {
             const getText = sel => doc.querySelector(sel)?.textContent.trim() || '';
             const infoRow = getText('.dtl-inf__row');
             const bodyText = (doc.body?.textContent || '').replace(/\\s+/g, ' ').trim();
-            const removedText = /tin.*(?:đã|bị).*(?:gỡ|xóa)|tin.*không.*tồn tại/i.test(bodyText);
+            const removedText = /(?:tin(?: đăng| rao| này)?\\s*(?:đã|bị)\\s*(?:được\\s*)?(?:gỡ|xóa))|(?:tin(?: đăng| rao| này)?\\s*(?:không còn|không)\\s*tồn tại)/i.test(bodyText);
             const explicitlyRemoved = [404, 410].includes(r.status)
                 || responsePath.includes('/khong-tim-thay')
                 || removedText;
+            const pageReason = [404, 410].includes(r.status)
+                ? `http_${r.status}`
+                : (responsePath.includes('/khong-tim-thay')
+                    ? 'not_found_path'
+                    : (removedText ? 'removed_text' : ''));
             const identityPresent = Boolean(
                 postId && (
                     doc.querySelector('.dtl-inf__dsr, .dtl-inf__row, .dtl-stl__row, .dtl-adr')
@@ -371,6 +379,7 @@ async (urls) => {
                 url,
                 http_status:      r.status,
                 page_status:      pageStatus,
+                page_reason:      pageReason,
                 detail_price_raw: detailPriceRaw,
                 description:       getText('.dtl-inf__dsr'),
                 address:           getText('.dtl-stl__row, .dtl-adr'),

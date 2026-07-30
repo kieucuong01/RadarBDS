@@ -42,6 +42,7 @@
   }
 
   function number(value) {
+    if (value === null || value === undefined || value === '') return null;
     var parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
   }

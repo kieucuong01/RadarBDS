@@ -4896,6 +4896,7 @@ def api_listings():
         WITH {LATEST_VALUATION_CTE},
              {LATEST_SHADOW_VALUATION_CTE}
         SELECT l.*,
+               {listing_activity_at_sql("l")} AS activity_at,
                CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS is_signal,
                ({display_mos_expr}) AS mos_pct,
                ({display_fair_expr}) AS fair_ppm2,
