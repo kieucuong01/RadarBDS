@@ -306,7 +306,7 @@ git commit -m "fix: harden listing image downloads"
 **Interfaces:**
 - Produces: `run_guland_image_backfill(*, apply=False, limit=50, recover_live_missing=True, download_recovered=True, include_inactive=False) -> dict[str, object]`
 
-- [ ] **Step 1: Write failing zero-ready tests**
+- [x] **Step 1: Write failing zero-ready tests**
 
 Construct rows for:
 
@@ -325,13 +325,13 @@ On apply, assert a live-confirmed URL matching a `NOT_FOUND` row resets that
 row to `NULL`, includes the listing in targeted download IDs, and records raw
 history only when the payload changed.
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_guland_image_backfill.py tests\test_cli_command_logging.py -q
 ```
 
-- [ ] **Step 3: Implement zero-ready planning and bounded CLI**
+- [x] **Step 3: Implement zero-ready planning and bounded CLI**
 
 Compute ready listing IDs from DB rows plus the S3 key inventory. Select all
 eligible raw targets whose listing ID is not ready, not only zero-row/raw-empty
@@ -353,7 +353,7 @@ Clamp/validate `--limit` to 1–200, default 50, and pass it from `radar.py`
 through `cli/guland_images.py`. Preserve dry-run default and
 `--include-inactive`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 ```powershell
 & $py -X utf8 -m pytest `
@@ -364,7 +364,7 @@ through `cli/guland_images.py`. Preserve dry-run default and
 & $py -X utf8 radar.py guland-image-backfill --help
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add services/guland_image_backfill.py cli/guland_images.py radar.py tests/test_guland_image_backfill.py tests/test_cli_command_logging.py

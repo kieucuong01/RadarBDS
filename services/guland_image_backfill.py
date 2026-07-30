@@ -62,6 +62,13 @@ class ThumbnailRepair:
     thumb_key: str
 
 
+def validate_backfill_limit(value: int) -> int:
+    limit = int(value)
+    if not 1 <= limit <= 200:
+        raise ValueError("Guland image backfill limit must be between 1 and 200")
+    return limit
+
+
 def _row_dict(row) -> dict:
     if hasattr(row, "items"):
         return dict(row.items())
@@ -173,6 +180,40 @@ def _primary_image_rows(rows: Sequence[GulandImageRow]) -> list[GulandImageRow]:
     for row in sorted(rows, key=lambda item: (item.listing_id, item.img_order, item.image_id)):
         primary_by_listing_id.setdefault(row.listing_id, row)
     return list(primary_by_listing_id.values())
+
+
+def _ready_listing_ids(
+    rows: Sequence[GulandImageRow],
+    s3_keys: set[str],
+    *,
+    s3_enabled: bool,
+) -> set[int]:
+    ready: set[int] = set()
+    for row in rows:
+        image_key = normalize_object_key(row.local_path)
+        if not _is_downloaded_image_key(image_key):
+            continue
+        if s3_enabled:
+            if image_key not in s3_keys:
+                continue
+            if _thumb_key_for_image_key(image_key) not in s3_keys:
+                continue
+        ready.add(int(row.listing_id))
+    return ready
+
+
+def _bounded_zero_ready_targets(
+    targets: Sequence[GulandRawImageTarget],
+    *,
+    ready_listing_ids: set[int],
+    limit: int,
+) -> list[GulandRawImageTarget]:
+    bounded = validate_backfill_limit(limit)
+    return [
+        target
+        for target in sorted(targets, key=lambda item: item.listing_id)
+        if target.listing_id not in ready_listing_ids
+    ][:bounded]
 
 
 def _active_guland_scope_sql(include_inactive: bool) -> str:
@@ -338,6 +379,53 @@ def _apply_raw_image_recovery(
     return raw_updated, image_rows_inserted, sorted(set(changed_listing_ids))
 
 
+def _reset_image_rows_by_id(image_ids: Sequence[int]) -> int:
+    ids = sorted({int(image_id) for image_id in image_ids})
+    if not ids:
+        return 0
+    placeholders = ",".join("?" for _ in ids)
+    with get_conn() as conn:
+        cur = conn.execute(
+            f"""
+            UPDATE listing_images
+            SET local_path=NULL,
+                crawled_at=datetime('now')
+            WHERE id IN ({placeholders})
+            """,
+            ids,
+        )
+    return max(0, int(cur.rowcount or 0))
+
+
+def _reset_live_not_found_rows(
+    images_by_listing_id: Mapping[int, Sequence[str]],
+) -> int:
+    reset = 0
+    with get_conn() as conn:
+        for listing_id, urls in images_by_listing_id.items():
+            clean_urls = sorted({
+                clean
+                for clean in (_valid_remote_image_url(url) for url in urls)
+                if clean
+            })
+            if not clean_urls:
+                continue
+            placeholders = ",".join("?" for _ in clean_urls)
+            cur = conn.execute(
+                f"""
+                UPDATE listing_images
+                SET local_path=NULL,
+                    crawled_at=datetime('now')
+                WHERE listing_id=?
+                  AND local_path='NOT_FOUND'
+                  AND img_url IN ({placeholders})
+                """,
+                [int(listing_id), *clean_urls],
+            )
+            reset += max(0, int(cur.rowcount or 0))
+    return reset
+
+
 def _download_public_original_to_temp(image_key: str, temp_dir: Path) -> Path:
     url = public_url_for_key(image_key)
     if not url:
@@ -372,32 +460,54 @@ def _apply_thumbnail_repairs(repairs: Sequence[ThumbnailRepair]) -> tuple[int, i
 def run_guland_image_backfill(
     *,
     apply: bool = False,
+    limit: int = 50,
     recover_live_missing: bool = True,
     download_recovered: bool = True,
     include_inactive: bool = False,
 ) -> dict[str, object]:
+    limit = validate_backfill_limit(limit)
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     image_rows, raw_targets = _load_guland_images(include_inactive=include_inactive)
-    s3_keys = list_object_keys("data/images/") if s3_image_storage_enabled() else set()
-    primary_rows = _primary_image_rows(image_rows)
-    repairs, missing_original = _build_thumbnail_repairs(primary_rows, s3_keys)
-
-    raw_missing_targets = [
+    s3_enabled = s3_image_storage_enabled()
+    s3_keys = list_object_keys("data/images/") if s3_enabled else set()
+    ready_listing_ids = _ready_listing_ids(
+        image_rows,
+        s3_keys,
+        s3_enabled=s3_enabled,
+    )
+    all_zero_ready_targets = [
         target
-        for target in raw_targets
-        if not _image_urls_from_raw(target.raw_json) or target.existing_image_rows == 0
+        for target in sorted(raw_targets, key=lambda item: item.listing_id)
+        if target.listing_id not in ready_listing_ids
     ]
+    zero_ready_targets = _bounded_zero_ready_targets(
+        raw_targets,
+        ready_listing_ids=ready_listing_ids,
+        limit=limit,
+    )
+    selected_listing_ids = {target.listing_id for target in zero_ready_targets}
+    selected_image_rows = [
+        row for row in image_rows if row.listing_id in selected_listing_ids
+    ]
+    primary_rows = _primary_image_rows(selected_image_rows)
+    repairs, missing_original = (
+        _build_thumbnail_repairs(primary_rows, s3_keys)
+        if s3_enabled
+        else ([], [])
+    )
+
     live_images: dict[int, list[str]] = {
         target.listing_id: _image_urls_from_raw(target.raw_json)
-        for target in raw_missing_targets
+        for target in zero_ready_targets
         if target.existing_image_rows == 0 and _image_urls_from_raw(target.raw_json)
     }
-    if recover_live_missing and raw_missing_targets:
-        live_images.update(_fetch_live_image_map(raw_missing_targets))
+    if recover_live_missing and zero_ready_targets:
+        live_images.update(_fetch_live_image_map(zero_ready_targets))
 
     stats: dict[str, object] = {
         "run_id": run_id if apply else "",
         "apply": bool(apply),
+        "limit": limit,
         "include_inactive": bool(include_inactive),
         "eligible": len(raw_targets),
         "listing_image_rows": len(image_rows),
@@ -406,11 +516,22 @@ def run_guland_image_backfill(
         "not_found_rows": sum(1 for row in image_rows if str(row.local_path or "").upper().endswith("NOT_FOUND")),
         "missing_original_rows": len(missing_original),
         "missing_thumbnail_rows": len(repairs),
-        "raw_missing_image_targets": len(raw_missing_targets),
+        "raw_missing_image_targets": sum(
+            1
+            for target in zero_ready_targets
+            if not _image_urls_from_raw(target.raw_json)
+        ),
+        "zero_row_targets": sum(
+            1 for target in zero_ready_targets if target.existing_image_rows == 0
+        ),
+        "zero_ready_total": len(all_zero_ready_targets),
+        "zero_ready_targets": len(zero_ready_targets),
+        "live_checked_targets": len(zero_ready_targets) if recover_live_missing else 0,
         "live_recoverable_targets": len(live_images),
         "thumbnail_uploaded": 0,
         "raw_updated": 0,
         "listing_images_inserted": 0,
+        "retry_rows_reset": 0,
         "recovered_images_downloaded": 0,
         "errors": 0,
     }
@@ -424,19 +545,23 @@ def run_guland_image_backfill(
     changed_listing_ids: list[int] = []
     if live_images:
         raw_updated, inserted, changed_listing_ids = _apply_raw_image_recovery(
-            raw_missing_targets,
+            zero_ready_targets,
             live_images,
         )
         stats["raw_updated"] = raw_updated
         stats["listing_images_inserted"] = inserted
 
-    if download_recovered and changed_listing_ids:
+    retry_rows_reset = _reset_image_rows_by_id(missing_original)
+    retry_rows_reset += _reset_live_not_found_rows(live_images)
+    stats["retry_rows_reset"] = retry_rows_reset
+
+    if download_recovered and selected_listing_ids:
         from cleansing.download_images import download_images
 
         try:
             stats["recovered_images_downloaded"] = download_images(
-                limit=max(500, min(3000, len(changed_listing_ids) * 12)),
-                listing_ids=changed_listing_ids,
+                limit=max(100, min(2400, len(selected_listing_ids) * 12)),
+                listing_ids=sorted(selected_listing_ids),
             )
         except RuntimeError as exc:
             if "download-images" not in str(exc):

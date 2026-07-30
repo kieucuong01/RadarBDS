@@ -110,6 +110,16 @@ from cli.system import (
     cmd_clean_broker_images,
 )
 
+
+def _bounded_guland_image_limit(value: str) -> int:
+    from services.guland_image_backfill import validate_backfill_limit
+
+    try:
+        return validate_backfill_limit(int(value))
+    except (TypeError, ValueError) as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+
+
 def build_parser():
     parser = argparse.ArgumentParser(prog="radar", description="Radar BDS CLI")
     sub = parser.add_subparsers(dest="cmd")
@@ -172,6 +182,12 @@ def build_parser():
         "--include-inactive",
         action="store_true",
         help="Include inactive/hidden/duplicate Guland listings in the missing-image scope",
+    )
+    p_guland_images.add_argument(
+        "--limit",
+        type=_bounded_guland_image_limit,
+        default=50,
+        help="Maximum zero-ready Guland listings to inspect (1-200, default: 50)",
     )
     p_guland_images.set_defaults(
         recover_live_missing=True,
