@@ -757,19 +757,19 @@ git commit -m "feat: add bounded guland reconciliation"
 **Interfaces:**
 - Produces: release evidence; does not authorize production apply/deploy.
 
-- [ ] **Step 1: Compile all touched Python**
+- [x] **Step 1: Compile all touched Python**
 
 ```powershell
 & $py -X utf8 -m py_compile db\schema.py db\raw_listings.py db\listings.py db\crawl_runs.py analytics\lifecycle.py services\guland_reconciliation.py services\guland_historical_reconciliation.py crawler\base_crawler.py crawler\guland_pw.py cleansing\reprocess.py cli\crawlers.py cli\guland_reconciliation.py cli\queries.py alerts\ops.py radar.py app.py services\market_data.py
 ```
 
-- [ ] **Step 2: Run all focused Python tests**
+- [x] **Step 2: Run all focused Python tests**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_postgres_connection.py tests\test_raw_insert_results.py tests\test_crawl_run_status.py tests\test_crawl_health.py tests\test_ops_alert.py tests\test_daily_crawl_limits.py tests\test_guland_crawler_stats.py tests\test_source_lifecycle.py tests\test_guland_reconciliation.py tests\test_guland_source_verifier.py tests\test_guland_targeted_reprocess.py tests\test_guland_historical_reconciliation.py tests\test_price_history.py tests\test_lot_history.py tests\test_drop_filter.py tests\test_source_policy.py -q
 ```
 
-- [ ] **Step 3: Run UI tests and JavaScript syntax**
+- [x] **Step 3: Run UI tests and JavaScript syntax**
 
 ```powershell
 node --check static\js\main\signal_card.js
@@ -779,7 +779,7 @@ node tests\js\test_signal_card.js
 & $py -X utf8 -m pytest tests\test_signal_detail_ui.py tests\test_listing_map_js.py tests\test_refactor_structure.py -q
 ```
 
-- [ ] **Step 4: Run local API smoke tests**
+- [x] **Step 4: Run local API smoke tests**
 
 ```powershell
 & $py -X utf8 -c "from app import app; c=app.test_client(); [print(p, c.get(p).status_code) for p in ['/api/dashboard','/api/signals?page=1&limit=3']]"
@@ -788,7 +788,7 @@ node tests\js\test_signal_card.js
 Expected: both endpoints return 200; `/api/dashboard` remains lightweight and
 `/api/signals` remains thumbnail-first.
 
-- [ ] **Step 5: Run dry-run reconciliation and inspect samples**
+- [x] **Step 5: Run dry-run reconciliation and inspect samples**
 
 ```powershell
 & $py -X utf8 radar.py guland-reconcile --limit 50
@@ -797,7 +797,7 @@ Expected: both endpoints return 200; `/api/dashboard` remains lightweight and
 Confirm no writes, no unbounded request count, no secrets, and that sampled
 price changes match live card/detail values.
 
-- [ ] **Step 6: Review diff and request code review**
+- [x] **Step 6: Review diff and request code review**
 
 ```powershell
 git diff --check
@@ -814,3 +814,9 @@ Use `superpowers:verification-before-completion` and
 `superpowers:finishing-a-development-branch`. Do not merge, push, apply
 production reconciliation, or deploy without the user's explicit release
 instruction for this change set.
+
+Verification note (2026-07-30): the task-focused Python/UI/JS suites and local
+API smoke are green. The repository-wide suite still has 12 failures outside
+the two crawl plans (admin/test isolation, legacy SEO asset expectation,
+Windows social font lookup, and digital-product cache expectation), so branch
+integration remains intentionally open.
