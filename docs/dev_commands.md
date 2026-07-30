@@ -220,16 +220,21 @@ Verify a live SEO article after deploy:
 & $py -X utf8 scripts\generate_thumbnails.py --signals 300
 & $py -X utf8 scripts\generate_thumbnails.py --limit 1000
 
-# Active Guland only: dry-run by default; creates/uploads missing S3 thumbnails
-# and recovers currently live detail-page images when --apply is used.
-& $py -X utf8 radar.py guland-image-backfill
-& $py -X utf8 radar.py guland-image-backfill --apply
+# Eligible Guland only: dry-run by default. Scope is zero-ready, including
+# rows that exist but are NULL/NOT_FOUND/missing S3 original or thumbnail.
+# Live inspection is bounded to 1-200 listings; default is 50.
+& $py -X utf8 radar.py guland-image-backfill --limit 50
+& $py -X utf8 radar.py guland-image-backfill --limit 50 --apply
 
 # Broader audit/repair: include inactive/hidden/duplicate Guland listings.
 # Prefer dry-run first because this can refetch many historical pages.
-& $py -X utf8 radar.py guland-image-backfill --include-inactive
-& $py -X utf8 radar.py guland-image-backfill --include-inactive --apply
+& $py -X utf8 radar.py guland-image-backfill --include-inactive --limit 50
+& $py -X utf8 radar.py guland-image-backfill --include-inactive --limit 50 --apply
 ```
+
+Production `--apply` requires explicit user approval. Apply merges live image
+URLs into revisioned raw history, resets only confirmed retryable rows, and
+downloads only the bounded zero-ready listing IDs.
 
 ## Fast Verification
 

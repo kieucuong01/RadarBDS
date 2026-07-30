@@ -67,6 +67,52 @@ class FacebookImageRefreshTest(unittest.TestCase):
         self.assertEqual(payload["imgs"], ["https://scontent.test/fresh.jpg"])
         self.assertEqual(payload["_apify_raw"], {"id": "fb1"})
 
+    def test_same_url_content_edit_is_revisioned_even_when_images_are_unchanged(self):
+        from db.connection import get_conn
+        from db.raw_listings import get_raw_listing_revisions
+        from cli.crawlers import _refresh_existing_facebook_images
+
+        url = self.url
+        old = {
+            "url": url,
+            "description": "Giá 2 tỷ",
+            "imgs": ["https://scontent.test/same.jpg"],
+            "manual_note": "preserve me",
+        }
+        with get_conn() as conn:
+            raw_id = conn.execute(
+                """
+                INSERT INTO raw_listings (source, source_id, url, raw_json)
+                VALUES ('facebook', 'fb-edit', ?, ?)
+                """,
+                (url, json.dumps(old)),
+            ).lastrowid
+
+        changed = _refresh_existing_facebook_images(
+            url,
+            {
+                "url": url,
+                "description": "Giá 1.9 tỷ",
+                "imgs": ["https://scontent.test/same.jpg"],
+            },
+        )
+
+        self.assertEqual(changed, raw_id)
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT raw_json FROM raw_listings WHERE id=?",
+                (raw_id,),
+            ).fetchone()
+        payload = json.loads(row["raw_json"])
+        self.assertEqual(payload["description"], "Giá 1.9 tỷ")
+        self.assertEqual(payload["manual_note"], "preserve me")
+        revisions = get_raw_listing_revisions(raw_id)
+        self.assertEqual(
+            [item["raw_json"]["description"] for item in revisions],
+            ["Giá 2 tỷ", "Giá 1.9 tỷ"],
+        )
+        self.assertIn("description", revisions[-1]["changed_fields"])
+
 
 if __name__ == "__main__":
     unittest.main()

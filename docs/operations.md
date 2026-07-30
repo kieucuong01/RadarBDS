@@ -157,6 +157,33 @@ confirmations before hiding a listing, refreshes only confirmed price changes,
 and runs targeted reprocess for those changed raw rows. It never fabricates
 missing historical prices. Keep the limit between 1 and 200.
 
+## Guland Zero-ready Image Recovery
+
+The image repair command treats a listing as ready only when it has a usable
+original and, in S3 mode, the matching WebP thumbnail. It therefore includes
+rows that already exist but are `NULL`, `NOT_FOUND`, or point to a missing S3
+object:
+
+```powershell
+& $py -X utf8 radar.py guland-image-backfill --limit 50
+```
+
+Dry-run is the default and may perform bounded read-only source checks. Review
+`zero_ready_total`, `zero_ready_targets`, `live_recoverable_targets`,
+`missing_original_rows`, and `missing_thumbnail_rows` before apply.
+
+Production apply always requires explicit user approval:
+
+```powershell
+& $py -X utf8 radar.py guland-image-backfill --limit 50 --apply
+```
+
+Apply writes changed raw snapshots to `raw_listing_revisions`, resets only
+live-confirmed `NOT_FOUND` URLs or missing originals, and invokes targeted
+downloads for the selected listing IDs. New image objects include image-row
+identity and an asset fingerprint, so Facebook revisions cannot overwrite the
+same immutable S3 key.
+
 ## Cache Prewarm
 
 Use after deploy and after crawl/reprocess:

@@ -109,6 +109,13 @@ Trong postprocess:
 4. Gọi `_clean_broker_images_after_download(...)` để xóa ảnh môi giới/ảnh mặt
    người không phù hợp.
 
+Ảnh mới không còn dùng tên chỉ theo `(listing_id, img_order)`. Downloader dùng
+thêm `listing_images.id` và fingerprint của asset để hai revision ảnh Facebook
+không ghi đè cùng object S3. Với URL Facebook chỉ đổi query chữ ký CDN, gallery
+giữ file đã tải; khi path asset thật đổi, slot hiện hành được reset để tải lại.
+Downloader chỉ đánh dấu ready sau khi body giải mã được và, ở chế độ S3, cả
+original lẫn thumbnail đều upload thành công.
+
 Nếu `fb_new = 0`, hệ thống không reprocess toàn bộ; nó chỉ tải backlog ảnh,
 ops health check, prewarm dashboard rồi dừng.
 
@@ -138,6 +145,11 @@ run_full_reprocess()
 
 Sau bước này, một raw có thể vẫn không thành listing nếu parser không đủ dữ
 liệu, URL thiếu, phone blacklist, hoặc trùng trong batch.
+
+`raw_listings` luôn là snapshot mới nhất. Mỗi trạng thái khác biệt của cùng
+source URL được append vào `raw_listing_revisions`; observation giống hệt liền
+trước không sinh thêm revision. Các cập nhật ảnh, chi tiết Guland, tọa độ,
+repair và image cleanup đều đi qua repository này.
 
 ### Bước 4 — `listings` → `valuation_results`
 

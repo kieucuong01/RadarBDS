@@ -38,8 +38,13 @@ def _parse_raw_json(value: object) -> dict:
 
 
 def _changed_fields(previous: Mapping[str, Any], current: Mapping[str, Any]) -> list[str]:
+    missing = object()
     keys = set(previous) | set(current)
-    return sorted(key for key in keys if previous.get(key) != current.get(key))
+    return sorted(
+        key
+        for key in keys
+        if previous.get(key, missing) != current.get(key, missing)
+    )
 
 
 def _append_raw_revision(

@@ -54,9 +54,8 @@ def _prewarm_dashboard_cache():
 
 
 def _refresh_existing_facebook_images(url: str, raw_data: dict):
-    """Refresh volatile Facebook CDN image URLs for an already-seen post."""
-    imgs = raw_data.get("imgs") or raw_data.get("img_urls") or []
-    if not url or not imgs:
+    """Refresh changed source fields for an already-seen Facebook post."""
+    if not url or not raw_data:
         return None
 
     with get_conn() as conn:
@@ -72,13 +71,13 @@ def _refresh_existing_facebook_images(url: str, raw_data: dict):
         except Exception:
             existing = {}
 
+        imgs = raw_data.get("imgs") or raw_data.get("img_urls") or []
         old_imgs = existing.get("imgs") or existing.get("img_urls") or []
-        if old_imgs == imgs:
-            return None
-
-        existing["imgs"] = imgs
-        if raw_data.get("_apify_raw"):
-            existing["_apify_raw"] = raw_data["_apify_raw"]
+        incoming = dict(raw_data)
+        if old_imgs and not imgs:
+            incoming.pop("imgs", None)
+            incoming.pop("img_urls", None)
+        existing.update(incoming)
         changed = update_raw_listing_payload(
             int(row["id"]),
             existing,

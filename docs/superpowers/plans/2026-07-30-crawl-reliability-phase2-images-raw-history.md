@@ -385,7 +385,7 @@ git commit -m "feat: recover zero-ready Guland images"
 - Documents: local dry-run, bounded apply command, raw history behavior, and
   explicit production approval gate.
 
-- [ ] **Step 1: Update operations documentation**
+- [x] **Step 1: Update operations documentation**
 
 Document:
 
@@ -398,7 +398,7 @@ State that apply checks zero-ready displayable listings, retries recovered
 URLs, and writes raw revisions. Production apply still requires explicit user
 approval.
 
-- [ ] **Step 2: Run the focused phase-two suite**
+- [x] **Step 2: Run the focused phase-two suite**
 
 ```powershell
 & $py -X utf8 -m pytest `
@@ -418,7 +418,7 @@ approval.
   tests\test_s3_image_storage.py -q
 ```
 
-- [ ] **Step 3: Run syntax and local dry-run verification**
+- [x] **Step 3: Run syntax and local dry-run verification**
 
 ```powershell
 & $py -X utf8 -m py_compile `
@@ -432,7 +432,7 @@ git diff --check
 
 Dry-run must report bounded counts and make no DB/object writes.
 
-- [ ] **Step 4: Self-review inline**
+- [x] **Step 4: Self-review inline**
 
 Review the complete diff against the design:
 
@@ -445,7 +445,7 @@ Review the complete diff against the design:
 
 Fix all critical or important findings and rerun affected tests.
 
-- [ ] **Step 5: Run repository-wide tests**
+- [x] **Step 5: Run repository-wide tests**
 
 Use the documented isolated test PostgreSQL URL and production-like public base
 URL override:
@@ -457,14 +457,21 @@ URL override:
 Record exact passed, skipped, and failed counts. Do not claim the branch is
 green if unrelated baseline failures remain.
 
-- [ ] **Step 6: Commit documentation and verification evidence**
+Verification note (2026-07-30): 1,706 tests collected; 1,693 passed, 2 skipped,
+and 11 failed in the existing out-of-scope baseline groups (admin duplicate
+queue isolation, guest signal visibility, legacy SEO image expectation, and
+Linux-only social font paths on Windows). The phase-two focused suite is
+79/79 green, syntax checks pass, and local Guland dry-run `--limit 20`
+completed with zero writes/errors.
+
+- [x] **Step 6: Commit documentation and verification evidence**
 
 ```powershell
 git add docs/daily_crawl_flow.md docs/dev_commands.md docs/operations.md docs/superpowers/plans/2026-07-30-crawl-reliability-phase2-images-raw-history.md
 git commit -m "docs: record phase two image verification"
 ```
 
-- [ ] **Step 7: Stop before release**
+- [x] **Step 7: Stop before release**
 
 Report commits, focused/full verification, dry-run counts, and any remaining
 baseline failures. Do not merge, push, deploy, or run production `--apply`

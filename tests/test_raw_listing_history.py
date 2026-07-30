@@ -124,3 +124,25 @@ def test_canonical_raw_json_ignores_mapping_order_but_not_values():
     assert payload_a == payload_b == '{"a":1,"b":2}'
     assert hash_a == hash_b
     assert hash_changed != hash_a
+
+
+def test_changed_fields_distinguishes_missing_key_from_explicit_null():
+    url = _url("explicit-null")
+    try:
+        inserted = insert_raw_result(
+            "guland",
+            "post-explicit-null",
+            url,
+            {"url": url, "title": "A"},
+        )
+
+        assert update_raw_listing_payload(
+            inserted.raw_id,
+            {"url": url, "title": "A", "source_lat": None},
+            change_kind="coordinate_backfill",
+        )
+
+        revisions = get_raw_listing_revisions(inserted.raw_id)
+        assert revisions[-1]["changed_fields"] == ["source_lat"]
+    finally:
+        _delete(url)
