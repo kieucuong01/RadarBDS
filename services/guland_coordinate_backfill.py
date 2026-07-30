@@ -124,7 +124,6 @@ def _build_update_plan(
         normalized_target = normalize_guland_post_url(target.url)
         if normalized_target is None:
             stats["invalid"] += 1
-            stats["errors"] += 1
             continue
         card = cards_by_url.get(normalized_target[0])
         if card is None:

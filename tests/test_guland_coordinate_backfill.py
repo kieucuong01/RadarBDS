@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from dataclasses import replace
 import os
 
 import pytest
@@ -69,6 +70,31 @@ def test_dry_run_builds_plan_without_writing(monkeypatch, tmp_path):
     assert result["raw_updated"] == 0
     assert merge_calls == []
     assert list(tmp_path.iterdir()) == []
+
+
+def test_invalid_non_guland_target_url_is_data_invalid_not_runtime_error(
+    monkeypatch,
+    tmp_path,
+):
+    target = replace(
+        _target(),
+        url="https://guland.test/post/test-row",
+        source_id="fixture",
+    )
+    monkeypatch.setattr(
+        "services.guland_coordinate_backfill.load_active_guland_coordinate_targets",
+        lambda: [target],
+    )
+    monkeypatch.setattr(
+        "services.guland_coordinate_backfill._collect_cards",
+        lambda targets: [],
+    )
+
+    result = run_guland_coordinate_backfill(manifest_root=tmp_path)
+
+    assert result["invalid"] == 1
+    assert result["errors"] == 0
+    assert result["missing"] == 0
 
 
 def test_apply_writes_manifest_then_raw_then_exact_map(monkeypatch, tmp_path):
