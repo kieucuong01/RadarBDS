@@ -836,7 +836,11 @@ class PriceHistoryTest(unittest.TestCase):
 
         response = app.test_client().get(f"/api/history/{listing_id}")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()["history"], [{"date": "2026-05-06", "price_ty": 1.74}])
+        self.assertEqual(response.get_json()["history"], [{
+            "date": "2026-05-06",
+            "price_ty": 1.74,
+            "recorded_at": "2026-05-06 22:58:26",
+        }])
 
         admin_client = app.test_client()
         self._login_as_admin(admin_client)
@@ -844,6 +848,51 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual(admin_response.status_code, 200)
         admin_history = admin_response.get_json()["history"]
         self.assertEqual(admin_history[0]["url"], f"{self.url_prefix}/dx84")
+
+    def test_guland_history_keeps_distinct_same_day_price_changes(self):
+        from app import app
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, updated_at, probably_sold
+                ) VALUES (
+                    'guland', ?, ?, 'Guland same-day price changes',
+                    'Phu Loi', 100, 'dat_nen', 2.4, 24,
+                    '2026-07-30T15:00:00+07:00', 0
+                )
+                """,
+                (
+                    f"{self.source_id}-same-day-guland",
+                    f"{self.url_prefix}/same-day-guland",
+                ),
+            )
+            listing_id = self._track(cur.lastrowid)
+            conn.executemany(
+                """
+                INSERT INTO price_history (
+                    listing_id, price_ty, price_per_m2, recorded_at
+                ) VALUES (?, ?, ?, ?)
+                """,
+                [
+                    (listing_id, 2.5, 25.0, "2026-07-30 08:00:00"),
+                    (listing_id, 2.7, 27.0, "2026-07-30 11:00:00"),
+                    (listing_id, 2.4, 24.0, "2026-07-30 15:00:00"),
+                ],
+            )
+
+        history = app.test_client().get(
+            f"/api/history/{listing_id}"
+        ).get_json()["history"]
+
+        self.assertEqual(
+            [row["price_ty"] for row in history],
+            [2.5, 2.7, 2.4],
+        )
+        self.assertTrue(history[-1]["recorded_at"].endswith("15:00:00"))
 
     def test_history_api_keeps_only_final_same_day_parser_snapshot(self):
         from app import app

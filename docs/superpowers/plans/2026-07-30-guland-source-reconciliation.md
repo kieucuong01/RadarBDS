@@ -470,7 +470,7 @@ git commit -m "feat: record guland price changes"
   list[tuple[float, str]]) -> int` inserts one UUID-scoped listing plus ordered
   `price_history` rows and returns its ID; teardown removes dependent rows.
 
-- [ ] **Step 1: Write failing history API tests**
+- [x] **Step 1: Write failing history API tests**
 
 ```python
 def test_guland_history_keeps_distinct_same_day_price_changes():
@@ -496,13 +496,13 @@ def test_facebook_same_day_parser_snapshots_still_collapse():
     ]
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_price_history.py -q
 ```
 
-- [ ] **Step 3: Make history ranking source-specific**
+- [x] **Step 3: Make history ranking source-specific**
 
 For Guland, order and date plot points by `price_history.recorded_at` and do not
 collapse distinct same-day prices. For Facebook, retain the final same-day
@@ -511,7 +511,7 @@ parser snapshot behavior and posted-date semantics.
 Do not merge separate Guland listing IDs into one price series unless the
 existing source-ID identity relationship already links them.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_price_history.py tests\test_lot_history.py -q

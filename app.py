@@ -5251,7 +5251,8 @@ def get_price_history(listing_id):
     tier = current_tier()
     with db_mod.get_conn() as conn:
         curr = conn.execute("""
-            SELECT posted_at, crawled_at, updated_at, price_ty, ward, area_m2, property_type, road_tier,
+            SELECT source, posted_at, crawled_at, updated_at, price_updated_at,
+                   price_ty, ward, area_m2, property_type, road_tier,
                    price_per_m2, title, url
             FROM listings
             WHERE id = ?
@@ -5261,17 +5262,30 @@ def get_price_history(listing_id):
         rows = conn.execute(f"""
             WITH ranked_snapshots AS (
                 SELECT ph.id, ph.listing_id, ph.recorded_at, ph.price_ty, ph.price_per_m2,
-                       COALESCE(NULLIF(l.posted_at, ''), ph.recorded_at, l.crawled_at, l.updated_at) AS history_date,
-                       l.url,
+                       CASE
+                           WHEN l.source='guland' THEN ph.recorded_at
+                           ELSE COALESCE(
+                               NULLIF(l.posted_at, ''),
+                               ph.recorded_at,
+                               l.crawled_at,
+                               l.updated_at
+                           )
+                       END AS history_date,
+                       l.url, l.source,
                        ROW_NUMBER() OVER (
-                           PARTITION BY ph.listing_id, substr(ph.recorded_at, 1, 10)
+                           PARTITION BY ph.listing_id,
+                               CASE
+                                   WHEN l.source='guland' THEN CAST(ph.id AS TEXT)
+                                   ELSE substr(ph.recorded_at, 1, 10)
+                               END
                            ORDER BY ph.recorded_at DESC, ph.id DESC
                        ) AS same_day_rank
                 FROM price_history ph
                 LEFT JOIN listings l ON l.id = ph.listing_id
                 WHERE ph.listing_id IN ({placeholders})
             )
-            SELECT listing_id, recorded_at, price_ty, price_per_m2, history_date, url
+            SELECT listing_id, recorded_at, price_ty, price_per_m2,
+                   history_date, url, source
             FROM ranked_snapshots
             WHERE same_day_rank = 1
             ORDER BY history_date ASC, recorded_at ASC, id ASC
@@ -5285,6 +5299,8 @@ def get_price_history(listing_id):
             if same_as_last:
                 continue
             item = {'date': (r["history_date"] or '')[:10], 'price_ty': price_ty}
+            if r["source"] == "guland":
+                item["recorded_at"] = r["recorded_at"] or ""
             if tier == "admin" and r["url"]:
                 item["url"] = r["url"]
             history.append(item)
@@ -5296,7 +5312,8 @@ def get_price_history(listing_id):
             if not history or not _same_price_value(history[-1]['price_ty'], current_price):
                 item = {
                     'date': (
-                        curr["posted_at"]
+                        curr["price_updated_at"]
+                        or curr["posted_at"]
                         or curr["crawled_at"]
                         or curr["updated_at"]
                         or ''
@@ -5304,6 +5321,13 @@ def get_price_history(listing_id):
                     'price_ty': current_price,
                     'is_current': True,
                 }
+                if curr["source"] == "guland":
+                    item["recorded_at"] = (
+                        curr["price_updated_at"]
+                        or curr["crawled_at"]
+                        or curr["updated_at"]
+                        or ""
+                    )
                 if tier == "admin" and curr["url"]:
                     item["url"] = curr["url"]
                 history.append(item)
