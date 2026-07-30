@@ -55,6 +55,7 @@ ID_TABLES = {
     "notification_log",
     "price_history",
     "public_content_items",
+    "raw_listing_revisions",
     "raw_listings",
     "user_audit_log",
     "user_favorite_listings",

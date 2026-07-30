@@ -28,6 +28,26 @@ CREATE INDEX IF NOT EXISTS idx_raw_crawled   ON raw_listings(crawled_at DESC);
 CREATE INDEX IF NOT EXISTS idx_raw_source_crawled
     ON raw_listings(source, crawled_at DESC);
 
+CREATE TABLE IF NOT EXISTS raw_listing_revisions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    raw_listing_id  INTEGER NOT NULL REFERENCES raw_listings(id) ON DELETE CASCADE,
+    revision_no     INTEGER NOT NULL,
+    source          TEXT NOT NULL,
+    source_id       TEXT,
+    url             TEXT NOT NULL,
+    raw_json        TEXT NOT NULL,
+    content_hash    TEXT NOT NULL,
+    changed_fields  JSONB NOT NULL DEFAULT '[]'::jsonb,
+    change_kind     TEXT NOT NULL,
+    crawl_run_id    INTEGER,
+    observed_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(raw_listing_id, revision_no)
+);
+CREATE INDEX IF NOT EXISTS idx_raw_revisions_listing
+    ON raw_listing_revisions(raw_listing_id, revision_no DESC);
+CREATE INDEX IF NOT EXISTS idx_raw_revisions_source_url
+    ON raw_listing_revisions(source, url, observed_at DESC);
+
 
 -- ================================================================
 -- TẦNG 2: PROCESSED — output của pipeline, reprocessable từ raw
@@ -1035,12 +1055,49 @@ def _migrate_facebook_crawl_profiles(conn: Any) -> None:
     )
 
 
+def _migrate_raw_listing_revisions(conn: Any) -> None:
+    """Create append-only source snapshots for edits to one raw URL."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS raw_listing_revisions (
+            id BIGSERIAL PRIMARY KEY,
+            raw_listing_id BIGINT NOT NULL
+                REFERENCES raw_listings(id) ON DELETE CASCADE,
+            revision_no INTEGER NOT NULL,
+            source TEXT NOT NULL,
+            source_id TEXT,
+            url TEXT NOT NULL,
+            raw_json TEXT NOT NULL,
+            content_hash TEXT NOT NULL,
+            changed_fields JSONB NOT NULL DEFAULT '[]'::jsonb,
+            change_kind TEXT NOT NULL,
+            crawl_run_id BIGINT,
+            observed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE(raw_listing_id, revision_no)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_raw_revisions_listing
+        ON raw_listing_revisions(raw_listing_id, revision_no DESC)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_raw_revisions_source_url
+        ON raw_listing_revisions(source, url, observed_at DESC)
+        """
+    )
+
+
 def _run_migrations(conn: Any) -> None:
     """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
     _migrate_listing_map_locations(conn)
     _migrate_listing_reports(conn)
     _migrate_admin_jobs(conn)
     _migrate_facebook_crawl_profiles(conn)
+    _migrate_raw_listing_revisions(conn)
     conn.execute(
         """
         ALTER TABLE crawl_run_progress

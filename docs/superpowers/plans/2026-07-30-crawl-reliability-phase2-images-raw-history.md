@@ -33,7 +33,7 @@
 - Produces: `refresh_raw_listing(source: str, url: str, raw_data: dict, crawl_run_id: int | None = None, *, change_kind: str = "source_refresh") -> int`
 - Produces: `get_raw_listing_revisions(raw_id: int) -> list[dict]`
 
-- [ ] **Step 1: Write failing schema and repository tests**
+- [x] **Step 1: Write failing schema and repository tests**
 
 Create tests that:
 
@@ -54,7 +54,7 @@ Also insert one legacy `raw_listings` row directly, refresh it, and assert that
 the old state is seeded before the new state. Assert canonical JSON ignores
 dictionary insertion order but not actual values.
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_raw_listing_history.py -q
@@ -63,7 +63,7 @@ dictionary insertion order but not actual values.
 Expected: collection or schema assertions fail because the ledger and helpers
 do not exist.
 
-- [ ] **Step 3: Add the revision schema**
+- [x] **Step 3: Add the revision schema**
 
 Add `raw_listing_revisions` with:
 
@@ -87,7 +87,7 @@ Add indexes on `(raw_listing_id, revision_no DESC)` and
 `(source, url, observed_at DESC)`. Add an idempotent migration helper for an
 existing PostgreSQL database.
 
-- [ ] **Step 4: Implement revision-aware repository writes**
+- [x] **Step 4: Implement revision-aware repository writes**
 
 Canonicalize with:
 
@@ -108,14 +108,14 @@ In one transaction:
 Make `insert_raw_result()` append revision 1 only after the raw insert succeeds.
 Keep duplicate insert behavior unchanged.
 
-- [ ] **Step 5: Run focused tests and verify GREEN**
+- [x] **Step 5: Run focused tests and verify GREEN**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_raw_listing_history.py tests\test_raw_insert_results.py -q
 & $py -X utf8 -m py_compile db\schema.py db\raw_listings.py
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add db/schema.py db/raw_listings.py tests/test_raw_listing_history.py
