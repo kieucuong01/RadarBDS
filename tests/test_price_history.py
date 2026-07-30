@@ -155,6 +155,73 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual([r["price_ty"] for r in rows], [1.74, 1.70])
         self.assertEqual([r["crawl_run_id"] for r in rows], [1, 2])
 
+    def test_guland_same_price_preserves_first_seen_and_price_activity(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(price_ty=2.5, price_per_m2=25.0),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+        with get_conn() as conn:
+            before = conn.execute(
+                """
+                SELECT first_seen_at, price_updated_at
+                FROM listings WHERE id=?
+                """,
+                (listing_id,),
+            ).fetchone()
+
+        upsert_listing(
+            self._rec(price_ty=2.5, price_per_m2=24.9),
+            crawl_run_id=2,
+        )
+
+        with get_conn() as conn:
+            after = conn.execute(
+                """
+                SELECT first_seen_at, price_updated_at
+                FROM listings WHERE id=?
+                """,
+                (listing_id,),
+            ).fetchone()
+        self.assertEqual(after["first_seen_at"], before["first_seen_at"])
+        self.assertIsNone(after["price_updated_at"])
+        self.assertEqual(
+            [row["price_ty"] for row in self._history_rows(listing_id)],
+            [2.5],
+        )
+
+    def test_guland_increase_and_decrease_append_price_history(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(price_ty=2.5, price_per_m2=25.0),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+        upsert_listing(
+            self._rec(price_ty=2.7, price_per_m2=27.0),
+            crawl_run_id=2,
+        )
+        upsert_listing(
+            self._rec(price_ty=2.4, price_per_m2=24.0),
+            crawl_run_id=3,
+        )
+
+        self.assertEqual(
+            [row["price_ty"] for row in self._history_rows(listing_id)],
+            [2.5, 2.7, 2.4],
+        )
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT price_updated_at FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+        self.assertIsNotNone(row["price_updated_at"])
+
     def test_upsert_listing_missing_price_or_area_preserves_last_known_values(self):
         from db.connection import get_conn
         from db.listings import upsert_listing
@@ -218,18 +285,24 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertIsNone(row["depth_m"])
         self.assertIsNone(row["tho_cu_m2"])
 
-    def test_upsert_listing_clear_stale_measurements_can_clear_stale_price(self):
+    def test_facebook_full_reprocess_can_clear_stale_price(self):
         from db.connection import get_conn
         from db.listings import upsert_listing
 
         listing_id, _ = upsert_listing(
-            self._rec(price_ty=3.0, price_per_m2=20.0, area_m2=150.0),
+            self._rec(
+                source="facebook",
+                price_ty=3.0,
+                price_per_m2=20.0,
+                area_m2=150.0,
+            ),
             crawl_run_id=1,
         )
         self._track(listing_id)
 
         same_listing_id, is_new = upsert_listing(
             self._rec(
+                source="facebook",
                 price_ty=None,
                 price_per_m2=None,
                 area_m2=150.0,

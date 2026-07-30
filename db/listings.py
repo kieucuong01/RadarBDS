@@ -240,7 +240,8 @@ def _same_price_snapshot(a: Optional[float], b: Optional[float]) -> bool:
 
 def _should_insert_price_history(conn, listing_id: int,
                                  price_ty: Optional[float],
-                                 price_per_m2: Optional[float]) -> bool:
+                                 price_per_m2: Optional[float],
+                                 source: str = "") -> bool:
     if price_ty is None and price_per_m2 is None:
         return False
 
@@ -253,6 +254,9 @@ def _should_insert_price_history(conn, listing_id: int,
     """, (listing_id,)).fetchone()
     if latest is None:
         return True
+
+    if source == "guland":
+        return not _same_price_snapshot(price_ty, latest["price_ty"])
 
     return not (
         _same_price_snapshot(price_ty, latest["price_ty"])
@@ -270,7 +274,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
         has_road_name_column = _has_listing_column(conn, "road_name")
         existing = conn.execute(
             """
-            SELECT id, price_ty, price_per_m2, area_m2,
+            SELECT id, source, price_ty, price_per_m2, area_m2,
                    frontage_m, depth_m,
                    price_first_ty, price_dropped, suspicious_bait,
                    llm_notes
@@ -296,14 +300,16 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     property_type, tx_type, frontage_m, depth_m,
                     road_type, road_tier, tho_cu_m2, tho_cu_ratio, has_so, is_hot, contact_phone, seller_name{road_name_col},
                     price_first_ty, crawled_at, updated_at,
-                    first_seen_at, last_seen_at, is_active, posted_at
+                    first_seen_at, last_seen_at, is_active, posted_at,
+                    source_status, source_status_reason
                 ) VALUES (
                     :raw_id, :source, :source_id, :url, :title, :description,
                     :area, :ward, :raw_area_text, :price_ty, :price_per_m2, :area_m2,
                     :property_type, :tx_type, :frontage_m, :depth_m,
                     :road_type, :road_tier, :tho_cu_m2, :tho_cu_ratio, :has_so, :is_hot, :contact_phone, :seller_name{road_name_val},
                     :price_ty, :crawled_at, :updated_at,
-                    :crawled_at, :crawled_at, 1, :posted_at
+                    :crawled_at, :crawled_at, 1, :posted_at,
+                    :source_status, :source_status_reason
                 )
             """, {
                 "raw_id":       rec.get("raw_id"),
@@ -334,10 +340,20 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "crawled_at":   now,
                 "updated_at":   now,
                 "posted_at":    rec.get("post_date"),
+                "source_status": "active" if rec["source"] == "guland" else "unknown",
+                "source_status_reason": (
+                    "new_confirmed_detail" if rec["source"] == "guland" else ""
+                ),
             })
             listing_id = cur.lastrowid
 
-            if _should_insert_price_history(conn, listing_id, rec.get("price_ty"), rec.get("price_per_m2")):
+            if _should_insert_price_history(
+                conn,
+                listing_id,
+                rec.get("price_ty"),
+                rec.get("price_per_m2"),
+                rec["source"],
+            ):
                 conn.execute(
                     "INSERT INTO price_history (listing_id, price_ty, price_per_m2, crawl_run_id) VALUES (?,?,?,?)",
                     (listing_id, rec.get("price_ty"), rec.get("price_per_m2"), crawl_run_id)
@@ -349,8 +365,12 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             first_price = existing["price_first_ty"] or existing["price_ty"]
             clear_stale_measurements = bool(rec.get("_clear_stale_measurements"))
             override_fields = set(rec.get("_llm_extraction_override_fields") or [])
+            is_guland = (rec.get("source") or existing["source"]) == "guland"
             if clear_stale_measurements:
-                new_price = rec.get("price_ty")
+                if is_guland and not _present(rec.get("price_ty")):
+                    new_price = existing["price_ty"]
+                else:
+                    new_price = rec.get("price_ty")
             else:
                 new_price = (
                     rec.get("price_ty")
@@ -390,6 +410,11 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     new_depth = derived_depth
             if not _present(new_ppm2) and _present(new_price) and _present(new_area):
                 new_ppm2 = round(float(new_price) * 1000 / float(new_area), 3)
+            price_changed = bool(
+                is_guland
+                and new_price is not None
+                and not _same_price_snapshot(existing["price_ty"], new_price)
+            )
             price_dropped  = existing["price_dropped"]
             price_drop_pct = None
             suspicious_bait = existing["suspicious_bait"] if "suspicious_bait" in existing.keys() else 0
@@ -435,10 +460,22 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     suspicious_bait     = :suspicious_bait,
                     consecutive_missing = 0,
                     updated_at          = :updated_at,
+                    price_updated_at    = CASE
+                        WHEN :price_changed <> 0 THEN CAST(:price_updated_at AS TIMESTAMPTZ)
+                        ELSE price_updated_at
+                    END,
                     last_seen_at        = :updated_at,
                     first_seen_at       = COALESCE(first_seen_at, :updated_at),
                     is_active           = 1,
                     delisted_at         = NULL,
+                    source_status       = CASE
+                        WHEN :is_guland <> 0 THEN 'active'
+                        ELSE source_status
+                    END,
+                    source_status_reason = CASE
+                        WHEN :is_guland <> 0 THEN 'refreshed_detail'
+                        ELSE source_status_reason
+                    END,
                     posted_at           = COALESCE(posted_at, :posted_at)
                 WHERE id = :id
             """, {
@@ -464,10 +501,19 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "suspicious_bait": suspicious_bait,
                 "clear_price":    int(clear_price),
                 "updated_at":    now,
+                "price_updated_at": now,
+                "price_changed": int(price_changed),
+                "is_guland":     int(is_guland),
                 "posted_at":     rec.get("post_date"),
             })
 
-            if _should_insert_price_history(conn, listing_id, new_price, new_ppm2):
+            if _should_insert_price_history(
+                conn,
+                listing_id,
+                new_price,
+                new_ppm2,
+                rec.get("source") or existing["source"],
+            ):
                 conn.execute(
                     "INSERT INTO price_history (listing_id, price_ty, price_per_m2, crawl_run_id) VALUES (?,?,?,?)",
                     (listing_id, new_price, new_ppm2, crawl_run_id)

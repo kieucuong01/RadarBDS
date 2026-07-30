@@ -16,6 +16,7 @@ from db.raw_listings import (
     insert_raw,
     insert_raw_result,
     RawInsertResult,
+    refresh_raw_listing,
 )
 from db.schema import SCHEMA_SQL, init_schema
 
@@ -34,6 +35,7 @@ __all__ = [
     "insert_raw",
     "insert_raw_result",
     "RawInsertResult",
+    "refresh_raw_listing",
     "mark_missing_listings",
     "normalize_phone",
     "save_valuation_result",

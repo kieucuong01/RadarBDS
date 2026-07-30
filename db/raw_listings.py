@@ -66,6 +66,35 @@ def insert_raw(source: str, source_id: Optional[str], url: str,
     ).raw_id
 
 
+def refresh_raw_listing(
+    source: str,
+    url: str,
+    raw_data: dict,
+    crawl_run_id: Optional[int] = None,
+) -> int:
+    """Refresh one existing source identity without inserting a second row."""
+    with get_conn() as conn:
+        cur = conn.execute(
+            """
+            UPDATE raw_listings
+            SET raw_json=?,
+                crawled_at=datetime('now'),
+                crawl_run_id=?
+            WHERE source=? AND url=?
+            RETURNING id
+            """,
+            (
+                json.dumps(raw_data, ensure_ascii=False),
+                crawl_run_id,
+                source,
+                url,
+            ),
+        )
+        if not cur.lastrowid:
+            raise LookupError(f"Raw listing not found for {source}: {url}")
+        return int(cur.lastrowid)
+
+
 def get_raw_for_reprocess(source: Optional[str] = None,
                           since: Optional[str] = None,
                           incremental: bool = False,

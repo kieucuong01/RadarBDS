@@ -276,7 +276,14 @@ def test_secondary_crawl_limits_image_backfill():
         SOURCE_NAME = "guland"
 
         def run(self, mode, headless=True):
-            return {"new": 1, "skipped": 0, "errors": 0}
+            return {
+                "new": 1,
+                "updated": 0,
+                "skipped": 0,
+                "errors": 0,
+                "inserted_raw_ids": [1001],
+                "refreshed_raw_ids": [],
+            }
 
     args = SimpleNamespace(
         source="guland",
@@ -288,7 +295,7 @@ def test_secondary_crawl_limits_image_backfill():
     with mock.patch.object(crawlers, "init_schema"), \
          mock.patch.object(crawlers, "get_conn", return_value=_FakeDbContext()), \
          mock.patch.object(crawlers, "_get_crawlers", return_value=[_NewCrawler()]), \
-        mock.patch("cleansing.reprocess.run_full_reprocess", return_value={
+        mock.patch("cleansing.reprocess.run_targeted_reprocess", return_value={
              "listings": {"new": 1, "updated": 0, "processed_ids": [42]},
              "valuation": {"total": 1, "signals": 0, "outliers": 0},
          }), \
@@ -301,3 +308,64 @@ def test_secondary_crawl_limits_image_backfill():
 
     assert calls["download"] == {"limit": 500, "listing_ids": [42]}
     assert calls["clean"] == {"source": "guland", "limit": 500}
+
+
+def test_guland_crawl_reprocesses_only_inserted_and_refreshed_raw_ids():
+    calls = {}
+
+    class _ReconciledCrawler:
+        SOURCE_NAME = "guland"
+
+        def run(self, mode, headless=True):
+            return {
+                "new": 1,
+                "updated": 1,
+                "skipped": 0,
+                "errors": 0,
+                "inserted_raw_ids": [101],
+                "refreshed_raw_ids": [202],
+            }
+
+    args = SimpleNamespace(
+        source="guland",
+        visible=False,
+        no_reprocess=False,
+        no_alert=True,
+    )
+    targeted_result = {
+        "listings": {
+            "new": 1,
+            "updated": 1,
+            "processed_ids": [10, 20],
+        },
+        "valuation": {"total": 2, "signals": 0, "outliers": 0},
+        "map_locations": {"processed": 2},
+    }
+
+    def fake_targeted(raw_ids):
+        calls["raw_ids"] = raw_ids
+        return targeted_result
+
+    with mock.patch.object(crawlers, "init_schema"), \
+         mock.patch.object(crawlers, "get_conn", return_value=_FakeDbContext()), \
+         mock.patch.object(crawlers, "_get_crawlers", return_value=[_ReconciledCrawler()]), \
+         mock.patch(
+             "cleansing.reprocess.run_targeted_reprocess",
+             side_effect=fake_targeted,
+         ), \
+         mock.patch(
+             "cleansing.reprocess.run_full_reprocess",
+             side_effect=AssertionError("Guland reconciliation must stay targeted"),
+         ), \
+         mock.patch(
+             "cleansing.download_images.download_images",
+             side_effect=lambda **kwargs: calls.setdefault("download", kwargs),
+         ), \
+         mock.patch.object(crawlers, "_clean_broker_images_after_download"), \
+         mock.patch.object(crawlers, "cmd_export_raw"), \
+         mock.patch.object(crawlers, "_maybe_send_ops_alert"), \
+         mock.patch.object(crawlers, "_prewarm_dashboard_cache"):
+        crawlers._cmd_crawl(args, mode="incremental")
+
+    assert calls["raw_ids"] == [101, 202]
+    assert calls["download"] == {"limit": 500, "listing_ids": [10, 20]}

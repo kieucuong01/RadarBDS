@@ -634,6 +634,27 @@ def _run_listing_map_backfill(processed_ids: list[int], *, full: bool) -> dict:
         return {"status": "error", "error": str(exc)}
 
 
+def run_targeted_reprocess(raw_ids: list[int]) -> dict:
+    """Normalize, revalue, and remap only explicitly refreshed raw rows."""
+    bounded_raw_ids = list(
+        dict.fromkeys(int(raw_id) for raw_id in raw_ids if raw_id)
+    )
+    listing_stats = reprocess_listings(raw_ids=bounded_raw_ids)
+    processed_ids = list(
+        dict.fromkeys(listing_stats.get("processed_ids") or [])
+    )
+    valuation_stats = reprocess_valuation(incremental_ids=processed_ids)
+    map_location_stats = _run_listing_map_backfill(
+        processed_ids,
+        full=False,
+    )
+    return {
+        "listings": listing_stats,
+        "valuation": valuation_stats,
+        "map_locations": map_location_stats,
+    }
+
+
 def _run_full_reprocess(source: str = None, since: str = None, full: bool = False, raw_ids: list = None):
     """Chạy pipeline reprocess: raw → listings → valuation."""
     logger.info("=" * 55)

@@ -410,11 +410,20 @@ def _cmd_crawl(args, mode: str = "full"):
         return
 
     total_new = 0
+    targeted_raw_ids: list[int] = []
     crawler_exceptions: list[tuple[str, str]] = []
     for crawler in crawlers:
         try:
             stats = crawler.run(mode=mode, headless=headless)
-            total_new += stats.get("new", 0)
+            if crawler.SOURCE_NAME == "guland":
+                changed_raw_ids = [
+                    *(stats.get("inserted_raw_ids") or []),
+                    *(stats.get("refreshed_raw_ids") or []),
+                ]
+                targeted_raw_ids.extend(changed_raw_ids)
+                total_new += len(changed_raw_ids)
+            else:
+                total_new += stats.get("new", 0)
             print(f"[{crawler.SOURCE_NAME}] new={stats['new']} skip={stats['skipped']} err={stats['errors']}")
         except Exception as e:
             print(f"[{crawler.SOURCE_NAME}] Lỗi: {e}")
@@ -444,8 +453,14 @@ def _cmd_crawl(args, mode: str = "full"):
 
     if not no_reprocess:
         print(f"\nReprocess {total_new} records moi/cap nhat...")
-        from cleansing.reprocess import run_full_reprocess
-        result = run_full_reprocess()
+        if source_filter == "guland":
+            from cleansing.reprocess import run_targeted_reprocess
+            result = run_targeted_reprocess(
+                list(dict.fromkeys(targeted_raw_ids))
+            )
+        else:
+            from cleansing.reprocess import run_full_reprocess
+            result = run_full_reprocess()
         r, v = result["listings"], result["valuation"]
         print(f"Listings : {r['new']} new | {r['updated']} updated")
         print(f"Valuation: {v['total']} valuated | {v['signals']} signals | {v['outliers']} outliers")

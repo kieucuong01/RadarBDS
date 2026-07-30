@@ -718,23 +718,19 @@ class GulandCrawler(BaseCrawler):
         snapshot: ExistingGulandSnapshot,
         record: dict,
     ) -> int:
-        with get_conn() as conn:
-            cur = conn.execute(
-                """
-                UPDATE raw_listings
-                SET raw_json=?, crawled_at=datetime('now'), crawl_run_id=?
-                WHERE id=? AND source='guland' AND url=?
-                """,
-                (
-                    json.dumps(record, ensure_ascii=False),
-                    getattr(self, "_crawl_run_id", None),
-                    snapshot.raw_id,
-                    snapshot.url,
-                ),
+        from db.raw_listings import refresh_raw_listing
+
+        raw_id = refresh_raw_listing(
+            "guland",
+            snapshot.url,
+            record,
+            crawl_run_id=getattr(self, "_crawl_run_id", None),
+        )
+        if raw_id != snapshot.raw_id:
+            raise RuntimeError(
+                f"Guland raw identity changed: expected {snapshot.raw_id}, got {raw_id}"
             )
-            if cur.rowcount != 1:
-                raise LookupError(f"Guland raw listing not found: {snapshot.raw_id}")
-        return snapshot.raw_id
+        return raw_id
 
     def _track_reconciliation_error(
         self,

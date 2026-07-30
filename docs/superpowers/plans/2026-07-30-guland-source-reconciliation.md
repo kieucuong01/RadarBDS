@@ -360,7 +360,7 @@ git commit -m "feat: reconcile existing guland listings"
   `untouched_listing_id`, and `untouched_updated_at`; teardown deletes all
   dependent rows by those listing IDs.
 
-- [ ] **Step 1: Write failing Guland history tests**
+- [x] **Step 1: Write failing Guland history tests**
 
 ```python
 def test_guland_same_price_preserves_first_seen_and_history():
@@ -382,7 +382,7 @@ def test_guland_increase_and_decrease_append_history():
     assert _listing_state(listing_id)["price_updated_at"] is not None
 ```
 
-- [ ] **Step 2: Write a failing narrow-reprocess test**
+- [x] **Step 2: Write a failing narrow-reprocess test**
 
 ```python
 def test_targeted_reprocess_only_touches_requested_raw_ids(monkeypatch):
@@ -394,20 +394,20 @@ def test_targeted_reprocess_only_touches_requested_raw_ids(monkeypatch):
     assert untouched["updated_at"] == seeded["untouched_updated_at"]
 ```
 
-- [ ] **Step 3: Verify RED**
+- [x] **Step 3: Verify RED**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_price_history.py tests\test_guland_targeted_reprocess.py -q
 ```
 
-- [ ] **Step 4: Implement same-row raw refresh**
+- [x] **Step 4: Implement same-row raw refresh**
 
 `refresh_raw_listing()` updates only `(source, url)`, writes JSON with
 `ensure_ascii=False`, updates `crawled_at` and `crawl_run_id`, and raises
 `LookupError` when the identity is absent. It never inserts a second same-URL
 row.
 
-- [ ] **Step 5: Make Guland history price-driven**
+- [x] **Step 5: Make Guland history price-driven**
 
 For existing Guland listings:
 
@@ -429,7 +429,7 @@ For Guland, `_should_insert_price_history()` compares `price_ty` only; area/ppm2
 reparsing at the same price cannot add a plot point. Facebook keeps the current
 price-plus-ppm2 behavior.
 
-- [ ] **Step 6: Add the narrow reprocess orchestration**
+- [x] **Step 6: Add the narrow reprocess orchestration**
 
 `run_targeted_reprocess(raw_ids)` calls:
 
@@ -444,13 +444,13 @@ Update `_cmd_crawl()` to gather `inserted_raw_ids + refreshed_raw_ids` from
 Guland stats and call `run_targeted_reprocess()` once. Image work receives only
 the returned processed listing IDs.
 
-- [ ] **Step 7: Verify GREEN**
+- [x] **Step 7: Verify GREEN**
 
 ```powershell
 & $py -X utf8 -m pytest tests\test_price_history.py tests\test_guland_targeted_reprocess.py tests\test_daily_crawl_limits.py -q
 ```
 
-- [ ] **Step 8: Commit price refresh and targeted reprocess**
+- [x] **Step 8: Commit price refresh and targeted reprocess**
 
 ```powershell
 git add db/raw_listings.py db/listings.py cleansing/reprocess.py cli/crawlers.py tests/test_price_history.py tests/test_guland_targeted_reprocess.py
