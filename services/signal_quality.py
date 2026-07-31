@@ -9,7 +9,6 @@ ACTIONABLE_SUPPRESS_FLAGS = frozenset({
     "multi_lot_listing",
     "extreme_guland_ppm2",
     "suspicious_bait",
-    "guland_cluster_flood",
     "review_bad_valuation",
     "review_bad_extraction",
 })

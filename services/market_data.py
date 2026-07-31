@@ -9,6 +9,10 @@ from cleansing.feature_extractor import _NAMED_ROADS, extract_road_width, extrac
 from config.property_types import PROPERTY_TYPE_LABELS, normalize_property_types
 from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
 from db.connection import get_conn
+from db.guland_publishers import (
+    publisher_sort_rank_sql,
+    publisher_visibility_sql,
+)
 from services.image_assets import resolve_image_url
 from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
 
@@ -47,8 +51,9 @@ related_price_drops AS MATERIALIZED (
 # Tier-aware masking (server-side). Address + tên đường KHÔNG che (decision 2026-05-14)
 # ─────────────────────────────────────────────────────────────────────────────
 TIER_ORDER = {"guest": 0, "free": 1, "vip": 2, "admin": 3}
-DEFAULT_VISIBLE_SOURCES = ("facebook",)
-ADMIN_SOURCE_OPTIONS = ("facebook", "guland")
+DEFAULT_VISIBLE_SOURCES = ("facebook", "guland")
+PUBLIC_SOURCE_OPTIONS = frozenset(DEFAULT_VISIBLE_SOURCES)
+ADMIN_SOURCE_OPTIONS = DEFAULT_VISIBLE_SOURCES
 DATE_RANGE_OPTIONS = {
     "1w": "-7 days",
     "1m": "-1 months",
@@ -89,10 +94,11 @@ _PHONE_REDACTION = "Liên hệ tư vấn"
 
 
 def normalize_sources_for_tier(sources=None, tier: str = "guest"):
-    if tier != "admin":
-        return list(DEFAULT_VISIBLE_SOURCES)
-
-    allowed = set(ADMIN_SOURCE_OPTIONS)
+    allowed = (
+        set(ADMIN_SOURCE_OPTIONS)
+        if tier == "admin"
+        else set(PUBLIC_SOURCE_OPTIONS)
+    )
     normalized = []
     for source in sources or []:
         value = (source or "").strip().lower()
@@ -509,6 +515,7 @@ def build_listing_filters(
     keyword="",
     date_range=None,
     require_complete=False,
+    include_guland_high_activity=False,
 ):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
@@ -522,6 +529,10 @@ def build_listing_filters(
         f"COALESCE({col('is_blacklisted')},0)=0",
         f"COALESCE({col('review_hidden')},0)=0",
         f"COALESCE({col('source_status')},'unknown') <> 'inactive'",
+        publisher_visibility_sql(
+            prefix[:-1] if prefix.endswith(".") else "listings",
+            include_high_activity=include_guland_high_activity,
+        ),
     ]
     if only_drops:
         where_parts.append(group_price_drop_filter_sql(prefix))
@@ -1158,7 +1169,7 @@ def format_signal_card_record(r, primary_img=None, tier: str = "guest"):
 _format_signal_row = format_signal_card_record
 
 
-def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', area_ranges=None, price_ranges=None, keyword="", include_total=True, date_range=None):
+def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', area_ranges=None, price_ranges=None, keyword="", include_total=True, date_range=None, include_guland_high_activity=False):
     # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
     # Guest still sees the full deal feed; original URLs/phones stay redacted.
     if tier == "guest":
@@ -1179,6 +1190,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         price_ranges=price_ranges,
         keyword=keyword,
         date_range=date_range,
+        include_guland_high_activity=include_guland_high_activity,
     )
     deal = build_deal_sql(mos_min)
     actual_expr = deal.actual_expr
@@ -1195,6 +1207,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     elif sort == "score_desc":
         score_expr = _max_sql("COALESCE(v.signal_score,0)", "COALESCE(sv.signal_score,0)")
         order_sql = f"{score_expr} DESC, ({display_mos_expr}) DESC, l.id DESC"
+    order_sql = f"{publisher_sort_rank_sql('l')} ASC, {order_sql}"
     fresh_flag = "0 AS is_fresh_locked"
     total_select = "COUNT(*) OVER() AS total_count," if include_total else ""
 
@@ -1287,7 +1300,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     return payload
 
 
-def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', include_trend=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier='guest', date_range=None):
+def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', include_trend=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier='guest', date_range=None, include_guland_high_activity=False):
     if tier == "guest":
         mos_min = 10
         only_drops = False
@@ -1306,6 +1319,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         price_ranges=price_ranges,
         keyword=keyword,
         date_range=date_range,
+        include_guland_high_activity=include_guland_high_activity,
     )
 
     stats_row = conn.execute(f"""
@@ -1346,6 +1360,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         price_ranges=price_ranges,
         keyword=keyword,
         date_range=date_range,
+        include_guland_high_activity=include_guland_high_activity,
     )
     signal_condition = build_deal_sql(mos_min).condition
     signal_row = conn.execute(f"""
@@ -1399,6 +1414,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
             area_ranges=area_ranges,
             price_ranges=price_ranges,
             keyword=keyword,
+            include_guland_high_activity=include_guland_high_activity,
         )
 
     return {
@@ -1412,7 +1428,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
     }
 
 
-def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", date_range=None):
+def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", date_range=None, include_guland_high_activity=False):
     conn = _open_read_conn(db_path)
     where_sql, params = build_listing_filters(
         sources,
@@ -1427,6 +1443,7 @@ def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=F
         price_ranges=price_ranges,
         keyword=keyword,
         date_range=date_range,
+        include_guland_high_activity=include_guland_high_activity,
     )
 
     row = conn.execute(f"""
@@ -1454,14 +1471,22 @@ def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=F
         "price_drops": 0,
     }
 
-def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword=""):
+def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", include_guland_high_activity=False):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
     prop_types = normalize_property_types(prop_types)
 
     conn = _open_read_conn(db_path)
 
-    where_parts = ["probably_sold = 0", "COALESCE(is_blacklisted,0)=0", "COALESCE(review_hidden,0)=0"]
+    where_parts = [
+        "probably_sold = 0",
+        "COALESCE(is_blacklisted,0)=0",
+        "COALESCE(review_hidden,0)=0",
+        publisher_visibility_sql(
+            "listings",
+            include_high_activity=include_guland_high_activity,
+        ),
+    ]
     if only_drops:
         where_parts.append(group_price_drop_filter_sql())
     else:
@@ -1548,7 +1573,8 @@ def _shift_month(d: date, delta: int) -> date:
 
 def _market_indicator_filters(sources=None, wards=None, prop_types=None, prefix="",
                               area_min=0, area_max=0, price_min=0, price_max=0,
-                              area_ranges=None, price_ranges=None):
+                              area_ranges=None, price_ranges=None,
+                              include_guland_high_activity=False):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
     prop_types = normalize_property_types(prop_types)
@@ -1558,6 +1584,10 @@ def _market_indicator_filters(sources=None, wards=None, prop_types=None, prefix=
         f"{col('probably_sold')} = 0",
         f"COALESCE({col('is_blacklisted')},0)=0",
         f"COALESCE({col('review_hidden')},0)=0",
+        publisher_visibility_sql(
+            prefix[:-1] if prefix.endswith(".") else "listings",
+            include_high_activity=include_guland_high_activity,
+        ),
     ]
     params = []
 
@@ -1690,7 +1720,8 @@ def _build_area_risk_radar(distress, supply, deal_rows):
 
 def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
                            area_min=0, area_max=0, price_min=0, price_max=0,
-                           area_ranges=None, price_ranges=None):
+                           area_ranges=None, price_ranges=None,
+                           include_guland_high_activity=False):
     conn = _open_read_conn(db_path)
     where_sql, params = _market_indicator_filters(
         sources=sources,
@@ -1703,6 +1734,7 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
         price_max=price_max,
         area_ranges=area_ranges,
         price_ranges=price_ranges,
+        include_guland_high_activity=include_guland_high_activity,
     )
 
     lot_cte = f"""

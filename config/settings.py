@@ -114,6 +114,9 @@ CRAWLER_DELAY_MAX     = float(os.getenv("CRAWLER_DELAY_MAX", 4.0))
 CRAWLER_RETRY_MAX     = int(os.getenv("CRAWLER_RETRY_MAX", 3))
 CRAWLER_TIMEOUT       = int(os.getenv("CRAWLER_TIMEOUT", 30))
 CRAWL_INTERVAL_MINS   = int(os.getenv("CRAWL_INTERVAL_MINS", 60))    # run every N minutes
+GULAND_PUBLISHER_KEY_SECRET = os.getenv(
+    "GULAND_PUBLISHER_KEY_SECRET", ""
+).strip()
 
 # ─── GEOFENCING ─────────────────────────────────────────────────────────────
 WATCH_AREAS = [

@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/admin-favicon-16.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/admin-apple-touch-icon.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="manifest" href="{{ url_for('static', filename='admin.webmanifest') }}?v=admin-v43-dup-cluster-pairs">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v50-facebook-broker-delete-ui">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v51-facebook-broker-guland-publisher">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -360,6 +360,7 @@
         <button class="segment" data-quality-tab="blacklist">Hắc danh sách <span id="blacklistCount">0</span></button>
         <button class="segment" data-quality-tab="source_qc">Guland QC</button>
         <button class="segment" data-quality-tab="legal_qc">Legal QC</button>
+        <button class="segment" data-quality-tab="publisher_qc">Người đăng Guland</button>
       </div>
 
       <section id="quality-dups" class="quality-tab active">
@@ -387,6 +388,11 @@
       <section id="quality-legal_qc" class="quality-tab">
         <div class="notice"><strong>Legal QC:</strong> Case thiếu hoặc cần soi lại bằng chứng pháp lý. Hành động xác minh sổ nằm tại đây, không ở AI Training.</div>
         <div id="qualityLegalQcGrid" class="training-grid quality-review-grid"></div>
+      </section>
+
+      <section id="quality-publisher_qc" class="quality-tab">
+        <div class="notice"><strong>Người đăng Guland:</strong> Xem tần suất đăng và chỉ ghi đè khi đã kiểm tra. Dữ liệu định danh nhạy cảm không được hiển thị tại đây.</div>
+        <div id="qualityPublisherQcGrid" class="publisher-qc-grid"></div>
       </section>
     </section>
 
@@ -948,7 +954,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/admin/facebook-crawl.js') }}?v=admin-facebook-crawl-v2-broker-delete-ui"></script>
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v50-facebook-broker-delete-ui"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v51-facebook-broker-guland-publisher"></script>
   {% endif %}
 </body>
 </html>

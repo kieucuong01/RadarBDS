@@ -727,7 +727,7 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
         self.assertEqual(trusted["source_quality_recheck"], 0)
         self.assertNotIn("old_guland_post", trusted["source_quality_flags"] or "")
 
-    def test_reprocess_marks_guland_cluster_flood_for_source_qc(self):
+    def test_reprocess_does_not_generate_retired_guland_cluster_flood(self):
         from cleansing.reprocess import reprocess_valuation
         from db.connection import get_conn
 
@@ -783,8 +783,10 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
         self.assertEqual(len(clustered), 4)
         for row in clustered:
             self.assertEqual(row["is_signal"], 1)
-            self.assertEqual(row["source_quality_recheck"], 1)
-            self.assertIn("guland_cluster_flood", row["source_quality_flags"])
+            self.assertNotIn(
+                "guland_cluster_flood",
+                row["source_quality_flags"] or "",
+            )
 
         self.assertIsNotNone(singleton)
         self.assertEqual(singleton["is_signal"], 1)

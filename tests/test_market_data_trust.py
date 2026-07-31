@@ -46,7 +46,10 @@ def test_recheck_metadata_and_retired_guland_strength_flags_do_not_block_signal(
     retired_strength_flags = {
         "is_signal": 1,
         "source_quality_recheck": 1,
-        "source_quality_flags": "guland_weak_signal,guland_user_facing_risk",
+        "source_quality_flags": (
+            "guland_weak_signal,guland_user_facing_risk,"
+            "guland_cluster_flood"
+        ),
     }
 
     assert is_actionable_signal(bare_recheck) is True
@@ -63,3 +66,4 @@ def test_actionable_sql_blocks_only_explicit_hard_quality_flags():
     assert "source_quality_recheck" not in sql
     assert "guland_weak_signal" not in sql
     assert "guland_user_facing_risk" not in sql
+    assert "guland_cluster_flood" not in sql

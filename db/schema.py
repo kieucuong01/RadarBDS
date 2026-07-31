@@ -1091,6 +1091,105 @@ def _migrate_raw_listing_revisions(conn: Any) -> None:
     )
 
 
+def _migrate_guland_publishers(conn: Any) -> None:
+    """Create deterministic Guland publisher identity and activity storage."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS source_publishers (
+            id BIGSERIAL PRIMARY KEY,
+            source TEXT NOT NULL CHECK (source IN ('guland')),
+            publisher_key TEXT NOT NULL,
+            identity_type TEXT NOT NULL,
+            identity_confidence TEXT NOT NULL
+                CHECK (identity_confidence IN ('low','medium','high')),
+            display_name TEXT NOT NULL DEFAULT '',
+            activity_class TEXT NOT NULL DEFAULT 'unknown'
+                CHECK (activity_class IN (
+                    'unknown','low_manual','high_activity','automated_repost'
+                )),
+            activity_reason TEXT NOT NULL DEFAULT '',
+            manual_override TEXT NOT NULL DEFAULT ''
+                CHECK (manual_override IN (
+                    '','allow_manual','hide_high_activity'
+                )),
+            first_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            last_classified_at TIMESTAMPTZ,
+            metrics_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+            UNIQUE(source, publisher_key)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS listing_publishers (
+            listing_id BIGINT PRIMARY KEY
+                REFERENCES listings(id) ON DELETE CASCADE,
+            publisher_id BIGINT
+                REFERENCES source_publishers(id) ON DELETE SET NULL,
+            identity_status TEXT NOT NULL DEFAULT 'unknown'
+                CHECK (identity_status IN ('identified','unknown','unreachable')),
+            evidence_type TEXT NOT NULL DEFAULT 'unknown',
+            identity_confidence TEXT NOT NULL DEFAULT 'low'
+                CHECK (identity_confidence IN ('low','medium','high')),
+            checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS publisher_activity_daily (
+            publisher_id BIGINT NOT NULL
+                REFERENCES source_publishers(id) ON DELETE CASCADE,
+            activity_date DATE NOT NULL,
+            new_listing_count INTEGER NOT NULL DEFAULT 0,
+            seen_listing_count INTEGER NOT NULL DEFAULT 0,
+            bump_count INTEGER NOT NULL DEFAULT 0,
+            near_duplicate_count INTEGER NOT NULL DEFAULT 0,
+            repeated_template_count INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY(publisher_id, activity_date)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS publisher_listing_observations (
+            publisher_id BIGINT NOT NULL
+                REFERENCES source_publishers(id) ON DELETE CASCADE,
+            listing_id BIGINT NOT NULL
+                REFERENCES listings(id) ON DELETE CASCADE,
+            activity_date DATE NOT NULL,
+            was_new BOOLEAN NOT NULL DEFAULT FALSE,
+            was_seen BOOLEAN NOT NULL DEFAULT TRUE,
+            was_bumped BOOLEAN NOT NULL DEFAULT FALSE,
+            near_duplicate_count INTEGER NOT NULL DEFAULT 0,
+            repeated_template BOOLEAN NOT NULL DEFAULT FALSE,
+            observed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            PRIMARY KEY(publisher_id, listing_id, activity_date)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_source_publishers_activity
+        ON source_publishers(activity_class, manual_override)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_source_publishers_last_seen
+        ON source_publishers(last_seen_at DESC)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_listing_publishers_publisher
+        ON listing_publishers(publisher_id)
+        """
+    )
+
+
 def _run_migrations(conn: Any) -> None:
     """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
     _migrate_listing_map_locations(conn)
@@ -1098,6 +1197,7 @@ def _run_migrations(conn: Any) -> None:
     _migrate_admin_jobs(conn)
     _migrate_facebook_crawl_profiles(conn)
     _migrate_raw_listing_revisions(conn)
+    _migrate_guland_publishers(conn)
     conn.execute(
         """
         ALTER TABLE crawl_run_progress

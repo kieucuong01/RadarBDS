@@ -64,3 +64,22 @@ def test_listing_scope_uses_parameter_placeholders_for_untrusted_filters():
     assert attack not in sql
     assert "l.ward IN (?)" in sql
     assert params[0] == attack
+
+
+def test_public_listing_scope_uses_one_indexed_publisher_anti_join():
+    sql, _params = build_listing_filters(
+        sources=["facebook", "guland"],
+        prefix="l.",
+    )
+
+    assert sql.count("NOT EXISTS") == 1
+    assert sql.count("FROM listing_publishers lp") == 1
+    assert "JOIN source_publishers sp ON sp.id = lp.publisher_id" in sql
+    assert "lp.listing_id = l.id" in sql
+
+    admin_sql, _admin_params = build_listing_filters(
+        sources=["facebook", "guland"],
+        prefix="l.",
+        include_guland_high_activity=True,
+    )
+    assert "FROM listing_publishers lp" not in admin_sql

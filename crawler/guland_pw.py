@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from crawler.base_crawler import BaseCrawler
 from analytics.lifecycle import mark_source_seen, record_source_check
 from db.connection import get_conn
+from db.guland_publishers import record_seen_guland_cards
 from services.guland_reconciliation import (
     ExistingGulandSnapshot,
     canonical_price_vnd,
@@ -34,6 +35,7 @@ from services.guland_coordinates import (
     evaluate_guland_coordinate_url,
     raw_coordinate_fields,
 )
+from services.guland_publisher_activity import validated_raw_publisher_fields
 from services.market_data import get_city_for_ward
 
 logger = logging.getLogger(__name__)
@@ -372,7 +374,26 @@ async (urls) => {
                 return '';
             };
 
-            const phoneEl = doc.querySelector('[href^="tel:"]');
+            const publisherRoot = doc.querySelector([
+                '.dtl-profile',
+                '.dtl-contact',
+                '.profile-info',
+                '[data-user-id]',
+                '[class*="publisher"]',
+                '[class*="seller"]'
+            ].join(','));
+            const publisherPhoneEl = publisherRoot?.querySelector('a[href^="tel:"]');
+            const publisherProfileEl = publisherRoot?.querySelector(
+                'a[href*="/user/"],a[href*="/users/"],a[href*="/profile/"]'
+            );
+            const pageGlobalPhoneEl = doc.querySelector('a[href^="tel:"]');
+            const publisherProfileUrl = publisherProfileEl?.href || '';
+            const publisherSourceId = publisherRoot?.getAttribute('data-user-id')
+                || publisherProfileUrl.match(/\\/(?:user|users|profile)\\/([^/?#]+)/i)?.[1]
+                || '';
+            const publisherNameEl = publisherRoot?.querySelector(
+                '[data-publisher-name],.profile-info__tle,.profile-name,[class*="name"]'
+            );
             const imgs    = listingImages(doc, postId, html);
 
             return {
@@ -388,7 +409,18 @@ async (urls) => {
                 road_width_raw:    extract('Đường.hẻm vào rộng', 'Chiều rộng'),
                 location_type_raw: extract('Vị trí'),
                 legal_raw:         extract('Pháp lý'),
-                contact_phone:     phoneEl ? phoneEl.href.replace('tel:', '') : '',
+                publisher_source_id: publisherSourceId,
+                publisher_profile_url: publisherProfileUrl,
+                publisher_name: publisherNameEl?.textContent?.trim() || '',
+                publisher_phone_candidate: publisherPhoneEl
+                    ? publisherPhoneEl.href.replace('tel:', '')
+                    : '',
+                publisher_phone_scope: publisherPhoneEl
+                    ? 'listing_contact'
+                    : '',
+                page_global_phone: pageGlobalPhoneEl
+                    ? pageGlobalPhoneEl.href.replace('tel:', '')
+                    : '',
                 detail_imgs:       imgs,
             };
         } catch(e) {
@@ -588,6 +620,10 @@ class GulandCrawler(BaseCrawler):
 
     def _build_record(self, card: dict, detail: dict) -> dict:
         url = card["url"]
+        publisher_fields = validated_raw_publisher_fields(detail)
+        publisher_checked_at = datetime.now(
+            ZoneInfo("Asia/Ho_Chi_Minh")
+        ).isoformat()
 
         # The configured list URL carries the canonical ward context. The
         # individual /post/ URL does not reliably contain it.
@@ -624,14 +660,20 @@ class GulandCrawler(BaseCrawler):
             "road_width_raw":    detail.get("road_width_raw", ""),
             "location_type_raw": detail.get("location_type_raw", ""),
             "legal_raw":         detail.get("legal_raw", ""),
-            "contact_phone":     detail.get("contact_phone", ""),
+            "contact_phone":     publisher_fields.get("publisher_phone", ""),
+            "seller_name":       publisher_fields.get("publisher_name", ""),
             "imgs":              detail.get("detail_imgs", []) or card.get("imgs", []),
             "date_raw":          card.get("date_raw", ""),
             "tx_type":           "ban",
             "province":          "Bình Dương",
             "district":          "Thủ Dầu Một",
             "source":            self.SOURCE_NAME,
+            "_publisher_contact_checked": True,
+            "publisher_identity_checked_at": publisher_checked_at,
         }
+        record.update(publisher_fields)
+        if detail.get("page_global_phone"):
+            record["page_global_phone"] = detail["page_global_phone"]
         city = get_city_for_ward(ward_display)
         context_text = " ".join(filter(None, (
             record["title"],
@@ -672,6 +714,8 @@ class GulandCrawler(BaseCrawler):
             "error_details": [],
             "inserted_raw_ids": [],
             "refreshed_raw_ids": [],
+            "publisher_seen": 0,
+            "publisher_bumps": 0,
         }
         for key, value in defaults.items():
             if key not in self._stats:
@@ -834,12 +878,24 @@ class GulandCrawler(BaseCrawler):
             "road_width_raw",
             "location_type_raw",
             "legal_raw",
-            "contact_phone",
             "detail_imgs",
         ):
             if detail.get(key) not in (None, "", []):
                 target_key = "imgs" if key == "detail_imgs" else key
                 record[target_key] = detail[key]
+        publisher_fields = validated_raw_publisher_fields(detail)
+        record.update(publisher_fields)
+        record["contact_phone"] = publisher_fields.get("publisher_phone", "")
+        record["seller_name"] = (
+            publisher_fields.get("publisher_name")
+            or record.get("seller_name", "")
+        )
+        record["_publisher_contact_checked"] = True
+        record["publisher_identity_checked_at"] = datetime.now(
+            ZoneInfo("Asia/Ho_Chi_Minh")
+        ).isoformat()
+        if detail.get("page_global_phone"):
+            record["page_global_phone"] = detail["page_global_phone"]
         return self._refresh_changed_record(snapshot, record)
 
     def _verify_stale_listings(self, page, limit: int) -> dict:
@@ -930,6 +986,27 @@ class GulandCrawler(BaseCrawler):
         ]
         if discovered_existing_urls:
             self._mark_seen_urls(discovered_existing_urls)
+        try:
+            with get_conn() as conn:
+                publisher_stats = record_seen_guland_cards(
+                    conn,
+                    all_cards,
+                    datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")),
+                )
+            self._stats["publisher_seen"] += int(
+                publisher_stats.get("seen", 0) or 0
+            )
+            self._stats["publisher_bumps"] += int(
+                publisher_stats.get("bumps", 0) or 0
+            )
+            self._stats["refreshed_raw_ids"].extend(
+                publisher_stats.get("changed_raw_ids") or []
+            )
+        except Exception as exc:
+            self.logger.warning(
+                "[guland] publisher card observation skipped: %s",
+                exc,
+            )
         self._stats["existing"] += len(discovered_existing_urls)
         self._stats["unchanged"] += len(plan.unchanged_cards)
         self._stats["invalid_price"] += len(plan.invalid_price_cards)

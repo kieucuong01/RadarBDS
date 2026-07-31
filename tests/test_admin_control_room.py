@@ -28,6 +28,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
         for patcher in self.patches:
             patcher.start()
 
+        app_module.clear_admin_read_cache()
         init_schema()
         self.client = app_module.app.test_client()
 
@@ -42,6 +43,17 @@ class AdminControlRoomGateTest(unittest.TestCase):
                 conn.execute("DELETE FROM listings WHERE url LIKE ?", ("https://example.test/%",))
                 conn.execute("DELETE FROM raw_listings WHERE url LIKE ?", ("https://example.test/%",))
                 conn.execute("DELETE FROM crawl_runs WHERE area LIKE ?", ("ops-test-%",))
+                conn.execute(
+                    """
+                    DELETE FROM admin_audit_log
+                    WHERE entity_type='guland_publisher'
+                      AND action='guland_publisher_override'
+                    """
+                )
+                conn.execute(
+                    "DELETE FROM source_publishers WHERE publisher_key LIKE ?",
+                    ("admin-test-publisher-%",),
+                )
         except Exception:
             pass
 
@@ -2173,6 +2185,8 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertNotIn('data-quality-tab="extraction_qc"', html)
         self.assertIn('data-quality-tab="source_qc"', html)
         self.assertIn('data-quality-tab="legal_qc"', html)
+        self.assertIn('data-quality-tab="publisher_qc"', html)
+        self.assertIn('id="qualityPublisherQcGrid"', html)
         self.assertNotIn('id="qualityRecheckGrid"', html)
         self.assertNotIn('id="qualityExtractionQcGrid"', html)
 
@@ -2189,6 +2203,9 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn("/admin/api/data-quality/retry-source-crawl", js)
         self.assertIn("downloadMissingImagesFromQuality", js)
         self.assertIn("retryDataQualitySourceCrawl", js)
+        self.assertIn("/admin/api/guland-publishers", js)
+        self.assertIn("loadGulandPublishers", js)
+        self.assertIn("setGulandPublisherOverride", js)
         self.assertIn("Tải ảnh thiếu", js)
         self.assertIn("Crawl lại nguồn", js)
         self.assertNotIn("qualityExtractionQcGrid", js)
@@ -2200,6 +2217,87 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".quality-kpi-grid", css)
         self.assertIn(".quality-detail-grid", css)
         self.assertIn(".quality-action-btn", css)
+        self.assertIn(".publisher-qc-card", css)
+
+    def test_guland_publisher_api_is_admin_only_and_redacts_identity(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            publisher_id = conn.execute(
+                """
+                INSERT INTO source_publishers (
+                    source, publisher_key, identity_type,
+                    identity_confidence, display_name, activity_class,
+                    activity_reason, metrics_json, last_seen_at
+                )
+                VALUES (
+                    'guland', ?, 'member_id',
+                    'high', 'Người đăng thử nghiệm', 'high_activity',
+                    'posts_7d_high',
+                    '{"posts_1d": 8, "posts_7d": 35, "posts_30d": 80,
+                      "max_posts_per_day_30d": 12, "source_bumps_30d": 20,
+                      "near_duplicate_ratio_30d": 0.72}',
+                    NOW()
+                )
+                """,
+                (f"admin-test-publisher-{uuid.uuid4().hex}",),
+            ).lastrowid
+
+        denied = self.client.get("/admin/api/guland-publishers")
+        self.assertEqual(denied.status_code, 403)
+
+        self._login_as_admin()
+        response = self.client.get(
+            "/admin/api/guland-publishers?activity_class=high_activity"
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["total"], 1)
+        item = payload["items"][0]
+        self.assertEqual(item["id"], publisher_id)
+        self.assertEqual(item["display_name"], "Người đăng thử nghiệm")
+        self.assertEqual(item["effective_class"], "high_activity")
+        self.assertEqual(item["metrics"]["posts_7d"], 35)
+        self.assertEqual(item["linked_listing_count"], 0)
+        for forbidden in (
+            "publisher_key",
+            "contact_phone",
+            "profile_url",
+            "member_id",
+            "identity_value",
+        ):
+            self.assertNotIn(forbidden, item)
+
+        invalid = self.client.post(
+            f"/admin/api/guland-publishers/{publisher_id}/override",
+            json={"override": "show_everything"},
+        )
+        self.assertEqual(invalid.status_code, 400)
+        self.assertEqual(
+            invalid.get_json()["error"],
+            "invalid_publisher_override",
+        )
+
+        changed = self.client.post(
+            f"/admin/api/guland-publishers/{publisher_id}/override",
+            json={"override": "allow_manual"},
+        )
+        self.assertEqual(changed.status_code, 200)
+        self.assertEqual(changed.get_json()["effective_class"], "low_manual")
+        with get_conn() as conn:
+            audit = conn.execute(
+                """
+                SELECT action, entity_id
+                FROM admin_audit_log
+                WHERE entity_type='guland_publisher'
+                  AND entity_id=?
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (publisher_id,),
+            ).fetchone()
+        self.assertEqual(audit["action"], "guland_publisher_override")
+        self.assertEqual(int(audit["entity_id"]), publisher_id)
 
     def test_admin_data_quality_can_enqueue_missing_image_download(self):
         import app as app_module

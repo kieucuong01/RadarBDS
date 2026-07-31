@@ -92,6 +92,7 @@ from cli.crawlers import (
 )
 from cli.guland_coordinates import cmd_guland_coordinate_backfill
 from cli.guland_images import cmd_guland_image_backfill
+from cli.guland_publishers import cmd_guland_publisher_backfill
 from cli.guland_reconciliation import cmd_guland_reconcile
 from cli.queries import (
     cmd_query, cmd_deal_brief, cmd_inspect, cmd_crawl_health
@@ -205,6 +206,22 @@ def build_parser():
         action="store_true",
         help="Apply confirmed lifecycle and price changes (default: dry-run)",
     )
+
+    p_guland_publishers = sub.add_parser(
+        "guland-publisher-backfill",
+        help=(
+            "Dry-run-first publisher identity/activity backfill for live "
+            "Guland listings"
+        ),
+    )
+    p_guland_publishers.add_argument("--limit", type=int, default=100)
+    p_guland_publishers.add_argument("--apply", action="store_true")
+    p_guland_publishers.add_argument(
+        "--no-resume",
+        action="store_false",
+        dest="resume",
+    )
+    p_guland_publishers.set_defaults(resume=True)
 
     p_map_coverage = sub.add_parser(
         "map-location-coverage",
@@ -420,6 +437,8 @@ def main():
         cmd_guland_image_backfill(args)
     elif args.cmd == "guland-reconcile":
         cmd_guland_reconcile(args)
+    elif args.cmd == "guland-publisher-backfill":
+        cmd_guland_publisher_backfill(args)
     elif args.cmd == "map-location-coverage":
         cmd_map_location_coverage(args)
     elif args.cmd == "map-location-research-queue":

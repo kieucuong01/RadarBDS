@@ -6,6 +6,7 @@ from cleansing.reprocess import run_targeted_reprocess
 from db.connection import get_conn
 from db.listings import upsert_listing
 from db.schema import init_schema
+from services.guland_publisher_activity import validated_raw_publisher_fields
 
 
 def _raw_record(url: str, source_id: str, price_ty: float) -> dict:
@@ -126,3 +127,79 @@ def test_targeted_reprocess_only_touches_requested_raw_ids():
         assert untouched["updated_at"] == seeded["untouched_updated_at"]
     finally:
         _cleanup(seeded)
+
+
+def test_targeted_reprocess_links_publisher_once():
+    init_schema()
+    token = uuid.uuid4().hex
+    url = f"https://guland.vn/post/publisher-targeted-{token}"
+    source_id = f"publisher-{token}"
+    raw_data = {
+        **_raw_record(url, source_id, 2.2),
+        **validated_raw_publisher_fields(
+            {
+                "publisher_source_id": f"member-{token}",
+                "publisher_name": "Publisher Targeted",
+            },
+            secret="targeted-reprocess-secret-" + ("x" * 40),
+        ),
+    }
+    raw_id = None
+    listing_id = None
+    publisher_id = None
+    try:
+        with get_conn() as conn:
+            raw_id = conn.execute(
+                """
+                INSERT INTO raw_listings
+                    (source, source_id, url, raw_json, crawled_at)
+                VALUES ('guland', ?, ?, ?, '2026-07-31T10:00:00+07:00')
+                """,
+                (source_id, url, json.dumps(raw_data)),
+            ).lastrowid
+
+        with mock.patch(
+            "cleansing.reprocess.reprocess_valuation",
+            return_value={"total": 1, "signals": 0, "outliers": 0},
+        ), mock.patch(
+            "cleansing.reprocess._run_listing_map_backfill",
+            return_value={"processed": 1},
+        ):
+            first = run_targeted_reprocess([raw_id])
+            second = run_targeted_reprocess([raw_id])
+
+        listing_id = first["listings"]["processed_ids"][0]
+        assert second["listings"]["processed_ids"] == [listing_id]
+        with get_conn() as conn:
+            link = conn.execute(
+                """
+                SELECT publisher_id, identity_status
+                FROM listing_publishers WHERE listing_id=?
+                """,
+                (listing_id,),
+            ).fetchone()
+            publisher_id = link["publisher_id"]
+            daily = conn.execute(
+                """
+                SELECT new_listing_count, seen_listing_count
+                FROM publisher_activity_daily
+                WHERE publisher_id=? AND activity_date=CURRENT_DATE
+                """,
+                (publisher_id,),
+            ).fetchone()
+
+        assert link["identity_status"] == "identified"
+        assert publisher_id is not None
+        assert daily["new_listing_count"] == 1
+        assert daily["seen_listing_count"] == 1
+    finally:
+        with get_conn() as conn:
+            if listing_id:
+                conn.execute("DELETE FROM listings WHERE id=?", (listing_id,))
+            if raw_id:
+                conn.execute("DELETE FROM raw_listings WHERE id=?", (raw_id,))
+            if publisher_id:
+                conn.execute(
+                    "DELETE FROM source_publishers WHERE id=?",
+                    (publisher_id,),
+                )

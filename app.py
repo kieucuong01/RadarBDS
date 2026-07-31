@@ -95,9 +95,16 @@ mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
 # Import the extracted services
 from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters, listing_activity_at_sql, listing_card_activity
+from db.guland_publishers import (
+    list_publishers,
+    publisher_sort_rank_sql,
+    publisher_visibility_sql,
+    set_publisher_override,
+)
 from services.market_data import LATEST_SHADOW_VALUATION_CTE, _display_fair_sql, _display_mos_sql
 from services.listing_map import (
     MapFilters,
+    clear_listing_map_cache,
     load_listing_map_items,
     load_listing_map_summary,
 )
@@ -4031,6 +4038,14 @@ def _get_signals_version(db_path: str) -> str:
                 SELECT datetime(updated_at) AS v
                   FROM listings
                  WHERE updated_at IS NOT NULL
+                UNION ALL
+                SELECT last_classified_at AS v
+                  FROM source_publishers
+                 WHERE last_classified_at IS NOT NULL
+                UNION ALL
+                SELECT last_seen_at AS v
+                  FROM source_publishers
+                 WHERE last_seen_at IS NOT NULL
             )
             """
         ).fetchone()
@@ -4143,6 +4158,13 @@ def _request_date_range(req) -> str:
     return normalize_date_range(req.args.get("date_range") or req.args.get("time_range"), default="3m") or "3m"
 
 
+def _include_guland_high_activity(req, tier: str) -> bool:
+    return (
+        tier == "admin"
+        and (req.args.get("hide_guland_reposts") or "1").strip() == "0"
+    )
+
+
 _LISTING_MAP_LOCATION_KEY_RE = re.compile(
     r"^(exact|road|landmark|ward):[a-z0-9:-]+$"
 )
@@ -4170,6 +4192,7 @@ def _listing_map_filters(req, mode: str) -> MapFilters:
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     ranges = _request_range_filter_kwargs(req)
+    tier = current_tier()
     return MapFilters(
         city=active_city,
         wards=tuple(wards or ()),
@@ -4190,6 +4213,7 @@ def _listing_map_filters(req, mode: str) -> MapFilters:
             and (req.args.get("complete") or "").strip().lower()
             in {"1", "true", "yes", "on"}
         ),
+        include_guland_high_activity=_include_guland_high_activity(req, tier),
     )
 
 
@@ -4501,6 +4525,7 @@ def api_dashboard():
     include_trend = request.args.get("include_trend") == "1"
     # Load data without fetching all listings to save time/memory
     tier = current_tier()
+    include_guland_high_activity = _include_guland_high_activity(request, tier)
     cache_key = (
         tier,
         active_city,
@@ -4519,6 +4544,7 @@ def api_dashboard():
         keyword,
         date_range,
         bool(include_trend),
+        include_guland_high_activity,
     )
 
     def _load_dashboard_payload():
@@ -4534,6 +4560,7 @@ def api_dashboard():
             tier=tier,
             keyword=keyword,
             date_range=date_range,
+            include_guland_high_activity=include_guland_high_activity,
             **range_kwargs,
         )
         return {
@@ -4566,6 +4593,8 @@ def api_counts():
     date_range = _request_date_range(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
+    tier = current_tier()
+    include_guland_high_activity = _include_guland_high_activity(request, tier)
     return jsonify({
         "stats": load_counts(
             _db_handle(),
@@ -4576,6 +4605,7 @@ def api_counts():
             mos_min=mos_min,
             keyword=keyword,
             date_range=date_range,
+            include_guland_high_activity=include_guland_high_activity,
             **range_kwargs,
         ),
         "active_city": active_city,
@@ -4583,7 +4613,7 @@ def api_counts():
         "active_sources": sources,
         "active_props": prop_types,
         "trend_period": trend_period,
-        "tier": current_tier(),
+        "tier": tier,
     })
 
 def api_signals():
@@ -4602,6 +4632,7 @@ def api_signals():
     include_total = request.args.get("include_total") != "0"
     db_path = _db_handle()
     tier = current_tier()
+    include_guland_high_activity = _include_guland_high_activity(request, tier)
     cache_key = (
         tier,
         active_city,
@@ -4622,6 +4653,7 @@ def api_signals():
         page,
         limit,
         bool(include_total),
+        include_guland_high_activity,
     )
 
     def _load_signal_payload():
@@ -4639,6 +4671,7 @@ def api_signals():
             keyword=keyword,
             include_total=include_total,
             date_range=date_range,
+            include_guland_high_activity=include_guland_high_activity,
             **range_kwargs,
         )
 
@@ -4652,8 +4685,19 @@ def api_trends():
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     db_path = _db_handle()
+    tier = current_tier()
+    include_guland_high_activity = _include_guland_high_activity(request, tier)
     return jsonify({
-        "trend_data": load_trend_data(db_path, sources, wards, prop_types, only_drops, trend_period, **range_kwargs),
+        "trend_data": load_trend_data(
+            db_path,
+            sources,
+            wards,
+            prop_types,
+            only_drops,
+            trend_period,
+            include_guland_high_activity=include_guland_high_activity,
+            **range_kwargs,
+        ),
         "trend_period": trend_period
     })
 
@@ -4727,7 +4771,14 @@ def api_heatmap():
         "COALESCE(l.is_blacklisted,0)=0",
         "COALESCE(l.review_hidden,0)=0",
         "l.price_per_m2 > 0",
-        "l.price_per_m2 < 1000"
+        "l.price_per_m2 < 1000",
+        publisher_visibility_sql(
+            "l",
+            include_high_activity=_include_guland_high_activity(
+                request,
+                current_tier(),
+            ),
+        ),
     ]
     if only_drops:
         where_parts.append(group_price_drop_filter_sql("l."))
@@ -4824,11 +4875,16 @@ def api_market_indicators():
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     db_path = _db_handle()
+    tier = current_tier()
     return jsonify(load_market_indicators(
         db_path,
         sources=sources,
         wards=wards,
         prop_types=prop_types,
+        include_guland_high_activity=_include_guland_high_activity(
+            request,
+            tier,
+        ),
         **range_kwargs,
     ))
 
@@ -4861,6 +4917,8 @@ def api_listings():
     db_path = _db_handle()
     conn = connect(db_path)
     
+    tier = current_tier()
+    include_guland_high_activity = _include_guland_high_activity(request, tier)
     where_sql, params = build_listing_filters(
         sources=sources,
         wards=wards,
@@ -4870,6 +4928,7 @@ def api_listings():
         keyword=keyword,
         date_range=date_range,
         require_complete=complete_only,
+        include_guland_high_activity=include_guland_high_activity,
         **range_kwargs,
     )
 
@@ -4890,7 +4949,6 @@ def api_listings():
     sort_dir = "DESC" if request.args.get("sort_dir", default_dir).lower() == "desc" else "ASC"
     order_expr = sort_col_map.get(sort_by, listing_activity_at_sql("l"))
 
-    tier = current_tier()
     fresh_flag = "0 AS is_fresh_locked"
     query = f"""
         WITH {LATEST_VALUATION_CTE},
@@ -4913,7 +4971,8 @@ def api_listings():
         LEFT JOIN latest_valuation v ON l.id = v.listing_id
         LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
         WHERE {where_sql}
-        ORDER BY {order_expr} {sort_dir} NULLS LAST
+        ORDER BY {publisher_sort_rank_sql('l')} ASC,
+                 {order_expr} {sort_dir} NULLS LAST
         LIMIT ? OFFSET ?
     """
     query_params = list(params)
@@ -6269,6 +6328,64 @@ def admin_api_data_quality_retry_source_crawl():
     clear_admin_read_cache("data_quality_summary")
     clear_admin_read_cache("growth")
     return jsonify({"ok": True, "job": _public_crawl_job(created)})
+
+
+@require_admin_auth
+def admin_api_guland_publishers():
+    activity_class = (
+        request.args.get("activity_class") or ""
+    ).strip().lower()
+    limit = _clamp_int(request.args.get("limit"), 50, 1, 200)
+    offset = _clamp_int(request.args.get("offset"), 0, 0, 1_000_000)
+    try:
+        with get_conn() as conn:
+            payload = list_publishers(
+                conn,
+                activity_class=activity_class,
+                limit=limit,
+                offset=offset,
+            )
+    except ValueError:
+        return jsonify({
+            "ok": False,
+            "error": "invalid_publisher_activity_class",
+        }), 400
+    return jsonify({"ok": True, **payload})
+
+
+@require_admin_auth
+def admin_api_guland_publisher_override(publisher_id: int):
+    payload = request.get_json(silent=True) or {}
+    override = str(payload.get("override") or "").strip()
+    if override not in {"", "allow_manual", "hide_high_activity"}:
+        return jsonify({
+            "ok": False,
+            "error": "invalid_publisher_override",
+        }), 400
+    try:
+        with get_conn() as conn:
+            result = set_publisher_override(
+                conn,
+                publisher_id,
+                override,
+                _admin_profile_config_actor(),
+            )
+    except ValueError as exc:
+        if "not found" in str(exc).lower():
+            return jsonify({
+                "ok": False,
+                "error": "publisher_not_found",
+            }), 404
+        return jsonify({
+            "ok": False,
+            "error": "invalid_publisher_override",
+        }), 400
+
+    clear_dashboard_cache()
+    clear_signal_cache()
+    clear_listing_map_cache()
+    clear_admin_read_cache("data_quality_summary")
+    return jsonify({"ok": True, **result})
 
 
 @require_admin_auth

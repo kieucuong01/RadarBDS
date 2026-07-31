@@ -67,6 +67,35 @@ class SourcePolicyTest(unittest.TestCase):
             conn.execute(f"DELETE FROM listing_images WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
+            conn.execute(
+                "DELETE FROM source_publishers WHERE publisher_key LIKE ?",
+                (f"test-key-%-{self.token}",),
+            )
+
+    def _link_guland_class(self, listing_id, activity_class):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            publisher_id = conn.execute(
+                """
+                INSERT INTO source_publishers (
+                    source, publisher_key, identity_type,
+                    identity_confidence, activity_class
+                )
+                VALUES ('guland', ?, 'member_id', 'high', ?)
+                """,
+                (f"test-key-{listing_id}-{self.token}", activity_class),
+            ).lastrowid
+            conn.execute(
+                """
+                INSERT INTO listing_publishers (
+                    listing_id, publisher_id, identity_status,
+                    evidence_type, identity_confidence
+                )
+                VALUES (?, ?, 'identified', 'member_id', 'high')
+                """,
+                (listing_id, publisher_id),
+            )
 
     def _seed_signal(
         self,
@@ -189,7 +218,7 @@ class SourcePolicyTest(unittest.TestCase):
         except TypeError:
             self.client.set_cookie("localhost", SESSION_COOKIE_NAME, self.admin_token)
 
-    def test_guest_source_query_is_forced_to_facebook(self):
+    def test_guest_can_select_safe_guland_source(self):
         response = self.client.get(
             f"/api/signals?city=Khac&ward={self.ward}&source=guland&limit=10"
         )
@@ -197,18 +226,141 @@ class SourcePolicyTest(unittest.TestCase):
 
         payload = response.get_json()
         self.assertEqual(payload["total"], 1)
-        self.assertEqual([s["source"] for s in payload["signals"]], ["facebook"])
-        self.assertEqual(payload["signals"][0]["title"], "Facebook source policy signal")
+        self.assertEqual([s["source"] for s in payload["signals"]], ["guland"])
+        self.assertEqual(payload["signals"][0]["title"], "Guland source policy signal")
 
-    def test_guest_dashboard_defaults_to_facebook_only(self):
+    def test_guest_dashboard_defaults_to_facebook_plus_safe_guland(self):
         response = self.client.get(f"/api/dashboard?city=Khac&ward={self.ward}")
         self.assertEqual(response.status_code, 200)
 
         payload = response.get_json()
-        self.assertEqual(payload["active_sources"], ["facebook"])
-        self.assertEqual(payload["all_sources"], ["facebook"])
-        self.assertEqual(payload["stats"]["total"], 1)
-        self.assertEqual(payload["stats"]["signals"], 1)
+        self.assertEqual(payload["active_sources"], ["facebook", "guland"])
+        self.assertEqual(payload["all_sources"], ["facebook", "guland"])
+        self.assertEqual(payload["stats"]["total"], 2)
+        self.assertEqual(payload["stats"]["signals"], 2)
+
+    def test_guest_guland_query_hides_high_activity_but_keeps_unknown(self):
+        self._link_guland_class(self.guland_id, "high_activity")
+        unknown_id = self._seed_signal(
+            source="guland",
+            title="Unknown publisher stays visible",
+            source_id="guland-unknown",
+        )
+
+        payload = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}"
+            "&source=guland&date_range=all&limit=20"
+        ).get_json()
+
+        self.assertEqual(
+            [row["id"] for row in payload["signals"]],
+            [unknown_id],
+        )
+
+    def test_low_manual_guland_sorts_before_newer_unknown(self):
+        low_id = self._seed_signal(
+            source="guland",
+            title="Low manual publisher",
+            source_id="guland-low-manual",
+            posted_at="2026-07-01T08:00:00",
+        )
+        unknown_id = self._seed_signal(
+            source="guland",
+            title="Newer unknown publisher",
+            source_id="guland-newer-unknown",
+            posted_at="2026-07-31T08:00:00",
+        )
+        self._link_guland_class(low_id, "low_manual")
+
+        payload = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}"
+            "&source=guland&date_range=all&limit=20"
+        ).get_json()
+        ordered = [row["id"] for row in payload["signals"]]
+
+        self.assertLess(ordered.index(low_id), ordered.index(unknown_id))
+
+    def test_map_summary_and_pages_use_same_publisher_visibility(self):
+        from db.connection import get_conn
+
+        low_id = self._seed_signal(
+            source="guland",
+            title="Map low manual",
+            source_id="map-low",
+        )
+        unknown_id = self._seed_signal(
+            source="guland",
+            title="Map unknown",
+            source_id="map-unknown",
+        )
+        high_id = self._seed_signal(
+            source="guland",
+            title="Map high activity",
+            source_id="map-high",
+        )
+        automated_id = self._seed_signal(
+            source="guland",
+            title="Map automated repost",
+            source_id="map-automated",
+        )
+        self._link_guland_class(low_id, "low_manual")
+        self._link_guland_class(high_id, "high_activity")
+        self._link_guland_class(automated_id, "automated_repost")
+        location_key = f"exact:{self.token}"
+        with get_conn() as conn:
+            for listing_id in (
+                self.facebook_id,
+                low_id,
+                unknown_id,
+                high_id,
+                automated_id,
+            ):
+                conn.execute(
+                    """
+                    INSERT INTO listing_map_locations (
+                        listing_id, lat, lng, location_precision,
+                        location_key, location_label, source,
+                        resolver_version, listing_location_signature,
+                        resolution_status
+                    )
+                    VALUES (
+                        ?, 11.01, 106.65, 'exact', ?, 'Publisher parity',
+                        'test', 'test-v1', ?, 'resolved'
+                    )
+                    """,
+                    (
+                        listing_id,
+                        location_key,
+                        f"publisher-parity:{listing_id}",
+                    ),
+                )
+
+        query = (
+            f"mode=signals&city=Khac&ward={self.ward}"
+            "&date_range=all"
+        )
+        summary = self.client.get(f"/api/map-listings?{query}").get_json()
+        first_page = self.client.get(
+            f"/api/map-listing-items?{query}"
+            f"&location_key={location_key}&page=1&limit=2"
+        ).get_json()
+        second_page = self.client.get(
+            f"/api/map-listing-items?{query}"
+            f"&location_key={location_key}&page=2&limit=2"
+        ).get_json()
+
+        self.assertEqual(summary["summary"]["total"], 4)
+        self.assertEqual(summary["summary"]["mapped"], 3)
+        ids = [
+            row["id"]
+            for row in first_page["items"] + second_page["items"]
+        ]
+        self.assertEqual(first_page["total"], 3)
+        self.assertIn(low_id, ids)
+        self.assertIn(unknown_id, ids)
+        self.assertNotIn(high_id, ids)
+        self.assertNotIn(automated_id, ids)
+        self.assertLess(ids.index(low_id), ids.index(unknown_id))
 
     def test_admin_can_select_guland_source(self):
         self._login_as_admin()
@@ -222,6 +374,49 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(payload["total"], 1)
         self.assertEqual([s["source"] for s in payload["signals"]], ["guland"])
         self.assertEqual(payload["signals"][0]["title"], "Guland source policy signal")
+
+    def test_only_admin_can_reveal_high_activity_guland_publishers(self):
+        self._link_guland_class(self.guland_id, "high_activity")
+        query = (
+            f"city=Khac&ward={self.ward}&source=guland"
+            "&date_range=all&limit=10"
+        )
+
+        guest = self.client.get(
+            f"/api/signals?{query}&hide_guland_reposts=0"
+        ).get_json()
+        self.assertEqual(guest["total"], 0)
+
+        self._login_as_admin()
+        admin_default = self.client.get(f"/api/signals?{query}").get_json()
+        admin_hidden = self.client.get(
+            f"/api/signals?{query}&hide_guland_reposts=1"
+        ).get_json()
+        admin_revealed = self.client.get(
+            f"/api/signals?{query}&hide_guland_reposts=0"
+        ).get_json()
+
+        self.assertEqual(admin_default["total"], 0)
+        self.assertEqual(admin_hidden["total"], 0)
+        self.assertEqual(admin_revealed["total"], 1)
+        self.assertEqual(admin_revealed["signals"][0]["id"], self.guland_id)
+
+    def test_admin_dashboard_has_checked_guland_and_repost_filter(self):
+        self._login_as_admin()
+
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn(
+            'name="source" value="guland" checked',
+            html,
+        )
+        self.assertIn(
+            'id="hideGulandReposts" type="checkbox" checked',
+            html,
+        )
+        self.assertIn("Ẩn người đăng dày/repost", html)
 
     def test_guland_dashboard_signal_count_matches_actionable_feed(self):
         from db.connection import get_conn
@@ -353,7 +548,8 @@ class SourcePolicyTest(unittest.TestCase):
         guest = self.client.get(
             f"/api/signals?city=Khac&ward={self.ward}&date_range=all&limit=10"
         ).get_json()
-        self.assertEqual(guest["total"], 0)
+        self.assertEqual(guest["total"], 1)
+        self.assertEqual(guest["signals"][0]["id"], self.guland_id)
 
         self._login_as_admin()
         admin = self.client.get(
@@ -363,15 +559,18 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(admin["total"], 1)
         self.assertEqual(admin["signals"][0]["id"], self.guland_id)
 
-    def test_admin_default_source_is_facebook(self):
+    def test_admin_default_sources_match_public_safe_sources(self):
         self._login_as_admin()
 
         response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=10")
         self.assertEqual(response.status_code, 200)
 
         payload = response.get_json()
-        self.assertEqual(payload["total"], 1)
-        self.assertEqual([s["source"] for s in payload["signals"]], ["facebook"])
+        self.assertEqual(payload["total"], 2)
+        self.assertEqual(
+            {s["source"] for s in payload["signals"]},
+            {"facebook", "guland"},
+        )
 
     def test_signal_feed_defaults_to_three_month_listing_window(self):
         old_date = (datetime.now() - timedelta(days=130)).strftime("%Y-%m-%d %H:%M:%S")
@@ -386,8 +585,14 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         payload = response.get_json()
-        self.assertEqual(payload["total"], 1)
-        self.assertEqual([s["title"] for s in payload["signals"]], ["Facebook source policy signal"])
+        self.assertEqual(payload["total"], 2)
+        self.assertEqual(
+            {s["title"] for s in payload["signals"]},
+            {
+                "Facebook source policy signal",
+                "Guland source policy signal",
+            },
+        )
 
     def test_signal_feed_supports_all_time_listing_window(self):
         old_date = (datetime.now() - timedelta(days=400)).strftime("%Y-%m-%d %H:%M:%S")
@@ -403,8 +608,9 @@ class SourcePolicyTest(unittest.TestCase):
 
         payload = response.get_json()
         titles = [s["title"] for s in payload["signals"]]
-        self.assertEqual(payload["total"], 2)
+        self.assertEqual(payload["total"], 3)
         self.assertIn("Facebook source policy signal", titles)
+        self.assertIn("Guland source policy signal", titles)
         self.assertIn("Old all time visible signal", titles)
 
     def test_all_listings_uses_same_date_range_filter(self):
@@ -419,15 +625,22 @@ class SourcePolicyTest(unittest.TestCase):
         default_response = self.client.get(f"/api/listings?city=Khac&ward={self.ward}&limit=20")
         self.assertEqual(default_response.status_code, 200)
         default_payload = default_response.get_json()
-        self.assertEqual(default_payload["total"], 1)
-        self.assertEqual([x["title"] for x in default_payload["listings"]], ["Facebook source policy signal"])
+        self.assertEqual(default_payload["total"], 2)
+        self.assertEqual(
+            {x["title"] for x in default_payload["listings"]},
+            {
+                "Facebook source policy signal",
+                "Guland source policy signal",
+            },
+        )
 
         all_response = self.client.get(f"/api/listings?city=Khac&ward={self.ward}&date_range=all&limit=20")
         self.assertEqual(all_response.status_code, 200)
         all_payload = all_response.get_json()
         titles = [x["title"] for x in all_payload["listings"]]
-        self.assertEqual(all_payload["total"], 2)
+        self.assertEqual(all_payload["total"], 3)
         self.assertIn("Facebook source policy signal", titles)
+        self.assertIn("Guland source policy signal", titles)
         self.assertIn("Old listings hidden by default", titles)
 
     def test_all_listings_complete_filter_requires_ward_price_and_area(self):
@@ -739,8 +952,10 @@ class SourcePolicyTest(unittest.TestCase):
             admin_html,
             r'name="source"\s+value="facebook"\s+checked',
         )
-        guland_pos = admin_html.index('value="guland"')
-        self.assertNotIn("checked", admin_html[guland_pos:guland_pos + 100])
+        self.assertRegex(
+            admin_html,
+            r'name="source"\s+value="guland"\s+checked',
+        )
 
 
 if __name__ == "__main__":

@@ -8,14 +8,17 @@ Use this when a task touches user-facing deal quality, dedup/history, valuation,
 - User/VIP/main surfaces use the latest valuation plus `services.signal_quality.actionable_signal_sql()`.
 - Admin QC can show suppressed rows so humans can review parser/source quality.
 - `low_segment_confidence` alone should not suppress user-facing signals. Keep it in `source_quality_flags` and show a warning badge.
-- Fatal quality flags that can suppress promotion include parser price mistakes, down-payment-as-price, too-low absolute price, large-lot model risk, area/dimension conflict, source category conflict, multi-lot listing, test artifact, human bad-extraction labels, and Guland quality flags.
+- Fatal quality flags that can suppress promotion include parser price mistakes, down-payment-as-price, too-low absolute price, large-lot model risk, area/dimension conflict, source category conflict, multi-lot listing, test artifact, human bad-extraction labels, and deterministic Guland price/source errors.
 
 ## Source Policy
 
-- Facebook is primary for crawl, valuation baseline, user feed, VIP push, and default admin review.
+- Facebook is primary for crawl order, valuation baseline, VIP push, and default admin review.
 - Guland is secondary. It may supplement sparse valuation segments only when strict quality gates pass, and it should not promote itself directly unless stronger gates are satisfied.
 - BatDongSan is legacy/disabled. Keep old cleanup/import helpers only when needed for historical data cleanup; do not schedule it in daily crawl.
-- Guest/Free/VIP are forced to `source=facebook`. Admin may use source filters for QC/research.
+- Guest/Free/VIP may select Facebook or filtered Guland. Guland publishers classified `low_manual` or fail-open `unknown` are visible; `high_activity` and `automated_repost` are hidden.
+- Admin sees the same safe default and may explicitly reveal high/tool-like publishers with `hide_guland_reposts=0`, or set audited per-publisher overrides in Data Quality.
+- Publisher activity affects only feed/map visibility and ordering. It is not a listing quality flag, signal gate, valuation feature, or dedup identity.
+- Historical `guland_cluster_flood` is retired as a hard gate and is warning-only if it remains in old valuation rows.
 
 ## Dedup And Lot History
 
@@ -81,6 +84,7 @@ Data Quality queues:
 - `recheck`: hidden/bad-data rows that need recheck after fixes.
 - `source_qc`: model-cheap listings suppressed from user/VIP promotion due to source or valuation quality flags.
 - `legal_qc`: signal rows missing detected legal-doc image or with human wrong-data notes.
+- `publisher_qc`: aggregate Guland publisher cadence, classification, confidence, and audited allow/hide overrides. It never exposes publisher HMAC keys, phone numbers, member IDs, or profile URLs.
 
 Anti-bias rules:
 

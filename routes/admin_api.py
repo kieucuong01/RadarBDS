@@ -126,6 +126,23 @@ def admin_api_data_quality_retry_source_crawl(**kwargs):
     return _impl("admin_api_data_quality_retry_source_crawl", **kwargs)
 
 
+@bp.route("/admin/api/guland-publishers")
+def admin_api_guland_publishers(**kwargs):
+    return _impl("admin_api_guland_publishers", **kwargs)
+
+
+@bp.route(
+    "/admin/api/guland-publishers/<int:publisher_id>/override",
+    methods=["POST"],
+)
+def admin_api_guland_publisher_override(publisher_id, **kwargs):
+    return _impl(
+        "admin_api_guland_publisher_override",
+        publisher_id=publisher_id,
+        **kwargs,
+    )
+
+
 @bp.route("/admin/api/ai-training/feedback", methods=["POST"])
 def admin_api_ai_training_feedback(**kwargs):
     return _impl("admin_api_ai_training_feedback", **kwargs)

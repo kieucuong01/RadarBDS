@@ -477,6 +477,18 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                         WHEN :is_guland <> 0 THEN 'refreshed_detail'
                         ELSE source_status_reason
                     END,
+                    contact_phone = CASE
+                        WHEN :is_guland <> 0
+                             AND :publisher_contact_checked <> 0
+                        THEN :contact_phone
+                        ELSE contact_phone
+                    END,
+                    seller_name = CASE
+                        WHEN :is_guland <> 0
+                             AND NULLIF(BTRIM(:seller_name), '') IS NOT NULL
+                        THEN :seller_name
+                        ELSE seller_name
+                    END,
                     posted_at           = COALESCE(posted_at, :posted_at)
                 WHERE id = :id
             """, {
@@ -505,6 +517,11 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "price_updated_at": now,
                 "price_changed": int(price_changed),
                 "is_guland":     int(is_guland),
+                "publisher_contact_checked": int(
+                    bool(rec.get("_publisher_contact_checked"))
+                ),
+                "contact_phone": rec.get("contact_phone"),
+                "seller_name": rec.get("seller_name"),
                 "posted_at":     rec.get("post_date"),
             })
 

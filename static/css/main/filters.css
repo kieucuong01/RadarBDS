@@ -29,6 +29,10 @@
   gap: 2px 8px;
 }
 
+.source-grid-wide {
+  grid-column: 1 / -1;
+}
+
 .date-range-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

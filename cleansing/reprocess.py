@@ -27,6 +27,11 @@ from cleansing.feature_extractor import (
 from db.analytics import save_valuation_result
 from db.connection import advisory_lock, get_conn
 from db.crawl_runs import finish_crawl_run, start_crawl_run
+from db.guland_publishers import (
+    recompute_publisher,
+    record_listing_observation,
+    sync_listing_publisher,
+)
 from db.listings import insert_images, update_listing_outlier, upsert_listing
 from db.moderation import is_phone_blacklisted
 from db.raw_listings import get_raw_for_reprocess
@@ -34,7 +39,6 @@ from db.schema import init_schema
 
 
 GULAND_EXTREME_PPM2 = 80.0
-GULAND_CLUSTER_MIN_SIZE = 4
 BAD_VALUATION_VERDICTS = {"fake_price", "cannot_price", "overpriced"}
 GOOD_VALUATION_VERDICTS = {"cheap_real", "correct", "good"}
 LOW_ABSOLUTE_PRICE_TY = 0.5
@@ -161,58 +165,6 @@ def _valuation_quality_flags(row) -> tuple:
         flags.append("too_low_absolute_price")
 
     return tuple(sorted(set(flags)))
-
-
-def _ascii_signature(text: str) -> str:
-    text = unicodedata.normalize("NFD", text or "")
-    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
-    text = text.lower().replace("đ", "d")
-    text = re.sub(r"\b\d+(?:[,.]\d+)?\b", " ", text)
-    tokens = re.findall(r"[a-z]+", text)
-    return " ".join(tokens[:8])
-
-
-def _guland_cluster_key(row):
-    if (row["source"] or "").lower() != "guland":
-        return None
-    if _has_positive_feedback(row):
-        return None
-    title_sig = _ascii_signature(row["title"] or row["description"] or "")
-    if not title_sig:
-        return None
-    try:
-        area_bucket = int(round(float(row["area_m2"] or 0)))
-        price_bucket = round(float(row["price_ty"] or 0), 1)
-    except Exception:
-        return None
-    if area_bucket <= 0 or price_bucket <= 0:
-        return None
-    return (
-        row["ward"] or "unknown",
-        row["property_type"] or "khac",
-        area_bucket,
-        price_bucket,
-        title_sig,
-    )
-
-
-def _guland_cluster_flag_map(rows) -> dict:
-    unique_rows = {}
-    for row in rows:
-        unique_rows[row["id"]] = row
-
-    groups = {}
-    for row in unique_rows.values():
-        key = _guland_cluster_key(row)
-        if key:
-            groups.setdefault(key, []).append(row["id"])
-
-    flagged = {}
-    for ids in groups.values():
-        if len(ids) >= GULAND_CLUSTER_MIN_SIZE:
-            for listing_id in ids:
-                flagged.setdefault(listing_id, set()).add("guland_cluster_flood")
-    return flagged
 
 
 def populate_content_hashes(conn) -> int:
@@ -382,6 +334,27 @@ def reprocess_listings(source: str = None, since: str = None, full: bool = False
             listing_id, is_new = upsert_listing(rec, crawl_run_id=run_id)
             stats["processed_ids"].append(listing_id)
 
+            if rec["source"] == "guland":
+                with get_conn() as conn:
+                    publisher_id = sync_listing_publisher(
+                        conn,
+                        listing_id,
+                        raw_data,
+                    )
+                    if publisher_id:
+                        record_listing_observation(
+                            conn,
+                            listing_id,
+                            date.today(),
+                            is_new=is_new,
+                            source_date_changed=False,
+                        )
+                        recompute_publisher(
+                            conn,
+                            publisher_id,
+                            date.today(),
+                        )
+
             if is_new:
                 stats["new"] += 1
             else:
@@ -507,10 +480,8 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
                 ORDER BY l.id DESC
             """).fetchall()
 
-    cluster_flags = _guland_cluster_flag_map(list(train_rows) + list(valuate_rows))
-
     def row_to_listing(row):
-        flags = tuple(sorted(set(_source_quality_flags(row)) | cluster_flags.get(row["id"], set())))
+        flags = _source_quality_flags(row)
         crawled = date.fromisoformat(row["crawled_at"][:10]) if row["crawled_at"] else None
         posted = date.fromisoformat(row["posted_at"][:10]) if row["posted_at"] else None
         return Listing(

@@ -48,6 +48,8 @@ def test_listing_map_summary_uses_one_shared_connection_and_compact_query(
     assert len(connection.queries) == 2
     summary_sql = connection.queries[1][0]
     assert "listing_map_locations" in summary_sql
+    assert summary_sql.count("NOT EXISTS") == 1
+    assert summary_sql.count("FROM listing_publishers lp") == 2
     assert "listing_images" not in summary_sql
     assert "LEFT JOIN LATERAL" not in summary_sql
     assert result["summary"]["total"] == 0
@@ -150,6 +152,8 @@ def test_load_signals_uses_shared_connection_scope(monkeypatch):
     assert result["signals"] == []
     assert conn.closed is False
     assert len(conn.queries) == 1
+    assert conn.queries[0][0].count("NOT EXISTS") == 1
+    assert conn.queries[0][0].count("FROM listing_publishers lp") == 2
     assert "COUNT(*) OVER()" in conn.queries[0][0]
     assert "LEFT JOIN LATERAL" in conn.queries[0][0]
     assert "image_count" in conn.queries[0][0]
@@ -356,6 +360,7 @@ def test_load_dashboard_summary_uses_compact_read_model(monkeypatch):
     assert conn.closed is False
     assert len(conn.queries) == 5
     sql_text = "\n".join(sql for sql, _ in conn.queries)
+    assert "FROM listing_publishers lp" in sql_text
     assert "SELECT * FROM listings" not in sql_text
     assert "listing_images" not in sql_text
     assert "LEFT JOIN LATERAL" not in sql_text

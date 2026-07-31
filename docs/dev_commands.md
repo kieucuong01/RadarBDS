@@ -89,6 +89,29 @@ Invoke-RestMethod "http://127.0.0.1:5000/api/map-listings?mode=all&complete=1"
 Invoke-RestMethod "http://127.0.0.1:5000/api/map-listing-items?mode=signals&location_key=ward:thu-dau-mot:phu-loi&page=1&limit=20"
 ```
 
+### Người đăng Guland
+
+`GULAND_PUBLISHER_KEY_SECRET` phải có ít nhất 32 ký tự ngẫu nhiên trong
+`.env.local`; không in hoặc commit giá trị. Backfill mặc định dry-run và chỉ
+xét tin Guland còn hoạt động/đang có thể hiển thị:
+
+```powershell
+# Read-only; giới hạn một browser session
+& $py -X utf8 radar.py guland-publisher-backfill --limit 100
+
+# Chỉ chạy sau khi xem dry-run và được duyệt riêng
+& $py -X utf8 radar.py guland-publisher-backfill --limit 100 --apply
+
+# Bỏ checkpoint cũ và duyệt lại tập mục tiêu
+& $py -X utf8 radar.py guland-publisher-backfill --limit 100 --no-resume
+```
+
+Dry-run chỉ trả số lượng candidate/live/identity/class và không trả HMAC key,
+phone, profile URL hay member ID. Apply ghi checkpoint an toàn tại
+`.local/guland-publisher-backfill/<run-id>.json`, có thể resume idempotent và
+chỉ targeted reprocess các raw row thật sự đổi. Activity lịch sử được dựng từ
+`first_seen_at` đã có, không sửa ngày card hay giả lập ngày đăng nguồn.
+
 Direct `psql` access to the same local DB:
 
 ```powershell
