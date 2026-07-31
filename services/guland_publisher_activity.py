@@ -208,6 +208,7 @@ def validated_raw_publisher_fields(
         detail,
         str(detail.get("description") or ""),
     )
+    validated_identity = evidence
     try:
         publisher_key = build_publisher_key(
             evidence,
@@ -226,17 +227,22 @@ def validated_raw_publisher_fields(
         )
         publisher_key = ""
 
-    return {
+    fields: dict[str, object] = {
         "publisher_identity_status": evidence.status,
         "publisher_identity_type": evidence.identity_type,
         "publisher_identity_confidence": evidence.confidence,
         "publisher_identity_reason": evidence.reason,
         "publisher_key": publisher_key,
-        "publisher_source_id": evidence.source_id,
-        "publisher_profile_url": evidence.profile_url,
-        "publisher_name": evidence.name,
-        "publisher_phone": evidence.phone,
     }
+    if validated_identity.source_id:
+        fields["publisher_source_id"] = validated_identity.source_id
+    if validated_identity.profile_url:
+        fields["publisher_profile_url"] = validated_identity.profile_url
+    if validated_identity.name:
+        fields["publisher_name"] = validated_identity.name
+    if validated_identity.phone:
+        fields["publisher_phone"] = validated_identity.phone
+    return fields
 
 
 def classify_publisher(

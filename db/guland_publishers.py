@@ -270,6 +270,96 @@ def record_listing_observation(
     )
 
 
+def record_seen_guland_cards(
+    conn,
+    cards,
+    observed_at: datetime,
+) -> dict[str, Any]:
+    """Record current Guland cards and preserve source-date bumps in raw history."""
+    from db.raw_listings import update_raw_listing_payload
+
+    card_by_url = {
+        str(card.get("url") or "").strip(): card
+        for card in cards or []
+        if str(card.get("url") or "").strip()
+    }
+    stats: dict[str, Any] = {
+        "seen": 0,
+        "bumps": 0,
+        "changed_raw_ids": [],
+    }
+    if not card_by_url:
+        return stats
+
+    rows = []
+    urls = list(card_by_url)
+    for start in range(0, len(urls), 500):
+        chunk = urls[start:start + 500]
+        placeholders = ",".join("?" * len(chunk))
+        rows.extend(
+            conn.execute(
+                f"""
+                SELECT r.id AS raw_id, r.url, r.raw_json, l.id AS listing_id
+                FROM raw_listings r
+                JOIN listings l ON l.raw_id=r.id
+                WHERE r.source='guland' AND r.url IN ({placeholders})
+                """,
+                chunk,
+            ).fetchall()
+        )
+
+    observed_on = observed_at.date()
+    affected_publishers: set[int] = set()
+    for row in rows:
+        try:
+            raw_data = json.loads(row["raw_json"] or "{}")
+        except (TypeError, ValueError, json.JSONDecodeError):
+            raw_data = {}
+        card = card_by_url.get(str(row["url"] or ""))
+        if card is None:
+            continue
+
+        old_date_raw = str(raw_data.get("date_raw") or "").strip()
+        new_date_raw = str(card.get("date_raw") or "").strip()
+        source_date_changed = bool(
+            new_date_raw and new_date_raw != old_date_raw
+        )
+        if source_date_changed:
+            updated_raw = dict(raw_data)
+            updated_raw["date_raw"] = new_date_raw
+            if update_raw_listing_payload(
+                int(row["raw_id"]),
+                updated_raw,
+                change_kind="guland_source_bump",
+                conn=conn,
+            ):
+                stats["changed_raw_ids"].append(int(row["raw_id"]))
+
+        record_listing_observation(
+            conn,
+            int(row["listing_id"]),
+            observed_on,
+            is_new=False,
+            source_date_changed=source_date_changed,
+        )
+        link = conn.execute(
+            """
+            SELECT publisher_id FROM listing_publishers
+            WHERE listing_id=? AND publisher_id IS NOT NULL
+            """,
+            (row["listing_id"],),
+        ).fetchone()
+        if link:
+            affected_publishers.add(int(link["publisher_id"]))
+            stats["seen"] += 1
+            if source_date_changed:
+                stats["bumps"] += 1
+
+    for publisher_id in affected_publishers:
+        recompute_publisher(conn, publisher_id, observed_on)
+    return stats
+
+
 def recompute_publisher(
     conn,
     publisher_id: int,

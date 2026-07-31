@@ -8,6 +8,7 @@ from db import connection
 from db.guland_publishers import (
     publisher_sort_rank_sql,
     publisher_visibility_sql,
+    record_seen_guland_cards,
     recompute_publisher,
     record_listing_observation,
     set_publisher_override,
@@ -245,3 +246,92 @@ def test_visibility_and_rank_sql_share_the_publisher_link_contract():
     assert publisher_visibility_sql("candidate", True) == "1=1"
     assert "allow_manual" in rank
     assert "automated_repost" in rank
+
+
+def test_seen_card_bump_is_idempotent_and_does_not_change_listing_dates(
+    publisher_listing,
+):
+    listing_id, token = publisher_listing
+    raw_id = None
+    try:
+        raw_data = {
+            "url": f"https://guland.vn/post/seen-{token}",
+            "date_raw": "1 ngày trước",
+            **_identified_raw(token),
+        }
+        with connection.get_conn() as conn:
+            raw_id = conn.execute(
+                """
+                INSERT INTO raw_listings (source, source_id, url, raw_json)
+                VALUES ('guland', ?, ?, ?)
+                """,
+                (
+                    f"seen-{token}",
+                    raw_data["url"],
+                    json.dumps(raw_data),
+                ),
+            ).lastrowid
+            conn.execute(
+                """
+                UPDATE listings
+                SET raw_id=?, url=?, first_seen_at='2026-07-01T08:00:00+07:00',
+                    posted_at='2026-07-01'
+                WHERE id=?
+                """,
+                (raw_id, raw_data["url"], listing_id),
+            )
+            publisher_id = sync_listing_publisher(
+                conn,
+                listing_id,
+                raw_data,
+            )
+            first = record_seen_guland_cards(
+                conn,
+                [{"url": raw_data["url"], "date_raw": "Hôm nay"}],
+                datetime.fromisoformat("2026-07-31T10:00:00+07:00"),
+            )
+            second = record_seen_guland_cards(
+                conn,
+                [{"url": raw_data["url"], "date_raw": "Hôm nay"}],
+                datetime.fromisoformat("2026-07-31T11:00:00+07:00"),
+            )
+            daily = conn.execute(
+                """
+                SELECT seen_listing_count, bump_count
+                FROM publisher_activity_daily
+                WHERE publisher_id=? AND activity_date='2026-07-31'
+                """,
+                (publisher_id,),
+            ).fetchone()
+            listing = conn.execute(
+                """
+                SELECT first_seen_at, posted_at
+                FROM listings WHERE id=?
+                """,
+                (listing_id,),
+            ).fetchone()
+            revision = conn.execute(
+                """
+                SELECT change_kind
+                FROM raw_listing_revisions
+                WHERE raw_listing_id=?
+                ORDER BY revision_no DESC LIMIT 1
+                """,
+                (raw_id,),
+            ).fetchone()
+
+        assert first["changed_raw_ids"] == [raw_id]
+        assert second["changed_raw_ids"] == []
+        assert daily["seen_listing_count"] == 1
+        assert daily["bump_count"] == 1
+        assert listing["first_seen_at"] == "2026-07-01T08:00:00+07:00"
+        assert listing["posted_at"] == "2026-07-01"
+        assert revision["change_kind"] == "guland_source_bump"
+    finally:
+        if raw_id:
+            with connection.get_conn() as conn:
+                conn.execute(
+                    "UPDATE listings SET raw_id=NULL WHERE id=?",
+                    (listing_id,),
+                )
+                conn.execute("DELETE FROM raw_listings WHERE id=?", (raw_id,))

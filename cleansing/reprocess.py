@@ -27,6 +27,11 @@ from cleansing.feature_extractor import (
 from db.analytics import save_valuation_result
 from db.connection import advisory_lock, get_conn
 from db.crawl_runs import finish_crawl_run, start_crawl_run
+from db.guland_publishers import (
+    recompute_publisher,
+    record_listing_observation,
+    sync_listing_publisher,
+)
 from db.listings import insert_images, update_listing_outlier, upsert_listing
 from db.moderation import is_phone_blacklisted
 from db.raw_listings import get_raw_for_reprocess
@@ -381,6 +386,27 @@ def reprocess_listings(source: str = None, since: str = None, full: bool = False
 
             listing_id, is_new = upsert_listing(rec, crawl_run_id=run_id)
             stats["processed_ids"].append(listing_id)
+
+            if rec["source"] == "guland":
+                with get_conn() as conn:
+                    publisher_id = sync_listing_publisher(
+                        conn,
+                        listing_id,
+                        raw_data,
+                    )
+                    if publisher_id:
+                        record_listing_observation(
+                            conn,
+                            listing_id,
+                            date.today(),
+                            is_new=is_new,
+                            source_date_changed=False,
+                        )
+                        recompute_publisher(
+                            conn,
+                            publisher_id,
+                            date.today(),
+                        )
 
             if is_new:
                 stats["new"] += 1

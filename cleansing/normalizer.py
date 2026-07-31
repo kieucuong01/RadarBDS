@@ -917,6 +917,9 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             "is_hot":        int(hot),
             "contact_phone": (contact_phone[:50] or None),
             "seller_name":   (raw.get("seller_name") or "")[:200] or None,
+            "_publisher_contact_checked": bool(
+                raw.get("_publisher_contact_checked")
+            ),
             "post_date":     parse_post_date(raw.get("date_raw", ""), raw.get("crawled_at", "")),
             "img_urls":      raw.get("imgs") or raw.get("img_urls") or [],
             "raw_json":      raw,
