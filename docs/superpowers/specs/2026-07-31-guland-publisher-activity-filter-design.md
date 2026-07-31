@@ -98,6 +98,9 @@ Use isolated publisher tables rather than overloading listing quality fields:
   confidence, reasons, first/last observation, and aggregate activity.
 - `listing_publishers`: one current publisher link per listing, including
   evidence type and confidence.
+- `publisher_listing_observations`: one idempotent publisher/listing/day
+  observation ledger used to distinguish new, seen, bumped, and
+  near-duplicate evidence without double-counting retries.
 - `publisher_activity_daily`: daily counts used to recompute classifications.
 
 The raw listing remains the source of truth, so publisher links and aggregates
