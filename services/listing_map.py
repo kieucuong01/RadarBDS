@@ -10,6 +10,7 @@ import time
 from config.listing_map import LISTING_MAP_RESOLVER_VERSION
 from config.property_types import PROPERTY_TYPE_LABELS, normalize_property_types
 from db.connection import get_conn
+from db.guland_publishers import publisher_sort_rank_sql
 from services.market_data import (
     DEFAULT_VISIBLE_SOURCES,
     LATEST_SHADOW_VALUATION_CTE,
@@ -49,6 +50,7 @@ class MapFilters:
     keyword: str = ""
     date_range: str = "3m"
     complete_only: bool = False
+    include_guland_high_activity: bool = False
 
 
 def clear_listing_map_cache() -> None:
@@ -70,11 +72,7 @@ def _row_value(row, key, default=None):
 
 
 def _normalized_filters(filters: MapFilters, tier: str) -> MapFilters:
-    sources = tuple(
-        normalize_sources_for_tier(filters.sources, tier)
-        if tier != "admin"
-        else (filters.sources or DEFAULT_VISIBLE_SOURCES)
-    )
+    sources = tuple(normalize_sources_for_tier(filters.sources, tier))
     return replace(
         filters,
         wards=tuple(dict.fromkeys(filters.wards)),
@@ -110,6 +108,13 @@ def get_listing_map_data_version(conn) -> str:
             COALESCE((
                 SELECT MAX(updated_at)
                 FROM listing_map_locations
+            ), 'epoch'),
+            COALESCE((
+                SELECT MAX(GREATEST(
+                    COALESCE(last_classified_at, 'epoch'),
+                    COALESCE(last_seen_at, 'epoch')
+                ))
+                FROM source_publishers
             ), 'epoch')
         )::text AS data_version
         """
@@ -159,6 +164,7 @@ def _filtered_sql(mode: str, filters: MapFilters) -> tuple[str, list]:
         keyword=filters.keyword,
         date_range=filters.date_range,
         require_complete=filters.complete_only if mode == "all" else False,
+        include_guland_high_activity=filters.include_guland_high_activity,
     )
     deal = build_deal_sql(filters.mos_min)
     mode_condition = ""
@@ -182,6 +188,7 @@ def _filtered_sql(mode: str, filters: MapFilters) -> tuple[str, list]:
                l.price_updated_at,
                {listing_activity_at_sql('l')} AS activity_at,
                l.source,
+               {publisher_sort_rank_sql('l')} AS publisher_rank,
                ({deal.mos_expr}) AS mos_pct,
                CASE WHEN ({deal.condition}) THEN 1 ELSE 0 END AS is_signal
         FROM listings l
@@ -403,6 +410,7 @@ def load_listing_map_items(
                    f.price_updated_at,
                    f.activity_at,
                    f.source,
+                   f.publisher_rank,
                    f.mos_pct,
                    f.is_signal,
                    primary_img.local_path AS primary_local_path,
@@ -417,7 +425,7 @@ def load_listing_map_items(
                 LIMIT 1
             ) primary_img ON TRUE
             WHERE ml.location_key = ?
-            ORDER BY f.activity_at DESC, f.id DESC
+            ORDER BY f.publisher_rank ASC, f.activity_at DESC, f.id DESC
             LIMIT ? OFFSET ?
             """,
             params + [location_key, limit, offset],

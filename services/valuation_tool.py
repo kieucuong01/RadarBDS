@@ -39,7 +39,6 @@ BASELINE_EXCLUDE_QUALITY_FLAGS = frozenset({
     "extreme_guland_ppm2",
     "review_bad_valuation",
     "review_bad_extraction",
-    "guland_cluster_flood",
 })
 
 _MODEL_CACHE_LOCK = RLock()
