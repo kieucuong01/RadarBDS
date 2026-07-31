@@ -82,8 +82,8 @@ Performance boundary:
 
 - `valuation_results.is_signal` still means "cheap by model"; trust is tracked separately.
 - Runtime signal fields are deterministic: parser/normalizer/feature extractor, dedup, and valuation. Crawl/reprocess does not call external LLM verification.
-- User/VIP-facing queues use latest actionable valuation from `services.signal_quality`, which excludes duplicate reposts, `source_quality_recheck`, and fatal quality flags while preserving model-cheap rows for admin QC.
-- Valuation training is Facebook-primary. Thin canonical Facebook segments (`n < 35`) can be supplemented by strict-pass Guland rows at weight 0.4; this improves sparse segments without letting Guland promote itself directly to user/VIP surfaces.
+- User/VIP-facing queues use latest actionable valuation from `services.signal_quality`, which excludes duplicate reposts and explicit hard quality flags while preserving model-cheap rows for admin QC. `source_quality_recheck` is QC metadata and does not independently suppress a signal.
+- Valuation training is Facebook-primary. Thin canonical Facebook segments (`n < 35`) can be supplemented by strict-pass Guland rows at weight 0.4. Presentation is independent of that training policy: Guland and Facebook use the same model-signal/MOS threshold, then the same explicit hard quality blockers.
 - Regression valuation caps tier-3 roads at max 80% of the same-listing tier-2 counterfactual, so learned coefficients cannot make tier 3 equal to or higher than tier 2.
 - Trust tiers should now be treated as listing/valuation metadata, not as a live legal-image verification product path.
 - `/api/signals`, `/api/listing/<id>`, investment memo, and VIP push must keep source URL/phone redacted for non-admin users.

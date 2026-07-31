@@ -212,14 +212,17 @@ ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
 `actionable_signal_sql("v")` yêu cầu:
 
 - `v.is_signal = 1`;
-- không bị `source_quality_recheck` nguy hiểm;
-- không có fatal quality flags như `parsed_discount_as_price`,
-  `down_payment_as_price`, `too_low_absolute_price`,
-  `large_lot_model_risk`, `area_dimension_conflict`,
-  `source_category_conflict`, `multi_lot_listing`, `old_guland_post`,
-  `guland_weak_signal`, `review_bad_extraction`, `review_bad_valuation`, ...
+- không có hard-block quality flags:
+  `too_low_absolute_price`, `missing_area_evidence`,
+  `area_dimension_conflict`, `ambiguous_price_text`,
+  `source_category_conflict`, `multi_lot_listing`,
+  `extreme_guland_ppm2`, `suspicious_bait`, `guland_cluster_flood`,
+  `review_bad_extraction`, `review_bad_valuation`.
 
-`low_segment_confidence` không tự chặn signal; nó là warning/recheck nhẹ.
+`source_quality_recheck` là metadata QC, không tự chặn signal. Các cờ
+`low_road_confidence`, `low_segment_confidence`, `approximate_price_text`,
+`old_guland_post`, cùng hai cờ cũ `guland_weak_signal` /
+`guland_user_facing_risk` là warning-only nếu còn tồn tại trong dữ liệu lịch sử.
 
 `actionable_listing_sql("l")` thường yêu cầu listing:
 
@@ -384,7 +387,11 @@ is_signal = (mos_pct ≥ SIGNAL_MOS_THRESHOLD)
 
 Cách tính fair_ppm2 (per-ward weighted ridge + road tier + size discount) xem `.claude/rules/valuation.md`. Facebook is the primary baseline; if a canonical segment has fewer than 35 Facebook samples, strict-pass Guland rows may supplement training with weight 0.4. Regression valuation caps `road_tier=3` at max 80% of the same-listing tier-2 counterfactual before downstream adjustments. Không hardcode threshold ở chỗ khác — `analytics/valuation.py::SegmentModel.mos_threshold` đọc từ settings.
 
-Quality flags can keep the valuation row but suppress user/VIP promotion. Fatal gates currently include parser/data risk such as `parsed_discount_as_price`, `down_payment_as_price`, `too_low_absolute_price`, `large_lot_model_risk`, `area_dimension_conflict`, `source_category_conflict`, `multi_lot_listing`, `test_artifact`, source bad-extraction labels, and Guland quality flags such as `guland_weak_signal` / `guland_user_facing_risk`. `low_segment_confidence` alone is warning-only for user-facing cards.
+Quality flags can keep the valuation row but suppress user/VIP promotion. Only
+the explicit hard-block flags listed above suppress a model signal. Guland and
+Facebook use the same model-signal/MOS threshold; source-specific strength
+flags do not suppress Guland cards. `source_quality_recheck` and warning-only
+flags remain available for QC badges and admin review.
 
 Signal now has a separate trust tier:
 
