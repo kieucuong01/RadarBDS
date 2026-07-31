@@ -223,6 +223,38 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual([s["source"] for s in payload["signals"]], ["guland"])
         self.assertEqual(payload["signals"][0]["title"], "Guland source policy signal")
 
+    def test_guland_dashboard_signal_count_matches_actionable_feed(self):
+        from db.connection import get_conn
+
+        blocked_id = self._seed_signal(
+            source="guland",
+            title="Guland hard-blocked signal",
+            source_id="guland-hard-blocked",
+        )
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE valuation_results
+                SET source_quality_recheck=1,
+                    source_quality_flags='ambiguous_price_text'
+                WHERE listing_id=?
+                """,
+                (blocked_id,),
+            )
+
+        self._login_as_admin()
+        query = f"city=Khac&ward={self.ward}&source=guland&date_range=all&mos_min=10"
+        feed = self.client.get(f"/api/signals?{query}&limit=20")
+        dashboard = self.client.get(f"/api/dashboard?{query}")
+
+        self.assertEqual(feed.status_code, 200)
+        self.assertEqual(dashboard.status_code, 200)
+        self.assertEqual(feed.get_json()["total"], 1)
+        self.assertEqual(
+            dashboard.get_json()["stats"]["signals"],
+            feed.get_json()["total"],
+        )
+
     def test_guland_card_uses_first_seen_until_price_changes(self):
         from db.connection import get_conn
 

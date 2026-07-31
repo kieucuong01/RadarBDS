@@ -1347,10 +1347,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         keyword=keyword,
         date_range=date_range,
     )
-    actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
-    display_mos_expr = _display_mos_sql("v", "sv", actual_expr)
-    effective_mos_min = float(mos_min if mos_min is not None else 10)
-    signal_condition = _deal_mos_signal_sql(display_mos_expr, effective_mos_min)
+    signal_condition = build_deal_sql(mos_min).condition
     signal_row = conn.execute(f"""
         WITH {LATEST_VALUATION_CTE},
              {LATEST_SHADOW_VALUATION_CTE}
