@@ -40,7 +40,9 @@ def test_actionable_query_uses_latest_valuation_and_shared_quality_contract():
     assert "latest_valuation AS MATERIALIZED" in sql
     assert "JOIN latest_valuation v ON v.listing_id = l.id" in sql
     assert "COALESCE(v.is_signal,0)=1" in sql
-    assert "source_quality_recheck" in sql
+    assert "source_quality_recheck" not in sql
+    assert "ambiguous_price_text" in sql
+    assert "review_bad_extraction" in sql
     assert "review_bad_extraction" in sql
     assert "l.duplicate_of_id IS NULL" in sql
     assert params[-2:] == ["2026-06-01", "2026-07-01"]

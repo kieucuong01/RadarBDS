@@ -297,7 +297,7 @@ class VipNotifyTest(unittest.TestCase):
                 """
                 UPDATE valuation_results
                    SET source_quality_recheck=1,
-                       source_quality_flags='parsed_discount_as_price'
+                       source_quality_flags='too_low_absolute_price'
                  WHERE listing_id=?
                 """,
                 (self.listing_ids[-1],),
