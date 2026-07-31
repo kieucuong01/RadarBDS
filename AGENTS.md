@@ -62,6 +62,7 @@ Marketing skills:
 - Remote Supabase project `ozdjzfiqcjnlfuihqqjy` is sync/backup only. Passwords live only in ignored env files; never print or commit them.
 - Production: Ubuntu Server 24.04 LTS, Python 3.12, systemd services, Nginx, domain `https://radarbds.vn`.
 - Production env must set `PUBLIC_BASE_URL=https://radarbds.vn` and `DASHBOARD_BASE_URL=https://radarbds.vn`.
+- Local and production env must set a private `GULAND_PUBLISHER_KEY_SECRET` of at least 32 random characters before publisher identity capture/backfill.
 - Runtime data is ignored by git: DB dumps, `data/images/`, thumbnails, logs, reports, and backups must stay uncommitted.
 
 ## Core Entry Points
@@ -89,6 +90,8 @@ Marketing skills:
 - `low_segment_confidence` alone does not suppress user-facing signals; show a warning badge instead.
 - Facebook repost matching may use heuristics, but only with strong guards for type, location, area/dimensions, thổ cư, and phone.
 - Guland and legacy BatDongSan use source-id identity only for lot history/dedup; do not use cross-URL same-lot heuristics for them.
+- Guest/Free/VIP may see Guland `low_manual` and fail-open `unknown` publishers. Hide `high_activity` and `automated_repost`; only admin may reveal or override them.
+- Guland publisher activity is a feed/map ranking and visibility policy, not a source-quality flag or valuation input. `guland_cluster_flood` is retired as a hard gate.
 - Daily production crawl is Facebook-first. Guland runs as a secondary timer/fallback cron. Do not put slow secondary crawl before Facebook.
 - Do not reintroduce external LLM verification into crawl/reprocess. Advisory notes and Claude review stay manual/explicit and write only to `ai_deal_review`.
 

@@ -184,6 +184,49 @@ downloads for the selected listing IDs. New image objects include image-row
 identity and an asset fingerprint, so Facebook revisions cannot overwrite the
 same immutable S3 key.
 
+## Guland Publisher Activity Backfill
+
+Before crawl or backfill, `/etc/radar-bds/radar.env` must contain a private
+`GULAND_PUBLISHER_KEY_SECRET` with at least 32 random characters. Never print
+or copy the value into logs, checkpoints, JSON output, source control, or an
+admin response.
+
+The command only checks Guland listings that are active/displayable, plus
+currently configured source cards whose publisher status still needs checking.
+Dry-run is the default:
+
+```bash
+set -a
+. /etc/radar-bds/radar.env
+set +a
+cd /opt/radar-bds/current
+/opt/radar-bds/.venv/bin/python -X utf8 radar.py guland-publisher-backfill --limit 100
+```
+
+Review candidate, live, identified/unknown/unreachable, and estimated class
+counts. Output must contain aggregates only. Production apply is a separate
+data mutation and always requires explicit approval:
+
+```bash
+/opt/radar-bds/.venv/bin/python -X utf8 radar.py guland-publisher-backfill --limit 100 --apply
+```
+
+Apply checkpoints to `.local/guland-publisher-backfill/<run-id>.json`, resumes
+idempotently, updates publisher evidence/activity, and runs targeted listing
+normalization only. It does not rerun valuation or change first-seen, posted,
+price-update, price history, images, coordinates, map rows, or valuation rows.
+
+After an approved apply, verify counts and payload redaction:
+
+```bash
+curl -fsS "http://127.0.0.1:5000/api/dashboard?source=guland&cache_refresh=1" >/dev/null
+curl -fsS "http://127.0.0.1:5000/api/signals?source=guland&page=1&limit=3" >/dev/null
+curl -fsS "http://127.0.0.1:5000/api/map-listings?mode=signals&source=guland" >/dev/null
+```
+
+Deployment may create the idempotent tables and deploy the code, but it must
+not automatically run publisher backfill `--apply`.
+
 ## Cache Prewarm
 
 Use after deploy and after crawl/reprocess:

@@ -151,6 +151,15 @@ source URL được append vào `raw_listing_revisions`; observation giống h�
 trước không sinh thêm revision. Các cập nhật ảnh, chi tiết Guland, tọa độ,
 repair và image cleanup đều đi qua repository này.
 
+Với Guland, detail crawl còn lấy bằng chứng người đăng chỉ trong component
+profile/contact của tin. Member ID, profile URL hoặc số điện thoại đúng scope
+được chuẩn hóa thành HMAC bằng `GULAND_PUBLISHER_KEY_SECRET`; hotline/footer
+toàn trang chỉ là diagnostic và không được dùng làm danh tính. Reprocess liên
+kết listing với `source_publishers`, ghi observation theo ngày và phân loại
+`low_manual`, `high_activity`, `automated_repost` hoặc fail-open `unknown`.
+Ngày bump/repost nguồn được lưu thành raw revision
+`guland_source_bump`, không đổi `first_seen_at` hay ngày card nếu giá không đổi.
+
 ### Bước 4 — `listings` → `valuation_results`
 
 Sau `reprocess_listings()`, `_run_full_reprocess()` gọi:
@@ -216,13 +225,20 @@ ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
   `too_low_absolute_price`, `missing_area_evidence`,
   `area_dimension_conflict`, `ambiguous_price_text`,
   `source_category_conflict`, `multi_lot_listing`,
-  `extreme_guland_ppm2`, `suspicious_bait`, `guland_cluster_flood`,
+  `extreme_guland_ppm2`, `suspicious_bait`,
   `review_bad_extraction`, `review_bad_valuation`.
 
 `source_quality_recheck` là metadata QC, không tự chặn signal. Các cờ
 `low_road_confidence`, `low_segment_confidence`, `approximate_price_text`,
 `old_guland_post`, cùng hai cờ cũ `guland_weak_signal` /
-`guland_user_facing_risk` là warning-only nếu còn tồn tại trong dữ liệu lịch sử.
+`guland_user_facing_risk` và `guland_cluster_flood` là warning-only nếu còn tồn
+tại trong dữ liệu lịch sử.
+
+Sau quality gate, feed và Maps áp dụng policy người đăng Guland chung:
+`low_manual` trước `unknown`; `high_activity` và `automated_repost` bị ẩn với
+Guest/Free/VIP. Admin mặc định cũng ẩn nhưng có thể bỏ chọn
+“Ẩn người đăng dày/repost”. Policy này không thay đổi valuation, quality flags,
+dedup hay lot history; Guland vẫn nhận diện lô theo source ID.
 
 `actionable_listing_sql("l")` thường yêu cầu listing:
 
