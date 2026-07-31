@@ -57,6 +57,7 @@ ID_TABLES = {
     "public_content_items",
     "raw_listing_revisions",
     "raw_listings",
+    "source_publishers",
     "user_audit_log",
     "user_favorite_listings",
     "user_watchlists",
