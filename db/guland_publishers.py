@@ -66,7 +66,7 @@ def _validated_repository_fields(
         "publisher_key": str(validated["publisher_key"]),
         "identity_type": str(validated["publisher_identity_type"]),
         "confidence": str(validated["publisher_identity_confidence"]),
-        "display_name": str(validated["publisher_name"])[:240],
+        "display_name": str(validated.get("publisher_name") or "")[:240],
     }
 
 
@@ -268,6 +268,14 @@ def record_listing_observation(
         """,
         (publisher_id, observed_on),
     )
+    conn.execute(
+        """
+        UPDATE source_publishers
+        SET last_seen_at=GREATEST(last_seen_at, NOW())
+        WHERE id=?
+        """,
+        (publisher_id,),
+    )
 
 
 def record_seen_guland_cards(
@@ -276,6 +284,7 @@ def record_seen_guland_cards(
     observed_at: datetime,
 ) -> dict[str, Any]:
     """Record current Guland cards and preserve source-date bumps in raw history."""
+    from cleansing.normalizer import parse_post_date
     from db.raw_listings import update_raw_listing_payload
 
     card_by_url = {
@@ -299,7 +308,8 @@ def record_seen_guland_cards(
         rows.extend(
             conn.execute(
                 f"""
-                SELECT r.id AS raw_id, r.url, r.raw_json, l.id AS listing_id
+                SELECT r.id AS raw_id, r.url, r.raw_json, r.crawled_at,
+                       l.id AS listing_id
                 FROM raw_listings r
                 JOIN listings l ON l.raw_id=r.id
                 WHERE r.source='guland' AND r.url IN ({placeholders})
@@ -321,16 +331,40 @@ def record_seen_guland_cards(
 
         old_date_raw = str(raw_data.get("date_raw") or "").strip()
         new_date_raw = str(card.get("date_raw") or "").strip()
-        source_date_changed = bool(
-            new_date_raw and new_date_raw != old_date_raw
+        old_source_date = str(
+            raw_data.get("source_post_date")
+            or (
+                parse_post_date(
+                    old_date_raw,
+                    str(row["crawled_at"] or ""),
+                )
+                if old_date_raw
+                else ""
+            )
         )
-        if source_date_changed:
+        new_source_date = (
+            parse_post_date(new_date_raw, observed_at.isoformat())
+            if new_date_raw
+            else ""
+        )
+        is_date_baseline = bool(new_date_raw and not old_date_raw)
+        source_date_changed = bool(
+            old_date_raw
+            and new_date_raw
+            and old_source_date != new_source_date
+        )
+        if is_date_baseline or source_date_changed:
             updated_raw = dict(raw_data)
             updated_raw["date_raw"] = new_date_raw
+            updated_raw["source_post_date"] = new_source_date
             if update_raw_listing_payload(
                 int(row["raw_id"]),
                 updated_raw,
-                change_kind="guland_source_bump",
+                change_kind=(
+                    "guland_source_bump"
+                    if source_date_changed
+                    else "guland_card_date_baseline"
+                ),
                 conn=conn,
             ):
                 stats["changed_raw_ids"].append(int(row["raw_id"]))

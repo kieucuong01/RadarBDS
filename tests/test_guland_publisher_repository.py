@@ -141,6 +141,28 @@ def test_sync_is_idempotent_and_unknown_is_fail_open(publisher_listing):
     assert link["identity_status"] == "unknown"
 
 
+def test_legacy_raw_without_publisher_fields_is_fail_open(publisher_listing):
+    listing_id, _token = publisher_listing
+
+    with connection.get_conn() as conn:
+        publisher_id = sync_listing_publisher(conn, listing_id, {})
+        link = conn.execute(
+            """
+            SELECT publisher_id, identity_status, evidence_type,
+                   identity_confidence
+            FROM listing_publishers
+            WHERE listing_id=?
+            """,
+            (listing_id,),
+        ).fetchone()
+
+    assert publisher_id is None
+    assert link["publisher_id"] is None
+    assert link["identity_status"] == "unknown"
+    assert link["evidence_type"] == "unknown"
+    assert link["identity_confidence"] == "low"
+
+
 def test_observations_are_idempotent_and_recompute_exact_threshold(
     publisher_listing,
 ):
@@ -150,6 +172,14 @@ def test_observations_are_idempotent_and_recompute_exact_threshold(
             conn,
             listing_id,
             _identified_raw(token),
+        )
+        conn.execute(
+            """
+            UPDATE source_publishers
+            SET last_seen_at='2020-01-01T00:00:00+00:00'
+            WHERE id=?
+            """,
+            (publisher_id,),
         )
         for _ in range(2):
             record_listing_observation(
@@ -175,6 +205,10 @@ def test_observations_are_idempotent_and_recompute_exact_threshold(
             publisher_id,
             date(2026, 7, 31),
         )
+        last_seen_at = conn.execute(
+            "SELECT last_seen_at FROM source_publishers WHERE id=?",
+            (publisher_id,),
+        ).fetchone()["last_seen_at"]
 
     assert dict(daily.items()) == {
         "new_listing_count": 1,
@@ -184,6 +218,7 @@ def test_observations_are_idempotent_and_recompute_exact_threshold(
         "repeated_template_count": 1,
     }
     assert classification.activity_class == "automated_repost"
+    assert last_seen_at.year > 2020
 
 
 def test_override_is_audited_and_returns_effective_class(publisher_listing):
@@ -327,6 +362,89 @@ def test_seen_card_bump_is_idempotent_and_does_not_change_listing_dates(
         assert listing["first_seen_at"] == "2026-07-01T08:00:00+07:00"
         assert listing["posted_at"] == "2026-07-01"
         assert revision["change_kind"] == "guland_source_bump"
+    finally:
+        if raw_id:
+            with connection.get_conn() as conn:
+                conn.execute(
+                    "UPDATE listings SET raw_id=NULL WHERE id=?",
+                    (listing_id,),
+                )
+                conn.execute("DELETE FROM raw_listings WHERE id=?", (raw_id,))
+
+
+def test_first_card_date_capture_is_baseline_not_a_bump(publisher_listing):
+    listing_id, token = publisher_listing
+    raw_id = None
+    try:
+        raw_data = {
+            "url": f"https://guland.vn/post/baseline-{token}",
+            **_identified_raw(token),
+        }
+        with connection.get_conn() as conn:
+            raw_id = conn.execute(
+                """
+                INSERT INTO raw_listings (source, source_id, url, raw_json)
+                VALUES ('guland', ?, ?, ?)
+                """,
+                (
+                    f"baseline-{token}",
+                    raw_data["url"],
+                    json.dumps(raw_data),
+                ),
+            ).lastrowid
+            conn.execute(
+                "UPDATE listings SET raw_id=?, url=? WHERE id=?",
+                (raw_id, raw_data["url"], listing_id),
+            )
+            publisher_id = sync_listing_publisher(
+                conn,
+                listing_id,
+                raw_data,
+            )
+            baseline = record_seen_guland_cards(
+                conn,
+                [{"url": raw_data["url"], "date_raw": "1 ngày trước"}],
+                datetime.fromisoformat("2026-07-31T09:00:00+07:00"),
+            )
+            natural_progression = record_seen_guland_cards(
+                conn,
+                [{"url": raw_data["url"], "date_raw": "2 ngày trước"}],
+                datetime.fromisoformat("2026-08-01T09:00:00+07:00"),
+            )
+            bumped = record_seen_guland_cards(
+                conn,
+                [{"url": raw_data["url"], "date_raw": "Hôm nay"}],
+                datetime.fromisoformat("2026-08-01T10:00:00+07:00"),
+            )
+            daily = conn.execute(
+                """
+                SELECT bump_count
+                FROM publisher_activity_daily
+                WHERE publisher_id=? AND activity_date='2026-08-01'
+                """,
+                (publisher_id,),
+            ).fetchone()
+            revisions = conn.execute(
+                """
+                SELECT change_kind
+                FROM raw_listing_revisions
+                WHERE raw_listing_id=?
+                ORDER BY revision_no
+                """,
+                (raw_id,),
+            ).fetchall()
+
+        assert baseline["changed_raw_ids"] == [raw_id]
+        assert baseline["bumps"] == 0
+        assert natural_progression["changed_raw_ids"] == []
+        assert natural_progression["bumps"] == 0
+        assert bumped["changed_raw_ids"] == [raw_id]
+        assert bumped["bumps"] == 1
+        assert daily["bump_count"] == 1
+        assert [row["change_kind"] for row in revisions][-2:] == [
+            "guland_card_date_baseline",
+            "guland_source_bump",
+        ]
     finally:
         if raw_id:
             with connection.get_conn() as conn:

@@ -158,7 +158,11 @@ toàn trang chỉ là diagnostic và không được dùng làm danh tính. Repr
 kết listing với `source_publishers`, ghi observation theo ngày và phân loại
 `low_manual`, `high_activity`, `automated_repost` hoặc fail-open `unknown`.
 Ngày bump/repost nguồn được lưu thành raw revision
-`guland_source_bump`, không đổi `first_seen_at` hay ngày card nếu giá không đổi.
+`guland_source_bump`; lần đầu bổ sung ngày card còn thiếu chỉ là
+`guland_card_date_baseline`, không bị tính nhầm thành bump. So sánh dùng ngày
+nguồn tuyệt đối `source_post_date`, nên diễn tiến tự nhiên kiểu “1 ngày trước”
+thành “2 ngày trước” không bị tính là repost. Không thao tác nào đổi
+`first_seen_at` hay ngày card nếu giá không đổi.
 
 ### Bước 4 — `listings` → `valuation_results`
 

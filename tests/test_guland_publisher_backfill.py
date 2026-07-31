@@ -1,6 +1,8 @@
 import json
 import uuid
 from dataclasses import replace
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -177,6 +179,50 @@ def test_dry_run_never_calls_mutation_functions(monkeypatch):
     assert stats["identity_by_type"] == {"member_id": 1, "unknown": 1}
 
 
+def test_dry_run_estimates_shared_publisher_from_first_seen_dates(monkeypatch):
+    today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat()
+    targets = []
+    details = {}
+    for index in range(6):
+        source_id = str(900200 + index)
+        url = f"https://guland.vn/post/dry-shared-{source_id}"
+        targets.append(
+            GulandPublisherBackfillTarget(
+                listing_id=1000 + index,
+                raw_id=2000 + index,
+                url=url,
+                source_id=source_id,
+                source_status="active",
+                publisher_status="unchecked",
+                raw_data={"title": f"Shared publisher {index}"},
+                first_seen_at=today,
+            )
+        )
+        details[url] = {
+            "url": url,
+            "http_status": 200,
+            "page_status": "live",
+            "publisher_source_id": "member-shared",
+            "description": "",
+        }
+
+    monkeypatch.setattr(
+        service,
+        "_collect_targets_and_details",
+        lambda _limit: (targets, details, len(targets)),
+    )
+    monkeypatch.setattr(
+        service,
+        "GULAND_PUBLISHER_KEY_SECRET",
+        "dry-run-estimate-secret-" + ("x" * 40),
+    )
+
+    stats = run_guland_publisher_backfill(apply=False, limit=10)
+
+    assert stats["would_identify"] == 6
+    assert stats["estimated_classes"] == {"high_activity": 1}
+
+
 def test_apply_preserves_listing_assets_price_and_valuation(
     monkeypatch,
     tmp_path,
@@ -299,6 +345,7 @@ def test_apply_preserves_listing_assets_price_and_valuation(
                 source_status=row["source_status"],
                 publisher_status="unchecked",
                 raw_data=json.loads(row["raw_json"]),
+                first_seen_at="2026-07-01T08:00:00+07:00",
             )
             return [target], {url: detail}, 1
 
@@ -374,20 +421,24 @@ def test_apply_preserves_listing_assets_price_and_valuation(
                 (listing_id,),
             ).fetchone()
             publisher_id = link["publisher_id"]
-            observation_count = conn.execute(
+            observations = conn.execute(
                 """
-                SELECT COUNT(*) AS n
+                SELECT activity_date, was_new, was_seen
                 FROM publisher_listing_observations
                 WHERE publisher_id=? AND listing_id=?
+                ORDER BY activity_date
                 """,
                 (publisher_id, listing_id),
-            ).fetchone()["n"]
+            ).fetchall()
 
         assert first["raw_updated"] == 1
         assert second["raw_updated"] == 0
         assert after == before
         assert after_counts == before_counts
-        assert observation_count == 1
+        assert len(observations) == 2
+        assert str(observations[0]["activity_date"]) == "2026-07-01"
+        assert observations[0]["was_new"] is True
+        assert observations[1]["was_seen"] is True
         checkpoint_text = " ".join(
             path.read_text(encoding="utf-8")
             for path in tmp_path.glob("*.json")

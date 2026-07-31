@@ -213,8 +213,10 @@ data mutation and always requires explicit approval:
 
 Apply checkpoints to `.local/guland-publisher-backfill/<run-id>.json`, resumes
 idempotently, updates publisher evidence/activity, and runs targeted listing
-normalization only. It does not rerun valuation or change first-seen, posted,
-price-update, price history, images, coordinates, map rows, or valuation rows.
+normalization only. Historical new-listing activity is reconstructed from the
+preserved `first_seen_at`; the command does not rerun valuation or change
+first-seen, posted, price-update, price history, images, coordinates, map rows,
+or valuation rows.
 
 After an approved apply, verify counts and payload redaction:
 

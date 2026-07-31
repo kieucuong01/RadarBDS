@@ -109,7 +109,8 @@ xét tin Guland còn hoạt động/đang có thể hiển thị:
 Dry-run chỉ trả số lượng candidate/live/identity/class và không trả HMAC key,
 phone, profile URL hay member ID. Apply ghi checkpoint an toàn tại
 `.local/guland-publisher-backfill/<run-id>.json`, có thể resume idempotent và
-chỉ targeted reprocess các raw row thật sự đổi.
+chỉ targeted reprocess các raw row thật sự đổi. Activity lịch sử được dựng từ
+`first_seen_at` đã có, không sửa ngày card hay giả lập ngày đăng nguồn.
 
 Direct `psql` access to the same local DB:
 

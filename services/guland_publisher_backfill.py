@@ -7,7 +7,7 @@ import os
 import tempfile
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 from zoneinfo import ZoneInfo
@@ -39,6 +39,7 @@ class GulandPublisherBackfillTarget:
     source_status: str
     publisher_status: str
     raw_data: Mapping[str, object]
+    first_seen_at: object = ""
 
 
 def validate_backfill_limit(value: int) -> int:
@@ -80,6 +81,7 @@ def _load_targets(
         rows = conn.execute(
             f"""
             SELECT l.id AS listing_id, r.id AS raw_id, r.url, r.source_id,
+                   l.first_seen_at,
                    r.raw_json, COALESCE(l.source_status, 'unknown') AS source_status,
                    COALESCE(lp.identity_status, 'unchecked') AS publisher_status
             FROM listings l
@@ -121,6 +123,7 @@ def _load_targets(
             source_status=str(row["source_status"] or "unknown"),
             publisher_status=str(row["publisher_status"] or "unchecked"),
             raw_data=_parse_raw_json(row["raw_json"]),
+            first_seen_at=row["first_seen_at"] or "",
         )
         for row in rows
     ]
@@ -211,6 +214,95 @@ def _verified_detail(
     return "live", fields
 
 
+def _target_observed_on(
+    target: GulandPublisherBackfillTarget,
+    fallback: date,
+) -> date:
+    value = target.first_seen_at
+    parsed: date | None = None
+    if isinstance(value, datetime):
+        parsed = value.date()
+    elif isinstance(value, date):
+        parsed = value
+    else:
+        raw = str(value or "").strip()
+        if raw:
+            try:
+                parsed = datetime.fromisoformat(
+                    raw.replace("Z", "+00:00")
+                ).date()
+            except ValueError:
+                try:
+                    parsed = date.fromisoformat(raw[:10])
+                except ValueError:
+                    parsed = None
+    if parsed is None or parsed > fallback:
+        return fallback
+    return parsed
+
+
+def _estimate_activity_classes(
+    plan: Sequence[Mapping[str, object]],
+    *,
+    as_of: date,
+) -> Counter[str]:
+    """Estimate publisher classes from preserved first-seen dates."""
+    publisher_days: dict[str, Counter[date]] = {}
+    publisher_confidence: dict[str, str] = {}
+    unknown_count = 0
+    for item in plan:
+        target = item["target"]
+        assert isinstance(target, GulandPublisherBackfillTarget)
+        fields = dict(item.get("fields") or {})
+        if item.get("outcome") == "removed":
+            continue
+        if (
+            item.get("outcome") != "live"
+            or fields.get("publisher_identity_status") != "identified"
+            or not fields.get("publisher_key")
+        ):
+            unknown_count += 1
+            continue
+        key = str(fields["publisher_key"])
+        publisher_days.setdefault(key, Counter())[
+            _target_observed_on(target, as_of)
+        ] += 1
+        publisher_confidence[key] = str(
+            fields.get("publisher_identity_confidence") or "low"
+        )
+
+    classes: Counter[str] = Counter()
+    if unknown_count:
+        classes["unknown"] = unknown_count
+    for key, daily in publisher_days.items():
+        metrics = PublisherMetrics(
+            new_1d=int(daily.get(as_of, 0)),
+            new_7d=sum(
+                count
+                for observed_on, count in daily.items()
+                if observed_on >= as_of - timedelta(days=6)
+            ),
+            new_30d=sum(
+                count
+                for observed_on, count in daily.items()
+                if observed_on >= as_of - timedelta(days=29)
+            ),
+            max_new_on_day=max(daily.values(), default=0),
+            active_days_30d=sum(
+                1
+                for observed_on in daily
+                if observed_on >= as_of - timedelta(days=29)
+            ),
+        )
+        classes[
+            classify_publisher(
+                metrics,
+                publisher_confidence[key],
+            ).activity_class
+        ] += 1
+    return classes
+
+
 def _build_plan(
     targets: Sequence[GulandPublisherBackfillTarget],
     details: Mapping[str, Mapping[str, object]],
@@ -225,7 +317,6 @@ def _build_plan(
         sorted(Counter(target.source_status for target in targets).items())
     )
     identity_types: Counter[str] = Counter()
-    estimated_classes: Counter[str] = Counter()
     plan: list[dict[str, object]] = []
     for target in targets:
         outcome, fields = _verified_detail(
@@ -243,27 +334,18 @@ def _build_plan(
             status = str(
                 fields.get("publisher_identity_status") or "unknown"
             )
-            confidence = str(
-                fields.get("publisher_identity_confidence") or "low"
-            )
             if status == "identified":
                 stats["would_identify"] = int(stats["would_identify"]) + 1
             else:
                 stats["would_remain_unknown"] = (
                     int(stats["would_remain_unknown"]) + 1
                 )
-            estimated = classify_publisher(
-                PublisherMetrics(),
-                confidence,
-            ).activity_class
-            estimated_classes[estimated] += 1
             identity_types[identity_type] += 1
         elif outcome == "unreachable":
             stats["would_remain_unknown"] = (
                 int(stats["would_remain_unknown"]) + 1
             )
             identity_types["unknown"] += 1
-            estimated_classes["unknown"] += 1
         plan.append(
             {
                 "target": target,
@@ -273,6 +355,10 @@ def _build_plan(
             }
         )
     stats["identity_by_type"] = dict(sorted(identity_types.items()))
+    estimated_classes = _estimate_activity_classes(
+        plan,
+        as_of=datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date(),
+    )
     stats["estimated_classes"] = dict(sorted(estimated_classes.items()))
     return plan, stats
 
@@ -461,8 +547,11 @@ def _apply_plan(
                     record_listing_observation(
                         conn,
                         target.listing_id,
-                        checked_at_dt.date(),
-                        is_new=False,
+                        _target_observed_on(
+                            target,
+                            checked_at_dt.date(),
+                        ),
+                        is_new=True,
                         source_date_changed=False,
                     )
                     recompute_publisher(
