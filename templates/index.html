@@ -75,7 +75,7 @@
 
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-input-zoom-20260612' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=content-hubs-20260729' %}
-  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=pagespeed-a11y-20260611' %}
+  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=guland-publisher-filter-20260731' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
@@ -175,7 +175,11 @@
         <div class="filter-body">
           <div id="sourceFilters" class="source-grid">
             <label class="filter-option"><input type="checkbox" name="source" value="facebook" checked> Facebook</label>
-            <label class="filter-option"><input type="checkbox" name="source" value="guland"> Guland.vn</label>
+            <label class="filter-option"><input type="checkbox" name="source" value="guland" checked> Guland.vn</label>
+            <label class="filter-option source-grid-wide">
+              <input id="hideGulandReposts" type="checkbox" checked>
+              Ẩn người đăng dày/repost
+            </label>
           </div>
         </div>
       </div>
@@ -1420,7 +1424,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=content-hubs-20260729"></script>
-  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=loader-font-fix-20260611"></script>
+  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=guland-publisher-filter-20260731"></script>
   <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signal_card.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=signal-detail-regression-20260729"></script>

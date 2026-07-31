@@ -82,6 +82,13 @@ function getFilterQuery() {
   for (let [k, v] of fd.entries()) {
     params.append(k, v);
   }
+  const hideGulandReposts = document.getElementById('hideGulandReposts');
+  if (hideGulandReposts) {
+    params.set(
+      'hide_guland_reposts',
+      hideGulandReposts.checked ? '1' : '0'
+    );
+  }
   selectedRangeTokens('price').forEach(token => params.append('price_range', token));
   selectedRangeTokens('area').forEach(token => params.append('area_range', token));
   const wardBoxes = Array.from(document.querySelectorAll('#wardFilters input[name="ward"]'));

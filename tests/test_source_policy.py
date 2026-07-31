@@ -375,6 +375,49 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual([s["source"] for s in payload["signals"]], ["guland"])
         self.assertEqual(payload["signals"][0]["title"], "Guland source policy signal")
 
+    def test_only_admin_can_reveal_high_activity_guland_publishers(self):
+        self._link_guland_class(self.guland_id, "high_activity")
+        query = (
+            f"city=Khac&ward={self.ward}&source=guland"
+            "&date_range=all&limit=10"
+        )
+
+        guest = self.client.get(
+            f"/api/signals?{query}&hide_guland_reposts=0"
+        ).get_json()
+        self.assertEqual(guest["total"], 0)
+
+        self._login_as_admin()
+        admin_default = self.client.get(f"/api/signals?{query}").get_json()
+        admin_hidden = self.client.get(
+            f"/api/signals?{query}&hide_guland_reposts=1"
+        ).get_json()
+        admin_revealed = self.client.get(
+            f"/api/signals?{query}&hide_guland_reposts=0"
+        ).get_json()
+
+        self.assertEqual(admin_default["total"], 0)
+        self.assertEqual(admin_hidden["total"], 0)
+        self.assertEqual(admin_revealed["total"], 1)
+        self.assertEqual(admin_revealed["signals"][0]["id"], self.guland_id)
+
+    def test_admin_dashboard_has_checked_guland_and_repost_filter(self):
+        self._login_as_admin()
+
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn(
+            'name="source" value="guland" checked',
+            html,
+        )
+        self.assertIn(
+            'id="hideGulandReposts" type="checkbox" checked',
+            html,
+        )
+        self.assertIn("Ẩn người đăng dày/repost", html)
+
     def test_guland_dashboard_signal_count_matches_actionable_feed(self):
         from db.connection import get_conn
 
@@ -909,8 +952,10 @@ class SourcePolicyTest(unittest.TestCase):
             admin_html,
             r'name="source"\s+value="facebook"\s+checked',
         )
-        guland_pos = admin_html.index('value="guland"')
-        self.assertNotIn("checked", admin_html[guland_pos:guland_pos + 100])
+        self.assertRegex(
+            admin_html,
+            r'name="source"\s+value="guland"\s+checked',
+        )
 
 
 if __name__ == "__main__":

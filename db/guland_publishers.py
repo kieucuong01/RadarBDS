@@ -506,6 +506,122 @@ def set_publisher_override(
     }
 
 
+def list_publishers(
+    conn,
+    *,
+    activity_class: str = "",
+    limit: int = 50,
+    offset: int = 0,
+) -> dict[str, Any]:
+    """Return an admin-safe publisher QC page without identity material."""
+    valid_classes = {
+        "",
+        "unknown",
+        "low_manual",
+        "high_activity",
+        "automated_repost",
+    }
+    if activity_class not in valid_classes:
+        raise ValueError("invalid publisher activity class")
+
+    effective_class_sql = """
+        CASE sp.manual_override
+          WHEN 'allow_manual' THEN 'low_manual'
+          WHEN 'hide_high_activity' THEN 'high_activity'
+          ELSE sp.activity_class
+        END
+    """
+    where_sql = "WHERE sp.source='guland'"
+    params: list[Any] = []
+    if activity_class:
+        where_sql += f" AND ({effective_class_sql})=?"
+        params.append(activity_class)
+
+    total_row = conn.execute(
+        f"""
+        SELECT COUNT(*) AS total
+        FROM source_publishers sp
+        {where_sql}
+        """,
+        params,
+    ).fetchone()
+    rows = conn.execute(
+        f"""
+        SELECT
+            sp.id,
+            sp.display_name,
+            sp.activity_class,
+            ({effective_class_sql}) AS effective_class,
+            sp.identity_confidence,
+            sp.activity_reason,
+            sp.manual_override,
+            sp.metrics_json,
+            sp.last_seen_at,
+            (
+                SELECT COUNT(*)
+                FROM listing_publishers lp
+                WHERE lp.publisher_id=sp.id
+            ) AS linked_listing_count
+        FROM source_publishers sp
+        {where_sql}
+        ORDER BY
+            CASE ({effective_class_sql})
+              WHEN 'automated_repost' THEN 0
+              WHEN 'high_activity' THEN 1
+              WHEN 'unknown' THEN 2
+              WHEN 'low_manual' THEN 3
+              ELSE 2
+            END,
+            sp.last_seen_at DESC,
+            sp.id DESC
+        LIMIT ? OFFSET ?
+        """,
+        [*params, limit, offset],
+    ).fetchall()
+
+    items: list[dict[str, Any]] = []
+    for row in rows:
+        metrics = row["metrics_json"] or {}
+        if isinstance(metrics, str):
+            try:
+                metrics = json.loads(metrics)
+            except (TypeError, ValueError):
+                metrics = {}
+        if not isinstance(metrics, dict):
+            metrics = {}
+        last_seen = row["last_seen_at"]
+        items.append(
+            {
+                "id": int(row["id"]),
+                "display_name": str(row["display_name"] or ""),
+                "activity_class": str(row["activity_class"] or "unknown"),
+                "effective_class": str(
+                    row["effective_class"] or "unknown"
+                ),
+                "identity_confidence": str(
+                    row["identity_confidence"] or "low"
+                ),
+                "activity_reason": str(row["activity_reason"] or ""),
+                "manual_override": str(row["manual_override"] or ""),
+                "metrics": metrics,
+                "linked_listing_count": int(
+                    row["linked_listing_count"] or 0
+                ),
+                "last_seen_at": (
+                    last_seen.isoformat()
+                    if hasattr(last_seen, "isoformat")
+                    else str(last_seen or "")
+                ),
+            }
+        )
+    return {
+        "items": items,
+        "total": int(total_row["total"] or 0),
+        "limit": int(limit),
+        "offset": int(offset),
+    }
+
+
 def publisher_visibility_sql(
     alias: str = "l",
     include_high_activity: bool = False,

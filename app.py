@@ -96,12 +96,15 @@ mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 # Import the extracted services
 from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters, listing_activity_at_sql, listing_card_activity
 from db.guland_publishers import (
+    list_publishers,
     publisher_sort_rank_sql,
     publisher_visibility_sql,
+    set_publisher_override,
 )
 from services.market_data import LATEST_SHADOW_VALUATION_CTE, _display_fair_sql, _display_mos_sql
 from services.listing_map import (
     MapFilters,
+    clear_listing_map_cache,
     load_listing_map_items,
     load_listing_map_summary,
 )
@@ -6325,6 +6328,64 @@ def admin_api_data_quality_retry_source_crawl():
     clear_admin_read_cache("data_quality_summary")
     clear_admin_read_cache("growth")
     return jsonify({"ok": True, "job": _public_crawl_job(created)})
+
+
+@require_admin_auth
+def admin_api_guland_publishers():
+    activity_class = (
+        request.args.get("activity_class") or ""
+    ).strip().lower()
+    limit = _clamp_int(request.args.get("limit"), 50, 1, 200)
+    offset = _clamp_int(request.args.get("offset"), 0, 0, 1_000_000)
+    try:
+        with get_conn() as conn:
+            payload = list_publishers(
+                conn,
+                activity_class=activity_class,
+                limit=limit,
+                offset=offset,
+            )
+    except ValueError:
+        return jsonify({
+            "ok": False,
+            "error": "invalid_publisher_activity_class",
+        }), 400
+    return jsonify({"ok": True, **payload})
+
+
+@require_admin_auth
+def admin_api_guland_publisher_override(publisher_id: int):
+    payload = request.get_json(silent=True) or {}
+    override = str(payload.get("override") or "").strip()
+    if override not in {"", "allow_manual", "hide_high_activity"}:
+        return jsonify({
+            "ok": False,
+            "error": "invalid_publisher_override",
+        }), 400
+    try:
+        with get_conn() as conn:
+            result = set_publisher_override(
+                conn,
+                publisher_id,
+                override,
+                _admin_profile_config_actor(),
+            )
+    except ValueError as exc:
+        if "not found" in str(exc).lower():
+            return jsonify({
+                "ok": False,
+                "error": "publisher_not_found",
+            }), 404
+        return jsonify({
+            "ok": False,
+            "error": "invalid_publisher_override",
+        }), 400
+
+    clear_dashboard_cache()
+    clear_signal_cache()
+    clear_listing_map_cache()
+    clear_admin_read_cache("data_quality_summary")
+    return jsonify({"ok": True, **result})
 
 
 @require_admin_auth

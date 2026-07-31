@@ -1381,6 +1381,7 @@ function switchQualityTab(name) {
   document.querySelectorAll('.quality-tab').forEach(tab => tab.classList.toggle('active', tab.id === `quality-${name}`));
   if (name === 'dups') loadDuplicates();
   else if (name === 'blacklist') loadBlacklist();
+  else if (name === 'publisher_qc') loadGulandPublishers();
   else loadDataQualityQueue(name);
 }
 
@@ -1406,6 +1407,82 @@ async function loadDataQualityQueue(queue) {
   items.forEach(it => { _trnGal[it.id] = (it.images && it.images.length) ? it.images : []; });
   root.innerHTML = items.map(x => dataQualityReviewCard(x, queue)).join('');
   requestAnimationFrame(() => _trnSyncDescriptionToggles(root));
+}
+
+const GULAND_PUBLISHER_CLASS = {
+  low_manual: 'Ít đăng / thủ công',
+  unknown: 'Chưa đủ dữ liệu',
+  high_activity: 'Đăng dày',
+  automated_repost: 'Có dấu hiệu tool repost'
+};
+
+function gulandPublisherMetric(metrics, key, fallback = 0) {
+  const value = Number(metrics?.[key]);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function gulandPublisherCard(item) {
+  const metrics = item.metrics || {};
+  const klass = item.effective_class || 'unknown';
+  const override = item.manual_override || '';
+  const nearDuplicate = metrics.near_duplicates_max_day == null
+    ? `${Math.round(gulandPublisherMetric(metrics, 'near_duplicate_ratio_30d') * 100)}%`
+    : String(gulandPublisherMetric(metrics, 'near_duplicates_max_day'));
+  const lastSeen = item.last_seen_at
+    ? new Date(item.last_seen_at).toLocaleString('vi-VN')
+    : 'Chưa rõ';
+  return `
+    <article class="publisher-qc-card publisher-qc-${esc(klass)}">
+      <div class="publisher-qc-head">
+        <div>
+          <h3>${esc(item.display_name || 'Không có tên')}</h3>
+          <p>#${Number(item.id)} · ${Number(item.linked_listing_count || 0)} tin đang liên kết</p>
+        </div>
+        <span class="publisher-qc-class">${esc(GULAND_PUBLISHER_CLASS[klass] || klass)}</span>
+      </div>
+      <dl class="publisher-qc-metrics">
+        <div><dt>1 ngày</dt><dd>${gulandPublisherMetric(metrics, 'posts_1d', gulandPublisherMetric(metrics, 'new_1d'))}</dd></div>
+        <div><dt>7 ngày</dt><dd>${gulandPublisherMetric(metrics, 'posts_7d', gulandPublisherMetric(metrics, 'new_7d'))}</dd></div>
+        <div><dt>30 ngày</dt><dd>${gulandPublisherMetric(metrics, 'posts_30d', gulandPublisherMetric(metrics, 'new_30d'))}</dd></div>
+        <div><dt>Cao nhất/ngày</dt><dd>${gulandPublisherMetric(metrics, 'max_posts_per_day_30d', gulandPublisherMetric(metrics, 'max_new_on_day'))}</dd></div>
+        <div><dt>Bump 30 ngày</dt><dd>${gulandPublisherMetric(metrics, 'source_bumps_30d', gulandPublisherMetric(metrics, 'bumps_30d'))}</dd></div>
+        <div><dt>Gần trùng/ngày</dt><dd>${esc(nearDuplicate)}</dd></div>
+      </dl>
+      <div class="publisher-qc-meta">
+        <span>Tin cậy: ${esc(item.identity_confidence || 'low')}</span>
+        <span>Lý do: ${esc(item.activity_reason || 'Chưa phân loại')}</span>
+        <span>Gặp gần nhất: ${esc(lastSeen)}</span>
+      </div>
+      <div class="publisher-qc-actions">
+        <button type="button" class="secondary-btn ${override === 'allow_manual' ? 'active' : ''}"
+          onclick="setGulandPublisherOverride(${Number(item.id)}, 'allow_manual')">Cho phép như người đăng ít</button>
+        <button type="button" class="secondary-btn ${override === 'hide_high_activity' ? 'active' : ''}"
+          onclick="setGulandPublisherOverride(${Number(item.id)}, 'hide_high_activity')">Luôn ẩn khỏi người dùng</button>
+        ${override ? `<button type="button" class="secondary-btn" onclick="setGulandPublisherOverride(${Number(item.id)}, '')">Bỏ ghi đè</button>` : ''}
+      </div>
+    </article>
+  `;
+}
+
+async function loadGulandPublishers() {
+  const root = document.getElementById('qualityPublisherQcGrid');
+  if (!root) return;
+  root.innerHTML = '<div class="empty">Đang tải người đăng Guland...</div>';
+  const data = await fetchJSON('/admin/api/guland-publishers?limit=100');
+  const items = data.items || [];
+  root.innerHTML = items.length
+    ? items.map(gulandPublisherCard).join('')
+    : '<div class="empty">Chưa có người đăng Guland đã nhận diện.</div>';
+}
+
+async function setGulandPublisherOverride(publisherId, override) {
+  await fetchJSON(`/admin/api/guland-publishers/${publisherId}/override`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ override })
+  });
+  showAdminToast('Đã cập nhật cách lọc người đăng Guland', 'success');
+  await loadGulandPublishers();
 }
 
 function infraFilters() {
