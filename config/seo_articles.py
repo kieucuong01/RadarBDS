@@ -9335,6 +9335,266 @@ SEO_ARTICLES = {
         ]
     }
 
+,
+    "dinh-hoa-hay-hiep-thanh-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/dinh-hoa-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+        "title": "Định Hòa hay Hiệp Thành: nên xem khu nào trước? | Radar BDS",
+        "description": "Dữ liệu Radar BDS cập nhật 31/07/2026: Định Hòa nhiều nguồn hàng hơn, còn Hiệp Thành hợp người mua ưu tiên nhà đất gần trung tâm hơn. Luôn tách đất nền và nhà đất trước khi so giá rao.",
+        "keywords": "Định Hòa hay Hiệp Thành, giá đất Định Hòa, giá đất Hiệp Thành, nhà đất Định Hòa, nhà đất Hiệp Thành, Radar BDS",
+        "breadcrumb_label": "Định Hòa hay Hiệp Thành",
+        "hero_badge": "So sánh phường",
+        "hero_title": "Định Hòa hay Hiệp Thành: nên xem khu nào trước?",
+        "hero_text": "Nếu anh muốn nhiều lựa chọn để lọc nhanh, nên mở Định Hòa trước. Nếu anh ưu tiên nhà đất và chấp nhận mặt bằng giá cao hơn, Hiệp Thành vẫn đáng xem song song. Điểm quan trọng là phải tách đất nền và nhà đất, vì hai phường lệch nhau rất rõ ở từng loại hình.",
+        "scope_label": "Thủ Dầu Một · Định Hòa / Hiệp Thành",
+        "hero_checks": [
+            "Định Hòa đang theo dõi 62 tin; Hiệp Thành có 23 tin",
+            "Đất nền Định Hòa có giá trung vị 19,1 tr/m²; Hiệp Thành là 18,6 tr/m²",
+            "Nhà đất Định Hòa có giá trung vị 30,6 tr/m²; Hiệp Thành là 46,7 tr/m²",
+            "Nhóm dưới 4 tỷ nghiêng về Định Hòa ở cả đất nền lẫn nhà đất"
+        ],
+        "primary_cta": "Mở dashboard lọc Định Hòa và Hiệp Thành",
+        "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=dinh_hoa_vs_hiep_thanh",
+        "secondary_cta": "Xem báo cáo Bình Dương tháng 06/2026",
+        "secondary_href": "/bao-cao/bds-binh-duong-thang-06-2026",
+        "map_label": "Tin tức / Định Hòa · Hiệp Thành",
+        "hero_metric": {
+            "label": "Nguồn hàng đang theo dõi",
+            "value": "62 vs 23",
+            "delta": "Định Hòa vs Hiệp Thành",
+            "note": "Nguồn Facebook đang theo dõi, cập nhật 31/07/2026"
+        },
+        "property_card": {
+            "status": "So sánh 2 phường",
+            "title": "Định Hòa dễ mở trước nếu anh cần nhiều mẫu để lọc",
+            "price": "Đất nền 19,1 vs 18,6 tr/m² · nhà đất 30,6 vs 46,7 tr/m²",
+            "metric_a": "Tin dưới 4 tỷ",
+            "metric_a_value": "46 vs 9",
+            "metric_b": "Tín hiệu đáng kiểm tra",
+            "metric_b_value": "9 vs 7"
+        },
+        "local_links_title": "Đọc tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Định Hòa",
+                "href": "/binh-duong/phuong-dinh-hoa",
+                "description": "Xem điểm mạnh, dữ liệu nền và hướng lọc riêng cho Định Hòa."
+            },
+            {
+                "label": "Trang phường Hiệp Thành",
+                "href": "/binh-duong/phuong-hiep-thanh",
+                "description": "Đọc nhanh bối cảnh Hiệp Thành trước khi mở từng tin."
+            },
+            {
+                "label": "Dùng công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Đối chiếu giá rao từng tin với mặt bằng theo phường trước khi gọi môi giới."
+            },
+            {
+                "label": "Dưới 3 tỷ nên xem Hiệp Thành hay Phú Tân trước?",
+                "href": "/tin-tuc/duoi-3-ty-nen-xem-hiep-thanh-hay-phu-tan-truoc",
+                "description": "Nếu anh đang lọc thêm theo ngân sách, bài này giúp mở tiếp đúng hướng."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nên mở Định Hòa hay Hiệp Thành trước nếu mới bắt đầu lọc tin?",
+                "a": "Nếu mục tiêu của anh là mở rộng nguồn hàng để lọc nhanh, nên mở Định Hòa trước vì đang có 62 tin theo dõi so với 23 tin ở Hiệp Thành. Định Hòa cũng có 41 tin đất nền và 20 tin nhà đất, dày hơn hẳn ở cả hai nhóm."
+            },
+            {
+                "q": "Đất nền Định Hòa và Hiệp Thành hiện chênh nhau nhiều không?",
+                "a": "Không chênh quá mạnh về giá rao trung vị/m². Đất nền Định Hòa hiện khoảng 19,1 tr/m², còn Hiệp Thành khoảng 18,6 tr/m². Tuy nhiên Định Hòa có 27 tin đất nền dưới 3 tỷ và 30 tin dưới 4 tỷ, trong khi Hiệp Thành chỉ có 3 tin dưới 3 tỷ và 4 tin dưới 4 tỷ."
+            },
+            {
+                "q": "Nhà đất bên nào hợp người mua ngân sách dưới 4 tỷ hơn?",
+                "a": "Định Hòa hợp hơn ở nhóm ngân sách này. Nhà đất Định Hòa có 16 tin dưới 4 tỷ và giá trung vị 30,6 tr/m²; Hiệp Thành có 5 tin dưới 4 tỷ nhưng giá trung vị cao hơn nhiều, khoảng 46,7 tr/m²."
+            },
+            {
+                "q": "7 tín hiệu ở Hiệp Thành có nghĩa là nên ưu tiên mua khu này không?",
+                "a": "Không. Tín hiệu chỉ giúp anh ưu tiên thứ tự kiểm tra tiếp. Người mua vẫn cần xem kỹ pháp lý, quy hoạch, đường vào, hiện trạng và mức độ hợp ngân sách. Radar BDS là bộ lọc dữ liệu ban đầu, không thay quyết định thẩm định."
+            }
+        ],
+        "article": {
+            "published_at": "2026-07-31",
+            "modified_at": "2026-07-31",
+            "intro": [
+                "Nếu anh đang phân vân Định Hòa hay Hiệp Thành, câu trả lời ngắn là: cần nhiều lựa chọn và ngân sách dễ thở hơn thì mở Định Hòa trước; cần xem thêm nhà đất ở mặt bằng giá cao hơn thì giữ Hiệp Thành trong danh sách so song song. So đúng phải tách riêng đất nền và nhà đất.",
+                "Bài này dùng dữ liệu production của Radar BDS, chỉ lấy nguồn Facebook đang theo dõi với is_active=1, lọc bỏ tin ẩn và blacklist, cập nhật ngày 31/07/2026. Đây là giá rao để lọc ban đầu, không phải giá chốt hay cam kết mua được ở mức này."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Định Hòa tổng tin",
+                    "value": "62",
+                    "note": "9 tín hiệu đáng kiểm tra"
+                },
+                {
+                    "label": "Hiệp Thành tổng tin",
+                    "value": "23",
+                    "note": "7 tín hiệu đáng kiểm tra"
+                },
+                {
+                    "label": "Đất nền dưới 4 tỷ",
+                    "value": "30 vs 4",
+                    "note": "Định Hòa vs Hiệp Thành"
+                },
+                {
+                    "label": "Nhà đất dưới 4 tỷ",
+                    "value": "16 vs 5",
+                    "note": "Định Hòa vs Hiệp Thành"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Dữ liệu Radar BDS · Facebook đang theo dõi",
+                    "title": "So Định Hòa và Hiệp Thành theo loại hình BĐS",
+                    "note": "Cập nhật 31/07/2026. Giá/m² là giá trung vị của tin rao đang theo dõi; luôn phải tách đất nền và nhà đất.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường / loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Tín hiệu"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "range", "label": "Khoảng quan sát"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Định Hòa · đất nền", "tracked": "41", "signals": "6", "under4": "30", "median_m2": "19,1 tr/m²", "median_total": "2,38 tỷ", "range": "11,4-28,6 tr/m²"},
+                        {"ward_type": "Định Hòa · nhà đất", "tracked": "20", "signals": "3", "under4": "16", "median_m2": "30,6 tr/m²", "median_total": "2,95 tỷ", "range": "15,3-40,5 tr/m²"},
+                        {"ward_type": "Hiệp Thành · đất nền", "tracked": "10", "signals": "2", "under4": "4", "median_m2": "18,6 tr/m²", "median_total": "2,48 tỷ", "range": "10,0-23,4 tr/m²"},
+                        {"ward_type": "Hiệp Thành · nhà đất", "tracked": "13", "signals": "5", "under4": "5", "median_m2": "46,7 tr/m²", "median_total": "3,73 tỷ", "range": "38,1-70,0 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Mở phường nào trước trong dashboard?",
+                    "note": "Bảng này giúp chọn bộ lọc mở trước; sau đó anh vẫn cần đọc từng tin cụ thể.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều lựa chọn hơn", "open_first": "Định Hòa", "why": "62 tin theo dõi so với 23 tin ở Hiệp Thành"},
+                        {"need": "Đất nền dưới 4 tỷ", "open_first": "Định Hòa", "why": "30 tin dưới 4 tỷ, nhiều hơn Hiệp Thành 4 tin"},
+                        {"need": "Nhà đất dưới 4 tỷ", "open_first": "Định Hòa", "why": "16 tin dưới 4 tỷ, cao hơn Hiệp Thành 5 tin"},
+                        {"need": "Muốn xem nhà đất mặt bằng cao hơn", "open_first": "Hiệp Thành", "why": "Giá trung vị nhà đất 46,7 tr/m², cao hơn Định Hòa 30,6 tr/m²"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Định Hòa dày nguồn hàng hơn ở cả hai loại hình",
+                    "note": "Số tin đang theo dõi giúp anh biết nên mở phường nào trước để đỡ mất thời gian lọc.",
+                    "alt": "Biểu đồ số tin đang theo dõi ở Định Hòa và Hiệp Thành theo loại hình",
+                    "rows": [
+                        {"label": "Định Hòa · đất nền", "value_label": "41 tin", "width": 100, "color": "#2563eb"},
+                        {"label": "Định Hòa · nhà đất", "value_label": "20 tin", "width": 49, "color": "#16a34a"},
+                        {"label": "Hiệp Thành · đất nền", "value_label": "10 tin", "width": 24, "color": "#f59e0b"},
+                        {"label": "Hiệp Thành · nhà đất", "value_label": "13 tin", "width": 32, "color": "#dc2626"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất Hiệp Thành cao giá hơn rõ rệt",
+                    "note": "Giá rao nhà đất ở Hiệp Thành cao hơn mạnh, trong khi đất nền hai phường không lệch quá xa.",
+                    "alt": "Biểu đồ giá trung vị nhà đất Định Hòa và Hiệp Thành",
+                    "rows": [
+                        {"label": "Định Hòa · nhà đất", "value_label": "30,6 tr/m²", "width": 66, "color": "#22c55e"},
+                        {"label": "Hiệp Thành · nhà đất", "value_label": "46,7 tr/m²", "width": 100, "color": "#ef4444"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "nguon-hang-dinh-hoa-hiep-thanh",
+                    "heading": "1. Định Hòa đáng mở trước nếu anh cần nhiều mẫu để lọc",
+                    "paragraphs": [
+                        "Số lượng tin đang theo dõi hiện tại chênh khá rõ: Định Hòa có 62 tin, còn Hiệp Thành có 23 tin. Chỉ riêng đất nền, Định Hòa đã có 41 tin, gấp hơn 4 lần Hiệp Thành. Với người mua đang ở giai đoạn mở radar để xem nhanh mặt bằng, đây là lợi thế lớn vì anh có nhiều mẫu hơn để so giá, diện tích và vị trí.",
+                        "Nguồn hàng dày hơn không tự động có nghĩa là rẻ hơn hoặc tốt hơn, nhưng nó giúp anh dễ tìm được vài mẫu hợp ngân sách để đi tiếp. Với Định Hòa, cả đất nền lẫn nhà đất đều có độ phủ tốt hơn trong dữ liệu hiện tại."
+                    ],
+                    "bullets": [
+                        "Định Hòa: 62 tin theo dõi · 41 đất nền · 20 nhà đất",
+                        "Hiệp Thành: 23 tin theo dõi · 10 đất nền · 13 nhà đất",
+                        "Tín hiệu tổng: 9 vs 7",
+                        "Nếu mới lọc lần đầu, Định Hòa cho nhiều mẫu để so hơn"
+                    ]
+                },
+                {
+                    "id": "dat-nen-dinh-hoa-hiep-thanh",
+                    "heading": "2. Đất nền hai phường gần nhau về giá/m² nhưng Định Hòa dễ lọc hơn theo ngân sách",
+                    "paragraphs": [
+                        "Giá trung vị đất nền Định Hòa hiện khoảng 19,1 tr/m², Hiệp Thành khoảng 18,6 tr/m². Chênh lệch này không lớn, nên nếu chỉ nhìn giá/m² thì nhiều người sẽ thấy hai phường gần như ngang nhau.",
+                        "Điểm khác nằm ở số tin hợp ngân sách. Định Hòa có 27 tin đất nền dưới 3 tỷ và 30 tin dưới 4 tỷ, trong khi Hiệp Thành chỉ có 3 và 4 tin tương ứng. Vì vậy, nếu anh săn đất nền với khung tài chính phổ biến, Định Hòa là nơi nên mở trước."
+                    ],
+                    "bullets": [
+                        "Định Hòa đất nền: 19,1 tr/m² · tổng giá trung vị 2,38 tỷ",
+                        "Hiệp Thành đất nền: 18,6 tr/m² · tổng giá trung vị 2,48 tỷ",
+                        "Dưới 3 tỷ: 27 vs 3",
+                        "Dưới 4 tỷ: 30 vs 4"
+                    ]
+                },
+                {
+                    "id": "nha-dat-dinh-hoa-hiep-thanh",
+                    "heading": "3. Nhà đất Hiệp Thành cao giá hơn, còn Định Hòa hợp ngân sách rộng hơn",
+                    "paragraphs": [
+                        "Nhà đất là nơi khác biệt rõ nhất giữa hai phường. Định Hòa đang có giá trung vị khoảng 30,6 tr/m² và tổng giá trung vị 2,95 tỷ. Trong khi đó, Hiệp Thành lên khoảng 46,7 tr/m² và tổng giá trung vị 3,73 tỷ. Nghĩa là Hiệp Thành đang nghiêng về nhóm nhà đất giá cao hơn rõ rệt.",
+                        "Nếu ngân sách của anh dưới 4 tỷ, Định Hòa đang dễ lọc hơn với 16 tin nhà đất dưới 4 tỷ so với 5 tin ở Hiệp Thành. Hiệp Thành vẫn hữu ích nếu anh chấp nhận mặt bằng cao hơn và muốn xem một số vị trí nhà đất khác biệt, nhưng không phải điểm nên mở trước cho đa số người mua phổ thông."
+                    ],
+                    "bullets": [
+                        "Nhà đất Định Hòa: 20 tin · 16 tin dưới 4 tỷ · 30,6 tr/m²",
+                        "Nhà đất Hiệp Thành: 13 tin · 5 tin dưới 4 tỷ · 46,7 tr/m²",
+                        "Tổng giá trung vị: 2,95 tỷ vs 3,73 tỷ",
+                        "Hiệp Thành phù hợp hơn nếu anh đã chấp nhận mức giá cao hơn"
+                    ]
+                },
+                {
+                    "id": "cach-loc-tren-radar",
+                    "heading": "4. Cách lọc thực tế trên Radar BDS để khỏi đọc nhầm",
+                    "paragraphs": [
+                        "Anh nên lọc theo thứ tự: chọn phường, tách đất nền với nhà đất, đặt khung tổng giá trước rồi mới nhìn giá/m². Cách này tránh việc thấy một tin có vẻ rẻ nhưng thực ra thuộc loại hình khác hoặc có mặt bằng giá hoàn toàn khác với nhu cầu của anh.",
+                        "Sau khi lọc, hãy dùng thêm công cụ định giá và xem nhóm tín hiệu đáng kiểm tra trước. Tín hiệu chỉ là ưu tiên đọc trước, không phải nhãn xác nhận nên mua ngay. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay hiện trạng thực tế."
+                    ],
+                    "bullets": [
+                        "Chọn Định Hòa hoặc Hiệp Thành trước",
+                        "Tách đất nền và nhà đất",
+                        "Giới hạn tổng giá theo ngân sách",
+                        "Đối chiếu với /dinh-gia-bds trước khi gọi môi giới"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã tách đất nền và nhà đất trước khi so hai phường.",
+                "Đã nhìn cả giá/m² lẫn tổng giá trung vị.",
+                "Đã kiểm tra số tin hợp ngân sách dưới 3 tỷ hoặc 4 tỷ.",
+                "Đã hiểu tín hiệu chỉ là nhóm nên kiểm tra trước.",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và hiện trạng sau khi lọc dữ liệu."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar BDS để lọc Định Hòa và Hiệp Thành",
+            "body": "Chọn đúng phường, tách đất nền và nhà đất, rồi xem nhóm tín hiệu trước khi liên hệ từng tin cụ thể.",
+            "button": "Mở dashboard",
+            "button_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=dinh_hoa_vs_hiep_thanh"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Định Hòa hay Hiệp Thành",
+                "href": "/tin-tuc/dinh-hoa-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+                "url": "https://radarbds.vn/tin-tuc/dinh-hoa-hay-hiep-thanh-nen-xem-khu-nao-truoc"
+            }
+        ]
+    }
 
 }
 
