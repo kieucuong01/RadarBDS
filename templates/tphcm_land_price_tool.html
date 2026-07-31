@@ -91,6 +91,10 @@
         <p>Nhập tuyến đường hoặc phường/xã để xem đúng đoạn đường và ba nhóm giá đất.</p>
       </div>
       <div class="result-state result-error" id="landPriceError" role="alert" hidden></div>
+
+      {% set lead_cta_context = "seo_landing_lead" %}
+      {% include "partials/seo_lead_capture.html" %}
+
       <div class="table-wrap" id="landPriceTable" hidden>
         <table>
           <thead>
@@ -365,5 +369,6 @@
   </main>
   <script src="{{ url_for('static', filename='js/tphcm_land_price_calculator.js') }}?v=tphcm-land-mixed-20260728-2"></script>
   <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=tphcm-land-mixed-20260728-2"></script>
+  {% include "partials/seo_lead_capture_script.html" %}
 </body>
 </html>

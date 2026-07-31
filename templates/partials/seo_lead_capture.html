@@ -1,3 +1,4 @@
+{% set page = page|default({}) %}
 {% set lead_scope = page.live_ward or page.lead_scope_label or page.scope_label or page.hero_title %}
 {% set lead_note = "Quan tâm " ~ lead_scope ~ " từ " ~ page.path %}
 <section class="seo-lead-capture" aria-label="Nhận tin đáng kiểm tra theo khu vực">
