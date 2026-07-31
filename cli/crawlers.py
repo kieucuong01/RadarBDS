@@ -9,7 +9,7 @@ from pathlib import Path
 from cli.data_import import cmd_export_raw
 from db.connection import advisory_lock, get_conn
 from db.moderation import normalize_phone
-from db.raw_listings import insert_raw
+from db.raw_listings import insert_raw_result, update_raw_listing_payload
 from db.schema import init_schema
 
 def _get_crawlers(source_filter=None):
@@ -54,9 +54,8 @@ def _prewarm_dashboard_cache():
 
 
 def _refresh_existing_facebook_images(url: str, raw_data: dict):
-    """Refresh volatile Facebook CDN image URLs for an already-seen post."""
-    imgs = raw_data.get("imgs") or raw_data.get("img_urls") or []
-    if not url or not imgs:
+    """Refresh changed source fields for an already-seen Facebook post."""
+    if not url or not raw_data:
         return None
 
     with get_conn() as conn:
@@ -72,22 +71,20 @@ def _refresh_existing_facebook_images(url: str, raw_data: dict):
         except Exception:
             existing = {}
 
+        imgs = raw_data.get("imgs") or raw_data.get("img_urls") or []
         old_imgs = existing.get("imgs") or existing.get("img_urls") or []
-        if old_imgs == imgs:
-            return None
-
-        existing["imgs"] = imgs
-        if raw_data.get("_apify_raw"):
-            existing["_apify_raw"] = raw_data["_apify_raw"]
-        conn.execute(
-            """
-            UPDATE raw_listings
-               SET raw_json = ?, crawled_at = datetime('now')
-             WHERE id = ?
-            """,
-            (json.dumps(existing, ensure_ascii=False), row["id"]),
+        incoming = dict(raw_data)
+        if old_imgs and not imgs:
+            incoming.pop("imgs", None)
+            incoming.pop("img_urls", None)
+        existing.update(incoming)
+        changed = update_raw_listing_payload(
+            int(row["id"]),
+            existing,
+            change_kind="facebook_image_refresh",
+            conn=conn,
         )
-        return row["id"]
+        return int(row["id"]) if changed else None
 
 
 def _facebook_crawl_to_raw(
@@ -207,13 +204,19 @@ def _facebook_crawl_to_raw(
         raw_data = dict(record)
         if apify_raw:
             raw_data["_apify_raw"] = apify_raw
-        rid = insert_raw(
-            source="facebook",
-            source_id=record.get("post_id") or None,
-            url=record["url"],
-            raw_data=raw_data,
-        )
-        if rid:
+        try:
+            insert_result = insert_raw_result(
+                source="facebook",
+                source_id=record.get("post_id") or None,
+                url=record["url"],
+                raw_data=raw_data,
+                crawl_run_id=run_id,
+            )
+        except Exception as exc:
+            finish_crawl_run(run_id, {}, status="error", error_msg=str(exc)[:500])
+            raise
+        rid = insert_result.raw_id
+        if insert_result.status == "inserted":
             inserted += 1
         else:
             refreshed_raw_id = _refresh_existing_facebook_images(record["url"], raw_data)
@@ -404,11 +407,20 @@ def _cmd_crawl(args, mode: str = "full"):
         return
 
     total_new = 0
+    targeted_raw_ids: list[int] = []
     crawler_exceptions: list[tuple[str, str]] = []
     for crawler in crawlers:
         try:
             stats = crawler.run(mode=mode, headless=headless)
-            total_new += stats.get("new", 0)
+            if crawler.SOURCE_NAME == "guland":
+                changed_raw_ids = [
+                    *(stats.get("inserted_raw_ids") or []),
+                    *(stats.get("refreshed_raw_ids") or []),
+                ]
+                targeted_raw_ids.extend(changed_raw_ids)
+                total_new += len(changed_raw_ids)
+            else:
+                total_new += stats.get("new", 0)
             print(f"[{crawler.SOURCE_NAME}] new={stats['new']} skip={stats['skipped']} err={stats['errors']}")
         except Exception as e:
             print(f"[{crawler.SOURCE_NAME}] Lỗi: {e}")
@@ -438,8 +450,14 @@ def _cmd_crawl(args, mode: str = "full"):
 
     if not no_reprocess:
         print(f"\nReprocess {total_new} records moi/cap nhat...")
-        from cleansing.reprocess import run_full_reprocess
-        result = run_full_reprocess()
+        if source_filter == "guland":
+            from cleansing.reprocess import run_targeted_reprocess
+            result = run_targeted_reprocess(
+                list(dict.fromkeys(targeted_raw_ids))
+            )
+        else:
+            from cleansing.reprocess import run_full_reprocess
+            result = run_full_reprocess()
         r, v = result["listings"], result["valuation"]
         print(f"Listings : {r['new']} new | {r['updated']} updated")
         print(f"Valuation: {v['total']} valuated | {v['signals']} signals | {v['outliers']} outliers")
@@ -491,7 +509,7 @@ def _maybe_send_ops_alert(crawl_start_ts: str, crawler_exceptions: list) -> None
                        COALESCE(n_new,0) AS n_new, COALESCE(error_msg,'') AS error_msg
                 FROM crawl_runs
                 WHERE source NOT LIKE 'reprocess:%'
-                  AND datetime(started_at) >= datetime(?)
+                  AND NULLIF(started_at, '')::timestamptz >= ?::timestamptz
                 ORDER BY started_at
                 """,
                 (crawl_start_ts,),
@@ -578,10 +596,15 @@ def _repair_guland(crawler, rows, headless):
                             changed = True
                     if changed:
                         with get_conn() as conn:
-                            conn.execute("UPDATE raw_listings SET raw_json=? WHERE id=?",
-                                         (json.dumps(raw_data, ensure_ascii=False), raw_id))
-                        repaired += 1
-                        print(f"  [repair] OK: {url[-50:]}")
+                            persisted = update_raw_listing_payload(
+                                int(raw_id),
+                                raw_data,
+                                change_kind="source_repair",
+                                conn=conn,
+                            )
+                        if persisted:
+                            repaired += 1
+                            print(f"  [repair] OK: {url[-50:]}")
             except Exception as e:
                 print(f"  [repair] Batch error: {e}")
             done = min(i + BATCH_SIZE, len(urls))

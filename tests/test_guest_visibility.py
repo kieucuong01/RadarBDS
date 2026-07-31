@@ -339,7 +339,7 @@ class GuestVisibilityTest(unittest.TestCase):
         filtered_ids = {row["id"] for row in filtered.get_json()["signals"]}
         self.assertNotIn(both_id, filtered_ids)
 
-    def test_free_user_can_filter_signal_feed_below_default_mos_threshold(self):
+    def test_free_user_cannot_filter_below_model_signal_threshold(self):
         from db.connection import get_conn
 
         with get_conn() as conn:
@@ -395,10 +395,9 @@ class GuestVisibilityTest(unittest.TestCase):
         filtered_response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=20&mos_min=5")
         self.assertEqual(filtered_response.status_code, 200)
         rows = {row["id"]: row for row in filtered_response.get_json()["signals"]}
-        self.assertIn(listing_id, rows)
-        self.assertAlmostEqual(rows[listing_id]["mos_pct_display"], 8.3, places=1)
+        self.assertNotIn(listing_id, rows)
 
-    def test_signal_feed_does_not_hide_display_mos_deals_for_quality_flags(self):
+    def test_signal_feed_hides_display_mos_deals_with_hard_quality_flags(self):
         from db.connection import get_conn
 
         with get_conn() as conn:
@@ -448,14 +447,11 @@ class GuestVisibilityTest(unittest.TestCase):
         response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=20")
         self.assertEqual(response.status_code, 200)
         rows = {row["id"]: row for row in response.get_json()["signals"]}
-        self.assertIn(listing_id, rows)
-        self.assertAlmostEqual(rows[listing_id]["mos_pct_display"], 28.6, places=1)
-        self.assertTrue(rows[listing_id]["source_quality_recheck"])
-        self.assertEqual(rows[listing_id]["source_quality_flags"], "review_bad_extraction")
+        self.assertNotIn(listing_id, rows)
 
         dashboard = self.client.get(f"/api/dashboard?city=Khac&ward={self.ward}")
         self.assertEqual(dashboard.status_code, 200)
-        self.assertEqual(dashboard.get_json()["stats"]["signals"], 2)
+        self.assertEqual(dashboard.get_json()["stats"]["signals"], 1)
 
     def test_drop_filter_includes_canonical_with_higher_price_repost(self):
         from db.connection import get_conn

@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
@@ -75,6 +77,47 @@ def test_guland_image_backfill_can_include_inactive_scope():
     args = radar.build_parser().parse_args(["guland-image-backfill", "--include-inactive"])
 
     assert args.include_inactive is True
+
+
+def test_guland_image_backfill_has_bounded_default_limit():
+    import radar
+
+    args = radar.build_parser().parse_args(["guland-image-backfill"])
+    assert args.limit == 50
+
+    args = radar.build_parser().parse_args(
+        ["guland-image-backfill", "--limit", "200"]
+    )
+    assert args.limit == 200
+
+    with pytest.raises(SystemExit):
+        radar.build_parser().parse_args(
+            ["guland-image-backfill", "--limit", "201"]
+        )
+
+
+def test_guland_image_cli_forwards_the_requested_limit(monkeypatch):
+    from argparse import Namespace
+    from cli import guland_images
+
+    captured = {}
+
+    def run(**kwargs):
+        captured.update(kwargs)
+        return {"zero_ready_targets": 0}
+
+    monkeypatch.setattr(guland_images, "run_guland_image_backfill", run)
+    guland_images.cmd_guland_image_backfill(
+        Namespace(
+            apply=False,
+            limit=37,
+            recover_live_missing=True,
+            download_recovered=True,
+            include_inactive=False,
+        )
+    )
+
+    assert captured["limit"] == 37
 
 
 def test_guland_coordinate_cli_prints_one_json_object(monkeypatch, capsys):

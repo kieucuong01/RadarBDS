@@ -109,6 +109,13 @@ Trong postprocess:
 4. Gọi `_clean_broker_images_after_download(...)` để xóa ảnh môi giới/ảnh mặt
    người không phù hợp.
 
+Ảnh mới không còn dùng tên chỉ theo `(listing_id, img_order)`. Downloader dùng
+thêm `listing_images.id` và fingerprint của asset để hai revision ảnh Facebook
+không ghi đè cùng object S3. Với URL Facebook chỉ đổi query chữ ký CDN, gallery
+giữ file đã tải; khi path asset thật đổi, slot hiện hành được reset để tải lại.
+Downloader chỉ đánh dấu ready sau khi body giải mã được và, ở chế độ S3, cả
+original lẫn thumbnail đều upload thành công.
+
 Nếu `fb_new = 0`, hệ thống không reprocess toàn bộ; nó chỉ tải backlog ảnh,
 ops health check, prewarm dashboard rồi dừng.
 
@@ -138,6 +145,11 @@ run_full_reprocess()
 
 Sau bước này, một raw có thể vẫn không thành listing nếu parser không đủ dữ
 liệu, URL thiếu, phone blacklist, hoặc trùng trong batch.
+
+`raw_listings` luôn là snapshot mới nhất. Mỗi trạng thái khác biệt của cùng
+source URL được append vào `raw_listing_revisions`; observation giống hệt liền
+trước không sinh thêm revision. Các cập nhật ảnh, chi tiết Guland, tọa độ,
+repair và image cleanup đều đi qua repository này.
 
 ### Bước 4 — `listings` → `valuation_results`
 
@@ -200,14 +212,17 @@ ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
 `actionable_signal_sql("v")` yêu cầu:
 
 - `v.is_signal = 1`;
-- không bị `source_quality_recheck` nguy hiểm;
-- không có fatal quality flags như `parsed_discount_as_price`,
-  `down_payment_as_price`, `too_low_absolute_price`,
-  `large_lot_model_risk`, `area_dimension_conflict`,
-  `source_category_conflict`, `multi_lot_listing`, `old_guland_post`,
-  `guland_weak_signal`, `review_bad_extraction`, `review_bad_valuation`, ...
+- không có hard-block quality flags:
+  `too_low_absolute_price`, `missing_area_evidence`,
+  `area_dimension_conflict`, `ambiguous_price_text`,
+  `source_category_conflict`, `multi_lot_listing`,
+  `extreme_guland_ppm2`, `suspicious_bait`, `guland_cluster_flood`,
+  `review_bad_extraction`, `review_bad_valuation`.
 
-`low_segment_confidence` không tự chặn signal; nó là warning/recheck nhẹ.
+`source_quality_recheck` là metadata QC, không tự chặn signal. Các cờ
+`low_road_confidence`, `low_segment_confidence`, `approximate_price_text`,
+`old_guland_post`, cùng hai cờ cũ `guland_weak_signal` /
+`guland_user_facing_risk` là warning-only nếu còn tồn tại trong dữ liệu lịch sử.
 
 `actionable_listing_sql("l")` thường yêu cầu listing:
 
@@ -372,7 +387,11 @@ is_signal = (mos_pct ≥ SIGNAL_MOS_THRESHOLD)
 
 Cách tính fair_ppm2 (per-ward weighted ridge + road tier + size discount) xem `.claude/rules/valuation.md`. Facebook is the primary baseline; if a canonical segment has fewer than 35 Facebook samples, strict-pass Guland rows may supplement training with weight 0.4. Regression valuation caps `road_tier=3` at max 80% of the same-listing tier-2 counterfactual before downstream adjustments. Không hardcode threshold ở chỗ khác — `analytics/valuation.py::SegmentModel.mos_threshold` đọc từ settings.
 
-Quality flags can keep the valuation row but suppress user/VIP promotion. Fatal gates currently include parser/data risk such as `parsed_discount_as_price`, `down_payment_as_price`, `too_low_absolute_price`, `large_lot_model_risk`, `area_dimension_conflict`, `source_category_conflict`, `multi_lot_listing`, `test_artifact`, source bad-extraction labels, and Guland quality flags such as `guland_weak_signal` / `guland_user_facing_risk`. `low_segment_confidence` alone is warning-only for user-facing cards.
+Quality flags can keep the valuation row but suppress user/VIP promotion. Only
+the explicit hard-block flags listed above suppress a model signal. Guland and
+Facebook use the same model-signal/MOS threshold; source-specific strength
+flags do not suppress Guland cards. `source_quality_recheck` and warning-only
+flags remain available for QC badges and admin review.
 
 Signal now has a separate trust tier:
 
@@ -639,6 +658,25 @@ Never map from broad new ward alone. Examples:
 | `Chánh Hiệp TPHCM` | `Chánh Hiệp` | `None` |
 
 This keeps the valuation baseline stable: old ward/sub-ward segments remain the training and MOS units. New ward names can be displayed or stored later if a schema field such as `location_evidence` or `new_ward` is added, but v1 keeps them transient inside the normalizer.
+
+### 5.5 Đối soát lịch sử Guland
+
+Đây là tác vụ bảo trì có giới hạn, không nằm trước Facebook trong daily crawl.
+Mặc định chỉ đọc và kiểm tra live:
+
+```powershell
+& $py -X utf8 radar.py guland-reconcile --limit 100
+```
+
+Chỉ chạy `--apply` trên production sau khi người dùng duyệt rõ số liệu dry-run:
+
+```powershell
+& $py -X utf8 radar.py guland-reconcile --limit 100 --apply
+```
+
+Apply chỉ cập nhật lifecycle có bằng chứng nguồn, giá thay đổi đã xác nhận và
+targeted reprocess cho các raw row tương ứng. Hai lần xác nhận nguồn báo gỡ mới
+ẩn tin; lỗi mạng/Cloudflare được giữ ở trạng thái `unreachable`.
 
 ---
 

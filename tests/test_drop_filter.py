@@ -1,10 +1,7 @@
-import shutil
 import sys
-import tempfile
 import unittest
 import uuid
 from pathlib import Path
-from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -15,8 +12,6 @@ class DropFilterTest(unittest.TestCase):
         from db.schema import init_schema
         import app as app_module
 
-        self.tmpdir = Path(tempfile.mkdtemp())
-        self.db_path = self.tmpdir / "radar_drop_filter.db"
         self.token = uuid.uuid4().hex
         self.url_prefix = f"https://drop-filter-{self.token}.test"
         self.ward = f"DropWard{self.token[:8]}"
@@ -24,12 +19,6 @@ class DropFilterTest(unittest.TestCase):
         self.session_token = f"drop-filter-free-token-{self.token}"
         self.listing_ids = []
         connection.close_all()
-        self.patches = [
-            mock.patch.object(connection, "DB_PATH", self.db_path),
-            mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path),
-        ]
-        for p in self.patches:
-            p.start()
 
         init_schema()
         self._delete_test_rows()
@@ -41,9 +30,6 @@ class DropFilterTest(unittest.TestCase):
 
         self._delete_test_rows()
         connection.close_all()
-        for p in reversed(self.patches):
-            p.stop()
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def _delete_test_rows(self):
         from db.connection import get_conn

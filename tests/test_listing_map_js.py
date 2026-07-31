@@ -170,6 +170,21 @@ def test_listing_map_item_click_ignores_missing_ids_without_navigation():
     assert result == {"valid": False, "assigned": None, "modalOpened": False}
 
 
+def test_listing_map_uses_source_specific_activity_copy():
+    assert (
+        _run_node("mapApi.cardDateText({days_ago:0,card_date_reason:'price_updated'})")
+        == "Cập nhật giá hôm nay"
+    )
+    assert (
+        _run_node("mapApi.cardDateText({days_ago:3,card_date_reason:'first_seen'})")
+        == "Theo dõi từ 3 ngày trước"
+    )
+    assert (
+        _run_node("mapApi.cardDateText({days_ago:2,card_date_reason:'posted'})")
+        == "2 ngày trước"
+    )
+
+
 def test_listing_map_focus_trap_yields_when_signal_modal_is_open():
     source = MAP_SCRIPT.read_text(encoding="utf-8")
 

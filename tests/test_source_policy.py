@@ -1,11 +1,8 @@
-import shutil
 import sys
-import tempfile
 import unittest
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -16,8 +13,6 @@ class SourcePolicyTest(unittest.TestCase):
         from db.schema import init_schema
         import app as app_module
 
-        self.tmpdir = Path(tempfile.mkdtemp())
-        self.db_path = self.tmpdir / "radar_source_policy.db"
         self.token = uuid.uuid4().hex
         self.url_prefix = f"https://source-policy-{self.token}.test"
         self.ward = f"SourceWard{self.token[:8]}"
@@ -26,13 +21,6 @@ class SourcePolicyTest(unittest.TestCase):
         self.listing_ids = []
 
         connection.close_all()
-        self.patches = [
-            mock.patch.object(connection, "DB_PATH", self.db_path),
-            mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path),
-        ]
-        for patcher in self.patches:
-            patcher.start()
-
         init_schema()
         self._delete_test_rows()
         self.client = app_module.app.test_client()
@@ -52,9 +40,6 @@ class SourcePolicyTest(unittest.TestCase):
 
         self._delete_test_rows()
         connection.close_all()
-        for patcher in reversed(self.patches):
-            patcher.stop()
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def _delete_test_rows(self):
         from db.connection import get_conn
@@ -237,6 +222,146 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(payload["total"], 1)
         self.assertEqual([s["source"] for s in payload["signals"]], ["guland"])
         self.assertEqual(payload["signals"][0]["title"], "Guland source policy signal")
+
+    def test_guland_dashboard_signal_count_matches_actionable_feed(self):
+        from db.connection import get_conn
+
+        blocked_id = self._seed_signal(
+            source="guland",
+            title="Guland hard-blocked signal",
+            source_id="guland-hard-blocked",
+        )
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE valuation_results
+                SET source_quality_recheck=1,
+                    source_quality_flags='ambiguous_price_text'
+                WHERE listing_id=?
+                """,
+                (blocked_id,),
+            )
+
+        self._login_as_admin()
+        query = f"city=Khac&ward={self.ward}&source=guland&date_range=all&mos_min=10"
+        feed = self.client.get(f"/api/signals?{query}&limit=20")
+        dashboard = self.client.get(f"/api/dashboard?{query}")
+
+        self.assertEqual(feed.status_code, 200)
+        self.assertEqual(dashboard.status_code, 200)
+        self.assertEqual(feed.get_json()["total"], 1)
+        self.assertEqual(
+            dashboard.get_json()["stats"]["signals"],
+            feed.get_json()["total"],
+        )
+
+    def test_guland_card_uses_first_seen_until_price_changes(self):
+        from db.connection import get_conn
+
+        first_seen = (datetime.now() - timedelta(days=12)).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                SET first_seen_at=?, price_updated_at=NULL
+                WHERE id=?
+                """,
+                (first_seen, self.guland_id),
+            )
+
+        self._login_as_admin()
+        response = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}"
+            "&source=guland&date_range=all&limit=10"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        row = response.get_json()["signals"][0]
+        self.assertEqual(row["days_ago"], 12)
+        self.assertEqual(row["card_date_reason"], "first_seen")
+
+    def test_guland_card_uses_price_update_as_latest_activity(self):
+        from db.connection import get_conn
+
+        first_seen = (datetime.now() - timedelta(days=12)).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+        price_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                SET first_seen_at=?, price_updated_at=?
+                WHERE id=?
+                """,
+                (first_seen, price_updated, self.guland_id),
+            )
+
+        self._login_as_admin()
+        response = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}"
+            "&source=guland&date_range=all&limit=10"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        row = response.get_json()["signals"][0]
+        self.assertEqual(row["days_ago"], 0)
+        self.assertEqual(row["card_date_reason"], "price_updated")
+
+    def test_facebook_card_keeps_posted_date_semantics(self):
+        from db.connection import get_conn
+
+        posted_at = (datetime.now() - timedelta(days=4)).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE listings
+                SET posted_at=?, crawled_at=CURRENT_TIMESTAMP,
+                    first_seen_at=CURRENT_TIMESTAMP,
+                    price_updated_at=CURRENT_TIMESTAMP
+                WHERE id=?
+                """,
+                (posted_at, self.facebook_id),
+            )
+
+        response = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}&date_range=all&limit=10"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        row = response.get_json()["signals"][0]
+        self.assertEqual(row["days_ago"], 4)
+        self.assertEqual(row["card_date_reason"], "posted")
+
+    def test_confirmed_inactive_listing_is_hidden_but_unreachable_stays_visible(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            conn.execute(
+                "UPDATE listings SET source_status='inactive' WHERE id=?",
+                (self.facebook_id,),
+            )
+            conn.execute(
+                "UPDATE listings SET source_status='unreachable' WHERE id=?",
+                (self.guland_id,),
+            )
+
+        guest = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}&date_range=all&limit=10"
+        ).get_json()
+        self.assertEqual(guest["total"], 0)
+
+        self._login_as_admin()
+        admin = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}"
+            "&source=guland&date_range=all&limit=10"
+        ).get_json()
+        self.assertEqual(admin["total"], 1)
+        self.assertEqual(admin["signals"][0]["id"], self.guland_id)
 
     def test_admin_default_source_is_facebook(self):
         self._login_as_admin()

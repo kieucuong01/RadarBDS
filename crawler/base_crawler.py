@@ -42,6 +42,31 @@ def _normalize_playwright_browser_path_env() -> None:
         logger.warning("Normalized PLAYWRIGHT_BROWSERS_PATH containing surrounding whitespace")
 
 
+def _configured_playwright_executable() -> str | None:
+    """Prefer an explicit/local system Chrome without changing production env."""
+    explicit = os.environ.get("PLAYWRIGHT_EXECUTABLE_PATH", "").strip()
+    if explicit:
+        if Path(explicit).is_file():
+            return explicit
+        logger.warning("PLAYWRIGHT_EXECUTABLE_PATH does not exist; ignoring it")
+
+    if sys.platform != "win32":
+        return None
+    candidates = []
+    for env_name, suffix in (
+        ("PROGRAMFILES(X86)", ("Google", "Chrome", "Application", "chrome.exe")),
+        ("PROGRAMFILES", ("Google", "Chrome", "Application", "chrome.exe")),
+        ("LOCALAPPDATA", ("Google", "Chrome", "Application", "chrome.exe")),
+    ):
+        root = os.environ.get(env_name, "").strip()
+        if root:
+            candidates.append(Path(root).joinpath(*suffix))
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
 class BaseCrawler(ABC):
     """
     Abstract crawler. Subclass phải định nghĩa:
@@ -76,16 +101,20 @@ class BaseCrawler(ABC):
     def _launch(self, playwright, headless: bool = True):
         """Khởi động browser stealth, trả về (browser, context)."""
         _normalize_playwright_browser_path_env()
-        browser = playwright.chromium.launch(
-            headless=headless,
-            args=[
+        launch_options = {
+            "headless": headless,
+            "args": [
                 "--no-sandbox",
                 "--disable-blink-features=AutomationControlled",
                 "--disable-dev-shm-usage",
                 "--disable-extensions",
                 "--disable-plugins-discovery",
             ],
-        )
+        }
+        executable_path = _configured_playwright_executable()
+        if executable_path:
+            launch_options["executable_path"] = executable_path
+        browser = playwright.chromium.launch(**launch_options)
         ua = random.choice(self._UA_POOL)
         self.logger.info(f"UA: {ua[:60]}...")
         ctx = browser.new_context(
@@ -151,18 +180,23 @@ class BaseCrawler(ABC):
         Trả về stats dict: {new, skipped, errors}
         """
         _normalize_playwright_browser_path_env()
-        try:
-            from playwright.sync_api import sync_playwright
-        except ImportError:
-            raise SystemExit(
-                "Playwright chưa cài:\n"
-                "  pip install playwright\n"
-                "  playwright install chromium"
-            )
+        from db.crawl_runs import (
+            derive_crawl_status,
+            finish_crawl_run,
+            get_incomplete_run,
+            mark_url_done,
+            mark_url_error,
+            start_crawl_run,
+        )
 
-        from db.crawl_runs import start_crawl_run, finish_crawl_run, get_incomplete_run, mark_url_done
-
-        self._stats = {"fetched": 0, "new": 0, "skipped": 0, "errors": 0, "error_details": []}
+        self._stats = {
+            "fetched": 0,
+            "new": 0,
+            "updated": 0,
+            "skipped": 0,
+            "errors": 0,
+            "error_details": [],
+        }
 
         # Check for incomplete run to resume
         incomplete = get_incomplete_run(self.SOURCE_NAME)
@@ -176,38 +210,105 @@ class BaseCrawler(ABC):
         else:
             run_id = start_crawl_run(self.SOURCE_NAME, "TDM")
             completed_urls = set()
+        self._crawl_run_id = run_id
+        fatal_error = None
+        try:
+            try:
+                from playwright.sync_api import sync_playwright
+            except ImportError as exc:
+                raise SystemExit(
+                    "Playwright chưa cài:\n"
+                    "  pip install playwright\n"
+                    "  playwright install chromium"
+                ) from exc
 
-        with sync_playwright() as pw:
-            browser, ctx = self._launch(pw, headless=headless)
-            self._ctx = ctx
-            page = ctx.new_page()
-            page.set_default_timeout(30_000)
+            with sync_playwright() as pw:
+                browser, ctx = self._launch(pw, headless=headless)
+                self._ctx = ctx
+                page = ctx.new_page()
+                page.set_default_timeout(30_000)
 
-            for url in self.TARGET_URLS:
-                if url in completed_urls:
-                    self.logger.info(f"[{self.SOURCE_NAME}] Skip (already done): {url}")
-                    continue
+                for url in self.TARGET_URLS:
+                    if url in completed_urls:
+                        self.logger.info(f"[{self.SOURCE_NAME}] Skip (already done): {url}")
+                        continue
 
-                self.logger.info(f"[{self.SOURCE_NAME}] {mode} crawl: {url}")
-                try:
-                    if mode == "full":
-                        n = self.crawl_full(page, url)
-                    else:
-                        n = self.crawl_incremental(page, url)
-                    self.logger.info(
-                        f"[{self.SOURCE_NAME}] {url} → {n} new records"
-                    )
-                    mark_url_done(run_id, url, n)
-                except Exception as e:
-                    self.logger.error(f"[{self.SOURCE_NAME}] Error on {url}: {e}", exc_info=True)
-                    self._track_error(url, e, error_type="crawl_exception")
+                    self.logger.info(f"[{self.SOURCE_NAME}] {mode} crawl: {url}")
+                    before = {
+                        key: int(self._stats.get(key, 0) or 0)
+                        for key in (
+                            "fetched",
+                            "existing",
+                            "new",
+                            "updated",
+                            "invalid_price",
+                            "errors",
+                        )
+                    }
+                    try:
+                        if mode == "full":
+                            n = self.crawl_full(page, url)
+                        else:
+                            n = self.crawl_incremental(page, url)
+                        mark_url_done(run_id, url, n)
+                    except Exception as exc:
+                        self.logger.error(
+                            f"[{self.SOURCE_NAME}] Error on {url}: {exc}",
+                            exc_info=True,
+                        )
+                        self._track_error(url, exc, error_type="crawl_exception")
+                        mark_url_error(run_id, url, str(exc))
+                    finally:
+                        counters = {
+                            "url": url[:500],
+                            "fetched": int(self._stats.get("fetched", 0) or 0)
+                            - before["fetched"],
+                            "existing": int(self._stats.get("existing", 0) or 0)
+                            - before["existing"],
+                            "new": int(self._stats.get("new", 0) or 0)
+                            - before["new"],
+                            "changed": int(self._stats.get("updated", 0) or 0)
+                            - before["updated"],
+                            "invalid": int(self._stats.get("invalid_price", 0) or 0)
+                            - before["invalid_price"],
+                            "errors": int(self._stats.get("errors", 0) or 0)
+                            - before["errors"],
+                        }
+                        self.logger.info(
+                            "[%s] target=%s",
+                            self.SOURCE_NAME,
+                            json.dumps(counters, ensure_ascii=False),
+                        )
 
-            browser.close()
-
-        error_msg = None
-        if self._stats["error_details"]:
-            error_msg = json.dumps(self._stats["error_details"][:20], ensure_ascii=False)
-        finish_crawl_run(run_id, self._stats, status="done", error_msg=error_msg)
+                self.after_targets(page, run_id)
+                browser.close()
+        except BaseException as exc:
+            fatal_error = exc
+            if not self._stats["error_details"] or (
+                self._stats["error_details"][-1].get("error_msg") != str(exc)[:200]
+            ):
+                self._track_error(
+                    f"{self.SOURCE_NAME}:run",
+                    exc,
+                    error_type="fatal",
+                )
+            raise
+        finally:
+            error_msg = None
+            if self._stats["error_details"]:
+                error_msg = json.dumps(
+                    self._stats["error_details"][:20],
+                    ensure_ascii=False,
+                )[:2000]
+            finish_crawl_run(
+                run_id,
+                self._stats,
+                status=derive_crawl_status(
+                    self._stats,
+                    fatal=fatal_error is not None,
+                ),
+                error_msg=error_msg,
+            )
 
         self.logger.info(
             f"[{self.SOURCE_NAME}] Done — "
@@ -228,6 +329,10 @@ class BaseCrawler(ABC):
         """Chỉ crawl tin đăng hôm nay/hôm qua. Trả về số record mới."""
         pass
 
+    def after_targets(self, page, run_id: int) -> None:
+        """Optional post-target hook for bounded source verification."""
+        return None
+
     # ── DB helpers ─────────────────────────────────────────────────────────
 
     def upsert_raw(self, url: str, raw_data: dict) -> bool:
@@ -243,39 +348,35 @@ class BaseCrawler(ABC):
 
         from db.connection import get_conn
         from db.moderation import normalize_phone
+        from db.raw_listings import insert_raw_result
 
         source_id = str(raw_data.get("post_id") or raw_data.get("source_id") or "")
-        raw_json = json.dumps(raw_data, ensure_ascii=False)
         phone_norm = normalize_phone(raw_data.get("contact_phone"))
 
-        try:
+        if phone_norm:
             with get_conn() as conn:
-                if phone_norm:
-                    blocked = conn.execute(
-                        "SELECT 1 FROM broker_blacklist WHERE active=1 AND phone_norm=?",
-                        (phone_norm,),
-                    ).fetchone()
-                    if blocked:
-                        self._stats["skipped"] += 1
-                        return False
-                existing = conn.execute(
-                    "SELECT id FROM raw_listings WHERE source=? AND url=?",
-                    (self.SOURCE_NAME, url),
+                blocked = conn.execute(
+                    "SELECT 1 FROM broker_blacklist WHERE active=1 AND phone_norm=?",
+                    (phone_norm,),
                 ).fetchone()
-                if existing:
+                if blocked:
                     self._stats["skipped"] += 1
                     return False
-                conn.execute(
-                    """INSERT INTO raw_listings (source, source_id, url, raw_json, crawled_at)
-                       VALUES (?, ?, ?, ?, datetime('now'))""",
-                    (self.SOURCE_NAME, source_id, url, raw_json),
-                )
+
+        result = insert_raw_result(
+            self.SOURCE_NAME,
+            source_id,
+            url,
+            raw_data,
+            getattr(self, "_crawl_run_id", None),
+        )
+        self._last_raw_insert_result = result
+        if result.status == "inserted":
             self._stats["new"] += 1
             return True
-        except Exception as e:
-            self.logger.error(f"upsert_raw error url={url}: {e}")
-            self._stats["errors"] += 1
-            return False
+
+        self._stats["skipped"] += 1
+        return False
 
     def url_exists(self, url: str) -> bool:
         """Kiểm tra URL đã có trong DB chưa."""

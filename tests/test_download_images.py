@@ -1,12 +1,44 @@
+import io
 import shutil
-import sys
 import tempfile
 import unittest
+import urllib.error
 import uuid
 from pathlib import Path
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from PIL import Image
+
+
+def _png_bytes() -> bytes:
+    output = io.BytesIO()
+    Image.new("RGB", (2, 2), (240, 30, 30)).save(output, "PNG")
+    return output.getvalue()
+
+
+PNG_BYTES = _png_bytes()
+
+
+class FakeResponse:
+    status = 200
+
+    def __init__(self, body=PNG_BYTES, content_type="image/png", content_length=None):
+        self.body = body
+        self.headers = {
+            "Content-Type": content_type,
+            "Content-Length": str(
+                len(body) if content_length is None else content_length
+            ),
+        }
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return False
+
+    def read(self, amount=-1):
+        return self.body if amount is None or amount < 0 else self.body[:amount]
 
 
 class DownloadImagesRetryTest(unittest.TestCase):
@@ -15,45 +47,35 @@ class DownloadImagesRetryTest(unittest.TestCase):
         from db.schema import init_schema
 
         self.tmpdir = Path(tempfile.mkdtemp())
-        self.db_path = self.tmpdir / "radar_images.db"
         self.token = uuid.uuid4().hex
-        self.listing_url = f"https://facebook.test/post/{self.token}"
+        self.listing_urls = []
         connection.close_all()
-        self.db_patch = mock.patch.object(connection, "DB_PATH", self.db_path)
-        self.db_patch.start()
         init_schema()
-        self._delete_test_rows()
 
     def tearDown(self):
         from db import connection
+        from db.connection import get_conn
 
         try:
-            self._delete_test_rows()
+            with get_conn() as conn:
+                for url in self.listing_urls:
+                    conn.execute("DELETE FROM listings WHERE url=?", (url,))
         finally:
             connection.close_all()
-            self.db_patch.stop()
             shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-    def _delete_test_rows(self):
+    def _create_image(
+        self,
+        *,
+        source="facebook",
+        img_url="https://scontent.test/image.jpg",
+        img_order=0,
+        local_path=None,
+    ):
         from db.connection import get_conn
 
-        with get_conn() as conn:
-            rows = conn.execute(
-                "SELECT id FROM listings WHERE url=? OR url='https://facebook.test/post/1'",
-                (self.listing_url,),
-            ).fetchall()
-            ids = [row["id"] for row in rows]
-            if ids:
-                placeholders = ",".join("?" for _ in ids)
-                conn.execute(f"DELETE FROM listing_images WHERE listing_id IN ({placeholders})", ids)
-                conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", ids)
-
-    def test_facebook_not_found_image_is_retryable(self):
-        from db.connection import get_conn
-        import cleansing.download_images as downloader
-
-        image_dir = self.tmpdir / "images"
-        image_dir.mkdir()
+        url = f"https://example.test/{source}/{uuid.uuid4().hex}"
+        self.listing_urls.append(url)
         with get_conn() as conn:
             listing_id = conn.execute(
                 """
@@ -61,33 +83,61 @@ class DownloadImagesRetryTest(unittest.TestCase):
                     source, source_id, url, title, area, ward, property_type,
                     tx_type, price_ty, price_per_m2, area_m2, crawled_at
                 )
-                VALUES (
-                    'facebook', ?, ?,
-                    'Tin co anh', 'Tan An', 'Tan An', 'dat_nen',
-                    'ban', 1.0, 10.0, 100.0, '2026-05-01T00:00:00'
-                )
+                VALUES (?, ?, ?, 'Tin co anh', 'Tan An', 'Tan An', 'dat_nen',
+                        'ban', 1.0, 10.0, 100.0, datetime('now'))
                 """,
-                (f"fb-{self.token}", self.listing_url),
+                (source, f"{source}-{uuid.uuid4().hex}", url),
             ).lastrowid
-            conn.execute(
+            image_id = conn.execute(
                 """
-                INSERT INTO listing_images (listing_id, img_url, img_order, local_path, crawled_at)
-                VALUES (?, 'https://scontent.test/image.jpg', 0, 'NOT_FOUND', datetime('now'))
+                INSERT INTO listing_images
+                    (listing_id, img_url, img_order, local_path, crawled_at)
+                VALUES (?, ?, ?, ?, datetime('now'))
                 """,
-                (listing_id,),
-            )
+                (listing_id, img_url, img_order, local_path),
+            ).lastrowid
+        return listing_id, image_id
 
-        class FakeResponse:
-            status = 200
+    def _local_path(self, image_id):
+        from db.connection import get_conn
 
-            def __enter__(self):
-                return self
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT local_path FROM listing_images WHERE id=?",
+                (image_id,),
+            ).fetchone()
+        return row["local_path"]
 
-            def __exit__(self, *_args):
-                return False
+    def test_object_path_is_unique_for_two_rows_in_the_same_slot(self):
+        from cleansing.download_images import image_object_path
 
-            def read(self):
-                return b"fake image bytes"
+        first_path, first_key = image_object_path(
+            image_id=101,
+            listing_id=50,
+            img_url="https://scontent.test/a.jpg?token=1",
+            format_name="PNG",
+            root=self.tmpdir,
+        )
+        second_path, second_key = image_object_path(
+            image_id=102,
+            listing_id=50,
+            img_url="https://scontent.test/b.jpg?token=2",
+            format_name="PNG",
+            root=self.tmpdir,
+        )
+
+        self.assertNotEqual(first_path, second_path)
+        self.assertNotEqual(first_key, second_key)
+        self.assertIn("_101_", first_key)
+        self.assertIn("_102_", second_key)
+        self.assertTrue(first_key.endswith(".png"))
+
+    def test_facebook_not_found_image_is_retryable(self):
+        import cleansing.download_images as downloader
+
+        listing_id, image_id = self._create_image(local_path="NOT_FOUND")
+        image_dir = self.tmpdir / "images"
+        image_dir.mkdir()
 
         with mock.patch.object(downloader, "DATA_DIR", image_dir), \
              mock.patch.object(downloader, "ensure_thumbnail", return_value=None), \
@@ -95,83 +145,157 @@ class DownloadImagesRetryTest(unittest.TestCase):
             count = downloader.download_images(limit=10, listing_id=listing_id)
 
         self.assertEqual(count, 1)
-        with get_conn() as conn:
-            row = conn.execute(
-                "SELECT local_path FROM listing_images WHERE listing_id=?",
-                (listing_id,),
-            ).fetchone()
-        self.assertEqual(row["local_path"], f"data/images/{listing_id}_0.jpg")
-        self.assertTrue((image_dir / f"{listing_id}_0.jpg").exists())
+        local_path = self._local_path(image_id)
+        self.assertIn(f"{listing_id}_{image_id}_", local_path)
+        self.assertTrue((image_dir / Path(local_path).name).exists())
 
-    def test_s3_mode_uploads_original_and_thumbnail_before_marking_local_path(self):
-        from db.connection import get_conn
+    def test_transient_http_error_retries_then_succeeds(self):
         import cleansing.download_images as downloader
 
+        listing_id, image_id = self._create_image()
         image_dir = self.tmpdir / "images"
         image_dir.mkdir()
-        thumb_path = image_dir / "thumbs" / "0_0.webp"
-        thumb_path.parent.mkdir()
-        thumb_path.write_bytes(b"fake thumb")
+        transient = urllib.error.HTTPError(
+            "https://scontent.test/image.jpg",
+            503,
+            "busy",
+            {},
+            None,
+        )
 
-        with get_conn() as conn:
-            listing_id = conn.execute(
-                """
-                INSERT INTO listings (
-                    source, source_id, url, title, area, ward, property_type,
-                    tx_type, price_ty, price_per_m2, area_m2, crawled_at
-                )
-                VALUES (
-                    'facebook', ?, ?,
-                    'Tin co anh S3', 'Tan An', 'Tan An', 'dat_nen',
-                    'ban', 1.0, 10.0, 100.0, '2026-05-01T00:00:00'
-                )
-                """,
-                (f"fb-s3-{self.token}", f"{self.listing_url}/s3"),
-            ).lastrowid
-            thumb_path = image_dir / "thumbs" / f"{listing_id}_0.webp"
-            thumb_path.write_bytes(b"fake thumb")
-            conn.execute(
-                """
-                INSERT INTO listing_images (listing_id, img_url, img_order, local_path, crawled_at)
-                VALUES (?, 'https://scontent.test/image-s3.jpg', 0, NULL, datetime('now'))
-                """,
-                (listing_id,),
-            )
+        with mock.patch.object(downloader, "DATA_DIR", image_dir), \
+             mock.patch.object(downloader, "ensure_thumbnail", return_value=None), \
+             mock.patch.object(downloader.time, "sleep"), \
+             mock.patch.object(
+                 downloader.urllib.request,
+                 "urlopen",
+                 side_effect=[transient, FakeResponse()],
+             ) as fetch:
+            count = downloader.download_images(limit=10, listing_id=listing_id)
 
-        class FakeResponse:
-            status = 200
+        self.assertEqual(count, 1)
+        self.assertEqual(fetch.call_count, 2)
+        self.assertIsNotNone(self._local_path(image_id))
 
-            def __enter__(self):
-                return self
+    def test_html_body_is_rejected_without_partial_file(self):
+        import cleansing.download_images as downloader
 
-            def __exit__(self, *_args):
-                return False
+        listing_id, image_id = self._create_image()
+        image_dir = self.tmpdir / "images"
+        image_dir.mkdir()
 
-            def read(self):
-                return b"fake image bytes"
+        with mock.patch.object(downloader, "DATA_DIR", image_dir), \
+             mock.patch.object(
+                 downloader.urllib.request,
+                 "urlopen",
+                 return_value=FakeResponse(b"<html>blocked</html>", "text/html"),
+             ):
+            count = downloader.download_images(limit=10, listing_id=listing_id)
+
+        self.assertEqual(count, 0)
+        self.assertIsNone(self._local_path(image_id))
+        self.assertEqual(list(image_dir.glob("*.part")), [])
+        self.assertEqual(list(image_dir.glob("*.*")), [])
+
+    def test_oversized_content_length_is_rejected_before_publish(self):
+        import cleansing.download_images as downloader
+
+        listing_id, image_id = self._create_image()
+        image_dir = self.tmpdir / "images"
+        image_dir.mkdir()
+        response = FakeResponse(
+            PNG_BYTES,
+            "image/png",
+            content_length=downloader.MAX_IMAGE_BYTES + 1,
+        )
+
+        with mock.patch.object(downloader, "DATA_DIR", image_dir), \
+             mock.patch.object(downloader.urllib.request, "urlopen", return_value=response):
+            count = downloader.download_images(limit=10, listing_id=listing_id)
+
+        self.assertEqual(count, 0)
+        self.assertIsNone(self._local_path(image_id))
+        self.assertEqual(list(image_dir.iterdir()), [])
+
+    def test_terminal_not_found_marks_row(self):
+        import cleansing.download_images as downloader
+
+        listing_id, image_id = self._create_image(source="guland")
+        missing = urllib.error.HTTPError(
+            "https://scontent.test/image.jpg",
+            404,
+            "missing",
+            {},
+            None,
+        )
+        with mock.patch.object(
+            downloader.urllib.request,
+            "urlopen",
+            side_effect=missing,
+        ):
+            count = downloader.download_images(limit=10, listing_id=listing_id)
+
+        self.assertEqual(count, 0)
+        self.assertEqual(self._local_path(image_id), "NOT_FOUND")
+
+    def test_s3_requires_original_and_thumbnail_upload_before_ready(self):
+        import cleansing.download_images as downloader
+
+        listing_id, image_id = self._create_image()
+        image_dir = self.tmpdir / "images"
+        thumb_dir = image_dir / "thumbs"
+        thumb_dir.mkdir(parents=True)
+
+        def make_thumb(path):
+            thumb = thumb_dir / f"{Path(path).stem}.webp"
+            thumb.write_bytes(b"webp")
+            return thumb
 
         uploads = []
+
+        def upload(path, key):
+            uploads.append((Path(path).name, key))
+
         with mock.patch.dict("os.environ", {"RADAR_IMAGE_STORAGE": "s3"}, clear=False), \
              mock.patch.object(downloader, "DATA_DIR", image_dir), \
-             mock.patch.object(downloader, "ensure_thumbnail", return_value=thumb_path), \
-             mock.patch.object(downloader, "upload_file", side_effect=lambda path, key: uploads.append((Path(path).name, key))), \
+             mock.patch.object(downloader, "ensure_thumbnail", side_effect=make_thumb), \
+             mock.patch.object(downloader, "upload_file", side_effect=upload), \
              mock.patch.object(downloader.urllib.request, "urlopen", return_value=FakeResponse()):
             count = downloader.download_images(limit=10, listing_id=listing_id)
 
         self.assertEqual(count, 1)
-        self.assertEqual(
-            uploads,
-            [
-                (f"{listing_id}_0.jpg", f"data/images/{listing_id}_0.jpg"),
-                (f"{listing_id}_0.webp", f"data/images/thumbs/{listing_id}_0.webp"),
-            ],
-        )
-        with get_conn() as conn:
-            row = conn.execute(
-                "SELECT local_path FROM listing_images WHERE listing_id=?",
-                (listing_id,),
-            ).fetchone()
-        self.assertEqual(row["local_path"], f"data/images/{listing_id}_0.jpg")
+        self.assertEqual(len(uploads), 2)
+        self.assertIn(f"{listing_id}_{image_id}_", uploads[0][1])
+        self.assertTrue(uploads[1][1].startswith("data/images/thumbs/"))
+        self.assertIsNotNone(self._local_path(image_id))
+
+    def test_s3_thumbnail_upload_failure_does_not_mark_ready(self):
+        import cleansing.download_images as downloader
+
+        listing_id, image_id = self._create_image()
+        image_dir = self.tmpdir / "images"
+        thumb_dir = image_dir / "thumbs"
+        thumb_dir.mkdir(parents=True)
+
+        def make_thumb(path):
+            thumb = thumb_dir / f"{Path(path).stem}.webp"
+            thumb.write_bytes(b"webp")
+            return thumb
+
+        def fail_thumbnail(_path, key):
+            if "/thumbs/" in key:
+                raise RuntimeError("thumbnail upload failed")
+
+        with mock.patch.dict("os.environ", {"RADAR_IMAGE_STORAGE": "s3"}, clear=False), \
+             mock.patch.object(downloader, "DATA_DIR", image_dir), \
+             mock.patch.object(downloader, "ensure_thumbnail", side_effect=make_thumb), \
+             mock.patch.object(downloader, "upload_file", side_effect=fail_thumbnail), \
+             mock.patch.object(downloader.urllib.request, "urlopen", return_value=FakeResponse()):
+            count = downloader.download_images(limit=10, listing_id=listing_id)
+
+        self.assertEqual(count, 0)
+        self.assertIsNone(self._local_path(image_id))
+        self.assertEqual(list(image_dir.glob("*.part")), [])
 
 
 if __name__ == "__main__":

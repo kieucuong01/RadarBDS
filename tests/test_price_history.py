@@ -1,10 +1,7 @@
-import shutil
 import sys
-import tempfile
 import unittest
 import uuid
 from pathlib import Path
-from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -45,8 +42,6 @@ class PriceHistoryTest(unittest.TestCase):
         from db import connection
         from db.schema import init_schema
 
-        self.tmpdir = Path(tempfile.mkdtemp())
-        self.db_path = self.tmpdir / "radar_test.db"
         self.token = uuid.uuid4().hex
         self.url_prefix = f"https://price-history-{self.token}.test"
         self.source_id = f"price-history-{self.token}"
@@ -54,8 +49,6 @@ class PriceHistoryTest(unittest.TestCase):
         self.admin_token = f"price-history-admin-token-{self.token}"
         self.listing_ids = []
         connection.close_all()
-        self.db_path_patch = mock.patch.object(connection, "DB_PATH", self.db_path)
-        self.db_path_patch.start()
         init_schema()
         self._delete_test_rows()
 
@@ -64,8 +57,6 @@ class PriceHistoryTest(unittest.TestCase):
 
         self._delete_test_rows()
         connection.close_all()
-        self.db_path_patch.stop()
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def _delete_test_rows(self):
         from db.connection import get_conn
@@ -164,6 +155,73 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual([r["price_ty"] for r in rows], [1.74, 1.70])
         self.assertEqual([r["crawl_run_id"] for r in rows], [1, 2])
 
+    def test_guland_same_price_preserves_first_seen_and_price_activity(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(price_ty=2.5, price_per_m2=25.0),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+        with get_conn() as conn:
+            before = conn.execute(
+                """
+                SELECT first_seen_at, price_updated_at
+                FROM listings WHERE id=?
+                """,
+                (listing_id,),
+            ).fetchone()
+
+        upsert_listing(
+            self._rec(price_ty=2.5, price_per_m2=24.9),
+            crawl_run_id=2,
+        )
+
+        with get_conn() as conn:
+            after = conn.execute(
+                """
+                SELECT first_seen_at, price_updated_at
+                FROM listings WHERE id=?
+                """,
+                (listing_id,),
+            ).fetchone()
+        self.assertEqual(after["first_seen_at"], before["first_seen_at"])
+        self.assertIsNone(after["price_updated_at"])
+        self.assertEqual(
+            [row["price_ty"] for row in self._history_rows(listing_id)],
+            [2.5],
+        )
+
+    def test_guland_increase_and_decrease_append_price_history(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(price_ty=2.5, price_per_m2=25.0),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+        upsert_listing(
+            self._rec(price_ty=2.7, price_per_m2=27.0),
+            crawl_run_id=2,
+        )
+        upsert_listing(
+            self._rec(price_ty=2.4, price_per_m2=24.0),
+            crawl_run_id=3,
+        )
+
+        self.assertEqual(
+            [row["price_ty"] for row in self._history_rows(listing_id)],
+            [2.5, 2.7, 2.4],
+        )
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT price_updated_at FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+        self.assertIsNotNone(row["price_updated_at"])
+
     def test_upsert_listing_missing_price_or_area_preserves_last_known_values(self):
         from db.connection import get_conn
         from db.listings import upsert_listing
@@ -227,18 +285,24 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertIsNone(row["depth_m"])
         self.assertIsNone(row["tho_cu_m2"])
 
-    def test_upsert_listing_clear_stale_measurements_can_clear_stale_price(self):
+    def test_facebook_full_reprocess_can_clear_stale_price(self):
         from db.connection import get_conn
         from db.listings import upsert_listing
 
         listing_id, _ = upsert_listing(
-            self._rec(price_ty=3.0, price_per_m2=20.0, area_m2=150.0),
+            self._rec(
+                source="facebook",
+                price_ty=3.0,
+                price_per_m2=20.0,
+                area_m2=150.0,
+            ),
             crawl_run_id=1,
         )
         self._track(listing_id)
 
         same_listing_id, is_new = upsert_listing(
             self._rec(
+                source="facebook",
                 price_ty=None,
                 price_per_m2=None,
                 area_m2=150.0,
@@ -772,7 +836,11 @@ class PriceHistoryTest(unittest.TestCase):
 
         response = app.test_client().get(f"/api/history/{listing_id}")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()["history"], [{"date": "2026-05-06", "price_ty": 1.74}])
+        self.assertEqual(response.get_json()["history"], [{
+            "date": "2026-05-06",
+            "price_ty": 1.74,
+            "recorded_at": "2026-05-06 22:58:26",
+        }])
 
         admin_client = app.test_client()
         self._login_as_admin(admin_client)
@@ -780,6 +848,51 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual(admin_response.status_code, 200)
         admin_history = admin_response.get_json()["history"]
         self.assertEqual(admin_history[0]["url"], f"{self.url_prefix}/dx84")
+
+    def test_guland_history_keeps_distinct_same_day_price_changes(self):
+        from app import app
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, updated_at, probably_sold
+                ) VALUES (
+                    'guland', ?, ?, 'Guland same-day price changes',
+                    'Phu Loi', 100, 'dat_nen', 2.4, 24,
+                    '2026-07-30T15:00:00+07:00', 0
+                )
+                """,
+                (
+                    f"{self.source_id}-same-day-guland",
+                    f"{self.url_prefix}/same-day-guland",
+                ),
+            )
+            listing_id = self._track(cur.lastrowid)
+            conn.executemany(
+                """
+                INSERT INTO price_history (
+                    listing_id, price_ty, price_per_m2, recorded_at
+                ) VALUES (?, ?, ?, ?)
+                """,
+                [
+                    (listing_id, 2.5, 25.0, "2026-07-30 08:00:00"),
+                    (listing_id, 2.7, 27.0, "2026-07-30 11:00:00"),
+                    (listing_id, 2.4, 24.0, "2026-07-30 15:00:00"),
+                ],
+            )
+
+        history = app.test_client().get(
+            f"/api/history/{listing_id}"
+        ).get_json()["history"]
+
+        self.assertEqual(
+            [row["price_ty"] for row in history],
+            [2.5, 2.7, 2.4],
+        )
+        self.assertTrue(history[-1]["recorded_at"].endswith("15:00:00"))
 
     def test_history_api_keeps_only_final_same_day_parser_snapshot(self):
         from app import app

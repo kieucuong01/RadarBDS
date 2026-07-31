@@ -2,7 +2,8 @@
 import json
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Sequence
+from urllib.parse import urlsplit
 
 from config.property_types import normalize_property_type
 from db.connection import get_conn
@@ -240,7 +241,8 @@ def _same_price_snapshot(a: Optional[float], b: Optional[float]) -> bool:
 
 def _should_insert_price_history(conn, listing_id: int,
                                  price_ty: Optional[float],
-                                 price_per_m2: Optional[float]) -> bool:
+                                 price_per_m2: Optional[float],
+                                 source: str = "") -> bool:
     if price_ty is None and price_per_m2 is None:
         return False
 
@@ -253,6 +255,9 @@ def _should_insert_price_history(conn, listing_id: int,
     """, (listing_id,)).fetchone()
     if latest is None:
         return True
+
+    if source == "guland":
+        return not _same_price_snapshot(price_ty, latest["price_ty"])
 
     return not (
         _same_price_snapshot(price_ty, latest["price_ty"])
@@ -270,7 +275,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
         has_road_name_column = _has_listing_column(conn, "road_name")
         existing = conn.execute(
             """
-            SELECT id, price_ty, price_per_m2, area_m2,
+            SELECT id, source, price_ty, price_per_m2, area_m2,
                    frontage_m, depth_m,
                    price_first_ty, price_dropped, suspicious_bait,
                    llm_notes
@@ -296,14 +301,16 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     property_type, tx_type, frontage_m, depth_m,
                     road_type, road_tier, tho_cu_m2, tho_cu_ratio, has_so, is_hot, contact_phone, seller_name{road_name_col},
                     price_first_ty, crawled_at, updated_at,
-                    first_seen_at, last_seen_at, is_active, posted_at
+                    first_seen_at, last_seen_at, is_active, posted_at,
+                    source_status, source_status_reason
                 ) VALUES (
                     :raw_id, :source, :source_id, :url, :title, :description,
                     :area, :ward, :raw_area_text, :price_ty, :price_per_m2, :area_m2,
                     :property_type, :tx_type, :frontage_m, :depth_m,
                     :road_type, :road_tier, :tho_cu_m2, :tho_cu_ratio, :has_so, :is_hot, :contact_phone, :seller_name{road_name_val},
                     :price_ty, :crawled_at, :updated_at,
-                    :crawled_at, :crawled_at, 1, :posted_at
+                    :crawled_at, :crawled_at, 1, :posted_at,
+                    :source_status, :source_status_reason
                 )
             """, {
                 "raw_id":       rec.get("raw_id"),
@@ -334,10 +341,20 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "crawled_at":   now,
                 "updated_at":   now,
                 "posted_at":    rec.get("post_date"),
+                "source_status": "active" if rec["source"] == "guland" else "unknown",
+                "source_status_reason": (
+                    "new_confirmed_detail" if rec["source"] == "guland" else ""
+                ),
             })
             listing_id = cur.lastrowid
 
-            if _should_insert_price_history(conn, listing_id, rec.get("price_ty"), rec.get("price_per_m2")):
+            if _should_insert_price_history(
+                conn,
+                listing_id,
+                rec.get("price_ty"),
+                rec.get("price_per_m2"),
+                rec["source"],
+            ):
                 conn.execute(
                     "INSERT INTO price_history (listing_id, price_ty, price_per_m2, crawl_run_id) VALUES (?,?,?,?)",
                     (listing_id, rec.get("price_ty"), rec.get("price_per_m2"), crawl_run_id)
@@ -349,8 +366,12 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             first_price = existing["price_first_ty"] or existing["price_ty"]
             clear_stale_measurements = bool(rec.get("_clear_stale_measurements"))
             override_fields = set(rec.get("_llm_extraction_override_fields") or [])
+            is_guland = (rec.get("source") or existing["source"]) == "guland"
             if clear_stale_measurements:
-                new_price = rec.get("price_ty")
+                if is_guland and not _present(rec.get("price_ty")):
+                    new_price = existing["price_ty"]
+                else:
+                    new_price = rec.get("price_ty")
             else:
                 new_price = (
                     rec.get("price_ty")
@@ -390,6 +411,11 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     new_depth = derived_depth
             if not _present(new_ppm2) and _present(new_price) and _present(new_area):
                 new_ppm2 = round(float(new_price) * 1000 / float(new_area), 3)
+            price_changed = bool(
+                is_guland
+                and new_price is not None
+                and not _same_price_snapshot(existing["price_ty"], new_price)
+            )
             price_dropped  = existing["price_dropped"]
             price_drop_pct = None
             suspicious_bait = existing["suspicious_bait"] if "suspicious_bait" in existing.keys() else 0
@@ -435,10 +461,22 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     suspicious_bait     = :suspicious_bait,
                     consecutive_missing = 0,
                     updated_at          = :updated_at,
+                    price_updated_at    = CASE
+                        WHEN :price_changed <> 0 THEN CAST(:price_updated_at AS TIMESTAMPTZ)
+                        ELSE price_updated_at
+                    END,
                     last_seen_at        = :updated_at,
                     first_seen_at       = COALESCE(first_seen_at, :updated_at),
                     is_active           = 1,
                     delisted_at         = NULL,
+                    source_status       = CASE
+                        WHEN :is_guland <> 0 THEN 'active'
+                        ELSE source_status
+                    END,
+                    source_status_reason = CASE
+                        WHEN :is_guland <> 0 THEN 'refreshed_detail'
+                        ELSE source_status_reason
+                    END,
                     posted_at           = COALESCE(posted_at, :posted_at)
                 WHERE id = :id
             """, {
@@ -464,10 +502,19 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "suspicious_bait": suspicious_bait,
                 "clear_price":    int(clear_price),
                 "updated_at":    now,
+                "price_updated_at": now,
+                "price_changed": int(price_changed),
+                "is_guland":     int(is_guland),
                 "posted_at":     rec.get("post_date"),
             })
 
-            if _should_insert_price_history(conn, listing_id, new_price, new_ppm2):
+            if _should_insert_price_history(
+                conn,
+                listing_id,
+                new_price,
+                new_ppm2,
+                rec.get("source") or existing["source"],
+            ):
                 conn.execute(
                     "INSERT INTO price_history (listing_id, price_ty, price_per_m2, crawl_run_id) VALUES (?,?,?,?)",
                     (listing_id, new_price, new_ppm2, crawl_run_id)
@@ -488,17 +535,138 @@ def update_listing_outlier(listing_id: int, is_outlier: bool,
         """, (int(is_outlier), direction, sigma, listing_id))
 
 
-def insert_images(listing_id: int, img_urls: list) -> None:
+def canonical_image_asset_key(url: str) -> str:
+    """Normalize a source image identity while dropping volatile signatures."""
+    text = str(url or "").strip()
+    try:
+        parsed = urlsplit(text)
+    except ValueError:
+        return text
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        return text
+    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}{parsed.path}"
+
+
+def _ready_image_path(value: object) -> bool:
+    path = str(value or "").strip()
+    return bool(path and path.upper() != "NOT_FOUND")
+
+
+def sync_listing_images(
+    listing_id: int,
+    img_urls: Sequence[str],
+    *,
+    source: str,
+) -> dict[str, int]:
+    """Merge a source gallery while keeping Facebook slots collision-free."""
+    stats = {"inserted": 0, "updated": 0, "removed": 0, "reset": 0}
+    urls = []
+    seen = set()
+    for value in img_urls or []:
+        url = str(value or "").strip()
+        if not url.startswith(("http://", "https://")) or url in seen:
+            continue
+        seen.add(url)
+        urls.append(url)
+
     with get_conn() as conn:
-        for order, url in enumerate(img_urls):
-            img_type = _classify_image_type(url, order)
-            try:
-                conn.execute(
-                    "INSERT OR IGNORE INTO listing_images (listing_id, img_url, img_order, img_type) VALUES (?,?,?,?)",
-                    (listing_id, url, order, img_type)
+        if source != "facebook":
+            for order, url in enumerate(urls):
+                img_type = _classify_image_type(url, order)
+                cur = conn.execute(
+                    """
+                    INSERT OR IGNORE INTO listing_images
+                        (listing_id, img_url, img_order, img_type)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (listing_id, url, order, img_type),
                 )
-            except Exception as e:
-                logger.warning(f"Image insert skip: {e}")
+                if cur.lastrowid:
+                    stats["inserted"] += 1
+            return stats
+
+        for order, url in enumerate(urls):
+            img_type = _classify_image_type(url, order)
+            candidates = conn.execute(
+                """
+                SELECT id, img_url, img_order, img_type, local_path
+                FROM listing_images
+                WHERE listing_id=? AND img_order=?
+                ORDER BY id
+                """,
+                (listing_id, order),
+            ).fetchall()
+            if not candidates:
+                conn.execute(
+                    """
+                    INSERT INTO listing_images
+                        (listing_id, img_url, img_order, img_type)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (listing_id, url, order, img_type),
+                )
+                stats["inserted"] += 1
+                continue
+
+            new_key = canonical_image_asset_key(url)
+
+            def candidate_rank(row) -> tuple[int, int, int, int]:
+                same_asset = canonical_image_asset_key(row["img_url"]) == new_key
+                ready = _ready_image_path(row["local_path"])
+                return (
+                    int(same_asset and ready),
+                    int(same_asset),
+                    int(ready),
+                    int(row["id"]),
+                )
+
+            chosen = max(candidates, key=candidate_rank)
+            duplicate_ids = [
+                int(row["id"])
+                for row in candidates
+                if int(row["id"]) != int(chosen["id"])
+            ]
+            if duplicate_ids:
+                placeholders = ",".join("?" for _ in duplicate_ids)
+                conn.execute(
+                    f"DELETE FROM listing_images WHERE id IN ({placeholders})",
+                    duplicate_ids,
+                )
+                stats["removed"] += len(duplicate_ids)
+
+            same_asset = canonical_image_asset_key(chosen["img_url"]) == new_key
+            reset = bool(not same_asset and _ready_image_path(chosen["local_path"]))
+            conn.execute(
+                """
+                UPDATE listing_images
+                SET img_url=?,
+                    img_order=?,
+                    img_type=?,
+                    local_path=CASE WHEN ? <> 0 THEN local_path ELSE NULL END,
+                    ocr_text=CASE WHEN ? <> 0 THEN ocr_text ELSE NULL END,
+                    crawled_at=datetime('now')
+                WHERE id=?
+                """,
+                (
+                    url,
+                    order,
+                    img_type,
+                    int(same_asset),
+                    int(same_asset),
+                    int(chosen["id"]),
+                ),
+            )
+            stats["updated"] += 1
+            stats["reset"] += int(reset)
+    return stats
+
+
+def insert_images(
+    listing_id: int,
+    img_urls: list,
+    source: str = "",
+) -> dict[str, int]:
+    return sync_listing_images(listing_id, img_urls, source=source)
 
 
 def _classify_image_type(url: str, order: int) -> str:

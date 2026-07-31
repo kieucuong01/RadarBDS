@@ -1,13 +1,226 @@
 ﻿"""Raw listing repository helpers."""
+from dataclasses import dataclass
+import hashlib
 import json
-import logging
-from typing import Optional
+from typing import Any, Literal, Mapping, Optional
 
 from db.connection import get_conn
-from db.moderation import normalize_phone
 
-logger = logging.getLogger(__name__)
 # ─── RAW layer ────────────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class RawInsertResult:
+    status: Literal["inserted", "duplicate"]
+    raw_id: int | None
+
+
+def canonical_raw_json(raw_data: Mapping[str, Any]) -> tuple[str, str]:
+    """Return deterministic JSON plus its SHA-256 content identity."""
+    payload = json.dumps(
+        dict(raw_data),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return payload, digest
+
+
+def _parse_raw_json(value: object) -> dict:
+    if isinstance(value, Mapping):
+        return dict(value)
+    try:
+        parsed = json.loads(str(value or "{}"))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _changed_fields(previous: Mapping[str, Any], current: Mapping[str, Any]) -> list[str]:
+    missing = object()
+    keys = set(previous) | set(current)
+    return sorted(
+        key
+        for key in keys
+        if previous.get(key, missing) != current.get(key, missing)
+    )
+
+
+def _append_raw_revision(
+    conn,
+    row: Mapping[str, Any],
+    raw_data: Mapping[str, Any],
+    *,
+    change_kind: str,
+    crawl_run_id: Optional[int],
+    changed_fields: list[str],
+) -> None:
+    payload, digest = canonical_raw_json(raw_data)
+    latest = conn.execute(
+        """
+        SELECT revision_no
+        FROM raw_listing_revisions
+        WHERE raw_listing_id=?
+        ORDER BY revision_no DESC
+        LIMIT 1
+        """,
+        (int(row["id"]),),
+    ).fetchone()
+    revision_no = int(latest["revision_no"] or 0) + 1 if latest else 1
+    conn.execute(
+        """
+        INSERT INTO raw_listing_revisions (
+            raw_listing_id, revision_no, source, source_id, url,
+            raw_json, content_hash, changed_fields, change_kind, crawl_run_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            int(row["id"]),
+            revision_no,
+            str(row["source"]),
+            row["source_id"],
+            str(row["url"]),
+            payload,
+            digest,
+            json.dumps(changed_fields, ensure_ascii=False),
+            change_kind,
+            crawl_run_id,
+        ),
+    )
+
+
+def _seed_legacy_revision(conn, row: Mapping[str, Any]) -> None:
+    existing = conn.execute(
+        """
+        SELECT revision_no
+        FROM raw_listing_revisions
+        WHERE raw_listing_id=?
+        ORDER BY revision_no DESC
+        LIMIT 1
+        """,
+        (int(row["id"]),),
+    ).fetchone()
+    if existing:
+        return
+    _append_raw_revision(
+        conn,
+        row,
+        _parse_raw_json(row["raw_json"]),
+        change_kind="legacy_seed",
+        crawl_run_id=row["crawl_run_id"],
+        changed_fields=[],
+    )
+
+
+def _update_raw_listing_payload(
+    conn,
+    raw_id: int,
+    raw_data: Mapping[str, Any],
+    *,
+    change_kind: str,
+    crawl_run_id: Optional[int],
+) -> bool:
+    row = conn.execute(
+        """
+        SELECT id, source, source_id, url, raw_json, crawl_run_id
+        FROM raw_listings
+        WHERE id=?
+        FOR UPDATE
+        """,
+        (int(raw_id),),
+    ).fetchone()
+    if not row:
+        raise LookupError(f"Raw listing not found: {raw_id}")
+
+    _seed_legacy_revision(conn, row)
+    previous = _parse_raw_json(row["raw_json"])
+    _, previous_hash = canonical_raw_json(previous)
+    _, current_hash = canonical_raw_json(raw_data)
+    if previous_hash == current_hash:
+        return False
+
+    effective_run_id = crawl_run_id if crawl_run_id is not None else row["crawl_run_id"]
+    _append_raw_revision(
+        conn,
+        row,
+        raw_data,
+        change_kind=change_kind,
+        crawl_run_id=effective_run_id,
+        changed_fields=_changed_fields(previous, raw_data),
+    )
+    conn.execute(
+        """
+        UPDATE raw_listings
+        SET raw_json=?,
+            crawled_at=datetime('now'),
+            crawl_run_id=?
+        WHERE id=?
+        """,
+        (
+            json.dumps(dict(raw_data), ensure_ascii=False),
+            effective_run_id,
+            int(raw_id),
+        ),
+    )
+    return True
+
+
+def update_raw_listing_payload(
+    raw_id: int,
+    raw_data: Mapping[str, Any],
+    *,
+    change_kind: str,
+    crawl_run_id: Optional[int] = None,
+    conn=None,
+) -> bool:
+    """Persist one distinct state and append its ordered raw revision."""
+    if conn is not None:
+        return _update_raw_listing_payload(
+            conn,
+            raw_id,
+            raw_data,
+            change_kind=change_kind,
+            crawl_run_id=crawl_run_id,
+        )
+    with get_conn() as managed_conn:
+        return _update_raw_listing_payload(
+            managed_conn,
+            raw_id,
+            raw_data,
+            change_kind=change_kind,
+            crawl_run_id=crawl_run_id,
+        )
+
+
+def get_raw_listing_revisions(raw_id: int) -> list[dict]:
+    with get_conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT revision_no, source, source_id, url, raw_json,
+                   content_hash, changed_fields, change_kind,
+                   crawl_run_id, observed_at
+            FROM raw_listing_revisions
+            WHERE raw_listing_id=?
+            ORDER BY revision_no
+            """,
+            (int(raw_id),),
+        ).fetchall()
+    revisions: list[dict] = []
+    for source_row in rows:
+        row = dict(source_row.items())
+        row["raw_json"] = _parse_raw_json(row.get("raw_json"))
+        changed = row.get("changed_fields")
+        if isinstance(changed, str):
+            try:
+                changed = json.loads(changed)
+            except (TypeError, ValueError, json.JSONDecodeError):
+                changed = []
+        row["changed_fields"] = list(changed or [])
+        revisions.append(row)
+    return revisions
+
 
 def get_raw_urls(source: str) -> set:
     """Lấy set URL đã có trong raw_listings — dùng để skip khi crawl lại."""
@@ -18,33 +231,92 @@ def get_raw_urls(source: str) -> set:
     return {r[0] for r in rows}
 
 
+def insert_raw_result(
+    source: str,
+    source_id: Optional[str],
+    url: str,
+    raw_data: dict,
+    crawl_run_id: Optional[int] = None,
+) -> RawInsertResult:
+    """Insert one raw record and distinguish conflicts from write failures."""
+    with get_conn() as conn:
+        cur = conn.execute(
+            """
+            INSERT INTO raw_listings
+                (source, source_id, url, raw_json, crawl_run_id)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(source, url) DO NOTHING
+            """,
+            (
+                source,
+                source_id,
+                url,
+                json.dumps(raw_data, ensure_ascii=False),
+                crawl_run_id,
+            ),
+        )
+        if cur.lastrowid:
+            _append_raw_revision(
+                conn,
+                {
+                    "id": int(cur.lastrowid),
+                    "source": source,
+                    "source_id": source_id,
+                    "url": url,
+                },
+                raw_data,
+                change_kind="initial",
+                crawl_run_id=crawl_run_id,
+                changed_fields=[],
+            )
+            return RawInsertResult("inserted", cur.lastrowid)
+        return RawInsertResult("duplicate", None)
+
+
 def insert_raw(source: str, source_id: Optional[str], url: str,
                raw_data: dict, crawl_run_id: Optional[int] = None) -> Optional[int]:
     """
     Lưu raw record. UNIQUE(source, url) → bỏ qua nếu đã có.
     Trả về raw_id hoặc None nếu đã tồn tại.
     """
+    return insert_raw_result(
+        source,
+        source_id,
+        url,
+        raw_data,
+        crawl_run_id,
+    ).raw_id
+
+
+def refresh_raw_listing(
+    source: str,
+    url: str,
+    raw_data: dict,
+    crawl_run_id: Optional[int] = None,
+    *,
+    change_kind: str = "source_refresh",
+) -> int:
+    """Refresh one existing source identity without inserting a second row."""
     with get_conn() as conn:
-        try:
-            phone_norm = normalize_phone(raw_data.get("contact_phone"))
-            if phone_norm:
-                blocked = conn.execute(
-                    "SELECT 1 FROM broker_blacklist WHERE active=1 AND phone_norm=?",
-                    (phone_norm,),
-                ).fetchone()
-                if blocked:
-                    return None
-            cur = conn.execute(
-                """INSERT OR IGNORE INTO raw_listings
-                   (source, source_id, url, raw_json, crawl_run_id)
-                   VALUES (?, ?, ?, ?, ?)""",
-                (source, source_id, url,
-                 json.dumps(raw_data, ensure_ascii=False), crawl_run_id)
-            )
-            return cur.lastrowid if cur.lastrowid else None
-        except Exception as e:
-            logger.error(f"insert_raw error [{url}]: {e}")
-            return None
+        row = conn.execute(
+            """
+            SELECT id
+            FROM raw_listings
+            WHERE source=? AND url=?
+            """,
+            (source, url),
+        ).fetchone()
+        if not row:
+            raise LookupError(f"Raw listing not found for {source}: {url}")
+        raw_id = int(row["id"])
+        _update_raw_listing_payload(
+            conn,
+            raw_id,
+            raw_data,
+            change_kind=change_kind,
+            crawl_run_id=crawl_run_id,
+        )
+        return raw_id
 
 
 def get_raw_for_reprocess(source: Optional[str] = None,

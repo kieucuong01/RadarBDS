@@ -42,6 +42,7 @@
   }
 
   function number(value) {
+    if (value === null || value === undefined || value === '') return null;
     var parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
   }
@@ -86,6 +87,14 @@
     var days = daysAgoValue(value);
     if (days === null) return 'Chưa rõ ngày';
     return days === 0 ? 'hôm nay' : days + ' ngày trước';
+  }
+
+  function cardDateText(item) {
+    var relative = timeAgoText(item && item.days_ago);
+    var reason = String((item && item.card_date_reason) || 'posted');
+    if (reason === 'price_updated') return 'Cập nhật giá ' + relative;
+    if (reason === 'first_seen') return 'Theo dõi từ ' + relative;
+    return relative;
   }
 
   function formatTy(value) {
@@ -225,11 +234,16 @@
     var price = positive(item.price_ty || item.price);
     var actual = positive(item.actual_ppm2 || item.price_per_m2);
     var mos = positive(item.mos_pct_display || item.mos_pct || item.mos);
-    var newListing = number(item.days_ago) !== null && number(item.days_ago) >= 0 && number(item.days_ago) <= 7;
+    var dateReason = String(item.card_date_reason || 'posted');
+    var newListing = dateReason !== 'price_updated'
+      && number(item.days_ago) !== null
+      && number(item.days_ago) >= 0
+      && number(item.days_ago) <= 7;
+    var priceUpdated = dateReason === 'price_updated';
     var property = item.prop_type_label || item.property_type_label || item.prop_type || item.property_type || '';
     var road = item.road_label || item.street_label || item.road_type || '';
     var thoCu = item.tho_cu_label || (item.tho_cu_m2 ? 'TC ' + format(item.tho_cu_m2) + 'm²' : '');
-    var timeText = timeAgoText(item.days_ago);
+    var timeText = cardDateText(item);
     var computedFair = fairPrice(item);
     var actualClass = actualPriceClass(item);
     var dropBadge = item.price_dropped
@@ -262,7 +276,9 @@
       + '" onerror="RadarSignalCard.useFallbackImage(this)">'
       + '<div class="sc-empty-media"><div class="sc-empty-media-copy"><strong>Chưa có ảnh</strong><span>Xem giá và vị trí</span></div></div>'
       + (mos ? '<div class="mos-badge">Rẻ hơn ' + Math.round(mos) + '%</div>' : '')
-      + (newListing ? '<div class="new-badge">MỚI</div>' : '')
+      + (priceUpdated
+        ? '<div class="new-badge price-update-badge">CẬP NHẬT GIÁ</div>'
+        : (newListing ? '<div class="new-badge">MỚI</div>' : ''))
       + '<div class="sc-img-tags">'
       + sourceTag
       + '<span class="sc-time-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + esc(timeText) + '</span>'
@@ -290,6 +306,7 @@
   return {
     render: render,
     detailHref: detailHref,
+    cardDateText: cardDateText,
     defaultImage: defaultImage,
     useFallbackImage: useFallbackImage
   };

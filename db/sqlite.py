@@ -14,6 +14,9 @@ from db.raw_listings import (
     get_raw_for_reprocess,
     get_raw_urls,
     insert_raw,
+    insert_raw_result,
+    RawInsertResult,
+    refresh_raw_listing,
 )
 from db.schema import SCHEMA_SQL, init_schema
 
@@ -30,6 +33,9 @@ __all__ = [
     "insert_images",
     "is_phone_blacklisted",
     "insert_raw",
+    "insert_raw_result",
+    "RawInsertResult",
+    "refresh_raw_listing",
     "mark_missing_listings",
     "normalize_phone",
     "save_valuation_result",

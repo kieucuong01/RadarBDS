@@ -83,6 +83,42 @@ assert.match(feed, /role="button"/);
 assert.match(feed, /favorite-btn/);
 assert.match(feed, /Ráp mối/);
 
+const gulandFirstSeen = api.render({
+  ...item,
+  source: 'guland',
+  days_ago: 3,
+  card_date_reason: 'first_seen',
+}, {
+  context: 'signal',
+  openMode: 'modal',
+});
+assert.match(gulandFirstSeen, /Theo dõi từ 3 ngày trước/);
+assert.match(gulandFirstSeen, />MỚI</);
+
+const gulandPriceUpdated = api.render({
+  ...item,
+  source: 'guland',
+  days_ago: 0,
+  card_date_reason: 'price_updated',
+}, {
+  context: 'signal',
+  openMode: 'modal',
+});
+assert.match(gulandPriceUpdated, /Cập nhật giá hôm nay/);
+assert.match(gulandPriceUpdated, />CẬP NHẬT GIÁ</);
+assert.doesNotMatch(gulandPriceUpdated, />MỚI</);
+
+const unknownDate = api.render({
+  ...item,
+  days_ago: null,
+  card_date_reason: 'posted',
+}, {
+  context: 'signal',
+  openMode: 'modal',
+});
+assert.match(unknownDate, /Chưa rõ ngày/);
+assert.doesNotMatch(unknownDate, />MỚI</);
+
 const legacyFeed = api.render({
   ...item,
   price_dropped: true,

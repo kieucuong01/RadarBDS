@@ -342,12 +342,10 @@ def cmd_crawl_health(args):
     init_schema()
     limit = getattr(args, "limit", None) or 10
 
+    from db.crawl_runs import load_recent_crawl_runs, summarize_recent_crawl_runs
+
     with get_conn() as conn:
-        runs = conn.execute("""
-            SELECT id, source, started_at, finished_at, status,
-                   n_new, n_skipped, n_fetched, error_msg
-            FROM crawl_runs ORDER BY id DESC LIMIT ?
-        """, (limit,)).fetchall()
+        runs = load_recent_crawl_runs(conn, limit)
 
     if not runs:
         print("Chưa có crawl run nào.")
@@ -385,22 +383,18 @@ def cmd_crawl_health(args):
 
     # Summary
     with get_conn() as conn:
-        recent = conn.execute("""
-            SELECT source,
-                   COUNT(*) as runs,
-                   SUM(COALESCE(n_new, 0)) as total_new,
-                   SUM(CASE WHEN error_msg IS NOT NULL AND error_msg != '' THEN 1 ELSE 0 END) as runs_with_errors
-            FROM crawl_runs
-            WHERE started_at > datetime('now', '-7 days')
-            GROUP BY source
-        """).fetchall()
+        recent = summarize_recent_crawl_runs(conn, days=7)
 
     if recent:
         print(f"\n── TUẦN QUA ──────────────────────────────────────────")
         for r in recent:
             err_pct = round(r["runs_with_errors"] / r["runs"] * 100) if r["runs"] else 0
             health = "OK" if err_pct < 30 else "WARN" if err_pct < 60 else "CRIT"
-            print(f"  {(r['source'] or ''):12} | {r['runs']:>3} runs | {r['total_new']:>5} new | "
-                  f"errors: {r['runs_with_errors']}/{r['runs']} ({err_pct}%) [{health}]")
+            print(
+                f"  {(r['source'] or ''):12} | {r['runs']:>3} runs | "
+                f"{r['total_new']:>5} new | partial={r['partial_runs']} | "
+                f"error={r['error_runs']} | errors: "
+                f"{r['runs_with_errors']}/{r['runs']} ({err_pct}%) [{health}]"
+            )
 
     print(f"\n{'═'*W}\n")

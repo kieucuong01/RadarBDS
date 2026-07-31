@@ -21,6 +21,9 @@ def _fresh_db() -> sqlite3.Connection:
             property_type TEXT, price_ty REAL, area_m2 REAL, price_per_m2 REAL,
             first_seen_at TEXT, last_seen_at TEXT, delisted_at TEXT,
             is_active INTEGER DEFAULT 1, lifecycle_hours INTEGER,
+            source_status TEXT DEFAULT 'unknown',
+            last_source_check_at TEXT,
+            source_status_reason TEXT DEFAULT '',
             crawled_at TEXT
         );
     """)
@@ -46,7 +49,7 @@ def test_mark_seen_reactivates():
     assert row["delisted_at"] is None
 
 
-def test_sweep_delisted_flags_stale():
+def test_sweep_delisted_does_not_flag_stale_without_source_evidence():
     conn = _fresh_db()
     now  = datetime.now()
     old  = (now - timedelta(hours=STALE_HOURS_BEFORE_DELIST + 10)).isoformat(timespec='seconds')
@@ -54,10 +57,10 @@ def test_sweep_delisted_flags_stale():
     _insert(conn, "stale",  old, old)       # sẽ bị delisted
     _insert(conn, "active", old, new)       # fresh → bỏ qua
 
-    delisted = sweep_delisted(conn)
-    urls = {d["url"] for d in delisted}
-    assert "stale" in urls
-    assert "active" not in urls
+    assert sweep_delisted(conn) == []
+    assert conn.execute(
+        "SELECT is_active FROM listings WHERE url='stale'"
+    ).fetchone()["is_active"] == 1
 
 
 def test_likely_sold_flag():
@@ -68,6 +71,14 @@ def test_likely_sold_flag():
     # ĐIỀU CHỈNH: last_seen phải sau first_seen
     first = (now - timedelta(hours=STALE_HOURS_BEFORE_DELIST + 29)).isoformat(timespec='seconds')
     _insert(conn, "fast_sold", first, last)
+    conn.execute(
+        """
+        UPDATE listings
+        SET source_status='inactive', is_active=0, last_source_check_at=?
+        WHERE url='fast_sold'
+        """,
+        (last,),
+    )
 
     delisted = sweep_delisted(conn)
     assert len(delisted) == 1

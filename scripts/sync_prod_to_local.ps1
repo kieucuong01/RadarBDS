@@ -23,6 +23,69 @@ $BackupDir = Join-Path $Root ".local\prod-sync"
 $ImageRoot = Join-Path $Root "data\images"
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
+function Read-EnvFile {
+    param([string] $Path)
+
+    $Values = @{}
+    if (!(Test-Path -LiteralPath $Path)) {
+        return $Values
+    }
+
+    Get-Content -LiteralPath $Path | ForEach-Object {
+        if ($_ -match '^\s*#' -or $_ -notmatch '=') {
+            return
+        }
+        $Key, $Value = $_.Split("=", 2)
+        $Key = $Key.Trim()
+        $Value = $Value.Trim().Trim('"').Trim("'")
+        if ($Key) {
+            $Values[$Key] = $Value
+        }
+    }
+    return $Values
+}
+
+function Get-LocalEnvValues {
+    $Values = @{}
+    foreach ($Path in @((Join-Path $Root ".env"), (Join-Path $Root ".env.local"))) {
+        $FileValues = Read-EnvFile -Path $Path
+        foreach ($Key in $FileValues.Keys) {
+            $Values[$Key] = $FileValues[$Key]
+        }
+    }
+    return $Values
+}
+
+function Apply-LocalDatabaseDefaults {
+    $Values = Get-LocalEnvValues
+    if (!$Values.ContainsKey("DATABASE_URL")) {
+        return
+    }
+
+    try {
+        $Parsed = [Uri] $Values["DATABASE_URL"]
+    }
+    catch {
+        return
+    }
+
+    if (!$PSBoundParameters.ContainsKey("LocalHost") -and $Parsed.Host) {
+        $script:LocalHost = $Parsed.Host
+    }
+    if (!$PSBoundParameters.ContainsKey("LocalPort") -and !$Parsed.IsDefaultPort) {
+        $script:LocalPort = $Parsed.Port
+    }
+    if (!$PSBoundParameters.ContainsKey("LocalDb")) {
+        $DbName = $Parsed.AbsolutePath.TrimStart("/")
+        if ($DbName) {
+            $script:LocalDb = $DbName
+        }
+    }
+    if (!$PSBoundParameters.ContainsKey("LocalUser") -and $Parsed.UserInfo) {
+        $script:LocalUser = [Uri]::UnescapeDataString($Parsed.UserInfo.Split(":", 2)[0])
+    }
+}
+
 function Invoke-Checked {
     param(
         [string] $Label,
@@ -48,19 +111,12 @@ function Set-LocalPgPasswordFromEnv {
         return
     }
 
-    $EnvPath = Join-Path $Root ".env"
-    if (!(Test-Path -LiteralPath $EnvPath)) {
+    $Values = Get-LocalEnvValues
+    if (!$Values.ContainsKey("DATABASE_URL")) {
         return
     }
 
-    $Line = Get-Content -LiteralPath $EnvPath |
-        Where-Object { $_ -match '^DATABASE_URL=' } |
-        Select-Object -First 1
-    if (!$Line) {
-        return
-    }
-
-    $Url = $Line.Substring("DATABASE_URL=".Length).Trim().Trim('"').Trim("'")
+    $Url = $Values["DATABASE_URL"]
     if (!$Url) {
         return
     }
@@ -77,6 +133,7 @@ function Set-LocalPgPasswordFromEnv {
     }
 }
 
+Apply-LocalDatabaseDefaults
 Require-File (Join-Path $PgBin "pg_dump.exe")
 Require-File (Join-Path $PgBin "pg_restore.exe")
 Require-File (Join-Path $PgBin "psql.exe")
@@ -131,7 +188,7 @@ $RemoteDump = "/tmp/radar_bds_prod_$Stamp.dump"
 $LocalProdDump = Join-Path $BackupDir "prod_radar_bds_$Stamp.dump"
 $LocalBeforeDump = Join-Path $BackupDir "local_before_prod_sync_$Stamp.dump"
 
-$RemoteDumpCmd = "set -e; tmp=`$(mktemp); tr -d '\r' < '$RemoteEnvFile' > `"`$tmp`"; . `"`$tmp`"; rm -f `"`$tmp`"; pg_dump --format=custom `"`$DATABASE_URL`" > '$RemoteDump'"
+$RemoteDumpCmd = "set -e; tmp=`$(mktemp); tr -d '\r' < '$RemoteEnvFile' > `"`$tmp`"; . `"`$tmp`"; rm -f `"`$tmp`"; err=`$(mktemp); if ! pg_dump --format=custom `"`$DATABASE_URL`" > '$RemoteDump' 2>`"`$err`"; then echo 'App DB role dump failed; retrying with local postgres role.'; rm -f '$RemoteDump'; sudo -n -u postgres pg_dump --format=custom --file='$RemoteDump' `"`$DB_NAME`"; fi; rm -f `"`$err`""
 Invoke-Checked "Create production DB dump on VPS" {
     & ssh @SshArgs $RemoteDumpCmd
 }

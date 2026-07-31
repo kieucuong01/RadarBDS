@@ -56,9 +56,10 @@ Marketing skills:
 ## Runtime Facts
 
 - Canonical DB: PostgreSQL via `DATABASE_URL`.
-- Local dev DB: installed PostgreSQL 18 service `postgresql-x64-18` on `127.0.0.1:5432`, database `radar_bds`, managed with pgAdmin4. The passworded local `DATABASE_URL` lives only in `.env`; never print or commit it.
-- Portable PostgreSQL 17 in `tools/postgresql-17.10/` with data in `.local/postgres-data` is legacy/fallback for isolated restore or recovery only; it is not the normal local DB.
-- Remote Supabase project `ozdjzfiqcjnlfuihqqjy` is sync/backup only. Passwords live only in local `.env`; never print or commit them.
+- Environment files: `.env` is the production-shaped base copied from the VPS when needed; `.env.local` is ignored local override and wins on this machine.
+- Current local dev DB override: portable PostgreSQL 17 at `127.0.0.1:15432`, database `radar_bds`; test DB `radar_bds_test`. Start it with `scripts/local_postgres.ps1 start` if port 15432 is not accepting connections.
+- Installed PostgreSQL 18 service `postgresql-x64-18` on `127.0.0.1:5432` exists but local credentials may drift; do not assume it is the active dev DB unless `.env.local` points there.
+- Remote Supabase project `ozdjzfiqcjnlfuihqqjy` is sync/backup only. Passwords live only in ignored env files; never print or commit them.
 - Production: Ubuntu Server 24.04 LTS, Python 3.12, systemd services, Nginx, domain `https://radarbds.vn`.
 - Production env must set `PUBLIC_BASE_URL=https://radarbds.vn` and `DASHBOARD_BASE_URL=https://radarbds.vn`.
 - Runtime data is ignored by git: DB dumps, `data/images/`, thumbnails, logs, reports, and backups must stay uncommitted.
@@ -97,7 +98,7 @@ PowerShell local dev:
 
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-# .env should set DATABASE_URL=postgresql://postgres:<local-password>@127.0.0.1:5432/radar_bds
+# .env.local should set local DATABASE_URL and RADAR_TEST_DATABASE_URL
 & $py -X utf8 radar.py inspect
 & $py -X utf8 app.py
 ```

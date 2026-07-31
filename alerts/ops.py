@@ -49,6 +49,9 @@ def summarize_crawl_health(rows: list) -> tuple[bool, str]:
         if status == "error":
             unhealthy = True
             tag = "❌ ERROR"
+        elif status == "partial":
+            unhealthy = True
+            tag = "⚠️ PARTIAL"
         elif n_fetched == 0 and n_new == 0:
             unhealthy = True
             tag = "⚠️ ZERO FETCHED"

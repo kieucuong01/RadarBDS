@@ -13,24 +13,32 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 Local PostgreSQL setup:
 
 Normal local development uses the installed PostgreSQL 18 Windows service,
-managed through pgAdmin4:
+Current local override uses the repo portable PostgreSQL instance:
 
-- service: `postgresql-x64-18`
-- host/port: `127.0.0.1:5432`
+- start command: `.\scripts\local_postgres.ps1 start`
+- host/port: `127.0.0.1:15432`
 - database: `radar_bds`
 - user: `postgres`
-- password: keep it in local `.env`; do not paste it into docs, commits, or chat
-- pgAdmin registration: host `127.0.0.1`, port `5432`, maintenance DB `radar_bds`
+- test database: `radar_bds_test`
+- env source: `.env` is production-shaped base; `.env.local` is local override
 
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
-Get-Service postgresql-x64-18
-# .env should set DATABASE_URL=postgresql://postgres:<local-password>@127.0.0.1:5432/radar_bds
+.\scripts\local_postgres.ps1 start
+# .env.local should set DATABASE_URL and RADAR_TEST_DATABASE_URL
 & $py -X utf8 radar.py inspect
 & $py -X utf8 app.py
 & $py -X utf8 radar.py reprocess
 & $py -X utf8 radar.py reprocess --full
+```
+
+PostgreSQL integration tests must use `RADAR_TEST_DATABASE_URL` from
+`.env.local`. Its database name must contain `test`:
+
+```powershell
+if (-not $env:RADAR_TEST_DATABASE_URL) { throw "Set RADAR_TEST_DATABASE_URL to the local radar_bds_test database" }
+& $py -X utf8 -m pytest tests\test_postgres_connection.py tests\test_price_history.py -q
 ```
 
 ### Backfill vị trí bản đồ
@@ -84,15 +92,14 @@ Invoke-RestMethod "http://127.0.0.1:5000/api/map-listing-items?mode=signals&loca
 Direct `psql` access to the same local DB:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -h 127.0.0.1 -p 5432 -U postgres -d radar_bds
+& ".\tools\postgresql-17.10\pgsql\bin\psql.exe" -h 127.0.0.1 -p 15432 -U postgres -d radar_bds
 ```
 
-The old portable PostgreSQL 17 bundle in `tools/postgresql-17.10/` and
-`.local/postgres-data` is only a fallback for isolated restore or recovery.
-Do not start it as the default local DB.
+The installed PostgreSQL 18 service on port 5432 may exist for pgAdmin, but
+do not assume it is the active app DB unless `.env.local` points there.
 
 Remote Supabase project ref `ozdjzfiqcjnlfuihqqjy` is kept only for sync/backup.
-The real password is in local `.env` only. Do not paste it into docs or commits.
+The real passwords are in ignored env files only. Do not paste them into docs or commits.
 Avoid Supabase Transaction Pooler for the Flask app/crawler unless psycopg
 prepared statements are explicitly disabled; local Postgres should be the normal
 dev/reprocess target because remote round trips make full jobs slow.
@@ -213,16 +220,21 @@ Verify a live SEO article after deploy:
 & $py -X utf8 scripts\generate_thumbnails.py --signals 300
 & $py -X utf8 scripts\generate_thumbnails.py --limit 1000
 
-# Active Guland only: dry-run by default; creates/uploads missing S3 thumbnails
-# and recovers currently live detail-page images when --apply is used.
-& $py -X utf8 radar.py guland-image-backfill
-& $py -X utf8 radar.py guland-image-backfill --apply
+# Eligible Guland only: dry-run by default. Scope is zero-ready, including
+# rows that exist but are NULL/NOT_FOUND/missing S3 original or thumbnail.
+# Live inspection is bounded to 1-200 listings; default is 50.
+& $py -X utf8 radar.py guland-image-backfill --limit 50
+& $py -X utf8 radar.py guland-image-backfill --limit 50 --apply
 
 # Broader audit/repair: include inactive/hidden/duplicate Guland listings.
 # Prefer dry-run first because this can refetch many historical pages.
-& $py -X utf8 radar.py guland-image-backfill --include-inactive
-& $py -X utf8 radar.py guland-image-backfill --include-inactive --apply
+& $py -X utf8 radar.py guland-image-backfill --include-inactive --limit 50
+& $py -X utf8 radar.py guland-image-backfill --include-inactive --limit 50 --apply
 ```
+
+Production `--apply` requires explicit user approval. Apply merges live image
+URLs into revisioned raw history, resets only confirmed retryable rows, and
+downloads only the bounded zero-ready listing IDs.
 
 ## Fast Verification
 

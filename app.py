@@ -94,7 +94,7 @@ mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
 # Import the extracted services
-from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters
+from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters, listing_activity_at_sql, listing_card_activity
 from services.market_data import LATEST_SHADOW_VALUATION_CTE, _display_fair_sql, _display_mos_sql
 from services.listing_map import (
     MapFilters,
@@ -4881,14 +4881,14 @@ def api_listings():
     signal_condition = f"({old_signal_condition}) AND ({new_signal_condition})"
     sort_col_map = {
         "area": "l.area_m2", "price": "l.price_ty", "price_m2": "l.price_per_m2",
-        "fair": f"({display_fair_expr})", "date": "COALESCE(l.posted_at, l.crawled_at)",
+        "fair": f"({display_fair_expr})", "date": listing_activity_at_sql("l"),
         "ward": "l.ward", "prop_type": "l.property_type",
     }
     # Default sort = newest first (date DESC). Client can override.
     sort_by = request.args.get("sort_by", "date")
     default_dir = "desc" if sort_by == "date" else "asc"
     sort_dir = "DESC" if request.args.get("sort_dir", default_dir).lower() == "desc" else "ASC"
-    order_expr = sort_col_map.get(sort_by, "COALESCE(l.posted_at, l.crawled_at)")
+    order_expr = sort_col_map.get(sort_by, listing_activity_at_sql("l"))
 
     tier = current_tier()
     fresh_flag = "0 AS is_fresh_locked"
@@ -4896,6 +4896,7 @@ def api_listings():
         WITH {LATEST_VALUATION_CTE},
              {LATEST_SHADOW_VALUATION_CTE}
         SELECT l.*,
+               {listing_activity_at_sql("l")} AS activity_at,
                CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS is_signal,
                ({display_mos_expr}) AS mos_pct,
                ({display_fair_expr}) AS fair_ppm2,
@@ -4960,6 +4961,7 @@ def api_listings():
     listings = []
     for r in rows:
         badge_meta = signal_badge_metadata(r)
+        activity_at, card_date_reason = listing_card_activity(r)
         related_first = related_drop_map.get(r["id"])
         price_ty = r["price_ty"]
         price_first_ty = r["price_first_ty"]
@@ -4990,7 +4992,8 @@ def api_listings():
             "mos_pct_new": round(r["mos_pct_new"], 1) if r.get("mos_pct_new") else 0,
             "fair_ppm2_display": round(r["fair_ppm2_display"], 1) if r.get("fair_ppm2_display") else (round(r["fair_ppm2"], 1) if r["fair_ppm2"] else None),
             "mos_pct_display": round(r["mos_pct_display"], 1) if r.get("mos_pct_display") else (round(r["mos_pct"], 1) if r["mos_pct"] else 0),
-            "days_ago": _days_ago(r['posted_at'] or r['crawled_at']), "is_hot": bool(r['is_hot']), "price_dropped": price_dropped,
+            "days_ago": _days_ago(activity_at), "card_date_reason": card_date_reason,
+            "is_hot": bool(r['is_hot']), "price_dropped": price_dropped,
             "suspicious_bait": bool(r['suspicious_bait']),
             "drop_pct": drop_pct, "price_first_ty": price_first_ty, "duplicate_of_id": r['duplicate_of_id'],
             "source": r['source'], "imgs": img_map.get(r['id'], []),
@@ -5087,6 +5090,7 @@ def api_listing_detail(listing_id):
         return jsonify({"error": "not found"}), 404
 
     l = data["listing"]
+    activity_at, card_date_reason = listing_card_activity(l)
     return jsonify({
         "id": l["id"],
         "title": l["title"],
@@ -5129,7 +5133,8 @@ def api_listing_detail(listing_id):
         "legal_status": l.get("legal_status") or "unverified",
         "legal_flags": l.get("legal_flags") or "",
         "legal_verification": data.get("legal_verification") or {},
-        "days_ago": _days_ago(l["posted_at"] or l["crawled_at"]),
+        "days_ago": _days_ago(activity_at),
+        "card_date_reason": card_date_reason,
         "imgs": data["images"],
         "map_location": data.get("map_location"),
         "tier": data.get("tier"),
@@ -5251,7 +5256,8 @@ def get_price_history(listing_id):
     tier = current_tier()
     with db_mod.get_conn() as conn:
         curr = conn.execute("""
-            SELECT posted_at, crawled_at, updated_at, price_ty, ward, area_m2, property_type, road_tier,
+            SELECT source, posted_at, crawled_at, updated_at, price_updated_at,
+                   price_ty, ward, area_m2, property_type, road_tier,
                    price_per_m2, title, url
             FROM listings
             WHERE id = ?
@@ -5261,17 +5267,30 @@ def get_price_history(listing_id):
         rows = conn.execute(f"""
             WITH ranked_snapshots AS (
                 SELECT ph.id, ph.listing_id, ph.recorded_at, ph.price_ty, ph.price_per_m2,
-                       COALESCE(NULLIF(l.posted_at, ''), ph.recorded_at, l.crawled_at, l.updated_at) AS history_date,
-                       l.url,
+                       CASE
+                           WHEN l.source='guland' THEN ph.recorded_at
+                           ELSE COALESCE(
+                               NULLIF(l.posted_at, ''),
+                               ph.recorded_at,
+                               l.crawled_at,
+                               l.updated_at
+                           )
+                       END AS history_date,
+                       l.url, l.source,
                        ROW_NUMBER() OVER (
-                           PARTITION BY ph.listing_id, substr(ph.recorded_at, 1, 10)
+                           PARTITION BY ph.listing_id,
+                               CASE
+                                   WHEN l.source='guland' THEN CAST(ph.id AS TEXT)
+                                   ELSE substr(ph.recorded_at, 1, 10)
+                               END
                            ORDER BY ph.recorded_at DESC, ph.id DESC
                        ) AS same_day_rank
                 FROM price_history ph
                 LEFT JOIN listings l ON l.id = ph.listing_id
                 WHERE ph.listing_id IN ({placeholders})
             )
-            SELECT listing_id, recorded_at, price_ty, price_per_m2, history_date, url
+            SELECT listing_id, recorded_at, price_ty, price_per_m2,
+                   history_date, url, source
             FROM ranked_snapshots
             WHERE same_day_rank = 1
             ORDER BY history_date ASC, recorded_at ASC, id ASC
@@ -5285,6 +5304,8 @@ def get_price_history(listing_id):
             if same_as_last:
                 continue
             item = {'date': (r["history_date"] or '')[:10], 'price_ty': price_ty}
+            if r["source"] == "guland":
+                item["recorded_at"] = r["recorded_at"] or ""
             if tier == "admin" and r["url"]:
                 item["url"] = r["url"]
             history.append(item)
@@ -5296,7 +5317,8 @@ def get_price_history(listing_id):
             if not history or not _same_price_value(history[-1]['price_ty'], current_price):
                 item = {
                     'date': (
-                        curr["posted_at"]
+                        curr["price_updated_at"]
+                        or curr["posted_at"]
                         or curr["crawled_at"]
                         or curr["updated_at"]
                         or ''
@@ -5304,6 +5326,13 @@ def get_price_history(listing_id):
                     'price_ty': current_price,
                     'is_current': True,
                 }
+                if curr["source"] == "guland":
+                    item["recorded_at"] = (
+                        curr["price_updated_at"]
+                        or curr["crawled_at"]
+                        or curr["updated_at"]
+                        or ""
+                    )
                 if tier == "admin" and curr["url"]:
                     item["url"] = curr["url"]
                 history.append(item)

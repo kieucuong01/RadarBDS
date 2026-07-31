@@ -6,7 +6,7 @@ Use this for VPS deploy, production smoke checks, DB sync, crawl logs, and one-o
 
 | Environment | Purpose | Notes |
 |---|---|---|
-| Local Windows | Development and safe reprocess/audit | Python 3.12, installed PostgreSQL 18 service `postgresql-x64-18`, pgAdmin4 |
+| Local Windows | Development and safe reprocess/audit | Python 3.12, `.env.local` override, local PostgreSQL on `127.0.0.1:15432` |
 | Production VPS | Public site and daily crawl | Ubuntu Server 24.04 LTS, Python 3.12, systemd, Nginx |
 | Supabase project `ozdjzfiqcjnlfuihqqjy` | Sync/backup | Password only in local `.env`; do not print/commit |
 
@@ -130,8 +130,59 @@ Pull DB plus missing images:
 .\scripts\sync_prod_to_local.ps1 -SyncImages
 ```
 
-This is production -> local only. It creates a dump on the VPS, downloads it, backs up current local DB, then restores into local `radar_bds`.
-Local restore target is the installed PostgreSQL 18 service on `127.0.0.1:5432`.
+This is production -> local only. It creates a dump on the VPS, downloads it,
+backs up current local DB, then restores into the local `radar_bds` selected by
+`.env.local`. If the production app DB role lacks full dump privileges, the
+script retries on the VPS with the local `postgres` role.
+
+## Guland Historical Reconciliation
+
+The bounded reconciliation command checks only currently displayable Guland
+listings, with unknown or stale source checks first. Dry-run is the default and
+does not write lifecycle, raw listing, history, or reprocess data:
+
+```powershell
+& $py -X utf8 radar.py guland-reconcile --limit 100
+```
+
+Review the bounded counts before considering apply. Production apply always
+requires explicit user approval:
+
+```powershell
+& $py -X utf8 radar.py guland-reconcile --limit 100 --apply
+```
+
+Apply backfills deterministic metadata, uses two explicit removal
+confirmations before hiding a listing, refreshes only confirmed price changes,
+and runs targeted reprocess for those changed raw rows. It never fabricates
+missing historical prices. Keep the limit between 1 and 200.
+
+## Guland Zero-ready Image Recovery
+
+The image repair command treats a listing as ready only when it has a usable
+original and, in S3 mode, the matching WebP thumbnail. It therefore includes
+rows that already exist but are `NULL`, `NOT_FOUND`, or point to a missing S3
+object:
+
+```powershell
+& $py -X utf8 radar.py guland-image-backfill --limit 50
+```
+
+Dry-run is the default and may perform bounded read-only source checks. Review
+`zero_ready_total`, `zero_ready_targets`, `live_recoverable_targets`,
+`missing_original_rows`, and `missing_thumbnail_rows` before apply.
+
+Production apply always requires explicit user approval:
+
+```powershell
+& $py -X utf8 radar.py guland-image-backfill --limit 50 --apply
+```
+
+Apply writes changed raw snapshots to `raw_listing_revisions`, resets only
+live-confirmed `NOT_FOUND` URLs or missing originals, and invokes targeted
+downloads for the selected listing IDs. New image objects include image-row
+identity and an asset fingerprint, so Facebook revisions cannot overwrite the
+same immutable S3 key.
 
 ## Cache Prewarm
 

@@ -6,6 +6,25 @@ from db import connection
 from db.connection import PgRow, adapt_sql
 
 
+def test_test_process_requires_explicit_test_database(monkeypatch):
+    monkeypatch.delenv("RADAR_TEST_DATABASE_URL", raising=False)
+    monkeypatch.setattr(connection, "_is_test_process", lambda: True)
+
+    with pytest.raises(connection.DatabaseConfigurationError, match="RADAR_TEST_DATABASE_URL"):
+        connection._database_url()
+
+
+def test_test_database_name_must_contain_test(monkeypatch):
+    monkeypatch.setenv(
+        "RADAR_TEST_DATABASE_URL",
+        "postgresql://radar@127.0.0.1:5432/radar_bds",
+    )
+    monkeypatch.setattr(connection, "_is_test_process", lambda: True)
+
+    with pytest.raises(connection.DatabaseConfigurationError, match="database name"):
+        connection._database_url()
+
+
 class _AdvisoryLockConnection:
     def __init__(self, locked):
         self.locked = locked

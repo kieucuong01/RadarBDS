@@ -88,6 +88,20 @@ class OpsAlertTest(unittest.TestCase):
         self.assertIn("❌ ERROR guland", msg)
         self.assertIn("Cloudflare 403", msg)
 
+    def test_summarize_flags_partial_status(self):
+        from alerts.ops import summarize_crawl_health
+
+        row = {
+            "source": "guland",
+            "status": "partial",
+            "n_fetched": 40,
+            "n_new": 2,
+            "error_msg": "one ward failed",
+        }
+        unhealthy, msg = summarize_crawl_health([row])
+        self.assertTrue(unhealthy)
+        self.assertIn("PARTIAL", msg)
+
     def test_summarize_flags_zero_fetched(self):
         from alerts.ops import summarize_crawl_health
 

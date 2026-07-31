@@ -116,12 +116,44 @@ def listing_date_range_filter(date_range: str | None, prefix: str = ""):
     interval = DATE_RANGE_OPTIONS.get(normalized)
     if not interval:
         return [], []
-    col = lambda name: f"{prefix}{name}" if prefix else name
-    date_expr = f"COALESCE({col('posted_at')}, {col('crawled_at')})"
+    alias = prefix[:-1] if prefix.endswith(".") else prefix
+    date_expr = listing_activity_at_sql(alias)
     return [
         f"{date_expr} IS NOT NULL",
-        f"datetime({date_expr}) >= datetime('now', ?)",
+        f"CAST({date_expr} AS TIMESTAMP) >= datetime('now', ?)",
     ], [interval]
+
+
+def listing_activity_at_sql(alias: str = "l") -> str:
+    """Public card activity: Guland price change/first seen, Facebook post date."""
+    col = lambda name: f"{alias}.{name}" if alias else name
+    return (
+        f"(CASE WHEN {col('source')} = 'guland' "
+        f"THEN COALESCE(CAST({col('price_updated_at')} AS TEXT), "
+        f"{col('first_seen_at')}, {col('crawled_at')}) "
+        f"ELSE COALESCE({col('posted_at')}, {col('crawled_at')}) END)"
+    )
+
+
+def listing_card_activity(row):
+    source = str(_row_get(row, "source", "") or "").lower()
+    selected_activity = _row_get(row, "activity_at")
+    if source == "guland":
+        price_updated_at = _row_get(row, "price_updated_at")
+        if price_updated_at:
+            return selected_activity or price_updated_at, "price_updated"
+        return (
+            selected_activity
+            or _row_get(row, "first_seen_at")
+            or _row_get(row, "crawled_at"),
+            "first_seen",
+        )
+    return (
+        selected_activity
+        or _row_get(row, "posted_at")
+        or _row_get(row, "crawled_at"),
+        "posted",
+    )
 
 
 def _redact_embedded_phones(text):
@@ -197,12 +229,17 @@ def get_city_for_ward(ward: str) -> str:
             return city
     return "Khác"
 
-def _days_ago(crawled_at: str) -> int:
+def _days_ago(crawled_at) -> int | None:
     try:
-        if crawled_at:
-            d = date.fromisoformat(crawled_at[:10])
-            return (date.today() - d).days
-        return None
+        if not crawled_at:
+            return None
+        if isinstance(crawled_at, datetime):
+            d = crawled_at.date()
+        elif isinstance(crawled_at, date):
+            d = crawled_at
+        else:
+            d = date.fromisoformat(str(crawled_at)[:10])
+        return (date.today() - d).days
     except Exception:
         return None
 
@@ -484,6 +521,7 @@ def build_listing_filters(
         f"{col('probably_sold')} = 0",
         f"COALESCE({col('is_blacklisted')},0)=0",
         f"COALESCE({col('review_hidden')},0)=0",
+        f"COALESCE({col('source_status')},'unknown') <> 'inactive'",
     ]
     if only_drops:
         where_parts.append(group_price_drop_filter_sql(prefix))
@@ -686,7 +724,7 @@ def _signal_sort_sql(sort_key: str) -> str:
         if part
     ]
     sort_map = {
-        "newest": "COALESCE(l.posted_at, l.crawled_at) DESC, l.id DESC",
+        "newest": f"{listing_activity_at_sql('l')} DESC, l.id DESC",
         "price_m2_asc": "v.actual_ppm2 IS NULL, v.actual_ppm2 ASC, l.id DESC",
         "price_asc": "l.price_ty IS NULL, l.price_ty ASC, l.id DESC",
         "mos_desc": "v.mos_pct IS NULL, v.mos_pct DESC, l.id DESC",
@@ -1060,6 +1098,7 @@ def signal_badge_metadata(r):
 def format_signal_card_record(r, primary_img=None, tier: str = "guest"):
     fair_ppm2 = round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None
     badge_meta = signal_badge_metadata(r)
+    activity_at, card_date_reason = listing_card_activity(r)
     record = {
         "id": r['id'],
         "detail_href": f"/listing/{int(r['id'])}",
@@ -1088,7 +1127,8 @@ def format_signal_card_record(r, primary_img=None, tier: str = "guest"):
         "price_first_ty": r['price_first_ty'],
         "duplicate_of_id": r['duplicate_of_id'],
         "url": r['url'],
-        "days_ago": _days_ago(r['posted_at'] or r['crawled_at']),
+        "days_ago": _days_ago(activity_at),
+        "card_date_reason": card_date_reason,
         "ward": r['ward'],
         "signal_score": r['signal_score'],
         "trust_tier": _row_get(r, "trust_tier", "candidate_signal"),
@@ -1179,7 +1219,9 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
                {effective_price_drop_select_sql("l", "related_drop")},
                l.suspicious_bait,
                l.duplicate_of_id,
-               l.url, l.crawled_at, l.posted_at, l.ward, l.road_tier, l.has_so,
+               {listing_activity_at_sql('l')} AS activity_at,
+               l.url, l.crawled_at, l.posted_at, l.first_seen_at,
+               l.price_updated_at, l.ward, l.road_tier, l.has_so,
                 {_max_sql("COALESCE(v.signal_score, 0)", "COALESCE(sv.signal_score, 0)")} as signal_score,
                COALESCE(v.trust_tier, sv.trust_tier, 'candidate_signal') as trust_tier,
                COALESCE(v.trust_score, sv.trust_score, 0) as trust_score,
@@ -1305,10 +1347,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         keyword=keyword,
         date_range=date_range,
     )
-    actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
-    display_mos_expr = _display_mos_sql("v", "sv", actual_expr)
-    effective_mos_min = float(mos_min if mos_min is not None else 10)
-    signal_condition = _deal_mos_signal_sql(display_mos_expr, effective_mos_min)
+    signal_condition = build_deal_sql(mos_min).condition
     signal_row = conn.execute(f"""
         WITH {LATEST_VALUATION_CTE},
              {LATEST_SHADOW_VALUATION_CTE}
@@ -1811,6 +1850,7 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest"):
         WITH {LATEST_VALUATION_CTE},
              {LATEST_SHADOW_VALUATION_CTE}
         SELECT l.*,
+               {listing_activity_at_sql('l')} AS activity_at,
                CASE WHEN COALESCE(v.is_signal,0)=1 OR COALESCE(sv.is_signal,0)=1 THEN 1 ELSE 0 END AS is_signal,
                ({display_mos_expr}) AS mos_pct,
                ({display_fair_expr}) AS fair_ppm2,

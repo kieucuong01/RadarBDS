@@ -28,6 +28,26 @@ CREATE INDEX IF NOT EXISTS idx_raw_crawled   ON raw_listings(crawled_at DESC);
 CREATE INDEX IF NOT EXISTS idx_raw_source_crawled
     ON raw_listings(source, crawled_at DESC);
 
+CREATE TABLE IF NOT EXISTS raw_listing_revisions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    raw_listing_id  INTEGER NOT NULL REFERENCES raw_listings(id) ON DELETE CASCADE,
+    revision_no     INTEGER NOT NULL,
+    source          TEXT NOT NULL,
+    source_id       TEXT,
+    url             TEXT NOT NULL,
+    raw_json        TEXT NOT NULL,
+    content_hash    TEXT NOT NULL,
+    changed_fields  JSONB NOT NULL DEFAULT '[]'::jsonb,
+    change_kind     TEXT NOT NULL,
+    crawl_run_id    INTEGER,
+    observed_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(raw_listing_id, revision_no)
+);
+CREATE INDEX IF NOT EXISTS idx_raw_revisions_listing
+    ON raw_listing_revisions(raw_listing_id, revision_no DESC);
+CREATE INDEX IF NOT EXISTS idx_raw_revisions_source_url
+    ON raw_listing_revisions(source, url, observed_at DESC);
+
 
 -- ================================================================
 -- TẦNG 2: PROCESSED — output của pipeline, reprocessable từ raw
@@ -68,6 +88,7 @@ CREATE TABLE IF NOT EXISTS listings (
     price_dropped       INTEGER DEFAULT 0,
     price_drop_pct      REAL,
     price_first_ty      REAL,
+    price_updated_at    TIMESTAMPTZ,
     suspicious_bait     INTEGER DEFAULT 0,
 
     -- OCR sổ hồng
@@ -80,6 +101,15 @@ CREATE TABLE IF NOT EXISTS listings (
     sold_at             TEXT,
     probably_sold       INTEGER DEFAULT 0,
     consecutive_missing INTEGER DEFAULT 0,
+    first_seen_at       TEXT DEFAULT (datetime('now')),
+    last_seen_at        TEXT DEFAULT (datetime('now')),
+    delisted_at         TEXT,
+    is_active           INTEGER DEFAULT 1,
+    lifecycle_hours     INTEGER,
+    source_status       TEXT NOT NULL DEFAULT 'unknown'
+                        CHECK (source_status IN ('unknown','active','inactive','unreachable')),
+    last_source_check_at TIMESTAMPTZ,
+    source_status_reason TEXT NOT NULL DEFAULT '',
 
     -- Dedup flag
     possibly_duplicate  INTEGER DEFAULT 0,   -- 1 = có thể trùng với listing khác
@@ -246,6 +276,7 @@ CREATE TABLE IF NOT EXISTS crawl_run_progress (
     target_url      TEXT NOT NULL,
     status          TEXT DEFAULT 'pending',
     n_new           INTEGER DEFAULT 0,
+    error_msg       TEXT NOT NULL DEFAULT '',
     completed_at    TEXT,
     UNIQUE(run_id, target_url)
 );
@@ -1024,12 +1055,55 @@ def _migrate_facebook_crawl_profiles(conn: Any) -> None:
     )
 
 
+def _migrate_raw_listing_revisions(conn: Any) -> None:
+    """Create append-only source snapshots for edits to one raw URL."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS raw_listing_revisions (
+            id BIGSERIAL PRIMARY KEY,
+            raw_listing_id BIGINT NOT NULL
+                REFERENCES raw_listings(id) ON DELETE CASCADE,
+            revision_no INTEGER NOT NULL,
+            source TEXT NOT NULL,
+            source_id TEXT,
+            url TEXT NOT NULL,
+            raw_json TEXT NOT NULL,
+            content_hash TEXT NOT NULL,
+            changed_fields JSONB NOT NULL DEFAULT '[]'::jsonb,
+            change_kind TEXT NOT NULL,
+            crawl_run_id BIGINT,
+            observed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE(raw_listing_id, revision_no)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_raw_revisions_listing
+        ON raw_listing_revisions(raw_listing_id, revision_no DESC)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_raw_revisions_source_url
+        ON raw_listing_revisions(source, url, observed_at DESC)
+        """
+    )
+
+
 def _run_migrations(conn: Any) -> None:
     """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
     _migrate_listing_map_locations(conn)
     _migrate_listing_reports(conn)
     _migrate_admin_jobs(conn)
     _migrate_facebook_crawl_profiles(conn)
+    _migrate_raw_listing_revisions(conn)
+    conn.execute(
+        """
+        ALTER TABLE crawl_run_progress
+        ADD COLUMN IF NOT EXISTS error_msg TEXT NOT NULL DEFAULT ''
+        """
+    )
     existing = _table_columns(conn, "listings")
     migrations = [
         ("possibly_duplicate", "ALTER TABLE listings ADD COLUMN possibly_duplicate INTEGER DEFAULT 0"),
@@ -1043,6 +1117,21 @@ def _run_migrations(conn: Any) -> None:
         ("delisted_at",        "ALTER TABLE listings ADD COLUMN delisted_at TEXT"),
         ("is_active",          "ALTER TABLE listings ADD COLUMN is_active INTEGER DEFAULT 1"),
         ("lifecycle_hours",    "ALTER TABLE listings ADD COLUMN lifecycle_hours INTEGER"),
+        ("price_updated_at",   "ALTER TABLE listings ADD COLUMN price_updated_at TIMESTAMPTZ"),
+        (
+            "source_status",
+            "ALTER TABLE listings ADD COLUMN source_status TEXT NOT NULL "
+            "DEFAULT 'unknown' CHECK (source_status IN "
+            "('unknown','active','inactive','unreachable'))",
+        ),
+        (
+            "last_source_check_at",
+            "ALTER TABLE listings ADD COLUMN last_source_check_at TIMESTAMPTZ",
+        ),
+        (
+            "source_status_reason",
+            "ALTER TABLE listings ADD COLUMN source_status_reason TEXT NOT NULL DEFAULT ''",
+        ),
         ("posted_at",          "ALTER TABLE listings ADD COLUMN posted_at TEXT"),
         ("content_hash",       "ALTER TABLE listings ADD COLUMN content_hash TEXT"),
         ("suspicious_bait",    "ALTER TABLE listings ADD COLUMN suspicious_bait INTEGER DEFAULT 0"),
@@ -1073,6 +1162,10 @@ def _run_migrations(conn: Any) -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_listings_source_first_seen "
             "ON listings(source, (COALESCE(first_seen_at, crawled_at)))"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_listings_source_status_check "
+            "ON listings(source, source_status, last_source_check_at, id)"
         )
     except Exception as e:
         logger.warning(f"Index skip listings auxiliary indexes: {e}")

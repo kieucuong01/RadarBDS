@@ -2,6 +2,8 @@ from types import SimpleNamespace
 from unittest import mock
 
 import cli.crawlers as crawlers
+import pytest
+from db.raw_listings import RawInsertResult
 
 
 class _FakeDbContext:
@@ -142,13 +144,71 @@ def test_facebook_crawl_records_health_row():
          mock.patch("config.area_profiles.post_mentions_other_city", return_value=False), \
          mock.patch("db.crawl_runs.start_crawl_run", return_value=123) as start_run, \
          mock.patch("db.crawl_runs.finish_crawl_run") as finish_run, \
-         mock.patch.object(crawlers, "insert_raw", return_value=456):
+         mock.patch.object(
+             crawlers,
+             "insert_raw_result",
+             return_value=RawInsertResult("inserted", 456),
+         ):
         stats = crawlers._facebook_crawl_to_raw(mode="incremental")
 
     assert stats["fetched"] == 2
     assert stats["inserted"] == 1
     start_run.assert_called_once_with("facebook", "all")
     finish_run.assert_called_once_with(123, {"fetched": 2, "new": 1, "skipped": 1})
+
+
+def test_facebook_crawl_propagates_raw_insert_failure():
+    class _FakeFacebookCrawler:
+        def crawl_all(self, *_args, **_kwargs):
+            return [
+                {
+                    "url": "https://facebook.test/write-failure",
+                    "post_id": "write-failure",
+                    "text": "ban dat 100m2",
+                    "imgs": [],
+                }
+            ]
+
+    record = {
+        "url": "https://facebook.test/write-failure",
+        "post_id": "write-failure",
+        "contact_phone": "",
+        "imgs": [],
+    }
+    with mock.patch(
+        "crawler.facebook_apify.FacebookApifyCrawler",
+        return_value=_FakeFacebookCrawler(),
+    ), mock.patch(
+        "crawler.facebook_apify.load_profiles",
+        return_value=[{"url": "https://facebook.test/a"}],
+    ), mock.patch(
+        "crawler.facebook_chrome.is_relevant",
+        return_value=True,
+    ), mock.patch(
+        "crawler.facebook_chrome.build_record",
+        return_value=record,
+    ), mock.patch(
+        "config.area_profiles.post_mentions_other_city",
+        return_value=False,
+    ), mock.patch(
+        "db.crawl_runs.start_crawl_run",
+        return_value=123,
+    ), mock.patch(
+        "db.crawl_runs.finish_crawl_run",
+    ) as finish_run, mock.patch.object(
+        crawlers,
+        "insert_raw_result",
+        side_effect=RuntimeError("database unavailable"),
+    ), mock.patch.object(
+        crawlers,
+        "_refresh_existing_facebook_images",
+    ) as refresh_images:
+        with pytest.raises(RuntimeError, match="database unavailable"):
+            crawlers._facebook_crawl_to_raw(mode="incremental")
+
+    refresh_images.assert_not_called()
+    finish_run.assert_called_once()
+    assert finish_run.call_args.kwargs["status"] == "error"
 
 
 def test_postprocess_downloads_processed_listing_images_first():
@@ -216,7 +276,14 @@ def test_secondary_crawl_limits_image_backfill():
         SOURCE_NAME = "guland"
 
         def run(self, mode, headless=True):
-            return {"new": 1, "skipped": 0, "errors": 0}
+            return {
+                "new": 1,
+                "updated": 0,
+                "skipped": 0,
+                "errors": 0,
+                "inserted_raw_ids": [1001],
+                "refreshed_raw_ids": [],
+            }
 
     args = SimpleNamespace(
         source="guland",
@@ -228,7 +295,7 @@ def test_secondary_crawl_limits_image_backfill():
     with mock.patch.object(crawlers, "init_schema"), \
          mock.patch.object(crawlers, "get_conn", return_value=_FakeDbContext()), \
          mock.patch.object(crawlers, "_get_crawlers", return_value=[_NewCrawler()]), \
-        mock.patch("cleansing.reprocess.run_full_reprocess", return_value={
+        mock.patch("cleansing.reprocess.run_targeted_reprocess", return_value={
              "listings": {"new": 1, "updated": 0, "processed_ids": [42]},
              "valuation": {"total": 1, "signals": 0, "outliers": 0},
          }), \
@@ -241,3 +308,64 @@ def test_secondary_crawl_limits_image_backfill():
 
     assert calls["download"] == {"limit": 500, "listing_ids": [42]}
     assert calls["clean"] == {"source": "guland", "limit": 500}
+
+
+def test_guland_crawl_reprocesses_only_inserted_and_refreshed_raw_ids():
+    calls = {}
+
+    class _ReconciledCrawler:
+        SOURCE_NAME = "guland"
+
+        def run(self, mode, headless=True):
+            return {
+                "new": 1,
+                "updated": 1,
+                "skipped": 0,
+                "errors": 0,
+                "inserted_raw_ids": [101],
+                "refreshed_raw_ids": [202],
+            }
+
+    args = SimpleNamespace(
+        source="guland",
+        visible=False,
+        no_reprocess=False,
+        no_alert=True,
+    )
+    targeted_result = {
+        "listings": {
+            "new": 1,
+            "updated": 1,
+            "processed_ids": [10, 20],
+        },
+        "valuation": {"total": 2, "signals": 0, "outliers": 0},
+        "map_locations": {"processed": 2},
+    }
+
+    def fake_targeted(raw_ids):
+        calls["raw_ids"] = raw_ids
+        return targeted_result
+
+    with mock.patch.object(crawlers, "init_schema"), \
+         mock.patch.object(crawlers, "get_conn", return_value=_FakeDbContext()), \
+         mock.patch.object(crawlers, "_get_crawlers", return_value=[_ReconciledCrawler()]), \
+         mock.patch(
+             "cleansing.reprocess.run_targeted_reprocess",
+             side_effect=fake_targeted,
+         ), \
+         mock.patch(
+             "cleansing.reprocess.run_full_reprocess",
+             side_effect=AssertionError("Guland reconciliation must stay targeted"),
+         ), \
+         mock.patch(
+             "cleansing.download_images.download_images",
+             side_effect=lambda **kwargs: calls.setdefault("download", kwargs),
+         ), \
+         mock.patch.object(crawlers, "_clean_broker_images_after_download"), \
+         mock.patch.object(crawlers, "cmd_export_raw"), \
+         mock.patch.object(crawlers, "_maybe_send_ops_alert"), \
+         mock.patch.object(crawlers, "_prewarm_dashboard_cache"):
+        crawlers._cmd_crawl(args, mode="incremental")
+
+    assert calls["raw_ids"] == [101, 202]
+    assert calls["download"] == {"limit": 500, "listing_ids": [10, 20]}

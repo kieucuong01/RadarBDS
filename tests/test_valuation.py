@@ -380,7 +380,7 @@ def test_training_dedupes_duplicate_reposts_by_canonical_lot():
     assert result.price_per_m2_fair < 15.0
 
 
-def test_guland_requires_stronger_signal_than_facebook():
+def test_guland_uses_same_signal_strength_threshold_as_facebook():
     from services.signal_quality import is_actionable_signal
 
     listings = [_make_listing(i, 15.0, source="facebook") for i in range(30)]
@@ -398,13 +398,15 @@ def test_guland_requires_stronger_signal_than_facebook():
     assert facebook_result.is_signal is True
     assert is_actionable_signal(facebook_result) is True
     assert weak_guland_result.is_signal is True
-    assert weak_guland_result.source_quality_recheck is True
-    assert "guland_weak_signal" in weak_guland_result.source_quality_flags
-    assert is_actionable_signal(weak_guland_result) is False
+    assert weak_guland_result.source_quality_recheck is False
+    assert "guland_weak_signal" not in weak_guland_result.source_quality_flags
+    assert "guland_user_facing_risk" not in weak_guland_result.source_quality_flags
+    assert is_actionable_signal(weak_guland_result) is True
     assert deep_guland_result.is_signal is True
-    assert deep_guland_result.source_quality_recheck is True
-    assert "guland_user_facing_risk" in deep_guland_result.source_quality_flags
-    assert is_actionable_signal(deep_guland_result) is False
+    assert deep_guland_result.source_quality_recheck is False
+    assert "guland_weak_signal" not in deep_guland_result.source_quality_flags
+    assert "guland_user_facing_risk" not in deep_guland_result.source_quality_flags
+    assert is_actionable_signal(deep_guland_result) is True
 
 
 def test_guland_with_positive_feedback_or_legal_evidence_can_be_actionable():
@@ -430,7 +432,7 @@ def test_guland_with_positive_feedback_or_legal_evidence_can_be_actionable():
     assert is_actionable_signal(legal_result) is True
 
 
-def test_guland_quality_flags_keep_valuation_but_suppress_signal():
+def test_old_guland_post_is_warning_only_for_actionability():
     from services.signal_quality import is_actionable_signal
 
     listings = [_make_listing(i, 15.0, source="facebook") for i in range(30)]
@@ -448,9 +450,9 @@ def test_guland_quality_flags_keep_valuation_but_suppress_signal():
     assert result is not None
     assert result.price_per_m2_fair > 0
     assert result.is_signal is True
-    assert result.source_quality_recheck is True
+    assert result.source_quality_recheck is False
     assert "old_guland_post" in result.source_quality_flags
-    assert is_actionable_signal(result) is False
+    assert is_actionable_signal(result) is True
 
 
 def test_low_segment_confidence_keeps_model_signal_with_warning_badge_only():
