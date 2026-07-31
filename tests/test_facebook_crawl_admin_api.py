@@ -325,7 +325,7 @@ def test_profiles_endpoint_rejects_stale_revision_without_overwriting(tmp_path):
     assert payload["revision"] == facebook_profile_revision(current)
 
 
-def test_profiles_endpoint_saves_to_db_without_touching_json_file(tmp_path):
+def test_profiles_endpoint_removes_only_profile_config_without_touching_json_file(tmp_path):
     import app as app_module
     from services.admin_quality import facebook_profile_revision, normalize_facebook_profiles
 
@@ -333,7 +333,7 @@ def test_profiles_endpoint_saves_to_db_without_touching_json_file(tmp_path):
     profile_path.write_text('{"legacy": []}', encoding="utf-8")
     before = profile_path.read_text(encoding="utf-8")
     current = sample_profiles()
-    submitted = [{**current[0], "daily_limit": 88}, current[1]]
+    submitted = [current[1]]
     saved_calls = []
 
     class FakeConnection:

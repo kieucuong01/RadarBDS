@@ -58,6 +58,10 @@
     return normalizedProfilesHash(baseline) !== normalizedProfilesHash(draft);
   }
 
+  function removeProfileFromDraft(draft, url) {
+    return (Array.isArray(draft) ? draft : []).filter((profile) => profile.url !== url);
+  }
+
   function requestsForView(view) {
     const normalized = normalizeView(view);
     if (normalized === 'brokers') {
@@ -481,13 +485,26 @@
           qualityLabel(profile),
           profile.latest_crawled_at || 'Chưa crawl',
         ];
-        cells.forEach((value) => {
+        cells.forEach((value, cellIndex) => {
           const cell = document.createElement('td');
-          cell.textContent = value;
+          if (cellIndex === 0) {
+            const [name, city] = value.split('\n');
+            const identity = document.createElement('div');
+            identity.className = 'crawl-broker-identity';
+            const brokerName = document.createElement('strong');
+            brokerName.textContent = name;
+            const brokerCity = document.createElement('small');
+            brokerCity.textContent = city;
+            identity.append(brokerName, brokerCity);
+            cell.appendChild(identity);
+          } else {
+            cell.className = 'crawl-broker-metric';
+            cell.textContent = value;
+          }
           row.appendChild(cell);
         });
         const actions = document.createElement('td');
-        actions.className = 'crawl-row-actions';
+        actions.className = 'crawl-row-actions crawl-broker-actions';
         actions.append(
           button('Sửa', 'secondary-btn', () => openDrawer(index)),
           button('Chạy', 'secondary-btn', async () => {
@@ -495,6 +512,19 @@
             state.runProfileUrl = selected.runProfileUrl;
             await setView('run', {force: true});
             applyRunDefaults();
+          }),
+          button('Xóa', 'secondary-btn danger-btn', () => {
+            const label = profile.broker_name || profile.url;
+            if (!confirmAction(
+              `Xóa ${label} khỏi danh sách crawl? Tin đã crawl vẫn được giữ nguyên.`,
+            )) return;
+            state.draft = removeProfileFromDraft(state.draft, profile.url);
+            if (state.runProfileUrl === profile.url) state.runProfileUrl = '';
+            renderProfiles();
+            renderRunProfiles();
+            if (state.duplicates) renderDuplicates(state.duplicates, false);
+            syncDirty();
+            text(byId('crawlBrokerStatus'), 'Đã bỏ môi giới khỏi bản nháp. Bấm Lưu thay đổi để áp dụng.');
           }),
         );
         row.appendChild(actions);
@@ -948,6 +978,7 @@
     normalizeView,
     normalizedProfilesHash,
     isDraftDirty,
+    removeProfileFromDraft,
     requestsForView,
     buildRunPreview,
     buildMaintenancePreview,

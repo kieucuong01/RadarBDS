@@ -210,6 +210,16 @@ def test_facebook_crawl_mobile_drawer_stays_in_viewport_with_touch_sized_actions
     assert ".crawl-drawer-actions button { min-height: 44px; }" in mobile_css
 
 
+def test_facebook_broker_actions_have_explicit_safe_delete_and_responsive_styles():
+    source = (ROOT / "static" / "js" / "admin" / "facebook-crawl.js").read_text(encoding="utf-8")
+    css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
+
+    assert "Tin đã crawl vẫn được giữ nguyên" in source
+    assert "crawl-broker-actions" in source
+    assert ".crawl-broker-actions" in css
+    assert ".danger-btn" in css
+
+
 def test_data_quality_items_cache_payload_and_ward_metadata():
     app_source = (ROOT / "app.py").read_text(encoding="utf-8")
     items_route = app_source[app_source.index("def admin_api_data_quality_items"):app_source.index("def _admin_review_items_response")]

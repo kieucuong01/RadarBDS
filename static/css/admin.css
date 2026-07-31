@@ -3215,8 +3215,29 @@ p { margin: 6px 0 0; color: var(--muted); }
 .crawl-broker-table-wrap { padding: 0; overflow-x: auto; }
 .crawl-broker-table { min-width: 1040px; }
 .crawl-broker-table td { white-space: pre-line; vertical-align: middle; }
-.crawl-row-actions { flex-wrap: nowrap; }
-.crawl-row-actions .secondary-btn { min-height: 38px; padding: 7px 10px; }
+.crawl-broker-table tbody tr { transition: background-color .18s ease, transform .18s ease; }
+.crawl-broker-table tbody tr:hover { background: #f8fbff; }
+.crawl-broker-identity {
+  color: var(--ink); font-size: 14px; font-weight: 800; line-height: 1.5;
+}
+.crawl-broker-metric {
+  color: #475569; font-size: 12.5px; font-weight: 700; line-height: 1.45;
+}
+.crawl-broker-metric:nth-child(2) { color: #166534; }
+.crawl-broker-metric:nth-child(3) { color: #1d4ed8; }
+.crawl-broker-metric:nth-child(5) { color: #6d28d9; }
+.crawl-row-actions, .crawl-broker-actions { flex-wrap: nowrap; }
+.crawl-broker-actions .secondary-btn { min-height: 44px; padding: 8px 11px; }
+.danger-btn {
+  margin-left: 4px; border-color: #fecaca !important; color: #b91c1c !important;
+  background: #fff1f2 !important;
+}
+.danger-btn:hover {
+  border-color: #f87171 !important; color: #fff !important; background: #dc2626 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .crawl-broker-table tbody tr { transition: none; }
+}
 .crawl-duplicate-list {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px; margin-top: 14px;
@@ -3297,8 +3318,9 @@ p { margin: 6px 0 0; color: var(--muted); }
   .crawl-broker-table td:nth-child(5)::before { content: "Chất lượng"; }
   .crawl-broker-table td:nth-child(6)::before { content: "Crawl cuối"; }
   .crawl-broker-table td:nth-child(7)::before { content: "Thao tác"; }
-  .crawl-row-actions { flex-wrap: wrap; }
-  .crawl-row-actions .secondary-btn { flex: 1; min-height: 44px; }
+  .crawl-row-actions, .crawl-broker-actions { flex-wrap: wrap; }
+  .crawl-broker-actions .secondary-btn { flex: 1 1 88px; min-height: 44px; }
+  .danger-btn { margin-left: 0; }
   .crawl-broker-drawer { width: 100%; max-width: 440px; }
   .crawl-drawer-actions button { min-height: 44px; }
   .crawl-duplicate-card { grid-template-columns: 1fr; }

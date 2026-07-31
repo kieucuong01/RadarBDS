@@ -39,6 +39,22 @@ assert.notEqual(
   api.normalizedProfilesHash(changed),
 );
 
+const draftForRemoval = [
+  {url: 'https://www.facebook.com/broker-a', broker_name: 'Broker A'},
+  {url: 'https://www.facebook.com/broker-b', broker_name: 'Broker B'},
+];
+const remainingAfterRemoval = api.removeProfileFromDraft(
+  draftForRemoval,
+  'https://www.facebook.com/broker-a',
+);
+assert.deepEqual(remainingAfterRemoval, [
+  {url: 'https://www.facebook.com/broker-b', broker_name: 'Broker B'},
+]);
+assert.deepEqual(draftForRemoval, [
+  {url: 'https://www.facebook.com/broker-a', broker_name: 'Broker A'},
+  {url: 'https://www.facebook.com/broker-b', broker_name: 'Broker B'},
+]);
+
 assert.deepEqual(api.requestsForView('overview'), ['/admin/api/facebook-crawl/overview']);
 assert.deepEqual(api.requestsForView('brokers'), [
   '/admin/api/facebook-crawl/profiles',
