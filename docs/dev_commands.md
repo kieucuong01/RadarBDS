@@ -280,6 +280,65 @@ Targeted tests:
 & $py -X utf8 -m pytest tests\test_market_data_performance.py tests\test_postgres_connection.py tests\test_market_data_trust.py
 ```
 
+### Homepage signal read model
+
+Initialize the additive schema, publish a complete local snapshot, and compare only safe identifiers/field names:
+
+```powershell
+& $py -X utf8 radar.py signal-read-model --refresh --compare --limit 200
+```
+
+Feature-off is the default and rollback path:
+
+```powershell
+$env:RADAR_SIGNAL_READ_MODEL_ENABLED = "0"
+& $py -X utf8 app.py
+```
+
+For a controlled feature-on local process:
+
+```powershell
+$env:RADAR_SIGNAL_READ_MODEL_ENABLED = "1"
+$env:RADAR_SIGNAL_QUERY_TIMEOUT_MS = "5000"
+& $py -X utf8 app.py
+```
+
+Focused Phase 1 verification:
+
+```powershell
+& $py -X utf8 -m py_compile `
+  app.py `
+  db\guland_publishers.py `
+  db\public_dataset_versions.py `
+  services\market_data.py `
+  services\signal_read_model.py `
+  services\public_data_publish.py `
+  cleansing\reprocess.py `
+  scripts\benchmark_public_read_path.py
+
+& $py -X utf8 -m pytest `
+  tests\test_market_data_performance.py `
+  tests\test_public_dataset_versions.py `
+  tests\test_signal_read_model.py `
+  tests\test_guest_visibility.py `
+  tests\test_source_policy.py `
+  tests\test_guland_targeted_reprocess.py `
+  tests\test_guland_publisher_repository.py `
+  tests\test_reprocess_review_hidden.py `
+  tests\test_schema_init_permissions.py `
+  tests\test_benchmark_public_read_path.py -q
+```
+
+With Flask running, record cold/warm status, TTFB, total time, and bytes without printing bodies/cookies:
+
+```powershell
+& $py -X utf8 scripts\benchmark_public_read_path.py `
+  --base-url http://127.0.0.1:5000 `
+  --repeat 5
+```
+
+Local parity and single-request timings are not the concurrency acceptance test. Follow the staged load gates in `docs/superpowers/plans/2026-08-01-homepage-performance-scale-master.md` before claiming 1,000-5,000 simultaneous in-flight capacity.
+
 Post-merger location resolver:
 
 ```powershell

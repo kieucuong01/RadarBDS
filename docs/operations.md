@@ -80,6 +80,61 @@ Then smoke:
 ssh -i "$env:USERPROFILE\.ssh\radar_bds_deploy_rsa" deploy@103.90.226.230 "cd /opt/radar-bds/current && curl -fsS http://127.0.0.1:5000/api/dashboard >/dev/null && curl -fsS 'http://127.0.0.1:5000/api/signals?page=1&limit=3' >/dev/null"
 ```
 
+## Signal Read Model Rollout And Rollback
+
+Phase 1 is additive and must be deployed feature-off first. In `/etc/radar-bds/radar.env` keep:
+
+```bash
+RADAR_SIGNAL_READ_MODEL_ENABLED=0
+RADAR_SIGNAL_QUERY_TIMEOUT_MS=5000
+RADAR_SIGNAL_CACHE_TTL_SECONDS=60
+```
+
+After deploying code and confirming the legacy API still works, initialize/backfill and compare as the runtime user:
+
+```bash
+cd /opt/radar-bds/current
+set -a
+. /etc/radar-bds/radar.env
+set +a
+/opt/radar-bds/.venv/bin/python -X utf8 radar.py signal-read-model --refresh --compare --limit 200
+```
+
+The command is safe for logs: it prints counts, listing ids, case names, and differing field names only. It never prints descriptions, phone numbers, source URLs, response bodies, cookies, or env values. Do not enable the flag unless `difference_count` is `0`.
+
+Then set `RADAR_SIGNAL_READ_MODEL_ENABLED=1`, restart `radar-bds.service`, and check VPS-local plus public paths:
+
+```bash
+sudo systemctl restart radar-bds.service
+sudo systemctl is-active radar-bds.service
+/opt/radar-bds/.venv/bin/python -X utf8 scripts/benchmark_public_read_path.py --base-url http://127.0.0.1:5000 --repeat 5
+/opt/radar-bds/.venv/bin/python -X utf8 scripts/benchmark_public_read_path.py --base-url https://radarbds.vn --repeat 5
+```
+
+Rollback is immediate and data-preserving: set the feature flag back to `0` and restart the service. Keep `signal_card_read_model` and `public_dataset_versions`; they are additive and useful for diagnosis. A failed refresh returns `public_read_model.status=error` to crawl/admin stats and leaves the prior complete rows/version active. The strict CLI exits nonzero.
+
+Useful read-only inspection:
+
+```sql
+SELECT dataset_name, version, updated_at
+FROM public_dataset_versions
+ORDER BY dataset_name;
+
+SELECT COUNT(*) AS rows, MAX(refreshed_at) AS newest_refresh
+FROM signal_card_read_model;
+
+SELECT relname, reloptions
+FROM pg_class
+WHERE relname IN (
+  'signal_card_read_model', 'listings', 'valuation_results',
+  'valuation_shadow_results', 'listing_images',
+  'listing_publishers', 'source_publishers'
+)
+ORDER BY relname;
+```
+
+This rollout proves parity and normal-load latency only. Do not claim the 1,000-5,000 simultaneous in-flight request objective until the later pooling/cache/Nginx phases and staged load gates pass.
+
 ## Crawl Automation
 
 Primary daily job:

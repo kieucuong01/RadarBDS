@@ -12,6 +12,8 @@ Source crawlers
   -> cleansing/dedup.py
   -> analytics/valuation.py
   -> valuation_results
+  -> services/public_data_publish.py
+  -> signal_card_read_model + public_dataset_versions
   -> routes/* blueprints -> app.py API implementations / alerts / CLI reports
 ```
 
@@ -67,8 +69,19 @@ Performance boundary:
 
 - `services/market_data.py` is on the hot path for PostgreSQL-backed local dev. Use the shared read connection scope from `db.connection.get_conn()` instead of opening a fresh PostgreSQL connection per read.
 - `/api/dashboard` is cached in-process for a short TTL by filter key. Guest dashboard rate limiting is in-memory; write-sensitive scopes such as lead capture still use DB-backed rate limiting.
-- `/api/signals` should avoid avoidable remote round-trips. The card feed query uses `COUNT(*) OVER()` and a lateral primary-image subquery so page data, total count, and thumbnail are fetched together.
+- `/api/signals` keeps `load_signals()` as its stable interface. With `RADAR_SIGNAL_READ_MODEL_ENABLED=0` it uses `_load_signals_legacy()`; with the flag enabled it reads `signal_card_read_model` through one bounded page query and joins the preselected image by primary key.
+- The read-model query applies a transaction-local `statement_timeout`, clamps `limit` to 100, uses `limit + 1` when `include_total=0`, and reuses the existing formatter plus tier redaction. It must not fork API serialization or masking rules.
+- Legacy feed publisher policy is set-based through one `listing_publishers`/`source_publishers` join. Do not restore correlated publisher subqueries.
 - Feed ordering should not depend on retired legal-image verification paths.
+
+### Signal-card read model publication
+
+- `signal_card_read_model` stores deterministic card/filter fields, the selected primary image id, public publisher visibility/rank, and the latest actionable valuation projection.
+- `public_dataset_versions` has durable `signals` and `market` rows. `signals` increments only after the final read-model insert in the same transaction.
+- Full refresh builds a temporary stage, locks only for delete/insert publication, then bumps the version. If any step raises, PostgreSQL rollback preserves the previous complete version.
+- Incremental refresh deletes/rebuilds only processed listing ids plus their current duplicate parents. More than 500 ids switches to full refresh; full/large publication runs `ANALYZE` on the fixed public-read table allowlist.
+- `cleansing/reprocess.py` publishes after valuation, lifecycle, trends, dedup, map work, and content hashes. Targeted reprocess publishes only touched ids. Guland publisher override refreshes linked listings inside the override transaction.
+- Phase 1 improves origin SQL and gives safe rollback. Redis, bounded connection pooling, Nginx microcache, browser request fan-out reduction, and the 1,000-5,000 in-flight load gate belong to later phases in the master plan.
 
 ## Signal Filter Runtime Flow
 

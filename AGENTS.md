@@ -72,6 +72,8 @@ Marketing skills:
 - `app.py`: Flask setup plus current route implementations.
 - `routes/`: public/auth/market/admin blueprints; many still delegate to `app.py`.
 - `services/market_data.py`: hot-path dashboard/listing read models and API shaping.
+- `services/signal_read_model.py`: transactional `signal_card_read_model` refresh and feature-flagged compact signal query.
+- `services/public_data_publish.py`: non-Flask publication boundary used after deterministic reprocess and repair jobs.
 - `services/signal_quality.py`: latest valuation CTE and actionable signal gate.
 - `services/image_assets.py`: image URL and thumbnail resolution.
 - `cleansing/reprocess.py`: normalize, dedup, valuation orchestration.
@@ -87,6 +89,9 @@ Marketing skills:
 - Only admin can expose original listing URLs and phone numbers. Guest/Free/VIP APIs must redact them.
 - `/api/dashboard` is lightweight summary only. It must not return all signals, descriptions, or image arrays.
 - `/api/signals` is the paginated card feed. Keep it compact and thumbnail-first.
+- `RADAR_SIGNAL_READ_MODEL_ENABLED` defaults to `0`. Enable it only after `radar.py signal-read-model --refresh --compare` reports zero differences in the target environment; rollback is flag `0` plus service restart.
+- A failed signal read-model refresh must leave the previous complete rows/version active. Never bump `public_dataset_versions.signals` outside the refresh transaction.
+- The capacity objective means roughly 1,000-5,000 simultaneous in-flight public requests, not 5,000 sustained origin RPS. Do not claim that gate from unit tests or single-request timings; use the staged production load plan.
 - User-facing signal surfaces use latest valuation plus `services.signal_quality.actionable_signal_sql()`, not raw `valuation_results.is_signal` alone.
 - `low_segment_confidence` alone does not suppress user-facing signals; show a warning badge instead.
 - Facebook repost matching may use heuristics, but only with strong guards for type, location, area/dimensions, thổ cư, and phone.
@@ -113,6 +118,7 @@ Common verification:
 & $py -X utf8 -m py_compile app.py services\market_data.py cleansing\dedup.py cleansing\feature_extractor.py analytics\valuation.py
 node --check static\js\main.js
 & $py -X utf8 -m pytest tests\test_dedup.py tests\test_price_history.py tests\test_lot_history.py tests\test_drop_filter.py
+& $py -X utf8 radar.py signal-read-model --refresh --compare --limit 200
 ```
 
 Deploy after pushing `main`:
