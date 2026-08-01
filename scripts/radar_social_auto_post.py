@@ -208,8 +208,15 @@ def main() -> int:
     posted = state.setdefault("posted", {})
     already_done, done_item = posted_today(posted)
     if already_done:
-        print("@rb social auto-post OK — already posted today")
-        print(f"Post URL: {done_item.get('post_url') or ((done_item.get('browser_result') or {}).get('permalink'))}")
+        post_url = done_item.get("post_url") or ((done_item.get("browser_result") or {}).get("permalink"))
+        print("## @rb Daily Facebook Page Care")
+        print("- KPI hôm nay: ĐẠT")
+        print(f"- Published Page post: already posted today: {post_url}")
+        if done_item.get("queue"):
+            print(f"- Source queue/article: {done_item.get('queue')}")
+        if done_item.get("visual"):
+            print(f"- Visual: {done_item.get('visual')}")
+        print(f"- Verification: posted_slugs.json has today's valid Facebook permalink")
         return 0
     queue_path = create_unposted_queue(posted)
     key, slug, url = queue_key(queue_path)
@@ -228,10 +235,16 @@ def main() -> int:
         "result": result,
     }
     save_state(state)
-    print("@rb social auto-post OK")
-    print(f"Slug: {slug}")
-    print(f"URL: {url}")
-    print(f"Queue: {queue_path}")
+    data = json.loads(queue_path.read_text(encoding="utf-8"))
+    content = data.get("content") or {}
+    print("## @rb Daily Facebook Page Care")
+    print("- KPI hôm nay: ĐẠT")
+    print(f"- Published Page post: {result.get('post_url')}")
+    print(f"- Source queue/article: {queue_path} → {url}")
+    print(f"- Visual: {content.get('visual_path') or content.get('image_path') or ''} · {content.get('visual_style') or 'legacy'}")
+    print(f"- Caption angle: {str(content.get('message') or '').splitlines()[0][:160]}")
+    print("- Self-comment/pin: not attempted by deterministic KPI autopost")
+    print("- Verification: browser_result ok=true + verified_text=true + valid Facebook permalink")
     return 0
 
 
