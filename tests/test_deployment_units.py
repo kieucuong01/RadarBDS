@@ -55,6 +55,8 @@ def test_nginx_public_cache_requires_no_session_and_app_opt_in():
     assert "proxy_hide_header X-Radar-Public-Cache;" in include
     assert "add_header X-Radar-Edge-Cache $upstream_cache_status always;" in site
     assert 'add_header X-Content-Type-Options "nosniff" always;' in site
+    assert site.count("backlog=8192") == 1
+    assert "listen 443 ssl http2 backlog=8192;" in site
     for route in ("= /", "= /api/signals", "= /api/counts", "= /api/dashboard"):
         assert f"location {route}" in site
     assert "ssl_certificate" in site
