@@ -4036,9 +4036,16 @@ def _public_dataset_versions(names) -> dict[str, int]:
         return {name: 0 for name in names}
 
 
-def _public_json_response(result: CacheResult, *, tier: str):
+def _public_json_response(
+    result: CacheResult,
+    *,
+    tier: str,
+    dataset_version: int | None = None,
+):
     response = jsonify(result.payload)
     response.headers["X-Radar-Cache"] = result.status
+    if dataset_version is not None:
+        response.headers["X-Radar-Dataset-Version"] = str(int(dataset_version))
     response.headers["Server-Timing"] = (
         f'app_cache;desc="{result.status}", load;dur={result.load_ms:.2f}'
     )
@@ -4703,7 +4710,11 @@ def api_dashboard():
         )
     except (PublicCacheBusy, DatabasePoolBusy) as exc:
         return _public_busy_response(exc)
-    return _public_json_response(result, tier=cache_tier)
+    return _public_json_response(
+        result,
+        tier=cache_tier,
+        dataset_version=versions.get(DATASET_SIGNALS, 0),
+    )
 
 @rate_limit("dashboard", limits={"guest": 1200, "free": 2400, "vip": None, "admin": None})
 def api_counts():
@@ -4776,7 +4787,11 @@ def api_counts():
         )
     except (PublicCacheBusy, DatabasePoolBusy) as exc:
         return _public_busy_response(exc)
-    return _public_json_response(result, tier=cache_tier)
+    return _public_json_response(
+        result,
+        tier=cache_tier,
+        dataset_version=versions.get(DATASET_SIGNALS, 0),
+    )
 
 def api_signals():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
@@ -4859,7 +4874,11 @@ def api_signals():
         )
     except (PublicCacheBusy, DatabasePoolBusy) as exc:
         return _public_busy_response(exc)
-    return _public_json_response(result, tier=cache_tier)
+    return _public_json_response(
+        result,
+        tier=cache_tier,
+        dataset_version=versions.get(DATASET_SIGNALS, 0),
+    )
 
 def api_trends():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)

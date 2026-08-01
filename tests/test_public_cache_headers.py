@@ -14,6 +14,7 @@ PUBLIC_CACHE_CONTROL = (
 
 @pytest.fixture
 def client(monkeypatch):
+    monkeypatch.setattr(radar_app, "_public_cache_enabled", lambda: True)
     monkeypatch.setattr(radar_app, "current_tier", lambda: "guest")
     monkeypatch.setattr(radar_app, "current_user", lambda: None)
     monkeypatch.setattr(auth_core, "current_tier", lambda: "guest")
@@ -55,6 +56,7 @@ def test_guest_signal_response_is_public_cache_candidate(client):
     assert response.headers["Cache-Control"] == PUBLIC_CACHE_CONTROL
     assert "Cookie" in response.headers["Vary"]
     assert response.headers["X-Radar-Cache"] == "miss"
+    assert response.headers["X-Radar-Dataset-Version"] == "1"
     assert "load;dur=1.25" in response.headers["Server-Timing"]
 
 

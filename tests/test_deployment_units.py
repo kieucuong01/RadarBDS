@@ -95,6 +95,18 @@ def test_normal_deploy_requires_explicit_performance_infra_opt_in():
     assert 'scripts/install_performance_infra.sh rollback "`$performance_backup"' in text
 
 
+def test_public_cache_verifier_checks_hit_bypass_and_redaction():
+    text = Path("scripts/verify_public_cache.ps1").read_text("utf-8")
+
+    assert "X-Radar-Edge-Cache" in text
+    assert "radar_session=cache-bypass-probe" in text
+    assert "Bearer cache-bypass-probe" in text
+    assert '"source_url"' in text
+    assert '"phone"' in text
+    assert "Set-Cookie" in text
+    assert "Cache HIT was not observed" in text
+
+
 def test_guland_secondary_systemd_timer_runs_after_primary_daily_crawl():
     base = Path("deployment/ubuntu24")
     service = (base / "radar-bds-guland-crawl.service").read_text(encoding="utf-8")
