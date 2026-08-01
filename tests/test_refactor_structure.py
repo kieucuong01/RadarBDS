@@ -46,6 +46,7 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
     html = _read("templates/index.html")
     expected_order = [
         "js/main/core.js",
+        "js/main/filter_runtime.js",
         "js/main/filters.js",
         "js/main/signals.js",
         "js/main/boot.js",
@@ -297,7 +298,7 @@ def test_signal_cards_use_professional_empty_image_state():
         assert expected in signals_js or expected in cards_css
 
     assert ".sc-empty-media" in cards_css
-    assert "pagespeed-a11y-20260611" in html
+    assert "signal-detail-regression-20260729" in html
 
 
 def test_first_signal_image_is_lcp_priority_but_later_images_stay_lazy():
@@ -379,7 +380,7 @@ def test_signal_cards_and_modal_render_compact_property_badges():
         "streetLabel",
         "thoCuLabel",
         "propertyTypeLabel",
-        "pagespeed-a11y-20260611",
+        "signal-detail-regression-20260729",
     ]:
         assert expected in html or expected in signals_js or expected in modal_js
 
@@ -429,7 +430,7 @@ def test_signal_feed_uses_fast_total_free_path_and_defers_dashboard_meta():
     filters_js = _read("static/js/main/filters.js")
     core_js = _read("static/js/main/core.js")
 
-    assert "pagespeed-a11y-20260611" in html
+    assert "saved-listings-header-images-20260722" in html
     assert "params.set('include_total', '0')" in signals_js
     assert "Number.isFinite(Number(data.total))" in signals_js
     assert "deferDashboardMetaRefresh" in filters_js
@@ -443,7 +444,7 @@ def test_signal_feed_uses_css_skeleton_cards_not_inline_placeholder_blocks():
     signals_js = _read("static/js/main/signals.js")
     cards_css = _read("static/css/main/cards.css")
 
-    assert "pagespeed-a11y-20260611" in html
+    assert "signal-detail-regression-20260729" in html
     assert "signal-skeleton-card" in signals_js
     assert "signal-skeleton-media" in signals_js
     assert "signal-skeleton-price" in signals_js
@@ -465,7 +466,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "pagespeed-a11y-20260611",
+        "guland-publisher-filter-20260731",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -481,7 +482,7 @@ def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "pagespeed-a11y-20260611",
+        "guland-publisher-filter-20260731",
         ".sidebar .filter-sheet-head",
         "position: sticky",
         "margin: -14px -14px 8px",
