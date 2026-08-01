@@ -26,9 +26,10 @@ Current priority:
 
 | City | Priority wards |
 |---|---|
-| Thủ Dầu Một | Hòa Phú, Phú Cường, Chánh Nghĩa, Phú Thọ |
-| Bến Cát | Mỹ Phước, Tân Định, An Điền, An Tây, Thới Hòa, Hòa Lợi, Phú An, Chánh Phú Hòa |
 | Tân Uyên trước sáp nhập | Uyên Hưng, Tân Phước Khánh, Thạnh Phước, Tân Hiệp, Khánh Bình, Thái Hòa, Hội Nghĩa, Tân Vĩnh Hiệp, Phú Chánh, Vĩnh Tân, Bạch Đằng, Thạnh Hội |
+| Thủ Dầu Một | Hòa Phú, Phú Cường, Chánh Nghĩa, Phú Thọ |
+
+Bến Cát is paused from nightly tracking because the watchlist is already OK; keep its config/history for manual review and future reactivation only.
 
 Future expansion should only update config/aliases, for example:
 

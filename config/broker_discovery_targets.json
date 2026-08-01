@@ -1,7 +1,7 @@
 {
   "schema": "radar_broker_discovery_targets.v1",
   "campaign_name": "current_priority",
-  "notes": "Current areas are campaign config, not hardcoded logic. Night broker discovery prioritizes Tân Uyên old/pre-merger area names (3/4 slots), keeps Bến Cát as monitoring (1/4 slot), and prepares Thủ Dầu Một thin wards for the next phase; Dĩ An/Thuận An are temporarily ok.",
+  "notes": "Current areas are campaign config, not hardcoded logic. Night broker discovery prioritizes Tân Uyên old/pre-merger area names (3/4 slots) plus Thủ Dầu Một thin wards (1/4 slot); Bến Cát is paused because coverage is already OK; Dĩ An/Thuận An are temporarily ok.",
   "target_areas": [
     {
       "city": "Thủ Dầu Một",
