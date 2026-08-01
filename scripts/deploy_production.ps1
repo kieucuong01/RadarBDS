@@ -4,7 +4,8 @@ param(
     [string] $KeyPath = "$env:USERPROFILE\.ssh\radar_bds_deploy_rsa",
     [string] $RemotePath = "/opt/radar-bds/current",
     [string] $Branch = "main",
-    [switch] $ArchiveKnownTempFiles = $true
+    [switch] $ArchiveKnownTempFiles = $true,
+    [switch] $InstallPerformanceInfra = $false
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,6 +23,7 @@ $sshArgs = @(
 )
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $ArchiveKnownTempFilesFlag = if ($ArchiveKnownTempFiles) { "1" } else { "0" }
+$InstallPerformanceInfraFlag = if ($InstallPerformanceInfra) { "1" } else { "0" }
 $RemoteScriptPath = "/tmp/radar-bds-deploy-$Stamp.sh"
 $LocalScriptPath = Join-Path $env:TEMP "radar-bds-deploy-$Stamp.sh"
 
@@ -35,6 +37,8 @@ stash_ref=""
 deploy_started="0"
 raw_backup="/tmp/radar-bds-raw-backup-before-$Stamp.json"
 archive_known_temp_files="$ArchiveKnownTempFilesFlag"
+install_performance_infra="$InstallPerformanceInfraFlag"
+performance_backup=""
 known_temp_archive=""
 known_temp_files=(
   "_check_cols2.py"
@@ -78,6 +82,10 @@ rollback_to_before() {
   trap - ERR
   if [ "`$deploy_started" = "1" ]; then
     echo "deploy failed; rolling back to `$before"
+    if [ -n "`$performance_backup" ] && [ -f scripts/install_performance_infra.sh ]; then
+      sudo -n bash scripts/install_performance_infra.sh rollback "`$performance_backup" || true
+      performance_backup=""
+    fi
     git reset --hard "`$before_commit" >/dev/null || true
     if [ -f "`$raw_backup" ]; then
       mkdir -p data
@@ -162,6 +170,15 @@ git pull --ff-only origin "$Branch"
 if [ -f "`$raw_backup" ]; then
   mkdir -p data
   cp -f "`$raw_backup" data/raw_backup.json
+fi
+if [ "`$install_performance_infra" = "1" ]; then
+  install_output=`$(sudo -n bash scripts/install_performance_infra.sh install)
+  printf '%s\n' "`$install_output"
+  performance_backup=`$(printf '%s\n' "`$install_output" | sed -n 's/^PERFORMANCE_BACKUP_DIR=//p' | tail -n 1)
+  if [ -z "`$performance_backup" ]; then
+    echo "performance installer did not report its backup directory"
+    false
+  fi
 fi
 /opt/radar-bds/.venv/bin/python -X utf8 -m pip install -r requirements.txt
 /opt/radar-bds/.venv/bin/python -X utf8 -m py_compile app.py services/market_data.py services/image_assets.py services/public_content.py cli/public_content.py

@@ -71,6 +71,30 @@ def test_connection_queue_profile_is_narrow_and_explicit():
     ]
 
 
+def test_performance_installer_validates_before_activation_and_has_rollback():
+    text = Path("scripts/install_performance_infra.sh").read_text("utf-8")
+
+    assert 'case "$1" in' in text
+    assert "install)" in text
+    assert "rollback)" in text
+    assert "/var/backups/radar-bds-performance" in text
+    assert "nginx -t" in text
+    assert "systemd-analyze verify" in text
+    assert "redis-server --test-memory 2" in text
+    assert "systemctl reload nginx" in text
+    assert "systemctl restart radar-bds.service" in text
+
+
+def test_normal_deploy_requires_explicit_performance_infra_opt_in():
+    text = Path("scripts/deploy_production.ps1").read_text("utf-8")
+
+    assert "[switch] $InstallPerformanceInfra = $false" in text
+    assert 'install_performance_infra="$InstallPerformanceInfraFlag"' in text
+    assert "scripts/install_performance_infra.sh install" in text
+    assert 'if [ "`$install_performance_infra" = "1" ]' in text
+    assert 'scripts/install_performance_infra.sh rollback "`$performance_backup"' in text
+
+
 def test_guland_secondary_systemd_timer_runs_after_primary_daily_crawl():
     base = Path("deployment/ubuntu24")
     service = (base / "radar-bds-guland-crawl.service").read_text(encoding="utf-8")
