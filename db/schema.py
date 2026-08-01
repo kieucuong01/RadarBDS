@@ -785,15 +785,33 @@ def init_schema() -> None:
                     pass
                 if _core_schema_exists(conn):
                     try:
-                        if not _table_exists(conn, "public_dataset_versions"):
+                        required_public_tables = (
+                            "public_dataset_versions",
+                            "signal_card_read_model",
+                        )
+                        missing_public_tables = [
+                            table
+                            for table in required_public_tables
+                            if not _table_exists(conn, table)
+                        ]
+                        if missing_public_tables:
                             _migrate_public_read_model(conn)
-                        if not _table_exists(conn, "public_dataset_versions"):
+                        still_missing = [
+                            table
+                            for table in required_public_tables
+                            if not _table_exists(conn, table)
+                        ]
+                        if still_missing:
                             raise RuntimeError(
-                                "required table public_dataset_versions is missing"
+                                "required table "
+                                + ", ".join(still_missing)
+                                + " is missing"
                             )
                     except Exception as migration_exc:
                         raise RuntimeError(
-                            "required table public_dataset_versions is unavailable"
+                            "required table "
+                            + ", ".join(missing_public_tables)
+                            + " is unavailable"
                         ) from migration_exc
                     try:
                         _migrate_listing_map_locations(conn)
@@ -1380,6 +1398,109 @@ def _migrate_public_read_model(conn: Any) -> None:
         ON CONFLICT (dataset_name) DO NOTHING
         """
     )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS signal_card_read_model (
+            listing_id BIGINT PRIMARY KEY
+                REFERENCES listings(id) ON DELETE CASCADE,
+            title TEXT NOT NULL DEFAULT '',
+            description TEXT NOT NULL DEFAULT '',
+            source TEXT NOT NULL,
+            source_status TEXT NOT NULL DEFAULT 'unknown',
+            url TEXT NOT NULL DEFAULT '',
+            ward TEXT,
+            property_type TEXT,
+            area_m2 DOUBLE PRECISION,
+            frontage_m DOUBLE PRECISION,
+            depth_m DOUBLE PRECISION,
+            price_ty DOUBLE PRECISION,
+            actual_ppm2 DOUBLE PRECISION,
+            fair_ppm2 DOUBLE PRECISION,
+            fair_ppm2_old DOUBLE PRECISION,
+            fair_ppm2_new DOUBLE PRECISION,
+            mos_pct DOUBLE PRECISION,
+            mos_pct_old DOUBLE PRECISION,
+            mos_pct_new DOUBLE PRECISION,
+            signal_score INTEGER NOT NULL DEFAULT 0,
+            is_actionable BOOLEAN NOT NULL DEFAULT FALSE,
+            is_hot BOOLEAN NOT NULL DEFAULT FALSE,
+            possibly_duplicate BOOLEAN NOT NULL DEFAULT FALSE,
+            price_dropped BOOLEAN NOT NULL DEFAULT FALSE,
+            price_drop_pct DOUBLE PRECISION,
+            price_first_ty DOUBLE PRECISION,
+            suspicious_bait BOOLEAN NOT NULL DEFAULT FALSE,
+            duplicate_of_id BIGINT,
+            activity_at TIMESTAMPTZ,
+            crawled_at TEXT,
+            posted_at TEXT,
+            first_seen_at TEXT,
+            price_updated_at TEXT,
+            road_name TEXT,
+            road_type TEXT,
+            road_width_m DOUBLE PRECISION,
+            road_tier INTEGER NOT NULL DEFAULT 0,
+            tho_cu_m2 DOUBLE PRECISION,
+            tho_cu_ratio DOUBLE PRECISION,
+            has_so BOOLEAN,
+            trust_tier TEXT NOT NULL DEFAULT 'candidate_signal',
+            trust_score INTEGER NOT NULL DEFAULT 0,
+            legal_status TEXT NOT NULL DEFAULT 'unverified',
+            legal_flags TEXT NOT NULL DEFAULT '',
+            source_quality_flags TEXT NOT NULL DEFAULT '',
+            source_quality_recheck BOOLEAN NOT NULL DEFAULT FALSE,
+            has_legal_doc_image BOOLEAN NOT NULL DEFAULT FALSE,
+            publisher_visible_public BOOLEAN NOT NULL DEFAULT TRUE,
+            publisher_rank SMALLINT NOT NULL DEFAULT 1,
+            primary_image_id BIGINT
+                REFERENCES listing_images(id) ON DELETE SET NULL,
+            image_count INTEGER NOT NULL DEFAULT 0,
+            refreshed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_signal_card_public_newest
+        ON signal_card_read_model(
+            publisher_rank, activity_at DESC, listing_id DESC
+        )
+        WHERE is_actionable AND publisher_visible_public
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_signal_card_public_filter
+        ON signal_card_read_model(
+            source, ward, property_type, publisher_rank,
+            activity_at DESC, listing_id DESC
+        )
+        WHERE is_actionable AND publisher_visible_public
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_signal_card_public_mos
+        ON signal_card_read_model(mos_pct DESC, listing_id DESC)
+        WHERE is_actionable AND publisher_visible_public
+        """
+    )
+    for table in (
+        "signal_card_read_model",
+        "listings",
+        "valuation_results",
+        "valuation_shadow_results",
+        "listing_images",
+        "listing_publishers",
+        "source_publishers",
+    ):
+        conn.execute(
+            f"""
+            ALTER TABLE {table} SET (
+                autovacuum_analyze_scale_factor = 0.02,
+                autovacuum_analyze_threshold = 100
+            )
+            """
+        )
 
 
 def _migrate_public_content_items(conn: Any) -> None:

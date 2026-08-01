@@ -483,13 +483,20 @@ def related_price_drop_join_sql(alias="l", join_alias="related_drop"):
     )
 
 
-def effective_price_drop_select_sql(alias="l", lateral_alias="related_drop"):
+def effective_price_drop_select_sql(
+    alias="l",
+    lateral_alias="related_drop",
+    *,
+    boolean_flag=False,
+):
     first_price = f"{lateral_alias}.first_price"
     valid_raw_drop = _valid_price_drop_sql(f"{alias}.")
+    flag_true = "TRUE" if boolean_flag else "1"
+    flag_false = "FALSE" if boolean_flag else "0"
     return f"""
                CASE
                    WHEN {valid_raw_drop} OR {first_price} IS NOT NULL
-                   THEN 1 ELSE 0
+                   THEN {flag_true} ELSE {flag_false}
                END AS price_dropped,
                CASE
                    WHEN {valid_raw_drop} THEN {alias}.price_drop_pct
