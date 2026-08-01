@@ -154,17 +154,17 @@ This rollout proves parity and normal-load latency only. Do not claim the 1,000-
 
 ## Shared Public Cache And PostgreSQL Pool Rollout
 
-Phase 2 application code is safe to deploy before Redis, but production must initially keep:
+Phase 2 application code is safe to deploy before Redis. Current production, after the completed Phase 4 safety drills, uses:
 
 ```bash
 RADAR_DB_POOL_MIN=1
 RADAR_DB_POOL_MAX=4
 RADAR_DB_POOL_TIMEOUT_SECONDS=1.0
-RADAR_PUBLIC_CACHE_ENABLED=0
+RADAR_PUBLIC_CACHE_ENABLED=1
 RADAR_REDIS_URL=redis://127.0.0.1:6379/0
 RADAR_CACHE_SCHEMA_VERSION=1
 RADAR_PUBLIC_CACHE_FRESH_SECONDS=60
-RADAR_PUBLIC_CACHE_STALE_SECONDS=180
+RADAR_PUBLIC_CACHE_STALE_SECONDS=86400
 RADAR_PUBLIC_CACHE_LOCK_SECONDS=5
 RADAR_PUBLIC_CACHE_WAIT_SECONDS=0.25
 RADAR_PUBLIC_DB_SLOTS=2
@@ -184,7 +184,7 @@ ORDER BY usename, state;
 
 Pool saturation raises a controlled application error instead of creating unbounded connections. Confirm service logs contain the configured `PostgreSQL pool initialized min=1 max=4` line and that `/api/signals`, `/api/counts`, and `/api/dashboard` remain correct with the cache flag off.
 
-Do not enable the cache flag until Phase 4 has installed a local-only Redis service and these checks pass:
+For a new environment, do not enable the cache flag until Phase 4 has installed a local-only Redis service and these checks pass:
 
 ```bash
 sudo systemctl is-active redis-server
@@ -216,7 +216,7 @@ Rollback order:
 3. Redis may then be stopped or repaired without affecting PostgreSQL truth.
 4. Keep the pool limits in place. Roll back pool code only by deploying the prior commit; never compensate by raising PostgreSQL connection limits during an incident.
 
-The Phase 2 runtime gate is complete only after the Phase 4 controlled drill proves a shared hit/lock across at least two Gunicorn workers, one loader for 100 identical cold requests, bounded work/stale-or-503 while Redis is stopped, version bootstrap after restart, and both cache flags `0` and `1`. Until then the production cache flag stays `0`.
+The production Phase 2 runtime gate passed on 2026-08-01: real Redis DB 15 integration, shared cache isolation, Redis-stop/recovery at 100 VUs, bounded DB sessions, and cache flags `0` and `1` were all exercised. This is environment-specific evidence, not permission to skip the gate elsewhere.
 
 ## Signal-First Frontend Runtime
 
@@ -239,7 +239,84 @@ Controlled local browser evidence from 2026-08-01 (cache disabled, local Postgre
 - a deliberately paused signal request was canceled as `net::ERR_ABORTED`; only the replacement response rendered; page 2 produced `60/60` unique card ids;
 - a disposable Free session showed tier `free` and returned `Cache-Control: private, no-store`, `X-Radar-Cache: bypass`, and no public marker for signals/counts. The synthetic user/session and browser cookie were removed after the proof.
 
-These measurements validate Phase 3 request ordering and rendering only. Redis, Nginx microcache, Gunicorn sizing, and 1,000-5,000 in-flight evidence remain the Phase 4 gate.
+These measurements validate Phase 3 request ordering and rendering only. The following section records the later Phase 4 infrastructure and capacity evidence; neither section alone is permission to claim the still-unmet 1,000-5,000 external gate.
+
+## Production Public-Read Capacity Runbook
+
+This is the production truth recorded on 2026-08-01. The implementation is deployed, cache/privacy/failure behavior is verified, and the highest passing external stages are recorded below. The requested 1,000-5,000 acceptance target is **not** complete; do not round the highest passing stage upward.
+
+### Active capacity contract
+
+| Layer | Active production setting | Ownership |
+|---|---|---|
+| Nginx | exact guest cache for `/`, `/api/signals`, `/api/counts`, `/api/dashboard`; TTL 15 s; inactive 24 h; 512 MB zone; lock/background update/stale-on-error | absorbs repeated/common public concurrency; never caches session/auth/admin/error/`Set-Cookie` responses |
+| TLS accept queue | IPv4 `backlog=8192`; `worker_connections=4096`; `multi_accept on`; kernel `somaxconn=8192`, `tcp_max_syn_backlog=8192` | accepts bursts without scaling Flask/DB work one-for-one |
+| Gunicorn | 3 workers x 4 threads; timeout 45 s; graceful 30 s; keepalive 5 s; max requests 2,000 + jitter 200; `LimitNOFILE=65536` | bounded origin request concurrency |
+| Redis | loopback only; persistence off; 256 MB; `allkeys-lru`; max clients 256 | disposable shared response/version cache, never source of truth |
+| Application cache | fresh 60 s; stale 86,400 s; lock 5 s; wait 250 ms; at most 2 uncached loaders/process | protects slow/cold reads and retains a stale dashboard across idle periods |
+| PostgreSQL | pool min/max 1/4 per worker; acquire timeout 1 s | at most 12 normal web connections; crawl/reprocess is accounted separately |
+
+The 45-second origin timeout is deliberate: the observed cold dashboard fill took 33.4 seconds, while the warm Redis response took 0 ms application time. The 24-hour Nginx inactive window and 86,400-second application stale window keep that expensive key usable between idle requests and during bounded dependency failures.
+
+### Install, verify, observe, and rollback
+
+Normal deploy does not mutate system Redis/Nginx/sysctl settings. Installation is an explicit root operation and creates a dated backup:
+
+```bash
+cd /opt/radar-bds/current
+sudo ./scripts/install_performance_infra.sh install
+```
+
+The installer validates a temporary Redis instance through a Unix socket before activation, validates Nginx syntax before reload, and traps nested-function failures for automatic rollback. A missing vendor `/etc/redis/redis.conf` is restored with `--force-confmiss`; never hand-create an incomplete vendor file.
+
+From Windows, verify public cache/privacy/freshness without printing bodies, cookies, or credentials:
+
+```powershell
+.\scripts\verify_public_cache.ps1 -BaseUrl "https://radarbds.vn"
+```
+
+Expected for all four allowlisted paths: repeated guest request `HIT`; fake cookie and Bearer request `BYPASS` plus `private, no-store`; no source URL, original URL, phone, seller, or embedded phone fields. Useful host checks:
+
+```bash
+systemctl is-active nginx radar-bds redis-server postgresql
+redis-cli -h 127.0.0.1 PING
+redis-cli -h 127.0.0.1 CONFIG GET save appendonly maxmemory maxmemory-policy maxclients
+ss -lnt '( sport = :443 or sport = :6379 or sport = :5000 )'
+systemctl show radar-bds.service -p LimitNOFILE
+sysctl net.core.somaxconn net.ipv4.tcp_max_syn_backlog
+```
+
+For an application privacy/key/version incident, first set `RADAR_PUBLIC_CACHE_ENABLED=0`, restart `radar-bds.service`, and verify private/bypass headers. Full infrastructure rollback for the latest production install is:
+
+```bash
+sudo /opt/radar-bds/current/scripts/install_performance_infra.sh rollback /var/backups/radar-bds-performance/20260801-111210
+```
+
+The corresponding environment snapshots are `/etc/radar-bds/radar.env.before-phase4-20260801-103830` and `/etc/radar-bds/radar.env.before-stale-20260801-111210`. Before using an older backup on a later deployment, inspect its manifest and current files; do not assume paths remain current.
+
+### Measured production evidence
+
+External tests used browser-style compression (`Accept-Encoding: gzip`). The first uncompressed 100-VU run transferred 383 MB and was rejected as a harness error; it is not a capacity result.
+
+| External scenario | Result | p95 / p99 | Edge behavior and origin state |
+|---|---:|---:|---|
+| normal homepage, 100 VUs | pass, 0% errors, 21,752 requests | 192.64 / 656.77 ms | 21,715 HIT, 2 MISS, 35 STALE; DB app sessions 4 |
+| mixed 50-key filters, 100 VUs | pass, 0% errors, 23,722 requests | 29.02 / 79.72 ms | 22,796 HIT, 726 STALE |
+| mixed 50-key filters, 500 VUs | pass, 0.12% errors, 99,510 requests | 248.33 / 869 ms | 98,248 HIT, 938 STALE; DB app sessions <=7 |
+| normal homepage, 500 VUs | fail gate, 0.75% errors | 8.49 / 25.56 s | origin stayed stable; after backlog fix kernel listen drops did not increase |
+| mixed 50-key filters, 1,000 VUs | fail gate, 0.83% errors | 2.85 / 8.36 s | origin stayed stable; DB app sessions 6-7; Redis had no rejected clients/evictions |
+
+The Redis-stop drill at 100 VUs passed with 0% errors, p95 199.98 ms, p99 532.45 ms, and 10,846 requests while Redis was unavailable for 21 seconds. Public responses remained `HIT`/`STALE`, PostgreSQL stayed at 4 app sessions/1 active, and Redis recovered with `PONG` and prewarm. The full rollback/reinstall drill also passed.
+
+The IPv4 listen backlog was raised from the Linux/Nginx default queue to 8,192 after the first 500-VU test showed cumulative listen overflows. On retest, both kernel counters stayed exactly unchanged while the client still saw latency/timeouts, isolating the remaining bottleneck to the single direct-origin/network-generator path rather than new origin accept drops.
+
+Evidence is retained locally at `C:\tmp\radar-phase4-evidence-20260801-172749`, including `public-cache-verification-final.txt`, `k6-default-100-gzip.*`, `k6-mixed-500.*`, `k6-mixed-1000.*`, `k6-redis-drill-100.*`, and host observation logs. Runtime evidence stays uncommitted.
+
+### Honest capacity boundary and next architecture
+
+The current single 2-vCPU/4-GB origin has proven cache collapse, privacy isolation, Redis failure recovery, bounded DB sessions, stable service resources, normal-homepage 100 VUs, and mixed-filter 500 VUs. It has **not** proven the 1,000-5,000 external acceptance target, 5,000 unique cold filters, sustained 5,000 RPS, or high availability. The 5,000 stage was intentionally not run after earlier abort thresholds failed.
+
+The next capacity phase must put a CDN/edge cache and origin shield in front of the same guest-only contract, keep authenticated traffic private, add distributed load generators in at least two regions, and repeat 100 -> 500 -> 1,000 -> 5,000 serial gates. Do not compensate by blindly increasing Gunicorn workers, PostgreSQL connections, Redis memory, or timeouts.
 
 ## Crawl Automation
 

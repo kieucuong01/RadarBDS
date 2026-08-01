@@ -478,6 +478,8 @@ Advance only after the prior result and simultaneous host observations pass:
 
 The mixed setup prewarms exactly 50 canonical filter pairs and requires the second probe for each route to be `HIT`. Never run the two scenarios or two stages in parallel. Stop at the first abort threshold from `docs/operations.md`; do not compensate by raising workers, PostgreSQL connections, timeouts, or Redis memory.
 
+The script explicitly requests `Accept-Encoding: gzip` to represent a browser. Treat an uncompressed result as an invalid harness run, not production capacity. The authoritative 2026-08-01 production results and rollback commands are in `docs/operations.md`: normal 100 VUs and mixed 500 VUs passed; normal 500 and mixed 1,000 missed the approved gates; 5,000 was not run after the abort threshold.
+
 Post-merger location resolver:
 
 ```powershell
