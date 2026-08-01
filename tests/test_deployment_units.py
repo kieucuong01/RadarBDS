@@ -4,6 +4,33 @@ import subprocess
 from pathlib import Path
 
 
+def test_redis_profile_is_loopback_cache_only_and_memory_bounded():
+    text = Path("deployment/ubuntu24/redis-radar-bds.conf").read_text("utf-8")
+
+    assert "bind 127.0.0.1 -::1" in text
+    assert "protected-mode yes" in text
+    assert 'save ""' in text
+    assert "appendonly no" in text
+    assert "maxmemory 256mb" in text
+    assert "maxmemory-policy allkeys-lru" in text
+    assert "maxclients 256" in text
+    assert "tcp-keepalive 60" in text
+
+
+def test_web_service_has_bounded_gunicorn_capacity():
+    text = Path("deployment/ubuntu24/radar-bds.service").read_text("utf-8")
+
+    assert "After=network-online.target postgresql.service redis-server.service" in text
+    assert "--workers 3" in text
+    assert "--threads 4" in text
+    assert "--timeout 30" in text
+    assert "--graceful-timeout 30" in text
+    assert "--keep-alive 5" in text
+    assert "--max-requests 2000" in text
+    assert "--max-requests-jitter 200" in text
+    assert "LimitNOFILE=65536" in text
+
+
 def test_guland_secondary_systemd_timer_runs_after_primary_daily_crawl():
     base = Path("deployment/ubuntu24")
     service = (base / "radar-bds-guland-crawl.service").read_text(encoding="utf-8")
