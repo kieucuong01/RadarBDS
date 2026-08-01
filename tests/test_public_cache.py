@@ -205,6 +205,29 @@ def test_version_lookup_falls_back_to_postgres_and_mirrors_redis(
     assert events == ["db"]
 
 
+def test_version_lookup_keeps_last_known_version_when_redis_and_db_are_down(
+    monkeypatch, fake_redis
+):
+    fake_redis.fail = True
+    monkeypatch.setattr(public_cache, "get_redis_client", lambda: fake_redis)
+    with public_cache._VERSION_CACHE_LOCK:
+        public_cache._VERSION_CACHE["signals"] = (
+            9,
+            time.monotonic() - public_cache._VERSION_CACHE_SECONDS - 1,
+        )
+
+    @contextmanager
+    def unavailable_db():
+        raise RuntimeError("db down")
+        yield
+
+    monkeypatch.setattr(public_cache, "get_conn", unavailable_db)
+
+    assert public_cache.get_current_dataset_versions(("signals",)) == {
+        "signals": 9
+    }
+
+
 def test_stored_record_contains_only_timestamp_and_payload(fake_redis):
     cache = PublicResponseCache(redis_client=fake_redis, clock=FakeClock(123.0))
     cache.store_for_test("key", {"signals": []}, stored_at=123.0)

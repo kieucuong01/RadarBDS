@@ -62,8 +62,6 @@ def _patch_live_snapshot(monkeypatch, radar_app):
 
     monkeypatch.setattr(radar_app, "load_dashboard_summary", fake_summary)
     monkeypatch.setattr(radar_app, "load_signals", fake_signals)
-    radar_app.clear_dashboard_cache()
-    radar_app.clear_signal_cache()
     return calls
 
 
@@ -120,8 +118,6 @@ def test_priority_ward_page_degrades_without_database(monkeypatch):
 
     monkeypatch.setattr(radar_app, "load_dashboard_summary", unavailable)
     monkeypatch.setattr(radar_app, "load_signals", unavailable)
-    radar_app.clear_dashboard_cache()
-    radar_app.clear_signal_cache()
 
     response = radar_app.app.test_client().get("/binh-duong/phuong-hiep-thanh")
     html = response.get_data(as_text=True)

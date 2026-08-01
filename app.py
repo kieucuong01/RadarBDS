@@ -58,8 +58,12 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 from config import database_sqlite as db_mod
 from config.property_types import normalize_property_types
 from db import facebook_profiles as db_facebook_profiles
-from db.connection import connect, get_conn
-from db.public_dataset_versions import DATASET_SIGNALS, get_dataset_versions
+from db.connection import DatabasePoolBusy, connect, get_conn
+from db.public_dataset_versions import (
+    DATASET_MARKET,
+    DATASET_SIGNALS,
+    get_dataset_versions,
+)
 from db.moderation import normalize_phone
 from config.settings import (
     LEGAL_IMAGE_EVIDENCE_ENABLED,
@@ -150,6 +154,13 @@ from services.public_content import (
     PostgresPublicContentRepository,
     public_pdf_url,
 )
+from services.public_cache import (
+    CacheResult,
+    PublicCacheBusy,
+    clear_local_public_cache,
+    get_current_dataset_versions,
+    get_or_load_public_payload,
+)
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -223,11 +234,20 @@ def inject_city_map_products():
 @app.after_request
 def add_response_headers(response):
     if request.path.startswith("/api/"):
-        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
-        if request.path.startswith("/api/digital-products/orders/"):
-            response.headers["Cache-Control"] = "private, no-store"
+        public_cache_classified = (
+            request.path in {"/api/signals", "/api/counts", "/api/dashboard"}
+            and (
+                "X-Radar-Cache" in response.headers
+                or response.headers.get("Cache-Control")
+                in {"private, no-store", "no-store"}
+            )
+        )
+        if not public_cache_classified:
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+            if request.path.startswith("/api/digital-products/orders/"):
+                response.headers["Cache-Control"] = "private, no-store"
     elif any(
         request.path.startswith(f"{page['order_base_path']}/")
         for page in CITY_MAP_PRODUCTS.values()
@@ -1743,7 +1763,26 @@ def serve_local_image(filename):
 
 
 def index():
-    return render_template('index.html', wards_by_city=CITY_MAP, site_meta=_site_meta("/"), saved_page=False)
+    response = make_response(
+        render_template(
+            'index.html',
+            wards_by_city=CITY_MAP,
+            site_meta=_site_meta("/"),
+            saved_page=False,
+        )
+    )
+    is_anonymous = (
+        not request.cookies.get(SESSION_COOKIE_NAME)
+        and not request.headers.get("Authorization")
+        and "Set-Cookie" not in response.headers
+    )
+    if is_anonymous:
+        response.headers["X-Radar-Public-Cache"] = "1"
+        response.headers["Cache-Control"] = _PUBLIC_CACHE_CONTROL
+        response.headers["Vary"] = "Cookie"
+    else:
+        response.headers["Cache-Control"] = "private, no-store"
+    return response
 
 
 def saved_listings_page():
@@ -2932,29 +2971,42 @@ def _build_live_location_snapshot(page: dict) -> dict:
         ],
     }
     try:
-        summary = _cached_dashboard_payload(
-            ("seo-location-summary", ward),
-            lambda: load_dashboard_summary(
+        summary = get_or_load_public_payload(
+            endpoint="dashboard",
+            tier="guest",
+            versions=_public_dataset_versions(_DASHBOARD_DATASETS),
+            query={"wards": [ward], "include_trend": False},
+            loader=lambda: load_dashboard_summary(
                 _db_handle(),
                 wards=[ward],
                 tier="guest",
                 include_trend=False,
             ),
-            ttl_seconds=300,
-        )
-        signal_payload = _cached_signal_payload(
-            ("seo-location-signals", ward, 5),
-            lambda: load_signals(
-                _db_handle(),
-                wards=[ward],
-                tier="guest",
-                page=1,
-                limit=5,
-                sort="newest",
-                include_total=False,
+        ).payload
+        signal_payload = get_or_load_public_payload(
+            endpoint="signals",
+            tier="guest",
+            versions=_public_dataset_versions(_SIGNAL_DATASETS),
+            query={
+                "wards": [ward],
+                "page": 1,
+                "limit": 5,
+                "sort": "newest",
+                "include_total": False,
+            },
+            loader=lambda: _tier_safe_signal_payload(
+                load_signals(
+                    _db_handle(),
+                    wards=[ward],
+                    tier="guest",
+                    page=1,
+                    limit=5,
+                    sort="newest",
+                    include_total=False,
+                ),
+                "guest",
             ),
-            ttl_seconds=300,
-        )
+        ).payload
         stats = summary.get("stats") or {}
         market_rows = []
         for row in summary.get("market") or []:
@@ -3959,56 +4011,128 @@ def sitemap_xml():
     return Response(body, mimetype="application/xml")
 
 
-_DASHBOARD_CACHE = {}
-_DASHBOARD_CACHE_MAX_ITEMS = 96
-_DASHBOARD_CACHE_TTL_SECONDS = float(os.getenv("RADAR_DASHBOARD_CACHE_TTL_SECONDS", "120"))
-_SIGNAL_CACHE = {}
-_SIGNAL_CACHE_MAX_ITEMS = 256
-_SIGNAL_CACHE_TTL_SECONDS = float(os.getenv("RADAR_SIGNAL_CACHE_TTL_SECONDS", "60"))
+_PUBLIC_CACHE_CONTROL = (
+    "public, max-age=15, s-maxage=15, stale-while-revalidate=180, "
+    "stale-if-error=180"
+)
+_SIGNAL_DATASETS = (DATASET_SIGNALS,)
+_DASHBOARD_DATASETS = (DATASET_SIGNALS, DATASET_MARKET)
+_VALID_SIGNAL_SORTS = frozenset(
+    {"newest", "price_m2_asc", "price_asc", "mos_desc", "score_desc"}
+)
 
 
-def clear_dashboard_cache():
-    _DASHBOARD_CACHE.clear()
+def _public_cache_enabled() -> bool:
+    return os.getenv("RADAR_PUBLIC_CACHE_ENABLED", "0").strip() == "1"
 
 
-def clear_signal_cache():
-    _SIGNAL_CACHE.clear()
+def _public_dataset_versions(names) -> dict[str, int]:
+    if not _public_cache_enabled():
+        return {name: 0 for name in names}
+    try:
+        return get_current_dataset_versions(names)
+    except Exception:
+        logger.exception("Unable to resolve public dataset versions")
+        return {name: 0 for name in names}
 
 
-def _cached_dashboard_payload(key, loader, now=None, ttl_seconds=None, force_refresh=False):
-    ttl = _DASHBOARD_CACHE_TTL_SECONDS if ttl_seconds is None else ttl_seconds
-    if ttl <= 0:
-        return loader()
+def _public_json_response(result: CacheResult, *, tier: str):
+    response = jsonify(result.payload)
+    response.headers["X-Radar-Cache"] = result.status
+    response.headers["Server-Timing"] = (
+        f'app_cache;desc="{result.status}", load;dur={result.load_ms:.2f}'
+    )
+    is_anonymous = (
+        tier == "guest"
+        and not request.cookies.get(SESSION_COOKIE_NAME)
+        and not request.headers.get("Authorization")
+    )
+    if (
+        is_anonymous
+        and response.status_code == 200
+        and "Set-Cookie" not in response.headers
+    ):
+        response.headers["X-Radar-Public-Cache"] = "1"
+        response.headers["Cache-Control"] = _PUBLIC_CACHE_CONTROL
+        response.headers["Vary"] = "Cookie"
+        response.headers.pop("Pragma", None)
+        response.headers.pop("Expires", None)
+    else:
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers.pop("X-Radar-Public-Cache", None)
+    return response
 
-    now = time.monotonic() if now is None else now
-    entry = _DASHBOARD_CACHE.get(key)
-    if not force_refresh and entry and now - entry["ts"] <= ttl:
-        return deepcopy(entry["payload"])
 
-    payload = loader()
-    _DASHBOARD_CACHE[key] = {"ts": now, "payload": deepcopy(payload)}
-    if len(_DASHBOARD_CACHE) > _DASHBOARD_CACHE_MAX_ITEMS:
-        oldest_key = min(_DASHBOARD_CACHE, key=lambda k: _DASHBOARD_CACHE[k]["ts"])
-        _DASHBOARD_CACHE.pop(oldest_key, None)
-    return payload
+def _public_busy_response(exc):
+    retry_after = int(getattr(exc, "retry_after", 1) or 1)
+    response = jsonify(
+        {"error": "temporarily_busy", "retry_after": retry_after}
+    )
+    response.status_code = 503
+    response.headers["Retry-After"] = str(retry_after)
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
-def _cached_signal_payload(key, loader, now=None, ttl_seconds=None):
-    ttl = _SIGNAL_CACHE_TTL_SECONDS if ttl_seconds is None else ttl_seconds
-    if ttl <= 0:
-        return loader()
+def _bounded_public_filter_values(
+    *, wards, sources, prop_types, range_kwargs, keyword
+):
+    wards = sorted(dict.fromkeys(wards or ()))[:64]
+    sources = sorted(dict.fromkeys(sources or ()))[:4]
+    prop_types = sorted(dict.fromkeys(prop_types or ()))[:8]
+    bounded_ranges = dict(range_kwargs)
+    bounded_ranges["area_ranges"] = sorted(
+        dict.fromkeys(range_kwargs["area_ranges"])
+    )[:12]
+    bounded_ranges["price_ranges"] = sorted(
+        dict.fromkeys(range_kwargs["price_ranges"])
+    )[:12]
+    return wards, sources, prop_types, bounded_ranges, keyword[:80]
 
-    now = time.monotonic() if now is None else now
-    entry = _SIGNAL_CACHE.get(key)
-    if entry and now - entry["ts"] <= ttl:
-        return deepcopy(entry["payload"])
 
-    payload = loader()
-    _SIGNAL_CACHE[key] = {"ts": now, "payload": deepcopy(payload)}
-    if len(_SIGNAL_CACHE) > _SIGNAL_CACHE_MAX_ITEMS:
-        oldest_key = min(_SIGNAL_CACHE, key=lambda k: _SIGNAL_CACHE[k]["ts"])
-        _SIGNAL_CACHE.pop(oldest_key, None)
-    return payload
+def _public_filter_query(
+    *,
+    active_city,
+    wards,
+    sources,
+    prop_types,
+    only_drops,
+    trend_period,
+    mos_min,
+    range_kwargs,
+    keyword,
+    date_range,
+    include_guland_high_activity,
+    **extra,
+):
+    return {
+        "active_city": active_city,
+        "wards": wards,
+        "sources": sources,
+        "prop_types": prop_types,
+        "only_drops": bool(only_drops),
+        "trend_period": trend_period,
+        "mos_min": int(mos_min or 0),
+        "area_min": float(range_kwargs["area_min"] or 0),
+        "area_max": float(range_kwargs["area_max"] or 0),
+        "price_min": float(range_kwargs["price_min"] or 0),
+        "price_max": float(range_kwargs["price_max"] or 0),
+        "area_ranges": range_kwargs["area_ranges"],
+        "price_ranges": range_kwargs["price_ranges"],
+        "keyword": keyword,
+        "date_range": date_range,
+        "include_guland_high_activity": bool(include_guland_high_activity),
+        **extra,
+    }
+
+
+def _tier_safe_signal_payload(payload: dict, tier: str) -> dict:
+    safe = dict(payload)
+    safe["signals"] = [
+        redact_for_tier(signal, tier)
+        for signal in (payload.get("signals") or [])
+    ]
+    return safe
 
 
 def _dashboard_cache_refresh_requested(req) -> bool:
@@ -4497,37 +4621,40 @@ def api_dashboard():
     range_kwargs = _request_range_filter_kwargs(request)
     keyword = _request_keyword(request)
     date_range = _request_date_range(request)
-    area_min = range_kwargs["area_min"]
-    area_max = range_kwargs["area_max"]
-    price_min = range_kwargs["price_min"]
-    price_max = range_kwargs["price_max"]
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
+    wards, sources, prop_types, range_kwargs, keyword = (
+        _bounded_public_filter_values(
+            wards=wards,
+            sources=sources,
+            prop_types=prop_types,
+            range_kwargs=range_kwargs,
+            keyword=keyword,
+        )
+    )
+    active_city = str(active_city or "")[:80]
+    trend_period = trend_period if trend_period in {"day", "week", "month"} else "day"
     db_path = _db_handle()
     include_trend = request.args.get("include_trend") == "1"
-    # Load data without fetching all listings to save time/memory
     tier = current_tier()
     include_guland_high_activity = _include_guland_high_activity(request, tier)
-    cache_key = (
-        tier,
-        active_city,
-        tuple(wards or ()),
-        tuple(sources or ()),
-        tuple(prop_types or ()),
-        bool(only_drops),
-        trend_period,
-        int(mos_min or 0),
-        float(area_min or 0),
-        float(area_max or 0),
-        float(price_min or 0),
-        float(price_max or 0),
-        tuple(range_kwargs["area_ranges"]),
-        tuple(range_kwargs["price_ranges"]),
-        keyword,
-        date_range,
-        bool(include_trend),
-        include_guland_high_activity,
+    versions = _public_dataset_versions(_DASHBOARD_DATASETS)
+    cache_query = _public_filter_query(
+        active_city=active_city,
+        wards=wards,
+        sources=sources,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        trend_period=trend_period,
+        mos_min=mos_min,
+        range_kwargs=range_kwargs,
+        keyword=keyword,
+        date_range=date_range,
+        include_guland_high_activity=include_guland_high_activity,
+        include_trend=bool(include_trend),
     )
+    force_refresh = _dashboard_cache_refresh_requested(request)
+    cache_tier = "admin" if force_refresh else tier
 
     def _load_dashboard_payload():
         data = load_dashboard_summary(
@@ -4549,7 +4676,11 @@ def api_dashboard():
             "stats": data["stats"],
             "market": data["market"],
             "trend_data": data["trend_data"],
-            "signals_version": _get_signals_version(db_path),
+            "signals_version": (
+                str(versions[DATASET_SIGNALS])
+                if _public_cache_enabled()
+                else _get_signals_version(db_path)
+            ),
             "all_wards": data["all_wards"],
             "all_sources": data["all_sources"] if tier == "admin" else sources,
             "wards_by_city": data["wards_by_city"],
@@ -4561,11 +4692,18 @@ def api_dashboard():
             "tier": tier,
         }
 
-    return jsonify(_cached_dashboard_payload(
-        cache_key,
-        _load_dashboard_payload,
-        force_refresh=_dashboard_cache_refresh_requested(request),
-    ))
+    try:
+        result = get_or_load_public_payload(
+            endpoint="dashboard",
+            tier=cache_tier,
+            versions=versions,
+            query=cache_query,
+            loader=_load_dashboard_payload,
+            force_refresh=force_refresh,
+        )
+    except (PublicCacheBusy, DatabasePoolBusy) as exc:
+        return _public_busy_response(exc)
+    return _public_json_response(result, tier=cache_tier)
 
 @rate_limit("dashboard", limits={"guest": 1200, "free": 2400, "vip": None, "admin": None})
 def api_counts():
@@ -4575,28 +4713,70 @@ def api_counts():
     date_range = _request_date_range(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
+    wards, sources, prop_types, range_kwargs, keyword = (
+        _bounded_public_filter_values(
+            wards=wards,
+            sources=sources,
+            prop_types=prop_types,
+            range_kwargs=range_kwargs,
+            keyword=keyword,
+        )
+    )
+    active_city = str(active_city or "")[:80]
+    trend_period = trend_period if trend_period in {"day", "week", "month"} else "day"
     tier = current_tier()
     include_guland_high_activity = _include_guland_high_activity(request, tier)
-    return jsonify({
-        "stats": load_counts(
-            _db_handle(),
-            sources=sources,
-            wards=wards,
-            prop_types=prop_types,
-            only_drops=only_drops,
-            mos_min=mos_min,
-            keyword=keyword,
-            date_range=date_range,
-            include_guland_high_activity=include_guland_high_activity,
-            **range_kwargs,
-        ),
-        "active_city": active_city,
-        "active_wards": wards,
-        "active_sources": sources,
-        "active_props": prop_types,
-        "trend_period": trend_period,
-        "tier": tier,
-    })
+    versions = _public_dataset_versions(_SIGNAL_DATASETS)
+    cache_query = _public_filter_query(
+        active_city=active_city,
+        wards=wards,
+        sources=sources,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        trend_period=trend_period,
+        mos_min=mos_min,
+        range_kwargs=range_kwargs,
+        keyword=keyword,
+        date_range=date_range,
+        include_guland_high_activity=include_guland_high_activity,
+    )
+    force_refresh = _dashboard_cache_refresh_requested(request)
+    cache_tier = "admin" if force_refresh else tier
+
+    def _load_counts_payload():
+        return {
+            "stats": load_counts(
+                _db_handle(),
+                sources=sources,
+                wards=wards,
+                prop_types=prop_types,
+                only_drops=only_drops,
+                mos_min=mos_min,
+                keyword=keyword,
+                date_range=date_range,
+                include_guland_high_activity=include_guland_high_activity,
+                **range_kwargs,
+            ),
+            "active_city": active_city,
+            "active_wards": wards,
+            "active_sources": sources,
+            "active_props": prop_types,
+            "trend_period": trend_period,
+            "tier": tier,
+        }
+
+    try:
+        result = get_or_load_public_payload(
+            endpoint="counts",
+            tier=cache_tier,
+            versions=versions,
+            query=cache_query,
+            loader=_load_counts_payload,
+            force_refresh=force_refresh,
+        )
+    except (PublicCacheBusy, DatabasePoolBusy) as exc:
+        return _public_busy_response(exc)
+    return _public_json_response(result, tier=cache_tier)
 
 def api_signals():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
@@ -4605,61 +4785,81 @@ def api_signals():
     date_range = _request_date_range(request)
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
-    try:
-        page = int(request.args.get("page", 1))
-        limit = int(request.args.get("limit", 30))
-    except ValueError:
-        page, limit = 1, 30
+    wards, sources, prop_types, range_kwargs, keyword = (
+        _bounded_public_filter_values(
+            wards=wards,
+            sources=sources,
+            prop_types=prop_types,
+            range_kwargs=range_kwargs,
+            keyword=keyword,
+        )
+    )
+    active_city = str(active_city or "")[:80]
+    trend_period = trend_period if trend_period in {"day", "week", "month"} else "day"
+    page = _clamp_int(request.args.get("page"), 1, 1, 2_000)
+    limit = _clamp_int(request.args.get("limit"), 30, 1, 100)
     sort = request.args.get("sort", "newest")
+    if sort not in _VALID_SIGNAL_SORTS:
+        sort = "newest"
     include_total = request.args.get("include_total") != "0"
     db_path = _db_handle()
     tier = current_tier()
     include_guland_high_activity = _include_guland_high_activity(request, tier)
-    cache_key = (
-        tier,
-        active_city,
-        tuple(wards or ()),
-        tuple(sources or ()),
-        tuple(prop_types or ()),
-        bool(only_drops),
-        int(mos_min or 0),
-        float(range_kwargs["area_min"] or 0),
-        float(range_kwargs["area_max"] or 0),
-        float(range_kwargs["price_min"] or 0),
-        float(range_kwargs["price_max"] or 0),
-        tuple(range_kwargs["area_ranges"]),
-        tuple(range_kwargs["price_ranges"]),
-        keyword,
-        date_range,
-        sort,
-        page,
-        limit,
-        bool(include_total),
-        include_guland_high_activity,
+    versions = _public_dataset_versions(_SIGNAL_DATASETS)
+    cache_query = _public_filter_query(
+        active_city=active_city,
+        wards=wards,
+        sources=sources,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        trend_period=trend_period,
+        mos_min=mos_min,
+        range_kwargs=range_kwargs,
+        keyword=keyword,
+        date_range=date_range,
+        include_guland_high_activity=include_guland_high_activity,
+        sort=sort,
+        page=page,
+        limit=limit,
+        include_total=bool(include_total),
     )
+    force_refresh = _dashboard_cache_refresh_requested(request)
+    cache_tier = "admin" if force_refresh else tier
 
     def _load_signal_payload():
-        return load_signals(
-            db_path,
-            sources=sources,
-            wards=wards,
-            prop_types=prop_types,
-            only_drops=only_drops,
-            mos_min=mos_min,
-            sort=sort,
-            page=page,
-            limit=limit,
-            tier=tier,
-            keyword=keyword,
-            include_total=include_total,
-            date_range=date_range,
-            include_guland_high_activity=include_guland_high_activity,
-            **range_kwargs,
+        return _tier_safe_signal_payload(
+            load_signals(
+                db_path,
+                sources=sources,
+                wards=wards,
+                prop_types=prop_types,
+                only_drops=only_drops,
+                mos_min=mos_min,
+                sort=sort,
+                page=page,
+                limit=limit,
+                tier=tier,
+                keyword=keyword,
+                include_total=include_total,
+                date_range=date_range,
+                include_guland_high_activity=include_guland_high_activity,
+                **range_kwargs,
+            ),
+            tier,
         )
 
-    if tier == "admin":
-        return jsonify(_load_signal_payload())
-    return jsonify(_cached_signal_payload(cache_key, _load_signal_payload))
+    try:
+        result = get_or_load_public_payload(
+            endpoint="signals",
+            tier=cache_tier,
+            versions=versions,
+            query=cache_query,
+            loader=_load_signal_payload,
+            force_refresh=force_refresh,
+        )
+    except (PublicCacheBusy, DatabasePoolBusy) as exc:
+        return _public_busy_response(exc)
+    return _public_json_response(result, tier=cache_tier)
 
 def api_trends():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
@@ -6363,8 +6563,7 @@ def admin_api_guland_publisher_override(publisher_id: int):
             "error": "invalid_publisher_override",
         }), 400
 
-    clear_dashboard_cache()
-    clear_signal_cache()
+    clear_local_public_cache()
     clear_listing_map_cache()
     clear_admin_read_cache("data_quality_summary")
     return jsonify({"ok": True, **result})

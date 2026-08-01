@@ -440,8 +440,6 @@ def test_load_dashboard_summary_uses_compact_read_model(monkeypatch):
 def test_api_dashboard_uses_fast_summary_loader(monkeypatch):
     import app as radar_app
 
-    radar_app.clear_dashboard_cache()
-
     def fake_summary(*_args, **_kwargs):
         return {
             "stats": {"total": 20, "signals": 7, "hot": 2, "new_recent_days_7": 5, "price_drops": 3},
@@ -490,35 +488,57 @@ def test_get_signals_version_uses_primary_key_dataset_counter(monkeypatch):
     assert params == ("signals",)
 
 
-def test_api_signals_caches_guest_payload_but_not_admin(monkeypatch):
+def test_api_signals_uses_identical_bounded_values_for_cache_and_loader(monkeypatch):
     import app as radar_app
 
-    radar_app.clear_signal_cache()
-    calls = {"guest": 0, "admin": 0}
+    cache_calls = []
+    loader_calls = []
 
     def fake_load_signals(*_args, **kwargs):
-        tier = kwargs.get("tier")
-        calls[tier] += 1
+        loader_calls.append(kwargs)
         return {
             "signals": [],
             "page": kwargs.get("page", 1),
             "limit": kwargs.get("limit", 30),
             "has_more": False,
             "sort": kwargs.get("sort", "newest"),
-            "tier": tier,
+            "tier": kwargs.get("tier"),
         }
 
+    def fake_cache(**kwargs):
+        cache_calls.append(kwargs)
+        return radar_app.CacheResult(kwargs["loader"](), "miss", 0.0)
+
     monkeypatch.setattr(radar_app, "load_signals", fake_load_signals)
+    monkeypatch.setattr(radar_app, "get_or_load_public_payload", fake_cache)
 
     client = radar_app.app.test_client()
-    assert client.get("/api/signals?include_total=0").status_code == 200
-    assert client.get("/api/signals?include_total=0").status_code == 200
-    assert calls["guest"] == 1
+    query = "&".join(
+        ["page=-50", "limit=900", "sort=not-real", f"q={'x' * 120}"]
+        + [f"ward=W{i:03d}" for i in range(80)]
+        + [f"source=s{i}" for i in range(8)]
+        + [f"prop_type=p{i}" for i in range(12)]
+        + [f"area_range={i}:{i + 1}" for i in range(20)]
+        + [f"price_range={i}:{i + 1}" for i in range(20)]
+    )
+    assert client.get(f"/api/signals?{query}").status_code == 200
 
-    monkeypatch.setattr(radar_app, "current_tier", lambda: "admin")
-    assert client.get("/api/signals?include_total=0").status_code == 200
-    assert client.get("/api/signals?include_total=0").status_code == 200
-    assert calls["admin"] == 2
+    cache_query = cache_calls[0]["query"]
+    loader = loader_calls[0]
+    assert cache_query["page"] == loader["page"] == 1
+    assert cache_query["limit"] == loader["limit"] == 100
+    assert cache_query["sort"] == loader["sort"] == "newest"
+    assert cache_query["keyword"] == loader["keyword"] == "x" * 80
+    assert cache_query["wards"] == loader["wards"]
+    assert cache_query["sources"] == loader["sources"]
+    assert cache_query["prop_types"] == loader["prop_types"]
+    assert cache_query["area_ranges"] == loader["area_ranges"]
+    assert cache_query["price_ranges"] == loader["price_ranges"]
+    assert len(loader["wards"]) == 64
+    assert len(loader["sources"]) <= 4
+    assert len(loader["prop_types"]) <= 8
+    assert len(loader["area_ranges"]) == 12
+    assert len(loader["price_ranges"]) == 12
 
 
 def test_load_trend_data_includes_sample_count(monkeypatch):
@@ -603,50 +623,6 @@ def test_load_market_indicators_includes_area_risk_radar(monkeypatch):
     assert radar[0]["verdict_key"] == "selloff"
     assert result["summary"]["area_risk_hotspots"] == 1
     assert conn.closed is True
-
-
-def test_dashboard_cache_reuses_loader_until_ttl_expires():
-    import app as radar_app
-
-    radar_app.clear_dashboard_cache()
-    calls = {"n": 0}
-
-    def loader():
-        calls["n"] += 1
-        return {"stats": {"calls": calls["n"]}}
-
-    first = radar_app._cached_dashboard_payload(("same", "filters"), loader, now=100.0, ttl_seconds=30)
-    second = radar_app._cached_dashboard_payload(("same", "filters"), loader, now=120.0, ttl_seconds=30)
-    expired = radar_app._cached_dashboard_payload(("same", "filters"), loader, now=131.0, ttl_seconds=30)
-
-    assert first == {"stats": {"calls": 1}}
-    assert second == first
-    assert expired == {"stats": {"calls": 2}}
-    assert calls["n"] == 2
-
-
-def test_dashboard_cache_force_refresh_reloads_even_inside_ttl():
-    import app as radar_app
-
-    radar_app.clear_dashboard_cache()
-    calls = {"n": 0}
-
-    def loader():
-        calls["n"] += 1
-        return {"stats": {"calls": calls["n"]}}
-
-    first = radar_app._cached_dashboard_payload(("same", "filters"), loader, now=100.0, ttl_seconds=120)
-    refreshed = radar_app._cached_dashboard_payload(
-        ("same", "filters"),
-        loader,
-        now=101.0,
-        ttl_seconds=120,
-        force_refresh=True,
-    )
-
-    assert first == {"stats": {"calls": 1}}
-    assert refreshed == {"stats": {"calls": 2}}
-    assert calls["n"] == 2
 
 
 def test_schema_defines_feed_performance_indexes():

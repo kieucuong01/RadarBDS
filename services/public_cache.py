@@ -110,6 +110,11 @@ def _clear_local_cache_for_test() -> None:
         _VERSION_CACHE.clear()
 
 
+def clear_local_public_cache() -> None:
+    """Drop only disposable process-local response/version mirrors."""
+    _clear_local_cache_for_test()
+
+
 class PublicResponseCache:
     def __init__(
         self,
@@ -351,6 +356,7 @@ def get_current_dataset_versions(names: Iterable[str]) -> dict[str, int]:
     now = time.monotonic()
     versions: dict[str, int] = {}
     missing: list[str] = []
+    last_known: dict[str, int] = {}
 
     for name in validated:
         try:
@@ -367,14 +373,28 @@ def get_current_dataset_versions(names: Iterable[str]) -> dict[str, int]:
 
         with _VERSION_CACHE_LOCK:
             local = _VERSION_CACHE.get(name)
+        if local is not None:
+            last_known[name] = local[0]
         if local is not None and now - local[1] <= _VERSION_CACHE_SECONDS:
             versions[name] = local[0]
         else:
             missing.append(name)
 
     if missing:
-        with get_conn() as conn:
-            durable = get_dataset_versions(conn, tuple(missing))
+        try:
+            with get_conn() as conn:
+                durable = get_dataset_versions(conn, tuple(missing))
+        except Exception:
+            if all(name in last_known for name in missing):
+                logger.warning(
+                    "Using last-known dataset versions while Redis and PostgreSQL are unavailable",
+                    exc_info=True,
+                )
+                versions.update(
+                    {name: last_known[name] for name in missing}
+                )
+                return {name: versions[name] for name in validated}
+            raise
         for name in missing:
             version = int(durable[name])
             versions[name] = version
