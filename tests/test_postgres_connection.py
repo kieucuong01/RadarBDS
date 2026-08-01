@@ -6,6 +6,93 @@ from db import connection
 from db.connection import PgRow, adapt_sql
 
 
+class _PoolRawConnection:
+    def __init__(self):
+        self.commit_calls = 0
+        self.rollback_calls = 0
+        self.executed = []
+
+    def execute(self, sql, params=None):
+        self.executed.append((sql, params))
+
+    def cursor(self):
+        return _PoolCursor(self)
+
+    def commit(self):
+        self.commit_calls += 1
+
+    def rollback(self):
+        self.rollback_calls += 1
+
+
+class _PoolCursor:
+    rowcount = 1
+    description = ()
+
+    def __init__(self, raw):
+        self.raw = raw
+
+    def execute(self, sql, params=None):
+        self.raw.executed.append((sql, params))
+
+    def close(self):
+        pass
+
+
+class _Pool:
+    def __init__(self):
+        self.raw = _PoolRawConnection()
+        self.timeouts = []
+        self.returned = []
+
+    def getconn(self, *, timeout):
+        self.timeouts.append(timeout)
+        return self.raw
+
+    def putconn(self, raw):
+        self.returned.append(raw)
+
+
+class _TimeoutPool:
+    def getconn(self, *, timeout):
+        raise connection.PoolTimeout("pool exhausted")
+
+
+def test_get_conn_returns_connection_to_pool_after_commit(monkeypatch):
+    fake_pool = _Pool()
+    monkeypatch.setattr(connection, "_get_pool", lambda: fake_pool)
+
+    with connection.get_conn() as conn:
+        conn.execute("SELECT 1")
+
+    assert fake_pool.raw.commit_calls == 1
+    assert fake_pool.raw.rollback_calls == 0
+    assert fake_pool.returned == [fake_pool.raw]
+    assert len(fake_pool.timeouts) == 1
+    assert isinstance(fake_pool.timeouts[0], float)
+
+
+def test_get_conn_rolls_back_and_returns_connection_on_error(monkeypatch):
+    fake_pool = _Pool()
+    monkeypatch.setattr(connection, "_get_pool", lambda: fake_pool)
+
+    with pytest.raises(RuntimeError, match="boom"):
+        with connection.get_conn():
+            raise RuntimeError("boom")
+
+    assert fake_pool.raw.commit_calls == 0
+    assert fake_pool.raw.rollback_calls == 1
+    assert fake_pool.returned == [fake_pool.raw]
+
+
+def test_pool_timeout_becomes_database_pool_busy(monkeypatch):
+    monkeypatch.setattr(connection, "_get_pool", lambda: _TimeoutPool())
+
+    with pytest.raises(connection.DatabasePoolBusy, match="saturated"):
+        with connection.get_conn():
+            pass
+
+
 def test_test_process_requires_explicit_test_database(monkeypatch):
     monkeypatch.delenv("RADAR_TEST_DATABASE_URL", raising=False)
     monkeypatch.setattr(connection, "_is_test_process", lambda: True)

@@ -5,6 +5,7 @@ script that copies the legacy ``data/radar_bds.db`` into PostgreSQL.
 """
 from __future__ import annotations
 
+import atexit
 import logging
 import os
 import re
@@ -14,6 +15,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Mapping, Sequence
 from urllib.parse import urlparse
+
+from psycopg_pool import ConnectionPool, PoolTimeout
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,8 @@ LEGACY_SQLITE_PATH = DATA_DIR / "radar_bds.db"
 # The PostgreSQL connection layer never opens this file.
 DB_PATH = LEGACY_SQLITE_PATH
 
-_local = threading.local()
+_pool: ConnectionPool | None = None
+_pool_lock = threading.Lock()
 
 ID_TABLES = {
     "admin_audit_log",
@@ -70,6 +74,10 @@ ID_TABLES = {
 
 class DatabaseConfigurationError(RuntimeError):
     """Raised when PostgreSQL runtime configuration is missing or unusable."""
+
+
+class DatabasePoolBusy(RuntimeError):
+    """Raised when the bounded PostgreSQL pool cannot admit work in time."""
 
 
 class AdvisoryLockBusy(RuntimeError):
@@ -259,28 +267,88 @@ def connect(_unused_path: str | None = None) -> PgConnection:
     return PgConnection(raw)
 
 
-def _get_connection() -> PgConnection:
-    if not hasattr(_local, "conn") or _local.conn is None:
-        _local.conn = connect()
-        logger.info("PostgreSQL connection initialized")
-    return _local.conn
+def _pool_int(name: str, default: int, minimum: int, maximum: int) -> int:
+    try:
+        value = int(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        value = default
+    return min(max(value, minimum), maximum)
+
+
+def _pool_float(name: str, default: float, minimum: float, maximum: float) -> float:
+    try:
+        value = float(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        value = default
+    return min(max(value, minimum), maximum)
+
+
+def _configure_pooled_connection(raw) -> None:
+    raw.execute("SET TIME ZONE 'Asia/Bangkok'")
+    raw.commit()
+
+
+def _get_pool() -> ConnectionPool:
+    global _pool
+    if _pool is not None:
+        return _pool
+    with _pool_lock:
+        if _pool is None:
+            minimum = _pool_int("RADAR_DB_POOL_MIN", 1, 0, 4)
+            maximum = _pool_int("RADAR_DB_POOL_MAX", 4, 1, 12)
+            if minimum > maximum:
+                minimum = maximum
+            _pool = ConnectionPool(
+                conninfo=_database_url(),
+                min_size=minimum,
+                max_size=maximum,
+                timeout=_pool_float(
+                    "RADAR_DB_POOL_TIMEOUT_SECONDS", 1.0, 0.1, 10.0
+                ),
+                max_idle=300.0,
+                max_lifetime=1800.0,
+                configure=_configure_pooled_connection,
+                open=False,
+                name="radar-bds",
+            )
+            _pool.open(wait=False)
+            logger.info(
+                "PostgreSQL pool initialized min=%d max=%d", minimum, maximum
+            )
+    return _pool
 
 
 @contextmanager
 def get_conn():
-    conn = _get_connection()
+    pool = _get_pool()
+    timeout = _pool_float("RADAR_DB_POOL_TIMEOUT_SECONDS", 1.0, 0.1, 10.0)
+    try:
+        raw = pool.getconn(timeout=timeout)
+    except PoolTimeout as exc:
+        raise DatabasePoolBusy(
+            "PostgreSQL connection pool is saturated"
+        ) from exc
+
+    conn = PgConnection(raw)
     try:
         yield conn
         conn.commit()
     except Exception:
         conn.rollback()
         raise
+    finally:
+        pool.putconn(raw)
 
 
 def close_all() -> None:
-    if hasattr(_local, "conn") and _local.conn:
-        _local.conn.close()
-        _local.conn = None
+    global _pool
+    with _pool_lock:
+        pool, _pool = _pool, None
+    if pool is not None:
+        pool.close(timeout=5.0)
+
+
+atexit.register(close_all)
 
 
 @contextmanager
