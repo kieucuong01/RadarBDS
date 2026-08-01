@@ -430,3 +430,99 @@ def test_publication_failure_is_returned_unless_strict(monkeypatch):
             listing_ids=(11,),
             strict=True,
         )
+
+
+def test_version_is_published_only_after_database_context_exits(
+    monkeypatch,
+):
+    from services import public_data_publish
+    from services.signal_read_model import SignalReadModelRefresh
+
+    events = []
+
+    @contextmanager
+    def committed_connection():
+        events.append("db-enter")
+        yield object()
+        events.append("db-exit-commit")
+
+    monkeypatch.setenv("RADAR_PUBLIC_CACHE_ENABLED", "1")
+    monkeypatch.setattr(public_data_publish, "get_conn", committed_connection)
+    monkeypatch.setattr(
+        public_data_publish,
+        "refresh_signal_card_read_model",
+        lambda *args, **kwargs: SignalReadModelRefresh(
+            mode="incremental",
+            affected_rows=1,
+            versions={"signals": 9},
+            duration_ms=1.0,
+        ),
+    )
+    monkeypatch.setattr(
+        public_data_publish,
+        "publish_dataset_versions",
+        lambda versions: events.append(("redis", versions)),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        public_data_publish,
+        "prewarm_configured_routes",
+        lambda: events.append("prewarm") or {"succeeded": 1},
+        raising=False,
+    )
+
+    result = public_data_publish.publish_public_data(
+        listing_ids=(), strict=True
+    )
+
+    assert events == [
+        "db-enter",
+        "db-exit-commit",
+        ("redis", {"signals": 9}),
+        "prewarm",
+    ]
+    assert result["status"] == "ok"
+
+
+def test_post_commit_cache_failure_does_not_relabel_database_success(
+    monkeypatch,
+):
+    from services import public_data_publish
+    from services.signal_read_model import SignalReadModelRefresh
+
+    @contextmanager
+    def committed_connection():
+        yield object()
+
+    monkeypatch.setenv("RADAR_PUBLIC_CACHE_ENABLED", "1")
+    monkeypatch.setattr(public_data_publish, "get_conn", committed_connection)
+    monkeypatch.setattr(
+        public_data_publish,
+        "refresh_signal_card_read_model",
+        lambda *args, **kwargs: SignalReadModelRefresh(
+            mode="incremental",
+            affected_rows=1,
+            versions={"signals": 10},
+            duration_ms=1.0,
+        ),
+    )
+    monkeypatch.setattr(
+        public_data_publish,
+        "publish_dataset_versions",
+        lambda versions: (_ for _ in ()).throw(RuntimeError("redis down")),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        public_data_publish,
+        "prewarm_configured_routes",
+        lambda: (_ for _ in ()).throw(RuntimeError("http down")),
+        raising=False,
+    )
+
+    result = public_data_publish.publish_public_data(
+        listing_ids=(), strict=True
+    )
+
+    assert result["status"] == "ok"
+    assert result["cache"]["version_mirror"]["status"] == "error"
+    assert result["cache"]["prewarm"]["status"] == "error"

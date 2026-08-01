@@ -235,3 +235,16 @@ def test_stored_record_contains_only_timestamp_and_payload(fake_redis):
     record = json.loads(fake_redis.get("key:fresh"))
 
     assert record == {"stored_at": 123.0, "payload": {"signals": []}}
+
+
+def test_version_publish_reports_redis_failure_after_updating_local_mirror(
+    monkeypatch, fake_redis
+):
+    fake_redis.fail = True
+    monkeypatch.setattr(public_cache, "get_redis_client", lambda: fake_redis)
+
+    with pytest.raises(RuntimeError, match="version mirror"):
+        public_cache.publish_dataset_versions({"signals": 12})
+
+    with public_cache._VERSION_CACHE_LOCK:
+        assert public_cache._VERSION_CACHE["signals"][0] == 12

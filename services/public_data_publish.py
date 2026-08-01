@@ -2,8 +2,11 @@
 
 from dataclasses import asdict
 import logging
+import os
 
 from db.connection import get_conn
+from services.public_cache import publish_dataset_versions
+from services.public_prewarm import prewarm_configured_routes
 from services.signal_read_model import (
     analyze_public_read_tables,
     refresh_signal_card_read_model,
@@ -55,9 +58,40 @@ def publish_public_data(
             )
             if expanded_ids is None or len(expanded_ids) >= 500:
                 analyze_public_read_tables(conn)
-        return {"status": "ok", **asdict(result)}
     except Exception as exc:
         logger.exception("Public signal read-model publication failed")
         if strict:
             raise
         return {"status": "error", "error": str(exc)}
+
+    cache_report = {
+        "version_mirror": {"status": "pending"},
+        "prewarm": {"status": "disabled"},
+    }
+    try:
+        publish_dataset_versions(result.versions)
+        cache_report["version_mirror"] = {"status": "ok"}
+    except Exception as exc:
+        logger.exception("Public dataset version mirror failed after commit")
+        cache_report["version_mirror"] = {
+            "status": "error",
+            "error": str(exc),
+        }
+
+    if os.getenv("RADAR_PUBLIC_CACHE_ENABLED", "0").strip() == "1":
+        try:
+            prewarm_result = prewarm_configured_routes()
+            cache_report["prewarm"] = {
+                "status": (
+                    "ok" if prewarm_result.get("failed", 0) == 0 else "partial"
+                ),
+                **prewarm_result,
+            }
+        except Exception as exc:
+            logger.exception("Public route prewarm failed after commit")
+            cache_report["prewarm"] = {
+                "status": "error",
+                "error": str(exc),
+            }
+
+    return {"status": "ok", **asdict(result), "cache": cache_report}

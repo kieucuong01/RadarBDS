@@ -1,0 +1,8 @@
+[
+  "/",
+  "/api/signals?include_total=0&limit=30&page=1&sort=newest",
+  "/api/counts",
+  "/api/dashboard",
+  "/api/signals?include_total=0&limit=30&page=1&sort=newest&source=facebook",
+  "/api/signals?include_total=0&limit=30&page=1&sort=newest&source=guland"
+]

@@ -415,6 +415,7 @@ def publish_dataset_versions(versions: Mapping[str, int]) -> None:
     validated = _validated_dataset_names(versions.keys())
     client = get_redis_client()
     now = time.monotonic()
+    first_error: RedisError | None = None
     for name in validated:
         version = int(versions[name])
         if version < 0:
@@ -422,9 +423,13 @@ def publish_dataset_versions(versions: Mapping[str, int]) -> None:
         _cache_version_locally(name, version, now)
         try:
             client.set(f"radar:dataset-version:{name}", str(version))
-        except RedisError:
+        except RedisError as exc:
+            if first_error is None:
+                first_error = exc
             logger.warning(
                 "Redis dataset version publish failed name=%s",
                 name,
                 exc_info=True,
             )
+    if first_error is not None:
+        raise RuntimeError("Redis dataset version mirror failed") from first_error
