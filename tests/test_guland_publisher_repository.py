@@ -297,8 +297,12 @@ def test_seen_card_bump_is_idempotent_and_does_not_change_listing_dates(
         with connection.get_conn() as conn:
             raw_id = conn.execute(
                 """
-                INSERT INTO raw_listings (source, source_id, url, raw_json)
-                VALUES ('guland', ?, ?, ?)
+                INSERT INTO raw_listings (
+                    source, source_id, url, raw_json, crawled_at
+                )
+                VALUES (
+                    'guland', ?, ?, ?, '2026-07-31T10:00:00+07:00'
+                )
                 """,
                 (
                     f"seen-{token}",
