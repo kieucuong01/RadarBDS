@@ -18,6 +18,7 @@ Read this first in every new AI/dev session. It is the token-light map, not the 
 | Browser-use social ops, Facebook groups/Page, broker discovery, trend monitoring | `docs/browser-use-social-ops.md` + `docs/social-care-workflow.md` + `docs/broker-discovery.md` (auto-post wrapper: `scripts/radar_social_auto_post.py`; broker scoring: `scripts/radar_broker_discovery.py`) |
 | Monthly market reports, `/bao-cao` hub, report cron automation | `docs/seo-monthly-reports.md` |
 | Deploy, VPS ops, local/prod DB sync, logs | `docs/operations.md` |
+| Homepage/filter performance, cache/read-model scaling, 1,000-5,000 concurrent public requests | `docs/superpowers/specs/2026-08-01-homepage-filter-performance-scale-design.md` + `docs/superpowers/plans/2026-08-01-homepage-performance-scale-master.md` |
 | Product/data rules, dedup/history, quality gates | `docs/product_rules.md` |
 | Exact local commands and test matrix | `docs/dev_commands.md` |
 | Auth, tier gating, redaction | `docs/rbac.md` |

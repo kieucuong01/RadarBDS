@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-01
 
-**Status:** Approved in conversation; awaiting written-spec review
+**Status:** Approved in writing by the user on 2026-08-01
 
 **Scope:** `radarbds.vn` public homepage, signal feed, filters, supporting summary/count APIs, PostgreSQL read path, Redis, Gunicorn/systemd, and Nginx
 
@@ -512,4 +512,4 @@ Never commit secrets, Redis credentials, database dumps, runtime caches, load-te
 
 ## 17. Review Gate
 
-This document records the approved conversational design. No implementation should begin until the user reviews this written version. After approval, create a file-by-file implementation plan with explicit TDD steps and verification commands before editing production code.
+The user approved this written design on 2026-08-01. Implementation is governed by `docs/superpowers/plans/2026-08-01-homepage-performance-scale-master.md` and its phase plans. Each phase must follow its TDD steps and release gate before production changes.
