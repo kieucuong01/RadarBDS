@@ -283,6 +283,50 @@ def test_visibility_and_rank_sql_share_the_publisher_link_contract():
     assert "automated_repost" in rank
 
 
+def test_override_refreshes_linked_read_model_rows_atomically(
+    publisher_listing,
+    monkeypatch,
+):
+    from services import signal_read_model
+
+    listing_id, token = publisher_listing
+    calls = []
+    with connection.get_conn() as conn:
+        publisher_id = sync_listing_publisher(
+            conn,
+            listing_id,
+            _identified_raw(token),
+        )
+        monkeypatch.setattr(
+            signal_read_model,
+            "refresh_signal_card_read_model",
+            lambda refresh_conn, **kwargs: calls.append(
+                (refresh_conn, kwargs)
+            )
+            or signal_read_model.SignalReadModelRefresh(
+                "incremental",
+                1,
+                {"signals": 9},
+                1.5,
+            ),
+        )
+
+        updated = set_publisher_override(
+            conn,
+            publisher_id,
+            "allow_manual",
+            actor=f"admin:{token}",
+        )
+
+    assert calls == [
+        (
+            calls[0][0],
+            {"listing_ids": (listing_id,), "market_changed": False},
+        )
+    ]
+    assert updated["public_read_model"]["versions"] == {"signals": 9}
+
+
 def test_joined_publisher_visibility_is_fail_open_for_unknown_identity():
     from db.guland_publishers import publisher_visibility_from_join_sql
 

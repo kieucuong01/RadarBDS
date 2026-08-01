@@ -26,6 +26,7 @@ from cleansing.feature_extractor import (
 )
 from db.analytics import save_valuation_result
 from db.connection import advisory_lock, get_conn
+from services.public_data_publish import publish_public_data
 from db.crawl_runs import finish_crawl_run, start_crawl_run
 from db.guland_publishers import (
     recompute_publisher,
@@ -623,10 +624,16 @@ def run_targeted_reprocess(raw_ids: list[int]) -> dict:
         processed_ids,
         full=False,
     )
+    public_read_model_stats = publish_public_data(
+        listing_ids=tuple(processed_ids),
+        market_changed=False,
+        strict=False,
+    )
     return {
         "listings": listing_stats,
         "valuation": valuation_stats,
         "map_locations": map_location_stats,
+        "public_read_model": public_read_model_stats,
     }
 
 
@@ -682,6 +689,12 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
     with get_conn() as conn:
         n_hashes = populate_content_hashes(conn)
 
+    public_read_model_stats = publish_public_data(
+        listing_ids=None if full else tuple(dict.fromkeys(processed_ids)),
+        market_changed=True,
+        strict=False,
+    )
+
     logger.info("FULL REPROCESS DONE")
     logger.info(f"  Listings : {listing_stats}")
     logger.info(f"  Legal    : {legal_stats}")
@@ -696,7 +709,8 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
     return {"listings": listing_stats, "legal": legal_stats, "valuation": val_stats,
             "map_locations": map_location_stats,
             "dedup": dedup_stats, "price_drops": n_drops,
-            "lifecycle": {"delisted": n_delisted, "likely_sold": n_likely_sold}}
+            "lifecycle": {"delisted": n_delisted, "likely_sold": n_likely_sold},
+            "public_read_model": public_read_model_stats}
 
 
 if __name__ == "__main__":

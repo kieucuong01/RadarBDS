@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 import pytest
 
 from db import connection
@@ -294,3 +296,94 @@ def test_read_model_payload_matches_legacy(
     read_model = load_signals_from_read_model(None, **kwargs)
 
     assert read_model == legacy
+
+
+def test_full_reprocess_publishes_after_dedup_and_market(monkeypatch):
+    from analytics import lifecycle, market_trend
+    from cleansing import dedup, reprocess
+
+    events = []
+
+    class _Connection:
+        def execute(self, _sql, _params=None):
+            return None
+
+    @contextmanager
+    def fake_get_conn():
+        yield _Connection()
+
+    monkeypatch.setattr(reprocess, "get_conn", fake_get_conn)
+    monkeypatch.setattr(
+        reprocess,
+        "reprocess_listings",
+        lambda **_kwargs: {
+            "processed_ids": [11],
+            "new": 1,
+            "updated": 0,
+            "skipped": 0,
+        },
+    )
+    monkeypatch.setattr(
+        reprocess,
+        "reprocess_valuation",
+        lambda **_kwargs: events.append("valuation")
+        or {"total": 1, "signals": 1, "outliers": 0},
+    )
+    monkeypatch.setattr(
+        reprocess,
+        "_run_listing_map_backfill",
+        lambda *_args, **_kwargs: {},
+    )
+    monkeypatch.setattr(reprocess, "populate_content_hashes", lambda _conn: 0)
+    monkeypatch.setattr(lifecycle, "backfill_first_seen", lambda _conn: None)
+    monkeypatch.setattr(lifecycle, "sweep_delisted", lambda _conn: [])
+    monkeypatch.setattr(market_trend, "detect_price_drops", lambda _conn: 0)
+    monkeypatch.setattr(market_trend, "compute_weekly_trend", lambda _conn: None)
+    monkeypatch.setattr(market_trend, "compute_monthly_trend", lambda _conn: None)
+    monkeypatch.setattr(market_trend, "compute_daily_trend", lambda _conn: None)
+    monkeypatch.setattr(
+        dedup,
+        "flag_duplicates_in_db",
+        lambda _conn: {"dup_groups": 0, "flagged": 0, "unique_lots": 1},
+    )
+    monkeypatch.setattr(
+        reprocess,
+        "publish_public_data",
+        lambda **kwargs: events.append(("publish", kwargs))
+        or {"status": "ok"},
+    )
+
+    result = reprocess._run_full_reprocess(full=False)
+
+    assert events[-1] == (
+        "publish",
+        {
+            "listing_ids": (11,),
+            "market_changed": True,
+            "strict": False,
+        },
+    )
+    assert result["public_read_model"] == {"status": "ok"}
+
+
+def test_publication_failure_is_returned_unless_strict(monkeypatch):
+    from services import public_data_publish
+
+    @contextmanager
+    def failing_conn():
+        raise RuntimeError("refresh unavailable")
+        yield
+
+    monkeypatch.setattr(public_data_publish, "get_conn", failing_conn)
+
+    result = public_data_publish.publish_public_data(
+        listing_ids=(11,),
+        strict=False,
+    )
+
+    assert result == {"status": "error", "error": "refresh unavailable"}
+    with pytest.raises(RuntimeError, match="refresh unavailable"):
+        public_data_publish.publish_public_data(
+            listing_ids=(11,),
+            strict=True,
+        )

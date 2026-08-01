@@ -37,6 +37,24 @@ def test_crawl_daily_rejects_disabled_sources():
         parser.parse_args(["crawl-daily", "--source", "batdongsan"])
 
 
+def test_signal_read_model_cli_accepts_refresh_compare_and_bounded_limit():
+    import radar
+
+    args = radar.build_parser().parse_args(
+        ["signal-read-model", "--refresh", "--compare", "--limit", "200"]
+    )
+
+    assert args.cmd == "signal-read-model"
+    assert args.refresh is True
+    assert args.compare is True
+    assert args.limit == 200
+
+    with pytest.raises(SystemExit):
+        radar.build_parser().parse_args(
+            ["signal-read-model", "--compare", "--limit", "1001"]
+        )
+
+
 def test_guland_coordinate_backfill_defaults_to_dry_run():
     import radar
 

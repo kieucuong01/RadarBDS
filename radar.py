@@ -109,6 +109,7 @@ from cli.system import (
     cmd_reprocess, cmd_dashboard, cmd_schedule_setup,
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
     cmd_clean_broker_images,
+    cmd_signal_read_model,
 )
 
 
@@ -119,6 +120,16 @@ def _bounded_guland_image_limit(value: str) -> int:
         return validate_backfill_limit(int(value))
     except (TypeError, ValueError) as exc:
         raise argparse.ArgumentTypeError(str(exc)) from exc
+
+
+def _bounded_signal_compare_limit(value: str) -> int:
+    try:
+        limit = int(value)
+    except (TypeError, ValueError) as exc:
+        raise argparse.ArgumentTypeError("limit must be an integer") from exc
+    if not 1 <= limit <= 1000:
+        raise argparse.ArgumentTypeError("limit must be between 1 and 1000")
+    return limit
 
 
 def build_parser():
@@ -132,6 +143,18 @@ def build_parser():
     p_re.add_argument("--full",   action="store_true", help="Chạy toàn bộ dữ liệu (mặc định là incremental)")
     p_re.add_argument("--valuation-only", action="store_true")
     p_re.add_argument("--listings-only",  action="store_true")
+
+    p_signal_read_model = sub.add_parser(
+        "signal-read-model",
+        help="Refresh and safely compare the public signal read model",
+    )
+    p_signal_read_model.add_argument("--refresh", action="store_true")
+    p_signal_read_model.add_argument("--compare", action="store_true")
+    p_signal_read_model.add_argument(
+        "--limit",
+        type=_bounded_signal_compare_limit,
+        default=200,
+    )
 
     p_map = sub.add_parser(
         "map-locations",
@@ -429,6 +452,8 @@ def main():
 
     if args.cmd == "reprocess":
         cmd_reprocess(args)
+    elif args.cmd == "signal-read-model":
+        cmd_signal_read_model(args)
     elif args.cmd == "map-locations":
         cmd_map_locations(args)
     elif args.cmd == "guland-coordinate-backfill":

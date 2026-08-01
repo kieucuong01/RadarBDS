@@ -530,6 +530,26 @@ def set_publisher_override(
             row["activity_reason"],
         ),
     )
+    linked_listing_ids = tuple(
+        int(link["listing_id"])
+        for link in conn.execute(
+            """
+            SELECT listing_id
+            FROM listing_publishers
+            WHERE publisher_id=?
+            ORDER BY listing_id
+            """,
+            (publisher_id,),
+        ).fetchall()
+    )
+    from dataclasses import asdict
+    from services.signal_read_model import refresh_signal_card_read_model
+
+    public_read_model = refresh_signal_card_read_model(
+        conn,
+        listing_ids=linked_listing_ids,
+        market_changed=False,
+    )
     return {
         **after,
         "publisher_id": publisher_id,
@@ -537,6 +557,7 @@ def set_publisher_override(
             str(row["activity_class"]),
             override,
         ),
+        "public_read_model": asdict(public_read_model),
     }
 
 

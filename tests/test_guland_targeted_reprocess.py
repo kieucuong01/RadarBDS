@@ -203,3 +203,40 @@ def test_targeted_reprocess_links_publisher_once():
                     "DELETE FROM source_publishers WHERE id=?",
                     (publisher_id,),
                 )
+
+
+def test_targeted_reprocess_publishes_processed_ids(monkeypatch):
+    from cleansing import reprocess
+
+    events = []
+    monkeypatch.setattr(
+        reprocess,
+        "reprocess_listings",
+        lambda **_kwargs: {"processed_ids": [31, 31, 32]},
+    )
+    monkeypatch.setattr(
+        reprocess,
+        "reprocess_valuation",
+        lambda **_kwargs: {"total": 2, "signals": 1, "outliers": 0},
+    )
+    monkeypatch.setattr(
+        reprocess,
+        "_run_listing_map_backfill",
+        lambda *_args, **_kwargs: {"processed": 2},
+    )
+    monkeypatch.setattr(
+        reprocess,
+        "publish_public_data",
+        lambda **kwargs: events.append(kwargs) or {"status": "ok"},
+    )
+
+    result = reprocess.run_targeted_reprocess([101, 102])
+
+    assert events == [
+        {
+            "listing_ids": (31, 32),
+            "market_changed": False,
+            "strict": False,
+        }
+    ]
+    assert result["public_read_model"] == {"status": "ok"}

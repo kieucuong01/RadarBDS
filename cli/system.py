@@ -1,6 +1,7 @@
 import sys
 import subprocess
 import platform
+import json
 from pathlib import Path
 from db.connection import advisory_lock, get_conn
 from db.schema import init_schema
@@ -8,6 +9,125 @@ from db.schema import init_schema
 def cmd_reprocess(args):
     with advisory_lock("reprocess"):
         return _cmd_reprocess(args)
+
+
+_SIGNAL_READ_MODEL_COMPARE_CASES = (
+    ("default", {}),
+    ("facebook", {"sources": ["facebook"]}),
+    ("guland", {"sources": ["guland"]}),
+    ("ward_tan_an", {"wards": ["Tan An"]}),
+    ("property_dat_nen", {"prop_types": ["dat_nen"]}),
+    ("mos_20", {"mos_min": 20}),
+    ("price_drops", {"only_drops": True}),
+    ("mos_desc", {"sort": "mos_desc"}),
+    ("score_desc", {"sort": "score_desc"}),
+)
+
+
+def _collect_signal_page(loader, *, limit: int, tier: str, case: dict):
+    page_size = min(max(limit, 1), 100)
+    collected = []
+    page = 1
+    while len(collected) < limit:
+        payload = loader(
+            None,
+            tier=tier,
+            page=page,
+            limit=page_size,
+            include_total=False,
+            **case,
+        )
+        batch = payload["signals"]
+        collected.extend(batch)
+        if not payload["has_more"] or not batch:
+            break
+        page += 1
+    return collected[:limit]
+
+
+def compare_signal_read_model(limit: int = 200) -> dict:
+    from services.market_data import _load_signals_legacy
+    from services.signal_read_model import load_signals_from_read_model
+
+    bounded_limit = min(max(int(limit), 1), 1000)
+    differences = []
+    compared_cases = 0
+    for tier in ("guest", "free", "vip", "admin"):
+        for case_name, case in _SIGNAL_READ_MODEL_COMPARE_CASES:
+            compared_cases += 1
+            legacy = _collect_signal_page(
+                _load_signals_legacy,
+                limit=bounded_limit,
+                tier=tier,
+                case=case,
+            )
+            read_model = _collect_signal_page(
+                load_signals_from_read_model,
+                limit=bounded_limit,
+                tier=tier,
+                case=case,
+            )
+            legacy_ids = [int(row["id"]) for row in legacy]
+            read_model_ids = [int(row["id"]) for row in read_model]
+            legacy_by_id = {int(row["id"]): row for row in legacy}
+            read_model_by_id = {int(row["id"]): row for row in read_model}
+            common_ids = set(legacy_by_id) & set(read_model_by_id)
+            differing_fields = sorted(
+                {
+                    field
+                    for listing_id in common_ids
+                    for field in (
+                        set(legacy_by_id[listing_id])
+                        | set(read_model_by_id[listing_id])
+                    )
+                    if legacy_by_id[listing_id].get(field)
+                    != read_model_by_id[listing_id].get(field)
+                }
+            )
+            if legacy_ids != read_model_ids or differing_fields:
+                differences.append(
+                    {
+                        "case": case_name,
+                        "tier": tier,
+                        "legacy_count": len(legacy_ids),
+                        "read_model_count": len(read_model_ids),
+                        "legacy_only_ids": sorted(
+                            set(legacy_ids) - set(read_model_ids)
+                        ),
+                        "read_model_only_ids": sorted(
+                            set(read_model_ids) - set(legacy_ids)
+                        ),
+                        "order_mismatch": legacy_ids != read_model_ids,
+                        "field_names": differing_fields,
+                    }
+                )
+    return {
+        "status": "ok" if not differences else "mismatch",
+        "compared_cases": compared_cases,
+        "limit": bounded_limit,
+        "difference_count": len(differences),
+        "differences": differences,
+    }
+
+
+def cmd_signal_read_model(args):
+    init_schema()
+    output = {}
+    if bool(getattr(args, "refresh", False)):
+        from services.public_data_publish import publish_public_data
+
+        output["refresh"] = publish_public_data(
+            listing_ids=None,
+            market_changed=False,
+            strict=True,
+        )
+    if bool(getattr(args, "compare", False)):
+        output["compare"] = compare_signal_read_model(
+            int(getattr(args, "limit", 200))
+        )
+    print(json.dumps(output, ensure_ascii=False, sort_keys=True))
+    if output.get("compare", {}).get("status") == "mismatch":
+        raise SystemExit(1)
 
 
 def _cmd_reprocess(args):
