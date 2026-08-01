@@ -792,6 +792,9 @@ function renderSignalDealCard(x, opts = {}) {
 
 async function loadSignals(page = 1, opts = {}) {
   const reset = Boolean(opts.reset);
+  if (reset && window.performance && window.performance.mark) {
+    window.performance.mark('radar-signals-request-start');
+  }
   const queryKey = signalQuery(page);
   if (reset && signalLoading && inflightSignalQueryKey === queryKey) return;
   const runId = reset ? ++signalRunSeq : signalRunSeq;
@@ -822,7 +825,11 @@ async function loadSignals(page = 1, opts = {}) {
       if (typeof syncMobileBadges === 'function') syncMobileBadges();
     }
     if (reset) document.getElementById('signalsGrid').innerHTML = '';
-    renderSignals(data.signals || [], { append: !reset, priorityFirstImage: reset && !firstSignalsLoaded });
+    renderSignals(data.signals || [], {
+      append: !reset,
+      priorityFirstImage: reset && !firstSignalsLoaded,
+      measureFirstCards: reset,
+    });
     signalPageNo = data.page || page;
     signalHasMore = Boolean(data.has_more);
     if (!signalHasMore && _sigObserver) _sigObserver.disconnect();
@@ -866,7 +873,10 @@ function renderSignals(signals, options = {}) {
     return;
   }
 
-  _renderSignalCards(freshSignals, { priorityFirstImage: Boolean(options.priorityFirstImage) });
+  _renderSignalCards(freshSignals, {
+    priorityFirstImage: Boolean(options.priorityFirstImage),
+    measureFirstCards: Boolean(options.measureFirstCards),
+  });
   _setupSignalScroll();
 }
 
@@ -888,6 +898,15 @@ function _renderSignalCards(signals, options = {}) {
         priorityImage: Boolean(options.priorityFirstImage && index === 0)
       });
     }).join(''));
+    if (start === 0 && options.measureFirstCards && window.performance
+        && window.performance.mark && window.performance.measure) {
+      window.performance.mark('radar-first-signal-cards-rendered');
+      window.performance.measure(
+        'radar-first-signal-cards',
+        'radar-signals-request-start',
+        'radar-first-signal-cards-rendered',
+      );
+    }
     loadFavoriteListings();
     if (options.priorityFirstImage && !firstSignalRenderEventSent) {
       firstSignalRenderEventSent = true;

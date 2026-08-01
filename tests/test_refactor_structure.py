@@ -453,6 +453,28 @@ def test_signal_filter_flow_loads_cards_before_counts_without_dashboard():
     assert "navigator.geolocation.getCurrentPosition" not in core_js
 
 
+def test_homepage_measures_web_vitals_and_first_signal_cards_without_pii():
+    html = _read("templates/index.html")
+    signals_js = _read("static/js/main/signals.js")
+    vitals_js = _read("static/js/main/web_vitals.js")
+
+    assert "js/main/web_vitals.js" in html
+    assert html.index("js/main/web_vitals.js") < html.index("js/main/boot.js")
+    assert "radar-signals-request-start" in signals_js
+    assert "radar-first-signal-cards-rendered" in signals_js
+    assert "radar-first-signal-cards" in signals_js
+    assert "grid.insertAdjacentHTML" in signals_js
+    assert "largest-contentful-paint" in vitals_js
+    assert "layout-shift" in vitals_js
+    assert "durationThreshold: 40" in vitals_js
+    assert "metric_name" in vitals_js
+    assert "metric_value" in vitals_js
+    assert "metric_rating" in vitals_js
+    assert "non_interaction: true" in vitals_js
+    for forbidden in ("page_url", "listing_id", "user_id", "cookie", "currentFilters"):
+        assert forbidden not in vitals_js
+
+
 def test_signal_feed_uses_css_skeleton_cards_not_inline_placeholder_blocks():
     html = _read("templates/index.html")
     signals_js = _read("static/js/main/signals.js")
