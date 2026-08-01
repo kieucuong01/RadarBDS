@@ -133,6 +133,8 @@ WHERE relname IN (
 ORDER BY relname;
 ```
 
+The runtime migration catches `insufficient_privilege` only for the optional reloption tuning on pre-existing tables. The new read-model/version tables remain mandatory. If the inspection query shows missing options, have the PostgreSQL table owner apply `autovacuum_analyze_scale_factor=0.02` and `autovacuum_analyze_threshold=100`; do not grant broader ownership to the web runtime role merely to pass deploy.
+
 This rollout proves parity and normal-load latency only. Do not claim the 1,000-5,000 simultaneous in-flight request objective until the later pooling/cache/Nginx phases and staged load gates pass.
 
 ## Crawl Automation

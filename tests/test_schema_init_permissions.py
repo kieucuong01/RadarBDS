@@ -138,3 +138,27 @@ def test_init_schema_does_not_accept_missing_signal_read_model(monkeypatch):
 
     with pytest.raises(RuntimeError, match="signal_card_read_model"):
         schema.init_schema()
+
+
+def test_public_read_model_migration_tolerates_optional_reloption_permission():
+    import db.schema as schema
+
+    statements = []
+
+    class _CaptureConnection:
+        def execute(self, sql, params=None):
+            statements.append((sql, params))
+
+    schema._migrate_public_read_model(_CaptureConnection())
+
+    tuning_statements = [
+        sql
+        for sql, _params in statements
+        if "autovacuum_analyze_scale_factor" in sql
+    ]
+    assert len(tuning_statements) == 7
+    assert all("DO $$" in sql for sql in tuning_statements)
+    assert all(
+        "WHEN insufficient_privilege" in sql
+        for sql in tuning_statements
+    )

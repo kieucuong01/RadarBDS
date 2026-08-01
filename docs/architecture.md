@@ -80,6 +80,7 @@ Performance boundary:
 - `public_dataset_versions` has durable `signals` and `market` rows. `signals` increments only after the final read-model insert in the same transaction.
 - Full refresh builds a temporary stage, locks only for delete/insert publication, then bumps the version. If any step raises, PostgreSQL rollback preserves the previous complete version.
 - Incremental refresh deletes/rebuilds only processed listing ids plus their current duplicate parents. More than 500 ids switches to full refresh; full/large publication runs `ANALYZE` on the fixed public-read table allowlist.
+- Creating the read-model/version tables is required. Autovacuum/analyze reloptions on pre-existing hot tables are optional during runtime migration because the app DB role may not own those tables; inspect `pg_class.reloptions` and apply missing tuning with the PostgreSQL owner instead of failing deploy.
 - `cleansing/reprocess.py` publishes after valuation, lifecycle, trends, dedup, map work, and content hashes. Targeted reprocess publishes only touched ids. Guland publisher override refreshes linked listings inside the override transaction.
 - Phase 1 improves origin SQL and gives safe rollback. Redis, bounded connection pooling, Nginx microcache, browser request fan-out reduction, and the 1,000-5,000 in-flight load gate belong to later phases in the master plan.
 

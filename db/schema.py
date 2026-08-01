@@ -1495,10 +1495,16 @@ def _migrate_public_read_model(conn: Any) -> None:
     ):
         conn.execute(
             f"""
-            ALTER TABLE {table} SET (
-                autovacuum_analyze_scale_factor = 0.02,
-                autovacuum_analyze_threshold = 100
-            )
+            DO $$
+            BEGIN
+                ALTER TABLE {table} SET (
+                    autovacuum_analyze_scale_factor = 0.02,
+                    autovacuum_analyze_threshold = 100
+                );
+            EXCEPTION
+                WHEN insufficient_privilege THEN
+                    RAISE NOTICE 'Skipping optional analyze tuning for {table}';
+            END $$;
             """
         )
 
