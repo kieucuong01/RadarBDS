@@ -1,6 +1,7 @@
 param(
     [string] $BaseUrl = "https://radarbds.vn",
-    [string] $ExpectedDatasetVersion = ""
+    [string] $ExpectedDatasetVersion = "",
+    [switch] $RequireCdn = $false
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,6 +24,9 @@ $SensitiveKeys = @(
 $CookieValue = "cache-bypass-probe-$([guid]::NewGuid().ToString('N'))"
 $CookieHeaderContract = "radar_session=cache-bypass-probe"
 $AuthorizationValue = "Bearer cache-bypass-probe"
+$CdnPublicStatuses = @("HIT", "MISS", "EXPIRED", "STALE", "UPDATING", "REVALIDATED")
+$CdnHotStatuses = @("HIT", "STALE", "UPDATING", "REVALIDATED")
+$OriginPublicStatuses = @("HIT", "MISS", "STALE", "UPDATING")
 
 function Get-HeaderValue {
     param($Response, [string] $Name)
@@ -119,6 +123,15 @@ function Assert-PrivateBypass {
     if ($cacheControl -notmatch "(?i)private" -or $cacheControl -notmatch "(?i)no-store") {
         throw "$Kind request is missing private, no-store for $Url"
     }
+    if ($RequireCdn) {
+        if (-not (Get-HeaderValue $response "CF-Ray")) {
+            throw "$Kind request is missing CF-Ray for $Url"
+        }
+        $cdn = (Get-HeaderValue $response "CF-Cache-Status").ToUpperInvariant()
+        if (@("BYPASS", "DYNAMIC") -notcontains $cdn) {
+            throw "$Kind request has unsafe Cloudflare cache status '$cdn' for $Url"
+        }
+    }
 }
 
 $results = @()
@@ -135,18 +148,34 @@ foreach ($path in $ProbePaths) {
     if ($cacheControl -notmatch "(?i)public" -or $cacheControl -notmatch "(?i)max-age=15") {
         throw "Guest response is missing the public 15-second policy for $url"
     }
+    if ($RequireCdn) {
+        if (-not (Get-HeaderValue $guest "CF-Ray")) {
+            throw "Guest response is missing CF-Ray for $url"
+        }
+        $guestCdn = (Get-HeaderValue $guest "CF-Cache-Status").ToUpperInvariant()
+        if ($CdnPublicStatuses -notcontains $guestCdn) {
+            throw "Guest response has unsafe Cloudflare cache status '$guestCdn' for $url"
+        }
+    }
 
     $hit = $null
     for ($attempt = 1; $attempt -le 5; $attempt++) {
         $candidate = Invoke-CacheRequest -Url $url
         $edge = (Get-HeaderValue $candidate "X-Radar-Edge-Cache").ToUpperInvariant()
-        if ($edge -eq "HIT") {
+        $cdn = (Get-HeaderValue $candidate "CF-Cache-Status").ToUpperInvariant()
+        $originPublic = $OriginPublicStatuses -contains $edge
+        $cdnHot = $CdnHotStatuses -contains $cdn
+        if ((-not $RequireCdn -and $edge -eq "HIT") -or
+            ($RequireCdn -and $originPublic -and $cdnHot)) {
             $hit = $candidate
             break
         }
         Start-Sleep -Seconds 2
     }
-    if ($null -eq $hit) { throw "Cache HIT was not observed for $url" }
+    if ($null -eq $hit) {
+        if ($RequireCdn) { throw "Cloudflare HIT was not observed for $url" }
+        throw "Cache HIT was not observed for $url"
+    }
 
     if ($path.StartsWith("/api/")) {
         $json = $hit.Content | ConvertFrom-Json
@@ -155,9 +184,11 @@ foreach ($path in $ProbePaths) {
 
     Assert-PrivateBypass -Url $url -Kind "cookie"
     Assert-PrivateBypass -Url $url -Kind "authorization"
+    $hitEdge = Get-HeaderValue $hit "X-Radar-Edge-Cache"
+    $hitCdn = Get-HeaderValue $hit "CF-Cache-Status"
     $results += [pscustomobject]@{
         Path = $path
-        Guest = (Get-HeaderValue $hit "X-Radar-Edge-Cache")
+        Guest = if ($RequireCdn) { "CF:$hitCdn/Radar:$hitEdge" } else { $hitEdge }
         Cookie = "BYPASS"
         Authorization = "BYPASS"
         Version = (Get-HeaderValue $hit "X-Radar-Dataset-Version")

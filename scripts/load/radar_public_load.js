@@ -6,6 +6,7 @@ const BASE_URL = String(__ENV.BASE_URL || '').replace(/\/+$/, '');
 const SCENARIO = String(__ENV.SCENARIO || 'default').toLowerCase();
 const VUS = Math.max(1, Math.min(5000, Number.parseInt(__ENV.VUS || '100', 10)));
 const DURATION = String(__ENV.DURATION || '2m');
+const REQUIRE_CDN = String(__ENV.REQUIRE_CDN || '0') === '1';
 const RUN_ID = String(__ENV.RUN_ID || 'manual')
   .replace(/[^a-zA-Z0-9._-]/g, '-')
   .slice(0, 64);
@@ -19,6 +20,11 @@ const edgeMiss = new Counter('radar_edge_miss');
 const edgeStale = new Counter('radar_edge_stale');
 const edgeBypass = new Counter('radar_edge_bypass');
 const edgeUnknown = new Counter('radar_edge_unknown');
+const cdnHit = new Counter('radar_cdn_hit');
+const cdnMiss = new Counter('radar_cdn_miss');
+const cdnStale = new Counter('radar_cdn_stale');
+const cdnBypass = new Counter('radar_cdn_bypass');
+const cdnUnknown = new Counter('radar_cdn_unknown');
 
 export const options = {
   vus: VUS,
@@ -99,6 +105,29 @@ function recordEdge(response) {
   return status;
 }
 
+function cdnStatus(response) {
+  return String(
+    response.headers['CF-Cache-Status']
+      || response.headers['Cf-Cache-Status']
+      || response.headers['cf-cache-status']
+      || ''
+  ).toUpperCase();
+}
+
+function recordCdn(response) {
+  const status = cdnStatus(response);
+  if (status === 'HIT') cdnHit.add(1);
+  else if (status === 'MISS' || status === 'EXPIRED') cdnMiss.add(1);
+  else if (['STALE', 'UPDATING', 'REVALIDATED'].includes(status)) cdnStale.add(1);
+  else if (status === 'BYPASS' || status === 'DYNAMIC') cdnBypass.add(1);
+  else cdnUnknown.add(1);
+  return status;
+}
+
+function isPublicCdnStatus(status) {
+  return ['HIT', 'MISS', 'EXPIRED', 'STALE', 'UPDATING', 'REVALIDATED'].includes(status);
+}
+
 function mixedUrls(item) {
   return [
     `${BASE_URL}/api/signals?${item.signals}`,
@@ -124,7 +153,10 @@ export function setup() {
       fail(`Mixed prewarm failed for ${item.signals}`);
     }
     const second = requestPair(urls);
-    if (!second.every((response) => response.status === 200 && edgeStatus(response) === 'HIT')) {
+    const warmed = REQUIRE_CDN
+      ? second.every((response) => response.status === 200 && cdnStatus(response) === 'HIT')
+      : second.every((response) => response.status === 200 && edgeStatus(response) === 'HIT');
+    if (!warmed) {
       fail(`Mixed prewarm did not produce HIT for ${item.signals}`);
     }
   }
@@ -138,15 +170,19 @@ function runDefault() {
   ]);
   const homeEdge = recordEdge(responses[0]);
   const signalEdge = recordEdge(responses[1]);
+  const homeCdn = recordCdn(responses[0]);
+  const signalCdn = recordCdn(responses[1]);
   check(responses[0], {
     'homepage status is 200': (response) => response.status === 200,
     'homepage is edge classified': () => Boolean(homeEdge),
     'homepage body has Radar BDS': (response) => String(response.body || '').includes('Radar BDS'),
+    'homepage uses public CDN cache': () => !REQUIRE_CDN || isPublicCdnStatus(homeCdn),
   });
   check(responses[1], {
     'signals status is 200': (response) => response.status === 200,
     'signals are edge classified': () => Boolean(signalEdge),
     'signals body has array field': (response) => /"signals"\s*:\s*\[/.test(String(response.body || '')),
+    'signals use public CDN cache': () => !REQUIRE_CDN || isPublicCdnStatus(signalCdn),
   });
 }
 
@@ -155,15 +191,19 @@ function runMixed() {
   const responses = requestPair(mixedUrls(item));
   const signalEdge = recordEdge(responses[0]);
   const countsEdge = recordEdge(responses[1]);
+  const signalCdn = recordCdn(responses[0]);
+  const countsCdn = recordCdn(responses[1]);
   check(responses[0], {
     'mixed signals status is 200': (response) => response.status === 200,
     'mixed signals are edge classified': () => Boolean(signalEdge),
     'mixed signals body shape is valid': (response) => /"signals"\s*:\s*\[/.test(String(response.body || '')),
+    'mixed signals use public CDN cache': () => !REQUIRE_CDN || isPublicCdnStatus(signalCdn),
   });
   check(responses[1], {
     'mixed counts status is 200': (response) => response.status === 200,
     'mixed counts are edge classified': () => Boolean(countsEdge),
     'mixed counts body shape is valid': (response) => /"stats"\s*:\s*\{/.test(String(response.body || '')),
+    'mixed counts use public CDN cache': () => !REQUIRE_CDN || isPublicCdnStatus(countsCdn),
   });
 }
 

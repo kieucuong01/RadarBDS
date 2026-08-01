@@ -34,9 +34,20 @@ def _write_shard(
     stale: int = 0,
     bypass: int = 0,
     unknown: int = 0,
+    cdn_hit: int | None = None,
+    cdn_miss: int | None = None,
+    cdn_stale: int = 0,
+    cdn_bypass: int = 0,
+    cdn_unknown: int = 0,
+    require_cdn: bool = True,
+    omit_zero_counters: bool = False,
     exit_code: int = 0,
     crossed_threshold: bool = False,
 ) -> None:
+    if cdn_hit is None:
+        cdn_hit = hit
+    if cdn_miss is None:
+        cdn_miss = miss
     folder = root / f"shard-{shard}"
     folder.mkdir(parents=True)
     metadata = {
@@ -47,6 +58,7 @@ def _write_shard(
         "shard": shard,
         "expected_shards": expected_shards,
         "vus": vus,
+        "require_cdn": require_cdn,
         "k6_exit_code": exit_code,
     }
     summary = {
@@ -77,8 +89,19 @@ def _write_shard(
             "radar_edge_stale": {"count": stale},
             "radar_edge_bypass": {"count": bypass},
             "radar_edge_unknown": {"count": unknown},
+            "radar_cdn_hit": {"count": cdn_hit},
+            "radar_cdn_miss": {"count": cdn_miss},
+            "radar_cdn_stale": {"count": cdn_stale},
+            "radar_cdn_bypass": {"count": cdn_bypass},
+            "radar_cdn_unknown": {"count": cdn_unknown},
         }
     }
+    if omit_zero_counters:
+        summary["metrics"] = {
+            name: metric
+            for name, metric in summary["metrics"].items()
+            if metric.get("count") != 0
+        }
     (folder / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
     (folder / "summary.json").write_text(json.dumps(summary), encoding="utf-8")
 
@@ -100,6 +123,7 @@ def _run(root: Path, output: Path, *, scenario: str = "default") -> subprocess.C
             RUN_ID,
             "--base-url",
             BASE_URL,
+            "--require-cdn",
             "--output",
             str(output),
         ],
@@ -130,6 +154,13 @@ def test_valid_shards_are_summed_and_use_conservative_max_percentiles(tmp_path: 
         "radar_edge_bypass": 0,
         "radar_edge_unknown": 0,
     }
+    assert aggregate["cdn"] == {
+        "radar_cdn_hit": 21970,
+        "radar_cdn_miss": 30,
+        "radar_cdn_stale": 0,
+        "radar_cdn_bypass": 0,
+        "radar_cdn_unknown": 0,
+    }
     assert "stage_status=passed" in completed.stdout
 
 
@@ -142,6 +173,10 @@ def test_valid_shards_are_summed_and_use_conservative_max_percentiles(tmp_path: 
         ({"crossed_threshold": True}, "crossed threshold"),
         ({"bypass": 1}, "edge bypass"),
         ({"unknown": 1}, "unknown edge"),
+        ({"cdn_bypass": 1}, "cdn bypass"),
+        ({"cdn_unknown": 1}, "unknown cdn"),
+        ({"cdn_hit": 0, "cdn_stale": 0}, "cdn hit or stale"),
+        ({"require_cdn": False}, "metadata require_cdn mismatch"),
         ({"p95": 1000.0}, "p95"),
         ({"p99": 2000.0}, "p99"),
         ({"failed_passes": 50, "failed_fails": 9950}, "failure rate"),
@@ -169,3 +204,12 @@ def test_mixed_scenario_uses_1500ms_p95_limit(tmp_path: Path):
 
     assert completed.returncode != 0
     assert "p95" in completed.stderr.lower()
+
+
+def test_zero_value_counter_metrics_may_be_omitted_by_k6(tmp_path: Path):
+    _write_shard(tmp_path, 0, omit_zero_counters=True)
+    _write_shard(tmp_path, 1, omit_zero_counters=True)
+
+    completed = _run(tmp_path, tmp_path / "aggregate.json")
+
+    assert completed.returncode == 0, completed.stderr

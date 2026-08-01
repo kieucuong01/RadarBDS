@@ -92,6 +92,7 @@ jobs:
           BASE_URL: https://radarbds.vn
           EXPECTED_SHARDS: ${{ inputs.expected_shards }}
           RUN_ID: ${{ needs.prepare.outputs.run_id }}
+          REQUIRE_CDN: "1"
           SCENARIO: ${{ inputs.scenario }}
           SHARD: ${{ matrix.shard }}
           STAGE: ${{ inputs.stage }}
@@ -112,6 +113,7 @@ jobs:
               "shard": int(os.environ["SHARD"]),
               "expected_shards": int(os.environ["EXPECTED_SHARDS"]),
               "vus": int(os.environ["VUS"]),
+              "require_cdn": True,
               "k6_exit_code": None,
           }
           Path("result/metadata.json").write_text(
@@ -126,6 +128,7 @@ jobs:
           BASE_URL: https://radarbds.vn
           DURATION: ${{ inputs.duration }}
           RUN_ID: ${{ needs.prepare.outputs.run_id }}
+          REQUIRE_CDN: "1"
           SCENARIO: ${{ inputs.scenario }}
           VUS: ${{ inputs.vus_per_shard }}
         run: |
@@ -136,6 +139,7 @@ jobs:
             -e BASE_URL="$BASE_URL" \
             -e SCENARIO="$SCENARIO" \
             -e RUN_ID="$RUN_ID" \
+            -e REQUIRE_CDN="$REQUIRE_CDN" \
             -e VUS="$VUS" \
             -e DURATION="$DURATION" \
             scripts/load/radar_public_load.js
@@ -204,6 +208,7 @@ jobs:
             --stage "$STAGE" \
             --run-id "$RUN_ID" \
             --base-url https://radarbds.vn \
+            --require-cdn \
             --output aggregate/stage-summary.json \
             | tee aggregate/stage-summary.txt
           python3 - "$EXPECTED_TOTAL_VUS" <<'PY'

@@ -118,6 +118,10 @@ def test_public_cache_verifier_checks_hit_bypass_and_redaction():
     assert '"source_url"' in text
     assert '"phone"' in text
     assert "Set-Cookie" in text
+    assert "[switch] $RequireCdn" in text
+    assert "CF-Cache-Status" in text
+    assert "CF-Ray" in text
+    assert "Cloudflare HIT" in text
     assert "Cache HIT was not observed" in text
     assert "ConvertFrom-Json -Depth" not in text
 
@@ -133,6 +137,11 @@ def test_k6_public_load_script_has_safe_scenarios_and_thresholds():
     assert "p(99)<2000" in text
     assert "Accept-Encoding" in text and "gzip" in text
     assert "X-Radar-Edge-Cache" in text
+    assert "REQUIRE_CDN" in text
+    assert "CF-Cache-Status" in text
+    assert "radar_cdn_hit" in text
+    assert "radar_cdn_bypass" in text
+    assert "radar_cdn_unknown" in text
     assert "radar_session" not in text
     assert "Authorization" not in text
 
@@ -159,6 +168,9 @@ def test_reusable_distributed_load_stage_is_pinned_synchronized_and_fail_closed(
     assert "d3f86a106a0bac45b974a628896c90dbdf5c8093" in text
     assert "--summary-export" in text
     assert "p(99)" in text
+    assert "REQUIRE_CDN: \"1\"" in text
+    assert '"require_cdn": True' in text
+    assert "--require-cdn" in text
     assert "aggregate_k6_shards.py" in text
     assert "if: always()" in text
     assert "contents: read" in text

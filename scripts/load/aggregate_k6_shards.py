@@ -19,6 +19,13 @@ EDGE_METRICS = (
     "radar_edge_bypass",
     "radar_edge_unknown",
 )
+CDN_METRICS = (
+    "radar_cdn_hit",
+    "radar_cdn_miss",
+    "radar_cdn_stale",
+    "radar_cdn_bypass",
+    "radar_cdn_unknown",
+)
 
 
 class AggregationError(ValueError):
@@ -74,6 +81,15 @@ def _metric_count(summary: dict[str, Any], metric_name: str) -> int:
     return _integer(_metric_number(summary, metric_name, "count"), f"{metric_name}.count")
 
 
+def _optional_metric_count(summary: dict[str, Any], metric_name: str) -> int:
+    metrics = _object(summary.get("metrics"), "summary metrics")
+    if metric_name not in metrics:
+        return 0
+    return _integer(
+        _metric_number(summary, metric_name, "count"), f"{metric_name}.count"
+    )
+
+
 def _rate_counts(summary: dict[str, Any], metric_name: str) -> tuple[int, int]:
     metric = _metric(summary, metric_name)
     passes = _integer(metric.get("passes"), f"{metric_name}.passes")
@@ -96,7 +112,7 @@ def _require_thresholds_not_crossed(summary: dict[str, Any], metric_name: str) -
 
 def _metadata_value(metadata: dict[str, Any], name: str, expected: Any) -> None:
     actual = metadata.get(name)
-    if actual != expected:
+    if actual != expected or type(actual) is not type(expected):
         raise AggregationError(
             f"Metadata {name} mismatch: expected {expected!r}, got {actual!r}"
         )
@@ -122,6 +138,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             ("base_url", args.base_url),
             ("shard", shard),
             ("expected_shards", args.expected_shards),
+            ("require_cdn", args.require_cdn),
         ):
             _metadata_value(metadata, field, expected)
 
@@ -160,12 +177,38 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
                 f"Shard {shard} check rate {check_rate:.6f} is not above 0.995"
             )
 
-        bypass = _metric_count(summary, "radar_edge_bypass")
+        bypass = _optional_metric_count(summary, "radar_edge_bypass")
         if bypass:
             raise AggregationError(f"Shard {shard} edge bypass count was {bypass}")
-        unknown = _metric_count(summary, "radar_edge_unknown")
+        unknown = _optional_metric_count(summary, "radar_edge_unknown")
         if unknown:
             raise AggregationError(f"Shard {shard} unknown edge count was {unknown}")
+        edge_public = sum(
+            _optional_metric_count(summary, name)
+            for name in ("radar_edge_hit", "radar_edge_miss", "radar_edge_stale")
+        )
+        if edge_public <= 0:
+            raise AggregationError(f"Shard {shard} has no public origin edge evidence")
+
+        if args.require_cdn:
+            cdn_bypass = _optional_metric_count(summary, "radar_cdn_bypass")
+            if cdn_bypass:
+                raise AggregationError(
+                    f"Shard {shard} CDN bypass count was {cdn_bypass}"
+                )
+            cdn_unknown = _optional_metric_count(summary, "radar_cdn_unknown")
+            if cdn_unknown:
+                raise AggregationError(
+                    f"Shard {shard} unknown CDN count was {cdn_unknown}"
+                )
+            cdn_hot = sum(
+                _optional_metric_count(summary, name)
+                for name in ("radar_cdn_hit", "radar_cdn_stale")
+            )
+            if cdn_hot <= 0:
+                raise AggregationError(
+                    f"Shard {shard} has no CDN HIT or stale evidence"
+                )
 
         metadata_rows.append(metadata)
         summaries.append(summary)
@@ -180,6 +223,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "stage": args.stage,
         "run_id": args.run_id,
         "base_url": args.base_url,
+        "require_cdn": args.require_cdn,
         "expected_shards": args.expected_shards,
         "total_vus": sum(_integer(item["vus"], "metadata vus") for item in metadata_rows),
         "http_reqs": sum(_metric_count(item, "http_reqs") for item in summaries),
@@ -192,8 +236,12 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "failure_rate": failure_true / (failure_true + failure_false),
         "check_rate": check_passes / (check_passes + check_fails),
         "edge": {
-            name: sum(_metric_count(item, name) for item in summaries)
+            name: sum(_optional_metric_count(item, name) for item in summaries)
             for name in EDGE_METRICS
+        },
+        "cdn": {
+            name: sum(_optional_metric_count(item, name) for item in summaries)
+            for name in CDN_METRICS
         },
     }
     return aggregate_result
@@ -207,6 +255,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--stage", required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--base-url", choices=("https://radarbds.vn",), required=True)
+    parser.add_argument("--require-cdn", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
     return parser
 
