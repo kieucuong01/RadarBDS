@@ -218,6 +218,29 @@ Rollback order:
 
 The Phase 2 runtime gate is complete only after the Phase 4 controlled drill proves a shared hit/lock across at least two Gunicorn workers, one loader for 100 identical cold requests, bounded work/stale-or-503 while Redis is stopped, version bootstrap after restart, and both cache flags `0` and `1`. Until then the production cache flag stays `0`.
 
+## Signal-First Frontend Runtime
+
+The Signals-tab request contract is:
+
+```text
+canonical filter snapshot -> /api/signals immediately -> first card chunk
+                                                   \-> /api/counts after settle/idle
+```
+
+`/api/dashboard` is intentionally absent while the Signals tab stays active. It is still used when a filter changes on a non-Signals tab. Cache-busting version `homepage-perf-20260801` covers `core.js`, `filter_runtime.js`, `filters.js`, `signals.js`, and `web_vitals.js`; all changed immutable assets must retain a coordinated version bump on later edits.
+
+Keep these browser-visible safeguards together during incident diagnosis: AbortController per request scope, canonical snapshot check before deferred counts, signal response run id, render-chunk sequence, and listing-id deduplication. A stale response in Network is acceptable only when it is visibly canceled and cannot mutate the final cards.
+
+Controlled local browser evidence from 2026-08-01 (cache disabled, local PostgreSQL, not a capacity claim):
+
+- desktop HTML TTFB `4.7 ms`; first signals `321.8 ms`; `radar-first-signal-cards` `337.1 ms`; counts began at `519.4 ms`; LCP `528 ms`; CLS `0.0015`;
+- mobile `390x844`: HTML TTFB `45.8 ms`; first signals `277.0 ms`; first cards `299.9 ms`; counts began at `517.4 ms`; LCP `580 ms`; CLS `0.00023`; the tested interaction produced no event at the 40 ms observer threshold, so the controlled sample is `<40 ms`;
+- mobile rendered one card column with zero horizontal overflow; the first trace contained signals then counts and no dashboard;
+- a deliberately paused signal request was canceled as `net::ERR_ABORTED`; only the replacement response rendered; page 2 produced `60/60` unique card ids;
+- a disposable Free session showed tier `free` and returned `Cache-Control: private, no-store`, `X-Radar-Cache: bypass`, and no public marker for signals/counts. The synthetic user/session and browser cookie were removed after the proof.
+
+These measurements validate Phase 3 request ordering and rendering only. Redis, Nginx microcache, Gunicorn sizing, and 1,000-5,000 in-flight evidence remain the Phase 4 gate.
+
 ## Crawl Automation
 
 Primary daily job:

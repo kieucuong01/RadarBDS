@@ -75,6 +75,8 @@ Marketing skills:
 - `services/signal_read_model.py`: transactional `signal_card_read_model` refresh and feature-flagged compact signal query.
 - `services/public_cache_keys.py`, `services/public_cache.py`: canonical tier/version keys, Redis fresh/stale single-flight, and bounded local fallback.
 - `services/public_data_publish.py`, `services/public_prewarm.py`: post-commit version mirror and no-cookie allowlisted warming after deterministic data jobs.
+- `static/js/main/filter_runtime.js`: canonical browser filter queries and the signal-first/counts-after sequencing helper.
+- `static/js/main/web_vitals.js`: dependency-free LCP/INP/CLS observation and PII-free GA4 emission; `signals.js` owns the `radar-first-signal-cards` measure.
 - `services/signal_quality.py`: latest valuation CTE and actionable signal gate.
 - `services/image_assets.py`: image URL and thumbnail resolution.
 - `cleansing/reprocess.py`: normalize, dedup, valuation orchestration.
@@ -98,6 +100,8 @@ Marketing skills:
 - Only anonymous guest `/`, `/api/signals`, `/api/counts`, and `/api/dashboard` may carry `X-Radar-Public-Cache: 1`. Any session, Authorization, Set-Cookie, admin, error, saved/auth/admin/checkout/order response remains private/no-store.
 - Publish read-model/version data in PostgreSQL first, exit/commit, then mirror Redis and prewarm. Redis/prewarm failure must be reported separately and must not relabel committed DB data as failed.
 - The capacity objective means roughly 1,000-5,000 simultaneous in-flight public requests, not 5,000 sustained origin RPS. Do not claim that gate from unit tests or single-request timings; use the staged production load plan.
+- On the Signals tab, one settled filter starts exactly one immediate `/api/signals` request. `/api/counts` is deferred until that signal load settles; `/api/dashboard` must not run on this path. Dashboard metadata remains a non-Signals-tab concern.
+- Keep browser request cancellation and newest-response-wins together: `requestControllers[scope].abort()`, `signalRunSeq`, `signalRenderSeq`, `renderedSignalIds`, and page-1 reset are one invariant set. Do not remove one in isolation.
 - User-facing signal surfaces use latest valuation plus `services.signal_quality.actionable_signal_sql()`, not raw `valuation_results.is_signal` alone.
 - `low_segment_confidence` alone does not suppress user-facing signals; show a warning badge instead.
 - Facebook repost matching may use heuristics, but only with strong guards for type, location, area/dimensions, thổ cư, and phone.

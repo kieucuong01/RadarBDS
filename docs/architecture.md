@@ -98,11 +98,19 @@ Performance boundary:
 
 ## Signal Filter Runtime Flow
 
-- Main tab filtering should run in two stages:
-  - stage 1: request `/api/signals` immediately and update cards,
-  - stage 2: request `/api/dashboard` in background for header/meta updates.
+- `static/js/main/filter_runtime.js` owns browser-side canonicalization. It sorts query keys, trims values, removes the retired `sigv`, and sorts/deduplicates order-insensitive ward/source/property/range values. Range values use numeric lower/upper-bound ordering so the browser string matches the parsed server cache-key tuple.
+- On the Signals tab, `applyFilters()` snapshots the canonical query, resets pagination, and starts exactly one immediate `/api/signals?page=1&include_total=0...` request. Only after that promise settles, and only if the snapshot is still current, it schedules `/api/counts` through `requestIdleCallback` (100 ms timer fallback).
+- `/api/dashboard` is not part of Signals-tab filtering. Non-Signals tabs may refresh counts and dashboard metadata immediately; Market/Insights/All keep their existing lazy loaders.
+- Rapid changes retain three layers of stale-work protection: `fetchJSONCached()` aborts the prior scope controller; `signalRunSeq` prevents an older response from rendering; `signalRenderSeq` cancels old animation-frame chunks. `renderedSignalIds` resets on page 1 and deduplicates appended pages.
 - `insights` data is not part of normal signal-filter refresh and should load on Insights tab activation.
 - Infinite scroll must dedupe by listing id on client render to avoid race-condition duplicates.
+
+### Browser performance telemetry
+
+- `static/js/main/web_vitals.js` observes native LCP, layout shifts without recent input, and the largest interaction event at the 40 ms threshold. It sends each available metric once on page-hidden through GA4 event `web_vital` with only `metric_name`, rounded `metric_value`, `metric_rating`, and `non_interaction`.
+- Approved good/poor boundaries are LCP `2500/4000 ms`, INP `200/500 ms`, and CLS `0.1/0.25`. The helper must not include URLs, filters, listing/user identifiers, cookies, or free-form text.
+- Every reset signal load marks `radar-signals-request-start`; the first inserted chunk marks `radar-first-signal-cards-rendered` and measures `radar-first-signal-cards`. This measures request plus JSON/render time to useful cards, not image completion.
+- `filter_runtime.js` plus `web_vitals.js` has a 5 KiB uncompressed budget. Both are loaded below visible HTML and before `boot.js`; neither may add a network dependency.
 
 ## Trust Layer
 

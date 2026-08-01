@@ -414,6 +414,42 @@ foreach ($path in $paths) {
 
 Use `services.public_prewarm.prewarm_configured_routes()` for the allowlisted no-cookie prewarm. Do not add raw URLs, user identifiers, cookies, auth headers, saved listings, admin pages, or checkout/order routes.
 
+### Signal-first frontend performance
+
+Focused Phase 3 gate:
+
+```powershell
+node --test tests\js\filter_runtime.test.cjs tests\js\web_vitals.test.cjs
+node --check static\js\main\filter_runtime.js
+node --check static\js\main\web_vitals.js
+node --check static\js\main\filters.js
+node --check static\js\main\signals.js
+node --check static\js\main\core.js
+node --check static\js\main\boot.js
+
+$bytes = (Get-Item -LiteralPath static\js\main\web_vitals.js).Length +
+  (Get-Item -LiteralPath static\js\main\filter_runtime.js).Length
+if ($bytes -gt 5120) { throw "New performance JS exceeds 5 KB uncompressed" }
+
+& $py -X utf8 -m pytest `
+  tests\test_refactor_structure.py `
+  tests\test_traffic_seo_aio.py `
+  tests\test_market_data_performance.py `
+  tests\test_guest_visibility.py `
+  tests\test_source_policy.py `
+  tests\test_security_hardening.py -q
+```
+
+Real-browser verification must cover desktop and `390x844`:
+
+1. On a fresh guest load, `/api/signals` is the first dynamic dashboard request; cards render before `/api/counts` finishes; no `/api/dashboard` occurs on the Signals tab.
+2. Change several filters faster than a slow response. Confirm the old request is canceled, the newest payload alone renders, and page 2 contains no duplicate `data-id` values.
+3. Switch to Market, change a filter, and confirm counts/dashboard plus Market resources still load.
+4. Repeat a filter with a real disposable Free session. `/`, signals, and counts must be `private, no-store`, have no `X-Radar-Public-Cache`, and retain correct visible tier/card behavior. Remove the disposable session afterward.
+5. Record HTML TTFB, first signal duration, `radar-first-signal-cards`, LCP, an INP interaction sample (or `<40 ms` when the observer has no qualifying event), CLS, resource count, and transfer bytes under the same viewport/network profile as the baseline.
+
+Do not treat source-contract tests as browser evidence. Do not leave CDP throttling, request interception, synthetic cookies/users, or a viewport override active after the run.
+
 Post-merger location resolver:
 
 ```powershell
