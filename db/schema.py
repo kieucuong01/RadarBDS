@@ -823,6 +823,12 @@ def init_schema() -> None:
                         raise RuntimeError(
                             "required table listing_map_locations is unavailable"
                         ) from migration_exc
+                    # Preserve the required public read path before attempting
+                    # best-effort migrations on legacy tables the runtime role
+                    # may not own. A later privilege error aborts the current
+                    # PostgreSQL transaction, so without this boundary the new
+                    # required tables are silently rolled back as well.
+                    conn.commit()
                     try:
                         _migrate_admin_jobs(conn)
                         _migrate_facebook_crawl_profiles(conn)
@@ -830,6 +836,10 @@ def init_schema() -> None:
                         _migrate_user_favorite_listings(conn)
                         _migrate_property_type_aliases(conn)
                     except Exception as migration_exc:
+                        try:
+                            conn.rollback()
+                        except Exception:
+                            pass
                         logger.warning(
                             "Limited schema migration skipped after DDL privilege failure: %s",
                             migration_exc,

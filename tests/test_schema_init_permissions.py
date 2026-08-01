@@ -15,6 +15,8 @@ class _FakeConn:
     def __init__(self, existing_tables):
         self.existing_tables = set(existing_tables)
         self.rolled_back = False
+        self.rollback_count = 0
+        self.commit_count = 0
         self.executed = []
 
     def execute(self, sql, params=None):
@@ -33,6 +35,10 @@ class _FakeConn:
 
     def rollback(self):
         self.rolled_back = True
+        self.rollback_count += 1
+
+    def commit(self):
+        self.commit_count += 1
 
 
 @contextmanager
@@ -138,6 +144,34 @@ def test_init_schema_does_not_accept_missing_signal_read_model(monkeypatch):
 
     with pytest.raises(RuntimeError, match="signal_card_read_model"):
         schema.init_schema()
+
+
+def test_init_schema_commits_required_tables_before_optional_permission_failure(
+    monkeypatch,
+):
+    import db.schema as schema
+
+    class _LimitedOwnerConnection(_FakeConn):
+        def execute(self, sql, params=None):
+            if "CREATE TABLE IF NOT EXISTS public_dataset_versions" in sql:
+                self.existing_tables.add("public_dataset_versions")
+            if "CREATE TABLE IF NOT EXISTS signal_card_read_model" in sql:
+                self.existing_tables.add("signal_card_read_model")
+            if "CREATE TABLE IF NOT EXISTS admin_jobs" in sql:
+                raise RuntimeError("must be owner of table admin_jobs")
+            return super().execute(sql, params)
+
+    conn = _LimitedOwnerConnection(
+        {"raw_listings", "listings", "valuation_results", "crawl_runs"}
+    )
+    monkeypatch.setattr(schema, "get_conn", lambda: _fake_get_conn(conn))
+
+    schema.init_schema()
+
+    assert conn.commit_count == 1
+    assert conn.rollback_count == 2
+    assert "public_dataset_versions" in conn.existing_tables
+    assert "signal_card_read_model" in conn.existing_tables
 
 
 def test_public_read_model_migration_tolerates_optional_reloption_permission():

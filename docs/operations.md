@@ -135,6 +135,20 @@ ORDER BY relname;
 
 The runtime migration catches `insufficient_privilege` only for the optional reloption tuning on pre-existing tables. The new read-model/version tables remain mandatory. If the inspection query shows missing options, have the PostgreSQL table owner apply `autovacuum_analyze_scale_factor=0.02` and `autovacuum_analyze_threshold=100`; do not grant broader ownership to the web runtime role merely to pass deploy.
 
+After schema init under a limited-owner runtime role, verify the required objects separately before restarting or enabling the flag. A warning that a later legacy migration was skipped is not proof that the earlier transaction committed:
+
+```sql
+SELECT to_regclass('public.public_dataset_versions') AS versions_table,
+       to_regclass('public.signal_card_read_model') AS read_model_table,
+       to_regclass('public.listing_map_locations') AS map_locations_table;
+
+SELECT dataset_name, version
+FROM public_dataset_versions
+ORDER BY dataset_name;
+```
+
+All three object names must be non-null and the version table must contain `market` and `signals`. `db.schema.init_schema()` commits these required objects before best-effort legacy migrations; if an optional migration then hits `insufficient_privilege`, it rolls back that optional transaction only.
+
 This rollout proves parity and normal-load latency only. Do not claim the 1,000-5,000 simultaneous in-flight request objective until the later pooling/cache/Nginx phases and staged load gates pass.
 
 ## Crawl Automation
