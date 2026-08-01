@@ -14,7 +14,7 @@ Usage:
       --all --month 07 --year 2026
 """
 
-import sys, os, re, argparse
+import sys, os, re, argparse, ast, pprint
 from datetime import date, timedelta
 
 sys.path.insert(0, "/opt/radar-bds/current")
@@ -493,42 +493,40 @@ def generate_master_report(month, year):
 
 
 def inject_report(config_path, entry):
-    """Inject a report entry into seo_pages.py, before the closing } of SEO_PAGES."""
+    """Append report as a top-level SEO_PAGES assignment after the real SEO_PAGES dict.
+
+    seo_pages.py has helper dicts/functions after SEO_PAGES. The old implementation
+    searched from EOF for a top-level `}` and could accidentally inject reports into
+    a later helper dict. AST gives the real SEO_PAGES assignment boundary.
+    """
     slug = entry["path"].lstrip("/")
 
     with open(config_path) as f:
         content = f.read()
 
-    key_line = f'    "{slug}"'
-    if key_line in content:
+    ns = {}
+    exec(compile(content, config_path, "exec"), ns)
+    if slug in ns.get("SEO_PAGES", {}):
         print(f"  ⚠️  Entry '{slug}' already exists — skipping")
         return False
 
-    lines = content.split("\n")
-    closing_idx = None
-    for i in range(len(lines) - 1, -1, -1):
-        stripped = lines[i].strip()
-        if stripped == "}" and len(lines[i]) - len(lines[i].lstrip()) == 0:
-            if i > 0 and lines[i-1].strip().endswith("}") and lines[i-1].strip() != "}":
-                continue
-            closing_idx = i
+    tree = ast.parse(content)
+    seo_node = None
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "SEO_PAGES" for t in node.targets):
+            seo_node = node
             break
-
-    if closing_idx is None:
-        print("  ❌ Could not find closing brace of SEO_PAGES")
+    if seo_node is None or seo_node.end_lineno is None:
+        print("  ❌ Could not locate SEO_PAGES assignment")
         return False
 
-    entry_lines = [f'    "{slug}": ' + "{"]
-    keys = list(entry.keys())
-    for j, k in enumerate(keys):
-        v = entry[k]
-        v_repr = repr(v)
-        comma = "," if j < len(keys) - 1 else ""
-        entry_lines.append(f'        "{k}": {v_repr}{comma}')
-    entry_lines.append('    },')
-    entry_text = "\n".join(entry_lines)
-
-    lines.insert(closing_idx, entry_text)
+    entry_text = (
+        f"\n# --- Generated monthly report: {slug} ---\n"
+        f"SEO_PAGES[{slug!r}] = {pprint.pformat(entry, width=140, sort_dicts=False)}\n"
+        f"# --- End generated monthly report: {slug} ---\n"
+    )
+    lines = content.split("\n")
+    lines.insert(seo_node.end_lineno, entry_text)
     new_content = "\n".join(lines)
 
     try:
@@ -542,7 +540,6 @@ def inject_report(config_path, entry):
 
     print(f"  ✅ Injected '{slug}'")
     return True
-
 
 def main():
     parser = argparse.ArgumentParser(description="Generate monthly Radar BDS reports")

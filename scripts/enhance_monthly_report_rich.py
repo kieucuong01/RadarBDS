@@ -433,14 +433,42 @@ def update_master_page(page: dict, ward_pages: dict[str, dict], month: int, year
 
 
 def replace_entry_text(config_text: str, key: str, entry: dict) -> str:
-    lines = config_text.splitlines(); start = next((i for i, line in enumerate(lines) if line.strip().startswith(f'"{key}":')), None)
-    if start is None: raise KeyError(f"Missing SEO_PAGES entry {key}; run generate_monthly_report.py first")
-    depth = 0; end = None
-    for i in range(start, len(lines)):
-        depth += lines[i].count("{") - lines[i].count("}")
-        if i > start and depth <= 0: end = i; break
-    if end is None: raise RuntimeError(f"Could not find end of SEO_PAGES entry {key}")
-    return "\n".join(lines[:start] + [f'    "{key}": {pprint.pformat(entry, width=140, sort_dicts=False)},'] + lines[end + 1:]) + "\n"
+    lines = config_text.splitlines()
+
+    # Old generator style: entry is inside the initial SEO_PAGES dict as
+    #     "slug": {...},
+    start = next((i for i, line in enumerate(lines) if line.strip().startswith(f'"{key}":')), None)
+    if start is not None:
+        depth = 0; end = None
+        for i in range(start, len(lines)):
+            depth += lines[i].count("{") - lines[i].count("}")
+            if i > start and depth <= 0:
+                end = i; break
+        if end is None: raise RuntimeError(f"Could not find end of SEO_PAGES entry {key}")
+        return "\n".join(lines[:start] + [f'    "{key}": {pprint.pformat(entry, width=140, sort_dicts=False)},'] + lines[end + 1:]) + "\n"
+
+    # New safer generator style: top-level assignment after SEO_PAGES, wrapped by
+    # Generated monthly report markers.
+    assign_prefixes = (f"SEO_PAGES[{key!r}] =", f'SEO_PAGES["{key}"] =')
+    start = next((i for i, line in enumerate(lines) if line.strip().startswith(assign_prefixes)), None)
+    if start is None:
+        raise KeyError(f"Missing SEO_PAGES entry {key}; run generate_monthly_report.py first")
+    end = None
+    marker = f"# --- End generated monthly report: {key} ---"
+    for i in range(start + 1, len(lines)):
+        if lines[i].strip() == marker:
+            end = i - 1
+            break
+    if end is None:
+        depth = 0
+        for i in range(start, len(lines)):
+            depth += lines[i].count("{") - lines[i].count("}")
+            if i > start and depth <= 0:
+                end = i; break
+    if end is None:
+        raise RuntimeError(f"Could not find end of SEO_PAGES assignment {key}")
+    replacement = f"SEO_PAGES[{key!r}] = {pprint.pformat(entry, width=140, sort_dicts=False)}".splitlines()
+    return "\n".join(lines[:start] + replacement + lines[end + 1:]) + "\n"
 
 
 def main() -> int:
