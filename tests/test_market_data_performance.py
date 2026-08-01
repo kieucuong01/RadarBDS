@@ -160,6 +160,51 @@ def test_load_signals_uses_shared_connection_scope(monkeypatch):
     assert "image_count" in conn.queries[0][0]
 
 
+def test_load_signals_feature_flag_selects_read_model(monkeypatch):
+    import services.market_data as market_data
+
+    calls = []
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setattr(
+        market_data,
+        "load_signals_from_read_model",
+        lambda *args, **kwargs: calls.append((args, kwargs))
+        or {
+            "signals": [],
+            "page": 1,
+            "limit": 30,
+            "has_more": False,
+            "sort": "newest",
+            "tier": "guest",
+        },
+    )
+
+    payload = market_data.load_signals(None, include_total=False)
+
+    assert payload["signals"] == []
+    assert len(calls) == 1
+    assert calls[0][1]["include_total"] is False
+
+
+def test_load_signals_feature_off_keeps_legacy_query(monkeypatch):
+    import services.market_data as market_data
+
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "0")
+    called = {"legacy": 0}
+    monkeypatch.setattr(
+        market_data,
+        "_load_signals_legacy",
+        lambda *args, **kwargs: called.__setitem__(
+            "legacy", called["legacy"] + 1
+        )
+        or {"signals": []},
+    )
+
+    market_data.load_signals(None)
+
+    assert called["legacy"] == 1
+
+
 def test_load_signals_joins_publisher_activity_once(monkeypatch):
     import services.market_data as market_data
 

@@ -2,6 +2,7 @@ from datetime import datetime, date
 from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass
+import os
 import re
 import unicodedata
 
@@ -1190,7 +1191,7 @@ def format_signal_card_record(r, primary_img=None, tier: str = "guest"):
 _format_signal_row = format_signal_card_record
 
 
-def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', area_ranges=None, price_ranges=None, keyword="", include_total=True, date_range=None, include_guland_high_activity=False):
+def _load_signals_legacy(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', area_ranges=None, price_ranges=None, keyword="", include_total=True, date_range=None, include_guland_high_activity=False):
     # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
     # Guest still sees the full deal feed; original URLs/phones stay redacted.
     if tier == "guest":
@@ -1324,6 +1325,29 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         payload["total"] = total
         payload["pages"] = (total + limit - 1) // limit if limit else 1
     return payload
+
+
+def _signal_read_model_enabled() -> bool:
+    return os.getenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "0").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+def load_signals_from_read_model(*args, **kwargs):
+    from services.signal_read_model import (
+        load_signals_from_read_model as read_model_loader,
+    )
+
+    return read_model_loader(*args, **kwargs)
+
+
+def load_signals(*args, **kwargs):
+    if _signal_read_model_enabled():
+        return load_signals_from_read_model(*args, **kwargs)
+    return _load_signals_legacy(*args, **kwargs)
 
 
 def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', include_trend=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier='guest', date_range=None, include_guland_high_activity=False):

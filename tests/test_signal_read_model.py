@@ -102,9 +102,12 @@ def test_failed_full_refresh_keeps_previous_rows_and_version(monkeypatch):
     from services import signal_read_model
 
     with connection.get_conn() as conn:
-        before_rows = conn.execute(
-            "SELECT listing_id FROM signal_card_read_model ORDER BY listing_id"
-        ).fetchall()
+        before_rows = [
+            row["listing_id"]
+            for row in conn.execute(
+                "SELECT listing_id FROM signal_card_read_model ORDER BY listing_id"
+            ).fetchall()
+        ]
         before_version = get_dataset_versions(conn, ("signals",))["signals"]
 
     monkeypatch.setattr(
@@ -120,9 +123,12 @@ def test_failed_full_refresh_keeps_previous_rows_and_version(monkeypatch):
             )
 
     with connection.get_conn() as conn:
-        after_rows = conn.execute(
-            "SELECT listing_id FROM signal_card_read_model ORDER BY listing_id"
-        ).fetchall()
+        after_rows = [
+            row["listing_id"]
+            for row in conn.execute(
+                "SELECT listing_id FROM signal_card_read_model ORDER BY listing_id"
+            ).fetchall()
+        ]
         after_version = get_dataset_versions(conn, ("signals",))["signals"]
 
     assert after_rows == before_rows
@@ -191,3 +197,100 @@ def test_analyze_public_read_tables_uses_fixed_allowlist():
 
     assert statements == [("ANALYZE " + ", ".join(PUBLIC_READ_TABLES), None)]
     assert "signal_card_read_model" in PUBLIC_READ_TABLES
+
+
+def test_read_model_query_is_bounded_and_sets_local_timeout(monkeypatch):
+    from services import signal_read_model
+
+    class _Cursor:
+        def fetchall(self):
+            return []
+
+    class _Connection:
+        def __init__(self):
+            self.queries = []
+            self.closed = False
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params))
+            return _Cursor()
+
+        def close(self):
+            self.closed = True
+
+    conn = _Connection()
+    monkeypatch.setenv("RADAR_SIGNAL_QUERY_TIMEOUT_MS", "2400")
+    monkeypatch.setattr(
+        signal_read_model,
+        "_open_read_conn",
+        lambda _db_path=None: conn,
+    )
+
+    payload = signal_read_model.load_signals_from_read_model(
+        None,
+        sources=["facebook"],
+        wards=["Tan An"],
+        include_total=False,
+    )
+
+    assert conn.queries[0] == (
+        "SELECT set_config('statement_timeout', ?, true)",
+        ("2400ms",),
+    )
+    query, params = conn.queries[1]
+    assert "FROM signal_card_read_model rm" in query
+    assert "COUNT(*) OVER()" not in query
+    assert params[-2:] == [31, 0]
+    assert payload == {
+        "signals": [],
+        "page": 1,
+        "limit": 30,
+        "has_more": False,
+        "sort": "newest",
+        "tier": "guest",
+    }
+    assert conn.closed is True
+
+
+PARITY_CASES = (
+    {},
+    {"sources": ["facebook"]},
+    {"sources": ["guland"]},
+    {"wards": ["Tan An"]},
+    {"prop_types": ["dat_nen"]},
+    {"mos_min": 20},
+    {"only_drops": True},
+    {"sort": "mos_desc"},
+    {"sort": "score_desc"},
+    {"page": 2, "limit": 12, "include_total": False},
+)
+
+
+@pytest.fixture(scope="module")
+def populated_signal_read_model():
+    from services.signal_read_model import refresh_signal_card_read_model
+
+    connection.close_all()
+    init_schema()
+    with connection.get_conn() as conn:
+        result = refresh_signal_card_read_model(conn, listing_ids=None)
+    connection.close_all()
+    assert result.mode == "full"
+    return result
+
+
+@pytest.mark.parametrize("case", PARITY_CASES)
+@pytest.mark.parametrize("tier", ("guest", "free", "vip", "admin"))
+def test_read_model_payload_matches_legacy(
+    populated_signal_read_model,
+    case,
+    tier,
+):
+    from services.market_data import _load_signals_legacy
+    from services.signal_read_model import load_signals_from_read_model
+
+    kwargs = {"tier": tier, **case}
+    legacy = _load_signals_legacy(None, **kwargs)
+    read_model = load_signals_from_read_model(None, **kwargs)
+
+    assert read_model == legacy
