@@ -26,8 +26,9 @@ Current priority:
 
 | City | Priority wards |
 |---|---|
-| Thủ Dầu Một | Hòa Phú, Phú Cường |
+| Thủ Dầu Một | Hòa Phú, Phú Cường, Chánh Nghĩa, Phú Thọ |
 | Bến Cát | Mỹ Phước, Tân Định, An Điền, An Tây, Thới Hòa, Hòa Lợi, Phú An, Chánh Phú Hòa |
+| Tân Uyên trước sáp nhập | Uyên Hưng, Tân Phước Khánh, Thạnh Phước, Tân Hiệp, Khánh Bình, Thái Hòa, Hội Nghĩa, Tân Vĩnh Hiệp, Phú Chánh, Vĩnh Tân, Bạch Đằng, Thạnh Hội |
 
 Future expansion should only update config/aliases, for example:
 
@@ -41,7 +42,7 @@ Future expansion should only update config/aliases, for example:
 }
 ```
 
-Same pattern applies to Thuận An, Tân Uyên, or any future city/ward.
+Dĩ An/Thuận An are temporarily OK and are not in the night queue unless anh asks to switch back.
 
 ## Files
 
