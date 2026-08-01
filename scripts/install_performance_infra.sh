@@ -214,7 +214,7 @@ validate_redis_config() {
 }
 
 validate_before_activation() {
-  redis-server --test-memory 2
+  redis-server --test-memory 2 >/dev/null
   validate_redis_config
   nginx -t
   systemd-analyze verify /etc/systemd/system/radar-bds.service
