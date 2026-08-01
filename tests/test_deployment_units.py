@@ -110,6 +110,7 @@ def test_public_cache_verifier_checks_hit_bypass_and_redaction():
     assert '"phone"' in text
     assert "Set-Cookie" in text
     assert "Cache HIT was not observed" in text
+    assert "ConvertFrom-Json -Depth" not in text
 
 
 def test_k6_public_load_script_has_safe_scenarios_and_thresholds():

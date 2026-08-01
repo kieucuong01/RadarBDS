@@ -149,7 +149,7 @@ foreach ($path in $ProbePaths) {
     if ($null -eq $hit) { throw "Cache HIT was not observed for $url" }
 
     if ($path.StartsWith("/api/")) {
-        $json = $hit.Content | ConvertFrom-Json -Depth 100
+        $json = $hit.Content | ConvertFrom-Json
         Assert-NoSensitiveJson -Value $json
     }
 
