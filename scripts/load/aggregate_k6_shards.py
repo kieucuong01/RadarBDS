@@ -1,0 +1,241 @@
+#!/usr/bin/env python3
+"""Fail-closed aggregation for synchronized Radar BDS k6 shards."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import os
+import sys
+from pathlib import Path
+from typing import Any
+
+
+EDGE_METRICS = (
+    "radar_edge_hit",
+    "radar_edge_miss",
+    "radar_edge_stale",
+    "radar_edge_bypass",
+    "radar_edge_unknown",
+)
+
+
+class AggregationError(ValueError):
+    """Raised when shard evidence is incomplete or violates a gate."""
+
+
+def _object(value: Any, label: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise AggregationError(f"{label} must be a JSON object")
+    return value
+
+
+def _number(value: Any, label: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise AggregationError(f"{label} must be numeric")
+    result = float(value)
+    if not math.isfinite(result) or result < 0:
+        raise AggregationError(f"{label} must be a finite non-negative number")
+    return result
+
+
+def _integer(value: Any, label: str) -> int:
+    numeric = _number(value, label)
+    if not numeric.is_integer():
+        raise AggregationError(f"{label} must be an integer")
+    return int(numeric)
+
+
+def _read_json(path: Path, label: str) -> dict[str, Any]:
+    try:
+        return _object(json.loads(path.read_text(encoding="utf-8")), label)
+    except FileNotFoundError as exc:
+        raise AggregationError(f"Missing {label}: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise AggregationError(f"Invalid {label}: {path}: {exc}") from exc
+
+
+def _metric(summary: dict[str, Any], name: str) -> dict[str, Any]:
+    metrics = _object(summary.get("metrics"), "summary metrics")
+    if name not in metrics:
+        raise AggregationError(f"Missing metric: {name}")
+    return _object(metrics[name], f"metric {name}")
+
+
+def _metric_number(summary: dict[str, Any], metric_name: str, field: str) -> float:
+    metric = _metric(summary, metric_name)
+    if field not in metric:
+        raise AggregationError(f"Missing metric field: {metric_name}.{field}")
+    return _number(metric[field], f"{metric_name}.{field}")
+
+
+def _metric_count(summary: dict[str, Any], metric_name: str) -> int:
+    return _integer(_metric_number(summary, metric_name, "count"), f"{metric_name}.count")
+
+
+def _rate_counts(summary: dict[str, Any], metric_name: str) -> tuple[int, int]:
+    metric = _metric(summary, metric_name)
+    passes = _integer(metric.get("passes"), f"{metric_name}.passes")
+    fails = _integer(metric.get("fails"), f"{metric_name}.fails")
+    if passes + fails <= 0:
+        raise AggregationError(f"{metric_name} has no samples")
+    return passes, fails
+
+
+def _require_thresholds_not_crossed(summary: dict[str, Any], metric_name: str) -> None:
+    thresholds = _object(_metric(summary, metric_name).get("thresholds"), f"{metric_name}.thresholds")
+    if not thresholds:
+        raise AggregationError(f"Missing threshold results for {metric_name}")
+    for expression, crossed in thresholds.items():
+        if not isinstance(crossed, bool):
+            raise AggregationError(f"Threshold result must be boolean: {metric_name} {expression}")
+        if crossed:
+            raise AggregationError(f"Shard crossed threshold: {metric_name} {expression}")
+
+
+def _metadata_value(metadata: dict[str, Any], name: str, expected: Any) -> None:
+    actual = metadata.get(name)
+    if actual != expected:
+        raise AggregationError(
+            f"Metadata {name} mismatch: expected {expected!r}, got {actual!r}"
+        )
+
+
+def aggregate(args: argparse.Namespace) -> dict[str, Any]:
+    if args.expected_shards < 1:
+        raise AggregationError("expected_shards must be at least 1")
+
+    summaries: list[dict[str, Any]] = []
+    metadata_rows: list[dict[str, Any]] = []
+    for shard in range(args.expected_shards):
+        shard_dir = args.input_dir / f"shard-{shard}"
+        if not shard_dir.is_dir():
+            raise AggregationError(f"Missing shard directory: {shard_dir}")
+        metadata = _read_json(shard_dir / "metadata.json", "shard metadata")
+        summary = _read_json(shard_dir / "summary.json", "shard summary")
+
+        for field, expected in (
+            ("scenario", args.scenario),
+            ("stage", args.stage),
+            ("run_id", args.run_id),
+            ("base_url", args.base_url),
+            ("shard", shard),
+            ("expected_shards", args.expected_shards),
+        ):
+            _metadata_value(metadata, field, expected)
+
+        vus = _integer(metadata.get("vus"), "metadata vus")
+        if vus < 1:
+            raise AggregationError("metadata vus must be at least 1")
+        exit_code = _integer(metadata.get("k6_exit_code"), "metadata k6_exit_code")
+        if exit_code != 0:
+            raise AggregationError(f"Shard {shard} k6 exit code was {exit_code}")
+
+        for metric_name in ("http_req_duration", "http_req_failed", "checks"):
+            _require_thresholds_not_crossed(summary, metric_name)
+
+        p95 = _metric_number(summary, "http_req_duration", "p(95)")
+        p99 = _metric_number(summary, "http_req_duration", "p(99)")
+        p95_limit = 1500.0 if args.scenario == "mixed" else 1000.0
+        if p95 >= p95_limit:
+            raise AggregationError(
+                f"Shard {shard} p95 {p95:.3f}ms is not below {p95_limit:.0f}ms"
+            )
+        if p99 >= 2000.0:
+            raise AggregationError(
+                f"Shard {shard} p99 {p99:.3f}ms is not below 2000ms"
+            )
+
+        failed_true, failed_false = _rate_counts(summary, "http_req_failed")
+        failure_rate = failed_true / (failed_true + failed_false)
+        if failure_rate >= 0.005:
+            raise AggregationError(
+                f"Shard {shard} failure rate {failure_rate:.6f} is not below 0.005"
+            )
+        check_passes, check_fails = _rate_counts(summary, "checks")
+        check_rate = check_passes / (check_passes + check_fails)
+        if check_rate <= 0.995:
+            raise AggregationError(
+                f"Shard {shard} check rate {check_rate:.6f} is not above 0.995"
+            )
+
+        bypass = _metric_count(summary, "radar_edge_bypass")
+        if bypass:
+            raise AggregationError(f"Shard {shard} edge bypass count was {bypass}")
+        unknown = _metric_count(summary, "radar_edge_unknown")
+        if unknown:
+            raise AggregationError(f"Shard {shard} unknown edge count was {unknown}")
+
+        metadata_rows.append(metadata)
+        summaries.append(summary)
+
+    failure_true = sum(_rate_counts(item, "http_req_failed")[0] for item in summaries)
+    failure_false = sum(_rate_counts(item, "http_req_failed")[1] for item in summaries)
+    check_passes = sum(_rate_counts(item, "checks")[0] for item in summaries)
+    check_fails = sum(_rate_counts(item, "checks")[1] for item in summaries)
+    aggregate_result = {
+        "status": "passed",
+        "scenario": args.scenario,
+        "stage": args.stage,
+        "run_id": args.run_id,
+        "base_url": args.base_url,
+        "expected_shards": args.expected_shards,
+        "total_vus": sum(_integer(item["vus"], "metadata vus") for item in metadata_rows),
+        "http_reqs": sum(_metric_count(item, "http_reqs") for item in summaries),
+        "max_shard_p95_ms": max(
+            _metric_number(item, "http_req_duration", "p(95)") for item in summaries
+        ),
+        "max_shard_p99_ms": max(
+            _metric_number(item, "http_req_duration", "p(99)") for item in summaries
+        ),
+        "failure_rate": failure_true / (failure_true + failure_false),
+        "check_rate": check_passes / (check_passes + check_fails),
+        "edge": {
+            name: sum(_metric_count(item, name) for item in summaries)
+            for name in EDGE_METRICS
+        },
+    }
+    return aggregate_result
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input-dir", type=Path, required=True)
+    parser.add_argument("--expected-shards", type=int, required=True)
+    parser.add_argument("--scenario", choices=("default", "mixed"), required=True)
+    parser.add_argument("--stage", required=True)
+    parser.add_argument("--run-id", required=True)
+    parser.add_argument("--base-url", choices=("https://radarbds.vn",), required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    return parser
+
+
+def main() -> int:
+    args = _parser().parse_args()
+    try:
+        result = aggregate(args)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        temporary = args.output.with_name(f"{args.output.name}.{os.getpid()}.tmp")
+        temporary.write_text(
+            json.dumps(result, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(args.output)
+    except (AggregationError, OSError) as exc:
+        print(f"aggregation_error={exc}", file=sys.stderr)
+        return 1
+
+    print("stage_status=passed")
+    print(f"stage={result['stage']}")
+    print(f"total_vus={result['total_vus']}")
+    print(f"http_reqs={result['http_reqs']}")
+    print(f"max_shard_p95_ms={result['max_shard_p95_ms']:.3f}")
+    print(f"max_shard_p99_ms={result['max_shard_p99_ms']:.3f}")
+    print(f"failure_rate={result['failure_rate']:.6f}")
+    print(f"check_rate={result['check_rate']:.6f}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
