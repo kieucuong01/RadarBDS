@@ -418,6 +418,33 @@ def test_api_dashboard_uses_fast_summary_loader(monkeypatch):
     assert payload["signals_version"] == "test-version"
 
 
+def test_get_signals_version_uses_primary_key_dataset_counter(monkeypatch):
+    import app as radar_app
+
+    class _VersionConnection:
+        def __init__(self):
+            self.queries = []
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params))
+            return _FakeCursor(rows=[{"dataset_name": "signals", "version": 17}])
+
+    conn = _VersionConnection()
+
+    @contextmanager
+    def fake_get_conn():
+        yield conn
+
+    monkeypatch.setattr(radar_app, "get_conn", fake_get_conn)
+
+    assert radar_app._get_signals_version("ignored") == "17"
+    assert len(conn.queries) == 1
+    sql, params = conn.queries[0]
+    assert "FROM public_dataset_versions" in sql
+    assert "MAX(" not in sql
+    assert params == ("signals",)
+
+
 def test_api_signals_caches_guest_payload_but_not_admin(monkeypatch):
     import app as radar_app
 

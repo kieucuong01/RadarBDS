@@ -59,6 +59,7 @@ from config import database_sqlite as db_mod
 from config.property_types import normalize_property_types
 from db import facebook_profiles as db_facebook_profiles
 from db.connection import connect, get_conn
+from db.public_dataset_versions import DATASET_SIGNALS, get_dataset_versions
 from db.moderation import normalize_phone
 from config.settings import (
     LEGAL_IMAGE_EVIDENCE_ENABLED,
@@ -4024,32 +4025,8 @@ def _dashboard_cache_refresh_requested(req) -> bool:
 
 def _get_signals_version(db_path: str) -> str:
     with get_conn() as conn:
-        row = conn.execute(
-            """
-            SELECT COALESCE(
-                MAX(v),
-                '1970-01-01T00:00:00'
-            ) AS v
-            FROM (
-                SELECT datetime(review_hidden_at) AS v
-                  FROM listings
-                 WHERE review_hidden_at IS NOT NULL
-                UNION ALL
-                SELECT datetime(updated_at) AS v
-                  FROM listings
-                 WHERE updated_at IS NOT NULL
-                UNION ALL
-                SELECT last_classified_at AS v
-                  FROM source_publishers
-                 WHERE last_classified_at IS NOT NULL
-                UNION ALL
-                SELECT last_seen_at AS v
-                  FROM source_publishers
-                 WHERE last_seen_at IS NOT NULL
-            )
-            """
-        ).fetchone()
-        return str(row[0] if row and row[0] is not None else "0")
+        versions = get_dataset_versions(conn, (DATASET_SIGNALS,))
+    return str(versions[DATASET_SIGNALS])
 
 
 def _db_handle():

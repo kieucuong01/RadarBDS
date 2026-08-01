@@ -43,7 +43,15 @@ def _fake_get_conn(conn):
 def test_init_schema_skips_ddl_when_existing_schema_lacks_owner(monkeypatch):
     import db.schema as schema
 
-    conn = _FakeConn({"raw_listings", "listings", "valuation_results", "crawl_runs"})
+    conn = _FakeConn(
+        {
+            "raw_listings",
+            "listings",
+            "valuation_results",
+            "crawl_runs",
+            "public_dataset_versions",
+        }
+    )
     monkeypatch.setattr(schema, "get_conn", lambda: _fake_get_conn(conn))
 
     schema.init_schema()
@@ -74,9 +82,33 @@ def test_init_schema_does_not_accept_missing_derived_location_table(monkeypatch)
             return super().execute(sql, params)
 
     conn = _NoDerivedTableConnection(
-        {"raw_listings", "listings", "valuation_results", "crawl_runs"}
+        {
+            "raw_listings",
+            "listings",
+            "valuation_results",
+            "crawl_runs",
+            "public_dataset_versions",
+        }
     )
     monkeypatch.setattr(schema, "get_conn", lambda: _fake_get_conn(conn))
 
     with pytest.raises(RuntimeError, match="listing_map_locations"):
+        schema.init_schema()
+
+
+def test_init_schema_does_not_accept_missing_public_dataset_versions(monkeypatch):
+    import db.schema as schema
+
+    class _NoPublicVersionsConnection(_FakeConn):
+        def execute(self, sql, params=None):
+            if "CREATE TABLE IF NOT EXISTS public_dataset_versions" in sql:
+                raise RuntimeError("permission denied for schema public")
+            return super().execute(sql, params)
+
+    conn = _NoPublicVersionsConnection(
+        {"raw_listings", "listings", "valuation_results", "crawl_runs"}
+    )
+    monkeypatch.setattr(schema, "get_conn", lambda: _fake_get_conn(conn))
+
+    with pytest.raises(RuntimeError, match="public_dataset_versions"):
         schema.init_schema()

@@ -785,6 +785,17 @@ def init_schema() -> None:
                     pass
                 if _core_schema_exists(conn):
                     try:
+                        if not _table_exists(conn, "public_dataset_versions"):
+                            _migrate_public_read_model(conn)
+                        if not _table_exists(conn, "public_dataset_versions"):
+                            raise RuntimeError(
+                                "required table public_dataset_versions is missing"
+                            )
+                    except Exception as migration_exc:
+                        raise RuntimeError(
+                            "required table public_dataset_versions is unavailable"
+                        ) from migration_exc
+                    try:
                         _migrate_listing_map_locations(conn)
                         if not _table_exists(conn, "listing_map_locations"):
                             raise RuntimeError(
@@ -1198,6 +1209,7 @@ def _run_migrations(conn: Any) -> None:
     _migrate_facebook_crawl_profiles(conn)
     _migrate_raw_listing_revisions(conn)
     _migrate_guland_publishers(conn)
+    _migrate_public_read_model(conn)
     conn.execute(
         """
         ALTER TABLE crawl_run_progress
@@ -1348,6 +1360,26 @@ def _run_migrations(conn: Any) -> None:
     _migrate_notification_log(conn)
     _migrate_user_favorite_listings(conn)
     _migrate_property_type_aliases(conn)
+
+
+def _migrate_public_read_model(conn: Any) -> None:
+    """Create durable public dataset counters used by hot read paths."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public_dataset_versions (
+            dataset_name TEXT PRIMARY KEY,
+            version BIGINT NOT NULL DEFAULT 0 CHECK (version >= 0),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO public_dataset_versions(dataset_name, version)
+        VALUES ('signals', 0), ('market', 0)
+        ON CONFLICT (dataset_name) DO NOTHING
+        """
+    )
 
 
 def _migrate_public_content_items(conn: Any) -> None:
