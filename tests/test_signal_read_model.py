@@ -254,6 +254,49 @@ def test_read_model_query_is_bounded_and_sets_local_timeout(monkeypatch):
     assert conn.closed is True
 
 
+def test_read_model_newest_sort_preserves_legacy_guland_text_order(monkeypatch):
+    from services import signal_read_model
+
+    class _Cursor:
+        def fetchall(self):
+            return []
+
+    class _Connection:
+        def __init__(self):
+            self.queries = []
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params))
+            return _Cursor()
+
+        def close(self):
+            return None
+
+    conn = _Connection()
+    monkeypatch.setattr(
+        signal_read_model,
+        "_open_read_conn",
+        lambda _db_path=None: conn,
+    )
+
+    signal_read_model.load_signals_from_read_model(
+        None,
+        sources=["guland"],
+        include_total=False,
+    )
+
+    query = " ".join(conn.queries[1][0].split())
+    expected_order = (
+        "CASE WHEN rm.source = 'guland' THEN "
+        "COALESCE(CAST(rm.price_updated_at AS TEXT), "
+        "rm.first_seen_at, rm.crawled_at) ELSE "
+        "COALESCE(rm.posted_at, rm.crawled_at) END) DESC, "
+        "rm.listing_id DESC"
+    )
+    assert expected_order in query
+    assert "rm.activity_at DESC" not in query
+
+
 PARITY_CASES = (
     {},
     {"sources": ["facebook"]},

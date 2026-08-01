@@ -149,6 +149,8 @@ ORDER BY dataset_name;
 
 All three object names must be non-null and the version table must contain `market` and `signals`. `db.schema.init_schema()` commits these required objects before best-effort legacy migrations; if an optional migration then hits `insufficient_privilege`, it rolls back that optional transaction only.
 
+If compare reports only `order_mismatch` for Guland with identical IDs and fields, inspect `price_updated_at`, `first_seen_at`, and `crawled_at` string formats before changing indexes. Mixed space/`T` separators are present in production, and Phase 1 must preserve the existing lexical `listing_activity_at_sql()` order. Do not sort `newest` solely by normalized `signal_card_read_model.activity_at` unless that user-visible behavior change has its own migration and acceptance test.
+
 This rollout proves parity and normal-load latency only. Do not claim the 1,000-5,000 simultaneous in-flight request objective until the later pooling/cache/Nginx phases and staged load gates pass.
 
 ## Crawl Automation

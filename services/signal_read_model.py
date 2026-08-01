@@ -325,7 +325,10 @@ def _statement_timeout_ms() -> int:
 
 
 def _read_model_sort_sql(sort_key: str, alias: str) -> str:
-    newest = f"{alias}.activity_at DESC, {alias}.listing_id DESC"
+    newest = (
+        f"{listing_activity_at_sql(alias)} DESC, "
+        f"{alias}.listing_id DESC"
+    )
     sort_map = {
         "newest": newest,
         "price_m2_asc": (
