@@ -122,6 +122,7 @@ def test_k6_public_load_script_has_safe_scenarios_and_thresholds():
     assert "http_req_failed" in text
     assert "p(95)<1000" in text
     assert "p(99)<2000" in text
+    assert "Accept-Encoding" in text and "gzip" in text
     assert "X-Radar-Edge-Cache" in text
     assert "radar_session" not in text
     assert "Authorization" not in text

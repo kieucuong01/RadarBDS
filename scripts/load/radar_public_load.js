@@ -33,7 +33,10 @@ export const options = {
 };
 
 const REQUEST_PARAMS = Object.freeze({
-  headers: { Accept: 'text/html,application/json;q=0.9,*/*;q=0.8' },
+  headers: {
+    Accept: 'text/html,application/json;q=0.9,*/*;q=0.8',
+    'Accept-Encoding': 'gzip',
+  },
   tags: { radar_scenario: SCENARIO },
 });
 
