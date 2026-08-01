@@ -35,6 +35,42 @@ def _load_queue(path: Path) -> dict:
     return data
 
 
+def _extract_browser_result(stdout: str) -> dict:
+    """Return the last JSON status object printed by the browser-use program."""
+    for line in reversed((stdout or "").splitlines()):
+        line = line.strip()
+        if not line or not line.startswith("{"):
+            continue
+        try:
+            data = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data, dict) and "ok" in data:
+            return data
+    return {}
+
+
+def _is_valid_facebook_permalink(url: str) -> bool:
+    return bool(
+        isinstance(url, str)
+        and url.startswith("https://www.facebook.com/")
+        and ("/posts/" in url or "/permalink.php" in url or "story_fbid=" in url)
+    )
+
+
+def _validate_publish_success(record: dict) -> dict:
+    """Hard gate for cron KPI: success requires a real post permalink."""
+    browser_result = _extract_browser_result(str(record.get("stdout") or ""))
+    if not browser_result:
+        raise SystemExit("Publish returned 0 but no browser verification JSON was found")
+    if not browser_result.get("ok") or not browser_result.get("verified_text"):
+        raise SystemExit(f"Publish did not verify as a real Page article: {browser_result}")
+    permalink = browser_result.get("permalink") or ""
+    if not _is_valid_facebook_permalink(permalink):
+        raise SystemExit(f"Publish verification missing valid Facebook permalink: {browser_result}")
+    return browser_result
+
+
 def _program(queue: dict, mode: str, screenshot_path: str) -> str:
     page_url = queue.get("target", {}).get("page_url") or "https://www.facebook.com/radarbdsvn/"
     content = queue.get("content", {})
@@ -137,8 +173,8 @@ if mode != 'publish':
 def verified_on_page():
     needle = message.split('\\n', 1)[0][:60]
     # New Page posts can appear lower than the hero/profile cards after publish,
-    # especially when a visual is attached. Scan the rendered timeline before
-    # declaring a false negative.
+    # especially when a visual is attached. Success must be a real timeline
+    # article with a persistent Facebook permalink; composer/body text is not enough.
     for y in (0, 900, 1800, 3200, 5200, 7600):
         js('window.scrollTo(0, ' + str(y) + ')')
         time.sleep(1.5)
@@ -148,40 +184,31 @@ def verified_on_page():
             and 'Create post' in (((n.get('name') or {{}}).get('value', '')) or '')
             for n in nodes
         )
-        draft_has_text = False
+        post = {{'found': False, 'permalink': '', 'article_text': ''}}
         try:
-            draft_has_text = bool(js('''(() => {{
+            post = js('''(() => {{
                 const needle = %s;
-                const editable = [...document.querySelectorAll('[contenteditable="true"], textarea, [role="textbox"]')];
-                return editable.some(el => ((el.innerText || el.value || el.textContent || '').includes(needle)));
-            }})()''' % json.dumps(needle)))
-        except Exception:
-            draft_has_text = False
-        found_article = False
-        for n in nodes:
-            role = (n.get('role') or {{}}).get('value', '')
-            name = (n.get('name') or {{}}).get('value', '')
-            if role == 'article' and needle and needle in name:
-                found_article = True
-                break
-        dom_article_has_text = False
-        try:
-            dom_article_has_text = bool(js('''(() => {{
-                const needle = %s;
-                const articles = [...document.querySelectorAll('[role="article"]')];
-                return articles.some(article => {{
+                const validPermalink = href => !!href && (
+                    href.includes('/posts/') || href.includes('/permalink.php') || href.includes('story_fbid=')
+                );
+                for (const article of [...document.querySelectorAll('[role="article"]')]) {{
                     const text = article.innerText || '';
-                    const hasDraft = !!article.querySelector('[contenteditable="true"], textarea, [role="textbox"]');
-                    return text.includes(needle) && !hasDraft;
-                }});
-            }})()''' % json.dumps(needle)))
+                    if (!text.includes(needle)) continue;
+                    const draftHasNeedle = [...article.querySelectorAll('[contenteditable="true"], textarea, [role="textbox"]')]
+                        .some(el => ((el.innerText || el.value || el.textContent || '').includes(needle)));
+                    if (draftHasNeedle) continue;
+                    const links = [...article.querySelectorAll('a')].map(a => a.href || '').filter(Boolean);
+                    const permalink = links.find(validPermalink) || '';
+                    if (!permalink) continue;
+                    return {{found: true, permalink, article_text: text.slice(0, 500)}};
+                }}
+                return {{found: false, permalink: '', article_text: ''}};
+            }})()''' % json.dumps(needle)) or {{'found': False, 'permalink': '', 'article_text': ''}}
         except Exception:
-            dom_article_has_text = False
-        # Do not use document.body.innerText as success evidence: inline composer
-        # drafts also live in body text and caused false OK reports.
-        if (found_article or dom_article_has_text) and not has_dialog and not draft_has_text:
-            return True, needle
-    return False, needle
+            post = {{'found': False, 'permalink': '', 'article_text': ''}}
+        if post.get('found') and not has_dialog:
+            return True, needle, post.get('permalink') or ''
+    return False, needle, ''
 
 # Current Page UI is normally: composer -> Next -> Post settings -> Post.
 # Some variants publish/close after Next; verify before looking for final Post.
@@ -194,10 +221,10 @@ for n in ax_nodes():
         break
 
 time.sleep(5)
-found, needle = verified_on_page()
+found, needle, permalink = verified_on_page()
 if found:
     capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
-    print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'needle': needle, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_published'}}, ensure_ascii=False))
+    print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'needle': needle, 'permalink': permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_published'}}, ensure_ascii=False))
     raise SystemExit(0)
 
 post_button = None
@@ -213,10 +240,10 @@ if not post_button:
     # timeline renders the new article. Poll the feed before reporting a false
     # negative; this avoids repost attempts from a successfully-created post.
     for _ in range(25):
-        found, needle = verified_on_page()
+        found, needle, permalink = verified_on_page()
         if found:
             capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
-            print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'needle': needle, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_async_published'}}, ensure_ascii=False))
+            print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'needle': needle, 'permalink': permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_async_published'}}, ensure_ascii=False))
             raise SystemExit(0)
         time.sleep(2)
     raise RuntimeError('Final Post button not found or disabled, and Next did not verify as published.')
@@ -247,16 +274,16 @@ try:
         time.sleep(2)
 except Exception:
     pass
-found, needle = False, message.split('\\n', 1)[0][:60]
+found, needle, permalink = False, message.split('\\n', 1)[0][:60], ''
 # Native Page posts can take a little longer to appear in the feed after the
 # CTA modal is dismissed. Poll before failing so cron does not report false negatives.
 for _ in range(25):
-    found, needle = verified_on_page()
+    found, needle, permalink = verified_on_page()
     if found:
         break
     time.sleep(2)
 capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
-print(json.dumps({{'ok': found, 'mode': mode, 'verified_text': found, 'needle': needle, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'post_button'}}, ensure_ascii=False))
+print(json.dumps({{'ok': found, 'mode': mode, 'verified_text': found, 'needle': needle, 'permalink': permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'post_button'}}, ensure_ascii=False))
 if not found:
     raise RuntimeError('Post action attempted but verification text was not found.')
 """
@@ -309,6 +336,14 @@ def run(args: argparse.Namespace) -> dict:
         "stderr": proc.stderr[-4000:],
         "screenshot": screenshot_path,
     }
+    if proc.returncode == 0 and args.mode == "publish":
+        try:
+            record["browser_result"] = _validate_publish_success(record)
+        except SystemExit as exc:
+            record["validation_error"] = str(exc)
+            log_path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            print(json.dumps(record, ensure_ascii=False, indent=2))
+            raise
     log_path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(record, ensure_ascii=False, indent=2))
     if proc.returncode != 0:

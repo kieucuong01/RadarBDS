@@ -86,6 +86,39 @@ def save_state(state: dict) -> None:
     tmp.replace(STATE_PATH)
 
 
+def valid_facebook_permalink(url: str) -> bool:
+    return bool(
+        isinstance(url, str)
+        and url.startswith("https://www.facebook.com/")
+        and ("/posts/" in url or "/permalink.php" in url or "story_fbid=" in url)
+    )
+
+
+def posted_today(posted: dict, *, today: dt.date | None = None) -> tuple[bool, dict]:
+    today = today or dt.datetime.now().astimezone().date()
+    for item in posted.values():
+        if not isinstance(item, dict):
+            continue
+        post_url = item.get("post_url") or ((item.get("browser_result") or {}).get("permalink"))
+        if not valid_facebook_permalink(str(post_url or "")):
+            continue
+        posted_at = str(item.get("posted_at") or "")[:10]
+        if posted_at == today.isoformat():
+            return True, item
+    return False, {}
+
+
+def parse_post_wrapper_stdout(stdout: str) -> dict:
+    try:
+        data = json.loads((stdout or "").strip())
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Publish wrapper returned 0 but stdout was not JSON: {exc}") from exc
+    browser_result = data.get("browser_result") if isinstance(data, dict) else None
+    if not isinstance(browser_result, dict) or not valid_facebook_permalink(str(browser_result.get("permalink") or "")):
+        raise SystemExit(f"Publish wrapper missing verified permalink: {str(stdout)[-1000:]}")
+    return data
+
+
 def article_candidates() -> list[tuple[str, str]]:
     """Newest /tin-tuc article slugs with their publish/modified dates."""
     if str(REPO) not in sys.path:
@@ -158,6 +191,11 @@ def publish(queue_path: Path) -> dict:
             "Facebook Page publish failed\n"
             f"STDOUT:\n{proc.stdout[-3000:]}\nSTDERR:\n{proc.stderr[-3000:]}"
         )
+    wrapper_record = parse_post_wrapper_stdout(proc.stdout)
+    browser_result = wrapper_record["browser_result"]
+    record["post_url"] = browser_result["permalink"]
+    record["browser_result"] = browser_result
+    record["screenshot"] = wrapper_record.get("screenshot")
     return record
 
 
@@ -168,6 +206,11 @@ def main() -> int:
     ensure_browser()
     state = load_state()
     posted = state.setdefault("posted", {})
+    already_done, done_item = posted_today(posted)
+    if already_done:
+        print("@rb social auto-post OK — already posted today")
+        print(f"Post URL: {done_item.get('post_url') or ((done_item.get('browser_result') or {}).get('permalink'))}")
+        return 0
     queue_path = create_unposted_queue(posted)
     key, slug, url = queue_key(queue_path)
     if key in posted:
@@ -179,6 +222,9 @@ def main() -> int:
         "url": url,
         "queue": str(queue_path),
         "posted_at": dt.datetime.now(dt.timezone.utc).astimezone().isoformat(timespec="seconds"),
+        "post_url": result.get("post_url"),
+        "screenshot": result.get("screenshot"),
+        "browser_result": result.get("browser_result"),
         "result": result,
     }
     save_state(state)
