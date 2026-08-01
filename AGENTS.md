@@ -62,6 +62,7 @@ Marketing skills:
 - Installed PostgreSQL 18 service `postgresql-x64-18` on `127.0.0.1:5432` exists but local credentials may drift; do not assume it is the active dev DB unless `.env.local` points there.
 - Remote Supabase project `ozdjzfiqcjnlfuihqqjy` is sync/backup only. Passwords live only in ignored env files; never print or commit them.
 - Production: Ubuntu Server 24.04 LTS, Python 3.12, systemd services, Nginx, domain `https://radarbds.vn`.
+- Production Git origin is the canonical HTTPS repository URL. The retired `github.com-radarbds` SSH alias no longer resolves; keep the guarded bundle fallback for future fetch outages.
 - Production public-read path uses guest-only Nginx microcache -> bounded Gunicorn `3x4` -> Redis cache/read model -> PostgreSQL pool max `4` per worker. Redis is loopback-only, disposable, persistence-off, and capped at 256 MB. Current exact settings, evidence, and rollback are in `docs/operations.md`.
 - Public DNS currently points directly to `103.90.226.230` on Vietnix nameservers; Cloudflare/CDN is not active. The direct external path is the measured capacity bottleneck. Do not rerun the distributed capacity branch until the authenticated CDN cutover and `-RequireCdn` verifier pass.
 - Production env must set `PUBLIC_BASE_URL=https://radarbds.vn` and `DASHBOARD_BASE_URL=https://radarbds.vn`.

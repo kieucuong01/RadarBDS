@@ -24,9 +24,11 @@ Use `-Path file1,file2` instead of `-All` when the worktree has unrelated dirty
 files that should not be committed.
 
 The ship script stages the requested files, commits, pushes `origin/main`, then
-runs production deploy. If the VPS checkout cannot fetch from GitHub because of
-the `github.com-radarbds` alias/auth path, it automatically deploys the pushed
-commit through a local `git bundle` fallback.
+runs production deploy. On 2026-08-01 the VPS checkout origin was normalized to
+`https://github.com/kieucuong01/RadarBDS.git` after the old
+`github.com-radarbds` hostname stopped resolving; a live fetch proved the new
+origin and production HEAD matched `origin/main`. The local `git bundle`
+fallback remains the guarded recovery path if a future GitHub fetch fails.
 
 After code is already committed and pushed to `origin/main`:
 
@@ -315,9 +317,9 @@ Evidence is retained locally at `C:\tmp\radar-phase4-evidence-20260801-172749`, 
 
 Distributed workflow run `30698414443` stopped all dependent stages after `default-100`, as designed. All 33,288 content/cache checks passed and no HTTP request failed; only the unchanged latency thresholds crossed. Local external compressed tests top out around 2.2 MB/s, while `k6-vps-diagnostic-500` on the same host delivered about 8 MB/s at p95 665 ms. This is the decision evidence for CDN/origin shielding, not permission to relax the p95/p99 gates.
 
-The paired 30-minute observer retained 152 samples in `distributed-20260801-1848`. It showed no service restart, Redis rejection/eviction, PostgreSQL saturation, or new listen drop during the load stage. The observer nevertheless ended `ABORT` after the workflow had already stopped because its final three samples recorded nonzero swap-in values `8`, `8`, and `16`, exactly triggering the fail-closed sustained-swap rule. The last sample still had about 2.23 GB available memory, CPU 4%, PostgreSQL 0/3 active/total, and all four services active. Treat the whole attempt as non-acceptance and require a clean observer alongside the post-CDN rerun; do not erase or reinterpret this abort as a pass.
+The paired 30-minute observer retained 152 samples in `distributed-20260801-1848`. It showed no service restart, Redis rejection/eviction, PostgreSQL saturation, or new listen drop during the load stage. The observer nevertheless ended `ABORT` after the workflow had already stopped because its final three samples recorded nonzero swap-in values `8`, `8`, and `16`, exactly triggering the fail-closed sustained-swap rule. The last sample still had about 2.23 GB available memory, CPU 4%, PostgreSQL 0/3 active/total, and all four services active. A later idle diagnostic found about 2.16 GB available memory, 176 MB swap allocated, `vm.swappiness=60`, and zero swap-in/out on every live interval after the initial `vmstat` since-boot row. This does not turn the failed observer into a pass; require a clean observer alongside the post-CDN rerun and diagnose fresh sustained swap if it returns.
 
-Current DNS is still direct: `radarbds.vn -> 103.90.226.230`, authoritative nameservers `ns1.vietnix.net`, `ns2.vietnix.net`, and `nsbak.vietnix.net`; no `CF-Ray`/`CF-Cache-Status` is present. The authenticated Vietnix account has the domain/VPS/Object Storage but no CDN service, and the available Cloudflare session is not authenticated. No account, plan, or nameserver change was created automatically. Use `docs/superpowers/specs/2026-08-01-cloudflare-origin-shield-design.md` and its paired plan for the exact allowlist, private bypass, DNS preservation, cutover, and rollback contract.
+Current DNS is still direct: `radarbds.vn -> 103.90.226.230`, authoritative nameservers `ns1.vietnix.net`, `ns2.vietnix.net`, and `nsbak.vietnix.net`; no `CF-Ray`/`CF-Cache-Status` is present. The authenticated Vietnix account has the domain/VPS/Object Storage but no CDN service, and the available Cloudflare session is not authenticated. No `CLOUDFLARE*`, `CF_*`, `DNS_*`, or `VIETNIX*` API credential variable was found in the ignored local env files or readable production env files. No account, plan, or nameserver change was created automatically. Use `docs/superpowers/specs/2026-08-01-cloudflare-origin-shield-design.md` and its paired plan for the exact allowlist, private bypass, DNS preservation, cutover, and rollback contract.
 
 ### Honest capacity boundary and next architecture
 
