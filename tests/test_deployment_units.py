@@ -85,6 +85,7 @@ def test_performance_installer_validates_before_activation_and_has_rollback():
     assert "redis-server /etc/redis/redis.conf --test-memory 2" not in text
     assert 'redis-cli -s "$socket" PING' in text
     assert 'redis-cli -s "$socket" SHUTDOWN NOSAVE' in text
+    assert "--force-confmiss" in text
     assert "systemctl reload nginx" in text
     assert "systemctl restart radar-bds.service" in text
 

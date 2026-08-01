@@ -103,7 +103,7 @@ install_redis_package() {
   apt-get update
   if dpkg-query -W -f='${Status}' redis-server 2>/dev/null | grep -Fq 'install ok installed'; then
     if [ ! -f /etc/redis/redis.conf ]; then
-      apt-get install --reinstall -y redis-server
+      apt-get -o Dpkg::Options::=--force-confmiss install --reinstall -y redis-server
     fi
   else
     apt-get install -y redis-server
