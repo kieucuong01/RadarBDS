@@ -107,6 +107,20 @@ def test_public_cache_verifier_checks_hit_bypass_and_redaction():
     assert "Cache HIT was not observed" in text
 
 
+def test_k6_public_load_script_has_safe_scenarios_and_thresholds():
+    text = Path("scripts/load/radar_public_load.js").read_text("utf-8")
+
+    assert "SCENARIO" in text
+    assert "default" in text and "mixed" in text
+    assert "http.batch" in text
+    assert "http_req_failed" in text
+    assert "p(95)<1000" in text
+    assert "p(99)<2000" in text
+    assert "X-Radar-Edge-Cache" in text
+    assert "radar_session" not in text
+    assert "Authorization" not in text
+
+
 def test_guland_secondary_systemd_timer_runs_after_primary_daily_crawl():
     base = Path("deployment/ubuntu24")
     service = (base / "radar-bds-guland-crawl.service").read_text(encoding="utf-8")

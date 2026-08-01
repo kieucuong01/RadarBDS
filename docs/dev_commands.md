@@ -450,6 +450,34 @@ Real-browser verification must cover desktop and `390x844`:
 
 Do not treat source-contract tests as browser evidence. Do not leave CDP throttling, request interception, synthetic cookies/users, or a viewport override active after the run.
 
+### Staged public concurrency test
+
+Validate the k6 profile without generating load:
+
+```powershell
+k6 inspect scripts\load\radar_public_load.js
+```
+
+Run stages serially from a machine outside the VPS. `RUN_ID` is one shared, non-secret edge-key suffix for the whole stage; change it between stages, never per virtual user:
+
+```powershell
+$env:BASE_URL = "https://radarbds.vn"
+$env:SCENARIO = "default"
+$env:RUN_ID = "stage-100"
+$env:VUS = "100"
+$env:DURATION = "2m"
+k6 run scripts\load\radar_public_load.js
+```
+
+Advance only after the prior result and simultaneous host observations pass:
+
+| Scenario | Serial VUs | Limit |
+|---|---|---|
+| `default` | `100`, `500`, `1000`, `5000` | p95 < 1,000 ms; p99 < 2,000 ms; failures < 0.5% |
+| `mixed` | `100`, `500`, `1000` | p95 < 1,500 ms; p99 < 2,000 ms; failures < 0.5% |
+
+The mixed setup prewarms exactly 50 canonical filter pairs and requires the second probe for each route to be `HIT`. Never run the two scenarios or two stages in parallel. Stop at the first abort threshold from `docs/operations.md`; do not compensate by raising workers, PostgreSQL connections, timeouts, or Redis memory.
+
 Post-merger location resolver:
 
 ```powershell
