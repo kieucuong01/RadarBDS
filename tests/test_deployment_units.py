@@ -194,6 +194,35 @@ def test_distributed_capacity_caller_is_serial_fixed_target_and_non_overlapping(
     assert text.count("uses: ./.github/workflows/_radar-distributed-load-stage.yml") == 7
 
 
+def test_capacity_observer_is_status_only_and_enforces_host_abort_thresholds():
+    sample = Path(
+        "scripts/load/production_capacity_sample.sh"
+    ).read_text("utf-8")
+    observer = Path(
+        "scripts/load/observe_production_capacity.ps1"
+    ).read_text("utf-8")
+
+    for token in (
+        "systemctl is-active",
+        "ListenOverflows",
+        "ListenDrops",
+        "used_memory",
+        "evicted_keys",
+        "rejected_connections",
+        "pg_stat_activity",
+        "vmstat",
+    ):
+        assert token in sample
+    assert "source /etc/radar-bds/radar.env" not in sample
+    assert "$DB_CONNECTIONS_MAX = 12" in observer
+    assert "$REDIS_MEMORY_MAX = 268435456" in observer
+    assert "$CPU_MAX = 90" in observer
+    assert "ABORT" in observer
+    assert "host-samples.jsonl" in observer
+    assert "response.body" not in observer.lower()
+    assert "Remove-Item" not in observer
+
+
 def test_guland_secondary_systemd_timer_runs_after_primary_daily_crawl():
     base = Path("deployment/ubuntu24")
     service = (base / "radar-bds-guland-crawl.service").read_text(encoding="utf-8")

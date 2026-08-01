@@ -480,6 +480,45 @@ The mixed setup prewarms exactly 50 canonical filter pairs and requires the seco
 
 The script explicitly requests `Accept-Encoding: gzip` to represent a browser. Treat an uncompressed result as an invalid harness run, not production capacity. The authoritative 2026-08-01 production results and rollback commands are in `docs/operations.md`: normal 100 VUs and mixed 500 VUs passed; normal 500 and mixed 1,000 missed the approved gates; 5,000 was not run after the abort threshold.
 
+### Distributed production capacity gate
+
+The distributed workflow removes one load generator/path as a confounder. It is production load, not CI smoke. It runs only from the exact branch `capacity-test/approved-20260801` or a manual dispatch confirmed with `radarbds.vn`, uses a non-canceling concurrency group, and advances only while every shard in the prior stage passes.
+
+Before the single trigger, start the host observer from the deployed, verified `main` commit:
+
+```powershell
+$evidence = "C:\tmp\radar-phase4-evidence-20260801-172749\distributed-$(Get-Date -Format yyyyMMdd-HHmmss)"
+.\scripts\load\observe_production_capacity.ps1 `
+  -EvidenceDir $evidence `
+  -DurationMinutes 30 `
+  -IntervalSeconds 10
+```
+
+From a clean commit that already matches `origin/main` and production, create the one approved push trigger:
+
+```powershell
+git push origin HEAD:refs/heads/capacity-test/approved-20260801
+```
+
+Do not force-push or push a second commit to that branch while a workflow is queued or active. The exact stage order is default 100, mixed 100, default 500, mixed 500, default 1,000, mixed 1,000, then default 5,000. The stage aggregator requires all expected shard artifacts, rejects any nonzero k6 exit, BYPASS/unknown edge count, mismatched metadata, or crossed threshold, and reports the maximum shard p95/p99 rather than averaging percentiles.
+
+Validate the tooling without production load:
+
+```powershell
+& $py -X utf8 -m pytest `
+  tests\test_distributed_load_aggregation.py `
+  tests\test_deployment_units.py -q
+& $py -X utf8 -m py_compile scripts\load\aggregate_k6_shards.py
+& $bash -n scripts\load\production_capacity_sample.sh
+$tokens=$null; $errors=$null
+[System.Management.Automation.Language.Parser]::ParseFile(
+  (Resolve-Path scripts\load\observe_production_capacity.ps1),
+  [ref]$tokens, [ref]$errors) | Out-Null
+if ($errors.Count) { throw ($errors | Out-String) }
+```
+
+Workflow artifacts are still evidence only after local aggregation, host samples, public-cache privacy verification, and real-browser desktop/mobile checks agree. Never run the local k6 stages and distributed workflow concurrently.
+
 Post-merger location resolver:
 
 ```powershell
