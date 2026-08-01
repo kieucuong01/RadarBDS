@@ -137,6 +137,34 @@ def test_k6_public_load_script_has_safe_scenarios_and_thresholds():
     assert "Authorization" not in text
 
 
+def test_reusable_distributed_load_stage_is_pinned_synchronized_and_fail_closed():
+    text = Path(
+        ".github/workflows/_radar-distributed-load-stage.yml"
+    ).read_text("utf-8")
+
+    assert "workflow_call:" in text
+    assert "shards_json:" in text
+    assert "fromJSON(inputs.shards_json)" in text
+    assert "date +%s" in text
+    assert "+ 120" in text
+    assert "late_by" in text
+    assert '"$late_by" -gt 10' in text
+    assert "grafana/k6/releases/download/v2.1.0" in text
+    assert (
+        "295d961ebfca306f295f1133068dcd403a8171c87f387928f5f30b0fbcff858a"
+        in text
+    )
+    assert "11bd71901bbe5b1630ceea73d27597364c9af683" in text
+    assert "ea165f8d65b6e75b540449e92b4886f43607fa02" in text
+    assert "d3f86a106a0bac45b974a628896c90dbdf5c8093" in text
+    assert "--summary-export" in text
+    assert "p(99)" in text
+    assert "aggregate_k6_shards.py" in text
+    assert "if: always()" in text
+    assert "contents: read" in text
+    assert "id-token" not in text
+
+
 def test_guland_secondary_systemd_timer_runs_after_primary_daily_crawl():
     base = Path("deployment/ubuntu24")
     service = (base / "radar-bds-guland-crawl.service").read_text(encoding="utf-8")

@@ -1,0 +1,232 @@
+name: Radar distributed load stage
+
+on:
+  workflow_call:
+    inputs:
+      scenario:
+        required: true
+        type: string
+      stage:
+        required: true
+        type: string
+      total_vus:
+        required: true
+        type: number
+      vus_per_shard:
+        required: true
+        type: number
+      shards_json:
+        required: true
+        type: string
+      expected_shards:
+        required: true
+        type: number
+      duration:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      start_epoch: ${{ steps.coordinate.outputs.start_epoch }}
+      run_id: ${{ steps.coordinate.outputs.run_id }}
+    steps:
+      - name: Set synchronized start
+        id: coordinate
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          start_epoch=$(($(date +%s) + 120))
+          run_id="gha-${GITHUB_RUN_ID}-${{ inputs.stage }}"
+          echo "start_epoch=$start_epoch" >> "$GITHUB_OUTPUT"
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+  load:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: ${{ fromJSON(inputs.shards_json) }}
+    steps:
+      - name: Checkout exact workflow commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install verified k6 v2.1.0
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          archive="$RUNNER_TEMP/k6-v2.1.0-linux-amd64.tar.gz"
+          curl --fail --silent --show-error --location \
+            --output "$archive" \
+            https://github.com/grafana/k6/releases/download/v2.1.0/k6-v2.1.0-linux-amd64.tar.gz
+          echo "295d961ebfca306f295f1133068dcd403a8171c87f387928f5f30b0fbcff858a  $archive" \
+            | sha256sum --check --strict
+          tar -xzf "$archive" -C "$RUNNER_TEMP"
+          test -x "$RUNNER_TEMP/k6-v2.1.0-linux-amd64/k6"
+
+      - name: Wait for synchronized epoch
+        shell: bash
+        env:
+          START_EPOCH: ${{ needs.prepare.outputs.start_epoch }}
+        run: |
+          set -Eeuo pipefail
+          now=$(date +%s)
+          wait_seconds=$((START_EPOCH - now))
+          if [ "$wait_seconds" -gt 0 ]; then
+            sleep "$wait_seconds"
+          fi
+          late_by=$(($(date +%s) - START_EPOCH))
+          if [ "$late_by" -gt 10 ]; then
+            echo "Shard started ${late_by}s after the synchronized epoch" >&2
+            exit 1
+          fi
+
+      - name: Write status-only shard metadata
+        shell: bash
+        env:
+          BASE_URL: https://radarbds.vn
+          EXPECTED_SHARDS: ${{ inputs.expected_shards }}
+          RUN_ID: ${{ needs.prepare.outputs.run_id }}
+          SCENARIO: ${{ inputs.scenario }}
+          SHARD: ${{ matrix.shard }}
+          STAGE: ${{ inputs.stage }}
+          VUS: ${{ inputs.vus_per_shard }}
+        run: |
+          set -Eeuo pipefail
+          mkdir -p result
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          metadata = {
+              "scenario": os.environ["SCENARIO"],
+              "stage": os.environ["STAGE"],
+              "run_id": os.environ["RUN_ID"],
+              "base_url": os.environ["BASE_URL"],
+              "shard": int(os.environ["SHARD"]),
+              "expected_shards": int(os.environ["EXPECTED_SHARDS"]),
+              "vus": int(os.environ["VUS"]),
+              "k6_exit_code": None,
+          }
+          Path("result/metadata.json").write_text(
+              json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
+          )
+          PY
+
+      - name: Run k6 shard
+        id: k6
+        shell: bash
+        env:
+          BASE_URL: https://radarbds.vn
+          DURATION: ${{ inputs.duration }}
+          RUN_ID: ${{ needs.prepare.outputs.run_id }}
+          SCENARIO: ${{ inputs.scenario }}
+          VUS: ${{ inputs.vus_per_shard }}
+        run: |
+          set +e
+          "$RUNNER_TEMP/k6-v2.1.0-linux-amd64/k6" run \
+            --summary-trend-stats='avg,min,med,max,p(90),p(95),p(99),count' \
+            --summary-export=result/summary.json \
+            -e BASE_URL="$BASE_URL" \
+            -e SCENARIO="$SCENARIO" \
+            -e RUN_ID="$RUN_ID" \
+            -e VUS="$VUS" \
+            -e DURATION="$DURATION" \
+            scripts/load/radar_public_load.js
+          k6_exit_code=$?
+          set -e
+          K6_EXIT_CODE="$k6_exit_code" python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path("result/metadata.json")
+          metadata = json.loads(path.read_text(encoding="utf-8"))
+          metadata["k6_exit_code"] = int(os.environ["K6_EXIT_CODE"])
+          path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+          PY
+          echo "exit_code=$k6_exit_code" >> "$GITHUB_OUTPUT"
+          exit "$k6_exit_code"
+
+      - name: Upload shard evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: radar-${{ inputs.stage }}-shard-${{ matrix.shard }}
+          path: result
+          if-no-files-found: error
+          retention-days: 14
+
+  aggregate:
+    if: always()
+    needs:
+      - prepare
+      - load
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact workflow commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Download shard evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: radar-${{ inputs.stage }}-shard-*
+          path: downloaded
+
+      - name: Normalize and aggregate shards
+        shell: bash
+        env:
+          EXPECTED_SHARDS: ${{ inputs.expected_shards }}
+          EXPECTED_TOTAL_VUS: ${{ inputs.total_vus }}
+          RUN_ID: ${{ needs.prepare.outputs.run_id }}
+          SCENARIO: ${{ inputs.scenario }}
+          STAGE: ${{ inputs.stage }}
+        run: |
+          set -Eeuo pipefail
+          mkdir -p normalized aggregate
+          for shard in $(seq 0 $((EXPECTED_SHARDS - 1))); do
+            source_dir="downloaded/radar-${STAGE}-shard-${shard}"
+            test -d "$source_dir"
+            mkdir -p "normalized/shard-${shard}"
+            cp "$source_dir/metadata.json" "$source_dir/summary.json" \
+              "normalized/shard-${shard}/"
+          done
+          python3 scripts/load/aggregate_k6_shards.py \
+            --input-dir normalized \
+            --expected-shards "$EXPECTED_SHARDS" \
+            --scenario "$SCENARIO" \
+            --stage "$STAGE" \
+            --run-id "$RUN_ID" \
+            --base-url https://radarbds.vn \
+            --output aggregate/stage-summary.json \
+            | tee aggregate/stage-summary.txt
+          python3 - "$EXPECTED_TOTAL_VUS" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          expected = int(sys.argv[1])
+          result = json.loads(Path("aggregate/stage-summary.json").read_text("utf-8"))
+          if result["total_vus"] != expected:
+              raise SystemExit(
+                  f"total_vus mismatch: expected {expected}, got {result['total_vus']}"
+              )
+          with Path("aggregate/stage-summary.txt").open("a", encoding="utf-8") as report:
+              report.write(f"expected_total_vus={expected}\n")
+          PY
+          cat aggregate/stage-summary.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload aggregate evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: radar-${{ inputs.stage }}-aggregate
+          path: aggregate
+          if-no-files-found: error
+          retention-days: 14
