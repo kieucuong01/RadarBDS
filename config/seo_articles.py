@@ -9595,6 +9595,458 @@ SEO_ARTICLES = {
             }
         ]
     }
+,
+    "hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc": {
+    "variant": "knowledge",
+    "path": "/tin-tuc/hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc",
+    "title": "Hiệp Thành hay Tân An: nên xem khu nào trước? | Radar BDS",
+    "description": "Dữ liệu Radar BDS cập nhật 01/08/2026 cho thấy Tân An nhiều tin để lọc hơn, còn Hiệp Thành nhỉnh hơn ở nhóm tín hiệu và đất nền giá/m² thấp hơn. Khi so giá rao, luôn tách đất nền và nhà đất.",
+    "keywords": "Hiệp Thành hay Tân An, giá đất Hiệp Thành, giá đất Tân An, nhà đất Hiệp Thành, nhà đất Tân An, Radar BDS",
+    "breadcrumb_label": "Hiệp Thành hay Tân An",
+    "hero_badge": "So sánh phường",
+    "hero_title": "Hiệp Thành hay Tân An: nên xem khu nào trước?",
+    "hero_text": "Nếu anh muốn nhiều tin để lọc nhanh và mặt bằng nhà đất mềm hơn, nên mở Tân An trước. Nếu anh ưu tiên soi nhóm tin có dấu hiệu đáng chú ý hoặc muốn nhìn đất nền giá/m² thấp hơn, Hiệp Thành vẫn đáng mở song song. Quan trọng nhất là phải tách đất nền và nhà đất trước khi so giá rao.",
+    "scope_label": "Thủ Dầu Một · Hiệp Thành / Tân An",
+    "hero_checks": [
+        "Tân An đang theo dõi 50 tin; Hiệp Thành có 38 tin",
+        "Đất nền Tân An có giá trung vị 15,2 tr/m²; Hiệp Thành là 11,8 tr/m²",
+        "Nhà đất Tân An có giá trung vị 17,3 tr/m²; Hiệp Thành là 46,7 tr/m²",
+        "Nhóm tín hiệu nghiêng về Hiệp Thành 11 tin so với 7 tin ở Tân An"
+    ],
+    "primary_cta": "Mở dashboard lọc Hiệp Thành và Tân An",
+    "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_tan_an",
+    "secondary_cta": "Xem báo cáo Bình Dương tháng 06/2026",
+    "secondary_href": "/bao-cao/bds-binh-duong-thang-06-2026",
+    "hero_metric": {
+        "label": "Tin đang theo dõi",
+        "value": "88 tin",
+        "delta": "18 tin đất nền giá dưới 4 tỷ ở Hiệp Thành vs 35 tin ở Tân An",
+        "note": "Nguồn Facebook live, lọc theo phường ngày 01/08/2026"
+    },
+    "property_card": {
+        "status": "Cập nhật 01/08/2026",
+        "title": "Chọn phường theo đúng loại hình",
+        "price": "Tân An dễ mở trước nếu anh cần nhiều lựa chọn",
+        "metric_a": "Đất nền",
+        "metric_a_value": "Hiệp Thành 11,8 tr/m² · Tân An 15,2 tr/m²",
+        "metric_b": "Nhà đất",
+        "metric_b_value": "Hiệp Thành 46,7 tr/m² · Tân An 17,3 tr/m²"
+    },
+    "value_cards": [
+        {
+            "title": "Tân An hợp người mua cần nhiều mẫu để lọc nhanh",
+            "body": "Tân An đang có 50 tin live, trong đó 38 tin đất nền và 12 tin nhà đất. Nguồn hàng dày hơn giúp anh dễ mở dashboard và so nhiều tin cùng lúc."
+        },
+        {
+            "title": "Hiệp Thành đáng xem nếu anh săn nhóm tín hiệu trước",
+            "body": "Hiệp Thành có 11 tin có dấu hiệu đáng chú ý, nhiều hơn 7 tin ở Tân An. Chênh lệch này không phải cam kết nên mua, nhưng đủ để ưu tiên thứ tự kiểm tra."
+        },
+        {
+            "title": "Đừng dùng một mặt bằng giá chung",
+            "body": "Đất nền Hiệp Thành đang thấp hơn Tân An theo giá trung vị/m², nhưng nhà đất lại cao hơn rất mạnh. Gộp hai loại hình vào một con số sẽ làm anh đọc sai thị trường."
+        }
+    ],
+    "dashboard_preview": {
+        "eyebrow": "Mở Radar theo phường",
+        "title": "Lọc riêng Hiệp Thành và Tân An",
+        "description": "Tách loại hình trước, rồi mới so giá rao và nhóm tín hiệu.",
+        "image": "/static/images/seo/ward-compare-dashboard-preview.webp",
+        "alt": "Dashboard Radar BDS lọc phường Hiệp Thành và Tân An"
+    },
+    "market_snapshot": {
+        "eyebrow": "Snapshot 01/08/2026",
+        "title": "So nhanh hai phường theo loại hình",
+        "columns": [
+            {
+                "key": "ward_type",
+                "label": "Phường · loại hình"
+            },
+            {
+                "key": "tracked",
+                "label": "Tin đang theo dõi"
+            },
+            {
+                "key": "signals",
+                "label": "Dấu hiệu"
+            },
+            {
+                "key": "under4",
+                "label": "Dưới 4 tỷ"
+            },
+            {
+                "key": "median_m2",
+                "label": "Giá trung vị/m²"
+            },
+            {
+                "key": "median_total",
+                "label": "Tổng giá trung vị"
+            },
+            {
+                "key": "range",
+                "label": "Vùng 25-75%"
+            }
+        ],
+        "rows": [
+            {
+                "ward_type": "Hiệp Thành · đất nền",
+                "tracked": "18",
+                "signals": "5",
+                "under4": "9",
+                "median_m2": "11,8 tr/m²",
+                "median_total": "2,68 tỷ",
+                "range": "10,0-20,5 tr/m²"
+            },
+            {
+                "ward_type": "Hiệp Thành · nhà đất",
+                "tracked": "20",
+                "signals": "6",
+                "under4": "10",
+                "median_m2": "46,7 tr/m²",
+                "median_total": "3,25 tỷ",
+                "range": "38,1-52,5 tr/m²"
+            },
+            {
+                "ward_type": "Tân An · đất nền",
+                "tracked": "38",
+                "signals": "7",
+                "under4": "35",
+                "median_m2": "15,2 tr/m²",
+                "median_total": "1,75 tỷ",
+                "range": "12,6-19,1 tr/m²"
+            },
+            {
+                "ward_type": "Tân An · nhà đất",
+                "tracked": "12",
+                "signals": "0",
+                "under4": "10",
+                "median_m2": "17,3 tr/m²",
+                "median_total": "3,03 tỷ",
+                "range": "17,3-28,7 tr/m²"
+            }
+        ]
+    },
+    "local_links": [
+        {
+            "label": "Trang phường Hiệp Thành",
+            "href": "/binh-duong/phuong-hiep-thanh",
+            "description": "Xem trang tổng hợp dữ liệu và lối vào dashboard của Hiệp Thành."
+        },
+        {
+            "label": "Trang phường Tân An",
+            "href": "/binh-duong/phuong-tan-an",
+            "description": "Xem trang tổng hợp dữ liệu và lối vào dashboard của Tân An."
+        },
+        {
+            "label": "Định Hòa hay Hiệp Thành",
+            "href": "/tin-tuc/dinh-hoa-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+            "description": "So thêm Hiệp Thành với một phường có nguồn hàng dày hơn."
+        },
+        {
+            "label": "Dưới 4 tỷ: Phú Lợi hay Tân An",
+            "href": "/tin-tuc/duoi-4-ty-nen-mua-nha-dat-phu-loi-hay-tan-an",
+            "description": "Đặt Tân An vào bối cảnh nhóm nhà đất ngân sách dưới 4 tỷ."
+        },
+        {
+            "label": "Công cụ định giá BĐS",
+            "href": "/dinh-gia-bds",
+            "description": "Ước lượng nhanh trước khi gọi môi giới."
+        }
+    ],
+    "faq": [
+        {
+            "q": "Nếu muốn nhiều tin để lọc nhanh thì nên mở phường nào trước?",
+            "a": "Nên mở Tân An trước vì hiện có 50 tin đang theo dõi, nhiều hơn 38 tin ở Hiệp Thành. Lợi thế này rõ nhất ở nhóm đất nền: Tân An có 38 tin, còn Hiệp Thành có 18 tin."
+        },
+        {
+            "q": "Đất nền ở Hiệp Thành hay Tân An đang mềm hơn?",
+            "a": "Theo dữ liệu Radar BDS ngày 01/08/2026, đất nền Hiệp Thành có giá trung vị 11,8 tr/m², thấp hơn Tân An 15,2 tr/m². Tuy nhiên Hiệp Thành có ít nguồn hàng hơn, nên anh cần kiểm tra kỹ vị trí và đường vào từng tin."
+        },
+        {
+            "q": "Nhà đất ở hai phường khác nhau thế nào?",
+            "a": "Nhà đất Tân An đang có giá trung vị 17,3 tr/m², trong khi Hiệp Thành là 46,7 tr/m². Vì vậy nếu mục tiêu là nhà ở sẵn với mặt bằng mềm hơn, Tân An dễ lọc hơn đáng kể."
+        },
+        {
+            "q": "Dấu hiệu đáng chú ý có nghĩa là nên mua ngay không?",
+            "a": "Không. Dấu hiệu chỉ là bộ lọc để anh ưu tiên thứ tự kiểm tra trước. Sau đó vẫn phải xem pháp lý, quy hoạch, hiện trạng, vị trí, lộ giới và so lại với mặt bằng giá cùng loại hình."
+        }
+    ],
+    "article": {
+        "published_at": "2026-08-01",
+        "modified_at": "2026-08-01",
+        "intro": [
+            "Nếu anh đang phân vân nên mở Hiệp Thành hay Tân An trước, câu trả lời ngắn là: cần nhiều lựa chọn thì mở Tân An; cần soi nhóm tin đáng kiểm tra hoặc muốn nhìn đất nền giá/m² thấp hơn thì mở Hiệp Thành song song. Dữ liệu dưới đây là giá rao live từ Facebook trên Radar BDS ngày 01/08/2026.",
+            "Điểm dễ sai nhất là gộp đất nền và nhà đất vào cùng một mặt bằng giá. Hai phường này lệch rất mạnh theo từng loại hình, nên bài này tách riêng số tin, giá trung vị và nhóm dưới 4 tỷ để anh đọc nhanh hơn."
+        ],
+        "summary_cards": [
+            {
+                "label": "Tổng số tin hai phường",
+                "value": "88 tin",
+                "note": "Hiệp Thành 38 · Tân An 50"
+            },
+            {
+                "label": "Dấu hiệu đáng chú ý",
+                "value": "18 tin",
+                "note": "Hiệp Thành 11 · Tân An 7"
+            },
+            {
+                "label": "Đất nền giá trung vị/m²",
+                "value": "11,8 vs 15,2 tr/m²",
+                "note": "Hiệp Thành thấp hơn Tân An"
+            },
+            {
+                "label": "Nhà đất giá trung vị/m²",
+                "value": "46,7 vs 17,3 tr/m²",
+                "note": "Hiệp Thành cao hơn rất mạnh"
+            }
+        ],
+        "data_tables": [
+            {
+                "eyebrow": "Bảng so nhanh",
+                "title": "Hiệp Thành và Tân An khác nhau thế nào khi tách loại hình?",
+                "note": "Đây là giá rao đang theo dõi trên Radar BDS, không phải giá chốt giao dịch.",
+                "columns": [
+                    {
+                        "key": "ward_type",
+                        "label": "Phường · loại hình"
+                    },
+                    {
+                        "key": "tracked",
+                        "label": "Tin đang theo dõi"
+                    },
+                    {
+                        "key": "signals",
+                        "label": "Dấu hiệu"
+                    },
+                    {
+                        "key": "under4",
+                        "label": "Dưới 4 tỷ"
+                    },
+                    {
+                        "key": "median_m2",
+                        "label": "Giá trung vị/m²"
+                    },
+                    {
+                        "key": "median_total",
+                        "label": "Tổng giá trung vị"
+                    },
+                    {
+                        "key": "range",
+                        "label": "Vùng 25-75%"
+                    }
+                ],
+                "rows": [
+                    {
+                        "ward_type": "Hiệp Thành · đất nền",
+                        "tracked": "18",
+                        "signals": "5",
+                        "under4": "9",
+                        "median_m2": "11,8 tr/m²",
+                        "median_total": "2,68 tỷ",
+                        "range": "10,0-20,5 tr/m²"
+                    },
+                    {
+                        "ward_type": "Hiệp Thành · nhà đất",
+                        "tracked": "20",
+                        "signals": "6",
+                        "under4": "10",
+                        "median_m2": "46,7 tr/m²",
+                        "median_total": "3,25 tỷ",
+                        "range": "38,1-52,5 tr/m²"
+                    },
+                    {
+                        "ward_type": "Tân An · đất nền",
+                        "tracked": "38",
+                        "signals": "7",
+                        "under4": "35",
+                        "median_m2": "15,2 tr/m²",
+                        "median_total": "1,75 tỷ",
+                        "range": "12,6-19,1 tr/m²"
+                    },
+                    {
+                        "ward_type": "Tân An · nhà đất",
+                        "tracked": "12",
+                        "signals": "0",
+                        "under4": "10",
+                        "median_m2": "17,3 tr/m²",
+                        "median_total": "3,03 tỷ",
+                        "range": "17,3-28,7 tr/m²"
+                    }
+                ]
+            },
+            {
+                "eyebrow": "Kết luận nhanh theo nhu cầu",
+                "title": "Nên mở phường nào trước trong dashboard?",
+                "note": "Chọn phường mở trước để tiết kiệm thời gian lọc, không phải để thay bước thẩm định thực tế.",
+                "columns": [
+                    {
+                        "key": "need",
+                        "label": "Nhu cầu"
+                    },
+                    {
+                        "key": "open_first",
+                        "label": "Nên mở trước"
+                    },
+                    {
+                        "key": "why",
+                        "label": "Vì sao"
+                    }
+                ],
+                "rows": [
+                    {
+                        "need": "Muốn nhiều tin để xem nhanh",
+                        "open_first": "Tân An",
+                        "why": "50 tin live, dày hơn Hiệp Thành 38 tin"
+                    },
+                    {
+                        "need": "Ưu tiên đất nền mềm hơn theo giá/m²",
+                        "open_first": "Hiệp Thành",
+                        "why": "Đất nền trung vị 11,8 tr/m², thấp hơn Tân An 15,2 tr/m²"
+                    },
+                    {
+                        "need": "Muốn nhà đất mặt bằng mềm hơn",
+                        "open_first": "Tân An",
+                        "why": "Nhà đất trung vị 17,3 tr/m², thấp hơn rất nhiều so với 46,7 tr/m² ở Hiệp Thành"
+                    },
+                    {
+                        "need": "Ưu tiên soi nhóm có dấu hiệu đáng chú ý",
+                        "open_first": "Hiệp Thành",
+                        "why": "11 tín hiệu so với 7 tín hiệu ở Tân An"
+                    }
+                ]
+            }
+        ],
+        "charts": [
+            {
+                "eyebrow": "Visual nhanh",
+                "title": "Tân An có nguồn hàng dày hơn để mở trước",
+                "note": "Bar chart dùng tổng số tin live của hai phường để chọn nơi lọc ban đầu.",
+                "alt": "Biểu đồ số tin live ở Tân An và Hiệp Thành",
+                "rows": [
+                    {
+                        "label": "Tân An",
+                        "value_label": "50 tin",
+                        "width": 100,
+                        "color": "#2563eb"
+                    },
+                    {
+                        "label": "Hiệp Thành",
+                        "value_label": "38 tin",
+                        "width": 76,
+                        "color": "#16a34a"
+                    }
+                ]
+            },
+            {
+                "eyebrow": "Visual nhanh",
+                "title": "Hiệp Thành nhỉnh hơn ở nhóm tín hiệu cần kiểm tra",
+                "note": "Tín hiệu chỉ để ưu tiên thứ tự xem trước, không phải kết luận nên mua ngay.",
+                "alt": "Biểu đồ số tín hiệu ở Hiệp Thành và Tân An",
+                "rows": [
+                    {
+                        "label": "Hiệp Thành",
+                        "value_label": "11 tín hiệu",
+                        "width": 100,
+                        "color": "#dc2626"
+                    },
+                    {
+                        "label": "Tân An",
+                        "value_label": "7 tín hiệu",
+                        "width": 64,
+                        "color": "#f59e0b"
+                    }
+                ]
+            }
+        ],
+        "sections": [
+            {
+                "id": "tan-an-loc-nhanh",
+                "heading": "Nếu cần nhiều lựa chọn để lọc nhanh, nên mở Tân An trước",
+                "paragraphs": [
+                    "Tân An hiện có 50 tin đang theo dõi, nhiều hơn Hiệp Thành 38 tin. Chênh lệch này đến chủ yếu từ đất nền: Tân An có 38 tin đất nền, còn Hiệp Thành có 18 tin. Khi anh đang ở bước mở dashboard và muốn có nhiều mẫu để đối chiếu nhanh, Tân An cho biên độ lựa chọn rộng hơn.",
+                    "Mặt bằng giá rao ở Tân An cũng dễ thở hơn ở nhiều nhóm. Đất nền Tân An có giá trung vị 15,2 tr/m² và tổng giá trung vị 1,75 tỷ. Nhà đất Tân An có giá trung vị 17,3 tr/m² và tổng giá trung vị 3,03 tỷ. Đây là lý do Tân An phù hợp với người mua muốn bắt đầu từ nhóm hàng mềm và nhiều tin."
+                ],
+                "bullets": [
+                    "Tân An: 50 tin live · 7 tín hiệu",
+                    "Đất nền Tân An: 38 tin · 35 tin dưới 4 tỷ · giá trung vị 15,2 tr/m²",
+                    "Nhà đất Tân An: 12 tin · 10 tin dưới 4 tỷ · giá trung vị 17,3 tr/m²",
+                    "Tổng giá trung vị: đất nền 1,75 tỷ · nhà đất 3,03 tỷ"
+                ]
+            },
+            {
+                "id": "hiep-thanh-soi-tin",
+                "heading": "Nếu muốn soi nhóm tin đáng chú ý trước, Hiệp Thành đáng mở song song",
+                "paragraphs": [
+                    "Hiệp Thành có 11 tin có dấu hiệu đáng chú ý, trong khi Tân An có 7. Chênh lệch này không lớn như ở các bài so phường khác, nhưng vẫn đủ để Hiệp Thành đáng được mở song song nếu anh thích bắt đầu từ nhóm cần kiểm tra trước thay vì xem tràn toàn bộ nguồn hàng.",
+                    "Ở nhóm đất nền, Hiệp Thành còn có một điểm đáng để ý: giá trung vị chỉ 11,8 tr/m², thấp hơn Tân An 15,2 tr/m². Nói cách khác, Hiệp Thành không nhiều hàng bằng, nhưng một phần nguồn đất nền đang nằm ở mặt bằng giá/m² thấp hơn. Đây là dữ liệu tốt để anh lọc sâu hơn, không phải lý do để bỏ qua bước kiểm tra pháp lý và thực địa."
+                ],
+                "bullets": [
+                    "Hiệp Thành: 38 tin live · 11 tín hiệu",
+                    "Đất nền Hiệp Thành: 18 tin · 5 tín hiệu · giá trung vị 11,8 tr/m²",
+                    "Nhà đất Hiệp Thành: 20 tin · 6 tín hiệu · giá trung vị 46,7 tr/m²",
+                    "Nhóm dưới 4 tỷ ở Hiệp Thành vẫn có: 9 tin đất nền và 10 tin nhà đất"
+                ]
+            },
+            {
+                "id": "nha-dat-khac-biet-lon",
+                "heading": "Nhà đất là điểm khác biệt lớn nhất giữa hai phường",
+                "paragraphs": [
+                    "Nếu anh tìm nhà ở sẵn, đừng lấy mặt bằng giá đất nền để suy ra nhà đất. Tân An đang có giá trung vị nhà đất 17,3 tr/m², còn Hiệp Thành là 46,7 tr/m². Chênh lệch này rất lớn và đủ để đảo thứ tự ưu tiên khi nhu cầu chuyển từ đất nền sang nhà đất xây sẵn.",
+                    "Tổng giá trung vị nhà đất hai bên lại không chênh quá xa, ở mức 3,03 tỷ và 3,25 tỷ. Điều này cho thấy bài toán không chỉ nằm ở giá/m² mà còn liên quan diện tích, vị trí và cấu trúc tài sản. Vì vậy khi thấy một tin nhà đất Hiệp Thành có tổng giá gần Tân An, anh nên kiểm tra thêm diện tích, hẻm hay mặt tiền và tình trạng pháp lý thực tế."
+                ],
+                "bullets": [
+                    "Nhà đất Tân An: 12 tin · giá trung vị 17,3 tr/m² · tổng giá trung vị 3,03 tỷ",
+                    "Nhà đất Hiệp Thành: 20 tin · giá trung vị 46,7 tr/m² · tổng giá trung vị 3,25 tỷ",
+                    "Chênh lệch giá/m² lớn hơn nhiều so với chênh lệch tổng giá",
+                    "Khi đọc tin nhà đất, luôn xem thêm diện tích và vị trí thực tế"
+                ]
+            },
+            {
+                "id": "mo-dashboard-the-nao",
+                "heading": "Nên mở dashboard theo thứ tự nào?",
+                "paragraphs": [
+                    "Nếu mục tiêu là lọc nhanh nhiều tin và ưu tiên mặt bằng mềm hơn, anh nên mở Tân An trước. Nếu mục tiêu là soi nhóm tín hiệu hoặc tìm đất nền giá/m² thấp hơn, anh nên mở Hiệp Thành song song ngay từ đầu. Cùng một câu hỏi nên xem khu nào trước, nhưng đáp án đổi theo đúng loại hình mà anh đang nhắm tới.",
+                    "Sau khi chọn phường, hãy giữ bộ lọc loại hình, so từng tin với giá trung vị cùng loại hình, rồi chuyển sang bước kiểm tra vị trí, quy hoạch, lộ giới, đường vào và giấy tờ. Nếu cần thêm một mốc tham chiếu, anh có thể mở công cụ định giá hoặc báo cáo tháng trước khi gọi môi giới."
+                ],
+                "bullets": [
+                    "Mở Tân An trước nếu anh cần nhiều mẫu để lọc",
+                    "Mở Hiệp Thành song song nếu anh ưu tiên nhóm tín hiệu hoặc đất nền giá/m² thấp hơn",
+                    "Luôn tách đất nền và nhà đất trước khi so giá",
+                    "Giá rao chỉ là bộ lọc ban đầu, không thay thẩm định pháp lý và thực địa"
+                ]
+            }
+        ],
+        "checklist": [
+            "Đã tách đất nền và nhà đất trước khi so hai phường.",
+            "Đã nhìn cả số tin, số tín hiệu và nhóm dưới 4 tỷ.",
+            "Đã hiểu đây là giá rao live, không phải giá chốt giao dịch.",
+            "Đã chọn phường mở trước theo đúng loại hình đang cần mua.",
+            "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và hiện trạng sau khi lọc dữ liệu."
+        ]
+    },
+    "final_cta": {
+        "title": "Mở Radar BDS để lọc Hiệp Thành và Tân An",
+        "body": "Giữ đúng bộ lọc loại hình, so giá rao theo phường và ưu tiên nhóm tin cần kiểm tra trước khi liên hệ.",
+        "button": "Mở dashboard",
+        "button_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_tan_an"
+    },
+    "breadcrumbs": [
+        {
+            "name": "Trang chủ",
+            "href": "/",
+            "url": "https://radarbds.vn/"
+        },
+        {
+            "name": "Tin tức",
+            "href": "/tin-tuc",
+            "url": "https://radarbds.vn/tin-tuc"
+        },
+        {
+            "name": "Hiệp Thành hay Tân An",
+            "href": "/tin-tuc/hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc",
+            "url": "https://radarbds.vn/tin-tuc/hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc"
+        }
+    ]
+}
 
 }
 
