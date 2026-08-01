@@ -424,16 +424,30 @@ def test_new_signal_cards_use_orange_badge_and_card_highlight():
     assert "rgba(249, 115, 22" in cards_css
 
 
-def test_signal_feed_uses_fast_total_free_path_and_defers_dashboard_meta():
-    html = _read("templates/index.html")
+def test_signal_filter_flow_loads_cards_before_counts_without_dashboard():
     signals_js = _read("static/js/main/signals.js")
     filters_js = _read("static/js/main/filters.js")
     core_js = _read("static/js/main/core.js")
+    start = filters_js.index("function applyFilters()")
+    end = filters_js.index("\nfunction ", start + 1)
+    apply_block = filters_js[start:end]
 
-    assert "saved-listings-header-images-20260722" in html
+    assert "RadarFilterRuntime.runSignalFirst" in apply_block
+    assert "loadSignals(1, { reset: true })" in apply_block
+    assert "currentFilters === filterSnapshot" in apply_block
+    assert "deferCountsRefresh(false)" in apply_block
+    signal_branch = apply_block.split("if (tab === 'signals')", 1)[1].split("} else", 1)[0]
+    assert "refreshDashboardMeta" not in signal_branch
+    assert "refreshCounts(false);" not in signal_branch
+
     assert "params.set('include_total', '0')" in signals_js
+    assert "window.RadarFilterRuntime.canonicalize(params)" in signals_js
+    assert "params.set('sigv'" not in signals_js
+    assert "signalsVersion" not in signals_js
+    assert "signalsVersion" not in filters_js
+    assert "signalsVersion" not in core_js
     assert "Number.isFinite(Number(data.total))" in signals_js
-    assert "deferDashboardMetaRefresh" in filters_js
+    assert "deferDashboardMetaRefresh" not in filters_js
     assert "requestIdleCallback" in filters_js
     assert "applyFilters();" in core_js
     assert "navigator.geolocation.getCurrentPosition" not in core_js

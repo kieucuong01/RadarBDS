@@ -64,3 +64,26 @@ test('runSignalFirst suppresses counts for a superseded filter snapshot', async 
   );
   assert.deepEqual(events, []);
 });
+
+test('out-of-order runs schedule counts only for the current snapshot', async () => {
+  const events = [];
+  let currentSnapshot = 'old';
+  let releaseOld;
+  const oldSignal = new Promise((resolve) => { releaseOld = resolve; });
+  const oldRun = runtime.runSignalFirst(
+    () => oldSignal,
+    () => events.push('old-counts'),
+    () => currentSnapshot === 'old',
+  );
+
+  currentSnapshot = 'new';
+  await runtime.runSignalFirst(
+    () => Promise.resolve('new-result'),
+    () => events.push('new-counts'),
+    () => currentSnapshot === 'new',
+  );
+  releaseOld('old-result');
+  await oldRun;
+
+  assert.deepEqual(events, ['new-counts']);
+});

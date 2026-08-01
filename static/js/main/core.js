@@ -300,7 +300,6 @@ let signalPageNo = 1;
 let signalHasMore = false;
 let signalLoading = false;
 let signalSort = 'newest';
-let signalsVersion = '0';
 let signalRunSeq = 0;
 let signalRenderSeq = 0;
 let firstSignalsLoaded = false;

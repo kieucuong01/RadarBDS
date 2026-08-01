@@ -272,8 +272,7 @@ function signalQuery(page) {
   params.set('page', String(page));
   params.set('limit', String(SIGNAL_PAGE_SIZE));
   params.set('include_total', '0');
-  params.set('sigv', String(signalsVersion || '0'));
-  return params.toString();
+  return window.RadarFilterRuntime.canonicalize(params);
 }
 
 function _severityText(level) {

@@ -109,7 +109,7 @@ function getFilterQuery() {
     params.set('q', keyword);
   }
   params.append('trend_period', trendPeriod);
-  return params.toString();
+  return window.RadarFilterRuntime.canonicalize(params);
 }
 
 function rangeToken(btn) {
@@ -201,25 +201,32 @@ function updateTrendPeriod(p, btn) {
   ensureDashboardScript('market').then(() => loadTrendData(false)).catch((err) => console.error(err));
 }
 
-function deferDashboardMetaRefresh(useCache = false) {
-  const run = () => refreshDashboardMeta(useCache);
+function deferCountsRefresh(useCache = false) {
+  const run = () => refreshCounts(useCache);
   if (typeof window.requestIdleCallback === 'function') {
-    window.requestIdleCallback(run, { timeout: 900 });
+    window.requestIdleCallback(run, { timeout: 1200 });
   } else {
-    setTimeout(run, 160);
+    setTimeout(run, 100);
   }
 }
 
 function applyFilters() {
   currentFilters = getFilterQuery();
+  const filterSnapshot = currentFilters;
   currentPageNo = 1;
   listingsHasMore = false;
   const tab = activeTabId();
-  refreshCounts(false);
+
   if (tab === 'signals') {
-    loadSignals(1, { reset: true });
-    deferDashboardMetaRefresh(false);
+    window.RadarFilterRuntime.runSignalFirst(
+      () => loadSignals(1, { reset: true }),
+      () => deferCountsRefresh(false),
+      () => currentFilters === filterSnapshot,
+    ).catch((err) => {
+      if (err && err.name !== 'AbortError') console.error(err);
+    });
   } else {
+    refreshCounts(false);
     refreshDashboardMeta(false);
   }
 
@@ -314,7 +321,6 @@ async function refreshDashboardMeta(useCache = false) {
     // Update Wards based on City
     globalWardsByCity = data.wards_by_city;
     updateWardFilters(data.wards_by_city, data.active_wards, { preserveScroll: true });
-    signalsVersion = String(data.signals_version || '0');
     syncSignalSortSelect();
 
   } catch (err) {
