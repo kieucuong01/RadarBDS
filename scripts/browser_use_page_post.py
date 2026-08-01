@@ -148,6 +148,15 @@ def verified_on_page():
             and 'Create post' in (((n.get('name') or {{}}).get('value', '')) or '')
             for n in nodes
         )
+        draft_has_text = False
+        try:
+            draft_has_text = bool(js('''(() => {{
+                const needle = %s;
+                const editable = [...document.querySelectorAll('[contenteditable="true"], textarea, [role="textbox"]')];
+                return editable.some(el => ((el.innerText || el.value || el.textContent || '').includes(needle)));
+            }})()''' % json.dumps(needle)))
+        except Exception:
+            draft_has_text = False
         found_article = False
         for n in nodes:
             role = (n.get('role') or {{}}).get('value', '')
@@ -155,16 +164,22 @@ def verified_on_page():
             if role == 'article' and needle and needle in name:
                 found_article = True
                 break
-        # AX article names sometimes omit collapsed/new Page post text even when
-        # the post is already visible in the rendered DOM. Use body text as a
-        # secondary check to avoid false-negative publish results and duplicate
-        # reruns.
-        body_has_text = False
+        dom_article_has_text = False
         try:
-            body_has_text = bool(needle and needle in js('document.body.innerText || ""'))
+            dom_article_has_text = bool(js('''(() => {{
+                const needle = %s;
+                const articles = [...document.querySelectorAll('[role="article"]')];
+                return articles.some(article => {{
+                    const text = article.innerText || '';
+                    const hasDraft = !!article.querySelector('[contenteditable="true"], textarea, [role="textbox"]');
+                    return text.includes(needle) && !hasDraft;
+                }});
+            }})()''' % json.dumps(needle)))
         except Exception:
-            body_has_text = False
-        if (found_article or body_has_text) and not has_dialog:
+            dom_article_has_text = False
+        # Do not use document.body.innerText as success evidence: inline composer
+        # drafts also live in body text and caused false OK reports.
+        if (found_article or dom_article_has_text) and not has_dialog and not draft_has_text:
             return True, needle
     return False, needle
 
