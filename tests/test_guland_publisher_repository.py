@@ -283,6 +283,15 @@ def test_visibility_and_rank_sql_share_the_publisher_link_contract():
     assert "automated_repost" in rank
 
 
+def test_joined_publisher_visibility_is_fail_open_for_unknown_identity():
+    from db.guland_publishers import publisher_visibility_from_join_sql
+
+    sql = publisher_visibility_from_join_sql("l", "feed_sp")
+    assert "COALESCE" in sql
+    assert "'unknown'" in sql
+    assert "NOT IN ('high_activity', 'automated_repost')" in sql
+
+
 def test_seen_card_bump_is_idempotent_and_does_not_change_listing_dates(
     publisher_listing,
 ):

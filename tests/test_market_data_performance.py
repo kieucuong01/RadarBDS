@@ -152,11 +152,37 @@ def test_load_signals_uses_shared_connection_scope(monkeypatch):
     assert result["signals"] == []
     assert conn.closed is False
     assert len(conn.queries) == 1
-    assert conn.queries[0][0].count("NOT EXISTS") == 1
-    assert conn.queries[0][0].count("FROM listing_publishers lp") == 2
+    assert conn.queries[0][0].count("NOT EXISTS") == 0
+    assert conn.queries[0][0].count("LEFT JOIN listing_publishers feed_lp") == 1
+    assert conn.queries[0][0].count("LEFT JOIN source_publishers feed_sp") == 1
     assert "COUNT(*) OVER()" in conn.queries[0][0]
     assert "LEFT JOIN LATERAL" in conn.queries[0][0]
     assert "image_count" in conn.queries[0][0]
+
+
+def test_load_signals_joins_publisher_activity_once(monkeypatch):
+    import services.market_data as market_data
+
+    conn = _FakeReadConnection()
+
+    @contextmanager
+    def fake_read_conn(_db_path=None):
+        yield conn
+
+    monkeypatch.setattr(market_data, "_read_conn", fake_read_conn)
+    market_data.load_signals(
+        None,
+        sources=["facebook", "guland"],
+        wards=["Tan An"],
+        tier="guest",
+        include_total=False,
+    )
+
+    sql = conn.queries[0][0]
+    assert sql.count("LEFT JOIN listing_publishers feed_lp") == 1
+    assert sql.count("LEFT JOIN source_publishers feed_sp") == 1
+    assert "NOT EXISTS" not in sql
+    assert "SELECT CASE" not in sql
 
 
 def test_load_signals_fast_page_skips_total_count_and_uses_limit_plus_one(monkeypatch):

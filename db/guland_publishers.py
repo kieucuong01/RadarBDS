@@ -681,6 +681,68 @@ def publisher_visibility_sql(
     """.strip()
 
 
+def publisher_feed_join_sql(
+    listing_alias: str = "l",
+    link_alias: str = "feed_lp",
+    publisher_alias: str = "feed_sp",
+) -> str:
+    """Return the one-to-one publisher joins used by public feed queries."""
+    return f"""
+    LEFT JOIN listing_publishers {link_alias}
+      ON {link_alias}.listing_id = {listing_alias}.id
+    LEFT JOIN source_publishers {publisher_alias}
+      ON {publisher_alias}.id = {link_alias}.publisher_id
+    """.strip()
+
+
+def publisher_effective_class_from_join_sql(publisher_alias: str) -> str:
+    """Resolve the public activity class from an already joined publisher."""
+    return f"""
+    COALESCE(
+      CASE {publisher_alias}.manual_override
+        WHEN 'allow_manual' THEN 'low_manual'
+        WHEN 'hide_high_activity' THEN 'automated_repost'
+        ELSE {publisher_alias}.activity_class
+      END,
+      'unknown'
+    )
+    """.strip()
+
+
+def publisher_visibility_from_join_sql(
+    listing_alias: str = "l",
+    publisher_alias: str = "feed_sp",
+    *,
+    include_high_activity: bool = False,
+) -> str:
+    """Return the fail-open public predicate for an already joined publisher."""
+    if include_high_activity:
+        return "1=1"
+    effective = publisher_effective_class_from_join_sql(publisher_alias)
+    return (
+        f"({listing_alias}.source <> 'guland' OR "
+        f"({effective}) NOT IN ('high_activity', 'automated_repost'))"
+    )
+
+
+def publisher_sort_rank_from_join_sql(
+    listing_alias: str = "l",
+    publisher_alias: str = "feed_sp",
+) -> str:
+    """Return the feed rank from an already joined publisher row."""
+    effective = publisher_effective_class_from_join_sql(publisher_alias)
+    return f"""
+    CASE
+      WHEN {listing_alias}.source <> 'guland' THEN 0
+      WHEN ({effective}) = 'low_manual' THEN 0
+      WHEN ({effective}) = 'unknown' THEN 1
+      WHEN ({effective}) = 'high_activity' THEN 2
+      WHEN ({effective}) = 'automated_repost' THEN 3
+      ELSE 1
+    END
+    """.strip()
+
+
 def publisher_sort_rank_sql(alias: str = "l") -> str:
     """Return the shared publisher-class rank without exposing identity."""
     return f"""

@@ -10,7 +10,10 @@ from config.property_types import PROPERTY_TYPE_LABELS, normalize_property_types
 from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED
 from db.connection import get_conn
 from db.guland_publishers import (
+    publisher_feed_join_sql,
+    publisher_sort_rank_from_join_sql,
     publisher_sort_rank_sql,
+    publisher_visibility_from_join_sql,
     publisher_visibility_sql,
 )
 from services.image_assets import resolve_image_url
@@ -516,6 +519,7 @@ def build_listing_filters(
     date_range=None,
     require_complete=False,
     include_guland_high_activity=False,
+    publisher_alias: str | None = None,
 ):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
@@ -524,15 +528,25 @@ def build_listing_filters(
     # Common filters. Normal views hide duplicates; drop-only views show reliable
     # repost drops even when the lower-price repost is marked duplicate.
     col = lambda name: f"{prefix}{name}" if prefix else name
+    listing_alias = prefix[:-1] if prefix.endswith(".") else "listings"
+    publisher_visibility = (
+        publisher_visibility_from_join_sql(
+            listing_alias,
+            publisher_alias,
+            include_high_activity=include_guland_high_activity,
+        )
+        if publisher_alias
+        else publisher_visibility_sql(
+            listing_alias,
+            include_high_activity=include_guland_high_activity,
+        )
+    )
     where_parts = [
         f"{col('probably_sold')} = 0",
         f"COALESCE({col('is_blacklisted')},0)=0",
         f"COALESCE({col('review_hidden')},0)=0",
         f"COALESCE({col('source_status')},'unknown') <> 'inactive'",
-        publisher_visibility_sql(
-            prefix[:-1] if prefix.endswith(".") else "listings",
-            include_high_activity=include_guland_high_activity,
-        ),
+        publisher_visibility,
     ]
     if only_drops:
         where_parts.append(group_price_drop_filter_sql(prefix))
@@ -1191,6 +1205,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
         keyword=keyword,
         date_range=date_range,
         include_guland_high_activity=include_guland_high_activity,
+        publisher_alias="feed_sp",
     )
     deal = build_deal_sql(mos_min)
     actual_expr = deal.actual_expr
@@ -1207,7 +1222,10 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
     elif sort == "score_desc":
         score_expr = _max_sql("COALESCE(v.signal_score,0)", "COALESCE(sv.signal_score,0)")
         order_sql = f"{score_expr} DESC, ({display_mos_expr}) DESC, l.id DESC"
-    order_sql = f"{publisher_sort_rank_sql('l')} ASC, {order_sql}"
+    order_sql = (
+        f"{publisher_sort_rank_from_join_sql('l', 'feed_sp')} ASC, "
+        f"{order_sql}"
+    )
     fresh_flag = "0 AS is_fresh_locked"
     total_select = "COUNT(*) OVER() AS total_count," if include_total else ""
 
@@ -1248,6 +1266,7 @@ def load_signals(db_path, sources=None, wards=None, prop_types=None, only_drops=
                COALESCE(img_count.image_count, 0) AS image_count,
                {fresh_flag}
         FROM listings l
+        {publisher_feed_join_sql('l', 'feed_lp', 'feed_sp')}
         LEFT JOIN latest_valuation v ON v.listing_id = l.id
         LEFT JOIN latest_shadow_valuation sv ON sv.listing_id = l.id
         LEFT JOIN LATERAL (
