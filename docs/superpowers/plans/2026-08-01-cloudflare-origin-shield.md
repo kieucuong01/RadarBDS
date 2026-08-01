@@ -8,18 +8,18 @@
 
 ## Task 1: Make origin freshness compatible with stale edge revalidation
 
-- [ ] Change the anonymous allowlisted header to `public, max-age=15, stale-while-revalidate=180, stale-if-error=180`.
-- [ ] Update header tests first and confirm they fail before the application change.
-- [ ] Preserve `private, no-store` for session-cookie, Authorization, and admin responses.
-- [ ] Run focused cache/header/privacy tests.
+- [x] Change the anonymous allowlisted header to `public, max-age=15, stale-while-revalidate=180, stale-if-error=180`.
+- [x] Update header tests first and confirm they fail before the application change.
+- [x] Preserve `private, no-store` for session-cookie, Authorization, and admin responses.
+- [x] Run focused cache/header/privacy tests.
 
 ## Task 2: Require real CDN evidence
 
-- [ ] Extend the public verifier with an opt-in `-RequireCdn` gate for `CF-Ray` and Cloudflare HIT/private bypass behavior.
-- [ ] Add Cloudflare status counters to k6 and enable `REQUIRE_CDN=1` in the distributed workflow.
-- [ ] Extend shard metadata and conservative aggregation so missing CDN headers, guest BYPASS/DYNAMIC, or zero HIT/stale responses fail.
-- [ ] Add failing tests before each implementation change.
-- [ ] Keep direct-origin local diagnostics available by leaving CDN requirement opt-in outside the production workflow.
+- [x] Extend the public verifier with an opt-in `-RequireCdn` gate for `CF-Ray` and Cloudflare HIT/private bypass behavior.
+- [x] Add Cloudflare status counters to k6 and enable `REQUIRE_CDN=1` in the distributed workflow.
+- [x] Extend shard metadata and conservative aggregation so missing CDN headers, guest BYPASS/DYNAMIC, or zero HIT/stale responses fail.
+- [x] Add failing tests before each implementation change.
+- [x] Keep direct-origin local diagnostics available by leaving CDN requirement opt-in outside the production workflow.
 
 ## Task 3: Release CDN-readiness code
 

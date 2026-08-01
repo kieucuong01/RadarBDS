@@ -482,7 +482,13 @@ The script explicitly requests `Accept-Encoding: gzip` to represent a browser. T
 
 ### Distributed production capacity gate
 
-The distributed workflow removes one load generator/path as a confounder. It is production load, not CI smoke. It runs only from the exact branch `capacity-test/approved-20260801` or a manual dispatch confirmed with `radarbds.vn`, uses a non-canceling concurrency group, and advances only while every shard in the prior stage passes.
+The distributed workflow removes one load generator/path as a confounder. It is production load, not CI smoke. It runs only from the exact branch `capacity-test/approved-20260801` or a manual dispatch confirmed with `radarbds.vn`, uses a non-canceling concurrency group, and advances only while every shard in the prior stage passes. Do not trigger it while DNS is direct; first require CDN proof:
+
+```powershell
+.\scripts\verify_public_cache.ps1 -BaseUrl "https://radarbds.vn" -RequireCdn
+```
+
+The command must show Cloudflare HIT/stale for every guest path and BYPASS/DYNAMIC plus origin `private, no-store` for both session-cookie and Authorization probes.
 
 Before the single trigger, start the host observer from the deployed, verified `main` commit:
 
@@ -500,7 +506,9 @@ From a clean commit that already matches `origin/main` and production, create th
 git push origin HEAD:refs/heads/capacity-test/approved-20260801
 ```
 
-Do not force-push or push a second commit to that branch while a workflow is queued or active. The exact stage order is default 100, mixed 100, default 500, mixed 500, default 1,000, mixed 1,000, then default 5,000. The stage aggregator requires all expected shard artifacts, rejects any nonzero k6 exit, BYPASS/unknown edge count, mismatched metadata, or crossed threshold, and reports the maximum shard p95/p99 rather than averaging percentiles.
+Do not force-push or push a second commit to that branch while a workflow is queued or active. The exact stage order is default 100, mixed 100, default 500, mixed 500, default 1,000, mixed 1,000, then default 5,000. The stage aggregator requires all expected shard artifacts, rejects any nonzero k6 exit, origin/CDN BYPASS or unknown guest count, zero CDN HIT/stale evidence, mismatched metadata, or crossed threshold, and reports the maximum shard p95/p99 rather than averaging percentiles. k6 may omit zero-valued Counter metrics; the aggregator treats only those optional counter omissions as zero and still fails on missing required duration/rate/check metrics.
+
+Historical run `30698414443` failed closed at distributed default 100 with 0% request/check errors but p95/p99 2.24/3.10 seconds; all later jobs were skipped and the host stayed healthy. That direct-path result is why the workflow now sets `REQUIRE_CDN=1`.
 
 Validate the tooling without production load:
 

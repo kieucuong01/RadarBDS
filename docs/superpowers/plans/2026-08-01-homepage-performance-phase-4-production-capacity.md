@@ -10,7 +10,7 @@
 
 ## Execution Result (2026-08-01)
 
-The implementation, reversible install, cache/privacy verification, real Redis integration, rollback/reinstall drill, Redis-stop recovery drill, and live desktop/mobile browser checks are complete and deployed. The external capacity acceptance gate is intentionally still open: normal homepage 100 VUs and mixed 50-key filters 500 VUs passed; normal 500 VUs and mixed 1,000 VUs missed the latency/error thresholds while origin resources and database sessions stayed bounded. Per this plan's abort rule, the 5,000 stage was not run. The current production contract, exact measurements, evidence path, and rollback command are recorded in `docs/operations.md`; a CDN/origin-shield plus distributed-generator phase is required before claiming 1,000-5,000 acceptance.
+The implementation, reversible install, cache/privacy verification, real Redis integration, rollback/reinstall drill, Redis-stop recovery drill, and live desktop/mobile browser checks are complete and deployed. The external capacity acceptance gate is intentionally still open. Direct tests passed normal 100 VUs and mixed 500 VUs, then distributed run `30698414443` failed closed at default 100 with valid/redacted responses but p95/p99 2.24/3.10 seconds while the origin stayed healthy. Cross-run throughput evidence isolates the direct public network path. CDN-required k6/aggregation/verifier gates are implemented; the authenticated Cloudflare cutover and unchanged serial rerun remain. See the Cloudflare design/plan and `docs/operations.md`; do not claim 1,000-5,000 acceptance yet.
 
 ## Global Constraints
 

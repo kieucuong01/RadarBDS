@@ -98,6 +98,8 @@ Cookie, Authorization, `Set-Cookie`, non-2xx, admin, and non-allowlisted routes 
 
 This topology collapses repeated/common public keys; it does not turn one 2-vCPU origin into a safe 5,000-unique-cold-query service or high-availability deployment. The 2026-08-01 production test passed the browser-compressed normal homepage at 100 VUs and a prewarmed 50-key mixed-filter corpus at 500 VUs. External 500 normal and 1,000 mixed stages missed their latency/error gates while Redis, PostgreSQL, CPU, memory, and accept queues remained bounded. A CDN/origin shield plus distributed load generation is required before claiming the 1,000-5,000 target. See `docs/operations.md` for the exact evidence and rollback.
 
+The follow-up distributed run `30698414443` removed the single Windows generator but failed closed at its first default-100 stage: every response/check was valid, while p95/p99 reached 2.24/3.10 seconds and the origin remained far below abort thresholds. External transfer plateaus at roughly 1.2-2.2 MB/s versus about 8 MB/s from a same-host diagnostic, so the remaining scaling boundary is the direct public network path. Cloudflare is designed as the next edge in `docs/superpowers/specs/2026-08-01-cloudflare-origin-shield-design.md`, but is not active yet. Until it is, the active topology begins at Nginx exactly as shown above.
+
 ### Signal-card read model publication
 
 - `signal_card_read_model` stores deterministic card/filter fields, the selected primary image id, public publisher visibility/rank, and the latest actionable valuation projection.
@@ -108,7 +110,7 @@ This topology collapses repeated/common public keys; it does not turn one 2-vCPU
 - In the limited-owner migration path, commit `public_dataset_versions`, `signal_card_read_model`, and `listing_map_locations` before attempting best-effort legacy migrations. Any later `insufficient_privilege` error aborts the active PostgreSQL transaction; the handler must roll that optional transaction back so required tables are never silently lost.
 - The read model retains normalized `activity_at` but `newest` ordering deliberately reuses `listing_activity_at_sql()` over the preserved text columns. Production Guland rows contain both `YYYY-MM-DD HH...` and `YYYY-MM-DDTHH...`; replacing the legacy lexical key with `TIMESTAMPTZ` changes feed order and fails the parity gate. Treat a chronological-order migration as a separate product change, not a performance refactor.
 - `cleansing/reprocess.py` publishes after valuation, lifecycle, trends, dedup, map work, and content hashes. Targeted reprocess publishes only touched ids. Guland publisher override refreshes linked listings inside the override transaction.
-- Phases 1-4 are deployed: read-model SQL, bounded pool/shared cache, signal-first browser flow, and reversible Redis/Nginx/Gunicorn capacity configuration. The 1,000-5,000 external acceptance gate remains open because the 2026-08-01 run stopped at its first failed stages, as required by the plan.
+- Phases 1-4 are deployed: read-model SQL, bounded pool/shared cache, signal-first browser flow, and reversible Redis/Nginx/Gunicorn capacity configuration. Distributed load tooling and CDN-required evidence gates are implemented. The 1,000-5,000 acceptance gate remains open until an authenticated CDN cutover passes every serial stage.
 
 ## Signal Filter Runtime Flow
 

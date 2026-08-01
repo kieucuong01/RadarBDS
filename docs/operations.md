@@ -305,6 +305,7 @@ External tests used browser-style compression (`Accept-Encoding: gzip`). The fir
 | mixed 50-key filters, 500 VUs | pass, 0.12% errors, 99,510 requests | 248.33 / 869 ms | 98,248 HIT, 938 STALE; DB app sessions <=7 |
 | normal homepage, 500 VUs | fail gate, 0.75% errors | 8.49 / 25.56 s | origin stayed stable; after backlog fix kernel listen drops did not increase |
 | mixed 50-key filters, 1,000 VUs | fail gate, 0.83% errors | 2.85 / 8.36 s | origin stayed stable; DB app sessions 6-7; Redis had no rejected clients/evictions |
+| distributed default, 100 VUs (`30698414443`) | fail latency gate, 0% HTTP errors, 100% checks, 11,096 requests | 2.24 / 3.10 s | GitHub-hosted path delivered 143 MB at ~1.2 MB/s; CPU peaked ~14%; DB 3/0 active; Redis/listen counters/services stayed healthy |
 
 The Redis-stop drill at 100 VUs passed with 0% errors, p95 199.98 ms, p99 532.45 ms, and 10,846 requests while Redis was unavailable for 21 seconds. Public responses remained `HIT`/`STALE`, PostgreSQL stayed at 4 app sessions/1 active, and Redis recovered with `PONG` and prewarm. The full rollback/reinstall drill also passed.
 
@@ -312,11 +313,21 @@ The IPv4 listen backlog was raised from the Linux/Nginx default queue to 8,192 a
 
 Evidence is retained locally at `C:\tmp\radar-phase4-evidence-20260801-172749`, including `public-cache-verification-final.txt`, `k6-default-100-gzip.*`, `k6-mixed-500.*`, `k6-mixed-1000.*`, `k6-redis-drill-100.*`, and host observation logs. Runtime evidence stays uncommitted.
 
+Distributed workflow run `30698414443` stopped all dependent stages after `default-100`, as designed. All 33,288 content/cache checks passed and no HTTP request failed; only the unchanged latency thresholds crossed. Local external compressed tests top out around 2.2 MB/s, while `k6-vps-diagnostic-500` on the same host delivered about 8 MB/s at p95 665 ms. This is the decision evidence for CDN/origin shielding, not permission to relax the p95/p99 gates.
+
+Current DNS is still direct: `radarbds.vn -> 103.90.226.230`, authoritative nameservers `ns1.vietnix.net`, `ns2.vietnix.net`, and `nsbak.vietnix.net`; no `CF-Ray`/`CF-Cache-Status` is present. The authenticated Vietnix account has the domain/VPS/Object Storage but no CDN service, and the available Cloudflare session is not authenticated. No account, plan, or nameserver change was created automatically. Use `docs/superpowers/specs/2026-08-01-cloudflare-origin-shield-design.md` and its paired plan for the exact allowlist, private bypass, DNS preservation, cutover, and rollback contract.
+
 ### Honest capacity boundary and next architecture
 
 The current single 2-vCPU/4-GB origin has proven cache collapse, privacy isolation, Redis failure recovery, bounded DB sessions, stable service resources, normal-homepage 100 VUs, and mixed-filter 500 VUs. It has **not** proven the 1,000-5,000 external acceptance target, 5,000 unique cold filters, sustained 5,000 RPS, or high availability. The 5,000 stage was intentionally not run after earlier abort thresholds failed.
 
-The next capacity phase must put a CDN/edge cache and origin shield in front of the same guest-only contract, keep authenticated traffic private, add distributed load generators in at least two regions, and repeat 100 -> 500 -> 1,000 -> 5,000 serial gates. Do not compensate by blindly increasing Gunicorn workers, PostgreSQL connections, Redis memory, or timeouts.
+The next capacity phase must activate the documented CDN/edge cache in front of the same guest-only contract, keep authenticated traffic private, and repeat 100 -> 500 -> 1,000 -> 5,000 serial gates. The production verifier must pass with `-RequireCdn` before the capacity branch is pushed again:
+
+```powershell
+.\scripts\verify_public_cache.ps1 -BaseUrl "https://radarbds.vn" -RequireCdn
+```
+
+That mode requires `CF-Ray`, guest Cloudflare HIT/stale evidence, private Cloudflare BYPASS/DYNAMIC, origin `private, no-store`, redaction, and the existing Nginx marker contract. Do not compensate by increasing Gunicorn workers, PostgreSQL connections, Redis memory, or timeouts.
 
 ## Crawl Automation
 

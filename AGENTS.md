@@ -18,7 +18,7 @@ Read this first in every new AI/dev session. It is the token-light map, not the 
 | Browser-use social ops, Facebook groups/Page, broker discovery, trend monitoring | `docs/browser-use-social-ops.md` + `docs/social-care-workflow.md` + `docs/broker-discovery.md` (auto-post wrapper: `scripts/radar_social_auto_post.py`; broker scoring: `scripts/radar_broker_discovery.py`) |
 | Monthly market reports, `/bao-cao` hub, report cron automation | `docs/seo-monthly-reports.md` |
 | Deploy, VPS ops, local/prod DB sync, logs | `docs/operations.md` |
-| Homepage/filter performance, cache/read-model scaling, 1,000-5,000 concurrent public requests | `docs/superpowers/specs/2026-08-01-homepage-filter-performance-scale-design.md` + `docs/superpowers/plans/2026-08-01-homepage-performance-scale-master.md` + production truth in `docs/operations.md` |
+| Homepage/filter performance, cache/read-model scaling, CDN, 1,000-5,000 concurrent public requests | `docs/superpowers/specs/2026-08-01-homepage-filter-performance-scale-design.md` + `docs/superpowers/plans/2026-08-01-homepage-performance-scale-master.md` + `docs/superpowers/specs/2026-08-01-cloudflare-origin-shield-design.md` + production truth in `docs/operations.md` |
 | Product/data rules, dedup/history, quality gates | `docs/product_rules.md` |
 | Exact local commands and test matrix | `docs/dev_commands.md` |
 | Auth, tier gating, redaction | `docs/rbac.md` |
@@ -63,6 +63,7 @@ Marketing skills:
 - Remote Supabase project `ozdjzfiqcjnlfuihqqjy` is sync/backup only. Passwords live only in ignored env files; never print or commit them.
 - Production: Ubuntu Server 24.04 LTS, Python 3.12, systemd services, Nginx, domain `https://radarbds.vn`.
 - Production public-read path uses guest-only Nginx microcache -> bounded Gunicorn `3x4` -> Redis cache/read model -> PostgreSQL pool max `4` per worker. Redis is loopback-only, disposable, persistence-off, and capped at 256 MB. Current exact settings, evidence, and rollback are in `docs/operations.md`.
+- Public DNS currently points directly to `103.90.226.230` on Vietnix nameservers; Cloudflare/CDN is not active. The direct external path is the measured capacity bottleneck. Do not rerun the distributed capacity branch until the authenticated CDN cutover and `-RequireCdn` verifier pass.
 - Production env must set `PUBLIC_BASE_URL=https://radarbds.vn` and `DASHBOARD_BASE_URL=https://radarbds.vn`.
 - Local and production env must set a private `GULAND_PUBLISHER_KEY_SECRET` of at least 32 random characters before publisher identity capture/backfill.
 - Runtime data is ignored by git: DB dumps, `data/images/`, thumbnails, logs, reports, and backups must stay uncommitted.
@@ -76,7 +77,7 @@ Marketing skills:
 - `services/signal_read_model.py`: transactional `signal_card_read_model` refresh and feature-flagged compact signal query.
 - `services/public_cache_keys.py`, `services/public_cache.py`: canonical tier/version keys, Redis fresh/stale single-flight, and bounded local fallback.
 - `services/public_data_publish.py`, `services/public_prewarm.py`: post-commit version mirror and no-cookie allowlisted warming after deterministic data jobs.
-- `deployment/ubuntu24/*`, `scripts/install_performance_infra.sh`, `scripts/verify_public_cache.ps1`, `scripts/load/radar_public_load.js`: bounded production capacity, reversible install, cache/privacy proof, and staged external load profile.
+- `deployment/ubuntu24/*`, `scripts/install_performance_infra.sh`, `scripts/verify_public_cache.ps1`, `scripts/load/radar_public_load.js`, `scripts/load/aggregate_k6_shards.py`, `scripts/load/observe_production_capacity.ps1`: bounded production capacity, reversible install, origin/CDN privacy proof, conservative distributed aggregation, and host observation.
 - `static/js/main/filter_runtime.js`: canonical browser filter queries and the signal-first/counts-after sequencing helper.
 - `static/js/main/web_vitals.js`: dependency-free LCP/INP/CLS observation and PII-free GA4 emission; `signals.js` owns the `radar-first-signal-cards` measure.
 - `services/signal_quality.py`: latest valuation CTE and actionable signal gate.
@@ -102,7 +103,7 @@ Marketing skills:
 - Only anonymous guest `/`, `/api/signals`, `/api/counts`, and `/api/dashboard` may carry `X-Radar-Public-Cache: 1`. Any session, Authorization, Set-Cookie, admin, error, saved/auth/admin/checkout/order response remains private/no-store.
 - Publish read-model/version data in PostgreSQL first, exit/commit, then mirror Redis and prewarm. Redis/prewarm failure must be reported separately and must not relabel committed DB data as failed.
 - The capacity objective means roughly 1,000-5,000 simultaneous in-flight public requests, not 5,000 sustained origin RPS. Do not claim that gate from unit tests or single-request timings; use the staged production load plan.
-- The 2026-08-01 external gate passed the normal homepage profile at 100 VUs and the 50-key mixed filter profile at 500 VUs. Mixed 1,000 VUs and the normal 500-VU profile missed latency/error gates although origin resources and DB sessions stayed bounded; 5,000 was intentionally not run. Do not claim 1,000-5,000 acceptance without the documented CDN/distributed-generator follow-up.
+- The 2026-08-01 direct-origin gate passed the local normal profile at 100 VUs and mixed filters at 500 VUs. Distributed run `30698414443` then failed closed at external default 100 with 0% HTTP/check errors but p95 2.24 s and p99 3.10 s while CPU/DB/Redis/listen queues stayed healthy. This, the 1.2-2.2 MB/s external plateau, and the same-host ~8 MB/s diagnostic prove the public egress/path is the next bottleneck. Do not rerun 500-5,000 or raise backend bounds before CDN/origin shielding is active and verified.
 - On the Signals tab, one settled filter starts exactly one immediate `/api/signals` request. `/api/counts` is deferred until that signal load settles; `/api/dashboard` must not run on this path. Dashboard metadata remains a non-Signals-tab concern.
 - Keep browser request cancellation and newest-response-wins together: `requestControllers[scope].abort()`, `signalRunSeq`, `signalRenderSeq`, `renderedSignalIds`, and page-1 reset are one invariant set. Do not remove one in isolation.
 - User-facing signal surfaces use latest valuation plus `services.signal_quality.actionable_signal_sql()`, not raw `valuation_results.is_signal` alone.
