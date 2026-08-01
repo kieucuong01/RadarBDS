@@ -31,6 +31,46 @@ def test_web_service_has_bounded_gunicorn_capacity():
     assert "LimitNOFILE=65536" in text
 
 
+def test_nginx_public_cache_requires_no_session_and_app_opt_in():
+    global_cache = Path(
+        "deployment/ubuntu24/nginx-radar-bds-cache.conf"
+    ).read_text("utf-8")
+    include = Path(
+        "deployment/ubuntu24/nginx-radar-public-cache.inc"
+    ).read_text("utf-8")
+    site = Path("deployment/ubuntu24/nginx-radar-bds.conf").read_text("utf-8")
+
+    assert 'map $http_cookie $radar_has_session' in global_cache
+    assert r'~*(^|;\s*)radar_session=' in global_cache
+    assert r'"~*(^|;\s*)radar_session=" 1;' in global_cache
+    assert 'map $upstream_http_x_radar_public_cache $radar_app_public' in global_cache
+    assert "proxy_cache radar_public;" in include
+    assert "proxy_cache_bypass $radar_has_session $http_authorization;" in include
+    assert (
+        "proxy_no_cache $radar_has_session $http_authorization "
+        "$radar_not_app_public $upstream_http_set_cookie;"
+    ) in include
+    assert "proxy_cache_valid 200 15s;" in include
+    assert "proxy_cache_lock on;" in include
+    assert "proxy_hide_header X-Radar-Public-Cache;" in include
+    assert "add_header X-Radar-Edge-Cache $upstream_cache_status always;" in site
+    assert 'add_header X-Content-Type-Options "nosniff" always;' in site
+    for route in ("= /", "= /api/signals", "= /api/counts", "= /api/dashboard"):
+        assert f"location {route}" in site
+    assert "ssl_certificate" in site
+
+
+def test_connection_queue_profile_is_narrow_and_explicit():
+    text = Path(
+        "deployment/ubuntu24/60-radar-bds-connections.conf"
+    ).read_text("utf-8")
+
+    assert text.splitlines() == [
+        "net.core.somaxconn=8192",
+        "net.ipv4.tcp_max_syn_backlog=8192",
+    ]
+
+
 def test_guland_secondary_systemd_timer_runs_after_primary_daily_crawl():
     base = Path("deployment/ubuntu24")
     service = (base / "radar-bds-guland-crawl.service").read_text(encoding="utf-8")
