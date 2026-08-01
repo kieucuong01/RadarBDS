@@ -223,7 +223,7 @@ for url in \
   "http://127.0.0.1:5000/api/dashboard" \
   "http://127.0.0.1:5000/api/dashboard" \
   "http://127.0.0.1:5000/api/dashboard"; do
-  curl -fsS --max-time 30 "`$url" >/dev/null
+  curl -fsS --max-time 45 "`$url" >/dev/null
 done
 
 after=`$(git rev-parse --short HEAD)

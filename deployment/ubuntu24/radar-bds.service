@@ -11,7 +11,7 @@ WorkingDirectory=/opt/radar-bds/current
 EnvironmentFile=/etc/radar-bds/radar.env
 Environment=PYTHONUNBUFFERED=1
 LimitNOFILE=65536
-ExecStart=/opt/radar-bds/.venv/bin/gunicorn --bind 127.0.0.1:5000 --workers 3 --threads 4 --timeout 30 --graceful-timeout 30 --keep-alive 5 --max-requests 2000 --max-requests-jitter 200 --access-logfile - --error-logfile - app:app
+ExecStart=/opt/radar-bds/.venv/bin/gunicorn --bind 127.0.0.1:5000 --workers 3 --threads 4 --timeout 45 --graceful-timeout 30 --keep-alive 5 --max-requests 2000 --max-requests-jitter 200 --access-logfile - --error-logfile - app:app
 Restart=on-failure
 RestartSec=5
 KillSignal=SIGINT

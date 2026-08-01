@@ -16,9 +16,9 @@ proxy_cache_lock on;
 proxy_cache_lock_timeout 10s;
 proxy_cache_lock_age 10s;
 proxy_cache_background_update on;
-proxy_cache_use_stale updating;
+proxy_cache_use_stale error timeout invalid_header http_500 http_502 http_503 http_504 updating;
 
 proxy_connect_timeout 2s;
-proxy_read_timeout 10s;
+proxy_read_timeout 45s;
 proxy_send_timeout 10s;
 proxy_hide_header X-Radar-Public-Cache;

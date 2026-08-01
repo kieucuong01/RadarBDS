@@ -23,7 +23,7 @@ def test_web_service_has_bounded_gunicorn_capacity():
     assert "After=network-online.target postgresql.service redis-server.service" in text
     assert "--workers 3" in text
     assert "--threads 4" in text
-    assert "--timeout 30" in text
+    assert "--timeout 45" in text
     assert "--graceful-timeout 30" in text
     assert "--keep-alive 5" in text
     assert "--max-requests 2000" in text
@@ -52,7 +52,13 @@ def test_nginx_public_cache_requires_no_session_and_app_opt_in():
     ) in include
     assert "proxy_cache_valid 200 15s;" in include
     assert "proxy_cache_lock on;" in include
+    assert (
+        "proxy_cache_use_stale error timeout invalid_header http_500 http_502 "
+        "http_503 http_504 updating;"
+    ) in include
+    assert "proxy_read_timeout 45s;" in include
     assert "proxy_hide_header X-Radar-Public-Cache;" in include
+    assert "inactive=24h" in global_cache
     assert "add_header X-Radar-Edge-Cache $upstream_cache_status always;" in site
     assert 'add_header X-Content-Type-Options "nosniff" always;' in site
     assert site.count("backlog=8192") == 1
@@ -100,6 +106,7 @@ def test_normal_deploy_requires_explicit_performance_infra_opt_in():
     assert "scripts/install_performance_infra.sh install" in text
     assert 'if [ "`$install_performance_infra" = "1" ]' in text
     assert 'scripts/install_performance_infra.sh rollback "`$performance_backup"' in text
+    assert "curl -fsS --max-time 45" in text
 
 
 def test_public_cache_verifier_checks_hit_bypass_and_redaction():
