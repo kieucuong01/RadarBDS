@@ -231,6 +231,22 @@ for n in ax_nodes():
     if role == 'button' and name in ('Not now', 'Không phải bây giờ') and not p.get('disabled'):
         click_backend(n.get('backendDOMNodeId'))
         break
+# Facebook may show post-publish upsell dialogs such as Product Tagging. Close
+# them before verification so browser-use can finish cleanly instead of timing out.
+try:
+    closed_upsell = js('''(() => {{
+        for (const dialog of [...document.querySelectorAll('[role="dialog"]')]) {{
+            const text = dialog.innerText || '';
+            if (!/Product Tagging|Add Product Tags|Explore Product/i.test(text)) continue;
+            const close = dialog.querySelector('[aria-label="Close"], [aria-label="Đóng"], [role="button"][aria-label]');
+            if (close) {{ close.click(); return true; }}
+        }}
+        return false;
+    }})()''')
+    if closed_upsell:
+        time.sleep(2)
+except Exception:
+    pass
 found, needle = False, message.split('\\n', 1)[0][:60]
 # Native Page posts can take a little longer to appear in the feed after the
 # CTA modal is dismissed. Poll before failing so cron does not report false negatives.
