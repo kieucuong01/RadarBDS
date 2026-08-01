@@ -31,11 +31,11 @@ def _seed_targeted_pair() -> dict:
     init_schema()
     token = uuid.uuid4().hex
     seeded = {}
-    with get_conn() as conn:
-        for label, price in (("changed", 2.7), ("untouched", 2.1)):
+    for label, price in (("changed", 2.7), ("untouched", 2.1)):
+        with get_conn() as conn:
             url = f"https://guland.vn/post/targeted-{label}-{token}"
             source_id = f"{label}-{token}"
-            raw = conn.execute(
+            raw_id = conn.execute(
                 """
                 INSERT INTO raw_listings
                     (source, source_id, url, raw_json, crawled_at)
@@ -46,17 +46,18 @@ def _seed_targeted_pair() -> dict:
                     url,
                     json.dumps(_raw_record(url, source_id, price)),
                 ),
-            )
-            listing_id, _ = upsert_listing(
-                {
-                    **_raw_record(url, source_id, 2.5 if label == "changed" else price),
-                    "raw_id": raw.lastrowid,
-                    "source": "guland",
-                },
-                crawl_run_id=1,
-            )
-            seeded[f"{label}_raw_id"] = raw.lastrowid
-            seeded[f"{label}_listing_id"] = listing_id
+            ).lastrowid
+        listing_id, _ = upsert_listing(
+            {
+                **_raw_record(url, source_id, 2.5 if label == "changed" else price),
+                "raw_id": raw_id,
+                "source": "guland",
+            },
+            crawl_run_id=1,
+        )
+        seeded[f"{label}_raw_id"] = raw_id
+        seeded[f"{label}_listing_id"] = listing_id
+    with get_conn() as conn:
         conn.execute(
             """
             UPDATE listings
