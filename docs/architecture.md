@@ -67,12 +67,22 @@ Security boundary:
 
 Performance boundary:
 
-- `services/market_data.py` is on the hot path for PostgreSQL-backed local dev. Use the shared read connection scope from `db.connection.get_conn()` instead of opening a fresh PostgreSQL connection per read.
-- `/api/dashboard` is cached in-process for a short TTL by filter key. Guest dashboard rate limiting is in-memory; write-sensitive scopes such as lead capture still use DB-backed rate limiting.
+- `services/market_data.py` is on the hot path for PostgreSQL-backed local dev. Use the bounded `db.connection.get_conn()` pool scope instead of opening a fresh PostgreSQL connection per read. Each process defaults to pool min/max `1/4` with a one-second acquire timeout; three Gunicorn workers therefore admit at most 12 application DB connections.
+- `/api/signals`, `/api/counts`, and `/api/dashboard` use `services/public_cache.py` when `RADAR_PUBLIC_CACHE_ENABLED=1`. The old per-process route dictionaries no longer exist. Guest/Free/VIP keys are separate; admin and explicit local/admin `cache_refresh=1` requests bypass response caching.
 - `/api/signals` keeps `load_signals()` as its stable interface. With `RADAR_SIGNAL_READ_MODEL_ENABLED=0` it uses `_load_signals_legacy()`; with the flag enabled it reads `signal_card_read_model` through one bounded page query and joins the preselected image by primary key.
 - The read-model query applies a transaction-local `statement_timeout`, clamps `limit` to 100, uses `limit + 1` when `include_total=0`, and reuses the existing formatter plus tier redaction. It must not fork API serialization or masking rules.
 - Legacy feed publisher policy is set-based through one `listing_publishers`/`source_publishers` join. Do not restore correlated publisher subqueries.
 - Feed ordering should not depend on retired legal-image verification paths.
+
+### Shared public response cache
+
+- PostgreSQL `public_dataset_versions` is the source of truth. Redis keys `radar:dataset-version:signals` and `radar:dataset-version:market` are disposable mirrors; publication updates them only after the DB transaction exits successfully.
+- Response keys are `radar:public:v<schema>:<endpoint>:<tier>:<version-tuple>:<sha256(canonical-json-query)>`. Canonical queries contain only parsed response-changing fields. Multi-value filters are sorted/deduplicated; page is clamped to `1..2000`, limit to `1..100`, wards/sources/property types to `64/4/8`, range groups to `12` each, and keyword to 80 characters before both the key and SQL loader.
+- Each key has `<key>:fresh` for 60 seconds, `<key>:stale` for 240 seconds total, and `<key>:lock` for five seconds. A token-owned Lua compare/delete releases the lock. Waiters spend at most 250 ms looking for the winning fresh result.
+- Redis failure falls back to a process-local 256-entry LRU. A process-wide bounded semaphore admits at most two uncached DB loaders; excess work receives controlled `503 Retry-After: 1`. A bounded stale value may be served when a loader or dependency fails.
+- Anonymous guest homepage/API responses may carry `X-Radar-Public-Cache: 1` and a 15-second shared-cache policy. Any `radar_session`, `Authorization`, admin response, `Set-Cookie`, non-2xx result, or controlled error remains private/no-store and must never enter an edge cache.
+- Guest cache values are produced only after tier redaction. Original listing/source URLs, seller names, contact phones, and embedded phone numbers may not enter the guest namespace.
+- `services/public_prewarm.py` reads at most 20 allowlisted relative routes, never sends Cookie/Authorization, caps response reads at 2 MiB, and reports status only. `services/public_data_publish.py` mirrors committed versions first, then prewarms only while the shared-cache flag is enabled; Redis/HTTP failures never relabel committed DB data as failed.
 
 ### Signal-card read model publication
 
@@ -84,7 +94,7 @@ Performance boundary:
 - In the limited-owner migration path, commit `public_dataset_versions`, `signal_card_read_model`, and `listing_map_locations` before attempting best-effort legacy migrations. Any later `insufficient_privilege` error aborts the active PostgreSQL transaction; the handler must roll that optional transaction back so required tables are never silently lost.
 - The read model retains normalized `activity_at` but `newest` ordering deliberately reuses `listing_activity_at_sql()` over the preserved text columns. Production Guland rows contain both `YYYY-MM-DD HH...` and `YYYY-MM-DDTHH...`; replacing the legacy lexical key with `TIMESTAMPTZ` changes feed order and fails the parity gate. Treat a chronological-order migration as a separate product change, not a performance refactor.
 - `cleansing/reprocess.py` publishes after valuation, lifecycle, trends, dedup, map work, and content hashes. Targeted reprocess publishes only touched ids. Guland publisher override refreshes linked listings inside the override transaction.
-- Phase 1 improves origin SQL and gives safe rollback. Redis, bounded connection pooling, Nginx microcache, browser request fan-out reduction, and the 1,000-5,000 in-flight load gate belong to later phases in the master plan.
+- Phase 1 improves origin SQL. Phase 2 adds the bounded pool and application cache contract, but production Redis and the cache flag remain off until the Phase 4 install/failure drill. Nginx microcache, browser fan-out proof, and the 1,000-5,000 in-flight gate still require their later phase gates.
 
 ## Signal Filter Runtime Flow
 

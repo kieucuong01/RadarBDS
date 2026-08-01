@@ -73,7 +73,8 @@ Marketing skills:
 - `routes/`: public/auth/market/admin blueprints; many still delegate to `app.py`.
 - `services/market_data.py`: hot-path dashboard/listing read models and API shaping.
 - `services/signal_read_model.py`: transactional `signal_card_read_model` refresh and feature-flagged compact signal query.
-- `services/public_data_publish.py`: non-Flask publication boundary used after deterministic reprocess and repair jobs.
+- `services/public_cache_keys.py`, `services/public_cache.py`: canonical tier/version keys, Redis fresh/stale single-flight, and bounded local fallback.
+- `services/public_data_publish.py`, `services/public_prewarm.py`: post-commit version mirror and no-cookie allowlisted warming after deterministic data jobs.
 - `services/signal_quality.py`: latest valuation CTE and actionable signal gate.
 - `services/image_assets.py`: image URL and thumbnail resolution.
 - `cleansing/reprocess.py`: normalize, dedup, valuation orchestration.
@@ -91,6 +92,11 @@ Marketing skills:
 - `/api/signals` is the paginated card feed. Keep it compact and thumbnail-first.
 - `RADAR_SIGNAL_READ_MODEL_ENABLED` defaults to `0`. Enable it only after `radar.py signal-read-model --refresh --compare` reports zero differences in the target environment; rollback is flag `0` plus service restart.
 - A failed signal read-model refresh must leave the previous complete rows/version active. Never bump `public_dataset_versions.signals` outside the refresh transaction.
+- `db.connection.get_conn()` is a lazy bounded pool scope (default max 4/process). Always return connections through that context; keep `connect()` only for explicit fresh-connection owners.
+- `RADAR_PUBLIC_CACHE_ENABLED` stays `0` until Redis is local-only, the real integration test passes, and the Phase 4 Redis-stop/recovery drill proves shared lock, bounded DB work, and stale-or-controlled-503 behavior.
+- Public cache keys use only parsed/clamped response-changing values plus effective tier and durable dataset versions. Admin bypasses; guest/Free/VIP never share namespaces.
+- Only anonymous guest `/`, `/api/signals`, `/api/counts`, and `/api/dashboard` may carry `X-Radar-Public-Cache: 1`. Any session, Authorization, Set-Cookie, admin, error, saved/auth/admin/checkout/order response remains private/no-store.
+- Publish read-model/version data in PostgreSQL first, exit/commit, then mirror Redis and prewarm. Redis/prewarm failure must be reported separately and must not relabel committed DB data as failed.
 - The capacity objective means roughly 1,000-5,000 simultaneous in-flight public requests, not 5,000 sustained origin RPS. Do not claim that gate from unit tests or single-request timings; use the staged production load plan.
 - User-facing signal surfaces use latest valuation plus `services.signal_quality.actionable_signal_sql()`, not raw `valuation_results.is_signal` alone.
 - `low_segment_confidence` alone does not suppress user-facing signals; show a warning badge instead.
@@ -119,6 +125,7 @@ Common verification:
 node --check static\js\main.js
 & $py -X utf8 -m pytest tests\test_dedup.py tests\test_price_history.py tests\test_lot_history.py tests\test_drop_filter.py
 & $py -X utf8 radar.py signal-read-model --refresh --compare --limit 200
+& $py -X utf8 -m pytest tests\test_postgres_connection.py tests\test_public_cache_keys.py tests\test_public_cache.py tests\test_public_cache_headers.py tests\test_public_prewarm.py -q
 ```
 
 Deploy after pushing `main`:

@@ -87,7 +87,6 @@ Phase 1 is additive and must be deployed feature-off first. In `/etc/radar-bds/r
 ```bash
 RADAR_SIGNAL_READ_MODEL_ENABLED=0
 RADAR_SIGNAL_QUERY_TIMEOUT_MS=5000
-RADAR_SIGNAL_CACHE_TTL_SECONDS=60
 ```
 
 After deploying code and confirming the legacy API still works, initialize/backfill and compare as the runtime user:
@@ -152,6 +151,72 @@ All three object names must be non-null and the version table must contain `mark
 If compare reports only `order_mismatch` for Guland with identical IDs and fields, inspect `price_updated_at`, `first_seen_at`, and `crawled_at` string formats before changing indexes. Mixed space/`T` separators are present in production, and Phase 1 must preserve the existing lexical `listing_activity_at_sql()` order. Do not sort `newest` solely by normalized `signal_card_read_model.activity_at` unless that user-visible behavior change has its own migration and acceptance test.
 
 This rollout proves parity and normal-load latency only. Do not claim the 1,000-5,000 simultaneous in-flight request objective until the later pooling/cache/Nginx phases and staged load gates pass.
+
+## Shared Public Cache And PostgreSQL Pool Rollout
+
+Phase 2 application code is safe to deploy before Redis, but production must initially keep:
+
+```bash
+RADAR_DB_POOL_MIN=1
+RADAR_DB_POOL_MAX=4
+RADAR_DB_POOL_TIMEOUT_SECONDS=1.0
+RADAR_PUBLIC_CACHE_ENABLED=0
+RADAR_REDIS_URL=redis://127.0.0.1:6379/0
+RADAR_CACHE_SCHEMA_VERSION=1
+RADAR_PUBLIC_CACHE_FRESH_SECONDS=60
+RADAR_PUBLIC_CACHE_STALE_SECONDS=180
+RADAR_PUBLIC_CACHE_LOCK_SECONDS=5
+RADAR_PUBLIC_CACHE_WAIT_SECONDS=0.25
+RADAR_PUBLIC_DB_SLOTS=2
+RADAR_PUBLIC_STATEMENT_TIMEOUT_MS=1500
+RADAR_PUBLIC_PREWARM_URL=http://127.0.0.1:5000
+```
+
+The connection budget is `Gunicorn workers * RADAR_DB_POOL_MAX`. The approved Phase 4 target is `3 * 4 = 12` web connections. Do not increase either value independently. Under ordinary web-only traffic, inspect PostgreSQL from a privileged SQL session and keep the Radar database/user count within that budget; exclude a separately running crawl/reprocess before interpreting the count:
+
+```sql
+SELECT datname, usename, state, COUNT(*) AS sessions
+FROM pg_stat_activity
+WHERE datname = current_database()
+GROUP BY datname, usename, state
+ORDER BY usename, state;
+```
+
+Pool saturation raises a controlled application error instead of creating unbounded connections. Confirm service logs contain the configured `PostgreSQL pool initialized min=1 max=4` line and that `/api/signals`, `/api/counts`, and `/api/dashboard` remain correct with the cache flag off.
+
+Do not enable the cache flag until Phase 4 has installed a local-only Redis service and these checks pass:
+
+```bash
+sudo systemctl is-active redis-server
+redis-cli -h 127.0.0.1 -p 6379 PING
+ss -lntp | grep '127.0.0.1:6379'
+redis-cli -h 127.0.0.1 -p 6379 INFO server | grep '^redis_version:'
+redis-cli -h 127.0.0.1 -p 6379 INFO memory | grep -E '^(used_memory_human|maxmemory_human|maxmemory_policy):'
+```
+
+Expected: `active`, `PONG`, loopback-only listening, the installed Redis version, and the Phase 4 cache-only memory/policy limits. Redis contains no source-of-truth data and persistence remains disabled by the Phase 4 service configuration.
+
+Dataset and cache inspection without response bodies or credentials:
+
+```bash
+sudo -u radar bash -lc 'set -a; . /etc/radar-bds/radar.env; set +a; cd /opt/radar-bds/current && /opt/radar-bds/.venv/bin/python -X utf8 -c "from services.public_cache import get_current_dataset_versions; print(get_current_dataset_versions((\"signals\",\"market\")))"'
+curl -sS -D - -o /dev/null 'http://127.0.0.1:5000/api/signals?include_total=0&limit=30&page=1&sort=newest'
+curl -sS -D - -o /dev/null 'http://127.0.0.1:5000/api/counts'
+curl -sS -D - -o /dev/null 'http://127.0.0.1:5000/api/dashboard'
+```
+
+`X-Radar-Cache` is `miss`, `hit`, `stale`, or `bypass`; `Server-Timing` reports cache status and loader duration. Only anonymous guest responses may include `X-Radar-Public-Cache: 1` plus the public 15-second policy. Repeat with a harmless `Cookie: radar_session=invalid-probe` and with an `Authorization` header; both must return `Cache-Control: private, no-store` and no public marker. Do not log real session/admin values.
+
+Committed read-model publication follows this order: DB refresh/version commit, Redis version mirror, then the six allowlisted warm routes from `config/public_cache_warm_routes.json`. Publication output keeps DB `status=ok` and reports mirror/prewarm state separately under `cache`. Prewarm sends no cookie/authorization, reads at most 2 MiB, and logs status only.
+
+Rollback order:
+
+1. For any privacy/key/version issue, set `RADAR_PUBLIC_CACHE_ENABLED=0` and restart `radar-bds.service` immediately.
+2. Verify all three endpoints return `X-Radar-Cache: bypass` and correct tier redaction.
+3. Redis may then be stopped or repaired without affecting PostgreSQL truth.
+4. Keep the pool limits in place. Roll back pool code only by deploying the prior commit; never compensate by raising PostgreSQL connection limits during an incident.
+
+The Phase 2 runtime gate is complete only after the Phase 4 controlled drill proves a shared hit/lock across at least two Gunicorn workers, one loader for 100 identical cold requests, bounded work/stale-or-503 while Redis is stopped, version bootstrap after restart, and both cache flags `0` and `1`. Until then the production cache flag stays `0`.
 
 ## Crawl Automation
 
@@ -304,12 +369,13 @@ not automatically run publisher backfill `--apply`.
 
 ## Cache Prewarm
 
-Use after deploy and after crawl/reprocess:
+With `RADAR_PUBLIC_CACHE_ENABLED=1`, crawl/reprocess publication automatically mirrors versions and warms the bounded route file. Manual status-only prewarm for diagnosis:
 
 ```bash
-curl -fsS "http://127.0.0.1:5000/api/dashboard?cache_refresh=1" >/dev/null
-curl -fsS "http://127.0.0.1:5000/api/signals?page=1&limit=3" >/dev/null
+sudo -u radar bash -lc 'set -a; . /etc/radar-bds/radar.env; set +a; cd /opt/radar-bds/current && /opt/radar-bds/.venv/bin/python -X utf8 -c "from services.public_prewarm import prewarm_configured_routes; print(prewarm_configured_routes())"'
 ```
+
+Never add authenticated, admin, checkout/order, saved-listing, arbitrary-host, fragment, credential, or user-specific URLs to the warm-route file.
 
 ## Thu Dau Mot Digital Map Commerce
 

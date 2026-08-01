@@ -185,7 +185,7 @@ python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -U pip setuptools wheel
 pip install -r requirements.txt -r requirements-dev.txt
-python -c "import flask, numpy, cv2, PIL, psycopg, playwright; print('ok')"
+python -c "import flask, numpy, cv2, PIL, psycopg, psycopg_pool, redis, playwright; print('ok')"
 ```
 
 Production service smoke after installing `deployment/ubuntu24/*.service`:
@@ -339,6 +339,81 @@ With Flask running, record cold/warm status, TTFB, total time, and bytes without
 
 Local parity and single-request timings are not the concurrency acceptance test. Follow the staged load gates in `docs/superpowers/plans/2026-08-01-homepage-performance-scale-master.md` before claiming 1,000-5,000 simultaneous in-flight capacity.
 
+### Shared public cache and bounded PostgreSQL pool
+
+Phase 2 static/focused verification:
+
+```powershell
+& $py -X utf8 -m py_compile `
+  app.py `
+  db\connection.py `
+  services\public_cache_keys.py `
+  services\public_cache.py `
+  services\public_data_publish.py `
+  services\public_prewarm.py
+
+& $py -X utf8 -m pytest `
+  tests\test_postgres_connection.py `
+  tests\test_public_cache_keys.py `
+  tests\test_public_cache.py `
+  tests\test_public_cache_headers.py `
+  tests\test_public_cache_redis_integration.py `
+  tests\test_public_prewarm.py `
+  tests\test_signal_read_model.py `
+  tests\test_market_data_performance.py `
+  tests\test_guest_visibility.py `
+  tests\test_source_policy.py `
+  tests\test_security_hardening.py -q
+```
+
+The real Redis integration test skips unless an isolated Redis test database is explicitly configured. Do not point it at an unknown/shared cache:
+
+```powershell
+$env:RADAR_TEST_REDIS_URL = "redis://127.0.0.1:6379/15"
+& $py -X utf8 -m pytest tests\test_public_cache_redis_integration.py -q
+```
+
+Run application code locally with cache disabled (the deploy-safe default):
+
+```powershell
+$env:RADAR_PUBLIC_CACHE_ENABLED = "0"
+$env:RADAR_DB_POOL_MIN = "1"
+$env:RADAR_DB_POOL_MAX = "4"
+$env:RADAR_DB_POOL_TIMEOUT_SECONDS = "1.0"
+& $py -X utf8 app.py
+```
+
+Only after a local Redis is intentionally running, use a disposable DB number and enable the application cache for focused tests:
+
+```powershell
+$env:RADAR_REDIS_URL = "redis://127.0.0.1:6379/15"
+$env:RADAR_PUBLIC_CACHE_ENABLED = "1"
+& $py -X utf8 app.py
+```
+
+Inspect headers without printing JSON bodies:
+
+```powershell
+$paths = @(
+  "/",
+  "/api/signals?include_total=0&limit=30&page=1&sort=newest",
+  "/api/counts",
+  "/api/dashboard"
+)
+foreach ($path in $paths) {
+  $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:5000$path"
+  [pscustomobject]@{
+    Path = $path
+    Status = $response.StatusCode
+    AppCache = $response.Headers["X-Radar-Cache"]
+    Public = $response.Headers["X-Radar-Public-Cache"]
+    CacheControl = $response.Headers["Cache-Control"]
+  }
+}
+```
+
+Use `services.public_prewarm.prewarm_configured_routes()` for the allowlisted no-cookie prewarm. Do not add raw URLs, user identifiers, cookies, auth headers, saved listings, admin pages, or checkout/order routes.
+
 Post-merger location resolver:
 
 ```powershell
@@ -473,7 +548,7 @@ notifications, and orphan local image files.
 Quick local API timing without starting a browser:
 
 ```powershell
-& $py -X utf8 -c "import time, app as a; c=a.app.test_client(); a.clear_dashboard_cache(); [print(p, c.get(p).status_code) for p in ['/api/dashboard','/api/signals?page=1&limit=30&sort=score_desc']]"
+& $py -X utf8 scripts\benchmark_public_read_path.py --base-url http://127.0.0.1:5000 --repeat 5
 ```
 
 ## Telegram / VIP Watchlist
