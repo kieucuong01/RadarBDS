@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
 BACKUP_ROOT=/var/backups/radar-bds-performance
 EXPECTED_ROOT=/opt/radar-bds/current
@@ -178,9 +178,44 @@ path.write_text(text[: match.start()] + block + text[match.end() :], encoding="u
 PY
 }
 
+validate_redis_config() {
+  local temp_dir socket pid_file log_file response
+  temp_dir=$(mktemp -d /tmp/radar-redis-validate.XXXXXX)
+  socket="$temp_dir/redis.sock"
+  pid_file="$temp_dir/redis.pid"
+  log_file="$temp_dir/redis.log"
+
+  if ! redis-server /etc/redis/redis.conf \
+    --daemonize yes \
+    --supervised no \
+    --pidfile "$pid_file" \
+    --port 0 \
+    --unixsocket "$socket" \
+    --unixsocketperm 700 \
+    --dir "$temp_dir" \
+    --logfile "$log_file"; then
+    [ -f "$log_file" ] && sed -n '1,120p' "$log_file" >&2
+    rm -f -- "$socket" "$pid_file" "$log_file"
+    rmdir -- "$temp_dir" 2>/dev/null || true
+    return 1
+  fi
+
+  response=$(redis-cli -s "$socket" PING)
+  if [ "$response" != "PONG" ]; then
+    printf 'error: temporary Redis validation instance did not answer PONG\n' >&2
+    redis-cli -s "$socket" SHUTDOWN NOSAVE >/dev/null 2>&1 || true
+    rm -f -- "$socket" "$pid_file" "$log_file"
+    rmdir -- "$temp_dir" 2>/dev/null || true
+    return 1
+  fi
+  redis-cli -s "$socket" SHUTDOWN NOSAVE >/dev/null
+  rm -f -- "$socket" "$pid_file" "$log_file"
+  rmdir -- "$temp_dir" 2>/dev/null || true
+}
+
 validate_before_activation() {
   redis-server --test-memory 2
-  redis-server /etc/redis/redis.conf --test-memory 2
+  validate_redis_config
   nginx -t
   systemd-analyze verify /etc/systemd/system/radar-bds.service
 }

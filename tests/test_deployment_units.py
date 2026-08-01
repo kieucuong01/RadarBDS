@@ -80,7 +80,11 @@ def test_performance_installer_validates_before_activation_and_has_rollback():
     assert "/var/backups/radar-bds-performance" in text
     assert "nginx -t" in text
     assert "systemd-analyze verify" in text
+    assert "set -Eeuo pipefail" in text
     assert "redis-server --test-memory 2" in text
+    assert "redis-server /etc/redis/redis.conf --test-memory 2" not in text
+    assert 'redis-cli -s "$socket" PING' in text
+    assert 'redis-cli -s "$socket" SHUTDOWN NOSAVE' in text
     assert "systemctl reload nginx" in text
     assert "systemctl restart radar-bds.service" in text
 
