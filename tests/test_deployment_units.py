@@ -165,6 +165,35 @@ def test_reusable_distributed_load_stage_is_pinned_synchronized_and_fail_closed(
     assert "id-token" not in text
 
 
+def test_distributed_capacity_caller_is_serial_fixed_target_and_non_overlapping():
+    text = Path(
+        ".github/workflows/radar-distributed-capacity.yml"
+    ).read_text("utf-8")
+
+    assert "capacity-test/approved-20260801" in text
+    assert "confirmation:" in text
+    assert "radarbds.vn" in text
+    assert "group: radar-production-capacity" in text
+    assert "cancel-in-progress: false" in text
+    assert "BASE_URL" not in text
+    assert "contents: read" in text
+    expected = [
+        "default_100",
+        "mixed_100",
+        "default_500",
+        "mixed_500",
+        "default_1000",
+        "mixed_1000",
+        "default_5000",
+    ]
+    positions = [text.index(f"  {name}:") for name in expected]
+    assert positions == sorted(positions)
+    assert "shards_json: '[0,1,2,3,4]'" in text
+    assert "vus_per_shard: 1000" in text
+    assert "needs: mixed_1000" in text
+    assert text.count("uses: ./.github/workflows/_radar-distributed-load-stage.yml") == 7
+
+
 def test_guland_secondary_systemd_timer_runs_after_primary_daily_crawl():
     base = Path("deployment/ubuntu24")
     service = (base / "radar-bds-guland-crawl.service").read_text(encoding="utf-8")

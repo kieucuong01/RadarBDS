@@ -1,0 +1,122 @@
+name: Radar distributed production capacity
+
+on:
+  push:
+    branches:
+      - capacity-test/approved-20260801
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type radarbds.vn to run the production capacity gate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: radar-production-capacity
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Validate explicit production target approval
+        shell: bash
+        env:
+          CONFIRMATION: ${{ inputs.confirmation || '' }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -Eeuo pipefail
+          if [ "$EVENT_NAME" = "push" ]; then
+            test "$REF_NAME" = "capacity-test/approved-20260801"
+          else
+            test "$EVENT_NAME" = "workflow_dispatch"
+            test "$CONFIRMATION" = "radarbds.vn"
+          fi
+
+  default_100:
+    needs: gate
+    uses: ./.github/workflows/_radar-distributed-load-stage.yml
+    with:
+      scenario: default
+      stage: default-100
+      total_vus: 100
+      vus_per_shard: 100
+      shards_json: '[0]'
+      expected_shards: 1
+      duration: 2m
+
+  mixed_100:
+    needs: default_100
+    uses: ./.github/workflows/_radar-distributed-load-stage.yml
+    with:
+      scenario: mixed
+      stage: mixed-100
+      total_vus: 100
+      vus_per_shard: 100
+      shards_json: '[0]'
+      expected_shards: 1
+      duration: 2m
+
+  default_500:
+    needs: mixed_100
+    uses: ./.github/workflows/_radar-distributed-load-stage.yml
+    with:
+      scenario: default
+      stage: default-500
+      total_vus: 500
+      vus_per_shard: 500
+      shards_json: '[0]'
+      expected_shards: 1
+      duration: 2m
+
+  mixed_500:
+    needs: default_500
+    uses: ./.github/workflows/_radar-distributed-load-stage.yml
+    with:
+      scenario: mixed
+      stage: mixed-500
+      total_vus: 500
+      vus_per_shard: 500
+      shards_json: '[0]'
+      expected_shards: 1
+      duration: 2m
+
+  default_1000:
+    needs: mixed_500
+    uses: ./.github/workflows/_radar-distributed-load-stage.yml
+    with:
+      scenario: default
+      stage: default-1000
+      total_vus: 1000
+      vus_per_shard: 500
+      shards_json: '[0,1]'
+      expected_shards: 2
+      duration: 2m
+
+  mixed_1000:
+    needs: default_1000
+    uses: ./.github/workflows/_radar-distributed-load-stage.yml
+    with:
+      scenario: mixed
+      stage: mixed-1000
+      total_vus: 1000
+      vus_per_shard: 500
+      shards_json: '[0,1]'
+      expected_shards: 2
+      duration: 2m
+
+  default_5000:
+    needs: mixed_1000
+    uses: ./.github/workflows/_radar-distributed-load-stage.yml
+    with:
+      scenario: default
+      stage: default-5000
+      total_vus: 5000
+      vus_per_shard: 1000
+      shards_json: '[0,1,2,3,4]'
+      expected_shards: 5
+      duration: 2m
