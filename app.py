@@ -4012,7 +4012,7 @@ def sitemap_xml():
 
 
 _PUBLIC_CACHE_CONTROL = (
-    "public, max-age=15, s-maxage=15, stale-while-revalidate=180, "
+    "public, max-age=15, stale-while-revalidate=180, "
     "stale-if-error=180"
 )
 _SIGNAL_DATASETS = (DATASET_SIGNALS,)
