@@ -4024,9 +4024,14 @@ def _dashboard_cache_refresh_requested(req) -> bool:
 
 
 def _get_signals_version(db_path: str) -> str:
-    with get_conn() as conn:
-        versions = get_dataset_versions(conn, (DATASET_SIGNALS,))
-    return str(versions[DATASET_SIGNALS])
+    try:
+        with get_conn() as conn:
+            versions = get_dataset_versions(conn, (DATASET_SIGNALS,))
+        return str(versions[DATASET_SIGNALS])
+    except Exception:
+        # Keep lightweight dashboard reads resilient even if the durable
+        # version table is missing or temporarily unavailable.
+        return "0"
 
 
 def _db_handle():
