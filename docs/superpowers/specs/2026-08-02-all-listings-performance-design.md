@@ -63,6 +63,8 @@ It will no longer exclude a row merely because ward, price, area, or listing pri
 
 Add one nullable projection field for the original listing `price_per_m2`. The all-listings API currently filters, sorts, and serializes that listing value; it must not silently substitute the signal valuation's `actual_ppm2`.
 
+Preserve the existing `Tin rao` card badge separately as `listing_is_signal`. The legacy route currently requires both the old and shadow valuation actionability predicates for that presentation field, which is not identical to the canonical `is_actionable` subset used by `Săn Deal`. `listing_is_signal` is display compatibility only and must never replace `is_actionable` in `/api/signals`, counts, dashboard, or signals-mode Maps.
+
 The refresh remains transactional: stage a complete replacement, lock only at the final swap, replace rows, and bump durable versions in the same transaction. A failed refresh leaves both the old projection and versions active.
 
 ### 3.2 Separate all-listings query semantics from signal semantics
