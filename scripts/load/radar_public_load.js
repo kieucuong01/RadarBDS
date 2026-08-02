@@ -1,6 +1,7 @@
 import http from 'k6/http';
 import { check, fail, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
+import { buildFailureDiagnostic } from './radar_failure_diagnostics.mjs';
 
 const BASE_URL = String(__ENV.BASE_URL || '').replace(/\/+$/, '');
 const SCENARIO = String(__ENV.SCENARIO || 'default').toLowerCase();
@@ -25,6 +26,7 @@ const cdnMiss = new Counter('radar_cdn_miss');
 const cdnStale = new Counter('radar_cdn_stale');
 const cdnBypass = new Counter('radar_cdn_bypass');
 const cdnUnknown = new Counter('radar_cdn_unknown');
+let failureDiagnosticBudget = 3;
 
 export const options = {
   vus: VUS,
@@ -139,6 +141,14 @@ function isPublicCdnStatus(status) {
   return ['HIT', 'MISS', 'EXPIRED', 'STALE', 'UPDATING', 'REVALIDATED'].includes(status);
 }
 
+function reportHttpFailure(endpoint, response) {
+  if (failureDiagnosticBudget <= 0) return;
+  const diagnostic = buildFailureDiagnostic(endpoint, response);
+  if (!diagnostic) return;
+  console.warn(`radar_http_failure=${JSON.stringify(diagnostic)}`);
+  failureDiagnosticBudget -= 1;
+}
+
 function mixedUrls(item) {
   return [
     `${BASE_URL}/api/signals?${item.signals}`,
@@ -188,6 +198,9 @@ function runDefault() {
   const homeCdn = recordCdn(responses[0]);
   const signalCdn = recordCdn(responses[1]);
   const listingsCdn = recordCdn(responses[2]);
+  reportHttpFailure('homepage', responses[0]);
+  reportHttpFailure('signals', responses[1]);
+  reportHttpFailure('listings', responses[2]);
   check(responses[0], {
     'homepage status is 200': (response) => response.status === 200,
     'homepage is edge classified': () => Boolean(homeEdge),
@@ -217,6 +230,9 @@ function runMixed() {
   const signalCdn = recordCdn(responses[0]);
   const countsCdn = recordCdn(responses[1]);
   const listingsCdn = recordCdn(responses[2]);
+  reportHttpFailure('signals', responses[0]);
+  reportHttpFailure('counts', responses[1]);
+  reportHttpFailure('listings', responses[2]);
   check(responses[0], {
     'mixed signals status is 200': (response) => response.status === 200,
     'mixed signals are edge classified': () => Boolean(signalEdge),
