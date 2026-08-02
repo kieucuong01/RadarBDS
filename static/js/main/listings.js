@@ -287,8 +287,10 @@ function setupListingsObserver() {
   }
 
   const gridSentinel = document.getElementById('listingsGridSentinel');
-  const gridRoot = document.getElementById('tab-all');
-  if (!gridSentinel || !gridRoot) return;
+  const gridRoot = window.matchMedia('(max-width: 1024px)').matches
+    ? null
+    : document.getElementById('tab-all');
+  if (!gridSentinel) return;
   new IntersectionObserver(entries => {
     if (entries[0].isIntersecting && listingsView === 'grid' && listingsHasMore && !listingsLoading) {
       loadListings(currentPageNo + 1);

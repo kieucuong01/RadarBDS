@@ -39,13 +39,24 @@
   padding: 0;
 }
 
+html {
+  min-height: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: var(--bg);
   color: var(--text);
   font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
   display: flex;
   height: 100vh;
+  width: 100%;
+  max-width: 100%;
   overflow: hidden;
+  overscroll-behavior-x: none;
   font-size: 15px;
   transition: background 0.3s, color 0.3s;
 }
@@ -155,7 +166,30 @@ body {
   cursor: pointer;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  html {
+    height: auto;
+    overflow-y: auto;
+  }
+
+  body {
+    display: block;
+    min-height: 100dvh;
+    height: auto;
+    overflow-x: clip;
+    overflow-y: auto;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  summary,
+  label {
+    touch-action: manipulation;
+  }
+
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
   select,
   textarea {

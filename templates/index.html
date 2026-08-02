@@ -73,13 +73,13 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
 
-  {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-input-zoom-20260612' %}
+  {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-scroll-lock-20260802' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=content-hubs-20260729' %}
-  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=guland-publisher-filter-20260731' %}
+  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=mobile-scroll-lock-20260802' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
-  {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=tools-nav-20260728' %}
+  {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=mobile-scroll-lock-20260802' %}
   {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=account-menu-compact-20260606' %}
   <link rel="stylesheet" href="{{ css_base }}">
   <link rel="stylesheet" href="{{ css_layout }}">
@@ -99,7 +99,7 @@
     window.RADAR_ASSETS = {
       modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729",
       market: "{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611",
-      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=favorite-listings-20260715",
+      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-scroll-lock-20260802",
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=zalo-new-tab-20260624",
       listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=listing-map-read-model-canvas-20260802"
@@ -1430,7 +1430,7 @@
   <script src="{{ url_for('static', filename='js/main/signal_card.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=homepage-perf-20260801"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-scroll-lock-20260802"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=report-internal-link-filters-20260723"></script>
 </body>

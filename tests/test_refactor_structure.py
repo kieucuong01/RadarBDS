@@ -61,7 +61,7 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
     assert "window.RADAR_ASSETS" in html
     assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729\"" in html
     assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611\"" in html
-    assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=favorite-listings-20260715\"" in html
+    assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-scroll-lock-20260802\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611\"" in html
     assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=zalo-new-tab-20260624\"" in html
     assert "window.RADAR_STYLES" in html
@@ -742,7 +742,7 @@ def test_lazy_feature_shells_are_hidden_or_positioned_before_lazy_css_loads():
     html = _read("templates/index.html")
     base_css = _read("static/css/main/base.css")
 
-    assert "css/main/base.css') ~ '?v=mobile-input-zoom-20260612'" in html
+    assert "css/main/base.css') ~ '?v=mobile-scroll-lock-20260802'" in html
     hidden_shell_rule = re.search(
         r"\.modal,\s*\.chat-window,\s*\.user-menu-dropdown,\s*\.mobile-app-title,\s*\.mobile-bottom-nav\s*\{([^}]*)\}",
         base_css,
@@ -768,16 +768,54 @@ def test_mobile_form_controls_prevent_ios_focus_zoom_without_disabling_user_zoom
     assert "user-scalable=no" not in viewport_content
     assert "maximum-scale" not in viewport_content
 
-    guard = re.search(r"@media\s*\(max-width:\s*768px\)\s*\{(?P<body>.*?)\n\}", base_css, re.S)
-    assert guard, "missing mobile CSS guard"
-    body = guard.group("body")
+    assert "@media (max-width: 1024px)" in base_css
+    mobile_css = base_css.split("@media (max-width: 1024px)", 1)[-1]
     for expected in [
+        "min-height: 100dvh",
+        "overflow-y: auto",
+        "touch-action: manipulation",
         'input:not([type="checkbox"]):not([type="radio"]):not([type="range"])',
         "select",
         "textarea",
         "font-size: 16px !important",
     ]:
-        assert expected in body
+        assert expected in mobile_css
+
+
+def test_mobile_dashboard_uses_page_scroll_without_breaking_infinite_scroll():
+    html = _read("templates/index.html")
+    base_css = _read("static/css/main/base.css")
+    filters_css = _read("static/css/main/filters.css")
+    leads_css = _read("static/css/main/leads_chat.css")
+    signals_js = _read("static/js/main/signals.js")
+    listings_js = _read("static/js/main/listings.js")
+
+    for expected in [
+        "mobile-scroll-lock-20260802",
+        "body {",
+        "overflow-x: clip",
+        ".main {",
+        "height: auto",
+        "overflow: visible",
+        "#tab-signals,",
+        "#tab-market,",
+        "#tab-all.listings-grid-mode,",
+        "#tab-insights",
+        "scrollbar-gutter: auto",
+    ]:
+        assert expected in html or expected in base_css or expected in filters_css or expected in leads_css
+
+    mobile_leads = leads_css.split("@media (max-width: 1024px)", 1)[-1]
+    header_rule = re.search(r"\.header\s*\{(?P<body>[^}]+)\}", mobile_leads, re.S)
+    assert header_rule
+    assert "position: fixed" in header_rule.group("body")
+    assert "width: 100%" in header_rule.group("body")
+    assert "max-width: 100%" in header_rule.group("body")
+    assert "padding: calc(var(--mobile-header-height) + 12px)" in mobile_leads
+
+    for source in [signals_js, listings_js]:
+        assert "window.matchMedia('(max-width: 1024px)').matches" in source
+        assert "? null" in source
 
 
 def test_dashboard_avoids_mobile_render_blocking_third_party_assets():

@@ -148,7 +148,7 @@ class FavoriteListingsTest(unittest.TestCase):
         self.assertIn('id="signalModal"', html)
         self.assertIn("loadSavedListingsPage(true)", html)
         self.assertIn("saved-header-brand", html)
-        self.assertIn("saved-listings-header-images-20260722", html)
+        self.assertIn("mobile-scroll-lock-20260802", html)
 
         signals_js = (Path(__file__).resolve().parent.parent / "static" / "js" / "main" / "signals.js").read_text(encoding="utf-8")
         self.assertIn("primary_img: images[0] || ''", signals_js)

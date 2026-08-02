@@ -924,7 +924,9 @@ function _setupSignalScroll() {
   ensureSignalScrollRoot();
   if (_sigObserver) _sigObserver.disconnect();
   const grid = document.getElementById('signalsGrid');
-  const root = grid.closest('.tab-content');
+  const root = window.matchMedia('(max-width: 1024px)').matches
+    ? null
+    : grid.closest('.tab-content');
   const sentinel = document.getElementById('sig-scroll-sentinel');
   if (!sentinel) {
     const s = document.createElement('div');

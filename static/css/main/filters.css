@@ -1215,14 +1215,26 @@
 }
 
 @media (max-width: 1024px) {
-  #tab-signals {
-    height: 100%;
-    max-height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
+  #tab-signals,
+  #tab-market,
+  #tab-all.listings-grid-mode,
+  #tab-insights {
+    height: auto;
+    max-height: none;
+    overflow: visible;
     padding-right: 0;
     padding-bottom: calc(96px + env(safe-area-inset-bottom));
-    scrollbar-gutter: stable;
+    overscroll-behavior-y: auto;
+    touch-action: auto;
+    scrollbar-gutter: auto;
+  }
+
+  #tab-all {
+    overflow: visible;
+  }
+
+  #tab-signals {
+    overflow-x: clip;
   }
 
   .sidebar .filter-group {
@@ -1349,7 +1361,6 @@
   .sidebar .ward-search {
     min-height: 36px;
     border-radius: 11px;
-    font-size: 0.8rem;
   }
 
   .sidebar .ward-search {
