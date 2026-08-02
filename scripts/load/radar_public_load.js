@@ -147,13 +147,17 @@ function isPublicCdnStatus(status) {
   return ['HIT', 'MISS', 'EXPIRED', 'STALE', 'UPDATING', 'REVALIDATED'].includes(status);
 }
 
-function recordCacheOutcomes(response) {
+export function recordCacheOutcomes(response) {
   const status = Number(response && response.status) || 0;
   if (status === 0) {
     transportError.add(1);
     return { edge: 'TRANSPORT_ERROR', cdn: 'TRANSPORT_ERROR' };
   }
-  if (status !== 200 && safeHeaderValue(response, 'CF-Ray')) {
+  const explicitCloudflareError = Boolean(
+    safeHeaderValue(response, 'CF-Error-Type')
+      || safeHeaderValue(response, 'CF-Error-Origin')
+  );
+  if (status !== 200 && explicitCloudflareError) {
     edgeError.add(1);
     cdnError.add(1);
     return { edge: 'CDN_ERROR', cdn: 'CDN_ERROR' };

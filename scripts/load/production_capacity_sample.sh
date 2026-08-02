@@ -41,9 +41,9 @@ rejected_connections="$(redis_value stats rejected_connections)"
 keyspace_hits="$(redis_value stats keyspace_hits)"
 keyspace_misses="$(redis_value stats keyspace_misses)"
 
-read -r db_connections db_active < <(
+read -r db_connections db_active db_oldest_active db_legacy_active db_map_read_model_active < <(
   sudo -n -u postgres psql -d radar_bds -At -F ' ' -c \
-    "SELECT COUNT(*), COUNT(*) FILTER (WHERE state = 'active') FROM pg_stat_activity WHERE datname = current_database() AND backend_type = 'client backend' AND usename <> 'postgres'"
+    "SELECT COUNT(*), COUNT(*) FILTER (WHERE state = 'active'), COALESCE(MAX(EXTRACT(EPOCH FROM now() - query_start)::bigint) FILTER (WHERE state = 'active'), 0), COUNT(*) FILTER (WHERE state = 'active' AND query ~ '^[[:space:]]*WITH[[:space:]]+latest_valuation[[:space:]]+AS[[:space:]]+MATERIALIZED' AND query LIKE '%listing_map_locations%'), COUNT(*) FILTER (WHERE state = 'active' AND query LIKE '%signal_card_read_model%' AND query LIKE '%listing_map_locations%') FROM pg_stat_activity WHERE datname = current_database() AND backend_type = 'client backend' AND usename <> 'postgres'"
 )
 
 tcp_total="$(ss -Htan | wc -l | tr -d ' ')"
@@ -66,6 +66,9 @@ export CPU_SYSTEM="$cpu_system"
 export CPU_USER="$cpu_user"
 export DB_ACTIVE="$db_active"
 export DB_CONNECTIONS="$db_connections"
+export DB_LEGACY_ACTIVE="$db_legacy_active"
+export DB_MAP_READ_MODEL_ACTIVE="$db_map_read_model_active"
+export DB_OLDEST_ACTIVE="$db_oldest_active"
 export EVICTED_KEYS="${evicted_keys:-0}"
 export KEYSPACE_HITS="${keyspace_hits:-0}"
 export KEYSPACE_MISSES="${keyspace_misses:-0}"
@@ -135,6 +138,11 @@ sample = {
     "postgresql": {
         "connections": integer("DB_CONNECTIONS"),
         "active": integer("DB_ACTIVE"),
+        "oldest_active_seconds": integer("DB_OLDEST_ACTIVE"),
+        "query_classes": {
+            "legacy_latest_valuation": integer("DB_LEGACY_ACTIVE"),
+            "map_read_model": integer("DB_MAP_READ_MODEL_ACTIVE"),
+        },
     },
     "restarts": {
         "nginx": integer("NGINX_RESTARTS"),

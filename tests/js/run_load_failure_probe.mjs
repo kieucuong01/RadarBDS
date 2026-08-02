@@ -105,6 +105,23 @@ async function loadModule(filePath) {
 }
 
 const entry = await loadModule(entryPath);
+entry.namespace.recordCacheOutcomes({
+  status: 500,
+  headers: {
+    'CF-Ray': 'origin-failure-ray-HKG',
+    'CF-Cache-Status': 'DYNAMIC',
+    'X-Radar-Edge-Cache': 'MISS',
+  },
+  body: 'origin failure',
+});
+entry.namespace.recordCacheOutcomes({
+  status: 522,
+  headers: {
+    'CF-Ray': 'explicit-edge-ray-HKG',
+    'CF-Error-Type': '522',
+  },
+  body: 'edge failure',
+});
 for (let attempt = 0; attempt < 5; attempt += 1) entry.namespace.default();
 process.stdout.write(JSON.stringify({
   warnings,
@@ -112,10 +129,12 @@ process.stdout.write(JSON.stringify({
     [...counters.entries()]
       .filter(([name]) => [
         'radar_cdn_error',
+        'radar_cdn_bypass',
         'radar_cdn_hit',
         'radar_cdn_unknown',
         'radar_edge_error',
         'radar_edge_hit',
+        'radar_edge_miss',
         'radar_edge_unknown',
         'radar_transport_error',
       ].includes(name))

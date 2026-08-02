@@ -1,4 +1,7 @@
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor
+import threading
+import time
 
 from services.listing_map import MapFilters
 
@@ -25,10 +28,11 @@ class _MapConnection:
     def execute(self, sql, params=None):
         self.queries.append((sql, list(params or [])))
         if "FROM public_dataset_versions" in sql:
-            return _Cursor(rows=[{
-                "dataset_name": "signals",
-                "version": int(self.version.removeprefix("v")),
-            }])
+            version = int(self.version.removeprefix("v"))
+            return _Cursor(rows=[
+                {"dataset_name": "signals", "version": version},
+                {"dataset_name": "listings", "version": version},
+            ])
         if "AS data_version" in sql:
             return _Cursor(row={"data_version": self.version})
         if "GROUP BY ml.location_key" in sql:
@@ -236,6 +240,235 @@ def test_signal_summary_uses_read_model_and_dataset_version(monkeypatch):
     assert "latest_valuation" not in summary_sql
     assert "latest_shadow_valuation" not in summary_sql
     assert "rm.is_actionable" in summary_sql
+
+
+def test_all_map_uses_listing_read_model_and_durable_version(monkeypatch):
+    import services.listing_map as listing_map
+
+    connection = _MapConnection()
+
+    @contextmanager
+    def fake_get_conn():
+        yield connection
+
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", fake_get_conn)
+
+    listing_map.load_listing_map_summary(
+        mode="all",
+        tier="guest",
+        filters=_filters(complete_only=True),
+    )
+    listing_map.load_listing_map_items(
+        mode="all",
+        tier="guest",
+        filters=_filters(complete_only=True),
+        location_key="road:thu-dau-mot:phu-loi:dx-43",
+        page=1,
+        limit=20,
+    )
+
+    sql_text = "\n".join(sql for sql, _params in connection.queries)
+    summary_sql = next(
+        sql for sql, _params in connection.queries
+        if "GROUP BY ml.location_key" in sql
+    )
+    item_sql = next(
+        sql for sql, _params in connection.queries
+        if "ml.location_key = ?" in sql
+    )
+    assert "FROM public_dataset_versions" in sql_text
+    assert "FROM signal_card_read_model rm" in summary_sql
+    assert "latest_valuation" not in summary_sql
+    assert "latest_shadow_valuation" not in summary_sql
+    assert "rm.listing_is_signal" in summary_sql
+    assert "NULLIF(TRIM(COALESCE(rm.ward, '')), '') IS NOT NULL" in summary_sql
+    assert "LEFT JOIN LATERAL" not in item_sql
+    assert "primary_img.id = f.primary_image_id" in item_sql
+
+
+def test_all_map_rolls_back_when_listing_read_model_flag_is_disabled(monkeypatch):
+    import services.listing_map as listing_map
+
+    connection = _MapConnection()
+
+    @contextmanager
+    def fake_get_conn():
+        yield connection
+
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "0")
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", fake_get_conn)
+
+    listing_map.load_listing_map_summary(
+        mode="all", tier="guest", filters=_filters()
+    )
+
+    summary_sql = next(
+        sql for sql, _params in connection.queries
+        if "GROUP BY ml.location_key" in sql
+    )
+    assert "latest_valuation AS MATERIALIZED" in summary_sql
+    assert "FROM signal_card_read_model rm" not in summary_sql
+
+
+def test_all_map_rolls_back_when_durable_listing_version_is_zero(monkeypatch):
+    import services.listing_map as listing_map
+
+    connection = _MapConnection()
+    connection.version = "v0"
+
+    @contextmanager
+    def fake_get_conn():
+        yield connection
+
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", fake_get_conn)
+
+    listing_map.load_listing_map_items(
+        mode="all",
+        tier="guest",
+        filters=_filters(),
+        location_key="road:thu-dau-mot:phu-loi:dx-43",
+        page=1,
+        limit=20,
+    )
+
+    item_sql = next(
+        sql for sql, _params in connection.queries
+        if "ml.location_key = ?" in sql
+    )
+    assert "latest_valuation AS MATERIALIZED" in item_sql
+    assert "FROM signal_card_read_model rm" not in item_sql
+
+
+def test_all_map_summary_single_flights_same_cache_key(monkeypatch):
+    import services.listing_map as listing_map
+
+    class _SlowMapConnection(_MapConnection):
+        def execute(self, sql, params=None):
+            if "GROUP BY ml.location_key" in sql:
+                time.sleep(0.05)
+            return super().execute(sql, params)
+
+    connection = _SlowMapConnection()
+
+    @contextmanager
+    def fake_get_conn():
+        yield connection
+
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", fake_get_conn)
+
+    def load_summary(_index):
+        return listing_map.load_listing_map_summary(
+            mode="all",
+            tier="guest",
+            filters=_filters(),
+        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        results = list(executor.map(load_summary, range(8)))
+
+    assert connection.summary_calls == 1
+    assert all(result == results[0] for result in results)
+
+
+def test_all_map_summary_waiters_release_connections_before_slow_query(
+    monkeypatch,
+):
+    import services.listing_map as listing_map
+
+    worker_count = 8
+    context_barrier = threading.Barrier(worker_count)
+    state_lock = threading.Lock()
+    pool_state = {"active": 0, "active_during_heavy": []}
+
+    class _BoundedMapConnection(_MapConnection):
+        def execute(self, sql, params=None):
+            if "AS data_version" in sql:
+                context_barrier.wait(timeout=2)
+            if "GROUP BY ml.location_key" in sql:
+                time.sleep(0.03)
+                with state_lock:
+                    pool_state["active_during_heavy"].append(
+                        pool_state["active"]
+                    )
+                time.sleep(0.05)
+            return super().execute(sql, params)
+
+    connection = _BoundedMapConnection()
+
+    @contextmanager
+    def bounded_get_conn():
+        with state_lock:
+            pool_state["active"] += 1
+        try:
+            yield connection
+        finally:
+            with state_lock:
+                pool_state["active"] -= 1
+
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", bounded_get_conn)
+
+    def load_summary(_index):
+        return listing_map.load_listing_map_summary(
+            mode="all", tier="guest", filters=_filters()
+        )
+
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        results = list(executor.map(load_summary, range(worker_count)))
+
+    assert connection.summary_calls == 1
+    assert pool_state["active_during_heavy"] == [1]
+    assert all(result == results[0] for result in results)
+
+
+def test_all_map_items_single_flight_same_cache_key(monkeypatch):
+    import services.listing_map as listing_map
+
+    class _SlowMapConnection(_MapConnection):
+        def execute(self, sql, params=None):
+            if "ml.location_key = ?" in sql:
+                time.sleep(0.05)
+            return super().execute(sql, params)
+
+    connection = _SlowMapConnection()
+
+    @contextmanager
+    def fake_get_conn():
+        yield connection
+
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", fake_get_conn)
+
+    def load_items(_index):
+        return listing_map.load_listing_map_items(
+            mode="all",
+            tier="guest",
+            filters=_filters(),
+            location_key="road:thu-dau-mot:phu-loi:dx-43",
+            page=1,
+            limit=20,
+        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        results = list(executor.map(load_items, range(8)))
+
+    assert connection.item_calls == 1
+    assert all(result == results[0] for result in results)
 
 
 def test_summary_cache_uses_data_version_tier_mode_and_filters(monkeypatch):

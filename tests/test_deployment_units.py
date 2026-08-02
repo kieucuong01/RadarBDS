@@ -234,9 +234,14 @@ def test_capacity_observer_is_status_only_and_enforces_host_abort_thresholds():
         "evicted_keys",
         "rejected_connections",
         "pg_stat_activity",
+        "legacy_latest_valuation",
+        "oldest_active_seconds",
+        "map_read_model",
         "vmstat",
     ):
         assert token in sample
+    assert "query ~ '^[[:space:]]*WITH[[:space:]]+latest_valuation" in sample
+    assert "query LIKE 'WITH latest_valuation AS MATERIALIZED%'" not in sample
     assert "source /etc/radar-bds/radar.env" not in sample
     assert "$DB_CONNECTIONS_MAX = 12" in observer
     assert "$REDIS_MEMORY_MAX = 268435456" in observer

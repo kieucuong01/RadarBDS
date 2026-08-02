@@ -93,11 +93,13 @@ def test_k6_load_harness_emits_bounded_failure_diagnostic():
         expected_warning,
     ]
     assert actual["counters"] == {
-        "radar_cdn_error": 5,
+        "radar_cdn_bypass": 1,
+        "radar_cdn_error": 6,
         "radar_cdn_hit": 10,
         "radar_cdn_unknown": 0,
-        "radar_edge_error": 5,
+        "radar_edge_error": 6,
         "radar_edge_hit": 10,
+        "radar_edge_miss": 1,
         "radar_edge_unknown": 0,
         "radar_transport_error": 0,
     }
