@@ -109,7 +109,14 @@ def click_backend(backend_id):
     click_at_xy(x, y)
     time.sleep(1.5)
 
-# Open composer. Facebook may label this in English on the profile.
+# Open composer. Facebook may label this in English on the profile. Dismiss
+# non-composer overlays first; stale notification popovers can intercept the
+# first composer click.
+try:
+    press_key('Escape')
+    time.sleep(1)
+except Exception:
+    pass
 composer = None
 for n in ax_nodes():
     role = (n.get('role') or {{}}).get('value', '')
@@ -118,23 +125,65 @@ for n in ax_nodes():
         composer = n.get('backendDOMNodeId')
         break
 if not composer:
-    raise RuntimeError('Composer button not found. Stop before taking any account action.')
-click_backend(composer)
-time.sleep(3)
+    # A previous failed run can leave Facebook showing the draft as an inline
+    # composer button. Re-open that draft instead of failing or typing a duplicate.
+    inline_draft = js('''(() => {{
+        const needle = %s;
+        for (const el of [...document.querySelectorAll('[role="button"]')]) {{
+            const text = el.innerText || el.textContent || '';
+            const r = el.getBoundingClientRect();
+            if (text.includes(needle) && r.width > 20 && r.height > 20) {{
+                return {{found: true, x: r.x + r.width / 2, y: r.y + r.height / 2}};
+            }}
+        }}
+        return {{found: false}};
+    }})()''' % json.dumps(needle)) or {{'found': False}}
+    if inline_draft.get('found'):
+        click_at_xy(inline_draft['x'], inline_draft['y'])
+        time.sleep(3)
+    else:
+        raise RuntimeError('Composer button not found. Stop before taking any account action.')
+else:
+    click_backend(composer)
+    time.sleep(3)
 
-# Find composer textbox and type message.
-textbox = None
-for n in ax_nodes():
-    role = (n.get('role') or {{}}).get('value', '')
-    name = (n.get('name') or {{}}).get('value', '')
-    p = props(n)
-    if role == 'textbox' and p.get('editable') == 'richtext':
-        textbox = n.get('backendDOMNodeId')
-        break
+# Find composer textbox. If Facebook expanded the draft inline first, click the
+# draft button once more to open the real Create Post dialog.
+def find_textbox_backend():
+    for node in ax_nodes():
+        role = (node.get('role') or {{}}).get('value', '')
+        p = props(node)
+        if role == 'textbox' and p.get('editable') == 'richtext':
+            return node.get('backendDOMNodeId')
+    return None
+
+textbox = find_textbox_backend()
 if not textbox:
-    raise RuntimeError('Post textbox not found after opening composer.')
+    inline_draft = js('''(() => {{
+        const needle = %s;
+        for (const el of [...document.querySelectorAll('[role="button"]')]) {{
+            const text = el.innerText || el.textContent || '';
+            const r = el.getBoundingClientRect();
+            if (text.includes(needle) && r.width > 20 && r.height > 20) {{
+                return {{found: true, x: r.x + r.width / 2, y: r.y + r.height / 2}};
+            }}
+        }}
+        return {{found: false}};
+    }})()''' % json.dumps(needle)) or {{'found': False}}
+    if inline_draft.get('found'):
+        click_at_xy(inline_draft['x'], inline_draft['y'])
+        time.sleep(3)
+        textbox = find_textbox_backend()
+if not textbox:
+    raise RuntimeError('Post textbox not found after opening composer or inline draft.')
 click_backend(textbox)
-type_text(message)
+caption_already_present = js('''(() => {{
+    const needle = %s;
+    return [...document.querySelectorAll('[role="dialog"] [role="textbox"], [role="dialog"] [contenteditable="true"], [role="dialog"] textarea')]
+        .some(el => ((el.innerText || el.value || el.textContent || '').includes(needle)));
+}})()''' % json.dumps(needle))
+if not caption_already_present:
+    type_text(message)
 time.sleep(5)
 
 if image:
@@ -142,12 +191,14 @@ if image:
     caption_dialogs = js("[...document.querySelectorAll('[role=dialog]')].filter(d => (d.innerText||'').includes(" + json.dumps(needle) + ")).length")
     if caption_dialogs != 1:
         raise RuntimeError('Expected exactly one caption composer, found ' + str(caption_dialogs))
-    doc = cdp('DOM.getDocument', depth=1)['root']['nodeId']
-    ids = cdp('DOM.querySelectorAll', nodeId=doc, selector='[role="dialog"] input[type="file"]')['nodeIds']
-    if len(ids) != 1:
-        raise RuntimeError('Expected one composer file input, found ' + str(len(ids)))
-    cdp('DOM.setFileInputFiles', nodeId=ids[0], files=[image])
-    time.sleep(8)
+    caption_has_image = js("[...document.querySelectorAll('[role=dialog]')].some(d => (d.innerText||'').includes(" + json.dumps(needle) + ") && d.querySelector('img'))")
+    if not caption_has_image:
+        doc = cdp('DOM.getDocument', depth=1)['root']['nodeId']
+        ids = cdp('DOM.querySelectorAll', nodeId=doc, selector='[role="dialog"] input[type="file"]')['nodeIds']
+        if len(ids) != 1:
+            raise RuntimeError('Expected one composer file input, found ' + str(len(ids)))
+        cdp('DOM.setFileInputFiles', nodeId=ids[0], files=[image])
+        time.sleep(8)
     caption_dialogs = js("[...document.querySelectorAll('[role=dialog]')].filter(d => (d.innerText||'').includes(" + json.dumps(needle) + ") && d.querySelector('img')).length")
     if caption_dialogs != 1:
         raise RuntimeError('Caption and visual are not in the same composer')
@@ -211,53 +262,60 @@ def verified_on_page():
     return False, needle, ''
 
 # Current Page UI is normally: composer -> Next -> Post settings -> Post.
-# Some variants publish/close after Next; verify before looking for final Post.
-for n in ax_nodes():
-    role = (n.get('role') or {{}}).get('value', '')
-    name = (n.get('name') or {{}}).get('value', '')
-    p = props(n)
-    if role == 'button' and name in ('Next', 'Tiếp') and not p.get('disabled'):
-        click_backend(n.get('backendDOMNodeId'))
-        break
-
-time.sleep(5)
-found, needle, permalink = verified_on_page()
-if found:
-    capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
-    print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'needle': needle, 'permalink': permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_published'}}, ensure_ascii=False))
-    raise SystemExit(0)
-
-post_button = None
-for n in ax_nodes():
-    role = (n.get('role') or {{}}).get('value', '')
-    name = (n.get('name') or {{}}).get('value', '')
-    p = props(n)
-    if role == 'button' and name in ('Post', 'Đăng') and not p.get('disabled'):
-        post_button = n.get('backendDOMNodeId')
-        break
-if not post_button:
-    # Some Page variants publish after Next and close the composer before the
-    # timeline renders the new article. Poll the feed before reporting a false
-    # negative; this avoids repost attempts from a successfully-created post.
-    for _ in range(25):
-        found, needle, permalink = verified_on_page()
-        if found:
-            capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
-            print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'needle': needle, 'permalink': permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_async_published'}}, ensure_ascii=False))
-            raise SystemExit(0)
+# Click exact buttons inside the expected dialog so we do not confuse
+# `Post audience` with the final `Post` button.
+def click_exact_dom_button(label, dialog_regex=''):
+    target = js('''(() => {{
+        const label = %s;
+        const patternSource = %s;
+        const pattern = patternSource ? new RegExp(patternSource, 'i') : null;
+        const dialogs = [...document.querySelectorAll('[role="dialog"]')];
+        for (const dialog of dialogs) {{
+            const dialogText = dialog.innerText || '';
+            if (pattern && !pattern.test(dialogText)) continue;
+            for (const el of [...dialog.querySelectorAll('[role="button"], button')]) {{
+                const text = (el.innerText || el.ariaLabel || el.getAttribute('aria-label') || el.textContent || '').trim();
+                const disabled = el.getAttribute('aria-disabled') === 'true' || el.disabled;
+                const r = el.getBoundingClientRect();
+                if (text === label && !disabled && r.width > 20 && r.height > 20) {{
+                    return {{found: true, x: r.x + r.width / 2, y: r.y + r.height / 2, text}};
+                }}
+            }}
+        }}
+        return {{found: false}};
+    }})()''' % (json.dumps(label), json.dumps(dialog_regex))) or {{'found': False}}
+    if target.get('found'):
+        click_at_xy(target['x'], target['y'])
         time.sleep(2)
-    raise RuntimeError('Final Post button not found or disabled, and Next did not verify as published.')
-click_backend(post_button)
+        return True
+    return False
+
+flow = 'unknown'
+clicked_next = click_exact_dom_button('Next', 'Create post') or click_exact_dom_button('Tiếp', 'Create post')
+if clicked_next:
+    flow = 'next_then_post_settings'
+    time.sleep(5)
+    clicked_post = click_exact_dom_button('Post', 'Post settings|Scheduling options|Publish now') or click_exact_dom_button('Đăng', 'Post settings|Scheduling options|Publish now')
+    if not clicked_post:
+        # Rare variant: Next itself publishes. Verify briefly before failing.
+        for _ in range(10):
+            found, needle, permalink = verified_on_page()
+            if found:
+                capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
+                print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'needle': needle, 'permalink': permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_async_published'}}, ensure_ascii=False))
+                raise SystemExit(0)
+            time.sleep(2)
+        raise RuntimeError('Final exact Post button not found in Post settings dialog.')
+else:
+    clicked_post = click_exact_dom_button('Post', 'Create post') or click_exact_dom_button('Đăng', 'Create post')
+    if not clicked_post:
+        raise RuntimeError('Neither Next nor exact Post button found in Create post dialog.')
+    flow = 'direct_post_button'
+
 time.sleep(3)
 # Facebook Page may ask whether to add a CTA button (e.g. Call Now) after Post.
 # For organic care posts, choose Not now; this completes publishing in current UI.
-for n in ax_nodes():
-    role = (n.get('role') or {{}}).get('value', '')
-    name = (n.get('name') or {{}}).get('value', '')
-    p = props(n)
-    if role == 'button' and name in ('Not now', 'Không phải bây giờ') and not p.get('disabled'):
-        click_backend(n.get('backendDOMNodeId'))
-        break
+click_exact_dom_button('Not now') or click_exact_dom_button('Không phải bây giờ')
 # Facebook may show post-publish upsell dialogs such as Product Tagging. Close
 # them before verification so browser-use can finish cleanly instead of timing out.
 try:
@@ -283,7 +341,7 @@ for _ in range(25):
         break
     time.sleep(2)
 capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
-print(json.dumps({{'ok': found, 'mode': mode, 'verified_text': found, 'needle': needle, 'permalink': permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'post_button'}}, ensure_ascii=False))
+print(json.dumps({{'ok': found, 'mode': mode, 'verified_text': found, 'needle': needle, 'permalink': permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': flow}}, ensure_ascii=False))
 if not found:
     raise RuntimeError('Post action attempted but verification text was not found.')
 """

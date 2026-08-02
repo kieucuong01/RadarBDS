@@ -60,3 +60,17 @@ def test_generated_publish_program_does_not_use_body_text_as_success_evidence(tm
     assert "document.body.innerText" not in program
     assert "permalink" in program
     assert "href.includes('/posts/')" in program
+
+def test_generated_publish_program_handles_inline_draft_and_exact_post_settings(tmp_path):
+    image = tmp_path / "visual.png"
+    image.write_bytes(b"fake")
+    queue = {
+        "target": {"page_url": "https://www.facebook.com/radarbdsvn/"},
+        "content": {"message": "Hook line\nBody #RadarBDS", "visual_path": str(image)},
+    }
+    program = mod._program(queue, "publish", str(tmp_path / "shot.png"))
+    compile(program, "<browser-use-program>", "exec")
+    assert "inline_draft" in program
+    assert "Post settings|Scheduling options|Publish now" in program
+    assert "text === label" in program
+    assert "Final exact Post button" in program
