@@ -12,6 +12,8 @@ $ErrorActionPreference = "Stop"
 $DB_CONNECTIONS_MAX = 12
 $REDIS_MEMORY_MAX = 268435456
 $CPU_MAX = 90
+$MEMORY_AVAILABLE_MIN_KB = 524288
+$SWAP_IO_MAX = 1024
 
 if ($DurationMinutes -lt 1 -or $DurationMinutes -gt 60) {
     throw "DurationMinutes must be between 1 and 60"
@@ -100,14 +102,25 @@ try {
             )
         }
 
-        if ([int]$sample.host.swap_in -gt 0 -or [int]$sample.host.swap_out -gt 0) {
+        if ([int64]$sample.host.memory_available_kb -lt $MEMORY_AVAILABLE_MIN_KB) {
+            $abortReasons.Add(
+                "memory available $($sample.host.memory_available_kb) KB is below $MEMORY_AVAILABLE_MIN_KB KB"
+            )
+        }
+
+        $swapIo = (
+            [int]$sample.host.swap_in + [int]$sample.host.swap_out
+        )
+        if ($swapIo -ge $SWAP_IO_MAX) {
             $swapActiveCount++
         }
         else {
             $swapActiveCount = 0
         }
         if ($swapActiveCount -ge 3) {
-            $abortReasons.Add("swap activity persisted for three samples")
+            $abortReasons.Add(
+                "swap I/O exceeded $SWAP_IO_MAX KB/s for three samples"
+            )
         }
 
         if ([int]$sample.host.cpu_percent -gt $CPU_MAX) {

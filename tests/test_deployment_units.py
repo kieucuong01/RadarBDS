@@ -246,6 +246,10 @@ def test_capacity_observer_is_status_only_and_enforces_host_abort_thresholds():
     assert "$DB_CONNECTIONS_MAX = 12" in observer
     assert "$REDIS_MEMORY_MAX = 268435456" in observer
     assert "$CPU_MAX = 90" in observer
+    assert "$MEMORY_AVAILABLE_MIN_KB = 524288" in observer
+    assert "$SWAP_IO_MAX = 1024" in observer
+    assert "memory available" in observer
+    assert "swap I/O exceeded" in observer
     assert "ABORT" in observer
     assert "host-samples.jsonl" in observer
     assert "response.body" not in observer.lower()
