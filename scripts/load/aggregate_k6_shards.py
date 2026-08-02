@@ -126,6 +126,9 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
 
     summaries: list[dict[str, Any]] = []
     metadata_rows: list[dict[str, Any]] = []
+    planned_vu_start_epoch: int | None = None
+    earliest_vu_starts: list[float] = []
+    latest_vu_starts: list[float] = []
     for shard in range(args.expected_shards):
         shard_dir = args.input_dir / f"shard-{shard}"
         if not shard_dir.is_dir():
@@ -147,6 +150,16 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         vus = _integer(metadata.get("vus"), "metadata vus")
         if vus < 1:
             raise AggregationError("metadata vus must be at least 1")
+        shard_vu_start_epoch = _integer(
+            metadata.get("vu_start_epoch"), "metadata vu_start_epoch"
+        )
+        if planned_vu_start_epoch is None:
+            planned_vu_start_epoch = shard_vu_start_epoch
+        elif shard_vu_start_epoch != planned_vu_start_epoch:
+            raise AggregationError(
+                "Metadata vu_start_epoch mismatch: "
+                f"expected {planned_vu_start_epoch}, got {shard_vu_start_epoch}"
+            )
         exit_code = _integer(metadata.get("k6_exit_code"), "metadata k6_exit_code")
         if exit_code != 0:
             raise AggregationError(f"Shard {shard} k6 exit code was {exit_code}")
@@ -178,6 +191,26 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             raise AggregationError(
                 f"Shard {shard} check rate {check_rate:.6f} is not above 0.995"
             )
+
+        vu_start_samples = _metric_count(summary, "radar_vu_started_at_ms")
+        if vu_start_samples != vus:
+            raise AggregationError(
+                f"Shard {shard} VU start samples {vu_start_samples} did not match {vus} VUs"
+            )
+        earliest_vu_start = _metric_number(summary, "radar_vu_started_at_ms", "min")
+        latest_vu_start = _metric_number(summary, "radar_vu_started_at_ms", "max")
+        planned_vu_start_ms = shard_vu_start_epoch * 1000
+        if earliest_vu_start < planned_vu_start_ms - 1000:
+            raise AggregationError(
+                f"Shard {shard} VU start preceded the planned epoch"
+            )
+        if latest_vu_start > planned_vu_start_ms + 10_000:
+            raise AggregationError(
+                f"Shard {shard} VU start deadline exceeded by "
+                f"{latest_vu_start - planned_vu_start_ms:.0f}ms"
+            )
+        earliest_vu_starts.append(earliest_vu_start)
+        latest_vu_starts.append(latest_vu_start)
 
         bypass = _optional_metric_count(summary, "radar_edge_bypass")
         if bypass:
@@ -253,6 +286,10 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             _optional_metric_count(item, "radar_origin_error")
             for item in summaries
         ),
+        "planned_vu_start_epoch": planned_vu_start_epoch,
+        "earliest_vu_start_ms": min(earliest_vu_starts),
+        "latest_vu_start_ms": max(latest_vu_starts),
+        "vu_start_skew_ms": max(latest_vu_starts) - min(earliest_vu_starts),
     }
     return aggregate_result
 
@@ -293,6 +330,7 @@ def main() -> int:
     print(f"max_shard_p99_ms={result['max_shard_p99_ms']:.3f}")
     print(f"failure_rate={result['failure_rate']:.6f}")
     print(f"check_rate={result['check_rate']:.6f}")
+    print(f"vu_start_skew_ms={result['vu_start_skew_ms']:.0f}")
     return 0
 
 

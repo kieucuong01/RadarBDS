@@ -1,6 +1,6 @@
 import http from 'k6/http';
 import { check, fail, sleep } from 'k6';
-import { Counter } from 'k6/metrics';
+import { Counter, Trend } from 'k6/metrics';
 import {
   buildFailureDiagnostic,
   safeHeaderValue,
@@ -11,6 +11,7 @@ const SCENARIO = String(__ENV.SCENARIO || 'default').toLowerCase();
 const VUS = Math.max(1, Math.min(5000, Number.parseInt(__ENV.VUS || '100', 10)));
 const DURATION = String(__ENV.DURATION || '2m');
 const REQUIRE_CDN = String(__ENV.REQUIRE_CDN || '0') === '1';
+const VU_START_EPOCH = Number.parseInt(__ENV.VU_START_EPOCH || '0', 10);
 const RUN_ID = String(__ENV.RUN_ID || 'manual')
   .replace(/[^a-zA-Z0-9._-]/g, '-')
   .slice(0, 64);
@@ -33,11 +34,14 @@ const cdnUnknown = new Counter('radar_cdn_unknown');
 const cdnError = new Counter('radar_cdn_error');
 const originError = new Counter('radar_origin_error');
 const transportError = new Counter('radar_transport_error');
+const vuStartedAt = new Trend('radar_vu_started_at_ms');
 let failureDiagnosticBudget = 3;
+let vuStartRecorded = false;
 
 export const options = {
   vus: VUS,
   duration: DURATION,
+  setupTimeout: '5m',
   thresholds: {
     http_req_failed: ['rate<0.005'],
     http_req_duration: SCENARIO === 'mixed'
@@ -194,9 +198,21 @@ function requestBatch(urls) {
   ]);
 }
 
+function waitForVuStartEpoch() {
+  if (!Number.isFinite(VU_START_EPOCH) || VU_START_EPOCH <= 0) return;
+  const waitSeconds = VU_START_EPOCH - (Date.now() / 1000);
+  if (waitSeconds < -10) {
+    fail(`Shard missed VU start epoch by ${Math.abs(waitSeconds).toFixed(3)} seconds`);
+  }
+  if (waitSeconds > 0) sleep(waitSeconds);
+}
+
 export function setup() {
   if (!BASE_URL) fail('BASE_URL is required');
-  if (SCENARIO !== 'mixed') return { corpusSize: MIXED_CORPUS.length };
+  if (SCENARIO !== 'mixed') {
+    waitForVuStartEpoch();
+    return { corpusSize: MIXED_CORPUS.length };
+  }
 
   for (const item of MIXED_CORPUS) {
     const urls = mixedUrls(item);
@@ -212,6 +228,7 @@ export function setup() {
       fail(`Mixed prewarm did not produce HIT for ${item.signals}`);
     }
   }
+  waitForVuStartEpoch();
   return { corpusSize: MIXED_CORPUS.length };
 }
 
@@ -289,6 +306,10 @@ function runMixed() {
 }
 
 export default function radarPublicLoad() {
+  if (!vuStartRecorded && VU_START_EPOCH > 0) {
+    vuStartedAt.add(Date.now());
+    vuStartRecorded = true;
+  }
   if (SCENARIO === 'mixed') runMixed();
   else runDefault();
   sleep(1);

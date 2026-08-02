@@ -33,6 +33,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       start_epoch: ${{ steps.coordinate.outputs.start_epoch }}
+      vu_start_epoch: ${{ steps.coordinate.outputs.vu_start_epoch }}
       run_id: ${{ steps.coordinate.outputs.run_id }}
     steps:
       - name: Set synchronized start
@@ -41,8 +42,13 @@ jobs:
         run: |
           set -Eeuo pipefail
           start_epoch=$(($(date +%s) + 120))
+          vu_start_epoch="$start_epoch"
+          if [ "${{ inputs.scenario }}" = "mixed" ]; then
+            vu_start_epoch=$((start_epoch + 240))
+          fi
           run_id="gha-${GITHUB_RUN_ID}-${{ inputs.stage }}"
           echo "start_epoch=$start_epoch" >> "$GITHUB_OUTPUT"
+          echo "vu_start_epoch=$vu_start_epoch" >> "$GITHUB_OUTPUT"
           echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
 
   load:
@@ -97,6 +103,7 @@ jobs:
           SHARD: ${{ matrix.shard }}
           STAGE: ${{ inputs.stage }}
           VUS: ${{ inputs.vus_per_shard }}
+          VU_START_EPOCH: ${{ needs.prepare.outputs.vu_start_epoch }}
         run: |
           set -Eeuo pipefail
           mkdir -p result
@@ -114,6 +121,7 @@ jobs:
               "expected_shards": int(os.environ["EXPECTED_SHARDS"]),
               "vus": int(os.environ["VUS"]),
               "require_cdn": True,
+              "vu_start_epoch": int(os.environ["VU_START_EPOCH"]),
               "k6_exit_code": None,
           }
           Path("result/metadata.json").write_text(
@@ -131,6 +139,7 @@ jobs:
           REQUIRE_CDN: "1"
           SCENARIO: ${{ inputs.scenario }}
           VUS: ${{ inputs.vus_per_shard }}
+          VU_START_EPOCH: ${{ needs.prepare.outputs.vu_start_epoch }}
         run: |
           set +e
           "$RUNNER_TEMP/k6-v2.1.0-linux-amd64/k6" run \
@@ -141,6 +150,7 @@ jobs:
             -e RUN_ID="$RUN_ID" \
             -e REQUIRE_CDN="$REQUIRE_CDN" \
             -e VUS="$VUS" \
+            -e VU_START_EPOCH="$VU_START_EPOCH" \
             -e DURATION="$DURATION" \
             scripts/load/radar_public_load.js
           k6_exit_code=$?

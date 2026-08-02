@@ -158,6 +158,21 @@ def test_k6_public_load_script_has_safe_scenarios_and_thresholds():
     assert "listings body shape is valid" in text
 
 
+def test_k6_mixed_prewarm_has_a_bounded_setup_window():
+    text = Path("scripts/load/radar_public_load.js").read_text("utf-8")
+    workflow = Path(
+        ".github/workflows/_radar-distributed-load-stage.yml"
+    ).read_text("utf-8")
+    commands = Path("docs/dev_commands.md").read_text("utf-8")
+
+    assert "setupTimeout: '5m'" in text
+    assert "VU_START_EPOCH" in text
+    assert "radar_vu_started_at_ms" in text
+    assert "vu_start_epoch=$((start_epoch + 240))" in workflow
+    assert "VU_START_EPOCH" in workflow
+    assert "-DurationMinutes 60" in commands
+
+
 def test_reusable_distributed_load_stage_is_pinned_synchronized_and_fail_closed():
     text = Path(
         ".github/workflows/_radar-distributed-load-stage.yml"

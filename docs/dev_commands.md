@@ -528,7 +528,7 @@ Advance only after the prior result and simultaneous host observations pass:
 | `default` | `100`, `500`, `1000`, `5000` | p95 < 1,000 ms; p99 < 2,000 ms; failures < 0.5% |
 | `mixed` | `100`, `500`, `1000` | p95 < 1,500 ms; p99 < 2,000 ms; failures < 0.5% |
 
-The mixed setup keeps exactly 50 canonical filter combinations and exercises signals, counts, and listings for each combination; it does not create a cross product or per-VU keys. The second probe for all three routes must be `HIT`. Never run the two scenarios or two stages in parallel. Stop at the first abort threshold from `docs/operations.md`; do not compensate by raising workers, PostgreSQL connections, timeouts, or Redis memory.
+The mixed setup keeps exactly 50 canonical filter combinations and exercises signals, counts, and listings for each combination; it does not create a cross product or per-VU keys. The second probe for all three routes must be `HIT`. The fixed corpus has a five-minute `setupTimeout`; distributed mixed shards get a shared VU epoch four minutes after their synchronized k6 launch, wait after prewarm, and fail if they miss it by more than ten seconds. The aggregator also requires one `radar_vu_started_at_ms` sample per configured VU and rejects late or mismatched starts. A setup/synchronization failure produces no VU capacity result and must not be reported as a pass or failure for that stage. Never run the two scenarios or two stages in parallel. Stop at the first abort threshold from `docs/operations.md`; do not compensate by raising workers, PostgreSQL connections, timeouts, or Redis memory.
 
 The script explicitly requests `Accept-Encoding: gzip` to represent a browser. Treat an uncompressed result as an invalid harness run, not production capacity. The authoritative 2026-08-01 production results and rollback commands are in `docs/operations.md`: normal 100 VUs and mixed 500 VUs passed; normal 500 and mixed 1,000 missed the approved gates; 5,000 was not run after the abort threshold.
 
@@ -548,9 +548,11 @@ Before the single trigger, start the host observer from the deployed, verified `
 $evidence = "C:\tmp\radar-phase4-evidence-20260801-172749\distributed-$(Get-Date -Format yyyyMMdd-HHmmss)"
 .\scripts\load\observe_production_capacity.ps1 `
   -EvidenceDir $evidence `
-  -DurationMinutes 30 `
+  -DurationMinutes 60 `
   -IntervalSeconds 10
 ```
+
+The observer must start before the push and remain active through the last executed stage. The seven coordination windows, three mixed prewarm waits, and seven load windows can take about 40 minutes even when every gate passes; no capacity stage counts without overlapping host-observer evidence.
 
 From a clean commit that already matches `origin/main` and production, create the one approved push trigger:
 

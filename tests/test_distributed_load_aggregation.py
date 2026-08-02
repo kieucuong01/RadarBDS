@@ -10,6 +10,7 @@ SCRIPT = Path("scripts/load/aggregate_k6_shards.py")
 BASE_URL = "https://radarbds.vn"
 STAGE = "default-1000"
 RUN_ID = "run-1-default-1000"
+VU_START_EPOCH = 1_800_000_000
 
 
 def _write_shard(
@@ -47,11 +48,21 @@ def _write_shard(
     omit_zero_counters: bool = False,
     exit_code: int = 0,
     crossed_threshold: bool = False,
+    vu_start_epoch: int = VU_START_EPOCH,
+    vu_start_count: int | None = None,
+    vu_start_min_ms: float | None = None,
+    vu_start_max_ms: float | None = None,
 ) -> None:
     if cdn_hit is None:
         cdn_hit = hit
     if cdn_miss is None:
         cdn_miss = miss
+    if vu_start_count is None:
+        vu_start_count = vus
+    if vu_start_min_ms is None:
+        vu_start_min_ms = vu_start_epoch * 1000 + 100
+    if vu_start_max_ms is None:
+        vu_start_max_ms = vu_start_epoch * 1000 + 900
     folder = root / f"shard-{shard}"
     folder.mkdir(parents=True)
     metadata = {
@@ -63,6 +74,7 @@ def _write_shard(
         "expected_shards": expected_shards,
         "vus": vus,
         "require_cdn": require_cdn,
+        "vu_start_epoch": vu_start_epoch,
         "k6_exit_code": exit_code,
     }
     summary = {
@@ -102,6 +114,11 @@ def _write_shard(
             "radar_cdn_bypass": {"count": cdn_bypass},
             "radar_cdn_unknown": {"count": cdn_unknown},
             "radar_cdn_error": {"count": cdn_error},
+            "radar_vu_started_at_ms": {
+                "count": vu_start_count,
+                "min": vu_start_min_ms,
+                "max": vu_start_max_ms,
+            },
         }
     }
     if omit_zero_counters:
@@ -172,6 +189,10 @@ def test_valid_shards_are_summed_and_use_conservative_max_percentiles(tmp_path: 
         "radar_cdn_error": 0,
     }
     assert aggregate["origin_errors"] == 0
+    assert aggregate["planned_vu_start_epoch"] == VU_START_EPOCH
+    assert aggregate["earliest_vu_start_ms"] == VU_START_EPOCH * 1000 + 100
+    assert aggregate["latest_vu_start_ms"] == VU_START_EPOCH * 1000 + 900
+    assert aggregate["vu_start_skew_ms"] == 800
     assert "stage_status=passed" in completed.stdout
 
 
@@ -188,6 +209,10 @@ def test_valid_shards_are_summed_and_use_conservative_max_percentiles(tmp_path: 
         ({"cdn_unknown": 1}, "unknown cdn"),
         ({"cdn_hit": 0, "cdn_stale": 0}, "cdn hit or stale"),
         ({"require_cdn": False}, "metadata require_cdn mismatch"),
+        ({"vu_start_epoch": VU_START_EPOCH + 1}, "vu_start_epoch mismatch"),
+        ({"vu_start_count": 499}, "vu start samples"),
+        ({"vu_start_min_ms": VU_START_EPOCH * 1000 - 1_001}, "preceded"),
+        ({"vu_start_max_ms": VU_START_EPOCH * 1000 + 10_001}, "vu start deadline"),
         ({"p95": 1000.0}, "p95"),
         ({"p99": 2000.0}, "p99"),
         ({"failed_passes": 50, "failed_fails": 9950}, "failure rate"),

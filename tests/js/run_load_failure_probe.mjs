@@ -96,7 +96,11 @@ async function loadModule(filePath) {
         }
         add(value) { counters.set(this.name, (counters.get(this.name) || 0) + value); }
       }
-      return modules.get(specifier) || synthetic(specifier, { Counter });
+      class Trend {
+        constructor(name) { this.name = name; }
+        add() {}
+      }
+      return modules.get(specifier) || synthetic(specifier, { Counter, Trend });
     }
     return loadModule(fileURLToPath(new URL(specifier, referencingModule.identifier)));
   });
