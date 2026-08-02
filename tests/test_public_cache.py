@@ -228,6 +228,31 @@ def test_version_lookup_keeps_last_known_version_when_redis_and_db_are_down(
     }
 
 
+def test_durable_readiness_does_not_trust_stale_positive_redis(
+    monkeypatch, fake_redis
+):
+    fake_redis.set("radar:dataset-version:listings", "9")
+    events = []
+
+    @contextmanager
+    def durable_db():
+        events.append("db")
+        yield object()
+
+    monkeypatch.setattr(public_cache, "get_redis_client", lambda: fake_redis)
+    monkeypatch.setattr(public_cache, "get_conn", durable_db)
+    monkeypatch.setattr(
+        public_cache,
+        "get_dataset_versions",
+        lambda conn, names: {"listings": 0},
+    )
+
+    assert public_cache.get_durable_dataset_versions(("listings",)) == {
+        "listings": 0
+    }
+    assert events == ["db"]
+
+
 def test_stored_record_contains_only_timestamp_and_payload(fake_redis):
     cache = PublicResponseCache(redis_client=fake_redis, clock=FakeClock(123.0))
     cache.store_for_test("key", {"signals": []}, stored_at=123.0)

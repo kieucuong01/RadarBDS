@@ -27,6 +27,12 @@ def client(monkeypatch):
     )
     monkeypatch.setattr(
         radar_app,
+        "get_durable_dataset_versions",
+        lambda names: {name: 1 for name in names},
+        raising=False,
+    )
+    monkeypatch.setattr(
+        radar_app,
         "load_signals",
         lambda *_args, **kwargs: {
             "signals": [],

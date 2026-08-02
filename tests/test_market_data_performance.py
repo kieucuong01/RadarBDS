@@ -706,6 +706,12 @@ def test_api_listings_uses_identical_bounded_values_for_cache_and_loader(monkeyp
         "get_current_dataset_versions",
         lambda names: {name: 9 for name in names},
     )
+    monkeypatch.setattr(
+        radar_app,
+        "get_durable_dataset_versions",
+        lambda names: {name: 9 for name in names},
+        raising=False,
+    )
     monkeypatch.setattr(radar_app, "load_listing_feed", fake_load_listing_feed)
     monkeypatch.setattr(radar_app, "get_or_load_public_payload", fake_cache)
 
@@ -752,6 +758,56 @@ def test_api_listings_uses_identical_bounded_values_for_cache_and_loader(monkeyp
     assert len(loader["prop_types"]) <= 8
     assert len(loader["area_ranges"]) == 12
     assert len(loader["price_ranges"]) == 12
+
+
+def test_api_listings_fails_closed_when_redis_version_is_stale_positive(
+    monkeypatch,
+):
+    import app as radar_app
+    import auth.core as auth_core
+
+    cache_calls = []
+    loader_calls = []
+
+    auth_core.clear_rate_limit_cache()
+    monkeypatch.setattr(radar_app, "_public_cache_enabled", lambda: True)
+    monkeypatch.setattr(
+        radar_app,
+        "get_current_dataset_versions",
+        lambda names: {name: 9 for name in names},
+    )
+    monkeypatch.setattr(
+        radar_app,
+        "get_durable_dataset_versions",
+        lambda names: {name: 0 for name in names},
+        raising=False,
+    )
+
+    def fake_loader(*_args, **kwargs):
+        loader_calls.append(kwargs)
+        return {
+            "listings": [],
+            "page": kwargs["page"],
+            "limit": kwargs["limit"],
+            "total": 0,
+            "pages": 0,
+        }
+
+    def fake_cache(**kwargs):
+        cache_calls.append(kwargs)
+        return radar_app.CacheResult(kwargs["loader"](), "miss", 0.0)
+
+    monkeypatch.setattr(radar_app, "load_listing_feed", fake_loader)
+    monkeypatch.setattr(radar_app, "get_or_load_public_payload", fake_cache)
+
+    response = radar_app.app.test_client().get(
+        "/api/listings?page=1&limit=50"
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Radar-Dataset-Version"] == "0"
+    assert cache_calls[0]["versions"] == {"listings": 0}
+    assert loader_calls[0]["listings_version"] == 0
 
 
 def test_load_trend_data_includes_sample_count(monkeypatch):

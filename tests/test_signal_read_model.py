@@ -566,7 +566,8 @@ def test_version_is_published_only_after_database_context_exits(
     monkeypatch.setattr(
         public_data_publish,
         "prewarm_configured_routes",
-        lambda: events.append("prewarm") or {"succeeded": 1},
+        lambda **kwargs: events.append(("prewarm", kwargs))
+        or {"succeeded": 1},
         raising=False,
     )
 
@@ -578,7 +579,7 @@ def test_version_is_published_only_after_database_context_exits(
         "db-enter",
         "db-exit-commit",
         ("redis", {"signals": 9}),
-        "prewarm",
+        ("prewarm", {"listings_version": 0}),
     ]
     assert result["status"] == "ok"
 
@@ -614,7 +615,7 @@ def test_post_commit_cache_failure_does_not_relabel_database_success(
     monkeypatch.setattr(
         public_data_publish,
         "prewarm_configured_routes",
-        lambda: (_ for _ in ()).throw(RuntimeError("http down")),
+        lambda **kwargs: (_ for _ in ()).throw(RuntimeError("http down")),
         raising=False,
     )
 

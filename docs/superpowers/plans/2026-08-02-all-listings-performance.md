@@ -15,6 +15,7 @@
 - The cache-disabled local read-model benchmark for the canonical 50-row route passed: five cold samples were `83.80-170.48 ms` (cold p95 `170.48 ms`) and five warm samples were `78.63-101.10 ms`, all HTTP 200 with a stable 164,242-byte body.
 - Task 6 focused gate, py_compile, frontend syntax, and diff checks pass. Full pytest with production canonical env still has 21 pre-existing failures in untouched admin asset-version, browser/social wrapper, saved-page asset-version, and SEO content/OG contracts; do not silently call the full suite green or broaden this performance release to fix them.
 - Task 7 review/rebase/push/deploy/production evidence is not complete. Do not present the local commits as a production release.
+- First review found two Important readiness gaps. Both now have regression coverage: `/api/listings` ignores a stale-positive Redis mirror when PostgreSQL is zero, and configured/standalone prewarm requires positive committed/durable readiness. The expanded focused gate passes 257 tests; refreshed local parity remains Signals `36/36` and Listings `76/76` with zero differences. Post-fix cache-disabled canonical samples are cold `79.54-119.46 ms` and warm `74.51-96.83 ms`, all HTTP 200 with the stable 164,242-byte body. Reviewer confirmation, rebase, release, and production evidence remain pending.
 
 ## Global Constraints
 

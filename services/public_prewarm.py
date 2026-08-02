@@ -8,6 +8,9 @@ from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 from urllib.request import Request, urlopen
 
+from db.connection import get_conn
+from db.public_dataset_versions import DATASET_LISTINGS, get_dataset_versions
+
 
 logger = logging.getLogger(__name__)
 
@@ -109,12 +112,29 @@ def prewarm_public_routes(
 
 def prewarm_configured_routes(
     config_path: str | Path = DEFAULT_ROUTE_CONFIG,
+    *,
+    listings_version: int | None = None,
 ) -> dict:
     routes = json.loads(Path(config_path).read_text(encoding="utf-8"))
     if not isinstance(routes, list):
         raise ValueError("public prewarm route config must be a list")
+    if listings_version is None and any(
+        urlsplit(str(route or "")).path == "/api/listings"
+        for route in routes
+    ):
+        try:
+            listings_version = _durable_listing_version()
+        except Exception:
+            logger.exception(
+                "Unable to resolve durable listing version for prewarm"
+            )
+            listings_version = 0
     routes = [
-        route for route in routes if _route_enabled_for_configured_prewarm(route)
+        route
+        for route in routes
+        if _route_enabled_for_configured_prewarm(
+            route, listings_version=listings_version
+        )
     ]
     return prewarm_public_routes(
         os.getenv(
@@ -124,7 +144,17 @@ def prewarm_configured_routes(
     )
 
 
-def _route_enabled_for_configured_prewarm(route: str) -> bool:
+def _durable_listing_version() -> int:
+    with get_conn() as conn:
+        versions = get_dataset_versions(conn, (DATASET_LISTINGS,))
+    return int(versions.get(DATASET_LISTINGS, 0))
+
+
+def _route_enabled_for_configured_prewarm(
+    route: str,
+    *,
+    listings_version: int | None = None,
+) -> bool:
     if urlsplit(str(route or "")).path != "/api/listings":
         return True
     listing_enabled = os.getenv(
@@ -133,4 +163,8 @@ def _route_enabled_for_configured_prewarm(route: str) -> bool:
     signal_enabled = os.getenv(
         "RADAR_SIGNAL_READ_MODEL_ENABLED", "0"
     ).strip() == "1"
-    return listing_enabled and signal_enabled
+    return (
+        listing_enabled
+        and signal_enabled
+        and int(listings_version or 0) > 0
+    )

@@ -75,6 +75,9 @@ _REDIS_CLIENT_LOCK = threading.Lock()
 _VERSION_CACHE: dict[str, tuple[int, float]] = {}
 _VERSION_CACHE_LOCK = threading.RLock()
 _VERSION_CACHE_SECONDS = 5.0
+_DURABLE_VERSION_CACHE: dict[str, tuple[int, float]] = {}
+_DURABLE_VERSION_CACHE_LOCK = threading.RLock()
+_DURABLE_VERSION_CACHE_SECONDS = 1.0
 
 
 def _local_get(key: str, *, clock: Callable[[], float], max_age: float):
@@ -108,6 +111,8 @@ def _clear_local_cache_for_test() -> None:
         _LOCAL_CACHE.clear()
     with _VERSION_CACHE_LOCK:
         _VERSION_CACHE.clear()
+    with _DURABLE_VERSION_CACHE_LOCK:
+        _DURABLE_VERSION_CACHE.clear()
 
 
 def clear_local_public_cache() -> None:
@@ -409,6 +414,39 @@ def get_current_dataset_versions(names: Iterable[str]) -> dict[str, int]:
                 )
 
     return {name: versions[name] for name in validated}
+
+
+def get_durable_dataset_versions(names: Iterable[str]) -> dict[str, int]:
+    """Read PostgreSQL readiness with a short, stampede-safe process cache.
+
+    This cache is deliberately separate from the Redis-backed version mirror.
+    A Redis value must never make a read model eligible when its durable
+    PostgreSQL version has been reset to zero.
+    """
+    validated = _validated_dataset_names(names)
+    now = time.monotonic()
+    with _DURABLE_VERSION_CACHE_LOCK:
+        cached = {
+            name: _DURABLE_VERSION_CACHE.get(name) for name in validated
+        }
+        if all(
+            record is not None
+            and now - record[1] <= _DURABLE_VERSION_CACHE_SECONDS
+            for record in cached.values()
+        ):
+            return {
+                name: int(cached[name][0]) for name in validated
+            }
+
+        with get_conn() as conn:
+            durable = get_dataset_versions(conn, validated)
+        refreshed_at = time.monotonic()
+        for name in validated:
+            _DURABLE_VERSION_CACHE[name] = (
+                int(durable[name]),
+                refreshed_at,
+            )
+        return {name: int(durable[name]) for name in validated}
 
 
 def publish_dataset_versions(versions: Mapping[str, int]) -> None:

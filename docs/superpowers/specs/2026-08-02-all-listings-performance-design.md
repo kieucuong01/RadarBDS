@@ -103,6 +103,8 @@ Add `DATASET_LISTINGS = "listings"` to `public_dataset_versions`. Signal read-mo
 
 The new flag defaults to enabled-with-readiness-gate. On first deployment the absent/zero `listings` version keeps requests on the legacy route. After the expanded full refresh and successful parity check bump the version, the endpoint can switch without a partial-data window. Setting `RADAR_LISTING_READ_MODEL_ENABLED=0` provides a route-specific rollback without disabling the Săn Deal feed.
 
+Durable readiness must be checked independently from the disposable Redis mirror. A short process cache may bound PostgreSQL readiness reads, but a stale-positive Redis key after restore/reset must not enable the projection or select a positive-version response-cache namespace. Configured prewarm has the same fail-closed rule: publication supplies its committed version, while standalone prewarm reads PostgreSQL and skips `/api/listings` on zero or error.
+
 ### 3.4 Shared application cache and Nginx guest cache
 
 Wrap `/api/listings` with the existing `get_or_load_public_payload()` contract:

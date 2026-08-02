@@ -5,6 +5,7 @@ import logging
 import os
 
 from db.connection import get_conn
+from db.public_dataset_versions import DATASET_LISTINGS
 from services.public_cache import publish_dataset_versions
 from services.public_prewarm import prewarm_configured_routes
 from services.signal_read_model import (
@@ -80,7 +81,11 @@ def publish_public_data(
 
     if os.getenv("RADAR_PUBLIC_CACHE_ENABLED", "0").strip() == "1":
         try:
-            prewarm_result = prewarm_configured_routes()
+            prewarm_result = prewarm_configured_routes(
+                listings_version=int(
+                    result.versions.get(DATASET_LISTINGS, 0)
+                )
+            )
             cache_report["prewarm"] = {
                 "status": (
                     "ok" if prewarm_result.get("failed", 0) == 0 else "partial"

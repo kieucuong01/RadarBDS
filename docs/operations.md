@@ -173,7 +173,7 @@ set +a
 /opt/radar-bds/.venv/bin/python -X utf8 -c 'from services.public_cache import get_current_dataset_versions; print(get_current_dataset_versions(("signals","listings","market")))'
 ```
 
-Require both comparisons to report `difference_count=0`, a positive durable `listings` version, and a matching Redis mirror. Redis mirror/prewarm errors are separate from the committed PostgreSQL refresh and must still be resolved before enabling the route. While either read-model flag is disabled, configured publication deliberately skips `/api/listings`; it must never prewarm the known slow legacy query.
+Require both comparisons to report `difference_count=0`, a positive durable `listings` version, and a matching Redis mirror. Redis mirror/prewarm errors are separate from the committed PostgreSQL refresh and must still be resolved before enabling the route. Route dispatch rechecks PostgreSQL readiness through a separate one-second process cache and ignores a divergent Redis mirror. Configured publication passes the just-committed version; standalone prewarm reads the durable version itself. Either mode skips `/api/listings` while a flag is disabled or durable readiness is zero, so it never prewarms the known slow legacy query.
 
 Then set `RADAR_LISTING_READ_MODEL_ENABLED=1`, restart, prewarm once, and measure the canonical route without printing its body:
 
@@ -247,7 +247,7 @@ curl -sS -D - -o /dev/null 'http://127.0.0.1:5000/api/dashboard'
 
 `X-Radar-Cache` is `miss`, `hit`, `stale`, or `bypass`; `Server-Timing` reports cache status and loader duration. Only anonymous guest responses may include `X-Radar-Public-Cache: 1` plus the public 15-second policy. Repeat with a harmless `Cookie: radar_session=invalid-probe` and with an `Authorization` header; both must return `Cache-Control: private, no-store` and no public marker. Do not log real session/admin values.
 
-Committed read-model publication follows this order: DB refresh/version commit, Redis version mirror, then the seven allowlisted warm routes from `config/public_cache_warm_routes.json`. Publication output keeps DB `status=ok` and reports mirror/prewarm state separately under `cache`. Prewarm sends no cookie/authorization, reads at most 2 MiB, logs status only, and skips the configured listings route until both read-model flags are enabled.
+Committed read-model publication follows this order: DB refresh/version commit, Redis version mirror, then the seven allowlisted warm routes from `config/public_cache_warm_routes.json`. Publication output keeps DB `status=ok` and reports mirror/prewarm state separately under `cache`. Prewarm sends no cookie/authorization, reads at most 2 MiB, logs status only, and skips the configured listings route until both read-model flags and a positive committed/durable `listings` version are present.
 
 Rollback order:
 

@@ -161,6 +161,7 @@ from services.public_cache import (
     PublicCacheBusy,
     clear_local_public_cache,
     get_current_dataset_versions,
+    get_durable_dataset_versions,
     get_or_load_public_payload,
 )
 
@@ -4041,15 +4042,24 @@ def _public_dataset_versions(names) -> dict[str, int]:
 
 
 def _listing_dataset_versions() -> dict[str, int]:
-    """Resolve listing readiness even when the response cache is disabled."""
-    if _public_cache_enabled():
-        return _public_dataset_versions(_LISTING_DATASETS)
+    """Use durable readiness; Redis is only a disposable version mirror."""
     try:
-        with get_conn() as conn:
-            return get_dataset_versions(conn, _LISTING_DATASETS)
+        durable = get_durable_dataset_versions(_LISTING_DATASETS)
     except Exception:
         logger.exception("Unable to resolve listing dataset version")
         return {DATASET_LISTINGS: 0}
+
+    durable_version = int(durable.get(DATASET_LISTINGS, 0))
+    if _public_cache_enabled():
+        mirrored = _public_dataset_versions(_LISTING_DATASETS)
+        mirrored_version = int(mirrored.get(DATASET_LISTINGS, 0))
+        if mirrored_version != durable_version:
+            logger.warning(
+                "Ignoring divergent Redis listing version mirror=%s durable=%s",
+                mirrored_version,
+                durable_version,
+            )
+    return {DATASET_LISTINGS: durable_version}
 
 
 def _public_json_response(

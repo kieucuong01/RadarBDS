@@ -106,7 +106,7 @@ def test_listings_is_an_allowlisted_prewarm_path():
     )
 
 
-def test_configured_prewarm_skips_listings_until_read_model_flags_are_ready(
+def test_configured_prewarm_skips_listings_until_durable_version_is_ready(
     monkeypatch, tmp_path
 ):
     config = tmp_path / "routes.json"
@@ -115,8 +115,57 @@ def test_configured_prewarm_skips_listings_until_read_model_flags_are_ready(
         encoding="utf-8",
     )
     captured = []
-    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "0")
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
     monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setattr(
+        public_prewarm,
+        "prewarm_public_routes",
+        lambda base_url, routes: captured.extend(routes) or {},
+    )
+
+    public_prewarm.prewarm_configured_routes(config, listings_version=0)
+
+    assert captured == ["/api/dashboard"]
+
+
+def test_configured_prewarm_includes_listings_after_committed_version(
+    monkeypatch, tmp_path
+):
+    config = tmp_path / "routes.json"
+    listing_route = "/api/listings?page=1&limit=50"
+    config.write_text(
+        json.dumps(["/api/dashboard", listing_route]),
+        encoding="utf-8",
+    )
+    captured = []
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setattr(
+        public_prewarm,
+        "prewarm_public_routes",
+        lambda base_url, routes: captured.extend(routes) or {},
+    )
+
+    public_prewarm.prewarm_configured_routes(config, listings_version=7)
+
+    assert captured == ["/api/dashboard", listing_route]
+
+
+def test_standalone_configured_prewarm_reads_durable_listing_version(
+    monkeypatch, tmp_path
+):
+    config = tmp_path / "routes.json"
+    listing_route = "/api/listings?page=1&limit=50"
+    config.write_text(json.dumps([listing_route]), encoding="utf-8")
+    captured = []
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setattr(
+        public_prewarm,
+        "_durable_listing_version",
+        lambda: 5,
+        raising=False,
+    )
     monkeypatch.setattr(
         public_prewarm,
         "prewarm_public_routes",
@@ -125,4 +174,4 @@ def test_configured_prewarm_skips_listings_until_read_model_flags_are_ready(
 
     public_prewarm.prewarm_configured_routes(config)
 
-    assert captured == ["/api/dashboard"]
+    assert captured == [listing_route]

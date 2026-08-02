@@ -386,7 +386,7 @@ Focused contract tests:
   tests\test_deployment_units.py -q
 ```
 
-`RADAR_LISTING_READ_MODEL_ENABLED=0` plus service restart is the route-only rollback. Configured prewarm skips `/api/listings` while either read-model flag is disabled; direct manual prewarm remains available for explicit diagnosis. Do not treat a cached parity-equivalent response as proof that rollback dispatch used legacy SQL—use a local `cache_refresh=1` probe or disable application cache for that diagnostic.
+`RADAR_LISTING_READ_MODEL_ENABLED=0` plus service restart is the route-only rollback. Configured prewarm skips `/api/listings` while either read-model flag is disabled or durable `listings` readiness is zero; standalone prewarm reads PostgreSQL readiness and publication passes its just-committed version. Direct manual prewarm remains available for explicit diagnosis. Do not treat a cached parity-equivalent response as proof that rollback dispatch used legacy SQL—use a local `cache_refresh=1` probe or disable application cache for that diagnostic.
 
 ### Shared public cache and bounded PostgreSQL pool
 
