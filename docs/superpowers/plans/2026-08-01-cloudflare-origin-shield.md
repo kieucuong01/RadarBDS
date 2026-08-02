@@ -23,9 +23,11 @@
 
 ## Task 3: Release CDN-readiness code
 
-- [ ] Run the full Phase 4 repository gate, syntax checks, k6 inspect, workflow validation, and `git diff --check`.
-- [ ] Commit, fetch/rebase current `origin/main`, push, deploy the exact commit, and prove production HEAD and clean state.
-- [ ] Verify current origin mode still passes before any DNS mutation.
+- [x] Run the full Phase 4 repository gate, syntax checks, k6 inspect, workflow validation, and `git diff --check`.
+- [x] Commit, fetch/rebase current `origin/main`, push, deploy the exact commit, and prove production HEAD and clean state.
+- [x] Verify current origin mode still passes before any DNS mutation.
+
+Task 3 release evidence: CDN-readiness commits through `4ad6e79` are on production, the checkout is clean, Radar/Nginx/Redis/PostgreSQL are active, and the non-CDN verifier passes guest HIT, cookie/Authorization BYPASS, redaction, and dataset version checks for all four allowlisted routes. Tasks 4-7 remain intentionally open pending an authenticated Cloudflare control plane and the unchanged distributed capacity rerun.
 
 ## Task 4: Configure the authenticated Cloudflare zone
 

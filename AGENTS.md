@@ -75,7 +75,7 @@ Marketing skills:
 - `app.py`: Flask setup plus current route implementations.
 - `routes/`: public/auth/market/admin blueprints; many still delegate to `app.py`.
 - `services/market_data.py`: hot-path dashboard/listing read models and API shaping.
-- `services/signal_read_model.py`: transactional `signal_card_read_model` refresh and feature-flagged compact signal query.
+- `services/signal_read_model.py`: transactional `signal_card_read_model` refresh, feature-flagged compact signal query, and the shared filtered signal count used by dashboard summary.
 - `services/public_cache_keys.py`, `services/public_cache.py`: canonical tier/version keys, Redis fresh/stale single-flight, and bounded local fallback.
 - `services/public_data_publish.py`, `services/public_prewarm.py`: post-commit version mirror and no-cookie allowlisted warming after deterministic data jobs.
 - `deployment/ubuntu24/*`, `scripts/install_performance_infra.sh`, `scripts/verify_public_cache.ps1`, `scripts/load/radar_public_load.js`, `scripts/load/aggregate_k6_shards.py`, `scripts/load/observe_production_capacity.ps1`: bounded production capacity, reversible install, origin/CDN privacy proof, conservative distributed aggregation, and host observation.
@@ -96,6 +96,7 @@ Marketing skills:
 - Only admin can expose original listing URLs and phone numbers. Guest/Free/VIP APIs must redact them.
 - `/api/dashboard` is lightweight summary only. It must not return all signals, descriptions, or image arrays.
 - `/api/signals` is the paginated card feed. Keep it compact and thumbnail-first.
+- When `RADAR_SIGNAL_READ_MODEL_ENABLED=1`, dashboard `stats.signals` must use `count_signals_from_read_model()` with the same public filters as `/api/signals`; do not restore the request-time latest-valuation CTE. Flag `0` retains the legacy count only as rollback.
 - `RADAR_SIGNAL_READ_MODEL_ENABLED` defaults to `0`. Enable it only after `radar.py signal-read-model --refresh --compare` reports zero differences in the target environment; rollback is flag `0` plus service restart.
 - A failed signal read-model refresh must leave the previous complete rows/version active. Never bump `public_dataset_versions.signals` outside the refresh transaction.
 - `db.connection.get_conn()` is a lazy bounded pool scope (default max 4/process). Always return connections through that context; keep `connect()` only for explicit fresh-connection owners.
