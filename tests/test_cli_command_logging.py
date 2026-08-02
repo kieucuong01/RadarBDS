@@ -55,6 +55,16 @@ def test_signal_read_model_cli_accepts_refresh_compare_and_bounded_limit():
         )
 
 
+def test_signal_read_model_parser_accepts_listing_compare():
+    import radar
+
+    args = radar.build_parser().parse_args(
+        ["signal-read-model", "--compare-listings", "--limit", "200"]
+    )
+
+    assert args.compare_listings is True
+
+
 def test_guland_coordinate_backfill_defaults_to_dry_run():
     import radar
 

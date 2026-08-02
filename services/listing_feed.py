@@ -157,6 +157,14 @@ def _valid_price_drop_values(price_ty, price_first_ty) -> bool:
     )
 
 
+def _drop_pct_from_prices(price_ty, price_first_ty):
+    if not _valid_price_drop_values(price_ty, price_first_ty):
+        return None
+    price = float(price_ty)
+    first_price = float(price_first_ty)
+    return round((first_price - price) / first_price * 100, 2)
+
+
 def _rounded(row, key, *, default=None):
     value = _row_get(row, key)
     return round(value, 1) if value else default
@@ -168,7 +176,7 @@ def _format_listing_row(row, imgs: list[str], *, tier: str) -> dict:
     price_ty = _row_get(row, "price_ty")
     price_first_ty = _row_get(row, "price_first_ty")
     price_dropped = _valid_price_drop_values(price_ty, price_first_ty)
-    drop_pct = _row_get(row, "price_drop_pct") if price_dropped else None
+    drop_pct = _drop_pct_from_prices(price_ty, price_first_ty)
     fair_ppm2 = _rounded(row, "fair_ppm2")
     mos_pct = _rounded(row, "mos_pct", default=0)
     fair_display = _rounded(row, "fair_ppm2_display", default=fair_ppm2)

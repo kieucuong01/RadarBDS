@@ -150,6 +150,7 @@ def build_parser():
     )
     p_signal_read_model.add_argument("--refresh", action="store_true")
     p_signal_read_model.add_argument("--compare", action="store_true")
+    p_signal_read_model.add_argument("--compare-listings", action="store_true")
     p_signal_read_model.add_argument(
         "--limit",
         type=_bounded_signal_compare_limit,

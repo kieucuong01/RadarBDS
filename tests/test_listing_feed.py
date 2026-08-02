@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 
@@ -319,3 +321,64 @@ def test_api_listings_delegates_database_work_to_listing_service(monkeypatch):
     assert len(captured) == 1
     assert captured[0]["date_range"] == "3m"
     assert captured[0]["listings_version"] == 7
+
+
+def test_listing_compare_reports_only_safe_metadata(monkeypatch):
+    from cli import system
+
+    monkeypatch.setattr(
+        system,
+        "_collect_listing_page",
+        lambda loader, **_kwargs: (
+            {
+                "rows": [
+                    {
+                        "id": 7,
+                        "description": "private A",
+                        "url": "https://a",
+                    }
+                ],
+                "meta": {"total": 1, "page": 1},
+            }
+            if loader.__name__.endswith("legacy")
+            else {
+                "rows": [
+                    {
+                        "id": 8,
+                        "description": "private B",
+                        "url": "https://b",
+                    }
+                ],
+                "meta": {"total": 1, "page": 1},
+            }
+        ),
+    )
+
+    report = system.compare_listing_read_model(limit=20)
+    rendered = json.dumps(report, ensure_ascii=False)
+
+    assert report["status"] == "mismatch"
+    assert "private A" not in rendered
+    assert "private B" not in rendered
+    assert "https://a" not in rendered
+    assert "https://b" not in rendered
+    assert "legacy_only_ids" in rendered
+    assert "read_model_only_ids" in rendered
+
+
+def test_listing_formatter_recomputes_drop_pct_from_effective_first_price():
+    from services import listing_feed
+
+    row = _listing_row()
+    row.update(
+        {
+            "price_ty": 2.4,
+            "price_first_ty": 3.1,
+            "price_drop_pct": 4.0,
+        }
+    )
+
+    listing = listing_feed._format_listing_row(row, [], tier="guest")
+
+    assert listing["price_dropped"] is True
+    assert listing["drop_pct"] == 22.58

@@ -23,6 +23,70 @@ _SIGNAL_READ_MODEL_COMPARE_CASES = (
     ("score_desc", {"sort": "score_desc"}),
 )
 
+_LISTING_READ_MODEL_COMPARE_CASES = (
+    ("default_3m", {"date_range": "3m"}),
+    ("facebook", {"sources": ["facebook"], "date_range": "3m"}),
+    ("guland", {"sources": ["guland"], "date_range": "3m"}),
+    ("ward_tan_an", {"wards": ["Tan An"], "date_range": "3m"}),
+    (
+        "property_dat_nen",
+        {"prop_types": ["dat_nen"], "date_range": "3m"},
+    ),
+    ("price_drops", {"only_drops": True, "date_range": "3m"}),
+    ("complete", {"complete_only": True, "date_range": "3m"}),
+    (
+        "area_range",
+        {"area_min": 60, "area_max": 200, "date_range": "3m"},
+    ),
+    (
+        "price_range",
+        {"price_min": 1, "price_max": 5, "date_range": "3m"},
+    ),
+    ("keyword", {"keyword": "duong", "date_range": "3m"}),
+    ("date_all", {"date_range": "all"}),
+    (
+        "area_asc",
+        {"sort_by": "area", "sort_dir": "asc", "date_range": "3m"},
+    ),
+    (
+        "price_desc",
+        {"sort_by": "price", "sort_dir": "desc", "date_range": "3m"},
+    ),
+    (
+        "price_m2_asc",
+        {
+            "sort_by": "price_m2",
+            "sort_dir": "asc",
+            "date_range": "3m",
+        },
+    ),
+    (
+        "fair_desc",
+        {"sort_by": "fair", "sort_dir": "desc", "date_range": "3m"},
+    ),
+    (
+        "ward_asc",
+        {"sort_by": "ward", "sort_dir": "asc", "date_range": "3m"},
+    ),
+    (
+        "prop_type_asc",
+        {
+            "sort_by": "prop_type",
+            "sort_dir": "asc",
+            "date_range": "3m",
+        },
+    ),
+    ("page_2", {"page": 2, "limit": 50, "date_range": "3m"}),
+    (
+        "guland_admin_override",
+        {
+            "sources": ["guland"],
+            "include_guland_high_activity": True,
+            "date_range": "3m",
+        },
+    ),
+)
+
 
 def _collect_signal_page(loader, *, limit: int, tier: str, case: dict):
     page_size = min(max(limit, 1), 100)
@@ -110,6 +174,129 @@ def compare_signal_read_model(limit: int = 200) -> dict:
     }
 
 
+def _collect_listing_page(loader, *, limit: int, tier: str, case: dict):
+    bounded_limit = min(max(int(limit), 1), 1000)
+    start_page = max(int(case.get("page", 1)), 1)
+    page_size = min(max(int(case.get("limit", 100)), 1), 100)
+    target_rows = page_size if "page" in case else bounded_limit
+    call_case = {
+        key: value
+        for key, value in case.items()
+        if key not in {"page", "limit"}
+    }
+    collected = []
+    first_meta = None
+    page = start_page
+    while len(collected) < target_rows:
+        payload = loader(
+            None,
+            tier=tier,
+            page=page,
+            limit=min(page_size, target_rows - len(collected)),
+            **call_case,
+        )
+        if first_meta is None:
+            first_meta = {
+                key: payload.get(key)
+                for key in (
+                    "total",
+                    "page",
+                    "limit",
+                    "pages",
+                    "has_more",
+                    "tier",
+                )
+            }
+        batch = list(payload.get("listings") or ())
+        collected.extend(batch)
+        if not payload.get("has_more") or not batch or "page" in case:
+            break
+        page += 1
+    return {"rows": collected[:target_rows], "meta": first_meta or {}}
+
+
+def compare_listing_read_model(limit: int = 200) -> dict:
+    """Compare listing feeds while retaining only non-sensitive diagnostics."""
+    from services.listing_feed import (
+        _load_listing_feed_legacy,
+        load_listings_from_read_model,
+    )
+
+    bounded_limit = min(max(int(limit), 1), 1000)
+    differences = []
+    compared_cases = 0
+    for tier in ("guest", "free", "vip", "admin"):
+        for case_name, case in _LISTING_READ_MODEL_COMPARE_CASES:
+            compared_cases += 1
+            legacy = _collect_listing_page(
+                _load_listing_feed_legacy,
+                limit=bounded_limit,
+                tier=tier,
+                case=case,
+            )
+            read_model = _collect_listing_page(
+                load_listings_from_read_model,
+                limit=bounded_limit,
+                tier=tier,
+                case=case,
+            )
+            legacy_rows = legacy["rows"]
+            read_model_rows = read_model["rows"]
+            legacy_ids = [int(row["id"]) for row in legacy_rows]
+            read_model_ids = [int(row["id"]) for row in read_model_rows]
+            legacy_by_id = {int(row["id"]): row for row in legacy_rows}
+            read_model_by_id = {
+                int(row["id"]): row for row in read_model_rows
+            }
+            common_ids = set(legacy_by_id) & set(read_model_by_id)
+            differing_fields = sorted(
+                {
+                    field
+                    for listing_id in common_ids
+                    for field in (
+                        set(legacy_by_id[listing_id])
+                        | set(read_model_by_id[listing_id])
+                    )
+                    if legacy_by_id[listing_id].get(field)
+                    != read_model_by_id[listing_id].get(field)
+                }
+            )
+            differing_metadata_fields = sorted(
+                key
+                for key in set(legacy["meta"]) | set(read_model["meta"])
+                if legacy["meta"].get(key) != read_model["meta"].get(key)
+            )
+            if (
+                legacy_ids != read_model_ids
+                or differing_fields
+                or differing_metadata_fields
+            ):
+                differences.append(
+                    {
+                        "case": case_name,
+                        "tier": tier,
+                        "legacy_count": len(legacy_ids),
+                        "read_model_count": len(read_model_ids),
+                        "legacy_only_ids": sorted(
+                            set(legacy_ids) - set(read_model_ids)
+                        ),
+                        "read_model_only_ids": sorted(
+                            set(read_model_ids) - set(legacy_ids)
+                        ),
+                        "order_mismatch": legacy_ids != read_model_ids,
+                        "field_names": differing_fields,
+                        "metadata_fields": differing_metadata_fields,
+                    }
+                )
+    return {
+        "status": "ok" if not differences else "mismatch",
+        "compared_cases": compared_cases,
+        "limit": bounded_limit,
+        "difference_count": len(differences),
+        "differences": differences,
+    }
+
+
 def cmd_signal_read_model(args):
     init_schema()
     output = {}
@@ -125,8 +312,15 @@ def cmd_signal_read_model(args):
         output["compare"] = compare_signal_read_model(
             int(getattr(args, "limit", 200))
         )
+    if bool(getattr(args, "compare_listings", False)):
+        output["listings_compare"] = compare_listing_read_model(
+            int(getattr(args, "limit", 200))
+        )
     print(json.dumps(output, ensure_ascii=False, sort_keys=True))
-    if output.get("compare", {}).get("status") == "mismatch":
+    if any(
+        output.get(key, {}).get("status") == "mismatch"
+        for key in ("compare", "listings_compare")
+    ):
         raise SystemExit(1)
 
 
