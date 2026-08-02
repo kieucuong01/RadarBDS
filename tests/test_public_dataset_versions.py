@@ -22,7 +22,11 @@ def test_public_dataset_version_schema_has_required_rows():
             """
         ).fetchall()
 
-    assert [row["dataset_name"] for row in rows] == ["market", "signals"]
+    assert [row["dataset_name"] for row in rows] == [
+        "listings",
+        "market",
+        "signals",
+    ]
     assert all(int(row["version"]) >= 0 for row in rows)
 
 

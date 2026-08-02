@@ -581,7 +581,7 @@ def test_signal_cards_do_not_render_deal_summary_strip():
 
 def test_all_listings_grid_reuses_signal_deal_card_renderer():
     html = _read("templates/index.html")
-    app_source = _read("app.py")
+    listing_feed_source = _read("services/listing_feed.py")
     signals_js = _read("static/js/main/signals.js")
     listings_js = _read("static/js/main/listings.js")
 
@@ -596,9 +596,9 @@ def test_all_listings_grid_reuses_signal_deal_card_renderer():
 
     assert "renderSignalDealCard(x, {" in listings_js
     assert "cardContext: 'all'" in listings_js
-    assert "signal_badge_metadata" in app_source
-    assert '"street_label": badge_meta["street_label"]' in app_source
-    assert '"tho_cu_label": badge_meta["tho_cu_label"]' in app_source
+    assert "signal_badge_metadata" in listing_feed_source
+    assert '"street_label": badge_meta["street_label"]' in listing_feed_source
+    assert '"tho_cu_label": badge_meta["tho_cu_label"]' in listing_feed_source
     assert "function listingCard(x)" in listings_js
     assert "js/main/signals.js" in html
     assert "js/main/listings.js" in html
