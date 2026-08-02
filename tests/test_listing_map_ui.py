@@ -99,6 +99,32 @@ def test_launcher_contract_supports_only_deal_and_listing_tabs():
     assert "bottom: 28px" in layout
 
 
+def test_listing_map_assets_warm_without_blocking_initial_dashboard_render():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    core = (root / "static/js/main/core.js").read_text(encoding="utf-8")
+
+    assert "function warmListingMapAssets" in core
+    assert "window.RadarListingMap.loadLeaflet()" in core
+    assert "requestIdleCallback" in core
+    assert "pointerenter" in core
+    assert "focus" in core
+    assert "await warmListingMapAssets()" in core
+
+
+def test_all_listings_script_warms_after_load_and_before_tab_click():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    core = (root / "static/js/main/core.js").read_text(encoding="utf-8")
+
+    assert "function warmListingsAssets" in core
+    assert "function scheduleListingsWarmup" in core
+    assert 'querySelectorAll(\'[data-tab-target="all"]\')' in core
+    assert "await warmListingsAssets()" in core
+
+
 def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     from pathlib import Path
 

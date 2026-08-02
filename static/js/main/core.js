@@ -109,6 +109,69 @@ function ensureDashboardStyles(keys) {
   return Promise.all((keys || []).map((key) => ensureDashboardStyle(key)));
 }
 
+function warmListingMapAssets() {
+  if (listingMapWarmPromise) return listingMapWarmPromise;
+  listingMapWarmPromise = Promise.all([
+    ensureDashboardStyle('listingMap'),
+    ensureDashboardScript('listingMap')
+  ]).then(() => {
+    if (
+      window.RadarListingMap
+      && typeof window.RadarListingMap.loadLeaflet === 'function'
+    ) {
+      return window.RadarListingMap.loadLeaflet();
+    }
+    return undefined;
+  });
+  return listingMapWarmPromise;
+}
+
+function scheduleListingMapWarmup() {
+  const launcher = document.getElementById('listingMapLauncher');
+  if (!launcher) return;
+  const warm = () => warmListingMapAssets().catch(() => {});
+  launcher.addEventListener('pointerenter', warm, { once: true, passive: true });
+  launcher.addEventListener('focus', warm, { once: true });
+  const warmWhenIdle = () => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(warm, { timeout: 5000 });
+    } else {
+      window.setTimeout(warm, 2500);
+    }
+  };
+  if (document.readyState === 'complete') {
+    warmWhenIdle();
+  } else {
+    window.addEventListener('load', warmWhenIdle, { once: true });
+  }
+}
+
+function warmListingsAssets() {
+  return ensureDashboardScript('listings');
+}
+
+function scheduleListingsWarmup() {
+  const launchers = document.querySelectorAll('[data-tab-target="all"]');
+  if (!launchers.length) return;
+  const warm = () => warmListingsAssets().catch(() => {});
+  launchers.forEach((launcher) => {
+    launcher.addEventListener('pointerenter', warm, { once: true, passive: true });
+    launcher.addEventListener('focus', warm, { once: true });
+  });
+  const warmWhenIdle = () => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(warm, { timeout: 5000 });
+    } else {
+      window.setTimeout(warm, 2500);
+    }
+  };
+  if (document.readyState === 'complete') {
+    warmWhenIdle();
+  } else {
+    window.addEventListener('load', warmWhenIdle, { once: true });
+  }
+}
+
 async function lazyOpenSignal(card) {
   await ensureDashboardStyle('modal');
   await ensureDashboardScript('modal');
@@ -148,8 +211,7 @@ function getListingMapFilterSnapshot() {
 async function lazyOpenListingMap() {
   const snapshot = getListingMapFilterSnapshot();
   if (!snapshot) return;
-  await ensureDashboardStyle('listingMap');
-  await ensureDashboardScript('listingMap');
+  await warmListingMapAssets();
   return window.RadarListingMap.open(snapshot);
 }
 
@@ -321,6 +383,7 @@ let marketIndicatorRunSeq = 0;
 let chartJsPromise = null;
 const lazyScriptPromises = {};
 const lazyStylePromises = {};
+let listingMapWarmPromise = null;
 let listingsUiInitialized = false;
 
 function initializeListingsUi() {
@@ -522,7 +585,7 @@ async function switchTab(tabId, btn) {
     loadInsights(false);
   }
   if (tabId === 'all') {
-    await ensureDashboardScript('listings');
+    await warmListingsAssets();
     initializeListingsUi();
     loadListings(1);
   }
@@ -533,4 +596,6 @@ async function switchTab(tabId, btn) {
 
 document.addEventListener('DOMContentLoaded', () => {
   syncListingMapLauncher();
+  scheduleListingMapWarmup();
+  scheduleListingsWarmup();
 });
