@@ -4,8 +4,11 @@ from collections.abc import Iterable
 
 
 DATASET_SIGNALS = "signals"
+DATASET_LISTINGS = "listings"
 DATASET_MARKET = "market"
-ALLOWED_DATASETS = frozenset({DATASET_SIGNALS, DATASET_MARKET})
+ALLOWED_DATASETS = frozenset(
+    {DATASET_SIGNALS, DATASET_LISTINGS, DATASET_MARKET}
+)
 
 
 def _validated(names: Iterable[str]) -> tuple[str, ...]:

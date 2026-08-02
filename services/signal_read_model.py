@@ -12,6 +12,7 @@ from db.guland_publishers import (
     publisher_visibility_from_join_sql,
 )
 from db.public_dataset_versions import (
+    DATASET_LISTINGS,
     DATASET_MARKET,
     DATASET_SIGNALS,
     bump_dataset_versions,
@@ -53,6 +54,7 @@ READ_MODEL_COLUMNS = (
     "frontage_m",
     "depth_m",
     "price_ty",
+    "listing_price_per_m2",
     "actual_ppm2",
     "fair_ppm2",
     "fair_ppm2_old",
@@ -62,6 +64,7 @@ READ_MODEL_COLUMNS = (
     "mos_pct_new",
     "signal_score",
     "is_actionable",
+    "listing_is_signal",
     "is_hot",
     "possibly_duplicate",
     "price_dropped",
@@ -131,6 +134,13 @@ def _select_sql(listing_ids: tuple[int, ...] | None) -> tuple[str, tuple[int, ..
         "COALESCE(sv.signal_score, 0)",
     )
     complete_listing_expr = _signal_listing_data_sql("l")
+    is_actionable_expr = (
+        f"(({complete_listing_expr}) AND ({actionable_expr}))"
+    )
+    listing_is_signal_expr = (
+        f"(({actionable_signal_sql('v')}) "
+        f"AND ({actionable_signal_sql('sv')}))"
+    )
     public_visibility_expr = publisher_visibility_from_join_sql("l", "feed_sp")
     publisher_rank_expr = publisher_sort_rank_from_join_sql("l", "feed_sp")
     primary_image_order_sql = (
@@ -161,6 +171,7 @@ def _select_sql(listing_ids: tuple[int, ...] | None) -> tuple[str, tuple[int, ..
         l.frontage_m,
         l.depth_m,
         l.price_ty,
+        l.price_per_m2 AS listing_price_per_m2,
         ({actual_expr}) AS actual_ppm2,
         ({fair_expr}) AS fair_ppm2,
         v.fair_ppm2 AS fair_ppm2_old,
@@ -169,7 +180,8 @@ def _select_sql(listing_ids: tuple[int, ...] | None) -> tuple[str, tuple[int, ..
         v.mos_pct AS mos_pct_old,
         sv.mos_pct AS mos_pct_new,
         {score_expr} AS signal_score,
-        ({actionable_expr}) AS is_actionable,
+        ({is_actionable_expr}) AS is_actionable,
+        ({listing_is_signal_expr}) AS listing_is_signal,
         COALESCE(l.is_hot, 0)::boolean AS is_hot,
         COALESCE(l.possibly_duplicate, 0)::boolean AS possibly_duplicate,
         {price_drop_select},
@@ -228,7 +240,6 @@ def _select_sql(listing_ids: tuple[int, ...] | None) -> tuple[str, tuple[int, ..
       AND COALESCE(l.is_blacklisted, 0)=0
       AND COALESCE(l.review_hidden, 0)=0
       AND COALESCE(l.source_status, 'unknown') <> 'inactive'
-      AND {complete_listing_expr}
       {listing_id_clause}
     """
     return sql, ids
@@ -271,7 +282,9 @@ def refresh_signal_card_read_model(
         )
     )
     if ids is not None and not ids:
-        versions = get_dataset_versions(conn, (DATASET_SIGNALS,))
+        versions = get_dataset_versions(
+            conn, (DATASET_SIGNALS, DATASET_LISTINGS)
+        )
         return SignalReadModelRefresh("noop", 0, versions, 0.0)
     if ids is not None and len(ids) > 500:
         ids = None
@@ -299,9 +312,9 @@ def refresh_signal_card_read_model(
         mode = "incremental"
 
     datasets = (
-        (DATASET_SIGNALS, DATASET_MARKET)
+        (DATASET_SIGNALS, DATASET_LISTINGS, DATASET_MARKET)
         if market_changed
-        else (DATASET_SIGNALS,)
+        else (DATASET_SIGNALS, DATASET_LISTINGS)
     )
     versions = bump_dataset_versions(conn, datasets)
     return SignalReadModelRefresh(

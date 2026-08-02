@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import uuid
 
 import pytest
 
@@ -36,15 +37,32 @@ def test_signal_read_model_schema_and_indexes_exist():
                 """
             ).fetchall()
         }
-        versions = get_dataset_versions(conn, ("signals", "market"))
+        columns = {
+            row["column_name"]
+            for row in conn.execute(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema='public'
+                  AND table_name='signal_card_read_model'
+                """
+            ).fetchall()
+        }
+        versions = get_dataset_versions(
+            conn, ("signals", "listings", "market")
+        )
 
     assert table["table_name"] == "signal_card_read_model"
     assert {
         "idx_signal_card_public_newest",
         "idx_signal_card_public_filter",
         "idx_signal_card_public_mos",
+        "idx_signal_card_all_public_newest",
+        "idx_signal_card_all_public_filter",
+        "idx_signal_card_all_public_drop",
     } <= indexes
-    assert set(versions) == {"signals", "market"}
+    assert {"listing_price_per_m2", "listing_is_signal"} <= columns
+    assert set(versions) == {"signals", "listings", "market"}
 
 
 def test_signal_card_select_sql_emits_boolean_storage_values():
@@ -55,6 +73,49 @@ def test_signal_card_select_sql_emits_boolean_storage_values():
     assert "THEN TRUE ELSE FALSE" in sql
     assert "COALESCE(l.has_so, 0)::boolean AS has_so" in sql
     assert params == ()
+
+
+def test_refresh_keeps_incomplete_public_listing_but_not_as_signal():
+    from services.signal_read_model import refresh_signal_card_read_model
+
+    token = uuid.uuid4().hex
+    with connection.get_conn() as conn:
+        cursor = conn.execute(
+            """
+            INSERT INTO listings(
+                source, source_id, url, title, description,
+                source_status, ward, price_ty, price_per_m2, area_m2
+            )
+            VALUES (?, ?, ?, ?, '', 'active', NULL, 2.5, 12.5, NULL)
+            RETURNING id
+            """,
+            (
+                "facebook",
+                f"read-model-incomplete-{token}",
+                f"https://example.invalid/read-model-incomplete-{token}",
+                "Incomplete public row",
+            ),
+        )
+        listing_id = int(cursor.lastrowid)
+        result = refresh_signal_card_read_model(
+            conn, listing_ids=(listing_id,)
+        )
+        projected = conn.execute(
+            """
+            SELECT listing_id, listing_price_per_m2,
+                   listing_is_signal, is_actionable
+            FROM signal_card_read_model
+            WHERE listing_id=?
+            """,
+            (listing_id,),
+        ).fetchone()
+        conn.execute("DELETE FROM listings WHERE id=?", (listing_id,))
+
+    assert set(result.versions) >= {"signals", "listings"}
+    assert projected["listing_id"] == listing_id
+    assert projected["listing_price_per_m2"] == 12.5
+    assert projected["listing_is_signal"] is False
+    assert projected["is_actionable"] is False
 
 
 def test_full_refresh_bumps_version_after_final_insert(monkeypatch):
@@ -84,7 +145,7 @@ def test_full_refresh_bumps_version_after_final_insert(monkeypatch):
         signal_read_model,
         "bump_dataset_versions",
         lambda _conn, names: events.append(("bump", names))
-        or {"signals": 8},
+        or {"signals": 8, "listings": 5},
     )
 
     result = signal_read_model.refresh_signal_card_read_model(
@@ -93,11 +154,11 @@ def test_full_refresh_bumps_version_after_final_insert(monkeypatch):
     )
 
     insert_position = events.index(("insert",))
-    bump_position = events.index(("bump", ("signals",)))
+    bump_position = events.index(("bump", ("signals", "listings")))
     assert insert_position < bump_position
     assert result.mode == "full"
     assert result.affected_rows == 3
-    assert result.versions == {"signals": 8}
+    assert result.versions == {"signals": 8, "listings": 5}
 
 
 def test_failed_full_refresh_keeps_previous_rows_and_version(monkeypatch):
@@ -141,13 +202,14 @@ def test_empty_refresh_is_noop_without_version_bump():
     from services.signal_read_model import refresh_signal_card_read_model
 
     with connection.get_conn() as conn:
-        before = get_dataset_versions(conn, ("signals",))["signals"]
+        before = get_dataset_versions(conn, ("signals", "listings"))
         result = refresh_signal_card_read_model(conn, listing_ids=())
-        after = get_dataset_versions(conn, ("signals",))["signals"]
+        after = get_dataset_versions(conn, ("signals", "listings"))
 
     assert result.mode == "noop"
     assert result.affected_rows == 0
     assert after == before
+    assert result.versions == before
 
 
 def test_more_than_five_hundred_ids_uses_full_refresh(monkeypatch):
@@ -171,7 +233,7 @@ def test_more_than_five_hundred_ids_uses_full_refresh(monkeypatch):
     monkeypatch.setattr(
         signal_read_model,
         "bump_dataset_versions",
-        lambda _conn, _names: {"signals": 1},
+        lambda _conn, _names: {"signals": 1, "listings": 1},
     )
 
     result = signal_read_model.refresh_signal_card_read_model(

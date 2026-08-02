@@ -1404,7 +1404,7 @@ def _migrate_public_read_model(conn: Any) -> None:
     conn.execute(
         """
         INSERT INTO public_dataset_versions(dataset_name, version)
-        VALUES ('signals', 0), ('market', 0)
+        VALUES ('signals', 0), ('listings', 0), ('market', 0)
         ON CONFLICT (dataset_name) DO NOTHING
         """
     )
@@ -1424,6 +1424,7 @@ def _migrate_public_read_model(conn: Any) -> None:
             frontage_m DOUBLE PRECISION,
             depth_m DOUBLE PRECISION,
             price_ty DOUBLE PRECISION,
+            listing_price_per_m2 DOUBLE PRECISION,
             actual_ppm2 DOUBLE PRECISION,
             fair_ppm2 DOUBLE PRECISION,
             fair_ppm2_old DOUBLE PRECISION,
@@ -1433,6 +1434,7 @@ def _migrate_public_read_model(conn: Any) -> None:
             mos_pct_new DOUBLE PRECISION,
             signal_score INTEGER NOT NULL DEFAULT 0,
             is_actionable BOOLEAN NOT NULL DEFAULT FALSE,
+            listing_is_signal BOOLEAN NOT NULL DEFAULT FALSE,
             is_hot BOOLEAN NOT NULL DEFAULT FALSE,
             possibly_duplicate BOOLEAN NOT NULL DEFAULT FALSE,
             price_dropped BOOLEAN NOT NULL DEFAULT FALSE,
@@ -1470,6 +1472,19 @@ def _migrate_public_read_model(conn: Any) -> None:
     )
     conn.execute(
         """
+        ALTER TABLE signal_card_read_model
+        ADD COLUMN IF NOT EXISTS listing_price_per_m2 DOUBLE PRECISION
+        """
+    )
+    conn.execute(
+        """
+        ALTER TABLE signal_card_read_model
+        ADD COLUMN IF NOT EXISTS listing_is_signal
+            BOOLEAN NOT NULL DEFAULT FALSE
+        """
+    )
+    conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_signal_card_public_newest
         ON signal_card_read_model(
             publisher_rank, activity_at DESC, listing_id DESC
@@ -1492,6 +1507,34 @@ def _migrate_public_read_model(conn: Any) -> None:
         CREATE INDEX IF NOT EXISTS idx_signal_card_public_mos
         ON signal_card_read_model(mos_pct DESC, listing_id DESC)
         WHERE is_actionable AND publisher_visible_public
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_signal_card_all_public_newest
+        ON signal_card_read_model(
+            publisher_rank, activity_at DESC, listing_id DESC
+        )
+        WHERE publisher_visible_public AND NOT possibly_duplicate
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_signal_card_all_public_filter
+        ON signal_card_read_model(
+            source, ward, property_type, publisher_rank,
+            activity_at DESC, listing_id DESC
+        )
+        WHERE publisher_visible_public
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_signal_card_all_public_drop
+        ON signal_card_read_model(
+            publisher_rank, activity_at DESC, listing_id DESC
+        )
+        WHERE publisher_visible_public AND price_dropped
         """
     )
     for table in (
