@@ -193,7 +193,7 @@ Release evidence is incomplete unless it records: commit SHA, service status, du
 
 ### Production follow-up on 2026-08-02
 
-The all-listings projection and application path are active in production, but the edge/capacity rollout is intentionally still open. Preserve these facts for the next agent instead of repeating the expensive audits:
+At this 2026-08-02 checkpoint, the all-listings projection and application path were active in production, while the edge/capacity rollout was still open. Preserve these historical facts instead of repeating the expensive audits; the later definitive result is recorded under **Measured production evidence** below:
 
 - deployed feature commits include `d5c7e3f` (post-load/hover Maps and Tin rao asset warm-up) and `c4705c1` (`/api/counts` metrics from the shared projection);
 - the published projection contained 23,059 rows; durable PostgreSQL and Redis mirrors matched at `signals=5`, `listings=1`, `market=1` at verification time;
@@ -205,7 +205,7 @@ The all-listings projection and application path are active in production, but t
 - origin prewarm succeeded for all seven configured routes. Repeated HTTPS origin probes changed `/api/listings` from `MISS` to `HIT`, and the public `scripts/verify_public_cache.ps1` passed all five path classes: guest `HIT`, cookie and Authorization `BYPASS`, private/no-store enforcement, recursive redaction, hidden internal marker, and `listings` version `1`;
 - the route-dispatch rollback drill is complete and data-preserving. With `RADAR_LISTING_READ_MODEL_ENABLED=0`, a VPS-local `cache_refresh=1` legacy probe returned HTTP 200 in 51.737 seconds. The mandatory restore set the flag back to `1`, restarted the service, prewarmed seven of seven routes, and returned the same read-model route in 91 ms. PostgreSQL and Redis versions remained matched at `signals=5`, `listings=1`, `market=1`; `/api/signals`, `/api/counts`, `/api/dashboard`, Maps, and stored data were not disabled or changed.
 
-The user-visible hot paths and VPS origin phase are therefore fixed and deployed. Revoke the temporary ACL after inspection with `sudo setfacl -x u:deploy /etc/nginx/sites-available/radar-bds.conf /etc/radar-bds/radar.env`. Remaining work is Cloudflare/Vietnix DNS cutover, the documented distributed 100 -> 500 -> 1,000 -> 5,000 gates, and optional full production Cartesian parity if a longer maintenance window is approved. Do not claim the 5,000-concurrent public objective before the CDN gates pass.
+At that checkpoint, the user-visible hot paths and VPS origin phase were fixed and deployed, while Cloudflare/Vietnix DNS cutover and the distributed gates remained. Those items were subsequently completed through the scoped definitive result documented below. Optional full production Cartesian parity still requires a longer approved maintenance window. Revoke the temporary ACL after inspection with `sudo setfacl -x u:deploy /etc/nginx/sites-available/radar-bds.conf /etc/radar-bds/radar.env`.
 
 ## Shared Public Cache And PostgreSQL Pool Rollout
 
@@ -316,17 +316,17 @@ Controlled local browser evidence from 2026-08-01 (cache disabled, local Postgre
 - a deliberately paused signal request was canceled as `net::ERR_ABORTED`; only the replacement response rendered; page 2 produced `60/60` unique card ids;
 - a disposable Free session showed tier `free` and returned `Cache-Control: private, no-store`, `X-Radar-Cache: bypass`, and no public marker for signals/counts. The synthetic user/session and browser cookie were removed after the proof.
 
-These measurements validate Phase 3 request ordering and rendering only. The following section records the later Phase 4 infrastructure and capacity evidence; neither section alone is permission to claim the still-unmet 1,000-5,000 external gate.
+These measurements validate Phase 3 request ordering and rendering only. They did not, by themselves, prove the external capacity gate; the following section records the later Phase 4 infrastructure evidence and the definitive scoped 1,000/5,000-VU result.
 
 ## Production Public-Read Capacity Runbook
 
-This is the production truth recorded on 2026-08-01. The implementation is deployed, cache/privacy/failure behavior is verified, and the highest passing external stages are recorded below. The requested 1,000-5,000 acceptance target is **not** complete; do not round the highest passing stage upward.
+This section preserves the production history from 2026-08-01 through the definitive 2026-08-03 run. The implementation is deployed, cache/privacy/failure behavior is verified, and the common-key homepage contract has passed 5,000 concurrent VUs. Keep the scope boundaries below: this is not a claim for 5,000 RPS, 5,000 unique cold filters, authenticated traffic, or high availability.
 
 ### Active capacity contract
 
 | Layer | Active production setting | Ownership |
 |---|---|---|
-| Nginx | exact guest cache for `/`, `/api/signals`, `/api/counts`, `/api/dashboard`; TTL 15 s; inactive 24 h; 512 MB zone; lock/background update/stale-on-error | absorbs repeated/common public concurrency; never caches session/auth/admin/error/`Set-Cookie` responses |
+| Nginx | exact guest cache for `/`, `/api/signals`, `/api/listings`, `/api/counts`, `/api/dashboard`; TTL 15 s; inactive 24 h; 512 MB zone; lock/background update/stale-on-error | absorbs repeated/common public concurrency; never caches session/auth/admin/error/`Set-Cookie` responses |
 | TLS accept queue | IPv4 `backlog=8192`; `worker_connections=4096`; `multi_accept on`; kernel `somaxconn=8192`, `tcp_max_syn_backlog=8192` | accepts bursts without scaling Flask/DB work one-for-one |
 | Gunicorn | 3 workers x 4 threads; timeout 45 s; graceful 30 s; keepalive 5 s; max requests 2,000 + jitter 200; `LimitNOFILE=65536` | bounded origin request concurrency |
 | Redis | loopback only; persistence off; 256 MB; `allkeys-lru`; max clients 256 | disposable shared response/version cache, never source of truth |
@@ -408,15 +408,29 @@ The observer now treats memory pressure explicitly: abort immediately below 512 
 
 Cloudflare run `30759522225` subsequently passed `default-100`, `mixed-100`, and `default-500`; the production observer remained clean through those executed load stages. Its `mixed-500` job is **not a capacity failure or pass**: k6 stopped inside `setup()` after the default 60-second setup limit, having issued only 258 of the 300 serial prewarm requests and zero VU iterations/checks. The workflow correctly skipped 1,000 and 5,000. Commit `41c69b3` therefore proves the common homepage path through 500 VUs and the mixed path through 100 VUs only. The harness now gives the fixed 50-key prewarm a bounded five-minute setup window and makes every mixed shard wait for the same post-prewarm VU epoch. Aggregation requires all configured VUs to record their first iteration within the ten-second synchronized-start window, preventing a staggered run from being mislabeled as concurrent capacity. Repeat the full serial gates with a fresh paired observer before raising the boundary.
 
-Cloudflare run `30760783597` on `e9a75d7` passed `default-100`, `mixed-100`, `default-500`, `mixed-500`, `default-1000`, and `mixed-1000` with overlapping host observation. `default-5000` again has **no capacity result**: k6 needed 11.653 seconds to initialize 965 of 1,000 VUs on a shard, then the harness rejected the shard for missing its ten-second VU epoch; it issued zero HTTP requests and the origin remained idle. The default distributed path now reserves a separate one-minute initialization window, after which the existing per-VU ten-second synchronization gate still applies. Repeat all serial gates from the deployed commit before claiming 5,000.
+Cloudflare run `30760783597` on `e9a75d7` passed `default-100`, `mixed-100`, `default-500`, `mixed-500`, `default-1000`, and `mixed-1000` with overlapping host observation. `default-5000` from that run has **no capacity result**: k6 needed 11.653 seconds to initialize 965 of 1,000 VUs on a shard, then the harness rejected the shard for missing its ten-second VU epoch; it issued zero HTTP requests and the origin remained idle. The default distributed path then reserved a separate one-minute initialization window while retaining the per-VU ten-second synchronization gate, leading to the full rerun below.
+
+Definitive Cloudflare run `30762453173` on `063cd04` passed every serial gate with `REQUIRE_CDN=1` and the fresh observer at `C:\tmp\radar-capacity-063cd04-20260803-020109`. Percentiles are the conservative maximum shard values; start skew spans the earliest through latest first VU iteration across all shards.
+
+| Stage | Requests | Max shard p95 / p99 | Failure / check rate | VU start skew |
+|---|---:|---:|---:|---:|
+| `default-100` | 35,067 | 19.566 / 61.245 ms | 0.0314% / 99.9765% | 7 ms |
+| `mixed-100` | 35,415 | 13.804 / 747.933 ms | 0.0056% / 99.9957% | 9 ms |
+| `default-500` | 175,416 | 17.308 / 54.069 ms | 0.0405% / 99.9711% | 34 ms |
+| `mixed-500` | 175,602 | 13.467 / 45.498 ms | 0.0171% / 99.9873% | 75 ms |
+| `default-1000` | 348,426 | 30.554 / 180.240 ms | 0.0339% / 99.9747% | 35 ms |
+| `mixed-1000` | 351,072 | 15.093 / 35.291 ms | 0.0208% / 99.9847% | 97 ms |
+| `default-5000` | 1,660,770 | 141.255 / 397.478 ms | 0.0909% / 99.9318% | 183 ms |
+
+The paired observer covered the whole workflow, remained active after the final aggregate, and completed with 360 samples and no abort reason. Across the full observation it recorded maximum CPU 90%, minimum available memory 787,068 KB, maximum swap-in 144 KB/s, PostgreSQL at most 7 connections and 0 active, zero Redis rejected connections/evictions, zero recent Nginx/Radar errors, zero Radar restarts, no inactive service sample, and unchanged kernel `ListenDrops`/`ListenOverflows` (`5376`/`5354`). After the capacity workflow, three isolated background swap-out samples reached at most 18,512 KB/s; none was consecutive, so the three-sample sustained-swap guard did not trigger. Observer stderr remained empty. The `default-5000` aggregate included 1,620,215 CDN HIT and 39,036 stale responses; no CDN error was recorded. Runtime evidence is intentionally uncommitted, while this result and the reproducible runbook remain in git.
 
 Production browser smoke after `4ad6e79` covered desktop `1280x720` and mobile `390x844`. Both rendered 30 signal cards. Removing Tân An changed the first card set and produced one new `/api/signals` plus one `/api/counts` request, with no `/api/dashboard` request; the mobile snapshot recorded `13/14` wards and a one-column layout without horizontal overflow. Application/filter/card runtime logs were clean. Playwright did report the existing GA collector requests to `analytics.google.com`, `www.google.com`, and `stats.g.doubleclick.net` being blocked by the current CSP; treat those third-party telemetry messages separately from application regressions.
 
 ### Honest capacity boundary and next architecture
 
-The current single 2-vCPU/4-GB origin plus Cloudflare edge has proven cache collapse, privacy isolation, Redis failure recovery, bounded DB sessions, CDN-required default/mixed 100 VUs, and the earlier origin-cache mixed-filter 500-VU stage. It has **not** proven the 500-VU Cloudflare stage, the 1,000-5,000 external acceptance target, 5,000 unique cold filters, sustained 5,000 RPS, or high availability. The first Cloudflare 500 attempt was cancelled because the observer detected an independent production SQL hotspot before k6 began.
+The current single 2-vCPU/4-GB origin plus Cloudflare edge has proven cache collapse, privacy isolation, Redis failure recovery, bounded DB sessions, the 50-key mixed-filter contract through 1,000 concurrent VUs, and the common-key homepage contract through 5,000 concurrent VUs. It has **not** proven 5,000 unique cold filters, sustained 5,000 RPS, authenticated/private-path capacity at those levels, origin-only 5,000 concurrency, or high availability. Preserve that distinction in product and infrastructure claims.
 
-The next capacity phase must keep the active guest-only Cloudflare contract, keep authenticated traffic private, deploy and smoke the all-listings Maps read path, then repeat 100 -> 500 -> 1,000 -> 5,000 serial gates. The production verifier must continue to pass with `-RequireCdn` before the capacity branch is pushed again:
+Keep the active guest-only Cloudflare contract and authenticated traffic private. Repeat the full 100 -> 500 -> 1,000 -> 5,000 acceptance chain after material cache, query, CDN, topology, or load-harness changes; routine releases still require the production verifier with `-RequireCdn`:
 
 ```powershell
 .\scripts\verify_public_cache.ps1 -BaseUrl "https://radarbds.vn" -RequireCdn
