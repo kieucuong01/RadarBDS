@@ -4774,6 +4774,7 @@ def api_counts():
     tier = current_tier()
     include_guland_high_activity = _include_guland_high_activity(request, tier)
     versions = _public_dataset_versions(_SIGNAL_DATASETS)
+    versions.update(_listing_dataset_versions())
     cache_query = _public_filter_query(
         active_city=active_city,
         wards=wards,
@@ -4803,6 +4804,7 @@ def api_counts():
                 tier=tier,
                 date_range=date_range,
                 include_guland_high_activity=include_guland_high_activity,
+                listings_version=versions.get(DATASET_LISTINGS, 0),
                 **range_kwargs,
             ),
             "active_city": active_city,

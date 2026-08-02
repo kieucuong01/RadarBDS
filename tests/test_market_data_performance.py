@@ -570,6 +570,112 @@ def test_load_counts_includes_filtered_signal_count_when_read_model_enabled(
     assert conn.closed is True
 
 
+def test_load_counts_uses_listing_projection_after_durable_publication(
+    monkeypatch,
+):
+    import services.listing_feed as listing_feed
+    import services.market_data as market_data
+    import services.signal_read_model as signal_read_model
+
+    class _CountsConnection:
+        def __init__(self):
+            self.closed = False
+
+        def execute(self, _sql, _params=None):
+            raise AssertionError("legacy listings count query should not run")
+
+        def close(self):
+            self.closed = True
+
+    conn = _CountsConnection()
+    captured = {}
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
+    monkeypatch.setattr(
+        market_data,
+        "_open_read_conn",
+        lambda _db_path=None: conn,
+    )
+
+    def fake_listing_counts(_conn, **kwargs):
+        captured.update(kwargs)
+        return {
+            "total": 20,
+            "hot": 2,
+            "new_recent_days_7": 5,
+            "price_drops": 3,
+        }
+
+    monkeypatch.setattr(
+        listing_feed,
+        "load_listing_counts_from_read_model",
+        fake_listing_counts,
+    )
+    monkeypatch.setattr(
+        signal_read_model,
+        "count_signals_from_read_model",
+        lambda _conn, **_kwargs: 7,
+    )
+
+    stats = market_data.load_counts(
+        None,
+        sources=["facebook"],
+        wards=["Tân An"],
+        date_range="3m",
+        tier="admin",
+        listings_version=4,
+    )
+
+    assert stats == {
+        "total": 20,
+        "signals": 7,
+        "hot": 2,
+        "new_recent_days_7": 5,
+        "price_drops": 3,
+    }
+    assert captured["sources"] == ["facebook"]
+    assert captured["wards"] == ["Tân An"]
+    assert captured["date_range"] == "3m"
+    assert captured["tier"] == "admin"
+    assert conn.closed is True
+
+
+def test_api_counts_passes_durable_listing_version(monkeypatch):
+    import app as radar_app
+
+    captured = {}
+
+    def fake_counts(*_args, **kwargs):
+        captured.update(kwargs)
+        return {
+            "total": 20,
+            "signals": 7,
+            "hot": 2,
+            "new_recent_days_7": 5,
+            "price_drops": 3,
+        }
+
+    monkeypatch.setattr(radar_app, "load_counts", fake_counts)
+    monkeypatch.setattr(
+        radar_app,
+        "_public_dataset_versions",
+        lambda _names: {"signals": 5},
+    )
+    monkeypatch.setattr(
+        radar_app,
+        "_listing_dataset_versions",
+        lambda: {"listings": 4},
+    )
+
+    response = radar_app.app.test_client().get(
+        "/api/counts?cache_refresh=1"
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["stats"]["signals"] == 7
+    assert captured["listings_version"] == 4
+
+
 def test_api_dashboard_uses_fast_summary_loader(monkeypatch):
     import app as radar_app
 

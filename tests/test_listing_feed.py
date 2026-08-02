@@ -382,3 +382,48 @@ def test_listing_formatter_recomputes_drop_pct_from_effective_first_price():
 
     assert listing["price_dropped"] is True
     assert listing["drop_pct"] == 22.58
+
+
+def test_listing_count_metrics_use_the_shared_projection():
+    from services import listing_feed
+
+    class _CountConnection:
+        def __init__(self):
+            self.queries = []
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params or []))
+            class _Cursor:
+                def fetchone(self):
+                    return {
+                    "total": 20,
+                    "hot": 2,
+                    "new_recent_days_7": 5,
+                    "price_drops": 3,
+                }
+
+            return _Cursor()
+
+    conn = _CountConnection()
+    stats = listing_feed.load_listing_counts_from_read_model(
+        conn,
+        sources=["facebook"],
+        wards=["Tân An"],
+        date_range="3m",
+        tier="guest",
+    )
+
+    assert stats == {
+        "total": 20,
+        "hot": 2,
+        "new_recent_days_7": 5,
+        "price_drops": 3,
+    }
+    assert len(conn.queries) == 1
+    sql, params = conn.queries[0]
+    assert "FROM signal_card_read_model rm" in sql
+    assert "FROM listings" not in sql
+    assert "rm.publisher_visible_public" in sql
+    assert "rm.price_dropped" in sql
+    assert "facebook" in params
+    assert "Tân An" in params

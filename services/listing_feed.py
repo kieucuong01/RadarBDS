@@ -141,6 +141,70 @@ def build_listing_read_model_filters(
     return " AND ".join(clauses), params
 
 
+def load_listing_counts_from_read_model(
+    conn,
+    *,
+    sources=None,
+    wards=None,
+    prop_types=None,
+    only_drops=False,
+    area_min=0,
+    area_max=0,
+    price_min=0,
+    price_max=0,
+    area_ranges=None,
+    price_ranges=None,
+    keyword="",
+    tier="guest",
+    date_range=None,
+    include_guland_high_activity=False,
+) -> dict[str, int]:
+    """Load badge metrics from the same compact projection as Tin rao."""
+    allow_high_activity = bool(
+        tier == "admin" and include_guland_high_activity
+    )
+    where_sql, params = build_listing_read_model_filters(
+        sources=sources,
+        wards=wards,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+        keyword=keyword,
+        date_range=date_range,
+        allow_high_activity=allow_high_activity,
+    )
+    row = conn.execute(
+        f"""
+        SELECT
+            COUNT(*) AS total,
+            COALESCE(SUM(CASE WHEN rm.is_hot THEN 1 ELSE 0 END), 0) AS hot,
+            COALESCE(SUM(CASE WHEN (
+                COALESCE(rm.posted_at, rm.crawled_at) IS NOT NULL
+                AND CAST(COALESCE(rm.posted_at, rm.crawled_at) AS TIMESTAMP)
+                    >= datetime('now', '-7 days')
+            ) THEN 1 ELSE 0 END), 0) AS new_recent_days_7,
+            COALESCE(SUM(CASE WHEN rm.price_dropped THEN 1 ELSE 0 END), 0)
+                AS price_drops
+        FROM signal_card_read_model rm
+        WHERE {where_sql}
+        """,
+        params,
+    ).fetchone()
+    return {
+        "total": int(_row_get(row, "total", 0) or 0),
+        "hot": int(_row_get(row, "hot", 0) or 0),
+        "new_recent_days_7": int(
+            _row_get(row, "new_recent_days_7", 0) or 0
+        ),
+        "price_drops": int(_row_get(row, "price_drops", 0) or 0),
+    }
+
+
 def _valid_price_drop_values(price_ty, price_first_ty) -> bool:
     try:
         price = float(price_ty) if price_ty is not None else None

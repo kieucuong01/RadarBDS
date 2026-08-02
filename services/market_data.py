@@ -1554,46 +1554,70 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
     }
 
 
-def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier="guest", date_range=None, include_guland_high_activity=False):
+def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier="guest", date_range=None, include_guland_high_activity=False, listings_version=0):
     conn = _open_read_conn(db_path)
-    where_sql, params = build_listing_filters(
-        sources,
-        wards,
-        prop_types,
-        only_drops,
-        area_min=area_min,
-        area_max=area_max,
-        price_min=price_min,
-        price_max=price_max,
-        area_ranges=area_ranges,
-        price_ranges=price_ranges,
-        keyword=keyword,
-        date_range=date_range,
-        include_guland_high_activity=include_guland_high_activity,
+    from services.listing_feed import (
+        listing_read_model_enabled,
+        load_listing_counts_from_read_model,
     )
 
-    row = conn.execute(f"""
-        WITH filtered AS (
-            SELECT id, is_hot, posted_at, crawled_at,
-                   CASE WHEN {group_price_drop_filter_sql()} THEN 1 ELSE 0 END AS price_dropped
-            FROM listings
-            WHERE {where_sql}
+    if listing_read_model_enabled(listings_version):
+        stats = load_listing_counts_from_read_model(
+            conn,
+            sources=sources,
+            wards=wards,
+            prop_types=prop_types,
+            only_drops=only_drops,
+            area_min=area_min,
+            area_max=area_max,
+            price_min=price_min,
+            price_max=price_max,
+            area_ranges=area_ranges,
+            price_ranges=price_ranges,
+            keyword=keyword,
+            tier=tier,
+            date_range=date_range,
+            include_guland_high_activity=include_guland_high_activity,
         )
-        SELECT
-            (SELECT COUNT(*) FROM filtered) AS total,
-            (SELECT COUNT(*) FROM filtered WHERE is_hot = 1) AS hot,
-            (SELECT COUNT(*) FROM filtered WHERE (
-                COALESCE(posted_at, crawled_at) IS NOT NULL
-                AND julianday('now') - julianday(substr(COALESCE(posted_at, crawled_at),1,10)) <= 7
-            )) AS new_recent_days_7,
-            (SELECT COUNT(*) FROM filtered WHERE price_dropped = 1) AS price_drops
-    """, params).fetchone()
-    stats = dict(row) if row else {
-        "total": 0,
-        "hot": 0,
-        "new_recent_days_7": 0,
-        "price_drops": 0,
-    }
+    else:
+        where_sql, params = build_listing_filters(
+            sources,
+            wards,
+            prop_types,
+            only_drops,
+            area_min=area_min,
+            area_max=area_max,
+            price_min=price_min,
+            price_max=price_max,
+            area_ranges=area_ranges,
+            price_ranges=price_ranges,
+            keyword=keyword,
+            date_range=date_range,
+            include_guland_high_activity=include_guland_high_activity,
+        )
+
+        row = conn.execute(f"""
+            WITH filtered AS (
+                SELECT id, is_hot, posted_at, crawled_at,
+                       CASE WHEN {group_price_drop_filter_sql()} THEN 1 ELSE 0 END AS price_dropped
+                FROM listings
+                WHERE {where_sql}
+            )
+            SELECT
+                (SELECT COUNT(*) FROM filtered) AS total,
+                (SELECT COUNT(*) FROM filtered WHERE is_hot = 1) AS hot,
+                (SELECT COUNT(*) FROM filtered WHERE (
+                    COALESCE(posted_at, crawled_at) IS NOT NULL
+                    AND julianday('now') - julianday(substr(COALESCE(posted_at, crawled_at),1,10)) <= 7
+                )) AS new_recent_days_7,
+                (SELECT COUNT(*) FROM filtered WHERE price_dropped = 1) AS price_drops
+        """, params).fetchone()
+        stats = dict(row) if row else {
+            "total": 0,
+            "hot": 0,
+            "new_recent_days_7": 0,
+            "price_drops": 0,
+        }
     stats["signals"] = count_filtered_signals(
         conn,
         sources=sources,
