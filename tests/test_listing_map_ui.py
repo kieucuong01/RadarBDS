@@ -125,6 +125,28 @@ def test_all_listings_script_warms_after_load_and_before_tab_click():
     assert "await warmListingsAssets()" in core
 
 
+def test_dashboard_badges_do_not_render_a_false_zero_before_counts_load():
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "templates/index.html").read_text(encoding="utf-8")
+    core = (root / "static/js/main/core.js").read_text(encoding="utf-8")
+    placeholder = chr(0x2026)
+
+    for badge_id in (
+        "badgeSignals",
+        "badgeTotal",
+        "mobileBadgeSignals",
+        "mobileBadgeTotal",
+    ):
+        assert re.search(
+            rf'id="{badge_id}"[^>]*>{re.escape(placeholder)}<', html
+        )
+        assert not re.search(rf'id="{badge_id}"[^>]*>0<', html)
+    assert f"source.textContent || '{placeholder}'" in core
+
+
 def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     from pathlib import Path
 

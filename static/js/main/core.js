@@ -491,7 +491,7 @@ const TAB_TITLES = {
 function syncMobileBadge(sourceId, targetId) {
   const source = document.getElementById(sourceId);
   const target = document.getElementById(targetId);
-  if (source && target) target.textContent = source.textContent || '0';
+  if (source && target) target.textContent = source.textContent || '…';
 }
 
 function syncMobileBadges() {

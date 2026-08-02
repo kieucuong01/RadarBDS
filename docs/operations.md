@@ -191,6 +191,21 @@ Route-only rollback is data-preserving: set `RADAR_LISTING_READ_MODEL_ENABLED=0`
 
 Release evidence is incomplete unless it records: commit SHA, service status, durable and Redis `listings` version, full-refresh row count/duration, parity difference count, five VPS-local cold/warm samples and cold p95, public HIT p95, browser first-content time, cache/privacy headers, redaction checks, and the route-only rollback probe.
 
+### Production follow-up on 2026-08-02
+
+The all-listings projection and application path are active in production, but the edge/capacity rollout is intentionally still open. Preserve these facts for the next agent instead of repeating the expensive audits:
+
+- deployed feature commits include `d5c7e3f` (post-load/hover Maps and Tin rao asset warm-up) and `c4705c1` (`/api/counts` metrics from the shared projection);
+- the published projection contained 23,059 rows; durable PostgreSQL and Redis mirrors matched at `signals=5`, `listings=1`, `market=1` at verification time;
+- full local parity completed with 36 signal cases and 76 listing cases at limit 200, all with `difference_count=0`; production completed an eight-case, limit-50 sampled parity smoke with zero differences. The full production Cartesian comparison was stopped because the legacy CTE path repeatedly exceeded the bounded audit window, so it must not be reported as complete;
+- production VPS-local `/api/listings` forced-loader samples were 101-173 ms cold and 116-154 ms warm. Public warm samples were 65-145 ms. A real Admin browser click showed the Tin rao tab active in 2.6 ms, skeletons in 6.7 ms, and 50 real cards in 332.2 ms; its `/api/listings` request took 233.5 ms;
+- before `d5c7e3f`, a cold first Maps click kept the dashboard visible for about 2,908 ms while CSS, module code, and Leaflet loaded. After post-load idle warm-up, the same production interaction opened and completed in 55 ms. Warm-up starts only after `window.load`/idle, or on launcher hover/focus, so it does not block the initial homepage render;
+- before `c4705c1`, a real Admin `/api/counts` request took 22,477 ms and left the Săn Deal badge at the initial `0`. After the fix, the browser request took 77.9 ms and five forced VPS-local probes took 54-98 ms. Initial badges render an unknown placeholder until the deferred count arrives; do not reintroduce a false zero placeholder;
+- `scripts/verify_public_cache.ps1` still fails for `/api/listings` because the new exact Nginx location is not installed and the internal `X-Radar-Public-Cache` marker is publicly visible. The deploy user has no passwordless sudo. A root operator must run `cd /opt/radar-bds/current && sudo ./scripts/install_performance_infra.sh install`, then rerun the public privacy/cache verifier before any `/api/listings` edge HIT or 1,000-5,000 capacity claim;
+- production currently uses an ignored `.env.local` route override because the deploy user cannot edit `/etc/radar-bds/radar.env`. Move `RADAR_LISTING_READ_MODEL_ENABLED=1` into the root-owned environment and remove the temporary override during the root maintenance window. The full route-dispatch rollback probe is still pending; feature-flag availability alone is not that proof.
+
+The user-visible hot paths are therefore fixed and deployed at the application layer. Remaining work is root-owned Nginx/environment installation, public privacy verification, the route-only rollback probe, full production Cartesian parity if a longer maintenance window is approved, and the documented CDN/distributed 1,000 -> 5,000 gates.
+
 ## Shared Public Cache And PostgreSQL Pool Rollout
 
 Phase 2 application code is safe to deploy before Redis. Current production, after the completed Phase 4 safety drills, uses:
@@ -267,7 +282,7 @@ canonical filter snapshot -> /api/signals immediately -> first card chunk
                                                    \-> /api/counts after settle/idle
 ```
 
-`/api/dashboard` is intentionally absent while the Signals tab stays active. It is still used when a filter changes on a non-Signals tab. Cache-busting version `homepage-perf-20260801` covers `core.js`, `filter_runtime.js`, `filters.js`, `signals.js`, and `web_vitals.js`; all changed immutable assets must retain a coordinated version bump on later edits.
+`/api/dashboard` is intentionally absent while the Signals tab stays active. It is still used when a filter changes on a non-Signals tab. `core.js` uses the later `homepage-counts-20260802` cache-busting version; `filter_runtime.js`, `filters.js`, `signals.js`, and `web_vitals.js` retain `homepage-perf-20260801`. Every changed immutable asset must receive an explicit version bump on later edits.
 
 Keep these browser-visible safeguards together during incident diagnosis: AbortController per request scope, canonical snapshot check before deferred counts, signal response run id, render-chunk sequence, and listing-id deduplication. A stale response in Network is acceptable only when it is visibly canceled and cannot mutate the final cards.
 

@@ -68,7 +68,7 @@ Security boundary:
 Performance boundary:
 
 - `services/market_data.py` is on the hot path for PostgreSQL-backed local dev. Use the bounded `db.connection.get_conn()` pool scope instead of opening a fresh PostgreSQL connection per read. Each process defaults to pool min/max `1/4` with a one-second acquire timeout; three Gunicorn workers therefore admit at most 12 application DB connections.
-- `/api/signals`, `/api/listings`, `/api/counts`, and `/api/dashboard` use `services/public_cache.py` when `RADAR_PUBLIC_CACHE_ENABLED=1`; production enabled it after the Phase 4 integration, privacy, failure, and rollback gates. The old per-process route dictionaries no longer exist. Guest/Free/VIP keys are separate; admin and explicit local/admin `cache_refresh=1` requests bypass response caching.
+- `/api/signals`, `/api/listings`, `/api/counts`, and `/api/dashboard` use `services/public_cache.py` when `RADAR_PUBLIC_CACHE_ENABLED=1`; production enabled the application cache after the Phase 4 integration, privacy, failure, and rollback gates. The old per-process route dictionaries no longer exist. Guest/Free/VIP keys are separate; admin and explicit local/admin `cache_refresh=1` requests bypass response caching. The 2026-08-02 `/api/listings` exact Nginx edge location is still pending a root install and must not be inferred from the active application cache.
 - `/api/signals` keeps `load_signals()` as its stable interface. With `RADAR_SIGNAL_READ_MODEL_ENABLED=0` it uses `_load_signals_legacy()`; with the flag enabled it reads `signal_card_read_model` through one bounded page query and joins the preselected image by primary key.
 - `/api/listings` keeps its all-listings predicate separate from the signal predicate. The enabled path has no latest-valuation CTE, clamps page/limit, computes an exact total, fetches only selected card rows, and loads full legally ordered `imgs` arrays in one image query. Its response/cache readiness is the durable PostgreSQL `public_dataset_versions.listings`, not `signals` or the Redis mirror. A separate one-second process cache bounds readiness reads and prevents a request stampede; a stale-positive Redis version cannot enable the projection or select a stale cache namespace.
 - With the same flag enabled, `load_dashboard_summary()` obtains `stats.signals` through `count_signals_from_read_model()` on its existing pooled connection. The count reuses the exact ward/source/property/range/keyword/date/publisher/tier filters from the public feed and never rebuilds latest valuation CTEs at request time. Flag `0` keeps the legacy CTE branch for immediate rollback only.
@@ -90,7 +90,8 @@ Performance boundary:
 
 ```text
 anonymous GET /, /api/signals, /api/listings, /api/counts, /api/dashboard
-  -> Nginx exact-location guest cache (15 s, lock + background update, stale-on-error)
+  -> Nginx exact-location guest cache (15 s, lock + background update, stale-on-error;
+     production `/api/listings` location pending root installation on 2026-08-02)
   -> Gunicorn 3 workers x 4 threads, timeout 45 s, max 12 concurrent app requests
   -> Redis public response cache (loopback, 256 MB, allkeys-lru, no persistence)
   -> bounded PostgreSQL pool (max 4/worker, max 12 web sessions)
