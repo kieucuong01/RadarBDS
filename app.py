@@ -114,6 +114,7 @@ from services.listing_map import (
     load_listing_map_summary,
 )
 from services.listing_comparables import load_listing_comparables
+from services.listing_feed import VALID_LISTING_SORTS, load_listing_feed
 from services.listing_reports import (
     ListingReportError,
     list_listing_reports,
@@ -5115,161 +5116,37 @@ def api_listings():
         limit = int(request.args.get("limit", 50))
     except ValueError:
         page, limit = 1, 50
-    offset = (page - 1) * limit
-    
-    db_path = _db_handle()
-    conn = connect(db_path)
-    
+
     tier = current_tier()
     include_guland_high_activity = _include_guland_high_activity(request, tier)
-    where_sql, params = build_listing_filters(
+    sort_by = request.args.get("sort_by", "date")
+    if sort_by not in VALID_LISTING_SORTS:
+        sort_by = "date"
+    default_dir = "desc" if sort_by == "date" else "asc"
+    sort_dir = (
+        "desc"
+        if request.args.get("sort_dir", default_dir).lower() == "desc"
+        else "asc"
+    )
+    payload = load_listing_feed(
+        _db_handle(),
         sources=sources,
         wards=wards,
         prop_types=prop_types,
         only_drops=only_drops,
-        prefix="l.",
+        sort_by=sort_by,
+        sort_dir=sort_dir,
+        page=page,
+        limit=limit,
+        tier=tier,
         keyword=keyword,
         date_range=date_range,
-        require_complete=complete_only,
+        complete_only=complete_only,
         include_guland_high_activity=include_guland_high_activity,
+        listings_version=0,
         **range_kwargs,
     )
-
-    actual_expr = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
-    display_fair_expr = _display_fair_sql("v", "sv")
-    display_mos_expr = _display_mos_sql("v", "sv", actual_expr)
-    old_signal_condition = actionable_signal_sql("v")
-    new_signal_condition = actionable_signal_sql("sv")
-    signal_condition = f"({old_signal_condition}) AND ({new_signal_condition})"
-    sort_col_map = {
-        "area": "l.area_m2", "price": "l.price_ty", "price_m2": "l.price_per_m2",
-        "fair": f"({display_fair_expr})", "date": listing_activity_at_sql("l"),
-        "ward": "l.ward", "prop_type": "l.property_type",
-    }
-    # Default sort = newest first (date DESC). Client can override.
-    sort_by = request.args.get("sort_by", "date")
-    default_dir = "desc" if sort_by == "date" else "asc"
-    sort_dir = "DESC" if request.args.get("sort_dir", default_dir).lower() == "desc" else "ASC"
-    order_expr = sort_col_map.get(sort_by, listing_activity_at_sql("l"))
-
-    fresh_flag = "0 AS is_fresh_locked"
-    query = f"""
-        WITH {LATEST_VALUATION_CTE},
-             {LATEST_SHADOW_VALUATION_CTE}
-        SELECT l.*,
-               {listing_activity_at_sql("l")} AS activity_at,
-               CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS is_signal,
-               ({display_mos_expr}) AS mos_pct,
-               ({display_fair_expr}) AS fair_ppm2,
-               v.fair_ppm2 AS fair_ppm2_old,
-               sv.fair_ppm2 AS fair_ppm2_new,
-               v.mos_pct AS mos_pct_old,
-               sv.mos_pct AS mos_pct_new,
-               ({display_fair_expr}) AS fair_ppm2_display,
-               ({display_mos_expr}) AS mos_pct_display,
-               GREATEST(COALESCE(v.signal_score,0), COALESCE(sv.signal_score,0)) AS signal_score,
-               CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS actionable_signal,
-               {fresh_flag}
-        FROM listings l
-        LEFT JOIN latest_valuation v ON l.id = v.listing_id
-        LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
-        WHERE {where_sql}
-        ORDER BY {publisher_sort_rank_sql('l')} ASC,
-                 {order_expr} {sort_dir} NULLS LAST
-        LIMIT ? OFFSET ?
-    """
-    query_params = list(params)
-    query_params.extend([limit, offset])
-    rows = conn.execute(query, query_params).fetchall()
-    
-    count_query = f"SELECT COUNT(*) FROM listings l WHERE {where_sql}"
-    total = conn.execute(count_query, params).fetchone()[0]
-    
-    listing_ids = [r['id'] for r in rows]
-    from collections import defaultdict
-    img_map = defaultdict(list)
-    related_drop_map = {}
-    if listing_ids:
-        placeholders = ",".join("?" * len(listing_ids))
-        img_rows = conn.execute(f"""
-            SELECT listing_id, local_path, img_url
-            FROM listing_images
-            WHERE listing_id IN ({placeholders})
-            ORDER BY listing_id, {_image_order_sql()}
-        """, listing_ids).fetchall()
-        for r in img_rows:
-            url = resolve_image_url(r[1], r[2])
-            if url:
-                img_map[r[0]].append(url)
-        drop_rows = conn.execute(f"""
-            SELECT drop_child.duplicate_of_id AS listing_id,
-                   MAX(drop_child.price_ty) AS first_price
-            FROM listings drop_child
-            JOIN listings parent ON parent.id = drop_child.duplicate_of_id
-            WHERE drop_child.duplicate_of_id IN ({placeholders})
-              AND COALESCE(drop_child.probably_sold,0)=0
-              AND COALESCE(drop_child.is_blacklisted,0)=0
-              AND COALESCE(drop_child.review_hidden,0)=0
-              AND drop_child.price_ty IS NOT NULL
-              AND parent.price_ty IS NOT NULL
-              AND drop_child.price_ty > parent.price_ty * 1.01
-              AND parent.price_ty >= drop_child.price_ty * 0.60
-            GROUP BY drop_child.duplicate_of_id
-        """, listing_ids).fetchall()
-        related_drop_map = {r["listing_id"]: r["first_price"] for r in drop_rows}
-        
-    conn.close()
-
-    listings = []
-    for r in rows:
-        badge_meta = signal_badge_metadata(r)
-        activity_at, card_date_reason = listing_card_activity(r)
-        related_first = related_drop_map.get(r["id"])
-        price_ty = r["price_ty"]
-        price_first_ty = r["price_first_ty"]
-        price_dropped = _valid_price_drop_values(price_ty, price_first_ty)
-        drop_pct = r["price_drop_pct"] if price_dropped else None
-        if related_first is not None and price_ty:
-            price_dropped = True
-            drop_pct = round(((related_first - price_ty) / related_first * 100), 2)
-            price_first_ty = related_first
-        listings.append(redact_for_tier({
-            "id": r['id'], "title": r['title'], "description": r['description'] or "",
-            "price_ty": price_ty, "area_m2": r['area_m2'],
-            "frontage_m": r['frontage_m'], "depth_m": r['depth_m'],
-            "price_per_m2": round(r['price_per_m2'], 1) if r['price_per_m2'] else None, "prop_type": r['property_type'],
-            "prop_type_label": badge_meta["property_type_label"],
-            "road_tier": r['road_tier'], "road_type": r['road_type'],
-            "road_width_m": badge_meta["road_width_m"],
-            "road_label": badge_meta["road_label"],
-            "street_label": badge_meta["street_label"],
-            "tho_cu_m2": badge_meta["tho_cu_m2"],
-            "tho_cu_ratio": badge_meta["tho_cu_ratio"],
-            "tho_cu_label": badge_meta["tho_cu_label"],
-            "ward": r['ward'], "url": r['url'], "is_signal": bool(r['actionable_signal']), "mos_pct": round(r['mos_pct'], 1) if r['mos_pct'] else 0,
-            "fair_ppm2": round(r['fair_ppm2'], 1) if r['fair_ppm2'] else None,
-            "fair_ppm2_old": round(r["fair_ppm2_old"], 1) if r.get("fair_ppm2_old") else None,
-            "fair_ppm2_new": round(r["fair_ppm2_new"], 1) if r.get("fair_ppm2_new") else None,
-            "mos_pct_old": round(r["mos_pct_old"], 1) if r.get("mos_pct_old") else 0,
-            "mos_pct_new": round(r["mos_pct_new"], 1) if r.get("mos_pct_new") else 0,
-            "fair_ppm2_display": round(r["fair_ppm2_display"], 1) if r.get("fair_ppm2_display") else (round(r["fair_ppm2"], 1) if r["fair_ppm2"] else None),
-            "mos_pct_display": round(r["mos_pct_display"], 1) if r.get("mos_pct_display") else (round(r["mos_pct"], 1) if r["mos_pct"] else 0),
-            "days_ago": _days_ago(activity_at), "card_date_reason": card_date_reason,
-            "is_hot": bool(r['is_hot']), "price_dropped": price_dropped,
-            "suspicious_bait": bool(r['suspicious_bait']),
-            "drop_pct": drop_pct, "price_first_ty": price_first_ty, "duplicate_of_id": r['duplicate_of_id'],
-            "source": r['source'], "imgs": img_map.get(r['id'], []),
-            "is_fresh_locked": bool(r['is_fresh_locked']),
-        }, tier))
-    return jsonify({
-        "listings": listings,
-        "total": total,
-        "page": page,
-        "limit": limit,
-        "pages": (total + limit - 1) // limit if limit > 0 else 1,
-        "has_more": page * limit < total,
-        "tier": tier,
-    })
+    return jsonify(payload)
 
 
 @rate_limit(
