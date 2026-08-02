@@ -426,6 +426,60 @@ def _read_model_filters(
     return " AND ".join(clauses), params
 
 
+def count_signals_from_read_model(
+    conn,
+    *,
+    sources=None,
+    wards=None,
+    prop_types=None,
+    only_drops=False,
+    mos_min=0,
+    area_min=0,
+    area_max=0,
+    price_min=0,
+    price_max=0,
+    area_ranges=None,
+    price_ranges=None,
+    keyword="",
+    tier="guest",
+    date_range=None,
+    include_guland_high_activity=False,
+) -> int:
+    """Count the exact public signal feed without rebuilding valuations."""
+    if tier == "guest":
+        mos_min = 10
+        only_drops = False
+
+    allow_high_activity = bool(
+        tier == "admin" and include_guland_high_activity
+    )
+    where_sql, params = _read_model_filters(
+        sources=sources,
+        wards=wards,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        mos_min=mos_min,
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+        keyword=keyword,
+        date_range=date_range,
+        allow_high_activity=allow_high_activity,
+    )
+    row = conn.execute(
+        f"""
+        SELECT COUNT(*) AS signals
+        FROM signal_card_read_model rm
+        WHERE {where_sql}
+        """,
+        params,
+    ).fetchone()
+    return int(_row_get(row, "signals", 0) or 0)
+
+
 def load_signals_from_read_model(
     db_path,
     sources=None,

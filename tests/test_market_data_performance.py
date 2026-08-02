@@ -370,6 +370,8 @@ def test_load_counts_uses_compact_shared_connection_scope(monkeypatch):
 def test_load_dashboard_summary_uses_compact_read_model(monkeypatch):
     import services.market_data as market_data
 
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "0")
+
     class _DashboardConnection:
         def __init__(self):
             self.queries = []
@@ -435,6 +437,68 @@ def test_load_dashboard_summary_uses_compact_read_model(monkeypatch):
     assert "SELECT * FROM listings" not in sql_text
     assert "listing_images" not in sql_text
     assert "LEFT JOIN LATERAL" not in sql_text
+
+
+def test_load_dashboard_summary_counts_signals_from_read_model_when_enabled(
+    monkeypatch,
+):
+    import services.market_data as market_data
+
+    class _DashboardConnection:
+        def __init__(self):
+            self.queries = []
+            self.closed = False
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params))
+            if "FROM signal_card_read_model rm" in sql:
+                return _FakeCursor(row={"signals": 7})
+            if "JOIN latest_valuation" in sql:
+                return _FakeCursor(row={"signals": 7})
+            if "GROUP BY property_type" in sql:
+                return _FakeCursor(rows=[])
+            if "SELECT DISTINCT ward" in sql:
+                return _FakeCursor(rows=[("Tan An",)])
+            if "SELECT DISTINCT source" in sql:
+                return _FakeCursor(rows=[("facebook",)])
+            return _FakeCursor(row={
+                "total": 20,
+                "signals": 0,
+                "hot": 2,
+                "new_recent_days_7": 5,
+                "price_drops": 3,
+            })
+
+        def close(self):
+            self.closed = True
+            raise AssertionError(
+                "dashboard summary reads should not close the shared connection"
+            )
+
+    conn = _DashboardConnection()
+
+    @contextmanager
+    def fake_read_conn(_db_path=None):
+        yield conn
+
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setattr(market_data, "_read_conn", fake_read_conn, raising=False)
+
+    result = market_data.load_dashboard_summary(
+        None,
+        sources=["facebook"],
+        wards=["Tan An"],
+        mos_min=10,
+        date_range="3m",
+        include_trend=False,
+        tier="guest",
+    )
+
+    assert result["stats"]["signals"] == 7
+    sql_text = "\n".join(sql for sql, _ in conn.queries)
+    assert "FROM signal_card_read_model rm" in sql_text
+    assert "latest_valuation" not in sql_text
+    assert conn.closed is False
 
 
 def test_api_dashboard_uses_fast_summary_loader(monkeypatch):

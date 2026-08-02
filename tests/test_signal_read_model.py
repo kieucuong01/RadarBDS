@@ -201,6 +201,43 @@ def test_analyze_public_read_tables_uses_fixed_allowlist():
     assert "signal_card_read_model" in PUBLIC_READ_TABLES
 
 
+def test_count_signals_from_read_model_reuses_public_feed_filters():
+    from services import signal_read_model
+
+    class _Cursor:
+        def fetchone(self):
+            return {"signals": 7}
+
+    class _Connection:
+        def __init__(self):
+            self.queries = []
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params))
+            return _Cursor()
+
+    conn = _Connection()
+    result = signal_read_model.count_signals_from_read_model(
+        conn,
+        sources=["facebook"],
+        wards=["Tan An"],
+        mos_min=10,
+        date_range="3m",
+        tier="guest",
+    )
+
+    assert result == 7
+    assert len(conn.queries) == 1
+    query, params = conn.queries[0]
+    assert "SELECT COUNT(*) AS signals" in query
+    assert "FROM signal_card_read_model rm" in query
+    assert "latest_valuation" not in query
+    assert "facebook" in params
+    assert "Tan An" in params
+    assert "-3 months" in params
+    assert 10.0 in params
+
+
 def test_read_model_query_is_bounded_and_sets_local_timeout(monkeypatch):
     from services import signal_read_model
 

@@ -1396,33 +1396,55 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         "price_drops": 0,
     }
 
-    signal_where_sql, signal_params = build_listing_filters(
-        sources,
-        wards,
-        prop_types,
-        only_drops,
-        prefix="l.",
-        area_min=area_min,
-        area_max=area_max,
-        price_min=price_min,
-        price_max=price_max,
-        area_ranges=area_ranges,
-        price_ranges=price_ranges,
-        keyword=keyword,
-        date_range=date_range,
-        include_guland_high_activity=include_guland_high_activity,
-    )
-    signal_condition = build_deal_sql(mos_min).condition
-    signal_row = conn.execute(f"""
-        WITH {LATEST_VALUATION_CTE},
-             {LATEST_SHADOW_VALUATION_CTE}
-        SELECT COUNT(*) AS signals
-        FROM listings l
-        LEFT JOIN latest_valuation v ON l.id = v.listing_id
-        LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
-        WHERE ({signal_condition}) AND {_signal_listing_data_sql("l")} AND {signal_where_sql}
-    """, signal_params).fetchone()
-    stats["signals"] = int(_row_get(signal_row, "signals", 0) or 0)
+    if _signal_read_model_enabled():
+        from services.signal_read_model import count_signals_from_read_model
+
+        stats["signals"] = count_signals_from_read_model(
+            conn,
+            sources=sources,
+            wards=wards,
+            prop_types=prop_types,
+            only_drops=only_drops,
+            mos_min=mos_min,
+            area_min=area_min,
+            area_max=area_max,
+            price_min=price_min,
+            price_max=price_max,
+            area_ranges=area_ranges,
+            price_ranges=price_ranges,
+            keyword=keyword,
+            tier=tier,
+            date_range=date_range,
+            include_guland_high_activity=include_guland_high_activity,
+        )
+    else:
+        signal_where_sql, signal_params = build_listing_filters(
+            sources,
+            wards,
+            prop_types,
+            only_drops,
+            prefix="l.",
+            area_min=area_min,
+            area_max=area_max,
+            price_min=price_min,
+            price_max=price_max,
+            area_ranges=area_ranges,
+            price_ranges=price_ranges,
+            keyword=keyword,
+            date_range=date_range,
+            include_guland_high_activity=include_guland_high_activity,
+        )
+        signal_condition = build_deal_sql(mos_min).condition
+        signal_row = conn.execute(f"""
+            WITH {LATEST_VALUATION_CTE},
+                 {LATEST_SHADOW_VALUATION_CTE}
+            SELECT COUNT(*) AS signals
+            FROM listings l
+            LEFT JOIN latest_valuation v ON l.id = v.listing_id
+            LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
+            WHERE ({signal_condition}) AND {_signal_listing_data_sql("l")} AND {signal_where_sql}
+        """, signal_params).fetchone()
+        stats["signals"] = int(_row_get(signal_row, "signals", 0) or 0)
 
     market = []
     summary_rows = conn.execute(f"""
