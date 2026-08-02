@@ -674,6 +674,86 @@ def test_api_signals_uses_identical_bounded_values_for_cache_and_loader(monkeypa
     assert len(loader["price_ranges"]) == 12
 
 
+def test_api_listings_uses_identical_bounded_values_for_cache_and_loader(monkeypatch):
+    import app as radar_app
+    import auth.core as auth_core
+
+    cache_calls = []
+    loader_calls = []
+
+    def fake_load_listing_feed(*_args, **kwargs):
+        loader_calls.append(kwargs)
+        return {
+            "listings": [],
+            "page": kwargs["page"],
+            "limit": kwargs["limit"],
+            "total": 0,
+            "pages": 0,
+        }
+
+    def fake_cache(**kwargs):
+        cache_calls.append(kwargs)
+        return radar_app.CacheResult(kwargs["loader"](), "miss", 0.0)
+
+    def fail_rate_limit_db(*_args, **_kwargs):
+        raise AssertionError("cached listings must not write DB rate-limit rows")
+
+    auth_core.clear_rate_limit_cache()
+    monkeypatch.setattr(auth_core, "get_conn", fail_rate_limit_db)
+    monkeypatch.setattr(radar_app, "_public_cache_enabled", lambda: True)
+    monkeypatch.setattr(
+        radar_app,
+        "get_current_dataset_versions",
+        lambda names: {name: 9 for name in names},
+    )
+    monkeypatch.setattr(radar_app, "load_listing_feed", fake_load_listing_feed)
+    monkeypatch.setattr(radar_app, "get_or_load_public_payload", fake_cache)
+
+    client = radar_app.app.test_client()
+    query = "&".join(
+        [
+            "page=9000",
+            "limit=900",
+            "complete=1",
+            "sort_by=price",
+            "sort_dir=desc",
+            "load_run=client-only",
+            f"q={'x' * 120}",
+        ]
+        + [f"ward=W{i:03d}" for i in range(80)]
+        + [f"source=s{i}" for i in range(8)]
+        + [f"prop_type=p{i}" for i in range(12)]
+        + [f"area_range={i}:{i + 1}" for i in range(20)]
+        + [f"price_range={i}:{i + 1}" for i in range(20)]
+    )
+    response = client.get(f"/api/listings?{query}")
+
+    assert response.status_code == 200
+    assert response.headers["X-Radar-Dataset-Version"] == "9"
+    assert cache_calls[0]["endpoint"] == "listings"
+    assert cache_calls[0]["versions"] == {"listings": 9}
+    cache_query = cache_calls[0]["query"]
+    loader = loader_calls[0]
+    assert cache_query["page"] == loader["page"] == 2000
+    assert cache_query["limit"] == loader["limit"] == 100
+    assert cache_query["complete"] is loader["complete_only"] is True
+    assert cache_query["sort"] == "price:desc"
+    assert loader["sort_by"] == "price"
+    assert loader["sort_dir"] == "desc"
+    assert loader["listings_version"] == 9
+    assert cache_query["keyword"] == loader["keyword"] == "x" * 80
+    assert cache_query["wards"] == loader["wards"]
+    assert cache_query["sources"] == loader["sources"]
+    assert cache_query["prop_types"] == loader["prop_types"]
+    assert cache_query["area_ranges"] == loader["area_ranges"]
+    assert cache_query["price_ranges"] == loader["price_ranges"]
+    assert len(loader["wards"]) == 64
+    assert len(loader["sources"]) <= 4
+    assert len(loader["prop_types"]) <= 8
+    assert len(loader["area_ranges"]) == 12
+    assert len(loader["price_ranges"]) == 12
+
+
 def test_load_trend_data_includes_sample_count(monkeypatch):
     import services.market_data as market_data
 

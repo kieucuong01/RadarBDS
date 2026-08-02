@@ -60,6 +60,7 @@ from config.property_types import normalize_property_types
 from db import facebook_profiles as db_facebook_profiles
 from db.connection import DatabasePoolBusy, connect, get_conn
 from db.public_dataset_versions import (
+    DATASET_LISTINGS,
     DATASET_MARKET,
     DATASET_SIGNALS,
     get_dataset_versions,
@@ -236,7 +237,8 @@ def inject_city_map_products():
 def add_response_headers(response):
     if request.path.startswith("/api/"):
         public_cache_classified = (
-            request.path in {"/api/signals", "/api/counts", "/api/dashboard"}
+            request.path
+            in {"/api/signals", "/api/counts", "/api/dashboard", "/api/listings"}
             and (
                 "X-Radar-Cache" in response.headers
                 or response.headers.get("Cache-Control")
@@ -4017,6 +4019,7 @@ _PUBLIC_CACHE_CONTROL = (
     "stale-if-error=180"
 )
 _SIGNAL_DATASETS = (DATASET_SIGNALS,)
+_LISTING_DATASETS = (DATASET_LISTINGS,)
 _DASHBOARD_DATASETS = (DATASET_SIGNALS, DATASET_MARKET)
 _VALID_SIGNAL_SORTS = frozenset(
     {"newest", "price_m2_asc", "price_asc", "mos_desc", "score_desc"}
@@ -4035,6 +4038,18 @@ def _public_dataset_versions(names) -> dict[str, int]:
     except Exception:
         logger.exception("Unable to resolve public dataset versions")
         return {name: 0 for name in names}
+
+
+def _listing_dataset_versions() -> dict[str, int]:
+    """Resolve listing readiness even when the response cache is disabled."""
+    if _public_cache_enabled():
+        return _public_dataset_versions(_LISTING_DATASETS)
+    try:
+        with get_conn() as conn:
+            return get_dataset_versions(conn, _LISTING_DATASETS)
+    except Exception:
+        logger.exception("Unable to resolve listing dataset version")
+        return {DATASET_LISTINGS: 0}
 
 
 def _public_json_response(
@@ -4139,6 +4154,15 @@ def _tier_safe_signal_payload(payload: dict, tier: str) -> dict:
     safe["signals"] = [
         redact_for_tier(signal, tier)
         for signal in (payload.get("signals") or [])
+    ]
+    return safe
+
+
+def _tier_safe_listing_payload(payload: dict, tier: str) -> dict:
+    safe = dict(payload)
+    safe["listings"] = [
+        redact_for_tier(listing, tier)
+        for listing in (payload.get("listings") or [])
     ]
     return safe
 
@@ -5102,7 +5126,10 @@ def api_valuation_tool_estimate():
         return jsonify({"ok": False, "error": "validation_error", "field": str(exc)}), 422
 
 
-@rate_limit("listings")
+@rate_limit(
+    "listings",
+    limits={"guest": 1200, "free": 2400, "vip": None, "admin": None},
+)
 def api_listings():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     range_kwargs = _request_range_filter_kwargs(request)
@@ -5111,11 +5138,19 @@ def api_listings():
     complete_only = (request.args.get("complete") or "").strip().lower() in {"1", "true", "yes", "on"}
     if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
-    try:
-        page = int(request.args.get("page", 1))
-        limit = int(request.args.get("limit", 50))
-    except ValueError:
-        page, limit = 1, 50
+    wards, sources, prop_types, range_kwargs, keyword = (
+        _bounded_public_filter_values(
+            wards=wards,
+            sources=sources,
+            prop_types=prop_types,
+            range_kwargs=range_kwargs,
+            keyword=keyword,
+        )
+    )
+    active_city = str(active_city or "")[:80]
+    trend_period = trend_period if trend_period in {"day", "week", "month"} else "day"
+    page = _clamp_int(request.args.get("page"), 1, 1, 2_000)
+    limit = _clamp_int(request.args.get("limit"), 50, 1, 100)
 
     tier = current_tier()
     include_guland_high_activity = _include_guland_high_activity(request, tier)
@@ -5128,25 +5163,66 @@ def api_listings():
         if request.args.get("sort_dir", default_dir).lower() == "desc"
         else "asc"
     )
-    payload = load_listing_feed(
-        _db_handle(),
-        sources=sources,
+    versions = _listing_dataset_versions()
+    cache_query = _public_filter_query(
+        active_city=active_city,
         wards=wards,
+        sources=sources,
         prop_types=prop_types,
         only_drops=only_drops,
-        sort_by=sort_by,
-        sort_dir=sort_dir,
-        page=page,
-        limit=limit,
-        tier=tier,
+        trend_period=trend_period,
+        mos_min=0,
+        range_kwargs=range_kwargs,
         keyword=keyword,
         date_range=date_range,
-        complete_only=complete_only,
         include_guland_high_activity=include_guland_high_activity,
-        listings_version=0,
-        **range_kwargs,
+        complete=bool(complete_only),
+        sort=f"{sort_by}:{sort_dir}",
+        page=page,
+        limit=limit,
     )
-    return jsonify(payload)
+    force_refresh = _dashboard_cache_refresh_requested(request)
+    cache_tier = "admin" if force_refresh else tier
+
+    def _load_listing_payload():
+        return _tier_safe_listing_payload(
+            load_listing_feed(
+                _db_handle(),
+                sources=sources,
+                wards=wards,
+                prop_types=prop_types,
+                only_drops=only_drops,
+                sort_by=sort_by,
+                sort_dir=sort_dir,
+                page=page,
+                limit=limit,
+                tier=tier,
+                keyword=keyword,
+                date_range=date_range,
+                complete_only=complete_only,
+                include_guland_high_activity=include_guland_high_activity,
+                listings_version=versions[DATASET_LISTINGS],
+                **range_kwargs,
+            ),
+            tier,
+        )
+
+    try:
+        result = get_or_load_public_payload(
+            endpoint="listings",
+            tier=cache_tier,
+            versions=versions,
+            query=cache_query,
+            loader=_load_listing_payload,
+            force_refresh=force_refresh,
+        )
+    except (PublicCacheBusy, DatabasePoolBusy) as exc:
+        return _public_busy_response(exc)
+    return _public_json_response(
+        result,
+        tier=cache_tier,
+        dataset_version=versions.get(DATASET_LISTINGS, 0),
+    )
 
 
 @rate_limit(

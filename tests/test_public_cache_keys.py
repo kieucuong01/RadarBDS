@@ -56,6 +56,68 @@ def test_client_only_and_unknown_fields_are_not_passed_to_key_builder():
     assert canonical == {"page": 1}
 
 
+def test_listing_cache_key_includes_complete_sort_page_and_version():
+    base = build_public_cache_key(
+        endpoint="listings",
+        tier="guest",
+        versions={"listings": 4},
+        query={
+            "complete": False,
+            "sort": "date:desc",
+            "page": 1,
+            "limit": 50,
+        },
+    )
+    changes = (
+        {
+            "complete": True,
+            "sort": "date:desc",
+            "page": 1,
+            "limit": 50,
+        },
+        {
+            "complete": False,
+            "sort": "price:asc",
+            "page": 1,
+            "limit": 50,
+        },
+        {
+            "complete": False,
+            "sort": "date:desc",
+            "page": 2,
+            "limit": 50,
+        },
+    )
+
+    for changed in changes:
+        assert base != build_public_cache_key(
+            endpoint="listings",
+            tier="guest",
+            versions={"listings": 4},
+            query=changed,
+        )
+
+
+def test_unknown_listing_query_fields_do_not_change_cache_key():
+    known = canonical_query(
+        {"page": 1, "complete": True, "sort": "date:desc"}
+    )
+    unknown = canonical_query(
+        {
+            "page": 1,
+            "complete": True,
+            "sort": "date:desc",
+            "load_run": "different-every-time",
+        }
+    )
+
+    assert known == unknown == {
+        "complete": True,
+        "page": 1,
+        "sort": "date:desc",
+    }
+
+
 @pytest.mark.parametrize(
     ("endpoint", "tier"),
     (("unknown", "guest"), ("signals", "superadmin")),

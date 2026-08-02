@@ -28,6 +28,7 @@ ALLOWED_QUERY_FIELDS = frozenset(
         "date_range",
         "include_trend",
         "include_guland_high_activity",
+        "complete",
         "sort",
         "page",
         "limit",
@@ -38,7 +39,7 @@ MULTI_VALUE_FIELDS = frozenset(
     {"wards", "sources", "prop_types", "area_ranges", "price_ranges"}
 )
 VALID_TIERS = frozenset({"guest", "free", "vip", "admin"})
-VALID_ENDPOINTS = frozenset({"signals", "counts", "dashboard"})
+VALID_ENDPOINTS = frozenset({"signals", "counts", "dashboard", "listings"})
 
 
 def _scalar(value):

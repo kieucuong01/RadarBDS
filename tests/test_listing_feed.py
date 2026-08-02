@@ -304,6 +304,11 @@ def test_api_listings_delegates_database_work_to_listing_service(monkeypatch):
     monkeypatch.setattr(
         radar_app, "load_listing_feed", fake_loader, raising=False
     )
+    monkeypatch.setattr(
+        radar_app,
+        "_listing_dataset_versions",
+        lambda: {"listings": 7},
+    )
     monkeypatch.setattr(radar_app, "connect", fail_inline_connection)
 
     response = radar_app.app.test_client().get(
@@ -313,4 +318,4 @@ def test_api_listings_delegates_database_work_to_listing_service(monkeypatch):
     assert response.status_code == 200
     assert len(captured) == 1
     assert captured[0]["date_range"] == "3m"
-    assert captured[0]["listings_version"] == 0
+    assert captured[0]["listings_version"] == 7

@@ -338,7 +338,7 @@ RATE_LIMITS_PER_HOUR = {
     "vip": None,
     "admin": None,
 }
-MEMORY_RATE_LIMIT_SCOPES = {"dashboard", "listing_map"}
+MEMORY_RATE_LIMIT_SCOPES = {"dashboard", "listing_map", "listings"}
 _rate_limit_memory: dict[str, tuple[datetime, int]] = {}
 _rate_limit_lock = threading.Lock()
 
