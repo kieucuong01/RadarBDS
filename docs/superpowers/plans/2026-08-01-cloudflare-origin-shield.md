@@ -1,6 +1,6 @@
 # Cloudflare Origin-Shield Implementation Plan
 
-**Goal:** Activate a privacy-safe Cloudflare cache for the four public Radar BDS read paths, then rerun the unchanged distributed 1,000-5,000-VU release gate.
+**Goal:** Activate a privacy-safe Cloudflare cache for the five public Radar BDS read paths, then rerun the unchanged distributed 1,000-5,000-VU release gate.
 
 **Architecture:** Cloudflare becomes the public edge, Nginx remains the 15-second origin shield, and Flask/Redis/PostgreSQL retain their existing bounded read path. Request-time rules bypass session and Authorization traffic before cache lookup. The test harness requires independent Cloudflare and origin-cache evidence.
 
@@ -27,7 +27,7 @@
 - [x] Commit, fetch/rebase current `origin/main`, push, deploy the exact commit, and prove production HEAD and clean state.
 - [x] Verify current origin mode still passes before any DNS mutation.
 
-Task 3 release evidence: CDN-readiness commits through `4ad6e79` are on production, the checkout is clean, Radar/Nginx/Redis/PostgreSQL are active, and the non-CDN verifier passes guest HIT, cookie/Authorization BYPASS, redaction, and dataset version checks for all four allowlisted routes. Tasks 4-7 remain intentionally open pending an authenticated Cloudflare control plane and the unchanged distributed capacity rerun.
+Task 3 release evidence: CDN-readiness commits through `4ad6e79` are on production, the checkout is clean, Radar/Nginx/Redis/PostgreSQL are active, and the non-CDN verifier passes guest HIT, cookie/Authorization BYPASS, redaction, and dataset version checks. The 2026-08-02 origin follow-up added and verified `/api/listings`, bringing the exact allowlist to five paths. Tasks 4-7 remain intentionally open pending an authenticated Cloudflare control plane and the unchanged distributed capacity rerun.
 
 ## Task 4: Configure the authenticated Cloudflare zone
 

@@ -12,7 +12,7 @@ Cloudflare is not currently active for `radarbds.vn`: DNS resolves directly to `
 
 Put a globally distributed cache in front of the existing guest read path without changing application URLs, freshness, private behavior, redaction, database bounds, or the release gate:
 
-- cache only `GET`/`HEAD` requests for `/`, `/api/signals`, `/api/counts`, and `/api/dashboard`;
+- cache only `GET`/`HEAD` requests for `/`, `/api/signals`, `/api/listings`, `/api/counts`, and `/api/dashboard`;
 - keep the complete normalized query string in the cache key;
 - use the origin's 15-second freshness policy and bounded stale revalidation;
 - bypass every request carrying `radar_session` or `Authorization`;
@@ -46,7 +46,7 @@ Expression:
 
 ```text
 (http.host eq "radarbds.vn" and http.request.method in {"GET" "HEAD"} and
- http.request.uri.path in {"/" "/api/signals" "/api/counts" "/api/dashboard"} and
+ http.request.uri.path in {"/" "/api/signals" "/api/listings" "/api/counts" "/api/dashboard"} and
  not http.cookie contains "radar_session=" and
  not any(http.request.headers["authorization"][*] ne ""))
 ```
@@ -59,7 +59,7 @@ Settings:
 - Cache key: retain the full query string; sorting query parameters is allowed, ignoring them is forbidden.
 - Serve stale while revalidating: enabled.
 
-No `Cache Everything` wildcard over `/api/*` is allowed. The four exact paths are the entire public allowlist.
+No `Cache Everything` wildcard over `/api/*` is allowed. The five exact paths are the entire public allowlist.
 
 ## Origin cache headers
 
@@ -104,7 +104,7 @@ Rollback is deterministic: restore `ns1.vietnix.net`, `ns2.vietnix.net`, and `ns
 CDN cutover is accepted only when:
 
 - DNS resolves to Cloudflare and public responses contain `CF-Ray`;
-- guest retries show Cloudflare HIT on all four allowlisted paths;
+- guest retries show Cloudflare HIT on all five allowlisted paths;
 - session-cookie and Authorization probes are never Cloudflare HIT and retain `private, no-store` from origin;
 - public API output remains redacted and dataset version freshness remains within the approved window;
 - desktop and mobile browser flows remain signal-first with filters working;
