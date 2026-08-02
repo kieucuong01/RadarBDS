@@ -19,7 +19,11 @@ const responses = [
   {
     status: 522,
     error_code: 1211,
-    headers: { 'CF-Ray': 'probe-ray-HKG' },
+    headers: {
+      'CF-Ray': 'probe-ray-HKG',
+      'CF-Error-Type': '522',
+      'CF-Error-Origin': 'edge',
+    },
     body: 'phone=0909000000&source_url=private',
   },
   {
@@ -49,6 +53,7 @@ const context = vm.createContext({
   },
 });
 const modules = new Map();
+const counters = new Map();
 
 function synthetic(identifier, exports) {
   const module = new vm.SyntheticModule(
@@ -84,7 +89,13 @@ async function loadModule(filePath) {
       });
     }
     if (specifier === 'k6/metrics') {
-      class Counter { add() {} }
+      class Counter {
+        constructor(name) {
+          this.name = name;
+          if (!counters.has(name)) counters.set(name, 0);
+        }
+        add(value) { counters.set(this.name, (counters.get(this.name) || 0) + value); }
+      }
       return modules.get(specifier) || synthetic(specifier, { Counter });
     }
     return loadModule(fileURLToPath(new URL(specifier, referencingModule.identifier)));
@@ -95,4 +106,19 @@ async function loadModule(filePath) {
 
 const entry = await loadModule(entryPath);
 for (let attempt = 0; attempt < 5; attempt += 1) entry.namespace.default();
-process.stdout.write(JSON.stringify(warnings));
+process.stdout.write(JSON.stringify({
+  warnings,
+  counters: Object.fromEntries(
+    [...counters.entries()]
+      .filter(([name]) => [
+        'radar_cdn_error',
+        'radar_cdn_hit',
+        'radar_cdn_unknown',
+        'radar_edge_error',
+        'radar_edge_hit',
+        'radar_edge_unknown',
+        'radar_transport_error',
+      ].includes(name))
+      .sort(([left], [right]) => left.localeCompare(right))
+  ),
+}));

@@ -1,7 +1,10 @@
 import http from 'k6/http';
 import { check, fail, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
-import { buildFailureDiagnostic } from './radar_failure_diagnostics.mjs';
+import {
+  buildFailureDiagnostic,
+  safeHeaderValue,
+} from './radar_failure_diagnostics.mjs';
 
 const BASE_URL = String(__ENV.BASE_URL || '').replace(/\/+$/, '');
 const SCENARIO = String(__ENV.SCENARIO || 'default').toLowerCase();
@@ -21,11 +24,14 @@ const edgeMiss = new Counter('radar_edge_miss');
 const edgeStale = new Counter('radar_edge_stale');
 const edgeBypass = new Counter('radar_edge_bypass');
 const edgeUnknown = new Counter('radar_edge_unknown');
+const edgeError = new Counter('radar_edge_error');
 const cdnHit = new Counter('radar_cdn_hit');
 const cdnMiss = new Counter('radar_cdn_miss');
 const cdnStale = new Counter('radar_cdn_stale');
 const cdnBypass = new Counter('radar_cdn_bypass');
 const cdnUnknown = new Counter('radar_cdn_unknown');
+const cdnError = new Counter('radar_cdn_error');
+const transportError = new Counter('radar_transport_error');
 let failureDiagnosticBudget = 3;
 
 export const options = {
@@ -141,6 +147,20 @@ function isPublicCdnStatus(status) {
   return ['HIT', 'MISS', 'EXPIRED', 'STALE', 'UPDATING', 'REVALIDATED'].includes(status);
 }
 
+function recordCacheOutcomes(response) {
+  const status = Number(response && response.status) || 0;
+  if (status === 0) {
+    transportError.add(1);
+    return { edge: 'TRANSPORT_ERROR', cdn: 'TRANSPORT_ERROR' };
+  }
+  if (status !== 200 && safeHeaderValue(response, 'CF-Ray')) {
+    edgeError.add(1);
+    cdnError.add(1);
+    return { edge: 'CDN_ERROR', cdn: 'CDN_ERROR' };
+  }
+  return { edge: recordEdge(response), cdn: recordCdn(response) };
+}
+
 function reportHttpFailure(endpoint, response) {
   if (failureDiagnosticBudget <= 0) return;
   const diagnostic = buildFailureDiagnostic(endpoint, response);
@@ -192,12 +212,15 @@ function runDefault() {
     ['GET', `${BASE_URL}/api/signals?page=1&limit=20&load_run=${formEncode(RUN_ID)}`, null, REQUEST_PARAMS],
     ['GET', `${BASE_URL}/api/listings?date_range=3m&sort_by=date&sort_dir=desc&page=1&limit=50&load_run=${formEncode(RUN_ID)}`, null, REQUEST_PARAMS],
   ]);
-  const homeEdge = recordEdge(responses[0]);
-  const signalEdge = recordEdge(responses[1]);
-  const listingsEdge = recordEdge(responses[2]);
-  const homeCdn = recordCdn(responses[0]);
-  const signalCdn = recordCdn(responses[1]);
-  const listingsCdn = recordCdn(responses[2]);
+  const homeCache = recordCacheOutcomes(responses[0]);
+  const signalCache = recordCacheOutcomes(responses[1]);
+  const listingsCache = recordCacheOutcomes(responses[2]);
+  const homeEdge = homeCache.edge;
+  const signalEdge = signalCache.edge;
+  const listingsEdge = listingsCache.edge;
+  const homeCdn = homeCache.cdn;
+  const signalCdn = signalCache.cdn;
+  const listingsCdn = listingsCache.cdn;
   reportHttpFailure('homepage', responses[0]);
   reportHttpFailure('signals', responses[1]);
   reportHttpFailure('listings', responses[2]);
@@ -224,12 +247,15 @@ function runDefault() {
 function runMixed() {
   const item = MIXED_CORPUS[(__VU + __ITER) % MIXED_CORPUS.length];
   const responses = requestBatch(mixedUrls(item));
-  const signalEdge = recordEdge(responses[0]);
-  const countsEdge = recordEdge(responses[1]);
-  const listingsEdge = recordEdge(responses[2]);
-  const signalCdn = recordCdn(responses[0]);
-  const countsCdn = recordCdn(responses[1]);
-  const listingsCdn = recordCdn(responses[2]);
+  const signalCache = recordCacheOutcomes(responses[0]);
+  const countsCache = recordCacheOutcomes(responses[1]);
+  const listingsCache = recordCacheOutcomes(responses[2]);
+  const signalEdge = signalCache.edge;
+  const countsEdge = countsCache.edge;
+  const listingsEdge = listingsCache.edge;
+  const signalCdn = signalCache.cdn;
+  const countsCdn = countsCache.cdn;
+  const listingsCdn = listingsCache.cdn;
   reportHttpFailure('signals', responses[0]);
   reportHttpFailure('counts', responses[1]);
   reportHttpFailure('listings', responses[2]);

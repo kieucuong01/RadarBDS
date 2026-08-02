@@ -34,11 +34,14 @@ def _write_shard(
     stale: int = 0,
     bypass: int = 0,
     unknown: int = 0,
+    edge_error: int = 0,
+    transport_error: int = 0,
     cdn_hit: int | None = None,
     cdn_miss: int | None = None,
     cdn_stale: int = 0,
     cdn_bypass: int = 0,
     cdn_unknown: int = 0,
+    cdn_error: int = 0,
     require_cdn: bool = True,
     omit_zero_counters: bool = False,
     exit_code: int = 0,
@@ -89,11 +92,14 @@ def _write_shard(
             "radar_edge_stale": {"count": stale},
             "radar_edge_bypass": {"count": bypass},
             "radar_edge_unknown": {"count": unknown},
+            "radar_edge_error": {"count": edge_error},
+            "radar_transport_error": {"count": transport_error},
             "radar_cdn_hit": {"count": cdn_hit},
             "radar_cdn_miss": {"count": cdn_miss},
             "radar_cdn_stale": {"count": cdn_stale},
             "radar_cdn_bypass": {"count": cdn_bypass},
             "radar_cdn_unknown": {"count": cdn_unknown},
+            "radar_cdn_error": {"count": cdn_error},
         }
     }
     if omit_zero_counters:
@@ -153,6 +159,7 @@ def test_valid_shards_are_summed_and_use_conservative_max_percentiles(tmp_path: 
         "radar_edge_stale": 0,
         "radar_edge_bypass": 0,
         "radar_edge_unknown": 0,
+        "radar_edge_error": 0,
     }
     assert aggregate["cdn"] == {
         "radar_cdn_hit": 21970,
@@ -160,6 +167,7 @@ def test_valid_shards_are_summed_and_use_conservative_max_percentiles(tmp_path: 
         "radar_cdn_stale": 0,
         "radar_cdn_bypass": 0,
         "radar_cdn_unknown": 0,
+        "radar_cdn_error": 0,
     }
     assert "stage_status=passed" in completed.stdout
 
@@ -213,3 +221,33 @@ def test_zero_value_counter_metrics_may_be_omitted_by_k6(tmp_path: Path):
     completed = _run(tmp_path, tmp_path / "aggregate.json")
 
     assert completed.returncode == 0, completed.stderr
+
+
+def test_cdn_errors_are_governed_by_failure_threshold_not_unknown_gate(tmp_path: Path):
+    for shard in range(2):
+        _write_shard(
+            tmp_path,
+            shard,
+            requests=1000,
+            hit=998,
+            miss=0,
+            edge_error=1,
+            transport_error=1,
+            cdn_hit=998,
+            cdn_miss=0,
+            cdn_error=1,
+            failed_passes=2,
+            failed_fails=998,
+            check_passes=3990,
+            check_fails=10,
+        )
+
+    output = tmp_path / "aggregate.json"
+    completed = _run(tmp_path, output)
+
+    assert completed.returncode == 0, completed.stderr
+    aggregate = json.loads(output.read_text("utf-8"))
+    assert aggregate["failure_rate"] == 0.002
+    assert aggregate["edge"]["radar_edge_error"] == 2
+    assert aggregate["cdn"]["radar_cdn_error"] == 2
+    assert aggregate["transport_errors"] == 2

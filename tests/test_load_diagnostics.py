@@ -42,6 +42,8 @@ def test_failure_diagnostic_reports_only_safe_boundary_metadata():
           headers: {{
             'CF-Ray': 'a24e-example-HKG',
             'CF-Cache-Status': 'DYNAMIC',
+            'CF-Error-Type': '502',
+            'CF-Error-Origin': 'edge',
             'X-Radar-Edge-Cache': '',
           }},
           body: 'phone=0909000000&source_url=private',
@@ -58,6 +60,8 @@ def test_failure_diagnostic_reports_only_safe_boundary_metadata():
             "error_code": 1211,
             "cf_ray": "a24e-example-HKG",
             "cf_cache": "DYNAMIC",
+            "cf_error_type": "502",
+            "cf_error_origin": "edge",
             "radar_cache": "",
         },
     }
@@ -76,9 +80,24 @@ def test_k6_load_harness_emits_bounded_failure_diagnostic():
     )
     assert result.returncode == 0, result.stderr
 
-    expected = (
+    expected_warning = (
         'radar_http_failure={"endpoint":"signals","status":522,'
         '"error_code":1211,"cf_ray":"probe-ray-HKG",'
-        '"cf_cache":"","radar_cache":""}'
+        '"cf_cache":"","cf_error_type":"522",'
+        '"cf_error_origin":"edge","radar_cache":""}'
     )
-    assert json.loads(result.stdout) == [expected, expected, expected]
+    actual = json.loads(result.stdout)
+    assert actual["warnings"] == [
+        expected_warning,
+        expected_warning,
+        expected_warning,
+    ]
+    assert actual["counters"] == {
+        "radar_cdn_error": 5,
+        "radar_cdn_hit": 10,
+        "radar_cdn_unknown": 0,
+        "radar_edge_error": 5,
+        "radar_edge_hit": 10,
+        "radar_edge_unknown": 0,
+        "radar_transport_error": 0,
+    }

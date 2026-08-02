@@ -18,6 +18,7 @@ EDGE_METRICS = (
     "radar_edge_stale",
     "radar_edge_bypass",
     "radar_edge_unknown",
+    "radar_edge_error",
 )
 CDN_METRICS = (
     "radar_cdn_hit",
@@ -25,6 +26,7 @@ CDN_METRICS = (
     "radar_cdn_stale",
     "radar_cdn_bypass",
     "radar_cdn_unknown",
+    "radar_cdn_error",
 )
 
 
@@ -243,6 +245,10 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             name: sum(_optional_metric_count(item, name) for item in summaries)
             for name in CDN_METRICS
         },
+        "transport_errors": sum(
+            _optional_metric_count(item, "radar_transport_error")
+            for item in summaries
+        ),
     }
     return aggregate_result
 
