@@ -8,6 +8,14 @@
 
 **Tech Stack:** Python 3.12, Flask, PostgreSQL 17/18, psycopg pooled connections, Redis, Nginx, pytest, PowerShell verification, k6, existing idempotent `db.schema` migrations.
 
+## Execution Status (2026-08-02)
+
+- Tasks 1-5 are implemented in focused commits `b28c92e`, `e039bce`, `a26657b`, `5ee5623`, and `eee52bd`.
+- Local parity after refresh is exact: Săn Deal `36/36` cases and Tin rao `76/76` cases at limit 200, both with `difference_count=0`.
+- The cache-disabled local read-model benchmark for the canonical 50-row route passed: five cold samples were `83.80-170.48 ms` (cold p95 `170.48 ms`) and five warm samples were `78.63-101.10 ms`, all HTTP 200 with a stable 164,242-byte body.
+- Task 6 focused gate, py_compile, frontend syntax, and diff checks pass. Full pytest with production canonical env still has 21 pre-existing failures in untouched admin asset-version, browser/social wrapper, saved-page asset-version, and SEO content/OG contracts; do not silently call the full suite green or broaden this performance release to fix them.
+- Task 7 review/rebase/push/deploy/production evidence is not complete. Do not present the local commits as a production release.
+
 ## Global Constraints
 
 - Preserve `/api/listings` response keys, listing fields, full `imgs` arrays, legal-first image order, pagination, filters, sorts, modal behavior, and table/grid rendering.

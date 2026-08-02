@@ -76,6 +76,7 @@ Marketing skills:
 - `routes/`: public/auth/market/admin blueprints; many still delegate to `app.py`.
 - `services/market_data.py`: hot-path dashboard/listing read models and API shaping.
 - `services/signal_read_model.py`: transactional `signal_card_read_model` refresh, feature-flagged compact signal query, and the shared filtered signal count used by dashboard summary.
+- `services/listing_feed.py`: bounded legacy/read-model dispatch, all-listings filters/sorts, exact totals, ordered full image arrays, formatting, and tier redaction for `/api/listings`.
 - `services/public_cache_keys.py`, `services/public_cache.py`: canonical tier/version keys, Redis fresh/stale single-flight, and bounded local fallback.
 - `services/public_data_publish.py`, `services/public_prewarm.py`: post-commit version mirror and no-cookie allowlisted warming after deterministic data jobs.
 - `deployment/ubuntu24/*`, `scripts/install_performance_infra.sh`, `scripts/verify_public_cache.ps1`, `scripts/load/radar_public_load.js`, `scripts/load/aggregate_k6_shards.py`, `scripts/load/observe_production_capacity.ps1`: bounded production capacity, reversible install, origin/CDN privacy proof, conservative distributed aggregation, and host observation.
@@ -101,11 +102,14 @@ Marketing skills:
 - Signals-mode `/api/map-listings` and `/api/map-listing-items` use `signal_card_read_model` plus the `signals` dataset version while the read-model flag is on. Do not rebuild latest-valuation CTEs on the Maps click path.
 - When `RADAR_SIGNAL_READ_MODEL_ENABLED=1`, dashboard `stats.signals` must use `count_signals_from_read_model()` with the same public filters as `/api/signals`; do not restore the request-time latest-valuation CTE. Flag `0` retains the legacy count only as rollback.
 - `RADAR_SIGNAL_READ_MODEL_ENABLED` defaults to `0`. Enable it only after `radar.py signal-read-model --refresh --compare` reports zero differences in the target environment; rollback is flag `0` plus service restart.
+- `signal_card_read_model` stores all stable public-base listing cards. `is_actionable` is the stricter signal-only subset; `listing_is_signal` only preserves the legacy badge on the all-listings tab and must not govern Săn Deal, counts, dashboard, or signal Maps.
+- `/api/listings` reads that projection only when `RADAR_SIGNAL_READ_MODEL_ENABLED=1`, `RADAR_LISTING_READ_MODEL_ENABLED` is not `0`, and the durable `listings` version is positive. It uses the independent `listings` cache version and retains full ordered `imgs`; route-only rollback is `RADAR_LISTING_READ_MODEL_ENABLED=0` plus service restart.
+- The `listings` guest/free rate-limit scope is process-memory backed at 1,200/2,400 requests per hour so cache hits never write PostgreSQL rate-limit rows. Keep bounded cache loading and controlled `503` backpressure as the origin protection.
 - A failed signal read-model refresh must leave the previous complete rows/version active. Never bump `public_dataset_versions.signals` outside the refresh transaction.
 - `db.connection.get_conn()` is a lazy bounded pool scope (default max 4/process). Always return connections through that context; keep `connect()` only for explicit fresh-connection owners.
 - Production has `RADAR_PUBLIC_CACHE_ENABLED=1` only after local-only Redis, the real integration test, guest/private isolation checks, rollback drill, and Redis-stop/recovery drill passed. A new environment must repeat those gates before enabling it.
 - Public cache keys use only parsed/clamped response-changing values plus effective tier and durable dataset versions. Admin bypasses; guest/Free/VIP never share namespaces.
-- Only anonymous guest `/`, `/api/signals`, `/api/counts`, and `/api/dashboard` may carry `X-Radar-Public-Cache: 1`. Any session, Authorization, Set-Cookie, admin, error, saved/auth/admin/checkout/order response remains private/no-store.
+- Only anonymous guest `/`, `/api/signals`, `/api/listings`, `/api/counts`, and `/api/dashboard` may carry `X-Radar-Public-Cache: 1`. Any session, Authorization, Set-Cookie, admin, error, saved/auth/admin/checkout/order response remains private/no-store.
 - Publish read-model/version data in PostgreSQL first, exit/commit, then mirror Redis and prewarm. Redis/prewarm failure must be reported separately and must not relabel committed DB data as failed.
 - The capacity objective means roughly 1,000-5,000 simultaneous in-flight public requests, not 5,000 sustained origin RPS. Do not claim that gate from unit tests or single-request timings; use the staged production load plan.
 - The 2026-08-01 direct-origin gate passed the local normal profile at 100 VUs and mixed filters at 500 VUs. Distributed run `30698414443` then failed closed at external default 100 with 0% HTTP/check errors but p95 2.24 s and p99 3.10 s while CPU/DB/Redis/listen queues stayed healthy. This, the 1.2-2.2 MB/s external plateau, and the same-host ~8 MB/s diagnostic prove the public egress/path is the next bottleneck. Do not rerun 500-5,000 or raise backend bounds before CDN/origin shielding is active and verified.
@@ -137,8 +141,8 @@ Common verification:
 & $py -X utf8 -m py_compile app.py services\market_data.py cleansing\dedup.py cleansing\feature_extractor.py analytics\valuation.py
 node --check static\js\main.js
 & $py -X utf8 -m pytest tests\test_dedup.py tests\test_price_history.py tests\test_lot_history.py tests\test_drop_filter.py
-& $py -X utf8 radar.py signal-read-model --refresh --compare --limit 200
-& $py -X utf8 -m pytest tests\test_postgres_connection.py tests\test_public_cache_keys.py tests\test_public_cache.py tests\test_public_cache_headers.py tests\test_public_prewarm.py -q
+& $py -X utf8 radar.py signal-read-model --refresh --compare --compare-listings --limit 200
+& $py -X utf8 -m pytest tests\test_listing_feed.py tests\test_postgres_connection.py tests\test_public_cache_keys.py tests\test_public_cache.py tests\test_public_cache_headers.py tests\test_public_prewarm.py -q
 ```
 
 Deploy after pushing `main`:

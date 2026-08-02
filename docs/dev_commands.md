@@ -339,6 +339,55 @@ With Flask running, record cold/warm status, TTFB, total time, and bytes without
 
 Local parity and single-request timings are not the concurrency acceptance test. Follow the staged load gates in `docs/superpowers/plans/2026-08-01-homepage-performance-scale-master.md` before claiming 1,000-5,000 simultaneous in-flight capacity.
 
+### Homepage all-listings read model
+
+The Tin rao feed has a separate route flag but shares the atomic card projection. Keep the listing route off for the first deploy/backfill, then require both parity reports to be exact:
+
+```powershell
+$env:RADAR_LISTING_READ_MODEL_ENABLED = "0"
+$env:RADAR_SIGNAL_READ_MODEL_ENABLED = "1"
+& $py -X utf8 radar.py signal-read-model `
+  --refresh `
+  --compare `
+  --compare-listings `
+  --limit 200
+
+& $py -X utf8 -c `
+  'from services.public_cache import get_current_dataset_versions; print(get_current_dataset_versions(("signals","listings","market")))'
+```
+
+Both comparisons must return `difference_count=0`; `listings` must be positive in PostgreSQL and match its Redis mirror. To exercise the fast local route after that gate:
+
+```powershell
+$env:RADAR_LISTING_READ_MODEL_ENABLED = "1"
+& $py -X utf8 app.py
+
+& $py -X utf8 scripts\benchmark_public_read_path.py `
+  --base-url http://127.0.0.1:5000 `
+  --repeat 5 `
+  --path "/api/listings?date_range=3m&sort_by=date&sort_dir=desc&page=1&limit=50"
+```
+
+Focused contract tests:
+
+```powershell
+& $py -X utf8 -m pytest `
+  tests\test_signal_read_model.py `
+  tests\test_listing_feed.py `
+  tests\test_market_data_performance.py `
+  tests\test_public_cache_keys.py `
+  tests\test_public_cache_headers.py `
+  tests\test_public_prewarm.py `
+  tests\test_source_policy.py `
+  tests\test_drop_filter.py `
+  tests\test_guest_visibility.py `
+  tests\test_cli_command_logging.py `
+  tests\test_benchmark_public_read_path.py `
+  tests\test_deployment_units.py -q
+```
+
+`RADAR_LISTING_READ_MODEL_ENABLED=0` plus service restart is the route-only rollback. Configured prewarm skips `/api/listings` while either read-model flag is disabled; direct manual prewarm remains available for explicit diagnosis. Do not treat a cached parity-equivalent response as proof that rollback dispatch used legacy SQL—use a local `cache_refresh=1` probe or disable application cache for that diagnostic.
+
 ### Shared public cache and bounded PostgreSQL pool
 
 Phase 2 static/focused verification:
@@ -397,6 +446,7 @@ Inspect headers without printing JSON bodies:
 $paths = @(
   "/",
   "/api/signals?include_total=0&limit=30&page=1&sort=newest",
+  "/api/listings?date_range=3m&sort_by=date&sort_dir=desc&page=1&limit=50",
   "/api/counts",
   "/api/dashboard"
 )
@@ -456,6 +506,8 @@ Validate the k6 profile without generating load:
 
 ```powershell
 k6 inspect scripts\load\radar_public_load.js
+Get-Content -LiteralPath scripts\load\radar_public_load.js -Raw -Encoding UTF8 |
+  node --input-type=module --check
 ```
 
 Run stages serially from a machine outside the VPS. `RUN_ID` is one shared, non-secret edge-key suffix for the whole stage; change it between stages, never per virtual user:
@@ -476,7 +528,7 @@ Advance only after the prior result and simultaneous host observations pass:
 | `default` | `100`, `500`, `1000`, `5000` | p95 < 1,000 ms; p99 < 2,000 ms; failures < 0.5% |
 | `mixed` | `100`, `500`, `1000` | p95 < 1,500 ms; p99 < 2,000 ms; failures < 0.5% |
 
-The mixed setup prewarms exactly 50 canonical filter pairs and requires the second probe for each route to be `HIT`. Never run the two scenarios or two stages in parallel. Stop at the first abort threshold from `docs/operations.md`; do not compensate by raising workers, PostgreSQL connections, timeouts, or Redis memory.
+The mixed setup keeps exactly 50 canonical filter combinations and exercises signals, counts, and listings for each combination; it does not create a cross product or per-VU keys. The second probe for all three routes must be `HIT`. Never run the two scenarios or two stages in parallel. Stop at the first abort threshold from `docs/operations.md`; do not compensate by raising workers, PostgreSQL connections, timeouts, or Redis memory.
 
 The script explicitly requests `Accept-Encoding: gzip` to represent a browser. Treat an uncompressed result as an invalid harness run, not production capacity. The authoritative 2026-08-01 production results and rollback commands are in `docs/operations.md`: normal 100 VUs and mixed 500 VUs passed; normal 500 and mixed 1,000 missed the approved gates; 5,000 was not run after the abort threshold.
 

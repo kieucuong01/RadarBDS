@@ -148,11 +148,48 @@ FROM public_dataset_versions
 ORDER BY dataset_name;
 ```
 
-All three object names must be non-null and the version table must contain `market` and `signals`. `db.schema.init_schema()` commits these required objects before best-effort legacy migrations; if an optional migration then hits `insufficient_privilege`, it rolls back that optional transaction only.
+All three object names must be non-null and the version table must contain `market`, `signals`, and `listings`. `db.schema.init_schema()` commits these required objects before best-effort legacy migrations; if an optional migration then hits `insufficient_privilege`, it rolls back that optional transaction only.
 
 If compare reports only `order_mismatch` for Guland with identical IDs and fields, inspect `price_updated_at`, `first_seen_at`, and `crawled_at` string formats before changing indexes. Mixed space/`T` separators are present in production, and Phase 1 must preserve the existing lexical `listing_activity_at_sql()` order. Do not sort `newest` solely by normalized `signal_card_read_model.activity_at` unless that user-visible behavior change has its own migration and acceptance test.
 
 This rollout proves parity and normal-load latency only. Do not claim the 1,000-5,000 simultaneous in-flight request objective until the later pooling/cache/Nginx phases and staged load gates pass.
+
+## All-Listings Read Model Rollout And Rollback
+
+`/api/listings` shares `signal_card_read_model` but has independent readiness, cache versioning, and rollback. Deploy with the route off even though its code default is enabled. Set this in `/etc/radar-bds/radar.env` before the first deployment:
+
+```bash
+RADAR_LISTING_READ_MODEL_ENABLED=0
+```
+
+After the code is active, run the full refresh and both safe-metadata parity checks as the runtime user. The command exits nonzero on either signal or all-listings mismatch and never logs descriptions, URLs, phone numbers, cookies, or credentials:
+
+```bash
+cd /opt/radar-bds/current
+set -a
+. /etc/radar-bds/radar.env
+set +a
+/opt/radar-bds/.venv/bin/python -X utf8 radar.py signal-read-model --refresh --compare --compare-listings --limit 200
+/opt/radar-bds/.venv/bin/python -X utf8 -c 'from services.public_cache import get_current_dataset_versions; print(get_current_dataset_versions(("signals","listings","market")))'
+```
+
+Require both comparisons to report `difference_count=0`, a positive durable `listings` version, and a matching Redis mirror. Redis mirror/prewarm errors are separate from the committed PostgreSQL refresh and must still be resolved before enabling the route. While either read-model flag is disabled, configured publication deliberately skips `/api/listings`; it must never prewarm the known slow legacy query.
+
+Then set `RADAR_LISTING_READ_MODEL_ENABLED=1`, restart, prewarm once, and measure the canonical route without printing its body:
+
+```bash
+sudo systemctl restart radar-bds.service
+sudo systemctl is-active radar-bds.service
+sudo -u radar bash -lc 'set -a; . /etc/radar-bds/radar.env; set +a; cd /opt/radar-bds/current && /opt/radar-bds/.venv/bin/python -X utf8 -c "from services.public_prewarm import prewarm_configured_routes; print(prewarm_configured_routes())"'
+/opt/radar-bds/.venv/bin/python -X utf8 scripts/benchmark_public_read_path.py --base-url http://127.0.0.1:5000 --repeat 5 --path '/api/listings?date_range=3m&sort_by=date&sort_dir=desc&page=1&limit=50'
+curl -sS -D - -o /dev/null 'http://127.0.0.1:5000/api/listings?date_range=3m&sort_by=date&sort_dir=desc&page=1&limit=50'
+```
+
+From Windows, run `scripts/verify_public_cache.ps1` against the public domain. It must prove guest HIT plus cookie/Authorization bypass, private/no-store headers, and recursive redaction for the listings response. Browser smoke must cover desktop and mobile Tin rao activation, first visible rows, filters, each sort, page append, full image arrays/modal, and no duplicate first-page request. Record first-content time from browser navigation/network evidence, not a unit test.
+
+Route-only rollback is data-preserving: set `RADAR_LISTING_READ_MODEL_ENABLED=0`, restart `radar-bds.service`, and use a VPS-local `cache_refresh=1` probe or temporarily disable the application cache for the diagnostic so an old equivalent cached payload cannot hide the legacy dispatch. Keep the projection and `listings` version. This rollback must not disable `/api/signals`, `/api/counts`, `/api/dashboard`, or signals-mode Maps. For a privacy/key concern, also remove or disable the exact Nginx `/api/listings` cache location and reload Nginx before further public traffic.
+
+Release evidence is incomplete unless it records: commit SHA, service status, durable and Redis `listings` version, full-refresh row count/duration, parity difference count, five VPS-local cold/warm samples and cold p95, public HIT p95, browser first-content time, cache/privacy headers, redaction checks, and the route-only rollback probe.
 
 ## Shared Public Cache And PostgreSQL Pool Rollout
 
@@ -201,15 +238,16 @@ Expected: `active`, `PONG`, loopback-only listening, the installed Redis version
 Dataset and cache inspection without response bodies or credentials:
 
 ```bash
-sudo -u radar bash -lc 'set -a; . /etc/radar-bds/radar.env; set +a; cd /opt/radar-bds/current && /opt/radar-bds/.venv/bin/python -X utf8 -c "from services.public_cache import get_current_dataset_versions; print(get_current_dataset_versions((\"signals\",\"market\")))"'
+sudo -u radar bash -lc 'set -a; . /etc/radar-bds/radar.env; set +a; cd /opt/radar-bds/current && /opt/radar-bds/.venv/bin/python -X utf8 -c "from services.public_cache import get_current_dataset_versions; print(get_current_dataset_versions((\"signals\",\"listings\",\"market\")))"'
 curl -sS -D - -o /dev/null 'http://127.0.0.1:5000/api/signals?include_total=0&limit=30&page=1&sort=newest'
+curl -sS -D - -o /dev/null 'http://127.0.0.1:5000/api/listings?date_range=3m&sort_by=date&sort_dir=desc&page=1&limit=50'
 curl -sS -D - -o /dev/null 'http://127.0.0.1:5000/api/counts'
 curl -sS -D - -o /dev/null 'http://127.0.0.1:5000/api/dashboard'
 ```
 
 `X-Radar-Cache` is `miss`, `hit`, `stale`, or `bypass`; `Server-Timing` reports cache status and loader duration. Only anonymous guest responses may include `X-Radar-Public-Cache: 1` plus the public 15-second policy. Repeat with a harmless `Cookie: radar_session=invalid-probe` and with an `Authorization` header; both must return `Cache-Control: private, no-store` and no public marker. Do not log real session/admin values.
 
-Committed read-model publication follows this order: DB refresh/version commit, Redis version mirror, then the six allowlisted warm routes from `config/public_cache_warm_routes.json`. Publication output keeps DB `status=ok` and reports mirror/prewarm state separately under `cache`. Prewarm sends no cookie/authorization, reads at most 2 MiB, and logs status only.
+Committed read-model publication follows this order: DB refresh/version commit, Redis version mirror, then the seven allowlisted warm routes from `config/public_cache_warm_routes.json`. Publication output keeps DB `status=ok` and reports mirror/prewarm state separately under `cache`. Prewarm sends no cookie/authorization, reads at most 2 MiB, logs status only, and skips the configured listings route until both read-model flags are enabled.
 
 Rollback order:
 
@@ -298,7 +336,7 @@ From Windows, verify public cache/privacy/freshness without printing bodies, coo
 .\scripts\verify_public_cache.ps1 -BaseUrl "https://radarbds.vn"
 ```
 
-Expected for all four allowlisted paths: repeated guest request `HIT`; fake cookie and Bearer request `BYPASS` plus `private, no-store`; no source URL, original URL, phone, seller, or embedded phone fields. Useful host checks:
+Expected for all five allowlisted public path classes: repeated guest request `HIT`; fake cookie and Bearer request `BYPASS` plus `private, no-store`; no source URL, original URL, phone, seller, or embedded phone fields. Useful host checks:
 
 ```bash
 systemctl is-active nginx radar-bds redis-server postgresql

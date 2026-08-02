@@ -55,7 +55,7 @@ PostgreSQL migration status:
 - `/api/signals`: paginated card summaries. It accepts the dashboard filters plus `page`, `limit`, `sort`.
 - `/api/listing/<id>`: full detail payload for modal, including description and original images.
 - `/api/history/<id>`: price history, lot history, and comparable data for modal.
-- `/api/listings`: paginated table data for the all-listings tab.
+- `/api/listings`: paginated table data for the all-listings tab. It uses the shared card projection only after both read-model flags and a positive durable `listings` version; otherwise it falls back to the legacy loader.
 - `/api/watchlists`: user saved filters for VIP Telegram push.
 - `/api/auth/telegram/*`: bot linking via webhook or local sync fallback.
 - `/api/market-indicators`: VIP-only deep analysis.
@@ -68,8 +68,9 @@ Security boundary:
 Performance boundary:
 
 - `services/market_data.py` is on the hot path for PostgreSQL-backed local dev. Use the bounded `db.connection.get_conn()` pool scope instead of opening a fresh PostgreSQL connection per read. Each process defaults to pool min/max `1/4` with a one-second acquire timeout; three Gunicorn workers therefore admit at most 12 application DB connections.
-- `/api/signals`, `/api/counts`, and `/api/dashboard` use `services/public_cache.py` when `RADAR_PUBLIC_CACHE_ENABLED=1`; production enabled it after the Phase 4 integration, privacy, failure, and rollback gates. The old per-process route dictionaries no longer exist. Guest/Free/VIP keys are separate; admin and explicit local/admin `cache_refresh=1` requests bypass response caching.
+- `/api/signals`, `/api/listings`, `/api/counts`, and `/api/dashboard` use `services/public_cache.py` when `RADAR_PUBLIC_CACHE_ENABLED=1`; production enabled it after the Phase 4 integration, privacy, failure, and rollback gates. The old per-process route dictionaries no longer exist. Guest/Free/VIP keys are separate; admin and explicit local/admin `cache_refresh=1` requests bypass response caching.
 - `/api/signals` keeps `load_signals()` as its stable interface. With `RADAR_SIGNAL_READ_MODEL_ENABLED=0` it uses `_load_signals_legacy()`; with the flag enabled it reads `signal_card_read_model` through one bounded page query and joins the preselected image by primary key.
+- `/api/listings` keeps its all-listings predicate separate from the signal predicate. The enabled path has no latest-valuation CTE, clamps page/limit, computes an exact total, fetches only selected card rows, and loads full legally ordered `imgs` arrays in one image query. Its response/cache readiness is `public_dataset_versions.listings`, not `signals`.
 - With the same flag enabled, `load_dashboard_summary()` obtains `stats.signals` through `count_signals_from_read_model()` on its existing pooled connection. The count reuses the exact ward/source/property/range/keyword/date/publisher/tier filters from the public feed and never rebuilds latest valuation CTEs at request time. Flag `0` keeps the legacy CTE branch for immediate rollback only.
 - The read-model query applies a transaction-local `statement_timeout`, clamps `limit` to 100, uses `limit + 1` when `include_total=0`, and reuses the existing formatter plus tier redaction. It must not fork API serialization or masking rules.
 - Legacy feed publisher policy is set-based through one `listing_publishers`/`source_publishers` join. Do not restore correlated publisher subqueries.
@@ -77,18 +78,18 @@ Performance boundary:
 
 ### Shared public response cache
 
-- PostgreSQL `public_dataset_versions` is the source of truth. Redis keys `radar:dataset-version:signals` and `radar:dataset-version:market` are disposable mirrors; publication updates them only after the DB transaction exits successfully.
+- PostgreSQL `public_dataset_versions` is the source of truth. Redis keys for `signals`, `listings`, and `market` are disposable mirrors; publication updates them only after the DB transaction exits successfully.
 - Response keys are `radar:public:v<schema>:<endpoint>:<tier>:<version-tuple>:<sha256(canonical-json-query)>`. Canonical queries contain only parsed response-changing fields. Multi-value filters are sorted/deduplicated; page is clamped to `1..2000`, limit to `1..100`, wards/sources/property types to `64/4/8`, range groups to `12` each, and keyword to 80 characters before both the key and SQL loader.
 - Each key has `<key>:fresh` for 60 seconds, `<key>:stale` for the configured stale window, and `<key>:lock` for five seconds. The production stale window is 86,400 seconds so expensive dashboard data survives idle periods and can be served during dependency failure; the code default remains 180 seconds for environments that do not override it. A token-owned Lua compare/delete releases the lock. Waiters spend at most 250 ms looking for the winning fresh result.
 - Redis failure falls back to a process-local 256-entry LRU. A process-wide bounded semaphore admits at most two uncached DB loaders; excess work receives controlled `503 Retry-After: 1`. A bounded stale value may be served when a loader or dependency fails.
 - Anonymous guest homepage/API responses may carry `X-Radar-Public-Cache: 1` and a 15-second shared-cache policy. Any `radar_session`, `Authorization`, admin response, `Set-Cookie`, non-2xx result, or controlled error remains private/no-store and must never enter an edge cache.
 - Guest cache values are produced only after tier redaction. Original listing/source URLs, seller names, contact phones, and embedded phone numbers may not enter the guest namespace.
-- `services/public_prewarm.py` reads at most 20 allowlisted relative routes, never sends Cookie/Authorization, caps response reads at 2 MiB, and reports status only. `services/public_data_publish.py` mirrors committed versions first, then prewarms only while the shared-cache flag is enabled; Redis/HTTP failures never relabel committed DB data as failed.
+- `services/public_prewarm.py` reads at most 20 allowlisted relative routes, never sends Cookie/Authorization, caps response reads at 2 MiB, and reports status only. Configured `/api/listings` warming is skipped while either read-model flag is disabled, so publication cannot launch the legacy 50-second path. `services/public_data_publish.py` mirrors committed versions first, then prewarms only while the shared-cache flag is enabled; Redis/HTTP failures never relabel committed DB data as failed.
 
 ### Production concurrency topology
 
 ```text
-anonymous GET /, /api/signals, /api/counts, /api/dashboard
+anonymous GET /, /api/signals, /api/listings, /api/counts, /api/dashboard
   -> Nginx exact-location guest cache (15 s, lock + background update, stale-on-error)
   -> Gunicorn 3 workers x 4 threads, timeout 45 s, max 12 concurrent app requests
   -> Redis public response cache (loopback, 256 MB, allkeys-lru, no persistence)
@@ -103,8 +104,8 @@ The follow-up distributed run `30698414443` removed the single Windows generator
 
 ### Signal-card read model publication
 
-- `signal_card_read_model` stores deterministic card/filter fields, the selected primary image id, public publisher visibility/rank, and the latest actionable valuation projection.
-- `public_dataset_versions` has durable `signals` and `market` rows. `signals` increments only after the final read-model insert in the same transaction.
+- `signal_card_read_model` stores every stable public-base listing card, including incomplete non-signal rows, deterministic card/filter fields, the selected primary image id, public publisher visibility/rank, and valuation fields. `is_actionable` includes the signal completeness rule; `listing_is_signal` is presentation compatibility for the legacy Tin rao badge only.
+- `public_dataset_versions` has durable `signals`, `listings`, and `market` rows. A non-noop shared projection refresh increments `signals` and `listings` only after the final insert in the same transaction; `market` remains independent.
 - Full refresh builds a temporary stage, locks only for delete/insert publication, then bumps the version. If any step raises, PostgreSQL rollback preserves the previous complete version.
 - Incremental refresh deletes/rebuilds only processed listing ids plus their current duplicate parents. More than 500 ids switches to full refresh; full/large publication runs `ANALYZE` on the fixed public-read table allowlist.
 - Creating the read-model/version tables is required. Autovacuum/analyze reloptions on pre-existing hot tables are optional during runtime migration because the app DB role may not own those tables; inspect `pg_class.reloptions` and apply missing tuning with the PostgreSQL owner instead of failing deploy.
