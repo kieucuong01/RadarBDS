@@ -168,6 +168,7 @@ def test_k6_mixed_prewarm_has_a_bounded_setup_window():
     assert "setupTimeout: '5m'" in text
     assert "VU_START_EPOCH" in text
     assert "radar_vu_started_at_ms" in text
+    assert "vu_start_epoch=$((start_epoch + 60))" in workflow
     assert "vu_start_epoch=$((start_epoch + 240))" in workflow
     assert "VU_START_EPOCH" in workflow
     assert "-DurationMinutes 60" in commands
