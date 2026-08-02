@@ -63,7 +63,13 @@ def test_nginx_public_cache_requires_no_session_and_app_opt_in():
     assert 'add_header X-Content-Type-Options "nosniff" always;' in site
     assert site.count("backlog=8192") == 1
     assert "listen 443 ssl http2 backlog=8192;" in site
-    for route in ("= /", "= /api/signals", "= /api/counts", "= /api/dashboard"):
+    for route in (
+        "= /",
+        "= /api/signals",
+        "= /api/listings",
+        "= /api/counts",
+        "= /api/dashboard",
+    ):
         assert f"location {route}" in site
     assert "ssl_certificate" in site
 
@@ -124,6 +130,10 @@ def test_public_cache_verifier_checks_hit_bypass_and_redaction():
     assert "Cloudflare HIT" in text
     assert "Cache HIT was not observed" in text
     assert "ConvertFrom-Json -Depth" not in text
+    assert (
+        '"/api/listings?date_range=3m&sort_by=date&sort_dir=desc'
+        '&page=1&limit=50"'
+    ) in text
 
 
 def test_k6_public_load_script_has_safe_scenarios_and_thresholds():
@@ -144,6 +154,8 @@ def test_k6_public_load_script_has_safe_scenarios_and_thresholds():
     assert "radar_cdn_unknown" in text
     assert "radar_session" not in text
     assert "Authorization" not in text
+    assert "/api/listings?" in text
+    assert "listings body shape is valid" in text
 
 
 def test_reusable_distributed_load_stage_is_pinned_synchronized_and_fail_closed():

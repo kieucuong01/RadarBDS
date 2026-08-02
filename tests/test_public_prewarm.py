@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import json
 
 import pytest
 
@@ -89,3 +90,39 @@ def test_prewarm_caps_response_body_read_at_two_megabytes(monkeypatch):
     assert response.read_sizes == [2 * 1024 * 1024 + 1]
     assert result["failed"] == 1
     assert result["routes"][0]["status"] == "body_too_large"
+
+
+def test_listings_is_an_allowlisted_prewarm_path():
+    routes = public_prewarm._validated_routes(
+        [
+            "/api/listings?date_range=3m&sort_by=date&sort_dir=desc"
+            "&page=1&limit=50"
+        ]
+    )
+
+    assert routes == (
+        "/api/listings?date_range=3m&sort_by=date&sort_dir=desc"
+        "&page=1&limit=50",
+    )
+
+
+def test_configured_prewarm_skips_listings_until_read_model_flags_are_ready(
+    monkeypatch, tmp_path
+):
+    config = tmp_path / "routes.json"
+    config.write_text(
+        json.dumps(["/api/dashboard", "/api/listings?page=1&limit=50"]),
+        encoding="utf-8",
+    )
+    captured = []
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "0")
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setattr(
+        public_prewarm,
+        "prewarm_public_routes",
+        lambda base_url, routes: captured.extend(routes) or {},
+    )
+
+    public_prewarm.prewarm_configured_routes(config)
+
+    assert captured == ["/api/dashboard"]

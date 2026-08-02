@@ -85,6 +85,17 @@ const MIXED_CORPUS = Object.freeze(MIXED_WARDS.flatMap((ward) => (
     return Object.freeze({
       signals: canonicalQuery({ ...base, include_total: '0', limit: '20', page: '1', sort: 'newest' }),
       counts: canonicalQuery(base),
+      listings: canonicalQuery({
+        load_run: RUN_ID,
+        prop_type: variant.prop_type,
+        source: variant.source,
+        ward: [ward],
+        date_range: '3m',
+        limit: '50',
+        page: '1',
+        sort_by: 'date',
+        sort_dir: 'desc',
+      }),
     });
   })
 )));
@@ -132,13 +143,15 @@ function mixedUrls(item) {
   return [
     `${BASE_URL}/api/signals?${item.signals}`,
     `${BASE_URL}/api/counts?${item.counts}`,
+    `${BASE_URL}/api/listings?${item.listings}`,
   ];
 }
 
-function requestPair(urls) {
+function requestBatch(urls) {
   return http.batch([
     ['GET', urls[0], null, REQUEST_PARAMS],
     ['GET', urls[1], null, REQUEST_PARAMS],
+    ['GET', urls[2], null, REQUEST_PARAMS],
   ]);
 }
 
@@ -148,11 +161,11 @@ export function setup() {
 
   for (const item of MIXED_CORPUS) {
     const urls = mixedUrls(item);
-    const first = requestPair(urls);
+    const first = requestBatch(urls);
     if (!first.every((response) => response.status === 200)) {
       fail(`Mixed prewarm failed for ${item.signals}`);
     }
-    const second = requestPair(urls);
+    const second = requestBatch(urls);
     const warmed = REQUIRE_CDN
       ? second.every((response) => response.status === 200 && cdnStatus(response) === 'HIT')
       : second.every((response) => response.status === 200 && edgeStatus(response) === 'HIT');
@@ -167,11 +180,14 @@ function runDefault() {
   const responses = http.batch([
     ['GET', `${BASE_URL}/?load_run=${formEncode(RUN_ID)}`, null, REQUEST_PARAMS],
     ['GET', `${BASE_URL}/api/signals?page=1&limit=20&load_run=${formEncode(RUN_ID)}`, null, REQUEST_PARAMS],
+    ['GET', `${BASE_URL}/api/listings?date_range=3m&sort_by=date&sort_dir=desc&page=1&limit=50&load_run=${formEncode(RUN_ID)}`, null, REQUEST_PARAMS],
   ]);
   const homeEdge = recordEdge(responses[0]);
   const signalEdge = recordEdge(responses[1]);
+  const listingsEdge = recordEdge(responses[2]);
   const homeCdn = recordCdn(responses[0]);
   const signalCdn = recordCdn(responses[1]);
+  const listingsCdn = recordCdn(responses[2]);
   check(responses[0], {
     'homepage status is 200': (response) => response.status === 200,
     'homepage is edge classified': () => Boolean(homeEdge),
@@ -184,15 +200,23 @@ function runDefault() {
     'signals body has array field': (response) => /"signals"\s*:\s*\[/.test(String(response.body || '')),
     'signals use public CDN cache': () => !REQUIRE_CDN || isPublicCdnStatus(signalCdn),
   });
+  check(responses[2], {
+    'listings status is 200': (response) => response.status === 200,
+    'listings are edge classified': () => Boolean(listingsEdge),
+    'listings body shape is valid': (response) => /"listings"\s*:\s*\[/.test(String(response.body || '')),
+    'listings use public CDN cache': () => !REQUIRE_CDN || isPublicCdnStatus(listingsCdn),
+  });
 }
 
 function runMixed() {
   const item = MIXED_CORPUS[(__VU + __ITER) % MIXED_CORPUS.length];
-  const responses = requestPair(mixedUrls(item));
+  const responses = requestBatch(mixedUrls(item));
   const signalEdge = recordEdge(responses[0]);
   const countsEdge = recordEdge(responses[1]);
+  const listingsEdge = recordEdge(responses[2]);
   const signalCdn = recordCdn(responses[0]);
   const countsCdn = recordCdn(responses[1]);
+  const listingsCdn = recordCdn(responses[2]);
   check(responses[0], {
     'mixed signals status is 200': (response) => response.status === 200,
     'mixed signals are edge classified': () => Boolean(signalEdge),
@@ -204,6 +228,12 @@ function runMixed() {
     'mixed counts are edge classified': () => Boolean(countsEdge),
     'mixed counts body shape is valid': (response) => /"stats"\s*:\s*\{/.test(String(response.body || '')),
     'mixed counts use public CDN cache': () => !REQUIRE_CDN || isPublicCdnStatus(countsCdn),
+  });
+  check(responses[2], {
+    'mixed listings status is 200': (response) => response.status === 200,
+    'mixed listings are edge classified': () => Boolean(listingsEdge),
+    'mixed listings body shape is valid': (response) => /"listings"\s*:\s*\[/.test(String(response.body || '')),
+    'mixed listings use public CDN cache': () => !REQUIRE_CDN || isPublicCdnStatus(listingsCdn),
   });
 }
 

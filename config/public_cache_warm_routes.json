@@ -1,6 +1,7 @@
 [
   "/",
   "/api/signals?include_total=0&limit=30&page=1&sort=newest",
+  "/api/listings?date_range=3m&sort_by=date&sort_dir=desc&page=1&limit=50",
   "/api/counts",
   "/api/dashboard",
   "/api/signals?include_total=0&limit=30&page=1&sort=newest&source=facebook",

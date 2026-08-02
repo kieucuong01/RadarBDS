@@ -14,7 +14,13 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_ROUTE_CONFIG = PROJECT_ROOT / "config" / "public_cache_warm_routes.json"
 ALLOWED_PATHS = frozenset(
-    {"/", "/api/signals", "/api/counts", "/api/dashboard"}
+    {
+        "/",
+        "/api/signals",
+        "/api/listings",
+        "/api/counts",
+        "/api/dashboard",
+    }
 )
 MAX_ROUTES = 20
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
@@ -107,9 +113,24 @@ def prewarm_configured_routes(
     routes = json.loads(Path(config_path).read_text(encoding="utf-8"))
     if not isinstance(routes, list):
         raise ValueError("public prewarm route config must be a list")
+    routes = [
+        route for route in routes if _route_enabled_for_configured_prewarm(route)
+    ]
     return prewarm_public_routes(
         os.getenv(
             "RADAR_PUBLIC_PREWARM_URL", "http://127.0.0.1:5000"
         ),
         routes,
     )
+
+
+def _route_enabled_for_configured_prewarm(route: str) -> bool:
+    if urlsplit(str(route or "")).path != "/api/listings":
+        return True
+    listing_enabled = os.getenv(
+        "RADAR_LISTING_READ_MODEL_ENABLED", "1"
+    ).strip() != "0"
+    signal_enabled = os.getenv(
+        "RADAR_SIGNAL_READ_MODEL_ENABLED", "0"
+    ).strip() == "1"
+    return listing_enabled and signal_enabled

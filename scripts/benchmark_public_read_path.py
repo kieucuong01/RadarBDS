@@ -18,6 +18,7 @@ DEFAULT_PATHS = (
     "/api/signals?limit=30&include_total=0",
     "/api/signals?source=facebook&limit=30&include_total=0",
     "/api/signals?source=guland&limit=30&include_total=0",
+    "/api/listings?date_range=3m&sort_by=date&sort_dir=desc&page=1&limit=50",
     "/api/counts",
     "/api/dashboard",
 )

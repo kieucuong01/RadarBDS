@@ -11,6 +11,7 @@ $BaseUrl = $BaseUrl.TrimEnd("/")
 $ProbePaths = @(
     "/",
     "/api/signals?page=1&limit=20",
+    "/api/listings?date_range=3m&sort_by=date&sort_dir=desc&page=1&limit=50",
     "/api/counts",
     "/api/dashboard"
 )

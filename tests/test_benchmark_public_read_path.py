@@ -52,3 +52,11 @@ def test_benchmark_reuses_only_warm_connection_and_never_prints_body(
     assert "secret-response-body" not in output
     assert "cold" in output
     assert "warm" in output
+
+
+def test_default_benchmark_paths_include_all_listings():
+    from scripts import benchmark_public_read_path as benchmark
+
+    assert any(
+        path.startswith("/api/listings?") for path in benchmark.DEFAULT_PATHS
+    )
