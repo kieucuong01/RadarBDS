@@ -4330,15 +4330,16 @@ def _listing_map_filters(req, mode: str) -> MapFilters:
     )
 
 
-def _safe_listing_map_payload(value):
+def _safe_listing_map_payload(value, tier: str):
     if isinstance(value, dict):
-        return {
-            key: _safe_listing_map_payload(item)
+        safe = {
+            key: _safe_listing_map_payload(item, tier)
             for key, item in value.items()
             if key not in _LISTING_MAP_SENSITIVE_KEYS
         }
+        return redact_for_tier(safe, tier)
     if isinstance(value, list):
-        return [_safe_listing_map_payload(item) for item in value]
+        return [_safe_listing_map_payload(item, tier) for item in value]
     return value
 
 
@@ -4764,6 +4765,7 @@ def api_counts():
                 only_drops=only_drops,
                 mos_min=mos_min,
                 keyword=keyword,
+                tier=tier,
                 date_range=date_range,
                 include_guland_high_activity=include_guland_high_activity,
                 **range_kwargs,
@@ -5278,12 +5280,13 @@ def api_map_listings():
     mode = (request.args.get("mode") or "").strip().lower()
     if mode not in {"signals", "all"}:
         return jsonify({"error": "invalid_mode"}), 400
+    tier = current_tier()
     payload = load_listing_map_summary(
         mode=mode,
-        tier=current_tier(),
+        tier=tier,
         filters=_listing_map_filters(request, mode),
     )
-    return jsonify(_safe_listing_map_payload(payload))
+    return jsonify(_safe_listing_map_payload(payload, tier))
 
 
 @rate_limit(
@@ -5308,15 +5311,16 @@ def api_map_listing_items():
         return jsonify({"error": "invalid_pagination"}), 400
     if page < 1 or limit < 1:
         return jsonify({"error": "invalid_pagination"}), 400
+    tier = current_tier()
     payload = load_listing_map_items(
         mode=mode,
-        tier=current_tier(),
+        tier=tier,
         filters=_listing_map_filters(request, mode),
         location_key=location_key,
         page=page,
         limit=min(limit, 50),
     )
-    return jsonify(_safe_listing_map_payload(payload))
+    return jsonify(_safe_listing_map_payload(payload, tier))
 
 def listing_detail(listing_id):
     db_path = _db_handle()

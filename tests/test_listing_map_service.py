@@ -24,6 +24,11 @@ class _MapConnection:
 
     def execute(self, sql, params=None):
         self.queries.append((sql, list(params or [])))
+        if "FROM public_dataset_versions" in sql:
+            return _Cursor(rows=[{
+                "dataset_name": "signals",
+                "version": int(self.version.removeprefix("v")),
+            }])
         if "AS data_version" in sql:
             return _Cursor(row={"data_version": self.version})
         if "GROUP BY ml.location_key" in sql:
@@ -104,7 +109,7 @@ class _MapConnection:
             return _Cursor(rows=[{
                 "total_count": 1,
                 "id": 8,
-                "title": "Lô đất Phú Lợi",
+                "title": "Lô đất Phú Lợi, gọi 0909 123 456",
                 "price_ty": 1.8,
                 "area_m2": 100,
                 "property_type": "dat_nen",
@@ -202,6 +207,37 @@ def test_summary_invariants_and_compact_query(monkeypatch):
     assert "sum(count(ml.listing_id)) over()" in summary_sql
 
 
+def test_signal_summary_uses_read_model_and_dataset_version(monkeypatch):
+    import services.listing_map as listing_map
+
+    connection = _MapConnection()
+
+    @contextmanager
+    def fake_get_conn():
+        yield connection
+
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", fake_get_conn)
+
+    listing_map.load_listing_map_summary(
+        mode="signals",
+        tier="guest",
+        filters=_filters(),
+    )
+
+    sql_text = "\n".join(sql for sql, _params in connection.queries)
+    summary_sql = next(
+        sql for sql, _params in connection.queries
+        if "GROUP BY ml.location_key" in sql
+    )
+    assert "FROM public_dataset_versions" in sql_text
+    assert "FROM signal_card_read_model rm" in summary_sql
+    assert "latest_valuation" not in summary_sql
+    assert "latest_shadow_valuation" not in summary_sql
+    assert "rm.is_actionable" in summary_sql
+
+
 def test_summary_cache_uses_data_version_tier_mode_and_filters(monkeypatch):
     import services.listing_map as listing_map
 
@@ -261,6 +297,7 @@ def test_group_items_are_bounded_and_allowlisted(monkeypatch):
     assert payload["total"] == 1
     assert payload["items"][0]["id"] == 8
     assert payload["items"][0]["prop_type_label"]
+    assert "0909 123 456" not in payload["items"][0]["title"]
     assert set(payload["items"][0]).isdisjoint(
         {"url", "phone", "contact_phone", "description", "seller_name"}
     )
@@ -270,3 +307,44 @@ def test_group_items_are_bounded_and_allowlisted(monkeypatch):
     )
     assert "latest_valuation AS MATERIALIZED" in item_sql
     assert "LIMIT ? OFFSET ?" in item_sql
+
+    admin_payload = listing_map.load_listing_map_items(
+        mode="signals",
+        tier="admin",
+        filters=_filters(),
+        location_key="road:thu-dau-mot:phu-loi:dx-43",
+        page=1,
+        limit=20,
+    )
+    assert admin_payload["items"][0]["title"].endswith("0909 123 456")
+
+
+def test_signal_group_items_reuse_read_model_primary_image(monkeypatch):
+    import services.listing_map as listing_map
+
+    connection = _MapConnection()
+
+    @contextmanager
+    def fake_get_conn():
+        yield connection
+
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", fake_get_conn)
+
+    listing_map.load_listing_map_items(
+        mode="signals",
+        tier="guest",
+        filters=_filters(),
+        location_key="road:thu-dau-mot:phu-loi:dx-43",
+        page=1,
+        limit=20,
+    )
+
+    item_sql = next(
+        sql for sql, _params in connection.queries
+        if "ml.location_key = ?" in sql
+    )
+    assert "latest_valuation" not in item_sql
+    assert "LEFT JOIN LATERAL" not in item_sql
+    assert "primary_img.id = f.primary_image_id" in item_sql

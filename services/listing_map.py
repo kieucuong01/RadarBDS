@@ -11,6 +11,7 @@ from config.listing_map import LISTING_MAP_RESOLVER_VERSION
 from config.property_types import PROPERTY_TYPE_LABELS, normalize_property_types
 from db.connection import get_conn
 from db.guland_publishers import publisher_sort_rank_sql
+from db.public_dataset_versions import DATASET_SIGNALS, get_dataset_versions
 from services.market_data import (
     DEFAULT_VISIBLE_SOURCES,
     LATEST_SHADOW_VALUATION_CTE,
@@ -21,7 +22,9 @@ from services.market_data import (
     listing_activity_at_sql,
     listing_card_activity,
     normalize_sources_for_tier,
+    redact_for_tier,
     resolve_image_url,
+    signal_read_model_enabled,
 )
 from services.signal_quality import LATEST_VALUATION_CTE
 
@@ -82,11 +85,17 @@ def _normalized_filters(filters: MapFilters, tier: str) -> MapFilters:
         mos_min=10 if tier == "guest" else int(filters.mos_min or 0),
         area_ranges=tuple(tuple(item) for item in filters.area_ranges),
         price_ranges=tuple(tuple(item) for item in filters.price_ranges),
+        include_guland_high_activity=bool(
+            tier == "admin" and filters.include_guland_high_activity
+        ),
     )
 
 
-def get_listing_map_data_version(conn) -> str:
+def get_listing_map_data_version(conn, mode: str = "all") -> str:
     """Return a cross-process invalidation fingerprint from source timestamps."""
+    if mode == "signals" and signal_read_model_enabled():
+        versions = get_dataset_versions(conn, (DATASET_SIGNALS,))
+        return f"signals:{versions[DATASET_SIGNALS]}"
     row = conn.execute(
         """
         SELECT GREATEST(
@@ -148,7 +157,55 @@ def _cache_put(key: tuple, payload: dict) -> dict:
     return deepcopy(payload)
 
 
+def _read_model_filtered_sql(filters: MapFilters) -> tuple[str, list]:
+    from services.signal_read_model import build_signal_read_model_filters
+
+    where_sql, params = build_signal_read_model_filters(
+        sources=filters.sources,
+        wards=filters.wards,
+        prop_types=filters.prop_types,
+        only_drops=filters.only_drops,
+        mos_min=filters.mos_min,
+        area_min=filters.area_min,
+        area_max=filters.area_max,
+        price_min=filters.price_min,
+        price_max=filters.price_max,
+        area_ranges=filters.area_ranges,
+        price_ranges=filters.price_ranges,
+        keyword=filters.keyword,
+        date_range=filters.date_range,
+        allow_high_activity=filters.include_guland_high_activity,
+    )
+    return (
+        f"""
+        SELECT rm.listing_id AS id,
+               rm.title,
+               rm.price_ty,
+               rm.area_m2,
+               rm.property_type,
+               rm.ward,
+               rm.road_name,
+               rm.posted_at,
+               rm.crawled_at,
+               rm.first_seen_at,
+               rm.price_updated_at,
+               {listing_activity_at_sql('rm')} AS activity_at,
+               rm.source,
+               rm.publisher_rank,
+               rm.mos_pct,
+               rm.primary_image_id,
+               TRUE AS is_signal
+        FROM signal_card_read_model rm
+        WHERE {where_sql}
+        """,
+        params,
+    )
+
+
 def _filtered_sql(mode: str, filters: MapFilters) -> tuple[str, list]:
+    if mode == "signals" and signal_read_model_enabled():
+        return _read_model_filtered_sql(filters)
+
     where_sql, params = build_listing_filters(
         sources=list(filters.sources),
         wards=list(filters.wards),
@@ -200,13 +257,36 @@ def _filtered_sql(mode: str, filters: MapFilters) -> tuple[str, list]:
     )
 
 
-def _base_cte(filtered_sql: str) -> str:
+def _base_cte(filtered_sql: str, mode: str) -> str:
+    if mode == "signals" and signal_read_model_enabled():
+        return f"""
+            WITH filtered AS MATERIALIZED (
+                {filtered_sql}
+            )
+        """
     return f"""
         WITH {LATEST_VALUATION_CTE},
              {LATEST_SHADOW_VALUATION_CTE},
              filtered AS MATERIALIZED (
                  {filtered_sql}
              )
+    """
+
+
+def _primary_image_join(mode: str) -> str:
+    if mode == "signals" and signal_read_model_enabled():
+        return (
+            "LEFT JOIN listing_images primary_img "
+            "ON primary_img.id = f.primary_image_id"
+        )
+    return """
+        LEFT JOIN LATERAL (
+            SELECT li.local_path, li.img_url
+            FROM listing_images li
+            WHERE li.listing_id = f.id
+            ORDER BY li.img_order, li.id
+            LIMIT 1
+        ) primary_img ON TRUE
     """
 
 
@@ -222,7 +302,7 @@ def load_listing_map_summary(
     filtered_sql, params = _filtered_sql(mode, filters)
 
     with get_conn() as conn:
-        data_version = get_listing_map_data_version(conn)
+        data_version = get_listing_map_data_version(conn, mode)
         cache_key = (
             "summary",
             tier,
@@ -236,7 +316,7 @@ def load_listing_map_summary(
             return cached
 
         rows = conn.execute(
-            _base_cte(filtered_sql)
+            _base_cte(filtered_sql, mode)
             + f"""
             SELECT ml.location_key,
                    ml.lat,
@@ -378,7 +458,7 @@ def load_listing_map_items(
     filtered_sql, params = _filtered_sql(mode, filters)
 
     with get_conn() as conn:
-        data_version = get_listing_map_data_version(conn)
+        data_version = get_listing_map_data_version(conn, mode)
         cache_key = (
             "items",
             tier,
@@ -394,8 +474,8 @@ def load_listing_map_items(
         if cached is not None:
             return cached
         rows = conn.execute(
-            _base_cte(filtered_sql)
-            + """
+            _base_cte(filtered_sql, mode)
+            + f"""
             SELECT COUNT(*) OVER()::INTEGER AS total_count,
                    f.id,
                    f.title,
@@ -417,13 +497,7 @@ def load_listing_map_items(
                    primary_img.img_url AS primary_img_url
             FROM filtered f
             JOIN listing_map_locations ml ON ml.listing_id = f.id
-            LEFT JOIN LATERAL (
-                SELECT li.local_path, li.img_url
-                FROM listing_images li
-                WHERE li.listing_id = f.id
-                ORDER BY li.img_order, li.id
-                LIMIT 1
-            ) primary_img ON TRUE
+            {_primary_image_join(mode)}
             WHERE ml.location_key = ?
             ORDER BY f.publisher_rank ASC, f.activity_at DESC, f.id DESC
             LIMIT ? OFFSET ?
@@ -436,7 +510,7 @@ def load_listing_map_items(
     for row in rows:
         prop_type = str(_row_value(row, "property_type", "") or "")
         activity_at, card_date_reason = listing_card_activity(row)
-        items.append({
+        items.append(redact_for_tier({
             "id": int(_row_value(row, "id", 0)),
             "title": str(_row_value(row, "title", "") or ""),
             "price_ty": _row_value(row, "price_ty"),
@@ -458,7 +532,7 @@ def load_listing_map_items(
                 _row_value(row, "primary_img_url"),
                 prefer_thumb=True,
             ) or "",
-        })
+        }, tier))
     payload = {
         "mode": mode,
         "location_key": location_key,

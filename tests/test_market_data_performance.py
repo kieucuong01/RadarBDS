@@ -322,7 +322,7 @@ def test_score_sort_does_not_emit_invalid_order_by_zero():
     assert "COALESCE(v.signal_score, 0) DESC" in score_sort
 
 
-def test_load_counts_uses_compact_shared_connection_scope(monkeypatch):
+def test_load_counts_uses_shared_connection_and_legacy_signal_fallback(monkeypatch):
     import services.market_data as market_data
 
     class _CountsConnection:
@@ -332,6 +332,8 @@ def test_load_counts_uses_compact_shared_connection_scope(monkeypatch):
 
         def execute(self, sql, params=None):
             self.queries.append((sql, params))
+            if "JOIN latest_valuation" in sql:
+                return _FakeCursor(row={"signals": 3})
             return _FakeCursor(row={
                 "total": 12,
                 "hot": 1,
@@ -344,6 +346,7 @@ def test_load_counts_uses_compact_shared_connection_scope(monkeypatch):
             raise AssertionError("market count reads should not close the shared connection")
 
     conn = _CountsConnection()
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "0")
 
     @contextmanager
     def fake_read_conn(_db_path=None):
@@ -358,13 +361,15 @@ def test_load_counts_uses_compact_shared_connection_scope(monkeypatch):
     result = market_data.load_counts(None, sources=["facebook"], wards=["Tan An"])
 
     assert result["total"] == 12
+    assert result["signals"] == 3
     assert result["new_recent_days_7"] == 2
     assert conn.closed is False
-    assert len(conn.queries) == 1
+    assert len(conn.queries) == 2
     assert "FROM listings" in conn.queries[0][0]
     assert "latest_valuation" not in conn.queries[0][0]
     assert "listing_images" not in conn.queries[0][0]
     assert "LEFT JOIN LATERAL" not in conn.queries[0][0]
+    assert "JOIN latest_valuation" in conn.queries[1][0]
 
 
 def test_load_dashboard_summary_uses_compact_read_model(monkeypatch):
@@ -499,6 +504,70 @@ def test_load_dashboard_summary_counts_signals_from_read_model_when_enabled(
     assert "FROM signal_card_read_model rm" in sql_text
     assert "latest_valuation" not in sql_text
     assert conn.closed is False
+
+
+def test_load_counts_includes_filtered_signal_count_when_read_model_enabled(
+    monkeypatch,
+):
+    import services.market_data as market_data
+    import services.signal_read_model as signal_read_model
+
+    class _CountsConnection:
+        def __init__(self):
+            self.closed = False
+
+        def execute(self, _sql, _params=None):
+            return _FakeCursor(row={
+                "total": 20,
+                "hot": 2,
+                "new_recent_days_7": 5,
+                "price_drops": 3,
+            })
+
+        def close(self):
+            self.closed = True
+
+    captured = {}
+    conn = _CountsConnection()
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setattr(
+        market_data,
+        "_open_read_conn",
+        lambda _db_path=None: conn,
+    )
+
+    def fake_count(_conn, **kwargs):
+        captured.update(kwargs)
+        return 7
+
+    monkeypatch.setattr(
+        signal_read_model,
+        "count_signals_from_read_model",
+        fake_count,
+    )
+
+    stats = market_data.load_counts(
+        None,
+        sources=["facebook"],
+        wards=["Tan An"],
+        mos_min=18,
+        date_range="1m",
+        tier="free",
+    )
+
+    assert stats == {
+        "total": 20,
+        "signals": 7,
+        "hot": 2,
+        "new_recent_days_7": 5,
+        "price_drops": 3,
+    }
+    assert captured["sources"] == ["facebook"]
+    assert captured["wards"] == ["Tan An"]
+    assert captured["mos_min"] == 18
+    assert captured["date_range"] == "1m"
+    assert captured["tier"] == "free"
+    assert conn.closed is True
 
 
 def test_api_dashboard_uses_fast_summary_loader(monkeypatch):

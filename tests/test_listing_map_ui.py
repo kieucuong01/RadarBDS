@@ -44,7 +44,7 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
         assert f'id="{hook}"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-canvas-height-20260730") == 2
+    assert html.count("listing-map-read-model-canvas-20260802") == 2
     assert "window.RADAR_MAP_VENDOR" in html
     assert not re.search(
         r"<(?:script|link)[^>]+(?:leaflet\.js|leaflet\.css)",

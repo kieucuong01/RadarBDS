@@ -91,6 +91,14 @@ def test_map_base_layers_have_complete_attribution():
     assert "Maxar" in layers["satellite"]["attribution"]
 
 
+def test_map_prefers_canvas_for_large_marker_sets():
+    assert _run_node("mapApi.mapOptions()") == {
+        "zoomControl": True,
+        "scrollWheelZoom": True,
+        "preferCanvas": True,
+    }
+
+
 def test_tracking_context_is_strictly_allowlisted():
     result = _run_node(
         "mapApi.safeTrackingContext({"

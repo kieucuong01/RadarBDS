@@ -99,7 +99,7 @@ def test_map_items_validate_location_paging_and_strip_sensitive_fields():
     unsafe = {
         "items": [{
             "id": 1,
-            "title": "Tin",
+            "title": "Tin chính chủ 0909 123 456",
             "url": "https://secret.test",
             "phone": "0909",
             "contact_phone": "0909",
@@ -151,6 +151,7 @@ def test_map_items_validate_location_paging_and_strip_sensitive_fields():
     )
     text = json.dumps(response.get_json())
     for forbidden in (
+        "0909 123 456",
         '"url"',
         '"phone"',
         '"contact_phone"',
@@ -160,6 +161,32 @@ def test_map_items_validate_location_paging_and_strip_sensitive_fields():
         '"source_url"',
     ):
         assert forbidden not in text
+
+
+def test_map_items_preserve_phone_in_title_for_admin_only():
+    app_module, client = _client()
+    payload = {
+        "items": [{"id": 1, "title": "Liên hệ 0909 123 456"}],
+        "total": 1,
+        "page": 1,
+        "limit": 20,
+    }
+
+    with (
+        mock.patch.object(app_module, "current_tier", return_value="admin"),
+        mock.patch.object(
+            app_module,
+            "load_listing_map_items",
+            return_value=payload,
+        ),
+    ):
+        response = client.get(
+            "/api/map-listing-items?mode=signals"
+            "&location_key=ward:thu-dau-mot:phu-loi&page=1"
+        )
+
+    assert response.status_code == 200
+    assert response.get_json()["items"][0]["title"] == "Liên hệ 0909 123 456"
 
 
 def test_listing_map_tracking_actions_are_allowlisted_and_privacy_bounded(

@@ -426,6 +426,11 @@ def _read_model_filters(
     return " AND ".join(clauses), params
 
 
+def build_signal_read_model_filters(**kwargs) -> tuple[str, list]:
+    """Build the canonical public signal predicate for adjacent read models."""
+    return _read_model_filters(**kwargs)
+
+
 def count_signals_from_read_model(
     conn,
     *,

@@ -81,6 +81,14 @@
     };
   }
 
+  function mapOptions() {
+    return {
+      zoomControl: true,
+      scrollWheelZoom: true,
+      preferCanvas: true
+    };
+  }
+
   function precisionCopy(value) {
     var copies = {
       exact: {
@@ -411,10 +419,7 @@
     var canvas = element("listingMapCanvas");
     if (!canvas) throw new Error("Missing listing map canvas");
     if (state.map) state.map.remove();
-    state.map = L.map(canvas, {
-      zoomControl: true,
-      scrollWheelZoom: true
-    });
+    state.map = L.map(canvas, mapOptions());
     var definitions = mapBaseLayers();
     state.baseLayers = {
       street: L.tileLayer(definitions.street.url, definitions.street),
@@ -1014,6 +1019,7 @@
     normalizeBaseLayer: normalizeBaseLayer,
     cardDateText: cardDateText,
     mapBaseLayers: mapBaseLayers,
+    mapOptions: mapOptions,
     safeTrackingContext: safeTrackingContext,
     precisionCopy: precisionCopy,
     normalizeAccuracyRadius: normalizeAccuracyRadius,

@@ -233,6 +233,27 @@ canonical filter snapshot -> /api/signals immediately -> first card chunk
 
 Keep these browser-visible safeguards together during incident diagnosis: AbortController per request scope, canonical snapshot check before deferred counts, signal response run id, render-chunk sequence, and listing-id deduplication. A stale response in Network is acceptable only when it is visibly canceled and cannot mutate the final cards.
 
+The Săn Deal badge and Maps click have an additional regression gate:
+
+1. Keep `/api/signals?...&include_total=0` as the first dynamic request.
+2. Confirm the later `/api/counts` response contains numeric `stats.signals`, and both `#badgeSignals` and `#mobileBadgeSignals` show that value.
+3. Click `Xem trên Maps` from the Signals tab. `/api/map-listings?...&mode=signals` must complete from `signal_card_read_model`; its SQL must contain neither `latest_valuation` nor `latest_shadow_valuation`.
+4. Confirm the map status becomes `aria-busy=false`, one Leaflet Canvas exists, no SVG marker surface is created, and the desktop panel/mobile sheet remains interactive.
+5. After a production deploy that changes the counts payload, refresh/publish the signals read model once so the durable and Redis `signals` versions advance together; otherwise the old cached counts payload may remain valid under the previous version key.
+6. Query one map item as Guest/Free/VIP and confirm any phone embedded in `title` is redacted; admin may retain the original title. With `RADAR_SIGNAL_READ_MODEL_ENABLED=0`, confirm `stats.signals` is still the legacy exact count rather than `0`.
+
+Focused verification:
+
+```powershell
+& $py -X utf8 -m pytest `
+  tests\test_listing_map_service.py `
+  tests\test_listing_map_api.py `
+  tests\test_listing_map_js.py `
+  tests\test_listing_map_ui.py `
+  tests\test_market_data_performance.py -q
+node --check static\js\main\listing_map.js
+```
+
 Controlled local browser evidence from 2026-08-01 (cache disabled, local PostgreSQL, not a capacity claim):
 
 - desktop HTML TTFB `4.7 ms`; first signals `321.8 ms`; `radar-first-signal-cards` `337.1 ms`; counts began at `519.4 ms`; LCP `528 ms`; CLS `0.0015`;

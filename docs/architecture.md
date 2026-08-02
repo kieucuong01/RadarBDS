@@ -117,10 +117,18 @@ The follow-up distributed run `30698414443` removed the single Windows generator
 
 - `static/js/main/filter_runtime.js` owns browser-side canonicalization. It sorts query keys, trims values, removes the retired `sigv`, and sorts/deduplicates order-insensitive ward/source/property/range values. Range values use numeric lower/upper-bound ordering so the browser string matches the parsed server cache-key tuple.
 - On the Signals tab, `applyFilters()` snapshots the canonical query, resets pagination, and starts exactly one immediate `/api/signals?page=1&include_total=0...` request. Only after that promise settles, and only if the snapshot is still current, it schedules `/api/counts` through `requestIdleCallback` (100 ms timer fallback).
+- `/api/counts` owns the filtered total shown in desktop/mobile Săn Deal badges through `stats.signals`. The feed deliberately omits `total`; adding its `COUNT(*) OVER()` back would regress first-card latency.
 - `/api/dashboard` is not part of Signals-tab filtering. Non-Signals tabs may refresh counts and dashboard metadata immediately; Market/Insights/All keep their existing lazy loaders.
 - Rapid changes retain three layers of stale-work protection: `fetchJSONCached()` aborts the prior scope controller; `signalRunSeq` prevents an older response from rendering; `signalRenderSeq` cancels old animation-frame chunks. `renderedSignalIds` resets on page 1 and deduplicates appended pages.
 - `insights` data is not part of normal signal-filter refresh and should load on Insights tab activation.
 - Infinite scroll must dedupe by listing id on client render to avoid race-condition duplicates.
+
+### Homepage listing Maps read path
+
+- `mode=signals` summary and item requests reuse `signal_card_read_model` and the canonical read-model filter predicate, then join `listing_map_locations`. Their cache version is `public_dataset_versions.signals`; they must not scan valuation history or compute the legacy publisher policy at click time.
+- `mode=all` remains on the legacy listing/valuation path because it is not an actionable-signal feed. The shared `RADAR_SIGNAL_READ_MODEL_ENABLED` flag preserves the data-safe fallback for both the card feed and signals-mode Maps.
+- Signals-mode map items reuse `signal_card_read_model.primary_image_id` instead of a per-listing lateral image lookup. The summary stays grouped and contains no descriptions, phone numbers, source URLs, seller identity, or image arrays. Guest/Free/VIP item titles pass through the same embedded-phone redaction as normal cards; only admin retains the original title.
+- Leaflet uses its Canvas renderer for the large grouped marker set. The directory remains accessible and both desktop/mobile panels consume the same compact summary payload.
 
 ### Browser performance telemetry
 

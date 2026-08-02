@@ -96,6 +96,9 @@ Marketing skills:
 - Only admin can expose original listing URLs and phone numbers. Guest/Free/VIP APIs must redact them.
 - `/api/dashboard` is lightweight summary only. It must not return all signals, descriptions, or image arrays.
 - `/api/signals` is the paginated card feed. Keep it compact and thumbnail-first.
+- The Săn Deal badge comes from `/api/counts` `stats.signals`; keep the first feed request on `include_total=0` and never restore its window count just to populate the badge.
+- `/api/counts` must call the shared filtered-signal counter in both flag states. A read-model rollback must use the legacy exact count, never a synthetic `signals=0`.
+- Signals-mode `/api/map-listings` and `/api/map-listing-items` use `signal_card_read_model` plus the `signals` dataset version while the read-model flag is on. Do not rebuild latest-valuation CTEs on the Maps click path.
 - When `RADAR_SIGNAL_READ_MODEL_ENABLED=1`, dashboard `stats.signals` must use `count_signals_from_read_model()` with the same public filters as `/api/signals`; do not restore the request-time latest-valuation CTE. Flag `0` retains the legacy count only as rollback.
 - `RADAR_SIGNAL_READ_MODEL_ENABLED` defaults to `0`. Enable it only after `radar.py signal-read-model --refresh --compare` reports zero differences in the target environment; rollback is flag `0` plus service restart.
 - A failed signal read-model refresh must leave the previous complete rows/version active. Never bump `public_dataset_versions.signals` outside the refresh transaction.

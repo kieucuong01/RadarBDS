@@ -1336,6 +1336,11 @@ def _signal_read_model_enabled() -> bool:
     }
 
 
+def signal_read_model_enabled() -> bool:
+    """Expose the shared rollout gate to adjacent public read services."""
+    return _signal_read_model_enabled()
+
+
 def load_signals_from_read_model(*args, **kwargs):
     from services.signal_read_model import (
         load_signals_from_read_model as read_model_loader,
@@ -1348,6 +1353,86 @@ def load_signals(*args, **kwargs):
     if _signal_read_model_enabled():
         return load_signals_from_read_model(*args, **kwargs)
     return _load_signals_legacy(*args, **kwargs)
+
+
+def count_filtered_signals(
+    conn,
+    *,
+    sources=None,
+    wards=None,
+    prop_types=None,
+    only_drops=False,
+    mos_min=0,
+    area_min=0,
+    area_max=0,
+    price_min=0,
+    price_max=0,
+    area_ranges=None,
+    price_ranges=None,
+    keyword="",
+    tier="guest",
+    date_range=None,
+    include_guland_high_activity=False,
+) -> int:
+    """Count the exact signal feed using the active read implementation."""
+    if tier == "guest":
+        mos_min = 10
+        only_drops = False
+
+    if _signal_read_model_enabled():
+        from services.signal_read_model import count_signals_from_read_model
+
+        return count_signals_from_read_model(
+            conn,
+            sources=sources,
+            wards=wards,
+            prop_types=prop_types,
+            only_drops=only_drops,
+            mos_min=mos_min,
+            area_min=area_min,
+            area_max=area_max,
+            price_min=price_min,
+            price_max=price_max,
+            area_ranges=area_ranges,
+            price_ranges=price_ranges,
+            keyword=keyword,
+            tier=tier,
+            date_range=date_range,
+            include_guland_high_activity=include_guland_high_activity,
+        )
+
+    signal_where_sql, signal_params = build_listing_filters(
+        sources,
+        wards,
+        prop_types,
+        only_drops,
+        prefix="l.",
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+        keyword=keyword,
+        date_range=date_range,
+        include_guland_high_activity=include_guland_high_activity,
+    )
+    signal_condition = build_deal_sql(mos_min).condition
+    signal_row = conn.execute(
+        f"""
+        WITH {LATEST_VALUATION_CTE},
+             {LATEST_SHADOW_VALUATION_CTE}
+        SELECT COUNT(*) AS signals
+        FROM listings l
+        LEFT JOIN latest_valuation v ON l.id = v.listing_id
+        LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
+        WHERE ({signal_condition})
+          AND {_signal_listing_data_sql("l")}
+          AND {signal_where_sql}
+        """,
+        signal_params,
+    ).fetchone()
+    return int(_row_get(signal_row, "signals", 0) or 0)
 
 
 def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', include_trend=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier='guest', date_range=None, include_guland_high_activity=False):
@@ -1396,55 +1481,24 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
         "price_drops": 0,
     }
 
-    if _signal_read_model_enabled():
-        from services.signal_read_model import count_signals_from_read_model
-
-        stats["signals"] = count_signals_from_read_model(
-            conn,
-            sources=sources,
-            wards=wards,
-            prop_types=prop_types,
-            only_drops=only_drops,
-            mos_min=mos_min,
-            area_min=area_min,
-            area_max=area_max,
-            price_min=price_min,
-            price_max=price_max,
-            area_ranges=area_ranges,
-            price_ranges=price_ranges,
-            keyword=keyword,
-            tier=tier,
-            date_range=date_range,
-            include_guland_high_activity=include_guland_high_activity,
-        )
-    else:
-        signal_where_sql, signal_params = build_listing_filters(
-            sources,
-            wards,
-            prop_types,
-            only_drops,
-            prefix="l.",
-            area_min=area_min,
-            area_max=area_max,
-            price_min=price_min,
-            price_max=price_max,
-            area_ranges=area_ranges,
-            price_ranges=price_ranges,
-            keyword=keyword,
-            date_range=date_range,
-            include_guland_high_activity=include_guland_high_activity,
-        )
-        signal_condition = build_deal_sql(mos_min).condition
-        signal_row = conn.execute(f"""
-            WITH {LATEST_VALUATION_CTE},
-                 {LATEST_SHADOW_VALUATION_CTE}
-            SELECT COUNT(*) AS signals
-            FROM listings l
-            LEFT JOIN latest_valuation v ON l.id = v.listing_id
-            LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
-            WHERE ({signal_condition}) AND {_signal_listing_data_sql("l")} AND {signal_where_sql}
-        """, signal_params).fetchone()
-        stats["signals"] = int(_row_get(signal_row, "signals", 0) or 0)
+    stats["signals"] = count_filtered_signals(
+        conn,
+        sources=sources,
+        wards=wards,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        mos_min=mos_min,
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+        keyword=keyword,
+        tier=tier,
+        date_range=date_range,
+        include_guland_high_activity=include_guland_high_activity,
+    )
 
     market = []
     summary_rows = conn.execute(f"""
@@ -1500,7 +1554,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
     }
 
 
-def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", date_range=None, include_guland_high_activity=False):
+def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier="guest", date_range=None, include_guland_high_activity=False):
     conn = _open_read_conn(db_path)
     where_sql, params = build_listing_filters(
         sources,
@@ -1534,14 +1588,32 @@ def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=F
             )) AS new_recent_days_7,
             (SELECT COUNT(*) FROM filtered WHERE price_dropped = 1) AS price_drops
     """, params).fetchone()
-    conn.close()
-
-    return dict(row) if row else {
+    stats = dict(row) if row else {
         "total": 0,
         "hot": 0,
         "new_recent_days_7": 0,
         "price_drops": 0,
     }
+    stats["signals"] = count_filtered_signals(
+        conn,
+        sources=sources,
+        wards=wards,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        mos_min=mos_min,
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+        keyword=keyword,
+        tier=tier,
+        date_range=date_range,
+        include_guland_high_activity=include_guland_high_activity,
+    )
+    conn.close()
+    return stats
 
 def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", include_guland_high_activity=False):
     if not sources:
