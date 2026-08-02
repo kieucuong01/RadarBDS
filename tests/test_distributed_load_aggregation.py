@@ -35,6 +35,7 @@ def _write_shard(
     bypass: int = 0,
     unknown: int = 0,
     edge_error: int = 0,
+    origin_error: int = 0,
     transport_error: int = 0,
     cdn_hit: int | None = None,
     cdn_miss: int | None = None,
@@ -93,6 +94,7 @@ def _write_shard(
             "radar_edge_bypass": {"count": bypass},
             "radar_edge_unknown": {"count": unknown},
             "radar_edge_error": {"count": edge_error},
+            "radar_origin_error": {"count": origin_error},
             "radar_transport_error": {"count": transport_error},
             "radar_cdn_hit": {"count": cdn_hit},
             "radar_cdn_miss": {"count": cdn_miss},
@@ -169,6 +171,7 @@ def test_valid_shards_are_summed_and_use_conservative_max_percentiles(tmp_path: 
         "radar_cdn_unknown": 0,
         "radar_cdn_error": 0,
     }
+    assert aggregate["origin_errors"] == 0
     assert "stage_status=passed" in completed.stdout
 
 
@@ -251,3 +254,33 @@ def test_cdn_errors_are_governed_by_failure_threshold_not_unknown_gate(tmp_path:
     assert aggregate["edge"]["radar_edge_error"] == 2
     assert aggregate["cdn"]["radar_cdn_error"] == 2
     assert aggregate["transport_errors"] == 2
+
+
+def test_origin_errors_are_governed_by_failure_threshold_not_unknown_gate(
+    tmp_path: Path,
+):
+    for shard in range(2):
+        _write_shard(
+            tmp_path,
+            shard,
+            requests=1000,
+            hit=999,
+            miss=0,
+            origin_error=1,
+            cdn_hit=999,
+            cdn_miss=0,
+            failed_passes=1,
+            failed_fails=999,
+            check_passes=3995,
+            check_fails=5,
+        )
+
+    output = tmp_path / "aggregate.json"
+    completed = _run(tmp_path, output)
+
+    assert completed.returncode == 0, completed.stderr
+    aggregate = json.loads(output.read_text("utf-8"))
+    assert aggregate["failure_rate"] == 0.001
+    assert aggregate["origin_errors"] == 2
+    assert aggregate["edge"]["radar_edge_unknown"] == 0
+    assert aggregate["cdn"]["radar_cdn_unknown"] == 0

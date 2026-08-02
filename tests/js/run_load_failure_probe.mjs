@@ -129,13 +129,12 @@ process.stdout.write(JSON.stringify({
     [...counters.entries()]
       .filter(([name]) => [
         'radar_cdn_error',
-        'radar_cdn_bypass',
         'radar_cdn_hit',
         'radar_cdn_unknown',
         'radar_edge_error',
         'radar_edge_hit',
-        'radar_edge_miss',
         'radar_edge_unknown',
+        'radar_origin_error',
         'radar_transport_error',
       ].includes(name))
       .sort(([left], [right]) => left.localeCompare(right))

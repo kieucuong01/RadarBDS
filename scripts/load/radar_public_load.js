@@ -31,6 +31,7 @@ const cdnStale = new Counter('radar_cdn_stale');
 const cdnBypass = new Counter('radar_cdn_bypass');
 const cdnUnknown = new Counter('radar_cdn_unknown');
 const cdnError = new Counter('radar_cdn_error');
+const originError = new Counter('radar_origin_error');
 const transportError = new Counter('radar_transport_error');
 let failureDiagnosticBudget = 3;
 
@@ -161,6 +162,10 @@ export function recordCacheOutcomes(response) {
     edgeError.add(1);
     cdnError.add(1);
     return { edge: 'CDN_ERROR', cdn: 'CDN_ERROR' };
+  }
+  if (status !== 200) {
+    originError.add(1);
+    return { edge: 'ORIGIN_ERROR', cdn: 'ORIGIN_ERROR' };
   }
   return { edge: recordEdge(response), cdn: recordCdn(response) };
 }

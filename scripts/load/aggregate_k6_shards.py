@@ -249,6 +249,10 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             _optional_metric_count(item, "radar_transport_error")
             for item in summaries
         ),
+        "origin_errors": sum(
+            _optional_metric_count(item, "radar_origin_error")
+            for item in summaries
+        ),
     }
     return aggregate_result
 
