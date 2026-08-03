@@ -1,4 +1,34 @@
 """Shared helpers for separating model signals from actionable signals."""
+import math
+
+
+DEFAULT_SIGNAL_MOS_MIN_PCT = 15.0
+MOS_FILTER_MIN_PCT = 0.0
+MOS_FILTER_MAX_PCT = 70.0
+_MOS_FILTER_TIERS = frozenset({"vip", "admin"})
+
+
+def effective_signal_mos_min(
+    tier: str,
+    requested_value=None,
+    *,
+    was_explicit: bool | None = None,
+) -> float:
+    """Return the user-facing MOS floor for one signal request."""
+    if str(tier or "guest").strip().lower() not in _MOS_FILTER_TIERS:
+        return DEFAULT_SIGNAL_MOS_MIN_PCT
+
+    explicit = requested_value is not None if was_explicit is None else bool(was_explicit)
+    if not explicit:
+        return DEFAULT_SIGNAL_MOS_MIN_PCT
+
+    try:
+        value = float(requested_value)
+    except (TypeError, ValueError):
+        return DEFAULT_SIGNAL_MOS_MIN_PCT
+    if not math.isfinite(value):
+        return DEFAULT_SIGNAL_MOS_MIN_PCT
+    return min(max(value, MOS_FILTER_MIN_PCT), MOS_FILTER_MAX_PCT)
 
 ACTIONABLE_SUPPRESS_FLAGS = frozenset({
     "too_low_absolute_price",
