@@ -99,6 +99,75 @@ def test_map_prefers_canvas_for_large_marker_sets():
     }
 
 
+def test_active_panel_id_selects_exactly_one_responsive_surface():
+    assert _run_node("mapApi.activePanelId(false)") == "listingMapPanel"
+    assert _run_node("mapApi.activePanelId(true)") == "listingMapMobileSheet"
+
+
+def test_directory_window_limits_initial_and_incremental_dom_to_100():
+    assert _run_node("mapApi.directoryWindow(1837,0)") == {
+        "visible": 100,
+        "nextVisible": 200,
+        "remaining": 1737,
+    }
+    assert _run_node("mapApi.directoryWindow(1837,100)") == {
+        "visible": 100,
+        "nextVisible": 200,
+        "remaining": 1737,
+    }
+    assert _run_node("mapApi.directoryWindow(1837,1800)") == {
+        "visible": 1800,
+        "nextVisible": 1837,
+        "remaining": 37,
+    }
+    assert _run_node("mapApi.directoryWindow(42,0)") == {
+        "visible": 42,
+        "nextVisible": 42,
+        "remaining": 0,
+    }
+
+
+def test_panel_render_model_targets_one_surface_and_slices_locations():
+    result = _run_node(
+        "(function(){"
+        "const locations=Array.from({length:105},(_,i)=>({id:i}));"
+        "const model=mapApi.panelRenderModel(true,locations,0);"
+        "return {"
+        "active:model.activePanelId,"
+        "inactive:model.inactivePanelId,"
+        "ids:model.groups.map(group=>group.id),"
+        "remaining:model.remaining,"
+        "nextVisible:model.nextVisible"
+        "};"
+        "})()"
+    )
+
+    assert result == {
+        "active": "listingMapMobileSheet",
+        "inactive": "listingMapPanel",
+        "ids": list(range(100)),
+        "remaining": 5,
+        "nextVisible": 105,
+    }
+
+
+def test_batch_ranges_split_dom_work_without_gaps_or_overlap():
+    assert _run_node("mapApi.batchRanges(0,25)") == []
+    assert _run_node("mapApi.batchRanges(100,25)") == [
+        [0, 25],
+        [25, 50],
+        [50, 75],
+        [75, 100],
+    ]
+    assert _run_node("mapApi.batchRanges(105,25)") == [
+        [0, 25],
+        [25, 50],
+        [50, 75],
+        [75, 100],
+        [100, 105],
+    ]
+
+
 def test_tracking_context_is_strictly_allowlisted():
     result = _run_node(
         "mapApi.safeTrackingContext({"

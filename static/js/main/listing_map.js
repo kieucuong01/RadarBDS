@@ -12,6 +12,9 @@
 
   var VALID_MODES = ["signals", "all"];
   var VALID_BASE_LAYERS = ["street", "satellite"];
+  var DIRECTORY_BATCH_SIZE = 100;
+  var DIRECTORY_FRAME_CHUNK_SIZE = 25;
+  var MOBILE_MEDIA_QUERY = "(max-width: 760px)";
   var LOCATION_KEY_PATTERN = /^(exact|road|landmark|ward):[a-z0-9:-]+$/;
   var SAFE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
   var leafletPromise = null;
@@ -34,7 +37,13 @@
     scrollTop: 0,
     historyPushed: false,
     summary: null,
-    selectedGroup: null
+    selectedGroup: null,
+    panelView: { kind: "directory", group: null, payload: null },
+    directoryVisibleCount: DIRECTORY_BATCH_SIZE,
+    directoryGeneration: 0,
+    directoryFrameId: null,
+    mediaQuery: null,
+    mediaQueryHandler: null
   };
 
   function normalizeMode(value) {
@@ -158,6 +167,48 @@
   function safeCount(value) {
     var number = Number(value);
     return Number.isFinite(number) && number >= 0 ? Math.round(number) : 0;
+  }
+
+  function activePanelId(isMobile) {
+    return isMobile ? "listingMapMobileSheet" : "listingMapPanel";
+  }
+
+  function directoryWindow(total, requestedVisible) {
+    var safeTotal = safeCount(total);
+    var requested = safeCount(requestedVisible);
+    var visible = Math.min(
+      safeTotal,
+      Math.max(requested || DIRECTORY_BATCH_SIZE, DIRECTORY_BATCH_SIZE)
+    );
+    var nextVisible = Math.min(safeTotal, visible + DIRECTORY_BATCH_SIZE);
+    return {
+      visible: visible,
+      nextVisible: nextVisible,
+      remaining: Math.max(safeTotal - visible, 0)
+    };
+  }
+
+  function panelRenderModel(isMobile, locations, requestedVisible) {
+    var safeLocations = Array.isArray(locations) ? locations : [];
+    var page = directoryWindow(safeLocations.length, requestedVisible);
+    return {
+      activePanelId: activePanelId(Boolean(isMobile)),
+      inactivePanelId: activePanelId(!Boolean(isMobile)),
+      groups: safeLocations.slice(0, page.visible),
+      visible: page.visible,
+      nextVisible: page.nextVisible,
+      remaining: page.remaining
+    };
+  }
+
+  function batchRanges(total, batchSize) {
+    var safeTotal = safeCount(total);
+    var safeBatch = Math.max(safeCount(batchSize) || 1, 1);
+    var ranges = [];
+    for (var start = 0; start < safeTotal; start += safeBatch) {
+      ranges.push([start, Math.min(start + safeBatch, safeTotal)]);
+    }
+    return ranges;
   }
 
   function normalizeAccuracyRadius(value) {
@@ -330,11 +381,64 @@
     return node;
   }
 
-  function panelTargets() {
-    return [
-      element("listingMapPanel"),
-      element("listingMapMobileSheet")
-    ].filter(Boolean);
+  function isMobileViewport() {
+    return Boolean(state.mediaQuery && state.mediaQuery.matches);
+  }
+
+  function activePanel() {
+    return element(activePanelId(isMobileViewport()));
+  }
+
+  function inactivePanel() {
+    return element(activePanelId(!isMobileViewport()));
+  }
+
+  function clearPanels() {
+    clearElement(element("listingMapPanel"));
+    clearElement(element("listingMapMobileSheet"));
+  }
+
+  function cancelDirectoryRender() {
+    state.directoryGeneration += 1;
+    if (state.directoryFrameId !== null) {
+      if (typeof root.cancelAnimationFrame === "function") {
+        root.cancelAnimationFrame(state.directoryFrameId);
+      } else {
+        root.clearTimeout(state.directoryFrameId);
+      }
+    }
+    state.directoryFrameId = null;
+  }
+
+  function scheduleDirectoryChunk(callback) {
+    if (typeof root.requestAnimationFrame === "function") {
+      state.directoryFrameId = root.requestAnimationFrame(callback);
+      return;
+    }
+    state.directoryFrameId = root.setTimeout(callback, 0);
+  }
+
+  function appendDirectoryGroups(list, groups) {
+    cancelDirectoryRender();
+    var generation = state.directoryGeneration;
+    var index = 0;
+
+    function appendChunk() {
+      if (!state.open || generation !== state.directoryGeneration) return;
+      var end = Math.min(index + DIRECTORY_FRAME_CHUNK_SIZE, groups.length);
+      var fragment = root.document.createDocumentFragment();
+      for (; index < end; index += 1) {
+        fragment.appendChild(groupButton(groups[index]));
+      }
+      list.appendChild(fragment);
+      if (index < groups.length) {
+        scheduleDirectoryChunk(appendChunk);
+      } else {
+        state.directoryFrameId = null;
+      }
+    }
+
+    appendChunk();
   }
 
   function renderRetry(target, message, retry, retryContext) {
@@ -485,45 +589,65 @@
     return button;
   }
 
-  function renderGroupDirectory(payload) {
+  function renderGroupDirectoryInto(target, payload) {
+    if (!target) return;
     var summary = payload.summary || {};
-    panelTargets().forEach(function (target) {
-      clearElement(target);
-      var shell = create("div", "listing-map-directory");
-      var stats = create("div", "listing-map-summary-grid");
-      [
-        ["Đã định vị", safeCount(summary.mapped)],
-        ["Chưa định vị", safeCount(summary.unmapped_count)],
-        ["Theo đường", safeCount(summary.road_count)],
-        ["Theo khu vực", safeCount(summary.landmark_count)],
-        ["Theo phường", safeCount(summary.ward_count)]
-      ].forEach(function (entry) {
-        var card = create("div", "listing-map-summary-card");
-        card.appendChild(create("span", "", entry[0]));
-        card.appendChild(create("strong", "", entry[1]));
-        stats.appendChild(card);
-      });
-      shell.appendChild(stats);
-      var heading = create(
-        "h3",
-        "listing-map-directory-title",
-        "Chọn một vị trí để xem tin"
-      );
-      shell.appendChild(heading);
-      var list = create("div", "listing-map-group-list");
-      (payload.locations || []).forEach(function (group) {
-        list.appendChild(groupButton(group));
-      });
-      if (!list.childNodes.length) {
-        list.appendChild(create(
-          "p",
-          "listing-map-empty",
-          "Bộ lọc hiện tại chưa có lô đất xác định được vị trí."
-        ));
-      }
-      shell.appendChild(list);
-      target.appendChild(shell);
+    cancelDirectoryRender();
+    clearElement(target);
+    var shell = create("div", "listing-map-directory");
+    var stats = create("div", "listing-map-summary-grid");
+    [
+      ["Đã định vị", safeCount(summary.mapped)],
+      ["Chưa định vị", safeCount(summary.unmapped_count)],
+      ["Theo đường", safeCount(summary.road_count)],
+      ["Theo khu vực", safeCount(summary.landmark_count)],
+      ["Theo phường", safeCount(summary.ward_count)]
+    ].forEach(function (entry) {
+      var card = create("div", "listing-map-summary-card");
+      card.appendChild(create("span", "", entry[0]));
+      card.appendChild(create("strong", "", entry[1]));
+      stats.appendChild(card);
     });
+    shell.appendChild(stats);
+    var heading = create(
+      "h3",
+      "listing-map-directory-title",
+      "Chọn một vị trí để xem tin"
+    );
+    shell.appendChild(heading);
+    var list = create("div", "listing-map-group-list");
+    var model = panelRenderModel(
+      isMobileViewport(),
+      payload.locations || [],
+      state.directoryVisibleCount
+    );
+    if (model.groups.length) {
+      appendDirectoryGroups(list, model.groups);
+    } else {
+      list.appendChild(create(
+        "p",
+        "listing-map-empty",
+        "Bộ lọc hiện tại chưa có lô đất xác định được vị trí."
+      ));
+    }
+    shell.appendChild(list);
+    if (model.remaining > 0) {
+      var more = create(
+        "button",
+        "listing-map-show-more",
+        "Xem thêm " + model.remaining + " vị trí"
+      );
+      more.type = "button";
+      more.addEventListener("click", function () {
+        var scrollTop = target.scrollTop;
+        state.directoryVisibleCount = model.nextVisible;
+        renderActiveView();
+        var nextTarget = activePanel();
+        if (nextTarget) nextTarget.scrollTop = scrollTop;
+      });
+      shell.appendChild(more);
+    }
+    target.appendChild(shell);
   }
 
   function makeTooltip(group) {
@@ -630,94 +754,162 @@
     openListingFromMap(root, item);
   }
 
-  function renderItems(group, payload) {
-    panelTargets().forEach(function (target) {
-      clearElement(target);
-      var shell = create("div", "listing-map-items");
-      var back = create(
-        "button",
-        "listing-map-back",
-        "← Tất cả vị trí"
-      );
-      back.type = "button";
-      back.addEventListener("click", function () {
-        renderGroupDirectory(state.summary || {
-          summary: {},
-          locations: []
-        });
-      });
-      shell.appendChild(back);
-      shell.appendChild(create("h3", "", group.label));
-      shell.appendChild(create(
-        "p",
-        "listing-map-precision-copy",
-        precisionCopy(group.precision).badge + ". "
-          + precisionCopy(group.precision).detail
+  function renderItemsInto(target, group, payload) {
+    if (!target) return;
+    cancelDirectoryRender();
+    clearElement(target);
+    var shell = create("div", "listing-map-items");
+    var back = create(
+      "button",
+      "listing-map-back",
+      "← Tất cả vị trí"
+    );
+    back.type = "button";
+    back.addEventListener("click", function () {
+      state.selectedGroup = null;
+      setPanelView("directory");
+    });
+    shell.appendChild(back);
+    shell.appendChild(create("h3", "", group.label));
+    shell.appendChild(create(
+      "p",
+      "listing-map-precision-copy",
+      precisionCopy(group.precision).badge + ". "
+        + precisionCopy(group.precision).detail
+    ));
+    var list = create("div", "listing-map-item-list");
+    (payload.items || []).forEach(function (item) {
+      var card = create("button", "listing-map-item-card");
+      card.type = "button";
+      if (item.thumbnail) {
+        var image = create("img", "listing-map-item-thumb");
+        image.src = item.thumbnail;
+        image.alt = "";
+        image.loading = "lazy";
+        card.appendChild(image);
+      }
+      var content = create("span", "listing-map-item-content");
+      content.appendChild(create("strong", "", item.title || "Tin rao"));
+      content.appendChild(create(
+        "span",
+        "listing-map-item-meta",
+        [
+          item.price_ty ? item.price_ty + " tỷ" : "Chưa rõ giá",
+          item.area_m2 ? item.area_m2 + " m²" : "Chưa rõ diện tích",
+          item.prop_type_label || "",
+          item.ward || "",
+          item.road_name || ""
+        ].filter(Boolean).join(" · ")
       ));
-      var list = create("div", "listing-map-item-list");
-      (payload.items || []).forEach(function (item) {
-        var card = create("button", "listing-map-item-card");
-        card.type = "button";
-        if (item.thumbnail) {
-          var image = create("img", "listing-map-item-thumb");
-          image.src = item.thumbnail;
-          image.alt = "";
-          image.loading = "lazy";
-          card.appendChild(image);
-        }
-        var content = create("span", "listing-map-item-content");
-        content.appendChild(create("strong", "", item.title || "Tin rao"));
+      if (state.snapshot.mode === "signals") {
         content.appendChild(create(
           "span",
-          "listing-map-item-meta",
-          [
-            item.price_ty ? item.price_ty + " tỷ" : "Chưa rõ giá",
-            item.area_m2 ? item.area_m2 + " m²" : "Chưa rõ diện tích",
-            item.prop_type_label || "",
-            item.ward || "",
-            item.road_name || ""
-          ].filter(Boolean).join(" · ")
-        ));
-        if (state.snapshot.mode === "signals") {
-          content.appendChild(create(
-            "span",
-            "listing-map-item-mos",
-            "MOS " + Number(item.mos_pct || 0).toFixed(1) + "%"
-          ));
-        }
-        if (item.days_ago !== null && item.days_ago !== undefined) {
-          content.appendChild(create(
-            "small",
-            "",
-            cardDateText(item)
-          ));
-        }
-        card.appendChild(content);
-        card.addEventListener("click", function () {
-          openItem(item);
-        });
-        list.appendChild(card);
-      });
-      if (!list.childNodes.length) {
-        list.appendChild(create(
-          "p",
-          "listing-map-empty",
-          "Không còn tin phù hợp trong nhóm này."
+          "listing-map-item-mos",
+          "MOS " + Number(item.mos_pct || 0).toFixed(1) + "%"
         ));
       }
-      shell.appendChild(list);
-      target.appendChild(shell);
+      if (item.days_ago !== null && item.days_ago !== undefined) {
+        content.appendChild(create(
+          "small",
+          "",
+          cardDateText(item)
+        ));
+      }
+      card.appendChild(content);
+      card.addEventListener("click", function () {
+        openItem(item);
+      });
+      list.appendChild(card);
+    });
+    if (!list.childNodes.length) {
+      list.appendChild(create(
+        "p",
+        "listing-map-empty",
+        "Không còn tin phù hợp trong nhóm này."
+      ));
+    }
+    shell.appendChild(list);
+    target.appendChild(shell);
+  }
+
+  function renderItemsLoadingInto(target, group) {
+    if (!target) return;
+    cancelDirectoryRender();
+    clearElement(target);
+    var shell = create("div", "listing-map-panel-loading");
+    shell.appendChild(create("strong", "", group.label));
+    shell.appendChild(create("span", "", "Đang tải các lô đất..."));
+    target.appendChild(shell);
+  }
+
+  function renderItemsErrorInto(target, group) {
+    renderRetry(
+      target,
+      "Không tải được các lô đất tại vị trí này.",
+      function () { selectGroup(group); },
+      {
+        mode: state.snapshot && state.snapshot.mode,
+        precision: group.precision,
+        listing_count: group.listing_count
+      }
+    );
+  }
+
+  function renderSummaryErrorInto(target) {
+    renderRetry(
+      target,
+      "Không tải được dữ liệu bản đồ.",
+      requestSummary,
+      { mode: state.snapshot && state.snapshot.mode }
+    );
+  }
+
+  function renderLibraryErrorInto(target) {
+    renderRetry(
+      target,
+      "Bản đồ chưa tải được. Danh sách tin vẫn hoạt động bình thường.",
+      function () { startMapLoad(state.snapshot); },
+      { mode: state.snapshot && state.snapshot.mode }
+    );
+  }
+
+  function renderActiveView() {
+    var target = activePanel();
+    clearElement(inactivePanel());
+    if (!target) return;
+    var view = state.panelView || { kind: "directory" };
+    if (view.kind === "items") {
+      renderItemsInto(target, view.group, view.payload || { items: [] });
+      return;
+    }
+    if (view.kind === "items-loading") {
+      renderItemsLoadingInto(target, view.group);
+      return;
+    }
+    if (view.kind === "items-error") {
+      renderItemsErrorInto(target, view.group);
+      return;
+    }
+    if (view.kind === "summary-error") {
+      renderSummaryErrorInto(target);
+      return;
+    }
+    if (view.kind === "library-error") {
+      renderLibraryErrorInto(target);
+      return;
+    }
+    renderGroupDirectoryInto(target, state.summary || {
+      summary: {}, locations: []
     });
   }
 
-  function renderItemsLoading(group) {
-    panelTargets().forEach(function (target) {
-      clearElement(target);
-      var shell = create("div", "listing-map-panel-loading");
-      shell.appendChild(create("strong", "", group.label));
-      shell.appendChild(create("span", "", "Đang tải các lô đất..."));
-      target.appendChild(shell);
-    });
+  function setPanelView(kind, group, payload) {
+    state.panelView = {
+      kind: kind,
+      group: group || null,
+      payload: payload || null
+    };
+    renderActiveView();
   }
 
   function selectGroup(group) {
@@ -735,7 +927,7 @@
       20
     );
     if (!url) return;
-    renderItemsLoading(group);
+    setPanelView("items-loading", group);
     emitTrack("listing_map_group_selected", {
       mode: state.snapshot.mode,
       precision: group.precision,
@@ -745,29 +937,18 @@
     });
     fetchJson(url, controller).then(function (payload) {
       if (!state.open || sequence !== itemSequence) return;
-      renderItems(group, payload);
+      setPanelView("items", group, payload);
     }).catch(function (error) {
       if (error && error.name === "AbortError") return;
       if (!state.open || sequence !== itemSequence) return;
-      panelTargets().forEach(function (target) {
-        renderRetry(
-          target,
-          "Không tải được các lô đất tại vị trí này.",
-          function () { selectGroup(group); },
-          {
-            mode: state.snapshot.mode,
-            precision: group.precision,
-            listing_count: group.listing_count
-          }
-        );
-      });
+      setPanelView("items-error", group);
     });
   }
 
   function renderSummary(payload) {
     state.summary = payload;
     renderMarkers(payload);
-    renderGroupDirectory(payload);
+    setPanelView("directory");
     var summary = payload.summary || {};
     setStatus(
       "Đã định vị " + safeCount(summary.mapped) + "/"
@@ -794,14 +975,7 @@
         if (error && error.name === "AbortError") return;
         if (!state.open || sequence !== summarySequence) return;
         setStatus("Không tải được dữ liệu vị trí.", false);
-        panelTargets().forEach(function (target) {
-          renderRetry(
-            target,
-            "Không tải được dữ liệu bản đồ.",
-            requestSummary,
-            { mode: state.snapshot.mode }
-          );
-        });
+        setPanelView("summary-error");
       });
   }
 
@@ -828,14 +1002,7 @@
     }).catch(function () {
       if (!state.open) return;
       setStatus("Không thể tải thư viện bản đồ.", false);
-      panelTargets().forEach(function (target) {
-        renderRetry(
-          target,
-          "Bản đồ chưa tải được. Danh sách tin vẫn hoạt động bình thường.",
-          function () { startMapLoad(safe); },
-          { mode: safe.mode }
-        );
-      });
+      setPanelView("library-error");
       return undefined;
     });
   }
@@ -856,6 +1023,8 @@
     state.workspace = workspace;
     state.summary = null;
     state.selectedGroup = null;
+    state.panelView = { kind: "directory", group: null, payload: null };
+    state.directoryVisibleCount = DIRECTORY_BATCH_SIZE;
     workspace.hidden = false;
     root.document.body.classList.add("listing-map-open");
     var launcher = element("listingMapLauncher");
@@ -893,13 +1062,14 @@
     if (state.itemController) state.itemController.abort();
     state.summaryController = null;
     state.itemController = null;
+    cancelDirectoryRender();
     if (state.markerLayer) state.markerLayer.clearLayers();
     if (state.map) state.map.remove();
     state.map = null;
     state.markerLayer = null;
     state.baseLayers = {};
     state.activeBaseLayer = "street";
-    panelTargets().forEach(clearElement);
+    clearPanels();
     setStatus("", false);
     if (state.workspace) state.workspace.hidden = true;
     root.document.body.classList.remove("listing-map-open");
@@ -945,6 +1115,7 @@
     state.snapshot = null;
     state.summary = null;
     state.selectedGroup = null;
+    state.panelView = { kind: "directory", group: null, payload: null };
     if (shouldConsumeHistory) root.history.back();
   }
 
@@ -1000,6 +1171,21 @@
   function bind(doc, win) {
     if (bound || !doc || !win) return;
     bound = true;
+    state.mediaQuery = typeof win.matchMedia === "function"
+      ? win.matchMedia(MOBILE_MEDIA_QUERY)
+      : { matches: false };
+    state.mediaQueryHandler = function () {
+      if (!state.open) return;
+      renderActiveView();
+      root.setTimeout(function () {
+        if (state.map) state.map.invalidateSize();
+      }, 0);
+    };
+    if (typeof state.mediaQuery.addEventListener === "function") {
+      state.mediaQuery.addEventListener("change", state.mediaQueryHandler);
+    } else if (typeof state.mediaQuery.addListener === "function") {
+      state.mediaQuery.addListener(state.mediaQueryHandler);
+    }
     doc.addEventListener("keydown", onKeydown);
     win.addEventListener("popstate", function (event) {
       if (shouldCloseMapOnPopstate(event, state.open)) {
@@ -1023,6 +1209,10 @@
     safeTrackingContext: safeTrackingContext,
     precisionCopy: precisionCopy,
     normalizeAccuracyRadius: normalizeAccuracyRadius,
+    activePanelId: activePanelId,
+    directoryWindow: directoryWindow,
+    panelRenderModel: panelRenderModel,
+    batchRanges: batchRanges,
     openListingFromMap: openListingFromMap,
     shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,
