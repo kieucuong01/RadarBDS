@@ -92,7 +92,7 @@ class VipNotifyTest(unittest.TestCase):
             self.user_ids.append(user_id)
             return user_id
 
-    def _insert_watchlist(self, user_id: int) -> None:
+    def _insert_watchlist(self, user_id: int, mos_min=0) -> None:
         from db.connection import get_conn
 
         with get_conn() as conn:
@@ -101,12 +101,17 @@ class VipNotifyTest(unittest.TestCase):
                 INSERT INTO user_watchlists (
                     user_id, name, wards, prop_types, mos_min,
                     notify_email, notify_telegram, active
-                ) VALUES (?, 'TDM deals', ?, ?, 0, 0, 1, 1)
+                ) VALUES (?, 'TDM deals', ?, ?, ?, 0, 1, 1)
                 """,
-                (user_id, json.dumps([self.ward]), json.dumps(["dat_nen"])),
+                (
+                    user_id,
+                    json.dumps([self.ward]),
+                    json.dumps(["dat_nen"]),
+                    mos_min,
+                ),
             )
 
-    def _insert_signal(self) -> int:
+    def _insert_signal(self, mos_pct=28.0) -> int:
         from db.connection import get_conn
 
         idx = len(self.listing_ids) + 1
@@ -137,9 +142,9 @@ class VipNotifyTest(unittest.TestCase):
             conn.execute(
                 """
                 INSERT INTO valuation_results (listing_id, mos_pct, is_signal)
-                VALUES (?, 28.0, 1)
+                VALUES (?, ?, 1)
                 """,
-                (listing_id,),
+                (listing_id, mos_pct),
             )
             return listing_id
 
@@ -234,6 +239,38 @@ class VipNotifyTest(unittest.TestCase):
                 (listing_id,),
             ).fetchall()
         self.assertEqual([tuple(r) for r in rows], [(admin_id, listing_id, "telegram", 2.1)])
+
+    def test_default_watchlist_excludes_candidate_below_fifteen(self):
+        from cli.notify import push_new_listings_to_vip
+
+        vip_id = self._insert_user("vip", "vip-default-15", self.vip_expires)
+        self._insert_watchlist(vip_id, mos_min=0)
+        self._insert_signal(mos_pct=12.0)
+
+        with mock.patch(
+            "alerts.telegram.send_watchlist_digest",
+            return_value=True,
+        ) as send:
+            stats = push_new_listings_to_vip(since=self.since)
+
+        self.assertEqual(stats["matched_users"], 0)
+        send.assert_not_called()
+
+    def test_explicit_ten_watchlist_keeps_candidate_below_fifteen(self):
+        from cli.notify import push_new_listings_to_vip
+
+        vip_id = self._insert_user("vip", "vip-explicit-10", self.vip_expires)
+        self._insert_watchlist(vip_id, mos_min=10)
+        listing_id = self._insert_signal(mos_pct=12.0)
+
+        with mock.patch(
+            "alerts.telegram.send_watchlist_digest",
+            return_value=True,
+        ) as send:
+            stats = push_new_listings_to_vip(since=self.since)
+
+        self.assertEqual(stats["matched_users"], 1)
+        self.assertEqual(send.call_args.args[1][0]["id"], listing_id)
 
     def _vip_setup(self):
         vip_id = self._insert_user("vip", "vip-chat", self.vip_expires)

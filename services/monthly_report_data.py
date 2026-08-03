@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, Callable
 
 from services.signal_quality import (
+    DEFAULT_SIGNAL_MOS_MIN_PCT,
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
     actionable_signal_sql,
@@ -106,6 +107,7 @@ def actionable_count_query(
         canonical=True,
     )
     type_sql = ""
+    params.append(DEFAULT_SIGNAL_MOS_MIN_PCT)
     if property_type:
         type_sql = " AND l.property_type = ?"
         params.append(property_type)
@@ -117,6 +119,7 @@ JOIN latest_valuation v ON v.listing_id = l.id
 WHERE {where_sql}
   AND {actionable_listing_sql("l")}
   AND {actionable_signal_sql("v")}
+  AND COALESCE(v.mos_pct, 0) >= ?
   {type_sql}
 """
     return sql, params
@@ -151,6 +154,7 @@ LEFT JOIN first_image img ON img.listing_id = l.id
 WHERE {where_sql}
   AND {actionable_listing_sql("l")}
   AND {actionable_signal_sql("v")}
+  AND COALESCE(v.mos_pct, 0) >= ?
   AND l.property_type IN ('dat_nen', 'nha_dat')
   AND l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0 AND l.price_per_m2 < 500
   AND l.price_ty IS NOT NULL AND l.price_ty > 0 AND l.price_ty < 50
@@ -159,7 +163,11 @@ WHERE {where_sql}
 ORDER BY v.mos_pct DESC, v.signal_score DESC NULLS LAST, l.crawled_at DESC, l.id DESC
 LIMIT ?
 """
-    return sql, [*params, max(1, min(int(limit), 50))]
+    return sql, [
+        *params,
+        DEFAULT_SIGNAL_MOS_MIN_PCT,
+        max(1, min(int(limit), 50)),
+    ]
 
 
 def _row_dict(row: Any, columns: tuple[str, ...]) -> dict:

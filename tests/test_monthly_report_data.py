@@ -45,7 +45,8 @@ def test_actionable_query_uses_latest_valuation_and_shared_quality_contract():
     assert "review_bad_extraction" in sql
     assert "review_bad_extraction" in sql
     assert "l.duplicate_of_id IS NULL" in sql
-    assert params[-2:] == ["2026-06-01", "2026-07-01"]
+    assert "COALESCE(v.mos_pct, 0) >= ?" in sql
+    assert params[-3:] == ["2026-06-01", "2026-07-01", 15.0]
 
 
 def test_featured_query_is_canonical_actionable_and_never_selects_contact_fields():
@@ -65,6 +66,8 @@ def test_featured_query_is_canonical_actionable_and_never_selects_contact_fields
     assert "order by v.mos_pct desc" in lowered
     assert "limit ?" in lowered
     assert params[-1] == 6
+    assert "coalesce(v.mos_pct, 0) >= ?" in lowered
+    assert params[-2] == 15.0
     assert "contact_phone" not in lowered
     assert " l.url" not in lowered
 

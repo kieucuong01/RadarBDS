@@ -25,6 +25,7 @@ from services.signal_quality import (
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
     actionable_signal_sql,
+    effective_signal_mos_min,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,8 +58,14 @@ def _listing_matches(listing: dict, watchlist: dict) -> bool:
     prop_types = _parse_json_list(watchlist.get("prop_types"))
     if prop_types and listing.get("property_type") not in prop_types:
         return False
-    mos_min = watchlist.get("mos_min") or 0
-    if mos_min and (listing.get("mos_pct") or 0) < mos_min:
+    requested_mos = watchlist.get("mos_min")
+    mos_was_explicit = requested_mos not in (None, "", 0, 0.0, "0")
+    mos_min = effective_signal_mos_min(
+        "vip",
+        requested_mos,
+        was_explicit=mos_was_explicit,
+    )
+    if float(listing.get("mos_pct") or 0) < mos_min:
         return False
     pmax = watchlist.get("price_max_ty")
     if pmax is not None and (listing.get("price_ty") or 0) > pmax:
