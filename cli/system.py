@@ -7,8 +7,7 @@ from db.connection import advisory_lock, get_conn
 from db.schema import init_schema
 
 def cmd_reprocess(args):
-    with advisory_lock("reprocess"):
-        return _cmd_reprocess(args)
+    return _cmd_reprocess(args)
 
 
 def cmd_integrity_report(args):
