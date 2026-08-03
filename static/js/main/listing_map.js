@@ -14,6 +14,7 @@
   var VALID_BASE_LAYERS = ["street", "satellite"];
   var DIRECTORY_BATCH_SIZE = 100;
   var DIRECTORY_FRAME_CHUNK_SIZE = 25;
+  var MARKER_BATCH_SIZE = 200;
   var MOBILE_MEDIA_QUERY = "(max-width: 760px)";
   var LOCATION_KEY_PATTERN = /^(exact|road|landmark|ward):[a-z0-9:-]+$/;
   var SAFE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
@@ -43,7 +44,10 @@
     directoryGeneration: 0,
     directoryFrameId: null,
     mediaQuery: null,
-    mediaQueryHandler: null
+    mediaQueryHandler: null,
+    markerGeneration: 0,
+    markerFrameId: null,
+    markerRenderCount: 0
   };
 
   function normalizeMode(value) {
@@ -209,6 +213,31 @@
       ranges.push([start, Math.min(start + safeBatch, safeTotal)]);
     }
     return ranges;
+  }
+
+  function nextBatch(total, start, batchSize) {
+    var safeTotal = safeCount(total);
+    var safeStart = Math.min(safeCount(start), safeTotal);
+    var safeBatch = Math.max(safeCount(batchSize) || 1, 1);
+    var end = Math.min(safeStart + safeBatch, safeTotal);
+    return {
+      start: safeStart,
+      end: end,
+      done: end >= safeTotal
+    };
+  }
+
+  function canContinueMarkerRender(
+    isOpen,
+    expectedGeneration,
+    currentGeneration,
+    hasMarkerLayer
+  ) {
+    return Boolean(
+      isOpen
+      && hasMarkerLayer
+      && expectedGeneration === currentGeneration
+    );
   }
 
   function normalizeAccuracyRadius(value) {
@@ -666,41 +695,112 @@
     return wrapper;
   }
 
+  function cancelMarkerRender() {
+    state.markerGeneration += 1;
+    if (state.markerFrameId !== null) {
+      if (typeof root.cancelAnimationFrame === "function") {
+        root.cancelAnimationFrame(state.markerFrameId);
+      } else {
+        root.clearTimeout(state.markerFrameId);
+      }
+    }
+    state.markerFrameId = null;
+    state.markerRenderCount = 0;
+  }
+
+  function scheduleMarkerBatch(callback) {
+    if (typeof root.requestAnimationFrame === "function") {
+      state.markerFrameId = root.requestAnimationFrame(callback);
+      return;
+    }
+    state.markerFrameId = root.setTimeout(callback, 0);
+  }
+
+  function addMarker(group) {
+    var lat = Number(group.lat);
+    var lng = Number(group.lng);
+    var marker = root.L.circleMarker(
+      [lat, lng],
+      markerStyle(group.precision)
+    );
+    marker.bindTooltip(makeTooltip(group));
+    marker.on("click", function () {
+      selectGroup(group);
+    });
+    marker.on("add", function () {
+      var markerElement = marker.getElement();
+      if (!markerElement) return;
+      markerElement.setAttribute("tabindex", "0");
+      markerElement.setAttribute("role", "button");
+      markerElement.setAttribute(
+        "aria-label",
+        precisionCopy(group.precision).badge + ", "
+          + safeCount(group.listing_count) + " tin"
+      );
+      markerElement.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectGroup(group);
+        }
+      });
+    });
+    marker.addTo(state.markerLayer);
+  }
+
+  function setSummaryStatus(payload) {
+    var summary = (payload && payload.summary) || {};
+    setStatus(
+      "Đã định vị " + safeCount(summary.mapped) + "/"
+        + safeCount(summary.total) + " tin; "
+        + safeCount(summary.unmapped_count) + " tin chưa đủ vị trí.",
+      false
+    );
+  }
+
+  function renderMarkerBatch(context) {
+    if (!canContinueMarkerRender(
+      state.open,
+      context.generation,
+      state.markerGeneration,
+      Boolean(state.markerLayer)
+    )) return;
+
+    var batch = nextBatch(
+      context.groups.length,
+      context.index,
+      MARKER_BATCH_SIZE
+    );
+    for (; context.index < batch.end; context.index += 1) {
+      addMarker(context.groups[context.index]);
+    }
+    state.markerRenderCount = context.index;
+
+    if (!batch.done) {
+      setStatus(
+        "Đang hiển thị " + context.index + "/"
+          + context.groups.length + " vị trí...",
+        true
+      );
+      scheduleMarkerBatch(function () {
+        renderMarkerBatch(context);
+      });
+      return;
+    }
+    state.markerFrameId = null;
+    setSummaryStatus(state.summary);
+  }
+
   function renderMarkers(payload) {
     if (!state.map || !state.markerLayer) return;
+    cancelMarkerRender();
     state.markerLayer.clearLayers();
     var bounds = [];
-    (payload.locations || []).forEach(function (group) {
+    var groups = (payload.locations || []).filter(function (group) {
       var lat = Number(group.lat);
       var lng = Number(group.lng);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-      var marker = root.L.circleMarker(
-        [lat, lng],
-        markerStyle(group.precision)
-      );
-      marker.bindTooltip(makeTooltip(group));
-      marker.on("click", function () {
-        selectGroup(group);
-      });
-      marker.on("add", function () {
-        var markerElement = marker.getElement();
-        if (!markerElement) return;
-        markerElement.setAttribute("tabindex", "0");
-        markerElement.setAttribute("role", "button");
-        markerElement.setAttribute(
-          "aria-label",
-          precisionCopy(group.precision).badge + ", "
-            + safeCount(group.listing_count) + " tin"
-        );
-        markerElement.addEventListener("keydown", function (event) {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            selectGroup(group);
-          }
-        });
-      });
-      marker.addTo(state.markerLayer);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
       bounds.push([lat, lng]);
+      return true;
     });
     if (bounds.length) {
       state.map.fitBounds(bounds, {
@@ -710,6 +810,12 @@
     } else {
       state.map.setView([11.02, 106.63], 11);
     }
+    var context = {
+      generation: state.markerGeneration,
+      groups: groups,
+      index: 0
+    };
+    renderMarkerBatch(context);
   }
 
   function validListingId(item) {
@@ -947,15 +1053,8 @@
 
   function renderSummary(payload) {
     state.summary = payload;
-    renderMarkers(payload);
     setPanelView("directory");
-    var summary = payload.summary || {};
-    setStatus(
-      "Đã định vị " + safeCount(summary.mapped) + "/"
-        + safeCount(summary.total) + " tin; "
-        + safeCount(summary.unmapped_count) + " tin chưa đủ vị trí.",
-      false
-    );
+    renderMarkers(payload);
   }
 
   function requestSummary() {
@@ -1063,6 +1162,7 @@
     state.summaryController = null;
     state.itemController = null;
     cancelDirectoryRender();
+    cancelMarkerRender();
     if (state.markerLayer) state.markerLayer.clearLayers();
     if (state.map) state.map.remove();
     state.map = null;
@@ -1213,6 +1313,8 @@
     directoryWindow: directoryWindow,
     panelRenderModel: panelRenderModel,
     batchRanges: batchRanges,
+    nextBatch: nextBatch,
+    canContinueMarkerRender: canContinueMarkerRender,
     openListingFromMap: openListingFromMap,
     shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,

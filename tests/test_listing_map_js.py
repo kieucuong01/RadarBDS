@@ -168,6 +168,31 @@ def test_batch_ranges_split_dom_work_without_gaps_or_overlap():
     ]
 
 
+def test_next_marker_batch_advances_by_200_and_finishes_exactly():
+    assert _run_node("mapApi.nextBatch(450,0,200)") == {
+        "start": 0,
+        "end": 200,
+        "done": False,
+    }
+    assert _run_node("mapApi.nextBatch(450,200,200)") == {
+        "start": 200,
+        "end": 400,
+        "done": False,
+    }
+    assert _run_node("mapApi.nextBatch(450,400,200)") == {
+        "start": 400,
+        "end": 450,
+        "done": True,
+    }
+
+
+def test_marker_render_generation_rejects_closed_or_stale_work():
+    assert _run_node("mapApi.canContinueMarkerRender(true,4,4,true)") is True
+    assert _run_node("mapApi.canContinueMarkerRender(false,4,4,true)") is False
+    assert _run_node("mapApi.canContinueMarkerRender(true,3,4,true)") is False
+    assert _run_node("mapApi.canContinueMarkerRender(true,4,4,false)") is False
+
+
 def test_tracking_context_is_strictly_allowlisted():
     result = _run_node(
         "mapApi.safeTrackingContext({"
