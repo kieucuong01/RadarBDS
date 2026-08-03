@@ -1,4 +1,8 @@
 import re
+import shutil
+from pathlib import Path
+
+import pytest
 
 
 def _client():
@@ -6,6 +10,20 @@ def _client():
 
     app_module.app.config.update(TESTING=True)
     return app_module.app.test_client()
+
+
+def _chrome_executable():
+    candidates = [
+        shutil.which("google-chrome"),
+        shutil.which("chromium"),
+        shutil.which("chromium-browser"),
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    ]
+    for candidate in candidates:
+        if candidate and Path(candidate).is_file():
+            return candidate
+    pytest.skip("Chrome/Chromium executable is unavailable")
 
 
 def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
@@ -201,3 +219,46 @@ def test_listing_map_workspace_body_gets_stable_remaining_height():
 
     assert "grid-template-rows: auto auto minmax(0, 1fr);" in styles
     assert "grid-template-rows: auto auto auto minmax(0, 1fr);" not in styles
+
+
+def test_mobile_leaflet_canvas_keeps_full_remaining_viewport_height():
+    playwright = pytest.importorskip("playwright.sync_api")
+    css = Path("static/css/main/listing_map.css").read_text(encoding="utf-8")
+    html = f"""
+    <style>{css}</style>
+    <style>
+      .leaflet-container {{ position: relative; overflow: hidden; }}
+    </style>
+    <body class="listing-map-open">
+      <section class="listing-map-workspace">
+        <header class="listing-map-workspace-head"><h2>Maps</h2></header>
+        <div class="listing-map-status">Đang tải</div>
+        <div class="listing-map-workspace-body">
+          <div class="listing-map-canvas leaflet-container"></div>
+          <aside class="listing-map-panel"></aside>
+        </div>
+        <div class="listing-map-mobile-sheet"></div>
+      </section>
+    </body>
+    """
+
+    with playwright.sync_playwright() as driver:
+        browser = driver.chromium.launch(
+            executable_path=_chrome_executable(),
+            headless=True,
+        )
+        page = browser.new_page(viewport={"width": 390, "height": 844})
+        page.set_content(html)
+        metrics = page.locator(".listing-map-canvas").evaluate(
+            """element => {
+              const rect = element.getBoundingClientRect();
+              return {
+                position: getComputedStyle(element).position,
+                height: rect.height,
+              };
+            }"""
+        )
+        browser.close()
+
+    assert metrics["position"] == "absolute"
+    assert metrics["height"] > 700

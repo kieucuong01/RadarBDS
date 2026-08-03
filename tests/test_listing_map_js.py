@@ -194,13 +194,19 @@ def test_marker_render_generation_rejects_closed_or_stale_work():
 
 
 def test_mobile_sheet_model_exposes_explicit_accessible_states():
-    assert _run_node("mapApi.mobileSheetModel(false)") == {
+    assert _run_node("mapApi.mobileSheetModel(false,'directory')") == {
         "expanded": False,
         "state": "collapsed",
         "ariaExpanded": "false",
         "label": "Xem danh sách vị trí",
     }
-    assert _run_node("mapApi.mobileSheetModel(true)") == {
+    assert _run_node("mapApi.mobileSheetModel(false,'items')") == {
+        "expanded": False,
+        "state": "collapsed",
+        "ariaExpanded": "false",
+        "label": "Mở rộng",
+    }
+    assert _run_node("mapApi.mobileSheetModel(true,'items')") == {
         "expanded": True,
         "state": "expanded",
         "ariaExpanded": "true",
@@ -215,6 +221,17 @@ def test_selected_group_views_require_an_expanded_mobile_sheet():
         assert _run_node(
             f"mapApi.sheetExpandedForView({json.dumps(view)},false)"
         ) is True
+
+
+def test_selected_mobile_sheet_actions_remain_available_on_errors():
+    assert _run_node("mapApi.selectedSheetActionModel(false)") == {
+        "backLabel": "← Tất cả vị trí",
+        "retryLabel": None,
+    }
+    assert _run_node("mapApi.selectedSheetActionModel(true)") == {
+        "backLabel": "← Tất cả vị trí",
+        "retryLabel": "Thử lại",
+    }
 
 
 def test_tracking_context_is_strictly_allowlisted():

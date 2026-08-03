@@ -241,13 +241,16 @@
     );
   }
 
-  function mobileSheetModel(expanded) {
+  function mobileSheetModel(expanded, viewKind) {
     var isExpanded = Boolean(expanded);
+    var isDirectory = String(viewKind || "directory") === "directory";
     return {
       expanded: isExpanded,
       state: isExpanded ? "expanded" : "collapsed",
       ariaExpanded: isExpanded ? "true" : "false",
-      label: isExpanded ? "Thu gọn" : "Xem danh sách vị trí"
+      label: isExpanded
+        ? "Thu gọn"
+        : (isDirectory ? "Xem danh sách vị trí" : "Mở rộng")
     };
   }
 
@@ -256,6 +259,13 @@
       return true;
     }
     return Boolean(currentExpanded);
+  }
+
+  function selectedSheetActionModel(hasError) {
+    return {
+      backLabel: "← Tất cả vị trí",
+      retryLabel: hasError ? "Thử lại" : null
+    };
   }
 
   function normalizeAccuracyRadius(value) {
@@ -641,7 +651,10 @@
   }
 
   function setMobileSheetExpanded(expanded) {
-    var model = mobileSheetModel(expanded);
+    var model = mobileSheetModel(
+      expanded,
+      state.panelView && state.panelView.kind
+    );
     var sheet = element("listingMapMobileSheet");
     state.sheetExpanded = model.expanded;
     if (!sheet) return;
@@ -663,7 +676,10 @@
   }
 
   function createSheetToggle() {
-    var model = mobileSheetModel(state.sheetExpanded);
+    var model = mobileSheetModel(
+      state.sheetExpanded,
+      state.panelView && state.panelView.kind
+    );
     var toggle = create(
       "button",
       "listing-map-sheet-toggle",
@@ -676,6 +692,28 @@
       setMobileSheetExpanded(!state.sheetExpanded);
     });
     return toggle;
+  }
+
+  function createSelectedGroupBackButton() {
+    var button = create(
+      "button",
+      "listing-map-back",
+      selectedSheetActionModel(false).backLabel
+    );
+    button.type = "button";
+    button.addEventListener("click", function () {
+      state.selectedGroup = null;
+      setPanelView("directory");
+    });
+    return button;
+  }
+
+  function appendSelectedSheetHeader(shell, back) {
+    appendSheetHandle(shell);
+    var actions = create("div", "listing-map-sheet-actions");
+    actions.appendChild(back);
+    actions.appendChild(createSheetToggle());
+    shell.appendChild(actions);
   }
 
   function renderGroupDirectoryInto(target, payload) {
@@ -929,22 +967,9 @@
     cancelDirectoryRender();
     clearElement(target);
     var shell = create("div", "listing-map-items");
-    var back = create(
-      "button",
-      "listing-map-back",
-      "← Tất cả vị trí"
-    );
-    back.type = "button";
-    back.addEventListener("click", function () {
-      state.selectedGroup = null;
-      setPanelView("directory");
-    });
+    var back = createSelectedGroupBackButton();
     if (isMobileSheet(target)) {
-      appendSheetHandle(shell);
-      var actions = create("div", "listing-map-sheet-actions");
-      actions.appendChild(back);
-      actions.appendChild(createSheetToggle());
-      shell.appendChild(actions);
+      appendSelectedSheetHeader(shell, back);
     } else {
       shell.appendChild(back);
     }
@@ -1027,6 +1052,35 @@
   }
 
   function renderItemsErrorInto(target, group) {
+    if (isMobileSheet(target)) {
+      cancelDirectoryRender();
+      clearElement(target);
+      var shell = create("div", "listing-map-error");
+      appendSelectedSheetHeader(shell, createSelectedGroupBackButton());
+      shell.appendChild(create(
+        "strong",
+        "",
+        "Không tải được các lô đất tại vị trí này."
+      ));
+      var retry = create(
+        "button",
+        "listing-map-retry",
+        selectedSheetActionModel(true).retryLabel
+      );
+      retry.type = "button";
+      retry.addEventListener("click", function () {
+        emitTrack("listing_map_retry", {
+          mode: state.snapshot && state.snapshot.mode,
+          precision: group.precision,
+          listing_count: group.listing_count
+        });
+        selectGroup(group);
+      });
+      shell.appendChild(retry);
+      target.appendChild(shell);
+      target.scrollTop = 0;
+      return;
+    }
     renderRetry(
       target,
       "Không tải được các lô đất tại vị trí này.",
@@ -1405,6 +1459,7 @@
     canContinueMarkerRender: canContinueMarkerRender,
     mobileSheetModel: mobileSheetModel,
     sheetExpandedForView: sheetExpandedForView,
+    selectedSheetActionModel: selectedSheetActionModel,
     openListingFromMap: openListingFromMap,
     shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,

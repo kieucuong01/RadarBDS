@@ -457,7 +457,7 @@
     display: block;
   }
 
-  .listing-map-canvas {
+  .listing-map-workspace-body > .listing-map-canvas {
     position: absolute;
     inset: 0;
   }
@@ -503,7 +503,11 @@
   .listing-map-mobile-sheet:not(.is-expanded) .listing-map-show-more,
   .listing-map-mobile-sheet:not(.is-expanded) .listing-map-directory-title,
   .listing-map-mobile-sheet:not(.is-expanded)
-    .listing-map-summary-card:nth-child(n + 4) {
+    .listing-map-summary-card:nth-child(n + 4),
+  .listing-map-mobile-sheet:not(.is-expanded)
+    .listing-map-items .listing-map-precision-copy,
+  .listing-map-mobile-sheet:not(.is-expanded)
+    .listing-map-items .listing-map-item-list {
     display: none;
   }
 
