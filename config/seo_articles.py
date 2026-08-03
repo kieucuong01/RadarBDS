@@ -10290,7 +10290,267 @@ SEO_ARTICLES = {
         }
     ]
 }
+,
 
+"cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong": {
+    "variant": "knowledge",
+    "path": "/tin-tuc/cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong",
+    "title": "Cách định giá nhà đất Bình Dương bằng giá rao theo phường | Radar BDS",
+    "description": "Radar BDS cập nhật 03/08/2026: cách dùng giá rao theo phường để định giá nhà đất Bình Dương, luôn tách đất nền và nhà đất trước khi gọi môi giới.",
+    "keywords": "cách định giá nhà đất Bình Dương, giá rao theo phường Bình Dương, định giá đất nền Bình Dương, định giá nhà đất Thủ Dầu Một, Radar BDS",
+    "breadcrumb_label": "Cách định giá nhà đất Bình Dương bằng giá rao theo phường",
+    "hero_badge": "Hướng dẫn định giá",
+    "hero_title": "Cách định giá nhà đất Bình Dương bằng giá rao theo phường",
+    "hero_text": "Muốn biết một tin đang rẻ hay chỉ nhìn có vẻ rẻ, bạn nên so với mặt bằng giá rao cùng phường và cùng loại hình trước. Dữ liệu live Radar BDS ngày 03/08/2026 cho thấy chỉ cần trộn đất nền với nhà đất là kết luận có thể lệch rất xa.",
+    "scope_label": "Bình Dương · Hướng dẫn định giá theo phường",
+    "hero_checks": [
+        "Radar đang theo dõi 2.665 tin Facebook live, trong đó 321 tin có dấu hiệu đáng chú ý",
+        "Tân An có đất nền trung vị 14,8 tr/m² nhưng nhà đất là 17,3 tr/m²",
+        "Phú Mỹ có đất nền trung vị 22,7 tr/m² nhưng nhà đất lên 43,0 tr/m²",
+        "Hiệp Thành là ví dụ điển hình: đất nền 11,8 tr/m² nhưng nhà đất 46,7 tr/m²"
+    ],
+    "primary_cta": "Mở công cụ định giá BĐS",
+    "primary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=pricing_by_ward",
+    "secondary_cta": "Xem báo cáo thị trường gần nhất",
+    "secondary_href": "/bao-cao/bds-binh-duong-thang-07-2026",
+    "map_label": "Tin tức / Hướng dẫn định giá",
+    "hero_metric": {
+        "label": "Mẫu live để tham chiếu",
+        "value": "2.665 tin",
+        "delta": "321 dấu hiệu đáng chú ý",
+        "note": "Tin Facebook live, lọc ngày 03/08/2026 với is_active=1"
+    },
+    "property_card": {
+        "status": "Cập nhật 03/08/2026",
+        "title": "Định giá đúng bắt đầu từ đúng phường, đúng loại hình",
+        "price": "Đất nền và nhà đất lệch nhau mạnh ở nhiều phường; đừng lấy một mức giá chung để mặc cả",
+        "metric_a": "Nhóm dễ so",
+        "metric_a_value": "Tân An đất nền 14,8 tr/m² · Định Hòa đất nền 20,5 tr/m²",
+        "metric_b": "Nhóm dễ sai",
+        "metric_b_value": "Hiệp Thành đất nền 11,8 tr/m² · nhà đất 46,7 tr/m²"
+    },
+    "value_cards": [
+        {
+            "title": "Bước 1: chốt đúng loại hình trước khi định giá",
+            "body": "Nếu bạn đang xem nhà xây sẵn, đừng lấy mặt bằng đất nền cùng phường để ép giá. Dữ liệu live cho thấy nhiều phường có chênh lệch rất lớn giữa đất nền và nhà đất."
+        },
+        {
+            "title": "Bước 2: chọn đúng phường để lấy khung giá tham chiếu",
+            "body": "Cùng là Thủ Dầu Một nhưng Tân An, Định Hòa, Phú Tân và Phú Mỹ đang có mặt bằng rất khác nhau. So theo phường giúp bạn biết một tin đang lệch bao nhiêu so với khu vực thực tế."
+        },
+        {
+            "title": "Bước 3: dùng công cụ rồi mới gọi môi giới",
+            "body": "Bạn có thể lấy giá rao trung vị theo phường làm mốc, sau đó mở công cụ định giá và dashboard để kiểm tra sâu hơn trước khi hỏi pháp lý, quy hoạch hay thương lượng."
+        }
+    ],
+    "dashboard_preview": {
+        "eyebrow": "Từ bài hướng dẫn sang công cụ",
+        "title": "Mở Radar để định giá theo phường",
+        "description": "Bắt đầu từ giá rao cùng phường, rồi chuyển sang dashboard và công cụ định giá để kiểm tra từng tin cụ thể.",
+        "image": "/static/images/seo/ward-compare-dashboard-preview.webp",
+        "alt": "Dashboard Radar BDS và công cụ định giá theo phường"
+    },
+    "market_snapshot": {
+        "eyebrow": "Snapshot 03/08/2026",
+        "title": "Bốn phường cho thấy vì sao phải tách đất nền và nhà đất",
+        "columns": [
+            {"key": "ward_type", "label": "Phường · loại hình"},
+            {"key": "tracked", "label": "Tin đang theo dõi"},
+            {"key": "under4", "label": "Dưới 4 tỷ"},
+            {"key": "median_m2", "label": "Giá trung vị/m²"},
+            {"key": "median_total", "label": "Tổng giá trung vị"},
+            {"key": "range", "label": "Vùng 25-75%"}
+        ],
+        "rows": [
+            {"ward_type": "Tân An · đất nền", "tracked": "41", "under4": "41", "median_m2": "14,8 tr/m²", "median_total": "1,75 tỷ", "range": "12,6-18,9 tr/m²"},
+            {"ward_type": "Định Hòa · đất nền", "tracked": "56", "under4": "38", "median_m2": "20,5 tr/m²", "median_total": "2,67 tỷ", "range": "17,2-22,1 tr/m²"},
+            {"ward_type": "Phú Tân · nhà đất", "tracked": "7", "under4": "6", "median_m2": "34,4 tr/m²", "median_total": "3,10 tỷ", "range": "34,4-36,9 tr/m²"},
+            {"ward_type": "Phú Mỹ · nhà đất", "tracked": "23", "under4": "19", "median_m2": "43,0 tr/m²", "median_total": "3,55 tỷ", "range": "33,8-46,7 tr/m²"}
+        ]
+    },
+    "local_links": [
+        {
+            "label": "Trang phường Tân An",
+            "href": "/binh-duong/phuong-tan-an",
+            "description": "Xem dữ liệu và lối vào dashboard cho Tân An."
+        },
+        {
+            "label": "Trang phường Phú Tân",
+            "href": "/binh-duong/phuong-phu-tan",
+            "description": "Xem dữ liệu live trước khi định giá nhóm nhà đất ở Phú Tân."
+        },
+        {
+            "label": "Công cụ định giá BĐS",
+            "href": "/dinh-gia-bds",
+            "description": "Ước lượng nhanh trước khi gọi môi giới."
+        },
+        {
+            "label": "Tra cứu bảng giá đất",
+            "href": "/bang-gia-dat-tphcm",
+            "description": "Dùng mốc bảng giá nhà nước khi bạn cần đối chiếu thêm chính sách."
+        },
+        {
+            "label": "Giá rao khác giá giao dịch thế nào?",
+            "href": "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao",
+            "description": "Hiểu giới hạn của dữ liệu giá rao trước khi mặc cả."
+        },
+        {
+            "label": "Hiệp Thành hay Tân An: nên xem khu nào trước?",
+            "href": "/tin-tuc/hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc",
+            "description": "Ví dụ thực tế về việc tách đất nền và nhà đất khi lọc phường."
+        }
+    ],
+    "faq": [
+        {
+            "q": "Muốn định giá một tin ở Bình Dương thì nên bắt đầu từ đâu?",
+            "a": "Hãy bắt đầu từ đúng phường và đúng loại hình. Nếu tin là đất nền ở Tân An, bạn nên so với mặt bằng đất nền Tân An thay vì lấy giá nhà đất hoặc lấy một mốc chung của cả thành phố."
+        },
+        {
+            "q": "Vì sao không nên dùng một mức giá chung cho cả đất nền và nhà đất?",
+            "a": "Vì chênh lệch rất lớn. Dữ liệu live ngày 03/08/2026 cho thấy ở Hiệp Thành, đất nền trung vị khoảng 11,8 tr/m² nhưng nhà đất lên 46,7 tr/m². Trộn hai nhóm này sẽ làm định giá sai mạnh."
+        },
+        {
+            "q": "Giá trong bài là giá chốt hay giá rao?",
+            "a": "Đây là giá rao từ tin Facebook live mà Radar BDS đang theo dõi, không phải giá giao dịch đã chốt, cũng không phải kết quả thẩm định chính thức."
+        },
+        {
+            "q": "Sau khi có khung giá theo phường thì làm gì tiếp?",
+            "a": "Bạn nên mở dashboard để lọc đúng phường, so thêm diện tích, tổng giá, số tin dưới 4 tỷ và nhóm có dấu hiệu đáng chú ý, rồi mới dùng công cụ định giá hoặc gọi môi giới để hỏi sâu hơn."
+        }
+    ],
+    "article": {
+        "published_at": "2026-08-03",
+        "modified_at": "2026-08-03",
+        "intro": [
+            "Muốn định giá nhanh một tin nhà đất Bình Dương, bạn hãy so với giá rao cùng phường và cùng loại hình trước. Dữ liệu Radar BDS ngày 03/08/2026 cho thấy chỉ cần trộn đất nền với nhà đất là mức tham chiếu có thể lệch rất mạnh.",
+            "Bài này dùng giá rao live từ Facebook mà Radar đang theo dõi. Đây không phải giá chốt giao dịch hay kết quả thẩm định pháp lý, nhưng đủ tốt để bạn biết nên mở tin nào trước và nên hỏi môi giới ở mức nào."
+        ],
+        "summary_cards": [
+            {"label": "Thị trường live", "value": "2.665 tin", "note": "Facebook live, đã lọc blacklist/review hidden"},
+            {"label": "Nhóm cần kiểm tra", "value": "321 tin", "note": "is_hot hoặc price_dropped"},
+            {"label": "Đất nền mềm", "value": "Tân An 14,8 tr/m²", "note": "41/41 tin đang dưới 4 tỷ"},
+            {"label": "Nhà đất cao", "value": "Phú Mỹ 43,0 tr/m²", "note": "Vẫn còn 19 tin dưới 4 tỷ"}
+        ],
+        "data_tables": [
+            {
+                "eyebrow": "Bảng tham chiếu nhanh",
+                "title": "Lấy mốc định giá từ đâu trước khi gọi môi giới?",
+                "note": "Luôn đọc riêng đất nền và nhà đất. Đây là giá rao live, không phải giá chốt.",
+                "columns": [
+                    {"key": "case", "label": "Nếu bạn đang xem"},
+                    {"key": "first_check", "label": "Mốc nên xem trước"},
+                    {"key": "why", "label": "Vì sao"}
+                ],
+                "rows": [
+                    {"case": "Đất nền Tân An", "first_check": "14,8 tr/m² · tổng giá 1,75 tỷ", "why": "Tân An đang là một trong các phường đất nền mềm hơn trong nhóm live khảo sát."},
+                    {"case": "Đất nền Định Hòa", "first_check": "20,5 tr/m² · tổng giá 2,67 tỷ", "why": "Định Hòa cho thấy chỉ khác phường là mặt bằng đất nền đã tăng lên rõ."},
+                    {"case": "Nhà đất Phú Tân", "first_check": "34,4 tr/m² · tổng giá 3,10 tỷ", "why": "Nhóm nhà đất Phú Tân ít tin hơn nhưng vẫn cao hơn rõ so với đất nền cùng khu vực."},
+                    {"case": "Nhà đất Phú Mỹ", "first_check": "43,0 tr/m² · tổng giá 3,55 tỷ", "why": "Nếu lấy giá đất nền Phú Mỹ để mặc cả nhà đất, bạn sẽ lệch khung rất xa."}
+                ]
+            },
+            {
+                "eyebrow": "Quy trình 3 bước",
+                "title": "Cách dùng Radar để định giá một tin trước khi đi xem",
+                "note": "Mục tiêu là rút ngắn thời gian lọc tin, không thay cho pháp lý hay thẩm định thực địa.",
+                "columns": [
+                    {"key": "step", "label": "Bước"},
+                    {"key": "action", "label": "Việc cần làm"},
+                    {"key": "result", "label": "Bạn sẽ biết gì"}
+                ],
+                "rows": [
+                    {"step": "1", "action": "Chọn đúng phường và loại hình trên dashboard", "result": "Có khung giá rao trung vị đúng ngữ cảnh thay vì một mức giá chung."},
+                    {"step": "2", "action": "So giá/m² và tổng giá với mặt bằng cùng phường", "result": "Biết tin đang rẻ hơn, ngang hay cao hơn mặt bằng live."},
+                    {"step": "3", "action": "Mở công cụ định giá rồi hỏi thêm pháp lý/quy hoạch", "result": "Biết nên tiếp tục gọi môi giới hay loại tin sớm."}
+                ]
+            }
+        ],
+        "charts": [
+            {
+                "eyebrow": "Ví dụ sai lệch thường gặp",
+                "title": "Cùng một phường nhưng đất nền và nhà đất có thể cách nhau rất xa",
+                "note": "Hiệp Thành là ví dụ dễ thấy nhất trong dữ liệu live ngày 03/08/2026.",
+                "alt": "So sánh đất nền và nhà đất Hiệp Thành",
+                "rows": [
+                    {"label": "Hiệp Thành · đất nền", "value_label": "11,8 tr/m²", "width": 25, "color": "#2563eb"},
+                    {"label": "Hiệp Thành · nhà đất", "value_label": "46,7 tr/m²", "width": 100, "color": "#dc2626"},
+                    {"label": "Tân An · đất nền", "value_label": "14,8 tr/m²", "width": 32, "color": "#16a34a"},
+                    {"label": "Tân An · nhà đất", "value_label": "17,3 tr/m²", "width": 37, "color": "#f59e0b"}
+                ]
+            }
+        ],
+        "sections": [
+            {
+                "id": "dung-phuong-dung-loai-hinh",
+                "heading": "Bước đầu tiên: định giá theo đúng phường, đúng loại hình",
+                "paragraphs": [
+                    "Một tin chỉ có ý nghĩa khi bạn đặt nó vào đúng nhóm so sánh. Ví dụ, đất nền Tân An đang có giá trung vị 14,8 tr/m², trong khi đất nền Định Hòa là 20,5 tr/m². Chỉ đổi phường thôi là biên độ tham chiếu đã khác đáng kể.",
+                    "Tương tự, trong cùng một phường, nhà đất thường cao hơn đất nền vì đã có công trình, hiện trạng sử dụng và bài toán ở sẵn. Vì vậy bước đầu tiên luôn là chốt: bạn đang mua đất nền hay nhà đất, rồi mới bàn tới rẻ hay đắt."
+                ],
+                "bullets": [
+                    "Chọn phường trước khi chọn mức giá.",
+                    "Tách đất nền và nhà đất trước khi so mặt bằng.",
+                    "Đọc đồng thời giá/m² và tổng giá để tránh hiểu sai do diện tích."
+                ]
+            },
+            {
+                "id": "dung-gia-rao-nhu-moc-loc",
+                "heading": "Dùng giá rao như mốc lọc ban đầu, không dùng như giá chốt",
+                "paragraphs": [
+                    "Giá trong bài là giá rao từ tin Facebook live mà Radar BDS đang theo dõi. Mốc này hữu ích để biết một tin đang lệch bao nhiêu so với thị trường đang rao bán, nhưng không phải bằng chứng rằng giao dịch sẽ chốt đúng mức đó.",
+                    "Cách dùng thực tế là: nếu một tin nhà đất Phú Mỹ đang nằm cao hơn rõ so với mốc 43,0 tr/m² mà mô tả không có lợi thế nổi bật, bạn có cơ sở để hỏi kỹ hơn hoặc loại sớm. Nếu một tin đất nền Tân An nằm gần hoặc thấp hơn mốc 14,8 tr/m², bạn có lý do để mở sâu hơn và kiểm tra pháp lý."
+                ],
+                "bullets": [
+                    "Giá rao giúp lọc nhanh tin nên mở trước.",
+                    "Không dùng giá rao để thay cho thẩm định pháp lý hoặc giá chốt.",
+                    "Tin thấp hơn mặt bằng vẫn cần kiểm tra đường, quy hoạch và hiện trạng."
+                ]
+            },
+            {
+                "id": "quy-trinh-truoc-khi-goi-moi-gioi",
+                "heading": "Trước khi gọi môi giới, nên làm đủ 3 điểm này",
+                "paragraphs": [
+                    "Thứ nhất, mở dashboard theo đúng phường để xem nguồn hàng live còn bao nhiêu tin và bao nhiêu tin dưới ngưỡng ngân sách của bạn. Thứ hai, so lại giá/m² và tổng giá với mốc trung vị cùng loại hình. Thứ ba, chuyển sang công cụ định giá để có thêm một lớp tham chiếu trước khi trao đổi sâu.",
+                    "Quy trình này không làm bạn mua chắc thắng, nhưng giúp giảm các cuộc gọi thừa và tránh mặc cả dựa trên một mặt bằng giá sai. Với người mua bình thường, chỉ cần làm đúng ba bước này đã tránh được nhiều lỗi đọc giá phổ biến."
+                ],
+                "bullets": [
+                    "Mở dashboard theo phường và loại hình.",
+                    "So với giá rao trung vị cùng nhóm.",
+                    "Dùng công cụ định giá rồi mới gọi môi giới hoặc đi xem."
+                ]
+            }
+        ],
+        "checklist": [
+            "Đã chốt loại hình cần mua: đất nền hay nhà đất.",
+            "Đã so giá theo đúng phường thay vì lấy mốc chung toàn khu vực.",
+            "Đã hiểu đây là giá rao live, không phải giá chốt giao dịch.",
+            "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và hiện trạng sau khi lọc dữ liệu.",
+            "Đã mở công cụ định giá hoặc dashboard trước khi gọi môi giới."
+        ]
+    },
+    "final_cta": {
+        "title": "Mở Radar BDS để định giá đúng ngữ cảnh",
+        "body": "Lọc đúng phường, tách đúng loại hình, rồi dùng công cụ định giá để biết tin nào đáng mở tiếp trước khi liên hệ môi giới.",
+        "button": "Mở công cụ định giá",
+        "button_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=pricing_by_ward"
+    },
+    "breadcrumbs": [
+        {
+            "name": "Trang chủ",
+            "href": "/",
+            "url": "https://radarbds.vn/"
+        },
+        {
+            "name": "Tin tức",
+            "href": "/tin-tuc",
+            "url": "https://radarbds.vn/tin-tuc"
+        },
+        {
+            "name": "Cách định giá nhà đất Bình Dương",
+            "href": "/tin-tuc/cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong",
+            "url": "https://radarbds.vn/tin-tuc/cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong"
+        }
+    ]
+}
 
 }
 
