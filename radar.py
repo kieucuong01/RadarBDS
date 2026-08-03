@@ -110,6 +110,7 @@ from cli.system import (
     cmd_lifecycle, cmd_download_images, cmd_db_cleanup,
     cmd_clean_broker_images,
     cmd_signal_read_model,
+    cmd_integrity_report,
 )
 
 
@@ -143,6 +144,13 @@ def build_parser():
     p_re.add_argument("--full",   action="store_true", help="Chạy toàn bộ dữ liệu (mặc định là incremental)")
     p_re.add_argument("--valuation-only", action="store_true")
     p_re.add_argument("--listings-only",  action="store_true")
+
+    p_integrity = sub.add_parser(
+        "integrity-report",
+        help="Read-only extraction/valuation integrity comparison",
+    )
+    p_integrity.add_argument("--limit", type=int)
+    p_integrity.add_argument("--json", action="store_true", dest="as_json")
 
     p_signal_read_model = sub.add_parser(
         "signal-read-model",
@@ -453,6 +461,8 @@ def main():
 
     if args.cmd == "reprocess":
         cmd_reprocess(args)
+    elif args.cmd == "integrity-report":
+        cmd_integrity_report(args)
     elif args.cmd == "signal-read-model":
         cmd_signal_read_model(args)
     elif args.cmd == "map-locations":

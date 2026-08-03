@@ -11,6 +11,26 @@ def cmd_reprocess(args):
         return _cmd_reprocess(args)
 
 
+def cmd_integrity_report(args):
+    """Print the read-only extraction/valuation integrity comparison."""
+    from services import extraction_integrity_report
+
+    report = extraction_integrity_report.build_integrity_report(
+        limit=getattr(args, "limit", None),
+    )
+    if getattr(args, "as_json", False):
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        for key, value in report.items():
+            rendered = (
+                json.dumps(value, ensure_ascii=False, sort_keys=True)
+                if isinstance(value, (dict, list))
+                else value
+            )
+            print(f"{key}: {rendered}")
+    return report
+
+
 _SIGNAL_READ_MODEL_COMPARE_CASES = (
     ("default", {}),
     ("facebook", {"sources": ["facebook"]}),
