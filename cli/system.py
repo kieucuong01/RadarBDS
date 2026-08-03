@@ -353,10 +353,12 @@ def _cmd_reprocess(args):
 
     if getattr(args, "valuation_only", False):
         # valuation_only mặc định chạy full trừ khi có logic khác
-        stats = reprocess_valuation(incremental_ids=None)
+        with advisory_lock("reprocess"):
+            stats = reprocess_valuation(incremental_ids=None)
         print(f"Valuation (Full): {stats}")
     elif getattr(args, "listings_only", False):
-        stats = reprocess_listings(source=getattr(args, "source", None), since=getattr(args, "since", None), full=full)
+        with advisory_lock("reprocess"):
+            stats = reprocess_listings(source=getattr(args, "source", None), since=getattr(args, "since", None), full=full)
         print(f"Listings: {stats}")
     else:
         result = run_full_reprocess(

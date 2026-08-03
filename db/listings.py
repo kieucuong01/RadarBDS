@@ -616,10 +616,10 @@ def sync_listing_images(
                 """
                 SELECT id, img_url, img_order, img_type, local_path
                 FROM listing_images
-                WHERE listing_id=? AND img_order=?
+                WHERE listing_id=? AND (img_order=? OR img_url=?)
                 ORDER BY id
                 """,
-                (listing_id, order),
+                (listing_id, order, url),
             ).fetchall()
             if not candidates:
                 conn.execute(

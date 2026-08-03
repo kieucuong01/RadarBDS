@@ -146,6 +146,39 @@ def test_partial_facebook_observation_does_not_delete_unobserved_trailing_slot()
         _delete_listing(listing_id)
 
 
+def test_facebook_exact_url_moving_slots_does_not_hit_unique_constraint():
+    listing_id, _ = _create_listing("facebook")
+    moved = "https://scontent.test/moved.jpg?token=same"
+    try:
+        with get_conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO listing_images (listing_id, img_url, img_order)
+                VALUES (?, 'https://scontent.test/old-cover.jpg', 0)
+                """,
+                (listing_id,),
+            )
+            conn.execute(
+                """
+                INSERT INTO listing_images
+                    (listing_id, img_url, img_order, local_path)
+                VALUES (?, ?, 1, 'data/images/moved.jpg')
+                """,
+                (listing_id, moved),
+            )
+
+        stats = sync_listing_images(listing_id, [moved], source="facebook")
+
+        rows = _rows(listing_id)
+        assert stats["removed"] == 1
+        assert len(rows) == 1
+        assert rows[0]["img_url"] == moved
+        assert rows[0]["img_order"] == 0
+        assert rows[0]["local_path"] == "data/images/moved.jpg"
+    finally:
+        _delete_listing(listing_id)
+
+
 def test_guland_keeps_url_identity_instead_of_collapsing_same_order():
     listing_id, _ = _create_listing("guland")
     try:
