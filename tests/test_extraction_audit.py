@@ -31,7 +31,7 @@ def test_audit_flags_price_area_and_tho_cu_mismatches():
         title="Ban dat Tan An gia 2 ty",
         description="DT 5x20 tho cu 100m2 duong nhua 6m",
         price_ty=1.2,
-        area_m2=88.0,
+        area_m2=50.0,
         tho_cu_m2=60.0,
         tho_cu_ratio=0.63,
     ))
@@ -69,6 +69,15 @@ def test_audit_ignores_matching_extraction_with_minor_rounding():
 
     assert result["findings"] == []
     assert result["score"] == 0
+
+
+def test_audit_uses_irregular_geometry_tolerance():
+    result = audit_listing_extraction(_listing(
+        description="Lô xéo hậu ngang 5m dài 40m",
+        area_m2=100,
+    ))
+
+    assert "area_m2" not in _fields(result)
 
 
 def test_audit_ignores_price_when_stored_value_matches_description_detail():

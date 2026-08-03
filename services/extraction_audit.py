@@ -6,9 +6,11 @@ import unicodedata
 from pathlib import Path
 from typing import Any, Mapping
 
+from cleansing.extraction_integrity import declared_total_area, severe_geometry_conflict
 from cleansing.feature_extractor import (
     classify_property_type,
     extract_area,
+    extract_dimensions,
     extract_price,
     extract_road_tier,
     extract_tho_cu,
@@ -50,17 +52,32 @@ def audit_listing_extraction(listing: Mapping[str, Any]) -> dict[str, Any]:
                 _evidence_for_number(text, expected_price, ("ty", "ti", "trieu", "tr")),
             ))
 
-    expected_area = extract_area(text)
+    declared_area = declared_total_area(text)
+    expected_area = declared_area or extract_area(text)
     actual_area = _to_float(_get(listing, "area_m2"))
     if expected_area is not None and actual_area is not None:
         if not _close_number(actual_area, expected_area, rel=0.05, abs_tol=2.0):
-            findings.append(_finding(
-                "area_m2",
-                actual_area,
-                expected_area,
-                "Text contains a clear area/dimension that differs from stored area.",
-                _evidence_for_number(text, expected_area, ("m2", "m²", "mv", "x")),
-            ))
+            dimensions = extract_dimensions(text)
+            frontage = _to_float(dimensions.get("frontage_m"))
+            depth = _to_float(dimensions.get("depth_m"))
+            dimension_area = frontage * depth if frontage and depth else None
+            expected_is_dimension = bool(
+                declared_area is None
+                and dimension_area is not None
+                and _close_number(expected_area, dimension_area, rel=0.03, abs_tol=2.0)
+            )
+            should_report = (
+                not expected_is_dimension
+                or severe_geometry_conflict(text, actual_area, frontage, depth)
+            )
+            if should_report:
+                findings.append(_finding(
+                    "area_m2",
+                    actual_area,
+                    expected_area,
+                    "Text contains a clear area/dimension that differs from stored area.",
+                    _evidence_for_number(text, expected_area, ("m2", "m²", "mv", "x")),
+                ))
 
     expected_ward = match_ward(title, description)
     actual_ward = _get(listing, "ward")

@@ -77,6 +77,15 @@ def test_engine_signal_threshold():
     assert result2 is not None and result2.is_signal is False
 
 
+def test_price_area_inconsistent_is_not_actionable():
+    from services.signal_quality import is_actionable_signal
+
+    assert not is_actionable_signal({
+        "is_signal": 1,
+        "source_quality_flags": "price_area_inconsistent",
+    })
+
+
 def test_median_road_tier_area_adjustment_is_segment_relative():
     listings = [_make_listing(i, 20.0, area=100.0, road_tier=2) for i in range(20)]
     engine = MedianRoadTierValuationEngine()

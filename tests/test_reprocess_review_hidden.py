@@ -507,6 +507,118 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
         self.assertIn("multi_lot_listing", _valuation_quality_flags(row))
 
+    def test_apartment_unit_scaled_price_is_suppressed(self):
+        from cleansing.reprocess import _valuation_quality_flags
+
+        class Row(dict):
+            def __missing__(self, _key):
+                return None
+
+        row = Row({
+            "source": "guland",
+            "source_id": "bad-apartment-price",
+            "url": "https://guland.test/bad-apartment-price",
+            "title": "Căn hộ giá 1,72 tỷ",
+            "description": "Diện tích 60m2",
+            "property_type": "chung_cu",
+            "tx_type": "ban",
+            "price_ty": 0.002,
+            "price_per_m2": 0.033,
+            "area_m2": 60,
+        })
+
+        self.assertIn("too_low_absolute_price", _valuation_quality_flags(row))
+
+    def test_quality_flags_merge_persisted_extraction_flags(self):
+        from cleansing.reprocess import _valuation_quality_flags
+
+        class Row(dict):
+            def __missing__(self, _key):
+                return None
+
+        row = Row({
+            "source": "guland",
+            "url": "https://guland.test/persisted-integrity-flag",
+            "title": "Bán đất giá tốt",
+            "description": "",
+            "property_type": "dat_nen",
+            "tx_type": "ban",
+            "price_ty": 2.0,
+            "price_per_m2": 20.0,
+            "area_m2": 100.0,
+            "extraction_quality_flags": "price_area_inconsistent",
+        })
+
+        self.assertIn("price_area_inconsistent", _valuation_quality_flags(row))
+
+    def test_quality_flags_detect_unverified_unit_price_invariant(self):
+        from cleansing.reprocess import _valuation_quality_flags
+
+        class Row(dict):
+            def __missing__(self, _key):
+                return None
+
+        row = Row({
+            "source": "guland",
+            "url": "https://guland.test/unverified-unit-price",
+            "title": "Bán đất giá tốt",
+            "description": "Liên hệ chính chủ",
+            "property_type": "dat_nen",
+            "tx_type": "ban",
+            "price_ty": 2.0,
+            "price_per_m2": 10.0,
+            "area_m2": 100.0,
+        })
+
+        self.assertIn("price_area_inconsistent", _valuation_quality_flags(row))
+
+    def test_quality_flags_use_irregular_geometry_tolerance(self):
+        from cleansing.reprocess import _valuation_quality_flags
+
+        class Row(dict):
+            def __missing__(self, _key):
+                return None
+
+        base = {
+            "source": "facebook",
+            "url": "https://facebook.test/geometry-tolerance",
+            "title": "Bán đất 100m2 giá 2 tỷ",
+            "property_type": "dat_nen",
+            "tx_type": "ban",
+            "price_ty": 2.0,
+            "price_per_m2": 20.0,
+            "area_m2": 100.0,
+        }
+        irregular = Row({**base, "description": "Lô xéo hậu ngang 5m dài 40m"})
+        regular = Row({**base, "description": "Đất vuông ngang 5m dài 40m"})
+
+        self.assertNotIn("area_dimension_conflict", _valuation_quality_flags(irregular))
+        self.assertIn("area_dimension_conflict", _valuation_quality_flags(regular))
+
+    def test_positive_feedback_does_not_override_deterministic_integrity(self):
+        from cleansing.reprocess import _source_quality_flags
+
+        class Row(dict):
+            def __missing__(self, _key):
+                return None
+
+        row = Row({
+            "source": "facebook",
+            "url": "https://facebook.test/positive-multi-lot",
+            "title": "Bán gấp 2 lô Chánh Mỹ",
+            "description": "Giá tốt liên hệ",
+            "property_type": "dat_nen",
+            "tx_type": "ban",
+            "price_ty": 2.0,
+            "price_per_m2": 20.0,
+            "area_m2": 100.0,
+            "feedback_verdict": "all_correct",
+            "feedback_extraction_verdict": "all_correct",
+            "feedback_valuation_verdict": "cheap_real",
+        })
+
+        self.assertIn("multi_lot_listing", _source_quality_flags(row))
+
     def test_quality_flags_allow_land_use_for_warehouse_text(self):
         from cleansing.reprocess import _valuation_quality_flags
 

@@ -525,14 +525,9 @@ _MULTI_LOT_PRICE_RE = re.compile(
     re.IGNORECASE,
 )
 _MULTI_LOT_COUNT_RE = re.compile(
-    r'\b(?:co\s*)?[2-9]\d?\s+lo\s+(?:lien\s+ke|dat|nen)\b|'
+    r'\b(?:ban\s+(?:gap\s+)?)?(?:con\s+)?[2-9]\d?\s+'
+    r'(?:lo|nen)(?:\s+(?:dat|lien\s+ke))?\b|'
     r'\b(?:ban\s+)?le\s+tung\s+lo\b',
-    re.IGNORECASE,
-)
-_MULTI_LOT_PER_LOT_PRICE_RE = re.compile(
-    r'\b(?:gia|gia\s+ban)?\s*[:：-]?\s*'
-    r'\d{1,3}(?:\s*(?:ty|ti)\s*\d{1,3}|[,.]\d{1,3}\s*(?:ty|ti)|\s*(?:ty|ti))'
-    r'\s*/\s*lo\b',
     re.IGNORECASE,
 )
 _MULTI_ASSET_RENTAL_CONTEXT_RE = re.compile(
@@ -560,8 +555,7 @@ def is_multi_lot_listing(title: str, description: str = "") -> bool:
 
     if (
         _MULTI_LOT_COUNT_RE.search(text)
-        and _MULTI_LOT_AREA_RE.search(text)
-        and (_MULTI_LOT_PER_LOT_PRICE_RE.search(text) or _MULTI_LOT_PRICE_RE.search(text))
+        and not _MULTI_ASSET_RENTAL_CONTEXT_RE.search(text)
     ):
         return True
 

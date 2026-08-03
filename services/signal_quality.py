@@ -34,6 +34,7 @@ ACTIONABLE_SUPPRESS_FLAGS = frozenset({
     "too_low_absolute_price",
     "missing_area_evidence",
     "area_dimension_conflict",
+    "price_area_inconsistent",
     "ambiguous_price_text",
     "source_category_conflict",
     "multi_lot_listing",

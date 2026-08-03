@@ -176,6 +176,12 @@ def test_detect_multi_lot_listing():
     )
 
 
+def test_detects_numeric_multi_lot_phrase_without_repeated_offer_pairs():
+    assert is_multi_lot_listing("Bán gấp 2 lô Chánh Mỹ", "Giá tốt liên hệ")
+    assert is_multi_lot_listing("Còn 3 nền liền kề", "Khu dân cư đẹp")
+    assert not is_multi_lot_listing("Nhà trọ 12 phòng", "Mỗi phòng đang cho thuê")
+
+
 def test_extract_dimensions():
     d = extract_dimensions("ngang 22.5m sâu 82m")
     assert d["frontage_m"] == 22.5

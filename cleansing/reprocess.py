@@ -18,8 +18,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from cleansing.normalizer import normalize_record, compute_content_hash
+from cleansing.extraction_integrity import declared_total_area, severe_geometry_conflict
 from cleansing.feature_extractor import (
     extract_area,
+    extract_dimensions,
+    extract_price,
     extract_url_hint,
     has_ambiguous_masked_price,
     is_multi_lot_listing,
@@ -77,15 +80,15 @@ def _has_positive_feedback(row) -> bool:
 
 def _source_quality_flags(row) -> tuple:
     source = (row["source"] or "").lower()
+    flags = list(_valuation_quality_flags(row))
 
     if _has_positive_feedback(row):
-        return ()
+        return tuple(sorted(set(flags)))
 
     verdict = (row["feedback_verdict"] or "").strip()
     extraction = (row["feedback_extraction_verdict"] or "").strip()
     valuation = (row["feedback_valuation_verdict"] or verdict).strip()
 
-    flags = list(_valuation_quality_flags(row))
     if source != "guland":
         return tuple(sorted(set(flags)))
 
@@ -114,8 +117,15 @@ def _valuation_quality_flags(row) -> tuple:
     ppm2 = _float_value(row["price_per_m2"])
     area_m2 = _float_value(row["area_m2"])
     prop_type = row["property_type"] or ""
+    tx_type = (row["tx_type"] or "ban").lower()
     source = (row["source"] or "").lower()
     url_hint = extract_url_hint(row["url"] or "")
+
+    flags.extend(
+        part.strip()
+        for part in str(row["extraction_quality_flags"] or "").split(",")
+        if part.strip()
+    )
 
     # keep parsed text as-is; test marker is no longer a hard gating signal criteria.
 
@@ -130,7 +140,9 @@ def _valuation_quality_flags(row) -> tuple:
     if ambiguous_price:
         flags.append("ambiguous_price_text")
 
-    if prop_type in {"dat_nen", "nha_dat"} and price_ty and price_ty <= LOW_ABSOLUTE_PRICE_TY:
+    if tx_type == "ban" and price_ty and price_ty <= 0.05:
+        flags.append("too_low_absolute_price")
+    elif prop_type in {"dat_nen", "nha_dat"} and price_ty and price_ty <= LOW_ABSOLUTE_PRICE_TY:
         flags.append("too_low_absolute_price")
 
     if source == "facebook" and prop_type in {"dat_nen", "nha_dat"} and area_m2 and not _float_value(extract_area(title + "\n" + description)):
@@ -155,12 +167,24 @@ def _valuation_quality_flags(row) -> tuple:
     if prop_type in {"dat_nen", "nha_dat", "nha_tro"} and is_multi_lot_listing(title, description):
         flags.append("multi_lot_listing")
 
-    description_area_m2 = _float_value(extract_area(description))
-    if area_m2 and description_area_m2 and prop_type in {"dat_nen", "nha_dat"}:
-        bigger = max(area_m2, description_area_m2)
-        smaller = min(area_m2, description_area_m2)
-        if smaller > 0 and bigger / smaller >= 1.8:
-            flags.append("area_dimension_conflict")
+    dimensions = extract_dimensions(title + "\n" + description)
+    if area_m2 and severe_geometry_conflict(
+        title + "\n" + description,
+        area_m2,
+        dimensions.get("frontage_m"),
+        dimensions.get("depth_m"),
+    ):
+        flags.append("area_dimension_conflict")
+
+    if price_ty and area_m2 and ppm2:
+        canonical_ppm2 = price_ty * 1000 / area_m2
+        mismatch = abs(canonical_ppm2 - ppm2) / max(canonical_ppm2, ppm2)
+        has_clear_text_support = bool(
+            extract_price(title + "\n" + description)
+            and declared_total_area(title + "\n" + description)
+        )
+        if mismatch > 0.20 and not has_clear_text_support:
+            flags.append("price_area_inconsistent")
 
     if prop_type in {"dat_nen", "nha_dat"} and ppm2 and ppm2 < 1.0:
         flags.append("too_low_absolute_price")
@@ -415,7 +439,7 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
                    l.tho_cu_m2, l.tho_cu_ratio,
                    l.has_so, l.is_hot, l.price_dropped, l.crawled_at, l.posted_at,
                    l.url, l.contact_phone, l.source, l.source_id, l.suspicious_bait,
-                   l.review_hidden, l.duplicate_of_id,
+                   l.review_hidden, l.duplicate_of_id, l.extraction_quality_flags,
                    'unverified' AS legal_status,
                    'candidate_signal' AS trust_tier,
                    0 AS trust_score,
