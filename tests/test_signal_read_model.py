@@ -161,6 +161,74 @@ def test_full_refresh_bumps_version_after_final_insert(monkeypatch):
     assert result.versions == {"signals": 8, "listings": 5}
 
 
+def test_staged_insert_rechecks_images_deleted_after_snapshot():
+    from services.signal_read_model import (
+        _insert_staged_rows,
+        _select_sql,
+    )
+
+    token = uuid.uuid4().hex
+    with connection.get_conn() as conn:
+        listing_id = int(conn.execute(
+            """
+            INSERT INTO listings(
+                source, source_id, url, title, description,
+                source_status, ward, price_ty, price_per_m2, area_m2
+            ) VALUES (?, ?, ?, 'Image race fixture', '', 'active',
+                      'Phú Lợi', 2.5, 25.0, 100)
+            RETURNING id
+            """,
+            (
+                "facebook",
+                f"read-model-image-race-{token}",
+                f"https://example.invalid/read-model-image-race-{token}",
+            ),
+        ).lastrowid)
+        image_id = int(conn.execute(
+            """
+            INSERT INTO listing_images(listing_id, img_url, img_order)
+            VALUES (?, ?, 0)
+            """,
+            (listing_id, f"https://example.invalid/image-{token}.jpg"),
+        ).lastrowid)
+        select_sql, params = _select_sql((listing_id,))
+        conn.execute(
+            "CREATE TEMP TABLE signal_card_read_model_stage "
+            "ON COMMIT DROP AS " + select_sql,
+            params,
+        )
+        staged = conn.execute(
+            """
+            SELECT primary_image_id, image_count
+            FROM signal_card_read_model_stage
+            WHERE listing_id=?
+            """,
+            (listing_id,),
+        ).fetchone()
+        assert staged["primary_image_id"] == image_id
+        assert staged["image_count"] == 1
+
+        conn.execute("DELETE FROM listing_images WHERE id=?", (image_id,))
+        conn.execute(
+            "DELETE FROM signal_card_read_model WHERE listing_id=?",
+            (listing_id,),
+        )
+
+        assert _insert_staged_rows(conn) == 1
+        projected = conn.execute(
+            """
+            SELECT primary_image_id, image_count
+            FROM signal_card_read_model
+            WHERE listing_id=?
+            """,
+            (listing_id,),
+        ).fetchone()
+        conn.execute("DELETE FROM listings WHERE id=?", (listing_id,))
+
+    assert projected["primary_image_id"] is None
+    assert projected["image_count"] == 0
+
+
 def test_failed_full_refresh_keeps_previous_rows_and_version(monkeypatch):
     from services import signal_read_model
 

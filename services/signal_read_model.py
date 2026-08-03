@@ -122,6 +122,14 @@ class SignalReadModelRefresh:
     duration_ms: float
 
 
+def _primary_image_order_sql(alias: str) -> str:
+    return (
+        LEGAL_IMAGE_ORDER_SQL.replace("img_type", f"{alias}.img_type")
+        .replace("img_order", f"{alias}.img_order")
+        .replace(", id", f", {alias}.id")
+    )
+
+
 def _select_sql(listing_ids: tuple[int, ...] | None) -> tuple[str, tuple[int, ...]]:
     ids = tuple(listing_ids or ())
     listing_id_clause = ""
@@ -148,11 +156,7 @@ def _select_sql(listing_ids: tuple[int, ...] | None) -> tuple[str, tuple[int, ..
     )
     public_visibility_expr = publisher_visibility_from_join_sql("l", "feed_sp")
     publisher_rank_expr = publisher_sort_rank_from_join_sql("l", "feed_sp")
-    primary_image_order_sql = (
-        LEGAL_IMAGE_ORDER_SQL.replace("img_type", "li.img_type")
-        .replace("img_order", "li.img_order")
-        .replace(", id", ", li.id")
-    )
+    primary_image_order_sql = _primary_image_order_sql("li")
     price_drop_select = effective_price_drop_select_sql(
         "l",
         "related_drop",
@@ -256,9 +260,30 @@ def _column_list() -> str:
 
 def _insert_staged_rows(conn) -> int:
     columns = _column_list()
+    selected_columns = []
+    for column in READ_MODEL_COLUMNS:
+        if column == "primary_image_id":
+            selected_columns.append("live_primary.id AS primary_image_id")
+        elif column == "image_count":
+            selected_columns.append(
+                "COALESCE(live_images.image_count, 0)::integer AS image_count"
+            )
+        else:
+            selected_columns.append(f"stage.{column}")
+    select_list = ", ".join(selected_columns)
+    primary_order = _primary_image_order_sql("li")
     cursor = conn.execute(
         f"INSERT INTO signal_card_read_model ({columns}) "
-        f"SELECT {columns} FROM signal_card_read_model_stage"
+        f"SELECT {select_list} FROM signal_card_read_model_stage stage "
+        "LEFT JOIN LATERAL ("
+        "SELECT li.id FROM listing_images li "
+        "WHERE li.listing_id=stage.listing_id "
+        f"ORDER BY {primary_order} LIMIT 1"
+        ") live_primary ON TRUE "
+        "LEFT JOIN LATERAL ("
+        "SELECT COUNT(*)::integer AS image_count FROM listing_images li "
+        "WHERE li.listing_id=stage.listing_id"
+        ") live_images ON TRUE"
     )
     return max(int(cursor.rowcount or 0), 0)
 
