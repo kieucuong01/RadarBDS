@@ -42,9 +42,11 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
         "listingMapMobileSheet",
     ):
         assert f'id="{hook}"' in html
+    assert 'id="listingMapMobileSheet"' in html
+    assert 'data-state="collapsed"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-read-model-canvas-20260802") == 2
+    assert html.count("listing-map-progressive-sheet-20260803") == 2
     assert "window.RADAR_MAP_VENDOR" in html
     assert not re.search(
         r"<(?:script|link)[^>]+(?:leaflet\.js|leaflet\.css)",
@@ -178,7 +180,6 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
         assert contract in script
     assert "item.description" not in script
     assert "@media (max-width: 760px)" in styles
-    assert "max-height: min(47vh, 410px)" in styles
     assert "min-height: 44px" in styles
     assert "@media (prefers-reduced-motion: reduce)" in styles
     assert ".listing-map-precision-landmark" in styles

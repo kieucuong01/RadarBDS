@@ -47,7 +47,8 @@
     mediaQueryHandler: null,
     markerGeneration: 0,
     markerFrameId: null,
-    markerRenderCount: 0
+    markerRenderCount: 0,
+    sheetExpanded: false
   };
 
   function normalizeMode(value) {
@@ -238,6 +239,23 @@
       && hasMarkerLayer
       && expectedGeneration === currentGeneration
     );
+  }
+
+  function mobileSheetModel(expanded) {
+    var isExpanded = Boolean(expanded);
+    return {
+      expanded: isExpanded,
+      state: isExpanded ? "expanded" : "collapsed",
+      ariaExpanded: isExpanded ? "true" : "false",
+      label: isExpanded ? "Thu gọn" : "Xem danh sách vị trí"
+    };
+  }
+
+  function sheetExpandedForView(kind, currentExpanded) {
+    if (["items-loading", "items", "items-error"].indexOf(kind) >= 0) {
+      return true;
+    }
+    return Boolean(currentExpanded);
   }
 
   function normalizeAccuracyRadius(value) {
@@ -618,12 +636,58 @@
     return button;
   }
 
+  function isMobileSheet(target) {
+    return Boolean(target && target.id === "listingMapMobileSheet");
+  }
+
+  function setMobileSheetExpanded(expanded) {
+    var model = mobileSheetModel(expanded);
+    var sheet = element("listingMapMobileSheet");
+    state.sheetExpanded = model.expanded;
+    if (!sheet) return;
+    sheet.classList.toggle("is-expanded", model.expanded);
+    sheet.dataset.state = model.state;
+    Array.prototype.forEach.call(
+      sheet.querySelectorAll("[data-listing-map-sheet-toggle]"),
+      function (toggle) {
+        toggle.setAttribute("aria-expanded", model.ariaExpanded);
+        toggle.textContent = model.label;
+      }
+    );
+  }
+
+  function appendSheetHandle(shell) {
+    var handle = create("div", "listing-map-sheet-handle");
+    handle.setAttribute("aria-hidden", "true");
+    shell.appendChild(handle);
+  }
+
+  function createSheetToggle() {
+    var model = mobileSheetModel(state.sheetExpanded);
+    var toggle = create(
+      "button",
+      "listing-map-sheet-toggle",
+      model.label
+    );
+    toggle.type = "button";
+    toggle.dataset.listingMapSheetToggle = "true";
+    toggle.setAttribute("aria-expanded", model.ariaExpanded);
+    toggle.addEventListener("click", function () {
+      setMobileSheetExpanded(!state.sheetExpanded);
+    });
+    return toggle;
+  }
+
   function renderGroupDirectoryInto(target, payload) {
     if (!target) return;
     var summary = payload.summary || {};
     cancelDirectoryRender();
     clearElement(target);
     var shell = create("div", "listing-map-directory");
+    if (isMobileSheet(target)) {
+      appendSheetHandle(shell);
+      shell.appendChild(createSheetToggle());
+    }
     var stats = create("div", "listing-map-summary-grid");
     [
       ["Đã định vị", safeCount(summary.mapped)],
@@ -875,7 +939,15 @@
       state.selectedGroup = null;
       setPanelView("directory");
     });
-    shell.appendChild(back);
+    if (isMobileSheet(target)) {
+      appendSheetHandle(shell);
+      var actions = create("div", "listing-map-sheet-actions");
+      actions.appendChild(back);
+      actions.appendChild(createSheetToggle());
+      shell.appendChild(actions);
+    } else {
+      shell.appendChild(back);
+    }
     shell.appendChild(create("h3", "", group.label));
     shell.appendChild(create(
       "p",
@@ -936,6 +1008,7 @@
     }
     shell.appendChild(list);
     target.appendChild(shell);
+    if (isMobileSheet(target)) target.scrollTop = 0;
   }
 
   function renderItemsLoadingInto(target, group) {
@@ -943,9 +1016,14 @@
     cancelDirectoryRender();
     clearElement(target);
     var shell = create("div", "listing-map-panel-loading");
+    if (isMobileSheet(target)) {
+      appendSheetHandle(shell);
+      shell.appendChild(createSheetToggle());
+    }
     shell.appendChild(create("strong", "", group.label));
     shell.appendChild(create("span", "", "Đang tải các lô đất..."));
     target.appendChild(shell);
+    if (isMobileSheet(target)) target.scrollTop = 0;
   }
 
   function renderItemsErrorInto(target, group) {
@@ -959,6 +1037,7 @@
         listing_count: group.listing_count
       }
     );
+    if (isMobileSheet(target)) target.scrollTop = 0;
   }
 
   function renderSummaryErrorInto(target) {
@@ -984,6 +1063,12 @@
     clearElement(inactivePanel());
     if (!target) return;
     var view = state.panelView || { kind: "directory" };
+    if (isMobileViewport()) {
+      setMobileSheetExpanded(sheetExpandedForView(
+        view.kind,
+        state.sheetExpanded
+      ));
+    }
     if (view.kind === "items") {
       renderItemsInto(target, view.group, view.payload || { items: [] });
       return;
@@ -1021,6 +1106,7 @@
   function selectGroup(group) {
     if (!state.open || !state.snapshot) return;
     state.selectedGroup = group;
+    setMobileSheetExpanded(true);
     itemSequence += 1;
     var sequence = itemSequence;
     if (state.itemController) state.itemController.abort();
@@ -1124,6 +1210,7 @@
     state.selectedGroup = null;
     state.panelView = { kind: "directory", group: null, payload: null };
     state.directoryVisibleCount = DIRECTORY_BATCH_SIZE;
+    setMobileSheetExpanded(false);
     workspace.hidden = false;
     root.document.body.classList.add("listing-map-open");
     var launcher = element("listingMapLauncher");
@@ -1172,6 +1259,7 @@
     clearPanels();
     setStatus("", false);
     if (state.workspace) state.workspace.hidden = true;
+    setMobileSheetExpanded(false);
     root.document.body.classList.remove("listing-map-open");
     var launcher = element("listingMapLauncher");
     if (launcher) launcher.setAttribute("aria-expanded", "false");
@@ -1315,6 +1403,8 @@
     batchRanges: batchRanges,
     nextBatch: nextBatch,
     canContinueMarkerRender: canContinueMarkerRender,
+    mobileSheetModel: mobileSheetModel,
+    sheetExpandedForView: sheetExpandedForView,
     openListingFromMap: openListingFromMap,
     shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,

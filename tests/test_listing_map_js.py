@@ -193,6 +193,30 @@ def test_marker_render_generation_rejects_closed_or_stale_work():
     assert _run_node("mapApi.canContinueMarkerRender(true,4,4,false)") is False
 
 
+def test_mobile_sheet_model_exposes_explicit_accessible_states():
+    assert _run_node("mapApi.mobileSheetModel(false)") == {
+        "expanded": False,
+        "state": "collapsed",
+        "ariaExpanded": "false",
+        "label": "Xem danh sách vị trí",
+    }
+    assert _run_node("mapApi.mobileSheetModel(true)") == {
+        "expanded": True,
+        "state": "expanded",
+        "ariaExpanded": "true",
+        "label": "Thu gọn",
+    }
+
+
+def test_selected_group_views_require_an_expanded_mobile_sheet():
+    assert _run_node("mapApi.sheetExpandedForView('directory',false)") is False
+    assert _run_node("mapApi.sheetExpandedForView('directory',true)") is True
+    for view in ("items-loading", "items", "items-error"):
+        assert _run_node(
+            f"mapApi.sheetExpandedForView({json.dumps(view)},false)"
+        ) is True
+
+
 def test_tracking_context_is_strictly_allowlisted():
     result = _run_node(
         "mapApi.safeTrackingContext({"
