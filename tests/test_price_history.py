@@ -168,6 +168,35 @@ class PriceHistoryTest(unittest.TestCase):
             ).fetchone()
         self.assertEqual(row["extraction_quality_flags"], "")
 
+    def test_listings_schema_has_crawl_run_provenance(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema=current_schema() AND table_name='listings'
+                """
+            ).fetchall()
+        self.assertIn("crawl_run_id", {row["column_name"] for row in rows})
+
+    def test_upsert_listing_persists_latest_crawl_run_id(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(self._rec(), crawl_run_id=101)
+        self._track(listing_id)
+        upsert_listing(self._rec(title="Tin cập nhật"), crawl_run_id=202)
+        upsert_listing(self._rec(title="Tin không có run mới"), crawl_run_id=None)
+
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT crawl_run_id FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+        self.assertEqual(row["crawl_run_id"], 202)
+
     def test_upsert_listing_changed_price_adds_one_history_snapshot(self):
         from db.listings import upsert_listing
 

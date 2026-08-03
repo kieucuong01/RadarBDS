@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS listings (
     contact_phone       TEXT,
     seller_name         TEXT,
     extraction_quality_flags TEXT NOT NULL DEFAULT '',
+    crawl_run_id        INTEGER,
 
     -- Outlier flag (thay vì drop)
     is_outlier          INTEGER DEFAULT 0,   -- 1 = nằm ngoài ±2σ của segment
@@ -1291,6 +1292,7 @@ def _run_migrations(conn: Any) -> None:
             "extraction_quality_flags",
             "ALTER TABLE listings ADD COLUMN extraction_quality_flags TEXT NOT NULL DEFAULT ''",
         ),
+        ("crawl_run_id", "ALTER TABLE listings ADD COLUMN crawl_run_id INTEGER"),
     ]
     for col, sql in migrations:
         if col not in existing:
