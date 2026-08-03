@@ -224,14 +224,16 @@ def test_selected_group_views_require_an_expanded_mobile_sheet():
 
 
 def test_selected_mobile_sheet_actions_remain_available_on_errors():
-    assert _run_node("mapApi.selectedSheetActionModel(false)") == {
-        "backLabel": "← Tất cả vị trí",
-        "retryLabel": None,
-    }
-    assert _run_node("mapApi.selectedSheetActionModel(true)") == {
-        "backLabel": "← Tất cả vị trí",
-        "retryLabel": "Thử lại",
-    }
+    for view in ("items-loading", "items"):
+        assert _run_node(
+            f"mapApi.selectedSheetActionModel({json.dumps(view)})"
+        ) == {
+            "backLabel": "← Tất cả vị trí",
+            "retryLabel": None,
+        }
+    assert _run_node(
+        "mapApi.selectedSheetActionModel('items-error')"
+    ) == {"backLabel": "← Tất cả vị trí", "retryLabel": "Thử lại"}
 
 
 def test_tracking_context_is_strictly_allowlisted():

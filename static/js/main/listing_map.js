@@ -261,10 +261,10 @@
     return Boolean(currentExpanded);
   }
 
-  function selectedSheetActionModel(hasError) {
+  function selectedSheetActionModel(viewKind) {
     return {
       backLabel: "← Tất cả vị trí",
-      retryLabel: hasError ? "Thử lại" : null
+      retryLabel: viewKind === "items-error" ? "Thử lại" : null
     };
   }
 
@@ -698,7 +698,7 @@
     var button = create(
       "button",
       "listing-map-back",
-      selectedSheetActionModel(false).backLabel
+      selectedSheetActionModel("items").backLabel
     );
     button.type = "button";
     button.addEventListener("click", function () {
@@ -1042,8 +1042,7 @@
     clearElement(target);
     var shell = create("div", "listing-map-panel-loading");
     if (isMobileSheet(target)) {
-      appendSheetHandle(shell);
-      shell.appendChild(createSheetToggle());
+      appendSelectedSheetHeader(shell, createSelectedGroupBackButton());
     }
     shell.appendChild(create("strong", "", group.label));
     shell.appendChild(create("span", "", "Đang tải các lô đất..."));
@@ -1065,7 +1064,7 @@
       var retry = create(
         "button",
         "listing-map-retry",
-        selectedSheetActionModel(true).retryLabel
+        selectedSheetActionModel("items-error").retryLabel
       );
       retry.type = "button";
       retry.addEventListener("click", function () {
