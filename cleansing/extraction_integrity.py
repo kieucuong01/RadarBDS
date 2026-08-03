@@ -60,7 +60,8 @@ def _area_number(value: str) -> float | None:
 def declared_total_area(text: str) -> float | None:
     folded = _fold(text)
     direct_patterns = (
-        rf"\b(?:tong(?:\s+(?:dt|dien tich))?|dt\s+tong)\s*[:=\-]?\s*"
+        rf"\b(?:(?<!be )(?<!be-)tong(?:\s+(?:dt|dien tich))?|dt\s+tong)"
+        rf"\s*[:=\-]?\s*"
         rf"{_AREA_NUMBER}\s*{_EXPLICIT_AREA_UNIT}\b",
         rf"\b(?:dt(?:\s+dat)?|dien tich(?:\s+dat)?)\s*[:=\-]?\s*"
         rf"{_AREA_NUMBER}\s*{_EXPLICIT_AREA_UNIT}\b",
@@ -78,7 +79,8 @@ def declared_total_area(text: str) -> float | None:
     ):
         context = folded[max(0, match.start() - 48):match.start()]
         if re.search(
-            r"(?:\d+(?:[,.]\d+)?\s*[x×*]\s*\d+(?:[,.]\d+)?|dt|dien tich|tong|ngang)",
+            r"(?:\d+(?:[,.]\d+)?\s*[x×*]\s*\d+(?:[,.]\d+)?|"
+            r"dt|dien tich|(?<!be )(?<!be-)tong|ngang)",
             context,
         ):
             return _area_number(match.group(1))

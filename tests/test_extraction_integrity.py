@@ -55,6 +55,7 @@ def test_bare_listing_area_is_a_declared_total_but_tho_cu_is_not():
         ("Diện tích 100m2, ngang 5 dài 20", 100.0),
         ("Diện tích 15x71m. Tổng 1028m2", 1028.0),
         ("Diện tích 7x38m nở hậu 9m ~ 309m2", 309.0),
+        ("Đường bê tông 4,5m. Diện tích 5x20=100m", 100.0),
         ("DT 11x73 đất CLN", None),
     ],
 )
