@@ -28,10 +28,23 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 .\scripts\local_postgres.ps1 start
 # .env.local should set DATABASE_URL and RADAR_TEST_DATABASE_URL
 & $py -X utf8 radar.py inspect
+& $py -X utf8 radar.py integrity-report --json
 & $py -X utf8 app.py
 & $py -X utf8 radar.py reprocess
 & $py -X utf8 radar.py reprocess --full
 ```
+
+`integrity-report` is a read-only extraction-to-valuation comparison. It does
+not change schema, listing data, valuation snapshots, read models, dataset
+versions, or caches. Review `invariant_violations_remaining`; it must be zero
+before applying the result of a full reprocess to production.
+
+After deploying a revision that changes measurement reconciliation or
+valuation snapshots, run an explicit production `reprocess --full` before
+considering the data migration complete. If main or shadow valuation fails,
+the transaction keeps the previous snapshot and map/public publication must
+not run. Roll back by reverting the application revision; never promote the
+shadow model as an automatic fallback.
 
 PostgreSQL integration tests must use `RADAR_TEST_DATABASE_URL` from
 `.env.local`. Its database name must contain `test`:
@@ -279,6 +292,19 @@ Targeted tests:
 & $py -X utf8 -m pytest tests\test_valuation.py
 & $py -X utf8 -m pytest tests\test_market_data_performance.py tests\test_postgres_connection.py tests\test_market_data_trust.py
 ```
+
+Extraction-to-valuation integrity gate:
+
+```powershell
+& $py -X utf8 radar.py integrity-report --json
+& $py -X utf8 radar.py reprocess --full
+& $py -X utf8 radar.py signal-read-model --refresh --compare --compare-listings --limit 200
+```
+
+The first command is always read-only. The second and third commands mutate
+derived data and must be run only in the intended environment after the
+integrity report and tests pass. A failed valuation run must leave the prior
+main/shadow snapshots and outlier state intact.
 
 ### Homepage signal read model
 

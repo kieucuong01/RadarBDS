@@ -164,45 +164,55 @@ nguồn tuyệt đối `source_post_date`, nên diễn tiến tự nhiên kiểu
 thành “2 ngày trước” không bị tính là repost. Không thao tác nào đổi
 `first_seen_at` hay ngày card nếu giá không đổi.
 
-### Bước 4 — `listings` → `valuation_results`
+Normalizer đối soát measurement theo một policy dùng chung:
 
-Sau `reprocess_listings()`, `_run_full_reprocess()` gọi:
+- diện tích tổng được công bố thắng `ngang × dài`;
+- lô thường chỉ là xung đột nặng khi sai số lớn hơn 40%; lô xéo/nở hậu/nhiều
+  cạnh chỉ bị chặn khi sai số lớn hơn 60%;
+- chỉ suy diện tích thiếu từ đúng một cặp kích thước hợp lệ của lô thường;
+- `price_per_m2` luôn được tính lại từ `price_ty × 1000 / area_m2`;
+- mâu thuẫn chưa giải quyết được lưu ở `listings.extraction_quality_flags`;
+- bài bán nhiều lô vẫn được giữ nguyên nhưng bị loại khỏi training và signal
+  actionable, không tự tách thành các listing con.
+
+### Bước 4 — hoàn tất trạng thái listing trước valuation
+
+Sau `reprocess_listings()`, `_run_full_reprocess()` chạy đúng thứ tự:
 
 ```text
-reprocess_valuation(incremental_ids=processed_ids)
+content_hash -> dedup -> first_seen -> price drops -> lifecycle
+             -> weekly/monthly/daily trends -> valuation
 ```
+
+Valuation vì vậy luôn đọc trạng thái dedup, giảm giá và lifecycle mới nhất;
+không còn định giá trước rồi mới cập nhật các prerequisite này.
+
+### Bước 5 — `listings` → main/shadow valuation nguyên tử
 
 Trong `reprocess_valuation()`:
 
-1. Lấy tập train gần nhất từ `listings`, bỏ tin sold/blacklist/review hidden.
-2. Lấy tập cần định giá:
-   - incremental: chỉ các listing vừa xử lý;
-   - full: toàn bộ listing đủ điều kiện.
-3. Join feedback mới nhất từ `ai_training_feedback` để tạo quality flags.
-4. Dựng object `analytics.valuation.Listing`.
-5. Fit `analytics.valuation.ValuationEngine()`.
-6. Gọi `engine.valuate_batch(...)`.
-7. Xóa valuation cũ của incremental IDs để tránh trùng snapshot.
-8. Ghi kết quả vào `valuation_results` qua `_batch_save_valuations(...)`.
+1. Lấy tập train và tập cần định giá, bỏ sold/blacklist/review hidden.
+2. Chuyển row thành `analytics.valuation.Listing`; row lỗi làm cả run fail rõ
+   `listing_id`, không bị bỏ qua im lặng.
+3. Fit và tính xong cả main `road_tier_hierarchical_v1` lẫn shadow
+   `median_road_tier_v1` trong bộ nhớ.
+4. Trong đúng một PostgreSQL transaction: tạo hai model run, thay main/shadow
+   rows của target, reset/cập nhật outlier và gắn `model_run_id` cùng
+   `crawl_run_id`.
+
+Nếu bất kỳ main/shadow insert nào lỗi, transaction rollback và snapshot cũ
+cùng outlier state vẫn nguyên vẹn. Không xóa `valuation_model_runs` lịch sử và
+không tự promote shadow thành main.
 
 `valuation_results.is_signal=1` chỉ có nghĩa là model thấy tin rẻ hơn fair
 value theo MOS threshold. Đây là **model signal**, chưa chắc được hiện lên UI
 hoặc bắn Telegram.
 
-### Bước 5 — các tác vụ sau valuation
+### Bước 6 — map và public publication
 
-Vẫn trong `_run_full_reprocess()`:
-
-- `detect_price_drops(conn)` cập nhật price-drop/history.
-- `sweep_delisted(conn)` đánh dấu listing biến mất/likely sold.
-- `compute_weekly_trend`, `compute_monthly_trend`, `compute_daily_trend` cập
-  nhật market trend.
-- `cleansing.dedup.flag_duplicates_in_db(conn)` đánh dấu lot trùng/repost.
-- `populate_content_hashes(conn)` backfill hash chống repost.
-
-Điểm dễ nhầm: dedup và price-drop chạy **sau** valuation. Vì vậy UI/Telegram
-không chỉ dựa vào `is_signal`; chúng còn gate tiếp bằng listing flags và latest
-valuation.
+Map backfill rồi `publish_public_data()` chỉ chạy sau khi transaction valuation
+thành công. Exception valuation phải propagate; tuyệt đối không refresh public
+read model/cache từ một snapshot dở dang.
 
 ### Bước 7 — định nghĩa signal được hiện cho user
 
@@ -227,7 +237,8 @@ ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
 - `v.is_signal = 1`;
 - không có hard-block quality flags:
   `too_low_absolute_price`, `missing_area_evidence`,
-  `area_dimension_conflict`, `ambiguous_price_text`,
+  `area_dimension_conflict`, `price_area_inconsistent`,
+  `unreprocessable_source_payload`, `ambiguous_price_text`,
   `source_category_conflict`, `multi_lot_listing`,
   `extreme_guland_ppm2`, `suspicious_bait`,
   `review_bad_extraction`, `review_bad_valuation`.
