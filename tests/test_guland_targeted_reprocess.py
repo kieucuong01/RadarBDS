@@ -206,38 +206,21 @@ def test_targeted_reprocess_links_publisher_once():
                 )
 
 
-def test_targeted_reprocess_publishes_processed_ids(monkeypatch):
+def test_targeted_reprocess_uses_full_prerequisite_pipeline(monkeypatch):
     from cleansing import reprocess
 
-    events = []
+    calls = []
     monkeypatch.setattr(
         reprocess,
-        "reprocess_listings",
-        lambda **_kwargs: {"processed_ids": [31, 31, 32]},
-    )
-    monkeypatch.setattr(
-        reprocess,
-        "reprocess_valuation",
-        lambda **_kwargs: {"total": 2, "signals": 1, "outliers": 0},
-    )
-    monkeypatch.setattr(
-        reprocess,
-        "_run_listing_map_backfill",
-        lambda *_args, **_kwargs: {"processed": 2},
-    )
-    monkeypatch.setattr(
-        reprocess,
-        "publish_public_data",
-        lambda **kwargs: events.append(kwargs) or {"status": "ok"},
+        "run_full_reprocess",
+        lambda **kwargs: calls.append(kwargs) or {
+            "listings": {"processed_ids": [31, 32]},
+            "valuation": {"total": 2, "signals": 1, "outliers": 0},
+            "public_read_model": {"status": "ok"},
+        },
     )
 
-    result = reprocess.run_targeted_reprocess([101, 102])
+    result = reprocess.run_targeted_reprocess([101, 102, 101])
 
-    assert events == [
-        {
-            "listing_ids": (31, 32),
-            "market_changed": False,
-            "strict": False,
-        }
-    ]
+    assert calls == [{"raw_ids": [101, 102]}]
     assert result["public_read_model"] == {"status": "ok"}

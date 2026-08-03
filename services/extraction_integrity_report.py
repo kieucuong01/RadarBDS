@@ -4,8 +4,16 @@ from __future__ import annotations
 import json
 import math
 from collections import Counter
+from datetime import date, datetime
 from typing import Any, Iterable, Mapping
 
+from analytics.valuation import (
+    DEFAULT_BASELINE_SOURCES,
+    SPECIAL_MARKET_SKIP_TYPES,
+    SUPPLEMENTAL_BASELINE_SOURCE,
+    SUPPLEMENTAL_GULAND_OLD_POST_DAYS,
+    SUPPLEMENTAL_LARGE_LOT_AREA_M2,
+)
 from cleansing.normalizer import normalize_record
 from cleansing.reprocess import _source_quality_flags
 from db.connection import get_conn
@@ -48,6 +56,7 @@ def build_integrity_report(limit: int | None = None) -> dict[str, Any]:
             l.url,
             l.title,
             l.description,
+            l.ward,
             l.property_type,
             l.tx_type,
             l.price_ty,
@@ -56,6 +65,14 @@ def build_integrity_report(limit: int | None = None) -> dict[str, Any]:
             l.price_per_m2,
             l.frontage_m,
             l.depth_m,
+            l.road_tier,
+            l.crawled_at,
+            l.posted_at,
+            l.suspicious_bait,
+            l.probably_sold,
+            l.is_blacklisted,
+            l.review_hidden,
+            l.duplicate_of_id,
             COALESCE(to_jsonb(l)->>'extraction_quality_flags', '')
                 AS extraction_quality_flags,
             r.raw_json,
@@ -263,11 +280,60 @@ def _json_object(value) -> dict[str, Any]:
 
 
 def _training_eligible(row: Mapping[str, Any], flags: set[str]) -> bool:
-    return bool(
-        not flags
-        and (_number(row.get("price_per_m2")) or 0) > 0
-        and (_number(row.get("area_m2")) or 0) > 0
+    if (
+        flags
+        or (_number(row.get("price_per_m2")) or 0) <= 0
+        or (_number(row.get("area_m2")) or 0) <= 0
+        or _truthy_db_flag(row.get("probably_sold"))
+        or _truthy_db_flag(row.get("is_blacklisted"))
+        or _truthy_db_flag(row.get("review_hidden"))
+        or row.get("duplicate_of_id") is not None
+        or str(row.get("property_type") or "") in SPECIAL_MARKET_SKIP_TYPES
+    ):
+        return False
+
+    source = str(row.get("source") or "").strip().lower()
+    baseline_sources = {str(item).strip().lower() for item in DEFAULT_BASELINE_SOURCES}
+    if not source or source in baseline_sources:
+        return True
+    if source != SUPPLEMENTAL_BASELINE_SOURCE:
+        return False
+
+    ward = str(row.get("ward") or "").strip().lower()
+    price_ty = _number(row.get("price_ty")) or 0
+    area_m2 = _number(row.get("area_m2")) or 0
+    road_tier = _number(row.get("road_tier")) or 0
+    if not ward or ward == "unknown" or price_ty <= 0:
+        return False
+    if area_m2 >= SUPPLEMENTAL_LARGE_LOT_AREA_M2 and road_tier <= 0:
+        return False
+
+    posted = _date_value(row.get("posted_at"))
+    crawled = _date_value(row.get("crawled_at"))
+    return not (
+        posted
+        and crawled
+        and (crawled - posted).days >= SUPPLEMENTAL_GULAND_OLD_POST_DAYS
     )
+
+
+def _truthy_db_flag(value: Any) -> bool:
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
+def _date_value(value: Any) -> date | None:
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(str(value)[:10])
+    except ValueError:
+        return None
 
 
 def _canonical_ppm_invariant(row: Mapping[str, Any]) -> bool:

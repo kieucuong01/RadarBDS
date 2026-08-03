@@ -760,30 +760,11 @@ def _run_listing_map_backfill(processed_ids: list[int], *, full: bool) -> dict:
 
 
 def run_targeted_reprocess(raw_ids: list[int]) -> dict:
-    """Normalize, revalue, and remap only explicitly refreshed raw rows."""
+    """Run the complete prerequisite pipeline for explicitly refreshed rows."""
     bounded_raw_ids = list(
         dict.fromkeys(int(raw_id) for raw_id in raw_ids if raw_id)
     )
-    listing_stats = reprocess_listings(raw_ids=bounded_raw_ids)
-    processed_ids = list(
-        dict.fromkeys(listing_stats.get("processed_ids") or [])
-    )
-    valuation_stats = reprocess_valuation(incremental_ids=processed_ids)
-    map_location_stats = _run_listing_map_backfill(
-        processed_ids,
-        full=False,
-    )
-    public_read_model_stats = publish_public_data(
-        listing_ids=tuple(processed_ids),
-        market_changed=False,
-        strict=False,
-    )
-    return {
-        "listings": listing_stats,
-        "valuation": valuation_stats,
-        "map_locations": map_location_stats,
-        "public_read_model": public_read_model_stats,
-    }
+    return run_full_reprocess(raw_ids=bounded_raw_ids)
 
 
 def _run_full_reprocess(source: str = None, since: str = None, full: bool = False, raw_ids: list = None):

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import services.extraction_integrity_report as report_service
 from services.extraction_integrity_report import (
     _compare_row,
+    _training_eligible,
     build_integrity_report,
     summarize_integrity_changes,
 )
@@ -73,7 +74,60 @@ def test_build_integrity_report_executes_only_one_read_query(monkeypatch):
     assert len(statements) == 1
     statement = statements[0][0].lstrip().upper()
     assert statement.startswith("WITH")
+    for column in (
+        "L.PROBABLY_SOLD",
+        "L.IS_BLACKLISTED",
+        "L.REVIEW_HIDDEN",
+        "L.DUPLICATE_OF_ID",
+        "L.ROAD_TIER",
+        "L.POSTED_AT",
+        "L.CRAWLED_AT",
+    ):
+        assert column in statement
     assert not any(word in statement for word in ("INSERT ", "UPDATE ", "DELETE ", "ALTER ", "CREATE "))
+
+
+def test_training_eligibility_matches_static_valuation_baseline_policy():
+    base = {
+        "source": "facebook",
+        "property_type": "dat_nen",
+        "ward": "Phu Loi",
+        "price_ty": 2.0,
+        "price_per_m2": 20.0,
+        "area_m2": 100.0,
+        "road_tier": 2,
+        "posted_at": "2026-07-29T00:00:00+07:00",
+        "crawled_at": "2026-08-03T00:00:00+07:00",
+        "probably_sold": 0,
+        "is_blacklisted": 0,
+        "review_hidden": 0,
+        "duplicate_of_id": None,
+    }
+
+    assert _training_eligible(base, set()) is True
+    for field, value in (
+        ("probably_sold", 1),
+        ("is_blacklisted", 1),
+        ("review_hidden", 1),
+        ("duplicate_of_id", 99),
+        ("property_type", "kho_xuong"),
+        ("source", "batdongsan"),
+    ):
+        assert _training_eligible({**base, field: value}, set()) is False
+
+    assert _training_eligible(base, {"multi_lot_listing"}) is False
+    assert _training_eligible({**base, "source": "guland"}, set()) is True
+    assert _training_eligible({
+        **base,
+        "source": "guland",
+        "area_m2": 1200.0,
+        "road_tier": 0,
+    }, set()) is False
+    assert _training_eligible({
+        **base,
+        "source": "guland",
+        "posted_at": "2026-07-01T00:00:00+07:00",
+    }, set()) is False
 
 
 def test_integrity_report_samples_prioritize_measurement_changes():
