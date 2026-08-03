@@ -131,6 +131,21 @@ def test_lazy_listings_module_does_not_break_dashboard_boot():
     assert ".then(() => { initializeListingsUi(); loadListings(1); })" in filters_js
 
 
+def test_homepage_mos_control_defaults_to_fifteen_and_locks_non_privileged_tiers():
+    html = _read("templates/index.html")
+    boot_js = _read("static/js/main/boot.js")
+
+    assert 'id="mosValue">15</span>%' in html
+    assert 'id="mosSlider" min="0" max="70" step="5" value="15"' in html
+    assert "USER_TIER not in ['vip', 'admin']" in html
+    assert "if (mosSlider && !mosSlider.disabled)" in boot_js
+
+
+def test_homepage_mos_asset_version_changes_with_boot_behavior():
+    html = _read("templates/index.html")
+    assert "js/main/boot.js') }}?v=default-signal-mos-15-20260803" in html
+
+
 def test_all_listings_tab_supports_table_and_grid_views():
     html = _read("templates/index.html")
     listings_js = _read("static/js/main/listings.js")
@@ -502,7 +517,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "guland-publisher-filter-20260731",
+        "default-signal-mos-15-20260803",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -518,7 +533,7 @@ def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "guland-publisher-filter-20260731",
+        "default-signal-mos-15-20260803",
         ".sidebar .filter-sheet-head",
         "position: sticky",
         "margin: -14px -14px 8px",

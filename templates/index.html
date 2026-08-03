@@ -596,19 +596,21 @@
               🔥 TÍN HIỆU MẠNH
             </button> -->
 
-            <div class="command-mos core-filter-callout {% if USER_TIER == 'guest' %}tier-locked-filter{% endif %}" {% if USER_TIER=='guest'
-              %}onclick="window.track('locked_filter_click',{context:{filter:'mos_min'}}); RadarAuth.openAuthModal('Đăng ký miễn phí để lọc theo định giá')"
-              title="Đăng ký để dùng bộ lọc này" {% endif %}>
+            {% set mos_filter_locked = USER_TIER not in ['vip', 'admin'] %}
+            <div class="command-mos core-filter-callout {% if mos_filter_locked %}tier-locked-filter{% endif %}"
+              {% if mos_filter_locked %}aria-disabled="true"{% endif %}
+              {% if USER_TIER=='guest' %}onclick="window.track('locked_filter_click',{context:{filter:'mos_min'}}); RadarAuth.openAuthModal('Đăng ký miễn phí để xem tín hiệu MOS từ 15%')"
+              title="Đăng ký để xem tín hiệu MOS từ 15%"{% elif USER_TIER=='free' %}onclick="window.track('locked_filter_click',{context:{filter:'mos_min'}}); RadarAuth.nudgeVipUpgrade('Mở khóa bộ lọc MOS cho VIP')"
+              title="Nâng cấp VIP để tùy chỉnh bộ lọc MOS"{% endif %}>
               <div class="command-mos-head">
                 <span class="command-mos-label">
-                  {% if USER_TIER == 'guest' %}🔒 {% endif %}Rẻ hơn ≥ <strong><span
-                      id="mosValue">10</span>%</strong>
+                  {% if mos_filter_locked %}🔒 {% endif %}Rẻ hơn ≥ <strong><span id="mosValue">15</span>%</strong>
                 </span>
               </div>
 
               <div class="command-mos-track">
-                <input type="range" name="mos_min" id="mosSlider" min="0" max="70" step="5" value="10" {% if
-                  USER_TIER=='guest' %}disabled{% endif %}
+                <input type="range" name="mos_min" id="mosSlider" min="0" max="70" step="5" value="15"
+                  {% if mos_filter_locked %}disabled{% endif %}
                   aria-label="Biên an toàn tối thiểu"
                   oninput="syncCoreFilterVisuals()"
                   onchange="scheduleApplyFilters()">
@@ -1432,7 +1434,7 @@
   <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-scroll-lock-20260802"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=report-internal-link-filters-20260723"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=default-signal-mos-15-20260803"></script>
 </body>
 
 </html>

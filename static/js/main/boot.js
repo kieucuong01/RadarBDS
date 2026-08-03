@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const initialMosMin = searchParams.get('mos_min');
   if (initialMosMin !== null) {
     const mosSlider = document.getElementById('mosSlider');
-    if (mosSlider) mosSlider.value = initialMosMin;
+    if (mosSlider && !mosSlider.disabled) mosSlider.value = initialMosMin;
   }
   const initialPropTypes = searchParams.getAll('prop_type').filter(Boolean);
   if (initialPropTypes.length) {
