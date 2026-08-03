@@ -10052,12 +10052,12 @@ SEO_ARTICLES = {
     "variant": "knowledge",
     "path": "/tin-tuc/tan-an-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc",
     "title": "Tân An hay Tương Bình Hiệp: nên xem khu nào trước? | Radar BDS",
-    "description": "Dữ liệu Radar BDS cập nhật 02/08/2026 cho thấy Tân An nhiều tin đất nền hơn để lọc nhanh, còn Tương Bình Hiệp nhỉnh hơn ở nhóm nhà đất và tổng số tin dưới 4 tỷ. Khi so giá rao, luôn tách đất nền và nhà đất.",
+    "description": "Radar BDS cập nhật 02/08/2026: so Tân An và Tương Bình Hiệp theo giá trung vị đất nền, nhà đất, số tin dưới 4 tỷ và cách lọc an toàn.",
     "keywords": "Tân An hay Tương Bình Hiệp, giá đất Tân An, giá đất Tương Bình Hiệp, nhà đất Tân An, nhà đất Tương Bình Hiệp, Radar BDS",
     "breadcrumb_label": "Tân An hay Tương Bình Hiệp",
     "hero_badge": "So sánh phường",
     "hero_title": "Tân An hay Tương Bình Hiệp: nên xem khu nào trước?",
-    "hero_text": "Nếu anh muốn lọc nhanh nhiều tin đất nền giá mềm, nên mở Tân An trước. Nếu anh ưu tiên nhà đất dưới 4 tỷ và muốn xem nguồn hàng cân hơn giữa đất nền với nhà đất, Tương Bình Hiệp đáng mở song song. Điểm quan trọng là không dùng một mặt bằng giá chung cho hai phường.",
+    "hero_text": "Nếu bạn muốn lọc nhanh nhiều tin đất nền giá mềm, nên mở Tân An trước. Nếu bạn ưu tiên nhà đất dưới 4 tỷ và muốn xem nguồn hàng cân hơn giữa đất nền với nhà đất, Tương Bình Hiệp đáng mở song song. Điểm quan trọng là không dùng một mặt bằng giá chung cho hai phường.",
     "scope_label": "Thủ Dầu Một · Tân An / Tương Bình Hiệp",
     "hero_checks": [
         "Tân An đang theo dõi 60 tin; Tương Bình Hiệp có 42 tin",
@@ -10078,7 +10078,7 @@ SEO_ARTICLES = {
     "property_card": {
         "status": "Cập nhật 02/08/2026",
         "title": "Chọn phường theo đúng nhu cầu lọc tin",
-        "price": "Tân An dễ mở trước nếu anh săn đất nền; Tương Bình Hiệp dễ đọc hơn ở nhóm nhà đất dưới 4 tỷ",
+        "price": "Tân An dễ mở trước nếu bạn săn đất nền; Tương Bình Hiệp dễ đọc hơn ở nhóm nhà đất dưới 4 tỷ",
         "metric_a": "Đất nền",
         "metric_a_value": "Tân An 14,8 tr/m² · Tương Bình Hiệp 20,4 tr/m²",
         "metric_b": "Nhà đất",
@@ -10162,19 +10162,19 @@ SEO_ARTICLES = {
         },
         {
             "q": "Ngân sách dưới 4 tỷ nên xem phường nào trước?",
-            "a": "Nếu anh muốn xem đất nền dưới 4 tỷ với nhiều lựa chọn hơn, Tân An dễ mở trước vì có 41 tin đất nền dưới 4 tỷ. Nếu anh muốn cân thêm nhà đất ở sẵn dưới 4 tỷ, Tương Bình Hiệp có 24 tin nhà đất trong ngưỡng này nên đáng lọc song song."
+            "a": "Nếu bạn muốn xem đất nền dưới 4 tỷ với nhiều lựa chọn hơn, Tân An dễ mở trước vì có 41 tin đất nền dưới 4 tỷ. Nếu bạn muốn cân thêm nhà đất ở sẵn dưới 4 tỷ, Tương Bình Hiệp có 24 tin nhà đất trong ngưỡng này nên đáng lọc song song."
         },
         {
             "q": "Dấu hiệu đáng chú ý có phải là khuyến nghị mua?",
-            "a": "Không. Đây chỉ là bộ lọc dữ liệu ban đầu để ưu tiên thứ tự kiểm tra. Trước khi giao dịch, anh vẫn cần xem pháp lý, quy hoạch, hiện trạng, lộ giới, vị trí thực tế và so lại với mặt bằng giá cùng loại hình."
+            "a": "Không. Đây chỉ là bộ lọc dữ liệu ban đầu để ưu tiên thứ tự kiểm tra. Trước khi giao dịch, bạn vẫn cần xem pháp lý, quy hoạch, hiện trạng, lộ giới, vị trí thực tế và so lại với mặt bằng giá cùng loại hình."
         }
     ],
     "article": {
         "published_at": "2026-08-02",
-        "modified_at": "2026-08-02",
+        "modified_at": "2026-08-03",
         "intro": [
-            "Nếu anh đang phân vân nên mở Tân An hay Tương Bình Hiệp trước, câu trả lời ngắn là: cần nhiều đất nền để lọc nhanh thì mở Tân An; cần xem thêm nhà đất dưới 4 tỷ thì mở Tương Bình Hiệp song song. Dữ liệu dưới đây là giá rao live từ Facebook trên Radar BDS ngày 02/08/2026.",
-            "Điểm dễ sai nhất là lấy một mặt bằng giá chung cho cả hai phường. Tân An và Tương Bình Hiệp lệch khá rõ giữa đất nền và nhà đất, nên bài này tách riêng số tin, giá trung vị và nhóm dưới 4 tỷ để anh quyết định nhanh hơn."
+            "Nếu bạn đang phân vân nên mở Tân An hay Tương Bình Hiệp trước, câu trả lời ngắn là: cần nhiều đất nền để lọc nhanh thì mở Tân An; cần xem thêm nhà đất dưới 4 tỷ thì mở Tương Bình Hiệp song song. Dữ liệu dưới đây là giá rao live từ Facebook trên Radar BDS ngày 02/08/2026.",
+            "Điểm dễ sai nhất là lấy một mặt bằng giá chung cho cả hai phường. Tân An và Tương Bình Hiệp lệch khá rõ giữa đất nền và nhà đất, nên bài này tách riêng số tin, giá trung vị và nhóm dưới 4 tỷ để bạn quyết định nhanh hơn."
         ],
         "summary_cards": [
             {"label": "Tổng số tin hai phường", "value": "102 tin", "note": "Tân An 60 · Tương Bình Hiệp 42"},
@@ -10223,13 +10223,13 @@ SEO_ARTICLES = {
                 "id": "mo-phuong-nao-truoc",
                 "heading": "Nên mở phường nào trước tùy mục tiêu lọc tin",
                 "paragraphs": [
-                    "Nếu mục tiêu của anh là lọc nhanh nhiều đất nền để tìm khung giá tham chiếu ban đầu, Tân An là điểm mở trước hợp lý hơn. Phường này đang có 44 tin đất nền live, giá rao trung vị khoảng 14,8 tr/m² và 41 tin dưới 4 tỷ.",
+                    "Nếu mục tiêu của bạn là lọc nhanh nhiều đất nền để tìm khung giá tham chiếu ban đầu, Tân An là điểm mở trước hợp lý hơn. Phường này đang có 44 tin đất nền live, giá rao trung vị khoảng 14,8 tr/m² và 41 tin dưới 4 tỷ.",
                     "Nếu mục tiêu là xem thêm nhà đất ở sẵn dưới 4 tỷ, Tương Bình Hiệp đáng đưa vào vòng lọc đầu tiên. Phường này có 24 tin nhà đất dưới 4 tỷ, nhiều hơn 14 tin nhà đất của Tân An, đồng thời có 5 tin có dấu hiệu đáng chú ý trong nhóm nhà đất."
                 ],
                 "bullets": [
-                    "Mở Tân An trước khi anh ưu tiên đất nền nhiều mẫu và mặt bằng giá mềm hơn.",
-                    "Mở Tương Bình Hiệp song song khi anh cần thêm lựa chọn nhà đất ở sẵn dưới 4 tỷ.",
-                    "Đừng lấy tổng số tin toàn phường làm kết luận nếu nhu cầu của anh chỉ tập trung vào một loại hình."
+                    "Mở Tân An trước khi bạn ưu tiên đất nền nhiều mẫu và mặt bằng giá mềm hơn.",
+                    "Mở Tương Bình Hiệp song song khi bạn cần thêm lựa chọn nhà đất ở sẵn dưới 4 tỷ.",
+                    "Đừng lấy tổng số tin toàn phường làm kết luận nếu nhu cầu của bạn chỉ tập trung vào một loại hình."
                 ]
             },
             {
@@ -10249,8 +10249,8 @@ SEO_ARTICLES = {
                 "id": "cach-dung-radar",
                 "heading": "Cách dùng Radar BDS để rút ngắn thời gian đi xem thực tế",
                 "paragraphs": [
-                    "Bước đầu, anh có thể mở dashboard và lọc từng phường riêng, sau đó chia tiếp theo loại hình đất nền hoặc nhà đất. Việc này giúp tránh sai lệch do một phường có nhiều đất nền hơn còn phường kia dày nhà đất hơn.",
-                    "Sau khi có danh sách ngắn, anh nên ưu tiên xem nhóm có dấu hiệu đáng chú ý trước rồi mới mở rộng sang các tin còn lại. Cuối cùng, dùng công cụ định giá để kiểm tra lại mặt bằng trước khi gọi môi giới hoặc hẹn đi xem."
+                    "Bước đầu, bạn có thể mở dashboard và lọc từng phường riêng, sau đó chia tiếp theo loại hình đất nền hoặc nhà đất. Việc này giúp tránh sai lệch do một phường có nhiều đất nền hơn còn phường kia dày nhà đất hơn.",
+                    "Sau khi có danh sách ngắn, bạn nên ưu tiên xem nhóm có dấu hiệu đáng chú ý trước rồi mới mở rộng sang các tin còn lại. Cuối cùng, dùng công cụ định giá để kiểm tra lại mặt bằng trước khi gọi môi giới hoặc hẹn đi xem."
                 ],
                 "bullets": [
                     "Lọc theo từng phường: Tân An, rồi Tương Bình Hiệp.",
@@ -10268,7 +10268,7 @@ SEO_ARTICLES = {
     },
     "final_cta": {
         "title": "Mở Radar để lọc đúng phường, đúng loại hình",
-        "body": "Anh có thể mở Tân An và Tương Bình Hiệp trên Radar BDS, tách đất nền với nhà đất rồi lưu lại nhóm tin đáng kiểm tra trước khi gọi môi giới.",
+        "body": "Bạn có thể mở Tân An và Tương Bình Hiệp trên Radar BDS, tách đất nền với nhà đất rồi lưu lại nhóm tin đáng kiểm tra trước khi gọi môi giới.",
         "button": "Mở dashboard lọc hai phường",
         "button_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=tan_an_vs_tuong_binh_hiep"
     },
