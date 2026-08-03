@@ -44,9 +44,25 @@ def test_multiple_dimension_pairs_use_irregular_threshold():
     )
 
 
+def test_duplicated_title_or_non_dimension_words_do_not_make_lot_irregular():
+    text = (
+        "Diện tích 4 x 26m, sân sau thoáng mát khoảng 4m. "
+        "Diện tích 4 x 26m, sân sau thoáng mát khoảng 4m."
+    )
+    assert not is_irregular_geometry(text)
+
+    broker_text = "DT 4x19m, thổ cư 60m² * 3PN * 2WC"
+    assert not is_irregular_geometry(f"{broker_text} {broker_text}")
+
+
+def test_distinct_front_and_back_widths_make_lot_irregular():
+    assert is_irregular_geometry("Ngang trước 5m, ngang sau 7m, dài 30m")
+
+
 def test_bare_listing_area_is_a_declared_total_but_tho_cu_is_not():
     assert has_declared_total_area("Bán đất 225m² giá 2,65 tỷ")
     assert not has_declared_total_area("Đất thổ cư 60m², ngang 5 dài 20")
+    assert not has_declared_total_area("Bán nhà 9m2 x 12,6m giá 1,5 tỷ")
 
 
 @pytest.mark.parametrize(
@@ -60,6 +76,21 @@ def test_bare_listing_area_is_a_declared_total_but_tho_cu_is_not():
     ],
 )
 def test_declared_total_area_ignores_dimension_components(text, expected):
+    assert declared_total_area(text) == expected
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("Tổng diện tích 7.712m2", 7712.0),
+        ("Diện tích đất 2.729 m²", 2729.0),
+        ("Diện tích 68.95m2", 68.95),
+        ("Diện tích 7,712m2", 7.712),
+        ("DT 5.22 x 25 = 126 .9 m2 nở hậu 6m", 126.9),
+        ("Ngang 14x12m (90,4m²), thổ cư 60m²", 90.4),
+    ],
+)
+def test_declared_total_area_understands_vietnamese_thousands_separator(text, expected):
     assert declared_total_area(text) == expected
 
 
@@ -121,6 +152,26 @@ def test_irregular_missing_area_is_not_inferred_from_dimensions():
     )
     assert result.area_m2 is None
     assert result.price_per_m2 is None
+
+
+def test_regular_dimensions_are_inferred_when_title_is_duplicated_in_description():
+    text = "Diện tích 4,3x17,3m\nDiện tích 4,3x17,3m, thổ cư 60m2"
+    result = reconcile_measurements(
+        text=text,
+        structured_price_ty=2.55,
+        structured_area_m2=None,
+        source_price_per_m2=None,
+        parsed_price_ty=2.55,
+        parsed_area_m2=74.4,
+        parsed_tho_cu_m2=60,
+        frontage_m=4.3,
+        depth_m=17.3,
+        parsed_area_is_declared_total=False,
+        ambiguous_price=False,
+        multi_lot=False,
+    )
+    assert result.area_m2 == 74.4
+    assert result.price_per_m2 == pytest.approx(34.274, abs=0.001)
 
 
 def test_unverified_structured_ppm_conflict_fails_closed_but_recomputes_ppm():

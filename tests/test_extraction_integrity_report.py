@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import services.extraction_integrity_report as report_service
 from services.extraction_integrity_report import (
+    _compare_row,
     build_integrity_report,
     summarize_integrity_changes,
 )
@@ -125,3 +126,125 @@ def test_integrity_report_cli_parser_and_json_output(monkeypatch, capsys):
     system.cmd_integrity_report(SimpleNamespace(limit=200, as_json=True))
 
     assert json.loads(capsys.readouterr().out) == expected
+
+
+def test_integrity_report_keeps_review_flags_after_renormalization(monkeypatch):
+    monkeypatch.setattr(report_service, "normalize_record", lambda _raw: {
+        "price_ty": 2.0,
+        "area_m2": 100.0,
+        "tho_cu_m2": None,
+        "price_per_m2": 20.0,
+        "extraction_quality_flags": "",
+    })
+    row = {
+        "listing_id": 7,
+        "raw_id": 17,
+        "source": "guland",
+        "source_id": "reviewed",
+        "url": "https://example.test/reviewed",
+        "title": "Bán đất 100m2 giá 2 tỷ",
+        "description": "",
+        "property_type": "dat_nen",
+        "tx_type": "ban",
+        "price_ty": 2.0,
+        "area_m2": 100.0,
+        "tho_cu_m2": None,
+        "price_per_m2": 20.0,
+        "frontage_m": None,
+        "depth_m": None,
+        "extraction_quality_flags": "",
+        "raw_json": {"title": "Bán đất 100m2 giá 2 tỷ", "url": "https://example.test/reviewed"},
+        "raw_source": "guland",
+        "raw_source_id": "reviewed",
+        "raw_url": "https://example.test/reviewed",
+        "raw_crawled_at": "2026-08-03T00:00:00",
+        "main_id": 70,
+        "main_is_signal": 1,
+        "main_flags": "review_bad_extraction",
+        "shadow_id": 71,
+        "main_mos": 30.0,
+        "shadow_mos": 28.0,
+        "feedback_verdict": "bad_data",
+        "feedback_extraction_verdict": "wrong_area",
+        "feedback_valuation_verdict": "",
+        "source_payload_reprocessable": 1,
+    }
+
+    comparison = _compare_row(SimpleNamespaceRow(row))
+
+    assert "review_bad_extraction" in comparison["new_flags"]
+    assert comparison["new_actionable"] is False
+
+
+def test_integrity_report_suppresses_unreprocessable_source_payload(monkeypatch):
+    monkeypatch.setattr(report_service, "normalize_record", lambda _raw: None)
+    row = {
+        "listing_id": 8,
+        "raw_id": 18,
+        "source": "facebook",
+        "source_id": "legacy",
+        "url": "https://example.test/legacy",
+        "title": "Legacy row",
+        "description": "",
+        "property_type": "dat_nen",
+        "tx_type": "ban",
+        "price_ty": 2.0,
+        "area_m2": 100.0,
+        "tho_cu_m2": None,
+        "price_per_m2": 20.0,
+        "extraction_quality_flags": "",
+        "raw_json": {},
+        "main_id": 80,
+        "main_is_signal": 1,
+        "main_flags": "",
+        "source_payload_reprocessable": 0,
+    }
+
+    comparison = _compare_row(SimpleNamespaceRow(row))
+
+    assert comparison["normalization_failed"] is True
+    assert "unreprocessable_source_payload" in comparison["new_flags"]
+    assert comparison["new_actionable"] is False
+    assert comparison["invariant_ok"] is True
+
+
+def test_integrity_report_does_not_keep_signal_actionable_without_measurements(monkeypatch):
+    monkeypatch.setattr(report_service, "normalize_record", lambda _raw: {
+        "price_ty": 2.0,
+        "area_m2": None,
+        "tho_cu_m2": None,
+        "price_per_m2": None,
+        "extraction_quality_flags": "",
+    })
+    row = {
+        "listing_id": 9,
+        "raw_id": 19,
+        "source": "facebook",
+        "source_id": "irregular-no-total",
+        "url": "https://example.test/irregular-no-total",
+        "title": "Lô xéo ngang 5 dài 30 giá 2 tỷ",
+        "description": "",
+        "property_type": "dat_nen",
+        "tx_type": "ban",
+        "price_ty": 2.0,
+        "area_m2": 150.0,
+        "tho_cu_m2": None,
+        "price_per_m2": 13.333,
+        "extraction_quality_flags": "",
+        "raw_json": {"title": "Lô xéo ngang 5 dài 30 giá 2 tỷ"},
+        "main_id": 90,
+        "main_is_signal": 1,
+        "main_flags": "",
+        "source_payload_reprocessable": 1,
+    }
+
+    comparison = _compare_row(SimpleNamespaceRow(row))
+
+    assert comparison["new_actionable"] is False
+    assert comparison["invariant_ok"] is True
+
+
+class SimpleNamespaceRow(dict):
+    """Dict row with the keys()/indexing contract returned by the DB adapter."""
+
+    pass

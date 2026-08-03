@@ -128,6 +128,14 @@ def _valuation_quality_flags(row) -> tuple:
         for part in str(row["extraction_quality_flags"] or "").split(",")
         if part.strip()
     )
+    try:
+        source_payload_reprocessable = row["source_payload_reprocessable"]
+    except (KeyError, IndexError, TypeError):
+        source_payload_reprocessable = None
+    if source_payload_reprocessable is not None and str(source_payload_reprocessable).strip().lower() in {
+        "0", "false", "no",
+    }:
+        flags.append("unreprocessable_source_payload")
 
     # keep parsed text as-is; test marker is no longer a hard gating signal criteria.
 
@@ -442,6 +450,9 @@ def reprocess_listings(source: str = None, since: str = None, full: bool = False
                 continue
 
             raw_data["area_name"] = raw_data.get("area_name") or raw_data.get("area", "")
+            raw_data["url"] = raw_data.get("url") or raw.get("url", "")
+            raw_data["source"] = raw_data.get("source") or raw.get("source", "")
+            raw_data["source_id"] = raw_data.get("source_id") or raw.get("source_id", "")
             raw_data["crawled_at"] = raw.get("crawled_at", "")
             rec = normalize_record(raw_data)
             if not rec or not rec.get("url"):
@@ -554,8 +565,16 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
                    '' AS legal_flags,
                    f.verdict AS feedback_verdict,
                    f.extraction_verdict AS feedback_extraction_verdict,
-                   f.valuation_verdict AS feedback_valuation_verdict
+                   f.valuation_verdict AS feedback_valuation_verdict,
+                   CASE
+                     WHEN l.raw_id IS NULL THEN NULL
+                     WHEN r.id IS NOT NULL
+                      AND NULLIF(BTRIM(COALESCE((r.raw_json::jsonb)->>'title','')), '') IS NOT NULL
+                      AND NULLIF(BTRIM(COALESCE((r.raw_json::jsonb)->>'url', r.url, '')), '') IS NOT NULL
+                     THEN 1 ELSE 0
+                   END AS source_payload_reprocessable
             FROM listings l
+            LEFT JOIN raw_listings r ON r.id = l.raw_id
             LEFT JOIN ai_training_feedback f ON f.id = (
                 SELECT id FROM ai_training_feedback
                 WHERE listing_id = l.id

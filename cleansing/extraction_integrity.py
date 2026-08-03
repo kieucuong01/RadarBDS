@@ -47,26 +47,40 @@ def _fold(text: str) -> str:
 _AREA_NUMBER = r"(\d+(?:[,.]\d+)?)"
 _AREA_UNIT = r"(?:m[²2]|mv|met vuong)"
 _EXPLICIT_AREA_UNIT = r"(?:m(?:[²2])?|mv|met vuong)"
+_NOT_DIMENSION_TAIL = r"(?!\s*[x×*]\s*\d)"
 
 
-def _area_number(value: str) -> float | None:
+def parse_area_number(value) -> float | None:
+    """Parse VN area notation while preserving comma/dot decimal values."""
+    raw = str(value or "").strip().replace(" ", "")
+    if not raw:
+        return None
+    if re.fullmatch(r"\d{1,3}(?:\.\d{3})+(?:,\d+)?", raw):
+        raw = raw.replace(".", "").replace(",", ".")
+    else:
+        raw = raw.replace(",", ".")
     try:
-        area = float(value.replace(",", "."))
+        area = float(raw)
     except (TypeError, ValueError):
         return None
     return area if 0 < area < 100_000 else None
 
 
+def _area_number(value: str) -> float | None:
+    return parse_area_number(value)
+
+
 def declared_total_area(text: str) -> float | None:
     folded = _fold(text)
+    folded = re.sub(r"(?<=\d)\s*([,.])\s*(?=\d)", r"\1", folded)
     direct_patterns = (
         rf"\b(?:(?<!be )(?<!be-)tong(?:\s+(?:dt|dien tich))?|dt\s+tong)"
         rf"\s*[:=\-]?\s*"
-        rf"{_AREA_NUMBER}\s*{_EXPLICIT_AREA_UNIT}\b",
+        rf"{_AREA_NUMBER}\s*{_EXPLICIT_AREA_UNIT}\b{_NOT_DIMENSION_TAIL}",
         rf"\b(?:dt(?:\s+dat)?|dien tich(?:\s+dat)?)\s*[:=\-]?\s*"
-        rf"{_AREA_NUMBER}\s*{_EXPLICIT_AREA_UNIT}\b",
+        rf"{_AREA_NUMBER}\s*{_EXPLICIT_AREA_UNIT}\b{_NOT_DIMENSION_TAIL}",
         rf"\b(?:ban\s+)?(?:dat|lo|nha)(?:\s+nen)?\s+"
-        rf"{_AREA_NUMBER}\s*{_AREA_UNIT}\b",
+        rf"{_AREA_NUMBER}\s*{_AREA_UNIT}\b{_NOT_DIMENSION_TAIL}",
     )
     for pattern in direct_patterns:
         match = re.search(pattern, folded)
@@ -81,6 +95,18 @@ def declared_total_area(text: str) -> float | None:
         if re.search(
             r"(?:\d+(?:[,.]\d+)?\s*[x×*]\s*\d+(?:[,.]\d+)?|"
             r"dt|dien tich|(?<!be )(?<!be-)tong|ngang)",
+            context,
+        ):
+            return _area_number(match.group(1))
+
+    for match in re.finditer(
+        rf"\(\s*{_AREA_NUMBER}\s*{_EXPLICIT_AREA_UNIT}\s*\)",
+        folded,
+    ):
+        context = folded[max(0, match.start() - 48):match.start()]
+        if re.search(
+            r"\d+(?:[,.]\d+)?\s*m?[²2]?\s*[x×*]\s*"
+            r"\d+(?:[,.]\d+)?\s*m?\s*$",
             context,
         ):
             return _area_number(match.group(1))
@@ -103,9 +129,35 @@ def geometry_difference_ratio(reported_area, frontage_m, depth_m):
 
 def is_irregular_geometry(text: str, *, dimension_pair_count: int = 1) -> bool:
     folded = _fold(text)
+    def distinct_values(pattern: str) -> set[float]:
+        values = set()
+        for raw in re.findall(pattern, folded):
+            try:
+                values.add(round(float(raw.replace(",", ".")), 3))
+            except (TypeError, ValueError):
+                continue
+        return values
+
+    frontage_values = distinct_values(
+        r"\bngang(?:\s+(?:truoc|sau))?\s*[:=\-]?\s*(\d+(?:[,.]\d+)?)"
+    )
+    depth_values = distinct_values(
+        r"\b(?:dai|sau)\s*[:=\-]?\s*(\d+(?:[,.]\d+)?)"
+    )
+    pair_values = set()
+    for frontage, depth in re.findall(
+            r"(?<!\d)(\d+(?:[,.]\d+)?)\s*m?[²2]?\s*[x×*]\s*"
+            r"(\d+(?:[,.]\d+)?)",
+            folded,
+    ):
+        frontage_value = float(frontage.replace(",", "."))
+        depth_value = float(depth.replace(",", "."))
+        if 2 <= frontage_value <= 50 and 5 <= depth_value <= 500:
+            pair_values.add((round(frontage_value, 3), round(depth_value, 3)))
     repeated_sides = (
-        len(re.findall(r"\bngang\b", folded)) > 1
-        or len(re.findall(r"\b(?:dai|sau)\b", folded)) > 1
+        len(frontage_values) > 1
+        or len(depth_values) > 1
+        or len(pair_values) > 1
     )
     return (
         dimension_pair_count > 1

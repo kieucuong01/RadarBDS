@@ -91,6 +91,15 @@ def test_price_label_marks_tens_level_approximate_prices():
     assert _format_price_label("Gi\u00e1 3ty**") is None
 
 
+def test_extract_price_preserves_leading_zero_fraction_and_ignores_area_after_price():
+    assert extract_price("Giá 3 tỷ 090tr") == 3.09
+    assert extract_price("Giá 2 tỷ 050 triệu") == 2.05
+    assert extract_price("Giá 3.090 tỷ") == 3.09
+    assert extract_price("Giá 2,9 tỷ 180 m vuông") == 2.9
+    assert extract_price("Giá chỉ hơn 2 tỷ xíu xiu") is None
+    assert extract_price("Chỉ hơn 2 tỷ là sở hữu lô đất đẹp") is None
+
+
 def test_normalize_facebook_ambiguous_masked_price_clears_structured_price():
     rec = normalize_record({
         "source": "facebook",
@@ -111,6 +120,10 @@ def test_normalize_facebook_ambiguous_masked_price_clears_structured_price():
 
 def test_extract_area():
     assert extract_area("1.826 m²") == 1826.0
+    assert extract_area("Tổng diện tích 7.712 m²") == 7712.0
+    assert extract_area("DT 3.000m2") == 3000.0
+    assert extract_area("Diện tích 68.95m2") == 68.95
+    assert extract_area("Diện tích 7,712m2") == 7.712
     assert extract_area("110m2") == 110.0
     assert extract_area("DT: 5x18 = 90m²") == 90.0
     assert extract_area("2.546,3 m²") == 2546.3
@@ -178,8 +191,32 @@ def test_detect_multi_lot_listing():
 
 def test_detects_numeric_multi_lot_phrase_without_repeated_offer_pairs():
     assert is_multi_lot_listing("Bán gấp 2 lô Chánh Mỹ", "Giá tốt liên hệ")
+    assert is_multi_lot_listing("Bán 2 lô nhỏ liền kề", "Giá tốt liên hệ")
     assert is_multi_lot_listing("Còn 3 nền liền kề", "Khu dân cư đẹp")
     assert not is_multi_lot_listing("Nhà trọ 12 phòng", "Mỗi phòng đang cho thuê")
+    assert is_multi_lot_listing(
+        "Bán đất tiện làm nhà trọ",
+        "Giá 2,15 tỷ/lô, có 2 lô liền kề",
+    )
+    assert is_multi_lot_listing(
+        "Đất biệt thự 18,8x36",
+        "Đã tách sẵn 2 thửa riêng, mua lẻ từng thửa",
+    )
+    assert is_multi_lot_listing(
+        "Chủ gửi bán 10x30",
+        "Gồm 2 sổ rời, mỗi sổ 5x30, giá tính trên mỗi sổ",
+    )
+
+
+def test_detects_numbered_lots_with_meter_dimension_notation():
+    assert is_multi_lot_listing(
+        "Đất Phú Thọ",
+        (
+            "Lô 1 DT 4m x 25m giá 2tỷ950. "
+            "Lô 2 DT 4m x 22m giá 2tỷ850. "
+            "Lô 3 DT 6m x 25m giá 2tỷ390."
+        ),
+    )
 
 
 def test_extract_dimensions():
@@ -262,6 +299,18 @@ def test_extract_tho_cu():
 
     r = extract_tho_cu("full thổ cư", 100)
     assert r["tho_cu_ratio"] == 1.0
+
+    r = extract_tho_cu("thổ cư 3.000m2", 4000)
+    assert r["tho_cu_m2"] == 3000.0
+
+
+def test_parse_full_residential_area_keeps_declared_land_area():
+    parsed = parse_facebook_post(
+        "Gia đình cần bán đất 84m2 thổ cư. "
+        "Diện tích: 84m² full thổ cư. Đường bê tông 10m."
+    )
+    assert parsed["area_m2"] == 84.0
+    assert parsed["tho_cu_m2"] == 84.0
 
 
 def test_extract_tho_cu_percent_means_full_area_not_100m2():

@@ -619,6 +619,31 @@ class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
 
         self.assertIn("multi_lot_listing", _source_quality_flags(row))
 
+    def test_missing_source_payload_is_a_deterministic_quality_flag(self):
+        from cleansing.reprocess import _source_quality_flags
+
+        class Row(dict):
+            def __missing__(self, _key):
+                return None
+
+        row = Row({
+            "source": "facebook",
+            "url": "https://facebook.test/missing-source-payload",
+            "title": "Bán đất 100m2 giá 2 tỷ",
+            "description": "",
+            "property_type": "dat_nen",
+            "tx_type": "ban",
+            "price_ty": 2.0,
+            "price_per_m2": 20.0,
+            "area_m2": 100.0,
+            "source_payload_reprocessable": 0,
+            "feedback_verdict": "all_correct",
+            "feedback_extraction_verdict": "all_correct",
+            "feedback_valuation_verdict": "cheap_real",
+        })
+
+        self.assertIn("unreprocessable_source_payload", _source_quality_flags(row))
+
     def test_quality_flags_allow_land_use_for_warehouse_text(self):
         from cleansing.reprocess import _valuation_quality_flags
 

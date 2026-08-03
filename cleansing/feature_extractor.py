@@ -20,6 +20,7 @@ import unicodedata
 from typing import Optional, Dict, Any
 
 from config.property_types import normalize_property_type
+from cleansing.extraction_integrity import declared_total_area, parse_area_number
 
 logger = logging.getLogger(__name__)
 
@@ -123,13 +124,19 @@ def extract_price(text: str) -> Optional[float]:
     t_fold = _ascii_fold(t)
     t_fold = _strip_folded_non_asking_price_phrases(t_fold)
 
+    if re.search(
+        r'\b(?:chi\s+)?(?:hon|tren)\s*\d+(?:[,.]\d+)?\s*(?:ty|ti)\b',
+        t_fold,
+    ):
+        return None
+
     def _parse_ty_rest(ty_str: str, rest: str) -> float:
         """Helper: X tỷ + Y phần lẻ → tỷ (ví dụ 2 + '550' = 2.55, 2 + '8' = 2.8)."""
         ty = float(ty_str.replace(',', '.'))
-        v  = float(rest)
-        if v >= 100:   return round(ty + v / 1000, 4)
-        elif v >= 10:  return round(ty + v / 100,  4)
-        else:          return round(ty + v / 10,   4)
+        digits = str(rest).strip()
+        return round(ty + int(digits) / (10 ** len(digits)), 4)
+
+    not_area_after_rest = r'(?!\s*(?:m\s*vuong|m[²2]|met\s*vuong)\b)'
 
     m = re.search(
         r'\b(?:giam|ha|bot)\b.{0,80}?\b(?:con|xuong|chi\s*con)\s*'
@@ -144,7 +151,12 @@ def extract_price(text: str) -> Optional[float]:
 
     # If the post has both exact compact price and later fuzzy shorthand,
     # trust the exact value: "1ty350tr ... 1ty3xx" -> 1.35, not 1.3.
-    m = re.search(r'\b(\d+)\s*(?:ty|ti)\s*(\d{2,3})(?:\s*(?:tr|trieu))?\b', t_fold, re.IGNORECASE)
+    m = re.search(
+        rf'(?<![\d,.])(\d+)\s*(?:ty|ti)\s*(\d{{2,3}})'
+        rf'(?:\s*(?:tr|trieu))?\b{not_area_after_rest}',
+        t_fold,
+        re.IGNORECASE,
+    )
     if m:
         return _parse_ty_rest(m.group(1), m.group(2))
 
@@ -193,23 +205,38 @@ def extract_price(text: str) -> Optional[float]:
         pass
 
     # Broker typo: "2t tỷ 7" means "2 tỷ 7" (2.7), not unknown.
-    m = re.search(r'(\d+)\s*t\s*(?:ty|ti)\s*(\d{1,3})(?!\d)', t_fold)
+    m = re.search(
+        rf'(?<![\d,.])(\d+)\s*t\s*(?:ty|ti)\s*(\d{{1,3}})'
+        rf'(?!\d){not_area_after_rest}',
+        t_fold,
+    )
     if m:
         return _parse_ty_rest(m.group(1), m.group(2))
 
     # Folded Vietnamese: "X ty Y" covers real Unicode "X tỷ Y" even when
     # legacy source literals below are mojibake.
-    m = re.search(r'([\d]+[,.]?[\d]*)\s*(?:ty|ti)\s*([\d]+)(?!\d)', t_fold)
+    m = re.search(
+        rf'(?<![\d,.])([\d]+[,.]?[\d]*)\s*(?:ty|ti)\s*([\d]+)'
+        rf'(?!\d){not_area_after_rest}',
+        t_fold,
+    )
     if m:
         return _parse_ty_rest(m.group(1), m.group(2))
 
     # Pattern unicode: "X tỷ Y" hoặc "XtỷY" (2 tỷ 550=2.55, 1 tỷ 2=1.2, 2tỷ8=2.8)
-    m = re.search(r'([\d]+[,.]?[\d]*)\s*tỷ\s*([\d]+)', t)
+    m = re.search(
+        r'(?<![\d,.])([\d]+[,.]?[\d]*)\s*tỷ\s*([\d]+)'
+        r'(?!\d)(?!\s*(?:m\s*(?:vuông|vuong)|m[²2]|mét\s*vuông|met\s*vuong)\b)',
+        t,
+    )
     if m:
         return _parse_ty_rest(m.group(1), m.group(2))
 
     # Pattern ASCII "ty" (môi giới FB hay dùng): 1ty8=1.8, 2ty550=2.55, 4ty5=4.5
-    m = re.search(r'(\d+)\s*ty\s*(\d+)', t)
+    m = re.search(
+        rf'(?<![\d,.])(\d+)\s*ty\s*(\d+)(?!\d){not_area_after_rest}',
+        t,
+    )
     if m:
         return _parse_ty_rest(m.group(1), m.group(2))
 
@@ -339,8 +366,8 @@ def extract_area(text: str) -> Optional[float]:
     # "15x71m. Tổng 1028m2" should be 1028m², not 1065m².
     m = re.search(r'(?:tong|tong\s*dt|dt\s*tong)[:\s]*([\d]+[,.]?[\d]*)\s*(?:m[²2]?|mv|met\s*vuong)', t_fold, re.IGNORECASE)
     if m:
-        val = float(m.group(1).replace(',', '.'))
-        if 5 < val < 100000:
+        val = parse_area_number(m.group(1))
+        if val is not None and 5 < val < 100000:
             return val
 
     # Irregular lots often state the measured area after dimensions:
@@ -353,8 +380,8 @@ def extract_area(text: str) -> Optional[float]:
     ):
         context = t_fold[max(0, m.start() - 48):m.start()]
         if re.search(r'(?:[\d]+[,.]?[\d]*\s*[x×\*]\s*[\d]+[,.]?[\d]*|dt|dien\s*tich|tong|ngang)', context):
-            val = float(m.group(1).replace(',', '.'))
-            if 5 < val < 100000:
+            val = parse_area_number(m.group(1))
+            if val is not None and 5 < val < 100000:
                 return val
 
     # "ngang W x dài/sâu D" written in the title should outrank later
@@ -382,36 +409,35 @@ def extract_area(text: str) -> Optional[float]:
     # Ưu tiên 1: "= Xm²" sau kích thước "DT: 5x18 = 90m²"
     m = re.search(r'=\s*([\d]+[,.]?[\d]*)\s*m[²2]', t_clean, re.IGNORECASE)
     if m:
-        val = float(m.group(1).replace(',', '.'))
-        if 5 < val < 100000:
+        val = parse_area_number(m.group(1))
+        if val is not None and 5 < val < 100000:
             return val
 
     # Ưu tiên 2: "DT X m²" / "diện tích X m²"
     m = re.search(r'(?:dt|diện tích|tổng dt)[:\s]*([\d]+[,.]?[\d]*)\s*m[²2]', t_clean, re.IGNORECASE)
     if m:
-        raw = m.group(1).replace(',', '.')
-        val = float(raw)
-        if 5 < val < 100000:
+        val = parse_area_number(m.group(1))
+        if val is not None and 5 < val < 100000:
             return val
 
     # Ưu tiên 2b: "DT X mét" / "diện tích X mét" — FB hay dùng "mét" thay m²
     m = re.search(r'(?:dt|diện tích)[:\s]*([\d]+[,.]?[\d]*)\s*m[eé]t\b', t_clean, re.IGNORECASE)
     if m:
-        val = float(m.group(1).replace(',', '.'))
-        if 5 < val < 10000:
+        val = parse_area_number(m.group(1))
+        if val is not None and 5 < val < 10000:
             return val
 
     # Ưu tiên 2c: "DT X mv" / "Xmv" — "mv" = mét vuông (FB môi giới dùng)
     m = re.search(r'(?:dt|diện tích)[:\s]*([\d]+[,.]?[\d]*)\s*mv\b', t_clean, re.IGNORECASE)
     if m:
-        val = float(m.group(1).replace(',', '.'))
-        if 5 < val < 10000:
+        val = parse_area_number(m.group(1))
+        if val is not None and 5 < val < 10000:
             return val
     for m in re.finditer(r'\b([\d]+[,.]?[\d]*)\s*mv\b', t_clean, re.IGNORECASE):
         if _is_non_land_area_context(t_fold, m.start(), m.end()):
             continue
-        val = float(m.group(1).replace(',', '.'))
-        if 5 < val < 10000:
+        val = parse_area_number(m.group(1))
+        if val is not None and 5 < val < 10000:
             return val
 
     # Ưu tiên 2d: "Dt W dài D" → W × D (ví dụ "Dt : 4 dài 30" = 120m²)
@@ -449,8 +475,8 @@ def extract_area(text: str) -> Optional[float]:
     # Ưu tiên 2g: "DT Xm" (single m trong context DT, ví dụ "diện tích:334m" hay "DT 68.9m")
     m = re.search(r'(?:dt|diện tích)[:\s]*([\d]+[,.]?[\d]*)\s*m\b(?!²|2)', t_clean, re.IGNORECASE)
     if m:
-        val = float(m.group(1).replace(',', '.'))
-        if 5 < val < 10000:
+        val = parse_area_number(m.group(1))
+        if val is not None and 5 < val < 10000:
             return val
 
     # Ưu tiên 3: dấu phân cách hàng nghìn kiểu VN:
@@ -459,8 +485,7 @@ def extract_area(text: str) -> Optional[float]:
     for m in re.finditer(r'([\d]{1,3}(?:\.\d{3})+(?:,\d+)?)\s*m[²2]', t_clean, re.IGNORECASE):
         if _is_non_land_area_context(t_fold, m.start(), m.end()):
             continue
-        raw = m.group(1).replace('.', '').replace(',', '.')
-        return float(raw)
+        return parse_area_number(m.group(1))
 
     # Ưu tiên 4: tính từ kích thước "DT: 5x20m" hoặc "diện tích: 5 x 20m"
     # (trước khi fallback sang m² tự do, tránh nhầm road_width)
@@ -486,8 +511,8 @@ def extract_area(text: str) -> Optional[float]:
     for m in re.finditer(r'([\d]+[,.]?[\d]*)\s*m[²2]', t_clean, re.IGNORECASE):
         if _is_non_land_area_context(t_fold, m.start(), m.end()):
             continue
-        val = float(m.group(1).replace(',', '.'))
-        if val > 5 and val < 100000:
+        val = parse_area_number(m.group(1))
+        if val is not None and val > 5 and val < 100000:
             return val
 
     # Fallback: tính từ kích thước tự do "4x20", "5 x 18"
@@ -515,19 +540,22 @@ def _is_non_land_area_context(folded_text: str, start: int, end: int) -> bool:
 _MULTI_LOT_LABEL_RE = re.compile(r'\blo\s*(?:so\s*)?\d{1,2}\b', re.IGNORECASE)
 _MULTI_LOT_AREA_RE = re.compile(
     r'\b\d{2,5}(?:[,.]\d+)?\s*m2\b|'
-    r'\b\d{1,3}(?:[,.]\d+)?\s*[x×]\s*\d{1,3}(?:[,.]\d+)?\s*m?\b',
+    r'\b\d{1,3}(?:[,.]\d+)?\s*m?[²2]?\s*[x×]\s*'
+    r'\d{1,3}(?:[,.]\d+)?\s*m?\b',
     re.IGNORECASE,
 )
 _MULTI_LOT_PRICE_RE = re.compile(
     r'\b\d{1,3}(?:[,.]\d{1,3})?\s*(?:ty|ti)\b|'
-    r'\b\d{1,3}\s*t\s*\d{1,3}\b|'
+    r'\b\d{1,3}\s*(?:t|ty|ti)\s*\d{1,3}\b|'
     r'\b\d{3,4}\s*(?:tr|trieu)\b',
     re.IGNORECASE,
 )
 _MULTI_LOT_COUNT_RE = re.compile(
     r'\b(?:ban\s+(?:gap\s+)?)?(?:con\s+)?[2-9]\d?\s+'
     r'(?:lo|nen)(?:\s+(?:dat|lien\s+ke))?\b|'
-    r'\b(?:ban\s+)?le\s+tung\s+lo\b',
+    r'\b(?:ban\s+)?le\s+tung\s+lo\b|'
+    r'\b(?:da\s+)?tach\s+(?:san\s+)?[2-9]\d?\s+thua\b|'
+    r'\bgom\s+[2-9]\d?\s+so\b',
     re.IGNORECASE,
 )
 _MULTI_ASSET_RENTAL_CONTEXT_RE = re.compile(
@@ -553,10 +581,7 @@ def is_multi_lot_listing(title: str, description: str = "") -> bool:
     ):
         return True
 
-    if (
-        _MULTI_LOT_COUNT_RE.search(text)
-        and not _MULTI_ASSET_RENTAL_CONTEXT_RE.search(text)
-    ):
+    if _MULTI_LOT_COUNT_RE.search(text):
         return True
 
     labels = list(_MULTI_LOT_LABEL_RE.finditer(text))
@@ -720,10 +745,7 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
     label = r'(?:tho\s*cu|tho|tc|odt|dat\s*o(?:\s*do\s*thi)?)'
 
     def _value(raw: str) -> Optional[float]:
-        try:
-            return float(str(raw).replace(',', '.'))
-        except (TypeError, ValueError):
-            return None
+        return parse_area_number(raw)
 
     area = _value(total_area)
 
@@ -2031,7 +2053,7 @@ def extract_all(title: str, description: str, source_price_str: str = '',
     if badge_area_m2 is not None:
         area_m2 = badge_area_m2
     else:
-        area_m2 = extract_area(full_text)
+        area_m2 = declared_total_area(full_text) or extract_area(full_text)
 
     # Giá/m² — badge ưu tiên tuyệt đối
     if badge_ppm2 is not None:

@@ -7,7 +7,7 @@ from collections import Counter
 from typing import Any, Iterable, Mapping
 
 from cleansing.normalizer import normalize_record
-from cleansing.reprocess import _valuation_quality_flags
+from cleansing.reprocess import _source_quality_flags
 from db.connection import get_conn
 from services.signal_quality import (
     ACTIONABLE_SUPPRESS_FLAGS,
@@ -63,16 +63,32 @@ def build_integrity_report(limit: int | None = None) -> dict[str, Any]:
             r.source_id AS raw_source_id,
             r.url AS raw_url,
             r.crawled_at AS raw_crawled_at,
+            CASE
+              WHEN l.raw_id IS NULL THEN NULL
+              WHEN r.id IS NOT NULL
+               AND NULLIF(BTRIM(COALESCE((r.raw_json::jsonb)->>'title','')), '') IS NOT NULL
+               AND NULLIF(BTRIM(COALESCE((r.raw_json::jsonb)->>'url', r.url, '')), '') IS NOT NULL
+              THEN 1 ELSE 0
+            END AS source_payload_reprocessable,
             m.id AS main_id,
             m.is_signal AS main_is_signal,
             m.mos_pct AS main_mos,
             m.source_quality_flags AS main_flags,
             s.id AS shadow_id,
-            s.mos_pct AS shadow_mos
+            s.mos_pct AS shadow_mos,
+            f.verdict AS feedback_verdict,
+            f.extraction_verdict AS feedback_extraction_verdict,
+            f.valuation_verdict AS feedback_valuation_verdict
         FROM listings l
-        JOIN raw_listings r ON r.id=l.raw_id
+        LEFT JOIN raw_listings r ON r.id=l.raw_id
         LEFT JOIN latest_main m ON m.listing_id=l.id
         LEFT JOIN latest_shadow s ON s.listing_id=l.id
+        LEFT JOIN ai_training_feedback f ON f.id = (
+            SELECT id FROM ai_training_feedback
+            WHERE listing_id = l.id
+            ORDER BY created_at DESC
+            LIMIT 1
+        )
         ORDER BY l.id
         {limit_clause}
     """
@@ -96,32 +112,31 @@ def _compare_row(row) -> dict[str, Any]:
     })
     normalized = normalize_record(raw_data)
 
-    stored_quality_flags = set(_valuation_quality_flags(current))
+    current_quality_flags = set(_source_quality_flags(current))
     main_flags = split_quality_flags(current.get("main_flags"))
-    old_flags = stored_quality_flags | main_flags | split_quality_flags(
-        current.get("extraction_quality_flags")
-    )
+    old_flags = main_flags if current.get("main_id") is not None else current_quality_flags
 
-    normalization_failed = normalized is None
+    normalization_failed = current.get("raw_id") is not None and normalized is None
     normalized = normalized or {
         field: current.get(field) for field in _MEASUREMENT_FIELDS
     }
     new_record = _SafeRow(dict(current))
     new_record.update(normalized)
-    new_quality_flags = set(_valuation_quality_flags(new_record))
-    new_flags = new_quality_flags | split_quality_flags(
-        normalized.get("extraction_quality_flags")
-    )
+    new_quality_flags = set(_source_quality_flags(new_record))
+    new_flags = set(new_quality_flags)
 
     is_signal = bool(current.get("main_is_signal"))
     old_actionable = is_actionable_signal({
         "is_signal": is_signal,
         "source_quality_flags": sorted(old_flags),
     })
-    new_actionable = is_actionable_signal({
-        "is_signal": is_signal,
-        "source_quality_flags": sorted(new_flags),
-    })
+    new_actionable = bool(
+        _has_valuation_measurements(normalized)
+        and is_actionable_signal({
+            "is_signal": is_signal,
+            "source_quality_flags": sorted(new_flags),
+        })
+    )
 
     changes = {}
     for field in _MEASUREMENT_FIELDS:
@@ -130,7 +145,7 @@ def _compare_row(row) -> dict[str, Any]:
         if _values_differ(old_value, new_value):
             changes[field] = [old_value, new_value]
 
-    training_before = _training_eligible(current, stored_quality_flags)
+    training_before = _training_eligible(current, old_flags)
     training_after = _training_eligible(new_record, new_quality_flags)
     invariant_ok = (
         not new_actionable
@@ -265,6 +280,13 @@ def _canonical_ppm_invariant(row: Mapping[str, Any]) -> bool:
         return False
     canonical = price_ty * 1000 / area_m2
     return math.isclose(canonical, price_per_m2, rel_tol=0.01, abs_tol=0.01)
+
+
+def _has_valuation_measurements(row: Mapping[str, Any]) -> bool:
+    return all(
+        (_number(row.get(field)) or 0) > 0
+        for field in ("price_ty", "area_m2", "price_per_m2")
+    )
 
 
 def _values_differ(old_value: float | None, new_value: float | None) -> bool:
