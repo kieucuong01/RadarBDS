@@ -628,6 +628,7 @@ git commit -m 'fix: suppress unresolved extraction contradictions'
 ### Task 4: Persist crawl provenance through normalized listings
 
 **Files:**
+- Modify: `db/schema.py:40-120, 1270-1330`
 - Modify: `db/listings.py:268-540`
 - Modify: `tests/test_price_history.py`
 
@@ -635,7 +636,48 @@ git commit -m 'fix: suppress unresolved extraction contradictions'
 - Consumes: existing `upsert_listing(rec: dict, crawl_run_id: int | None)` argument.
 - Produces: `listings.crawl_run_id` set to the latest supplied normalization/reprocess run on insert/update; source-crawl provenance remains available through `raw_id`.
 
-- [ ] **Step 1: Add a failing provenance test**
+- [ ] **Step 1: Add a failing listing-schema provenance test**
+
+Add to `PriceHistoryTest`:
+
+```python
+def test_listings_schema_has_crawl_run_provenance(self):
+    from db.connection import get_conn
+
+    with get_conn() as conn:
+        rows = conn.execute(
+            '''SELECT column_name
+               FROM information_schema.columns
+               WHERE table_schema=current_schema() AND table_name='listings' '''
+        ).fetchall()
+    self.assertIn('crawl_run_id', {row['column_name'] for row in rows})
+```
+
+- [ ] **Step 2: Run the schema test and confirm the missing-column assertion**
+
+```powershell
+& $py -X utf8 -m pytest tests/test_price_history.py::PriceHistoryTest::test_listings_schema_has_crawl_run_provenance -q
+```
+
+Expected: assertion failure because `crawl_run_id` is absent from `listings`.
+
+- [ ] **Step 3: Add the listing column and idempotent migration**
+
+Add to the `listings` DDL:
+
+```sql
+crawl_run_id INTEGER,
+```
+
+Add to the existing listing migration list:
+
+```python
+('crawl_run_id', 'ALTER TABLE listings ADD COLUMN crawl_run_id INTEGER')
+```
+
+Run the Step 2 command again. Expected: pass.
+
+- [ ] **Step 4: Add a failing upsert provenance test**
 
 ```python
 def test_upsert_listing_persists_latest_crawl_run_id():
@@ -652,7 +694,7 @@ def test_upsert_listing_persists_latest_crawl_run_id():
     assert row['crawl_run_id'] == 202
 ```
 
-- [ ] **Step 2: Run the exact test and confirm it fails with null provenance**
+- [ ] **Step 5: Run the exact upsert test and confirm it fails with null provenance**
 
 ```powershell
 & $py -X utf8 -m pytest tests/test_price_history.py::PriceHistoryTest::test_upsert_listing_persists_latest_crawl_run_id -q
@@ -660,7 +702,7 @@ def test_upsert_listing_persists_latest_crawl_run_id():
 
 Expected assertion: `None != 202`.
 
-- [ ] **Step 3: Wire the existing argument into insert and update SQL**
+- [ ] **Step 6: Wire the existing argument into insert and update SQL**
 
 Add `crawl_run_id` to the listing insert columns/values and update assignment:
 
@@ -670,7 +712,7 @@ crawl_run_id = COALESCE(:crawl_run_id, crawl_run_id)
 
 Pass `'crawl_run_id': crawl_run_id` in both parameter dictionaries. Do not clear an existing run when a caller supplies `None`.
 
-- [ ] **Step 4: Run price-history regressions**
+- [ ] **Step 7: Run price-history regressions**
 
 ```powershell
 & $py -X utf8 -m pytest tests/test_price_history.py -q
@@ -678,10 +720,10 @@ Pass `'crawl_run_id': crawl_run_id` in both parameter dictionaries. Do not clear
 
 Expected: all tests pass and existing price-history `crawl_run_id` behavior is unchanged.
 
-- [ ] **Step 5: Commit normalized provenance**
+- [ ] **Step 8: Commit normalized provenance**
 
 ```powershell
-git add db/listings.py tests/test_price_history.py
+git add db/schema.py db/listings.py tests/test_price_history.py docs/superpowers/plans/2026-08-03-extraction-valuation-integrity-hardening.md
 git commit -m 'fix: retain listing crawl provenance'
 ```
 
