@@ -314,6 +314,16 @@ Controlled local browser evidence from 2026-08-03 (local PostgreSQL, not a capac
 - Asset key: `listing-map-progressive-sheet-20260803` is shared by the Maps JavaScript and CSS URLs.
 - Rollback: revert only the scoped Maps commits, redeploy, and leave PostgreSQL, Redis, crawler state, listings, valuations, and user data unchanged.
 
+Verified public production evidence after deploying `6a448ca` on 2026-08-03:
+
+- `radar-bds.service` was active; the CDN-required public-cache verifier passed for `/`, signals, listings, counts, and dashboard with guest Cloudflare caching plus authenticated bypass.
+- `/robots.txt`, `/sitemap.xml`, `/api/dashboard`, `/api/signals?page=1&limit=3`, and `/api/listings?...&limit=3` returned HTTP 200. The rendered homepage contained the shared Maps asset key exactly twice.
+- desktop `1440x900` Săn Deal completed `1,371/1,371` in `338.1 ms` with one `223.5 ms` summary request, 75 active-panel directory buttons, zero inactive-panel buttons, one Canvas, and no observed long task above 50 ms;
+- desktop `1440x900` Tin rao completed `7,783/7,783` in `583.9 ms` with one `362.2 ms` summary request, 100 active-panel directory buttons, zero inactive-panel buttons, one Canvas, about 5,046 document nodes, and no observed long task above 50 ms;
+- mobile `390x844` Săn Deal used one summary request, one Canvas and 12 loaded tiles; the collapsed sheet was `151.9 px` high. Selecting a real marker expanded it to `523.3 px`; the first card was fully visible, the canvas retained `753 px`, bottom navigation was hidden, and overlap/horizontal overflow were both zero;
+- mobile `375x667` Tin rao completed in `644.8 ms` with one summary request, 100 active-panel buttons, one Canvas and 12 loaded tiles, and no observed long task above 50 ms. Selecting a real marker expanded the sheet to `413.5 px`; the first card was fully visible, the canvas retained `576 px`, bottom navigation was hidden, and overlap/horizontal overflow were both zero;
+- the production Săn Deal badge displayed `1,371`, not zero. Browser console review found no Maps/application error; the existing CSP blocks for Cloudflare Insights and Google Analytics remain a separate telemetry issue.
+
 Repeat the two real-mobile marker selections after every Maps CSS, Leaflet-loading, workspace-layout, or mobile-navigation change. External Facebook thumbnail `403` responses are source-CDN failures and may be reported separately, but a zero-height canvas, missing map tiles, hidden selected card, application exception, duplicate summary request, or horizontal overflow is a release blocker.
 
 Focused verification:
