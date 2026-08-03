@@ -676,19 +676,21 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
         "statuses": {"removed_from_pipeline": 1},
         "trust_tiers": {},
     }
-    
-    # Valuation: Nếu full=False, chỉ định giá các tin vừa mới xử lý
-    val_stats = reprocess_valuation(incremental_ids=None if full else processed_ids)
-    map_location_stats = _run_listing_map_backfill(
-        processed_ids,
-        full=full,
-    )
 
-
-    # Price drops — BUG FIX: chưa từng được gọi trong pipeline
+    # Complete every deterministic prerequisite before fitting or valuating.
     from analytics.market_trend import compute_weekly_trend, compute_monthly_trend, compute_daily_trend, detect_price_drops
-    # Logic giá trị: lifecycle feedback — listing biến mất nhanh = deal khớp
     from analytics.lifecycle import sweep_delisted, backfill_first_seen
+    from cleansing.dedup import flag_duplicates_in_db
+
+    # Content hash backfill (alert filter dùng để loại repost cùng nội dung khác URL)
+    with get_conn() as conn:
+        n_hashes = populate_content_hashes(conn)
+
+    # Cross-source dedup must settle before valuation training reads listings.
+    with get_conn() as conn:
+        dedup_stats = flag_duplicates_in_db(conn)
+
+    # Logic giá trị: lifecycle feedback — listing biến mất nhanh = deal khớp
     with get_conn() as conn:
         backfill_first_seen(conn)               # một lần cho DB cũ (idempotent)
         n_drops       = detect_price_drops(conn)
@@ -704,14 +706,12 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
         compute_daily_trend(conn)
     logger.info("Market trends (weekly, monthly, daily) updated")
 
-    # Cross-source dedup
-    from cleansing.dedup import flag_duplicates_in_db
-    with get_conn() as conn:
-        dedup_stats = flag_duplicates_in_db(conn)
-
-    # Content hash backfill (alert filter dùng để loại repost cùng nội dung khác URL)
-    with get_conn() as conn:
-        n_hashes = populate_content_hashes(conn)
+    # Valuation: Nếu full=False, chỉ định giá các tin vừa mới xử lý
+    val_stats = reprocess_valuation(incremental_ids=None if full else processed_ids)
+    map_location_stats = _run_listing_map_backfill(
+        processed_ids,
+        full=full,
+    )
 
     public_read_model_stats = publish_public_data(
         listing_ids=None if full else tuple(dict.fromkeys(processed_ids)),

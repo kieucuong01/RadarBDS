@@ -551,6 +551,7 @@ def test_full_reprocess_publishes_after_dedup_and_market(monkeypatch):
     from cleansing import dedup, reprocess
 
     events = []
+    published = {}
 
     class _Connection:
         def execute(self, _sql, _params=None):
@@ -580,37 +581,81 @@ def test_full_reprocess_publishes_after_dedup_and_market(monkeypatch):
     monkeypatch.setattr(
         reprocess,
         "_run_listing_map_backfill",
-        lambda *_args, **_kwargs: {},
-    )
-    monkeypatch.setattr(reprocess, "populate_content_hashes", lambda _conn: 0)
-    monkeypatch.setattr(lifecycle, "backfill_first_seen", lambda _conn: None)
-    monkeypatch.setattr(lifecycle, "sweep_delisted", lambda _conn: [])
-    monkeypatch.setattr(market_trend, "detect_price_drops", lambda _conn: 0)
-    monkeypatch.setattr(market_trend, "compute_weekly_trend", lambda _conn: None)
-    monkeypatch.setattr(market_trend, "compute_monthly_trend", lambda _conn: None)
-    monkeypatch.setattr(market_trend, "compute_daily_trend", lambda _conn: None)
-    monkeypatch.setattr(
-        dedup,
-        "flag_duplicates_in_db",
-        lambda _conn: {"dup_groups": 0, "flagged": 0, "unique_lots": 1},
+        lambda *_args, **_kwargs: events.append("map") or {},
     )
     monkeypatch.setattr(
         reprocess,
+        "populate_content_hashes",
+        lambda _conn: events.append("hashes") or 0,
+    )
+    monkeypatch.setattr(
+        lifecycle,
+        "backfill_first_seen",
+        lambda _conn: events.append("first_seen"),
+    )
+    monkeypatch.setattr(
+        lifecycle,
+        "sweep_delisted",
+        lambda _conn: events.append("lifecycle") or [],
+    )
+    monkeypatch.setattr(
+        market_trend,
+        "detect_price_drops",
+        lambda _conn: events.append("drops") or 0,
+    )
+    monkeypatch.setattr(
+        market_trend,
+        "compute_weekly_trend",
+        lambda _conn: events.append("weekly"),
+    )
+    monkeypatch.setattr(
+        market_trend,
+        "compute_monthly_trend",
+        lambda _conn: events.append("monthly"),
+    )
+    monkeypatch.setattr(
+        market_trend,
+        "compute_daily_trend",
+        lambda _conn: events.append("daily"),
+    )
+    monkeypatch.setattr(
+        dedup,
+        "flag_duplicates_in_db",
+        lambda _conn: events.append("dedup")
+        or {"dup_groups": 0, "flagged": 0, "unique_lots": 1},
+    )
+
+    def fake_publish(**kwargs):
+        events.append("publish")
+        published.update(kwargs)
+        return {"status": "ok"}
+
+    monkeypatch.setattr(
+        reprocess,
         "publish_public_data",
-        lambda **kwargs: events.append(("publish", kwargs))
-        or {"status": "ok"},
+        fake_publish,
     )
 
     result = reprocess._run_full_reprocess(full=False)
 
-    assert events[-1] == (
+    assert events == [
+        "hashes",
+        "dedup",
+        "first_seen",
+        "drops",
+        "lifecycle",
+        "weekly",
+        "monthly",
+        "daily",
+        "valuation",
+        "map",
         "publish",
-        {
-            "listing_ids": (11,),
-            "market_changed": True,
-            "strict": False,
-        },
-    )
+    ]
+    assert published == {
+        "listing_ids": (11,),
+        "market_changed": True,
+        "strict": False,
+    }
     assert result["public_read_model"] == {"status": "ok"}
 
 
