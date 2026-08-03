@@ -309,6 +309,16 @@ The default Săn Deal MOS floor is a consumer policy, not a valuation-model chan
 
 Rollback is code/cache-only: revert the scoped default-MOS commits, redeploy, republish the signals dataset version, and clear only affected caches. Never rewrite listings, valuation rows, crawler data, reviews, or user data for this rollback.
 
+Verified production evidence for the MOS 15 rollout on 2026-08-03:
+
+- Release commit `0fe58d5908479ce8250b0e7915577a2d72056ba9` was deployed to `/opt/radar-bds/current`; `radar-bds.service` remained `active`.
+- The full signal read-model refresh published `23,262` rows in `69,596 ms`, prewarmed `7/7` routes, mirrored dataset versions successfully (`signals=7`, `listings=3`), and compared 36 sampled cases with `difference_count=0`.
+- The refresh initially exposed an existing race: an image could be removed after the full-refresh staging snapshot but before the final insert, causing `signal_card_read_model_primary_image_id_fkey`. Commit `0fe58d5` rechecks the live primary image and image count in the final insert. The regression test and all 241 MOS/feed/count/Maps/UI/alert/report tests passed before release.
+- Fresh Guest requests returned `1,125` signals for both the default feed and a crafted `mos_min=10` request; the minimum displayed MOS in the first 100 rows was `15.3`. `/api/counts`, `/api/dashboard`, and signals Maps all reported `1,125` after the Cloudflare stale-while-revalidate entry advanced to dataset version 7.
+- Anonymous signal/count/dashboard responses retained short public cache headers and no `Set-Cookie`; repeated counts/dashboard requests reached Cloudflare `HIT`. Signals Maps remained dynamic/no-store.
+- Production contains `328` public actionable candidates from MOS 10 through below 15, so VIP/Admin explicit MOS 10 has real data to inspect. The available Chrome session was Guest; tier-aware integration tests proved explicit VIP/Admin values remain enabled without fabricating an authenticated production session.
+- Chrome desktop showed `Săn Deal 1125`, MOS 15, and a disabled Guest control. A crafted `/?mos_min=10` still rendered 15. At an exact `390 px` content viewport, Maps reported `1,125/1,125`; selecting a real marker expanded the sheet with the first card fully above the viewport bottom, no horizontal overflow, and the dashboard bottom navigation absent while Maps was open. Closing Maps and selecting Tin rao rendered cards with badge `7,810` and no console error.
+
 ### Listing Maps progressive-rendering and mobile-sheet gate
 
 Keep the Maps rendering contract independent from the backend capacity contract. The summary endpoint may return thousands of location groups, but the browser must render only the active responsive panel, expose at most 100 directory rows initially, append directory DOM in 25-row animation-frame chunks, and append Leaflet markers in 200-marker animation-frame chunks. Resizing between desktop and mobile reuses the cached view model and must not request the summary again. Closing Maps invalidates every pending directory and marker generation so stale frame callbacks cannot mutate a later session.

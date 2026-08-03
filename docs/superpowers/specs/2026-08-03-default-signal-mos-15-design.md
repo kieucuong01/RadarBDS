@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-03
 
-**Status:** Design approved and implemented locally; production verification pending
+**Status:** Approved, implemented, and verified in production on 2026-08-03
 
 **Scope:** Default signal semantics and MOS filtering for the homepage Săn Deal feed, badge/counts, Maps, default alerts/reports, and existing VIP/Admin MOS controls
 
