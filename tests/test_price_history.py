@@ -143,6 +143,31 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual(rows[0]["price_ty"], 1.74)
         self.assertEqual(rows[0]["crawl_run_id"], 1)
 
+    def test_upsert_listing_replaces_deterministic_extraction_flags(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        first = self._rec(extraction_quality_flags="price_area_inconsistent")
+        listing_id, _ = upsert_listing(first, crawl_run_id=1)
+        self._track(listing_id)
+
+        with get_conn() as conn:
+            inserted = conn.execute(
+                "SELECT extraction_quality_flags FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+        self.assertEqual(inserted["extraction_quality_flags"], "price_area_inconsistent")
+
+        second = self._rec(extraction_quality_flags="")
+        upsert_listing(second, crawl_run_id=2)
+
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT extraction_quality_flags FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+        self.assertEqual(row["extraction_quality_flags"], "")
+
     def test_upsert_listing_changed_price_adds_one_history_snapshot(self):
         from db.listings import upsert_listing
 

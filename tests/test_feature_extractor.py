@@ -395,6 +395,39 @@ def test_normalizer_overrides_structured_area_when_it_is_tho_cu_not_total_area()
     assert rec["tho_cu_m2"] == 100.0
 
 
+def test_normalizer_keeps_explicit_area_for_skewed_lot():
+    rec = normalize_record({
+        "source": "facebook",
+        "external_id": "skewed-lot",
+        "url": "https://facebook.test/skewed-lot",
+        "default_area": "Thủ Dầu Một",
+        "title": "Bán đất diện tích 100m2 giá 2 tỷ",
+        "description": "Lô xéo hậu, ngang 5m dài 40m",
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 100
+    assert rec["price_per_m2"] == 20
+
+
+def test_normalizer_recomputes_stale_structured_ppm():
+    rec = normalize_record({
+        "source": "guland",
+        "source_id": "canonical-ppm",
+        "url": "https://guland.vn/canonical-ppm",
+        "title": "Đất 85m2 giá 1,7 tỷ",
+        "description": "Diện tích đất 85m2, thổ cư 60m2",
+        "price_ty": 1.7,
+        "area_m2": 60,
+        "price_per_m2": 20,
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 85
+    assert rec["tho_cu_m2"] == 60
+    assert rec["price_per_m2"] == 20
+
+
 def test_normalizer_prefers_reported_total_area_over_dimension_product():
     rec = normalize_record({
         "source": "facebook",

@@ -12,10 +12,12 @@ from typing import List, Dict, Optional
 from config.settings import WATCH_AREAS, ALERT_KEYWORDS
 from config.area_profiles import detect_subward_from_street, infer_standard_lot
 from config.location_aliases import resolve_post_merger_location
+from cleansing.extraction_integrity import declared_total_area, reconcile_measurements
 from cleansing.feature_extractor import (
     classify_property_type, extract_tho_cu, extract_road_tier,
     extract_legal, extract_phone, extract_road_type, parse_facebook_post,
-    extract_area, extract_url_hint, has_ambiguous_masked_price,
+    extract_url_hint, has_ambiguous_masked_price,
+    is_multi_lot_listing,
 )  # extract_legal đã có sẵn — dùng cho has_so detection
 
 logger = logging.getLogger(__name__)
@@ -216,50 +218,6 @@ def _infer_depth_from_area_frontage(area_m2, frontage_m) -> Optional[float]:
     if 2 <= frontage <= 50 and 5 <= depth <= 500:
         return round(depth, 1)
     return None
-
-
-def _dimension_area_override(area_m2, frontage_m, depth_m) -> Optional[float]:
-    area = _float_or_none(area_m2)
-    frontage = _float_or_none(frontage_m)
-    depth = _float_or_none(depth_m)
-    if frontage is None or depth is None:
-        return None
-    if not (2 <= frontage <= 50 and 5 <= depth <= 500):
-        return None
-
-    dim_area = round(frontage * depth, 1)
-    if area is None or area <= 0:
-        return dim_area
-
-    smaller = min(area, dim_area)
-    bigger = max(area, dim_area)
-    if smaller > 0 and bigger / smaller >= 1.15:
-        return dim_area
-    return None
-
-
-def _has_reported_total_area_marker(text: str) -> bool:
-    folded = _ascii_fold(text or "")
-    total_match = re.search(
-        r'(?:tong|tong\s*dt|dt\s*tong)[:\s]*[\d]+[,.]?[\d]*\s*(?:m[²2]?|mv|met\s*vuong)',
-        folded,
-        re.IGNORECASE,
-    )
-    if total_match:
-        return True
-
-    for match in re.finditer(
-        r'(?:=|~)\s*[\d]+[,.]?[\d]*\s*(?:m[²2]?|mv|met\s*vuong)',
-        folded,
-        re.IGNORECASE,
-    ):
-        context = folded[max(0, match.start() - 48):match.start()]
-        if re.search(
-            r'(?:[\d]+[,.]?[\d]*\s*[x×\*]\s*[\d]+[,.]?[\d]*|dt|dien\s*tich|tong|ngang)',
-            context,
-        ):
-            return True
-    return False
 
 
 def match_area(raw_text: str) -> Optional[str]:
@@ -703,116 +661,51 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
                 area_m2 = round(area_m2 * 1000)
                 price_per_m2 = None  # buộc tính lại từ price_ty / area_m2 mới
 
-        # Source structured area can be stale/wrong. If title has an explicit area
-        # that is wildly different, trust title because it is the visible listing fact.
-        title_area_m2 = extract_area(title)
-        has_title_area_m2 = bool(title_area_m2 and 10 < title_area_m2 < 100000)
-        if area_m2 and has_title_area_m2:
-            bigger = max(float(area_m2), float(title_area_m2))
-            smaller = min(float(area_m2), float(title_area_m2))
-            if smaller > 0 and bigger / smaller >= 1.8:
-                area_m2 = title_area_m2
-                price_per_m2 = None
-
-        # Fallback: trích xuất từ text khi nguồn không có structured fields (Facebook posts).
-        # Vẫn parse khi thiếu dimensions, kể cả area structured đã có sẵn.
-        _fb_parsed: dict = {}
+        # Parse visible text once, then reconcile structured and parsed measurements
+        # through the shared deterministic policy. Source dimensions are kept separate
+        # from display-only dimensions inferred later in this function.
         _parse_text = "\n".join(part for part in [title, description] if part)
+        _fb_parsed = parse_facebook_post(_parse_text) or {}
+        _declared_area_candidates = [
+            declared_total_area(part)
+            for part in (title, description)
+            if part
+        ]
+        _declared_area = next(
+            (candidate for candidate in _declared_area_candidates if candidate),
+            None,
+        )
         _has_ambiguous_masked_price = source_name == "facebook" and has_ambiguous_masked_price(_parse_text)
-        if _has_ambiguous_masked_price:
-            price_ty = None
-            price_per_m2 = None
-        _has_reported_area = _has_reported_total_area_marker(_parse_text)
-        _fb_area_is_declared_total = False
-        if (
-            source_name == "facebook"
-            or price_ty is None
-            or area_m2 is None
-            or price_per_m2 is None
-            or raw.get("frontage_m") is None
-            or raw.get("depth_m") is None
-            or raw.get("road_width_m") is None
-        ):
-            _fb_parsed = parse_facebook_post(_parse_text) or {}
-            if price_ty is None and not _has_ambiguous_masked_price:
-                price_ty = _fb_parsed.get("price_total")
-            if area_m2 is None:
-                parsed_area_from_text = _fb_parsed.get("area_m2") or None
-                area_m2 = parsed_area_from_text
-                _fb_area_is_declared_total = bool(parsed_area_from_text and _has_reported_area)
-            if price_per_m2 is None:
-                if price_ty and area_m2:
-                    price_per_m2 = None  # tính lại từ area cuối cùng ở block dưới
-                else:
-                    price_per_m2 = _fb_parsed.get("price_per_m2")
-
-            parsed_price = _float_or_none(_fb_parsed.get("price_total"))
-            current_price = _float_or_none(price_ty)
-            if (
-                source_name == "facebook"
-                and parsed_price
-                and current_price
-                and parsed_price > current_price * 1.15
-            ):
-                price_ty = parsed_price
-                price_per_m2 = None
-
-            parsed_area = _float_or_none(_fb_parsed.get("area_m2"))
-            current_area = _float_or_none(area_m2)
-            parsed_tho_cu = _float_or_none(_fb_parsed.get("tho_cu_m2"))
-            structured_area_looks_like_tho_cu = (
-                parsed_tho_cu is not None
-                and current_area is not None
-                and abs(current_area - parsed_tho_cu) <= max(1.0, parsed_tho_cu * 0.03)
-            )
-            if (
-                source_name == "facebook"
-                and parsed_area
-                and current_area
-                and parsed_area > current_area * 1.10
-                and structured_area_looks_like_tho_cu
-            ):
-                area_m2 = parsed_area
-                price_per_m2 = None
-
         parsed_frontage = raw.get("frontage_m") or _fb_parsed.get("frontage_m")
         parsed_depth = raw.get("depth_m") or _fb_parsed.get("depth_m")
-        parsed_area = _float_or_none(_fb_parsed.get("area_m2"))
-        current_area = _float_or_none(area_m2)
-        parsed_area_is_declared_total = False
+        parsed_frontage_num = _float_or_none(parsed_frontage)
+        parsed_depth_num = _float_or_none(parsed_depth)
+        dimension_area = None
         if (
-            parsed_area
-            and current_area
-            and 10 < parsed_area < 100000
-            and _has_reported_area
+            parsed_frontage_num is not None
+            and parsed_depth_num is not None
+            and 2 <= parsed_frontage_num <= 50
+            and 5 <= parsed_depth_num <= 500
         ):
-            parsed_frontage_num = _float_or_none(parsed_frontage)
-            parsed_depth_num = _float_or_none(parsed_depth)
-            parsed_matches_current = abs(parsed_area - current_area) <= max(1.0, parsed_area * 0.03)
-            if parsed_matches_current:
-                parsed_area_is_declared_total = True
-            if parsed_frontage_num and parsed_depth_num:
-                dim_area = round(parsed_frontage_num * parsed_depth_num, 1)
-                current_tracks_dim = abs(current_area - dim_area) <= max(1.0, dim_area * 0.03)
-                parsed_differs_from_current = abs(parsed_area - current_area) >= max(5.0, current_area * 0.08)
-                if current_tracks_dim and parsed_differs_from_current:
-                    area_m2 = parsed_area
-                    price_per_m2 = None
-                    parsed_area_is_declared_total = True
-
-        corrected_area = (
-            None
-            if has_title_area_m2 or parsed_area_is_declared_total or _fb_area_is_declared_total
-            else _dimension_area_override(area_m2, parsed_frontage, parsed_depth)
+            dimension_area = round(parsed_frontage_num * parsed_depth_num, 1)
+        integrity = reconcile_measurements(
+            text=_parse_text,
+            structured_price_ty=price_ty,
+            structured_area_m2=area_m2,
+            source_price_per_m2=price_per_m2 or _fb_parsed.get("price_per_m2"),
+            parsed_price_ty=_fb_parsed.get("price_total"),
+            parsed_area_m2=_declared_area or dimension_area or _fb_parsed.get("area_m2"),
+            parsed_tho_cu_m2=_fb_parsed.get("tho_cu_m2"),
+            frontage_m=parsed_frontage,
+            depth_m=parsed_depth,
+            parsed_area_is_declared_total=bool(_declared_area),
+            ambiguous_price=_has_ambiguous_masked_price,
+            multi_lot=is_multi_lot_listing(title, description),
         )
-        if corrected_area is not None:
-            area_m2 = corrected_area
-            price_per_m2 = None
-
-        if not _has_ambiguous_masked_price and not price_ty and price_per_m2 and area_m2 and area_m2 > 0:
-            price_ty = round((price_per_m2 * area_m2) / 1_000, 4)
-        if price_ty and area_m2 and area_m2 > 0 and not price_per_m2:
-            price_per_m2 = round((price_ty * 1_000) / area_m2, 3)
+        price_ty = integrity.price_ty
+        area_m2 = integrity.area_m2
+        price_per_m2 = integrity.price_per_m2
+        extraction_quality_flags = ",".join(integrity.flags)
 
         # Sanity check
         if price_per_m2 and (price_per_m2 < 0.1 or price_per_m2 > 500_000):
@@ -831,6 +724,13 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         full_text   = title + ' ' + description
         road_text   = " ".join(filter(None, [description, road_text_extra]))
         tho_cu_info = extract_tho_cu(full_text, area_m2)
+        if integrity.tho_cu_m2 is not None:
+            tho_cu_info["tho_cu_m2"] = integrity.tho_cu_m2
+            tho_cu_info["tho_cu_ratio"] = (
+                min(integrity.tho_cu_m2 / area_m2, 1.0)
+                if area_m2 and area_m2 > 0
+                else None
+            )
         raw_label   = str(raw.get("property_type", ""))
         url_hint    = extract_url_hint(url)
         prop_type   = classify_property_type(
@@ -923,6 +823,8 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             "post_date":     parse_post_date(raw.get("date_raw", ""), raw.get("crawled_at", "")),
             "img_urls":      raw.get("imgs") or raw.get("img_urls") or [],
             "raw_json":      raw,
+            "extraction_quality_flags": extraction_quality_flags,
+            "_integrity_repairs": integrity.repairs,
             "_clear_stale_measurements": bool(_has_ambiguous_masked_price),
         }
     except Exception as e:

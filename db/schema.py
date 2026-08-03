@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS listings (
     is_hot              INTEGER DEFAULT 0,
     contact_phone       TEXT,
     seller_name         TEXT,
+    extraction_quality_flags TEXT NOT NULL DEFAULT '',
 
     -- Outlier flag (thay vì drop)
     is_outlier          INTEGER DEFAULT 0,   -- 1 = nằm ngoài ±2σ của segment
@@ -1286,6 +1287,10 @@ def _run_migrations(conn: Any) -> None:
         ("tho_cu_m2",          "ALTER TABLE listings ADD COLUMN tho_cu_m2 REAL"),
         ("tho_cu_ratio",       "ALTER TABLE listings ADD COLUMN tho_cu_ratio REAL"),
         ("road_name",          "ALTER TABLE listings ADD COLUMN road_name TEXT"),
+        (
+            "extraction_quality_flags",
+            "ALTER TABLE listings ADD COLUMN extraction_quality_flags TEXT NOT NULL DEFAULT ''",
+        ),
     ]
     for col, sql in migrations:
         if col not in existing:

@@ -300,6 +300,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     area, ward, raw_area_text, price_ty, price_per_m2, area_m2,
                     property_type, tx_type, frontage_m, depth_m,
                     road_type, road_tier, tho_cu_m2, tho_cu_ratio, has_so, is_hot, contact_phone, seller_name{road_name_col},
+                    extraction_quality_flags,
                     price_first_ty, crawled_at, updated_at,
                     first_seen_at, last_seen_at, is_active, posted_at,
                     source_status, source_status_reason
@@ -308,6 +309,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     :area, :ward, :raw_area_text, :price_ty, :price_per_m2, :area_m2,
                     :property_type, :tx_type, :frontage_m, :depth_m,
                     :road_type, :road_tier, :tho_cu_m2, :tho_cu_ratio, :has_so, :is_hot, :contact_phone, :seller_name{road_name_val},
+                    :extraction_quality_flags,
                     :price_ty, :crawled_at, :updated_at,
                     :crawled_at, :crawled_at, 1, :posted_at,
                     :source_status, :source_status_reason
@@ -338,6 +340,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "is_hot":       int(rec.get("is_hot", False)),
                 "contact_phone": rec.get("contact_phone"),
                 "seller_name":  rec.get("seller_name"),
+                "extraction_quality_flags": rec.get("extraction_quality_flags") or "",
                 "crawled_at":   now,
                 "updated_at":   now,
                 "posted_at":    rec.get("post_date"),
@@ -455,6 +458,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     ward                = :ward,                 -- cho phép NULL overwrite (re-normalize có thể loại ward sai khi text chứa địa danh non-TDM)
                     has_so              = :has_so,
                     is_hot              = :is_hot,
+                    extraction_quality_flags = :extraction_quality_flags,
                     price_first_ty      = CASE WHEN :clear_price <> 0 THEN NULL ELSE price_first_ty END,
                     price_dropped       = :price_dropped,
                     price_drop_pct      = :price_drop_pct,
@@ -509,6 +513,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "ward":          rec.get("ward") or None,
                 "has_so":        int(rec.get("has_so", True)),
                 "is_hot":        int(rec.get("is_hot", False)),
+                "extraction_quality_flags": rec.get("extraction_quality_flags") or "",
                 "price_dropped": price_dropped,
                 "price_drop_pct": price_drop_pct,
                 "suspicious_bait": suspicious_bait,
