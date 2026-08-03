@@ -296,6 +296,26 @@ The Săn Deal badge and Maps click have an additional regression gate:
 5. After a production deploy that changes the counts payload, refresh/publish the signals read model once so the durable and Redis `signals` versions advance together; otherwise the old cached counts payload may remain valid under the previous version key.
 6. Query one map item as Guest/Free/VIP and confirm any phone embedded in `title` is redacted; admin may retain the original title. With `RADAR_SIGNAL_READ_MODEL_ENABLED=0`, confirm `stats.signals` is still the legacy exact count rather than `0`.
 
+### Listing Maps progressive-rendering and mobile-sheet gate
+
+Keep the Maps rendering contract independent from the backend capacity contract. The summary endpoint may return thousands of location groups, but the browser must render only the active responsive panel, expose at most 100 directory rows initially, append directory DOM in 25-row animation-frame chunks, and append Leaflet markers in 200-marker animation-frame chunks. Resizing between desktop and mobile reuses the cached view model and must not request the summary again. Closing Maps invalidates every pending directory and marker generation so stale frame callbacks cannot mutate a later session.
+
+On mobile, selected-group loading, success, and error views open the bottom sheet automatically. The sheet must preserve explicit `← Tất cả vị trí`, expand/collapse, and retry actions; hide the dashboard bottom navigation and floating actions while Maps is open; respect `env(safe-area-inset-bottom)`; and keep the first listing card fully visible at both `390x844` and `375x667`. The direct-child canvas selector must continue to override Leaflet's later `.leaflet-container { position: relative; }`; otherwise the canvas collapses to zero height after the stylesheet finishes loading.
+
+Controlled local browser evidence from 2026-08-03 (local PostgreSQL, not a capacity claim):
+
+- Scope: `Săn Deal` and `Tin rao` homepage Maps.
+- Automated gate: 46 focused Maps JS/UI/API/service tests passed; `node --check static/js/main/listing_map.js` and `git diff --check` exited successfully.
+- desktop Săn Deal completed in `421.8 ms` for `1,362/1,362` mapped listings; Tin rao completed in `705.1 ms` for `7,709/7,709`;
+- both modes issued one summary request, initially rendered 100 directory buttons only in the active panel, and recorded no browser long task above 50 ms;
+- the Tin rao document contained about 5,165 nodes after the bounded render, versus about 22,920 before this change; `Xem thêm` advanced the directory from 100 to 200 rows;
+- mobile Săn Deal at `390x844` completed in `377.2 ms`; Tin rao at `375x667` completed in `656.1 ms`; both rendered a non-zero Leaflet canvas and no horizontal overflow;
+- after selecting a real marker at `375x667`, the sheet occupied `413.5 px`, the first Tin rao card was fully visible, the canvas retained `576 px`, and the dashboard bottom navigation remained hidden. Resizing a selected Săn Deal view from `390x844` to `375x667` caused no additional summary or item request.
+- Asset key: `listing-map-progressive-sheet-20260803` is shared by the Maps JavaScript and CSS URLs.
+- Rollback: revert only the scoped Maps commits, redeploy, and leave PostgreSQL, Redis, crawler state, listings, valuations, and user data unchanged.
+
+Repeat the two real-mobile marker selections after every Maps CSS, Leaflet-loading, workspace-layout, or mobile-navigation change. External Facebook thumbnail `403` responses are source-CDN failures and may be reported separately, but a zero-height canvas, missing map tiles, hidden selected card, application exception, duplicate summary request, or horizontal overflow is a release blocker.
+
 Focused verification:
 
 ```powershell
