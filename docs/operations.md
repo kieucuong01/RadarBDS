@@ -296,6 +296,19 @@ The Săn Deal badge and Maps click have an additional regression gate:
 5. After a production deploy that changes the counts payload, refresh/publish the signals read model once so the durable and Redis `signals` versions advance together; otherwise the old cached counts payload may remain valid under the previous version key.
 6. Query one map item as Guest/Free/VIP and confirm any phone embedded in `title` is redacted; admin may retain the original title. With `RADAR_SIGNAL_READ_MODEL_ENABLED=0`, confirm `stats.signals` is still the legacy exact count rather than `0`.
 
+### Publish a default signal-policy change
+
+The default Săn Deal MOS floor is a consumer policy, not a valuation-model change. Keep the internal `SIGNAL_MOS_THRESHOLD=0.10`, deploy the tested code, and do not run a valuation reprocess solely for a default-MOS change.
+
+1. Deploy the tested commit with `scripts/deploy_production.ps1`.
+2. On the active VPS release run `/opt/radar-bds/.venv/bin/python -X utf8 radar.py signal-read-model --refresh --compare --limit 200`.
+3. Confirm the durable `signals` dataset version and Redis mirror advanced together, then wait for or purge the prior anonymous homepage/API edge-cache entries.
+4. Verify default and crafted Guest requests contain no `mos_pct_display < 15`, `/api/counts` equals `/api/signals total`, and signals Maps uses the same threshold.
+5. Verify an authenticated VIP/Admin explicit `mos_min=10` request. If production has no eligible 10-14.9% row, record the zero-row DB fact and use query/test evidence instead of fabricating a browser example.
+6. Verify Guest/Free controls remain fixed at 15, VIP/Admin controls remain editable, Tin rao is unaffected, and non-admin redaction remains intact.
+
+Rollback is code/cache-only: revert the scoped default-MOS commits, redeploy, republish the signals dataset version, and clear only affected caches. Never rewrite listings, valuation rows, crawler data, reviews, or user data for this rollback.
+
 ### Listing Maps progressive-rendering and mobile-sheet gate
 
 Keep the Maps rendering contract independent from the backend capacity contract. The summary endpoint may return thousands of location groups, but the browser must render only the active responsive panel, expose at most 100 directory rows initially, append directory DOM in 25-row animation-frame chunks, and append Leaflet markers in 200-marker animation-frame chunks. Resizing between desktop and mobile reuses the cached view model and must not request the summary again. Closing Maps invalidates every pending directory and marker generation so stale frame callbacks cannot mutate a later session.

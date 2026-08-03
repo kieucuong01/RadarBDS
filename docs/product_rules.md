@@ -6,6 +6,10 @@ Use this when a task touches user-facing deal quality, dedup/history, valuation,
 
 - `valuation_results.is_signal=1` means model-cheap/MOS candidate. It is not automatically an investable deal.
 - User/VIP/main surfaces use the latest valuation plus `services.signal_quality.actionable_signal_sql()`.
+- `SIGNAL_MOS_THRESHOLD=0.10` is the internal valuation-candidate boundary; it is not the default public Săn Deal threshold.
+- The default user-facing signal minimum is `DEFAULT_SIGNAL_MOS_MIN_PCT=15.0` across feed, badge/counts, dashboard, signals Maps, default alerts, and public reports.
+- Guest and Free are fixed at MOS 15 even when a request supplies `mos_min`; VIP and Admin default to 15 and may explicitly select 10 to inspect eligible 10-14.9% candidates.
+- Keep `actionable_signal_sql()` candidate-oriented. Apply the user-facing MOS floor at the consumer/request boundary so no valuation reprocess is required.
 - Admin QC can show suppressed rows so humans can review parser/source quality.
 - `low_segment_confidence` alone should not suppress user-facing signals. Keep it in `source_quality_flags` and show a warning badge.
 - Fatal quality flags that can suppress promotion include parser price mistakes, down-payment-as-price, too-low absolute price, large-lot model risk, area/dimension conflict, source category conflict, multi-lot listing, test artifact, human bad-extraction labels, and deterministic Guland price/source errors.
