@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import services.extraction_integrity_report as report_service
 from services.extraction_integrity_report import (
     _compare_row,
+    _resolve_training_membership,
     _training_eligible,
     build_integrity_report,
     summarize_integrity_changes,
@@ -128,6 +129,41 @@ def test_training_eligibility_matches_static_valuation_baseline_policy():
         "source": "guland",
         "posted_at": "2026-07-01T00:00:00+07:00",
     }, set()) is False
+
+
+def test_training_membership_applies_newest_candidate_window(monkeypatch):
+    monkeypatch.setattr(report_service, "TRAINING_WINDOW_LIMIT", 2)
+    comparisons = []
+    for listing_id in (1, 2, 3):
+        record = {
+            "listing_id": listing_id,
+            "source": "facebook",
+            "property_type": "dat_nen",
+            "tx_type": "ban",
+            "ward": "Phu Loi",
+            "price_ty": 2.0,
+            "price_per_m2": 20.0,
+            "area_m2": 100.0,
+            "road_tier": 2,
+            "probably_sold": 0,
+            "is_blacklisted": 0,
+            "review_hidden": 0,
+            "duplicate_of_id": None,
+        }
+        comparisons.append({
+            "listing_id": listing_id,
+            "old_flags": [],
+            "new_flags": [],
+            "training_before": True,
+            "training_after": True,
+            "_training_context": {"before": record, "after": record},
+        })
+
+    _resolve_training_membership(comparisons)
+
+    assert [row["training_before"] for row in comparisons] == [False, True, True]
+    assert [row["training_after"] for row in comparisons] == [False, True, True]
+    assert all("_training_context" not in row for row in comparisons)
 
 
 def test_integrity_report_samples_prioritize_measurement_changes():

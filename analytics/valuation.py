@@ -33,6 +33,7 @@ MIN_RELIABLE_N_FOR_SIGNAL = 15
 OUTLIER_SIGMA   = 2.0
 TIME_DECAY_DAYS = 90
 DEFAULT_BASELINE_SOURCES = ("facebook",)
+TRAINING_WINDOW_LIMIT = 30000
 PRIMARY_BASELINE_MIN_CANONICAL_N = 35
 SUPPLEMENTAL_BASELINE_SOURCE = "guland"
 SUPPLEMENTAL_BASELINE_WEIGHT = 0.40
@@ -727,8 +728,9 @@ class ValuationEngine:
                 combined[key] = listings
         return combined
 
-    def fit(self, listings, conn=None):
+    def _training_groups(self, listings):
         from collections import defaultdict
+
         listings = self._dedupe_training_lots(listings)
         primary_segs = defaultdict(list)
         primary_cluster_segs = defaultdict(list)
@@ -764,6 +766,22 @@ class ValuationEngine:
         )
         fallback_segs = self._combine_primary_and_supplemental(
             primary_fallback_segs, supplemental_fallback_segs
+        )
+        return segs, cluster_segs, parent_segs, fallback_segs
+
+    def training_member_ids(self, listings) -> set[int]:
+        """Return listing IDs that contribute to at least one fitted baseline."""
+        groups = self._training_groups(listings)
+        return {
+            int(listing.id)
+            for group in groups
+            for members in group.values()
+            for listing in members
+        }
+
+    def fit(self, listings, conn=None):
+        segs, cluster_segs, parent_segs, fallback_segs = self._training_groups(
+            listings
         )
         for k, ls in segs.items():
             m = RoadTierSegmentModel(k, fallback_level="exact")

@@ -538,6 +538,7 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
     from analytics.valuation import (
         MAIN_MODEL_NAME,
         MAIN_MODEL_VERSION,
+        TRAINING_WINDOW_LIMIT,
         Listing,
         ValuationEngine,
     )
@@ -607,7 +608,7 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
                   AND COALESCE(l.is_blacklisted,0) = 0
                   AND COALESCE(l.review_hidden,0) = 0
                 ORDER BY l.id DESC
-                LIMIT 30000
+                LIMIT {TRAINING_WINDOW_LIMIT}
             """).fetchall()
 
         # 2. Lấy dữ liệu để ĐỊNH GIÁ (Valuate).

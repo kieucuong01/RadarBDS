@@ -398,6 +398,40 @@ def test_training_dedupes_duplicate_reposts_by_canonical_lot():
     assert result.price_per_m2_fair < 15.0
 
 
+def test_training_member_ids_match_fit_dedup_and_source_policy():
+    primary = [
+        _make_listing(i, 20.0, source="facebook", road_tier=2)
+        for i in range(1, 36)
+    ]
+    canonical = primary[0]
+    duplicate = _make_listing(1000, 20.0, source="facebook", road_tier=2)
+    duplicate.duplicate_of_id = canonical.id
+    unused_guland = _make_listing(1001, 10.0, source="guland", road_tier=2)
+    flagged = _make_listing(
+        1002,
+        10.0,
+        source="facebook",
+        road_tier=2,
+        source_quality_flags=("multi_lot_listing",),
+    )
+
+    members = ValuationEngine().training_member_ids(
+        primary + [duplicate, unused_guland, flagged]
+    )
+
+    assert canonical.id in members
+    assert duplicate.id not in members
+    assert unused_guland.id not in members
+    assert flagged.id not in members
+
+    thin_primary = primary[:10]
+    used_guland = _make_listing(1003, 10.0, source="guland", road_tier=2)
+    thin_members = ValuationEngine().training_member_ids(
+        thin_primary + [used_guland]
+    )
+    assert used_guland.id in thin_members
+
+
 def test_guland_uses_same_signal_strength_threshold_as_facebook():
     from services.signal_quality import is_actionable_signal
 

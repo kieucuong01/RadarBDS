@@ -9,10 +9,13 @@ from typing import Any, Iterable, Mapping
 
 from analytics.valuation import (
     DEFAULT_BASELINE_SOURCES,
+    TRAINING_WINDOW_LIMIT,
     SPECIAL_MARKET_SKIP_TYPES,
     SUPPLEMENTAL_BASELINE_SOURCE,
     SUPPLEMENTAL_GULAND_OLD_POST_DAYS,
     SUPPLEMENTAL_LARGE_LOT_AREA_M2,
+    Listing,
+    ValuationEngine,
 )
 from cleansing.normalizer import normalize_record
 from cleansing.reprocess import _source_quality_flags
@@ -113,6 +116,7 @@ def build_integrity_report(limit: int | None = None) -> dict[str, Any]:
         rows = conn.execute(sql, params).fetchall()
 
     comparisons = [_compare_row(row) for row in rows]
+    _resolve_training_membership(comparisons)
     return summarize_integrity_changes(comparisons)
 
 
@@ -185,6 +189,10 @@ def _compare_row(row) -> dict[str, Any]:
         "main_mos": _number(current.get("main_mos")),
         "shadow_mos": _number(current.get("shadow_mos")),
         "normalization_failed": normalization_failed,
+        "_training_context": {
+            "before": dict(current),
+            "after": dict(new_record),
+        },
     }
 
 
@@ -314,6 +322,76 @@ def _training_eligible(row: Mapping[str, Any], flags: set[str]) -> bool:
         posted
         and crawled
         and (crawled - posted).days >= SUPPLEMENTAL_GULAND_OLD_POST_DAYS
+    )
+
+
+def _resolve_training_membership(
+    comparisons: list[dict[str, Any]],
+) -> None:
+    """Apply the engine's window, lot dedup, and source policy to report rows."""
+    for phase, flag_key, result_key in (
+        ("before", "old_flags", "training_before"),
+        ("after", "new_flags", "training_after"),
+    ):
+        candidates = []
+        for comparison in comparisons:
+            context = comparison.get("_training_context") or {}
+            record = _SafeRow(dict(context.get(phase) or {}))
+            if _training_window_candidate(record):
+                candidates.append((comparison, record))
+        candidates.sort(
+            key=lambda item: int(item[0].get("listing_id") or 0),
+            reverse=True,
+        )
+        candidates = candidates[:TRAINING_WINDOW_LIMIT]
+        listings = [
+            _training_listing(
+                record,
+                set(comparison.get(flag_key) or ()),
+            )
+            for comparison, record in candidates
+        ]
+        member_ids = ValuationEngine().training_member_ids(listings)
+        for comparison in comparisons:
+            comparison[result_key] = int(comparison["listing_id"]) in member_ids
+
+    for comparison in comparisons:
+        comparison.pop("_training_context", None)
+
+
+def _training_window_candidate(row: Mapping[str, Any]) -> bool:
+    return bool(
+        (_number(row.get("price_per_m2")) or 0) > 0
+        and not _truthy_db_flag(row.get("probably_sold"))
+        and not _truthy_db_flag(row.get("is_blacklisted"))
+        and not _truthy_db_flag(row.get("review_hidden"))
+    )
+
+
+def _training_listing(
+    row: Mapping[str, Any],
+    flags: set[str],
+) -> Listing:
+    listing_id = int(row.get("listing_id") or row.get("id") or 0)
+    duplicate_of_id = row.get("duplicate_of_id")
+    return Listing(
+        id=listing_id,
+        area=str(row.get("area") or row.get("ward") or "unknown"),
+        ward=str(row.get("ward") or "unknown"),
+        property_type=str(row.get("property_type") or "khac"),
+        tx_type=str(row.get("tx_type") or "ban"),
+        price_per_m2=float(_number(row.get("price_per_m2")) or 0),
+        price_total=float(_number(row.get("price_ty")) or 0),
+        area_m2=float(_number(row.get("area_m2")) or 0),
+        road_tier=int(_number(row.get("road_tier")) or 0),
+        crawled_at=_date_value(row.get("crawled_at")),
+        posted_at=_date_value(row.get("posted_at")),
+        source=str(row.get("source") or ""),
+        duplicate_of_id=(
+            int(duplicate_of_id) if duplicate_of_id is not None else None
+        ),
+        exclude_from_baseline=bool(flags),
+        source_quality_flags=tuple(sorted(flags)),
     )
 
 
