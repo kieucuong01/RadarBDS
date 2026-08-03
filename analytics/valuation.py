@@ -66,6 +66,7 @@ ROAD_TIER_MULTIPLIER = {
 }
 _ROAD_TIER_PROP_TYPES = {'dat_nen', 'nha_dat', 'nha_tro'}
 SPECIAL_MARKET_SKIP_TYPES = {'kho_xuong', 'nha_o_xa_hoi'}
+MAIN_MODEL_NAME = "road_tier_hierarchical"
 MAIN_MODEL_VERSION = "road_tier_hierarchical_v1"
 MIN_ROAD_BUCKET_SAMPLES = 8
 SHRINKAGE_PRIOR_N = 12
@@ -114,6 +115,7 @@ class Listing:
     trust_tier:     str = 'candidate_signal'
     trust_score:    int = 0
     legal_flags:    Tuple[str, ...] = field(default_factory=tuple)
+    crawl_run_id:   Optional[int] = None
 
 def extract_regex_features(text: str) -> Dict[str, bool]:
     if not text: return {}

@@ -302,8 +302,24 @@ CREATE TABLE IF NOT EXISTS market_weekly (
 CREATE INDEX IF NOT EXISTS idx_market_weekly_week ON market_weekly(week DESC, area, property_type);
 
 
+CREATE TABLE IF NOT EXISTS valuation_model_runs (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    model_name      TEXT NOT NULL,
+    model_version   TEXT NOT NULL,
+    status          TEXT DEFAULT 'complete',
+    config_json     TEXT,
+    metrics_json    TEXT,
+    total_count     INTEGER DEFAULT 0,
+    signal_count    INTEGER DEFAULT 0,
+    computed_at     TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_valuation_model_runs_latest
+    ON valuation_model_runs(model_name, model_version, computed_at DESC, id DESC);
+
 CREATE TABLE IF NOT EXISTS valuation_results (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    model_run_id    INTEGER REFERENCES valuation_model_runs(id) ON DELETE SET NULL,
     listing_id      INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
     crawl_run_id    INTEGER,
     fair_ppm2       REAL,
@@ -342,21 +358,6 @@ CREATE INDEX IF NOT EXISTS idx_valuation_signal_trust_score
         listing_id
     )
     WHERE is_signal = 1;
-
-CREATE TABLE IF NOT EXISTS valuation_model_runs (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    model_name      TEXT NOT NULL,
-    model_version   TEXT NOT NULL,
-    status          TEXT DEFAULT 'complete',
-    config_json     TEXT,
-    metrics_json    TEXT,
-    total_count     INTEGER DEFAULT 0,
-    signal_count    INTEGER DEFAULT 0,
-    computed_at     TEXT DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_valuation_model_runs_latest
-    ON valuation_model_runs(model_name, model_version, computed_at DESC, id DESC);
 
 CREATE TABLE IF NOT EXISTS valuation_shadow_results (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1323,6 +1324,11 @@ def _run_migrations(conn: Any) -> None:
     # Migrations cho valuation_results
     v_existing = _table_columns(conn, "valuation_results")
     v_migrations = [
+        (
+            "model_run_id",
+            "ALTER TABLE valuation_results ADD COLUMN model_run_id INTEGER "
+            "REFERENCES valuation_model_runs(id) ON DELETE SET NULL",
+        ),
         ("signal_score", "ALTER TABLE valuation_results ADD COLUMN signal_score INTEGER DEFAULT NULL"),
         ("road_tier",    "ALTER TABLE valuation_results ADD COLUMN road_tier INTEGER DEFAULT 0"),
         ("source_quality_flags", "ALTER TABLE valuation_results ADD COLUMN source_quality_flags TEXT"),
@@ -1339,6 +1345,14 @@ def _run_migrations(conn: Any) -> None:
                 logger.info(f"Migration: added valuation_results.{col}")
             except Exception as e:
                 logger.warning(f"Migration skip valuation_results.{col}: {e}")
+
+    try:
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_valuation_model_run "
+            "ON valuation_results(model_run_id)"
+        )
+    except Exception as e:
+        logger.warning(f"Index skip idx_valuation_model_run: {e}")
 
     # Migrations cho ai_deal_review — Claude-authored memo, append-only
     adr_existing = _table_columns(conn, "ai_deal_review")
