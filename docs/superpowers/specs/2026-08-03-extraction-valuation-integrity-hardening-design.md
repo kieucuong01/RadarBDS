@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-03
 
-**Status:** Conversational design approved; written specification awaiting review
+**Status:** Approved for implementation
 
 **Scope:** Deterministic extraction integrity, automatic quality suppression, multi-lot detection, reprocess ordering, valuation provenance, and atomic valuation replacement from `raw_listings` through `valuation_results`.
 
@@ -120,6 +120,8 @@ Create `cleansing/extraction_integrity.py` as the focused deterministic policy m
 
 `cleansing/normalizer.py` remains the orchestrator that gathers source fields and text, calls the resolver once, and writes the selected `price_ty`, `area_m2`, `tho_cu_m2`, and derived `price_per_m2` into the normalized record.
 
+Persist unresolved deterministic flags in `listings.extraction_quality_flags` so valuation can reproduce the same fail-closed decision after the normalized row has been committed. Each deterministic reprocess overwrites this field, including clearing stale flags; it is not a human or AI label.
+
 `cleansing/feature_extractor.py` continues to own text extraction and gains only the bounded multi-lot phrase coverage needed by the policy.
 
 `cleansing/reprocess.py` consumes the same integrity policy when building valuation quality flags. This ensures already-normalized rows and future incremental rows receive identical suppression semantics.
@@ -167,7 +169,9 @@ One database transaction then performs the complete replacement:
 
 Any insert or update failure rolls back the transaction and leaves the previous main, shadow, and listing-outlier state active.
 
-Add nullable `model_run_id` to `valuation_results`, referencing `valuation_model_runs`. Main rows use `analytics.valuation.MAIN_MODEL_VERSION`; shadow rows retain their existing model identity. Populate each valuation row's existing `crawl_run_id` from its source listing so an output can be traced back to the crawl that produced the normalized input.
+Add nullable `model_run_id` to `valuation_results`, referencing `valuation_model_runs`. Main rows use `analytics.valuation.MAIN_MODEL_VERSION`; shadow rows retain their existing model identity. Populate each valuation row's existing `crawl_run_id` from its listing so an output can be traced to the normalization/reprocess run that produced it; `listings.raw_id -> raw_listings.crawl_run_id` remains the source-crawl provenance path.
+
+`upsert_listing()` must therefore persist its existing `crawl_run_id` argument on both insert and update, retaining the previous value only when a caller supplies no run ID.
 
 Each model run records deterministic metrics in `metrics_json`:
 
