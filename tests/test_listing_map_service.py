@@ -3,6 +3,8 @@ from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
 
+import pytest
+
 from services.listing_map import MapFilters
 
 
@@ -150,6 +152,22 @@ def _filters(**overrides):
     }
     values.update(overrides)
     return MapFilters(**values)
+
+
+@pytest.mark.parametrize(
+    ("tier", "requested", "expected"),
+    [
+        ("guest", 10, 15.0),
+        ("free", 25, 15.0),
+        ("vip", 10, 10.0),
+        ("admin", 20, 20.0),
+    ],
+)
+def test_map_filter_normalization_matches_signal_policy(tier, requested, expected):
+    from services.listing_map import _normalized_filters
+
+    normalized = _normalized_filters(MapFilters(mos_min=requested), tier)
+    assert normalized.mos_min == expected
 
 
 def test_summary_invariants_and_compact_query(monkeypatch):

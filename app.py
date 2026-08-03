@@ -4347,7 +4347,7 @@ def _listing_map_filters(req, mode: str) -> MapFilters:
         sources=tuple(sources or ()),
         prop_types=tuple(prop_types or ()),
         only_drops=bool(only_drops),
-        mos_min=int(mos_min or 0),
+        mos_min=float(mos_min),
         area_min=ranges["area_min"],
         area_max=ranges["area_max"],
         price_min=ranges["price_min"],

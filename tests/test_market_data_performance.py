@@ -10,7 +10,7 @@ def test_city_map_includes_phu_tho_under_thu_dau_mot():
     assert market_data.get_city_for_ward("Phú Thọ") == "THỦ DẦU MỘT"
 
 
-def test_listing_map_summary_uses_one_shared_connection_and_compact_query(
+def test_listing_map_summary_releases_version_connection_before_compact_query(
     monkeypatch,
 ):
     import services.listing_map as listing_map
@@ -46,7 +46,7 @@ def test_listing_map_summary_uses_one_shared_connection_and_compact_query(
         ),
     )
 
-    assert entered == 1
+    assert entered == 2
     assert len(connection.queries) == 2
     summary_sql = connection.queries[1][0]
     assert "listing_map_locations" in summary_sql
@@ -55,6 +55,50 @@ def test_listing_map_summary_uses_one_shared_connection_and_compact_query(
     assert "listing_images" not in summary_sql
     assert "LEFT JOIN LATERAL" not in summary_sql
     assert result["summary"]["total"] == 0
+
+
+def test_listing_map_items_releases_version_connection_before_item_query(
+    monkeypatch,
+):
+    import services.listing_map as listing_map
+
+    class _MapConnection:
+        def __init__(self):
+            self.queries = []
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params))
+            if "AS data_version" in sql:
+                return _FakeCursor(row={"data_version": "v1"})
+            return _FakeCursor(rows=[])
+
+    connection = _MapConnection()
+    entered = 0
+
+    @contextmanager
+    def fake_get_conn():
+        nonlocal entered
+        entered += 1
+        yield connection
+
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", fake_get_conn)
+    result = listing_map.load_listing_map_items(
+        mode="signals",
+        tier="guest",
+        filters=listing_map.MapFilters(
+            city="THỦ DẦU MỘT",
+            wards=("Phú Lợi",),
+            sources=("facebook",),
+        ),
+        location_key="ward:thu-dau-mot:phu-loi",
+        page=1,
+        limit=20,
+    )
+
+    assert entered == 2
+    assert len(connection.queries) == 2
+    assert result["items"] == []
 
 
 class _FakeCursor:

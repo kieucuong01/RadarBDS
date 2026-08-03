@@ -35,7 +35,11 @@ from services.market_data import (
     resolve_image_url,
     signal_read_model_enabled,
 )
-from services.signal_quality import LATEST_VALUATION_CTE
+from services.signal_quality import (
+    DEFAULT_SIGNAL_MOS_MIN_PCT,
+    LATEST_VALUATION_CTE,
+    effective_signal_mos_min,
+)
 
 
 MAP_CACHE_TTL_SECONDS = 60
@@ -55,7 +59,7 @@ class MapFilters:
     sources: tuple[str, ...] = ()
     prop_types: tuple[str, ...] = ()
     only_drops: bool = False
-    mos_min: int = 10
+    mos_min: float = DEFAULT_SIGNAL_MOS_MIN_PCT
     area_min: float = 0
     area_max: float = 0
     price_min: float = 0
@@ -95,7 +99,11 @@ def _normalized_filters(filters: MapFilters, tier: str) -> MapFilters:
         sources=sources,
         prop_types=tuple(normalize_property_types(filters.prop_types)),
         only_drops=False if tier == "guest" else bool(filters.only_drops),
-        mos_min=10 if tier == "guest" else int(filters.mos_min or 0),
+        mos_min=effective_signal_mos_min(
+            tier,
+            filters.mos_min,
+            was_explicit=True,
+        ),
         area_ranges=tuple(tuple(item) for item in filters.area_ranges),
         price_ranges=tuple(tuple(item) for item in filters.price_ranges),
         include_guland_high_activity=bool(

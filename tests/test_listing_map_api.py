@@ -1,6 +1,8 @@
 import json
 from unittest import mock
 
+import pytest
+
 
 LISTING_MAP_TRACK_ACTIONS = {
     "listing_map_opened",
@@ -81,7 +83,7 @@ def test_map_endpoint_passes_normalized_filters_and_guest_source_policy():
     assert filters.include_guland_high_activity is False
     assert filters.prop_types == ("dat_nen",)
     assert filters.only_drops is False
-    assert filters.mos_min == 10
+    assert filters.mos_min == 15.0
     assert filters.area_min == 80
     assert filters.area_max == 150
     assert filters.price_min == 1
@@ -91,6 +93,44 @@ def test_map_endpoint_passes_normalized_filters_and_guest_source_policy():
     assert filters.keyword == "DX 43"
     assert filters.date_range == "1m"
     assert filters.complete_only is True
+
+
+@pytest.mark.parametrize(
+    ("tier", "query", "expected"),
+    [
+        ("guest", "mos_min=10", 15.0),
+        ("free", "mos_min=10", 15.0),
+        ("vip", "", 15.0),
+        ("vip", "mos_min=10", 10.0),
+        ("admin", "mos_min=12.5", 12.5),
+    ],
+)
+def test_signal_map_uses_tier_aware_mos(monkeypatch, tier, query, expected):
+    import app as app_module
+    import auth.core as auth_core
+
+    captured = {}
+    monkeypatch.setattr(app_module, "current_tier", lambda: tier)
+    monkeypatch.setattr(auth_core, "current_tier", lambda: tier)
+
+    def loader(**kwargs):
+        captured.update(kwargs)
+        return {
+            "mode": "signals",
+            "summary": {"total": 0, "mapped": 0, "unmapped_count": 0},
+            "locations": [],
+        }
+
+    monkeypatch.setattr(app_module, "load_listing_map_summary", loader)
+
+    suffix = f"&{query}" if query else ""
+    response = app_module.app.test_client().get(
+        f"/api/map-listings?mode=signals{suffix}"
+    )
+
+    assert response.status_code == 200
+    assert captured["mode"] == "signals"
+    assert captured["filters"].mos_min == expected
 
 
 def test_map_items_validate_location_paging_and_strip_sensitive_fields():
