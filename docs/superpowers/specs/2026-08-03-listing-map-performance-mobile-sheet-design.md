@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-03
 
-**Status:** Conversational design approved by the user on 2026-08-03; pending written-spec review
+**Status:** Approved in writing by the user on 2026-08-03
 
 **Scope:** Homepage `Xem trên Maps` for both `Săn Deal` and `Tin rao`, including browser rendering, the responsive location directory, marker-to-listing interaction, mobile safe areas, tests, rollout, and production verification
 
