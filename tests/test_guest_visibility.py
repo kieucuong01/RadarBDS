@@ -71,7 +71,7 @@ class GuestVisibilityTest(unittest.TestCase):
             conn.execute(f"DELETE FROM legal_verifications WHERE listing_id IN ({placeholders})", params)
             conn.execute(f"DELETE FROM listings WHERE id IN ({placeholders})", params)
 
-    def _login_as_free(self):
+    def _login_as_tier(self, tier):
         from auth.core import SESSION_COOKIE_NAME
         from db.connection import get_conn
 
@@ -79,9 +79,9 @@ class GuestVisibilityTest(unittest.TestCase):
             cur = conn.execute(
                 """
                 INSERT INTO users (identifier, identifier_type, password_hash, tier)
-                VALUES (?, 'email', 'hash', 'free')
+                VALUES (?, 'email', 'hash', ?)
                 """,
-                (self.user_identifier,),
+                (self.user_identifier, tier),
             )
             conn.execute(
                 """
@@ -94,6 +94,46 @@ class GuestVisibilityTest(unittest.TestCase):
             self.client.set_cookie(SESSION_COOKIE_NAME, self.session_token)
         except TypeError:
             self.client.set_cookie("localhost", SESSION_COOKIE_NAME, self.session_token)
+
+    def _login_as_free(self):
+        self._login_as_tier("free")
+
+    def _seed_signal_at_mos(self, slug: str, mos_pct: float) -> int:
+        from db.connection import get_conn
+
+        actual = 20.0
+        fair = actual / (1.0 - mos_pct / 100.0)
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, description, ward,
+                    area_m2, property_type, price_ty, price_per_m2,
+                    probably_sold, possibly_duplicate, posted_at, crawled_at
+                ) VALUES (
+                    'facebook', ?, ?, ?, 'MOS boundary fixture', ?,
+                    100, 'dat_nen', 2.0, 20.0, 0, 0, datetime('now'), datetime('now')
+                )
+                """,
+                (
+                    f"{slug}-{self.token}",
+                    f"{self.url_prefix}/{slug}",
+                    f"Signal MOS {mos_pct}",
+                    self.ward,
+                ),
+            )
+            listing_id = cur.lastrowid
+            self.listing_ids.append(listing_id)
+            conn.execute(
+                """
+                INSERT INTO valuation_results (
+                    listing_id, fair_ppm2, actual_ppm2, mos_pct, is_signal,
+                    signal_score, source_quality_flags
+                ) VALUES (?, ?, ?, ?, 1, 50, '')
+                """,
+                (listing_id, fair, actual, mos_pct),
+            )
+            return listing_id
 
     def _seed_fresh_signal(self):
         from db.connection import get_conn
@@ -155,6 +195,36 @@ class GuestVisibilityTest(unittest.TestCase):
         self.assertEqual(row["url"], None)
         self.assertNotIn("locked_reason", row)
         self.assertFalse(row["is_fresh_locked"])
+
+    def test_default_signal_feed_and_counts_start_at_fifteen(self):
+        low_id = self._seed_signal_at_mos("mos-12", 12.0)
+        high_id = self._seed_signal_at_mos("mos-16", 16.0)
+        query = f"city=Khac&ward={self.ward}&limit=100"
+
+        default_payload = self.client.get(f"/api/signals?{query}").get_json()
+        crafted_payload = self.client.get(
+            f"/api/signals?{query}&mos_min=10"
+        ).get_json()
+        count_payload = self.client.get(f"/api/counts?{query}").get_json()
+
+        default_ids = {row["id"] for row in default_payload["signals"]}
+        crafted_ids = {row["id"] for row in crafted_payload["signals"]}
+        self.assertNotIn(low_id, default_ids)
+        self.assertNotIn(low_id, crafted_ids)
+        self.assertIn(high_id, default_ids)
+        self.assertIn(high_id, crafted_ids)
+        self.assertEqual(
+            count_payload["stats"]["signals"],
+            default_payload["total"],
+        )
+
+        self._login_as_tier("vip")
+        vip_default = self.client.get(f"/api/signals?{query}").get_json()
+        vip_explicit = self.client.get(
+            f"/api/signals?{query}&mos_min=10"
+        ).get_json()
+        self.assertNotIn(low_id, {row["id"] for row in vip_default["signals"]})
+        self.assertIn(low_id, {row["id"] for row in vip_explicit["signals"]})
 
     def test_signal_feed_uses_latest_valuation_once_per_listing(self):
         from db.connection import get_conn
@@ -337,7 +407,7 @@ class GuestVisibilityTest(unittest.TestCase):
         filtered = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=10&mos_min=20")
         self.assertEqual(filtered.status_code, 200)
         filtered_ids = {row["id"] for row in filtered.get_json()["signals"]}
-        self.assertNotIn(both_id, filtered_ids)
+        self.assertIn(both_id, filtered_ids)
 
     def test_free_user_cannot_filter_below_model_signal_threshold(self):
         from db.connection import get_conn

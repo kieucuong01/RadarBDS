@@ -18,7 +18,12 @@ from db.guland_publishers import (
     publisher_visibility_sql,
 )
 from services.image_assets import resolve_image_url
-from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
+from services.signal_quality import (
+    DEFAULT_SIGNAL_MOS_MIN_PCT,
+    LATEST_VALUATION_CTE,
+    actionable_signal_sql,
+    effective_signal_mos_min,
+)
 
 LATEST_SHADOW_VALUATION_CTE = """
 latest_shadow_valuation AS MATERIALIZED (
@@ -719,7 +724,9 @@ def build_deal_sql(mos_min: float) -> DealSql:
     actual = "COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2)"
     fair = _display_fair_sql("v", "sv")
     mos = _display_mos_sql("v", "sv", actual)
-    minimum = float(mos_min if mos_min is not None else 10)
+    minimum = float(
+        mos_min if mos_min is not None else DEFAULT_SIGNAL_MOS_MIN_PCT
+    )
     condition = (
         f"({actionable_signal_sql('v')}) AND "
         f"({_deal_mos_signal_sql(mos, minimum)})"
@@ -1191,11 +1198,10 @@ def format_signal_card_record(r, primary_img=None, tier: str = "guest"):
 _format_signal_row = format_signal_card_record
 
 
-def _load_signals_legacy(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', area_ranges=None, price_ranges=None, keyword="", include_total=True, date_range=None, include_guland_high_activity=False):
-    # Guest tier: ignore "below valuation" (mos_min) and "only price-drops" filters.
-    # Guest still sees the full deal feed; original URLs/phones stay redacted.
+def _load_signals_legacy(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=DEFAULT_SIGNAL_MOS_MIN_PCT, sort='newest', page=1, limit=30, area_min=0, area_max=0, price_min=0, price_max=0, tier='guest', area_ranges=None, price_ranges=None, keyword="", include_total=True, date_range=None, include_guland_high_activity=False):
+    mos_min = effective_signal_mos_min(tier, mos_min, was_explicit=True)
+    # Guest tier cannot use the separate price-drop-only filter.
     if tier == "guest":
-        mos_min = 10
         only_drops = False
     conn = _open_read_conn(db_path)
     where_sql, params = build_listing_filters(
@@ -1362,7 +1368,7 @@ def count_filtered_signals(
     wards=None,
     prop_types=None,
     only_drops=False,
-    mos_min=0,
+    mos_min=DEFAULT_SIGNAL_MOS_MIN_PCT,
     area_min=0,
     area_max=0,
     price_min=0,
@@ -1375,8 +1381,8 @@ def count_filtered_signals(
     include_guland_high_activity=False,
 ) -> int:
     """Count the exact signal feed using the active read implementation."""
+    mos_min = effective_signal_mos_min(tier, mos_min, was_explicit=True)
     if tier == "guest":
-        mos_min = 10
         only_drops = False
 
     if _signal_read_model_enabled():
@@ -1435,9 +1441,9 @@ def count_filtered_signals(
     return int(_row_get(signal_row, "signals", 0) or 0)
 
 
-def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', include_trend=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier='guest', date_range=None, include_guland_high_activity=False):
+def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', include_trend=False, mos_min=DEFAULT_SIGNAL_MOS_MIN_PCT, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier='guest', date_range=None, include_guland_high_activity=False):
+    mos_min = effective_signal_mos_min(tier, mos_min, was_explicit=True)
     if tier == "guest":
-        mos_min = 10
         only_drops = False
 
     conn = _open_read_conn(db_path)
@@ -1554,7 +1560,8 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
     }
 
 
-def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=0, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier="guest", date_range=None, include_guland_high_activity=False, listings_version=0):
+def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=False, mos_min=DEFAULT_SIGNAL_MOS_MIN_PCT, area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", tier="guest", date_range=None, include_guland_high_activity=False, listings_version=0):
+    mos_min = effective_signal_mos_min(tier, mos_min, was_explicit=True)
     conn = _open_read_conn(db_path)
     from services.listing_feed import (
         listing_read_model_enabled,
@@ -2173,22 +2180,23 @@ def get_base_filters(req):
         wards = ["__NO_WARD_SELECTED__"]
     only_drops = req.args.get("only_drops") == "1"
     trend_period = req.args.get("trend_period", "day")
-    try:
-        mos_min = int(req.args.get("mos_min", 10))
-    except (ValueError, TypeError):
-        mos_min = 10
-
+    requested_mos = req.args.get("mos_min")
+    mos_was_explicit = "mos_min" in req.args
     tier = "guest"
 
-    # Guest tier cannot use commission-sensitive filters (mos_min, only_drops).
     try:
         from auth.core import current_tier as _current_tier
         tier = _current_tier()
-        if tier == "guest":
-            mos_min = 10
-            only_drops = False
     except Exception:
         pass
+
+    mos_min = effective_signal_mos_min(
+        tier,
+        requested_mos,
+        was_explicit=mos_was_explicit,
+    )
+    if tier == "guest":
+        only_drops = False
 
     sources = normalize_sources_for_tier(sources, tier)
 

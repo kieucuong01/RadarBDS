@@ -1,5 +1,7 @@
 from contextlib import contextmanager
 
+import pytest
+
 
 def test_city_map_includes_phu_tho_under_thu_dau_mot():
     import services.market_data as market_data
@@ -564,7 +566,7 @@ def test_load_counts_includes_filtered_signal_count_when_read_model_enabled(
     }
     assert captured["sources"] == ["facebook"]
     assert captured["wards"] == ["Tan An"]
-    assert captured["mos_min"] == 18
+    assert captured["mos_min"] == 15.0
     assert captured["date_range"] == "1m"
     assert captured["tier"] == "free"
     assert conn.closed is True
@@ -778,6 +780,57 @@ def test_api_signals_uses_identical_bounded_values_for_cache_and_loader(monkeypa
     assert len(loader["prop_types"]) <= 8
     assert len(loader["area_ranges"]) == 12
     assert len(loader["price_ranges"]) == 12
+
+
+@pytest.mark.parametrize(
+    ("tier", "query", "expected"),
+    [
+        ("guest", "", 15.0),
+        ("guest", "?mos_min=10", 15.0),
+        ("free", "?mos_min=10", 15.0),
+        ("vip", "", 15.0),
+        ("vip", "?mos_min=10", 10.0),
+        ("admin", "?mos_min=12.5", 12.5),
+        ("admin", "?mos_min=nan", 15.0),
+    ],
+)
+def test_api_signals_normalizes_mos_before_cache_and_loader(
+    monkeypatch, tier, query, expected
+):
+    import app as radar_app
+    import auth.core as auth_core
+
+    captured = {"cache": None, "loader": None}
+
+    monkeypatch.setattr(auth_core, "current_tier", lambda: tier)
+    monkeypatch.setattr(radar_app, "current_tier", lambda: tier)
+    monkeypatch.setattr(
+        radar_app,
+        "_public_dataset_versions",
+        lambda _names: {"signals": 1},
+    )
+
+    def fake_load_signals(*_args, **kwargs):
+        captured["loader"] = kwargs["mos_min"]
+        return {
+            "signals": [],
+            "page": 1,
+            "limit": 30,
+            "total": 0,
+            "pages": 0,
+        }
+
+    def fake_cache(**kwargs):
+        captured["cache"] = kwargs["query"]["mos_min"]
+        return radar_app.CacheResult(kwargs["loader"](), "miss", 0.0)
+
+    monkeypatch.setattr(radar_app, "load_signals", fake_load_signals)
+    monkeypatch.setattr(radar_app, "get_or_load_public_payload", fake_cache)
+
+    response = radar_app.app.test_client().get(f"/api/signals{query}")
+
+    assert response.status_code == 200
+    assert captured == {"cache": expected, "loader": expected}
 
 
 def test_api_listings_uses_identical_bounded_values_for_cache_and_loader(monkeypatch):

@@ -4145,7 +4145,7 @@ def _public_filter_query(
         "prop_types": prop_types,
         "only_drops": bool(only_drops),
         "trend_period": trend_period,
-        "mos_min": int(mos_min or 0),
+        "mos_min": float(mos_min or 0),
         "area_min": float(range_kwargs["area_min"] or 0),
         "area_max": float(range_kwargs["area_max"] or 0),
         "price_min": float(range_kwargs["price_min"] or 0),

@@ -297,7 +297,45 @@ def test_count_signals_from_read_model_reuses_public_feed_filters():
     assert "facebook" in params
     assert "Tan An" in params
     assert "-3 months" in params
-    assert 10.0 in params
+    assert 15.0 in params
+    assert 10.0 not in params
+
+
+@pytest.mark.parametrize(
+    ("tier", "requested", "expected"),
+    [
+        ("guest", 10, 15.0),
+        ("free", 10, 15.0),
+        ("vip", 10, 10.0),
+        ("admin", 10, 10.0),
+    ],
+)
+def test_read_model_enforces_tier_mos_policy(monkeypatch, tier, requested, expected):
+    from services import signal_read_model
+
+    captured = {}
+
+    def fake_filters(**kwargs):
+        captured["mos_min"] = kwargs["mos_min"]
+        return "TRUE", []
+
+    class _Cursor:
+        def fetchone(self):
+            return {"signals": 0}
+
+    class _Connection:
+        def execute(self, _sql, _params=None):
+            return _Cursor()
+
+    monkeypatch.setattr(
+        signal_read_model,
+        "_read_model_filters",
+        fake_filters,
+    )
+    signal_read_model.count_signals_from_read_model(
+        _Connection(), tier=tier, mos_min=requested
+    )
+    assert captured["mos_min"] == expected
 
 
 def test_read_model_query_is_bounded_and_sets_local_timeout(monkeypatch):

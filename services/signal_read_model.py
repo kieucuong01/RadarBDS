@@ -38,7 +38,12 @@ from services.market_data import (
     related_price_drop_join_sql,
     resolve_image_url,
 )
-from services.signal_quality import LATEST_VALUATION_CTE, actionable_signal_sql
+from services.signal_quality import (
+    DEFAULT_SIGNAL_MOS_MIN_PCT,
+    LATEST_VALUATION_CTE,
+    actionable_signal_sql,
+    effective_signal_mos_min,
+)
 
 
 READ_MODEL_COLUMNS = (
@@ -384,7 +389,7 @@ def _read_model_filters(
     wards=None,
     prop_types=None,
     only_drops=False,
-    mos_min=0,
+    mos_min=DEFAULT_SIGNAL_MOS_MIN_PCT,
     area_min=0,
     area_max=0,
     price_min=0,
@@ -464,8 +469,8 @@ def count_signals_from_read_model(
     include_guland_high_activity=False,
 ) -> int:
     """Count the exact public signal feed without rebuilding valuations."""
+    mos_min = effective_signal_mos_min(tier, mos_min, was_explicit=True)
     if tier == "guest":
-        mos_min = 10
         only_drops = False
 
     allow_high_activity = bool(
@@ -504,7 +509,7 @@ def load_signals_from_read_model(
     wards=None,
     prop_types=None,
     only_drops=False,
-    mos_min=0,
+    mos_min=DEFAULT_SIGNAL_MOS_MIN_PCT,
     sort="newest",
     page=1,
     limit=30,
@@ -520,8 +525,8 @@ def load_signals_from_read_model(
     date_range=None,
     include_guland_high_activity=False,
 ):
+    mos_min = effective_signal_mos_min(tier, mos_min, was_explicit=True)
     if tier == "guest":
-        mos_min = 10
         only_drops = False
 
     page = max(int(page or 1), 1)
