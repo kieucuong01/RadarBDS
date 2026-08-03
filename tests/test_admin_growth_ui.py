@@ -29,7 +29,7 @@ def test_growth_admin_ui_contract():
     assert "chart.js@4.4.4" in script
     user_select = template[template.index('id="userTierFilter"'):template.index('id="userTable"', template.index('id="userTierFilter"'))]
     assert "chart.js@4.4.4" not in user_select
-    assert "admin-v50-facebook-broker-delete-ui" in template
+    assert "admin-v51-facebook-broker-guland-publisher" in template
     assert "/admin/api/growth?period=" in script
     assert "include_guland=" in script
     assert "prefers-reduced-motion" in script
@@ -190,7 +190,7 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
     assert "?v=admin-facebook-crawl-v2-broker-delete-ui" in template
-    assert "css/admin.css') }}?v=admin-v50-facebook-broker-delete-ui" in template
+    assert "css/admin.css') }}?v=admin-v51-facebook-broker-guland-publisher" in template
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script
     assert "/admin/api/facebook-crawl/config" not in (

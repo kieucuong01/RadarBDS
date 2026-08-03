@@ -12,6 +12,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import re
 import sys
 import textwrap
@@ -136,9 +137,19 @@ def _slug_hashtag(ward: str) -> str:
 
 
 def _font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont:
-    regular = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-    bold_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-    return ImageFont.truetype(bold_path if bold else regular, size)
+    windows_fonts = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
+    candidates = (
+        Path(
+            "/usr/share/fonts/truetype/dejavu/"
+            + ("DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf")
+        ),
+        windows_fonts / ("arialbd.ttf" if bold else "arial.ttf"),
+    )
+    for path in candidates:
+        if path.is_file():
+            return ImageFont.truetype(str(path), size)
+    candidate_text = ", ".join(str(path) for path in candidates)
+    raise RuntimeError(f"No supported TrueType font found: {candidate_text}")
 
 
 def _wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, max_width: int) -> list[str]:
