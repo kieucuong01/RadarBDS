@@ -728,6 +728,8 @@ CREATE TABLE IF NOT EXISTS radar_ask_usage (
     completion_tokens   INTEGER NOT NULL DEFAULT 0 CHECK (completion_tokens >= 0),
     cache_hit_tokens    INTEGER NOT NULL DEFAULT 0 CHECK (cache_hit_tokens >= 0),
     cache_miss_tokens   INTEGER NOT NULL DEFAULT 0 CHECK (cache_miss_tokens >= 0),
+    pricing_version     TEXT NOT NULL DEFAULT 'deepseek-v4-usd-2026-08-04',
+    reservation_expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '10 minutes'),
     outcome             TEXT CHECK (outcome IS NULL OR outcome IN (
                             'answered', 'insufficient', 'clarification',
                             'provider_failure', 'validation_failure',
@@ -1386,6 +1388,33 @@ def _migrate_guland_publishers(conn: Any) -> None:
     )
 
 
+def _migrate_radar_ask_usage(conn: Any) -> None:
+    """Keep reservation expiry/accounting columns safe on pre-feature schemas."""
+    if not _table_exists(conn, "radar_ask_usage"):
+        return
+    conn.execute(
+        """
+        ALTER TABLE radar_ask_usage
+        ADD COLUMN IF NOT EXISTS pricing_version TEXT NOT NULL
+            DEFAULT 'deepseek-v4-usd-2026-08-04'
+        """
+    )
+    conn.execute(
+        """
+        ALTER TABLE radar_ask_usage
+        ADD COLUMN IF NOT EXISTS reservation_expires_at TIMESTAMPTZ NOT NULL
+            DEFAULT (NOW() + INTERVAL '10 minutes')
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_radar_ask_usage_active_reservations
+        ON radar_ask_usage(usage_month, reservation_expires_at)
+        WHERE settlement_status = 'reserved'
+        """
+    )
+
+
 def _run_migrations(conn: Any) -> None:
     """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
     _migrate_listing_map_locations(conn)
@@ -1395,6 +1424,7 @@ def _run_migrations(conn: Any) -> None:
     _migrate_raw_listing_revisions(conn)
     _migrate_guland_publishers(conn)
     _migrate_public_read_model(conn)
+    _migrate_radar_ask_usage(conn)
     conn.execute(
         """
         ALTER TABLE crawl_run_progress
