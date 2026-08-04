@@ -10551,7 +10551,422 @@ SEO_ARTICLES = {
         }
     ]
 }
+,
 
+"khi-nao-nen-dung-cong-cu-dinh-gia-truoc-khi-goi-moi-gioi": {
+    "variant": "knowledge",
+    "path": "/tin-tuc/khi-nao-nen-dung-cong-cu-dinh-gia-truoc-khi-goi-moi-gioi",
+    "title": "Khi nào nên dùng công cụ định giá trước khi gọi môi giới? | Radar BDS",
+    "description": "Radar BDS cập nhật 04/08/2026: khi nào nên mở công cụ định giá trước khi gọi môi giới, dựa trên 17.373 tin Facebook live và luôn tách đất nền với nhà đất.",
+    "keywords": "khi nào nên dùng công cụ định giá, công cụ định giá nhà đất Bình Dương, gọi môi giới khi nào, Radar BDS, định giá theo phường",
+    "breadcrumb_label": "Khi nào nên dùng công cụ định giá trước khi gọi môi giới?",
+    "hero_badge": "Buyer guide / Free tool",
+    "hero_title": "Khi nào nên dùng công cụ định giá trước khi gọi môi giới?",
+    "hero_text": "Nếu bạn chưa biết một tin đang cao hơn hay thấp hơn mặt bằng cùng phường, hãy mở công cụ định giá trước khi gọi. Dữ liệu live Radar BDS ngày 04/08/2026 cho thấy chỉ cần trộn đất nền với nhà đất hoặc gọi quá sớm là rất dễ hỏi sai giá ngay từ đầu.",
+    "scope_label": "Bình Dương · Quy trình lọc tin trước khi gọi",
+    "hero_checks": [
+        "Radar đang theo dõi 17.373 tin Facebook live, trong đó 2.569 tin có dấu hiệu đáng chú ý",
+        "Tân An có đất nền trung vị 16,3 tr/m² nhưng nhà đất là 22,8 tr/m²",
+        "Định Hòa có đất nền 15,8 tr/m² nhưng nhà đất lên 29,9 tr/m²",
+        "Phú Mỹ và Hiệp Thành đều cho thấy nhà đất đang cao hơn đất nền khoảng 15-16 tr/m²"
+    ],
+    "primary_cta": "Mở công cụ định giá BĐS",
+    "primary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=when_to_use_valuation_tool",
+    "secondary_cta": "Xem báo cáo thị trường gần nhất",
+    "secondary_href": "/bao-cao/bds-binh-duong-thang-07-2026",
+    "map_label": "Tin tức / Hướng dẫn dùng công cụ",
+    "hero_metric": {
+        "label": "Mẫu live tham chiếu",
+        "value": "17.373 tin",
+        "delta": "2.569 dấu hiệu đáng chú ý",
+        "note": "Tin Facebook live, lọc ngày 04/08/2026 với is_active=1"
+    },
+    "property_card": {
+        "status": "Cập nhật 04/08/2026",
+        "title": "Dùng công cụ định giá khi bạn cần một mốc so nhanh trước cuộc gọi đầu tiên",
+        "price": "Công cụ không thay pháp lý hay thẩm định chính thức, nhưng giúp biết tin đang lệch bao xa so với mặt bằng cùng phường và cùng loại hình.",
+        "metric_a": "Nhóm dễ hỏi sai",
+        "metric_a_value": "Định Hòa đất nền 15,8 tr/m² · nhà đất 29,9 tr/m²",
+        "metric_b": "Nhóm nên lọc trước",
+        "metric_b_value": "Tân An đất nền 16,3 tr/m² · Phú Tân nhà đất 34,9 tr/m²"
+    },
+    "value_cards": [
+        {
+            "title": "Nên mở công cụ khi mới thấy tin có vẻ rẻ",
+            "body": "Nếu bạn chỉ mới thấy một tin thấp hơn cảm nhận thị trường, hãy mở công cụ định giá để lấy mốc theo phường và loại hình trước. Bước này giúp tránh gọi môi giới chỉ vì một con số nhìn hấp dẫn."
+        },
+        {
+            "title": "Nên mở công cụ khi đang so 2-3 phường gần nhau",
+            "body": "Tân An, Định Hòa, Phú Mỹ hay Phú Tân có mặt bằng rất khác nhau. Công cụ định giá giúp bạn đặt đúng bối cảnh trước khi quyết định nên hỏi khu nào trước."
+        },
+        {
+            "title": "Không nên bỏ qua bước lọc nếu bạn còn mơ hồ về loại hình",
+            "body": "Chỉ cần trộn đất nền với nhà đất là câu hỏi dành cho môi giới đã lệch ngay. Công cụ định giá tốt nhất khi bạn dùng nó để chốt đúng nhóm so sánh trước cuộc gọi đầu tiên."
+        }
+    ],
+    "dashboard_preview": {
+        "eyebrow": "Từ bài hướng dẫn sang thao tác",
+        "title": "Mở công cụ rồi quay lại dashboard để kiểm tra từng tin",
+        "description": "Đi từ mốc định giá theo phường sang dashboard lọc tín hiệu, thay vì gọi môi giới ngay khi chưa có khung tham chiếu.",
+        "image": "/static/images/seo/ward-compare-dashboard-preview.webp",
+        "alt": "Công cụ định giá và dashboard Radar BDS"
+    },
+    "market_snapshot": {
+        "eyebrow": "Snapshot 04/08/2026",
+        "title": "Những nhóm nên định giá trước khi gọi môi giới",
+        "columns": [
+            {
+                "key": "ward_type",
+                "label": "Phường · loại hình"
+            },
+            {
+                "key": "tracked",
+                "label": "Tin đang theo dõi"
+            },
+            {
+                "key": "under4",
+                "label": "Dưới 4 tỷ"
+            },
+            {
+                "key": "median_m2",
+                "label": "Giá trung vị/m²"
+            },
+            {
+                "key": "median_total",
+                "label": "Tổng giá trung vị"
+            },
+            {
+                "key": "use_tool_when",
+                "label": "Nên mở công cụ khi"
+            }
+        ],
+        "rows": [
+            {
+                "ward_type": "Tân An · đất nền",
+                "tracked": "716",
+                "under4": "675",
+                "median_m2": "16,3 tr/m²",
+                "median_total": "1,79 tỷ",
+                "use_tool_when": "Bạn thấy một lô dưới 16 tr/m² và muốn biết có thật sự thấp hơn mặt bằng hay không."
+            },
+            {
+                "ward_type": "Định Hòa · nhà đất",
+                "tracked": "301",
+                "under4": "269",
+                "median_m2": "29,9 tr/m²",
+                "median_total": "2,70 tỷ",
+                "use_tool_when": "Bạn đang so với đất nền cùng khu và sợ hỏi sai giá nhà xây sẵn."
+            },
+            {
+                "ward_type": "Phú Tân · nhà đất",
+                "tracked": "120",
+                "under4": "77",
+                "median_m2": "34,9 tr/m²",
+                "median_total": "3,50 tỷ",
+                "use_tool_when": "Bạn phân vân giữa gọi môi giới ngay hay lọc thêm nhóm dưới 4 tỷ trước."
+            },
+            {
+                "ward_type": "Phú Mỹ · đất nền",
+                "tracked": "436",
+                "under4": "337",
+                "median_m2": "22,7 tr/m²",
+                "median_total": "3,05 tỷ",
+                "use_tool_when": "Bạn đang so Phú Mỹ với phường khác và cần một mốc nhanh trước khi đi tiếp."
+            }
+        ]
+    },
+    "local_links": [
+        {
+            "label": "Hub nhà đất Bình Dương",
+            "href": "/binh-duong",
+            "description": "Đi từ hub sang từng phường trước khi mở công cụ định giá."
+        },
+        {
+            "label": "Trang phường Phú Tân",
+            "href": "/binh-duong/phuong-phu-tan",
+            "description": "Xem dữ liệu live và lối vào dashboard cho Phú Tân."
+        },
+        {
+            "label": "Dashboard lọc tín hiệu theo phường",
+            "href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=when_to_use_valuation_tool",
+            "description": "Lọc đúng phường, đúng loại hình rồi xem tin đáng kiểm tra."
+        },
+        {
+            "label": "Công cụ định giá BĐS",
+            "href": "/dinh-gia-bds",
+            "description": "Ước lượng nhanh trước cuộc gọi đầu tiên với môi giới."
+        },
+        {
+            "label": "Báo cáo thị trường tháng 07/2026",
+            "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+            "description": "Đọc bức tranh rộng hơn sau khi đã lọc theo phường."
+        },
+        {
+            "label": "Cách định giá nhà đất Bình Dương bằng giá rao theo phường",
+            "href": "/tin-tuc/cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong",
+            "description": "Bài nền để hiểu vì sao phải so theo phường và loại hình."
+        }
+    ],
+    "faq": [
+        {
+            "q": "Khi nào nên mở công cụ định giá trước khi gọi môi giới?",
+            "a": "Khi bạn chưa có mốc so giá theo đúng phường và đúng loại hình, hoặc khi thấy một tin có vẻ rẻ hơn mặt bằng. Công cụ giúp bạn biết nên gọi ngay, hỏi thêm hay loại sớm."
+        },
+        {
+            "q": "Công cụ định giá có thay cho thẩm định chính thức không?",
+            "a": "Không. Công cụ chỉ là lớp lọc dữ liệu ban đầu dựa trên giá rao và mặt bằng đang theo dõi. Bạn vẫn cần kiểm tra pháp lý, quy hoạch, hiện trạng và thương lượng thực tế."
+        },
+        {
+            "q": "Vì sao phải tách đất nền và nhà đất trước khi dùng công cụ?",
+            "a": "Vì chênh lệch giữa hai loại hình rất lớn. Dữ liệu live 04/08/2026 cho thấy ở Định Hòa, đất nền trung vị khoảng 15,8 tr/m² nhưng nhà đất lên 29,9 tr/m². Nếu gộp chung, câu hỏi dành cho môi giới sẽ sai ngay từ đầu."
+        },
+        {
+            "q": "Nếu đã có giá/m² rồi thì còn cần công cụ định giá nữa không?",
+            "a": "Có, nếu bạn muốn so thêm tổng giá, nhóm ngân sách, phường lân cận hoặc kiểm tra xem tin đang thấp hơn mặt bằng bao nhiêu. Giá/m² là một mốc tốt, nhưng chưa đủ để gọi là định giá xong."
+        }
+    ],
+    "article": {
+        "published_at": "2026-08-04",
+        "modified_at": "2026-08-04",
+        "intro": [
+            "Nếu bạn chưa biết một tin đang cao hơn hay thấp hơn mặt bằng cùng phường, hãy mở công cụ định giá trước khi gọi môi giới. Dữ liệu Radar BDS ngày 04/08/2026 cho thấy chỉ cần hỏi sai loại hình hoặc sai phường là cuộc gọi đầu tiên đã kém hiệu quả.",
+            "Bài này dùng giá rao từ tin Facebook live mà Radar BDS đang theo dõi. Đây là giá rao để lọc ban đầu, không phải giá chốt giao dịch hay kết quả thẩm định pháp lý chính thức."
+        ],
+        "summary_cards": [
+            {
+                "label": "Thị trường live",
+                "value": "17.373 tin",
+                "note": "Facebook live, đã lọc blacklist/review hidden"
+            },
+            {
+                "label": "Nhóm đáng kiểm tra",
+                "value": "2.569 tin",
+                "note": "is_hot hoặc price_dropped"
+            },
+            {
+                "label": "Đất nền dễ gọi sai",
+                "value": "Tân An 16,3 tr/m²",
+                "note": "716 tin đang theo dõi, 675 tin dưới 4 tỷ"
+            },
+            {
+                "label": "Nhà đất nên định giá trước",
+                "value": "Định Hòa 29,9 tr/m²",
+                "note": "Chênh rất xa so với đất nền cùng phường"
+            }
+        ],
+        "illustration": {
+            "src": "/static/images/seo/ward-compare-dashboard-preview.webp",
+            "alt": "Mở công cụ định giá trước khi gọi môi giới trên Radar BDS",
+            "caption": "Bắt đầu từ công cụ định giá, sau đó quay lại dashboard để kiểm tra từng tin theo phường và loại hình."
+        },
+        "data_tables": [
+            {
+                "eyebrow": "3 tình huống thực tế",
+                "title": "Khi nào nên mở công cụ định giá trước cuộc gọi đầu tiên?",
+                "note": "Ưu tiên các tình huống bạn chưa chắc về mặt bằng giá hoặc đang so nhiều phường gần nhau.",
+                "columns": [
+                    {
+                        "key": "case",
+                        "label": "Tình huống"
+                    },
+                    {
+                        "key": "should_do",
+                        "label": "Nên làm gì"
+                    },
+                    {
+                        "key": "why",
+                        "label": "Vì sao"
+                    }
+                ],
+                "rows": [
+                    {
+                        "case": "Thấy một tin có vẻ rẻ hơn mặt bằng",
+                        "should_do": "Mở công cụ định giá rồi so với phường và loại hình tương ứng",
+                        "why": "Bạn cần biết đây là tin thấp hơn mặt bằng thật hay chỉ thấp vì khác loại hình/khác vị trí."
+                    },
+                    {
+                        "case": "Đang phân vân giữa 2-3 phường",
+                        "should_do": "Lấy mốc giá rao trung vị từng phường trước khi hỏi sâu",
+                        "why": "Tân An, Định Hòa, Phú Mỹ và Phú Tân đang có mặt bằng rất khác nhau."
+                    },
+                    {
+                        "case": "Tin nhà đất nhưng bạn chỉ quen nhìn giá đất nền",
+                        "should_do": "Định giá lại đúng nhóm nhà đất rồi mới gọi",
+                        "why": "Nhà đất đã gồm công trình và hiện trạng sử dụng nên không thể lấy mốc đất nền để hỏi giá."
+                    }
+                ]
+            },
+            {
+                "eyebrow": "Ví dụ dữ liệu live",
+                "title": "Bốn nhóm cho thấy vì sao nên định giá trước khi gọi",
+                "note": "Luôn đọc đây là giá rao. Giá chốt thực tế còn phụ thuộc vị trí cụ thể, pháp lý và thương lượng.",
+                "columns": [
+                    {
+                        "key": "ward_type",
+                        "label": "Phường · loại hình"
+                    },
+                    {
+                        "key": "median_m2",
+                        "label": "Giá trung vị/m²"
+                    },
+                    {
+                        "key": "median_total",
+                        "label": "Tổng giá trung vị"
+                    },
+                    {
+                        "key": "tracked",
+                        "label": "Tin đang theo dõi"
+                    },
+                    {
+                        "key": "takeaway",
+                        "label": "Ý nghĩa khi gọi môi giới"
+                    }
+                ],
+                "rows": [
+                    {
+                        "ward_type": "Tân An · đất nền",
+                        "median_m2": "16,3 tr/m²",
+                        "median_total": "1,79 tỷ",
+                        "tracked": "716",
+                        "takeaway": "Nếu tin chào cao hơn rõ nhưng không có lợi thế nổi bật, bạn nên hỏi kỹ lý do tăng giá."
+                    },
+                    {
+                        "ward_type": "Định Hòa · nhà đất",
+                        "median_m2": "29,9 tr/m²",
+                        "median_total": "2,70 tỷ",
+                        "tracked": "301",
+                        "takeaway": "Đừng đem mốc đất nền 15,8 tr/m² vào cuộc gọi hỏi nhà đất ở Định Hòa."
+                    },
+                    {
+                        "ward_type": "Phú Tân · nhà đất",
+                        "median_m2": "34,9 tr/m²",
+                        "median_total": "3,50 tỷ",
+                        "tracked": "120",
+                        "takeaway": "Phù hợp để lọc trước nhóm dưới 4 tỷ rồi mới gọi các tin còn lại."
+                    },
+                    {
+                        "ward_type": "Phú Mỹ · đất nền",
+                        "median_m2": "22,7 tr/m²",
+                        "median_total": "3,05 tỷ",
+                        "tracked": "436",
+                        "takeaway": "Nên định giá trước khi so Phú Mỹ với các phường rẻ hơn như Tân An hoặc Định Hòa."
+                    }
+                ]
+            }
+        ],
+        "charts": [
+            {
+                "eyebrow": "Chênh lệch loại hình",
+                "title": "Ở nhiều phường, nhà đất cao hơn đất nền rất rõ",
+                "note": "Đây là lý do phổ biến nhất khiến người mua hỏi sai giá nếu bỏ qua công cụ định giá ban đầu.",
+                "alt": "So sánh giá trung vị đất nền và nhà đất ở Tân An, Định Hòa, Phú Mỹ, Hiệp Thành",
+                "rows": [
+                    {
+                        "label": "Tân An · đất nền",
+                        "value_label": "16,3 tr/m²",
+                        "width": 42,
+                        "color": "#2563eb"
+                    },
+                    {
+                        "label": "Tân An · nhà đất",
+                        "value_label": "22,8 tr/m²",
+                        "width": 59,
+                        "color": "#16a34a"
+                    },
+                    {
+                        "label": "Định Hòa · đất nền",
+                        "value_label": "15,8 tr/m²",
+                        "width": 41,
+                        "color": "#0f766e"
+                    },
+                    {
+                        "label": "Định Hòa · nhà đất",
+                        "value_label": "29,9 tr/m²",
+                        "width": 77,
+                        "color": "#f59e0b"
+                    },
+                    {
+                        "label": "Phú Mỹ · nhà đất",
+                        "value_label": "38,7 tr/m²",
+                        "width": 100,
+                        "color": "#dc2626"
+                    }
+                ]
+            }
+        ],
+        "sections": [
+            {
+                "id": "mo-cong-cu-khi-chua-co-moc-so",
+                "heading": "Mở công cụ khi bạn chưa có mốc so theo đúng phường và đúng loại hình",
+                "paragraphs": [
+                    "Sai lầm phổ biến nhất là nhìn một tin có vẻ rẻ rồi gọi ngay, trong khi bạn chưa biết mặt bằng của đúng phường và đúng loại hình. Chỉ cần nhầm giữa đất nền và nhà đất, hoặc nhảy từ phường này sang phường khác, câu hỏi đầu tiên dành cho môi giới đã lệch.",
+                    "Công cụ định giá hữu ích nhất ở giai đoạn này: nó cho bạn một mốc tham chiếu nhanh để biết nên tiếp tục hỏi sâu, chuyển sang phường khác hay loại sớm. Với người mua bình thường, bước lọc này giúp tiết kiệm nhiều cuộc gọi không cần thiết."
+                ],
+                "bullets": [
+                    "Chưa có mốc giá theo phường thì nên mở công cụ trước.",
+                    "Chưa chắc loại hình là đất nền hay nhà đất thì càng nên mở công cụ.",
+                    "Tin nhìn rẻ chưa chắc là tin nên gọi trước."
+                ]
+            },
+            {
+                "id": "mo-cong-cu-khi-so-nhieu-phuong",
+                "heading": "Mở công cụ khi đang so nhiều phường gần nhau",
+                "paragraphs": [
+                    "Tân An và Định Hòa đang có nhóm đất nền trung vị quanh 15,8-16,3 tr/m², trong khi Phú Mỹ là 22,7 tr/m² và Phú Tân là 23,8 tr/m². Nếu bạn gọi môi giới ở Phú Mỹ nhưng trong đầu vẫn giữ mặt bằng của Tân An, cuộc nói chuyện sẽ rất dễ đi sai hướng.",
+                    "Vì vậy, cứ mỗi lần bạn đổi phường hoặc đổi ngân sách, hãy định giá lại trước. Bước này đặc biệt hữu ích khi bạn đang lọc các nhóm dưới 3-4 tỷ hoặc cân nhắc giữa khu dễ mua và khu có nhiều tiện ích hơn."
+                ],
+                "bullets": [
+                    "So liên phường thì phải cập nhật lại mốc giá.",
+                    "Ngân sách dưới 4 tỷ nên nhìn cả giá/m² và tổng giá.",
+                    "Không dùng một mức giá chung cho toàn Thủ Dầu Một."
+                ]
+            },
+            {
+                "id": "goi-moi-gioi-sau-khi-da-loc",
+                "heading": "Gọi môi giới sau khi đã lọc được đúng nhóm tin",
+                "paragraphs": [
+                    "Sau khi có mốc định giá, bạn nên quay lại dashboard để lọc đúng phường, đúng loại hình, rồi mở nhóm tin đáng kiểm tra trước. Lúc này cuộc gọi với môi giới sẽ cụ thể hơn: bạn hỏi trên nền một khung giá có thật, thay vì hỏi bằng cảm giác chung chung.",
+                    "Ví dụ, với nhà đất Phú Tân có giá trung vị 34,9 tr/m² và tổng giá trung vị 3,50 tỷ, bạn có thể ưu tiên hỏi các tin dưới 4 tỷ, sau đó kiểm tra thêm pháp lý, đường/hẻm và hiện trạng. Đó là trình tự thực tế hơn nhiều so với việc gọi toàn bộ tin vừa mới thấy."
+                ],
+                "bullets": [
+                    "Định giá trước, gọi sau.",
+                    "Gọi ít hơn nhưng đúng nhóm tin hơn.",
+                    "Sau cuộc gọi vẫn phải kiểm tra pháp lý, quy hoạch và thực địa."
+                ]
+            }
+        ],
+        "checklist": [
+            "Đã chốt đúng phường cần so giá.",
+            "Đã tách đất nền và nhà đất trước khi định giá.",
+            "Đã hiểu đây là giá rao live, không phải giá chốt giao dịch.",
+            "Đã lọc lại trên dashboard sau khi có mốc định giá.",
+            "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và thực địa sau cuộc gọi."
+        ]
+    },
+    "final_cta": {
+        "title": "Mở công cụ rồi lọc tiếp trên Radar",
+        "body": "Lấy mốc định giá theo phường trước, sau đó quay lại dashboard để chọn đúng tin đáng kiểm tra thay vì gọi môi giới dàn hàng ngang.",
+        "button": "Mở công cụ định giá",
+        "button_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=when_to_use_valuation_tool"
+    },
+    "breadcrumbs": [
+        {
+            "name": "Trang chủ",
+            "href": "/",
+            "url": "https://radarbds.vn/"
+        },
+        {
+            "name": "Tin tức",
+            "href": "/tin-tuc",
+            "url": "https://radarbds.vn/tin-tuc"
+        },
+        {
+            "name": "Khi nào nên dùng công cụ định giá trước khi gọi môi giới?",
+            "href": "/tin-tuc/khi-nao-nen-dung-cong-cu-dinh-gia-truoc-khi-goi-moi-gioi",
+            "url": "https://radarbds.vn/tin-tuc/khi-nao-nen-dung-cong-cu-dinh-gia-truoc-khi-goi-moi-gioi"
+        }
+    ]
+}
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
