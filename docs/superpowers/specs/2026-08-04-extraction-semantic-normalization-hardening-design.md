@@ -36,12 +36,13 @@ Evidence precedence is:
 
 1. explicitly declared total area;
 2. valid structured source area;
-3. exactly one valid frontage/depth pair for a regular, non-multi-lot post;
-4. no manufactured area when evidence is ambiguous.
+3. a valid primary dimension explicitly labeled `diện tích`, `DT`, `kích thước`, or `KT` when area is otherwise missing, even if a later `thực tế` dimension differs;
+4. exactly one valid frontage/depth pair for a regular, non-multi-lot post;
+5. no manufactured area from unlabeled irregular sides when evidence is ambiguous.
 
 The existing 40% regular and 60% irregular severe thresholds remain unchanged. Routine skewed-lot differences are accepted.
 
-Compact million prices are accepted only when a price token is present and the amount is at least 100 million, for example `giá chỉ 950TR`. Amounts in clauses describing `đưa trước`, `thanh toán`, `trả trước`, `cọc`, `hỗ trợ vay`, `vay`, `giảm`, or interior value are removed before asking-price selection. Exact `giảm ... còn ...` patterns continue to return the remaining asking price.
+Compact million prices are accepted only when a price token is present and the amount is at least 100 million, for example `giá chỉ 950TR`. Per-unit prices such as `5,87 triệu/m²` are never total asking prices. Amounts in clauses describing `đưa trước`, `thanh toán`, `trả trước`, `cọc`, `hỗ trợ vay`, `vay`, `giảm`, or interior value are removed before asking-price selection. Exact `giảm ... còn ...` patterns continue to return the remaining asking price. A vague lower bound such as `>1 tỷ` does not overwrite a more precise structured source price.
 
 ## 4. Multi-lot and Property Context
 
@@ -77,7 +78,7 @@ Add `listings.measurement_provenance` as a JSON string with stable per-field val
 }
 ```
 
-Allowed values are `source_structured`, `declared_text`, `source_text`, `derived_area_frontage`, `derived_standard_lot`, and `unknown`. Existing columns remain compatible. Reprocess overwrites deterministic provenance, just as it overwrites deterministic extraction flags.
+Allowed values are `source_structured`, `declared_text`, `source_text`, `derived_dimensions`, `derived_area_frontage`, `derived_standard_lot`, `admin_override`, and `unknown`. Existing columns remain compatible. Reprocess overwrites deterministic provenance, just as it overwrites deterministic extraction flags.
 
 `db.listings` must preserve provenance when it derives a missing depth or area. Explicit LLM/admin overrides remain separate and may mark the overridden field as `admin_override`; no AI result is written to `ai_training_feedback`.
 

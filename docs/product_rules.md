@@ -34,6 +34,30 @@ Use this when a task touches user-facing deal quality, dedup/history, valuation,
 - When auditing lot-history regressions, verify both pair-level conflicts and group-level spread. A clean local audit should reach `pair_issue_counts={}` and `group_spread_flags=0`.
 - Data Quality duplicate review should show only ambiguous pairs. High-confidence Facebook pairs with matching ward, property type, area, and dimensions are auto-accepted by the pipeline and should not burden human review.
 
+## Extractor Measurement Rules
+
+- Normalize asking price, total area, frontage/depth, road width/type, and
+  residential area from one deterministic text pass. Final `tho_cu_m2` is
+  evaluated against the final canonical `area_m2`.
+- Explicit total area wins over rectangular multiplication. A labeled primary
+  dimension (`diện tích`, `DT`) may supply a missing area even when a later
+  `thực tế` dimension differs; unlabeled irregular sides do not manufacture an
+  area.
+- Geometry mismatch is severe only above 40% for regular lots and above 60%
+  for skewed, rear-widening, or multi-side lots.
+- Per-unit prices such as `5,87 triệu/m²`, loans, deposits, down-payments, and
+  discount amounts are not total asking prices. A vague lower bound such as
+  `>1 tỷ` must not overwrite a more precise structured source price.
+- `measurement_provenance` records `source_structured`, `declared_text`,
+  `source_text`, `derived_dimensions`, `derived_area_frontage`,
+  `derived_standard_lot`, `admin_override`, or `unknown` per measurement.
+- Persist `road_width_m` and its provenance during both insert and update.
+- Repeated title/description text and road labels such as `quốc lộ 13` must
+  not manufacture a multi-lot offer. Confirmed multi-lot posts stay intact and
+  fail closed; never synthesize child listings.
+- The read-only extraction audit reports strong text evidence even when stored
+  values are null, including frontage, depth, road width/type, and thổ cư.
+
 ## Extractor Ward Rules
 
 - `default_area` is city/profile context, not a ward fallback.

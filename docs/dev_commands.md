@@ -296,15 +296,26 @@ Targeted tests:
 Extraction-to-valuation integrity gate:
 
 ```powershell
+& $py -X utf8 -m py_compile cleansing\feature_extractor.py cleansing\extraction_integrity.py cleansing\normalizer.py db\listings.py db\schema.py services\extraction_audit.py
+& $py -X utf8 -m pytest tests\test_feature_extractor.py tests\test_extraction_integrity.py tests\test_extraction_audit.py tests\test_price_history.py tests\test_dedup.py tests\test_lot_history.py tests\test_signal_quality.py tests\test_reprocess_review_hidden.py -q
+# Bounded read-only diagnostic; useful for fast outlier review but not the final gate.
+& $py -X utf8 radar.py integrity-report --limit 200 --json
+# Full read-only gate. This normalizes every listing and can take several minutes.
 & $py -X utf8 radar.py integrity-report --json
 & $py -X utf8 radar.py reprocess --full
 & $py -X utf8 radar.py signal-read-model --refresh --compare --compare-listings --limit 200
 ```
 
-The first command is always read-only. The second and third commands mutate
-derived data and must be run only in the intended environment after the
-integrity report and tests pass. A failed valuation run must leave the prior
-main/shadow snapshots and outlier state intact.
+Both `integrity-report` commands are read-only. `reprocess --full` and the
+read-model refresh mutate derived data and must run only in the intended
+environment after the report and tests pass. A failed valuation run must leave
+the prior main/shadow snapshots and outlier state intact.
+
+Parser/schema releases require the full production sequence: deploy the exact
+`origin/main` SHA, run one controlled `reprocess --full`, require
+`invariant_violations_remaining=0`, refresh the read model, and require both
+signal/listing parity reports to have `difference_count=0` before smoke/cache
+verification. The bounded `--limit` report never replaces the full gate.
 
 ### Homepage signal read model
 

@@ -166,11 +166,18 @@ thành “2 ngày trước” không bị tính là repost. Không thao tác nà
 
 Normalizer đối soát measurement theo một policy dùng chung:
 
+- giá chào, diện tích tổng, kích thước, bề rộng đường và thổ cư được đọc từ
+  cùng một lượt text; `tho_cu_m2` chỉ được chốt sau khi có `area_m2` cuối;
 - diện tích tổng được công bố thắng `ngang × dài`;
 - lô thường chỉ là xung đột nặng khi sai số lớn hơn 40%; lô xéo/nở hậu/nhiều
   cạnh chỉ bị chặn khi sai số lớn hơn 60%;
-- chỉ suy diện tích thiếu từ đúng một cặp kích thước hợp lệ của lô thường;
+- chỉ suy diện tích thiếu từ cặp kích thước hợp lệ; nếu có nhiều kích thước,
+  cặp mang nhãn `diện tích`/`DT` có thể làm kích thước pháp lý chính, còn mô tả
+  cạnh rời rạc của lô xéo không tự sinh diện tích;
 - `price_per_m2` luôn được tính lại từ `price_ty × 1000 / area_m2`;
+- `listings.measurement_provenance` phân biệt số liệu có cấu trúc/text với
+  `derived_dimensions`, `derived_area_frontage` và `derived_standard_lot`;
+- `road_width_m` được persist cùng provenance, không chỉ tồn tại trong parser;
 - mâu thuẫn chưa giải quyết được lưu ở `listings.extraction_quality_flags`;
 - bài bán nhiều lô vẫn được giữ nguyên nhưng bị loại khỏi training và signal
   actionable, không tự tách thành các listing con.
