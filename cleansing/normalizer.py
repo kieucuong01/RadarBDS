@@ -724,13 +724,6 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         full_text   = title + ' ' + description
         road_text   = " ".join(filter(None, [description, road_text_extra]))
         tho_cu_info = extract_tho_cu(full_text, area_m2)
-        if integrity.tho_cu_m2 is not None:
-            tho_cu_info["tho_cu_m2"] = integrity.tho_cu_m2
-            tho_cu_info["tho_cu_ratio"] = (
-                min(integrity.tho_cu_m2 / area_m2, 1.0)
-                if area_m2 and area_m2 > 0
-                else None
-            )
         raw_label   = str(raw.get("property_type", ""))
         url_hint    = extract_url_hint(url)
         prop_type   = classify_property_type(

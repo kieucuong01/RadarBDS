@@ -791,6 +791,20 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
     if m and area and not _negated(m.start()):
         return _finish(area)
 
+    # Three-value broker shorthand: frontage x depth x residential area.
+    # The third value is residential area only when it is immediately
+    # followed by an explicit residential-land label.
+    three_value = re.search(
+        rf'(?<!\d)\d+(?:[,.]\d+)?\s*(?:m\s*)?[x×\*]\s*'
+        rf'\d+(?:[,.]\d+)?\s*(?:m\s*)?[x×\*]\s*'
+        rf'{num}\s*(?:m[²2]?|mv)?\s*{label}\b',
+        folded,
+    )
+    if three_value and not _negated(three_value.start()):
+        value = _value(three_value.group(1))
+        if value is not None and 5 <= value <= 10000:
+            return _finish(value)
+
     label_matches = []
     compact_value_re = rf'[x×\*]\s*\d+(?:[,.]\d+)?\s*(?:m\s*)?tc\s*[\s.:：,\-]*{num}(?!\d)(?![,.]\d)\s*{unit}?'
     for m in re.finditer(compact_value_re, folded):

@@ -299,6 +299,35 @@ def test_extract_area_and_dimensions_skip_truncated_dimension_prefix():
     assert dims["depth_m"] == 25.0
 
 
+def test_normalize_uses_final_area_for_full_tho_cu_after_road_width():
+    rec = normalize_record({
+        "source": "facebook",
+        "url": "https://facebook.test/full-tho-cu-road-width",
+        "title": "Đất 6x18 full thổ cư giá 1,5 tỷ",
+        "description": "Đường bê tông 6m, ô tô thông",
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 108
+    assert rec["tho_cu_m2"] == 108
+    assert rec["road_width_m"] == 6
+
+
+def test_normalize_three_value_shorthand_keeps_residential_area():
+    rec = normalize_record({
+        "source": "facebook",
+        "url": "https://facebook.test/three-value-tho-cu",
+        "title": "Đất Hiệp An 4,1 x 25 x 50m thổ cư giá 1tỷ490",
+        "description": "Phường Phú An mới, Hiệp An Bình Dương cũ",
+        "default_area": "Thủ Dầu Một",
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 102.5
+    assert rec["tho_cu_m2"] == 50
+    assert rec["ward"] == "Hiệp An"
+
+
 def test_extract_tho_cu():
     r = extract_tho_cu("300m² thổ cư", 500)
     assert r["tho_cu_m2"] == 300
