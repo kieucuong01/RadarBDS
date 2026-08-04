@@ -291,6 +291,16 @@ def _lazy_market_handler(function_name: str) -> ToolHandler:
     return handler
 
 
+def _lazy_knowledge_handler(function_name: str) -> ToolHandler:
+    def handler(*, args: BaseModel, context: ToolContext) -> EvidenceBundle:
+        from .tools import knowledge
+
+        function = getattr(knowledge, function_name)
+        return function(args=args, context=context)
+
+    return handler
+
+
 def _registration(
     name: str,
     description: str,
@@ -404,8 +414,18 @@ _DEFAULT_REGISTRATIONS = {
             InspectListingRisksArgs,
             _lazy_market_handler("inspect_listing_risks"),
         ),
-        _registration("lookup_official_land_price", "Look up one curated official land-price row.", OfficialLandPriceArgs),
-        _registration("search_official_documents", "Search curated official and Radar knowledge only.", SearchOfficialDocumentsArgs),
+        _registration(
+            "lookup_official_land_price",
+            "Look up bounded curated official land-price rows.",
+            OfficialLandPriceArgs,
+            _lazy_knowledge_handler("lookup_official_land_price"),
+        ),
+        _registration(
+            "search_official_documents",
+            "Search curated official, Radar-method, and editorial knowledge only.",
+            SearchOfficialDocumentsArgs,
+            _lazy_knowledge_handler("search_official_documents"),
+        ),
     )
 }
 

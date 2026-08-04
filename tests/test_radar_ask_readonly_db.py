@@ -341,41 +341,6 @@ def test_knowledge_phase_adds_only_curated_seventh_view(readonly_environment):
     password = token_urlsafe(32)
     with psycopg.connect(test_url) as admin_conn:
         with admin_conn.transaction(force_rollback=True):
-            admin_conn.execute(
-                """
-                CREATE TABLE public.knowledge_sources (
-                    id UUID PRIMARY KEY,
-                    slug TEXT NOT NULL,
-                    title TEXT NOT NULL,
-                    canonical_url TEXT NOT NULL,
-                    trust_class TEXT NOT NULL,
-                    jurisdiction TEXT NOT NULL
-                )
-                """
-            )
-            admin_conn.execute(
-                """
-                CREATE TABLE public.knowledge_documents (
-                    id UUID PRIMARY KEY,
-                    source_id UUID NOT NULL REFERENCES public.knowledge_sources(id),
-                    title TEXT NOT NULL,
-                    version TEXT NOT NULL,
-                    published_at DATE,
-                    effective_from DATE,
-                    effective_to DATE
-                )
-                """
-            )
-            admin_conn.execute(
-                """
-                CREATE TABLE public.knowledge_chunks (
-                    id UUID PRIMARY KEY,
-                    document_id UUID NOT NULL REFERENCES public.knowledge_documents(id),
-                    chunk_index INTEGER NOT NULL,
-                    chunk_text TEXT NOT NULL
-                )
-                """
-            )
             apply_configuration(
                 admin_conn,
                 password=password,
@@ -394,30 +359,6 @@ def test_foundation_reapply_revokes_knowledge_base_column_grants(readonly_enviro
     password = token_urlsafe(32)
     with psycopg.connect(test_url) as admin_conn:
         with admin_conn.transaction(force_rollback=True):
-            admin_conn.execute(
-                """
-                CREATE TABLE public.knowledge_sources (
-                    id UUID PRIMARY KEY, slug TEXT, title TEXT,
-                    canonical_url TEXT, trust_class TEXT, jurisdiction TEXT
-                )
-                """
-            )
-            admin_conn.execute(
-                """
-                CREATE TABLE public.knowledge_documents (
-                    id UUID PRIMARY KEY, source_id UUID, title TEXT, version TEXT,
-                    published_at DATE, effective_from DATE, effective_to DATE
-                )
-                """
-            )
-            admin_conn.execute(
-                """
-                CREATE TABLE public.knowledge_chunks (
-                    id UUID PRIMARY KEY, document_id UUID,
-                    chunk_index INTEGER, chunk_text TEXT
-                )
-                """
-            )
             apply_configuration(
                 admin_conn,
                 password=password,

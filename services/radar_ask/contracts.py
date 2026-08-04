@@ -76,6 +76,7 @@ class SourceKind(str, Enum):
     OFFICIAL_PRICE = "official_price"
     OFFICIAL_DOCUMENT = "official_document"
     RADAR_METHOD = "radar_method"
+    EDITORIAL = "editorial"
 
 
 class RetrievalQuality(str, Enum):

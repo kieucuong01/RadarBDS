@@ -18,6 +18,11 @@ from .contracts import (
 TIER_ORDER = {"free": 0, "vip": 1, "admin": 2}
 PHONE_PATTERN = re.compile(r"(?<!\d)(?:\+?84|0)(?:[\s.()-]*\d){8,10}(?!\d)")
 URL_PATTERN = re.compile(r"(?i)\b(?:https?://|www\.)[^\s\"'<>]+")
+SAFE_PROVIDER_SOURCE_REF_PATTERN = re.compile(
+    r"^knowledge:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-"
+    r"[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+    re.IGNORECASE,
+)
 PRIVATE_KEYS = frozenset(
     {
         "phone",
@@ -77,6 +82,8 @@ def _sanitize_value(value: Any) -> Any:
 
 
 def _provider_source_ref(source_ref: str) -> str:
+    if SAFE_PROVIDER_SOURCE_REF_PATTERN.fullmatch(source_ref.strip()):
+        return source_ref.strip().lower()
     parsed = urlparse(source_ref)
     if parsed.scheme or parsed.netloc or URL_PATTERN.search(source_ref):
         return "external-source:redacted"

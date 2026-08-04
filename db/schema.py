@@ -1416,6 +1416,104 @@ def _migrate_radar_ask_usage(conn: Any) -> None:
     )
 
 
+def _migrate_radar_ask_knowledge(conn: Any) -> None:
+    """Create the curated, owner-written knowledge corpus and FTS index."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS knowledge_sources (
+            id UUID PRIMARY KEY,
+            slug TEXT NOT NULL UNIQUE
+                CHECK (slug ~ '^[a-z0-9][a-z0-9-]{1,79}$'),
+            title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 300),
+            canonical_url TEXT NOT NULL,
+            trust_class TEXT NOT NULL
+                CHECK (trust_class IN ('official','radar_method','editorial')),
+            jurisdiction TEXT NOT NULL
+                CHECK (char_length(jurisdiction) BETWEEN 1 AND 160),
+            active BOOLEAN NOT NULL DEFAULT TRUE,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS knowledge_documents (
+            id UUID PRIMARY KEY,
+            source_id UUID NOT NULL
+                REFERENCES knowledge_sources(id) ON DELETE CASCADE,
+            title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 500),
+            version TEXT NOT NULL CHECK (char_length(version) BETWEEN 1 AND 120),
+            published_at DATE,
+            effective_from DATE,
+            effective_to DATE,
+            content_sha256 CHAR(64) NOT NULL
+                CHECK (content_sha256 ~ '^[0-9a-f]{64}$'),
+            document_text TEXT NOT NULL CHECK (char_length(document_text) > 0),
+            is_current BOOLEAN NOT NULL DEFAULT TRUE,
+            supersedes_document_id UUID
+                REFERENCES knowledge_documents(id) ON DELETE SET NULL,
+            imported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            CHECK (effective_to IS NULL OR effective_from IS NULL
+                   OR effective_to >= effective_from),
+            UNIQUE(source_id, content_sha256)
+        )
+        """
+    )
+    conn.execute("DROP INDEX IF EXISTS idx_knowledge_documents_current_version")
+    conn.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_knowledge_documents_source_version
+        ON knowledge_documents(source_id, version)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_knowledge_documents_effective
+        ON knowledge_documents(source_id, is_current, effective_from, effective_to)
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS knowledge_chunks (
+            id UUID PRIMARY KEY,
+            document_id UUID NOT NULL
+                REFERENCES knowledge_documents(id) ON DELETE CASCADE,
+            chunk_index INTEGER NOT NULL CHECK (chunk_index BETWEEN 0 AND 100000),
+            chunk_text TEXT NOT NULL CHECK (char_length(chunk_text) > 0),
+            normalized_text TEXT NOT NULL,
+            token_count INTEGER NOT NULL CHECK (token_count BETWEEN 1 AND 100000),
+            content_sha256 CHAR(64) NOT NULL
+                CHECK (content_sha256 ~ '^[0-9a-f]{64}$'),
+            search_vector TSVECTOR GENERATED ALWAYS AS (
+                to_tsvector('simple', COALESCE(chunk_text,''))
+            ) STORED,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE(document_id, chunk_index),
+            CHECK (char_length(normalized_text) > 0)
+        )
+        """
+    )
+    conn.execute(
+        """
+        ALTER TABLE knowledge_chunks
+        DROP CONSTRAINT IF EXISTS knowledge_chunks_document_id_content_sha256_key
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_search_vector
+        ON knowledge_chunks USING GIN (search_vector)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_document_order
+        ON knowledge_chunks(document_id, chunk_index)
+        """
+    )
+
+
 def _run_migrations(conn: Any) -> None:
     """Thêm cột mới vào bảng cũ nếu chưa có (idempotent)."""
     _migrate_listing_map_locations(conn)
@@ -1426,6 +1524,7 @@ def _run_migrations(conn: Any) -> None:
     _migrate_guland_publishers(conn)
     _migrate_public_read_model(conn)
     _migrate_radar_ask_usage(conn)
+    _migrate_radar_ask_knowledge(conn)
     conn.execute(
         """
         ALTER TABLE crawl_run_progress

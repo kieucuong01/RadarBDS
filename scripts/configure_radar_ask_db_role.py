@@ -181,6 +181,7 @@ KNOWLEDGE_COLUMN_GRANTS: dict[str, tuple[str, ...]] = {
         "canonical_url",
         "trust_class",
         "jurisdiction",
+        "active",
     ),
     "knowledge_documents": (
         "id",
@@ -190,8 +191,18 @@ KNOWLEDGE_COLUMN_GRANTS: dict[str, tuple[str, ...]] = {
         "published_at",
         "effective_from",
         "effective_to",
+        "imported_at",
     ),
-    "knowledge_chunks": ("id", "document_id", "chunk_index", "chunk_text"),
+    "knowledge_chunks": (
+        "id",
+        "document_id",
+        "chunk_index",
+        "chunk_text",
+        "normalized_text",
+        "token_count",
+        "content_sha256",
+        "search_vector",
+    ),
 }
 
 
@@ -380,11 +391,17 @@ SELECT
     c.document_id,
     c.chunk_index,
     c.chunk_text,
+    c.normalized_text,
+    c.token_count,
+    c.content_sha256 AS chunk_content_sha256,
+    c.search_vector,
     d.title AS document_title,
     d.version,
     d.published_at,
     d.effective_from,
     d.effective_to,
+    TRUE AS is_current,
+    d.imported_at,
     s.slug AS source_slug,
     s.title AS source_title,
     s.canonical_url AS source_url,
@@ -393,6 +410,31 @@ SELECT
 FROM public.knowledge_chunks c
 JOIN public.knowledge_documents d ON d.id=c.document_id
 JOIN public.knowledge_sources s ON s.id=d.source_id
+WHERE s.active
+  AND (d.effective_from IS NULL OR d.effective_from<=CURRENT_DATE)
+  AND (d.effective_to IS NULL OR d.effective_to>=CURRENT_DATE)
+  AND NOT EXISTS (
+      SELECT 1
+      FROM public.knowledge_documents newer
+      WHERE newer.source_id=d.source_id
+        AND (newer.effective_from IS NULL OR newer.effective_from<=CURRENT_DATE)
+        AND (newer.effective_to IS NULL OR newer.effective_to>=CURRENT_DATE)
+        AND (
+            COALESCE(newer.effective_from, DATE '-infinity')
+                > COALESCE(d.effective_from, DATE '-infinity')
+            OR (
+                COALESCE(newer.effective_from, DATE '-infinity')
+                    = COALESCE(d.effective_from, DATE '-infinity')
+                AND newer.imported_at>d.imported_at
+            )
+            OR (
+                COALESCE(newer.effective_from, DATE '-infinity')
+                    = COALESCE(d.effective_from, DATE '-infinity')
+                AND newer.imported_at=d.imported_at
+                AND newer.id::text>d.id::text
+            )
+        )
+  )
 """
 
 
