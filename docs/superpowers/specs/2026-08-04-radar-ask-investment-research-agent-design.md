@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-04
 
-**Status:** Approved in conversation; pending written-spec review
+**Status:** Approved
 
 **Scope:** Permanently replace the legacy Radar Assistant with an authenticated, source-grounded real-estate investment research assistant using DeepSeek, database routing, typed agentic RAG, adaptive-depth analysis, claim-level citations, durable quotas, and hard monthly cost controls.
 
