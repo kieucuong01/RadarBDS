@@ -338,6 +338,9 @@
         <a class="result-action-secondary" id="landPriceSourceCta" href="{{ land_price_source_url }}" target="_blank" rel="noopener noreferrer">Đối chiếu văn bản chính thức</a>
         <a class="result-action-primary" id="landPriceValuationCta" href="/dinh-gia-bds" hidden>Định giá lô đất khu vực Bình Dương</a>
       </div>
+      {% set lead_cta_context = "land_price_tool_lead" %}
+      {% set lead_note = "Quan tâm bảng giá đất và muốn Radar gợi ý thêm trang định giá phù hợp." %}
+      {% include "partials/seo_lead_capture.html" %}
     </section>
 
     <section class="land-price-shell explainer">

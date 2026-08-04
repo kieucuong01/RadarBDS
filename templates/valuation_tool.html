@@ -323,6 +323,10 @@
         <a href="/bao-cao">Xem báo cáo dữ liệu</a>
       </div>
     </section>
+
+    {% set lead_cta_context = "valuation_tool_lead" %}
+    {% set lead_note = "Muốn nhận 5 tin phù hợp nhất sau khi định giá lô đất Bình Dương." %}
+    {% include "partials/seo_lead_capture.html" %}
   </main>
 
   <div id="authModal" class="modal" onclick="if(event.target===this)RadarAuth.closeAuthModal()">
@@ -349,6 +353,7 @@
     </div>
   </div>
 
+  {% include "partials/seo_lead_capture_script.html" %}
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=valuation-tool-auth-20260722"></script>
   <script src="{{ url_for('static', filename='js/valuation_comparable_card.js') }}?v=valuation-comparable-cards-20260728"></script>
   <script src="{{ url_for('static', filename='js/valuation_tool.js') }}?v=valuation-comparable-cards-20260728"></script>
