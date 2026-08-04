@@ -53,6 +53,26 @@ class FakeSession:
         return result
 
 
+class AdvancingSession(FakeSession):
+    def __init__(self, clock, advances):
+        super().__init__()
+        self.clock = clock
+        self.advances = deque(advances)
+
+    def post(self, url, **kwargs):
+        result = super().post(url, **kwargs)
+        self.clock.value += self.advances.popleft()
+        return result
+
+
+class FakeMonotonic:
+    def __init__(self):
+        self.value = 0.0
+
+    def __call__(self):
+        return self.value
+
+
 @pytest.fixture
 def settings(monkeypatch):
     monkeypatch.setenv("DEEPSEEK_API_KEY", "unit-test-key")
@@ -253,6 +273,23 @@ def test_json_mode_rejects_two_invalid_responses(settings):
         )
 
     assert len(session.calls) == 2
+
+
+def test_deep_json_repair_shares_one_monotonic_deadline(settings):
+    clock = FakeMonotonic()
+    session = AdvancingSession(clock, advances=(45.0, 16.0))
+    session.queue(FakeResponse(completion_payload(content="not-json")))
+    session.queue(FakeResponse(completion_payload(content='{"answer":"late"}')))
+    provider = DeepSeekProvider(settings=settings, session=session, monotonic_fn=clock)
+
+    with pytest.raises(ProviderUnavailable, match="deadline"):
+        provider.complete_until(simple_request(json_mode=True), deadline=60.0)
+
+    assert len(session.calls) == 2
+    first_timeout = session.calls[0]["timeout"]
+    second_timeout = session.calls[1]["timeout"]
+    assert first_timeout.total == pytest.approx(60.0)
+    assert second_timeout.total == pytest.approx(15.0)
 
 
 @pytest.mark.parametrize(

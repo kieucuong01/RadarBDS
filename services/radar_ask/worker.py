@@ -15,6 +15,7 @@ from uuid import uuid4
 
 from .burst import get_burst_limiter
 from .config import RadarAskSettings
+from .contracts import ProviderUsage
 from .limits import RadarAskLimitService
 from .orchestrator import OrchestratorDependencies, execute_leased_run
 from .provider import DeepSeekProvider
@@ -69,6 +70,7 @@ class RadarAskWorker:
         lease_seconds: int = DEFAULT_LEASE_SECONDS,
         poll_seconds: float = DEFAULT_POLL_SECONDS,
         execute_fn: Callable[..., object] = execute_leased_run,
+        monotonic_fn: Callable[[], float] = monotonic,
     ):
         if not 1 <= int(lease_seconds) <= 300:
             raise ValueError("lease_seconds must be between 1 and 300")
@@ -79,6 +81,7 @@ class RadarAskWorker:
         self.lease_seconds = int(lease_seconds)
         self.poll_seconds = float(poll_seconds)
         self.execute_fn = execute_fn
+        self._monotonic = monotonic_fn
         self._stop = Event()
 
     def request_stop(self, *_args) -> None:
@@ -89,13 +92,22 @@ class RadarAskWorker:
         if not self.dependencies.settings.enabled:
             raise RadarAskWorkerDisabled("Radar Ask worker refuses while feature is disabled")
 
-    def _execute_owned(self, run) -> object | None:
+    def _execute_owned(
+        self,
+        run,
+        *,
+        deadline: float | None = None,
+        cancelled: Callable[[], bool] | None = None,
+    ) -> object | None:
         try:
             return self.execute_fn(
                 run,
                 worker_id=self.worker_id,
                 dependencies=self.dependencies,
                 lease_seconds=self.lease_seconds,
+                deadline=deadline,
+                cancelled=cancelled,
+                monotonic_fn=self._monotonic,
             )
         except InvalidRunTransition:
             LOGGER.warning("Radar Ask lease ownership changed for run %s", run.id)
@@ -109,6 +121,9 @@ class RadarAskWorker:
                     outcome="database_failure",
                     error_code="worker_execution_failed",
                     retryable=True,
+                    reservation_id=run.reservation_id,
+                    usage=ProviderUsage(),
+                    lease_seconds=self.lease_seconds,
                 )
             except InvalidRunTransition:
                 return None
@@ -116,7 +131,9 @@ class RadarAskWorker:
     def run_once(self) -> object | None:
         """Recover stale work, lease at most one run, and execute it synchronously."""
         self._require_enabled()
-        self.dependencies.repository.recover_expired_leases()
+        self.dependencies.repository.recover_expired_leases(
+            lease_seconds=self.lease_seconds
+        )
         if self._stop.is_set():
             return None
         run = self.dependencies.repository.lease_next_run(
@@ -125,27 +142,34 @@ class RadarAskWorker:
         )
         if run is None:
             return None
-        return self._execute_owned(run)
+        cancelled = Event()
+        deadline = self._monotonic() + float(self.dependencies.settings.deep_timeout_seconds)
+        return self._execute_owned(run, deadline=deadline, cancelled=cancelled.is_set)
 
     def run_forever(self) -> None:
         """Run until SIGTERM/request_stop, renewing active leases while they drain."""
         self._require_enabled()
-        self.dependencies.repository.recover_expired_leases()
+        self.dependencies.repository.recover_expired_leases(
+            lease_seconds=self.lease_seconds
+        )
         concurrency = max(1, min(int(self.dependencies.settings.worker_concurrency), 8))
         renew_interval = max(1.0, self.lease_seconds / 3)
-        next_renewal = monotonic() + renew_interval
+        next_renewal = self._monotonic() + renew_interval
         recovery_interval = max(5.0, min(30.0, self.poll_seconds * 10))
-        next_recovery = monotonic() + recovery_interval
-        active: dict[Future, object] = {}
+        next_recovery = self._monotonic() + recovery_interval
+        active: dict[Future, tuple[object, Event, float]] = {}
 
-        with ThreadPoolExecutor(
+        executor = ThreadPoolExecutor(
             max_workers=concurrency,
             thread_name_prefix="radar-ask-deep",
-        ) as executor:
+        )
+        try:
             while active or not self._stop.is_set():
-                if not self._stop.is_set() and monotonic() >= next_recovery:
-                    self.dependencies.repository.recover_expired_leases()
-                    next_recovery = monotonic() + recovery_interval
+                if not self._stop.is_set() and self._monotonic() >= next_recovery:
+                    self.dependencies.repository.recover_expired_leases(
+                        lease_seconds=self.lease_seconds
+                    )
+                    next_recovery = self._monotonic() + recovery_interval
                 done = {future for future in active if future.done()}
                 for future in done:
                     active.pop(future)
@@ -161,16 +185,26 @@ class RadarAskWorker:
                     )
                     if run is None:
                         break
-                    active[executor.submit(self._execute_owned, run)] = run
+                    cancelled = Event()
+                    deadline = self._monotonic() + float(
+                        self.dependencies.settings.deep_timeout_seconds
+                    )
+                    future = executor.submit(
+                        self._execute_owned,
+                        run,
+                        deadline=deadline,
+                        cancelled=cancelled.is_set,
+                    )
+                    active[future] = (run, cancelled, deadline)
 
                 if not active:
                     if self._stop.wait(self.poll_seconds):
                         break
                     continue
 
-                now = monotonic()
+                now = self._monotonic()
                 if now >= next_renewal:
-                    for run in list(active.values()):
+                    for run, cancelled, _deadline in list(active.values()):
                         try:
                             self.dependencies.repository.renew_lease(
                                 run.id,
@@ -179,10 +213,29 @@ class RadarAskWorker:
                             )
                         except InvalidRunTransition:
                             LOGGER.warning("Radar Ask lease renewal lost for run %s", run.id)
+                            cancelled.set()
                     next_renewal = now + renew_interval
 
-                timeout = min(self.poll_seconds, max(0.01, next_renewal - monotonic()))
+                for _run, cancelled, deadline in active.values():
+                    if now >= deadline:
+                        cancelled.set()
+
+                if self._stop.is_set() and active:
+                    final_deadline = max(deadline for _run, _cancelled, deadline in active.values())
+                    if now >= final_deadline:
+                        for _run, cancelled, _deadline in active.values():
+                            cancelled.set()
+                        break
+
+                timeout = min(
+                    self.poll_seconds,
+                    max(0.01, next_renewal - self._monotonic()),
+                )
                 wait(active, timeout=timeout, return_when=FIRST_COMPLETED)
+        finally:
+            for _run, cancelled, _deadline in active.values():
+                cancelled.set()
+            executor.shutdown(wait=False, cancel_futures=True)
 
 
 def cmd_radar_ask_worker(_args=None) -> None:

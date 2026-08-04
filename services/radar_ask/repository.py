@@ -1,8 +1,8 @@
 """Durable, owner-scoped persistence for Radar Ask.
 
-This module stores chat content and immutable audit records. Quota and budget
-reservation logic deliberately lives in a separate service so it can serialize
-accounting transactions without coupling them to conversation CRUD.
+This module stores chat content and immutable audit records. Normal reservation
+policy lives in the limit service; leased worker finalization is kept here so
+the run, assistant message, and exact usage reservation commit atomically.
 """
 from __future__ import annotations
 
@@ -15,6 +15,9 @@ from uuid import UUID, uuid4
 from psycopg.types.json import Jsonb
 
 from db.connection import PgConnection, PgRow, get_conn
+
+from .contracts import ProviderUsage, RunOutcome
+from .limits import CONSUMED_OUTCOMES, calculate_provider_cost
 
 
 TERMINAL_RUN_STATUSES = frozenset({"completed", "insufficient", "failed", "cancelled"})
@@ -686,6 +689,8 @@ class RadarAskRepository:
         target: str,
         outcome: str,
         answer: Mapping[str, Any],
+        reservation_id: UUID,
+        usage: ProviderUsage,
     ) -> RadarAskRunRecord:
         owner = _bounded_text(worker_id, field="worker_id", maximum=128)
         if target not in {"completed", "insufficient"}:
@@ -720,6 +725,13 @@ class RadarAskRepository:
                 "UPDATE radar_ask_sessions SET updated_at=NOW() WHERE id=?",
                 (row["session_id"],),
             )
+            self._settle_leased_usage(
+                conn,
+                run_id=run_id,
+                reservation_id=reservation_id,
+                usage=usage,
+                outcome=outcome,
+            )
         return _run_from_row(row)
 
     def fail_leased_run(
@@ -730,6 +742,9 @@ class RadarAskRepository:
         outcome: str,
         error_code: str,
         retryable: bool,
+        reservation_id: UUID,
+        usage: ProviderUsage,
+        lease_seconds: int = 90,
     ) -> RadarAskRunRecord:
         """Requeue a retryable first attempt or terminally fail the owned lease."""
         owner = _bounded_text(worker_id, field="worker_id", maximum=128)
@@ -738,6 +753,9 @@ class RadarAskRepository:
         normalized_error = _bounded_text(error_code, field="error_code", maximum=80)
         if not normalized_error.replace("_", "").isalnum() or normalized_error.lower() != normalized_error:
             raise ValueError("error_code must contain lowercase letters, digits, or underscores")
+        grace = int(lease_seconds)
+        if not 1 <= grace <= 300:
+            raise ValueError("lease_seconds must be between 1 and 300")
         with get_conn() as conn:
             current = conn.execute(
                 """
@@ -753,6 +771,21 @@ class RadarAskRepository:
             should_retry = bool(retryable) and int(current["attempt_count"]) < 2
             if should_retry:
                 delay = 10 if int(current["attempt_count"]) == 1 else 30
+                extended = conn.execute(
+                    """
+                    UPDATE radar_ask_usage
+                    SET reservation_expires_at=GREATEST(
+                            reservation_expires_at,
+                            NOW() + (? || ' seconds')::interval
+                        ),
+                        updated_at=NOW()
+                    WHERE id=? AND run_key=? AND settlement_status='reserved'
+                    RETURNING *
+                    """,
+                    (delay + grace, reservation_id, run_id),
+                ).fetchone()
+                if extended is None:
+                    raise InvalidRunTransition("run reservation is unavailable for retry")
                 row = conn.execute(
                     """
                     UPDATE radar_ask_runs
@@ -776,21 +809,88 @@ class RadarAskRepository:
                     """,
                     (outcome, normalized_error, run_id, owner),
                 ).fetchone()
-                conn.execute(
-                    """
-                    UPDATE radar_ask_usage
-                    SET settlement_status='released', question_status='released',
-                        outcome=COALESCE(outcome, ?), settled_at=COALESCE(settled_at, NOW()),
-                        updated_at=NOW()
-                    WHERE run_key=? AND settlement_status='reserved'
-                    """,
-                    (outcome, run_id),
+                self._settle_leased_usage(
+                    conn,
+                    run_id=run_id,
+                    reservation_id=reservation_id,
+                    usage=usage,
+                    outcome=outcome,
                 )
         assert row is not None
         return _run_from_row(row)
 
-    def recover_expired_leases(self) -> dict[str, int]:
+    @staticmethod
+    def _settle_leased_usage(
+        conn: PgConnection,
+        *,
+        run_id: UUID,
+        reservation_id: UUID,
+        usage: ProviderUsage,
+        outcome: str,
+    ) -> None:
+        normalized_outcome = RunOutcome(outcome)
+        period = conn.execute(
+            """
+            SELECT usage_month FROM radar_ask_usage
+            WHERE id=? AND run_key=?
+            """,
+            (reservation_id, run_id),
+        ).fetchone()
+        if period is None:
+            raise InvalidRunTransition("run reservation was not found")
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))",
+            (f"radar_ask_budget:{period['usage_month']:%Y-%m}",),
+        )
+        ledger = conn.execute(
+            "SELECT * FROM radar_ask_usage WHERE id=? AND run_key=? FOR UPDATE",
+            (reservation_id, run_id),
+        ).fetchone()
+        if ledger is None:
+            raise InvalidRunTransition("run reservation was not found")
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))",
+            (f"radar_ask_quota:{ledger['user_id']}:{ledger['usage_date'].isoformat()}",),
+        )
+        if ledger["settlement_status"] != "reserved":
+            if ledger["outcome"] == normalized_outcome.value:
+                return
+            raise InvalidRunTransition("run reservation was already settled differently")
+
+        actual_usd = calculate_provider_cost(ledger["model"] or "none", usage)
+        consumed = normalized_outcome in CONSUMED_OUTCOMES
+        settlement_status = "settled" if consumed else "released"
+        question_status = "answered" if consumed else "released"
+        updated = conn.execute(
+            """
+            UPDATE radar_ask_usage
+            SET settlement_status=?, question_status=?, actual_usd=?,
+                prompt_tokens=?, completion_tokens=?, cache_hit_tokens=?,
+                cache_miss_tokens=?, outcome=?, settled_at=NOW(), updated_at=NOW()
+            WHERE id=? AND run_key=? AND settlement_status='reserved'
+            RETURNING *
+            """,
+            (
+                settlement_status,
+                question_status,
+                actual_usd,
+                usage.input_tokens,
+                usage.output_tokens,
+                usage.cache_hit_input_tokens,
+                usage.cache_miss_input_tokens,
+                normalized_outcome.value,
+                reservation_id,
+                run_id,
+            ),
+        ).fetchone()
+        if updated is None:
+            raise InvalidRunTransition("run reservation settlement lost its lock")
+
+    def recover_expired_leases(self, *, lease_seconds: int = 90) -> dict[str, int]:
         """Recover crashed workers without allowing a third attempt or orphaned hold."""
+        grace = int(lease_seconds)
+        if not 1 <= grace <= 300:
+            raise ValueError("lease_seconds must be between 1 and 300")
         counts = {"requeued": 0, "failed": 0}
         with get_conn() as conn:
             unavailable = conn.execute(
@@ -821,6 +921,33 @@ class RadarAskRepository:
                 attempts = int(current["attempt_count"])
                 if attempts < 2:
                     delay = 10 if attempts == 1 else 30
+                    reservation = conn.execute(
+                        """
+                        UPDATE radar_ask_usage
+                        SET reservation_expires_at=GREATEST(
+                                reservation_expires_at,
+                                NOW() + (? || ' seconds')::interval
+                            ),
+                            updated_at=NOW()
+                        WHERE run_key=? AND settlement_status='reserved'
+                        RETURNING *
+                        """,
+                        (delay + grace, current["id"]),
+                    ).fetchone()
+                    if reservation is None:
+                        conn.execute(
+                            """
+                            UPDATE radar_ask_runs
+                            SET status='failed', outcome='cancelled',
+                                error_code='reservation_unavailable', retryable=FALSE,
+                                worker_id=NULL, lease_until=NULL,
+                                completed_at=COALESCE(completed_at, NOW()), updated_at=NOW()
+                            WHERE id=? AND status='running' AND lease_until <= NOW()
+                            """,
+                            (current["id"],),
+                        )
+                        counts["failed"] += 1
+                        continue
                     conn.execute(
                         """
                         UPDATE radar_ask_runs
@@ -845,16 +972,21 @@ class RadarAskRepository:
                     """,
                     (current["id"],),
                 )
-                conn.execute(
+                reservation = conn.execute(
                     """
-                    UPDATE radar_ask_usage
-                    SET settlement_status='released', question_status='released',
-                        outcome=COALESCE(outcome, 'database_failure'),
-                        settled_at=COALESCE(settled_at, NOW()), updated_at=NOW()
+                    SELECT id FROM radar_ask_usage
                     WHERE run_key=? AND settlement_status='reserved'
                     """,
                     (current["id"],),
-                )
+                ).fetchone()
+                if reservation is not None:
+                    self._settle_leased_usage(
+                        conn,
+                        run_id=current["id"],
+                        reservation_id=reservation["id"],
+                        usage=ProviderUsage(),
+                        outcome="database_failure",
+                    )
                 counts["failed"] += 1
         return counts
 

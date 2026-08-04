@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
+from psycopg.errors import NumericValueOutOfRange
 
 from db import connection
 from db.connection import get_conn
@@ -179,10 +180,18 @@ def provider_answer() -> dict[str, object]:
 
 
 class ProviderSpy:
-    def __init__(self, *, error: Exception | None = None, block: Event | None = None):
+    def __init__(
+        self,
+        *,
+        error: Exception | None = None,
+        block: Event | None = None,
+        cancel_on_complete: Event | None = None,
+    ):
         self.error = error
         self.block = block
+        self.cancel_on_complete = cancel_on_complete
         self.requests = []
+        self.deadlines = []
 
     def complete(self, request):
         self.requests.append(request)
@@ -190,11 +199,17 @@ class ProviderSpy:
             self.block.wait(timeout=2)
         if self.error is not None:
             raise self.error
+        if self.cancel_on_complete is not None:
+            self.cancel_on_complete.set()
         return ProviderResponse(
             content="{}",
             json_value=provider_answer(),
             usage=ProviderUsage(input_tokens=100, output_tokens=50),
         )
+
+    def complete_until(self, request, *, deadline):
+        self.deadlines.append(deadline)
+        return self.complete(request)
 
 
 class FakeLimits:
@@ -349,6 +364,8 @@ def test_worker_token_owns_renew_complete_and_fail(worker_repo):
             target="completed",
             outcome="answered",
             answer=provider_answer(),
+            reservation_id=leased.reservation_id,
+            usage=ProviderUsage(),
         )
     completed = repository.complete_leased_run(
         queued.id,
@@ -356,6 +373,8 @@ def test_worker_token_owns_renew_complete_and_fail(worker_repo):
         target="completed",
         outcome="answered",
         answer=provider_answer(),
+        reservation_id=leased.reservation_id,
+        usage=ProviderUsage(),
     )
     assert completed.status == "completed"
     assert completed.worker_id is None and completed.lease_until is None
@@ -373,9 +392,18 @@ def test_retry_backoff_then_maximum_two_attempts_releases_reservation(worker_rep
         outcome="provider_failure",
         error_code="provider_unavailable",
         retryable=True,
+        reservation_id=reservation_id,
+        usage=ProviderUsage(),
+        lease_seconds=90,
     )
     assert requeued.status == "queued"
     assert timedelta(seconds=9) <= requeued.available_at - datetime.now(timezone.utc) <= timedelta(seconds=11)
+    with get_conn() as conn:
+        first_usage = conn.execute(
+            "SELECT reservation_expires_at FROM radar_ask_usage WHERE id=?",
+            (reservation_id,),
+        ).fetchone()
+    assert first_usage["reservation_expires_at"] >= requeued.available_at + timedelta(seconds=89)
 
     with get_conn() as conn:
         conn.execute("UPDATE radar_ask_runs SET available_at=NOW() WHERE id=?", (queued.id,))
@@ -387,6 +415,9 @@ def test_retry_backoff_then_maximum_two_attempts_releases_reservation(worker_rep
         outcome="provider_failure",
         error_code="provider_unavailable",
         retryable=True,
+        reservation_id=reservation_id,
+        usage=ProviderUsage(),
+        lease_seconds=90,
     )
     assert terminal.status == "failed"
     assert terminal.attempt_count == 2
@@ -400,7 +431,7 @@ def test_retry_backoff_then_maximum_two_attempts_releases_reservation(worker_rep
 
 def test_expired_lease_recovery_requeues_then_terminally_fails(worker_repo):
     repository, user = worker_repo
-    first_run, _ = queue_run(repository, user, key="recover-one")
+    first_run, first_reservation = queue_run(repository, user, key="recover-one")
     second_run, second_reservation = queue_run(repository, user, key="recover-two")
     first = repository.lease_next_run(worker_id="dead-1", lease_seconds=90)
     second = repository.lease_next_run(worker_id="dead-2", lease_seconds=90)
@@ -434,9 +465,18 @@ def test_expired_lease_recovery_requeues_then_terminally_fails(worker_repo):
             "SELECT settlement_status FROM radar_ask_usage WHERE id=?",
             (second_reservation,),
         ).fetchone()
+        first_usage = conn.execute(
+            """
+            SELECT u.reservation_expires_at, r.available_at
+            FROM radar_ask_usage u JOIN radar_ask_runs r ON r.id=u.run_key
+            WHERE u.id=?
+            """,
+            (first_reservation,),
+        ).fetchone()
     assert states[first_run.id] == "queued"
     assert states[second_run.id] == "failed"
     assert usage["settlement_status"] == "released"
+    assert first_usage["reservation_expires_at"] >= first_usage["available_at"] + timedelta(seconds=89)
 
 
 def test_recovery_terminally_fails_queued_run_with_released_reservation(worker_repo):
@@ -512,7 +552,6 @@ def test_successful_deep_execution_completes_owned_run_and_settles(worker_repo):
     assert result.status is RunStatus.COMPLETED
     assert result.answer is not None
     assert len(provider.requests) == 1
-    assert deps.limits.settlements[0]["outcome"] is RunOutcome.ANSWERED
     with get_conn() as conn:
         assistant = conn.execute(
             """
@@ -521,7 +560,116 @@ def test_successful_deep_execution_completes_owned_run_and_settles(worker_repo):
             """,
             (queued.session_id,),
         ).fetchone()
+        usage = conn.execute(
+            """
+            SELECT settlement_status, question_status, outcome,
+                   prompt_tokens, completion_tokens, actual_usd
+            FROM radar_ask_usage WHERE run_key=?
+            """,
+            (queued.id,),
+        ).fetchone()
     assert assistant["total"] == 1
+    assert tuple(usage)[:5] == ("settled", "answered", "answered", 100, 50)
+    assert usage["actual_usd"] > 0
+
+
+def test_lease_loss_after_provider_response_records_usage_before_terminal_failure(worker_repo):
+    repository, user = worker_repo
+    queued, reservation_id = queue_run(repository, user, key="lease-loss-usage")
+    leased = repository.lease_next_run(worker_id="lease-loss-worker", lease_seconds=90)
+    cancellation = Event()
+    provider = ProviderSpy(cancel_on_complete=cancellation)
+    deps = worker_dependencies(repository, provider)
+
+    result = execute_leased_run(
+        leased,
+        worker_id="lease-loss-worker",
+        dependencies=deps,
+        cancelled=cancellation.is_set,
+    )
+
+    assert result.status is RunStatus.FAILED
+    assert result.error_code == "worker_lease_lost"
+    assert len(provider.deadlines) == 1
+    with get_conn() as conn:
+        usage = conn.execute(
+            """
+            SELECT settlement_status, outcome, prompt_tokens, completion_tokens, actual_usd
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation_id,),
+        ).fetchone()
+    assert tuple(usage)[:4] == ("released", "provider_failure", 100, 50)
+    assert usage["actual_usd"] > 0
+
+
+def test_success_finalization_rolls_back_run_message_and_usage_together(worker_repo):
+    repository, user = worker_repo
+    queued, reservation_id = queue_run(repository, user, key="atomic-success")
+    leased = repository.lease_next_run(worker_id="atomic-success-worker", lease_seconds=90)
+    assert leased is not None
+    overflowing_usage = ProviderUsage(input_tokens=10**15, output_tokens=10**15)
+
+    with pytest.raises(NumericValueOutOfRange):
+        repository.complete_leased_run(
+            queued.id,
+            worker_id="atomic-success-worker",
+            target="completed",
+            outcome="answered",
+            answer=provider_answer(),
+            reservation_id=reservation_id,
+            usage=overflowing_usage,
+        )
+
+    with get_conn() as conn:
+        run = conn.execute(
+            "SELECT status, worker_id FROM radar_ask_runs WHERE id=?",
+            (queued.id,),
+        ).fetchone()
+        messages = conn.execute(
+            "SELECT COUNT(*) AS total FROM radar_ask_messages WHERE session_id=? AND role='assistant'",
+            (queued.session_id,),
+        ).fetchone()
+        usage = conn.execute(
+            "SELECT settlement_status, question_status FROM radar_ask_usage WHERE id=?",
+            (reservation_id,),
+        ).fetchone()
+    assert tuple(run) == ("running", "atomic-success-worker")
+    assert messages["total"] == 0
+    assert tuple(usage) == ("reserved", "reserved")
+
+
+def test_failure_finalization_rolls_back_ledger_and_run_together(worker_repo):
+    repository, user = worker_repo
+    queued, reservation_id = queue_run(repository, user, key="atomic-failure")
+    leased = repository.lease_next_run(worker_id="atomic-failure-worker", lease_seconds=90)
+    assert leased is not None
+    with get_conn() as conn:
+        conn.execute("UPDATE radar_ask_runs SET attempt_count=2 WHERE id=?", (queued.id,))
+
+    with pytest.raises(NumericValueOutOfRange):
+        repository.fail_leased_run(
+            queued.id,
+            worker_id="atomic-failure-worker",
+            outcome="provider_failure",
+            error_code="provider_unavailable",
+            retryable=True,
+            reservation_id=reservation_id,
+            usage=ProviderUsage(input_tokens=10**15, output_tokens=10**15),
+            lease_seconds=90,
+        )
+
+    with get_conn() as conn:
+        run = conn.execute(
+            "SELECT status, worker_id FROM radar_ask_runs WHERE id=?",
+            (queued.id,),
+        ).fetchone()
+        usage = conn.execute(
+            "SELECT settlement_status, question_status FROM radar_ask_usage WHERE id=?",
+            (reservation_id,),
+        ).fetchone()
+    assert tuple(run) == ("running", "atomic-failure-worker")
+    assert tuple(usage) == ("reserved", "reserved")
 
 
 def test_deep_request_only_enqueues_without_provider_call(monkeypatch):
@@ -605,7 +753,7 @@ def test_graceful_stop_finishes_active_run_and_does_not_lease_again():
         def __init__(self):
             self.lease_calls = 0
 
-        def recover_expired_leases(self):
+        def recover_expired_leases(self, **_kwargs):
             return {"requeued": 0, "failed": 0}
 
         def lease_next_run(self, **_kwargs):
@@ -640,3 +788,88 @@ def test_graceful_stop_finishes_active_run_and_does_not_lease_again():
     assert not thread.is_alive()
     assert completed.is_set()
     assert repository.lease_calls == 1
+
+
+def test_lost_renewal_signals_active_execution_to_cancel():
+    leased = SimpleNamespace(id=uuid4(), reservation_id=uuid4())
+    cancelled_seen = Event()
+
+    class LostLeaseRepository:
+        def __init__(self):
+            self.lease_calls = 0
+
+        def recover_expired_leases(self, **_kwargs):
+            return {"requeued": 0, "failed": 0}
+
+        def lease_next_run(self, **_kwargs):
+            self.lease_calls += 1
+            return leased if self.lease_calls == 1 else None
+
+        def renew_lease(self, *_args, **_kwargs):
+            raise InvalidRunTransition("lost")
+
+    repository = LostLeaseRepository()
+    deps = worker_dependencies(repository, ProviderSpy())
+
+    def execute(_run, *, cancelled, **_kwargs):
+        while not cancelled():
+            Event().wait(0.01)
+        cancelled_seen.set()
+
+    worker = RadarAskWorker(
+        dependencies=deps,
+        worker_id="lost-renewal-worker",
+        lease_seconds=1,
+        poll_seconds=0.01,
+        execute_fn=execute,
+    )
+    thread = Thread(target=worker.run_forever)
+    thread.start()
+    assert cancelled_seen.wait(timeout=2)
+    worker.request_stop()
+    thread.join(timeout=2)
+
+    assert not thread.is_alive()
+
+
+def test_shutdown_drain_returns_at_active_deadline():
+    leased = SimpleNamespace(id=uuid4(), reservation_id=uuid4())
+    started = Event()
+    release = Event()
+
+    class FakeRepository:
+        def __init__(self):
+            self.lease_calls = 0
+
+        def recover_expired_leases(self, **_kwargs):
+            return {"requeued": 0, "failed": 0}
+
+        def lease_next_run(self, **_kwargs):
+            self.lease_calls += 1
+            return leased if self.lease_calls == 1 else None
+
+        def renew_lease(self, *_args, **_kwargs):
+            return leased
+
+    repository = FakeRepository()
+    deps = worker_dependencies(repository, ProviderSpy())
+    deps.settings.deep_timeout_seconds = 0.05
+
+    def execute(_run, **_kwargs):
+        started.set()
+        release.wait(timeout=2)
+
+    worker = RadarAskWorker(
+        dependencies=deps,
+        worker_id="bounded-stop-worker",
+        poll_seconds=0.01,
+        execute_fn=execute,
+    )
+    thread = Thread(target=worker.run_forever)
+    thread.start()
+    assert started.wait(timeout=1)
+    worker.request_stop()
+    thread.join(timeout=1)
+    release.set()
+
+    assert not thread.is_alive()

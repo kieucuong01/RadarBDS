@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Mapping, Sequence
+from time import monotonic
 from typing import Protocol
 
 import requests
 from pydantic import ValidationError
+from urllib3.util import Timeout
 
 from .config import RadarAskSettings
 from .contracts import (
@@ -41,6 +44,14 @@ class ProviderInvalidResponse(ProviderError):
 
 class RadarAskProvider(Protocol):
     def complete(self, request: ProviderRequest) -> ProviderResponse:
+        raise NotImplementedError
+
+    def complete_until(
+        self,
+        request: ProviderRequest,
+        *,
+        deadline: float,
+    ) -> ProviderResponse:
         raise NotImplementedError
 
 
@@ -174,11 +185,37 @@ def _parse_response(payload: object) -> ProviderResponse:
 
 
 class DeepSeekProvider:
-    def __init__(self, *, settings: RadarAskSettings, session: requests.Session | None = None):
+    def __init__(
+        self,
+        *,
+        settings: RadarAskSettings,
+        session: requests.Session | None = None,
+        monotonic_fn=monotonic,
+    ):
         self._settings = settings
         self._session = session or requests.Session()
+        self._monotonic = monotonic_fn
 
     def complete(self, request: ProviderRequest) -> ProviderResponse:
+        return self._complete(request, deadline=None)
+
+    def complete_until(
+        self,
+        request: ProviderRequest,
+        *,
+        deadline: float,
+    ) -> ProviderResponse:
+        """Complete within one absolute deadline, including JSON repair attempts."""
+        if not math.isfinite(deadline):
+            raise ValueError("deadline must be finite")
+        return self._complete(request, deadline=float(deadline))
+
+    def _complete(
+        self,
+        request: ProviderRequest,
+        *,
+        deadline: float | None,
+    ) -> ProviderResponse:
         allowed_models = {
             self._settings.router_model,
             self._settings.free_model,
@@ -189,7 +226,12 @@ class DeepSeekProvider:
 
         attempts = 2 if request.json_mode else 1
         for _attempt in range(attempts):
-            response = self._post_once(request)
+            remaining = None if deadline is None else deadline - self._monotonic()
+            if remaining is not None and remaining <= 0:
+                raise ProviderUnavailable("DeepSeek deadline exceeded")
+            response = self._post_once(request, timeout_seconds=remaining)
+            if deadline is not None and self._monotonic() >= deadline:
+                raise ProviderUnavailable("DeepSeek deadline exceeded")
             if not request.json_mode:
                 return response
             raw_content = (response.content or "").strip()
@@ -226,7 +268,12 @@ class DeepSeekProvider:
         )
         return self.complete(request)
 
-    def _post_once(self, request: ProviderRequest) -> ProviderResponse:
+    def _post_once(
+        self,
+        request: ProviderRequest,
+        *,
+        timeout_seconds: float | None = None,
+    ) -> ProviderResponse:
         if not self._settings.deepseek_api_key:
             raise ProviderUnavailable("DeepSeek API key is not configured")
         url = f"{self._settings.deepseek_base_url}/chat/completions"
@@ -235,10 +282,18 @@ class DeepSeekProvider:
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
-        timeout = (
-            min(CONNECT_TIMEOUT_SECONDS, self._settings.provider_timeout_seconds),
-            self._settings.provider_timeout_seconds,
-        )
+        if timeout_seconds is None:
+            timeout = (
+                min(CONNECT_TIMEOUT_SECONDS, self._settings.provider_timeout_seconds),
+                self._settings.provider_timeout_seconds,
+            )
+        else:
+            bounded = max(float(timeout_seconds), 0.001)
+            timeout = Timeout(
+                total=bounded,
+                connect=min(CONNECT_TIMEOUT_SECONDS, bounded),
+                read=bounded,
+            )
         try:
             response = self._session.post(
                 url,

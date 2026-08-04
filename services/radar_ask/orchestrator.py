@@ -6,6 +6,7 @@ import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from time import monotonic
 from typing import Any, Protocol
 from uuid import UUID, uuid4
 
@@ -65,6 +66,10 @@ class RadarAskFeatureDisabled(RadarAskOrchestrationError):
 
 class RadarAskTierDenied(RadarAskOrchestrationError):
     """The authenticated tier is not enabled for Radar Ask."""
+
+
+class _WorkerLeaseLost(RadarAskOrchestrationError):
+    """The Deep worker must stop before issuing more provider work."""
 
 
 class RepositoryProtocol(Protocol):
@@ -514,6 +519,9 @@ def _execute_running_run(
     dependencies: OrchestratorDependencies,
     run_id: UUID,
     before_provider: Callable[[], None] | None = None,
+    provider_deadline: float | None = None,
+    cancelled: Callable[[], bool] | None = None,
+    monotonic_fn: Callable[[], float] = monotonic,
 ) -> _ExecutionResult:
     """Execute the one typed retrieval/provider/validation path for any run owner."""
     usage = EMPTY_USAGE
@@ -548,12 +556,23 @@ def _execute_running_run(
                 now=_utc_now(dependencies.clock),
             )
         elif decision.generated:
+            if cancelled is not None and cancelled():
+                raise _WorkerLeaseLost("Deep worker lease was lost")
+            if provider_deadline is not None and monotonic_fn() >= provider_deadline:
+                raise _WorkerLeaseLost("Deep worker deadline expired")
             if before_provider is not None:
                 before_provider()
-            response = dependencies.provider.complete(
-                _provider_request(request, context, decision, policy, bundles)
-            )
+            provider_request = _provider_request(request, context, decision, policy, bundles)
+            complete_until = getattr(dependencies.provider, "complete_until", None)
+            if provider_deadline is not None and callable(complete_until):
+                response = complete_until(provider_request, deadline=provider_deadline)
+            else:
+                response = dependencies.provider.complete(provider_request)
             usage = response.usage
+            if cancelled is not None and cancelled():
+                raise _WorkerLeaseLost("Deep worker lease was lost")
+            if provider_deadline is not None and monotonic_fn() >= provider_deadline:
+                raise _WorkerLeaseLost("Deep worker deadline expired")
             candidate = _provider_answer(response)
         else:
             candidate = _deterministic_answer(
@@ -584,6 +603,14 @@ def _execute_running_run(
             outcome=RunOutcome.PROVIDER_FAILURE,
             error_code="provider_unavailable",
             retryable=True,
+        )
+    except _WorkerLeaseLost:
+        return _ExecutionResult(
+            answer=None,
+            usage=usage,
+            outcome=RunOutcome.PROVIDER_FAILURE,
+            error_code="worker_lease_lost",
+            retryable=False,
         )
     except AnswerValidationError:
         return _ExecutionResult(
@@ -628,6 +655,9 @@ def execute_leased_run(
     worker_id: str,
     dependencies: OrchestratorDependencies,
     lease_seconds: int = 90,
+    deadline: float | None = None,
+    cancelled: Callable[[], bool] | None = None,
+    monotonic_fn: Callable[[], float] = monotonic,
 ) -> AskRunResult:
     """Resume one already-reserved, PostgreSQL-leased Deep run."""
     if not dependencies.settings.enabled:
@@ -663,6 +693,11 @@ def execute_leased_run(
         tier=run.tier,
         reserved_usd=run.reserved_usd,
     )
+    provider_deadline = (
+        float(deadline)
+        if deadline is not None
+        else monotonic_fn() + float(dependencies.settings.deep_timeout_seconds)
+    )
 
     def before_provider() -> None:
         dependencies.repository.renew_lease(
@@ -680,18 +715,21 @@ def execute_leased_run(
         dependencies=dependencies,
         run_id=run.id,
         before_provider=before_provider,
+        provider_deadline=provider_deadline,
+        cancelled=cancelled,
+        monotonic_fn=monotonic_fn,
     )
     if execution.answer is None:
         assert execution.error_code is not None
-        terminal = not execution.retryable or int(run.attempt_count) >= 2
-        if terminal:
-            _settle(dependencies.limits, reservation, execution.usage, execution.outcome)
         failed = dependencies.repository.fail_leased_run(
             run.id,
             worker_id=worker_id,
             outcome=execution.outcome.value,
             error_code=execution.error_code,
             retryable=execution.retryable,
+            reservation_id=reservation.reservation_id,
+            usage=execution.usage,
+            lease_seconds=lease_seconds,
         )
         return _run_result(failed)
 
@@ -702,8 +740,9 @@ def execute_leased_run(
         target=target.value,
         outcome=execution.outcome.value,
         answer=execution.answer.model_dump(mode="json"),
+        reservation_id=reservation.reservation_id,
+        usage=execution.usage,
     )
-    _settle(dependencies.limits, reservation, execution.usage, execution.outcome)
     return _run_result(terminal, answer=execution.answer)
 
 
