@@ -1,7 +1,7 @@
 {
   "schema": "radar_broker_discovery_targets.v1",
-  "campaign_name": "current_priority",
-  "notes": "Current areas are campaign config, not hardcoded logic. Night broker discovery prioritizes Tân Uyên old/pre-merger area names (3/4 slots) plus Thủ Dầu Một thin wards (1/4 slot); Bến Cát is paused because coverage is already OK; Dĩ An/Thuận An are temporarily ok.",
+  "campaign_name": "daily_four_area_thin_ward_priority",
+  "notes": "Daily night broker discovery covers Dĩ An, Thuận An, Tân Uyên old/pre-merger areas and Thủ Dầu Một thin wards. Schedule: 23:00 Dĩ An, 01:00 Thuận An, 03:00 Tân Uyên, 05:00 + 07:00 TDM thin wards; report 09:00. Bến Cát remains paused because coverage is OK.",
   "target_areas": [
     {
       "city": "Thủ Dầu Một",
@@ -55,71 +55,168 @@
       ]
     },
     {
-      "city": "Bến Cát",
+      "city": "Dĩ An",
       "aliases": [
-        "Ben Cat",
-        "Bến Cát"
+        "Di An",
+        "Dĩ An"
       ],
       "priority_wards": [
         {
-          "name": "Mỹ Phước",
+          "name": "Dĩ An",
           "aliases": [
-            "My Phuoc",
-            "Mỹ Phước",
-            "MP1",
-            "MP2",
-            "MP3",
-            "MP4"
+            "phường Dĩ An",
+            "p. Dĩ An",
+            "trung tâm Dĩ An",
+            "Vincom Dĩ An"
           ]
         },
         {
-          "name": "Tân Định",
+          "name": "An Bình",
           "aliases": [
-            "Tan Dinh",
-            "Tân Định"
+            "An Binh",
+            "An Bình",
+            "Sóng Thần",
+            "KCN Sóng Thần"
           ]
         },
         {
-          "name": "An Điền",
+          "name": "Bình An",
           "aliases": [
-            "An Dien",
-            "An Điền"
+            "Binh An",
+            "Bình An",
+            "QL1K",
+            "Quốc lộ 1K"
           ]
         },
         {
-          "name": "An Tây",
+          "name": "Bình Thắng",
           "aliases": [
-            "An Tay",
-            "An Tây"
+            "Binh Thang",
+            "Bình Thắng",
+            "Suối Tiên",
+            "Bến xe Miền Đông mới"
           ]
         },
         {
-          "name": "Thới Hòa",
+          "name": "Đông Hòa",
           "aliases": [
-            "Thoi Hoa",
-            "Thới Hòa"
+            "Dong Hoa",
+            "Đông Hòa",
+            "Làng Đại học",
+            "Đại học Quốc gia"
           ]
         },
         {
-          "name": "Hòa Lợi",
+          "name": "Tân Bình",
           "aliases": [
-            "Hoa Loi",
-            "Hoà Lợi",
-            "Hòa Lợi"
+            "Tan Binh",
+            "Tân Bình",
+            "Ngã tư 550",
+            "ĐT743"
           ]
         },
         {
-          "name": "Phú An",
+          "name": "Tân Đông Hiệp",
           "aliases": [
-            "Phu An",
-            "Phú An"
+            "Tan Dong Hiep",
+            "Tân Đông Hiệp",
+            "Đông Tân",
+            "Ngã tư 550"
+          ]
+        }
+      ]
+    },
+    {
+      "city": "Thuận An",
+      "aliases": [
+        "Thuan An",
+        "Thuận An"
+      ],
+      "priority_wards": [
+        {
+          "name": "An Phú",
+          "aliases": [
+            "An Phu",
+            "An Phú",
+            "Việt Sing",
+            "Miếu Ông Cù"
           ]
         },
         {
-          "name": "Chánh Phú Hòa",
+          "name": "An Thạnh",
           "aliases": [
-            "Chanh Phu Hoa",
-            "Chánh Phú Hòa"
+            "An Thanh",
+            "An Thạnh",
+            "Chợ Búng",
+            "Cầu Ông Bố"
+          ]
+        },
+        {
+          "name": "Bình Chuẩn",
+          "aliases": [
+            "Binh Chuan",
+            "Bình Chuẩn",
+            "Chợ Bình Chuẩn"
+          ]
+        },
+        {
+          "name": "Bình Hòa",
+          "aliases": [
+            "Binh Hoa",
+            "Bình Hòa",
+            "AEON Bình Dương",
+            "VSIP 1"
+          ]
+        },
+        {
+          "name": "Bình Nhâm",
+          "aliases": [
+            "Binh Nham",
+            "Bình Nhâm",
+            "Vườn trái cây Bình Nhâm"
+          ]
+        },
+        {
+          "name": "Hưng Định",
+          "aliases": [
+            "Hung Dinh",
+            "Hưng Định",
+            "Cầu Ngang"
+          ]
+        },
+        {
+          "name": "Lái Thiêu",
+          "aliases": [
+            "Lai Thieu",
+            "Lái Thiêu",
+            "Chợ Lái Thiêu",
+            "Cầu Phú Long"
+          ]
+        },
+        {
+          "name": "Thuận Giao",
+          "aliases": [
+            "Thuan Giao",
+            "Thuận Giao",
+            "KCN Đồng An",
+            "22 tháng 12"
+          ]
+        },
+        {
+          "name": "Vĩnh Phú",
+          "aliases": [
+            "Vinh Phu",
+            "Vĩnh Phú",
+            "Cầu Vĩnh Phú",
+            "QL13"
+          ]
+        },
+        {
+          "name": "An Sơn",
+          "aliases": [
+            "An Son",
+            "An Sơn",
+            "Sông Sài Gòn"
           ]
         }
       ]
@@ -216,6 +313,76 @@
           "aliases": [
             "Thanh Hoi",
             "Thạnh Hội"
+          ]
+        }
+      ]
+    },
+    {
+      "city": "Bến Cát",
+      "aliases": [
+        "Ben Cat",
+        "Bến Cát"
+      ],
+      "priority_wards": [
+        {
+          "name": "Mỹ Phước",
+          "aliases": [
+            "My Phuoc",
+            "Mỹ Phước",
+            "MP1",
+            "MP2",
+            "MP3",
+            "MP4"
+          ]
+        },
+        {
+          "name": "Tân Định",
+          "aliases": [
+            "Tan Dinh",
+            "Tân Định"
+          ]
+        },
+        {
+          "name": "An Điền",
+          "aliases": [
+            "An Dien",
+            "An Điền"
+          ]
+        },
+        {
+          "name": "An Tây",
+          "aliases": [
+            "An Tay",
+            "An Tây"
+          ]
+        },
+        {
+          "name": "Thới Hòa",
+          "aliases": [
+            "Thoi Hoa",
+            "Thới Hòa"
+          ]
+        },
+        {
+          "name": "Hòa Lợi",
+          "aliases": [
+            "Hoa Loi",
+            "Hoà Lợi",
+            "Hòa Lợi"
+          ]
+        },
+        {
+          "name": "Phú An",
+          "aliases": [
+            "Phu An",
+            "Phú An"
+          ]
+        },
+        {
+          "name": "Chánh Phú Hòa",
+          "aliases": [
+            "Chanh Phu Hoa",
+            "Chánh Phú Hòa"
           ]
         }
       ]
