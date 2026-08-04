@@ -20,6 +20,16 @@ TERMINAL_RUN_STATUSES = frozenset({"completed", "insufficient", "failed", "cance
 RUN_STATUSES = frozenset(
     {"created", "clarifying", "queued", "running", *TERMINAL_RUN_STATUSES}
 )
+ALLOWED_RUN_TRANSITIONS = {
+    "created": frozenset({"clarifying", "queued", "running", "cancelled"}),
+    "queued": frozenset({"running", "cancelled"}),
+    "running": frozenset({"completed", "insufficient", "failed", "cancelled"}),
+    "clarifying": frozenset(),
+    "completed": frozenset(),
+    "insufficient": frozenset(),
+    "failed": frozenset(),
+    "cancelled": frozenset(),
+}
 RUN_OUTCOMES = frozenset(
     {
         "answered",
@@ -495,6 +505,13 @@ class RadarAskRepository:
                 assert row is not None
                 return self._resolve_idempotent_run(row, normalized_question)
             conn.execute(
+                """
+                INSERT INTO radar_ask_messages (id, session_id, role, content)
+                VALUES (?, ?, 'user', ?)
+                """,
+                (uuid4(), owned_session_id, normalized_question),
+            )
+            conn.execute(
                 "UPDATE radar_ask_sessions SET updated_at=NOW() WHERE id=? AND user_id=?",
                 (owned_session_id, user_id),
             )
@@ -518,23 +535,50 @@ class RadarAskRepository:
         self,
         run_id: UUID,
         *,
+        user_id: int | None = None,
         expected: Collection[str],
         target: str,
         outcome: str | None = None,
+        effective_depth: str | None = None,
+        route: Mapping[str, Any] | None = None,
+        answer: Mapping[str, Any] | None = None,
+        model: str | None = None,
+        error_code: str | None = None,
+        retryable: bool | None = None,
     ) -> RadarAskRunRecord:
         expected_statuses = sorted(set(expected))
         if not expected_statuses or any(value not in RUN_STATUSES for value in expected_statuses):
             raise ValueError("expected contains an invalid run status")
         if target not in RUN_STATUSES:
             raise ValueError("target is an invalid run status")
+        if any(target not in ALLOWED_RUN_TRANSITIONS[value] for value in expected_statuses):
+            raise InvalidRunTransition("requested run transition is not allowed")
         if outcome is not None and outcome not in RUN_OUTCOMES:
             raise ValueError("outcome is invalid")
+        if user_id is not None and user_id <= 0:
+            raise ValueError("user_id must be positive")
+        if effective_depth not in {None, "fast", "standard", "deep"}:
+            raise ValueError("effective_depth is invalid")
+        normalized_model = None
+        if model is not None:
+            normalized_model = _bounded_text(model, field="model", maximum=120)
+        normalized_error = None
+        if error_code is not None:
+            normalized_error = _bounded_text(error_code, field="error_code", maximum=80)
+            if not normalized_error.replace("_", "").isalnum() or normalized_error.lower() != normalized_error:
+                raise ValueError("error_code must contain lowercase letters, digits, or underscores")
         terminal = target in TERMINAL_RUN_STATUSES
         with get_conn() as conn:
             row = conn.execute(
                 """
                 UPDATE radar_ask_runs
                 SET status=?, outcome=?,
+                    effective_depth=COALESCE(?, effective_depth),
+                    route_json=COALESCE(?, route_json),
+                    answer_json=COALESCE(?, answer_json),
+                    model=COALESCE(?, model),
+                    error_code=COALESCE(?, error_code),
+                    retryable=COALESCE(?, retryable),
                     started_at=CASE
                         WHEN ?='running' AND started_at IS NULL THEN NOW()
                         ELSE started_at
@@ -542,11 +586,27 @@ class RadarAskRepository:
                     completed_at=CASE WHEN ? THEN COALESCE(completed_at, NOW()) ELSE completed_at END,
                     updated_at=NOW()
                 WHERE id=?
+                  AND (?::bigint IS NULL OR user_id=?)
                   AND status=ANY(?::text[])
                   AND status NOT IN ('completed', 'insufficient', 'failed', 'cancelled')
                 RETURNING *
                 """,
-                (target, outcome, target, terminal, run_id, expected_statuses),
+                (
+                    target,
+                    outcome,
+                    effective_depth,
+                    Jsonb(dict(route)) if route is not None else None,
+                    Jsonb(dict(answer)) if answer is not None else None,
+                    normalized_model,
+                    normalized_error,
+                    retryable,
+                    target,
+                    terminal,
+                    run_id,
+                    user_id,
+                    user_id,
+                    expected_statuses,
+                ),
             ).fetchone()
             if row is None:
                 current = conn.execute(

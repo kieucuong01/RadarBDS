@@ -224,6 +224,14 @@ def test_create_run_is_idempotent_but_rejects_changed_question(repository_env):
     assert replay.id == first.id
     assert replay.session_id == first.session_id
     assert replay.status == "created"
+    messages = repository.list_messages(
+        user_id=users.free_id,
+        session_id=first.session_id,
+        limit=20,
+    )
+    assert [(message.role, message.content) for message in messages] == [
+        ("user", "Giá Phú Mỹ?"),
+    ]
     with pytest.raises(IdempotencyConflict):
         repository.create_run(
             user_id=users.free_id,
@@ -242,9 +250,21 @@ def test_run_reads_are_owner_scoped_and_terminal_transition_is_immutable(reposit
 
     assert repository.get_run(user_id=users.free_id, run_id=run.id) is not None
     assert repository.get_run(user_id=users.vip_id, run_id=run.id) is None
-    completed = repository.transition_run(
+    with pytest.raises(InvalidRunTransition):
+        repository.transition_run(
+            run.id,
+            user_id=users.vip_id,
+            expected={"created"},
+            target="running",
+        )
+    running = repository.transition_run(
         run.id,
         expected={"created"},
+        target="running",
+    )
+    completed = repository.transition_run(
+        running.id,
+        expected={"running"},
         target="completed",
         outcome="answered",
     )
@@ -263,6 +283,51 @@ def test_run_reads_are_owner_scoped_and_terminal_transition_is_immutable(reposit
             target="completed",
             outcome="cancelled",
         )
+
+
+def test_run_transition_atomically_persists_route_model_and_answer(repository_env):
+    repository, users = repository_env
+    run = repository.create_run(
+        user_id=users.vip_id,
+        question="Phân tích Phú Mỹ",
+        idempotency_key="payload-transition-1",
+    )
+    route = {
+        "depth": "standard",
+        "question_type": "market_recommendation",
+        "tool_calls": [],
+        "generated": True,
+    }
+    running = repository.transition_run(
+        run.id,
+        user_id=users.vip_id,
+        expected={"created"},
+        target="running",
+        effective_depth="standard",
+        route=route,
+        model="deepseek-v4-pro",
+    )
+    answer = {
+        "answered": True,
+        "depth": "standard",
+        "direct_answer": "Cần kiểm tra thêm.",
+        "as_of": "2026-08-04T06:30:00Z",
+        "dataset_version": "signals:12",
+    }
+    completed = repository.transition_run(
+        run.id,
+        user_id=users.vip_id,
+        expected={"running"},
+        target="completed",
+        outcome="answered",
+        answer=answer,
+    )
+
+    assert running.effective_depth == "standard"
+    assert running.route == route
+    assert running.model == "deepseek-v4-pro"
+    assert completed.answer == answer
+
 
 
 def test_tool_and_evidence_audit_rows_are_idempotent_and_immutable(repository_env):

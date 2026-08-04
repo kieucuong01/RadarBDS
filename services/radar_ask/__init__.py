@@ -18,10 +18,13 @@ from .contracts import (
     RunStatus,
     ToolCall,
 )
+from .orchestrator import OrchestratorDependencies, run_question
+from .validator import AnswerValidationError, validate_answer
 
 __all__ = [
     "AnswerClaim",
     "AnswerEnvelope",
+    "AnswerValidationError",
     "AskContext",
     "AskDepth",
     "AskQuestionRequest",
@@ -30,6 +33,7 @@ __all__ = [
     "EvidenceBundle",
     "EvidenceItem",
     "ModelPolicy",
+    "OrchestratorDependencies",
     "ProviderRequest",
     "ProviderResponse",
     "ProviderUsage",
@@ -39,4 +43,6 @@ __all__ = [
     "RunStatus",
     "ToolCall",
     "resolve_model_policy",
+    "run_question",
+    "validate_answer",
 ]
