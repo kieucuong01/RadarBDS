@@ -79,6 +79,7 @@ class RadarAskSettings:
     deepseek_base_url: str
     database_url: str = field(repr=False)
     db_pool_max: int
+    db_pool_timeout_seconds: float
     router_model: str
     free_model: str
     smart_model: str
@@ -113,14 +114,38 @@ class RadarAskSettings:
         if warning >= hard_stop:
             raise ValueError("monthly warning must be below monthly hard stop")
 
+        enabled = _parse_bool("RADAR_ASK_ENABLED", False)
+        database_url = os.getenv("RADAR_ASK_DATABASE_URL", "").strip()
+        if enabled:
+            if not database_url:
+                raise ValueError("RADAR_ASK_DATABASE_URL is required when Radar Ask is enabled")
+            parsed_database = urlparse(database_url)
+            if (
+                parsed_database.scheme not in {"postgres", "postgresql"}
+                or not parsed_database.hostname
+                or not parsed_database.path.strip("/")
+            ):
+                raise ValueError("RADAR_ASK_DATABASE_URL must be a PostgreSQL URL")
+            if parsed_database.username != "radar_ask_ro":
+                raise ValueError("RADAR_ASK_DATABASE_URL must use the radar_ask_ro role")
+
         settings = cls(
-            enabled=_parse_bool("RADAR_ASK_ENABLED", False),
+            enabled=enabled,
             allowed_tiers=_parse_allowed_tiers(),
             deepseek_api_key=os.getenv("DEEPSEEK_API_KEY", "").strip(),
             deepseek_base_url=_validated_https_url("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
-            database_url=os.getenv("RADAR_ASK_DATABASE_URL", "").strip(),
+            database_url=database_url,
             db_pool_max=_parse_int(
                 "RADAR_ASK_DB_POOL_MAX", 1, minimum=1, maximum=4, label="read-only DB pool max"
+            ),
+            db_pool_timeout_seconds=float(
+                _parse_decimal(
+                    "RADAR_ASK_DB_POOL_TIMEOUT_SECONDS",
+                    "1.0",
+                    minimum=Decimal("0.1"),
+                    maximum=Decimal("10"),
+                    label="read-only DB pool timeout",
+                )
             ),
             router_model=os.getenv("RADAR_ASK_ROUTER_MODEL", "deepseek-v4-flash").strip(),
             free_model=os.getenv("RADAR_ASK_FREE_MODEL", "deepseek-v4-flash").strip(),

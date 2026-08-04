@@ -196,3 +196,11 @@ def test_public_read_model_migration_tolerates_optional_reloption_permission():
         "WHEN insufficient_privilege" in sql
         for sql in tuning_statements
     )
+
+
+def test_runtime_schema_does_not_create_privileged_radar_ask_roles_or_views():
+    import db.schema as schema
+
+    assert "CREATE ROLE radar_ask_ro" not in schema.SCHEMA_SQL
+    assert "radar_ask_v_listings" not in schema.SCHEMA_SQL
+    assert "radar_ask_view_owner" not in schema.SCHEMA_SQL
