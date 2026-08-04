@@ -319,3 +319,31 @@ def test_expired_terminal_run_is_purged_from_a_session_with_a_running_sibling(re
     with get_conn() as conn:
         assert conn.execute("SELECT 1 FROM radar_ask_runs WHERE id=?", (old.id,)).fetchone() is None
         assert conn.execute("SELECT status FROM radar_ask_runs WHERE id=?", (active.id,)).fetchone()["status"] == "running"
+
+
+def test_clock_boundary_and_legacy_messages_preserve_nonterminal_sessions(retention_env):
+    repository, user = retention_env
+    with pytest.raises(ValueError):
+        RadarAskRetentionService(clock=lambda: NOW.replace(tzinfo=None)).purge_expired_content(dry_run=True)
+    boundary = _terminal_run(repository, user, key="boundary")
+    _age_session_content(boundary.session_id, when=NOW - timedelta(days=90))
+    legacy = repository.create_run(user_id=user.id, question="legacy", idempotency_key="legacy")
+    with get_conn() as conn:
+        conn.execute("UPDATE radar_ask_messages SET run_id=NULL, created_at=? WHERE session_id=?", (NOW - timedelta(days=91), legacy.session_id))
+        conn.execute("UPDATE radar_ask_sessions SET updated_at=? WHERE id=?", (NOW - timedelta(days=91), legacy.session_id))
+    purge_expired_content(clock=lambda: NOW)
+    with get_conn() as conn:
+        assert conn.execute("SELECT 1 FROM radar_ask_runs WHERE id=?", (boundary.id,)).fetchone() is not None
+        assert conn.execute("SELECT 1 FROM radar_ask_messages WHERE session_id=?", (legacy.session_id,)).fetchone() is not None
+
+
+def test_dry_run_matches_apply_for_shared_expired_run(retention_env):
+    repository, user = retention_env
+    old = _terminal_run(repository, user, key="parity-old")
+    active = repository.create_run(user_id=user.id, session_id=old.session_id, question="active", idempotency_key="parity-active")
+    repository.transition_run(active.id, user_id=user.id, expected={"created"}, target="queued")
+    with get_conn() as conn:
+        conn.execute("UPDATE radar_ask_runs SET created_at=?, updated_at=?, completed_at=? WHERE id=?", (NOW-timedelta(days=91), NOW-timedelta(days=91), NOW-timedelta(days=91), old.id))
+    dry = purge_expired_content(dry_run=True, clock=lambda: NOW)
+    applied = purge_expired_content(clock=lambda: NOW)
+    assert dry["runs"] == applied["runs"] == 1

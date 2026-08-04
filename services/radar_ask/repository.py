@@ -1450,32 +1450,37 @@ class RadarAskRepository:
                 FROM radar_ask_runs r
                 WHERE r.status=ANY(?::text[])
                   AND COALESCE(r.completed_at, r.updated_at, r.created_at) < ?
-                  AND NOT EXISTS (
-                      SELECT 1 FROM radar_ask_runs active
-                      WHERE active.session_id=r.session_id
-                        AND active.status<>ALL(?::text[])
-                  )
                 """,
-                (list(TERMINAL_RUN_STATUSES), cutoff, list(TERMINAL_RUN_STATUSES)),
+                (list(TERMINAL_RUN_STATUSES), cutoff),
             ).fetchone()["count"]
             messages = conn.execute(
                 """
                 SELECT COUNT(*) AS count
                 FROM radar_ask_messages m
-                WHERE m.created_at < ?
-                  AND NOT EXISTS (
-                      SELECT 1 FROM radar_ask_runs active
-                      WHERE active.session_id=m.session_id
-                        AND active.status<>ALL(?::text[])
-                  )
+                LEFT JOIN radar_ask_runs r ON r.id=m.run_id
+                WHERE (r.status=ANY(?::text[]) AND COALESCE(r.completed_at,r.updated_at,r.created_at) < ?)
+                   OR (m.run_id IS NULL AND m.created_at < ? AND NOT EXISTS (
+                       SELECT 1 FROM radar_ask_runs active WHERE active.session_id=m.session_id AND active.status<>ALL(?::text[])
+                   ))
                 """,
-                (cutoff, list(TERMINAL_RUN_STATUSES)),
+                (list(TERMINAL_RUN_STATUSES), cutoff, cutoff, list(TERMINAL_RUN_STATUSES)),
             ).fetchone()["count"]
         return {"sessions": int(sessions), "runs": int(runs), "messages": int(messages)}
 
     def purge_expired_content_batch(self, *, cutoff: datetime) -> dict[str, int] | None:
         """Delete one bounded raw-content target set without touching nonterminal work."""
         with get_conn() as conn:
+            feedback_ids = [row["id"] for row in conn.execute(
+                """SELECT f.id FROM radar_ask_feedback f JOIN radar_ask_messages m ON m.id=f.message_id
+                LEFT JOIN radar_ask_runs r ON r.id=m.run_id
+                WHERE (r.status=ANY(?::text[]) AND COALESCE(r.completed_at,r.updated_at,r.created_at) < ?)
+                   OR (m.run_id IS NULL AND m.created_at < ? AND NOT EXISTS (SELECT 1 FROM radar_ask_runs a WHERE a.session_id=m.session_id AND a.status<>ALL(?::text[])))
+                ORDER BY f.created_at,f.id FOR UPDATE OF f,m SKIP LOCKED LIMIT ?""",
+                (list(TERMINAL_RUN_STATUSES), cutoff, cutoff, list(TERMINAL_RUN_STATUSES), RETENTION_BATCH_SIZE),
+            ).fetchall()]
+            if feedback_ids:
+                conn.execute("DELETE FROM radar_ask_feedback WHERE id=ANY(?)", (feedback_ids,))
+                return {"sessions": 0, "runs": 0, "messages": 0}
             tool_ids = [row["id"] for row in conn.execute(
                 """SELECT t.id FROM radar_ask_tool_calls t JOIN radar_ask_runs r ON r.id=t.run_id
                 WHERE r.status=ANY(?::text[]) AND COALESCE(r.completed_at,r.updated_at,r.created_at) < ?
@@ -1537,11 +1542,12 @@ class RadarAskRepository:
                     FROM radar_ask_messages m
                     JOIN radar_ask_sessions s ON s.id=m.session_id
                     WHERE m.run_id IS NULL AND m.created_at < ?
+                      AND NOT EXISTS (SELECT 1 FROM radar_ask_runs a WHERE a.session_id=m.session_id AND a.status<>ALL(?::text[]))
                     ORDER BY m.created_at, m.id
                     FOR UPDATE OF m, s SKIP LOCKED
                     LIMIT ?
                     """,
-                    (cutoff, RETENTION_BATCH_SIZE),
+                    (cutoff, list(TERMINAL_RUN_STATUSES), RETENTION_BATCH_SIZE),
                 ).fetchall()
             ]
             if message_ids:
@@ -1584,6 +1590,14 @@ class RadarAskRepository:
     def purge_expired_usage_batch(self, *, cutoff_month: date) -> dict[str, int] | None:
         """Delete one bounded aggregate batch; usage-attempt rows cascade with its ledger."""
         with get_conn() as conn:
+            attempt_ids = [row["id"] for row in conn.execute(
+                """SELECT a.id FROM radar_ask_usage_attempts a JOIN radar_ask_usage u ON u.id=a.reservation_id
+                WHERE u.usage_month < ? ORDER BY a.leased_at,a.id FOR UPDATE OF a,u SKIP LOCKED LIMIT ?""",
+                (cutoff_month, RETENTION_BATCH_SIZE),
+            ).fetchall()]
+            if attempt_ids:
+                conn.execute("DELETE FROM radar_ask_usage_attempts WHERE id=ANY(?)", (attempt_ids,))
+                return {"usage": 0, "attempts": len(attempt_ids)}
             usage_ids = [
                 row["id"]
                 for row in conn.execute(
@@ -1599,14 +1613,6 @@ class RadarAskRepository:
             ]
             if not usage_ids:
                 return None
-            attempts = int(
-                conn.execute(
-                    """
-                    SELECT COUNT(*) AS count FROM radar_ask_usage_attempts
-                    WHERE reservation_id=ANY(?)
-                    """,
-                    (usage_ids,),
-                ).fetchone()["count"]
-            )
+            attempts = 0
             conn.execute("DELETE FROM radar_ask_usage WHERE id=ANY(?)", (usage_ids,))
         return {"usage": len(usage_ids), "attempts": attempts}
