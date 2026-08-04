@@ -9,6 +9,7 @@ payos==1.1.0
 Pillow==12.3.0
 playwright==1.58.0
 psycopg[binary,pool]==3.3.4
+pydantic==2.13.4
 qrcode==8.2
 redis==5.2.1
 requests==2.33.0

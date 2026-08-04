@@ -128,7 +128,7 @@ Expected: `ModuleNotFoundError: No module named 'services.radar_ask'`.
 
 - [ ] **Step 3: Implement the typed contracts and strict configuration.**
 
-Pin `pydantic==2.11.7`. Use `ConfigDict(extra="forbid")` for every model that parses request or provider output. Bound question length, tool calls, evidence count, claims, and text fields. Do not accept arbitrary provider fields into persisted domain models.
+Pin `pydantic==2.13.4`, the production-stable version verified from the official PyPI registry and already present in the local Python 3.12 runtime. Use `ConfigDict(extra="forbid")` for every model that parses request or provider output. Bound question length, tool calls, evidence count, claims, and text fields. Do not accept arbitrary provider fields into persisted domain models.
 
 ```python
 class AskQuestionRequest(BaseModel):
