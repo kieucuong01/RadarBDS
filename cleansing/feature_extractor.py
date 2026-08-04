@@ -64,7 +64,12 @@ _NON_ASKING_PRICE_PATTERNS = [
     r'(?:rẻ\s*hơn|re\s*hon|thấp\s*hơn|thap\s*hon)\s*(?:thị\s*trường|thi\s*truong)?\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
     # Down-payment / financing snippets are not total asking price.
     r'(?:đưa\s*trước|dua\s*truoc|trả\s*trước|tra\s*truoc|đặt\s*cọc|dat\s*coc|cọc|coc)\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
+    r'(?:thanh\s*toán|thanh\s*toan|đóng\s*trước|dong\s*truoc)'
+    r'(?:\s+[^,.;\n]{0,24})?\s*[:：\-]?\s*[\d,.]+\s*'
+    r'(?:tỷ|ty|tỉ|triệu|tr|m|k)\b(?:\s*nhận\s*nhà|\s*nhan\s*nha)?',
     r'(?:vay|ngân\s*hàng|ngan\s*hang|nh)\s*(?:hỗ\s*trợ|ho\s*tro|được|duoc)?\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
+    r'(?:hỗ\s*trợ|ho\s*tro)\s*(?:vay|ngân\s*hàng|ngan\s*hang|nh)'
+    r'\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
     # Contact-only price lines such as "Giá LH 0967..." should not make nearby deltas valid.
     r'(?:giá|gia)\s*(?:lh|liên\s*hệ|lien\s*he|hotline|zalo)\s*[:：\-]?\s*(?:\+?84|0)?[\d\s.\-()]{8,}',
 ]
@@ -269,9 +274,9 @@ def extract_price(text: str) -> Optional[float]:
     if m:
         return float(m.group(1))
 
-    # Pattern: "XXX triệu" — fix double-assign + missing return khi val<100
-    # "1.500 triệu" → 1500 → 1.5 tỷ  |  "880 triệu" → 0.88 tỷ  |  "80 triệu" → None (quá thấp)
-    m = re.search(r'([\d]+[,.]?[\d]*)\s*triệu', t)
+    # Pattern: "XXX triệu" / compact "XXXtr" after non-asking clauses were removed.
+    # "1.500 triệu" → 1.5 tỷ | "950TR" → 0.95 tỷ | "80tr" → None.
+    m = re.search(r'([\d]+[,.]?[\d]*)\s*(?:trieu|tr)\b', _ascii_fold(t))
     if m:
         raw = m.group(1).replace(',', '').replace('.', '')
         try:

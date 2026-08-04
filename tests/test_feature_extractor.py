@@ -71,6 +71,13 @@ def test_extract_price_handles_real_unicode_ty_patterns():
     assert extract_price("Gi\u1ea3m 400 tri\u1ec7u gi\u00e1 4,2 t\u1ef7 ch\u1ec9 c\u00f2n 3,8 t\u1ef7") == 3.8
 
 
+def test_extract_price_handles_compact_million_and_non_asking_amounts():
+    assert extract_price("GIÁ CHỈ 950TR còn thương lượng") == 0.95
+    assert extract_price("Hơn 2.3xx tỷ, thanh toán 700 triệu nhận nhà") is None
+    assert extract_price("Giá bán 2,35 tỷ, hỗ trợ vay 800 triệu") == 2.35
+    assert extract_price("Chủ hạ giá 400tr chỉ còn 2tỷ2") == 2.2
+
+
 def test_extract_price_ignores_interior_value_when_asking_price_is_vague():
     assert extract_price("Gi\u00e1 thi\u1ec7n ch\u00ed, full n\u1ed9i th\u1ea5t cao c\u1ea5p h\u01a1n 1 t\u1ef7") is None
     assert extract_price("Full n\u1ed9i th\u1ea5t h\u01a1n 1 t\u1ef7, gi\u00e1 g\u1eb7p ch\u1ee7 th\u01b0\u01a1ng l\u01b0\u1ee3ng") is None
