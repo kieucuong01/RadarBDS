@@ -347,3 +347,56 @@ def test_dry_run_matches_apply_for_shared_expired_run(retention_env):
     dry = purge_expired_content(dry_run=True, clock=lambda: NOW)
     applied = purge_expired_content(clock=lambda: NOW)
     assert dry["runs"] == applied["runs"] == 1
+
+
+def test_more_than_500_owned_runs_and_messages_are_processed_in_multiple_batches(retention_env):
+    repository, user = retention_env
+    session = repository.create_session(user_id=user.id, title="bulk")
+    old = NOW - timedelta(days=91)
+    rows = [(uuid4(), session.id, user.id, f"bulk-{i}", f"q{i}", old, old, old) for i in range(501)]
+    with get_conn() as conn:
+        conn.executemany(
+            """INSERT INTO radar_ask_runs (id,session_id,user_id,idempotency_key,question,status,created_at,updated_at,completed_at)
+            VALUES (?, ?, ?, ?, ?, 'completed', ?, ?, ?)""", rows,
+        )
+        conn.executemany(
+            "INSERT INTO radar_ask_messages (id,session_id,run_id,role,content,created_at) VALUES (?, ?, ?, 'user', 'old', ?)",
+            [(uuid4(), session.id, row[0], old) for row in rows],
+        )
+        conn.execute("UPDATE radar_ask_sessions SET created_at=?, updated_at=? WHERE id=?", (old, old, session.id))
+    result = purge_expired_content(clock=lambda: NOW)
+    assert result["runs"] == 501 and result["messages"] == 501 and result["batches"] >= 5
+
+
+def test_more_than_500_usage_and_attempts_are_processed_in_multiple_batches(retention_env):
+    _repository, user = retention_env
+    old = _month_before(NOW, 13)
+    ids = [_insert_usage(user, usage_month=old) for _ in range(501)]
+    result = purge_expired_usage(clock=lambda: NOW)
+    assert result == {"usage": 501, "attempts": 501, "batches": 4}
+    with get_conn() as conn:
+        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_usage WHERE id=ANY(?)", (ids,)).fetchone()["count"] == 0
+
+
+def test_created_and_clarifying_runs_and_their_messages_are_preserved(retention_env):
+    repository, user = retention_env
+    created = repository.create_run(user_id=user.id, question="created", idempotency_key="created-old")
+    clarifying = repository.create_run(user_id=user.id, question="clarifying", idempotency_key="clarifying-old")
+    repository.transition_run(clarifying.id, user_id=user.id, expected={"created"}, target="clarifying")
+    _age_session_content(created.session_id, when=NOW-timedelta(days=91))
+    _age_session_content(clarifying.session_id, when=NOW-timedelta(days=91))
+    purge_expired_content(clock=lambda: NOW)
+    with get_conn() as conn:
+        assert conn.execute("SELECT status FROM radar_ask_runs WHERE id=?", (created.id,)).fetchone()["status"] == "created"
+        assert conn.execute("SELECT status FROM radar_ask_runs WHERE id=?", (clarifying.id,)).fetchone()["status"] == "clarifying"
+        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_messages WHERE run_id IN (?, ?)", (created.id, clarifying.id)).fetchone()["count"] == 2
+
+
+def test_new_run_messages_have_foreign_key_ownership(retention_env):
+    repository, user = retention_env
+    run = repository.create_run(user_id=user.id, question="linked", idempotency_key="linked")
+    repository.create_message(user_id=user.id, session_id=run.session_id, run_id=run.id, role="assistant", content="linked answer")
+    with get_conn() as conn:
+        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_messages WHERE run_id=?", (run.id,)).fetchone()["count"] == 2
+        with pytest.raises(Exception):
+            conn.execute("INSERT INTO radar_ask_messages (id,session_id,run_id,role,content) VALUES (?, ?, ?, 'user', 'bad')", (uuid4(), run.session_id, uuid4()))
