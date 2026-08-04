@@ -243,6 +243,27 @@ def test_invalid_session_cursor_is_rejected_without_database_fallback(api_client
     assert_private(response)
 
 
+def test_history_repository_failure_returns_private_generic_service_error(api_client, monkeypatch):
+    import routes.radar_ask_api as ask_api
+
+    class FailingRepository:
+        def list_sessions(self, **_kwargs):
+            raise RuntimeError("database pool password=do-not-disclose")
+
+    monkeypatch.setattr(ask_api, "get_repository", lambda: FailingRepository())
+    response = api_client.get("/api/radar-ask/sessions")
+
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "error": {
+            "code": "service_unavailable",
+            "message": "Dich vu tam thoi chua san sang.",
+        }
+    }
+    assert "password" not in response.get_data(as_text=True)
+    assert_private(response)
+
+
 def test_session_history_rename_delete_and_feedback_are_owner_scoped(api_client, monkeypatch):
     import routes.radar_ask_api as ask_api
 

@@ -50,6 +50,10 @@ def _private(response):
     return response
 
 
+def _service_unavailable():
+    return api_error("service_unavailable", "Dich vu tam thoi chua san sang.", 503)
+
+
 @bp.after_request
 def _private_radar_ask_response(response):
     return _private(response)
@@ -180,10 +184,13 @@ def ask_question():
     except RadarAskFeatureDisabled:
         return api_error("not_found", "Khong tim thay tai nguyen.", 404)
     except Exception:
-        return api_error("provider_unavailable", "Dich vu tam thoi chua san sang.", 503)
+        return _service_unavailable()
     if result.status is RunStatus.FAILED:
         return api_error(result.error_code or "provider_unavailable", "Dich vu tam thoi chua san sang.", 503)
-    response = jsonify(run_payload(result, tier=tier))
+    try:
+        response = jsonify(run_payload(result, tier=tier))
+    except Exception:
+        return _service_unavailable()
     response.status_code = 202 if result.status in {RunStatus.QUEUED, RunStatus.CREATED, RunStatus.RUNNING} else 200
     return _private(response)
 
@@ -197,13 +204,13 @@ def get_run(run_id: str):
     parsed = _uuid(run_id)
     if parsed is None:
         return api_error("not_found", "Khong tim thay tai nguyen.", 404)
-    run = get_repository().get_run(user_id=user_id, run_id=parsed)
-    if run is None:
-        return api_error("not_found", "Khong tim thay tai nguyen.", 404)
     try:
+        run = get_repository().get_run(user_id=user_id, run_id=parsed)
+        if run is None:
+            return api_error("not_found", "Khong tim thay tai nguyen.", 404)
         return _private(jsonify(run_record_payload(run, tier=tier)))
-    except (TypeError, ValueError):
-        return api_error("provider_unavailable", "Dich vu tam thoi chua san sang.", 503)
+    except Exception:
+        return _service_unavailable()
 
 
 @bp.get("/api/radar-ask/sessions")
@@ -217,13 +224,16 @@ def list_sessions():
     if limit is None or (request.args.get("cursor") and cursor is None):
         return api_error("invalid_request", "Phan trang khong hop le.", 400)
     before_at, before_id = cursor if cursor is not None else (None, None)
-    rows = get_repository().list_sessions(
-        user_id=user_id,
-        limit=limit,
-        before_updated_at=before_at,
-        before_id=before_id,
-    )
-    return _private(jsonify({"sessions": [session_payload(row) for row in rows], "limit": limit, "next_cursor": _encode_cursor(rows[-1].updated_at, rows[-1].id) if len(rows) == limit else None}))
+    try:
+        rows = get_repository().list_sessions(
+            user_id=user_id,
+            limit=limit,
+            before_updated_at=before_at,
+            before_id=before_id,
+        )
+        return _private(jsonify({"sessions": [session_payload(row) for row in rows], "limit": limit, "next_cursor": _encode_cursor(rows[-1].updated_at, rows[-1].id) if len(rows) == limit else None}))
+    except Exception:
+        return _service_unavailable()
 
 
 @bp.get("/api/radar-ask/sessions/<session_id>")
@@ -239,16 +249,21 @@ def get_session(session_id: str):
         return api_error("not_found", "Khong tim thay tai nguyen.", 404)
     if limit is None or (request.args.get("message_cursor") and cursor is None):
         return api_error("invalid_request", "Phan trang khong hop le.", 400)
-    repository = get_repository()
-    session = repository.get_session(user_id=user_id, session_id=parsed)
-    if session is None:
-        return api_error("not_found", "Khong tim thay tai nguyen.", 404)
     before_at, before_id = cursor if cursor is not None else (None, None)
     try:
+        repository = get_repository()
+        session = repository.get_session(user_id=user_id, session_id=parsed)
+        if session is None:
+            return api_error("not_found", "Khong tim thay tai nguyen.", 404)
         messages = repository.list_messages(user_id=user_id, session_id=parsed, limit=limit, before_created_at=before_at, before_id=before_id)
     except OwnedResourceNotFound:
         return api_error("not_found", "Khong tim thay tai nguyen.", 404)
-    return _private(jsonify({"session": session_payload(session), "messages": [message_payload(row) for row in messages], "message_limit": limit, "next_message_cursor": _encode_cursor(messages[0].created_at, messages[0].id) if len(messages) == limit else None}))
+    except Exception:
+        return _service_unavailable()
+    try:
+        return _private(jsonify({"session": session_payload(session), "messages": [message_payload(row) for row in messages], "message_limit": limit, "next_message_cursor": _encode_cursor(messages[0].created_at, messages[0].id) if len(messages) == limit else None}))
+    except Exception:
+        return _service_unavailable()
 
 
 @bp.patch("/api/radar-ask/sessions/<session_id>")
@@ -270,9 +285,14 @@ def rename_session(session_id: str):
         session = get_repository().rename_session(user_id=user_id, session_id=parsed, title=payload["title"])
     except ValueError:
         return api_error("invalid_request", "Tieu de khong hop le.", 400)
+    except Exception:
+        return _service_unavailable()
     if session is None:
         return api_error("not_found", "Khong tim thay tai nguyen.", 404)
-    return _private(jsonify({"session": session_payload(session)}))
+    try:
+        return _private(jsonify({"session": session_payload(session)}))
+    except Exception:
+        return _service_unavailable()
 
 
 @bp.delete("/api/radar-ask/sessions/<session_id>")
@@ -285,7 +305,13 @@ def delete_session(session_id: str):
         return gate
     user_id, tier = gate
     parsed = _uuid(session_id)
-    if parsed is None or not get_repository().delete_session(user_id=user_id, session_id=parsed):
+    if parsed is None:
+        return api_error("not_found", "Khong tim thay tai nguyen.", 404)
+    try:
+        deleted = get_repository().delete_session(user_id=user_id, session_id=parsed)
+    except Exception:
+        return _service_unavailable()
+    if not deleted:
         return api_error("not_found", "Khong tim thay tai nguyen.", 404)
     _audit("radar_ask_session_deleted", user_id=user_id, tier=tier, context={"session_id": str(parsed)})
     response = make_response("", 204)
@@ -301,7 +327,10 @@ def delete_all_sessions():
     if not isinstance(gate, tuple):
         return gate
     user_id, tier = gate
-    count = get_repository().delete_all_sessions(user_id=user_id)
+    try:
+        count = get_repository().delete_all_sessions(user_id=user_id)
+    except Exception:
+        return _service_unavailable()
     _audit("radar_ask_sessions_deleted", user_id=user_id, tier=tier, context={"count": count})
     response = make_response("", 204)
     return _private(response)
@@ -331,4 +360,9 @@ def add_feedback(message_id: str):
         return api_error("not_found", "Khong tim thay tai nguyen.", 404)
     except ValueError:
         return api_error("invalid_request", "Danh gia khong hop le.", 400)
-    return _private(jsonify({"feedback": feedback_payload(feedback)}))
+    except Exception:
+        return _service_unavailable()
+    try:
+        return _private(jsonify({"feedback": feedback_payload(feedback)}))
+    except Exception:
+        return _service_unavailable()
