@@ -112,6 +112,7 @@ from cli.system import (
     cmd_signal_read_model,
     cmd_integrity_report,
 )
+from services.radar_ask.worker import cmd_radar_ask_worker
 
 
 def _bounded_guland_image_limit(value: str) -> int:
@@ -136,6 +137,11 @@ def _bounded_signal_compare_limit(value: str) -> int:
 def build_parser():
     parser = argparse.ArgumentParser(prog="radar", description="Radar BDS CLI")
     sub = parser.add_subparsers(dest="cmd")
+
+    sub.add_parser(
+        "radar-ask-worker",
+        help="Run the feature-gated Radar Ask Deep research worker",
+    )
 
     # reprocess
     p_re = sub.add_parser("reprocess", help="Reprocess từ raw_listings")
@@ -461,6 +467,8 @@ def main():
 
     if args.cmd == "reprocess":
         cmd_reprocess(args)
+    elif args.cmd == "radar-ask-worker":
+        cmd_radar_ask_worker(args)
     elif args.cmd == "integrity-report":
         cmd_integrity_report(args)
     elif args.cmd == "signal-read-model":

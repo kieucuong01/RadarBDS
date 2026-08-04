@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from typing import Any, Collection, Mapping
 from uuid import UUID, uuid4
 
@@ -108,6 +109,9 @@ class RadarAskRunRecord:
     started_at: datetime | None
     completed_at: datetime | None
     updated_at: datetime
+    reservation_id: UUID | None = None
+    tier: str | None = None
+    reserved_usd: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -222,6 +226,9 @@ def _run_from_row(row: PgRow) -> RadarAskRunRecord:
         started_at=data["started_at"],
         completed_at=data["completed_at"],
         updated_at=data["updated_at"],
+        reservation_id=data.get("reservation_id"),
+        tier=data.get("reservation_tier"),
+        reserved_usd=data.get("reserved_usd"),
     )
 
 
@@ -570,6 +577,286 @@ class RadarAskRepository:
                 (run_id, user_id),
             ).fetchone()
         return _run_from_row(row) if row is not None else None
+
+    def lease_next_run(
+        self,
+        *,
+        worker_id: str,
+        lease_seconds: int = 90,
+    ) -> RadarAskRunRecord | None:
+        """Lease one ready Deep run with PostgreSQL as the concurrency authority."""
+        owner = _bounded_text(worker_id, field="worker_id", maximum=128)
+        duration = int(lease_seconds)
+        if not 1 <= duration <= 300:
+            raise ValueError("lease_seconds must be between 1 and 300")
+        with get_conn() as conn:
+            leased = conn.execute(
+                """
+                WITH candidate AS (
+                    SELECT r.id
+                    FROM radar_ask_runs r
+                    JOIN radar_ask_usage u ON u.run_key=r.id
+                    WHERE r.status='queued'
+                      AND r.effective_depth='deep'
+                      AND r.available_at <= NOW()
+                      AND r.attempt_count < 2
+                      AND u.settlement_status='reserved'
+                    ORDER BY r.available_at, r.created_at
+                    FOR UPDATE OF r, u SKIP LOCKED
+                    LIMIT 1
+                )
+                UPDATE radar_ask_runs r
+                SET status='running', worker_id=?,
+                    lease_until=NOW() + (? || ' seconds')::interval,
+                    attempt_count=attempt_count + 1,
+                    started_at=COALESCE(started_at, NOW()),
+                    retryable=FALSE, error_code=NULL, updated_at=NOW()
+                FROM candidate
+                WHERE r.id=candidate.id
+                RETURNING r.id, r.lease_until
+                """,
+                (owner, duration),
+            ).fetchone()
+            if leased is None:
+                return None
+            conn.execute(
+                """
+                UPDATE radar_ask_usage
+                SET reservation_expires_at=GREATEST(reservation_expires_at, ?),
+                    updated_at=NOW()
+                WHERE run_key=? AND settlement_status='reserved'
+                """,
+                (leased["lease_until"], leased["id"]),
+            )
+            row = conn.execute(
+                """
+                SELECT r.*, u.id AS reservation_id,
+                       u.tier AS reservation_tier, u.reserved_usd
+                FROM radar_ask_runs r
+                JOIN radar_ask_usage u ON u.run_key=r.id
+                WHERE r.id=? AND r.worker_id=? AND r.status='running'
+                  AND u.settlement_status='reserved'
+                """,
+                (leased["id"], owner),
+            ).fetchone()
+        assert row is not None
+        return _run_from_row(row)
+
+    def renew_lease(
+        self,
+        run_id: UUID,
+        *,
+        worker_id: str,
+        lease_seconds: int = 90,
+    ) -> RadarAskRunRecord:
+        owner = _bounded_text(worker_id, field="worker_id", maximum=128)
+        duration = int(lease_seconds)
+        if not 1 <= duration <= 300:
+            raise ValueError("lease_seconds must be between 1 and 300")
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                UPDATE radar_ask_runs
+                SET lease_until=NOW() + (? || ' seconds')::interval,
+                    updated_at=NOW()
+                WHERE id=? AND status='running' AND worker_id=?
+                  AND lease_until > NOW()
+                RETURNING *
+                """,
+                (duration, run_id, owner),
+            ).fetchone()
+            if row is None:
+                raise InvalidRunTransition("run lease is not owned by this worker")
+            conn.execute(
+                """
+                UPDATE radar_ask_usage
+                SET reservation_expires_at=GREATEST(reservation_expires_at, ?),
+                    updated_at=NOW()
+                WHERE run_key=? AND settlement_status='reserved'
+                """,
+                (row["lease_until"], run_id),
+            )
+        return _run_from_row(row)
+
+    def complete_leased_run(
+        self,
+        run_id: UUID,
+        *,
+        worker_id: str,
+        target: str,
+        outcome: str,
+        answer: Mapping[str, Any],
+    ) -> RadarAskRunRecord:
+        owner = _bounded_text(worker_id, field="worker_id", maximum=128)
+        if target not in {"completed", "insufficient"}:
+            raise ValueError("leased completion target is invalid")
+        if outcome not in {"answered", "insufficient"}:
+            raise ValueError("leased completion outcome is invalid")
+        answer_payload = dict(answer)
+        content = _bounded_content(answer_payload.get("direct_answer", ""), maximum=12_000)
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                UPDATE radar_ask_runs
+                SET status=?, outcome=?, answer_json=?, retryable=FALSE,
+                    error_code=NULL, worker_id=NULL, lease_until=NULL,
+                    completed_at=COALESCE(completed_at, NOW()), updated_at=NOW()
+                WHERE id=? AND status='running' AND worker_id=?
+                  AND lease_until > NOW()
+                RETURNING *
+                """,
+                (target, outcome, Jsonb(answer_payload), run_id, owner),
+            ).fetchone()
+            if row is None:
+                raise InvalidRunTransition("run lease is not owned by this worker")
+            conn.execute(
+                """
+                INSERT INTO radar_ask_messages (id, session_id, role, content, answer_json)
+                VALUES (?, ?, 'assistant', ?, ?)
+                """,
+                (uuid4(), row["session_id"], content, Jsonb(answer_payload)),
+            )
+            conn.execute(
+                "UPDATE radar_ask_sessions SET updated_at=NOW() WHERE id=?",
+                (row["session_id"],),
+            )
+        return _run_from_row(row)
+
+    def fail_leased_run(
+        self,
+        run_id: UUID,
+        *,
+        worker_id: str,
+        outcome: str,
+        error_code: str,
+        retryable: bool,
+    ) -> RadarAskRunRecord:
+        """Requeue a retryable first attempt or terminally fail the owned lease."""
+        owner = _bounded_text(worker_id, field="worker_id", maximum=128)
+        if outcome not in RUN_OUTCOMES - {"answered", "insufficient", "clarification"}:
+            raise ValueError("leased failure outcome is invalid")
+        normalized_error = _bounded_text(error_code, field="error_code", maximum=80)
+        if not normalized_error.replace("_", "").isalnum() or normalized_error.lower() != normalized_error:
+            raise ValueError("error_code must contain lowercase letters, digits, or underscores")
+        with get_conn() as conn:
+            current = conn.execute(
+                """
+                SELECT * FROM radar_ask_runs
+                WHERE id=? AND status='running' AND worker_id=?
+                  AND lease_until > NOW()
+                FOR UPDATE
+                """,
+                (run_id, owner),
+            ).fetchone()
+            if current is None:
+                raise InvalidRunTransition("run lease is not owned by this worker")
+            should_retry = bool(retryable) and int(current["attempt_count"]) < 2
+            if should_retry:
+                delay = 10 if int(current["attempt_count"]) == 1 else 30
+                row = conn.execute(
+                    """
+                    UPDATE radar_ask_runs
+                    SET status='queued', outcome=NULL, error_code=?, retryable=TRUE,
+                        available_at=NOW() + (? || ' seconds')::interval,
+                        worker_id=NULL, lease_until=NULL, updated_at=NOW()
+                    WHERE id=? AND status='running' AND worker_id=?
+                    RETURNING *
+                    """,
+                    (normalized_error, delay, run_id, owner),
+                ).fetchone()
+            else:
+                row = conn.execute(
+                    """
+                    UPDATE radar_ask_runs
+                    SET status='failed', outcome=?, error_code=?, retryable=FALSE,
+                        worker_id=NULL, lease_until=NULL,
+                        completed_at=COALESCE(completed_at, NOW()), updated_at=NOW()
+                    WHERE id=? AND status='running' AND worker_id=?
+                    RETURNING *
+                    """,
+                    (outcome, normalized_error, run_id, owner),
+                ).fetchone()
+                conn.execute(
+                    """
+                    UPDATE radar_ask_usage
+                    SET settlement_status='released', question_status='released',
+                        outcome=COALESCE(outcome, ?), settled_at=COALESCE(settled_at, NOW()),
+                        updated_at=NOW()
+                    WHERE run_key=? AND settlement_status='reserved'
+                    """,
+                    (outcome, run_id),
+                )
+        assert row is not None
+        return _run_from_row(row)
+
+    def recover_expired_leases(self) -> dict[str, int]:
+        """Recover crashed workers without allowing a third attempt or orphaned hold."""
+        counts = {"requeued": 0, "failed": 0}
+        with get_conn() as conn:
+            unavailable = conn.execute(
+                """
+                UPDATE radar_ask_runs r
+                SET status='failed', outcome='cancelled',
+                    error_code='reservation_unavailable', retryable=FALSE,
+                    worker_id=NULL, lease_until=NULL,
+                    completed_at=COALESCE(completed_at, NOW()), updated_at=NOW()
+                WHERE r.status='queued' AND r.effective_depth='deep'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM radar_ask_usage u
+                      WHERE u.run_key=r.id AND u.settlement_status='reserved'
+                  )
+                RETURNING r.id
+                """
+            ).fetchall()
+            counts["failed"] += len(unavailable)
+            rows = conn.execute(
+                """
+                SELECT * FROM radar_ask_runs
+                WHERE status='running' AND lease_until <= NOW()
+                ORDER BY lease_until, created_at
+                FOR UPDATE SKIP LOCKED
+                """
+            ).fetchall()
+            for current in rows:
+                attempts = int(current["attempt_count"])
+                if attempts < 2:
+                    delay = 10 if attempts == 1 else 30
+                    conn.execute(
+                        """
+                        UPDATE radar_ask_runs
+                        SET status='queued', outcome=NULL,
+                            error_code='worker_lease_expired', retryable=TRUE,
+                            available_at=NOW() + (? || ' seconds')::interval,
+                            worker_id=NULL, lease_until=NULL, updated_at=NOW()
+                        WHERE id=? AND status='running' AND lease_until <= NOW()
+                        """,
+                        (delay, current["id"]),
+                    )
+                    counts["requeued"] += 1
+                    continue
+                conn.execute(
+                    """
+                    UPDATE radar_ask_runs
+                    SET status='failed', outcome='database_failure',
+                        error_code='worker_lease_expired', retryable=FALSE,
+                        worker_id=NULL, lease_until=NULL,
+                        completed_at=COALESCE(completed_at, NOW()), updated_at=NOW()
+                    WHERE id=? AND status='running' AND lease_until <= NOW()
+                    """,
+                    (current["id"],),
+                )
+                conn.execute(
+                    """
+                    UPDATE radar_ask_usage
+                    SET settlement_status='released', question_status='released',
+                        outcome=COALESCE(outcome, 'database_failure'),
+                        settled_at=COALESCE(settled_at, NOW()), updated_at=NOW()
+                    WHERE run_key=? AND settlement_status='reserved'
+                    """,
+                    (current["id"],),
+                )
+                counts["failed"] += 1
+        return counts
 
     def transition_run(
         self,
