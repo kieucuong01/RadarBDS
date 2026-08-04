@@ -67,6 +67,10 @@ _NON_ASKING_PRICE_PATTERNS = [
     r'(?:thanh\s*toán|thanh\s*toan|đóng\s*trước|dong\s*truoc)'
     r'(?:\s+[^,.;\n]{0,24})?\s*[:：\-]?\s*[\d,.]+\s*'
     r'(?:tỷ|ty|tỉ|triệu|tr|m|k)\b(?:\s*nhận\s*nhà|\s*nhan\s*nha)?',
+    r'(?:đóng|dong|thanh\s*toán|thanh\s*toan)\s*'
+    r'[\d,.]+\s*%\s*\(\s*[\d,.]+\s*'
+    r'(?:tỷ|ty|tỉ|triệu|tr|m|k)\s*\)'
+    r'(?:\s*(?:là|la)\s*(?:nhận\s*nhà|nhan\s*nha))?',
     r'(?:vay|ngân\s*hàng|ngan\s*hang|nh)\s*(?:hỗ\s*trợ|ho\s*tro|được|duoc)?\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
     r'(?:hỗ\s*trợ|ho\s*tro)\s*(?:vay|ngân\s*hàng|ngan\s*hang|nh)'
     r'\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
@@ -580,6 +584,11 @@ _MULTI_LOT_PER_LOT_RE = re.compile(
     r'(?:/|\b(?:moi|tung)\s+)(?:lo|nen)\b|\b(?:hai|ba)\s+(?:lo|nen)\b',
     re.IGNORECASE,
 )
+_MULTI_UNIT_INVENTORY_CONTEXT_RE = re.compile(
+    r'\b(?:tong\s*hop\s+)?gio\s+hang\b|\bquy\s+can\b|'
+    r'\bcan\s+[1-5]\s+phong\s+ngu\b',
+    re.IGNORECASE,
+)
 _MULTI_ASSET_RENTAL_CONTEXT_RE = re.compile(
     r'\b(?:may\s+can|nhieu\s+can|tro\s+moi|tro\s+cu|nha\s+tro|day\s+tro)\b',
     re.IGNORECASE,
@@ -612,6 +621,18 @@ def is_multi_lot_listing(title: str, description: str = "") -> bool:
 
     if _MULTI_LOT_COUNT_RE.search(text):
         return True
+
+    if _MULTI_UNIT_INVENTORY_CONTEXT_RE.search(text):
+        distinct_areas = {
+            match.group(0).replace(',', '.')
+            for match in _MULTI_LOT_AREA_RE.finditer(text)
+        }
+        distinct_prices = {
+            match.group(0).replace(',', '.')
+            for match in _MULTI_LOT_PRICE_RE.finditer(text)
+        }
+        if len(distinct_areas) >= 2 and len(distinct_prices) >= 2:
+            return True
 
     area_tho_cu_groups = {
         (total.replace(',', '.'), residential.replace(',', '.'))
@@ -696,7 +717,11 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
         return result
 
     # "ngang X sâu Y" / "ngang X dài Y"
-    m = re.search(r'ngang\s*([\d]+[,.]?[\d]*)\s*(?:m\b)?\s*(?:,|sâu|dài|x)\s*([\d]+[,.]?[\d]*)', t)
+    m = re.search(
+        r'ngang\s*([\d]+[,.]?[\d]*)\s*(?:m\b)?\s*'
+        r'(?:,\s*)?(?:sâu|dài|x)\s*([\d]+[,.]?[\d]*)',
+        t,
+    )
     if m:
         result['frontage_m'] = float(m.group(1).replace(',', '.'))
         result['depth_m'] = float(m.group(2).replace(',', '.'))
@@ -1589,7 +1614,8 @@ def _strip_nearby_chung_cu_context(text: str) -> str:
 def _has_chung_cu_keyword(text: str) -> bool:
     folded = _ascii_fold(text).replace("Ä‘", "d").replace("Ä", "d")
     return bool(_CHUNG_CU_RE.search(text) or re.search(
-        r'\bchung\s*cu\b|\bcan\s*ho\b|\bbiconsi\b|\bblock\s*[a-z0-9]+\b',
+        r'\bchung\s*cu\b|\bcan\s*ho\b|\bbiconsi\b|\bblock\s*[a-z0-9]+\b|'
+        r'\bcan\s+[1-5]\s+phong\s+ngu\b',
         folded,
         flags=re.IGNORECASE,
     ))

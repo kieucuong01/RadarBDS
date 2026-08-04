@@ -78,6 +78,9 @@ def test_extract_price_handles_compact_million_and_non_asking_amounts():
     assert extract_price("Chủ hạ giá 400tr chỉ còn 2tỷ2") == 2.2
     assert extract_price("Giá 5,87 triệu/m²") is None
     assert extract_price("Giá >1ty xíu xiu") is None
+    assert extract_price(
+        "Chỉ từ 29tr/m². Đóng 30% (500tr) là nhận nhà."
+    ) is None
 
 
 def test_extract_price_ignores_interior_value_when_asking_price_is_vague():
@@ -141,6 +144,22 @@ def test_normalize_keeps_structured_price_when_visible_price_is_only_a_lower_bou
 
     assert rec is not None
     assert rec["price_ty"] == 1.3
+
+
+def test_normalize_keeps_structured_total_when_text_only_has_unit_price_and_down_payment():
+    rec = normalize_record({
+        "source": "guland",
+        "source_id": "unit-price-and-down-payment",
+        "url": "https://guland.test/unit-price-and-down-payment",
+        "title": "Căn hộ 64m2 chỉ từ 29tr/m2",
+        "description": "Đóng 30% (500tr) là nhận nhà, ngân hàng cho vay 70%",
+        "price_ty": 1.85,
+        "area_m2": 64,
+        "property_type": "Căn hộ",
+    })
+
+    assert rec is not None
+    assert rec["price_ty"] == 1.85
 
 
 def test_extract_area():
@@ -248,6 +267,25 @@ def test_multi_lot_ignores_title_repeated_in_description_and_national_road_numbe
     assert not is_multi_lot_listing(title, f"{title}\nLiên hệ xem nhà")
 
 
+def test_multi_lot_detects_multi_unit_apartment_inventory():
+    assert is_multi_lot_listing(
+        "Tổng hợp giỏ hàng chuyển nhượng giá tốt",
+        (
+            "Căn 1 phòng ngủ 63.88m2 giá 3.16 tỷ. "
+            "Căn 2 phòng ngủ 94.46m2 giá 3.97 tỷ. "
+            "Căn 3 phòng ngủ 125m2 giá 5.15 tỷ."
+        ),
+    )
+
+
+def test_property_type_detects_apartment_bedroom_inventory():
+    assert classify_property_type(
+        "Tổng hợp giỏ hàng chuyển nhượng",
+        "Căn 1 phòng ngủ 63m2; căn 2 phòng ngủ 94m2",
+        63,
+    ) == "chung_cu"
+
+
 def test_detects_numbered_lots_with_meter_dimension_notation():
     assert is_multi_lot_listing(
         "Đất Phú Thọ",
@@ -267,6 +305,14 @@ def test_extract_dimensions():
     d = extract_dimensions("4x34")
     assert d["frontage_m"] == 4.0
     assert d["depth_m"] == 34.0
+
+    d = extract_dimensions("DT 100m2 full thổ cư, ngang 7,5m")
+    assert d["frontage_m"] == 7.5
+    assert d["depth_m"] is None
+
+    d = extract_dimensions("ngang 4m, dài 20m")
+    assert d["frontage_m"] == 4.0
+    assert d["depth_m"] == 20.0
 
     d = extract_dimensions("Đất P hiệp an 1/ Nguyễn chí Thanh 4 dài 28 tc 60")
     assert d["frontage_m"] == 4.0
