@@ -346,6 +346,7 @@ def test_generated_standard_answer_reserves_calls_provider_validates_and_settles
     assert provider.requests[0].json_mode is True
     assert provider.requests[0].thinking_enabled is False
     assert deps.repository.messages[-1]["role"] == "assistant"
+    assert deps.repository.messages[-1]["run_id"] == result.run_id
 
 
 def test_provider_boundary_redacts_phone_urls_and_secret_like_tokens_from_context():

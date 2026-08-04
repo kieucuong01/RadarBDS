@@ -394,6 +394,12 @@ def test_worker_token_owns_renew_complete_and_fail(worker_repo):
     )
     assert completed.status == "completed"
     assert completed.worker_id is None and completed.lease_until is None
+    with get_conn() as conn:
+        assistant = conn.execute(
+            "SELECT run_id FROM radar_ask_messages WHERE session_id=? AND role='assistant'",
+            (queued.session_id,),
+        ).fetchone()
+    assert assistant is not None and assistant["run_id"] == queued.id
 
 
 def test_retry_backoff_then_maximum_two_attempts_releases_reservation(worker_repo):

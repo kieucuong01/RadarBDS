@@ -340,6 +340,10 @@ def test_clock_boundary_and_legacy_messages_preserve_nonterminal_sessions(retent
 def test_dry_run_matches_apply_for_shared_expired_run(retention_env):
     repository, user = retention_env
     old = _terminal_run(repository, user, key="parity-old")
+    repository.record_tool_call(run_id=old.id, tool_call_key="parity-tool", tool_name="market", arguments={}, result_summary={}, status="completed")
+    repository.record_evidence(run_id=old.id, evidence_key="parity-evidence", evidence_kind="market", source_ref="market:old", payload={}, min_tier="vip", as_of=NOW)
+    answer = repository.create_message(user_id=user.id, session_id=old.session_id, run_id=old.id, role="assistant", content="old")
+    repository.add_feedback(user_id=user.id, message_id=answer.id, rating="helpful")
     active = repository.create_run(user_id=user.id, session_id=old.session_id, question="active", idempotency_key="parity-active")
     repository.transition_run(active.id, user_id=user.id, expected={"created"}, target="queued")
     with get_conn() as conn:
@@ -347,6 +351,11 @@ def test_dry_run_matches_apply_for_shared_expired_run(retention_env):
     dry = purge_expired_content(dry_run=True, clock=lambda: NOW)
     applied = purge_expired_content(clock=lambda: NOW)
     assert dry["runs"] == applied["runs"] == 1
+    assert dry["messages"] == applied["messages"] == 2
+    with get_conn() as conn:
+        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_tool_calls WHERE run_id=?", (old.id,)).fetchone()["count"] == 0
+        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_evidence WHERE run_id=?", (old.id,)).fetchone()["count"] == 0
+        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_feedback WHERE message_id=?", (answer.id,)).fetchone()["count"] == 0
 
 
 def test_more_than_500_owned_runs_and_messages_are_processed_in_multiple_batches(retention_env):
