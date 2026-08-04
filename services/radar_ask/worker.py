@@ -5,10 +5,10 @@ import logging
 import os
 import signal
 import socket
-from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
+from concurrent.futures import FIRST_COMPLETED, Future, wait
 from dataclasses import replace
 from datetime import datetime, timezone
-from threading import Event
+from threading import Event, Thread
 from time import monotonic
 from typing import Callable
 from uuid import uuid4
@@ -36,6 +36,26 @@ class RadarAskWorkerDisabled(RuntimeError):
 def _default_worker_id() -> str:
     host = socket.gethostname().strip()[:48] or "radar"
     return f"{host}:{os.getpid()}:{uuid4().hex[:12]}"
+
+
+def _submit_daemon(callback: Callable[..., object], /, *args, **kwargs) -> Future:
+    """Run one bounded task without registering an interpreter-exit join."""
+    future: Future = Future()
+
+    def invoke() -> None:
+        if not future.set_running_or_notify_cancel():
+            return
+        try:
+            future.set_result(callback(*args, **kwargs))
+        except BaseException as exc:
+            future.set_exception(exc)
+
+    Thread(
+        target=invoke,
+        name=f"radar-ask-deep-{uuid4().hex[:8]}",
+        daemon=True,
+    ).start()
+    return future
 
 
 def build_worker_dependencies(
@@ -159,10 +179,6 @@ class RadarAskWorker:
         next_recovery = self._monotonic() + recovery_interval
         active: dict[Future, tuple[object, Event, float]] = {}
 
-        executor = ThreadPoolExecutor(
-            max_workers=concurrency,
-            thread_name_prefix="radar-ask-deep",
-        )
         try:
             while active or not self._stop.is_set():
                 if not self._stop.is_set() and self._monotonic() >= next_recovery:
@@ -189,7 +205,7 @@ class RadarAskWorker:
                     deadline = self._monotonic() + float(
                         self.dependencies.settings.deep_timeout_seconds
                     )
-                    future = executor.submit(
+                    future = _submit_daemon(
                         self._execute_owned,
                         run,
                         deadline=deadline,
@@ -235,7 +251,6 @@ class RadarAskWorker:
         finally:
             for _run, cancelled, _deadline in active.values():
                 cancelled.set()
-            executor.shutdown(wait=False, cancel_futures=True)
 
 
 def cmd_radar_ask_worker(_args=None) -> None:

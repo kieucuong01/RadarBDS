@@ -746,6 +746,34 @@ CREATE INDEX IF NOT EXISTS idx_radar_ask_usage_month
     ON radar_ask_usage(usage_month, settlement_status);
 
 
+-- Provider usage belongs to the immutable lease attempt that incurred it.
+-- Keeping attempts separate lets a stale worker report cost without granting
+-- it authority to finalize the mutable run or create an assistant message.
+CREATE TABLE IF NOT EXISTS radar_ask_usage_attempts (
+    id                  UUID PRIMARY KEY,
+    reservation_id      UUID NOT NULL REFERENCES radar_ask_usage(id) ON DELETE CASCADE,
+    run_key             UUID NOT NULL,
+    attempt_count       INTEGER NOT NULL CHECK (attempt_count BETWEEN 1 AND 2),
+    worker_id           TEXT NOT NULL CHECK (char_length(worker_id) BETWEEN 1 AND 128),
+    model               TEXT NOT NULL,
+    prompt_tokens       INTEGER NOT NULL DEFAULT 0 CHECK (prompt_tokens >= 0),
+    completion_tokens   INTEGER NOT NULL DEFAULT 0 CHECK (completion_tokens >= 0),
+    cache_hit_tokens    INTEGER NOT NULL DEFAULT 0 CHECK (cache_hit_tokens >= 0),
+    cache_miss_tokens   INTEGER NOT NULL DEFAULT 0 CHECK (cache_miss_tokens >= 0),
+    actual_usd          NUMERIC(12, 6) NOT NULL DEFAULT 0 CHECK (actual_usd >= 0),
+    outcome             TEXT CHECK (outcome IS NULL OR outcome IN (
+                            'answered', 'insufficient', 'clarification',
+                            'provider_failure', 'validation_failure',
+                            'database_failure', 'budget_hard_stop', 'cancelled'
+                        )),
+    leased_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    recorded_at         TIMESTAMPTZ,
+    UNIQUE(run_key, attempt_count)
+);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_usage_attempts_reservation
+    ON radar_ask_usage_attempts(reservation_id, attempt_count);
+
+
 CREATE TABLE IF NOT EXISTS radar_ask_feedback (
     id         UUID PRIMARY KEY,
     message_id UUID NOT NULL REFERENCES radar_ask_messages(id) ON DELETE CASCADE,

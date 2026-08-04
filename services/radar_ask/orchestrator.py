@@ -36,6 +36,7 @@ from .evidence import build_provider_bundle
 from .limits import BudgetHardStop, QuotaExceeded
 from .provider import ProviderError, RadarAskProvider
 from .registry import ToolArgumentsInvalid, ToolContext, ToolRegistry, execute_tool
+from .repository import InvalidRunTransition
 from .routing import Planner, route_question
 from .validator import (
     AnswerValidationError,
@@ -721,28 +722,50 @@ def execute_leased_run(
     )
     if execution.answer is None:
         assert execution.error_code is not None
-        failed = dependencies.repository.fail_leased_run(
-            run.id,
-            worker_id=worker_id,
-            outcome=execution.outcome.value,
-            error_code=execution.error_code,
-            retryable=execution.retryable,
-            reservation_id=reservation.reservation_id,
-            usage=execution.usage,
-            lease_seconds=lease_seconds,
-        )
+        try:
+            failed = dependencies.repository.fail_leased_run(
+                run.id,
+                worker_id=worker_id,
+                outcome=execution.outcome.value,
+                error_code=execution.error_code,
+                retryable=execution.retryable,
+                reservation_id=reservation.reservation_id,
+                usage=execution.usage,
+                lease_seconds=lease_seconds,
+            )
+        except InvalidRunTransition:
+            dependencies.repository.record_attempt_usage(
+                run_id=run.id,
+                reservation_id=reservation.reservation_id,
+                attempt_count=int(run.attempt_count),
+                worker_id=worker_id,
+                usage=execution.usage,
+                outcome=execution.outcome.value,
+            )
+            raise
         return _run_result(failed)
 
     target = RunStatus.COMPLETED if execution.answer.answered else RunStatus.INSUFFICIENT
-    terminal = dependencies.repository.complete_leased_run(
-        run.id,
-        worker_id=worker_id,
-        target=target.value,
-        outcome=execution.outcome.value,
-        answer=execution.answer.model_dump(mode="json"),
-        reservation_id=reservation.reservation_id,
-        usage=execution.usage,
-    )
+    try:
+        terminal = dependencies.repository.complete_leased_run(
+            run.id,
+            worker_id=worker_id,
+            target=target.value,
+            outcome=execution.outcome.value,
+            answer=execution.answer.model_dump(mode="json"),
+            reservation_id=reservation.reservation_id,
+            usage=execution.usage,
+        )
+    except InvalidRunTransition:
+        dependencies.repository.record_attempt_usage(
+            run_id=run.id,
+            reservation_id=reservation.reservation_id,
+            attempt_count=int(run.attempt_count),
+            worker_id=worker_id,
+            usage=execution.usage,
+            outcome=RunOutcome.PROVIDER_FAILURE.value,
+        )
+        raise
     return _run_result(terminal, answer=execution.answer)
 
 

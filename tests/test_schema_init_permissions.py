@@ -204,3 +204,11 @@ def test_runtime_schema_does_not_create_privileged_radar_ask_roles_or_views():
     assert "CREATE ROLE radar_ask_ro" not in schema.SCHEMA_SQL
     assert "radar_ask_v_listings" not in schema.SCHEMA_SQL
     assert "radar_ask_view_owner" not in schema.SCHEMA_SQL
+
+
+def test_runtime_schema_creates_idempotent_radar_ask_attempt_usage_ledger():
+    import db.schema as schema
+
+    assert "CREATE TABLE IF NOT EXISTS radar_ask_usage_attempts" in schema.SCHEMA_SQL
+    assert "UNIQUE(run_key, attempt_count)" in schema.SCHEMA_SQL
+    assert "REFERENCES radar_ask_usage(id) ON DELETE CASCADE" in schema.SCHEMA_SQL

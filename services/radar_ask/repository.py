@@ -616,7 +616,7 @@ class RadarAskRepository:
                     retryable=FALSE, error_code=NULL, updated_at=NOW()
                 FROM candidate
                 WHERE r.id=candidate.id
-                RETURNING r.id, r.lease_until
+                RETURNING r.id, r.lease_until, r.attempt_count
                 """,
                 (owner, duration),
             ).fetchone()
@@ -631,6 +631,27 @@ class RadarAskRepository:
                 """,
                 (leased["lease_until"], leased["id"]),
             )
+            conn.execute(
+                """
+                INSERT INTO radar_ask_usage_attempts (
+                    id, reservation_id, run_key, attempt_count, worker_id, model
+                )
+                SELECT ?, u.id, u.run_key, ?, ?, COALESCE(u.model, 'none')
+                FROM radar_ask_usage u
+                WHERE u.run_key=? AND u.settlement_status='reserved'
+                ON CONFLICT (run_key, attempt_count) DO NOTHING
+                """,
+                (uuid4(), leased["attempt_count"], owner, leased["id"]),
+            )
+            attempt = conn.execute(
+                """
+                SELECT worker_id FROM radar_ask_usage_attempts
+                WHERE run_key=? AND attempt_count=?
+                """,
+                (leased["id"], leased["attempt_count"]),
+            ).fetchone()
+            if attempt is None or attempt["worker_id"] != owner:
+                raise InvalidRunTransition("run attempt ownership could not be recorded")
             row = conn.execute(
                 """
                 SELECT r.*, u.id AS reservation_id,
@@ -729,8 +750,10 @@ class RadarAskRepository:
                 conn,
                 run_id=run_id,
                 reservation_id=reservation_id,
-                usage=usage,
                 outcome=outcome,
+                attempt_count=int(row["attempt_count"]),
+                worker_id=owner,
+                usage=usage,
             )
         return _run_from_row(row)
 
@@ -771,6 +794,20 @@ class RadarAskRepository:
             should_retry = bool(retryable) and int(current["attempt_count"]) < 2
             if should_retry:
                 delay = 10 if int(current["attempt_count"]) == 1 else 30
+                self._lock_usage_ledger(
+                    conn,
+                    run_id=run_id,
+                    reservation_id=reservation_id,
+                )
+                self._record_attempt_usage(
+                    conn,
+                    run_id=run_id,
+                    reservation_id=reservation_id,
+                    attempt_count=int(current["attempt_count"]),
+                    worker_id=owner,
+                    usage=usage,
+                    outcome=outcome,
+                )
                 extended = conn.execute(
                     """
                     UPDATE radar_ask_usage
@@ -813,22 +850,144 @@ class RadarAskRepository:
                     conn,
                     run_id=run_id,
                     reservation_id=reservation_id,
-                    usage=usage,
                     outcome=outcome,
+                    attempt_count=int(current["attempt_count"]),
+                    worker_id=owner,
+                    usage=usage,
                 )
         assert row is not None
         return _run_from_row(row)
 
+    def record_attempt_usage(
+        self,
+        *,
+        run_id: UUID,
+        reservation_id: UUID,
+        attempt_count: int,
+        worker_id: str,
+        usage: ProviderUsage,
+        outcome: str,
+    ) -> None:
+        """Record cost for one immutable lease attempt without finalizing its run."""
+        owner = _bounded_text(worker_id, field="worker_id", maximum=128)
+        attempt = int(attempt_count)
+        if attempt not in {1, 2}:
+            raise ValueError("attempt_count must be 1 or 2")
+        if outcome not in RUN_OUTCOMES:
+            raise ValueError("attempt outcome is invalid")
+        with get_conn() as conn:
+            self._lock_usage_ledger(
+                conn,
+                run_id=run_id,
+                reservation_id=reservation_id,
+            )
+            self._record_attempt_usage(
+                conn,
+                run_id=run_id,
+                reservation_id=reservation_id,
+                attempt_count=attempt,
+                worker_id=owner,
+                usage=usage,
+                outcome=outcome,
+            )
+
     @staticmethod
-    def _settle_leased_usage(
+    def _record_attempt_usage(
         conn: PgConnection,
         *,
         run_id: UUID,
         reservation_id: UUID,
+        attempt_count: int,
+        worker_id: str,
         usage: ProviderUsage,
         outcome: str,
     ) -> None:
         normalized_outcome = RunOutcome(outcome)
+        attempt = conn.execute(
+            """
+            SELECT * FROM radar_ask_usage_attempts
+            WHERE reservation_id=? AND run_key=? AND attempt_count=? AND worker_id=?
+            FOR UPDATE
+            """,
+            (reservation_id, run_id, attempt_count, worker_id),
+        ).fetchone()
+        if attempt is None:
+            raise InvalidRunTransition("run attempt is not owned by this worker")
+        actual_usd = calculate_provider_cost(attempt["model"], usage)
+        if attempt["recorded_at"] is not None:
+            expected = (
+                usage.input_tokens,
+                usage.output_tokens,
+                usage.cache_hit_input_tokens,
+                usage.cache_miss_input_tokens,
+                actual_usd,
+                normalized_outcome.value,
+            )
+            stored = (
+                attempt["prompt_tokens"],
+                attempt["completion_tokens"],
+                attempt["cache_hit_tokens"],
+                attempt["cache_miss_tokens"],
+                attempt["actual_usd"],
+                attempt["outcome"],
+            )
+            if stored != expected:
+                raise InvalidRunTransition("run attempt usage was already recorded differently")
+            return
+
+        updated = conn.execute(
+            """
+            UPDATE radar_ask_usage_attempts
+            SET prompt_tokens=?, completion_tokens=?, cache_hit_tokens=?,
+                cache_miss_tokens=?, actual_usd=?, outcome=?, recorded_at=NOW()
+            WHERE reservation_id=? AND run_key=? AND attempt_count=?
+              AND worker_id=? AND recorded_at IS NULL
+            RETURNING *
+            """,
+            (
+                usage.input_tokens,
+                usage.output_tokens,
+                usage.cache_hit_input_tokens,
+                usage.cache_miss_input_tokens,
+                actual_usd,
+                normalized_outcome.value,
+                reservation_id,
+                run_id,
+                attempt_count,
+                worker_id,
+            ),
+        ).fetchone()
+        if updated is None:
+            raise InvalidRunTransition("run attempt usage lost its lock")
+
+        # If another owner already settled the run, append this late cost once.
+        conn.execute(
+            """
+            UPDATE radar_ask_usage
+            SET actual_usd=actual_usd+?, prompt_tokens=prompt_tokens+?,
+                completion_tokens=completion_tokens+?,
+                cache_hit_tokens=cache_hit_tokens+?,
+                cache_miss_tokens=cache_miss_tokens+?, updated_at=NOW()
+            WHERE id=? AND run_key=? AND settlement_status<>'reserved'
+            """,
+            (
+                actual_usd,
+                usage.input_tokens,
+                usage.output_tokens,
+                usage.cache_hit_input_tokens,
+                usage.cache_miss_input_tokens,
+                reservation_id,
+                run_id,
+            ),
+        )
+
+    @staticmethod
+    def _lock_usage_ledger(
+        conn: PgConnection,
+        *,
+        run_id: UUID,
+        reservation_id: UUID,
+    ) -> PgRow:
         period = conn.execute(
             """
             SELECT usage_month FROM radar_ask_usage
@@ -852,12 +1011,54 @@ class RadarAskRepository:
             "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))",
             (f"radar_ask_quota:{ledger['user_id']}:{ledger['usage_date'].isoformat()}",),
         )
+        return ledger
+
+    def _settle_leased_usage(
+        self,
+        conn: PgConnection,
+        *,
+        run_id: UUID,
+        reservation_id: UUID,
+        outcome: str,
+        attempt_count: int | None = None,
+        worker_id: str | None = None,
+        usage: ProviderUsage | None = None,
+    ) -> None:
+        normalized_outcome = RunOutcome(outcome)
+        ledger = self._lock_usage_ledger(
+            conn,
+            run_id=run_id,
+            reservation_id=reservation_id,
+        )
         if ledger["settlement_status"] != "reserved":
             if ledger["outcome"] == normalized_outcome.value:
                 return
             raise InvalidRunTransition("run reservation was already settled differently")
 
-        actual_usd = calculate_provider_cost(ledger["model"] or "none", usage)
+        if attempt_count is not None:
+            assert worker_id is not None and usage is not None
+            self._record_attempt_usage(
+                conn,
+                run_id=run_id,
+                reservation_id=reservation_id,
+                attempt_count=attempt_count,
+                worker_id=worker_id,
+                usage=usage,
+                outcome=outcome,
+            )
+        totals = conn.execute(
+            """
+            SELECT COALESCE(SUM(actual_usd), 0) AS actual_usd,
+                   COALESCE(SUM(prompt_tokens), 0) AS prompt_tokens,
+                   COALESCE(SUM(completion_tokens), 0) AS completion_tokens,
+                   COALESCE(SUM(cache_hit_tokens), 0) AS cache_hit_tokens,
+                   COALESCE(SUM(cache_miss_tokens), 0) AS cache_miss_tokens
+            FROM radar_ask_usage_attempts
+            WHERE reservation_id=? AND run_key=? AND recorded_at IS NOT NULL
+            """,
+            (reservation_id, run_id),
+        ).fetchone()
+        assert totals is not None
         consumed = normalized_outcome in CONSUMED_OUTCOMES
         settlement_status = "settled" if consumed else "released"
         question_status = "answered" if consumed else "released"
@@ -873,11 +1074,11 @@ class RadarAskRepository:
             (
                 settlement_status,
                 question_status,
-                actual_usd,
-                usage.input_tokens,
-                usage.output_tokens,
-                usage.cache_hit_input_tokens,
-                usage.cache_miss_input_tokens,
+                totals["actual_usd"],
+                totals["prompt_tokens"],
+                totals["completion_tokens"],
+                totals["cache_hit_tokens"],
+                totals["cache_miss_tokens"],
                 normalized_outcome.value,
                 reservation_id,
                 run_id,

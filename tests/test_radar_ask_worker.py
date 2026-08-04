@@ -4,7 +4,11 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+import subprocess
+import sys
+import textwrap
 from threading import Event, Thread
+from time import monotonic
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -40,6 +44,14 @@ from services.radar_ask.worker import RadarAskWorker, RadarAskWorkerDisabled
 
 
 NOW = datetime(2026, 8, 5, 5, 0, tzinfo=timezone.utc)
+
+
+class FakeMonotonic:
+    def __init__(self):
+        self.value = 0.0
+
+    def __call__(self):
+        return self.value
 
 
 @dataclass(frozen=True)
@@ -186,15 +198,19 @@ class ProviderSpy:
         error: Exception | None = None,
         block: Event | None = None,
         cancel_on_complete: Event | None = None,
+        started: Event | None = None,
     ):
         self.error = error
         self.block = block
         self.cancel_on_complete = cancel_on_complete
+        self.started = started
         self.requests = []
         self.deadlines = []
 
     def complete(self, request):
         self.requests.append(request)
+        if self.started is not None:
+            self.started.set()
         if self.block is not None:
             self.block.wait(timeout=2)
         if self.error is not None:
@@ -644,8 +660,23 @@ def test_failure_finalization_rolls_back_ledger_and_run_together(worker_repo):
     queued, reservation_id = queue_run(repository, user, key="atomic-failure")
     leased = repository.lease_next_run(worker_id="atomic-failure-worker", lease_seconds=90)
     assert leased is not None
+    repository.fail_leased_run(
+        queued.id,
+        worker_id="atomic-failure-worker",
+        outcome="provider_failure",
+        error_code="provider_unavailable",
+        retryable=True,
+        reservation_id=reservation_id,
+        usage=ProviderUsage(),
+        lease_seconds=90,
+    )
     with get_conn() as conn:
-        conn.execute("UPDATE radar_ask_runs SET attempt_count=2 WHERE id=?", (queued.id,))
+        conn.execute("UPDATE radar_ask_runs SET available_at=NOW() WHERE id=?", (queued.id,))
+    second = repository.lease_next_run(
+        worker_id="atomic-failure-worker",
+        lease_seconds=90,
+    )
+    assert second is not None and second.attempt_count == 2
 
     with pytest.raises(NumericValueOutOfRange):
         repository.fail_leased_run(
@@ -832,6 +863,125 @@ def test_lost_renewal_signals_active_execution_to_cancel():
     assert not thread.is_alive()
 
 
+def test_real_lost_renewal_records_attempt_usage_once_and_next_owner_settles_total(worker_repo):
+    repository, user = worker_repo
+    queued, reservation_id = queue_run(repository, user, key="real-lost-renewal")
+    provider_started = Event()
+    release_provider = Event()
+    renewal_lost = Event()
+
+    class ObservedRepository(RadarAskRepository):
+        def renew_lease(self, *args, **kwargs):
+            try:
+                return super().renew_lease(*args, **kwargs)
+            except InvalidRunTransition:
+                renewal_lost.set()
+                raise
+
+    observed = ObservedRepository()
+    assert callable(getattr(observed, "record_attempt_usage", None))
+    provider = ProviderSpy(block=release_provider, started=provider_started)
+    deps = worker_dependencies(observed, provider)
+    fake_clock = FakeMonotonic()
+    worker = RadarAskWorker(
+        dependencies=deps,
+        worker_id="combined-loss-worker",
+        lease_seconds=1,
+        poll_seconds=0.01,
+        monotonic_fn=fake_clock,
+    )
+    thread = Thread(target=worker.run_forever)
+    thread.start()
+    assert provider_started.wait(timeout=2)
+
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE radar_ask_runs SET lease_until=NOW()-INTERVAL '1 second' WHERE id=?",
+            (queued.id,),
+        )
+    assert repository.recover_expired_leases(lease_seconds=1) == {
+        "requeued": 1,
+        "failed": 0,
+    }
+    fake_clock.value = 2.0
+    assert renewal_lost.wait(timeout=2)
+    release_provider.set()
+
+    deadline = monotonic() + 2
+    first_attempt = None
+    while monotonic() < deadline:
+        with get_conn() as conn:
+            first_attempt = conn.execute(
+                """
+                SELECT prompt_tokens, completion_tokens, actual_usd, outcome
+                FROM radar_ask_usage_attempts
+                WHERE run_key=? AND attempt_count=1
+                """,
+                (queued.id,),
+            ).fetchone()
+        if first_attempt is not None and first_attempt["prompt_tokens"] == 100:
+            break
+        Event().wait(0.01)
+    worker.request_stop()
+    thread.join(timeout=2)
+
+    assert not thread.is_alive()
+    assert first_attempt is not None
+    assert tuple(first_attempt)[:2] == (100, 50)
+    assert first_attempt["actual_usd"] > 0
+    assert first_attempt["outcome"] == "provider_failure"
+    with pytest.raises(InvalidRunTransition):
+        observed.record_attempt_usage(
+            run_id=queued.id,
+            reservation_id=reservation_id,
+            attempt_count=1,
+            worker_id="stale-intruder",
+            usage=ProviderUsage(input_tokens=100, output_tokens=50),
+            outcome="provider_failure",
+        )
+    with get_conn() as conn:
+        first_run = conn.execute(
+            "SELECT status, worker_id FROM radar_ask_runs WHERE id=?",
+            (queued.id,),
+        ).fetchone()
+        assistant_count = conn.execute(
+            "SELECT COUNT(*) AS total FROM radar_ask_messages WHERE session_id=? AND role='assistant'",
+            (queued.session_id,),
+        ).fetchone()
+        conn.execute("UPDATE radar_ask_runs SET available_at=NOW() WHERE id=?", (queued.id,))
+    assert tuple(first_run) == ("queued", None)
+    assert assistant_count["total"] == 0
+
+    second = repository.lease_next_run(worker_id="second-owner", lease_seconds=90)
+    assert second is not None and second.attempt_count == 2
+    second_result = execute_leased_run(
+        second,
+        worker_id="second-owner",
+        dependencies=worker_dependencies(repository, ProviderSpy()),
+    )
+    assert second_result.status is RunStatus.COMPLETED
+
+    observed.record_attempt_usage(
+        run_id=queued.id,
+        reservation_id=reservation_id,
+        attempt_count=1,
+        worker_id="combined-loss-worker",
+        usage=ProviderUsage(input_tokens=100, output_tokens=50),
+        outcome="provider_failure",
+    )
+    with get_conn() as conn:
+        total = conn.execute(
+            """
+            SELECT prompt_tokens, completion_tokens, actual_usd, settlement_status
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation_id,),
+        ).fetchone()
+    assert tuple(total)[:2] == (200, 100)
+    assert total["actual_usd"] > first_attempt["actual_usd"]
+    assert total["settlement_status"] == "settled"
+
+
 def test_shutdown_drain_returns_at_active_deadline():
     leased = SimpleNamespace(id=uuid4(), reservation_id=uuid4())
     started = Event()
@@ -873,3 +1023,66 @@ def test_shutdown_drain_returns_at_active_deadline():
     release.set()
 
     assert not thread.is_alive()
+
+
+def test_cli_process_exits_at_deadline_with_blocked_execution():
+    script = textwrap.dedent(
+        """
+        import sys
+        from threading import Event, Timer
+        from types import SimpleNamespace
+        from uuid import uuid4
+
+        import radar
+        from services.radar_ask.worker import RadarAskWorker
+
+        leased = SimpleNamespace(id=uuid4(), reservation_id=uuid4())
+
+        class Repository:
+            def __init__(self):
+                self.calls = 0
+            def recover_expired_leases(self, **_kwargs):
+                return {"requeued": 0, "failed": 0}
+            def lease_next_run(self, **_kwargs):
+                self.calls += 1
+                return leased if self.calls == 1 else None
+            def renew_lease(self, *_args, **_kwargs):
+                return leased
+
+        dependencies = SimpleNamespace(
+            settings=SimpleNamespace(
+                enabled=True,
+                worker_concurrency=1,
+                deep_timeout_seconds=0.10,
+            ),
+            repository=Repository(),
+        )
+
+        def blocked(_run, **_kwargs):
+            Event().wait(60)
+
+        def command(_args):
+            worker = RadarAskWorker(
+                dependencies=dependencies,
+                worker_id="subprocess-worker",
+                poll_seconds=0.01,
+                execute_fn=blocked,
+            )
+            Timer(0.05, worker.request_stop).start()
+            worker.run_forever()
+
+        radar.cmd_radar_ask_worker = command
+        sys.argv = ["radar.py", "radar-ask-worker"]
+        radar.main()
+        """
+    )
+
+    completed = subprocess.run(
+        [sys.executable, "-X", "utf8", "-c", script],
+        capture_output=True,
+        text=True,
+        timeout=4,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
