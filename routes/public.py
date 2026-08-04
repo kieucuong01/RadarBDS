@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from flask import Blueprint
+from flask import Blueprint, abort, make_response
+
+from auth.core import current_tier, current_user
+from services.radar_ask.service import feature_enabled, tier_allowed
 
 bp = Blueprint("public", __name__)
 
@@ -11,6 +14,23 @@ def _impl(name: str, **kwargs):
     import app as app_module
 
     return getattr(app_module, name)(**kwargs)
+
+
+@bp.route("/hoi-radar-bds")
+def radar_ask_page():
+    if not feature_enabled():
+        abort(404)
+    user = current_user()
+    tier = current_tier()
+    if not user or tier == "guest":
+        response = make_response("Dang nhap de dung Radar Ask.", 401)
+    elif not tier_allowed(tier):
+        response = make_response("Goi tai khoan chua duoc cap Radar Ask.", 403)
+    else:
+        response = make_response("<main><h1>Radar Ask</h1></main>", 200)
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers.pop("X-Radar-Public-Cache", None)
+    return response
 
 
 @bp.route("/data/images/<path:filename>")

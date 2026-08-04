@@ -185,7 +185,23 @@ from auth.core import (
 )
 
 app = Flask(__name__)
-app.before_request(reject_cross_site_session_request)
+
+
+def _request_security_guard():
+    """Keep the global CSRF rule while preserving Radar Ask's private error contract."""
+    rejected = reject_cross_site_session_request()
+    if rejected is None or not request.path.startswith("/api/radar-ask/"):
+        return rejected
+    from services.radar_ask.service import feature_enabled
+
+    if not feature_enabled():
+        return None
+    from routes.radar_ask_api import api_error
+
+    return api_error("cross_site_request", "Yeu cau khong hop le.", 403)
+
+
+app.before_request(_request_security_guard)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -246,12 +262,18 @@ def add_response_headers(response):
                 in {"private, no-store", "no-store"}
             )
         )
-        if not public_cache_classified:
+        if request.path.startswith("/api/radar-ask/"):
+            response.headers["Cache-Control"] = "private, no-store"
+            response.headers.pop("X-Radar-Public-Cache", None)
+        elif not public_cache_classified:
             response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
             if request.path.startswith("/api/digital-products/orders/"):
                 response.headers["Cache-Control"] = "private, no-store"
+    elif request.path == "/hoi-radar-bds":
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers.pop("X-Radar-Public-Cache", None)
     elif any(
         request.path.startswith(f"{page['order_base_path']}/")
         for page in CITY_MAP_PRODUCTS.values()
@@ -8299,6 +8321,10 @@ def api_chat():
 from routes import register_blueprints
 
 register_blueprints(app)
+
+from routes.radar_ask_api import bp as radar_ask_api_bp
+
+app.register_blueprint(radar_ask_api_bp)
 
 
 def ensure_perf_indexes():

@@ -278,3 +278,12 @@ def test_only_anonymous_homepage_is_edge_cache_candidate(client):
     )
     assert "X-Radar-Public-Cache" not in authorization.headers
     assert authorization.headers["Cache-Control"] == "private, no-store"
+
+
+def test_radar_ask_routes_are_always_private_and_never_public_cache_candidates(client, monkeypatch):
+    monkeypatch.setenv("RADAR_ASK_ENABLED", "1")
+
+    response = client.get("/api/radar-ask/sessions")
+
+    assert response.headers["Cache-Control"] == "private, no-store"
+    assert "X-Radar-Public-Cache" not in response.headers

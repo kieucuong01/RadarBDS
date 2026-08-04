@@ -313,6 +313,36 @@ class RadarAskRepository:
             ).fetchone()
         return _session_from_row(row) if row is not None else None
 
+    def list_sessions(
+        self,
+        *,
+        user_id: int,
+        limit: int = 20,
+        before_updated_at: datetime | None = None,
+        before_id: UUID | None = None,
+    ) -> list[RadarAskSessionRecord]:
+        """Return owner-scoped sessions in stable newest-first keyset order."""
+        bounded_limit = max(1, min(int(limit), 50))
+        if (before_updated_at is None) != (before_id is None):
+            raise ValueError("session cursor must include timestamp and id")
+        where = "user_id=?"
+        params: list[Any] = [user_id]
+        if before_updated_at is not None and before_id is not None:
+            where += " AND (updated_at < ? OR (updated_at = ? AND id < ?))"
+            params.extend((before_updated_at, before_updated_at, before_id))
+        params.append(bounded_limit)
+        with get_conn() as conn:
+            rows = conn.execute(
+                f"""
+                SELECT * FROM radar_ask_sessions
+                WHERE {where}
+                ORDER BY updated_at DESC, id DESC
+                LIMIT ?
+                """,
+                tuple(params),
+            ).fetchall()
+        return [_session_from_row(row) for row in rows]
+
     def rename_session(
         self,
         *,
@@ -377,8 +407,12 @@ class RadarAskRepository:
         user_id: int,
         session_id: UUID,
         limit: int = 50,
+        before_created_at: datetime | None = None,
+        before_id: UUID | None = None,
     ) -> list[RadarAskMessageRecord]:
-        bounded_limit = max(1, min(int(limit), 200))
+        bounded_limit = max(1, min(int(limit), 100))
+        if (before_created_at is None) != (before_id is None):
+            raise ValueError("message cursor must include timestamp and id")
         with get_conn() as conn:
             owned = conn.execute(
                 "SELECT 1 FROM radar_ask_sessions WHERE id=? AND user_id=?",
@@ -386,18 +420,24 @@ class RadarAskRepository:
             ).fetchone()
             if owned is None:
                 raise OwnedResourceNotFound("session was not found")
+            where = "session_id=?"
+            params: list[Any] = [session_id]
+            if before_created_at is not None and before_id is not None:
+                where += " AND (created_at < ? OR (created_at = ? AND id < ?))"
+                params.extend((before_created_at, before_created_at, before_id))
+            params.append(bounded_limit)
             rows = conn.execute(
-                """
+                f"""
                 SELECT *
                 FROM (
-                    SELECT * FROM radar_ask_messages
-                    WHERE session_id=?
+                SELECT * FROM radar_ask_messages
+                    WHERE {where}
                     ORDER BY created_at DESC, id DESC
                     LIMIT ?
                 ) recent
                 ORDER BY created_at, id
                 """,
-                (session_id, bounded_limit),
+                tuple(params),
             ).fetchall()
         return [_message_from_row(row) for row in rows]
 
