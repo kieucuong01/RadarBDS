@@ -1506,14 +1506,12 @@ class RadarAskRepository:
                 (list(TERMINAL_RUN_STATUSES), cutoff, RETENTION_BATCH_SIZE),
             ).fetchall()]
             if message_ids:
-                cursor = conn.execute(
+                deleted = conn.execute(
                     "DELETE FROM radar_ask_messages m WHERE id=ANY(?) "
                     "AND NOT EXISTS (SELECT 1 FROM radar_ask_feedback f WHERE f.message_id=m.id)",
                     (message_ids,),
                 )
-                if cursor.rowcount == 0:
-                    return {"sessions": 0, "runs": 0, "messages": 0}
-                return {"sessions": 0, "runs": 0, "messages": len(message_ids)}
+                return {"sessions": 0, "runs": 0, "messages": max(deleted.rowcount, 0)}
             run_ids = [
                 row["id"]
                 for row in conn.execute(
@@ -1537,14 +1535,15 @@ class RadarAskRepository:
                 ).fetchall()
             ]
             if run_ids:
-                conn.execute(
+                deleted = conn.execute(
                     """DELETE FROM radar_ask_runs r WHERE id=ANY(?)
                     AND NOT EXISTS (SELECT 1 FROM radar_ask_tool_calls t WHERE t.run_id=r.id)
                     AND NOT EXISTS (SELECT 1 FROM radar_ask_evidence e WHERE e.run_id=r.id)
-                    AND NOT EXISTS (SELECT 1 FROM radar_ask_messages m WHERE m.run_id=r.id)""",
+                    AND NOT EXISTS (SELECT 1 FROM radar_ask_messages m WHERE m.run_id=r.id)
+                    """,
                     (run_ids,),
                 )
-                return {"sessions": 0, "runs": len(run_ids), "messages": 0}
+                return {"sessions": 0, "runs": max(deleted.rowcount, 0), "messages": 0}
 
             message_ids = [
                 row["id"]
@@ -1563,14 +1562,12 @@ class RadarAskRepository:
                 ).fetchall()
             ]
             if message_ids:
-                cursor = conn.execute(
+                deleted = conn.execute(
                     "DELETE FROM radar_ask_messages m WHERE id=ANY(?) "
                     "AND NOT EXISTS (SELECT 1 FROM radar_ask_feedback f WHERE f.message_id=m.id)",
                     (message_ids,),
                 )
-                if cursor.rowcount == 0:
-                    return {"sessions": 0, "runs": 0, "messages": 0}
-                return {"sessions": 0, "runs": 0, "messages": len(message_ids)}
+                return {"sessions": 0, "runs": 0, "messages": max(deleted.rowcount, 0)}
             session_ids = [row["id"] for row in conn.execute(
                 """SELECT s.id FROM radar_ask_sessions s WHERE s.updated_at < ?
                 AND NOT EXISTS (SELECT 1 FROM radar_ask_runs r WHERE r.session_id=s.id)
@@ -1579,13 +1576,14 @@ class RadarAskRepository:
                 (cutoff, RETENTION_BATCH_SIZE),
             ).fetchall()]
             if session_ids:
-                conn.execute(
+                deleted = conn.execute(
                     """DELETE FROM radar_ask_sessions s WHERE id=ANY(?)
                     AND NOT EXISTS (SELECT 1 FROM radar_ask_runs r WHERE r.session_id=s.id)
-                    AND NOT EXISTS (SELECT 1 FROM radar_ask_messages m WHERE m.session_id=s.id)""",
+                    AND NOT EXISTS (SELECT 1 FROM radar_ask_messages m WHERE m.session_id=s.id)
+                    """,
                     (session_ids,),
                 )
-                return {"sessions": len(session_ids), "runs": 0, "messages": 0}
+                return {"sessions": max(deleted.rowcount, 0), "runs": 0, "messages": 0}
         return None
 
     def count_expired_usage(self, *, cutoff_month: date) -> dict[str, int]:
@@ -1637,9 +1635,9 @@ class RadarAskRepository:
             if not usage_ids:
                 return None
             attempts = 0
-            conn.execute(
+            deleted = conn.execute(
                 "DELETE FROM radar_ask_usage u WHERE id=ANY(?) "
                 "AND NOT EXISTS (SELECT 1 FROM radar_ask_usage_attempts a WHERE a.reservation_id=u.id)",
                 (usage_ids,),
             )
-        return {"usage": len(usage_ids), "attempts": attempts}
+        return {"usage": max(deleted.rowcount, 0), "attempts": attempts}

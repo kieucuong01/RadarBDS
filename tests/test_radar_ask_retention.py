@@ -375,6 +375,9 @@ def test_more_than_500_owned_runs_and_messages_are_processed_in_multiple_batches
         conn.execute("UPDATE radar_ask_sessions SET created_at=?, updated_at=? WHERE id=?", (old, old, session.id))
     result = purge_expired_content(clock=lambda: NOW)
     assert result["runs"] == 501 and result["messages"] == 501 and result["batches"] >= 5
+    with get_conn() as conn:
+        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_runs WHERE session_id=?", (session.id,)).fetchone()["count"] == 0
+        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_messages WHERE session_id=?", (session.id,)).fetchone()["count"] == 0
 
 
 def test_more_than_500_usage_and_attempts_are_processed_in_multiple_batches(retention_env):
