@@ -563,6 +563,15 @@ _MULTI_LOT_COUNT_RE = re.compile(
     r'\bgom\s+[2-9]\d?\s+so\b',
     re.IGNORECASE,
 )
+_MULTI_LOT_AREA_THO_CU_GROUP_RE = re.compile(
+    r'\b(\d{2,5}(?:[,.]\d+)?)\s*m2\b[^.;\n]{0,36}?'
+    r'\b(?:tho\s*cu|tc|odt)\s*(\d{1,5}(?:[,.]\d+)?)\s*m2\b',
+    re.IGNORECASE,
+)
+_MULTI_LOT_PER_LOT_RE = re.compile(
+    r'(?:/|\b(?:moi|tung)\s+)(?:lo|nen)\b|\b(?:hai|ba)\s+(?:lo|nen)\b',
+    re.IGNORECASE,
+)
 _MULTI_ASSET_RENTAL_CONTEXT_RE = re.compile(
     r'\b(?:may\s+can|nhieu\s+can|tro\s+moi|tro\s+cu|nha\s+tro|day\s+tro)\b',
     re.IGNORECASE,
@@ -587,6 +596,13 @@ def is_multi_lot_listing(title: str, description: str = "") -> bool:
         return True
 
     if _MULTI_LOT_COUNT_RE.search(text):
+        return True
+
+    area_tho_cu_groups = {
+        (total.replace(',', '.'), residential.replace(',', '.'))
+        for total, residential in _MULTI_LOT_AREA_THO_CU_GROUP_RE.findall(text)
+    }
+    if len(area_tho_cu_groups) >= 2 and _MULTI_LOT_PER_LOT_RE.search(text):
         return True
 
     labels = list(_MULTI_LOT_LABEL_RE.finditer(text))
@@ -1508,7 +1524,7 @@ _NHA_KW = [
 _KHO_XUONG_KW = [
     'nhà xưởng', 'kho xưởng', 'nhà kho', 'bán xưởng', 'cho thuê xưởng',
     'xưởng sản xuất', 'xưởng may', 'xưởng gỗ', 'xưởng cơ khí',
-    'kcn ', 'khu công nghiệp', 'cụm công nghiệp',
+    'kho đang cho thuê', 'kho hiện hữu',
 ]
 
 # Chung cư content detection — dùng cho cả url_hint=None override
@@ -1594,7 +1610,15 @@ def _is_social_housing_text(text: str) -> bool:
 
 def _is_kho_xuong_text(text: str) -> bool:
     """True nếu nội dung chỉ rõ kho/nhà xưởng (cho Facebook hoặc URL không rõ)."""
-    return any(kw in text for kw in _KHO_XUONG_KW)
+    if any(kw in text for kw in _KHO_XUONG_KW):
+        return True
+    folded = _ascii_fold(text).replace("đ", "d")
+    return bool(re.search(
+        r'\b(?:ban|can\s+ban|cho\s+thue)\s+(?:nha\s+)?(?:kho|xuong)\b|'
+        r'\b(?:kho|xuong)\s+(?:dang\s+cho\s+thue|hien\s+huu)\b',
+        folded,
+        re.IGNORECASE,
+    ))
 
 # Keyword phủ định nhà (dùng để loại false positive nha_dat)
 # 2026-05-05: cũng dùng để chặn nhầm đất nông nghiệp thành loại riêng.
@@ -1691,7 +1715,7 @@ def _has_source_category_land_override(
 
     folded = _ascii_fold(text).replace("Ä‘", "d").replace("Ä", "d")
     has_land_asset = bool(re.search(
-        r'\b(?:ban\s+)?(?:lo\s+)?dat\b|'
+        r'\b(?:ban|can\s+ban|lo)\s+dat\b|'
         r'\blo\s+dat\b|'
         r'\bdat\s+(?:nen|vuon|tho\s*cu|nong\s*nghiep|cln|nhanh?)\b|'
         r'\bchua\s*(?:co\s*)?tho\s*cu\b',

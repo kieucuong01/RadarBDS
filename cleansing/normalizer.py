@@ -132,7 +132,7 @@ r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|ra)\s+(?:duong\s+)?$"
 def _clean_named_road(value: str) -> str | None:
     name = re.sub(r"\s+", " ", value or "").strip()
     for stop in (
-        " gia ", " dt ", " dien tich ", " tho cu ", " phuong ", " tp ",
+        " gia ", " dt ", " dien tich ", " tho cu ", " tp ",
         " ben cat", " thu dau mot", " duong ", " hem ", " gan ", " cach ",
         " khu ", " kdc ", " ngay ",
     ):
@@ -143,6 +143,14 @@ def _clean_named_road(value: str) -> str | None:
     if not name:
         return None
     folded = _ascii_fold(name)
+    if re.search(
+        r'\b(?:sieu\s+pham|cuc\s+(?:re|dep)|gia\s+re|tuyet\s+dep|mat\s+me|'
+        r'thong\s+thoang|rong\s+rai)\b',
+        folded,
+    ):
+        return None
+    if re.match(r'^(?:theo|truoc)\b', folded):
+        return None
     if re.match(r"^dx\s+(?:nhua|be\s*tong|thong|rong|duong)\b", folded):
         return None
     if re.match(r"^(?:nhua|be tong|o to|oto|xe hoi|thong|rong|lon|nho|so)\b", name):

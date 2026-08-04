@@ -215,6 +215,13 @@ def test_detects_numeric_multi_lot_phrase_without_repeated_offer_pairs():
     )
 
 
+def test_multi_lot_detects_two_area_residential_groups_without_numbered_labels():
+    assert is_multi_lot_listing(
+        "Bán hai lô đất",
+        "445m2 thổ cư 141m2 và 534m2 thổ cư 160m2, giá 3,5 tỷ/lô",
+    )
+
+
 def test_detects_numbered_lots_with_meter_dimension_notation():
     assert is_multi_lot_listing(
         "Đất Phú Thọ",
@@ -920,6 +927,14 @@ def test_extract_road_name_ignores_proximity_but_keeps_actual_roads():
     assert extract_road_type("5x41tc 80m đường đất 4m chuẩn bị lên nhựa") == "duong_dat"
 
 
+def test_road_name_keeps_nguyen_tri_phuong_and_rejects_generic_prose():
+    assert extract_road_name("Nhánh Nguyễn Tri Phương, P. Chánh Nghĩa") == "Nguyen Tri Phuong"
+    assert extract_road_name("2 mặt tiền đường siêu phẩm cực rẻ") is None
+    assert extract_road_name("Mặt tiền đường trước đất rộng") is None
+    assert extract_road_name("Nhà đẹp đường theo Messi") is None
+    assert extract_road_name("Đường cực đẹp, dân cư đông") is None
+
+
 def test_extract_road_name_captures_named_alley_without_house_number():
     assert extract_road_name("Nh\u00e0 h\u1ebbm B\u00f9i Qu\u1ed1c Kh\u00e1nh, \u0111\u01b0\u1eddng xe h\u01a1i") == "Bui Quoc Khanh"
     assert extract_road_name("H\u1ebbm Hu\u1ef3nh V\u0103n L\u0169y, l\u00f4 g\u00f3c 2 m\u1eb7t ti\u1ec1n") == "Huynh Van Luy"
@@ -1387,6 +1402,19 @@ def test_extract_legal():
 
     r = extract_legal("sổ hồng riêng từng lô")
     assert r["has_so"] is True
+
+
+def test_property_type_ignores_nearby_industrial_context():
+    assert classify_property_type(
+        "Nhà 1 trệt 1 lầu",
+        "Gần khu công nghiệp, diện tích 100m2",
+        100,
+    ) == "nha_dat"
+    assert classify_property_type(
+        "Cần bán kho đang cho thuê",
+        "Kho hiện hữu trên đất",
+        320,
+    ) == "kho_xuong"
 
 
 def test_classify_property_type():
