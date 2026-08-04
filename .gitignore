@@ -50,6 +50,10 @@ artifacts/
 output/
 .npm-cache/
 tools/
+!services/radar_ask/tools/
+!services/radar_ask/tools/**
+services/radar_ask/tools/__pycache__/
+services/radar_ask/tools/**/*.pyc
 .local/
 
 # Agent/runtime worktrees and local state

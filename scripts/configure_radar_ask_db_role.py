@@ -75,6 +75,11 @@ BASE_COLUMN_GRANTS: dict[str, tuple[str, ...]] = {
         "crawled_at",
         "is_active",
         "probably_sold",
+        "review_hidden",
+        "is_blacklisted",
+        "suspicious_bait",
+        "extraction_quality_flags",
+        "measurement_provenance",
     ),
     "valuation_results": (
         "id",
@@ -93,6 +98,7 @@ BASE_COLUMN_GRANTS: dict[str, tuple[str, ...]] = {
         "trust_tier",
         "trust_score",
         "legal_flags",
+        "valuation_trace",
         "computed_at",
     ),
     "price_history": (
@@ -219,7 +225,16 @@ FOUNDATION_VIEW_SQL: tuple[str, ...] = (
         l.posted_at,
         l.crawled_at,
         (l.is_active = 1) AS is_active,
-        (l.probably_sold = 1) AS probably_sold
+        (l.probably_sold = 1) AS probably_sold,
+        l.measurement_provenance,
+        l.extraction_quality_flags,
+        (l.suspicious_bait = 1) AS suspicious_bait,
+        (
+            COALESCE(l.review_hidden, 0) = 0
+            AND COALESCE(l.is_blacklisted, 0) = 0
+            AND COALESCE(l.probably_sold, 0) = 0
+            AND COALESCE(l.is_active, 1) = 1
+        ) AS public_visible
     FROM public.listings l
     """,
     """
@@ -242,7 +257,8 @@ FOUNDATION_VIEW_SQL: tuple[str, ...] = (
         v.trust_tier,
         v.trust_score,
         v.legal_flags,
-        v.computed_at
+        v.computed_at,
+        v.valuation_trace
     FROM public.valuation_results v
     """,
     """

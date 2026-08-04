@@ -67,7 +67,7 @@ class SafeToolArgs(BaseModel):
 
 
 class ResolveListingArgs(SafeToolArgs):
-    listing_id: int = Field(gt=0)
+    listing_id: int | None = Field(default=None, gt=0)
 
 
 class ResolveLocationArgs(SafeToolArgs):
@@ -173,6 +173,7 @@ class SearchOfficialDocumentsArgs(SafeToolArgs):
 @dataclass(frozen=True)
 class ToolContext:
     ask: AskContext
+    read_conn_factory: Callable[[], Any] | None = None
 
 
 ToolHandler = Callable[..., EvidenceBundle]
@@ -250,16 +251,51 @@ APPROVED_TOOL_NAMES = (
 )
 
 
-def _registration(name: str, description: str, args_model: type[BaseModel]):
-    return ToolRegistration(name=name, description=description, args_model=args_model)
+def _lazy_entity_handler(function_name: str) -> ToolHandler:
+    def handler(*, args: BaseModel, context: ToolContext) -> EvidenceBundle:
+        from .tools import entities
+
+        function = getattr(entities, function_name)
+        return function(args=args, context=context)
+
+    return handler
+
+
+def _registration(
+    name: str,
+    description: str,
+    args_model: type[BaseModel],
+    handler: ToolHandler | None = None,
+):
+    return ToolRegistration(
+        name=name,
+        description=description,
+        args_model=args_model,
+        handler=handler,
+    )
 
 
 _DEFAULT_REGISTRATIONS = {
     item.name: item
     for item in (
-        _registration("resolve_listing", "Resolve one owned listing reference.", ResolveListingArgs),
-        _registration("resolve_location", "Resolve a bounded Radar market location.", ResolveLocationArgs),
-        _registration("resolve_road", "Resolve one road in city and ward context.", ResolveRoadArgs),
+        _registration(
+            "resolve_listing",
+            "Resolve one tier-visible Radar listing reference.",
+            ResolveListingArgs,
+            _lazy_entity_handler("resolve_listing"),
+        ),
+        _registration(
+            "resolve_location",
+            "Resolve a bounded canonical Radar market location.",
+            ResolveLocationArgs,
+            _lazy_entity_handler("resolve_location"),
+        ),
+        _registration(
+            "resolve_road",
+            "Resolve one road in city and ward context.",
+            ResolveRoadArgs,
+            _lazy_entity_handler("resolve_road"),
+        ),
         _registration("get_listing_facts", "Return redacted facts for one listing.", ListingFactsArgs),
         _registration("get_price_history", "Return bounded asking-price history.", HistoryArgs),
         _registration("get_lot_history", "Return bounded canonical-lot repost history.", HistoryArgs),
