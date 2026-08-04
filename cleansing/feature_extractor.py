@@ -130,7 +130,8 @@ def extract_price(text: str) -> Optional[float]:
     t_fold = _strip_folded_non_asking_price_phrases(t_fold)
 
     if re.search(
-        r'\b(?:chi\s+)?(?:hon|tren)\s*\d+(?:[,.]\d+)?\s*(?:ty|ti)\b',
+        r'(?:\b(?:chi\s+)?(?:hon|tren)\s*|>)'
+        r'\d+(?:[,.]\d+)?\s*(?:ty|ti)\b',
         t_fold,
     ):
         return None
@@ -276,7 +277,11 @@ def extract_price(text: str) -> Optional[float]:
 
     # Pattern: "XXX triệu" / compact "XXXtr" after non-asking clauses were removed.
     # "1.500 triệu" → 1.5 tỷ | "950TR" → 0.95 tỷ | "80tr" → None.
-    m = re.search(r'([\d]+[,.]?[\d]*)\s*(?:trieu|tr)\b', _ascii_fold(t))
+    m = re.search(
+        r'([\d]+[,.]?[\d]*)\s*(?:trieu|tr)\b'
+        r'(?!\s*(?:/|moi)\s*m(?:2|²|vuong)\b)',
+        _ascii_fold(t),
+    )
     if m:
         raw = m.group(1).replace(',', '').replace('.', '')
         try:
@@ -542,7 +547,10 @@ def _is_non_land_area_context(folded_text: str, start: int, end: int) -> bool:
 # 3. GIÁ / M²
 # ═══════════════════════════════════════════════════════════════════
 
-_MULTI_LOT_LABEL_RE = re.compile(r'\blo\s*(?:so\s*)?\d{1,2}\b', re.IGNORECASE)
+_MULTI_LOT_LABEL_RE = re.compile(
+    r'(?<!quoc )(?<!dai )\blo\s*(?:so\s*)?\d{1,2}\b',
+    re.IGNORECASE,
+)
 _MULTI_LOT_AREA_RE = re.compile(
     r'\b\d{2,5}(?:[,.]\d+)?\s*m2\b|'
     r'\b\d{1,3}(?:[,.]\d+)?\s*m?[²2]?\s*[x×]\s*'
@@ -587,7 +595,14 @@ _MULTI_ASSET_CODED_OFFER_RE = re.compile(
 
 def is_multi_lot_listing(title: str, description: str = "") -> bool:
     """Detect posts that advertise multiple lots with separate area/price pairs."""
-    text = _ascii_fold(" ".join(part for part in [title, description] if part))
+    title_folded = _ascii_fold(title).strip()
+    description_folded = _ascii_fold(description).strip()
+    if title_folded and description_folded and title_folded in description_folded:
+        text = description_folded
+    elif title_folded and description_folded and description_folded in title_folded:
+        text = title_folded
+    else:
+        text = " ".join(part for part in (title_folded, description_folded) if part)
     text = text.replace("đ", "d").replace("Đ", "d")
     if (
         _MULTI_ASSET_RENTAL_CONTEXT_RE.search(text)

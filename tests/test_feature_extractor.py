@@ -76,6 +76,8 @@ def test_extract_price_handles_compact_million_and_non_asking_amounts():
     assert extract_price("Hơn 2.3xx tỷ, thanh toán 700 triệu nhận nhà") is None
     assert extract_price("Giá bán 2,35 tỷ, hỗ trợ vay 800 triệu") == 2.35
     assert extract_price("Chủ hạ giá 400tr chỉ còn 2tỷ2") == 2.2
+    assert extract_price("Giá 5,87 triệu/m²") is None
+    assert extract_price("Giá >1ty xíu xiu") is None
 
 
 def test_extract_price_ignores_interior_value_when_asking_price_is_vague():
@@ -123,6 +125,22 @@ def test_normalize_facebook_ambiguous_masked_price_clears_structured_price():
     assert rec["price_per_m2"] is None
     assert rec["area_m2"] == 150.0
     assert rec["_clear_stale_measurements"] is True
+
+
+def test_normalize_keeps_structured_price_when_visible_price_is_only_a_lower_bound():
+    rec = normalize_record({
+        "source": "guland",
+        "source_id": "vague-lower-bound-price",
+        "url": "https://guland.test/vague-lower-bound-price",
+        "title": "Đất Tân An giá >1ty xíu xiu",
+        "description": "Diện tích 5x20m, thổ cư 53m2, đường bê tông 4m",
+        "price_ty": 1.3,
+        "area_m2": 100,
+        "default_area": "Thủ Dầu Một",
+    })
+
+    assert rec is not None
+    assert rec["price_ty"] == 1.3
 
 
 def test_extract_area():
@@ -220,6 +238,14 @@ def test_multi_lot_detects_two_area_residential_groups_without_numbered_labels()
         "Bán hai lô đất",
         "445m2 thổ cư 141m2 và 534m2 thổ cư 160m2, giá 3,5 tỷ/lô",
     )
+
+
+def test_multi_lot_ignores_title_repeated_in_description_and_national_road_number():
+    title = (
+        "Bán nhà Hiệp An, 1 sẹt quốc lộ 13, "
+        "diện tích 5x25, thổ cư 60m2, giá 2tỷ350"
+    )
+    assert not is_multi_lot_listing(title, f"{title}\nLiên hệ xem nhà")
 
 
 def test_detects_numbered_lots_with_meter_dimension_notation():
@@ -355,10 +381,30 @@ def test_normalize_marks_source_and_derived_dimension_provenance():
     assert inferred["measurement_provenance"]["frontage_m"] == "derived_standard_lot"
     assert inferred["measurement_provenance"]["depth_m"] == "derived_standard_lot"
     assert explicit is not None
+    assert explicit["measurement_provenance"]["area_m2"] == "derived_dimensions"
     assert explicit["measurement_provenance"]["frontage_m"] == "source_text"
     assert explicit["measurement_provenance"]["depth_m"] == "source_text"
     assert explicit["road_width_m"] == 6
     assert explicit["measurement_provenance"]["road_width_m"] == "source_text"
+
+
+def test_normalize_uses_labeled_legal_dimensions_when_actual_dimensions_also_exist():
+    rec = normalize_record({
+        "source": "facebook",
+        "url": "https://facebook.test/legal-and-actual-dimensions",
+        "title": "Đất Tân An giá 1tỷ490",
+        "description": (
+            "Diện tích 6x20, thổ cư 60m2, thực tế 7.5x19. "
+            "Đường ô tô rộng 3.5m"
+        ),
+        "default_area": "Thủ Dầu Một",
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 120
+    assert rec["frontage_m"] == 6
+    assert rec["depth_m"] == 20
+    assert "area_dimension_conflict" not in rec["extraction_quality_flags"]
 
 
 def test_extract_tho_cu():

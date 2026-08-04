@@ -683,6 +683,14 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             (candidate for candidate in _declared_area_candidates if candidate),
             None,
         )
+        _parse_text_folded = _ascii_fold(_parse_text)
+        _has_labeled_dimensions = bool(re.search(
+            r"\b(?:dien\s+tich|dt|kich\s+thuoc|kt)\s*[:=\-]?\s*"
+            r"\d+(?:[,.]\d+)?\s*m?\s*[x×*]\s*"
+            r"\d+(?:[,.]\d+)?\s*m?\b",
+            _parse_text_folded,
+            re.IGNORECASE,
+        ))
         _has_ambiguous_masked_price = source_name == "facebook" and has_ambiguous_masked_price(_parse_text)
         structured_frontage = _float_or_none(raw.get("frontage_m"))
         structured_depth = _float_or_none(raw.get("depth_m"))
@@ -710,7 +718,14 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             parsed_tho_cu_m2=_fb_parsed.get("tho_cu_m2"),
             frontage_m=parsed_frontage,
             depth_m=parsed_depth,
-            parsed_area_is_declared_total=bool(_declared_area),
+            parsed_area_is_declared_total=bool(
+                _declared_area
+                or (
+                    area_m2 is None
+                    and dimension_area is not None
+                    and _has_labeled_dimensions
+                )
+            ),
             ambiguous_price=_has_ambiguous_masked_price,
             multi_lot=is_multi_lot_listing(title, description),
         )
@@ -803,7 +818,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             elif _float_or_none(raw.get("area_m2")) is not None:
                 measurement_provenance["area_m2"] = "source_structured"
             elif dimension_area is not None:
-                measurement_provenance["area_m2"] = "source_text"
+                measurement_provenance["area_m2"] = "derived_dimensions"
             else:
                 measurement_provenance["area_m2"] = "unknown"
         if _raw_front is not None:
