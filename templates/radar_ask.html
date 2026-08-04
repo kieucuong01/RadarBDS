@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>Hỏi Radar BĐS</title>
+  {% include "partials/google_site_tags.html" %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"></noscript>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=mobile-scroll-lock-20260802">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/radar_ask.css') }}?v=radar-ask-workspace-v1">
+  <script>
+    try {
+      document.documentElement.setAttribute('data-theme', localStorage.getItem('radar_theme') || 'dark');
+    } catch (_error) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
+</head>
+<body class="radar-ask-page">
+  <div class="radar-ask-app" data-radar-ask-app data-tier="{{ USER_TIER }}" data-cost-state="normal">
+    <header class="radar-ask-topbar">
+      <a class="radar-ask-brand" href="/" aria-label="Về trang tổng quan Radar BDS">
+        <img src="{{ url_for('static', filename='images/app-icon-192.png') }}" alt="" width="34" height="34">
+        <span>Radar BDS</span>
+      </a>
+      <nav class="radar-ask-nav" aria-label="Điều hướng chính">
+        <a href="/">Tổng quan</a>
+        <a href="/?tab=signals">Săn deal</a>
+        <a href="/hoi-radar-bds" aria-current="page">Hỏi Radar BĐS</a>
+        <a href="/bao-cao">Báo cáo</a>
+      </nav>
+      <div class="radar-ask-account">
+        <button class="radar-ask-icon-button" type="button" data-theme-toggle aria-label="Đổi giao diện sáng tối" title="Đổi giao diện">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
+        </button>
+        <span class="radar-ask-user-avatar" aria-hidden="true">{{ ((USER.get('display_name') or USER.get('email') or 'R')|string|trim)[:1]|upper }}</span>
+        <span class="radar-ask-user-name">{{ USER.get('display_name') or USER.get('email') or 'Tài khoản' }}</span>
+      </div>
+    </header>
+
+    <div class="radar-ask-mobile-header">
+      <button class="radar-ask-icon-button" type="button" data-history-open aria-label="Mở lịch sử cuộc trò chuyện">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div>
+        <strong>Hỏi Radar BĐS</strong>
+        <span data-quota>Đang tải hạn mức…</span>
+      </div>
+      <button class="radar-ask-history-mobile" type="button" data-history-open>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v6h6M12 7v5l3 2"/></svg>
+        Lịch sử
+      </button>
+    </div>
+
+    <div class="radar-ask-layout">
+      <aside class="radar-ask-history" data-history-sheet aria-label="Cuộc trò chuyện" aria-hidden="false">
+        <div class="radar-ask-panel-heading">
+          <div>
+            <span>Không gian nghiên cứu</span>
+            <h2>Cuộc trò chuyện</h2>
+          </div>
+          <button class="radar-ask-icon-button radar-ask-mobile-only" type="button" data-history-close aria-label="Đóng lịch sử">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <button class="radar-ask-new-button" type="button" data-new-conversation>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Cuộc trò chuyện mới
+        </button>
+        <div class="radar-ask-history-list" data-history-list aria-label="Lịch sử">
+          <p class="radar-ask-history-empty">Đang tải lịch sử…</p>
+        </div>
+        <p class="radar-ask-retention-note">Nội dung chi tiết được lưu tối đa 90 ngày.</p>
+      </aside>
+      <button class="radar-ask-scrim" type="button" data-history-scrim aria-label="Đóng lịch sử" hidden></button>
+
+      <main class="radar-ask-main">
+        <div class="radar-ask-main-heading">
+          <div>
+            <h1>Hỏi Radar BĐS</h1>
+            <p>Nghiên cứu dữ liệu bất động sản Bình Dương theo nhu cầu của bạn.</p>
+          </div>
+          <div class="radar-ask-quota" data-quota>Đang tải hạn mức…</div>
+        </div>
+
+        <section class="radar-ask-conversation" data-conversation aria-label="Nội dung cuộc trò chuyện">
+          <div class="radar-ask-welcome" data-welcome>
+            <span class="radar-ask-welcome-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3 9.8 8.8 4 11l5.8 2.2L12 19l2.2-5.8L20 11l-5.8-2.2L12 3Z"/></svg>
+            </span>
+            <h2>Bắt đầu từ một quyết định đầu tư thực tế</h2>
+            <p>Chọn câu hỏi mẫu hoặc mô tả ngân sách, vị trí, mức giá và điều bạn cần kiểm chứng.</p>
+            <div class="radar-ask-samples">
+              <button type="button" data-sample-question>Ngân sách 2,5 tỷ ở Thủ Dầu Một nên xem phường nào?</button>
+              <button type="button" data-sample-question>So sánh Phú Mỹ, Định Hòa và Phú Tân cho đầu tư</button>
+              <button type="button" data-sample-question>Tìm lô dưới 20 triệu/m² ở Bến Cát</button>
+              <button type="button" data-sample-question>Hôm nay khu vực nào có nhiều tin giảm giá?</button>
+              <button type="button" data-sample-question>Giải thích bảng giá đất chính thức áp dụng thế nào?</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="radar-ask-live-region" data-live-status aria-live="polite" aria-atomic="true">Sẵn sàng nhận câu hỏi.</div>
+
+        <form class="radar-ask-composer" data-composer-form>
+          <div class="radar-ask-composer-head">
+            <span>Độ sâu phân tích</span>
+            <div class="radar-ask-depths" role="group" aria-label="Độ sâu phân tích">
+              <button type="button" data-depth="fast" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-8 12h7l-1 8 8-12h-7l1-8Z"/></svg>
+                Nhanh
+              </button>
+              <button type="button" data-depth="standard" aria-pressed="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V9m7 10V5m7 14v-7"/></svg>
+                Phân tích
+              </button>
+              <button type="button" data-depth="deep" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a4 4 0 0 0-4 4 4 4 0 0 0-2 7 4 4 0 0 0 4 6h2V3Zm0 0a4 4 0 0 1 4 4 4 4 0 0 1 2 7 4 4 0 0 1-4 6h-2"/></svg>
+                Chuyên sâu
+              </button>
+            </div>
+          </div>
+          <div class="radar-ask-composer-row">
+            <label class="radar-ask-visually-hidden" for="radarAskComposer">Câu hỏi cho Radar BDS</label>
+            <textarea id="radarAskComposer" data-composer rows="2" maxlength="2000" placeholder="Hỏi về khu vực, lô đất, mặt tiền đường, giá hoặc tín hiệu…"></textarea>
+            <button class="radar-ask-submit" type="submit" data-submit>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-8-8 18-2-8-8-2Zm8 2 5-5"/></svg>
+              Gửi câu hỏi
+            </button>
+          </div>
+          <div class="radar-ask-composer-foot">
+            <span>Enter để gửi · Shift + Enter để xuống dòng</span>
+            <span>Nội dung do AI tổng hợp từ dữ liệu Radar BDS</span>
+          </div>
+        </form>
+      </main>
+
+      <aside class="radar-ask-evidence" data-evidence-sheet aria-label="Nguồn & cách tính">
+        <div class="radar-ask-panel-heading">
+          <div>
+            <span>Minh bạch dữ liệu</span>
+            <h2>Nguồn & cách tính</h2>
+          </div>
+          <button class="radar-ask-icon-button" type="button" data-evidence-close aria-label="Đóng nguồn và cách tính">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div class="radar-ask-evidence-content" data-evidence-content>
+          <div class="radar-ask-evidence-empty">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13Zm0 0A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
+            <p>Nguồn dữ liệu và thời điểm cập nhật sẽ xuất hiện cùng câu trả lời.</p>
+          </div>
+        </div>
+        <p class="radar-ask-disclaimer">Thông tin mang tính tham khảo, không phải lời khuyên đầu tư.</p>
+      </aside>
+      <button class="radar-ask-scrim" type="button" data-evidence-scrim aria-label="Đóng nguồn và cách tính" hidden></button>
+    </div>
+
+    <dialog class="radar-ask-delete-dialog" data-delete-dialog aria-labelledby="radarAskDeleteTitle">
+      <h2 id="radarAskDeleteTitle">Xóa cuộc trò chuyện?</h2>
+      <p>Nội dung cuộc trò chuyện này sẽ bị xóa khỏi lịch sử của bạn.</p>
+      <div>
+        <button type="button" class="radar-ask-secondary-button" data-delete-cancel>Giữ lại</button>
+        <button type="button" class="radar-ask-danger-button" data-delete-confirm>Xóa</button>
+      </div>
+    </dialog>
+  </div>
+  <script src="{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v1" defer></script>
+</body>
+</html>

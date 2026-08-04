@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, abort, make_response
+from flask import Blueprint, abort, make_response, render_template
 
 from auth.core import current_tier, current_user
 from services.radar_ask.service import feature_enabled, tier_allowed
@@ -27,7 +27,10 @@ def radar_ask_page():
     elif not tier_allowed(tier):
         response = make_response("Goi tai khoan chua duoc cap Radar Ask.", 403)
     else:
-        response = make_response("<main><h1>Radar Ask</h1></main>", 200)
+        response = make_response(
+            render_template("radar_ask.html", USER=user, USER_TIER=tier),
+            200,
+        )
     response.headers["Cache-Control"] = "private, no-store"
     response.headers.pop("X-Radar-Public-Cache", None)
     return response
