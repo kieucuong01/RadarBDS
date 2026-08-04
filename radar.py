@@ -113,6 +113,7 @@ from cli.system import (
     cmd_integrity_report,
 )
 from services.radar_ask.worker import cmd_radar_ask_worker
+from services.radar_ask.retention import cmd_radar_ask_retention
 
 
 def _bounded_guland_image_limit(value: str) -> int:
@@ -141,6 +142,15 @@ def build_parser():
     sub.add_parser(
         "radar-ask-worker",
         help="Run the feature-gated Radar Ask Deep research worker",
+    )
+    p_radar_ask_retention = sub.add_parser(
+        "radar-ask-retention",
+        help="Purge expired Radar Ask raw content and usage aggregates",
+    )
+    p_radar_ask_retention.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print eligible retention counts without deleting data",
     )
 
     # reprocess
@@ -469,6 +479,8 @@ def main():
         cmd_reprocess(args)
     elif args.cmd == "radar-ask-worker":
         cmd_radar_ask_worker(args)
+    elif args.cmd == "radar-ask-retention":
+        cmd_radar_ask_retention(args)
     elif args.cmd == "integrity-report":
         cmd_integrity_report(args)
     elif args.cmd == "signal-read-model":

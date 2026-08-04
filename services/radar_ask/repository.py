@@ -7,7 +7,7 @@ the run, assistant message, and exact usage reservation commit atomically.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Collection, Mapping
 from uuid import UUID, uuid4
@@ -46,6 +46,7 @@ RUN_OUTCOMES = frozenset(
         "cancelled",
     }
 )
+RETENTION_BATCH_SIZE = 500
 
 
 class RadarAskRepositoryError(RuntimeError):
@@ -1393,3 +1394,216 @@ class RadarAskRepository:
             )
             deleted = cursor.rowcount
         return max(deleted, 0)
+
+    @staticmethod
+    def _content_counts_for_sessions(conn: PgConnection, session_ids: list[UUID]) -> dict[str, int]:
+        return {
+            "sessions": len(session_ids),
+            "runs": int(
+                conn.execute(
+                    "SELECT COUNT(*) AS count FROM radar_ask_runs WHERE session_id=ANY(?)",
+                    (session_ids,),
+                ).fetchone()["count"]
+            ),
+            "messages": int(
+                conn.execute(
+                    "SELECT COUNT(*) AS count FROM radar_ask_messages WHERE session_id=ANY(?)",
+                    (session_ids,),
+                ).fetchone()["count"]
+            ),
+        }
+
+    def count_expired_content(self, *, cutoff: datetime) -> dict[str, int]:
+        """Count only raw-content candidates; this method never mutates persisted data."""
+        with get_conn() as conn:
+            sessions = conn.execute(
+                """
+                SELECT COUNT(*) AS count
+                FROM radar_ask_sessions s
+                WHERE s.updated_at < ?
+                  AND NOT EXISTS (
+                      SELECT 1 FROM radar_ask_messages m
+                      WHERE m.session_id=s.id AND m.created_at >= ?
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM radar_ask_runs r
+                      WHERE r.session_id=s.id AND r.status<>ALL(?::text[])
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM radar_ask_runs r
+                      WHERE r.session_id=s.id
+                        AND COALESCE(r.completed_at, r.updated_at, r.created_at) >= ?
+                  )
+                """,
+                (cutoff, cutoff, list(TERMINAL_RUN_STATUSES), cutoff),
+            ).fetchone()["count"]
+            runs = conn.execute(
+                """
+                SELECT COUNT(*) AS count
+                FROM radar_ask_runs r
+                WHERE r.status=ANY(?::text[])
+                  AND COALESCE(r.completed_at, r.updated_at, r.created_at) < ?
+                  AND NOT EXISTS (
+                      SELECT 1 FROM radar_ask_runs active
+                      WHERE active.session_id=r.session_id
+                        AND active.status<>ALL(?::text[])
+                  )
+                """,
+                (list(TERMINAL_RUN_STATUSES), cutoff, list(TERMINAL_RUN_STATUSES)),
+            ).fetchone()["count"]
+            messages = conn.execute(
+                """
+                SELECT COUNT(*) AS count
+                FROM radar_ask_messages m
+                WHERE m.created_at < ?
+                  AND NOT EXISTS (
+                      SELECT 1 FROM radar_ask_runs active
+                      WHERE active.session_id=m.session_id
+                        AND active.status<>ALL(?::text[])
+                  )
+                """,
+                (cutoff, list(TERMINAL_RUN_STATUSES)),
+            ).fetchone()["count"]
+        return {"sessions": int(sessions), "runs": int(runs), "messages": int(messages)}
+
+    def purge_expired_content_batch(self, *, cutoff: datetime) -> dict[str, int] | None:
+        """Delete one bounded raw-content target set without touching nonterminal work."""
+        with get_conn() as conn:
+            session_ids = [
+                row["id"]
+                for row in conn.execute(
+                    """
+                    SELECT s.id
+                    FROM radar_ask_sessions s
+                    WHERE s.updated_at < ?
+                      AND NOT EXISTS (
+                          SELECT 1 FROM radar_ask_messages m
+                          WHERE m.session_id=s.id AND m.created_at >= ?
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1 FROM radar_ask_runs r
+                          WHERE r.session_id=s.id AND r.status<>ALL(?::text[])
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1 FROM radar_ask_runs r
+                          WHERE r.session_id=s.id
+                            AND COALESCE(r.completed_at, r.updated_at, r.created_at) >= ?
+                      )
+                    ORDER BY s.updated_at, s.id
+                    FOR UPDATE SKIP LOCKED
+                    LIMIT ?
+                    """,
+                    (cutoff, cutoff, list(TERMINAL_RUN_STATUSES), cutoff, RETENTION_BATCH_SIZE),
+                ).fetchall()
+            ]
+            if session_ids:
+                counts = self._content_counts_for_sessions(conn, session_ids)
+                conn.execute("DELETE FROM radar_ask_sessions WHERE id=ANY(?)", (session_ids,))
+                return counts
+
+            run_ids = [
+                row["id"]
+                for row in conn.execute(
+                    """
+                    SELECT r.id
+                    FROM radar_ask_runs r
+                    JOIN radar_ask_sessions s ON s.id=r.session_id
+                    WHERE r.status=ANY(?::text[])
+                      AND COALESCE(r.completed_at, r.updated_at, r.created_at) < ?
+                      AND NOT EXISTS (
+                          SELECT 1 FROM radar_ask_runs active
+                          WHERE active.session_id=r.session_id
+                            AND active.status<>ALL(?::text[])
+                      )
+                    ORDER BY COALESCE(r.completed_at, r.updated_at, r.created_at), r.id
+                    FOR UPDATE OF r, s SKIP LOCKED
+                    LIMIT ?
+                    """,
+                    (
+                        list(TERMINAL_RUN_STATUSES),
+                        cutoff,
+                        list(TERMINAL_RUN_STATUSES),
+                        RETENTION_BATCH_SIZE,
+                    ),
+                ).fetchall()
+            ]
+            if run_ids:
+                conn.execute("DELETE FROM radar_ask_runs WHERE id=ANY(?)", (run_ids,))
+                return {"sessions": 0, "runs": len(run_ids), "messages": 0}
+
+            message_ids = [
+                row["id"]
+                for row in conn.execute(
+                    """
+                    SELECT m.id
+                    FROM radar_ask_messages m
+                    JOIN radar_ask_sessions s ON s.id=m.session_id
+                    WHERE m.created_at < ?
+                      AND NOT EXISTS (
+                          SELECT 1 FROM radar_ask_runs active
+                          WHERE active.session_id=m.session_id
+                            AND active.status<>ALL(?::text[])
+                      )
+                    ORDER BY m.created_at, m.id
+                    FOR UPDATE OF m, s SKIP LOCKED
+                    LIMIT ?
+                    """,
+                    (cutoff, list(TERMINAL_RUN_STATUSES), RETENTION_BATCH_SIZE),
+                ).fetchall()
+            ]
+            if message_ids:
+                conn.execute("DELETE FROM radar_ask_messages WHERE id=ANY(?)", (message_ids,))
+                return {"sessions": 0, "runs": 0, "messages": len(message_ids)}
+        return None
+
+    def count_expired_usage(self, *, cutoff_month: date) -> dict[str, int]:
+        """Count content-free usage rows eligible for the 13-month accounting purge."""
+        with get_conn() as conn:
+            usage = int(
+                conn.execute(
+                    "SELECT COUNT(*) AS count FROM radar_ask_usage WHERE usage_month < ?",
+                    (cutoff_month,),
+                ).fetchone()["count"]
+            )
+            attempts = int(
+                conn.execute(
+                    """
+                    SELECT COUNT(*) AS count
+                    FROM radar_ask_usage_attempts a
+                    JOIN radar_ask_usage u ON u.id=a.reservation_id
+                    WHERE u.usage_month < ?
+                    """,
+                    (cutoff_month,),
+                ).fetchone()["count"]
+            )
+        return {"usage": usage, "attempts": attempts}
+
+    def purge_expired_usage_batch(self, *, cutoff_month: date) -> dict[str, int] | None:
+        """Delete one bounded aggregate batch; usage-attempt rows cascade with its ledger."""
+        with get_conn() as conn:
+            usage_ids = [
+                row["id"]
+                for row in conn.execute(
+                    """
+                    SELECT id FROM radar_ask_usage
+                    WHERE usage_month < ?
+                    ORDER BY usage_month, id
+                    FOR UPDATE SKIP LOCKED
+                    LIMIT ?
+                    """,
+                    (cutoff_month, RETENTION_BATCH_SIZE),
+                ).fetchall()
+            ]
+            if not usage_ids:
+                return None
+            attempts = int(
+                conn.execute(
+                    """
+                    SELECT COUNT(*) AS count FROM radar_ask_usage_attempts
+                    WHERE reservation_id=ANY(?)
+                    """,
+                    (usage_ids,),
+                ).fetchone()["count"]
+            )
+            conn.execute("DELETE FROM radar_ask_usage WHERE id=ANY(?)", (usage_ids,))
+        return {"usage": len(usage_ids), "attempts": attempts}
