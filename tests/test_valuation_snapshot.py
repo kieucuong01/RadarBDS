@@ -120,7 +120,8 @@ def test_main_valuation_rows_store_model_and_crawl_run_provenance(valuation_case
     with get_conn() as conn:
         row = conn.execute(
             """
-            SELECT v.crawl_run_id, r.model_name, r.model_version, r.metrics_json
+            SELECT v.crawl_run_id, v.fair_ppm2, v.valuation_trace,
+                   r.model_name, r.model_version, r.metrics_json
             FROM valuation_results v
             JOIN valuation_model_runs r ON r.id=v.model_run_id
             WHERE v.listing_id=?
@@ -130,6 +131,11 @@ def test_main_valuation_rows_store_model_and_crawl_run_provenance(valuation_case
     assert row["crawl_run_id"] == 717
     assert row["model_name"] == "road_tier_hierarchical"
     assert row["model_version"] == "road_tier_hierarchical_v1"
+    trace = row["valuation_trace"]
+    assert trace["trace_version"] == 1
+    assert trace["final_fair_ppm2"] == pytest.approx(row["fair_ppm2"], abs=0.01)
+    assert trace["sample_count"] == 20
+    assert valuation_case.target_id not in trace["comparable_listing_ids"]
     metrics = json.loads(row["metrics_json"])
     assert metrics["training_count"] == 20
     assert metrics["valuation_count"] == 20

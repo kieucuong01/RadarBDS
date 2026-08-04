@@ -17,6 +17,8 @@ from collections import Counter
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+from psycopg.types.json import Jsonb
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from cleansing.normalizer import normalize_record, compute_content_hash
@@ -264,8 +266,9 @@ def _insert_main_results(conn, results, id_map, model_run_id, computed_at):
                 segment, n_segment, signal_score, road_tier,
                 source_quality_flags, source_quality_recheck,
                 legal_status, trust_tier, trust_score, legal_flags,
+                valuation_trace,
                 computed_at
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 model_run_id,
@@ -288,6 +291,7 @@ def _insert_main_results(conn, results, id_map, model_run_id, computed_at):
                 result.trust_tier,
                 result.trust_score,
                 ",".join(result.legal_flags or ()),
+                Jsonb(result.valuation_trace),
                 computed_at,
             ),
         )
@@ -559,7 +563,7 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
                    l.has_so, l.is_hot, l.price_dropped, l.crawled_at, l.posted_at,
                    l.url, l.contact_phone, l.source, l.source_id, l.suspicious_bait,
                    l.review_hidden, l.duplicate_of_id, l.extraction_quality_flags,
-                   l.crawl_run_id,
+                   l.crawl_run_id, l.measurement_provenance,
                    'unverified' AS legal_status,
                    'candidate_signal' AS trust_tier,
                    0 AS trust_score,
@@ -637,6 +641,21 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
         flags = _source_quality_flags(row)
         crawled = date.fromisoformat(row["crawled_at"][:10]) if row["crawled_at"] else None
         posted = date.fromisoformat(row["posted_at"][:10]) if row["posted_at"] else None
+        raw_provenance = row["measurement_provenance"]
+        if isinstance(raw_provenance, dict):
+            measurement_provenance = {
+                str(key): str(value) for key, value in raw_provenance.items()
+            }
+        else:
+            try:
+                parsed_provenance = json.loads(raw_provenance or "{}")
+            except (TypeError, ValueError):
+                parsed_provenance = {}
+            measurement_provenance = (
+                {str(key): str(value) for key, value in parsed_provenance.items()}
+                if isinstance(parsed_provenance, dict)
+                else {}
+            )
         return Listing(
             id           = row["id"],
             area         = row["area"] or "unknown",
@@ -669,6 +688,7 @@ def reprocess_valuation(incremental_ids: list = None, training_ids: list = None)
             trust_score = int(row["trust_score"] or 0),
             legal_flags = tuple(x for x in (row["legal_flags"] or "").split(",") if x),
             crawl_run_id = int(row["crawl_run_id"]) if row["crawl_run_id"] else None,
+            measurement_provenance = measurement_provenance,
             review_recheck_candidate = bool(
                 row["review_hidden"]
                 and row["feedback_verdict"] == "bad_data"

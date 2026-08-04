@@ -9,7 +9,7 @@ Valuation Engine — Python thuần, 0 token Claude
 import logging
 import math
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 from datetime import datetime, date
 import numpy as np
 import re
@@ -117,6 +117,7 @@ class Listing:
     trust_score:    int = 0
     legal_flags:    Tuple[str, ...] = field(default_factory=tuple)
     crawl_run_id:   Optional[int] = None
+    measurement_provenance: Dict[str, str] = field(default_factory=dict)
 
 def extract_regex_features(text: str) -> Dict[str, bool]:
     if not text: return {}
@@ -128,6 +129,96 @@ def extract_regex_features(text: str) -> Dict[str, bool]:
         'is_đường_đâm': bool(re.search(r'đường đâm|đâm đường|đâm hông', text)),
         'near_grave': bool(re.search(r'nghĩa trang|mồ mả|gần mộ', text)),
     }
+
+@dataclass(frozen=True)
+class ValuationAdjustment:
+    code: str
+    input_value: float | str | None
+    multiplier: float
+    delta_ppm2: float
+    applied: bool
+    reason: str
+
+    def to_json_dict(self) -> Dict[str, Any]:
+        return {
+            "code": self.code,
+            "input_value": self.input_value,
+            "multiplier": self.multiplier,
+            "delta_ppm2": self.delta_ppm2,
+            "applied": self.applied,
+            "reason": self.reason,
+        }
+
+
+@dataclass(frozen=True)
+class ValuationTrace:
+    trace_version: int
+    model_name: str
+    model_version: str
+    requested_segment: str
+    effective_segment: str
+    fallback_reason: Optional[str]
+    baseline_ppm2: float
+    adjustments: Sequence[ValuationAdjustment]
+    final_fair_ppm2: float
+    final_fair_total: float
+    confidence_low_ppm2: Optional[float]
+    confidence_high_ppm2: Optional[float]
+    sample_count: int
+    comparable_listing_ids: Sequence[int]
+    quality_flags: Sequence[str]
+    suppressed_factors: Sequence[str]
+    measurement_provenance: Dict[str, str]
+
+    def to_json_dict(self) -> Dict[str, Any]:
+        payload = {
+            "trace_version": int(self.trace_version),
+            "model_name": self.model_name,
+            "model_version": self.model_version,
+            "requested_segment": self.requested_segment,
+            "effective_segment": self.effective_segment,
+            "fallback_reason": self.fallback_reason,
+            "baseline_ppm2": float(self.baseline_ppm2),
+            "adjustments": [item.to_json_dict() for item in self.adjustments],
+            "final_fair_ppm2": float(self.final_fair_ppm2),
+            "final_fair_total": float(self.final_fair_total),
+            "confidence_low_ppm2": (
+                float(self.confidence_low_ppm2)
+                if self.confidence_low_ppm2 is not None
+                else None
+            ),
+            "confidence_high_ppm2": (
+                float(self.confidence_high_ppm2)
+                if self.confidence_high_ppm2 is not None
+                else None
+            ),
+            "sample_count": int(self.sample_count),
+            "comparable_listing_ids": sorted(
+                {int(value) for value in self.comparable_listing_ids}
+            )[:20],
+            "quality_flags": sorted({str(value) for value in self.quality_flags}),
+            "suppressed_factors": sorted(
+                {str(value) for value in self.suppressed_factors}
+            ),
+            "measurement_provenance": {
+                str(key): str(value)
+                for key, value in sorted(self.measurement_provenance.items())
+            },
+        }
+
+        def ensure_finite(value: Any) -> None:
+            if isinstance(value, float) and not math.isfinite(value):
+                raise ValueError("valuation trace numbers must be finite")
+            if isinstance(value, dict):
+                for nested in value.values():
+                    ensure_finite(nested)
+            elif isinstance(value, list):
+                for nested in value:
+                    ensure_finite(nested)
+
+        ensure_finite(payload)
+        return payload
+
 
 @dataclass
 class ValuationResult:
@@ -151,6 +242,7 @@ class ValuationResult:
     trust_tier:           str = 'candidate_signal'
     trust_score:          int = 0
     legal_flags:          Tuple[str, ...] = field(default_factory=tuple)
+    valuation_trace:      Dict[str, Any] = field(default_factory=dict)
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -489,6 +581,8 @@ class RoadTierSegmentModel:
         self.fitted = False
         self.bucket_medians: Dict[int, float] = {}
         self.bucket_counts: Dict[int, int] = {}
+        self.training_listing_ids: List[int] = []
+        self.bucket_listing_ids: Dict[int, List[int]] = {}
 
     def fit(self, listings: List[Listing]):
         if not listings:
@@ -549,6 +643,10 @@ class RoadTierSegmentModel:
         for bucket, prices in by_bucket.items():
             self.bucket_counts[bucket] = len(prices)
             self.bucket_medians[bucket] = _weighted_center(bucket_items[bucket])
+            self.bucket_listing_ids[bucket] = sorted(
+                int(item.id) for item in bucket_items[bucket] if item.id
+            )
+        self.training_listing_ids = sorted(int(item.id) for item in known if item.id)
         self._enforce_monotonic_road_buckets()
         self.fitted = True
 
@@ -588,34 +686,150 @@ class RoadTierSegmentModel:
         count = self.bucket_counts.get(bucket, 0)
         return self.median_ppm2 * multiplier, f"segment_median_adjusted_bucket_{bucket}", count
 
-    def predict_fair_ppm2(self, listing: Listing, base_override: Optional[float] = None) -> Optional[float]:
+    def comparable_listing_ids(self, listing: Listing) -> List[int]:
+        bucket = _road_bucket(listing.road_tier)
+        values = self.bucket_listing_ids.get(bucket) or self.training_listing_ids
+        return [value for value in values if value != listing.id]
+
+    def predict_fair_ppm2_with_trace(
+        self,
+        listing: Listing,
+        base_override: Optional[float] = None,
+    ) -> Tuple[
+        Optional[float],
+        Tuple[ValuationAdjustment, ...],
+        Tuple[str, ...],
+    ]:
         if not self.fitted:
-            return None
+            return None, (), ()
         base_fair = base_override
         if base_fair is None:
             base_fair, _, _ = self.bucket_base_ppm2(listing)
         if base_fair is None:
             base_fair, _, _ = self.fallback_base_ppm2(listing)
         if not base_fair or base_fair <= 0:
-            return None
+            return None, (), ()
+
+        adjustments: List[ValuationAdjustment] = []
+        suppressed: List[str] = []
+
+        def apply_adjustment(
+            code: str,
+            *,
+            input_value: float | str | None,
+            multiplier: float,
+            applied: bool,
+            reason: str,
+        ) -> None:
+            nonlocal base_fair
+            before = float(base_fair)
+            if applied:
+                base_fair = before * float(multiplier)
+            else:
+                suppressed.append(code)
+            adjustments.append(
+                ValuationAdjustment(
+                    code=code,
+                    input_value=input_value,
+                    multiplier=round(float(multiplier), 6),
+                    delta_ppm2=round(float(base_fair) - before, 6),
+                    applied=applied,
+                    reason=reason,
+                )
+            )
 
         if self.segment_key[1] in SIZE_DISCOUNT_ALPHA:
-            base_fair *= _main_area_adjustment(listing.area_m2, self.ref_area_m2)
+            area_factor = _main_area_adjustment(listing.area_m2, self.ref_area_m2)
+            apply_adjustment(
+                "area_size",
+                input_value=float(listing.area_m2) if listing.area_m2 else None,
+                multiplier=area_factor,
+                applied=bool(listing.area_m2 and self.ref_area_m2),
+                reason=f"stepwise area adjustment versus reference {self.ref_area_m2:.2f} m2",
+            )
+        else:
+            apply_adjustment(
+                "area_size",
+                input_value=float(listing.area_m2) if listing.area_m2 else None,
+                multiplier=1.0,
+                applied=False,
+                reason="property type has no approved area-size adjustment",
+            )
         if self.segment_key[1] in LOT_SHAPE_PROP_TYPES:
-            shape_factor, _, _ = _lot_shape_adjustment(listing.frontage_m, listing.depth_m)
-            base_fair *= shape_factor
+            shape_factor, _, shape_audit = _lot_shape_adjustment(
+                listing.frontage_m,
+                listing.depth_m,
+            )
+            shape_valid = shape_audit.get("depth_ratio") is not None
+            apply_adjustment(
+                "lot_shape",
+                input_value=shape_audit.get("depth_ratio"),
+                multiplier=shape_factor,
+                applied=shape_valid,
+                reason=(
+                    "frontage-depth ratio adjustment"
+                    if shape_valid
+                    else "frontage or depth is missing or outside safe bounds"
+                ),
+            )
+        else:
+            apply_adjustment(
+                "lot_shape",
+                input_value=None,
+                multiplier=1.0,
+                applied=False,
+                reason="property type has no approved lot-shape adjustment",
+            )
 
         feat = extract_regex_features(f"{listing.title} {listing.description}")
-        if feat.get('is_corner'): base_fair *= 1.10
-        if feat.get('is_nở_hậu'): base_fair *= 1.05
-        if feat.get('is_thắt_hậu'): base_fair *= 0.90
-        if feat.get('is_đường_đâm'): base_fair *= 0.85
-        if feat.get('near_grave'): base_fair *= 0.80
+        for code, feature_name, multiplier in (
+            ("corner", "is_corner", 1.10),
+            ("widening_rear", "is_nở_hậu", 1.05),
+            ("narrowing_rear", "is_thắt_hậu", 0.90),
+            ("road_alignment_risk", "is_đường_đâm", 0.85),
+            ("near_grave_risk", "near_grave", 0.80),
+        ):
+            present = bool(feat.get(feature_name))
+            apply_adjustment(
+                code,
+                input_value="present" if present else "absent",
+                multiplier=multiplier,
+                applied=present,
+                reason=("feature detected in listing text" if present else "feature not detected"),
+            )
 
-        if not _effective_has_so(listing):
-            base_fair *= 0.75
-        base_fair *= EXPECTED_NEGOTIATION_RATIO
-        return round(base_fair, 2) if base_fair > 0 else None
+        explicit_no_so = not _effective_has_so(listing)
+        apply_adjustment(
+            "legal_document",
+            input_value="explicit_no_so" if explicit_no_so else "no_discount",
+            multiplier=0.75,
+            applied=explicit_no_so,
+            reason=(
+                "listing explicitly states no title certificate"
+                if explicit_no_so
+                else "no explicit legal-document discount"
+            ),
+        )
+        apply_adjustment(
+            "negotiation",
+            input_value="asking_price",
+            multiplier=EXPECTED_NEGOTIATION_RATIO,
+            applied=True,
+            reason="expected negotiation from asking price",
+        )
+        fair = round(float(base_fair), 2) if base_fair > 0 else None
+        return fair, tuple(adjustments), tuple(sorted(set(suppressed)))
+
+    def predict_fair_ppm2(
+        self,
+        listing: Listing,
+        base_override: Optional[float] = None,
+    ) -> Optional[float]:
+        fair, _adjustments, _suppressed = self.predict_fair_ppm2_with_trace(
+            listing,
+            base_override=base_override,
+        )
+        return fair
 
     def confidence_level(self):
         if self.n_samples >= 45:
@@ -820,7 +1034,7 @@ class ValuationEngine:
     def _select_pricing_basis(
         self,
         listing: Listing,
-    ) -> Optional[Tuple[RoadTierSegmentModel, float, str, int]]:
+    ) -> Optional[Tuple[RoadTierSegmentModel, float, str, int, List[int]]]:
         candidates = self._candidate_models(listing)
         if not candidates:
             return None
@@ -828,7 +1042,13 @@ class ValuationEngine:
         exact = candidates[0]
         exact_base, exact_basis, exact_count = exact.bucket_base_ppm2(listing)
         if exact_base is not None:
-            return exact, exact_base, f"{exact.fallback_level}:{exact_basis}", exact_count
+            return (
+                exact,
+                exact_base,
+                f"{exact.fallback_level}:{exact_basis}",
+                exact_count,
+                exact.comparable_listing_ids(listing),
+            )
 
         sparse_base, sparse_basis, sparse_count = exact.sparse_bucket_base_ppm2(listing)
         for model in candidates[1:]:
@@ -842,16 +1062,38 @@ class ValuationEngine:
                     f"shrink:{exact.fallback_level}:{sparse_basis}:n={sparse_count}"
                     f"+{model.fallback_level}:{broad_basis}:n={broad_count}"
                 )
-                return model, blended, basis, broad_count
-            return model, broad_base, f"{model.fallback_level}:{broad_basis}", broad_count
+                comparable_ids = sorted(
+                    set(exact.comparable_listing_ids(listing))
+                    | set(model.comparable_listing_ids(listing))
+                )
+                return model, blended, basis, broad_count, comparable_ids
+            return (
+                model,
+                broad_base,
+                f"{model.fallback_level}:{broad_basis}",
+                broad_count,
+                model.comparable_listing_ids(listing),
+            )
 
         if sparse_base is not None and sparse_count > 0:
-            return exact, sparse_base, f"{exact.fallback_level}:{sparse_basis}", sparse_count
+            return (
+                exact,
+                sparse_base,
+                f"{exact.fallback_level}:{sparse_basis}",
+                sparse_count,
+                exact.comparable_listing_ids(listing),
+            )
 
         for model in candidates:
             fallback_base, fallback_basis, fallback_count = model.fallback_base_ppm2(listing)
             if fallback_base is not None:
-                return model, fallback_base, f"{model.fallback_level}:{fallback_basis}", fallback_count
+                return (
+                    model,
+                    fallback_base,
+                    f"{model.fallback_level}:{fallback_basis}",
+                    fallback_count,
+                    model.comparable_listing_ids(listing),
+                )
         return None
 
     def valuate(self, listing: Listing) -> Optional[ValuationResult]:
@@ -865,8 +1107,11 @@ class ValuationEngine:
         selection = self._select_pricing_basis(listing)
         if not selection or not listing.price_per_m2:
             return None
-        m, base_ppm2, price_basis, basis_count = selection
-        fair = m.predict_fair_ppm2(listing, base_override=base_ppm2)
+        m, base_ppm2, price_basis, basis_count, comparable_ids = selection
+        fair, adjustments, suppressed_factors = m.predict_fair_ppm2_with_trace(
+            listing,
+            base_override=base_ppm2,
+        )
         if not fair: return None
         actual = listing.price_per_m2
         discount = (fair - actual) / fair
@@ -920,6 +1165,37 @@ class ValuationEngine:
 
         score = provisional_score if is_sig else 0
 
+        requested_key = self._key(listing)
+        requested_segment = "|".join(
+            (*requested_key, f"road_bucket_{_road_bucket(listing.road_tier)}")
+        )
+        effective_segment = "|".join(
+            (*m.segment_key, m.fallback_level, price_basis)
+        )
+        exact_basis = (
+            m.segment_key == requested_key
+            and price_basis == f"exact:road_bucket_{_road_bucket(listing.road_tier)}"
+        )
+        trace = ValuationTrace(
+            trace_version=1,
+            model_name=MAIN_MODEL_NAME,
+            model_version=MAIN_MODEL_VERSION,
+            requested_segment=requested_segment,
+            effective_segment=effective_segment,
+            fallback_reason=None if exact_basis else price_basis,
+            baseline_ppm2=round(float(base_ppm2), 6),
+            adjustments=adjustments,
+            final_fair_ppm2=round(float(fair), 2),
+            final_fair_total=round(float(fair) * float(listing.area_m2), 2),
+            confidence_low_ppm2=None,
+            confidence_high_ppm2=None,
+            sample_count=m.n_samples,
+            comparable_listing_ids=comparable_ids,
+            quality_flags=tuple(sorted(quality_flags)),
+            suppressed_factors=suppressed_factors,
+            measurement_provenance=dict(listing.measurement_provenance or {}),
+        )
+
         return ValuationResult(
             listing_id=listing.id, area=listing.area, property_type=listing.property_type,
             price_per_m2_actual=round(actual, 2), price_per_m2_fair=round(fair, 2),
@@ -935,6 +1211,7 @@ class ValuationEngine:
             trust_tier=getattr(listing, "trust_tier", "candidate_signal") or "candidate_signal",
             trust_score=int(getattr(listing, "trust_score", 0) or 0),
             legal_flags=tuple(sorted(_legal_flags(listing))),
+            valuation_trace=trace.to_json_dict(),
         )
 
     def valuate_batch(self, listings: List[Listing]) -> List[ValuationResult]:

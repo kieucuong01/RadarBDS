@@ -339,6 +339,7 @@ CREATE TABLE IF NOT EXISTS valuation_results (
     trust_tier      TEXT DEFAULT 'candidate_signal',
     trust_score     INTEGER DEFAULT 0,
     legal_flags     TEXT,
+    valuation_trace JSONB NOT NULL DEFAULT '{}'::jsonb,
     computed_at     TEXT DEFAULT (datetime('now'))
 );
 
@@ -1525,6 +1526,11 @@ def _run_migrations(conn: Any) -> None:
         ("trust_tier",   "ALTER TABLE valuation_results ADD COLUMN trust_tier TEXT DEFAULT 'candidate_signal'"),
         ("trust_score",  "ALTER TABLE valuation_results ADD COLUMN trust_score INTEGER DEFAULT 0"),
         ("legal_flags",  "ALTER TABLE valuation_results ADD COLUMN legal_flags TEXT"),
+        (
+            "valuation_trace",
+            "ALTER TABLE valuation_results ADD COLUMN valuation_trace "
+            "JSONB NOT NULL DEFAULT '{}'::jsonb",
+        ),
     ]
     for col, sql in v_migrations:
         if col not in v_existing:
