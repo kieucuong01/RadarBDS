@@ -605,6 +605,159 @@ CREATE INDEX IF NOT EXISTS idx_audit_created_user
     ON user_audit_log(created_at DESC, user_id);
 
 
+-- ================================================================
+-- RADAR ASK: typed, auditable RAG runtime (legacy assistant retained)
+-- ================================================================
+CREATE TABLE IF NOT EXISTS radar_ask_sessions (
+    id           UUID PRIMARY KEY,
+    user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title        TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 200),
+    summary_json JSONB NOT NULL DEFAULT '{}'::jsonb
+                 CHECK (jsonb_typeof(summary_json) = 'object'),
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_sessions_owner_updated
+    ON radar_ask_sessions(user_id, updated_at DESC, id DESC);
+
+
+CREATE TABLE IF NOT EXISTS radar_ask_messages (
+    id          UUID PRIMARY KEY,
+    session_id  UUID NOT NULL REFERENCES radar_ask_sessions(id) ON DELETE CASCADE,
+    role        TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+    content     TEXT NOT NULL CHECK (char_length(content) BETWEEN 1 AND 12000),
+    answer_json JSONB CHECK (answer_json IS NULL OR jsonb_typeof(answer_json) = 'object'),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_messages_session_created
+    ON radar_ask_messages(session_id, created_at, id);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_messages_retention
+    ON radar_ask_messages(created_at);
+
+
+CREATE TABLE IF NOT EXISTS radar_ask_runs (
+    id                  UUID PRIMARY KEY,
+    session_id          UUID NOT NULL REFERENCES radar_ask_sessions(id) ON DELETE CASCADE,
+    user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    idempotency_key     TEXT NOT NULL CHECK (char_length(idempotency_key) BETWEEN 1 AND 128),
+    question            TEXT NOT NULL CHECK (char_length(question) BETWEEN 1 AND 2000),
+    requested_depth     TEXT CHECK (requested_depth IS NULL OR requested_depth IN ('fast', 'standard', 'deep')),
+    effective_depth     TEXT CHECK (effective_depth IS NULL OR effective_depth IN ('fast', 'standard', 'deep')),
+    status              TEXT NOT NULL DEFAULT 'created'
+                        CHECK (status IN (
+                            'created', 'clarifying', 'queued', 'running',
+                            'completed', 'insufficient', 'failed', 'cancelled'
+                        )),
+    outcome             TEXT CHECK (outcome IS NULL OR outcome IN (
+                            'answered', 'insufficient', 'clarification',
+                            'provider_failure', 'validation_failure',
+                            'database_failure', 'budget_hard_stop', 'cancelled'
+                        )),
+    route_json          JSONB CHECK (route_json IS NULL OR jsonb_typeof(route_json) = 'object'),
+    answer_json         JSONB CHECK (answer_json IS NULL OR jsonb_typeof(answer_json) = 'object'),
+    model               TEXT,
+    error_code          TEXT,
+    retryable           BOOLEAN NOT NULL DEFAULT FALSE,
+    available_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    worker_id           TEXT,
+    lease_until         TIMESTAMPTZ,
+    attempt_count       INTEGER NOT NULL DEFAULT 0 CHECK (attempt_count BETWEEN 0 AND 2),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    started_at          TIMESTAMPTZ,
+    completed_at        TIMESTAMPTZ,
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(user_id, idempotency_key)
+);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_runs_session_created
+    ON radar_ask_runs(session_id, created_at, id);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_runs_user
+    ON radar_ask_runs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_runs_queue
+    ON radar_ask_runs(status, available_at, created_at)
+    WHERE status = 'queued';
+
+
+CREATE TABLE IF NOT EXISTS radar_ask_tool_calls (
+    id                  UUID PRIMARY KEY,
+    run_id              UUID NOT NULL REFERENCES radar_ask_runs(id) ON DELETE CASCADE,
+    tool_call_key       TEXT NOT NULL CHECK (char_length(tool_call_key) BETWEEN 1 AND 128),
+    tool_name           TEXT NOT NULL CHECK (char_length(tool_name) BETWEEN 1 AND 128),
+    arguments_json      JSONB NOT NULL CHECK (jsonb_typeof(arguments_json) = 'object'),
+    result_summary_json JSONB NOT NULL CHECK (jsonb_typeof(result_summary_json) = 'object'),
+    status              TEXT NOT NULL CHECK (status IN ('planned', 'running', 'completed', 'failed')),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_at        TIMESTAMPTZ,
+    UNIQUE(run_id, tool_call_key)
+);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_tool_calls_run
+    ON radar_ask_tool_calls(run_id, created_at, id);
+
+
+CREATE TABLE IF NOT EXISTS radar_ask_evidence (
+    id            UUID PRIMARY KEY,
+    run_id        UUID NOT NULL REFERENCES radar_ask_runs(id) ON DELETE CASCADE,
+    evidence_key  TEXT NOT NULL CHECK (char_length(evidence_key) BETWEEN 1 AND 160),
+    evidence_kind TEXT NOT NULL CHECK (char_length(evidence_kind) BETWEEN 1 AND 80),
+    source_ref    TEXT NOT NULL CHECK (char_length(source_ref) BETWEEN 1 AND 500),
+    payload_json  JSONB NOT NULL CHECK (jsonb_typeof(payload_json) = 'object'),
+    min_tier      TEXT NOT NULL CHECK (min_tier IN ('free', 'vip', 'admin')),
+    as_of         TIMESTAMPTZ NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(run_id, evidence_key)
+);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_evidence_run
+    ON radar_ask_evidence(run_id, created_at, id);
+
+
+-- Usage intentionally does not cascade with runs: deleting chat content must
+-- preserve the immutable billing and budget ledger.
+CREATE TABLE IF NOT EXISTS radar_ask_usage (
+    id                  UUID PRIMARY KEY,
+    run_key             UUID NOT NULL UNIQUE,
+    user_id             INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    tier                TEXT NOT NULL CHECK (tier IN ('free', 'vip', 'admin')),
+    model               TEXT,
+    depth               TEXT CHECK (depth IS NULL OR depth IN ('fast', 'standard', 'deep')),
+    usage_date          DATE NOT NULL,
+    usage_month         DATE NOT NULL,
+    settlement_status   TEXT NOT NULL CHECK (settlement_status IN ('reserved', 'settled', 'released')),
+    question_status     TEXT NOT NULL CHECK (question_status IN ('reserved', 'answered', 'released')),
+    reserved_usd        NUMERIC(12, 6) NOT NULL DEFAULT 0 CHECK (reserved_usd >= 0),
+    actual_usd          NUMERIC(12, 6) NOT NULL DEFAULT 0 CHECK (actual_usd >= 0),
+    prompt_tokens       INTEGER NOT NULL DEFAULT 0 CHECK (prompt_tokens >= 0),
+    completion_tokens   INTEGER NOT NULL DEFAULT 0 CHECK (completion_tokens >= 0),
+    cache_hit_tokens    INTEGER NOT NULL DEFAULT 0 CHECK (cache_hit_tokens >= 0),
+    cache_miss_tokens   INTEGER NOT NULL DEFAULT 0 CHECK (cache_miss_tokens >= 0),
+    outcome             TEXT CHECK (outcome IS NULL OR outcome IN (
+                            'answered', 'insufficient', 'clarification',
+                            'provider_failure', 'validation_failure',
+                            'database_failure', 'budget_hard_stop', 'cancelled'
+                        )),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    settled_at          TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_usage_user_day
+    ON radar_ask_usage(user_id, usage_date);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_usage_month
+    ON radar_ask_usage(usage_month, settlement_status);
+
+
+CREATE TABLE IF NOT EXISTS radar_ask_feedback (
+    id         UUID PRIMARY KEY,
+    message_id UUID NOT NULL REFERENCES radar_ask_messages(id) ON DELETE CASCADE,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    rating     TEXT NOT NULL CHECK (rating IN ('helpful', 'not_helpful')),
+    note       TEXT CHECK (note IS NULL OR char_length(note) <= 500),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(user_id, message_id)
+);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_feedback_message
+    ON radar_ask_feedback(message_id);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_feedback_user
+    ON radar_ask_feedback(user_id, created_at DESC);
+
+
 CREATE TABLE IF NOT EXISTS assistant_sessions (
     id                      INTEGER PRIMARY KEY AUTOINCREMENT,
     session_token           TEXT NOT NULL UNIQUE,

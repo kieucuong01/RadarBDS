@@ -1,0 +1,675 @@
+"""Durable, owner-scoped persistence for Radar Ask.
+
+This module stores chat content and immutable audit records. Quota and budget
+reservation logic deliberately lives in a separate service so it can serialize
+accounting transactions without coupling them to conversation CRUD.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Collection, Mapping
+from uuid import UUID, uuid4
+
+from psycopg.types.json import Jsonb
+
+from db.connection import PgConnection, PgRow, get_conn
+
+
+TERMINAL_RUN_STATUSES = frozenset({"completed", "insufficient", "failed", "cancelled"})
+RUN_STATUSES = frozenset(
+    {"created", "clarifying", "queued", "running", *TERMINAL_RUN_STATUSES}
+)
+RUN_OUTCOMES = frozenset(
+    {
+        "answered",
+        "insufficient",
+        "clarification",
+        "provider_failure",
+        "validation_failure",
+        "database_failure",
+        "budget_hard_stop",
+        "cancelled",
+    }
+)
+
+
+class RadarAskRepositoryError(RuntimeError):
+    """Base class for repository domain failures."""
+
+
+class OwnedResourceNotFound(RadarAskRepositoryError):
+    """Raised when a resource is missing or is not owned by the caller."""
+
+
+class IdempotencyConflict(RadarAskRepositoryError):
+    """Raised when an idempotency key is reused for different input."""
+
+
+class InvalidRunTransition(RadarAskRepositoryError):
+    """Raised when a guarded run-state transition cannot be applied."""
+
+
+class ImmutableAuditConflict(RadarAskRepositoryError):
+    """Raised when an immutable audit key is replayed with different data."""
+
+
+@dataclass(frozen=True)
+class RadarAskSessionRecord:
+    id: UUID
+    user_id: int
+    title: str
+    summary: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass(frozen=True)
+class RadarAskMessageRecord:
+    id: UUID
+    session_id: UUID
+    role: str
+    content: str
+    answer: dict[str, Any] | None
+    created_at: datetime
+
+
+@dataclass(frozen=True)
+class RadarAskRunRecord:
+    id: UUID
+    session_id: UUID
+    user_id: int
+    idempotency_key: str
+    question: str
+    requested_depth: str | None
+    effective_depth: str | None
+    status: str
+    outcome: str | None
+    route: dict[str, Any] | None
+    answer: dict[str, Any] | None
+    model: str | None
+    error_code: str | None
+    retryable: bool
+    available_at: datetime
+    worker_id: str | None
+    lease_until: datetime | None
+    attempt_count: int
+    created_at: datetime
+    started_at: datetime | None
+    completed_at: datetime | None
+    updated_at: datetime
+
+
+@dataclass(frozen=True)
+class RadarAskToolCallRecord:
+    id: UUID
+    run_id: UUID
+    tool_call_key: str
+    tool_name: str
+    arguments: dict[str, Any]
+    result_summary: dict[str, Any]
+    status: str
+    created_at: datetime
+    completed_at: datetime | None
+
+
+@dataclass(frozen=True)
+class RadarAskEvidenceRecord:
+    id: UUID
+    run_id: UUID
+    evidence_key: str
+    evidence_kind: str
+    source_ref: str
+    payload: dict[str, Any]
+    min_tier: str
+    as_of: datetime
+    created_at: datetime
+
+
+@dataclass(frozen=True)
+class RadarAskFeedbackRecord:
+    id: UUID
+    message_id: UUID
+    user_id: int
+    rating: str
+    note: str | None
+    created_at: datetime
+
+
+def _bounded_text(value: str, *, field: str, maximum: int) -> str:
+    normalized = " ".join(str(value).split())
+    if not normalized or len(normalized) > maximum:
+        raise ValueError(f"{field} must contain between 1 and {maximum} characters")
+    return normalized
+
+
+def _optional_note(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = " ".join(value.split())
+    if len(normalized) > 500:
+        raise ValueError("note must not exceed 500 characters")
+    return normalized or None
+
+
+def _bounded_content(value: str, *, maximum: int) -> str:
+    normalized = str(value).strip()
+    if not normalized or len(normalized) > maximum:
+        raise ValueError(f"content must contain between 1 and {maximum} characters")
+    return normalized
+
+
+def _row_dict(row: PgRow) -> dict[str, Any]:
+    return dict(row.items())
+
+
+def _session_from_row(row: PgRow) -> RadarAskSessionRecord:
+    data = _row_dict(row)
+    return RadarAskSessionRecord(
+        id=data["id"],
+        user_id=data["user_id"],
+        title=data["title"],
+        summary=data["summary_json"],
+        created_at=data["created_at"],
+        updated_at=data["updated_at"],
+    )
+
+
+def _message_from_row(row: PgRow) -> RadarAskMessageRecord:
+    data = _row_dict(row)
+    return RadarAskMessageRecord(
+        id=data["id"],
+        session_id=data["session_id"],
+        role=data["role"],
+        content=data["content"],
+        answer=data["answer_json"],
+        created_at=data["created_at"],
+    )
+
+
+def _run_from_row(row: PgRow) -> RadarAskRunRecord:
+    data = _row_dict(row)
+    return RadarAskRunRecord(
+        id=data["id"],
+        session_id=data["session_id"],
+        user_id=data["user_id"],
+        idempotency_key=data["idempotency_key"],
+        question=data["question"],
+        requested_depth=data["requested_depth"],
+        effective_depth=data["effective_depth"],
+        status=data["status"],
+        outcome=data["outcome"],
+        route=data["route_json"],
+        answer=data["answer_json"],
+        model=data["model"],
+        error_code=data["error_code"],
+        retryable=data["retryable"],
+        available_at=data["available_at"],
+        worker_id=data["worker_id"],
+        lease_until=data["lease_until"],
+        attempt_count=data["attempt_count"],
+        created_at=data["created_at"],
+        started_at=data["started_at"],
+        completed_at=data["completed_at"],
+        updated_at=data["updated_at"],
+    )
+
+
+def _tool_from_row(row: PgRow) -> RadarAskToolCallRecord:
+    data = _row_dict(row)
+    return RadarAskToolCallRecord(
+        id=data["id"],
+        run_id=data["run_id"],
+        tool_call_key=data["tool_call_key"],
+        tool_name=data["tool_name"],
+        arguments=data["arguments_json"],
+        result_summary=data["result_summary_json"],
+        status=data["status"],
+        created_at=data["created_at"],
+        completed_at=data["completed_at"],
+    )
+
+
+def _evidence_from_row(row: PgRow) -> RadarAskEvidenceRecord:
+    data = _row_dict(row)
+    return RadarAskEvidenceRecord(
+        id=data["id"],
+        run_id=data["run_id"],
+        evidence_key=data["evidence_key"],
+        evidence_kind=data["evidence_kind"],
+        source_ref=data["source_ref"],
+        payload=data["payload_json"],
+        min_tier=data["min_tier"],
+        as_of=data["as_of"],
+        created_at=data["created_at"],
+    )
+
+
+def _feedback_from_row(row: PgRow) -> RadarAskFeedbackRecord:
+    data = _row_dict(row)
+    return RadarAskFeedbackRecord(
+        id=data["id"],
+        message_id=data["message_id"],
+        user_id=data["user_id"],
+        rating=data["rating"],
+        note=data["note"],
+        created_at=data["created_at"],
+    )
+
+
+class RadarAskRepository:
+    """PostgreSQL repository with ownership checks at every user boundary."""
+
+    def create_session(
+        self,
+        *,
+        user_id: int,
+        title: str,
+        summary: Mapping[str, Any] | None = None,
+    ) -> RadarAskSessionRecord:
+        normalized_title = _bounded_text(title, field="title", maximum=200)
+        with get_conn() as conn:
+            return self._create_session(
+                conn,
+                user_id=user_id,
+                title=normalized_title,
+                summary=dict(summary or {}),
+            )
+
+    @staticmethod
+    def _create_session(
+        conn: PgConnection,
+        *,
+        user_id: int,
+        title: str,
+        summary: dict[str, Any],
+    ) -> RadarAskSessionRecord:
+        row = conn.execute(
+            """
+            INSERT INTO radar_ask_sessions (id, user_id, title, summary_json)
+            VALUES (?, ?, ?, ?)
+            RETURNING *
+            """,
+            (uuid4(), user_id, title, Jsonb(summary)),
+        ).fetchone()
+        assert row is not None
+        return _session_from_row(row)
+
+    def get_session(self, *, user_id: int, session_id: UUID) -> RadarAskSessionRecord | None:
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM radar_ask_sessions WHERE id=? AND user_id=?",
+                (session_id, user_id),
+            ).fetchone()
+        return _session_from_row(row) if row is not None else None
+
+    def rename_session(
+        self,
+        *,
+        user_id: int,
+        session_id: UUID,
+        title: str,
+    ) -> RadarAskSessionRecord | None:
+        normalized = _bounded_text(title, field="title", maximum=200)
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                UPDATE radar_ask_sessions
+                SET title=?, updated_at=NOW()
+                WHERE id=? AND user_id=?
+                RETURNING *
+                """,
+                (normalized, session_id, user_id),
+            ).fetchone()
+        return _session_from_row(row) if row is not None else None
+
+    def create_message(
+        self,
+        *,
+        user_id: int,
+        session_id: UUID,
+        role: str,
+        content: str,
+        answer: Mapping[str, Any] | None = None,
+    ) -> RadarAskMessageRecord:
+        if role not in {"user", "assistant"}:
+            raise ValueError("role must be user or assistant")
+        normalized = _bounded_content(content, maximum=12_000)
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                INSERT INTO radar_ask_messages (id, session_id, role, content, answer_json)
+                SELECT ?, s.id, ?, ?, ?
+                FROM radar_ask_sessions s
+                WHERE s.id=? AND s.user_id=?
+                RETURNING *
+                """,
+                (
+                    uuid4(),
+                    role,
+                    normalized,
+                    Jsonb(dict(answer)) if answer is not None else None,
+                    session_id,
+                    user_id,
+                ),
+            ).fetchone()
+            if row is None:
+                raise OwnedResourceNotFound("session was not found")
+            conn.execute(
+                "UPDATE radar_ask_sessions SET updated_at=NOW() WHERE id=? AND user_id=?",
+                (session_id, user_id),
+            )
+        return _message_from_row(row)
+
+    def list_messages(
+        self,
+        *,
+        user_id: int,
+        session_id: UUID,
+        limit: int = 50,
+    ) -> list[RadarAskMessageRecord]:
+        bounded_limit = max(1, min(int(limit), 200))
+        with get_conn() as conn:
+            owned = conn.execute(
+                "SELECT 1 FROM radar_ask_sessions WHERE id=? AND user_id=?",
+                (session_id, user_id),
+            ).fetchone()
+            if owned is None:
+                raise OwnedResourceNotFound("session was not found")
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM (
+                    SELECT * FROM radar_ask_messages
+                    WHERE session_id=?
+                    ORDER BY created_at DESC, id DESC
+                    LIMIT ?
+                ) recent
+                ORDER BY created_at, id
+                """,
+                (session_id, bounded_limit),
+            ).fetchall()
+        return [_message_from_row(row) for row in rows]
+
+    def add_feedback(
+        self,
+        *,
+        user_id: int,
+        message_id: UUID,
+        rating: str,
+        note: str | None = None,
+    ) -> RadarAskFeedbackRecord:
+        if rating not in {"helpful", "not_helpful"}:
+            raise ValueError("rating must be helpful or not_helpful")
+        normalized_note = _optional_note(note)
+        with get_conn() as conn:
+            owned = conn.execute(
+                """
+                SELECT 1
+                FROM radar_ask_messages m
+                JOIN radar_ask_sessions s ON s.id=m.session_id
+                WHERE m.id=? AND s.user_id=? AND m.role='assistant'
+                """,
+                (message_id, user_id),
+            ).fetchone()
+            if owned is None:
+                raise OwnedResourceNotFound("assistant message was not found")
+            row = conn.execute(
+                """
+                INSERT INTO radar_ask_feedback (id, message_id, user_id, rating, note)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT (user_id, message_id)
+                DO UPDATE SET rating=EXCLUDED.rating, note=EXCLUDED.note
+                RETURNING *
+                """,
+                (uuid4(), message_id, user_id, rating, normalized_note),
+            ).fetchone()
+        assert row is not None
+        return _feedback_from_row(row)
+
+    def create_run(
+        self,
+        *,
+        user_id: int,
+        question: str,
+        idempotency_key: str,
+        session_id: UUID | None = None,
+        requested_depth: str | None = None,
+    ) -> RadarAskRunRecord:
+        normalized_question = _bounded_text(question, field="question", maximum=2_000)
+        normalized_key = _bounded_text(
+            idempotency_key,
+            field="idempotency_key",
+            maximum=128,
+        )
+        if requested_depth not in {None, "fast", "standard", "deep"}:
+            raise ValueError("requested_depth is invalid")
+
+        with get_conn() as conn:
+            existing = conn.execute(
+                "SELECT * FROM radar_ask_runs WHERE user_id=? AND idempotency_key=?",
+                (user_id, normalized_key),
+            ).fetchone()
+            if existing is not None:
+                return self._resolve_idempotent_run(existing, normalized_question)
+
+            if session_id is None:
+                session = self._create_session(
+                    conn,
+                    user_id=user_id,
+                    title=normalized_question[:200],
+                    summary={},
+                )
+                owned_session_id = session.id
+            else:
+                owned = conn.execute(
+                    "SELECT id FROM radar_ask_sessions WHERE id=? AND user_id=?",
+                    (session_id, user_id),
+                ).fetchone()
+                if owned is None:
+                    raise OwnedResourceNotFound("session was not found")
+                owned_session_id = session_id
+
+            row = conn.execute(
+                """
+                INSERT INTO radar_ask_runs (
+                    id, session_id, user_id, idempotency_key, question, requested_depth
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT (user_id, idempotency_key) DO NOTHING
+                RETURNING *
+                """,
+                (
+                    uuid4(),
+                    owned_session_id,
+                    user_id,
+                    normalized_key,
+                    normalized_question,
+                    requested_depth,
+                ),
+            ).fetchone()
+            if row is None:
+                row = conn.execute(
+                    "SELECT * FROM radar_ask_runs WHERE user_id=? AND idempotency_key=?",
+                    (user_id, normalized_key),
+                ).fetchone()
+                assert row is not None
+                return self._resolve_idempotent_run(row, normalized_question)
+            conn.execute(
+                "UPDATE radar_ask_sessions SET updated_at=NOW() WHERE id=? AND user_id=?",
+                (owned_session_id, user_id),
+            )
+        return _run_from_row(row)
+
+    @staticmethod
+    def _resolve_idempotent_run(row: PgRow, question: str) -> RadarAskRunRecord:
+        if row["question"] != question:
+            raise IdempotencyConflict("idempotency key belongs to a different question")
+        return _run_from_row(row)
+
+    def get_run(self, *, user_id: int, run_id: UUID) -> RadarAskRunRecord | None:
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM radar_ask_runs WHERE id=? AND user_id=?",
+                (run_id, user_id),
+            ).fetchone()
+        return _run_from_row(row) if row is not None else None
+
+    def transition_run(
+        self,
+        run_id: UUID,
+        *,
+        expected: Collection[str],
+        target: str,
+        outcome: str | None = None,
+    ) -> RadarAskRunRecord:
+        expected_statuses = sorted(set(expected))
+        if not expected_statuses or any(value not in RUN_STATUSES for value in expected_statuses):
+            raise ValueError("expected contains an invalid run status")
+        if target not in RUN_STATUSES:
+            raise ValueError("target is an invalid run status")
+        if outcome is not None and outcome not in RUN_OUTCOMES:
+            raise ValueError("outcome is invalid")
+        terminal = target in TERMINAL_RUN_STATUSES
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                UPDATE radar_ask_runs
+                SET status=?, outcome=?,
+                    started_at=CASE
+                        WHEN ?='running' AND started_at IS NULL THEN NOW()
+                        ELSE started_at
+                    END,
+                    completed_at=CASE WHEN ? THEN COALESCE(completed_at, NOW()) ELSE completed_at END,
+                    updated_at=NOW()
+                WHERE id=?
+                  AND status=ANY(?::text[])
+                  AND status NOT IN ('completed', 'insufficient', 'failed', 'cancelled')
+                RETURNING *
+                """,
+                (target, outcome, target, terminal, run_id, expected_statuses),
+            ).fetchone()
+            if row is None:
+                current = conn.execute(
+                    "SELECT status FROM radar_ask_runs WHERE id=?",
+                    (run_id,),
+                ).fetchone()
+                if current is None:
+                    raise InvalidRunTransition("run was not found")
+                raise InvalidRunTransition("run status changed before the guarded transition")
+        return _run_from_row(row)
+
+    def record_tool_call(
+        self,
+        *,
+        run_id: UUID,
+        tool_call_key: str,
+        tool_name: str,
+        arguments: Mapping[str, Any],
+        result_summary: Mapping[str, Any],
+        status: str,
+    ) -> RadarAskToolCallRecord:
+        key = _bounded_text(tool_call_key, field="tool_call_key", maximum=128)
+        name = _bounded_text(tool_name, field="tool_name", maximum=128)
+        if status not in {"planned", "running", "completed", "failed"}:
+            raise ValueError("tool call status is invalid")
+        immutable = {
+            "tool_name": name,
+            "arguments_json": dict(arguments),
+            "result_summary_json": dict(result_summary),
+            "status": status,
+        }
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                INSERT INTO radar_ask_tool_calls (
+                    id, run_id, tool_call_key, tool_name,
+                    arguments_json, result_summary_json, status, completed_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, CASE WHEN ? IN ('completed', 'failed') THEN NOW() END)
+                ON CONFLICT (run_id, tool_call_key) DO NOTHING
+                RETURNING *
+                """,
+                (
+                    uuid4(),
+                    run_id,
+                    key,
+                    name,
+                    Jsonb(immutable["arguments_json"]),
+                    Jsonb(immutable["result_summary_json"]),
+                    status,
+                    status,
+                ),
+            ).fetchone()
+            if row is None:
+                row = conn.execute(
+                    "SELECT * FROM radar_ask_tool_calls WHERE run_id=? AND tool_call_key=?",
+                    (run_id, key),
+                ).fetchone()
+                assert row is not None
+                existing = _row_dict(row)
+                if any(existing[field] != value for field, value in immutable.items()):
+                    raise ImmutableAuditConflict("tool-call key belongs to different audit data")
+        return _tool_from_row(row)
+
+    def record_evidence(
+        self,
+        *,
+        run_id: UUID,
+        evidence_key: str,
+        evidence_kind: str,
+        source_ref: str,
+        payload: Mapping[str, Any],
+        min_tier: str,
+        as_of: datetime,
+    ) -> RadarAskEvidenceRecord:
+        key = _bounded_text(evidence_key, field="evidence_key", maximum=160)
+        kind = _bounded_text(evidence_kind, field="evidence_kind", maximum=80)
+        source = _bounded_text(source_ref, field="source_ref", maximum=500)
+        if min_tier not in {"free", "vip", "admin"}:
+            raise ValueError("min_tier is invalid")
+        immutable = {
+            "evidence_kind": kind,
+            "source_ref": source,
+            "payload_json": dict(payload),
+            "min_tier": min_tier,
+            "as_of": as_of,
+        }
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                INSERT INTO radar_ask_evidence (
+                    id, run_id, evidence_key, evidence_kind,
+                    source_ref, payload_json, min_tier, as_of
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT (run_id, evidence_key) DO NOTHING
+                RETURNING *
+                """,
+                (uuid4(), run_id, key, kind, source, Jsonb(dict(payload)), min_tier, as_of),
+            ).fetchone()
+            if row is None:
+                row = conn.execute(
+                    "SELECT * FROM radar_ask_evidence WHERE run_id=? AND evidence_key=?",
+                    (run_id, key),
+                ).fetchone()
+                assert row is not None
+                existing = _row_dict(row)
+                if any(existing[field] != value for field, value in immutable.items()):
+                    raise ImmutableAuditConflict("evidence key belongs to different audit data")
+        return _evidence_from_row(row)
+
+    def delete_session(self, *, user_id: int, session_id: UUID) -> bool:
+        with get_conn() as conn:
+            cursor = conn.execute(
+                "DELETE FROM radar_ask_sessions WHERE id=? AND user_id=?",
+                (session_id, user_id),
+            )
+            deleted = cursor.rowcount
+        return deleted == 1
+
+    def delete_all_sessions(self, *, user_id: int) -> int:
+        with get_conn() as conn:
+            cursor = conn.execute(
+                "DELETE FROM radar_ask_sessions WHERE user_id=?",
+                (user_id,),
+            )
+            deleted = cursor.rowcount
+        return max(deleted, 0)
