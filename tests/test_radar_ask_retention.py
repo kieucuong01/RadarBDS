@@ -305,3 +305,17 @@ def test_dry_run_mutates_nothing_and_usage_keeps_13_month_buckets_but_purges_14t
         )
         assert conn.execute("SELECT 1 FROM radar_ask_usage WHERE id=?", (expired_usage,)).fetchone() is None
         assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_usage_attempts").fetchone()["count"] == 13
+
+
+def test_expired_terminal_run_is_purged_from_a_session_with_a_running_sibling(retention_env):
+    repository, user = retention_env
+    old = _terminal_run(repository, user, key="shared-old")
+    active = repository.create_run(user_id=user.id, session_id=old.session_id, question="Dang chay", idempotency_key="shared-active")
+    repository.transition_run(active.id, user_id=user.id, expected={"created"}, target="running")
+    _age_session_content(old.session_id, when=NOW - timedelta(days=91))
+    with get_conn() as conn:
+        conn.execute("UPDATE radar_ask_runs SET created_at=?, updated_at=?, completed_at=? WHERE id=?", (NOW - timedelta(days=91), NOW - timedelta(days=91), NOW - timedelta(days=91), old.id))
+    purge_expired_content(clock=lambda: NOW)
+    with get_conn() as conn:
+        assert conn.execute("SELECT 1 FROM radar_ask_runs WHERE id=?", (old.id,)).fetchone() is None
+        assert conn.execute("SELECT status FROM radar_ask_runs WHERE id=?", (active.id,)).fetchone()["status"] == "running"

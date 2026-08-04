@@ -625,6 +625,7 @@ CREATE INDEX IF NOT EXISTS idx_radar_ask_sessions_owner_updated
 CREATE TABLE IF NOT EXISTS radar_ask_messages (
     id          UUID PRIMARY KEY,
     session_id  UUID NOT NULL REFERENCES radar_ask_sessions(id) ON DELETE CASCADE,
+    run_id      UUID,
     role        TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
     content     TEXT NOT NULL CHECK (char_length(content) BETWEEN 1 AND 12000),
     answer_json JSONB CHECK (answer_json IS NULL OR jsonb_typeof(answer_json) = 'object'),
@@ -1428,6 +1429,24 @@ def _migrate_radar_ask_usage(conn: Any) -> None:
             DEFAULT 'deepseek-v4-usd-2026-08-04'
         """
     )
+
+
+def _migrate_radar_ask_messages(conn: Any) -> None:
+    if not _table_exists(conn, "radar_ask_messages"):
+        return
+    conn.execute("ALTER TABLE radar_ask_messages ADD COLUMN IF NOT EXISTS run_id UUID")
+    exists = conn.execute(
+        "SELECT 1 FROM pg_constraint WHERE conname='radar_ask_messages_run_id_fkey'"
+    ).fetchone()
+    if exists is None:
+        conn.execute(
+            "ALTER TABLE radar_ask_messages ADD CONSTRAINT radar_ask_messages_run_id_fkey "
+            "FOREIGN KEY (run_id) REFERENCES radar_ask_runs(id) ON DELETE CASCADE"
+        )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_radar_ask_messages_run_created "
+        "ON radar_ask_messages(run_id, created_at, id) WHERE run_id IS NOT NULL"
+    )
     conn.execute(
         """
         ALTER TABLE radar_ask_usage
@@ -1552,6 +1571,7 @@ def _run_migrations(conn: Any) -> None:
     _migrate_guland_publishers(conn)
     _migrate_public_read_model(conn)
     _migrate_radar_ask_usage(conn)
+    _migrate_radar_ask_messages(conn)
     _migrate_radar_ask_knowledge(conn)
     conn.execute(
         """

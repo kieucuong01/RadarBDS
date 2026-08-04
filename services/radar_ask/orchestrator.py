@@ -872,6 +872,7 @@ def run_question(
             role="assistant",
             content=answer.direct_answer,
             answer=answer.model_dump(mode="json"),
+            run_id=run.id,
         )
         return _run_result(clarifying, answer=answer)
 
@@ -933,6 +934,7 @@ def run_question(
         role="assistant",
         content=answer.direct_answer,
         answer=answer.model_dump(mode="json"),
+        run_id=run.id,
     )
     _settle(dependencies.limits, reservation, execution.usage, outcome)
     return _run_result(terminal, answer=answer)

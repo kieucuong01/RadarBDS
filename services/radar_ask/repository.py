@@ -83,6 +83,7 @@ class RadarAskSessionRecord:
 class RadarAskMessageRecord:
     id: UUID
     session_id: UUID
+    run_id: UUID | None
     role: str
     content: str
     answer: dict[str, Any] | None
@@ -198,6 +199,7 @@ def _message_from_row(row: PgRow) -> RadarAskMessageRecord:
     return RadarAskMessageRecord(
         id=data["id"],
         session_id=data["session_id"],
+        run_id=data.get("run_id"),
         role=data["role"],
         content=data["content"],
         answer=data["answer_json"],
@@ -382,6 +384,7 @@ class RadarAskRepository:
         role: str,
         content: str,
         answer: Mapping[str, Any] | None = None,
+        run_id: UUID | None = None,
     ) -> RadarAskMessageRecord:
         if role not in {"user", "assistant"}:
             raise ValueError("role must be user or assistant")
@@ -389,19 +392,23 @@ class RadarAskRepository:
         with get_conn() as conn:
             row = conn.execute(
                 """
-                INSERT INTO radar_ask_messages (id, session_id, role, content, answer_json)
-                SELECT ?, s.id, ?, ?, ?
+                INSERT INTO radar_ask_messages (id, session_id, run_id, role, content, answer_json)
+                SELECT ?, s.id, ?, ?, ?, ?
                 FROM radar_ask_sessions s
                 WHERE s.id=? AND s.user_id=?
+                  AND (?::uuid IS NULL OR EXISTS (SELECT 1 FROM radar_ask_runs r WHERE r.id=? AND r.session_id=s.id AND r.user_id=s.user_id))
                 RETURNING *
                 """,
                 (
                     uuid4(),
+                    run_id,
                     role,
                     normalized,
                     Jsonb(dict(answer)) if answer is not None else None,
                     session_id,
                     user_id,
+                    run_id,
+                    run_id,
                 ),
             ).fetchone()
             if row is None:
@@ -557,10 +564,10 @@ class RadarAskRepository:
                 return self._resolve_idempotent_run(row, normalized_question)
             conn.execute(
                 """
-                INSERT INTO radar_ask_messages (id, session_id, role, content)
-                VALUES (?, ?, 'user', ?)
+                INSERT INTO radar_ask_messages (id, session_id, run_id, role, content)
+                VALUES (?, ?, ?, 'user', ?)
                 """,
-                (uuid4(), owned_session_id, normalized_question),
+                (uuid4(), owned_session_id, row["id"], normalized_question),
             )
             conn.execute(
                 "UPDATE radar_ask_sessions SET updated_at=NOW() WHERE id=? AND user_id=?",
@@ -738,10 +745,10 @@ class RadarAskRepository:
                 raise InvalidRunTransition("run lease is not owned by this worker")
             conn.execute(
                 """
-                INSERT INTO radar_ask_messages (id, session_id, role, content, answer_json)
-                VALUES (?, ?, 'assistant', ?, ?)
+                INSERT INTO radar_ask_messages (id, session_id, run_id, role, content, answer_json)
+                VALUES (?, ?, ?, 'assistant', ?, ?)
                 """,
-                (uuid4(), row["session_id"], content, Jsonb(answer_payload)),
+                (uuid4(), row["session_id"], row["id"], content, Jsonb(answer_payload)),
             )
             conn.execute(
                 "UPDATE radar_ask_sessions SET updated_at=NOW() WHERE id=?",
@@ -1469,38 +1476,33 @@ class RadarAskRepository:
     def purge_expired_content_batch(self, *, cutoff: datetime) -> dict[str, int] | None:
         """Delete one bounded raw-content target set without touching nonterminal work."""
         with get_conn() as conn:
-            session_ids = [
-                row["id"]
-                for row in conn.execute(
-                    """
-                    SELECT s.id
-                    FROM radar_ask_sessions s
-                    WHERE s.updated_at < ?
-                      AND NOT EXISTS (
-                          SELECT 1 FROM radar_ask_messages m
-                          WHERE m.session_id=s.id AND m.created_at >= ?
-                      )
-                      AND NOT EXISTS (
-                          SELECT 1 FROM radar_ask_runs r
-                          WHERE r.session_id=s.id AND r.status<>ALL(?::text[])
-                      )
-                      AND NOT EXISTS (
-                          SELECT 1 FROM radar_ask_runs r
-                          WHERE r.session_id=s.id
-                            AND COALESCE(r.completed_at, r.updated_at, r.created_at) >= ?
-                      )
-                    ORDER BY s.updated_at, s.id
-                    FOR UPDATE SKIP LOCKED
-                    LIMIT ?
-                    """,
-                    (cutoff, cutoff, list(TERMINAL_RUN_STATUSES), cutoff, RETENTION_BATCH_SIZE),
-                ).fetchall()
-            ]
-            if session_ids:
-                counts = self._content_counts_for_sessions(conn, session_ids)
-                conn.execute("DELETE FROM radar_ask_sessions WHERE id=ANY(?)", (session_ids,))
-                return counts
-
+            tool_ids = [row["id"] for row in conn.execute(
+                """SELECT t.id FROM radar_ask_tool_calls t JOIN radar_ask_runs r ON r.id=t.run_id
+                WHERE r.status=ANY(?::text[]) AND COALESCE(r.completed_at,r.updated_at,r.created_at) < ?
+                ORDER BY t.created_at,t.id FOR UPDATE OF t,r SKIP LOCKED LIMIT ?""",
+                (list(TERMINAL_RUN_STATUSES), cutoff, RETENTION_BATCH_SIZE),
+            ).fetchall()]
+            if tool_ids:
+                conn.execute("DELETE FROM radar_ask_tool_calls WHERE id=ANY(?)", (tool_ids,))
+                return {"sessions": 0, "runs": 0, "messages": 0}
+            evidence_ids = [row["id"] for row in conn.execute(
+                """SELECT e.id FROM radar_ask_evidence e JOIN radar_ask_runs r ON r.id=e.run_id
+                WHERE r.status=ANY(?::text[]) AND COALESCE(r.completed_at,r.updated_at,r.created_at) < ?
+                ORDER BY e.created_at,e.id FOR UPDATE OF e,r SKIP LOCKED LIMIT ?""",
+                (list(TERMINAL_RUN_STATUSES), cutoff, RETENTION_BATCH_SIZE),
+            ).fetchall()]
+            if evidence_ids:
+                conn.execute("DELETE FROM radar_ask_evidence WHERE id=ANY(?)", (evidence_ids,))
+                return {"sessions": 0, "runs": 0, "messages": 0}
+            message_ids = [row["id"] for row in conn.execute(
+                """SELECT m.id FROM radar_ask_messages m JOIN radar_ask_runs r ON r.id=m.run_id
+                WHERE r.status=ANY(?::text[]) AND COALESCE(r.completed_at,r.updated_at,r.created_at) < ?
+                ORDER BY m.created_at,m.id FOR UPDATE OF m,r SKIP LOCKED LIMIT ?""",
+                (list(TERMINAL_RUN_STATUSES), cutoff, RETENTION_BATCH_SIZE),
+            ).fetchall()]
+            if message_ids:
+                conn.execute("DELETE FROM radar_ask_messages WHERE id=ANY(?)", (message_ids,))
+                return {"sessions": 0, "runs": 0, "messages": len(message_ids)}
             run_ids = [
                 row["id"]
                 for row in conn.execute(
@@ -1510,19 +1512,15 @@ class RadarAskRepository:
                     JOIN radar_ask_sessions s ON s.id=r.session_id
                     WHERE r.status=ANY(?::text[])
                       AND COALESCE(r.completed_at, r.updated_at, r.created_at) < ?
-                      AND NOT EXISTS (
-                          SELECT 1 FROM radar_ask_runs active
-                          WHERE active.session_id=r.session_id
-                            AND active.status<>ALL(?::text[])
-                      )
+                      AND NOT EXISTS (SELECT 1 FROM radar_ask_tool_calls t WHERE t.run_id=r.id)
+                      AND NOT EXISTS (SELECT 1 FROM radar_ask_evidence e WHERE e.run_id=r.id)
+                      AND NOT EXISTS (SELECT 1 FROM radar_ask_messages m WHERE m.run_id=r.id)
                     ORDER BY COALESCE(r.completed_at, r.updated_at, r.created_at), r.id
                     FOR UPDATE OF r, s SKIP LOCKED
                     LIMIT ?
                     """,
                     (
-                        list(TERMINAL_RUN_STATUSES),
-                        cutoff,
-                        list(TERMINAL_RUN_STATUSES),
+                        list(TERMINAL_RUN_STATUSES), cutoff,
                         RETENTION_BATCH_SIZE,
                     ),
                 ).fetchall()
@@ -1538,22 +1536,27 @@ class RadarAskRepository:
                     SELECT m.id
                     FROM radar_ask_messages m
                     JOIN radar_ask_sessions s ON s.id=m.session_id
-                    WHERE m.created_at < ?
-                      AND NOT EXISTS (
-                          SELECT 1 FROM radar_ask_runs active
-                          WHERE active.session_id=m.session_id
-                            AND active.status<>ALL(?::text[])
-                      )
+                    WHERE m.run_id IS NULL AND m.created_at < ?
                     ORDER BY m.created_at, m.id
                     FOR UPDATE OF m, s SKIP LOCKED
                     LIMIT ?
                     """,
-                    (cutoff, list(TERMINAL_RUN_STATUSES), RETENTION_BATCH_SIZE),
+                    (cutoff, RETENTION_BATCH_SIZE),
                 ).fetchall()
             ]
             if message_ids:
                 conn.execute("DELETE FROM radar_ask_messages WHERE id=ANY(?)", (message_ids,))
                 return {"sessions": 0, "runs": 0, "messages": len(message_ids)}
+            session_ids = [row["id"] for row in conn.execute(
+                """SELECT s.id FROM radar_ask_sessions s WHERE s.updated_at < ?
+                AND NOT EXISTS (SELECT 1 FROM radar_ask_runs r WHERE r.session_id=s.id)
+                AND NOT EXISTS (SELECT 1 FROM radar_ask_messages m WHERE m.session_id=s.id)
+                ORDER BY s.updated_at,s.id FOR UPDATE SKIP LOCKED LIMIT ?""",
+                (cutoff, RETENTION_BATCH_SIZE),
+            ).fetchall()]
+            if session_ids:
+                conn.execute("DELETE FROM radar_ask_sessions WHERE id=ANY(?)", (session_ids,))
+                return {"sessions": len(session_ids), "runs": 0, "messages": 0}
         return None
 
     def count_expired_usage(self, *, cutoff_month: date) -> dict[str, int]:
