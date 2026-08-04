@@ -12,10 +12,13 @@ from cleansing.feature_extractor import (
     extract_area,
     extract_dimensions,
     extract_price,
+    extract_road_type,
     extract_road_tier,
+    extract_road_width,
     extract_tho_cu,
 )
 from cleansing.normalizer import extract_road_name, match_ward
+from config.location_aliases import resolve_post_merger_location
 
 
 FIELD_WEIGHTS = {
@@ -23,6 +26,10 @@ FIELD_WEIGHTS = {
     "area_m2": 5,
     "ward": 4,
     "property_type": 4,
+    "frontage_m": 3,
+    "depth_m": 3,
+    "road_width_m": 3,
+    "road_type": 2,
     "road_tier": 3,
     "road_name": 2,
     "tho_cu_m2": 3,
@@ -42,8 +49,11 @@ def audit_listing_extraction(listing: Mapping[str, Any]) -> dict[str, Any]:
     price_candidates = _price_candidates(title, description)
     expected_price = _expected_price(title, description, price_candidates)
     actual_price = _to_float(_get(listing, "price_ty"))
-    if expected_price is not None and actual_price is not None:
-        if not any(_close_number(actual_price, p, rel=0.08, abs_tol=0.05) for p in price_candidates):
+    if expected_price is not None:
+        if actual_price is None or not any(
+            _close_number(actual_price, p, rel=0.08, abs_tol=0.05)
+            for p in price_candidates
+        ):
             findings.append(_finding(
                 "price_ty",
                 actual_price,
@@ -55,11 +65,19 @@ def audit_listing_extraction(listing: Mapping[str, Any]) -> dict[str, Any]:
     declared_area = declared_total_area(text)
     expected_area = declared_area or extract_area(text)
     actual_area = _to_float(_get(listing, "area_m2"))
-    if expected_area is not None and actual_area is not None:
-        if not _close_number(actual_area, expected_area, rel=0.05, abs_tol=2.0):
-            dimensions = extract_dimensions(text)
-            frontage = _to_float(dimensions.get("frontage_m"))
-            depth = _to_float(dimensions.get("depth_m"))
+    dimensions = extract_dimensions(text)
+    frontage = _to_float(dimensions.get("frontage_m"))
+    depth = _to_float(dimensions.get("depth_m"))
+    if expected_area is not None:
+        if actual_area is None:
+            findings.append(_finding(
+                "area_m2",
+                actual_area,
+                expected_area,
+                "Text contains a clear area/dimension but stored area is missing.",
+                _evidence_for_number(text, expected_area, ("m2", "mÂ²", "mv", "x")),
+            ))
+        elif not _close_number(actual_area, expected_area, rel=0.05, abs_tol=2.0):
             dimension_area = frontage * depth if frontage and depth else None
             expected_is_dimension = bool(
                 declared_area is None
@@ -79,9 +97,37 @@ def audit_listing_extraction(listing: Mapping[str, Any]) -> dict[str, Any]:
                     _evidence_for_number(text, expected_area, ("m2", "m²", "mv", "x")),
                 ))
 
-    expected_ward = match_ward(title, description)
+    for field, expected in (("frontage_m", frontage), ("depth_m", depth)):
+        actual = _to_float(_get(listing, field))
+        if expected is not None and (
+            actual is None
+            or not _close_number(actual, expected, rel=0.12, abs_tol=0.5)
+        ):
+            findings.append(_finding(
+                field,
+                actual,
+                expected,
+                "Text contains a clear lot dimension that differs from stored data.",
+                _evidence_for_number(text, expected, ("m", "x")),
+            ))
+
+    location = resolve_post_merger_location(
+        title,
+        description,
+        intended_city=str(
+            _get(listing, "city") or _get(listing, "default_area") or ""
+        ) or None,
+    )
+    if location.has_strong_old_ward:
+        expected_ward = location.ward
+    elif location.new_ward:
+        expected_ward = None
+    else:
+        expected_ward = match_ward(title, description)
     actual_ward = _get(listing, "ward")
-    if expected_ward and actual_ward and not _ward_compatible(str(actual_ward), expected_ward):
+    if expected_ward and (
+        not actual_ward or not _ward_compatible(str(actual_ward), expected_ward)
+    ):
         findings.append(_finding(
             "ward",
             actual_ward,
@@ -92,12 +138,40 @@ def audit_listing_extraction(listing: Mapping[str, Any]) -> dict[str, Any]:
 
     expected_road_tier = extract_road_tier(title, description)
     actual_road_tier = _to_int(_get(listing, "road_tier"))
-    if expected_road_tier and actual_road_tier is not None and actual_road_tier != expected_road_tier:
+    if expected_road_tier and actual_road_tier != expected_road_tier:
         findings.append(_finding(
             "road_tier",
             actual_road_tier,
             expected_road_tier,
             "Text road-access evidence maps to a different road tier.",
+            _road_evidence(text),
+        ))
+
+    expected_road_width = extract_road_width(text)
+    actual_road_width = _to_float(_get(listing, "road_width_m"))
+    if expected_road_width is not None and (
+        actual_road_width is None
+        or not _close_number(actual_road_width, expected_road_width, rel=0.15, abs_tol=1.0)
+    ):
+        findings.append(_finding(
+            "road_width_m",
+            actual_road_width,
+            expected_road_width,
+            "Text contains a clear road width that differs from stored data.",
+            _road_evidence(text),
+        ))
+
+    expected_road_type = extract_road_type(text)
+    actual_road_type = str(_get(listing, "road_type") or "").strip()
+    if expected_road_type != "unknown" and not _road_type_compatible(
+        actual_road_type,
+        expected_road_type,
+    ):
+        findings.append(_finding(
+            "road_type",
+            actual_road_type or None,
+            expected_road_type,
+            "Text contains a clear road-surface/access type that differs from stored data.",
             _road_evidence(text),
         ))
 
@@ -115,8 +189,13 @@ def audit_listing_extraction(listing: Mapping[str, Any]) -> dict[str, Any]:
     expected_tho_cu = extract_tho_cu(text, expected_area or actual_area)
     expected_tho_cu_m2 = _to_float(expected_tho_cu.get("tho_cu_m2"))
     actual_tho_cu_m2 = _to_float(_get(listing, "tho_cu_m2"))
-    if expected_tho_cu_m2 is not None and actual_tho_cu_m2 is not None:
-        if not _close_number(actual_tho_cu_m2, expected_tho_cu_m2, rel=0.08, abs_tol=3.0):
+    if expected_tho_cu_m2 is not None:
+        if actual_tho_cu_m2 is None or not _close_number(
+            actual_tho_cu_m2,
+            expected_tho_cu_m2,
+            rel=0.08,
+            abs_tol=3.0,
+        ):
             findings.append(_finding(
                 "tho_cu_m2",
                 actual_tho_cu_m2,
@@ -133,7 +212,7 @@ def audit_listing_extraction(listing: Mapping[str, Any]) -> dict[str, Any]:
         price_per_m2=_to_float(_get(listing, "price_per_m2")),
     )
     actual_property = _get(listing, "property_type")
-    if expected_property and actual_property and expected_property != actual_property:
+    if expected_property and expected_property != actual_property:
         findings.append(_finding(
             "property_type",
             actual_property,
@@ -254,6 +333,20 @@ def _ward_compatible(actual: str, expected: str) -> bool:
         ("my phuoc", "chanh phu hoa"),
     }
     return (actual_folded, expected_folded) in compatible_pairs
+
+
+def _road_type_compatible(actual: str, expected: str) -> bool:
+    aliases = {
+        "nhua": "duong_nhua",
+        "duong nhua": "duong_nhua",
+        "betong": "be_tong",
+        "be tong": "be_tong",
+    }
+    actual_folded = _fold(actual).replace("_", " ")
+    expected_folded = _fold(expected).replace("_", " ")
+    actual_canonical = aliases.get(actual_folded, actual_folded.replace(" ", "_"))
+    expected_canonical = aliases.get(expected_folded, expected_folded.replace(" ", "_"))
+    return bool(actual_canonical) and actual_canonical == expected_canonical
 
 
 def _finding(field: str, actual: Any, expected: Any, reason: str, evidence: str) -> dict[str, Any]:
