@@ -44,6 +44,18 @@ OFFICIAL_DATA_PATH = (
     / "tphcm_land_prices_2026.json"
 )
 OFFICIAL_SOURCE_HOSTS = frozenset({"congbao.hochiminhcity.gov.vn"})
+OPTIONAL_VECTOR_FUNCTIONS = (
+    (
+        "radar_ask_vector_readiness",
+        "",
+        "public.radar_ask_vector_readiness()",
+    ),
+    (
+        "radar_ask_semantic_search",
+        "vector, text, integer",
+        "public.radar_ask_semantic_search(vector,text,integer)",
+    ),
+)
 
 
 BASE_COLUMN_GRANTS: dict[str, tuple[str, ...]] = {
@@ -694,6 +706,38 @@ def _create_views_as_owner(
         )
 
 
+def _configure_optional_vector_execute(conn: psycopg.Connection, *, phase: str) -> None:
+    """Keep optional SECURITY DEFINER functions aligned with the active phase."""
+    for function_name, argument_types, signature in OPTIONAL_VECTOR_FUNCTIONS:
+        exists = conn.execute(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM pg_proc procedure
+                JOIN pg_namespace namespace ON namespace.oid=procedure.pronamespace
+                WHERE namespace.nspname='public'
+                  AND procedure.proname=%s
+                  AND oidvectortypes(procedure.proargtypes)=%s
+            )
+            """,
+            (function_name, argument_types),
+        ).fetchone()[0]
+        if not exists:
+            continue
+        conn.execute(f"REVOKE ALL ON FUNCTION {signature} FROM PUBLIC")
+        conn.execute(
+            sql.SQL(f"REVOKE ALL ON FUNCTION {signature} FROM {{}}").format(
+                sql.Identifier(READ_ROLE)
+            )
+        )
+        if phase == "knowledge":
+            conn.execute(
+                sql.SQL(f"GRANT EXECUTE ON FUNCTION {signature} TO {{}}").format(
+                    sql.Identifier(READ_ROLE)
+                )
+            )
+
+
 def apply_configuration(
     conn: psycopg.Connection,
     *,
@@ -778,6 +822,7 @@ def apply_configuration(
                 sql.Identifier(READ_ROLE),
             )
         )
+    _configure_optional_vector_execute(conn, phase=phase)
 
 
 def _effective_relation_privileges(
@@ -952,6 +997,40 @@ def check_configuration(
         ).fetchone()[0]
         if can_read:
             violations.append(f"view owner can read sensitive column {table}.{column}")
+
+    for function_name, argument_types, _signature in OPTIONAL_VECTOR_FUNCTIONS:
+        rows = conn.execute(
+            """
+            SELECT procedure.oid,
+                   has_function_privilege(%s, procedure.oid, 'EXECUTE'),
+                   EXISTS (
+                       SELECT 1
+                       FROM aclexplode(
+                           COALESCE(
+                               procedure.proacl,
+                               acldefault('f', procedure.proowner)
+                           )
+                       ) privilege
+                       WHERE privilege.grantee=0
+                         AND privilege.privilege_type='EXECUTE'
+                   )
+            FROM pg_proc procedure
+            JOIN pg_namespace namespace ON namespace.oid=procedure.pronamespace
+            WHERE namespace.nspname='public'
+              AND procedure.proname=%s
+              AND oidvectortypes(procedure.proargtypes)=%s
+            """,
+            (READ_ROLE, function_name, argument_types),
+        ).fetchall()
+        for _oid, read_can_execute, public_can_execute in rows:
+            if public_can_execute:
+                violations.append(
+                    f"optional vector function {function_name} is executable by PUBLIC"
+                )
+            if bool(read_can_execute) != (phase == "knowledge"):
+                violations.append(
+                    f"optional vector function {function_name} execute grant differs from phase"
+                )
 
     return RoleCheckReport(
         phase=phase,

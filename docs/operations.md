@@ -12,6 +12,87 @@ Use this for VPS deploy, production smoke checks, DB sync, crawl logs, and one-o
 
 Public domain: `https://radarbds.vn`. Production env file: `/etc/radar-bds/radar.env`.
 
+## Radar Ask Retrieval Gate
+
+PostgreSQL full-text search is the mandatory Radar Ask knowledge path. Keep
+`RADAR_ASK_KNOWLEDGE_VECTOR_ENABLED=0` unless every gate below passes on the
+target host. Normal app startup and deploy never create the `vector` extension,
+download a model, alter vector columns, or backfill embeddings.
+
+The checked-in Vietnamese benchmark has 50 non-PII cases across address
+aliases, post-merger ward names, legal terminology, official land-price intent,
+market paraphrases, and exact-source lookup. The 2026-08-04 local PostgreSQL
+baseline (`2026-08-04-v1`) measured macro Recall@5 `0.76`, exact-source
+Recall@5 `0.875`, MRR@10 `0.76`, and p95 query latency `1.387 ms`. Runtime
+reports stay ignored under `reports/`; they contain metrics and IDs, never raw
+document text.
+
+```powershell
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
+& $py -X utf8 scripts\radar_ask_retrieval_benchmark.py `
+  --mode fts `
+  --cases tests\fixtures\radar_ask\retrieval_cases.json `
+  --output reports\radar_ask_retrieval_fts.json
+```
+
+Only these offline candidates are approved for comparison:
+`intfloat/multilingual-e5-small` (384 dimensions) and `BAAI/bge-m3` (1024
+dimensions). Install `requirements-radar-ask-retrieval.txt` in a separate
+maintenance environment. Pass a pre-downloaded local directory with
+`--model-path`; the benchmark forces Hugging Face/Transformers offline and does
+not resolve a remote model ID. Semantic activation measurement also requires
+an owner-installed pgvector extension, builds a temporary HNSW index, runs the
+same FTS ordering, and measures the fused RRF path; pure in-memory cosine scores
+cannot authorize activation.
+
+```powershell
+& $py -X utf8 scripts\radar_ask_retrieval_benchmark.py `
+  --mode semantic `
+  --model-id intfloat/multilingual-e5-small `
+  --model-path C:\approved-models\multilingual-e5-small `
+  --fts-baseline reports\radar_ask_retrieval_fts.json `
+  --worker-processes 3 `
+  --cases tests\fixtures\radar_ask\retrieval_cases.json `
+  --output reports\radar_ask_retrieval_e5.json
+```
+
+Activation is fail-closed and requires all of the following on the same
+benchmark version:
+
+- macro Recall@5 improves by at least `0.08` over FTS;
+- exact-source Recall@5 is at least `0.85`;
+- p95 local semantic query latency is at most `250 ms`;
+- peak process memory multiplied by all `3` Gunicorn workers is at most
+  `1,024 MB` total on the current 4-GB VPS;
+- the owner-applied migration check confirms extension, exact dimension/model,
+  complete embedding coverage, HNSW index, and bounded security-definer
+  functions.
+
+The 1,024-MB total model-bearing-worker allowance is separate from Redis's
+256-MB cap and preserves headroom for Gunicorn/PostgreSQL on the measured 4-GB
+host. Because the encoder cache is process-local, the gate multiplies measured
+RSS by all three workers; it does not assume one shared model copy. Re-evaluate
+it after any VPS size or worker-count change. Apply only after a candidate report says
+`activation_gate.eligible=true`:
+
+```bash
+/opt/radar-bds/retrieval-venv/bin/python -X utf8 \
+  scripts/radar_ask_vector_migration.py apply \
+  --model-id intfloat/multilingual-e5-small \
+  --dimension 384 \
+  --model-path /opt/radar-bds/models/multilingual-e5-small
+/opt/radar-bds/retrieval-venv/bin/python -X utf8 \
+  scripts/radar_ask_vector_migration.py check \
+  --model-id intfloat/multilingual-e5-small --dimension 384
+```
+
+Then configure the exact same local model path/ID/dimension, set the vector flag
+to `1`, restart, and smoke both semantic and forced-FTS fallback. Any readiness
+failure, incomplete coverage, memory regression, or latency regression requires
+setting the flag back to `0` and restarting; the curated FTS corpus remains the
+source of truth. No semantic candidate has been approved or enabled as of this
+checkpoint because local model assets have not been supplied.
+
 ## Deploy Flow
 
 For the normal local one-command ship:

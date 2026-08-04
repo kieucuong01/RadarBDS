@@ -28,6 +28,10 @@ from services.radar_ask.registry import (
     execute_tool,
 )
 from services.radar_ask.tools.knowledge import (
+    RankedChunk,
+    SemanticRetriever,
+    VectorRetrievalNotReady,
+    fuse_ranked_results,
     lookup_official_land_price,
     search_official_documents,
 )
@@ -403,3 +407,91 @@ def test_registry_dispatches_both_curated_knowledge_handlers():
     ]
 
     assert all(execute_tool(call, tool_context(connection)).items for call in calls)
+
+
+def test_vector_flag_cannot_enable_without_extension_and_local_model(
+    monkeypatch,
+    tmp_path,
+):
+    model_path = tmp_path / "local-model"
+    model_path.mkdir()
+    monkeypatch.setenv("RADAR_ASK_KNOWLEDGE_VECTOR_ENABLED", "1")
+    monkeypatch.setenv("RADAR_ASK_KNOWLEDGE_VECTOR_MODEL_PATH", str(model_path))
+    monkeypatch.setenv(
+        "RADAR_ASK_KNOWLEDGE_VECTOR_MODEL_ID",
+        "intfloat/multilingual-e5-small",
+    )
+    monkeypatch.setenv("RADAR_ASK_KNOWLEDGE_VECTOR_DIMENSION", "384")
+
+    with pytest.raises(VectorRetrievalNotReady, match="readiness"):
+        SemanticRetriever.from_environment(FakeKnowledgeConnection())
+
+
+def test_unready_vector_path_falls_back_to_fts_without_losing_citations(
+    monkeypatch,
+    tmp_path,
+):
+    model_path = tmp_path / "local-model"
+    model_path.mkdir()
+    monkeypatch.setenv("RADAR_ASK_KNOWLEDGE_VECTOR_ENABLED", "1")
+    monkeypatch.setenv("RADAR_ASK_KNOWLEDGE_VECTOR_MODEL_PATH", str(model_path))
+    monkeypatch.setenv(
+        "RADAR_ASK_KNOWLEDGE_VECTOR_MODEL_ID",
+        "intfloat/multilingual-e5-small",
+    )
+    monkeypatch.setenv("RADAR_ASK_KNOWLEDGE_VECTOR_DIMENSION", "384")
+
+    bundle = search_official_documents(
+        args=SearchOfficialDocumentsArgs(query="bảng giá đất", limit=5),
+        context=tool_context(FakeKnowledgeConnection()),
+    )
+
+    assert bundle.items
+    assert bundle.items[0].source_ref.startswith("knowledge:")
+    assert "semantic_retrieval_unavailable_using_fts" in bundle.warnings
+    assert bundle.calculations["retrieval"].startswith("postgres_fts")
+
+
+def test_rrf_deduplicates_and_prioritizes_agreement():
+    first = RankedChunk(chunk_id="c1", rank=1, payload={"source_ref": "knowledge:c1"})
+    shared_fts = RankedChunk(chunk_id="c2", rank=2, payload={"source_ref": "knowledge:c2"})
+    shared_semantic = RankedChunk(
+        chunk_id="c2",
+        rank=1,
+        payload={"source_ref": "knowledge:c2"},
+    )
+
+    fused = fuse_ranked_results(
+        fts=[first, shared_fts],
+        semantic=[shared_semantic],
+        limit=5,
+    )
+
+    assert [item.chunk_id for item in fused] == ["c2", "c1"]
+    assert fused[0].payload["source_ref"] == "knowledge:c2"
+
+
+def test_e5_semantic_query_uses_required_query_prefix():
+    class RecordingEncoder:
+        def __init__(self):
+            self.inputs = []
+
+        def encode(self, inputs, **_kwargs):
+            self.inputs.append(list(inputs))
+            return [[0.1, 0.2, 0.3]]
+
+    class EmptySemanticConnection:
+        def execute(self, sql, _params=()):
+            assert "radar_ask_semantic_search" in sql
+            return FakeResult([])
+
+    encoder = RecordingEncoder()
+    retriever = SemanticRetriever(
+        conn=EmptySemanticConnection(),
+        encoder=encoder,
+        model_id="intfloat/multilingual-e5-small",
+        dimension=3,
+    )
+
+    assert retriever.search("giá đất Phú Mỹ", limit=5) == []
+    assert encoder.inputs == [["query: giá đất Phú Mỹ"]]

@@ -398,6 +398,56 @@ def test_foundation_reapply_revokes_knowledge_base_column_grants(readonly_enviro
             assert report.ok, report.violations
 
 
+def test_foundation_reapply_revokes_optional_vector_function_execute(
+    readonly_environment,
+):
+    test_url, _settings = readonly_environment
+    password = token_urlsafe(32)
+    with psycopg.connect(test_url) as admin_conn:
+        with admin_conn.transaction(force_rollback=True):
+            admin_conn.execute(
+                """
+                CREATE OR REPLACE FUNCTION public.radar_ask_vector_readiness()
+                RETURNS TABLE (ok boolean)
+                LANGUAGE sql
+                SECURITY DEFINER
+                SET search_path=pg_catalog,public
+                AS $$ SELECT TRUE $$
+                """
+            )
+            apply_configuration(
+                admin_conn,
+                password=password,
+                phase="knowledge",
+                official_payload={"rows": []},
+            )
+            assert admin_conn.execute(
+                """
+                SELECT has_function_privilege(
+                    'radar_ask_ro',
+                    'public.radar_ask_vector_readiness()',
+                    'EXECUTE'
+                )
+                """
+            ).fetchone()[0]
+
+            apply_configuration(
+                admin_conn,
+                password=password,
+                phase="foundation",
+                official_payload={"rows": []},
+            )
+            assert not admin_conn.execute(
+                """
+                SELECT has_function_privilege(
+                    'radar_ask_ro',
+                    'public.radar_ask_vector_readiness()',
+                    'EXECUTE'
+                )
+                """
+            ).fetchone()[0]
+
+
 def test_official_price_reapply_replaces_stale_snapshot_rows(readonly_environment):
     test_url, _settings = readonly_environment
     password = token_urlsafe(32)

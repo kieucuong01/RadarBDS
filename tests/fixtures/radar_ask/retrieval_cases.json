@@ -1,0 +1,122 @@
+{
+  "benchmark_version": "2026-08-04-v1",
+  "corpus": [
+    {
+      "chunk_id": "addr-phu-my",
+      "trust_class": "radar_method",
+      "text": "Phường Phú Mỹ tại Thủ Dầu Một cũng thường được tìm bằng Phu My, khu Phú Mỹ TDM, phường Phú Mỹ Bình Dương và địa chỉ Phú Mỹ thành phố Thủ Dầu Một."
+    },
+    {
+      "chunk_id": "addr-dinh-hoa",
+      "trust_class": "radar_method",
+      "text": "Phường Định Hòa tại Thủ Dầu Một thường được viết Định Hoà, Dinh Hoa, khu Định Hòa TDM và địa chỉ Định Hòa Bình Dương."
+    },
+    {
+      "chunk_id": "merge-phu-tan",
+      "trust_class": "radar_method",
+      "text": "Trong dữ liệu định giá Radar BDS, TDC Phú Chánh và khu tái định cư Phú Chánh được chuẩn hóa về phường Phú Tân; tên cũ Phú Chánh không tạo một thị trường riêng."
+    },
+    {
+      "chunk_id": "merge-hiep-thanh",
+      "trust_class": "radar_method",
+      "text": "Trong dữ liệu định giá Radar BDS, KDC Hiệp Thành và khu dân cư Hiệp Thành được chuẩn hóa về phường Hiệp Thành; tên khu không phải một phường độc lập."
+    },
+    {
+      "chunk_id": "legal-certificate",
+      "trust_class": "official",
+      "text": "Giấy chứng nhận quyền sử dụng đất thường được gọi là sổ đỏ hoặc sổ hồng. Cần kiểm tra chủ sử dụng, thửa đất, thế chấp, tranh chấp và hạn chế quyền trước khi giao dịch."
+    },
+    {
+      "chunk_id": "legal-land-use",
+      "trust_class": "official",
+      "text": "Đất ở đô thị ODT, đất ở nông thôn ONT, đất trồng cây lâu năm CLN và diện tích thổ cư có mục đích sử dụng khác nhau; chuyển mục đích không phải lúc nào cũng được chấp thuận."
+    },
+    {
+      "chunk_id": "official-price-purpose",
+      "trust_class": "official",
+      "text": "Bảng giá đất là căn cứ chính thức cho một số nghĩa vụ tài chính, thuế, phí, bồi thường và thủ tục quản lý nhà nước trong phạm vi pháp luật quy định."
+    },
+    {
+      "chunk_id": "official-price-not-market",
+      "trust_class": "official",
+      "text": "Bảng giá đất nhà nước không đồng nghĩa với giá giao dịch thị trường, giá rao bán hay giá trị hợp lý của một lô đất cụ thể; định giá thực tế cần dữ liệu so sánh."
+    },
+    {
+      "chunk_id": "market-asking-price",
+      "trust_class": "radar_method",
+      "text": "Giá rao bán và đơn giá chào bán là mức người bán đang yêu cầu, không phải giá giao dịch đã công chứng; Radar BDS luôn ghi rõ asking price và thời điểm quan sát."
+    },
+    {
+      "chunk_id": "market-fair-value",
+      "trust_class": "radar_method",
+      "text": "Giá trị hợp lý Radar fair value là ước tính từ mẫu so sánh, phân khúc, mặt tiền đường, diện tích, pháp lý và độ tin cậy; không phải cam kết giá mua bán."
+    },
+    {
+      "chunk_id": "source-resolution-87",
+      "trust_class": "official",
+      "text": "Nguồn chính thức Nghị quyết 87/2025/NQ-HĐND Thành phố Hồ Chí Minh ngày 26 tháng 12 năm 2025 quy định bảng giá đất áp dụng từ ngày 1 tháng 1 năm 2026."
+    },
+    {
+      "chunk_id": "source-radar-method",
+      "trust_class": "radar_method",
+      "text": "Tài liệu phương pháp Radar BDS giải thích biên an toàn MOS, mẫu so sánh, giá trị hợp lý, cảnh báo chất lượng dữ liệu và lý do một lô đất được định giá."
+    }
+  ],
+  "cases": [
+    {"id":"address-01","category":"address_alias","query":"Phu My Thu Dau Mot","accepted_chunk_ids":["addr-phu-my"],"required_trust_class":"radar_method"},
+    {"id":"address-02","category":"address_alias","query":"phường Phú Mỹ Bình Dương","accepted_chunk_ids":["addr-phu-my"],"required_trust_class":"radar_method"},
+    {"id":"address-03","category":"address_alias","query":"khu Phú Mỹ TDM","accepted_chunk_ids":["addr-phu-my"],"required_trust_class":"radar_method"},
+    {"id":"address-04","category":"address_alias","query":"địa chỉ Phú Mỹ thành phố Thủ Dầu Một","accepted_chunk_ids":["addr-phu-my"],"required_trust_class":"radar_method"},
+    {"id":"address-05","category":"address_alias","query":"Dinh Hoa Thu Dau Mot","accepted_chunk_ids":["addr-dinh-hoa"],"required_trust_class":"radar_method"},
+    {"id":"address-06","category":"address_alias","query":"phường Định Hoà Bình Dương","accepted_chunk_ids":["addr-dinh-hoa"],"required_trust_class":"radar_method"},
+    {"id":"address-07","category":"address_alias","query":"khu Định Hòa TDM","accepted_chunk_ids":["addr-dinh-hoa"],"required_trust_class":"radar_method"},
+    {"id":"address-08","category":"address_alias","query":"địa chỉ Định Hòa Thủ Dầu Một","accepted_chunk_ids":["addr-dinh-hoa"],"required_trust_class":"radar_method"},
+    {"id":"address-09","category":"address_alias","query":"Phú Mỹ và Định Hòa Thủ Dầu Một","accepted_chunk_ids":["addr-phu-my","addr-dinh-hoa"],"required_trust_class":"radar_method"},
+
+    {"id":"merger-01","category":"post_merger_ward","query":"TDC Phú Chánh thuộc phường nào","accepted_chunk_ids":["merge-phu-tan"],"required_trust_class":"radar_method"},
+    {"id":"merger-02","category":"post_merger_ward","query":"khu tái định cư Phú Chánh chuẩn hóa","accepted_chunk_ids":["merge-phu-tan"],"required_trust_class":"radar_method"},
+    {"id":"merger-03","category":"post_merger_ward","query":"tên cũ Phú Chánh thị trường riêng","accepted_chunk_ids":["merge-phu-tan"],"required_trust_class":"radar_method"},
+    {"id":"merger-04","category":"post_merger_ward","query":"Phú Chánh dữ liệu định giá Radar BDS","accepted_chunk_ids":["merge-phu-tan"],"required_trust_class":"radar_method"},
+    {"id":"merger-05","category":"post_merger_ward","query":"KDC Hiệp Thành thuộc phường nào","accepted_chunk_ids":["merge-hiep-thanh"],"required_trust_class":"radar_method"},
+    {"id":"merger-06","category":"post_merger_ward","query":"khu dân cư Hiệp Thành chuẩn hóa","accepted_chunk_ids":["merge-hiep-thanh"],"required_trust_class":"radar_method"},
+    {"id":"merger-07","category":"post_merger_ward","query":"Hiệp Thành tên khu hay phường","accepted_chunk_ids":["merge-hiep-thanh"],"required_trust_class":"radar_method"},
+    {"id":"merger-08","category":"post_merger_ward","query":"KDC Hiệp Thành dữ liệu định giá","accepted_chunk_ids":["merge-hiep-thanh"],"required_trust_class":"radar_method"},
+    {"id":"merger-09","category":"post_merger_ward","query":"Phú Chánh Phú Tân chuẩn hóa phường","accepted_chunk_ids":["merge-phu-tan"],"required_trust_class":"radar_method"},
+
+    {"id":"legal-01","category":"legal_terminology","query":"sổ đỏ giấy chứng nhận quyền sử dụng đất","accepted_chunk_ids":["legal-certificate"],"required_trust_class":"official"},
+    {"id":"legal-02","category":"legal_terminology","query":"sổ hồng kiểm tra chủ sử dụng","accepted_chunk_ids":["legal-certificate"],"required_trust_class":"official"},
+    {"id":"legal-03","category":"legal_terminology","query":"thửa đất thế chấp tranh chấp","accepted_chunk_ids":["legal-certificate"],"required_trust_class":"official"},
+    {"id":"legal-04","category":"legal_terminology","query":"hạn chế quyền trước khi giao dịch","accepted_chunk_ids":["legal-certificate"],"required_trust_class":"official"},
+    {"id":"legal-05","category":"legal_terminology","query":"ODT đất ở đô thị là gì","accepted_chunk_ids":["legal-land-use"],"required_trust_class":"official"},
+    {"id":"legal-06","category":"legal_terminology","query":"ONT đất ở nông thôn","accepted_chunk_ids":["legal-land-use"],"required_trust_class":"official"},
+    {"id":"legal-07","category":"legal_terminology","query":"CLN đất trồng cây lâu năm","accepted_chunk_ids":["legal-land-use"],"required_trust_class":"official"},
+    {"id":"legal-08","category":"legal_terminology","query":"diện tích thổ cư chuyển mục đích","accepted_chunk_ids":["legal-land-use"],"required_trust_class":"official"},
+
+    {"id":"official-01","category":"official_land_price","query":"bảng giá đất căn cứ nghĩa vụ tài chính","accepted_chunk_ids":["official-price-purpose"],"required_trust_class":"official"},
+    {"id":"official-02","category":"official_land_price","query":"bảng giá đất dùng tính thuế phí","accepted_chunk_ids":["official-price-purpose"],"required_trust_class":"official"},
+    {"id":"official-03","category":"official_land_price","query":"bảng giá đất bồi thường thủ tục nhà nước","accepted_chunk_ids":["official-price-purpose"],"required_trust_class":"official"},
+    {"id":"official-04","category":"official_land_price","query":"phạm vi pháp luật bảng giá đất","accepted_chunk_ids":["official-price-purpose"],"required_trust_class":"official"},
+    {"id":"official-05","category":"official_land_price","query":"bảng giá đất có phải giá thị trường","accepted_chunk_ids":["official-price-not-market"],"required_trust_class":"official"},
+    {"id":"official-06","category":"official_land_price","query":"bảng giá nhà nước khác giá rao bán","accepted_chunk_ids":["official-price-not-market"],"required_trust_class":"official"},
+    {"id":"official-07","category":"official_land_price","query":"bảng giá đất định giá lô đất cụ thể","accepted_chunk_ids":["official-price-not-market"],"required_trust_class":"official"},
+    {"id":"official-08","category":"official_land_price","query":"giá giao dịch thị trường cần dữ liệu so sánh","accepted_chunk_ids":["official-price-not-market"],"required_trust_class":"official"},
+
+    {"id":"market-01","category":"market_paraphrase","query":"giá rao bán có phải giá giao dịch","accepted_chunk_ids":["market-asking-price"],"required_trust_class":"radar_method"},
+    {"id":"market-02","category":"market_paraphrase","query":"đơn giá chào bán người bán yêu cầu","accepted_chunk_ids":["market-asking-price"],"required_trust_class":"radar_method"},
+    {"id":"market-03","category":"market_paraphrase","query":"asking price thời điểm quan sát","accepted_chunk_ids":["market-asking-price"],"required_trust_class":"radar_method"},
+    {"id":"market-04","category":"market_paraphrase","query":"giá rao không phải giá công chứng","accepted_chunk_ids":["market-asking-price"],"required_trust_class":"radar_method"},
+    {"id":"market-05","category":"market_paraphrase","query":"Radar fair value giá trị hợp lý","accepted_chunk_ids":["market-fair-value"],"required_trust_class":"radar_method"},
+    {"id":"market-06","category":"market_paraphrase","query":"định giá từ mẫu so sánh mặt tiền đường","accepted_chunk_ids":["market-fair-value"],"required_trust_class":"radar_method"},
+    {"id":"market-07","category":"market_paraphrase","query":"giá trị hợp lý phụ thuộc pháp lý diện tích","accepted_chunk_ids":["market-fair-value"],"required_trust_class":"radar_method"},
+    {"id":"market-08","category":"market_paraphrase","query":"fair value không cam kết giá mua bán","accepted_chunk_ids":["market-fair-value"],"required_trust_class":"radar_method"},
+
+    {"id":"source-01","category":"exact_source","query":"Nghị quyết 87/2025/NQ-HĐND","accepted_chunk_ids":["source-resolution-87"],"required_trust_class":"official"},
+    {"id":"source-02","category":"exact_source","query":"nguồn chính thức bảng giá đất 2026 TP HCM","accepted_chunk_ids":["source-resolution-87"],"required_trust_class":"official"},
+    {"id":"source-03","category":"exact_source","query":"ngày 26 tháng 12 năm 2025 nghị quyết","accepted_chunk_ids":["source-resolution-87"],"required_trust_class":"official"},
+    {"id":"source-04","category":"exact_source","query":"bảng giá đất áp dụng ngày 1 tháng 1 năm 2026","accepted_chunk_ids":["source-resolution-87"],"required_trust_class":"official"},
+    {"id":"source-05","category":"exact_source","query":"tài liệu phương pháp Radar BDS","accepted_chunk_ids":["source-radar-method"],"required_trust_class":"radar_method"},
+    {"id":"source-06","category":"exact_source","query":"phương pháp biên an toàn MOS","accepted_chunk_ids":["source-radar-method"],"required_trust_class":"radar_method"},
+    {"id":"source-07","category":"exact_source","query":"Radar giải thích mẫu so sánh giá trị hợp lý","accepted_chunk_ids":["source-radar-method"],"required_trust_class":"radar_method"},
+    {"id":"source-08","category":"exact_source","query":"lý do lô đất được định giá cảnh báo dữ liệu","accepted_chunk_ids":["source-radar-method"],"required_trust_class":"radar_method"}
+  ]
+}

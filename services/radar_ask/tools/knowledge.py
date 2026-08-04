@@ -1,10 +1,14 @@
 """Curated official-price and PostgreSQL full-text knowledge retrieval."""
 from __future__ import annotations
 
+import os
+import math
 import re
 import unicodedata
 from collections.abc import Mapping
-from datetime import date
+from dataclasses import dataclass, field
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from ..contracts import EvidenceItem, SourceKind
@@ -23,6 +27,197 @@ TRUST_KIND = {
     "radar_method": SourceKind.RADAR_METHOD,
     "editorial": SourceKind.EDITORIAL,
 }
+VECTOR_MODEL_DIMENSIONS = {
+    "intfloat/multilingual-e5-small": 384,
+    "BAAI/bge-m3": 1024,
+}
+VECTOR_CONTRACT_VERSION = "radar-ask-vector-v1"
+
+
+class VectorRetrievalNotReady(RuntimeError):
+    """Raised when an explicitly enabled vector path fails its readiness gate."""
+
+
+@dataclass(frozen=True)
+class RankedChunk:
+    chunk_id: str
+    rank: int
+    payload: Mapping[str, Any] = field(default_factory=dict)
+    score: float = 0.0
+
+    def __post_init__(self) -> None:
+        if not self.chunk_id or self.rank < 1:
+            raise ValueError("ranked chunk requires a non-empty ID and positive rank")
+
+
+def fuse_ranked_results(
+    *,
+    fts: list[RankedChunk],
+    semantic: list[RankedChunk],
+    limit: int,
+    rank_constant: int = 60,
+) -> list[RankedChunk]:
+    """Fuse bounded lexical/semantic ranks without weakening exact chunk IDs."""
+    if not 1 <= int(limit) <= 10:
+        raise ValueError("fused result limit must be between 1 and 10")
+    if rank_constant < 1:
+        raise ValueError("RRF rank constant must be positive")
+    scores: dict[str, float] = {}
+    payloads: dict[str, Mapping[str, Any]] = {}
+    best_rank: dict[str, int] = {}
+    for ranked_list in (fts, semantic):
+        seen: set[str] = set()
+        for item in ranked_list[:10]:
+            if item.chunk_id in seen:
+                continue
+            seen.add(item.chunk_id)
+            scores[item.chunk_id] = scores.get(item.chunk_id, 0.0) + 1.0 / (
+                rank_constant + item.rank
+            )
+            payloads.setdefault(item.chunk_id, item.payload)
+            best_rank[item.chunk_id] = min(
+                item.rank,
+                best_rank.get(item.chunk_id, item.rank),
+            )
+    ordered_ids = sorted(
+        scores,
+        key=lambda chunk_id: (
+            -scores[chunk_id],
+            best_rank[chunk_id],
+            chunk_id,
+        ),
+    )[:limit]
+    return [
+        RankedChunk(
+            chunk_id=chunk_id,
+            rank=index,
+            payload=payloads[chunk_id],
+            score=scores[chunk_id],
+        )
+        for index, chunk_id in enumerate(ordered_ids, start=1)
+    ]
+
+
+def _vector_environment() -> tuple[Path, str, int]:
+    raw_path = os.getenv("RADAR_ASK_KNOWLEDGE_VECTOR_MODEL_PATH", "").strip()
+    model_id = os.getenv("RADAR_ASK_KNOWLEDGE_VECTOR_MODEL_ID", "").strip()
+    raw_dimension = os.getenv("RADAR_ASK_KNOWLEDGE_VECTOR_DIMENSION", "").strip()
+    if not raw_path or not model_id or not raw_dimension:
+        raise VectorRetrievalNotReady("vector model readiness settings are incomplete")
+    try:
+        dimension = int(raw_dimension)
+    except ValueError as exc:
+        raise VectorRetrievalNotReady("vector model dimension is invalid") from exc
+    if VECTOR_MODEL_DIMENSIONS.get(model_id) != dimension:
+        raise VectorRetrievalNotReady("vector model readiness settings are invalid")
+    return Path(raw_path).expanduser().resolve(), model_id, dimension
+
+
+@lru_cache(maxsize=2)
+def _load_local_encoder(model_path: str):
+    path = Path(model_path)
+    if not path.is_dir() or not (
+        (path / "modules.json").is_file() or (path / "config.json").is_file()
+    ):
+        raise VectorRetrievalNotReady("local vector model assets are missing")
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")
+    os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+    try:
+        from sentence_transformers import SentenceTransformer
+    except ImportError as exc:  # pragma: no cover - optional runtime dependency
+        raise VectorRetrievalNotReady(
+            "sentence-transformers retrieval dependency is not installed"
+        ) from exc
+    try:
+        return SentenceTransformer(
+            str(path),
+            local_files_only=True,
+            trust_remote_code=False,
+        )
+    except Exception as exc:  # pragma: no cover - model-library specific
+        raise VectorRetrievalNotReady("local vector model could not be loaded") from exc
+
+
+@dataclass
+class SemanticRetriever:
+    conn: Any
+    encoder: Any
+    model_id: str
+    dimension: int
+
+    @classmethod
+    def from_environment(cls, conn) -> "SemanticRetriever":
+        model_path, model_id, dimension = _vector_environment()
+        try:
+            readiness_cursor = conn.execute(
+                "SELECT * FROM public.radar_ask_vector_readiness()"
+            )
+            readiness = _row_dict(readiness_cursor, readiness_cursor.fetchone())
+        except Exception as exc:
+            raise VectorRetrievalNotReady(
+                "database vector readiness check failed"
+            ) from exc
+        if (
+            not readiness
+            or not bool(readiness.get("extension_ready"))
+            or not bool(readiness.get("index_ready"))
+            or str(readiness.get("model_id") or "") != model_id
+            or int(readiness.get("dimension") or 0) != dimension
+            or str(readiness.get("contract_version") or "")
+            != VECTOR_CONTRACT_VERSION
+            or int(readiness.get("embedded_chunks") or 0)
+            != int(readiness.get("total_chunks") or -1)
+            or int(readiness.get("total_chunks") or 0) < 1
+        ):
+            raise VectorRetrievalNotReady("database vector readiness gate did not pass")
+        return cls(
+            conn=conn,
+            encoder=_load_local_encoder(str(model_path)),
+            model_id=model_id,
+            dimension=dimension,
+        )
+
+    def search(self, query: str, *, limit: int) -> list[RankedChunk]:
+        bounded_limit = min(max(int(limit), 1), 10)
+        encoded_query = (
+            f"query: {query}"
+            if self.model_id == "intfloat/multilingual-e5-small"
+            else query
+        )
+        try:
+            encoded = self.encoder.encode(
+                [encoded_query],
+                normalize_embeddings=True,
+                show_progress_bar=False,
+            )[0]
+            vector = [float(value) for value in encoded]
+        except Exception as exc:
+            raise VectorRetrievalNotReady("semantic query encoding failed") from exc
+        if len(vector) != self.dimension:
+            raise VectorRetrievalNotReady("semantic query vector dimension mismatched")
+        if not all(math.isfinite(value) for value in vector):
+            raise VectorRetrievalNotReady("semantic query vector is not finite")
+        vector_literal = "[" + ",".join(f"{value:.9g}" for value in vector) + "]"
+        try:
+            cursor = self.conn.execute(
+                """
+                SELECT *
+                FROM public.radar_ask_semantic_search(%s::vector, %s, %s)
+                """,
+                (vector_literal, self.model_id, bounded_limit),
+            )
+            rows = _rows(cursor)
+        except Exception as exc:
+            raise VectorRetrievalNotReady("semantic database query failed") from exc
+        return [
+            RankedChunk(
+                chunk_id=str(row["chunk_id"]),
+                rank=rank,
+                payload=row,
+                score=float(row.get("rank") or 0.0),
+            )
+            for rank, row in enumerate(rows, start=1)
+        ]
 
 
 def _fold(value: str) -> str:
@@ -151,23 +346,54 @@ def search_official_documents(
     question = f"curated knowledge {args.query}"
     settings = _settings()
     limit = min(args.limit, settings.evidence_row_limit, 10)
+    vector_warning: str | None = None
+    retrieval_method = "postgres_fts_simple_plus_accent_folded_lexical"
     with _read_context(context) as conn:
         _configure_timeout(conn, settings)
         rows = _search_rows(conn, query=args.query, limit=limit)
+        if settings.knowledge_vector_enabled:
+            try:
+                semantic = SemanticRetriever.from_environment(conn).search(
+                    args.query,
+                    limit=limit,
+                )
+                lexical = [
+                    RankedChunk(
+                        chunk_id=str(row["chunk_id"]),
+                        rank=rank,
+                        payload=row,
+                        score=float(row.get("rank") or 0.0),
+                    )
+                    for rank, row in enumerate(rows, start=1)
+                ]
+                rows = [
+                    dict(item.payload)
+                    for item in fuse_ranked_results(
+                        fts=lexical,
+                        semantic=semantic,
+                        limit=limit,
+                    )
+                ]
+                retrieval_method = "postgres_fts_plus_local_semantic_rrf"
+            except VectorRetrievalNotReady:
+                vector_warning = "semantic_retrieval_unavailable_using_fts"
     if not rows:
-        return (
-            EvidenceBuilder(question_snapshot=question)
-            .missing("curated_document_evidence_not_found")
-            .build()
+        missing_builder = EvidenceBuilder(question_snapshot=question).missing(
+            "curated_document_evidence_not_found"
         )
+        if vector_warning:
+            missing_builder.warn(vector_warning)
+        return missing_builder.build()
     builder = (
         EvidenceBuilder(question_snapshot=question, row_limit=limit)
         .calculate(
-            retrieval="postgres_fts_simple_plus_accent_folded_lexical",
+            retrieval=retrieval_method,
             result_count=len(rows),
             trust_classes=sorted({str(row.get("trust_class")) for row in rows}),
         )
     )
+    if vector_warning:
+        builder.warn(vector_warning)
     for row in rows:
         builder.add(_knowledge_item(row))
     return builder.build()
