@@ -684,8 +684,12 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             None,
         )
         _has_ambiguous_masked_price = source_name == "facebook" and has_ambiguous_masked_price(_parse_text)
-        parsed_frontage = raw.get("frontage_m") or _fb_parsed.get("frontage_m")
-        parsed_depth = raw.get("depth_m") or _fb_parsed.get("depth_m")
+        structured_frontage = _float_or_none(raw.get("frontage_m"))
+        structured_depth = _float_or_none(raw.get("depth_m"))
+        text_frontage = _float_or_none(_fb_parsed.get("frontage_m"))
+        text_depth = _float_or_none(_fb_parsed.get("depth_m"))
+        parsed_frontage = structured_frontage if structured_frontage is not None else text_frontage
+        parsed_depth = structured_depth if structured_depth is not None else text_depth
         parsed_frontage_num = _float_or_none(parsed_frontage)
         parsed_depth_num = _float_or_none(parsed_depth)
         dimension_area = None
@@ -782,11 +786,51 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         # Lot inference cho khu vực quy hoạch bàn cờ (Mỹ Phước)
         _raw_front = parsed_frontage
         _raw_depth = parsed_depth
+        structured_road_width = _float_or_none(raw.get("road_width_m"))
+        text_road_width = _float_or_none(_fb_parsed.get("road_width_m"))
+        street_road_width = _float_or_none(_st_width)
+        road_width_m = (
+            structured_road_width
+            if structured_road_width is not None
+            else text_road_width
+            if text_road_width is not None
+            else street_road_width
+        )
+        measurement_provenance = {}
+        if area_m2 is not None:
+            if _declared_area is not None:
+                measurement_provenance["area_m2"] = "declared_text"
+            elif _float_or_none(raw.get("area_m2")) is not None:
+                measurement_provenance["area_m2"] = "source_structured"
+            elif dimension_area is not None:
+                measurement_provenance["area_m2"] = "source_text"
+            else:
+                measurement_provenance["area_m2"] = "unknown"
+        if _raw_front is not None:
+            measurement_provenance["frontage_m"] = (
+                "source_structured" if structured_frontage is not None else "source_text"
+            )
+        if _raw_depth is not None:
+            measurement_provenance["depth_m"] = (
+                "source_structured" if structured_depth is not None else "source_text"
+            )
         if _raw_front and not _raw_depth:
             _raw_depth = _infer_depth_from_area_frontage(area_m2, _raw_front)
+            if _raw_depth is not None:
+                measurement_provenance["depth_m"] = "derived_area_frontage"
         _inf_front, _inf_depth = (None, None)
         if not _raw_front and not _raw_depth:
             _inf_front, _inf_depth = infer_standard_lot(area_m2, ward_final)
+            if _inf_front is not None:
+                measurement_provenance["frontage_m"] = "derived_standard_lot"
+            if _inf_depth is not None:
+                measurement_provenance["depth_m"] = "derived_standard_lot"
+        if tho_cu_info.get("tho_cu_m2") is not None:
+            measurement_provenance["tho_cu_m2"] = "source_text"
+        if road_width_m is not None:
+            measurement_provenance["road_width_m"] = (
+                "source_structured" if structured_road_width is not None else "source_text"
+            )
 
         return {
             "source":        raw.get("source", "unknown"),
@@ -804,9 +848,9 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             "tx_type":       _norm_tx_type(raw.get("tx_type") or raw.get("transaction_type")),
             "frontage_m":    _raw_front or _inf_front,
             "depth_m":       _raw_depth or _inf_depth,
+            "measurement_provenance": measurement_provenance,
             "road_name":     road_name,
-            "road_width_m":  raw.get("road_width_m") or _fb_parsed.get("road_width_m")
-                             or _st_width,
+            "road_width_m":  road_width_m,
             "road_type":     _norm_road_type(raw.get("road_type") or
                              extract_road_type(" ".join(filter(None, [
                                  title, description, road_text_extra

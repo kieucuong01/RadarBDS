@@ -335,6 +335,32 @@ def test_normalize_three_value_shorthand_keeps_residential_area():
     assert rec["ward"] == "Hiệp An"
 
 
+def test_normalize_marks_source_and_derived_dimension_provenance():
+    inferred = normalize_record({
+        "source": "facebook",
+        "url": "https://facebook.test/provenance-standard-lot",
+        "title": "Đất Mỹ Phước 3 diện tích 100m2 giá 2 tỷ",
+        "description": "Sổ riêng, khu dân cư hiện hữu",
+        "default_area": "Bến Cát",
+    })
+    explicit = normalize_record({
+        "source": "facebook",
+        "url": "https://facebook.test/provenance-source-text",
+        "title": "Đất Mỹ Phước 3 diện tích 5x20m giá 2 tỷ",
+        "description": "Sổ riêng, đường nhựa trước đất rộng 6m",
+        "default_area": "Bến Cát",
+    })
+
+    assert inferred is not None
+    assert inferred["measurement_provenance"]["frontage_m"] == "derived_standard_lot"
+    assert inferred["measurement_provenance"]["depth_m"] == "derived_standard_lot"
+    assert explicit is not None
+    assert explicit["measurement_provenance"]["frontage_m"] == "source_text"
+    assert explicit["measurement_provenance"]["depth_m"] == "source_text"
+    assert explicit["road_width_m"] == 6
+    assert explicit["measurement_provenance"]["road_width_m"] == "source_text"
+
+
 def test_extract_tho_cu():
     r = extract_tho_cu("300m² thổ cư", 500)
     assert r["tho_cu_m2"] == 300

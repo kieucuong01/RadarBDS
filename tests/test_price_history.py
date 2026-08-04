@@ -181,6 +181,36 @@ class PriceHistoryTest(unittest.TestCase):
             ).fetchall()
         self.assertIn("crawl_run_id", {row["column_name"] for row in rows})
 
+    def test_upsert_listing_persists_measurement_provenance(self):
+        import json
+
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        provenance = {
+            "area_m2": "declared_text",
+            "frontage_m": "source_text",
+            "depth_m": "derived_area_frontage",
+            "road_width_m": "source_text",
+        }
+        listing_id, _ = upsert_listing(
+            self._rec(road_width_m=6, measurement_provenance=provenance),
+            crawl_run_id=303,
+        )
+        self._track(listing_id)
+
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT road_width_m, measurement_provenance FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        stored = row["measurement_provenance"]
+        if isinstance(stored, str):
+            stored = json.loads(stored)
+        self.assertEqual(row["road_width_m"], 6)
+        self.assertEqual(stored, provenance)
+
     def test_upsert_listing_persists_latest_crawl_run_id(self):
         from db.connection import get_conn
         from db.listings import upsert_listing

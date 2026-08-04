@@ -49,17 +49,62 @@ def _derive_depth_from_area_frontage(area_m2, frontage_m):
     return None
 
 
+_MEASUREMENT_PROVENANCE_FIELDS = {
+    "area_m2",
+    "frontage_m",
+    "depth_m",
+    "road_width_m",
+    "tho_cu_m2",
+}
+
+
+def _measurement_provenance(value) -> dict:
+    if isinstance(value, dict):
+        data = value
+    elif value:
+        try:
+            data = json.loads(value)
+        except (TypeError, ValueError):
+            data = {}
+    else:
+        data = {}
+    if not isinstance(data, dict):
+        return {}
+    return {
+        str(field): str(source)
+        for field, source in data.items()
+        if field in _MEASUREMENT_PROVENANCE_FIELDS and source not in (None, "")
+    }
+
+
+def _serialize_measurement_provenance(value) -> str:
+    return json.dumps(
+        _measurement_provenance(value),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
 def _coerce_listing_measurements(rec: dict) -> dict:
     out = dict(rec)
+    provenance = _measurement_provenance(out.get("measurement_provenance"))
 
     if not _present(out.get("depth_m")):
         derived_depth = _derive_depth_from_area_frontage(out.get("area_m2"), out.get("frontage_m"))
         if derived_depth is not None:
             out["depth_m"] = derived_depth
+            provenance["depth_m"] = "derived_area_frontage"
 
     derived_area = _derive_area_from_dimensions(out.get("frontage_m"), out.get("depth_m"))
     if not _present(out.get("area_m2")) and derived_area is not None:
         out["area_m2"] = derived_area
+        provenance["area_m2"] = "derived_dimensions"
+
+    for field in _MEASUREMENT_PROVENANCE_FIELDS:
+        if _present(out.get(field)) and field not in provenance:
+            provenance[field] = "unknown"
+    out["measurement_provenance"] = provenance
 
     price_ty = _float_or_none(out.get("price_ty"))
     area_m2 = _float_or_none(out.get("area_m2"))
@@ -152,6 +197,14 @@ def _apply_explicit_llm_extraction_override(rec: dict, existing=None) -> dict:
     for field, value in override_fields.items():
         out[field] = _coerce_llm_override_value(field, value)
         touched.add(field)
+
+    provenance = _measurement_provenance(out.get("measurement_provenance"))
+    for field in touched & _MEASUREMENT_PROVENANCE_FIELDS:
+        if _present(out.get(field)):
+            provenance[field] = "admin_override"
+        else:
+            provenance.pop(field, None)
+    out["measurement_provenance"] = provenance
 
     if touched & {"price_ty", "area_m2", "price_per_m2"} and "price_per_m2" not in touched:
         price_ty = _float_or_none(out.get("price_ty"))
@@ -276,7 +329,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
         existing = conn.execute(
             """
             SELECT id, source, price_ty, price_per_m2, area_m2,
-                   frontage_m, depth_m,
+                   frontage_m, depth_m, measurement_provenance,
                    price_first_ty, price_dropped, suspicious_bait,
                    llm_notes
             FROM listings
@@ -299,8 +352,8 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     raw_id, source, source_id, url, title, description,
                     area, ward, raw_area_text, price_ty, price_per_m2, area_m2,
                     property_type, tx_type, frontage_m, depth_m,
-                    road_type, road_tier, tho_cu_m2, tho_cu_ratio, has_so, is_hot, contact_phone, seller_name{road_name_col},
-                    extraction_quality_flags, crawl_run_id,
+                    road_width_m, road_type, road_tier, tho_cu_m2, tho_cu_ratio, has_so, is_hot, contact_phone, seller_name{road_name_col},
+                    extraction_quality_flags, measurement_provenance, crawl_run_id,
                     price_first_ty, crawled_at, updated_at,
                     first_seen_at, last_seen_at, is_active, posted_at,
                     source_status, source_status_reason
@@ -308,8 +361,8 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     :raw_id, :source, :source_id, :url, :title, :description,
                     :area, :ward, :raw_area_text, :price_ty, :price_per_m2, :area_m2,
                     :property_type, :tx_type, :frontage_m, :depth_m,
-                    :road_type, :road_tier, :tho_cu_m2, :tho_cu_ratio, :has_so, :is_hot, :contact_phone, :seller_name{road_name_val},
-                    :extraction_quality_flags, :crawl_run_id,
+                    :road_width_m, :road_type, :road_tier, :tho_cu_m2, :tho_cu_ratio, :has_so, :is_hot, :contact_phone, :seller_name{road_name_val},
+                    :extraction_quality_flags, :measurement_provenance, :crawl_run_id,
                     :price_ty, :crawled_at, :updated_at,
                     :crawled_at, :crawled_at, 1, :posted_at,
                     :source_status, :source_status_reason
@@ -332,6 +385,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "frontage_m":   rec.get("frontage_m"),
                 "depth_m":      rec.get("depth_m"),
                 "road_name":    rec.get("road_name"),
+                "road_width_m": rec.get("road_width_m"),
                 "road_type":    rec.get("road_type", "unknown"),
                 "road_tier":    int(rec.get("road_tier", 0)),
                 "tho_cu_m2":    rec.get("tho_cu_m2"),
@@ -341,6 +395,9 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "contact_phone": rec.get("contact_phone"),
                 "seller_name":  rec.get("seller_name"),
                 "extraction_quality_flags": rec.get("extraction_quality_flags") or "",
+                "measurement_provenance": _serialize_measurement_provenance(
+                    rec.get("measurement_provenance")
+                ),
                 "crawl_run_id": crawl_run_id,
                 "crawled_at":   now,
                 "updated_at":   now,
@@ -409,10 +466,27 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     if "depth_m" in override_fields
                     else _prefer_new_value(rec.get("depth_m"), existing["depth_m"])
                 )
+            existing_provenance = _measurement_provenance(existing["measurement_provenance"])
+            incoming_provenance = _measurement_provenance(rec.get("measurement_provenance"))
+            if clear_stale_measurements:
+                new_provenance = incoming_provenance
+            else:
+                new_provenance = {**existing_provenance, **incoming_provenance}
             if not _present(new_depth):
                 derived_depth = _derive_depth_from_area_frontage(new_area, new_frontage)
                 if derived_depth is not None:
                     new_depth = derived_depth
+                    new_provenance["depth_m"] = "derived_area_frontage"
+            final_measurements = {
+                "area_m2": new_area,
+                "frontage_m": new_frontage,
+                "depth_m": new_depth,
+                "road_width_m": rec.get("road_width_m"),
+                "tho_cu_m2": rec.get("tho_cu_m2"),
+            }
+            for field, value in final_measurements.items():
+                if not _present(value):
+                    new_provenance.pop(field, None)
             if not _present(new_ppm2) and _present(new_price) and _present(new_area):
                 new_ppm2 = round(float(new_price) * 1000 / float(new_area), 3)
             price_changed = bool(
@@ -452,6 +526,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     depth_m             = :depth_m,
                     area                = :area,
                     {road_name_set}
+                    road_width_m        = :road_width_m,
                     road_tier           = CASE WHEN :road_tier > 0 THEN :road_tier ELSE 0 END,
                     road_type           = :road_type,
                     tho_cu_m2           = :tho_cu_m2,
@@ -460,6 +535,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     has_so              = :has_so,
                     is_hot              = :is_hot,
                     extraction_quality_flags = :extraction_quality_flags,
+                    measurement_provenance = :measurement_provenance,
                     crawl_run_id        = COALESCE(:crawl_run_id, crawl_run_id),
                     price_first_ty      = CASE WHEN :clear_price <> 0 THEN NULL ELSE price_first_ty END,
                     price_dropped       = :price_dropped,
@@ -508,6 +584,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "depth_m":       new_depth,
                 "area":          rec.get("area", ""),
                 "road_name":     rec.get("road_name"),
+                "road_width_m":  rec.get("road_width_m"),
                 "road_tier":     int(rec.get("road_tier", 0)),
                 "road_type":     rec.get("road_type") or "unknown",
                 "tho_cu_m2":     rec.get("tho_cu_m2"),
@@ -516,6 +593,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                 "has_so":        int(rec.get("has_so", True)),
                 "is_hot":        int(rec.get("is_hot", False)),
                 "extraction_quality_flags": rec.get("extraction_quality_flags") or "",
+                "measurement_provenance": _serialize_measurement_provenance(new_provenance),
                 "crawl_run_id": crawl_run_id,
                 "price_dropped": price_dropped,
                 "price_drop_pct": price_drop_pct,

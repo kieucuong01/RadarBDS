@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS listings (
     contact_phone       TEXT,
     seller_name         TEXT,
     extraction_quality_flags TEXT NOT NULL DEFAULT '',
+    measurement_provenance TEXT NOT NULL DEFAULT '{}',
     crawl_run_id        INTEGER,
 
     -- Outlier flag (thay vì drop)
@@ -1292,6 +1293,10 @@ def _run_migrations(conn: Any) -> None:
         (
             "extraction_quality_flags",
             "ALTER TABLE listings ADD COLUMN extraction_quality_flags TEXT NOT NULL DEFAULT ''",
+        ),
+        (
+            "measurement_provenance",
+            "ALTER TABLE listings ADD COLUMN measurement_provenance TEXT NOT NULL DEFAULT '{}'",
         ),
         ("crawl_run_id", "ALTER TABLE listings ADD COLUMN crawl_run_id INTEGER"),
     ]
