@@ -28,12 +28,19 @@ from .contracts import (
     RouteDecision,
     RunOutcome,
     RunStatus,
+    ToolCall,
 )
+from .evidence import build_provider_bundle
 from .limits import BudgetHardStop, QuotaExceeded
 from .provider import ProviderError, RadarAskProvider
-from .registry import ToolContext, ToolRegistry, execute_tool
+from .registry import ToolArgumentsInvalid, ToolContext, ToolRegistry, execute_tool
 from .routing import Planner, route_question
-from .validator import AnswerValidationError, validate_answer
+from .validator import (
+    AnswerValidationError,
+    EvidenceAssessment,
+    grade_evidence,
+    validate_answer,
+)
 
 
 MAX_SERIALIZED_EVIDENCE_CHARS = 40_000
@@ -138,6 +145,15 @@ def _policy(
             update={"thinking_enabled": policy.thinking_enabled and decision.use_thinking}
         )
     return policy
+
+
+def correction_limit(depth: AskDepth, tier: str) -> int:
+    """Return the hard server-side corrective retrieval limit."""
+    if depth is AskDepth.FAST:
+        return 0
+    if depth is AskDepth.STANDARD:
+        return 1
+    return 1 if tier == "free" else 2
 
 
 def _merge_bundles(question: str, bundles: Sequence[EvidenceBundle]) -> EvidenceBundle:
@@ -264,7 +280,10 @@ def _provider_request(
     bundles: Sequence[EvidenceBundle],
 ) -> ProviderRequest:
     safe_evidence = _redact_provider_value(
-        [bundle.model_dump(mode="json") for bundle in bundles]
+        [
+            build_provider_bundle(bundle, tier=context.tier).model_dump(mode="json")
+            for bundle in bundles
+        ]
     )
     evidence_json = json.dumps(
         safe_evidence,
@@ -346,6 +365,101 @@ def _persist_audit(repository: RepositoryProtocol, run_id: UUID, calls, bundles)
                 min_tier=item.min_tier,
                 as_of=item.as_of,
             )
+
+
+def _repair_call(
+    call: ToolCall,
+    *,
+    attempt: int,
+    registry: ToolRegistry,
+) -> ToolCall | None:
+    """Widen only typed bounded retrieval arguments; never invent a new tool."""
+    arguments = dict(call.arguments)
+    candidates: list[dict[str, Any]] = []
+    current_window = arguments.get("window_days")
+    if isinstance(current_window, int) and not isinstance(current_window, bool):
+        for value in (7, 30, 90, 180, 365):
+            if value > current_window:
+                widened = dict(arguments)
+                widened["window_days"] = value
+                candidates.append(widened)
+    current_limit = arguments.get("limit")
+    if isinstance(current_limit, int) and not isinstance(current_limit, bool):
+        for value in (10, 20, 50):
+            if value > current_limit:
+                widened = dict(arguments)
+                widened["limit"] = value
+                candidates.append(widened)
+
+    suffix = f":repair-{attempt}"
+    call_id = f"{call.call_id[: 80 - len(suffix)]}{suffix}"
+    for candidate_arguments in candidates:
+        candidate = call.model_copy(
+            update={"call_id": call_id, "arguments": candidate_arguments}
+        )
+        try:
+            registry.validate_call(candidate)
+        except ToolArgumentsInvalid:
+            continue
+        return candidate
+    return None
+
+
+def _retrieve_with_corrections(
+    context: AskContext,
+    decision: RouteDecision,
+    *,
+    dependencies: OrchestratorDependencies,
+    run_id: UUID,
+) -> tuple[list[EvidenceBundle], EvidenceAssessment]:
+    active_calls = list(decision.tool_calls)
+    active_bundles = [
+        execute_tool(
+            call,
+            ToolContext(ask=context),
+            registry=dependencies.registry,
+        )
+        for call in active_calls
+    ]
+    _persist_audit(dependencies.repository, run_id, active_calls, active_bundles)
+    assessment = grade_evidence(
+        active_bundles,
+        now=_utc_now(dependencies.clock),
+        required_freshness_hours=decision.required_freshness_hours,
+        tier=context.tier,
+    )
+
+    for attempt in range(1, correction_limit(decision.depth, context.tier) + 1):
+        if assessment.grade is not RetrievalQuality.REPAIR:
+            break
+        repairs: list[tuple[int, ToolCall]] = []
+        for index, call in enumerate(active_calls):
+            repaired = _repair_call(call, attempt=attempt, registry=dependencies.registry)
+            if repaired is not None:
+                repairs.append((index, repaired))
+                break
+        if not repairs:
+            break
+        repair_calls = [call for _index, call in repairs]
+        repair_bundles = [
+            execute_tool(
+                call,
+                ToolContext(ask=context),
+                registry=dependencies.registry,
+            )
+            for call in repair_calls
+        ]
+        _persist_audit(dependencies.repository, run_id, repair_calls, repair_bundles)
+        for (index, repaired), repaired_bundle in zip(repairs, repair_bundles, strict=True):
+            active_calls[index] = repaired
+            active_bundles[index] = repaired_bundle
+        assessment = grade_evidence(
+            active_bundles,
+            now=_utc_now(dependencies.clock),
+            required_freshness_hours=decision.required_freshness_hours,
+            tier=context.tier,
+        )
+    return active_bundles, assessment
 
 
 def _settle(limits: LimitProtocol, reservation, usage: ProviderUsage, outcome: RunOutcome):
@@ -509,17 +623,36 @@ def run_question(
     )
     usage = EMPTY_USAGE
     try:
-        bundles = [
-            execute_tool(
-                call,
-                ToolContext(ask=context),
-                registry=dependencies.registry,
-            )
-            for call in decision.tool_calls
-        ]
-        _persist_audit(dependencies.repository, run.id, decision.tool_calls, bundles)
+        bundles, assessment = _retrieve_with_corrections(
+            context,
+            decision,
+            dependencies=dependencies,
+            run_id=run.id,
+        )
         merged = _merge_bundles(request.question, bundles)
-        if decision.generated:
+        if assessment.grade is not RetrievalQuality.SUFFICIENT:
+            merged = merged.model_copy(
+                update={
+                    "retrieval_quality": assessment.grade,
+                    "missing_requirements": list(
+                        dict.fromkeys(
+                            [
+                                *merged.missing_requirements,
+                                *assessment.missing_requirements,
+                            ]
+                        )
+                    )[:20],
+                    "warnings": list(
+                        dict.fromkeys([*merged.warnings, *assessment.warnings])
+                    )[:20],
+                }
+            )
+            candidate = _deterministic_answer(
+                decision,
+                merged,
+                now=_utc_now(dependencies.clock),
+            )
+        elif decision.generated:
             response = dependencies.provider.complete(
                 _provider_request(request, context, decision, policy, bundles)
             )
@@ -536,6 +669,8 @@ def run_question(
             bundles,
             tier=context.tier,
             expected_depth=decision.depth,
+            now=_utc_now(dependencies.clock),
+            required_freshness_hours=decision.required_freshness_hours,
         )
     except ProviderError:
         return _fail_run(

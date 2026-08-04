@@ -31,6 +31,7 @@ from services.radar_ask.contracts import (
 from services.radar_ask.orchestrator import (
     OrchestratorDependencies,
     RadarAskFeatureDisabled,
+    correction_limit,
     run_question,
 )
 from services.radar_ask.limits import BudgetHardStop, QuotaExceeded
@@ -241,12 +242,13 @@ def make_deps(
     provider: FakeProvider | None = None,
     enabled: bool = True,
     reserve_error: Exception | None = None,
+    handler=None,
 ) -> OrchestratorDependencies:
     repo = FakeRepository()
     limits = FakeLimits(reserve_error=reserve_error)
     burst = FakeBurst()
     evidence = bundle or grounded_bundle()
-    registry = make_registry(lambda *, args, context: evidence)
+    registry = make_registry(handler or (lambda *, args, context: evidence))
 
     def router(request, context, **kwargs):
         return decision
@@ -506,6 +508,190 @@ def test_grounded_insufficient_result_consumes_one_question_without_provider():
     assert result.answer is not None and result.answer.answered is False
     assert result.answer.verdict is AskVerdict.INSUFFICIENT
     assert deps.limits.settlements[0]["outcome"] is RunOutcome.INSUFFICIENT
+
+
+@pytest.mark.parametrize(
+    ("depth", "tier", "expected"),
+    [
+        (AskDepth.FAST, "free", 0),
+        (AskDepth.STANDARD, "free", 1),
+        (AskDepth.STANDARD, "admin", 1),
+        (AskDepth.DEEP, "free", 1),
+        (AskDepth.DEEP, "vip", 2),
+        (AskDepth.DEEP, "admin", 2),
+    ],
+)
+def test_corrective_retrieval_limits_are_bounded_by_depth_and_tier(depth, tier, expected):
+    assert correction_limit(depth, tier) == expected
+
+
+def test_standard_repair_expands_window_once_then_synthesizes_from_repaired_evidence():
+    seen_windows: list[int] = []
+
+    def handler(*, args, context):
+        seen_windows.append(args.window_days)
+        if len(seen_windows) == 1:
+            return grounded_bundle(quality=RetrievalQuality.REPAIR).model_copy(
+                update={"missing_requirements": ["fresh_evidence_required"]}
+            )
+        return grounded_bundle()
+
+    provider = FakeProvider(response=ProviderResponse(json_value=generated_answer()))
+    deps = make_deps(
+        decision=standard_decision(),
+        provider=provider,
+        handler=handler,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Phân tích khu đang giảm giá"),
+        make_context(),
+        dependencies=deps,
+        idempotency_key="repair-standard-1",
+    )
+
+    assert result.status is RunStatus.COMPLETED
+    assert seen_windows == [1, 7]
+    assert len(deps.repository.tools) == 2
+    assert len(provider.requests) == 1
+
+
+def test_exhausted_standard_repair_returns_grounded_insufficient_without_provider():
+    seen_windows: list[int] = []
+
+    def handler(*, args, context):
+        seen_windows.append(args.window_days)
+        return grounded_bundle(quality=RetrievalQuality.REPAIR).model_copy(
+            update={"missing_requirements": ["minimum_three_road_listings_required"]}
+        )
+
+    provider = FakeProvider(response=ProviderResponse(json_value=generated_answer()))
+    deps = make_deps(
+        decision=standard_decision(),
+        provider=provider,
+        handler=handler,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Phân tích khu đang giảm giá"),
+        make_context("vip"),
+        dependencies=deps,
+        idempotency_key="repair-exhausted-1",
+    )
+
+    assert result.status is RunStatus.INSUFFICIENT
+    assert result.answer is not None and result.answer.verdict is AskVerdict.INSUFFICIENT
+    assert "minimum_three_road_listings_required" in result.answer.next_verification_steps
+    assert seen_windows == [1, 7]
+    assert provider.requests == []
+
+
+def test_fast_path_never_runs_corrective_retrieval():
+    calls = 0
+
+    def handler(*, args, context):
+        nonlocal calls
+        calls += 1
+        return grounded_bundle(quality=RetrievalQuality.REPAIR)
+
+    deps = make_deps(decision=fast_decision(), handler=handler)
+
+    result = run_question(
+        AskQuestionRequest(question="Khu nào giảm giá hôm nay?"),
+        make_context(),
+        dependencies=deps,
+        idempotency_key="fast-no-repair-1",
+    )
+
+    assert result.status is RunStatus.INSUFFICIENT
+    assert calls == 1
+    assert deps.provider.requests == []
+
+
+def test_standard_correction_limit_counts_retrievals_not_batches_of_tool_calls():
+    seen_windows: list[int] = []
+
+    def handler(*, args, context):
+        seen_windows.append(args.window_days)
+        evidence = EvidenceItem(
+            evidence_id=f"market:window:{args.window_days}",
+            source_kind=SourceKind.MARKET_STAT,
+            source_ref=f"market:window:{args.window_days}",
+            value=3,
+            unit="tin",
+            as_of=NOW,
+            dataset_version=f"signals:{args.window_days}",
+            sample_size=3,
+        )
+        return EvidenceBundle(
+            question_snapshot="Khu nào giảm giá?",
+            items=[evidence],
+            missing_requirements=["more_evidence_required"],
+            retrieval_quality=RetrievalQuality.REPAIR,
+        )
+
+    decision = standard_decision().model_copy(
+        update={
+            "tool_calls": [
+                ToolCall(
+                    call_id="standard-a",
+                    name="rank_price_drop_areas",
+                    arguments={"window_days": 1},
+                ),
+                ToolCall(
+                    call_id="standard-b",
+                    name="rank_price_drop_areas",
+                    arguments={"window_days": 2},
+                ),
+            ]
+        }
+    )
+    deps = make_deps(decision=decision, handler=handler)
+
+    result = run_question(
+        AskQuestionRequest(question="Phân tích khu đang giảm giá"),
+        make_context("vip"),
+        dependencies=deps,
+        idempotency_key="correction-total-limit-1",
+    )
+
+    assert result.status is RunStatus.INSUFFICIENT
+    assert seen_windows == [1, 2, 7]
+    assert len(deps.repository.tools) == 3
+
+
+def test_provider_receives_tier_filtered_evidence_without_private_keys():
+    private = EvidenceItem(
+        evidence_id="market:admin-only",
+        source_kind=SourceKind.MARKET_STAT,
+        source_ref="https://private.example/source",
+        value={"user_id": 999, "phone": "0909 123 456", "secret_note": "hidden"},
+        unit="tin",
+        as_of=NOW,
+        dataset_version="signals:12",
+        sample_size=3,
+        min_tier="admin",
+    )
+    evidence = grounded_bundle().model_copy(
+        update={"items": [*grounded_bundle().items, private]}
+    )
+    provider = FakeProvider(response=ProviderResponse(json_value=generated_answer()))
+    deps = make_deps(
+        decision=standard_decision(),
+        bundle=evidence,
+        provider=provider,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Phân tích khu đang giảm giá"),
+        make_context("free"),
+        dependencies=deps,
+        idempotency_key="provider-tier-filter-1",
+    )
+
+    assert result.status is RunStatus.FAILED
+    assert result.error_code == "answer_validation_failed"
+    assert provider.requests == []
 
 
 def test_idempotent_completed_run_returns_stored_answer_without_reexecution():
