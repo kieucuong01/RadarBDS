@@ -1,0 +1,339 @@
+from __future__ import annotations
+
+import json
+from collections import deque
+
+import pytest
+import requests
+
+from services.radar_ask.config import RadarAskSettings
+from services.radar_ask.contracts import (
+    ProviderMessage,
+    ProviderRequest,
+    ProviderToolDefinition,
+)
+from services.radar_ask.provider import (
+    DeepSeekProvider,
+    ProviderInvalidResponse,
+    ProviderRejected,
+    ProviderUnavailable,
+)
+
+
+class FakeResponse:
+    def __init__(self, payload=None, *, status_code=200, raw_content=None, headers=None):
+        self._payload = payload
+        self.status_code = status_code
+        self.headers = headers or {}
+        self.content = raw_content if raw_content is not None else json.dumps(payload).encode("utf-8")
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.HTTPError(response=self)
+
+    def json(self):
+        if isinstance(self._payload, Exception):
+            raise self._payload
+        return self._payload
+
+
+class FakeSession:
+    def __init__(self):
+        self.queued = deque()
+        self.calls = []
+
+    def queue(self, response_or_error):
+        self.queued.append(response_or_error)
+
+    def post(self, url, **kwargs):
+        self.calls.append({"url": url, **kwargs})
+        result = self.queued.popleft()
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+
+@pytest.fixture
+def settings(monkeypatch):
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "unit-test-key")
+    monkeypatch.setenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+    return RadarAskSettings.from_env()
+
+
+def completion_payload(*, content="Kết quả", tool_calls=None, reasoning=None, usage=None):
+    return {
+        "id": "chatcmpl-test",
+        "choices": [
+            {
+                "index": 0,
+                "finish_reason": "tool_calls" if tool_calls else "stop",
+                "message": {
+                    "role": "assistant",
+                    "content": content,
+                    "reasoning_content": reasoning,
+                    "tool_calls": tool_calls or [],
+                },
+            }
+        ],
+        "usage": usage
+        or {
+            "prompt_tokens": 10,
+            "completion_tokens": 4,
+            "prompt_cache_hit_tokens": 6,
+            "prompt_cache_miss_tokens": 4,
+        },
+    }
+
+
+def simple_request(**overrides):
+    values = {
+        "model": "deepseek-v4-flash",
+        "messages": [ProviderMessage(role="user", content="Giá Phú Mỹ?")],
+        "max_output_tokens": 1_500,
+        "thinking_enabled": False,
+    }
+    values.update(overrides)
+    return ProviderRequest(**values)
+
+
+def test_complete_sends_exact_safe_http_boundary(settings):
+    session = FakeSession()
+    session.queue(FakeResponse(completion_payload()))
+    provider = DeepSeekProvider(settings=settings, session=session)
+
+    response = provider.complete(simple_request())
+
+    assert response.content == "Kết quả"
+    assert len(session.calls) == 1
+    call = session.calls[0]
+    assert call["url"] == "https://api.deepseek.com/chat/completions"
+    assert call["headers"] == {
+        "Authorization": "Bearer unit-test-key",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    assert call["timeout"] == (5, 30)
+    assert call["json"] == {
+        "model": "deepseek-v4-flash",
+        "messages": [{"role": "user", "content": "Giá Phú Mỹ?"}],
+        "max_tokens": 1_500,
+        "stream": False,
+        "thinking": {"type": "disabled"},
+    }
+
+
+def test_complete_maps_tools_and_preserves_reasoning_only_for_continuation(settings):
+    session = FakeSession()
+    session.queue(
+        FakeResponse(
+            completion_payload(
+                content=None,
+                reasoning="private next-step reasoning",
+                tool_calls=[
+                    {
+                        "id": "call_market_1",
+                        "type": "function",
+                        "function": {
+                            "name": "compare_areas",
+                            "arguments": '{"wards":["Phú Mỹ","Định Hòa"]}',
+                        },
+                    }
+                ],
+            )
+        )
+    )
+    provider = DeepSeekProvider(settings=settings, session=session)
+    tool = ProviderToolDefinition(
+        name="compare_areas",
+        description="Compare two canonical wards.",
+        parameters={
+            "type": "object",
+            "properties": {"wards": {"type": "array", "items": {"type": "string"}}},
+            "required": ["wards"],
+            "additionalProperties": False,
+        },
+    )
+    request = simple_request(
+        model="deepseek-v4-pro",
+        thinking_enabled=True,
+        messages=[
+            ProviderMessage(role="user", content="So sánh hai phường"),
+            ProviderMessage(
+                role="assistant",
+                content=None,
+                reasoning_content="private prior reasoning",
+                tool_calls=[],
+            ),
+            ProviderMessage(role="tool", tool_call_id="call_prior", content='{"ok":true}'),
+        ],
+        tools=[tool],
+    )
+
+    response = provider.complete(request)
+
+    assert response.reasoning_content == "private next-step reasoning"
+    assert "reasoning_content" not in response.model_dump()
+    assert response.tool_calls[0].name == "compare_areas"
+    assert response.tool_calls[0].arguments == {"wards": ["Phú Mỹ", "Định Hòa"]}
+    body = session.calls[0]["json"]
+    assert body["thinking"] == {"type": "enabled"}
+    assert body["messages"][1]["reasoning_content"] == "private prior reasoning"
+    assert body["messages"][2] == {
+        "role": "tool",
+        "content": '{"ok":true}',
+        "tool_call_id": "call_prior",
+    }
+    assert body["tools"] == [
+        {
+            "type": "function",
+            "function": {
+                "name": "compare_areas",
+                "description": "Compare two canonical wards.",
+                "parameters": tool.parameters,
+            },
+        }
+    ]
+
+
+def test_complete_normalizes_usage_fields(settings):
+    session = FakeSession()
+    session.queue(FakeResponse(completion_payload()))
+    response = DeepSeekProvider(settings=settings, session=session).complete(simple_request())
+
+    assert response.usage.input_tokens == 10
+    assert response.usage.output_tokens == 4
+    assert response.usage.cache_hit_input_tokens == 6
+    assert response.usage.cache_miss_input_tokens == 4
+
+
+def test_json_mode_retries_once_for_empty_content(settings):
+    session = FakeSession()
+    session.queue(FakeResponse(completion_payload(content="")))
+    session.queue(FakeResponse(completion_payload(content='{"route":"fast"}')))
+    provider = DeepSeekProvider(settings=settings, session=session)
+
+    response = provider.complete_json(
+        model="deepseek-v4-flash",
+        messages=[{"role": "user", "content": "Route this question"}],
+        max_output_tokens=500,
+    )
+
+    assert response.json_value == {"route": "fast"}
+    assert len(session.calls) == 2
+    assert session.calls[0]["json"]["response_format"] == {"type": "json_object"}
+    assert "valid JSON object" in session.calls[0]["json"]["messages"][0]["content"]
+
+
+def test_json_mode_does_not_retry_valid_content(settings):
+    session = FakeSession()
+    session.queue(FakeResponse(completion_payload(content='{"route":"fast"}')))
+    provider = DeepSeekProvider(settings=settings, session=session)
+
+    response = provider.complete_json(
+        model="deepseek-v4-flash",
+        messages=[{"role": "user", "content": "Route"}],
+        max_output_tokens=500,
+    )
+
+    assert response.json_value == {"route": "fast"}
+    assert len(session.calls) == 1
+
+
+def test_json_mode_rejects_two_invalid_responses(settings):
+    session = FakeSession()
+    session.queue(FakeResponse(completion_payload(content="not-json")))
+    session.queue(FakeResponse(completion_payload(content="still-not-json")))
+    provider = DeepSeekProvider(settings=settings, session=session)
+
+    with pytest.raises(ProviderInvalidResponse, match="valid JSON"):
+        provider.complete_json(
+            model="deepseek-v4-flash",
+            messages=[{"role": "user", "content": "Route"}],
+            max_output_tokens=500,
+        )
+
+    assert len(session.calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("status_code", "error_type"),
+    [(400, ProviderRejected), (401, ProviderRejected), (429, ProviderUnavailable), (500, ProviderUnavailable)],
+)
+def test_http_errors_are_mapped_without_response_body(settings, status_code, error_type):
+    session = FakeSession()
+    session.queue(
+        FakeResponse(
+            {"error": {"message": "sensitive provider body"}},
+            status_code=status_code,
+        )
+    )
+    provider = DeepSeekProvider(settings=settings, session=session)
+
+    with pytest.raises(error_type) as raised:
+        provider.complete(simple_request())
+
+    assert "sensitive provider body" not in str(raised.value)
+    assert "unit-test-key" not in str(raised.value)
+
+
+@pytest.mark.parametrize("error", [requests.Timeout("slow"), requests.ConnectionError("offline")])
+def test_network_failures_are_provider_unavailable(settings, error):
+    session = FakeSession()
+    session.queue(error)
+
+    with pytest.raises(ProviderUnavailable, match="unavailable"):
+        DeepSeekProvider(settings=settings, session=session).complete(simple_request())
+
+
+def test_response_size_is_bounded_before_json_parsing(settings):
+    session = FakeSession()
+    session.queue(
+        FakeResponse(
+            completion_payload(),
+            raw_content=b"x" * (1_048_576 + 1),
+            headers={"Content-Length": str(1_048_576 + 1)},
+        )
+    )
+
+    with pytest.raises(ProviderInvalidResponse, match="too large"):
+        DeepSeekProvider(settings=settings, session=session).complete(simple_request())
+
+
+def test_invalid_tool_argument_json_is_rejected(settings):
+    session = FakeSession()
+    session.queue(
+        FakeResponse(
+            completion_payload(
+                content=None,
+                tool_calls=[
+                    {
+                        "id": "call_bad",
+                        "type": "function",
+                        "function": {"name": "compare_areas", "arguments": "not-json"},
+                    }
+                ],
+            )
+        )
+    )
+
+    with pytest.raises(ProviderInvalidResponse, match="tool arguments"):
+        DeepSeekProvider(settings=settings, session=session).complete(simple_request())
+
+
+def test_provider_requires_api_key_only_when_called(monkeypatch):
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    settings = RadarAskSettings.from_env()
+    provider = DeepSeekProvider(settings=settings, session=FakeSession())
+
+    with pytest.raises(ProviderUnavailable, match="not configured"):
+        provider.complete(simple_request())
+
+
+def test_provider_rejects_unconfigured_model_without_http_call(settings):
+    session = FakeSession()
+    provider = DeepSeekProvider(settings=settings, session=session)
+
+    with pytest.raises(ProviderRejected, match="model is not allowed"):
+        provider.complete(simple_request(model="untrusted-model"))
+
+    assert session.calls == []
