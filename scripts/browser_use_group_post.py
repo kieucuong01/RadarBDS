@@ -88,9 +88,17 @@ if image:
     doc=cdp('DOM.getDocument',depth=1)['root']['nodeId']
     ids=cdp('DOM.querySelectorAll',nodeId=doc,selector='[role="dialog"] input[type="file"]')['nodeIds']
     if len(ids) != 1: raise RuntimeError(f'Expected one composer file input, found {{len(ids)}}')
-    cdp('DOM.setFileInputFiles',nodeId=ids[0],files=[image]); time.sleep(8)
-    caption_dialogs=js("[...document.querySelectorAll('[role=dialog]')].filter(d => (d.innerText||'').includes("+json.dumps(needle)+") && d.querySelector('img')).length")
-    if caption_dialogs != 1: raise RuntimeError('Caption and visual are not in the same composer')
+    cdp('DOM.setFileInputFiles',nodeId=ids[0],files=[image])
+    caption_has_native_visual=False
+    blob_selector='img[src^="blob:"]'
+    for _ in range(20):
+        caption_visuals=js("[...document.querySelectorAll('[role=dialog]')].filter(d => (d.innerText||'').includes("+json.dumps(needle)+") && d.querySelector("+json.dumps(blob_selector)+")).length")
+        if caption_visuals == 1:
+            caption_has_native_visual=True
+            break
+        time.sleep(1)
+    if not caption_has_native_visual:
+        raise RuntimeError('Caption and native blob visual are not in the same composer after 20s')
 capture_screenshot(path=screenshot,full=False,max_dim=1800)
 if mode=='prepare':
     print(json.dumps({{'ok':True,'status':'prepared','group':expected_group,'screenshot':screenshot}},ensure_ascii=False)); raise SystemExit(0)

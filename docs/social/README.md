@@ -6,9 +6,9 @@ This file is the first stop for `@rb` Facebook social tasks. Goal: avoid redisco
 
 | Surface | Acting identity | Cadence | Content rule |
 |---|---|---:|---|
+| Facebook Page Care | Radar BDS | Daily 18:40, max 1 verified post/day | Publish one Radar BDS article with verified caption and native visual. Link preview, avatar, logo, or draft is not a successful visual post. |
 | Facebook group post | Radar BDS | Tue/Fri 19:30, capped by code | Must show Radar BDS value: data, tracked listings, signals, price/m², ward filters, comparisons. No generic BĐS knowledge posts. |
 | Comment seeding | Tiny Sudo | 10:30 / 15:30 / 20:30 daily, capped by code | Contextual/flexible. Can use educational content if it answers the post. No spam/trùng post/author/topic. |
-| Approval monitor | Radar BDS browser | 20:15 daily | Silent unless pending group post changes status. |
 
 Always restore/check identity to **Radar BDS** after any Tiny Sudo action.
 
@@ -16,9 +16,9 @@ Always restore/check identity to **Radar BDS** after any Tiny Sudo action.
 
 | Job | Schedule | Script wrapper |
 |---|---:|---|
+| `@rb Daily Facebook Page Care` | `40 18 * * *` | `~/.hermes/profiles/portfolio-ops/scripts/rb_page_care_autopost.sh` |
 | `@rb controlled Facebook group auto-post` | `30 19 * * 2,5` | `~/.hermes/profiles/portfolio-ops/scripts/radar_group_auto_post_cron.sh` |
 | `@rb Facebook comment seeding 3/day` | `30 10,15,20 * * *` | `~/.hermes/profiles/portfolio-ops/scripts/radar_public_post_comment_scheduler.sh` |
-| `@rb Facebook group approval monitor` | `15 20 * * *` | `~/.hermes/profiles/portfolio-ops/scripts/radar_group_post_monitor_cron.sh` |
 
 All three are script-only cron jobs (`no_agent=True`). Empty stdout means silent skip.
 
@@ -26,6 +26,9 @@ All three are script-only cron jobs (`no_agent=True`). Empty stdout means silent
 
 | Purpose | Path |
 |---|---|
+| Page Care scheduler | `scripts/radar_social_auto_post.py` |
+| Page Care browser executor | `scripts/browser_use_page_post.py` |
+| Page Care state | `/opt/radar-bds/var/social_queue/posted_slugs.json` |
 | Group post scheduler | `scripts/radar_group_auto_post.py` |
 | Group post browser executor | `scripts/browser_use_group_post.py` |
 | Group post targets | `config/social_group_targets.json` |
@@ -34,8 +37,17 @@ All three are script-only cron jobs (`no_agent=True`). Empty stdout means silent
 | Comment browser executor | `scripts/browser_use_group_comment.py` |
 | Comment targets/pages/groups | `config/social_group_comment_targets.json` |
 | Comment state | `/opt/radar-bds/var/social_queue/public-post-comment/state.json` |
-| Browser profile launcher | `/home/hermesops/radar-browser-use/start-radar-social-browser.sh` |
-| Identity checker | `/tmp/verify_radar_social_identity.py` |
+| Browser supervisor | `radar-social-browser.service` (systemd, user `hermesops`, `Restart=always`) |
+| Browser health wrapper | `~/.hermes/profiles/portfolio-ops/scripts/ensure_radar_social_browser.sh` |
+
+## Reliability and truth gates
+
+- The authenticated Chrome profile is launched only by `radar-social-browser.service` as `hermesops`. Repo Python running as `radar` connects to CDP `127.0.0.1:9224` and fails clearly if it is unavailable; it must not spawn the browser.
+- Page Care is successful only when `verified_text=true`, `verified_visual=true`, the post has a real Facebook permalink, and the native image has a `/photo` or `/photo.php` permalink.
+- Page Care daily cap reads both current flat proof fields and legacy/production evidence nested under `browser_result`. A recovery rerun must return `already posted today` without changing `posted_slugs.json`.
+- Page uploads and group uploads require `img[src^="blob:"]` in the same caption composer. Generic `<img>` elements are avatars/link previews and do not count. Poll for up to 20 seconds instead of using a fixed sleep.
+- Never press blanket `Escape` after typing Page hashtags: current Facebook UI may close the composer into an unpublished inline draft.
+- Group `pending admin approval` is a successful submission state, not a public publish. Checkpoint/captcha/login/identity/CDP/permission/traceback failures must exit nonzero, not `SKIP`.
 
 ## Current known targets
 
@@ -87,9 +99,11 @@ All three are script-only cron jobs (`no_agent=True`). Empty stdout means silent
 | Change | Check |
 |---|---|
 | JSON config only | `python3 -m json.tool` |
-| Python social logic | `py_compile` + targeted `tests.test_radar_group_comment_seed` or `tests.test_radar_group_auto_post` |
+| Page Care logic | targeted `test_radar_social_auto_post.py` + `test_browser_use_page_post.py` |
+| Group/comment logic | targeted `test_radar_group_comment_seed.py` + `test_radar_group_auto_post.py` |
 | Cron schedule | `cronjob list` after update |
-| Live Facebook action | screenshot + permalink/status + identity restore |
+| Page recovery rerun | production-shaped daily-cap test → wrapper safe no-op → unchanged state checksum/count → cron output `already posted today` |
+| Live Facebook action | screenshot + permalink/native-photo/status + identity restore |
 
 Do not run broad test suites for docs/config-only changes.
 

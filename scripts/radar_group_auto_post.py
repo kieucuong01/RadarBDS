@@ -19,7 +19,6 @@ from PIL import Image, ImageDraw, ImageFont
 REPO=Path('/opt/radar-bds/current')
 TARGETS=REPO/'config/social_group_targets.json'
 EXECUTOR=REPO/'scripts/browser_use_group_post.py'
-START_BROWSER=Path('/home/hermesops/radar-browser-use/start-radar-social-browser.sh')
 CDP='http://127.0.0.1:9224'
 STATE=Path('/opt/radar-bds/var/social_queue/group-autopost/state.json')
 QUEUE_DIR=Path('/opt/radar-bds/var/social_queue/group-autopost/queue')
@@ -151,13 +150,11 @@ def cdp_ready() -> bool:
 
 
 def ensure_browser() -> None:
-    if cdp_ready(): return
-    subprocess.Popen([str(START_BROWSER)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
-    import time
-    for _ in range(30):
-        time.sleep(1)
-        if cdp_ready(): return
-    raise RuntimeError('Radar Social Chrome CDP unavailable')
+    if cdp_ready():
+        return
+    raise RuntimeError(
+        'Radar Social Chrome CDP unavailable; cron wrapper must restore radar-social-browser.service first'
+    )
 
 
 def parse_time(s: str) -> dt.datetime | None:

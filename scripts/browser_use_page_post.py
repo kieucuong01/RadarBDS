@@ -58,7 +58,15 @@ def _is_valid_facebook_permalink(url: str) -> bool:
     )
 
 
-def _validate_publish_success(record: dict) -> dict:
+def _is_valid_facebook_photo_permalink(url: str) -> bool:
+    return bool(
+        isinstance(url, str)
+        and url.startswith("https://www.facebook.com/")
+        and ("/photo/" in url or "/photo.php" in url)
+    )
+
+
+def _validate_publish_success(record: dict, *, require_visual: bool = False) -> dict:
     """Hard gate for cron KPI: success requires a real post permalink."""
     browser_result = _extract_browser_result(str(record.get("stdout") or ""))
     if not browser_result:
@@ -68,6 +76,10 @@ def _validate_publish_success(record: dict) -> dict:
     permalink = browser_result.get("permalink") or ""
     if not _is_valid_facebook_permalink(permalink):
         raise SystemExit(f"Publish verification missing valid Facebook permalink: {browser_result}")
+    if require_visual:
+        photo_permalink = browser_result.get("photo_permalink") or ""
+        if not browser_result.get("verified_visual") or not _is_valid_facebook_photo_permalink(photo_permalink):
+            raise SystemExit(f"Publish verification missing native visual/photo permalink: {browser_result}")
     return browser_result
 
 
@@ -157,7 +169,12 @@ def find_textbox_backend():
             return node.get('backendDOMNodeId')
     return None
 
-textbox = find_textbox_backend()
+textbox = None
+for _ in range(12):
+    textbox = find_textbox_backend()
+    if textbox:
+        break
+    time.sleep(1)
 if not textbox:
     inline_draft = js('''(() => {{
         const needle = %s;
@@ -172,11 +189,31 @@ if not textbox:
     }})()''' % json.dumps(needle)) or {{'found': False}}
     if inline_draft.get('found'):
         click_at_xy(inline_draft['x'], inline_draft['y'])
-        time.sleep(3)
-        textbox = find_textbox_backend()
+        for _ in range(12):
+            time.sleep(1)
+            textbox = find_textbox_backend()
+            if textbox:
+                break
+textbox_point = {{'found': False}}
 if not textbox:
-    raise RuntimeError('Post textbox not found after opening composer or inline draft.')
-click_backend(textbox)
+    # Facebook occasionally exposes the contenteditable composer in the DOM
+    # before Accessibility.getFullAXTree receives its richtext node.
+    textbox_point = js('''(() => {{
+        for (const el of [...document.querySelectorAll('[role="dialog"] [role="textbox"], [role="dialog"] [contenteditable="true"]')]) {{
+            const r = el.getBoundingClientRect();
+            if (r.width > 20 && r.height > 15) {{
+                return {{found: true, x: r.x + r.width / 2, y: r.y + r.height / 2}};
+            }}
+        }}
+        return {{found: false}};
+    }})()''') or {{'found': False}}
+if textbox:
+    click_backend(textbox)
+elif textbox_point.get('found'):
+    click_at_xy(textbox_point['x'], textbox_point['y'])
+    time.sleep(1)
+else:
+    raise RuntimeError('Post textbox not found after waiting for composer or inline draft.')
 caption_already_present = js('''(() => {{
     const needle = %s;
     return [...document.querySelectorAll('[role="dialog"] [role="textbox"], [role="dialog"] [contenteditable="true"], [role="dialog"] textarea')]
@@ -187,31 +224,36 @@ if not caption_already_present:
 time.sleep(5)
 
 if image:
-    # Upload only through the file input inside the one composer that already contains our caption.
-    caption_dialogs = js("[...document.querySelectorAll('[role=dialog]')].filter(d => (d.innerText||'').includes(" + json.dumps(needle) + ")).length")
-    if caption_dialogs != 1:
-        raise RuntimeError('Expected exactly one caption composer, found ' + str(caption_dialogs))
-    caption_has_image = js("[...document.querySelectorAll('[role=dialog]')].some(d => (d.innerText||'').includes(" + json.dumps(needle) + ") && d.querySelector('img'))")
-    if not caption_has_image:
+    # Link previews, avatars and Page logos are normal <img> elements. A native
+    # composer upload is represented by a blob: image; only that counts.
+    caption_has_native_visual = js('''[...document.querySelectorAll('[role=dialog]')].some(d => (d.innerText||'').includes(%s) && d.querySelector('img[src^="blob:"]'))''' % json.dumps(needle))
+    if not caption_has_native_visual:
         doc = cdp('DOM.getDocument', depth=1)['root']['nodeId']
         ids = cdp('DOM.querySelectorAll', nodeId=doc, selector='[role="dialog"] input[type="file"]')['nodeIds']
-        if len(ids) != 1:
-            raise RuntimeError('Expected one composer file input, found ' + str(len(ids)))
-        cdp('DOM.setFileInputFiles', nodeId=ids[0], files=[image])
-        time.sleep(8)
-    caption_dialogs = js("[...document.querySelectorAll('[role=dialog]')].filter(d => (d.innerText||'').includes(" + json.dumps(needle) + ") && d.querySelector('img')).length")
-    if caption_dialogs != 1:
-        raise RuntimeError('Caption and visual are not in the same composer')
+        candidates = []
+        for node_id in ids:
+            raw = cdp('DOM.getAttributes', nodeId=node_id).get('attributes', [])
+            attrs = dict(zip(raw[0::2], raw[1::2]))
+            accept = attrs.get('accept', '').lower()
+            if 'image' in accept:
+                candidates.append((node_id, 'video' not in accept))
+        image_only = [node_id for node_id, only in candidates if only]
+        selected = image_only[0] if image_only else (candidates[0][0] if candidates else None)
+        if not selected:
+            raise RuntimeError('No image-capable composer file input found')
+        obj = cdp('DOM.resolveNode', nodeId=selected)['object']['objectId']
+        cdp('DOM.setFileInputFiles', objectId=obj, files=[image])
+        for _ in range(20):
+            time.sleep(1)
+            caption_has_native_visual = js('''[...document.querySelectorAll('[role=dialog]')].some(d => (d.innerText||'').includes(%s) && d.querySelector('img[src^="blob:"]'))''' % json.dumps(needle))
+            if caption_has_native_visual:
+                break
+    if not caption_has_native_visual:
+        raise RuntimeError('Queue visual upload produced no native blob preview in the caption composer')
 
-# Screenshot after content/link preview loads. Only dismiss hashtag suggestions
-# when hashtags are present; pressing Escape on plain native posts can close the
-# composer and leave an unpublished inline draft.
-if '#' in message:
-    try:
-        press_key('Escape')
-        time.sleep(1)
-    except Exception:
-        pass
+# Do not press Escape after typing. In current Facebook Page UI, Escape closes
+# the whole composer into an inline draft even when no hashtag suggestion is
+# visible. Next/Post controls remain usable with harmless suggestions present.
 capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
 
 if mode == 'prepare':
@@ -235,7 +277,7 @@ def verified_on_page():
             and 'Create post' in (((n.get('name') or {{}}).get('value', '')) or '')
             for n in nodes
         )
-        post = {{'found': False, 'permalink': '', 'article_text': ''}}
+        post = {{'found': False, 'permalink': '', 'photo_permalink': '', 'article_text': ''}}
         try:
             post = js('''(() => {{
                 const needle = %s;
@@ -251,15 +293,19 @@ def verified_on_page():
                     const links = [...article.querySelectorAll('a')].map(a => a.href || '').filter(Boolean);
                     const permalink = links.find(validPermalink) || '';
                     if (!permalink) continue;
-                    return {{found: true, permalink, article_text: text.slice(0, 500)}};
+                    const photo_permalink = links.find(href => href.includes('/photo/') || href.includes('/photo.php')) || '';
+                    return {{found: true, permalink, photo_permalink, article_text: text.slice(0, 500)}};
                 }}
-                return {{found: false, permalink: '', article_text: ''}};
-            }})()''' % json.dumps(needle)) or {{'found': False, 'permalink': '', 'article_text': ''}}
+                return {{found: false, permalink: '', photo_permalink: '', article_text: ''}};
+            }})()''' % json.dumps(needle)) or {{'found': False, 'permalink': '', 'photo_permalink': '', 'article_text': ''}}
         except Exception:
-            post = {{'found': False, 'permalink': '', 'article_text': ''}}
+            post = {{'found': False, 'permalink': '', 'photo_permalink': '', 'article_text': ''}}
         if post.get('found') and not has_dialog:
-            return True, needle, post.get('permalink') or ''
-    return False, needle, ''
+            photo_permalink = post.get('photo_permalink') or ''
+            if image and not photo_permalink:
+                continue
+            return True, needle, post.get('permalink') or '', photo_permalink
+    return False, needle, '', ''
 
 # Current Page UI is normally: composer -> Next -> Post settings -> Post.
 # Click exact buttons inside the expected dialog so we do not confuse
@@ -299,10 +345,10 @@ if clicked_next:
     if not clicked_post:
         # Rare variant: Next itself publishes. Verify briefly before failing.
         for _ in range(10):
-            found, needle, permalink = verified_on_page()
+            found, needle, permalink, photo_permalink = verified_on_page()
             if found:
                 capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
-                print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'needle': needle, 'permalink': permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_async_published'}}, ensure_ascii=False))
+                print(json.dumps({{'ok': True, 'mode': mode, 'verified_text': True, 'verified_visual': bool(photo_permalink), 'needle': needle, 'permalink': permalink, 'photo_permalink': photo_permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': 'next_async_published'}}, ensure_ascii=False))
                 raise SystemExit(0)
             time.sleep(2)
         raise RuntimeError('Final exact Post button not found in Post settings dialog.')
@@ -332,16 +378,16 @@ try:
         time.sleep(2)
 except Exception:
     pass
-found, needle, permalink = False, message.split('\\n', 1)[0][:60], ''
+found, needle, permalink, photo_permalink = False, message.split('\\n', 1)[0][:60], '', ''
 # Native Page posts can take a little longer to appear in the feed after the
 # CTA modal is dismissed. Poll before failing so cron does not report false negatives.
 for _ in range(25):
-    found, needle, permalink = verified_on_page()
+    found, needle, permalink, photo_permalink = verified_on_page()
     if found:
         break
     time.sleep(2)
 capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
-print(json.dumps({{'ok': found, 'mode': mode, 'verified_text': found, 'needle': needle, 'permalink': permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': flow}}, ensure_ascii=False))
+print(json.dumps({{'ok': found, 'mode': mode, 'verified_text': found, 'verified_visual': bool(photo_permalink), 'needle': needle, 'permalink': permalink, 'photo_permalink': photo_permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': flow}}, ensure_ascii=False))
 if not found:
     raise RuntimeError('Post action attempted but verification text was not found.')
 """
@@ -361,8 +407,15 @@ def run(args: argparse.Namespace) -> dict:
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return result
 
-    if args.mode == "publish" and not args.yes:
-        raise SystemExit("Refusing to publish without --yes. Use --mode prepare for review mode.")
+    if args.mode == "publish":
+        if not args.yes:
+            raise SystemExit("Refusing to publish without --yes. Use --mode prepare for review mode.")
+        content = queue.get("content") or {}
+        visual_path = str(content.get("visual_path") or content.get("image") or "").strip()
+        if not visual_path:
+            raise SystemExit("Page publish requires a native visual path in content.visual_path or content.image")
+        if not Path(visual_path).is_file():
+            raise SystemExit(f"Queue visual/image file missing: {visual_path}")
     if not BROWSER_USE.exists():
         raise SystemExit(f"browser-use CLI not found: {BROWSER_USE}")
 
@@ -396,7 +449,7 @@ def run(args: argparse.Namespace) -> dict:
     }
     if proc.returncode == 0 and args.mode == "publish":
         try:
-            record["browser_result"] = _validate_publish_success(record)
+            record["browser_result"] = _validate_publish_success(record, require_visual=True)
         except SystemExit as exc:
             record["validation_error"] = str(exc)
             log_path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

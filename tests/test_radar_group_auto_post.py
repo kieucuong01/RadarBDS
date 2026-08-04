@@ -51,6 +51,21 @@ class GroupAutoPostTests(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm: poster.allowlisted(queue,cfg)
         self.assertIn('not enabled',str(cm.exception))
 
+    def test_group_program_waits_for_native_blob_visual_in_caption_composer(self):
+        queue={
+            'target':{'surface':'group','page_url':TARGET['url']},
+            'content':{'message':'Hook line\nBody','image':'/tmp/visual.png'},
+        }
+        original=poster.Path.exists
+        poster.Path.exists=lambda _self: True
+        try:
+            program=poster.program(queue,'publish','/tmp/shot.png',TARGET)
+        finally:
+            poster.Path.exists=original
+        compile(program,'<group-browser-program>','exec')
+        self.assertIn('for _ in range(20):',program)
+        self.assertIn('img[src^="blob:"]',program)
+
     def test_daily_cap_blocks_second_action(self):
         now=dt.datetime.now().astimezone()
         state={'actions':[{'at':now.isoformat(),'target_id':'other','status':'published'}]}

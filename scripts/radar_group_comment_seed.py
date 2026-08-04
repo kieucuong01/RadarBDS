@@ -29,7 +29,6 @@ if str(REPO_ROOT) not in sys.path:
 REPO = Path('/opt/radar-bds/current')
 CONFIG = REPO / 'config/social_group_comment_targets.json'
 EXECUTOR = REPO / 'scripts/browser_use_group_comment.py'
-START_BROWSER = Path('/home/hermesops/radar-browser-use/start-radar-social-browser.sh')
 BROWSER_USE = Path('/home/hermesops/radar-browser-use/.venv/bin/browser-use')
 BROWSER_USE_CWD = Path('/home/hermesops/radar-browser-use')
 CDP = 'http://127.0.0.1:9224'
@@ -634,18 +633,25 @@ def cdp_ready() -> bool:
 def ensure_browser() -> None:
     if cdp_ready():
         return
-    subprocess.Popen([str(START_BROWSER)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-    for _ in range(30):
-        time.sleep(1)
-        if cdp_ready():
-            return
-    raise RuntimeError('Radar Social Chrome CDP unavailable')
+    raise RuntimeError(
+        'Radar Social Chrome CDP unavailable; cron wrapper must restore radar-social-browser.service first'
+    )
 
 
 def restore_radar_identity() -> None:
     program = r"""
 import json,time
 goto_url('https://www.facebook.com/'); wait_for_load(); time.sleep(3)
+# Fast path: the Page home composer is a stronger identity signal than the
+# profile menu and is not affected by notification popovers intercepting clicks.
+radar_home=js("(() => (document.body?.innerText||'').includes(\"What's on your mind, Radar BDS?\"))()")
+if radar_home:
+    print(json.dumps({'ok':True,'current_identity':'Radar BDS','source':'page_home'}))
+    raise SystemExit(0)
+try:
+    press_key('ESC'); time.sleep(1)
+except Exception:
+    pass
 opened=js("(() => {const e=[...document.querySelectorAll('[role=button]')].find(x=>(x.getAttribute('aria-label')||'')==='Your profile');if(!e)return false;e.click();return true})()")
 if not opened: raise RuntimeError('Your profile button not found')
 time.sleep(2)

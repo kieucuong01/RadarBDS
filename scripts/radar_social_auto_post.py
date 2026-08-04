@@ -19,14 +19,12 @@ import json
 import os
 import subprocess
 import sys
-import time
 import urllib.request
 from pathlib import Path
 
 REPO = Path("/opt/radar-bds/current")
 QUEUE_SCRIPT = REPO / "scripts/radar_social_queue.py"
 POST_SCRIPT = REPO / "scripts/browser_use_page_post.py"
-START_BROWSER = Path("/home/hermesops/radar-browser-use/start-radar-social-browser.sh")
 CDP_URL = "http://127.0.0.1:9224"
 STATE_PATH = Path("/opt/radar-bds/var/social_queue/posted_slugs.json")
 # Use a dedicated Hermes-owned queue dir for auto-posting. The SEO publisher can
@@ -52,22 +50,9 @@ def ensure_browser() -> None:
     if cdp_ready():
         log("Chrome CDP already reachable at 127.0.0.1:9224")
         return
-    if not START_BROWSER.exists():
-        raise SystemExit(f"Browser start script missing: {START_BROWSER}")
-    log("Starting dedicated Radar Social Chrome worker")
-    subprocess.Popen(
-        [str(START_BROWSER)],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True,
-        cwd=str(REPO),
+    raise SystemExit(
+        "Radar Social Chrome CDP unavailable; cron wrapper must restore radar-social-browser.service first"
     )
-    for _ in range(30):
-        time.sleep(1)
-        if cdp_ready():
-            log("Chrome CDP is ready")
-            return
-    raise SystemExit("Chrome CDP did not become ready within 30s")
 
 
 def load_state() -> dict:
@@ -94,18 +79,34 @@ def valid_facebook_permalink(url: str) -> bool:
     )
 
 
-def posted_today(posted: dict, *, today: dt.date | None = None) -> tuple[bool, dict]:
+def valid_facebook_photo_permalink(url: str) -> bool:
+    return bool(
+        isinstance(url, str)
+        and url.startswith("https://www.facebook.com/")
+        and ("/photo/" in url or "/photo.php" in url)
+    )
+
+
+def posted_today(posted: dict, today: dt.date | None = None) -> tuple[bool, dict | None]:
     today = today or dt.datetime.now().astimezone().date()
     for item in posted.values():
-        if not isinstance(item, dict):
-            continue
-        post_url = item.get("post_url") or ((item.get("browser_result") or {}).get("permalink"))
-        if not valid_facebook_permalink(str(post_url or "")):
-            continue
-        posted_at = str(item.get("posted_at") or "")[:10]
-        if posted_at == today.isoformat():
+        item = item if isinstance(item, dict) else {}
+        raw_browser_result = item.get("browser_result")
+        browser_result: dict = raw_browser_result if isinstance(raw_browser_result, dict) else {}
+        stamp = str(item.get("posted_at") or "")
+        post_url = str(item.get("post_url") or browser_result.get("permalink") or "")
+        photo_url = str(item.get("photo_url") or browser_result.get("photo_permalink") or "")
+        verified_text = item.get("verified_text", browser_result.get("verified_text"))
+        verified_visual = item.get("verified_visual", browser_result.get("verified_visual"))
+        if (
+            stamp[:10] == today.isoformat()
+            and valid_facebook_permalink(post_url)
+            and bool(verified_text)
+            and bool(verified_visual)
+            and valid_facebook_photo_permalink(photo_url)
+        ):
             return True, item
-    return False, {}
+    return False, None
 
 
 def parse_post_wrapper_stdout(stdout: str) -> dict:
@@ -114,8 +115,16 @@ def parse_post_wrapper_stdout(stdout: str) -> dict:
     except json.JSONDecodeError as exc:
         raise SystemExit(f"Publish wrapper returned 0 but stdout was not JSON: {exc}") from exc
     browser_result = data.get("browser_result") if isinstance(data, dict) else None
-    if not isinstance(browser_result, dict) or not valid_facebook_permalink(str(browser_result.get("permalink") or "")):
+    if not isinstance(browser_result, dict) or browser_result.get("ok") is not True:
+        raise SystemExit(f"Post wrapper missing browser_result.ok=true: {str(stdout)[-1000:]}")
+    if not valid_facebook_permalink(str(browser_result.get("permalink") or "")):
         raise SystemExit(f"Publish wrapper missing verified permalink: {str(stdout)[-1000:]}")
+    if (
+        not browser_result.get("verified_text")
+        or not browser_result.get("verified_visual")
+        or not valid_facebook_photo_permalink(str(browser_result.get("photo_permalink") or ""))
+    ):
+        raise SystemExit(f"Publish wrapper missing verified native visual: {str(stdout)[-1000:]}")
     return data
 
 
@@ -200,10 +209,6 @@ def publish(queue_path: Path) -> dict:
 
 
 def main() -> int:
-    os.chdir(REPO)
-    QUEUE_DIR.mkdir(parents=True, exist_ok=True)
-    RUN_DIR.mkdir(parents=True, exist_ok=True)
-    ensure_browser()
     state = load_state()
     posted = state.setdefault("posted", {})
     already_done, done_item = posted_today(posted)
@@ -216,22 +221,34 @@ def main() -> int:
             print(f"- Source queue/article: {done_item.get('queue')}")
         if done_item.get("visual"):
             print(f"- Visual: {done_item.get('visual')}")
-        print(f"- Verification: posted_slugs.json has today's valid Facebook permalink")
+        print("- Verification: posted_slugs.json has today's verified text + native visual + Facebook permalinks")
         return 0
+
+    # Only touch the browser and queue directories when a publish is actually due.
+    # A recovery rerun after today's KPI is already met must remain a safe no-op
+    # even if the CDP service is temporarily unavailable.
+    os.chdir(REPO)
+    QUEUE_DIR.mkdir(parents=True, exist_ok=True)
+    RUN_DIR.mkdir(parents=True, exist_ok=True)
+    ensure_browser()
     queue_path = create_unposted_queue(posted)
     key, slug, url = queue_key(queue_path)
     if key in posted:
         raise SystemExit(f"Internal dedupe error: selected already-posted queue {key}")
     log(f"Publishing social item: {key}")
     result = publish(queue_path)
+    browser_result = result.get("browser_result") or {}
     posted[key] = {
         "slug": slug,
         "url": url,
         "queue": str(queue_path),
         "posted_at": dt.datetime.now(dt.timezone.utc).astimezone().isoformat(timespec="seconds"),
         "post_url": result.get("post_url"),
+        "photo_url": browser_result.get("photo_permalink"),
+        "verified_text": bool(browser_result.get("verified_text")),
+        "verified_visual": bool(browser_result.get("verified_visual")),
         "screenshot": result.get("screenshot"),
-        "browser_result": result.get("browser_result"),
+        "browser_result": browser_result,
         "result": result,
     }
     save_state(state)
@@ -244,7 +261,7 @@ def main() -> int:
     print(f"- Visual: {content.get('visual_path') or content.get('image_path') or ''} · {content.get('visual_style') or 'legacy'}")
     print(f"- Caption angle: {str(content.get('message') or '').splitlines()[0][:160]}")
     print("- Self-comment/pin: not attempted by deterministic KPI autopost")
-    print("- Verification: browser_result ok=true + verified_text=true + valid Facebook permalink")
+    print("- Verification: browser_result ok=true + verified_text=true + verified_visual=true + valid post/photo permalinks")
     return 0
 
 
