@@ -172,6 +172,80 @@ def test_read_role_can_select_only_safe_views_not_sensitive_tables(readonly_envi
                 conn.execute(forbidden_sql).fetchall()
 
 
+def test_analytical_tool_queries_execute_only_through_safe_views(readonly_environment):
+    """Compile and execute every new analytical SQL shape against PostgreSQL."""
+    from services.radar_ask.contracts import AskContext
+    from services.radar_ask.registry import (
+        CompareAreasArgs,
+        MarketTrendArgs,
+        MatchBudgetArgs,
+        RankPriceDropAreasArgs,
+        RoadMarketArgs,
+        SearchDealsArgs,
+        ToolContext,
+    )
+    from services.radar_ask.tools.market import (
+        compare_areas,
+        estimate_road_market,
+        get_market_trend,
+        match_budget,
+        rank_price_drop_areas,
+        search_deals,
+    )
+    from services.radar_ask.tools.valuation import (
+        _fetch_comparable_rows,
+        _fetch_latest_valuation,
+    )
+
+    _test_url, settings = readonly_environment
+
+    def read_factory():
+        return get_radar_ask_read_conn(settings=settings)
+
+    tool_context = ToolContext(
+        ask=AskContext(user_id=1, tier="admin"),
+        read_conn_factory=read_factory,
+    )
+    impossible = "__radar_ask_no_match__"
+    bundles = [
+        estimate_road_market(
+            args=RoadMarketArgs(road=impossible, ward=impossible),
+            context=tool_context,
+        ),
+        compare_areas(
+            args=CompareAreasArgs(areas=[impossible, f"{impossible}_2"]),
+            context=tool_context,
+        ),
+        get_market_trend(
+            args=MarketTrendArgs(ward=impossible),
+            context=tool_context,
+        ),
+        match_budget(args=MatchBudgetArgs(budget_ty=1), context=tool_context),
+        search_deals(args=SearchDealsArgs(), context=tool_context),
+        rank_price_drop_areas(
+            args=RankPriceDropAreasArgs(),
+            context=tool_context,
+        ),
+    ]
+    assert all(bundle.question_snapshot for bundle in bundles)
+
+    with get_radar_ask_read_conn(settings=settings) as conn:
+        assert _fetch_latest_valuation(conn, -1) is None
+        assert _fetch_comparable_rows(
+            conn,
+            {
+                "listing_id": -1,
+                "ward": impossible,
+                "property_type": "dat_nen",
+                "road_name": impossible,
+                "road_tier": 0,
+                "area_m2": 100,
+            },
+            window_days=180,
+            row_limit=3,
+        ) == []
+
+
 def test_safe_listing_and_signal_views_exclude_sensitive_columns(readonly_environment):
     test_url, _settings = readonly_environment
     with psycopg.connect(test_url) as admin_conn:

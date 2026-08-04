@@ -271,6 +271,26 @@ def _lazy_listing_handler(function_name: str) -> ToolHandler:
     return handler
 
 
+def _lazy_valuation_handler(function_name: str) -> ToolHandler:
+    def handler(*, args: BaseModel, context: ToolContext) -> EvidenceBundle:
+        from .tools import valuation
+
+        function = getattr(valuation, function_name)
+        return function(args=args, context=context)
+
+    return handler
+
+
+def _lazy_market_handler(function_name: str) -> ToolHandler:
+    def handler(*, args: BaseModel, context: ToolContext) -> EvidenceBundle:
+        from .tools import market
+
+        function = getattr(market, function_name)
+        return function(args=args, context=context)
+
+    return handler
+
+
 def _registration(
     name: str,
     description: str,
@@ -324,16 +344,66 @@ _DEFAULT_REGISTRATIONS = {
             HistoryArgs,
             _lazy_listing_handler("get_lot_history"),
         ),
-        _registration("explain_valuation", "Return the deterministic valuation trace.", ExplainValuationArgs),
-        _registration("find_comparables", "Return bounded eligible comparable listings.", ComparableArgs),
-        _registration("check_sample_quality", "Assess deterministic valuation sample quality.", SampleQualityArgs),
-        _registration("estimate_road_market", "Estimate bounded asking-market statistics for a road.", RoadMarketArgs),
-        _registration("compare_areas", "Compare bounded asking-market statistics across areas.", CompareAreasArgs),
-        _registration("get_market_trend", "Return a bounded market trend window.", MarketTrendArgs),
-        _registration("match_budget", "Match a bounded budget to eligible market areas.", MatchBudgetArgs),
-        _registration("search_deals", "Search current actionable Radar deal candidates.", SearchDealsArgs),
-        _registration("rank_price_drop_areas", "Rank areas by bounded current price-drop signals.", RankPriceDropAreasArgs),
-        _registration("inspect_listing_risks", "Return deterministic risk flags for one listing.", InspectListingRisksArgs),
+        _registration(
+            "explain_valuation",
+            "Return the persisted deterministic valuation trace.",
+            ExplainValuationArgs,
+            _lazy_valuation_handler("explain_valuation"),
+        ),
+        _registration(
+            "find_comparables",
+            "Return bounded eligible comparable listings.",
+            ComparableArgs,
+            _lazy_valuation_handler("find_comparables"),
+        ),
+        _registration(
+            "check_sample_quality",
+            "Assess deterministic valuation sample quality.",
+            SampleQualityArgs,
+            _lazy_valuation_handler("check_sample_quality"),
+        ),
+        _registration(
+            "estimate_road_market",
+            "Estimate bounded asking-market statistics for a road.",
+            RoadMarketArgs,
+            _lazy_market_handler("estimate_road_market"),
+        ),
+        _registration(
+            "compare_areas",
+            "Compare bounded asking-market statistics across areas.",
+            CompareAreasArgs,
+            _lazy_market_handler("compare_areas"),
+        ),
+        _registration(
+            "get_market_trend",
+            "Return a bounded market trend window.",
+            MarketTrendArgs,
+            _lazy_market_handler("get_market_trend"),
+        ),
+        _registration(
+            "match_budget",
+            "Match a bounded budget to eligible market areas.",
+            MatchBudgetArgs,
+            _lazy_market_handler("match_budget"),
+        ),
+        _registration(
+            "search_deals",
+            "Search current actionable Radar deal candidates.",
+            SearchDealsArgs,
+            _lazy_market_handler("search_deals"),
+        ),
+        _registration(
+            "rank_price_drop_areas",
+            "Rank areas by bounded current price-drop signals.",
+            RankPriceDropAreasArgs,
+            _lazy_market_handler("rank_price_drop_areas"),
+        ),
+        _registration(
+            "inspect_listing_risks",
+            "Return deterministic risk flags for one listing.",
+            InspectListingRisksArgs,
+            _lazy_market_handler("inspect_listing_risks"),
+        ),
         _registration("lookup_official_land_price", "Look up one curated official land-price row.", OfficialLandPriceArgs),
         _registration("search_official_documents", "Search curated official and Radar knowledge only.", SearchOfficialDocumentsArgs),
     )

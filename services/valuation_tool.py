@@ -436,7 +436,10 @@ def estimate_property_value(payload: dict[str, Any], *, tier: str = "guest") -> 
             "error": "cannot_estimate",
             "message": "Chưa đủ dữ liệu so sánh hợp lệ cho khu vực hoặc loại hình này.",
         }
-    model, base_ppm2, _price_basis, basis_count = selection
+    # The valuation engine also returns comparable IDs for persisted traces.
+    # Keep this public tool compatible with both the legacy four-field test
+    # double and the current five-field engine result.
+    model, base_ppm2, _price_basis, basis_count, *_comparable_ids = selection
     fair_ppm2 = model.predict_fair_ppm2(target, base_override=base_ppm2)
     if not fair_ppm2:
         return {
