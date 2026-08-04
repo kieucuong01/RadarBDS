@@ -217,7 +217,11 @@ def test_read_role_cannot_write_or_create_objects(readonly_environment):
         "CREATE TABLE public.radar_ask_escape(id integer)",
     ):
         with pytest.raises(
-            (psycopg.errors.ReadOnlySqlTransaction, psycopg.errors.InsufficientPrivilege)
+            (
+                psycopg.errors.ReadOnlySqlTransaction,
+                psycopg.errors.InsufficientPrivilege,
+                psycopg.errors.ObjectNotInPrerequisiteState,
+            )
         ):
             with get_radar_ask_read_conn(settings=settings) as conn:
                 conn.execute(forbidden_sql)

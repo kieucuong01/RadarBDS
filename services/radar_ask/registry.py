@@ -261,6 +261,16 @@ def _lazy_entity_handler(function_name: str) -> ToolHandler:
     return handler
 
 
+def _lazy_listing_handler(function_name: str) -> ToolHandler:
+    def handler(*, args: BaseModel, context: ToolContext) -> EvidenceBundle:
+        from .tools import listings
+
+        function = getattr(listings, function_name)
+        return function(args=args, context=context)
+
+    return handler
+
+
 def _registration(
     name: str,
     description: str,
@@ -296,9 +306,24 @@ _DEFAULT_REGISTRATIONS = {
             ResolveRoadArgs,
             _lazy_entity_handler("resolve_road"),
         ),
-        _registration("get_listing_facts", "Return redacted facts for one listing.", ListingFactsArgs),
-        _registration("get_price_history", "Return bounded asking-price history.", HistoryArgs),
-        _registration("get_lot_history", "Return bounded canonical-lot repost history.", HistoryArgs),
+        _registration(
+            "get_listing_facts",
+            "Return redacted facts for one listing.",
+            ListingFactsArgs,
+            _lazy_listing_handler("get_listing_facts"),
+        ),
+        _registration(
+            "get_price_history",
+            "Return bounded asking-price history.",
+            HistoryArgs,
+            _lazy_listing_handler("get_price_history"),
+        ),
+        _registration(
+            "get_lot_history",
+            "Return bounded canonical-lot repost history.",
+            HistoryArgs,
+            _lazy_listing_handler("get_lot_history"),
+        ),
         _registration("explain_valuation", "Return the deterministic valuation trace.", ExplainValuationArgs),
         _registration("find_comparables", "Return bounded eligible comparable listings.", ComparableArgs),
         _registration("check_sample_quality", "Assess deterministic valuation sample quality.", SampleQualityArgs),

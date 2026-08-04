@@ -57,6 +57,11 @@ def _sanitize_text(value: str) -> str:
     return PHONE_PATTERN.sub("[REDACTED]", redacted)
 
 
+def redact_evidence_text(value: str) -> str:
+    """Remove embedded phone and URL tokens from user-visible evidence text."""
+    return _sanitize_text(value)
+
+
 def _sanitize_value(value: Any) -> Any:
     if isinstance(value, str):
         return _sanitize_text(value)

@@ -61,6 +61,7 @@ BASE_COLUMN_GRANTS: dict[str, tuple[str, ...]] = {
         "road_name",
         "road_width_m",
         "road_type",
+        "road_tier",
         "tho_cu_m2",
         "tho_cu_ratio",
         "has_so",
@@ -234,8 +235,11 @@ FOUNDATION_VIEW_SQL: tuple[str, ...] = (
             AND COALESCE(l.is_blacklisted, 0) = 0
             AND COALESCE(l.probably_sold, 0) = 0
             AND COALESCE(l.is_active, 1) = 1
+            AND COALESCE(s.publisher_visible_public, TRUE)
         ) AS public_visible
+        , l.road_tier
     FROM public.listings l
+    LEFT JOIN public.signal_card_read_model s ON s.listing_id = l.id
     """,
     """
     CREATE OR REPLACE VIEW public.radar_ask_v_valuations
