@@ -1506,7 +1506,13 @@ class RadarAskRepository:
                 (list(TERMINAL_RUN_STATUSES), cutoff, RETENTION_BATCH_SIZE),
             ).fetchall()]
             if message_ids:
-                conn.execute("DELETE FROM radar_ask_messages WHERE id=ANY(?)", (message_ids,))
+                cursor = conn.execute(
+                    "DELETE FROM radar_ask_messages m WHERE id=ANY(?) "
+                    "AND NOT EXISTS (SELECT 1 FROM radar_ask_feedback f WHERE f.message_id=m.id)",
+                    (message_ids,),
+                )
+                if cursor.rowcount == 0:
+                    return {"sessions": 0, "runs": 0, "messages": 0}
                 return {"sessions": 0, "runs": 0, "messages": len(message_ids)}
             run_ids = [
                 row["id"]
@@ -1531,7 +1537,13 @@ class RadarAskRepository:
                 ).fetchall()
             ]
             if run_ids:
-                conn.execute("DELETE FROM radar_ask_runs WHERE id=ANY(?)", (run_ids,))
+                conn.execute(
+                    """DELETE FROM radar_ask_runs r WHERE id=ANY(?)
+                    AND NOT EXISTS (SELECT 1 FROM radar_ask_tool_calls t WHERE t.run_id=r.id)
+                    AND NOT EXISTS (SELECT 1 FROM radar_ask_evidence e WHERE e.run_id=r.id)
+                    AND NOT EXISTS (SELECT 1 FROM radar_ask_messages m WHERE m.run_id=r.id)""",
+                    (run_ids,),
+                )
                 return {"sessions": 0, "runs": len(run_ids), "messages": 0}
 
             message_ids = [
@@ -1551,7 +1563,13 @@ class RadarAskRepository:
                 ).fetchall()
             ]
             if message_ids:
-                conn.execute("DELETE FROM radar_ask_messages WHERE id=ANY(?)", (message_ids,))
+                cursor = conn.execute(
+                    "DELETE FROM radar_ask_messages m WHERE id=ANY(?) "
+                    "AND NOT EXISTS (SELECT 1 FROM radar_ask_feedback f WHERE f.message_id=m.id)",
+                    (message_ids,),
+                )
+                if cursor.rowcount == 0:
+                    return {"sessions": 0, "runs": 0, "messages": 0}
                 return {"sessions": 0, "runs": 0, "messages": len(message_ids)}
             session_ids = [row["id"] for row in conn.execute(
                 """SELECT s.id FROM radar_ask_sessions s WHERE s.updated_at < ?
@@ -1561,7 +1579,12 @@ class RadarAskRepository:
                 (cutoff, RETENTION_BATCH_SIZE),
             ).fetchall()]
             if session_ids:
-                conn.execute("DELETE FROM radar_ask_sessions WHERE id=ANY(?)", (session_ids,))
+                conn.execute(
+                    """DELETE FROM radar_ask_sessions s WHERE id=ANY(?)
+                    AND NOT EXISTS (SELECT 1 FROM radar_ask_runs r WHERE r.session_id=s.id)
+                    AND NOT EXISTS (SELECT 1 FROM radar_ask_messages m WHERE m.session_id=s.id)""",
+                    (session_ids,),
+                )
                 return {"sessions": len(session_ids), "runs": 0, "messages": 0}
         return None
 
@@ -1614,5 +1637,9 @@ class RadarAskRepository:
             if not usage_ids:
                 return None
             attempts = 0
-            conn.execute("DELETE FROM radar_ask_usage WHERE id=ANY(?)", (usage_ids,))
+            conn.execute(
+                "DELETE FROM radar_ask_usage u WHERE id=ANY(?) "
+                "AND NOT EXISTS (SELECT 1 FROM radar_ask_usage_attempts a WHERE a.reservation_id=u.id)",
+                (usage_ids,),
+            )
         return {"usage": len(usage_ids), "attempts": attempts}
