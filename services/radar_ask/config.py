@@ -11,6 +11,27 @@ from .contracts import AskDepth, ModelPolicy, Tier
 TIER_DAILY_LIMITS: dict[Tier, int] = {"free": 5, "vip": 20, "admin": 100}
 TIER_BURST_LIMITS: dict[Tier, int] = {"free": 2, "vip": 5, "admin": 10}
 VALID_TIERS = frozenset(TIER_DAILY_LIMITS)
+REQUEST_OWNER_LEASE_SECONDS = 300
+REQUEST_PROVIDER_MAX_ATTEMPTS = 2
+REQUEST_PROVIDER_BUDGET_CAP_SECONDS = 240
+REQUEST_DB_TOOL_MARGIN_SECONDS = 30
+
+if (
+    REQUEST_OWNER_LEASE_SECONDS
+    <= REQUEST_PROVIDER_BUDGET_CAP_SECONDS + REQUEST_DB_TOOL_MARGIN_SECONDS
+):
+    raise RuntimeError("Radar Ask request lease must leave a database/tool safety margin")
+
+
+def request_provider_budget_seconds(provider_timeout_seconds: int) -> int:
+    """Return one absolute request budget covering both bounded JSON attempts."""
+    timeout = int(provider_timeout_seconds)
+    if not 1 <= timeout <= 120:
+        raise ValueError("provider timeout must be between 1 and 120")
+    return min(
+        timeout * REQUEST_PROVIDER_MAX_ATTEMPTS,
+        REQUEST_PROVIDER_BUDGET_CAP_SECONDS,
+    )
 
 
 def _parse_bool(name: str, default: bool) -> bool:

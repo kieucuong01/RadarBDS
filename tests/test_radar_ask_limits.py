@@ -884,6 +884,113 @@ def test_expired_planned_reservation_releases_but_keeps_known_planner_cost(limit
     )
 
 
+def test_expired_queued_retry_settles_planner_and_every_recorded_attempt_once(
+    limit_environment,
+):
+    service, users, clock, _settings = limit_environment
+    repository = RadarAskRepository()
+    run = repository.create_run(
+        user_id=users.vip_id,
+        question="Nghiên cứu sâu khu vực",
+        idempotency_key=f"expiry-attempts-{uuid4()}",
+        requested_depth="deep",
+    )
+    reservation = service.reserve_question(
+        user_id=users.vip_id,
+        tier="vip",
+        run_id=run.id,
+        max_cost_usd=Decimal("0.12"),
+        model="deepseek-v4-pro",
+        depth="deep",
+    )
+    planner_usage = ProviderUsage(
+        input_tokens=100,
+        output_tokens=20,
+        cache_miss_input_tokens=100,
+    )
+    service.record_planner_usage(
+        reservation_id=reservation.reservation_id,
+        model="deepseek-v4-flash",
+        usage=planner_usage,
+    )
+    repository.transition_run(
+        run.id,
+        user_id=users.vip_id,
+        expected={"created"},
+        target="queued",
+        effective_depth="deep",
+        route={
+            "depth": "deep",
+            "question_type": "market_research",
+            "tool_calls": [],
+            "generated": True,
+            "use_thinking": True,
+        },
+        model="deepseek-v4-pro",
+    )
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE radar_ask_usage SET reservation_expires_at=NOW()+INTERVAL '10 minutes' WHERE id=?",
+            (reservation.reservation_id,),
+        )
+    leased = repository.lease_next_run(worker_id="attempt-owner", lease_seconds=90)
+    assert leased is not None and leased.id == run.id
+    answer_attempt_usage = ProviderUsage(
+        input_tokens=200,
+        output_tokens=30,
+        cache_miss_input_tokens=200,
+    )
+    queued = repository.fail_leased_run(
+        run.id,
+        worker_id="attempt-owner",
+        outcome=RunOutcome.PROVIDER_FAILURE.value,
+        error_code="provider_unavailable",
+        retryable=True,
+        reservation_id=reservation.reservation_id,
+        usage=answer_attempt_usage,
+        lease_seconds=90,
+    )
+    assert queued.status == "queued"
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE radar_ask_usage SET reservation_expires_at=? WHERE id=?",
+            (clock.value - timedelta(seconds=1), reservation.reservation_id),
+        )
+
+    _reserve(service, user_id=users.admin_id, tier="admin")
+    with get_conn() as conn:
+        first = conn.execute(
+            """
+            SELECT settlement_status, question_status, outcome, actual_usd,
+                   prompt_tokens, completion_tokens, cache_miss_tokens
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation.reservation_id,),
+        ).fetchone()
+
+    assert tuple(first) == (
+        "released",
+        "released",
+        "cancelled",
+        Decimal("0.000133"),
+        300,
+        50,
+        300,
+    )
+
+    _reserve(service, user_id=users.admin_id, tier="admin")
+    with get_conn() as conn:
+        replay = conn.execute(
+            """
+            SELECT settlement_status, question_status, outcome, actual_usd,
+                   prompt_tokens, completion_tokens, cache_miss_tokens
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation.reservation_id,),
+        ).fetchone()
+    assert tuple(replay) == tuple(first)
+
+
 class FakeRedis:
     def __init__(self):
         self.counts: dict[str, int] = {}

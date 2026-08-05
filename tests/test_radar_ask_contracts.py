@@ -7,7 +7,14 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from services.radar_ask.config import RadarAskSettings, resolve_model_policy
+from services.radar_ask.config import (
+    REQUEST_DB_TOOL_MARGIN_SECONDS,
+    REQUEST_OWNER_LEASE_SECONDS,
+    REQUEST_PROVIDER_BUDGET_CAP_SECONDS,
+    RadarAskSettings,
+    request_provider_budget_seconds,
+    resolve_model_policy,
+)
 from services.radar_ask.contracts import (
     AnswerClaim,
     AnswerEnvelope,
@@ -243,6 +250,18 @@ def test_safe_settings_defaults_keep_feature_off_and_admin_only(monkeypatch):
     assert settings.provider_timeout_seconds == 30
     assert settings.deep_timeout_seconds == 60
     assert settings.evidence_row_limit == 50
+
+
+def test_request_provider_budget_always_leaves_database_tool_margin():
+    assert REQUEST_OWNER_LEASE_SECONDS == 300
+    assert REQUEST_PROVIDER_BUDGET_CAP_SECONDS == 240
+    assert REQUEST_DB_TOOL_MARGIN_SECONDS >= 30
+    assert request_provider_budget_seconds(30) == 60
+    assert request_provider_budget_seconds(120) == 240
+    assert (
+        REQUEST_OWNER_LEASE_SECONDS
+        > REQUEST_PROVIDER_BUDGET_CAP_SECONDS + REQUEST_DB_TOOL_MARGIN_SECONDS
+    )
 
 
 def test_settings_repr_never_exposes_provider_or_database_secrets(monkeypatch):

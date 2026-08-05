@@ -37,6 +37,7 @@ class Planner(Protocol):
         request: AskQuestionRequest,
         context: AskContext,
         allowed_tools: tuple[str, ...],
+        deadline: float | None = None,
     ) -> PlannerResult | RouteDecision | Mapping[str, Any]: ...
 
 

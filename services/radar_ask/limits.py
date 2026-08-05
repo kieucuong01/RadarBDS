@@ -168,22 +168,62 @@ class RadarAskLimitService:
     ) -> None:
         conn.execute(
             """
-            UPDATE radar_ask_usage
+            WITH expired AS (
+                SELECT
+                    u.id,
+                    u.reserved_usd,
+                    u.planner_actual_usd
+                        + COALESCE(SUM(a.actual_usd)
+                            FILTER (WHERE a.recorded_at IS NOT NULL), 0) AS known_actual_usd,
+                    u.planner_prompt_tokens
+                        + COALESCE(SUM(a.prompt_tokens)
+                            FILTER (WHERE a.recorded_at IS NOT NULL), 0) AS prompt_tokens,
+                    u.planner_completion_tokens
+                        + COALESCE(SUM(a.completion_tokens)
+                            FILTER (WHERE a.recorded_at IS NOT NULL), 0) AS completion_tokens,
+                    u.planner_cache_hit_tokens
+                        + COALESCE(SUM(a.cache_hit_tokens)
+                            FILTER (WHERE a.recorded_at IS NOT NULL), 0) AS cache_hit_tokens,
+                    u.planner_cache_miss_tokens
+                        + COALESCE(SUM(a.cache_miss_tokens)
+                            FILTER (WHERE a.recorded_at IS NOT NULL), 0) AS cache_miss_tokens,
+                    (
+                        r.status='running'
+                        AND (
+                            r.worker_id LIKE 'planner:provider:%'
+                            OR r.worker_id LIKE 'sync:provider:%'
+                        )
+                    ) AS provider_ambiguous
+                FROM radar_ask_usage u
+                LEFT JOIN radar_ask_runs r ON r.id=u.run_key
+                LEFT JOIN radar_ask_usage_attempts a
+                       ON a.reservation_id=u.id AND a.run_key=u.run_key
+                WHERE u.settlement_status='reserved'
+                  AND u.usage_month=?
+                  AND u.reservation_expires_at <= ?
+                GROUP BY u.id, r.status, r.worker_id
+            )
+            UPDATE radar_ask_usage u
             SET settlement_status='released',
                 question_status='released',
-                outcome='cancelled',
-                actual_usd=actual_usd + planner_actual_usd,
-                prompt_tokens=prompt_tokens + planner_prompt_tokens,
-                completion_tokens=completion_tokens + planner_completion_tokens,
-                cache_hit_tokens=cache_hit_tokens + planner_cache_hit_tokens,
-                cache_miss_tokens=cache_miss_tokens + planner_cache_miss_tokens,
-                settled_at=COALESCE(settled_at, ?),
+                outcome=CASE WHEN expired.provider_ambiguous
+                             THEN 'database_failure' ELSE 'cancelled' END,
+                actual_usd=CASE WHEN expired.provider_ambiguous
+                                THEN GREATEST(
+                                    expired.reserved_usd,
+                                    expired.known_actual_usd
+                                )
+                                ELSE expired.known_actual_usd END,
+                prompt_tokens=expired.prompt_tokens,
+                completion_tokens=expired.completion_tokens,
+                cache_hit_tokens=expired.cache_hit_tokens,
+                cache_miss_tokens=expired.cache_miss_tokens,
+                settled_at=COALESCE(u.settled_at, ?),
                 updated_at=?
-            WHERE settlement_status='reserved'
-              AND usage_month=?
-              AND reservation_expires_at <= ?
+            FROM expired
+            WHERE u.id=expired.id AND u.settlement_status='reserved'
             """,
-            (now, now, usage_month, now),
+            (usage_month, now, now, now),
         )
 
     @staticmethod

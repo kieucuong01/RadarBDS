@@ -134,6 +134,7 @@ class FakeRepository:
         self.planning_failures: list[dict[str, object]] = []
         self.sync_claims: list[dict[str, object]] = []
         self.sync_finalizations: list[dict[str, object]] = []
+        self.request_renewals: list[dict[str, object]] = []
 
     def create_run(self, *, user_id, question, idempotency_key, session_id, requested_depth):
         key = (user_id, idempotency_key)
@@ -187,6 +188,19 @@ class FakeRepository:
         self.sync_claims.append(dict(kwargs))
         if str(kwargs["owner_id"]).startswith("planner:"):
             self.planning_claims.append(dict(kwargs))
+        return run
+
+    def renew_request_lease(self, run_id, **kwargs):
+        run = self.get_run(user_id=kwargs["user_id"], run_id=run_id)
+        assert run is not None
+        assert run.status == "running" and run.worker_id == kwargs["owner_id"]
+        run = replace(
+            run,
+            worker_id=kwargs["provider_owner_id"],
+            lease_until=NOW + timedelta(seconds=kwargs["lease_seconds"]),
+        )
+        self.runs[(run.user_id, run.idempotency_key)] = run
+        self.request_renewals.append(dict(kwargs))
         return run
 
     def finalize_planning(self, run_id, **kwargs):
@@ -321,6 +335,9 @@ class FakeLimits:
     def record_planner_usage(self, **kwargs):
         self.planner_usage.append(dict(kwargs))
 
+    def month_snapshot(self, **_kwargs):
+        return SimpleNamespace(committed_plus_reserved_usd=Decimal("0"))
+
 
 class FakeBurst:
     def __init__(self):
@@ -330,11 +347,20 @@ class FakeBurst:
         self.calls.append((user_id, tier))
 
 
+class FakeMonotonic:
+    def __init__(self, value: float = 1_000.0):
+        self.value = value
+
+    def __call__(self) -> float:
+        return self.value
+
+
 class FakeProvider:
     def __init__(self, response: ProviderResponse | None = None, error: Exception | None = None):
         self.response = response
         self.error = error
         self.requests = []
+        self.deadlines: list[float] = []
 
     def complete(self, request):
         self.requests.append(request)
@@ -342,6 +368,10 @@ class FakeProvider:
             raise self.error
         assert self.response is not None
         return self.response
+
+    def complete_until(self, request, *, deadline):
+        self.deadlines.append(deadline)
+        return self.complete(request)
 
 
 def make_registry(handler) -> ToolRegistry:
@@ -383,6 +413,7 @@ def make_deps(
             free_model="deepseek-v4-flash",
             smart_model="deepseek-v4-pro",
             router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
             monthly_hard_stop_usd=Decimal("50"),
         ),
         repository=repo,
@@ -472,6 +503,7 @@ def test_unmatched_question_claims_before_typed_planner_and_atomically_persists_
             free_model="deepseek-v4-flash",
             smart_model="deepseek-v4-pro",
             router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
             monthly_hard_stop_usd=Decimal("50"),
         ),
         repository=repo,
@@ -541,6 +573,7 @@ def test_planner_failure_records_known_usage_then_releases_without_answered_quot
             free_model="deepseek-v4-flash",
             smart_model="deepseek-v4-pro",
             router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
             monthly_hard_stop_usd=Decimal("50"),
         ),
         repository=repo,
@@ -568,6 +601,56 @@ def test_planner_failure_records_known_usage_then_releases_without_answered_quot
     assert repo.planning_failures[0]["planner_model"] == "deepseek-v4-flash"
     assert repo.planning_failures[0]["usage"] == usage
     assert repo.planning_failures[0]["outcome"] == RunOutcome.PROVIDER_FAILURE.value
+
+
+def test_planner_budget_recheck_stops_while_owner_is_still_claimed_and_before_provider():
+    planner_calls = 0
+
+    def planner(**_kwargs):
+        nonlocal planner_calls
+        planner_calls += 1
+        raise AssertionError("budget stop must precede planner HTTP")
+
+    class RecheckStopLimits(FakeLimits):
+        def month_snapshot(self, **_kwargs):
+            return SimpleNamespace(committed_plus_reserved_usd=Decimal("51"))
+
+    from services.radar_ask.routing import route_question
+
+    repository = FakeRepository()
+    dependencies = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"vip"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=repository,
+        limits=RecheckStopLimits(),
+        burst=FakeBurst(),
+        router=route_question,
+        registry=DEFAULT_TOOL_REGISTRY,
+        provider=FakeProvider(),
+        clock=lambda: NOW,
+        planner=planner,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Thị trường này đang thế nào?"),
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key="planner-budget-recheck-before-provider",
+    )
+
+    assert result.status is RunStatus.FAILED
+    assert result.error_code == "monthly_budget_hard_stop"
+    assert planner_calls == 0
+    assert repository.request_renewals == []
+    assert repository.planning_claims[0]["owner_id"].startswith("planner:claimed:")
+    assert repository.planning_failures[0]["outcome"] == RunOutcome.BUDGET_HARD_STOP.value
 
 
 def test_planned_deep_persists_validated_route_and_preflight_usage_before_queue():
@@ -601,6 +684,7 @@ def test_planned_deep_persists_validated_route_and_preflight_usage_before_queue(
             free_model="deepseek-v4-flash",
             smart_model="deepseek-v4-pro",
             router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
             monthly_hard_stop_usd=Decimal("50"),
         ),
         repository=repo,
@@ -656,6 +740,7 @@ def test_planned_deep_clarification_finalizes_directly_and_never_queues():
             free_model="deepseek-v4-flash",
             smart_model="deepseek-v4-pro",
             router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
             monthly_hard_stop_usd=Decimal("50"),
         ),
         repository=repository,
@@ -734,6 +819,173 @@ def test_sync_finalize_retry_never_repeats_provider(commit_mode):
     assert len(repository.sync_finalizations) == 1
 
 
+@pytest.mark.parametrize("commit_mode", ["precommit", "postcommit"])
+def test_sync_finalize_survives_mutation_and_readback_faults_without_repeating_provider(
+    commit_mode,
+):
+    class FaultyRepository(FakeRepository):
+        def __init__(self):
+            super().__init__()
+            self.mutation_calls = 0
+            self.fail_next_read = False
+
+        def get_run(self, **kwargs):
+            if self.fail_next_read:
+                self.fail_next_read = False
+                raise RuntimeError("readback unavailable")
+            return super().get_run(**kwargs)
+
+        def finalize_sync_run(self, run_id, **kwargs):
+            self.mutation_calls += 1
+            if commit_mode == "precommit" and self.mutation_calls < 3:
+                self.fail_next_read = True
+                raise RuntimeError("write unavailable before commit")
+            result = super().finalize_sync_run(run_id, **kwargs)
+            if commit_mode == "postcommit" and self.mutation_calls == 1:
+                self.fail_next_read = True
+                raise RuntimeError("commit acknowledgement lost")
+            return result
+
+    provider = FakeProvider(
+        response=ProviderResponse(
+            json_value=generated_answer(),
+            usage=ProviderUsage(input_tokens=80, output_tokens=16),
+        )
+    )
+    repository = FaultyRepository()
+    dependencies = make_deps(decision=standard_decision(), provider=provider)
+    dependencies = replace(dependencies, repository=repository)
+
+    result = run_question(
+        AskQuestionRequest(question="Phân tích giá khu này"),
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key=f"sync-write-read-{commit_mode}",
+    )
+
+    assert result.status is RunStatus.COMPLETED
+    assert len(provider.requests) == 1
+    assert len(repository.sync_finalizations) == 1
+    assert repository.sync_finalizations[0]["usage"] == ProviderUsage(
+        input_tokens=80,
+        output_tokens=16,
+    )
+    assert len(repository.messages) == 1
+
+
+@pytest.mark.parametrize("commit_mode", ["precommit", "postcommit"])
+def test_planner_failure_survives_mutation_and_readback_faults_with_exact_usage(commit_mode):
+    class FaultyRepository(FakeRepository):
+        def __init__(self):
+            super().__init__()
+            self.mutation_calls = 0
+            self.fail_next_read = False
+
+        def get_run(self, **kwargs):
+            if self.fail_next_read:
+                self.fail_next_read = False
+                raise RuntimeError("readback unavailable")
+            return super().get_run(**kwargs)
+
+        def fail_planning(self, run_id, **kwargs):
+            self.mutation_calls += 1
+            if commit_mode == "precommit" and self.mutation_calls < 3:
+                self.fail_next_read = True
+                raise RuntimeError("write unavailable before commit")
+            result = super().fail_planning(run_id, **kwargs)
+            if commit_mode == "postcommit" and self.mutation_calls == 1:
+                self.fail_next_read = True
+                raise RuntimeError("commit acknowledgement lost")
+            return result
+
+    planner_calls = 0
+    known_usage = ProviderUsage(
+        input_tokens=151,
+        output_tokens=27,
+        cache_miss_input_tokens=151,
+    )
+
+    def planner(**_kwargs):
+        nonlocal planner_calls
+        planner_calls += 1
+        raise ProviderUnavailable("private planner detail", usage=known_usage)
+
+    from services.radar_ask.routing import route_question
+
+    repository = FaultyRepository()
+    dependencies = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"vip"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=repository,
+        limits=FakeLimits(),
+        burst=FakeBurst(),
+        router=route_question,
+        registry=DEFAULT_TOOL_REGISTRY,
+        provider=FakeProvider(),
+        clock=lambda: NOW,
+        planner=planner,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Thị trường này đang thế nào?"),
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key=f"planner-write-read-{commit_mode}",
+    )
+
+    assert result.status is RunStatus.FAILED
+    assert result.error_code == "planner_unavailable"
+    assert planner_calls == 1
+    assert len(repository.planning_failures) == 1
+    assert repository.planning_failures[0]["usage"] == known_usage
+
+
+def test_total_persistence_outage_after_provider_keeps_provider_phase_lease_reserved():
+    class OutageRepository(FakeRepository):
+        outage = False
+
+        def get_run(self, **kwargs):
+            if self.outage:
+                raise RuntimeError("database read unavailable")
+            return super().get_run(**kwargs)
+
+        def finalize_sync_run(self, run_id, **kwargs):
+            self.outage = True
+            raise RuntimeError("database write unavailable")
+
+    provider = FakeProvider(
+        response=ProviderResponse(
+            json_value=generated_answer(),
+            usage=ProviderUsage(input_tokens=83, output_tokens=17),
+        )
+    )
+    repository = OutageRepository()
+    dependencies = make_deps(decision=standard_decision(), provider=provider)
+    dependencies = replace(dependencies, repository=repository)
+
+    with pytest.raises(RuntimeError):
+        run_question(
+            AskQuestionRequest(question="Phân tích giá khu này"),
+            make_context("vip"),
+            dependencies=dependencies,
+            idempotency_key="sync-total-persistence-outage",
+        )
+
+    assert len(provider.requests) == 1
+    stored = next(iter(repository.runs.values()))
+    assert stored.status == RunStatus.RUNNING.value
+    assert stored.worker_id is not None and stored.worker_id.startswith("sync:provider:")
+    assert stored.lease_until == NOW + timedelta(seconds=300)
+    assert repository.sync_finalizations == []
+
+
 def test_ambiguous_planner_finalize_reconciles_durable_route_without_replanning():
     class CommitThenRaiseRepository(FakeRepository):
         def __init__(self):
@@ -783,6 +1035,7 @@ def test_ambiguous_planner_finalize_reconciles_durable_route_without_replanning(
             free_model="deepseek-v4-flash",
             smart_model="deepseek-v4-pro",
             router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
             monthly_hard_stop_usd=Decimal("50"),
         ),
         repository=repository,
@@ -850,6 +1103,7 @@ def test_precommit_planner_persistence_failure_is_terminal_and_replay_never_repl
             free_model="deepseek-v4-flash",
             smart_model="deepseek-v4-pro",
             router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
             monthly_hard_stop_usd=Decimal("50"),
         ),
         repository=repository,
@@ -923,6 +1177,7 @@ def test_concurrent_idempotent_replay_observes_claimed_run_and_only_owner_plans(
             free_model="deepseek-v4-flash",
             smart_model="deepseek-v4-pro",
             router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
             monthly_hard_stop_usd=Decimal("50"),
         ),
         repository=repository,
@@ -1052,6 +1307,117 @@ def test_generated_standard_answer_reserves_calls_provider_validates_and_settles
     assert provider.requests[0].thinking_enabled is False
     assert deps.repository.messages[-1]["role"] == "assistant"
     assert deps.repository.messages[-1]["run_id"] == result.run_id
+
+
+def test_planner_rotates_to_provider_phase_with_300_second_lease_and_240_second_deadline():
+    from services.radar_ask.routing import route_question
+
+    monotonic_clock = FakeMonotonic()
+    repository = FakeRepository()
+    observed: dict[str, object] = {}
+
+    def planner(*, deadline, **_kwargs):
+        run = next(iter(repository.runs.values()))
+        observed["owner"] = run.worker_id
+        observed["deadline"] = deadline
+        return PlannerResult(
+            decision=RouteDecision(
+                depth=AskDepth.FAST,
+                question_type="clarification",
+                generated=False,
+                needs_clarification=True,
+                clarification_question="Bạn cho tôi biết khu vực cần xem nhé?",
+            ),
+            usage=ProviderUsage(input_tokens=100, output_tokens=20),
+        )
+
+    deps = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"vip"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=repository,
+        limits=FakeLimits(),
+        burst=FakeBurst(),
+        router=route_question,
+        registry=DEFAULT_TOOL_REGISTRY,
+        provider=FakeProvider(),
+        clock=lambda: NOW,
+        planner=planner,
+        monotonic_clock=monotonic_clock,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Thị trường này có gì đáng chú ý?"),
+        make_context("vip"),
+        dependencies=deps,
+        idempotency_key="planner-provider-phase-deadline",
+    )
+
+    assert result.status is RunStatus.CLARIFYING
+    assert repository.planning_claims[0]["owner_id"].startswith("planner:claimed:")
+    assert repository.planning_claims[0]["lease_seconds"] == 300
+    assert repository.request_renewals[0]["owner_id"].startswith("planner:claimed:")
+    assert repository.request_renewals[0]["provider_owner_id"].startswith("planner:provider:")
+    assert repository.request_renewals[0]["lease_seconds"] == 300
+    assert str(observed["owner"]).startswith("planner:provider:")
+    assert observed["deadline"] == 1_240.0
+
+
+def test_sync_answer_rotates_owner_immediately_before_bounded_provider_call():
+    events: list[str] = []
+    repository = FakeRepository()
+    monotonic_clock = FakeMonotonic(2_000.0)
+
+    class OrderedRepository(FakeRepository):
+        def renew_request_lease(self, run_id, **kwargs):
+            events.append("renew")
+            return super().renew_request_lease(run_id, **kwargs)
+
+    repository = OrderedRepository()
+
+    class PhaseCheckingProvider(FakeProvider):
+        def complete_until(self, request, *, deadline):
+            events.append("provider")
+            run = next(iter(repository.runs.values()))
+            assert run.worker_id is not None and run.worker_id.startswith("sync:provider:")
+            return super().complete_until(request, deadline=deadline)
+
+    provider = PhaseCheckingProvider(
+        response=ProviderResponse(
+            json_value=generated_answer(),
+            usage=ProviderUsage(input_tokens=70, output_tokens=14),
+        )
+    )
+    deps = make_deps(
+        decision=standard_decision(),
+        provider=provider,
+        handler=lambda *, args, context: events.append("tool") or grounded_bundle(),
+    )
+    deps = replace(
+        deps,
+        repository=repository,
+        monotonic_clock=monotonic_clock,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Phân tích khu đang giảm giá"),
+        make_context("vip"),
+        dependencies=deps,
+        idempotency_key="sync-provider-phase-deadline",
+    )
+
+    assert result.status is RunStatus.COMPLETED
+    assert events == ["tool", "renew", "provider"]
+    assert repository.sync_claims[0]["owner_id"].startswith("sync:claimed:")
+    assert repository.sync_claims[0]["lease_seconds"] == 300
+    assert repository.request_renewals[0]["provider_owner_id"].startswith("sync:provider:")
+    assert provider.deadlines == [2_240.0]
 
 
 def test_provider_boundary_redacts_phone_urls_and_secret_like_tokens_from_context():

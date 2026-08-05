@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import subprocess
@@ -19,11 +19,14 @@ from db import connection
 from db.connection import get_conn
 from db.schema import init_schema
 from services.radar_ask.contracts import (
+    AskContext,
     AskDepth,
+    AskQuestionRequest,
     EvidenceBundle,
     EvidenceItem,
     ProviderResponse,
     ProviderUsage,
+    PlannerResult,
     RetrievalQuality,
     RouteDecision,
     RunOutcome,
@@ -36,11 +39,15 @@ from services.radar_ask.contracts import (
 from services.radar_ask.orchestrator import (
     OrchestratorDependencies,
     execute_leased_run,
+    run_question,
 )
 from services.radar_ask.provider import ProviderUnavailable
-from services.radar_ask.limits import calculate_provider_cost
+from services.radar_ask.config import RadarAskSettings
+from services.radar_ask.limits import RadarAskLimitService, calculate_provider_cost
+from services.radar_ask.planner import DeepSeekTypedPlanner
 from services.radar_ask.registry import DEFAULT_TOOL_REGISTRY, ToolRegistration, ToolRegistry
 from services.radar_ask.repository import InvalidRunTransition, RadarAskRepository
+from services.radar_ask.routing import route_question
 from services.radar_ask.worker import RadarAskWorker, RadarAskWorkerDisabled
 
 
@@ -533,7 +540,7 @@ def test_expired_planner_lease_fails_and_releases_without_replan_or_worker_queue
     claimed = repository.claim_planning(
         run.id,
         user_id=user.vip_id,
-        planner_id="planner:expired",
+        planner_id="planner:claimed:expired",
         lease_seconds=90,
     )
     assert claimed is not None
@@ -554,11 +561,20 @@ def test_expired_planner_lease_fails_and_releases_without_replan_or_worker_queue
     assert repository.lease_next_run(worker_id="deep-worker", lease_seconds=90) is None
     with get_conn() as conn:
         ledger = conn.execute(
-            "SELECT settlement_status, question_status, outcome FROM radar_ask_usage WHERE id=?",
+            """
+            SELECT settlement_status, question_status, outcome, reserved_usd, actual_usd
+            FROM radar_ask_usage WHERE id=?
+            """,
             (reservation_id,),
         ).fetchone()
     assert ledger is not None
-    assert tuple(ledger) == ("released", "released", "database_failure")
+    assert tuple(ledger) == (
+        "released",
+        "released",
+        "database_failure",
+        Decimal("0.250000"),
+        Decimal("0.000000"),
+    )
 
 
 def test_expired_sync_owner_fails_terminally_and_is_never_requeued_to_deep_worker(worker_repo):
@@ -592,7 +608,7 @@ def test_expired_sync_owner_fails_terminally_and_is_never_requeued_to_deep_worke
     claimed = repository.claim_reserved_run(
         run.id,
         user_id=user.vip_id,
-        owner_id="sync:expired",
+        owner_id="sync:claimed:expired",
         reservation_id=reservation_id,
         lease_seconds=90,
         effective_depth="standard",
@@ -617,10 +633,488 @@ def test_expired_sync_owner_fails_terminally_and_is_never_requeued_to_deep_worke
     assert repository.lease_next_run(worker_id="deep-worker", lease_seconds=90) is None
     with get_conn() as conn:
         ledger = conn.execute(
-            "SELECT settlement_status, question_status, outcome FROM radar_ask_usage WHERE id=?",
+            """
+            SELECT settlement_status, question_status, outcome, reserved_usd, actual_usd
+            FROM radar_ask_usage WHERE id=?
+            """,
             (reservation_id,),
         ).fetchone()
-    assert tuple(ledger) == ("released", "released", "database_failure")
+    assert tuple(ledger) == (
+        "released",
+        "released",
+        "database_failure",
+        Decimal("0.250000"),
+        Decimal("0.000000"),
+    )
+
+
+@pytest.mark.parametrize("namespace", ["planner", "sync"])
+def test_expired_provider_phase_conservatively_covers_ambiguous_spend(worker_repo, namespace):
+    repository, user = worker_repo
+    run = repository.create_run(
+        user_id=user.vip_id,
+        question="Provider returned while database was unavailable",
+        idempotency_key=f"expired-{namespace}-provider-phase",
+    )
+    reservation_id = uuid4()
+    now = datetime.now(timezone.utc)
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO radar_ask_usage (
+                id, run_key, user_id, tier, model, depth,
+                usage_date, usage_month, settlement_status, question_status,
+                reserved_usd, reservation_expires_at
+            ) VALUES (?, ?, ?, 'vip', 'deepseek-v4-pro', 'standard',
+                      ?, ?, 'reserved', 'reserved', 0.25, ?)
+            """,
+            (
+                reservation_id,
+                run.id,
+                user.vip_id,
+                now.date(),
+                now.date().replace(day=1),
+                now + timedelta(minutes=10),
+            ),
+        )
+    claimed_owner = f"{namespace}:claimed:expired"
+    provider_owner = f"{namespace}:provider:expired"
+    claimed = repository.claim_reserved_run(
+        run.id,
+        user_id=user.vip_id,
+        owner_id=claimed_owner,
+        reservation_id=reservation_id,
+        lease_seconds=300,
+        effective_depth="standard",
+        route={
+            "depth": "standard",
+            "question_type": "test",
+            "tool_calls": [],
+            "generated": True,
+            "use_thinking": False,
+        },
+        model="deepseek-v4-pro",
+    )
+    assert claimed is not None
+    rotated = repository.renew_request_lease(
+        run.id,
+        user_id=user.vip_id,
+        owner_id=claimed_owner,
+        provider_owner_id=provider_owner,
+        lease_seconds=300,
+    )
+    assert rotated.worker_id == provider_owner
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE radar_ask_runs SET lease_until=NOW()-INTERVAL '1 second' WHERE id=?",
+            (run.id,),
+        )
+
+    assert repository.recover_expired_leases() == {"requeued": 0, "failed": 1}
+
+    with get_conn() as conn:
+        ledger = conn.execute(
+            """
+            SELECT settlement_status, question_status, outcome, reserved_usd, actual_usd
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation_id,),
+        ).fetchone()
+    assert tuple(ledger) == (
+        "released",
+        "released",
+        "database_failure",
+        Decimal("0.250000"),
+        Decimal("0.250000"),
+    )
+
+
+def test_request_owner_rotation_rejects_stale_claimed_owner(worker_repo):
+    repository, user = worker_repo
+    run = repository.create_run(
+        user_id=user.vip_id,
+        question="Owner rotation",
+        idempotency_key="request-owner-rotation",
+    )
+    reservation_id = uuid4()
+    now = datetime.now(timezone.utc)
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO radar_ask_usage (
+                id, run_key, user_id, tier, model, depth,
+                usage_date, usage_month, settlement_status, question_status,
+                reserved_usd, reservation_expires_at
+            ) VALUES (?, ?, ?, 'vip', 'deepseek-v4-pro', 'standard',
+                      ?, ?, 'reserved', 'reserved', 0.25, ?)
+            """,
+            (
+                reservation_id,
+                run.id,
+                user.vip_id,
+                now.date(),
+                now.date().replace(day=1),
+                now + timedelta(minutes=10),
+            ),
+        )
+    claimed_owner = "sync:claimed:rotation"
+    provider_owner = "sync:provider:rotation"
+    claimed = repository.claim_reserved_run(
+        run.id,
+        user_id=user.vip_id,
+        owner_id=claimed_owner,
+        reservation_id=reservation_id,
+        lease_seconds=300,
+        effective_depth="standard",
+        route={"depth": "standard"},
+        model="deepseek-v4-pro",
+    )
+    assert claimed is not None
+    repository.renew_request_lease(
+        run.id,
+        user_id=user.vip_id,
+        owner_id=claimed_owner,
+        provider_owner_id=provider_owner,
+        lease_seconds=300,
+    )
+
+    finalize_kwargs = {
+        "user_id": user.vip_id,
+        "reservation_id": reservation_id,
+        "target": "failed",
+        "outcome": "provider_failure",
+        "usage": ProviderUsage(input_tokens=10, output_tokens=2),
+        "error_code": "provider_unavailable",
+        "retryable": True,
+    }
+    with pytest.raises(InvalidRunTransition):
+        repository.finalize_sync_run(
+            run.id,
+            owner_id=claimed_owner,
+            **finalize_kwargs,
+        )
+    terminal = repository.finalize_sync_run(
+        run.id,
+        owner_id=provider_owner,
+        **finalize_kwargs,
+    )
+    assert terminal.status == "failed"
+
+
+class BarrierRequestProvider:
+    def __init__(self, response: ProviderResponse):
+        self.response = response
+        self.started = Event()
+        self.release = Event()
+        self.requests = []
+        self.deadlines: list[float] = []
+
+    def complete(self, _request):
+        raise AssertionError("request provider must always use an absolute deadline")
+
+    def complete_until(self, request, *, deadline):
+        self.requests.append(request)
+        self.deadlines.append(deadline)
+        self.started.set()
+        assert self.release.wait(timeout=5)
+        return self.response
+
+
+def _real_request_dependencies(repository, user, provider, *, planner=None, router=None):
+    settings = replace(
+        RadarAskSettings.from_env(),
+        enabled=True,
+        allowed_tiers=frozenset({"vip"}),
+        provider_timeout_seconds=120,
+        deep_timeout_seconds=120,
+    )
+    return OrchestratorDependencies(
+        settings=settings,
+        repository=repository,
+        limits=RadarAskLimitService(settings=settings),
+        burst=FakeBurst(),
+        router=router or route_question,
+        registry=make_registry(),
+        provider=provider,
+        clock=lambda: datetime.now(timezone.utc),
+        planner=planner,
+    )
+
+
+def test_real_planner_provider_barrier_cannot_be_recovered_during_paid_call(worker_repo):
+    repository, user = worker_repo
+    planner_usage = ProviderUsage(
+        input_tokens=100,
+        output_tokens=20,
+        cache_miss_input_tokens=100,
+    )
+    provider = BarrierRequestProvider(
+        ProviderResponse(
+            json_value=RouteDecision(
+                depth=AskDepth.FAST,
+                question_type="clarification",
+                generated=False,
+                needs_clarification=True,
+                clarification_question="Bạn muốn xem phường nào?",
+            ).model_dump(mode="json"),
+            usage=planner_usage,
+        )
+    )
+    settings = replace(
+        RadarAskSettings.from_env(),
+        enabled=True,
+        allowed_tiers=frozenset({"vip"}),
+        provider_timeout_seconds=120,
+        deep_timeout_seconds=120,
+    )
+    planner = DeepSeekTypedPlanner(
+        settings=settings,
+        provider=provider,
+        registry=make_registry(),
+    )
+    dependencies = _real_request_dependencies(
+        repository,
+        user,
+        provider,
+        planner=planner,
+    )
+    outcomes: list[object] = []
+
+    thread = Thread(
+        target=lambda: outcomes.append(
+            run_question(
+                AskQuestionRequest(question="Khu này đang có xu hướng gì?"),
+                AskContext(user_id=user.vip_id, tier="vip"),
+                dependencies=dependencies,
+                idempotency_key="real-planner-provider-barrier",
+            )
+        )
+    )
+    thread.start()
+    assert provider.started.wait(timeout=5)
+
+    assert repository.recover_expired_leases() == {"requeued": 0, "failed": 0}
+    with get_conn() as conn:
+        active = conn.execute(
+            """
+            SELECT id, worker_id, lease_until > NOW() AS lease_active
+            FROM radar_ask_runs WHERE user_id=?
+            ORDER BY created_at DESC LIMIT 1
+            """,
+            (user.vip_id,),
+        ).fetchone()
+    assert active["worker_id"].startswith("planner:provider:")
+    assert active["lease_active"] is True
+
+    provider.release.set()
+    thread.join(timeout=5)
+    assert not thread.is_alive()
+    assert len(outcomes) == 1 and outcomes[0].status is RunStatus.CLARIFYING
+    with get_conn() as conn:
+        ledger = conn.execute(
+            """
+            SELECT settlement_status, actual_usd, prompt_tokens, completion_tokens
+            FROM radar_ask_usage u
+            JOIN radar_ask_runs r ON r.id=u.run_key
+            WHERE r.id=?
+            """,
+            (active["id"],),
+        ).fetchone()
+        message_count = conn.execute(
+            """
+            SELECT COUNT(*) AS count FROM radar_ask_messages m
+            JOIN radar_ask_runs r ON r.id=m.run_id
+            WHERE r.id=? AND m.role='assistant'
+            """,
+            (active["id"],),
+        ).fetchone()["count"]
+    assert tuple(ledger) == ("released", Decimal("0.000020"), 100, 20)
+    assert message_count == 1
+    assert len(provider.requests) == 1
+
+
+def test_real_sync_provider_barrier_cannot_be_recovered_and_finalizes_exactly_once(worker_repo):
+    repository, user = worker_repo
+    usage = ProviderUsage(
+        input_tokens=200,
+        output_tokens=30,
+        cache_miss_input_tokens=200,
+    )
+    answer = provider_answer()
+    answer["depth"] = "standard"
+    provider = BarrierRequestProvider(
+        ProviderResponse(json_value=answer, usage=usage)
+    )
+    decision = RouteDecision(
+        depth=AskDepth.STANDARD,
+        question_type="market_research",
+        tool_calls=[
+            ToolCall(
+                call_id="sync-barrier-1",
+                name="rank_price_drop_areas",
+                arguments={"window_days": 30, "limit": 10},
+            )
+        ],
+        generated=True,
+        use_thinking=False,
+    )
+    dependencies = _real_request_dependencies(
+        repository,
+        user,
+        provider,
+        router=lambda *_args, **_kwargs: decision,
+    )
+    outcomes: list[object] = []
+
+    thread = Thread(
+        target=lambda: outcomes.append(
+            run_question(
+                AskQuestionRequest(question="Phân tích khu này"),
+                AskContext(user_id=user.vip_id, tier="vip"),
+                dependencies=dependencies,
+                idempotency_key="real-sync-provider-barrier",
+            )
+        )
+    )
+    thread.start()
+    assert provider.started.wait(timeout=5)
+
+    assert repository.recover_expired_leases() == {"requeued": 0, "failed": 0}
+    with get_conn() as conn:
+        active = conn.execute(
+            """
+            SELECT id, worker_id, lease_until > NOW() AS lease_active
+            FROM radar_ask_runs WHERE user_id=?
+            ORDER BY created_at DESC LIMIT 1
+            """,
+            (user.vip_id,),
+        ).fetchone()
+    assert active["worker_id"].startswith("sync:provider:")
+    assert active["lease_active"] is True
+
+    provider.release.set()
+    thread.join(timeout=5)
+    assert not thread.is_alive()
+    assert len(outcomes) == 1 and outcomes[0].status is RunStatus.COMPLETED
+    with get_conn() as conn:
+        ledger = conn.execute(
+            """
+            SELECT settlement_status, actual_usd, prompt_tokens, completion_tokens
+            FROM radar_ask_usage u
+            JOIN radar_ask_runs r ON r.id=u.run_key
+            WHERE r.id=?
+            """,
+            (active["id"],),
+        ).fetchone()
+        message_count = conn.execute(
+            """
+            SELECT COUNT(*) AS count FROM radar_ask_messages m
+            JOIN radar_ask_runs r ON r.id=m.run_id
+            WHERE r.id=? AND m.role='assistant'
+            """,
+            (active["id"],),
+        ).fetchone()["count"]
+    assert tuple(ledger) == ("settled", Decimal("0.000113"), 200, 30)
+    assert message_count == 1
+    assert len(provider.requests) == 1
+
+
+def test_real_total_outage_after_paid_call_recovers_provider_phase_conservatively(worker_repo):
+    _repository, user = worker_repo
+
+    class OutageRepository(RadarAskRepository):
+        unavailable = True
+
+        def get_run(self, **kwargs):
+            if self.unavailable:
+                raise RuntimeError("database read unavailable")
+            return super().get_run(**kwargs)
+
+        def finalize_sync_run(self, run_id, **kwargs):
+            if self.unavailable:
+                raise RuntimeError("database write unavailable")
+            return super().finalize_sync_run(run_id, **kwargs)
+
+    repository = OutageRepository()
+    usage = ProviderUsage(
+        input_tokens=200,
+        output_tokens=30,
+        cache_miss_input_tokens=200,
+    )
+    answer = provider_answer()
+    answer["depth"] = "standard"
+    provider = BarrierRequestProvider(ProviderResponse(json_value=answer, usage=usage))
+    provider.release.set()
+    decision = RouteDecision(
+        depth=AskDepth.STANDARD,
+        question_type="market_research",
+        tool_calls=[
+            ToolCall(
+                call_id="outage-provider-1",
+                name="rank_price_drop_areas",
+                arguments={"window_days": 30, "limit": 10},
+            )
+        ],
+        generated=True,
+        use_thinking=False,
+    )
+    dependencies = _real_request_dependencies(
+        repository,
+        user,
+        provider,
+        router=lambda *_args, **_kwargs: decision,
+    )
+
+    with pytest.raises(RuntimeError):
+        run_question(
+            AskQuestionRequest(question="Phân tích khu này"),
+            AskContext(user_id=user.vip_id, tier="vip"),
+            dependencies=dependencies,
+            idempotency_key="real-sync-total-outage-recovery",
+        )
+
+    assert len(provider.requests) == 1
+    with get_conn() as conn:
+        active = conn.execute(
+            """
+            SELECT r.id, r.status, r.worker_id, u.id AS reservation_id,
+                   u.settlement_status, u.reserved_usd, u.actual_usd
+            FROM radar_ask_runs r JOIN radar_ask_usage u ON u.run_key=r.id
+            WHERE r.user_id=? ORDER BY r.created_at DESC LIMIT 1
+            """,
+            (user.vip_id,),
+        ).fetchone()
+    assert active["status"] == "running"
+    assert active["worker_id"].startswith("sync:provider:")
+    assert active["settlement_status"] == "reserved"
+    assert active["actual_usd"] == Decimal("0.000000")
+
+    repository.unavailable = False
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE radar_ask_runs SET lease_until=NOW()-INTERVAL '1 second' WHERE id=?",
+            (active["id"],),
+        )
+    assert repository.recover_expired_leases() == {"requeued": 0, "failed": 1}
+    with get_conn() as conn:
+        recovered = conn.execute(
+            """
+            SELECT r.status, r.outcome, r.error_code, u.settlement_status,
+                   u.outcome AS usage_outcome, u.reserved_usd, u.actual_usd
+            FROM radar_ask_runs r JOIN radar_ask_usage u ON u.run_key=r.id
+            WHERE r.id=?
+            """,
+            (active["id"],),
+        ).fetchone()
+    assert tuple(recovered) == (
+        "failed",
+        "database_failure",
+        "sync_lease_expired",
+        "released",
+        "database_failure",
+        active["reserved_usd"],
+        active["reserved_usd"],
+    )
 
 
 def test_recovery_terminally_fails_queued_run_with_released_reservation(worker_repo):

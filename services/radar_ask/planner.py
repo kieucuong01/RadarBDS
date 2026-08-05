@@ -4,10 +4,12 @@ from __future__ import annotations
 import json
 import re
 from decimal import Decimal
+from time import monotonic
+from typing import Callable
 
 from pydantic import ValidationError
 
-from .config import RadarAskSettings
+from .config import RadarAskSettings, request_provider_budget_seconds
 from .contracts import (
     AskContext,
     AskQuestionRequest,
@@ -40,10 +42,15 @@ _PARCEL_IDENTIFIER = re.compile(
 )
 _PERSON_INITIAL = "A-ZÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ"
 _PERSON_TOKEN = rf"[{_PERSON_INITIAL}][A-Za-zÀ-ỹĐđ'’\-]{{0,30}}"
+_PERSON_WORD = r"[A-Za-zÀ-ỹĐđ'’\-]{1,31}"
+_PERSON_LABEL = r"(?:chủ\s*đất|chủ\s*nhà|môi\s*giới|người\s*bán|khách\s*hàng|họ\s*tên)"
+_NON_NAME_START = r"(?:không|chưa|đang|đã|sẽ|muốn|cần|bán|giảm|tăng)"
 _LABELED_PERSON = re.compile(
-    rf"(?i:\b(?:chủ\s*đất|chủ\s*nhà|môi\s*giới|người\s*bán|khách\s*hàng|họ\s*tên))"
-    rf"\s*(?:[:=-]\s*)?{_PERSON_TOKEN}(?:\s+{_PERSON_TOKEN}){{1,4}}"
-    r"(?=\s*(?:[,;\n]|$))"
+    rf"(?i:\b{_PERSON_LABEL})"
+    rf"(?:\s*[:=-]\s*(?!(?i:{_NON_NAME_START})\b)"
+    rf"{_PERSON_WORD}(?:\s+{_PERSON_WORD}){{1,4}}"
+    rf"|\s+{_PERSON_TOKEN}(?:\s+{_PERSON_TOKEN}){{1,4}})"
+    r"(?=\s*(?:[,;.!?\n]|$))"
 )
 
 
@@ -73,10 +80,12 @@ class DeepSeekTypedPlanner:
         settings: RadarAskSettings,
         provider: RadarAskProvider,
         registry: ToolRegistry,
+        monotonic_fn: Callable[[], float] = monotonic,
     ):
         self.settings = settings
         self.provider = provider
         self.registry = registry
+        self.monotonic_fn = monotonic_fn
 
     def __call__(
         self,
@@ -84,6 +93,7 @@ class DeepSeekTypedPlanner:
         request: AskQuestionRequest,
         context: AskContext,
         allowed_tools: tuple[str, ...],
+        deadline: float | None = None,
     ) -> PlannerResult:
         allowed = tuple(dict.fromkeys(allowed_tools))
         if (
@@ -125,7 +135,13 @@ class DeepSeekTypedPlanner:
             ensure_ascii=False,
             separators=(",", ":"),
         )
-        response = self.provider.complete(
+        absolute_deadline = (
+            float(deadline)
+            if deadline is not None
+            else self.monotonic_fn()
+            + request_provider_budget_seconds(self.settings.provider_timeout_seconds)
+        )
+        response = self.provider.complete_until(
             ProviderRequest(
                 model=self.settings.router_model,
                 messages=[
@@ -135,7 +151,8 @@ class DeepSeekTypedPlanner:
                 max_output_tokens=PLANNER_MAX_OUTPUT_TOKENS,
                 thinking_enabled=False,
                 json_mode=True,
-            )
+            ),
+            deadline=absolute_deadline,
         )
         try:
             decision = RouteDecision.model_validate(response.json_value)

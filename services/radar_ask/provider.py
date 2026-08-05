@@ -10,7 +10,7 @@ import requests
 from pydantic import ValidationError
 from urllib3.util import Timeout
 
-from .config import RadarAskSettings
+from .config import REQUEST_PROVIDER_MAX_ATTEMPTS, RadarAskSettings
 from .contracts import (
     ProviderMessage,
     ProviderRequest,
@@ -289,7 +289,7 @@ class DeepSeekProvider:
         if request.model not in allowed_models:
             raise ProviderRejected("provider model is not allowed")
 
-        attempts = 2 if request.json_mode else 1
+        attempts = REQUEST_PROVIDER_MAX_ATTEMPTS if request.json_mode else 1
         accumulated_usage = ProviderUsage()
         for _attempt in range(attempts):
             remaining = None if deadline is None else deadline - self._monotonic()

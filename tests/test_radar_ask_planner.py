@@ -35,6 +35,10 @@ class FakeProvider:
         self.requests.append(request)
         return self.response
 
+    def complete_until(self, request, *, deadline):
+        assert deadline > 0
+        return self.complete(request)
+
 
 def planner_settings() -> RadarAskSettings:
     return replace(
@@ -164,6 +168,8 @@ def test_planner_minimizes_hostile_pii_but_keeps_useful_location_and_road_contex
     [
         "Môi giới đang đẩy giá đất Phú Mỹ như thế nào?",
         "Chủ đất giảm giá vì sao?",
+        "Chủ đất: không giảm giá vì sao?",
+        "Môi giới: đang đẩy giá đất?",
     ],
 )
 def test_planner_person_redaction_retains_unlabeled_market_semantics(question):
@@ -185,6 +191,39 @@ def test_planner_person_redaction_retains_unlabeled_market_semantics(question):
     outbound = provider.requests[0].messages[1].content or ""
     assert question in outbound
     assert "[REDACTED_PERSON]" not in outbound
+
+
+@pytest.mark.parametrize(
+    ("question", "private_name"),
+    [
+        ("Chủ đất Nguyễn Văn A?", "Nguyễn Văn A"),
+        ("chủ đất: nguyễn văn a;", "nguyễn văn a"),
+        ("Môi giới: trần thị b.", "trần thị b"),
+        ("Người bán Lê Thị Ánh!", "Lê Thị Ánh"),
+    ],
+)
+def test_planner_redacts_labeled_names_with_sentence_punctuation_and_delimiter(
+    question,
+    private_name,
+):
+    provider = FakeProvider(
+        ProviderResponse(json_value=valid_route(), usage=ProviderUsage(input_tokens=1))
+    )
+    planner = DeepSeekTypedPlanner(
+        settings=planner_settings(),
+        provider=provider,
+        registry=DEFAULT_TOOL_REGISTRY,
+    )
+
+    planner(
+        request=AskQuestionRequest(question=question),
+        context=AskContext(user_id=7, tier="vip"),
+        allowed_tools=tuple(DEFAULT_TOOL_REGISTRY.registrations),
+    )
+
+    outbound = provider.requests[0].messages[1].content or ""
+    assert private_name not in outbound
+    assert "[REDACTED_PERSON]" in outbound
 
 
 def test_invalid_typed_planner_output_preserves_known_provider_usage():

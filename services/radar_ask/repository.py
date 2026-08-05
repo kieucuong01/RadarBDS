@@ -902,7 +902,12 @@ class RadarAskRepository:
         owner = _bounded_text(planner_id, field="planner_id", maximum=128)
         if not owner.startswith("planner:"):
             raise ValueError("planner_id must use the planner namespace")
-        if outcome not in {"provider_failure", "validation_failure", "database_failure"}:
+        if outcome not in {
+            "provider_failure",
+            "validation_failure",
+            "database_failure",
+            "budget_hard_stop",
+        }:
             raise ValueError("planning failure outcome is invalid")
         normalized_error = _bounded_text(error_code, field="error_code", maximum=80)
         normalized_model = _bounded_text(
@@ -1399,6 +1404,80 @@ class RadarAskRepository:
             )
         return _run_from_row(row)
 
+    def renew_request_lease(
+        self,
+        run_id: UUID,
+        *,
+        user_id: int,
+        owner_id: str,
+        provider_owner_id: str,
+        lease_seconds: int = 300,
+    ) -> RadarAskRunRecord:
+        """Atomically rotate a request owner into its paid-provider phase."""
+        owner = _bounded_text(owner_id, field="owner_id", maximum=128)
+        provider_owner = _bounded_text(
+            provider_owner_id,
+            field="provider_owner_id",
+            maximum=128,
+        )
+        if owner.startswith("planner:claimed:"):
+            namespace = "planner"
+        elif owner.startswith("sync:claimed:"):
+            namespace = "sync"
+        elif owner.startswith(("planner:provider:", "sync:provider:")):
+            if owner != provider_owner:
+                raise ValueError("provider-phase renewal cannot change owner")
+            namespace = owner.split(":", 1)[0]
+        else:
+            raise ValueError("request owner phase transition is invalid")
+        expected_claimed = f"{namespace}:claimed:"
+        expected_provider = f"{namespace}:provider:"
+        if owner.startswith(expected_claimed):
+            if not provider_owner.startswith(expected_provider):
+                raise ValueError("request provider owner namespace is invalid")
+            if owner[len(expected_claimed) :] != provider_owner[len(expected_provider) :]:
+                raise ValueError("request owner phase token must remain unchanged")
+        duration = int(lease_seconds)
+        if not 1 <= duration <= 300:
+            raise ValueError("lease_seconds must be between 1 and 300")
+        with get_conn() as conn:
+            ledger = conn.execute(
+                """
+                SELECT id FROM radar_ask_usage
+                WHERE run_key=? AND settlement_status='reserved'
+                FOR UPDATE
+                """,
+                (run_id,),
+            ).fetchone()
+            if ledger is None:
+                raise InvalidRunTransition("request reservation is unavailable")
+            row = conn.execute(
+                """
+                UPDATE radar_ask_runs
+                SET worker_id=?, lease_until=NOW() + (? || ' seconds')::interval,
+                    updated_at=NOW()
+                WHERE id=? AND user_id=? AND status='running' AND worker_id=?
+                  AND lease_until > NOW()
+                RETURNING *
+                """,
+                (provider_owner, duration, run_id, user_id, owner),
+            ).fetchone()
+            if row is None:
+                raise InvalidRunTransition("request lease is not owned by this phase")
+            extended = conn.execute(
+                """
+                UPDATE radar_ask_usage
+                SET reservation_expires_at=GREATEST(reservation_expires_at, ?),
+                    updated_at=NOW()
+                WHERE id=? AND run_key=? AND settlement_status='reserved'
+                RETURNING *
+                """,
+                (row["lease_until"], ledger["id"], run_id),
+            ).fetchone()
+            if extended is None:
+                raise InvalidRunTransition("request reservation is unavailable")
+        return _run_from_row(row)
+
     def complete_leased_run(
         self,
         run_id: UUID,
@@ -1720,6 +1799,7 @@ class RadarAskRepository:
         attempt_count: int | None = None,
         worker_id: str | None = None,
         usage: ProviderUsage | None = None,
+        minimum_actual_usd: Decimal | None = None,
     ) -> None:
         normalized_outcome = RunOutcome(outcome)
         ledger = self._lock_usage_ledger(
@@ -1759,6 +1839,14 @@ class RadarAskRepository:
         consumed = normalized_outcome in CONSUMED_OUTCOMES
         settlement_status = "settled" if consumed else "released"
         question_status = "answered" if consumed else "released"
+        known_actual = Decimal(ledger["planner_actual_usd"]) + Decimal(
+            totals["actual_usd"]
+        )
+        actual = (
+            max(known_actual, Decimal(minimum_actual_usd))
+            if minimum_actual_usd is not None
+            else known_actual
+        )
         updated = conn.execute(
             """
             UPDATE radar_ask_usage
@@ -1771,8 +1859,7 @@ class RadarAskRepository:
             (
                 settlement_status,
                 question_status,
-                Decimal(ledger["planner_actual_usd"])
-                + Decimal(totals["actual_usd"]),
+                actual,
                 int(ledger["planner_prompt_tokens"]) + int(totals["prompt_tokens"]),
                 int(ledger["planner_completion_tokens"])
                 + int(totals["completion_tokens"]),
@@ -1826,7 +1913,7 @@ class RadarAskRepository:
                 )
                 reservation = conn.execute(
                     """
-                    SELECT id FROM radar_ask_usage
+                    SELECT id, reserved_usd FROM radar_ask_usage
                     WHERE run_key=? AND settlement_status='reserved'
                     """,
                     (current["id"],),
@@ -1837,6 +1924,11 @@ class RadarAskRepository:
                         run_id=current["id"],
                         reservation_id=reservation["id"],
                         outcome="database_failure",
+                        minimum_actual_usd=(
+                            Decimal(reservation["reserved_usd"])
+                            if ":provider:" in current["worker_id"]
+                            else None
+                        ),
                     )
                 counts["failed"] += 1
 

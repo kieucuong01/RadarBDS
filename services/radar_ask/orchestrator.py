@@ -6,11 +6,16 @@ import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from time import monotonic
+from time import monotonic, sleep
 from typing import Any, Protocol
 from uuid import UUID, uuid4
 
-from .config import RadarAskSettings, resolve_model_policy
+from .config import (
+    REQUEST_OWNER_LEASE_SECONDS,
+    RadarAskSettings,
+    request_provider_budget_seconds,
+    resolve_model_policy,
+)
 from .contracts import (
     AnswerClaim,
     AnswerEnvelope,
@@ -80,6 +85,7 @@ class RepositoryProtocol(Protocol):
     def get_run(self, **kwargs): ...
     def claim_planning(self, run_id: UUID, **kwargs): ...
     def claim_reserved_run(self, run_id: UUID, **kwargs): ...
+    def renew_request_lease(self, run_id: UUID, **kwargs): ...
     def finalize_planning(self, run_id: UUID, **kwargs): ...
     def finalize_sync_run(self, run_id: UUID, **kwargs): ...
     def fail_planning(self, run_id: UUID, **kwargs): ...
@@ -113,6 +119,8 @@ class OrchestratorDependencies:
     provider: RadarAskProvider
     clock: Callable[[], datetime]
     planner: Planner | None = None
+    monotonic_clock: Callable[[], float] = monotonic
+    persistence_sleep: Callable[[float], None] = sleep
 
 
 @dataclass(frozen=True)
@@ -495,6 +503,34 @@ def _sync_result_matches(run, *, target: str, outcome: str, answer) -> bool:
     )
 
 
+_PERSISTENCE_BACKOFF_SECONDS = (0.0, 0.05, 0.15)
+_TERMINAL_RUN_STATUSES = {
+    RunStatus.CLARIFYING.value,
+    RunStatus.COMPLETED.value,
+    RunStatus.INSUFFICIENT.value,
+    RunStatus.FAILED.value,
+    RunStatus.CANCELLED.value,
+}
+
+
+def _read_owned_run(
+    dependencies: OrchestratorDependencies,
+    run,
+    *,
+    owner_id: str,
+):
+    """Read durable truth without letting a transient read hide a safe retry."""
+    try:
+        durable = dependencies.repository.get_run(user_id=run.user_id, run_id=run.id)
+    except Exception:
+        return None
+    if durable is None:
+        return None
+    if durable.status == RunStatus.RUNNING.value and durable.worker_id != owner_id:
+        return None
+    return durable
+
+
 def _finalize_sync_or_reconcile(
     dependencies: OrchestratorDependencies,
     run,
@@ -532,12 +568,17 @@ def _finalize_sync_or_reconcile(
         "retryable": retryable,
     }
     last_error: Exception | None = None
-    for _attempt in range(2):
+    for delay in _PERSISTENCE_BACKOFF_SECONDS:
+        dependencies.persistence_sleep(delay)
         try:
             return dependencies.repository.finalize_sync_run(run.id, **kwargs)
         except Exception as exc:
             last_error = exc
-            durable = dependencies.repository.get_run(user_id=run.user_id, run_id=run.id)
+            durable = _read_owned_run(
+                dependencies,
+                run,
+                owner_id=owner_id,
+            )
             if durable is not None and _sync_result_matches(
                 durable,
                 target=target,
@@ -545,24 +586,19 @@ def _finalize_sync_or_reconcile(
                 answer=answer,
             ):
                 return durable
-    if target != RunStatus.FAILED.value:
-        failure_kwargs = {
-            **kwargs,
-            "target": RunStatus.FAILED.value,
-            "outcome": RunOutcome.DATABASE_FAILURE.value,
-            "answer": None,
-            "error_code": "sync_persistence_failed",
-            "retryable": True,
-        }
-        try:
-            return dependencies.repository.finalize_sync_run(run.id, **failure_kwargs)
-        except Exception:
-            durable = dependencies.repository.get_run(user_id=run.user_id, run_id=run.id)
-            if durable is not None and durable.status in {
-                RunStatus.FAILED.value,
-                RunStatus.CANCELLED.value,
-            }:
+            if durable is not None and durable.status in _TERMINAL_RUN_STATUSES:
                 return durable
+    for _attempt in range(2):
+        durable = _read_owned_run(dependencies, run, owner_id=owner_id)
+        if durable is not None and _sync_result_matches(
+            durable,
+            target=target,
+            outcome=outcome.value,
+            answer=answer,
+        ):
+            return durable
+        if durable is not None and durable.status in _TERMINAL_RUN_STATUSES:
+            return durable
     assert last_error is not None
     raise last_error
 
@@ -613,25 +649,37 @@ def _fail_planning_claim(
     error_code: str,
     retryable: bool,
 ) -> AskRunResult:
-    """Terminate one planner owner, falling back only to durable run truth."""
-    try:
-        failed = dependencies.repository.fail_planning(
-            run.id,
-            user_id=run.user_id,
-            planner_id=planner_id,
-            reservation_id=reservation.reservation_id,
-            planner_model=dependencies.settings.router_model,
-            usage=usage,
-            outcome=outcome.value,
-            error_code=error_code,
-            retryable=retryable,
-        )
-    except Exception:
-        durable = dependencies.repository.get_run(user_id=run.user_id, run_id=run.id)
-        if durable is None:
-            raise
-        return _run_result(durable)
-    return _run_result(failed)
+    """Persist one known planner failure without ever repeating provider work."""
+    kwargs = {
+        "user_id": run.user_id,
+        "planner_id": planner_id,
+        "reservation_id": reservation.reservation_id,
+        "planner_model": dependencies.settings.router_model,
+        "usage": usage,
+        "outcome": outcome.value,
+        "error_code": error_code,
+        "retryable": retryable,
+    }
+    last_error: Exception | None = None
+    for delay in _PERSISTENCE_BACKOFF_SECONDS:
+        dependencies.persistence_sleep(delay)
+        try:
+            return _run_result(dependencies.repository.fail_planning(run.id, **kwargs))
+        except Exception as exc:
+            last_error = exc
+            durable = _read_owned_run(
+                dependencies,
+                run,
+                owner_id=planner_id,
+            )
+            if durable is not None and durable.status in _TERMINAL_RUN_STATUSES:
+                return _run_result(durable)
+    for _attempt in range(2):
+        durable = _read_owned_run(dependencies, run, owner_id=planner_id)
+        if durable is not None and durable.status in _TERMINAL_RUN_STATUSES:
+            return _run_result(durable)
+    assert last_error is not None
+    raise last_error
 
 
 def _execute_running_run(
@@ -642,7 +690,7 @@ def _execute_running_run(
     *,
     dependencies: OrchestratorDependencies,
     run_id: UUID,
-    before_provider: Callable[[], None] | None = None,
+    before_provider: Callable[[], float | None] | None = None,
     provider_deadline: float | None = None,
     cancelled: Callable[[], bool] | None = None,
     monotonic_fn: Callable[[], float] = monotonic,
@@ -682,20 +730,26 @@ def _execute_running_run(
         elif decision.generated:
             if cancelled is not None and cancelled():
                 raise _WorkerLeaseLost("Deep worker lease was lost")
-            if provider_deadline is not None and monotonic_fn() >= provider_deadline:
-                raise _WorkerLeaseLost("Deep worker deadline expired")
+            active_deadline = provider_deadline
             if before_provider is not None:
-                before_provider()
+                renewed_deadline = before_provider()
+                if renewed_deadline is not None:
+                    active_deadline = renewed_deadline
+            if active_deadline is None:
+                active_deadline = monotonic_fn() + request_provider_budget_seconds(
+                    dependencies.settings.provider_timeout_seconds
+                )
+            if monotonic_fn() >= active_deadline:
+                raise _WorkerLeaseLost("Deep worker deadline expired")
             provider_request = _provider_request(request, context, decision, policy, bundles)
-            complete_until = getattr(dependencies.provider, "complete_until", None)
-            if provider_deadline is not None and callable(complete_until):
-                response = complete_until(provider_request, deadline=provider_deadline)
-            else:
-                response = dependencies.provider.complete(provider_request)
+            response = dependencies.provider.complete_until(
+                provider_request,
+                deadline=active_deadline,
+            )
             usage = response.usage
             if cancelled is not None and cancelled():
                 raise _WorkerLeaseLost("Deep worker lease was lost")
-            if provider_deadline is not None and monotonic_fn() >= provider_deadline:
+            if monotonic_fn() >= active_deadline:
                 raise _WorkerLeaseLost("Deep worker deadline expired")
             candidate = _provider_answer(response)
         else:
@@ -1011,13 +1065,14 @@ def run_question(
             )
             raise
 
-        planner_id = f"planner:{uuid4()}"
+        request_token = str(uuid4())
+        planner_id = f"planner:claimed:{request_token}"
         claimed = dependencies.repository.claim_reserved_run(
             run.id,
             user_id=context.user_id,
             owner_id=planner_id,
             reservation_id=reservation.reservation_id,
-            lease_seconds=90,
+            lease_seconds=REQUEST_OWNER_LEASE_SECONDS,
         )
         if claimed is None:
             durable = dependencies.repository.get_run(
@@ -1041,12 +1096,39 @@ def run_question(
         run = claimed
 
         try:
+            provider_planner_id = f"planner:provider:{request_token}"
+            _assert_provider_budget(dependencies, reservation)
+            run = dependencies.repository.renew_request_lease(
+                run.id,
+                user_id=context.user_id,
+                owner_id=planner_id,
+                provider_owner_id=provider_planner_id,
+                lease_seconds=REQUEST_OWNER_LEASE_SECONDS,
+            )
+            planner_id = provider_planner_id
+            planner_deadline = dependencies.monotonic_clock() + float(
+                request_provider_budget_seconds(
+                    dependencies.settings.provider_timeout_seconds
+                )
+            )
             planned = PlannerResult.model_validate(
                 dependencies.planner(
                     request=request,
                     context=context,
                     allowed_tools=tuple(dependencies.registry.registrations),
+                    deadline=planner_deadline,
                 )
+            )
+        except BudgetHardStop:
+            return _fail_planning_claim(
+                dependencies,
+                run,
+                planner_id=planner_id,
+                reservation=reservation,
+                usage=EMPTY_USAGE,
+                outcome=RunOutcome.BUDGET_HARD_STOP,
+                error_code="monthly_budget_hard_stop",
+                retryable=False,
             )
         except ProviderError as exc:
             return _fail_planning_claim(
@@ -1137,9 +1219,10 @@ def run_question(
                 target=planning_target,
             )
         except Exception:
-            durable = dependencies.repository.get_run(
-                user_id=context.user_id,
-                run_id=run.id,
+            durable = _read_owned_run(
+                dependencies,
+                run,
+                owner_id=planner_id,
             )
             expected_route = decision.model_dump(mode="json")
             if durable is not None and durable.route == expected_route:
@@ -1212,13 +1295,14 @@ def run_question(
             )
             raise
 
-        sync_id = f"sync:{uuid4()}"
+        sync_token = str(uuid4())
+        sync_id = f"sync:claimed:{sync_token}"
         claimed = dependencies.repository.claim_reserved_run(
             run.id,
             user_id=context.user_id,
             owner_id=sync_id,
             reservation_id=reservation.reservation_id,
-            lease_seconds=90,
+            lease_seconds=REQUEST_OWNER_LEASE_SECONDS,
             effective_depth=decision.depth.value,
             route=decision.model_dump(mode="json"),
             model=policy.model,
@@ -1284,6 +1368,29 @@ def run_question(
         return _run_result(queued)
 
     running = run
+
+    def before_sync_provider() -> float:
+        nonlocal running
+        assert running.worker_id is not None
+        current_owner = running.worker_id
+        if ":claimed:" in current_owner:
+            provider_owner = current_owner.replace(":claimed:", ":provider:", 1)
+        else:
+            provider_owner = current_owner
+        _assert_provider_budget(dependencies, reservation)
+        running = dependencies.repository.renew_request_lease(
+            running.id,
+            user_id=context.user_id,
+            owner_id=current_owner,
+            provider_owner_id=provider_owner,
+            lease_seconds=REQUEST_OWNER_LEASE_SECONDS,
+        )
+        return dependencies.monotonic_clock() + float(
+            request_provider_budget_seconds(
+                dependencies.settings.provider_timeout_seconds
+            )
+        )
+
     execution = _execute_running_run(
         request,
         context,
@@ -1291,6 +1398,8 @@ def run_question(
         policy,
         dependencies=dependencies,
         run_id=run.id,
+        before_provider=before_sync_provider,
+        monotonic_fn=dependencies.monotonic_clock,
     )
     if execution.answer is None:
         assert execution.error_code is not None

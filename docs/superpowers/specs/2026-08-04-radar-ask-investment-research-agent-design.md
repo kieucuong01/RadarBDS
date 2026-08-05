@@ -456,6 +456,12 @@ Tables and charts are generated from typed server data. DeepSeek cannot emit exe
 - Budget hard stop: preserve deterministic shortcuts and reject provider-dependent runs.
 - Stale evidence: show `as_of` and reduce confidence rather than implying current truth.
 
+### 16.1 Paid-call lease and database-outage boundary
+
+Synchronous and planner runs use a 300-second PostgreSQL owner lease. The provider receives one absolute monotonic deadline of at most 240 seconds across its bounded JSON attempts, leaving more than 30 seconds for tool and persistence work. Immediately before each paid HTTP call, one short database transaction renews the run and reservation and rotates `planner:claimed:*` or `sync:claimed:*` to the matching `*:provider:*` owner. No database transaction remains open across provider HTTP.
+
+Terminal persistence retries are bounded to three mutation attempts with 0/50/150 ms backoff and two final readbacks; they never repeat planner or answer provider work. If every mutation and readback fails, the request raises a sanitized internal failure while the long provider-phase lease and reservation remain intact for recovery. On expiry, a claimed-phase run settles only exact known planner/attempt usage, which may be zero. A provider-phase run is payment-ambiguous and settles conservatively to the greater of exact known usage and `reserved_usd`, with a clear `database_failure` outcome. Normal queued/worker expiry always sums planner usage plus every immutable recorded Deep attempt exactly once. This deliberately favors budget safety during a total database outage; an operator may later reconcile the conservative reservation against the provider bill.
+
 ## 17. Evaluation and Observability
 
 Build a versioned golden evaluation set from production-shaped, redacted Radar snapshots. It covers:
