@@ -26,7 +26,19 @@ Add direct presenters for all current deterministic question types:
 - `price_drop_ranking`
 - `road_market_estimate`
 
-Generated valuation, official-document, and genuinely complex routes keep the existing typed DeepSeek synthesis path. Insufficient or conflicted evidence keeps the current fail-closed answer instead of fabricating a recommendation.
+Generated valuation, official-document, and genuinely complex routes keep the existing typed DeepSeek synthesis path, but must obey the same direct-answer contract below. Questions outside the five deterministic patterns continue through the typed planner, which may select approved database or knowledge tools and then synthesize a grounded answer. Insufficient or conflicted evidence keeps the current fail-closed answer instead of fabricating a recommendation.
+
+## Universal Answer Contract
+
+This contract applies to every current and future Radar Ask route, not only the five examples above:
+
+1. The response body answers the user's question first. Source cards only support claims made in that response.
+2. Deterministic questions use server-owned presenters. Complex questions use the typed planner and DeepSeek synthesis over retrieved evidence.
+3. Valuation explanations state the important inputs, comparable market evidence, adjustments, model fair value, and uncertainty instead of merely linking the listing.
+4. Official-price and legal-context answers explain how the cited document applies, distinguish official schedules from observed asking or transaction prices, and cite only the relevant document passages.
+5. Free-form investment questions may combine approved tools, but every material factual claim must map to relevant evidence returned by those tools.
+6. If the question is ambiguous, Radar asks one useful clarification. If evidence is missing or weak, Radar says what is missing and does not pad the response with unrelated sources.
+7. A response that contains source cards but no substantive answer is invalid and must fail validation or be replaced with a useful safe fallback.
 
 ## Architecture
 
@@ -97,6 +109,8 @@ Use focused TDD fixtures that exercise real presenter output and the existing va
 - Budget regression proves the top ward aggregate, not the first listing, is cited.
 - Source-link tests prove budget, price-drop, and road aggregates open equivalent filtered views.
 - Orchestrator tests prove these routes make zero provider calls and still return useful answers.
+- Generated-route tests prove valuation, official-document, and typed-planner answers lead with grounded prose and never return source cards as the answer itself.
+- A contract regression rejects any successful response that has citations but only generic source-directed prose.
 - Existing privacy, contract, validation, routing, JavaScript rendering, and golden-evaluation tests remain green.
 - Production QA asks at least one budget, comparison, deal, drop, and road question with the Admin account, then verifies answer content and opened sources.
 
