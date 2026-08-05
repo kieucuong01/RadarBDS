@@ -93,6 +93,64 @@ setting the flag back to `0` and restarting; the curated FTS corpus remains the
 source of truth. No semantic candidate has been approved or enabled as of this
 checkpoint because local model assets have not been supplied.
 
+## Radar Ask Golden Release Evaluation
+
+The versioned golden corpus is
+`tests/fixtures/radar_ask/golden_questions.json`. It contains deterministic,
+non-account production-like cases but never reads a live database or calls a
+provider in its default mode. Expected routing/tool/evidence/answer truth is
+stored separately from the fixture planner outputs, evidence bundles, and
+answer candidates. The evaluator therefore exercises the public typed
+`route_question()`, tool-dispatch, and `validate_answer()` boundaries without
+deriving observed results from expected values.
+
+Run the free, offline release gate from the repository root:
+
+```powershell
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
+& $py -X utf8 scripts\evaluate_radar_ask.py `
+  --cases tests\fixtures\radar_ask\golden_questions.json `
+  --mode deterministic `
+  --output reports\radar_ask_golden_local.json
+& $py -X utf8 -m pytest tests\test_radar_ask_evaluation.py -q
+```
+
+The CLI exits nonzero unless routing and exact tool selection are each at least
+95%, numeric grounding/citation/privacy/auth are exactly 100%, and accepted
+unsupported material claims are exactly 0%. Reports contain case IDs, metric
+counts, and bounded failure dimensions only; they omit questions, prompts, raw
+evidence, phone numbers, URLs, and account identifiers. The current `v1`
+deterministic baseline has 140 cases: routing/tool selection are `0.971429`;
+numeric grounding, citation, and auth are `1.0`; unsupported claims are `0.0`;
+and privacy is RED at `0.985714`. The two failing provider-payload probes are
+`privacy-001` (lowercase multi-token labeled name) and `privacy-002`
+(single-token labeled name). They exercise the actual `DeepSeekTypedPlanner`
+message builder through a fake provider, so the run remains offline while
+measuring what would leave the application. Keep the CLI nonzero until both
+probes pass; do not relax the exact privacy threshold. A routing/tool miss does
+not cascade into a fabricated numeric or citation failure; each dimension uses
+its own denominator.
+
+DB-backed extensions to this evaluation must first prove the parsed database
+name is exactly `radar_bds_test` on loopback. The checked-in deterministic gate
+does not open PostgreSQL at all.
+
+Live provider observation is optional and never part of the free default run.
+It refuses to start without both the cost confirmation and an explicit ignored
+JSON path below `reports/`:
+
+```powershell
+& $py -X utf8 scripts\evaluate_radar_ask.py `
+  --cases tests\fixtures\radar_ask\golden_questions.json `
+  --record-provider --confirm-live-cost --case-limit 5 `
+  --output reports\radar_ask_provider_record.json
+```
+
+Provider recordings retain only sanitized typed answer envelopes plus
+case/model/status/token/cost metadata. Prompts, raw evidence, contacts, URLs,
+person/account identifiers, and source links are removed. A recording never
+updates golden truth automatically; review any proposed corpus change by hand.
+
 ## Deploy Flow
 
 For the normal local one-command ship:
