@@ -49,6 +49,7 @@ RUN_OUTCOMES = frozenset(
 )
 RETENTION_BATCH_SIZE = 500
 ADMIN_METRIC_WINDOWS = ("today", "last_7_days", "month")
+ADMIN_MODEL_BUCKETS = frozenset({"none", "deepseek-v4-flash", "deepseek-v4-pro"})
 
 
 class RadarAskRepositoryError(RuntimeError):
@@ -199,7 +200,7 @@ def _admin_window() -> dict[str, Any]:
             "insufficient": 0.0,
         },
         "tokens": {"input": 0, "output": 0, "cache_hit": 0, "cache_miss": 0},
-        "feedback": {"helpful": 0, "not_helpful": 0},
+        "feedback_by_question_cohort": {"helpful": 0, "not_helpful": 0},
     }
 
 
@@ -1423,77 +1424,73 @@ class RadarAskRepository:
     ) -> dict[str, Any]:
         """Return bounded aggregate metadata for the Admin control room.
 
-        The usage ledger is the indexed starting point for every historical
-        window. Conversation content tables are never selected; feedback is
-        joined only for its allowlisted rating bucket.
+        Operational metrics start from the indexed run timestamp so failures
+        that happen before reservation remain visible. Cost and token totals
+        stay on the immutable usage ledger. Conversation content is never
+        selected; feedback is grouped by its question-run cohort.
         """
         current = _admin_aware_utc(now or datetime.now(timezone.utc))
         local_date = current.astimezone(BANGKOK).date()
         month_start = local_date.replace(day=1)
-        window_starts = {
+        window_start_dates = {
             "today": local_date,
             "last_7_days": local_date - timedelta(days=6),
             "month": month_start,
         }
-        scan_start = min(window_starts.values())
-        usage_months = sorted({scan_start.replace(day=1), month_start})
+        window_start_times = {
+            key: datetime.combine(value, datetime.min.time(), tzinfo=BANGKOK).astimezone(timezone.utc)
+            for key, value in window_start_dates.items()
+        }
+        scan_start_date = min(window_start_dates.values())
+        scan_start_time = min(window_start_times.values())
+        usage_months = sorted({scan_start_date.replace(day=1), month_start})
         warning = Decimal(settings.monthly_warning_usd).quantize(MONEY_QUANTUM)
         hard_stop = Decimal(settings.monthly_hard_stop_usd).quantize(MONEY_QUANTUM)
         if warning <= 0 or hard_stop <= warning:
             raise ValueError("metrics budget thresholds are invalid")
-        allowed_models = sorted(
-            {
-                "none",
-                settings.router_model,
-                settings.free_model,
-                settings.smart_model,
-            }
-        )
-        allowed_models = [value for value in allowed_models if 0 < len(value) <= 120]
-        if not allowed_models:
-            allowed_models = ["none"]
+        allowed_models = sorted(ADMIN_MODEL_BUCKETS)
 
         windows = {key: _admin_window() for key in ADMIN_METRIC_WINDOWS}
-        window_params = (
-            window_starts["today"],
-            window_starts["last_7_days"],
-            window_starts["month"],
+        window_date_params = (
+            window_start_dates["today"],
+            window_start_dates["last_7_days"],
+            window_start_dates["month"],
+        )
+        window_time_params = (
+            window_start_times["today"],
+            window_start_times["last_7_days"],
+            window_start_times["month"],
         )
         with get_conn() as conn:
             grouped_rows = conn.execute(
                 """
-                WITH window_defs(window_key, start_date) AS (
-                    VALUES ('today', ?::date), ('last_7_days', ?::date), ('month', ?::date)
+                WITH window_defs(window_key, start_at) AS (
+                    VALUES
+                        ('today', ?::timestamptz),
+                        ('last_7_days', ?::timestamptz),
+                        ('month', ?::timestamptz)
                 ),
-                month_usage AS MATERIALIZED (
+                bounded_runs AS MATERIALIZED (
                     SELECT
-                        u.run_key,
-                        u.tier,
-                        u.model AS usage_model,
-                        u.depth,
-                        u.usage_date,
-                        u.outcome,
-                        u.prompt_tokens,
-                        u.completion_tokens,
-                        u.cache_hit_tokens,
-                        u.cache_miss_tokens,
-                        r.id AS run_id,
-                        r.model AS run_model
-                    FROM radar_ask_usage u
-                    LEFT JOIN radar_ask_runs r ON r.id=u.run_key
-                    WHERE u.usage_month=ANY(?::date[])
-                      AND u.usage_date>=?
-                      AND u.usage_date<=?
+                        r.id,
+                        r.created_at,
+                        r.model,
+                        COALESCE(r.effective_depth,r.requested_depth) AS depth,
+                        r.outcome,
+                        u.tier
+                    FROM radar_ask_runs r
+                    JOIN users u ON u.id=r.user_id
+                    WHERE r.created_at>=? AND r.created_at<=?
                 )
                 SELECT
                     w.window_key,
                     CASE WHEN b.tier IN ('free','vip','admin') THEN b.tier ELSE 'other' END AS tier_bucket,
                     CASE
-                        WHEN COALESCE(b.usage_model,b.run_model,'none')=ANY(?::text[])
-                        THEN COALESCE(b.usage_model,b.run_model,'none')
+                        WHEN b.model IS NULL THEN 'unassigned'
+                        WHEN b.model=ANY(?::text[]) THEN b.model
                         ELSE 'other'
                     END AS model_bucket,
-                    CASE WHEN b.depth IN ('fast','standard','deep') THEN b.depth ELSE 'other' END AS depth_bucket,
+                    CASE WHEN b.depth IN ('fast','standard','deep') THEN b.depth ELSE 'unassigned' END AS depth_bucket,
                     CASE
                         WHEN b.outcome IS NULL THEN 'pending'
                         WHEN b.outcome IN (
@@ -1502,45 +1499,37 @@ class RadarAskRepository:
                         ) THEN b.outcome
                         ELSE 'other'
                     END AS outcome_bucket,
-                    COUNT(b.run_key) AS questions,
-                    COUNT(b.run_id) AS runs,
-                    COALESCE(SUM(b.prompt_tokens),0) AS prompt_tokens,
-                    COALESCE(SUM(b.completion_tokens),0) AS completion_tokens,
-                    COALESCE(SUM(b.cache_hit_tokens),0) AS cache_hit_tokens,
-                    COALESCE(SUM(b.cache_miss_tokens),0) AS cache_miss_tokens
+                    COUNT(b.id) AS questions,
+                    COUNT(b.id) AS runs
                 FROM window_defs w
-                LEFT JOIN month_usage b
-                  ON b.usage_date>=w.start_date AND b.usage_date<=?
+                LEFT JOIN bounded_runs b
+                  ON b.created_at>=w.start_at AND b.created_at<=?
                 GROUP BY w.window_key,tier_bucket,model_bucket,depth_bucket,outcome_bucket
                 ORDER BY w.window_key,tier_bucket,model_bucket,depth_bucket,outcome_bucket
                 """,
-                (*window_params, usage_months, scan_start, local_date, allowed_models, local_date),
+                (*window_time_params, scan_start_time, current, allowed_models, current),
             ).fetchall()
 
             health_rows = conn.execute(
                 """
-                WITH window_defs(window_key, start_date) AS (
-                    VALUES ('today', ?::date), ('last_7_days', ?::date), ('month', ?::date)
+                WITH window_defs(window_key, start_at) AS (
+                    VALUES
+                        ('today', ?::timestamptz),
+                        ('last_7_days', ?::timestamptz),
+                        ('month', ?::timestamptz)
                 ),
-                month_usage AS MATERIALIZED (
+                bounded_runs AS MATERIALIZED (
                     SELECT
-                        u.run_key,
-                        u.usage_date,
-                        u.outcome,
-                        r.started_at,
-                        r.completed_at
-                    FROM radar_ask_usage u
-                    LEFT JOIN radar_ask_runs r ON r.id=u.run_key
-                    WHERE u.usage_month=ANY(?::date[])
-                      AND u.usage_date>=?
-                      AND u.usage_date<=?
+                        id,created_at,outcome,started_at,completed_at
+                    FROM radar_ask_runs
+                    WHERE created_at>=? AND created_at<=?
                 )
                 SELECT
                     w.window_key,
-                    COUNT(b.run_key) FILTER (WHERE b.outcome IS NOT NULL) AS terminal_runs,
-                    COUNT(b.run_key) FILTER (WHERE b.outcome='provider_failure') AS provider_failures,
-                    COUNT(b.run_key) FILTER (WHERE b.outcome='validation_failure') AS validation_failures,
-                    COUNT(b.run_key) FILTER (WHERE b.outcome='insufficient') AS insufficient_runs,
+                    COUNT(b.id) FILTER (WHERE b.outcome IS NOT NULL) AS terminal_runs,
+                    COUNT(b.id) FILTER (WHERE b.outcome='provider_failure') AS provider_failures,
+                    COUNT(b.id) FILTER (WHERE b.outcome='validation_failure') AS validation_failures,
+                    COUNT(b.id) FILTER (WHERE b.outcome='insufficient') AS insufficient_runs,
                     percentile_disc(0.5) WITHIN GROUP (
                         ORDER BY EXTRACT(EPOCH FROM (b.completed_at-b.started_at))*1000
                     ) FILTER (WHERE b.completed_at IS NOT NULL AND b.started_at IS NOT NULL) AS p50_ms,
@@ -1548,12 +1537,43 @@ class RadarAskRepository:
                         ORDER BY EXTRACT(EPOCH FROM (b.completed_at-b.started_at))*1000
                     ) FILTER (WHERE b.completed_at IS NOT NULL AND b.started_at IS NOT NULL) AS p95_ms
                 FROM window_defs w
-                LEFT JOIN month_usage b
+                LEFT JOIN bounded_runs b
+                  ON b.created_at>=w.start_at AND b.created_at<=?
+                GROUP BY w.window_key
+                ORDER BY w.window_key
+                """,
+                (*window_time_params, scan_start_time, current, current),
+            ).fetchall()
+
+            token_rows = conn.execute(
+                """
+                WITH window_defs(window_key, start_date) AS (
+                    VALUES
+                        ('today', ?::date),
+                        ('last_7_days', ?::date),
+                        ('month', ?::date)
+                ),
+                bounded_usage AS MATERIALIZED (
+                    SELECT
+                        usage_date,prompt_tokens,completion_tokens,
+                        cache_hit_tokens,cache_miss_tokens
+                    FROM radar_ask_usage
+                    WHERE usage_month=ANY(?::date[])
+                      AND usage_date>=? AND usage_date<=?
+                )
+                SELECT
+                    w.window_key,
+                    COALESCE(SUM(b.prompt_tokens),0) AS prompt_tokens,
+                    COALESCE(SUM(b.completion_tokens),0) AS completion_tokens,
+                    COALESCE(SUM(b.cache_hit_tokens),0) AS cache_hit_tokens,
+                    COALESCE(SUM(b.cache_miss_tokens),0) AS cache_miss_tokens
+                FROM window_defs w
+                LEFT JOIN bounded_usage b
                   ON b.usage_date>=w.start_date AND b.usage_date<=?
                 GROUP BY w.window_key
                 ORDER BY w.window_key
                 """,
-                (*window_params, usage_months, scan_start, local_date, local_date),
+                (*window_date_params, usage_months, scan_start_date, local_date, local_date),
             ).fetchall()
 
             cost_row = conn.execute(
@@ -1587,29 +1607,30 @@ class RadarAskRepository:
 
             feedback_rows = conn.execute(
                 """
-                WITH window_defs(window_key, start_date) AS (
-                    VALUES ('today', ?::date), ('last_7_days', ?::date), ('month', ?::date)
+                WITH window_defs(window_key, start_at) AS (
+                    VALUES
+                        ('today', ?::timestamptz),
+                        ('last_7_days', ?::timestamptz),
+                        ('month', ?::timestamptz)
                 ),
-                month_usage AS MATERIALIZED (
-                    SELECT run_key,usage_date
-                    FROM radar_ask_usage
-                    WHERE usage_month=ANY(?::date[])
-                      AND usage_date>=?
-                      AND usage_date<=?
+                bounded_runs AS MATERIALIZED (
+                    SELECT id,created_at
+                    FROM radar_ask_runs
+                    WHERE created_at>=? AND created_at<=?
                 )
                 SELECT
                     w.window_key,
                     CASE WHEN f.rating IN ('helpful','not_helpful') THEN f.rating ELSE 'other' END AS rating_bucket,
                     COUNT(f.id) AS total
                 FROM window_defs w
-                LEFT JOIN month_usage u
-                  ON u.usage_date>=w.start_date AND u.usage_date<=?
-                LEFT JOIN radar_ask_messages m ON m.run_id=u.run_key
+                LEFT JOIN bounded_runs r
+                  ON r.created_at>=w.start_at AND r.created_at<=?
+                LEFT JOIN radar_ask_messages m ON m.run_id=r.id
                 LEFT JOIN radar_ask_feedback f ON f.message_id=m.id
                 GROUP BY w.window_key,rating_bucket
                 ORDER BY w.window_key,rating_bucket
                 """,
-                (*window_params, usage_months, scan_start, local_date, local_date),
+                (*window_time_params, scan_start_time, current, current),
             ).fetchall()
 
         for row in grouped_rows:
@@ -1628,10 +1649,17 @@ class RadarAskRepository:
                 ("by_outcome", row["outcome_bucket"]),
             ):
                 target[field][bucket] = target[field].get(bucket, 0) + questions
-            target["tokens"]["input"] += int(row["prompt_tokens"] or 0)
-            target["tokens"]["output"] += int(row["completion_tokens"] or 0)
-            target["tokens"]["cache_hit"] += int(row["cache_hit_tokens"] or 0)
-            target["tokens"]["cache_miss"] += int(row["cache_miss_tokens"] or 0)
+
+        for row in token_rows:
+            key = row["window_key"]
+            if key not in windows:
+                continue
+            windows[key]["tokens"] = {
+                "input": int(row["prompt_tokens"] or 0),
+                "output": int(row["completion_tokens"] or 0),
+                "cache_hit": int(row["cache_hit_tokens"] or 0),
+                "cache_miss": int(row["cache_miss_tokens"] or 0),
+            }
 
         for row in health_rows:
             key = row["window_key"]
@@ -1655,7 +1683,7 @@ class RadarAskRepository:
             key = row["window_key"]
             rating = row["rating_bucket"]
             if key in windows and rating in {"helpful", "not_helpful"}:
-                windows[key]["feedback"][rating] += int(row["total"] or 0)
+                windows[key]["feedback_by_question_cohort"][rating] += int(row["total"] or 0)
 
         actual = Decimal(cost_row["actual_usd"] or 0).quantize(MONEY_QUANTUM)
         reserved = Decimal(cost_row["reserved_usd"] or 0).quantize(MONEY_QUANTUM)

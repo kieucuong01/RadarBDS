@@ -4,6 +4,7 @@ import json
 from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
+from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -36,7 +37,7 @@ def _empty_metrics() -> dict:
             "insufficient": 0.0,
         },
         "tokens": {"input": 0, "output": 0, "cache_hit": 0, "cache_miss": 0},
-        "feedback": {"helpful": 0, "not_helpful": 0},
+        "feedback_by_question_cohort": {"helpful": 0, "not_helpful": 0},
     }
     return {
         "generated_at": NOW.isoformat(),
@@ -120,6 +121,9 @@ def test_admin_control_room_includes_resilient_radar_ask_health_surface(monkeypa
     assert 'id="refreshRadarAskMetricsBtn"' in html
     assert 'aria-live="polite"' in html
     assert "Hỏi Radar BDS" in html
+    admin_js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(encoding="utf-8")
+    assert "feedback_by_question_cohort" in admin_js
+    assert "Phản hồi theo cohort câu hỏi" in admin_js
 
 
 @pytest.fixture
@@ -240,6 +244,49 @@ def aggregate_rows():
             )
             return run_id
 
+        def seed_unreserved_run(
+            *,
+            tier: str,
+            model: str | None,
+            depth: str | None,
+            status: str,
+            outcome: str,
+            age: timedelta,
+            latency_ms: int,
+        ):
+            run_id = uuid4()
+            run_ids.append(run_id)
+            created_at = NOW - age
+            started_at = created_at + timedelta(seconds=1)
+            completed_at = started_at + timedelta(milliseconds=latency_ms)
+            conn.execute(
+                """
+                INSERT INTO radar_ask_runs (
+                    id, session_id, user_id, idempotency_key, question,
+                    requested_depth, effective_depth, status, outcome, model,
+                    available_at, created_at, started_at, completed_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    run_id,
+                    session_id,
+                    user_ids[("free", "vip", "admin").index(tier)],
+                    f"admin-metrics-no-usage-{run_id}",
+                    f"{SECRET} no usage {run_id}",
+                    depth,
+                    depth,
+                    status,
+                    outcome,
+                    model,
+                    created_at,
+                    created_at,
+                    started_at,
+                    completed_at,
+                    completed_at,
+                ),
+            )
+            return run_id
+
         answered = seed_run(
             tier="free", model="deepseek-v4-flash", depth="fast",
             status="completed", outcome="answered", age=timedelta(hours=1),
@@ -268,6 +315,16 @@ def aggregate_rows():
             actual="0.000000", reserved="2.000000", settlement="reserved",
             expires=NOW + timedelta(minutes=10),
         )
+        no_usage_budget = seed_unreserved_run(
+            tier="vip", model="deepseek-v4-pro", depth="deep",
+            status="cancelled", outcome="budget_hard_stop", age=timedelta(hours=4),
+            latency_ms=5000,
+        )
+        no_usage_validation = seed_unreserved_run(
+            tier="free", model=None, depth=None,
+            status="failed", outcome="validation_failure", age=timedelta(hours=5),
+            latency_ms=6000,
+        )
 
         message_id = uuid4()
         conn.execute(
@@ -285,7 +342,13 @@ def aggregate_rows():
             (uuid4(), message_id, user_ids[0], f"Private note {SECRET}", NOW - timedelta(minutes=20)),
         )
 
-    yield SimpleNamespace(run_ids=run_ids, user_ids=user_ids, queued=queued)
+    yield SimpleNamespace(
+        run_ids=run_ids,
+        user_ids=user_ids,
+        queued=queued,
+        no_usage_budget=no_usage_budget,
+        no_usage_validation=no_usage_validation,
+    )
 
     with get_conn() as conn:
         conn.execute("DELETE FROM radar_ask_usage WHERE run_key=ANY(?)", (run_ids,))
@@ -317,24 +380,27 @@ def test_repository_returns_bounded_aggregate_health_without_content_or_pii(aggr
 
     today = metrics["windows"]["today"]
     seven_days = metrics["windows"]["last_7_days"]
-    assert today["questions"] == today["runs"] == 4
-    assert today["by_tier"] == {"admin": 2, "free": 1, "vip": 1}
+    assert today["questions"] == today["runs"] == 6
+    assert today["by_tier"] == {"admin": 2, "free": 2, "vip": 2}
     assert today["by_outcome"] == {
         "answered": 1,
+        "budget_hard_stop": 1,
         "insufficient": 1,
         "pending": 1,
         "provider_failure": 1,
+        "validation_failure": 1,
     }
-    assert today["latency_ms"] == {"p50": 2000, "p95": 3000}
-    assert today["rates"]["provider_failure"] == pytest.approx(1 / 3, abs=0.000001)
-    assert today["rates"]["validation_failure"] == 0
-    assert today["rates"]["insufficient"] == pytest.approx(1 / 3, abs=0.000001)
+    assert today["latency_ms"] == {"p50": 3000, "p95": 6000}
+    assert today["rates"]["provider_failure"] == pytest.approx(1 / 5, abs=0.000001)
+    assert today["rates"]["validation_failure"] == pytest.approx(1 / 5, abs=0.000001)
+    assert today["rates"]["insufficient"] == pytest.approx(1 / 5, abs=0.000001)
     assert today["tokens"] == {"input": 600, "output": 90, "cache_hit": 90, "cache_miss": 210}
-    assert today["feedback"] == {"helpful": 1, "not_helpful": 0}
+    assert today["feedback_by_question_cohort"] == {"helpful": 1, "not_helpful": 0}
     assert seven_days["by_model"] == {
         "deepseek-v4-flash": 1,
-        "deepseek-v4-pro": 3,
+        "deepseek-v4-pro": 4,
         "other": 1,
+        "unassigned": 1,
     }
     assert metrics["queue"]["depth"] == 1
     assert metrics["queue"]["oldest_age_seconds"] == 600
@@ -358,6 +424,45 @@ def test_repository_returns_bounded_aggregate_health_without_content_or_pii(aggr
     assert forbidden_keys.isdisjoint(set(_all_keys(metrics)))
 
 
+def test_pre_reservation_failures_without_usage_are_counted_operationally(aggregate_rows):
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT id,outcome FROM radar_ask_runs WHERE id=ANY(?) ORDER BY outcome",
+            ([aggregate_rows.no_usage_budget, aggregate_rows.no_usage_validation],),
+        ).fetchall()
+        usage_count = conn.execute(
+            "SELECT COUNT(*) AS total FROM radar_ask_usage WHERE run_key=ANY(?)",
+            ([aggregate_rows.no_usage_budget, aggregate_rows.no_usage_validation],),
+        ).fetchone()
+    assert {row["outcome"] for row in rows} == {"budget_hard_stop", "validation_failure"}
+    assert usage_count is not None and usage_count["total"] == 0
+
+    metrics = RadarAskRepository().admin_metrics(now=NOW, settings=_settings())
+
+    today = metrics["windows"]["today"]
+    assert today["questions"] == 6
+    assert today["by_outcome"]["budget_hard_stop"] == 1
+    assert today["by_outcome"]["validation_failure"] == 1
+    assert today["rates"]["validation_failure"] == pytest.approx(0.2)
+
+
+def test_arbitrary_configured_model_labels_are_bucketed_as_other(aggregate_rows):
+    arbitrary = replace(
+        _settings(),
+        router_model="tenant-private-router-name",
+        free_model="private-model-name-do-not-expose",
+        smart_model="tenant-private-smart-name",
+    )
+
+    metrics = RadarAskRepository().admin_metrics(now=NOW, settings=arbitrary)
+
+    assert metrics["windows"]["last_7_days"]["by_model"]["other"] == 1
+    serialized = json.dumps(metrics, ensure_ascii=False, sort_keys=True)
+    assert "private-model-name-do-not-expose" not in serialized
+    assert "tenant-private-router-name" not in serialized
+    assert "tenant-private-smart-name" not in serialized
+
+
 def test_admin_endpoint_serializes_only_repository_aggregates(aggregate_rows, monkeypatch):
     import routes.admin_api as admin_routes
 
@@ -372,7 +477,7 @@ def test_admin_endpoint_serializes_only_repository_aggregates(aggregate_rows, mo
 
     assert response.status_code == 200
     assert payload["ok"] is True
-    assert payload["metrics"]["windows"]["today"]["questions"] == 4
+    assert payload["metrics"]["windows"]["today"]["questions"] == 6
     assert response.headers["Cache-Control"] == "private, no-store"
     serialized = json.dumps(payload, ensure_ascii=False, sort_keys=True)
     assert SECRET not in serialized
@@ -384,6 +489,7 @@ def test_metric_queries_have_their_expected_supporting_indexes(aggregate_rows):
         "idx_radar_ask_usage_month",
         "radar_ask_usage_run_key_key",
         "radar_ask_runs_pkey",
+        "idx_radar_ask_runs_created",
         "idx_radar_ask_runs_queue",
         "idx_radar_ask_messages_run_created",
         "idx_radar_ask_feedback_message",

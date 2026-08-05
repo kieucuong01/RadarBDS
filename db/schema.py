@@ -674,6 +674,8 @@ CREATE INDEX IF NOT EXISTS idx_radar_ask_runs_session_created
     ON radar_ask_runs(session_id, created_at, id);
 CREATE INDEX IF NOT EXISTS idx_radar_ask_runs_user
     ON radar_ask_runs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_radar_ask_runs_created
+    ON radar_ask_runs(created_at);
 CREATE INDEX IF NOT EXISTS idx_radar_ask_runs_queue
     ON radar_ask_runs(status, available_at, created_at)
     WHERE status = 'queued';

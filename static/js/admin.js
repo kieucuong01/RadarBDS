@@ -1624,7 +1624,9 @@ function renderRadarAskMetrics(payload) {
   const latency = month.latency_ms && typeof month.latency_ms === 'object' ? month.latency_ms : {};
   const rates = month.rates && typeof month.rates === 'object' ? month.rates : {};
   const tokens = month.tokens && typeof month.tokens === 'object' ? month.tokens : {};
-  const feedback = month.feedback && typeof month.feedback === 'object' ? month.feedback : {};
+  const feedback = month.feedback_by_question_cohort && typeof month.feedback_by_question_cohort === 'object'
+    ? month.feedback_by_question_cohort
+    : {};
 
   state.textContent = payload?.enabled === false
     ? 'Tính năng đang tắt; số liệu lịch sử và ngân sách vẫn được giữ để theo dõi.'
@@ -1656,7 +1658,7 @@ function renderRadarAskMetrics(payload) {
     radarAskMetricCard('Lỗi provider', radarAskFormatRate(rates.provider_failure), 'Trên các run đã kết thúc', radarAskNumber(rates.provider_failure) > 0 ? 'warning' : ''),
     radarAskMetricCard('Lỗi validation', radarAskFormatRate(rates.validation_failure), `Thiếu dữ liệu ${radarAskFormatRate(rates.insufficient)}`, radarAskNumber(rates.validation_failure) > 0 ? 'warning' : ''),
     radarAskMetricCard('Token tháng', radarAskFormatCount(tokens.input), `Output ${radarAskFormatCount(tokens.output)} · cache hit ${radarAskFormatCount(tokens.cache_hit)}`),
-    radarAskMetricCard('Phản hồi hữu ích', radarAskFormatCount(feedback.helpful), `Không hữu ích ${radarAskFormatCount(feedback.not_helpful)}`),
+    radarAskMetricCard('Phản hồi theo cohort câu hỏi', radarAskFormatCount(feedback.helpful), `Hữu ích · không hữu ích ${radarAskFormatCount(feedback.not_helpful)}`),
   );
   breakdowns.replaceChildren(
     radarAskBreakdown('Theo gói', month.by_tier),
