@@ -95,6 +95,9 @@
       </div>
     </header>
 
+    {% set lead_cta_context = "tdm_map_product_lead" %}
+    {% include "partials/seo_lead_capture.html" %}
+
     <section id="ban-do-tuong-tac" class="seo-shell bd-map-section tdm-product-map-section" aria-labelledby="ban-do-tuong-tac-title">
       <div class="planning-section-heading">
         <div>
@@ -447,6 +450,7 @@
   </main>
 
   {% include "partials/seo_footer.html" %}
+  {% include "partials/seo_lead_capture_script.html" %}
   {% set view_event = page.tracking_prefix ~ "_product_viewed" %}
   {% include "partials/seo_tracking.html" %}
 </body>
