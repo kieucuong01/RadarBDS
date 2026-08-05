@@ -623,6 +623,83 @@ class RadarAskRepository:
             ).fetchone()
         return _run_from_row(row) if row is not None else None
 
+    def claim_reserved_run(
+        self,
+        run_id: UUID,
+        *,
+        user_id: int,
+        owner_id: str,
+        reservation_id: UUID,
+        lease_seconds: int = 90,
+        effective_depth: str | None = None,
+        route: Mapping[str, Any] | None = None,
+        model: str | None = None,
+    ) -> RadarAskRunRecord | None:
+        """Atomically bind one active reservation to a synchronous/planner owner."""
+        owner = _bounded_text(owner_id, field="owner_id", maximum=128)
+        if not owner.startswith(("planner:", "sync:")):
+            raise ValueError("owner_id must use the planner or sync namespace")
+        duration = int(lease_seconds)
+        if not 1 <= duration <= 300:
+            raise ValueError("lease_seconds must be between 1 and 300")
+        if effective_depth not in {None, "fast", "standard", "deep"}:
+            raise ValueError("effective_depth is invalid")
+        normalized_model = (
+            _bounded_text(model, field="model", maximum=120) if model is not None else None
+        )
+        route_payload = Jsonb(dict(route)) if route is not None else None
+        with get_conn() as conn:
+            ledger = conn.execute(
+                """
+                SELECT id FROM radar_ask_usage
+                WHERE id=? AND run_key=? AND user_id=?
+                  AND settlement_status='reserved' AND question_status='reserved'
+                  AND reservation_expires_at > NOW()
+                FOR UPDATE
+                """,
+                (reservation_id, run_id, user_id),
+            ).fetchone()
+            if ledger is None:
+                return None
+            row = conn.execute(
+                """
+                UPDATE radar_ask_runs
+                SET status='running', worker_id=?,
+                    lease_until=NOW() + (? || ' seconds')::interval,
+                    effective_depth=COALESCE(?, effective_depth),
+                    route_json=COALESCE(?, route_json),
+                    model=COALESCE(?, model),
+                    started_at=COALESCE(started_at, NOW()),
+                    retryable=FALSE, error_code=NULL, updated_at=NOW()
+                WHERE id=? AND user_id=? AND status='created'
+                RETURNING *
+                """,
+                (
+                    owner,
+                    duration,
+                    effective_depth,
+                    route_payload,
+                    normalized_model,
+                    run_id,
+                    user_id,
+                ),
+            ).fetchone()
+            if row is None:
+                return None
+            ledger = conn.execute(
+                """
+                UPDATE radar_ask_usage
+                SET reservation_expires_at=GREATEST(reservation_expires_at, ?),
+                    updated_at=NOW()
+                WHERE id=?
+                RETURNING *
+                """,
+                (row["lease_until"], ledger["id"]),
+            ).fetchone()
+            if ledger is None:
+                raise InvalidRunTransition("run reservation lost its claim lock")
+        return _run_from_row(row)
+
     def claim_planning(
         self,
         run_id: UUID,
@@ -649,7 +726,10 @@ class RadarAskRepository:
                 FROM radar_ask_usage u
                 WHERE r.id=? AND r.user_id=? AND r.status='created'
                   AND r.route_json IS NULL
-                  AND u.run_key=r.id AND u.settlement_status='reserved'
+                  AND u.run_key=r.id AND u.user_id=r.user_id
+                  AND u.settlement_status='reserved'
+                  AND u.question_status='reserved'
+                  AND u.reservation_expires_at > NOW()
                 RETURNING r.*
                 """,
                 (owner, duration, run_id, user_id),
@@ -870,6 +950,330 @@ class RadarAskRepository:
                 conn,
                 run_id=run_id,
                 reservation_id=reservation_id,
+                outcome=outcome,
+            )
+        return _run_from_row(row)
+
+    @staticmethod
+    def _sync_usage_values(
+        ledger: PgRow,
+        usage: ProviderUsage,
+    ) -> tuple[Decimal, int, int, int, int]:
+        answer_model = ledger["model"]
+        if answer_model == "none":
+            if any(
+                (
+                    usage.input_tokens,
+                    usage.output_tokens,
+                    usage.cache_hit_input_tokens,
+                    usage.cache_miss_input_tokens,
+                )
+            ):
+                raise InvalidRunTransition("zero-cost model cannot record provider usage")
+            answer_actual = Decimal("0")
+        else:
+            answer_actual = calculate_provider_cost(answer_model, usage)
+        return (
+            (Decimal(ledger["planner_actual_usd"]) + answer_actual).quantize(
+                MONEY_QUANTUM
+            ),
+            int(ledger["planner_prompt_tokens"]) + usage.input_tokens,
+            int(ledger["planner_completion_tokens"]) + usage.output_tokens,
+            int(ledger["planner_cache_hit_tokens"]) + usage.cache_hit_input_tokens,
+            int(ledger["planner_cache_miss_tokens"]) + usage.cache_miss_input_tokens,
+        )
+
+    @classmethod
+    def _settle_sync_usage(
+        cls,
+        conn: PgConnection,
+        *,
+        ledger: PgRow,
+        usage: ProviderUsage,
+        outcome: str,
+    ) -> None:
+        normalized_outcome = RunOutcome(outcome)
+        if ledger["settlement_status"] != "reserved":
+            raise InvalidRunTransition("sync reservation is unavailable")
+        actual, prompt, completion, cache_hit, cache_miss = cls._sync_usage_values(
+            ledger,
+            usage,
+        )
+        consumed = normalized_outcome in CONSUMED_OUTCOMES
+        updated = conn.execute(
+            """
+            UPDATE radar_ask_usage
+            SET settlement_status=?, question_status=?, actual_usd=?,
+                prompt_tokens=?, completion_tokens=?, cache_hit_tokens=?,
+                cache_miss_tokens=?, outcome=?, settled_at=NOW(), updated_at=NOW()
+            WHERE id=? AND run_key=? AND settlement_status='reserved'
+            RETURNING *
+            """,
+            (
+                "settled" if consumed else "released",
+                "answered" if consumed else "released",
+                actual,
+                prompt,
+                completion,
+                cache_hit,
+                cache_miss,
+                normalized_outcome.value,
+                ledger["id"],
+                ledger["run_key"],
+            ),
+        ).fetchone()
+        if updated is None:
+            raise InvalidRunTransition("sync reservation settlement lost its lock")
+
+    @staticmethod
+    def _insert_sync_message(
+        conn: PgConnection,
+        *,
+        current: PgRow,
+        content: str,
+        answer: Mapping[str, Any],
+    ) -> None:
+        conn.execute(
+            """
+            INSERT INTO radar_ask_messages (
+                id, session_id, run_id, role, content, answer_json
+            ) VALUES (?, ?, ?, 'assistant', ?, ?)
+            """,
+            (
+                uuid4(),
+                current["session_id"],
+                current["id"],
+                content,
+                Jsonb(dict(answer)),
+            ),
+        )
+        conn.execute(
+            "UPDATE radar_ask_sessions SET updated_at=NOW() WHERE id=? AND user_id=?",
+            (current["session_id"], current["user_id"]),
+        )
+
+    @classmethod
+    def _assert_sync_replay(
+        cls,
+        conn: PgConnection,
+        *,
+        current: PgRow,
+        ledger: PgRow,
+        target: str,
+        outcome: str,
+        answer: Mapping[str, Any] | None,
+        content: str | None,
+        usage: ProviderUsage,
+    ) -> None:
+        if (
+            current["status"] != target
+            or current["outcome"] != outcome
+            or current["answer_json"] != (dict(answer) if answer is not None else None)
+        ):
+            raise InvalidRunTransition("sync run was already finalized differently")
+        actual, prompt, completion, cache_hit, cache_miss = cls._sync_usage_values(
+            ledger,
+            usage,
+        )
+        consumed = RunOutcome(outcome) in CONSUMED_OUTCOMES
+        expected = (
+            "settled" if consumed else "released",
+            "answered" if consumed else "released",
+            outcome,
+            actual,
+            prompt,
+            completion,
+            cache_hit,
+            cache_miss,
+        )
+        stored = (
+            ledger["settlement_status"],
+            ledger["question_status"],
+            ledger["outcome"],
+            ledger["actual_usd"],
+            ledger["prompt_tokens"],
+            ledger["completion_tokens"],
+            ledger["cache_hit_tokens"],
+            ledger["cache_miss_tokens"],
+        )
+        if stored != expected:
+            raise InvalidRunTransition("sync usage was already finalized differently")
+        if answer is not None:
+            messages = conn.execute(
+                """
+                SELECT content, answer_json FROM radar_ask_messages
+                WHERE run_id=? AND role='assistant'
+                FOR UPDATE
+                """,
+                (current["id"],),
+            ).fetchall()
+            if len(messages) != 1 or (
+                messages[0]["content"], messages[0]["answer_json"]
+            ) != (content, dict(answer)):
+                raise InvalidRunTransition("sync assistant message is not replay-safe")
+
+    def finalize_sync_run(
+        self,
+        run_id: UUID,
+        *,
+        user_id: int,
+        owner_id: str,
+        reservation_id: UUID,
+        target: str,
+        outcome: str,
+        usage: ProviderUsage,
+        answer: Mapping[str, Any] | None = None,
+        effective_depth: str | None = None,
+        route: Mapping[str, Any] | None = None,
+        model: str | None = None,
+        planner_model: str | None = None,
+        planner_usage: ProviderUsage | None = None,
+        error_code: str | None = None,
+        retryable: bool = False,
+    ) -> RadarAskRunRecord:
+        """Commit sync run state, message, provider cost, and quota as one unit."""
+        owner = _bounded_text(owner_id, field="owner_id", maximum=128)
+        if not owner.startswith(("planner:", "sync:")):
+            raise ValueError("owner_id must use the planner or sync namespace")
+        expected_outcome = {
+            "clarifying": "clarification",
+            "completed": "answered",
+            "insufficient": "insufficient",
+        }
+        if target not in {"clarifying", "completed", "insufficient", "failed"}:
+            raise ValueError("sync finalization target is invalid")
+        if target in expected_outcome and expected_outcome[target] != outcome:
+            raise ValueError("sync finalization outcome does not match target")
+        if target == "failed" and outcome not in {
+            "provider_failure",
+            "validation_failure",
+            "database_failure",
+            "budget_hard_stop",
+            "cancelled",
+        }:
+            raise ValueError("sync failure outcome is invalid")
+        if (planner_model is None) != (planner_usage is None):
+            raise ValueError("planner model and usage must be supplied together")
+        if effective_depth not in {None, "fast", "standard", "deep"}:
+            raise ValueError("effective_depth is invalid")
+        normalized_model = (
+            _bounded_text(model, field="model", maximum=120) if model is not None else None
+        )
+        normalized_planner_model = (
+            _bounded_text(planner_model, field="planner_model", maximum=120)
+            if planner_model is not None
+            else None
+        )
+        normalized_error = (
+            _bounded_text(error_code, field="error_code", maximum=80)
+            if error_code is not None
+            else None
+        )
+        if normalized_error is not None and (
+            not normalized_error.replace("_", "").isalnum()
+            or normalized_error.lower() != normalized_error
+        ):
+            raise ValueError("error_code must contain lowercase letters, digits, or underscores")
+        answer_payload = dict(answer) if answer is not None else None
+        if (target in {"clarifying", "completed", "insufficient"}) != (
+            answer_payload is not None
+        ):
+            raise ValueError("sync answer presence does not match target")
+        content = (
+            _bounded_content(answer_payload.get("direct_answer", ""), maximum=12_000)
+            if answer_payload is not None
+            else None
+        )
+        with get_conn() as conn:
+            current = conn.execute(
+                "SELECT * FROM radar_ask_runs WHERE id=? AND user_id=? FOR UPDATE",
+                (run_id, user_id),
+            ).fetchone()
+            if current is None:
+                raise InvalidRunTransition("sync run was not found")
+            ledger = self._lock_usage_ledger(
+                conn,
+                run_id=run_id,
+                reservation_id=reservation_id,
+            )
+            if current["status"] != "running":
+                if normalized_planner_model is not None and planner_usage is not None:
+                    self._record_planner_component(
+                        conn,
+                        ledger=ledger,
+                        planner_model=normalized_planner_model,
+                        usage=planner_usage,
+                    )
+                self._assert_sync_replay(
+                    conn,
+                    current=current,
+                    ledger=ledger,
+                    target=target,
+                    outcome=outcome,
+                    answer=answer_payload,
+                    content=content,
+                    usage=usage,
+                )
+                return _run_from_row(current)
+            if current["worker_id"] != owner:
+                raise InvalidRunTransition("sync lease is not owned by this request")
+            if ledger["settlement_status"] != "reserved":
+                raise InvalidRunTransition("sync reservation is unavailable")
+            if normalized_planner_model is not None and planner_usage is not None:
+                self._record_planner_component(
+                    conn,
+                    ledger=ledger,
+                    planner_model=normalized_planner_model,
+                    usage=planner_usage,
+                )
+                ledger = conn.execute(
+                    "SELECT * FROM radar_ask_usage WHERE id=? FOR UPDATE",
+                    (reservation_id,),
+                ).fetchone()
+                assert ledger is not None
+            row = conn.execute(
+                """
+                UPDATE radar_ask_runs
+                SET status=?, outcome=?,
+                    effective_depth=COALESCE(?, effective_depth),
+                    route_json=COALESCE(?, route_json),
+                    answer_json=?, model=COALESCE(?, model),
+                    error_code=?, retryable=?, worker_id=NULL, lease_until=NULL,
+                    completed_at=CASE WHEN ?='clarifying' THEN completed_at
+                                      ELSE COALESCE(completed_at, NOW()) END,
+                    updated_at=NOW()
+                WHERE id=? AND user_id=? AND status='running' AND worker_id=?
+                  AND lease_until > NOW()
+                RETURNING *
+                """,
+                (
+                    target,
+                    outcome,
+                    effective_depth,
+                    Jsonb(dict(route)) if route is not None else None,
+                    Jsonb(answer_payload) if answer_payload is not None else None,
+                    normalized_model,
+                    normalized_error,
+                    bool(retryable),
+                    target,
+                    run_id,
+                    user_id,
+                    owner,
+                ),
+            ).fetchone()
+            if row is None:
+                raise InvalidRunTransition("sync finalization lost its lease")
+            if answer_payload is not None and content is not None:
+                self._insert_sync_message(
+                    conn,
+                    current=current,
+                    content=content,
+                    answer=answer_payload,
+                )
+            self._settle_sync_usage(
+                conn,
+                ledger=ledger,
+                usage=usage,
                 outcome=outcome,
             )
         return _run_from_row(row)
@@ -1391,27 +1795,34 @@ class RadarAskRepository:
             raise ValueError("lease_seconds must be between 1 and 300")
         counts = {"requeued": 0, "failed": 0}
         with get_conn() as conn:
-            expired_planners = conn.execute(
+            expired_request_owners = conn.execute(
                 """
                 SELECT * FROM radar_ask_runs
-                WHERE status='running' AND worker_id LIKE 'planner:%'
+                WHERE status='running'
+                  AND (worker_id LIKE 'planner:%' OR worker_id LIKE 'sync:%')
                   AND lease_until <= NOW()
                 ORDER BY lease_until, created_at
                 FOR UPDATE SKIP LOCKED
                 """
             ).fetchall()
-            for current in expired_planners:
+            for current in expired_request_owners:
+                lease_error = (
+                    "planner_lease_expired"
+                    if current["worker_id"].startswith("planner:")
+                    else "sync_lease_expired"
+                )
                 conn.execute(
                     """
                     UPDATE radar_ask_runs
                     SET status='failed', outcome='database_failure',
-                        error_code='planner_lease_expired', retryable=FALSE,
+                        error_code=?, retryable=FALSE,
                         worker_id=NULL, lease_until=NULL,
                         completed_at=COALESCE(completed_at, NOW()), updated_at=NOW()
-                    WHERE id=? AND status='running' AND worker_id LIKE 'planner:%'
+                    WHERE id=? AND status='running'
+                      AND (worker_id LIKE 'planner:%' OR worker_id LIKE 'sync:%')
                       AND lease_until <= NOW()
                     """,
-                    (current["id"],),
+                    (lease_error, current["id"]),
                 )
                 reservation = conn.execute(
                     """
@@ -1449,7 +1860,10 @@ class RadarAskRepository:
                 """
                 SELECT * FROM radar_ask_runs
                 WHERE status='running' AND lease_until <= NOW()
-                  AND (worker_id IS NULL OR worker_id NOT LIKE 'planner:%')
+                  AND (worker_id IS NULL OR (
+                        worker_id NOT LIKE 'planner:%'
+                        AND worker_id NOT LIKE 'sync:%'
+                  ))
                 ORDER BY lease_until, created_at
                 FOR UPDATE SKIP LOCKED
                 """

@@ -26,6 +26,8 @@ class FakeResponse:
         self.status_code = status_code
         self.headers = headers or {}
         self.content = raw_content if raw_content is not None else json.dumps(payload).encode("utf-8")
+        self.closed = False
+        self.bytes_yielded = 0
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -35,6 +37,15 @@ class FakeResponse:
         if isinstance(self._payload, Exception):
             raise self._payload
         return self._payload
+
+    def iter_content(self, chunk_size=1):
+        for offset in range(0, len(self.content), chunk_size):
+            chunk = self.content[offset : offset + chunk_size]
+            self.bytes_yielded += len(chunk)
+            yield chunk
+
+    def close(self):
+        self.closed = True
 
 
 class FakeSession:
@@ -379,6 +390,42 @@ def test_response_size_is_bounded_before_json_parsing(settings):
 
     with pytest.raises(ProviderInvalidResponse, match="too large"):
         DeepSeekProvider(settings=settings, session=session).complete(simple_request())
+
+
+@pytest.mark.parametrize(
+    "content_length",
+    ["not-an-integer", "-1", str(1_048_576 + 1)],
+)
+def test_invalid_content_length_keeps_bounded_actual_usage(settings, content_length):
+    session = FakeSession()
+    response = FakeResponse(
+        completion_payload(),
+        headers={"Content-Length": content_length},
+    )
+    session.queue(response)
+
+    with pytest.raises(ProviderInvalidResponse) as caught:
+        DeepSeekProvider(settings=settings, session=session).complete(simple_request())
+
+    assert caught.value.usage.input_tokens == 10
+    assert caught.value.usage.output_tokens == 4
+    assert response.closed is True
+
+
+def test_actually_oversized_body_stops_at_bounded_read_without_usage_parse(settings):
+    session = FakeSession()
+    response = FakeResponse(
+        completion_payload(),
+        raw_content=b"x" * (1_048_576 + 100_000),
+    )
+    session.queue(response)
+
+    with pytest.raises(ProviderInvalidResponse, match="too large") as caught:
+        DeepSeekProvider(settings=settings, session=session).complete(simple_request())
+
+    assert caught.value.usage.input_tokens == 0
+    assert response.bytes_yielded <= 1_048_576 + 65_536
+    assert response.closed is True
 
 
 def test_invalid_tool_argument_json_is_rejected(settings):

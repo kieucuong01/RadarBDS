@@ -85,21 +85,35 @@ def _extract_usage(payload: Mapping[str, object]) -> ProviderUsage:
     return parsed
 
 
-def _extract_bounded_error_usage(response: object) -> ProviderUsage:
-    """Best-effort billing evidence from a bounded HTTP error body."""
-    content = getattr(response, "content", None)
-    if not isinstance(content, (bytes, bytearray)) or len(content) > MAX_RESPONSE_BYTES:
-        return ProviderUsage()
-    try:
-        payload = response.json()
-    except (AttributeError, TypeError, ValueError):
-        return ProviderUsage()
+def _extract_bounded_error_usage(payload: object) -> ProviderUsage:
+    """Best-effort billing evidence from an already bounded decoded body."""
     if not isinstance(payload, Mapping):
         return ProviderUsage()
     try:
         return _extract_usage(payload)
     except ProviderInvalidResponse:
         return ProviderUsage()
+
+
+def _read_bounded_body(response: object) -> bytes:
+    """Read at most one bounded response body; never buffer an oversized payload."""
+    chunks: list[bytes] = []
+    total = 0
+    try:
+        iterator = response.iter_content(chunk_size=65_536)
+    except AttributeError:
+        content = getattr(response, "content", b"")
+        iterator = (content,)
+    for chunk in iterator:
+        if not chunk:
+            continue
+        if not isinstance(chunk, (bytes, bytearray)):
+            raise ProviderInvalidResponse("provider response body is invalid")
+        total += len(chunk)
+        if total > MAX_RESPONSE_BYTES:
+            raise ProviderInvalidResponse("provider response is too large")
+        chunks.append(bytes(chunk))
+    return b"".join(chunks)
 
 
 def _message_payload(message: ProviderMessage) -> dict[str, object]:
@@ -370,38 +384,51 @@ class DeepSeekProvider:
                 headers=headers,
                 json=_request_payload(request),
                 timeout=timeout,
+                stream=True,
             )
+            content_length_error: str | None = None
             content_length = response.headers.get("Content-Length")
             if content_length is not None:
                 try:
-                    if int(content_length) > MAX_RESPONSE_BYTES:
-                        raise ProviderInvalidResponse("provider response is too large")
+                    declared_length = int(content_length)
+                    if declared_length < 0:
+                        content_length_error = "provider Content-Length is invalid"
+                    elif declared_length > MAX_RESPONSE_BYTES:
+                        content_length_error = "provider response is too large"
                 except ValueError:
-                    raise ProviderInvalidResponse("provider Content-Length is invalid") from None
-            if len(response.content) > MAX_RESPONSE_BYTES:
-                raise ProviderInvalidResponse("provider response is too large")
-            response.raise_for_status()
-        except ProviderInvalidResponse:
-            raise
-        except requests.HTTPError as exc:
-            status_code = getattr(exc.response, "status_code", 0) or 0
-            usage = _extract_bounded_error_usage(exc.response)
-            if status_code == 429 or status_code >= 500:
-                raise ProviderUnavailable(
-                    f"DeepSeek is unavailable (HTTP {status_code})",
+                    content_length_error = "provider Content-Length is invalid"
+            body = _read_bounded_body(response)
+            try:
+                payload = json.loads(body)
+            except (TypeError, UnicodeDecodeError, ValueError):
+                payload = None
+            usage = _extract_bounded_error_usage(payload)
+            if content_length_error is not None:
+                raise ProviderInvalidResponse(content_length_error, usage=usage)
+            try:
+                response.raise_for_status()
+            except requests.HTTPError as exc:
+                status_code = getattr(exc.response, "status_code", 0) or 0
+                if status_code == 429 or status_code >= 500:
+                    raise ProviderUnavailable(
+                        f"DeepSeek is unavailable (HTTP {status_code})",
+                        usage=usage,
+                    ) from None
+                raise ProviderRejected(
+                    f"DeepSeek rejected the request (HTTP {status_code})",
                     usage=usage,
                 ) from None
-            raise ProviderRejected(
-                f"DeepSeek rejected the request (HTTP {status_code})",
-                usage=usage,
-            ) from None
+            if payload is None:
+                raise ProviderInvalidResponse("provider response is not valid JSON")
+        except ProviderInvalidResponse:
+            raise
+        except (ProviderRejected, ProviderUnavailable):
+            raise
         except (requests.Timeout, requests.ConnectionError):
             raise ProviderUnavailable("DeepSeek is unavailable") from None
         except requests.RequestException:
             raise ProviderUnavailable("DeepSeek request failed") from None
-
-        try:
-            payload = response.json()
-        except (TypeError, ValueError):
-            raise ProviderInvalidResponse("provider response is not valid JSON") from None
+        finally:
+            if "response" in locals():
+                response.close()
         return _parse_response(payload)

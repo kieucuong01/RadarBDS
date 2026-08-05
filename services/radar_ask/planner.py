@@ -38,9 +38,12 @@ _PARCEL_IDENTIFIER = re.compile(
     r"(?:\s*(?:[,;/ -]|và)\s*(?:tờ(?:\s*bản\s*đồ)?|tbđ)\s*(?:số)?\s*"
     r"[:#=-]?\s*\d{1,6})?"
 )
+_PERSON_INITIAL = "A-ZÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ"
+_PERSON_TOKEN = rf"[{_PERSON_INITIAL}][A-Za-zÀ-ỹĐđ'’\-]{{0,30}}"
 _LABELED_PERSON = re.compile(
-    r"(?i)\b(?:chủ\s*đất|chủ\s*nhà|môi\s*giới|người\s*bán|khách\s*hàng|họ\s*tên)"
-    r"\s*[:=-]?\s*[^,;\n]{2,80}"
+    rf"(?i:\b(?:chủ\s*đất|chủ\s*nhà|môi\s*giới|người\s*bán|khách\s*hàng|họ\s*tên))"
+    rf"\s*(?:[:=-]\s*)?{_PERSON_TOKEN}(?:\s+{_PERSON_TOKEN}){{1,4}}"
+    r"(?=\s*(?:[,;\n]|$))"
 )
 
 

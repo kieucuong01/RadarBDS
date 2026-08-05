@@ -305,6 +305,82 @@ def test_planning_claim_is_exclusive_across_real_database_threads(repository_env
     assert claimed[0].lease_until > datetime.now(timezone.utc)
 
 
+def test_reserved_run_claim_requires_active_ledger_and_persists_sync_owner_route(repository_env):
+    repository, users = repository_env
+    run = repository.create_run(
+        user_id=users.free_id,
+        question="Khu nào giảm giá hôm nay?",
+        idempotency_key="sync-reserved-claim",
+    )
+    reservation_id = _reserve_planning_run(
+        run=run,
+        user_id=users.free_id,
+        tier="free",
+    )
+    route = {
+        "depth": "fast",
+        "question_type": "price_drop_areas",
+        "tool_calls": [],
+        "generated": False,
+        "use_thinking": False,
+    }
+
+    claimed = repository.claim_reserved_run(
+        run.id,
+        user_id=users.free_id,
+        owner_id="sync:atomic",
+        reservation_id=reservation_id,
+        lease_seconds=90,
+        effective_depth="fast",
+        route=route,
+        model="none",
+    )
+
+    assert claimed is not None
+    assert claimed.status == "running"
+    assert claimed.worker_id == "sync:atomic"
+    assert claimed.route == route
+    with get_conn() as conn:
+        expires_at = conn.execute(
+            "SELECT reservation_expires_at FROM radar_ask_usage WHERE id=?",
+            (reservation_id,),
+        ).fetchone()["reservation_expires_at"]
+    assert expires_at >= claimed.lease_until
+
+
+def test_reserved_run_claim_rejects_expired_or_released_ledger(repository_env):
+    repository, users = repository_env
+    run = repository.create_run(
+        user_id=users.free_id,
+        question="Không được claim ledger chết",
+        idempotency_key="sync-dead-ledger",
+    )
+    reservation_id = _reserve_planning_run(
+        run=run,
+        user_id=users.free_id,
+        tier="free",
+    )
+    with get_conn() as conn:
+        conn.execute(
+            """
+            UPDATE radar_ask_usage
+            SET settlement_status='released', question_status='released',
+                reservation_expires_at=NOW() - INTERVAL '1 second'
+            WHERE id=?
+            """,
+            (reservation_id,),
+        )
+
+    assert repository.claim_reserved_run(
+        run.id,
+        user_id=users.free_id,
+        owner_id="sync:dead",
+        reservation_id=reservation_id,
+        lease_seconds=90,
+    ) is None
+    assert repository.get_run(user_id=users.free_id, run_id=run.id).status == "created"
+
+
 def test_planning_claim_is_exclusive_across_real_database_processes(repository_env):
     repository, users = repository_env
     run = repository.create_run(
@@ -458,6 +534,246 @@ def test_planning_failure_atomically_accounts_known_usage_and_releases(repositor
     )
     assert ledger["planner_actual_usd"] > 0
     assert ledger["planner_recorded_at"] is not None
+
+
+def test_planned_deep_clarification_finalizes_message_usage_and_release_atomically(repository_env):
+    repository, users = repository_env
+    run = repository.create_run(
+        user_id=users.vip_id,
+        question="Phân tích sâu khu này",
+        idempotency_key="planned-deep-clarification-atomic",
+    )
+    reservation_id = _reserve_planning_run(run=run, user_id=users.vip_id)
+    claimed = repository.claim_reserved_run(
+        run.id,
+        user_id=users.vip_id,
+        owner_id="planner:clarify",
+        reservation_id=reservation_id,
+        lease_seconds=90,
+    )
+    assert claimed is not None
+    route = {
+        "depth": "deep",
+        "question_type": "clarification",
+        "tool_calls": [],
+        "generated": True,
+        "use_thinking": False,
+        "needs_clarification": True,
+        "clarification_question": "Bạn muốn hỏi khu nào?",
+    }
+    answer = {
+        "answered": False,
+        "depth": "deep",
+        "verdict": None,
+        "direct_answer": "Bạn muốn hỏi khu nào?",
+        "claims": [],
+        "source_cards": [],
+        "as_of": datetime.now(timezone.utc).isoformat(),
+        "dataset_version": "radar-ask:foundation",
+    }
+    planner_usage = ProviderUsage(input_tokens=25, output_tokens=5)
+
+    finalize_kwargs = dict(
+        user_id=users.vip_id,
+        owner_id="planner:clarify",
+        reservation_id=reservation_id,
+        target="clarifying",
+        outcome="clarification",
+        usage=ProviderUsage(),
+        answer=answer,
+        effective_depth="deep",
+        route=route,
+        model="deepseek-v4-pro",
+        planner_model="deepseek-v4-flash",
+        planner_usage=planner_usage,
+    )
+    clarifying = repository.finalize_sync_run(
+        run.id,
+        **finalize_kwargs,
+    )
+    assert repository.finalize_sync_run(run.id, **finalize_kwargs) == clarifying
+    with pytest.raises(InvalidRunTransition):
+        repository.finalize_sync_run(
+            run.id,
+            **{
+                **finalize_kwargs,
+                "planner_usage": ProviderUsage(input_tokens=26, output_tokens=5),
+            },
+        )
+
+    assert clarifying.status == "clarifying"
+    assert clarifying.worker_id is None and clarifying.lease_until is None
+    with get_conn() as conn:
+        ledger = conn.execute(
+            """
+            SELECT settlement_status, question_status, outcome,
+                   planner_prompt_tokens, planner_completion_tokens, actual_usd
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation_id,),
+        ).fetchone()
+        messages = conn.execute(
+            "SELECT role, content FROM radar_ask_messages WHERE run_id=? ORDER BY created_at",
+            (run.id,),
+        ).fetchall()
+    assert tuple(ledger)[:5] == ("released", "released", "clarification", 25, 5)
+    assert ledger["actual_usd"] > 0
+    assert [(row["role"], row["content"]) for row in messages] == [
+        ("user", "Phân tích sâu khu này"),
+        ("assistant", "Bạn muốn hỏi khu nào?"),
+    ]
+    assert repository.lease_next_run(worker_id="worker:must-not-lease") is None
+
+
+def test_sync_completion_is_exactly_replayable_with_one_message_and_cost(repository_env):
+    repository, users = repository_env
+    run = repository.create_run(
+        user_id=users.vip_id,
+        question="Giá hiện tại là bao nhiêu?",
+        idempotency_key="sync-finalize-replay",
+    )
+    reservation_id = _reserve_planning_run(run=run, user_id=users.vip_id)
+    claimed = repository.claim_reserved_run(
+        run.id,
+        user_id=users.vip_id,
+        owner_id="sync:complete",
+        reservation_id=reservation_id,
+        lease_seconds=90,
+        effective_depth="standard",
+        route={"depth": "standard", "question_type": "road_price", "tool_calls": [], "generated": True, "use_thinking": False},
+        model="deepseek-v4-pro",
+    )
+    assert claimed is not None
+    answer = {
+        "answered": True,
+        "depth": "standard",
+        "verdict": "needs_checks",
+        "direct_answer": "Giá tham khảo hiện tại là 20 triệu/m².",
+        "claims": [],
+        "source_cards": [],
+        "as_of": datetime.now(timezone.utc).isoformat(),
+        "dataset_version": "signals:1",
+    }
+    usage = ProviderUsage(input_tokens=100, output_tokens=20)
+    kwargs = dict(
+        user_id=users.vip_id,
+        owner_id="sync:complete",
+        reservation_id=reservation_id,
+        target="completed",
+        outcome="answered",
+        usage=usage,
+        answer=answer,
+    )
+
+    first = repository.finalize_sync_run(run.id, **kwargs)
+    replay = repository.finalize_sync_run(run.id, **kwargs)
+
+    assert replay == first
+    with get_conn() as conn:
+        ledger = conn.execute(
+            """
+            SELECT settlement_status, question_status, outcome,
+                   prompt_tokens, completion_tokens, actual_usd
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation_id,),
+        ).fetchone()
+        assistant_count = conn.execute(
+            "SELECT COUNT(*) AS total FROM radar_ask_messages WHERE run_id=? AND role='assistant'",
+            (run.id,),
+        ).fetchone()["total"]
+    assert tuple(ledger)[:5] == ("settled", "answered", "answered", 100, 20)
+    assert ledger["actual_usd"] > 0
+    assert assistant_count == 1
+
+    with pytest.raises(InvalidRunTransition):
+        repository.finalize_sync_run(
+            run.id,
+            **{**kwargs, "usage": ProviderUsage(input_tokens=101, output_tokens=20)},
+        )
+
+
+@pytest.mark.parametrize("failure_point", ["run", "message", "usage"])
+def test_sync_finalize_failure_rolls_back_run_message_and_usage(
+    repository_env,
+    monkeypatch,
+    failure_point,
+):
+    repository, users = repository_env
+    run = repository.create_run(
+        user_id=users.vip_id,
+        question=f"Atomic rollback {failure_point}",
+        idempotency_key=f"sync-rollback-{failure_point}-{uuid4()}",
+    )
+    reservation_id = _reserve_planning_run(run=run, user_id=users.vip_id)
+    claimed = repository.claim_reserved_run(
+        run.id,
+        user_id=users.vip_id,
+        owner_id="sync:rollback",
+        reservation_id=reservation_id,
+        lease_seconds=90,
+        effective_depth="standard",
+        route={"depth": "standard", "question_type": "rollback", "tool_calls": [], "generated": True, "use_thinking": False},
+        model="deepseek-v4-pro",
+    )
+    assert claimed is not None
+    answer = {
+        "answered": True,
+        "depth": "standard",
+        "verdict": "needs_checks",
+        "direct_answer": "Câu trả lời phải rollback.",
+        "claims": [],
+        "source_cards": [],
+        "as_of": datetime.now(timezone.utc).isoformat(),
+        "dataset_version": "signals:rollback",
+    }
+
+    if failure_point == "message":
+        monkeypatch.setattr(
+            repository,
+            "_insert_sync_message",
+            lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("message write failed")),
+        )
+    elif failure_point == "usage":
+        monkeypatch.setattr(
+            repository,
+            "_settle_sync_usage",
+            lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("usage write failed")),
+        )
+
+    error_type = InvalidRunTransition if failure_point == "run" else RuntimeError
+    with pytest.raises(error_type):
+        repository.finalize_sync_run(
+            run.id,
+            user_id=users.vip_id,
+            owner_id="sync:wrong" if failure_point == "run" else "sync:rollback",
+            reservation_id=reservation_id,
+            target="completed",
+            outcome="answered",
+            usage=ProviderUsage(input_tokens=50, output_tokens=10),
+            answer=answer,
+        )
+
+    durable = repository.get_run(user_id=users.vip_id, run_id=run.id)
+    assert durable is not None
+    assert durable.status == "running"
+    assert durable.worker_id == "sync:rollback"
+    assert durable.answer is None
+    with get_conn() as conn:
+        ledger = conn.execute(
+            """
+            SELECT settlement_status, question_status, actual_usd,
+                   prompt_tokens, completion_tokens, outcome
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation_id,),
+        ).fetchone()
+        assistant_count = conn.execute(
+            "SELECT COUNT(*) AS total FROM radar_ask_messages WHERE run_id=? AND role='assistant'",
+            (run.id,),
+        ).fetchone()["total"]
+    assert tuple(ledger) == ("reserved", "reserved", Decimal("0.000000"), 0, 0, None)
+    assert assistant_count == 0
 
 
 def test_run_reads_are_owner_scoped_and_terminal_transition_is_immutable(repository_env):

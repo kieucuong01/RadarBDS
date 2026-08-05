@@ -34,7 +34,7 @@ from .contracts import (
     UsageReservation,
 )
 from .evidence import build_provider_bundle
-from .limits import BudgetHardStop, QuotaExceeded
+from .limits import BudgetHardStop, QuotaExceeded, ReservationUnavailable
 from .planner import PLANNER_MAX_COST_USD
 from .provider import ProviderError, RadarAskProvider
 from .registry import ToolArgumentsInvalid, ToolContext, ToolRegistry, execute_tool
@@ -79,7 +79,9 @@ class RepositoryProtocol(Protocol):
     def create_run(self, **kwargs): ...
     def get_run(self, **kwargs): ...
     def claim_planning(self, run_id: UUID, **kwargs): ...
+    def claim_reserved_run(self, run_id: UUID, **kwargs): ...
     def finalize_planning(self, run_id: UUID, **kwargs): ...
+    def finalize_sync_run(self, run_id: UUID, **kwargs): ...
     def fail_planning(self, run_id: UUID, **kwargs): ...
     def transition_run(self, run_id: UUID, **kwargs): ...
     def record_tool_call(self, **kwargs): ...
@@ -485,12 +487,84 @@ def _retrieve_with_corrections(
     return active_bundles, assessment
 
 
-def _settle(limits: LimitProtocol, reservation, usage: ProviderUsage, outcome: RunOutcome):
-    return limits.settle_question(
-        reservation_id=reservation.reservation_id,
-        usage=usage,
-        outcome=outcome,
+def _sync_result_matches(run, *, target: str, outcome: str, answer) -> bool:
+    return (
+        run.status == target
+        and run.outcome == outcome
+        and run.answer == (answer.model_dump(mode="json") if answer is not None else None)
     )
+
+
+def _finalize_sync_or_reconcile(
+    dependencies: OrchestratorDependencies,
+    run,
+    *,
+    reservation,
+    owner_id: str,
+    target: str,
+    outcome: RunOutcome,
+    usage: ProviderUsage,
+    answer: AnswerEnvelope | None = None,
+    effective_depth: str | None = None,
+    route: Mapping[str, Any] | None = None,
+    model: str | None = None,
+    planner_usage: ProviderUsage | None = None,
+    error_code: str | None = None,
+    retryable: bool = False,
+):
+    """Retry only persistence, never provider work, and trust exact durable truth."""
+    kwargs = {
+        "user_id": run.user_id,
+        "owner_id": owner_id,
+        "reservation_id": reservation.reservation_id,
+        "target": target,
+        "outcome": outcome.value,
+        "usage": usage,
+        "answer": answer.model_dump(mode="json") if answer is not None else None,
+        "effective_depth": effective_depth,
+        "route": route,
+        "model": model,
+        "planner_model": (
+            dependencies.settings.router_model if planner_usage is not None else None
+        ),
+        "planner_usage": planner_usage,
+        "error_code": error_code,
+        "retryable": retryable,
+    }
+    last_error: Exception | None = None
+    for _attempt in range(2):
+        try:
+            return dependencies.repository.finalize_sync_run(run.id, **kwargs)
+        except Exception as exc:
+            last_error = exc
+            durable = dependencies.repository.get_run(user_id=run.user_id, run_id=run.id)
+            if durable is not None and _sync_result_matches(
+                durable,
+                target=target,
+                outcome=outcome.value,
+                answer=answer,
+            ):
+                return durable
+    if target != RunStatus.FAILED.value:
+        failure_kwargs = {
+            **kwargs,
+            "target": RunStatus.FAILED.value,
+            "outcome": RunOutcome.DATABASE_FAILURE.value,
+            "answer": None,
+            "error_code": "sync_persistence_failed",
+            "retryable": True,
+        }
+        try:
+            return dependencies.repository.finalize_sync_run(run.id, **failure_kwargs)
+        except Exception:
+            durable = dependencies.repository.get_run(user_id=run.user_id, run_id=run.id)
+            if durable is not None and durable.status in {
+                RunStatus.FAILED.value,
+                RunStatus.CANCELLED.value,
+            }:
+                return durable
+    assert last_error is not None
+    raise last_error
 
 
 def _fail_run(
@@ -503,14 +577,25 @@ def _fail_run(
     error_code: str,
     retryable: bool,
 ) -> AskRunResult:
-    if reservation is not None:
-        _settle(dependencies.limits, reservation, usage, outcome)
-    failed = dependencies.repository.transition_run(
-        run.id,
-        user_id=run.user_id,
-        expected={"running"},
-        target="failed",
-        outcome=outcome.value,
+    if reservation is None or run.worker_id is None:
+        failed = dependencies.repository.transition_run(
+            run.id,
+            user_id=run.user_id,
+            expected={"running"},
+            target="failed",
+            outcome=outcome.value,
+            error_code=error_code,
+            retryable=retryable,
+        )
+        return _run_result(failed)
+    failed = _finalize_sync_or_reconcile(
+        dependencies,
+        run,
+        reservation=reservation,
+        owner_id=run.worker_id,
+        target=RunStatus.FAILED.value,
+        outcome=outcome,
+        usage=usage,
         error_code=error_code,
         retryable=retryable,
     )
@@ -892,6 +977,18 @@ def run_question(
                 model=possible_answer.model,
                 depth=request.requested_depth.value if request.requested_depth else None,
             )
+        except ReservationUnavailable:
+            cancelled = dependencies.repository.transition_run(
+                run.id,
+                user_id=context.user_id,
+                expected={"created"},
+                target="cancelled",
+                outcome=RunOutcome.CANCELLED.value,
+                error_code="reservation_unavailable",
+                retryable=True,
+                model=possible_answer.model,
+            )
+            return _run_result(cancelled)
         except (BudgetHardStop, QuotaExceeded) as exc:
             budget_stopped = isinstance(exc, BudgetHardStop)
             dependencies.repository.transition_run(
@@ -915,10 +1012,11 @@ def run_question(
             raise
 
         planner_id = f"planner:{uuid4()}"
-        claimed = dependencies.repository.claim_planning(
+        claimed = dependencies.repository.claim_reserved_run(
             run.id,
             user_id=context.user_id,
-            planner_id=planner_id,
+            owner_id=planner_id,
+            reservation_id=reservation.reservation_id,
             lease_seconds=90,
         )
         if claimed is None:
@@ -928,6 +1026,17 @@ def run_question(
             )
             if durable is None:
                 raise InvalidRunTransition("claimed planner run was not found")
+            if durable.status == RunStatus.CREATED.value:
+                durable = dependencies.repository.transition_run(
+                    run.id,
+                    user_id=context.user_id,
+                    expected={"created"},
+                    target="cancelled",
+                    outcome=RunOutcome.CANCELLED.value,
+                    error_code="reservation_unavailable",
+                    retryable=True,
+                    model=possible_answer.model,
+                )
             return _run_result(durable)
         run = claimed
 
@@ -982,6 +1091,37 @@ def run_question(
                 retryable=False,
             )
 
+        if decision.needs_clarification:
+            answer = AnswerEnvelope(
+                answered=False,
+                depth=decision.depth,
+                verdict=None,
+                direct_answer=(
+                    decision.clarification_question
+                    or "Bạn vui lòng bổ sung thông tin."
+                ),
+                as_of=_utc_now(dependencies.clock),
+                dataset_version="radar-ask:foundation",
+            )
+            clarifying = _finalize_sync_or_reconcile(
+                dependencies,
+                run,
+                reservation=reservation,
+                owner_id=planner_id,
+                target=RunStatus.CLARIFYING.value,
+                outcome=RunOutcome.CLARIFICATION,
+                usage=EMPTY_USAGE,
+                answer=answer,
+                effective_depth=decision.depth.value,
+                route=decision.model_dump(mode="json"),
+                model=policy.model,
+                planner_usage=planned.usage,
+            )
+            return _run_result(
+                clarifying,
+                answer=answer if clarifying.status == RunStatus.CLARIFYING.value else None,
+            )
+
         planning_target = "queued" if decision.depth is AskDepth.DEEP else "running"
         try:
             run = dependencies.repository.finalize_planning(
@@ -1034,6 +1174,20 @@ def run_question(
                 model=policy.model,
                 depth=decision.depth.value,
             )
+        except ReservationUnavailable:
+            cancelled = dependencies.repository.transition_run(
+                run.id,
+                user_id=context.user_id,
+                expected={"created"},
+                target="cancelled",
+                outcome=RunOutcome.CANCELLED.value,
+                error_code="reservation_unavailable",
+                retryable=True,
+                effective_depth=decision.depth.value,
+                route=decision.model_dump(mode="json"),
+                model=policy.model,
+            )
+            return _run_result(cancelled)
         except (BudgetHardStop, QuotaExceeded) as exc:
             budget_stopped = isinstance(exc, BudgetHardStop)
             dependencies.repository.transition_run(
@@ -1058,6 +1212,40 @@ def run_question(
             )
             raise
 
+        sync_id = f"sync:{uuid4()}"
+        claimed = dependencies.repository.claim_reserved_run(
+            run.id,
+            user_id=context.user_id,
+            owner_id=sync_id,
+            reservation_id=reservation.reservation_id,
+            lease_seconds=90,
+            effective_depth=decision.depth.value,
+            route=decision.model_dump(mode="json"),
+            model=policy.model,
+        )
+        if claimed is None:
+            durable = dependencies.repository.get_run(
+                user_id=context.user_id,
+                run_id=run.id,
+            )
+            if durable is None:
+                raise InvalidRunTransition("claimed sync run was not found")
+            if durable.status == RunStatus.CREATED.value:
+                durable = dependencies.repository.transition_run(
+                    run.id,
+                    user_id=context.user_id,
+                    expected={"created"},
+                    target="cancelled",
+                    outcome=RunOutcome.CANCELLED.value,
+                    error_code="reservation_unavailable",
+                    retryable=True,
+                    effective_depth=decision.depth.value,
+                    route=decision.model_dump(mode="json"),
+                    model=policy.model,
+                )
+            return _run_result(durable)
+        run = claimed
+
     if decision.needs_clarification:
         now = _utc_now(dependencies.clock)
         answer = AnswerEnvelope(
@@ -1068,27 +1256,21 @@ def run_question(
             as_of=now,
             dataset_version="radar-ask:foundation",
         )
-        clarifying = dependencies.repository.transition_run(
-            run.id,
-            user_id=context.user_id,
-            expected={"running"} if planned_route else {"created"},
-            target="clarifying",
-            outcome=RunOutcome.CLARIFICATION.value,
-            effective_depth=decision.depth.value,
-            route=decision.model_dump(mode="json"),
-            answer=answer.model_dump(mode="json"),
-            model=policy.model,
+        assert run.worker_id is not None
+        clarifying = _finalize_sync_or_reconcile(
+            dependencies,
+            run,
+            reservation=reservation,
+            owner_id=run.worker_id,
+            target=RunStatus.CLARIFYING.value,
+            outcome=RunOutcome.CLARIFICATION,
+            usage=EMPTY_USAGE,
+            answer=answer,
         )
-        _settle(dependencies.limits, reservation, EMPTY_USAGE, RunOutcome.CLARIFICATION)
-        dependencies.repository.create_message(
-            user_id=context.user_id,
-            session_id=run.session_id,
-            role="assistant",
-            content=answer.direct_answer,
-            answer=answer.model_dump(mode="json"),
-            run_id=run.id,
+        return _run_result(
+            clarifying,
+            answer=answer if clarifying.status == RunStatus.CLARIFYING.value else None,
         )
-        return _run_result(clarifying, answer=answer)
 
     if decision.depth is AskDepth.DEEP:
         if planned_route:
@@ -1096,26 +1278,12 @@ def run_question(
         queued = dependencies.repository.transition_run(
             run.id,
             user_id=context.user_id,
-            expected={"created"},
+            expected={"running"},
             target="queued",
-            effective_depth=decision.depth.value,
-            route=decision.model_dump(mode="json"),
-            model=policy.model,
         )
         return _run_result(queued)
 
-    if planned_route:
-        running = run
-    else:
-        running = dependencies.repository.transition_run(
-            run.id,
-            user_id=context.user_id,
-            expected={"created"},
-            target="running",
-            effective_depth=decision.depth.value,
-            route=decision.model_dump(mode="json"),
-            model=policy.model,
-        )
+    running = run
     execution = _execute_running_run(
         request,
         context,
@@ -1139,21 +1307,18 @@ def run_question(
     answer = execution.answer
     outcome = RunOutcome.ANSWERED if answer.answered else RunOutcome.INSUFFICIENT
     target = RunStatus.COMPLETED if answer.answered else RunStatus.INSUFFICIENT
-    terminal = dependencies.repository.transition_run(
-        run.id,
-        user_id=context.user_id,
-        expected={"running"},
+    assert running.worker_id is not None
+    terminal = _finalize_sync_or_reconcile(
+        dependencies,
+        running,
+        reservation=reservation,
+        owner_id=running.worker_id,
         target=target.value,
-        outcome=outcome.value,
-        answer=answer.model_dump(mode="json"),
+        outcome=outcome,
+        usage=execution.usage,
+        answer=answer,
     )
-    dependencies.repository.create_message(
-        user_id=context.user_id,
-        session_id=run.session_id,
-        role="assistant",
-        content=answer.direct_answer,
-        answer=answer.model_dump(mode="json"),
-        run_id=run.id,
+    return _run_result(
+        terminal,
+        answer=answer if terminal.status == target.value else None,
     )
-    _settle(dependencies.limits, reservation, execution.usage, outcome)
-    return _run_result(terminal, answer=answer)

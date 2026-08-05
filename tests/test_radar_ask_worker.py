@@ -561,6 +561,68 @@ def test_expired_planner_lease_fails_and_releases_without_replan_or_worker_queue
     assert tuple(ledger) == ("released", "released", "database_failure")
 
 
+def test_expired_sync_owner_fails_terminally_and_is_never_requeued_to_deep_worker(worker_repo):
+    repository, user = worker_repo
+    run = repository.create_run(
+        user_id=user.vip_id,
+        question="Sync request crashed before atomic finalize",
+        idempotency_key="expired-sync-owner",
+    )
+    reservation_id = uuid4()
+    now = datetime.now(timezone.utc)
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO radar_ask_usage (
+                id, run_key, user_id, tier, model, depth,
+                usage_date, usage_month, settlement_status, question_status,
+                reserved_usd, reservation_expires_at
+            ) VALUES (?, ?, ?, 'vip', 'deepseek-v4-pro', 'standard',
+                      ?, ?, 'reserved', 'reserved', 0.25, ?)
+            """,
+            (
+                reservation_id,
+                run.id,
+                user.vip_id,
+                now.date(),
+                now.date().replace(day=1),
+                now + timedelta(minutes=10),
+            ),
+        )
+    claimed = repository.claim_reserved_run(
+        run.id,
+        user_id=user.vip_id,
+        owner_id="sync:expired",
+        reservation_id=reservation_id,
+        lease_seconds=90,
+        effective_depth="standard",
+        route={"depth": "standard", "question_type": "test", "tool_calls": [], "generated": True, "use_thinking": False},
+        model="deepseek-v4-pro",
+    )
+    assert claimed is not None
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE radar_ask_runs SET lease_until=NOW()-INTERVAL '1 second' WHERE id=?",
+            (run.id,),
+        )
+
+    recovered = repository.recover_expired_leases()
+
+    assert recovered == {"requeued": 0, "failed": 1}
+    stored = repository.get_run(user_id=user.vip_id, run_id=run.id)
+    assert stored is not None
+    assert stored.status == "failed"
+    assert stored.error_code == "sync_lease_expired"
+    assert stored.attempt_count == 0
+    assert repository.lease_next_run(worker_id="deep-worker", lease_seconds=90) is None
+    with get_conn() as conn:
+        ledger = conn.execute(
+            "SELECT settlement_status, question_status, outcome FROM radar_ask_usage WHERE id=?",
+            (reservation_id,),
+        ).fetchone()
+    assert tuple(ledger) == ("released", "released", "database_failure")
+
+
 def test_recovery_terminally_fails_queued_run_with_released_reservation(worker_repo):
     repository, user = worker_repo
     queued, reservation_id = queue_run(repository, user, key="released-reservation")
@@ -839,6 +901,8 @@ def test_deep_request_only_enqueues_without_provider_call(monkeypatch):
         model=None,
         error_code=None,
         retryable=False,
+        worker_id=None,
+        lease_until=None,
     )
     transitions = []
 
@@ -851,9 +915,23 @@ def test_deep_request_only_enqueues_without_provider_call(monkeypatch):
             if name in kwargs:
                 setattr(run, name, kwargs[name])
         run.status = kwargs["target"]
+        if run.status != "running":
+            run.worker_id = None
+            run.lease_until = None
+        return run
+
+    def claim_reserved_run(_run_id, **kwargs):
+        run.status = "running"
+        run.worker_id = kwargs["owner_id"]
+        run.lease_until = NOW + timedelta(seconds=kwargs["lease_seconds"])
+        for name in ("effective_depth", "route", "model"):
+            if kwargs.get(name) is not None:
+                setattr(run, name, kwargs[name])
         return run
 
     repository.create_run = create_run
+    repository.get_run = lambda **_kwargs: run
+    repository.claim_reserved_run = claim_reserved_run
     repository.transition_run = transition_run
     deps = worker_dependencies(repository, provider)
 

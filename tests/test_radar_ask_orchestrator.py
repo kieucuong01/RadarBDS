@@ -132,6 +132,8 @@ class FakeRepository:
         self.planning_claims: list[dict[str, object]] = []
         self.planning_finalizations: list[dict[str, object]] = []
         self.planning_failures: list[dict[str, object]] = []
+        self.sync_claims: list[dict[str, object]] = []
+        self.sync_finalizations: list[dict[str, object]] = []
 
     def create_run(self, *, user_id, question, idempotency_key, session_id, requested_depth):
         key = (user_id, idempotency_key)
@@ -167,6 +169,26 @@ class FakeRepository:
         self.planning_claims.append(dict(kwargs))
         return run
 
+    def claim_reserved_run(self, run_id, **kwargs):
+        run = self.get_run(user_id=kwargs["user_id"], run_id=run_id)
+        assert run is not None
+        if run.status != "created":
+            return None
+        run = replace(
+            run,
+            status="running",
+            worker_id=kwargs["owner_id"],
+            lease_until=NOW + timedelta(seconds=kwargs.get("lease_seconds", 90)),
+            effective_depth=kwargs.get("effective_depth") or run.effective_depth,
+            route=dict(kwargs["route"]) if kwargs.get("route") is not None else run.route,
+            model=kwargs.get("model") or run.model,
+        )
+        self.runs[(run.user_id, run.idempotency_key)] = run
+        self.sync_claims.append(dict(kwargs))
+        if str(kwargs["owner_id"]).startswith("planner:"):
+            self.planning_claims.append(dict(kwargs))
+        return run
+
     def finalize_planning(self, run_id, **kwargs):
         run = self.get_run(user_id=kwargs["user_id"], run_id=run_id)
         assert run is not None and run.worker_id == kwargs["planner_id"]
@@ -198,6 +220,41 @@ class FakeRepository:
         )
         self.runs[(run.user_id, run.idempotency_key)] = run
         self.planning_failures.append(dict(kwargs))
+        return run
+
+    def finalize_sync_run(self, run_id, **kwargs):
+        run = self.get_run(user_id=kwargs["user_id"], run_id=run_id)
+        assert run is not None
+        if run.status == kwargs["target"]:
+            return run
+        assert run.status == "running" and run.worker_id == kwargs["owner_id"]
+        answer = dict(kwargs["answer"]) if kwargs.get("answer") is not None else None
+        run = replace(
+            run,
+            status=kwargs["target"],
+            outcome=kwargs["outcome"],
+            effective_depth=kwargs.get("effective_depth") or run.effective_depth,
+            route=dict(kwargs["route"]) if kwargs.get("route") is not None else run.route,
+            answer=answer,
+            model=kwargs.get("model") or run.model,
+            error_code=kwargs.get("error_code"),
+            retryable=kwargs.get("retryable", False),
+            worker_id=None,
+            lease_until=None,
+        )
+        self.runs[(run.user_id, run.idempotency_key)] = run
+        self.sync_finalizations.append(dict(kwargs))
+        if answer is not None:
+            self.messages.append(
+                {
+                    "user_id": run.user_id,
+                    "session_id": run.session_id,
+                    "role": "assistant",
+                    "content": answer["direct_answer"],
+                    "answer": answer,
+                    "run_id": run.id,
+                }
+            )
         return run
 
     def transition_run(self, run_id, **kwargs):
@@ -341,13 +398,17 @@ def make_deps(
 def test_unmatched_question_claims_before_typed_planner_and_atomically_persists_usage_route():
     events: list[str] = []
     class OrderedRepository(FakeRepository):
-        def claim_planning(self, run_id, **kwargs):
+        def claim_reserved_run(self, run_id, **kwargs):
             events.append("claim")
-            return super().claim_planning(run_id, **kwargs)
+            return super().claim_reserved_run(run_id, **kwargs)
 
         def finalize_planning(self, run_id, **kwargs):
             events.append("finalize")
             return super().finalize_planning(run_id, **kwargs)
+
+        def finalize_sync_run(self, run_id, **kwargs):
+            events.append("sync_finalize")
+            return super().finalize_sync_run(run_id, **kwargs)
 
     repo = OrderedRepository()
 
@@ -431,12 +492,13 @@ def test_unmatched_question_claims_before_typed_planner_and_atomically_persists_
     )
 
     assert result.status is RunStatus.COMPLETED
-    assert events == ["reserve", "claim", "planner", "finalize", "settle"]
+    assert events == ["reserve", "claim", "planner", "finalize", "sync_finalize"]
     assert limits.reservations[0]["max_cost_usd"] == Decimal("0.13")
     assert limits.reservations[0]["model"] == "deepseek-v4-pro"
     assert repo.planning_finalizations[0]["planner_model"] == "deepseek-v4-flash"
     assert repo.planning_finalizations[0]["usage"] == planner_usage
-    assert limits.settlements[0]["usage"] == ProviderUsage(input_tokens=700, output_tokens=120)
+    assert limits.settlements == []
+    assert repo.sync_finalizations[0]["usage"] == ProviderUsage(input_tokens=700, output_tokens=120)
 
 
 def test_deterministic_fast_does_not_call_planner_or_reserve_provider_cost():
@@ -566,6 +628,110 @@ def test_planned_deep_persists_validated_route_and_preflight_usage_before_queue(
     assert repo.planning_finalizations[0]["usage"] == planner_usage
     assert limits.settlements == []
     assert dependencies.provider.requests == []
+
+
+def test_planned_deep_clarification_finalizes_directly_and_never_queues():
+    planner_usage = ProviderUsage(input_tokens=33, output_tokens=7)
+
+    def planner(**_kwargs):
+        return PlannerResult(
+            decision=RouteDecision(
+                depth=AskDepth.DEEP,
+                question_type="clarification",
+                tool_calls=[],
+                generated=True,
+                needs_clarification=True,
+                clarification_question="Bạn muốn phân tích phường nào?",
+            ),
+            usage=planner_usage,
+        )
+
+    from services.radar_ask.routing import route_question
+
+    repository = FakeRepository()
+    dependencies = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"free", "vip", "admin"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=repository,
+        limits=FakeLimits(),
+        burst=FakeBurst(),
+        router=route_question,
+        registry=DEFAULT_TOOL_REGISTRY,
+        provider=FakeProvider(),
+        clock=lambda: NOW,
+        planner=planner,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Phân tích sâu khu này"),
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key="planned-deep-clarification",
+    )
+
+    assert result.status is RunStatus.CLARIFYING
+    assert result.answer is not None
+    assert result.answer.direct_answer == "Bạn muốn phân tích phường nào?"
+    assert repository.planning_finalizations == []
+    assert len(repository.sync_finalizations) == 1
+    finalized = repository.sync_finalizations[0]
+    assert finalized["target"] == RunStatus.CLARIFYING.value
+    assert finalized["planner_usage"] == planner_usage
+    assert finalized["effective_depth"] == AskDepth.DEEP.value
+    assert dependencies.provider.requests == []
+
+
+@pytest.mark.parametrize("commit_mode", ["ambiguous", "precommit"])
+def test_sync_finalize_retry_never_repeats_provider(commit_mode):
+    class FlakyFinalizeRepository(FakeRepository):
+        def __init__(self):
+            super().__init__()
+            self.raised = False
+
+        def finalize_sync_run(self, run_id, **kwargs):
+            if not self.raised and commit_mode == "precommit":
+                self.raised = True
+                raise RuntimeError("commit failed before durable write")
+            result = super().finalize_sync_run(run_id, **kwargs)
+            if not self.raised and commit_mode == "ambiguous":
+                self.raised = True
+                raise RuntimeError("ambiguous commit acknowledgement")
+            return result
+
+    provider = FakeProvider(
+        response=ProviderResponse(
+            json_value=generated_answer(),
+            usage=ProviderUsage(input_tokens=80, output_tokens=16),
+        )
+    )
+    repository = FlakyFinalizeRepository()
+    dependencies = make_deps(decision=standard_decision(), provider=provider)
+    dependencies = replace(dependencies, repository=repository)
+    request = AskQuestionRequest(question="Phân tích giá khu này")
+
+    first = run_question(
+        request,
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key=f"sync-{commit_mode}",
+    )
+    replay = run_question(
+        request,
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key=f"sync-{commit_mode}",
+    )
+
+    assert first.status is RunStatus.COMPLETED
+    assert replay.status is RunStatus.COMPLETED
+    assert len(provider.requests) == 1
+    assert len(repository.sync_finalizations) == 1
 
 
 def test_ambiguous_planner_finalize_reconciles_durable_route_without_replanning():
@@ -855,7 +1021,7 @@ def test_fast_deterministic_answer_has_zero_provider_cost_and_grounded_sources()
     assert result.answer.source_cards[0].evidence_id == "market:phu-my:drop-count"
     assert deps.provider.requests == []
     assert deps.limits.reservations[0]["max_cost_usd"] == Decimal("0")
-    assert deps.limits.settlements[0]["outcome"] is RunOutcome.ANSWERED
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.ANSWERED.value
     assert len(deps.repository.tools) == 1
     assert len(deps.repository.evidence) == 1
 
@@ -879,8 +1045,8 @@ def test_generated_standard_answer_reserves_calls_provider_validates_and_settles
     assert result.status is RunStatus.COMPLETED
     assert deps.limits.reservations[0]["max_cost_usd"] == Decimal("0.03")
     assert deps.limits.reservations[0]["model"] == "deepseek-v4-flash"
-    assert deps.limits.settlements[0]["usage"].output_tokens == 120
-    assert deps.limits.settlements[0]["outcome"] is RunOutcome.ANSWERED
+    assert deps.repository.sync_finalizations[0]["usage"].output_tokens == 120
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.ANSWERED.value
     assert len(provider.requests) == 1
     assert provider.requests[0].json_mode is True
     assert provider.requests[0].thinking_enabled is False
@@ -968,12 +1134,15 @@ def test_clarification_releases_question_reservation():
     assert result.status is RunStatus.CLARIFYING
     assert result.answer is not None
     assert result.answer.direct_answer == "Bạn muốn hỏi lô nào?"
-    assert deps.limits.settlements[0]["outcome"] is RunOutcome.CLARIFICATION
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.CLARIFICATION.value
     assert deps.provider.requests == []
 
 
 def test_provider_failure_releases_question_and_money():
-    provider = FakeProvider(error=ProviderUnavailable("private provider detail"))
+    known_usage = ProviderUsage(input_tokens=61, output_tokens=9)
+    provider = FakeProvider(
+        error=ProviderUnavailable("private provider detail", usage=known_usage)
+    )
     deps = make_deps(decision=standard_decision(), provider=provider)
 
     result = run_question(
@@ -986,8 +1155,34 @@ def test_provider_failure_releases_question_and_money():
     assert result.status is RunStatus.FAILED
     assert result.error_code == "provider_unavailable"
     assert result.retryable is True
-    assert deps.limits.settlements[0]["outcome"] is RunOutcome.PROVIDER_FAILURE
-    assert "private provider detail" not in str(deps.repository.transitions[-1])
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.PROVIDER_FAILURE.value
+    assert deps.repository.sync_finalizations[0]["usage"] == known_usage
+    assert "private provider detail" not in str(deps.repository.sync_finalizations[-1])
+
+
+def test_tool_failure_after_sync_claim_atomically_fails_without_provider_call():
+    def broken_tool(**_kwargs):
+        raise RuntimeError("private database detail")
+
+    deps = make_deps(decision=fast_decision(), handler=broken_tool)
+
+    result = run_question(
+        AskQuestionRequest(question="Khu nào giảm giá hôm nay?"),
+        make_context(),
+        dependencies=deps,
+        idempotency_key="sync-tool-failure",
+    )
+
+    assert result.status is RunStatus.FAILED
+    assert result.error_code == "evidence_execution_failed"
+    assert deps.provider.requests == []
+    assert len(deps.repository.sync_claims) == 1
+    assert len(deps.repository.sync_finalizations) == 1
+    finalized = deps.repository.sync_finalizations[0]
+    assert finalized["target"] == RunStatus.FAILED.value
+    assert finalized["outcome"] == RunOutcome.DATABASE_FAILURE.value
+    assert finalized["usage"] == ProviderUsage()
+    assert "private database detail" not in str(finalized)
 
 
 @pytest.mark.parametrize(
@@ -1013,7 +1208,7 @@ def test_malicious_or_unsupported_provider_answer_fails_closed(answer):
 
     assert result.status is RunStatus.FAILED
     assert result.error_code == "answer_validation_failed"
-    assert deps.limits.settlements[0]["outcome"] is RunOutcome.VALIDATION_FAILURE
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.VALIDATION_FAILURE.value
 
 
 def test_numeric_material_claim_requires_existing_evidence():
@@ -1047,7 +1242,7 @@ def test_grounded_insufficient_result_consumes_one_question_without_provider():
     assert result.status is RunStatus.INSUFFICIENT
     assert result.answer is not None and result.answer.answered is False
     assert result.answer.verdict is AskVerdict.INSUFFICIENT
-    assert deps.limits.settlements[0]["outcome"] is RunOutcome.INSUFFICIENT
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.INSUFFICIENT.value
 
 
 @pytest.mark.parametrize(

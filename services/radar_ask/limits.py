@@ -56,6 +56,10 @@ class ReservationOwnershipConflict(RadarAskLimitError):
     """Raised when a run-key replay changes user or tier ownership."""
 
 
+class ReservationUnavailable(RadarAskLimitError):
+    """Raised when an idempotent run ledger cannot safely be reused."""
+
+
 class UnknownModelPricing(RadarAskLimitError):
     """Raised rather than undercounting a provider model with unknown pricing."""
 
@@ -253,6 +257,12 @@ class RadarAskLimitService:
         usage_date, usage_month, reset_at = _periods(now)
         reserved = _money(maximum * self.settings.cost_safety_multiplier)
         expires_at = now + self.reservation_ttl
+        # Expiry cleanup must survive a later quota/budget/unavailable rejection.
+        # The admission transaction reacquires the same lock and repeats cleanup,
+        # so no unlocked capacity can be consumed between these two scopes.
+        with get_conn() as release_conn:
+            self._lock(release_conn, f"radar_ask_budget:{usage_month:%Y-%m}")
+            self._release_expired(release_conn, usage_month=usage_month, now=now)
         with get_conn() as conn:
             self._lock(conn, f"radar_ask_budget:{usage_month:%Y-%m}")
             self._release_expired(conn, usage_month=usage_month, now=now)
@@ -267,18 +277,129 @@ class RadarAskLimitService:
                     raise ReservationOwnershipConflict(
                         "run reservation belongs to another user or tier"
                     )
+                if (
+                    existing["settlement_status"] == "reserved"
+                    and existing["question_status"] == "reserved"
+                    and existing["reservation_expires_at"] > now
+                ):
+                    actual, active = self._budget_totals(
+                        conn,
+                        usage_month=existing["usage_month"],
+                        now=now,
+                    )
+                    return UsageReservation(
+                        reservation_id=existing["id"],
+                        run_id=existing["run_key"],
+                        user_id=user_id,
+                        tier=tier,
+                        reserved_usd=existing["reserved_usd"],
+                        warning_active=self._warning(actual + active) is not None,
+                    )
+
+                pristine_run = conn.execute(
+                    """
+                    SELECT id FROM radar_ask_runs
+                    WHERE id=? AND user_id=? AND status='created'
+                      AND route_json IS NULL AND answer_json IS NULL
+                      AND outcome IS NULL AND worker_id IS NULL
+                      AND effective_depth IS NULL AND model IS NULL
+                      AND error_code IS NULL AND started_at IS NULL
+                      AND attempt_count=0
+                    FOR UPDATE
+                    """,
+                    (run_key, user_id),
+                ).fetchone()
+                pristine_usage = (
+                    existing["settlement_status"] == "released"
+                    and existing["question_status"] == "released"
+                    and existing["outcome"] == RunOutcome.CANCELLED.value
+                    and Decimal(existing["actual_usd"]) == 0
+                    and existing["planner_recorded_at"] is None
+                    and int(existing["prompt_tokens"]) == 0
+                    and int(existing["completion_tokens"]) == 0
+                    and int(existing["cache_hit_tokens"]) == 0
+                    and int(existing["cache_miss_tokens"]) == 0
+                    and existing["usage_date"] == usage_date
+                    and existing["usage_month"] == usage_month
+                )
+                if pristine_run is None or not pristine_usage:
+                    raise ReservationUnavailable(
+                        "run reservation is no longer active or safely reusable"
+                    )
+
+                limit = TIER_DAILY_LIMITS[tier]  # type: ignore[index]
+                used_row = conn.execute(
+                    """
+                    SELECT COUNT(*) AS used
+                    FROM radar_ask_usage
+                    WHERE user_id=? AND usage_date=?
+                      AND (
+                        question_status='answered'
+                        OR (
+                            question_status='reserved'
+                            AND settlement_status='reserved'
+                            AND reservation_expires_at > ?
+                        )
+                      )
+                    """,
+                    (user_id, usage_date, now),
+                ).fetchone()
+                used = int(used_row["used"] if used_row is not None else 0)
+                if used >= limit:
+                    raise QuotaExceeded(
+                        tier=tier,
+                        limit=limit,
+                        used=used,
+                        reset_at=reset_at,
+                    )
                 actual, active = self._budget_totals(
                     conn,
-                    usage_month=existing["usage_month"],
+                    usage_month=usage_month,
                     now=now,
                 )
+                projected = _money(actual + active + reserved)
+                if reserved > 0 and projected > self.settings.monthly_hard_stop_usd:
+                    raise BudgetHardStop(
+                        projected_usd=projected,
+                        hard_stop_usd=_money(self.settings.monthly_hard_stop_usd),
+                    )
+                warning = self._warning(projected)
+                reactivated = conn.execute(
+                    """
+                    UPDATE radar_ask_usage
+                    SET model=?, depth=?, settlement_status='reserved',
+                        question_status='reserved', reserved_usd=?, actual_usd=0,
+                        pricing_version=?, reservation_expires_at=?, outcome=NULL,
+                        prompt_tokens=0, completion_tokens=0,
+                        cache_hit_tokens=0, cache_miss_tokens=0,
+                        settled_at=NULL, updated_at=?
+                    WHERE id=? AND run_key=? AND settlement_status='released'
+                      AND question_status='released' AND actual_usd=0
+                      AND planner_recorded_at IS NULL
+                    RETURNING *
+                    """,
+                    (
+                        effective_model,
+                        depth,
+                        reserved,
+                        PRICING_VERSION,
+                        expires_at,
+                        now,
+                        existing["id"],
+                        run_key,
+                    ),
+                ).fetchone()
+                if reactivated is None:
+                    raise ReservationUnavailable(
+                        "run reservation lost its reactivation lock"
+                    )
                 return UsageReservation(
-                    reservation_id=existing["id"],
-                    run_id=existing["run_key"],
+                    reservation_id=reactivated["id"],
+                    run_id=reactivated["run_key"],
                     user_id=user_id,
                     tier=tier,
-                    reserved_usd=existing["reserved_usd"],
-                    warning_active=self._warning(actual + active) is not None,
+                    reserved_usd=reactivated["reserved_usd"],
+                    warning_active=warning is not None,
                 )
 
             limit = TIER_DAILY_LIMITS[tier]  # type: ignore[index]

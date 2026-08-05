@@ -15,15 +15,26 @@ from db.connection import get_conn
 from db.schema import init_schema
 from services.radar_ask.burst import BurstExceeded, BurstLimiter
 from services.radar_ask.config import RadarAskSettings
-from services.radar_ask.contracts import ProviderUsage, RunOutcome
+from services.radar_ask.contracts import (
+    AskContext,
+    AskDepth,
+    AskQuestionRequest,
+    ProviderUsage,
+    RouteDecision,
+    RunOutcome,
+)
 from services.radar_ask.limits import (
     BudgetHardStop,
     BudgetWarning,
     PlannerUsageConflict,
     QuotaExceeded,
     RadarAskLimitService,
+    ReservationUnavailable,
     calculate_provider_cost,
 )
+from services.radar_ask.orchestrator import OrchestratorDependencies, run_question
+from services.radar_ask.repository import RadarAskRepository
+from services.radar_ask.registry import DEFAULT_TOOL_REGISTRY
 
 
 @dataclass(frozen=True)
@@ -231,6 +242,311 @@ def test_reservation_is_idempotent_for_same_run(limit_environment):
             (run_id,),
         ).fetchone()["total"]
     assert count == 1
+
+
+def test_expired_pristine_created_run_replay_reactivates_under_fresh_locks(limit_environment):
+    _service, users, clock, settings = limit_environment
+    service = RadarAskLimitService(
+        settings=settings,
+        now_fn=clock,
+        reservation_ttl=timedelta(seconds=30),
+    )
+    run = RadarAskRepository().create_run(
+        user_id=users.free_id,
+        question="Replay an toàn",
+        idempotency_key=f"expired-replay-{uuid4()}",
+    )
+    first = service.reserve_question(
+        user_id=users.free_id,
+        tier="free",
+        run_id=run.id,
+        max_cost_usd=Decimal("0.03"),
+        model="deepseek-v4-flash",
+        depth="standard",
+    )
+    clock.value += timedelta(seconds=31)
+    for _index in range(4):
+        _reserve(service, user_id=users.free_id, tier="free")
+
+    replay = service.reserve_question(
+        user_id=users.free_id,
+        tier="free",
+        run_id=run.id,
+        max_cost_usd=Decimal("0.04"),
+        model="deepseek-v4-pro",
+        depth="deep",
+    )
+
+    assert replay.reservation_id == first.reservation_id
+    assert replay.reserved_usd == Decimal("0.080000")
+    with pytest.raises(QuotaExceeded):
+        _reserve(service, user_id=users.free_id, tier="free")
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT settlement_status, question_status, reserved_usd, model, depth,
+                   outcome, actual_usd, reservation_expires_at
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (first.reservation_id,),
+        ).fetchone()
+    assert tuple(row)[:7] == (
+        "reserved",
+        "reserved",
+        Decimal("0.080000"),
+        "deepseek-v4-pro",
+        "deep",
+        None,
+        Decimal("0.000000"),
+    )
+    assert row["reservation_expires_at"] == clock.value + timedelta(seconds=30)
+
+
+def test_expired_replay_cannot_bypass_fresh_monthly_hard_stop(limit_environment):
+    _service, users, clock, settings = limit_environment
+    service = RadarAskLimitService(
+        settings=settings,
+        now_fn=clock,
+        reservation_ttl=timedelta(seconds=30),
+    )
+    run = RadarAskRepository().create_run(
+        user_id=users.admin_id,
+        question="Replay qua hard stop",
+        idempotency_key=f"expired-budget-{uuid4()}",
+    )
+    first = service.reserve_question(
+        user_id=users.admin_id,
+        tier="admin",
+        run_id=run.id,
+        max_cost_usd=Decimal("1"),
+        model="deepseek-v4-pro",
+        depth="standard",
+    )
+    clock.value += timedelta(seconds=31)
+    for amount in ("10", "10", "5"):
+        _reserve(service, user_id=users.admin_id, tier="admin", max_cost=amount)
+
+    with pytest.raises(BudgetHardStop):
+        service.reserve_question(
+            user_id=users.admin_id,
+            tier="admin",
+            run_id=run.id,
+            max_cost_usd=Decimal("0.01"),
+            model="deepseek-v4-pro",
+            depth="standard",
+        )
+
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT settlement_status, question_status FROM radar_ask_usage WHERE id=?",
+            (first.reservation_id,),
+        ).fetchone()
+        stored_run = conn.execute(
+            "SELECT status FROM radar_ask_runs WHERE id=?",
+            (run.id,),
+        ).fetchone()
+    assert tuple(row) == ("released", "released")
+    assert stored_run["status"] == "created"
+
+
+def test_hard_stopped_same_key_replay_cancels_created_run(limit_environment):
+    _service, users, _clock, settings = limit_environment
+    live_clock = MutableClock(datetime.now(timezone.utc))
+    service = RadarAskLimitService(
+        settings=settings,
+        now_fn=live_clock,
+        reservation_ttl=timedelta(seconds=30),
+    )
+    repository = RadarAskRepository()
+    key = f"hard-stop-replay-{uuid4()}"
+    request = AskQuestionRequest(question="Phân tích giá khu này")
+    run = repository.create_run(
+        user_id=users.admin_id,
+        question=request.question,
+        idempotency_key=key,
+    )
+    reservation = service.reserve_question(
+        user_id=users.admin_id,
+        tier="admin",
+        run_id=run.id,
+        max_cost_usd=Decimal("1"),
+        model="deepseek-v4-pro",
+        depth="standard",
+    )
+    live_clock.value += timedelta(seconds=31)
+    for amount in ("10", "10", "5"):
+        _reserve(service, user_id=users.admin_id, tier="admin", max_cost=amount)
+
+    class Burst:
+        def check(self, **_kwargs):
+            return None
+
+    class Provider:
+        def complete(self, _request):
+            raise AssertionError("hard-stopped replay must not call provider")
+
+    decision = RouteDecision(
+        depth=AskDepth.STANDARD,
+        question_type="clarification",
+        generated=True,
+        needs_clarification=True,
+        clarification_question="Bạn muốn hỏi khu nào?",
+    )
+    enabled_settings = replace(
+        settings,
+        enabled=True,
+        allowed_tiers=frozenset({"free", "vip", "admin"}),
+    )
+    with pytest.raises(BudgetHardStop):
+        run_question(
+            request,
+            AskContext(user_id=users.admin_id, tier="admin"),
+            dependencies=OrchestratorDependencies(
+                settings=enabled_settings,
+                repository=repository,
+                limits=service,
+                burst=Burst(),
+                router=lambda *_args, **_kwargs: decision,
+                registry=DEFAULT_TOOL_REGISTRY,
+                provider=Provider(),
+                clock=live_clock,
+            ),
+            idempotency_key=key,
+        )
+
+    durable = repository.get_run(user_id=users.admin_id, run_id=run.id)
+    assert durable is not None
+    assert durable.status == "cancelled"
+    assert durable.error_code == "monthly_budget_hard_stop"
+    with get_conn() as conn:
+        ledger = conn.execute(
+            "SELECT settlement_status, question_status FROM radar_ask_usage WHERE id=?",
+            (reservation.reservation_id,),
+        ).fetchone()
+    assert tuple(ledger) == ("released", "released")
+
+
+def test_same_key_replay_reactivates_then_creates_no_duplicate_chat_messages(limit_environment):
+    _service, users, _clock, settings = limit_environment
+    live_clock = MutableClock(datetime.now(timezone.utc))
+    service = RadarAskLimitService(
+        settings=settings,
+        now_fn=live_clock,
+        reservation_ttl=timedelta(seconds=30),
+    )
+    repository = RadarAskRepository()
+    key = f"reactivated-chat-{uuid4()}"
+    request = AskQuestionRequest(question="Lô này là lô nào?")
+    run = repository.create_run(
+        user_id=users.free_id,
+        question=request.question,
+        idempotency_key=key,
+    )
+    first = service.reserve_question(
+        user_id=users.free_id,
+        tier="free",
+        run_id=run.id,
+        max_cost_usd=Decimal("0.03"),
+        model="deepseek-v4-flash",
+        depth="standard",
+    )
+    live_clock.value += timedelta(seconds=31)
+
+    class Burst:
+        def check(self, **_kwargs):
+            return None
+
+    class Provider:
+        def complete(self, _request):
+            raise AssertionError("clarification replay must not call provider")
+
+    decision = RouteDecision(
+        depth=AskDepth.STANDARD,
+        question_type="clarification",
+        generated=False,
+        needs_clarification=True,
+        clarification_question="Bạn vui lòng cung cấp mã tin hoặc vị trí lô đất.",
+    )
+    enabled_settings = replace(
+        settings,
+        enabled=True,
+        allowed_tiers=frozenset({"free", "vip", "admin"}),
+    )
+    result = run_question(
+        request,
+        AskContext(user_id=users.free_id, tier="free"),
+        dependencies=OrchestratorDependencies(
+            settings=enabled_settings,
+            repository=repository,
+            limits=service,
+            burst=Burst(),
+            router=lambda *_args, **_kwargs: decision,
+            registry=DEFAULT_TOOL_REGISTRY,
+            provider=Provider(),
+            clock=live_clock,
+        ),
+        idempotency_key=key,
+    )
+
+    assert result.status.value == "clarifying"
+    with get_conn() as conn:
+        ledger = conn.execute(
+            "SELECT id, settlement_status, question_status FROM radar_ask_usage WHERE run_key=?",
+            (run.id,),
+        ).fetchone()
+        messages = conn.execute(
+            "SELECT role FROM radar_ask_messages WHERE run_id=? ORDER BY created_at",
+            (run.id,),
+        ).fetchall()
+    assert ledger["id"] == first.reservation_id
+    assert tuple(ledger)[1:] == ("released", "released")
+    assert [row["role"] for row in messages] == ["user", "assistant"]
+
+
+def test_expired_non_pristine_usage_is_never_reactivated(limit_environment):
+    _service, users, clock, settings = limit_environment
+    service = RadarAskLimitService(
+        settings=settings,
+        now_fn=clock,
+        reservation_ttl=timedelta(seconds=30),
+    )
+    run = RadarAskRepository().create_run(
+        user_id=users.vip_id,
+        question="Planner đã tốn chi phí",
+        idempotency_key=f"non-pristine-{uuid4()}",
+    )
+    reservation = service.reserve_question(
+        user_id=users.vip_id,
+        tier="vip",
+        run_id=run.id,
+        max_cost_usd=Decimal("0.13"),
+        model="deepseek-v4-pro",
+        depth="standard",
+    )
+    service.record_planner_usage(
+        reservation_id=reservation.reservation_id,
+        model="deepseek-v4-flash",
+        usage=ProviderUsage(input_tokens=10, output_tokens=2),
+    )
+    clock.value += timedelta(seconds=31)
+
+    with pytest.raises(ReservationUnavailable):
+        service.reserve_question(
+            user_id=users.vip_id,
+            tier="vip",
+            run_id=run.id,
+            max_cost_usd=Decimal("0.13"),
+            model="deepseek-v4-pro",
+            depth="standard",
+        )
+
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT settlement_status, actual_usd FROM radar_ask_usage WHERE id=?",
+            (reservation.reservation_id,),
+        ).fetchone()
+    assert row["settlement_status"] == "released"
+    assert row["actual_usd"] > 0
 
 
 def test_warning_at_20_and_hard_stop_above_50(limit_environment):

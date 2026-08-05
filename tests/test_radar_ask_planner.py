@@ -159,6 +159,34 @@ def test_planner_minimizes_hostile_pii_but_keeps_useful_location_and_road_contex
     assert "recent_turns" not in serialized
 
 
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Môi giới đang đẩy giá đất Phú Mỹ như thế nào?",
+        "Chủ đất giảm giá vì sao?",
+    ],
+)
+def test_planner_person_redaction_retains_unlabeled_market_semantics(question):
+    provider = FakeProvider(
+        ProviderResponse(json_value=valid_route(), usage=ProviderUsage(input_tokens=1))
+    )
+    planner = DeepSeekTypedPlanner(
+        settings=planner_settings(),
+        provider=provider,
+        registry=DEFAULT_TOOL_REGISTRY,
+    )
+
+    planner(
+        request=AskQuestionRequest(question=question),
+        context=AskContext(user_id=7, tier="vip"),
+        allowed_tools=tuple(DEFAULT_TOOL_REGISTRY.registrations),
+    )
+
+    outbound = provider.requests[0].messages[1].content or ""
+    assert question in outbound
+    assert "[REDACTED_PERSON]" not in outbound
+
+
 def test_invalid_typed_planner_output_preserves_known_provider_usage():
     usage = ProviderUsage(input_tokens=90, output_tokens=10, cache_miss_input_tokens=90)
     provider = FakeProvider(
