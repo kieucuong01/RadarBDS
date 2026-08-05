@@ -1,0 +1,30 @@
+[Unit]
+Description=Radar BDS Radar Ask privacy retention
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=radar
+Group=radar
+WorkingDirectory=/opt/radar-bds/current
+EnvironmentFile=/etc/radar-bds/radar.env
+Environment=PYTHONUNBUFFERED=1
+RuntimeDirectory=radar-bds
+ReadWritePaths=/run/radar-bds
+ExecStart=/opt/radar-bds/.venv/bin/python -X utf8 radar.py radar-ask-retention
+TimeoutStartSec=10m
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

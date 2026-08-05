@@ -35,6 +35,7 @@ before_commit=`$(git rev-parse HEAD)
 before=`$(git rev-parse --short HEAD)
 stash_ref=""
 deploy_started="0"
+radar_ask_units_installed="0"
 raw_backup="/tmp/radar-bds-raw-backup-before-$Stamp.json"
 archive_known_temp_files="$ArchiveKnownTempFilesFlag"
 install_performance_infra="$InstallPerformanceInfraFlag"
@@ -182,6 +183,7 @@ if [ "`$install_performance_infra" = "1" ]; then
 fi
 /opt/radar-bds/.venv/bin/python -X utf8 -m pip install -r requirements.txt
 /opt/radar-bds/.venv/bin/python -X utf8 -m py_compile app.py services/market_data.py services/image_assets.py services/public_content.py cli/public_content.py
+/opt/radar-bds/.venv/bin/python -X utf8 -m compileall -q services/radar_ask
 if sudo -n -u radar true 2>/dev/null; then
   sudo -n -u radar bash -lc 'set -a; source /etc/radar-bds/radar.env; set +a; /opt/radar-bds/.venv/bin/python -X utf8 -c "from db.schema import init_schema; init_schema()"'
 else
@@ -213,8 +215,22 @@ if [ -f deployment/ubuntu24/radar-bds-public-content.service ] && [ -f deploymen
     echo "install the public-content systemd units manually; no deploy-user cron fallback is created because /etc/radar-bds/radar.env is readable only by root:radar"
   fi
 fi
+if [ -f scripts/install_radar_ask_services.sh ]; then
+  if sudo -n bash scripts/install_radar_ask_services.sh install; then
+    radar_ask_units_installed="1"
+  else
+    echo "skipped installing Radar Ask systemd units (root/systemd verification unavailable)"
+    echo "run scripts/install_radar_ask_services.sh install manually before Radar Ask rollout"
+  fi
+fi
 sudo systemctl restart radar-bds.service
 sudo systemctl is-active radar-bds.service
+
+if [ "`$radar_ask_units_installed" = "1" ] \
+  && sudo systemctl is-active --quiet radar-ask-worker.service; then
+  sudo systemctl try-restart radar-ask-worker.service
+  sudo systemctl is-active radar-ask-worker.service
+fi
 
 smoke_service
 

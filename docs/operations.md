@@ -126,15 +126,14 @@ counts, and bounded failure dimensions only; they omit questions, prompts, raw
 evidence, phone numbers, URLs, and account identifiers. The current `v1`
 deterministic baseline has 140 cases: routing/tool selection are `0.971429`;
 numeric grounding, citation, and auth are `1.0`; unsupported claims are `0.0`;
-and privacy is RED at `0.985714`. The two failing provider-payload probes are
-`privacy-001` (lowercase multi-token labeled name) and `privacy-002`
-(single-token labeled name). They exercise the actual `DeepSeekTypedPlanner`
-message builder through a fake provider, so the run remains offline while
-measuring what would leave the application. Keep the CLI nonzero until both
-probes pass; do not relax the exact privacy threshold. A routing/tool miss does
-not cascade into a fabricated numeric or citation failure; each dimension uses
-its own denominator. Likewise, authorization is scored from the HTTP gate
-result before routing; denied cases never call the router, planner, or tools.
+and privacy is `1.0`. The provider-payload probes include lowercase multi-token
+and single-token labeled Vietnamese names. They exercise the actual
+`DeepSeekTypedPlanner` message builder through a fake provider, so the run
+remains offline while measuring what would leave the application. Do not relax
+the exact privacy threshold. A routing/tool miss does not cascade into a
+fabricated numeric or citation failure; each dimension uses its own
+denominator. Likewise, authorization is scored from the HTTP gate result before
+routing; denied cases never call the router, planner, or tools.
 
 The corpus diversity guard requires at least 24 independent evidence bundles,
 24 answer candidates, and 12 planner outputs. It also checks multiple road,
@@ -170,10 +169,14 @@ review any proposed corpus change by hand.
 
 ## Radar Ask Performance And Rendered QA Gate
 
-This gate is local/test-only. It uses seeded test users, the test PostgreSQL
-database, and a deterministic fake provider. Both executables reject a
-non-loopback target and require the explicit `RADAR_ASK_FAKE_PROVIDER=1`
-operator assertion. They are not a live DeepSeek or production load path.
+This gate is local/test-only. It uses seeded Admin test users, the test
+PostgreSQL database, and a deterministic fake provider. The server itself must
+expose QA capability proof that its parsed database is exactly
+`radar_bds_test` on loopback, its injected provider is the approved fake, and
+live provider access is disallowed. Both executables also reject a non-loopback
+target and require the explicit `RADAR_ASK_FAKE_PROVIDER=1` operator assertion.
+The assertion variable alone cannot turn a normal app process into the QA
+server. This is not a live DeepSeek or production load path.
 
 Run the focused backend/public contract gate first:
 
@@ -204,22 +207,35 @@ an environment where k6 is already approved. Start the local app/test worker
 with the fake provider injected before load; setting the assertion variable by
 itself does not replace that fixture.
 
+Start the dedicated loopback QA server in a separate terminal. It refuses any
+database other than `radar_bds_test`, removes `DEEPSEEK_API_KEY`, serves a
+fixed fake-provider capability proof, and writes 100 distinct Admin seed users
+only below ignored `.local/`:
+
+```powershell
+& $py -X utf8 scripts\radar_ask_qa_server.py --check-config
+& $py -X utf8 scripts\radar_ask_qa_server.py `
+  --port 5077 --seed-count 100 `
+  --seed-output .local\radar-ask-load-users.json
+```
+
 Immediately before assistant load, record the public p95 on the same local
 server/profile. Keep both JSON reports ignored under `reports/`:
 
 ```powershell
 k6 run scripts\load\radar_public_load.js `
-  --env BASE_URL=http://127.0.0.1:5000 `
+  --env BASE_URL=http://127.0.0.1:5077 `
   --env SCENARIO=default --env VUS=10 --env DURATION=30s `
   --summary-export reports\radar_public_before_radar_ask.json
 $baseline = Get-Content reports\radar_public_before_radar_ask.json -Raw |
   ConvertFrom-Json
 $env:PUBLIC_BASELINE_P95_MS = [string]$baseline.metrics.http_req_duration.values.'p(95)'
-$env:BASE_URL = "http://127.0.0.1:5000"
+$env:BASE_URL = "http://127.0.0.1:5077"
 $env:DURATION = "30s"
-$env:VUS_PER_SCENARIO = "1"
+$env:VUS_PER_SCENARIO = "20"
 $env:RADAR_ASK_FAKE_PROVIDER = "1"
-# JSON array of seeded local-only identifier/password/session_id/run_id objects.
+# At least 5 * VUS_PER_SCENARIO distinct seeded local-only users. Each object
+# contains identifier/password/session_id/run_id; k6 assigns one iteration/VU.
 $env:RADAR_ASK_TEST_USERS_JSON = Get-Content .local\radar-ask-load-users.json -Raw
 k6 run scripts\load\radar_ask_load.js `
   --summary-export reports\radar_ask_load_local.json
@@ -229,8 +245,11 @@ Release targets are Fast p95 <=800 ms; one-tool Standard with bounded fake
 latency p95 <=6 s; Deep enqueue/history/poll p95 <=500 ms; assistant and public
 errors <1%; statement timeouts 0%; and public p95 no more than 20% above the
 immediately preceding baseline. The profile runs the assistant scenarios and
-an anonymous public scenario in parallel. Never pass real credentials in the
-command or commit `.local` user fixtures/load reports.
+an anonymous public scenario in parallel. The default `20` VUs across five
+authenticated scenarios therefore requires all 100 distinct seed users, with
+exactly one iteration per VU. This is a local latency/regression smoke, not
+production capacity proof. Never pass real credentials in the command or
+commit `.local` user fixtures/load reports.
 
 Rendered proof uses the same already-running local fake-provider app. The
 script logs in through the normal auth endpoint, exercises one Fast answer,
@@ -240,11 +259,11 @@ submit, relevant console errors, horizontal overflow, mobile 16-pixel input,
 visible/focused composer, and page scroll instead of a nested feed trap.
 
 ```powershell
-$env:RADAR_ASK_TEST_IDENTIFIER = "<seeded-local-user>"
-$env:RADAR_ASK_TEST_PASSWORD = "<from ignored local fixture>"
+$env:RADAR_ASK_TEST_IDENTIFIER = "radar-ask-admin-000@example.test"
+$env:RADAR_ASK_TEST_PASSWORD = "radar-ask-local-qa-only"
 $env:RADAR_ASK_FAKE_PROVIDER = "1"
 & $py -X utf8 scripts\verify_radar_ask_ui.py `
-  --base-url http://127.0.0.1:5000 `
+  --base-url http://127.0.0.1:5077 `
   --output artifacts\radar-ask
 ```
 
@@ -253,6 +272,133 @@ It writes only `desktop.png`, `mobile.png`, and bounded `metrics.json` below
 ignored `artifacts/radar-ask/`. If Python Playwright or its Chromium binary is
 missing, do not install it implicitly or claim rendered proof; report the exact
 tool blocker and leave the command for the final release environment.
+
+## Radar Ask Production Services And Verification
+
+Deploy installs three hardened units: an operator-controlled Deep worker, a
+one-shot privacy retention job, and its daily persistent timer. Unit validation
+and installation are idempotent:
+
+```bash
+sudo bash scripts/install_radar_ask_services.sh check
+sudo bash scripts/install_radar_ask_services.sh install
+```
+
+Installation enables only `radar-ask-retention.timer`. It deliberately neither
+enables nor starts `radar-ask-worker.service`, because the worker refuses to run
+while `RADAR_ASK_ENABLED=0`. Normal deploy does not edit
+`/etc/radar-bds/radar.env`; it only `try-restart`s a worker that is already
+active from a prior deliberate rollout. It never runs full reprocess, installs
+pgvector, changes allowed tiers, or drops legacy tables.
+
+Keep the first deploy feature-off:
+
+```dotenv
+RADAR_ASK_ENABLED=0
+RADAR_ASK_ALLOWED_TIERS=admin
+RADAR_ASK_MONTHLY_WARN_USD=20
+RADAR_ASK_MONTHLY_HARD_USD=50
+RADAR_ASK_DB_POOL_MAX=1
+RADAR_ASK_WORKER_CONCURRENCY=2
+```
+
+The worker unit overrides only its own read pool to
+`RADAR_ASK_DB_POOL_MAX=2`; the web process remains at one Radar Ask read
+connection per Gunicorn worker. With the current `3` web workers and one worker
+process, verifier capacity is `3 * 1 + 1 * 2 = 5`. Verification fails unless
+PostgreSQL still has at least 25% of `max_connections` free after reserved
+superuser slots, current application connections, and those five connections.
+
+The minimal live provider compatibility smoke is the only Task 4 command that
+can incur provider cost, and it refuses by default. The current reviewed
+DeepSeek contracts (checked against official JSON/tool/thinking/pricing docs on
+2026-08-05) are `deepseek-v4-flash` and `deepseek-v4-pro`; thinking tool
+continuation must echo `reasoning_content`. Run this only at the controlled
+Task 5 cost gate:
+
+```powershell
+& $py -X utf8 scripts\radar_ask_provider_smoke.py `
+  --confirm-live-cost `
+  --output reports\radar_ask_release\provider-smoke.json
+```
+
+The ignored report contains an allowlisted schema version, model IDs, structural
+JSON/tool/continuation booleans, token counts, pricing version, and estimated
+USD only. It never saves prompts, response content, reasoning, tool arguments,
+credentials, evidence, or user data.
+
+Before SSH, validate the verifier contract locally without network access:
+
+```powershell
+& scripts\verify_radar_ask_production.ps1 `
+  -ConfigCheck -ExpectedSha <40-character-deployed-sha>
+```
+
+Then run the read-only production gate after feature-off deploy:
+
+```powershell
+& scripts\verify_radar_ask_production.ps1 `
+  -ExpectedSha <40-character-deployed-sha> `
+  -ExpectedFeatureState off `
+  -ExpectedAllowedTiers admin `
+  -ReadinessPhase foundation
+```
+
+After applying the documented knowledge-role grants and deliberately enabling
+Admin access, enable/start the worker and use the knowledge gate:
+
+```bash
+sudo systemctl enable --now radar-ask-worker.service
+```
+
+```powershell
+& scripts\verify_radar_ask_production.ps1 `
+  -ExpectedSha <40-character-deployed-sha> `
+  -ExpectedFeatureState on `
+  -ExpectedAllowedTiers admin `
+  -ReadinessPhase knowledge
+```
+
+The optional authenticated Admin smoke spends provider tokens and therefore
+requires two independent fail-closed inputs: `-ConfirmLiveCost` and a local
+ignored JSON file containing only `identifier` and `password`. The verifier
+uploads it over SSH to a mode-`0600` temporary path, never places either value
+on a command line or in output, and removes the remote file in `finally`:
+
+```powershell
+& scripts\verify_radar_ask_production.ps1 `
+  -ExpectedSha <40-character-deployed-sha> `
+  -ExpectedFeatureState on `
+  -ExpectedAllowedTiers admin `
+  -ReadinessPhase knowledge `
+  -RunAuthenticatedSmoke -ConfirmLiveCost `
+  -AuthCredentialPath .local\radar-ask-production-admin.json
+```
+
+This explicit mode logs in through the real auth API, verifies Admin quota
+policy and private/no-store headers, exercises one Flash-planned request, one
+Pro Standard request, and one Deep queue, then polls the exact Deep `run_id` to
+a terminal state and logs out. Do not use it during feature-off deploy or Task
+4 local verification.
+
+The verifier checks exact deployed SHA, web/worker/timer state, feature and tier
+flags, required schema, 100% trace coverage for the latest eligible valuations,
+read-only role grants, `$20/$50` thresholds, provider-bound synthetic redaction,
+connection headroom, public health, legacy endpoint absence, and the anonymous
+auth/private-cache boundary. Default mode is read-only and does not create users
+or spend provider tokens. Positive VIP/Free quota and citation behavior remains
+part of the controlled later rollout and rendered QA.
+
+Fast rollback is feature-off plus service state, without deleting data:
+
+```bash
+sudo systemctl disable --now radar-ask-worker.service
+sudo systemctl restart radar-bds.service
+sudo systemctl is-active radar-bds.service
+```
+
+The retention timer may remain active because it only enforces the already
+approved 90-day content and 13-month usage policies.
 
 ## Deploy Flow
 
