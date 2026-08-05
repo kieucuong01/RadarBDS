@@ -1477,14 +1477,17 @@ class RadarAskRepository:
                         r.model,
                         COALESCE(r.effective_depth,r.requested_depth) AS depth,
                         r.outcome,
-                        u.tier
+                        usage.tier
                     FROM radar_ask_runs r
-                    JOIN users u ON u.id=r.user_id
+                    LEFT JOIN radar_ask_usage usage ON usage.run_key=r.id
                     WHERE r.created_at>=? AND r.created_at<=?
                 )
                 SELECT
                     w.window_key,
-                    CASE WHEN b.tier IN ('free','vip','admin') THEN b.tier ELSE 'other' END AS tier_bucket,
+                    CASE
+                        WHEN b.tier IN ('free','vip','admin') THEN b.tier
+                        ELSE 'unassigned'
+                    END AS tier_bucket,
                     CASE
                         WHEN b.model IS NULL THEN 'unassigned'
                         WHEN b.model=ANY(?::text[]) THEN b.model

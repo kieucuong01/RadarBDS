@@ -381,7 +381,7 @@ def test_repository_returns_bounded_aggregate_health_without_content_or_pii(aggr
     today = metrics["windows"]["today"]
     seven_days = metrics["windows"]["last_7_days"]
     assert today["questions"] == today["runs"] == 6
-    assert today["by_tier"] == {"admin": 2, "free": 2, "vip": 2}
+    assert today["by_tier"] == {"admin": 2, "free": 1, "unassigned": 2, "vip": 1}
     assert today["by_outcome"] == {
         "answered": 1,
         "budget_hard_stop": 1,
@@ -444,6 +444,29 @@ def test_pre_reservation_failures_without_usage_are_counted_operationally(aggreg
     assert today["by_outcome"]["budget_hard_stop"] == 1
     assert today["by_outcome"]["validation_failure"] == 1
     assert today["rates"]["validation_failure"] == pytest.approx(0.2)
+
+
+def test_tier_breakdown_uses_immutable_usage_cohort_not_current_user_tier(aggregate_rows):
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE users SET tier='vip' WHERE id=?",
+            (aggregate_rows.user_ids[0],),
+        )
+        usage = conn.execute(
+            "SELECT tier FROM radar_ask_usage WHERE user_id=? ORDER BY created_at LIMIT 1",
+            (aggregate_rows.user_ids[0],),
+        ).fetchone()
+    assert usage is not None and usage["tier"] == "free"
+
+    metrics = RadarAskRepository().admin_metrics(now=NOW, settings=_settings())
+
+    assert metrics["windows"]["today"]["questions"] == 6
+    assert metrics["windows"]["today"]["by_tier"] == {
+        "admin": 2,
+        "free": 1,
+        "unassigned": 2,
+        "vip": 1,
+    }
 
 
 def test_arbitrary_configured_model_labels_are_bucketed_as_other(aggregate_rows):
