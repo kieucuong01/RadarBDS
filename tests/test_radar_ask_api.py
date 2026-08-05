@@ -8,7 +8,14 @@ from uuid import UUID, uuid4
 import pytest
 
 import app as radar_app
-from services.radar_ask.contracts import AnswerEnvelope, AskDepth, AskRunResult, RunStatus
+from services.radar_ask.contracts import (
+    AnswerEnvelope,
+    AskDepth,
+    AskRunResult,
+    RunStatus,
+    SourceCard,
+    SourceKind,
+)
 from services.radar_ask.limits import BudgetHardStop, QuotaExceeded
 
 
@@ -25,6 +32,16 @@ def answered_run(*, status: RunStatus = RunStatus.COMPLETED) -> AskRunResult:
             depth=AskDepth.FAST,
             direct_answer="Mau du lieu hien tai cho thay gia chao can kiem tra them.",
             next_verification_steps=["Kiem tra phap ly"],
+            source_cards=[
+                SourceCard(
+                    evidence_id="listing:58772",
+                    title="listing: radar-listing:58772:budget-match",
+                    source_kind=SourceKind.LISTING,
+                    source_ref="radar-listing:58772:budget-match",
+                    as_of=NOW,
+                    href=None,
+                )
+            ],
             as_of=NOW,
             dataset_version="signals:12",
         ),
@@ -186,6 +203,16 @@ def test_fast_question_returns_public_answer_contract_and_idempotency(api_client
     assert set(("run_id", "session_id", "status", "answer", "quota", "cost_state")) <= set(body)
     assert body["answer"]["next_checks"] == ["Kiem tra phap ly"]
     assert "next_verification_steps" not in body["answer"]
+    assert body["answer"]["source_cards"] == [
+        {
+            "evidence_id": "listing:58772",
+            "title": "Tin Radar #58772",
+            "source_kind": "listing",
+            "as_of": "2026-08-05T04:00:00Z",
+            "href": "/listing/58772",
+        }
+    ]
+    assert "source_ref" not in body["answer"]["source_cards"][0]
     assert calls == [("Gia Phu My?", 11, "free", "request-11")]
     assert_private(response)
 

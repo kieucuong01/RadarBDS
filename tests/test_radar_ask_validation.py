@@ -36,6 +36,7 @@ def item(
     as_of: datetime = NOW,
     sample_size: int | None = 8,
     source_ref: str = "road-market:Phu-My:DL1:exact_road:90d",
+    provenance: dict[str, str] | None = None,
 ) -> EvidenceItem:
     return EvidenceItem(
         evidence_id=evidence_id,
@@ -46,6 +47,7 @@ def item(
         as_of=as_of,
         dataset_version="test:1",
         sample_size=sample_size,
+        provenance=provenance or {},
     )
 
 
@@ -427,6 +429,105 @@ def test_prompt_injection_inside_document_is_data_and_does_not_control_validatio
     )
 
     assert validated.source_cards[0].evidence_id == hostile.evidence_id
+
+
+@pytest.mark.parametrize(
+    ("evidence", "expected_title", "expected_href"),
+    (
+        (
+            item(
+                "listing:58772",
+                kind=SourceKind.LISTING,
+                value={"listing_ref": "radar-listing:58772"},
+                source_ref="radar-listing:58772:budget-match",
+            ),
+            "Tin Radar #58772",
+            "/listing/58772",
+        ),
+        (
+            item(
+                "market:phu-my",
+                value={"ward": "Phú Mỹ"},
+                source_ref="ward-market:Phú Mỹ:90d",
+            ),
+            "Thị trường Phú Mỹ · 90 ngày",
+            "/?tab=all&ward=Ph%C3%BA+M%E1%BB%B9&date_range=3m",
+        ),
+        (
+            item(
+                "valuation:77",
+                kind=SourceKind.VALUATION,
+                value={"listing_ref": "radar-listing:123"},
+                source_ref="radar-valuation:77",
+            ),
+            "Định giá Radar · tin #123",
+            "/listing/123",
+        ),
+        (
+            item(
+                "knowledge:official",
+                kind=SourceKind.OFFICIAL_DOCUMENT,
+                value={"source_title": "Cổng thông tin Chính phủ"},
+                unit=None,
+                sample_size=None,
+                source_ref="knowledge:official",
+                provenance={"source_url": "https://vanban.chinhphu.vn/example"},
+            ),
+            "Nguồn chính thức · Cổng thông tin Chính phủ",
+            "https://vanban.chinhphu.vn/example",
+        ),
+    ),
+)
+def test_source_cards_receive_deterministic_safe_destinations(
+    evidence, expected_title, expected_href
+):
+    candidate = answer(
+        AnswerClaim(text="Dữ liệu này cần được đối chiếu.", evidence_ids=[evidence.evidence_id]),
+        direct_answer="Dữ liệu này cần được đối chiếu.",
+    )
+
+    validated = validate_answer(
+        candidate,
+        [bundle(evidence)],
+        tier="vip",
+        expected_depth=AskDepth.STANDARD,
+    )
+
+    assert validated.source_cards[0].title == expected_title
+    assert validated.source_cards[0].href == expected_href
+
+
+@pytest.mark.parametrize(
+    ("kind", "source_url"),
+    (
+        (SourceKind.OFFICIAL_DOCUMENT, "http://vanban.example/insecure"),
+        (SourceKind.OFFICIAL_DOCUMENT, "https://user:pass@vanban.example/private"),
+        (SourceKind.EDITORIAL, "https://example.com/not-official"),
+    ),
+)
+def test_source_cards_never_expose_unsafe_or_nonofficial_external_urls(kind, source_url):
+    evidence = item(
+        "knowledge:unsafe",
+        kind=kind,
+        value={"source_title": "Tài liệu tham khảo"},
+        unit=None,
+        sample_size=None,
+        source_ref="knowledge:unsafe",
+        provenance={"source_url": source_url},
+    )
+    candidate = answer(
+        AnswerClaim(text="Dữ liệu này cần được đối chiếu.", evidence_ids=[evidence.evidence_id]),
+        direct_answer="Dữ liệu này cần được đối chiếu.",
+    )
+
+    validated = validate_answer(
+        candidate,
+        [bundle(evidence)],
+        tier="vip",
+        expected_depth=AskDepth.STANDARD,
+    )
+
+    assert validated.source_cards[0].href is None
 
 
 def test_missing_requirements_are_graded_repair_when_some_evidence_exists():

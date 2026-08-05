@@ -21,6 +21,7 @@ from .repository import (
     RadarAskSessionRecord,
 )
 from .routing import route_question
+from .source_links import source_card_details
 
 
 def feature_enabled() -> bool:
@@ -81,16 +82,25 @@ def _answer_payload(answer: AnswerEnvelope | None) -> dict[str, Any] | None:
         return None
     payload = answer.model_dump(mode="json")
     payload["next_checks"] = payload.pop("next_verification_steps", [])
-    # Source links and raw source references are not a public HTTP contract.
-    payload["source_cards"] = [
-        {
-            "evidence_id": card.get("evidence_id"),
-            "title": card.get("title"),
-            "source_kind": card.get("source_kind"),
-            "as_of": card.get("as_of"),
-        }
-        for card in payload.get("source_cards", [])
-    ]
+    # Raw source references stay private. Deterministic same-origin fallbacks
+    # make older persisted answers clickable without a data migration.
+    source_cards = []
+    for card, serialized in zip(answer.source_cards, payload.get("source_cards", [])):
+        title, fallback_href = source_card_details(
+            source_kind=card.source_kind,
+            source_ref=card.source_ref,
+            existing_title=card.title,
+        )
+        source_cards.append(
+            {
+                "evidence_id": serialized.get("evidence_id"),
+                "title": title,
+                "source_kind": serialized.get("source_kind"),
+                "as_of": serialized.get("as_of"),
+                "href": card.href or fallback_href,
+            }
+        )
+    payload["source_cards"] = source_cards
     return payload
 
 

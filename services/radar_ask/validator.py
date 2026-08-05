@@ -21,6 +21,7 @@ from .contracts import (
     SourceCard,
     SourceKind,
 )
+from .source_links import source_card_details
 
 
 PHONE_PATTERN = re.compile(r"(?<!\d)(?:\+?84|0)(?:[\s.()-]*\d){8,10}(?!\d)")
@@ -521,14 +522,20 @@ def _source_cards(
     for evidence_id, item in by_id.items():
         if evidence_id not in selected:
             continue
+        title, href = source_card_details(
+            source_kind=item.source_kind,
+            source_ref=item.source_ref,
+            value=item.value,
+            provenance=item.provenance,
+        )
         cards.append(
             SourceCard(
                 evidence_id=evidence_id,
-                title=f"{item.source_kind.value}: {item.source_ref}",
+                title=title,
                 source_kind=item.source_kind,
                 source_ref=item.source_ref,
                 as_of=item.as_of,
-                href=None,
+                href=href,
             )
         )
         if len(cards) == 20:

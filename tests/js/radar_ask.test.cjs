@@ -138,6 +138,7 @@ function completedAnswer(overrides = {}) {
         title: 'Radar BDS · Giá rao bán 90 ngày',
         source_kind: 'market_stat',
         as_of: '2026-08-05T04:00:00Z',
+        href: '/?tab=all&ward=Ph%C3%BA+M%E1%BB%B9&date_range=3m',
       },
     ],
     suggested_followups: ['So sánh thêm với Định Hòa'],
@@ -193,6 +194,10 @@ test('fast answer stays compact and keeps deep sections collapsed', () => {
   assert.equal(root.querySelector('[data-deep-details]').hidden, true);
   assert.equal(root.querySelectorAll('[data-key-metric]').length, 4);
   assert.equal(root.querySelectorAll('[data-source-card]').length, 1);
+  const sourceLink = root.querySelector('[data-source-card]').querySelector('a');
+  assert.equal(sourceLink.getAttribute('href'), '/?tab=all&ward=Ph%C3%BA+M%E1%BB%B9&date_range=3m');
+  assert.equal(sourceLink.getAttribute('target'), '_blank');
+  assert.equal(sourceLink.getAttribute('rel'), 'noopener noreferrer');
 });
 
 test('deep answer progressively discloses thesis, risk, confidence and checks', () => {
