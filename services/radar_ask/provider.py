@@ -298,8 +298,13 @@ class DeepSeekProvider:
                     "DeepSeek deadline exceeded",
                     usage=accumulated_usage,
                 )
+            attempt_timeout = (
+                None
+                if remaining is None
+                else min(remaining, float(self._settings.provider_timeout_seconds))
+            )
             try:
-                response = self._post_once(request, timeout_seconds=remaining)
+                response = self._post_once(request, timeout_seconds=attempt_timeout)
             except ProviderError as exc:
                 raise type(exc)(
                     str(exc),

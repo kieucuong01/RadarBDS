@@ -40,16 +40,13 @@ _PARCEL_IDENTIFIER = re.compile(
     r"(?:\s*(?:[,;/ -]|và)\s*(?:tờ(?:\s*bản\s*đồ)?|tbđ)\s*(?:số)?\s*"
     r"[:#=-]?\s*\d{1,6})?"
 )
-_PERSON_INITIAL = "A-ZÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ"
-_PERSON_TOKEN = rf"[{_PERSON_INITIAL}][A-Za-zÀ-ỹĐđ'’\-]{{0,30}}"
 _PERSON_WORD = r"[A-Za-zÀ-ỹĐđ'’\-]{1,31}"
 _PERSON_LABEL = r"(?:chủ\s*đất|chủ\s*nhà|môi\s*giới|người\s*bán|khách\s*hàng|họ\s*tên)"
 _NON_NAME_START = r"(?:không|chưa|đang|đã|sẽ|muốn|cần|bán|giảm|tăng)"
 _LABELED_PERSON = re.compile(
     rf"(?i:\b{_PERSON_LABEL})"
-    rf"(?:\s*[:=-]\s*(?!(?i:{_NON_NAME_START})\b)"
-    rf"{_PERSON_WORD}(?:\s+{_PERSON_WORD}){{1,4}}"
-    rf"|\s+{_PERSON_TOKEN}(?:\s+{_PERSON_TOKEN}){{1,4}})"
+    rf"\s*(?:[:=-]\s*)?(?!(?i:{_NON_NAME_START})\b)"
+    rf"{_PERSON_WORD}(?:\s+{_PERSON_WORD}){{0,4}}"
     r"(?=\s*(?:[,;.!?\n]|$))"
 )
 

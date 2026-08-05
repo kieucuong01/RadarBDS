@@ -324,7 +324,7 @@ def test_deep_json_repair_shares_one_monotonic_deadline(settings):
     assert len(session.calls) == 2
     first_timeout = session.calls[0]["timeout"]
     second_timeout = session.calls[1]["timeout"]
-    assert first_timeout.total == pytest.approx(60.0)
+    assert first_timeout.total == pytest.approx(30.0)
     assert second_timeout.total == pytest.approx(15.0)
     assert caught.value.usage.input_tokens == 20
     assert caught.value.usage.output_tokens == 8
