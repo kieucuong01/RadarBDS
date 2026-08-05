@@ -99,6 +99,37 @@ def test_static_workspace_contract_is_safe_and_mobile_first():
     assert "grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) minmax(320px, 380px)" in css
 
 
+def test_review_round_one_accessibility_privacy_and_cache_contracts():
+    html = _read("templates/radar_ask.html")
+    javascript = _read("static/js/radar_ask.js")
+    css = _read("static/css/radar_ask.css")
+
+    assert "onload=" not in html
+    assert "onclick=" not in html
+    assert "onerror=" not in html
+    assert "radar-ask-workspace-v2" in html
+    assert "radar-ask-workspace-v1" not in html
+    assert 'data-load-more-sessions' in html
+    assert 'data-load-more-messages' in html
+    assert html.count('role="complementary"') >= 2
+    assert 'aria-label="Gửi câu hỏi"' in html
+    assert 'data-submit-label' in html
+
+    assert "sessionStorage" in javascript
+    assert "consumeHandoff" in javascript
+    assert "url.searchParams.set('question'" not in javascript
+    assert "url.searchParams.set('ward'" not in javascript
+    assert "url.searchParams.set('road'" not in javascript
+    assert ".inert" in javascript
+    assert "aria-modal" in javascript
+    assert "trapSheetFocus" in javascript
+
+    assert ".radar-ask-page .radar-ask-submit" in css
+    assert ".radar-ask-submit [data-submit-label]" in css
+    assert "pointer-events: none" in css
+    assert "visibility: hidden" in css
+
+
 def test_quota_copy_uses_tier_caps_without_static_remaining_claims():
     html = _read("templates/radar_ask.html")
     javascript = _read("static/js/radar_ask.js")

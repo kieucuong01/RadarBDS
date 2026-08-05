@@ -8,7 +8,10 @@
   'use strict';
 
   const POLL_DELAYS_MS = Object.freeze([1000, 2000, 3000, 5000]);
-  const TERMINAL_STATUSES = new Set(['completed', 'failed', 'insufficient', 'cancelled']);
+  const HANDOFF_STORAGE_KEY = 'radarAsk:handoff:v1';
+  const PENDING_STATUSES = new Set(['created', 'queued', 'running']);
+  const ANSWER_STATUSES = new Set(['completed', 'clarifying', 'insufficient']);
+  const TERMINAL_STATUSES = new Set([...ANSWER_STATUSES, 'failed', 'cancelled']);
   const RETRYABLE_CODES = new Set([
     'provider_unavailable',
     'service_unavailable',
@@ -27,6 +30,13 @@
     rui_ro_cao: 'Rủi ro cao',
     khong_du_du_lieu: 'Chưa đủ dữ liệu',
   });
+
+  function classifyRunStatus(status) {
+    if (PENDING_STATUSES.has(status)) return 'pending';
+    if (ANSWER_STATUSES.has(status)) return 'answer';
+    if (status === 'cancelled') return 'cancelled';
+    return 'failed';
+  }
 
   function quotaLabel(quota) {
     const tier = String(quota && quota.tier || 'free').toLowerCase();
@@ -57,6 +67,62 @@
     } catch (_error) {
       return null;
     }
+  }
+
+  function sanitizeOpenOptions(options) {
+    const source = options && typeof options === 'object' ? options : {};
+    const sanitized = {};
+    if (typeof source.question === 'string' && source.question.trim()) {
+      sanitized.question = source.question.trim().slice(0, 2000);
+    }
+    const listingId = Number(source.listing_id);
+    if (Number.isInteger(listingId) && listingId > 0) sanitized.listing_id = listingId;
+    if (typeof source.ward === 'string' && source.ward.trim()) sanitized.ward = source.ward.trim().slice(0, 120);
+    if (typeof source.road === 'string' && source.road.trim()) sanitized.road = source.road.trim().slice(0, 180);
+    return sanitized;
+  }
+
+  function questionFromOpenOptions(options) {
+    const payload = sanitizeOpenOptions(options);
+    if (payload.question) return payload.question;
+    const location = [payload.road, payload.ward].filter(Boolean).join(', ');
+    if (payload.listing_id && location) return `Phân tích lô #${payload.listing_id} tại ${location}`;
+    if (payload.listing_id) return `Phân tích lô #${payload.listing_id}`;
+    if (location) return `Phân tích bất động sản tại ${location}`;
+    return '';
+  }
+
+  function consumeHandoff(storage) {
+    if (!storage) return null;
+    let raw = null;
+    try {
+      raw = storage.getItem(HANDOFF_STORAGE_KEY);
+    } catch (_error) {
+      return null;
+    } finally {
+      try { storage.removeItem(HANDOFF_STORAGE_KEY); } catch (_error) { /* one-time cleanup is best effort */ }
+    }
+    if (!raw) return null;
+    try {
+      const parsed = sanitizeOpenOptions(JSON.parse(raw));
+      return Object.keys(parsed).length ? parsed : null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function openWithHandoff(options, { storage, navigate, workspace = null }) {
+    const payload = sanitizeOpenOptions(options);
+    if (workspace) {
+      workspace.setContext(payload);
+      workspace.focusComposer();
+      return true;
+    }
+    if (storage && Object.keys(payload).length) {
+      try { storage.setItem(HANDOFF_STORAGE_KEY, JSON.stringify(payload)); } catch (_error) { /* navigate without private context */ }
+    }
+    navigate('/hoi-radar-bds');
+    return true;
   }
 
   function makeElement(documentRef, tagName, className, text) {
@@ -270,6 +336,21 @@
     };
   }
 
+  function mergeUniqueById(existing, incoming, { prepend = false } = {}) {
+    const current = Array.isArray(existing) ? existing : [];
+    const page = Array.isArray(incoming) ? incoming : [];
+    const seen = new Set();
+    const merged = [];
+    const ordered = prepend ? [...page, ...current] : [...current, ...page];
+    ordered.forEach((item) => {
+      const identifier = item && item.id;
+      if (!identifier || seen.has(identifier)) return;
+      seen.add(identifier);
+      merged.push(item);
+    });
+    return merged;
+  }
+
   function createController({ api, view = {}, poller = pollRun, confirm = async () => true }) {
     if (!api || typeof api !== 'object') throw new TypeError('Radar Ask API adapter is required');
     const state = {
@@ -280,6 +361,11 @@
       lastDepth: 'standard',
       quota: null,
       costState: 'normal',
+      sessions: [],
+      nextSessionCursor: null,
+      currentMessages: [],
+      nextMessageCursor: null,
+      currentSession: null,
     };
     const notify = (name, ...args) => {
       if (typeof view[name] === 'function') view[name](...args);
@@ -298,7 +384,7 @@
       return run;
     };
 
-    return {
+    const controller = {
       state,
       async submit(question, depth = 'standard') {
         const normalized = String(question || '').trim();
@@ -312,7 +398,7 @@
           const request = { question: normalized, requested_depth: state.lastDepth };
           if (state.currentSessionId) request.session_id = state.currentSessionId;
           let run = applyRun(await api.postQuestion(request));
-          if (run && ['created', 'queued', 'running'].includes(run.status) && typeof api.getRun === 'function') {
+          if (run && classifyRunStatus(run.status) === 'pending' && typeof api.getRun === 'function') {
             run = applyRun(await poller({
               runId: run.run_id,
               fetchRun: api.getRun,
@@ -341,27 +427,51 @@
           return null;
         }
       },
-      async loadSessions() {
+      async loadSessions({ append = false } = {}) {
+        if (append && !state.nextSessionCursor) return { sessions: state.sessions, next_cursor: null };
         try {
-          const payload = await api.listSessions();
-          notify('showSessions', payload && payload.sessions || []);
+          const payload = await api.listSessions(append ? state.nextSessionCursor : null);
+          state.sessions = mergeUniqueById(append ? state.sessions : [], payload && payload.sessions || []);
+          state.nextSessionCursor = payload && payload.next_cursor || null;
+          notify('showSessions', state.sessions, { nextCursor: state.nextSessionCursor });
           return payload;
         } catch (caught) {
           notify('showError', normalizeError(caught));
           return null;
         }
       },
-      async openSession(sessionId) {
+      loadMoreSessions() {
+        return controller.loadSessions({ append: true });
+      },
+      async openSession(sessionId, { appendOlder = false } = {}) {
+        if (appendOlder && (!state.currentSessionId || !state.nextMessageCursor)) {
+          return { session: state.currentSession, messages: state.currentMessages, next_message_cursor: null };
+        }
         try {
-          const payload = await api.getSession(sessionId);
+          const payload = await api.getSession(sessionId, appendOlder ? state.nextMessageCursor : null);
           state.currentSessionId = sessionId;
           state.currentRunId = null;
-          notify('showSession', payload);
+          state.currentSession = payload && payload.session || state.currentSession;
+          state.currentMessages = mergeUniqueById(
+            appendOlder ? state.currentMessages : [],
+            payload && payload.messages || [],
+            { prepend: appendOlder },
+          );
+          state.nextMessageCursor = payload && payload.next_message_cursor || null;
+          notify('showSession', {
+            ...payload,
+            session: state.currentSession,
+            messages: state.currentMessages,
+          }, { nextCursor: state.nextMessageCursor, appendedOlder: appendOlder });
           return payload;
         } catch (caught) {
           notify('showError', normalizeError(caught));
           return null;
         }
+      },
+      loadMoreMessages() {
+        if (!state.currentSessionId) return Promise.resolve(null);
+        return controller.openSession(state.currentSessionId, { appendOlder: true });
       },
       async deleteSession(sessionId) {
         if (!await confirm(sessionId)) return { cancelled: true };
@@ -370,7 +480,11 @@
           if (state.currentSessionId === sessionId) {
             state.currentSessionId = null;
             state.currentRunId = null;
+            state.currentSession = null;
+            state.currentMessages = [];
+            state.nextMessageCursor = null;
           }
+          state.sessions = state.sessions.filter((session) => session.id !== sessionId);
           notify('removeSession', sessionId);
           return { deleted: true };
         } catch (caught) {
@@ -391,9 +505,13 @@
       newConversation() {
         state.currentSessionId = null;
         state.currentRunId = null;
+        state.currentSession = null;
+        state.currentMessages = [];
+        state.nextMessageCursor = null;
         notify('showSession', null);
       },
     };
+    return controller;
   }
 
   class RadarAskRequestError extends Error {
@@ -447,11 +565,15 @@
       getRun(runId) {
         return request(`/api/radar-ask/runs/${encodeURIComponent(runId)}`);
       },
-      listSessions() {
-        return request('/api/radar-ask/sessions?limit=50');
+      listSessions(cursor = null) {
+        const params = new URLSearchParams({ limit: '50' });
+        if (cursor) params.set('cursor', cursor);
+        return request(`/api/radar-ask/sessions?${params.toString()}`);
       },
-      getSession(sessionId) {
-        return request(`/api/radar-ask/sessions/${encodeURIComponent(sessionId)}?message_limit=100`);
+      getSession(sessionId, cursor = null) {
+        const params = new URLSearchParams({ message_limit: '100' });
+        if (cursor) params.set('message_cursor', cursor);
+        return request(`/api/radar-ask/sessions/${encodeURIComponent(sessionId)}?${params.toString()}`);
       },
       deleteSession(sessionId) {
         return request(`/api/radar-ask/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' });
@@ -465,6 +587,68 @@
     };
   }
 
+  const SHEET_FOCUS_SELECTOR = [
+    'a[href]',
+    'button:not([disabled])',
+    'textarea:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+  ].join(',');
+
+  function syncSheetAccessibility(sheet, { modal, open }) {
+    if (!sheet) return;
+    if (!modal) {
+      sheet.setAttribute('role', 'complementary');
+      sheet.removeAttribute('aria-modal');
+      sheet.setAttribute('aria-hidden', 'false');
+      sheet.inert = false;
+      sheet.removeAttribute('inert');
+      sheet.classList.add('is-open');
+      return;
+    }
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-modal', 'true');
+    sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+    sheet.inert = !open;
+    if (open) sheet.removeAttribute('inert');
+    else sheet.setAttribute('inert', '');
+    sheet.classList[open ? 'add' : 'remove']('is-open');
+  }
+
+  function focusableSheetItems(sheet) {
+    if (!sheet || typeof sheet.querySelectorAll !== 'function') return [];
+    return Array.from(sheet.querySelectorAll(SHEET_FOCUS_SELECTOR)).filter((element) => {
+      if (element.disabled || element.inert || element.hidden) return false;
+      return element.getAttribute ? element.getAttribute('aria-hidden') !== 'true' : true;
+    });
+  }
+
+  function trapSheetFocus(event, sheet) {
+    if (!event || event.key !== 'Tab') return false;
+    const items = focusableSheetItems(sheet);
+    if (!items.length) return false;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = sheet.ownerDocument && sheet.ownerDocument.activeElement;
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+      return true;
+    }
+    if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+      return true;
+    }
+    return false;
+  }
+
+  function focusFirstInSheet(sheet) {
+    const first = focusableSheetItems(sheet)[0];
+    if (first) first.focus();
+  }
+
   function initializeWorkspace(documentRef, windowRef) {
     const root = documentRef.querySelector('[data-radar-ask-app]');
     if (!root) return null;
@@ -473,9 +657,12 @@
     const welcome = query('[data-welcome]');
     const composer = query('[data-composer]');
     const submitButton = query('[data-submit]');
+    const submitLabel = query('[data-submit-label]');
     const quotaNodes = root.querySelectorAll('[data-quota]');
     const liveStatus = query('[data-live-status]');
     const historyList = query('[data-history-list]');
+    const loadMoreSessionsButton = query('[data-load-more-sessions]');
+    const loadMoreMessagesButton = query('[data-load-more-messages]');
     const historySheet = query('[data-history-sheet]');
     const historyScrim = query('[data-history-scrim]');
     const evidenceSheet = query('[data-evidence-sheet]');
@@ -485,34 +672,48 @@
     const runNodes = new Map();
     let selectedDepth = 'standard';
     let pendingDeleteResolve = null;
+    let historyReturnFocus = null;
+    let evidenceReturnFocus = null;
 
     const setStatus = (message) => {
       if (liveStatus) liveStatus.textContent = message;
     };
-    const closeHistory = () => {
-      historySheet.classList.remove('is-open');
-      historySheet.setAttribute('aria-hidden', windowRef.matchMedia('(max-width: 640px)').matches ? 'true' : 'false');
+    const historyIsModal = () => windowRef.matchMedia('(max-width: 640px)').matches;
+    const evidenceIsModal = () => windowRef.matchMedia('(max-width: 900px)').matches;
+    const closeHistory = ({ restoreFocus = true } = {}) => {
+      syncSheetAccessibility(historySheet, { modal: historyIsModal(), open: false });
       historyScrim.hidden = true;
+      if (restoreFocus && historyReturnFocus && typeof historyReturnFocus.focus === 'function') historyReturnFocus.focus();
+      historyReturnFocus = null;
     };
-    const openHistory = () => {
-      historySheet.classList.add('is-open');
-      historySheet.setAttribute('aria-hidden', 'false');
-      historyScrim.hidden = false;
-      const close = query('[data-history-close]');
-      if (close) close.focus();
+    const openHistory = (trigger) => {
+      historyReturnFocus = trigger || documentRef.activeElement;
+      const modal = historyIsModal();
+      syncSheetAccessibility(historySheet, { modal, open: true });
+      historyScrim.hidden = !modal;
+      if (modal) focusFirstInSheet(historySheet);
     };
-    const closeEvidence = () => {
-      evidenceSheet.classList.remove('is-open');
-      root.classList.add('is-evidence-closed');
+    const closeEvidence = ({ restoreFocus = true } = {}) => {
+      syncSheetAccessibility(evidenceSheet, { modal: evidenceIsModal(), open: false });
       evidenceScrim.hidden = true;
+      if (restoreFocus && evidenceReturnFocus && typeof evidenceReturnFocus.focus === 'function') evidenceReturnFocus.focus();
+      evidenceReturnFocus = null;
     };
-    const showEvidence = (answer) => {
+    const showEvidence = (answer, trigger) => {
       evidenceContent.replaceChildren(renderSourceCards(documentRef, answer && answer.source_cards || [], false));
-      root.classList.remove('is-evidence-closed');
-      evidenceSheet.classList.add('is-open');
-      evidenceScrim.hidden = false;
-      const close = query('[data-evidence-close]');
-      if (windowRef.matchMedia('(max-width: 640px)').matches && close) close.focus();
+      evidenceReturnFocus = trigger || documentRef.activeElement;
+      const modal = evidenceIsModal();
+      syncSheetAccessibility(evidenceSheet, { modal, open: true });
+      evidenceScrim.hidden = !modal;
+      if (modal) focusFirstInSheet(evidenceSheet);
+    };
+    const syncResponsiveSheets = () => {
+      syncSheetAccessibility(historySheet, { modal: historyIsModal(), open: false });
+      syncSheetAccessibility(evidenceSheet, { modal: evidenceIsModal(), open: !evidenceIsModal() });
+      historyScrim.hidden = true;
+      evidenceScrim.hidden = true;
+      historyReturnFocus = null;
+      evidenceReturnFocus = null;
     };
     const showWelcome = () => {
       conversation.replaceChildren(welcome);
@@ -532,7 +733,7 @@
     };
     const attachAnswerActions = (node, answer, messageId) => {
       const sourceButton = node.querySelector('[data-open-evidence]');
-      if (sourceButton) sourceButton.addEventListener('click', () => showEvidence(answer));
+      if (sourceButton) sourceButton.addEventListener('click', () => showEvidence(answer, sourceButton));
       node.querySelectorAll('[data-suggested-question]').forEach((button) => {
         button.addEventListener('click', () => {
           composer.value = button.getAttribute('data-suggested-question') || '';
@@ -558,7 +759,7 @@
       setPending(value) {
         submitButton.disabled = value || root.getAttribute('data-cost-state') === 'locked';
         composer.setAttribute('aria-busy', String(value));
-        submitButton.textContent = value ? 'Đang gửi…' : 'Gửi câu hỏi';
+        submitLabel.textContent = value ? 'Đang gửi…' : 'Gửi câu hỏi';
         if (value) setStatus('Đang gửi câu hỏi tới Radar BDS.');
       },
       setQuota(quotaPayload, costState) {
@@ -580,13 +781,17 @@
           conversation.append(current.wrapper);
           runNodes.set(run.run_id, current);
         }
-        if (run.status === 'completed' || run.status === 'insufficient') {
+        const statusKind = classifyRunStatus(run.status);
+        if (statusKind === 'answer') {
           renderAnswer(current.body, run.answer || {});
           attachAnswerActions(current.body, run.answer || {}, null);
-          setStatus('Radar BDS đã hoàn tất câu trả lời.');
-        } else if (run.status === 'failed') {
+          setStatus(run.status === 'clarifying' ? 'Radar BDS cần bạn làm rõ thêm.' : 'Radar BDS đã hoàn tất câu trả lời.');
+        } else if (statusKind === 'failed') {
           current.body.replaceChildren(makeElement(documentRef, 'p', 'radar-ask-error', 'Không thể hoàn tất nghiên cứu này. Vui lòng thử lại.'));
           setStatus('Nghiên cứu không hoàn tất.');
+        } else if (statusKind === 'cancelled') {
+          current.body.replaceChildren(makeElement(documentRef, 'p', 'radar-ask-cancelled', 'Nghiên cứu này đã được hủy và sẽ không tiếp tục chạy.'));
+          setStatus('Nghiên cứu đã được hủy.');
         } else if (run.status === 'poll_timeout') {
           const timeout = makeElement(documentRef, 'div', 'radar-ask-run-state');
           timeout.append(makeElement(documentRef, 'p', '', 'Nghiên cứu vẫn đang chạy. Bạn có thể làm mới trạng thái mà không gửi lại câu hỏi.'));
@@ -620,8 +825,10 @@
         conversation.append(block);
         setStatus(error.message);
       },
-      showSessions(sessions) {
+      showSessions(sessions, { nextCursor = null } = {}) {
         historyList.replaceChildren();
+        loadMoreSessionsButton.hidden = !nextCursor;
+        loadMoreSessionsButton.disabled = false;
         if (!sessions.length) {
           historyList.append(makeElement(documentRef, 'p', 'radar-ask-history-empty', 'Chưa có cuộc trò chuyện.'));
           return;
@@ -642,13 +849,15 @@
           historyList.append(row);
         });
       },
-      showSession(payload) {
+      showSession(payload, { nextCursor = null, appendedOlder = false } = {}) {
         if (!payload) {
           showWelcome();
           composer.focus();
           return;
         }
-        conversation.replaceChildren();
+        loadMoreMessagesButton.hidden = !nextCursor;
+        loadMoreMessagesButton.disabled = false;
+        conversation.replaceChildren(loadMoreMessagesButton);
         runNodes.clear();
         (payload.messages || []).forEach((message) => {
           const rendered = makeMessage(message.role, message.content || '', message.id);
@@ -660,7 +869,12 @@
         });
         setStatus(`Đã mở ${payload.session && payload.session.title || 'cuộc trò chuyện'}.`);
         closeHistory();
-        composer.focus();
+        if (appendedOlder) {
+          if (!loadMoreMessagesButton.hidden) loadMoreMessagesButton.focus();
+          else conversation.focus({ preventScroll: true });
+        } else {
+          composer.focus();
+        }
       },
       removeSession(sessionId) {
         const row = historyList.querySelector(`[data-session-row="${sessionId}"]`);
@@ -696,7 +910,7 @@
       conversation.append(userMessage.wrapper);
       composer.value = '';
       const result = await controller.submit(question, selectedDepth);
-      if (result && ['completed', 'insufficient'].includes(result.status) && result.session_id) {
+      if (result && classifyRunStatus(result.status) === 'answer' && result.session_id) {
         await controller.openSession(result.session_id);
       }
       await controller.loadSessions();
@@ -723,16 +937,36 @@
       });
     });
     query('[data-new-conversation]').addEventListener('click', () => controller.newConversation());
-    root.querySelectorAll('[data-history-open]').forEach((button) => button.addEventListener('click', openHistory));
+    root.querySelectorAll('[data-history-open]').forEach((button) => button.addEventListener('click', () => openHistory(button)));
     query('[data-history-close]').addEventListener('click', closeHistory);
     historyScrim.addEventListener('click', closeHistory);
     query('[data-evidence-close]').addEventListener('click', closeEvidence);
     evidenceScrim.addEventListener('click', closeEvidence);
+    historySheet.addEventListener('keydown', (event) => trapSheetFocus(event, historySheet));
+    evidenceSheet.addEventListener('keydown', (event) => trapSheetFocus(event, evidenceSheet));
+    documentRef.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      if (evidenceIsModal() && evidenceSheet.getAttribute('aria-hidden') === 'false') {
+        event.preventDefault();
+        closeEvidence();
+      } else if (historyIsModal() && historySheet.getAttribute('aria-hidden') === 'false') {
+        event.preventDefault();
+        closeHistory();
+      }
+    });
     historyList.addEventListener('click', (event) => {
       const open = event.target.closest('[data-open-session]');
       const remove = event.target.closest('[data-delete-session]');
       if (open) controller.openSession(open.getAttribute('data-open-session'));
       if (remove) controller.deleteSession(remove.getAttribute('data-delete-session'));
+    });
+    loadMoreSessionsButton.addEventListener('click', async () => {
+      loadMoreSessionsButton.disabled = true;
+      try { await controller.loadMoreSessions(); } finally { loadMoreSessionsButton.disabled = false; }
+    });
+    loadMoreMessagesButton.addEventListener('click', async () => {
+      loadMoreMessagesButton.disabled = true;
+      try { await controller.loadMoreMessages(); } finally { loadMoreMessagesButton.disabled = false; }
     });
     conversation.addEventListener('click', (event) => {
       const feedback = event.target.closest('[data-feedback]');
@@ -765,35 +999,31 @@
     });
 
     view.setQuota({ tier: root.getAttribute('data-tier') }, 'normal');
-    if (windowRef.matchMedia('(max-width: 640px)').matches) closeHistory();
+    syncResponsiveSheets();
+    windowRef.addEventListener('resize', syncResponsiveSheets, { passive: true });
     controller.loadSessions();
-    const params = new URLSearchParams(windowRef.location.search);
-    const initialQuestion = params.get('question');
-    if (initialQuestion) composer.value = initialQuestion.slice(0, 2000);
+    let handoff = null;
+    try { handoff = consumeHandoff(windowRef.sessionStorage); } catch (_error) { handoff = null; }
+    if (handoff) composer.value = questionFromOpenOptions(handoff);
     setStatus('Sẵn sàng nhận câu hỏi.');
-    return { controller, focusComposer: () => composer.focus(), setQuestion: (value) => { composer.value = value; } };
+    return {
+      controller,
+      focusComposer: () => composer.focus(),
+      setContext: (options) => { composer.value = questionFromOpenOptions(options); },
+    };
   }
 
   let browserWorkspace = null;
 
   function open(options = {}) {
-    const question = typeof options.question === 'string' ? options.question.slice(0, 2000) : '';
-    if (browserWorkspace) {
-      if (question) browserWorkspace.setQuestion(question);
-      browserWorkspace.focusComposer();
-      return true;
-    }
     if (typeof window === 'undefined') return false;
-    const url = new URL('/hoi-radar-bds', window.location.origin);
-    if (question) url.searchParams.set('question', question);
-    if (Number.isInteger(Number(options.listing_id)) && Number(options.listing_id) > 0) {
-      url.searchParams.set('listing_id', String(Number(options.listing_id)));
-    }
-    ['ward', 'road'].forEach((key) => {
-      if (typeof options[key] === 'string' && options[key].trim()) url.searchParams.set(key, options[key].trim().slice(0, 180));
+    let storage = null;
+    try { storage = window.sessionStorage; } catch (_error) { storage = null; }
+    return openWithHandoff(options, {
+      storage,
+      workspace: browserWorkspace,
+      navigate: (path) => window.location.assign(path),
     });
-    window.location.assign(url.pathname + url.search);
-    return true;
   }
 
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
@@ -804,18 +1034,27 @@
 
   return {
     POLL_DELAYS_MS,
+    ANSWER_STATUSES,
+    HANDOFF_STORAGE_KEY,
+    PENDING_STATUSES,
     TERMINAL_STATUSES,
     TIER_CAPS,
+    classifyRunStatus,
+    consumeHandoff,
     createApi,
     createController,
     handleComposerKey,
     initializeWorkspace,
     normalizeError,
     open,
+    openWithHandoff,
     pollRun,
     quotaLabel,
     renderAnswer,
     renderSourceCards,
     safeHref,
+    sanitizeOpenOptions,
+    syncSheetAccessibility,
+    trapSheetFocus,
   };
 });

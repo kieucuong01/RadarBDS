@@ -8,10 +8,9 @@
   {% include "partials/google_site_tags.html" %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"></noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=mobile-scroll-lock-20260802">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/radar_ask.css') }}?v=radar-ask-workspace-v1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/radar_ask.css') }}?v=radar-ask-workspace-v2">
   <script>
     try {
       document.documentElement.setAttribute('data-theme', localStorage.getItem('radar_theme') || 'dark');
@@ -57,7 +56,7 @@
     </div>
 
     <div class="radar-ask-layout">
-      <aside class="radar-ask-history" data-history-sheet aria-label="Cuộc trò chuyện" aria-hidden="false">
+      <aside class="radar-ask-history" data-history-sheet role="complementary" aria-label="Cuộc trò chuyện" aria-hidden="false">
         <div class="radar-ask-panel-heading">
           <div>
             <span>Không gian nghiên cứu</span>
@@ -74,6 +73,7 @@
         <div class="radar-ask-history-list" data-history-list aria-label="Lịch sử">
           <p class="radar-ask-history-empty">Đang tải lịch sử…</p>
         </div>
+        <button class="radar-ask-load-more" type="button" data-load-more-sessions hidden>Xem thêm cuộc trò chuyện</button>
         <p class="radar-ask-retention-note">Nội dung chi tiết được lưu tối đa 90 ngày.</p>
       </aside>
       <button class="radar-ask-scrim" type="button" data-history-scrim aria-label="Đóng lịch sử" hidden></button>
@@ -87,7 +87,8 @@
           <div class="radar-ask-quota" data-quota>Đang tải hạn mức…</div>
         </div>
 
-        <section class="radar-ask-conversation" data-conversation aria-label="Nội dung cuộc trò chuyện">
+        <section class="radar-ask-conversation" data-conversation tabindex="-1" aria-label="Nội dung cuộc trò chuyện">
+          <button class="radar-ask-load-more" type="button" data-load-more-messages hidden>Xem tin nhắn cũ hơn</button>
           <div class="radar-ask-welcome" data-welcome>
             <span class="radar-ask-welcome-mark" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 3 9.8 8.8 4 11l5.8 2.2L12 19l2.2-5.8L20 11l-5.8-2.2L12 3Z"/></svg>
@@ -127,9 +128,9 @@
           <div class="radar-ask-composer-row">
             <label class="radar-ask-visually-hidden" for="radarAskComposer">Câu hỏi cho Radar BDS</label>
             <textarea id="radarAskComposer" data-composer rows="2" maxlength="2000" placeholder="Hỏi về khu vực, lô đất, mặt tiền đường, giá hoặc tín hiệu…"></textarea>
-            <button class="radar-ask-submit" type="submit" data-submit>
+            <button class="radar-ask-submit" type="submit" data-submit aria-label="Gửi câu hỏi">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-8-8 18-2-8-8-2Zm8 2 5-5"/></svg>
-              Gửi câu hỏi
+              <span data-submit-label>Gửi câu hỏi</span>
             </button>
           </div>
           <div class="radar-ask-composer-foot">
@@ -139,7 +140,7 @@
         </form>
       </main>
 
-      <aside class="radar-ask-evidence" data-evidence-sheet aria-label="Nguồn & cách tính">
+      <aside class="radar-ask-evidence" data-evidence-sheet role="complementary" aria-label="Nguồn & cách tính">
         <div class="radar-ask-panel-heading">
           <div>
             <span>Minh bạch dữ liệu</span>
@@ -169,6 +170,6 @@
       </div>
     </dialog>
   </div>
-  <script src="{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v1" defer></script>
+  <script src="{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v2" defer></script>
 </body>
 </html>

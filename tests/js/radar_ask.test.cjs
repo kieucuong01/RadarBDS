@@ -3,12 +3,18 @@ const assert = require('node:assert/strict');
 
 const {
   POLL_DELAYS_MS,
+  classifyRunStatus,
+  consumeHandoff,
+  createApi,
   createController,
   handleComposerKey,
+  openWithHandoff,
   pollRun,
   quotaLabel,
   renderAnswer,
   safeHref,
+  syncSheetAccessibility,
+  trapSheetFocus,
 } = require('../../static/js/radar_ask.js');
 
 class FakeElement {
@@ -148,8 +154,8 @@ function fakeView() {
     setQuota: (quota, cost) => calls.push(['quota', quota, cost]),
     showRun: (run) => calls.push(['run', run]),
     showError: (error) => calls.push(['error', error]),
-    showSessions: (sessions) => calls.push(['sessions', sessions]),
-    showSession: (session) => calls.push(['session', session]),
+    showSessions: (sessions, meta) => calls.push(['sessions', sessions, meta]),
+    showSession: (session, meta) => calls.push(['session', session, meta]),
     removeSession: (id) => calls.push(['remove', id]),
     showFeedback: (id, rating) => calls.push(['feedback', id, rating]),
   };
@@ -327,4 +333,205 @@ test('controller supports history navigation, confirmation delete and feedback',
   assert.equal(controller.state.currentSessionId, null);
   assert.equal(view.calls.some(([name]) => name === 'sessions'), true);
   assert.equal(view.calls.some(([name]) => name === 'session'), true);
+});
+
+test('run statuses share one pending and terminal classification', () => {
+  assert.equal(classifyRunStatus('created'), 'pending');
+  assert.equal(classifyRunStatus('queued'), 'pending');
+  assert.equal(classifyRunStatus('running'), 'pending');
+  assert.equal(classifyRunStatus('completed'), 'answer');
+  assert.equal(classifyRunStatus('clarifying'), 'answer');
+  assert.equal(classifyRunStatus('insufficient'), 'answer');
+  assert.equal(classifyRunStatus('failed'), 'failed');
+  assert.equal(classifyRunStatus('cancelled'), 'cancelled');
+});
+
+test('clarifying response renders immediately without polling', async () => {
+  let gets = 0;
+  const view = fakeView();
+  const controller = createController({
+    api: {
+      postQuestion: async () => ({
+        run_id: 'clarify-1',
+        session_id: 'session-clarify',
+        status: 'clarifying',
+        answer: completedAnswer({ direct_answer: 'Bạn muốn xem phường nào?' }),
+      }),
+      getRun: async () => { gets += 1; },
+    },
+    view,
+  });
+
+  const result = await controller.submit('So sánh khu vực', 'standard');
+  assert.equal(result.status, 'clarifying');
+  assert.equal(gets, 0);
+  assert.equal(view.calls.some(([name, run]) => name === 'run' && run.status === 'clarifying'), true);
+});
+
+test('pollRun treats clarifying and cancelled as terminal', async () => {
+  const clarifying = await pollRun({
+    runId: 'run-clarify',
+    fetchRun: async () => ({ run_id: 'run-clarify', status: 'clarifying', answer: completedAnswer() }),
+    wait: async () => {},
+  });
+  const cancelled = await pollRun({
+    runId: 'run-cancelled',
+    fetchRun: async () => ({ run_id: 'run-cancelled', status: 'cancelled' }),
+    wait: async () => {},
+  });
+  assert.equal(clarifying.status, 'clarifying');
+  assert.equal(cancelled.status, 'cancelled');
+});
+
+test('session pagination appends older pages without duplicates or reordering', async () => {
+  const cursors = [];
+  const view = fakeView();
+  const pages = {
+    first: { sessions: [{ id: 's3' }, { id: 's2' }], next_cursor: 'older sessions' },
+    'older sessions': { sessions: [{ id: 's2' }, { id: 's1' }], next_cursor: null },
+  };
+  const controller = createController({
+    api: {
+      listSessions: async (cursor) => {
+        cursors.push(cursor || null);
+        return pages[cursor || 'first'];
+      },
+    },
+    view,
+  });
+
+  await controller.loadSessions();
+  await controller.loadMoreSessions();
+  assert.deepEqual(cursors, [null, 'older sessions']);
+  assert.deepEqual(controller.state.sessions.map(({ id }) => id), ['s3', 's2', 's1']);
+  const rendered = view.calls.filter(([name]) => name === 'sessions').at(-1);
+  assert.deepEqual(rendered[1].map(({ id }) => id), ['s3', 's2', 's1']);
+  assert.equal(rendered[2].nextCursor, null);
+});
+
+test('message pagination prepends older pages without duplicates or reordering', async () => {
+  const cursors = [];
+  const view = fakeView();
+  const controller = createController({
+    api: {
+      getSession: async (_sessionId, cursor) => {
+        cursors.push(cursor || null);
+        if (!cursor) {
+          return { session: { id: 's1' }, messages: [{ id: 'm3' }, { id: 'm4' }], next_message_cursor: 'older messages' };
+        }
+        return { session: { id: 's1' }, messages: [{ id: 'm1' }, { id: 'm2' }, { id: 'm3' }], next_message_cursor: null };
+      },
+    },
+    view,
+  });
+
+  await controller.openSession('s1');
+  await controller.loadMoreMessages();
+  assert.deepEqual(cursors, [null, 'older messages']);
+  assert.deepEqual(controller.state.currentMessages.map(({ id }) => id), ['m1', 'm2', 'm3', 'm4']);
+  const rendered = view.calls.filter(([name]) => name === 'session').at(-1);
+  assert.deepEqual(rendered[1].messages.map(({ id }) => id), ['m1', 'm2', 'm3', 'm4']);
+  assert.equal(rendered[2].nextCursor, null);
+});
+
+test('API pagination uses URLSearchParams for opaque cursors', async () => {
+  const paths = [];
+  const api = createApi(async (path) => {
+    paths.push(path);
+    return { ok: true, status: 200, json: async () => ({ sessions: [], messages: [] }) };
+  });
+  await api.listSessions('a+b/c=');
+  await api.getSession('session-1', 'x+y/z=');
+  const sessionsUrl = new URL(paths[0], 'https://radarbds.vn');
+  const messagesUrl = new URL(paths[1], 'https://radarbds.vn');
+  assert.equal(sessionsUrl.searchParams.get('limit'), '50');
+  assert.equal(sessionsUrl.searchParams.get('cursor'), 'a+b/c=');
+  assert.equal(messagesUrl.searchParams.get('message_limit'), '100');
+  assert.equal(messagesUrl.searchParams.get('message_cursor'), 'x+y/z=');
+});
+
+function fakeSheet() {
+  const attributes = new Map();
+  const classes = new Set();
+  return {
+    inert: false,
+    setAttribute: (name, value) => attributes.set(name, String(value)),
+    getAttribute: (name) => attributes.get(name) ?? null,
+    removeAttribute: (name) => attributes.delete(name),
+    classList: {
+      add: (name) => classes.add(name),
+      remove: (name) => classes.delete(name),
+      contains: (name) => classes.has(name),
+    },
+  };
+}
+
+test('sheet accessibility state hides closed modals and preserves permanent desktop panels', () => {
+  const sheet = fakeSheet();
+  syncSheetAccessibility(sheet, { modal: true, open: false });
+  assert.equal(sheet.getAttribute('role'), 'dialog');
+  assert.equal(sheet.getAttribute('aria-modal'), 'true');
+  assert.equal(sheet.getAttribute('aria-hidden'), 'true');
+  assert.equal(sheet.inert, true);
+  assert.equal(sheet.classList.contains('is-open'), false);
+
+  syncSheetAccessibility(sheet, { modal: true, open: true });
+  assert.equal(sheet.getAttribute('aria-hidden'), 'false');
+  assert.equal(sheet.inert, false);
+  assert.equal(sheet.classList.contains('is-open'), true);
+
+  syncSheetAccessibility(sheet, { modal: false, open: false });
+  assert.equal(sheet.getAttribute('role'), 'complementary');
+  assert.equal(sheet.getAttribute('aria-modal'), null);
+  assert.equal(sheet.getAttribute('aria-hidden'), 'false');
+  assert.equal(sheet.inert, false);
+});
+
+test('focus trap wraps Tab within an open sheet', () => {
+  const focused = [];
+  const first = { disabled: false, focus: () => focused.push('first') };
+  const last = { disabled: false, focus: () => focused.push('last') };
+  const sheet = {
+    ownerDocument: { activeElement: last },
+    querySelectorAll: () => [first, last],
+  };
+  const event = { key: 'Tab', shiftKey: false, preventDefault() { this.prevented = true; } };
+  assert.equal(trapSheetFocus(event, sheet), true);
+  assert.equal(event.prevented, true);
+  assert.deepEqual(focused, ['first']);
+});
+
+function memoryStorage({ failWrites = false } = {}) {
+  const values = new Map();
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => {
+      if (failWrites) throw new Error('storage unavailable');
+      values.set(key, String(value));
+    },
+    removeItem: (key) => values.delete(key),
+  };
+}
+
+test('cross-page open uses one-time sessionStorage handoff and a private-data-free URL', () => {
+  const storage = memoryStorage();
+  const navigations = [];
+  const privateOptions = { question: 'Giá lô Phú Mỹ?', ward: 'Phú Mỹ', road: 'DX 068', listing_id: 123 };
+  openWithHandoff(privateOptions, { storage, navigate: (url) => navigations.push(url) });
+
+  assert.deepEqual(navigations, ['/hoi-radar-bds']);
+  assert.equal(navigations[0].includes('Phú'), false);
+  const consumed = consumeHandoff(storage);
+  assert.equal(consumed.question, 'Giá lô Phú Mỹ?');
+  assert.equal(consumed.ward, 'Phú Mỹ');
+  assert.equal(consumeHandoff(storage), null);
+});
+
+test('handoff fails closed without putting private context in navigation URL', () => {
+  const navigations = [];
+  openWithHandoff(
+    { question: 'Câu hỏi riêng tư', ward: 'Phú Mỹ' },
+    { storage: memoryStorage({ failWrites: true }), navigate: (url) => navigations.push(url) },
+  );
+  assert.deepEqual(navigations, ['/hoi-radar-bds']);
 });

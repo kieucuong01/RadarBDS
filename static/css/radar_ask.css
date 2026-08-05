@@ -334,6 +334,30 @@
   line-height: 1.6;
 }
 
+.radar-ask-load-more {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 9px;
+  padding: 0 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.radar-ask-load-more:hover {
+  color: var(--text);
+  border-color: rgba(99, 102, 241, 0.38);
+  background: rgba(99, 102, 241, 0.07);
+}
+
+.radar-ask-load-more[hidden] {
+  display: none;
+}
+
 .radar-ask-history-empty {
   padding: 24px 8px;
   text-align: center;
@@ -585,12 +609,19 @@
 
 .radar-ask-insufficient,
 .radar-ask-error,
+.radar-ask-cancelled,
 .radar-ask-run-state {
   margin-top: 14px;
   padding: 13px 14px;
   border-radius: 11px;
   font-size: 12px;
   line-height: 1.65;
+}
+
+.radar-ask-cancelled {
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background: rgba(148, 163, 184, 0.07);
 }
 
 .radar-ask-insufficient {
@@ -1038,6 +1069,10 @@
   overflow: hidden;
 }
 
+.radar-ask-evidence > .radar-ask-panel-heading .radar-ask-icon-button {
+  display: none;
+}
+
 .radar-ask-app.is-evidence-closed .radar-ask-evidence {
   display: none;
 }
@@ -1197,9 +1232,20 @@
     transition: transform 180ms ease;
   }
 
+  .radar-ask-evidence[aria-hidden="true"] {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .radar-ask-evidence.is-open {
+    visibility: visible;
+    pointer-events: auto;
     display: flex;
     transform: translateX(0);
+  }
+
+  .radar-ask-evidence > .radar-ask-panel-heading .radar-ask-icon-button {
+    display: inline-flex;
   }
 
   .radar-ask-app.is-evidence-closed .radar-ask-evidence {
@@ -1320,7 +1366,14 @@
     transition: transform 180ms ease;
   }
 
+  .radar-ask-history[aria-hidden="true"] {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .radar-ask-history.is-open {
+    visibility: visible;
+    pointer-events: auto;
     transform: translateX(0);
   }
 
@@ -1469,12 +1522,16 @@
     font-size: 16px;
   }
 
-  .radar-ask-submit {
+  .radar-ask-page .radar-ask-submit {
     min-width: 52px;
     width: 52px;
     min-height: 52px;
     padding: 0;
     font-size: 0;
+  }
+
+  .radar-ask-submit [data-submit-label] {
+    display: none;
   }
 
   .radar-ask-submit svg {
