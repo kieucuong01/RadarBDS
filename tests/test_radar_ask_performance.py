@@ -30,6 +30,7 @@ from services.radar_ask.contracts import (
 from services.radar_ask.evidence import EvidenceBuilder
 from services.radar_ask.orchestrator import OrchestratorDependencies
 from services.radar_ask.registry import DEFAULT_TOOL_REGISTRY
+from scripts.verify_radar_ask_ui import _valid_qa_capability
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -395,6 +396,33 @@ def test_rendered_verifier_has_safe_offline_config_check(tmp_path):
     assert list(tmp_path.iterdir()) == []
 
 
+def test_rendered_verifier_requires_server_owned_fake_provider_and_test_db_proof():
+    valid = {
+        "mode": "radar_ask_test",
+        "provider": "fake",
+        "database": "radar_bds_test",
+        "live_provider_allowed": False,
+    }
+    headers = {"X-Radar-Ask-QA-Provider": "fake"}
+
+    assert _valid_qa_capability(valid, headers) is True
+    for changed in (
+        {**valid, "provider": "deepseek"},
+        {**valid, "database": "radar_bds"},
+        {**valid, "live_provider_allowed": True},
+    ):
+        assert _valid_qa_capability(changed, headers) is False
+    assert _valid_qa_capability(valid, {}) is False
+
+    source = (ROOT / "scripts" / "verify_radar_ask_ui.py").read_text(encoding="utf-8")
+    main_source = source[source.index("def main()") :]
+    assert main_source.index("_verify_server_capability") < main_source.index("sync_playwright")
+    assert "login_user.get(\"tier\") not in {\"vip\", \"admin\"}" in source
+    assert "observation[\"path\"] == f'/api/radar-ask/runs/{deep[\"run_id\"]}'" in source
+    assert "observation[\"http_status\"] == 200" in source
+    assert "deep_terminal_poll_count" in source
+
+
 def test_k6_profile_is_valid_ecmascript_without_installing_k6():
     script = ROOT / "scripts" / "load" / "radar_ask_load.js"
     source = script.read_text(encoding="utf-8")
@@ -408,3 +436,11 @@ def test_k6_profile_is_valid_ecmascript_without_installing_k6():
         check=False,
     )
     assert result.returncode == 0, result.stderr or result.stdout
+    assert "executor: 'per-vu-iterations'" in source
+    assert "executor: 'constant-vus'" not in source
+    assert "iterations: 1" in source
+    assert "AUTHENTICATED_SCENARIOS.length * VUS_PER_SCENARIO" in source
+    assert "/api/radar-ask/qa-capabilities" in source
+    assert "live_provider_allowed === false" in source
+    assert "from 'k6/execution'" in source
+    assert "sleep(" not in source

@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+import requests
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT_ROOT = (ROOT / "artifacts" / "radar-ask").resolve()
@@ -24,6 +26,8 @@ APP_CONSOLE_ALLOWLIST = (
     "fonts.googleapis.com",
     "fonts.gstatic.com",
 )
+QA_CAPABILITY_PATH = "/api/radar-ask/qa-capabilities"
+QA_CAPABILITY_HEADER = "X-Radar-Ask-QA-Provider"
 
 
 class VerificationError(RuntimeError):
@@ -75,6 +79,47 @@ def _private_response(response: Any) -> bool:
         and "no-store" in cache_control
         and not response.headers.get("x-radar-public-cache")
     )
+
+
+def _valid_qa_capability(payload: object, headers: Any) -> bool:
+    """Require server-owned proof that this target cannot reach a paid provider."""
+    if not isinstance(payload, dict):
+        return False
+    header_value = ""
+    if headers is not None:
+        header_value = str(headers.get(QA_CAPABILITY_HEADER, "")).strip().lower()
+    return (
+        header_value == "fake"
+        and payload.get("mode") == "radar_ask_test"
+        and payload.get("provider") == "fake"
+        and payload.get("database") == "radar_bds_test"
+        and payload.get("live_provider_allowed") is False
+    )
+
+
+def _verify_server_capability(base_url: str, timeout_ms: int) -> dict[str, Any]:
+    """Fail before login/question transmission unless the QA server proves isolation."""
+    try:
+        response = requests.get(
+            f"{base_url}{QA_CAPABILITY_PATH}",
+            headers={"Accept": "application/json"},
+            timeout=max(0.1, min(timeout_ms / 1_000, 5.0)),
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except (requests.RequestException, ValueError) as exc:
+        raise VerificationError(
+            "server did not prove fake-provider/test-database isolation"
+        ) from exc
+    if not _private_response(response) or not _valid_qa_capability(payload, response.headers):
+        raise VerificationError(
+            "server did not prove fake-provider/test-database isolation"
+        )
+    return {
+        "mode": "radar_ask_test",
+        "provider": "fake",
+        "database": "radar_bds_test",
+    }
 
 
 def _application_console_errors(messages: list[str]) -> list[str]:
@@ -212,6 +257,7 @@ def _verify_viewport(
     page_errors: list[str] = []
     private_contracts: list[bool] = []
     request_counts = {"question": 0, "poll": 0, "history": 0, "delete": 0}
+    poll_observations: list[dict[str, Any]] = []
 
     def on_console(message: Any) -> None:
         if message.type == "error":
@@ -226,6 +272,19 @@ def _verify_viewport(
             request_counts["question"] += 1
         elif "/runs/" in path:
             request_counts["poll"] += 1
+            try:
+                body = response.json()
+            except Exception:
+                body = None
+            poll_observations.append(
+                {
+                    "path": path,
+                    "http_status": response.status,
+                    "run_id": body.get("run_id") if isinstance(body, dict) else None,
+                    "status": body.get("status") if isinstance(body, dict) else None,
+                    "private": _private_response(response),
+                }
+            )
         elif "/sessions" in path and response.request.method == "DELETE":
             request_counts["delete"] += 1
         elif "/sessions" in path:
@@ -243,6 +302,10 @@ def _verify_viewport(
     )
     if login.status != 200:
         raise VerificationError(f"seeded login failed with HTTP {login.status}")
+    login_payload = login.json()
+    login_user = login_payload.get("user") if isinstance(login_payload, dict) else None
+    if not isinstance(login_user, dict) or login_user.get("tier") not in {"vip", "admin"}:
+        raise VerificationError("seeded rendered user must be VIP or Admin for the four-question flow")
     page.goto(f"{base_url}/hoi-radar-bds", wait_until="networkidle")
     composer = page.locator("[data-composer]")
     composer.wait_for(state="visible")
@@ -266,10 +329,21 @@ def _verify_viewport(
     )
     if deep.get("status") not in {"queued", "created", "running"}:
         raise VerificationError("Deep submit did not return a queued state")
-    page.wait_for_function(
-        "() => performance.getEntriesByType('resource').some(entry => entry.name.includes('/api/radar-ask/runs/'))",
+    page.locator(f'[data-run-id="{deep["run_id"]}"] [data-answer]').wait_for(
+        state="visible",
         timeout=timeout_ms,
     )
+    matching_polls = [
+        observation
+        for observation in poll_observations
+        if observation["path"] == f'/api/radar-ask/runs/{deep["run_id"]}'
+        and observation["http_status"] == 200
+        and observation["run_id"] == deep["run_id"]
+        and observation["status"] in {"completed", "clarifying", "insufficient"}
+        and observation["private"]
+    ]
+    if not matching_polls:
+        raise VerificationError("Deep poll did not return a private terminal response for the submitted run")
 
     _open_history(page, name == "mobile", timeout_ms)
     _delete_session(page, str(fast["session_id"]), timeout_ms)
@@ -293,6 +367,7 @@ def _verify_viewport(
         "fast_ms": round(fast_ms, 3),
         "deep_enqueue_ms": round(deep_enqueue_ms, 3),
         "request_counts": request_counts,
+        "deep_terminal_poll_count": len(matching_polls),
         "private_response_count": len(private_contracts),
         "relevant_console_errors": relevant_console,
         "page_errors": page_errors,
@@ -315,6 +390,12 @@ def main() -> int:
         return 0
 
     try:
+        capability = _verify_server_capability(base_url, args.timeout_ms)
+    except VerificationError as exc:
+        print(f"configuration_error={exc}", file=sys.stderr)
+        return 2
+
+    try:
         from playwright.sync_api import Error as PlaywrightError
         from playwright.sync_api import sync_playwright
     except ImportError:
@@ -328,6 +409,7 @@ def main() -> int:
     report: dict[str, Any] = {
         "schema_version": 1,
         "target": "loopback_fake_provider",
+        "server_capability": capability,
         "viewports": {},
     }
     try:

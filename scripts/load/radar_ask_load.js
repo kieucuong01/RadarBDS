@@ -1,5 +1,6 @@
 import http from 'k6/http';
-import { check, fail, sleep } from 'k6';
+import { check, fail } from 'k6';
+import exec from 'k6/execution';
 import { Rate, Trend } from 'k6/metrics';
 
 const BASE_URL = String(__ENV.BASE_URL || 'http://127.0.0.1:5000').replace(/\/+$/, '');
@@ -10,6 +11,14 @@ const RUN_ID = String(__ENV.RUN_ID || 'radar-ask-local')
   .slice(0, 48);
 const PUBLIC_BASELINE_P95_MS = Number(__ENV.PUBLIC_BASELINE_P95_MS || 0);
 const PUBLIC_LIMIT_MS = PUBLIC_BASELINE_P95_MS * 1.2;
+const QA_CAPABILITY_PATH = '/api/radar-ask/qa-capabilities';
+const AUTHENTICATED_SCENARIOS = Object.freeze([
+  'fast',
+  'standard_fake',
+  'deep_enqueue',
+  'history',
+  'poll',
+]);
 
 let testUsers;
 try {
@@ -53,10 +62,11 @@ export const options = {
 
 function scenario(exec) {
   return {
-    executor: 'constant-vus',
+    executor: 'per-vu-iterations',
     exec,
     vus: VUS_PER_SCENARIO,
-    duration: DURATION,
+    iterations: 1,
+    maxDuration: DURATION,
     gracefulStop: '5s',
   };
 }
@@ -90,16 +100,39 @@ export function setup() {
   if (!Array.isArray(testUsers) || testUsers.length === 0 || !testUsers.every(validSeed)) {
     fail('RADAR_ASK_TEST_USERS_JSON requires seeded identifier/password/session_id/run_id objects');
   }
+  const requiredUsers = AUTHENTICATED_SCENARIOS.length * VUS_PER_SCENARIO;
+  if (testUsers.length < requiredUsers) {
+    fail(`RADAR_ASK_TEST_USERS_JSON needs at least ${requiredUsers} distinct users to avoid quota/burst distortion`);
+  }
   if (!Number.isFinite(PUBLIC_BASELINE_P95_MS) || PUBLIC_BASELINE_P95_MS <= 0) {
     fail('PUBLIC_BASELINE_P95_MS from the immediately preceding public baseline is required');
   }
-  return { userCount: testUsers.length, publicLimitMs: PUBLIC_LIMIT_MS };
+  const capability = http.get(`${BASE_URL}${QA_CAPABILITY_PATH}`, {
+    headers: { Accept: 'application/json' },
+    tags: { radar_ask_operation: 'qa_capability' },
+  });
+  const capabilityBody = jsonBody(capability);
+  const capabilityOk = capability.status === 200
+    && privateHeaders(capability)
+    && String(capability.headers['X-Radar-Ask-QA-Provider'] || '').toLowerCase() === 'fake'
+    && capabilityBody
+    && capabilityBody.mode === 'radar_ask_test'
+    && capabilityBody.provider === 'fake'
+    && capabilityBody.database === 'radar_bds_test'
+    && capabilityBody.live_provider_allowed === false;
+  if (!capabilityOk) {
+    fail('Server did not prove fake-provider/radar_bds_test isolation; no credentials or questions were sent');
+  }
+  return { userCount: testUsers.length, requiredUsers, publicLimitMs: PUBLIC_LIMIT_MS };
 }
 
 let authenticated = false;
 
 function userForVu() {
-  return testUsers[(__VU - 1) % testUsers.length];
+  const scenarioIndex = AUTHENTICATED_SCENARIOS.indexOf(exec.scenario.name);
+  if (scenarioIndex < 0) fail('Authenticated user requested outside an authenticated scenario');
+  const iterationIndex = Number(exec.scenario.iterationInInstance || 0) % VUS_PER_SCENARIO;
+  return testUsers[(scenarioIndex * VUS_PER_SCENARIO) + iterationIndex];
 }
 
 function jsonBody(response) {
@@ -177,7 +210,6 @@ export function runFast() {
     questionParams('fast'),
   );
   recordAssistant(response, fastDuration, [200], ['completed', 'insufficient', 'clarifying']);
-  sleep(0.2);
 }
 
 export function runStandard() {
@@ -191,7 +223,6 @@ export function runStandard() {
     questionParams('standard_fake'),
   );
   recordAssistant(response, standardDuration, [200], ['completed', 'insufficient', 'clarifying']);
-  sleep(0.2);
 }
 
 export function runDeepEnqueue() {
@@ -205,7 +236,6 @@ export function runDeepEnqueue() {
     questionParams('deep_enqueue'),
   );
   recordAssistant(response, deepEnqueueDuration, [202], ['queued', 'created', 'running']);
-  sleep(0.2);
 }
 
 export function runHistory() {
@@ -234,7 +264,6 @@ export function runHistory() {
   assistantErrors.add(!ok);
   statementTimeouts.add(false);
   check(detail, { 'history is paginated bounded and private': () => Boolean(ok) });
-  sleep(0.2);
 }
 
 export function runPoll() {
@@ -249,7 +278,6 @@ export function runPoll() {
     [200],
     ['created', 'queued', 'running', 'completed', 'insufficient', 'clarifying', 'failed', 'cancelled'],
   );
-  sleep(0.2);
 }
 
 const PUBLIC_PATHS = Object.freeze([
@@ -272,5 +300,4 @@ export function runPublicIsolation() {
   publicDuration.add(response.timings.duration);
   publicErrors.add(!ok);
   check(response, { 'public API contract remains available': () => Boolean(ok) });
-  sleep(0.2);
 }
