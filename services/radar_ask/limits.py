@@ -60,6 +60,10 @@ class UnknownModelPricing(RadarAskLimitError):
     """Raised rather than undercounting a provider model with unknown pricing."""
 
 
+class PlannerUsageConflict(RadarAskLimitError):
+    """A planner component may be recorded once, with exact replay allowed."""
+
+
 @dataclass(frozen=True)
 class BudgetWarning:
     projected_usd: Decimal
@@ -164,6 +168,11 @@ class RadarAskLimitService:
             SET settlement_status='released',
                 question_status='released',
                 outcome='cancelled',
+                actual_usd=actual_usd + planner_actual_usd,
+                prompt_tokens=prompt_tokens + planner_prompt_tokens,
+                completion_tokens=completion_tokens + planner_completion_tokens,
+                cache_hit_tokens=cache_hit_tokens + planner_cache_hit_tokens,
+                cache_miss_tokens=cache_miss_tokens + planner_cache_miss_tokens,
                 settled_at=COALESCE(settled_at, ?),
                 updated_at=?
             WHERE settlement_status='reserved'
@@ -348,6 +357,83 @@ class RadarAskLimitService:
             warning_active=warning is not None,
         )
 
+    def record_planner_usage(
+        self,
+        *,
+        reservation_id: UUID | str,
+        model: str,
+        usage: ProviderUsage,
+    ) -> None:
+        """Persist one Flash planning component before any later settlement."""
+        try:
+            reservation_key = UUID(str(reservation_id))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("reservation_id must be a UUID") from exc
+        if model not in MODEL_PRICES_USD_PER_MILLION:
+            raise UnknownModelPricing("planner pricing is not configured for this model")
+        actual_usd = calculate_provider_cost(model, usage)
+        now = self._now()
+        with get_conn() as conn:
+            period = conn.execute(
+                "SELECT usage_month FROM radar_ask_usage WHERE id=?",
+                (reservation_key,),
+            ).fetchone()
+            if period is None:
+                raise ReservationNotFound("usage reservation was not found")
+            self._lock(conn, f"radar_ask_budget:{period['usage_month']:%Y-%m}")
+            row = conn.execute(
+                "SELECT * FROM radar_ask_usage WHERE id=? FOR UPDATE",
+                (reservation_key,),
+            ).fetchone()
+            if row is None:
+                raise ReservationNotFound("usage reservation was not found")
+            if row["planner_recorded_at"] is not None:
+                stored = (
+                    row["planner_model"],
+                    row["planner_prompt_tokens"],
+                    row["planner_completion_tokens"],
+                    row["planner_cache_hit_tokens"],
+                    row["planner_cache_miss_tokens"],
+                    row["planner_actual_usd"],
+                )
+                expected = (
+                    model,
+                    usage.input_tokens,
+                    usage.output_tokens,
+                    usage.cache_hit_input_tokens,
+                    usage.cache_miss_input_tokens,
+                    actual_usd,
+                )
+                if stored != expected:
+                    raise PlannerUsageConflict("planner usage was already recorded differently")
+                return
+            if row["settlement_status"] != "reserved":
+                raise PlannerUsageConflict("planner usage cannot be added after settlement")
+            updated = conn.execute(
+                """
+                UPDATE radar_ask_usage
+                SET planner_model=?, planner_prompt_tokens=?,
+                    planner_completion_tokens=?, planner_cache_hit_tokens=?,
+                    planner_cache_miss_tokens=?, planner_actual_usd=?,
+                    planner_recorded_at=?, updated_at=?
+                WHERE id=?
+                RETURNING *
+                """,
+                (
+                    model,
+                    usage.input_tokens,
+                    usage.output_tokens,
+                    usage.cache_hit_input_tokens,
+                    usage.cache_miss_input_tokens,
+                    actual_usd,
+                    now,
+                    now,
+                    reservation_key,
+                ),
+            ).fetchone()
+            if updated is None:
+                raise PlannerUsageConflict("planner usage lost its reservation lock")
+
     def settle_question(
         self,
         *,
@@ -388,7 +474,8 @@ class RadarAskLimitService:
                     question_consumed=row["question_status"] == "answered",
                 )
 
-            actual_usd = calculate_provider_cost(row["model"] or "none", usage)
+            answer_usd = calculate_provider_cost(row["model"] or "none", usage)
+            actual_usd = _money(Decimal(row["planner_actual_usd"]) + answer_usd)
             consumed = normalized_outcome in CONSUMED_OUTCOMES
             settlement_status = "settled" if consumed else "released"
             question_status = "answered" if consumed else "released"
@@ -405,10 +492,10 @@ class RadarAskLimitService:
                     settlement_status,
                     question_status,
                     actual_usd,
-                    usage.input_tokens,
-                    usage.output_tokens,
-                    usage.cache_hit_input_tokens,
-                    usage.cache_miss_input_tokens,
+                    int(row["planner_prompt_tokens"]) + usage.input_tokens,
+                    int(row["planner_completion_tokens"]) + usage.output_tokens,
+                    int(row["planner_cache_hit_tokens"]) + usage.cache_hit_input_tokens,
+                    int(row["planner_cache_miss_tokens"]) + usage.cache_miss_input_tokens,
                     normalized_outcome.value,
                     now,
                     now,

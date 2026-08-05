@@ -40,7 +40,7 @@ def test_template_has_accessible_workspace_and_five_investor_samples():
         "Cuộc trò chuyện",
         "Cuộc trò chuyện mới",
         "Nhanh",
-        "Phân tích",
+        "Tự động",
         "Chuyên sâu",
         "Nguồn & cách tính",
         "Hỏi về khu vực, lô đất, mặt tiền đường, giá hoặc tín hiệu…",

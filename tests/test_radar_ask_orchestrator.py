@@ -19,6 +19,7 @@ from services.radar_ask.contracts import (
     EvidenceItem,
     ProviderResponse,
     ProviderUsage,
+    PlannerResult,
     RetrievalQuality,
     RouteDecision,
     RunOutcome,
@@ -175,6 +176,7 @@ class FakeLimits:
         self.reservations: list[dict[str, object]] = []
         self.settlements: list[dict[str, object]] = []
         self.reserve_error = reserve_error
+        self.planner_usage: list[dict[str, object]] = []
 
     def reserve_question(self, **kwargs):
         self.reservations.append(dict(kwargs))
@@ -197,6 +199,9 @@ class FakeLimits:
             actual_usd=Decimal("0"),
             question_consumed=outcome in {RunOutcome.ANSWERED, RunOutcome.INSUFFICIENT},
         )
+
+    def record_planner_usage(self, **kwargs):
+        self.planner_usage.append(dict(kwargs))
 
 
 class FakeBurst:
@@ -259,6 +264,8 @@ def make_deps(
             allowed_tiers=frozenset({"free", "vip", "admin"}),
             free_model="deepseek-v4-flash",
             smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            monthly_hard_stop_usd=Decimal("50"),
         ),
         repository=repo,
         limits=limits,
@@ -268,6 +275,231 @@ def make_deps(
         provider=provider or FakeProvider(),
         clock=lambda: NOW,
     )
+
+
+def test_unmatched_question_reserves_before_typed_planner_and_records_usage_before_answer():
+    events: list[str] = []
+    repo = FakeRepository()
+
+    class OrderedLimits(FakeLimits):
+        def reserve_question(self, **kwargs):
+            events.append("reserve")
+            return super().reserve_question(**kwargs)
+
+        def record_planner_usage(self, **kwargs):
+            events.append("record_planner")
+            return super().record_planner_usage(**kwargs)
+
+        def settle_question(self, **kwargs):
+            events.append("settle")
+            return super().settle_question(**kwargs)
+
+    planner_usage = ProviderUsage(
+        input_tokens=300,
+        output_tokens=60,
+        cache_miss_input_tokens=300,
+    )
+
+    def planner(**_kwargs):
+        events.append("planner")
+        return PlannerResult(
+            decision=RouteDecision(
+                depth=AskDepth.STANDARD,
+                question_type="market_trend",
+                tool_calls=[
+                    ToolCall(
+                        call_id="planner-trend-1",
+                        name="get_market_trend",
+                        arguments={"ward": "Phu My", "window_days": 90},
+                    )
+                ],
+                generated=True,
+            ),
+            usage=planner_usage,
+        )
+
+    provider = FakeProvider(
+        response=ProviderResponse(
+            json_value=generated_answer(),
+            usage=ProviderUsage(input_tokens=700, output_tokens=120),
+        )
+    )
+    metadata = DEFAULT_TOOL_REGISTRY.get("get_market_trend")
+    registry = ToolRegistry(
+        {
+            metadata.name: ToolRegistration(
+                name=metadata.name,
+                description=metadata.description,
+                args_model=metadata.args_model,
+                handler=lambda *, args, context: grounded_bundle(),
+            )
+        }
+    )
+    limits = OrderedLimits()
+    from services.radar_ask.routing import route_question
+
+    dependencies = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"free", "vip", "admin"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=repo,
+        limits=limits,
+        burst=FakeBurst(),
+        router=route_question,
+        registry=registry,
+        provider=provider,
+        clock=lambda: NOW,
+        planner=planner,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Phu My dang co xu huong the nao?"),
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key="planned-standard-1",
+    )
+
+    assert result.status is RunStatus.COMPLETED
+    assert events == ["reserve", "planner", "record_planner", "settle"]
+    assert limits.reservations[0]["max_cost_usd"] == Decimal("0.13")
+    assert limits.reservations[0]["model"] == "deepseek-v4-pro"
+    assert limits.planner_usage[0]["model"] == "deepseek-v4-flash"
+    assert limits.planner_usage[0]["usage"] == planner_usage
+    assert limits.settlements[0]["usage"] == ProviderUsage(input_tokens=700, output_tokens=120)
+
+
+def test_deterministic_fast_does_not_call_planner_or_reserve_provider_cost():
+    calls = []
+
+    def planner(**_kwargs):
+        calls.append("planner")
+        raise AssertionError("deterministic Fast must not plan")
+
+    deps = make_deps(decision=fast_decision())
+    deps = replace(deps, planner=planner)
+
+    result = run_question(
+        AskQuestionRequest(question="Khu nao giam gia hom nay?"),
+        make_context(),
+        dependencies=deps,
+        idempotency_key="fast-no-planner-reservation",
+    )
+
+    assert result.status is RunStatus.COMPLETED
+    assert calls == []
+    assert deps.limits.reservations[0]["max_cost_usd"] == Decimal("0")
+    assert deps.limits.planner_usage == []
+
+
+def test_planner_failure_records_known_usage_then_releases_without_answered_quota():
+    usage = ProviderUsage(input_tokens=150, output_tokens=25, cache_miss_input_tokens=150)
+
+    def planner(**_kwargs):
+        raise ProviderUnavailable("private planner error", usage=usage)
+
+    from services.radar_ask.routing import route_question
+
+    repo = FakeRepository()
+    limits = FakeLimits()
+    dependencies = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"free", "vip", "admin"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=repo,
+        limits=limits,
+        burst=FakeBurst(),
+        router=route_question,
+        registry=DEFAULT_TOOL_REGISTRY,
+        provider=FakeProvider(),
+        clock=lambda: NOW,
+        planner=planner,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Phu My dang co xu huong the nao?"),
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key="planner-failure-cost",
+    )
+
+    assert result.status is RunStatus.FAILED
+    assert result.error_code == "planner_unavailable"
+    assert result.retryable is True
+    assert len(limits.planner_usage) == 1
+    assert limits.planner_usage[0]["model"] == "deepseek-v4-flash"
+    assert limits.planner_usage[0]["usage"] == usage
+    assert limits.settlements[0]["outcome"] is RunOutcome.PROVIDER_FAILURE
+    assert limits.settlements[0]["usage"] == ProviderUsage()
+
+
+def test_planned_deep_persists_validated_route_and_preflight_usage_before_queue():
+    planner_usage = ProviderUsage(input_tokens=250, output_tokens=40)
+
+    def planner(**_kwargs):
+        return PlannerResult(
+            decision=RouteDecision(
+                depth=AskDepth.DEEP,
+                question_type="deep_market_research",
+                tool_calls=[
+                    ToolCall(
+                        call_id="planned-deep-1",
+                        name="rank_price_drop_areas",
+                        arguments={"window_days": 30, "limit": 10},
+                    )
+                ],
+                generated=True,
+            ),
+            usage=planner_usage,
+        )
+
+    from services.radar_ask.routing import route_question
+
+    repo = FakeRepository()
+    limits = FakeLimits()
+    dependencies = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"free", "vip", "admin"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=repo,
+        limits=limits,
+        burst=FakeBurst(),
+        router=route_question,
+        registry=make_registry(lambda *, args, context: grounded_bundle()),
+        provider=FakeProvider(),
+        clock=lambda: NOW,
+        planner=planner,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Danh gia toan dien xu huong khu vuc nay"),
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key="planned-deep-route",
+    )
+
+    stored = next(iter(repo.runs.values()))
+    assert result.status is RunStatus.QUEUED
+    assert stored.route == RouteDecision.model_validate(stored.route).model_dump(mode="json")
+    assert stored.route["question_type"] == "deep_market_research"
+    assert stored.route["depth"] == "deep"
+    assert limits.planner_usage[0]["usage"] == planner_usage
+    assert limits.settlements == []
+    assert dependencies.provider.requests == []
 
 
 def fast_decision() -> RouteDecision:

@@ -19,6 +19,7 @@ from services.radar_ask.contracts import ProviderUsage, RunOutcome
 from services.radar_ask.limits import (
     BudgetHardStop,
     BudgetWarning,
+    PlannerUsageConflict,
     QuotaExceeded,
     RadarAskLimitService,
     calculate_provider_cost,
@@ -427,6 +428,144 @@ def test_concurrent_free_reservations_never_cross_daily_limit(limit_environment)
 
     accepted = [item for item in results if not isinstance(item, QuotaExceeded)]
     assert len(accepted) == 5
+
+
+def test_planner_usage_is_durable_idempotent_and_additive_to_answer_usage(limit_environment):
+    service, users, _clock, _settings = limit_environment
+    reservation = _reserve(
+        service,
+        user_id=users.vip_id,
+        tier="vip",
+        max_cost="0.13",
+        model="deepseek-v4-pro",
+    )
+    planner_usage = ProviderUsage(
+        input_tokens=500,
+        output_tokens=75,
+        cache_miss_input_tokens=500,
+    )
+    answer_usage = ProviderUsage(
+        input_tokens=900,
+        output_tokens=150,
+        cache_hit_input_tokens=300,
+        cache_miss_input_tokens=600,
+    )
+
+    service.record_planner_usage(
+        reservation_id=reservation.reservation_id,
+        model="deepseek-v4-flash",
+        usage=planner_usage,
+    )
+    service.record_planner_usage(
+        reservation_id=reservation.reservation_id,
+        model="deepseek-v4-flash",
+        usage=planner_usage,
+    )
+    settlement = service.settle_question(
+        reservation_id=reservation.reservation_id,
+        usage=answer_usage,
+        outcome=RunOutcome.ANSWERED,
+    )
+
+    expected_cost = calculate_provider_cost("deepseek-v4-flash", planner_usage) + calculate_provider_cost(
+        "deepseek-v4-pro", answer_usage
+    )
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT planner_model, planner_prompt_tokens, planner_completion_tokens,
+                   planner_actual_usd, prompt_tokens, completion_tokens, actual_usd
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation.reservation_id,),
+        ).fetchone()
+
+    assert settlement.actual_usd == expected_cost
+    assert row["planner_model"] == "deepseek-v4-flash"
+    assert row["planner_prompt_tokens"] == 500
+    assert row["planner_completion_tokens"] == 75
+    assert row["prompt_tokens"] == 1400
+    assert row["completion_tokens"] == 225
+    assert row["actual_usd"] == expected_cost
+
+    with pytest.raises(PlannerUsageConflict):
+        service.record_planner_usage(
+            reservation_id=reservation.reservation_id,
+            model="deepseek-v4-flash",
+            usage=ProviderUsage(input_tokens=1),
+        )
+
+
+@pytest.mark.parametrize(
+    "outcome",
+    [
+        RunOutcome.CLARIFICATION,
+        RunOutcome.INSUFFICIENT,
+        RunOutcome.PROVIDER_FAILURE,
+        RunOutcome.VALIDATION_FAILURE,
+    ],
+)
+def test_planner_usage_survives_every_terminal_settlement(limit_environment, outcome):
+    service, users, _clock, _settings = limit_environment
+    reservation = _reserve(
+        service,
+        user_id=users.vip_id,
+        tier="vip",
+        max_cost="0.13",
+        model="deepseek-v4-pro",
+    )
+    usage = ProviderUsage(input_tokens=100, output_tokens=20, cache_miss_input_tokens=100)
+    service.record_planner_usage(
+        reservation_id=reservation.reservation_id,
+        model="deepseek-v4-flash",
+        usage=usage,
+    )
+
+    settlement = service.settle_question(
+        reservation_id=reservation.reservation_id,
+        usage=ProviderUsage(),
+        outcome=outcome,
+    )
+
+    assert settlement.actual_usd == calculate_provider_cost("deepseek-v4-flash", usage)
+    assert settlement.question_consumed is (outcome is RunOutcome.INSUFFICIENT)
+
+
+def test_expired_planned_reservation_releases_but_keeps_known_planner_cost(limit_environment):
+    service, users, clock, _settings = limit_environment
+    reservation = _reserve(
+        service,
+        user_id=users.vip_id,
+        tier="vip",
+        max_cost="0.13",
+        model="deepseek-v4-pro",
+    )
+    usage = ProviderUsage(input_tokens=200, output_tokens=30, cache_miss_input_tokens=200)
+    service.record_planner_usage(
+        reservation_id=reservation.reservation_id,
+        model="deepseek-v4-flash",
+        usage=usage,
+    )
+    clock.value += timedelta(minutes=11)
+
+    _reserve(service, user_id=users.admin_id, tier="admin")
+
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT settlement_status, question_status, actual_usd,
+                   prompt_tokens, completion_tokens
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation.reservation_id,),
+        ).fetchone()
+    assert tuple(row) == (
+        "released",
+        "released",
+        calculate_provider_cost("deepseek-v4-flash", usage),
+        200,
+        30,
+    )
 
 
 class FakeRedis:

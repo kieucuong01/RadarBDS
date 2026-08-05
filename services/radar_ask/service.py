@@ -10,6 +10,7 @@ from .config import VALID_TIERS, RadarAskSettings
 from .contracts import AnswerEnvelope, AskContext, AskQuestionRequest, AskRunResult, RunStatus
 from .limits import RadarAskLimitService
 from .orchestrator import OrchestratorDependencies, run_question
+from .planner import DeepSeekTypedPlanner
 from .provider import DeepSeekProvider
 from .registry import DEFAULT_TOOL_REGISTRY
 from .repository import (
@@ -42,6 +43,7 @@ def get_repository() -> RadarAskRepository:
 
 def _dependencies() -> OrchestratorDependencies:
     settings = RadarAskSettings.from_env()
+    provider = DeepSeekProvider(settings=settings)
     return OrchestratorDependencies(
         settings=settings,
         repository=get_repository(),
@@ -49,8 +51,13 @@ def _dependencies() -> OrchestratorDependencies:
         burst=get_burst_limiter(),
         router=route_question,
         registry=DEFAULT_TOOL_REGISTRY,
-        provider=DeepSeekProvider(settings=settings),
+        provider=provider,
         clock=lambda: datetime.now(timezone.utc),
+        planner=DeepSeekTypedPlanner(
+            settings=settings,
+            provider=provider,
+            registry=DEFAULT_TOOL_REGISTRY,
+        ),
     )
 
 

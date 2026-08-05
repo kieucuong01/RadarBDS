@@ -111,7 +111,10 @@ def test_schema_creates_active_tables_indexes_constraints_and_keeps_legacy(repos
                 SELECT column_name, data_type
                 FROM information_schema.columns
                 WHERE table_schema='public' AND table_name='radar_ask_usage'
-                  AND column_name IN ('usage_date', 'usage_month', 'reserved_usd', 'actual_usd')
+                  AND column_name IN (
+                      'usage_date', 'usage_month', 'reserved_usd', 'actual_usd',
+                      'planner_model', 'planner_actual_usd', 'planner_recorded_at'
+                  )
                 """
             ).fetchall()
         }
@@ -129,6 +132,9 @@ def test_schema_creates_active_tables_indexes_constraints_and_keeps_legacy(repos
         "usage_month": "date",
         "reserved_usd": "numeric",
         "actual_usd": "numeric",
+        "planner_model": "text",
+        "planner_actual_usd": "numeric",
+        "planner_recorded_at": "timestamp with time zone",
     }
 
 

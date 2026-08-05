@@ -7,7 +7,14 @@ from typing import Any, Callable, Mapping, Protocol
 
 from pydantic import ValidationError
 
-from .contracts import AskContext, AskDepth, AskQuestionRequest, RouteDecision, ToolCall
+from .contracts import (
+    AskContext,
+    AskDepth,
+    AskQuestionRequest,
+    PlannerResult,
+    RouteDecision,
+    ToolCall,
+)
 from .registry import APPROVED_TOOL_NAMES, DEFAULT_TOOL_REGISTRY, ToolRegistry
 
 
@@ -30,7 +37,7 @@ class Planner(Protocol):
         request: AskQuestionRequest,
         context: AskContext,
         allowed_tools: tuple[str, ...],
-    ) -> RouteDecision | Mapping[str, Any]: ...
+    ) -> PlannerResult | RouteDecision | Mapping[str, Any]: ...
 
 
 _WARD_ALIASES = {
@@ -379,12 +386,18 @@ def route_question(
     if planner is None:
         raise PlannerRequired("question requires the typed planner")
     try:
+        planned_value = planner(
+            request=request,
+            context=context,
+            allowed_tools=tuple(registry.registrations),
+        )
+        raw_decision = (
+            planned_value.decision
+            if isinstance(planned_value, PlannerResult)
+            else planned_value
+        )
         planned = RouteDecision.model_validate(
-            planner(
-                request=request,
-                context=context,
-                allowed_tools=tuple(registry.registrations),
-            )
+            raw_decision
         )
     except (ValidationError, TypeError, ValueError) as exc:
         raise RoutingPolicyViolation("planner returned an invalid typed route") from exc
@@ -392,5 +405,21 @@ def route_question(
         planned,
         context=context,
         requested_depth=requested_depth,
+        registry=registry,
+    )
+
+
+def finalize_planned_route(
+    decision: RouteDecision,
+    *,
+    request: AskQuestionRequest,
+    context: AskContext,
+    registry: ToolRegistry = DEFAULT_TOOL_REGISTRY,
+) -> RouteDecision:
+    """Apply request/tier/registry policy to an already typed provider route."""
+    return _finalize(
+        RouteDecision.model_validate(decision),
+        context=context,
+        requested_depth=_depth_requested(request, _fold(request.question)),
         registry=registry,
     )

@@ -29,6 +29,10 @@ JSON_SYSTEM_INSTRUCTION = "Return exactly one valid JSON object and no surroundi
 class ProviderError(RuntimeError):
     """Base class for sanitized provider-boundary failures."""
 
+    def __init__(self, message: str, *, usage: ProviderUsage | None = None):
+        self.usage = usage or ProviderUsage()
+        super().__init__(message)
+
 
 class ProviderUnavailable(ProviderError):
     """The configured provider cannot safely serve the request now."""
@@ -225,15 +229,29 @@ class DeepSeekProvider:
             raise ProviderRejected("provider model is not allowed")
 
         attempts = 2 if request.json_mode else 1
+        accumulated_usage = ProviderUsage()
         for _attempt in range(attempts):
             remaining = None if deadline is None else deadline - self._monotonic()
             if remaining is not None and remaining <= 0:
-                raise ProviderUnavailable("DeepSeek deadline exceeded")
-            response = self._post_once(request, timeout_seconds=remaining)
+                raise ProviderUnavailable(
+                    "DeepSeek deadline exceeded",
+                    usage=accumulated_usage,
+                )
+            try:
+                response = self._post_once(request, timeout_seconds=remaining)
+            except ProviderError as exc:
+                raise type(exc)(
+                    str(exc),
+                    usage=accumulated_usage + exc.usage,
+                ) from None
+            accumulated_usage = accumulated_usage + response.usage
             if deadline is not None and self._monotonic() >= deadline:
-                raise ProviderUnavailable("DeepSeek deadline exceeded")
+                raise ProviderUnavailable(
+                    "DeepSeek deadline exceeded",
+                    usage=accumulated_usage,
+                )
             if not request.json_mode:
-                return response
+                return response.model_copy(update={"usage": accumulated_usage})
             raw_content = (response.content or "").strip()
             if not raw_content:
                 continue
@@ -243,8 +261,13 @@ class DeepSeekProvider:
                 continue
             if not isinstance(json_value, dict):
                 continue
-            return response.model_copy(update={"json_value": json_value})
-        raise ProviderInvalidResponse("provider did not return a valid JSON object")
+            return response.model_copy(
+                update={"json_value": json_value, "usage": accumulated_usage}
+            )
+        raise ProviderInvalidResponse(
+            "provider did not return a valid JSON object",
+            usage=accumulated_usage,
+        )
 
     def complete_json(
         self,

@@ -728,6 +728,16 @@ CREATE TABLE IF NOT EXISTS radar_ask_usage (
     question_status     TEXT NOT NULL CHECK (question_status IN ('reserved', 'answered', 'released')),
     reserved_usd        NUMERIC(12, 6) NOT NULL DEFAULT 0 CHECK (reserved_usd >= 0),
     actual_usd          NUMERIC(12, 6) NOT NULL DEFAULT 0 CHECK (actual_usd >= 0),
+    planner_model       TEXT CHECK (
+                            planner_model IS NULL
+                            OR char_length(planner_model) BETWEEN 1 AND 120
+                        ),
+    planner_prompt_tokens INTEGER NOT NULL DEFAULT 0 CHECK (planner_prompt_tokens >= 0),
+    planner_completion_tokens INTEGER NOT NULL DEFAULT 0 CHECK (planner_completion_tokens >= 0),
+    planner_cache_hit_tokens INTEGER NOT NULL DEFAULT 0 CHECK (planner_cache_hit_tokens >= 0),
+    planner_cache_miss_tokens INTEGER NOT NULL DEFAULT 0 CHECK (planner_cache_miss_tokens >= 0),
+    planner_actual_usd NUMERIC(12, 6) NOT NULL DEFAULT 0 CHECK (planner_actual_usd >= 0),
+    planner_recorded_at TIMESTAMPTZ,
     prompt_tokens       INTEGER NOT NULL DEFAULT 0 CHECK (prompt_tokens >= 0),
     completion_tokens   INTEGER NOT NULL DEFAULT 0 CHECK (completion_tokens >= 0),
     cache_hit_tokens    INTEGER NOT NULL DEFAULT 0 CHECK (cache_hit_tokens >= 0),
@@ -1429,6 +1439,25 @@ def _migrate_radar_ask_usage(conn: Any) -> None:
         ALTER TABLE radar_ask_usage
         ADD COLUMN IF NOT EXISTS pricing_version TEXT NOT NULL
             DEFAULT 'deepseek-v4-usd-2026-08-04'
+        """
+    )
+    conn.execute(
+        """
+        ALTER TABLE radar_ask_usage
+        ADD COLUMN IF NOT EXISTS planner_model TEXT CHECK (
+            planner_model IS NULL OR char_length(planner_model) BETWEEN 1 AND 120
+        ),
+        ADD COLUMN IF NOT EXISTS planner_prompt_tokens INTEGER NOT NULL DEFAULT 0
+            CHECK (planner_prompt_tokens >= 0),
+        ADD COLUMN IF NOT EXISTS planner_completion_tokens INTEGER NOT NULL DEFAULT 0
+            CHECK (planner_completion_tokens >= 0),
+        ADD COLUMN IF NOT EXISTS planner_cache_hit_tokens INTEGER NOT NULL DEFAULT 0
+            CHECK (planner_cache_hit_tokens >= 0),
+        ADD COLUMN IF NOT EXISTS planner_cache_miss_tokens INTEGER NOT NULL DEFAULT 0
+            CHECK (planner_cache_miss_tokens >= 0),
+        ADD COLUMN IF NOT EXISTS planner_actual_usd NUMERIC(12, 6) NOT NULL DEFAULT 0
+            CHECK (planner_actual_usd >= 0),
+        ADD COLUMN IF NOT EXISTS planner_recorded_at TIMESTAMPTZ
         """
     )
 

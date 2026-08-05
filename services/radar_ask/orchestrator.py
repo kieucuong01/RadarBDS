@@ -22,6 +22,7 @@ from .contracts import (
     EvidenceBundle,
     EvidenceItem,
     ModelPolicy,
+    PlannerResult,
     ProviderMessage,
     ProviderRequest,
     ProviderUsage,
@@ -34,10 +35,11 @@ from .contracts import (
 )
 from .evidence import build_provider_bundle
 from .limits import BudgetHardStop, QuotaExceeded
+from .planner import PLANNER_MAX_COST_USD
 from .provider import ProviderError, RadarAskProvider
 from .registry import ToolArgumentsInvalid, ToolContext, ToolRegistry, execute_tool
 from .repository import InvalidRunTransition
-from .routing import Planner, route_question
+from .routing import Planner, PlannerRequired, finalize_planned_route, route_question
 from .validator import (
     AnswerValidationError,
     EvidenceAssessment,
@@ -83,6 +85,7 @@ class RepositoryProtocol(Protocol):
 
 class LimitProtocol(Protocol):
     def reserve_question(self, **kwargs): ...
+    def record_planner_usage(self, **kwargs): ...
     def settle_question(self, **kwargs): ...
     def month_snapshot(self, **kwargs): ...
 
@@ -597,7 +600,8 @@ def _execute_running_run(
             error_code="monthly_budget_hard_stop",
             retryable=False,
         )
-    except ProviderError:
+    except ProviderError as exc:
+        usage = exc.usage
         return _ExecutionResult(
             answer=None,
             usage=usage,
@@ -798,10 +802,11 @@ def run_question(
         decision = dependencies.router(
             request,
             context,
-            planner=dependencies.planner,
+            planner=None,
             registry=dependencies.registry,
         )
-        policy = _policy(decision, context, dependencies.settings)
+    except PlannerRequired:
+        decision = None
     except Exception:
         running = dependencies.repository.transition_run(
             run.id,
@@ -819,30 +824,173 @@ def run_question(
             retryable=False,
         )
 
-    try:
-        reservation = dependencies.limits.reserve_question(
-            user_id=context.user_id,
+    if decision is None:
+        if dependencies.planner is None:
+            running = dependencies.repository.transition_run(
+                run.id,
+                user_id=context.user_id,
+                expected={"created"},
+                target="running",
+            )
+            return _fail_run(
+                dependencies,
+                running,
+                reservation=None,
+                usage=EMPTY_USAGE,
+                outcome=RunOutcome.VALIDATION_FAILURE,
+                error_code="routing_failed",
+                retryable=False,
+            )
+        possible_answer = resolve_model_policy(
             tier=context.tier,
-            run_id=run.id,
-            max_cost_usd=policy.max_cost_usd,
-            model=policy.model,
-            depth=decision.depth.value,
+            depth=AskDepth.DEEP,
+            generated=True,
+            settings=dependencies.settings,
         )
-    except (BudgetHardStop, QuotaExceeded) as exc:
-        budget_stopped = isinstance(exc, BudgetHardStop)
-        dependencies.repository.transition_run(
-            run.id,
-            user_id=context.user_id,
-            expected={"created"},
-            target="cancelled",
-            outcome=(RunOutcome.BUDGET_HARD_STOP.value if budget_stopped else RunOutcome.CANCELLED.value),
-            error_code=("monthly_budget_hard_stop" if budget_stopped else "daily_quota_exceeded"),
-            retryable=True,
-            effective_depth=decision.depth.value,
-            route=decision.model_dump(mode="json"),
-            model=policy.model,
+        try:
+            reservation = dependencies.limits.reserve_question(
+                user_id=context.user_id,
+                tier=context.tier,
+                run_id=run.id,
+                max_cost_usd=possible_answer.max_cost_usd + PLANNER_MAX_COST_USD,
+                model=possible_answer.model,
+                depth=request.requested_depth.value if request.requested_depth else None,
+            )
+        except (BudgetHardStop, QuotaExceeded) as exc:
+            budget_stopped = isinstance(exc, BudgetHardStop)
+            dependencies.repository.transition_run(
+                run.id,
+                user_id=context.user_id,
+                expected={"created"},
+                target="cancelled",
+                outcome=(
+                    RunOutcome.BUDGET_HARD_STOP.value
+                    if budget_stopped
+                    else RunOutcome.CANCELLED.value
+                ),
+                error_code=(
+                    "monthly_budget_hard_stop"
+                    if budget_stopped
+                    else "daily_quota_exceeded"
+                ),
+                retryable=True,
+                model=possible_answer.model,
+            )
+            raise
+
+        try:
+            planned = PlannerResult.model_validate(
+                dependencies.planner(
+                    request=request,
+                    context=context,
+                    allowed_tools=tuple(dependencies.registry.registrations),
+                )
+            )
+        except ProviderError as exc:
+            if exc.usage != EMPTY_USAGE:
+                dependencies.limits.record_planner_usage(
+                    reservation_id=reservation.reservation_id,
+                    model=dependencies.settings.router_model,
+                    usage=exc.usage,
+                )
+            running = dependencies.repository.transition_run(
+                run.id,
+                user_id=context.user_id,
+                expected={"created"},
+                target="running",
+                model=possible_answer.model,
+            )
+            return _fail_run(
+                dependencies,
+                running,
+                reservation=reservation,
+                usage=EMPTY_USAGE,
+                outcome=RunOutcome.PROVIDER_FAILURE,
+                error_code="planner_unavailable",
+                retryable=True,
+            )
+        except Exception:
+            running = dependencies.repository.transition_run(
+                run.id,
+                user_id=context.user_id,
+                expected={"created"},
+                target="running",
+                model=possible_answer.model,
+            )
+            return _fail_run(
+                dependencies,
+                running,
+                reservation=reservation,
+                usage=EMPTY_USAGE,
+                outcome=RunOutcome.VALIDATION_FAILURE,
+                error_code="routing_failed",
+                retryable=False,
+            )
+
+        dependencies.limits.record_planner_usage(
+            reservation_id=reservation.reservation_id,
+            model=dependencies.settings.router_model,
+            usage=planned.usage,
         )
-        raise
+        try:
+            decision = finalize_planned_route(
+                planned.decision,
+                request=request,
+                context=context,
+                registry=dependencies.registry,
+            )
+            policy = _policy(decision, context, dependencies.settings)
+        except Exception:
+            running = dependencies.repository.transition_run(
+                run.id,
+                user_id=context.user_id,
+                expected={"created"},
+                target="running",
+                model=possible_answer.model,
+            )
+            return _fail_run(
+                dependencies,
+                running,
+                reservation=reservation,
+                usage=EMPTY_USAGE,
+                outcome=RunOutcome.VALIDATION_FAILURE,
+                error_code="routing_failed",
+                retryable=False,
+            )
+    else:
+        policy = _policy(decision, context, dependencies.settings)
+        try:
+            reservation = dependencies.limits.reserve_question(
+                user_id=context.user_id,
+                tier=context.tier,
+                run_id=run.id,
+                max_cost_usd=policy.max_cost_usd,
+                model=policy.model,
+                depth=decision.depth.value,
+            )
+        except (BudgetHardStop, QuotaExceeded) as exc:
+            budget_stopped = isinstance(exc, BudgetHardStop)
+            dependencies.repository.transition_run(
+                run.id,
+                user_id=context.user_id,
+                expected={"created"},
+                target="cancelled",
+                outcome=(
+                    RunOutcome.BUDGET_HARD_STOP.value
+                    if budget_stopped
+                    else RunOutcome.CANCELLED.value
+                ),
+                error_code=(
+                    "monthly_budget_hard_stop"
+                    if budget_stopped
+                    else "daily_quota_exceeded"
+                ),
+                retryable=True,
+                effective_depth=decision.depth.value,
+                route=decision.model_dump(mode="json"),
+                model=policy.model,
+            )
+            raise
 
     if decision.needs_clarification:
         now = _utc_now(dependencies.clock)

@@ -1114,11 +1114,15 @@ class RadarAskRepository:
             (
                 settlement_status,
                 question_status,
-                totals["actual_usd"],
-                totals["prompt_tokens"],
-                totals["completion_tokens"],
-                totals["cache_hit_tokens"],
-                totals["cache_miss_tokens"],
+                Decimal(ledger["planner_actual_usd"])
+                + Decimal(totals["actual_usd"]),
+                int(ledger["planner_prompt_tokens"]) + int(totals["prompt_tokens"]),
+                int(ledger["planner_completion_tokens"])
+                + int(totals["completion_tokens"]),
+                int(ledger["planner_cache_hit_tokens"])
+                + int(totals["cache_hit_tokens"]),
+                int(ledger["planner_cache_miss_tokens"])
+                + int(totals["cache_miss_tokens"]),
                 normalized_outcome.value,
                 reservation_id,
                 run_id,

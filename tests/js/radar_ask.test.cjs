@@ -563,13 +563,14 @@ test('contextual launcher survives as a bounded typed page context in question p
     road: 'R'.repeat(220),
     question: 'Không được lặp câu hỏi vào page_context',
   });
-  await controller.submit('Vì sao lô đất này được định giá như hiện tại?', 'standard');
+  await controller.submit('Vì sao lô đất này được định giá như hiện tại?');
 
   assert.deepEqual(payloads[0].page_context, {
     listing_id: 123,
     ward: 'P'.repeat(120),
     road: 'R'.repeat(180),
   });
+  assert.equal(payloads[0].requested_depth, undefined);
   assert.equal(payloads[0].page_context.question, undefined);
 });
 

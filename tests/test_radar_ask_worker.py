@@ -38,6 +38,7 @@ from services.radar_ask.orchestrator import (
     execute_leased_run,
 )
 from services.radar_ask.provider import ProviderUnavailable
+from services.radar_ask.limits import calculate_provider_cost
 from services.radar_ask.registry import DEFAULT_TOOL_REGISTRY, ToolRegistration, ToolRegistry
 from services.radar_ask.repository import InvalidRunTransition, RadarAskRepository
 from services.radar_ask.worker import RadarAskWorker, RadarAskWorkerDisabled
@@ -593,6 +594,54 @@ def test_successful_deep_execution_completes_owned_run_and_settles(worker_repo):
     assert assistant["total"] == 1
     assert tuple(usage)[:5] == ("settled", "answered", "answered", 100, 50)
     assert usage["actual_usd"] > 0
+
+
+def test_deep_worker_settlement_adds_final_usage_to_persisted_planner_usage(worker_repo):
+    repository, user = worker_repo
+    queued, reservation_id = queue_run(repository, user, key="planner-plus-worker")
+    planner_usage = ProviderUsage(
+        input_tokens=400,
+        output_tokens=60,
+        cache_miss_input_tokens=400,
+    )
+    planner_cost = calculate_provider_cost("deepseek-v4-flash", planner_usage)
+    with get_conn() as conn:
+        conn.execute(
+            """
+            UPDATE radar_ask_usage
+            SET planner_model='deepseek-v4-flash', planner_prompt_tokens=?,
+                planner_completion_tokens=?, planner_cache_hit_tokens=?,
+                planner_cache_miss_tokens=?, planner_actual_usd=?,
+                planner_recorded_at=NOW()
+            WHERE id=?
+            """,
+            (
+                planner_usage.input_tokens,
+                planner_usage.output_tokens,
+                planner_usage.cache_hit_input_tokens,
+                planner_usage.cache_miss_input_tokens,
+                planner_cost,
+                reservation_id,
+            ),
+        )
+    leased = repository.lease_next_run(worker_id="planner-worker", lease_seconds=90)
+    provider = ProviderSpy()
+    deps = worker_dependencies(repository, provider)
+
+    result = execute_leased_run(leased, worker_id="planner-worker", dependencies=deps)
+
+    assert result.status is RunStatus.COMPLETED
+    final_usage = ProviderUsage(input_tokens=100, output_tokens=50)
+    expected_cost = planner_cost + calculate_provider_cost("deepseek-v4-pro", final_usage)
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT prompt_tokens, completion_tokens, actual_usd, settlement_status
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation_id,),
+        ).fetchone()
+    assert tuple(row) == (500, 110, expected_cost, "settled")
 
 
 def test_lease_loss_after_provider_response_records_usage_before_terminal_failure(worker_repo):

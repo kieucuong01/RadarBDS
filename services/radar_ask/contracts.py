@@ -258,6 +258,27 @@ class ProviderUsage(ContractModel):
     cache_hit_input_tokens: int = Field(default=0, ge=0)
     cache_miss_input_tokens: int = Field(default=0, ge=0)
 
+    def __add__(self, other: object) -> "ProviderUsage":
+        if not isinstance(other, ProviderUsage):
+            return NotImplemented
+        return ProviderUsage(
+            input_tokens=self.input_tokens + other.input_tokens,
+            output_tokens=self.output_tokens + other.output_tokens,
+            cache_hit_input_tokens=(
+                self.cache_hit_input_tokens + other.cache_hit_input_tokens
+            ),
+            cache_miss_input_tokens=(
+                self.cache_miss_input_tokens + other.cache_miss_input_tokens
+            ),
+        )
+
+
+class PlannerResult(ContractModel):
+    """One immutable planner result; usage travels with the typed decision."""
+
+    decision: RouteDecision
+    usage: ProviderUsage = Field(default_factory=ProviderUsage)
+
 
 class ProviderToolDefinition(ContractModel):
     name: str = Field(min_length=1, max_length=80, pattern=r"^[a-z][a-z0-9_]*$")

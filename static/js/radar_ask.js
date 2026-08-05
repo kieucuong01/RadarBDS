@@ -23,7 +23,7 @@
     vip: { label: 'VIP', cap: 20, capLabel: 'VIP · 20 câu/ngày' },
     admin: { label: 'Admin', cap: 100, capLabel: 'Admin · 100 câu/ngày' },
   });
-  const DEPTH_LABELS = Object.freeze({ fast: 'Nhanh', standard: 'Phân tích', deep: 'Chuyên sâu' });
+  const DEPTH_LABELS = Object.freeze({ fast: 'Nhanh', auto: 'Tự động', standard: 'Phân tích', deep: 'Chuyên sâu' });
   const VERDICT_LABELS = Object.freeze({
     dang_xem: 'Đáng xem',
     can_kiem_tra_them: 'Cần kiểm tra thêm',
@@ -400,7 +400,7 @@
       currentRunId: null,
       currentSessionId: null,
       lastQuestion: '',
-      lastDepth: 'standard',
+      lastDepth: 'auto',
       quota: null,
       costState: 'normal',
       sessions: [],
@@ -434,16 +434,17 @@
         state.pageContext = Object.keys(bounded).length ? bounded : null;
         return state.pageContext;
       },
-      async submit(question, depth = 'standard') {
+      async submit(question, depth = 'auto') {
         const normalized = String(question || '').trim();
         if (state.pending || state.costState === 'locked') return { ignored: true };
         if (!normalized) return { ignored: true, reason: 'empty_question' };
         state.pending = true;
         state.lastQuestion = normalized;
-        state.lastDepth = DEPTH_LABELS[depth] ? depth : 'standard';
+        state.lastDepth = DEPTH_LABELS[depth] ? depth : 'auto';
         notify('setPending', true);
         try {
-          const request = { question: normalized, requested_depth: state.lastDepth };
+          const request = { question: normalized };
+          if (state.lastDepth !== 'auto') request.requested_depth = state.lastDepth;
           if (state.currentSessionId) request.session_id = state.currentSessionId;
           if (state.pageContext) request.page_context = { ...state.pageContext };
           let run = applyRun(await api.postQuestion(request));
@@ -719,7 +720,7 @@
     const evidenceScrim = query('[data-evidence-scrim]');
     const deleteDialog = query('[data-delete-dialog]');
     const runNodes = new Map();
-    let selectedDepth = 'standard';
+    let selectedDepth = 'auto';
     let pendingDeleteResolve = null;
     let historyReturnFocus = null;
     let evidenceReturnFocus = null;

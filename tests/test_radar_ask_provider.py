@@ -239,6 +239,10 @@ def test_json_mode_retries_once_for_empty_content(settings):
     )
 
     assert response.json_value == {"route": "fast"}
+    assert response.usage.input_tokens == 20
+    assert response.usage.output_tokens == 8
+    assert response.usage.cache_hit_input_tokens == 12
+    assert response.usage.cache_miss_input_tokens == 8
     assert len(session.calls) == 2
     assert session.calls[0]["json"]["response_format"] == {"type": "json_object"}
     assert "valid JSON object" in session.calls[0]["json"]["messages"][0]["content"]
@@ -265,7 +269,7 @@ def test_json_mode_rejects_two_invalid_responses(settings):
     session.queue(FakeResponse(completion_payload(content="still-not-json")))
     provider = DeepSeekProvider(settings=settings, session=session)
 
-    with pytest.raises(ProviderInvalidResponse, match="valid JSON"):
+    with pytest.raises(ProviderInvalidResponse, match="valid JSON") as caught:
         provider.complete_json(
             model="deepseek-v4-flash",
             messages=[{"role": "user", "content": "Route"}],
@@ -273,6 +277,8 @@ def test_json_mode_rejects_two_invalid_responses(settings):
         )
 
     assert len(session.calls) == 2
+    assert caught.value.usage.input_tokens == 20
+    assert caught.value.usage.output_tokens == 8
 
 
 def test_deep_json_repair_shares_one_monotonic_deadline(settings):
@@ -282,7 +288,7 @@ def test_deep_json_repair_shares_one_monotonic_deadline(settings):
     session.queue(FakeResponse(completion_payload(content='{"answer":"late"}')))
     provider = DeepSeekProvider(settings=settings, session=session, monotonic_fn=clock)
 
-    with pytest.raises(ProviderUnavailable, match="deadline"):
+    with pytest.raises(ProviderUnavailable, match="deadline") as caught:
         provider.complete_until(simple_request(json_mode=True), deadline=60.0)
 
     assert len(session.calls) == 2
@@ -290,6 +296,21 @@ def test_deep_json_repair_shares_one_monotonic_deadline(settings):
     second_timeout = session.calls[1]["timeout"]
     assert first_timeout.total == pytest.approx(60.0)
     assert second_timeout.total == pytest.approx(15.0)
+    assert caught.value.usage.input_tokens == 20
+    assert caught.value.usage.output_tokens == 8
+
+
+def test_json_retry_network_failure_keeps_first_attempt_usage(settings):
+    session = FakeSession()
+    session.queue(FakeResponse(completion_payload(content="not-json")))
+    session.queue(requests.Timeout("private timeout"))
+    provider = DeepSeekProvider(settings=settings, session=session)
+
+    with pytest.raises(ProviderUnavailable) as caught:
+        provider.complete(simple_request(json_mode=True))
+
+    assert caught.value.usage.input_tokens == 10
+    assert caught.value.usage.output_tokens == 4
 
 
 @pytest.mark.parametrize(
