@@ -5,7 +5,7 @@ import { Rate, Trend } from 'k6/metrics';
 
 const BASE_URL = String(__ENV.BASE_URL || 'http://127.0.0.1:5000').replace(/\/+$/, '');
 const DURATION = String(__ENV.DURATION || '30s');
-const VUS_PER_SCENARIO = Math.max(1, Math.min(20, Number.parseInt(__ENV.VUS_PER_SCENARIO || '1', 10)));
+const VUS_PER_SCENARIO = Math.max(1, Math.min(20, Number.parseInt(__ENV.VUS_PER_SCENARIO || '20', 10)));
 const RUN_ID = String(__ENV.RUN_ID || 'radar-ask-local')
   .replace(/[^a-zA-Z0-9._-]/g, '-')
   .slice(0, 48);
@@ -288,7 +288,8 @@ const PUBLIC_PATHS = Object.freeze([
 ]);
 
 export function runPublicIsolation() {
-  const [path, requiredKey] = PUBLIC_PATHS[__ITER % PUBLIC_PATHS.length];
+  const publicIndex = Number(exec.scenario.iterationInInstance || 0) % PUBLIC_PATHS.length;
+  const [path, requiredKey] = PUBLIC_PATHS[publicIndex];
   const response = http.get(`${BASE_URL}${path}`, {
     headers: { Accept: 'application/json', 'Accept-Encoding': 'gzip' },
     tags: { radar_ask_operation: 'public_isolation', public_path: path.split('?')[0] },

@@ -417,7 +417,7 @@ def test_rendered_verifier_requires_server_owned_fake_provider_and_test_db_proof
     source = (ROOT / "scripts" / "verify_radar_ask_ui.py").read_text(encoding="utf-8")
     main_source = source[source.index("def main()") :]
     assert main_source.index("_verify_server_capability") < main_source.index("sync_playwright")
-    assert "login_user.get(\"tier\") not in {\"vip\", \"admin\"}" in source
+    assert "login_user.get(\"tier\") != \"admin\"" in source
     assert "observation[\"path\"] == f'/api/radar-ask/runs/{deep[\"run_id\"]}'" in source
     assert "observation[\"http_status\"] == 200" in source
     assert "deep_terminal_poll_count" in source
@@ -444,3 +444,21 @@ def test_k6_profile_is_valid_ecmascript_without_installing_k6():
     assert "live_provider_allowed === false" in source
     assert "from 'k6/execution'" in source
     assert "sleep(" not in source
+    assert "VUS_PER_SCENARIO || '20'" in source
+    assert "PUBLIC_PATHS[publicIndex]" in source
+    assert "PUBLIC_PATHS[__ITER" not in source
+
+
+def test_committed_qa_harness_is_loopback_fake_and_test_database_only():
+    source = (ROOT / "scripts" / "radar_ask_qa_server.py").read_text(encoding="utf-8")
+
+    assert 'database != "radar_bds_test"' in source
+    assert 'run_simple(\n        "127.0.0.1"' in source
+    assert 'os.environ.pop("DEEPSEEK_API_KEY", None)' in source
+    assert '"live_provider_allowed": False' in source
+    assert 'QA_CAPABILITY_HEADER = ("X-Radar-Ask-QA-Provider", "fake")' in source
+    assert "DeepSeekProvider" not in source
+    assert "--seed-count" in source
+    assert "default=100" in source
+    main_source = source[source.index("def main(") :]
+    assert main_source.index("if args.check_config") < main_source.index("_write_seed_file")

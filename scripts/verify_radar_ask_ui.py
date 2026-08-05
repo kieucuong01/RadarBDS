@@ -304,8 +304,8 @@ def _verify_viewport(
         raise VerificationError(f"seeded login failed with HTTP {login.status}")
     login_payload = login.json()
     login_user = login_payload.get("user") if isinstance(login_payload, dict) else None
-    if not isinstance(login_user, dict) or login_user.get("tier") not in {"vip", "admin"}:
-        raise VerificationError("seeded rendered user must be VIP or Admin for the four-question flow")
+    if not isinstance(login_user, dict) or login_user.get("tier") != "admin":
+        raise VerificationError("seeded rendered user must be Admin for the four-question flow")
     page.goto(f"{base_url}/hoi-radar-bds", wait_until="networkidle")
     composer = page.locator("[data-composer]")
     composer.wait_for(state="visible")
