@@ -99,6 +99,66 @@ def test_typed_planner_returns_route_and_usage_without_mutable_side_channel():
     assert "[REDACTED]" in serialized
 
 
+def test_planner_minimizes_hostile_pii_but_keeps_useful_location_and_road_context():
+    provider = FakeProvider(
+        ProviderResponse(json_value=valid_route(), usage=ProviderUsage(input_tokens=1))
+    )
+    planner = DeepSeekTypedPlanner(
+        settings=planner_settings(),
+        provider=provider,
+        registry=DEFAULT_TOOL_REGISTRY,
+    )
+
+    planner(
+        request=AskQuestionRequest(
+            question=(
+                "So sánh Phú Mỹ và Định Hòa, liên hệ owner@example.test; "
+                "chủ đất Nguyễn Văn A; CCCD 079123456789; CMND 123456789; "
+                "MST 0312345678; STK 012345678901; thửa 1234 tờ bản đồ 56"
+            )
+        ),
+        context=AskContext.model_validate(
+            {
+                "user_id": 7,
+                "tier": "vip",
+                "page": {
+                    "city": "Thủ Dầu Một",
+                    "ward": "Phú Mỹ - email hint@example.test",
+                    "road": "DX 068; môi giới Trần Thị B; STK 998877665544",
+                },
+                "session_summary": "private CCCD 001122334455",
+                "recent_turns": ["khách hàng Lê Văn C, email c@example.test"],
+            }
+        ),
+        allowed_tools=tuple(DEFAULT_TOOL_REGISTRY.registrations),
+    )
+
+    serialized = "\n".join(message.content or "" for message in provider.requests[0].messages)
+    for sensitive in (
+        "owner@example.test",
+        "hint@example.test",
+        "Nguyễn Văn A",
+        "Trần Thị B",
+        "079123456789",
+        "123456789",
+        "0312345678",
+        "012345678901",
+        "998877665544",
+        "thửa 1234",
+        "tờ bản đồ 56",
+        "001122334455",
+        "Lê Văn C",
+        "c@example.test",
+    ):
+        assert sensitive not in serialized
+    assert "Phú Mỹ" in serialized
+    assert "Định Hòa" in serialized
+    assert "Thủ Dầu Một" in serialized
+    assert "DX 068" in serialized
+    assert "session_summary" not in serialized
+    assert "recent_turns" not in serialized
+
+
 def test_invalid_typed_planner_output_preserves_known_provider_usage():
     usage = ProviderUsage(input_tokens=90, output_tokens=10, cache_miss_input_tokens=90)
     provider = FakeProvider(

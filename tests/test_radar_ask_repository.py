@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from pathlib import Path
+import subprocess
+import sys
 from uuid import UUID, uuid4
 
 import pytest
@@ -17,6 +21,7 @@ from services.radar_ask.repository import (
     OwnedResourceNotFound,
     RadarAskRepository,
 )
+from services.radar_ask.contracts import ProviderUsage
 
 
 @dataclass(frozen=True)
@@ -244,6 +249,215 @@ def test_create_run_is_idempotent_but_rejects_changed_question(repository_env):
             question="Giá Định Hòa?",
             idempotency_key="question-1",
         )
+
+
+def _reserve_planning_run(*, run, user_id: int, tier: str = "vip") -> UUID:
+    reservation_id = uuid4()
+    now = datetime.now(timezone.utc)
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO radar_ask_usage (
+                id, run_key, user_id, tier, model, depth,
+                usage_date, usage_month, settlement_status, question_status,
+                reserved_usd, reservation_expires_at
+            ) VALUES (?, ?, ?, ?, 'deepseek-v4-pro', NULL,
+                      ?, ?, 'reserved', 'reserved', 0.25, ?)
+            """,
+            (
+                reservation_id,
+                run.id,
+                user_id,
+                tier,
+                now.date(),
+                now.date().replace(day=1),
+                now + timedelta(minutes=10),
+            ),
+        )
+    return reservation_id
+
+
+def test_planning_claim_is_exclusive_across_real_database_threads(repository_env):
+    repository, users = repository_env
+    run = repository.create_run(
+        user_id=users.vip_id,
+        question="Câu hỏi chưa khớp deterministic route",
+        idempotency_key="planner-thread-claim",
+    )
+    _reserve_planning_run(run=run, user_id=users.vip_id)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first, second = pool.map(
+            lambda owner: repository.claim_planning(
+                run.id,
+                user_id=users.vip_id,
+                planner_id=owner,
+                lease_seconds=90,
+            ),
+            ("planner:a", "planner:b"),
+        )
+
+    claimed = [candidate for candidate in (first, second) if candidate is not None]
+    assert len(claimed) == 1
+    assert claimed[0].status == "running"
+    assert claimed[0].worker_id in {"planner:a", "planner:b"}
+    assert claimed[0].lease_until is not None
+    assert claimed[0].lease_until > datetime.now(timezone.utc)
+
+
+def test_planning_claim_is_exclusive_across_real_database_processes(repository_env):
+    repository, users = repository_env
+    run = repository.create_run(
+        user_id=users.vip_id,
+        question="Câu hỏi planner tranh chấp process",
+        idempotency_key="planner-process-claim",
+    )
+    _reserve_planning_run(run=run, user_id=users.vip_id)
+    script = (
+        "import sys; from uuid import UUID; "
+        "from services.radar_ask.repository import RadarAskRepository; "
+        "claimed=RadarAskRepository().claim_planning(UUID(sys.argv[1]), "
+        "user_id=int(sys.argv[2]), planner_id=sys.argv[3], lease_seconds=90); "
+        "print('claimed' if claimed is not None else 'replay')"
+    )
+    processes = [
+        subprocess.Popen(
+            [
+                sys.executable,
+                "-X",
+                "utf8",
+                "-c",
+                script,
+                str(run.id),
+                str(users.vip_id),
+                owner,
+            ],
+            cwd=str(Path(__file__).resolve().parents[1]),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        for owner in ("planner:process-a", "planner:process-b")
+    ]
+    results = [process.communicate(timeout=15) for process in processes]
+
+    assert [process.returncode for process in processes] == [0, 0], results
+    outcomes = [stdout.strip().splitlines()[-1] for stdout, _stderr in results]
+    assert sorted(outcomes) == ["claimed", "replay"]
+
+
+def test_planning_finalize_atomically_persists_route_usage_and_handoff(repository_env):
+    repository, users = repository_env
+    run = repository.create_run(
+        user_id=users.vip_id,
+        question="Phân tích một câu hỏi chưa khớp",
+        idempotency_key="planner-atomic-finalize",
+    )
+    reservation_id = _reserve_planning_run(run=run, user_id=users.vip_id)
+    claimed = repository.claim_planning(
+        run.id,
+        user_id=users.vip_id,
+        planner_id="planner:atomic",
+        lease_seconds=90,
+    )
+    assert claimed is not None
+    route = {
+        "depth": "deep",
+        "question_type": "market_trend",
+        "tool_calls": [],
+        "generated": True,
+        "use_thinking": False,
+    }
+    usage = ProviderUsage(
+        input_tokens=17,
+        output_tokens=3,
+        cache_hit_input_tokens=5,
+        cache_miss_input_tokens=12,
+    )
+
+    queued = repository.finalize_planning(
+        run.id,
+        user_id=users.vip_id,
+        planner_id="planner:atomic",
+        reservation_id=reservation_id,
+        planner_model="deepseek-v4-flash",
+        answer_model="deepseek-v4-pro",
+        effective_depth="deep",
+        route=route,
+        usage=usage,
+        target="queued",
+    )
+
+    assert queued.status == "queued"
+    assert queued.route == route
+    assert queued.worker_id is None and queued.lease_until is None
+    with get_conn() as conn:
+        ledger = conn.execute(
+            """
+            SELECT planner_model, planner_prompt_tokens, planner_completion_tokens,
+                   planner_cache_hit_tokens, planner_cache_miss_tokens,
+                   planner_actual_usd, planner_recorded_at
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation_id,),
+        ).fetchone()
+    assert ledger is not None
+    assert tuple(ledger)[:5] == ("deepseek-v4-flash", 17, 3, 5, 12)
+    assert ledger["planner_actual_usd"] > 0
+    assert ledger["planner_recorded_at"] is not None
+
+
+def test_planning_failure_atomically_accounts_known_usage_and_releases(repository_env):
+    repository, users = repository_env
+    run = repository.create_run(
+        user_id=users.vip_id,
+        question="Planner trả cấu trúc không hợp lệ",
+        idempotency_key="planner-atomic-failure",
+    )
+    reservation_id = _reserve_planning_run(run=run, user_id=users.vip_id)
+    claimed = repository.claim_planning(
+        run.id,
+        user_id=users.vip_id,
+        planner_id="planner:failure",
+        lease_seconds=90,
+    )
+    assert claimed is not None
+    usage = ProviderUsage(input_tokens=41, output_tokens=9)
+
+    failed = repository.fail_planning(
+        run.id,
+        user_id=users.vip_id,
+        planner_id="planner:failure",
+        reservation_id=reservation_id,
+        planner_model="deepseek-v4-flash",
+        usage=usage,
+        outcome="validation_failure",
+        error_code="routing_failed",
+        retryable=False,
+    )
+
+    assert failed.status == "failed"
+    assert failed.worker_id is None and failed.lease_until is None
+    with get_conn() as conn:
+        ledger = conn.execute(
+            """
+            SELECT settlement_status, question_status, outcome,
+                   planner_prompt_tokens, planner_completion_tokens,
+                   planner_actual_usd, planner_recorded_at
+            FROM radar_ask_usage WHERE id=?
+            """,
+            (reservation_id,),
+        ).fetchone()
+    assert ledger is not None
+    assert tuple(ledger)[:5] == (
+        "released",
+        "released",
+        "validation_failure",
+        41,
+        9,
+    )
+    assert ledger["planner_actual_usd"] > 0
+    assert ledger["planner_recorded_at"] is not None
 
 
 def test_run_reads_are_owner_scoped_and_terminal_transition_is_immutable(repository_env):

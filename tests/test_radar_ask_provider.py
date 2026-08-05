@@ -226,6 +226,25 @@ def test_complete_normalizes_usage_fields(settings):
     assert response.usage.cache_miss_input_tokens == 4
 
 
+def test_provider_usage_is_bounded_before_any_database_accounting(settings):
+    session = FakeSession()
+    session.queue(
+        FakeResponse(
+            completion_payload(
+                usage={
+                    "prompt_tokens": 10_000_001,
+                    "completion_tokens": 1,
+                    "prompt_cache_hit_tokens": 0,
+                    "prompt_cache_miss_tokens": 10_000_001,
+                }
+            )
+        )
+    )
+
+    with pytest.raises(ProviderInvalidResponse, match="usage is invalid"):
+        DeepSeekProvider(settings=settings, session=session).complete(simple_request())
+
+
 def test_json_mode_retries_once_for_empty_content(settings):
     session = FakeSession()
     session.queue(FakeResponse(completion_payload(content="")))
@@ -321,7 +340,10 @@ def test_http_errors_are_mapped_without_response_body(settings, status_code, err
     session = FakeSession()
     session.queue(
         FakeResponse(
-            {"error": {"message": "sensitive provider body"}},
+            {
+                "error": {"message": "sensitive provider body"},
+                "usage": {"prompt_tokens": 13, "completion_tokens": 2},
+            },
             status_code=status_code,
         )
     )
@@ -332,6 +354,8 @@ def test_http_errors_are_mapped_without_response_body(settings, status_code, err
 
     assert "sensitive provider body" not in str(raised.value)
     assert "unit-test-key" not in str(raised.value)
+    assert raised.value.usage.input_tokens == 13
+    assert raised.value.usage.output_tokens == 2
 
 
 @pytest.mark.parametrize("error", [requests.Timeout("slow"), requests.ConnectionError("offline")])
@@ -374,8 +398,48 @@ def test_invalid_tool_argument_json_is_rejected(settings):
         )
     )
 
-    with pytest.raises(ProviderInvalidResponse, match="tool arguments"):
+    with pytest.raises(ProviderInvalidResponse, match="tool arguments") as caught:
         DeepSeekProvider(settings=settings, session=session).complete(simple_request())
+
+    assert caught.value.usage.input_tokens == 10
+    assert caught.value.usage.output_tokens == 4
+    assert caught.value.usage.cache_hit_input_tokens == 6
+    assert caught.value.usage.cache_miss_input_tokens == 4
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        ({"choices": [], "usage": {"prompt_tokens": 17, "completion_tokens": 3}}, "choice"),
+        (
+            {
+                "choices": [{"message": "not-an-object"}],
+                "usage": {"prompt_tokens": 17, "completion_tokens": 3},
+            },
+            "message",
+        ),
+        (
+            {
+                "choices": [{"message": {"content": None, "tool_calls": {"bad": True}}}],
+                "usage": {"prompt_tokens": 17, "completion_tokens": 3},
+            },
+            "tool calls",
+        ),
+    ],
+)
+def test_structurally_invalid_completion_preserves_independently_parsed_usage(
+    settings,
+    payload,
+    message,
+):
+    session = FakeSession()
+    session.queue(FakeResponse(payload))
+
+    with pytest.raises(ProviderInvalidResponse, match=message) as caught:
+        DeepSeekProvider(settings=settings, session=session).complete(simple_request())
+
+    assert caught.value.usage.input_tokens == 17
+    assert caught.value.usage.output_tokens == 3
 
 
 def test_provider_requires_api_key_only_when_called(monkeypatch):

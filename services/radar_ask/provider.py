@@ -22,6 +22,7 @@ from .contracts import (
 
 
 MAX_RESPONSE_BYTES = 1_048_576
+MAX_USAGE_TOKENS_PER_RESPONSE = 10_000_000
 CONNECT_TIMEOUT_SECONDS = 5
 JSON_SYSTEM_INSTRUCTION = "Return exactly one valid JSON object and no surrounding text."
 
@@ -63,7 +64,7 @@ def _extract_usage(payload: Mapping[str, object]) -> ProviderUsage:
     raw_usage = payload.get("usage")
     usage = raw_usage if isinstance(raw_usage, Mapping) else {}
     try:
-        return ProviderUsage(
+        parsed = ProviderUsage(
             input_tokens=usage.get("prompt_tokens", 0),
             output_tokens=usage.get("completion_tokens", 0),
             cache_hit_input_tokens=usage.get("prompt_cache_hit_tokens", 0),
@@ -71,6 +72,34 @@ def _extract_usage(payload: Mapping[str, object]) -> ProviderUsage:
         )
     except ValidationError as exc:
         raise ProviderInvalidResponse("provider usage is invalid") from exc
+    if any(
+        value > MAX_USAGE_TOKENS_PER_RESPONSE
+        for value in (
+            parsed.input_tokens,
+            parsed.output_tokens,
+            parsed.cache_hit_input_tokens,
+            parsed.cache_miss_input_tokens,
+        )
+    ):
+        raise ProviderInvalidResponse("provider usage is invalid")
+    return parsed
+
+
+def _extract_bounded_error_usage(response: object) -> ProviderUsage:
+    """Best-effort billing evidence from a bounded HTTP error body."""
+    content = getattr(response, "content", None)
+    if not isinstance(content, (bytes, bytearray)) or len(content) > MAX_RESPONSE_BYTES:
+        return ProviderUsage()
+    try:
+        payload = response.json()
+    except (AttributeError, TypeError, ValueError):
+        return ProviderUsage()
+    if not isinstance(payload, Mapping):
+        return ProviderUsage()
+    try:
+        return _extract_usage(payload)
+    except ProviderInvalidResponse:
+        return ProviderUsage()
 
 
 def _message_payload(message: ProviderMessage) -> dict[str, object]:
@@ -129,21 +158,27 @@ def _request_payload(request: ProviderRequest) -> dict[str, object]:
     return payload
 
 
-def _parse_tool_call(raw_call: object) -> ToolCall:
+def _parse_tool_call(raw_call: object, *, usage: ProviderUsage) -> ToolCall:
     if not isinstance(raw_call, Mapping):
-        raise ProviderInvalidResponse("provider tool call is invalid")
+        raise ProviderInvalidResponse("provider tool call is invalid", usage=usage)
     raw_function = raw_call.get("function")
     if raw_call.get("type") != "function" or not isinstance(raw_function, Mapping):
-        raise ProviderInvalidResponse("provider tool call is invalid")
+        raise ProviderInvalidResponse("provider tool call is invalid", usage=usage)
     raw_arguments = raw_function.get("arguments")
     if not isinstance(raw_arguments, str):
-        raise ProviderInvalidResponse("provider tool arguments are invalid")
+        raise ProviderInvalidResponse("provider tool arguments are invalid", usage=usage)
     try:
         arguments = json.loads(raw_arguments)
     except (TypeError, ValueError) as exc:
-        raise ProviderInvalidResponse("provider tool arguments are not valid JSON") from exc
+        raise ProviderInvalidResponse(
+            "provider tool arguments are not valid JSON",
+            usage=usage,
+        ) from exc
     if not isinstance(arguments, dict):
-        raise ProviderInvalidResponse("provider tool arguments must be an object")
+        raise ProviderInvalidResponse(
+            "provider tool arguments must be an object",
+            usage=usage,
+        )
     try:
         return ToolCall(
             call_id=raw_call.get("id"),
@@ -151,41 +186,53 @@ def _parse_tool_call(raw_call: object) -> ToolCall:
             arguments=arguments,
         )
     except ValidationError as exc:
-        raise ProviderInvalidResponse("provider tool arguments violate the contract") from exc
+        raise ProviderInvalidResponse(
+            "provider tool arguments violate the contract",
+            usage=usage,
+        ) from exc
 
 
 def _parse_response(payload: object) -> ProviderResponse:
     if not isinstance(payload, Mapping):
         raise ProviderInvalidResponse("provider response must be an object")
+    # Usage is independent billing evidence. Parse it before any optional
+    # completion structure so every later rejection can still be accounted.
+    usage = _extract_usage(payload)
     choices = payload.get("choices")
     if not isinstance(choices, list) or not choices or not isinstance(choices[0], Mapping):
-        raise ProviderInvalidResponse("provider response has no completion choice")
+        raise ProviderInvalidResponse(
+            "provider response has no completion choice",
+            usage=usage,
+        )
     choice = choices[0]
     raw_message = choice.get("message")
     if not isinstance(raw_message, Mapping):
-        raise ProviderInvalidResponse("provider response message is invalid")
+        raise ProviderInvalidResponse("provider response message is invalid", usage=usage)
     content = raw_message.get("content")
     reasoning_content = raw_message.get("reasoning_content")
     if content is not None and not isinstance(content, str):
-        raise ProviderInvalidResponse("provider response content is invalid")
+        raise ProviderInvalidResponse("provider response content is invalid", usage=usage)
     if reasoning_content is not None and not isinstance(reasoning_content, str):
-        raise ProviderInvalidResponse("provider reasoning content is invalid")
+        raise ProviderInvalidResponse("provider reasoning content is invalid", usage=usage)
     raw_tool_calls = raw_message.get("tool_calls") or []
     if not isinstance(raw_tool_calls, list):
-        raise ProviderInvalidResponse("provider tool calls are invalid")
-    tool_calls = [_parse_tool_call(raw_call) for raw_call in raw_tool_calls]
+        raise ProviderInvalidResponse("provider tool calls are invalid", usage=usage)
+    tool_calls = [_parse_tool_call(raw_call, usage=usage) for raw_call in raw_tool_calls]
     if not content and not tool_calls:
         content = ""
     try:
         return ProviderResponse(
             content=content,
             tool_calls=tool_calls,
-            usage=_extract_usage(payload),
+            usage=usage,
             finish_reason=choice.get("finish_reason"),
             reasoning_content=reasoning_content,
         )
     except ValidationError as exc:
-        raise ProviderInvalidResponse("provider response violates the contract") from exc
+        raise ProviderInvalidResponse(
+            "provider response violates the contract",
+            usage=usage,
+        ) from exc
 
 
 class DeepSeekProvider:
@@ -338,9 +385,16 @@ class DeepSeekProvider:
             raise
         except requests.HTTPError as exc:
             status_code = getattr(exc.response, "status_code", 0) or 0
+            usage = _extract_bounded_error_usage(exc.response)
             if status_code == 429 or status_code >= 500:
-                raise ProviderUnavailable(f"DeepSeek is unavailable (HTTP {status_code})") from None
-            raise ProviderRejected(f"DeepSeek rejected the request (HTTP {status_code})") from None
+                raise ProviderUnavailable(
+                    f"DeepSeek is unavailable (HTTP {status_code})",
+                    usage=usage,
+                ) from None
+            raise ProviderRejected(
+                f"DeepSeek rejected the request (HTTP {status_code})",
+                usage=usage,
+            ) from None
         except (requests.Timeout, requests.ConnectionError):
             raise ProviderUnavailable("DeepSeek is unavailable") from None
         except requests.RequestException:

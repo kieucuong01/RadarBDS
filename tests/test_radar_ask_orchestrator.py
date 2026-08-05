@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from types import SimpleNamespace
+from threading import Event
 from uuid import UUID, uuid4
 
 import pytest
@@ -116,6 +118,8 @@ class FakeRun:
     model: str | None = None
     error_code: str | None = None
     retryable: bool = False
+    worker_id: str | None = None
+    lease_until: datetime | None = None
 
 
 class FakeRepository:
@@ -125,6 +129,9 @@ class FakeRepository:
         self.tools: list[dict[str, object]] = []
         self.evidence: list[dict[str, object]] = []
         self.messages: list[dict[str, object]] = []
+        self.planning_claims: list[dict[str, object]] = []
+        self.planning_finalizations: list[dict[str, object]] = []
+        self.planning_failures: list[dict[str, object]] = []
 
     def create_run(self, *, user_id, question, idempotency_key, session_id, requested_depth):
         key = (user_id, idempotency_key)
@@ -138,6 +145,60 @@ class FakeRepository:
                 requested_depth=requested_depth,
             )
         return self.runs[key]
+
+    def get_run(self, *, user_id, run_id):
+        return next(
+            (item for item in self.runs.values() if item.id == run_id and item.user_id == user_id),
+            None,
+        )
+
+    def claim_planning(self, run_id, **kwargs):
+        run = self.get_run(user_id=kwargs["user_id"], run_id=run_id)
+        assert run is not None
+        if run.status != "created":
+            return None
+        run = replace(
+            run,
+            status="running",
+            worker_id=kwargs["planner_id"],
+            lease_until=NOW + timedelta(seconds=kwargs.get("lease_seconds", 90)),
+        )
+        self.runs[(run.user_id, run.idempotency_key)] = run
+        self.planning_claims.append(dict(kwargs))
+        return run
+
+    def finalize_planning(self, run_id, **kwargs):
+        run = self.get_run(user_id=kwargs["user_id"], run_id=run_id)
+        assert run is not None and run.worker_id == kwargs["planner_id"]
+        target = kwargs["target"]
+        run = replace(
+            run,
+            status=target,
+            effective_depth=kwargs["effective_depth"],
+            route=dict(kwargs["route"]),
+            model=kwargs["answer_model"],
+            worker_id=None if target == "queued" else run.worker_id,
+            lease_until=None if target == "queued" else run.lease_until,
+        )
+        self.runs[(run.user_id, run.idempotency_key)] = run
+        self.planning_finalizations.append(dict(kwargs))
+        return run
+
+    def fail_planning(self, run_id, **kwargs):
+        run = self.get_run(user_id=kwargs["user_id"], run_id=run_id)
+        assert run is not None and run.worker_id == kwargs["planner_id"]
+        run = replace(
+            run,
+            status="failed",
+            outcome=kwargs["outcome"],
+            error_code=kwargs["error_code"],
+            retryable=kwargs["retryable"],
+            worker_id=None,
+            lease_until=None,
+        )
+        self.runs[(run.user_id, run.idempotency_key)] = run
+        self.planning_failures.append(dict(kwargs))
+        return run
 
     def transition_run(self, run_id, **kwargs):
         run = next(item for item in self.runs.values() if item.id == run_id)
@@ -277,18 +338,23 @@ def make_deps(
     )
 
 
-def test_unmatched_question_reserves_before_typed_planner_and_records_usage_before_answer():
+def test_unmatched_question_claims_before_typed_planner_and_atomically_persists_usage_route():
     events: list[str] = []
-    repo = FakeRepository()
+    class OrderedRepository(FakeRepository):
+        def claim_planning(self, run_id, **kwargs):
+            events.append("claim")
+            return super().claim_planning(run_id, **kwargs)
+
+        def finalize_planning(self, run_id, **kwargs):
+            events.append("finalize")
+            return super().finalize_planning(run_id, **kwargs)
+
+    repo = OrderedRepository()
 
     class OrderedLimits(FakeLimits):
         def reserve_question(self, **kwargs):
             events.append("reserve")
             return super().reserve_question(**kwargs)
-
-        def record_planner_usage(self, **kwargs):
-            events.append("record_planner")
-            return super().record_planner_usage(**kwargs)
 
         def settle_question(self, **kwargs):
             events.append("settle")
@@ -365,11 +431,11 @@ def test_unmatched_question_reserves_before_typed_planner_and_records_usage_befo
     )
 
     assert result.status is RunStatus.COMPLETED
-    assert events == ["reserve", "planner", "record_planner", "settle"]
+    assert events == ["reserve", "claim", "planner", "finalize", "settle"]
     assert limits.reservations[0]["max_cost_usd"] == Decimal("0.13")
     assert limits.reservations[0]["model"] == "deepseek-v4-pro"
-    assert limits.planner_usage[0]["model"] == "deepseek-v4-flash"
-    assert limits.planner_usage[0]["usage"] == planner_usage
+    assert repo.planning_finalizations[0]["planner_model"] == "deepseek-v4-flash"
+    assert repo.planning_finalizations[0]["usage"] == planner_usage
     assert limits.settlements[0]["usage"] == ProviderUsage(input_tokens=700, output_tokens=120)
 
 
@@ -435,11 +501,11 @@ def test_planner_failure_records_known_usage_then_releases_without_answered_quot
     assert result.status is RunStatus.FAILED
     assert result.error_code == "planner_unavailable"
     assert result.retryable is True
-    assert len(limits.planner_usage) == 1
-    assert limits.planner_usage[0]["model"] == "deepseek-v4-flash"
-    assert limits.planner_usage[0]["usage"] == usage
-    assert limits.settlements[0]["outcome"] is RunOutcome.PROVIDER_FAILURE
-    assert limits.settlements[0]["usage"] == ProviderUsage()
+    assert limits.planner_usage == []
+    assert limits.settlements == []
+    assert repo.planning_failures[0]["planner_model"] == "deepseek-v4-flash"
+    assert repo.planning_failures[0]["usage"] == usage
+    assert repo.planning_failures[0]["outcome"] == RunOutcome.PROVIDER_FAILURE.value
 
 
 def test_planned_deep_persists_validated_route_and_preflight_usage_before_queue():
@@ -497,9 +563,250 @@ def test_planned_deep_persists_validated_route_and_preflight_usage_before_queue(
     assert stored.route == RouteDecision.model_validate(stored.route).model_dump(mode="json")
     assert stored.route["question_type"] == "deep_market_research"
     assert stored.route["depth"] == "deep"
-    assert limits.planner_usage[0]["usage"] == planner_usage
+    assert repo.planning_finalizations[0]["usage"] == planner_usage
     assert limits.settlements == []
     assert dependencies.provider.requests == []
+
+
+def test_ambiguous_planner_finalize_reconciles_durable_route_without_replanning():
+    class CommitThenRaiseRepository(FakeRepository):
+        def __init__(self):
+            super().__init__()
+            self.raised = False
+
+        def finalize_planning(self, run_id, **kwargs):
+            result = super().finalize_planning(run_id, **kwargs)
+            if not self.raised:
+                self.raised = True
+                raise RuntimeError("ambiguous commit acknowledgement")
+            return result
+
+    planner_calls = 0
+
+    def planner(**_kwargs):
+        nonlocal planner_calls
+        planner_calls += 1
+        return PlannerResult(
+            decision=RouteDecision(
+                depth=AskDepth.STANDARD,
+                question_type="market_trend",
+                tool_calls=[
+                    ToolCall(
+                        call_id="ambiguous-trend-1",
+                        name="get_market_trend",
+                        arguments={"ward": "Phu My", "window_days": 90},
+                    )
+                ],
+                generated=True,
+            ),
+            usage=ProviderUsage(input_tokens=31, output_tokens=7),
+        )
+
+    provider = FakeProvider(
+        response=ProviderResponse(
+            json_value=generated_answer(),
+            usage=ProviderUsage(input_tokens=70, output_tokens=12),
+        )
+    )
+    metadata = DEFAULT_TOOL_REGISTRY.get("get_market_trend")
+    repository = CommitThenRaiseRepository()
+    dependencies = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"free", "vip", "admin"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=repository,
+        limits=FakeLimits(),
+        burst=FakeBurst(),
+        router=__import__(
+            "services.radar_ask.routing",
+            fromlist=["route_question"],
+        ).route_question,
+        registry=ToolRegistry(
+            {
+                metadata.name: ToolRegistration(
+                    name=metadata.name,
+                    description=metadata.description,
+                    args_model=metadata.args_model,
+                    handler=lambda *, args, context: grounded_bundle(),
+                )
+            }
+        ),
+        provider=provider,
+        clock=lambda: NOW,
+        planner=planner,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Phu My hien co xu huong gi?"),
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key="planner-ambiguous-finalize",
+    )
+
+    assert result.status is RunStatus.COMPLETED
+    assert planner_calls == 1
+    assert len(repository.planning_claims) == 1
+    assert len(repository.planning_finalizations) == 1
+
+
+def test_precommit_planner_persistence_failure_is_terminal_and_replay_never_replans():
+    class RaiseBeforeCommitRepository(FakeRepository):
+        def finalize_planning(self, run_id, **kwargs):
+            raise RuntimeError("database failed before commit")
+
+    planner_calls = 0
+
+    def planner(**_kwargs):
+        nonlocal planner_calls
+        planner_calls += 1
+        return PlannerResult(
+            decision=RouteDecision(
+                depth=AskDepth.DEEP,
+                question_type="deep_market_research",
+                tool_calls=[],
+                generated=True,
+            ),
+            usage=ProviderUsage(input_tokens=23, output_tokens=5),
+        )
+
+    from services.radar_ask.routing import route_question
+
+    repository = RaiseBeforeCommitRepository()
+    dependencies = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"free", "vip", "admin"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=repository,
+        limits=FakeLimits(),
+        burst=FakeBurst(),
+        router=route_question,
+        registry=DEFAULT_TOOL_REGISTRY,
+        provider=FakeProvider(),
+        clock=lambda: NOW,
+        planner=planner,
+    )
+    request = AskQuestionRequest(question="Đánh giá toàn diện thị trường này")
+
+    first = run_question(
+        request,
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key="planner-precommit-failure",
+    )
+    replay = run_question(
+        request,
+        make_context("vip"),
+        dependencies=dependencies,
+        idempotency_key="planner-precommit-failure",
+    )
+
+    assert first.status is RunStatus.FAILED
+    assert first.error_code == "planner_persistence_failed"
+    assert replay.status is RunStatus.FAILED
+    assert planner_calls == 1
+    assert repository.planning_failures[0]["usage"] == ProviderUsage(
+        input_tokens=23,
+        output_tokens=5,
+    )
+
+
+def test_concurrent_idempotent_replay_observes_claimed_run_and_only_owner_plans():
+    planner_started = Event()
+    release_planner = Event()
+    planner_calls = 0
+
+    def planner(**_kwargs):
+        nonlocal planner_calls
+        planner_calls += 1
+        planner_started.set()
+        assert release_planner.wait(timeout=3)
+        return PlannerResult(
+            decision=RouteDecision(
+                depth=AskDepth.STANDARD,
+                question_type="market_trend",
+                tool_calls=[
+                    ToolCall(
+                        call_id="concurrent-trend-1",
+                        name="get_market_trend",
+                        arguments={"ward": "Phu My", "window_days": 90},
+                    )
+                ],
+                generated=True,
+            ),
+            usage=ProviderUsage(input_tokens=19, output_tokens=4),
+        )
+
+    from services.radar_ask.routing import route_question
+
+    metadata = DEFAULT_TOOL_REGISTRY.get("get_market_trend")
+    repository = FakeRepository()
+    dependencies = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"free", "vip", "admin"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=repository,
+        limits=FakeLimits(),
+        burst=FakeBurst(),
+        router=route_question,
+        registry=ToolRegistry(
+            {
+                metadata.name: ToolRegistration(
+                    name=metadata.name,
+                    description=metadata.description,
+                    args_model=metadata.args_model,
+                    handler=lambda *, args, context: grounded_bundle(),
+                )
+            }
+        ),
+        provider=FakeProvider(
+            response=ProviderResponse(
+                json_value=generated_answer(),
+                usage=ProviderUsage(input_tokens=50, output_tokens=10),
+            )
+        ),
+        clock=lambda: NOW,
+        planner=planner,
+    )
+    request = AskQuestionRequest(question="Phu My hien co xu huong nao?")
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        owner = pool.submit(
+            lambda: run_question(
+                request,
+                make_context("vip"),
+                dependencies=dependencies,
+                idempotency_key="planner-concurrent-replay",
+            )
+        )
+        assert planner_started.wait(timeout=3)
+        replay = run_question(
+            request,
+            make_context("vip"),
+            dependencies=dependencies,
+            idempotency_key="planner-concurrent-replay",
+        )
+        release_planner.set()
+        completed = owner.result(timeout=3)
+
+    assert replay.status is RunStatus.RUNNING
+    assert completed.status is RunStatus.COMPLETED
+    assert planner_calls == 1
+    assert len(repository.planning_claims) == 1
 
 
 def fast_decision() -> RouteDecision:

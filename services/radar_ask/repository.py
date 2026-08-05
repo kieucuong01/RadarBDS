@@ -28,7 +28,9 @@ RUN_STATUSES = frozenset(
 ALLOWED_RUN_TRANSITIONS = {
     "created": frozenset({"clarifying", "queued", "running", "cancelled"}),
     "queued": frozenset({"running", "cancelled"}),
-    "running": frozenset({"completed", "insufficient", "failed", "cancelled"}),
+    "running": frozenset(
+        {"clarifying", "completed", "insufficient", "failed", "cancelled"}
+    ),
     "clarifying": frozenset(),
     "completed": frozenset(),
     "insufficient": frozenset(),
@@ -621,6 +623,257 @@ class RadarAskRepository:
             ).fetchone()
         return _run_from_row(row) if row is not None else None
 
+    def claim_planning(
+        self,
+        run_id: UUID,
+        *,
+        user_id: int,
+        planner_id: str,
+        lease_seconds: int = 90,
+    ) -> RadarAskRunRecord | None:
+        """Atomically grant one bounded planner lease after reservation."""
+        owner = _bounded_text(planner_id, field="planner_id", maximum=128)
+        if not owner.startswith("planner:"):
+            raise ValueError("planner_id must use the planner namespace")
+        duration = int(lease_seconds)
+        if not 1 <= duration <= 300:
+            raise ValueError("lease_seconds must be between 1 and 300")
+        with get_conn() as conn:
+            row = conn.execute(
+                """
+                UPDATE radar_ask_runs r
+                SET status='running', worker_id=?,
+                    lease_until=NOW() + (? || ' seconds')::interval,
+                    started_at=COALESCE(started_at, NOW()),
+                    retryable=FALSE, error_code=NULL, updated_at=NOW()
+                FROM radar_ask_usage u
+                WHERE r.id=? AND r.user_id=? AND r.status='created'
+                  AND r.route_json IS NULL
+                  AND u.run_key=r.id AND u.settlement_status='reserved'
+                RETURNING r.*
+                """,
+                (owner, duration, run_id, user_id),
+            ).fetchone()
+            if row is None:
+                return None
+            conn.execute(
+                """
+                UPDATE radar_ask_usage
+                SET reservation_expires_at=GREATEST(reservation_expires_at, ?),
+                    updated_at=NOW()
+                WHERE run_key=? AND settlement_status='reserved'
+                """,
+                (row["lease_until"], run_id),
+            )
+        return _run_from_row(row)
+
+    @staticmethod
+    def _record_planner_component(
+        conn: PgConnection,
+        *,
+        ledger: PgRow,
+        planner_model: str,
+        usage: ProviderUsage,
+    ) -> None:
+        actual_usd = calculate_provider_cost(planner_model, usage)
+        expected = (
+            planner_model,
+            usage.input_tokens,
+            usage.output_tokens,
+            usage.cache_hit_input_tokens,
+            usage.cache_miss_input_tokens,
+            actual_usd,
+        )
+        if ledger["planner_recorded_at"] is not None:
+            stored = (
+                ledger["planner_model"],
+                ledger["planner_prompt_tokens"],
+                ledger["planner_completion_tokens"],
+                ledger["planner_cache_hit_tokens"],
+                ledger["planner_cache_miss_tokens"],
+                ledger["planner_actual_usd"],
+            )
+            if stored != expected:
+                raise InvalidRunTransition(
+                    "planner usage was already recorded differently"
+                )
+            return
+        if ledger["settlement_status"] != "reserved":
+            raise InvalidRunTransition("planner reservation is unavailable")
+        updated = conn.execute(
+            """
+            UPDATE radar_ask_usage
+            SET planner_model=?, planner_prompt_tokens=?,
+                planner_completion_tokens=?, planner_cache_hit_tokens=?,
+                planner_cache_miss_tokens=?, planner_actual_usd=?,
+                planner_recorded_at=NOW(), updated_at=NOW()
+            WHERE id=? AND run_key=? AND settlement_status='reserved'
+              AND planner_recorded_at IS NULL
+            RETURNING *
+            """,
+            (
+                *expected,
+                ledger["id"],
+                ledger["run_key"],
+            ),
+        ).fetchone()
+        if updated is None:
+            raise InvalidRunTransition("planner usage lost its reservation lock")
+
+    def finalize_planning(
+        self,
+        run_id: UUID,
+        *,
+        user_id: int,
+        planner_id: str,
+        reservation_id: UUID,
+        planner_model: str,
+        answer_model: str,
+        effective_depth: str,
+        route: Mapping[str, Any],
+        usage: ProviderUsage,
+        target: str,
+    ) -> RadarAskRunRecord:
+        """Persist the validated route and billed planner result under its lease."""
+        owner = _bounded_text(planner_id, field="planner_id", maximum=128)
+        if not owner.startswith("planner:"):
+            raise ValueError("planner_id must use the planner namespace")
+        if effective_depth not in {"fast", "standard", "deep"}:
+            raise ValueError("effective_depth is invalid")
+        if target not in {"running", "queued"}:
+            raise ValueError("planning target is invalid")
+        if (target == "queued") != (effective_depth == "deep"):
+            raise ValueError("only Deep planning may be queued")
+        normalized_planner_model = _bounded_text(
+            planner_model,
+            field="planner_model",
+            maximum=120,
+        )
+        normalized_answer_model = _bounded_text(
+            answer_model,
+            field="answer_model",
+            maximum=120,
+        )
+        route_payload = dict(route)
+        with get_conn() as conn:
+            current = conn.execute(
+                """
+                SELECT * FROM radar_ask_runs
+                WHERE id=? AND user_id=? AND status='running'
+                  AND worker_id=? AND lease_until > NOW()
+                FOR UPDATE
+                """,
+                (run_id, user_id, owner),
+            ).fetchone()
+            if current is None:
+                raise InvalidRunTransition("planning lease is not owned by this request")
+            ledger = self._lock_usage_ledger(
+                conn,
+                run_id=run_id,
+                reservation_id=reservation_id,
+            )
+            self._record_planner_component(
+                conn,
+                ledger=ledger,
+                planner_model=normalized_planner_model,
+                usage=usage,
+            )
+            row = conn.execute(
+                """
+                UPDATE radar_ask_runs
+                SET status=?, effective_depth=?, route_json=?, model=?,
+                    worker_id=CASE WHEN ?='queued' THEN NULL ELSE worker_id END,
+                    lease_until=CASE WHEN ?='queued' THEN NULL ELSE lease_until END,
+                    retryable=FALSE, error_code=NULL, updated_at=NOW()
+                WHERE id=? AND user_id=? AND status='running' AND worker_id=?
+                  AND lease_until > NOW()
+                RETURNING *
+                """,
+                (
+                    target,
+                    effective_depth,
+                    Jsonb(route_payload),
+                    normalized_answer_model,
+                    target,
+                    target,
+                    run_id,
+                    user_id,
+                    owner,
+                ),
+            ).fetchone()
+            if row is None:
+                raise InvalidRunTransition("planning handoff lost its lease")
+        return _run_from_row(row)
+
+    def fail_planning(
+        self,
+        run_id: UUID,
+        *,
+        user_id: int,
+        planner_id: str,
+        reservation_id: UUID,
+        planner_model: str,
+        usage: ProviderUsage,
+        outcome: str,
+        error_code: str,
+        retryable: bool,
+    ) -> RadarAskRunRecord:
+        """Atomically account known planner usage and terminate its owned lease."""
+        owner = _bounded_text(planner_id, field="planner_id", maximum=128)
+        if not owner.startswith("planner:"):
+            raise ValueError("planner_id must use the planner namespace")
+        if outcome not in {"provider_failure", "validation_failure", "database_failure"}:
+            raise ValueError("planning failure outcome is invalid")
+        normalized_error = _bounded_text(error_code, field="error_code", maximum=80)
+        normalized_model = _bounded_text(
+            planner_model,
+            field="planner_model",
+            maximum=120,
+        )
+        with get_conn() as conn:
+            current = conn.execute(
+                """
+                SELECT * FROM radar_ask_runs
+                WHERE id=? AND user_id=? AND status='running'
+                  AND worker_id=? AND lease_until > NOW()
+                FOR UPDATE
+                """,
+                (run_id, user_id, owner),
+            ).fetchone()
+            if current is None:
+                raise InvalidRunTransition("planning lease is not owned by this request")
+            ledger = self._lock_usage_ledger(
+                conn,
+                run_id=run_id,
+                reservation_id=reservation_id,
+            )
+            self._record_planner_component(
+                conn,
+                ledger=ledger,
+                planner_model=normalized_model,
+                usage=usage,
+            )
+            row = conn.execute(
+                """
+                UPDATE radar_ask_runs
+                SET status='failed', outcome=?, error_code=?, retryable=?,
+                    worker_id=NULL, lease_until=NULL,
+                    completed_at=COALESCE(completed_at, NOW()), updated_at=NOW()
+                WHERE id=? AND user_id=? AND status='running' AND worker_id=?
+                RETURNING *
+                """,
+                (outcome, normalized_error, bool(retryable), run_id, user_id, owner),
+            ).fetchone()
+            if row is None:
+                raise InvalidRunTransition("planning failure lost its lease")
+            self._settle_leased_usage(
+                conn,
+                run_id=run_id,
+                reservation_id=reservation_id,
+                outcome=outcome,
+            )
+        return _run_from_row(row)
+
     def lease_next_run(
         self,
         *,
@@ -1138,6 +1391,44 @@ class RadarAskRepository:
             raise ValueError("lease_seconds must be between 1 and 300")
         counts = {"requeued": 0, "failed": 0}
         with get_conn() as conn:
+            expired_planners = conn.execute(
+                """
+                SELECT * FROM radar_ask_runs
+                WHERE status='running' AND worker_id LIKE 'planner:%'
+                  AND lease_until <= NOW()
+                ORDER BY lease_until, created_at
+                FOR UPDATE SKIP LOCKED
+                """
+            ).fetchall()
+            for current in expired_planners:
+                conn.execute(
+                    """
+                    UPDATE radar_ask_runs
+                    SET status='failed', outcome='database_failure',
+                        error_code='planner_lease_expired', retryable=FALSE,
+                        worker_id=NULL, lease_until=NULL,
+                        completed_at=COALESCE(completed_at, NOW()), updated_at=NOW()
+                    WHERE id=? AND status='running' AND worker_id LIKE 'planner:%'
+                      AND lease_until <= NOW()
+                    """,
+                    (current["id"],),
+                )
+                reservation = conn.execute(
+                    """
+                    SELECT id FROM radar_ask_usage
+                    WHERE run_key=? AND settlement_status='reserved'
+                    """,
+                    (current["id"],),
+                ).fetchone()
+                if reservation is not None:
+                    self._settle_leased_usage(
+                        conn,
+                        run_id=current["id"],
+                        reservation_id=reservation["id"],
+                        outcome="database_failure",
+                    )
+                counts["failed"] += 1
+
             unavailable = conn.execute(
                 """
                 UPDATE radar_ask_runs r
@@ -1158,6 +1449,7 @@ class RadarAskRepository:
                 """
                 SELECT * FROM radar_ask_runs
                 WHERE status='running' AND lease_until <= NOW()
+                  AND (worker_id IS NULL OR worker_id NOT LIKE 'planner:%')
                 ORDER BY lease_until, created_at
                 FOR UPDATE SKIP LOCKED
                 """
@@ -1283,6 +1575,8 @@ class RadarAskRepository:
                     model=COALESCE(?, model),
                     error_code=COALESCE(?, error_code),
                     retryable=COALESCE(?, retryable),
+                    worker_id=CASE WHEN ?='running' THEN worker_id ELSE NULL END,
+                    lease_until=CASE WHEN ?='running' THEN lease_until ELSE NULL END,
                     started_at=CASE
                         WHEN ?='running' AND started_at IS NULL THEN NOW()
                         ELSE started_at
@@ -1304,6 +1598,8 @@ class RadarAskRepository:
                     normalized_model,
                     normalized_error,
                     retryable,
+                    target,
+                    target,
                     target,
                     terminal,
                     run_id,

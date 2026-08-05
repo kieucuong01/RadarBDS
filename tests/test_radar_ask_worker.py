@@ -502,6 +502,65 @@ def test_expired_lease_recovery_requeues_then_terminally_fails(worker_repo):
     assert first_usage["reservation_expires_at"] >= first_usage["available_at"] + timedelta(seconds=89)
 
 
+def test_expired_planner_lease_fails_and_releases_without_replan_or_worker_queue(worker_repo):
+    repository, user = worker_repo
+    run = repository.create_run(
+        user_id=user.vip_id,
+        question="Câu hỏi planner bị mất phản hồi commit",
+        idempotency_key="expired-planner-lease",
+    )
+    reservation_id = uuid4()
+    now = datetime.now(timezone.utc)
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO radar_ask_usage (
+                id, run_key, user_id, tier, model, depth,
+                usage_date, usage_month, settlement_status, question_status,
+                reserved_usd, reservation_expires_at
+            ) VALUES (?, ?, ?, 'vip', 'deepseek-v4-pro', NULL,
+                      ?, ?, 'reserved', 'reserved', 0.25, ?)
+            """,
+            (
+                reservation_id,
+                run.id,
+                user.vip_id,
+                now.date(),
+                now.date().replace(day=1),
+                now + timedelta(minutes=10),
+            ),
+        )
+    claimed = repository.claim_planning(
+        run.id,
+        user_id=user.vip_id,
+        planner_id="planner:expired",
+        lease_seconds=90,
+    )
+    assert claimed is not None
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE radar_ask_runs SET lease_until=NOW()-INTERVAL '1 second' WHERE id=?",
+            (run.id,),
+        )
+
+    recovered = repository.recover_expired_leases()
+
+    assert recovered == {"requeued": 0, "failed": 1}
+    stored = repository.get_run(user_id=user.vip_id, run_id=run.id)
+    assert stored is not None
+    assert stored.status == "failed"
+    assert stored.error_code == "planner_lease_expired"
+    assert stored.attempt_count == 0
+    assert repository.lease_next_run(worker_id="deep-worker", lease_seconds=90) is None
+    with get_conn() as conn:
+        ledger = conn.execute(
+            "SELECT settlement_status, question_status, outcome FROM radar_ask_usage WHERE id=?",
+            (reservation_id,),
+        ).fetchone()
+    assert ledger is not None
+    assert tuple(ledger) == ("released", "released", "database_failure")
+
+
 def test_recovery_terminally_fails_queued_run_with_released_reservation(worker_repo):
     repository, user = worker_repo
     queued, reservation_id = queue_run(repository, user, key="released-reservation")

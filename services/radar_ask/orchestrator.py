@@ -77,6 +77,10 @@ class _WorkerLeaseLost(RadarAskOrchestrationError):
 
 class RepositoryProtocol(Protocol):
     def create_run(self, **kwargs): ...
+    def get_run(self, **kwargs): ...
+    def claim_planning(self, run_id: UUID, **kwargs): ...
+    def finalize_planning(self, run_id: UUID, **kwargs): ...
+    def fail_planning(self, run_id: UUID, **kwargs): ...
     def transition_run(self, run_id: UUID, **kwargs): ...
     def record_tool_call(self, **kwargs): ...
     def record_evidence(self, **kwargs): ...
@@ -85,7 +89,6 @@ class RepositoryProtocol(Protocol):
 
 class LimitProtocol(Protocol):
     def reserve_question(self, **kwargs): ...
-    def record_planner_usage(self, **kwargs): ...
     def settle_question(self, **kwargs): ...
     def month_snapshot(self, **kwargs): ...
 
@@ -514,6 +517,38 @@ def _fail_run(
     return _run_result(failed)
 
 
+def _fail_planning_claim(
+    dependencies: OrchestratorDependencies,
+    run,
+    *,
+    planner_id: str,
+    reservation,
+    usage: ProviderUsage,
+    outcome: RunOutcome,
+    error_code: str,
+    retryable: bool,
+) -> AskRunResult:
+    """Terminate one planner owner, falling back only to durable run truth."""
+    try:
+        failed = dependencies.repository.fail_planning(
+            run.id,
+            user_id=run.user_id,
+            planner_id=planner_id,
+            reservation_id=reservation.reservation_id,
+            planner_model=dependencies.settings.router_model,
+            usage=usage,
+            outcome=outcome.value,
+            error_code=error_code,
+            retryable=retryable,
+        )
+    except Exception:
+        durable = dependencies.repository.get_run(user_id=run.user_id, run_id=run.id)
+        if durable is None:
+            raise
+        return _run_result(durable)
+    return _run_result(failed)
+
+
 def _execute_running_run(
     request: AskQuestionRequest,
     context: AskContext,
@@ -824,7 +859,8 @@ def run_question(
             retryable=False,
         )
 
-    if decision is None:
+    planned_route = decision is None
+    if planned_route:
         if dependencies.planner is None:
             running = dependencies.repository.transition_run(
                 run.id,
@@ -878,6 +914,23 @@ def run_question(
             )
             raise
 
+        planner_id = f"planner:{uuid4()}"
+        claimed = dependencies.repository.claim_planning(
+            run.id,
+            user_id=context.user_id,
+            planner_id=planner_id,
+            lease_seconds=90,
+        )
+        if claimed is None:
+            durable = dependencies.repository.get_run(
+                user_id=context.user_id,
+                run_id=run.id,
+            )
+            if durable is None:
+                raise InvalidRunTransition("claimed planner run was not found")
+            return _run_result(durable)
+        run = claimed
+
         try:
             planned = PlannerResult.model_validate(
                 dependencies.planner(
@@ -887,39 +940,21 @@ def run_question(
                 )
             )
         except ProviderError as exc:
-            if exc.usage != EMPTY_USAGE:
-                dependencies.limits.record_planner_usage(
-                    reservation_id=reservation.reservation_id,
-                    model=dependencies.settings.router_model,
-                    usage=exc.usage,
-                )
-            running = dependencies.repository.transition_run(
-                run.id,
-                user_id=context.user_id,
-                expected={"created"},
-                target="running",
-                model=possible_answer.model,
-            )
-            return _fail_run(
+            return _fail_planning_claim(
                 dependencies,
-                running,
+                run,
+                planner_id=planner_id,
                 reservation=reservation,
-                usage=EMPTY_USAGE,
+                usage=exc.usage,
                 outcome=RunOutcome.PROVIDER_FAILURE,
                 error_code="planner_unavailable",
                 retryable=True,
             )
         except Exception:
-            running = dependencies.repository.transition_run(
-                run.id,
-                user_id=context.user_id,
-                expected={"created"},
-                target="running",
-                model=possible_answer.model,
-            )
-            return _fail_run(
+            return _fail_planning_claim(
                 dependencies,
-                running,
+                run,
+                planner_id=planner_id,
                 reservation=reservation,
                 usage=EMPTY_USAGE,
                 outcome=RunOutcome.VALIDATION_FAILURE,
@@ -927,11 +962,6 @@ def run_question(
                 retryable=False,
             )
 
-        dependencies.limits.record_planner_usage(
-            reservation_id=reservation.reservation_id,
-            model=dependencies.settings.router_model,
-            usage=planned.usage,
-        )
         try:
             decision = finalize_planned_route(
                 planned.decision,
@@ -941,22 +971,58 @@ def run_question(
             )
             policy = _policy(decision, context, dependencies.settings)
         except Exception:
-            running = dependencies.repository.transition_run(
-                run.id,
-                user_id=context.user_id,
-                expected={"created"},
-                target="running",
-                model=possible_answer.model,
-            )
-            return _fail_run(
+            return _fail_planning_claim(
                 dependencies,
-                running,
+                run,
+                planner_id=planner_id,
                 reservation=reservation,
-                usage=EMPTY_USAGE,
+                usage=planned.usage,
                 outcome=RunOutcome.VALIDATION_FAILURE,
                 error_code="routing_failed",
                 retryable=False,
             )
+
+        planning_target = "queued" if decision.depth is AskDepth.DEEP else "running"
+        try:
+            run = dependencies.repository.finalize_planning(
+                run.id,
+                user_id=context.user_id,
+                planner_id=planner_id,
+                reservation_id=reservation.reservation_id,
+                planner_model=dependencies.settings.router_model,
+                answer_model=policy.model,
+                effective_depth=decision.depth.value,
+                route=decision.model_dump(mode="json"),
+                usage=planned.usage,
+                target=planning_target,
+            )
+        except Exception:
+            durable = dependencies.repository.get_run(
+                user_id=context.user_id,
+                run_id=run.id,
+            )
+            expected_route = decision.model_dump(mode="json")
+            if durable is not None and durable.route == expected_route:
+                if durable.status == RunStatus.QUEUED.value:
+                    return _run_result(durable)
+                if (
+                    durable.status == RunStatus.RUNNING.value
+                    and durable.worker_id == planner_id
+                ):
+                    run = durable
+                else:
+                    return _run_result(durable)
+            else:
+                return _fail_planning_claim(
+                    dependencies,
+                    run,
+                    planner_id=planner_id,
+                    reservation=reservation,
+                    usage=planned.usage,
+                    outcome=RunOutcome.DATABASE_FAILURE,
+                    error_code="planner_persistence_failed",
+                    retryable=True,
+                )
     else:
         policy = _policy(decision, context, dependencies.settings)
         try:
@@ -1005,7 +1071,7 @@ def run_question(
         clarifying = dependencies.repository.transition_run(
             run.id,
             user_id=context.user_id,
-            expected={"created"},
+            expected={"running"} if planned_route else {"created"},
             target="clarifying",
             outcome=RunOutcome.CLARIFICATION.value,
             effective_depth=decision.depth.value,
@@ -1025,6 +1091,8 @@ def run_question(
         return _run_result(clarifying, answer=answer)
 
     if decision.depth is AskDepth.DEEP:
+        if planned_route:
+            return _run_result(run)
         queued = dependencies.repository.transition_run(
             run.id,
             user_id=context.user_id,
@@ -1036,15 +1104,18 @@ def run_question(
         )
         return _run_result(queued)
 
-    running = dependencies.repository.transition_run(
-        run.id,
-        user_id=context.user_id,
-        expected={"created"},
-        target="running",
-        effective_depth=decision.depth.value,
-        route=decision.model_dump(mode="json"),
-        model=policy.model,
-    )
+    if planned_route:
+        running = run
+    else:
+        running = dependencies.repository.transition_run(
+            run.id,
+            user_id=context.user_id,
+            expected={"created"},
+            target="running",
+            effective_depth=decision.depth.value,
+            route=decision.model_dump(mode="json"),
+            model=policy.model,
+        )
     execution = _execute_running_run(
         request,
         context,

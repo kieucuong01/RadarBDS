@@ -24,8 +24,23 @@ PLANNER_MAX_OUTPUT_TOKENS = 1_200
 PLANNER_MAX_COST_USD = Decimal("0.01")
 _PHONE = re.compile(r"(?<!\d)(?:\+?84|0)(?:[\s.()-]*\d){8,10}(?!\d)")
 _URL = re.compile(r"(?i)\b(?:https?://|www\.)[^\s\"'<>]+")
+_EMAIL = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")
 _SECRET = re.compile(
     r"(?i)\b(?:authorization\s*:\s*)?bearer\s+[A-Za-z0-9._~+/=-]{8,}"
+)
+_SENSITIVE_IDENTIFIER = re.compile(
+    r"(?i)\b(?:cccd|cmnd|căn\s*cước(?:\s*công\s*dân)?|mã\s*số\s*thuế|mst|"
+    r"số\s*tài\s*khoản|stk|tài\s*khoản\s*ngân\s*hàng)\s*[:#=-]?\s*"
+    r"[A-Z0-9][A-Z0-9 .-]{5,30}"
+)
+_PARCEL_IDENTIFIER = re.compile(
+    r"(?i)\b(?:thửa(?:\s*đất)?|số\s*thửa)\s*(?:số)?\s*[:#=-]?\s*\d{1,8}"
+    r"(?:\s*(?:[,;/ -]|và)\s*(?:tờ(?:\s*bản\s*đồ)?|tbđ)\s*(?:số)?\s*"
+    r"[:#=-]?\s*\d{1,6})?"
+)
+_LABELED_PERSON = re.compile(
+    r"(?i)\b(?:chủ\s*đất|chủ\s*nhà|môi\s*giới|người\s*bán|khách\s*hàng|họ\s*tên)"
+    r"\s*[:=-]?\s*[^,;\n]{2,80}"
 )
 
 
@@ -39,7 +54,11 @@ def _redact(value: str | None, *, maximum: int) -> str | None:
     bounded = value[:maximum]
     bounded = _SECRET.sub("[REDACTED]", bounded)
     bounded = _URL.sub("[REDACTED]", bounded)
-    return _PHONE.sub("[REDACTED]", bounded)
+    bounded = _EMAIL.sub("[REDACTED_EMAIL]", bounded)
+    bounded = _LABELED_PERSON.sub("[REDACTED_PERSON]", bounded)
+    bounded = _PARCEL_IDENTIFIER.sub("[REDACTED_PARCEL]", bounded)
+    bounded = _SENSITIVE_IDENTIFIER.sub("[REDACTED_IDENTIFIER]", bounded)
+    return _PHONE.sub("[REDACTED_PHONE]", bounded)
 
 
 class DeepSeekTypedPlanner:
