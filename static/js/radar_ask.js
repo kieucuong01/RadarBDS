@@ -311,6 +311,39 @@
     return article;
   }
 
+  function renderRunState(root, run) {
+    if (!root || !root.ownerDocument) throw new TypeError('A DOM root is required');
+    const documentRef = root.ownerDocument;
+    const payload = run && typeof run === 'object' ? run : {};
+
+    if (payload.status === 'poll_timeout') {
+      const timeout = makeElement(documentRef, 'div', 'radar-ask-run-state');
+      timeout.append(makeElement(documentRef, 'p', '', 'Nghiên cứu vẫn đang chạy. Bạn có thể làm mới trạng thái mà không gửi lại câu hỏi.'));
+      const refresh = makeElement(documentRef, 'button', 'radar-ask-secondary-button', 'Làm mới trạng thái');
+      refresh.setAttribute('type', 'button');
+      setData(refresh, 'manual-refresh');
+      timeout.append(refresh);
+      root.replaceChildren(timeout);
+      return 'poll_timeout';
+    }
+
+    const statusKind = classifyRunStatus(payload.status);
+    if (statusKind === 'answer') {
+      renderAnswer(root, payload.answer || {});
+    } else if (statusKind === 'failed') {
+      root.replaceChildren(makeElement(documentRef, 'p', 'radar-ask-error', 'Không thể hoàn tất nghiên cứu này. Vui lòng thử lại.'));
+    } else if (statusKind === 'cancelled') {
+      root.replaceChildren(makeElement(documentRef, 'p', 'radar-ask-cancelled', 'Nghiên cứu này đã được hủy và sẽ không tiếp tục chạy.'));
+    } else {
+      const pending = makeElement(documentRef, 'div', 'radar-ask-run-state');
+      pending.setAttribute('role', 'status');
+      pending.append(makeElement(documentRef, 'span', 'radar-ask-progress-dots', '•••'));
+      pending.append(makeElement(documentRef, 'p', '', payload.status === 'running' ? 'Đang phân tích chuyên sâu…' : 'Đã xếp hàng nghiên cứu chuyên sâu…'));
+      root.replaceChildren(pending);
+    }
+    return statusKind;
+  }
+
   async function pollRun({ runId, fetchRun, wait, timeoutMs = 120000 }) {
     let elapsed = 0;
     let attempt = 0;
@@ -781,32 +814,17 @@
           conversation.append(current.wrapper);
           runNodes.set(run.run_id, current);
         }
-        const statusKind = classifyRunStatus(run.status);
+        const statusKind = renderRunState(current.body, run);
         if (statusKind === 'answer') {
-          renderAnswer(current.body, run.answer || {});
           attachAnswerActions(current.body, run.answer || {}, null);
           setStatus(run.status === 'clarifying' ? 'Radar BDS cần bạn làm rõ thêm.' : 'Radar BDS đã hoàn tất câu trả lời.');
         } else if (statusKind === 'failed') {
-          current.body.replaceChildren(makeElement(documentRef, 'p', 'radar-ask-error', 'Không thể hoàn tất nghiên cứu này. Vui lòng thử lại.'));
           setStatus('Nghiên cứu không hoàn tất.');
         } else if (statusKind === 'cancelled') {
-          current.body.replaceChildren(makeElement(documentRef, 'p', 'radar-ask-cancelled', 'Nghiên cứu này đã được hủy và sẽ không tiếp tục chạy.'));
           setStatus('Nghiên cứu đã được hủy.');
-        } else if (run.status === 'poll_timeout') {
-          const timeout = makeElement(documentRef, 'div', 'radar-ask-run-state');
-          timeout.append(makeElement(documentRef, 'p', '', 'Nghiên cứu vẫn đang chạy. Bạn có thể làm mới trạng thái mà không gửi lại câu hỏi.'));
-          const refresh = makeElement(documentRef, 'button', 'radar-ask-secondary-button', 'Làm mới trạng thái');
-          refresh.setAttribute('type', 'button');
-          setData(refresh, 'manual-refresh');
-          timeout.append(refresh);
-          current.body.replaceChildren(timeout);
+        } else if (statusKind === 'poll_timeout') {
           setStatus('Đã dừng tự động kiểm tra sau 2 phút.');
         } else {
-          const pending = makeElement(documentRef, 'div', 'radar-ask-run-state');
-          pending.setAttribute('role', 'status');
-          pending.append(makeElement(documentRef, 'span', 'radar-ask-progress-dots', '•••'));
-          pending.append(makeElement(documentRef, 'p', '', run.status === 'running' ? 'Đang phân tích chuyên sâu…' : 'Đã xếp hàng nghiên cứu chuyên sâu…'));
-          current.body.replaceChildren(pending);
           setStatus(run.status === 'running' ? 'Đang phân tích chuyên sâu.' : 'Đã xếp hàng nghiên cứu chuyên sâu.');
         }
         current.wrapper.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -1051,6 +1069,7 @@
     pollRun,
     quotaLabel,
     renderAnswer,
+    renderRunState,
     renderSourceCards,
     safeHref,
     sanitizeOpenOptions,

@@ -12,6 +12,7 @@ const {
   pollRun,
   quotaLabel,
   renderAnswer,
+  renderRunState,
   safeHref,
   syncSheetAccessibility,
   trapSheetFocus,
@@ -344,6 +345,14 @@ test('run statuses share one pending and terminal classification', () => {
   assert.equal(classifyRunStatus('insufficient'), 'answer');
   assert.equal(classifyRunStatus('failed'), 'failed');
   assert.equal(classifyRunStatus('cancelled'), 'cancelled');
+});
+
+test('poll timeout renders a manual refresh action instead of generic failure', () => {
+  const root = fakeRoot();
+
+  assert.equal(renderRunState(root, { run_id: 'run-slow', status: 'poll_timeout' }), 'poll_timeout');
+  assert.ok(root.querySelector('[data-manual-refresh]'));
+  assert.equal(root.querySelector('.radar-ask-error'), null);
 });
 
 test('clarifying response renders immediately without polling', async () => {
