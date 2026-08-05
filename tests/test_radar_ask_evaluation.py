@@ -195,16 +195,17 @@ def test_denied_auth_cases_use_real_http_gate_and_never_reach_downstream(
 
 def test_actual_http_gate_regression_lowers_auth_metric(monkeypatch, golden_corpus):
     baseline = evaluate_corpus(golden_corpus, mode="deterministic")
+    from routes import radar_ask_api as radar_ask_api_route
 
     def deny_everyone_regression():
-        return evaluation_module.radar_ask_api_route.api_error(
+        return radar_ask_api_route.api_error(
             "login_required",
             "login required",
             401,
         )
 
     monkeypatch.setattr(
-        evaluation_module.radar_ask_api_route,
+        radar_ask_api_route,
         "_gate",
         deny_everyone_regression,
     )
@@ -552,6 +553,7 @@ def test_deterministic_cli_writes_utf8_report_and_exits_nonzero_on_open_privacy_
 
 
 def test_record_provider_cli_refuses_missing_confirmation_without_network(tmp_path):
+    missing_cases = tmp_path / "must-not-load-corpus.json"
     result = subprocess.run(
         [
             sys.executable,
@@ -559,7 +561,7 @@ def test_record_provider_cli_refuses_missing_confirmation_without_network(tmp_pa
             "utf8",
             str(SCRIPT_PATH),
             "--cases",
-            str(CASES_PATH),
+            str(missing_cases),
             "--record-provider",
             "--output",
             str(ROOT / "reports" / "must-not-exist.json"),
@@ -569,8 +571,9 @@ def test_record_provider_cli_refuses_missing_confirmation_without_network(tmp_pa
         text=True,
         encoding="utf-8",
         env={**os.environ, "PYTHONUTF8": "1", "DEEPSEEK_API_KEY": ""},
-        timeout=10,
+        timeout=5,
     )
-    assert result.returncode != 0
+    assert result.returncode == 2
     assert "--confirm-live-cost" in (result.stderr + result.stdout)
+    assert "Traceback" not in (result.stderr + result.stdout)
     assert not (ROOT / "reports" / "must-not-exist.json").exists()

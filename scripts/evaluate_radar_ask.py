@@ -21,7 +21,6 @@ from typing import Any, Callable, Mapping, Sequence
 from unittest.mock import patch
 from urllib.parse import urlparse
 
-from flask import Flask
 from pydantic import ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -53,7 +52,6 @@ from services.radar_ask.registry import (
 )
 from services.radar_ask.routing import RoutingError, route_question
 from services.radar_ask.validator import AnswerValidationError, validate_answer
-from routes import radar_ask_api as radar_ask_api_route
 
 
 SCHEMA_VERSION = 1
@@ -502,6 +500,9 @@ def _ratio(passed: int, total: int) -> float:
 
 def _observe_auth_gate(case: Mapping[str, Any], *, user_id: int) -> tuple[tuple[Any, ...], bool]:
     """Exercise the real HTTP authorization gate with fixture-owned identity inputs."""
+    from flask import Flask
+    from routes import radar_ask_api as radar_ask_api_route
+
     authenticated = bool(case["authenticated"])
     tier = str(case["tier"])
     expected = (
@@ -1092,11 +1093,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        if args.record_provider and not args.confirm_live_cost:
+            raise RecordingGuardError("--record-provider requires --confirm-live-cost")
         corpus = load_corpus(args.cases)
         if args.record_provider:
             output = validate_record_output_path(args.output, repo_root=Path.cwd())
-            if not args.confirm_live_cost:
-                raise RecordingGuardError("--record-provider requires --confirm-live-cost")
             settings = RadarAskSettings.from_env()
             record_provider_cases(
                 corpus,
