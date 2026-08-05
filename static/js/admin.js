@@ -290,7 +290,10 @@ function switchPanel(name, options = {}) {
     };
   }
   if (name === 'training') loader = () => loadTrainingItems(false);
-  if (name === 'infra') loader = loadInfraItems;
+  if (name === 'infra') loader = async () => {
+    void loadRadarAskMetrics();
+    return loadInfraItems();
+  };
   if (name === 'users') loader = loadUsers;
   if (name === 'crawl') {
     loader = () => window.RadarFacebookCrawlAdmin?.loadCurrentView();
@@ -1548,6 +1551,139 @@ async function loadInfraItems() {
   renderInfraRows(data.items || []);
 }
 
+function radarAskNode(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined && text !== null) node.textContent = String(text);
+  return node;
+}
+
+function radarAskNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function radarAskFormatCount(value) {
+  return Math.round(radarAskNumber(value)).toLocaleString('vi-VN');
+}
+
+function radarAskFormatUsd(value) {
+  return `$${radarAskNumber(value).toFixed(2)}`;
+}
+
+function radarAskFormatRate(value) {
+  return `${(radarAskNumber(value) * 100).toFixed(1)}%`;
+}
+
+function radarAskMetricCard(label, value, note, tone = '') {
+  const card = radarAskNode('article', `radar-ask-metric-card${tone ? ` ${tone}` : ''}`);
+  card.append(
+    radarAskNode('span', 'radar-ask-metric-label', label),
+    radarAskNode('strong', '', value),
+    radarAskNode('small', '', note),
+  );
+  return card;
+}
+
+function radarAskBreakdown(title, buckets) {
+  const panel = radarAskNode('section', 'radar-ask-breakdown');
+  panel.appendChild(radarAskNode('h3', '', title));
+  const list = radarAskNode('dl', 'radar-ask-breakdown-list');
+  const safeBuckets = buckets && typeof buckets === 'object' && !Array.isArray(buckets) ? buckets : {};
+  const entries = Object.entries(safeBuckets)
+    .filter(([label, value]) => label && label.length <= 120 && Number.isFinite(Number(value)))
+    .sort((a, b) => Number(b[1]) - Number(a[1]) || a[0].localeCompare(b[0]))
+    .slice(0, 12);
+  if (!entries.length) {
+    list.appendChild(radarAskNode('div', 'radar-ask-breakdown-empty', 'Chưa có dữ liệu'));
+  } else {
+    entries.forEach(([label, value]) => {
+      const row = radarAskNode('div', 'radar-ask-breakdown-row');
+      row.append(radarAskNode('dt', '', label), radarAskNode('dd', '', radarAskFormatCount(value)));
+      list.appendChild(row);
+    });
+  }
+  panel.appendChild(list);
+  return panel;
+}
+
+function renderRadarAskMetrics(payload) {
+  const state = document.getElementById('radarAskMetricsState');
+  const banner = document.getElementById('radarAskBudgetBanner');
+  const content = document.getElementById('radarAskMetricsContent');
+  const cards = document.getElementById('radarAskMetricCards');
+  const breakdowns = document.getElementById('radarAskMetricBreakdowns');
+  if (!state || !banner || !content || !cards || !breakdowns) return;
+
+  const metrics = payload && payload.ok && payload.metrics && typeof payload.metrics === 'object'
+    ? payload.metrics : {};
+  const windows = metrics.windows && typeof metrics.windows === 'object' ? metrics.windows : {};
+  const month = windows.month && typeof windows.month === 'object' ? windows.month : {};
+  const cost = metrics.cost && typeof metrics.cost === 'object' ? metrics.cost : {};
+  const queue = metrics.queue && typeof metrics.queue === 'object' ? metrics.queue : {};
+  const latency = month.latency_ms && typeof month.latency_ms === 'object' ? month.latency_ms : {};
+  const rates = month.rates && typeof month.rates === 'object' ? month.rates : {};
+  const tokens = month.tokens && typeof month.tokens === 'object' ? month.tokens : {};
+  const feedback = month.feedback && typeof month.feedback === 'object' ? month.feedback : {};
+
+  state.textContent = payload?.enabled === false
+    ? 'Tính năng đang tắt; số liệu lịch sử và ngân sách vẫn được giữ để theo dõi.'
+    : 'Số liệu tổng hợp đã cập nhật.';
+  state.classList.remove('error');
+
+  const costState = ['normal', 'warning', 'hard_stop'].includes(cost.state) ? cost.state : 'normal';
+  banner.className = `radar-ask-budget-banner ${costState}`;
+  if (costState === 'hard_stop') {
+    banner.textContent = `KHÓA CỨNG — dự phóng ${radarAskFormatUsd(cost.projected_usd)} đã chạm ngưỡng ${radarAskFormatUsd(cost.hard_stop_usd)}.`;
+    banner.hidden = false;
+  } else if (costState === 'warning') {
+    banner.textContent = `CẢNH BÁO CHI PHÍ — dự phóng ${radarAskFormatUsd(cost.projected_usd)} đã vượt ngưỡng ${radarAskFormatUsd(cost.warning_usd)}.`;
+    banner.hidden = false;
+  } else {
+    banner.textContent = '';
+    banner.hidden = true;
+  }
+
+  const p95 = latency.p95 === null || latency.p95 === undefined
+    ? '—' : `${radarAskFormatCount(latency.p95)} ms`;
+  const oldest = queue.oldest_age_seconds === null || queue.oldest_age_seconds === undefined
+    ? 'Không có hàng đợi' : `Cũ nhất ${Math.max(0, Math.round(radarAskNumber(queue.oldest_age_seconds) / 60))} phút`;
+  cards.replaceChildren(
+    radarAskMetricCard('Dự phóng tháng', radarAskFormatUsd(cost.projected_usd), `Thực tế ${radarAskFormatUsd(cost.actual_usd)} · giữ chỗ ${radarAskFormatUsd(cost.reserved_usd)}`, costState),
+    radarAskMetricCard('Câu hỏi tháng', radarAskFormatCount(month.questions), `${radarAskFormatCount(month.runs)} run`),
+    radarAskMetricCard('Hàng đợi Deep', radarAskFormatCount(queue.depth), oldest, radarAskNumber(queue.depth) > 0 ? 'warning' : ''),
+    radarAskMetricCard('Độ trễ p95', p95, `p50 ${latency.p50 == null ? '—' : `${radarAskFormatCount(latency.p50)} ms`}`),
+    radarAskMetricCard('Lỗi provider', radarAskFormatRate(rates.provider_failure), 'Trên các run đã kết thúc', radarAskNumber(rates.provider_failure) > 0 ? 'warning' : ''),
+    radarAskMetricCard('Lỗi validation', radarAskFormatRate(rates.validation_failure), `Thiếu dữ liệu ${radarAskFormatRate(rates.insufficient)}`, radarAskNumber(rates.validation_failure) > 0 ? 'warning' : ''),
+    radarAskMetricCard('Token tháng', radarAskFormatCount(tokens.input), `Output ${radarAskFormatCount(tokens.output)} · cache hit ${radarAskFormatCount(tokens.cache_hit)}`),
+    radarAskMetricCard('Phản hồi hữu ích', radarAskFormatCount(feedback.helpful), `Không hữu ích ${radarAskFormatCount(feedback.not_helpful)}`),
+  );
+  breakdowns.replaceChildren(
+    radarAskBreakdown('Theo gói', month.by_tier),
+    radarAskBreakdown('Theo model', month.by_model),
+    radarAskBreakdown('Theo độ sâu', month.by_depth),
+    radarAskBreakdown('Theo kết quả', month.by_outcome),
+  );
+  content.hidden = false;
+}
+
+async function loadRadarAskMetrics() {
+  const state = document.getElementById('radarAskMetricsState');
+  const content = document.getElementById('radarAskMetricsContent');
+  if (!state || !content) return;
+  state.textContent = 'Đang tải số liệu tổng hợp…';
+  state.classList.remove('error');
+  try {
+    const payload = await fetchJSON('/admin/api/radar-ask/metrics', { silent: true });
+    renderRadarAskMetrics(payload);
+  } catch (error) {
+    state.textContent = 'Không tải được sức khỏe Hỏi Radar BDS. Các khu vực quản trị khác vẫn hoạt động.';
+    state.classList.add('error');
+    content.hidden = true;
+    console.warn('Radar Ask metrics unavailable');
+  }
+}
+
 function switchInfraFilter(name) {
   activeInfraFilter = name;
   document.querySelectorAll('.segment[data-infra-filter]').forEach((btn) => {
@@ -2587,6 +2723,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (e.key === 'ArrowRight') trnGalleryNav(1);
   });
   document.getElementById('refreshInfraBtn').addEventListener('click', loadInfraItems);
+  document.getElementById('refreshRadarAskMetricsBtn')?.addEventListener('click', loadRadarAskMetrics);
   document.getElementById('saveInfraBtn').addEventListener('click', saveInfra);
   document.getElementById('resetInfraBtn').addEventListener('click', resetInfraForm);
   document.getElementById('adminThemeToggle').addEventListener('click', toggleAdminTheme);

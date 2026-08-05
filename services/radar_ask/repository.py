@@ -7,7 +7,7 @@ the run, assistant message, and exact usage reservation commit atomically.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Collection, Mapping
 from uuid import UUID, uuid4
@@ -16,8 +16,9 @@ from psycopg.types.json import Jsonb
 
 from db.connection import PgConnection, PgRow, get_conn
 
+from .config import RadarAskSettings
 from .contracts import ProviderUsage, RunOutcome
-from .limits import CONSUMED_OUTCOMES, calculate_provider_cost
+from .limits import BANGKOK, CONSUMED_OUTCOMES, MONEY_QUANTUM, calculate_provider_cost
 
 
 TERMINAL_RUN_STATUSES = frozenset({"completed", "insufficient", "failed", "cancelled"})
@@ -47,6 +48,7 @@ RUN_OUTCOMES = frozenset(
     }
 )
 RETENTION_BATCH_SIZE = 500
+ADMIN_METRIC_WINDOWS = ("today", "last_7_days", "month")
 
 
 class RadarAskRepositoryError(RuntimeError):
@@ -180,6 +182,35 @@ def _bounded_content(value: str, *, maximum: int) -> str:
 
 def _row_dict(row: PgRow) -> dict[str, Any]:
     return dict(row.items())
+
+
+def _admin_window() -> dict[str, Any]:
+    return {
+        "questions": 0,
+        "runs": 0,
+        "by_tier": {},
+        "by_model": {},
+        "by_depth": {},
+        "by_outcome": {},
+        "latency_ms": {"p50": None, "p95": None},
+        "rates": {
+            "provider_failure": 0.0,
+            "validation_failure": 0.0,
+            "insufficient": 0.0,
+        },
+        "tokens": {"input": 0, "output": 0, "cache_hit": 0, "cache_miss": 0},
+        "feedback": {"helpful": 0, "not_helpful": 0},
+    }
+
+
+def _money_text(value: Any) -> str:
+    return format(Decimal(value or 0).quantize(MONEY_QUANTUM), "f")
+
+
+def _admin_aware_utc(value: datetime) -> datetime:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError("metrics clock must be timezone-aware")
+    return value.astimezone(timezone.utc)
 
 
 def _session_from_row(row: PgRow) -> RadarAskSessionRecord:
@@ -1383,6 +1414,273 @@ class RadarAskRepository:
                 if any(existing[field] != value for field, value in immutable.items()):
                     raise ImmutableAuditConflict("evidence key belongs to different audit data")
         return _evidence_from_row(row)
+
+    def admin_metrics(
+        self,
+        *,
+        settings: RadarAskSettings,
+        now: datetime | None = None,
+    ) -> dict[str, Any]:
+        """Return bounded aggregate metadata for the Admin control room.
+
+        The usage ledger is the indexed starting point for every historical
+        window. Conversation content tables are never selected; feedback is
+        joined only for its allowlisted rating bucket.
+        """
+        current = _admin_aware_utc(now or datetime.now(timezone.utc))
+        local_date = current.astimezone(BANGKOK).date()
+        month_start = local_date.replace(day=1)
+        window_starts = {
+            "today": local_date,
+            "last_7_days": local_date - timedelta(days=6),
+            "month": month_start,
+        }
+        scan_start = min(window_starts.values())
+        usage_months = sorted({scan_start.replace(day=1), month_start})
+        warning = Decimal(settings.monthly_warning_usd).quantize(MONEY_QUANTUM)
+        hard_stop = Decimal(settings.monthly_hard_stop_usd).quantize(MONEY_QUANTUM)
+        if warning <= 0 or hard_stop <= warning:
+            raise ValueError("metrics budget thresholds are invalid")
+        allowed_models = sorted(
+            {
+                "none",
+                settings.router_model,
+                settings.free_model,
+                settings.smart_model,
+            }
+        )
+        allowed_models = [value for value in allowed_models if 0 < len(value) <= 120]
+        if not allowed_models:
+            allowed_models = ["none"]
+
+        windows = {key: _admin_window() for key in ADMIN_METRIC_WINDOWS}
+        window_params = (
+            window_starts["today"],
+            window_starts["last_7_days"],
+            window_starts["month"],
+        )
+        with get_conn() as conn:
+            grouped_rows = conn.execute(
+                """
+                WITH window_defs(window_key, start_date) AS (
+                    VALUES ('today', ?::date), ('last_7_days', ?::date), ('month', ?::date)
+                ),
+                month_usage AS MATERIALIZED (
+                    SELECT
+                        u.run_key,
+                        u.tier,
+                        u.model AS usage_model,
+                        u.depth,
+                        u.usage_date,
+                        u.outcome,
+                        u.prompt_tokens,
+                        u.completion_tokens,
+                        u.cache_hit_tokens,
+                        u.cache_miss_tokens,
+                        r.id AS run_id,
+                        r.model AS run_model
+                    FROM radar_ask_usage u
+                    LEFT JOIN radar_ask_runs r ON r.id=u.run_key
+                    WHERE u.usage_month=ANY(?::date[])
+                      AND u.usage_date>=?
+                      AND u.usage_date<=?
+                )
+                SELECT
+                    w.window_key,
+                    CASE WHEN b.tier IN ('free','vip','admin') THEN b.tier ELSE 'other' END AS tier_bucket,
+                    CASE
+                        WHEN COALESCE(b.usage_model,b.run_model,'none')=ANY(?::text[])
+                        THEN COALESCE(b.usage_model,b.run_model,'none')
+                        ELSE 'other'
+                    END AS model_bucket,
+                    CASE WHEN b.depth IN ('fast','standard','deep') THEN b.depth ELSE 'other' END AS depth_bucket,
+                    CASE
+                        WHEN b.outcome IS NULL THEN 'pending'
+                        WHEN b.outcome IN (
+                            'answered','insufficient','clarification','provider_failure',
+                            'validation_failure','database_failure','budget_hard_stop','cancelled'
+                        ) THEN b.outcome
+                        ELSE 'other'
+                    END AS outcome_bucket,
+                    COUNT(b.run_key) AS questions,
+                    COUNT(b.run_id) AS runs,
+                    COALESCE(SUM(b.prompt_tokens),0) AS prompt_tokens,
+                    COALESCE(SUM(b.completion_tokens),0) AS completion_tokens,
+                    COALESCE(SUM(b.cache_hit_tokens),0) AS cache_hit_tokens,
+                    COALESCE(SUM(b.cache_miss_tokens),0) AS cache_miss_tokens
+                FROM window_defs w
+                LEFT JOIN month_usage b
+                  ON b.usage_date>=w.start_date AND b.usage_date<=?
+                GROUP BY w.window_key,tier_bucket,model_bucket,depth_bucket,outcome_bucket
+                ORDER BY w.window_key,tier_bucket,model_bucket,depth_bucket,outcome_bucket
+                """,
+                (*window_params, usage_months, scan_start, local_date, allowed_models, local_date),
+            ).fetchall()
+
+            health_rows = conn.execute(
+                """
+                WITH window_defs(window_key, start_date) AS (
+                    VALUES ('today', ?::date), ('last_7_days', ?::date), ('month', ?::date)
+                ),
+                month_usage AS MATERIALIZED (
+                    SELECT
+                        u.run_key,
+                        u.usage_date,
+                        u.outcome,
+                        r.started_at,
+                        r.completed_at
+                    FROM radar_ask_usage u
+                    LEFT JOIN radar_ask_runs r ON r.id=u.run_key
+                    WHERE u.usage_month=ANY(?::date[])
+                      AND u.usage_date>=?
+                      AND u.usage_date<=?
+                )
+                SELECT
+                    w.window_key,
+                    COUNT(b.run_key) FILTER (WHERE b.outcome IS NOT NULL) AS terminal_runs,
+                    COUNT(b.run_key) FILTER (WHERE b.outcome='provider_failure') AS provider_failures,
+                    COUNT(b.run_key) FILTER (WHERE b.outcome='validation_failure') AS validation_failures,
+                    COUNT(b.run_key) FILTER (WHERE b.outcome='insufficient') AS insufficient_runs,
+                    percentile_disc(0.5) WITHIN GROUP (
+                        ORDER BY EXTRACT(EPOCH FROM (b.completed_at-b.started_at))*1000
+                    ) FILTER (WHERE b.completed_at IS NOT NULL AND b.started_at IS NOT NULL) AS p50_ms,
+                    percentile_disc(0.95) WITHIN GROUP (
+                        ORDER BY EXTRACT(EPOCH FROM (b.completed_at-b.started_at))*1000
+                    ) FILTER (WHERE b.completed_at IS NOT NULL AND b.started_at IS NOT NULL) AS p95_ms
+                FROM window_defs w
+                LEFT JOIN month_usage b
+                  ON b.usage_date>=w.start_date AND b.usage_date<=?
+                GROUP BY w.window_key
+                ORDER BY w.window_key
+                """,
+                (*window_params, usage_months, scan_start, local_date, local_date),
+            ).fetchall()
+
+            cost_row = conn.execute(
+                """
+                SELECT
+                    COALESCE(SUM(actual_usd),0) AS actual_usd,
+                    COALESCE(SUM(
+                        CASE WHEN settlement_status='reserved' AND reservation_expires_at>?
+                             THEN reserved_usd ELSE 0 END
+                    ),0) AS reserved_usd
+                FROM radar_ask_usage
+                WHERE usage_month=?
+                """,
+                (current, month_start),
+            ).fetchone()
+            assert cost_row is not None
+
+            queue_row = conn.execute(
+                """
+                SELECT
+                    COUNT(*) AS depth,
+                    CASE WHEN MIN(created_at) IS NULL THEN NULL
+                         ELSE GREATEST(0,FLOOR(EXTRACT(EPOCH FROM (?-MIN(created_at)))))::bigint
+                    END AS oldest_age_seconds
+                FROM radar_ask_runs
+                WHERE status='queued'
+                """,
+                (current,),
+            ).fetchone()
+            assert queue_row is not None
+
+            feedback_rows = conn.execute(
+                """
+                WITH window_defs(window_key, start_date) AS (
+                    VALUES ('today', ?::date), ('last_7_days', ?::date), ('month', ?::date)
+                ),
+                month_usage AS MATERIALIZED (
+                    SELECT run_key,usage_date
+                    FROM radar_ask_usage
+                    WHERE usage_month=ANY(?::date[])
+                      AND usage_date>=?
+                      AND usage_date<=?
+                )
+                SELECT
+                    w.window_key,
+                    CASE WHEN f.rating IN ('helpful','not_helpful') THEN f.rating ELSE 'other' END AS rating_bucket,
+                    COUNT(f.id) AS total
+                FROM window_defs w
+                LEFT JOIN month_usage u
+                  ON u.usage_date>=w.start_date AND u.usage_date<=?
+                LEFT JOIN radar_ask_messages m ON m.run_id=u.run_key
+                LEFT JOIN radar_ask_feedback f ON f.message_id=m.id
+                GROUP BY w.window_key,rating_bucket
+                ORDER BY w.window_key,rating_bucket
+                """,
+                (*window_params, usage_months, scan_start, local_date, local_date),
+            ).fetchall()
+
+        for row in grouped_rows:
+            key = row["window_key"]
+            questions = int(row["questions"] or 0)
+            runs = int(row["runs"] or 0)
+            if key not in windows or questions <= 0:
+                continue
+            target = windows[key]
+            target["questions"] += questions
+            target["runs"] += runs
+            for field, bucket in (
+                ("by_tier", row["tier_bucket"]),
+                ("by_model", row["model_bucket"]),
+                ("by_depth", row["depth_bucket"]),
+                ("by_outcome", row["outcome_bucket"]),
+            ):
+                target[field][bucket] = target[field].get(bucket, 0) + questions
+            target["tokens"]["input"] += int(row["prompt_tokens"] or 0)
+            target["tokens"]["output"] += int(row["completion_tokens"] or 0)
+            target["tokens"]["cache_hit"] += int(row["cache_hit_tokens"] or 0)
+            target["tokens"]["cache_miss"] += int(row["cache_miss_tokens"] or 0)
+
+        for row in health_rows:
+            key = row["window_key"]
+            if key not in windows:
+                continue
+            terminal = int(row["terminal_runs"] or 0)
+            windows[key]["latency_ms"] = {
+                "p50": round(float(row["p50_ms"])) if row["p50_ms"] is not None else None,
+                "p95": round(float(row["p95_ms"])) if row["p95_ms"] is not None else None,
+            }
+            windows[key]["rates"] = {
+                "provider_failure": round(int(row["provider_failures"] or 0) / terminal, 6)
+                if terminal else 0.0,
+                "validation_failure": round(int(row["validation_failures"] or 0) / terminal, 6)
+                if terminal else 0.0,
+                "insufficient": round(int(row["insufficient_runs"] or 0) / terminal, 6)
+                if terminal else 0.0,
+            }
+
+        for row in feedback_rows:
+            key = row["window_key"]
+            rating = row["rating_bucket"]
+            if key in windows and rating in {"helpful", "not_helpful"}:
+                windows[key]["feedback"][rating] += int(row["total"] or 0)
+
+        actual = Decimal(cost_row["actual_usd"] or 0).quantize(MONEY_QUANTUM)
+        reserved = Decimal(cost_row["reserved_usd"] or 0).quantize(MONEY_QUANTUM)
+        projected = (actual + reserved).quantize(MONEY_QUANTUM)
+        cost_state = "hard_stop" if projected >= hard_stop else (
+            "warning" if projected >= warning else "normal"
+        )
+        return {
+            "generated_at": current.isoformat(),
+            "windows": windows,
+            "cost": {
+                "usage_month": month_start.isoformat(),
+                "actual_usd": _money_text(actual),
+                "reserved_usd": _money_text(reserved),
+                "projected_usd": _money_text(projected),
+                "warning_usd": _money_text(warning),
+                "hard_stop_usd": _money_text(hard_stop),
+                "state": cost_state,
+            },
+            "queue": {
+                "depth": int(queue_row["depth"] or 0),
+                "oldest_age_seconds": int(queue_row["oldest_age_seconds"])
+                if queue_row["oldest_age_seconds"] is not None else None,
+            },
+        }
 
     def delete_session(self, *, user_id: int, session_id: UUID) -> bool:
         with get_conn() as conn:

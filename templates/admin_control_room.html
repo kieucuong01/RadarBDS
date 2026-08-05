@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/admin-favicon-16.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/admin-apple-touch-icon.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="manifest" href="{{ url_for('static', filename='admin.webmanifest') }}?v=admin-v43-dup-cluster-pairs">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v51-facebook-broker-guland-publisher">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v51-facebook-broker-guland-publisher-radar-ask-observability">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -767,6 +767,23 @@
         <button class="secondary-btn" id="refreshInfraBtn"><span class="btn-icon-label">{{ admin_icon('refresh', 'btn-svg') }}<span>Làm mới</span></span></button>
       </div>
 
+      <section class="surface radar-ask-admin" id="radarAskMetrics" aria-labelledby="radarAskMetricsTitle">
+        <div class="radar-ask-admin-head">
+          <div>
+            <span class="radar-ask-admin-kicker">AI INVESTMENT RESEARCH</span>
+            <h2 id="radarAskMetricsTitle">Hỏi Radar BDS — Sức khỏe &amp; chi phí</h2>
+            <p>Tổng hợp vận hành, không hiển thị câu hỏi, câu trả lời hoặc dữ liệu người dùng.</p>
+          </div>
+          <button class="secondary-btn" id="refreshRadarAskMetricsBtn" type="button">Làm mới AI</button>
+        </div>
+        <div id="radarAskMetricsState" class="radar-ask-admin-state" role="status" aria-live="polite">Đang tải số liệu tổng hợp…</div>
+        <div id="radarAskBudgetBanner" class="radar-ask-budget-banner" role="status" hidden></div>
+        <div id="radarAskMetricsContent" class="radar-ask-admin-content" hidden>
+          <div id="radarAskMetricCards" class="radar-ask-metric-grid"></div>
+          <div id="radarAskMetricBreakdowns" class="radar-ask-breakdown-grid"></div>
+        </div>
+      </section>
+
       <section class="surface infra-surface">
         <div class="infra-grid">
           <form id="infraForm" class="infra-form" onsubmit="return false;">
@@ -954,7 +971,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/admin/facebook-crawl.js') }}?v=admin-facebook-crawl-v2-broker-delete-ui"></script>
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v51-facebook-broker-guland-publisher"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v51-facebook-broker-guland-publisher-radar-ask-observability"></script>
   {% endif %}
 </body>
 </html>

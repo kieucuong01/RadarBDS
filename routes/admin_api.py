@@ -1,9 +1,15 @@
 """Admin control room and QC API routes."""
 from __future__ import annotations
 
-from flask import Blueprint, redirect
+import logging
+
+from flask import Blueprint, jsonify, redirect
+
+from services.radar_ask.config import RadarAskSettings
+from services.radar_ask.service import get_repository
 
 bp = Blueprint("admin_api", __name__)
+logger = logging.getLogger(__name__)
 
 
 def _impl(name: str, **kwargs):
@@ -28,6 +34,26 @@ def admin_control_room(panel_slug=None, **kwargs):
 @bp.route("/admin/api/growth")
 def admin_api_growth(**kwargs):
     return _impl("admin_api_growth", **kwargs)
+
+
+@bp.route("/admin/api/radar-ask/metrics")
+def admin_api_radar_ask_metrics():
+    if not _impl("_admin_request_authorized"):
+        response, status = _impl("_admin_forbidden")
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers.pop("X-Radar-Public-Cache", None)
+        return response, status
+    try:
+        settings = RadarAskSettings.from_env()
+        metrics = get_repository().admin_metrics(settings=settings)
+        response = jsonify({"ok": True, "enabled": settings.enabled, "metrics": metrics})
+    except Exception:
+        logger.exception("Radar Ask Admin metrics unavailable")
+        response = jsonify({"ok": False, "error": "metrics_unavailable"})
+        response.status_code = 503
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers.pop("X-Radar-Public-Cache", None)
+    return response
 
 @bp.route("/admin/api/leads")
 def admin_api_leads(**kwargs):
