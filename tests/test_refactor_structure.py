@@ -63,7 +63,8 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
     assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611\"" in html
     assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-scroll-lock-20260802\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611\"" in html
-    assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=zalo-new-tab-20260624\"" in html
+    assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805\"" in html
+    assert "radarAsk: \"{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v2\"" in html
     assert "window.RADAR_STYLES" in html
     assert '{{ css_auth }}' in html
     body_scripts = html.split("window.RADAR_ASSETS", 1)[-1]
@@ -90,8 +91,7 @@ def test_lazy_auth_and_engagement_proxies_are_available_before_feature_scripts()
         "const lazyEngagementMethods",
         "window.RadarAuth = window.RadarAuth || {};",
         "window.tierCTA =",
-        "window.toggleChat =",
-        "window.sendMessage =",
+        "window.openRadarAsk =",
         "window.track =",
     ]:
         assert expected in core_js
@@ -108,13 +108,45 @@ def test_lazy_auth_and_engagement_proxies_are_available_before_feature_scripts()
 
     for method in [
         "tierCTA",
-        "toggleChat",
-        "sendMessage",
+        "openRadarAsk",
         "submitGuestLead",
         "submitLeadAndOpenZalo",
         "skipLeadAndOpenZalo",
     ]:
         assert f"'{method}'" in core_js
+
+
+def test_legacy_radar_assistant_runtime_is_permanently_absent():
+    for rel_path in [
+        "services/radar_assistant.py",
+        "services/assistant_" + "intents.py",
+        "services/assistant_" + "tools.py",
+        "tests/test_radar_assistant.py",
+    ]:
+        assert not (ROOT / rel_path).exists(), f"legacy file remains: {rel_path}"
+
+    forbidden = [
+        "build_assistant_" + "response",
+        "assistant_" + "intents",
+        "assistant_" + "tools",
+        "/api/" + "chat",
+        "toggle" + "Chat",
+        "chat" + "Window",
+        "chat" + "Messages",
+        "chat" + "Input",
+    ]
+    runtime_source = "\n".join(
+        _read(path)
+        for path in [
+            "app.py",
+            "routes/market_api.py",
+            "templates/index.html",
+            "static/js/main/auth_cta.js",
+            "static/js/main/core.js",
+        ]
+    )
+    for symbol in forbidden:
+        assert symbol not in runtime_source, f"legacy runtime reference remains: {symbol}"
 
 
 def test_lazy_listings_module_does_not_break_dashboard_boot():
@@ -914,7 +946,8 @@ def test_dashboard_accessibility_controls_have_names_and_keyboard_paths():
         'aria-label="Tìm tin rao theo tên đường hoặc địa danh"',
         'aria-label="Biên an toàn tối thiểu"',
         'aria-label="Đổi giao diện sáng tối"',
-        'aria-label="Đóng trợ lý Radar AI"',
+        'aria-label="Mở Hỏi Radar BĐS"',
+        'aria-label="Đăng nhập để hỏi Radar BĐS"',
     ]:
         assert expected in html
 

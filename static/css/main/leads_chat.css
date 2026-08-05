@@ -1,4 +1,4 @@
-/* Responsive overrides, floating actions, chat widget, and lead capture UI. */
+/* Responsive overrides, Radar Ask launcher, and lead capture UI. */
 /* Responsive Mobile Layout */
 .menu-btn {
   width: 40px;
@@ -603,10 +603,6 @@
     display: none;
   }
 
-  body.chat-open .floating-actions {
-    display: none;
-  }
-
   body.sidebar-open .mobile-bottom-nav,
   body.sidebar-open .floating-actions {
     opacity: 0;
@@ -641,13 +637,12 @@
   transform: scale(0.95);
 }
 
-.fab-ai {
+.fab-radar-ask {
   background: linear-gradient(135deg, var(--primary), #8b5cf6);
-  animation: pulse-ai 2s infinite;
+  animation: pulse-radar-ask 2s infinite;
 }
 
-/* Pulsing Animations */
-@keyframes pulse-ai {
+@keyframes pulse-radar-ask {
   0% {
     box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
   }
@@ -685,6 +680,19 @@
   right: 74px;
 }
 
+.sm-btn-radar-ask {
+  border-color: rgba(99, 102, 241, 0.35) !important;
+  background: rgba(99, 102, 241, 0.1) !important;
+  color: var(--primary) !important;
+  font-weight: 800;
+}
+
+.sm-btn-radar-ask:hover,
+.sm-btn-radar-ask:focus-visible {
+  border-color: var(--primary) !important;
+  background: rgba(99, 102, 241, 0.16) !important;
+}
+
 @media (max-width: 1024px) {
   .fab {
     width: 48px;
@@ -696,238 +704,6 @@
   .fab::after {
     display: none;
   }
-}
-
-/* Chatbot Window */
-.chat-window {
-  position: fixed;
-  bottom: 90px;
-  right: 24px;
-  width: 350px;
-  height: 500px;
-  background: var(--surface-solid);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  display: none;
-  flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-  z-index: 1001;
-  backdrop-filter: blur(20px);
-  overflow: hidden;
-  animation: slideUp 0.3s ease-out;
-}
-
-@media (max-width: 720px) {
-  .chat-window {
-    inset: auto 10px calc(88px + env(safe-area-inset-bottom)) 10px;
-    width: auto;
-    height: min(72vh, 560px);
-    border-radius: 22px;
-    z-index: 1002;
-  }
-
-  .chat-header {
-    padding: 14px 16px;
-  }
-
-  .chat-messages {
-    padding: 14px;
-  }
-
-  .chat-input-area {
-    padding: 10px;
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
-  }
-
-  .chat-input {
-    min-height: 44px;
-    border-radius: 14px;
-  }
-
-  .chat-send {
-    min-width: 58px;
-    border-radius: 14px;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.chat-header {
-  padding: 16px;
-  background: var(--primary);
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 700;
-}
-
-.chat-quick-prompts {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 12px 14px 10px;
-  border-bottom: 1px solid var(--border);
-  background:
-    linear-gradient(90deg, rgba(16, 185, 129, 0.10), rgba(245, 158, 11, 0.08)),
-    var(--surface);
-  scrollbar-width: none;
-}
-
-.chat-quick-prompts::-webkit-scrollbar {
-  display: none;
-}
-
-.chat-quick-prompts button {
-  flex: 0 0 auto;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  background: rgba(255, 255, 255, 0.72);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 8px 11px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-}
-
-.chat-quick-prompts button:hover {
-  border-color: rgba(16, 185, 129, 0.5);
-  transform: translateY(-1px);
-}
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.chat-input-area {
-  padding: 12px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  gap: 8px;
-}
-
-.chat-input {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: var(--text);
-  outline: none;
-}
-
-.chat-send {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0 16px;
-  cursor: pointer;
-}
-
-.message {
-  max-width: 80%;
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-
-.message.bot {
-  align-self: flex-start;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text);
-  max-width: 92%;
-  border-bottom-left-radius: 2px;
-  text-align: justify;
-  text-align-last: left;
-  text-justify: inter-word;
-}
-
-.assistant-cards {
-  display: grid;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.assistant-card {
-  display: grid;
-  gap: 4px;
-  padding: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.26);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.72);
-  color: var(--text);
-}
-
-.assistant-card strong {
-  font-size: 0.82rem;
-  line-height: 1.3;
-}
-
-.assistant-card span {
-  color: var(--text-muted);
-  font-size: 0.76rem;
-  font-weight: 700;
-}
-
-.assistant-card button,
-.assistant-action-btn {
-  border: 0;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 900;
-}
-
-.assistant-card button {
-  justify-self: start;
-  margin-top: 4px;
-  padding: 6px 9px;
-  background: rgba(15, 23, 42, 0.08);
-  color: var(--text);
-}
-
-.assistant-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.assistant-action-btn {
-  padding: 8px 10px;
-  background: linear-gradient(135deg, #10b981, #0f9f85);
-  color: white;
-  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.22);
-}
-
-.assistant-action-btn:nth-child(2n) {
-  background: linear-gradient(135deg, #f59e0b, #f97316);
-  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.2);
-}
-
-.message.user {
-  align-self: flex-end;
-  background: var(--primary);
-  color: white;
-  border-bottom-right-radius: 2px;
 }
 
 /* Lead Capture Modal */

@@ -128,7 +128,6 @@ from services.signal_quality import (
     split_quality_flags,
 )
 from services.advisory_memo import build_admin_valuation_workflow_markdown
-from services.radar_assistant import build_assistant_response
 from services import admin_growth, admin_leads, admin_quality, admin_users
 from services import admin_jobs as admin_job_service
 from db.admin_jobs import AdminJobAlreadyActive
@@ -8301,22 +8300,6 @@ def admin_api_ban_user(user_id):
         clear_admin_read_cache("growth")
     return jsonify(result), status
 
-
-@rate_limit("assistant_chat", limits={"guest": 40, "free": 160, "vip": 500, "admin": None})
-def api_chat():
-    payload = request.get_json(silent=True) or {}
-    message = (payload.get("message") or "").strip()
-    if not message:
-        return jsonify({"ok": False, "error": "empty_message"}), 400
-    response = build_assistant_response(
-        message,
-        session_id=payload.get("session_id"),
-        page_context=payload.get("page_context") or {},
-        current_filters=payload.get("current_filters") or {},
-        tier=current_tier(),
-        user=current_user(),
-    )
-    return jsonify(response)
 
 from routes import register_blueprints
 

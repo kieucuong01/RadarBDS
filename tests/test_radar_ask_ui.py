@@ -140,3 +140,26 @@ def test_quota_copy_uses_tier_caps_without_static_remaining_claims():
     for fabricated in ("còn 3/5", "còn 4/5", "còn 19/20", "remaining: 3"):
         assert fabricated not in html
         assert fabricated not in javascript
+
+
+def test_homepage_exposes_authenticated_and_contextual_radar_ask_launchers():
+    html = _read("templates/index.html")
+    engagement = _read("static/js/main/auth_cta.js")
+
+    assert html.count("data-radar-ask-open") >= 1
+    assert "data-radar-ask-context" in html
+    assert "{% if USER %}" in html
+    assert "RadarAuth.openAuthModal" in html
+    assert "window.RadarAsk.open" in engagement
+    assert "listing_id" in engagement
+    assert "ward" in engagement
+    assert "road" in engagement
+    assert "question" in engagement
+    assert "URLSearchParams" not in engagement
+    assert "location.search" not in engagement
+
+
+def test_legacy_chat_endpoint_returns_not_found():
+    response = radar_app.app.test_client().post("/api/" + "chat", json={"message": "test"})
+
+    assert response.status_code == 404

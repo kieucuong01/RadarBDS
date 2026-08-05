@@ -105,8 +105,3 @@ def api_create_lead(**kwargs):
 @bp.route("/api/lead-capture-guest", methods=["POST"])
 def api_create_guest_lead(**kwargs):
     return _impl("api_create_guest_lead", **kwargs)
-
-
-@bp.route('/api/chat', methods=['POST'])
-def api_chat(**kwargs):
-    return _impl("api_chat", **kwargs)
