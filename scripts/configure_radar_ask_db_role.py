@@ -850,6 +850,47 @@ def _effective_relation_privileges(
     return reads, writes
 
 
+def _effective_column_privileges(
+    conn: psycopg.Connection,
+    *,
+    role: str,
+    excluded_owner_role: str,
+) -> frozenset[tuple[str, str, str]]:
+    """Return effective column grants without information_schema visibility gaps.
+
+    ``information_schema.column_privileges`` only exposes grants visible to the
+    current connection role. Production applies the manifest as ``postgres``
+    but audits it through ``radar_app``, so use PostgreSQL's effective privilege
+    function against catalog OIDs instead.
+    """
+    rows = conn.execute(
+        """
+        SELECT relation.relname, attribute.attname, privilege.name
+        FROM pg_class relation
+        JOIN pg_namespace namespace ON namespace.oid=relation.relnamespace
+        JOIN pg_roles owner_role ON owner_role.rolname=%s
+        JOIN pg_attribute attribute
+          ON attribute.attrelid=relation.oid
+         AND attribute.attnum>0
+         AND NOT attribute.attisdropped
+        CROSS JOIN (
+            VALUES ('SELECT'), ('INSERT'), ('UPDATE'), ('REFERENCES')
+        ) AS privilege(name)
+        WHERE namespace.nspname='public'
+          AND relation.relkind IN ('r', 'p', 'v', 'm', 'f')
+          AND relation.relowner <> owner_role.oid
+          AND has_column_privilege(
+              %s,
+              relation.oid,
+              attribute.attnum,
+              privilege.name
+          )
+        """,
+        (excluded_owner_role, role),
+    ).fetchall()
+    return frozenset((relation, column, privilege) for relation, column, privilege in rows)
+
+
 def check_configuration(
     conn: psycopg.Connection,
     *,
@@ -961,24 +1002,11 @@ def check_configuration(
         for table, columns in expected_owner_grants.items()
         for column in columns
     }
-    actual_owner_columns = {
-        (table, column, privilege)
-        for table, column, privilege in conn.execute(
-            """
-            SELECT grants.table_name, grants.column_name, grants.privilege_type
-            FROM information_schema.column_privileges grants
-            JOIN pg_namespace namespace ON namespace.nspname=grants.table_schema
-            JOIN pg_class relation
-              ON relation.relnamespace=namespace.oid
-             AND relation.relname=grants.table_name
-            JOIN pg_roles owner_role ON owner_role.rolname=%s
-            WHERE grants.grantee=%s
-              AND grants.table_schema='public'
-              AND relation.relowner <> owner_role.oid
-            """,
-            (VIEW_OWNER_ROLE, VIEW_OWNER_ROLE),
-        ).fetchall()
-    }
+    actual_owner_columns = _effective_column_privileges(
+        conn,
+        role=VIEW_OWNER_ROLE,
+        excluded_owner_role=VIEW_OWNER_ROLE,
+    )
     if actual_owner_columns != expected_owner_columns:
         violations.append("view owner column grants differ from the exact manifest")
 

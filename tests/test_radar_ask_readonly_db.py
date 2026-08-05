@@ -21,6 +21,7 @@ from db.schema import init_schema
 from scripts.configure_radar_ask_db_role import (
     FOUNDATION_SAFE_VIEWS,
     KNOWLEDGE_SAFE_VIEWS,
+    _effective_column_privileges,
     apply_configuration,
     check_configuration,
 )
@@ -100,6 +101,28 @@ def test_foundation_role_manifest_is_exact_and_has_no_write_grants(readonly_envi
     assert report.read_relations == frozenset(FOUNDATION_SAFE_VIEWS)
     assert report.write_relations == frozenset()
     assert report.unexpected_relations == frozenset()
+
+
+def test_effective_column_privileges_does_not_depend_on_information_schema_visibility():
+    class StubResult:
+        @staticmethod
+        def fetchall():
+            return [("listings", "id", "SELECT")]
+
+    class StubConnection:
+        @staticmethod
+        def execute(query, params):
+            sql_text = str(query)
+            assert "has_column_privilege" in sql_text
+            assert "information_schema.column_privileges" not in sql_text
+            assert params == ("radar_ask_view_owner", "radar_ask_view_owner")
+            return StubResult()
+
+    assert _effective_column_privileges(
+        StubConnection(),
+        role="radar_ask_view_owner",
+        excluded_owner_role="radar_ask_view_owner",
+    ) == frozenset({("listings", "id", "SELECT")})
 
 
 def test_check_rejects_unexpected_view_owner_base_table_grant(readonly_environment):
