@@ -102,7 +102,11 @@ provider in its default mode. Expected routing/tool/evidence/answer truth is
 stored separately from the fixture planner outputs, evidence bundles, and
 answer candidates. The evaluator therefore exercises the public typed
 `route_question()`, tool-dispatch, and `validate_answer()` boundaries without
-deriving observed results from expected values.
+deriving observed results from expected values. Every case also runs the real
+`routes.radar_ask_api._gate()` inside a minimal Flask request context. Only the
+feature flag, fixture user, fixture tier, and tier-allow decision are patched;
+anonymous cases must observe the real `401 login_required`, while authenticated
+Free/VIP/Admin cases must observe the owner tuple before routing can start.
 
 Run the free, offline release gate from the repository root:
 
@@ -129,7 +133,14 @@ message builder through a fake provider, so the run remains offline while
 measuring what would leave the application. Keep the CLI nonzero until both
 probes pass; do not relax the exact privacy threshold. A routing/tool miss does
 not cascade into a fabricated numeric or citation failure; each dimension uses
-its own denominator.
+its own denominator. Likewise, authorization is scored from the HTTP gate
+result before routing; denied cases never call the router, planner, or tools.
+
+The corpus diversity guard requires at least 24 independent evidence bundles,
+24 answer candidates, and 12 planner outputs. It also checks multiple road,
+listing, valuation, numeric, and grounded-category observation pairs. These are
+checked-in observations; the evaluator never generates evidence or answers
+from expected truth at runtime.
 
 DB-backed extensions to this evaluation must first prove the parsed database
 name is exactly `radar_bds_test` on loopback. The checked-in deterministic gate
@@ -146,10 +157,16 @@ JSON path below `reports/`:
   --output reports\radar_ask_provider_record.json
 ```
 
-Provider recordings retain only sanitized typed answer envelopes plus
-case/model/status/token/cost metadata. Prompts, raw evidence, contacts, URLs,
-person/account identifiers, and source links are removed. A recording never
-updates golden truth automatically; review any proposed corpus change by hand.
+The live request contains only a privacy-scrubbed case question, expected depth,
+opaque evidence aliases, and the bounded `AnswerEnvelope` JSON schema. It never
+sends a golden answer candidate or shape example. Provider recordings retain
+only the typed envelope structure plus case/model/status/token/cost metadata:
+provider prose is replaced with fixed placeholders, evidence and source
+references are consistently pseudonymized, and source links are cleared.
+Unexpected nested answer fields or oversized payloads fail closed. Prompts,
+raw evidence, contacts, URLs, names, account identifiers, and provider prose
+are not persisted. A recording never updates golden truth automatically;
+review any proposed corpus change by hand.
 
 ## Deploy Flow
 

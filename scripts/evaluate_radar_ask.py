@@ -18,8 +18,10 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
+from unittest.mock import patch
 from urllib.parse import urlparse
 
+from flask import Flask
 from pydantic import ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -51,6 +53,7 @@ from services.radar_ask.registry import (
 )
 from services.radar_ask.routing import RoutingError, route_question
 from services.radar_ask.validator import AnswerValidationError, validate_answer
+from routes import radar_ask_api as radar_ask_api_route
 
 
 SCHEMA_VERSION = 1
@@ -93,6 +96,12 @@ _PHONE_RE = re.compile(r"(?<!\d)(?:\+?84|0)(?:[ .-]?\d){9,10}(?!\d)")
 _URL_RE = re.compile(r"\b(?:https?|ftp)://[^\s<>'\"]+", re.I)
 _EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.I)
 _BEARER_RE = re.compile(r"\bBearer\s+[A-Za-z0-9._~+\-/]+=*", re.I)
+_ACCOUNT_TOKEN_RE = re.compile(r"\bacct-[a-z0-9-]{3,}\b", re.I)
+_COMMON_PERSON_NAME_RE = re.compile(
+    r"\b(?:Nguyễn|Trần|Lê|Phạm|Hoàng|Huỳnh|Phan|Vũ|Võ|Đặng|Bùi|Đỗ|Hồ|Ngô|Dương|Lý)"
+    r"(?:\s+[A-Za-zÀ-ỹĐđ]{1,30}){1,3}\b",
+    re.I,
+)
 _LABELED_IDENTIFIER_RE = re.compile(
     r"\b(?:cccd|cmnd|mã số thuế|ma so thue|mst|số tài khoản|so tai khoan|"
     r"tài khoản|tai khoan|mã thửa|ma thua|số thửa|so thua)\s*[:#-]?\s*"
@@ -430,7 +439,15 @@ def _answer_references(answer: Mapping[str, Any]) -> tuple[list[str], bool]:
 
 def _redact_text(value: str) -> str:
     text = value
-    for pattern in (_URL_RE, _EMAIL_RE, _PHONE_RE, _BEARER_RE, _LABELED_IDENTIFIER_RE):
+    for pattern in (
+        _URL_RE,
+        _EMAIL_RE,
+        _PHONE_RE,
+        _BEARER_RE,
+        _LABELED_IDENTIFIER_RE,
+        _ACCOUNT_TOKEN_RE,
+        _COMMON_PERSON_NAME_RE,
+    ):
         text = pattern.sub("[đã ẩn]", text)
     text = _LABELED_PERSON_RE.sub(lambda match: f"{match.group(1)} [đã ẩn]", text)
     return text
@@ -454,7 +471,13 @@ def _has_sensitive_value(value: Any) -> bool:
     encoded = json.dumps(value, ensure_ascii=False, sort_keys=True)
     return any(
         pattern.search(encoded)
-        for pattern in (_PHONE_RE, _URL_RE, _EMAIL_RE, _BEARER_RE, _LABELED_IDENTIFIER_RE)
+        for pattern in (
+            _PHONE_RE,
+            _URL_RE,
+            _EMAIL_RE,
+            _BEARER_RE,
+            _LABELED_IDENTIFIER_RE,
+        )
     ) or bool(_LABELED_PERSON_RE.search(encoded))
 
 
@@ -477,6 +500,44 @@ def _ratio(passed: int, total: int) -> float:
     return round(passed / total, 6) if total else 1.0
 
 
+def _observe_auth_gate(case: Mapping[str, Any], *, user_id: int) -> tuple[tuple[Any, ...], bool]:
+    """Exercise the real HTTP authorization gate with fixture-owned identity inputs."""
+    authenticated = bool(case["authenticated"])
+    tier = str(case["tier"])
+    expected = (
+        ("owner", user_id, tier)
+        if authenticated
+        else ("error", 401, "login_required")
+    )
+    app = Flask("radar-ask-golden-auth")
+    with app.test_request_context("/api/radar-ask/evaluation", method="POST"):
+        with (
+            patch.object(radar_ask_api_route, "feature_enabled", return_value=True),
+            patch.object(
+                radar_ask_api_route,
+                "current_user",
+                return_value={"id": user_id} if authenticated else None,
+            ),
+            patch.object(
+                radar_ask_api_route,
+                "current_tier",
+                return_value=tier if authenticated else "guest",
+            ),
+            patch.object(radar_ask_api_route, "tier_allowed", return_value=True),
+        ):
+            observed = radar_ask_api_route._gate()
+    if isinstance(observed, tuple):
+        actual = ("owner", observed[0], observed[1])
+        allowed = True
+    else:
+        body = observed.get_json(silent=True) or {}
+        error = body.get("error") if isinstance(body, Mapping) else {}
+        code = error.get("code") if isinstance(error, Mapping) else None
+        actual = ("error", observed.status_code, code)
+        allowed = False
+    return (expected == actual, allowed)
+
+
 def evaluate_corpus(corpus: Mapping[str, Any], *, mode: str = "deterministic") -> dict[str, Any]:
     if mode != "deterministic":
         raise ValueError("default evaluation supports deterministic mode only")
@@ -491,22 +552,26 @@ def evaluate_corpus(corpus: Mapping[str, Any], *, mode: str = "deterministic") -
         counters["privacy_total"] += 1
         counters["auth_total"] += 1
 
-        if not case["authenticated"]:
+        auth_ok, gate_allowed = _observe_auth_gate(
+            case,
+            user_id=10_000 + counters["cases"],
+        )
+        if auth_ok:
+            counters["auth_pass"] += 1
+        else:
+            failures.append({"case_id": case["id"], "dimension": "auth:http_gate"})
+
+        if not gate_allowed:
             routing_ok = expected["question_type"] == "auth_required" and expected["depth"] == "denied"
             tools_ok = expected["tools"] == []
-            auth_ok = routing_ok and tools_ok
             counters["refusal_total"] += 1
             if routing_ok:
                 counters["routing_pass"] += 1
             if tools_ok:
                 counters["tools_pass"] += 1
-            if auth_ok:
-                counters["auth_pass"] += 1
-                if expected["answer_class"] == "denied":
-                    counters["refusal_pass"] += 1
+            if auth_ok and expected["answer_class"] == "denied":
+                counters["refusal_pass"] += 1
             counters["privacy_pass"] += 1
-            if not auth_ok:
-                failures.append({"case_id": case["id"], "dimension": "auth"})
             continue
 
         context = AskContext(
@@ -530,7 +595,6 @@ def evaluate_corpus(corpus: Mapping[str, Any], *, mode: str = "deterministic") -
             failures.append({"case_id": case["id"], "dimension": "routing"})
             failures.append({"case_id": case["id"], "dimension": "tools"})
             counters["privacy_pass"] += 1
-            counters["auth_pass"] += 1
             continue
         actual_tools = [call.name for call in decision.tool_calls]
         routing_ok = (
@@ -563,7 +627,6 @@ def evaluate_corpus(corpus: Mapping[str, Any], *, mode: str = "deterministic") -
                 counters["privacy_pass"] += 1
             else:
                 failures.append({"case_id": case["id"], "dimension": "privacy"})
-            counters["auth_pass"] += 1
             continue
 
         bundles: list[EvidenceBundle] = []
@@ -719,10 +782,11 @@ def evaluate_corpus(corpus: Mapping[str, Any], *, mode: str = "deterministic") -
             floor = Decimal("15") if case["tier"] == "free" else Decimal("10")
             if mos < floor:
                 mos_ok = False
+        counters["tier_policy_total"] += 1
         if mos_ok:
-            counters["auth_pass"] += 1
+            counters["tier_policy_pass"] += 1
         else:
-            failures.append({"case_id": case["id"], "dimension": "auth"})
+            failures.append({"case_id": case["id"], "dimension": "tier_policy"})
 
         if unsupported and validation_error is None:
             counters["unsupported_accepted"] += 1
@@ -739,6 +803,7 @@ def evaluate_corpus(corpus: Mapping[str, Any], *, mode: str = "deterministic") -
         "answer_class_accuracy": _ratio(counters["answer_pass"], counters["answer_total"]),
         "refusal_accuracy": _ratio(counters["refusal_pass"], counters["refusal_total"]),
         "validation_expectation_rate": _ratio(counters["validation_pass"], counters["validation_total"]),
+        "tier_policy_rate": _ratio(counters["tier_policy_pass"], counters["tier_policy_total"]),
     }
     report = {
         "schema_version": SCHEMA_VERSION,
@@ -822,11 +887,87 @@ def sanitize_record(raw: Mapping[str, Any]) -> dict[str, Any]:
             typed = AnswerEnvelope.model_validate(answer_raw)
         except ValidationError as exc:
             raise RecordingGuardError("provider recording answer is not a typed envelope") from exc
-        answer = _redact_value(typed.model_dump(mode="json"))
-        for card in answer.get("source_cards", []):
-            if isinstance(card, dict):
-                card["href"] = None
-                card["source_ref"] = f"evidence:{card.get('evidence_id', 'redacted')}"
+        typed_answer = typed.model_dump(mode="json")
+        evidence_aliases: dict[str, str] = {}
+        source_aliases: dict[str, str] = {}
+
+        def evidence_alias(value: object) -> str:
+            key = str(value)
+            if key not in evidence_aliases:
+                evidence_aliases[key] = f"evidence-{len(evidence_aliases) + 1:03d}"
+            return evidence_aliases[key]
+
+        def source_alias(value: object) -> str:
+            key = str(value)
+            if key not in source_aliases:
+                source_aliases[key] = f"source-{len(source_aliases) + 1:03d}"
+            return source_aliases[key]
+
+        answer = {
+            "answered": typed_answer["answered"],
+            "depth": typed_answer["depth"],
+            "verdict": typed_answer["verdict"],
+            "direct_answer": "[provider text removed]",
+            "claims": [
+                {
+                    "text": "[provider claim removed]",
+                    "evidence_ids": [evidence_alias(value) for value in claim["evidence_ids"]],
+                    "material": claim["material"],
+                    "numeric_value": claim["numeric_value"],
+                    "unit": "[unit removed]" if claim["unit"] is not None else None,
+                }
+                for claim in typed_answer["claims"]
+            ],
+            "key_metrics": [
+                {
+                    "label": "[provider metric removed]",
+                    "value": "[provider value removed]",
+                    "unit": "[unit removed]" if metric["unit"] is not None else None,
+                    "evidence_ids": [
+                        evidence_alias(value) for value in metric["evidence_ids"]
+                    ],
+                }
+                for metric in typed_answer["key_metrics"]
+            ],
+            "favorable_thesis": (
+                "[provider thesis removed]"
+                if typed_answer["favorable_thesis"] is not None
+                else None
+            ),
+            "counter_thesis": (
+                "[provider thesis removed]"
+                if typed_answer["counter_thesis"] is not None
+                else None
+            ),
+            "risks": ["[provider risk removed]" for _ in typed_answer["risks"]],
+            "confidence": typed_answer["confidence"],
+            "confidence_reasons": [
+                "[provider reason removed]" for _ in typed_answer["confidence_reasons"]
+            ],
+            "next_verification_steps": [
+                "[provider step removed]" for _ in typed_answer["next_verification_steps"]
+            ],
+            "source_cards": [
+                {
+                    "evidence_id": evidence_alias(card["evidence_id"]),
+                    "title": "[provider source removed]",
+                    "source_kind": card["source_kind"],
+                    "source_ref": source_alias(card["source_ref"]),
+                    "as_of": card["as_of"],
+                    "href": None,
+                }
+                for card in typed_answer["source_cards"]
+            ],
+            "suggested_followups": [
+                "[provider followup removed]" for _ in typed_answer["suggested_followups"]
+            ],
+            "as_of": typed_answer["as_of"],
+            "dataset_version": "recorded-dataset",
+        }
+        try:
+            answer = AnswerEnvelope.model_validate(answer).model_dump(mode="json")
+        except ValidationError as exc:
+            raise RecordingGuardError("sanitized provider answer is not a typed envelope") from exc
     usage_raw = raw.get("usage") if isinstance(raw.get("usage"), Mapping) else {}
     usage = {
         key: max(0, int(usage_raw.get(key, 0) or 0))
@@ -882,23 +1023,27 @@ def _live_provider_runner(settings: RadarAskSettings):
     provider = DeepSeekProvider(settings=settings)
 
     def run(case: Mapping[str, Any], corpus: Mapping[str, Any]) -> Mapping[str, Any]:
-        answer_id = case["observed"].get("answer_candidate_id")
-        fixture_answer = corpus["fixtures"]["answer_candidates"].get(answer_id, {})
-        evidence_ids = sorted(
+        raw_evidence_ids = sorted(
             {
                 item["evidence_id"]
                 for fixture_id in case["observed"].get("evidence_by_tool", {}).values()
                 for item in corpus["fixtures"]["evidence_bundles"][fixture_id].get("items", [])
             }
         )
+        evidence_ids = [f"evidence-{index:03d}" for index, _ in enumerate(raw_evidence_ids, 1)]
         model = settings.free_model if case["tier"] == "free" else settings.smart_model
+        safe_question = _redact_text(str(case["question"]))
+        if _has_sensitive_value(safe_question):
+            raise RecordingGuardError("provider recording question contains sensitive data")
         prompt = {
             "task": "Return one typed Radar Ask AnswerEnvelope JSON. Do not add phone numbers, URLs, names, or account identifiers.",
-            "question": case["question"],
+            "question": safe_question,
             "expected_depth": case["expected"]["depth"],
             "allowed_evidence_ids": evidence_ids,
-            "shape_example": fixture_answer,
+            "answer_schema": AnswerEnvelope.model_json_schema(mode="validation"),
         }
+        if len(_bounded_json_bytes(prompt)) > 48_000:
+            raise RecordingGuardError("provider recording prompt exceeds 48 KB")
         response = provider.complete_json(
             model=model,
             messages=[
