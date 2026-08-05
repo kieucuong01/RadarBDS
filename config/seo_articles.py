@@ -10967,6 +10967,286 @@ SEO_ARTICLES = {
         }
     ]
 }
+,
+    "tan-an-hay-phu-hoa-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/tan-an-hay-phu-hoa-nen-xem-khu-nao-truoc",
+        "category": {"key": "so-sanh-khu-vuc", "label": "So sánh khu vực"},
+        "title": "Tân An hay Phú Hòa: nên xem khu nào trước? | Radar BDS",
+        "description": "Dữ liệu Radar BDS cập nhật 05/08/2026 cho thấy Tân An nhiều tin đang theo dõi và giá mềm hơn rõ ở cả đất nền lẫn nhà đất. Phú Hòa hợp hơn khi anh ưu tiên khu gần trung tâm hơn và chấp nhận mặt bằng giá cao hơn.",
+        "keywords": "Tân An hay Phú Hòa, giá đất Tân An, giá đất Phú Hòa, đất nền Tân An, nhà đất Phú Hòa, Radar BDS",
+        "breadcrumb_label": "Tân An hay Phú Hòa",
+        "hero_badge": "So sánh phường",
+        "hero_title": "Tân An hay Phú Hòa: nên xem khu nào trước?",
+        "hero_text": "Nếu anh ưu tiên nhiều lựa chọn, giá mềm và nhóm dưới 4 tỷ dày hơn thì nên mở Tân An trước. Nếu anh cần xem khu gần trung tâm hơn, nguồn nhà đất dày và chấp nhận mặt bằng giá cao hơn, hãy mở thêm Phú Hòa. Khi so giá rao, luôn phải tách đất nền và nhà đất.",
+        "scope_label": "Thủ Dầu Một · Tân An / Phú Hòa",
+        "hero_checks": [
+            "Tân An đang theo dõi 1.229 tin; Phú Hòa là 985 tin",
+            "Đất nền Tân An có giá trung vị 16,3 tr/m²; Phú Hòa là 28,3 tr/m²",
+            "Nhà đất Tân An có giá trung vị 22,8 tr/m²; Phú Hòa là 38,5 tr/m²",
+            "Nhóm dưới 4 tỷ nghiêng mạnh về Tân An ở cả hai loại hình"
+        ],
+        "primary_cta": "Mở dashboard lọc Tân An trước",
+        "primary_href": "/?tab=signals&ward=T%C3%A2n%20An&utm_source=seo&utm_medium=article&utm_campaign=tan_an_vs_phu_hoa",
+        "secondary_cta": "Xem báo cáo Bình Dương tháng 07/2026",
+        "secondary_href": "/bao-cao/bds-binh-duong-thang-07-2026",
+        "map_label": "Tin tức / Tân An · Phú Hòa",
+        "hero_metric": {
+            "label": "Tổng số tin đang theo dõi",
+            "value": "2.214 tin",
+            "delta": "Tân An 1.229 · Phú Hòa 985",
+            "note": "Nguồn Facebook live, lọc theo phường ngày 05/08/2026"
+        },
+        "property_card": {
+            "status": "Cập nhật 05/08/2026",
+            "title": "Tân An rẻ hơn rõ khi tách đúng loại hình",
+            "price": "Đừng dùng một mặt bằng giá chung cho hai phường này",
+            "metric_a": "Đất nền",
+            "metric_a_value": "16,3 tr/m² vs 28,3 tr/m²",
+            "metric_b": "Nhà đất",
+            "metric_b_value": "22,8 tr/m² vs 38,5 tr/m²"
+        },
+        "value_cards": [
+            {
+                "title": "Tân An hợp người mua cần nhiều mẫu để lọc nhanh",
+                "body": "Tân An đang có 720 tin đất nền và 414 tin nhà đất đủ dữ liệu giá. Cả hai nhóm đều nhiều hơn hoặc tương đương Phú Hòa ở tệp dễ lọc theo ngân sách dưới 4 tỷ."
+            },
+            {
+                "title": "Phú Hòa hợp người mua muốn xem khu giá cao hơn nhưng hàng nhà đất dày",
+                "body": "Phú Hòa có 464 tin nhà đất đủ dữ liệu giá, nhỉnh hơn 414 tin ở Tân An. Tuy vậy mặt bằng giá nhà đất và đất nền tại đây cao hơn đáng kể, nên cần chốt ngân sách trước khi gọi."
+            },
+            {
+                "title": "Điểm dễ sai nhất là gộp đất nền với nhà đất",
+                "body": "Nếu gộp hai loại hình vào một con số, anh sẽ bỏ qua việc đất nền Tân An rẻ hơn mạnh và nhà đất Phú Hòa cũng cao hơn mạnh. So phường kiểu này phải tách loại hình trước rồi mới nhìn giá/m² và tổng giá."
+            }
+        ],
+        "local_links_title": "Đọc tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Tân An",
+                "href": "/binh-duong/phuong-tan-an",
+                "description": "Xem trang tổng hợp dữ liệu và lối vào dashboard của Tân An."
+            },
+            {
+                "label": "Trang phường Phú Hòa",
+                "href": "/binh-duong/phuong-phu-hoa",
+                "description": "Xem trang tổng hợp dữ liệu và lối vào dashboard của Phú Hòa."
+            },
+            {
+                "label": "Hiệp Thành hay Tân An",
+                "href": "/tin-tuc/hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc",
+                "description": "Đặt Tân An vào thêm một cặp so sánh để kiểm tra góc nhìn giá mềm."
+            },
+            {
+                "label": "Tân An hay Tương Bình Hiệp",
+                "href": "/tin-tuc/tan-an-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc",
+                "description": "So thêm một phường có nhịp giá khác để chọn khu mở trước."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Ước lượng nhanh giá rao theo phường trước khi gọi môi giới."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu muốn nhiều tin để lọc nhanh thì nên mở phường nào trước?",
+                "a": "Nên mở Tân An trước. Trong dữ liệu live ngày 05/08/2026, Tân An có 1.229 tin đang theo dõi, cao hơn 985 tin ở Phú Hòa. Riêng nhóm đất nền đủ dữ liệu giá, Tân An có 720 tin so với 248 tin ở Phú Hòa."
+            },
+            {
+                "q": "Đất nền Tân An hay Phú Hòa đang mềm hơn?",
+                "a": "Đất nền Tân An đang mềm hơn rõ. Giá trung vị đất nền tại Tân An là 16,3 tr/m², còn Phú Hòa là 28,3 tr/m². Tổng giá trung vị đất nền Tân An khoảng 1,79 tỷ, còn Phú Hòa khoảng 2,90 tỷ."
+            },
+            {
+                "q": "Nhà đất ở hai phường khác nhau thế nào?",
+                "a": "Nhà đất Tân An có giá trung vị 22,8 tr/m² và tổng giá trung vị khoảng 2,45 tỷ. Phú Hòa cao hơn ở cả hai chỉ số: 38,5 tr/m² và 3,79 tỷ. Nếu anh chốt ngân sách dưới 4 tỷ, Tân An đang cho vùng lựa chọn rộng hơn."
+            },
+            {
+                "q": "Dấu hiệu đáng chú ý có nghĩa là nên mua ngay không?",
+                "a": "Không. Dấu hiệu chỉ giúp anh ưu tiên thứ tự kiểm tra trước. Sau đó vẫn phải đọc pháp lý, quy hoạch, vị trí, hiện trạng nhà đất và so lại với mặt bằng giá cùng loại hình."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-05",
+            "modified_at": "2026-08-05",
+            "intro": [
+                "Nếu anh đang phân vân Tân An hay Phú Hòa, câu trả lời ngắn là: cần nguồn hàng dày, giá mềm và lọc nhanh dưới 4 tỷ thì mở Tân An trước; cần xem thêm khu có nhịp giá cao hơn và nguồn nhà đất dày hơn thì mở Phú Hòa sau. Dữ liệu dưới đây là giá rao live từ Facebook trên Radar BDS ngày 05/08/2026.",
+                "Điểm dễ nhầm nhất là nhìn một mặt bằng giá chung. Hai phường này lệch mạnh theo từng loại hình, nên bài này tách riêng đất nền và nhà đất, rồi mới so số tin, giá trung vị/m², tổng giá trung vị và nhóm dưới 4 tỷ."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng số tin hai phường",
+                    "value": "2.214 tin",
+                    "note": "Tân An 1.229 · Phú Hòa 985"
+                },
+                {
+                    "label": "Dấu hiệu đáng chú ý",
+                    "value": "140 tin",
+                    "note": "Tân An 81 · Phú Hòa 59"
+                },
+                {
+                    "label": "Đất nền giá trung vị/m²",
+                    "value": "16,3 vs 28,3 tr/m²",
+                    "note": "Tân An thấp hơn rõ"
+                },
+                {
+                    "label": "Nhà đất giá trung vị/m²",
+                    "value": "22,8 vs 38,5 tr/m²",
+                    "note": "Tân An vẫn thấp hơn rõ"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Tân An và Phú Hòa khác nhau thế nào khi tách loại hình?",
+                    "note": "Đây là giá rao đang theo dõi trên Radar BDS, không phải giá chốt giao dịch. Nguồn Facebook live, lọc ngày 05/08/2026.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Tân An · đất nền", "tracked": "720", "signals": "50", "under4": "697", "median_m2": "16,3 tr/m²", "median_total": "1,79 tỷ", "range": "12,4-19,5 tr/m²"},
+                        {"ward_type": "Tân An · nhà đất", "tracked": "414", "signals": "30", "under4": "411", "median_m2": "22,8 tr/m²", "median_total": "2,45 tỷ", "range": "19,2-29,8 tr/m²"},
+                        {"ward_type": "Phú Hòa · đất nền", "tracked": "248", "signals": "24", "under4": "217", "median_m2": "28,3 tr/m²", "median_total": "2,90 tỷ", "range": "22,6-31,5 tr/m²"},
+                        {"ward_type": "Phú Hòa · nhà đất", "tracked": "464", "signals": "34", "under4": "382", "median_m2": "38,5 tr/m²", "median_total": "3,79 tỷ", "range": "31,3-43,4 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước trong dashboard?",
+                    "note": "Mục tiêu khác nhau sẽ cho thứ tự mở khác nhau, nhưng điểm chung là phải tách đất nền và nhà đất trước.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Đất nền dưới 4 tỷ", "open_first": "Tân An", "why": "697 tin dưới 4 tỷ, cao hơn rõ so với 217 tin ở Phú Hòa"},
+                        {"need": "Nhà đất dưới 4 tỷ", "open_first": "Tân An", "why": "411 tin dưới 4 tỷ so với 382 tin ở Phú Hòa, đồng thời mặt bằng giá mềm hơn"},
+                        {"need": "Muốn xem khu giá cao hơn, gần trung tâm hơn", "open_first": "Phú Hòa", "why": "Nguồn nhà đất dày với mặt bằng 38,5 tr/m², phù hợp người mua đã chốt khu"},
+                        {"need": "Muốn lọc nhanh nhóm giá mềm", "open_first": "Tân An", "why": "Cả đất nền lẫn nhà đất đều có giá trung vị thấp hơn rõ"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Đất nền Tân An mềm hơn rõ so với Phú Hòa",
+                    "note": "So giá trung vị/m² của đất nền giữa hai phường.",
+                    "alt": "Biểu đồ giá trung vị đất nền Tân An và Phú Hòa",
+                    "rows": [
+                        {"label": "Tân An", "value_label": "16,3 tr/m²", "width": 58, "color": "#2563eb"},
+                        {"label": "Phú Hòa", "value_label": "28,3 tr/m²", "width": 100, "color": "#16a34a"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Tân An dày nhóm dưới 4 tỷ hơn ở cả hai loại hình",
+                    "note": "Tổng hai nhóm dưới 4 tỷ: Tân An 1.108 tin, Phú Hòa 599 tin.",
+                    "alt": "Biểu đồ nhóm dưới 4 tỷ ở Tân An và Phú Hòa",
+                    "rows": [
+                        {"label": "Tân An", "value_label": "1.108 tin", "width": 100, "color": "#dc2626"},
+                        {"label": "Phú Hòa", "value_label": "599 tin", "width": 54, "color": "#f59e0b"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "tan-an-mo-truoc-khi-nao",
+                    "heading": "Tân An nên mở trước khi anh cần giá mềm và nhiều lựa chọn",
+                    "paragraphs": [
+                        "Tân An đang cho mặt bằng dễ vào hơn ở cả hai loại hình. Với đất nền, giá trung vị là 16,3 tr/m² và tổng giá trung vị khoảng 1,79 tỷ. Với nhà đất, giá trung vị là 22,8 tr/m² và tổng giá trung vị khoảng 2,45 tỷ. Đây là mức thấp hơn rõ so với Phú Hòa ở cùng ngày so sánh.",
+                        "Không chỉ rẻ hơn, Tân An còn dày nguồn hàng hơn ở tệp đất nền: 720 tin đủ dữ liệu giá so với 248 tin ở Phú Hòa. Nếu anh đang ở bước lọc đầu tiên, cần mở dashboard để quét nhanh nhiều mẫu rồi chọn vài tin đáng gọi, Tân An hợp hơn để mở trước."
+                    ],
+                    "bullets": [
+                        "Đất nền Tân An: 720 tin · 50 dấu hiệu · 697 tin dưới 4 tỷ",
+                        "Nhà đất Tân An: 414 tin · 30 dấu hiệu · 411 tin dưới 4 tỷ",
+                        "Giá trung vị đất nền: 16,3 tr/m² · tổng giá trung vị 1,79 tỷ",
+                        "Giá trung vị nhà đất: 22,8 tr/m² · tổng giá trung vị 2,45 tỷ"
+                    ]
+                },
+                {
+                    "id": "phu-hoa-giu-lai-khi-nao",
+                    "heading": "Phú Hòa vẫn đáng xem nếu anh đã chốt khu và chấp nhận mặt bằng cao hơn",
+                    "paragraphs": [
+                        "Phú Hòa không phải phường nên bỏ qua. Điểm mạnh của nó là tệp nhà đất khá dày: 464 tin đủ dữ liệu giá, nhỉnh hơn 414 tin ở Tân An. Nếu anh muốn xem khu có nhịp giá cao hơn, quen khu vực hơn hoặc cần so thêm một phường gần trung tâm, Phú Hòa vẫn là bộ lọc nên mở tiếp sau Tân An.",
+                        "Điểm cần chấp nhận là mặt bằng giá tại đây cao hơn mạnh. Đất nền Phú Hòa có giá trung vị 28,3 tr/m², cao hơn Tân An 12,0 tr/m². Nhà đất Phú Hòa có giá trung vị 38,5 tr/m² và tổng giá trung vị 3,79 tỷ, nên nếu ngân sách đã sát trần thì anh cần lọc kỹ ngay từ đầu."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Hòa: 248 tin · 24 dấu hiệu · 217 tin dưới 4 tỷ",
+                        "Nhà đất Phú Hòa: 464 tin · 34 dấu hiệu · 382 tin dưới 4 tỷ",
+                        "Giá trung vị đất nền: 28,3 tr/m² · tổng giá trung vị 2,90 tỷ",
+                        "Giá trung vị nhà đất: 38,5 tr/m² · tổng giá trung vị 3,79 tỷ"
+                    ]
+                },
+                {
+                    "id": "dung-gop-gia-chung",
+                    "heading": "Vì sao không nên dùng một con số giá chung cho hai phường này?",
+                    "paragraphs": [
+                        "Nếu anh gộp đất nền và nhà đất vào cùng một mặt bằng giá, kết luận sẽ bị lệch. Tân An rẻ hơn mạnh ở đất nền, đồng thời vẫn rẻ hơn ở nhà đất. Trong khi đó, Phú Hòa có tệp nhà đất dày hơn nhưng giá cũng cao hơn. Bỏ qua bước tách loại hình sẽ làm anh đọc sai câu hỏi nên mở phường nào trước.",
+                        "Cách dùng đúng là chọn phường trước, tách đất nền và nhà đất, rồi mới nhìn giá trung vị/m², tổng giá trung vị và nhóm dưới 4 tỷ. Sau bước đó anh mới quay lại từng tin để kiểm tra đường, diện tích, thổ cư, pháp lý và lý do giảm giá."
+                    ],
+                    "bullets": [
+                        "Đừng so Tân An và Phú Hòa bằng một giá trung bình chung",
+                        "Ưu tiên giá trung vị theo từng loại hình BĐS",
+                        "Nhìn thêm tổng giá trung vị để tránh nhầm do diện tích khác nhau",
+                        "Nhóm dưới 4 tỷ giúp anh chốt thứ tự gọi môi giới nhanh hơn"
+                    ]
+                },
+                {
+                    "id": "mo-dashboard-the-nao",
+                    "heading": "Nên mở dashboard theo thứ tự nào?",
+                    "paragraphs": [
+                        "Nếu anh đang ở bước lọc đầu tiên, hãy mở Tân An trước vì nguồn hàng nhiều và mặt bằng giá mềm hơn. Khi đã xem được vài mẫu và muốn so thêm một phường giá cao hơn, nhiều nhà đất hơn, hãy mở tiếp Phú Hòa để kiểm tra xem mức giá chênh có đổi được gì về vị trí hoặc loại tài sản hay không.",
+                        "Dù mở phường nào trước, anh vẫn nên xem dữ liệu Radar như bộ lọc ban đầu. Đây là giá rao công khai từ Facebook, không phải giá chốt, không thay thẩm định pháp lý, quy hoạch hay kiểm tra thực địa."
+                    ],
+                    "bullets": [
+                        "Bước 1: mở Tân An để lọc nhanh nhóm giá mềm",
+                        "Bước 2: tách đất nền và nhà đất",
+                        "Bước 3: giới hạn ngân sách dưới 4 tỷ nếu cần",
+                        "Bước 4: mở thêm Phú Hòa để so khu giá cao hơn",
+                        "Bước 5: gọi ít tin hơn nhưng đúng nhóm hơn"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã tách đất nền và nhà đất trước khi so hai phường.",
+                "Đã nhìn cả giá trung vị/m² lẫn tổng giá trung vị.",
+                "Đã hiểu đây là giá rao live, không phải giá chốt giao dịch.",
+                "Đã dùng nhóm dưới 4 tỷ để chọn thứ tự mở dashboard.",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và thực địa sau khi lọc dữ liệu."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar rồi lọc Tân An trước",
+            "body": "Bắt đầu từ phường có mặt bằng giá mềm và nguồn hàng dày hơn, sau đó mới mở thêm Phú Hòa để so khu giá cao hơn thay vì gọi dàn hàng ngang.",
+            "button": "Mở dashboard Tân An",
+            "button_href": "/?tab=signals&ward=T%C3%A2n%20An&utm_source=seo&utm_medium=article&utm_campaign=tan_an_vs_phu_hoa"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Tân An hay Phú Hòa: nên xem khu nào trước?",
+                "href": "/tin-tuc/tan-an-hay-phu-hoa-nen-xem-khu-nao-truoc",
+                "url": "https://radarbds.vn/tin-tuc/tan-an-hay-phu-hoa-nen-xem-khu-nao-truoc"
+            }
+        ]
+    }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
