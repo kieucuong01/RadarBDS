@@ -611,6 +611,30 @@ def match_budget(*, args: MatchBudgetArgs, context: ToolContext):
             area_matches=area_matches,
         )
     )
+    for area_match in area_matches:
+        ward = str(area_match["ward"])
+        ward_rows = grouped[ward]
+        as_of = _latest_as_of(ward_rows)
+        version = f"budget-area:{as_of.isoformat(timespec='seconds')}:{len(ward_rows)}"
+        source_ref = f"budget-area:{ward}:{canonical_city or 'all'}"
+        builder.add(
+            EvidenceItem(
+                evidence_id=stable_evidence_id("market_stat", source_ref, version),
+                source_kind=SourceKind.MARKET_STAT,
+                source_ref=source_ref,
+                value={
+                    **area_match,
+                    "budget_ty": budget,
+                    "city": canonical_city,
+                },
+                unit="billion_vnd",
+                calculation_method="bounded_budget_listing_ward_aggregate",
+                as_of=as_of,
+                dataset_version=version,
+                sample_size=int(area_match["listing_count"]),
+                provenance={"method": "current_eligible_asking_listings"},
+            )
+        )
     for row in eligible:
         listing_id = int(row["listing_id"])
         as_of = _as_of(row.get("activity_at"))

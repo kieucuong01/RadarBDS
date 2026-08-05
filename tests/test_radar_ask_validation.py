@@ -455,6 +455,33 @@ def test_prompt_injection_inside_document_is_data_and_does_not_control_validatio
         ),
         (
             item(
+                "budget:phu-my",
+                value={"ward": "Phú Mỹ", "budget_ty": 2.5},
+                source_ref="budget-area:Phú Mỹ:Thủ Dầu Một",
+            ),
+            "Tin phù hợp ngân sách · Phú Mỹ",
+            "/?tab=all&ward=Ph%C3%BA+M%E1%BB%B9",
+        ),
+        (
+            item(
+                "drop:phu-my",
+                value={"ward": "Phú Mỹ", "signal_count": 3},
+                source_ref="price-drop-area:Phú Mỹ:1d",
+            ),
+            "Tín hiệu giảm giá · Phú Mỹ · 1 ngày",
+            "/?tab=signals&ward=Ph%C3%BA+M%E1%BB%B9&date_range=1w",
+        ),
+        (
+            item(
+                "road:phu-my",
+                value={"ward": "Phú Mỹ", "road": "ĐL1"},
+                source_ref="road-market:Phú Mỹ:ĐL1:exact_road:90d",
+            ),
+            "Giá chào ĐL1 · Phú Mỹ · 90 ngày",
+            "/?tab=all&ward=Ph%C3%BA+M%E1%BB%B9&q=%C4%90L1&date_range=3m",
+        ),
+        (
+            item(
                 "valuation:77",
                 kind=SourceKind.VALUATION,
                 value={"listing_ref": "radar-listing:123"},

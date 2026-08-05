@@ -12,6 +12,11 @@ from .contracts import SourceKind
 DIRECT_LISTING_REF = re.compile(r"^radar-(?:listing|signal):(\d+)(?::|$)")
 LOT_LISTING_REF = re.compile(r"^radar-lot:\d+:listing:(\d+)(?::|$)")
 WARD_MARKET_REF = re.compile(r"^ward-market:(.+):(\d+)d$")
+BUDGET_AREA_REF = re.compile(r"^budget-area:(.+):([^:]+)$")
+PRICE_DROP_AREA_REF = re.compile(r"^price-drop-area:(.+):(\d+)d$")
+ROAD_MARKET_REF = re.compile(
+    r"^road-market:([^:]+):(.+):(exact_road|ward_road_tier_fallback):(\d+)d$"
+)
 FRIENDLY_KIND_TITLES = {
     SourceKind.LISTING: "Tin Radar BDS",
     SourceKind.VALUATION: "Định giá Radar BDS",
@@ -117,6 +122,43 @@ def source_card_details(
                 (("tab", "all"), ("ward", ward), ("date_range", _date_range(days)))
             )
             return f"Thị trường {ward} · {days} ngày", f"/?{query}"
+
+    budget_match = BUDGET_AREA_REF.match(source_ref)
+    if kind is SourceKind.MARKET_STAT and budget_match:
+        ward = budget_match.group(1).strip()
+        if ward:
+            query = urlencode((('tab', 'all'), ('ward', ward)))
+            return f"Tin phù hợp ngân sách · {ward}", f"/?{query}"
+
+    price_drop_match = PRICE_DROP_AREA_REF.match(source_ref)
+    if kind is SourceKind.MARKET_STAT and price_drop_match:
+        ward = price_drop_match.group(1).strip()
+        days = int(price_drop_match.group(2))
+        if ward and days > 0:
+            query = urlencode(
+                (
+                    ("tab", "signals"),
+                    ("ward", ward),
+                    ("date_range", _date_range(days)),
+                )
+            )
+            return f"Tín hiệu giảm giá · {ward} · {days} ngày", f"/?{query}"
+
+    road_match = ROAD_MARKET_REF.match(source_ref)
+    if kind is SourceKind.MARKET_STAT and road_match:
+        ward = road_match.group(1).strip()
+        road = road_match.group(2).strip()
+        scope = road_match.group(3)
+        days = int(road_match.group(4))
+        if road and days > 0:
+            query_parts = [("tab", "all")]
+            if ward and ward != "unknown":
+                query_parts.append(("ward", ward))
+            query_parts.extend((("q", road), ("date_range", _date_range(days))))
+            query = urlencode(query_parts)
+            prefix = "Giá chào" if scope == "exact_road" else "Mẫu giá tham chiếu"
+            title_scope = f" · {ward}" if ward and ward != "unknown" else ""
+            return f"{prefix} {road}{title_scope} · {days} ngày", f"/?{query}"
 
     if kind is SourceKind.OFFICIAL_DOCUMENT:
         source_title = _official_title(value)

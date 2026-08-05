@@ -410,6 +410,16 @@ def test_match_budget_ranks_areas_without_calling_llm_for_arithmetic():
     assert bundle.calculations["budget_ty"] == 2.5
     assert bundle.calculations["matched_listing_count"] == 3
     assert bundle.calculations["area_matches"][0]["ward"] == "Phú Mỹ"
+    area_items = [
+        item for item in bundle.items if item.source_kind is SourceKind.MARKET_STAT
+    ]
+    assert [item.value["ward"] for item in area_items] == [
+        row["ward"] for row in bundle.calculations["area_matches"]
+    ]
+    assert (
+        area_items[0].sample_size
+        == bundle.calculations["area_matches"][0]["listing_count"]
+    )
 
 
 def test_search_deals_uses_only_actionable_gate_and_public_mos_floor():
