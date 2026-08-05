@@ -86,20 +86,6 @@ class RetrievalQuality(str, Enum):
     CONFLICTED = "conflicted"
 
 
-class AskQuestionRequest(ContractModel):
-    question: str = Field(min_length=1, max_length=2_000)
-    session_id: UUID | None = None
-    requested_depth: AskDepth | None = None
-
-    @field_validator("question")
-    @classmethod
-    def normalize_question(cls, value: str) -> str:
-        normalized = " ".join(value.split())
-        if not normalized:
-            raise ValueError("question must not be blank")
-        return normalized
-
-
 class PageContext(ContractModel):
     listing_id: int | None = Field(default=None, gt=0)
     city: str | None = Field(default=None, max_length=120)
@@ -113,6 +99,21 @@ class PageContext(ContractModel):
         if len(encoded.encode("utf-8")) > 8_192:
             raise ValueError("active filters exceed 8192 bytes")
         return self
+
+
+class AskQuestionRequest(ContractModel):
+    question: str = Field(min_length=1, max_length=2_000)
+    session_id: UUID | None = None
+    requested_depth: AskDepth | None = None
+    page_context: PageContext = Field(default_factory=PageContext)
+
+    @field_validator("question")
+    @classmethod
+    def normalize_question(cls, value: str) -> str:
+        normalized = " ".join(value.split())
+        if not normalized:
+            raise ValueError("question must not be blank")
+        return normalized
 
 
 class AskContext(ContractModel):

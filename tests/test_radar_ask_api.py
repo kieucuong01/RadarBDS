@@ -190,6 +190,61 @@ def test_fast_question_returns_public_answer_contract_and_idempotency(api_client
     assert_private(response)
 
 
+def test_contextual_listing_request_reaches_typed_api_and_deterministic_routing(api_client, monkeypatch):
+    import routes.radar_ask_api as ask_api
+    from services.radar_ask.routing import route_question
+
+    captured = []
+
+    def fake_run(request, context, *, idempotency_key):
+        decision = route_question(request, context)
+        captured.append((request, context, decision))
+        return answered_run()
+
+    monkeypatch.setattr(ask_api, "run_radar_question", fake_run)
+    response = api_client.post(
+        "/api/radar-ask/questions",
+        json={
+            "question": "Vì sao lô đất này được định giá như hiện tại?",
+            "requested_depth": "standard",
+            "page_context": {
+                "listing_id": 123,
+                "ward": "Phường do client gợi ý",
+                "road": "Đường do client gợi ý",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    typed_request, context, decision = captured[0]
+    assert typed_request.page_context.listing_id == 123
+    assert context.page == typed_request.page_context
+    assert [call.name for call in decision.tool_calls] == ["get_listing_facts", "explain_valuation"]
+    assert all(call.arguments == {"listing_id": 123} for call in decision.tool_calls)
+    assert "ward" not in decision.tool_calls[0].arguments
+    assert "road" not in decision.tool_calls[0].arguments
+
+
+@pytest.mark.parametrize(
+    "page_context",
+    (
+        {"listing_id": 0},
+        {"listing_id": 123, "road": "x" * 181},
+        {"active_filters": {"query": "x" * 8_193}},
+        {"listing_id": 123, "private_note": "do not accept"},
+    ),
+)
+def test_question_rejects_invalid_or_unbounded_page_context(api_client, page_context):
+    response = api_client.post(
+        "/api/radar-ask/questions",
+        json={"question": "Vì sao lô đất này?", "page_context": page_context},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"]["code"] == "invalid_request"
+    assert_private(response)
+
+
 def test_deep_question_returns_accepted(api_client, monkeypatch):
     import routes.radar_ask_api as ask_api
 

@@ -544,3 +544,43 @@ test('handoff fails closed without putting private context in navigation URL', (
   );
   assert.deepEqual(navigations, ['/hoi-radar-bds']);
 });
+
+test('contextual launcher survives as a bounded typed page context in question payload', async () => {
+  const payloads = [];
+  const controller = createController({
+    api: {
+      postQuestion: async (payload) => {
+        payloads.push(payload);
+        return { run_id: 'run-context', session_id: 'session-context', status: 'completed', answer: completedAnswer() };
+      },
+    },
+    view: fakeView(),
+  });
+
+  controller.setPageContext({
+    listing_id: 123,
+    ward: 'P'.repeat(140),
+    road: 'R'.repeat(220),
+    question: 'Không được lặp câu hỏi vào page_context',
+  });
+  await controller.submit('Vì sao lô đất này được định giá như hiện tại?', 'standard');
+
+  assert.deepEqual(payloads[0].page_context, {
+    listing_id: 123,
+    ward: 'P'.repeat(120),
+    road: 'R'.repeat(180),
+  });
+  assert.equal(payloads[0].page_context.question, undefined);
+});
+
+test('opening the workspace without usable context preserves the unsent draft', () => {
+  const calls = [];
+  const workspace = {
+    setContext: (payload) => calls.push(['context', payload]),
+    focusComposer: () => calls.push(['focus']),
+  };
+
+  openWithHandoff({}, { storage: memoryStorage(), navigate: () => {}, workspace });
+
+  assert.deepEqual(calls, [['focus']]);
+});

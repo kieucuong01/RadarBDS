@@ -205,9 +205,11 @@ def test_explicit_deep_research_is_bounded_and_thinking_only_for_smart_tier():
     assert free.depth is AskDepth.DEEP
     assert free.use_thinking is False
     assert len(free.tool_calls) == 2
+    assert all(call.arguments == {"listing_id": 88} for call in free.tool_calls)
     assert vip.depth is AskDepth.DEEP
     assert vip.use_thinking is True
     assert len(vip.tool_calls) == 2
+    assert all(call.arguments == {"listing_id": 88} for call in vip.tool_calls)
 
 
 def test_explicit_requested_depth_is_honored_without_adding_tools():

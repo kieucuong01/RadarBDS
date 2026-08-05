@@ -157,6 +157,7 @@ def test_homepage_exposes_authenticated_and_contextual_radar_ask_launchers():
     assert "question" in engagement
     assert "URLSearchParams" not in engagement
     assert "location.search" not in engagement
+    assert "css/main/leads_chat.css') ~ '?v=radar-ask-launcher-20260805'" in html
 
 
 def test_legacy_chat_endpoint_returns_not_found():

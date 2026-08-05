@@ -165,7 +165,7 @@ def ask_question():
     try:
         result = run_radar_question(
             typed,
-            AskContext(user_id=user_id, tier=tier),
+            AskContext(user_id=user_id, tier=tier, page=typed.page_context),
             idempotency_key=idempotency_key.strip() if idempotency_key else None,
         )
     except IdempotencyConflict:

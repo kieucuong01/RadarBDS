@@ -92,6 +92,15 @@
     return '';
   }
 
+  function pageContextFromOpenOptions(options) {
+    const payload = sanitizeOpenOptions(options);
+    const context = {};
+    if (payload.listing_id) context.listing_id = payload.listing_id;
+    if (payload.ward) context.ward = payload.ward;
+    if (payload.road) context.road = payload.road;
+    return context;
+  }
+
   function consumeHandoff(storage) {
     if (!storage) return null;
     let raw = null;
@@ -114,7 +123,7 @@
   function openWithHandoff(options, { storage, navigate, workspace = null }) {
     const payload = sanitizeOpenOptions(options);
     if (workspace) {
-      workspace.setContext(payload);
+      if (Object.keys(payload).length) workspace.setContext(payload);
       workspace.focusComposer();
       return true;
     }
@@ -399,6 +408,7 @@
       currentMessages: [],
       nextMessageCursor: null,
       currentSession: null,
+      pageContext: null,
     };
     const notify = (name, ...args) => {
       if (typeof view[name] === 'function') view[name](...args);
@@ -419,6 +429,11 @@
 
     const controller = {
       state,
+      setPageContext(context) {
+        const bounded = pageContextFromOpenOptions(context);
+        state.pageContext = Object.keys(bounded).length ? bounded : null;
+        return state.pageContext;
+      },
       async submit(question, depth = 'standard') {
         const normalized = String(question || '').trim();
         if (state.pending || state.costState === 'locked') return { ignored: true };
@@ -430,6 +445,7 @@
         try {
           const request = { question: normalized, requested_depth: state.lastDepth };
           if (state.currentSessionId) request.session_id = state.currentSessionId;
+          if (state.pageContext) request.page_context = { ...state.pageContext };
           let run = applyRun(await api.postQuestion(request));
           if (run && classifyRunStatus(run.status) === 'pending' && typeof api.getRun === 'function') {
             run = applyRun(await poller({
@@ -1022,12 +1038,23 @@
     controller.loadSessions();
     let handoff = null;
     try { handoff = consumeHandoff(windowRef.sessionStorage); } catch (_error) { handoff = null; }
-    if (handoff) composer.value = questionFromOpenOptions(handoff);
+    if (handoff) {
+      controller.setPageContext(handoff);
+      const suggestedQuestion = questionFromOpenOptions(handoff);
+      if (suggestedQuestion) composer.value = suggestedQuestion;
+    }
     setStatus('Sẵn sàng nhận câu hỏi.');
     return {
       controller,
       focusComposer: () => composer.focus(),
-      setContext: (options) => { composer.value = questionFromOpenOptions(options); },
+      setContext: (options) => {
+        const payload = sanitizeOpenOptions(options);
+        if (!Object.keys(payload).length) return false;
+        controller.setPageContext(payload);
+        const suggestedQuestion = questionFromOpenOptions(payload);
+        if (suggestedQuestion) composer.value = suggestedQuestion;
+        return true;
+      },
     };
   }
 
