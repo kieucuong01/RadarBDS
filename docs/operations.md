@@ -168,6 +168,92 @@ raw evidence, contacts, URLs, names, account identifiers, and provider prose
 are not persisted. A recording never updates golden truth automatically;
 review any proposed corpus change by hand.
 
+## Radar Ask Performance And Rendered QA Gate
+
+This gate is local/test-only. It uses seeded test users, the test PostgreSQL
+database, and a deterministic fake provider. Both executables reject a
+non-loopback target and require the explicit `RADAR_ASK_FAKE_PROVIDER=1`
+operator assertion. They are not a live DeepSeek or production load path.
+
+Run the focused backend/public contract gate first:
+
+```powershell
+$py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
+& $py -X utf8 -m pytest `
+  tests\test_radar_ask_performance.py `
+  tests\test_market_data_performance.py `
+  tests\test_public_cache_headers.py -q
+node --test tests\js\radar_ask.test.cjs
+& $py -X utf8 -m py_compile scripts\verify_radar_ask_ui.py
+Get-Content -LiteralPath scripts\load\radar_ask_load.js -Raw -Encoding UTF8 |
+  node --input-type=module --check
+```
+
+The assistant checks enforce zero provider calls on deterministic Fast,
+enqueue-before-execution on Deep, at most 50 evidence rows, active read-only
+statement timeout, 128-KiB response bounds, bounded history pagination, and
+`private, no-store` without `X-Radar-Public-Cache`. The two existing public
+suites remain authoritative for `/api/signals`, `/api/listings`, `/api/counts`,
+and `/api/dashboard`; do not duplicate or weaken those contracts in assistant
+tests.
+
+The mixed k6 profile is optional tooling, not a dependency to install during a
+release task. Check availability first. If `Get-Command k6` fails, retain the
+Node syntax proof, record `k6 unavailable`, and run the command below only from
+an environment where k6 is already approved. Start the local app/test worker
+with the fake provider injected before load; setting the assertion variable by
+itself does not replace that fixture.
+
+Immediately before assistant load, record the public p95 on the same local
+server/profile. Keep both JSON reports ignored under `reports/`:
+
+```powershell
+k6 run scripts\load\radar_public_load.js `
+  --env BASE_URL=http://127.0.0.1:5000 `
+  --env SCENARIO=default --env VUS=10 --env DURATION=30s `
+  --summary-export reports\radar_public_before_radar_ask.json
+$baseline = Get-Content reports\radar_public_before_radar_ask.json -Raw |
+  ConvertFrom-Json
+$env:PUBLIC_BASELINE_P95_MS = [string]$baseline.metrics.http_req_duration.values.'p(95)'
+$env:BASE_URL = "http://127.0.0.1:5000"
+$env:DURATION = "30s"
+$env:VUS_PER_SCENARIO = "1"
+$env:RADAR_ASK_FAKE_PROVIDER = "1"
+# JSON array of seeded local-only identifier/password/session_id/run_id objects.
+$env:RADAR_ASK_TEST_USERS_JSON = Get-Content .local\radar-ask-load-users.json -Raw
+k6 run scripts\load\radar_ask_load.js `
+  --summary-export reports\radar_ask_load_local.json
+```
+
+Release targets are Fast p95 <=800 ms; one-tool Standard with bounded fake
+latency p95 <=6 s; Deep enqueue/history/poll p95 <=500 ms; assistant and public
+errors <1%; statement timeouts 0%; and public p95 no more than 20% above the
+immediately preceding baseline. The profile runs the assistant scenarios and
+an anonymous public scenario in parallel. Never pass real credentials in the
+command or commit `.local` user fixtures/load reports.
+
+Rendered proof uses the same already-running local fake-provider app. The
+script logs in through the normal auth endpoint, exercises one Fast answer,
+one Deep enqueue plus poll, sources/history, and one delete flow at `1440x900`
+and `390x844`. It also checks private response headers, exactly one POST per
+submit, relevant console errors, horizontal overflow, mobile 16-pixel input,
+visible/focused composer, and page scroll instead of a nested feed trap.
+
+```powershell
+$env:RADAR_ASK_TEST_IDENTIFIER = "<seeded-local-user>"
+$env:RADAR_ASK_TEST_PASSWORD = "<from ignored local fixture>"
+$env:RADAR_ASK_FAKE_PROVIDER = "1"
+& $py -X utf8 scripts\verify_radar_ask_ui.py `
+  --base-url http://127.0.0.1:5000 `
+  --output artifacts\radar-ask
+```
+
+The verifier never records credentials or raw account/run/session identifiers.
+It writes only `desktop.png`, `mobile.png`, and bounded `metrics.json` below
+ignored `artifacts/radar-ask/`. If Python Playwright or its Chromium binary is
+missing, do not install it implicitly or claim rendered proof; report the exact
+tool blocker and leave the command for the final release environment.
+
 ## Deploy Flow
 
 For the normal local one-command ship:
