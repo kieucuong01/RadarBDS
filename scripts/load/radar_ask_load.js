@@ -119,6 +119,7 @@ export function setup() {
     && capabilityBody.mode === 'radar_ask_test'
     && capabilityBody.provider === 'fake'
     && capabilityBody.database === 'radar_bds_test'
+    && capabilityBody.backend_pipeline === 'real'
     && capabilityBody.live_provider_allowed === false;
   if (!capabilityOk) {
     fail('Server did not prove fake-provider/radar_bds_test isolation; no credentials or questions were sent');

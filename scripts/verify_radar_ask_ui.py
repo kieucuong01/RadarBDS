@@ -93,6 +93,7 @@ def _valid_qa_capability(payload: object, headers: Any) -> bool:
         and payload.get("mode") == "radar_ask_test"
         and payload.get("provider") == "fake"
         and payload.get("database") == "radar_bds_test"
+        and payload.get("backend_pipeline") == "real"
         and payload.get("live_provider_allowed") is False
     )
 
@@ -119,6 +120,7 @@ def _verify_server_capability(base_url: str, timeout_ms: int) -> dict[str, Any]:
         "mode": "radar_ask_test",
         "provider": "fake",
         "database": "radar_bds_test",
+        "backend_pipeline": "real",
     }
 
 

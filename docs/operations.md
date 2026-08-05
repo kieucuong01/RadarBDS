@@ -208,9 +208,12 @@ with the fake provider injected before load; setting the assertion variable by
 itself does not replace that fixture.
 
 Start the dedicated loopback QA server in a separate terminal. It refuses any
-database other than `radar_bds_test`, removes `DEEPSEEK_API_KEY`, serves a
-fixed fake-provider capability proof, and writes 100 distinct Admin seed users
-only below ignored `.local/`:
+database other than `radar_bds_test`, removes `DEEPSEEK_API_KEY`, and configures
+the real read-only role/views against that test database. Auth, Flask routes,
+orchestration, repositories, evidence SQL, quotas, and the Deep worker remain
+real; only the model boundary is a deterministic offline provider. The server
+publishes a fail-closed `backend_pipeline=real` capability proof and writes 100
+distinct Admin seed users only below ignored `.local/`:
 
 ```powershell
 & $py -X utf8 scripts\radar_ask_qa_server.py --check-config

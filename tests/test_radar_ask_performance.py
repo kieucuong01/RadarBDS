@@ -401,6 +401,7 @@ def test_rendered_verifier_requires_server_owned_fake_provider_and_test_db_proof
         "mode": "radar_ask_test",
         "provider": "fake",
         "database": "radar_bds_test",
+        "backend_pipeline": "real",
         "live_provider_allowed": False,
     }
     headers = {"X-Radar-Ask-QA-Provider": "fake"}
@@ -409,6 +410,7 @@ def test_rendered_verifier_requires_server_owned_fake_provider_and_test_db_proof
     for changed in (
         {**valid, "provider": "deepseek"},
         {**valid, "database": "radar_bds"},
+        {**valid, "backend_pipeline": "mock"},
         {**valid, "live_provider_allowed": True},
     ):
         assert _valid_qa_capability(changed, headers) is False
@@ -458,7 +460,15 @@ def test_committed_qa_harness_is_loopback_fake_and_test_database_only():
     assert '"live_provider_allowed": False' in source
     assert 'QA_CAPABILITY_HEADER = ("X-Radar-Ask-QA-Provider", "fake")' in source
     assert "DeepSeekProvider" not in source
+    assert '"backend_pipeline": "real"' in source
+    assert "OfflineQaProvider" in source
+    assert "OrchestratorDependencies" in source
+    assert "RadarAskRepository" in source
+    assert "RadarAskLimitService" in source
+    assert "RadarAskWorker" in source
+    assert "CapabilityMiddleware(radar_app.app, provider)" in source
+    assert 'path.startswith("/api/radar-ask/")' not in source
     assert "--seed-count" in source
     assert "default=100" in source
     main_source = source[source.index("def main(") :]
-    assert main_source.index("if args.check_config") < main_source.index("_write_seed_file")
+    assert main_source.index("if args.check_config") < main_source.index("_seed_users")
