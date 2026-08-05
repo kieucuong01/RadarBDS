@@ -521,7 +521,7 @@ def test_db_backed_evaluation_guard_accepts_only_exact_local_test_database(url, 
             verify_test_database_url(url)
 
 
-def test_deterministic_cli_writes_utf8_report_and_exits_nonzero_on_open_privacy_gate(tmp_path):
+def test_deterministic_cli_writes_utf8_report_and_passes_closed_privacy_gate(tmp_path):
     output = tmp_path / "golden-report.json"
     result = subprocess.run(
         [
@@ -543,12 +543,11 @@ def test_deterministic_cli_writes_utf8_report_and_exits_nonzero_on_open_privacy_
         env={**os.environ, "PYTHONUTF8": "1"},
         timeout=30,
     )
-    assert result.returncode == 2
-    assert "privacy_pass_rate" in result.stderr
+    assert result.returncode == 0, result.stderr or result.stdout
     report = json.loads(output.read_text(encoding="utf-8"))
     assert report["case_count"] >= 120
-    assert report["release_gate_passed"] is False
-    assert report["metrics"]["privacy_pass_rate"] < 1.0
+    assert report["release_gate_passed"] is True
+    assert report["metrics"]["privacy_pass_rate"] == 1.0
     assert "Ngân sách" not in output.read_text(encoding="utf-8")
 
 
