@@ -64,7 +64,7 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
     assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-scroll-lock-20260802\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611\"" in html
     assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805\"" in html
-    assert "radarAsk: \"{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v2\"" in html
+    assert "radarAsk: \"{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3\"" in html
     assert "window.RADAR_STYLES" in html
     assert '{{ css_auth }}' in html
     body_scripts = html.split("window.RADAR_ASSETS", 1)[-1]

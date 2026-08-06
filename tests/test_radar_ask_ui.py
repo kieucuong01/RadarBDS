@@ -107,7 +107,8 @@ def test_review_round_one_accessibility_privacy_and_cache_contracts():
     assert "onload=" not in html
     assert "onclick=" not in html
     assert "onerror=" not in html
-    assert "radar-ask-workspace-v2" in html
+    assert "radar-ask-workspace-v3" in html
+    assert "radar-ask-workspace-v2" not in html
     assert "radar-ask-workspace-v1" not in html
     assert 'data-load-more-sessions' in html
     assert 'data-load-more-messages' in html
@@ -116,6 +117,8 @@ def test_review_round_one_accessibility_privacy_and_cache_contracts():
     assert 'data-submit-label' in html
 
     assert "sessionStorage" in javascript
+    assert "showThinking" in javascript
+    assert "radar-ask-thinking" in css
     assert "consumeHandoff" in javascript
     assert "url.searchParams.set('question'" not in javascript
     assert "url.searchParams.set('ward'" not in javascript
