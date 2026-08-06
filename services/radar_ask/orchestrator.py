@@ -879,6 +879,23 @@ def _fail_planning_claim(
     raise last_error
 
 
+def _deterministic_fallback_route(
+    request: AskQuestionRequest,
+    context: AskContext,
+    *,
+    dependencies: OrchestratorDependencies,
+) -> RouteDecision | None:
+    try:
+        return dependencies.router(
+            request,
+            context,
+            planner=None,
+            registry=dependencies.registry,
+        )
+    except Exception:
+        return None
+
+
 def _execute_running_run(
     request: AskQuestionRequest,
     context: AskContext,
@@ -1187,31 +1204,33 @@ def run_question(
     if run.status != RunStatus.CREATED.value:
         return _run_result(run)
 
-    try:
-        decision = dependencies.router(
-            request,
-            context,
-            planner=None,
-            registry=dependencies.registry,
-        )
-    except PlannerRequired:
-        decision = None
-    except Exception:
-        running = dependencies.repository.transition_run(
-            run.id,
-            user_id=context.user_id,
-            expected={"created"},
-            target="running",
-        )
-        return _fail_run(
-            dependencies,
-            running,
-            reservation=None,
-            usage=EMPTY_USAGE,
-            outcome=RunOutcome.VALIDATION_FAILURE,
-            error_code="routing_failed",
-            retryable=False,
-        )
+    decision = None
+    if dependencies.planner is None:
+        try:
+            decision = dependencies.router(
+                request,
+                context,
+                planner=None,
+                registry=dependencies.registry,
+            )
+        except PlannerRequired:
+            decision = None
+        except Exception:
+            running = dependencies.repository.transition_run(
+                run.id,
+                user_id=context.user_id,
+                expected={"created"},
+                target="running",
+            )
+            return _fail_run(
+                dependencies,
+                running,
+                reservation=None,
+                usage=EMPTY_USAGE,
+                outcome=RunOutcome.VALIDATION_FAILURE,
+                error_code="routing_failed",
+                retryable=False,
+            )
 
     planned_route = decision is None
     if planned_route:
@@ -1346,6 +1365,104 @@ def run_question(
                 retryable=False,
             )
         except ProviderError as exc:
+            fallback_decision = _deterministic_fallback_route(
+                request,
+                context,
+                dependencies=dependencies,
+            )
+            if fallback_decision is not None:
+                fallback_policy = _policy(
+                    fallback_decision,
+                    context,
+                    dependencies.settings,
+                )
+                if fallback_decision.needs_clarification:
+                    answer = AnswerEnvelope(
+                        answered=False,
+                        depth=fallback_decision.depth,
+                        verdict=None,
+                        direct_answer=(
+                            fallback_decision.clarification_question
+                            or "Báº¡n vui lÃ²ng bá»• sung thÃ´ng tin."
+                        ),
+                        as_of=_utc_now(dependencies.clock),
+                        dataset_version="radar-ask:foundation",
+                    )
+                    clarifying = _finalize_sync_or_reconcile(
+                        dependencies,
+                        run,
+                        reservation=reservation,
+                        owner_id=planner_id,
+                        target=RunStatus.CLARIFYING.value,
+                        outcome=RunOutcome.CLARIFICATION,
+                        usage=EMPTY_USAGE,
+                        answer=answer,
+                        effective_depth=fallback_decision.depth.value,
+                        route=fallback_decision.model_dump(mode="json"),
+                        model=fallback_policy.model,
+                        planner_usage=exc.usage,
+                    )
+                    return _run_result(
+                        clarifying,
+                        answer=(
+                            answer
+                            if clarifying.status == RunStatus.CLARIFYING.value
+                            else None
+                        ),
+                    )
+                fallback_execution = _execute_running_run(
+                    request,
+                    context,
+                    fallback_decision,
+                    fallback_policy,
+                    dependencies=dependencies,
+                    run_id=run.id,
+                    monotonic_fn=dependencies.monotonic_clock,
+                )
+                if fallback_execution.answer is None:
+                    return _fail_run(
+                        dependencies,
+                        run,
+                        reservation=reservation,
+                        usage=fallback_execution.usage,
+                        outcome=fallback_execution.outcome,
+                        error_code=fallback_execution.error_code
+                        or "evidence_execution_failed",
+                        retryable=fallback_execution.retryable,
+                    )
+                fallback_answer = fallback_execution.answer
+                fallback_outcome = (
+                    RunOutcome.ANSWERED
+                    if fallback_answer.answered
+                    else RunOutcome.INSUFFICIENT
+                )
+                fallback_target = (
+                    RunStatus.COMPLETED
+                    if fallback_answer.answered
+                    else RunStatus.INSUFFICIENT
+                )
+                terminal = _finalize_sync_or_reconcile(
+                    dependencies,
+                    run,
+                    reservation=reservation,
+                    owner_id=planner_id,
+                    target=fallback_target.value,
+                    outcome=fallback_outcome,
+                    usage=fallback_execution.usage,
+                    answer=fallback_answer,
+                    effective_depth=fallback_decision.depth.value,
+                    route=fallback_decision.model_dump(mode="json"),
+                    model=fallback_policy.model,
+                    planner_usage=exc.usage,
+                )
+                return _run_result(
+                    terminal,
+                    answer=(
+                        fallback_answer
+                        if terminal.status == fallback_target.value
+                        else None
+                    ),
+                )
             return _fail_planning_claim(
                 dependencies,
                 run,

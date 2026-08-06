@@ -16,6 +16,7 @@ from .contracts import (
     ToolCall,
 )
 from .registry import APPROVED_TOOL_NAMES, DEFAULT_TOOL_REGISTRY, ToolRegistry
+from .provider import ProviderError
 
 
 class RoutingError(RuntimeError):
@@ -599,8 +600,33 @@ def route_question(
     planner: Planner | None = None,
     registry: ToolRegistry = DEFAULT_TOOL_REGISTRY,
 ) -> RouteDecision:
-    deterministic = _deterministic_route(request, context)
     requested_depth = _depth_requested(request, _fold(request.question))
+    planner_failed_invalid = False
+    if planner is not None:
+        try:
+            planned_value = planner(
+                request=request,
+                context=context,
+                allowed_tools=tuple(registry.registrations),
+            )
+            raw_decision = (
+                planned_value.decision
+                if isinstance(planned_value, PlannerResult)
+                else planned_value
+            )
+            planned = RouteDecision.model_validate(raw_decision)
+            return _finalize(
+                planned,
+                context=context,
+                requested_depth=requested_depth,
+                registry=registry,
+            )
+        except ProviderError:
+            planner_failed_invalid = False
+        except (ValidationError, TypeError, ValueError):
+            planner_failed_invalid = True
+
+    deterministic = _deterministic_route(request, context)
     if deterministic is not None:
         return _finalize(
             deterministic,
@@ -610,28 +636,9 @@ def route_question(
         )
     if planner is None:
         raise PlannerRequired("question requires the typed planner")
-    try:
-        planned_value = planner(
-            request=request,
-            context=context,
-            allowed_tools=tuple(registry.registrations),
-        )
-        raw_decision = (
-            planned_value.decision
-            if isinstance(planned_value, PlannerResult)
-            else planned_value
-        )
-        planned = RouteDecision.model_validate(
-            raw_decision
-        )
-    except (ValidationError, TypeError, ValueError) as exc:
-        raise RoutingPolicyViolation("planner returned an invalid typed route") from exc
-    return _finalize(
-        planned,
-        context=context,
-        requested_depth=requested_depth,
-        registry=registry,
-    )
+    if planner_failed_invalid:
+        raise RoutingPolicyViolation("planner returned an invalid typed route")
+    raise PlannerRequired("question requires the typed planner")
 
 
 def finalize_planned_route(

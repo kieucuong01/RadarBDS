@@ -747,27 +747,57 @@ def test_planned_consultant_clarification_asks_one_followup_without_database_or_
     assert deps.repository.sync_finalizations[0]["planner_usage"] == planner_usage
 
 
-def test_deterministic_fast_does_not_call_planner_or_reserve_provider_cost():
+def test_simple_question_uses_planner_first_even_when_deterministic_route_exists():
+    planner_usage = ProviderUsage(input_tokens=80, output_tokens=12, cache_miss_input_tokens=80)
     calls = []
 
     def planner(**_kwargs):
         calls.append("planner")
-        raise AssertionError("deterministic Fast must not plan")
+        return PlannerResult(decision=fast_decision(), usage=planner_usage)
 
     deps = make_deps(decision=fast_decision())
-    deps = replace(deps, planner=planner)
+    from services.radar_ask.routing import route_question
+
+    deps = replace(deps, router=route_question, planner=planner)
 
     result = run_question(
         AskQuestionRequest(question="Khu nao giam gia hom nay?"),
         make_context(),
         dependencies=deps,
-        idempotency_key="fast-no-planner-reservation",
+        idempotency_key="fast-planner-first",
     )
 
     assert result.status is RunStatus.COMPLETED
-    assert calls == []
-    assert deps.limits.reservations[0]["max_cost_usd"] == Decimal("0")
-    assert deps.limits.planner_usage == []
+    assert calls == ["planner"]
+    assert deps.repository.planning_finalizations[0]["usage"] == planner_usage
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.ANSWERED.value
+
+
+def test_planner_provider_failure_falls_back_to_deterministic_route_when_safe():
+    usage = ProviderUsage(input_tokens=80, output_tokens=12, cache_miss_input_tokens=80)
+    calls = []
+
+    def planner(**_kwargs):
+        calls.append("planner")
+        raise ProviderUnavailable("private planner error", usage=usage)
+
+    deps = make_deps(decision=fast_decision())
+    from services.radar_ask.routing import route_question
+
+    deps = replace(deps, router=route_question, planner=planner)
+
+    result = run_question(
+        AskQuestionRequest(question="Khu nao giam gia hom nay?"),
+        make_context(),
+        dependencies=deps,
+        idempotency_key="fast-planner-fallback",
+    )
+
+    assert result.status is RunStatus.COMPLETED
+    assert result.error_code is None
+    assert calls == ["planner"]
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.ANSWERED.value
+    assert deps.repository.sync_finalizations[0]["planner_usage"] == usage
 
 
 def test_planner_failure_records_known_usage_then_releases_without_answered_quota():

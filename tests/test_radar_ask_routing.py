@@ -125,19 +125,15 @@ def test_approved_simple_questions_use_fast_path_without_planner(
     tool_name,
     question_type,
 ):
-    planner = PlannerSpy()
-
     decision = route_question(
         AskQuestionRequest(question=question),
         make_context(),
-        planner=planner,
     )
 
     assert decision.depth is AskDepth.FAST
     assert decision.tool_calls[0].name == tool_name
     assert decision.question_type == question_type
     assert decision.use_thinking is False
-    assert planner.call_count == 0
 
 
 def test_fast_patterns_extract_bounded_business_arguments():
@@ -201,28 +197,11 @@ def test_tan_an_investor_questions_keep_the_right_intent():
     ],
 )
 def test_natural_ward_price_phrasing_never_falls_through_to_deal_search(question):
-    planner = PlannerSpy(
-        {
-            "depth": "fast",
-            "question_type": "deal_search",
-            "tool_calls": [
-                {
-                    "call_id": "wrong-deal-route",
-                    "name": "search_deals",
-                    "arguments": {"wards": ["Tân An"], "limit": 10},
-                }
-            ],
-            "generated": True,
-        }
-    )
-
     decision = route_question(
         AskQuestionRequest(question=question),
         make_context(tier="admin"),
-        planner=planner,
     )
 
-    assert planner.call_count == 0
     assert decision.question_type == "area_market_estimate"
     assert decision.tool_calls[0].name == "compare_areas"
     assert decision.tool_calls[0].arguments["areas"] == ["Tân An"]
@@ -256,9 +235,56 @@ def test_fast_tool_route_uses_reliable_presenter_even_if_planner_requests_genera
     assert decision.generated is False
 
 
-def test_budget_follow_up_inherits_current_session_ward_and_property_type():
-    planner = PlannerSpy()
+def test_planner_is_first_intent_layer_for_simple_investor_question():
+    planner = PlannerSpy(
+        {
+            "depth": "fast",
+            "question_type": "deal_search",
+            "tool_calls": [
+                {
+                    "call_id": "planner-understood-deal-intent",
+                    "name": "search_deals",
+                    "arguments": {
+                        "wards": ["TÃ¢n An"],
+                        "property_types": ["dat_nen"],
+                        "mos_min_pct": 10.0,
+                        "limit": 10,
+                    },
+                }
+            ],
+            "generated": False,
+            "use_thinking": False,
+        }
+    )
 
+    decision = route_question(
+        AskQuestionRequest(question="đất Tân An giờ giá bao nhiêu"),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+
+    assert planner.call_count == 1
+    assert decision.question_type == "deal_search"
+    assert decision.tool_calls[0].name == "search_deals"
+    assert decision.tool_calls[0].arguments["wards"] == ["TÃ¢n An"]
+
+
+def test_invalid_planner_output_falls_back_to_deterministic_route():
+    planner = PlannerSpy({"depth": "fast"})
+
+    decision = route_question(
+        AskQuestionRequest(question="đất Tân An giờ bao nhiêu"),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+
+    assert planner.call_count == 1
+    assert decision.question_type == "area_market_estimate"
+    assert decision.tool_calls[0].name == "compare_areas"
+    assert decision.tool_calls[0].arguments["areas"] == ["Tân An"]
+
+
+def test_budget_follow_up_inherits_current_session_ward_and_property_type():
     decision = route_question(
         AskQuestionRequest(question="Giá tầm 3 tỷ đổ lại thôi"),
         AskContext(
@@ -269,10 +295,8 @@ def test_budget_follow_up_inherits_current_session_ward_and_property_type():
                 property_types=["dat_nen"],
             ),
         ),
-        planner=planner,
     )
 
-    assert planner.call_count == 0
     assert decision.question_type == "budget_match"
     assert decision.tool_calls[0].name == "match_budget"
     assert decision.tool_calls[0].arguments == {
@@ -284,8 +308,6 @@ def test_budget_follow_up_inherits_current_session_ward_and_property_type():
 
 
 def test_short_price_follow_up_inherits_current_session_ward():
-    planner = PlannerSpy()
-
     decision = route_question(
         AskQuestionRequest(question="Giá sao?"),
         AskContext(
@@ -293,10 +315,8 @@ def test_short_price_follow_up_inherits_current_session_ward():
             tier="admin",
             session_memory=SessionMemory(wards=["Tân An"]),
         ),
-        planner=planner,
     )
 
-    assert planner.call_count == 0
     assert decision.question_type == "area_market_estimate"
     assert decision.tool_calls[0].arguments["areas"] == ["Tân An"]
 
@@ -428,11 +448,9 @@ def test_official_price_explanation_stays_deterministic_for_simple_policy_questi
 
 
 def test_current_listing_explanation_uses_page_context_without_guessing():
-    planner = PlannerSpy()
     decision = route_question(
         AskQuestionRequest(question="Lô đất này tại sao được định giá 2,5 tỷ?"),
         make_context(tier="vip", listing_id=123),
-        planner=planner,
     )
 
     assert decision.depth is AskDepth.STANDARD
@@ -442,24 +460,18 @@ def test_current_listing_explanation_uses_page_context_without_guessing():
     ]
     assert all(call.arguments["listing_id"] == 123 for call in decision.tool_calls)
     assert decision.use_thinking is False
-    assert planner.call_count == 0
 
 
 def test_listing_id_followups_route_without_planner():
-    planner = PlannerSpy()
-
     explanation = route_question(
         AskQuestionRequest(question="Giải thích định giá tin #1061"),
         make_context(tier="admin"),
-        planner=planner,
     )
     comparison = route_question(
         AskQuestionRequest(question="So sánh tin #1061 với tin #52103"),
         make_context(tier="admin"),
-        planner=planner,
     )
 
-    assert planner.call_count == 0
     assert explanation.question_type == "valuation_explanation"
     assert [call.name for call in explanation.tool_calls] == [
         "get_listing_facts",
@@ -478,11 +490,9 @@ def test_listing_id_followups_route_without_planner():
 
 
 def test_current_listing_risk_question_uses_page_context_without_planner():
-    planner = PlannerSpy()
     decision = route_question(
         AskQuestionRequest(question="Tin này có rủi ro gì cần kiểm tra không?"),
         make_context(tier="vip", listing_id=123),
-        planner=planner,
     )
 
     assert decision.depth is AskDepth.FAST
@@ -490,7 +500,6 @@ def test_current_listing_risk_question_uses_page_context_without_planner():
     assert [call.name for call in decision.tool_calls] == ["inspect_listing_risks"]
     assert decision.tool_calls[0].arguments == {"listing_id": 123}
     assert decision.generated is False
-    assert planner.call_count == 0
 
 
 def test_exact_road_market_question_uses_deterministic_market_tool():
@@ -531,17 +540,14 @@ def test_exact_road_market_uses_ward_written_in_the_question():
     ],
 )
 def test_ambiguous_listing_or_road_requests_ask_one_clarification(question):
-    planner = PlannerSpy()
     decision = route_question(
         AskQuestionRequest(question=question),
         make_context(),
-        planner=planner,
     )
 
     assert decision.needs_clarification is True
     assert decision.clarification_question
     assert decision.tool_calls == []
-    assert planner.call_count == 0
 
 
 def test_explicit_deep_research_is_bounded_and_thinking_only_for_smart_tier():
