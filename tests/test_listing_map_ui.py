@@ -64,7 +64,7 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'data-state="collapsed"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-exact-labels-20260807") == 2
+    assert html.count("listing-map-exact-labels-z14-20260807") == 2
     assert "window.RADAR_MAP_VENDOR" in html
     assert not re.search(
         r"<(?:script|link)[^>]+(?:leaflet\.js|leaflet\.css)",

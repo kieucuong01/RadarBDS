@@ -176,11 +176,11 @@ def test_panel_render_model_omits_exact_locations_from_directory():
     }
 
 
-def test_exact_marker_label_model_uses_two_compact_rows_only_when_zoomed_in():
+def test_exact_marker_label_model_uses_two_compact_rows_at_overview_zoom():
     result = _run_node(
         "mapApi.exactMarkerLabelModel({"
         "precision:'exact',price_ty:1.8,area_m2:100,price_per_m2:18"
-        "},16)"
+        "},14)"
     )
 
     assert result == {
@@ -191,7 +191,7 @@ def test_exact_marker_label_model_uses_two_compact_rows_only_when_zoomed_in():
     assert _run_node(
         "mapApi.exactMarkerLabelModel({"
         "precision:'exact',price_ty:1.8,area_m2:100,price_per_m2:18"
-        "},15).visible"
+        "},13).visible"
     ) is False
     assert _run_node(
         "mapApi.exactMarkerLabelModel({"
