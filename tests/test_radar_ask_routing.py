@@ -420,6 +420,31 @@ def test_unmatched_question_calls_typed_planner_once():
     assert set(planner.calls[0][2]) == set(APPROVED_TOOL_NAMES)
 
 
+def test_planner_can_route_small_talk_without_database_tools():
+    planner = PlannerSpy(
+        {
+            "depth": "standard",
+            "question_type": "conversation",
+            "tool_calls": [],
+            "generated": True,
+            "use_thinking": True,
+        }
+    )
+
+    decision = route_question(
+        AskQuestionRequest(question="Xin chào"),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+
+    assert planner.call_count == 1
+    assert decision.depth is AskDepth.FAST
+    assert decision.question_type == "conversation"
+    assert decision.tool_calls == []
+    assert decision.generated is False
+    assert decision.use_thinking is False
+
+
 def test_unmatched_question_without_planner_fails_closed():
     with pytest.raises(PlannerRequired):
         route_question(

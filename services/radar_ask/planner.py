@@ -79,6 +79,20 @@ INVESTOR_INTENT_EXAMPLES = (
         ],
         "rule": "Câu hỏi số lượng lô giảm giá theo phường dùng rank_price_drop_areas với wards, không dùng compare_areas.",
     },
+    {
+        "question": "Xin chào",
+        "depth": "fast",
+        "question_type": "conversation",
+        "tool_calls": [],
+        "rule": "Câu chào hỏi/xã giao không dùng tool dữ liệu và không tự tạo nhận định thị trường.",
+    },
+    {
+        "question": "Bạn làm được gì?",
+        "depth": "fast",
+        "question_type": "help",
+        "tool_calls": [],
+        "rule": "Câu hỏi khả năng/hướng dẫn dùng route help không tool; server sẽ trả gợi ý câu hỏi Radar BDS.",
+    },
 )
 _PHONE = re.compile(r"(?<!\d)(?:\+?84|0)(?:[\s.()-]*\d){8,10}(?!\d)")
 _URL = re.compile(r"(?i)\b(?:https?://|www\.)[^\s\"'<>]+")
@@ -175,6 +189,8 @@ class DeepSeekTypedPlanner:
             "Voi cau hoi đời thường nhu ok xiu, re, co lo nao, dang xem, hay bao nhieu lo, "
             "hay doc intent_examples de chon typed tool dung y dinh dau tu. "
             "Neu hoi so luong lo giam gia theo phuong, dung rank_price_drop_areas voi wards. "
+            "Neu chi la chao hoi, cam on, hoi ban lam duoc gi, hoac ngoai pham vi BDS, "
+            "tra route conversation, help, hoac off_topic voi tool_calls rong va generated false. "
             "Khong tu dat use_thinking; server se quyet dinh."
         )
         user = json.dumps(

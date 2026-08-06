@@ -70,6 +70,7 @@ _DEEP_MARKERS = (
     "deep research",
     "dao sau",
 )
+CONVERSATION_QUESTION_TYPES = frozenset({"conversation", "help", "off_topic"})
 
 
 def _fold(value: str) -> str:
@@ -201,6 +202,19 @@ def _finalize(
 ) -> RouteDecision:
     if decision.needs_clarification:
         return decision
+    if decision.question_type in CONVERSATION_QUESTION_TYPES:
+        if decision.tool_calls:
+            raise RoutingPolicyViolation("conversation routes cannot include tool calls")
+        return RouteDecision(
+            depth=AskDepth.FAST,
+            question_type=decision.question_type,
+            tool_calls=[],
+            generated=False,
+            use_thinking=False,
+            needs_clarification=False,
+            clarification_question=None,
+            required_freshness_hours=None,
+        )
     depth = requested_depth or decision.depth
     generated = decision.generated or depth is AskDepth.DEEP
     if depth is AskDepth.DEEP:

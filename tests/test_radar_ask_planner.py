@@ -228,6 +228,7 @@ def test_planner_payload_includes_investor_intent_examples_for_common_vietnamese
             "property_types": example["tool_calls"][0]["arguments"].get("property_types"),
         }
         for example in examples
+        if example["tool_calls"]
     ]
     assert any(
         example["question"] == "Tân An có lô nào 500m2 rẻ k"
@@ -239,6 +240,18 @@ def test_planner_payload_includes_investor_intent_examples_for_common_vietnamese
         example["question"] == "hiện có bao nhiêu lô giảm giá ở Tân An"
         and example["tool_calls"][0]["name"] == "rank_price_drop_areas"
         and example["tool_calls"][0]["arguments"]["wards"] == ["Tân An"]
+        for example in examples
+    )
+    assert any(
+        example["question"] == "Xin chào"
+        and example["question_type"] == "conversation"
+        and example["tool_calls"] == []
+        for example in examples
+    )
+    assert any(
+        example["question"] == "Bạn làm được gì?"
+        and example["question_type"] == "help"
+        and example["tool_calls"] == []
         for example in examples
     )
 

@@ -54,6 +54,7 @@ from .validator import (
 
 MAX_SERIALIZED_EVIDENCE_CHARS = 40_000
 EMPTY_USAGE = ProviderUsage()
+CONVERSATION_QUESTION_TYPES = frozenset({"conversation", "help", "off_topic"})
 PROVIDER_PHONE_PATTERN = re.compile(
     r"(?<!\d)(?:\+?84|0)(?:[\s.()-]*\d){8,10}(?!\d)"
 )
@@ -234,6 +235,55 @@ def _deterministic_answer(
     now: datetime,
 ) -> AnswerEnvelope:
     return present_deterministic_answer(decision, bundle, now=now)
+
+
+def _conversation_answer(
+    decision: RouteDecision,
+    *,
+    now: datetime,
+) -> AnswerEnvelope:
+    if decision.question_type == "help":
+        direct = (
+            "Tôi có thể giúp anh hỏi nhanh dữ liệu BĐS trong Radar: giá rao theo phường/đường, "
+            "so sánh khu vực, tìm lô đáng kiểm tra, tín hiệu giảm giá, và giải thích vì sao một tin "
+            "được định giá như vậy. Ví dụ: “đất Tân An giờ giá bao nhiêu”, “Tân An có lô nào 500m2 rẻ không”, "
+            "hoặc “Phú Mỹ và Định Hòa khác nhau sao?”."
+        )
+        followups = [
+            "đất Tân An giờ giá bao nhiêu",
+            "Tân An có lô nào 500m2 rẻ không",
+            "khu nào có nhiều tín hiệu giảm giá hôm nay",
+        ]
+    elif decision.question_type == "off_topic":
+        direct = (
+            "Tôi tập trung vào dữ liệu và tín hiệu bất động sản trong Radar BDS. "
+            "Nếu anh hỏi về giá khu vực, so sánh phường, tìm deal, giảm giá hoặc rủi ro của một tin, tôi sẽ tra dữ liệu giúp anh."
+        )
+        followups = [
+            "Bạn làm được gì với dữ liệu Radar BDS?",
+            "đất Tân An giờ giá bao nhiêu",
+        ]
+    else:
+        direct = (
+            "Xin chào, tôi là Hỏi Radar BDS. Anh có thể hỏi tôi về giá rao theo khu vực, "
+            "so sánh phường, tìm lô đáng kiểm tra, hoặc tín hiệu giảm giá trong dữ liệu Radar."
+        )
+        followups = [
+            "Bạn làm được gì?",
+            "đất Tân An giờ giá bao nhiêu",
+            "ngân sách 2,5 tỷ nên xem phường nào",
+        ]
+    return AnswerEnvelope(
+        answered=True,
+        depth=AskDepth.FAST,
+        verdict=None,
+        direct_answer=direct,
+        claims=[],
+        source_cards=[],
+        suggested_followups=followups,
+        as_of=now,
+        dataset_version="radar-ask:conversation",
+    )
 
 
 def _redact_provider_value(value: Any) -> Any:
@@ -1299,6 +1349,29 @@ def run_question(
         return _run_result(
             clarifying,
             answer=answer if clarifying.status == RunStatus.CLARIFYING.value else None,
+        )
+
+    if decision.question_type in CONVERSATION_QUESTION_TYPES:
+        now = _utc_now(dependencies.clock)
+        answer = _conversation_answer(decision, now=now)
+        assert run.worker_id is not None
+        terminal = _finalize_sync_or_reconcile(
+            dependencies,
+            run,
+            reservation=reservation,
+            owner_id=run.worker_id,
+            target=RunStatus.COMPLETED.value,
+            outcome=RunOutcome.ANSWERED,
+            usage=EMPTY_USAGE,
+            answer=answer,
+            effective_depth=decision.depth.value,
+            route=decision.model_dump(mode="json"),
+            model=policy.model,
+            planner_usage=planned.usage if planned_route else None,
+        )
+        return _run_result(
+            terminal,
+            answer=answer if terminal.status == RunStatus.COMPLETED.value else None,
         )
 
     if decision.depth is AskDepth.DEEP:

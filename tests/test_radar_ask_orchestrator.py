@@ -532,7 +532,7 @@ def test_unmatched_question_claims_before_typed_planner_and_atomically_persists_
     )
 
     result = run_question(
-        AskQuestionRequest(question="Phu My dang co xu huong the nao?"),
+        AskQuestionRequest(question="Tôi nên bắt đầu phân tích từ đâu?"),
         make_context("vip"),
         dependencies=dependencies,
         idempotency_key="planned-standard-1",
@@ -546,6 +546,62 @@ def test_unmatched_question_claims_before_typed_planner_and_atomically_persists_
     assert repo.planning_finalizations[0]["usage"] == planner_usage
     assert limits.settlements == []
     assert repo.sync_finalizations[0]["usage"] == ProviderUsage(input_tokens=700, output_tokens=120)
+
+
+def test_planned_conversation_returns_natural_answer_without_database_or_answer_model():
+    planner_usage = ProviderUsage(input_tokens=120, output_tokens=20, cache_miss_input_tokens=120)
+
+    def planner(**_kwargs):
+        return PlannerResult(
+            decision=RouteDecision(
+                depth=AskDepth.STANDARD,
+                question_type="conversation",
+                tool_calls=[],
+                generated=True,
+                use_thinking=True,
+            ),
+            usage=planner_usage,
+        )
+
+    from services.radar_ask.routing import route_question
+
+    deps = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"free", "vip", "admin"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=FakeRepository(),
+        limits=FakeLimits(),
+        burst=FakeBurst(),
+        router=route_question,
+        registry=DEFAULT_TOOL_REGISTRY,
+        provider=FakeProvider(),
+        clock=lambda: NOW,
+        planner=planner,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Xin chào"),
+        make_context("admin"),
+        dependencies=deps,
+        idempotency_key="conversation-hello",
+    )
+
+    assert result.status is RunStatus.COMPLETED
+    assert result.answer is not None
+    assert result.answer.answered is True
+    assert "Xin chào" in result.answer.direct_answer
+    assert "chưa đủ dữ liệu" not in result.answer.direct_answer.lower()
+    assert deps.provider.requests == []
+    assert deps.repository.tools == []
+    assert deps.repository.evidence == []
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.ANSWERED.value
+    assert deps.repository.planning_finalizations[0]["usage"] == planner_usage
 
 
 def test_deterministic_fast_does_not_call_planner_or_reserve_provider_cost():
@@ -602,7 +658,7 @@ def test_planner_failure_records_known_usage_then_releases_without_answered_quot
     )
 
     result = run_question(
-        AskQuestionRequest(question="Phu My dang co xu huong the nao?"),
+        AskQuestionRequest(question="Tôi nên bắt đầu phân tích từ đâu?"),
         make_context("vip"),
         dependencies=dependencies,
         idempotency_key="planner-failure-cost",
@@ -1076,7 +1132,7 @@ def test_ambiguous_planner_finalize_reconciles_durable_route_without_replanning(
     )
 
     result = run_question(
-        AskQuestionRequest(question="Phu My hien co xu huong gi?"),
+        AskQuestionRequest(question="Tôi nên bắt đầu phân tích từ đâu?"),
         make_context("vip"),
         dependencies=dependencies,
         idempotency_key="planner-ambiguous-finalize",
@@ -1218,7 +1274,7 @@ def test_concurrent_idempotent_replay_observes_claimed_run_and_only_owner_plans(
         clock=lambda: NOW,
         planner=planner,
     )
-    request = AskQuestionRequest(question="Phu My hien co xu huong nao?")
+    request = AskQuestionRequest(question="Tôi nên bắt đầu phân tích từ đâu?")
 
     with ThreadPoolExecutor(max_workers=1) as pool:
         owner = pool.submit(
