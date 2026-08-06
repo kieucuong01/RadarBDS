@@ -209,7 +209,7 @@ def _finalize(
             depth=AskDepth.FAST,
             question_type=decision.question_type,
             tool_calls=[],
-            generated=bool(decision.generated),
+            generated=True,
             use_thinking=False,
             needs_clarification=False,
             clarification_question=None,

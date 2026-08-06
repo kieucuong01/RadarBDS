@@ -426,8 +426,8 @@ def test_planner_can_route_small_talk_without_database_tools():
             "depth": "standard",
             "question_type": "conversation",
             "tool_calls": [],
-            "generated": True,
-            "use_thinking": True,
+            "generated": False,
+            "use_thinking": False,
         }
     )
 
