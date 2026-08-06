@@ -955,14 +955,32 @@ def _execute_running_run(
                 merged,
                 now=_utc_now(dependencies.clock),
             )
-        answer = validate_answer(
-            candidate,
-            bundles,
-            tier=context.tier,
-            expected_depth=decision.depth,
-            now=_utc_now(dependencies.clock),
-            required_freshness_hours=decision.required_freshness_hours,
-        )
+        try:
+            answer = validate_answer(
+                candidate,
+                bundles,
+                tier=context.tier,
+                expected_depth=decision.depth,
+                now=_utc_now(dependencies.clock),
+                required_freshness_hours=decision.required_freshness_hours,
+            )
+        except AnswerValidationError:
+            deterministic_candidate = _deterministic_answer(
+                decision,
+                merged,
+                now=_utc_now(dependencies.clock),
+            )
+            if deterministic_candidate.answered:
+                answer = validate_answer(
+                    deterministic_candidate,
+                    bundles,
+                    tier=context.tier,
+                    expected_depth=decision.depth,
+                    now=_utc_now(dependencies.clock),
+                    required_freshness_hours=decision.required_freshness_hours,
+                )
+            else:
+                raise
     except BudgetHardStop:
         return _ExecutionResult(
             answer=None,

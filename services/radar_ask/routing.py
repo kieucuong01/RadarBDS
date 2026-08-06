@@ -116,6 +116,25 @@ def _budget_ty(folded: str) -> float | None:
     return value if value is not None and 0.1 <= value <= 500 else None
 
 
+def _listing_ids_from_question(question: str) -> list[int]:
+    """Extract explicit Radar listing IDs from user-visible follow-up text."""
+    matches = re.findall(
+        r"(?i)(?:#|tin\s*#?|mã\s*tin\s*#?|ma\s*tin\s*#?)\s*(\d{1,9})",
+        question,
+    )
+    result: list[int] = []
+    seen: set[int] = set()
+    for raw in matches:
+        listing_id = int(raw)
+        if listing_id <= 0 or listing_id in seen:
+            continue
+        seen.add(listing_id)
+        result.append(listing_id)
+        if len(result) >= 2:
+            break
+    return result
+
+
 def _max_ppm2(folded: str) -> float | None:
     value = _parse_number(
         re.search(r"(?:duoi|toi da|max)\s*(\d+(?:[,.]\d+)?)\s*trieu(?:\s*/\s*m2)?", folded)
@@ -314,6 +333,39 @@ def _deterministic_route(
     road_question = "duong" in folded and any(
         phrase in folded for phrase in ("gia", "bao nhieu", "hien tai", "mat tien")
     )
+    explicit_listing_ids = _listing_ids_from_question(question)
+
+    if explicit_listing_ids and any(
+        marker in folded for marker in ("so sanh", "khac nhau", "voi")
+    ):
+        return RouteDecision(
+            depth=AskDepth.STANDARD,
+            question_type="listing_comparison",
+            tool_calls=[
+                _call(f"valuation-{listing_id}", "explain_valuation", {"listing_id": listing_id})
+                for listing_id in explicit_listing_ids[:2]
+            ],
+            generated=True,
+            use_thinking=False,
+            required_freshness_hours=24,
+        )
+
+    if explicit_listing_ids and (
+        valuation_question
+        or any(marker in folded for marker in ("giai thich", "tai sao", "vi sao", "dinh gia"))
+    ):
+        listing_id = explicit_listing_ids[0]
+        return RouteDecision(
+            depth=AskDepth.STANDARD,
+            question_type="valuation_explanation",
+            tool_calls=[
+                _call("listing-facts", "get_listing_facts", {"listing_id": listing_id}),
+                _call("valuation-trace", "explain_valuation", {"listing_id": listing_id}),
+            ],
+            generated=True,
+            use_thinking=False,
+            required_freshness_hours=24,
+        )
 
     if has_placeholder and (valuation_question or road_question):
         return _clarification(question, requested_depth=requested_depth)

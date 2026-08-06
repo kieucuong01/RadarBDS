@@ -1804,6 +1804,30 @@ def test_malicious_or_unsupported_provider_answer_fails_closed(answer):
     assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.VALIDATION_FAILURE.value
 
 
+def test_supported_generated_route_falls_back_to_deterministic_answer_on_validation_failure():
+    decision = fast_decision().model_copy(
+        update={"depth": AskDepth.STANDARD, "generated": True}
+    )
+    provider = FakeProvider(
+        response=ProviderResponse(json_value=generated_answer(evidence_ids=["invented"]))
+    )
+    deps = make_deps(decision=decision, provider=provider)
+
+    result = run_question(
+        AskQuestionRequest(question="CÃ¡c phÆ°á»ng khÃ¡c giÃ¡ khoáº£ng nhiÃªu?"),
+        make_context("admin"),
+        dependencies=deps,
+        idempotency_key="deterministic-fallback-after-validation-failure",
+    )
+
+    assert result.status is RunStatus.COMPLETED
+    assert result.error_code is None
+    assert result.answer is not None
+    assert result.answer.source_cards[0].evidence_id == "market:phu-my:drop-count"
+    assert deps.provider.requests
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.ANSWERED.value
+
+
 def test_numeric_material_claim_requires_existing_evidence():
     answer = AnswerEnvelope(
         answered=True,

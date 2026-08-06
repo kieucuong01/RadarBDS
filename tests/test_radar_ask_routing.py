@@ -445,6 +445,38 @@ def test_current_listing_explanation_uses_page_context_without_guessing():
     assert planner.call_count == 0
 
 
+def test_listing_id_followups_route_without_planner():
+    planner = PlannerSpy()
+
+    explanation = route_question(
+        AskQuestionRequest(question="Giải thích định giá tin #1061"),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+    comparison = route_question(
+        AskQuestionRequest(question="So sánh tin #1061 với tin #52103"),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+
+    assert planner.call_count == 0
+    assert explanation.question_type == "valuation_explanation"
+    assert [call.name for call in explanation.tool_calls] == [
+        "get_listing_facts",
+        "explain_valuation",
+    ]
+    assert all(call.arguments["listing_id"] == 1061 for call in explanation.tool_calls)
+    assert comparison.question_type == "listing_comparison"
+    assert [call.name for call in comparison.tool_calls] == [
+        "explain_valuation",
+        "explain_valuation",
+    ]
+    assert [call.arguments["listing_id"] for call in comparison.tool_calls] == [
+        1061,
+        52103,
+    ]
+
+
 def test_current_listing_risk_question_uses_page_context_without_planner():
     planner = PlannerSpy()
     decision = route_question(
