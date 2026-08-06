@@ -529,7 +529,7 @@ def _validate_reference_ids(answer: AnswerEnvelope, by_id: Mapping[str, Evidence
     unknown = referenced - set(by_id)
     if unknown:
         raise AnswerValidationError("answer references unknown evidence")
-    if NUMERIC_PATTERN.search(answer.direct_answer) and not any(
+    if answer.answered and NUMERIC_PATTERN.search(answer.direct_answer) and not any(
         claim.evidence_ids for claim in answer.claims
     ):
         raise AnswerValidationError("numeric direct answers require cited claims")

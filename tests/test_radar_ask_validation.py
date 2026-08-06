@@ -96,6 +96,35 @@ def test_numeric_claim_must_match_a_cited_evidence_value():
         )
 
 
+def test_insufficient_answer_can_include_numeric_next_step_without_cited_claims():
+    candidate = AnswerEnvelope(
+        answered=False,
+        depth=AskDepth.FAST,
+        verdict=AskVerdict.INSUFFICIENT,
+        direct_answer=(
+            "Chưa đủ dữ liệu đáng tin cậy để trả lời câu hỏi này. "
+            "Thử hỏi theo khung 90 ngày hoặc bỏ bớt điều kiện loại tài sản."
+        ),
+        claims=[],
+        as_of=NOW,
+        dataset_version="test:1",
+    )
+
+    validated = validate_answer(
+        candidate,
+        [
+            bundle(
+                retrieval_quality=RetrievalQuality.INSUFFICIENT,
+                missing_requirements=["eligible_area_samples_not_found"],
+            )
+        ],
+        tier="admin",
+        expected_depth=AskDepth.FAST,
+    )
+
+    assert validated.answered is False
+
+
 def test_material_number_in_claim_text_is_checked_even_if_model_omits_numeric_field():
     candidate = answer(
         AnswerClaim(
