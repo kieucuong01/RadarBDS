@@ -93,6 +93,59 @@ INVESTOR_INTENT_EXAMPLES = (
         "tool_calls": [],
         "rule": "Câu hỏi khả năng/hướng dẫn dùng route help không tool; server sẽ trả gợi ý câu hỏi Radar BDS.",
     },
+    {
+        "question": "kiếm cho tôi lô đất ok xíu",
+        "depth": "fast",
+        "question_type": "clarification",
+        "tool_calls": [],
+        "needs_clarification": True,
+        "clarification_question": "Anh muốn tìm ở khu vực nào và ngân sách khoảng bao nhiêu?",
+        "rule": "Thiếu khu vực và ngân sách thì hỏi lại một câu ngắn như nhân viên tư vấn, không đoán bừa.",
+    },
+    {
+        "question": "có lô nào ngon không",
+        "depth": "fast",
+        "question_type": "clarification",
+        "tool_calls": [],
+        "needs_clarification": True,
+        "clarification_question": "Anh muốn tìm ở phường/khu vực nào, và ưu tiên rẻ hơn thị trường hay diện tích/pháp lý tốt?",
+        "rule": "Từ 'ngon' có nhiều nghĩa; nếu thiếu khu vực hoặc tiêu chí thì hỏi lại thay vì gọi tool chung chung.",
+    },
+    {
+        "question": "tôi muốn mua đất đầu tư",
+        "depth": "fast",
+        "question_type": "clarification",
+        "tool_calls": [],
+        "needs_clarification": True,
+        "clarification_question": "Anh dự kiến ngân sách bao nhiêu và muốn xem khu vực nào trước?",
+        "rule": "Nhu cầu đầu tư quá rộng cần làm rõ ngân sách và khu vực trước khi tra dữ liệu.",
+    },
+    {
+        "question": "giá đất sao rồi",
+        "depth": "fast",
+        "question_type": "clarification",
+        "tool_calls": [],
+        "needs_clarification": True,
+        "clarification_question": "Anh muốn xem giá đất ở phường hoặc tuyến đường nào?",
+        "rule": "Hỏi giá nhưng thiếu khu vực thì hỏi lại vị trí, không trả thiếu dữ liệu.",
+    },
+    {
+        "question": "Tân An có gì đáng xem",
+        "depth": "fast",
+        "question_type": "deal_search",
+        "tool_calls": [
+            {
+                "call_id": "example-ward-deal-search",
+                "name": "search_deals",
+                "arguments": {
+                    "wards": ["Tân An"],
+                    "mos_min_pct": 10.0,
+                    "limit": 10,
+                },
+            }
+        ],
+        "rule": "Có khu vực và ý định xem cơ hội thì gọi search_deals; không hỏi lại nếu đủ để tra lô đáng kiểm tra.",
+    },
 )
 _PHONE = re.compile(r"(?<!\d)(?:\+?84|0)(?:[\s.()-]*\d){8,10}(?!\d)")
 _URL = re.compile(r"(?i)\b(?:https?://|www\.)[^\s\"'<>]+")
@@ -191,6 +244,10 @@ class DeepSeekTypedPlanner:
             "Neu hoi so luong lo giam gia theo phuong, dung rank_price_drop_areas voi wards. "
             "Neu chi la chao hoi, cam on, hoi ban lam duoc gi, hoac ngoai pham vi BDS, "
             "tra route conversation, help, hoac off_topic voi tool_calls rong va generated false. "
+            "Neu cau BDS mo ho thieu khu vuc, ngan sach, dien tich, hoac muc tieu, "
+            "tra clarification voi needs_clarification true va mot cau hoi ngan, tu nhien; "
+            "khong tra 'khong du du lieu' khi thuc chat chi la thieu y dinh. "
+            "Neu co du khu vuc va y dinh co hoi/dang xem/ngon/re, goi tool phu hop thay vi hoi lai. "
             "Khong tu dat use_thinking; server se quyet dinh."
         )
         user = json.dumps(

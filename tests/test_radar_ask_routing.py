@@ -445,6 +445,64 @@ def test_planner_can_route_small_talk_without_database_tools():
     assert decision.use_thinking is False
 
 
+def test_consultant_style_vague_investor_question_uses_planner_clarification():
+    planner = PlannerSpy(
+        {
+            "depth": "fast",
+            "question_type": "clarification",
+            "tool_calls": [],
+            "generated": True,
+            "needs_clarification": True,
+            "clarification_question": "Anh muốn tìm ở khu vực nào và ngân sách khoảng bao nhiêu?",
+        }
+    )
+
+    decision = route_question(
+        AskQuestionRequest(question="kiếm cho tôi lô đất ok xíu"),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+
+    assert planner.call_count == 1
+    assert decision.needs_clarification is True
+    assert decision.question_type == "clarification"
+    assert decision.tool_calls == []
+    assert "khu vực" in (decision.clarification_question or "").lower()
+
+
+def test_planner_routes_ward_opportunity_question_to_deal_search():
+    planner = PlannerSpy(
+        {
+            "depth": "fast",
+            "question_type": "deal_search",
+            "tool_calls": [
+                {
+                    "call_id": "plan-ward-opportunity",
+                    "name": "search_deals",
+                    "arguments": {
+                        "wards": ["Tân An"],
+                        "mos_min_pct": 10.0,
+                        "limit": 10,
+                    },
+                }
+            ],
+            "generated": False,
+            "use_thinking": False,
+        }
+    )
+
+    decision = route_question(
+        AskQuestionRequest(question="Tân An có gì đáng xem"),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+
+    assert planner.call_count == 1
+    assert decision.question_type == "deal_search"
+    assert decision.tool_calls[0].name == "search_deals"
+    assert decision.tool_calls[0].arguments["wards"] == ["Tân An"]
+
+
 def test_unmatched_question_without_planner_fails_closed():
     with pytest.raises(PlannerRequired):
         route_question(

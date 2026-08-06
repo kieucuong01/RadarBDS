@@ -254,6 +254,20 @@ def test_planner_payload_includes_investor_intent_examples_for_common_vietnamese
         and example["tool_calls"] == []
         for example in examples
     )
+    assert any(
+        example["question"] == "kiếm cho tôi lô đất ok xíu"
+        and example["question_type"] == "clarification"
+        and example["needs_clarification"] is True
+        and "khu vực" in example["clarification_question"].lower()
+        for example in examples
+    )
+    assert any(
+        example["question"] == "Tân An có gì đáng xem"
+        and example["question_type"] == "deal_search"
+        and example["tool_calls"][0]["name"] == "search_deals"
+        and example["tool_calls"][0]["arguments"]["wards"] == ["Tân An"]
+        for example in examples
+    )
 
 
 @pytest.mark.parametrize(

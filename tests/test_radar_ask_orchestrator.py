@@ -604,6 +604,64 @@ def test_planned_conversation_returns_natural_answer_without_database_or_answer_
     assert deps.repository.planning_finalizations[0]["usage"] == planner_usage
 
 
+def test_planned_consultant_clarification_asks_one_followup_without_database_or_answer_model():
+    planner_usage = ProviderUsage(input_tokens=180, output_tokens=40, cache_miss_input_tokens=180)
+
+    def planner(**_kwargs):
+        return PlannerResult(
+            decision=RouteDecision(
+                depth=AskDepth.FAST,
+                question_type="clarification",
+                tool_calls=[],
+                generated=True,
+                needs_clarification=True,
+                clarification_question=(
+                    "Anh muốn tìm ở khu vực nào và ngân sách khoảng bao nhiêu?"
+                ),
+            ),
+            usage=planner_usage,
+        )
+
+    from services.radar_ask.routing import route_question
+
+    deps = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"free", "vip", "admin"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=FakeRepository(),
+        limits=FakeLimits(),
+        burst=FakeBurst(),
+        router=route_question,
+        registry=DEFAULT_TOOL_REGISTRY,
+        provider=FakeProvider(),
+        clock=lambda: NOW,
+        planner=planner,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="kiếm cho tôi lô đất ok xíu"),
+        make_context("admin"),
+        dependencies=deps,
+        idempotency_key="consultant-clarify",
+    )
+
+    assert result.status is RunStatus.CLARIFYING
+    assert result.answer is not None
+    assert result.answer.direct_answer == "Anh muốn tìm ở khu vực nào và ngân sách khoảng bao nhiêu?"
+    assert "chưa đủ dữ liệu" not in result.answer.direct_answer.lower()
+    assert deps.provider.requests == []
+    assert deps.repository.tools == []
+    assert deps.repository.evidence == []
+    assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.CLARIFICATION.value
+    assert deps.repository.sync_finalizations[0]["planner_usage"] == planner_usage
+
+
 def test_deterministic_fast_does_not_call_planner_or_reserve_provider_cost():
     calls = []
 
