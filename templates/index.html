@@ -75,7 +75,7 @@
 
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-scroll-lock-20260802' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=content-hubs-20260729' %}
-  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=area-scope-modal-20260806' %}
+  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=area-scope-city-groups-20260806' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
@@ -586,16 +586,25 @@
               <h2 id="areaScopeChooserTitle">Bạn đang săn khu nào?</h2>
               <p>Chọn một hoặc vài phường để Radar BDS chỉ mở các signal đúng phạm vi bạn quan tâm.</p>
             </div>
-            <div class="area-scope-presets" aria-label="Gợi ý khu vực">
-              <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_tan_an_west')">Tân An phía Tây</button>
-              <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_central')">Trung tâm TDM</button>
-              <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_north_industrial')">Phú Tân - Hòa Phú</button>
-              <button type="button" class="area-scope-preset" onclick="selectAreaPreset('ben_cat_my_phuoc')">Mỹ Phước</button>
-              <button type="button" class="area-scope-preset" onclick="selectAreaPreset('ben_cat_outer')">Bến Cát ngoài</button>
+            {% set area_scope_cities = [('THỦ DẦU MỘT', 'Thủ Dầu Một'), ('BẾN CÁT', 'Bến Cát')] %}
+            <div class="area-scope-city-choices" id="areaScopeCityChoices" aria-label="Chọn khu vực săn deal">
+              {% for city_value, city_label in area_scope_cities %}
+                {% set city_wards = wards_by_city.get(city_value, []) %}
+                {% if city_wards %}
+                  <section class="area-scope-city-group" data-area-scope-city="{{ city_value }}">
+                    <button type="button" class="area-scope-city-all" data-city="{{ city_value }}" onclick="selectAreaCityAll(this.dataset.city)">Xem toàn {{ city_label }}</button>
+                    <div class="area-scope-ward-grid" aria-label="Chọn phường {{ city_label }}">
+                      {% for ward in city_wards %}
+                        <button type="button" class="area-scope-ward-chip" data-city="{{ city_value }}" data-ward="{{ ward }}" aria-pressed="false" onclick="toggleAreaScopeWard(this)">{{ ward }}</button>
+                      {% endfor %}
+                    </div>
+                  </section>
+                {% endif %}
+              {% endfor %}
             </div>
             <div class="area-scope-actions">
-              <button type="button" class="area-scope-all" onclick="selectCurrentCityAllAreaScope()">Xem toàn Thủ Dầu Một</button>
-              <button type="button" class="area-scope-filter" onclick="openAreaScopeFilterSheet()">Chọn phường trong bộ lọc</button>
+              <button type="button" class="area-scope-apply" id="areaScopeApplySelection" onclick="applyAreaScopeWardSelection()" disabled>Áp dụng khu vực</button>
+              <button type="button" class="area-scope-filter" onclick="openAreaScopeFilterSheet()">Mở bộ lọc nâng cao</button>
             </div>
           </section>
         </div>
@@ -1465,8 +1474,8 @@
   <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-scroll-lock-20260802"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=area-scope-modal-20260806"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=area-scope-modal-20260806"></script>
+  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=area-scope-city-groups-20260806"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=area-scope-city-groups-20260806"></script>
 </body>
 
 </html>

@@ -7,6 +7,7 @@
 
   const STORAGE_KEY = 'radar_area_scope_v1';
   const VALID_MODES = new Set(['custom', 'preset', 'city_all']);
+  let areaScopeDraft = null;
 
   const PRESET_SCOPES = Object.freeze([
     Object.freeze({
@@ -183,6 +184,56 @@
     return validateScope({ version: 1, city, wards: checked, mode }, wardsByCity);
   }
 
+  function nextDraftWardScope(current, city, ward, wardsByCity) {
+    const resolvedCity = resolveCity(city, wardsByCity);
+    const selectedWard = String(ward || '').trim();
+    if (!resolvedCity || !selectedWard || !(wardsByCity[resolvedCity] || []).includes(selectedWard)) return null;
+    const base = validateScope(current, wardsByCity);
+    const currentWards = base && base.city === resolvedCity && base.mode !== 'city_all'
+      ? uniqueValues(base.wards)
+      : [];
+    const nextWards = currentWards.includes(selectedWard)
+      ? currentWards.filter((item) => item !== selectedWard)
+      : currentWards.concat(selectedWard);
+    if (!nextWards.length) return null;
+    return validateScope({
+      version: 1,
+      city: resolvedCity,
+      wards: nextWards,
+      mode: 'custom',
+    }, wardsByCity);
+  }
+
+  function setAreaScopeDraft(scope, doc) {
+    areaScopeDraft = validateScope(scope, root.INITIAL_WARDS_BY_CITY || {});
+    renderAreaScopeDraft(doc || root.document);
+    return areaScopeDraft;
+  }
+
+  function renderAreaScopeDraft(doc) {
+    const documentRef = doc || root.document;
+    if (!documentRef || typeof documentRef.querySelectorAll !== 'function') return;
+    const selectedCity = areaScopeDraft && areaScopeDraft.city;
+    const selectedWards = new Set(areaScopeDraft && areaScopeDraft.mode !== 'city_all' ? areaScopeDraft.wards : []);
+    documentRef.querySelectorAll('.area-scope-city-group').forEach((group) => {
+      const groupCity = group.dataset ? group.dataset.areaScopeCity : '';
+      group.classList.toggle('is-active', Boolean(selectedCity && groupCity === selectedCity));
+    });
+    documentRef.querySelectorAll('.area-scope-ward-chip').forEach((chip) => {
+      const chipCity = chip.dataset ? chip.dataset.city : '';
+      const chipWard = chip.dataset ? chip.dataset.ward : '';
+      const selected = Boolean(selectedCity && chipCity === selectedCity && selectedWards.has(chipWard));
+      chip.classList.toggle('is-selected', selected);
+      chip.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+    const applyBtn = documentRef.getElementById('areaScopeApplySelection');
+    if (applyBtn) {
+      const enabled = Boolean(areaScopeDraft && areaScopeDraft.mode !== 'city_all' && areaScopeDraft.wards.length);
+      applyBtn.disabled = !enabled;
+      applyBtn.textContent = enabled ? `Áp dụng: ${scopeLabel(areaScopeDraft)}` : 'Áp dụng khu vực';
+    }
+  }
+
   function setCityControls(scope, doc) {
     const documentRef = doc || root.document;
     if (!documentRef || !scope) return;
@@ -201,6 +252,7 @@
     if (typeof updateWardFilters === 'function') {
       updateWardFilters(wardsByCity, selectedWards, { preserveScroll: false, preserveSearch: false });
     }
+    setAreaScopeDraft(scope, documentRef);
   }
 
   function updateScopeUi(scope, doc) {
@@ -230,10 +282,13 @@
     if (!documentRef) return;
     const chooser = documentRef.getElementById('areaScopeChooser');
     const bar = documentRef.getElementById('areaScopeBar');
+    const draft = selectedScopeFromControls(documentRef, root.INITIAL_WARDS_BY_CITY || {});
+    areaScopeDraft = draft && draft.mode !== 'city_all' ? draft : null;
     if (chooser) {
       chooser.hidden = false;
       if (documentRef.body) documentRef.body.classList.add('area-scope-modal-open');
-      const focusTarget = chooser.querySelector('.area-scope-preset, .area-scope-all, .area-scope-filter');
+      renderAreaScopeDraft(documentRef);
+      const focusTarget = chooser.querySelector('.area-scope-city-all, .area-scope-ward-chip, .area-scope-filter');
       if (focusTarget && typeof focusTarget.focus === 'function') focusTarget.focus();
     }
     if (bar) bar.hidden = true;
@@ -289,6 +344,34 @@
     }, { persist: true, updateUrl: true, apply: true });
   };
 
+  root.selectAreaCityAll = function selectAreaCityAll(city) {
+    const resolvedCity = resolveCity(city, root.INITIAL_WARDS_BY_CITY || {});
+    if (!resolvedCity) return null;
+    return applyDashboardScope({
+      version: 1,
+      city: resolvedCity,
+      wards: [],
+      mode: 'city_all',
+    }, { persist: true, updateUrl: true, apply: true });
+  };
+
+  root.toggleAreaScopeWard = function toggleAreaScopeWard(button) {
+    if (!button || !button.dataset) return null;
+    areaScopeDraft = nextDraftWardScope(
+      areaScopeDraft,
+      button.dataset.city,
+      button.dataset.ward,
+      root.INITIAL_WARDS_BY_CITY || {}
+    );
+    renderAreaScopeDraft(root.document);
+    return areaScopeDraft;
+  };
+
+  root.applyAreaScopeWardSelection = function applyAreaScopeWardSelection() {
+    if (!areaScopeDraft) return null;
+    return applyDashboardScope(areaScopeDraft, { persist: true, updateUrl: true, apply: true });
+  };
+
   root.openAreaScopeChooser = function openAreaScopeChooser() {
     showChooser(root.document);
   };
@@ -321,6 +404,7 @@
     applyScopeToParams,
     clearStoredScope,
     hideChooser,
+    nextDraftWardScope,
     readStoredScope,
     replaceUrlWithScope,
     saveScope,

@@ -93,6 +93,65 @@ assert.deepEqual(plain(restored), {
   updatedAt: '2026-08-06T10:00:00.000Z',
 });
 
+const tdmCity = Object.keys(wardsByCity)[0];
+const benCatCity = Object.keys(wardsByCity)[1];
+const tanAnWard = wardsByCity[tdmCity][0];
+const phuTanWard = wardsByCity[tdmCity][1];
+const myPhuocWard = wardsByCity[benCatCity][0];
+
+assert.deepEqual(plain(api.nextDraftWardScope(null, tdmCity, tanAnWard, wardsByCity)), {
+  version: 1,
+  city: tdmCity,
+  wards: [tanAnWard],
+  mode: 'custom',
+  label: tanAnWard,
+});
+
+assert.deepEqual(plain(api.nextDraftWardScope({
+  version: 1,
+  city: tdmCity,
+  wards: [tanAnWard],
+  mode: 'custom',
+}, tdmCity, phuTanWard, wardsByCity)), {
+  version: 1,
+  city: tdmCity,
+  wards: [tanAnWard, phuTanWard],
+  mode: 'custom',
+  label: `${tanAnWard} + ${phuTanWard}`,
+});
+
+assert.deepEqual(plain(api.nextDraftWardScope({
+  version: 1,
+  city: tdmCity,
+  wards: [tanAnWard, phuTanWard],
+  mode: 'custom',
+}, tdmCity, tanAnWard, wardsByCity)), {
+  version: 1,
+  city: tdmCity,
+  wards: [phuTanWard],
+  mode: 'custom',
+  label: phuTanWard,
+});
+
+assert.deepEqual(plain(api.nextDraftWardScope({
+  version: 1,
+  city: tdmCity,
+  wards: [tanAnWard],
+  mode: 'custom',
+}, benCatCity, myPhuocWard, wardsByCity)), {
+  version: 1,
+  city: benCatCity,
+  wards: [myPhuocWard],
+  mode: 'custom',
+  label: myPhuocWard,
+});
+
+assert.equal(api.nextDraftWardScope({
+  version: 1,
+  city: tdmCity,
+  wards: [tanAnWard],
+  mode: 'custom',
+}, tdmCity, tanAnWard, wardsByCity), null);
 const params = new URLSearchParams('tab=signals&q=ql13&city=B%E1%BA%BEN+C%C3%81T');
 api.applyScopeToParams(params, {
   version: 1,

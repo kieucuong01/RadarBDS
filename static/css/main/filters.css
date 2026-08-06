@@ -119,14 +119,26 @@ body.area-scope-modal-open {
   text-transform: uppercase;
 }
 
-.area-scope-presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.area-scope-city-choices {
+  display: grid;
+  gap: 12px;
 }
 
-.area-scope-preset,
-.area-scope-all,
+.area-scope-city-group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.area-scope-ward-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.area-scope-city-all,
+.area-scope-ward-chip,
+.area-scope-apply,
 .area-scope-filter,
 .area-scope-bar-actions button {
   border: 1px solid var(--border);
@@ -140,12 +152,36 @@ body.area-scope-modal-open {
   padding: 8px 10px;
 }
 
-.area-scope-preset:hover,
-.area-scope-all:hover,
+.area-scope-city-all:hover,
+.area-scope-ward-chip:hover,
+.area-scope-apply:hover:not(:disabled),
 .area-scope-filter:hover,
 .area-scope-bar-actions button:hover {
   border-color: var(--primary);
   color: var(--primary);
+}
+
+.area-scope-city-all {
+  width: fit-content;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.area-scope-city-all:hover {
+  color: #fff;
+  filter: brightness(1.04);
+}
+
+.area-scope-ward-chip {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.area-scope-ward-chip.is-selected,
+.area-scope-ward-chip[aria-pressed="true"] {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--accent);
 }
 
 .area-scope-actions {
@@ -154,15 +190,21 @@ body.area-scope-modal-open {
   grid-column: 1 / -1;
 }
 
-.area-scope-all {
+.area-scope-apply {
   background: var(--primary);
   border-color: var(--primary);
   color: #fff;
 }
 
-.area-scope-all:hover {
+.area-scope-apply:hover {
   color: #fff;
   filter: brightness(1.04);
+}
+
+.area-scope-apply:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  filter: grayscale(0.35);
 }
 
 .area-scope-bar {
