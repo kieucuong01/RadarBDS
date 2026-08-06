@@ -228,7 +228,7 @@ def extract_price(text: str) -> Optional[float]:
     # Folded Vietnamese: "X ty Y" covers real Unicode "X tỷ Y" even when
     # legacy source literals below are mojibake.
     m = re.search(
-        rf'(?<![\d,.])([\d]+[,.]?[\d]*)\s*(?:ty|ti)\s*([\d]+)'
+        rf'(?<![\d,.])(\d+)\s*(?:ty|ti)\s*([\d]+)'
         rf'(?!\d){not_area_after_rest}',
         t_fold,
     )
@@ -237,7 +237,7 @@ def extract_price(text: str) -> Optional[float]:
 
     # Pattern unicode: "X tỷ Y" hoặc "XtỷY" (2 tỷ 550=2.55, 1 tỷ 2=1.2, 2tỷ8=2.8)
     m = re.search(
-        r'(?<![\d,.])([\d]+[,.]?[\d]*)\s*tỷ\s*([\d]+)'
+        r'(?<![\d,.])(\d+)\s*tỷ\s*([\d]+)'
         r'(?!\d)(?!\s*(?:m\s*(?:vuông|vuong)|m[²2]|mét\s*vuông|met\s*vuong)\b)',
         t,
     )

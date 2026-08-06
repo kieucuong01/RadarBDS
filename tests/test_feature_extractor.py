@@ -112,6 +112,43 @@ def test_extract_price_preserves_leading_zero_fraction_and_ignores_area_after_pr
     assert extract_price("Chỉ hơn 2 tỷ là sở hữu lô đất đẹp") is None
 
 
+def test_extract_price_does_not_append_area_after_decimal_ty():
+    text = (
+        "B\u00e1n \u0111\u1ea5t 598.2m\u00b2 Ph\u01b0\u1eddng Ph\u00fa An\n"
+        "2.55 t\u1ef7\n"
+        "598.2m\u00b2"
+    )
+
+    assert extract_price(text) == 2.55
+    parsed = parse_facebook_post(text)
+    assert parsed["price_total"] == 2.55
+    assert parsed["price_per_m2"] == 4.26
+
+
+def test_normalize_guland_keeps_structured_decimal_ty_before_area_line():
+    rec = normalize_record({
+        "source": "guland",
+        "post_id": "1766477",
+        "url": "https://guland.vn/post/ban-dat-5982m2-phuong-phu-an-1766477",
+        "title": "B\u00e1n \u0111\u1ea5t 598.2m\u00b2 Ph\u01b0\u1eddng Ph\u00fa An",
+        "description": (
+            "B\u00e1n \u0111\u1ea5t 598.2m\u00b2 Ph\u01b0\u1eddng Ph\u00fa An\n"
+            "2.55 t\u1ef7\n"
+            "598.2m\u00b2\n"
+            "Ph\u01b0\u1eddng T\u00e2n An, Th\u00e0nh ph\u1ed1 Th\u1ee7 D\u1ea7u M\u1ed9t"
+        ),
+        "price_ty": 2.55,
+        "area_m2": 598.2,
+        "price_per_m2": 4.26,
+        "province": "B\u00ecnh D\u01b0\u01a1ng",
+        "district": "Th\u1ee7 D\u1ea7u M\u1ed9t",
+        "ward": "T\u00e2n An",
+    })
+
+    assert rec["price_ty"] == 2.55
+    assert rec["price_per_m2"] == 4.263
+
+
 def test_normalize_facebook_ambiguous_masked_price_clears_structured_price():
     rec = normalize_record({
         "source": "facebook",
