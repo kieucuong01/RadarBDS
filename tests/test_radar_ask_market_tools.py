@@ -448,6 +448,28 @@ def test_smart_tiers_can_explicitly_inspect_10_to_14_9_mos_with_warning(tier):
     assert "below_public_mos_threshold_caution" in bundle.warnings
 
 
+def test_search_deals_can_filter_by_ward_and_area_window():
+    connection = FakeMarketConnection()
+    connection.deal_rows[1]["ward"] = "Tân An"
+    connection.deal_rows[1]["area_m2"] = 500
+    connection.deal_rows[2]["ward"] = "Tân An"
+    connection.deal_rows[2]["area_m2"] = 320
+
+    bundle = search_deals(
+        args=SearchDealsArgs(
+            wards=["Tân An"],
+            min_area_m2=450,
+            max_area_m2=550,
+            mos_min_pct=10,
+        ),
+        context=context(connection, tier="admin"),
+    )
+
+    refs = [item.value["listing_ref"] for item in bundle.items]
+    assert refs == ["radar-listing:702"]
+    assert bundle.items[0].value["area_m2"] == 500.0
+
+
 def test_rank_price_drop_areas_uses_actionable_rows_and_counts_unique_listings():
     connection = FakeMarketConnection()
     bundle = rank_price_drop_areas(
@@ -463,6 +485,18 @@ def test_rank_price_drop_areas_uses_actionable_rows_and_counts_unique_listings()
     assert "mos_pct>=15" in normalized
     assert "publisher_visible_public" in normalized
     assert "group by ward" in normalized
+
+
+def test_rank_price_drop_areas_can_filter_to_one_ward():
+    connection = FakeMarketConnection()
+    bundle = rank_price_drop_areas(
+        args=RankPriceDropAreasArgs(window_days=7, wards=["Định Hòa"]),
+        context=context(connection),
+    )
+
+    assert bundle.calculations["wards"] == ["Định Hòa"]
+    assert [area["ward"] for area in bundle.calculations["areas"]] == ["Định Hòa"]
+    assert bundle.calculations["areas"][0]["signal_count"] == 2
 
 
 def test_inspect_listing_risks_separates_blockers_from_confidence_warning():

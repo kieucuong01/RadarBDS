@@ -188,6 +188,7 @@ def test_deal_search_lists_matches_and_cites_each_exact_listing():
         "fair_price_per_m2_million": 22,
         "mos_pct": 18,
         "signal_score": 80,
+        "area_m2": 80,
     }
     second = {
         "listing_ref": "radar-listing:702",
@@ -225,6 +226,7 @@ def test_deal_search_lists_matches_and_cites_each_exact_listing():
     assert "2 tin đáng kiểm tra" in answer.direct_answer
     assert "#701" in answer.direct_answer
     assert "#702" in answer.direct_answer
+    assert "80 m²" in answer.direct_answer
     assert [claim.evidence_ids for claim in answer.claims] == [["deal:701"], ["deal:702"]]
 
 
@@ -291,6 +293,28 @@ def test_price_drop_answer_ranks_ward_aggregates():
         ["drop:phu-my"],
         ["drop:dinh-hoa"],
     ]
+
+
+def test_price_drop_answer_for_single_ward_answers_count_not_market_price():
+    areas = [
+        {"ward": "Tân An", "signal_count": 2, "median_price_drop_pct": 6, "median_mos_pct": 19},
+    ]
+    bundle = EvidenceBundle(
+        question_snapshot="hiện có bao nhiêu lô giảm giá ở Tân An",
+        calculations={"window_days": 7, "areas": areas, "wards": ["Tân An"]},
+        items=[
+            item("drop:tan-an", source_ref="price-drop-area:Tân An:7d", value=areas[0], sample_size=2),
+        ],
+    )
+
+    answer = validated(
+        present_deterministic_answer(decision("price_drop_ranking"), bundle, now=NOW),
+        bundle,
+    )
+
+    assert answer.direct_answer.startswith("Trong 7 ngày qua, Tân An có 2 tín hiệu giảm giá")
+    assert "giá rao trung vị" not in answer.direct_answer.lower()
+    assert answer.claims[0].evidence_ids == ["drop:tan-an"]
 
 
 def test_road_market_answer_labels_exact_road_sample():

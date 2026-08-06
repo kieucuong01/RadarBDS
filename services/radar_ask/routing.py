@@ -122,6 +122,11 @@ def _max_ppm2(folded: str) -> float | None:
     return value if value is not None and 0.1 <= value <= 1_000 else None
 
 
+def _target_area_m2(folded: str) -> float | None:
+    value = _parse_number(re.search(r"(\d+(?:[,.]\d+)?)\s*m2\b", folded))
+    return value if value is not None and 5 <= value <= 100_000 else None
+
+
 def _property_type(folded: str) -> str | None:
     if "dat nen" in folded:
         return "dat_nen"
@@ -338,9 +343,10 @@ def _deterministic_route(
 
     if (
         len(wards) == 1
+        and "giam gia" not in folded
         and "bang gia dat" not in folded
-        and "gia" in folded
-        and any(marker in folded for marker in ("bao nhieu", "hien tai", "khoang", "mat bang"))
+        and ("gia" in folded or "dat" in folded)
+        and any(marker in folded for marker in ("bao nhieu", "hien tai", "khoang", "mat bang", "gio"))
     ):
         return _base_decision(
             question_type="area_market_estimate",
@@ -355,6 +361,38 @@ def _deterministic_route(
                     },
                 )
             ],
+            generated=False,
+            freshness_hours=24,
+        )
+
+    deal_intent_markers = (
+        "kiem",
+        "tim",
+        "lo nao",
+        "co lo",
+        "re",
+        "ok",
+        "dang kiem tra",
+        "deal",
+    )
+    if len(wards) == 1 and "giam gia" not in folded and any(
+        marker in folded for marker in deal_intent_markers
+    ):
+        arguments: dict[str, Any] = {
+            "wards": wards,
+            "mos_min_pct": 10.0,
+            "limit": 10,
+        }
+        property_type = _property_type(folded)
+        if property_type:
+            arguments["property_types"] = [property_type]
+        target_area = _target_area_m2(folded)
+        if target_area is not None:
+            arguments["min_area_m2"] = round(target_area * 0.9, 2)
+            arguments["max_area_m2"] = round(target_area * 1.1, 2)
+        return _base_decision(
+            question_type="deal_search",
+            calls=[_call("deal-search", "search_deals", arguments)],
             generated=False,
             freshness_hours=24,
         )
@@ -394,15 +432,21 @@ def _deterministic_route(
             freshness_hours=24,
         )
 
-    if "giam gia" in folded and any(marker in folded for marker in ("khu nao", "nhieu", "xep hang")):
+    if "giam gia" in folded and any(
+        marker in folded
+        for marker in ("khu nao", "nhieu", "xep hang", "bao nhieu", "may lo", "co bao nhieu")
+    ):
         window_days = 1 if "hom nay" in folded else 7
+        arguments: dict[str, Any] = {"window_days": window_days, "limit": 10}
+        if len(wards) == 1:
+            arguments["wards"] = wards
         return _base_decision(
             question_type="price_drop_ranking",
             calls=[
                 _call(
                     "price-drop-ranking",
                     "rank_price_drop_areas",
-                    {"window_days": window_days, "limit": 10},
+                    arguments,
                 )
             ],
             generated=False,

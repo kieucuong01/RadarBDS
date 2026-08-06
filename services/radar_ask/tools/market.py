@@ -684,6 +684,12 @@ def search_deals(*, args: SearchDealsArgs, context: ToolContext):
     if args.max_budget_ty is not None:
         sql_filters.append("price_ty<=%s")
         sql_params.append(float(args.max_budget_ty))
+    if args.min_area_m2 is not None:
+        sql_filters.append("area_m2>=%s")
+        sql_params.append(float(args.min_area_m2))
+    if args.max_area_m2 is not None:
+        sql_filters.append("area_m2<=%s")
+        sql_params.append(float(args.max_area_m2))
     if args.wards:
         sql_filters.append(f"ward IN ({','.join(['%s'] * len(args.wards))})")
         sql_params.extend(args.wards)
@@ -726,6 +732,15 @@ def search_deals(*, args: SearchDealsArgs, context: ToolContext):
             continue
         if args.max_budget_ty is not None and (
             price is None or price > float(args.max_budget_ty)
+        ):
+            continue
+        area = _number(row.get("area_m2"))
+        if args.min_area_m2 is not None and (
+            area is None or area < float(args.min_area_m2)
+        ):
+            continue
+        if args.max_area_m2 is not None and (
+            area is None or area > float(args.max_area_m2)
         ):
             continue
         if args.wards and row.get("ward") not in args.wards:
@@ -783,6 +798,11 @@ def search_deals(*, args: SearchDealsArgs, context: ToolContext):
 def rank_price_drop_areas(*, args: RankPriceDropAreasArgs, context: ToolContext):
     question = f"rank price drop areas {args.window_days} days"
     settings = _settings()
+    ward_filter_sql = ""
+    ward_filter_params: list[Any] = []
+    if args.wards:
+        ward_filter_sql = f"AND ward IN ({','.join(['%s'] * len(args.wards))})"
+        ward_filter_params.extend(args.wards)
     with _read_context(context) as conn:
         _configure_timeout(conn, settings)
         visibility_sql = (
@@ -804,6 +824,7 @@ def rank_price_drop_areas(*, args: RankPriceDropAreasArgs, context: ToolContext)
             WHERE is_actionable AND price_dropped
               AND mos_pct>=15
               {visibility_sql}
+              {ward_filter_sql}
               AND price_updated_at::timestamptz >= NOW() - (%s * INTERVAL '1 day')
             GROUP BY ward
             ORDER BY signal_count DESC,
@@ -812,9 +833,13 @@ def rank_price_drop_areas(*, args: RankPriceDropAreasArgs, context: ToolContext)
                      ward
             LIMIT %s
             """,
-            (args.window_days, min(args.limit, settings.evidence_row_limit)),
+            (*ward_filter_params, args.window_days, min(args.limit, settings.evidence_row_limit)),
         )
-        aggregate_rows = _rows(cursor)
+        aggregate_rows = [
+            row
+            for row in _rows(cursor)
+            if not args.wards or row.get("ward") in set(args.wards)
+        ]
     areas = [
         {
             "ward": str(row.get("ward") or "unknown"),
@@ -831,6 +856,7 @@ def rank_price_drop_areas(*, args: RankPriceDropAreasArgs, context: ToolContext)
         )
         .calculate(
             window_days=args.window_days,
+            wards=list(args.wards),
             actionable_gate="signal_card_read_model.is_actionable_from_shared_signal_quality",
             areas=areas,
         )

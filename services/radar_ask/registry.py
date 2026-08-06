@@ -144,6 +144,16 @@ class SearchDealsArgs(SafeToolArgs):
         gt=Decimal("0"),
         le=Decimal("500"),
     )
+    min_area_m2: Decimal | None = Field(
+        default=None,
+        gt=Decimal("0"),
+        le=Decimal("100000"),
+    )
+    max_area_m2: Decimal | None = Field(
+        default=None,
+        gt=Decimal("0"),
+        le=Decimal("100000"),
+    )
     wards: list[str] = Field(default_factory=list, max_length=10)
     property_types: list[str] = Field(default_factory=list, max_length=5)
     mos_min_pct: Decimal = Field(default=Decimal("15"), ge=Decimal("10"), le=Decimal("80"))
@@ -152,6 +162,7 @@ class SearchDealsArgs(SafeToolArgs):
 
 class RankPriceDropAreasArgs(SafeToolArgs):
     window_days: int = Field(default=1, ge=1, le=30)
+    wards: list[str] = Field(default_factory=list, max_length=10)
     limit: int = Field(default=10, ge=1, le=20)
 
 

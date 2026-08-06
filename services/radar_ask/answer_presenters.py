@@ -391,9 +391,11 @@ def _present_deal_search(
         listing_ref = str(value.get("listing_ref") or "")
         listing_id = listing_ref.rsplit(":", 1)[-1] if ":" in listing_ref else "?"
         ward = str(value.get("ward") or "chưa rõ phường")
+        area = _number(value.get("area_m2"))
+        area_text = f", diện tích {_fmt(area, digits=1)} m²" if area is not None else ""
         line = (
             f"{index}. #{listing_id} tại {ward}: mức chào {_fmt(value.get('asking_price_ty'), digits=3)} tỷ, "
-            f"{_fmt(value.get('asking_price_per_m2_million'))} triệu/m²; mức mô hình "
+            f"{_fmt(value.get('asking_price_per_m2_million'))} triệu/m²{area_text}; mức mô hình "
             f"{_fmt(value.get('fair_price_per_m2_million'))} triệu/m²; MOS "
             f"{_fmt(value.get('mos_pct'))}%, điểm tín hiệu {_integer(value.get('signal_score')) or 0}."
         )
@@ -429,7 +431,14 @@ def _present_price_drop_ranking(
         return _insufficient(decision, bundle, now)
     days = _integer(bundle.calculations.get("window_days")) or 1
     top_ward = str(selected[0][0]["ward"])
-    if days == 1:
+    requested_wards = bundle.calculations.get("wards")
+    if isinstance(requested_wards, list) and len(requested_wards) == 1 and len(selected) == 1:
+        count = _integer(selected[0][0].get("signal_count")) or 0
+        if days == 1:
+            intro = f"Hôm nay, {top_ward} có {count} tín hiệu giảm giá trong dữ liệu đủ điều kiện của Radar."
+        else:
+            intro = f"Trong {days} ngày qua, {top_ward} có {count} tín hiệu giảm giá trong dữ liệu đủ điều kiện của Radar."
+    elif days == 1:
         intro = f"Hôm nay, {top_ward} đang có nhiều tín hiệu giảm giá nhất trong dữ liệu đủ điều kiện của Radar."
     else:
         intro = f"Trong {days} ngày qua, {top_ward} đang có nhiều tín hiệu giảm giá nhất trong dữ liệu đủ điều kiện của Radar."
