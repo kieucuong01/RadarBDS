@@ -90,6 +90,14 @@ document.addEventListener('DOMContentLoaded', () => {
       box.checked = initialPropTypes.includes(box.value);
     });
   }
+  const initialPriceRanges = searchParams.getAll('price_range').filter(Boolean);
+  if (initialPriceRanges.length && typeof applyRangeParamsFromUrl === 'function') {
+    applyRangeParamsFromUrl('price', initialPriceRanges);
+  }
+  const initialAreaRanges = searchParams.getAll('area_range').filter(Boolean);
+  if (initialAreaRanges.length && typeof applyRangeParamsFromUrl === 'function') {
+    applyRangeParamsFromUrl('area', initialAreaRanges);
+  }
   if (typeof syncCoreFilterVisuals === 'function') syncCoreFilterVisuals();
   if (window.INITIAL_WARDS_BY_CITY) {
     globalWardsByCity = window.INITIAL_WARDS_BY_CITY;

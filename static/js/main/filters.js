@@ -137,6 +137,18 @@ function selectedRangeTokens(kind) {
     .filter(token => token !== ':');
 }
 
+function applyRangeParamsFromUrl(kind, tokens) {
+  const selectedTokens = new Set((tokens || []).map(String).filter(Boolean));
+  document.querySelectorAll(`.range-chip[data-range-kind="${kind}"]`).forEach(btn => {
+    const selected = selectedTokens.has(rangeToken(btn));
+    btn.classList.toggle('active', selected);
+    btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  });
+  if (selectedTokens.size) {
+    setRangeInputs(kind, '', '');
+  }
+}
+
 function setRangeInputs(kind, min = '', max = '') {
   const prefix = kind === 'price' ? 'price' : 'area';
   const minEl = document.getElementById(`${prefix}Min`);

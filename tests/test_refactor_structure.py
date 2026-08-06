@@ -175,7 +175,7 @@ def test_homepage_mos_control_defaults_to_fifteen_and_locks_non_privileged_tiers
 
 def test_homepage_mos_asset_version_changes_with_boot_behavior():
     html = _read("templates/index.html")
-    assert "js/main/boot.js') }}?v=area-scope-investment-filters-20260806" in html
+    assert "js/main/boot.js') }}?v=range-url-hydration-20260806" in html
 
 
 def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
@@ -218,6 +218,10 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert "RadarAreaScope.scopeFromSearchParams" in boot_js
     assert "RadarAreaScope.readStoredScope" in boot_js
     assert "RadarAreaScope.showChooser" in boot_js
+    assert "searchParams.getAll('price_range')" in boot_js
+    assert "searchParams.getAll('area_range')" in boot_js
+    assert "applyRangeParamsFromUrl('price'" in boot_js
+    assert "applyRangeParamsFromUrl('area'" in boot_js
     assert "const hasAnyUrlFilter = searchParams.toString().length > 0;" in boot_js
     assert "detectLocation();" not in boot_js
     assert "function hideChooser" in area_scope_js
@@ -801,8 +805,10 @@ def test_price_and_area_filters_support_multi_select_range_chips():
     for expected in [
         'data-range-name="price_range"',
         'data-range-name="area_range"',
+        "js/main/filters.js') }}?v=range-url-hydration-20260806",
         "toggleRangePreset",
         "selectedRangeTokens",
+        "applyRangeParamsFromUrl",
     ]:
         assert expected in html or expected in filters_js
 
