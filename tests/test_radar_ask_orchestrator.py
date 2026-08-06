@@ -1751,7 +1751,7 @@ def test_provider_failure_releases_question_and_money():
     assert "private provider detail" not in str(deps.repository.sync_finalizations[-1])
 
 
-def test_tool_failure_after_sync_claim_atomically_fails_without_provider_call():
+def test_tool_failure_after_sync_claim_returns_insufficient_without_provider_call():
     def broken_tool(**_kwargs):
         raise RuntimeError("private database detail")
 
@@ -1764,14 +1764,16 @@ def test_tool_failure_after_sync_claim_atomically_fails_without_provider_call():
         idempotency_key="sync-tool-failure",
     )
 
-    assert result.status is RunStatus.FAILED
-    assert result.error_code == "evidence_execution_failed"
+    assert result.status is RunStatus.INSUFFICIENT
+    assert result.answer is not None
+    assert result.answer.answered is False
+    assert result.error_code is None
     assert deps.provider.requests == []
     assert len(deps.repository.sync_claims) == 1
     assert len(deps.repository.sync_finalizations) == 1
     finalized = deps.repository.sync_finalizations[0]
-    assert finalized["target"] == RunStatus.FAILED.value
-    assert finalized["outcome"] == RunOutcome.DATABASE_FAILURE.value
+    assert finalized["target"] == RunStatus.INSUFFICIENT.value
+    assert finalized["outcome"] == RunOutcome.INSUFFICIENT.value
     assert finalized["usage"] == ProviderUsage()
     assert "private database detail" not in str(finalized)
 

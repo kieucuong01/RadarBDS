@@ -38,7 +38,7 @@ from .contracts import (
     UsageReservation,
 )
 from .answer_presenters import present_deterministic_answer
-from .evidence import build_provider_bundle
+from .evidence import EvidenceBuilder, build_provider_bundle
 from .limits import BudgetHardStop, QuotaExceeded, ReservationUnavailable
 from .planner import PLANNER_MAX_COST_USD
 from .provider import ProviderError, RadarAskProvider
@@ -606,6 +606,33 @@ def _repair_call(
     return None
 
 
+def _tool_unavailable_bundle(request_question: str, call: ToolCall) -> EvidenceBundle:
+    return (
+        EvidenceBuilder(question_snapshot=request_question)
+        .resolve(tool=call.name)
+        .warn("evidence_tool_unavailable")
+        .missing("evidence_tool_unavailable")
+        .build()
+    )
+
+
+def _execute_tool_safely(
+    call: ToolCall,
+    context: AskContext,
+    *,
+    question: str,
+    registry: ToolRegistry,
+) -> EvidenceBundle:
+    try:
+        return execute_tool(
+            call,
+            ToolContext(ask=context),
+            registry=registry,
+        )
+    except Exception:
+        return _tool_unavailable_bundle(question, call)
+
+
 def _retrieve_with_corrections(
     context: AskContext,
     decision: RouteDecision,
@@ -615,9 +642,10 @@ def _retrieve_with_corrections(
 ) -> tuple[list[EvidenceBundle], EvidenceAssessment]:
     active_calls = list(decision.tool_calls)
     active_bundles = [
-        execute_tool(
+        _execute_tool_safely(
             call,
-            ToolContext(ask=context),
+            context,
+            question=decision.question_type,
             registry=dependencies.registry,
         )
         for call in active_calls
@@ -643,9 +671,10 @@ def _retrieve_with_corrections(
             break
         repair_calls = [call for _index, call in repairs]
         repair_bundles = [
-            execute_tool(
+            _execute_tool_safely(
                 call,
-                ToolContext(ask=context),
+                context,
+                question=decision.question_type,
                 registry=dependencies.registry,
             )
             for call in repair_calls

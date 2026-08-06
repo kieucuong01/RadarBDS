@@ -39,6 +39,7 @@ INSUFFICIENT_DETAILS = {
     "city_not_supported_or_unresolved": "chưa xác định được thành phố trong phạm vi dữ liệu Radar",
     "city_ward_scope_mismatch": "thành phố và phường trong câu hỏi chưa khớp nhau",
     "market_trend_requires_both_periods": "chưa đủ dữ liệu ở cả hai giai đoạn để so sánh xu hướng",
+    "evidence_tool_unavailable": "Radar tạm thời chưa truy xuất được nguồn dữ liệu cần thiết cho câu hỏi này",
 }
 
 DEFAULT_INSUFFICIENT_DETAIL = "chưa có bằng chứng phù hợp trong phạm vi dữ liệu Radar hiện có"
@@ -59,6 +60,7 @@ INSUFFICIENT_NEXT_STEP_TEXT = {
     "no_actionable_price_drop_signals_in_window": "Thử mở rộng từ hôm nay sang 7-30 ngày để có đủ tín hiệu giảm giá đáng so sánh.",
     "eligible_road_market_sample_not_found": "Thử bổ sung phường của tuyến đường, hoặc hỏi theo khu/phường nếu đúng tuyến chưa đủ mẫu.",
     "market_trend_requires_both_periods": "Thử hỏi theo khung 90 ngày hoặc 180 ngày, hoặc mở rộng từ tuyến đường sang cả phường để có đủ mẫu.",
+    "evidence_tool_unavailable": "Anh có thể hỏi lại theo khu vực, ngân sách hoặc một mã tin cụ thể; Radar sẽ dùng nguồn khác nếu có đủ bằng chứng.",
 }
 
 RISK_FLAG_TEXT = {
@@ -386,10 +388,13 @@ def _present_deal_search(
     )
     lines: list[str] = []
     claims: list[AnswerClaim] = []
+    listing_ids: list[str] = []
     for index, evidence in enumerate(selected, start=1):
         value = _mapping(evidence.value) or {}
         listing_ref = str(value.get("listing_ref") or "")
         listing_id = listing_ref.rsplit(":", 1)[-1] if ":" in listing_ref else "?"
+        if listing_id != "?":
+            listing_ids.append(listing_id)
         ward = str(value.get("ward") or "chưa rõ phường")
         area = _number(value.get("area_m2"))
         area_text = f", diện tích {_fmt(area, digits=1)} m²" if area is not None else ""
@@ -404,12 +409,17 @@ def _present_deal_search(
     direct = "\n".join(
         [intro, *lines, "Mức chào và mức mô hình là hai chỉ báo sàng lọc; cần kiểm tra pháp lý và hiện trạng trước khi quyết định."]
     )
+    followups = []
+    if listing_ids:
+        followups.append(f"Giải thích định giá tin #{listing_ids[0]}")
+    if len(listing_ids) >= 2:
+        followups.append(f"So sánh tin #{listing_ids[0]} với tin #{listing_ids[1]}")
     return _base_answer(
         decision,
         bundle,
         direct_answer=direct,
         claims=claims,
-        followups=["Giải thích định giá của tin đứng đầu", "So sánh hai tin đầu tiên"],
+        followups=followups,
         now=now,
     )
 

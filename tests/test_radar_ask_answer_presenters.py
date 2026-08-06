@@ -228,6 +228,10 @@ def test_deal_search_lists_matches_and_cites_each_exact_listing():
     assert "#702" in answer.direct_answer
     assert "80 m²" in answer.direct_answer
     assert [claim.evidence_ids for claim in answer.claims] == [["deal:701"], ["deal:702"]]
+    assert answer.suggested_followups == [
+        "Giải thích định giá tin #701",
+        "So sánh tin #701 với tin #702",
+    ]
 
 
 def test_deal_search_uses_total_result_count_when_presenter_limits_displayed_rows():

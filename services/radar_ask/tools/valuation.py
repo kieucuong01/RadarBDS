@@ -336,20 +336,24 @@ def explain_valuation(*, args: ExplainValuationArgs, context: ToolContext):
 
     comparable_limit = min(5, settings.evidence_row_limit - 1)
     if comparable_limit >= 3:
-        comparable_bundle = find_comparables(
-            args=ComparableArgs(
-                listing_id=args.listing_id,
-                limit=comparable_limit,
-                window_days=180,
-            ),
-            context=context,
-        )
-        for item in comparable_bundle.items:
-            builder.add(item)
-        if not comparable_bundle.items:
+        try:
+            comparable_bundle = find_comparables(
+                args=ComparableArgs(
+                    listing_id=args.listing_id,
+                    limit=comparable_limit,
+                    window_days=180,
+                ),
+                context=context,
+            )
+        except Exception:
             builder.warn("valuation_comparables_not_currently_available")
         else:
-            builder.warn("current_comparables_may_differ_from_historical_trace_inputs")
+            for item in comparable_bundle.items:
+                builder.add(item)
+            if not comparable_bundle.items:
+                builder.warn("valuation_comparables_not_currently_available")
+            else:
+                builder.warn("current_comparables_may_differ_from_historical_trace_inputs")
     return builder.calculate(
         trace_version=int(trace.get("trace_version") or 0),
         sample_count=int(trace.get("sample_count") or valuation.get("n_segment") or 0),

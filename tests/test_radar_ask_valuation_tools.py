@@ -128,10 +128,11 @@ def comparable_row(listing_id, ppm2, *, flags="", duplicate=False, bait=False):
 
 
 class FakeValuationConnection:
-    def __init__(self, *, trace=True):
+    def __init__(self, *, trace=True, comparables_error: Exception | None = None):
         self.queries: list[tuple[str, tuple]] = []
         self.listing = target_row()
         self.valuation = valuation_row(trace=trace)
+        self.comparables_error = comparables_error
         self.comparables = [
             comparable_row(201, 19),
             comparable_row(202, 20),
@@ -151,6 +152,8 @@ class FakeValuationConnection:
         if "radar_ask:latest_valuation" in normalized:
             return FakeResult([self.valuation])
         if "radar_ask:comparables" in normalized:
+            if self.comparables_error is not None:
+                raise self.comparables_error
             return FakeResult(self.comparables)
         raise AssertionError(f"unexpected valuation query: {normalized}")
 
@@ -196,6 +199,18 @@ def test_explain_valuation_refuses_to_reverse_engineer_missing_legacy_trace():
     assert "historical_valuation_trace" in bundle.missing_requirements
     assert "legacy_valuation_trace_unavailable" in bundle.warnings
     assert all("adjustments" not in item.value for item in bundle.items)
+
+
+def test_explain_valuation_keeps_trace_when_optional_comparables_timeout():
+    bundle = explain_valuation(
+        args=ExplainValuationArgs(listing_id=123),
+        context=context(FakeValuationConnection(comparables_error=TimeoutError("slow"))),
+    )
+
+    trace_item = next(item for item in bundle.items if item.source_kind is SourceKind.VALUATION)
+    assert trace_item.value["trace"]["baseline_ppm2"] == 20.0
+    assert "valuation_comparables_not_currently_available" in bundle.warnings
+    assert bundle.missing_requirements == []
 
 
 def test_find_comparables_is_bounded_and_excludes_bad_inputs():

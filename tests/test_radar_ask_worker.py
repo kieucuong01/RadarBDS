@@ -1433,7 +1433,7 @@ def test_deep_request_only_enqueues_without_provider_call(monkeypatch):
     monkeypatch.setenv("RADAR_ASK_ALLOWED_TIERS", "vip")
     monkeypatch.setattr(ask_api, "current_user", lambda: {"id": 17, "tier": "vip"})
     monkeypatch.setattr(ask_api, "current_tier", lambda: "vip")
-    monkeypatch.setattr(ask_service, "_dependencies", lambda: deps)
+    monkeypatch.setattr(ask_service, "_dependencies", lambda *_args, **_kwargs: deps)
     response = radar_app.app.test_client().post(
         "/api/radar-ask/questions",
         json={"question": "Phan tich sau lo 123", "requested_depth": "deep"},
