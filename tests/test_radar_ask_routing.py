@@ -166,6 +166,20 @@ def test_exact_road_market_question_uses_deterministic_market_tool():
     assert decision.tool_calls[0].arguments["ward"] == "Định Hòa"
 
 
+def test_exact_road_market_uses_ward_written_in_the_question():
+    decision = route_question(
+        AskQuestionRequest(
+            question="Giá đất mặt tiền đường D1, Phú Mỹ hiện tại khoảng bao nhiêu?"
+        ),
+        make_context(),
+    )
+
+    assert decision.depth is AskDepth.FAST
+    assert decision.tool_calls[0].name == "estimate_road_market"
+    assert decision.tool_calls[0].arguments["road"] == "D1"
+    assert decision.tool_calls[0].arguments["ward"] == "Phú Mỹ"
+
+
 @pytest.mark.parametrize(
     "question",
     [

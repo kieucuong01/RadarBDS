@@ -272,6 +272,10 @@ def _deterministic_route(
         }
         if context.page.ward:
             arguments["ward"] = context.page.ward
+        else:
+            wards_in_question = _known_wards(folded)
+            if len(wards_in_question) == 1:
+                arguments["ward"] = wards_in_question[0]
         return _base_decision(
             question_type="road_market_estimate",
             calls=[_call("road-market", "estimate_road_market", arguments)],
