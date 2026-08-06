@@ -235,6 +235,39 @@ def test_fast_tool_route_uses_reliable_presenter_even_if_planner_requests_genera
     assert decision.generated is False
 
 
+def test_explicit_multi_ward_comparison_overrides_narrow_planner_route():
+    planner = PlannerSpy(
+        {
+            "depth": "fast",
+            "question_type": "area_market_estimate",
+            "tool_calls": [
+                {
+                    "call_id": "planner-too-narrow-area-market",
+                    "name": "compare_areas",
+                    "arguments": {
+                        "areas": ["Phú Mỹ"],
+                        "property_type": None,
+                        "window_days": 90,
+                    },
+                }
+            ],
+            "generated": False,
+            "use_thinking": False,
+        }
+    )
+
+    decision = route_question(
+        AskQuestionRequest(question="So sánh Phú Mỹ, Định Hòa và Phú Tân cho đầu tư"),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+
+    assert planner.call_count == 1
+    assert decision.question_type == "area_comparison"
+    assert decision.tool_calls[0].name == "compare_areas"
+    assert decision.tool_calls[0].arguments["areas"] == ["Phú Mỹ", "Định Hòa", "Phú Tân"]
+
+
 def test_planner_is_first_intent_layer_for_simple_investor_question():
     planner = PlannerSpy(
         {

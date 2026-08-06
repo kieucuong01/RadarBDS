@@ -593,6 +593,44 @@ def _deterministic_route(
     return None
 
 
+def _explicit_area_comparison_guard(
+    request: AskQuestionRequest,
+    context: AskContext,
+) -> RouteDecision | None:
+    """High-confidence correction when the user explicitly compares named areas.
+
+    The typed planner remains the first intent layer, but it can occasionally
+    narrow a multi-area comparison to the first area.  This guard preserves the
+    user's explicit comparison set before the evidence presenter runs.
+    """
+    deterministic = _deterministic_route(request, context)
+    if deterministic is None or deterministic.question_type != "area_comparison":
+        return None
+    areas = deterministic.tool_calls[0].arguments.get("areas") if deterministic.tool_calls else None
+    if not isinstance(areas, list) or len(areas) < 2:
+        return None
+    return deterministic
+
+
+def _route_covers_explicit_comparison(
+    planned: RouteDecision,
+    guard: RouteDecision,
+) -> bool:
+    expected = guard.tool_calls[0].arguments.get("areas") if guard.tool_calls else None
+    if not isinstance(expected, list):
+        return True
+    expected_set = {str(area) for area in expected}
+    for call in planned.tool_calls:
+        if call.name != "compare_areas":
+            continue
+        planned_areas = call.arguments.get("areas")
+        if isinstance(planned_areas, list) and expected_set.issubset(
+            {str(area) for area in planned_areas}
+        ):
+            return planned.question_type == "area_comparison"
+    return False
+
+
 def route_question(
     request: AskQuestionRequest,
     context: AskContext,
@@ -615,12 +653,24 @@ def route_question(
                 else planned_value
             )
             planned = RouteDecision.model_validate(raw_decision)
-            return _finalize(
+            finalized = _finalize(
                 planned,
                 context=context,
                 requested_depth=requested_depth,
                 registry=registry,
             )
+            comparison_guard = _explicit_area_comparison_guard(request, context)
+            if comparison_guard is not None and not _route_covers_explicit_comparison(
+                finalized,
+                comparison_guard,
+            ):
+                return _finalize(
+                    comparison_guard,
+                    context=context,
+                    requested_depth=requested_depth,
+                    registry=registry,
+                )
+            return finalized
         except ProviderError:
             planner_failed_invalid = False
         except (ValidationError, TypeError, ValueError):
