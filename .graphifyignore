@@ -1,0 +1,19 @@
+# Runtime, generated, archived, and agent-local trees that are not current source.
+.claude/worktrees/
+.playwright-cli/
+.worktrees/
+_legacy/
+data/
+logs/
+reports/
+scratch/
+browser_recordings/
+artifacts/
+output/
+tmp/
+tools/
+.local/
+.npm-cache/
+.pytest_cache/
+__pycache__/
+graphify-out/

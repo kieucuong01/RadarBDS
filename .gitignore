@@ -56,6 +56,9 @@ services/radar_ask/tools/__pycache__/
 services/radar_ask/tools/**/*.pyc
 .local/
 
+# Graphify generated graph artifacts are rebuilt per environment.
+graphify-out/
+
 # Agent/runtime worktrees and local state
 .worktrees/
 .claude/worktrees/

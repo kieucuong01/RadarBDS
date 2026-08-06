@@ -26,6 +26,13 @@ Read this first in every new AI/dev session. It is the token-light map, not the 
 
 Avoid broad reads of `.claude/worktrees/`, `_legacy/`, `data/`, `logs/`, `reports/`, `scratch/`, `browser_recordings/`, and `artifacts/` unless the task explicitly requires runtime evidence from them.
 
+## Graphify
+
+- The project-scoped skill lives at `.agents/skills/graphify/`; the generated graph lives at `graphify-out/`.
+- When `graphify-out/graph.json` exists, start codebase questions with `graphify query`, `graphify path`, or `graphify explain` before broad source searches.
+- Treat graph results as structural evidence, then verify important conclusions against source imports/tests.
+- Refresh manually with `graphify update .` after code changes. No Graphify git hook or strict mode is enabled.
+
 ## Project Summary
 
 Radar BDS is a PostgreSQL + Flask dashboard for Bình Dương real-estate deal signals.
