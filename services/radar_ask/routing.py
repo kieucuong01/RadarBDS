@@ -133,6 +133,26 @@ def _property_type(folded: str) -> str | None:
     return None
 
 
+def _is_area_price_question(folded: str) -> bool:
+    if "gia" not in folded:
+        return False
+    if any(
+        marker in folded
+        for marker in (
+            "bao nhieu",
+            "hien tai",
+            "khoang",
+            "mat bang gia",
+            "gia sao",
+            "gia the nao",
+            "gia tam nao",
+            "gia gio",
+        )
+    ):
+        return True
+    return bool(re.search(r"\bgia\b.*\b(?:nhieu|the nao|tam nao)\b[?!.]*$", folded))
+
+
 def _road_from_question(question: str) -> str | None:
     match = re.search(
         r"(?:đường|duong)\s+"
@@ -217,6 +237,8 @@ def _finalize(
         )
     depth = requested_depth or decision.depth
     generated = decision.generated or depth is AskDepth.DEEP
+    if depth is AskDepth.FAST and decision.tool_calls:
+        generated = False
     if depth is AskDepth.DEEP:
         max_calls = 2 if context.tier == "free" else 4
     else:
@@ -355,7 +377,10 @@ def _deterministic_route(
         and "giam gia" not in folded
         and "bang gia dat" not in folded
         and ("gia" in folded or "dat" in folded)
-        and any(marker in folded for marker in ("bao nhieu", "hien tai", "khoang", "mat bang", "gio"))
+        and (
+            _is_area_price_question(folded)
+            or any(marker in folded for marker in ("mat bang", "gio"))
+        )
     ):
         return _base_decision(
             question_type="area_market_estimate",

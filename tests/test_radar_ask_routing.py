@@ -108,6 +108,11 @@ def make_context(
             "area_market_estimate",
         ),
         (
+            "phường Tân An có giá nhiêu",
+            "compare_areas",
+            "area_market_estimate",
+        ),
+        (
             "hiện có bao nhiêu lô giảm giá ở Tân An",
             "rank_price_drop_areas",
             "price_drop_ranking",
@@ -183,6 +188,71 @@ def test_tan_an_investor_questions_keep_the_right_intent():
     assert area_price.tool_calls[0].arguments["property_type"] == "dat_nen"
     assert price_drop_count.question_type == "price_drop_ranking"
     assert price_drop_count.tool_calls[0].arguments["wards"] == ["Tân An"]
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "phường Tân An có giá nhiêu",
+        "giá đất Tân An nhiêu",
+        "Tân An giá thế nào",
+        "mặt bằng giá Tân An tầm nào",
+    ],
+)
+def test_natural_ward_price_phrasing_never_falls_through_to_deal_search(question):
+    planner = PlannerSpy(
+        {
+            "depth": "fast",
+            "question_type": "deal_search",
+            "tool_calls": [
+                {
+                    "call_id": "wrong-deal-route",
+                    "name": "search_deals",
+                    "arguments": {"wards": ["Tân An"], "limit": 10},
+                }
+            ],
+            "generated": True,
+        }
+    )
+
+    decision = route_question(
+        AskQuestionRequest(question=question),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+
+    assert planner.call_count == 0
+    assert decision.question_type == "area_market_estimate"
+    assert decision.tool_calls[0].name == "compare_areas"
+    assert decision.tool_calls[0].arguments["areas"] == ["Tân An"]
+    assert decision.generated is False
+
+
+def test_fast_tool_route_uses_reliable_presenter_even_if_planner_requests_generation():
+    planner = PlannerSpy(
+        {
+            "depth": "fast",
+            "question_type": "deal_search",
+            "tool_calls": [
+                {
+                    "call_id": "planned-deal-search",
+                    "name": "search_deals",
+                    "arguments": {"wards": ["Tân An"], "limit": 10},
+                }
+            ],
+            "generated": True,
+        }
+    )
+
+    decision = route_question(
+        AskQuestionRequest(question="Tân An có gì đáng xem"),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+
+    assert planner.call_count == 1
+    assert decision.tool_calls[0].name == "search_deals"
+    assert decision.generated is False
 
 
 def test_fuzzy_tan_an_deal_questions_use_typed_planner_for_intent():
