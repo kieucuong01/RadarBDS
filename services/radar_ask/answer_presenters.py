@@ -38,7 +38,7 @@ INSUFFICIENT_DETAILS = {
     "location_not_found": "chưa xác định được địa điểm trong phạm vi dữ liệu Radar",
     "city_not_supported_or_unresolved": "chưa xác định được thành phố trong phạm vi dữ liệu Radar",
     "city_ward_scope_mismatch": "thành phố và phường trong câu hỏi chưa khớp nhau",
-    "market_trend_requires_both_periods": "chưa có đủ dữ liệu ở cả hai giai đoạn để so sánh xu hướng",
+    "market_trend_requires_both_periods": "chưa đủ dữ liệu ở cả hai giai đoạn để so sánh xu hướng",
 }
 
 DEFAULT_INSUFFICIENT_DETAIL = "chưa có bằng chứng phù hợp trong phạm vi dữ liệu Radar hiện có"
@@ -46,9 +46,19 @@ DEFAULT_INSUFFICIENT_DETAIL = "chưa có bằng chứng phù hợp trong phạm 
 WARNING_TEXT = {
     "matches_use_current_asking_prices_not_transaction_prices": "Kết quả dùng mức chào hiện tại, không đại diện cho giá đã sang tên.",
     "asking_prices_not_transaction_prices": "Mẫu dùng mức chào từ tin đăng, không đại diện cho giá đã sang tên.",
+    "asking_price_trend_not_transaction_price_index": "Xu hướng dùng giá rao trung vị trong mẫu Radar, không phải chỉ số giá giao dịch.",
     "asking_price_and_model_fair_value_are_not_transaction_prices": "Mức chào và mức mô hình là chỉ báo sàng lọc, không phải giá đã sang tên.",
     "low_sample": "Mẫu còn nhỏ nên biên sai số có thể cao.",
     "insufficient_exact_road": "Không đủ mẫu đúng tuyến; Radar đang dùng nhóm đường tương đương trong cùng phường.",
+}
+
+INSUFFICIENT_NEXT_STEP_TEXT = {
+    "no_eligible_listings_within_budget": "Thử nới ngân sách, mở rộng thêm phường lân cận, hoặc hỏi theo loại tài sản cụ thể để Radar tìm mẫu gần hơn.",
+    "eligible_area_samples_not_found": "Thử hỏi theo khung 90 ngày, bỏ bớt điều kiện loại tài sản, hoặc so sánh từng phường một.",
+    "no_actionable_deals_match_filters": "Thử nới ngưỡng giá/mức MOS, hoặc hỏi 'tin đáng kiểm tra gần nhất' để xem danh sách rộng hơn.",
+    "no_actionable_price_drop_signals_in_window": "Thử mở rộng từ hôm nay sang 7-30 ngày để có đủ tín hiệu giảm giá đáng so sánh.",
+    "eligible_road_market_sample_not_found": "Thử bổ sung phường của tuyến đường, hoặc hỏi theo khu/phường nếu đúng tuyến chưa đủ mẫu.",
+    "market_trend_requires_both_periods": "Thử hỏi theo khung 90 ngày hoặc 180 ngày, hoặc mở rộng từ tuyến đường sang cả phường để có đủ mẫu.",
 }
 
 
@@ -108,6 +118,9 @@ def _insufficient(
     direct = "Chưa đủ dữ liệu đáng tin cậy để trả lời câu hỏi này."
     if detail:
         direct = f"{direct} Hiện {detail}."
+    next_step = INSUFFICIENT_NEXT_STEP_TEXT.get(detail_code or "")
+    if next_step:
+        direct = f"{direct} {next_step}"
     return AnswerEnvelope(
         answered=False,
         depth=decision.depth,
@@ -410,6 +423,83 @@ def _present_road_market_estimate(
     )
 
 
+def _present_market_trend(
+    decision: RouteDecision,
+    bundle: EvidenceBundle,
+    now: datetime,
+) -> AnswerEnvelope:
+    evidence = next(
+        (
+            item
+            for item in bundle.items
+            if item.source_kind is SourceKind.MARKET_STAT
+            and item.source_ref.startswith("market-trend:")
+            and _mapping(item.value) is not None
+        ),
+        None,
+    )
+    if evidence is None:
+        return _insufficient(decision, bundle, now)
+    value = _mapping(evidence.value) or {}
+    current = _number(value.get("current_median_asking_ppm2_million"))
+    previous = _number(value.get("previous_median_asking_ppm2_million"))
+    change_pct = _number(value.get("change_pct"))
+    current_count = _integer(value.get("current_sample_count")) or 0
+    previous_count = _integer(value.get("previous_sample_count")) or 0
+    window_days = _integer(value.get("window_days")) or 90
+    if current is None or previous is None or change_pct is None:
+        return _insufficient(decision, bundle, now)
+
+    ward = str(bundle.resolved_entities.get("ward") or "").strip()
+    road = str(bundle.resolved_entities.get("road") or "").strip()
+    if not ward or not road:
+        parts = evidence.source_ref.split(":")
+        if not ward and len(parts) > 1 and parts[1] != "all":
+            ward = parts[1]
+        if not road and len(parts) > 2 and parts[2] != "all":
+            road = parts[2]
+    scope = f"đường {road} tại {ward}" if road and ward else road or ward or "khu vực này"
+    if change_pct >= 3:
+        direction = "đang tăng"
+    elif change_pct <= -3:
+        direction = "đang giảm"
+    else:
+        direction = "đang đi ngang"
+    signed_change = f"{change_pct:+.2f}".rstrip("0").rstrip(".").replace(".", ",")
+    line = (
+        f"{scope} {direction} theo giá rao trung vị: hiện {_fmt(current)} triệu/m² "
+        f"so với {_fmt(previous)} triệu/m² ở nửa kỳ trước ({signed_change}%) trong khung {window_days} ngày. "
+        f"Mẫu hiện tại {current_count} tin, kỳ trước {previous_count} tin."
+    )
+    return _base_answer(
+        decision,
+        bundle,
+        direct_answer="\n".join(
+            [
+                line,
+                "Nên dùng tín hiệu này để sàng lọc khu vực, rồi kiểm tra từng lô bằng pháp lý, vị trí, mặt tiền và mẫu so sánh gần nhất.",
+            ]
+        ),
+        claims=[AnswerClaim(text=line, evidence_ids=[evidence.evidence_id])],
+        key_metrics=[
+            KeyMetric(
+                label="Giá rao trung vị hiện tại",
+                value=round(current, 2),
+                unit="million_vnd_per_m2",
+                evidence_ids=[evidence.evidence_id],
+            ),
+            KeyMetric(
+                label="Thay đổi so với nửa kỳ trước",
+                value=round(change_pct, 2),
+                unit="pct",
+                evidence_ids=[evidence.evidence_id],
+            ),
+        ],
+        followups=[f"Xem deal đáng kiểm tra tại {scope}", f"So sánh {scope} với khu lân cận"],
+        now=now,
+    )
+
+
 def _present_official_price_explanation(
     decision: RouteDecision,
     bundle: EvidenceBundle,
@@ -479,6 +569,7 @@ PRESENTERS: dict[str, Presenter] = {
     "deal_search": _present_deal_search,
     "price_drop_ranking": _present_price_drop_ranking,
     "road_market_estimate": _present_road_market_estimate,
+    "market_trend": _present_market_trend,
     "official_price_explanation": _present_official_price_explanation,
 }
 

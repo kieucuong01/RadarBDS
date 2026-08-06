@@ -296,6 +296,43 @@ def test_road_market_answer_labels_exact_road_sample():
     assert answer.claims[0].evidence_ids == ["road:phu-my"]
 
 
+def test_market_trend_answer_compares_period_medians_and_cites_market_stat():
+    value = {
+        "metric": "median_asking_price_per_m2",
+        "window_days": 90,
+        "previous_sample_count": 8,
+        "current_sample_count": 10,
+        "previous_median_asking_ppm2_million": 20,
+        "current_median_asking_ppm2_million": 22,
+        "change_pct": 10,
+    }
+    bundle = EvidenceBundle(
+        question_snapshot="Phú Mỹ đang có xu hướng thế nào?",
+        resolved_entities={"ward": "Phú Mỹ"},
+        calculations=value,
+        warnings=["asking_price_trend_not_transaction_price_index"],
+        items=[
+            item(
+                "trend:phu-my",
+                source_ref="market-trend:Phú Mỹ:all:90d",
+                value=value,
+                sample_size=18,
+            )
+        ],
+    )
+
+    answer = validated(
+        present_deterministic_answer(decision("market_trend"), bundle, now=NOW),
+        bundle,
+    )
+
+    assert "Phú Mỹ đang tăng" in answer.direct_answer
+    assert "22 triệu/m²" in answer.direct_answer
+    assert "20 triệu/m²" in answer.direct_answer
+    assert "+10%" in answer.direct_answer
+    assert answer.claims[0].evidence_ids == ["trend:phu-my"]
+
+
 def test_insufficient_evidence_does_not_create_unrelated_claim_or_source():
     bundle = EvidenceBundle(
         question_snapshot="Ngân sách 2,5 tỷ nên xem phường nào?",
@@ -309,6 +346,22 @@ def test_insufficient_evidence_does_not_create_unrelated_claim_or_source():
     assert answer.claims == []
     assert answer.source_cards == []
     assert "chưa đủ dữ liệu" in answer.direct_answer.lower()
+    assert "thử nới ngân sách" in answer.direct_answer.lower()
+
+
+def test_market_trend_insufficient_explains_numeric_gap_without_internal_code():
+    bundle = EvidenceBundle(
+        question_snapshot="Phú Mỹ đang tăng hay giảm?",
+        retrieval_quality=RetrievalQuality.INSUFFICIENT,
+        missing_requirements=["market_trend_requires_both_periods"],
+    )
+
+    answer = present_deterministic_answer(decision("market_trend"), bundle, now=NOW)
+
+    assert answer.answered is False
+    assert "chưa đủ dữ liệu ở cả hai giai đoạn" in answer.direct_answer.lower()
+    assert "thử hỏi theo khung 90 ngày" in answer.direct_answer.lower()
+    assert "market_trend_requires_both_periods" not in answer.direct_answer
 
 
 def test_insufficient_official_document_answer_uses_human_language():

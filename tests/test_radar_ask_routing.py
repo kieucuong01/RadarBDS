@@ -87,6 +87,16 @@ def make_context(
             "search_official_documents",
             "official_price_explanation",
         ),
+        (
+            "Phú Mỹ đang có xu hướng thế nào?",
+            "get_market_trend",
+            "market_trend",
+        ),
+        (
+            "Phú Mỹ có nên đầu tư không?",
+            "get_market_trend",
+            "market_trend",
+        ),
     ],
 )
 def test_approved_simple_questions_use_fast_path_without_planner(
@@ -268,7 +278,7 @@ def test_unmatched_question_calls_typed_planner_once():
     planner = PlannerSpy(planned)
 
     decision = route_question(
-        AskQuestionRequest(question="Phú Mỹ đang có xu hướng thế nào?"),
+        AskQuestionRequest(question="Tôi nên bắt đầu phân tích từ đâu?"),
         make_context(),
         planner=planner,
     )

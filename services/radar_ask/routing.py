@@ -355,6 +355,40 @@ def _deterministic_route(
             freshness_hours=24,
         )
 
+    market_trend_markers = (
+        "xu huong",
+        "thi truong",
+        "dang tang",
+        "dang giam",
+        "tang hay giam",
+        "giam hay tang",
+        "co tin hieu gi",
+        "co nen dau tu",
+        "dang dau tu",
+        "nen dau tu",
+        "nen xem khong",
+        "khu nay the nao",
+        "khu nay sao",
+    )
+    if any(marker in folded for marker in market_trend_markers):
+        arguments: dict[str, Any] = {"window_days": 90}
+        if context.page.ward:
+            arguments["ward"] = context.page.ward
+        elif len(wards) == 1:
+            arguments["ward"] = wards[0]
+        if context.page.road:
+            arguments["road"] = context.page.road
+        property_type = _property_type(folded)
+        if property_type:
+            arguments["property_type"] = property_type
+        if "ward" in arguments or "road" in arguments:
+            return _base_decision(
+                question_type="market_trend",
+                calls=[_call("market-trend", "get_market_trend", arguments)],
+                generated=False,
+                freshness_hours=24,
+            )
+
     if "bang gia dat" in folded and any(
         marker in folded for marker in ("dinh gia", "thuc te", "dung de", "phap ly")
     ):
