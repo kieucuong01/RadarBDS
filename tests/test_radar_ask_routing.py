@@ -673,6 +673,21 @@ def test_planner_can_route_small_talk_without_database_tools():
     assert decision.use_thinking is False
 
 
+def test_invalid_planner_output_for_small_talk_falls_back_to_conversation():
+    planner = PlannerSpy({"depth": "fast"})
+
+    decision = route_question(
+        AskQuestionRequest(question="Hello"),
+        make_context(tier="admin"),
+        planner=planner,
+    )
+
+    assert planner.call_count == 1
+    assert decision.question_type == "conversation"
+    assert decision.tool_calls == []
+    assert decision.generated is True
+
+
 def test_consultant_style_vague_investor_question_uses_planner_clarification():
     planner = PlannerSpy(
         {

@@ -153,6 +153,26 @@ def _property_type(folded: str) -> str | None:
     return None
 
 
+def _small_talk_question_type(folded: str) -> str | None:
+    compact = folded.strip(" ?!.")
+    if compact in {"hi", "hello", "helo", "hey", "xin chao", "chao", "chao ban"}:
+        return "conversation"
+    if compact in {"cam on", "thanks", "thank you", "ok", "oke", "duoc roi"}:
+        return "conversation"
+    if any(
+        marker in folded
+        for marker in (
+            "ban lam duoc gi",
+            "radar ask lam duoc gi",
+            "hoi radar bds lam duoc gi",
+            "huong dan",
+            "giup gi duoc",
+        )
+    ):
+        return "help"
+    return None
+
+
 def _is_area_price_question(folded: str) -> bool:
     if "gia" not in folded:
         return False
@@ -310,6 +330,15 @@ def _deterministic_route(
     question = request.question
     folded = _fold(question)
     requested_depth = _depth_requested(request, folded)
+    small_talk_type = _small_talk_question_type(folded)
+    if small_talk_type is not None:
+        return RouteDecision(
+            depth=requested_depth or AskDepth.FAST,
+            question_type=small_talk_type,
+            tool_calls=[],
+            generated=True,
+            use_thinking=False,
+        )
     has_placeholder = bool(re.search(r"(?<![a-z0-9])x{2,}(?![a-z0-9])", folded))
     listing_reference = any(
         phrase in folded for phrase in ("lo dat nay", "lo nay", "tin nay")
