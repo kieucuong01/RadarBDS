@@ -10,8 +10,9 @@ from zoneinfo import ZoneInfo
 
 from db.connection import PgConnection, get_conn
 
-from .config import RadarAskSettings, TIER_DAILY_LIMITS, VALID_TIERS
+from .config import RadarAskSettings, VALID_TIERS
 from .contracts import ProviderUsage, RunOutcome, UsageReservation, UsageSettlement
+from .quota_settings import load_radar_ask_quota_settings
 
 
 BANGKOK = ZoneInfo("Asia/Bangkok")
@@ -264,6 +265,63 @@ class RadarAskLimitService:
             warning_usd=_money(self.settings.monthly_warning_usd),
         )
 
+    @staticmethod
+    def _daily_limit(conn: PgConnection, *, tier: str) -> int | None:
+        return load_radar_ask_quota_settings(conn).limit_for_tier(tier)
+
+    @staticmethod
+    def _used_daily_questions(
+        conn: PgConnection,
+        *,
+        user_id: int,
+        usage_date: date,
+        now: datetime,
+    ) -> int:
+        used_row = conn.execute(
+            """
+            SELECT COUNT(*) AS used
+            FROM radar_ask_usage
+            WHERE user_id=? AND usage_date=?
+              AND (
+                question_status='answered'
+                OR (
+                    question_status='reserved'
+                    AND settlement_status='reserved'
+                    AND reservation_expires_at > ?
+                )
+              )
+            """,
+            (user_id, usage_date, now),
+        ).fetchone()
+        return int(used_row["used"] if used_row is not None else 0)
+
+    @staticmethod
+    def _raise_if_daily_quota_exceeded(
+        conn: PgConnection,
+        *,
+        tier: str,
+        user_id: int,
+        usage_date: date,
+        now: datetime,
+        reset_at: datetime,
+    ) -> None:
+        limit = RadarAskLimitService._daily_limit(conn, tier=tier)
+        if limit is None:
+            return
+        used = RadarAskLimitService._used_daily_questions(
+            conn,
+            user_id=user_id,
+            usage_date=usage_date,
+            now=now,
+        )
+        if used >= limit:
+            raise QuotaExceeded(
+                tier=tier,
+                limit=limit,
+                used=used,
+                reset_at=reset_at,
+            )
+
     def reserve_question(
         self,
         *,
@@ -367,31 +425,14 @@ class RadarAskLimitService:
                         "run reservation is no longer active or safely reusable"
                     )
 
-                limit = TIER_DAILY_LIMITS[tier]  # type: ignore[index]
-                used_row = conn.execute(
-                    """
-                    SELECT COUNT(*) AS used
-                    FROM radar_ask_usage
-                    WHERE user_id=? AND usage_date=?
-                      AND (
-                        question_status='answered'
-                        OR (
-                            question_status='reserved'
-                            AND settlement_status='reserved'
-                            AND reservation_expires_at > ?
-                        )
-                      )
-                    """,
-                    (user_id, usage_date, now),
-                ).fetchone()
-                used = int(used_row["used"] if used_row is not None else 0)
-                if used >= limit:
-                    raise QuotaExceeded(
-                        tier=tier,
-                        limit=limit,
-                        used=used,
-                        reset_at=reset_at,
-                    )
+                self._raise_if_daily_quota_exceeded(
+                    conn,
+                    tier=tier,
+                    user_id=user_id,
+                    usage_date=usage_date,
+                    now=now,
+                    reset_at=reset_at,
+                )
                 actual, active = self._budget_totals(
                     conn,
                     usage_month=usage_month,
@@ -442,31 +483,14 @@ class RadarAskLimitService:
                     warning_active=warning is not None,
                 )
 
-            limit = TIER_DAILY_LIMITS[tier]  # type: ignore[index]
-            used_row = conn.execute(
-                """
-                SELECT COUNT(*) AS used
-                FROM radar_ask_usage
-                WHERE user_id=? AND usage_date=?
-                  AND (
-                    question_status='answered'
-                    OR (
-                        question_status='reserved'
-                        AND settlement_status='reserved'
-                        AND reservation_expires_at > ?
-                    )
-                  )
-                """,
-                (user_id, usage_date, now),
-            ).fetchone()
-            used = int(used_row["used"] if used_row is not None else 0)
-            if used >= limit:
-                raise QuotaExceeded(
-                    tier=tier,
-                    limit=limit,
-                    used=used,
-                    reset_at=reset_at,
-                )
+            self._raise_if_daily_quota_exceeded(
+                conn,
+                tier=tier,
+                user_id=user_id,
+                usage_date=usage_date,
+                now=now,
+                reset_at=reset_at,
+            )
 
             actual, active = self._budget_totals(
                 conn,

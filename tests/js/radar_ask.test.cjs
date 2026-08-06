@@ -166,8 +166,10 @@ function fakeView() {
 test('quota label reports tier cap without inventing remaining quota', () => {
   assert.equal(quotaLabel({ tier: 'free' }), 'Free · 5 câu/ngày');
   assert.equal(quotaLabel({ tier: 'vip' }), 'VIP · 20 câu/ngày');
-  assert.equal(quotaLabel({ tier: 'admin' }), 'Admin · 100 câu/ngày');
+  assert.equal(quotaLabel({ tier: 'admin' }), 'Admin · không giới hạn hôm nay');
   assert.equal(quotaLabel({ tier: 'free', remaining: 3 }), 'Free · còn 3/5 câu hôm nay');
+  assert.equal(quotaLabel({ tier: 'vip', daily_limit: 25 }), 'VIP · 25 câu/ngày');
+  assert.equal(quotaLabel({ tier: 'vip', daily_limit: 25, remaining: 7 }), 'VIP · còn 7/25 câu hôm nay');
 });
 test('Enter submits while Shift+Enter preserves a newline', () => {
   let submits = 0;

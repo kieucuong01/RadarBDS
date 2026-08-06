@@ -2536,6 +2536,37 @@ p { margin: 6px 0 0; color: var(--muted); }
   background: color-mix(in srgb, var(--red) 10%, var(--panel));
 }
 
+.radar-ask-quota-settings {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(110px, 150px)) auto minmax(160px, auto);
+  align-items: end;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+}
+
+.radar-ask-quota-settings strong {
+  display: block;
+  font-size: 13px;
+}
+
+.radar-ask-quota-settings p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.radar-ask-quota-settings label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .radar-ask-admin-content {
   margin-top: 15px;
 }
@@ -2749,6 +2780,9 @@ p { margin: 6px 0 0; color: var(--muted); }
   .dup-summary-row em { grid-column: 2 / -1; }
   .dup-summary-row.header em { display: none; }
   .infra-grid { grid-template-columns: 1fr; }
+  .radar-ask-quota-settings { grid-template-columns: 1fr 1fr; }
+  .radar-ask-quota-settings > div,
+  .radar-ask-quota-settings .radar-ask-admin-state { grid-column: 1 / -1; }
   .radar-ask-metric-grid,
   .radar-ask-breakdown-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -2767,6 +2801,9 @@ p { margin: 6px 0 0; color: var(--muted); }
   .infra-two { grid-template-columns: 1fr; }
   .radar-ask-admin-head { align-items: stretch; flex-direction: column; }
   .radar-ask-admin-head .secondary-btn { width: 100%; }
+  .radar-ask-quota-settings { grid-template-columns: 1fr; }
+  .radar-ask-quota-settings > div,
+  .radar-ask-quota-settings .radar-ask-admin-state { grid-column: auto; }
   .radar-ask-metric-grid,
   .radar-ask-breakdown-grid { grid-template-columns: 1fr; }
   .infra-actions { flex-direction: column; }

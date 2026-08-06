@@ -21,7 +21,7 @@
   const TIER_CAPS = Object.freeze({
     free: { label: 'Free', cap: 5, capLabel: 'Free · 5 câu/ngày' },
     vip: { label: 'VIP', cap: 20, capLabel: 'VIP · 20 câu/ngày' },
-    admin: { label: 'Admin', cap: 100, capLabel: 'Admin · 100 câu/ngày' },
+    admin: { label: 'Admin', cap: null, capLabel: 'Admin · không giới hạn hôm nay' },
   });
   const DEPTH_LABELS = Object.freeze({ fast: 'Nhanh', auto: 'Tự động', standard: 'Phân tích', deep: 'Chuyên sâu' });
   const VERDICT_LABELS = Object.freeze({
@@ -41,10 +41,15 @@
   function quotaLabel(quota) {
     const tier = String(quota && quota.tier || 'free').toLowerCase();
     const policy = TIER_CAPS[tier] || TIER_CAPS.free;
-    if (Number.isInteger(quota && quota.remaining) && quota.remaining >= 0) {
-      return `${policy.label} · còn ${quota.remaining}/${policy.cap} câu hôm nay`;
+    if (tier === 'admin' || quota && quota.admin_unlimited === true) {
+      return policy.capLabel;
     }
-    return policy.capLabel;
+    const cap = Number.isInteger(quota && quota.daily_limit) && quota.daily_limit >= 0
+      ? quota.daily_limit : policy.cap;
+    if (Number.isInteger(quota && quota.remaining) && quota.remaining >= 0) {
+      return `${policy.label} · còn ${quota.remaining}/${cap} câu hôm nay`;
+    }
+    return `${policy.label} · ${cap} câu/ngày`;
   }
 
   function handleComposerKey(event, submit) {

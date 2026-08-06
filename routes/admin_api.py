@@ -3,9 +3,14 @@ from __future__ import annotations
 
 import logging
 
-from flask import Blueprint, jsonify, redirect
+from flask import Blueprint, jsonify, redirect, request
 
 from services.radar_ask.config import RadarAskSettings
+from services.radar_ask.quota_settings import (
+    RadarAskQuotaSettingsError,
+    load_radar_ask_quota_settings,
+    save_radar_ask_quota_settings,
+)
 from services.radar_ask.service import get_repository
 
 bp = Blueprint("admin_api", __name__)
@@ -54,6 +59,51 @@ def admin_api_radar_ask_metrics():
     response.headers["Cache-Control"] = "private, no-store"
     response.headers.pop("X-Radar-Public-Cache", None)
     return response
+
+
+def _private_admin_json(payload: dict, status: int = 200):
+    response = jsonify(payload)
+    response.status_code = status
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers.pop("X-Radar-Public-Cache", None)
+    return response
+
+
+@bp.route("/admin/api/radar-ask/settings", methods=["GET", "POST"])
+def admin_api_radar_ask_settings():
+    if not _impl("_admin_request_authorized"):
+        response, status = _impl("_admin_forbidden")
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers.pop("X-Radar-Public-Cache", None)
+        return response, status
+    try:
+        if request.method == "GET":
+            settings = load_radar_ask_quota_settings()
+            return _private_admin_json({"ok": True, "settings": settings.as_payload()})
+
+        payload = request.get_json(silent=True) or {}
+        limits = payload.get("daily_limits") if isinstance(payload, dict) else {}
+        if not isinstance(limits, dict):
+            limits = {}
+        user = _impl("current_user") or {}
+        updated_by = str(
+            user.get("identifier")
+            or user.get("email")
+            or user.get("id")
+            or "admin"
+        )
+        settings = save_radar_ask_quota_settings(
+            free_daily_limit=limits.get("free"),
+            vip_daily_limit=limits.get("vip"),
+            updated_by=updated_by,
+        )
+        return _private_admin_json({"ok": True, "settings": settings.as_payload()})
+    except RadarAskQuotaSettingsError:
+        return _private_admin_json({"ok": False, "error": "invalid_daily_limit"}, status=400)
+    except Exception:
+        logger.exception("Radar Ask Admin settings unavailable")
+        return _private_admin_json({"ok": False, "error": "settings_unavailable"}, status=503)
+
 
 @bp.route("/admin/api/leads")
 def admin_api_leads(**kwargs):
