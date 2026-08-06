@@ -13,6 +13,7 @@ from services.radar_ask.contracts import (
     PageContext,
     RetrievalQuality,
     RouteDecision,
+    SessionMemory,
     ToolCall,
 )
 from services.radar_ask.registry import (
@@ -253,6 +254,92 @@ def test_fast_tool_route_uses_reliable_presenter_even_if_planner_requests_genera
     assert planner.call_count == 1
     assert decision.tool_calls[0].name == "search_deals"
     assert decision.generated is False
+
+
+def test_budget_follow_up_inherits_current_session_ward_and_property_type():
+    planner = PlannerSpy()
+
+    decision = route_question(
+        AskQuestionRequest(question="Giá tầm 3 tỷ đổ lại thôi"),
+        AskContext(
+            user_id=7,
+            tier="admin",
+            session_memory=SessionMemory(
+                wards=["Định Hòa"],
+                property_types=["dat_nen"],
+            ),
+        ),
+        planner=planner,
+    )
+
+    assert planner.call_count == 0
+    assert decision.question_type == "budget_match"
+    assert decision.tool_calls[0].name == "match_budget"
+    assert decision.tool_calls[0].arguments == {
+        "budget_ty": 3.0,
+        "wards": ["Định Hòa"],
+        "property_types": ["dat_nen"],
+        "limit": 10,
+    }
+
+
+def test_short_price_follow_up_inherits_current_session_ward():
+    planner = PlannerSpy()
+
+    decision = route_question(
+        AskQuestionRequest(question="Giá sao?"),
+        AskContext(
+            user_id=7,
+            tier="admin",
+            session_memory=SessionMemory(wards=["Tân An"]),
+        ),
+        planner=planner,
+    )
+
+    assert planner.call_count == 0
+    assert decision.question_type == "area_market_estimate"
+    assert decision.tool_calls[0].arguments["areas"] == ["Tân An"]
+
+
+def test_explicit_new_ward_overrides_page_and_session_ward():
+    decision = route_question(
+        AskQuestionRequest(question="Đất Tân An giờ giá sao?"),
+        AskContext.model_validate(
+            {
+                "user_id": 7,
+                "tier": "admin",
+                "page": {"ward": "Phú Mỹ"},
+                "session_memory": {"wards": ["Định Hòa"]},
+            }
+        ),
+    )
+
+    assert decision.tool_calls[0].arguments["areas"] == ["Tân An"]
+
+
+def test_other_area_follow_up_does_not_silently_reuse_old_ward():
+    planner = PlannerSpy(
+        {
+            "depth": "fast",
+            "question_type": "help",
+            "tool_calls": [],
+            "generated": True,
+        }
+    )
+
+    decision = route_question(
+        AskQuestionRequest(question="Mấy phường khác thì sao?"),
+        AskContext(
+            user_id=7,
+            tier="admin",
+            session_memory=SessionMemory(wards=["Phú Mỹ", "Định Hòa"]),
+            recent_turns=["assistant: Nên ưu tiên Phú Mỹ và Định Hòa."],
+        ),
+        planner=planner,
+    )
+
+    assert planner.call_count == 1
+    assert decision.question_type == "help"
 
 
 def test_fuzzy_tan_an_deal_questions_use_typed_planner_for_intent():

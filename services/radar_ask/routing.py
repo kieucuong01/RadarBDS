@@ -153,6 +153,29 @@ def _is_area_price_question(folded: str) -> bool:
     return bool(re.search(r"\bgia\b.*\b(?:nhieu|the nao|tam nao)\b[?!.]*$", folded))
 
 
+def _asks_for_other_area(folded: str) -> bool:
+    return any(
+        marker in folded
+        for marker in ("phuong khac", "khu khac", "cho khac", "noi khac")
+    )
+
+
+def _effective_wards(explicit_wards: list[str], context: AskContext, folded: str) -> list[str]:
+    if explicit_wards:
+        return explicit_wards
+    if _asks_for_other_area(folded):
+        return []
+    if context.page.ward:
+        return [context.page.ward]
+    return list(context.session_memory.wards)
+
+
+def _effective_property_types(explicit: str | None, context: AskContext) -> list[str]:
+    if explicit:
+        return [explicit]
+    return list(context.session_memory.property_types)
+
+
 def _road_from_question(question: str) -> str | None:
     match = re.search(
         r"(?:đường|duong)\s+"
@@ -271,6 +294,7 @@ def _deterministic_route(
     listing_reference = any(
         phrase in folded for phrase in ("lo dat nay", "lo nay", "tin nay")
     )
+    listing_id = context.page.listing_id or context.session_memory.listing_id
     valuation_question = "dinh gia" in folded and any(
         phrase in folded for phrase in ("tai sao", "vi sao", "giai thich")
     )
@@ -296,12 +320,11 @@ def _deterministic_route(
     if (
         (valuation_question or listing_risk_question)
         and listing_reference
-        and context.page.listing_id is None
+        and listing_id is None
     ):
         return _clarification(question, requested_depth=requested_depth)
 
-    if valuation_question and context.page.listing_id is not None:
-        listing_id = context.page.listing_id
+    if valuation_question and listing_id is not None:
         decision = RouteDecision(
             depth=AskDepth.STANDARD,
             question_type="valuation_explanation",
@@ -315,14 +338,14 @@ def _deterministic_route(
         )
         return decision
 
-    if listing_risk_question and context.page.listing_id is not None:
+    if listing_risk_question and listing_id is not None:
         return _base_decision(
             question_type="listing_risk",
             calls=[
                 _call(
                     "listing-risk",
                     "inspect_listing_risks",
-                    {"listing_id": context.page.listing_id},
+                    {"listing_id": listing_id},
                 )
             ],
             generated=False,
@@ -338,12 +361,9 @@ def _deterministic_route(
             "property_type": _property_type(folded),
             "window_days": 90,
         }
-        if context.page.ward:
-            arguments["ward"] = context.page.ward
-        else:
-            wards_in_question = _known_wards(folded)
-            if len(wards_in_question) == 1:
-                arguments["ward"] = wards_in_question[0]
+        road_wards = _effective_wards(_known_wards(folded), context, folded)
+        if len(road_wards) == 1:
+            arguments["ward"] = road_wards[0]
         return _base_decision(
             question_type="road_market_estimate",
             calls=[_call("road-market", "estimate_road_market", arguments)],
@@ -351,8 +371,11 @@ def _deterministic_route(
             freshness_hours=24,
         )
 
-    wards = _known_wards(folded)
-    if len(wards) >= 2 and any(
+    explicit_wards = _known_wards(folded)
+    wards = _effective_wards(explicit_wards, context, folded)
+    explicit_property_type = _property_type(folded)
+    property_types = _effective_property_types(explicit_property_type, context)
+    if len(explicit_wards) >= 2 and any(
         marker in folded for marker in ("so sanh", "khac nhau", "voi", "va")
     ):
         return _base_decision(
@@ -362,8 +385,8 @@ def _deterministic_route(
                     "area-comparison",
                     "compare_areas",
                     {
-                        "areas": wards[:4],
-                        "property_type": _property_type(folded),
+                        "areas": explicit_wards[:4],
+                        "property_type": explicit_property_type,
                         "window_days": 90,
                     },
                 )
@@ -390,7 +413,7 @@ def _deterministic_route(
                     "compare_areas",
                     {
                         "areas": wards,
-                        "property_type": _property_type(folded),
+                        "property_type": property_types[0] if property_types else None,
                         "window_days": 90,
                     },
                 )
@@ -400,14 +423,23 @@ def _deterministic_route(
         )
 
     budget = _budget_ty(folded)
-    if budget is not None and any(
-        marker in folded for marker in ("ngan sach", "nen xem", "mua", "phuong nao")
+    if budget is not None and (
+        any(marker in folded for marker in ("ngan sach", "nen xem", "mua", "phuong nao"))
+        or bool(wards)
     ):
         arguments = {"budget_ty": budget, "limit": 10}
         if "thu dau mot" in folded:
             arguments["city"] = "Thủ Dầu Một"
         elif "ben cat" in folded:
             arguments["city"] = "Bến Cát"
+        elif context.page.city:
+            arguments["city"] = context.page.city
+        elif context.session_memory.city:
+            arguments["city"] = context.session_memory.city
+        if wards:
+            arguments["wards"] = wards[:10]
+        if property_types:
+            arguments["property_types"] = property_types[:5]
         return _base_decision(
             question_type="budget_match",
             calls=[_call("budget-match", "match_budget", arguments)],
@@ -472,15 +504,16 @@ def _deterministic_route(
     )
     if any(marker in folded for marker in market_trend_markers):
         arguments: dict[str, Any] = {"window_days": 90}
-        if context.page.ward:
+        if len(explicit_wards) == 1:
+            arguments["ward"] = explicit_wards[0]
+        elif context.page.ward and not _asks_for_other_area(folded):
             arguments["ward"] = context.page.ward
         elif len(wards) == 1:
             arguments["ward"] = wards[0]
         if context.page.road:
             arguments["road"] = context.page.road
-        property_type = _property_type(folded)
-        if property_type:
-            arguments["property_type"] = property_type
+        if property_types:
+            arguments["property_type"] = property_types[0]
         if "ward" in arguments or "road" in arguments:
             return _base_decision(
                 question_type="market_trend",
