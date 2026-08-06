@@ -97,6 +97,11 @@ def make_context(
             "get_market_trend",
             "market_trend",
         ),
+        (
+            "Giá đất nền Phú Mỹ hiện tại khoảng bao nhiêu?",
+            "compare_areas",
+            "area_market_estimate",
+        ),
     ],
 )
 def test_approved_simple_questions_use_fast_path_without_planner(
@@ -132,6 +137,10 @@ def test_fast_patterns_extract_bounded_business_arguments():
         AskQuestionRequest(question="Tin nào dưới 20 triệu/m² đang đáng kiểm tra?"),
         make_context(),
     )
+    area_price = route_question(
+        AskQuestionRequest(question="Giá đất nền Phú Mỹ hiện tại khoảng bao nhiêu?"),
+        make_context(),
+    )
 
     assert budget.tool_calls[0].arguments == {
         "budget_ty": 2.5,
@@ -142,6 +151,11 @@ def test_fast_patterns_extract_bounded_business_arguments():
     assert comparison.tool_calls[0].arguments["property_type"] == "dat_nen"
     assert deals.tool_calls[0].arguments["max_price_per_m2_million"] == 20.0
     assert deals.tool_calls[0].arguments["mos_min_pct"] == 15.0
+    assert area_price.tool_calls[0].arguments == {
+        "areas": ["Phú Mỹ"],
+        "property_type": "dat_nen",
+        "window_days": 90,
+    }
 
 
 def test_official_price_explanation_stays_deterministic_for_simple_policy_question():
@@ -171,6 +185,22 @@ def test_current_listing_explanation_uses_page_context_without_guessing():
     ]
     assert all(call.arguments["listing_id"] == 123 for call in decision.tool_calls)
     assert decision.use_thinking is False
+    assert planner.call_count == 0
+
+
+def test_current_listing_risk_question_uses_page_context_without_planner():
+    planner = PlannerSpy()
+    decision = route_question(
+        AskQuestionRequest(question="Tin này có rủi ro gì cần kiểm tra không?"),
+        make_context(tier="vip", listing_id=123),
+        planner=planner,
+    )
+
+    assert decision.depth is AskDepth.FAST
+    assert decision.question_type == "listing_risk"
+    assert [call.name for call in decision.tool_calls] == ["inspect_listing_risks"]
+    assert decision.tool_calls[0].arguments == {"listing_id": 123}
+    assert decision.generated is False
     assert planner.call_count == 0
 
 
@@ -206,6 +236,7 @@ def test_exact_road_market_uses_ward_written_in_the_question():
     "question",
     [
         "Lô đất này tại sao được định giá 2,5 tỷ?",
+        "Lô đất này có rủi ro gì?",
         "Lô đất XXX tại sao được định giá 2 tỷ?",
         "Giá đất mặt tiền đường XXX hiện tại là bao nhiêu?",
     ],

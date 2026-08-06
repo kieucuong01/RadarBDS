@@ -148,6 +148,37 @@ def test_area_comparison_answers_which_area_has_lower_observed_asking_price():
     }
 
 
+def test_area_market_estimate_answers_single_ward_price_directly():
+    phu_my = {
+        "ward": "Phú Mỹ",
+        "sample_count": 8,
+        "median_asking_ppm2_million": 20,
+        "p25_asking_ppm2_million": 18,
+        "p75_asking_ppm2_million": 22,
+    }
+    bundle = EvidenceBundle(
+        question_snapshot="Giá đất nền Phú Mỹ hiện tại khoảng bao nhiêu?",
+        calculations={
+            "metric": "asking_price_per_m2",
+            "window_days": 90,
+            "areas": {"Phú Mỹ": phu_my},
+        },
+        items=[
+            item("area:phu-my", source_ref="ward-market:Phú Mỹ:90d", value=phu_my, sample_size=8),
+        ],
+    )
+
+    answer = validated(
+        present_deterministic_answer(decision("area_market_estimate"), bundle, now=NOW),
+        bundle,
+    )
+
+    assert answer.direct_answer.startswith("Tại Phú Mỹ")
+    assert "20 triệu/m²" in answer.direct_answer
+    assert "18-22 triệu/m²" in answer.direct_answer
+    assert answer.claims[0].evidence_ids == ["area:phu-my"]
+
+
 def test_deal_search_lists_matches_and_cites_each_exact_listing():
     first = {
         "listing_ref": "radar-listing:701",
@@ -331,6 +362,51 @@ def test_market_trend_answer_compares_period_medians_and_cites_market_stat():
     assert "20 triệu/m²" in answer.direct_answer
     assert "+10%" in answer.direct_answer
     assert answer.claims[0].evidence_ids == ["trend:phu-my"]
+
+
+def test_listing_risk_answer_summarizes_blockers_warnings_and_numbers():
+    value = {
+        "listing_ref": "radar-listing:900",
+        "asking_price_ty": 2.5,
+        "asking_price_per_m2_million": 20,
+        "fair_price_per_m2_million": 24,
+        "mos_pct": 16.67,
+        "sample_count": 12,
+        "blocking_flags": ["possibly_duplicate"],
+        "warning_flags": ["legal_status_not_verified", "low_segment_confidence"],
+        "legal_status": "unverified",
+        "trust_tier": "candidate_signal",
+    }
+    bundle = EvidenceBundle(
+        question_snapshot="Tin này có rủi ro gì?",
+        resolved_entities={"listing_ref": "radar-listing:900"},
+        calculations={
+            "blocking_flags": ["possibly_duplicate"],
+            "warning_flags": ["legal_status_not_verified", "low_segment_confidence"],
+            "risk_level": "high",
+        },
+        items=[
+            item(
+                "risk:900",
+                kind=SourceKind.VALUATION,
+                source_ref="radar-listing:900:risk",
+                value=value,
+                sample_size=12,
+            )
+        ],
+    )
+
+    answer = validated(
+        present_deterministic_answer(decision("listing_risk"), bundle, now=NOW),
+        bundle,
+    )
+
+    assert "chưa nên xem là deal sạch" in answer.direct_answer.lower()
+    assert "có thể là tin trùng" in answer.direct_answer.lower()
+    assert "pháp lý chưa được xác minh" in answer.direct_answer.lower()
+    assert "2,5 tỷ" in answer.direct_answer
+    assert "MOS 16,67%" in answer.direct_answer
+    assert answer.claims[0].evidence_ids == ["risk:900"]
 
 
 def test_insufficient_evidence_does_not_create_unrelated_claim_or_source():

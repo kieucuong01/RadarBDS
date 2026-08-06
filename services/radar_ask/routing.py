@@ -238,13 +238,30 @@ def _deterministic_route(
     valuation_question = "dinh gia" in folded and any(
         phrase in folded for phrase in ("tai sao", "vi sao", "giai thich")
     )
+    listing_risk_question = listing_reference and any(
+        phrase in folded
+        for phrase in (
+            "rui ro",
+            "can kiem tra",
+            "dang kiem tra khong",
+            "co dang kiem tra",
+            "deal sach",
+            "co nen xem",
+            "co nen mua",
+            "phap ly",
+        )
+    )
     road_question = "duong" in folded and any(
         phrase in folded for phrase in ("gia", "bao nhieu", "hien tai", "mat tien")
     )
 
     if has_placeholder and (valuation_question or road_question):
         return _clarification(question, requested_depth=requested_depth)
-    if valuation_question and listing_reference and context.page.listing_id is None:
+    if (
+        (valuation_question or listing_risk_question)
+        and listing_reference
+        and context.page.listing_id is None
+    ):
         return _clarification(question, requested_depth=requested_depth)
 
     if valuation_question and context.page.listing_id is not None:
@@ -261,6 +278,20 @@ def _deterministic_route(
             required_freshness_hours=24,
         )
         return decision
+
+    if listing_risk_question and context.page.listing_id is not None:
+        return _base_decision(
+            question_type="listing_risk",
+            calls=[
+                _call(
+                    "listing-risk",
+                    "inspect_listing_risks",
+                    {"listing_id": context.page.listing_id},
+                )
+            ],
+            generated=False,
+            freshness_hours=24,
+        )
 
     if road_question:
         road = _road_from_question(question)
@@ -296,6 +327,29 @@ def _deterministic_route(
                     "compare_areas",
                     {
                         "areas": wards[:4],
+                        "property_type": _property_type(folded),
+                        "window_days": 90,
+                    },
+                )
+            ],
+            generated=False,
+            freshness_hours=24,
+        )
+
+    if (
+        len(wards) == 1
+        and "bang gia dat" not in folded
+        and "gia" in folded
+        and any(marker in folded for marker in ("bao nhieu", "hien tai", "khoang", "mat bang"))
+    ):
+        return _base_decision(
+            question_type="area_market_estimate",
+            calls=[
+                _call(
+                    "area-market",
+                    "compare_areas",
+                    {
+                        "areas": wards,
                         "property_type": _property_type(folded),
                         "window_days": 90,
                     },

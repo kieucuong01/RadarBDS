@@ -113,7 +113,7 @@ class RoadMarketArgs(SafeToolArgs):
 
 
 class CompareAreasArgs(SafeToolArgs):
-    areas: list[str] = Field(min_length=2, max_length=4)
+    areas: list[str] = Field(min_length=1, max_length=4)
     property_type: str | None = Field(default=None, max_length=80)
     window_days: int = Field(default=90, ge=30, le=180)
 

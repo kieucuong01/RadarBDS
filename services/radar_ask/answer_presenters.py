@@ -61,6 +61,21 @@ INSUFFICIENT_NEXT_STEP_TEXT = {
     "market_trend_requires_both_periods": "Thử hỏi theo khung 90 ngày hoặc 180 ngày, hoặc mở rộng từ tuyến đường sang cả phường để có đủ mẫu.",
 }
 
+RISK_FLAG_TEXT = {
+    "possibly_duplicate": "có thể là tin trùng",
+    "suspicious_bait": "có dấu hiệu tin mồi",
+    "missing_area_evidence": "thiếu bằng chứng diện tích đủ tin cậy",
+    "invalid_area": "diện tích có dấu hiệu không hợp lệ",
+    "invalid_price": "giá có dấu hiệu không hợp lệ",
+    "area_mismatch": "diện tích không khớp giữa các nguồn",
+    "ward_mismatch": "phường/khu vực không khớp",
+    "road_conflict": "tên đường có xung đột",
+    "tho_cu_mismatch": "thông tin thổ cư chưa khớp",
+    "legal_status_not_verified": "pháp lý chưa được xác minh",
+    "source_quality_recheck_required": "nguồn cần kiểm tra lại",
+    "low_segment_confidence": "mẫu định giá cùng phân khúc còn mỏng",
+}
+
 
 def _number(value: Any) -> float | None:
     if isinstance(value, bool) or value is None:
@@ -102,6 +117,10 @@ def _answer_as_of(bundle: EvidenceBundle, now: datetime) -> datetime:
 
 def _risk_text(warnings: Sequence[str]) -> list[str]:
     return [WARNING_TEXT.get(warning, warning) for warning in warnings[:12]]
+
+
+def _flag_text(flag: str) -> str:
+    return RISK_FLAG_TEXT.get(flag, flag.replace("_", " "))
 
 
 def _insufficient(
@@ -288,6 +307,62 @@ def _present_area_comparison(
         direct_answer=direct,
         claims=claims,
         followups=[f"So sánh deal tốt nhất tại {entry[0]}" for entry in ordered[:2]],
+        now=now,
+    )
+
+
+def _present_area_market_estimate(
+    decision: RouteDecision,
+    bundle: EvidenceBundle,
+    now: datetime,
+) -> AnswerEnvelope:
+    raw_areas = bundle.calculations.get("areas")
+    if not isinstance(raw_areas, Mapping):
+        return _insufficient(decision, bundle, now)
+    selected: tuple[str, Mapping[str, Any], EvidenceItem] | None = None
+    for ward, raw_stats in raw_areas.items():
+        stats = _mapping(raw_stats)
+        evidence = _item_by_ward(bundle.items, str(ward), prefix="ward-market:")
+        if stats is not None and evidence is not None:
+            selected = (str(ward), stats, evidence)
+            break
+    if selected is None:
+        return _insufficient(decision, bundle, now)
+    ward, stats, evidence = selected
+    count = _integer(stats.get("sample_count")) or 0
+    median = _fmt(stats.get("median_asking_ppm2_million"))
+    p25 = _fmt(stats.get("p25_asking_ppm2_million"))
+    p75 = _fmt(stats.get("p75_asking_ppm2_million"))
+    days = _integer(bundle.calculations.get("window_days")) or 90
+    line = (
+        f"Tại {ward}, giá rao trung vị trong mẫu Radar là {median} triệu/m²; "
+        f"khoảng giữa {p25}-{p75} triệu/m², trên mẫu {count} tin trong {days} ngày."
+    )
+    return _base_answer(
+        decision,
+        bundle,
+        direct_answer="\n".join(
+            [
+                line,
+                "Đây là mức chào từ tin đủ điều kiện, không đại diện cho giá đã sang tên.",
+            ]
+        ),
+        claims=[AnswerClaim(text=line, evidence_ids=[evidence.evidence_id])],
+        key_metrics=[
+            KeyMetric(
+                label=f"Giá rao trung vị tại {ward}",
+                value=_number(stats.get("median_asking_ppm2_million")),
+                unit="million_vnd_per_m2",
+                evidence_ids=[evidence.evidence_id],
+            ),
+            KeyMetric(
+                label=f"Mẫu giá tại {ward}",
+                value=count,
+                unit="count",
+                evidence_ids=[evidence.evidence_id],
+            ),
+        ],
+        followups=[f"So sánh {ward} với phường lân cận", f"Xem deal đáng kiểm tra tại {ward}"],
         now=now,
     )
 
@@ -500,6 +575,118 @@ def _present_market_trend(
     )
 
 
+def _present_listing_risk(
+    decision: RouteDecision,
+    bundle: EvidenceBundle,
+    now: datetime,
+) -> AnswerEnvelope:
+    evidence = next(
+        (
+            item
+            for item in bundle.items
+            if item.source_kind is SourceKind.VALUATION
+            and item.source_ref.startswith("radar-listing:")
+            and item.source_ref.endswith(":risk")
+            and _mapping(item.value) is not None
+        ),
+        None,
+    )
+    if evidence is None:
+        return _insufficient(decision, bundle, now)
+    value = _mapping(evidence.value) or {}
+    blocking = [
+        _flag_text(str(flag))
+        for flag in value.get("blocking_flags", [])
+        if isinstance(flag, str)
+    ]
+    warnings = [
+        _flag_text(str(flag))
+        for flag in value.get("warning_flags", [])
+        if isinstance(flag, str)
+    ]
+    risk_level = str(bundle.calculations.get("risk_level") or "needs_checks")
+    if risk_level == "high" or blocking:
+        verdict = AskVerdict.HIGH_RISK
+        intro = "Lô này chưa nên xem là deal sạch trong Radar."
+    elif warnings:
+        verdict = AskVerdict.NEEDS_CHECKS
+        intro = "Lô này có thể đưa vào danh sách kiểm tra, nhưng chưa đủ sạch để kết luận nhanh."
+    else:
+        verdict = AskVerdict.NEEDS_CHECKS
+        intro = "Radar chưa thấy cờ rủi ro deterministic lớn cho lô này."
+
+    metrics_parts: list[str] = []
+    asking_price = _number(value.get("asking_price_ty"))
+    asking_ppm2 = _number(value.get("asking_price_per_m2_million"))
+    fair_ppm2 = _number(value.get("fair_price_per_m2_million"))
+    mos_pct = _number(value.get("mos_pct"))
+    sample_count = _integer(value.get("sample_count"))
+    if asking_price is not None:
+        metrics_parts.append(f"mức chào {_fmt(asking_price, digits=3)} tỷ")
+    if asking_ppm2 is not None:
+        metrics_parts.append(f"{_fmt(asking_ppm2)} triệu/m²")
+    if fair_ppm2 is not None:
+        metrics_parts.append(f"mức mô hình {_fmt(fair_ppm2)} triệu/m²")
+    if mos_pct is not None:
+        metrics_parts.append(f"MOS {_fmt(mos_pct)}%")
+    if sample_count is not None:
+        metrics_parts.append(f"mẫu {sample_count} tin")
+    metrics_text = "; ".join(metrics_parts)
+
+    risk_parts: list[str] = []
+    if blocking:
+        risk_parts.append("Điểm chặn: " + ", ".join(blocking[:6]) + ".")
+    if warnings:
+        risk_parts.append("Điểm cần kiểm tra thêm: " + ", ".join(warnings[:6]) + ".")
+    if not risk_parts:
+        risk_parts.append("Dù không có cờ lớn, vẫn cần đối chiếu giấy tờ, vị trí thực địa và mẫu so sánh gần nhất.")
+
+    line = intro
+    if metrics_text:
+        line = f"{line} Số liệu hiện có: {metrics_text}."
+    direct = "\n".join(
+        [
+            line,
+            *risk_parts,
+            "Kết luận này là bước sàng lọc rủi ro; trước quyết định đầu tư vẫn cần kiểm tra pháp lý gốc, quy hoạch, vị trí thực địa và thương lượng thực tế.",
+        ]
+    )
+    key_metrics: list[KeyMetric] = []
+    if mos_pct is not None:
+        key_metrics.append(
+            KeyMetric(
+                label="MOS theo mô hình Radar",
+                value=round(mos_pct, 2),
+                unit="pct",
+                evidence_ids=[evidence.evidence_id],
+            )
+        )
+    if sample_count is not None:
+        key_metrics.append(
+            KeyMetric(
+                label="Mẫu định giá",
+                value=sample_count,
+                unit="count",
+                evidence_ids=[evidence.evidence_id],
+            )
+        )
+    return AnswerEnvelope(
+        answered=True,
+        depth=decision.depth,
+        verdict=verdict,
+        direct_answer=direct[:6_000],
+        claims=[AnswerClaim(text=line, evidence_ids=[evidence.evidence_id])],
+        key_metrics=key_metrics,
+        risks=_risk_text(bundle.warnings),
+        suggested_followups=[
+            "Giải thích vì sao lô này được định giá như vậy",
+            "Tìm lô so sánh gần khu này",
+        ],
+        as_of=_answer_as_of(bundle, now),
+        dataset_version=_dataset_version(bundle.items),
+    )
+
+
 def _present_official_price_explanation(
     decision: RouteDecision,
     bundle: EvidenceBundle,
@@ -566,10 +753,12 @@ def _present_official_price_explanation(
 PRESENTERS: dict[str, Presenter] = {
     "budget_match": _present_budget_match,
     "area_comparison": _present_area_comparison,
+    "area_market_estimate": _present_area_market_estimate,
     "deal_search": _present_deal_search,
     "price_drop_ranking": _present_price_drop_ranking,
     "road_market_estimate": _present_road_market_estimate,
     "market_trend": _present_market_trend,
+    "listing_risk": _present_listing_risk,
     "official_price_explanation": _present_official_price_explanation,
 }
 
