@@ -203,6 +203,105 @@ def test_messages_feedback_and_reads_require_session_ownership(repository_env):
         )
 
 
+def test_load_session_context_is_owned_bounded_and_newest_route_first(repository_env):
+    repository, users = repository_env
+    session = repository.create_session(user_id=users.free_id, title="Định Hòa")
+    older = repository.create_run(
+        user_id=users.free_id,
+        question="Đất Định Hòa thì sao?",
+        idempotency_key=f"context-older-{uuid4().hex}",
+        session_id=session.id,
+    )
+    repository.transition_run(
+        older.id,
+        user_id=users.free_id,
+        expected={"created"},
+        target="running",
+        route={
+            "depth": "fast",
+            "question_type": "market_trend",
+            "tool_calls": [
+                {
+                    "call_id": "older-trend",
+                    "name": "get_market_trend",
+                    "arguments": {"ward": "Định Hòa", "window_days": 90},
+                }
+            ],
+            "generated": False,
+        },
+    )
+    repository.transition_run(
+        older.id,
+        user_id=users.free_id,
+        expected={"running"},
+        target="completed",
+        outcome="answered",
+    )
+    newer = repository.create_run(
+        user_id=users.free_id,
+        question="Tìm lô dưới 3 tỷ",
+        idempotency_key=f"context-newer-{uuid4().hex}",
+        session_id=session.id,
+    )
+    repository.transition_run(
+        newer.id,
+        user_id=users.free_id,
+        expected={"created"},
+        target="running",
+        route={
+            "depth": "fast",
+            "question_type": "deal_search",
+            "tool_calls": [
+                {
+                    "call_id": "newer-deals",
+                    "name": "search_deals",
+                    "arguments": {"wards": ["Định Hòa"], "max_budget_ty": 3},
+                }
+            ],
+            "generated": False,
+        },
+    )
+    repository.transition_run(
+        newer.id,
+        user_id=users.free_id,
+        expected={"running"},
+        target="completed",
+        outcome="answered",
+    )
+    for index in range(8):
+        repository.create_message(
+            user_id=users.free_id,
+            session_id=session.id,
+            role="user" if index % 2 == 0 else "assistant",
+            content=f"turn-{index}",
+        )
+
+    context = repository.load_session_context(
+        user_id=users.free_id,
+        session_id=session.id,
+        message_limit=6,
+        route_limit=4,
+    )
+
+    assert [message.content for message in context.messages] == [
+        "turn-2",
+        "turn-3",
+        "turn-4",
+        "turn-5",
+        "turn-6",
+        "turn-7",
+    ]
+    assert [route["question_type"] for route in context.routes] == [
+        "deal_search",
+        "market_trend",
+    ]
+    with pytest.raises(OwnedResourceNotFound):
+        repository.load_session_context(
+            user_id=users.vip_id,
+            session_id=session.id,
+        )
+
+
 def test_message_content_preserves_markdown_line_breaks(repository_env):
     repository, users = repository_env
     session = repository.create_session(user_id=users.free_id, title="Phân tích")

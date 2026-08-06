@@ -96,6 +96,12 @@ class RadarAskMessageRecord:
 
 
 @dataclass(frozen=True)
+class RadarAskSessionContextRecord:
+    messages: tuple[RadarAskMessageRecord, ...]
+    routes: tuple[dict[str, Any], ...]
+
+
+@dataclass(frozen=True)
 class RadarAskRunRecord:
     id: UUID
     session_id: UUID
@@ -492,6 +498,54 @@ class RadarAskRepository:
                 tuple(params),
             ).fetchall()
         return [_message_from_row(row) for row in rows]
+
+    def load_session_context(
+        self,
+        *,
+        user_id: int,
+        session_id: UUID,
+        message_limit: int = 6,
+        route_limit: int = 4,
+    ) -> RadarAskSessionContextRecord:
+        """Load bounded current-chat context through the ownership boundary."""
+        bounded_messages = max(1, min(int(message_limit), 6))
+        bounded_routes = max(1, min(int(route_limit), 4))
+        with get_conn() as conn:
+            owned = conn.execute(
+                "SELECT 1 FROM radar_ask_sessions WHERE id=? AND user_id=?",
+                (session_id, user_id),
+            ).fetchone()
+            if owned is None:
+                raise OwnedResourceNotFound("session was not found")
+            message_rows = conn.execute(
+                """
+                SELECT *
+                FROM (
+                    SELECT * FROM radar_ask_messages
+                    WHERE session_id=?
+                    ORDER BY created_at DESC, id DESC
+                    LIMIT ?
+                ) recent
+                ORDER BY created_at, id
+                """,
+                (session_id, bounded_messages),
+            ).fetchall()
+            route_rows = conn.execute(
+                """
+                SELECT route_json
+                FROM radar_ask_runs
+                WHERE session_id=? AND user_id=?
+                  AND status IN ('completed','insufficient')
+                  AND route_json IS NOT NULL
+                ORDER BY created_at DESC, id DESC
+                LIMIT ?
+                """,
+                (session_id, user_id, bounded_routes),
+            ).fetchall()
+        return RadarAskSessionContextRecord(
+            messages=tuple(_message_from_row(row) for row in message_rows),
+            routes=tuple(dict(row["route_json"]) for row in route_rows),
+        )
 
     def add_feedback(
         self,
