@@ -136,4 +136,118 @@ assert.deepEqual(plain(api.readStoredScope(storage, wardsByCity)), {
   updatedAt: JSON.parse(storage.value).updatedAt,
 });
 
+const bodyClasses = new Set();
+const chooser = {
+  hidden: true,
+  focused: false,
+  querySelector() {
+    return {
+      focus() {
+        chooser.focused = true;
+      },
+    };
+  },
+};
+const bar = { hidden: false };
+const label = { textContent: '' };
+const doc = {
+  body: {
+    classList: {
+      add(name) {
+        bodyClasses.add(name);
+      },
+      remove(name) {
+        bodyClasses.delete(name);
+      },
+      toggle(name, force) {
+        if (force) bodyClasses.add(name);
+        else bodyClasses.delete(name);
+      },
+    },
+  },
+  getElementById(id) {
+    return {
+      areaScopeChooser: chooser,
+      areaScopeBar: bar,
+      areaScopeLabel: label,
+    }[id] || null;
+  },
+};
+
+api.showChooser(doc);
+assert.equal(chooser.hidden, false);
+assert.equal(bar.hidden, true);
+assert.equal(chooser.focused, true);
+assert.equal(bodyClasses.has('area-scope-modal-open'), true);
+
+api.hideChooser(doc);
+assert.equal(chooser.hidden, true);
+assert.equal(bodyClasses.has('area-scope-modal-open'), false);
+
+api.updateScopeUi({
+  version: 1,
+  city: 'THá»¦ Dáº¦U Má»˜T',
+  wards: ['TÃ¢n An'],
+  mode: 'custom',
+}, doc);
+assert.equal(label.textContent, 'TÃ¢n An');
+assert.equal(bar.hidden, false);
+assert.equal(chooser.hidden, true);
+assert.equal(bodyClasses.has('area-scope-modal-open'), false);
+
+const sidebarClasses = new Set(['collapsed']);
+const sidebar = {
+  classList: {
+    add(name) {
+      sidebarClasses.add(name);
+    },
+    remove(name) {
+      sidebarClasses.delete(name);
+    },
+    contains(name) {
+      return sidebarClasses.has(name);
+    },
+  },
+};
+const wardSearch = {
+  focused: false,
+  focus() {
+    this.focused = true;
+  },
+};
+window.document = {
+  body: doc.body,
+  getElementById(id) {
+    return {
+      areaScopeChooser: chooser,
+      sidebar,
+      wardSearch,
+    }[id] || null;
+  },
+};
+
+let toggleCount = 0;
+window.toggleMenu = function toggleMenu() {
+  toggleCount += 1;
+  sidebarClasses.add('show');
+};
+
+window.innerWidth = 1280;
+chooser.hidden = false;
+bodyClasses.add('area-scope-modal-open');
+window.openAreaScopeFilterSheet();
+assert.equal(toggleCount, 0);
+assert.equal(chooser.hidden, true);
+assert.equal(sidebarClasses.has('collapsed'), false);
+assert.equal(wardSearch.focused, true);
+assert.equal(bodyClasses.has('area-scope-modal-open'), false);
+
+window.innerWidth = 390;
+wardSearch.focused = false;
+chooser.hidden = false;
+window.openAreaScopeFilterSheet();
+assert.equal(toggleCount, 1);
+assert.equal(sidebarClasses.has('show'), true);
+assert.equal(wardSearch.focused, true);
+
 console.log('area scope: ok');

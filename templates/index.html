@@ -75,7 +75,7 @@
 
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-scroll-lock-20260802' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=content-hubs-20260729' %}
-  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=mobile-scroll-lock-20260802' %}
+  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=area-scope-modal-20260806' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
@@ -579,24 +579,26 @@
 
       <!-- TAB: SIGNALS -->
       <div id="tab-signals" class="tab-content active">
-        <section class="area-scope-chooser" id="areaScopeChooser" hidden aria-labelledby="areaScopeChooserTitle">
-          <div class="area-scope-copy">
-            <span class="area-scope-kicker">Khu vực quan tâm</span>
-            <h2 id="areaScopeChooserTitle">Bạn đang săn khu nào?</h2>
-            <p>Chọn một hoặc vài phường để Radar BDS chỉ mở các signal đúng phạm vi bạn quan tâm.</p>
-          </div>
-          <div class="area-scope-presets" aria-label="Gợi ý khu vực">
-            <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_tan_an_west')">Tân An phía Tây</button>
-            <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_central')">Trung tâm TDM</button>
-            <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_north_industrial')">Phú Tân - Hòa Phú</button>
-            <button type="button" class="area-scope-preset" onclick="selectAreaPreset('ben_cat_my_phuoc')">Mỹ Phước</button>
-            <button type="button" class="area-scope-preset" onclick="selectAreaPreset('ben_cat_outer')">Bến Cát ngoài</button>
-          </div>
-          <div class="area-scope-actions">
-            <button type="button" class="area-scope-all" onclick="selectCurrentCityAllAreaScope()">Xem toàn Thủ Dầu Một</button>
-            <button type="button" class="area-scope-filter" onclick="toggleMenu()">Chọn phường trong bộ lọc</button>
-          </div>
-        </section>
+        <div class="area-scope-modal" id="areaScopeChooser" hidden role="dialog" aria-modal="true" aria-labelledby="areaScopeChooserTitle">
+          <section class="area-scope-modal-panel">
+            <div class="area-scope-copy">
+              <span class="area-scope-kicker">Khu vực quan tâm</span>
+              <h2 id="areaScopeChooserTitle">Bạn đang săn khu nào?</h2>
+              <p>Chọn một hoặc vài phường để Radar BDS chỉ mở các signal đúng phạm vi bạn quan tâm.</p>
+            </div>
+            <div class="area-scope-presets" aria-label="Gợi ý khu vực">
+              <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_tan_an_west')">Tân An phía Tây</button>
+              <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_central')">Trung tâm TDM</button>
+              <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_north_industrial')">Phú Tân - Hòa Phú</button>
+              <button type="button" class="area-scope-preset" onclick="selectAreaPreset('ben_cat_my_phuoc')">Mỹ Phước</button>
+              <button type="button" class="area-scope-preset" onclick="selectAreaPreset('ben_cat_outer')">Bến Cát ngoài</button>
+            </div>
+            <div class="area-scope-actions">
+              <button type="button" class="area-scope-all" onclick="selectCurrentCityAllAreaScope()">Xem toàn Thủ Dầu Một</button>
+              <button type="button" class="area-scope-filter" onclick="openAreaScopeFilterSheet()">Chọn phường trong bộ lọc</button>
+            </div>
+          </section>
+        </div>
 
         <div class="area-scope-bar" id="areaScopeBar" hidden>
           <div class="area-scope-current">
@@ -1463,8 +1465,8 @@
   <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-scroll-lock-20260802"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=area-scope-20260806"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=area-scope-20260806"></script>
+  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=area-scope-modal-20260806"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=area-scope-modal-20260806"></script>
 </body>
 
 </html>

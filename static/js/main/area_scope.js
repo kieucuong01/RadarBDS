@@ -212,6 +212,17 @@
     if (label) label.textContent = scope ? scopeLabel(scope) : '';
     if (bar) bar.hidden = !scope;
     if (chooser) chooser.hidden = Boolean(scope);
+    if (documentRef.body) {
+      documentRef.body.classList.toggle('area-scope-modal-open', !scope && chooser && !chooser.hidden);
+    }
+  }
+
+  function hideChooser(doc) {
+    const documentRef = doc || root.document;
+    if (!documentRef) return;
+    const chooser = documentRef.getElementById('areaScopeChooser');
+    if (chooser) chooser.hidden = true;
+    if (documentRef.body) documentRef.body.classList.remove('area-scope-modal-open');
   }
 
   function showChooser(doc) {
@@ -219,7 +230,12 @@
     if (!documentRef) return;
     const chooser = documentRef.getElementById('areaScopeChooser');
     const bar = documentRef.getElementById('areaScopeBar');
-    if (chooser) chooser.hidden = false;
+    if (chooser) {
+      chooser.hidden = false;
+      if (documentRef.body) documentRef.body.classList.add('area-scope-modal-open');
+      const focusTarget = chooser.querySelector('.area-scope-preset, .area-scope-all, .area-scope-filter');
+      if (focusTarget && typeof focusTarget.focus === 'function') focusTarget.focus();
+    }
     if (bar) bar.hidden = true;
   }
 
@@ -277,6 +293,18 @@
     showChooser(root.document);
   };
 
+  root.openAreaScopeFilterSheet = function openAreaScopeFilterSheet() {
+    hideChooser(root.document);
+    const sidebar = root.document && root.document.getElementById('sidebar');
+    if (sidebar && Number(root.innerWidth || 0) > 1024) {
+      sidebar.classList.remove('collapsed');
+    } else if (sidebar && !sidebar.classList.contains('show') && typeof root.toggleMenu === 'function') {
+      root.toggleMenu();
+    }
+    const wardSearch = root.document && root.document.getElementById('wardSearch');
+    if (wardSearch && typeof wardSearch.focus === 'function') wardSearch.focus();
+  };
+
   root.persistCurrentAreaScope = function persistCurrentAreaScope(options) {
     const scope = selectedScopeFromControls(root.document, root.INITIAL_WARDS_BY_CITY || {});
     if (!scope) return null;
@@ -292,6 +320,7 @@
     applyDashboardScope,
     applyScopeToParams,
     clearStoredScope,
+    hideChooser,
     readStoredScope,
     replaceUrlWithScope,
     saveScope,
