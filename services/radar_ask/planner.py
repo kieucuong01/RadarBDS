@@ -80,6 +80,23 @@ INVESTOR_INTENT_EXAMPLES = (
         "rule": "Câu hỏi số lượng lô giảm giá theo phường dùng rank_price_drop_areas với wards, không dùng compare_areas.",
     },
     {
+        "question": "đất Tân An giờ giá bao nhiêu",
+        "depth": "fast",
+        "question_type": "area_market_estimate",
+        "tool_calls": [
+            {
+                "call_id": "example-area-price",
+                "name": "compare_areas",
+                "arguments": {
+                    "areas": ["Tân An"],
+                    "property_type": "dat_nen",
+                    "window_days": 90,
+                },
+            }
+        ],
+        "rule": "Câu hỏi giá hiện tại/khoảng bao nhiêu/mặt bằng giá của một phường dùng compare_areas; chỉ dùng get_market_trend khi hỏi xu hướng tăng giảm.",
+    },
+    {
         "question": "Xin chào",
         "depth": "fast",
         "question_type": "conversation",
@@ -264,6 +281,8 @@ class DeepSeekTypedPlanner:
             "Voi cau hoi đời thường nhu ok xiu, re, co lo nao, dang xem, hay bao nhieu lo, "
             "hay doc intent_examples de chon typed tool dung y dinh dau tu. "
             "Neu hoi so luong lo giam gia theo phuong, dung rank_price_drop_areas voi wards. "
+            "Neu hoi gia hien tai, gia bao nhieu, khoang bao nhieu, mat bang gia cua mot phuong/khu vuc, "
+            "dung compare_areas; khong dung get_market_trend tru khi nguoi dung hoi xu huong tang/giam. "
             "Neu chi la chao hoi, cam on, hoi ban lam duoc gi, hoac ngoai pham vi BDS, "
             "tra route conversation, help, hoac off_topic voi tool_calls rong va generated true "
             "de lop tra loi viet cau tu nhien nhu nguoi tu van. "

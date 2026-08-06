@@ -280,6 +280,13 @@ def test_planner_payload_includes_investor_intent_examples_for_common_vietnamese
         for example in examples
     )
     assert any(
+        example["question"] == "đất Tân An giờ giá bao nhiêu"
+        and example["question_type"] == "area_market_estimate"
+        and example["tool_calls"][0]["name"] == "compare_areas"
+        and example["tool_calls"][0]["arguments"]["areas"] == ["Tân An"]
+        for example in examples
+    )
+    assert any(
         example["question"] == "Xin chào"
         and example["question_type"] == "conversation"
         and example["tool_calls"] == []
