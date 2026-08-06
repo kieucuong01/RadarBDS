@@ -284,26 +284,53 @@
     const manualPrice = priceRanges.length ? '' : appendManualRange(params, 't\u1ef7', 'price_min', 'price_max');
     const priceLabels = priceRanges.map((token) => formatRangeLabel(token, 't\u1ef7')).filter(Boolean);
     if (manualPrice) priceLabels.push(manualPrice);
-    if (priceLabels.length) parts.push(`Gi\u00e1: ${priceLabels.join(' + ')}`);
+    if (priceLabels.length) parts.push({ kind: 'price', label: priceLabels.join(' + ') });
 
     const areaRanges = uniqueValues(params.getAll('area_range'));
     const manualArea = areaRanges.length ? '' : appendManualRange(params, 'm2', 'area_min', 'area_max');
     const areaLabels = areaRanges.map((token) => formatRangeLabel(token, 'm2')).filter(Boolean);
     if (manualArea) areaLabels.push(manualArea);
-    if (areaLabels.length) parts.push(`Di\u1ec7n t\u00edch: ${areaLabels.join(' + ')}`);
+    if (areaLabels.length) parts.push({ kind: 'area', label: areaLabels.join(' + ') });
 
     const propTypes = uniqueValues(params.getAll('prop_type'));
     const propLabels = propTypes.map((value) => PROP_TYPE_LABELS[value] || value).filter(Boolean);
     if (propLabels.length && propLabels.length < Object.keys(PROP_TYPE_LABELS).length) {
-      parts.push(`Lo\u1ea1i h\u00ecnh: ${propLabels.join(' + ')}`);
+      parts.push({ kind: 'type', label: propLabels.join(' + ') });
     }
     return parts;
   }
 
-  function scopeStatusLabel(scope, filterParams) {
+  function scopeStatusParts(scope, filterParams) {
     const base = scopeLabel(scope);
-    const filterParts = scopeFilterPartsFromParams(filterParams);
-    return [base].concat(filterParts).filter(Boolean).join(' | ');
+    const parts = base ? [{ kind: 'location', label: base }] : [];
+    return parts.concat(scopeFilterPartsFromParams(filterParams));
+  }
+
+  function scopeStatusLabel(scope, filterParams) {
+    return scopeStatusParts(scope, filterParams).map((part) => part.label).filter(Boolean).join(' | ');
+  }
+
+  function renderScopeStatusChips(container, parts, doc) {
+    if (!container) return;
+    const visibleParts = (parts || []).filter((part) => part && part.label);
+    if (typeof container.replaceChildren === 'function') container.replaceChildren();
+    else if (Array.isArray(container.children)) container.children.length = 0;
+    container.textContent = '';
+    if (!visibleParts.length) return;
+
+    const documentRef = doc || root.document;
+    const plainLabel = visibleParts.map((part) => part.label).join(' ');
+    if (!documentRef || typeof documentRef.createElement !== 'function' || typeof container.appendChild !== 'function') {
+      container.textContent = plainLabel;
+      return;
+    }
+    visibleParts.forEach((part) => {
+      const chip = documentRef.createElement('span');
+      chip.className = `area-scope-chip area-scope-chip-${part.kind}`;
+      chip.textContent = part.label;
+      container.appendChild(chip);
+    });
+    if (typeof container.setAttribute === 'function') container.setAttribute('aria-label', plainLabel);
   }
 
   function currentFilterParamsFromControls(doc) {
@@ -562,7 +589,10 @@
     const chooser = documentRef.getElementById('areaScopeChooser');
     const bar = documentRef.getElementById('areaScopeBar');
     const label = documentRef.getElementById('areaScopeLabel');
-    if (label) label.textContent = scope ? scopeStatusLabel(scope, currentFilterParamsFromControls(documentRef)) : '';
+    if (label) {
+      const parts = scope ? scopeStatusParts(scope, currentFilterParamsFromControls(documentRef)) : [];
+      renderScopeStatusChips(label, parts, documentRef);
+    }
     if (bar) bar.hidden = !scope;
     if (chooser) chooser.hidden = Boolean(scope);
     if (documentRef.body) {
@@ -775,9 +805,11 @@
     saveScope,
     scopeFromSearchParams,
     scopeStatusLabel,
+    scopeStatusParts,
     scopeLabel,
     selectedScopeFromControls,
     showChooser,
+    renderScopeStatusChips,
     refreshCurrentScopeUi,
     syncStoredFiltersControls,
     syncAreaScopeOptionalFilters,

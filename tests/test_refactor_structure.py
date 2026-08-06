@@ -233,6 +233,9 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert "closeAreaScopeChooser" in area_scope_js
     assert "root.closeAreaScopeChooser = function closeAreaScopeChooser()" in area_scope_js
     assert "scopeStatusLabel" in area_scope_js
+    assert "scopeStatusParts" in area_scope_js
+    assert "renderScopeStatusChips" in area_scope_js
+    assert 'class="area-scope-chip-list"' in html
     assert "refreshCurrentScopeUi" in area_scope_js
     assert "syncStoredFiltersControls" in area_scope_js
     assert "applyStoredFiltersToParams" in area_scope_js
@@ -813,6 +816,7 @@ def test_price_and_area_filters_support_multi_select_range_chips():
         'data-range-name="price_range"',
         'data-range-name="area_range"',
         "js/main/filters.js') }}?v=scope-filter-storage-20260807",
+        "js/main/area_scope.js') }}?v=scope-status-chips-20260807",
         "toggleRangePreset",
         "selectedRangeTokens",
         "applyRangeParamsFromUrl",
@@ -820,7 +824,10 @@ def test_price_and_area_filters_support_multi_select_range_chips():
         assert expected in html or expected in filters_js
 
     assert ".range-chip.active" in filters_css
-    assert ".area-scope-current strong" in filters_css
+    assert ".area-scope-chip-list" in filters_css
+    assert ".area-scope-chip-location" in filters_css
+    assert ".area-scope-chip-area" in filters_css
+    assert ".area-scope-chip-type" in filters_css
     assert "overflow-wrap: anywhere" in filters_css
 
 

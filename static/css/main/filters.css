@@ -326,11 +326,52 @@ body.area-scope-modal-open {
   font-weight: 700;
 }
 
-.area-scope-current strong {
+.area-scope-chip-list {
   min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.area-scope-chip {
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
   overflow-wrap: anywhere;
   white-space: normal;
-  font-size: 0.9rem;
+}
+
+.area-scope-chip-location {
+  border-color: rgba(16, 185, 129, 0.28);
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.area-scope-chip-price {
+  border-color: rgba(37, 99, 235, 0.24);
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.area-scope-chip-area {
+  border-color: rgba(217, 119, 6, 0.28);
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.area-scope-chip-type {
+  border-color: rgba(71, 85, 105, 0.22);
+  background: #f8fafc;
+  color: #334155;
 }
 
 .area-scope-bar-actions {

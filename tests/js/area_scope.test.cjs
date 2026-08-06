@@ -189,7 +189,7 @@ assert.equal(
     wards: ['TÃ¢n An'],
     mode: 'custom',
   }, new URLSearchParams('area_range=500%3A&prop_type=dat_nen&prop_type=nha_dat')),
-  'TÃ¢n An | Diện tích: > 500 m2 | Loại hình: Đất + Nhà đất'
+  'TÃ¢n An | > 500 m2 | Đất + Nhà đất'
 );
 
 assert.equal(
@@ -199,8 +199,19 @@ assert.equal(
     wards: ['TÃ¢n An'],
     mode: 'custom',
   }, new URLSearchParams('price_range=1%3A2&area_min=120&area_max=300&prop_type=dat_nen&prop_type=nha_dat&prop_type=chung_cu&prop_type=nha_tro')),
-  'TÃ¢n An | Giá: 1 - 2 tỷ | Diện tích: 120 - 300 m2'
+  'TÃ¢n An | 1 - 2 tỷ | 120 - 300 m2'
 );
+
+assert.deepEqual(plain(api.scopeStatusParts({
+  version: 1,
+  city: 'THá»¦ Dáº¦U Má»˜T',
+  wards: ['TÃ¢n An'],
+  mode: 'custom',
+}, new URLSearchParams('area_range=500%3A&prop_type=dat_nen&prop_type=nha_dat'))), [
+  { kind: 'location', label: 'TÃ¢n An' },
+  { kind: 'area', label: '> 500 m2' },
+  { kind: 'type', label: 'Đất + Nhà đất' },
+]);
 
 const storage = {
   value: '',
@@ -321,6 +332,65 @@ assert.equal(label.textContent, 'TÃ¢n An');
 assert.equal(bar.hidden, false);
 assert.equal(chooser.hidden, true);
 assert.equal(bodyClasses.has('area-scope-modal-open'), false);
+
+const chipLabel = {
+  textContent: '',
+  children: [],
+  appendChild(child) {
+    this.children.push(child);
+  },
+  setAttribute(name, value) {
+    this[name] = value;
+  },
+};
+const chipDoc = {
+  body: doc.body,
+  createElement(tagName) {
+    return {
+      tagName,
+      className: '',
+      textContent: '',
+    };
+  },
+  getElementById(id) {
+    return {
+      areaScopeChooser: chooser,
+      areaScopeBar: bar,
+      areaScopeLabel: chipLabel,
+    }[id] || null;
+  },
+  querySelectorAll(selector) {
+    if (selector === '.range-chip.active[data-range-kind="price"]') return [];
+    if (selector === '.range-chip.active[data-range-kind="area"]') {
+      return [{ dataset: { min: '500', max: '' } }];
+    }
+    if (selector === '#filterForm input[name="prop_type"]') {
+      return [
+        { checked: true, value: 'dat_nen' },
+        { checked: true, value: 'nha_dat' },
+        { checked: false, value: 'chung_cu' },
+      ];
+    }
+    return [];
+  },
+};
+api.updateScopeUi({
+  version: 1,
+  city: 'THá»¦ Dáº¦U Má»˜T',
+  wards: ['TÃ¢n An'],
+  mode: 'custom',
+}, chipDoc);
+assert.deepEqual(chipLabel.children.map((child) => child.textContent), [
+  'TÃ¢n An',
+  '> 500 m2',
+  'Đất + Nhà đất',
+]);
+assert.deepEqual(chipLabel.children.map((child) => child.className), [
+  'area-scope-chip area-scope-chip-location',
+  'area-scope-chip area-scope-chip-area',
+  'area-scope-chip area-scope-chip-type',
+]);
+assert.equal(chipLabel['aria-label'], 'TÃ¢n An > 500 m2 Đất + Nhà đất');
 
 const sidebarClasses = new Set(['collapsed']);
 const sidebar = {

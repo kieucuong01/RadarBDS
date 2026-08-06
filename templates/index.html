@@ -75,7 +75,7 @@
 
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-scroll-lock-20260802' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=content-hubs-20260729' %}
-  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=scope-filter-summary-20260806' %}
+  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=scope-status-chips-20260807' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
@@ -664,7 +664,7 @@
         <div class="area-scope-bar" id="areaScopeBar" hidden>
           <div class="area-scope-current">
             <span>Đang xem:</span>
-            <strong id="areaScopeLabel"></strong>
+            <strong id="areaScopeLabel" class="area-scope-chip-list" aria-live="polite"></strong>
           </div>
           <div class="area-scope-bar-actions">
             <button type="button" onclick="openAreaScopeChooser()">Đổi khu vực</button>
@@ -1526,7 +1526,7 @@
   <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-scroll-lock-20260802"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=scope-filter-storage-20260807"></script>
+  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=scope-status-chips-20260807"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=scope-filter-storage-20260807"></script>
 </body>
 
