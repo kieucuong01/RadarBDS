@@ -410,12 +410,76 @@ def _present_road_market_estimate(
     )
 
 
+def _present_official_price_explanation(
+    decision: RouteDecision,
+    bundle: EvidenceBundle,
+    now: datetime,
+) -> AnswerEnvelope:
+    official = next(
+        (
+            item
+            for item in bundle.items
+            if item.source_kind is SourceKind.OFFICIAL_DOCUMENT
+            and _mapping(item.value) is not None
+        ),
+        None,
+    )
+    method = next(
+        (
+            item
+            for item in bundle.items
+            if item.source_kind in {SourceKind.RADAR_METHOD, SourceKind.EDITORIAL}
+            and _mapping(item.value) is not None
+        ),
+        None,
+    )
+    if official is None and method is None:
+        return _insufficient(decision, bundle, now)
+
+    claims: list[AnswerClaim] = []
+    lines = [
+        (
+            "Không nên dùng bảng giá đất TP.HCM như giá thị trường, vì bảng giá đất "
+            "không phải giá thị trường hoặc giá trị thực tế của một lô đất."
+        ),
+    ]
+    if official is not None:
+        official_line = (
+            "Tài liệu chính thức cho thấy bảng giá đất chủ yếu là căn cứ quản lý "
+            "và nghĩa vụ tài chính, không phải bằng chứng trực tiếp của giá giao dịch thị trường."
+        )
+        lines.append(official_line)
+        claims.append(
+            AnswerClaim(text=official_line, evidence_ids=[official.evidence_id])
+        )
+    if method is not None:
+        method_line = (
+            "Khi định giá thực tế, Radar vẫn cần đối chiếu mẫu so sánh, vị trí, "
+            "pháp lý, diện tích và đặc điểm mặt tiền của lô cụ thể."
+        )
+        lines.append(method_line)
+        claims.append(AnswerClaim(text=method_line, evidence_ids=[method.evidence_id]))
+    direct = " ".join(lines)
+    return _base_answer(
+        decision,
+        bundle,
+        direct_answer=direct,
+        claims=claims,
+        followups=[
+            "Tra bảng giá đất cho một đường cụ thể",
+            "So sánh bảng giá đất với giá rao quanh khu đó",
+        ],
+        now=now,
+    )
+
+
 PRESENTERS: dict[str, Presenter] = {
     "budget_match": _present_budget_match,
     "area_comparison": _present_area_comparison,
     "deal_search": _present_deal_search,
     "price_drop_ranking": _present_price_drop_ranking,
     "road_market_estimate": _present_road_market_estimate,
+    "official_price_explanation": _present_official_price_explanation,
 }
 
 

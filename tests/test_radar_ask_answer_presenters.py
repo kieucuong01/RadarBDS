@@ -326,6 +326,56 @@ def test_insufficient_official_document_answer_uses_human_language():
     assert "curated_document_evidence_not_found" not in answer.direct_answer
 
 
+def test_official_price_explanation_answers_directly_from_curated_documents():
+    bundle = EvidenceBundle(
+        question_snapshot="Bảng giá đất TP.HCM có dùng để định giá thực tế không?",
+        items=[
+            item(
+                "doc:official",
+                kind=SourceKind.OFFICIAL_DOCUMENT,
+                source_ref="knowledge:official-price",
+                value={
+                    "text": (
+                        "Bảng giá đất là căn cứ cho nghĩa vụ tài chính nhưng "
+                        "không phải giá giao dịch thị trường."
+                    ),
+                    "document_title": "Điều 159 Luật Đất đai 2024",
+                    "source_title": "Luật Đất đai 2024",
+                    "trust_class": "official",
+                },
+            ),
+            item(
+                "doc:method",
+                kind=SourceKind.EDITORIAL,
+                source_ref="knowledge:radar-method",
+                value={
+                    "text": (
+                        "Radar phân biệt bảng giá đất, giá rao và giá trị hợp lý; "
+                        "định giá thực tế cần dữ liệu so sánh thị trường."
+                    ),
+                    "document_title": "Phương pháp định giá Radar BDS",
+                    "source_title": "Radar BDS",
+                    "trust_class": "radar_method",
+                },
+            ),
+        ],
+    )
+
+    answer = validated(
+        present_deterministic_answer(decision("official_price_explanation"), bundle, now=NOW),
+        bundle,
+    )
+
+    assert answer.answered is True
+    assert answer.direct_answer.startswith("Không nên dùng bảng giá đất TP.HCM như giá thị trường")
+    assert "Nguồn chỉ để đối chứng" not in answer.direct_answer
+    assert [claim.evidence_ids for claim in answer.claims] == [
+        ["doc:official"],
+        ["doc:method"],
+    ]
+    assert len(answer.source_cards) == 2
+
+
 def test_unknown_missing_requirement_never_leaks_internal_code():
     bundle = EvidenceBundle(
         question_snapshot="Câu hỏi chưa có dữ liệu",

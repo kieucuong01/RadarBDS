@@ -222,6 +222,7 @@ class SemanticRetriever:
 
 def _fold(value: str) -> str:
     decomposed = unicodedata.normalize("NFD", value or "").lower().replace("đ", "d")
+    decomposed = decomposed.replace("đ", "d")
     ascii_text = "".join(
         char for char in decomposed if unicodedata.category(char) != "Mn"
     )
@@ -235,6 +236,36 @@ def _rows(cursor) -> list[dict[str, Any]]:
 def _lexical_pattern(query: str) -> str:
     tokens = [token for token in _fold(query).split() if len(token) >= 2][:20]
     return "%" + "%".join(tokens) + "%" if tokens else "%"
+
+
+def _core_search_queries(query: str) -> list[str]:
+    normalized = " ".join((query or "").split())
+    if not normalized:
+        return []
+    folded = _fold(normalized)
+    candidates = [normalized]
+    if "bang gia dat" in folded:
+        candidates.append("bảng giá đất")
+        if any(marker in folded for marker in ("dinh gia", "thuc te", "thi truong")):
+            candidates.extend(
+                [
+                    "giá thị trường",
+                    "giá giao dịch thị trường",
+                    "định giá thực tế",
+                ]
+            )
+        if "159" in folded or "luat" in folded:
+            candidates.append("Điều 159 bảng giá đất")
+    if "nghia vu tai chinh" in folded:
+        candidates.append("nghĩa vụ tài chính")
+    result: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = _fold(candidate)
+        if key and key not in seen:
+            seen.add(key)
+            result.append(candidate)
+    return result[:6]
 
 
 def _knowledge_item(row: Mapping[str, Any]) -> EvidenceItem:
@@ -348,9 +379,15 @@ def search_official_documents(
     limit = min(args.limit, settings.evidence_row_limit, 10)
     vector_warning: str | None = None
     retrieval_method = "postgres_fts_simple_plus_accent_folded_lexical"
+    searched_queries: list[str] = []
     with _read_context(context) as conn:
         _configure_timeout(conn, settings)
-        rows = _search_rows(conn, query=args.query, limit=limit)
+        rows: list[dict[str, Any]] = []
+        for search_query in _core_search_queries(args.query):
+            searched_queries.append(search_query)
+            rows = _search_rows(conn, query=search_query, limit=limit)
+            if rows:
+                break
         if settings.knowledge_vector_enabled:
             try:
                 semantic = SemanticRetriever.from_environment(conn).search(
@@ -389,6 +426,7 @@ def search_official_documents(
         .calculate(
             retrieval=retrieval_method,
             result_count=len(rows),
+            searched_queries=searched_queries,
             trust_classes=sorted({str(row.get("trust_class")) for row in rows}),
         )
     )

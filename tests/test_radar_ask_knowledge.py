@@ -238,6 +238,7 @@ class FakeResult:
 class FakeKnowledgeConnection:
     def __init__(self):
         self.queries: list[tuple[str, tuple]] = []
+        self.knowledge_rows_by_query: dict[str, list[dict]] | None = None
         self.official_rows = [
             {
                 "row_key": "official-row-1",
@@ -285,6 +286,8 @@ class FakeKnowledgeConnection:
         if "radar_ask:official_land_price" in normalized:
             return FakeResult(self.official_rows)
         if "radar_ask:knowledge_search" in normalized:
+            if self.knowledge_rows_by_query is not None:
+                return FakeResult(self.knowledge_rows_by_query.get(str(params[0]), []))
             return FakeResult(self.knowledge_rows)
         if "radar_ask:governing_document" in normalized:
             requested_urls = {
@@ -336,6 +339,29 @@ def test_search_returns_exact_chunk_source_and_trust_citations():
     normalized = " ".join(search_sql.lower().split())
     assert "websearch_to_tsquery('simple'" in normalized
     assert "effective_from" in normalized and "effective_to" in normalized
+
+
+def test_search_retries_core_concepts_when_full_natural_question_is_too_specific():
+    connection = FakeKnowledgeConnection()
+    full_question = "Bảng giá đất TP.HCM có dùng để định giá thực tế không?"
+    connection.knowledge_rows_by_query = {
+        full_question: [],
+        "bảng giá đất": connection.knowledge_rows,
+    }
+
+    bundle = search_official_documents(
+        args=SearchOfficialDocumentsArgs(query=full_question, limit=5),
+        context=tool_context(connection),
+    )
+
+    searched_queries = [
+        params[0]
+        for sql, params in connection.queries
+        if "radar_ask:knowledge_search" in sql
+    ]
+    assert bundle.items
+    assert searched_queries[:2] == [full_question, "bảng giá đất"]
+    assert bundle.calculations["result_count"] == 1
 
 
 def test_official_land_price_is_labeled_separately_from_market_and_fair_value():

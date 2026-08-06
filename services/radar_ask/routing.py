@@ -75,6 +75,7 @@ _DEEP_MARKERS = (
 def _fold(value: str) -> str:
     normalized = unicodedata.normalize("NFKD", value or "")
     text = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    text = text.replace("đ", "d").replace("Đ", "D")
     return " ".join(text.replace("đ", "d").replace("Đ", "D").lower().split())
 
 
@@ -366,7 +367,7 @@ def _deterministic_route(
                     {"query": question, "limit": 5},
                 )
             ],
-            generated=True,
+            generated=False,
             freshness_hours=24 * 30,
         )
     return None

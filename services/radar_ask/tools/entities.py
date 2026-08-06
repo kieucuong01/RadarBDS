@@ -110,6 +110,7 @@ POST_MERGER_WARD_COMPONENTS = {
 
 def _fold(value: str) -> str:
     normalized = unicodedata.normalize("NFD", value or "").lower().replace("đ", "d")
+    normalized = normalized.replace("đ", "d").replace("Đ", "D")
     ascii_text = "".join(
         char for char in normalized if unicodedata.category(char) != "Mn"
     )

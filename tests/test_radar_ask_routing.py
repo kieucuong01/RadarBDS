@@ -134,6 +134,18 @@ def test_fast_patterns_extract_bounded_business_arguments():
     assert deals.tool_calls[0].arguments["mos_min_pct"] == 15.0
 
 
+def test_official_price_explanation_stays_deterministic_for_simple_policy_question():
+    decision = route_question(
+        AskQuestionRequest(question="Bảng giá đất TP.HCM có dùng để định giá thực tế không?"),
+        make_context(),
+    )
+
+    assert decision.depth is AskDepth.FAST
+    assert decision.question_type == "official_price_explanation"
+    assert decision.generated is False
+    assert decision.tool_calls[0].name == "search_official_documents"
+
+
 def test_current_listing_explanation_uses_page_context_without_guessing():
     planner = PlannerSpy()
     decision = route_question(

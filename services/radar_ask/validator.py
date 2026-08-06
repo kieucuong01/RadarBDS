@@ -81,6 +81,7 @@ class EvidenceAssessment:
 
 def _fold(value: str) -> str:
     normalized = unicodedata.normalize("NFD", value.lower()).replace("đ", "d")
+    normalized = normalized.replace("đ", "d").replace("Đ", "D")
     return "".join(char for char in normalized if unicodedata.category(char) != "Mn")
 
 
