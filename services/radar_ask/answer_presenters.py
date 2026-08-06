@@ -26,7 +26,22 @@ INSUFFICIENT_DETAILS = {
     "no_actionable_deals_match_filters": "chưa có deal đạt đồng thời các bộ lọc",
     "no_actionable_price_drop_signals_in_window": "chưa có tín hiệu giảm giá đủ điều kiện trong khoảng thời gian này",
     "eligible_road_market_sample_not_found": "chưa có mẫu giá phù hợp cho tuyến đường này",
+    "curated_document_evidence_not_found": "chưa có tài liệu chính thức đã kiểm duyệt phù hợp trong kho nguồn Radar",
+    "official_land_price_row_not_found": "chưa tìm thấy dòng bảng giá đất chính thức phù hợp với địa điểm này",
+    "listing_not_found_or_not_visible": "không tìm thấy tin phù hợp hoặc tài khoản hiện tại không được phép xem tin đó",
+    "valuation_not_found": "tin này chưa có kết quả định giá đủ điều kiện",
+    "eligible_comparables_not_found": "chưa có lô so sánh đủ điều kiện để đối chiếu",
+    "price_history_not_found": "chưa có lịch sử giá đáng tin cậy cho tin này",
+    "lot_history_not_found": "chưa có lịch sử lô đất đáng tin cậy cho tin này",
+    "road_location_is_ambiguous": "tên đường này xuất hiện ở nhiều khu vực và cần xác định thêm phường",
+    "location_is_ambiguous": "địa điểm này có nhiều cách hiểu và cần xác định rõ hơn",
+    "location_not_found": "chưa xác định được địa điểm trong phạm vi dữ liệu Radar",
+    "city_not_supported_or_unresolved": "chưa xác định được thành phố trong phạm vi dữ liệu Radar",
+    "city_ward_scope_mismatch": "thành phố và phường trong câu hỏi chưa khớp nhau",
+    "market_trend_requires_both_periods": "chưa có đủ dữ liệu ở cả hai giai đoạn để so sánh xu hướng",
 }
+
+DEFAULT_INSUFFICIENT_DETAIL = "chưa có bằng chứng phù hợp trong phạm vi dữ liệu Radar hiện có"
 
 WARNING_TEXT = {
     "matches_use_current_asking_prices_not_transaction_prices": "Kết quả dùng mức chào hiện tại, không đại diện cho giá đã sang tên.",
@@ -85,7 +100,11 @@ def _insufficient(
     now: datetime,
 ) -> AnswerEnvelope:
     detail_code = bundle.missing_requirements[0] if bundle.missing_requirements else None
-    detail = INSUFFICIENT_DETAILS.get(detail_code or "", detail_code)
+    detail = (
+        INSUFFICIENT_DETAILS.get(detail_code, DEFAULT_INSUFFICIENT_DETAIL)
+        if detail_code
+        else None
+    )
     direct = "Chưa đủ dữ liệu đáng tin cậy để trả lời câu hỏi này."
     if detail:
         direct = f"{direct} Hiện {detail}."

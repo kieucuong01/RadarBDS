@@ -309,3 +309,30 @@ def test_insufficient_evidence_does_not_create_unrelated_claim_or_source():
     assert answer.claims == []
     assert answer.source_cards == []
     assert "chưa đủ dữ liệu" in answer.direct_answer.lower()
+
+
+def test_insufficient_official_document_answer_uses_human_language():
+    bundle = EvidenceBundle(
+        question_snapshot="Bảng giá đất TP.HCM có dùng để định giá thực tế không?",
+        retrieval_quality=RetrievalQuality.INSUFFICIENT,
+        missing_requirements=["curated_document_evidence_not_found"],
+    )
+
+    answer = present_deterministic_answer(
+        decision("official_price_explanation"), bundle, now=NOW
+    )
+
+    assert "tài liệu chính thức đã kiểm duyệt" in answer.direct_answer
+    assert "curated_document_evidence_not_found" not in answer.direct_answer
+
+
+def test_unknown_missing_requirement_never_leaks_internal_code():
+    bundle = EvidenceBundle(
+        question_snapshot="Câu hỏi chưa có dữ liệu",
+        retrieval_quality=RetrievalQuality.INSUFFICIENT,
+        missing_requirements=["future_internal_requirement_code"],
+    )
+
+    answer = present_deterministic_answer(decision("unknown"), bundle, now=NOW)
+
+    assert "future_internal_requirement_code" not in answer.direct_answer
