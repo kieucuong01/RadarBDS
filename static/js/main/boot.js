@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (urlScope) {
       window.RadarAreaScope.syncScopeControls(urlScope, globalWardsByCity, document, updateWardFilters);
       window.RadarAreaScope.updateScopeUi(urlScope, document);
-      window.RadarAreaScope.saveScope(urlScope, window.localStorage);
+      window.RadarAreaScope.saveScope(urlScope, window.localStorage, window.RadarAreaScope.filtersFromSearchParams(searchParams));
       currentFilters = searchParams.toString();
       applyFilters();
       handledInitialAreaScope = true;
@@ -119,6 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const storedScope = window.RadarAreaScope.readStoredScope(window.localStorage, globalWardsByCity);
       if (storedScope) {
         window.RadarAreaScope.syncScopeControls(storedScope, globalWardsByCity, document, updateWardFilters);
+        window.RadarAreaScope.syncStoredFiltersControls(storedScope, document);
+        window.RadarAreaScope.applyStoredFiltersToParams(searchParams, storedScope);
         window.RadarAreaScope.updateScopeUi(storedScope, document);
         window.RadarAreaScope.replaceUrlWithScope(storedScope);
         applyFilters();

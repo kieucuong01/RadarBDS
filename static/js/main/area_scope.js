@@ -13,6 +13,15 @@
     chung_cu: 'Chung c\u01b0',
     nha_tro: 'Nh\u00e0 tr\u1ecd',
   });
+  const FILTER_PARAM_KEYS = Object.freeze([
+    'price_range',
+    'area_range',
+    'prop_type',
+    'price_min',
+    'price_max',
+    'area_min',
+    'area_max',
+  ]);
   let areaScopeDraft = null;
   let areaScopeDraftCity = '';
 
@@ -82,6 +91,56 @@
     return Array.from(new Set((values || []).map((value) => String(value || '').trim()).filter(Boolean)));
   }
 
+  function validRangeToken(token) {
+    const value = String(token || '').trim();
+    return value !== ':' && /^[0-9.]*:[0-9.]*$/.test(value);
+  }
+
+  function normalizeNumericFilterValue(value) {
+    const raw = String(value || '').trim();
+    if (!raw || !/^[0-9.]+$/.test(raw)) return '';
+    return raw;
+  }
+
+  function normalizeStoredFilters(filters) {
+    if (!filters || typeof filters !== 'object') return null;
+    if (filters instanceof URLSearchParams) {
+      filters = {
+        price_range: filters.getAll('price_range'),
+        area_range: filters.getAll('area_range'),
+        prop_type: filters.getAll('prop_type'),
+        price_min: filters.get('price_min'),
+        price_max: filters.get('price_max'),
+        area_min: filters.get('area_min'),
+        area_max: filters.get('area_max'),
+      };
+    }
+    const normalized = {};
+    const priceRanges = uniqueValues(filters.price_range).filter(validRangeToken);
+    if (priceRanges.length) normalized.price_range = priceRanges;
+    const areaRanges = uniqueValues(filters.area_range).filter(validRangeToken);
+    if (areaRanges.length) normalized.area_range = areaRanges;
+
+    if (!priceRanges.length) {
+      const priceMin = normalizeNumericFilterValue(filters.price_min);
+      const priceMax = normalizeNumericFilterValue(filters.price_max);
+      if (priceMin) normalized.price_min = priceMin;
+      if (priceMax) normalized.price_max = priceMax;
+    }
+    if (!areaRanges.length) {
+      const areaMin = normalizeNumericFilterValue(filters.area_min);
+      const areaMax = normalizeNumericFilterValue(filters.area_max);
+      if (areaMin) normalized.area_min = areaMin;
+      if (areaMax) normalized.area_max = areaMax;
+    }
+
+    const propTypes = uniqueValues(filters.prop_type).filter((value) => Object.prototype.hasOwnProperty.call(PROP_TYPE_LABELS, value));
+    if (propTypes.length && propTypes.length < Object.keys(PROP_TYPE_LABELS).length) {
+      normalized.prop_type = propTypes;
+    }
+    return Object.keys(normalized).length ? normalized : null;
+  }
+
   function scopeLabel(scope) {
     if (!scope) return '';
     if (scope.mode === 'city_all') return `Toàn ${cityLabel(scope.city)}`;
@@ -110,7 +169,24 @@
     if (typeof candidate.updatedAt === 'string' && candidate.updatedAt) {
       normalized.updatedAt = candidate.updatedAt;
     }
+    const filters = normalizeStoredFilters(candidate.filters);
+    if (filters) normalized.filters = filters;
     return normalized;
+  }
+
+  function filtersFromSearchParams(filterParams) {
+    const params = filterParams instanceof URLSearchParams
+      ? filterParams
+      : new URLSearchParams(String(filterParams || ''));
+    return normalizeStoredFilters({
+      price_range: params.getAll('price_range'),
+      area_range: params.getAll('area_range'),
+      prop_type: params.getAll('prop_type'),
+      price_min: params.get('price_min'),
+      price_max: params.get('price_max'),
+      area_min: params.get('area_min'),
+      area_max: params.get('area_max'),
+    });
   }
 
   function scopeFromSearchParams(params, wardsByCity) {
@@ -153,6 +229,25 @@
       if (!Object.prototype.hasOwnProperty.call(filters, key)) return;
       params.delete(key);
       appendUniqueParams(params, key, filters[key]);
+    });
+    return params;
+  }
+
+  function filtersFromScopeOrFilters(scopeOrFilters) {
+    if (!scopeOrFilters) return null;
+    return normalizeStoredFilters(scopeOrFilters.filters || scopeOrFilters);
+  }
+
+  function applyStoredFiltersToParams(params, scopeOrFilters) {
+    if (!(params instanceof URLSearchParams)) return params;
+    FILTER_PARAM_KEYS.forEach((key) => params.delete(key));
+    const filters = filtersFromScopeOrFilters(scopeOrFilters);
+    if (!filters) return params;
+    appendUniqueParams(params, 'price_range', filters.price_range);
+    appendUniqueParams(params, 'area_range', filters.area_range);
+    appendUniqueParams(params, 'prop_type', filters.prop_type);
+    ['price_min', 'price_max', 'area_min', 'area_max'].forEach((key) => {
+      if (filters[key]) params.set(key, filters[key]);
     });
     return params;
   }
@@ -278,6 +373,43 @@
     if (maxEl) maxEl.value = '';
   }
 
+  function clearSidebarRangeSelection(kind, doc) {
+    const documentRef = doc || root.document;
+    if (!documentRef || typeof documentRef.querySelectorAll !== 'function') return;
+    documentRef.querySelectorAll(`.range-chip[data-range-kind="${kind}"]`).forEach((chip) => {
+      chip.classList.remove('active');
+      chip.setAttribute('aria-pressed', 'false');
+    });
+  }
+
+  function setManualRangeSelection(kind, min, max, doc) {
+    const documentRef = doc || root.document;
+    if (!documentRef) return;
+    clearSidebarRangeSelection(kind, documentRef);
+    const prefix = kind === 'price' ? 'price' : 'area';
+    const minEl = documentRef.getElementById(`${prefix}Min`);
+    const maxEl = documentRef.getElementById(`${prefix}Max`);
+    if (minEl) minEl.value = min || '';
+    if (maxEl) maxEl.value = max || '';
+  }
+
+  function syncStoredFiltersControls(scopeOrFilters, doc) {
+    const documentRef = doc || root.document;
+    const filters = filtersFromScopeOrFilters(scopeOrFilters);
+    if (!filters || !documentRef || typeof documentRef.querySelectorAll !== 'function') return null;
+    if (filters.price_range) setSidebarRangeSelection('price', filters.price_range, documentRef);
+    else if (filters.price_min || filters.price_max) setManualRangeSelection('price', filters.price_min || '', filters.price_max || '', documentRef);
+    if (filters.area_range) setSidebarRangeSelection('area', filters.area_range, documentRef);
+    else if (filters.area_min || filters.area_max) setManualRangeSelection('area', filters.area_min || '', filters.area_max || '', documentRef);
+    if (filters.prop_type) {
+      const allowed = new Set(filters.prop_type);
+      documentRef.querySelectorAll('#filterForm input[name="prop_type"]').forEach((box) => {
+        box.checked = allowed.has(box.value);
+      });
+    }
+    return filters;
+  }
+
   function syncAreaScopeOptionalFilters(doc) {
     const documentRef = doc || root.document;
     const selected = selectedAreaScopeOptionalFilters(documentRef);
@@ -303,9 +435,10 @@
     }
   }
 
-  function saveScope(scope, storage) {
+  function saveScope(scope, storage, filters) {
     const target = storage || root.localStorage;
     if (!target || !scope) return null;
+    const normalizedFilters = normalizeStoredFilters(filters);
     const payload = {
       version: 1,
       city: scope.city,
@@ -314,6 +447,7 @@
       label: scopeLabel(scope),
       updatedAt: new Date().toISOString(),
     };
+    if (normalizedFilters) payload.filters = normalizedFilters;
     try {
       target.setItem(STORAGE_KEY, JSON.stringify(payload));
       return payload;
@@ -477,6 +611,7 @@
     params.set('tab', 'signals');
     applyScopeToParams(params, scope);
     if (optionalFilters) applyOptionalFiltersToParams(params, optionalFilters);
+    else if (scope.filters) applyStoredFiltersToParams(params, scope);
     const nextUrl = `${root.location.pathname || '/'}?${params.toString()}${root.location.hash || ''}`;
     root.history.replaceState(null, '', nextUrl);
   }
@@ -488,8 +623,14 @@
     if (!normalized) return null;
     syncScopeControls(normalized, wardsByCity, root.document, root.updateWardFilters);
     updateScopeUi(normalized, root.document);
-    if (opts.persist !== false) saveScope(normalized, root.localStorage);
-    if (opts.updateUrl !== false) replaceUrlWithScope(normalized, opts.optionalFilters || null);
+    const filtersToPersist = opts.optionalFilters || opts.filters || currentFilterParamsFromControls(root.document);
+    if (opts.persist !== false) saveScope(normalized, root.localStorage, filtersToPersist);
+    if (opts.updateUrl !== false) {
+      const urlScope = Object.assign({}, normalized);
+      const storedFilters = normalizeStoredFilters(filtersToPersist);
+      if (storedFilters) urlScope.filters = storedFilters;
+      replaceUrlWithScope(urlScope, opts.optionalFilters || null);
+    }
     if (opts.apply !== false && typeof root.applyFilters === 'function') root.applyFilters();
     return normalized;
   }
@@ -602,8 +743,14 @@
     const scope = selectedScopeFromControls(root.document, root.INITIAL_WARDS_BY_CITY || {});
     if (!scope) return null;
     updateScopeUi(scope, root.document);
-    saveScope(scope, root.localStorage);
-    if (options && options.updateUrl) replaceUrlWithScope(scope);
+    const filters = currentFilterParamsFromControls(root.document);
+    const storedFilters = normalizeStoredFilters(filters);
+    saveScope(scope, root.localStorage, storedFilters);
+    if (options && options.updateUrl) {
+      const urlScope = Object.assign({}, scope);
+      if (storedFilters) urlScope.filters = storedFilters;
+      replaceUrlWithScope(urlScope);
+    }
     return scope;
   };
 
@@ -616,8 +763,10 @@
     PRESET_SCOPES,
     applyDashboardScope,
     applyOptionalFiltersToParams,
+    applyStoredFiltersToParams,
     applyScopeToParams,
     clearStoredScope,
+    filtersFromSearchParams,
     hideChooser,
     renderAreaScopeDraft,
     nextDraftWardScope,
@@ -630,6 +779,7 @@
     selectedScopeFromControls,
     showChooser,
     refreshCurrentScopeUi,
+    syncStoredFiltersControls,
     syncAreaScopeOptionalFilters,
     syncScopeControls,
     updateScopeUi,

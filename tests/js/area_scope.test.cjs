@@ -222,7 +222,10 @@ api.saveScope({
   city: 'THỦ DẦU MỘT',
   wards: ['Tân An'],
   mode: 'custom',
-}, storage);
+}, storage, {
+  area_range: ['500:'],
+  prop_type: ['dat_nen', 'nha_dat'],
+});
 assert.match(storage.value, /"updatedAt"/);
 assert.deepEqual(plain(api.readStoredScope(storage, wardsByCity)), {
   version: 1,
@@ -230,8 +233,19 @@ assert.deepEqual(plain(api.readStoredScope(storage, wardsByCity)), {
   wards: ['Tân An'],
   mode: 'custom',
   label: 'Tân An',
+  filters: {
+    area_range: ['500:'],
+    prop_type: ['dat_nen', 'nha_dat'],
+  },
   updatedAt: JSON.parse(storage.value).updatedAt,
 });
+
+const storedParams = new URLSearchParams('tab=signals');
+api.applyStoredFiltersToParams(storedParams, api.readStoredScope(storage, wardsByCity));
+assert.equal(
+  storedParams.toString(),
+  'tab=signals&area_range=500%3A&prop_type=dat_nen&prop_type=nha_dat'
+);
 
 const bodyClasses = new Set();
 const chooser = {

@@ -237,7 +237,9 @@ function deferCountsRefresh(useCache = false) {
 
 function applyFilters() {
   currentFilters = getFilterQuery();
-  if (window.RadarAreaScope && typeof window.RadarAreaScope.refreshCurrentScopeUi === 'function') {
+  if (window.RadarAreaScope && typeof window.persistCurrentAreaScope === 'function') {
+    window.persistCurrentAreaScope({ updateUrl: false });
+  } else if (window.RadarAreaScope && typeof window.RadarAreaScope.refreshCurrentScopeUi === 'function') {
     window.RadarAreaScope.refreshCurrentScopeUi();
   }
   const filterSnapshot = currentFilters;
