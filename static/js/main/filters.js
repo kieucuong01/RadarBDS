@@ -4,6 +4,15 @@ function selectCity(btn) {
   btn.classList.add('active');
   document.getElementById('cityInput').value = btn.dataset.city;
   updateWardFilters(globalWardsByCity, [], { preserveScroll: false, preserveSearch: false });
+  if (window.RadarAreaScope && typeof window.RadarAreaScope.applyDashboardScope === 'function') {
+    window.RadarAreaScope.applyDashboardScope({
+      version: 1,
+      city: btn.dataset.city,
+      wards: [],
+      mode: 'city_all',
+    }, { persist: true, updateUrl: true, apply: true });
+    return;
+  }
   applyFilters();
 }
 
@@ -72,6 +81,10 @@ function setAllWards(checked) {
     box.checked = checked;
   });
   updateWardSelectionSummary();
+  if (checked && window.RadarAreaScope && typeof window.selectCurrentCityAllAreaScope === 'function') {
+    window.selectCurrentCityAllAreaScope();
+    return;
+  }
   scheduleApplyFilters();
 }
 

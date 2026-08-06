@@ -35,6 +35,9 @@ function updateWardFilters(wardsByCity, activeWards, opts = {}) {
 document.addEventListener('change', (e) => {
   if (e.target.matches('#wardFilters input[name="ward"]')) {
     updateWardSelectionSummary();
+    if (window.RadarAreaScope && typeof window.persistCurrentAreaScope === 'function') {
+      window.persistCurrentAreaScope({ updateUrl: true });
+    }
   }
   if (e.target.closest('#filterForm')) {
     scheduleApplyFilters();
@@ -92,11 +95,40 @@ document.addEventListener('DOMContentLoaded', () => {
     globalWardsByCity = window.INITIAL_WARDS_BY_CITY;
     updateWardFilters(globalWardsByCity, searchParams.getAll('ward'), { preserveScroll: false, preserveSearch: false });
   }
-  if (searchParams.toString()) {
-    currentFilters = searchParams.toString();
-    applyFilters();
-  } else {
-    detectLocation();
+
+  let handledInitialAreaScope = false;
+  if (window.RadarAreaScope && window.INITIAL_WARDS_BY_CITY) {
+    const urlScope = window.RadarAreaScope.scopeFromSearchParams(searchParams, globalWardsByCity);
+    const hasAnyUrlFilter = searchParams.toString().length > 0;
+    if (urlScope) {
+      window.RadarAreaScope.syncScopeControls(urlScope, globalWardsByCity, document, updateWardFilters);
+      window.RadarAreaScope.updateScopeUi(urlScope, document);
+      window.RadarAreaScope.saveScope(urlScope, window.localStorage);
+      currentFilters = searchParams.toString();
+      applyFilters();
+      handledInitialAreaScope = true;
+    } else if (!hasAnyUrlFilter) {
+      const storedScope = window.RadarAreaScope.readStoredScope(window.localStorage, globalWardsByCity);
+      if (storedScope) {
+        window.RadarAreaScope.syncScopeControls(storedScope, globalWardsByCity, document, updateWardFilters);
+        window.RadarAreaScope.updateScopeUi(storedScope, document);
+        window.RadarAreaScope.replaceUrlWithScope(storedScope);
+        applyFilters();
+      } else {
+        window.RadarAreaScope.showChooser(document);
+        hideLoader();
+      }
+      handledInitialAreaScope = true;
+    }
+  }
+
+  if (!handledInitialAreaScope) {
+    if (searchParams.toString()) {
+      currentFilters = searchParams.toString();
+      applyFilters();
+    } else {
+      applyFilters();
+    }
   }
   if (shouldOpenInitialTab && initialTab !== 'signals') {
     requestAnimationFrame(() => switchTab(initialTab, null));

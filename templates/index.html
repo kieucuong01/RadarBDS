@@ -579,6 +579,36 @@
 
       <!-- TAB: SIGNALS -->
       <div id="tab-signals" class="tab-content active">
+        <section class="area-scope-chooser" id="areaScopeChooser" hidden aria-labelledby="areaScopeChooserTitle">
+          <div class="area-scope-copy">
+            <span class="area-scope-kicker">Khu vực quan tâm</span>
+            <h2 id="areaScopeChooserTitle">Bạn đang săn khu nào?</h2>
+            <p>Chọn một hoặc vài phường để Radar BDS chỉ mở các signal đúng phạm vi bạn quan tâm.</p>
+          </div>
+          <div class="area-scope-presets" aria-label="Gợi ý khu vực">
+            <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_tan_an_west')">Tân An phía Tây</button>
+            <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_central')">Trung tâm TDM</button>
+            <button type="button" class="area-scope-preset" onclick="selectAreaPreset('tdm_north_industrial')">Phú Tân - Hòa Phú</button>
+            <button type="button" class="area-scope-preset" onclick="selectAreaPreset('ben_cat_my_phuoc')">Mỹ Phước</button>
+            <button type="button" class="area-scope-preset" onclick="selectAreaPreset('ben_cat_outer')">Bến Cát ngoài</button>
+          </div>
+          <div class="area-scope-actions">
+            <button type="button" class="area-scope-all" onclick="selectCurrentCityAllAreaScope()">Xem toàn Thủ Dầu Một</button>
+            <button type="button" class="area-scope-filter" onclick="toggleMenu()">Chọn phường trong bộ lọc</button>
+          </div>
+        </section>
+
+        <div class="area-scope-bar" id="areaScopeBar" hidden>
+          <div class="area-scope-current">
+            <span>Đang xem:</span>
+            <strong id="areaScopeLabel"></strong>
+          </div>
+          <div class="area-scope-bar-actions">
+            <button type="button" onclick="openAreaScopeChooser()">Đổi khu vực</button>
+            <button type="button" onclick="selectCurrentCityAllAreaScope()">Toàn khu vực</button>
+          </div>
+        </div>
+
         <div class="signal-search-row">
           <label class="keyword-search command-keyword-search" for="keywordSearchSignals">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -1433,7 +1463,8 @@
   <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-scroll-lock-20260802"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=default-signal-mos-15-20260803"></script>
+  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=area-scope-20260806"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=area-scope-20260806"></script>
 </body>
 
 </html>
