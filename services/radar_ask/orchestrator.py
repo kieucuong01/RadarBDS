@@ -53,6 +53,7 @@ from .validator import (
 
 
 MAX_SERIALIZED_EVIDENCE_CHARS = 40_000
+MAX_CONVERSATION_OUTPUT_TOKENS = 700
 EMPTY_USAGE = ProviderUsage()
 CONVERSATION_QUESTION_TYPES = frozenset({"conversation", "help", "off_topic"})
 PROVIDER_PHONE_PATTERN = re.compile(
@@ -296,6 +297,114 @@ def _redact_provider_value(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [_redact_provider_value(item) for item in value]
     return value
+
+
+def _conversation_provider_request(
+    request: AskQuestionRequest,
+    context: AskContext,
+    decision: RouteDecision,
+    policy: ModelPolicy,
+) -> ProviderRequest:
+    safe_context = _redact_provider_value(
+        {
+            "tier": context.tier,
+            "page": context.page.model_dump(mode="json"),
+            "session_summary": context.session_summary,
+            "recent_turns": context.recent_turns,
+        }
+    )
+    system = (
+        "Bạn là Hỏi Radar BDS: một trợ lý tư vấn bất động sản nói chuyện tự nhiên, "
+        "ngắn gọn và thực tế như một nhân viên tư vấn có dữ liệu hỗ trợ. "
+        "Nhiệm vụ này chỉ dành cho hội thoại mềm, chào hỏi, hướng dẫn hoặc làm rõ nhu cầu. "
+        "Không bịa số liệu, giá, số lượng tin, tín hiệu giảm giá, URL, số điện thoại hoặc nguồn. "
+        "Nếu câu hỏi cần số liệu thị trường thì không tự trả số; hãy mời người dùng hỏi rõ khu vực, "
+        "ngân sách, diện tích hoặc mục tiêu để Radar tra dữ liệu. "
+        "Trả đúng một JSON object gồm direct_answer và suggested_followups. "
+        "direct_answer dài 1-4 câu, xưng hô anh/tôi, không dùng giọng robot, "
+        "không nói 'chưa đủ dữ liệu' cho câu giao tiếp bình thường."
+    )
+    user = json.dumps(
+        {
+            "question": _redact_provider_value(request.question),
+            "question_type": decision.question_type,
+            "page_context": safe_context,
+            "required_output": {
+                "direct_answer": "string",
+                "suggested_followups": ["string", "string", "string"],
+            },
+        },
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    return ProviderRequest(
+        model=policy.model,
+        messages=[
+            ProviderMessage(role="system", content=system),
+            ProviderMessage(role="user", content=user),
+        ],
+        max_output_tokens=min(policy.max_output_tokens, MAX_CONVERSATION_OUTPUT_TOKENS),
+        thinking_enabled=False,
+        json_mode=True,
+    )
+
+
+def _conversation_answer_from_provider(
+    response,
+    decision: RouteDecision,
+    *,
+    now: datetime,
+) -> AnswerEnvelope:
+    payload = _provider_answer(response)
+    direct = _redact_provider_value(payload.get("direct_answer"))
+    if not isinstance(direct, str) or not direct.strip():
+        raise AnswerValidationError("conversation answer is empty")
+    raw_followups = payload.get("suggested_followups", [])
+    followups: list[str] = []
+    if isinstance(raw_followups, Sequence) and not isinstance(raw_followups, (str, bytes)):
+        for item in raw_followups:
+            redacted = _redact_provider_value(item)
+            if isinstance(redacted, str) and redacted.strip():
+                followups.append(redacted.strip()[:200])
+            if len(followups) >= 3:
+                break
+    return AnswerEnvelope(
+        answered=True,
+        depth=decision.depth,
+        verdict=None,
+        direct_answer=direct.strip()[:6_000],
+        claims=[],
+        source_cards=[],
+        suggested_followups=followups,
+        as_of=now,
+        dataset_version="radar-ask:conversation",
+    )
+
+
+def _natural_conversation_answer(
+    request: AskQuestionRequest,
+    context: AskContext,
+    decision: RouteDecision,
+    policy: ModelPolicy,
+    *,
+    dependencies: OrchestratorDependencies,
+    deadline: float,
+) -> tuple[AnswerEnvelope, ProviderUsage]:
+    if not decision.generated:
+        return _conversation_answer(decision, now=_utc_now(dependencies.clock)), EMPTY_USAGE
+    try:
+        provider_request = _conversation_provider_request(request, context, decision, policy)
+        response = dependencies.provider.complete_until(provider_request, deadline=deadline)
+        answer = _conversation_answer_from_provider(
+            response,
+            decision,
+            now=_utc_now(dependencies.clock),
+        )
+        return answer, response.usage
+    except ProviderError as exc:
+        return _conversation_answer(decision, now=_utc_now(dependencies.clock)), exc.usage
+    except AnswerValidationError:
+        return _conversation_answer(decision, now=_utc_now(dependencies.clock)), EMPTY_USAGE
 
 
 def _provider_request(
@@ -1352,17 +1461,43 @@ def run_question(
         )
 
     if decision.question_type in CONVERSATION_QUESTION_TYPES:
-        now = _utc_now(dependencies.clock)
-        answer = _conversation_answer(decision, now=now)
         assert run.worker_id is not None
+        conversation_owner = run.worker_id
+        conversation_deadline = dependencies.monotonic_clock() + float(
+            request_provider_budget_seconds(
+                dependencies.settings.provider_timeout_seconds
+            )
+        )
+        if decision.generated:
+            provider_owner = conversation_owner
+            if ":claimed:" in provider_owner:
+                provider_owner = provider_owner.replace(":claimed:", ":provider:", 1)
+            _assert_provider_budget(dependencies, reservation)
+            run = dependencies.repository.renew_request_lease(
+                run.id,
+                user_id=context.user_id,
+                owner_id=conversation_owner,
+                provider_owner_id=provider_owner,
+                lease_seconds=REQUEST_OWNER_LEASE_SECONDS,
+            )
+            assert run.worker_id is not None
+            conversation_owner = run.worker_id
+        answer, conversation_usage = _natural_conversation_answer(
+            request,
+            context,
+            decision,
+            policy,
+            dependencies=dependencies,
+            deadline=conversation_deadline,
+        )
         terminal = _finalize_sync_or_reconcile(
             dependencies,
             run,
             reservation=reservation,
-            owner_id=run.worker_id,
+            owner_id=conversation_owner,
             target=RunStatus.COMPLETED.value,
             outcome=RunOutcome.ANSWERED,
-            usage=EMPTY_USAGE,
+            usage=conversation_usage,
             answer=answer,
             effective_depth=decision.depth.value,
             route=decision.model_dump(mode="json"),

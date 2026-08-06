@@ -441,7 +441,7 @@ def test_planner_can_route_small_talk_without_database_tools():
     assert decision.depth is AskDepth.FAST
     assert decision.question_type == "conversation"
     assert decision.tool_calls == []
-    assert decision.generated is False
+    assert decision.generated is True
     assert decision.use_thinking is False
 
 

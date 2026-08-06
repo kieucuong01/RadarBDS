@@ -548,8 +548,9 @@ def test_unmatched_question_claims_before_typed_planner_and_atomically_persists_
     assert repo.sync_finalizations[0]["usage"] == ProviderUsage(input_tokens=700, output_tokens=120)
 
 
-def test_planned_conversation_returns_natural_answer_without_database_or_answer_model():
+def test_planned_conversation_uses_provider_for_human_like_answer_without_database():
     planner_usage = ProviderUsage(input_tokens=120, output_tokens=20, cache_miss_input_tokens=120)
+    answer_usage = ProviderUsage(input_tokens=210, output_tokens=55, cache_miss_input_tokens=210)
 
     def planner(**_kwargs):
         return PlannerResult(
@@ -580,7 +581,21 @@ def test_planned_conversation_returns_natural_answer_without_database_or_answer_
         burst=FakeBurst(),
         router=route_question,
         registry=DEFAULT_TOOL_REGISTRY,
-        provider=FakeProvider(),
+        provider=FakeProvider(
+            ProviderResponse(
+                json_value={
+                    "direct_answer": (
+                        "Xin chào anh, tôi có thể hỗ trợ anh soi giá, lọc lô đáng kiểm tra "
+                        "và so sánh khu vực bằng dữ liệu Radar BDS."
+                    ),
+                    "suggested_followups": [
+                        "đất Tân An giờ giá bao nhiêu",
+                        "Tân An có lô nào đáng kiểm tra không",
+                    ],
+                },
+                usage=answer_usage,
+            )
+        ),
         clock=lambda: NOW,
         planner=planner,
     )
@@ -597,10 +612,18 @@ def test_planned_conversation_returns_natural_answer_without_database_or_answer_
     assert result.answer.answered is True
     assert "Xin chào" in result.answer.direct_answer
     assert "chưa đủ dữ liệu" not in result.answer.direct_answer.lower()
-    assert deps.provider.requests == []
+    assert len(deps.provider.requests) == 1
+    provider_request = deps.provider.requests[0]
+    assert provider_request.json_mode is True
+    assert provider_request.tools == []
+    assert provider_request.thinking_enabled is False
+    encoded_request = "\n".join(message.content or "" for message in provider_request.messages)
+    assert "không bịa số liệu" in encoded_request.lower()
+    assert result.answer.source_cards == []
     assert deps.repository.tools == []
     assert deps.repository.evidence == []
     assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.ANSWERED.value
+    assert deps.repository.sync_finalizations[0]["usage"] == answer_usage
     assert deps.repository.planning_finalizations[0]["usage"] == planner_usage
 
 

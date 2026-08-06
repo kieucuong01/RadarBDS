@@ -278,6 +278,41 @@ test('controller allows one pending submit and renders immediate 200 answer', as
   assert.equal(view.calls.some(([name, run]) => name === 'run' && run.answer.direct_answer.includes('Phú Mỹ')), true);
 });
 
+test('controller shows a chat thinking indicator while waiting for the answer', async () => {
+  let resolvePost;
+  const calls = [];
+  const view = {
+    setPending: (value) => calls.push(['pending', value]),
+    showThinking: (value, question) => calls.push(['thinking', value, question]),
+    setQuota: () => {},
+    showRun: (run) => calls.push(['run', run.status]),
+    showError: (error) => calls.push(['error', error.code]),
+  };
+  const controller = createController({
+    api: {
+      postQuestion: () => new Promise((resolve) => { resolvePost = resolve; }),
+    },
+    view,
+  });
+
+  const pending = controller.submit('Xin chào', 'auto');
+  assert.deepEqual(calls.slice(0, 2), [
+    ['pending', true],
+    ['thinking', true, 'Xin chào'],
+  ]);
+
+  resolvePost({
+    run_id: 'run-chat',
+    session_id: 'session-chat',
+    status: 'completed',
+    answer: completedAnswer({ direct_answer: 'Xin chào anh.' }),
+  });
+  await pending;
+
+  assert.deepEqual(calls.at(-2), ['thinking', false, null]);
+  assert.deepEqual(calls.at(-1), ['pending', false]);
+});
+
 test('controller follows a 202 run and manual refresh never resubmits', async () => {
   let posts = 0;
   let gets = 0;

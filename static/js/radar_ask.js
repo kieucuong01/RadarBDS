@@ -442,6 +442,7 @@
         state.lastQuestion = normalized;
         state.lastDepth = DEPTH_LABELS[depth] ? depth : 'auto';
         notify('setPending', true);
+        notify('showThinking', true, normalized);
         try {
           const request = { question: normalized };
           if (state.lastDepth !== 'auto') request.requested_depth = state.lastDepth;
@@ -465,6 +466,7 @@
           return { status: 'failed', error };
         } finally {
           state.pending = false;
+          notify('showThinking', false, null);
           notify('setPending', false);
         }
       },
@@ -724,6 +726,7 @@
     let pendingDeleteResolve = null;
     let historyReturnFocus = null;
     let evidenceReturnFocus = null;
+    let thinkingMessage = null;
 
     const setStatus = (message) => {
       if (liveStatus) liveStatus.textContent = message;
@@ -766,6 +769,10 @@
       evidenceReturnFocus = null;
     };
     const showWelcome = () => {
+      if (thinkingMessage) {
+        thinkingMessage.remove();
+        thinkingMessage = null;
+      }
       conversation.replaceChildren(welcome);
       welcome.hidden = false;
       runNodes.clear();
@@ -780,6 +787,34 @@
       if (role === 'user') body.append(makeElement(documentRef, 'p', '', content));
       wrapper.append(avatar, body);
       return { wrapper, body };
+    };
+    const removeThinking = () => {
+      if (!thinkingMessage) return;
+      thinkingMessage.remove();
+      thinkingMessage = null;
+    };
+    const showThinking = (question) => {
+      removeThinking();
+      welcome.hidden = true;
+      const current = makeMessage('assistant', '');
+      current.wrapper.className += ' is-thinking';
+      current.wrapper.setAttribute('aria-live', 'polite');
+      const label = makeElement(documentRef, 'div', 'radar-ask-thinking');
+      label.setAttribute('role', 'status');
+      label.append(makeElement(documentRef, 'span', 'radar-ask-thinking-text', 'Radar đang suy nghĩ'));
+      const dots = makeElement(documentRef, 'span', 'radar-ask-thinking-dots');
+      dots.setAttribute('aria-hidden', 'true');
+      dots.append(
+        makeElement(documentRef, 'i', ''),
+        makeElement(documentRef, 'i', ''),
+        makeElement(documentRef, 'i', ''),
+      );
+      label.append(dots);
+      current.body.append(label);
+      thinkingMessage = current.wrapper;
+      conversation.append(thinkingMessage);
+      thinkingMessage.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      setStatus(question ? 'Radar BDS đang soạn câu trả lời.' : 'Radar BDS đang xử lý.');
     };
     const attachAnswerActions = (node, answer, messageId) => {
       const sourceButton = node.querySelector('[data-open-evidence]');
@@ -812,6 +847,10 @@
         submitLabel.textContent = value ? 'Đang gửi…' : 'Gửi câu hỏi';
         if (value) setStatus('Đang gửi câu hỏi tới Radar BDS.');
       },
+      showThinking(value, question) {
+        if (value) showThinking(question);
+        else removeThinking();
+      },
       setQuota(quotaPayload, costState) {
         const label = quotaLabel(quotaPayload || { tier: root.getAttribute('data-tier') });
         quotaNodes.forEach((node) => { node.textContent = label; });
@@ -823,6 +862,7 @@
         }
       },
       showRun(run) {
+        removeThinking();
         welcome.hidden = true;
         let current = runNodes.get(run.run_id);
         if (!current) {
@@ -847,6 +887,7 @@
         current.wrapper.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       },
       showError(error) {
+        removeThinking();
         const block = makeElement(documentRef, 'div', 'radar-ask-error');
         block.setAttribute('role', 'alert');
         block.append(makeElement(documentRef, 'strong', '', error.code === 'monthly_budget_hard_stop' ? 'Radar Ask đang tạm dừng' : 'Chưa thể trả lời'));
@@ -885,6 +926,7 @@
         });
       },
       showSession(payload, { nextCursor = null, appendedOlder = false } = {}) {
+        removeThinking();
         if (!payload) {
           showWelcome();
           composer.focus();
