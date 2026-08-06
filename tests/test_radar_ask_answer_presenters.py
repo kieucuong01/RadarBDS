@@ -197,6 +197,44 @@ def test_deal_search_lists_matches_and_cites_each_exact_listing():
     assert [claim.evidence_ids for claim in answer.claims] == [["deal:701"], ["deal:702"]]
 
 
+def test_deal_search_uses_total_result_count_when_presenter_limits_displayed_rows():
+    deals = []
+    evidence = []
+    for index in range(10):
+        listing_id = 800 + index
+        value = {
+            "listing_ref": f"radar-listing:{listing_id}",
+            "ward": "Phú Mỹ",
+            "asking_price_ty": 1.5,
+            "asking_price_per_m2_million": 15,
+            "fair_price_per_m2_million": 20,
+            "mos_pct": 25,
+            "signal_score": 80,
+        }
+        deals.append(value)
+        evidence.append(
+            item(
+                f"deal:{listing_id}",
+                kind=SourceKind.VALUATION,
+                source_ref=f"radar-signal:{listing_id}",
+                value=value,
+            )
+        )
+    bundle = EvidenceBundle(
+        question_snapshot="Tin nào dưới 20 triệu/m² đáng kiểm tra?",
+        calculations={"result_count": len(deals), "effective_mos_min_pct": 15},
+        items=evidence,
+    )
+
+    answer = validated(
+        present_deterministic_answer(decision("deal_search"), bundle, now=NOW),
+        bundle,
+    )
+
+    assert answer.direct_answer.startswith("Radar tìm thấy 10 tin")
+    assert len(answer.claims) == 5
+
+
 def test_price_drop_answer_ranks_ward_aggregates():
     areas = [
         {"ward": "Phú Mỹ", "signal_count": 3, "median_price_drop_pct": 8, "median_mos_pct": 18},

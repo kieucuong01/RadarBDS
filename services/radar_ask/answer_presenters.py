@@ -272,7 +272,11 @@ def _present_deal_search(
     ][:5]
     if not selected:
         return _insufficient(decision, bundle, now)
-    intro = f"Radar tìm thấy {len(selected)} tin đáng kiểm tra theo bộ lọc hiện tại."
+    result_count = _integer(bundle.calculations.get("result_count")) or len(selected)
+    intro = (
+        f"Radar tìm thấy {result_count} tin đáng kiểm tra theo bộ lọc hiện tại. "
+        "Dưới đây là các tin ưu tiên kiểm tra."
+    )
     lines: list[str] = []
     claims: list[AnswerClaim] = []
     for index, evidence in enumerate(selected, start=1):
