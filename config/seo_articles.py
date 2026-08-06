@@ -11246,7 +11246,474 @@ SEO_ARTICLES = {
             }
         ]
     }
+,
 
+'bang-gia-dat-va-gia-rao-khac-nhau-the-nao': {'variant': 'knowledge',
+                                               'path': '/tin-tuc/bang-gia-dat-va-gia-rao-khac-nhau-the-nao',
+                                               'category': {'key': 'huong-dan-doc-du-lieu', 'label': 'Hướng dẫn đọc dữ liệu'},
+                                               'title': 'Bảng giá đất và giá rao khác nhau thế nào? | Radar BDS',
+                                               'description': 'Radar BDS cập nhật 06/08/2026: phân biệt bảng giá đất '
+                                                              'với giá rao, khi nào nên dùng mỗi mốc và vì sao luôn '
+                                                              'phải tách đất nền với nhà đất khi lọc tin Bình Dương.',
+                                               'keywords': 'bảng giá đất và giá rao khác nhau thế nào, bảng giá đất là '
+                                                           'gì, giá rao là gì, định giá nhà đất Bình Dương, Radar BDS',
+                                               'breadcrumb_label': 'Bảng giá đất và giá rao khác nhau thế nào?',
+                                               'hero_badge': 'Giải thích nhanh / Buyer guide',
+                                               'hero_title': 'Bảng giá đất và giá rao khác nhau thế nào?',
+                                               'hero_text': 'Nếu anh đang xem một tin Bình Dương và thấy bảng giá đất '
+                                                            'thấp hơn rất nhiều so với giá rao, đó là chuyện bình '
+                                                            'thường. Bảng giá đất là mốc nhà nước cho mục đích quản '
+                                                            'lý; giá rao là mặt bằng người bán đang chào trên thị '
+                                                            'trường. Khi đọc Radar BDS, luôn tách đất nền và nhà đất '
+                                                            'trước rồi mới so giá.',
+                                               'scope_label': 'Bình Dương · Cách đọc giá nhà nước và giá thị trường',
+                                               'hero_checks': ['Radar đang theo dõi 17.924 tin Facebook live, trong đó '
+                                                               '2.603 tin có dấu hiệu đáng chú ý',
+                                                               'Định Hòa cho thấy đất nền trung vị 15,8 tr/m² nhưng '
+                                                               'nhà đất là 29,9 tr/m²',
+                                                               'Tân An có đất nền 16,3 tr/m² nhưng nhà đất là 22,8 '
+                                                               'tr/m²',
+                                                               'Phú Mỹ là ví dụ dễ thấy: đất nền 22,7 tr/m² nhưng nhà '
+                                                               'đất lên 38,7 tr/m²'],
+                                               'primary_cta': 'Mở công cụ định giá BĐS',
+                                               'primary_href': '/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=bang_gia_dat_vs_gia_rao',
+                                               'secondary_cta': 'Tra cứu bảng giá đất',
+                                               'secondary_href': '/bang-gia-dat-tphcm?utm_source=seo&utm_medium=article&utm_campaign=bang_gia_dat_vs_gia_rao',
+                                               'map_label': 'Tin tức / Giải thích cách đọc giá',
+                                               'hero_metric': {'label': 'Mẫu live để đọc giá rao',
+                                                               'value': '17.924 tin',
+                                                               'delta': '2.603 dấu hiệu đáng chú ý',
+                                                               'note': 'Nguồn Facebook live, lọc lúc 13:16 ngày '
+                                                                       '06/08/2026 với is_active=1'},
+                                               'property_card': {'status': 'Cập nhật 06/08/2026',
+                                                                 'title': 'Bảng giá đất không phải bảng chào bán trên '
+                                                                          'thị trường',
+                                                                 'price': 'Anh có thể dùng bảng giá đất để đối chiếu '
+                                                                          'thêm mốc nhà nước, nhưng khi lọc tin mua '
+                                                                          'thực tế vẫn phải nhìn giá rao cùng phường '
+                                                                          'và cùng loại hình.',
+                                                                 'metric_a': 'Đất nền dễ so',
+                                                                 'metric_a_value': 'Tân An 16,3 tr/m² · Định Hòa 15,8 '
+                                                                                   'tr/m²',
+                                                                 'metric_b': 'Nhà đất dễ lệch',
+                                                                 'metric_b_value': 'Phú Mỹ 38,7 tr/m² · Phú Hòa 38,5 '
+                                                                                   'tr/m²'},
+                                               'value_cards': [{'title': 'Bảng giá đất là mốc hành chính, không phải '
+                                                                         'mốc chốt mua bán',
+                                                                'body': 'Bảng giá đất hữu ích khi anh cần đối chiếu '
+                                                                        'thêm mốc nhà nước hoặc văn bản chính thức. Nó '
+                                                                        'không nói rằng một tin ngoài thị trường phải '
+                                                                        'bán đúng bằng mức đó.'},
+                                                               {'title': 'Giá rao là mặt bằng thị trường đang chào bán '
+                                                                         'hôm nay',
+                                                                'body': 'Giá rao cho anh biết người bán đang kỳ vọng '
+                                                                        'bao nhiêu ở từng phường và từng loại hình. '
+                                                                        'Đây là lớp dữ liệu phù hợp hơn để lọc tin '
+                                                                        'trước khi gọi môi giới.'},
+                                                               {'title': 'Muốn đọc đúng giá rao, phải tách đất nền và '
+                                                                         'nhà đất',
+                                                                'body': 'Nếu anh gộp chung hai loại hình, mức tham '
+                                                                        'chiếu sẽ lệch mạnh. Ngay trong dữ liệu live '
+                                                                        '06/08/2026, nhiều phường có chênh đáng kể '
+                                                                        'giữa đất nền và nhà đất.'}],
+                                               'dashboard_preview': {'eyebrow': 'Từ mốc giá sang kiểm tra tin',
+                                                                     'title': 'Dùng bảng giá đất để đối chiếu, dùng '
+                                                                              'Radar để lọc tin thực tế',
+                                                                     'description': 'Bắt đầu từ khái niệm đúng, rồi mở '
+                                                                                    'công cụ định giá và dashboard để '
+                                                                                    'kiểm tra từng tin theo phường, '
+                                                                                    'loại hình và tổng giá.',
+                                                                     'image': '/static/images/seo/ward-compare-dashboard-preview.webp',
+                                                                     'alt': 'Dashboard Radar BDS và công cụ định giá '
+                                                                            'bất động sản'},
+                                               'market_snapshot': {'eyebrow': 'Snapshot 06/08/2026',
+                                                                   'title': 'Các ví dụ live cho thấy vì sao giá rao '
+                                                                            'phải đi cùng loại hình',
+                                                                   'columns': [{'key': 'ward_type',
+                                                                                'label': 'Phường · loại hình'},
+                                                                               {'key': 'tracked',
+                                                                                'label': 'Tin đang theo dõi'},
+                                                                               {'key': 'median_m2',
+                                                                                'label': 'Giá trung vị/m²'},
+                                                                               {'key': 'median_total',
+                                                                                'label': 'Tổng giá trung vị'},
+                                                                               {'key': 'note',
+                                                                                'label': 'Cách đọc nhanh'}],
+                                                                   'rows': [{'ward_type': 'Tân An · đất nền',
+                                                                             'tracked': '725',
+                                                                             'median_m2': '16,3 tr/m²',
+                                                                             'median_total': '1,79 tỷ',
+                                                                             'note': 'Nhóm giá mềm để so tin đất nền '
+                                                                                     'trước.'},
+                                                                            {'ward_type': 'Tân An · nhà đất',
+                                                                             'tracked': '418',
+                                                                             'median_m2': '22,8 tr/m²',
+                                                                             'median_total': '2,45 tỷ',
+                                                                             'note': 'Cùng phường nhưng cao hơn đất '
+                                                                                     'nền rõ rệt.'},
+                                                                            {'ward_type': 'Định Hòa · đất nền',
+                                                                             'tracked': '657',
+                                                                             'median_m2': '15,8 tr/m²',
+                                                                             'median_total': '2,38 tỷ',
+                                                                             'note': 'Đất nền thấp hơn nhiều so với '
+                                                                                     'nhà đất cùng phường.'},
+                                                                            {'ward_type': 'Định Hòa · nhà đất',
+                                                                             'tracked': '308',
+                                                                             'median_m2': '29,9 tr/m²',
+                                                                             'median_total': '2,70 tỷ',
+                                                                             'note': 'Nếu lấy mốc đất nền để hỏi nhà '
+                                                                                     'đất sẽ bị lệch.'},
+                                                                            {'ward_type': 'Phú Mỹ · đất nền',
+                                                                             'tracked': '445',
+                                                                             'median_m2': '22,7 tr/m²',
+                                                                             'median_total': '3,05 tỷ',
+                                                                             'note': 'Mốc phù hợp khi lọc lô đất '
+                                                                                     'trống.'},
+                                                                            {'ward_type': 'Phú Mỹ · nhà đất',
+                                                                             'tracked': '509',
+                                                                             'median_m2': '38,7 tr/m²',
+                                                                             'median_total': '3,55 tỷ',
+                                                                             'note': 'Nhà đất đã gồm công trình nên '
+                                                                                     'không thể so bằng mốc đất '
+                                                                                     'nền.'}]},
+                                               'local_links_title': 'Đi tiếp từ khái niệm sang công cụ',
+                                               'local_links': [{'label': 'Hub nhà đất Bình Dương',
+                                                                'href': '/binh-duong',
+                                                                'description': 'Đi từ hub sang từng phường trước khi '
+                                                                               'lọc giá.'},
+                                                               {'label': 'Công cụ định giá BĐS',
+                                                                'href': '/dinh-gia-bds',
+                                                                'description': 'Ước lượng nhanh theo dữ liệu Radar '
+                                                                               'trước khi gọi môi giới.'},
+                                                               {'label': 'Tra cứu bảng giá đất',
+                                                                'href': '/bang-gia-dat-tphcm',
+                                                                'description': 'Đối chiếu thêm mốc nhà nước khi anh '
+                                                                               'cần xem văn bản chính thức.'},
+                                                               {'label': 'Báo cáo thị trường tháng 07/2026',
+                                                                'href': '/bao-cao/bds-binh-duong-thang-07-2026',
+                                                                'description': 'Đọc bức tranh rộng hơn sau khi hiểu '
+                                                                               'cách dùng từng mốc giá.'},
+                                                               {'label': 'Cách định giá nhà đất Bình Dương bằng giá '
+                                                                         'rao theo phường',
+                                                                'href': '/tin-tuc/cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong',
+                                                                'description': 'Bài nền để dùng giá rao đúng cách trên '
+                                                                               'Radar.'},
+                                                               {'label': 'Giá rao khác giá giao dịch thế nào?',
+                                                                'href': '/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao',
+                                                                'description': 'Hiểu thêm giới hạn của giá rao trước '
+                                                                               'khi thương lượng.'}],
+                                               'faq': [{'q': 'Bảng giá đất và giá rao khác nhau ở điểm nào?',
+                                                        'a': 'Bảng giá đất là mốc nhà nước phục vụ quản lý và đối '
+                                                             'chiếu chính sách. Giá rao là mức người bán đang chào '
+                                                             'trên thị trường. Khi lọc tin mua thực tế, anh nên xem '
+                                                             'giá rao cùng phường và cùng loại hình trước.'},
+                                                       {'q': 'Có nên lấy bảng giá đất để kết luận tin đang rẻ hay đắt '
+                                                             'không?',
+                                                        'a': 'Không nên dùng một mình. Bảng giá đất giúp thêm một lớp '
+                                                             'tham chiếu, nhưng để biết tin đang cao hay thấp trên thị '
+                                                             'trường, anh vẫn phải so với giá rao cùng phường, cùng '
+                                                             'loại hình và tổng giá tương tự.'},
+                                                       {'q': 'Vì sao Radar BDS luôn nhắc tách đất nền và nhà đất?',
+                                                        'a': 'Vì chênh lệch rất rõ. Dữ liệu live 06/08/2026 cho thấy ở '
+                                                             'Định Hòa, đất nền trung vị khoảng 15,8 tr/m² nhưng nhà '
+                                                             'đất là 29,9 tr/m². Nếu gộp hai nhóm, mốc tham chiếu sẽ '
+                                                             'sai ngay từ đầu.'},
+                                                       {'q': 'Sau khi đọc bài này thì nên làm gì tiếp?',
+                                                        'a': 'Anh nên mở công cụ định giá hoặc dashboard Radar, chọn '
+                                                             'đúng phường, tách đúng loại hình, rồi so thêm giá/m², '
+                                                             'tổng giá và các tin có dấu hiệu đáng chú ý trước khi gọi '
+                                                             'môi giới.'}],
+                                               'article': {'published_at': '2026-08-06',
+                                                           'modified_at': '2026-08-06',
+                                                           'intro': ['Nếu anh thấy bảng giá đất thấp hơn giá rao ngoài '
+                                                                     'thị trường, đó không phải lỗi dữ liệu. Hai mốc '
+                                                                     'này phục vụ hai việc khác nhau: một bên là mốc '
+                                                                     'nhà nước, một bên là mức người bán đang chào. '
+                                                                     'Khi lọc tin Bình Dương, anh nên xem cả hai nhưng '
+                                                                     'ưu tiên giá rao cùng phường và cùng loại hình để '
+                                                                     'quyết định mở tin nào trước.',
+                                                                     'Các số trong bài là giá rao từ tin Facebook live '
+                                                                     'mà Radar BDS đang theo dõi lúc 13:16 ngày '
+                                                                     '06/08/2026. Đây là giá rao để lọc ban đầu, không '
+                                                                     'phải giá chốt giao dịch hay kết quả thẩm định '
+                                                                     'pháp lý.'],
+                                                           'summary_cards': [{'label': 'Thị trường live',
+                                                                              'value': '17.924 tin',
+                                                                              'note': 'Facebook live, đã lọc blacklist '
+                                                                                      'và review hidden'},
+                                                                             {'label': 'Nhóm đáng kiểm tra',
+                                                                              'value': '2.603 tin',
+                                                                              'note': 'is_hot hoặc price_dropped'},
+                                                                             {'label': 'Đất nền dễ so',
+                                                                              'value': 'Tân An 16,3 tr/m²',
+                                                                              'note': '725 tin đủ dữ liệu giá'},
+                                                                             {'label': 'Nhà đất dễ lệch',
+                                                                              'value': 'Phú Mỹ 38,7 tr/m²',
+                                                                              'note': 'Cùng phường nhưng cao hơn đất '
+                                                                                      'nền mạnh'}],
+                                                           'illustration': {'src': '/static/images/seo/ward-compare-dashboard-preview.webp',
+                                                                            'alt': 'Cách dùng bảng giá đất và giá rao '
+                                                                                   'trên Radar BDS',
+                                                                            'caption': 'Dùng bảng giá đất như mốc đối '
+                                                                                       'chiếu, rồi quay lại Radar để '
+                                                                                       'lọc tin theo phường và loại '
+                                                                                       'hình.'},
+                                                           'data_tables': [{'eyebrow': 'So nhanh 3 mốc giá',
+                                                                            'title': 'Mỗi loại giá nên dùng vào việc '
+                                                                                     'gì?',
+                                                                            'note': 'Bài toán của người mua không phải '
+                                                                                    'chọn một mốc duy nhất, mà là dùng '
+                                                                                    'đúng mốc ở đúng bước.',
+                                                                            'columns': [{'key': 'kind',
+                                                                                         'label': 'Loại giá'},
+                                                                                        {'key': 'meaning',
+                                                                                         'label': 'Nó nói gì'},
+                                                                                        {'key': 'use_when',
+                                                                                         'label': 'Nên dùng khi'},
+                                                                                        {'key': 'dont_use',
+                                                                                         'label': 'Không nên dùng để'}],
+                                                                            'rows': [{'kind': 'Bảng giá đất',
+                                                                                      'meaning': 'Mốc nhà nước để đối '
+                                                                                                 'chiếu thêm chính '
+                                                                                                 'sách và văn bản',
+                                                                                      'use_when': 'Anh cần xem thêm '
+                                                                                                  'mốc hành chính hoặc '
+                                                                                                  'văn bản chính thức',
+                                                                                      'dont_use': 'Kết luận ngay giá '
+                                                                                                  'chào bán ngoài thị '
+                                                                                                  'trường phải bằng '
+                                                                                                  'mức đó'},
+                                                                                     {'kind': 'Giá rao',
+                                                                                      'meaning': 'Mức người bán đang '
+                                                                                                 'chào trên thị trường '
+                                                                                                 'hiện tại',
+                                                                                      'use_when': 'Anh cần lọc tin nào '
+                                                                                                  'nên mở trước, nên '
+                                                                                                  'hỏi trước',
+                                                                                      'dont_use': 'Khẳng định chắc giá '
+                                                                                                  'chốt sẽ đúng bằng '
+                                                                                                  'mức rao'},
+                                                                                     {'kind': 'Giá giao dịch thực tế',
+                                                                                      'meaning': 'Mức hai bên chốt sau '
+                                                                                                 'thương lượng và kiểm '
+                                                                                                 'tra',
+                                                                                      'use_when': 'Anh đã đi sâu vào '
+                                                                                                  'một tin cụ thể',
+                                                                                      'dont_use': 'Thay thế cho dữ '
+                                                                                                  'liệu lọc sớm nếu '
+                                                                                                  'anh chưa có thông '
+                                                                                                  'tin thực địa'}]},
+                                                                           {'eyebrow': 'Ví dụ dữ liệu live',
+                                                                            'title': 'Cùng một phường nhưng giá rao '
+                                                                                     'phải tách theo loại hình',
+                                                                            'note': 'Luôn đọc đây là giá rao. Giá chốt '
+                                                                                    'thực tế còn phụ thuộc vị trí cụ '
+                                                                                    'thể, pháp lý và thương lượng.',
+                                                                            'columns': [{'key': 'ward_type',
+                                                                                         'label': 'Phường · loại hình'},
+                                                                                        {'key': 'tracked',
+                                                                                         'label': 'Tin đang theo dõi'},
+                                                                                        {'key': 'median_m2',
+                                                                                         'label': 'Giá trung vị/m²'},
+                                                                                        {'key': 'median_total',
+                                                                                         'label': 'Tổng giá trung vị'},
+                                                                                        {'key': 'note',
+                                                                                         'label': 'Ý nghĩa khi lọc '
+                                                                                                  'tin'}],
+                                                                            'rows': [{'ward_type': 'Định Hòa · đất nền',
+                                                                                      'tracked': '657',
+                                                                                      'median_m2': '15,8 tr/m²',
+                                                                                      'median_total': '2,38 tỷ',
+                                                                                      'note': 'Mốc hợp khi anh đang '
+                                                                                              'xem lô đất trống.'},
+                                                                                     {'ward_type': 'Định Hòa · nhà đất',
+                                                                                      'tracked': '308',
+                                                                                      'median_m2': '29,9 tr/m²',
+                                                                                      'median_total': '2,70 tỷ',
+                                                                                      'note': 'Nếu hỏi nhà đất bằng '
+                                                                                              'mốc đất nền sẽ lệch '
+                                                                                              'mạnh.'},
+                                                                                     {'ward_type': 'Tân An · đất nền',
+                                                                                      'tracked': '725',
+                                                                                      'median_m2': '16,3 tr/m²',
+                                                                                      'median_total': '1,79 tỷ',
+                                                                                      'note': 'Nhóm dễ mở trước nếu '
+                                                                                              'anh cần giá mềm.'},
+                                                                                     {'ward_type': 'Tân An · nhà đất',
+                                                                                      'tracked': '418',
+                                                                                      'median_m2': '22,8 tr/m²',
+                                                                                      'median_total': '2,45 tỷ',
+                                                                                      'note': 'Vẫn cao hơn đất nền dù '
+                                                                                              'cùng phường.'},
+                                                                                     {'ward_type': 'Phú Mỹ · đất nền',
+                                                                                      'tracked': '445',
+                                                                                      'median_m2': '22,7 tr/m²',
+                                                                                      'median_total': '3,05 tỷ',
+                                                                                      'note': 'Chỉ dùng cho đất nền, '
+                                                                                              'không dùng thay nhà xây '
+                                                                                              'sẵn.'},
+                                                                                     {'ward_type': 'Phú Mỹ · nhà đất',
+                                                                                      'tracked': '509',
+                                                                                      'median_m2': '38,7 tr/m²',
+                                                                                      'median_total': '3,55 tỷ',
+                                                                                      'note': 'Nhà đất đã gồm công '
+                                                                                              'trình và hiện trạng '
+                                                                                              'ở.'}]}],
+                                                           'charts': [{'eyebrow': 'Visual nhanh',
+                                                                       'title': 'Chênh lệch trong cùng phường có thể '
+                                                                                'rất lớn nếu anh gộp loại hình',
+                                                                       'note': 'So giá rao trung vị/m² giữa đất nền và '
+                                                                               'nhà đất ở ba phường đang theo dõi '
+                                                                               'nhiều tin live.',
+                                                                       'alt': 'Biểu đồ chênh lệch giá rao đất nền và '
+                                                                              'nhà đất theo phường',
+                                                                       'rows': [{'label': 'Định Hòa · đất nền',
+                                                                                 'value_label': '15,8 tr/m²',
+                                                                                 'width': 41,
+                                                                                 'color': '#2563eb'},
+                                                                                {'label': 'Định Hòa · nhà đất',
+                                                                                 'value_label': '29,9 tr/m²',
+                                                                                 'width': 77,
+                                                                                 'color': '#dc2626'},
+                                                                                {'label': 'Tân An · đất nền',
+                                                                                 'value_label': '16,3 tr/m²',
+                                                                                 'width': 42,
+                                                                                 'color': '#16a34a'},
+                                                                                {'label': 'Tân An · nhà đất',
+                                                                                 'value_label': '22,8 tr/m²',
+                                                                                 'width': 59,
+                                                                                 'color': '#f59e0b'},
+                                                                                {'label': 'Phú Mỹ · đất nền',
+                                                                                 'value_label': '22,7 tr/m²',
+                                                                                 'width': 59,
+                                                                                 'color': '#0ea5e9'},
+                                                                                {'label': 'Phú Mỹ · nhà đất',
+                                                                                 'value_label': '38,7 tr/m²',
+                                                                                 'width': 100,
+                                                                                 'color': '#7c3aed'}]}],
+                                                           'sections': [{'id': 'bang-gia-dat-la-gi',
+                                                                         'heading': 'Bảng giá đất là mốc để đối chiếu '
+                                                                                    'thêm, không phải bảng chào bán',
+                                                                         'paragraphs': ['Khi anh tra bảng giá đất, anh '
+                                                                                        'đang nhìn một mốc nhà nước. '
+                                                                                        'Mốc này hữu ích cho việc đối '
+                                                                                        'chiếu thêm về chính sách, văn '
+                                                                                        'bản hoặc một số nghĩa vụ liên '
+                                                                                        'quan. Nhưng nó không có nghĩa '
+                                                                                        'rằng người bán ngoài thị '
+                                                                                        'trường phải rao đúng bằng con '
+                                                                                        'số đó.',
+                                                                                        'Vì vậy nếu anh thấy bảng giá '
+                                                                                        'đất và giá rao chênh nhau, '
+                                                                                        'đừng vội kết luận bên nào '
+                                                                                        'sai. Trước hết hãy xác định '
+                                                                                        'anh đang dùng mốc đó để làm '
+                                                                                        'gì: đối chiếu hành chính hay '
+                                                                                        'lọc cơ hội mua thực tế.'],
+                                                                         'bullets': ['Dùng bảng giá đất khi anh cần '
+                                                                                     'thêm mốc nhà nước.',
+                                                                                     'Không dùng bảng giá đất một mình '
+                                                                                     'để kết luận tin đang rẻ hay đắt.',
+                                                                                     'Khi quay lại chuyện mua thực tế, '
+                                                                                     'hãy so thêm giá rao cùng phường '
+                                                                                     'và cùng loại hình.']},
+                                                                        {'id': 'gia-rao-cho-viec-gi',
+                                                                         'heading': 'Giá rao phù hợp hơn cho bước lọc '
+                                                                                    'tin ban đầu',
+                                                                         'paragraphs': ['Giá rao cho biết người bán '
+                                                                                        'đang kỳ vọng mức nào trên thị '
+                                                                                        'trường hiện tại. Với Radar '
+                                                                                        'BDS, đây là lớp dữ liệu giúp '
+                                                                                        'anh quyết định tin nào nên mở '
+                                                                                        'trước, gọi trước hoặc loại '
+                                                                                        'sớm trước khi mất thời gian '
+                                                                                        'đi xem.',
+                                                                                        'Dù vậy, giá rao vẫn chỉ là '
+                                                                                        'giá rao. Nó hữu ích để lọc, '
+                                                                                        'chứ chưa phải bằng chứng rằng '
+                                                                                        'giao dịch sẽ chốt đúng mức '
+                                                                                        'đó. Vì thế bài toán đúng là: '
+                                                                                        'dùng giá rao để ưu tiên thứ '
+                                                                                        'tự kiểm tra, rồi mới kiểm tra '
+                                                                                        'sâu hơn.'],
+                                                                         'bullets': ['Giá rao giúp anh biết thị trường '
+                                                                                     'đang chào mức nào.',
+                                                                                     'Giá rao nên đi cùng phường, loại '
+                                                                                     'hình, diện tích và tổng giá.',
+                                                                                     'Giá rao không thay cho pháp lý, '
+                                                                                     'quy hoạch hoặc thương lượng thực '
+                                                                                     'tế.']},
+                                                                        {'id': 'tach-dat-nen-va-nha-dat',
+                                                                         'heading': 'Sai lầm lớn nhất là gộp đất nền '
+                                                                                    'với nhà đất vào một mốc',
+                                                                         'paragraphs': ['Dữ liệu live 06/08/2026 cho '
+                                                                                        'thấy cùng một phường nhưng '
+                                                                                        'hai loại hình có thể rất khác '
+                                                                                        'nhau. Ở Định Hòa, đất nền '
+                                                                                        'trung vị khoảng 15,8 tr/m² '
+                                                                                        'còn nhà đất là 29,9 tr/m². Ở '
+                                                                                        'Phú Mỹ, đất nền là 22,7 tr/m² '
+                                                                                        'nhưng nhà đất lên 38,7 tr/m².',
+                                                                                        'Nếu anh gộp chung hai nhóm '
+                                                                                        'này, mức tham chiếu sẽ sai '
+                                                                                        'ngay từ đầu. Kết quả là anh '
+                                                                                        'có thể gọi nhầm tin, ép giá '
+                                                                                        'sai hoặc bỏ qua tin đáng kiểm '
+                                                                                        'tra chỉ vì nhìn một con số '
+                                                                                        'tổng quát quá rộng.'],
+                                                                         'bullets': ['Đất nền: ưu tiên nhìn giá/m² và '
+                                                                                     'tổng giá của lô đất trống.',
+                                                                                     'Nhà đất: phải chấp nhận mặt bằng '
+                                                                                     'khác do có công trình và hiện '
+                                                                                     'trạng sử dụng.',
+                                                                                     'Cùng phường chưa đủ; phải đúng '
+                                                                                     'cả loại hình mới so được.']},
+                                                                        {'id': 'dung-hai-moc-cung-luc',
+                                                                         'heading': 'Cách dùng hai mốc cùng lúc mà '
+                                                                                    'không bị rối',
+                                                                         'paragraphs': ['Cách đơn giản nhất là đi theo '
+                                                                                        'thứ tự. Nếu anh cần mốc nhà '
+                                                                                        'nước, mở bảng giá đất để đối '
+                                                                                        'chiếu thêm. Nếu anh cần biết '
+                                                                                        'thị trường đang rao mức nào, '
+                                                                                        'mở Radar để xem giá rao cùng '
+                                                                                        'phường, rồi dùng công cụ định '
+                                                                                        'giá hoặc dashboard để lọc sâu '
+                                                                                        'hơn.',
+                                                                                        'Làm như vậy, anh không phải '
+                                                                                        'chọn bên nào đúng tuyệt đối. '
+                                                                                        'Anh chỉ đang dùng mỗi mốc cho '
+                                                                                        'đúng việc của nó: bảng giá '
+                                                                                        'đất cho phần đối chiếu nhà '
+                                                                                        'nước, giá rao cho phần lọc '
+                                                                                        'thị trường, và kiểm tra thực '
+                                                                                        'địa cho quyết định cuối '
+                                                                                        'cùng.'],
+                                                                         'bullets': ['Bước 1: nếu cần, đối chiếu bảng '
+                                                                                     'giá đất để có thêm mốc nhà nước.',
+                                                                                     'Bước 2: mở Radar, chọn đúng '
+                                                                                     'phường và đúng loại hình.',
+                                                                                     'Bước 3: so giá/m² và tổng giá '
+                                                                                     'với mặt bằng đang rao.',
+                                                                                     'Bước 4: chỉ gọi sâu những tin '
+                                                                                     'còn hợp sau vòng lọc đầu '
+                                                                                     'tiên.']}],
+                                                           'checklist': ['Đã phân biệt rõ bảng giá đất với giá rao thị '
+                                                                         'trường.',
+                                                                         'Đã tách đất nền và nhà đất trước khi so giá.',
+                                                                         'Đã hiểu các số trong bài là giá rao, không '
+                                                                         'phải giá chốt giao dịch.',
+                                                                         'Đã chọn đúng phường trước khi mở dashboard '
+                                                                         'hoặc công cụ định giá.',
+                                                                         'Đã giữ bước kiểm tra pháp lý, quy hoạch và '
+                                                                         'thực địa cho vòng sau.']},
+                                               'final_cta': {'title': 'Mở Radar để lọc giá rao đúng ngữ cảnh',
+                                                             'body': 'Khi đã hiểu bảng giá đất và giá rao khác nhau ở '
+                                                                     'đâu, anh có thể quay lại Radar để lọc đúng '
+                                                                     'phường, đúng loại hình và giảm bớt các cuộc gọi '
+                                                                     'thừa.',
+                                                             'button': 'Mở công cụ định giá',
+                                                             'button_href': '/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=bang_gia_dat_vs_gia_rao'}}
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
@@ -11279,4 +11746,6 @@ KNOWLEDGE_HUB = {'path': '/tin-tuc',
  'scope_label': 'Bình Dương · Tin tức dữ liệu',
  'featured_slug': 'dat-nen-hay-nha-dat-thu-dau-mot-dang-de-so-gia-hon',
  'breadcrumbs': [{'name': 'Trang chủ', 'href': '/', 'url': 'https://radarbds.vn/'},
-                 {'name': 'Tin tức', 'href': '/tin-tuc', 'url': 'https://radarbds.vn/tin-tuc'}]}
+                 {'name': 'Tin tức', 'href': '/tin-tuc', 'url': 'https://radarbds.vn/tin-tuc'}],
+
+}
