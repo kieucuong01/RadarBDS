@@ -75,12 +75,12 @@
 
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-scroll-lock-20260802' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=content-hubs-20260729' %}
-  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=area-scope-city-picker-20260806' %}
+  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=area-scope-investment-filters-20260806' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
   {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=radar-ask-launcher-20260805' %}
-  {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=account-menu-compact-20260606' %}
+  {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=auth-modal-width-20260806' %}
   <link rel="stylesheet" href="{{ css_base }}">
   <link rel="stylesheet" href="{{ css_layout }}">
   <link rel="preload" href="{{ css_filters }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -584,6 +584,7 @@
       <div id="tab-signals" class="tab-content active">
         <div class="area-scope-modal" id="areaScopeChooser" hidden role="dialog" aria-modal="true" aria-labelledby="areaScopeChooserTitle">
           <section class="area-scope-modal-panel">
+            <button type="button" class="area-scope-close" aria-label="Đóng chọn khu vực" onclick="closeAreaScopeChooser()">&times;</button>
             <div class="area-scope-copy">
               <span class="area-scope-kicker">Khu vực quan tâm</span>
               <h2 id="areaScopeChooserTitle">Bạn đang săn khu nào?</h2>
@@ -611,6 +612,47 @@
                   </section>
                 {% endif %}
               {% endfor %}
+            </div>
+            <div class="area-scope-filter-panel" id="areaScopeOptionalFilters" aria-label="Bộ lọc thêm">
+              <div class="area-scope-filter-head">
+                <span>Lọc thêm</span>
+                <button type="button" class="area-scope-filter-clear" onclick="clearAreaScopeOptionalFilters()">Bỏ lọc thêm</button>
+              </div>
+              <section class="area-scope-filter-block" data-area-scope-filter="price_range">
+                <div class="area-scope-filter-label">Giá</div>
+                <div class="area-scope-option-grid">
+                  <button type="button" class="area-scope-option-chip" data-filter-kind="price" data-filter-name="price_range"
+                    data-min="" data-max="1" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">&lt; 1 Tỷ</button>
+                  <button type="button" class="area-scope-option-chip" data-filter-kind="price" data-filter-name="price_range"
+                    data-min="1" data-max="2" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">1 - 2 Tỷ</button>
+                  <button type="button" class="area-scope-option-chip" data-filter-kind="price" data-filter-name="price_range"
+                    data-min="2" data-max="" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">&gt; 2 Tỷ</button>
+                </div>
+              </section>
+              <section class="area-scope-filter-block" data-area-scope-filter="area_range">
+                <div class="area-scope-filter-label">Diện tích</div>
+                <div class="area-scope-option-grid">
+                  <button type="button" class="area-scope-option-chip" data-filter-kind="area" data-filter-name="area_range"
+                    data-min="" data-max="150" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">&lt; 150 m2</button>
+                  <button type="button" class="area-scope-option-chip" data-filter-kind="area" data-filter-name="area_range"
+                    data-min="150" data-max="500" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">150 - 500 m2</button>
+                  <button type="button" class="area-scope-option-chip" data-filter-kind="area" data-filter-name="area_range"
+                    data-min="500" data-max="" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">&gt; 500 m2</button>
+                </div>
+              </section>
+              <section class="area-scope-filter-block" data-area-scope-filter="prop_type">
+                <div class="area-scope-filter-label">Loại hình</div>
+                <div class="area-scope-option-grid">
+                  <button type="button" class="area-scope-option-chip" data-filter-name="prop_type"
+                    data-value="dat_nen" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">Đất</button>
+                  <button type="button" class="area-scope-option-chip" data-filter-name="prop_type"
+                    data-value="nha_dat" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">Nhà đất</button>
+                  <button type="button" class="area-scope-option-chip" data-filter-name="prop_type"
+                    data-value="chung_cu" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">Chung cư</button>
+                  <button type="button" class="area-scope-option-chip" data-filter-name="prop_type"
+                    data-value="nha_tro" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">Nhà trọ</button>
+                </div>
+              </section>
             </div>
             <div class="area-scope-actions">
               <button type="button" class="area-scope-apply" id="areaScopeApplySelection" onclick="applyAreaScopeWardSelection()" disabled>Áp dụng khu vực</button>
@@ -1484,8 +1526,8 @@
   <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-scroll-lock-20260802"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=area-scope-city-picker-20260806"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=area-scope-city-picker-20260806"></script>
+  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=area-scope-investment-filters-20260806"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=area-scope-investment-filters-20260806"></script>
 </body>
 
 </html>

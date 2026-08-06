@@ -136,6 +136,77 @@
     return params;
   }
 
+  function appendUniqueParams(params, key, values) {
+    uniqueValues(values).forEach((value) => params.append(key, value));
+  }
+
+  function applyOptionalFiltersToParams(params, optionalFilters) {
+    if (!(params instanceof URLSearchParams)) return params;
+    const filters = optionalFilters || {};
+    ['price_range', 'area_range', 'prop_type'].forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(filters, key)) return;
+      params.delete(key);
+      appendUniqueParams(params, key, filters[key]);
+    });
+    return params;
+  }
+
+  function rangeTokenFromDataset(dataset) {
+    const min = dataset && dataset.min !== undefined ? dataset.min : '';
+    const max = dataset && dataset.max !== undefined ? dataset.max : '';
+    return `${min}:${max}`;
+  }
+
+  function selectedAreaScopeOptionalFilters(doc) {
+    const documentRef = doc || root.document;
+    if (!documentRef || typeof documentRef.querySelectorAll !== 'function') return null;
+    const selected = { price_range: [], area_range: [], prop_type: [] };
+    documentRef.querySelectorAll('.area-scope-option-chip.is-selected').forEach((chip) => {
+      const name = chip.dataset ? chip.dataset.filterName : '';
+      if (name === 'price_range' || name === 'area_range') {
+        selected[name].push(rangeTokenFromDataset(chip.dataset));
+      } else if (name === 'prop_type' && chip.dataset && chip.dataset.value) {
+        selected.prop_type.push(chip.dataset.value);
+      }
+    });
+    const compact = {};
+    Object.entries(selected).forEach(([key, values]) => {
+      if (values.length) compact[key] = values;
+    });
+    return Object.keys(compact).length ? compact : null;
+  }
+
+  function setSidebarRangeSelection(kind, tokens, doc) {
+    const documentRef = doc || root.document;
+    if (!documentRef || !tokens || !tokens.length) return;
+    const tokenSet = new Set(tokens);
+    documentRef.querySelectorAll(`.range-chip[data-range-kind="${kind}"]`).forEach((chip) => {
+      const selected = tokenSet.has(rangeTokenFromDataset(chip.dataset));
+      chip.classList.toggle('active', selected);
+      chip.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+    const prefix = kind === 'price' ? 'price' : 'area';
+    const minEl = documentRef.getElementById(`${prefix}Min`);
+    const maxEl = documentRef.getElementById(`${prefix}Max`);
+    if (minEl) minEl.value = '';
+    if (maxEl) maxEl.value = '';
+  }
+
+  function syncAreaScopeOptionalFilters(doc) {
+    const documentRef = doc || root.document;
+    const selected = selectedAreaScopeOptionalFilters(documentRef);
+    if (!selected) return null;
+    if ((selected.price_range || []).length) setSidebarRangeSelection('price', selected.price_range, documentRef);
+    if ((selected.area_range || []).length) setSidebarRangeSelection('area', selected.area_range, documentRef);
+    if ((selected.prop_type || []).length && documentRef && typeof documentRef.querySelectorAll === 'function') {
+      const allowed = new Set(uniqueValues(selected.prop_type));
+      documentRef.querySelectorAll('#filterForm input[name="prop_type"]').forEach((box) => {
+        box.checked = allowed.has(box.value);
+      });
+    }
+    return selected;
+  }
+
   function readStoredScope(storage, wardsByCity) {
     try {
       const raw = storage.getItem(STORAGE_KEY);
@@ -307,11 +378,12 @@
     if (bar) bar.hidden = true;
   }
 
-  function replaceUrlWithScope(scope) {
+  function replaceUrlWithScope(scope, optionalFilters) {
     if (!root.location || !root.history || !scope) return;
     const params = new URLSearchParams(root.location.search || '');
     params.set('tab', 'signals');
     applyScopeToParams(params, scope);
+    if (optionalFilters) applyOptionalFiltersToParams(params, optionalFilters);
     const nextUrl = `${root.location.pathname || '/'}?${params.toString()}${root.location.hash || ''}`;
     root.history.replaceState(null, '', nextUrl);
   }
@@ -324,7 +396,7 @@
     syncScopeControls(normalized, wardsByCity, root.document, root.updateWardFilters);
     updateScopeUi(normalized, root.document);
     if (opts.persist !== false) saveScope(normalized, root.localStorage);
-    if (opts.updateUrl !== false) replaceUrlWithScope(normalized);
+    if (opts.updateUrl !== false) replaceUrlWithScope(normalized, opts.optionalFilters || null);
     if (opts.apply !== false && typeof root.applyFilters === 'function') root.applyFilters();
     return normalized;
   }
@@ -360,12 +432,13 @@
   root.selectAreaCityAll = function selectAreaCityAll(city) {
     const resolvedCity = resolveCity(city, root.INITIAL_WARDS_BY_CITY || {});
     if (!resolvedCity) return null;
+    const optionalFilters = syncAreaScopeOptionalFilters(root.document);
     return applyDashboardScope({
       version: 1,
       city: resolvedCity,
       wards: [],
       mode: 'city_all',
-    }, { persist: true, updateUrl: true, apply: true });
+    }, { persist: true, updateUrl: true, apply: true, optionalFilters });
   };
 
   root.selectAreaScopeCity = function selectAreaScopeCity(city) {
@@ -392,11 +465,32 @@
 
   root.applyAreaScopeWardSelection = function applyAreaScopeWardSelection() {
     if (!areaScopeDraft) return null;
-    return applyDashboardScope(areaScopeDraft, { persist: true, updateUrl: true, apply: true });
+    const optionalFilters = syncAreaScopeOptionalFilters(root.document);
+    return applyDashboardScope(areaScopeDraft, { persist: true, updateUrl: true, apply: true, optionalFilters });
+  };
+
+  root.toggleAreaScopeOptionalChip = function toggleAreaScopeOptionalChip(button) {
+    if (!button) return null;
+    button.classList.toggle('is-selected');
+    button.setAttribute('aria-pressed', button.classList.contains('is-selected') ? 'true' : 'false');
+    return selectedAreaScopeOptionalFilters(root.document);
+  };
+
+  root.clearAreaScopeOptionalFilters = function clearAreaScopeOptionalFilters() {
+    const doc = root.document;
+    if (!doc || typeof doc.querySelectorAll !== 'function') return;
+    doc.querySelectorAll('.area-scope-option-chip.is-selected').forEach((chip) => {
+      chip.classList.remove('is-selected');
+      chip.setAttribute('aria-pressed', 'false');
+    });
   };
 
   root.openAreaScopeChooser = function openAreaScopeChooser() {
     showChooser(root.document);
+  };
+
+  root.closeAreaScopeChooser = function closeAreaScopeChooser() {
+    hideChooser(root.document);
   };
 
   root.openAreaScopeFilterSheet = function openAreaScopeFilterSheet() {
@@ -424,6 +518,7 @@
     STORAGE_KEY,
     PRESET_SCOPES,
     applyDashboardScope,
+    applyOptionalFiltersToParams,
     applyScopeToParams,
     clearStoredScope,
     hideChooser,
@@ -436,6 +531,7 @@
     scopeLabel,
     selectedScopeFromControls,
     showChooser,
+    syncAreaScopeOptionalFilters,
     syncScopeControls,
     updateScopeUi,
     validateScope,

@@ -273,6 +273,27 @@
   padding: 28px 28px 22px;
   border-radius: 18px;
 }
+
+#authModal .auth-modal-content,
+#guestLeadModal .auth-modal-content {
+  width: min(420px, calc(100vw - 32px));
+  max-width: 420px;
+}
+
+#vipUpgradeModal .auth-modal-content {
+  width: min(430px, calc(100vw - 32px));
+  max-width: 430px;
+}
+
+@media (max-width: 520px) {
+  #authModal .auth-modal-content,
+  #guestLeadModal .auth-modal-content,
+  #vipUpgradeModal .auth-modal-content {
+    width: min(100%, calc(100vw - 24px));
+    max-width: none;
+  }
+}
+
 .auth-modal-content h3 {
   margin: 0 0 8px;
   font-size: 20px;

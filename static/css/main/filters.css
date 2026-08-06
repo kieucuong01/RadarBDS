@@ -81,6 +81,7 @@
 }
 
 .area-scope-modal-panel {
+  position: relative;
   width: min(760px, 100%);
   max-height: calc(100dvh - 36px);
   overflow: auto;
@@ -93,6 +94,28 @@
   box-shadow: 0 28px 70px rgba(15, 23, 42, 0.34);
   padding: 14px;
   border-radius: 8px;
+}
+
+.area-scope-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.area-scope-close:hover {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 body.area-scope-modal-open {
@@ -124,6 +147,58 @@ body.area-scope-modal-open {
   gap: 12px;
 }
 
+.area-scope-filter-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.06);
+}
+
+.area-scope-filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.area-scope-filter-clear {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 0;
+}
+
+.area-scope-filter-clear:hover {
+  color: var(--primary);
+}
+
+.area-scope-filter-block {
+  display: grid;
+  gap: 6px;
+}
+
+.area-scope-filter-label {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.area-scope-option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
 .area-scope-city-picker {
   display: flex;
   flex-wrap: wrap;
@@ -149,6 +224,7 @@ body.area-scope-modal-open {
 .area-scope-city-tab,
 .area-scope-city-all,
 .area-scope-ward-chip,
+.area-scope-option-chip,
 .area-scope-apply,
 .area-scope-filter,
 .area-scope-bar-actions button {
@@ -166,6 +242,7 @@ body.area-scope-modal-open {
 .area-scope-city-tab:hover,
 .area-scope-city-all:hover,
 .area-scope-ward-chip:hover,
+.area-scope-option-chip:hover,
 .area-scope-apply:hover:not(:disabled),
 .area-scope-filter:hover,
 .area-scope-bar-actions button:hover {
@@ -196,7 +273,9 @@ body.area-scope-modal-open {
 }
 
 .area-scope-ward-chip.is-selected,
-.area-scope-ward-chip[aria-pressed="true"] {
+.area-scope-ward-chip[aria-pressed="true"],
+.area-scope-option-chip.is-selected,
+.area-scope-option-chip[aria-pressed="true"] {
   border-color: rgba(16, 185, 129, 0.55);
   background: rgba(16, 185, 129, 0.14);
   color: var(--accent);

@@ -164,6 +164,24 @@ assert.equal(
   'tab=signals&q=ql13&city=TH%E1%BB%A6+D%E1%BA%A6U+M%E1%BB%98T&ward=T%C3%A2n+An&ward=Ph%C3%BA+T%C3%A2n'
 );
 
+const optionalParams = new URLSearchParams('tab=signals');
+api.applyOptionalFiltersToParams(optionalParams, {
+  price_range: ['1:2', '2:'],
+  area_range: [':150'],
+  prop_type: ['dat_nen', 'nha_dat'],
+});
+assert.equal(
+  optionalParams.toString(),
+  'tab=signals&price_range=1%3A2&price_range=2%3A&area_range=%3A150&prop_type=dat_nen&prop_type=nha_dat'
+);
+api.applyOptionalFiltersToParams(optionalParams, { price_range: [] });
+assert.equal(
+  optionalParams.toString(),
+  'tab=signals&area_range=%3A150&prop_type=dat_nen&prop_type=nha_dat'
+);
+api.applyOptionalFiltersToParams(optionalParams, { area_range: [], prop_type: [] });
+assert.equal(optionalParams.toString(), 'tab=signals');
+
 const storage = {
   value: '',
   setItem(key, value) {
@@ -239,6 +257,22 @@ assert.equal(bar.hidden, true);
 assert.equal(chooser.focused, true);
 assert.equal(bodyClasses.has('area-scope-modal-open'), true);
 
+let savedByClose = false;
+window.localStorage = {
+  setItem() {
+    savedByClose = true;
+  },
+  removeItem() {
+    savedByClose = true;
+  },
+};
+window.document = doc;
+window.closeAreaScopeChooser();
+assert.equal(chooser.hidden, true);
+assert.equal(bodyClasses.has('area-scope-modal-open'), false);
+assert.equal(savedByClose, false);
+
+api.showChooser(doc);
 api.hideChooser(doc);
 assert.equal(chooser.hidden, true);
 assert.equal(bodyClasses.has('area-scope-modal-open'), false);

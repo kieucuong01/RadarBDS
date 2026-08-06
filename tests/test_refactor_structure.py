@@ -175,7 +175,7 @@ def test_homepage_mos_control_defaults_to_fifteen_and_locks_non_privileged_tiers
 
 def test_homepage_mos_asset_version_changes_with_boot_behavior():
     html = _read("templates/index.html")
-    assert "js/main/boot.js') }}?v=area-scope-city-picker-20260806" in html
+    assert "js/main/boot.js') }}?v=area-scope-investment-filters-20260806" in html
 
 
 def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
@@ -188,6 +188,8 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert 'role="dialog"' in html
     assert 'aria-modal="true"' in html
     assert 'class="area-scope-modal-panel"' in html
+    assert 'class="area-scope-close"' in html
+    assert "closeAreaScopeChooser()" in html
     assert 'id="areaScopeCityChoices"' in html
     assert 'class="area-scope-city-picker"' in html
     assert "selectAreaScopeCity(this.dataset.city)" in html
@@ -199,6 +201,14 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert 'class="area-scope-ward-chip"' in html
     assert "toggleAreaScopeWard" in html
     assert "applyAreaScopeWardSelection" in html
+    assert 'id="areaScopeOptionalFilters"' in html
+    assert 'class="area-scope-filter-panel"' in html
+    assert 'data-area-scope-filter="price_range"' in html
+    assert 'data-area-scope-filter="area_range"' in html
+    assert 'data-area-scope-filter="prop_type"' in html
+    assert "toggleAreaScopeOptionalChip(this)" in html
+    assert "clearAreaScopeOptionalFilters()" in html
+    assert "syncAreaScopeOptionalFilters" in area_scope_js
     assert 'id="areaScopeBar"' in html
     assert "js/main/area_scope.js" in html
     assert html.index("js/main/area_scope.js") < html.index("js/main/boot.js")
@@ -213,6 +223,8 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert "function hideChooser" in area_scope_js
     assert "area-scope-modal-open" in area_scope_js
     assert "openAreaScopeFilterSheet" in area_scope_js
+    assert "closeAreaScopeChooser" in area_scope_js
+    assert "root.closeAreaScopeChooser = function closeAreaScopeChooser()" in area_scope_js
     assert "selectAreaScopeCity" in area_scope_js
     assert "nextDraftWardScope" in area_scope_js
     assert "applyAreaScopeWardSelection" in area_scope_js
@@ -605,7 +617,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "area-scope-city-picker-20260806",
+        "area-scope-investment-filters-20260806",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -621,7 +633,7 @@ def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "area-scope-city-picker-20260806",
+        "area-scope-investment-filters-20260806",
         ".sidebar .filter-sheet-head",
         "position: sticky",
         "margin: -14px -14px 8px",
@@ -722,7 +734,7 @@ def test_mobile_account_menu_uses_fixed_dropdown_not_clipped_header_dropdown():
     auth_css = _read("static/css/auth.css")
 
     for expected in [
-        "account-menu-compact-20260606",
+        "auth-modal-width-20260806",
         'aria-expanded="false"',
         "setUserMenuOpen",
         "user-menu-open",
@@ -733,6 +745,18 @@ def test_mobile_account_menu_uses_fixed_dropdown_not_clipped_header_dropdown():
         "min-height: 44px",
     ]:
         assert expected in html or expected in auth_js or expected in auth_css
+
+
+def test_auth_modal_is_compact_on_desktop_without_affecting_other_modals():
+    html = _read("templates/index.html")
+    auth_css = _read("static/css/auth.css")
+
+    assert "auth-modal-width-20260806" in html
+    assert "#authModal .auth-modal-content" in auth_css
+    assert "width: min(420px, calc(100vw - 32px));" in auth_css
+    assert "#guestLeadModal .auth-modal-content" in auth_css
+    assert "#vipUpgradeModal .auth-modal-content" in auth_css
+    assert ".modal-content {\n  background: var(--surface-solid);" not in auth_css
 
 
 def test_vip_upgrade_click_uses_modal_with_zalo_cta_instead_of_alert():
