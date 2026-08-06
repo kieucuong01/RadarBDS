@@ -95,11 +95,7 @@ def _insufficient(
         verdict=AskVerdict.INSUFFICIENT,
         direct_answer=direct,
         risks=_risk_text(bundle.warnings),
-        next_verification_steps=(
-            ["Thử nới khoảng thời gian hoặc bổ sung khu vực/loại bất động sản."]
-            if bundle.missing_requirements
-            else []
-        ),
+        next_verification_steps=list(bundle.missing_requirements[:12]),
         as_of=_answer_as_of(bundle, now),
         dataset_version=_dataset_version(bundle.items),
     )
