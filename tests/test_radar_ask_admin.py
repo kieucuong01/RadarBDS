@@ -15,6 +15,7 @@ from db import connection
 from db.connection import get_conn
 from db.schema import init_schema
 from services.radar_ask.config import RadarAskSettings
+from services.radar_ask.quota_settings import save_radar_ask_quota_settings
 from services.radar_ask.repository import RadarAskRepository
 
 
@@ -124,6 +125,76 @@ def test_admin_control_room_includes_resilient_radar_ask_health_surface(monkeypa
     admin_js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(encoding="utf-8")
     assert "feedback_by_question_cohort" in admin_js
     assert "Phản hồi theo cohort câu hỏi" in admin_js
+
+
+def test_admin_control_room_includes_radar_ask_quota_settings_form(monkeypatch):
+    monkeypatch.setattr(radar_app, "current_tier", lambda: "admin")
+    monkeypatch.setattr(
+        radar_app,
+        "current_user",
+        lambda: {"id": 1, "tier": "admin", "identifier_type": "email"},
+    )
+
+    response = radar_app.app.test_client().get("/admin/infrastructure")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'id="radarAskQuotaSettings"' in html
+    assert 'id="radarAskFreeDailyLimit"' in html
+    assert 'id="radarAskVipDailyLimit"' in html
+    admin_js = (Path(__file__).resolve().parent.parent / "static/js/admin.js").read_text(encoding="utf-8")
+    assert "loadRadarAskSettings" in admin_js
+
+
+def test_admin_radar_ask_quota_settings_get_and_post(monkeypatch):
+    connection.close_all()
+    init_schema()
+    save_radar_ask_quota_settings(free_daily_limit=5, vip_daily_limit=20, updated_by="pytest-reset")
+    monkeypatch.setattr(radar_app, "current_tier", lambda: "admin")
+    monkeypatch.setattr(
+        radar_app,
+        "current_user",
+        lambda: {"id": 7, "tier": "admin", "identifier": "owner@example.test"},
+    )
+    client = radar_app.app.test_client()
+
+    initial = client.get("/admin/api/radar-ask/settings")
+    assert initial.status_code == 200
+    assert initial.headers["Cache-Control"] == "private, no-store"
+    assert "X-Radar-Public-Cache" not in initial.headers
+    assert initial.get_json()["settings"]["daily_limits"] == {"free": 5, "vip": 20}
+    assert initial.get_json()["settings"]["admin_unlimited"] is True
+
+    saved = client.post(
+        "/admin/api/radar-ask/settings",
+        json={"daily_limits": {"free": 4, "vip": 25}},
+    )
+    payload = saved.get_json()
+
+    assert saved.status_code == 200
+    assert payload["ok"] is True
+    assert payload["settings"]["daily_limits"] == {"free": 4, "vip": 25}
+    assert payload["settings"]["admin_unlimited"] is True
+
+    invalid = client.post(
+        "/admin/api/radar-ask/settings",
+        json={"daily_limits": {"free": -1, "vip": 25}},
+    )
+    assert invalid.status_code == 400
+    assert invalid.get_json() == {"ok": False, "error": "invalid_daily_limit"}
+
+    save_radar_ask_quota_settings(free_daily_limit=5, vip_daily_limit=20, updated_by="pytest-reset")
+    connection.close_all()
+
+
+@pytest.mark.parametrize("tier", ("guest", "free", "vip"))
+def test_radar_ask_quota_settings_denies_non_admin(monkeypatch, tier):
+    monkeypatch.setattr(radar_app, "current_tier", lambda: tier)
+
+    response = radar_app.app.test_client().get("/admin/api/radar-ask/settings")
+
+    assert response.status_code == 403
+    assert response.get_json() == {"ok": False, "error": "admin_required"}
 
 
 @pytest.fixture

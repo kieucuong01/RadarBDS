@@ -713,6 +713,17 @@ CREATE INDEX IF NOT EXISTS idx_radar_ask_evidence_run
     ON radar_ask_evidence(run_id, created_at, id);
 
 
+CREATE TABLE IF NOT EXISTS radar_ask_quota_settings (
+    tier        TEXT PRIMARY KEY CHECK (tier IN ('free', 'vip')),
+    daily_limit INTEGER NOT NULL CHECK (daily_limit BETWEEN 0 AND 1000),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_by TEXT NOT NULL DEFAULT ''
+);
+INSERT INTO radar_ask_quota_settings (tier, daily_limit, updated_by)
+VALUES ('free', 5, 'schema-default'), ('vip', 20, 'schema-default')
+ON CONFLICT (tier) DO NOTHING;
+
+
 -- Usage intentionally does not cascade with runs: deleting chat content must
 -- preserve the immutable billing and budget ledger.
 CREATE TABLE IF NOT EXISTS radar_ask_usage (
@@ -1494,6 +1505,26 @@ def _migrate_radar_ask_messages(conn: Any) -> None:
     )
 
 
+def _migrate_radar_ask_quota_settings(conn: Any) -> None:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS radar_ask_quota_settings (
+            tier        TEXT PRIMARY KEY CHECK (tier IN ('free', 'vip')),
+            daily_limit INTEGER NOT NULL CHECK (daily_limit BETWEEN 0 AND 1000),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_by TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO radar_ask_quota_settings (tier, daily_limit, updated_by)
+        VALUES ('free', 5, 'schema-default'), ('vip', 20, 'schema-default')
+        ON CONFLICT (tier) DO NOTHING
+        """
+    )
+
+
 def _migrate_radar_ask_knowledge(conn: Any) -> None:
     """Create the curated, owner-written knowledge corpus and FTS index."""
     conn.execute(
@@ -1603,6 +1634,7 @@ def _run_migrations(conn: Any) -> None:
     _migrate_public_read_model(conn)
     _migrate_radar_ask_usage(conn)
     _migrate_radar_ask_messages(conn)
+    _migrate_radar_ask_quota_settings(conn)
     _migrate_radar_ask_knowledge(conn)
     conn.execute(
         """

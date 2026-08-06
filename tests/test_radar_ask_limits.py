@@ -32,6 +32,7 @@ from services.radar_ask.limits import (
     ReservationUnavailable,
     calculate_provider_cost,
 )
+from services.radar_ask.quota_settings import save_radar_ask_quota_settings
 from services.radar_ask.orchestrator import OrchestratorDependencies, run_question
 from services.radar_ask.repository import RadarAskRepository
 from services.radar_ask.registry import DEFAULT_TOOL_REGISTRY
@@ -89,6 +90,7 @@ def limit_environment():
             "DELETE FROM users WHERE id IN (?, ?, ?)",
             (users.free_id, users.vip_id, users.admin_id),
         )
+    save_radar_ask_quota_settings(free_daily_limit=5, vip_daily_limit=20, updated_by="pytest-reset")
     connection.close_all()
 
 
@@ -138,9 +140,9 @@ def test_schema_has_expiring_reservations_and_active_budget_index(limit_environm
 
 @pytest.mark.parametrize(
     ("tier", "user_field", "limit"),
-    [("free", "free_id", 5), ("vip", "vip_id", 20), ("admin", "admin_id", 100)],
+    [("free", "free_id", 5), ("vip", "vip_id", 20)],
 )
-def test_daily_tier_limits_are_durable(limit_environment, tier, user_field, limit):
+def test_daily_free_and_vip_limits_are_durable(limit_environment, tier, user_field, limit):
     service, users, _clock, _settings = limit_environment
     user_id = getattr(users, user_field)
 
@@ -151,6 +153,53 @@ def test_daily_tier_limits_are_durable(limit_environment, tier, user_field, limi
         _reserve(service, user_id=user_id, tier=tier)
     assert exc_info.value.limit == limit
     assert exc_info.value.used == limit
+
+
+def test_daily_free_and_vip_limits_are_admin_configurable(limit_environment):
+    service, users, _clock, _settings = limit_environment
+    save_radar_ask_quota_settings(free_daily_limit=2, vip_daily_limit=3, updated_by="pytest")
+
+    for _ in range(2):
+        _reserve(service, user_id=users.free_id, tier="free")
+    with pytest.raises(QuotaExceeded) as free_exc:
+        _reserve(service, user_id=users.free_id, tier="free")
+    assert free_exc.value.limit == 2
+
+    for _ in range(3):
+        _reserve(service, user_id=users.vip_id, tier="vip")
+    with pytest.raises(QuotaExceeded) as vip_exc:
+        _reserve(service, user_id=users.vip_id, tier="vip")
+    assert vip_exc.value.limit == 3
+
+
+def test_zero_daily_limit_locks_free_or_vip(limit_environment):
+    service, users, _clock, _settings = limit_environment
+    save_radar_ask_quota_settings(free_daily_limit=0, vip_daily_limit=20, updated_by="pytest")
+
+    with pytest.raises(QuotaExceeded) as exc_info:
+        _reserve(service, user_id=users.free_id, tier="free")
+
+    assert exc_info.value.limit == 0
+    assert exc_info.value.used == 0
+
+
+def test_admin_has_no_daily_question_quota_but_usage_is_tracked(limit_environment):
+    service, users, _clock, _settings = limit_environment
+
+    for _ in range(105):
+        _reserve(service, user_id=users.admin_id, tier="admin")
+
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT COUNT(*) AS total
+            FROM radar_ask_usage
+            WHERE user_id=? AND tier='admin' AND question_status='reserved'
+            """,
+            (users.admin_id,),
+        ).fetchone()
+
+    assert int(row["total"]) == 105
 
 
 def test_daily_limit_rolls_over_at_midnight_asia_bangkok(limit_environment):

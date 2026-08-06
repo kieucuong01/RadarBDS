@@ -8,9 +8,9 @@ from urllib.parse import urlparse
 from .contracts import AskDepth, ModelPolicy, Tier
 
 
-TIER_DAILY_LIMITS: dict[Tier, int] = {"free": 5, "vip": 20, "admin": 100}
+TIER_DAILY_LIMITS: dict[Tier, int | None] = {"free": 5, "vip": 20, "admin": None}
 TIER_BURST_LIMITS: dict[Tier, int] = {"free": 2, "vip": 5, "admin": 10}
-VALID_TIERS = frozenset(TIER_DAILY_LIMITS)
+VALID_TIERS = frozenset(TIER_BURST_LIMITS)
 REQUEST_OWNER_LEASE_SECONDS = 300
 REQUEST_PROVIDER_MAX_ATTEMPTS = 2
 REQUEST_PROVIDER_BUDGET_CAP_SECONDS = 240

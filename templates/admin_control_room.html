@@ -778,6 +778,22 @@
         </div>
         <div id="radarAskMetricsState" class="radar-ask-admin-state" role="status" aria-live="polite">Đang tải số liệu tổng hợp…</div>
         <div id="radarAskBudgetBanner" class="radar-ask-budget-banner" role="status" hidden></div>
+        <form id="radarAskQuotaSettings" class="radar-ask-quota-settings" onsubmit="return false;">
+          <div>
+            <strong>Gioi han cau hoi / ngay</strong>
+            <p>Admin khong gioi han so cau hoi theo ngay; van bi khoa cung theo ngan sach thang.</p>
+          </div>
+          <label>
+            <span>Free</span>
+            <input id="radarAskFreeDailyLimit" class="input-control" type="number" min="0" max="1000" step="1" inputmode="numeric">
+          </label>
+          <label>
+            <span>VIP</span>
+            <input id="radarAskVipDailyLimit" class="input-control" type="number" min="0" max="1000" step="1" inputmode="numeric">
+          </label>
+          <button id="saveRadarAskSettingsBtn" class="primary-btn" type="button">Luu quota</button>
+          <span id="radarAskSettingsState" class="radar-ask-admin-state" role="status" aria-live="polite"></span>
+        </form>
         <div id="radarAskMetricsContent" class="radar-ask-admin-content" hidden>
           <div id="radarAskMetricCards" class="radar-ask-metric-grid"></div>
           <div id="radarAskMetricBreakdowns" class="radar-ask-breakdown-grid"></div>

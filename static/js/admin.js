@@ -292,6 +292,7 @@ function switchPanel(name, options = {}) {
   if (name === 'training') loader = () => loadTrainingItems(false);
   if (name === 'infra') loader = async () => {
     void loadRadarAskMetrics();
+    void loadRadarAskSettings();
     return loadInfraItems();
   };
   if (name === 'users') loader = loadUsers;
@@ -1686,6 +1687,72 @@ async function loadRadarAskMetrics() {
   }
 }
 
+function radarAskSettingsState(message, tone = '') {
+  const state = document.getElementById('radarAskSettingsState');
+  if (!state) return;
+  state.textContent = message || '';
+  state.classList.toggle('error', tone === 'error');
+}
+
+function radarAskParseDailyLimit(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) throw new Error('missing_limit_input');
+  const raw = String(input.value || '').trim();
+  const value = Number(raw);
+  if (!raw || !Number.isInteger(value) || value < 0 || value > 1000) {
+    throw new Error('invalid_daily_limit');
+  }
+  return value;
+}
+
+function renderRadarAskSettings(payload) {
+  const settings = payload && payload.ok && payload.settings && typeof payload.settings === 'object'
+    ? payload.settings : {};
+  const limits = settings.daily_limits && typeof settings.daily_limits === 'object'
+    ? settings.daily_limits : {};
+  const freeInput = document.getElementById('radarAskFreeDailyLimit');
+  const vipInput = document.getElementById('radarAskVipDailyLimit');
+  if (!freeInput || !vipInput) return;
+  freeInput.value = Number.isInteger(Number(limits.free)) ? String(Number(limits.free)) : '5';
+  vipInput.value = Number.isInteger(Number(limits.vip)) ? String(Number(limits.vip)) : '20';
+  radarAskSettingsState('Quota da cap nhat. Admin khong gioi han theo ngay.');
+}
+
+async function loadRadarAskSettings() {
+  const form = document.getElementById('radarAskQuotaSettings');
+  if (!form) return;
+  radarAskSettingsState('Dang tai quota...');
+  try {
+    const payload = await fetchJSON('/admin/api/radar-ask/settings', { silent: true });
+    renderRadarAskSettings(payload);
+  } catch (_error) {
+    radarAskSettingsState('Khong tai duoc quota Radar Ask.', 'error');
+  }
+}
+
+async function saveRadarAskSettings() {
+  try {
+    const freeLimit = radarAskParseDailyLimit('radarAskFreeDailyLimit');
+    const vipLimit = radarAskParseDailyLimit('radarAskVipDailyLimit');
+    radarAskSettingsState('Dang luu quota...');
+    const payload = await fetchJSON('/admin/api/radar-ask/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ daily_limits: { free: freeLimit, vip: vipLimit } }),
+      silent: true,
+    });
+    renderRadarAskSettings(payload);
+  } catch (error) {
+    const message = String(error && error.message || '');
+    radarAskSettingsState(
+      message.includes('invalid_daily_limit')
+        ? 'Quota phai la so nguyen 0-1000.'
+        : 'Khong luu duoc quota Radar Ask.',
+      'error',
+    );
+  }
+}
+
 function switchInfraFilter(name) {
   activeInfraFilter = name;
   document.querySelectorAll('.segment[data-infra-filter]').forEach((btn) => {
@@ -2725,7 +2792,11 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (e.key === 'ArrowRight') trnGalleryNav(1);
   });
   document.getElementById('refreshInfraBtn').addEventListener('click', loadInfraItems);
-  document.getElementById('refreshRadarAskMetricsBtn')?.addEventListener('click', loadRadarAskMetrics);
+  document.getElementById('refreshRadarAskMetricsBtn')?.addEventListener('click', () => {
+    void loadRadarAskMetrics();
+    void loadRadarAskSettings();
+  });
+  document.getElementById('saveRadarAskSettingsBtn')?.addEventListener('click', saveRadarAskSettings);
   document.getElementById('saveInfraBtn').addEventListener('click', saveInfra);
   document.getElementById('resetInfraBtn').addEventListener('click', resetInfraForm);
   document.getElementById('adminThemeToggle').addEventListener('click', toggleAdminTheme);

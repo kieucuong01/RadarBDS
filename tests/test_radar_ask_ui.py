@@ -139,7 +139,7 @@ def test_quota_copy_uses_tier_caps_without_static_remaining_claims():
 
     assert "Free · 5 câu/ngày" in javascript
     assert "VIP · 20 câu/ngày" in javascript
-    assert "Admin · 100 câu/ngày" in javascript
+    assert "Admin · không giới hạn hôm nay" in javascript
     for fabricated in ("còn 3/5", "còn 4/5", "còn 19/20", "remaining: 3"):
         assert fabricated not in html
         assert fabricated not in javascript

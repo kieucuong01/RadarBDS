@@ -12,6 +12,7 @@ from .limits import RadarAskLimitService
 from .orchestrator import OrchestratorDependencies, run_question
 from .planner import DeepSeekTypedPlanner
 from .provider import DeepSeekProvider
+from .quota_settings import load_radar_ask_quota_settings
 from .registry import DEFAULT_TOOL_REGISTRY
 from .repository import (
     RadarAskFeedbackRecord,
@@ -116,13 +117,24 @@ def _answer_payload(answer: AnswerEnvelope | None) -> dict[str, Any] | None:
     return payload
 
 
+def _quota_payload(*, tier: str) -> dict[str, Any]:
+    payload: dict[str, Any] = {"tier": tier}
+    try:
+        limit = load_radar_ask_quota_settings().limit_for_tier(tier)
+    except Exception:
+        limit = None if tier == "admin" else None
+    payload["daily_limit"] = limit
+    payload["admin_unlimited"] = tier == "admin"
+    return payload
+
+
 def run_payload(result: AskRunResult, *, tier: str) -> dict[str, Any]:
     return {
         "run_id": str(result.run_id),
         "session_id": str(result.session_id),
         "status": result.status.value,
         "answer": _answer_payload(result.answer),
-        "quota": {"tier": tier},
+        "quota": _quota_payload(tier=tier),
         "cost_state": {"state": "available"},
     }
 
