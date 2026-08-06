@@ -327,9 +327,9 @@ body.area-scope-modal-open {
 }
 
 .area-scope-current strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
   font-size: 0.9rem;
 }
 

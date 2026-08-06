@@ -229,6 +229,8 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert "openAreaScopeFilterSheet" in area_scope_js
     assert "closeAreaScopeChooser" in area_scope_js
     assert "root.closeAreaScopeChooser = function closeAreaScopeChooser()" in area_scope_js
+    assert "scopeStatusLabel" in area_scope_js
+    assert "refreshCurrentScopeUi" in area_scope_js
     assert "selectAreaScopeCity" in area_scope_js
     assert "nextDraftWardScope" in area_scope_js
     assert "applyAreaScopeWardSelection" in area_scope_js
@@ -621,7 +623,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "area-scope-investment-filters-20260806",
+        "scope-filter-summary-20260806",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -637,7 +639,7 @@ def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "area-scope-investment-filters-20260806",
+        "scope-filter-summary-20260806",
         ".sidebar .filter-sheet-head",
         "position: sticky",
         "margin: -14px -14px 8px",
@@ -805,7 +807,7 @@ def test_price_and_area_filters_support_multi_select_range_chips():
     for expected in [
         'data-range-name="price_range"',
         'data-range-name="area_range"',
-        "js/main/filters.js') }}?v=range-url-hydration-20260806",
+        "js/main/filters.js') }}?v=scope-filter-summary-20260806",
         "toggleRangePreset",
         "selectedRangeTokens",
         "applyRangeParamsFromUrl",
@@ -813,6 +815,8 @@ def test_price_and_area_filters_support_multi_select_range_chips():
         assert expected in html or expected in filters_js
 
     assert ".range-chip.active" in filters_css
+    assert ".area-scope-current strong" in filters_css
+    assert "overflow-wrap: anywhere" in filters_css
 
 
 def test_listing_date_range_filter_is_available_below_source_filter():

@@ -182,6 +182,26 @@ assert.equal(
 api.applyOptionalFiltersToParams(optionalParams, { area_range: [], prop_type: [] });
 assert.equal(optionalParams.toString(), 'tab=signals');
 
+assert.equal(
+  api.scopeStatusLabel({
+    version: 1,
+    city: 'THá»¦ Dáº¦U Má»˜T',
+    wards: ['TÃ¢n An'],
+    mode: 'custom',
+  }, new URLSearchParams('area_range=500%3A&prop_type=dat_nen&prop_type=nha_dat')),
+  'TÃ¢n An | Diện tích: > 500 m2 | Loại hình: Đất + Nhà đất'
+);
+
+assert.equal(
+  api.scopeStatusLabel({
+    version: 1,
+    city: 'THá»¦ Dáº¦U Má»˜T',
+    wards: ['TÃ¢n An'],
+    mode: 'custom',
+  }, new URLSearchParams('price_range=1%3A2&area_min=120&area_max=300&prop_type=dat_nen&prop_type=nha_dat&prop_type=chung_cu&prop_type=nha_tro')),
+  'TÃ¢n An | Giá: 1 - 2 tỷ | Diện tích: 120 - 300 m2'
+);
+
 const storage = {
   value: '',
   setItem(key, value) {

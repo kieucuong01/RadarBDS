@@ -7,6 +7,12 @@
 
   const STORAGE_KEY = 'radar_area_scope_v1';
   const VALID_MODES = new Set(['custom', 'preset', 'city_all']);
+  const PROP_TYPE_LABELS = Object.freeze({
+    dat_nen: '\u0110\u1ea5t',
+    nha_dat: 'Nh\u00e0 \u0111\u1ea5t',
+    chung_cu: 'Chung c\u01b0',
+    nha_tro: 'Nh\u00e0 tr\u1ecd',
+  });
   let areaScopeDraft = null;
   let areaScopeDraftCity = '';
 
@@ -155,6 +161,86 @@
     const min = dataset && dataset.min !== undefined ? dataset.min : '';
     const max = dataset && dataset.max !== undefined ? dataset.max : '';
     return `${min}:${max}`;
+  }
+
+  function formatRangeLabel(token, unit) {
+    const [rawMin, rawMax] = String(token || '').split(':');
+    const min = String(rawMin || '').trim();
+    const max = String(rawMax || '').trim();
+    if (min && max) return `${min} - ${max} ${unit}`;
+    if (min) return `> ${min} ${unit}`;
+    if (max) return `< ${max} ${unit}`;
+    return '';
+  }
+
+  function appendManualRange(params, key, minKey, maxKey) {
+    const min = String(params.get(minKey) || '').trim();
+    const max = String(params.get(maxKey) || '').trim();
+    if (min || max) return formatRangeLabel(`${min}:${max}`, key);
+    return '';
+  }
+
+  function scopeFilterPartsFromParams(filterParams) {
+    const params = filterParams instanceof URLSearchParams
+      ? filterParams
+      : new URLSearchParams(String(filterParams || ''));
+    const parts = [];
+    const priceRanges = uniqueValues(params.getAll('price_range'));
+    const manualPrice = priceRanges.length ? '' : appendManualRange(params, 't\u1ef7', 'price_min', 'price_max');
+    const priceLabels = priceRanges.map((token) => formatRangeLabel(token, 't\u1ef7')).filter(Boolean);
+    if (manualPrice) priceLabels.push(manualPrice);
+    if (priceLabels.length) parts.push(`Gi\u00e1: ${priceLabels.join(' + ')}`);
+
+    const areaRanges = uniqueValues(params.getAll('area_range'));
+    const manualArea = areaRanges.length ? '' : appendManualRange(params, 'm2', 'area_min', 'area_max');
+    const areaLabels = areaRanges.map((token) => formatRangeLabel(token, 'm2')).filter(Boolean);
+    if (manualArea) areaLabels.push(manualArea);
+    if (areaLabels.length) parts.push(`Di\u1ec7n t\u00edch: ${areaLabels.join(' + ')}`);
+
+    const propTypes = uniqueValues(params.getAll('prop_type'));
+    const propLabels = propTypes.map((value) => PROP_TYPE_LABELS[value] || value).filter(Boolean);
+    if (propLabels.length && propLabels.length < Object.keys(PROP_TYPE_LABELS).length) {
+      parts.push(`Lo\u1ea1i h\u00ecnh: ${propLabels.join(' + ')}`);
+    }
+    return parts;
+  }
+
+  function scopeStatusLabel(scope, filterParams) {
+    const base = scopeLabel(scope);
+    const filterParts = scopeFilterPartsFromParams(filterParams);
+    return [base].concat(filterParts).filter(Boolean).join(' | ');
+  }
+
+  function currentFilterParamsFromControls(doc) {
+    const documentRef = doc || root.document;
+    const params = new URLSearchParams();
+    if (!documentRef || typeof documentRef.querySelectorAll !== 'function') return params;
+    documentRef.querySelectorAll('.range-chip.active[data-range-kind="price"]').forEach((chip) => {
+      const token = rangeTokenFromDataset(chip.dataset);
+      if (token !== ':') params.append('price_range', token);
+    });
+    documentRef.querySelectorAll('.range-chip.active[data-range-kind="area"]').forEach((chip) => {
+      const token = rangeTokenFromDataset(chip.dataset);
+      if (token !== ':') params.append('area_range', token);
+    });
+    if (!params.has('price_range')) {
+      const minEl = documentRef.getElementById('priceMin');
+      const maxEl = documentRef.getElementById('priceMax');
+      if (minEl && minEl.value) params.set('price_min', minEl.value);
+      if (maxEl && maxEl.value) params.set('price_max', maxEl.value);
+    }
+    if (!params.has('area_range')) {
+      const minEl = documentRef.getElementById('areaMin');
+      const maxEl = documentRef.getElementById('areaMax');
+      if (minEl && minEl.value) params.set('area_min', minEl.value);
+      if (maxEl && maxEl.value) params.set('area_max', maxEl.value);
+    }
+    const propBoxes = Array.from(documentRef.querySelectorAll('#filterForm input[name="prop_type"]'));
+    const checkedProps = propBoxes.filter((box) => box.checked).map((box) => box.value);
+    if (checkedProps.length && checkedProps.length < propBoxes.length) {
+      checkedProps.forEach((value) => params.append('prop_type', value));
+    }
+    return params;
   }
 
   function selectedAreaScopeOptionalFilters(doc) {
@@ -342,12 +428,19 @@
     const chooser = documentRef.getElementById('areaScopeChooser');
     const bar = documentRef.getElementById('areaScopeBar');
     const label = documentRef.getElementById('areaScopeLabel');
-    if (label) label.textContent = scope ? scopeLabel(scope) : '';
+    if (label) label.textContent = scope ? scopeStatusLabel(scope, currentFilterParamsFromControls(documentRef)) : '';
     if (bar) bar.hidden = !scope;
     if (chooser) chooser.hidden = Boolean(scope);
     if (documentRef.body) {
       documentRef.body.classList.toggle('area-scope-modal-open', !scope && chooser && !chooser.hidden);
     }
+  }
+
+  function refreshCurrentScopeUi(doc) {
+    const documentRef = doc || root.document;
+    const scope = selectedScopeFromControls(documentRef, root.INITIAL_WARDS_BY_CITY || {});
+    if (scope) updateScopeUi(scope, documentRef);
+    return scope;
   }
 
   function hideChooser(doc) {
@@ -514,6 +607,10 @@
     return scope;
   };
 
+  root.refreshCurrentScopeUi = function refreshCurrentScopeUiFromControls() {
+    return refreshCurrentScopeUi(root.document);
+  };
+
   return Object.freeze({
     STORAGE_KEY,
     PRESET_SCOPES,
@@ -528,9 +625,11 @@
     replaceUrlWithScope,
     saveScope,
     scopeFromSearchParams,
+    scopeStatusLabel,
     scopeLabel,
     selectedScopeFromControls,
     showChooser,
+    refreshCurrentScopeUi,
     syncAreaScopeOptionalFilters,
     syncScopeControls,
     updateScopeUi,
