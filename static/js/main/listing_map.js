@@ -16,6 +16,11 @@
   var DIRECTORY_FRAME_CHUNK_SIZE = 25;
   var MARKER_BATCH_SIZE = 200;
   var MOBILE_MEDIA_QUERY = "(max-width: 760px)";
+  var EXACT_LABEL_MIN_ZOOM = 16;
+  var EXACT_LABEL_WIDTH = 104;
+  var EXACT_LABEL_HEIGHT = 34;
+  var EXACT_LABEL_ANCHOR_Y = 44;
+  var EXACT_LABEL_COLLISION_GAP = 6;
   var LOCATION_KEY_PATTERN = /^(exact|road|landmark|ward):[a-z0-9:-]+$/;
   var SAFE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
   var leafletPromise = null;
@@ -28,6 +33,9 @@
     workspace: null,
     map: null,
     markerLayer: null,
+    exactLabelLayer: null,
+    exactLabelGroups: [],
+    exactLabelFrameId: null,
     baseLayers: {},
     activeBaseLayer: "street",
     summaryController: null,
@@ -194,7 +202,11 @@
   }
 
   function panelRenderModel(isMobile, locations, requestedVisible) {
-    var safeLocations = Array.isArray(locations) ? locations : [];
+    var safeLocations = Array.isArray(locations)
+      ? locations.filter(function (group) {
+        return !group || group.precision !== "exact";
+      })
+      : [];
     var page = directoryWindow(safeLocations.length, requestedVisible);
     return {
       activePanelId: activePanelId(Boolean(isMobile)),
@@ -203,6 +215,65 @@
       visible: page.visible,
       nextVisible: page.nextVisible,
       remaining: page.remaining
+    };
+  }
+
+  function finiteNumber(value) {
+    var number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  function trimNumber(value, decimals) {
+    var number = finiteNumber(value);
+    if (number === null) return "";
+    return Number(number.toFixed(decimals)).toLocaleString("vi-VN", {
+      maximumFractionDigits: decimals
+    });
+  }
+
+  function exactMarkerLabelModel(group, zoom) {
+    if (
+      !group
+      || group.precision !== "exact"
+      || Number(zoom) < EXACT_LABEL_MIN_ZOOM
+    ) {
+      return { visible: false, line1: "", line2: "" };
+    }
+    var price = finiteNumber(group.price_ty);
+    var area = finiteNumber(group.area_m2);
+    var pricePerM2 = finiteNumber(group.price_per_m2);
+    if ((pricePerM2 === null || pricePerM2 <= 0) && price > 0 && area > 0) {
+      pricePerM2 = price * 1000 / area;
+    }
+    if (!(price > 0) || !(area > 0) || !(pricePerM2 > 0)) {
+      return { visible: false, line1: "", line2: "" };
+    }
+    return {
+      visible: true,
+      line1: trimNumber(price, 2) + " tỷ · " + trimNumber(area, 1) + " m²",
+      line2: trimNumber(pricePerM2, 1) + " tr/m²"
+    };
+  }
+
+  function labelRectCollides(candidate, existingRects, gap) {
+    var safeGap = Math.max(finiteNumber(gap) || 0, 0);
+    var rects = Array.isArray(existingRects) ? existingRects : [];
+    return rects.some(function (rect) {
+      return !(
+        candidate.right + safeGap <= rect.left
+        || candidate.left - safeGap >= rect.right
+        || candidate.bottom + safeGap <= rect.top
+        || candidate.top - safeGap >= rect.bottom
+      );
+    });
+  }
+
+  function exactLabelRect(point) {
+    return {
+      left: point.x - (EXACT_LABEL_WIDTH / 2),
+      right: point.x + (EXACT_LABEL_WIDTH / 2),
+      top: point.y - EXACT_LABEL_ANCHOR_Y,
+      bottom: point.y - EXACT_LABEL_ANCHOR_Y + EXACT_LABEL_HEIGHT
     };
   }
 
@@ -616,6 +687,8 @@
       }
     });
     state.markerLayer = L.layerGroup().addTo(state.map);
+    state.exactLabelLayer = L.layerGroup().addTo(state.map);
+    state.map.on("zoomend moveend", scheduleExactLabelRefresh);
     state.map.setView([11.02, 106.63], 11);
     root.setTimeout(function () {
       if (state.map) state.map.invalidateSize();
@@ -810,12 +883,96 @@
     state.markerRenderCount = 0;
   }
 
+  function cancelExactLabelRefresh() {
+    if (state.exactLabelFrameId !== null) {
+      if (typeof root.cancelAnimationFrame === "function") {
+        root.cancelAnimationFrame(state.exactLabelFrameId);
+      } else {
+        root.clearTimeout(state.exactLabelFrameId);
+      }
+    }
+    state.exactLabelFrameId = null;
+  }
+
+  function clearExactLabels() {
+    cancelExactLabelRefresh();
+    if (state.exactLabelLayer) state.exactLabelLayer.clearLayers();
+  }
+
   function scheduleMarkerBatch(callback) {
     if (typeof root.requestAnimationFrame === "function") {
       state.markerFrameId = root.requestAnimationFrame(callback);
       return;
     }
     state.markerFrameId = root.setTimeout(callback, 0);
+  }
+
+  function exactLabelHtml(model) {
+    return (
+      '<span class="listing-map-exact-label-main">' + model.line1 + '</span>'
+      + '<span class="listing-map-exact-label-sub">' + model.line2 + '</span>'
+    );
+  }
+
+  function refreshExactLabels() {
+    if (!state.map || !state.exactLabelLayer || !root.L) return;
+    state.exactLabelLayer.clearLayers();
+    var zoom = state.map.getZoom();
+    if (Number(zoom) < EXACT_LABEL_MIN_ZOOM) return;
+
+    var occupied = [];
+    var size = typeof state.map.getSize === "function"
+      ? state.map.getSize()
+      : { x: 0, y: 0 };
+    state.exactLabelGroups.forEach(function (group) {
+      var lat = Number(group.lat);
+      var lng = Number(group.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      var model = exactMarkerLabelModel(group, zoom);
+      if (!model.visible) return;
+      var point = state.map.latLngToContainerPoint([lat, lng]);
+      var rect = exactLabelRect(point);
+      if (
+        size.x
+        && (
+          rect.right < -EXACT_LABEL_WIDTH
+          || rect.left > size.x + EXACT_LABEL_WIDTH
+          || rect.bottom < -EXACT_LABEL_HEIGHT
+          || rect.top > size.y + EXACT_LABEL_HEIGHT
+        )
+      ) {
+        return;
+      }
+      if (labelRectCollides(rect, occupied, EXACT_LABEL_COLLISION_GAP)) {
+        return;
+      }
+      occupied.push(rect);
+      root.L.marker([lat, lng], {
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: 1000,
+        icon: root.L.divIcon({
+          className: "listing-map-exact-label",
+          html: exactLabelHtml(model),
+          iconSize: [EXACT_LABEL_WIDTH, EXACT_LABEL_HEIGHT],
+          iconAnchor: [EXACT_LABEL_WIDTH / 2, EXACT_LABEL_ANCHOR_Y]
+        })
+      }).addTo(state.exactLabelLayer);
+    });
+  }
+
+  function scheduleExactLabelRefresh() {
+    if (!state.open || !state.map || !state.exactLabelLayer) return;
+    cancelExactLabelRefresh();
+    var callback = function () {
+      state.exactLabelFrameId = null;
+      refreshExactLabels();
+    };
+    if (typeof root.requestAnimationFrame === "function") {
+      state.exactLabelFrameId = root.requestAnimationFrame(callback);
+      return;
+    }
+    state.exactLabelFrameId = root.setTimeout(callback, 0);
   }
 
   function addMarker(group) {
@@ -890,12 +1047,14 @@
     }
     state.markerFrameId = null;
     setSummaryStatus(state.summary);
+    scheduleExactLabelRefresh();
   }
 
   function renderMarkers(payload) {
     if (!state.map || !state.markerLayer) return;
     cancelMarkerRender();
     state.markerLayer.clearLayers();
+    clearExactLabels();
     var bounds = [];
     var groups = (payload.locations || []).filter(function (group) {
       var lat = Number(group.lat);
@@ -903,6 +1062,9 @@
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
       bounds.push([lat, lng]);
       return true;
+    });
+    state.exactLabelGroups = groups.filter(function (group) {
+      return group && group.precision === "exact";
     });
     if (bounds.length) {
       state.map.fitBounds(bounds, {
@@ -1303,10 +1465,13 @@
     state.itemController = null;
     cancelDirectoryRender();
     cancelMarkerRender();
+    clearExactLabels();
     if (state.markerLayer) state.markerLayer.clearLayers();
     if (state.map) state.map.remove();
     state.map = null;
     state.markerLayer = null;
+    state.exactLabelLayer = null;
+    state.exactLabelGroups = [];
     state.baseLayers = {};
     state.activeBaseLayer = "street";
     clearPanels();
@@ -1453,6 +1618,8 @@
     activePanelId: activePanelId,
     directoryWindow: directoryWindow,
     panelRenderModel: panelRenderModel,
+    exactMarkerLabelModel: exactMarkerLabelModel,
+    labelRectCollides: labelRectCollides,
     batchRanges: batchRanges,
     nextBatch: nextBatch,
     canContinueMarkerRender: canContinueMarkerRender,

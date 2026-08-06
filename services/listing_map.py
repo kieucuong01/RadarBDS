@@ -91,6 +91,17 @@ def _row_value(row, key, default=None):
     return default if value is None else value
 
 
+def _optional_float(row, key) -> float | None:
+    value = _row_value(row, key)
+    if value is None:
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if number > 0 else None
+
+
 def _normalized_filters(filters: MapFilters, tier: str) -> MapFilters:
     sources = tuple(normalize_sources_for_tier(filters.sources, tier))
     return replace(
@@ -264,6 +275,7 @@ def _read_model_filtered_sql(
                rm.title,
                rm.price_ty,
                rm.area_m2,
+               rm.listing_price_per_m2 AS price_per_m2,
                rm.property_type,
                rm.ward,
                rm.road_name,
@@ -323,6 +335,7 @@ def _filtered_sql(
                l.title,
                l.price_ty,
                l.area_m2,
+               l.price_per_m2,
                l.property_type,
                l.ward,
                l.road_name,
@@ -423,6 +436,28 @@ def load_listing_map_summary(
                        ''::TEXT AS relation,
                        COUNT(*)::INTEGER AS listing_count,
                        MAX(f.mos_pct) AS best_mos,
+                       CASE
+                           WHEN ml.location_precision = 'exact'
+                            AND COUNT(*) = 1
+                           THEN MAX(f.price_ty)
+                           ELSE NULL
+                       END AS label_price_ty,
+                       CASE
+                           WHEN ml.location_precision = 'exact'
+                            AND COUNT(*) = 1
+                           THEN MAX(f.area_m2)
+                           ELSE NULL
+                       END AS label_area_m2,
+                       CASE
+                           WHEN ml.location_precision = 'exact'
+                            AND COUNT(*) = 1
+                           THEN COALESCE(
+                               MAX(f.price_per_m2),
+                               MAX(f.price_ty) * 1000.0
+                                   / NULLIF(MAX(f.area_m2), 0)
+                           )
+                           ELSE NULL
+                       END AS label_price_per_m2,
                        SUM(COUNT(*)) OVER()::INTEGER AS total_count,
                        COALESCE(
                            SUM(COUNT(ml.listing_id)) OVER(),
@@ -504,7 +539,10 @@ def load_listing_map_summary(
             ).strip().lower()
             if relation not in _ALLOWED_LOCATION_RELATIONS:
                 relation = ""
-            locations.append({
+            listing_count = int(
+                _row_value(row, "listing_count", 0) or 0
+            )
+            location = {
                 "location_key": str(location_key),
                 "lat": float(_row_value(row, "lat", 0)),
                 "lng": float(_row_value(row, "lng", 0)),
@@ -514,14 +552,32 @@ def load_listing_map_summary(
                 "label": str(_row_value(row, "location_label", "")),
                 "accuracy_radius_m": accuracy_radius_m,
                 "relation": relation,
-                "listing_count": int(
-                    _row_value(row, "listing_count", 0) or 0
-                ),
+                "listing_count": listing_count,
                 "best_mos": round(
                     float(_row_value(row, "best_mos", 0) or 0),
                     1,
                 ),
-            })
+            }
+            if (
+                location["precision"] == "exact"
+                and listing_count == 1
+            ):
+                price_ty = _optional_float(row, "label_price_ty")
+                area_m2 = _optional_float(row, "label_area_m2")
+                price_per_m2 = _optional_float(row, "label_price_per_m2")
+                if (
+                    price_per_m2 is None
+                    and price_ty is not None
+                    and area_m2 is not None
+                ):
+                    price_per_m2 = price_ty * 1000 / area_m2
+                if price_ty is not None:
+                    location["price_ty"] = round(price_ty, 3)
+                if area_m2 is not None:
+                    location["area_m2"] = round(area_m2, 2)
+                if price_per_m2 is not None:
+                    location["price_per_m2"] = round(price_per_m2, 2)
+            locations.append(location)
         payload = {
             "mode": mode,
             "resolver_version": LISTING_MAP_RESOLVER_VERSION,

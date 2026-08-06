@@ -151,6 +151,70 @@ def test_panel_render_model_targets_one_surface_and_slices_locations():
     }
 
 
+def test_panel_render_model_omits_exact_locations_from_directory():
+    result = _run_node(
+        "(function(){"
+        "const locations=["
+        "{id:'e1',precision:'exact'},"
+        "{id:'r1',precision:'road'},"
+        "{id:'l1',precision:'landmark'},"
+        "{id:'w1',precision:'ward'}"
+        "];"
+        "const model=mapApi.panelRenderModel(false,locations,0);"
+        "return {"
+        "ids:model.groups.map(group=>group.id),"
+        "remaining:model.remaining,"
+        "visible:model.visible"
+        "};"
+        "})()"
+    )
+
+    assert result == {
+        "ids": ["r1", "l1", "w1"],
+        "remaining": 0,
+        "visible": 3,
+    }
+
+
+def test_exact_marker_label_model_uses_two_compact_rows_only_when_zoomed_in():
+    result = _run_node(
+        "mapApi.exactMarkerLabelModel({"
+        "precision:'exact',price_ty:1.8,area_m2:100,price_per_m2:18"
+        "},16)"
+    )
+
+    assert result == {
+        "visible": True,
+        "line1": "1,8 tỷ · 100 m²",
+        "line2": "18 tr/m²",
+    }
+    assert _run_node(
+        "mapApi.exactMarkerLabelModel({"
+        "precision:'exact',price_ty:1.8,area_m2:100,price_per_m2:18"
+        "},15).visible"
+    ) is False
+    assert _run_node(
+        "mapApi.exactMarkerLabelModel({"
+        "precision:'road',price_ty:1.8,area_m2:100,price_per_m2:18"
+        "},17).visible"
+    ) is False
+
+
+def test_exact_marker_label_collision_uses_screen_rect_gap():
+    assert _run_node(
+        "mapApi.labelRectCollides("
+        "{left:10,top:10,right:80,bottom:40},"
+        "[{left:75,top:12,right:120,bottom:44}],"
+        "6)"
+    ) is True
+    assert _run_node(
+        "mapApi.labelRectCollides("
+        "{left:10,top:10,right:80,bottom:40},"
+        "[{left:90,top:12,right:130,bottom:44}],"
+        "6)"
+    ) is False
+
+
 def test_batch_ranges_split_dom_work_without_gaps_or_overlap():
     assert _run_node("mapApi.batchRanges(0,25)") == []
     assert _run_node("mapApi.batchRanges(100,25)") == [

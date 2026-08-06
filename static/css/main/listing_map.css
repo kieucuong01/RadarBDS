@@ -150,6 +150,40 @@
   background: #dbeafe;
 }
 
+.listing-map-exact-label {
+  display: grid;
+  align-content: center;
+  gap: 1px;
+  box-sizing: border-box;
+  width: 104px !important;
+  height: 34px !important;
+  padding: 3px 5px;
+  border: 1px solid rgba(4, 120, 87, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
+  color: #0f172a;
+  font-size: 0.58rem;
+  font-weight: 850;
+  line-height: 1.12;
+  pointer-events: none;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.listing-map-exact-label-main,
+.listing-map-exact-label-sub {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.listing-map-exact-label-sub {
+  color: #047857;
+  font-weight: 900;
+}
+
 .listing-map-panel,
 .listing-map-mobile-sheet {
   background: var(--card, #fff);

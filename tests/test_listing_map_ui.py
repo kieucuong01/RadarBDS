@@ -64,7 +64,7 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'data-state="collapsed"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-progressive-sheet-20260803") == 2
+    assert html.count("listing-map-exact-labels-20260807") == 2
     assert "window.RADAR_MAP_VENDOR" in html
     assert not re.search(
         r"<(?:script|link)[^>]+(?:leaflet\.js|leaflet\.css)",
@@ -207,6 +207,21 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     assert "listingMapOfficialGisLink" not in script
     assert ".listing-map-precision-nearby" not in styles
     assert ".listing-map-official-gis" not in styles
+
+
+def test_listing_map_exact_marker_labels_are_compact_two_rows():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    styles = (root / "static/css/main/listing_map.css").read_text(
+        encoding="utf-8"
+    )
+
+    assert ".listing-map-exact-label" in styles
+    assert ".listing-map-exact-label-main" in styles
+    assert ".listing-map-exact-label-sub" in styles
+    assert "font-size: 0.58rem" in styles
+    assert "line-height: 1.12" in styles
 
 
 def test_listing_map_workspace_body_gets_stable_remaining_height():

@@ -72,6 +72,9 @@ class _MapConnection:
                     "location_label": "Vị trí chính xác từ tin rao",
                     "listing_count": 1,
                     "best_mos": 31.0,
+                    "label_price_ty": 1.8,
+                    "label_area_m2": 100,
+                    "label_price_per_m2": 18.0,
                 },
                 {
                     **common,
@@ -227,6 +230,43 @@ def test_summary_invariants_and_compact_query(monkeypatch):
     ):
         assert forbidden not in summary_sql
     assert "sum(count(ml.listing_id)) over()" in summary_sql
+
+
+def test_summary_exact_locations_include_compact_label_metrics(monkeypatch):
+    import services.listing_map as listing_map
+
+    connection = _MapConnection()
+
+    @contextmanager
+    def fake_get_conn():
+        yield connection
+
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", fake_get_conn)
+
+    payload = listing_map.load_listing_map_summary(
+        mode="signals",
+        tier="guest",
+        filters=_filters(),
+    )
+
+    exact = next(
+        group for group in payload["locations"]
+        if group["precision"] == "exact"
+    )
+    road = next(
+        group for group in payload["locations"]
+        if group["precision"] == "road"
+    )
+    assert exact["price_ty"] == 1.8
+    assert exact["area_m2"] == 100
+    assert exact["price_per_m2"] == 18.0
+    assert "price_ty" not in road
+    summary_sql = next(
+        sql for sql, _params in connection.queries
+        if "GROUP BY ml.location_key" in sql
+    )
+    assert "label_price_per_m2" in summary_sql
 
 
 def test_signal_summary_uses_read_model_and_dataset_version(monkeypatch):
