@@ -116,12 +116,29 @@ class AskQuestionRequest(ContractModel):
         return normalized
 
 
+class SessionMemory(ContractModel):
+    city: str | None = Field(default=None, max_length=120)
+    wards: list[str] = Field(default_factory=list, max_length=10)
+    road: str | None = Field(default=None, max_length=180)
+    property_types: list[str] = Field(default_factory=list, max_length=5)
+    budget_ty: float | None = Field(default=None, gt=0, le=500)
+    min_area_m2: float | None = Field(default=None, gt=0, le=100_000)
+    max_area_m2: float | None = Field(default=None, gt=0, le=100_000)
+    listing_id: int | None = Field(default=None, gt=0)
+    previous_question_type: str | None = Field(
+        default=None,
+        max_length=80,
+        pattern=r"^[a-z][a-z0-9_]*$",
+    )
+
+
 class AskContext(ContractModel):
     user_id: int = Field(gt=0)
     tier: Tier
     page: PageContext = Field(default_factory=PageContext)
     session_summary: str | None = Field(default=None, max_length=2_000)
     recent_turns: list[str] = Field(default_factory=list, max_length=6)
+    session_memory: SessionMemory = Field(default_factory=SessionMemory)
 
 
 class ToolCall(ContractModel):
