@@ -38,11 +38,11 @@ def test_build_price_repair_plan_updates_listing_and_matching_history_snapshots(
 def test_build_price_repair_plan_repairs_ignored_fraction_history_snapshot():
     listing = {
         "id": 66602,
-        "title": "Dat gia 1ty550",
-        "description": "Chu gui gia 1ty550",
-        "price_ty": 1.55,
+        "title": "Dat Tan An hang ngop chu ha gia con 1ty",
+        "description": "Dat Tan An hang ngop chu ha gia con 1ty550",
+        "price_ty": 1.0,
         "area_m2": 100,
-        "price_per_m2": 15.5,
+        "price_per_m2": 10.0,
     }
     history = [
         {"id": 10, "price_ty": 1.55, "price_per_m2": 15.5},
@@ -52,6 +52,7 @@ def test_build_price_repair_plan_repairs_ignored_fraction_history_snapshot():
     plan = build_price_repair_plan(listing, history)
 
     assert plan is not None
-    assert plan.listing_update is None
+    assert plan.listing_update is not None
+    assert plan.listing_update.price_ty == 1.55
     assert [row.price_history_id for row in plan.history_updates] == [11]
     assert plan.history_updates[0].price_ty == 1.55

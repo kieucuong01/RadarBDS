@@ -148,6 +148,19 @@ def extract_price(text: str) -> Optional[float]:
 
     not_area_after_rest = r'(?!\s*(?:m\s*vuong|m[²2]|met\s*vuong)\b)'
 
+    # If the post has both exact compact price and later fuzzy shorthand,
+    # trust the exact value: "1ty350tr ... 1ty3xx" -> 1.35, not 1.3.
+    # This must run before "ha/giam ... con Xty" because Facebook titles can
+    # be truncated at "con 1ty" while the description still has "con 1ty550".
+    m = re.search(
+        rf'(?<![\d,.])(\d+)\s*(?:ty|ti)\s*(\d{{2,3}})'
+        rf'(?:\s*(?:tr|trieu))?\b{not_area_after_rest}',
+        t_fold,
+        re.IGNORECASE,
+    )
+    if m:
+        return _parse_ty_rest(m.group(1), m.group(2))
+
     m = re.search(
         r'\b(?:giam|ha|bot)\b.{0,80}?\b(?:con|xuong|chi\s*con)\s*'
         r'(\d+[,.]?\d*)\s*(?:ty|ti)\s*(\d{1,3})?(?!\d)',
@@ -158,17 +171,6 @@ def extract_price(text: str) -> Optional[float]:
         if m.group(2):
             return _parse_ty_rest(m.group(1), m.group(2))
         return round(float(m.group(1).replace(',', '.')), 4)
-
-    # If the post has both exact compact price and later fuzzy shorthand,
-    # trust the exact value: "1ty350tr ... 1ty3xx" -> 1.35, not 1.3.
-    m = re.search(
-        rf'(?<![\d,.])(\d+)\s*(?:ty|ti)\s*(\d{{2,3}})'
-        rf'(?:\s*(?:tr|trieu))?\b{not_area_after_rest}',
-        t_fold,
-        re.IGNORECASE,
-    )
-    if m:
-        return _parse_ty_rest(m.group(1), m.group(2))
 
     # Masked shorthand: "3ty**" hides hundreds, but "3t5x" keeps hundreds clear.
     if re.search(rf'\d+\s*(?:t|ty|ti)\s*\d+\s*[x*]+\s*(?:tr|trieu)?{_MASKED_PRICE_SUFFIX}', t_fold, re.IGNORECASE):

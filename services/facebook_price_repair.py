@@ -213,6 +213,8 @@ def _candidate_rows(
         """(
             title ~* '(ty|ti|t)\\s*0[0-9]{2}'
          OR description ~* '(ty|ti|t)\\s*0[0-9]{2}'
+         OR title ~* '(ty|ti|t)\\s*[1-9][0-9]{2}'
+         OR description ~* '(ty|ti|t)\\s*[1-9][0-9]{2}'
          OR title ~* 'gi[aá]\\w*\\s*[:= -]*[0-9]{4}'
          OR description ~* 'gi[aá]\\w*\\s*[:= -]*[0-9]{4}'
         )""",
