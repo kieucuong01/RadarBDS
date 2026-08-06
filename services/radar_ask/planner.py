@@ -24,6 +24,62 @@ from .registry import ToolRegistry
 
 PLANNER_MAX_OUTPUT_TOKENS = 1_200
 PLANNER_MAX_COST_USD = Decimal("0.01")
+INVESTOR_INTENT_EXAMPLES = (
+    {
+        "question": "kiếm cho tôi lô đất tại Tân An ok xíu",
+        "depth": "fast",
+        "question_type": "deal_search",
+        "tool_calls": [
+            {
+                "call_id": "example-deal-search",
+                "name": "search_deals",
+                "arguments": {
+                    "wards": ["Tân An"],
+                    "property_types": ["dat"],
+                    "mos_min_pct": 10.0,
+                    "limit": 10,
+                },
+            }
+        ],
+        "rule": "Câu hỏi đời thường muốn tìm lô đáng xem/rẻ/ok thì dùng search_deals, không dùng compare_areas.",
+    },
+    {
+        "question": "Tân An có lô nào 500m2 rẻ k",
+        "depth": "fast",
+        "question_type": "deal_search",
+        "tool_calls": [
+            {
+                "call_id": "example-area-deal",
+                "name": "search_deals",
+                "arguments": {
+                    "wards": ["Tân An"],
+                    "mos_min_pct": 10.0,
+                    "limit": 10,
+                    "min_area_m2": 450.0,
+                    "max_area_m2": 550.0,
+                },
+            }
+        ],
+        "rule": "Diện tích mục tiêu có thể đổi thành khoảng +/-10% để tìm deal gần nhu cầu.",
+    },
+    {
+        "question": "hiện có bao nhiêu lô giảm giá ở Tân An",
+        "depth": "fast",
+        "question_type": "price_drop_ranking",
+        "tool_calls": [
+            {
+                "call_id": "example-price-drop-count",
+                "name": "rank_price_drop_areas",
+                "arguments": {
+                    "wards": ["Tân An"],
+                    "window_days": 7,
+                    "limit": 10,
+                },
+            }
+        ],
+        "rule": "Câu hỏi số lượng lô giảm giá theo phường dùng rank_price_drop_areas với wards, không dùng compare_areas.",
+    },
+)
 _PHONE = re.compile(r"(?<!\d)(?:\+?84|0)(?:[\s.()-]*\d){8,10}(?!\d)")
 _URL = re.compile(r"(?i)\b(?:https?://|www\.)[^\s\"'<>]+")
 _EMAIL = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")
@@ -116,6 +172,9 @@ class DeepSeekTypedPlanner:
             "Khong tao SQL, URL, file path, shell command, tool moi, du lieu nguoi dung, "
             "hay noi dung bang chung. Chon do sau toi thieu: fast cho mot phep tra cuu, "
             "standard cho so sanh toi da hai tool, deep khi can nhieu mien bang chung. "
+            "Voi cau hoi đời thường nhu ok xiu, re, co lo nao, dang xem, hay bao nhieu lo, "
+            "hay doc intent_examples de chon typed tool dung y dinh dau tu. "
+            "Neu hoi so luong lo giam gia theo phuong, dung rank_price_drop_areas voi wards. "
             "Khong tu dat use_thinking; server se quyet dinh."
         )
         user = json.dumps(
@@ -126,6 +185,7 @@ class DeepSeekTypedPlanner:
                     request.requested_depth.value if request.requested_depth else None
                 ),
                 "page_context": page,
+                "intent_examples": INVESTOR_INTENT_EXAMPLES,
                 "tool_registry": definitions,
                 "route_schema": RouteDecision.model_json_schema(mode="validation"),
             },

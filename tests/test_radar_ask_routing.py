@@ -108,16 +108,6 @@ def make_context(
             "area_market_estimate",
         ),
         (
-            "kiếm cho tôi lô đất tại Tân An ok xíu",
-            "search_deals",
-            "deal_search",
-        ),
-        (
-            "Tân An có lô nào 500m2 rẻ k",
-            "search_deals",
-            "deal_search",
-        ),
-        (
             "hiện có bao nhiêu lô giảm giá ở Tân An",
             "rank_price_drop_areas",
             "price_drop_ranking",
@@ -183,14 +173,6 @@ def test_tan_an_investor_questions_keep_the_right_intent():
         AskQuestionRequest(question="đất Tân An giờ bao nhiêu"),
         make_context(),
     )
-    soft_deal = route_question(
-        AskQuestionRequest(question="kiếm cho tôi lô đất tại Tân An ok xíu"),
-        make_context(tier="admin"),
-    )
-    large_cheap_deal = route_question(
-        AskQuestionRequest(question="Tân An có lô nào 500m2 rẻ k"),
-        make_context(tier="admin"),
-    )
     price_drop_count = route_question(
         AskQuestionRequest(question="hiện có bao nhiêu lô giảm giá ở Tân An"),
         make_context(tier="admin"),
@@ -198,15 +180,81 @@ def test_tan_an_investor_questions_keep_the_right_intent():
 
     assert area_price.question_type == "area_market_estimate"
     assert area_price.tool_calls[0].arguments["areas"] == ["Tân An"]
+    assert price_drop_count.question_type == "price_drop_ranking"
+    assert price_drop_count.tool_calls[0].arguments["wards"] == ["Tân An"]
+
+
+def test_fuzzy_tan_an_deal_questions_use_typed_planner_for_intent():
+    soft_planner = PlannerSpy(
+        {
+            "depth": "fast",
+            "question_type": "deal_search",
+            "tool_calls": [
+                {
+                    "call_id": "plan-soft-deal",
+                    "name": "search_deals",
+                    "arguments": {
+                        "wards": ["Tân An"],
+                        "property_types": ["dat"],
+                        "mos_min_pct": 10.0,
+                        "limit": 10,
+                    },
+                }
+            ],
+            "generated": False,
+            "use_thinking": False,
+        }
+    )
+    soft_deal = route_question(
+        AskQuestionRequest(question="kiếm cho tôi lô đất tại Tân An ok xíu"),
+        make_context(tier="admin"),
+        planner=soft_planner,
+    )
+
+    large_planner = PlannerSpy(
+        {
+            "depth": "fast",
+            "question_type": "deal_search",
+            "tool_calls": [
+                {
+                    "call_id": "plan-large-deal",
+                    "name": "search_deals",
+                    "arguments": {
+                        "wards": ["Tân An"],
+                        "mos_min_pct": 10.0,
+                        "limit": 10,
+                        "min_area_m2": 450.0,
+                        "max_area_m2": 550.0,
+                    },
+                }
+            ],
+            "generated": False,
+            "use_thinking": False,
+        }
+    )
+    large_cheap_deal = route_question(
+        AskQuestionRequest(question="Tân An có lô nào 500m2 rẻ k"),
+        make_context(tier="admin"),
+        planner=large_planner,
+    )
+
+    assert soft_planner.call_count == 1
     assert soft_deal.question_type == "deal_search"
     assert soft_deal.tool_calls[0].arguments["wards"] == ["Tân An"]
     assert soft_deal.tool_calls[0].arguments["mos_min_pct"] == 10.0
+    assert large_planner.call_count == 1
     assert large_cheap_deal.question_type == "deal_search"
     assert large_cheap_deal.tool_calls[0].arguments["wards"] == ["Tân An"]
     assert large_cheap_deal.tool_calls[0].arguments["min_area_m2"] == 450.0
     assert large_cheap_deal.tool_calls[0].arguments["max_area_m2"] == 550.0
-    assert price_drop_count.question_type == "price_drop_ranking"
-    assert price_drop_count.tool_calls[0].arguments["wards"] == ["Tân An"]
+
+
+def test_fuzzy_deal_question_without_planner_fails_closed():
+    with pytest.raises(PlannerRequired):
+        route_question(
+            AskQuestionRequest(question="kiếm cho tôi lô đất tại Tân An ok xíu"),
+            make_context(tier="admin"),
+        )
 
 
 def test_official_price_explanation_stays_deterministic_for_simple_policy_question():

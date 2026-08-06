@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
+import sys
 from dataclasses import replace
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 
 import pytest
 
@@ -193,6 +195,49 @@ def test_planner_person_redaction_retains_unlabeled_market_semantics(question):
     assert "[REDACTED_PERSON]" not in outbound
 
 
+def test_planner_payload_includes_investor_intent_examples_for_common_vietnamese_queries():
+    provider = FakeProvider(
+        ProviderResponse(json_value=valid_route(), usage=ProviderUsage(input_tokens=1))
+    )
+    planner = DeepSeekTypedPlanner(
+        settings=planner_settings(),
+        provider=provider,
+        registry=DEFAULT_TOOL_REGISTRY,
+    )
+
+    planner(
+        request=AskQuestionRequest(question="kiếm cho tôi lô đất tại Tân An ok xíu"),
+        context=AskContext(user_id=7, tier="admin"),
+        allowed_tools=tuple(DEFAULT_TOOL_REGISTRY.registrations),
+    )
+
+    outbound = provider.requests[0]
+    system = outbound.messages[0].content or ""
+    payload = json.loads(outbound.messages[1].content or "{}")
+    examples = payload["intent_examples"]
+
+    assert "đời thường" in system
+    assert {
+        "question": "kiếm cho tôi lô đất tại Tân An ok xíu",
+        "tool": "search_deals",
+    } in [
+        {"question": example["question"], "tool": example["tool_calls"][0]["name"]}
+        for example in examples
+    ]
+    assert any(
+        example["question"] == "Tân An có lô nào 500m2 rẻ k"
+        and example["tool_calls"][0]["arguments"]["min_area_m2"] == 450.0
+        and example["tool_calls"][0]["arguments"]["max_area_m2"] == 550.0
+        for example in examples
+    )
+    assert any(
+        example["question"] == "hiện có bao nhiêu lô giảm giá ở Tân An"
+        and example["tool_calls"][0]["name"] == "rank_price_drop_areas"
+        and example["tool_calls"][0]["arguments"]["wards"] == ["Tân An"]
+        for example in examples
+    )
+
+
 @pytest.mark.parametrize(
     ("question", "private_name"),
     [
@@ -285,6 +330,14 @@ def test_finalized_planner_route_rejects_hostile_tools_and_arguments(call, error
 
 
 def test_production_composition_injects_typed_planner_for_unmatched_question(monkeypatch):
+    redis_module = ModuleType("redis")
+    redis_exceptions_module = ModuleType("redis.exceptions")
+    redis_exceptions_module.RedisError = RuntimeError
+    redis_module.Redis = SimpleNamespace(from_url=lambda *_args, **_kwargs: SimpleNamespace())
+    redis_module.exceptions = redis_exceptions_module
+    monkeypatch.setitem(sys.modules, "redis", redis_module)
+    monkeypatch.setitem(sys.modules, "redis.exceptions", redis_exceptions_module)
+
     import services.radar_ask.service as service
 
     settings = planner_settings()
