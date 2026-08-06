@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, abort, make_response, render_template
+from flask import Blueprint, abort, make_response, redirect, render_template
 
 from auth.core import current_tier, current_user
 from services.radar_ask.service import feature_enabled, tier_allowed
@@ -54,6 +54,11 @@ def dashboard(**kwargs):
 @bp.route("/bds-da-luu")
 def saved_listings_page(**kwargs):
     return _impl("saved_listings_page", **kwargs)
+
+
+@bp.route("/ban")
+def ban_redirect(**kwargs):
+    return redirect("/ban-dat-binh-duong", code=301)
 
 
 @bp.route("/dinh-gia-bds")
