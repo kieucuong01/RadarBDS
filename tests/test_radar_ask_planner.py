@@ -16,6 +16,7 @@ from services.radar_ask.contracts import (
     ProviderResponse,
     ProviderUsage,
     RouteDecision,
+    SessionMemory,
     ToolCall,
 )
 from services.radar_ask.planner import DeepSeekTypedPlanner, PlannerOutputInvalid
@@ -105,6 +106,40 @@ def test_typed_planner_returns_route_and_usage_without_mutable_side_channel():
     assert "[REDACTED]" in serialized
 
 
+def test_planner_receives_bounded_current_session_context():
+    provider = FakeProvider(
+        ProviderResponse(json_value=valid_route(), usage=ProviderUsage(input_tokens=1))
+    )
+    planner = DeepSeekTypedPlanner(
+        settings=planner_settings(),
+        provider=provider,
+        registry=DEFAULT_TOOL_REGISTRY,
+    )
+
+    planner(
+        request=AskQuestionRequest(question="Rẻ hơn nữa thì sao?"),
+        context=AskContext(
+            user_id=7,
+            tier="admin",
+            recent_turns=["user: Tân An khoảng 500 m2"],
+            session_memory=SessionMemory(
+                wards=["Tân An"],
+                min_area_m2=450,
+                max_area_m2=550,
+                previous_question_type="deal_search",
+            ),
+        ),
+        allowed_tools=tuple(DEFAULT_TOOL_REGISTRY.registrations),
+    )
+
+    payload = json.loads(provider.requests[0].messages[-1].content or "{}")
+    conversation = payload["conversation_context"]
+    assert conversation["memory"]["wards"] == ["Tân An"]
+    assert conversation["memory"]["min_area_m2"] == 450
+    assert conversation["memory"]["max_area_m2"] == 550
+    assert conversation["recent_turns"] == ["user: Tân An khoảng 500 m2"]
+
+
 def test_planner_minimizes_hostile_pii_but_keeps_useful_location_and_road_context():
     provider = FakeProvider(
         ProviderResponse(json_value=valid_route(), usage=ProviderUsage(input_tokens=1))
@@ -162,7 +197,9 @@ def test_planner_minimizes_hostile_pii_but_keeps_useful_location_and_road_contex
     assert "Thủ Dầu Một" in serialized
     assert "DX 068" in serialized
     assert "session_summary" not in serialized
-    assert "recent_turns" not in serialized
+    assert "recent_turns" in serialized
+    assert "[REDACTED_PERSON]" in serialized
+    assert "[REDACTED_EMAIL]" in serialized
 
 
 @pytest.mark.parametrize(

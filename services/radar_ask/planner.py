@@ -191,6 +191,28 @@ def _redact(value: str | None, *, maximum: int) -> str | None:
     return _PHONE.sub("[REDACTED_PHONE]", bounded)
 
 
+def _conversation_context(context: AskContext) -> dict[str, object]:
+    memory = context.session_memory.model_dump(mode="json")
+    for field in ("city", "road"):
+        memory[field] = _redact(memory.get(field), maximum=180)
+    memory["wards"] = [
+        redacted
+        for value in memory.get("wards", [])
+        if (redacted := _redact(str(value), maximum=120))
+    ][:10]
+    memory["property_types"] = [
+        redacted
+        for value in memory.get("property_types", [])
+        if (redacted := _redact(str(value), maximum=80))
+    ][:5]
+    recent_turns = [
+        redacted
+        for value in context.recent_turns[-6:]
+        if (redacted := _redact(value, maximum=600))
+    ]
+    return {"memory": memory, "recent_turns": recent_turns}
+
+
 class DeepSeekTypedPlanner:
     """Return a typed route and its provider usage as one immutable value."""
 
@@ -249,6 +271,10 @@ class DeepSeekTypedPlanner:
             "tra clarification voi needs_clarification true va mot cau hoi ngan, tu nhien; "
             "khong tra 'khong du du lieu' khi thuc chat chi la thieu y dinh. "
             "Neu co du khu vuc va y dinh co hoi/dang xem/ngon/re, goi tool phu hop thay vi hoi lai. "
+            "Voi cau hoi tiep noi, dung conversation_context de ke thua phan nguoi dung khong nhac lai. "
+            "Thong tin noi ro trong cau hien tai uu tien hon page_context; page_context uu tien hon memory. "
+            "Neu cau hien tai doi khu vuc, ngan sach, dien tich, hay loai BDS thi dung gia tri moi. "
+            "Neu context mau thuan ma cau hien tai khong lam ro, hoi lai mot cau ngan thay vi doan. "
             "Khong tu dat use_thinking; server se quyet dinh."
         )
         user = json.dumps(
@@ -259,6 +285,7 @@ class DeepSeekTypedPlanner:
                     request.requested_depth.value if request.requested_depth else None
                 ),
                 "page_context": page,
+                "conversation_context": _conversation_context(context),
                 "intent_examples": INVESTOR_INTENT_EXAMPLES,
                 "tool_registry": definitions,
                 "route_schema": RouteDecision.model_json_schema(mode="validation"),

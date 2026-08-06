@@ -21,6 +21,7 @@ from .repository import (
     RadarAskSessionRecord,
 )
 from .routing import route_question
+from .session_context import hydrate_session_context
 from .source_links import source_card_details
 
 
@@ -42,12 +43,15 @@ def get_repository() -> RadarAskRepository:
     return RadarAskRepository()
 
 
-def _dependencies() -> OrchestratorDependencies:
+def _dependencies(
+    repository: RadarAskRepository | None = None,
+) -> OrchestratorDependencies:
     settings = RadarAskSettings.from_env()
     provider = DeepSeekProvider(settings=settings)
+    active_repository = repository or get_repository()
     return OrchestratorDependencies(
         settings=settings,
-        repository=get_repository(),
+        repository=active_repository,
         limits=RadarAskLimitService(settings=settings),
         burst=get_burst_limiter(),
         router=route_question,
@@ -69,10 +73,18 @@ def run_radar_question(
     idempotency_key: str | None,
 ) -> AskRunResult:
     """Execute only through the typed orchestration boundary."""
+    repository = get_repository()
+    effective_context = context
+    if request.session_id is not None:
+        stored_context = repository.load_session_context(
+            user_id=context.user_id,
+            session_id=request.session_id,
+        )
+        effective_context = hydrate_session_context(context, stored_context)
     return run_question(
         request,
-        context,
-        dependencies=_dependencies(),
+        effective_context,
+        dependencies=_dependencies(repository),
         idempotency_key=idempotency_key,
     )
 
