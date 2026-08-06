@@ -627,6 +627,68 @@ def test_planned_conversation_uses_provider_for_human_like_answer_without_databa
     assert deps.repository.planning_finalizations[0]["usage"] == planner_usage
 
 
+def test_conversation_provider_followups_are_clickable_user_questions():
+    def planner(**_kwargs):
+        return PlannerResult(
+            decision=RouteDecision(
+                depth=AskDepth.STANDARD,
+                question_type="conversation",
+                tool_calls=[],
+                generated=True,
+            ),
+            usage=ProviderUsage(input_tokens=80, output_tokens=20),
+        )
+
+    from services.radar_ask.routing import route_question
+
+    deps = OrchestratorDependencies(
+        settings=SimpleNamespace(
+            enabled=True,
+            allowed_tiers=frozenset({"free", "vip", "admin"}),
+            free_model="deepseek-v4-flash",
+            smart_model="deepseek-v4-pro",
+            router_model="deepseek-v4-flash",
+            provider_timeout_seconds=120,
+            monthly_hard_stop_usd=Decimal("50"),
+        ),
+        repository=FakeRepository(),
+        limits=FakeLimits(),
+        burst=FakeBurst(),
+        router=route_question,
+        registry=DEFAULT_TOOL_REGISTRY,
+        provider=FakeProvider(
+            ProviderResponse(
+                json_value={
+                    "direct_answer": "Chào anh, Radar BDS có thể giúp gì cho anh hôm nay?",
+                    "suggested_followups": [
+                        "Anh muốn tìm mua hay thuê bất động sản?",
+                        "Anh có khu vực cụ thể nào trong tâm trí không?",
+                        "Anh vui lòng chia sẻ ngân sách hoặc diện tích mong muốn nhé.",
+                    ],
+                },
+                usage=ProviderUsage(input_tokens=160, output_tokens=45),
+            )
+        ),
+        clock=lambda: NOW,
+        planner=planner,
+    )
+
+    result = run_question(
+        AskQuestionRequest(question="Helllo"),
+        make_context("admin"),
+        dependencies=deps,
+        idempotency_key="conversation-bad-followups",
+    )
+
+    assert result.status is RunStatus.COMPLETED
+    assert result.answer is not None
+    assert result.answer.suggested_followups
+    assert "Anh muốn tìm mua hay thuê bất động sản?" not in result.answer.suggested_followups
+    assert "Anh có khu vực cụ thể nào trong tâm trí không?" not in result.answer.suggested_followups
+    assert "Anh vui lòng chia sẻ ngân sách hoặc diện tích mong muốn nhé." not in result.answer.suggested_followups
+    assert all("?" in item for item in result.answer.suggested_followups)
+
+
 def test_planned_consultant_clarification_asks_one_followup_without_database_or_answer_model():
     planner_usage = ProviderUsage(input_tokens=180, output_tokens=40, cache_miss_input_tokens=180)
 

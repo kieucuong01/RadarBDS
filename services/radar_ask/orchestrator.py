@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -56,6 +57,33 @@ MAX_SERIALIZED_EVIDENCE_CHARS = 40_000
 MAX_CONVERSATION_OUTPUT_TOKENS = 700
 EMPTY_USAGE = ProviderUsage()
 CONVERSATION_QUESTION_TYPES = frozenset({"conversation", "help", "off_topic"})
+ASSISTANT_FOLLOWUP_PREFIXES = (
+    "anh ",
+    "chi ",
+    "anh/chi ",
+    "vui long ",
+    "hay ",
+    "neu anh ",
+    "neu chi ",
+    "ban vui long ",
+)
+CONVERSATION_FALLBACK_FOLLOWUPS = {
+    "help": [
+        "đất Tân An giờ giá bao nhiêu?",
+        "Tân An có lô nào 500m2 rẻ không?",
+        "khu nào có nhiều tín hiệu giảm giá hôm nay?",
+    ],
+    "off_topic": [
+        "Radar BDS làm được gì?",
+        "đất Tân An giờ giá bao nhiêu?",
+        "ngân sách 2,5 tỷ nên xem phường nào?",
+    ],
+    "conversation": [
+        "Radar BDS làm được gì?",
+        "đất Tân An giờ giá bao nhiêu?",
+        "ngân sách 2,5 tỷ nên xem phường nào?",
+    ],
+}
 PROVIDER_PHONE_PATTERN = re.compile(
     r"(?<!\d)(?:\+?84|0)(?:[\s.()-]*\d){8,10}(?!\d)"
 )
@@ -250,30 +278,19 @@ def _conversation_answer(
             "được định giá như vậy. Ví dụ: “đất Tân An giờ giá bao nhiêu”, “Tân An có lô nào 500m2 rẻ không”, "
             "hoặc “Phú Mỹ và Định Hòa khác nhau sao?”."
         )
-        followups = [
-            "đất Tân An giờ giá bao nhiêu",
-            "Tân An có lô nào 500m2 rẻ không",
-            "khu nào có nhiều tín hiệu giảm giá hôm nay",
-        ]
+        followups = _conversation_fallback_followups(decision)
     elif decision.question_type == "off_topic":
         direct = (
             "Tôi tập trung vào dữ liệu và tín hiệu bất động sản trong Radar BDS. "
             "Nếu anh hỏi về giá khu vực, so sánh phường, tìm deal, giảm giá hoặc rủi ro của một tin, tôi sẽ tra dữ liệu giúp anh."
         )
-        followups = [
-            "Bạn làm được gì với dữ liệu Radar BDS?",
-            "đất Tân An giờ giá bao nhiêu",
-        ]
+        followups = _conversation_fallback_followups(decision)
     else:
         direct = (
             "Xin chào, tôi là Hỏi Radar BDS. Anh có thể hỏi tôi về giá rao theo khu vực, "
             "so sánh phường, tìm lô đáng kiểm tra, hoặc tín hiệu giảm giá trong dữ liệu Radar."
         )
-        followups = [
-            "Bạn làm được gì?",
-            "đất Tân An giờ giá bao nhiêu",
-            "ngân sách 2,5 tỷ nên xem phường nào",
-        ]
+        followups = _conversation_fallback_followups(decision)
     return AnswerEnvelope(
         answered=True,
         depth=AskDepth.FAST,
@@ -299,6 +316,52 @@ def _redact_provider_value(value: Any) -> Any:
     return value
 
 
+def _fold_vietnamese(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"\s+", " ", ascii_text).strip().lower()
+
+
+def _looks_like_assistant_followup(value: str) -> bool:
+    folded = _fold_vietnamese(value).lstrip("\"'`([{ ")
+    return folded.startswith(ASSISTANT_FOLLOWUP_PREFIXES)
+
+
+def _conversation_fallback_followups(decision: RouteDecision) -> list[str]:
+    return list(
+        CONVERSATION_FALLBACK_FOLLOWUPS.get(
+            decision.question_type,
+            CONVERSATION_FALLBACK_FOLLOWUPS["conversation"],
+        )
+    )
+
+
+def _sanitize_conversation_followups(
+    raw_followups: Any,
+    decision: RouteDecision,
+) -> list[str]:
+    followups: list[str] = []
+    seen: set[str] = set()
+    if isinstance(raw_followups, Sequence) and not isinstance(raw_followups, (str, bytes)):
+        for item in raw_followups:
+            redacted = _redact_provider_value(item)
+            if not isinstance(redacted, str):
+                continue
+            candidate = redacted.strip()[:200]
+            if not candidate or _looks_like_assistant_followup(candidate):
+                continue
+            key = _fold_vietnamese(candidate)
+            if key in seen:
+                continue
+            seen.add(key)
+            followups.append(candidate)
+            if len(followups) >= 3:
+                break
+    if followups:
+        return followups
+    return _conversation_fallback_followups(decision)
+
+
 def _conversation_provider_request(
     request: AskQuestionRequest,
     context: AskContext,
@@ -321,6 +384,8 @@ def _conversation_provider_request(
         "Nếu câu hỏi cần số liệu thị trường thì không tự trả số; hãy mời người dùng hỏi rõ khu vực, "
         "ngân sách, diện tích hoặc mục tiêu để Radar tra dữ liệu. "
         "Trả đúng một JSON object gồm direct_answer và suggested_followups. "
+        "suggested_followups là các câu người dùng có thể bấm gửi tiếp, viết ở vai người hỏi; "
+        "không viết kiểu trợ lý hỏi khách như 'Anh muốn...', 'Anh có...', 'Anh vui lòng...'. "
         "direct_answer dài 1-4 câu, xưng hô anh/tôi, không dùng giọng robot, "
         "không nói 'chưa đủ dữ liệu' cho câu giao tiếp bình thường."
     )
@@ -331,7 +396,11 @@ def _conversation_provider_request(
             "page_context": safe_context,
             "required_output": {
                 "direct_answer": "string",
-                "suggested_followups": ["string", "string", "string"],
+                "suggested_followups": [
+                    "Radar BDS làm được gì?",
+                    "đất Tân An giờ giá bao nhiêu?",
+                    "ngân sách 2,5 tỷ nên xem phường nào?",
+                ],
             },
         },
         ensure_ascii=False,
@@ -359,15 +428,10 @@ def _conversation_answer_from_provider(
     direct = _redact_provider_value(payload.get("direct_answer"))
     if not isinstance(direct, str) or not direct.strip():
         raise AnswerValidationError("conversation answer is empty")
-    raw_followups = payload.get("suggested_followups", [])
-    followups: list[str] = []
-    if isinstance(raw_followups, Sequence) and not isinstance(raw_followups, (str, bytes)):
-        for item in raw_followups:
-            redacted = _redact_provider_value(item)
-            if isinstance(redacted, str) and redacted.strip():
-                followups.append(redacted.strip()[:200])
-            if len(followups) >= 3:
-                break
+    followups = _sanitize_conversation_followups(
+        payload.get("suggested_followups", []),
+        decision,
+    )
     return AnswerEnvelope(
         answered=True,
         depth=decision.depth,
