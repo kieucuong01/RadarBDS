@@ -57,14 +57,29 @@ def make_context(tier: str = "free") -> AskContext:
 def grounded_bundle(*, quality: RetrievalQuality = RetrievalQuality.SUFFICIENT) -> EvidenceBundle:
     return EvidenceBundle(
         question_snapshot="Khu nào giảm giá?",
-        calculations={"answer_summary": "Phú Mỹ có 3 tín hiệu giảm giá cần kiểm tra."},
+        calculations={
+            "window_days": 1,
+            "areas": [
+                {
+                    "ward": "Phú Mỹ",
+                    "signal_count": 3,
+                    "median_price_drop_pct": 8,
+                    "median_mos_pct": 18,
+                }
+            ],
+        },
         items=[
             EvidenceItem(
                 evidence_id="market:phu-my:drop-count",
                 source_kind=SourceKind.MARKET_STAT,
-                source_ref="market:phu-my",
-                value=3,
-                unit="tin",
+                source_ref="price-drop-area:Phú Mỹ:1d",
+                value={
+                    "ward": "Phú Mỹ",
+                    "signal_count": 3,
+                    "median_price_drop_pct": 8,
+                    "median_mos_pct": 18,
+                },
+                unit="signals",
                 as_of=NOW,
                 dataset_version="signals:12",
                 sample_size=18,
@@ -1233,7 +1248,7 @@ def test_concurrent_idempotent_replay_observes_claimed_run_and_only_owner_plans(
 def fast_decision() -> RouteDecision:
     return RouteDecision(
         depth=AskDepth.FAST,
-        question_type="price_drop_areas",
+        question_type="price_drop_ranking",
         tool_calls=[
             ToolCall(
                 call_id="fast-1",
@@ -1272,8 +1287,13 @@ def test_fast_deterministic_answer_has_zero_provider_cost_and_grounded_sources()
 
     assert result.status is RunStatus.COMPLETED
     assert result.answer is not None
-    assert result.answer.direct_answer == "Phú Mỹ có 3 tín hiệu giảm giá cần kiểm tra."
+    assert result.answer.direct_answer.startswith(
+        "Hôm nay, Phú Mỹ đang có nhiều tín hiệu giảm giá nhất"
+    )
+    assert "3 tín hiệu" in result.answer.direct_answer
+    assert "mở các nguồn bên dưới" not in result.answer.direct_answer.lower()
     assert result.answer.source_cards[0].evidence_id == "market:phu-my:drop-count"
+    assert result.answer.source_cards[0].source_ref == "price-drop-area:Phú Mỹ:1d"
     assert deps.provider.requests == []
     assert deps.limits.reservations[0]["max_cost_usd"] == Decimal("0")
     assert deps.repository.sync_finalizations[0]["outcome"] == RunOutcome.ANSWERED.value

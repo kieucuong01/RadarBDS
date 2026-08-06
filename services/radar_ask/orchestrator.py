@@ -17,13 +17,11 @@ from .config import (
     resolve_model_policy,
 )
 from .contracts import (
-    AnswerClaim,
     AnswerEnvelope,
     AskContext,
     AskDepth,
     AskQuestionRequest,
     AskRunResult,
-    AskVerdict,
     EvidenceBundle,
     EvidenceItem,
     ModelPolicy,
@@ -38,6 +36,7 @@ from .contracts import (
     ToolCall,
     UsageReservation,
 )
+from .answer_presenters import present_deterministic_answer
 from .evidence import build_provider_bundle
 from .limits import BudgetHardStop, QuotaExceeded, ReservationUnavailable
 from .planner import PLANNER_MAX_COST_USD
@@ -228,69 +227,13 @@ def _merge_bundles(question: str, bundles: Sequence[EvidenceBundle]) -> Evidence
     )
 
 
-def _dataset_version(items: Sequence[EvidenceItem]) -> str:
-    versions = list(dict.fromkeys(item.dataset_version for item in items))
-    if not versions:
-        return "radar-ask:foundation"
-    joined = ",".join(versions)
-    return joined if len(joined) <= 120 else versions[0]
-
-
 def _deterministic_answer(
     decision: RouteDecision,
     bundle: EvidenceBundle,
     *,
     now: datetime,
 ) -> AnswerEnvelope:
-    insufficient = bundle.retrieval_quality in {
-        RetrievalQuality.REPAIR,
-        RetrievalQuality.INSUFFICIENT,
-        RetrievalQuality.CONFLICTED,
-    }
-    as_of = max((item.as_of for item in bundle.items), default=now)
-    if insufficient:
-        details = bundle.missing_requirements[0] if bundle.missing_requirements else None
-        direct = "Chưa đủ dữ liệu đáng tin cậy để kết luận."
-        if details:
-            direct = f"{direct} Còn thiếu: {details}."
-        return AnswerEnvelope(
-            answered=False,
-            depth=decision.depth,
-            verdict=AskVerdict.INSUFFICIENT,
-            direct_answer=direct,
-            risks=list(bundle.warnings[:12]),
-            next_verification_steps=list(bundle.missing_requirements[:12]),
-            as_of=as_of,
-            dataset_version=_dataset_version(bundle.items),
-        )
-
-    summary = bundle.calculations.get("answer_summary")
-    direct = (
-        str(summary).strip()
-        if isinstance(summary, str) and summary.strip()
-        else "Radar đã tổng hợp dữ liệu hiện có; nên mở các nguồn bên dưới để kiểm tra chi tiết."
-    )
-    claims: list[AnswerClaim] = []
-    if bundle.items:
-        first = bundle.items[0]
-        claims.append(
-            AnswerClaim(
-                text=direct,
-                evidence_ids=[first.evidence_id],
-                material=True,
-            )
-        )
-    return AnswerEnvelope(
-        answered=True,
-        depth=decision.depth,
-        verdict=AskVerdict.NEEDS_CHECKS,
-        direct_answer=direct[:6_000],
-        claims=claims,
-        risks=list(bundle.warnings[:12]),
-        next_verification_steps=list(bundle.missing_requirements[:12]),
-        as_of=as_of,
-        dataset_version=_dataset_version(bundle.items),
-    )
+    return present_deterministic_answer(decision, bundle, now=now)
 
 
 def _redact_provider_value(value: Any) -> Any:
