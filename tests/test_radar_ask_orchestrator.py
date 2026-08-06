@@ -1325,6 +1325,12 @@ def test_generated_standard_answer_reserves_calls_provider_validates_and_settles
     assert len(provider.requests) == 1
     assert provider.requests[0].json_mode is True
     assert provider.requests[0].thinking_enabled is False
+    system_message = provider.requests[0].messages[0].content or ""
+    assert "trả lời trực tiếp câu hỏi" in system_message.lower()
+    assert "nguồn chỉ là dẫn chứng" in system_message.lower()
+    assert result.answer is not None
+    assert "Phú Mỹ" in result.answer.direct_answer
+    assert result.answer.source_cards[0].evidence_id == "market:phu-my:drop-count"
     assert deps.repository.messages[-1]["role"] == "assistant"
     assert deps.repository.messages[-1]["run_id"] == result.run_id
 

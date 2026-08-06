@@ -54,6 +54,16 @@ TIME_SENSITIVE_SOURCE_KINDS = frozenset(
         SourceKind.MARKET_STAT,
     }
 )
+SOURCE_ONLY_ANSWERS = frozenset(
+    {
+        "vui long xem cac nguon ben duoi de biet chi tiet",
+        "vui long xem nguon ben duoi de biet chi tiet",
+        "mo cac nguon ben duoi de kiem tra chi tiet",
+        "mo nguon ben duoi de kiem tra chi tiet",
+        "xem cac nguon ben duoi de biet chi tiet",
+        "xem nguon ben duoi de biet chi tiet",
+    }
+)
 
 
 class AnswerValidationError(RuntimeError):
@@ -72,6 +82,18 @@ class EvidenceAssessment:
 def _fold(value: str) -> str:
     normalized = unicodedata.normalize("NFD", value.lower()).replace("đ", "d")
     return "".join(char for char in normalized if unicodedata.category(char) != "Mn")
+
+
+def _is_source_only_answer(value: str) -> bool:
+    folded = _fold(value)
+    normalized = re.sub(r"[^a-z0-9]+", " ", folded).strip()
+    if normalized in SOURCE_ONLY_ANSWERS:
+        return True
+    return (
+        normalized.startswith("radar da tong hop du lieu hien co")
+        and "nguon ben duoi" in normalized
+        and ("kiem tra chi tiet" in normalized or "biet chi tiet" in normalized)
+    )
 
 
 def _answer_text_values(answer: AnswerEnvelope) -> Iterable[str]:
@@ -564,6 +586,8 @@ def validate_answer(
         raise AnswerValidationError("answered responses require an approved verdict")
     if not parsed.answered and parsed.verdict is not AskVerdict.INSUFFICIENT:
         raise AnswerValidationError("unanswered responses must be grounded insufficient conclusions")
+    if parsed.answered and _is_source_only_answer(parsed.direct_answer):
+        raise AnswerValidationError("answer does not directly answer the question")
 
     folded = _fold("\n".join(_answer_text_values(parsed)))
     if any(phrase in folded for phrase in FORBIDDEN_ADVISOR_PHRASES):

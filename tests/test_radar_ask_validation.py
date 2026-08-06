@@ -525,6 +525,55 @@ def test_source_cards_receive_deterministic_safe_destinations(
 
 
 @pytest.mark.parametrize(
+    "direct_answer",
+    (
+        "Radar đã tổng hợp dữ liệu hiện có; nên mở các nguồn bên dưới để kiểm tra chi tiết.",
+        "Vui lòng xem các nguồn bên dưới để biết chi tiết.",
+    ),
+)
+def test_source_only_boilerplate_is_not_accepted_as_a_successful_answer(direct_answer):
+    evidence = item(value={"ward": "Phú Mỹ", "signal_count": 3}, unit="signals")
+    candidate = answer(
+        AnswerClaim(
+            text="Mở các nguồn bên dưới để kiểm tra chi tiết.",
+            evidence_ids=[evidence.evidence_id],
+        ),
+        direct_answer=direct_answer,
+    )
+
+    with pytest.raises(AnswerValidationError, match="does not directly answer"):
+        validate_answer(
+            candidate,
+            [bundle(evidence)],
+            tier="admin",
+            expected_depth=AskDepth.STANDARD,
+        )
+
+
+def test_substantive_answer_may_still_invite_the_user_to_open_sources():
+    evidence = item(value={"ward": "Phú Mỹ", "signal_count": 3}, unit="signals")
+    candidate = answer(
+        AnswerClaim(
+            text="Phú Mỹ có 3 tín hiệu giảm giá trong mẫu hiện tại.",
+            evidence_ids=[evidence.evidence_id],
+        ),
+        direct_answer=(
+            "Phú Mỹ có 3 tín hiệu giảm giá trong mẫu hiện tại. "
+            "Anh có thể mở nguồn bên dưới để đối chiếu."
+        ),
+    )
+
+    validated = validate_answer(
+        candidate,
+        [bundle(evidence)],
+        tier="admin",
+        expected_depth=AskDepth.STANDARD,
+    )
+
+    assert validated.answered is True
+
+
+@pytest.mark.parametrize(
     ("kind", "source_url"),
     (
         (SourceKind.OFFICIAL_DOCUMENT, "http://vanban.example/insecure"),
