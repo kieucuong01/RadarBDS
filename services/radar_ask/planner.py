@@ -35,7 +35,7 @@ INVESTOR_INTENT_EXAMPLES = (
                 "name": "search_deals",
                 "arguments": {
                     "wards": ["Tân An"],
-                    "property_types": ["dat"],
+                    "property_types": ["dat_nen"],
                     "mos_min_pct": 10.0,
                     "limit": 10,
                 },

@@ -128,7 +128,7 @@ def _property_type(folded: str) -> str | None:
     if "nha dat" in folded or "nha pho" in folded:
         return "nha_dat"
     if "dat" in folded:
-        return "dat"
+        return "dat_nen"
     return None
 
 

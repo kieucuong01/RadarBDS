@@ -180,6 +180,7 @@ def test_tan_an_investor_questions_keep_the_right_intent():
 
     assert area_price.question_type == "area_market_estimate"
     assert area_price.tool_calls[0].arguments["areas"] == ["Tân An"]
+    assert area_price.tool_calls[0].arguments["property_type"] == "dat_nen"
     assert price_drop_count.question_type == "price_drop_ranking"
     assert price_drop_count.tool_calls[0].arguments["wards"] == ["Tân An"]
 
@@ -195,7 +196,7 @@ def test_fuzzy_tan_an_deal_questions_use_typed_planner_for_intent():
                     "name": "search_deals",
                     "arguments": {
                         "wards": ["Tân An"],
-                        "property_types": ["dat"],
+                        "property_types": ["dat_nen"],
                         "mos_min_pct": 10.0,
                         "limit": 10,
                     },

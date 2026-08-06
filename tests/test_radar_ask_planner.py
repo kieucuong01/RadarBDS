@@ -220,8 +220,13 @@ def test_planner_payload_includes_investor_intent_examples_for_common_vietnamese
     assert {
         "question": "kiếm cho tôi lô đất tại Tân An ok xíu",
         "tool": "search_deals",
+        "property_types": ["dat_nen"],
     } in [
-        {"question": example["question"], "tool": example["tool_calls"][0]["name"]}
+        {
+            "question": example["question"],
+            "tool": example["tool_calls"][0]["name"],
+            "property_types": example["tool_calls"][0]["arguments"].get("property_types"),
+        }
         for example in examples
     ]
     assert any(
