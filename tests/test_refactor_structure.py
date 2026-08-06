@@ -175,7 +175,7 @@ def test_homepage_mos_control_defaults_to_fifteen_and_locks_non_privileged_tiers
 
 def test_homepage_mos_asset_version_changes_with_boot_behavior():
     html = _read("templates/index.html")
-    assert "js/main/boot.js') }}?v=area-scope-city-groups-20260806" in html
+    assert "js/main/boot.js') }}?v=area-scope-city-picker-20260806" in html
 
 
 def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
@@ -189,10 +189,13 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert 'aria-modal="true"' in html
     assert 'class="area-scope-modal-panel"' in html
     assert 'id="areaScopeCityChoices"' in html
+    assert 'class="area-scope-city-picker"' in html
+    assert "selectAreaScopeCity(this.dataset.city)" in html
     assert "('THỦ DẦU MỘT', 'Thủ Dầu Một')" in html
     assert "('BẾN CÁT', 'Bến Cát')" in html
     assert "Xem toàn {{ city_label }}" in html
     assert 'class="area-scope-city-group"' in html
+    assert 'hidden' in html
     assert 'class="area-scope-ward-chip"' in html
     assert "toggleAreaScopeWard" in html
     assert "applyAreaScopeWardSelection" in html
@@ -210,8 +213,25 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert "function hideChooser" in area_scope_js
     assert "area-scope-modal-open" in area_scope_js
     assert "openAreaScopeFilterSheet" in area_scope_js
+    assert "selectAreaScopeCity" in area_scope_js
     assert "nextDraftWardScope" in area_scope_js
     assert "applyAreaScopeWardSelection" in area_scope_js
+
+
+def test_sidebar_city_filter_exposes_supported_crawl_cities_only():
+    html = _read("templates/index.html")
+
+    for expected in [
+        "('THỦ DẦU MỘT', 'Thủ Dầu Một')",
+        "('BẾN CÁT', 'Bến Cát')",
+        "('DĨ AN', 'Dĩ An')",
+        "('THUẬN AN', 'Thuận An')",
+        'class="city-pill {% if loop.first %}active{% endif %}"',
+        'data-city="{{ city_value }}"',
+    ]:
+        assert expected in html
+
+    assert "('TÂN UYÊN'," not in html
 
 
 def test_all_listings_tab_supports_table_and_grid_views():
@@ -585,7 +605,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "area-scope-city-groups-20260806",
+        "area-scope-city-picker-20260806",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -601,7 +621,7 @@ def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "area-scope-city-groups-20260806",
+        "area-scope-city-picker-20260806",
         ".sidebar .filter-sheet-head",
         "position: sticky",
         "margin: -14px -14px 8px",

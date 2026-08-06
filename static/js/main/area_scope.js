@@ -8,6 +8,7 @@
   const STORAGE_KEY = 'radar_area_scope_v1';
   const VALID_MODES = new Set(['custom', 'preset', 'city_all']);
   let areaScopeDraft = null;
+  let areaScopeDraftCity = '';
 
   const PRESET_SCOPES = Object.freeze([
     Object.freeze({
@@ -205,7 +206,9 @@
   }
 
   function setAreaScopeDraft(scope, doc) {
-    areaScopeDraft = validateScope(scope, root.INITIAL_WARDS_BY_CITY || {});
+    const normalized = validateScope(scope, root.INITIAL_WARDS_BY_CITY || {});
+    areaScopeDraft = normalized && normalized.mode !== 'city_all' ? normalized : null;
+    areaScopeDraftCity = normalized ? normalized.city : '';
     renderAreaScopeDraft(doc || root.document);
     return areaScopeDraft;
   }
@@ -213,11 +216,18 @@
   function renderAreaScopeDraft(doc) {
     const documentRef = doc || root.document;
     if (!documentRef || typeof documentRef.querySelectorAll !== 'function') return;
-    const selectedCity = areaScopeDraft && areaScopeDraft.city;
+    const selectedCity = areaScopeDraftCity || (areaScopeDraft && areaScopeDraft.city) || '';
     const selectedWards = new Set(areaScopeDraft && areaScopeDraft.mode !== 'city_all' ? areaScopeDraft.wards : []);
+    documentRef.querySelectorAll('.area-scope-city-tab').forEach((tab) => {
+      const tabCity = tab.dataset ? tab.dataset.city : '';
+      tab.classList.toggle('is-active', Boolean(selectedCity && tabCity === selectedCity));
+      tab.setAttribute('aria-pressed', selectedCity && tabCity === selectedCity ? 'true' : 'false');
+    });
     documentRef.querySelectorAll('.area-scope-city-group').forEach((group) => {
       const groupCity = group.dataset ? group.dataset.areaScopeCity : '';
-      group.classList.toggle('is-active', Boolean(selectedCity && groupCity === selectedCity));
+      const active = Boolean(selectedCity && groupCity === selectedCity);
+      group.hidden = !active;
+      group.classList.toggle('is-active', active);
     });
     documentRef.querySelectorAll('.area-scope-ward-chip').forEach((chip) => {
       const chipCity = chip.dataset ? chip.dataset.city : '';
@@ -283,12 +293,15 @@
     const chooser = documentRef.getElementById('areaScopeChooser');
     const bar = documentRef.getElementById('areaScopeBar');
     const draft = selectedScopeFromControls(documentRef, root.INITIAL_WARDS_BY_CITY || {});
+    const label = documentRef.getElementById('areaScopeLabel');
+    const hasSavedScopeLabel = Boolean(label && String(label.textContent || '').trim());
     areaScopeDraft = draft && draft.mode !== 'city_all' ? draft : null;
+    areaScopeDraftCity = draft && (draft.mode !== 'city_all' || hasSavedScopeLabel) ? draft.city : '';
     if (chooser) {
       chooser.hidden = false;
       if (documentRef.body) documentRef.body.classList.add('area-scope-modal-open');
       renderAreaScopeDraft(documentRef);
-      const focusTarget = chooser.querySelector('.area-scope-city-all, .area-scope-ward-chip, .area-scope-filter');
+      const focusTarget = chooser.querySelector('.area-scope-city-tab, .area-scope-city-all, .area-scope-ward-chip, .area-scope-filter');
       if (focusTarget && typeof focusTarget.focus === 'function') focusTarget.focus();
     }
     if (bar) bar.hidden = true;
@@ -355,8 +368,18 @@
     }, { persist: true, updateUrl: true, apply: true });
   };
 
+  root.selectAreaScopeCity = function selectAreaScopeCity(city) {
+    const resolvedCity = resolveCity(city, root.INITIAL_WARDS_BY_CITY || {});
+    if (!resolvedCity) return null;
+    areaScopeDraftCity = resolvedCity;
+    if (!areaScopeDraft || areaScopeDraft.city !== resolvedCity) areaScopeDraft = null;
+    renderAreaScopeDraft(root.document);
+    return areaScopeDraft;
+  };
+
   root.toggleAreaScopeWard = function toggleAreaScopeWard(button) {
     if (!button || !button.dataset) return null;
+    areaScopeDraftCity = resolveCity(button.dataset.city, root.INITIAL_WARDS_BY_CITY || {});
     areaScopeDraft = nextDraftWardScope(
       areaScopeDraft,
       button.dataset.city,
@@ -404,6 +427,7 @@
     applyScopeToParams,
     clearStoredScope,
     hideChooser,
+    renderAreaScopeDraft,
     nextDraftWardScope,
     readStoredScope,
     replaceUrlWithScope,

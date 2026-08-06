@@ -124,10 +124,20 @@ body.area-scope-modal-open {
   gap: 12px;
 }
 
+.area-scope-city-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .area-scope-city-group {
   display: grid;
   gap: 8px;
   min-width: 0;
+}
+
+.area-scope-city-group[hidden] {
+  display: none;
 }
 
 .area-scope-ward-grid {
@@ -136,6 +146,7 @@ body.area-scope-modal-open {
   gap: 7px;
 }
 
+.area-scope-city-tab,
 .area-scope-city-all,
 .area-scope-ward-chip,
 .area-scope-apply,
@@ -152,6 +163,7 @@ body.area-scope-modal-open {
   padding: 8px 10px;
 }
 
+.area-scope-city-tab:hover,
 .area-scope-city-all:hover,
 .area-scope-ward-chip:hover,
 .area-scope-apply:hover:not(:disabled),
@@ -159,6 +171,12 @@ body.area-scope-modal-open {
 .area-scope-bar-actions button:hover {
   border-color: var(--primary);
   color: var(--primary);
+}
+
+.area-scope-city-tab.is-active {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--accent);
 }
 
 .area-scope-city-all {
@@ -410,6 +428,7 @@ body.area-scope-modal-open {
 /* City Pills */
 .city-pills {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 8px;
 }
