@@ -1808,11 +1808,41 @@ def load_market_opportunities(
     )
     deal_sql = build_deal_sql(effective_mos)
     signal_condition = f"({actionable_signal_sql('v')}) AND COALESCE(({deal_sql.mos_expr}), 0) >= ?"
-    query_params = [effective_mos] + list(params)
+    query_params = list(params) + [effective_mos]
 
     query = f"""
-        WITH {LATEST_VALUATION_CTE},
-             {LATEST_SHADOW_VALUATION_CTE},
+        WITH filtered_listings AS MATERIALIZED (
+            SELECT
+                l.id,
+                l.ward,
+                l.price_per_m2,
+                l.price_ty,
+                l.area_m2
+            FROM listings l
+            WHERE {where_sql}
+              AND l.ward IS NOT NULL
+              AND TRIM(l.ward) != ''
+              AND LOWER(l.ward) != 'unknown'
+              AND COALESCE(l.price_per_m2, 0) > 0
+              AND COALESCE(l.price_per_m2, 0) < 1000
+        ),
+        latest_valuation AS MATERIALIZED (
+            SELECT DISTINCT ON (vr.listing_id) vr.*
+            FROM valuation_results vr
+            JOIN filtered_listings fl ON fl.id = vr.listing_id
+            ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
+        ),
+        latest_shadow_valuation AS MATERIALIZED (
+            SELECT DISTINCT ON (vsr.listing_id)
+                   vsr.listing_id, vsr.is_signal, vsr.actual_ppm2,
+                   vsr.fair_ppm2, vsr.mos_pct, vsr.signal_score,
+                   vsr.trust_tier, vsr.trust_score,
+                   vsr.legal_status, vsr.legal_flags,
+                   vsr.source_quality_flags, vsr.source_quality_recheck
+            FROM valuation_shadow_results vsr
+            JOIN filtered_listings fl ON fl.id = vsr.listing_id
+            ORDER BY vsr.listing_id, vsr.computed_at DESC, vsr.id DESC
+        ),
         opportunity_rows AS (
             SELECT
                 l.ward,
@@ -1825,12 +1855,8 @@ def load_market_opportunities(
             FROM listings l
             LEFT JOIN latest_valuation v ON l.id = v.listing_id
             LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
-            WHERE {where_sql}
-              AND l.ward IS NOT NULL
-              AND TRIM(l.ward) != ''
-              AND LOWER(l.ward) != 'unknown'
-              AND COALESCE(l.price_per_m2, 0) > 0
-              AND COALESCE(l.price_per_m2, 0) < 1000
+            JOIN filtered_listings fl ON fl.id = l.id
+            WHERE 1=1
               AND COALESCE(v.is_outlier, 0) = 0
         )
         SELECT

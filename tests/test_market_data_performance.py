@@ -1263,7 +1263,10 @@ def test_load_market_opportunities_uses_shared_scope_and_global_totals(monkeypat
             assert "% road %" in params
             assert "-1 months" in params
             assert 15.0 in params
-            assert params[0] == 15.0
+            assert params[-1] == 15.0
+            assert "filtered_listings AS MATERIALIZED" in sql
+            assert "JOIN filtered_listings fl ON fl.id = vr.listing_id" in sql
+            assert "JOIN filtered_listings fl ON fl.id = vsr.listing_id" in sql
             return _FakeCursor(rows=[
                 {
                     "ward": "Ward A",
