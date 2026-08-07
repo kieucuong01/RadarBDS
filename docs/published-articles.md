@@ -20,3 +20,10 @@
   - Score gate: 86/100
   - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-04, split by `dat_nen` vs `nha_dat`
   - Funnel: `/binh-duong`, `/binh-duong/phuong-phu-tan`, `/?tab=signals`, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong`
+
+## 2026-08-07
+- `/tin-tuc/dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon` — **Đất nền dưới 3 tỷ: Phú Tân hay Phú Mỹ còn nhiều lựa chọn hơn?**
+  - Pillar: So sánh phường / ngân sách
+  - Score gate: 94/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-07, filtered for đất nền and compared with the dưới-3-tỷ lens
+  - Funnel: `/binh-duong/phuong-phu-tan`, `/binh-duong/phuong-phu-my`, dashboard ward filters, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/phu-tan-hay-phu-my-loc-gia-theo-phuong`

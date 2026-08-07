@@ -11713,7 +11713,374 @@ SEO_ARTICLES = {
                                                                      'phường, đúng loại hình và giảm bớt các cuộc gọi '
                                                                      'thừa.',
                                                              'button': 'Mở công cụ định giá',
-                                                             'button_href': '/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=bang_gia_dat_vs_gia_rao'}}
+                                                             'button_href': '/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=bang_gia_dat_vs_gia_rao'}},
+
+    "dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "title": "Đất nền dưới 3 tỷ: Phú Tân hay Phú Mỹ còn nhiều lựa chọn hơn? | Radar BDS",
+        "description": "Radar BDS cập nhật 07/08/2026: nếu anh lọc riêng đất nền dưới 3 tỷ ở Thủ Dầu Một, Phú Tân đang nhiều lựa chọn và nhiều dấu hiệu đáng kiểm tra hơn Phú Mỹ. Bài này tách đúng loại hình để anh mở dashboard đúng thứ tự.",
+        "keywords": "đất nền dưới 3 tỷ Phú Tân hay Phú Mỹ, giá đất Phú Tân, giá đất Phú Mỹ, đất nền Thủ Dầu Một dưới 3 tỷ, Radar BDS",
+        "breadcrumb_label": "Đất nền dưới 3 tỷ: Phú Tân hay Phú Mỹ",
+        "hero_badge": "So sánh theo ngân sách",
+        "hero_title": "Đất nền dưới 3 tỷ: Phú Tân hay Phú Mỹ còn nhiều lựa chọn hơn?",
+        "hero_text": "Nếu anh chỉ lọc đất nền dưới 3 tỷ, nên mở Phú Tân trước. Dữ liệu live trên Radar BDS ngày 07/08/2026 cho thấy Phú Tân có 299 tin phù hợp, cao hơn 210 tin ở Phú Mỹ, đồng thời số dấu hiệu đáng chú ý cũng dày hơn. Phú Mỹ vẫn đáng xem, nhưng hợp hơn khi anh muốn so thêm khu có giá/m² mềm hơn nhẹ mà tổng giá thường nhỉnh hơn.",
+        "scope_label": "Thủ Dầu Một · Phú Tân / Phú Mỹ · đất nền dưới 3 tỷ",
+        "hero_checks": [
+            "Phú Tân có 299 tin đất nền dưới 3 tỷ; Phú Mỹ có 210 tin",
+            "Giá trung vị đất nền Phú Tân là 23,8 tr/m²; Phú Mỹ là 22,7 tr/m²",
+            "Tổng giá trung vị đất nền Phú Tân là 2,80 tỷ; Phú Mỹ là 3,00 tỷ",
+            "Dấu hiệu đáng chú ý ở đất nền nghiêng mạnh về Phú Tân: 351 tin so với 131 tin"
+        ],
+        "primary_cta": "Mở dashboard lọc Phú Tân dưới 3 tỷ",
+        "primary_href": "/?tab=signals&ward=Ph%C3%BA%20T%C3%A2n&utm_source=seo&utm_medium=article&utm_campaign=dat_nen_duoi_3_ty_phu_tan_vs_phu_my",
+        "secondary_cta": "Mở công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=dat_nen_duoi_3_ty_phu_tan_vs_phu_my",
+        "map_label": "Tin tức / Phú Tân · Phú Mỹ / đất nền dưới 3 tỷ",
+        "hero_metric": {
+            "label": "Đất nền dưới 3 tỷ đang theo dõi",
+            "value": "509 tin",
+            "delta": "Phú Tân 299 · Phú Mỹ 210",
+            "note": "Nguồn Facebook live, lọc ngày 07/08/2026 với is_active=1"
+        },
+        "property_card": {
+            "status": "Cập nhật 07/08/2026",
+            "title": "Phú Tân đang rộng cửa hơn cho bài toán đất nền dưới 3 tỷ",
+            "price": "Đây là giá rao đang theo dõi, không phải giá chốt giao dịch",
+            "metric_a": "Giá trung vị đất nền",
+            "metric_a_value": "23,8 vs 22,7 tr/m²",
+            "metric_b": "Tổng giá trung vị",
+            "metric_b_value": "2,80 vs 3,00 tỷ"
+        },
+        "value_cards": [
+            {
+                "title": "Phú Tân hợp người mua cần nhiều mẫu dưới 3 tỷ để lọc nhanh",
+                "body": "Trong dữ liệu live ngày 07/08/2026, Phú Tân có 299 tin đất nền dưới 3 tỷ, cao hơn 210 tin ở Phú Mỹ. Nếu anh đang ở bước lọc đầu tiên và muốn mở ra nhiều mẫu để so tiếp, Phú Tân là điểm nên vào trước."
+            },
+            {
+                "title": "Phú Mỹ vẫn đáng xem nếu anh muốn so thêm khu có giá/m² mềm hơn nhẹ",
+                "body": "Giá trung vị đất nền Phú Mỹ đang là 22,7 tr/m², thấp hơn nhẹ so với 23,8 tr/m² ở Phú Tân. Nhưng tổng giá trung vị lại cao hơn, khoảng 3,00 tỷ so với 2,80 tỷ, nên chỉ nhìn giá/m² sẽ dễ đọc sai."
+            },
+            {
+                "title": "Điểm quyết định nằm ở tổng giá và số lượng tin thật sự lọt ngân sách",
+                "body": "Hai phường không chênh quá lớn ở vùng giá/m², nhưng chênh rõ ở số tin lọt dưới 3 tỷ và ở số dấu hiệu đáng chú ý. Với ngân sách chặt, tổng giá và số lượng tin còn trong vùng mua mới là thứ nên nhìn trước."
+            }
+        ],
+        "local_links_title": "Đọc tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Phú Tân",
+                "href": "/binh-duong/phuong-phu-tan",
+                "description": "Xem trang tổng hợp dữ liệu và lối vào dashboard của Phú Tân."
+            },
+            {
+                "label": "Trang phường Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Xem trang tổng hợp dữ liệu và lối vào dashboard của Phú Mỹ."
+            },
+            {
+                "label": "Phú Tân hay Phú Mỹ: nên lọc đất nền và nhà đất theo phường thế nào?",
+                "href": "/tin-tuc/phu-tan-hay-phu-my-loc-gia-theo-phuong",
+                "description": "Bài tổng quát hơn nếu anh muốn so cả đất nền lẫn nhà đất."
+            },
+            {
+                "label": "Giá đất Phú Tân hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu",
+                "description": "Đọc sâu riêng Phú Tân theo từng loại hình BĐS."
+            },
+            {
+                "label": "Giá đất Phú Mỹ hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
+                "description": "Đọc sâu riêng Phú Mỹ theo từng loại hình BĐS."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào mặt bằng chung của toàn Thủ Dầu Một."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu chỉ mua đất nền dưới 3 tỷ thì nên mở phường nào trước?",
+                "a": "Nên mở Phú Tân trước. Dữ liệu Radar BDS ngày 07/08/2026 cho thấy Phú Tân có 299 tin đất nền dưới 3 tỷ, trong khi Phú Mỹ có 210 tin."
+            },
+            {
+                "q": "Đất nền Phú Mỹ có rẻ hơn Phú Tân không?",
+                "a": "Nếu nhìn giá trung vị/m² thì Phú Mỹ thấp hơn nhẹ, ở mức 22,7 tr/m² so với 23,8 tr/m² ở Phú Tân. Nhưng tổng giá trung vị đất nền Phú Mỹ lại cao hơn, khoảng 3,00 tỷ so với 2,80 tỷ ở Phú Tân."
+            },
+            {
+                "q": "Vì sao cùng lọc dưới 3 tỷ mà tổng giá trung vị Phú Mỹ vẫn là 3,00 tỷ?",
+                "a": "Tổng giá trung vị trong bài là mặt bằng của toàn bộ nhóm đất nền đang theo dõi ở từng phường, dùng để cho anh thấy cấu trúc giá chung. Khi lọc riêng dưới 3 tỷ, anh vẫn cần vào dashboard để xem danh sách phù hợp ngân sách thực tế."
+            },
+            {
+                "q": "Dấu hiệu đáng chú ý có nghĩa là nên mua ngay không?",
+                "a": "Không. Dấu hiệu chỉ giúp anh ưu tiên tin nên mở ra kiểm tra trước. Sau đó vẫn phải xem pháp lý, quy hoạch, đường vào, diện tích thực và hiện trạng xung quanh."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-07",
+            "modified_at": "2026-08-07",
+            "intro": [
+                "Nếu anh đang lọc riêng đất nền dưới 3 tỷ giữa Phú Tân và Phú Mỹ, câu trả lời ngắn là: nên mở Phú Tân trước. Trong dữ liệu live trên Radar BDS ngày 07/08/2026, Phú Tân có 299 tin phù hợp ngân sách này, còn Phú Mỹ có 210 tin. Đây là giá rao từ tin công khai Facebook đang theo dõi, không phải giá chốt giao dịch.",
+                "Điểm dễ nhầm là chỉ nhìn giá/m². Phú Mỹ đang thấp hơn nhẹ về giá trung vị/m², nhưng tổng giá trung vị toàn nhóm đất nền lại cao hơn Phú Tân. Với ngân sách chặt, anh nên nhìn đồng thời số lượng tin lọt ngân sách, tổng giá trung vị và số dấu hiệu đáng chú ý."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Đất nền dưới 3 tỷ",
+                    "value": "509 tin",
+                    "note": "Phú Tân 299 · Phú Mỹ 210"
+                },
+                {
+                    "label": "Dấu hiệu đáng chú ý",
+                    "value": "482 tin",
+                    "note": "Phú Tân 351 · Phú Mỹ 131 ở nhóm đất nền đang theo dõi"
+                },
+                {
+                    "label": "Giá trung vị đất nền",
+                    "value": "23,8 vs 22,7 tr/m²",
+                    "note": "Phú Tân cao hơn nhẹ về giá/m²"
+                },
+                {
+                    "label": "Tổng giá trung vị đất nền",
+                    "value": "2,80 vs 3,00 tỷ",
+                    "note": "Phú Tân thấp hơn về tổng giá"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Đất nền Phú Tân và Phú Mỹ đang khác nhau thế nào?",
+                    "note": "Nguồn Facebook live ngày 07/08/2026, chỉ lấy tin đang theo dõi với is_active=1. Đây là giá rao, không phải giá chốt giao dịch.",
+                    "columns": [
+                        {
+                            "key": "ward",
+                            "label": "Phường"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin đất nền đang theo dõi"
+                        },
+                        {
+                            "key": "under3",
+                            "label": "Dưới 3 tỷ"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu"
+                        },
+                        {
+                            "key": "median_m2",
+                            "label": "Giá trung vị/m²"
+                        },
+                        {
+                            "key": "median_total",
+                            "label": "Tổng giá trung vị"
+                        },
+                        {
+                            "key": "range",
+                            "label": "Vùng 25-75%"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward": "Phú Tân",
+                            "tracked": "530",
+                            "under3": "299",
+                            "signals": "351",
+                            "median_m2": "23,8 tr/m²",
+                            "median_total": "2,80 tỷ",
+                            "range": "19,3-27,0 tr/m²"
+                        },
+                        {
+                            "ward": "Phú Mỹ",
+                            "tracked": "448",
+                            "under3": "210",
+                            "signals": "131",
+                            "median_m2": "22,7 tr/m²",
+                            "median_total": "3,00 tỷ",
+                            "range": "20,4-27,0 tr/m²"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước trong dashboard?",
+                    "note": "Với bài toán đất nền dưới 3 tỷ, thứ tự mở nên đi theo số lượng tin còn trong vùng mua trước, rồi mới nhìn thêm giá/m².",
+                    "columns": [
+                        {
+                            "key": "need",
+                            "label": "Nhu cầu"
+                        },
+                        {
+                            "key": "open_first",
+                            "label": "Nên mở trước"
+                        },
+                        {
+                            "key": "why",
+                            "label": "Vì sao"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "need": "Muốn nhiều mẫu đất nền dưới 3 tỷ để lọc nhanh",
+                            "open_first": "Phú Tân",
+                            "why": "299 tin dưới 3 tỷ, cao hơn 210 tin ở Phú Mỹ"
+                        },
+                        {
+                            "need": "Ưu tiên nhóm có nhiều dấu hiệu đáng chú ý",
+                            "open_first": "Phú Tân",
+                            "why": "351 dấu hiệu ở đất nền, cao hơn rõ so với 131 ở Phú Mỹ"
+                        },
+                        {
+                            "need": "Muốn so thêm khu có giá/m² thấp hơn nhẹ",
+                            "open_first": "Phú Mỹ",
+                            "why": "Giá trung vị đất nền là 22,7 tr/m², thấp hơn nhẹ so với 23,8 tr/m² ở Phú Tân"
+                        },
+                        {
+                            "need": "Ngân sách sát 3 tỷ, muốn tổng giá mềm hơn",
+                            "open_first": "Phú Tân",
+                            "why": "Tổng giá trung vị 2,80 tỷ, thấp hơn mức 3,00 tỷ ở Phú Mỹ"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Phú Tân đang dày lựa chọn đất nền dưới 3 tỷ hơn",
+                    "note": "So số lượng tin đất nền dưới 3 tỷ giữa hai phường.",
+                    "alt": "Biểu đồ số tin đất nền dưới 3 tỷ ở Phú Tân và Phú Mỹ",
+                    "rows": [
+                        {
+                            "label": "Phú Tân",
+                            "value_label": "299 tin",
+                            "width": 100,
+                            "color": "#2563eb"
+                        },
+                        {
+                            "label": "Phú Mỹ",
+                            "value_label": "210 tin",
+                            "width": 70,
+                            "color": "#16a34a"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Phú Mỹ thấp hơn nhẹ về giá/m² nhưng tổng giá lại nhỉnh hơn",
+                    "note": "Đừng dừng ở một con số giá/m² khi ngân sách bị khóa dưới 3 tỷ.",
+                    "alt": "Biểu đồ giá trung vị đất nền Phú Tân và Phú Mỹ",
+                    "rows": [
+                        {
+                            "label": "Phú Tân",
+                            "value_label": "23,8 tr/m² · 2,80 tỷ",
+                            "width": 100,
+                            "color": "#dc2626"
+                        },
+                        {
+                            "label": "Phú Mỹ",
+                            "value_label": "22,7 tr/m² · 3,00 tỷ",
+                            "width": 95,
+                            "color": "#f59e0b"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "phu-tan-mo-truoc",
+                    "heading": "Phú Tân nên mở trước khi anh cần nhiều mẫu còn trong tầm mua",
+                    "paragraphs": [
+                        "Với ngân sách dưới 3 tỷ, số lượng tin còn trong vùng mua là chỉ số nên nhìn trước. Phú Tân hiện có 299 tin đất nền dưới 3 tỷ, cao hơn 210 tin ở Phú Mỹ. Điều này giúp anh có nhiều mẫu hơn để lọc tiếp theo vị trí, diện tích và đường vào.",
+                        "Ngoài số lượng tin, Phú Tân còn có tổng giá trung vị đất nền khoảng 2,80 tỷ, thấp hơn mức 3,00 tỷ ở Phú Mỹ. Khi ngân sách đã chặt, chênh 200 triệu đủ để quyết định việc anh có cần nới thêm hay không."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Tân đang theo dõi: 530 tin",
+                        "Lọc dưới 3 tỷ còn: 299 tin",
+                        "Giá trung vị đất nền: 23,8 tr/m²",
+                        "Tổng giá trung vị: 2,80 tỷ"
+                    ]
+                },
+                {
+                    "id": "phu-my-giu-lai",
+                    "heading": "Phú Mỹ vẫn nên mở sau nếu anh muốn so thêm một mặt bằng giá khác",
+                    "paragraphs": [
+                        "Phú Mỹ không phải lựa chọn yếu. Điểm đáng chú ý của phường này là giá trung vị đất nền đang ở mức 22,7 tr/m², thấp hơn nhẹ so với 23,8 tr/m² ở Phú Tân. Nếu anh muốn so thêm một khu có nhịp giá/m² mềm hơn chút, Phú Mỹ vẫn đáng được mở tiếp sau bước lọc đầu tiên.",
+                        "Nhưng Phú Mỹ có ít tin lọt dưới 3 tỷ hơn và tổng giá trung vị toàn nhóm đất nền cao hơn. Vì vậy với bài toán ưu tiên tiết kiệm thời gian lọc theo ngân sách, nó hợp vai trò phường so thêm hơn là phường mở đầu tiên."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Mỹ đang theo dõi: 448 tin",
+                        "Lọc dưới 3 tỷ còn: 210 tin",
+                        "Giá trung vị đất nền: 22,7 tr/m²",
+                        "Tổng giá trung vị: 3,00 tỷ"
+                    ]
+                },
+                {
+                    "id": "dau-hieu-khong-phai-khuyen-nghi",
+                    "heading": "351 dấu hiệu ở Phú Tân là bộ lọc ưu tiên, không phải nhãn nên mua ngay",
+                    "paragraphs": [
+                        "Trong nhóm đất nền đang theo dõi, Phú Tân có 351 tin có dấu hiệu đáng chú ý còn Phú Mỹ có 131 tin. Con số này hữu ích nếu anh muốn mở nhóm nên kiểm tra trước để đỡ gọi dàn hàng ngang.",
+                        "Tuy vậy dấu hiệu không thay cho bước xác minh pháp lý, quy hoạch, vị trí, mặt đường hay mức độ phù hợp thực tế. Radar BDS là bộ lọc dữ liệu ban đầu, không phải quyết định cuối cùng."
+                    ],
+                    "bullets": [
+                        "Dấu hiệu Phú Tân: 351 tin",
+                        "Dấu hiệu Phú Mỹ: 131 tin",
+                        "Ưu tiên mở tin có dấu hiệu trước khi gọi sâu",
+                        "Luôn kiểm tra pháp lý và thực địa sau bước lọc"
+                    ]
+                },
+                {
+                    "id": "cach-mo-dashboard",
+                    "heading": "Nên mở dashboard theo thứ tự nào?",
+                    "paragraphs": [
+                        "Nếu anh đang ở bước đầu và chỉ có trần 3 tỷ cho đất nền, hãy mở Phú Tân trước. Sau khi xem xong vài mẫu hợp tiêu chí, anh mở thêm Phú Mỹ để kiểm tra xem mặt bằng giá/m² thấp hơn nhẹ có đổi được vị trí hoặc loại đường tốt hơn hay không.",
+                        "Cách dùng an toàn là lọc theo phường, giữ đúng loại hình đất nền, sau đó so từng tin với mặt bằng giá cùng phường. Đừng gộp đất nền với nhà đất, và cũng đừng xem giá rao như giá chốt thị trường."
+                    ],
+                    "bullets": [
+                        "Bước 1: mở Phú Tân, giữ đúng loại hình đất nền",
+                        "Bước 2: lọc khoảng ngân sách dưới 3 tỷ",
+                        "Bước 3: ưu tiên xem tin có dấu hiệu đáng chú ý",
+                        "Bước 4: mở thêm Phú Mỹ để so mặt bằng giá/m²",
+                        "Bước 5: chỉ gọi sâu những tin còn hợp sau vòng lọc đầu"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã giữ đúng loại hình đất nền khi so hai phường.",
+                "Đã nhìn cả số lượng tin lọt dưới 3 tỷ lẫn tổng giá trung vị.",
+                "Đã hiểu các số trong bài là giá rao, không phải giá chốt giao dịch.",
+                "Đã dùng dấu hiệu đáng chú ý như bộ lọc ưu tiên, không phải khuyến nghị mua.",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và thực địa sau khi lọc dữ liệu."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc đúng đất nền dưới 3 tỷ",
+            "body": "Bắt đầu từ phường đang có nhiều mẫu còn trong tầm mua hơn, rồi mới so tiếp phường còn lại để tiết kiệm thời gian gọi và xem tin.",
+            "button": "Mở dashboard Phú Tân",
+            "button_href": "/?tab=signals&ward=Ph%C3%BA%20T%C3%A2n&utm_source=seo&utm_medium=article&utm_campaign=dat_nen_duoi_3_ty_phu_tan_vs_phu_my"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Đất nền dưới 3 tỷ: Phú Tân hay Phú Mỹ còn nhiều lựa chọn hơn?",
+                "href": "/tin-tuc/dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon",
+                "url": "https://radarbds.vn/tin-tuc/dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon"
+            }
+        ]
+    }
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
