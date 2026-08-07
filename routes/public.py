@@ -41,6 +41,11 @@ def serve_local_image(**kwargs):
     return _impl("serve_local_image", **kwargs)
 
 
+@bp.route("/sitemap.xml.gz")
+def sitemap_xml_gz():
+    return redirect("/sitemap.xml", code=301)
+
+
 @bp.route("/")
 def index(**kwargs):
     return _impl("index", **kwargs)
