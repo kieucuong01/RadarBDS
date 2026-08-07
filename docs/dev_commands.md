@@ -707,6 +707,12 @@ candidates:
 & $py -X utf8 radar.py map-locations --full --dry-run
 & $py -X utf8 radar.py map-locations --full
 & $py -X utf8 radar.py map-location-coverage --status unresolved --limit 100
+& $py -X utf8 radar.py map-location-coverage `
+  --status unresolved `
+  --city "THỦ DẦU MỘT" `
+  --ward "Phú Tân" `
+  --include-ward-alias "Phú Chánh" `
+  --limit 100
 ```
 
 These commands write only derived map-location and coverage tables. They do
@@ -724,6 +730,13 @@ Quy trình production đầy đủ, browser evidence contract và stop gates n�
 & $py -X utf8 radar.py map-location-research-queue `
   --limit 50 `
   --candidate-type all
+
+& $py -X utf8 radar.py map-location-research-queue `
+  --limit 50 `
+  --candidate-type all `
+  --city "THỦ DẦU MỘT" `
+  --ward "Phú Tân" `
+  --include-ward-alias "Phú Chánh"
 
 & $py -X utf8 radar.py map-location-ingest-evidence `
   --input .local\listing-map-evidence\batch.json

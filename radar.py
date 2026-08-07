@@ -281,6 +281,13 @@ def build_parser():
         default="unresolved",
     )
     p_map_coverage.add_argument("--limit", type=int, default=100)
+    p_map_coverage.add_argument("--city", default="")
+    p_map_coverage.add_argument("--ward", default="")
+    p_map_coverage.add_argument(
+        "--include-ward-alias",
+        action="append",
+        default=[],
+    )
 
     p_map_queue = sub.add_parser(
         "map-location-research-queue",
@@ -291,6 +298,13 @@ def build_parser():
         "--candidate-type",
         choices=("all", "road", "landmark"),
         default="all",
+    )
+    p_map_queue.add_argument("--city", default="")
+    p_map_queue.add_argument("--ward", default="")
+    p_map_queue.add_argument(
+        "--include-ward-alias",
+        action="append",
+        default=[],
     )
 
     p_map_ingest = sub.add_parser(

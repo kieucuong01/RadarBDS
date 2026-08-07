@@ -14,6 +14,17 @@ LISTING_MAP_SUPPORTED_CITIES = (
     "THUẬN AN",
     "DĨ AN",
 )
+LISTING_MAP_WARD_ALIASES = {
+    ("THỦ DẦU MỘT", "phu chanh"): "Phú Tân",
+}
+
+LISTING_MAP_FORCE_AGGREGATE_ROADS = frozenset({
+    ("thu dau mot", "phu tan", "n 1"),
+    ("thu dau mot", "phu tan", "n 2"),
+    ("thu dau mot", "phu tan", "n 3"),
+    ("thu dau mot", "phu tan", "n 5"),
+    ("thu dau mot", "phu tan", "n 6"),
+})
 
 LISTING_MAP_REGISTRY_DIR = (
     PROJECT_ROOT / "static" / "maps" / "listing-locations"

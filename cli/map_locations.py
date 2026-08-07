@@ -62,6 +62,7 @@ def cmd_map_location_coverage(args):
     loaded = []
     for status in statuses:
         loaded.extend(load_listing_location_coverage(status, limit))
+    loaded = _filter_coverage_rows_for_location(args, loaded)
     loaded.sort(
         key=lambda row: (
             -int(row.get("affected_listing_count") or 0),
@@ -82,6 +83,31 @@ def cmd_map_location_coverage(args):
     }
     print(json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str))
     return payload
+
+
+def _filter_coverage_rows_for_location(args, rows):
+    city_filter = normalize_location_token(getattr(args, "city", "") or "")
+    ward_filter = normalize_location_token(getattr(args, "ward", "") or "")
+    ward_aliases = {
+        normalized
+        for value in (getattr(args, "include_ward_alias", None) or [])
+        if (normalized := normalize_location_token(value))
+    }
+    allowed_wards = {ward_filter, *ward_aliases} if ward_filter else ward_aliases
+    if not city_filter and not allowed_wards:
+        return list(rows)
+    return [
+        row
+        for row in rows
+        if (
+            not city_filter
+            or normalize_location_token(row.get("city") or "") == city_filter
+        )
+        and (
+            not allowed_wards
+            or normalize_location_token(row.get("ward") or "") in allowed_wards
+        )
+    ]
 
 
 def _slug(value: str) -> str:
@@ -301,7 +327,10 @@ def cmd_map_location_research_queue(args):
     }
     filtered = set()
     for status in _COVERAGE_STATUSES:
-        for row in load_listing_location_coverage(status, 1000):
+        for row in _filter_coverage_rows_for_location(
+            args,
+            load_listing_location_coverage(status, 1000),
+        ):
             city = str(row.get("city") or "").strip()
             ward = str(row.get("ward") or "").strip()
             road = normalize_road_token(row.get("road_candidate") or "")

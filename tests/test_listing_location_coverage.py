@@ -191,13 +191,189 @@ def test_map_location_coverage_cli_expands_unresolved_and_redacts_text(capsys):
     assert "description" not in printed["items"][0]
 
 
+def test_map_location_coverage_cli_filters_city_ward_and_alias(capsys):
+    from cli import map_locations
+
+    items = [
+        {
+            "candidate_key": "phu-tan",
+            "city": "THỦ DẦU MỘT",
+            "ward": "Phú Tân",
+            "road_candidate": "duong so 84",
+            "landmark_candidate": "",
+            "relation": "on",
+            "status": "not_found",
+            "affected_listing_count": 2,
+            "sample_listing_ids": [10, 11],
+            "resolution_note": "road_not_found",
+        },
+        {
+            "candidate_key": "phu-chanh",
+            "city": "THỦ DẦU MỘT",
+            "ward": "Phú Chánh",
+            "road_candidate": "",
+            "landmark_candidate": "",
+            "relation": "",
+            "status": "not_found",
+            "affected_listing_count": 3,
+            "sample_listing_ids": [12, 13, 14],
+            "resolution_note": "ward_not_found",
+        },
+        {
+            "candidate_key": "phu-my",
+            "city": "THỦ DẦU MỘT",
+            "ward": "Phú Mỹ",
+            "road_candidate": "n 5",
+            "landmark_candidate": "",
+            "relation": "on",
+            "status": "not_found",
+            "affected_listing_count": 99,
+            "sample_listing_ids": [15],
+            "resolution_note": "road_not_found",
+        },
+    ]
+    with mock.patch.object(
+        map_locations,
+        "load_listing_location_coverage",
+        return_value=items,
+    ):
+        payload = map_locations.cmd_map_location_coverage(
+            Namespace(
+                status="not_found",
+                limit=50,
+                city="THỦ DẦU MỘT",
+                ward="Phú Tân",
+                include_ward_alias=["Phú Chánh"],
+            )
+        )
+
+    printed = json.loads(capsys.readouterr().out)
+    assert payload == printed
+    assert [item["candidate_key"] for item in payload["items"]] == [
+        "phu-chanh",
+        "phu-tan",
+    ]
+    assert payload["affected_listings"] == 5
+
+
+def test_map_location_research_queue_filters_city_ward_and_alias(capsys):
+    from cli import map_locations
+
+    items = [
+        {
+            "candidate_key": "phu-tan",
+            "city": "THỦ DẦU MỘT",
+            "ward": "Phú Tân",
+            "road_candidate": "Đường số 84",
+            "landmark_candidate": "",
+            "relation": "on",
+            "status": "not_found",
+            "affected_listing_count": 2,
+            "sample_listing_ids": [10, 11],
+            "resolution_note": "road_not_found",
+        },
+        {
+            "candidate_key": "phu-chanh",
+            "city": "THỦ DẦU MỘT",
+            "ward": "Phú Chánh",
+            "road_candidate": "Đường số 35",
+            "landmark_candidate": "",
+            "relation": "on",
+            "status": "not_found",
+            "affected_listing_count": 3,
+            "sample_listing_ids": [12, 13, 14],
+            "resolution_note": "road_not_found",
+        },
+        {
+            "candidate_key": "phu-my",
+            "city": "THỦ DẦU MỘT",
+            "ward": "Phú Mỹ",
+            "road_candidate": "Đường số 86",
+            "landmark_candidate": "",
+            "relation": "on",
+            "status": "not_found",
+            "affected_listing_count": 99,
+            "sample_listing_ids": [15],
+            "resolution_note": "road_not_found",
+        },
+    ]
+    with mock.patch.object(
+        map_locations,
+        "_accepted_recheck_items",
+        return_value=[],
+    ), mock.patch.object(
+        map_locations,
+        "load_listing_location_coverage",
+        return_value=items,
+    ):
+        payload = map_locations.cmd_map_location_research_queue(
+            Namespace(
+                limit=50,
+                candidate_type="road",
+                city="THỦ DẦU MỘT",
+                ward="Phú Tân",
+                include_ward_alias=["Phú Chánh"],
+            )
+        )
+
+    printed = json.loads(capsys.readouterr().out)
+    assert payload == printed
+    assert [item["ward"] for item in payload["items"]] == [
+        "Phú Chánh",
+        "Phú Tân",
+    ]
+    assert payload["returned_candidates"] == 2
+
+
 def test_radar_parser_accepts_coverage_audit_options():
     import radar
 
     args = radar.build_parser().parse_args(
-        ["map-location-coverage", "--status", "unresolved", "--limit", "50"]
+        [
+            "map-location-coverage",
+            "--status",
+            "unresolved",
+            "--limit",
+            "50",
+            "--city",
+            "THỦ DẦU MỘT",
+            "--ward",
+            "Phú Tân",
+            "--include-ward-alias",
+            "Phú Chánh",
+        ]
     )
 
     assert args.cmd == "map-location-coverage"
     assert args.status == "unresolved"
     assert args.limit == 50
+    assert args.city == "THỦ DẦU MỘT"
+    assert args.ward == "Phú Tân"
+    assert args.include_ward_alias == ["Phú Chánh"]
+
+
+def test_radar_parser_accepts_research_queue_location_filters():
+    import radar
+
+    args = radar.build_parser().parse_args(
+        [
+            "map-location-research-queue",
+            "--limit",
+            "40",
+            "--candidate-type",
+            "road",
+            "--city",
+            "THỦ DẦU MỘT",
+            "--ward",
+            "Phú Tân",
+            "--include-ward-alias",
+            "Phú Chánh",
+        ]
+    )
+
+    assert args.cmd == "map-location-research-queue"
+    assert args.limit == 40
+    assert args.candidate_type == "road"
+    assert args.city == "THỦ DẦU MỘT"
+    assert args.ward == "Phú Tân"
+    assert args.include_ward_alias == ["Phú Chánh"]

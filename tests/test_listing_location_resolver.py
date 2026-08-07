@@ -1,5 +1,6 @@
 import inspect
 import json
+from pathlib import Path
 
 import pytest
 
@@ -12,6 +13,13 @@ from services.listing_location_resolver import (
     resolve_listing_location,
 )
 from services.listing_map_context import extract_map_location_context
+
+
+PHU_TAN_FIXTURE_PATH = (
+    Path(__file__).resolve().parent
+    / "fixtures"
+    / "phu_tan_map_ward_road_candidates.json"
+)
 
 
 def _road(*, lat=10.981, lng=106.689, landmark_keys=()):
@@ -86,6 +94,10 @@ def _resolve(text="", **extra):
         listing["road_name"],
     )
     return resolve_listing_location(listing, _registry(), context)
+
+
+def _load_phu_tan_fixture():
+    return json.loads(PHU_TAN_FIXTURE_PATH.read_text(encoding="utf-8"))
 
 
 def test_resolution_precedence_exact_road_landmark_ward():
@@ -246,6 +258,102 @@ def test_road_punctuation_variants_resolve_to_one_deterministic_point():
         "road:thu-dau-mot:phu-loi:dx-43"
     }
     assert len({item.signature for item in locations}) == 1
+
+
+def test_phu_tan_all_listings_fixture_moves_road_bearing_rows_out_of_ward_precision():
+    registry = load_location_registry()
+    fixtures = _load_phu_tan_fixture()
+    failures = []
+
+    for listing in fixtures:
+        context = extract_map_location_context(
+            listing.get("title", ""),
+            listing.get("description", ""),
+            listing.get("road_name", ""),
+        )
+        result = resolve_listing_location(listing, registry=registry, context=context)
+        if not result.location or result.location.precision == "ward":
+            failures.append(
+                (
+                    listing["id"],
+                    getattr(result.issue, "resolution_note", ""),
+                    getattr(result.issue, "road_candidate", ""),
+                )
+            )
+
+    assert len(fixtures) == 65
+    assert len(fixtures) - len(failures) >= 60, failures[:10]
+
+
+def test_phu_tan_false_positive_road_candidates_do_not_become_roads():
+    registry = load_location_registry()
+
+    for index, phrase in enumerate(
+        ("kinh doanh", "phuong binh", "tay anh em oi", "duong 5m"),
+        start=1,
+    ):
+        listing = {
+            "id": 920000 + index,
+            "ward": "Phú Tân",
+            "title": f"Nhà {phrase}",
+            "description": "",
+            "road_name": "",
+        }
+        result = resolve_listing_location(listing, registry=registry)
+
+        assert not result.location or result.location.precision != "road"
+
+
+def test_map_resolver_treats_phu_chanh_as_phu_tan_without_mutating_listing():
+    registry = load_location_registry()
+    listing = {
+        "id": 910001,
+        "ward": "Phú Chánh",
+        "title": "Đường số 35 TĐC Phú Chánh",
+        "description": "",
+        "road_name": "",
+    }
+
+    context = extract_map_location_context(
+        listing["title"],
+        listing["description"],
+        listing["road_name"],
+    )
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision in {"road", "landmark"}
+    assert "phu-tan" in result.location.location_key
+    assert listing["ward"] == "Phú Chánh"
+
+
+def test_number_letter_roads_normalize_to_numbered_road_when_context_says_road():
+    assert normalize_road_token("110B") == "duong so 110 b"
+    assert normalize_road_token("110 b") == "duong so 110 b"
+    assert normalize_road_token("Đường 11B") == "duong so 11 b"
+    assert normalize_road_token("5m") == "5 m"
+
+
+def test_ambiguous_phu_tan_duong_so_84_uses_aggregate_road():
+    registry = load_location_registry()
+    listing = {
+        "id": 910084,
+        "ward": "Phú Tân",
+        "title": "Đường số 84 TĐC Phú Chánh D",
+        "description": "",
+        "road_name": "",
+    }
+
+    context = extract_map_location_context(
+        listing["title"],
+        listing["description"],
+        listing["road_name"],
+    )
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert "duong-so-84" in result.location.location_key
 
 
 @pytest.mark.parametrize(

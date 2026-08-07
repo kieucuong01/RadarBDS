@@ -12,6 +12,7 @@ from config.listing_map import (
     LISTING_MAP_BOUNDS,
     LISTING_MAP_LANDMARK_REGISTRY_PATH,
     LISTING_MAP_ROAD_REGISTRY_PATH,
+    LISTING_MAP_WARD_ALIASES,
     LISTING_MAP_WARD_REGISTRY_PATH,
 )
 
@@ -36,6 +37,9 @@ def normalize_road_token(value: str) -> str:
     normalized = normalize_location_token(value)
     normalized = re.sub(r"(?<=[a-z])(?=\d)|(?<=\d)(?=[a-z])", " ", normalized)
     normalized = " ".join(normalized.split())
+    bare_number_letter = re.match(r"^(\d{1,4})\s+([a-z])$", normalized)
+    if bare_number_letter and bare_number_letter.group(2) != "m":
+        normalized = f"duong so {normalized}"
     if re.match(r"^duong (?:dx|d|db|dh|dt|ql|n|ng|ni|na|nb) \d", normalized):
         normalized = normalized.removeprefix("duong ")
     normalized = re.sub(r"^duong (?=\d)", "duong so ", normalized)
@@ -77,6 +81,10 @@ def _value(listing: Mapping, key: str, default=None):
 def _canonical_city(listing: Mapping) -> str:
     raw_city = str(_value(listing, "city", "") or "").strip()
     ward = str(_value(listing, "ward", "") or "").strip()
+    ward_token = normalize_location_token(ward)
+    for (alias_city, alias_ward), _canonical_ward in LISTING_MAP_WARD_ALIASES.items():
+        if ward_token == alias_ward:
+            return alias_city
     try:
         from services.market_data import CITY_MAP, get_city_for_ward
 
@@ -90,6 +98,11 @@ def _canonical_city(listing: Mapping) -> str:
     except ImportError:
         pass
     return raw_city.upper()
+
+
+def _canonical_map_ward(city: str, ward: str) -> str:
+    normalized_ward = normalize_location_token(ward)
+    return LISTING_MAP_WARD_ALIASES.get((city, normalized_ward), ward)
 
 
 def _float(value) -> float | None:
@@ -243,7 +256,7 @@ def _road_scopes(
     ward: str,
     registry: LocationRegistry,
 ) -> tuple[str, ...]:
-    normalized_ward = normalize_location_token(ward)
+    normalized_ward = normalize_location_token(_canonical_map_ward(city, ward))
     scopes = [normalized_ward]
     ward_entry = registry.wards.get((city, normalized_ward)) or {}
     parent = normalize_location_token(ward_entry.get("fallback_parent") or "")
@@ -311,6 +324,11 @@ def _match_road(
             return "ambiguous"
     if len(entries) == 1:
         return entries[0]
+    aggregate_entries = [
+        entry for entry in entries if bool(entry.get("aggregate"))
+    ]
+    if len(aggregate_entries) == 1:
+        return aggregate_entries[0]
     return "ambiguous" if entries else None
 
 
@@ -324,14 +342,14 @@ def _ward_fallback(
     status: str = "resolved",
     reason: str = "",
 ) -> ResolvedLocation | None:
-    normalized_ward = normalize_location_token(ward)
+    normalized_ward = normalize_location_token(_canonical_map_ward(city, ward))
     entry = registry.wards.get((city, normalized_ward))
     if not entry:
         return None
     return _resolved_from_entry(
         listing_id=listing_id,
         precision="ward",
-        location_key=f"ward:{_slug(city)}:{_slug(ward)}",
+        location_key=f"ward:{_slug(city)}:{_slug(normalized_ward)}",
         entry=entry,
         resolver_version=registry.resolver_version,
         signature=signature,
@@ -451,11 +469,13 @@ def resolve_listing_location(
 
     city = _canonical_city(listing)
     ward_label = str(_value(listing, "ward", "") or "").strip()
-    ward = normalize_location_token(ward_label)
-    direct_road = normalize_road_token(
+    map_ward_label = _canonical_map_ward(city, ward_label)
+    ward = normalize_location_token(map_ward_label)
+    stored_road = normalize_road_token(_value(listing, "road_name", ""))
+    context_direct_road = normalize_road_token(
         getattr(context, "direct_road", "")
-        or _value(listing, "road_name", "")
     )
+    direct_road = stored_road or context_direct_road
     nearby_road = normalize_road_token(getattr(context, "nearby_road", ""))
     landmark_key = normalize_location_token(getattr(context, "landmark", ""))
     relation = str(getattr(context, "relation", "") or "")
@@ -476,7 +496,7 @@ def resolve_listing_location(
 
     landmark_match = _match_landmark(
         city,
-        ward_label,
+        map_ward_label,
         landmark_key,
         registry,
     )
@@ -488,7 +508,7 @@ def resolve_listing_location(
     if direct_road:
         road_entry = _match_road(
             city,
-            ward_label,
+            map_ward_label,
             direct_road,
             landmark_key if landmark_entry else "",
             registry,
@@ -585,7 +605,7 @@ def resolve_listing_location(
     if nearby_road:
         road_entry = _match_road(
             city,
-            ward_label,
+            map_ward_label,
             nearby_road,
             landmark_key if landmark_entry else "",
             registry,

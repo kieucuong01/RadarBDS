@@ -38,7 +38,7 @@ _DIRECT_PREFIX_RE = re.compile(
     re.IGNORECASE,
 )
 _ROAD_CODE_RE = re.compile(
-    r"^(?P<prefix>dx|db|dh|dt|dl|tl|ql|nl|ni|n|d)\s*"
+    r"^(?:duong\s+)?(?P<prefix>dx|db|dh|dt|dl|tl|ql|nl|ni|n|d)\s*"
     r"[-./_]?\s*0*(?P<number>\d{1,4})(?P<suffix>[a-z]?)\b",
     re.IGNORECASE,
 )
@@ -54,8 +54,10 @@ _LANDMARK_RE = re.compile(
 )
 _ROAD_STOP_RE = re.compile(
     r"\b(?:khoang|chi|tam|khu|phuong|xa|thi tran|thanh pho|tp|"
-    r"dan cu|o to|xe hoi|duong nhua|duong be tong|duong dat|"
-    r"gia|dien tich|dt|ban|can ban|thong|gan|sat|cach)\b",
+    r"tphcm|hcm|tdc|tai dinh cu|dan cu|o to|xe hoi|"
+    r"duong nhua|duong be tong|duong dat|"
+    r"gia|dien tich|dt|ban|can ban|chinh chu|chu gui|gui|"
+    r"vi tri|kinh doanh|thong|gan|sat|cach)\b",
     re.IGNORECASE,
 )
 _LANDMARK_STOP_RE = re.compile(
@@ -174,7 +176,7 @@ def _direct_road(text: str) -> str:
         ):
             continue
         road = _road_after(text, match.end())
-        if road:
+        if road and _looks_like_road_name(road):
             return road
 
     code_match = re.search(

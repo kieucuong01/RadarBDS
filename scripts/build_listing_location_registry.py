@@ -22,6 +22,7 @@ from config.listing_map import (
     LISTING_MAP_AUTO_ACCEPT_THRESHOLD,
     LISTING_MAP_AUTO_OVERRIDE_PATH,
     LISTING_MAP_BOUNDS,
+    LISTING_MAP_FORCE_AGGREGATE_ROADS,
     LISTING_MAP_OVERRIDE_PATH,
     LISTING_MAP_WARD_BOUNDARY_PATHS,
 )
@@ -538,6 +539,82 @@ def _generated_road_rows(
                     }
                 )
     return rows
+
+
+_MAX_AGGREGATE_ROAD_RADIUS_M = 750.0
+
+
+def _add_aggregate_road_rows(rows: Sequence[dict]) -> list[dict]:
+    grouped: dict[tuple[str, str, str], list[dict]] = {}
+    for row in rows:
+        if row.get("aggregate"):
+            continue
+        key = (
+            str(row["city"]),
+            str(row["normalized_ward"]),
+            str(row["normalized_road"]),
+        )
+        grouped.setdefault(key, []).append(row)
+
+    output = list(rows)
+    for (_city, _normalized_ward, _normalized_road), parts in sorted(grouped.items()):
+        if len(parts) < 2:
+            continue
+        if any(row.get("landmark_keys") for row in parts):
+            continue
+        force_aggregate = (
+            normalize_location_token(_city),
+            _normalized_ward,
+            _normalized_road,
+        ) in LISTING_MAP_FORCE_AGGREGATE_ROADS
+        if any(
+            row.get("aggregate")
+            and (
+                str(row["city"]),
+                str(row["normalized_ward"]),
+                str(row["normalized_road"]),
+            )
+            == (_city, _normalized_ward, _normalized_road)
+            for row in rows
+        ):
+            continue
+        lat = sum(float(row["lat"]) for row in parts) / len(parts)
+        lng = sum(float(row["lng"]) for row in parts) / len(parts)
+        radius = max(
+            _distance_m(lat, lng, float(row["lat"]), float(row["lng"]))
+            + float(row.get("accuracy_radius_m") or 75)
+            for row in parts
+        )
+        if radius > _MAX_AGGREGATE_ROAD_RADIUS_M and not force_aggregate:
+            continue
+        osm_way_ids = sorted(
+            {
+                int(way_id)
+                for row in parts
+                for way_id in (row.get("osm_way_ids") or ())
+            }
+        )
+        first = sorted(
+            parts,
+            key=lambda row: (
+                str(row.get("road_name") or ""),
+                float(row["lat"]),
+                float(row["lng"]),
+            ),
+        )[0]
+        aggregate = {
+            **first,
+            "lat": round(lat, 7),
+            "lng": round(lng, 7),
+            "accuracy_radius_m": round(max(radius, 75.0), 1),
+            "source": "OpenStreetMap aggregate",
+            "source_url": str(first.get("source_url") or ""),
+            "osm_way_ids": osm_way_ids,
+            "aggregate": True,
+            "component_count": len(parts),
+        }
+        output.append(aggregate)
+    return output
 
 
 def _legacy_road_rows(
@@ -1121,6 +1198,7 @@ def build_location_registries(
         boundaries,
         road_aliases,
     )
+    road_rows = _add_aggregate_road_rows(road_rows)
     for row in road_rows:
         row.setdefault(
             "aliases",
