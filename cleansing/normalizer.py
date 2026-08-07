@@ -244,10 +244,6 @@ _OUTSIDE_KEYWORDS = [
     "bàu bàng", "bau-bang",
     "lai hưng", "lai-hung",
     "tân hưng", "tan-hung",
-    # Tân Uyên / Bắc Tân Uyên
-    "tân uyên", "tan-uyen",
-    "uyên hưng", "uyen-hung",
-    "tân vĩnh hiệp", "tan-vinh-hiep",
     # Dầu Tiếng
     "dầu tiếng", "dau-tieng",
     # Bàu Bàng/ngoài focus sau sáp nhập, hay bị rơi nhầm vào Bến Cát/Tân An
@@ -319,6 +315,20 @@ _WARD_KEYWORDS = {
     "Đông Hòa":          ["đông hòa", "đông hoà", "dong hoa", "dong-hoa", "donghoa"],
     "Tân Bình":          ["tân bình", "tan binh", "tan-binh", "tanbinh"],
     "Tân Đông Hiệp":     ["tân đông hiệp", "tan dong hiep", "tan-dong-hiep", "tandonghiep"],
+
+    # Tân Uyên — legacy wards used by public city filters
+    "Hội Nghĩa":         ["hội nghĩa", "hoi nghia", "hoi-nghia", "hoinghia"],
+    "Khánh Bình":        ["khánh bình", "khanh binh", "khanh-binh", "khanhbinh"],
+    "Phú Chánh":         ["phú chánh", "phu chanh", "phu-chanh", "phuchanh"],
+    "Tân Hiệp":          ["tân hiệp", "tan hiep", "tan-hiep", "tanhiep"],
+    "Tân Phước Khánh":   ["tân phước khánh", "tan phuoc khanh", "tan-phuoc-khanh", "tanphuockhanh"],
+    "Tân Vĩnh Hiệp":     ["tân vĩnh hiệp", "tan vinh hiep", "tan-vinh-hiep", "tanvinhhiep"],
+    "Thạnh Hội":         ["thạnh hội", "thanh hoi", "thanh-hoi", "thanhhoi"],
+    "Thạnh Phước":       ["thạnh phước", "thanh phuoc", "thanh-phuoc", "thanhphuoc"],
+    "Thái Hòa":          ["thái hòa", "thái hoà", "thai hoa", "thai-hoa", "thaihoa"],
+    "Uyên Hưng":         ["uyên hưng", "uyen hung", "uyen-hung", "uyenhung"],
+    "Vĩnh Tân":          ["vĩnh tân", "vinh tan", "vinh-tan", "vinhtan"],
+    "Bạch Đằng":         ["bạch đằng", "bach dang", "bach-dang", "bachdang"],
 }
 
 _CITY_WARDS = {
@@ -340,6 +350,11 @@ _CITY_WARDS = {
     "Dĩ An": [
         "An Bình", "Bình An", "Bình Thắng", "Dĩ An", "Đông Hòa",
         "Tân Bình", "Tân Đông Hiệp"
+    ],
+    "Tân Uyên": [
+        "Hội Nghĩa", "Khánh Bình", "Phú Chánh", "Tân Hiệp",
+        "Tân Phước Khánh", "Tân Vĩnh Hiệp", "Thạnh Hội", "Thạnh Phước",
+        "Thái Hòa", "Uyên Hưng", "Vĩnh Tân", "Bạch Đằng"
     ]
 }
 
