@@ -298,6 +298,27 @@ _WARD_KEYWORDS = {
     "Tân Định":         ["tân định", "tan-dinh", "tandinh"],
     "Thới Hòa":         ["thới hòa", "thới hoà", "thoi-hoa", "thoihoa"],
     "Phú An":           ["phú an", "phu-an", "phuan"],
+
+    # Thuận An — legacy wards used by public city filters
+    "An Phú":            ["an phú", "an phu", "an-phu", "anphu"],
+    "An Thạnh":          ["an thạnh", "an thanh", "an-thanh", "anthanh"],
+    "Bình Chuẩn":        ["bình chuẩn", "binh chuan", "binh-chuan", "binhchuan"],
+    "Bình Hòa":          ["bình hòa", "bình hoà", "binh hoa", "binh-hoa", "binhhoa"],
+    "Bình Nhâm":         ["bình nhâm", "binh nham", "binh-nham", "binhnham"],
+    "Hưng Định":         ["hưng định", "hung dinh", "hung-dinh", "hungdinh"],
+    "Lái Thiêu":         ["lái thiêu", "lai thieu", "lai-thieu", "laithieu"],
+    "Thuận Giao":        ["thuận giao", "thuan giao", "thuan-giao", "thuangiao"],
+    "Vĩnh Phú":          ["vĩnh phú", "vinh phu", "vinh-phu", "vinhphu"],
+    "An Sơn":            ["an sơn", "an son", "an-son", "anson"],
+
+    # Dĩ An — legacy wards used by public city filters
+    "An Bình":           ["an bình", "an binh", "an-binh", "anbinh"],
+    "Bình An":           ["bình an", "binh an", "binh-an", "binhan"],
+    "Bình Thắng":        ["bình thắng", "binh thang", "binh-thang", "binhthang"],
+    "Dĩ An":             ["dĩ an", "di an", "di-an", "dian"],
+    "Đông Hòa":          ["đông hòa", "đông hoà", "dong hoa", "dong-hoa", "donghoa"],
+    "Tân Bình":          ["tân bình", "tan binh", "tan-binh", "tanbinh"],
+    "Tân Đông Hiệp":     ["tân đông hiệp", "tan dong hiep", "tan-dong-hiep", "tandonghiep"],
 }
 
 _CITY_WARDS = {
@@ -311,6 +332,14 @@ _CITY_WARDS = {
         "An Điền", "An Tây", "Chánh Phú Hòa", "Hòa Lợi",
         "Mỹ Phước", "Mỹ Phước 1", "Mỹ Phước 2", "Mỹ Phước 3", "Mỹ Phước 4",
         "Tân Định", "Thới Hòa", "Phú An"
+    ],
+    "Thuận An": [
+        "An Phú", "An Thạnh", "Bình Chuẩn", "Bình Hòa", "Bình Nhâm",
+        "Hưng Định", "Lái Thiêu", "Thuận Giao", "Vĩnh Phú", "An Sơn"
+    ],
+    "Dĩ An": [
+        "An Bình", "Bình An", "Bình Thắng", "Dĩ An", "Đông Hòa",
+        "Tân Bình", "Tân Đông Hiệp"
     ]
 }
 
